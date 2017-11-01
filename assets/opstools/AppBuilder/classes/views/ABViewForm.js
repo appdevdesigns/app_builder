@@ -378,7 +378,7 @@ export default class ABViewForm extends ABViewContainer {
 
 		var component = super.component(App);
 
-		this.viewComponents = this.viewComponents || {}; // { viewId: viewComponent }
+		this.viewComponents = this.viewComponents || {}; // { fieldId: viewComponent }
 
 		// an ABViewForm_ is a collection of rows:
 		var _ui = {
@@ -447,6 +447,10 @@ export default class ABViewForm extends ABViewContainer {
 				if (data == null) {
 					var customFields = this.fieldComponents((comp) => comp instanceof ABViewFormCustom);
 					customFields.forEach((f) => {
+
+						var comp = this.viewComponents[f.id];
+						if (comp == null) return;
+
 						var colName = f.field().columnName;
 
 						// set value to each components
@@ -454,10 +458,13 @@ export default class ABViewForm extends ABViewContainer {
 						f.field().defaultValue(values);
 
 						if (values[colName] != null)
-							f.field().setValue($$(this.viewComponents[f.id].ui.id), values[colName]);
+							f.field().setValue($$(comp.ui.id), values[colName]);
 					});
 					var normalFields = this.fieldComponents((comp) => !(comp instanceof ABViewFormCustom));
 					normalFields.forEach((f) => {
+
+						var comp = this.viewComponents[f.id];
+						if (comp == null) return;
 
 						if (f.key != "button") {
 							var colName = f.field().columnName;
@@ -467,7 +474,7 @@ export default class ABViewForm extends ABViewContainer {
 							f.field().defaultValue(values);
 
 							if (values[colName] != null)
-								$$(this.viewComponents[f.id].ui.id).setValue(values[colName]);
+								$$(comp.ui.id).setValue(values[colName]);
 						}
 					});
 				}
@@ -476,6 +483,9 @@ export default class ABViewForm extends ABViewContainer {
 				else {
 					var customFields = this.fieldComponents((comp) => comp instanceof ABViewFormCustom);
 					customFields.forEach((f) => {
+
+						var comp = this.viewComponents[f.id];
+						if (comp == null) return;
 
 						var colName = f.field().columnName;
 						var val = data[colName];
@@ -486,7 +496,7 @@ export default class ABViewForm extends ABViewContainer {
 
 						// set value to each components
 						// if (val != null) {
-						f.field().setValue($$(this.viewComponents[f.id].ui.id), val);
+						f.field().setValue($$(comp.ui.id), val);
 						// }
 					});
 				}
@@ -501,12 +511,21 @@ export default class ABViewForm extends ABViewContainer {
 				if (currCursor != null) return;
 
 				var Form = $$(ids.component),
-					relationField = dc.fieldLink,
-					relationFieldCom = this.viewComponents[relationField.id];
+					relationField = dc.fieldLink;
+
+				// Pull a component of relation field
+				var relationFieldCom = this.fieldComponents((comp) => {
+					if (!(comp instanceof ABViewFormField)) return false;
+
+					return (comp.field().id == relationField.id);
+				})[0];
 
 				if (relationFieldCom == null) return;
 
-				var relationElem = $$(relationFieldCom.ui.id),
+				var relationFieldView = this.viewComponents[relationFieldCom.id];
+				if (relationFieldView == null) return;
+
+				var relationElem = $$(relationFieldView.ui.id),
 					relationName = relationField.relationName();
 
 				// pull data of parent's dc
@@ -551,6 +570,14 @@ export default class ABViewForm extends ABViewContainer {
 			var dc = this.dataCollection();
 			if (dc) {
 				data = dc.getCursor();
+
+				// select parent data to default value
+				var linkDc = dc.dataCollectionLink;
+				if (data == null && linkDc) {
+
+					var parentData = linkDc.getCursor();
+					_logic.displayParentData(parentData);
+				}
 			}
 
 			// do this for the initial form display so we can see defaults
