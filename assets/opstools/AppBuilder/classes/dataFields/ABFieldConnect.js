@@ -682,7 +682,8 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 				selectedData = row[relationName].map(function (d) {
 					// display label in format
-					d.text = d.text || linkedObject.displayData(d);
+					if (d)
+						d.text = d.text || linkedObject.displayData(d);
 
 					return d;
 				});
