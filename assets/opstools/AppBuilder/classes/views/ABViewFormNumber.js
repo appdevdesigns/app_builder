@@ -14,6 +14,7 @@ function L(key, altText) {
 
 
 var ABViewFormNumberPropertyComponentDefaults = {
+	isStepper:0
 }
 
 
@@ -61,6 +62,43 @@ export default class ABViewFormNumber extends ABViewFormField {
 	///
 	/// Instance Methods
 	///
+	
+	/**
+	 * @method toObj()
+	 *
+	 * properly compile the current state of this ABViewFormText instance
+	 * into the values needed for saving.
+	 *
+	 * @return {json}
+	 */
+	toObj () {
+
+		OP.Multilingual.unTranslate(this, this, ['label', 'formLabel']);
+
+		var obj = super.toObj();
+		obj.views = [];			// no subviews
+		return obj;
+	}
+
+
+	/**
+	 * @method fromValues()
+	 *
+	 * initialze this object with the given set of values.
+	 * @param {obj} values
+	 */
+	fromValues (values) {
+
+		super.fromValues(values);
+
+		// if this is being instantiated on a read from the Property UI,
+		this.settings.isStepper = this.settings.isStepper || PropertyComponentDefaults.isStepper;
+
+		// convert from "0" => 0
+		this.settings.isStepper = parseInt(this.settings.isStepper);
+
+	}
+
 
 	//
 	//	Editor Related
@@ -88,6 +126,7 @@ export default class ABViewFormNumber extends ABViewFormField {
 		numberElem.id = ids.component;
 
 		var _ui = {
+			type: "space",
 			rows: [
 				numberElem,
 				{}
@@ -108,6 +147,45 @@ export default class ABViewFormNumber extends ABViewFormField {
 		}
 	}
 
+	//
+	// Property Editor
+	// 
+
+	static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
+
+		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
+
+		// in addition to the common .label  values, we 
+		// ask for:
+		return commonUI.concat([
+			{
+				name: 'isStepper',
+				view: 'checkbox',
+				labelWidth: App.config.labelWidthCheckbox,
+				labelRight: L('ab.component.button.isStepper', '*Plus/Minus Buttons')
+			}
+		]);
+
+	}
+
+	static propertyEditorPopulate(ids, view) {
+
+		super.propertyEditorPopulate(ids, view);
+
+		$$(ids.isStepper).setValue(view.settings.isStepper != null ? view.settings.isStepper : ABViewFormNumberPropertyComponentDefaults.isStepper);
+
+	}
+
+	static propertyEditorValues(ids, view) {
+
+		super.propertyEditorValues(ids, view);
+
+		view.settings.isStepper = $$(ids.isStepper).getValue();
+
+	}
+
+
+
 
 	/*
 	 * @component()
@@ -124,10 +202,13 @@ export default class ABViewFormNumber extends ABViewFormField {
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		}
-
+		
+		console.log(this);
+		console.log(field);
+		var viewType = this.settings.isStepper ? "counter" : "text";
 
 		component.ui.id = ids.component;
-		component.ui.view = "counter";
+		component.ui.view = viewType;
 		component.ui.validate = (val) => { return !isNaN(val * 1); };
 
 		// make sure each of our child views get .init() called
