@@ -135,11 +135,11 @@ export default class ABViewTab extends ABViewWidget {
 				tabElem.rows[0].cells.forEach((tabView) => {
 
 					// Add 'move back' icon
-					tabView.header = ('<i class="fa fa-caret-left move-back" style="float: left; padding-left: 10px;"></i>' + tabView.header);
+					tabView.header = ('<i class="fa fa-caret-left move-back ab-tab-back"></i>' + tabView.header);
 					// Add 'edit' icon
-					tabView.header += ' <i class="fa fa-pencil-square-o rename"></i>';
+					tabView.header += ' <i class="fa fa-pencil-square rename ab-tab-edit"></i>';
 					// Add 'move next' icon
-					tabView.header += ' <i class="fa fa-caret-right move-next" style="float: right; padding-right: 10px;"></i>';
+					tabView.header += ' <i class="fa fa-caret-right move-next ab-tab-next"></i>';
 
 				});
 
@@ -170,7 +170,7 @@ export default class ABViewTab extends ABViewWidget {
 					borderless: true,
 					height: 1,
 					width: 0,
-					template: '<div class="ab-component-tools ab-layout-view">' +
+					template: '<div class="ab-component-tools ab-layout-view ab-tab-tools">' +
 					'<i class="fa fa-trash ab-component-remove"></i>' +
 					'<i class="fa fa-edit ab-component-edit"></i>' +
 					'</div>',

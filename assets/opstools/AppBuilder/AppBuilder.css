@@ -442,7 +442,44 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 	right: 34px;
 	top: 0;
 }
+.ab-tab-tools.ab-component-tools {
+	right: 0 !important;
+}
 
+.ab-tab-back:hover, .ab-tab-next:hover {
+	cursor: e-resize;
+	background: rgba(0,0,0,0.7);
+}
+.ab-tab-back:hover {
+	cursor: w-resize;
+}
+.ab-tab-back, .ab-tab-next {
+	float: left;
+	margin-left: 10px;
+	background: rgba(0,0,0,0.2);
+	width: 20px;
+	height: 20px;
+	border-radius: 10px;
+	line-height: 18px;
+	padding-right: 2px;
+}
+.ab-tab-edit {
+	opacity: 0.4;
+}
+.ab-tab-edit:hover {
+	opacity: 1;
+}
+.ab-tab-next {
+	float: right;
+	margin-right: 10px;
+	padding-left: 2px;
+}
+.webix_all_tabs div:first-child .ab-tab-back {
+	display: none;
+}
+.webix_all_tabs div:last-child .ab-tab-next {
+	display: none;
+}
 .ab-component-item-name {
 	float: left;
 	font-size: 18px;
