@@ -597,12 +597,23 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 .ab-component-header {
 	font-size: 25px;
 	font-weight: bold;
-	margin: 0px;
-	padding: 0px;
 }
 .ab-component-description {
+	margin-top: -10px !important;
 	font-size: 14px;
-	padding: 0px;
+}
+.ab-component-label {
+	margin-top: -10px !important;
+}
+.ab-menu-link.webix_menu-x .webix_list_item {
+	background: transparent;
+	color: #3498db;
+	font-weight: bold;
+	padding: 0;
+	margin-right: 15px;
+}
+.ab-menu-link.webix_menu-x .webix_list_item:hover {
+	text-decoration: underline;
 }
 
 /* Menu component */
@@ -936,4 +947,7 @@ a.ab-delete-photo:hover {
 }
 .detailView {
 	padding: 10px;
+}
+.transparent {
+	background: transparent !important;
 }

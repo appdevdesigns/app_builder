@@ -14,7 +14,8 @@ function L(key, altText) {
 
 
 var ABViewMenuPropertyComponentDefaults = {
-	orientation: 'x'
+	orientation: 'x',
+	buttonStyle: 'ab-menu-default'
 }
 
 
@@ -106,6 +107,11 @@ export default class ABViewMenu extends ABViewWidget {
 			type: "space",
 			rows: [
 				menu,
+				{
+					view:"label", 
+				    label: "Drag and drop menu items to reorder.",
+				    align:"center"
+				},
 				{}
 			]
 		};
@@ -151,41 +157,59 @@ export default class ABViewMenu extends ABViewWidget {
 				view: "richselect",
 				label: L('ab.component.menu.orientation', '*Orientation'),
 				value: ABViewMenuPropertyComponentDefaults.orientation,
+				labelWidth: App.config.labelWidthLarge,
 				options: [
 					{ id: 'x', value: L('ab.component.menu.horizontal', '*Horizontal') },
 					{ id: 'y', value: L('ab.component.menu.vertical', '*Vertical') }
 				]
 			},
 			{
-				view: 'label',
-				label: 'Page list',
-				height: 20
+				name: 'buttonStyle',
+				view: "richselect",
+				label: L('ab.component.menu.buttonStyle', '*Button Style'),
+				value: ABViewMenuPropertyComponentDefaults.buttonstyle,
+				labelWidth: App.config.labelWidthLarge,
+				options: [
+					{ id: 'ab-menu-default', value: L('ab.component.menu.defaulButton', '*Default') },
+					{ id: 'ab-menu-link', value: L('ab.component.menu.linkeButton', '*Link') }
+				]
 			},
-			{
-				name: "pages",
-				view: 'tree',
-				template: function (item, common) {
-					return ("<div class='ab-page-list-item'>" +
-						"{common.icon()} " +
+			{ 
+				view: "fieldset", 
+				label: L('ab.component.menu.pageList', '*Page List:'),
+				labelWidth: App.config.labelWidthLarge,
+				body:{
+					rows:[
+						{
+							name: "pages",
+							view: 'tree',
+							borderless: true,
+							css: "transparent",
+							template: function (item, common) {
+								return ("<div class='ab-page-list-item'>" +
+									"{common.icon()} " +
 
-						// TODO : Hide checkbox at own page
-						// (item.id == _logic.currentEditObject().parent.id ?
-						(false ?
-							'<input type="checkbox" class="webix_tree_checkbox" disabled="disabled">' :
-							"{common.checkbox()} ") +
+									// TODO : Hide checkbox at own page
+									// (item.id == _logic.currentEditObject().parent.id ?
+									(false ?
+										'<input type="checkbox" class="webix_tree_checkbox" disabled="disabled">' :
+										"{common.checkbox()} ") +
 
-						"{common.folder()} #label#" +
-						"</div>")
-						.replace('{common.icon()}', common.icon(item))
-						.replace('{common.checkbox()}', common.checkbox(item, false))
-						.replace('{common.folder()}', common.folder(item))
-						.replace('#label#', item.label);
-				},
-				on: {
-					onItemCheck: function () {
-						// trigger to save settings
-						_logic.onChange();
-					}
+									"{common.folder()} #label#" +
+									"</div>")
+									.replace('{common.icon()}', common.icon(item))
+									.replace('{common.checkbox()}', common.checkbox(item, false))
+									.replace('{common.folder()}', common.folder(item))
+									.replace('#label#', item.label);
+							},
+							on: {
+								onItemCheck: function () {
+									// trigger to save settings
+									_logic.onChange();
+								}
+							}
+						}
+					]
 				}
 			}
 		]);
@@ -198,6 +222,7 @@ export default class ABViewMenu extends ABViewWidget {
 		super.propertyEditorPopulate(ids, view);
 
 		$$(ids.orientation).setValue(view.settings.orientation || ABViewMenuPropertyComponentDefaults.orientation);
+		$$(ids.buttonStyle).setValue(view.settings.buttonStyle || ABViewMenuPropertyComponentDefaults.buttonStyle);
 
 		var pageTree = new webix.TreeCollection();
 		var application = view.application;
@@ -240,6 +265,7 @@ export default class ABViewMenu extends ABViewWidget {
 		super.propertyEditorValues(ids, view);
 
 		view.settings.orientation = $$(ids.orientation).getValue();
+		view.settings.buttonStyle = $$(ids.buttonStyle).getValue();
 		view.settings.pages = $$(ids.pages).getChecked() || [];
 
 	}
@@ -268,7 +294,7 @@ export default class ABViewMenu extends ABViewWidget {
 					view: "menu",
 					autoheight: true,
 					datatype: "json",
-					css: "ab_menu",
+					css: this.settings.buttonStyle || ABViewMenuPropertyComponentDefaults.buttonStyle,
 					layout: this.settings.orientation || ABViewMenuPropertyComponentDefaults.orientation,
 					on: {
 						onItemClick: (id, e, node) => {

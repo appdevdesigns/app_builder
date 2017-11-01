@@ -138,21 +138,21 @@ export default class ABViewLabel extends ABViewWidget  {
 
 
 		var _ui = {
-			id: ids.component,
-			view: 'label',
-			label: this.text || ''
-		}
-		_ui = this.uiFormatting(_ui);
-		
-		// This gives adequate space to the view
-		_ui = {
-			type: "space", // this code provides some margin between the rows so we don't have tangents
+			type: "form",
+			margin: 10,
+			padding: 10,
+			borderless: true,
 			rows: [
-				_ui,
-				{}// this little bit provides a spacer below the content that will fill the area but we added it here so we wouldn't loose the styles applied in uiFormatting
+				{
+					id: ids.component,
+					view: 'label',
+					label: this.text || ''
+				},
+				{}
 			]
-		};
-
+		}
+		
+		_ui = this.uiFormatting(_ui);
 
 		var _init = (options) => {
 		}
@@ -260,13 +260,20 @@ export default class ABViewLabel extends ABViewWidget  {
 
 		// an ABViewLabel is a simple Label
 		var _ui = {
-			id: ids.component,
-			view: 'label',
-			// css: 'ab-component-header ab-ellipses-text',
-			label: this.text || '*',
-			type: {
-				height: "auto"
-			}
+			type: "form",
+			padding: 15,
+			borderless: true,
+			rows: [
+				{
+					id: ids.component,
+					view: 'label',
+					// css: 'ab-component-header ab-ellipses-text',
+					label: this.text || '*',
+					type: {
+						height: "auto"
+					}
+				}
+			]
 		}
 		_ui = this.uiFormatting(_ui)
 
@@ -307,16 +314,17 @@ export default class ABViewLabel extends ABViewWidget  {
 
 			// normal
 			case 0: 
+				_ui.rows[0].css = 'ab-component-label ab-ellipses-text';
 				break;
 
 			// title
 			case 1: 
-				_ui.css = 'ab-component-header ab-ellipses-text';
+				_ui.rows[0].css = 'ab-component-header ab-ellipses-text';
 				break;
 
 			// description
 			case 2:
-				_ui.css = 'ab-component-description ab-ellipses-text';
+				_ui.rows[0].css = 'ab-component-description ab-ellipses-text';
 				break;
 		}
 
