@@ -79,14 +79,15 @@ export default class AB_Work_Interface_Workspace_Editor_Layout extends OP.Compon
 				});
 
 				// load the component's editor in our editArea
+				var editorComponent;
 				if (CurrentViewMode == "preview") {
-					var editorComponent = view.component(App);
+					editorComponent = view.component(App);
 				} else {
-					var editorComponent = view.editorComponent(App, "preview");					
+					editorComponent = view.editorComponent(App, "preview");
 				}
-				editorComponent.ui.id = ids.editArea;
-				webix.ui(editorComponent.ui, $$(ids.editArea));
-				// $$(ids.editArea).addView(editorComponent.ui);
+				// editorComponent.ui.id = ids.editArea;
+				// webix.ui(editorComponent.ui, $$(ids.editArea));
+				$$(ids.editArea).addView(editorComponent.ui);
 				editorComponent.init();
 
 			},
