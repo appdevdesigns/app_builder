@@ -190,6 +190,31 @@ export default class ABViewPage extends ABViewContainer {
 
     }
 
+	/*
+	 * @component()
+	 * return a UI component based upon this view.
+	 * @param {obj} App 
+	 * @return {obj} UI component
+	 */
+    component(App) {
+
+        var comp = super.component(App);
+
+        var _ui = {
+            view: "scrollview",
+            body: comp.ui
+        };
+
+        return {
+            ui: _ui,
+            init: comp.init,
+            logic: comp.logic,
+
+            onShow: comp.onShow
+        }
+    }
+
+
 
     /**
      * @method destroy()
@@ -272,17 +297,17 @@ export default class ABViewPage extends ABViewContainer {
     ///
 
 
-	/**
-	 * @method pages()
-	 *
-	 * return an array of all the ABViewPages for this ABViewPage.
-	 *
-	 * @param {fn} filter		a filter fn to return a set of ABViewPages that this fn
-	 *							returns true for.
-	 * @param {boolean} deep	flag to find in sub pages
-	 * 
-	 * @return {array}			array of ABViewPages
-	 */
+    /**
+     * @method pages()
+     *
+     * return an array of all the ABViewPages for this ABViewPage.
+     *
+     * @param {fn} filter		a filter fn to return a set of ABViewPages that this fn
+     *							returns true for.
+     * @param {boolean} deep	flag to find in sub pages
+     * 
+     * @return {array}			array of ABViewPages
+     */
     pages(filter, deep) {
 
         var result = [];
@@ -367,16 +392,16 @@ export default class ABViewPage extends ABViewContainer {
     /// Data sources
     ///
 
-	/**
-	 * @method dataCollections()
-	 *
-	 * return an array of all the ABViewDataCollection for this ABViewPage.
-	 *
-	 * @param {fn} filter		a filter fn to return a set of ABViewDataCollection that this fn
-	 *							returns true for.
-	 * 
-	 * @return {array}			array of ABViewDataCollection
-	 */
+    /**
+     * @method dataCollections()
+     *
+     * return an array of all the ABViewDataCollection for this ABViewPage.
+     *
+     * @param {fn} filter		a filter fn to return a set of ABViewDataCollection that this fn
+     *							returns true for.
+     * 
+     * @return {array}			array of ABViewDataCollection
+     */
     dataCollections(filter) {
 
         if (!this._dataCollections) return [];
