@@ -42,7 +42,8 @@ var ABViewGridPropertyComponentDefaults = {
 		filterConditions:[], // array of filters to apply to the data table
 		frozenColumnID:"", // id of column you want to stop freezing
 		hiddenFields:[], // array of [ids] to add hidden:true to
-	}
+	},
+	height: 0
 }
 
 
@@ -138,7 +139,8 @@ export default class ABViewGrid extends ABViewWidget  {
     	this._views = [];
 
     	// convert from "0" => 0
-    	// this.settings.format = parseInt(this.settings.format);
+		// this.settings.format = parseInt(this.settings.format);
+		this.settings.height = parseInt(this.settings.height || 0);
 
 	}
 
@@ -504,9 +506,17 @@ export default class ABViewGrid extends ABViewWidget  {
 									click: function(){
 										_logic.toolbarFrozen(this.$view);
 									}
-								}							
+								}
 							]
+						},
+
+						{
+							view: 'counter',
+							name: "height",
+							label: L("ab.component.grid.height", "*Height:"),
+							labelWidth: App.config.labelWidthLarge,
 						}
+
 					]
 				}
 			},
@@ -536,6 +546,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		// $$(ids.linkedEditPageForm).setValue(view.settings.linkedEditPageForm);
 		$$(ids.detailsPage).setValue(view.settings.detailsPage);
 		$$(ids.editPage).setValue(view.settings.editPage);
+		$$(ids.height).setValue(view.settings.height);
 		
 		// initial populate of properties and popups
 		view.populateEditor(ids, view);
@@ -568,6 +579,8 @@ export default class ABViewGrid extends ABViewWidget  {
 		// view.settings.linkedEditPageForm = $$(ids.linkedEditPageForm).getValue();
 		view.settings.detailsPage = $$(ids.detailsPage).getValue();
 		view.settings.editPage = $$(ids.editPage).getValue();
+		view.settings.height = $$(ids.height).getValue();
+
 	}
 
 
@@ -667,7 +680,8 @@ export default class ABViewGrid extends ABViewWidget  {
 		var DataTable = new ABWorkspaceDatatable(App, idBase, settings);
 		var PopupMassUpdateComponent = new ABPopupMassUpdate(App, idBase+"_mass");
 		var PopupFilterDataTableComponent = new ABPopupFilterDataTable(App, idBase+"_filter");
-		
+
+
 		var _init = () => {
 
 			if (this.settings.dataSource != "") {
@@ -747,7 +761,11 @@ export default class ABViewGrid extends ABViewWidget  {
 			}	
 			
 		};
-		
+
+		// specify height of the grid
+		if (this.settings.height)
+			DataTable.ui.height = this.settings.height;
+
 		var tableUI = {
 			type: "space",
 			rows: [
