@@ -337,7 +337,6 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                     _logic.hideLayoutButtons();
                     _logic.showNewDataCollection();
 
-                    App.actions.populateInterfaceWorkspace(CurrentView.pageRoot());
                 }
                 // layout
                 else {
@@ -345,8 +344,6 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                     EditorLayout.show();
                     _logic.showLayoutButtons();
                     _logic.hideNewDataCollection();
-
-                    App.actions.populateInterfaceWorkspace(CurrentView.pageRoot());
 
                 }
 
