@@ -144,6 +144,9 @@ export default class ABViewFormDatepicker extends ABViewFormField {
 
 		component.ui.id = ids.component;
 		component.ui.view = "datepicker";
+	
+		// allows entering characters in datepicker input, false by default
+		component.ui.editable = true;
 
 		if (field != null) {
 			component.ui.timepicker = this.settings.timepicker;

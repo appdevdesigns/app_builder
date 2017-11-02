@@ -808,6 +808,10 @@ class ABFieldDate extends ABField {
 			config.editor = 'date';
 
 
+		// allows entering characters in datepicker input, false by default
+		config.editable = true;
+
+
 		// NOTE: it seems that the default value is a string in ISO format.
 
 		//// NOTE: webix seems unable to parse ISO string into => date here.
