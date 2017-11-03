@@ -154,22 +154,6 @@ export default class ABViewDetailSelectivity extends ABViewDetailComponent {
 			var divSelectivity = '<div class="#className#"></div>'.replace("#className#", className);
 			component.logic.setValue(ids.component, divSelectivity);
 
-			// get selectivity dom
-			var domSelectivity = _logic.getDomSelectivity();
-			if (!domSelectivity) return;
-			
-			var isUsers = false;
-			if (component.ui.isUsers)
-				isUsers = component.ui.isUsers;
-
-			// render selectivity to html dom
-			var selectivitySettings = {
-				multiple: true,
-				readOnly: true,
-				isUsers: isUsers
-			};
-			field.selectivityRender(domSelectivity, selectivitySettings, App, {});
-
 		};
 
 		var _logic = {
@@ -188,12 +172,24 @@ export default class ABViewDetailSelectivity extends ABViewDetailComponent {
 					val = [val];
 				}
 
-				// get selectivity dom
-				var domSelectivity = _logic.getDomSelectivity();
-				if (!domSelectivity) return;
+				setTimeout(function(){ 
+					// get selectivity dom
+					var domSelectivity = _logic.getDomSelectivity();
+					var isUsers = false;
+					if (component.ui.isUsers)
+						isUsers = component.ui.isUsers;
 
-				// set value to selectivity
-				field.selectivitySet(domSelectivity, val, App);
+					// render selectivity to html dom
+					var selectivitySettings = {
+						multiple: true,
+						readOnly: true,
+						isUsers: isUsers
+					};
+					field.selectivityRender(domSelectivity, selectivitySettings, App, {});
+
+					// set value to selectivity
+					field.selectivitySet(domSelectivity, val, App);
+				}, 50);
 
 			}
 
