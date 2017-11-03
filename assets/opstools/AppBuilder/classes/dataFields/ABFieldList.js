@@ -344,7 +344,8 @@ var ABFieldListComponent = new ABFieldComponent({
 				return {
 					id: opt.id,
 					value: opt.text,
-					hex: opt.hex
+					hex: opt.hex,
+					translations: opt.translations
 				}
 			});
 			$$(ids.options).parse(opts);
@@ -363,8 +364,14 @@ var ABFieldListComponent = new ABFieldComponent({
 				return {
 					id: opt.id,
 					text: opt.value,
-					hex: opt.hex
+					hex: opt.hex,
+					translations: opt.translations
 				}
+			});
+
+			// Un-translate options list
+			values.settings.options.forEach(function (opt) {
+				OP.Multilingual.unTranslate(opt, opt, ["text"]);
 			});
 
 			// Set multiple default value

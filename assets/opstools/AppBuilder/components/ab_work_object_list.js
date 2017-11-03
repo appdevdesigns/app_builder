@@ -28,9 +28,10 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 				confirmDeleteMessage: L('ab.object.delete.message', "*Do you want to delete <b>{0}</b>?"),
 				listSearch: L('ab.object.list.search', "*Search"),
 				searchPlaceholder: L('ab.object.list.search.placeholder', "*Object name"),
+				listSetting: L('ab.object.list.setting', "*Setting"),
 				listSort: L('ab.object.list.sort', "*Sort"),
-				listAsc: L('ab.object.list.asc', "*A -> Z"),
-				listDesc: L('ab.object.list.desc', "*Z -> A"),
+				listAsc: L('ab.object.list.sort.asc', "*A -> Z"),
+				listDesc: L('ab.object.list.sort.desc', "*Z -> A"),
 				listGroup: L('ab.object.list.group', "*Group"),
 			}
 		}
@@ -68,7 +69,7 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 					rows: [
 						{
 							id: ids.listSetting,
-							header: "Settings",
+							header: labels.component.listSetting,
 							headerHeight: 30,
 							headerAltHeight: 30,
 							body: {
@@ -298,7 +299,7 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 				var searchText = $$(ids.searchText).getValue().toLowerCase();
 
 				$$(ids.list).filter(function (item) {
-					return item.label.toLowerCase().indexOf(searchText) > -1;
+					return !item.label || item.label.toLowerCase().indexOf(searchText) > -1;
 				});
 
 				// save to database

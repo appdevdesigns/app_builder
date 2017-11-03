@@ -262,7 +262,7 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
                     // the editor can define some basic form validations.
                     if (editor.isValid()) {
 
-                        var values = editor.values();
+                        var vals = _.cloneDeep(editor.values());
 
                         var field = null;
                         var oldData = null;
@@ -273,7 +273,7 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
                         if (!_editField) {
 
                             // get a new instance of a field:
-                            field = _currentObject.fieldNew(values);
+                            field = _currentObject.fieldNew(vals);
 
                             // Provide a default width based on the column label
                             var width = 20 + (field.label.length * 8);
@@ -323,7 +323,14 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
 
                             // use our _editField, backup our oldData
                             oldData = _editField.toObj();
-                            _editField.fromValues(values);
+
+                            // update changed values to old data
+                            var updateValues = _.cloneDeep(oldData);
+                            for (var key in vals) {
+                                updateValues[key] = vals[key];
+                            }
+
+                            _editField.fromValues(updateValues);
 
                             field = _editField;
                         }

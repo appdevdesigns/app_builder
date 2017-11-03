@@ -235,6 +235,42 @@ msgstr "Application description"
 
 #. path: app_builder
 #. code: en
+#. key: ab.object.list.setting
+msgid "Settings"
+msgstr "Settings"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.list.search
+msgid "Search"
+msgstr "Search"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.list.sort
+msgid "Sort"
+msgstr "Sort"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.list.sort.asc
+msgid "asc"
+msgstr "A -> Z"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.list.sort.desc
+msgid "desc"
+msgstr "Z -> A"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.list.group
+msgid "group"
+msgstr "Group"
+
+#. path: app_builder
+#. code: en
 #. key: ab.object.title
 msgid "Objects"
 msgstr "Objects"
@@ -256,12 +292,6 @@ msgstr "<b>{0}</b> is duplicate"
 #. key: ab.object.addNew
 msgid "Add new object"
 msgstr "Add new object"
-
-#. path: app_builder
-#. code: en
-#. key: ab.object.menu
-msgid "Object Menu"
-msgstr "Object Menu"
 
 #. path: app_builder
 #. code: en

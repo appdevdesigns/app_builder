@@ -233,6 +233,43 @@ msgstr "ชื่อแอปพลิเคชั่น"
 msgid "Application description"
 msgstr "รายละเอียดแอปพลิเคชั่น"
 
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.list.setting
+msgid "Settings"
+msgstr "ตั้งค่า"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.list.search
+msgid "Search"
+msgstr "ค้นหา"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.list.sort
+msgid "Sort"
+msgstr "จัดเรียง"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.list.sort.asc
+msgid "asc"
+msgstr "ก -> ฮ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.list.sort.desc
+msgid "desc"
+msgstr "ฮ -> ก"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.list.group
+msgid "group"
+msgstr "จัดกลุ่ม"
+
 #. path: app_builder
 #. code: th
 #. key: ab.object.title
@@ -255,19 +292,13 @@ msgstr "<b>{0}</b> มีซ้ำแล้ว"
 #. code: th
 #. key: ab.object.addNew
 msgid "Add new object"
-msgstr "Add new object"
-
-#. path: app_builder
-#. code: th
-#. key: ab.object.menu
-msgid "Object Menu"
-msgstr "Object Menu"
+msgstr "เพิ่มที่เก็บข้อมูลใหม่"
 
 #. path: app_builder
 #. code: th
 #. key: ab.object.form.placeholderName
 msgid "Object name"
-msgstr "Object name"
+msgstr "ชื่อที่เก็บข้อมูล"
 
 #. path: app_builder
 #. code: th
@@ -907,6 +938,18 @@ msgstr "ลบหน้านี้"
 
 #. path: app_builder
 #. code: th
+#. key: ab.common.import
+msgid "Import"
+msgstr "นำเข้า"
+
+#. path: app_builder
+#. code: th
+#. key: ab.common.export
+msgid "Export"
+msgstr "ส่งออก"
+
+#. path: app_builder
+#. code: th
 #. key: ab.common.save.error
 msgid "System could not save <b>{0}</b>."
 msgstr "ระบบไม่สามารถบันทึก <b>{0}</b>"
@@ -1239,5 +1282,5 @@ msgstr "[th] Interface"
 #. code: th
 #. key: ab.object.selectObject
 msgid "Select an object to work with."
-msgstr "[th] Select an object to work with."
+msgstr "เลือกที่เก็บข้อมูล"
 
