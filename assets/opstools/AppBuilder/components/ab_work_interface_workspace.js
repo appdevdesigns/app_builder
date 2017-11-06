@@ -9,6 +9,8 @@
 import ABWorkspaceEditor from "./ab_work_interface_workspace_editor"
 import ABWorkspaceDetails from "./ab_work_interface_workspace_details"
 
+import ABViewPage from "../classes/views/ABViewPage"
+
 export default class AB_Work_Interface_Workspace extends OP.Component {
     
     constructor(App) {
@@ -149,9 +151,9 @@ export default class AB_Work_Interface_Workspace extends OP.Component {
             /**
              * @function populateObjectWorkspace()
              *
-             * Initialize the Object Workspace with the provided ABObject.
+             * Initialize the Interface Workspace with the provided ABView.
              *
-             * @param {ABObject} object     current ABObject instance we are working with.
+             * @param {ABView} view     current ABView instance we are working with.
              */
             populateInterfaceWorkspace: function(view) {
                 // $$(ids.noSelection).hide();
@@ -163,6 +165,11 @@ export default class AB_Work_Interface_Workspace extends OP.Component {
                 ColumnDetails.viewLoad(view);
 
                 $$(ids.component).resize();
+
+                // select a page in interface list
+                if (view instanceof ABViewPage) {
+                    App.actions.selectInterfacePage(view);
+                }
 
             }
             
