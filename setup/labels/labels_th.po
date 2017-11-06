@@ -1057,6 +1057,12 @@ msgstr "[th] Checkbox"
 
 #. path: app_builder
 #. code: th
+#. key: ab.components.connect
+msgid "Connect"
+msgstr "[th] Connect"
+
+#. path: app_builder
+#. code: th
 #. key: ab.components.custom
 msgid "Custom"
 msgstr "[th] Custom"

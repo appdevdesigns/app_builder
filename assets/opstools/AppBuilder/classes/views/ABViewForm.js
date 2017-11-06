@@ -28,7 +28,7 @@ var ABViewFormDefaults = {
 var ABViewFormPropertyComponentDefaults = {
 	showLabel: true,
 	labelPosition: 'left',
-	labelWidth: 80
+	labelWidth: 120
 }
 
 export default class ABViewForm extends ABViewContainer {
@@ -218,6 +218,7 @@ export default class ABViewForm extends ABViewContainer {
 				name: 'datacollection',
 				view: 'richselect',
 				label: L('ab.components.form.dataSource', "*Data Source"),
+				labelWidth: App.config.labelWidthLarge,
 				on: {
 					onChange: _logic.selectSource
 				}
@@ -240,12 +241,14 @@ export default class ABViewForm extends ABViewContainer {
 			{
 				name: 'showLabel',
 				view: 'checkbox',
-				label: L('ab.components.form.showlabel', "*Display Label")
+				labelRight: L('ab.components.form.showlabel', "*Display Label"),
+				labelWidth: App.config.labelCheckbox
 			},
 			{
 				name: 'labelPosition',
 				view: 'richselect',
 				label: L('ab.components.form.labelPosition', "*Label Position"),
+				labelWidth: App.config.labelWidthLarge,
 				options: [
 					{
 						id: 'left',
@@ -261,6 +264,7 @@ export default class ABViewForm extends ABViewContainer {
 				name: 'labelWidth',
 				view: 'counter',
 				label: L('ab.components.form.labelWidth', "*Label Width"),
+				labelWidth: App.config.labelWidthLarge
 			}
 		]);
 
