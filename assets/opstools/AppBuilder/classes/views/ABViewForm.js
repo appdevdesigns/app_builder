@@ -284,10 +284,11 @@ export default class ABViewForm extends ABViewContainer {
 		});
 
 		SourceSelector.define('options', dcOptions);
+		SourceSelector.define('value', dataCollectionId);
 		SourceSelector.refresh();
-		SourceSelector.setValue(dataCollectionId);
 
 		this.propertyUpdateFieldOptions(ids, view, dataCollectionId);
+
 
 		// update properties when a field component is deleted
 		view.views().forEach((v) => {
