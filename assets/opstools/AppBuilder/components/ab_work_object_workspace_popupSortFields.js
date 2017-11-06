@@ -310,17 +310,21 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 					sort_form = $$(ids.form);
 
 				var childViews = sort_form.getChildViews();
-				if (childViews.length == 1) {
-					var sorts = CurrentObject.workspaceSortFields;
-					if (sorts && sorts.forEach) {
-						sorts.forEach((s) => {
-							_logic.clickAddNewSort(s.by, s.dir, s.isMulti);
-						});
+				childViews.forEach(function(i, idx, array){
+					if (idx !== array.length - 1){ 
+						sort_form.removeView(i);
 					}
+				});
 
-					if (sorts == null || sorts.length == 0) {
-						_logic.clickAddNewSort();
-					}
+				var sorts = CurrentObject.workspaceSortFields;
+				if (sorts && sorts.forEach) {
+					sorts.forEach((s) => {
+						_logic.clickAddNewSort(s.by, s.dir, s.isMulti);
+					});
+				}
+
+				if (sorts == null || sorts.length == 0) {
+					_logic.clickAddNewSort();
 				}
 			},
 

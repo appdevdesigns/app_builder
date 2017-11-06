@@ -35,7 +35,7 @@ export default class AB_Work_Interface_Workspace_Details extends OP.Component {
         // webix UI definition:
         this.ui = {
             id: ids.component,
-            width: 300,
+            width: 350,
             // scroll: true,
             rows: [
                 PropertiesList.ui

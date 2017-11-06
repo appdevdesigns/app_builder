@@ -24,7 +24,7 @@ var ABViewDetailDefaults = {
 var ABViewDetailPropertyComponentDefaults = {
 	showLabel: true,
 	labelPosition: 'left',
-	labelWidth: 80
+	labelWidth: 120
 }
 
 export default class ABViewDetail extends ABViewContainer {

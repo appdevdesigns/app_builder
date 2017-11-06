@@ -594,6 +594,13 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
                 var filterform = $$(ids.filterform),
                     filters = CurrentObject.workspaceFilterConditions;
 
+                var childViews = filterform.getChildViews();
+                childViews.forEach(function(i, idx, array){
+                    if (idx !== array.length - 1){ 
+                        filterform.removeView(i);
+                    }
+                });
+
                 if (filters && filters.length > 0 && filterform.getChildViews().length < 2) {
                     filters.forEach((f) => {
                         _logic.clickAddNewFilter(f);
