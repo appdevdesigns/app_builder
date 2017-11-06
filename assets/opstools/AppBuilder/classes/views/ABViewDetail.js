@@ -251,8 +251,8 @@ export default class ABViewDetail extends ABViewContainer {
 		});
 
 		SourceSelector.define('options', dcOptions);
+		SourceSelector.define('value', dataCollectionId);
 		SourceSelector.refresh();
-		SourceSelector.setValue(dataCollectionId);
 
 
 		this.propertyUpdateFieldOptions(ids, view, dataCollectionId);
