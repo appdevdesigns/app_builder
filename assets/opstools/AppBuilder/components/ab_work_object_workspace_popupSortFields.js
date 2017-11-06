@@ -193,7 +193,7 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 					if (f.fieldIsSortable()) {
 						listFields.push({
 							id: f.columnName,
-							label: f.label
+							value: f.label
 						});
 					}
 				})
