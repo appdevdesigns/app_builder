@@ -532,11 +532,17 @@ export default class ABViewForm extends ABViewContainer {
 				var formData = {};
 				formData[relationName] = data;
 
-				// convert to array
-				if (relationField.settings.linkType == 'many')
-					formData[relationName] = [formData[relationName]];
+				var val = null;
 
-				var val = relationField.pullRelationValues(formData);
+				if (formData[relationName]) {
+
+					// convert to array
+					if (relationField.settings.linkType == 'many')
+						formData[relationName] = [formData[relationName]];
+
+					val = relationField.pullRelationValues(formData);
+
+				}
 
 				// set data of parent to default value
 				relationField.setValue(relationElem, val);
