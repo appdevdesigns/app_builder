@@ -129,14 +129,15 @@ module.exports = {
     /* Pages */
 
     /**
-     * PUT /app_builder/application/:appID
+     * PUT /app_builder/application/:appID/interface
      * 
-     * Add/Update a page into ABApplication
+     * Add/Update a page/view into ABApplication
      */
-    pageSave: function (req, res) {
+    interfaceSave: function (req, res) {
         var appID = req.param('appID');
         var resolveUrl = req.body.resolveUrl;
-        var page = req.body.page;
+        var type = req.body.type; // 'page' or 'view'
+        var updateData = req.body.data;
 
         Promise.resolve()
             .catch((err) => { res.AD.error(err); })
@@ -164,29 +165,29 @@ module.exports = {
 
                     if (data == null) return resolve();
 
-                    var updatePage = data.appClass.urlResolve(resolveUrl);
+                    var updateVals = data.appClass.urlResolve(resolveUrl);
 
                     // update
-                    if (updatePage) {
+                    if (updateVals) {
 
                         var ignoreProps = ['id', 'pages', '_pages']
 
                         // clear old values
-                        for (var key in updatePage) {
+                        for (var key in updateVals) {
 
                             if (ignoreProps.indexOf(key) > -1)
                                 continue;
 
-                            delete updatePage[key];
+                            delete updateVals[key];
                         }
 
                         // add update values
-                        for (var key in page) {
+                        for (var key in updateData) {
 
                             if (ignoreProps.indexOf(key) > -1)
                                 continue;
 
-                            updatePage[key] = page[key];
+                            updateVals[key] = updateData[key];
                         }
                     }
 
@@ -200,9 +201,18 @@ module.exports = {
                         var parentUrl = parts.join('/');
                         var parent = data.appClass.urlResolve(parentUrl);
 
-                        // add new page to the parent
+                        // add new page/view to the parent
                         if (parent && parent.push) {
-                            parent.push(new ABViewPage(page, data.appClass));
+
+                            // ABViewPage
+                            if (type == 'page') {
+                                parent.push(new ABViewPage(updateData, data.appClass));
+                            }
+                            // ABView
+                            else {
+                                parent.push(updateData);
+                            }
+
                         }
                     }
 
@@ -231,9 +241,9 @@ module.exports = {
                 // Update page's nav view
                 return new Promise((resolve, reject) => {
 
-                    if (data == null) return resolve();
+                    if (type == 'page' || data == null) return resolve();
 
-                    var pageClass = data.appClass._pages.filter(p => p.id == page.id)[0];
+                    var pageClass = data.appClass._pages.filter(p => p.id == updateData.id)[0];
 
                     if (pageClass)
                         return AppBuilder.updateNavView(data.app, pageClass)
@@ -259,13 +269,14 @@ module.exports = {
     },
 
     /**
-     * DELETE /app_builder/application/:appID/:resolveUrl
+     * DELETE /app_builder/application/:appID/interface
      * 
-     * Delete a page in ABApplication
+     * Delete a page/view in ABApplication
      */
-    pageDestroy: function (req, res) {
+    interfaceDestroy: function (req, res) {
         var appID = req.param('appID');
         var resolveUrl = req.body.resolveUrl;
+        var type = req.body.type; // 'page' or 'view'
         var pageName;
 
         Promise.resolve()
@@ -334,7 +345,10 @@ module.exports = {
                 // Remove page's nav view
                 return new Promise((resolve, reject) => {
 
-                    if (Application == null || !pageName) return resolve();
+                    if (Application == null ||
+                        type == 'page' ||
+                        !pageName)
+                        return resolve();
 
                     return AppBuilder.removeNavView(Application, pageName)
                         .catch(reject)
@@ -352,7 +366,6 @@ module.exports = {
 
                 });
             });
-
 
     },
 

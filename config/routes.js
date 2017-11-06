@@ -16,11 +16,11 @@ module.exports = {
         'app_builder/ABApplicationController.objectDestroy',
 
     /* Application Pages */
-    'put /app_builder/application/:appID/page':
-        'app_builder/ABApplicationController.pageSave',
+    'put /app_builder/application/:appID/interface':
+        'app_builder/ABApplicationController.interfaceSave',
 
-    'delete /app_builder/application/:appID/page':
-        'app_builder/ABApplicationController.pageDestroy',
+    'delete /app_builder/application/:appID/interface':
+        'app_builder/ABApplicationController.interfaceDestroy',
 
     /* Application permissions */
     'get /app_builder/user/roles':

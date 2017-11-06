@@ -143,7 +143,7 @@ export default class ABViewTab extends ABViewWidget {
 
 				});
 
-			}			
+			}
 		}
 
 		var _ui = {
@@ -506,7 +506,7 @@ export default class ABViewTab extends ABViewWidget {
 								header: v.view.label,
 								body: tabUi
 							};
-						})						
+						})
 					}
 				]
 			}
@@ -516,7 +516,6 @@ export default class ABViewTab extends ABViewWidget {
 				view: 'spacer'
 			};
 		}
-
 
 		var _logic = {
 

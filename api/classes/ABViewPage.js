@@ -29,7 +29,30 @@ module.exports = class ABViewPage extends ABViewBase {
 		this._pages = pages;
 
 
+		// now properly handle our sub views.
+		var views = [];
+		var getViews = (v) => {
+
+			var subviews = [];
+
+			(v.views || []).forEach((child) => {
+				subviews.push(getViews(child));
+			});
+
+			v._views = subviews;
+
+			return v;
+
+		};
+
 		this.views = values.views || [];
+		this.views.forEach((v) => {
+			views.push(getViews(v));
+		})
+		this._views = views;
+
+
+		// now properly handle our data collections.
 		this.dataCollections = values.dataCollections || [];
 
 	}
@@ -56,7 +79,7 @@ module.exports = class ABViewPage extends ABViewBase {
 		}
 		result.pages = pages;
 
-		result.views = this.views;
+		result.views = this._views || this.views;
 		result.dataCollections = this.dataCollections;
 
 
