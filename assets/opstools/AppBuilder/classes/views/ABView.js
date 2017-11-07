@@ -144,8 +144,9 @@ export default class ABView extends ABViewBase {
 				// verify we have been .save() before:
 				if (this.id) {
 
-					// var parent = this.parent;
-					// if (!parent) parent = this.application;
+					var parent = this.parent;
+					if (parent) parent.viewDestroy(this)
+
 
 					this.application.viewDestroy(this)
 						.then(resolve)
@@ -180,10 +181,8 @@ export default class ABView extends ABViewBase {
 					this.id = OP.Util.uuid();	// setup default .id
 				}
 
-				// if this is not a child of another view then tell it's
-				// application to save this view.
-				// var parent = this.parent;
-				// if (!parent) parent = this.application;
+				var parent = this.parent;
+				if (parent) parent.viewSave(this);
 
 				this.application.viewSave(this)
 					.then(resolve)
@@ -363,7 +362,7 @@ export default class ABView extends ABViewBase {
 		var remainingViews = this.views(function (v) { return v.id != view.id; })
 		this._views = remainingViews;
 
-		return this.save();
+		// return this.save();
 	}
 
 
@@ -382,7 +381,7 @@ export default class ABView extends ABViewBase {
 			this._views.push(view);
 		}
 
-		return this.save();
+		// return this.save();
 	}
 
 

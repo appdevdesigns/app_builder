@@ -149,11 +149,13 @@ export default class ABViewLayout extends ABView  {
 					callback: (result) => {
 						if (result) {
 
-							this.viewDestroy(view)
-							.then(()=>{
-								// refresh the editor interface.
-								App.actions.populateInterfaceWorkspace(this);
-							})
+							view.destroy()
+								.then(()=>{
+
+									// refresh the editor interface.
+									App.actions.populateInterfaceWorkspace(this);
+
+								});
 						}
 					}
 				});

@@ -148,8 +148,8 @@ export default class ABViewDetail extends ABViewContainer {
 
 			}
 
-			// trigger a save()
-			this.propertyEditorSave(ids, currView);
+			// refresh editor view
+			currView.emit('properties.updated', this);
 
 		};
 
@@ -173,7 +173,9 @@ export default class ABViewDetail extends ABViewContainer {
 			newView.position.y = yPosition;
 
 			// add a new component
-			detailView._views.push(newView);
+			// detailView._views.push(newView);
+			newView.save();
+
 
 			// update properties when a sub-view is destroyed
 			newView.once('destroyed', () => { this.propertyEditorPopulate(ids, detailView); });

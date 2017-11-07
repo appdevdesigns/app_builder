@@ -79,6 +79,9 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 			// remove sub-pages properties
 			delete data['pages'];
 
+			// remove sub-views properties
+			delete data['views'];
+			
 			return new Promise(
 				(resolve, reject) => {
 

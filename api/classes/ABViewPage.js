@@ -30,6 +30,7 @@ module.exports = class ABViewPage extends ABViewBase {
 
 
 		// now properly handle our sub views.
+		// convert "views" to "_views" to support resolve url
 		var views = [];
 		var getViews = (v) => {
 
@@ -79,7 +80,30 @@ module.exports = class ABViewPage extends ABViewBase {
 		}
 		result.pages = pages;
 
-		result.views = this._views || this.views;
+		// compile our views
+		// convert "_views" to "views"
+		var views = [];
+		var getViews = (v) => {
+
+			var subviews = [];
+
+			(v._views || v.views || []).forEach((child) => {
+				subviews.push(getViews(child));
+			});
+
+			v.views = subviews;
+
+			return v;
+
+		};
+
+		(this._views || this.views || []).forEach((v) => {
+			views.push(getViews(v));
+		})
+		result.views = views;
+
+
+
 		result.dataCollections = this.dataCollections;
 
 

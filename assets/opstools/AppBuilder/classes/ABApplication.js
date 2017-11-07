@@ -232,6 +232,11 @@ export default class ABApplication extends ABApplicationBase {
 		// we already have an .id, so this must be an UPDATE
 		if (values.id) {
 
+			// remove 'objects' and 'pages' because when we have many objects and pages
+			// it will be a Bad Request - parameter is too much
+			delete values.json['objects'];
+			delete values.json['pages'];
+
 			return this.Model.update(values.id, values)
 				.then(() => {
 					_AllApplications.updateItem(values.id, this);

@@ -106,7 +106,7 @@ export default class ABViewTab extends ABViewWidget {
 						// Rename
 						if (e.target.classList.contains('rename')) {
 
-							ABViewTab.showPopup(tab);
+							ABViewTab.popupShow(tab);
 
 						}
 						// Reorder back
@@ -114,6 +114,7 @@ export default class ABViewTab extends ABViewWidget {
 
 							this.viewReorder(tabId, currIndex - 1);
 
+							// refresh editor view
 							this.emit('properties.updated', this);
 
 						}
@@ -122,6 +123,7 @@ export default class ABViewTab extends ABViewWidget {
 
 							this.viewReorder(tabId, currIndex + 1);
 
+							// refresh editor view
 							this.emit('properties.updated', this);
 
 						}
@@ -236,7 +238,7 @@ export default class ABViewTab extends ABViewWidget {
 						text: L('ab.interface.component.tab.confirmDeleteMessage', 'Do you want to delete <b>{0}</b>?').replace('{0}', deletedView.label),
 						callback: (result) => {
 							if (result) {
-								this.viewDestroy(deletedView);
+								deletedView.destroy();
 
 								// remove tab option
 								$$(ids.component).removeView(tabId);
@@ -270,10 +272,8 @@ export default class ABViewTab extends ABViewWidget {
 
 		// get current instance and .addTab()
 		var LayoutView = _logic.currentEditObject();
-		LayoutView.addTab(tabName);
+		return LayoutView.addTab(tabName);
 
-		// trigger a save()
-		this.propertyEditorSave(ids, LayoutView);
 	}
 
 
@@ -281,19 +281,19 @@ export default class ABViewTab extends ABViewWidget {
 
 		// get current instance and rename tab
 		var LayoutView = _logic.currentEditObject();
-		var editTab = LayoutView.views(v => v.id == tabId)[0];
+		var editedTab = LayoutView.views(v => v.id == tabId)[0];
 
-		if (editTab) {
-			editTab.label = tabName;
+		if (!editedTab) return Promise.resolve();
 
-			// trigger a save()
-			this.propertyEditorSave(ids, LayoutView);
-		}
+		editedTab.label = tabName;
+
+		// save
+		return editedTab.save();
 
 	}
 
 
-	static showPopup(tab) {
+	static popupShow(tab) {
 
 		var popup = $$("ab-component-tab-add-new-tab-popup");
 		var form = $$("ab-component-tab-add-new-tab-form");
@@ -331,7 +331,7 @@ export default class ABViewTab extends ABViewWidget {
 
 	}
 
-	static closePopup() {
+	static popupClose() {
 
 		var popup = $$("ab-component-tab-add-new-tab-popup");
 
@@ -339,6 +339,21 @@ export default class ABViewTab extends ABViewWidget {
 			popup.hide();
 
 	}
+
+	static popupBusy() {
+		var button = $$("ab-component-tab-save-button");
+
+		if (button)
+			button.disable();
+	}
+
+	static popupOk() {
+		var button = $$("ab-component-tab-save-button");
+
+		if (button)
+			button.enable();
+	}
+
 
 	static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
 
@@ -374,7 +389,7 @@ export default class ABViewTab extends ABViewWidget {
 								css: "ab-cancel-button",
 								autowidth: true,
 								click: () => {
-									this.closePopup();
+									this.popupClose();
 								}
 							},
 							{
@@ -388,14 +403,40 @@ export default class ABViewTab extends ABViewWidget {
 									var form = $$('ab-component-tab-add-new-tab-form');
 									if (form.validate()) {
 
+										this.popupBusy();
+
 										var vals = form.getValues();
 
-										if (vals.id == null)
-											this.addTab(ids, _logic, vals.label);
-										else
-											this.editTab(ids, _logic, vals.id, vals.label);
+										// add
+										if (vals.id == null) {
+											this.addTab(ids, _logic, vals.label)
+												.catch(() => {
+													// TODO : Error message
+													this.popupOk();
+												})
+												.then(() => {
+													this.popupOk();
+													this.popupClose();
 
-										this.closePopup();
+													// refresh editor view
+													_logic.currentEditObject().emit('properties.updated', this);
+												});
+										}
+										// edit
+										else {
+											this.editTab(ids, _logic, vals.id, vals.label)
+												.catch(() => {
+													// TODO : Error message
+													this.popupOk();
+												})
+												.then(() => {
+													this.popupOk();
+													this.popupClose();
+
+													// refresh editor view
+													_logic.currentEditObject().emit('properties.updated', this);
+												});
+										}
 
 									}
 
@@ -421,7 +462,7 @@ export default class ABViewTab extends ABViewWidget {
 				view: 'button',
 				value: L('ab.component.tab.addTab', '*Add Tab'),
 				click: () => {
-					this.showPopup();
+					this.popupShow();
 				}
 			}
 
@@ -449,10 +490,13 @@ export default class ABViewTab extends ABViewWidget {
 
 	addTab(tabName) {
 
-		this._views.push(ABViewManager.newView({
+		var newTab = ABViewManager.newView({
 			key: ABViewContainer.common().key,
 			label: tabName
-		}, this.application, this));
+		}, this.application, this);
+
+
+		return newTab.save();
 
 	}
 

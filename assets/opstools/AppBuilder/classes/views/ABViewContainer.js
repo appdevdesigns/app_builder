@@ -291,20 +291,31 @@ export default class ABViewContainer extends ABView {
 
 				var viewState = Dashboard.serialize();
 
+				var updateTasks = []
+
 				// save view position state to views
 				this.views().forEach((v) => {
 
-					var state = viewState.filter((vs) => vs.name == v.id)[0];
-					if (state) {
+					updateTasks.push(function (next) {
 
-						v.position.x = state.x;
-						v.position.y = state.y;
-					}
+						var state = viewState.filter((vs) => vs.name == v.id)[0];
+						if (state) {
+
+							v.position.x = state.x;
+							v.position.y = state.y;
+						}
+
+						// WARNING: put to server many times
+						v.save()
+							.catch(next)
+							.then(() => { next() });
+
+					});
 
 				});
 
-				// save template layout
-				this.save();
+				// update position of sub-child respectively
+				async.series(updateTasks);
 
 			},
 
@@ -431,7 +442,7 @@ export default class ABViewContainer extends ABView {
 					subComponents[v.id] = component;
 
 					// Create a new row
-					if (v.position.y == null || 
+					if (v.position.y == null ||
 						v.position.y != curRowIndex) {
 
 						curRowIndex = v.position.y || rows.length;

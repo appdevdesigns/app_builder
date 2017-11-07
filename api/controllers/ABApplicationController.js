@@ -137,7 +137,7 @@ module.exports = {
         var appID = req.param('appID');
         var resolveUrl = req.body.resolveUrl;
         var type = req.body.type; // 'page' or 'view'
-        var updateData = req.body.data;
+        var vals = req.body.data;
 
         Promise.resolve()
             .catch((err) => { res.AD.error(err); })
@@ -165,30 +165,31 @@ module.exports = {
 
                     if (data == null) return resolve();
 
-                    var updateVals = data.appClass.urlResolve(resolveUrl);
+                    var updateItem = data.appClass.urlResolve(resolveUrl);
 
                     // update
-                    if (updateVals) {
+                    if (updateItem) {
 
-                        var ignoreProps = ['id', 'pages', '_pages']
+                        var ignoreProps = ['id', 'pages', '_pages', 'views', '_views'];
 
                         // clear old values
-                        for (var key in updateVals) {
+                        for (var key in updateItem) {
 
                             if (ignoreProps.indexOf(key) > -1)
                                 continue;
 
-                            delete updateVals[key];
+                            delete updateItem[key];
                         }
 
                         // add update values
-                        for (var key in updateData) {
+                        for (var key in vals) {
 
                             if (ignoreProps.indexOf(key) > -1)
                                 continue;
 
-                            updateVals[key] = updateData[key];
+                            updateItem[key] = vals[key];
                         }
+
                     }
 
 
@@ -206,11 +207,11 @@ module.exports = {
 
                             // ABViewPage
                             if (type == 'page') {
-                                parent.push(new ABViewPage(updateData, data.appClass));
+                                parent.push(new ABViewPage(vals, data.appClass));
                             }
                             // ABView
                             else {
-                                parent.push(updateData);
+                                parent.push(vals);
                             }
 
                         }
@@ -241,9 +242,9 @@ module.exports = {
                 // Update page's nav view
                 return new Promise((resolve, reject) => {
 
-                    if (type == 'page' || data == null) return resolve();
+                    if (type != 'page' || data == null) return resolve();
 
-                    var pageClass = data.appClass._pages.filter(p => p.id == updateData.id)[0];
+                    var pageClass = data.appClass._pages.filter(p => p.id == vals.id)[0];
 
                     if (pageClass)
                         return AppBuilder.updateNavView(data.app, pageClass)
