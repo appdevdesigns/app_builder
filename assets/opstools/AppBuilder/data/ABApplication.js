@@ -63,21 +63,31 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 		},
 
 
-		// ** Pages
+		// ** Interfaces
 
-		pageSave: function (appId, resolveUrl, page) {
+		/**
+		 * @method interfaceSave
+		 * 
+		 * @param {guid} appId
+		 * @param {string} type  - 'page' or 'view'
+		 * @param {string} resolveUrl
+		 * @param {object} data
+		 * @return {Promise}
+		 */
+		interfaceSave: function (appId, type, resolveUrl, data) {
 
 			// remove sub-pages properties
-			delete page['pages'];
+			delete data['pages'];
 
 			return new Promise(
 				(resolve, reject) => {
 
 					AD.comm.service.put({
-						url: '/app_builder/application/' + appId + '/page',
+						url: '/app_builder/application/' + appId + '/interface',
 						data: {
 							resolveUrl: resolveUrl,
-							page: page
+							type: type,
+							data: data
 						}
 					}, function (err, result) {
 						if (err)
@@ -90,14 +100,23 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 			);
 		},
 
-		pageDestroy: function (appId, resolveUrl) {
+		/**
+		 * @method interfaceDestroy
+		 * 
+		 * @param {guid} appId
+		 * @param {string} type  - 'page' or 'view'
+		 * @param {string} resolveUrl
+		 * @return {Promise}
+		 */
+		interfaceDestroy: function (appId, type, resolveUrl) {
 
 			return new Promise(
 				(resolve, reject) => {
 
 					AD.comm.service.delete({
-						url: '/app_builder/application/' + appId + '/page',
+						url: '/app_builder/application/' + appId + '/interface',
 						data: {
+							type: type,
 							resolveUrl: resolveUrl
 						}
 					}, function (err, result) {
@@ -112,7 +131,6 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 			);
 
 		},
-
 
 
 	},

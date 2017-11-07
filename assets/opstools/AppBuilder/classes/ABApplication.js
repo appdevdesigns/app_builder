@@ -4,7 +4,7 @@ import ABApplicationBase from "./ABApplicationBase"
 import "../data/ABApplication"
 import ABObject from "./ABObject"
 import ABViewManager from "./ABViewManager"
-import ABViewPage from "./views/ABViewPage"
+import ABView from "./views/ABViewPage"
 
 
 var _AllApplications = [];
@@ -491,12 +491,12 @@ export default class ABApplication extends ABApplicationBase {
 	 * NOTE: this new page is not included in our this.pages until a .save()
 	 * is performed on the page.
 	 *
-	 * @return {ABViewPage}
+	 * @return {ABView}
 	 */
 	pageNew(values) {
 
 		// make sure this is an ABViewPage description
-		values.key = ABViewPage.common().key;
+		values.key = ABView.common().key;
 
 		return new ABViewManager.newView(values, this, null);
 	}
@@ -508,7 +508,7 @@ export default class ABApplication extends ABApplicationBase {
 	 *
 	 * remove the current ABViewPage from our list of ._pages.
 	 *
-	 * @param {ABViewPage} page
+	 * @param {ABView} page
 	 * @return {Promise}
 	 */
 	pageDestroy(page) {
@@ -517,7 +517,7 @@ export default class ABApplication extends ABApplicationBase {
 
 		var resolveUrl = page.urlPointer();
 
-		return this.Model.staticData.pageDestroy(this.id, resolveUrl)
+		return this.Model.staticData.interfaceDestroy(this.id, 'page', resolveUrl)
 			.then(() => {
 				// TODO : Should update _AllApplications in 
 			});
@@ -531,7 +531,7 @@ export default class ABApplication extends ABApplicationBase {
 	 *
 	 * persist the current ABViewPage in our list of ._pages.
 	 *
-	 * @param {ABViewPage} object
+	 * @param {ABView} object
 	 * @return {Promise}
 	 */
 	pageSave(page) {
@@ -544,7 +544,7 @@ export default class ABApplication extends ABApplicationBase {
 			data = page.toObj();
 
 		// return this.save();
-		return this.Model.staticData.pageSave(this.id, resolveUrl, data)
+		return this.Model.staticData.interfaceSave(this.id, 'page', resolveUrl, data)
 			.then(() => {
 
 				// TODO : Should update _AllApplications in 
@@ -557,6 +557,57 @@ export default class ABApplication extends ABApplicationBase {
 			});
 
 	}
+
+
+	///
+	/// Views
+	///
+
+
+	/**
+	 * @method viewDestroy()
+	 *
+	 * remove the current ABView from our list of ._views.
+	 *
+	 * @param {ABView} view
+	 * @return {Promise}
+	 */
+	viewDestroy(view) {
+
+		// return this.save();
+
+		var resolveUrl = view.urlPointer();
+
+		return this.Model.staticData.interfaceDestroy(this.id, 'view', resolveUrl)
+			.then(() => {
+			});
+
+	}
+
+
+
+	/**
+	 * @method viewSave()
+	 *
+	 * persist the current ABView in our list of ._views.
+	 *
+	 * @param {ABView} view
+	 * @return {Promise}
+	 */
+	viewSave(view) {
+
+		var resolveUrl = view.urlPointer(),
+			data = view.toObj();
+
+		// return this.save();
+		return this.Model.staticData.interfaceSave(this.id, 'view', resolveUrl, data)
+			.then(() => {
+
+			});
+
+	}
+
+
 
 
 

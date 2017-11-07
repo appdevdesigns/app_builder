@@ -542,6 +542,22 @@ console.error('!! todo: onBeforeEditStop() editing');
 		// Expose any globally accessible Actions:
 		this.actions({
 
+            /**
+             * @function selectInterfacePage()
+             *
+             * Select the page Workspace with the provided ABViewPage.
+             *
+             * @param {ABViewPage} view     current ABViewPage instance we are working with.
+             */
+			selectInterfacePage: function(view) {
+
+				var List = $$(ids.list);
+
+				if (List.getSelectedId() != view.id) {
+					List.select(view.id);
+				}
+
+			}
 
 		})
 
