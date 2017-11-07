@@ -100,11 +100,17 @@ export default class ABViewContainer extends ABView {
 			component: App.unique(idBase + '_component')
 		}
 
+		var cellHeight = 250;
+		if (this.key == "form" || this.key == "detail") {
+			cellHeight = 70;
+		}
 
 		var _ui = {
 			rows: [{
 				id: ids.component,
 				view: "dashboard",
+				css: "ab-"+this.key+"-container",
+				cellHeight: cellHeight,
 				gridColumns: this.settings.columns || ABPropertyComponentDefaults.columns
 			}]
 		};
@@ -127,7 +133,7 @@ export default class ABViewContainer extends ABView {
 
 					// specific viewId to .name, it will be used to save view position
 					name: child.id,
-
+					css: 'ab-widget-container',
 					body: {
 						rows: [
 							{
