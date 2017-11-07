@@ -309,7 +309,7 @@ export default class ABViewTab extends ABViewWidget {
 				});
 
 				popup.getHead().setHTML(L('ab.component.tab.editTab', '*Edit Tab'));
-				button.setValue(L('ab.common.edit', "*Edit"));
+				button.setValue(L('ab.common.edit', "*Save"));
 			}
 			// Add new tab
 			else {
