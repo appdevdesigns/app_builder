@@ -25,7 +25,7 @@ module.exports = {
     /* Objects */
 
     /**
-     * PUT /app_builder/application/:appID
+     * PUT /app_builder/application/:appID/object
      * 
      * Add/Update a object into ABApplication
      */
@@ -129,14 +129,13 @@ module.exports = {
     /* Pages */
 
     /**
-     * PUT /app_builder/application/:appID/interface
+     * PUT /app_builder/application/:appID/page
      * 
-     * Add/Update a page/view into ABApplication
+     * Add/Update a page into ABApplication
      */
-    interfaceSave: function (req, res) {
+    pageSave: function (req, res) {
         var appID = req.param('appID');
         var resolveUrl = req.body.resolveUrl;
-        var type = req.body.type; // 'page' or 'view'
         var vals = req.body.data;
 
         Promise.resolve()
@@ -170,7 +169,7 @@ module.exports = {
                     // update
                     if (updateItem) {
 
-                        var ignoreProps = ['id', 'pages', '_pages', 'views', '_views'];
+                        var ignoreProps = ['id', 'pages', '_pages'];
 
                         // clear old values
                         for (var key in updateItem) {
@@ -205,14 +204,7 @@ module.exports = {
                         // add new page/view to the parent
                         if (parent && parent.push) {
 
-                            // ABViewPage
-                            if (type == 'page') {
-                                parent.push(new ABViewPage(vals, data.appClass));
-                            }
-                            // ABView
-                            else {
-                                parent.push(vals);
-                            }
+                            parent.push(new ABViewPage(vals, data.appClass));
 
                         }
                     }
@@ -242,7 +234,7 @@ module.exports = {
                 // Update page's nav view
                 return new Promise((resolve, reject) => {
 
-                    if (type != 'page' || data == null) return resolve();
+                    if (data == null) return resolve();
 
                     var pageClass = data.appClass._pages.filter(p => p.id == vals.id)[0];
 
@@ -270,14 +262,13 @@ module.exports = {
     },
 
     /**
-     * DELETE /app_builder/application/:appID/interface
+     * DELETE /app_builder/application/:appID/page
      * 
-     * Delete a page/view in ABApplication
+     * Delete a page in ABApplication
      */
-    interfaceDestroy: function (req, res) {
+    pageDestroy: function (req, res) {
         var appID = req.param('appID');
         var resolveUrl = req.body.resolveUrl;
-        var type = req.body.type; // 'page' or 'view'
         var pageName;
 
         Promise.resolve()
@@ -347,7 +338,6 @@ module.exports = {
                 return new Promise((resolve, reject) => {
 
                     if (Application == null ||
-                        type == 'page' ||
                         !pageName)
                         return resolve();
 

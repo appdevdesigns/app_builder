@@ -109,7 +109,7 @@ export default class ABViewContainer extends ABView {
 			rows: [{
 				id: ids.component,
 				view: "dashboard",
-				css: "ab-"+this.key+"-container",
+				css: "ab-" + this.key + "-container",
 				cellHeight: cellHeight,
 				gridColumns: this.settings.columns || ABPropertyComponentDefaults.columns
 			}]
@@ -297,31 +297,20 @@ export default class ABViewContainer extends ABView {
 
 				var viewState = Dashboard.serialize();
 
-				var updateTasks = []
-
 				// save view position state to views
 				this.views().forEach((v) => {
 
-					updateTasks.push(function (next) {
+					var state = viewState.filter((vs) => vs.name == v.id)[0];
+					if (state) {
 
-						var state = viewState.filter((vs) => vs.name == v.id)[0];
-						if (state) {
-
-							v.position.x = state.x;
-							v.position.y = state.y;
-						}
-
-						// WARNING: put to server many times
-						v.save()
-							.catch(next)
-							.then(() => { next() });
-
-					});
+						v.position.x = state.x;
+						v.position.y = state.y;
+					}
 
 				});
 
-				// update position of sub-child respectively
-				async.series(updateTasks);
+				// save template layout
+				this.save();
 
 			},
 

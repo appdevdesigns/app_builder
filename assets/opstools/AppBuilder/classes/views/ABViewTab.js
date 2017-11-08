@@ -238,7 +238,7 @@ export default class ABViewTab extends ABViewWidget {
 						text: L('ab.interface.component.tab.confirmDeleteMessage', 'Do you want to delete <b>{0}</b>?').replace('{0}', deletedView.label),
 						callback: (result) => {
 							if (result) {
-								deletedView.destroy();
+								this.viewDestroy(deletedView);
 
 								// remove tab option
 								$$(ids.component).removeView(tabId);
@@ -272,7 +272,10 @@ export default class ABViewTab extends ABViewWidget {
 
 		// get current instance and .addTab()
 		var LayoutView = _logic.currentEditObject();
-		return LayoutView.addTab(tabName);
+		LayoutView.addTab(tabName);
+
+		// trigger a save()
+		this.propertyEditorSave(ids, LayoutView);
 
 	}
 
@@ -283,12 +286,12 @@ export default class ABViewTab extends ABViewWidget {
 		var LayoutView = _logic.currentEditObject();
 		var editedTab = LayoutView.views(v => v.id == tabId)[0];
 
-		if (!editedTab) return Promise.resolve();
+		if (!editedTab) return;
 
 		editedTab.label = tabName;
 
-		// save
-		return editedTab.save();
+		// trigger a save()
+		this.propertyEditorSave(ids, LayoutView);
 
 	}
 
@@ -409,33 +412,11 @@ export default class ABViewTab extends ABViewWidget {
 
 										// add
 										if (vals.id == null) {
-											this.addTab(ids, _logic, vals.label)
-												.catch(() => {
-													// TODO : Error message
-													this.popupOk();
-												})
-												.then(() => {
-													this.popupOk();
-													this.popupClose();
-
-													// refresh editor view
-													_logic.currentEditObject().emit('properties.updated', this);
-												});
+											this.addTab(ids, _logic, vals.label);
 										}
 										// edit
 										else {
-											this.editTab(ids, _logic, vals.id, vals.label)
-												.catch(() => {
-													// TODO : Error message
-													this.popupOk();
-												})
-												.then(() => {
-													this.popupOk();
-													this.popupClose();
-
-													// refresh editor view
-													_logic.currentEditObject().emit('properties.updated', this);
-												});
+											this.editTab(ids, _logic, vals.id, vals.label);
 										}
 
 									}
@@ -490,13 +471,10 @@ export default class ABViewTab extends ABViewWidget {
 
 	addTab(tabName) {
 
-		var newTab = ABViewManager.newView({
+		this._views.push(ABViewManager.newView({
 			key: ABViewContainer.common().key,
 			label: tabName
-		}, this.application, this);
-
-
-		return newTab.save();
+		}, this.application, this));
 
 	}
 

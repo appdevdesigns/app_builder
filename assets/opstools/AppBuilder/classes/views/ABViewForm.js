@@ -180,8 +180,8 @@ export default class ABViewForm extends ABViewContainer {
 
 			}
 
-			// refresh editor view
-			currView.emit('properties.updated', this);
+			// trigger a save()
+			this.propertyEditorSave(ids, currView);
 
 		};
 
@@ -205,8 +205,7 @@ export default class ABViewForm extends ABViewContainer {
 				newView.position.y = yPosition;
 
 			// add a new component
-			newView.save();
-			// FormView._views.push(newView);
+			FormView._views.push(newView);
 
 			// update properties when a sub-view is destroyed
 			newView.once('destroyed', () => { this.propertyEditorPopulate(ids, FormView); });

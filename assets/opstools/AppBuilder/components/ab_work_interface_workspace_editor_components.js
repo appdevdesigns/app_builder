@@ -125,8 +125,7 @@ export default class AB_Work_Interface_Workspace_Editor_Components extends OP.Co
 
 				var newComp = component.newInstance(CurrentView.application, CurrentView);
 
-				// CurrentView.viewSave(newComp)
-				newComp.save()
+				CurrentView.viewSave(newComp)
 					.then(() => {
 
 						// callback to parent

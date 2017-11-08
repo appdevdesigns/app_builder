@@ -149,7 +149,7 @@ export default class ABViewLayout extends ABView  {
 					callback: (result) => {
 						if (result) {
 
-							view.destroy()
+							this.viewDestroy(view)
 								.then(()=>{
 
 									// refresh the editor interface.
