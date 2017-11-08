@@ -512,7 +512,12 @@ export default class ABViewTab extends ABViewWidget {
 						view: 'tabview',
 						id: ids.component,
 						multiview: {
-							height: this.settings.height
+							height: this.settings.height,
+							on: {
+								onViewChange: function(prevId, nextId) {
+									_onShow(nextId);
+								}
+							}
 						},
 						cells: viewComponents.map((v) => {
 
@@ -564,8 +569,12 @@ export default class ABViewTab extends ABViewWidget {
 
 		}
 
-		var _onShow = () => {
+		var _onShow = (viewId) => {
+
 			viewComponents.forEach((v) => {
+
+				// ignore other views
+				if (viewId != null && v.view.id != viewId) return;
 
 				if (v.component &&
 					v.component.onShow)
