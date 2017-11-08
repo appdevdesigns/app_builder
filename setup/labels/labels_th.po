@@ -274,7 +274,7 @@ msgstr "จัดกลุ่ม"
 #. code: th
 #. key: ab.object.title
 msgid "Objects"
-msgstr "Objects"
+msgstr "ข้อมูล"
 
 #. path: app_builder
 #. code: th
@@ -1210,7 +1210,7 @@ msgstr "[th] Do you want to delete <b>{0}</b>?"
 #. code: th
 #. key: ab.interface.properties
 msgid "Properties"
-msgstr "[th] Properties"
+msgstr "คุณสมบัติ"
 
 #. path: app_builder
 #. code: th
@@ -1228,7 +1228,7 @@ msgstr "[th] Block"
 #. code: th
 #. key: ab.interface.viewModePreview
 msgid "Preview"
-msgstr "[th] Preview"
+msgstr "ภาพตัวอย่าง"
 
 #. path: app_builder
 #. code: th
@@ -1282,7 +1282,7 @@ msgstr "[th] Blank Page"
 #. code: th
 #. key: ab.interface.title
 msgid "Interface"
-msgstr "[th] Interface"
+msgstr "ส่วนแสดงผล"
 
 #. path: app_builder
 #. code: th
