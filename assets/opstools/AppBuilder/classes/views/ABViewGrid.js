@@ -553,6 +553,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		view.populatePopupEditors(view);
 		
 		// when a change is made in the properties the popups need to reflect the change
+		view.removeAllListeners('properties.updated');
 		view.addListener('properties.updated', function() {
 			view.populateEditor(ids, view);
 			view.populatePopupEditors(view);

@@ -360,6 +360,7 @@ export default class ABViewDataCollection extends ABView {
 		$$(ids.loadAll).setValue(view.settings.loadAll != null ? view.settings.loadAll : ABViewPropertyComponentDefaults.loadAll);
 
 		// when a change is made in the properties the popups need to reflect the change
+		view.removeAllListeners('properties.updated');
 		view.addListener('properties.updated', () => {
 			this.populatePopupEditors(view);
 		});
