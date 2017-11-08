@@ -212,10 +212,9 @@ steal(
 													view: "button", label: "Close", width: 100, align: "right",
 													click: function () {
 
-														if (self.previousPage && self.previousPage.settings.type != 'popup')
-															self.showPage(self.previousPage);
-														else
-															self.showPage();
+														// switch to the previous page
+														self.showPage();
+
 													}
 												}
 											]
@@ -290,7 +289,7 @@ steal(
 						showPage: function (pageId) {
 							var self = this;
 
-							pageId = pageId || (self.rootPage ? self.rootPage.id : null);
+							pageId = pageId || self.previousPageId || (self.rootPage ? self.rootPage.id : null);
 
 							if (pageId == null) return;
 
