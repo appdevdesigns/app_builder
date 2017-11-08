@@ -238,19 +238,16 @@ export default class ABViewContainer extends ABView {
 
 							var Dashboard = $$(ids.component);
 
-
-							// remove UI of this component in template
-							var deletedElem = Dashboard.queryView({ name: id });
-							if (deletedElem)
-								Dashboard.removeView(deletedElem);
-
-
 							deletedView.destroy()
 								.then(() => {
 
 									// signal the current view has been deleted.
 									deletedView.emit('destroyed', deletedView);
 
+									// remove UI of this component in template
+									var deletedElem = Dashboard.queryView({ name: id });
+									if (deletedElem)
+										Dashboard.removeView(deletedElem);
 
 									_logic.showEmptyPlaceholder();
 
