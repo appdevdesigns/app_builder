@@ -60,6 +60,11 @@ steal(
 								self.rootPage = self.data.application.urlResolve(self.options.page);
 
 								self.initPage();
+
+								webix.ready(function () {
+									self.showPage();
+								});
+	
 							});
 
 
@@ -91,10 +96,6 @@ steal(
 							var self = this;
 
 							self.renderPageContainer();
-
-							webix.ready(function () {
-								self.showPage();
-							});
 
 							self.initEvents(self.rootPage);
 
