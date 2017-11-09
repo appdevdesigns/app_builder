@@ -691,7 +691,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 				selectedData = row[relationName].map(function (d) {
 					// display label in format
 					if (d)
-						d.__text = d.__text || linkedObject.displayData(d);
+						d.text = d.text || linkedObject.displayData(d);
 
 					return d;
 				});
@@ -699,7 +699,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 			}
 			else {
 				selectedData = row[relationName];
-				selectedData.__text = (selectedData.__text || linkedObject.displayData(selectedData));
+				selectedData.text = (selectedData.text || linkedObject.displayData(selectedData));
 			}
 		}
 
