@@ -350,7 +350,7 @@ export default class ABViewTab extends ABViewWidget {
 			button.disable();
 	}
 
-	static popupOk() {
+	static popupReady() {
 		var button = $$("ab-component-tab-save-button");
 
 		if (button)
@@ -418,6 +418,10 @@ export default class ABViewTab extends ABViewWidget {
 										else {
 											this.editTab(ids, _logic, vals.id, vals.label);
 										}
+
+										this.popupReady();
+
+										this.popupClose();
 
 									}
 
