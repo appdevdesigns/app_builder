@@ -321,6 +321,20 @@ export default class ABViewDataCollection extends ABView {
 									label: ""
 								}
 							]
+						},
+						{
+							view: "select",
+							name: "fixSelect",
+							label: L('ab.component.datacollection.fixSelect', '*Select:'),
+							labelWidth: App.config.labelWidthLarge,
+							options: [],
+							on: {
+								onChange: function (newv, oldv) {
+									if (newv == oldv) return;
+
+									// _logic.selectObject(newv);
+								}
+							}
 						}
 					]
 				}
@@ -358,6 +372,20 @@ export default class ABViewDataCollection extends ABView {
 
 		// set .loadAll flag
 		$$(ids.loadAll).setValue(view.settings.loadAll != null ? view.settings.loadAll : ABViewPropertyComponentDefaults.loadAll);
+
+		// populate data items to fix select options
+		var object = view.datasource;
+		var dataItems = view.getData().map((item) => {
+			return {
+				id: item.id,
+				value: object.displayData(item)
+			}
+		});
+		dataItems.unshift({ id: '', value: L('ab.component.datacollection.fixSelect', '*Select fix cursor') });
+
+		$$(ids.fixSelect).define("options", dataItems);
+		$$(ids.fixSelect).refresh();
+		$$(ids.fixSelect).setValue(view.settings.fixSelect || '');
 
 		// when a change is made in the properties the popups need to reflect the change
 		this.updateEventIds = this.updateEventIds || {}; // { viewId: boolean, ..., viewIdn: boolean }
@@ -432,6 +460,9 @@ export default class ABViewDataCollection extends ABView {
 
 		// set loadAll flag
 		view.settings.loadAll = $$(ids.loadAll).getValue();
+
+		// set fix select value
+		view.settings.fixSelect = $$(ids.fixSelect).getValue();
 
 		// refresh data collection
 		view.init();
@@ -688,6 +719,10 @@ export default class ABViewDataCollection extends ABView {
 		this.loadData()
 			.then(() => {
 
+				// set static cursor
+				if (this.settings.fixSelect)
+					this.setCursor(this.settings.fixSelect);
+
 				var linkDc = this.dataCollectionLink;
 				if (linkDc) {
 
@@ -798,6 +833,11 @@ export default class ABViewDataCollection extends ABView {
 
 
 	setCursor(rowId) {
+
+		// If the static cursor is set, then this DC could not set cursor to other rows
+		if (this.settings.fixSelect && 
+			this.settings.fixSelect != rowId)
+			return;
 
 		var dc = this.__dataCollection;
 		if (dc) {

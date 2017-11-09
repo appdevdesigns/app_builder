@@ -424,6 +424,11 @@ export default class ABViewForm extends ABViewContainer {
 
 				dc.bind(Form);
 
+				var currData = dc.getCursor();
+				if (currData) {
+					_logic.displayData(currData);
+				}
+
 				// listen DC events
 				dc.removeListener('changeCursor', _logic.displayData)
 					.on('changeCursor', _logic.displayData);

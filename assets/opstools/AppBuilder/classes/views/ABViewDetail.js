@@ -344,6 +344,11 @@ export default class ABViewDetail extends ABViewContainer {
 			var dc = this.dataCollection();
 			if (dc) {
 
+				var currData = dc.getCursor();
+				if (currData) {
+					_logic.displayData(currData);
+				}
+
 				dc.removeListener('changeCursor', _logic.displayData)
 					.on('changeCursor', _logic.displayData);
 
