@@ -143,7 +143,7 @@ export default class ABWorkObjectDatatable extends OP.Component {
                     }
     			},
     			onBeforeEditStop: function (state, editor) {
-console.error('!! ToDo: onBeforeEditStop()');
+console.warn('!! ToDo: onBeforeEditStop()');
     				// var column = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.name == editor.column; });
 
     				// if (!column || column.length < 1) return true;
@@ -194,11 +194,11 @@ console.error('!! ToDo: onBeforeEditStop()');
                     _logic.onAfterColumnDrop(sourceId, targetId, event);
     			},
     			onAfterColumnShow: function (id) {
-console.error('!! ToDo: onAfterColumnShow()');
+console.warn('!! ToDo: onAfterColumnShow()');
     				// $$(self.webixUiId.visibleFieldsPopup).showField(id);
     			},
     			onAfterColumnHide: function (id) {
-console.error('!! ToDo: onAfterColumnHide()');
+console.warn('!! ToDo: onAfterColumnHide()');
     				// $$(self.webixUiId.visibleFieldsPopup).hideField(id);
     			},
 

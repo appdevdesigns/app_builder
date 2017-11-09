@@ -440,7 +440,9 @@ export default class ABViewContainer extends ABView {
 						curRowIndex = v.position.y || rows.length;
 						curColIndex = 0;
 
-						var rowNew = { cols: [] }
+						var rowNew = { 
+							cols: [] 
+						};
 
 						// Create columns following setting value
 						var colNumber = this.settings.columns || ABPropertyComponentDefaults.columns;
@@ -495,6 +497,8 @@ export default class ABViewContainer extends ABView {
 				// Initial component
 				component.init();
 			}
+
+			_onShow();
 
 		};
 

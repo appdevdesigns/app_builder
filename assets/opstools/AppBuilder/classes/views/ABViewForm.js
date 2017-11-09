@@ -28,7 +28,8 @@ var ABViewFormDefaults = {
 var ABViewFormPropertyComponentDefaults = {
 	showLabel: true,
 	labelPosition: 'left',
-	labelWidth: 120
+	labelWidth: 120,
+	height: 200
 }
 
 export default class ABViewForm extends ABViewContainer {
@@ -93,6 +94,7 @@ export default class ABViewForm extends ABViewContainer {
 
 		// convert from "0" => 0
 		this.settings.labelWidth = parseInt(this.settings.labelWidth);
+		this.settings.height = parseInt(this.settings.height || ABViewFormDefaults.height);
 
 	}
 
@@ -265,6 +267,12 @@ export default class ABViewForm extends ABViewContainer {
 				view: 'counter',
 				label: L('ab.components.form.labelWidth', "*Label Width"),
 				labelWidth: App.config.labelWidthLarge
+			},
+			{
+				view: 'counter',
+				name: "height",
+				label: L("ab.component.form.height", "*Height:"),
+				labelWidth: App.config.labelWidthLarge,
 			}
 		]);
 
@@ -304,6 +312,7 @@ export default class ABViewForm extends ABViewContainer {
 		$$(ids.showLabel).setValue(view.settings.showLabel || ABViewFormPropertyComponentDefaults.showLabel);
 		$$(ids.labelPosition).setValue(view.settings.labelPosition || ABViewFormPropertyComponentDefaults.labelPosition);
 		$$(ids.labelWidth).setValue(view.settings.labelWidth || ABViewFormPropertyComponentDefaults.labelWidth);
+		$$(ids.height).setValue(view.settings.height || ABViewFormPropertyComponentDefaults.height);
 	}
 
 	static propertyEditorValues(ids, view) {
@@ -314,6 +323,7 @@ export default class ABViewForm extends ABViewContainer {
 		view.settings.showLabel = $$(ids.showLabel).getValue();
 		view.settings.labelPosition = $$(ids.labelPosition).getValue();
 		view.settings.labelWidth = $$(ids.labelWidth).getValue();
+		view.settings.height = $$(ids.height).getValue();
 
 	}
 
@@ -388,6 +398,7 @@ export default class ABViewForm extends ABViewContainer {
 		// an ABViewForm_ is a collection of rows:
 		var _ui = {
 			view: "scrollview",
+			height: this.settings.height || ABViewFormPropertyComponentDefaults.height,
 			body: {
 				id: ids.component,
 				view: 'form',
@@ -402,7 +413,9 @@ export default class ABViewForm extends ABViewContainer {
 			component.init(options);
 
 			var Form = $$(ids.component);
-			webix.extend(Form, webix.ProgressBar);
+			if (Form) {
+				webix.extend(Form, webix.ProgressBar);
+			}
 
 
 			// attach all the .UI views:
@@ -421,13 +434,6 @@ export default class ABViewForm extends ABViewContainer {
 			// bind a data collection to form component
 			var dc = this.dataCollection();
 			if (dc) {
-
-				dc.bind(Form);
-
-				var currData = dc.getCursor();
-				if (currData) {
-					_logic.displayData(currData);
-				}
 
 				// listen DC events
 				dc.removeListener('changeCursor', _logic.displayData)
@@ -467,8 +473,7 @@ export default class ABViewForm extends ABViewContainer {
 						var values = {};
 						f.field().defaultValue(values);
 
-						if (values[colName] != null)
-							f.field().setValue($$(comp.ui.id), values[colName]);
+						f.field().setValue($$(comp.ui.id), values[colName]);
 					});
 					var normalFields = this.fieldComponents((comp) => !(comp instanceof ABViewFormCustom));
 					normalFields.forEach((f) => {
@@ -563,6 +568,8 @@ export default class ABViewForm extends ABViewContainer {
 
 		var _onShow = () => {
 
+			var Form = $$(ids.component);
+
 			var customFields = this.fieldComponents((comp) => comp instanceof ABViewFormCustom);
 			customFields.forEach((f) => {
 
@@ -585,6 +592,10 @@ export default class ABViewForm extends ABViewContainer {
 			var data = null;
 			var dc = this.dataCollection();
 			if (dc) {
+
+				if (Form)
+					dc.bind(Form);
+
 				data = dc.getCursor();
 
 				// select parent data to default value
@@ -598,7 +609,9 @@ export default class ABViewForm extends ABViewContainer {
 
 			// do this for the initial form display so we can see defaults
 			_logic.displayData(data);
-			$$(ids.component).adjust();
+
+			if (Form)
+				Form.adjust();
 
 		};
 
