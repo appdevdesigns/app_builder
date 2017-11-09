@@ -598,6 +598,9 @@ export default class ABViewForm extends ABViewContainer {
 
 				data = dc.getCursor();
 
+				// do this for the initial form display so we can see defaults
+				_logic.displayData(data);
+			
 				// select parent data to default value
 				var linkDc = dc.dataCollectionLink;
 				if (data == null && linkDc) {
@@ -606,9 +609,10 @@ export default class ABViewForm extends ABViewContainer {
 					_logic.displayParentData(parentData);
 				}
 			}
-
-			// do this for the initial form display so we can see defaults
-			_logic.displayData(data);
+			else {
+				// show blank data in the form
+				_logic.displayData(null);
+			}
 
 			if (Form)
 				Form.adjust();
