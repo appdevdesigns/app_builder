@@ -176,33 +176,7 @@ class ABFieldUser extends ABFieldSelectivity {
 		this.settings.editable = parseInt(this.settings.editable);
 		this.settings.isMultiple = parseInt(this.settings.isMultiple);
 		this.settings.isCurrentUser = parseInt(this.settings.isCurrentUser);
-		
-		this._currentUser = function() {
-			if (typeof window._currentUser == "undefined") {
-				OP.Comm.Service.get({ url: "/site/user/data" }).then((data) => {
-					var user1 = [{ id: data.user.username, text: data.user.username }];
-					var user2 = data.user.username
-					window._currentUser = {
-						selectivity: user1,
-						webix: user2
-					};
-					if (this.settings.isMultiple) {
-						return window._currentUser.selectivity;						
-					} else {
-						return window._currentUser.webix;
-					}
-				});			
-			} else {
-				if (this.settings.isMultiple) {
-					return window._currentUser.selectivity;						
-				} else {
-					return window._currentUser.webix;
-				}				
-			}
 
-		}
-		var currentUser = this._currentUser();
-		
 	}
 
 	// return the default values for this DataField
@@ -387,10 +361,16 @@ class ABFieldUser extends ABFieldSelectivity {
 	 */
 	defaultValue(values) {
 		if (this.settings.isCurrentUser) {
+
 			if (this.settings.isMultiple) {
-				values[this.columnName] = window._currentUser.selectivity;				
-			} else {
-				values[this.columnName] = window._currentUser.webix;								
+
+				values[this.columnName] = {
+					id: OP.User.username(),
+					text: OP.User.username()
+				};
+			}
+			else {
+				values[this.columnName] = OP.User.username();
 			}
 		}
 	}

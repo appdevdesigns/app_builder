@@ -10,34 +10,6 @@ AD.Control.OpsTool.extend('BuildApp', {
 
 	init: function (element, options) {
 		var self = this;
-		
-		if (typeof window._currentUser == "undefined") {
-			
-			var xmlHttp = null;
-			xmlHttp     = new XMLHttpRequest();
-
-			xmlHttp.open( "GET", "/site/user/data", false );
-			xmlHttp.send( null );
-
-			var json = xmlHttp.responseText;
-			var obj = JSON.parse(json);
-
-			var user1 = [{ id: obj.data.user.username, text: obj.data.user.username }];
-			var user2 = obj.data.user.username
-			window._currentUser = {
-				selectivity: user1,
-				webix: user2
-			};
-
-			// OP.Comm.Service.get({ url: "/site/user/data" }).then((data) => {
-			// 	var user1 = [{ id: data.user.username, text: data.user.username }];
-			// 	var user2 = data.user.username
-			// 	window._currentUser = {
-			// 		selectivity: user1,
-			// 		webix: user2
-			// 	};
-			// });			
-		}
 
 		options = AD.defaults({
 			templateDOM: '/opstools/BuildApp/views/BuildApp/BuildApp.ejs',
