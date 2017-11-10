@@ -235,9 +235,7 @@ class ABFieldUser extends ABFieldSelectivity {
 		else {
 			if (this.settings.editable = 1) {
 				config.editor = 'richselect';
-				this.getUsers().then(function (data) {
-					config.options = data;
-				});
+				config.options = this.getUsers();
 			}
 		}
 		return config;
@@ -276,20 +274,20 @@ class ABFieldUser extends ABFieldSelectivity {
 				multiple: true,
 				placeholder: placeholder,
 				data: row[this.columnName],
-				// items: this._users(),
+				items: this.getUsers(),
 				isUsers: true,
-				ajax: {
-					url: 'It will call url in .getOptions function', // require
-					minimumInputLength: 0,
-					quietMillis: 0,
-					fetch: (url, init, queryOptions) => {
-						return this.getUsers().then(function (data) {
-							return {
-								results: data
-							};
-						});
-					}
-				},
+				// ajax: {
+				// 	url: 'It will call url in .getOptions function', // require
+				// 	minimumInputLength: 0,
+				// 	quietMillis: 0,
+				// 	fetch: (url, init, queryOptions) => {
+				// 		return this.getUsers().then(function (data) {
+				// 			return {
+				// 				results: data
+				// 			};
+				// 		});
+				// 	}
+				// },
 				readOnly: readOnly
 			}, App, row);
 
@@ -454,41 +452,22 @@ class ABFieldUser extends ABFieldSelectivity {
 	}
 	
 	getUsers() {
-		return new Promise(
-			(resolve, reject) => {
-				if (typeof window._users == "undefined") {
-					OP.Comm.Service.get({ url: "/appdev-core/siteuser" }).then((data) => {
-						var items1 = data.map(function (item) {
-							return {
-								id: item.username,
-								text: item.username
-							}
-						});
-						var items2 = data.map(function (item) {
-							return {
-								id: item.username,
-								value: item.username
-							}
-						});
-						window._users = {
-							selectivity: items1,
-							webix: items2
-						};
-						if (this.settings.isMultiple) {
-							resolve(window._users.selectivity);								
-						} else {
-							resolve(window._users.webix);
-						}
-					});							
-				} else {
-					if (this.settings.isMultiple) {
-						resolve(window._users.selectivity);								
-					} else {
-						resolve(window._users.webix);
-					}
-				}
+
+		return OP.User.userlist().map((u) => {
+			var result = {
+				id: u.username
+			};
+
+			if (this.settings.isMultiple) {
+				result.text = u.username;
 			}
-		);
+			else {
+				result.value = u.username;
+			}
+
+			return result;
+		});
+
 	}
 
 
