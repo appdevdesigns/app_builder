@@ -335,10 +335,10 @@ export default class ABViewDetail extends ABViewContainer {
 		var _ui = {
 			type: "form",
 			borderless: true,
-			height: this.settings.height || ABViewDetailPropertyComponentDefaults.height,
+			// height: this.settings.height || ABViewDetailPropertyComponentDefaults.height,
 			rows: [
 				{
-					view: "scrollview",
+					// view: "scrollview",
 					body: container.ui
 				}
 			]

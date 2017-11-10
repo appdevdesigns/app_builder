@@ -397,13 +397,13 @@ export default class ABViewForm extends ABViewContainer {
 
 		// an ABViewForm_ is a collection of rows:
 		var _ui = {
-			view: "scrollview",
-			height: this.settings.height || ABViewFormPropertyComponentDefaults.height,
-			body: {
+			// view: "scrollview",
+			// height: this.settings.height || ABViewFormPropertyComponentDefaults.height,
+			// body: {
 				id: ids.component,
 				view: 'form',
 				rows: component.ui.rows
-			}
+			// }
 		};
 
 
