@@ -1,11 +1,4 @@
 /*
- * Created with Sublime Text 2.
- * User: song.chen
- * Date: 2017-11-12
- * Time: 22:12:30
- * Contact: song.chen@qunar.com
- */
-/*
  * ABFieldFile
  *
  * An ABFieldFile defines a File field type.
@@ -228,7 +221,6 @@ class ABFieldFile extends ABField {
 	}
 
 
-
 	/**
 	 * @function destroy
 	 * On a destroy operation, ask if the user wants to keep the related file.
@@ -273,32 +265,6 @@ class ABFieldFile extends ABField {
 		)
 	}
 
-
-
-
-	/**
-	 * @method toObj()
-	 *
-	 * properly compile the current state of this ABApplication instance
-	 * into the values needed for saving to the DB.
-	 *
-	 * Most of the instance data is stored in .json field, so be sure to
-	 * update that from all the current values of our child fields.
-	 *
-	 * @return {json}
-	 */
-	// toObj () {
-
-	// 	var obj = super.toObj();
-
-	// 	// obj.settings = this.settings;  // <--  super.toObj()
-
-	// 	return obj;
-	// }
-
-
-
-
 	///
 	/// Working with Actual Object Values:
 	///
@@ -314,8 +280,7 @@ class ABFieldFile extends ABField {
 	columnHeader (isObjectWorkspace) {
 		var config = super.columnHeader(isObjectWorkspace);
 
-		config.editor = false;  // 'text';  // '[edit_type]'   for your unique situation
-		// config.sort   = 'string' // '[sort_type]'   for your unique situation
+		config.editor = false; 
 
 		// populate our default template:
 		config.template = (obj) => {
@@ -328,9 +293,6 @@ class ABFieldFile extends ABField {
 
 			return fileDiv
 				.replace('#id#', this.idCustomContainer(obj) )
-
-			// return '<div id="#id#" class="ab-file-data-field">THIS IS FILE</div>'
-			// 	.replace('#id#', this.idCustomContainer(obj) )
 		}
 
 		return config;
@@ -368,7 +330,7 @@ class ABFieldFile extends ABField {
 
 		if (this.settings.limitFileSize) {
 			if (this.settings.fileSize) {
-				maximumSize = this.setting.fileSize;
+				maximumSize = this.settings.fileSize;
 			};
 		};
 
@@ -410,12 +372,6 @@ class ABFieldFile extends ABField {
 			    upload:url,
 			    inputName:'file',
 			    multiple: false,
-			    // formData:{
-			    // 	appKey:application.name,
-			    // 	permission:actionKey,
-			    // 	isWebix:true,
-			    // 	imageParam:'upload'
-			    // },
 			    on: {
 
 			    	// when a file is added to the uploader
@@ -424,7 +380,6 @@ class ABFieldFile extends ABField {
 						node.classList.remove('webix_invalid');
 						node.classList.remove('webix_invalid_cell');
 						
-
 			    		// verify file type
 	    				var acceptableTypes = typesList;
 	    				if (acceptableTypes && acceptableTypes != '') {
@@ -463,8 +418,9 @@ class ABFieldFile extends ABField {
 						// update just this value on our current object.model
 						if (row.id) {
 							var values = {};
-							values[this.columnName] = response.data.uuid;
-							values.filename = item.name;
+							values[this.columnName] = {}
+							values[this.columnName].uuid = response.data.uuid;
+							values[this.columnName].filename = item.name;
 							this.object.model().update(row.id, values)
 							.then(()=>{
 								// update the client side data object as well so other data changes won't cause this save to be reverted
@@ -530,8 +486,7 @@ class ABFieldFile extends ABField {
 					if (confirmDelete) {
 						// update just this value on our current object.model
 						var values = {};
-						values[this.columnName] = ""; // removing the reference to the image here
-						values.filename = "";
+						values[this.columnName] = {};
 						this.object.model().update(row.id, values)
 						.then(()=>{
 							// update the client side data object as well so other data changes won't cause this save to be reverted
@@ -609,11 +564,16 @@ class ABFieldFile extends ABField {
 		var fileDisplay = 'display:none';
 		var fileURL = '';
 
-		var value = obj[this.columnName];
-		// var name = obj.filename;
-		var name = "Attached File";
 
-		if ((value) && (value != '')) {
+		var value = '';
+		var name = '';
+
+		if (obj[this.columnName]) {
+			value = obj[this.columnName].uuid;
+			name = obj[this.columnName].filename;
+		};
+
+		if ((value != '') && (name != '')) {
 			iconDisplay =  'display:none';
 			fileDisplay = '';
 			fileURL =  '/opsportal/file/' + this.object.application.name + '/' + value;
@@ -658,24 +618,6 @@ class ABFieldFile extends ABField {
 	}
 
 }
-
-
-
-//// NOTE: if you need a unique [edit_type] by your returned config.editor above:
-// webix.editors = {
-//   "[edit_type]": {
-//     focus: function () {...}
-//     getValue: function () {...},
-//     setValue: function (value) {...},
-//     render: function () {...}
-//   }
-// };
-
-
-//// NOTE: if you need a unique [sort_type] by your returned config.sort above:
-// webix.DataStore.prototype.sorting.as.[sort_type] = function(a,b){ 
-//     return a > b ? 1 : -1; 
-// }
 
 
 export default ABFieldFile;

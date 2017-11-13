@@ -155,62 +155,24 @@ class ABFieldFile extends ABField {
 
 				var tableName = this.object.dbTableName();
 
-			async.series([
-			
-				(next) => {
-					// make sure there is a 'filename' json field 
-					// included:
-					knex.schema.hasColumn(tableName, 'filename')
-					.then((exists) => {
-						// create one if it doesn't exist:
-						if (!exists) {
-							knex.schema.table(tableName, (t) => {
-								t.string('filename');
+				// check to make sure we don't already have this column:
+				knex.schema.hasColumn(tableName, this.columnName)
+				.then((exists) => {
+
+					// create one if it doesn't exist:
+					if (!exists) {
+
+						return knex.schema.table(tableName, (t)=>{
+								t.json(this.columnName).nullable();
 							})
-							.then(() => {
-								next();
-							})
-							.catch(next);
-						} 
-						else next();
-					})
-					.catch(next);
-				},
-				
-				// create/alter the actual column
-				(next) => {
-					knex.schema.hasColumn(tableName, this.columnName)
-					.then((exists) => {
-						knex.schema.table(tableName, (t) => {
-							t.string(this.columnName).nullable();
-						})
-						.then(() => {
-							next();
-						})
-						.catch(next);
-					})
-					.catch(next);
-				}
-				
-			], (err) => {
-				if (err) reject(err);
-				else resolve();
-			});
+							.then(resolve, reject);
 
-			// 	// check to make sure we don't already have this column:
-			// 	knex.schema.hasColumn(tableName, this.columnName)
-			// 	.then((exists) => {
+					} else {
 
-			// 		return knex.schema.table(tableName, (t)=>{
-			// 				t.string(this.columnName).nullable();
-			// 				if (exists) {
-			// 					t.alter();
-			// 				}
-			// 			})
-			// 			.then(() => { resolve(); })
-			// 			.catch(reject);
-			// 	})
-
+						// if the column already exists, nothing to do:
+						resolve();
+					}
+				})
 			}
 		)
 
@@ -231,39 +193,6 @@ class ABFieldFile extends ABField {
 				.then(resolve)
 				.catch(reject);
 
-				// TODO: 
-				// implement the ability to remove the existing images referenced by this now-to-be-removed
-				// column from our shared OPImageUploader repository.
-				// this is a rough Pseudo Code of what should happen:
-
-				// if (this.settings.removeExistingData) {
-
-				// 	var model = this.object.model();
-				// 	model.findAll()
-				// 	.then(function(entries){
-
-				// 		var allActions = [];
-				// 		entries.forEach((e)=>{
-				// 			allActions.push(OPImageUploader.remove( e[this.columnName] ) );
-				// 		})
-
-				// 		Promise.all(allActions)
-				// 		.then(function(){
-				// 			super.migrateDrop()
-				// 			.then(resolve)
-				// 			.catch(reject);
-
-				// 		})
-				// 	})
-
-				// } else {
-
-				// 		super.migrateDrop()
-				// 		.then(resolve)
-				// 		.catch(reject);
-
-				// }
-
 			}
 		)
 	}
@@ -281,50 +210,13 @@ class ABFieldFile extends ABField {
 	jsonSchemaProperties(obj) {
 		// take a look here:  http://json-schema.org/example1.html
 
-		// if not already setup:
-		if (!obj['filename']) {
-
-			obj.filename = {
-				type:'string'
-			}
-
-		}
-
-		// // make sure our column is described in the 
-		// if (!obj.filename.properties[this.columnName]) {
-		// 	obj.filename.properties[this.columnName] = { type:'string', maxLength: 5000 }
-		// }
-
 		// if our field is not already defined:
 		if (!obj[this.columnName]) {
 
 			// techincally we are only storing the uuid as a string.
-			obj[this.columnName] = { type:'string' }
+			obj[this.columnName] = { type:['object', 'string', 'null'] };
 			
 		}
-	}
-
-	/**
-	 * @method postGet
-	 * Perform any final conditioning of data returned from our DB table before
-	 * it is returned to the client.
-	 * @param {obj} data  a json object representing the current table row
-	 */
-	postGet( data ) {
-		return new Promise(
-			(resolve, reject) => {
-
-				// if we are a multilingual field, make sure the .filename data is
-				// an object and not a string.
-				//// NOTE: a properly formatted json data in the .translations 
-				//// field should already be parsed as it is returned from 
-				//// objection.js query().
-					
-				sails.log.verbose('fileName.postGet(): ---> ('+ data.fileName +'):');
-				
-				resolve();
-			}
-		)
 	}
 
 }
