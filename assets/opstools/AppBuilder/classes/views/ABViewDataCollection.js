@@ -376,9 +376,11 @@ export default class ABViewDataCollection extends ABView {
 		});
 
 		// Add a current user option to allow select first row that match the current user
-		var userFields = object.fields((f) => f.key == 'user');
-		if (userFields.length > 0)
-			dataItems.unshift({ id: '_CurrentUser', value: L('ab.component.datacollection.currentUser', '[Current User]') });
+		if (object) {
+			var userFields = object.fields((f) => f.key == 'user');
+			if (userFields.length > 0)
+				dataItems.unshift({ id: '_CurrentUser', value: L('ab.component.datacollection.currentUser', '[Current User]') });
+		}
 
 		dataItems.unshift({ id: '', value: L('ab.component.datacollection.fixSelect', '*Select fix cursor') });
 
