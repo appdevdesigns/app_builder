@@ -109,9 +109,10 @@ steal(
 
 									// Wait until the tool's area has been shown
 									var areaKey = 'ab-' + self.data.application.name;
+									areaKey = areaKey.toLowerCase().replace(/_/g, '-');
 									var subID1, subID2;
 									var callback = function (message, data) {
-										if (!self.activated && data.area.toLowerCase() == areaKey.toLowerCase()) {
+										if (!self.activated && data.area.toLowerCase() == areaKey) {
 											self.activated = true;
 											subID1 && AD.comm.hub.unsubscribe(subID1);
 											subID2 && AD.comm.hub.unsubscribe(subID2);
