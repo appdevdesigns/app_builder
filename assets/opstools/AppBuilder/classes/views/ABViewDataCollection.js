@@ -14,6 +14,29 @@ function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
+function toDC(data) {
+	return new webix.DataCollection({
+		data: data,
+	});
+}
+
+function dataCollectionNew(data) {
+	// get a webix data collection
+	var dc = toDC(data || []);
+
+	// Apply this data collection to support multi-selection
+	// https://docs.webix.com/api__refs__selectionmodel.html
+	webix.extend(dc, webix.SelectionModel);
+
+	// override unused functions of selection model
+	dc.addCss = function () { };
+	dc.removeCss = function () { };
+	dc.render = function () { };
+
+	return dc;
+}
+
+
 
 var ABViewPropertyComponentDefaults = {
 	object: '', // id of ABObject
@@ -48,6 +71,8 @@ export default class ABViewDataCollection extends ABView {
 
 		// OP.Multilingual.translate(this, this, ['label']);
 
+		this.__dataCollection = dataCollectionNew();
+		
 		// refresh a data collection
 		// this.init();
 
@@ -661,15 +686,6 @@ export default class ABViewDataCollection extends ABView {
 	*			.resolve()
 	*/
 	init() {
-
-		var model = this.model;
-		if (model == null) return;
-
-		// If the data collection is exists, then will not initialize again
-		if (this.__dataCollection) return;
-
-		this.__dataCollection = model.dataCollectionNew();
-
 
 		this.__dataCollection.attachEvent("onAfterCursorChange", () => {
 
