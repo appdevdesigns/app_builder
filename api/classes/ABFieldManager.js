@@ -12,6 +12,7 @@ var ABFieldNumber = require( path.join(__dirname, "dataFields", "ABFieldNumber" 
 var ABFieldDate = require( path.join(__dirname, "dataFields", "ABFieldDate" ));
 var ABFieldBoolean = require( path.join(__dirname, "dataFields", "ABFieldBoolean" ));
 var ABFieldList = require( path.join(__dirname, "dataFields", "ABFieldList" ));
+var ABFieldFile = require( path.join(__dirname, "dataFields", "ABFieldFile"));
 var ABFieldImage  = require( path.join(__dirname, "dataFields", "ABFieldImage"  ));
 var ABFieldUser = require( path.join(__dirname, "dataFields", "ABFieldUser" ));
 var ABFieldConnect = require( path.join(__dirname, "dataFields", "ABFieldConnect" ));
@@ -27,8 +28,7 @@ Fields[ABFieldNumber.defaults().key] = ABFieldNumber;
 Fields[ABFieldDate.defaults().key] = ABFieldDate;
 Fields[ABFieldBoolean.defaults().key] = ABFieldBoolean;
 Fields[ABFieldList.defaults().key] = ABFieldList;
-
-
+Fields[ABFieldFile.defaults().key] = ABFieldFile;
 Fields[ABFieldImage.defaults().key] = ABFieldImage;
 Fields[ABFieldUser.defaults().key] = ABFieldUser;
 Fields[ABFieldConnect.defaults().key] = ABFieldConnect;

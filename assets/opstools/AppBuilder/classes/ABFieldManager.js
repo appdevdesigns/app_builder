@@ -13,6 +13,7 @@ import ABFieldDate from "./dataFields/ABFieldDate"
 import ABFieldBoolean from "./dataFields/ABFieldBoolean"
 import ABFieldList from "./dataFields/ABFieldList"
 import ABFieldImage from "./dataFields/ABFieldImage"
+import ABFieldFile from "./dataFields/ABFieldFile"
 import ABFieldUser from "./dataFields/ABFieldUser"
 import ABFieldConnect from "./dataFields/ABFieldConnect"
 
@@ -28,6 +29,7 @@ Fields[ABFieldDate.defaults().key] = ABFieldDate;
 Fields[ABFieldBoolean.defaults().key] = ABFieldBoolean;
 Fields[ABFieldList.defaults().key] = ABFieldList;
 Fields[ABFieldImage.defaults().key] = ABFieldImage;
+Fields[ABFieldFile.defaults().key] = ABFieldFile;
 Fields[ABFieldUser.defaults().key] = ABFieldUser;
 Fields[ABFieldConnect.defaults().key] = ABFieldConnect;
 
@@ -55,7 +57,8 @@ export default  {
 	 * @return {ABField}
 	 */
 	newField: function (values, object) {
-
+		console.log(values);
+		console.log(object);
 		if (values.key) {
 			return new Fields[values.key](values, object);
 		} else {
