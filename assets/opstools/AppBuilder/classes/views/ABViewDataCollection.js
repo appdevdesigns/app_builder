@@ -924,12 +924,12 @@ export default class ABViewDataCollection extends ABView {
 	loadData(start, limit) {
 
 		var obj = this.datasource;
+		if (obj == null) return Promise.resolve([]);
+
 		var model = obj.model();
+		if (model == null) return Promise.resolve([]);
+
 		var dc = this.__dataCollection;
-
-		if (obj == null || model == null || dc == null)
-			return Promise.resolve([]);
-
 		var wheres = this.settings.objectWorkspace.filterConditions || {};
 		var sorts = this.settings.objectWorkspace.sortConditions || {};
 
