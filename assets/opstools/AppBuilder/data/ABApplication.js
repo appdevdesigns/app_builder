@@ -65,6 +65,14 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 		// ** Pages
 
+		/**
+		 * @method pageSave
+		 * 
+		 * @param {guid} appId
+		 * @param {string} resolveUrl
+		 * @param {object} data
+		 * @return {Promise}
+		 */
 		pageSave: function (appId, resolveUrl, page) {
 
 			// remove sub-pages properties
@@ -77,7 +85,7 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 						url: '/app_builder/application/' + appId + '/page',
 						data: {
 							resolveUrl: resolveUrl,
-							page: page
+							data: page
 						}
 					}, function (err, result) {
 						if (err)
@@ -90,6 +98,13 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 			);
 		},
 
+		/**
+		 * @method pageDestroy
+		 * 
+		 * @param {guid} appId
+		 * @param {string} resolveUrl
+		 * @return {Promise}
+		 */
 		pageDestroy: function (appId, resolveUrl) {
 
 			return new Promise(
@@ -112,7 +127,6 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 			);
 
 		},
-
 
 
 	},

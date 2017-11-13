@@ -106,7 +106,7 @@ export default class ABViewTab extends ABViewWidget {
 						// Rename
 						if (e.target.classList.contains('rename')) {
 
-							ABViewTab.showPopup(tab);
+							ABViewTab.popupShow(tab);
 
 						}
 						// Reorder back
@@ -114,6 +114,7 @@ export default class ABViewTab extends ABViewWidget {
 
 							this.viewReorder(tabId, currIndex - 1);
 
+							// refresh editor view
 							this.emit('properties.updated', this);
 
 						}
@@ -122,6 +123,7 @@ export default class ABViewTab extends ABViewWidget {
 
 							this.viewReorder(tabId, currIndex + 1);
 
+							// refresh editor view
 							this.emit('properties.updated', this);
 
 						}
@@ -143,7 +145,7 @@ export default class ABViewTab extends ABViewWidget {
 
 				});
 
-			}			
+			}
 		}
 
 		var _ui = {
@@ -274,6 +276,7 @@ export default class ABViewTab extends ABViewWidget {
 
 		// trigger a save()
 		this.propertyEditorSave(ids, LayoutView);
+
 	}
 
 
@@ -281,19 +284,19 @@ export default class ABViewTab extends ABViewWidget {
 
 		// get current instance and rename tab
 		var LayoutView = _logic.currentEditObject();
-		var editTab = LayoutView.views(v => v.id == tabId)[0];
+		var editedTab = LayoutView.views(v => v.id == tabId)[0];
 
-		if (editTab) {
-			editTab.label = tabName;
+		if (!editedTab) return;
 
-			// trigger a save()
-			this.propertyEditorSave(ids, LayoutView);
-		}
+		editedTab.label = tabName;
+
+		// trigger a save()
+		this.propertyEditorSave(ids, LayoutView);
 
 	}
 
 
-	static showPopup(tab) {
+	static popupShow(tab) {
 
 		var popup = $$("ab-component-tab-add-new-tab-popup");
 		var form = $$("ab-component-tab-add-new-tab-form");
@@ -309,7 +312,7 @@ export default class ABViewTab extends ABViewWidget {
 				});
 
 				popup.getHead().setHTML(L('ab.component.tab.editTab', '*Edit Tab'));
-				button.setValue(L('ab.common.edit', "*Edit"));
+				button.setValue(L('ab.common.edit', "*Save"));
 			}
 			// Add new tab
 			else {
@@ -331,7 +334,7 @@ export default class ABViewTab extends ABViewWidget {
 
 	}
 
-	static closePopup() {
+	static popupClose() {
 
 		var popup = $$("ab-component-tab-add-new-tab-popup");
 
@@ -339,6 +342,21 @@ export default class ABViewTab extends ABViewWidget {
 			popup.hide();
 
 	}
+
+	static popupBusy() {
+		var button = $$("ab-component-tab-save-button");
+
+		if (button)
+			button.disable();
+	}
+
+	static popupReady() {
+		var button = $$("ab-component-tab-save-button");
+
+		if (button)
+			button.enable();
+	}
+
 
 	static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
 
@@ -374,7 +392,7 @@ export default class ABViewTab extends ABViewWidget {
 								css: "ab-cancel-button",
 								autowidth: true,
 								click: () => {
-									this.closePopup();
+									this.popupClose();
 								}
 							},
 							{
@@ -388,14 +406,22 @@ export default class ABViewTab extends ABViewWidget {
 									var form = $$('ab-component-tab-add-new-tab-form');
 									if (form.validate()) {
 
+										this.popupBusy();
+
 										var vals = form.getValues();
 
-										if (vals.id == null)
+										// add
+										if (vals.id == null) {
 											this.addTab(ids, _logic, vals.label);
-										else
+										}
+										// edit
+										else {
 											this.editTab(ids, _logic, vals.id, vals.label);
+										}
 
-										this.closePopup();
+										this.popupReady();
+
+										this.popupClose();
 
 									}
 
@@ -421,7 +447,7 @@ export default class ABViewTab extends ABViewWidget {
 				view: 'button',
 				value: L('ab.component.tab.addTab', '*Add Tab'),
 				click: () => {
-					this.showPopup();
+					this.popupShow();
 				}
 			}
 
@@ -490,7 +516,12 @@ export default class ABViewTab extends ABViewWidget {
 						view: 'tabview',
 						id: ids.component,
 						multiview: {
-							height: this.settings.height
+							height: this.settings.height,
+							on: {
+								onViewChange: function(prevId, nextId) {
+									_onShow(nextId);
+								}
+							}
 						},
 						cells: viewComponents.map((v) => {
 
@@ -506,7 +537,7 @@ export default class ABViewTab extends ABViewWidget {
 								header: v.view.label,
 								body: tabUi
 							};
-						})						
+						})
 					}
 				]
 			}
@@ -516,7 +547,6 @@ export default class ABViewTab extends ABViewWidget {
 				view: 'spacer'
 			};
 		}
-
 
 		var _logic = {
 
@@ -543,8 +573,12 @@ export default class ABViewTab extends ABViewWidget {
 
 		}
 
-		var _onShow = () => {
+		var _onShow = (viewId) => {
+
 			viewComponents.forEach((v) => {
+
+				// ignore other views
+				if (viewId != null && v.view.id != viewId) return;
 
 				if (v.component &&
 					v.component.onShow)

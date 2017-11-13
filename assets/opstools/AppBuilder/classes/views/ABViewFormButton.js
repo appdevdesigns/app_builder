@@ -329,8 +329,8 @@ export default class ABViewFormButton extends ABView {
 					dc.setCursor(null);
 				}
 
-				if (cancelButton.getFormView())
-					cancelButton.getFormView().clear();
+				// if (cancelButton.getFormView())
+				// 	cancelButton.getFormView().clear();
 
 				super.changePage(this.settings.afterCancel);
 			},
@@ -347,8 +347,8 @@ export default class ABViewFormButton extends ABView {
 					dc.setCursor(null);
 				}
 
-				if (resetButton.getFormView())
-					resetButton.getFormView().clear();
+				// if (resetButton.getFormView())
+				// 	resetButton.getFormView().clear();
 				
 			},
 			

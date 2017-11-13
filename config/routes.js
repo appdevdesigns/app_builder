@@ -16,7 +16,7 @@ module.exports = {
         'app_builder/ABApplicationController.objectDestroy',
 
     /* Application Pages */
-    'put /app_builder/application/:appID/page':
+    'put /app_builder/application/:appID/page':    
         'app_builder/ABApplicationController.pageSave',
 
     'delete /app_builder/application/:appID/page':

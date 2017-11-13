@@ -131,16 +131,49 @@ export default class ABViewPage extends ABViewContainer {
         this._dataCollections = dataCollections;
 
 
-        // initialize data sources
-        this._dataCollections.forEach((data) => {
-            data.init();
-        });
-
-
         // the default columns of ABView is 1
         this.settings.columns = this.settings.columns || 1;
 
         // convert from "0" => 0
+
+    }
+
+    //
+    //	Editor Related
+    //
+
+
+	/** 
+	 * @method editorComponent
+	 * return the Editor for this UI component.
+	 * the editor should display either a "block" view or "preview" of 
+	 * the current layout of the view.
+	 * @param {string} mode what mode are we in ['block', 'preview']
+	 * @return {Component} 
+	 */
+    editorComponent(App, mode) {
+
+        var comp = super.editorComponent(App, mode);
+
+
+        var _init = (options) => {
+
+            comp.init(options);
+
+            // initialize data sources
+            this._dataCollections.forEach((dc) => {
+                dc.init();
+            });
+
+
+        };
+
+
+        return {
+            ui: comp.ui,
+            init: _init,
+            logic: comp.logic
+        }
 
     }
 
@@ -205,9 +238,21 @@ export default class ABViewPage extends ABViewContainer {
             body: comp.ui
         };
 
+        var _init = (options) => {
+
+            comp.init(options);
+
+            // initialize data sources
+            this._dataCollections.forEach((dc) => {
+                dc.init();
+            });
+
+        }
+
+
         return {
             ui: _ui,
-            init: comp.init,
+            init: _init,
             logic: comp.logic,
 
             onShow: comp.onShow

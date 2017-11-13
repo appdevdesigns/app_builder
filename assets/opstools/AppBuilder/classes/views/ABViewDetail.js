@@ -24,7 +24,8 @@ var ABViewDetailDefaults = {
 var ABViewDetailPropertyComponentDefaults = {
 	showLabel: true,
 	labelPosition: 'left',
-	labelWidth: 80
+	labelWidth: 120,
+	height: 200
 }
 
 export default class ABViewDetail extends ABViewContainer {
@@ -67,6 +68,7 @@ export default class ABViewDetail extends ABViewContainer {
 
 		// convert from "0" => 0
 		this.settings.labelWidth = parseInt(this.settings.labelWidth);
+		this.settings.height = parseInt(this.settings.height);
 
 	}
 
@@ -175,6 +177,7 @@ export default class ABViewDetail extends ABViewContainer {
 			// add a new component
 			detailView._views.push(newView);
 
+
 			// update properties when a sub-view is destroyed
 			newView.once('destroyed', () => { this.propertyEditorPopulate(ids, detailView); });
 
@@ -228,6 +231,12 @@ export default class ABViewDetail extends ABViewContainer {
 				name: 'labelWidth',
 				view: 'counter',
 				label: L('ab.components.detail.labelWidth', "*Label Width"),
+			},
+			{
+				view: 'counter',
+				name: "height",
+				label: L("ab.component.detail.height", "*Height:"),
+				labelWidth: App.config.labelWidthLarge,
 			}
 
 		]);
@@ -251,8 +260,8 @@ export default class ABViewDetail extends ABViewContainer {
 		});
 
 		SourceSelector.define('options', dcOptions);
+		SourceSelector.define('value', dataCollectionId);
 		SourceSelector.refresh();
-		SourceSelector.setValue(dataCollectionId);
 
 
 		this.propertyUpdateFieldOptions(ids, view, dataCollectionId);
@@ -260,6 +269,7 @@ export default class ABViewDetail extends ABViewContainer {
 		$$(ids.showLabel).setValue(view.settings.showLabel || ABViewDetailPropertyComponentDefaults.showLabel);
 		$$(ids.labelPosition).setValue(view.settings.labelPosition || ABViewDetailPropertyComponentDefaults.labelPosition);
 		$$(ids.labelWidth).setValue(view.settings.labelWidth || ABViewDetailPropertyComponentDefaults.labelWidth);
+		$$(ids.height).setValue(view.settings.height || ABViewDetailPropertyComponentDefaults.height);
 
 		// update properties when a field component is deleted
 		view.views().forEach((v) => {
@@ -276,6 +286,7 @@ export default class ABViewDetail extends ABViewContainer {
 		view.settings.showLabel = $$(ids.showLabel).getValue();
 		view.settings.labelPosition = $$(ids.labelPosition).getValue();
 		view.settings.labelWidth = $$(ids.labelWidth).getValue();
+		view.settings.height = $$(ids.height).getValue();
 
 	}
 
@@ -324,10 +335,11 @@ export default class ABViewDetail extends ABViewContainer {
 		var _ui = {
 			type: "form",
 			borderless: true,
+			// height: this.settings.height || ABViewDetailPropertyComponentDefaults.height,
 			rows: [
 				{
-					view: "scrollview",
-					body: container.ui					
+					// view: "scrollview",
+					body: container.ui
 				}
 			]
 		};
@@ -342,6 +354,11 @@ export default class ABViewDetail extends ABViewContainer {
 			// listen DC events
 			var dc = this.dataCollection();
 			if (dc) {
+
+				var currData = dc.getCursor();
+				if (currData) {
+					_logic.displayData(currData);
+				}
 
 				dc.removeListener('changeCursor', _logic.displayData)
 					.on('changeCursor', _logic.displayData);
@@ -377,16 +394,16 @@ export default class ABViewDetail extends ABViewContainer {
 							if (options.id == val)
 								myVal = options.text;
 						});
-						
+
 						if (field.settings.hasColors) {
 							let myHex = "#66666";
-							field.settings.options.forEach(function(h) {
+							field.settings.options.forEach(function (h) {
 								if (h.text == myVal)
 									myHex = h.hex;
 							});
-							myVal = '<span class="selectivity-multiple-selected-item rendered" style="background-color:'+myHex+' !important;">'+myVal+'</span>';
-						}				
-						
+							myVal = '<span class="selectivity-multiple-selected-item rendered" style="background-color:' + myHex + ' !important;">' + myVal + '</span>';
+						}
+
 						val = myVal;
 					}
 
@@ -398,7 +415,7 @@ export default class ABViewDetail extends ABViewContainer {
 						if (val == null) {
 							val = "";
 						} else {
-							val = '<span class="selectivity-multiple-selected-item rendered" style="background-color:#eee !important; color: #666 !important; box-shadow: inset 0px 1px 1px #333;"><i style="opacity: 0.6;" class="fa fa-user"></i> '+val+'</span>';
+							val = '<span class="selectivity-multiple-selected-item rendered" style="background-color:#eee !important; color: #666 !important; box-shadow: inset 0px 1px 1px #333;"><i style="opacity: 0.6;" class="fa fa-user"></i> ' + val + '</span>';
 						}
 					}
 

@@ -400,11 +400,19 @@ class ABFieldConnect extends ABFieldSelectivity {
 	 *					unique id references.
 	 * @param {HtmlDOM} node  the HTML Dom object for this field's display.
 	 */
-	customDisplay(row, App, node, editable) {
+	customDisplay(row, App, node, editable, addNewViewId) {
 		// sanity check.
 		if (!node) { return }
 
 		var domNode = node.querySelector('.connect-data-values');
+		if (!domNode) return;
+		
+		if (typeof addNewViewId != "undefined" && domNode.parentElement.querySelector(".ab-connect-add-new") == null) {
+			var iDiv = document.createElement('div');
+			iDiv.className = 'ab-connect-add-new';
+			iDiv.innerHTML = '<a href="javascript:void(0);" class="fa fa-plus ab-connect-add-new-link"></a>';
+			domNode.parentElement.insertBefore(iDiv, domNode.parentElement.firstChild.nextSibling);
+		}
 
 		var multiselect = (this.settings.linkType == 'many');
 
@@ -538,7 +546,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 		// .common() is used to create the display in the list
 		formComponentSetting.common = () => {
 			return {
-				key: 'fieldcustom'
+				key: 'connect'
 			}
 		};
 

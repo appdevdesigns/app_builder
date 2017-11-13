@@ -54,14 +54,7 @@ steal(
 							self.initDOM();
 							self.initModels();
 
-							self.getData().then(function () {
-
-								// Store the root page
-								self.rootPage = self.data.application.urlResolve(self.options.page);
-
-								self.initPage();
-							});
-
+							self.getData();
 
 							AD.comm.hub.subscribe('opsportal.resize', function (message, data) {
 								self.height = data.height;
@@ -92,10 +85,6 @@ steal(
 
 							self.renderPageContainer();
 
-							webix.ready(function () {
-								self.showPage();
-							});
-
 							self.initEvents(self.rootPage);
 
 						},
@@ -116,26 +105,28 @@ steal(
 										}, next);
 								},
 
-								// Wait until the tool's area has been shown
 								function (next) {
-									if (self.activated) next();
-									else {
-										var areaKey = 'ab-' + self.data.application.name;
-										var subID1, subID2;
-										var callback = function (message, data) {
-											if (!self.activated && data.area == areaKey) {
-												self.activated = true;
-												subID1 && AD.comm.hub.unsubscribe(subID1);
-												subID2 && AD.comm.hub.unsubscribe(subID2);
-												next();
-											}
-										};
 
-										subID1 = AD.comm.hub.subscribe('opsportal.tool.show', callback);
-										subID2 = AD.comm.hub.subscribe('opsportal.area.show', callback);
+									// Wait until the tool's area has been shown
+									var areaKey = 'ab-' + self.data.application.name;
+									areaKey = areaKey.toLowerCase().replace(/_/g, '-');
+									var subID1, subID2;
+									var callback = function (message, data) {
+										if (!self.activated && data.area.toLowerCase() == areaKey) {
+											self.activated = true;
+											subID1 && AD.comm.hub.unsubscribe(subID1);
+											subID2 && AD.comm.hub.unsubscribe(subID2);
 
-										next();
-									}
+											self.startPage();
+
+										}
+									};
+
+									subID1 = AD.comm.hub.subscribe('opsportal.tool.show', callback);
+									subID2 = AD.comm.hub.subscribe('opsportal.area.show', callback);
+
+									next();
+
 								}
 
 							], function (err) {
@@ -144,6 +135,24 @@ steal(
 							});
 
 							return q;
+						},
+
+						startPage: function () {
+
+							var self = this;
+
+							// Wait until the tool's area has been shown
+							if (!self.activated) return;
+
+							// Store the root page
+							self.rootPage = self.data.application.urlResolve(self.options.page);
+
+							self.initPage();
+
+							webix.ready(function () {
+								self.showPage();
+							});
+
 						},
 
 						renderPageContainer: function () {
@@ -212,10 +221,9 @@ steal(
 													view: "button", label: "Close", width: 100, align: "right",
 													click: function () {
 
-														if (self.previousPage && self.previousPage.settings.type != 'popup')
-															self.showPage(self.previousPage);
-														else
-															self.showPage();
+														// switch to the previous page
+														self.showPage();
+
 													}
 												}
 											]
@@ -290,7 +298,7 @@ steal(
 						showPage: function (pageId) {
 							var self = this;
 
-							pageId = pageId || (self.rootPage ? self.rootPage.id : null);
+							pageId = pageId || self.previousPageId || (self.rootPage ? self.rootPage.id : null);
 
 							if (pageId == null) return;
 
@@ -392,6 +400,7 @@ steal(
 							}
 
 							// QUESTION: where does self.height come from?  is this a webix setting?
+							if (height == null && self.height == null) return;
 							if (height == null) height = self.height;
 
 							// track the last set of height/width values:

@@ -14,6 +14,29 @@ function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
+function toDC(data) {
+	return new webix.DataCollection({
+		data: data,
+	});
+}
+
+function dataCollectionNew(data) {
+	// get a webix data collection
+	var dc = toDC(data || []);
+
+	// Apply this data collection to support multi-selection
+	// https://docs.webix.com/api__refs__selectionmodel.html
+	webix.extend(dc, webix.SelectionModel);
+
+	// override unused functions of selection model
+	dc.addCss = function () { };
+	dc.removeCss = function () { };
+	dc.render = function () { };
+
+	return dc;
+}
+
+
 
 var ABViewPropertyComponentDefaults = {
 	object: '', // id of ABObject
@@ -48,6 +71,8 @@ export default class ABViewDataCollection extends ABView {
 
 		// OP.Multilingual.translate(this, this, ['label']);
 
+		this.__dataCollection = dataCollectionNew();
+		
 		// refresh a data collection
 		// this.init();
 
@@ -321,6 +346,13 @@ export default class ABViewDataCollection extends ABView {
 									label: ""
 								}
 							]
+						},
+						{
+							view: "select",
+							name: "fixSelect",
+							label: L('ab.component.datacollection.fixSelect', '*Select:'),
+							labelWidth: App.config.labelWidthLarge,
+							options: []
 						}
 					]
 				}
@@ -359,10 +391,37 @@ export default class ABViewDataCollection extends ABView {
 		// set .loadAll flag
 		$$(ids.loadAll).setValue(view.settings.loadAll != null ? view.settings.loadAll : ABViewPropertyComponentDefaults.loadAll);
 
-		// when a change is made in the properties the popups need to reflect the change
-		view.addListener('properties.updated', () => {
-			this.populatePopupEditors(view);
+		// populate data items to fix select options
+		var object = view.datasource;
+		var dataItems = view.getData().map((item) => {
+			return {
+				id: item.id,
+				value: object.displayData(item)
+			}
 		});
+
+		// Add a current user option to allow select first row that match the current user
+		if (object) {
+			var userFields = object.fields((f) => f.key == 'user');
+			if (userFields.length > 0)
+				dataItems.unshift({ id: '_CurrentUser', value: L('ab.component.datacollection.currentUser', '[Current User]') });
+		}
+
+		dataItems.unshift({ id: '', value: L('ab.component.datacollection.fixSelect', '*Select fix cursor') });
+
+		$$(ids.fixSelect).define("options", dataItems);
+		$$(ids.fixSelect).refresh();
+		$$(ids.fixSelect).setValue(view.settings.fixSelect || '');
+
+		// when a change is made in the properties the popups need to reflect the change
+		this.updateEventIds = this.updateEventIds || {}; // { viewId: boolean, ..., viewIdn: boolean }
+		if (!this.updateEventIds[view.id]) {
+			this.updateEventIds[view.id] = true;
+
+			view.addListener('properties.updated', () => {
+				this.populatePopupEditors(view);
+			});
+		}
 
 
 
@@ -427,6 +486,9 @@ export default class ABViewDataCollection extends ABView {
 
 		// set loadAll flag
 		view.settings.loadAll = $$(ids.loadAll).getValue();
+
+		// set fix select value
+		view.settings.fixSelect = $$(ids.fixSelect).getValue();
 
 		// refresh data collection
 		view.init();
@@ -625,12 +687,6 @@ export default class ABViewDataCollection extends ABView {
 	*/
 	init() {
 
-		var model = this.model;
-		if (model == null) return;
-
-		this.__dataCollection = model.dataCollectionNew();
-
-
 		this.__dataCollection.attachEvent("onAfterCursorChange", () => {
 
 			var currData = this.getCursor();
@@ -682,6 +738,48 @@ export default class ABViewDataCollection extends ABView {
 		// load data to initial the data collection
 		this.loadData()
 			.then(() => {
+
+				// set static cursor
+				if (this.settings.fixSelect) {
+
+					// set cursor to the current user
+					if (this.settings.fixSelect == "_CurrentUser") {
+
+						var username = OP.User.username();
+						var userFields = this.datasource.fields((f) => f.key == "user");
+
+						// find a row that contains the current user
+						var row = this.__dataCollection.find((r) => {
+
+							var found = false;
+
+							userFields.forEach((f) => {
+
+								if (found) return;
+
+								if (r[f.columnName].filter) { // Array - isMultiple
+									found = r[f.colName].filter((data) => data.id == username).length > 0;
+								}
+								else if (r[f.columnName] == username) {
+									found = true;
+								}
+
+							});
+
+							return found;
+
+						}, true);
+
+						// set a first row of current user to cursor
+						if (row)
+							this.__dataCollection.setCursor(row.id);
+					}
+					else {
+						this.setCursor(this.settings.fixSelect);
+					}
+
+				}
+
 
 				var linkDc = this.dataCollectionLink;
 				if (linkDc) {
@@ -794,6 +892,11 @@ export default class ABViewDataCollection extends ABView {
 
 	setCursor(rowId) {
 
+		// If the static cursor is set, then this DC could not set cursor to other rows
+		if (this.settings.fixSelect &&
+			this.settings.fixSelect != rowId)
+			return;
+
 		var dc = this.__dataCollection;
 		if (dc) {
 			dc.setCursor(rowId);
@@ -821,12 +924,12 @@ export default class ABViewDataCollection extends ABView {
 	loadData(start, limit) {
 
 		var obj = this.datasource;
+		if (obj == null) return Promise.resolve([]);
+
 		var model = obj.model();
+		if (model == null) return Promise.resolve([]);
+
 		var dc = this.__dataCollection;
-
-		if (obj == null || model == null || dc == null)
-			return Promise.resolve([]);
-
 		var wheres = this.settings.objectWorkspace.filterConditions || {};
 		var sorts = this.settings.objectWorkspace.sortConditions || {};
 

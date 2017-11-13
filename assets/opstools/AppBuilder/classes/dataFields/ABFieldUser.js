@@ -176,33 +176,7 @@ class ABFieldUser extends ABFieldSelectivity {
 		this.settings.editable = parseInt(this.settings.editable);
 		this.settings.isMultiple = parseInt(this.settings.isMultiple);
 		this.settings.isCurrentUser = parseInt(this.settings.isCurrentUser);
-		
-		this._currentUser = function() {
-			if (typeof window._currentUser == "undefined") {
-				OP.Comm.Service.get({ url: "/site/user/data" }).then((data) => {
-					var user1 = [{ id: data.user.username, text: data.user.username }];
-					var user2 = data.user.username
-					window._currentUser = {
-						selectivity: user1,
-						webix: user2
-					};
-					if (this.settings.isMultiple) {
-						return window._currentUser.selectivity;						
-					} else {
-						return window._currentUser.webix;
-					}
-				});			
-			} else {
-				if (this.settings.isMultiple) {
-					return window._currentUser.selectivity;						
-				} else {
-					return window._currentUser.webix;
-				}				
-			}
 
-		}
-		var currentUser = this._currentUser();
-		
 	}
 
 	// return the default values for this DataField
@@ -261,9 +235,7 @@ class ABFieldUser extends ABFieldSelectivity {
 		else {
 			if (this.settings.editable = 1) {
 				config.editor = 'richselect';
-				this.getUsers().then(function (data) {
-					config.options = data;
-				});
+				config.options = this.getUsers();
 			}
 		}
 		return config;
@@ -302,20 +274,20 @@ class ABFieldUser extends ABFieldSelectivity {
 				multiple: true,
 				placeholder: placeholder,
 				data: row[this.columnName],
-				// items: this._users(),
+				items: this.getUsers(),
 				isUsers: true,
-				ajax: {
-					url: 'It will call url in .getOptions function', // require
-					minimumInputLength: 0,
-					quietMillis: 0,
-					fetch: (url, init, queryOptions) => {
-						return this.getUsers().then(function (data) {
-							return {
-								results: data
-							};
-						});
-					}
-				},
+				// ajax: {
+				// 	url: 'It will call url in .getOptions function', // require
+				// 	minimumInputLength: 0,
+				// 	quietMillis: 0,
+				// 	fetch: (url, init, queryOptions) => {
+				// 		return this.getUsers().then(function (data) {
+				// 			return {
+				// 				results: data
+				// 			};
+				// 		});
+				// 	}
+				// },
 				readOnly: readOnly
 			}, App, row);
 
@@ -387,10 +359,16 @@ class ABFieldUser extends ABFieldSelectivity {
 	 */
 	defaultValue(values) {
 		if (this.settings.isCurrentUser) {
+
 			if (this.settings.isMultiple) {
-				values[this.columnName] = window._currentUser.selectivity;				
-			} else {
-				values[this.columnName] = window._currentUser.webix;								
+
+				values[this.columnName] = {
+					id: OP.User.username(),
+					text: OP.User.username()
+				};
+			}
+			else {
+				values[this.columnName] = OP.User.username();
 			}
 		}
 	}
@@ -474,41 +452,22 @@ class ABFieldUser extends ABFieldSelectivity {
 	}
 	
 	getUsers() {
-		return new Promise(
-			(resolve, reject) => {
-				if (typeof window._users == "undefined") {
-					OP.Comm.Service.get({ url: "/appdev-core/siteuser" }).then((data) => {
-						var items1 = data.map(function (item) {
-							return {
-								id: item.username,
-								text: item.username
-							}
-						});
-						var items2 = data.map(function (item) {
-							return {
-								id: item.username,
-								value: item.username
-							}
-						});
-						window._users = {
-							selectivity: items1,
-							webix: items2
-						};
-						if (this.settings.isMultiple) {
-							resolve(window._users.selectivity);								
-						} else {
-							resolve(window._users.webix);
-						}
-					});							
-				} else {
-					if (this.settings.isMultiple) {
-						resolve(window._users.selectivity);								
-					} else {
-						resolve(window._users.webix);
-					}
-				}
+
+		return OP.User.userlist().map((u) => {
+			var result = {
+				id: u.username
+			};
+
+			if (this.settings.isMultiple) {
+				result.text = u.username;
 			}
-		);
+			else {
+				result.value = u.username;
+			}
+
+			return result;
+		});
+
 	}
 
 

@@ -144,8 +144,11 @@ export default class ABView extends ABViewBase {
 				// verify we have been .save() before:
 				if (this.id) {
 
-					var parent = this.parent;
+					// if this is not a child of another view then tell it's
+  					// application to save this view.
+					  var parent = this.parent;
 					if (!parent) parent = this.application;
+
 
 					parent.viewDestroy(this)
 						.then(resolve)
@@ -181,9 +184,9 @@ export default class ABView extends ABViewBase {
 				}
 
 				// if this is not a child of another view then tell it's
-				// application to save this view.
-				var parent = this.parent;
-				// if (!parent) parent = this.application;
+  				// application to save this view.
+				 var parent = this.parent;
+  				if (!parent) parent = this.application;
 
 				parent.viewSave(this)
 					.then(resolve)

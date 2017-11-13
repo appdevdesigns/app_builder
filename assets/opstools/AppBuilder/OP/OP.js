@@ -26,6 +26,7 @@ import Multilingual from "./multilingual"
 import Test from "./test"
 import Util  from "./util"
 import Validation from "./validation"
+import User from "./user"
 
 
     window.OP = OP;
@@ -57,7 +58,9 @@ import Validation from "./validation"
 	OP.Util = Util;
 
 	OP.Validation = Validation;
-	
+
+	OP.User = User;
+	OP.User.init();
 
 	export default OP;
 // }

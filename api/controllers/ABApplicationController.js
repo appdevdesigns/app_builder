@@ -25,7 +25,7 @@ module.exports = {
     /* Objects */
 
     /**
-     * PUT /app_builder/application/:appID
+     * PUT /app_builder/application/:appID/object
      * 
      * Add/Update a object into ABApplication
      */
@@ -129,14 +129,14 @@ module.exports = {
     /* Pages */
 
     /**
-     * PUT /app_builder/application/:appID
+     * PUT /app_builder/application/:appID/page
      * 
      * Add/Update a page into ABApplication
      */
     pageSave: function (req, res) {
         var appID = req.param('appID');
         var resolveUrl = req.body.resolveUrl;
-        var page = req.body.page;
+        var vals = req.body.data;
 
         Promise.resolve()
             .catch((err) => { res.AD.error(err); })
@@ -164,30 +164,31 @@ module.exports = {
 
                     if (data == null) return resolve();
 
-                    var updatePage = data.appClass.urlResolve(resolveUrl);
+                    var updateItem = data.appClass.urlResolve(resolveUrl);
 
                     // update
-                    if (updatePage) {
+                    if (updateItem) {
 
-                        var ignoreProps = ['id', 'pages', '_pages']
+                        var ignoreProps = ['id', 'pages', '_pages'];
 
                         // clear old values
-                        for (var key in updatePage) {
+                        for (var key in updateItem) {
 
                             if (ignoreProps.indexOf(key) > -1)
                                 continue;
 
-                            delete updatePage[key];
+                            delete updateItem[key];
                         }
 
                         // add update values
-                        for (var key in page) {
+                        for (var key in vals) {
 
                             if (ignoreProps.indexOf(key) > -1)
                                 continue;
 
-                            updatePage[key] = page[key];
+                            updateItem[key] = vals[key];
                         }
+
                     }
 
 
@@ -200,9 +201,11 @@ module.exports = {
                         var parentUrl = parts.join('/');
                         var parent = data.appClass.urlResolve(parentUrl);
 
-                        // add new page to the parent
+                        // add new page/view to the parent
                         if (parent && parent.push) {
-                            parent.push(new ABViewPage(page, data.appClass));
+
+                            parent.push(new ABViewPage(vals, data.appClass));
+
                         }
                     }
 
@@ -233,7 +236,7 @@ module.exports = {
 
                     if (data == null) return resolve();
 
-                    var pageClass = data.appClass._pages.filter(p => p.id == page.id)[0];
+                    var pageClass = data.appClass._pages.filter(p => p.id == vals.id)[0];
 
                     if (pageClass)
                         return AppBuilder.updateNavView(data.app, pageClass)
@@ -259,7 +262,7 @@ module.exports = {
     },
 
     /**
-     * DELETE /app_builder/application/:appID/:resolveUrl
+     * DELETE /app_builder/application/:appID/page
      * 
      * Delete a page in ABApplication
      */
@@ -334,7 +337,9 @@ module.exports = {
                 // Remove page's nav view
                 return new Promise((resolve, reject) => {
 
-                    if (Application == null || !pageName) return resolve();
+                    if (Application == null ||
+                        !pageName)
+                        return resolve();
 
                     return AppBuilder.removeNavView(Application, pageName)
                         .catch(reject)
@@ -352,7 +357,6 @@ module.exports = {
 
                 });
             });
-
 
     },
 

@@ -307,19 +307,19 @@ console.log('... catch(err) !');
                     }
                     // if we are searching a multilingual field it is stored in translations so we need to search JSON
                     if (w.isMultiLingual == 1) {
-                        var fieldName = 'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH(translations, "one", "' + w.languageCode + '")), 1, 4)), "$.' + w.fieldName + '"))';
+                        var fieldName = 'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH(translations, "one", "' + w.languageCode + '")), 1, 4)), \'$."' + w.fieldName + '"\'))';
                     } else { // If we are just searching a field it is much simpler
-                        var fieldName = w.fieldName;
+                        var fieldName = '`' + w.fieldName + '`';
                     }
 
-                    var field = object._fields.filter(field => field.columnName == fieldName)[0];
+                    var field = object._fields.filter(field => field.columnName == w.fieldName)[0];
                     if (field && field.settings && field.settings.options && field.settings.options.filter) {
                         var inputID = field.settings.options.filter(option => option.text == input);
                         input = inputID[0].id;
                     }
 
                     // We are going to use the 'raw' queries for knex becuase the '.' for JSON searching is misinterpreted as a sql identifier
-                    var where = '`{fieldName}` {operator} {input}'
+                    var where = '{fieldName} {operator} {input}'
                         .replace('{fieldName}', fieldName)
                         .replace('{operator}', operator)
                         .replace('{input}', ((input != null) ? "'" + input + "'" : ''));
@@ -347,11 +347,11 @@ console.log('... catch(err) !');
                     // because we are going to sort by the users language not the builder's so the view will be sorted differntly depending on which languageCode
                     // you are using but the intent of the sort is maintained
                     if (o.isMulti == 1) {
-                        var by = 'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH(translations, "one", "' + req.user.data.languageCode + '")), 1, 4)), "$.' + o.by + '"))';
+                        var by = 'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH(translations, "one", "' + req.user.data.languageCode + '")), 1, 4)), \'$."' + o.by + '"\'))';
                     } else { // If we are just sorting a field it is much simpler
-                        var by = o.by;
+                        var by = "`" + o.by + "`";
                     }
-                    query.orderByRaw("`" + by + "` " + o.dir);
+                    query.orderByRaw(by + " " + o.dir);
                 })
             }
 

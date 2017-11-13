@@ -100,11 +100,17 @@ export default class ABViewContainer extends ABView {
 			component: App.unique(idBase + '_component')
 		}
 
+		var cellHeight = 250;
+		if (this.key == "form" || this.key == "detail") {
+			cellHeight = 70;
+		}
 
 		var _ui = {
 			rows: [{
 				id: ids.component,
 				view: "dashboard",
+				css: "ab-" + this.key + "-container",
+				cellHeight: cellHeight,
 				gridColumns: this.settings.columns || ABPropertyComponentDefaults.columns
 			}]
 		};
@@ -127,7 +133,7 @@ export default class ABViewContainer extends ABView {
 
 					// specific viewId to .name, it will be used to save view position
 					name: child.id,
-
+					css: 'ab-widget-container',
 					body: {
 						rows: [
 							{
@@ -232,19 +238,16 @@ export default class ABViewContainer extends ABView {
 
 							var Dashboard = $$(ids.component);
 
-
-							// remove UI of this component in template
-							var deletedElem = Dashboard.queryView({ name: id });
-							if (deletedElem)
-								Dashboard.removeView(deletedElem);
-
-
 							deletedView.destroy()
 								.then(() => {
 
 									// signal the current view has been deleted.
 									deletedView.emit('destroyed', deletedView);
 
+									// remove UI of this component in template
+									var deletedElem = Dashboard.queryView({ name: id });
+									if (deletedElem)
+										Dashboard.removeView(deletedElem);
 
 									_logic.showEmptyPlaceholder();
 
@@ -431,13 +434,15 @@ export default class ABViewContainer extends ABView {
 					subComponents[v.id] = component;
 
 					// Create a new row
-					if (v.position.y == null || 
+					if (v.position.y == null ||
 						v.position.y != curRowIndex) {
 
 						curRowIndex = v.position.y || rows.length;
 						curColIndex = 0;
 
-						var rowNew = { cols: [] }
+						var rowNew = { 
+							cols: [] 
+						};
 
 						// Create columns following setting value
 						var colNumber = this.settings.columns || ABPropertyComponentDefaults.columns;
@@ -492,6 +497,8 @@ export default class ABViewContainer extends ABView {
 				// Initial component
 				component.init();
 			}
+
+			_onShow();
 
 		};
 

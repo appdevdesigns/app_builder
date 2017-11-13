@@ -177,8 +177,11 @@ export default class ABViewFormSelectSingle extends ABViewFormField {
 		}
 
 		component.ui.view = this.settings.type || ABViewFormSelectSinglePropertyComponentDefaults.type;
-		
-		var options = field.settings.options || this.settings.options || [];
+
+		var options = [];
+
+		if (field)
+			options = field.settings.options || this.settings.options || [];
 
 		component.ui.id = ids.component;
 		component.ui.options = options.map((opt) => {
@@ -198,11 +201,18 @@ export default class ABViewFormSelectSingle extends ABViewFormField {
 
 		// make sure each of our child views get .init() called
 		component.init = (options) => {
-			if (field.key == "user") {
-				field.getUsers().then(function (data) {
+			if (field && field.key == "user") {
+
+				if (App.__users == null) {
+					App.__userlist = field.getUsers();
 					if ($$(component.ui.id))
-						$$(component.ui.id).define("options", data);
-				});
+						$$(component.ui.id).define("options", App.__userlist);
+				}
+				else {
+					if ($$(component.ui.id))
+						$$(component.ui.id).define("options", App.__userlist);
+				}
+
 			}
 		}
 
