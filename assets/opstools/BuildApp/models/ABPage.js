@@ -31,24 +31,6 @@ steal(
 						*/
 					},
 					{
-
-						getRootPageId: function () {
-							var page = this,
-								parentPage = page,
-								rootPageId;
-
-							while (rootPageId == null) {
-								if (parentPage.parent == null) {
-									rootPageId = (parentPage.id || parentPage);
-								}
-								else {
-									parentPage = parentPage.parent;
-								}
-							}
-
-							return rootPageId;
-						},                          
-
 						getItemTemplate: function () {
 							var page = this,
 								comTemplate = '';
@@ -69,43 +51,22 @@ steal(
 						display: function (application) {
 							var page = this,
 								q = $.Deferred(),
-								tasks = [],
-								components = [];
+								tasks = [];
 
-							async.series([
-								function(ok) {
-									page.getComponents()
-									.fail(ok)
-									.done(function(result) {
-										components = result;
+							page.components.forEach(function (item) {
+								tasks.push(function (next) {
+									page.renderComponent(application, item).then(function () {
+										next();
+									}, next);
+								});
+							});
 
-										ok();
-									});
-								},
-
-								function(ok) {
-
-									components.forEach(function (item) {
-										if (item.translate) item.translate();
-
-										tasks.push(function (next) {
-											page.renderComponent(application, item).then(function () {
-												next();
-											}, next);
-										});
-									});
-		
-									async.series(tasks, function (err) {
-										if (err)
-											q.reject(err);
-										else
-											q.resolve();
-
-										ok();
-									});
-		
-								}
-							]);
+							async.series(tasks, function (err) {
+								if (err)
+									q.reject(err);
+								else
+									q.resolve();
+							});
 
 							return q;
 						},
@@ -133,7 +94,6 @@ steal(
 							// Create component instance
 							page.attr('comInstances.' + item.id, new componentInstance(
 								application, // Current application
-								page.getRootPageId(), // the root page id
 								viewId, // the view id
 								item.id // the component data id
 							));
@@ -179,8 +139,8 @@ steal(
 									},
 									// Render component
 									function (next) {
-										if (page.attr('comInstances.' + item.id) && page.attr('comInstances.' + item.id).render) {
-											page.attr('comInstances.' + item.id).render(item.setting, editable, showAll, dataCollection, linkedDataCollection, item)
+										if (page.attr('comInstances.' + item.id)) {
+											page.attr('comInstances.' + item.id).render(item.setting, editable, showAll, dataCollection, linkedDataCollection)
 												.then(function () { next(); }, next);
 										}
 										else

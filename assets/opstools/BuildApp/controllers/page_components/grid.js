@@ -30,7 +30,7 @@ steal(
 		};
 
 		// Instance functions
-		var gridComponent = function (application, rootPageId, viewId, componentId) {
+		var gridComponent = function (application, viewId, componentId) {
 			var data = {},
 				events = {}; // { eventName: eventId, ..., eventNameN: eventIdN }
 
@@ -111,54 +111,30 @@ steal(
 					$$(self.viewId).hideProgress();
 			};
 
-			function filterLinkedData(setting) {
+			function filterLinkedData(linkedField) {
 				var self = this;
 
 				if (!self.data.columns) return;
 
-				var field = self.data.columns.filter(function (col) { return col.id == setting.linkedField; })[0];
+				var field = self.data.columns.filter(function (col) { return col.id == linkedField; })[0];
 
 				if (self.data.linkedToDataCollection && field) {
-					var currModel = self.data.linkedToDataCollection.AB.getCurrModel(rootPageId);
+					var currModel = self.data.linkedToDataCollection.AD.currModel();
 
 					if (currModel) {
 						$$(self.viewId).custom_filters = $$(self.viewId).custom_filters || {};
+						$$(self.viewId).custom_filters['linked_collection_filter'] = function (item) {
+							var itemValues = item[field.name];
 
-						// Filter to itself
-						if (setting.object == setting.linkedTo) {
-							var currValue = currModel.attr(field.name) || [];
-							if (currValue && !currValue.filter) {
-								currValue = [currValue];
+							if (!itemValues) {
+								return false;
 							}
-							currValue = currValue.map(function (n) { return n.id ? n.id : n; });
+							else if (itemValues && !itemValues.filter) {
+								itemValues = [itemValues]; // Convert to array
+							}
 
-							$$(self.viewId).custom_filters['linked_collection_filter'] = function (item) {
-								var itemValue = item[field.name] || [];
-								if (itemValue && !itemValue.filter) {
-									itemValue = [itemValue];
-								}
-								itemValue = itemValue.map(function (n) { return n.id ? n.id : n; });
-
-								return currValue.filter(function (n) {
-									return itemValue.indexOf(n) > -1;
-								}).length > 0;
-							};
-						}
-						// Filter to linked data collection
-						else {
-							$$(self.viewId).custom_filters['linked_collection_filter'] = function (item) {
-								var itemValues = item[field.name];
-
-								if (!itemValues) {
-									return false;
-								}
-								else if (itemValues && !itemValues.filter) {
-									itemValues = [itemValues]; // Convert to array
-								}
-
-								return itemValues.filter(function (f) { return f.id == currModel.id; }).length > 0;
-							};
-						}
+							return itemValues.filter(function (f) { return f.id == currModel.id; }).length > 0;
+						};
 					}
 
 					$$(self.viewId).refresh();
@@ -172,7 +148,7 @@ steal(
 			this.editViewId = componentIds.editDataTable;
 			this.data = data;
 
-			this.render = function (setting, editable, showAll, dataCollection, linkedToDataCollection, currComponent) {
+			this.render = function (setting, editable, showAll, dataCollection, linkedToDataCollection) {
 				var self = this,
 					columns = [],
 					q = $.Deferred();
@@ -186,14 +162,9 @@ steal(
 				// Initial linked dataCollection events
 				if (linkedToDataCollection) {
 					self.data.linkedToDataCollection = linkedToDataCollection;
-					if (events['onAfterCurrModelChange'] == null) {
-						events['onAfterCurrModelChange'] = self.data.linkedToDataCollection.attachEvent('onAfterCurrModelChange', function (basePageId, rowId) {
-							if (basePageId != rootPageId) return;
-
-							if (setting.linkedField)
-								filterLinkedData.call(self, setting);
-							else
-								$$(self.viewId).refresh();
+					if (events['onAfterCursorChange'] == null) {
+						events['onAfterCursorChange'] = self.data.linkedToDataCollection.attachEvent('onAfterCursorChange', function (id) {
+							$$(self.viewId).refresh();
 						});
 					}
 				}
@@ -296,14 +267,13 @@ steal(
 
 						$$(componentIds.editView).removeView(componentIds.editHeader);
 
-
 						// Title
 						header.rows.push({
 							id: componentIds.editTitle,
 							view: 'text',
 							placeholder: 'Title',
 							css: 'ab-component-header',
-							value: currComponent.title || setting.title || '',
+							value: setting.title || '',
 							on: {
 								onChange: function (newv, oldv) {
 									if (newv != oldv) {
@@ -321,7 +291,7 @@ steal(
 							view: 'textarea',
 							placeholder: 'Description',
 							css: 'ab-component-description',
-							value: currComponent.description || setting.description || '',
+							value: setting.description || '',
 							inputHeight: 60,
 							height: 60,
 							on: {
@@ -340,19 +310,19 @@ steal(
 						header.id = componentIds.header.replace('{id}', viewId);
 						header.width = 2100;
 
-						if (currComponent.title || setting.title) {
+						if (setting.title) {
 							header.rows.push({
 								view: 'label',
 								css: 'ab-component-header ab-ellipses-text',
-								label: currComponent.title || setting.title || ''
+								label: setting.title || ''
 							});
 						}
 
-						if (currComponent.description || setting.description) {
+						if (setting.description) {
 							header.rows.push({
 								view: 'label',
 								css: 'ab-component-description ab-ellipses-text',
-								label: currComponent.description || setting.description || ''
+								label: setting.description || ''
 							});
 						}
 					}
@@ -363,7 +333,7 @@ steal(
 						var object = application.objects.filter(function (obj) { return obj.id == self.data.setting.object });
 
 						action_buttons.push({
-							view: 'button', id: self.viewId + '-update-items-button', label: AD.lang.label.getLabel('ab.component.grid.updateRecords') ||'Update records', icon: "pencil", type: "icon", width: 140,
+							view: 'button', id: self.viewId + '-update-items-button', label: 'Update records', icon: "pencil", type: "icon", width: 140,
 							click: function () {
 								if ($$('ab-update-records-popup')) {
 									$$('ab-update-records-popup').define('application', application);
@@ -379,7 +349,7 @@ steal(
 
 					if (setting.selectable == 'enable' && setting.removable === 'enable') {
 						action_buttons.push({
-							view: 'button', id: self.viewId + '-delete-items-button', label: AD.lang.label.getLabel('ab.component.grid.deleteRecords') || 'Delete records', icon: "trash", type: "icon", width: 140,
+							view: 'button', id: self.viewId + '-delete-items-button', label: 'Delete records', icon: "trash", type: "icon", width: 140,
 							click: function () {
 								if ($$('ab-delete-records-popup')) {
 									$$('ab-delete-records-popup').define('objectModel', object[0]);
@@ -394,7 +364,7 @@ steal(
 
 					if (setting.filter === 'enable') {
 						action_buttons.push({
-							view: 'button', id: self.viewId + '-filter-button', label: AD.lang.label.getLabel('ab.component.grid.addFilter') || 'Add filters', icon: "filter", type: "icon", width: 120, badge: 0,
+							view: 'button', id: self.viewId + '-filter-button', label: 'Add filters', icon: "filter", type: "icon", width: 120, badge: 0,
 							click: function () {
 								if ($$('ab-filter-popup')) {
 									$$('ab-filter-popup').define('dataTable', $$(self.viewId));
@@ -417,7 +387,7 @@ steal(
 
 					if (setting.sort === 'enable') {
 						action_buttons.push({
-							view: 'button', id: self.viewId + '-sort-button', label: AD.lang.label.getLabel('ab.component.grid.applySort') || 'Apply sort', icon: "sort", type: "icon", width: 120, badge: 0,
+							view: 'button', id: self.viewId + '-sort-button', label: 'Apply sort', icon: "sort", type: "icon", width: 120, badge: 0,
 							click: function () {
 								if ($$('ab-sort-popup')) {
 									$$('ab-sort-popup').define('dataTable', $$(self.viewId));
@@ -461,7 +431,7 @@ steal(
 						$$(componentIds.toolbar.replace('{id}', viewId)).$setSize($$(viewId).config.width + 3);
 					}
 
-					if (self.data.dataCollection && self.data.dataCollection.AB.getCheckedItems().length > 0) {
+					if (self.data.dataCollection && self.data.dataCollection.getCheckedItems().length > 0) {
 						if ($$(self.viewId + '-update-items-button'))
 							$$(self.viewId + '-update-items-button').enable();
 
@@ -489,7 +459,7 @@ steal(
 										$$(self.viewId).define('select', true);
 
 									if (dataCollection)
-										dataCollection.AB.setCurrModel(rootPageId, (id.row || id));
+										dataCollection.setCursor((id.row || id));
 									break;
 								case 'appbuilder_edit_form':
 									$(self).trigger('changePage', {
@@ -500,7 +470,7 @@ steal(
 										$$(self.viewId).define('select', true);
 
 									if (dataCollection)
-										dataCollection.AB.setCurrModel(rootPageId, (id.row || id));
+										dataCollection.setCursor((id.row || id));
 									break;
 							}
 						});
@@ -524,9 +494,9 @@ steal(
 
 							if (col == 'select_column') {
 								if (state)
-									self.data.dataCollection.AB.checkItem(row);
+									self.data.dataCollection.checkItem(row);
 								else
-									self.data.dataCollection.AB.uncheckItem(row);
+									self.data.dataCollection.uncheckItem(row);
 							}
 						});
 					}
@@ -537,23 +507,21 @@ steal(
 								var rowId = data.id || data;
 
 								// Set cursor of data collection
-								var currModel = dataCollection.AB.getCurrModel(rootPageId);
+								var currModel = dataCollection.AD.currModel();
 								if (!currModel || currModel.id != rowId)
-									dataCollection.AB.setCurrModel(rootPageId, rowId);
+									dataCollection.setCursor(rowId);
 							});
 						}
 
-						if (events['onAfterCurrModelChange'] == null) {
-							events['onAfterCurrModelChange'] = dataCollection.attachEvent("onAfterCurrModelChange", function (basePageId, rowId) {
-								if (basePageId != rootPageId) return;
+						if (events['onAfterCursorChange'] == null) {
+							events['onAfterCursorChange'] = dataCollection.attachEvent("onAfterCursorChange", function (id) {
 								var selectedItem = $$(self.viewId).getSelectedId(false),
 									preserve = $$(self.viewId).config.multiselect;
 
-								if ($$(self.viewId).unselectAll)
+								if (!id && $$(self.viewId).unselectAll)
 									$$(self.viewId).unselectAll();
-
-								if ((!selectedItem || selectedItem.id != rowId) && $$(self.viewId).select) {
-									$$(self.viewId).select(rowId, preserve);
+								else if ((!selectedItem || selectedItem.id != id) && $$(self.viewId).select) {
+									$$(self.viewId).select(id, preserve);
 								}
 							});
 						}
@@ -561,7 +529,7 @@ steal(
 						if (events['onCheckItemsChange'] == null) {
 							events['onCheckItemsChange'] = dataCollection.attachEvent("onCheckItemsChange", function () {
 								// Enable Update/Delete buttons
-								if (dataCollection.AB.getCheckedItems().length > 0) {
+								if (dataCollection.getCheckedItems().length > 0) {
 									if ($$(self.viewId + '-update-items-button'))
 										$$(self.viewId + '-update-items-button').enable();
 									if ($$(self.viewId + '-delete-items-button'))
@@ -609,7 +577,7 @@ steal(
 				populateData.call(self, self.data.setting.object, dataCollection, self.data.columns);
 
 				if (linkedField)
-					filterLinkedData.call(self, self.data.setting);
+					filterLinkedData.call(self, linkedField);
 			};
 
 			this.getSettings = function () {
@@ -651,8 +619,6 @@ steal(
 					dataCollection,
 					linkedToDataCollection;
 
-				var editItem = application.currPage.components.filter(function (c) { return c.id == componentId; })[0];
-
 				async.series([
 					// Get data collection
 					function (next) {
@@ -692,7 +658,7 @@ steal(
 					},
 					// Render dataTable component
 					function (next) {
-						self.render(setting, true, selectAll, dataCollection, linkedToDataCollection, editItem).done(function () {
+						self.render(setting, true, selectAll, dataCollection, linkedToDataCollection).done(function () {
 							// Columns list
 							$$(componentIds.columnList).showProgress({ type: 'icon' });
 							bindColumnList.call(self, setting.object, selectAll);
@@ -719,24 +685,13 @@ steal(
 						// Data source - Linked to
 						var linkedObjIds = self.data.columns.filter(function (col) { return col.setting.linkObject != null; }).map(function (col) { return col.setting.linkObject.toString() }),
 							linkedObjs = application.objects.filter(function (obj) { return linkedObjIds.indexOf(obj.id.toString()) > -1; }),
-							selfObject = application.objects.filter(function (obj) { return obj.id == setting.object; })[0],
 							linkedToItem = $$(componentIds.propertyView).getItem('linkedTo');
-
 						linkedToItem.options = $.map(linkedObjs, function (o) {
 							return {
 								id: o.id,
 								value: o.label
 							};
 						});
-
-						// Linked to itself
-						if (selfObject) {
-							linkedToItem.options.splice(0, 0, {
-								id: selfObject.id,
-								value: selfObject.label
-							});
-						}
-
 						linkedToItem.options.splice(0, 0, {
 							id: 'none',
 							value: '[none]'
@@ -746,15 +701,7 @@ steal(
 						var linkedFieldItem = $$(componentIds.propertyView).getItem('linkedField');
 						if (setting.linkedTo) {
 							linkedFieldItem.options = self.data.columns
-								.filter(function (col) {
-									// Link to itself
-									if (setting.linkedTo &&
-										setting.linkedTo == setting.object)
-										return true;
-									// Link to other object
-									else
-										return col.setting.linkObject == setting.linkedTo;
-								})
+								.filter(function (col) { return col.setting.linkObject == setting.linkedTo; })
 								.map(function (col) {
 									return {
 										id: col.id,
@@ -776,8 +723,7 @@ steal(
 						// in a buried Tab component.
 						// var parentId = application.currPage.parent ? application.currPage.parent.attr('id') : application.currPage.attr('id');
 						// application.getPages({ or: [{ id: parentId }, { parent: parentId }] })
-						// application.getApplicationPages(application.currPage)
-						application.getAllApplicationPages()
+						application.getApplicationPages(application.currPage)
 							.fail(function (err) { next(err); })
 							.then(function (pages) {
 								var viewComponents = [],
@@ -786,30 +732,16 @@ steal(
 								pages.forEach(function (p) {
 									if (p.translate) p.translate();
 
-									var pageId = p.id;
-									var pageLabel = p.label;
-
-									// if there is a component in a tab
-									if (p.type == 'tab') {
-
-										var parentPage = pages.filter(function(page) { return page.id == p.parent.id })[0];
-										if (parentPage) {
-											pageId = p.parent.id;
-											pageLabel = parentPage.label + ' - ' + p.label
-										}
-									}
-
 									// Details view components
 									var detailsViews = p.components.filter(function (c) {
 										return c.component === "view" && c.setting && c.setting.object === setting.object;
 									});
 
 									if (detailsViews && detailsViews.length > 0) {
-
 										viewComponents = viewComponents.concat($.map(detailsViews, function (v) {
 											return [{
-												id: pageId + '|' + v.id,
-												value: pageLabel + ' - ' + v.component
+												id: p.id + '|' + v.id,
+												value: p.label + ' - ' + v.component
 											}];
 										}));
 									}
@@ -822,8 +754,8 @@ steal(
 									if (forms && forms.length > 0) {
 										formComponents = formComponents.concat($.map(forms, function (f) {
 											return [{
-												id: pageId + '|' + f.id,
-												value: pageLabel + ' - ' + f.component
+												id: p.id + '|' + f.id,
+												value: p.label + ' - ' + f.component
 											}];
 										}));
 									}
@@ -859,8 +791,8 @@ steal(
 							editForm = setting.editPage + '|' + setting.editForm;
 
 						$$(componentIds.propertyView).setValues({
-							title: editItem ? (editItem.title || '') : '',
-							description: editItem ? (editItem.description || '') : '',
+							title: setting.title || '',
+							description: setting.description || '',
 							object: setting.object,
 							linkedTo: setting.linkedTo,
 							linkedField: setting.linkedField,
@@ -1135,14 +1067,7 @@ steal(
 
 								if (linkedTo != 'none') {
 									linkedField.options = editInstance.data.columns
-										.filter(function (col) {
-											// Link to itself
-											if (linkedTo == propertyValues.object)
-												return true;
-											// Link to other object
-											else
-												return col.setting.linkObject == linkedTo;
-										})
+										.filter(function (col) { return col.setting.linkObject == linkedTo; })
 										.map(function (col) {
 											return {
 												id: col.id,

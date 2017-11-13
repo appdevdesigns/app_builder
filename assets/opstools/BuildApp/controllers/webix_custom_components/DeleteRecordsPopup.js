@@ -39,7 +39,7 @@ steal(
 
 										var deleteTasks = [];
 
-										delete_records_popup.dataCollection.AB.getCheckedItems().forEach(function (rowId) {
+										delete_records_popup.dataCollection.getCheckedItems().forEach(function (rowId) {
 											var modelData = delete_records_popup.dataCollection.AD.getModel(rowId);
 
 											deleteTasks.push(function (next) {
@@ -81,7 +81,7 @@ steal(
 
 						// Show checked items in selectivity
 						var checkedItems = [];
-						delete_records_popup.dataCollection.AB.getCheckedItems().forEach(function (rowId) {
+						delete_records_popup.dataCollection.getCheckedItems().forEach(function (rowId) {
 							var rowData = delete_records_popup.dataTable.getItem(rowId);
 
 							checkedItems.push({

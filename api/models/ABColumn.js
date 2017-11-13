@@ -53,7 +53,7 @@ module.exports = {
 
     attributes: {
 
-        object: { model: 'ABObject' },
+        // object: { model: 'ABObject' },
 
         name: {
             type: 'string',
@@ -473,12 +473,7 @@ module.exports = {
                     .populate('translations')
                     .then(function (srcObj) {
                         sourceObject = srcObj;
-                        
-                        if (sourceObject.isImported) {
-                            // Imported objects can have long names
-                            sourceSetting.isImported = true;
-                        }
-                        
+
                         next();
                     }, next);
             },
@@ -490,12 +485,7 @@ module.exports = {
                     .populate('translations')
                     .then(function (trgObj) {
                         targetObject = trgObj;
-                        
-                        if (targetObject.isImported) {
-                            // Imported objects can have long names
-                            targetSetting.isImported = true;
-                        }
-                        
+
                         next();
                     }, next);
             },
@@ -525,11 +515,11 @@ module.exports = {
                 if (sourceSetting.linkType == 'collection' && targetSetting.linkType == 'collection') {
 
                     if ((sourceObject.application.name + sourceObject.name + data.name).length + 6 > 32) {
-                        data.name = data.name.substring(0, (32 - ((sourceObject.application.name + sourceObject.name).length + 6)));
+                        data.name = data.name.substring(0, (32 - ((sourceObject.application.name + sourceObject.name).length + 5)));
                     }
 
                     if ((targetObject.application.name + targetObject.name + data.targetName).length + 6 > 32) {
-                        data.targetName = data.targetName.substring(0, (32 - ((targetObject.application.name + targetObject.name).length + 6)));
+                        data.targetName = data.targetName.substring(0, (32 - ((targetObject.application.name + targetObject.name).length + 5)));
                     }
 
                     // TODO : Check duplicate column names

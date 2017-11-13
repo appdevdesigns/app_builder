@@ -134,13 +134,7 @@ steal(
 
 													componentManager.editStop();
 
-													// settings
-													var settings = componentManager.editInstance.getSettings();
-													editedComponent.attr('setting', settings);
-
-													// title & description
-													editedComponent.attr('title', settings.title || '');
-													editedComponent.attr('description', settings.description || '');
+													editedComponent.attr('setting', componentManager.editInstance.getSettings());
 
 													var savedComponent;
 													async.series([
@@ -231,7 +225,7 @@ steal(
 																	if (!item.setting) item.setting = {};
 
 																	componentManager.setEditInstance(self.data.components[item_id]);
-																	componentManager.editInstance.populateSettings(item.setting, false);
+																	componentManager.editInstance.populateSettings(item.setting);
 
 																	$$(self.componentIds.layoutToolbarHeader).define('label', item.component.capitalize() + ' View');
 																	$$(self.componentIds.layoutToolbarHeader).refresh();
@@ -558,10 +552,6 @@ steal(
 									AD.error.log('Get components in page : Error get components', { error: err });
 								})
 								.then(function (result) {
-									result.forEach(function (r) {
-										if (r.translate) r.translate();
-									});
-
 									AD.classes.AppBuilder.currApp.currPage.attr('components', result);
 
 									var components = result.attr();
@@ -632,7 +622,6 @@ steal(
 						renderComponent: function (com) {
 							var self = this,
 								q = $.Deferred(),
-								rootPageId = AD.classes.AppBuilder.currApp.currPage.getRootPageId(),
 								componentInstance = componentManager.getComponent(com.attr('component')),
 								view = componentInstance ? componentInstance.getView() : null,
 								viewId = self.getComponentId(com.attr('id')),
@@ -643,7 +632,6 @@ steal(
 							if (componentInstance) {
 								self.data.components[com.attr('id')] = new componentInstance(
 									AD.classes.AppBuilder.currApp, // Current application
-									rootPageId, // the root page id
 									viewId, // the view id
 									com.id // the component data id
 								);
@@ -694,16 +682,12 @@ steal(
 									},
 									// Render component
 									function (next) {
-										if (self.data.components[com.attr('id')] && self.data.components[com.attr('id')].render) {
-											self.data.components[com.attr('id')].render(com.attr('setting'), editable, showAll, dataCollection, linkedDataCollection, com)
-												.fail(next)
-												.then(function () {
-													next();
-												});
-										}
-										else {
-											next();
-										}
+										self.data.components[com.attr('id')].render(com.attr('setting'), editable, showAll, dataCollection, linkedDataCollection)
+											.fail(next)
+											.then(function () {
+												next();
+											});
+
 									}
 								], function (err) {
 									if (err)

@@ -17,13 +17,11 @@ steal(
 			editDescription: 'ab-view-edit-description',
 			selectObject: 'ab-view-select-object',
 			selectColumns: 'ab-view-select-columns',
-			recordFilter: 'ab-view-record-filter',
-			currentUserFilterTitle: 'ab-view-current-user-title',
-			currentUserFilter: 'ab-view-current-user-filter'
+			recordFilter: 'ab-view-record-filter'
 		};
 
 		// Instance functions
-		var viewComponent = function (application, rootPageId, viewId, componentId) {
+		var viewComponent = function (application, viewId, componentId) {
 			var data = {},
 				eventIds = {},
 				objectModels = {};
@@ -55,7 +53,7 @@ steal(
 				if (newData)
 					currModel = newData;
 				else if (data.dataCollection)
-					currModel = data.dataCollection.AB.getCurrModel(rootPageId);
+					currModel = data.dataCollection.AD.currModel();
 
 				currModel = currModel && currModel.attr ? currModel.attr() : currModel;
 				data.currDataId = currModel ? currModel.id : null;
@@ -119,7 +117,7 @@ steal(
 			this.viewId = viewId;
 			this.editViewId = componentIds.editView;
 
-			this.render = function (setting, editable, showAll, dataCollection, linkedToDataCollection, currComponent) {
+			this.render = function (setting, editable, showAll, dataCollection) {
 				var q = $.Deferred(),
 					self = this,
 					fields = [],
@@ -130,10 +128,14 @@ steal(
 
 				// Initial events
 				if (data.dataCollection) {
-					if (eventIds['onAfterCurrModelChange'] == null) {
-						eventIds['onAfterCurrModelChange'] = data.dataCollection.attachEvent('onAfterCurrModelChange', function (baseRootId, rowId) {
-							if (baseRootId != rootPageId) return;
+					// TEMPORARY FEATURE :
+					if (setting.recordFilter != null) {
+						data.dataCollection.setCursor(setting.recordFilter)
+						data.dataCollection.recordFilter = setting.recordFilter;
+					}
 
+					if (eventIds['onAfterCursorChange'] == null) {
+						eventIds['onAfterCursorChange'] = data.dataCollection.attachEvent('onAfterCursorChange', function (id) {
 							updateData.call(self, setting);
 						});
 					}
@@ -278,7 +280,7 @@ steal(
 								view: 'text',
 								placeholder: 'Title',
 								css: 'ab-component-header',
-								value: currComponent.title || setting.title ||'',
+								value: setting.title || '',
 								on: {
 									onChange: function (newv, oldv) {
 										if (newv != oldv) {
@@ -290,11 +292,11 @@ steal(
 								}
 							});
 						}
-						else if (currComponent.title || setting.title) {
+						else if (setting.title) {
 							header.rows.push({
 								view: 'label',
 								css: 'ab-component-header',
-								label: currComponent.title || setting.title ||''
+								label: setting.title || ''
 							});
 						}
 
@@ -305,7 +307,7 @@ steal(
 								view: 'textarea',
 								placeholder: 'Description',
 								css: 'ab-component-description',
-								value: currComponent.description || setting.description ||'',
+								value: setting.description || '',
 								inputHeight: 60,
 								height: 70,
 								on: {
@@ -320,11 +322,11 @@ steal(
 
 							});
 						}
-						else if (currComponent.description || setting.description) {
+						else if (setting.description) {
 							header.rows.push({
 								view: 'label',
 								css: 'ab-component-description',
-								label: currComponent.description || setting.description ||''
+								label: setting.description || ''
 							});
 						}
 
@@ -334,25 +336,6 @@ steal(
 						updateData.call(self, setting);
 
 						$$(self.viewId).hideProgress();
-
-						// TEMPORARY FEATURE :
-						if (data.dataCollection) {
-							if (setting.recordFilter) {
-								data.dataCollection.AB.lockCurrModel(rootPageId, setting.recordFilter);
-							}
-							else if (setting.currentUserFilter == true || setting.currentUserFilter == "true") {
-
-								setTimeout(function () {
-									data.dataCollection.AB.updateCurrModelToCurrentUser(rootPageId);
-								}, 100);
-							}
-							else {
-
-								setTimeout(function () {
-									data.dataCollection.AB.unlockCurrModel(rootPageId);
-								}, 100);
-							}
-						}
 
 						// Trigger render event
 						$(self).trigger('renderComplete', {});
@@ -376,18 +359,13 @@ steal(
 					}
 				});
 
-				var recordFilter = '';
-				if (!isNaN(propertyValues[componentIds.recordFilter]))
-					recordFilter = propertyValues[componentIds.recordFilter] || '';
-
 				var settings = {
 					title: propertyValues[componentIds.editTitle],
 					description: propertyValues[componentIds.editDescription] || '',
 					object: propertyValues[componentIds.selectObject] || '', // ABObject.id
 					columns: propertyValues[componentIds.selectColumns] || '',
 					visibleFieldIds: visibleFieldIds, // [ABColumn.id]
-					recordFilter: recordFilter,
-					currentUserFilter: propertyValues[componentIds.currentUserFilter] == true
+					recordFilter: propertyValues[componentIds.recordFilter] || ''
 				};
 
 				return settings;
@@ -396,8 +374,6 @@ steal(
 			this.populateSettings = function (setting, showAll) {
 				var self = this,
 					editable = true;
-
-				var editItem = application.currPage.components.filter(function (c) { return c.id == componentId; })[0];
 
 				async.waterfall([
 					// Get data collection
@@ -419,35 +395,32 @@ steal(
 					},
 					// Render form component
 					function (dataCollection, next) {
-						self.render(setting, editable, showAll, dataCollection, null, editItem)
+						self.render(setting, editable, showAll, dataCollection)
 							.fail(next)
 							.then(function () {
 								next(null, dataCollection);
 							});
 					},
-					// Enable/Disable set current user filter
+					// Get row data to show in list
 					function (dataCollection, next) {
-						// Properties
-						// Filter - Records
 						if (dataCollection) {
+							// Properties
+							// Filter - Row
 							var rowData = dataCollection.find({});
+
 							var recordFilter = $$(componentIds.propertyView).getItem(componentIds.recordFilter);
-							var recordOptions = rowData.map(function (row) {
+							recordFilter.options = rowData.map(function (row) {
 								return {
 									id: row.id,
 									value: 'ID: #id# - #label#'.replace('#id#', row.id).replace('#label#', row._dataLabel)
 								};
 							});
 
-							recordOptions.unshift({
-								id: 'none',
-								value: '[None]'
-							});
-
-							recordFilter.options = recordOptions;
+							next();
 						}
-
-						next();
+						else {
+							next();
+						}
 					}
 				]);
 
@@ -487,12 +460,11 @@ steal(
 
 						// Set property values
 						var propValues = {};
-						propValues[componentIds.editTitle] = editItem ? (editItem.title || '') : '';
-						propValues[componentIds.editDescription] = editItem ? (editItem.description || '') : '';
+						propValues[componentIds.editTitle] = setting.title || '';
+						propValues[componentIds.editDescription] = setting.description || '';
 						propValues[componentIds.selectObject] = setting.object;
 						propValues[componentIds.selectColumns] = setting.columns;
 						propValues[componentIds.recordFilter] = setting.recordFilter || '';
-						propValues[componentIds.currentUserFilter] = setting.currentUserFilter == 'true';
 
 						$$(componentIds.propertyView).setValues(propValues);
 						$$(componentIds.propertyView).refresh();
@@ -587,7 +559,7 @@ steal(
 							return (selectedData && selectedData.length > 0) ? selectedData[0].value : '[Select]';
 						}
 					},
-					{ label: "Filter", type: "label", id: componentIds.currentUserFilterTitle },
+					{ label: "Filter", type: "label" },
 					{
 						id: componentIds.recordFilter,
 						name: 'filter',
@@ -595,47 +567,12 @@ steal(
 						label: 'Row',
 						template: function (data, dataValue) {
 							var selectedData = $.grep(data.options, function (opt) { return opt.id == dataValue; });
-							if (selectedData && selectedData.length > 0) {
-								return selectedData[0].value;
-							}
-							else {
-								return '[None]';
-							}
+
+							return (selectedData && selectedData.length > 0) ? selectedData[0].value : '[Select]';
 						}
-					},
-					{
-						id: componentIds.currentUserFilter,
-						name: 'currentUserFilter',
-						type: 'checkbox',
-						label: 'Current user',
-						editable: false
 					}
 				],
 				on: {
-					onAfterRender: function () {
-						// Filter - Current user
-						if (componentManager.editInstance &&
-							componentManager.editInstance.getSettings) {
-							var settings = componentManager.editInstance.getSettings();
-							var selectedObject = AD.classes.AppBuilder.currApp.objects.filter(function (obj) { return (obj.id || obj) == settings.object; })[0];
-							var userColumns = [];
-
-							if (selectedObject)
-								userColumns = selectedObject.columns.filter(function (col) { return col.fieldName == 'user'; });
-
-							var currUserFilter = $$(componentIds.propertyView).getItemNode(componentIds.currentUserFilter);
-
-							if (userColumns.length < 1) {
-								settings.currentUserFilter = '0';
-
-								$(currUserFilter).hide();
-							}
-							else {
-								$(currUserFilter).show();
-							}
-						}
-
-					},
 					onAfterEditStop: function (state, editor, ignoreUpdate) {
 						if (ignoreUpdate || state.old == state.value) return false;
 

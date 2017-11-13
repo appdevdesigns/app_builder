@@ -68,7 +68,7 @@ steal(
 									},
 									{
 										id: self.componentIds.componentSpace,
-										width: 300,
+										width: 220,
 										cells: [
 											{
 												id: self.componentIds.componentList,

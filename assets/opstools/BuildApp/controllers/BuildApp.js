@@ -6,7 +6,6 @@ steal(
 	'opstools/BuildApp/views/BuildApp/BuildApp.ejs',
 	'opstools/BuildApp/controllers/AppList.js',
 	'opstools/BuildApp/controllers/AppWorkspace.js',
-    // 'countly-sdk-web/lib/countly.min',
 	function () {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
@@ -25,8 +24,6 @@ steal(
 
 						init: function (element, options) {
 							var self = this;
-
-							webix.codebase = "/js/webix-extras/";
 
 							// Show message when user clicks back button
 							window.onbeforeunload = function () { return "Changes you made may not be saved."; };
@@ -95,12 +92,6 @@ steal(
 									self.updateSyncStatus({
 										action: 'start',
 										step: 'syncObjectData'
-									});
-
-									Countly.end_event({
-									   key: 'synchronize',
-									   count: 1,
-									   segmentation: data
 									});
 
 									// Sync object data
@@ -176,17 +167,15 @@ steal(
 								step: 'request'
 							});
 
-							Countly.start_event('synchronize');
-
 							AD.comm.service.post({
 								url: '/app_builder/fullReload/' + data.appID
 							})
 								.always(function () {
 								});
 
-							// FIX:  sometimes we loose the socket connection and don't get the
+							// FIX:  sometimes we loose the socket connection and don't get the 
 							// update from the server about the status of the reload.
-							// Here we manually add it a check to see if the server is done
+							// Here we manually add it a check to see if the server is done 
 							// and close out the Sync Interface:
 							var _checking = false;
 							function checkIt(delay) {
@@ -220,19 +209,11 @@ steal(
 												checkIt(10000);
 											}
 										})
-
+										
 									} else {
 										console.log('... Sync Done!');
 										// remove this subscription.
 										AD.comm.socket.unsubscribe(subID);
-
-										// This may be redundant, or even unused
-										// see initEvents()
-                                        Countly.end_event({
-                                            key: 'synchronize',
-                                            count: 1,
-                                            segmentation: { appID: data.appID }
-                                        });
 									}
 								}, delay);
 
@@ -242,7 +223,7 @@ steal(
 							var subID = AD.comm.socket.subscribe('server-reload', function(data) {
 								if (!_checking) { console.log('... starting checkIt!'); checkIt(30000); }
 							});
-
+							
 
 						},
 
@@ -308,13 +289,6 @@ steal(
 										'',
 										data.options.error
 									].join('\n')
-
-									Countly.end_event({
-									   key: 'synchronize',
-									   segmentation: {
-									       'error': data.options.error
-									   }
-									});
 
 									// Show retry screen
 									$$(self.webixUiId.loadingScreen).showErrorScreen(

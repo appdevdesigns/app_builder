@@ -7,18 +7,24 @@
 
 var async = require('async'),
     _ = require('lodash'),
-    AD = require('ad-utils');
+    AD = require('ad-utils'),
+    path = require('path');
+
+var ABClassApplication = require(path.join('..', 'classes', 'ABClassApplication'));
+
 
 module.exports = {
 
     tableName: 'appbuilder_application',
 
-    connection: 'appdev_default',
+    // connection: 'appdev_default',
 
 
     attributes: {
 
-        objects: { collection: 'ABObject', via: 'application' },
+        json : 'json', 
+        
+        // objects: { collection: 'ABObject', via: 'application' },
 
         pages: { collection: 'ABPage', via: 'application' },
 
@@ -63,6 +69,12 @@ module.exports = {
             return actionKeyName(this.validAppName()); // 'opstools.' + this.validAppName() + '.view'; 
         },
 
+        toABClass: function () {
+
+            return new ABClassApplication(this);
+
+        },
+
         validAppName: function () {
             return validAppName(this.name);
         }
@@ -100,12 +112,8 @@ module.exports = {
         if ((newRecord)
             && (newRecord.id)) {
 
-            // console.log('... ABApplication.afterCreate():  id: '+newRecord.id);
-
-            // Start building the physical module on the FileSystem:
-            setTimeout(function () {
-                AppBuilder.buildApplication(newRecord.id);
-            }, 500);
+            sails.log.info('ABApplication:afterCreate() triggering registerNavBarArea('+newRecord.id+')');
+            AppBuilder.registerNavBarArea(newRecord.id);
         }
 
         // don't wait around:
@@ -113,11 +121,32 @@ module.exports = {
     },
 
     afterUpdate: function (updatedRecord, cb) {
+
          // if we have a proper ABApplication.id given:
         if ((updatedRecord)
             && (updatedRecord.id)) {
-console.log('... update application: ', updatedRecord);
-            AppBuilder.updateApplication(updatedRecord.id);
+// console.log('... update application: ', updatedRecord);
+
+            Promise.resolve()
+
+                // Update Nav bar area
+                .then(() => {
+                    return AppBuilder.updateNavBarArea(updatedRecord.id);
+                })
+
+                // pull ABApplication
+                .then(() => {
+                    return new Promise((resolve, reject) => {
+
+                        ABApplication.findOne({ id: updatedRecord.id })
+                            .exec((err, result) => {
+                                if (err) reject(err);
+                                else resolve(result);
+                            });
+
+                    });
+                });
+
         }
 
         cb();
@@ -151,18 +180,18 @@ console.log('... update application: ', updatedRecord);
                         callback();
                     }, callback);
             },
-            function (callback) {
-                ABObject.destroy({ application: appIds })
-                    .then(function () {
-                        callback();
-                    }, callback);
-            },
-            function (callback) {
-                ABPage.destroy({ application: appIds })
-                    .then(function () {
-                        callback();
-                    }, callback);
-            },
+            // function (callback) {
+            //     ABObject.destroy({ application: appIds })
+            //         .then(function () {
+            //             callback();
+            //         }, callback);
+            // },
+            // function (callback) {
+            //     ABPage.destroy({ application: appIds })
+            //         .then(function () {
+            //             callback();
+            //         }, callback);
+            // },
 
             function ABApplication_AfterDelete_RemovePermissions(callback) {
 

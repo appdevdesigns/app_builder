@@ -2,7 +2,6 @@ steal(
 	'opstools/BuildApp/controllers/data_fields/connectObject.js',
 	'opstools/BuildApp/controllers/data_fields/string.js',
 	'opstools/BuildApp/controllers/data_fields/text.js',
-	'opstools/BuildApp/controllers/data_fields/richText.js',
 	'opstools/BuildApp/controllers/data_fields/number.js',
 	'opstools/BuildApp/controllers/data_fields/date.js',
 	'opstools/BuildApp/controllers/data_fields/boolean.js',
@@ -10,7 +9,6 @@ steal(
 	'opstools/BuildApp/controllers/data_fields/attachment.js',
 	'opstools/BuildApp/controllers/data_fields/image.js',
 	'opstools/BuildApp/controllers/data_fields/equation.js',
-	'opstools/BuildApp/controllers/data_fields/user.js',
 	function () {
 		var self = {};
 
@@ -26,7 +24,7 @@ steal(
 		// convert the provided objects into a [fields]
 		var fields = $.map(arguments, function (dataField, index) {
 
-			// if the dataField.includeHeader value is set, then update the
+			// if the dataField.includeHeader value is set, then update the 
 			includeHeaderDefinition(dataField);
 
 			return [dataField];
@@ -38,7 +36,7 @@ steal(
 				data.fieldName = field.name;
 				$(self).trigger('update', data);
 			});
-			// TODO:
+			// TODO:			
 			// possible way to have each field able to reference the DataFieldManager:
 			// field.DataFieldManager = self;
 		});
@@ -64,8 +62,8 @@ steal(
 		/**
 		 * @function includeHeaderDefinition
 		 *
-		 * Many DataFields share some base information for their usage
-		 * in the AppBuilder.  The UI Editors have a common header
+		 * Many DataFields share some base information for their usage 
+		 * in the AppBuilder.  The UI Editors have a common header 
 		 * and footer format, and this function allows child DataFields
 		 * to not have to define those over and over.
 		 *
@@ -149,7 +147,7 @@ steal(
 		 * the DataFields. These definitions will be used to create the
 		 * editor display when defining an instance of this DataField.
 		 *
-		 * @return {array}
+		 * @return {array} 
 		 */
 		self.getEditDefinitions = function () {
 			return fields.map(function (f) { return f.editDefinition; });
@@ -183,8 +181,8 @@ steal(
 		 * getFieldMenuList()
 		 *
 		 * return a list of available fields that can be added to an Object
-		 *
-		 * @return {array}  array of webix button definitions for the
+		 * 
+		 * @return {array}  array of webix button definitions for the 
 		 *					AppBuilder.choose field entry.
 		 *					.view: 'button'
 		 *					.value:  the multilingual text that should display
@@ -210,11 +208,11 @@ steal(
 		/**
 		 * getSettings
 		 *
-		 * Have the DataField scan it's Webix Entry form and return the
+		 * Have the DataField scan it's Webix Entry form and return the 
 		 * values collected.
-		 *
+		 * 
 		 * @param {string} name  Which DataField to return data from.
-		 * @return {json}        the settings values, or null.
+		 * @return {json}        the settings values, or null.				
 		 */
 		self.getSettings = function (name) {
 			var field = getField(name);
@@ -247,15 +245,15 @@ steal(
 		 * Have the DataField prepare it's display with the provided data.
 		 *
 		 * If no DataField matches data.name, then silently move on.
-		 *
-		 * @param {ABApplication} application the ABApplication object that defines
+		 * 
+		 * @param {ABApplication} application the ABApplication object that defines 
 		 *							this App.  From this we can access any additional
 		 *							info required for this DataField to work.
 		 *							ex: attempting to access other objects ..
 		 *
-		 * @param {ABColumn} data  An instance of ABColumn that contains
+		 * @param {ABColumn} data  An instance of ABColumn that contains 
 		 *						the settings for a DataField.
-		 *						NOTE: data.name  contains the DataField key
+		 *						NOTE: data.name  contains the DataField key					
 		 */
 		self.populateSettings = function (application, data) {
 			var field = getField(data.fieldName);
@@ -274,7 +272,7 @@ steal(
 
 			if (data.setting && data.setting.icon)
 				$$(componentIds.showIcon.replace('{0}', data.fieldName)).setValue(true);
-			else
+			else 
 				$$(componentIds.showIcon.replace('{0}', data.fieldName)).setValue(false);
 
 			field.populateSettings(application, data);
@@ -286,17 +284,17 @@ steal(
 		 *
 		 * Allow a DataField to manually create it's display in other UI components.
 		 *
-		 * @param {string} fieldName  Which DataField to work with.
-		 * @param {obj} application : The current ABApplication instance
+		 * @param {string} fieldName  Which DataField to work with.	
+		 * @param {obj} application : The current ABApplication instance 
 		 * @param {obj} object  : The ABObject that contains this DataField
 		 * @param {obj} fieldData : The ABColumn instance that defines this DataField
-		 * @param {obj} rowData   : the data of the Model instance from which we are
+		 * @param {obj} rowData   : the data of the Model instance from which we are 
 		 *						  	getting the data for this DataField
 		 * @param {} data       : the value of this DataField
 		 * @param {el} itemNode : the DOM element of the Webix Cell that contains
 		 * 						  the display of this DataField
 		 * @param {obj} options : provided by the calling UI component (Grid/Form)
-		 *						  .readOnly  {bool}  should we display as readOnly?
+		 *						  .readOnly  {bool}  should we display as readOnly?	
 		 * @return {bool}		: true (or non False) if there is a customDisplay
 		 *						: false if no customDisplay
 		 */
@@ -317,7 +315,7 @@ steal(
 		 *
 		 * Allow a DataField to manually create a custom editor for it's data.
 		 *
-		 * @param {obj} application : The current ABApplication instance
+		 * @param {obj} application : The current ABApplication instance 
 		 * @param {obj} object  : The ABObject that contains this DataField
 		 * @param {obj} fieldData : The ABColumn instance that defines this DataField
 		 * @param {int} dataId  : the .id of the current entry
@@ -341,7 +339,7 @@ steal(
 		 *
 		 * Verify that a dataField want's to display a custom editor.
 		 *
-		 * @param {string} fieldName  Which DataField to work with.
+		 * @param {string} fieldName  Which DataField to work with.	
 		 * @param {obj} fieldData : The ABColumn instance that defines this DataField
 		 * @return {bool}		: true if we want a custom editor
 		 *						: false if we don't
@@ -403,7 +401,7 @@ steal(
 		 * resetState
 		 *
 		 * Tell all DataFields to clear their Webix entry forms.
-		 *
+		 * 				
 		 */
 		self.resetState = function () {
 			fields.forEach(function (f) {

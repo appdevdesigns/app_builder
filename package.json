@@ -9,7 +9,10 @@
   "scripts": {
     "test": "make test",
     "postinstall": "node setup/setup.js",
-    "postupdate": "node setup/setup.js"
+    "postupdate": "node setup/setup.js",
+    "build": "node_modules/.bin/webpack",
+    "testbuild": "node_modules/.bin/webpack --config ./assets/opstools/AppBuilder/test/webpack.config.js",
+    "testclient": "node_modules/mocha-phantomjs/bin/mocha-phantomjs -p node_modules/phantomjs/bin/phantomjs assets/opstools/AppBuilder/test/test-all.html --reporter dot --ignore-resource-errors "
   },
   "repository": {
     "type": "git",
@@ -25,14 +28,32 @@
     "ad-utils": "appdevdesigns/ad-utils",
     "appdev-cli": "appdevdesigns/appdev-cli",
     "async": "^1.5.2",
+    "knex": "^0.13.0",
     "lodash": "^4.13.1",
-    "rimraf": "^2.6.1"
+    "moment": "^2.18.1",
+    "mysql": "^2.13.0",
+    "node-uuid": "^1.4.8",
+    "objection": "^0.7.12",
+    "rimraf": "^2.6.1",
+    "uuid": "^3.1.0"
   },
   "devDependencies": {
+    "babel-core": "^6.24.1",
+    "babel-loader": "^6.4.1",
+    "babel-polyfill": "^6.23.0",
+    "babel-preset-es2015": "^6.24.1",
     "barrels": "^1.6.4",
     "chai": "^3.5.0",
+    "css-loader": "^0.28.1",
+    "es6-promise": "^4.1.0",
+    "extract-text-webpack-plugin": "^2.1.0",
     "mocha": "^3.1.0",
-    "sinon": "^1.17.6",
-    "supertest": "^1.2.0"
+    "mocha-phantomjs": "^4.1.0",
+    "phantomjs": "^2.1.7",
+    "sinon": "^2.3.1",
+    "style-loader": "^0.16.1",
+    "supertest": "^1.2.0",
+    "uglifyjs-webpack-plugin": "^0.4.3",
+    "webpack": "^2.5.1"
   }
 }

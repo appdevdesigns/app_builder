@@ -67,12 +67,6 @@ msgstr "ค้นหา"
 
 #. path: app_builder
 #. code: th
-#. key: ab.common.select
-msgid "Select"
-msgstr "เลือก"
-
-#. path: app_builder
-#. code: th
 #. key: ab.common.close
 msgid "Close"
 msgstr "ปิด"
@@ -163,30 +157,6 @@ msgstr "<b>{0}</b> ถูกลบแล้ว"
 
 #. path: app_builder
 #. code: th
-#. key: ab.validate.overMaxLength
-msgid "This input value is invalid"
-msgstr "ข้อมูลนี้ไม่ถูกต้อง"
-
-#. path: app_builder
-#. code: th
-#. key: ab.validate.overMaxLengthDescription
-msgid "Should not have number of character more than #maxLength#."
-msgstr "ข้อมูลไม่สามารถมีจำนวนอักขระมากกว่า #maxLength#"
-
-#. path: app_builder
-#. code: th
-#. key: ab.validate.invalidFormat
-msgid "This input value is invalid format"
-msgstr "ข้อมูลนี้มีรูปแบบไม่ถูกต้อง"
-
-#. path: app_builder
-#. code: th
-#. key: ab.validate.invalidFormatDescription
-msgid "System disallow enter special character."
-msgstr "ระบบไม่อนุญาตให้กรอกข้อมูลที่มีสัญลักษณ์อื่นๆ"
-
-#. path: app_builder
-#. code: th
 #. key: ab.application.application
 msgid "Application"
 msgstr "แอปพลิเคชั่น"
@@ -235,18 +205,6 @@ msgstr "กลับไปหน้าแอปพลิเคชั่น"
 
 #. path: app_builder
 #. code: th
-#. key: ab.application.invalidName
-msgid "This application name is invalid"
-msgstr "แอปพลิเคชั่นนี้ไม่ถูกต้อง"
-
-#. path: app_builder
-#. code: th
-#. key: ab.application.duplicateName
-msgid "#appName# is duplicate."
-msgstr "#appName# ซ้ำกับชื่อแอปพลิเคชั่นอื่น"
-
-#. path: app_builder
-#. code: th
 #. key: ab.application.delete.title
 msgid "Delete application"
 msgstr "ลบแอปพลิเคชั่น"
@@ -275,11 +233,48 @@ msgstr "ชื่อแอปพลิเคชั่น"
 msgid "Application description"
 msgstr "รายละเอียดแอปพลิเคชั่น"
 
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.list.setting
+msgid "Settings"
+msgstr "ตั้งค่า"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.list.search
+msgid "Search"
+msgstr "ค้นหา"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.list.sort
+msgid "Sort"
+msgstr "จัดเรียง"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.list.sort.asc
+msgid "asc"
+msgstr "ก -> ฮ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.list.sort.desc
+msgid "desc"
+msgstr "ฮ -> ก"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.list.group
+msgid "group"
+msgstr "จัดกลุ่ม"
+
 #. path: app_builder
 #. code: th
 #. key: ab.object.title
 msgid "Objects"
-msgstr "Objects"
+msgstr "ข้อมูล"
 
 #. path: app_builder
 #. code: th
@@ -297,19 +292,13 @@ msgstr "<b>{0}</b> มีซ้ำแล้ว"
 #. code: th
 #. key: ab.object.addNew
 msgid "Add new object"
-msgstr "Add new object"
-
-#. path: app_builder
-#. code: th
-#. key: ab.object.menu
-msgid "Object Menu"
-msgstr "Object Menu"
+msgstr "เพิ่มที่เก็บข้อมูลใหม่"
 
 #. path: app_builder
 #. code: th
 #. key: ab.object.form.placeholderName
 msgid "Object name"
-msgstr "Object name"
+msgstr "ชื่อที่เก็บข้อมูล"
 
 #. path: app_builder
 #. code: th
@@ -392,8 +381,8 @@ msgstr "ข้อมูลนี้ยังไม่ได้บันทึก
 #. path: app_builder
 #. code: th
 #. key: ab.object.noConnectedData
-msgid "No data selected"
-msgstr "เลือกข้อมูล"
+msgid ""
+msgstr ""
 
 #. path: app_builder
 #. code: th
@@ -938,7 +927,7 @@ msgstr "เพิ่มหน้าใหม่"
 #. path: app_builder
 #. code: th
 #. key: ab.interface.placeholderPageName
-msgid "Page name"
+msgid "Parent Name"
 msgstr "ชื่อหน้า"
 
 #. path: app_builder
@@ -946,6 +935,18 @@ msgstr "ชื่อหน้า"
 #. key: ab.interface.delete.title
 msgid "Delete page"
 msgstr "ลบหน้านี้"
+
+#. path: app_builder
+#. code: th
+#. key: ab.common.import
+msgid "Import"
+msgstr "นำเข้า"
+
+#. path: app_builder
+#. code: th
+#. key: ab.common.export
+msgid "Export"
+msgstr "ส่งออก"
 
 #. path: app_builder
 #. code: th
@@ -970,30 +971,6 @@ msgstr "[th] %s:Returns the year of a given date"
 #. key: ab.interface.delete.message
 msgid "Do you want to delete <b>{0}</b>?"
 msgstr "คุณต้องการลบ<b>{0}</b>หรือไม่"
-
-#. path: app_builder
-#. code: th
-#. key: ab.component.grid.updateRecords
-msgid "Update records"
-msgstr "แก้ไขข้อมูล"
-
-#. path: app_builder
-#. code: th
-#. key: ab.component.grid.deleteRecords
-msgid "Delete records"
-msgstr "ลบข้อมูล"
-
-#. path: app_builder
-#. code: th
-#. key: ab.component.grid.addFilter
-msgid "Add filters"
-msgstr "กรองข้อมูล"
-
-#. path: app_builder
-#. code: th
-#. key: ab.component.grid.applySort
-msgid "Apply sort"
-msgstr "เรียงข้อมูล"
 
 #. path: app_builder
 #. code: th
@@ -1024,4 +1001,292 @@ msgstr "[th] Choose an icon"
 #. key: ab.component.tab.addTab
 msgid "Add Tab"
 msgstr "[th] Add Tab"
+
+#. path: app_builder
+#. code: th
+#. key: ab.validate.overMaxLength
+msgid "This input value is invalid"
+msgstr "ข้อมูลนี้ไม่ถูกต้อง"
+
+#. path: app_builder
+#. code: th
+#. key: ab.validate.overMaxLengthDescription
+msgid "Should not have number of character more than #maxLength#."
+msgstr "ข้อมูลไม่สามารถมีจำนวนอักขระมากกว่า #maxLength#"
+
+#. path: app_builder
+#. code: th
+#. key: ab.validate.invalidFormat
+msgid "This input value is invalid format"
+msgstr "ข้อมูลนี้มีรูปแบบไม่ถูกต้อง"
+
+#. path: app_builder
+#. code: th
+#. key: ab.validate.invalidFormatDescription
+msgid "System disallow enter special character."
+msgstr "ระบบไม่อนุญาตให้กรอกข้อมูลที่มีสัญลักษณ์อื่นๆ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.application.invalidName
+msgid "This application name is invalid"
+msgstr "แอปพลิเคชั่นนี้ไม่ถูกต้อง"
+
+#. path: app_builder
+#. code: th
+#. key: ab.application.duplicateName
+msgid "#appName# is duplicate."
+msgstr "#appName# ซ้ำกับชื่อแอปพลิเคชั่นอื่น"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.button
+msgid "Button"
+msgstr "[th] Button"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.form
+msgid "Form"
+msgstr "[th] Form"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.label
+msgid "Label"
+msgstr "[th] Label"
+
+#. path: app_builder
+#. code: th
+#. key: ab.component.label.text
+msgid "Text"
+msgstr "[th] Text"
+
+#. path: app_builder
+#. code: th
+#. key: ab.component.label.textPlaceholder
+msgid "Text Placeholder"
+msgstr "[th] Text Placeholder"
+
+#. path: app_builder
+#. code: th
+#. key: ab.component.label.formatting
+msgid "format options:"
+msgstr "[th] format options:"
+
+#. path: app_builder
+#. code: th
+#. key: ab.component.label.formatting.normal
+msgid "normal"
+msgstr "[th] normal"
+
+#. path: app_builder
+#. code: th
+#. key: ab.component.label.formatting.title
+msgid "title"
+msgstr "[th] title"
+
+#. path: app_builder
+#. code: th
+#. key: ab.component.label.formatting.description
+msgid "description"
+msgstr "[th] description"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.checkbox
+msgid "Checkbox"
+msgstr "[th] Checkbox"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.connect
+msgid "Connect"
+msgstr "[th] Connect"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.custom
+msgid "Custom"
+msgstr "[th] Custom"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.detail
+msgid "Detail"
+msgstr "[th] Detail"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.datepicker
+msgid "Date Picker"
+msgstr "[th] Date Picker"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.grid
+msgid "Grid"
+msgstr "[th] Grid"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.layout
+msgid "Layout"
+msgstr "[th] Layout"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.menu
+msgid "Menu"
+msgstr "[th] Menu"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.number
+msgid "Number"
+msgstr "[th] Number"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.selectsingle
+msgid "Single Select"
+msgstr "[th] Single Select"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.tab
+msgid "Tab"
+msgstr "[th] Tab"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.textbox
+msgid "Textbox"
+msgstr "[th] Textbox"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.view
+msgid "View"
+msgstr "[th] View"
+
+#. path: app_builder
+#. code: th
+#. key: ab.validation.view.label.unique
+msgid "View label must be unique among peers."
+msgstr "[th] View label must be unique among peers."
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.view.dropHere
+msgid "Drop Component Here"
+msgstr "[th] Drop Component Here"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.chart
+msgid "Chart"
+msgstr "[th] Chart"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.chart.pie
+msgid "Pie"
+msgstr "[th] Pie Chart"
+
+#. path: app_builder
+#. code: th
+#. key: ab.interface.component.confirmDeleteTitle
+msgid "Delete Component"
+msgstr "[th] Delete Component"
+
+#. path: app_builder
+#. code: th
+#. key: ab.interface.component.confirmDeleteMessage
+msgid "Do you want to delete <b>{0}</b>?"
+msgstr "[th] Do you want to delete <b>{0}</b>?"
+
+#. path: app_builder
+#. code: th
+#. key: ab.interface.properties
+msgid "Properties"
+msgstr "คุณสมบัติ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.interface.selectPage
+msgid "Select a Page to edit"
+msgstr "[th] Select a Page to edit"
+
+#. path: app_builder
+#. code: th
+#. key: ab.interface.viewModeBlock
+msgid "Block"
+msgstr "[th] Block"
+
+#. path: app_builder
+#. code: th
+#. key: ab.interface.viewModePreview
+msgid "Preview"
+msgstr "ภาพตัวอย่าง"
+
+#. path: app_builder
+#. code: th
+#. key: ab.interface.page.parentList
+msgid "Parent Page"
+msgstr "[th] Parent Page"
+
+#. path: app_builder
+#. code: th
+#. key: ab.interface.rootPage
+msgid "[Root Page]"
+msgstr "[th] [Root Page]"
+
+#. path: app_builder
+#. code: th
+#. key: ab.interface.components
+msgid "Components"
+msgstr "[th] Components"
+
+#. path: app_builder
+#. code: th
+#. key: ab.interface.noComponents
+msgid "No Components"
+msgstr "[th] No Components"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.common.headerLabel
+msgid "Label"
+msgstr "[th] Label"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.common.headerLabelPlaceholder
+msgid "Header Name"
+msgstr "[th] Header Name"
+
+#. path: app_builder
+#. code: th
+#. key: ab.interface.quickPage
+msgid "Quick Page"
+msgstr "[th] Quick Page"
+
+#. path: app_builder
+#. code: th
+#. key: ab.interface.blankPage
+msgid "Blank Page"
+msgstr "[th] Blank Page"
+
+#. path: app_builder
+#. code: th
+#. key: ab.interface.title
+msgid "Interface"
+msgstr "ส่วนแสดงผล"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.selectObject
+msgid "Select an object to work with."
+msgstr "เลือกที่เก็บข้อมูล"
 

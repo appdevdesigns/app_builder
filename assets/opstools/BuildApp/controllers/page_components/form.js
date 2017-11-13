@@ -41,28 +41,19 @@ steal(
 			};
 
 		//Constructor
-		var formComponent = function (application, rootPageId, viewId, componentId) {
+		var formComponent = function (application, viewId, componentId) {
 			var data = {},
 				events = {}, // { eventName: eventId, ..., eventNameN: eventIdN }
 				customEditTimeout = {}; // { colId: timeoutId }
 
 			// Private methods
-			function getCurrentModel(setting) {
-				var currModel = null;
-
-				if (setting.clearOnLoad != 'yes')
-					currModel = data.dataCollection.AB.getCurrModel(rootPageId);
-
-				return currModel;
-			}
-
-			function showCustomEdit(column, setting, current_view) {
+			function showCustomEdit(column, current_view) {
 				if (customEditTimeout[column.id]) clearTimeout(customEditTimeout[column.id]);
 				customEditTimeout[column.id] = setTimeout(function () {
 					var rowId;
 
 					if (data.dataCollection) {
-						var currModel = getCurrentModel(setting),
+						var currModel = data.dataCollection.AD.currModel(),
 							rowId = currModel ? currModel.id : null;
 					}
 
@@ -74,44 +65,34 @@ steal(
 				var self = this,
 					q = $.Deferred(),
 					editValues = $$(self.viewId).getValues(),
-					keys = Object.keys(editValues);
+					keys = Object.keys(editValues),
+					colVal;
 
 				// Populate values to model
-				async.eachSeries(columns, function (col, ok) {
-					async.waterfall([
+				async.each(columns, function (col, ok) {
+					async.series([
 						function (next) {
 							var childView = getChildView.call(self, col.name);
 							if (childView == null) {
 								// If link column is hidden, then select cursor item of linked data collection
 								if (col.type == 'connectObject') {
 									dataCollectionHelper.getDataCollection(application, col.setting.linkObject)
-										.fail(next)
 										.done(function (linkDC) {
-											var colVal;
-											var linkedCurrModel = linkDC.AB.getCurrModel(rootPageId);
-
-											if (linkedCurrModel != null) {
-												if (col.setting.linkType == 'collection')
-													colVal = [linkedCurrModel.id];
-												else
-													colVal = linkedCurrModel.id;
-											}
-
-											next(null, colVal);
+											if (col.setting.linkType == 'collection')
+												colVal = [linkDC.getCursor()];
+											else
+												colVal = linkDC.getCursor();
 										});
-								}
-								else {
-									next(null, null);
 								}
 							}
 							else {
 								// Get value in custom data field
-								var customVal = dataFieldsManager.getValue(application, null, col, childView.$view, editValues);
-								next(null, customVal);
+								colVal = dataFieldsManager.getValue(application, null, col, childView.$view, editValues);
 							}
 
+							next();
 						},
-						function (colVal, next) {
+						function (next) {
 							if (colVal != null)
 								modelData.attr(col.name, colVal);
 							else if (editValues[col.name] != null)
@@ -140,11 +121,11 @@ steal(
 				$$(self.viewId).showProgress({ type: "icon" });
 
 				// Group app
-				if (linkedToDataCollection && linkedToDataCollection.AB.getCheckedItems().length > 0) {
+				if (linkedToDataCollection && linkedToDataCollection.getCheckedItems().length > 0) {
 					var linkField = self.data.columns.filter(function (col) { return col.id == setting.linkField })[0];
 					var addTasks = [];
 
-					async.eachSeries(linkedToDataCollection.AB.getCheckedItems(), function (linkRowId) {
+					async.eachSeries(linkedToDataCollection.getCheckedItems(), function (linkRowId) {
 						async.series([
 							function (next) {
 								var modelData = new dataCollection.AD.getModelObject()(); // Create new model data
@@ -185,7 +166,7 @@ steal(
 				}
 				// Save without link data (Single row)
 				else {
-					var modelData = getCurrentModel(setting),
+					var modelData = dataCollection.AD.currModel(),
 						isAdd;
 
 					// Create
@@ -253,8 +234,8 @@ steal(
 				$$(self.viewId).hideProgress();
 
 				if (setting.clearOnSave == 'yes')
-					dataCollection.AB.setCurrModel(rootPageId, null);
-				else if (dataCollection.AB.getCurrModel(rootPageId) == null) {
+					dataCollection.setCursor(null);
+				else if (dataCollection.getCursor() == null) {
 					clearForm.call(self, object, self.data.columns, dataCollection);
 				}
 
@@ -270,18 +251,10 @@ steal(
 				}
 			}
 
-			function showFields(object, columns, rowId, rowData) {
+			function showCustomFields(object, columns, rowId, rowData) {
 				var self = this;
 
 				if (!columns || columns.length < 1) return;
-
-				// Webix view
-				if (rowData) {
-					var modelData = rowData.attr ? rowData.attr() : rowData;
-					$$(self.viewId).setValues(modelData);
-				}
-				else
-					$$(self.viewId).setValues({});
 
 				// Custom view
 				columns.forEach(function (col) {
@@ -293,36 +266,17 @@ steal(
 					if (childView.config && childView.config.view === 'template') {
 						if (childView.customEditEventId) webix.eventRemove(childView.customEditEventId);
 						childView.customEditEventId = webix.event(childView.$view, "click", function (e) {
-							showCustomEdit(col, col.setting, childView.$view);
+							showCustomEdit(col, childView.$view);
 						});
 					}
-
 					// Set default value
-					if ((rowData == null || rowData[col.name] == null) && rowId == null) {
-						if (childView.setValue && col.setting.default) {
-							var defaultValue = col.setting.default;
+					else if ((rowData == null || rowData[col.name] == null) && rowId == null && childView.setValue && col.setting.default) {
+						var defaultValue = col.setting.default;
 
-							if (col.type == 'date' || col.type == 'datetime')
-								defaultValue = new Date(col.setting.default);
+						if (col.type == 'date' || col.type == 'datetime')
+							defaultValue = new Date(col.setting.default);
 
-							childView.setValue(defaultValue);
-						}
-						else if (col.fieldName == 'user' && col.setting.defaultCurrentUser == true) {
-
-							// Get current user as default
-							AD.comm.service.get({
-								url: '/site/user/data'
-							})
-								.fail(function (err) {
-									webix.message(err.message);
-								})
-								.done(function (data) {
-									dataFieldsManager.setValue(col, childView.$view, {
-										id: data.user.username,
-										text: data.user.username
-									});
-								});
-						}
+						childView.setValue(defaultValue);
 					}
 				});
 			}
@@ -332,7 +286,7 @@ steal(
 
 				if (data.linkedToDataCollection) {
 					var checkedItems = [];
-					data.linkedToDataCollection.AB.getCheckedItems().forEach(function (rowId) {
+					data.linkedToDataCollection.getCheckedItems().forEach(function (rowId) {
 						var rowData = data.linkedToDataCollection.getItem(rowId);
 
 						checkedItems.push({
@@ -372,8 +326,7 @@ steal(
 						}
 					}
 
-					// Removed as this was overiding the webix container height.
-					// childView.define('height', 35); // Default height
+					childView.define('height', 35); // Default height
 					childView.resize();
 				});
 			}
@@ -404,7 +357,7 @@ steal(
 				// Clear form
 				$$(self.viewId).setValues({});
 				// Clear custom views
-				showFields.call(self, object, columns, null, null);
+				showCustomFields.call(self, object, columns, null, null);
 			}
 
 			// Set viewId to public
@@ -413,7 +366,7 @@ steal(
 			this.data = {};
 
 			// Instance functions
-			this.render = function (setting, editable, showAll, dataCollection, linkedToDataCollection, currComponent) {
+			this.render = function (setting, editable, showAll, dataCollection, linkedToDataCollection) {
 				var self = this,
 					q = $.Deferred(),
 					elementViews = [],
@@ -444,27 +397,25 @@ steal(
 				if (!data.object || data.object.length < 1) return;
 				data.object = data.object[0];
 
-				if (events['onAfterCurrModelChange'] == null && data.dataCollection) {
-					events['onAfterCurrModelChange'] = data.dataCollection.attachEvent('onAfterCurrModelChange', function (basePageId, rowId) {
-						if (basePageId != rootPageId) return;
-
+				if (events['onAfterCursorChange'] == null && data.dataCollection) {
+					events['onAfterCursorChange'] = data.dataCollection.attachEvent('onAfterCursorChange', function (id) {
 						async.series([
 							function (next) {
-								updateSaveButton(rowId).then(function () {
+								updateSaveButton(id).then(function () {
 									next();
 								}, next);
 							},
 							function (next) {
-								var currModel = getCurrentModel(setting);
+								var currModel = data.dataCollection.AD.currModel();
 
 								// Show custom display
-								showFields.call(self, data.object, self.data.columns, rowId, currModel);
+								showCustomFields.call(self, data.object, self.data.columns, id, currModel);
 
 								setElementHeights.call(self, self.data.columns, currModel);
 
 								next();
 							}
-						]);
+						])
 					});
 				}
 
@@ -504,8 +455,6 @@ steal(
 								});
 
 								self.data.columns = result;
-								self.data.columns.sort(function (a, b) { return a.weight - b.weight; });
-
 								next();
 							});
 					},
@@ -528,16 +477,6 @@ steal(
 												}
 											});
 
-											// sort options
-											if (col.setting && col.setting.options) {
-												var optIds = col.setting.options.map(function (opt) { return opt.id.toString() });
-
-												listOptions[col.id].sort(function (a, b) {
-													return optIds.indexOf(a.id.toString()) - optIds.indexOf(b.id.toString());
-												})
-											}
-
-
 											callback();
 										});
 								});
@@ -557,7 +496,7 @@ steal(
 
 							var element = {
 								name: col.name, // Field name
-								labelWidth: 200
+								labelWidth: 100
 							};
 							element.label = col.label;
 
@@ -587,35 +526,6 @@ steal(
 							else if (col.setting.editor === 'richselect') {
 								element.view = 'richselect';
 								element.options = listOptions[col.id];
-							}
-							else if (col.setting.editor === 'richtext') {
-
-								var template = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label>"
-									.replace(/#width#/g, element.labelWidth - 3)
-									.replace(/#label#/g, element.label);
-
-								// element.height = 250;
-								element.cols = [
-									{
-										view: 'template',
-										minHeight: 45,
-										borderless: true,
-										template: template,
-										width: element.labelWidth + 5
-									},
-									{
-										view: 'template',
-										template: "<div class='ab-richtext-data-field'></div>",
-										height: 375,
-										css: 'richtext-container',
-										borderless: true,
-									}
-								];
-
-								console.log('col.setting.editorId: --> ', col.setting.editorId)
-
-								console.log('element: ---> ', element)
-
 							}
 							else if (col.setting.template) {
 								var template = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label>#template#"
@@ -675,7 +585,7 @@ steal(
 								view: 'text',
 								placeholder: 'Title',
 								css: 'ab-component-header',
-								value: currComponent.title || setting.title || '',
+								value: setting.title || '',
 								on: {
 									onChange: function (newv, oldv) {
 										if (newv != oldv) {
@@ -687,11 +597,11 @@ steal(
 								}
 							});
 						}
-						else if (currComponent.title || setting.title) {
+						else if (setting.title) {
 							header.rows.push({
 								view: 'label',
 								css: 'ab-component-header',
-								label: currComponent.title || setting.title || '',
+								label: setting.title || ''
 							});
 						}
 
@@ -702,7 +612,7 @@ steal(
 								view: 'textarea',
 								placeholder: 'Description',
 								css: 'ab-component-description',
-								value: currComponent.description || setting.description || '',
+								value: setting.description || '',
 								inputHeight: 60,
 								height: 70,
 								on: {
@@ -717,11 +627,11 @@ steal(
 
 							});
 						}
-						else if (currComponent.description || setting.description) {
+						else if (setting.description) {
 							header.rows.push({
 								view: 'label',
 								css: 'ab-component-description',
-								label: currComponent.description || setting.description || ''
+								label: setting.description || ''
 							});
 						}
 
@@ -759,7 +669,7 @@ steal(
 								id: saveButtonId,
 								view: "button",
 								type: "form",
-								value: AD.lang.label.getLabel('ab.common.save') || "Save",
+								value: setting.saveLabel || "Save",
 								width: 90,
 								inputWidth: 80,
 								disabled: editable,
@@ -792,12 +702,12 @@ steal(
 							actionButtons.cols.push({
 								id: cancelButtonId,
 								view: "button",
-								value: AD.lang.label.getLabel('ab.common.cancel') || "Cancel",
+								value: setting.cancelLabel || "Cancel",
 								width: 90,
 								inputWidth: 80,
 								disabled: editable,
 								click: function () {
-									data.dataCollection.AB.setCurrModel(rootPageId, null);
+									data.dataCollection.setCursor(null);
 
 									clearForm.call(self, data.object, self.data.columns, data.dataCollection);
 
@@ -815,19 +725,21 @@ steal(
 						var currData;
 
 						// Bind data
-						if (dataCollection)
-							currData = getCurrentModel(setting);
+						if (dataCollection) {
+							$$(self.viewId).bind(dataCollection);
+							currData = dataCollection.AD.currModel();
+						}
 
 						// Show data of current select data
-						showFields.call(self, data.object, self.data.columns, currData ? currData.id : null, currData);
+						showCustomFields.call(self, data.object, self.data.columns, currData ? currData.id : null, currData);
 
 						next();
 					},
 					// Enable/Disable save button
 					function (next) {
 						var cursorId;
-						if (dataCollection && dataCollection.AB.getCurrModel() != null) {
-							cursorId = dataCollection.AB.getCurrModel().id;
+						if (dataCollection && dataCollection.getCursor() != null) {
+							cursorId = dataCollection.getCursor();
 						}
 						updateSaveButton(cursorId).then(function () {
 							next();
@@ -888,8 +800,6 @@ steal(
 					dataCollection,
 					linkedToDataCollection;
 
-				var editItem = application.currPage.components.filter(function (c) { return c.id == componentId; })[0];
-
 				async.series([
 					// Get data collection
 					function (next) {
@@ -945,7 +855,7 @@ steal(
 					},
 					// Render form component
 					function (next) {
-						self.render(setting, true, showAll, dataCollection, linkedToDataCollection, editItem)
+						self.render(setting, true, showAll, dataCollection, linkedToDataCollection)
 							.fail(next)
 							.done(function () { next(); });
 					},
@@ -1026,8 +936,8 @@ steal(
 
 					// Set property values
 					var propValues = {};
-					propValues[componentIds.editTitle] = editItem ? (editItem.title || '') : '';
-					propValues[componentIds.editDescription] = editItem ? (editItem.description || '') : '';
+					propValues[componentIds.editTitle] = setting.title || '';
+					propValues[componentIds.editDescription] = setting.description || '';
 					propValues[componentIds.selectObject] = setting.object;
 					propValues[componentIds.linkedTo] = setting.linkedTo;
 					propValues[componentIds.linkField] = setting.linkField;
@@ -1055,9 +965,10 @@ steal(
 
 				if (!data.dataCollection) return;
 
-				var currModel = getCurrentModel(data.setting);
+				var currModel = data.dataCollection.AD.currModel();
 
 				if (data.setting.clearOnLoad === 'yes') {
+					data.dataCollection.setCursor(null);
 					clearForm.call(self, data.object, self.data.columns, data.dataCollection);
 				}
 
@@ -1071,7 +982,7 @@ steal(
 					if (col.fieldName == 'connectObject' && !currModel) {
 						dataCollectionHelper.getDataCollection(application, col.setting.linkObject)
 							.then(function (linkedDataCollection) {
-								var linkCurrModel = linkedDataCollection.AB.getCurrModel(rootPageId);
+								var linkCurrModel = linkedDataCollection.AD.currModel();
 								if (!linkCurrModel) return;
 
 								// Get default value of linked data
@@ -1285,7 +1196,6 @@ steal(
 				],
 				on: {
 					onAfterEditStop: function (state, editor, ignoreUpdate) {
-						console.log('onAfterEditStop ---- ');
 						if (ignoreUpdate || state.old == state.value) return false;
 
 						var viewId = componentIds.editForm,

@@ -1,0 +1,1028 @@
+.webix_dt_editor input, .webix_dt_editor select, .webix_view, .webix_el_colorpicker input, .webix_el_combo input, .webix_el_datepicker input, .webix_el_search input, .webix_el_text input, .webix_control button, .webix_control input, .webix_control textarea, .webix_el_label, .webix_inp_bottom_label, .webix_inp_label, .webix_inp_top_label {
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif !important;
+}
+.webix_segment_0, .webix_segment_1, .webix_segment_N {
+	background: #888;
+	border-color: #888;
+}
+.webix_window {
+	box-shadow: 1px 3px 30px rgba(0,0,0,0.8);
+}
+.webix_segment_0.webix_selected, .webix_segment_1.webix_selected, .webix_segment_N.webix_selected,
+.webix_selected.webix_segment_0:hover, .webix_selected.webix_segment_1:hover, .webix_selected.webix_segment_N:hover,
+.webix_selected.webix_segment_0:active, .webix_selected.webix_segment_0:focus, .webix_selected.webix_segment_1:active, .webix_selected.webix_segment_1:focus, .webix_selected.webix_segment_N:active, .webix_selected.webix_segment_N:focus,
+.webix_inp_counter_next:active, .webix_inp_counter_prev:active, .webix_segment_0:active, .webix_segment_1:active, .webix_segment_N:active, .webixbutton:active, .webixtype_base:active {
+	background: #3498db;
+	border-color: #3498db;	
+}
+.ab-generated-page {
+	overflow-y: auto;
+	background: #fff !important;
+}
+.ab-main-container {
+	position: relative;
+	display: block;
+	width: 100%;
+	background: -moz-linear-gradient(top, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 100%); /* FF3.6-15 */
+	background: -webkit-linear-gradient(top, rgba(0,0,0,0.2) 0%,rgba(0,0,0,0) 100%); /* Chrome10-25,Safari5.1-6 */
+	background: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%,rgba(0,0,0,0) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+}
+.ab-main-container .pointer {
+	cursor: pointer;
+}
+.ab-main-container .right {
+	text-align: right;
+}
+.ab-main-container .center {
+	text-align: center;
+}
+.ab-main-container .left {
+	text-align: left;
+}
+.ab-text-bold {
+	font-weight: bold !important;
+}
+.ab-scroll-y {
+	overflow-y: auto !important;
+}
+.ab-ellipses-text, .ab-ellipses-text > div {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+.ab-interface-component {
+	background-color: #fff !important;
+	box-shadow: 0px 2px 4px rgba(0,0,0,0.2);
+}
+.float-left {
+	float: left;
+}
+.float-right {
+	float: right;
+}
+
+/* Webix icon */
+.ab-main-container .webix_icon {
+	line-height: inherit;
+}
+
+/* Fix overflow-x */
+.ab-generated-page .webix_scroll_cont {
+	overflow: auto !important;
+}
+
+/* == Webix datatable == */
+/* Checkbox column */
+.ab-main-container .webix_hcell.center input[type=checkbox] {
+	width:20px;
+	height:20px;
+	margin-top:12px;
+  }
+.ab-main-container .webix_table_checkbox {
+	width:20px;
+	height:20px;
+	margin-top:5px;
+}
+/* Last column */
+.ab-main-container .webix_column.webix_last > div,
+.ab-main-container .webix_hs_center td.webix_last,
+.ab-main-container .ab-app-list-descriptionwebix_hs_right td.webix_last {
+	border-right-width: 1px !important;
+}
+/* No padding/margin column */
+.ab-column-no-padding div {
+	padding: 0px !important;
+	margin: 0px !important;
+}
+.ab-main-container .ab-cell-warn {
+	background-color: #F5AE0F !important;
+}
+
+/* Webix selected item */
+.webix_list_item.webix_selected,
+.webix_column>div.webix_cell_select,
+.webix_column>div.webix_column_select,
+.webix_column>div.webix_row_select {
+	background-color: #3498db !important;
+}
+.webix_list_item.disabled {
+	background-color: #eee;
+	color: #aaa;
+}
+
+/* Webix message */
+.webix_success {
+  background-color: #BFF2BF;
+}
+.webix_success div {
+  background-color: #BFF2BF;
+  border: 1px solid #007A00;
+  color: #000;
+}
+
+/* Webix list */
+.ab-main-container .webix_list_item .webix_selected,
+.ab-main-container .webix_tree_item.webix_selected {
+	color: #fff !important;
+	background-color: #3498db !important;
+}
+.ab-app-form-permission .webix_selected {
+	color: #333 !important;
+	background-color: transparent !important;
+}
+.webix_list.webix_invalid {
+	background-color: #fff6f6;
+	border-color: #fea5a8;
+}
+
+/* Webix toolbar */
+.ab-toolbar-submenu, .ab-toolbar-submenu .webix_header>div {
+	background: #EEE !important;
+	color: #666 !important;
+	font-size: 15px !important;
+	font-weight: bold !important;
+	border-bottom: 0px !important;
+}
+.webix_view.webix_control .webix_disabled_box .webix_input_icon, .webix_view.webix_control .webix_disabled_box button, .webix_view.webix_control .webix_disabled_box label {
+	color: #CCC;
+	background: transparent;
+}
+.webix_control .webix_disabled_box .webix_el_arrow, .webix_control .webix_disabled_box .webix_img_btn, .webix_control .webix_disabled_box .webixtype_base, .webix_control .webix_disabled_box .webixtype_danger, .webix_control .webix_disabled_box .webixtype_form, .webix_control .webix_disabled_box .webixtype_next, .webix_control .webix_disabled_box .webixtype_prev {
+	color: #CCC;
+	background: transparent;
+}
+
+/* Webix segmented */
+.ab-form-component-item .webix_segment_0.webix_selected,
+.ab-form-component-item .webix_segment_1.webix_selected,
+.ab-form-component-item .webix_segment_N.webix_selected,
+.ab-component-view-edit-field .webix_segment_0.webix_selected,
+.ab-component-view-edit-field .webix_segment_1.webix_selected,
+.ab-component-view-edit-field .webix_segment_N.webix_selected {
+	color: #fff !important;
+	background-color: #3498db !important;
+}
+
+.ab-form-component-item .webix_segment_0,
+.ab-form-component-item .webix_segment_1,
+.ab-form-component-item .webix_segment_N,
+.ab-component-view-edit-field .webix_segment_0,
+.ab-component-view-edit-field .webix_segment_1,
+.ab-component-view-edit-field .webix_segment_N {
+	color: #3498db;
+	background: #fff;
+}
+
+/* Add new columns popup */
+.ab-add-fields-popup {
+	overflow-y: auto;
+}
+
+/* Application list */
+.ab-app-list {
+/*
+	min-height: 300px;
+	padding: 40px 100px;
+*/
+}
+.ab-app-select-list .webix_selected {
+	background-color: #FFF !important;
+	color: #333 !important;
+}
+.ab-app-select-list .webix_list_item:hover {
+	background: #ebebeb;
+}
+.ab-app-list-item {
+	position: relative;
+	height: 100%;
+	margin: -2px -10px;
+	padding: 15px;
+	line-height: 20px;
+}
+div[view_id='ab-app-list'] div.webix_list_item:hover,
+div[view_id='ab-object-list'] div.webix_list_item:hover,
+div[view_id='ab-object-list-menu'] div.webix_list_item:hover,
+div[view_id='ab-new-connectObject-list-item'] div.webix_list_item:hover,
+div[view_id='ab-edit-header-items'] div.webix_list_item:hover,
+div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
+	background-color: #eee;
+}
+.ab-app-list-name {
+	font-size: large;
+}
+.ab-app-list-description {
+	color: #999;
+	font-size: small;
+}
+.ab-app-list-info {
+	width: 95%;
+	display: inline-block;
+}
+.ab-app-list-edit {
+	position: absolute;
+	top: 0;
+	right: 10px;
+	opacity: 0.4;
+	line-height: 70px;
+	height: 70px;
+}
+.ab-app-list-edit:hover {
+	opacity: 1;
+}
+
+/* Application workspace */
+.ab-app-workspace {
+	/*min-height: 100px;*/
+}
+.ab-unsync-data-warning {
+	cursor: pointer;
+    color: #fff;
+    background-color: #F5962F;
+    border: #fff dotted 1px !important;
+    padding-left: 2px;
+}
+.ab-unsync-data-popup .webix_win_head {
+	background-color: #F5962F;
+}
+.ab-unsync-data-popup .webix_win_head .header {
+	padding-left: 5px;
+	font-weight: bold;
+    color: #fff;
+}
+.ab-unsync-data-status {
+	padding: 3px;
+}
+.ab-unsync-data-in-progress {
+	background-color: #F5AE0F;
+}
+.ab-unsync-data-done {
+	background-color: #3AB349;
+}
+.ab-unsync-data-error {
+	background-color: #EC2F2F;
+}
+
+/* Object list */
+.ab-object-list-filter .webix_accordionitem_header {
+	font-size: 14px;
+	line-height: 30px;
+}
+.ab-object-list-item {
+	position: relative;
+	height: 100%;
+}
+.ab-object-list-edit {
+	position: absolute;
+	top: 0px;
+	right: 5px;
+	display: none;
+}
+.ab-object-unsync {
+	background-color: #d2e3ef;
+	color: #4a4a4a;
+	position: absolute;
+	top: 4px;
+	right: 30px;
+	font-size: 12px;
+	border-radius: 6px;
+	padding: 0px 4px;
+	height: 20px;
+	line-height: 20px;
+	display: none;
+}
+
+/* Interface list */
+.ab-page-list-item {
+	position: relative;
+	height: 100%;
+}
+.ab-page-list-edit {
+	position: absolute;
+	top: 0px;
+	right: 5px;
+	display: none;
+	cursor: pointer;
+}
+
+/* Object datatable */
+.ab-object-data-header {
+	position: relative;
+}
+.ab-object-data-new-header {
+	background-color: #cfd9e0;
+}
+
+.ab-object-data-header-edit {
+	display: none;
+	position: absolute;
+	top: 15px;
+	right: 10px;
+}
+.ab-object-data-header:hover .ab-object-data-header-edit {
+	display: block;
+}
+.ab-object-unsync-data {
+	background-color: #dae6fb;
+}
+.ab-object-view-column {
+	color: #3498db;
+	font-weight: bold;
+	text-align: center;
+	cursor: pointer;
+}
+
+/* Connect object data */
+.ab-connect-add-new a.fa {
+	width: 35px;
+	height: 35px;
+	display: block;
+	float: left;
+	border-radius: 4px;
+	background: #3498db;
+	color: white;
+	opacity: 1;
+	text-align: center;
+	line-height: 35px;
+}
+.ab-connect-add-new a.fa:hover {
+	text-decoration: none;
+}
+.ab-connect-data-info {
+	display: inline-block;
+	width: 90px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.ab-connect-data-disable {
+	background-color: #aaa;
+}
+
+/* Custom selectivity */
+.selectivity-multiple-input-container {
+	background: none !important;
+	padding: 0px !important;
+	overflow: hidden !important;
+	max-height: 100% !important;
+}
+.selectivity-multiple-input, input[type=text].selectivity-multiple-input, .selectivity-multiple-input-container {
+	height: 35px !important;
+}
+.selectivity-single-result-container {
+	left: 2px;
+}
+.selectivity-multiple-selected-item, .selectivity-single-selected-item {
+	background: #3498db !important;
+	padding: 0 10px;
+	border-radius: 15px;
+	color: #FFF !important;
+	line-height: 2em;
+	display: inline-block;
+	/*max-width: 100px !important;*/
+}
+.selectivity-single-selected-item-remove {
+	color: #FFF;
+}
+.customField .selectivity-multiple-input-container {
+	border: 1px solid #CCC;
+	border-radius: 6px;
+	margin-right: 4px;
+}
+.selectivity-single-select {
+	background: transparent !important;
+}
+.webix_template .selectivity-single-select {
+	padding: 0;
+	border: 1px solid #CCC;
+	border-radius: 6px;
+	margin-right: 4px;
+}
+.selectivity-single-select input {
+	padding: 0;
+	border: 0;
+}
+.selectivity-single-selected-item {
+	color: #666;
+}
+.selectivity-single-result-container {
+	top: .0em !important;
+}
+.selectivity-single-selected-item-remove {
+	padding: 10 5px !important;
+}
+.selectivity-caret {
+	top: .4em !important;
+}
+
+/* Interface tree view */
+.ab-main-container .webix_tree_item.webix_selected span {
+	padding: 0px;
+	margin: 0px;
+	background: #3498db !important;
+}
+
+/* Interface new page popup */
+.ab-interface-new-quick-page {
+    overflow: scroll !important;
+	overflow-x: hidden !important;
+	overflow-y: auto !important;
+}
+
+.ab-interface-new-quick-page .webix_inp_checkbox_border label {
+	font-weight: normal; /* Override bootstrap*/
+}
+.webix_hcell input[type=checkbox] {
+	width: 20px;
+	height: 20px;
+	position: relative;
+	top: 5px;
+}
+
+/* Interface page layout */
+.ab-component-drop-area {
+	margin-right: 2px;
+	border: 1px dashed #000 !important;
+	background-color: #D3E9EF;
+	background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1' height='30px' width='90px'><text x='20' y='20' fill='#95CBEF' font-size='15'>Drop Here</text></svg>");
+}
+
+div[view_id='ab-interface-layout-page'] .webix_list_item,
+.ab-component-in-page {
+	position: relative;
+}
+
+.ab-component-tools {
+	position: absolute;
+	right: 34px;
+	top: 0;
+}
+.ab-tab-tools.ab-component-tools {
+	right: 0 !important;
+}
+
+.ab-tab-back:hover, .ab-tab-next:hover {
+	cursor: e-resize;
+	background: rgba(0,0,0,0.7);
+}
+.ab-tab-back:hover {
+	cursor: w-resize;
+}
+.ab-tab-back, .ab-tab-next {
+	float: left;
+	margin-left: 10px;
+	background: rgba(0,0,0,0.2);
+	width: 20px;
+	height: 20px;
+	border-radius: 10px;
+	line-height: 18px;
+	padding-right: 2px;
+}
+.ab-tab-edit {
+	opacity: 0.4;
+}
+.ab-tab-edit:hover {
+	opacity: 1;
+}
+.ab-tab-next {
+	float: right;
+	margin-right: 10px;
+	padding-left: 2px;
+}
+.webix_all_tabs div:first-child .ab-tab-back {
+	display: none;
+}
+.webix_all_tabs div:last-child .ab-tab-next {
+	display: none;
+}
+.ab-component-item-name {
+	float: left;
+	font-size: 18px;
+	border-right: 1px solid #ebebeb;
+	vertical-align: top;
+	padding-top: 10px;
+	width: 90px;
+	margin-bottom: -500em; /* CSS hack: equal height of right float */
+	padding-bottom: 500em;
+}
+
+.ab-component-item-display {
+	float: right;
+	vertical-align: top;
+	padding: 10px;
+	width: 87%;
+	line-height: 100%;
+	overflow-x: auto;
+}
+
+.ab-component-remove, .ab-component-edit {
+	float: right;
+	height: 33px;
+	line-height: 33px;
+	width: 33px;
+	color: white;
+	text-align: center;
+}
+.ab-component-remove:hover, .ab-component-edit:hover {
+	cursor: pointer;
+	opacity: 0.8;
+}
+.ab-component-remove {
+	margin: -2px 0 0 0;
+	background: #FF5722;
+}
+
+.ab-component-edit {
+	margin: -2px 1px 0 0;
+	background: #27ae60;
+}
+.dragContainer .ab-component-edit, .dragContainer .ab-component-remove {
+	display: none;
+}
+
+.ab-layout-view {
+	z-index: 999;
+}
+.ab-layout-view .ab-component-remove {
+	margin: -2px -2px 0 0;
+}
+
+.ab-component-link {
+	color: #003B7E;
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+.ab-view-chooser {
+	/*background: #EEE;*/
+	/*padding: 5px 0;*/
+}
+
+/* Interface component list */
+.ab-component-item-drag {
+	border: 1px solid #CCC !important;
+	font-size: 15px;
+	padding: 10px;
+	background-color: #fff;
+}
+.ab_interface_draggable .webix_list_item:hover {
+	cursor: -webkit-grab !important;
+	cursor: -moz-grab !important;
+	background: #EEE;
+}
+
+/*.ab_layout_pane.ab_interface_draggable .webix_list_item .ab-component-in-page:hover::before {
+	background: #666;
+	content: "\f07d";
+}
+
+.ab_interface_draggable .webix_list_item .ab-component-in-page:hover::before {
+	background: #666;
+	content: "\f060";
+}
+
+.ab_interface_draggable .webix_list_item .ab-component-in-page::before {
+	font-family: FontAwesome;
+	content: "\f047";
+	color: white;
+	line-height: 33px;
+	text-align: center;
+	display: block;
+	width: 35px;
+	height: 33px;
+	float: left;
+	margin: -2px 10px 0 -10px;
+	background: #CCC;
+}*/
+
+.remove-tools {
+	
+}
+
+.webix_view .child2component {
+	background: transparent;
+}
+.ab-layout-view-space {
+	padding: 10px 0;
+	clear: both;
+}
+.webix_view .webix_drag_over, .webix_view .webix_drop_zone {
+	background: #FFF;
+}
+.webix_overlay {
+	padding: 0 !important;
+}
+.webix_overlay .drop-zone {
+    font-size: 12px;
+    color: #666;
+    height: 90%;
+    background: #EFEFEF;
+    margin: 3%;
+    border-radius: 20px;
+    border: 3px dashed #CCC;
+	position: relative;
+}
+.widget_target {
+	z-index:3000;
+}
+.ab-page-container .ab-widget-container::before {
+	display: block;
+	height: 50px;
+	content: " ";
+	position: absolute;
+	top: 200px;
+	width: 100%;
+	z-index: 10;
+	background: -moz-linear-gradient(top, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 100%);
+	background: -webkit-linear-gradient(top, rgba(255,255,255,0) 0%,rgba(255,255,255,1) 100%);
+	background: linear-gradient(to bottom, rgba(255,255,255,0) 0%,rgba(255,255,255,1) 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00ffffff', endColorstr='#ffffff',GradientType=0 );
+}
+.webix_overlay .drop-zone div {
+    position: absolute;
+    top: 50%;
+    margin-top: -0.5em;
+    overflow: hidden;
+    white-space: nowrap;
+    width: 100%;
+    text-overflow: ellipsis;
+	color: #666;
+}
+/*.webix_drag_over::before {
+	content: "";
+	display: block;
+	height: 50px;
+	background: #F8F8F8;
+	color: #999;
+	border: 2px dashed #CCC;
+	margin: -2px -10px 0;
+}*/
+
+/* Header component */
+.ab-component-header {
+	font-size: 25px;
+	font-weight: bold;
+}
+.ab-component-description {
+	margin-top: -10px !important;
+	font-size: 14px;
+}
+.ab-component-label {
+	margin-top: -10px !important;
+}
+.ab-menu-link.webix_menu-x .webix_list_item {
+	background: transparent;
+	color: #3498db;
+	font-weight: bold;
+	padding: 0;
+	margin-right: 15px;
+}
+.ab-menu-link.webix_menu-x .webix_list_item:hover {
+	text-decoration: underline;
+}
+
+/* Menu component */
+.ab-page-list-item .webix_tree_checkbox {
+	margin: 0px !important;
+}
+.ab_menu {
+}
+.webix_menu-x .webix_list_item:last-child {
+	border-top-right-radius:4px;
+	border-bottom-right-radius:4px;
+}
+.webix_menu-x .webix_list_item:first-child {
+	border-top-left-radius:4px;
+	border-bottom-left-radius:4px;
+}
+.webix_menu-x a {
+	opacity: 1;
+} 
+
+/* Object toolbar */
+.ab-data-toolbar {
+	background: rgb(170,170,170) !important; /* Old browsers */
+	background: -moz-linear-gradient(left, rgba(170,170,170,1) 50%, rgba(136,136,136,1) 100%) !important; /* FF3.6-15 */
+	background: -webkit-linear-gradient(left, rgba(170,170,170,1) 50%,rgba(136,136,136,1) 100%) !important; /* Chrome10-25,Safari5.1-6 */
+	background: linear-gradient(to right, rgba(170,170,170,1) 50%,rgba(136,136,136,1) 100%) !important; /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+}
+.ab-data-toolbar .webix_list-x {
+	color: #fff;
+	background-color: inherit;
+}
+.ab-data-toolbar .webix_list-x .webix_list_item {
+	border-right: none !important;
+}
+.ab-data-toolbar .webix_list-x .webix_list_item:hover {
+	text-decoration: underline;
+}
+.ab-data-toolbar button {
+	text-align: center;
+	font-size: 14px;
+}
+.ab-data-toolbar button:hover, .ab-data-toolbar button:active {
+	background: #aaa !important;
+}
+.ab-data-toolbar .webix_icon_btn, .ab-component-in-page .webix_icon_btn, .ab_interface_draggable .webix_icon_btn {
+	opacity: 0.6;
+	font-size: 15px;
+}
+.ab-data-toolbar button:hover .webix_icon_btn {
+	opacity: 1;
+}
+
+/* Grid component */
+.ab-page-grid-column-item .column-checkbox {
+	display: inline-block;
+	position: relative;
+	top: -5px;
+	width: 30px;
+}
+
+.ab-page-grid-column-item .column-empty-checkbox {
+	position: relative;
+	width: 50px;
+	height: 38px;
+}
+
+.ab-page-grid-column-item .column-name {
+	display: inline-block;
+	position: relative;
+	top: -18px;
+}
+
+/* Form component */
+.ab-component-form-fields-component-info {
+	background-color: #ddd;
+	border-radius: 8px;
+	color: #666;
+	float: right;
+    padding: 0 6px;
+    font-size: 12px;
+}
+.ab-standard-button button, .ab-standard-button button:hover, .ab-standard-button button:active, .ab-standard-button .webix_icon_btn {
+	background: transparent !important;
+	border-color: transparent !important;
+	color: #666 !important;
+	box-shadow: none !important;
+}
+.ab-cancel-button button {
+	background: transparent !important;
+	color: #AAA;
+	border-color: transparent;
+}
+.ab-cancel-button button:hover {
+	text-decoration: underline;
+}
+.ab-cancel-button button:active {
+	box-shadow: none;
+}
+.ab-form-connect-data {
+	float: left;
+	border: #CCC solid 1px;
+	padding: 0px 5px;
+	min-width: 70%;
+	border-radius: 6px;
+}
+
+.ab-main-container .webix_layout_form {
+	background-color: #fff !important;
+}
+
+/* Loading Screen */
+.ab-loading-screen {
+	background: #000;
+	opacity: 0.7;
+	position: absolute !important;
+}
+.ab-loading-body {
+	background: #000;
+	border-width: 0px !important;
+}
+.ab-loading-message {
+	color: #fff !important;
+	background: #000 !important;
+	font-size: 30px !important;
+	text-align: center;
+	vertical-align: middle;
+	border-width: 0px !important;
+	padding-top: 20% !important;
+	height: 100px !important;
+}
+.ab-loading-button {
+	text-align: center;
+}
+.ab-loading-button button {
+	background-color: #003B7E;
+	width: 200px;
+}
+.ab-loading-cancel-button {
+	text-align: center;
+	background: transparent;
+}
+.ab-loading-cancel-button a {
+	color: #fff !important;
+}
+.ab-loading-screen .webix_progress_bottom {
+	height: 40px !important;
+	opacity: 1;
+}
+.ab-loading-screen .webix_progress_bottom .webix_progress_state {
+	height: 40px !important;
+}
+
+/* Dynamic DataTable */
+.dynamic-datatable-view .webix_badge {
+	margin: 0 !important;
+}
+
+/* Number data field */
+.ab-number-format-show {
+	white-space: nowrap;
+}
+
+/* Icon Picker */
+.ab-main-container .iconpicker .iconpicker-items {
+	color: #000;
+}
+
+/* Webix Tabs */
+div.webix_item_tab {
+	font-size: 16px;
+}
+
+::-webkit-input-placeholder { /* Chrome/Opera/Safari */
+  color: #CCC;
+}
+::-moz-placeholder { /* Firefox 19+ */
+  color: #CCC;
+}
+:-ms-input-placeholder { /* IE 10+ */
+  color: #CCC;
+}
+:-moz-placeholder { /* Firefox 18- */
+  color: #CCC;
+}
+
+/* Webix popup */
+.webix_popup_text {
+	padding-right: 20px;
+	padding-left: 20px;
+}
+
+/* Webix badge */
+.webix_badge {
+	line-height: 22px;
+	background-color: #666;
+}
+
+/* Webix split columns */
+.webix_ss_left, .webix_ss_right, .webix_hs_left, .webix_hs_right {
+	box-shadow: rgba(0, 0, 0, 0.4) 0px 0px 30px;
+	position: relative;
+	z-index: 200;
+}
+
+/* Selectivity Badges */
+.selectivityBadge {
+	top: 6px;
+	right: -5px;
+	background: #AAA;
+}
+.list-data-values, .connect-data-values {
+	position: relative;
+}
+/*
+.customField .connect-data-values, .customField .list-data-values {
+	display: inline-block;
+}*/
+.ab-image-holder .webix_template {
+	position: relative;
+}
+.webix_template {
+	line-height: 33px;
+	padding: 0px;
+}
+.ab-delete-photo {
+	position: absolute; 
+	top: 5px; 
+	right: 5px;
+	background: red; 
+	color: white; 
+	opacity: 1;
+	line-height: 25px;
+	opacity: 0.8;
+}
+.ab-delete-photo i {
+	padding: 5px;
+}
+.ab-delete-photo:focus {
+	color: white;
+}
+a.ab-delete-photo:hover {
+	color: white;
+	opacity: 1;
+}
+/* Legend Overrides */
+.webix_view legend {
+	margin: 0 0 -30px -10px;
+	border: 0;
+	padding: 10px 15px;
+	background: #EEE;
+	width: auto;
+	border-radius: 5px;
+}
+.webix_view fieldset {
+	padding: 20px 10px 0 10px;
+	border: 0 !important;
+	border-radius: 5px;
+	background: -moz-linear-gradient(top, rgba(238,238,238,1) 0%, rgba(238,238,238,1) 15%, rgba(238,238,238,0) 100%); /* FF3.6-15 */
+	background: -webkit-linear-gradient(top, rgba(238,238,238,1) 0%,rgba(238,238,238,1) 15%,rgba(238,238,238,0) 100%); /* Chrome10-25,Safari5.1-6 */
+	background: linear-gradient(to bottom, rgba(238,238,238,1) 0%,rgba(238,238,238,1) 15%,rgba(238,238,238,0) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#eeeeee', endColorstr='#00eeeeee',GradientType=0 ); /* IE6-9 */
+}
+
+.webix_layout_toolbar.webix_toolbar .webix_selected.webix_segment_0, .webix_layout_toolbar.webix_toolbar .webix_selected.webix_segment_1, .webix_layout_toolbar.webix_toolbar .webix_selected.webix_segment_N {
+	background-color: #3498db !important;
+}
+/*Tool Tip Override*/
+.webix_tooltip {
+    background-color: rgba(0,0,0,0.7) !important;
+    padding: 10px 15px !important;
+    border: 0 !important;
+    font-family: inherit !important; 
+    color: #fff !important;
+    box-shadow: none !important; 
+    border-radius: 10px !important;
+}
+
+.webixtype_prev {
+	background-color: #3498db !important;
+}
+.marginLeft10 {
+	margin-left: 10px !important;
+}
+.ab_breadcrumb .webix_list_item {
+	line-height: 35px !important;
+	height: 38px !important;
+}
+.webix_view .webix_selected .webix_tree_close, .webix_view .webix_selected .webix_tree_open {
+	color: #FFF;
+}
+
+/* Interface Editor */
+.ab-widget-header {
+	background-color: #DDD;
+}
+.ab-widget-header .webix_icon_btn {
+	opacity: 0.7;
+	margin-left: 5px;
+}
+.ab-main-container .widget_drag {
+    position: absolute;
+    z-index: 1;
+    top: 0px;
+    right: 0px;
+    width: 33px;
+    opacity: 1;
+    cursor: move;
+    background-color: #AAA;
+    height: 31px;
+    color: #fff;
+}
+.ab-main-container .widget_drag:hover {
+	opacity: 0.8;
+}
+.ab-main-container .widget_drag .webix_icon {
+	line-height: 28px;
+    width: 33px;
+    height: 33px;
+    text-align: center;
+}
+.gray {
+	background: #DDD !important;
+}
+.webix_el_checkbox .webix_label_right {
+	padding-top: 0;
+}
+.webix_multiview .webix_layout_space {
+	background: #f5f5f5;
+}
+.webix_multiview .webix_layout_space .webix_layout_space {
+	background: #FFF;
+}
+.ab-image-data-field {
+	padding: 10px 0;
+}
+.detailView {
+	padding: 10px;
+}
+.detailsView .webix_icon:hover, .edit .webix_icon:hover, .trash .webix_icon:hover {
+	cursor: pointer;
+}
+.ab-data-list .webix_list_item {
+	padding: 2px 0px 2px 10px;
+}
+.transparent {
+	background: transparent !important;
+}

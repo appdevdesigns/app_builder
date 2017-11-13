@@ -1,16 +1,13 @@
-
 steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/controllers/utils/DataHelper.js',
 	'opstools/BuildApp/controllers/utils/ModelCreator.js',
-	'opstools/BuildApp/models/ABApplication.js',
 
-	function (dataHelper, modelCreator, ABApplication) {
+	function (dataHelper, modelCreator) {
 		System.import('appdev').then(function () {
 			System.import('opstools/BuildApp').then(function () {
 				steal.import('appdev/ad',
 					'appdev/control/control'
-					//'opstools/BuildApp/models/ABApplication'
 				).then(function () {
 
 					// Namespacing conventions:
@@ -31,12 +28,12 @@ steal(
 
 							// Validate
 							if (options.app == null || options.app < 0) {
-								self.invalidApp();
+								AD.error.log('Application id is invalid.');
 								return;
 							}
 
 							if (options.page == null || options.page < 0) {
-								self.invalidPage();
+								AD.error.log('Page id is invalid.');
 								return;
 							}
 
@@ -44,59 +41,52 @@ steal(
 
 							self.debounceResize = false;
 							self.resizeValues = { height: 0, width: 0 };
-							
+
+							self.App = new OP.Component(null, self.containerDomID).App;
+
+							// Store page/sub page .components()
+							// These values will be defined in .renderPage()
+							self.pageComponents = {}; // { pageId: component }
+
 							// Has this app been selected by the user yet?
 							self.activated = false;
 
 							self.initDOM();
 							self.initModels();
-							self.initPage();
-						},
 
-						invalidApp: function () {
-							AD.error.log('Application id is invalid.');
-						},
+							self.getData();
 
-						invalidPage: function () {
-							AD.error.log('Page id is invalid.');
-						},
-
-						initDOM: function () {
-							console.log('... creating ABLiveTool <div> ');
-							this.element.html(
-								('<div id="#domID#"></div>' +
-									'<i id="#domID#-reload-button" class="fa fa-refresh ab-reload-page-button" aria-hidden="true"></i>')
-									.replace(/#domID#/g, this.containerDomID));
-						},
-
-						initModels: function () {
-							this.Models = {};
-							this.Models.ABApplication = AD.Model.get('opstools.BuildApp.ABApplication');
-						},
-
-						initPage: function () {
-							var self = this;
-							
 							AD.comm.hub.subscribe('opsportal.resize', function (message, data) {
 								self.height = data.height;
 								self.resize(data.height);
 							});
-							
-							self.getData().then(function () {
 
-								self.initEvents();
 
-								// Store the root page
-								self.rootPage = self.data.application.pages.filter(function (page) {
-									return page.id == self.options.page
-								})[0];
+						},
 
-								self.renderPageContainer();
+						initDOM: function () {
+							console.log('... creating ABLiveTool <div> ');
 
-								webix.ready(function () {
-									self.showPage();
-								});
-							});
+							this.element.html('<div style="background-color: #fff !important" id="#domID#"></div>'.replace(/#domID#/g, this.containerDomID));
+
+							// this.element.html(
+							// 	('<div id="#domID#"></div>' +
+							// 		'<i id="#domID#-reload-button" class="fa fa-refresh ab-reload-page-button" aria-hidden="true"></i>')
+							// 		.replace(/#domID#/g, this.containerDomID));
+						},
+
+						initModels: function () {
+							this.Models = {};
+							this.Models.ABApplication = OP.Model.get('opstools.BuildApp.ABApplication');
+						},
+
+						initPage: function () {
+							var self = this;
+
+							self.renderPageContainer();
+
+							self.initEvents(self.rootPage);
+
 						},
 
 						getData: function () {
@@ -107,67 +97,38 @@ steal(
 							async.series([
 								// Get application data
 								function (next) {
-									self.Models.ABApplication.findOne({ id: self.options.app })
+									ABApplication.getApplicationById(self.options.app)
 										.then(function (result) {
 											self.data.application = result;
 
 											next();
 										}, next);
 								},
-								
-								// Wait until the tool's area has been shown
+
 								function (next) {
-									if (self.activated) next();
-									else {
-										var areaKey = 'ab-' + self.data.application.name;
-										var subID1, subID2;
-										var callback = function(message, data) {
-											if (!self.activated && data.area == areaKey) {
-												self.activated = true;
-												subID1 && AD.comm.hub.unsubscribe(subID1);
-												subID2 && AD.comm.hub.unsubscribe(subID2);
-												next();
-											}
-										};
-										
-										subID1 = AD.comm.hub.subscribe('opsportal.tool.show', callback);
-										subID2 = AD.comm.hub.subscribe('opsportal.area.show', callback);
-									}
-								},
-								
-								// Get objects data
-								function (next) {
-									self.data.application.getObjects()
-										.then(function (result) {
-											result.forEach(function (page) {
-												if (page.translate) page.translate();
-											});
 
-											self.data.application.objects = result;
+									// Wait until the tool's area has been shown
+									var areaKey = 'ab-' + self.data.application.name;
+									areaKey = areaKey.toLowerCase().replace(/_/g, '-');
+									var subID1, subID2;
+									var callback = function (message, data) {
+										if (!self.activated && data.area.toLowerCase() == areaKey) {
+											self.activated = true;
+											subID1 && AD.comm.hub.unsubscribe(subID1);
+											subID2 && AD.comm.hub.unsubscribe(subID2);
 
-											next();
-										}, next);
-								},
-								// Get pages data
-								function (next) {
-									// self.data.application.getPages({
-									// 	or: [
-									// 		{ id: self.options.page },
-									// 		{ parent: self.options.page }
-									// 	]
-									// }).then(function (result) {
-									self.data.application.getAllApplicationPages()
-										.then(function (result) {
-											result.forEach(function (page) {
-												if (page.translate) page.translate();
-											});
+											self.startPage();
 
-											// self.data.pages = result;
-											self.data.application.pages = result;
+										}
+									};
 
-											next();
-										}, next);
+									subID1 = AD.comm.hub.subscribe('opsportal.tool.show', callback);
+									subID2 = AD.comm.hub.subscribe('opsportal.area.show', callback);
+
+									next();
+
 								}
+
 							], function (err) {
 								if (err) q.reject(err);
 								else q.resolve();
@@ -176,198 +137,40 @@ steal(
 							return q;
 						},
 
-						initEvents: function () {
+						startPage: function () {
+
 							var self = this;
 
-							$('#{domID}-reload-button'.replace('{domID}', self.containerDomID)).off('click');
-							$('#{domID}-reload-button'.replace('{domID}', self.containerDomID)).on('click', function () {
-								$('#' + self.containerDomID).html('');
+							// Wait until the tool's area has been shown
+							if (!self.activated) return;
 
-								self.initPage();
-							});
+							// Store the root page
+							self.rootPage = self.data.application.urlResolve(self.options.page);
 
-							AD.comm.hub.subscribe('ab.interface.add', function (msg, data) {
-								if (data.app == self.options.app
-									&& (data.page == self.options.page || data.parent == self.options.page)) {
+							self.initPage();
 
-									// Get the new page data
-									self.data.application.getPage(data.page)
-										.then(function (newPage) {
-											if (newPage.translate) newPage.translate();
-
-											var exists = false;
-
-											self.data.application.pages.forEach(function (page, index) {
-												// Update exists page
-												if (page.id == data.page) {
-													// #Hack! Fix the ModelUpdate() syncing
-													self.data.application.pages.attr(index, newPage.attr());
-													exists = true;
-												}
-											});
-
-											// Add new page to list
-											if (!exists) self.data.application.pages.push(newPage);
-
-											// Render the new page
-											self.renderPage(newPage);
-
-											// Set root page
-											if (data.page == self.options.page) {
-												self.rootPage = newPage;
-
-												// Refresh components of root page
-												if (self.activePage && data.page == self.activePage.id)
-													self.showPage(newPage);
-											}
-										});
-								}
-							});
-
-
-							AD.comm.hub.subscribe('ab.interface.update', function (msg, data) {
-								var page = self.data.application.pages.filter(function (p) {
-									if (p.id == data.page) {
-										// Check sub-pages or tabs
-										if (p.id != self.options.page) {
-											var isChildPage = false,
-												parentPage = p.parent;
-
-											// Recursive to get the root page
-											do {
-												if (parentPage) {
-													if ((parentPage.id || parentPage) == self.options.page && !isChildPage)
-														isChildPage = true;
-
-													parentPage = parentPage.parent;
-												}
-											} while (parentPage != null && !isChildPage)
-
-											return isChildPage;
-										}
-										// a root page is updated
-										else {
-											return true;
-										}
-									}
-									else {
-										return false;
-									}
-								})[0];
-
-								if ((data.app == self.options.app) && (page != null)) {
-
-									// Get the page data
-									self.data.application.getPage(data.page)
-										.then(function (page) {
-											var updatePage;
-
-											if (page.translate) page.translate();
-
-											// Update page in list
-											self.data.application.pages.forEach(function (p, index) {
-												if (p.id == page.id) {
-													// #Hack! Fix the ModelUpdate() syncing
-													self.data.application.pages.attr(index, page.attr());
-
-													// Find the updated page in list
-													updatePage = self.data.application.pages[index];
-												}
-											});
-
-											if (updatePage == null) return;
-
-											// rebuild our display
-											self.renderPage(updatePage);
-
-											// Update the active page
-											if (self.activePage.id == updatePage.id)
-												self.activePage = updatePage;
-
-											// Refresh components
-											self.showPage(self.activePage);
-
-										});
-								}
-							});
-
-
-							AD.comm.hub.subscribe('ab.interface.remove', function (msg, data) {
-
-								if (data.app == self.options.app) {
-
-									// If the deleted page is showing, then switch to previous page.
-									if (self.activePage && self.activePage.id == data.page && self.previousPage)
-										self.showPage(self.previousPage);
-
-									self.data.application.pages.slice(0).forEach(function (page, index) {
-										if (data.page != page.id) return;
-
-										var pageDomId = self.getPageDomID(page);
-
-										// Remove sub-page
-										if ($$(pageDomId)) {
-											// View type
-											if ($$(self.containerDomID).getChildViews().filter(function (view) { return view.config.id == pageDomId }).length > 0) {
-												$$(self.containerDomID).removeView(pageDomId);
-											}
-											// Popup type
-											else {
-												$$(pageDomId).destructor();
-											}
-										}
-
-										// Remove from self.data.pages
-										self.data.application.pages.splice(index, 1);
-									});
-
-									// Re-render menu and link components
-									self.activePage.components.forEach(function (item) {
-										switch (item.component) {
-											case 'menu':
-												if (item.setting &&
-													item.setting.pageIds &&
-													item.setting.pageIds.filter(function (pId) { return pId == data.page; }).length > 0) {
-													delete self.activePage.comInstances[item.id];
-
-													self.activePage.renderComponent(self.data.application, item).done(function (isNew) {
-														self.bindComponentEvents(self.activePage.comInstances[item.id], item);
-													});
-												}
-												break;
-											case 'link':
-												if (item.setting &&
-													item.setting.linkTo &&
-													item.setting.linkTo == data.page) {
-													delete self.activePage.comInstances[item.id];
-
-													self.activePage.renderComponent(self.data.application, item).done(function (isNew) {
-														self.bindComponentEvents(self.activePage.comInstances[item.id], item);
-													});
-												}
-												break;
-										}
-									});
-
-								}
-							});
-
-							AD.comm.hub.subscribe('opsportal.tool.show', function (message, data) {
-								self.resize(self.height);
+							webix.ready(function () {
+								self.showPage();
 							});
 
 						},
 
 						renderPageContainer: function () {
-							var self = this,
-								pages = self.data.application.pages;
+							var self = this;
+
+							if (self.rootPage == null) return;
+
 
 							// Clear UI content
-							var rootDomId = self.getPageDomID(self.rootPage);
+							var rootDomId = self.getPageDomID(self.rootPage.id);
 							if ($$(rootDomId))
 								webix.ui({}, $$(rootDomId));
 
-							// Create sub pages
+
+							// Create a sub pages container
+							if ($$(self.containerDomID)) {
+								$$(self.containerDomID).destructor();
+							}
 							webix.ui({
 								view: "multiview",
 								container: self.containerDomID,
@@ -381,32 +184,26 @@ steal(
 								}
 							});
 
-							// Sort pages
-							if (pages.sort) {
-								pages.sort(function (a, b) {
-									if (a.parent)
-										return 1;
-									else if (b.parent)
-										return -1;
-									else
-										return a.weight - b.weight;
-								});
-							}
 
-							// Render pages
-							pages.forEach(function (page) {
-								if (page.id == self.rootPage.id || (page.parent && page.parent.id == self.rootPage.id))
-									self.renderPage(page);
-							});
-
+							// Render the root page
+							self.renderPage(self.rootPage);
 						},
 
 						renderPage: function (page) {
 							var self = this,
-								pageDomId = this.getPageDomID(page);
+								pageDomId = this.getPageDomID(page.id);
 
-							switch (page.type) {
-								case 'modal':
+							var component = page.component(self.App);
+							var ui = component.ui;
+
+							// Keep the page component
+							self.pageComponents[page.id] = component;
+
+							// Define page id to be batch id of webix.multiview
+							ui.batch = page.id;
+
+							switch (page.settings.type) {
+								case 'popup':
 									var popupTemplate = {
 										view: "window",
 										id: pageDomId,
@@ -423,17 +220,18 @@ steal(
 												{
 													view: "button", label: "Close", width: 100, align: "right",
 													click: function () {
-														if (self.previousPage.type === 'modal')
-															self.showPage();
-														else
-															self.showPage(self.previousPage);
+
+														// switch to the previous page
+														self.showPage();
+
 													}
 												}
 											]
 										},
 										body: {
+											view: "scrollview",
 											scroll: true,
-											template: page.getItemTemplate()
+											body: ui
 										}
 									};
 
@@ -452,73 +250,44 @@ steal(
 									webix.ui(popupTemplate).hide();
 
 									break;
-								case 'tab':
-									// don't render tabs.  The component will do that.
-
-									// refresh tab view when update
-									var parentPage = self.data.application.pages.filter(function (p) { return p.id == page.parent.id })[0];
-									if (parentPage == null) break;
-
-									parentPage.components.forEach(function (com) {
-										if (parentPage.comInstances == null ||
-											parentPage.comInstances[com.id] == null ||
-											com.component !== 'tab' ||
-											com.setting.tabs == null ||
-											com.setting.tabs.filter(function (t) { return t.uuid == page.name; }).length < 1)
-											return;
-
-										var tabViewId = self.unique('ab_live_item', parentPage.id, com.id);
-										if ($$(tabViewId) == null) return;
-
-										// Get index of selected tab view
-										var selectedIndex = $$(tabViewId).getTabbar().optionIndex($$(tabViewId).getValue());
-
-										// force a refresh on component
-										parentPage.removeAttr('comInstances.' + com.id);
-
-										// Rerender the tab component
-										parentPage.renderComponent(self.data.application, com)
-											.done(function () {
-												var selectedTabView = $$(tabViewId).getTabbar().config.options[selectedIndex];
-
-												if ($$(tabViewId).getValue() == selectedTabView.id)
-													self.bindComponentEventsInTab(com);
-
-												// Switch to selected tab
-												$$(tabViewId).setValue(selectedTabView.id);
-											});
-									});
-
-									break;
 								case 'page':
 								default:
-									var pageTemplate = {
-										view: "template",
-										id: pageDomId,
-										template: page.getItemTemplate(),
-										minWidth: 700,
-										autoheight: true,
-										scroll: true
-									};
-
 									if ($$(pageDomId)) {
 										// Change page type (Popup -> Page)
 										if ($$(pageDomId).config.view == 'window') {
 											$$(pageDomId).destructor();
 
-											$$(self.containerDomID).addView(pageTemplate);
+											$$(self.containerDomID).addView(ui);
 										}
 										// Rebuild
 										else {
-											webix.ui(pageTemplate, $$(pageDomId));
+											webix.ui(ui, $$(pageDomId));
 										}
 									}
 									// Add to multi-view
 									else if ($$(self.containerDomID))
-										$$(self.containerDomID).addView(pageTemplate);
+										$$(self.containerDomID).addView(ui);
 
 									break;
 							}
+
+							// handle events
+							self.initEvents(page);
+
+							// Render children pages
+							if (page.pages) {
+								(page.pages() || []).forEach(function (subpage) {
+									self.renderPage(subpage);
+								});
+							}
+
+							// Initial UI components
+							setTimeout(function () {
+
+								component.init();
+
+							}, 50);
+
 						},
 
 						/**
@@ -526,131 +295,93 @@ steal(
 						*      Optional page. Default is to show
 						*      the root page.
 						*/
-						showPage: function (page) {
+						showPage: function (pageId) {
 							var self = this;
 
-							page = page || self.rootPage;
+							pageId = pageId || self.previousPageId || (self.rootPage ? self.rootPage.id : null);
+
+							if (pageId == null) return;
 
 							// Hide page popup
-							var activePageDomId = self.getPageDomID(self.activePage);
-							if (self.activePage && $$(activePageDomId) && $$(activePageDomId).hide)
+							var activePageDomId = self.getPageDomID(self.activePageId);
+							if ($$(activePageDomId) && $$(activePageDomId).hide)
 								$$(activePageDomId).hide();
 
-							var pageDomId = self.getPageDomID(page);
+							self.previousPageId = self.activePageId;
+							self.activePageId = pageId;
+
+							// Show page popup
+							var pageDomId = self.getPageDomID(pageId);
 							if ($$(pageDomId))
 								$$(pageDomId).show();
-							self.previousPage = self.activePage;
-							self.activePage = page;
 
 							// Question: should we do a resize() after all the components are rendered?
 
-							var components = [];
+							// Change page by batch id
+							var childViews = $$(self.containerDomID).getChildViews(),
+								batchExist = childViews.filter(function (v) { return v.config.batch == pageId; })[0];
+							if (batchExist)
+								$$(self.containerDomID).showBatch(pageId);
 
-							async.series([
-								function(next) {
-									self.activePage.getComponents()
-										.done(function(result) {
 
-											result.forEach(function(r){ 
-												if (r.translate) r.translate();
-											});
+							// Trigger .onShow to the component
+							setTimeout(function () {
 
-											components = result;
+								if (self.pageComponents[pageId] &&
+									self.pageComponents[pageId].onShow)
+									self.pageComponents[pageId].onShow();
 
-											next();
-										})
-										.fail(next);
-								},
-
-								function(next) {
-									async.each(components, function(item, nextComponent) {
-										
-										self.activePage.renderComponent(self.data.application, item)
-										.done(function (isNew) {
-											self.bindComponentEvents(page.comInstances[item.id], item);
-											self.bindComponentEventsInTab(item);
-											nextComponent();
-										});
-		
-									}, function(err) {
-										// self.resize() // <-- doesn't do the trick
-										AD.comm.hub.publish('opsportal.resize', { height: self.height });
-
-										next(err);
-									});
-										
-								}
-
-							])
+							}, 50);
 
 						},
 
-						bindComponentEvents: function (comInstance, itemInfo) {
+
+						initEvents(page) {
 							var self = this;
 
-							// Listen component events
-							$(comInstance).off('renderComplete');
-							$(comInstance).on('renderComplete', function (event, data) {
-								var rootPageDomId = self.getPageDomID(self.rootPage);
-								$$(rootPageDomId).adjust();
+							if (page == null) return;
 
-								if ($$(itemInfo.domID))
-									$$(itemInfo.domID).adjust();
+							// { pageId: eventId, ..., pageIdn: eventIdn }
+							self.changePageEventIds = self.changePageEventIds || {};
 
-								// if (_this.activePage.comInstances) {
-								// 	_this.activePage.components.forEach(function (item) {
-								// 		if (_this.activePage.comInstances[item.id] && _this.activePage.comInstances[item.id].onDisplay)
-								// 			_this.activePage.comInstances[item.id].onDisplay();
-								// 	});
-								// }
+							if (!self.changePageEventIds[page.id]) {
+								self.changePageEventIds[page.id] = page.on('changePage', function (pageId) {
 
-							});
-
-							$(comInstance).off('changePage');
-							$(comInstance).on('changePage', function (event, data) {
-								// Redirect to another page
-								if (data.previousPage)
-									self.showPage(self.previousPage);
-								else if (self.activePage.id != data.pageId && data.pageId) {
-
-									var redirectPage = self.data.application.pages.filter(function (p) { return p.id == data.pageId; });
-
-									if (redirectPage && redirectPage.length > 0)
-										self.showPage(redirectPage[0]);
-								}
-							});
-
-							if (itemInfo.component === 'tab') {
-
-								// make sure an embedded tab's component gets bound now.
-								self.bindComponentEventsInTab(itemInfo);
-
-								// when the tab changes, be sure to rebind it's current
-								// components:
-								$(comInstance).off('changeTab');
-								$(comInstance).on('changeTab', function (event, data) {
-									self.bindComponentEventsInTab(itemInfo);
-								});
-							}
-						},
-
-						bindComponentEventsInTab: function (item) {
-							var self = this;
-
-							// Bind events of components in tab
-							if (item.component == 'tab' && item.setting && item.setting.tabs) {
-								item.setting.tabs.forEach(function (tab) {
-									var tabPage = self.data.application.pages.filter(function (p) { return p.name == tab.uuid; })[0];
-
-									if (tabPage == null || tabPage.components == null || tabPage.comInstances == null) return;
-
-									tabPage.components.forEach(function (itemInTab) {
-										self.bindComponentEvents(tabPage.comInstances[itemInTab.id], itemInTab);
-									});
+									self.showPage(pageId);
 
 								});
 							}
+
+
+							if (!self.updatePageEventId && page.isRoot()) {
+
+								/**
+								 * @event ab.interface.update
+								 * This event is triggered when the root page is updated
+								 * 
+								 * @param data.rootPage {uuid} - id of the root page
+								 */
+								self.updatePageEventId = AD.comm.hub.subscribe('ab.interface.update', function (msg, data) {
+
+									if (page.id == data.rootPage.id) {
+
+										// clear the cache of events
+										self.changePageEventIds = {};
+
+										// update the root page instance
+										self.rootPage = data.rootPage;
+
+										// re-render this page
+										self.initPage();
+
+									}
+
+								});
+							}
+
+
 						},
+
 
 						resize: function (height) {
 							var _this = this;
@@ -669,6 +400,7 @@ steal(
 							}
 
 							// QUESTION: where does self.height come from?  is this a webix setting?
+							if (height == null && self.height == null) return;
 							if (height == null) height = self.height;
 
 							// track the last set of height/width values:
@@ -733,7 +465,7 @@ steal(
 									// I went ahead and refactored ABPage to have a .resize()
 									// it is not exactly the right solution, but it is close
 									// see notes on ABPage.js .resize()
-									_this.activePage.resize();
+									// _this.activePage.resize();
 									////  OLD Logic:
 									//
 									// // Resize components
@@ -752,12 +484,29 @@ steal(
 
 						},
 
-						getPageDomID: function (page) {
-							if (page)
-								return this.unique('ab_live_page', this.options.app, page.id);
-							else
-								return '';
+						removePage: function (pageId) {
+
+							var pageCom = this.pageComponents[pageId];
+							var pageElemId = pageCom.ui.id;
+
+							// swtich the page before it will be removed
+							if (this.activePageId == pageId) {
+								this.showPage(this.rootPage.id);
+							}
+
+							// remove from .multiview
+							$$(this.containerDomID).removeView(pageElemId);
+
+							// destroy view's modal
+							if ($$(pageElemId))
+								$$(pageElemId).destructor();
+
 						},
+
+						getPageDomID: function (pageId) {
+							return this.unique('ab_live_page', this.options.app, pageId);
+						},
+
 
 						unique: function () {
 							var args = Array.prototype.slice.call(arguments); // Convert to Array

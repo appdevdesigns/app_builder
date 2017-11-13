@@ -49,11 +49,7 @@ steal(
                 dateValue = new Date();
             }
 
-            var duration = moment.duration(moment().diff(dateValue));
-
-            return "{years} years {months} months"
-                .replace("{years}", duration.years())
-                .replace("{months}", duration.months());
+            return moment().diff(dateValue, 'years');
         }
     };
 

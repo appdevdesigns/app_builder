@@ -11,8 +11,7 @@ var _ = require('lodash');
 var path = require('path');
 var async = require('async');
 
-
-var reloading = null;
+var ABViewPage = require(path.join('..', 'classes', 'ABViewPage'));
 
 module.exports = {
 
@@ -22,285 +21,368 @@ module.exports = {
         shortcuts: false,
         rest: true
     },
-    
-    
-    /**
-     * Not used
-     *
-     * GET /app_builder/requirements
-     */
-    requirements: function(req, res) {
-        res.set('content-type', 'application/javascript');
-        
-        var output = '';
-        
-        ABApplication.find()
-        .then(function(list) {
-            for (var i=0; i<list.length; i++) {
-                output += 'System.import("opstools/AB_' + list[i].name + '");\n';
-            }
-            res.send(output);
-            return null;
-        })
-        .catch(function(err) {
-            res.AD.error(err);
-            return null;
-        });
-        
-    },
-    
-    
-    /**
-     * Generate the server side folder structure for an application.
-     *
-     * Objects and Pages are not generated.
-     * Reloading the ORM is also needed to complete the activation.
-     *
-     * POST /app_builder/prepareApp/:id
-     */
-    prepare: function(req, res) {
-        var appID = req.param('id');
-        
-        AppBuilder.buildApplication(appID)
-        .fail(function(err) {
-            res.AD.error(err);
-        })
-        .done(function() {
-            res.AD.success({});
-        });
-    },
-    
-    
-    /**
-     * POST /app_builder/reloadORM/:id
-     *
-     */
-    reloadORM: function(req, res) {
-        var appID = req.param('id');
 
-        if (!appID) {
-            res.AD.error('Application ID is not defined.');
-            return;
-        }
+    /* Objects */
 
-        if (reloading && reloading.state() == 'pending') {
-            reloading.always(function() {
-                // Wait until current reload is finished before starting
-                self.reloadORM(req, res);
+    /**
+     * PUT /app_builder/application/:appID/object
+     * 
+     * Add/Update a object into ABApplication
+     */
+    objectSave: function (req, res) {
+        var appID = req.param('appID');
+        var object = req.body.object;
+
+        ABApplication.findOne({ id: appID })
+            .fail(res.AD.error)
+            .then(function (app) {
+
+                if (app) {
+
+                    app.json.objects = app.json.objects || [];
+
+                    var indexObj = -1;
+                    var updateObj = app.json.objects.filter(function (obj, index) {
+
+                        var isExists = obj.id == object.id;
+                        if (isExists) indexObj = index;
+
+                        return isExists;
+                    })[0];
+
+                    // update
+                    if (updateObj) {
+                        app.json.objects[indexObj] = object;
+                    }
+                    // add new
+                    else {
+                        app.json.objects.push(object);
+                    }
+
+                    // save to database
+                    app.save(function (err) {
+                        if (err)
+                            res.AD.error(true);
+                        else
+                            res.AD.success(true);
+                    });
+                }
+                else {
+                    res.AD.success(true);
+                }
+
+
             });
-            return;
-        }
-        reloading = AD.sal.Deferred();
-        
-        AppBuilder.reload(appID)
-        .fail(function(err) {
-            res.AD.error(err);
-            reloading.reject(err);
-        })
-        .done(function() {
-            res.AD.success({});
-            reloading.resolve();
-        });
+
     },
 
-
-    // get /app_builder/reloadStatus 
-    reloadStatus: function(req, res) {
-
-        if (reloading && reloading.state() == 'pending') {
-            res.AD.success({state:'pending'});
-        } else {
-            res.AD.success({state:'done'});
-        }
-    },
-    
-    
     /**
-     * Generate the server side model definitions of a given AB application
-     * and then reload the ORM.
-     *
-     * POST /app_builder/fullReload/:id
+     * DELETE /app_builder/application/:appID/object/:id
+     * 
+     * Delete a object in ABApplication
      */
-    fullReload: function(req, res) {
-        var self = this,
-            appID = req.param('id');
+    objectDestroy: function (req, res) {
+        var appID = req.param('appID');
+        var objectID = req.param('id');
 
-        if (!appID) {
-            res.AD.error('Application ID is not defined.');
-            return;
-        }
+        ABApplication.findOne({ id: appID })
+            .fail(res.AD.error)
+            .then(function (app) {
 
-        if (reloading && reloading.state() == 'pending') {
-console.log('*** !!! Run full reload again');
-            reloading.always(function() {
-                // Wait until current reload is finished before starting
-                self.fullReload(req, res);
+                if (app) {
+
+                    app.json.objects = app.json.objects || [];
+
+                    var indexObj = -1;
+                    var updateObj = app.json.objects.filter(function (obj, index) {
+
+                        var isExists = obj.id == objectID;
+                        if (isExists) indexObj = index;
+
+                        return isExists;
+                    })[0];
+
+                    // remove
+                    if (indexObj > -1) {
+                        app.json.objects.splice(indexObj, 1);
+                    }
+
+                    // save to database
+                    app.save(function (err) {
+                        if (err)
+                            res.AD.error(true);
+                        else
+                            res.AD.success(true);
+                    });
+                }
+                else {
+                    res.AD.success(true);
+                }
+
+
             });
-            return;
-        }
-        reloading = AD.sal.Deferred();
-        
-        var appIDs = [],
-            objIDs = [];
 
-        async.series([
-            // Find the application info
-            function(next) {
-                ABApplication.find({ id : appID })
-                .populate('objects')
-                .then(function(list) {
-                    if (!list || !list[0]) {
-                        throw new Error('No application found');
-                    }
-                    
-                    for (var i=0; i<list.length; i++) {
-                        appIDs.push(list[i].id);
-                        for (var j=0; j<list[i].objects.length; j++) {
-                            objIDs.push( list[i].objects[j].id );
-                        }
-                    }
-                    objIDs.sort(function(a, b) {
-                        return parseInt(a) - parseInt(b);
-                    });
-                    
-                    next();
-                    return null;
-                })
-                .catch(function(err) {
-                    next(err);
-                    return null;
-                });
-            },
+    },
 
 
-            // Make sure our build directory is ready: 
-            function(next) {
-              
-                AppBuilder.buildDirectory.ready()
-                .fail(next)
-                .done(function(){
-                    next();
-                })
 
-            },
+    /* Pages */
 
+    /**
+     * PUT /app_builder/application/:appID/page
+     * 
+     * Add/Update a page into ABApplication
+     */
+    pageSave: function (req, res) {
+        var appID = req.param('appID');
+        var resolveUrl = req.body.resolveUrl;
+        var vals = req.body.data;
 
-            // Remove any current Model links in our new sails build directory
-            function(next) {
+        Promise.resolve()
+            .catch((err) => { res.AD.error(err); })
+            .then(() => {
 
-                // fs.readdir() for each target:
-                var pathModelDir = path.join(AppBuilder.paths.sailsBuildDir(), 'api', 'models');
-                fs.readdir(pathModelDir, function(err, files){
-                    if (err) {
-                        ADCore.error.log('Unable to read from sailsBuildDir.api.models directory:', {error:err});
-                        next(err);
-                    } else {
+                // Pull a application
+                return new Promise((resolve, reject) => {
 
-                        function unlinkIt(list, ok) {
-                            if (list.length == 0) {
-                                ok();
-                            } else {
-                                var target = list.shift();
-                                fs.unlink(path.join(pathModelDir, target), function (err) {
-                                    // Ignore errors. If file does not exist, that's fine.
-                                    unlinkIt(list, ok);
-                                });
-                            }
-                        }
-                        unlinkIt(files, next);
-                    }
-                })
-                    
+                    ABApplication.findOne({ id: appID })
+                        .exec((err, result) => {
+                            if (err) return reject(err);
 
-            },
-                
-
-            // Create model definitions for each AB Object
-            function(next) {
-                async.eachSeries(objIDs, function(id, ok) {
-                    AppBuilder.buildObject(id)
-                    .fail(ok)
-                    .done(function() {
-                        ok();
-                    });
-                }, function(err) {
-                    if (err) next(err);
-                    else next();
-                });
-            },
-
-            // Reload ORM
-            function(next) {
-                AppBuilder.reload(appID)
-                .fail(function(err){
-
-                    ADCore.error.log("Error during the Reload Process", { 
-                        error: err, 
-                        appID:appID,
-                        message:err.message, 
-                        stack:err.stack,
-                        user:req.AD.user().GUID()
-                    });
-
-                    next(err);
-                })
-                .done(function() {
-                    next();
-                });
-            },
-
-            // Update columns are synced
-            function(next) {
-                ABObject.find({ application : appID })
-                    .then(function(list) {
-                        var updateTasks = [];
-                        
-                        list.forEach(function(object) {
-                            updateTasks.push(function(ok) {
-                                ABColumn.update({ object: object.id }, { isSynced: true }).exec(ok);
+                            resolve({
+                                app: result,
+                                appClass: result.toABClass()
                             });
                         });
 
-                        async.parallel(updateTasks, next);
-                    });
-            },
-            
-            
-        ], function(err) {
-            if (err) {
-                console.error(err);
-                reloading.reject(err);
-            } else {
-                reloading.resolve();
-            }
-        });
+                });
+            })
+            .then((data) => {
 
-        res.AD.success({});
+                // Update page info to application
+                return new Promise((resolve, reject) => {
+
+                    if (data == null) return resolve();
+
+                    var updateItem = data.appClass.urlResolve(resolveUrl);
+
+                    // update
+                    if (updateItem) {
+
+                        var ignoreProps = ['id', 'pages', '_pages'];
+
+                        // clear old values
+                        for (var key in updateItem) {
+
+                            if (ignoreProps.indexOf(key) > -1)
+                                continue;
+
+                            delete updateItem[key];
+                        }
+
+                        // add update values
+                        for (var key in vals) {
+
+                            if (ignoreProps.indexOf(key) > -1)
+                                continue;
+
+                            updateItem[key] = vals[key];
+                        }
+
+                    }
+
+
+                    // add new
+                    else {
+
+                        // get the parent of view
+                        var parts = resolveUrl.split('/');
+                        parts.pop();
+                        var parentUrl = parts.join('/');
+                        var parent = data.appClass.urlResolve(parentUrl);
+
+                        // add new page/view to the parent
+                        if (parent && parent.push) {
+
+                            parent.push(new ABViewPage(vals, data.appClass));
+
+                        }
+                    }
+
+                    // update data to application
+                    var updateApp = data.appClass.toObj();
+                    data.app.json = updateApp.json;
+
+                    // save to database
+                    data.app.save(function (err) {
+                        if (err)
+                            reject(true);
+                        else {
+
+                            // refresh application class
+                            data.appClass = data.app.toABClass();
+
+                            resolve(data);
+                        }
+                    });
+
+
+                });
+            })
+            .then((data) => {
+
+                // Update page's nav view
+                return new Promise((resolve, reject) => {
+
+                    if (data == null) return resolve();
+
+                    var pageClass = data.appClass._pages.filter(p => p.id == vals.id)[0];
+
+                    if (pageClass)
+                        return AppBuilder.updateNavView(data.app, pageClass)
+                            .catch(reject)
+                            .then(resolve);
+                    else
+                        resolve();
+
+                });
+
+            })
+            .then(() => {
+
+                // Finish
+                return new Promise((resolve, reject) => {
+
+                    res.AD.success(true);
+                    resolve();
+
+                });
+            });
+
     },
-    
-    
+
+    /**
+     * DELETE /app_builder/application/:appID/page
+     * 
+     * Delete a page in ABApplication
+     */
+    pageDestroy: function (req, res) {
+        var appID = req.param('appID');
+        var resolveUrl = req.body.resolveUrl;
+        var pageName;
+
+        Promise.resolve()
+            .catch((err) => { res.AD.error(err); })
+            .then(() => {
+
+                // Pull a application
+                return new Promise((resolve, reject) => {
+
+                    ABApplication.findOne({ id: appID })
+                        .exec((err, result) => {
+                            if (err) reject(err);
+                            else resolve(result);
+                        });
+
+                });
+            })
+            .then((Application) => {
+
+                // Remove a page in the list
+                return new Promise((resolve, reject) => {
+
+                    if (Application == null) return resolve();
+
+                    var appClass = Application.toABClass();
+
+                    // get the delete page in list
+                    var deletePage = appClass.urlResolve(resolveUrl);
+                    if (!deletePage) return resolve();
+
+                    if (deletePage.parent == null)
+                        pageName = deletePage.name;
+
+                    // get the parent(array) of view
+                    var parts = resolveUrl.split('/');
+                    parts.pop();
+                    var parentUrl = parts.join('/');
+                    var parent = appClass.urlResolve(parentUrl); // should be a array
+
+                    // get index of item
+                    var indexPage = parent.findIndex(function (page) {
+                        return page.id == deletePage.id;
+                    });
+
+                    // remove
+                    if (indexPage > -1) {
+                        parent.splice(indexPage, 1);
+                    }
+
+                    // update data to application
+                    var updateApp = appClass.toObj();
+                    Application.json = updateApp.json;
+
+                    // save to database
+                    Application.save(function (err) {
+                        if (err)
+                            reject(err);
+                        else
+                            resolve(Application);
+                    });
+                });
+
+            })
+            .then((Application) => {
+
+                // Remove page's nav view
+                return new Promise((resolve, reject) => {
+
+                    if (Application == null ||
+                        !pageName)
+                        return resolve();
+
+                    return AppBuilder.removeNavView(Application, pageName)
+                        .catch(reject)
+                        .then(resolve);
+                });
+
+            })
+            .then(() => {
+
+                // Finish
+                return new Promise((resolve, reject) => {
+
+                    res.AD.success(true);
+                    resolve();
+
+                });
+            });
+
+    },
+
+
     /**
      * GET /app_builder/appJSON/:id?download=1
      * 
      * Export an app in JSON format
      */
-    jsonExport: function(req, res) {
+    jsonExport: function (req, res) {
         var appID = req.param('id');
         var forDownload = req.param('download');
-        
+
         AppBuilderExport.appToJSON(appID)
-        .fail(function(err) {
-            res.AD.error(err);
-        })
-        .done(function(data) {
-            if (forDownload) {
-                res.set('Content-Disposition', 'attachment; filename="app.json"');
-            }
-            res.json(data);
-        });
+            .fail(function (err) {
+                res.AD.error(err);
+            })
+            .done(function (data) {
+                if (forDownload) {
+                    res.set('Content-Disposition', 'attachment; filename="app.json"');
+                }
+                res.json(data);
+            });
     },
-    
-    
+
+
     /**
      * POST /app_builder/appJSON
      *
@@ -308,8 +390,8 @@ console.log('*** !!! Run full reload again');
      *
      * The file is expected to be uploaded via the Webix uploader widget.
      */
-    jsonImport: function(req, res) {
-        req.file('upload').upload(function(err, files) {
+    jsonImport: function (req, res) {
+        req.file('upload').upload(function (err, files) {
             if (err) {
                 console.log('jsonImport upload error', err);
                 res.send({ status: 'error' });
@@ -320,7 +402,7 @@ console.log('*** !!! Run full reload again');
                 res.send({ status: 'error' });
             }
             else {
-                fs.readFile(files[0].fd, function(err, data) {
+                fs.readFile(files[0].fd, function (err, data) {
                     if (err) {
                         console.log('jsonImport read error', err);
                         res.send({ status: 'error' });
@@ -330,21 +412,21 @@ console.log('*** !!! Run full reload again');
                         try {
                             var jsonData = JSON.parse(data.toString());
                             AppBuilderExport.appFromJSON(jsonData)
-                            .fail(function(err) {
-                                console.log('jsonImport import error', err);
-                                res.send({ 
-                                    status: 'error',
-                                    message: err.message,
-                                    error: err
+                                .fail(function (err) {
+                                    console.log('jsonImport import error', err);
+                                    res.send({
+                                        status: 'error',
+                                        message: err.message,
+                                        error: err
+                                    });
+                                    //res.AD.error(err);
+                                })
+                                .done(function () {
+                                    res.send({ status: "server" });
                                 });
-                                //res.AD.error(err);
-                            })
-                            .done(function() {
-                                res.send({ status: "server" });
-                            });
                         } catch (err) {
                             console.log('jsonImport parse error', err);
-                             res.send({ 
+                            res.send({
                                 status: 'error',
                                 message: 'json parse error',
                                 error: err,
@@ -356,128 +438,64 @@ console.log('*** !!! Run full reload again');
             }
         });
     },
-    
-    
+
+
     // GET /app_builder/application/:appID/findModels
     findModels: function (req, res) {
         var appID = req.param('appID');
         var result = [];
-        var application, appName;
-        var appModels = [];
-        
-        async.series([
-            // Find application
-            function(next) {
-                ABApplication.find({ id: appID })
-                .exec(function(err, list) {
-                    if (err) next(err);
-                    else if (!list || !list[0]) {
-                        next(new Error('Application not found: ' + appID));
-                    }
-                    else {
-                        application = list[0];
-                        appName = AppBuilder.rules.toApplicationNameFormat(application.name);
-                        next();
-                    }
-                });
-            },
-            
-            // Find all objects within this application
-            function(next) {
-                ABObject.find()
-                .where({ application: appID })
-                .exec(function(err, list) {
-                    if (err) next(err);
-                    else {
-                        list = list || [];
-                        // Make a list of model names from objects within
-                        // this application.
-                        appModels = _.map(list, function(o) {
-                            var name;
-                            if (o.isImported) name = o.name;
-                            else name = AppBuilder.rules.toObjectNameFormat(appName, o.name);
-                            return name.toLowerCase();
-                        });
-                        next();
-                    }
-                });
-            },
-            
-            function(next) {
-                // Result is all the sails models that are not currently in
-                // this application.
-                var sailsModels = Object.keys(sails.models);
-                result = _.difference(sailsModels, appModels);
-                result = _.map(result, function(r) {
-                    return { 
-                        objectId: null,
-                        modelName: r
-                    };
-                });
 
-                next();
-            },
+        ABApplication.find({ id: { '!': appID } })
+            .populate('translations')
+            .fail(res.AD.error)
+            .then(function (apps) {
 
-            // Get object id to model
-            function (next) {
-                ABObject.find({ application: { '!': appID }, isImported: { '!': 1 } })
-                    .populate('application')
-                    .exec(function (err, list) {
-                        list.forEach(function (obj) {
-                            var appName = AppBuilder.rules.toApplicationNameFormat(obj.application.name);
-                            var objModelName = AppBuilder.rules.toObjectNameFormat(appName, obj.name).toLowerCase();
+                // pull objects to array
+                apps.forEach(function (app) {
 
-                            // Populate object id to models
-                            for (var i = 0; i < result.length; i++) {
-                                if (result[i].modelName == objModelName) {
-                                    result[i].objectId = obj.id;
-                                }
+                    if (app.json.objects != null) {
+
+                        // get properties of objects
+                        var objects = app.json.objects.map(function (obj) {
+                            return {
+                                id: obj.id,
+                                name: obj.name,
+                                fields: obj.fields,
+                                translations: obj.translations,
+                                application: app
                             }
-
                         });
 
-                        next();
-                    });
-            }
-        
-        ], function(err) {
-            if (err) res.AD.error(err);
-            else res.AD.success(result);
-        });
+                        result = result.concat(objects);
+
+                    }
+
+                });
+
+                res.AD.success(result);
+
+            });
+
     },
-    
-    
+
+
     // POST /app_builder/application/:appID/importModel
     importModel: function (req, res) {
         var appID = req.param('appID');
         var modelObjectId = req.param('objectID') || '';
         var modelName = req.param('model') || '';
         var columns = req.param('columns') || [];
-        
+
         AppBuilder.modelToObject(appID, modelObjectId, modelName, columns)
-        .fail(function(err) {
-            res.AD.error(err);
-        })
-        .done(function(object) {
-            res.AD.success(object);
-        });
-    
-    },
+            .fail((err) => {
+                res.AD.error(err);
+            })
+            .done((obj) => {
+                res.AD.success(obj);
+            });
 
-    // GET /app_builder/application/findModelAttributes
-    findModelAttributes: function(req, res) {
-        var modelName = req.param('model') || '';
-
-        AppBuilder.findModelAttributes(modelName)
-        .fail(function(err) {
-            res.AD.error(err);
-        })
-        .done(function(columns) {
-            res.AD.success(columns);
-        });
     }
-    
-	
+
 };
 
 

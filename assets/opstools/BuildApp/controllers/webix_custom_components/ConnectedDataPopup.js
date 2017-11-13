@@ -8,7 +8,7 @@ steal(
 				common: {
 					ok: AD.lang.label.getLabel('ab.common.ok') || "Ok",
 					search: AD.lang.label.getLabel('ab.common.search') || "Search",
-					select: AD.lang.label.getLabel('ab.common.select') || "Select",
+					save: AD.lang.label.getLabel('ab.common.save') || "Save",
 					cancel: AD.lang.label.getLabel('ab.common.cancel') || "Cancel"
 				},
 				// Connected data
@@ -137,7 +137,7 @@ steal(
 								},
 								{
 									view: "button",
-									value: labels.common.select,
+									value: labels.common.save,
 									type: "form",
 									align: "right",
 									width: 150,

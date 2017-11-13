@@ -6,7 +6,7 @@ steal(
 		};
 
 		//Constructor
-		var newComponent = function (application, rootPageId, viewId, componentId) {
+		var newComponent = function (application, viewId, componentId) {
 			var data = {};
 
 			// Set viewId to public

@@ -34,7 +34,7 @@ steal(
 
 			validateFormat: function (input) {
 				// Validate maximum length of field name
-				var maxNameLength = 40;
+				var maxNameLength = 20;
 				if (input && input.length > maxNameLength) {
 					webix.alert({
 						title: labels.overMaxLength,
@@ -44,8 +44,8 @@ steal(
 					return false;
 				}
 
-				// Validate format field name - disallow special characters
-				if (/[!@#$%-()*+?.,\\^|=]/g.test(input)) {
+				// Validate format field name
+				if (!/^[a-zA-Z]{1}[a-zA-Z0-9\s]*$/.test(input)) {
 					webix.alert({
 						title: labels.invalidFormat,
 						text: labels.invalidFormatDescription,

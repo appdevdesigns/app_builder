@@ -6,30 +6,30 @@ var AD = require('ad-utils');
 
 module.exports = {
 
-  getFieldString: function(column) {
-    var dfd = AD.sal.Deferred();
+	getFieldString: function (column) {
+		var dfd = AD.sal.Deferred();
 
-    var colString = column.name + ':' + column.type;
+		var colString = column.name + ':' + column.type;
 
-    dfd.resolve(colString);
+		dfd.resolve(colString);
 
-    return dfd;
-  },
+		return dfd;
+	},
 
-  defaults: {
-    type: 'string',
-    fieldName: 'image',
-    setting: {
-      icon: 'file-image-o',
-      template: '<div class="ab-image-data-field"></div>',
-      /*
-      useWidth: '1',
-      imageWidth: '100',
-      useHeight: '1',
-      imageHeight: '100',
-      width: '100',
-      */
-      css: 'ab-column-no-padding'
+    defaults: {
+        type: 'string',
+        fieldName: 'image',
+        setting: {
+            icon: 'file-image-o',
+            template: '<div class="ab-image-data-field"></div>',
+            /*
+            useWidth: '1',
+            imageWidth: '100',
+            useHeight: '1',
+            imageHeight: '100',
+            width: '100',
+            */
+            css: 'ab-column-no-padding'
+        }
     }
-  }
 };
