@@ -665,6 +665,9 @@ export default class ABViewDataCollection extends ABView {
 		var model = this.model;
 		if (model == null) return;
 
+		// If the data collection is exists, then will not initialize again
+		if (this.__dataCollection) return;
+
 		this.__dataCollection = model.dataCollectionNew();
 
 
