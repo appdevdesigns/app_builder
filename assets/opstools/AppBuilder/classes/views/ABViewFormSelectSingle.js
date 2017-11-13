@@ -204,13 +204,9 @@ export default class ABViewFormSelectSingle extends ABViewFormField {
 			if (field && field.key == "user") {
 
 				if (App.__users == null) {
-					field.getUsers().then(function (data) {
-
-						App.__userlist = data;
-
-						if ($$(component.ui.id))
-							$$(component.ui.id).define("options", App.__userlist);
-					});
+					App.__userlist = field.getUsers();
+					if ($$(component.ui.id))
+						$$(component.ui.id).define("options", App.__userlist);
 				}
 				else {
 					if ($$(component.ui.id))
