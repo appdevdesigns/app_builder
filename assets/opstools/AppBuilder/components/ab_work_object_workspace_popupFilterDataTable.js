@@ -46,20 +46,14 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
             }
         };
         
-        var users = {};
-        
-        OP.Comm.Service.get({ url: "/appdev-core/siteuser" }).then((data) => {
-            var items = data.map(function(item) {
-                return {
-                    id: item.username,
-                    value: item.username
-                }
-            });
-            users = items;
+        var users = OP.User.userlist().map((u) => {
+            return {
+                id: u.username,
+                value: u.username
+            };
         });
 
-        
-        
+
         // internal list of Webix IDs to reference our UI components.
         var ids = {
             component: this.unique('component'),

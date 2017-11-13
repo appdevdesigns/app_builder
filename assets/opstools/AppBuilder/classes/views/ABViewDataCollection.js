@@ -327,14 +327,7 @@ export default class ABViewDataCollection extends ABView {
 							name: "fixSelect",
 							label: L('ab.component.datacollection.fixSelect', '*Select:'),
 							labelWidth: App.config.labelWidthLarge,
-							options: [],
-							on: {
-								onChange: function (newv, oldv) {
-									if (newv == oldv) return;
-
-									// _logic.selectObject(newv);
-								}
-							}
+							options: []
 						}
 					]
 				}
@@ -381,6 +374,12 @@ export default class ABViewDataCollection extends ABView {
 				value: object.displayData(item)
 			}
 		});
+
+		// Add a current user option to allow select first row that match the current user
+		var userFields = object.fields((f) => f.key == 'user');
+		if (userFields.length > 0)
+			dataItems.unshift({ id: '_CurrentUser', value: L('ab.component.datacollection.currentUser', '[Current User]') });
+
 		dataItems.unshift({ id: '', value: L('ab.component.datacollection.fixSelect', '*Select fix cursor') });
 
 		$$(ids.fixSelect).define("options", dataItems);
@@ -720,8 +719,46 @@ export default class ABViewDataCollection extends ABView {
 			.then(() => {
 
 				// set static cursor
-				if (this.settings.fixSelect)
-					this.setCursor(this.settings.fixSelect);
+				if (this.settings.fixSelect) {
+
+					// set cursor to the current user
+					if (this.settings.fixSelect == "_CurrentUser") {
+
+						var username = OP.User.username();
+						var userFields = this.datasource.fields((f) => f.key == "user");
+
+						// find a row that contains the current user
+						var row = this.__dataCollection.find((r) => {
+
+							var found = false;
+
+							userFields.forEach((f) => {
+
+								if (found) return;
+
+								if (r[f.columnName].filter) { // Array - isMultiple
+									found = r[f.colName].filter((data) => data.id == username).length > 0;
+								}
+								else if (r[f.columnName] == username) {
+									found = true;
+								}
+
+							});
+
+							return found;
+
+						}, true);
+
+						// set a first row of current user to cursor
+						if (row)
+							this.__dataCollection.setCursor(row.id);
+					}
+					else {
+						this.setCursor(this.settings.fixSelect);
+					}
+
+				}
+
 
 				var linkDc = this.dataCollectionLink;
 				if (linkDc) {
@@ -835,7 +872,7 @@ export default class ABViewDataCollection extends ABView {
 	setCursor(rowId) {
 
 		// If the static cursor is set, then this DC could not set cursor to other rows
-		if (this.settings.fixSelect && 
+		if (this.settings.fixSelect &&
 			this.settings.fixSelect != rowId)
 			return;
 
