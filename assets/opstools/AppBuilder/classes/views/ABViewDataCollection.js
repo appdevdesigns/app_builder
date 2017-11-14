@@ -728,7 +728,7 @@ export default class ABViewDataCollection extends ABView {
 			}
 		});
 
-		AD.comm.hub.subscribe('ab.datacollection.update', (msg, data) => {
+		AD.comm.hub.subscribe('ab.datacollection.delete', (msg, data) => {
 
 			if (this.datasource.id != data.objectId) return;
 
