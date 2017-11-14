@@ -742,6 +742,12 @@ export default class ABViewDataCollection extends ABView {
 			var deleteId = data.data;
 
 			if (this.__dataCollection.exists(deleteId)) {
+
+				// If the deleted item is current cursor, then the current cursor should be cleared.
+				var currId = this.__dataCollection.getCursor();
+				if (currId == deleteId)
+					this.__dataCollection.setCursor(null);
+
 				this.__dataCollection.remove(deleteId);
 			}
 		});

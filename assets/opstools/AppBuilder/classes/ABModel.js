@@ -349,12 +349,12 @@ export default class ABModel {
 
 						// .data is an empty object ?? 
 
-						this.normalizeData(values);
+						this.normalizeData(data);
 
-						resolve(values);
+						resolve(data);
 
 						// trigger a update event
-						triggerEvent('update', this.object, values);
+						triggerEvent('update', this.object, data);
 
 					})
 					.catch(reject);

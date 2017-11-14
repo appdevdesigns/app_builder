@@ -69,6 +69,191 @@ function updateRelationValues(query, id, updateRelationParams) {
 }
 
 
+/**
+ * @function populateFindConditions
+ * Add find conditions and include relation data to Knex.query
+ * 
+ * @param {Knex.query} query 
+ * @param {ABObject} object 
+ * @param {Object} options - {
+ *                              where : {Array}
+ *                              sort :  {Array}
+ *                              offset: {Integer}
+ *                              limit:  {Integer}
+ *                           }
+ */
+function populateFindConditions(query, object, options) {
+
+    var where = options.where,
+        sort = options.sort,
+        offset = options.offset,
+        limit = options.limit;
+
+    // Apply filters
+    if (!_.isEmpty(where)) {
+        var index = 0;
+        where.forEach(function (w) {
+
+            // 1:1 - Get rows that no relation with 
+            if (w.operator == 'have no relation') {
+                var relation_name = AppBuilder.rules.toFieldRelationFormat(w.fieldName);
+
+                query
+                    .leftJoinRelation(relation_name)
+                    .whereRaw('{relation_name}.id IS NULL'.replace('{relation_name}', relation_name));
+
+                return;
+            }
+
+            // We need to put back together our sql statment
+            switch(w.operator) {
+                case "contains":
+                    var operator = "LIKE";
+                    var input = "%"+w.inputValue+"%";
+                    break;
+                case "doesn't contain":
+                    var operator = "NOT LIKE";
+                    var input = "%"+w.inputValue+"%";
+                    break;
+                case "is not":
+                    var operator = "!=";
+                    var input = w.inputValue;
+                    break
+                case "is before":
+                    var operator = "<";
+                    var input = w.inputValue;
+                    break;
+                case "is after":
+                    var operator = ">";
+                    var input = w.inputValue;
+                    break;
+                case "is on or before":
+                    var operator = "<=";
+                    var input = w.inputValue;
+                    break;
+                case "is on or after":
+                    var operator = ">=";
+                    var input = w.inputValue;
+                    break;
+                case ":":
+                    var operator = "=";
+                    var input = w.inputValue;
+                    break;
+                case "≠":
+                    var operator = "!=";
+                    var input = w.inputValue;
+                    break;
+                case "<":
+                    var operator = "<";
+                    var input = w.inputValue;
+                    break;
+                case ">":
+                    var operator = ">";
+                    var input = w.inputValue;
+                    break;
+                case "≤":
+                    var operator = "<=";
+                    var input = w.inputValue;
+                    break;
+                case "≥":
+                    var operator = ">=";
+                    var input = w.inputValue;
+                    break;
+                case "equals":
+                    var operator = "=";
+                    var input = w.inputValue;
+                    break;
+                case "does not equal":
+                    var operator = "!=";
+                    var input = w.inputValue;
+                    break;
+                case "is checked":
+                    var operator = "=";
+                    var input = w.inputValue;
+                    break;
+                case "is not checked":
+                    var operator = "=";
+                    var input = w.inputValue;
+                    break;
+                case "is null":
+                    var operator = "IS NULL";
+                    var input = null;
+                    break;
+                case "is not null":
+                    var operator = "IS NOT NULL";
+                    var input = null;
+                    break;
+                default:
+                    var operator = "=";
+                    var input = w.inputValue;
+            }
+            // if we are searching a multilingual field it is stored in translations so we need to search JSON
+            if (w.isMultiLingual == 1) {
+                var fieldName = 'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH(translations, "one", "' + w.languageCode + '")), 1, 4)), \'$."' + w.fieldName + '"\'))';
+            } else { // If we are just searching a field it is much simpler
+                var fieldName = '`' + w.fieldName + '`';
+            }
+
+            var field = object._fields.filter(field => field.columnName == w.fieldName)[0];
+            if (field && field.settings && field.settings.options && field.settings.options.filter) {
+                var inputID = field.settings.options.filter(option => option.text == input);
+                input = inputID[0].id;
+            }
+
+            // We are going to use the 'raw' queries for knex becuase the '.' for JSON searching is misinterpreted as a sql identifier
+            var whereRaw = '{fieldName} {operator} {input}'
+                .replace('{fieldName}', fieldName)
+                .replace('{operator}', operator)
+                .replace('{input}', ((input != null) ? "'" + input + "'" : ''));
+
+            // Now we add in all of our where statements
+            if (index == 0) {
+                query.whereRaw(whereRaw);
+            } else if (w.combineCondition == "Or") {
+                query.orWhereRaw(whereRaw);
+            } else {
+                // the default whereRaw will provide an "AND" if there is already one present
+                query.whereRaw(whereRaw);                        
+            }
+            index++;
+        })
+    }
+
+    // Apply Sorts
+    if (!_.isEmpty(sort)) {
+        sort.forEach(function (o) {
+            // if we are ordering by a multilingual field it is stored in translations so we need to search JSON but this is different from filters
+            // because we are going to sort by the users language not the builder's so the view will be sorted differntly depending on which languageCode
+            // you are using but the intent of the sort is maintained
+            if (o.isMulti == 1) {
+                var by = 'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH(translations, "one", "' + req.user.data.languageCode + '")), 1, 4)), \'$."' + o.by + '"\'))';
+            } else { // If we are just sorting a field it is much simpler
+                var by = "`" + o.by + "`";
+            }
+            query.orderByRaw(by + " " + o.dir);
+        })
+    }
+
+
+    // apply any offset/limit if provided.
+    if (offset) {
+        query.offset(offset);
+    }
+    if (limit) {
+        query.limit(limit);
+    }            
+
+    // query relation data
+    var relationNames = object.connectFields()
+        .filter((f) => f.fieldLink() != null )
+        .map((f) => f.relationName() );
+
+    if (relationNames.length > 0)
+        query.eager('[#fieldNames#]'.replace('#fieldNames#', relationNames.join(', ')));
+
+}
+
+
 
 module.exports = {
 
@@ -103,7 +288,8 @@ module.exports = {
                 query.insert(createParams)
                 .then((newObj)=>{
 
-                    // create a new query when use same query, then new data are created duplicate
+                    // create a new query to update relation data
+                    // NOTE: when use same query, it will have a "created duplicate" error
                     var query2 = object.model().query();
                     var updateTasks = updateRelationValues(query2, newObj.id, updateRelationParams);
 
@@ -112,9 +298,24 @@ module.exports = {
                         .catch(Promise.reject)
                         .then((values)=>{
 
-                            res.AD.success(newObj);
+                            // Query the new row to response to client
+                            var query3 = object.model().query();
+                            populateFindConditions(query3, object, {
+                                where: [{
+                                    fieldName: "id",
+                                    operator: "equals",
+                                    inputValue: newObj.id
+                                }],
+                                offset: 0,
+                                limit: 1
+                            });
+                            query3
+                            .catch(Promise.reject)
+                            .then((newItem) => {
+                                res.AD.success(newItem[0]);
+                                Promise.resolve();
+                            });
 
-                            Promise.resolve();
 
                         });
 
@@ -199,187 +400,26 @@ console.log('... catch(err) !');
 
             var query = object.model().query();
 
-
-/// IMPLEMENT .where()  here
             var where = req.options._where.where;
-            
             var sort = req.options._where.sort;
-
-            var result = {};
-
-            // Apply filters
-            if (!_.isEmpty(where)) {
-                var index = 0;
-                where.forEach(function (w) {
-
-                    // 1:1 - Get rows that no relation with 
-                    if (w.operator == 'have no relation') {
-                        var relation_name = AppBuilder.rules.toFieldRelationFormat(w.fieldName);
-
-                        query
-                            .leftJoinRelation(relation_name)
-                            .whereRaw('{relation_name}.id IS NULL'.replace('{relation_name}', relation_name));
-
-                        return;
-                    }
-
-                    // We need to put back together our sql statment
-                    switch(w.operator) {
-                        case "contains":
-                            var operator = "LIKE";
-                            var input = "%"+w.inputValue+"%";
-                            break;
-                        case "doesn't contain":
-                            var operator = "NOT LIKE";
-                            var input = "%"+w.inputValue+"%";
-                            break;
-                        case "is not":
-                            var operator = "!=";
-                            var input = w.inputValue;
-                            break
-                        case "is before":
-                            var operator = "<";
-                            var input = w.inputValue;
-                            break;
-                        case "is after":
-                            var operator = ">";
-                            var input = w.inputValue;
-                            break;
-                        case "is on or before":
-                            var operator = "<=";
-                            var input = w.inputValue;
-                            break;
-                        case "is on or after":
-                            var operator = ">=";
-                            var input = w.inputValue;
-                            break;
-                        case ":":
-                            var operator = "=";
-                            var input = w.inputValue;
-                            break;
-                        case "≠":
-                            var operator = "!=";
-                            var input = w.inputValue;
-                            break;
-                        case "<":
-                            var operator = "<";
-                            var input = w.inputValue;
-                            break;
-                        case ">":
-                            var operator = ">";
-                            var input = w.inputValue;
-                            break;
-                        case "≤":
-                            var operator = "<=";
-                            var input = w.inputValue;
-                            break;
-                        case "≥":
-                            var operator = ">=";
-                            var input = w.inputValue;
-                            break;
-                        case "equals":
-                            var operator = "=";
-                            var input = w.inputValue;
-                            break;
-                        case "does not equal":
-                            var operator = "!=";
-                            var input = w.inputValue;
-                            break;
-                        case "is checked":
-                            var operator = "=";
-                            var input = w.inputValue;
-                            break;
-                        case "is not checked":
-                            var operator = "=";
-                            var input = w.inputValue;
-                            break;
-                        case "is null":
-                            var operator = "IS NULL";
-                            var input = null;
-                            break;
-                        case "is not null":
-                            var operator = "IS NOT NULL";
-                            var input = null;
-                            break;
-                        default:
-                            var operator = "=";
-                            var input = w.inputValue;
-                    }
-                    // if we are searching a multilingual field it is stored in translations so we need to search JSON
-                    if (w.isMultiLingual == 1) {
-                        var fieldName = 'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH(translations, "one", "' + w.languageCode + '")), 1, 4)), \'$."' + w.fieldName + '"\'))';
-                    } else { // If we are just searching a field it is much simpler
-                        var fieldName = '`' + w.fieldName + '`';
-                    }
-
-                    var field = object._fields.filter(field => field.columnName == w.fieldName)[0];
-                    if (field && field.settings && field.settings.options && field.settings.options.filter) {
-                        var inputID = field.settings.options.filter(option => option.text == input);
-                        input = inputID[0].id;
-                    }
-
-                    // We are going to use the 'raw' queries for knex becuase the '.' for JSON searching is misinterpreted as a sql identifier
-                    var where = '{fieldName} {operator} {input}'
-                        .replace('{fieldName}', fieldName)
-                        .replace('{operator}', operator)
-                        .replace('{input}', ((input != null) ? "'" + input + "'" : ''));
-
-                    // Now we add in all of our where statements
-                    if (index == 0) {
-                        query.whereRaw(where);
-                    } else if (w.combineCondition == "Or") {
-                        query.orWhereRaw(where);
-                    } else {
-                        // the default whereRaw will provide an "AND" if there is already one present
-                        query.whereRaw(where);                        
-                    }
-                    index++;
-                })
-            }
-            
-            // promise for the total count. this was moved below the filters because webix will get caught in an infinte loop of queries if you don't pass the right count
-            var pCount = query.clone().count('* as count').first(); 
-
-            // Apply Sorts
-            if (!_.isEmpty(sort)) {
-                sort.forEach(function (o) {
-                    // if we are ordering by a multilingual field it is stored in translations so we need to search JSON but this is different from filters
-                    // because we are going to sort by the users language not the builder's so the view will be sorted differntly depending on which languageCode
-                    // you are using but the intent of the sort is maintained
-                    if (o.isMulti == 1) {
-                        var by = 'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH(translations, "one", "' + req.user.data.languageCode + '")), 1, 4)), \'$."' + o.by + '"\'))';
-                    } else { // If we are just sorting a field it is much simpler
-                        var by = "`" + o.by + "`";
-                    }
-                    query.orderByRaw(by + " " + o.dir);
-                })
-            }
-
             var offset = req.options._offset;
             var limit = req.options._limit;
 
-            // apply any offset/limit if provided.
-            if (offset) {
-                query.offset(offset);
-            }
-            if (limit) {
-                query.limit(limit);
-            }            
-            
-            // query relation data
-            var relationNames = object.connectFields()
-                .filter((f) => f.fieldLink() != null )
-                .map((f) => f.relationName() );
+            populateFindConditions(query, object, {
+                where: where,
+                sort: sort,
+                offset: offset,
+                limit: limit
+            });
 
-            if (relationNames.length > 0)
-                query.eager('[#fieldNames#]'.replace('#fieldNames#', relationNames.join(', ')));
-                
-            // console.log(query.toString());
+            // promise for the total count. this was moved below the filters because webix will get caught in an infinte loop of queries if you don't pass the right count
+            var pCount = query.clone().count('* as count').first(); 
 
             Promise.all([
               pCount,
               query
             ]).then(function(values) {
+                var result = {};
                 var count = values[0].count;
                 var rows = values[1];
                 result.data = rows;
@@ -405,9 +445,9 @@ console.log('... catch(err) !');
                 // .then(()=>{
 
 
-                    if(res.header) res.header('Content-type', 'application/json');
-                    
-                    res.send(result, 200);
+                if(res.header) res.header('Content-type', 'application/json');
+
+                res.send(result, 200);
 
 
                 // })
@@ -530,11 +570,23 @@ console.log('... catch(err) !');
                         .catch(Promise.reject)
                         .then((values)=>{
 
-                            var numRows = values[0];
-
-                            res.AD.success({numRows:numRows});
-
-                            Promise.resolve();
+                            // Query the new row to response to client
+                            var query3 = object.model().query();
+                            populateFindConditions(query3, object, {
+                                where: [{
+                                    fieldName: "id",
+                                    operator: "equals",
+                                    inputValue: id
+                                }],
+                                offset: 0,
+                                limit: 1
+                            });
+                            query3
+                            .catch(Promise.reject)
+                            .then((newItem) => {
+                                res.AD.success(newItem[0]);
+                                Promise.resolve();
+                            });
 
                         });
 
