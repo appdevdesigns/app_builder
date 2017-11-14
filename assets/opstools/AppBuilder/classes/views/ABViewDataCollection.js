@@ -698,7 +698,9 @@ export default class ABViewDataCollection extends ABView {
 		// events
 		AD.comm.hub.subscribe('ab.datacollection.create', (msg, data) => {
 
-			if (this.datasource.id != data.objectId) return;
+			if (this.datasource &&
+				this.datasource.id != data.objectId)
+				return;
 
 			// TODO : filter before add 
 
@@ -712,7 +714,9 @@ export default class ABViewDataCollection extends ABView {
 
 		AD.comm.hub.subscribe('ab.datacollection.update', (msg, data) => {
 
-			if (this.datasource.id != data.objectId) return;
+			if (this.datasource &&
+				this.datasource.id != data.objectId)
+				return;
 
 			// updated values
 			var values = data.data;
@@ -730,7 +734,9 @@ export default class ABViewDataCollection extends ABView {
 
 		AD.comm.hub.subscribe('ab.datacollection.delete', (msg, data) => {
 
-			if (this.datasource.id != data.objectId) return;
+			if (this.datasource && 
+				this.datasource.id != data.objectId)
+				return;
 
 			// id of a deleted item
 			var deleteId = data.data;
