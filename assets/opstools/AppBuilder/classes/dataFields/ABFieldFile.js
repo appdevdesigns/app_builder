@@ -504,14 +504,13 @@ class ABFieldFile extends ABField {
 				}
 			})
 			
-		} else {
-			if (row[this.columnName] == '') {
-				var idBase = App.unique(this.idCustomContainer(row)),
-					idUploader = idBase + '-uploader';
-
-				$$(idUploader).fileDialog({ rowid: row.id });
-			};
 		}
+		else if (!row[this.columnName]) {
+			var idBase = App.unique(this.idCustomContainer(row)),
+				idUploader = idBase + '-uploader';
+
+			$$(idUploader).fileDialog({ rowid: row.id });
+		};
 
 		return false;
 	}
