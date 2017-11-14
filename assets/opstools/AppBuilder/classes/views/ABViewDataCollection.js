@@ -719,6 +719,12 @@ export default class ABViewDataCollection extends ABView {
 
 			if (this.__dataCollection.exists(values.id)) {
 				this.__dataCollection.updateItem(values.id, values);
+
+				// If the update item is current cursor, then should tell components to update.
+				var currData = this.getCursor();
+				if (currData && currData.id == values.id) {
+					this.emit("changeCursor", currData);
+				}
 			}
 		});
 
