@@ -374,6 +374,9 @@ steal(
 										// re-render this page
 										self.initPage();
 
+										// show the root page
+										self.showPage(page.id);
+
 									}
 
 								});
