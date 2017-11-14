@@ -301,7 +301,9 @@ steal(
 						showPage: function (pageId) {
 							var self = this;
 
-							pageId = pageId || self.previousPageId || (self.rootPage ? self.rootPage.id : null);
+							pageId = pageId ||
+									(self.previousPageId == self.activePageId ? null : self.previousPageId) ||
+									(self.rootPage ? self.rootPage.id : null);
 
 							if (pageId == null) return;
 
