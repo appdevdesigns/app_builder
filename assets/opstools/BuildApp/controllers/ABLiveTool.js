@@ -150,9 +150,6 @@ steal(
 							self.initPage();
 
 							webix.ready(function () {
-								for (const element of document.getElementById(self.containerDomID).getElementsByClassName("ab-loading")) {
-									element.style.display = "none";
-								}
 								self.showPage();
 							});
 
@@ -330,9 +327,12 @@ steal(
 							// Trigger .onShow to the component
 							setTimeout(function () {
 
-								if (self.pageComponents[pageId] &&
-									self.pageComponents[pageId].onShow)
+								if (self.pageComponents[pageId] && self.pageComponents[pageId].onShow) {
+									for (const element of document.getElementById(self.containerDomID).getElementsByClassName("ab-loading")) {
+										element.style.display = "none";
+									}
 									self.pageComponents[pageId].onShow();
+								}
 
 							}, 50);
 
