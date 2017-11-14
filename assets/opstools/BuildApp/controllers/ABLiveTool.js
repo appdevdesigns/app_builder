@@ -67,7 +67,7 @@ steal(
 						initDOM: function () {
 							console.log('... creating ABLiveTool <div> ');
 
-							this.element.html('<div style="background-color: #fff !important" id="#domID#"></div>'.replace(/#domID#/g, this.containerDomID));
+							this.element.html('<div style="background-color: #fff !important" id="#domID#"><div class="ab-loading">Loading&#8230;</div></div>'.replace(/#domID#/g, this.containerDomID));
 
 							// this.element.html(
 							// 	('<div id="#domID#"></div>' +
@@ -140,7 +140,7 @@ steal(
 						startPage: function () {
 
 							var self = this;
-
+							
 							// Wait until the tool's area has been shown
 							if (!self.activated) return;
 
@@ -150,6 +150,9 @@ steal(
 							self.initPage();
 
 							webix.ready(function () {
+								for (const element of document.getElementById(self.containerDomID).getElementsByClassName("ab-loading")) {
+									element.style.display = "none";
+								}
 								self.showPage();
 							});
 
