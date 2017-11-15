@@ -221,8 +221,11 @@ steal(
 													view: "button", label: "Close", width: 100, align: "right",
 													click: function () {
 
-														// switch to the previous page
-														self.showPage();
+														var popup = this.getTopParentView();
+														popup.hide();
+
+														// // switch to the previous page
+														// self.showPage();
 
 													}
 												}
