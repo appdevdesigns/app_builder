@@ -360,8 +360,8 @@ export default class ABViewDetail extends ABViewContainer {
 					_logic.displayData(currData);
 				}
 
-				dc.removeListener('changeCursor', _logic.displayData)
-					.on('changeCursor', _logic.displayData);
+				if (this.changeCursorEventId == null)
+					this.changeCursorEventId = dc.on('changeCursor', _logic.displayData);
 
 			}
 

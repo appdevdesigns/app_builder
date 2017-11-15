@@ -809,9 +809,11 @@ export default class ABViewDataCollection extends ABView {
 					// add listeners when cursor of link data collection is changed
 					// linkDc.removeListener("changeCursor", this.filterLinkCursor)
 					// 	.on("changeCursor", this.filterLinkCursor);
-					linkDc.on("changeCursor", (currData) => {
-						this.filterLinkCursor(currData);
-					});
+
+					if (this.changeCursorParentEventId == null)
+						this.changeCursorParentEventId = linkDc.on("changeCursor", (currData) => {
+							this.filterLinkCursor(currData);
+						});
 
 				}
 

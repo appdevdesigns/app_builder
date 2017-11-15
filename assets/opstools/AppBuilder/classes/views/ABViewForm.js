@@ -436,16 +436,16 @@ export default class ABViewForm extends ABViewContainer {
 			if (dc) {
 
 				// listen DC events
-				dc.removeListener('changeCursor', _logic.displayData)
-					.on('changeCursor', _logic.displayData);
+				if (this.changeCursorEventId == null)
+					this.changeCursorEventId = dc.on('changeCursor', _logic.displayData);
 
 				// bind the cursor event of the parent DC
 				var linkDc = dc.dataCollectionLink;
 				if (linkDc) {
 
 					// update the value of link field when data of the parent dc is changed
-					linkDc.removeListener('changeCursor', _logic.displayParentData)
-						.on('changeCursor', _logic.displayParentData);
+					if (this.changeParentCursorEventId == null)
+						this.changeParentCursorEventId = linkDc.on('changeCursor', _logic.displayParentData);
 
 				}
 
