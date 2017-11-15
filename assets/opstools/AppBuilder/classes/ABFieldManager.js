@@ -57,8 +57,6 @@ export default  {
 	 * @return {ABField}
 	 */
 	newField: function (values, object) {
-		console.log(values);
-		console.log(object);
 		if (values.key) {
 			return new Fields[values.key](values, object);
 		} else {
