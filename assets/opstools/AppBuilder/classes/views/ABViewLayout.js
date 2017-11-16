@@ -5,7 +5,8 @@
  *
  */
 
-import ABView from "./ABView"
+import ABViewContainer from "./ABViewContainer"
+import ABViewWidget from "./ABViewWidget"
 import ABViewManager from "../ABViewManager"
 
 
@@ -15,52 +16,52 @@ function L(key, altText) {
 
 
 var PropertyComponentDefaults = {
-	label:'',
-	numColumns:1  	// The number of columns for this layout
+	label: '',
+	numColumns: 1  	// The number of columns for this layout
 }
 
 
 var ABViewDefaults = {
 	key: 'layout',		// {string} unique key for this view
-	icon:'columns',		// {string} fa-[icon] reference for this view
-	labelKey:'ab.components.layout' // {string} the multilingual label key for the class label
+	icon: 'columns',		// {string} fa-[icon] reference for this view
+	labelKey: 'ab.components.layout' // {string} the multilingual label key for the class label
 }
 
 
 
-export default class ABViewLayout extends ABView  {
+export default class ABViewLayout extends ABViewWidget {
 
 	/**
 	 * @param {obj} values  key=>value hash of ABView values
 	 * @param {ABApplication} application the application object this view is under
 	 * @param {ABView} parent the ABView this view is a child of. (can be null)
 	 */
-    constructor(values, application, parent) {
+	constructor(values, application, parent) {
 
-    	super( values, application, parent, ABViewDefaults );
-
-
-  	// 	{
-  	// 		id:'uuid',					// uuid value for this obj
-  	// 		key:'viewKey',				// unique key for this View Type
-  	// 		icon:'font',				// fa-[icon] reference for an icon for this View Type
-  	// 		label:'',					// pulled from translation
-
-	//		settings: {					// unique settings for the type of field
-	//		},
-
-	// 		views:[],					// the child views contained by this view.
-
-	//		translations:[]				// text: the actual text being displayed by this label.
-
-  	// 	}
-
-  	}
+		super(values, application, parent, ABViewDefaults);
 
 
-  	static common() {
-  		return ABViewDefaults;
-  	}
+		// 	{
+		// 		id:'uuid',					// uuid value for this obj
+		// 		key:'viewKey',				// unique key for this View Type
+		// 		icon:'font',				// fa-[icon] reference for an icon for this View Type
+		// 		label:'',					// pulled from translation
+
+		//		settings: {					// unique settings for the type of field
+		//		},
+
+		// 		views:[],					// the child views contained by this view.
+
+		//		translations:[]				// text: the actual text being displayed by this label.
+
+		// 	}
+
+	}
+
+
+	static common() {
+		return ABViewDefaults;
+	}
 
 
 
@@ -81,49 +82,34 @@ export default class ABViewLayout extends ABView  {
 
 		var idBase = 'ABViewLayoutEditorComponent';
 		var ids = {
-			component: App.unique(idBase+'_component'),
+			component: App.unique(idBase + '_component'),
 			view: App.unique(idBase + '_view')
 		}
 
+		var component = this.component(App);
 
-		var _init = (options) => {
-
-			if (mode == 'preview') {
-				var allComponents = [];
-
-				// attach all the .UI views:
-				viewList.forEach((child) => {
-					var component = child.component(App);
-					var id = ids.view + '_' + child.id;
-					component.ui.container = id;
-					webix.ui(component.ui);
-					allComponents.push(component);
-				});
-				
-				// perform any init setups for the content:
-				allComponents.forEach((component) => {
-					component.init();
-				});
-			}
-		}
-
+		/** Logic */
 		var _logic = {
 
-			template:function(obj) {
-				if (mode == 'preview') {
-					return _template.replace("#objID#", obj.id);
-				} else {
-					return _templateBlock
-						.replace("#objID#", obj.id)
-						.replace('#icon#', obj.icon)
-						.replace('#label#', obj.label);
-				}
+			templateButton: function (obj) {
+
+				return ('<div class="ab-widget-header ab-layout-header">' +
+					'<i class="fa fa-#icon# webix_icon_btn"></i> ' +
+					' #label#' +
+					'<div class="ab-component-tools">' +
+					'<i class="fa fa-trash ab-component-remove"></i>' +
+					'<i class="fa fa-edit ab-component-edit"></i>' +
+					'</div>' +
+					'</div>')
+					.replace('#icon#', obj.icon)
+					.replace('#label#', obj.label);
+
 			},
 
 
-			viewEdit:(e, id, trg) => {
+			viewEdit: (e, id, trg) => {
 
-				var view = this.views(function(v) { return v.id == id; })[0];
+				var view = this.views(function (v) { return v.id == id; })[0];
 
 				if (!view) return false;
 
@@ -131,7 +117,7 @@ export default class ABViewLayout extends ABView  {
 				// calling .populateInterfaceWorkspace() which will replace
 				// the interface elements with the edited view.  (apparently
 				// that causes errors.)
-				setTimeout(()=>{
+				setTimeout(() => {
 					App.actions.populateInterfaceWorkspace(view);
 				}, 50);
 
@@ -139,18 +125,18 @@ export default class ABViewLayout extends ABView  {
 				return false;
 			},
 
-			viewDelete:(e, id, trg) => {
+			viewDelete: (e, id, trg) => {
 
-				var view = this.views(function(v) { return v.id == id; })[0];
+				var view = this.views(function (v) { return v.id == id; })[0];
 
 				OP.Dialog.Confirm({
-					title: L('ab.interface.component.confirmDeleteTitle','*Delete component'), 
+					title: L('ab.interface.component.confirmDeleteTitle', '*Delete component'),
 					text: L('ab.interface.component.confirmDeleteMessage', '*Do you want to delete <b>{0}</b>?').replace('{0}', view.label),
 					callback: (result) => {
 						if (result) {
 
 							this.viewDestroy(view)
-								.then(()=>{
+								.then(() => {
 
 									// refresh the editor interface.
 									App.actions.populateInterfaceWorkspace(this);
@@ -161,152 +147,46 @@ export default class ABViewLayout extends ABView  {
 				});
 				e.preventDefault();
 			}
-		} 
 
+		};
 
-		var _templateButton = [
-			'<div class="ab-component-tools ab-layout-view">',
-				'<i class="fa fa-trash ab-component-remove "></i>',
-				'<i class="fa fa-edit ab-component-edit "></i>',
-			'</div>'
-		].join('');
+		/** UI */
+		var _ui = Object.assign(component.ui, {});
+		_ui.type = "space";
 
-		var _template = [
-			'<div class="ab-component-in-page">',
-				'<div class="ab-layout-view-cols" id="'+ids.view+'_#objID#" ></div>',
-				_templateButton,
-			'</div>'
-		].join('');
+		this.views().forEach((v, index) => {
 
-		var _templateBlock = [
-			'<div class="ab-component-in-page">',
-				'<div id="'+ids.view+'_#objID#" >',
-					'<i class="fa fa-#icon#"></i>',
-					' #label#',
-				'</div>',
-				'<div id="'+ids.view+'_#objID#" >',
-					'<i class="fa fa-#icon#"></i>',
-					'#label#',
-				'</div>',
-			'</div>'
-		].join('');
-
-
-		//// Now setup the UI configuration:
-		// var _ui = {
-		// 	type: "space",
-		// 	id: ids.component,
-		// 	cols: [],
-		// }
-		// var _ui = {
-		// 	type: "space",
-		// 	rows: [
-		// 		{
-		// 			id: ids.component,
-		// 			cols: [],
-		// 		},
-		// 		{}
-		// 	]
-		// }
-
-		var viewList = this.views();
-
-		if (viewList.length > 0) {
-			var _ui = {
-				type: "space",
-				id: ids.component,
-				cols: [],
-			}
-
-			viewList.forEach((view)=>{
-
-				// preview mode
-				if (mode == 'preview') {
-
-					_ui.cols.push({
-						view: 'template',
-						template: _logic.template(view),
+			_ui.cols[index] = {
+				rows: [
+					// Add action buttons
+					{
+						type: 'template',
+						height: 33,
+						template: _logic.templateButton({
+							icon: v.icon,
+							label: v.label
+						}),
 						onClick: {
-							"ab-component-edit": function (e, id, trg) {
-								_logic.viewEdit(e, view.id, trg);
+							"ab-component-edit": (e, id, trg) => {
+								_logic.viewEdit(e, v.id, trg);
 							},
-							"ab-component-remove": function (e, id, trg) {
-								_logic.viewDelete(e, view.id, trg);
+							"ab-component-remove": (e, id, trg) => {
+								_logic.viewDelete(e, v.id, trg);
 							}
 						}
-					})
-
-				}
-
-				// block mode
-				else {
-
-					_ui.cols.push({
-						css:  {
-							position: "relative"
-						},
-						rows: [
-							{
-								view: 'list',
-								data: view.views(),
-								scroll: 'y',
-								select: false,
-								multiselect: false,
-								template: (comp, common) => {
-									return _logic.template(comp);
-								}
-							},
-							// Add actions buttons - Edit , Delete
-							{
-								view: 'template',
-								type: 'clean',
-								autoheight: false,
-								borderless: true,
-								height: 1,
-								width: 0,
-								template: _templateButton,
-								onClick: {
-									"ab-component-edit": function (e, id, trg) {
-										_logic.viewEdit(e, view.id, trg);
-									},
-									"ab-component-remove": function (e, id, trg) {
-										_logic.viewDelete(e, view.id, trg);
-									}
-								}
-							}
-
-						]
-					});
-
-
-			}
-
-			})
-		} else {
-			var _ui = {
-				type: "space",
-				rows: [
-					{
-						id: ids.component,
-						cols: [],
 					},
+					// Preview display here
+					_ui.cols[index],
 					{}
 				]
-			}
+			};
 
-			// no views currently defined, so add a placeholder:
-			_ui.rows[0].cols.push({
-				id:'del_me',
-				view:'label',
-				align:'center',
-				label:L('ab.component.layout.addView', '*Add a column from the properties panel.')
-			});
-		}
-
+		});
 
 		return {
-			ui:_ui,
-			init:_init
+			ui: _ui,
+			init: component.init,
+			logic: _logic
 		}
 	}
 
@@ -327,7 +207,7 @@ export default class ABViewLayout extends ABView  {
 	 * This method should find the current View instance and call it's .addColumn()
 	 * method.
 	 */
-	static addView (ids, _logic) {
+	static addView(ids, _logic) {
 
 		// get current instance and .addColumn()
 		var LayoutView = _logic.currentEditObject();
@@ -346,13 +226,13 @@ export default class ABViewLayout extends ABView  {
 	static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
 
 		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
-		
+
 
 		// if I don't create my own propertyEditorComponent, then I need to 
 		// create the onClick handler that will cause the current view instance
 		// to create a vew sub view/ column
 		if (!_logic.onClick) {
-			_logic.onClick = ()=>{
+			_logic.onClick = () => {
 				this.addView(ids, _logic)
 			}
 		}
@@ -365,7 +245,7 @@ export default class ABViewLayout extends ABView  {
 			{
 				view: 'button',
 				value: L('ab.component.layout.addColumn', '*Add Column '),
-				click:_logic.onClick
+				click: _logic.onClick
 			}
 
 		]);
@@ -379,11 +259,9 @@ export default class ABViewLayout extends ABView  {
 	 */
 	addColumn() {
 
-		var viewKey;
-
-		viewKey = ABView.common().key;
-
-		this._views.push(ABViewManager.newView({ key: viewKey }, this.application, this));
+		this._views.push(ABViewManager.newView({
+			key: ABViewContainer.common().key
+		}, this.application, this));
 
 	}
 
@@ -398,7 +276,7 @@ export default class ABViewLayout extends ABView  {
 
 		// get a UI component for each of our child views
 		var viewComponents = [];
-		this.views().forEach((v)=>{
+		this.views().forEach((v) => {
 			viewComponents.push(v.component(App));
 		})
 
@@ -406,9 +284,9 @@ export default class ABViewLayout extends ABView  {
 			return AD.lang.label.getLabel(key) || altText;
 		}
 
-		var idBase = 'ABViewLayout_'+this.id;
+		var idBase = 'ABViewLayout_' + this.id;
 		var ids = {
-			component: App.unique(idBase+'_component'),
+			component: App.unique(idBase + '_component'),
 		}
 
 
@@ -416,20 +294,20 @@ export default class ABViewLayout extends ABView  {
 		var _ui = {
 			id: ids.component,
 			// type: "space",
-			cols:[]
+			cols: []
 		}
-		
+
 		if (viewComponents.length > 0) {
 			// insert each of our sub views into our columns:
-			viewComponents.forEach((view)=>{
+			viewComponents.forEach((view) => {
 
-	//// TODO: track column widths?
+				//// TODO: track column widths?
 				_ui.cols.push(view.ui);
 			});
 		} else {
 			_ui.cols.push({
 				view: "label",
-				label: L('ab.interface.component.noColumnsYet','*No columns have been added yet.')
+				label: L('ab.interface.component.noColumnsYet', '*No columns have been added yet.')
 			});
 		}
 
@@ -438,7 +316,7 @@ export default class ABViewLayout extends ABView  {
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
 
-			viewComponents.forEach((view)=>{
+			viewComponents.forEach((view) => {
 				if (view.init)
 					view.init();
 			})
@@ -449,8 +327,8 @@ export default class ABViewLayout extends ABView  {
 
 
 		return {
-			ui:_ui,
-			init:_init
+			ui: _ui,
+			init: _init
 		}
 	}
 
@@ -483,7 +361,7 @@ export default class ABViewLayout extends ABView  {
 			}
 
 		}
-		
+
 	}
 
 

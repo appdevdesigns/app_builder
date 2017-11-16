@@ -191,21 +191,21 @@ export default class ABViewTab extends ABViewWidget {
 
 		var _logic = {
 
-			templateBlock: (tab) => {
-				var _template = [
-					'<div class="ab-component-in-page">',
-					'<div id="' + ids.view + '_#objID#" >',
-					'<i class="fa fa-#icon#"></i>',
-					' #label#',
-					'</div>',
-					'</div>'
-				].join('');
+			// templateBlock: (tab) => {
+			// 	var _template = [
+			// 		'<div class="ab-component-in-page">',
+			// 		'<div id="' + ids.view + '_#objID#" >',
+			// 		'<i class="fa fa-#icon#"></i>',
+			// 		' #label#',
+			// 		'</div>',
+			// 		'</div>'
+			// 	].join('');
 
-				return _template
-					.replace('#objID#', tab.id)
-					.replace('#icon#', tab.icon)
-					.replace('#label#', tab.label);
-			},
+			// 	return _template
+			// 		.replace('#objID#', tab.id)
+			// 		.replace('#icon#', tab.icon)
+			// 		.replace('#label#', tab.label);
+			// },
 
 			tabEdit: (e, nodeId, trg) => {
 

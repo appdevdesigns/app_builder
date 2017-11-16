@@ -1023,6 +1023,13 @@ a.ab-delete-photo:hover {
 .ab-data-list .webix_list_item {
 	padding: 2px 0px 2px 10px;
 }
+.ab-layout-header {
+	position: relative;
+}
+.ab-layout-header > .ab-component-tools {
+	right: 0px;	
+}
+
 .transparent {
 	background: transparent !important;
 }
