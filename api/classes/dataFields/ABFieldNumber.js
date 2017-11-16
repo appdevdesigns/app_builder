@@ -15,15 +15,15 @@ function L(key, altText) {
 
 
 var ABFieldNumberDefaults = {
-	key : 'number', // unique key to reference this specific DataField
-	icon : 'slack',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
-	
+	key: 'number', // unique key to reference this specific DataField
+	icon: 'slack',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
+
 	// menuName: what gets displayed in the Editor drop list
-	menuName : L('ab.dataField.number.menuName', '*Number'),
-	
+	menuName: L('ab.dataField.number.menuName', '*Number'),
+
 	// description: what gets displayed in the Editor description.
 	description: L('ab.dataField.number.description', '*A Float or Integer Value'),
-	
+
 	// what types of Sails ORM attributes can be imported into this data type?
 	// http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
 	compatibleOrmTypes: ['integer', 'float'],
@@ -41,23 +41,23 @@ var formatList = [
 ];
 
 var defaultValues = {
-	'allowRequired':0,
-	'numberDefault':'',
+	'allowRequired': 0,
+	'numberDefault': '',
 	'typeFormat': 'none',
 	'typeDecimals': 'none',
 	'typeDecimalPlaces': 'none',
-	'typeRounding' : 'none',
+	'typeRounding': 'none',
 	'typeThousands': 'none',
-	'validation':0,
-	'validateMinimum':'',
-	'validateMaximum':''
+	'validation': 0,
+	'validateMinimum': '',
+	'validateMaximum': ''
 }
 
 
 class ABFieldNumber extends ABField {
 
-    constructor(values, object) {
-    	super(values, object, ABFieldNumberDefaults);
+	constructor(values, object) {
+		super(values, object, ABFieldNumberDefaults);
 
     	/*
     	{
@@ -76,23 +76,23 @@ class ABFieldNumber extends ABField {
     	}
     	*/
 
-    	// we're responsible for setting up our specific settings:
-    	for (var dv in defaultValues) {
-    		this.settings[dv] = values.settings[dv] || defaultValues[dv];
-    	}
+		// we're responsible for setting up our specific settings:
+		for (var dv in defaultValues) {
+			this.settings[dv] = values.settings[dv] || defaultValues[dv];
+		}
 
 
-    	// text to Int:
-    	this.settings.allowRequired = parseInt(this.settings.allowRequired);
-    	this.settings.validation = parseInt(this.settings.validation);
+		// text to Int:
+		this.settings.allowRequired = parseInt(this.settings.allowRequired);
+		this.settings.validation = parseInt(this.settings.validation);
 
-  	}
+	}
 
 
-  	// return the default values for this DataField
-  	static defaults() {
-  		return ABFieldNumberDefaults;
-  	}
+	// return the default values for this DataField
+	static defaults() {
+		return ABFieldNumberDefaults;
+	}
 
 
 
@@ -145,7 +145,7 @@ class ABFieldNumber extends ABField {
 	 * perform the necessary sql actions to ADD this column to the DB table.
 	 * @param {knex} knex the Knex connection.
 	 */
-	migrateCreate (knex) {
+	migrateCreate(knex) {
 		return new Promise(
 			(resolve, reject) => {
 
@@ -155,49 +155,49 @@ class ABFieldNumber extends ABField {
 
 				// if this column doesn't already exist (you never know)
 				knex.schema.hasColumn(tableName, this.columnName)
-				.then((exists) => {
+					.then((exists) => {
 
-					return knex.schema.table(tableName, (t) => {
-						var currCol;
+						return knex.schema.table(tableName, (t) => {
+							var currCol;
 
-						// if this is an integer:
-						if (this.settings.typeDecimals == 'none') {
+							// if this is an integer:
+							if (this.settings.typeDecimals == 'none') {
 
-							currCol = t.integer(this.columnName);
+								currCol = t.integer(this.columnName);
 
-						} else {
+							} else {
 
-							var scale = parseInt(this.settings.typeDecimalPlaces);
-							var precision = scale + 8;
+								var scale = parseInt(this.settings.typeDecimalPlaces);
+								var precision = scale + 8;
 
-							currCol = t.decimal(this.columnName, precision, scale);
+								currCol = t.decimal(this.columnName, precision, scale);
 
-						}
+							}
 
-						// not null
-						if (this.settings.allowRequired) {
-							currCol.notNullable();
-						}
-						else {
-							currCol.nullable();
-						}
+							// not null
+							if (this.settings.allowRequired) {
+								currCol.notNullable();
+							}
+							else {
+								currCol.nullable();
+							}
 
-						// set default value
-						if (defaultTo) {
-							currCol.defaultTo(defaultTo);
-						}
+							// set default value
+							if (defaultTo) {
+								currCol.defaultTo(defaultTo);
+							}
 
-						if (exists) {
-							currCol.alter();
-						}
+							if (exists) {
+								currCol.alter();
+							}
 
 
-					})
-						.then(() => {
-							resolve();
 						})
-						.catch(reject);
-				})
+							.then(() => {
+								resolve();
+							})
+							.catch(reject);
+					})
 
 			}
 		)
@@ -239,18 +239,38 @@ class ABFieldNumber extends ABField {
 			// if this is an integer:
 			if (this.settings.typeDecimals == 'none') {
 
-				obj[this.columnName] = { type:'integer' }
-				
+				obj[this.columnName] = {
+					anyOf: [
+						{ "type": "integer" },
+						{ "type": "null" },
+						{
+							// allow empty string because it could not put empty array in REST api
+							"type": "string",
+							"maxLength": 0
+						}
+					]
+				};
+
 			} else {
 
-				obj[this.columnName] = { type:'number' }
+				obj[this.columnName] = {
+					anyOf: [
+						{ "type": "number" },
+						{ "type": "null" },
+						{
+							// allow empty string because it could not put empty array in REST api
+							"type": "string",
+							"maxLength": 0
+						}
+					]
+				};
 
 			}
 
-//// TODO: insert validation values here.
-			
+			//// TODO: insert validation values here.
+
 		}
-		
+
 	}
 
 
@@ -272,12 +292,15 @@ class ABFieldNumber extends ABField {
 				if (this.settings.typeDecimals == 'none') {
 
 					myParameter[this.columnName] = parseInt(myParameter[this.columnName]);
-					
+
 				} else {
 					var places = parseInt(this.settings.typeDecimalPlaces) || 2;
 					myParameter[this.columnName] = parseFloat(parseFloat(myParameter[this.columnName]).toFixed(places));
 				}
-				
+
+				if (isNaN(myParameter[this.columnName]))
+					myParameter[this.columnName] = null;
+
 			}
 		}
 
@@ -303,9 +326,9 @@ class ABFieldNumber extends ABField {
 				(_.isNaN(value) || !_.isNumber(value))) {
 
 				errors.push({
-					name:this.columnName,
-					message:'Number Required',
-					value:value
+					name: this.columnName,
+					message: 'Number Required',
+					value: value
 				})
 
 			}
@@ -318,4 +341,4 @@ class ABFieldNumber extends ABField {
 
 
 
-module.exports =  ABFieldNumber;
+module.exports = ABFieldNumber;

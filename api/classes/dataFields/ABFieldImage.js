@@ -220,7 +220,7 @@ super.migrateDrop(knex)
 		if (!obj[this.columnName]) {
 
 			// techincally we are only storing the uuid as a string.
-			obj[this.columnName] = { type:'string' }
+			obj[this.columnName] = { type: ["null", "string"] }
 			
 		}
 		

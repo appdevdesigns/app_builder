@@ -176,7 +176,15 @@ class ABFieldBoolean extends ABField {
 		// if our field is not already defined:
 		if (!obj[this.columnName]) {
 			obj[this.columnName] = {
-				type: ["null", "boolean"]
+				anyOf: [
+					{ "type": "boolean" },
+					{ "type": "null" },
+					{
+						// allow empty string because it could not put empty array in REST api
+						"type": "string",
+						"maxLength": 0
+					}
+				]
 			};
 
 		}

@@ -220,9 +220,8 @@ class ABFieldList extends ABField {
 				// store array value of selectivity
 				obj[this.columnName] = {
 					"anyOf": [
-						{
-							"type": "array"
-						},
+						{ "type": "array" },
+						{ "type": "null" },
 						{
 							// allow empty string because it could not put empty array in REST api
 							"type": "string",

@@ -40,20 +40,20 @@ class ABFieldFile extends ABField {
 	constructor(values, object) {
 		super(values, object, ABFieldFileDefaults);
 
-    	// we're responsible for setting up our specific settings:
-    	for (var dv in defaultValues) {
-    		this.settings[dv] = values.settings[dv] || defaultValues[dv];
-    	}
+		// we're responsible for setting up our specific settings:
+		for (var dv in defaultValues) {
+			this.settings[dv] = values.settings[dv] || defaultValues[dv];
+		}
 
 
-    	// text to Int:
-    	this.settings.fileSize = parseInt(this.settings.fileSize);
-    	this.settings.removeExistingData = parseInt(this.settings.removeExistingData);
+		// text to Int:
+		this.settings.fileSize = parseInt(this.settings.fileSize);
+		this.settings.removeExistingData = parseInt(this.settings.removeExistingData);
 	}
 
 
-  	// return the default values for this DataField
-  	static defaults() {
+	// return the default values for this DataField
+	static defaults() {
 		return ABFieldFileDefaults;
 	}
 
@@ -149,7 +149,7 @@ class ABFieldFile extends ABField {
 	 * perform the necessary sql actions to ADD this column to the DB table.
 	 * @param {knex} knex the Knex connection.
 	 */
-	migrateCreate (knex) {
+	migrateCreate(knex) {
 		return new Promise(
 			(resolve, reject) => {
 
@@ -157,22 +157,22 @@ class ABFieldFile extends ABField {
 
 				// check to make sure we don't already have this column:
 				knex.schema.hasColumn(tableName, this.columnName)
-				.then((exists) => {
+					.then((exists) => {
 
-					// create one if it doesn't exist:
-					if (!exists) {
+						// create one if it doesn't exist:
+						if (!exists) {
 
-						return knex.schema.table(tableName, (t)=>{
+							return knex.schema.table(tableName, (t) => {
 								t.json(this.columnName).nullable();
 							})
-							.then(resolve, reject);
+								.then(resolve, reject);
 
-					} else {
+						} else {
 
-						// if the column already exists, nothing to do:
-						resolve();
-					}
-				})
+							// if the column already exists, nothing to do:
+							resolve();
+						}
+					})
 			}
 		)
 
@@ -184,14 +184,14 @@ class ABFieldFile extends ABField {
 	 * perform the necessary sql actions to drop this column from the DB table.
 	 * @param {knex} knex the Knex connection.
 	 */
-	migrateDrop (knex) {
+	migrateDrop(knex) {
 		return new Promise(
 			(resolve, reject) => {
-				
+
 				sails.log.error('!!! TODO: pay attention to the .removeExistingData setting !!!');
 				super.migrateDrop(knex)
-				.then(resolve)
-				.catch(reject);
+					.then(resolve)
+					.catch(reject);
 
 			}
 		)
@@ -214,8 +214,18 @@ class ABFieldFile extends ABField {
 		if (!obj[this.columnName]) {
 
 			// techincally we are only storing the uuid as a string.
-			obj[this.columnName] = { type:['object', 'string', 'null'] };
-			
+			obj[this.columnName] = {
+				anyOf: [
+					{ "type": "object" },
+					{ "type": "null" },
+					{
+						// allow empty string because it could not put empty array in REST api
+						"type": "string",
+						"maxLength": 0
+					}
+				]
+			};
+
 		}
 	}
 

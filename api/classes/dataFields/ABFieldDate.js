@@ -241,7 +241,20 @@ class ABFieldDate extends ABField {
 			//// to validate these, we define type:'string' and checked against 
 			//// format:'date-time'
 			// if null is allowed:
-			obj[this.columnName] = { type:['null', 'string'], pattern: AppBuilder.rules.SQLDateTimeRegExp }
+			obj[this.columnName] = { 
+				anyOf: [
+					{ 
+						"type": "string",
+						"pattern": AppBuilder.rules.SQLDateTimeRegExp 
+					},
+					{ "type": "null" },
+					{
+						// allow empty string because it could not put empty array in REST api
+						"type": "string",
+						"maxLength": 0
+					}
+				]
+			}
 			// else 
 			// obj[this.columnName] = { type:'string', format:'date-time' }
 

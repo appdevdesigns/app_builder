@@ -358,7 +358,16 @@ class ABFieldConnect extends ABField {
 		// if our field is not already defined:
 		if (!obj[this.columnName]) {
 			obj[this.columnName] = {
-				type: ["null", "number", "array"]
+				anyOf: [
+					{ "type": "array" },
+					{ "type": "number" },
+					{ "type": "null" },
+					{
+						// allow empty string because it could not put empty array in REST api
+						"type": "string",
+						"maxLength": 0
+					}
+				]
 			};
 
 		}

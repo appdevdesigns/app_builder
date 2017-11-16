@@ -400,9 +400,9 @@ export default class ABViewForm extends ABViewContainer {
 			// view: "scrollview",
 			// height: this.settings.height || ABViewFormPropertyComponentDefaults.height,
 			// body: {
-				id: ids.component,
-				view: 'form',
-				rows: component.ui.rows
+			id: ids.component,
+			view: 'form',
+			rows: component.ui.rows
 			// }
 		};
 
@@ -600,7 +600,7 @@ export default class ABViewForm extends ABViewContainer {
 
 				// do this for the initial form display so we can see defaults
 				_logic.displayData(data);
-			
+
 				// select parent data to default value
 				var linkDc = dc.dataCollectionLink;
 				if (data == null && linkDc) {
@@ -744,9 +744,7 @@ export default class ABViewForm extends ABViewContainer {
 
 			// clear undefined values
 			for (var prop in formVals) {
-				if (formVals[prop] == undefined)
-					delete formVals[prop];
-				else if (formVals[prop] == null)
+				if (formVals[prop] == null)
 					formVals[prop] = '';
 			}
 
