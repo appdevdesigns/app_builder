@@ -110,21 +110,21 @@ steal(
 									// Wait until the tool's area has been shown
 									var areaKey = 'ab-' + self.data.application.name;
 									areaKey = areaKey.toLowerCase().replace(/_/g, '-');
-									var subID1, subID2;
+
 									var callback = function (message, data) {
 										if (!self.activated && data.area.toLowerCase() == areaKey) {
 											self.activated = true;
-											subID1 && AD.comm.hub.unsubscribe(subID1);
-											subID2 && AD.comm.hub.unsubscribe(subID2);
 
 											self.startPage();
 
 										}
 									};
 
+									if (self.subID1 == null)
+										self.subID1 = AD.comm.hub.subscribe('opsportal.tool.show', callback);
 
-									subID1 = AD.comm.hub.subscribe('opsportal.tool.show', callback);
-									subID2 = AD.comm.hub.subscribe('opsportal.area.show', callback);
+									if (self.subID2 == null)
+										self.subID2 = AD.comm.hub.subscribe('opsportal.area.show', callback);
 
 									// If there is a ops-area, it should trigger that ops-area to render page
 									// Because 'opsportal.tool.show' and 'opsportal.area.show' are not trigger
@@ -153,13 +153,14 @@ steal(
 							if (!self.activated) return;
 
 							// Store the root page
-							self.rootPage = self.data.application.urlResolve(self.options.page);
+							if (self.rootPage == null)
+								self.rootPage = self.data.application.urlResolve(self.options.page);
 
 							self.initPage();
 
-							webix.ready(function () {
-								self.showPage();
-							});
+							// webix.ready(function () {
+							self.showPage();
+							// });
 
 						},
 
@@ -384,11 +385,7 @@ steal(
 										// update the root page instance
 										self.rootPage = data.rootPage;
 
-										// re-render this page
-										self.initPage();
-
-										// show the root page
-										self.showPage(page.id);
+										self.activated = false;
 
 									}
 
