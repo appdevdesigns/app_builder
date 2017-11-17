@@ -122,8 +122,16 @@ steal(
 										}
 									};
 
+
 									subID1 = AD.comm.hub.subscribe('opsportal.tool.show', callback);
 									subID2 = AD.comm.hub.subscribe('opsportal.area.show', callback);
+
+									// If there is a ops-area, it should trigger that ops-area to render page
+									// Because 'opsportal.tool.show' and 'opsportal.area.show' are not trigger
+									var opsMenus = document.body.querySelectorAll('#op-list-menu > .op-container');
+									if (opsMenus.length == 1) {
+										opsMenus[0].click();
+									}
 
 									next();
 
@@ -140,7 +148,7 @@ steal(
 						startPage: function () {
 
 							var self = this;
-							
+
 							// Wait until the tool's area has been shown
 							if (!self.activated) return;
 
@@ -224,9 +232,6 @@ steal(
 														var popup = this.getTopParentView();
 														popup.hide();
 
-														// // switch to the previous page
-														// self.showPage();
-
 													}
 												}
 											]
@@ -302,8 +307,8 @@ steal(
 							var self = this;
 
 							pageId = pageId ||
-									(self.previousPageId == self.activePageId ? null : self.previousPageId) ||
-									(self.rootPage ? self.rootPage.id : null);
+								(self.previousPageId == self.activePageId ? null : self.previousPageId) ||
+								(self.rootPage ? self.rootPage.id : null);
 
 							if (pageId == null) return;
 
