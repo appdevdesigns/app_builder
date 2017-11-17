@@ -72,7 +72,7 @@ export default class ABViewDataCollection extends ABView {
 		// OP.Multilingual.translate(this, this, ['label']);
 
 		this.__dataCollection = dataCollectionNew();
-		
+
 		// refresh a data collection
 		// this.init();
 
@@ -702,12 +702,19 @@ export default class ABViewDataCollection extends ABView {
 				this.datasource.id != data.objectId)
 				return;
 
-			// TODO : filter before add 
+			// TODO : filter condition before add 
 
 			var rowData = data.data;
 
 			if (!this.__dataCollection.exists(rowData.id)) {
 				this.__dataCollection.add(rowData, 0);
+			}
+
+			// filter link data collection's cursor
+			var linkDc = this.dataCollectionLink;
+			if (linkDc) {
+				var linkCursor = linkDc.getCursor();
+				this.filterLinkCursor(linkCursor);
 			}
 
 		});
@@ -730,11 +737,19 @@ export default class ABViewDataCollection extends ABView {
 					this.emit("changeCursor", currData);
 				}
 			}
+
+			// filter link data collection's cursor
+			var linkDc = this.dataCollectionLink;
+			if (linkDc) {
+				var linkCursor = linkDc.getCursor();
+				this.filterLinkCursor(linkCursor);
+			}
+
 		});
 
 		AD.comm.hub.subscribe('ab.datacollection.delete', (msg, data) => {
 
-			if (this.datasource && 
+			if (this.datasource &&
 				this.datasource.id != data.objectId)
 				return;
 
