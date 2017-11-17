@@ -34,7 +34,7 @@ export default {
 	},
 
 	user: function () {
-		return this.__user.currentUser;
+		return this.__user.currentUser || {};
 	},
 
 	username: function () {
@@ -42,7 +42,7 @@ export default {
 	},
 
 	userlist: function() {
-		return this.__user.userList;
+		return this.__user.userList || [];
 	}
 
 
