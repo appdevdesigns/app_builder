@@ -7,7 +7,7 @@
  */
 
 import AB_Work_Interface_List_NewPage_BlankPage from "./ab_work_interface_list_newPage_blankPage"
-// import AB_Work_Interface_List_NewPage_QuickPage from "./ab_work_interface_list_newPage_quickPage"
+import AB_Work_Interface_List_NewPage_QuickPage from "./ab_work_interface_list_newPage_quickPage"
 import ABPage from '../classes/views/ABViewPage'
 
 
@@ -29,9 +29,9 @@ export default class AB_Work_Interface_List_NewPage extends OP.Component {
 				addNewPage : L('ab.interface.addNewPage', '*Add a new page'),
 
 				// formHeader: L('ab.application.form.header', "*Application Info"),
-				quickPage : L('ab.interface.quickPage', '*Quick Page'),
 				blankPage : L('ab.interface.blankPage', '*Blank Page'),
-
+				quickPage : L('ab.interface.quickPage', '*Quick Page'),
+				
 			}
 		}
 
@@ -50,7 +50,7 @@ export default class AB_Work_Interface_List_NewPage extends OP.Component {
 
 
 		var BlankPage = new AB_Work_Interface_List_NewPage_BlankPage(App);
-		// var QuickPage = new AB_Work_Interface_List_NewPage_QuickPage(App);
+		var QuickPage = new AB_Work_Interface_List_NewPage_QuickPage(App);
 
 
 		// Our webix UI definition:
@@ -60,7 +60,7 @@ export default class AB_Work_Interface_List_NewPage extends OP.Component {
 
 //// TODO: @James
 width: 650,
-maxHeight: 500,
+// maxHeight: 500,
 
 			position: "center",
 			modal: true,
@@ -72,8 +72,8 @@ maxHeight: 500,
 						view: "tabbar",
 						multiview: true,
 						options: [
-							{ id: ids.tabQuick, value: labels.component.quickPage },
-							{ id: ids.tabBlank, value: labels.component.blankPage }
+							{ id: ids.tabBlank, value: labels.component.blankPage },
+							{ id: ids.tabQuick, value: labels.component.quickPage }
 						],
 						on: {
 							onChange: function(newTab, oldTab){
@@ -84,11 +84,12 @@ maxHeight: 500,
 					{
 						cells: [
 							BlankPage.ui,
-							// QuickPage.ui
+							QuickPage.ui
 						]
 					},
 					{
 						margin: 5,
+						height: 40,
 						cols: [
 							{ fillspace: true },
 							{
@@ -126,6 +127,7 @@ maxHeight: 500,
 			webix.ui(this.ui);
 
 			BlankPage.init();
+			QuickPage.init();
 
 			// register our callbacks:
 			for(var c in _logic.callbacks) {
@@ -153,7 +155,7 @@ maxHeight: 500,
 				CurrentApplication = application;
 
 				BlankPage.applicationLoad(application);
-// QuickPage.applicationLoad(application);
+				QuickPage.applicationLoad(application);
 			},
 
 
@@ -166,7 +168,8 @@ maxHeight: 500,
 
 				var SaveButton = $$(ids.buttonSave);
 				var values = CurrentEditor.values();
-				
+				if (!values) return;
+
 				// this interface only creates Root Pages, or pages related to 
 				var page = null;
 				if(values.parent) {
@@ -181,12 +184,14 @@ maxHeight: 500,
 				} else {
 
 					SaveButton.disable();
-					CurrentEditor.showProgress();
+					CurrentEditor.formBusy();
 
 					page.save()
 					.then(()=>{
 						_logic.callbacks.onSave(page);
+
 						BlankPage.clear();
+						QuickPage.clear();
 // QuickPage.clear();
 						_logic.hide();
 
@@ -195,13 +200,13 @@ maxHeight: 500,
 						_logic.applicationLoad(CurrentApplication);
 
 						SaveButton.enable();
-						CurrentEditor.hideProgress();
+						CurrentEditor.formReady();
 					})
 					.catch((err) => {
 						// TODO: error message
 
 						SaveButton.enable();
-						CurrentEditor.hideProgress();
+						CurrentEditor.formReady();
 					})
 				}
 			},
@@ -265,13 +270,13 @@ maxHeight: 500,
 				if (newTab != oldTab) {
 
 					switch (newTab) {
-						case ids.tabQuick:
-							CurrentEditor = QuickPage;
-							QuickPage.show();
-							break;
 						case ids.tabBlank:
 							CurrentEditor = BlankPage;
 							BlankPage.show();
+							break;
+						case ids.tabQuick:
+							CurrentEditor = QuickPage;
+							QuickPage.show();
 							break;
 					}
 				}
