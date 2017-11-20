@@ -151,7 +151,7 @@ export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 								view: "select",
 								options: [
 									{ id: 'string', value: 'Single text' },
-									{ id: 'text', value: 'Long text' },
+									{ id: 'longtext', value: 'Long text' },
 									{ id: 'number', value: 'Number' },
 									{ id: 'date', value: 'Date' },
 									{ id: 'boolean', value: 'Checkbox' },
