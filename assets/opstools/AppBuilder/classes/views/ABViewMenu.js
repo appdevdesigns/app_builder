@@ -15,7 +15,8 @@ function L(key, altText) {
 
 var ABViewMenuPropertyComponentDefaults = {
 	orientation: 'x',
-	buttonStyle: 'ab-menu-default'
+	buttonStyle: 'ab-menu-default',
+	pages: [] // [pageId, ..., pageIdn]
 }
 
 
@@ -100,7 +101,7 @@ export default class ABViewMenu extends ABViewWidget {
 				var newOrder = context.from.data.order.slice(0)
 				this.settings.pages = newOrder;
 				this.save();
-			}				
+			}
 		}
 
 		var _ui = {
@@ -108,9 +109,9 @@ export default class ABViewMenu extends ABViewWidget {
 			rows: [
 				menu,
 				{
-					view:"label", 
-				    label: "Drag and drop menu items to reorder.",
-				    align:"center"
+					view: "label",
+					label: "Drag and drop menu items to reorder.",
+					align: "center"
 				},
 				{}
 			]
@@ -124,7 +125,7 @@ export default class ABViewMenu extends ABViewWidget {
 			if (this.settings.pages && this.settings.pages.length > -1) {
 				var orderMenu = [];
 				var orderMenu = this.AddPagesToView(this.application, Menu, this.settings.pages, orderMenu);
-				this.AddOrderedPagesToView(this.application, Menu, this.settings.pages, orderMenu);				
+				this.AddOrderedPagesToView(this.application, Menu, this.settings.pages, orderMenu);
 			}
 
 		}
@@ -174,12 +175,12 @@ export default class ABViewMenu extends ABViewWidget {
 					{ id: 'ab-menu-link', value: L('ab.component.menu.linkeButton', '*Link') }
 				]
 			},
-			{ 
-				view: "fieldset", 
+			{
+				view: "fieldset",
 				label: L('ab.component.menu.pageList', '*Page List:'),
 				labelWidth: App.config.labelWidthLarge,
-				body:{
-					rows:[
+				body: {
+					rows: [
 						{
 							name: "pages",
 							view: 'tree',
@@ -228,19 +229,29 @@ export default class ABViewMenu extends ABViewWidget {
 		var application = view.application;
 		var currentPage = view.pageParent();
 		var parentPage = currentPage.pageParent();
-		
-		var addPage = function (page, index, parentId) {
-			pageTree.add(page, index, parentId);
 
-			page.pages().forEach((childPage, childIndex)=>{
-				addPage(childPage, childIndex, page.id);
-			})
+		if (parentPage) {
+
+			// parent page
+			pageTree.add(parentPage, 0);
+
+			// current & cousin pages
+			var cousinPages = _.cloneDeep(parentPage.pages());
+			cousinPages.forEach((p, index) => {
+				pageTree.add(p, index, parentPage.id);
+			});
 		}
-		application.pages().forEach((p, index)=>{
-			if ( (parentPage && p == parentPage) || p == currentPage ) {
-				addPage(p, index);				
-			}
-		})
+		else {
+			// current page
+			pageTree.add(currentPage, 0);
+		}
+
+		// child pages
+		var childPages = _.cloneDeep(currentPage.pages());
+		childPages.forEach((p, index) => {
+			pageTree.add(p, index, currentPage.id);
+		});
+
 
 		$$(ids.pages).clearAll();
 		// $$(ids.pages).data.unsync();
@@ -248,7 +259,7 @@ export default class ABViewMenu extends ABViewWidget {
 		$$(ids.pages).refresh();
 		$$(ids.pages).uncheckAll();
 		$$(ids.pages).openAll();
-		
+
 		// Select pages
 		if (view.settings.pages && view.settings.pages.forEach) {
 			view.settings.pages.forEach((pageId) => {
@@ -300,7 +311,7 @@ export default class ABViewMenu extends ABViewWidget {
 						onItemClick: (id, e, node) => {
 							this.changePage(id);
 						}
-					}					
+					}
 				}
 			]
 		};
@@ -314,8 +325,8 @@ export default class ABViewMenu extends ABViewWidget {
 				if (this.settings.pages && this.settings.pages.length > -1) {
 					var orderMenu = [];
 					var orderMenu = this.AddPagesToView(this.application, Menu, this.settings.pages, orderMenu);
-					this.AddOrderedPagesToView(this.application, Menu, this.settings.pages, orderMenu);				
-				}				
+					this.AddOrderedPagesToView(this.application, Menu, this.settings.pages, orderMenu);
+				}
 			}
 
 
@@ -352,13 +363,13 @@ export default class ABViewMenu extends ABViewWidget {
 		if (!parent || !parent.pages || !menu || !pageIds) return;
 
 		var pages = parent.pages() || [];
-		
+
 		var insertPages = insertPages;
 
 		pages.forEach((page) => {
-		
+
 			if (pageIds.indexOf(page.id) > -1) {
-				insertPages[page.id] = 	{
+				insertPages[page.id] = {
 					id: page.id,
 					value: page.label
 				};
@@ -367,11 +378,11 @@ export default class ABViewMenu extends ABViewWidget {
 			this.AddPagesToView(page, menu, pageIds, insertPages);
 
 		});
-		
+
 		return insertPages;
 
 	}
-	
+
 	AddOrderedPagesToView(parent, menu, pageIds, orderMenu) {
 		var orderMenu = orderMenu;
 		pageIds.forEach((page) => {
