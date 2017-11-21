@@ -74,6 +74,9 @@ export default class ABViewDetailComponent extends ABViewWidget {
 			.replace(/#label#/g, field.label);
 			
 		var height = 38;
+		if (settings.labelPosition == 'top')
+			height = height * 2;
+
 		if (typeof field.settings.useHeight != "undefined" && field.settings.useHeight == 1) {
 			height = parseInt(field.settings.imageHeight);
 		}
