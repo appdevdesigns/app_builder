@@ -161,7 +161,7 @@ export default class ABViewPage extends ABViewContainer {
             comp.init(options);
 
             // initialize data sources
-            this._dataCollections.forEach((dc) => {
+            this.pageRoot().dataCollections().forEach((dc) => {
                 dc.init();
             });
 
@@ -243,7 +243,7 @@ export default class ABViewPage extends ABViewContainer {
             comp.init(options);
 
             // initialize data sources
-            this._dataCollections.forEach((dc) => {
+            this.pageRoot().dataCollections().forEach((dc) => {
                 dc.init();
             });
 

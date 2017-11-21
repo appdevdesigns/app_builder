@@ -687,6 +687,10 @@ export default class ABViewDataCollection extends ABView {
 	*/
 	init() {
 
+		// prevent initialize many times
+		if (this.initialized) return;
+		this.initialized = true;
+
 		this.__dataCollection.attachEvent("onAfterCursorChange", () => {
 
 			var currData = this.getCursor();
