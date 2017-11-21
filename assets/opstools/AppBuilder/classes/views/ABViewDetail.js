@@ -350,21 +350,7 @@ export default class ABViewDetail extends ABViewContainer {
 			// populate .views to webix.dashboard
 			container.init(options);
 
-
-			// listen DC events
-			var dc = this.dataCollection();
-			if (dc) {
-
-				var currData = dc.getCursor();
-				if (currData) {
-					_logic.displayData(currData);
-				}
-
-				if (this.changeCursorEventId == null)
-					this.changeCursorEventId = dc.on('changeCursor', _logic.displayData);
-
-			}
-
+			_onShow();
 		}
 
 		var _logic = {
@@ -429,11 +415,30 @@ export default class ABViewDetail extends ABViewContainer {
 
 		};
 
+		var _onShow = () => {
+
+			// listen DC events
+			var dc = this.dataCollection();
+			if (dc) {
+
+				var currData = dc.getCursor();
+				if (currData) {
+					_logic.displayData(currData);
+				}
+
+				if (this.changeCursorEventId == null)
+					this.changeCursorEventId = dc.on('changeCursor', _logic.displayData);
+
+			}
+
+		};
 
 		return {
 			ui: _ui,
 			init: _init,
-			logic: _logic
+			logic: _logic,
+
+			onShow: _onShow
 		}
 	}
 
