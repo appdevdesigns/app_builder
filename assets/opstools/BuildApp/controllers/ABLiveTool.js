@@ -108,7 +108,7 @@ steal(
 								function (next) {
 
 									// Wait until the tool's area has been shown
-									var areaKey = 'ab-' + self.data.application.name;
+									var areaKey = 'ab-' + self.data.application.name.trim();
 									areaKey = areaKey.toLowerCase().replace(/_/g, '-');
 
 									var callback = function (message, data) {

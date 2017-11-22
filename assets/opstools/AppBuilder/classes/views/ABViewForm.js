@@ -92,8 +92,13 @@ export default class ABViewForm extends ABViewContainer {
 
 		super.fromValues(values);
 
+		this.settings.labelPosition = this.settings.labelPosition || ABViewFormDefaults.labelPosition;
+
+		// convert from "0" => true/false
+		this.settings.showLabel = JSON.parse(this.settings.showLabel != null ? this.settings.showLabel : ABViewFormDefaults.showLabel);
+
 		// convert from "0" => 0
-		this.settings.labelWidth = parseInt(this.settings.labelWidth);
+		this.settings.labelWidth = parseInt(this.settings.labelWidth || ABViewFormDefaults.labelWidth);
 		this.settings.height = parseInt(this.settings.height || ABViewFormDefaults.height);
 
 	}
@@ -134,7 +139,7 @@ export default class ABViewForm extends ABViewContainer {
 
 						var yPosition = (fields.length - index - 1);
 
-						_logic.addFieldToForm(f, yPosition);
+						currView.addFieldToForm(f, yPosition);
 
 						// update item to UI list
 						f.selected = 1;
@@ -170,7 +175,7 @@ export default class ABViewForm extends ABViewContainer {
 
 			// add a field to the form
 			if (item.selected) {
-				_logic.addFieldToForm(item);
+				currView.addFieldToForm(item);
 			}
 			// remove field in the form
 			else {
@@ -186,34 +191,6 @@ export default class ABViewForm extends ABViewContainer {
 			this.propertyEditorSave(ids, currView);
 
 		};
-
-		_logic.addFieldToForm = (field, yPosition) => {
-
-			if (field == null)
-				return;
-
-			var FormView = _logic.currentEditObject();
-
-			var newView = field.formComponent().newInstance(FormView.application, FormView);
-			if (newView == null)
-				return;
-
-			// set settings to component
-			newView.settings = newView.settings || {};
-			newView.settings.fieldId = field.id;
-			// TODO : Default settings
-
-			if (yPosition != null)
-				newView.position.y = yPosition;
-
-			// add a new component
-			FormView._views.push(newView);
-
-			// update properties when a sub-view is destroyed
-			newView.once('destroyed', () => { this.propertyEditorPopulate(ids, FormView); });
-
-		}
-
 
 		return commonUI.concat([
 			{
@@ -309,7 +286,7 @@ export default class ABViewForm extends ABViewContainer {
 		});
 
 		$$(ids.datacollection).enable();
-		$$(ids.showLabel).setValue(view.settings.showLabel || ABViewFormPropertyComponentDefaults.showLabel);
+		$$(ids.showLabel).setValue(view.settings.showLabel);
 		$$(ids.labelPosition).setValue(view.settings.labelPosition || ABViewFormPropertyComponentDefaults.labelPosition);
 		$$(ids.labelWidth).setValue(view.settings.labelWidth || ABViewFormPropertyComponentDefaults.labelWidth);
 		$$(ids.height).setValue(view.settings.height || ABViewFormPropertyComponentDefaults.height);
@@ -321,8 +298,8 @@ export default class ABViewForm extends ABViewContainer {
 
 		view.settings.datacollection = $$(ids.datacollection).getValue();
 		view.settings.showLabel = $$(ids.showLabel).getValue();
-		view.settings.labelPosition = $$(ids.labelPosition).getValue();
-		view.settings.labelWidth = $$(ids.labelWidth).getValue();
+		view.settings.labelPosition = $$(ids.labelPosition).getValue() || ABViewFormPropertyComponentDefaults.labelPosition;
+		view.settings.labelWidth = $$(ids.labelWidth).getValue() || ABViewFormPropertyComponentDefaults.labelWidth;
 		view.settings.height = $$(ids.height).getValue();
 
 	}
@@ -702,6 +679,31 @@ export default class ABViewForm extends ABViewContainer {
 		this.fieldComponents().forEach((comp) => {
 			comp.destroy();
 		});
+	}
+
+	addFieldToForm(field, yPosition) {
+
+		if (field == null)
+			return;
+
+		var newView = field.formComponent().newInstance(this.application, this);
+		if (newView == null)
+			return;
+
+		// set settings to component
+		newView.settings = newView.settings || {};
+		newView.settings.fieldId = field.id;
+		// TODO : Default settings
+
+		if (yPosition != null)
+			newView.position.y = yPosition;
+
+		// add a new component
+		this._views.push(newView);
+
+		// update properties when a sub-view is destroyed
+		newView.once('destroyed', () => { ABViewForm.propertyEditorPopulate(ids, this); });
+
 	}
 
 

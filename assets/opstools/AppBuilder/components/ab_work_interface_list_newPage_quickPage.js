@@ -6,7 +6,13 @@
  *
  */
 
-import ABPage from '../classes/views/ABViewPage'
+import ABViewDetail from '../classes/views/ABViewDetail'
+import ABViewForm from '../classes/views/ABViewForm'
+import ABViewFormButton from '../classes/views/ABViewFormButton'
+import ABViewGrid from '../classes/views/ABViewGrid'
+import ABViewLabel from '../classes/views/ABViewLabel'
+import ABViewMenu from '../classes/views/ABViewMenu'
+import ABViewPage from '../classes/views/ABViewPage'
 
 
 export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Component {
@@ -35,12 +41,14 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 			form: this.unique('form'),
 
 			parentList: this.unique('parentList'),
-			selectDataSource: this.unique('selectDataSource'),
+			selectDataCollection: this.unique('selectDataCollection'),
 			displayGrid: this.unique('displayGrid'),
-			addNewButton: this.unique('addNewButton'),
-			addNewForm: this.unique('addNewForm'),
-			editData: this.unique('editData'),
-			viewData: this.unique('viewData')
+			addable: this.unique('addable'),
+			formAdd: this.unique('formAdd'),
+			editable: this.unique('editable'),
+			viewable: this.unique('viewable'),
+
+			subDcs: this.unique('subDcs')
 
 		}
 
@@ -107,21 +115,21 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 
 				}
 
-				$$(ids.selectDataSource).define('options', options);
-				$$(ids.selectDataSource).refresh();
+				$$(ids.selectDataCollection).define('options', options);
+				$$(ids.selectDataCollection).refresh();
 
 				// update select data source
-				var dcId = $$(ids.selectDataSource).getValue();
-				_logic.selectDataSource(dcId);
+				var dcId = $$(ids.selectDataCollection).getValue();
+				_logic.selectDataCollection(dcId);
 
 			},
 
 			/**
-			 * @function selectDataSource()
+			 * @function selectDataCollection()
 			 *
-			 * Select the data source
+			 * Select the data collection
 			 */
-			selectDataSource: function (newDcId, OldDcId) {
+			selectDataCollection: function (newDcId, OldDcId) {
 
 				if (CurrentPage)
 					CurrentDc = CurrentPage.pageRoot().dataCollections(dc => dc.id == newDcId)[0];
@@ -136,6 +144,41 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 						r.define('labelRight', label);
 						r.refresh();
 					}
+				});
+
+				// Pull data collections that parent is the selected dc
+				var subDcs = [];
+				if (CurrentDc) {
+					subDcs = CurrentPage.pageRoot().dataCollections(dc => dc.settings.linkDataCollection == CurrentDc.id);
+				}
+
+				// Re-build sub-dcs layout
+				$$(ids.subDcs).reconstruct();
+
+				// Add title
+				if (subDcs.length > 0) {
+					$$(ids.subDcs).addView({
+						view: "label",
+						label: "Do you want to add other options?",
+						css: "ab-text-bold"
+					});
+				}
+
+				// Add sub-dcs to layout
+				subDcs.forEach((subDc) => {
+					$$(ids.subDcs).addView({
+						view: "checkbox",
+						name: subDc.id + '|list',
+						labelRight: 'List connected <b>"#label#"</b> with a Grid'.replace('#label#', subDc.label),
+						labelWidth: 2
+					});
+
+					$$(ids.subDcs).addView({
+						view: "checkbox",
+						name: subDc.id + '|form',
+						labelRight: 'Add a connected <b>"#label#"</b> with a Form'.replace('#label#', subDc.label),
+						labelWidth: 2
+					});
 				});
 
 
@@ -224,16 +267,214 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 			},
 
 
+			getFormView: function () {
+
+				// create a new form instance
+				var newForm = new ABViewForm({
+					label: CurrentDc.label + " Form",
+					settings: {
+						datacollection: CurrentDc.id,
+						showLabel: true,
+						labelPosition: 'left',
+						labelWidth: 120
+					}
+				}, CurrentApplication);
+
+				// populate fields to a form
+				var object = CurrentDc.datasource;
+				object.fields().forEach((f, index) => {
+					newForm.addFieldToForm(f, index);
+				});
+
+				// Add action button to the form
+				newForm._views.push(new ABViewFormButton({
+					label: 'Form buttons',
+					settings: {
+						includeSave: true,
+						includeCancel: true,
+						includeReset: false
+					},
+					position: {
+						y: object.fields().length
+					}
+				}));
+
+				return newForm;
+
+			},
+
+
+			getDetailView: function () {
+
+				// create a new detail instance
+				var newDetail = new ABViewDetail({
+					label: "View " + CurrentDc.label,
+					settings: {
+						datacollection: CurrentDc.id,
+						showLabel: true,
+						labelPosition: 'left',
+						labelWidth: 120
+					}
+				}, CurrentApplication);
+
+				// populate fields to a form
+				var object = CurrentDc.datasource;
+				object.fields().forEach((f, index) => {
+					newDetail.addFieldToView(f, index);
+				});
+
+				return newDetail;
+			},
+
+
 			values: function () {
 
 				if (!CurrentDc) return null;
-				
+
 				// TODO : validate unique page's name 
+
+				var pages = [];
+				var views = [];
+				var formValues = $$(ids.form).getValues();
+				var subValues = $$(ids.subDcs).getValues();
+
+				var addPageId = null;
+				var viewPageId = null;
+
+				// Edit page
+				if (formValues.addable || formValues.editable) {
+
+					addPageId = OP.Util.uuid();
+
+					var newForm = _logic.getFormView();
+
+					// Add a page
+					pages.push({
+						id: addPageId,
+						key: ABViewPage.common().key,
+						icon: ABViewPage.common().icon,
+						name: CurrentDc.label,
+						settings: {
+							type: "popup"
+						},
+						views: [
+							// Title
+							{
+								key: ABViewLabel.common().key,
+								icon: ABViewLabel.common().icon,
+								label: "Title",
+								text: CurrentDc.label,
+								settings: {
+									format: 1
+								}
+							},
+							// Form
+							newForm.toObj()
+						]
+					});
+
+
+					// Add a menu
+					if (formValues.addable) {
+						views.push({
+							key: ABViewMenu.common().key,
+							icon: ABViewMenu.common().icon,
+							label: "Menu",
+							settings: {
+								pages: [addPageId]
+							}
+						});
+					}
+
+				}
+
+				// View page
+				if (formValues.viewable) {
+
+					viewPageId = OP.Util.uuid();
+
+					var newDetail = _logic.getDetailView();
+
+					pages.push({
+						id: viewPageId,
+						key: ABViewPage.common().key,
+						icon: ABViewPage.common().icon,
+						name: "View " + CurrentDc.label,
+						settings: {
+							type: "popup"
+						},
+						views: [
+							// Title
+							{
+								key: ABViewLabel.common().key,
+								icon: ABViewLabel.common().icon,
+								label: "Title",
+								text: "View " + CurrentDc.label,
+								settings: {
+									format: 1
+								}
+							},
+							// Detail
+							newDetail.toObj(),
+							// Menu
+							{
+								key: ABViewMenu.common().key,
+								icon: ABViewMenu.common().icon,
+								label: "Menu",
+								settings: {
+									pages: []
+								}
+							}
+						]
+					});
+
+				}
+
+				// Add a grid to show data of data source
+				if (formValues.showGrid) {
+
+					views.push({
+						key: ABViewGrid.common().key,
+						icon: ABViewGrid.common().icon,
+						label: CurrentDc.label,
+						settings: {
+							dataSource: CurrentDc.id,
+							height: 300,
+							editPage: formValues.editable ? addPageId : null,
+							detailsPage: formValues.viewable ? viewPageId : null
+						}
+					});
+
+				}
+
+				// Edit form
+				if (formValues.formAdd) {
+
+					// add the title to the form
+					views.push({
+						key: ABViewLabel.common().key,
+						icon: ABViewLabel.common().icon,
+						label: "Title",
+						text: 'Add ' + CurrentDc.label,
+						settings: {
+							format: 1
+						}
+					});
+
+					var newForm = _logic.getFormView();
+
+					// add the new form to page
+					views.push(newForm.toObj());
+
+				}
+
 
 				return {
 					parent: CurrentPage, // should be either null or an {}
 					name: CurrentDc.label,
-					key: ABPage.common().key
+					key: ABViewPage.common().key,
+					views: views,
+					pages: pages
 				}
 
 			}
@@ -257,37 +498,41 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 							{
 								view: "select",
 								id: ids.parentList,
-								label: labels.component.parentPage,
 								name: "parent",
+								label: labels.component.parentPage,
 								labelWidth: 170,
 								options: [],
 								on: { onChange: _logic.selectPage }
 							},
 							{
 								view: "select",
-								id: ids.selectDataSource,
+								id: ids.selectDataCollection,
+								name: "datacollection",
 								label: "Select a data source",
 								labelWidth: 170,
 								options: [],
-								on: { onChange: _logic.selectDataSource }
+								on: { onChange: _logic.selectDataCollection }
 							},
 							{ height: 10 },
 							{
 								view: "checkbox",
 								id: ids.displayGrid,
-								labelRight: "Display multiple <b>object.label</b> in a Grid",
+								name: "showGrid",
+								labelRight: 'Display multiple <b>""</b> in a Grid',
 								labelWidth: 2
 							},
 							{
 								view: "checkbox",
-								id: ids.addNewButton,
-								labelRight: "A Menu button linked to a page to Add a new <b>object.label</b>",
+								id: ids.addable,
+								name: "addable",
+								labelRight: 'A Menu button linked to a page to Add a new <b>""</b>',
 								labelWidth: 2
 							},
 							{
 								view: "checkbox",
-								id: ids.addNewForm,
-								labelRight: "Add a new <b>object.label</b> with a Form",
+								id: ids.formAdd,
+								name: "formAdd",
+								labelRight: 'Add a new <b>""</b> with a Form',
 								labelWidth: 2
 							},
 							{ height: 10 },
@@ -298,15 +543,23 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 							},
 							{
 								view: "checkbox",
-								id: ids.editData,
-								labelRight: "Edit selected <b>object.label</b>",
+								id: ids.editable,
+								name: "editable",
+								labelRight: 'Edit selected <b>""</b>',
 								labelWidth: 2
 							},
 							{
 								view: "checkbox",
-								id: ids.viewData,
-								labelRight: "View details of <b>object.label</b>",
+								id: ids.viewable,
+								name: "viewable",
+								labelRight: 'View details of <b>""</b>',
 								labelWidth: 2
+							},
+							{
+								view: "form",
+								id: ids.subDcs,
+								borderless: true,
+								elements: []
 							}
 						]
 					}

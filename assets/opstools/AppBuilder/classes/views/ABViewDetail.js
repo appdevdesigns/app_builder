@@ -66,6 +66,11 @@ export default class ABViewDetail extends ABViewContainer {
 
 		super.fromValues(values);
 
+		this.settings.labelPosition = this.settings.labelPosition || ABViewFormDefaults.labelPosition;
+
+		// convert from "0" => true/false
+		this.settings.showLabel = JSON.parse(this.settings.showLabel != null ? this.settings.showLabel : ABViewFormDefaults.showLabel);
+
 		// convert from "0" => 0
 		this.settings.labelWidth = parseInt(this.settings.labelWidth);
 		this.settings.height = parseInt(this.settings.height);
@@ -154,34 +159,6 @@ export default class ABViewDetail extends ABViewContainer {
 			this.propertyEditorSave(ids, currView);
 
 		};
-
-
-		_logic.addFieldToView = (field, yPosition) => {
-
-			if (field == null)
-				return;
-
-			var detailView = _logic.currentEditObject();
-
-			var newView = field.detailComponent().newInstance(detailView.application, detailView);
-			if (newView == null)
-				return;
-
-			// set settings to component
-			newView.settings = newView.settings || {};
-			newView.settings.fieldId = field.id;
-			// TODO : Default settings
-
-			newView.position.y = yPosition;
-
-			// add a new component
-			detailView._views.push(newView);
-
-
-			// update properties when a sub-view is destroyed
-			newView.once('destroyed', () => { this.propertyEditorPopulate(ids, detailView); });
-
-		}
 
 		return commonUI.concat([
 			{
@@ -474,6 +451,31 @@ export default class ABViewDetail extends ABViewContainer {
 		this.views().forEach((comp) => {
 			comp.destroy();
 		});
+	}
+
+	addFieldToView(field, yPosition) {
+
+		if (field == null)
+			return;
+
+		var newView = field.detailComponent().newInstance(this.application, this);
+		if (newView == null)
+			return;
+
+		// set settings to component
+		newView.settings = newView.settings || {};
+		newView.settings.fieldId = field.id;
+		// TODO : Default settings
+
+		newView.position.y = yPosition;
+
+		// add a new component
+		this._views.push(newView);
+
+
+		// update properties when a sub-view is destroyed
+		newView.once('destroyed', () => { ABViewDetail.propertyEditorPopulate(ids, this); });
+
 	}
 
 

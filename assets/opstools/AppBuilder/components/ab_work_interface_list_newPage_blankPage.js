@@ -216,12 +216,12 @@ export default class AB_Work_Interface_List_NewPage_BlankPage extends OP.Compone
 			},
 
 
-			showProgress: () => {
+			formBusy: () => {
 				$$(ids.component).showProgress({ type: "icon" });
 			},
 
 
-			hideProgress: () => {
+			formReady: () => {
 				$$(ids.component).hideProgress();
 			},
 
@@ -265,8 +265,8 @@ export default class AB_Work_Interface_List_NewPage_BlankPage extends OP.Compone
 		this.errors = _logic.errors;
 		this.show = _logic.show;
 		this.values = _logic.values;
-		this.showProgress = _logic.showProgress;
-		this.hideProgress = _logic.hideProgress;
+		this.formBusy = _logic.formBusy;
+		this.formReady = _logic.formReady;
 
 
 	}

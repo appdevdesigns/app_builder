@@ -188,11 +188,18 @@ width: 650,
 
 					page.save()
 					.then(()=>{
+
+						// save sub-pages sequentially
+						var subTasks = Promise.resolve();
+						page.pages().forEach(subPage => {
+							subTasks = subTasks.then(x => subPage.save());
+						});
+
 						_logic.callbacks.onSave(page);
 
 						BlankPage.clear();
 						QuickPage.clear();
-// QuickPage.clear();
+
 						_logic.hide();
 
 						// the CurrentApplication has changed it's values, so 

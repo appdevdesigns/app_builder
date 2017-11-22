@@ -201,6 +201,11 @@ export default class AB_Work_Interface_List extends OP.Component {
 				var parentPageId = (parentPage.id != page.id ? parentPage.id : null);
 				viewList.add(page, null, parentPageId);
 
+				// add sub-pages to tree-view
+				page.pages().forEach((p, index) => {
+					viewList.add(p, index, page.id);
+				});
+
 				$$(ids.list).refresh();
 
 				if (parentPageId)
