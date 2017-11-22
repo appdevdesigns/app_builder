@@ -267,13 +267,13 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 			},
 
 
-			getFormView: function () {
+			getFormView: function (dc) {
 
 				// create a new form instance
 				var newForm = new ABViewForm({
-					label: CurrentDc.label + " Form",
+					label: dc.label + " Form",
 					settings: {
-						datacollection: CurrentDc.id,
+						datacollection: dc.id,
 						showLabel: true,
 						labelPosition: 'left',
 						labelWidth: 120
@@ -281,7 +281,7 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 				}, CurrentApplication);
 
 				// populate fields to a form
-				var object = CurrentDc.datasource;
+				var object = dc.datasource;
 				object.fields().forEach((f, index) => {
 					newForm.addFieldToForm(f, index);
 				});
@@ -346,14 +346,14 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 
 					addPageId = OP.Util.uuid();
 
-					var newForm = _logic.getFormView();
+					var newForm = _logic.getFormView(CurrentDc);
 
 					// Add a page
 					pages.push({
 						id: addPageId,
 						key: ABViewPage.common().key,
 						icon: ABViewPage.common().icon,
-						name: CurrentDc.label,
+						name: "Add/Edit " + CurrentDc.label,
 						settings: {
 							type: "popup"
 						},
@@ -363,7 +363,7 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 								key: ABViewLabel.common().key,
 								icon: ABViewLabel.common().icon,
 								label: "Title",
-								text: CurrentDc.label,
+								text: "Add/Edit " + CurrentDc.label,
 								settings: {
 									format: 1
 								}
@@ -395,6 +395,109 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 
 					var newDetail = _logic.getDetailView();
 
+					var viewsOfDetail = [
+						// Title
+						{
+							key: ABViewLabel.common().key,
+							icon: ABViewLabel.common().icon,
+							label: "Title",
+							text: "View " + CurrentDc.label,
+							settings: {
+								format: 1
+							}
+						},
+						// Detail
+						newDetail.toObj()
+					];
+
+					// define sub-pages to menu
+					var menuSubPages = [];
+					if (addPageId)
+						menuSubPages.push(addPageId);
+
+					Object.keys(subValues).forEach((key, i) => {
+						if (subValues[key]) { // Check
+							var vals = key.split('|');
+							var dcId = vals[0];
+							var flag = vals[1]; // 'list' or 'form'
+
+							var subDc = CurrentPage.pageRoot().dataCollections(dc => dc.id == dcId)[0];
+
+
+							// Add grids of sub-dcs
+							if (flag == 'list') {
+								viewsOfDetail.push(
+									// Title
+									{
+										key: ABViewLabel.common().key,
+										icon: ABViewLabel.common().icon,
+										label: "Title",
+										text: subDc.label,
+										settings: {
+											format: 1
+										}
+									},
+									// Grid
+									{
+										key: ABViewGrid.common().key,
+										icon: ABViewGrid.common().icon,
+										label: subDc.label + "'s grid",
+										settings: {
+											dataSource: dcId,
+											height: 300
+										}
+									}
+								);
+							}
+							// Create a new page with form
+							else if (flag == 'form') {
+
+								var subPageId = OP.Util.uuid();
+
+								// add to menu
+								menuSubPages.push(subPageId);
+
+								var newForm = _logic.getFormView(subDc);
+
+								pages.push({
+									id: subPageId,
+									key: ABViewPage.common().key,
+									icon: ABViewPage.common().icon,
+									name: "Add/Edit " + subDc.label,
+									settings: {
+										type: "popup"
+									},
+									views: [
+										// Title
+										{
+											key: ABViewLabel.common().key,
+											icon: ABViewLabel.common().icon,
+											label: "Title",
+											text: "Add/Edit " + subDc.label,
+											settings: {
+												format: 1
+											}
+										},
+										// Form
+										newForm.toObj()
+									]
+								});
+							}
+
+
+						}
+					});
+
+					// Menu
+					viewsOfDetail.splice(1, 0, {
+						key: ABViewMenu.common().key,
+						icon: ABViewMenu.common().icon,
+						label: "Menu",
+						settings: {
+							pages: menuSubPages
+						}
+					});
+
 					pages.push({
 						id: viewPageId,
 						key: ABViewPage.common().key,
@@ -403,29 +506,7 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 						settings: {
 							type: "popup"
 						},
-						views: [
-							// Title
-							{
-								key: ABViewLabel.common().key,
-								icon: ABViewLabel.common().icon,
-								label: "Title",
-								text: "View " + CurrentDc.label,
-								settings: {
-									format: 1
-								}
-							},
-							// Detail
-							newDetail.toObj(),
-							// Menu
-							{
-								key: ABViewMenu.common().key,
-								icon: ABViewMenu.common().icon,
-								label: "Menu",
-								settings: {
-									pages: []
-								}
-							}
-						]
+						views: viewsOfDetail
 					});
 
 				}
@@ -461,7 +542,7 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 						}
 					});
 
-					var newForm = _logic.getFormView();
+					var newForm = _logic.getFormView(CurrentDc);
 
 					// add the new form to page
 					views.push(newForm.toObj());
