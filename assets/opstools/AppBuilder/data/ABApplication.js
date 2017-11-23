@@ -126,8 +126,7 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 			);
 
-		},
-
+		}
 
 	},
 	{

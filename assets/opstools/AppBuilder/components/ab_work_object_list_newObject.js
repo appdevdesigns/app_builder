@@ -37,6 +37,7 @@ export default class AB_Work_Object_List_NewObject extends OP.Component {   //.e
 		// internal list of Webix IDs to reference our UI components.
 		var ids = {
 			component: this.unique('component'),
+			tab: this.unique('tab')
 		}
 		
 		var selectNew = true;
@@ -58,18 +59,28 @@ export default class AB_Work_Object_List_NewObject extends OP.Component {   //.e
 			selectNewObject: true,
 			body: {
 				view: "tabview",
+				id: ids.tab,
 				cells: [
 					BlankTab.ui,
-					// importObjectCreator.getCreateView(),
 					CsvTab.ui,
 					ImportTab.ui
-				]
+				],
+				tabbar: {
+					on: {
+						onAfterTabClick: (id) => {
+	
+							_logic.switchTab(id);
+
+						}
+					}
+				}
 			},
 			on: {
 				onBeforeShow: () => {
-					if (currentApplication) {
-						ImportTab._logic.initModelList(currentApplication);
-					}
+
+					var id = $$(ids.tab).getValue();
+					_logic.switchTab(id);
+
 				}
 			}
 		};
@@ -232,7 +243,25 @@ export default class AB_Work_Object_List_NewObject extends OP.Component {   //.e
 				}
 				if ($$(ids.component))
 					$$(ids.component).show();
+			},
+
+			switchTab: function(tabId) {
+
+				if (tabId == BlankTab.ui.body.id) {
+					if (BlankTab.onShow)
+						BlankTab.onShow(currentApplication);
+				}
+				else if (tabId == CsvTab.ui.body.id) {
+					if (CsvTab.onShow)
+						CsvTab.onShow(currentApplication);
+				}
+				else if (tabId == ImportTab.ui.body.id) {
+					if (ImportTab.onShow)
+						ImportTab.onShow(currentApplication);
+				}
+
 			}
+
 		}
 
 

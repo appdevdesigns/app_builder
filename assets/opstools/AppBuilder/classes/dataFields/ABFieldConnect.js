@@ -27,7 +27,10 @@ var ABFieldConnectDefaults = {
 
 	isSortable: false,
 	isFilterable: false,
-	useAsLabel: false
+	useAsLabel: false,
+
+	// supportImport: flag to support import exists object
+	supportImport: false
 
 };
 

@@ -355,10 +355,13 @@ module.exports =  class ABObjectBase {
 	 * return the url pointer that references this object.  This url pointer
 	 * should be able to be used by this.application.urlResolve() to return 
 	 * this object.
+	 * 
+	 * @param {boolean} acrossApp - flag to include application id to url
+	 * 
 	 * @return {string} 
 	 */
-	urlPointer() {
-		return this.application.urlObject()+this.id;
+	urlPointer(acrossApp) {
+		return this.application.urlObject(acrossApp)+this.id;
 	}
 
 
@@ -366,10 +369,13 @@ module.exports =  class ABObjectBase {
 	/**
 	 * @method urlField
 	 * return a string pointer to this object's fields
+	 * 
+	 * @param {boolean} acrossApp - flag to include application id to url
+	 * 
 	 * @return {string}
 	 */
-	 urlField() {
-	 	return this.urlPointer() +'/_fields/'
+	 urlField(acrossApp) {
+	 	return this.urlPointer(acrossApp) +'/_fields/'
 	 }
 
 

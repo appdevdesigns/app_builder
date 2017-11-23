@@ -481,17 +481,17 @@ module.exports = {
 
     // POST /app_builder/application/:appID/importModel
     importModel: function (req, res) {
-        var appID = req.param('appID');
-        var modelObjectId = req.param('objectID') || '';
-        var modelName = req.param('model') || '';
+        var targetAppID = parseInt(req.param('appID') || 0);
+        var sourceAppID = parseInt(req.param('sourceAppId') || 0);
+        var objectID = req.param('objectId') || '';
         var columns = req.param('columns') || [];
 
-        AppBuilder.modelToObject(appID, modelObjectId, modelName, columns)
-            .fail((err) => {
+        AppBuilder.importObject(sourceAppID, targetAppID, objectID, columns)
+            .catch((err) => {
                 res.AD.error(err);
             })
-            .done((obj) => {
-                res.AD.success(obj);
+            .then((newObj) => {
+                res.AD.success(newObj);
             });
 
     }

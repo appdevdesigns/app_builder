@@ -2363,6 +2363,82 @@ console.log('page: ', page);
     },
 
 
+    /**
+     * Imports an existing object for use in an AB application.
+     * An AB object will be created for that model.
+     *
+     * @param integer sourceAppID
+     * @param integer targetAppID
+     * @param uuid objectID
+     * @param array [{
+     *      id: uuid,
+     *      label: string
+     * }] columns
+     * @return Promise
+     *     Resolves with the data of the new imported object
+     */
+    importObject: function (sourceAppID, targetAppID, objectID, columns) {
+
+        var sourceApp,
+            targetApp,
+            object;
+
+        return Promise.resolve()
+            .then(() => {
+
+                return new Promise((resolve, reject) => {
+                    
+                    ABApplication.find({ id: [sourceAppID, targetAppID] })
+                    .exec(function (err, list) {
+                        if (err) {
+                            reject(err);
+                        }
+                        else if (!list || !list[0]) {
+                            reject(new Error('application not found: ' + sourceAppID));
+                        }
+                        else {
+                            sourceApp = list.filter(function(a) { return a.id == sourceAppID; })[0];
+                            targetApp = list.filter(function(a) { return a.id == targetAppID; })[0];
+
+                            if (sourceApp == null) reject(new Error('application not found: ' + sourceAppID));
+                            else if (targetApp == null) reject(new Error('application not found: ' + targetAppID));
+                            else  resolve();
+                        }
+                    });
+    
+                });
+
+            })
+            .then(() => {
+
+                return new Promise((resolve, reject) => {
+
+                    // pull an object
+                    var sourceAppClass = sourceApp.toABClass();
+                    object = sourceAppClass.objectByID(objectID);
+                    if (object == null) reject(new Error('object not found: ' + objectID));
+
+                    var newObject = {
+                        isImported: 1,
+                        importFromObject: object.urlPointer(true),
+                        translations: object.translations, // copy label of object
+                        // fields: [] // TODO
+                        fields: object.fields()
+                    };
+
+
+                    targetApp.json.objects.push(newObject);
+                    targetApp.save()
+                        .fail(reject)
+                        .done(function() {
+                            resolve();
+                        });
+
+                });
+
+            });
+    },
+
 
     /**
      * Imports an existing Sails model for use in an AB application.

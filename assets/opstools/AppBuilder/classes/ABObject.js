@@ -1,5 +1,6 @@
 
 
+import ABApplication from "./ABApplication"
 import ABObjectBase from "./ABObjectBase"
 
 // import OP from "OP"
@@ -379,8 +380,16 @@ export default class ABObject extends ABObjectBase {
 	 * this ABObject.
 	 */
 	model() {
-		if (!this._model) 
-			this._model = new ABModel(this);
+
+		if (!this._model) {
+
+			if (this.isImported) {
+				this._model = ABApplication.objectFromRef(this.importFromObject);
+			}
+			else {
+				this._model = new ABModel(this);
+			}
+		}
 
 		return this._model;
 	}

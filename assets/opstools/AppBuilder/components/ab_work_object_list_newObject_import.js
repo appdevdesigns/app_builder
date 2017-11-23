@@ -6,6 +6,7 @@
  */
 
 import ABObject from '../classes/ABObject.js';
+import ABFieldManager from '../classes/ABFieldManager.js';
 
 export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
 
@@ -26,11 +27,11 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
         var ids = {
             component: this.unique('component'),
             form: this.unique('import'),
-            
+
             filter: this.unique('filter'),
-            modelList: this.unique('modelList'),
+            objectList: this.unique('objectList'),
             columnList: this.unique('columnList'),
-            
+
             buttonSave: this.unique('save'),
             buttonCancel: this.unique('cancel')
         };
@@ -45,9 +46,9 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
          */
         this.init = (options) => {
             // webix.extend($$(ids.form), webix.ProgressBar);
-            
+
             // load callbacks.
-            for(var c in _logic.callbacks) {
+            for (var c in _logic.callbacks) {
                 _logic.callbacks[c] = options[c] || _logic.callbacks[c];
             }
         };
@@ -58,77 +59,76 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
         var _logic = this._logic = {
 
             callbacks: {
-                onCancel: function() { console.warn('NO onCancel()!') },
+                onCancel: function () { console.warn('NO onCancel()!') },
                 //onSave  : function(values, cb) { console.warn('NO onSave()!') },
                 onBusyStart: null,
                 onBusyEnd: null,
                 onDone: null
             },
-            
-            
-            busyStart: function() {
+
+            onShow: (app) => {
+
+                currentApp = app;
+                _logic.formClear();
+                _logic.busyStart();
+                OP.Comm.Service.get({
+                    url: '/app_builder/application/' + app.id + '/findModels'
+                })
+                    .then((list) => {
+
+
+                        list.forEach((data) => {
+
+                            // translate label of objects
+                            OP.Multilingual.translate(data, data, ['label']);
+
+                            // translate label of application
+                            OP.Multilingual.translate(data.application, data.application, ['label']);
+
+                            // translate label of fields
+                            if (data.fields && data.fields.forEach) {
+                                data.fields.forEach((f) => {
+                                    OP.Multilingual.translate(f, f, ['label']);
+                                });
+                            }
+
+                        });
+
+                        $$(ids.objectList).parse(list, 'json');
+
+                        _logic.busyEnd();
+
+                    })
+                    .catch((err) => {
+                        _logic.busyEnd();
+                    });
+
+            },
+
+            busyStart: function () {
                 if (_logic.callbacks.onBusyStart) {
                     _logic.callbacks.onBusyStart();
                 }
             },
-            
-            busyEnd: function() {
+
+            busyEnd: function () {
                 if (_logic.callbacks.onBusyEnd) {
                     _logic.callbacks.onBusyEnd();
                 }
             },
-            
-            
-            filter: function() {
+
+
+            filter: function () {
                 // `this` should be from the Webix event
                 var filterText = this.getValue();
-                $$(ids.modelList).filter('#id#', filterText);
+                $$(ids.objectList).filter('#id#', filterText);
             },
-            
-            
-            initModelList: function(app) {
-                currentApp = app;
-                _logic.formClear();
-                _logic.busyStart();
-                OP.Comm.Service.get({ 
-                    url: '/app_builder/application/' + app.id + '/findModels'
-                })
-                .then((list) => {
 
 
-                    list.forEach((data) => {
-
-                        // translate label of objects
-                        OP.Multilingual.translate(data, data, ['label']);
-
-                        // translate label of application
-                        OP.Multilingual.translate(data.application, data.application, ['label']);
-
-                        // translate label of fields
-                        if (data.fields && data.fields.forEach) {
-                            data.fields.forEach((f) => {
-                                OP.Multilingual.translate(f, f, ['label']);
-                            });
-                        }
-
-                    });
-
-
-                    $$(ids.modelList).parse(list, 'json');
-
-                    _logic.busyEnd();
-
-                })
-                .catch((err) => {
-                    _logic.busyEnd();
-                });
-            },
-            
-            
-            modelSelect: function() {
+            objectSelect: function () {
                 $$(ids.columnList).clearAll();
 
-                var selectedObj = $$(ids.modelList).getSelectedItem(false);
+                var selectedObj = $$(ids.objectList).getSelectedItem(false);
                 if (selectedObj) {
 
                     _logic.busyStart();
@@ -144,11 +144,20 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
                             // if (col.model) continue;
                             // if (col.collection) continue;
 
+                            var fieldClass = ABFieldManager.allFields().filter((field) => field.defaults().key == f.key)[0];
+                            if (fieldClass == null) return;
+
+                            // if the field is not support to import, then it is invisible
+                            if (fieldClass.defaults().supportImport == false) return;
+
+                            // TODO
+                            var supported = true;
+
                             colNames.push({
-                                include: f.supported, // TODO
+                                include: supported,
                                 id: f.id,
                                 label: f.label,
-                                disabled: !f.supported  // TODO
+                                disabled: !supported
                             });
 
                         });
@@ -159,19 +168,19 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
                     _logic.busyEnd();
                 }
             },
-            
-            cancel: function() {
+
+            cancel: function () {
                 _logic.formClear();
                 _logic.callbacks.onCancel();
             },
 
 
-            formClear: function() {
+            formClear: function () {
                 // Filter section
                 $$(ids.form).clearValidation();
                 $$(ids.form).clear();
                 // Lists
-                $$(ids.modelList).clearAll();
+                $$(ids.objectList).clearAll();
                 $$(ids.columnList).clearAll();
             },
 
@@ -181,7 +190,7 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
              *
              * hide this component.
              */
-            hide: function() {
+            hide: function () {
                 $$(ids.component).hide();
             },
 
@@ -191,49 +200,45 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
              *
              * Send model import request to the server
              */
-            save: function() {
+            save: function () {
                 var saveButton = $$(ids.buttonSave);
-                var selectedModel = $$(ids.modelList).getSelectedItem();
-                if (!selectedModel) return false;
-                
+                var selectedObj = $$(ids.objectList).getSelectedItem();
+                if (!selectedObj) return false;
+
                 saveButton.disable();
                 _logic.busyStart();
-                
+
                 var columns = $$(ids.columnList)
-                        .data
-                        .find({ include: true })
-                        .map((col) => {
-                            return {
-                                name: col.id,
-                                label: col.label
-                            };
-                        });
-                var objectID = null;
-                if (typeof selectedModel.id == 'number') {
-                    objectID = selectedModel.id;
-                }
-                
+                    .data
+                    .find({ include: true })
+                    .map((col) => {
+                        return {
+                            id: col.id,
+                            label: col.label
+                        };
+                    });
+
                 OP.Comm.Service.post({
                     url: '/app_builder/application/' + currentApp.id + '/importModel',
                     data: {
-                        objectID,
-                        columns,
-                        model: selectedModel.modelName
+                        sourceAppId: selectedObj.application.id,
+                        objectId: selectedObj.id,
+                        columns: columns
                     }
                 })
-                .then((objValues) => {
-                    saveButton.enable();
-                    _logic.busyEnd();
-                    
-                    var object = new ABObject(objValues, currentApp);
-                    _logic.callbacks.onDone(object);
-                })
-                .catch((err) => {
-                    console.log('ERROR:', err);
-                    saveButton.enable();
-                    _logic.busyEnd();
-                });
-                
+                    .then((objValues) => {
+                        saveButton.enable();
+                        _logic.busyEnd();
+
+                        var object = new ABObject(objValues, currentApp);
+                        _logic.callbacks.onDone(object);
+                    })
+                    .catch((err) => {
+                        console.log('ERROR:', err);
+                        saveButton.enable();
+                        _logic.busyEnd();
+                    });
+
             },
 
 
@@ -242,13 +247,13 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
              *
              * Show this component.
              */
-            show: function() {
+            show: function () {
                 if ($$(ids.component))
                     $$(ids.component).show();
             }
         };
-        
-        
+
+
         // webix UI definition
         // (it references _logic functions defined above)
         this.ui = {
@@ -259,7 +264,7 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
                 id: ids.form,
                 width: 400,
                 elements: [
-                    
+
                     // Filter
                     {
                         cols: [
@@ -273,11 +278,11 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
                             }
                         ]
                     },
-                    
+
                     // Model list
                     {
                         view: 'list',
-                        id: ids.modelList,
+                        id: ids.objectList,
                         select: true,
                         height: 250,
                         minHeight: 250,
@@ -285,10 +290,10 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
                         data: [],
                         template: '<div>#label#</div>',
                         on: {
-                            onSelectChange: _logic.modelSelect
+                            onSelectChange: _logic.objectSelect
                         },
                     },
-                    
+
                     // Columns list
                     {
                         view: 'label',
@@ -340,7 +345,7 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
                             }
                         }
                     },
-                    
+
                     // Import & Cancel buttons
                     {
                         margin: 5,
@@ -349,7 +354,7 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
                             {
                                 view: "button",
                                 id: ids.buttonCancel,
-                                value: labels.common.cancel, 
+                                value: labels.common.cancel,
                                 css: "ab-cancel-button",
                                 autowidth: true,
                                 click: _logic.cancel
@@ -358,7 +363,7 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
                                 view: "button",
                                 id: ids.buttonSave,
                                 value: labels.common.import,
-                                autowidth: true, 
+                                autowidth: true,
                                 type: "form",
                                 click: _logic.save
                             }
@@ -379,6 +384,7 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
         // 
         // Define external interface methods:
         // 
+        this.onShow = _logic.onShow
 
     }
 

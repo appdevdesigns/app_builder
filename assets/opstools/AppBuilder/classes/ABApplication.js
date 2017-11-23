@@ -188,6 +188,31 @@ export default class ABApplication extends ABApplicationBase {
 	}
 
 
+	/**
+	 * @method objectFromRef
+	 * 
+	 * @param {string} resolveUrl - resolve url that include application id
+	 * @return {Promise}
+	 */
+	static objectFromRef(resolveUrl) {
+
+		// #/3/_objects/6eb3121b-1208-4c49-ae45-fcf722bd6db1
+		var parts = resolveUrl.split('/');
+
+		// get id of application
+		var appId = parts.splice(1, 1)[0];
+
+		// pull an application
+		var app = _AllApplications.find(function(a) { return a.id == appId; })[0];
+
+		// the url of object that exclude application id
+		var objectUrl = parts.join('/');
+
+		return app.urlResolve(objectUrl);
+	}
+
+
+
 
 	///
 	/// Instance Methods

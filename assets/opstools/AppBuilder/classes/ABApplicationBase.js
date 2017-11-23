@@ -327,32 +327,43 @@ module.exports = class ABApplicationBase {
 	/**
 	 * @method urlPointer()
 	 * return the url pointer for this application.
+	 *
+	 * @param {boolean} acrossApp - flag to include application id to url
+	 * 
 	 * @return {string} 
 	 */
-	urlPointer() {
+	urlPointer(acrossApp) {
 		// NOTE: if we need to expand this to search across 
 		// applications, then add in this application.id here:
-		// return '#/'+ this.id + '/'
-		return '#/';
+		if (acrossApp)
+			return '#/'+ this.id + '/'
+		else
+			return '#/';
 	}
 
 
 	/**
 	 * @method urlObject()
 	 * return the url pointer for objects in this application.
+	 * 
+	 * @param {boolean} acrossApp - flag to include application id to url
+	 *
 	 * @return {string} 
 	 */
-	urlObject() {
-		return this.urlPointer() + '_objects/'
+	urlObject(acrossApp) {
+		return this.urlPointer(acrossApp) + '_objects/'
 	}
 
 	/**
 	 * @method urlView()
 	 * return the url pointer for pages in this application.
+	 * 
+	 * @param {boolean} acrossApp - flag to include application id to url
+	 *
 	 * @return {string} 
 	 */
-	urlPage() {
-		return this.urlPointer() + '_pages/'
+	urlPage(acrossApp) {
+		return this.urlPointer(acrossApp) + '_pages/'
 	}
 
 
