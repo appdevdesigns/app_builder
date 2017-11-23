@@ -32,17 +32,20 @@ export default class ABFieldSelectivity extends ABField {
 		for (var dv in defaultSettings) {
 			settings[dv] = settings[dv] || defaultSettings[dv];
 		}
-		
-		if (settings.multiple && settings.items && settings.data) {
+		if (settings.multiple && settings.items && (settings.data && settings.data.length)) {
 			settings.data.forEach(function(d) {
 				var matchHex = settings.items.map(function(i) {
 					if (i.id == d.id)
 						d.hex = i.hex;
 				});
 			});
+			settings['data'] = this.prepareData(settings['data'], settings.multiple);
+		} else if (typeof settings['data'] == "undefined") {
+			settings['data'] = this.prepareData([], settings.multiple);
+		} else {
+			settings['data'] = this.prepareData(settings['data'], settings.multiple);
 		}
 
-		settings['data'] = this.prepareData(settings['data'], settings.multiple);
 
 		// Prevent render selectivity duplicate
 		if (domNode.selectivity != null) {
@@ -125,7 +128,7 @@ export default class ABFieldSelectivity extends ABField {
 	selectivitySet(domNode, data, App, row) {
 		if (domNode && domNode.selectivity) {
 
-			data = this.prepareData(data);
+			data = this.prepareData(data, domNode.selectivity.options.multiple);
 
 			if (data != null && (data[0] != "") && (data.length || data.id))
 				domNode.selectivity.setData(data);
@@ -149,6 +152,8 @@ export default class ABFieldSelectivity extends ABField {
 		// if single select, then it should be object
 		if (!multiple && Array.isArray(data)) {
 			data = data[0];
+		} else if (multiple && !Array.isArray(data)) {
+			data = [data];
 		}
 
 		return data;

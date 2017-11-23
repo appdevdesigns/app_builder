@@ -459,6 +459,7 @@ class ABFieldUser extends ABFieldSelectivity {
 			};
 
 			if (this.settings.isMultiple) {
+				result.id = u.username;
 				result.text = u.username;
 			}
 			else {
