@@ -486,7 +486,9 @@ module.exports = {
         var objectID = req.param('objectId') || '';
         var columns = req.param('columns') || [];
 
-        AppBuilder.importObject(sourceAppID, targetAppID, objectID, columns)
+        var currLangCode = ADCore.user.current(req).getLanguageCode(); // 'en';
+
+        AppBuilder.importObject(sourceAppID, targetAppID, objectID, columns, currLangCode)
             .catch((err) => {
                 res.AD.error(err);
             })

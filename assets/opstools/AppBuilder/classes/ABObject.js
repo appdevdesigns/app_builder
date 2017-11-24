@@ -101,6 +101,15 @@ export default class ABObject extends ABObjectBase {
 		return new Promise(
 			(resolve, reject) => {
 
+				// Remove the import object, then its model will not be destroyed
+				if (this.isImported) {
+					this.application.objectDestroy(this)
+						.catch(reject)
+						.then(() => { resolve(); });
+
+					return;
+				}
+
 				// OK, some of our Fields have special follow up actions that need to be
 				// considered when they no longer exist, so before we simply drop this
 				// object/table, drop each of our fields and give them a chance to clean up
@@ -384,7 +393,8 @@ export default class ABObject extends ABObjectBase {
 		if (!this._model) {
 
 			if (this.isImported) {
-				this._model = ABApplication.objectFromRef(this.importFromObject);
+				var obj = ABApplication.objectFromRef(this.importFromObject);
+				this._model = new ABModel(obj);
 			}
 			else {
 				this._model = new ABModel(this);

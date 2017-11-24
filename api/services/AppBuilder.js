@@ -2374,10 +2374,11 @@ console.log('page: ', page);
      *      id: uuid,
      *      label: string
      * }] columns
+     * @param string currLangCode
      * @return Promise
      *     Resolves with the data of the new imported object
      */
-    importObject: function (sourceAppID, targetAppID, objectID, columns) {
+    importObject: function (sourceAppID, targetAppID, objectID, columns, currLangCode) {
 
         var sourceApp,
             targetApp,
@@ -2418,14 +2419,30 @@ console.log('page: ', page);
                     object = sourceAppClass.objectByID(objectID);
                     if (object == null) reject(new Error('object not found: ' + objectID));
 
+                    // copy fields of the source object
+                    var fields = [];
+                    object.fields().forEach(f => {
+                        var selectCol = columns.filter(c => c.id == f.id)[0];
+                        if (selectCol == null) return;
+
+                        var cloneField = f.toObj();
+
+                        // edit label
+                        var trans = cloneField.translations.filter(t => t.language_code == currLangCode)[0];
+                        if (trans)
+                            trans.label = selectCol.label;
+
+                        fields.push(cloneField);
+
+                    });
+
                     var newObject = {
+                        id: uuid.v4(),
                         isImported: 1,
                         importFromObject: object.urlPointer(true),
                         translations: object.translations, // copy label of object
-                        // fields: [] // TODO
-                        fields: object.fields()
+                        fields: fields
                     };
-
 
                     targetApp.json.objects.push(newObject);
                     targetApp.save()
