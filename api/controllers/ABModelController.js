@@ -413,7 +413,8 @@ console.log('... catch(err) !');
             });
 
             // promise for the total count. this was moved below the filters because webix will get caught in an infinte loop of queries if you don't pass the right count
-            var pCount = query.clone().count('* as count').first(); 
+            var query2 = object.model().query();
+            var pCount = query2.count('id as count').first(); 
 
             Promise.all([
               pCount,
