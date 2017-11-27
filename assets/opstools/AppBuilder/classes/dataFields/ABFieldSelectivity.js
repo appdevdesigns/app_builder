@@ -40,7 +40,7 @@ export default class ABFieldSelectivity extends ABField {
 				});
 			});
 			settings['data'] = this.prepareData(settings['data'], settings.multiple);
-		} else if (typeof settings['data'] == "undefined") {
+		} else if (typeof settings['data'] == "undefined" || typeof settings['data'] == "null" || settings['data'] == null) {
 			settings['data'] = this.prepareData([], settings.multiple);
 		} else {
 			settings['data'] = this.prepareData(settings['data'], settings.multiple);
