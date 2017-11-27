@@ -425,7 +425,7 @@ console.warn('!! ToDo: onAfterColumnHide()');
     		},
             
     		/**
-    		 * @function getColumnConfig
+    		 * @function getFieldList
     		 *
     		 * return the column config of a datagrid
     		 * @param {string} id datagrid id you want the column info from
@@ -779,6 +779,15 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
     				// get column list from our CurrentObject
     				var columnHeaders = CurrentObject.columnHeaders(true);
                     
+                    var index = 0;
+                    columnHeaders.forEach(function(col) {
+                        index++;
+                        console.log(index);
+                        if (columnHeaders.length == index) {
+                            console.log(col);
+                            col.fillspace = true;
+                        }
+                    })
                     if (settings.isEditable == 0) {
                         columnHeaders.forEach(function(col) {
                             

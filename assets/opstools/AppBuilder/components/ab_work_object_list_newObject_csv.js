@@ -151,7 +151,7 @@ export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 								view: "select",
 								options: [
 									{ id: 'string', value: 'Single text' },
-									{ id: 'longtext', value: 'Long text' },
+									{ id: 'LongText', value: 'Long text' },
 									{ id: 'number', value: 'Number' },
 									{ id: 'date', value: 'Date' },
 									{ id: 'boolean', value: 'Checkbox' },
@@ -328,7 +328,7 @@ export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 
 						switch (item.dataType) {
 							case 'string':
-							case 'text':
+							case 'LongText':
 								newField.settings.supportMultilingual = 0;
 								break;
 						}
@@ -432,8 +432,8 @@ export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 				return 'date';
 			}
 			else {
-				if (data.length > 10)
-					return 'text';
+				if (data.length > 100)
+					return 'LongText';
 				else
 					return 'string';
 			}
