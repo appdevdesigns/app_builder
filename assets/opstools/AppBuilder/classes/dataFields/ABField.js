@@ -28,13 +28,14 @@ export default class ABField extends ABFieldBase {
   	// 		key:'fieldKey',				// unique key for this Field
   	// 		icon:'font',				// fa-[icon] reference for an icon for this Field Type
   	// 		label:'',					// pulled from translation
-			// columnName:'column_name',	// a valid mysql table.column name
-			// settings: {					// unique settings for the type of field
-			// 	showIcon:true/false,	// only useful in Object Workspace DataTable
+	// 		columnName:'column_name',	// a valid mysql table.column name
+	//		settings: {					// unique settings for the type of field
+	//		showIcon:true/false,		// only useful in Object Workspace DataTable
+	//		isImported: 1/0,			// flag to mark is import from other object
 
-			// 	// specific for dataField
-			// },
-			// translations:[]
+	// 	// specific for dataField
+	// },
+	// translations:[]
   	// 	}
   		
   	// 	this.fromValues(values);

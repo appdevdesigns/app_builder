@@ -28,6 +28,7 @@ module.exports = class ABField {
   			icon:'font',				// fa-[icon] reference for an icon for this Field Type
   			label:'',					// pulled from translation
 			columnName:'column_name',	// a valid mysql table.column name
+			isImported: 1/0,			// flag to mark is import from other object
 			settings: {					// unique settings for the type of field
 				showIcon:true/false,	// only useful in Object Workspace DataTable
 
@@ -155,6 +156,7 @@ module.exports = class ABField {
 			id : this.id,
 			key : this.key,
 			icon : this.icon,
+			isImported: this.isImported,
 			columnName: this.columnName,
 			settings: this.settings,
 			translations:this.translations
@@ -180,13 +182,16 @@ module.exports = class ABField {
     	this.label = values.label || values.settings.label || '?label?';
 
     	this.columnName = values.columnName || '';
-    	this.translations = values.translations || [];
+		this.translations = values.translations || [];
+
+		this.isImported = values.isImported || 0;
 
     	this.settings = values.settings || {};
     	this.settings.showIcon = values.settings.showIcon+"" || "1";
 		this.settings.width = values.settings.width+"" || "0";
 
-    	// convert from "0" => 0
+		// convert from "0" => 0
+		this.isImported = parseInt(this.isImported);
     	this.settings.showIcon = parseInt(this.settings.showIcon);
 		this.settings.width = parseInt(this.settings.width);
 	}

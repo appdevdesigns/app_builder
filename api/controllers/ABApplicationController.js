@@ -488,12 +488,42 @@ module.exports = {
 
         var currLangCode = ADCore.user.current(req).getLanguageCode(); // 'en';
 
-        AppBuilder.importObject(sourceAppID, targetAppID, objectID, columns, currLangCode)
-            .catch((err) => {
-                res.AD.error(err);
+        Promise.resolve()
+            .catch((err) => { res.AD.error(err); })
+            .then(() => {
+
+                // Import a object
+                return new Promise((resolve, reject) => {
+
+                    AppBuilder.importObject(sourceAppID, targetAppID, objectID, columns, currLangCode)
+                        .catch(reject)
+                        .then((objId) => {
+                            resolve(objId);
+                        });
+
+                });
             })
-            .then((newObj) => {
-                res.AD.success(newObj);
+            .then((objId) => {
+
+                // Pull a application
+                return new Promise((resolve, reject) => {
+
+                    ABApplication.findOne({ id: targetAppID })
+                        .fail(reject)
+                        .then(function (app) {
+
+                            var appClass = app.toABClass();
+                            var newObject = appClass.objects(obj => obj.id == objId)[0];
+                            if (!newObject) {
+                                return reject(new Error("Could not found new object"));
+                            }
+
+                            res.AD.success(newObject.toObj());
+
+                            resolve();
+                        });
+
+                });
             });
 
     }

@@ -2425,21 +2425,25 @@ console.log('page: ', page);
                         var selectCol = columns.filter(c => c.id == f.id)[0];
                         if (selectCol == null) return;
 
-                        var cloneField = f.toObj();
+                        var fieldImport = f.toObj();
+                        fieldImport.isImported = 1;
 
                         // edit label
-                        var trans = cloneField.translations.filter(t => t.language_code == currLangCode)[0];
+                        var trans = fieldImport.translations.filter(t => t.language_code == currLangCode)[0];
                         if (trans)
                             trans.label = selectCol.label;
 
-                        fields.push(cloneField);
+                        fields.push(fieldImport);
 
                     });
 
+                    var newObjId = uuid.v4();
                     var newObject = {
-                        id: uuid.v4(),
+                        id: newObjId,
                         isImported: 1,
                         importFromObject: object.urlPointer(true),
+                        // NOTE: store table name of import object to ignore async
+                        tableName: object.dbTableName(),
                         translations: object.translations, // copy label of object
                         fields: fields
                     };
@@ -2448,7 +2452,7 @@ console.log('page: ', page);
                     targetApp.save()
                         .fail(reject)
                         .done(function() {
-                            resolve();
+                            resolve(newObjId);
                         });
 
                 });

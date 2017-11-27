@@ -26,6 +26,7 @@ module.exports =  class ABField extends ABFieldBase {
   			icon:'font',				// fa-[icon] reference for an icon for this Field Type
   			label:'',					// pulled from translation
 			columnName:'column_name',	// a valid mysql table.column name 
+			isImported: 1/0,			// flag to mark is import from other object
 			settings: {					// unique settings for the type of field
 				showIcon:true/false,	// only useful in Object Workspace DataTable
 
@@ -64,6 +65,9 @@ module.exports =  class ABField extends ABFieldBase {
 		sails.log.info(''+this.fieldKey()+'.migrateDrop() ');
 		return new Promise(
 			(resolve, reject) => {
+
+				// if field is imported, then it will not remove column in table
+				if (this.isImported) return resolve();
 
 				var tableName = this.object.dbTableName();
 

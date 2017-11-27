@@ -60,7 +60,7 @@ module.exports =  class ABObjectBase {
 
 
 	  	// convert '0' to 0
-	  	this.isImported = parseInt(this.isImported);
+	  	this.isImported = parseInt(this.isImported || 0);
 	  	
 
 	  	// link me to my parent ABApplication

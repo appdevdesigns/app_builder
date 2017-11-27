@@ -100,17 +100,19 @@ module.exports = class ABObject extends ABObjectBase {
 	///
 
 	dbTableName() {
-		if (!JSON.parse(this.isImported || 0)) {
-			return AppBuilder.rules.toObjectNameFormat(this.application.dbApplicationName(), this.name);
+		if (this.isImported) {
+			// NOTE: store table name of import object to ignore async
+			return this.tableName;
 		}
 		else {
-			var modelName = this.name.toLowerCase();
-			if (!sails.models[modelName]) {
-				throw new Error(`Imported object model not found: ${modelName}`);
-			}
-			else {
-				return sails.models[modelName].waterline.schema[modelName].tableName;
-			}
+			return AppBuilder.rules.toObjectNameFormat(this.application.dbApplicationName(), this.name);
+			// var modelName = this.name.toLowerCase();
+			// if (!sails.models[modelName]) {
+			// 	throw new Error(`Imported object model not found: ${modelName}`);
+			// }
+			// else {
+			// 	return sails.models[modelName].waterline.schema[modelName].tableName;
+			// }
 		}
 	}
 
