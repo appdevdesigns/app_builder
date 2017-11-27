@@ -276,7 +276,7 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
                             field = _currentObject.fieldNew(vals);
 
                             // Provide a default width based on the column label
-                            var width = 20 + (field.label.length * 8);
+                            var width = 20 + (field.label.length * 10);
                             if (field.settings.showIcon) {
                                 width = width + 20;
                             }
