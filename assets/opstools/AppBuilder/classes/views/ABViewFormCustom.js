@@ -120,6 +120,9 @@ export default class ABViewFormCustom extends ABViewFormField {
 		var field = this.field();
 		var form = this.formComponent();
 
+		// this field may be deleted
+		if (!field) return component;
+
 		var idBase = 'ABViewFormCustom_' + this.id;
 		var ids = {
 			component: App.unique(idBase + '_component'),
