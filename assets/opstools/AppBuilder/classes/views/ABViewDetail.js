@@ -66,10 +66,10 @@ export default class ABViewDetail extends ABViewContainer {
 
 		super.fromValues(values);
 
-		this.settings.labelPosition = this.settings.labelPosition || ABViewFormDefaults.labelPosition;
+		this.settings.labelPosition = this.settings.labelPosition || ABViewDetailDefaults.labelPosition;
 
 		// convert from "0" => true/false
-		this.settings.showLabel = JSON.parse(this.settings.showLabel != null ? this.settings.showLabel : ABViewFormDefaults.showLabel);
+		this.settings.showLabel = JSON.parse(this.settings.showLabel != null ? this.settings.showLabel : ABViewDetailDefaults.showLabel);
 
 		// convert from "0" => 0
 		this.settings.labelWidth = parseInt(this.settings.labelWidth);

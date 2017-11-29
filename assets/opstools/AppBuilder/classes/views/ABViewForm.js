@@ -92,14 +92,14 @@ export default class ABViewForm extends ABViewContainer {
 
 		super.fromValues(values);
 
-		this.settings.labelPosition = this.settings.labelPosition || ABViewFormDefaults.labelPosition;
+		this.settings.labelPosition = this.settings.labelPosition || ABViewFormPropertyComponentDefaults.labelPosition;
 
 		// convert from "0" => true/false
-		this.settings.showLabel = JSON.parse(this.settings.showLabel != null ? this.settings.showLabel : ABViewFormDefaults.showLabel);
+		this.settings.showLabel = JSON.parse(this.settings.showLabel != null ? this.settings.showLabel : ABViewFormPropertyComponentDefaults.showLabel);
 
 		// convert from "0" => 0
-		this.settings.labelWidth = parseInt(this.settings.labelWidth || ABViewFormDefaults.labelWidth);
-		this.settings.height = parseInt(this.settings.height || ABViewFormDefaults.height);
+		this.settings.labelWidth = parseInt(this.settings.labelWidth || ABViewFormPropertyComponentDefaults.labelWidth);
+		this.settings.height = parseInt(this.settings.height || ABViewFormPropertyComponentDefaults.height);
 
 	}
 

@@ -486,6 +486,14 @@ module.exports = {
         var objectID = req.param('objectId') || '';
         var columns = req.param('columns') || [];
 
+        // Convert "true"/"false" to boolean
+        columns = columns.map(function(col) {
+
+            col.isHidden = JSON.parse(col.isHidden);
+            return col;
+
+        });
+
         var currLangCode = ADCore.user.current(req).getLanguageCode(); // 'en';
 
         Promise.resolve()

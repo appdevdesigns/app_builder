@@ -159,12 +159,13 @@ class ABFieldConnect extends ABField {
 				var tableName = this.object.dbTableName();
 
 				// find linked object
-				var application = this.object.application,
-					linkObject = this.objectLink(),
+				var linkObject = this.objectLink(),
 					linkTableName = linkObject.dbTableName(),
 					// TODO : should check duplicate column
 					linkColumnName = this.object.name;
 
+console.log('object: ', this.object);
+console.log('linkObject: ', linkObject);
 
 				// 1:M - create a column in the table and references to id of the link table
 				// 1:1 - create a column in the table, references to id of the link table and set to be unique

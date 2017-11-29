@@ -29,13 +29,15 @@ function L(key, altText) {
 module.exports = class ABObject extends ABObjectBase {
 
     constructor(attributes, application) {
-    	super(attributes, application);
+		super(attributes, application);
+
 /*
 {
 	id: uuid(),
 	name: 'name',
 	labelFormat: 'xxxxx',
 	isImported: 1/0,
+	tableName:'string',  // NOTE: store table name of import object to ignore async
 	urlPath:'string',
 	importFromObject: 'string', // JSON Schema style reference:  '#[ABApplication.id]/objects/[ABObject.id]'
 								// to get other object:  ABApplication.objectFromRef(obj.importFromObject);
@@ -68,6 +70,27 @@ module.exports = class ABObject extends ABObjectBase {
 	/// Instance Methods
 	///
 
+	/**
+	 * @method toObj()
+	 *
+	 * properly compile the current state of this ABApplication instance
+	 * into the values needed for saving to the DB.
+	 *
+	 * Most of the instance data is stored in .json field, so be sure to
+	 * update that from all the current values of our child fields.
+	 *
+	 * @return {json}
+	 */
+	toObj () {
+
+		var result = super.toObj();
+
+		// NOTE: store table name of import object to ignore async
+		result.tableName = this.tableName;
+
+		return result;
+
+	}
 
 
 	///

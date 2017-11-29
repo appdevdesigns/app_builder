@@ -362,25 +362,23 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
                                         _logic.callbacks.onSave(field);
                                     };
 
+                                    var refreshModels = () => {
+                                        
+                                        // refresh linked object model
+                                        linkCol.object.model().refresh();
+
+                                        // refresh source object model
+                                        // NOTE: M:1 relation has to refresh model after linked object's refreshed
+                                        field.object.model().refresh();
+
+                                    };
+
 
                                     // TODO workaround : update link column id
                                     if (linkCol != null) {
 
-                                        var refreshModels = () => {
-
-                                            // refresh linked object model
-                                            linkCol.object.model().refresh();
-
-                                            // refresh source object model
-                                            // NOTE: M:1 relation has to refresh model after linked object's refreshed
-                                            field.object.model().refresh();
-
-                                        };
-
                                         linkCol.settings.linkColumn = field.id;
                                         linkCol.save().then(() => {
-
-                                            var migrateTasks = [];
 
                                             // when add new link fields, then run create migrate fields here
                                             if (!_editField) {
@@ -483,7 +481,20 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
                 defaultEditorComponent.show(false, false);
                 _currentEditor = defaultEditorComponent;
 
+                // allow add the connect field only to import object
+                if (_currentObject.isImported) {
+
+                    var connectField = ABFieldManager.allFields().filter(f => f.defaults().key == 'connectObject')[0];
+                    var connectMenuName = connectField.defaults().menuName;
+                    $$(ids.types).setValue(connectMenuName);
+                    $$(ids.types).disable();
+
+                }
                 // show the ability to switch data types
+                else {
+                    $$(ids.types).enable();
+                }
+
                 $$(ids.types).show();
 
                 // change button text to 'add'
@@ -684,7 +695,7 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
         // Define our external interface methods:
         //
         this.applicationLoad = _logic.applicationLoad; // {fn}     fn(ABApplication) 
-        this.show = _logic.show;       // {fn}     fn(node, ABField)
+        this.show = _logic.show;                       // {fn}     fn(node, ABField)
     }
 
 }

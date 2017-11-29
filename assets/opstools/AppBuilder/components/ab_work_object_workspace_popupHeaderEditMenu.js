@@ -118,15 +118,6 @@ export default class ABWorkObjectPopupHeaderEditMenu extends OP.Component {
              */
             objectLoad: function(object) {
                 CurrentObject = object;
-    
-                // TODO:
-                // check if object is imported, if so, then switch the 
-                // shown fields to the imported menu:
-    
-                var listItems = menuItems['default'];
-                var List = $$(ids.list);
-                List.clearAll();
-                List.parse(listItems);
             },
     
             /**
@@ -171,8 +162,17 @@ export default class ABWorkObjectPopupHeaderEditMenu extends OP.Component {
              * Show this component.
              * @param {obj} $view  the webix.$view to hover the popup around.
              */
-            show:function($view, columnName) {
+            show:function($view, field) {
+
+                // check if field is imported, if so, then switch the 
+                // shown fields to the imported menu:
+                var listItems = field.isImported ? menuItems['imported'] : menuItems['default'];
+                var List = $$(ids.list);
+                List.clearAll();
+                List.parse(listItems);
+
                 $$(ids.component).show($view);
+
             }
         };
     

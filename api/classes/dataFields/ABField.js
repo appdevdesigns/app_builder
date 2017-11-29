@@ -66,6 +66,9 @@ module.exports =  class ABField extends ABFieldBase {
 		return new Promise(
 			(resolve, reject) => {
 
+				// if column name is empty, then .hasColumn function always returns true
+				if (this.columnName == '') return resolve();
+
 				// if field is imported, then it will not remove column in table
 				if (this.isImported) return resolve();
 

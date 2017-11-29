@@ -694,7 +694,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
     			if (EditField) {
 
     				// show the popup
-    				PopupHeaderEditComponent.show(node);
+    				PopupHeaderEditComponent.show(node, EditField);
     			}
 
     			return false;

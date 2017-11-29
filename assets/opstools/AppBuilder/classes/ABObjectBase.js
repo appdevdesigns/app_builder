@@ -31,7 +31,8 @@ module.exports =  class ABObjectBase {
     	this.id    = attributes.id;
     	this.name  = attributes.name || "";
     	this.labelFormat = attributes.labelFormat || "";
-    	this.isImported  = parseInt(attributes.isImported || 0);
+		this.isImported  = parseInt(attributes.isImported || 0);
+		this.tableName	 = attributes.tableName; // NOTE: store table name of import object to ignore async
     	this.urlPath	 = attributes.urlPath     || "";
     	this.importFromObject = attributes.importFromObject || "";
     	this.translations = attributes.translations;
@@ -110,7 +111,8 @@ module.exports =  class ABObjectBase {
 			name: 			this.name,
     		labelFormat: 	this.labelFormat,
     		isImported:  	this.isImported,
-    		urlPath: 		this.urlPath,
+			tableName:		this.tableName, // NOTE: store table name of import object to ignore async
+			urlPath: 		this.urlPath,
     		importFromObject: this.importFromObject,
     		objectWorkspace:  this.objectWorkspace,
     		translations: 	this.translations,

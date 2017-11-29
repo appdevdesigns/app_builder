@@ -2372,7 +2372,7 @@ console.log('page: ', page);
      * @param uuid objectID
      * @param array [{
      *      id: uuid,
-     *      label: string
+     *      isHidden: bool
      * }] columns
      * @param string currLangCode
      * @return Promise
@@ -2422,21 +2422,30 @@ console.log('page: ', page);
                     // copy fields of the source object
                     var fields = [];
                     object.fields().forEach(f => {
-                        var selectCol = columns.filter(c => c.id == f.id)[0];
-                        if (selectCol == null) return;
+
+                        // TODO: if application has link object, then it should have this column too
+                        if (f.key == 'connectObject') return;
 
                         var fieldImport = f.toObj();
                         fieldImport.isImported = 1;
-
-                        // edit label
-                        var trans = fieldImport.translations.filter(t => t.language_code == currLangCode)[0];
-                        if (trans)
-                            trans.label = selectCol.label;
 
                         fields.push(fieldImport);
 
                     });
 
+                    // pull hidden fields
+                    var hiddenFields = [];
+                    var hiddenFieldIds = columns
+                                        .filter(col => col.isHidden)
+                                        .map(col => col.id);
+
+                    hiddenFieldIds.forEach(fId => {
+                        var field = fields.filter(col => col.id == fId)[0];
+                        if (field)
+                            hiddenFields.push(field.columnName);
+                    });
+
+                    // create a new clone object
                     var newObjId = uuid.v4();
                     var newObject = {
                         id: newObjId,
@@ -2445,9 +2454,13 @@ console.log('page: ', page);
                         // NOTE: store table name of import object to ignore async
                         tableName: object.dbTableName(),
                         translations: object.translations, // copy label of object
-                        fields: fields
+                        fields: fields,
+                        objectWorkspace: {
+                            hiddenFields: hiddenFields
+                        },
                     };
 
+                    // add to object list and save
                     targetApp.json.objects.push(newObject);
                     targetApp.save()
                         .fail(reject)

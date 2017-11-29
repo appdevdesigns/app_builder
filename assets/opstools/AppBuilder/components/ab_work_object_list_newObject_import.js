@@ -150,14 +150,14 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
                             // if the field is not support to import, then it is invisible
                             if (fieldClass.defaults().supportImport == false) return;
 
-                            // TODO
-                            var supported = true;
+                            // // TODO
+                            // var supported = true;
 
                             colNames.push({
-                                include: supported,
                                 id: f.id,
                                 label: f.label,
-                                disabled: !supported
+                                isvisible: true,
+                                // disabled: !supported
                             });
 
                         });
@@ -182,6 +182,7 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
                 // Lists
                 $$(ids.objectList).clearAll();
                 $$(ids.columnList).clearAll();
+
             },
 
 
@@ -210,11 +211,11 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
 
                 var columns = $$(ids.columnList)
                     .data
-                    .find({ include: true })
+                    .find({})
                     .map((col) => {
                         return {
                             id: col.id,
-                            label: col.label
+                            isHidden: !col.isvisible
                         };
                     });
 
@@ -314,36 +315,20 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
                             height: 40
                         },
                         activeContent: {
-                            include: {
+
+                            isvisible: {
                                 view: 'checkbox',
                                 width: 30
-                            },
-                            label: {
-                                view: 'text',
-                                width: 280
                             }
+
                         },
                         template: (obj, common) => {
-                            // For disabled columns, display strikethrough text
-                            if (obj.disabled) {
-                                obj.include = false;
-                                return `
-                                    <span style="float:left; margin:8px 15px 7px 4px;">
-                                        <span class="glyphicon glyphicon-remove">
-                                        </span>
-                                    </span>
-                                    <span style="float:left; pading-left:1em; text-decoration:line-through;">
-                                        ${obj.label}
-                                    </span>
-                                `;
-                            }
-                            // For normal columns, display checkbox and text
-                            else {
-                                return `
-                                    <span class="float-left">${common.include(obj, common)}</span>
-                                    <span class="float-left">${common.label(obj, common)}</span>
-                                `;
-                            }
+
+                            return `
+                                <span class="float-left">${common.isvisible(obj, common)}</span>
+                                <span class="float-left">${obj.label}</span>
+                            `;
+
                         }
                     },
 
