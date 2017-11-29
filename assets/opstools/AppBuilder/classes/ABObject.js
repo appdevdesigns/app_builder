@@ -369,14 +369,16 @@ export default class ABObject extends ABObjectBase {
 		// ['{colId1}', ..., '{colIdN}']
 		var colIds = labelData.match(/\{[^}]+\}/g);
 
-		colIds.forEach((colId) => {
-			var colIdNoBracket = colId.replace('{', '').replace('}', '');
+		if (colIds && colIds.forEach) {
+			colIds.forEach((colId) => {
+				var colIdNoBracket = colId.replace('{', '').replace('}', '');
 
-			var field = this.fields((f) => f.id == colIdNoBracket)[0]
-			if (field == null) return;
+				var field = this.fields((f) => f.id == colIdNoBracket)[0]
+				if (field == null) return;
 
-			labelData = labelData.replace(colId, rowData[field.columnName] || '');
-		});
+				labelData = labelData.replace(colId, rowData[field.columnName] || '');
+			});
+		}
 
 		return labelData;
 	}
