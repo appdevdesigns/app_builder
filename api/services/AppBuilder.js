@@ -2449,6 +2449,9 @@ console.log('page: ', page);
                     var newObjId = uuid.v4();
                     var newObject = {
                         id: newObjId,
+                        name: object.name,
+                        labelFormat: object.labelFormat,
+                        urlPath: object.urlPath,
                         isImported: 1,
                         importFromObject: object.urlPointer(true),
                         // NOTE: store table name of import object to ignore async

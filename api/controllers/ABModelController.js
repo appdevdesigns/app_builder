@@ -295,7 +295,7 @@ module.exports = {
 
                     // update relation values
                     return Promise.all(updateTasks)
-                        .catch(Promise.reject)
+                        .catch((err) => { return Promise.reject(err); })
                         .then((values)=>{
 
                             // Query the new row to response to client
@@ -309,8 +309,9 @@ module.exports = {
                                 offset: 0,
                                 limit: 1
                             });
-                            query3
-                            .catch(Promise.reject)
+
+                            return query3
+                            .catch((err) => { return Promise.reject(err); })
                             .then((newItem) => {
                                 res.AD.success(newItem[0]);
                                 Promise.resolve();
@@ -559,7 +560,7 @@ console.log('... catch(err) !');
                 var query = object.model().query();
 
                 // Do Knex update data tasks
-                query.patch(updateParams || {}).where('id', id)
+                query.patch(updateParams || { id: id }).where('id', id)
                 .then((values)=>{
 
                     // create a new query when use same query, then new data are created duplicate
@@ -568,7 +569,7 @@ console.log('... catch(err) !');
 
                     // update relation values
                     return Promise.all(updateTasks)
-                        .catch(Promise.reject)
+                        .catch((err) => { return Promise.reject(err); })
                         .then((values)=>{
 
                             // Query the new row to response to client
@@ -582,8 +583,9 @@ console.log('... catch(err) !');
                                 offset: 0,
                                 limit: 1
                             });
-                            query3
-                            .catch(Promise.reject)
+
+                            return query3
+                            .catch((err) => { return Promise.reject(err); })
                             .then((newItem) => {
                                 res.AD.success(newItem[0]);
                                 Promise.resolve();

@@ -294,7 +294,10 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
                                 var linkObject = _currentApplication.objects((obj) => obj.id == field.settings.linkObject)[0];
 
                                 // TODO : should check duplicate column
-                                var linkColumnName = _currentObject.name;
+
+                                // NOTO : include random number to prevent duplicate column names
+                                var rand = Math.floor(Math.random() * 1000);
+                                var linkColumnName = _currentObject.name + rand;
 
                                 linkCol = linkObject.fieldNew({
                                     id: OP.Util.uuid(),

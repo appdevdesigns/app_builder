@@ -164,9 +164,6 @@ class ABFieldConnect extends ABField {
 					// TODO : should check duplicate column
 					linkColumnName = this.object.name;
 
-console.log('object: ', this.object);
-console.log('linkObject: ', linkObject);
-
 				// 1:M - create a column in the table and references to id of the link table
 				// 1:1 - create a column in the table, references to id of the link table and set to be unique
 				if ((this.settings.linkType == 'one') &&
@@ -389,7 +386,7 @@ console.log('linkObject: ', linkObject);
 		myParameter = super.requestParam(allParameters);
 
 		// remove relation column value
-		// We need to update it separately
+		// We need to update it in .requestRelationParam
 		if (myParameter != null)
 			delete myParameter[this.columnName];
 
