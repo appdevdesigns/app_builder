@@ -358,7 +358,12 @@ export default class ABObject extends ABObjectBase {
 		var mlFields = this.multilingualFields();
 		OP.Multilingual.translate(rowData, rowData, mlFields);
 
-		var labelData = this.labelFormat || '{' + this._fields[0].id + '}';
+		var labelData = this.labelFormat || '';
+		
+		// default label
+		if (!labelData && this._fields.length > 0) {
+			labelData = '{' + this._fields[0].id + '}';
+		}
 
 		// get column ids in {colId} template
 		// ['{colId1}', ..., '{colIdN}']
