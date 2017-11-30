@@ -66,10 +66,10 @@ export default class ABViewDetail extends ABViewContainer {
 
 		super.fromValues(values);
 
-		this.settings.labelPosition = this.settings.labelPosition || ABViewDetailDefaults.labelPosition;
+		this.settings.labelPosition = this.settings.labelPosition || ABViewDetailPropertyComponentDefaults.labelPosition;
 
 		// convert from "0" => true/false
-		this.settings.showLabel = JSON.parse(this.settings.showLabel != null ? this.settings.showLabel : ABViewDetailDefaults.showLabel);
+		this.settings.showLabel = JSON.parse(this.settings.showLabel != null ? this.settings.showLabel : ABViewDetailPropertyComponentDefaults.showLabel);
 
 		// convert from "0" => 0
 		this.settings.labelWidth = parseInt(this.settings.labelWidth);
@@ -113,7 +113,7 @@ export default class ABViewDetail extends ABViewContainer {
 
 						var yPosition = (fields.length - index - 1);
 
-						_logic.addFieldToView(f, yPosition);
+						currView.addFieldToView(f, yPosition);
 
 						// update item to UI list
 						f.selected = 1;
@@ -144,7 +144,7 @@ export default class ABViewDetail extends ABViewContainer {
 
 			// add a field to the form
 			if (item.selected) {
-				_logic.addFieldToView(item);
+				currView.addFieldToView(item);
 			}
 			// remove field in the form
 			else {

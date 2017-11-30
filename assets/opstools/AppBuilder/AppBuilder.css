@@ -367,7 +367,7 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 	max-height: 100% !important;
 }
 .selectivity-multiple-input, input[type=text].selectivity-multiple-input, .selectivity-multiple-input-container {
-	height: 35px !important;
+	/*height: 35px !important;*/
 }
 .selectivity-single-result-container {
 	left: 2px;
@@ -377,9 +377,12 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 	padding: 0 10px;
 	border-radius: 15px;
 	color: #FFF !important;
-	line-height: 2em;
+	line-height: 29px;
 	display: inline-block;
 	/*max-width: 100px !important;*/
+}
+.selectivity-multiple-input, input[type=text].selectivity-multiple-input {
+	height: 33px;
 }
 .selectivity-single-selected-item-remove {
 	color: #FFF;

@@ -75,7 +75,7 @@ export default class AB extends OP.Component {    //('ab', function(App) {
 
 			dataFieldShowIcon: L('ab.dataField.common.showIcon', '*show icon?'),
 			
-			componentDropZone: L('ab.common.componentDropZone', '*drop components here')
+			componentDropZone: L('ab.common.componentDropZone', '*add widgets here')
 		}
 
 
