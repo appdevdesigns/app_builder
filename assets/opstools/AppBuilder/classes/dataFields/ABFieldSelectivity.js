@@ -130,7 +130,7 @@ export default class ABFieldSelectivity extends ABField {
 
 			data = this.prepareData(data, domNode.selectivity.options.multiple);
 
-			if (data != null && (data[0] != "") && (data.length || data.id))
+			if (data != null && data[0] != "" && typeof data[0] != "undefined" && (data.length || data.id))
 				domNode.selectivity.setData(data);
 			else
 				domNode.selectivity.clear();
