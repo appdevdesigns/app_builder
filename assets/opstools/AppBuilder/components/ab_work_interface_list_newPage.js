@@ -170,9 +170,16 @@ width: 650,
 				var values = CurrentEditor.values();
 				if (!values) return;
 
+				var dataCollections = null;
+
 				// this interface only creates Root Pages, or pages related to 
 				var page = null;
 				if(values.parent) {
+
+					// Add data collections to the root page
+					dataCollections = _.cloneDeep(values.dataCollections);
+					delete values.dataCollections;
+
 					page = values.parent.pageNew(values);
 				} else {
 					page = CurrentApplication.pageNew(values);
@@ -188,6 +195,17 @@ width: 650,
 
 					page.save()
 					.then(()=>{
+
+						// Add data collections to the root page
+						if (dataCollections && dataCollections.length > 0) {
+							var rootPage = values.parent.pageRoot();
+							dataCollections.forEach(dc => {
+								var newDc = rootPage.dataCollectionNew(dc);
+								rootPage._dataCollections.push(newDc);
+							});
+
+							rootPage.save();
+						}
 
 						// save sub-pages sequentially
 						var subTasks = Promise.resolve();

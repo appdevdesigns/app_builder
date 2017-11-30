@@ -6,6 +6,7 @@
  *
  */
 
+import ABViewDataCollection from '../classes/views/ABViewDataCollection'
 import ABViewDetail from '../classes/views/ABViewDetail'
 import ABViewForm from '../classes/views/ABViewForm'
 import ABViewFormButton from '../classes/views/ABViewFormButton'
@@ -30,7 +31,8 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 				parentPage: L('ab.interface.page.parentList', '*Parent Page'),
 				placeholderPageName: L('ab.interface.placeholderPageName', '*Page name'),
 
-				rootPage: L('ab.interface.rootPage', '*[Root page]')
+				rootPage: L('ab.interface.rootPage', '*[Root page]'),
+				selectObject: L('ab.interface.selectObject', '*[Select object]')
 			}
 		};
 
@@ -41,14 +43,14 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 			form: this.unique('form'),
 
 			parentList: this.unique('parentList'),
-			selectDataCollection: this.unique('selectDataCollection'),
+			selectObject: this.unique('selectObject'),
 			displayGrid: this.unique('displayGrid'),
 			addable: this.unique('addable'),
 			formAdd: this.unique('formAdd'),
 			editable: this.unique('editable'),
 			viewable: this.unique('viewable'),
 
-			subDcs: this.unique('subDcs')
+			subObjs: this.unique('subObjs')
 
 		}
 
@@ -62,7 +64,7 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 
 		var CurrentApplication = null,
 			CurrentPage = null,
-			CurrentDc = null;
+			CurrentObj = null;
 
 		// our internal business logic 
 		var _logic = this._logic = {
@@ -75,11 +77,12 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 			applicationLoad: function (application) {
 				CurrentApplication = application;
 
-				var options = [{ id: '-', value: labels.component.rootPage }];
+				var pageOptions = [{ id: '-', value: labels.component.rootPage }];
 
+				/* Pages */
 				var addPage = function (page, indent) {
 					indent = indent || '';
-					options.push({ id: page.urlPointer(), value: indent + page.label });
+					pageOptions.push({ id: page.urlPointer(), value: indent + page.label });
 					page.pages().forEach(function (p) {
 						addPage(p, indent + '-');
 					})
@@ -88,8 +91,24 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 					addPage(page, '');
 				});
 
-				$$(ids.parentList).define('options', options);
+				$$(ids.parentList).define('options', pageOptions);
 				$$(ids.parentList).refresh();
+
+				/* Objects */
+				var objOptions = CurrentApplication.objects().map((obj) => {
+					return {
+						id: obj.id,
+						value: obj.label
+					}
+				}) || [];
+
+				objOptions.unshift({
+					id: '',
+					value: labels.component.selectObject
+				});
+
+				$$(ids.selectObject).define('options', objOptions);
+				$$(ids.selectObject).refresh();
 
 			},
 
@@ -100,46 +119,23 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 			 */
 			selectPage: function (newPageUrl, oldPageUrl) {
 
-				var options = [];
-
 				CurrentPage = CurrentApplication.urlResolve(newPageUrl.trim());
-				if (CurrentPage) {
-
-					// Populate the data collections to list
-					options = CurrentPage.pageRoot().dataCollections().map((dc) => {
-						return {
-							id: dc.id,
-							value: dc.label
-						}
-					}) || [];
-
-				}
-
-				$$(ids.selectDataCollection).define('options', options);
-				$$(ids.selectDataCollection).refresh();
-
-				// update select data source
-				var dcId = $$(ids.selectDataCollection).getValue();
-				_logic.selectDataCollection(dcId);
 
 			},
 
 			/**
-			 * @function selectDataCollection()
+			 * @function selectObject()
 			 *
-			 * Select the data collection
+			 * Select a object
 			 */
-			selectDataCollection: function (newDcId, OldDcId) {
+			selectObject: function (newObjId, oldObjId) {
 
-				if (CurrentPage)
-					CurrentDc = CurrentPage.pageRoot().dataCollections(dc => dc.id == newDcId)[0];
-				else
-					CurrentDc = null;
+				CurrentObj = CurrentApplication.objects(obj => obj.id == newObjId)[0];
 
 				// Rename data source name to template
 				$$(ids.form).getChildViews().forEach(function (r) {
 					if (r && r.config.labelRight) {
-						var label = r.config.labelRight.replace(/<b>[\s\S]*?<\/b>/, '<b>"' + (CurrentDc ? CurrentDc.label : '') + '"<\/b>');
+						var label = r.config.labelRight.replace(/<b>[\s\S]*?<\/b>/, '<b>"' + (CurrentObj ? CurrentObj.label : '') + '"<\/b>');
 
 						r.define('labelRight', label);
 						r.refresh();
@@ -147,17 +143,19 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 				});
 
 				// Pull data collections that parent is the selected dc
-				var subDcs = [];
-				if (CurrentDc) {
-					subDcs = CurrentPage.pageRoot().dataCollections(dc => dc.settings.linkDataCollection == CurrentDc.id);
+				var subObjs = [];
+				if (CurrentObj) {
+					subObjs = CurrentApplication.objects(obj => {
+						return obj.fields(f => f.key == 'connectObject' && f.settings.linkObject == CurrentObj.id).length > 0;
+					});
 				}
 
 				// Re-build sub-dcs layout
-				$$(ids.subDcs).reconstruct();
+				$$(ids.subObjs).reconstruct();
 
 				// Add title
-				if (subDcs.length > 0) {
-					$$(ids.subDcs).addView({
+				if (subObjs.length > 0) {
+					$$(ids.subObjs).addView({
 						view: "label",
 						label: "Do you want to add other options?",
 						css: "ab-text-bold"
@@ -165,18 +163,18 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 				}
 
 				// Add sub-dcs to layout
-				subDcs.forEach((subDc) => {
-					$$(ids.subDcs).addView({
+				subObjs.forEach((subObj) => {
+					$$(ids.subObjs).addView({
 						view: "checkbox",
-						name: subDc.id + '|list',
-						labelRight: 'List connected <b>"#label#"</b> with a Grid'.replace('#label#', subDc.label),
+						name: subObj.id + '|list',
+						labelRight: 'List connected <b>"#label#"</b> with a Grid'.replace('#label#', subObj.label),
 						labelWidth: 2
 					});
 
-					$$(ids.subDcs).addView({
+					$$(ids.subObjs).addView({
 						view: "checkbox",
-						name: subDc.id + '|form',
-						labelRight: 'Add a connected <b>"#label#"</b> with a Form'.replace('#label#', subDc.label),
+						name: subObj.id + '|form',
+						labelRight: 'Add a connected <b>"#label#"</b> with a Form'.replace('#label#', subObj.label),
 						labelWidth: 2
 					});
 				});
@@ -267,6 +265,33 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 			},
 
 
+			getDataCollection: function (label, obj, parentDc) {
+
+				var dcConfig = {
+					id: OP.Util.uuid(),
+					label: label || obj.label,
+					settings: {
+						object: obj.id,
+						objectUrl: obj.urlPointer(),
+						loadAll: 0,
+						fixSelect: ""
+					}
+				}
+
+				if (parentDc) {
+
+					dcConfig.settings.linkDataCollection = parentDc.id;
+
+					var linkField = obj.fields(f => f.datasourceLink && f.datasourceLink.id == parentDc.datasource.id)[0];
+					if (linkField)
+						dcConfig.settings.linkField = linkField.id;
+				}
+
+				return new ABViewDataCollection(dcConfig, CurrentApplication);
+
+			},
+
+
 			getFormView: function (dc) {
 
 				// create a new form instance
@@ -281,10 +306,12 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 				}, CurrentApplication);
 
 				// populate fields to a form
-				var object = dc.datasource;
-				object.fields().forEach((f, index) => {
-					newForm.addFieldToForm(f, index);
-				});
+				var object = CurrentApplication.objects(obj => obj.id == dc.settings.object)[0];
+				if (object) {
+					object.fields().forEach((f, index) => {
+						newForm.addFieldToForm(f, index);
+					});
+				}
 
 				// Add action button to the form
 				newForm._views.push(new ABViewFormButton({
@@ -304,13 +331,13 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 			},
 
 
-			getDetailView: function () {
+			getDetailView: function (dc) {
 
 				// create a new detail instance
 				var newDetail = new ABViewDetail({
-					label: "View " + CurrentDc.label,
+					label: "View " + dc.label,
 					settings: {
-						datacollection: CurrentDc.id,
+						datacollection: dc.id,
 						showLabel: true,
 						labelPosition: 'left',
 						labelWidth: 120
@@ -318,7 +345,7 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 				}, CurrentApplication);
 
 				// populate fields to a form
-				var object = CurrentDc.datasource;
+				var object = dc.datasource;
 				object.fields().forEach((f, index) => {
 					newDetail.addFieldToView(f, index);
 				});
@@ -329,31 +356,40 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 
 			values: function () {
 
-				if (!CurrentDc) return null;
+				if (!CurrentObj) return null;
 
 				// TODO : validate unique page's name 
 
 				var pages = [];
 				var views = [];
+				var dataCollections = [];
 				var formValues = $$(ids.form).getValues();
-				var subValues = $$(ids.subDcs).getValues();
+				var subValues = $$(ids.subObjs).getValues();
 
 				var addPageId = null;
 				var viewPageId = null;
+
+				var addDc = null;
+				var editDc = null;
 
 				// Edit page
 				if (formValues.addable || formValues.editable) {
 
 					addPageId = OP.Util.uuid();
 
-					var newForm = _logic.getFormView(CurrentDc);
+					// a data collection for edit
+					var editDcLabel = "Edit " + CurrentObj.label;
+					editDc = _logic.getDataCollection(editDcLabel, CurrentObj);
+					dataCollections.push(editDc.toObj());
 
-					// Add a page
+					var addForm = _logic.getFormView(editDc);
+
+					// Add a edit page
 					pages.push({
 						id: addPageId,
 						key: ABViewPage.common().key,
 						icon: ABViewPage.common().icon,
-						name: "Add/Edit " + CurrentDc.label,
+						name: "Edit " + CurrentObj.label,
 						settings: {
 							type: "popup"
 						},
@@ -363,13 +399,13 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 								key: ABViewLabel.common().key,
 								icon: ABViewLabel.common().icon,
 								label: "Title",
-								text: "Add/Edit " + CurrentDc.label,
+								text: "Edit " + CurrentObj.label,
 								settings: {
 									format: 1
 								}
 							},
 							// Form
-							newForm.toObj()
+							addForm.toObj()
 						]
 					});
 
@@ -393,7 +429,9 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 
 					viewPageId = OP.Util.uuid();
 
-					var newDetail = _logic.getDetailView();
+					var newDetail = _logic.getDetailView(editDc);
+					newDetail.position = newDetail.position || {};
+					newDetail.position.y = 1;
 
 					var viewsOfDetail = [
 						// Title
@@ -401,9 +439,12 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 							key: ABViewLabel.common().key,
 							icon: ABViewLabel.common().icon,
 							label: "Title",
-							text: "View " + CurrentDc.label,
+							text: "View " + CurrentObj.label,
 							settings: {
 								format: 1
+							},
+							position: {
+								y: 0
 							}
 						},
 						// Detail
@@ -418,11 +459,18 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 					Object.keys(subValues).forEach((key, i) => {
 						if (subValues[key]) { // Check
 							var vals = key.split('|');
-							var dcId = vals[0];
+							var objId = vals[0];
 							var flag = vals[1]; // 'list' or 'form'
 
-							var subDc = CurrentPage.pageRoot().dataCollections(dc => dc.id == dcId)[0];
+							var childObj = CurrentApplication.objects(obj => obj.id == objId)[0];
 
+							// create a data collection
+							var childDc = dataCollections.filter(dc => dc.settings.object == childObj.id)[0];
+							if (!childDc) {
+								var dcLabel = "Edit " + childObj.label;
+								childDc = _logic.getDataCollection(dcLabel, childObj, editDc);
+								dataCollections.push(childDc.toObj());
+							}
 
 							// Add grids of sub-dcs
 							if (flag == 'list') {
@@ -432,19 +480,25 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 										key: ABViewLabel.common().key,
 										icon: ABViewLabel.common().icon,
 										label: "Title",
-										text: subDc.label,
+										text: childObj.label,
 										settings: {
 											format: 1
+										},
+										position: {
+											y: viewsOfDetail.length + 1
 										}
 									},
 									// Grid
 									{
 										key: ABViewGrid.common().key,
 										icon: ABViewGrid.common().icon,
-										label: subDc.label + "'s grid",
+										label: childObj.label + "'s grid",
 										settings: {
-											dataSource: dcId,
+											dataSource: childDc.id,
 											height: 300
+										},
+										position: {
+											y: viewsOfDetail.length + 2
 										}
 									}
 								);
@@ -457,13 +511,13 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 								// add to menu
 								menuSubPages.push(subPageId);
 
-								var newForm = _logic.getFormView(subDc);
+								var newForm = _logic.getFormView(childDc);
 
 								pages.push({
 									id: subPageId,
 									key: ABViewPage.common().key,
 									icon: ABViewPage.common().icon,
-									name: "Add/Edit " + subDc.label,
+									name: "Add/Edit " + childObj.label,
 									settings: {
 										type: "popup"
 									},
@@ -473,7 +527,7 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 											key: ABViewLabel.common().key,
 											icon: ABViewLabel.common().icon,
 											label: "Title",
-											text: "Add/Edit " + subDc.label,
+											text: "Add/Edit " + childObj.label,
 											settings: {
 												format: 1
 											}
@@ -495,6 +549,9 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 						label: "Menu",
 						settings: {
 							pages: menuSubPages
+						},
+						position: {
+							y: 2
 						}
 					});
 
@@ -502,7 +559,7 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 						id: viewPageId,
 						key: ABViewPage.common().key,
 						icon: ABViewPage.common().icon,
-						name: "View " + CurrentDc.label,
+						name: "View " + CurrentObj.label,
 						settings: {
 							type: "popup"
 						},
@@ -517,9 +574,9 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 					views.push({
 						key: ABViewGrid.common().key,
 						icon: ABViewGrid.common().icon,
-						label: CurrentDc.label,
+						label: CurrentObj.label,
 						settings: {
-							dataSource: CurrentDc.id,
+							dataSource: editDc.id,
 							height: 300,
 							editPage: formValues.editable ? addPageId : null,
 							detailsPage: formValues.viewable ? viewPageId : null
@@ -531,31 +588,39 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 				// Edit form
 				if (formValues.formAdd) {
 
+					// a data collection for add
+					var addDcLabel = "Add " + CurrentObj.label;
+					addDc = _logic.getDataCollection(addDcLabel, CurrentObj);
+					dataCollections.push(addDc.toObj());
+
 					// add the title to the form
 					views.push({
 						key: ABViewLabel.common().key,
 						icon: ABViewLabel.common().icon,
 						label: "Title",
-						text: 'Add ' + CurrentDc.label,
+						text: 'Add ' + CurrentObj.label,
 						settings: {
 							format: 1
 						}
 					});
 
-					var newForm = _logic.getFormView(CurrentDc);
+					var addForm = _logic.getFormView(addDc);
 
 					// add the new form to page
-					views.push(newForm.toObj());
+					views.push(addForm.toObj());
 
 				}
 
 
 				return {
 					parent: CurrentPage, // should be either null or an {}
-					name: CurrentDc.label,
+					name: CurrentObj.label,
 					key: ABViewPage.common().key,
 					views: views,
-					pages: pages
+					pages: pages,
+
+					// data collection list will add to the root page
+					dataCollections: dataCollections
 				}
 
 			}
@@ -587,12 +652,12 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 							},
 							{
 								view: "select",
-								id: ids.selectDataCollection,
+								id: ids.selectObject,
 								name: "datacollection",
 								label: "Select a data source",
 								labelWidth: 170,
 								options: [],
-								on: { onChange: _logic.selectDataCollection }
+								on: { onChange: _logic.selectObject }
 							},
 							{ height: 10 },
 							{
@@ -638,7 +703,7 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 							},
 							{
 								view: "form",
-								id: ids.subDcs,
+								id: ids.subObjs,
 								borderless: true,
 								elements: []
 							}
