@@ -229,29 +229,20 @@ export default class ABViewMenu extends ABViewWidget {
 		var application = view.application;
 		var currentPage = view.pageParent();
 		var parentPage = currentPage.pageParent();
+		
+		var addPage = function (page, index, parentId) {
+			pageTree.add(page, index, parentId);
 
-		if (parentPage) {
-
-			// parent page
-			pageTree.add(parentPage, 0);
-
-			// current & cousin pages
-			var cousinPages = _.cloneDeep(parentPage.pages());
-			cousinPages.forEach((p, index) => {
-				pageTree.add(p, index, parentPage.id);
+			page.pages().forEach((childPage, childIndex)=>{
+				addPage(childPage, childIndex, page.id);
 			});
 		}
-		else {
-			// current page
-			pageTree.add(currentPage, 0);
-		}
-
-		// child pages
-		var childPages = _.cloneDeep(currentPage.pages());
-		childPages.forEach((p, index) => {
-			pageTree.add(p, index, currentPage.id);
-		});
-
+		
+		application.pages().forEach((p, index)=>{
+ 			if ( (parentPage && p == parentPage) || p == currentPage ) {
+ 				addPage(p, index);				
+ 			}
+ 		})
 
 		$$(ids.pages).clearAll();
 		// $$(ids.pages).data.unsync();
