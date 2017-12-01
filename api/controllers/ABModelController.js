@@ -30,17 +30,24 @@ function updateRelationValues(query, id, updateRelationParams) {
         for (var colName in updateRelationParams) {
 
             // clear relation values of relation
-            updateTasks.push(query.where('id', id).first()
+            updateTasks.push(new Promise((resolve, reject) => {
+
+                var clearRelationName = AppBuilder.rules.toFieldRelationFormat(colName);
+
+                return query.where('id', id).first()
+                .catch(err => reject(err))
                 .then(record => {
 
-                    var relationName = AppBuilder.rules.toFieldRelationFormat(colName);
-                    
                     if (record == null) return record;
 
-                    record = record.$relatedQuery(relationName).unrelate();
+                    record = record.$relatedQuery(clearRelationName).unrelate();
 
                     return record;
-                }));
+                })
+                .then(resolve);
+
+            }));
+                
 
             // convert relation data to array
             if (!Array.isArray(updateRelationParams[colName])) {
@@ -296,8 +303,10 @@ module.exports = {
                     var query2 = object.model().query();
                     var updateTasks = updateRelationValues(query2, newObj.id, updateRelationParams);
 
-                    // update relation values
-                    return Promise.all(updateTasks)
+                    // update relation values sequentially
+                    return updateTasks.reduce((promiseChain, currTask) => {
+                            return promiseChain.then(currTask);
+                        })
                         .catch((err) => { return Promise.reject(err); })
                         .then((values)=>{
 
@@ -570,8 +579,10 @@ console.log('... catch(err) !');
                     var query2 = object.model().query();
                     var updateTasks = updateRelationValues(query2, id, updateRelationParams);
 
-                    // update relation values
-                    return Promise.all(updateTasks)
+                    // update relation values sequentially
+                    return updateTasks.reduce((promiseChain, currTask) => {
+                            return promiseChain.then(currTask);
+                         })
                         .catch((err) => { return Promise.reject(err); })
                         .then((values)=>{
 
