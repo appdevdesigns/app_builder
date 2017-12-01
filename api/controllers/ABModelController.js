@@ -29,12 +29,12 @@ function updateRelationValues(query, id, updateRelationParams) {
 
         for (var colName in updateRelationParams) {
 
-            var relationName = AppBuilder.rules.toFieldRelationFormat(colName);
-
             // clear relation values of relation
             updateTasks.push(query.where('id', id).first()
                 .then(record => {
 
+                    var relationName = AppBuilder.rules.toFieldRelationFormat(colName);
+                    
                     if (record == null) return record;
 
                     record = record.$relatedQuery(relationName).unrelate();
@@ -50,6 +50,9 @@ function updateRelationValues(query, id, updateRelationParams) {
             // We could not insert many relation values at same time
             // NOTE : Error: batch insert only works with Postgresql
             updateRelationParams[colName].forEach(val => {
+
+                var relationName = AppBuilder.rules.toFieldRelationFormat(colName);
+
                 // insert relation values of relation
                 updateTasks.push(query.where('id', id).first()
                     .then(record => {
