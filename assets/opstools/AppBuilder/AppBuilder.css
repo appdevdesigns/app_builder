@@ -364,7 +364,7 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 	background: none !important;
 	padding: 0px !important;
 	overflow: hidden !important;
-	max-height: 100% !important;
+	max-height: unset;
 }
 .selectivity-multiple-input, input[type=text].selectivity-multiple-input, .selectivity-multiple-input-container {
 	/*height: 35px !important;*/
