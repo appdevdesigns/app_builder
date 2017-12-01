@@ -176,6 +176,7 @@ export default class ABViewMenu extends ABViewWidget {
 				]
 			},
 			{
+				name: "pagesFieldset",
 				view: "fieldset",
 				label: L('ab.component.menu.pageList', '*Page List:'),
 				labelWidth: App.config.labelWidthLarge,
@@ -260,6 +261,9 @@ export default class ABViewMenu extends ABViewWidget {
 
 			});
 		}
+		
+		$$(ids.pagesFieldset).config.height = ($$(ids.pages).count()*28)+18; // Number of pages plus 9px of padding top and bottom
+		$$(ids.pagesFieldset).resize();
 	}
 
 	static propertyEditorValues(ids, view) {
