@@ -1,0 +1,305 @@
+
+
+export default class ABViewFormPropertySubmitRule extends OP.Component {
+
+	/**
+	 * @param {object} App 
+	 *      ?what is this?
+	 * @param {string} idBase
+	 *      Identifier for this component
+	 */
+	constructor(App, idBase) {
+		super(App, idBase);
+		var L = this.Label;
+
+		var labels = {
+			common: App.labels,
+			component: {
+				header: L("ab.component.form.submitRule", "*Submit Rules"),
+				addNewRule: L("ab.component.form.addNewRule", "*Add new rule"),
+
+				action: L("ab.component.form.action", "*Action"),
+				actionOption1: L("ab.component.form.action.message", "*Show a confirmation message"),
+				actionOption2: L("ab.component.form.action.parentPage", "*Redirect to the parent page"),
+				actionOption3: L("ab.component.form.action.existsPage", "*Redirect to an existing page"),
+				actionOption4: L("ab.component.form.action.website", "*Redirect to another website URL"),
+				actionOption5: L("ab.component.form.action.newPage", "*Redirect to a new child page"),
+
+				when: L("ab.component.form.when", "*When"),
+				message: L("ab.component.form.message", "*Message"),
+				page: L("ab.component.form.page", "*Page"),
+				redirect: L("ab.component.form.redirect", "*Redirect"),
+			}
+		};
+
+		// internal list of Webix IDs to reference our UI components.
+		var ids = {
+			component: this.unique('component'),
+			rules: this.unique('rules'),
+
+			actionValue: this.unique('actionValue')
+		};
+
+		// webix UI definition:
+		this.ui = {
+			view: "window",
+			id: ids.component,
+			modal: true,
+			position: "center",
+			resize: true,
+			width: 700,
+			height: 450,
+			css: 'ab-main-container',
+			head: {
+				view: "toolbar",
+				cols: [
+					{ view: "label", label: labels.component.header }
+				]
+			},
+			body: {
+				rows: [
+					{
+						view: "scrollview",
+						scroll: true,
+						body: {
+							view: "layout",
+							id: ids.rules,
+							margin: 10,
+							rows: []
+						}
+					},
+					{
+						css: { 'background-color': '#fff' },
+						cols: [
+							{
+								view: "button",
+								icon: "plus",
+								type: "iconButton",
+								label: labels.component.addNewRule,
+								width: 150,
+								click: function () {
+									_logic.addRule();
+								}
+							},
+							{ fillspace: true }
+						]
+					},
+					{
+						css: { 'background-color': '#fff' },
+						cols: [
+							{ fillspace: true },
+							{
+								view: "button",
+								name: "cancel",
+								value: labels.common.cancel,
+								css: "ab-cancel-button",
+								autowidth: true,
+								click: function () {
+									_logic.buttonCancel();
+								}
+							},
+							{
+								view: "button",
+								name: "save",
+								label: labels.common.save,
+								type: "form",
+								autowidth: true,
+								click: function () {
+									_logic.buttonSave();
+								}
+							}
+						]
+					}
+				]
+			}
+		};
+
+		var _currentObject = null;
+
+		// for setting up UI
+		this.init = (options) => {
+			// register callbacks:
+			for (var c in _logic.callbacks) {
+				_logic.callbacks[c] = options[c] || _logic.callbacks[c];
+			}
+
+			webix.ui(this.ui);
+
+		};
+
+
+
+		// internal business logic 
+		var _logic = this._logic = {
+
+			buttonCancel: function () {
+				_logic.hide();
+			},
+
+			buttonSave: function () {
+			},
+
+			callbacks: {
+				onCancel: function () { console.warn('NO onCancel()!') },
+				onSave: function (field) { console.warn('NO onSave()!') },
+			},
+
+			/**
+			 * @method getRuleUI
+			 * get UI of rule view
+			 * 
+			 * @param options - {
+			 *		removable: boolean
+			 * }
+			 * 	
+			 */
+			getRuleUI: (options) => {
+
+				options = options || {};
+
+				return {
+					view: "layout",
+					css: "ab-component-form-rule",
+					isolate: true,
+					rows: [
+						{
+							view: "template",
+							css: "ab-component-form-rule",
+							template: '<i class="fa fa-trash ab-component-remove"></i>',
+							height: 30,
+							hidden: options.removable == false,
+							onClick: {
+								"ab-component-remove": function (e, id, trg) {
+
+									var viewRule = this.getParentView();
+									_logic.removeRule(viewRule);
+
+								}
+							}
+						},
+						// Action
+						{
+							view: "richselect",
+							label: labels.component.action,
+							labelWidth: App.config.labelWidthLarge,
+							value: "message",
+							options: [
+								{ id: "message", value: labels.component.actionOption1 },
+								{ id: "parentPage", value: labels.component.actionOption2 },
+								{ id: "existsPage", value: labels.component.actionOption3 },
+								{ id: "website", value: labels.component.actionOption4 },
+								// { id: "newPage", value: labels.component.actionOption5 }
+							],
+							on: {
+								onChange: function (newVal, oldVal) {
+									_logic.selectAction(newVal, this);
+								}
+							}
+						},
+						// When
+						{
+							cols: [
+								{
+									view: 'label',
+									css: 'ab-text-bold',
+									label: labels.component.when,
+									width: App.config.labelWidthLarge
+								},
+								{
+									view: 'richselect'
+								},
+								{
+									view: 'richselect'
+								},
+								{
+									view: 'richselect'
+								}
+							]
+						},
+						// Action Options
+						{
+							id: ids.actionValue,
+							cells: [
+								// Show a confirmation message
+								{
+									view: 'textarea',
+									batch: "message",
+									label: labels.component.message,
+									labelWidth: App.config.labelWidthLarge,
+									height: 130
+								},
+								// Redirect to the parent page
+								{
+									batch: "parentPage",
+									rows: []
+								},
+								// Redirect to an existing page
+								{
+									view: 'richselect',
+									batch: "existsPage",
+									label: labels.component.page,
+									labelWidth: App.config.labelWidthLarge,
+									options: []
+								},
+								// Redirect to another website URL
+								{
+									view: 'text',
+									batch: "website",
+									label: labels.component.redirect,
+									labelWidth: App.config.labelWidthLarge
+								},
+								// Redirect to a new child page
+								{
+									batch: "newPage"
+								}
+							]
+						}
+					]
+				}
+
+			},
+
+			addRule: () => {
+
+				var ruleUI = _logic.getRuleUI();
+
+				$$(ids.rules).addView(ruleUI);
+			},
+
+			removeRule: (viewRule) => {
+				$$(ids.rules).removeView(viewRule);
+			},
+
+			selectAction: (action, $view) => {
+				var viewRule = $view.getParentView();
+
+				// Swtich the view of action option
+				viewRule.$$(ids.actionValue).showBatch(action);
+			},
+
+			hide: function () {
+				$$(ids.component).hide();
+			},
+
+			show: function () {
+				$$(ids.component).show();
+			},
+
+			objectLoad: function (object) {
+				_currentObject = object;
+			}
+
+		};
+
+
+
+		// Expose any globally accessible Actions:
+		this.actions({
+		});
+
+		this.objectLoad = _logic.objectLoad;
+		this.show = _logic.show;
+
+	}
+
+}

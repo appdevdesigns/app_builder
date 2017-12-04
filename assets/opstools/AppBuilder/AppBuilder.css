@@ -787,6 +787,9 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 	min-width: 70%;
 	border-radius: 6px;
 }
+.ab-component-form-rule {
+	background-color: #dcdcdc;
+}
 
 .ab-main-container .webix_layout_form {
 	background-color: #fff !important;

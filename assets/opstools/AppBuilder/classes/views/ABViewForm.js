@@ -13,6 +13,10 @@ import ABViewFormField from "./ABViewFormField"
 import ABViewManager from "../ABViewManager"
 import ABPropertyComponent from "../ABPropertyComponent"
 
+import ABDisplayRule from "./ABViewFormPropertyDisplayRule"
+import ABRecordRule from "./ABViewFormPropertyRecordRule"
+import ABSubmitRule from "./ABViewFormPropertySubmitRule"
+
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
@@ -31,6 +35,10 @@ var ABViewFormPropertyComponentDefaults = {
 	labelWidth: 120,
 	height: 200
 }
+
+var PopupDisplayRule = null;
+var PopupRecordRule = null;
+var PopupSubmitRule = null;
 
 export default class ABViewForm extends ABViewContainer {
 
@@ -110,6 +118,27 @@ export default class ABViewForm extends ABViewContainer {
 	static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
 
 		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
+
+		var idBase = "ABViewForm";
+
+		PopupDisplayRule = new ABDisplayRule(App, idBase + "_displayrule");
+		PopupRecordRule = new ABRecordRule(App, idBase + "_recordrule");
+		PopupSubmitRule = new ABSubmitRule(App, idBase + "_submitrule");
+
+		PopupDisplayRule.init({
+			// onCancel: _logic.
+			// onSave: _logic.
+		});
+
+		PopupRecordRule.init({
+			// onCancel: _logic.
+			// onSave: _logic.
+		});
+
+		PopupSubmitRule.init({
+			// onCancel: _logic.
+			// onSave: _logic.
+		});
 
 
 		// _logic functions
@@ -192,6 +221,31 @@ export default class ABViewForm extends ABViewContainer {
 
 		};
 
+		_logic.submitRules = () => {
+
+			var currView = _logic.currentEditObject();
+
+			PopupSubmitRule.show();
+
+
+		};
+
+		_logic.displayRules = () => {
+
+			var currView = _logic.currentEditObject();
+
+			PopupDisplayRule.show();
+
+		};
+
+		_logic.recordRules = () => {
+
+			var currView = _logic.currentEditObject();
+
+			PopupRecordRule.show();
+
+		};
+
 		return commonUI.concat([
 			{
 				name: 'datacollection',
@@ -250,6 +304,73 @@ export default class ABViewForm extends ABViewContainer {
 				name: "height",
 				label: L("ab.component.form.height", "*Height:"),
 				labelWidth: App.config.labelWidthLarge,
+			},
+			{
+				view: "fieldset",
+				label: L('ab.component.form.rules', '*Rules:'),
+				labelWidth: App.config.labelWidthLarge,
+				body: {
+					rows: [
+						{
+							cols: [
+								{
+									view: "label",
+									label: L("ab.component.form.submitRules", "*Submit Rules:"),
+									width: App.config.labelWidthLarge,
+								},
+								{
+									view: "button",
+									label: L("ab.component.form.settings", "*Settings"),
+									icon: "gear",
+									type: "icon",
+									badge: 0,
+									click: function () {
+										_logic.submitRules();
+									}
+								}
+							]
+						},
+						{
+							cols: [
+								{
+									view: "label",
+									label: L("ab.component.form.displayRules", "*Display Rules:"),
+									width: App.config.labelWidthLarge,
+								},
+								{
+									view: "button",
+									label: L("ab.component.form.settings", "*Settings"),
+									icon: "gear",
+									type: "icon",
+									badge: 0,
+									click: function () {
+										_logic.displayRules();
+									}
+								}
+							]
+						},
+						{
+							cols: [
+								{
+									view: "label",
+									label: L("ab.component.form.recordRules", "*Record Rules:"),
+									width: App.config.labelWidthLarge,
+								},
+								{
+									view: "button",
+									label: L("ab.component.form.settings", "*Settings"),
+									icon: "gear",
+									type: "icon",
+									badge: 0,
+									click: function () {
+										_logic.recordRules();
+									}
+								}
+							]
+						}
+
+					]
+				}
 			}
 		]);
 
@@ -290,6 +411,12 @@ export default class ABViewForm extends ABViewContainer {
 		$$(ids.labelPosition).setValue(view.settings.labelPosition || ABViewFormPropertyComponentDefaults.labelPosition);
 		$$(ids.labelWidth).setValue(view.settings.labelWidth || ABViewFormPropertyComponentDefaults.labelWidth);
 		$$(ids.height).setValue(view.settings.height || ABViewFormPropertyComponentDefaults.height);
+
+		// Populate values to rules
+		var selectedDc = view.dataCollection() || {};
+		PopupDisplayRule.objectLoad(selectedDc.datasource);
+		PopupRecordRule.objectLoad(selectedDc.datasource);
+		PopupSubmitRule.objectLoad(selectedDc.datasource);
 	}
 
 	static propertyEditorValues(ids, view) {
