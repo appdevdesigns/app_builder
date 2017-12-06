@@ -29,7 +29,7 @@ var ABFieldConnectDefaults = {
 	isFilterable: false,
 	useAsLabel: false,
 
-	// supportImport: flag to support import exists object
+	// supportImport: flag to support import object across applications
 	supportImport: false
 
 };

@@ -97,6 +97,10 @@ export default class ABViewFormPropertyRecordRule extends OP.Component {
 
 			objectLoad: function (object) {
 				_currentObject = object;
+			},
+
+			setValue: function (settings) {
+
 			}
 
 		};
@@ -108,6 +112,7 @@ export default class ABViewFormPropertyRecordRule extends OP.Component {
 		});
 
 		this.objectLoad = _logic.objectLoad;
+		this.setValue = _logic.setValue;
 		this.show = _logic.show;
 
 	}

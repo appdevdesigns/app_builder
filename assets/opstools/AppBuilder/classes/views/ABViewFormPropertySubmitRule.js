@@ -1,3 +1,4 @@
+import RowFilter from '../RowFilter'
 
 
 export default class ABViewFormPropertySubmitRule extends OP.Component {
@@ -37,6 +38,8 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 			component: this.unique('component'),
 			rules: this.unique('rules'),
 
+			action: this.unique('action'),
+			when: this.unique('when'),
 			actionValue: this.unique('actionValue')
 		};
 
@@ -118,6 +121,7 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 
 		// for setting up UI
 		this.init = (options) => {
+
 			// register callbacks:
 			for (var c in _logic.callbacks) {
 				_logic.callbacks[c] = options[c] || _logic.callbacks[c];
@@ -133,15 +137,39 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 		var _logic = this._logic = {
 
 			buttonCancel: function () {
+
+				_logic.callbacks.onCancel();
 				_logic.hide();
+
 			},
 
 			buttonSave: function () {
+
+				var results = [];
+
+				var $viewRules = $$(ids.rules).getChildViews();
+				$viewRules.forEach(r => {
+
+					var $whenContainer = r.$$(ids.when);
+
+					var valueViewId = r.$$(ids.actionValue).getActiveId();
+					var value = r.$$(ids.actionValue).queryView({ id: valueViewId }).getValue();
+
+					results.push({
+						action: r.$$(ids.action).getValue(),
+						when: r.config.when.getValue($whenContainer),
+						value: value,
+					})
+
+				});
+
+				_logic.callbacks.onSave(results);
+				_logic.hide();
 			},
 
 			callbacks: {
 				onCancel: function () { console.warn('NO onCancel()!') },
-				onSave: function (field) { console.warn('NO onSave()!') },
+				onSave: function (rules) { console.warn('NO onSave()!') },
 			},
 
 			/**
@@ -157,9 +185,18 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 
 				options = options || {};
 
+				// Create "When" UI - Set fields
+				var when = new RowFilter(App, idBase);
+				if (_currentObject)
+					when.fieldsLoad(_currentObject.fields());
+
+				var when_ui = when.ui;
+				when_ui.id = ids.when;
+
 				return {
 					view: "layout",
 					css: "ab-component-form-rule",
+					when: when, // Store a instance of when
 					isolate: true,
 					rows: [
 						{
@@ -180,6 +217,7 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 						// Action
 						{
 							view: "richselect",
+							id: ids.action,
 							label: labels.component.action,
 							labelWidth: App.config.labelWidthLarge,
 							value: "message",
@@ -192,7 +230,7 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 							],
 							on: {
 								onChange: function (newVal, oldVal) {
-									_logic.selectAction(newVal, this);
+									_logic.selectAction(newVal, this.getParentView());
 								}
 							}
 						},
@@ -205,15 +243,7 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 									label: labels.component.when,
 									width: App.config.labelWidthLarge
 								},
-								{
-									view: 'richselect'
-								},
-								{
-									view: 'richselect'
-								},
-								{
-									view: 'richselect'
-								}
+								when_ui
 							]
 						},
 						// Action Options
@@ -263,18 +293,17 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 
 				var ruleUI = _logic.getRuleUI();
 
-				$$(ids.rules).addView(ruleUI);
+				return $$(ids.rules).addView(ruleUI);
 			},
 
 			removeRule: (viewRule) => {
 				$$(ids.rules).removeView(viewRule);
 			},
 
-			selectAction: (action, $view) => {
-				var viewRule = $view.getParentView();
+			selectAction: (action, $viewRule) => {
 
 				// Swtich the view of action option
-				viewRule.$$(ids.actionValue).showBatch(action);
+				$viewRule.$$(ids.actionValue).showBatch(action);
 			},
 
 			hide: function () {
@@ -287,6 +316,27 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 
 			objectLoad: function (object) {
 				_currentObject = object;
+			},
+
+			setValue: function(rules) {
+
+				rules = rules || [];
+				rules.forEach(r => {
+
+					// Select 'action'
+					var $viewRule = $$(_logic.addRule());
+					_logic.selectAction(r.action, $viewRule);
+
+					// Set 'when'
+					var $viewWhen = $viewRule.$$(ids.when);
+					$viewRule.config.when.setValue(r.when, $viewWhen);
+
+					// Define 'value'
+					var valueViewId = $viewRule.$$(ids.actionValue).getActiveId();
+					$viewRule.$$(ids.actionValue).queryView({ id: valueViewId }).setValue(r.value);
+
+				});
+
 			}
 
 		};
@@ -298,6 +348,7 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 		});
 
 		this.objectLoad = _logic.objectLoad;
+		this.setValue = _logic.setValue;
 		this.show = _logic.show;
 
 	}

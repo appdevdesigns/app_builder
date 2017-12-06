@@ -33,7 +33,10 @@ var ABViewFormPropertyComponentDefaults = {
 	showLabel: true,
 	labelPosition: 'left',
 	labelWidth: 120,
-	height: 200
+	height: 200,
+	displayRule: {},
+	recordRule: {},
+	submitRule: {}
 }
 
 var PopupDisplayRule = null;
@@ -125,21 +128,6 @@ export default class ABViewForm extends ABViewContainer {
 		PopupRecordRule = new ABRecordRule(App, idBase + "_recordrule");
 		PopupSubmitRule = new ABSubmitRule(App, idBase + "_submitrule");
 
-		PopupDisplayRule.init({
-			// onCancel: _logic.
-			// onSave: _logic.
-		});
-
-		PopupRecordRule.init({
-			// onCancel: _logic.
-			// onSave: _logic.
-		});
-
-		PopupSubmitRule.init({
-			// onCancel: _logic.
-			// onSave: _logic.
-		});
-
 
 		// _logic functions
 
@@ -221,16 +209,24 @@ export default class ABViewForm extends ABViewContainer {
 
 		};
 
-		_logic.submitRules = () => {
+		_logic.submitRuleShow = () => {
 
 			var currView = _logic.currentEditObject();
-
 			PopupSubmitRule.show();
-
 
 		};
 
-		_logic.displayRules = () => {
+		_logic.submitRuleSave = (settings) => {
+
+			var currView = _logic.currentEditObject();
+			currView.settings.submitRule = settings;
+
+			// trigger a save()
+			this.propertyEditorSave(ids, currView);
+
+		};
+
+		_logic.displayRuleShow = () => {
 
 			var currView = _logic.currentEditObject();
 
@@ -238,13 +234,33 @@ export default class ABViewForm extends ABViewContainer {
 
 		};
 
-		_logic.recordRules = () => {
+		_logic.recordRuleShow = () => {
 
 			var currView = _logic.currentEditObject();
 
 			PopupRecordRule.show();
 
 		};
+
+
+
+		/** Initial rule popups */
+		PopupDisplayRule.init({
+			// onCancel: _logic.
+			// onSave: _logic.
+		});
+
+		PopupRecordRule.init({
+			// onCancel: _logic.
+			// onSave: _logic.
+		});
+
+		PopupSubmitRule.init({
+			// onCancel: _logic.submitRuleCancel,
+			onSave: _logic.submitRuleSave
+		});
+
+
 
 		return commonUI.concat([
 			{
@@ -325,7 +341,7 @@ export default class ABViewForm extends ABViewContainer {
 									type: "icon",
 									badge: 0,
 									click: function () {
-										_logic.submitRules();
+										_logic.submitRuleShow();
 									}
 								}
 							]
@@ -344,7 +360,7 @@ export default class ABViewForm extends ABViewContainer {
 									type: "icon",
 									badge: 0,
 									click: function () {
-										_logic.displayRules();
+										_logic.displayRuleShow();
 									}
 								}
 							]
@@ -363,7 +379,7 @@ export default class ABViewForm extends ABViewContainer {
 									type: "icon",
 									badge: 0,
 									click: function () {
-										_logic.recordRules();
+										_logic.recordRuleShow();
 									}
 								}
 							]
@@ -417,6 +433,10 @@ export default class ABViewForm extends ABViewContainer {
 		PopupDisplayRule.objectLoad(selectedDc.datasource);
 		PopupRecordRule.objectLoad(selectedDc.datasource);
 		PopupSubmitRule.objectLoad(selectedDc.datasource);
+
+		PopupDisplayRule.setValue(view.settings.displayRule);
+		PopupRecordRule.setValue(view.settings.recordRule);
+		PopupSubmitRule.setValue(view.settings.submitRule);
 	}
 
 	static propertyEditorValues(ids, view) {

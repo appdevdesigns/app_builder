@@ -138,9 +138,9 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
                     // alert("saving here");
                     _logic.callbacks.onChange(objectWorkspace);
                 } else {
-                    _logic.callbacks.onChange();                    
+                    _logic.callbacks.onChange();
                 }
-            },            
+            },
 
             clickAddNewFilter: function (filters) {
                 var filter_popup = $$(ids.component),
