@@ -118,6 +118,7 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 		};
 
 		var _currentObject = null;
+		var _rules = [];
 
 		// for setting up UI
 		this.init = (options) => {
@@ -318,14 +319,14 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 				_currentObject = object;
 			},
 
-			setValue: function(rules) {
+			setValue: function (rules) {
 
-				rules = rules || [];
-				rules.forEach(r => {
+				_rules = rules || [];
+				_rules.forEach(r => {
 
 					// Select 'action'
 					var $viewRule = $$(_logic.addRule());
-					_logic.selectAction(r.action, $viewRule);
+					$viewRule.$$(ids.action).setValue(r.action);
 
 					// Set 'when'
 					var $viewWhen = $viewRule.$$(ids.when);
@@ -347,9 +348,9 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 		this.actions({
 		});
 
+		this.show = _logic.show;
 		this.objectLoad = _logic.objectLoad;
 		this.setValue = _logic.setValue;
-		this.show = _logic.show;
 
 	}
 

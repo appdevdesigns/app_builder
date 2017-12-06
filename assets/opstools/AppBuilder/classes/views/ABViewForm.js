@@ -17,6 +17,8 @@ import ABDisplayRule from "./ABViewFormPropertyDisplayRule"
 import ABRecordRule from "./ABViewFormPropertyRecordRule"
 import ABSubmitRule from "./ABViewFormPropertySubmitRule"
 
+import RowFilter from '../RowFilter'
+
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
@@ -34,9 +36,21 @@ var ABViewFormPropertyComponentDefaults = {
 	labelPosition: 'left',
 	labelWidth: 120,
 	height: 200,
-	displayRule: {},
-	recordRule: {},
-	submitRule: {}
+	displayRules: [],
+	recordRules: [],
+
+	//	[{
+	//		action: {string},
+	//		when: [
+	//			{
+	//				fieldId: {UUID},
+	//				comparer: {string},
+	//				value: {string}
+	//			}
+	//		],
+	//		value: {string}
+	//	}]
+	submitRules: []
 }
 
 var PopupDisplayRule = null;
@@ -219,7 +233,7 @@ export default class ABViewForm extends ABViewContainer {
 		_logic.submitRuleSave = (settings) => {
 
 			var currView = _logic.currentEditObject();
-			currView.settings.submitRule = settings;
+			currView.settings.submitRules = settings;
 
 			// trigger a save()
 			this.propertyEditorSave(ids, currView);
@@ -434,9 +448,9 @@ export default class ABViewForm extends ABViewContainer {
 		PopupRecordRule.objectLoad(selectedDc.datasource);
 		PopupSubmitRule.objectLoad(selectedDc.datasource);
 
-		PopupDisplayRule.setValue(view.settings.displayRule);
-		PopupRecordRule.setValue(view.settings.recordRule);
-		PopupSubmitRule.setValue(view.settings.submitRule);
+		PopupDisplayRule.setValue(view.settings.displayRules);
+		PopupRecordRule.setValue(view.settings.recordRules);
+		PopupSubmitRule.setValue(view.settings.submitRules);
 	}
 
 	static propertyEditorValues(ids, view) {
@@ -922,6 +936,9 @@ export default class ABViewForm extends ABViewContainer {
 									reject(err);
 								})
 								.then(() => {
+
+									this.doSubmitRules(formVals);
+
 									formReady();
 									resolve();
 								});
@@ -934,6 +951,9 @@ export default class ABViewForm extends ABViewContainer {
 									reject(err);
 								})
 								.then(() => {
+
+									this.doSubmitRules(formVals);
+
 									formReady();
 									resolve();
 								});
@@ -954,6 +974,39 @@ export default class ABViewForm extends ABViewContainer {
 
 			return Promise.resolve();
 		}
+	}
+
+
+	doSubmitRules(rowData) {
+
+		var submitRules = this.settings.submitRules || [];
+		submitRules.forEach(r => {
+
+			var object = this.dataCollection().datasource;
+			var filterer = new RowFilter();
+			filterer.fieldsLoad(object.fields());
+			filterer.setValue(r.when);
+			var isMatch = filterer.isValid(rowData);
+
+			if (isMatch) {
+				switch (r.action) {
+					case "message":
+						// r.value
+						break;
+					case "parentPage":
+						break;
+					case "existsPage":
+						// r.value
+						break;
+					case "website":
+						// r.value
+						break;
+				}
+			}
+
+
+		});
+
 	}
 
 

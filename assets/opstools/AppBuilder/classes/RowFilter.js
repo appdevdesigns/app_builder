@@ -8,7 +8,7 @@ export default class RowFilter extends OP.Component {
 		var L = this.Label;
 
 		var labels = {
-			common: App.labels,
+			common: (App || {}).labels,
 			component: {
 				and: L('ab.filter_fields.and', "*And"),
 				or: L('ab.filter_fields.or', "*Or"),
@@ -433,8 +433,10 @@ export default class RowFilter extends OP.Component {
 				if (!field) return;
 
 				// switch view
-				$viewCond.$$(ids.comparer).showBatch(field.key);
-				$viewCond.$$(ids.conditionValue).showBatch(field.key);
+				var batchName = field.key;
+				if (batchName == 'LongText') batchName = 'string';
+				$viewCond.$$(ids.comparer).showBatch(batchName);
+				$viewCond.$$(ids.conditionValue).showBatch(batchName);
 
 				// populate options of list
 				if (field.key == 'list') {
@@ -510,7 +512,11 @@ export default class RowFilter extends OP.Component {
 
 
 
-			setValue: function(settings, $container) {
+			setValue: function (settings, $container) {
+
+				config_settings = settings;
+
+				if (!$container) return;
 
 				var $viewForm = $container.$$(ids.filterForm);
 
@@ -531,6 +537,198 @@ export default class RowFilter extends OP.Component {
 
 				});
 
+			},
+
+
+			/**
+			 * @method isValid
+			 * validate the row data is valid filter condition
+			 * 
+			 * @param rowData {Object} - data row
+			 */
+			isValid: function (rowData) {
+
+				var result = false;
+
+				config_settings.filters.forEach(filter => {
+
+					var fieldInfo = fields.filter(f => f.id == filter.fieldId)[0];
+					if (!fieldInfo) return;
+
+					var value = rowData[fieldInfo.columnName];
+
+					switch (fieldInfo.key) {
+						case "string":
+						case "LongText":
+							result = _logic.textValid(value, filter.comparer, filter.value);
+							break;
+						case "date":
+						case "datetime":
+							result = _logic.dateValid(value, filter.comparer, filter.value);
+							break;
+						case "number":
+							result = _logic.numberValid(value, filter.comparer, filter.value);
+							break;
+						case "list":
+							result = _logic.listValid(value, filter.comparer, filter.value);
+							break;
+						case "boolean":
+							result = _logic.booleanValid(value, filter.comparer, filter.value);
+							break;
+						case "user":
+							result = _logic.userValid(value, filter.comparer, filter.value);
+							break;
+					}
+				});
+
+				return result;
+
+			},
+
+			textValid: function (value, comparer, compareValue) {
+
+				var result = false;
+
+				value = value.trim().toLowerCase();
+				compareValue = compareValue.trim().toLowerCase();
+
+				switch (comparer) {
+					case "contains":
+						result = value.indexOf(compareValue) > -1;
+						break;
+					case "doesn't contain":
+						result = value.indexOf(compareValue) < 0;
+						break;
+					case "is":
+						result = value == compareValue;
+						break;
+					case "is not":
+						result = value != compareValue;
+						break;
+				}
+
+				return result;
+
+			},
+
+			dateValid: function (value, comparer, compareValue) {
+
+				var result = false;
+
+				if (!(value instanceof Date))
+					value = new Date(value);
+
+				if (!(compareValue instanceof Date))
+					compareValue = new Date(compareValue);
+
+				switch (comparer) {
+					case "is before":
+						result = value < compareValue;
+						break;
+					case "is after":
+						result = value > compareValue;
+						break;
+					case "is on or before":
+						result = value <= compareValue;
+						break;
+					case "is on or after":
+						result = value >= compareValue;
+						break;
+				}
+
+				return result;
+
+			},
+
+			numberValid: function (value, comparer, compareValue) {
+
+				var result = false;
+
+				value = Number(value);
+				compareValue = Number(compareValue);
+
+				switch (comparer) {
+					case labels.filter_fields.equalCondition:
+						result = value == compareValue;
+						break;
+					case labels.filter_fields.notEqualCondition:
+						result = value != compareValue;
+						break;
+					case labels.filter_fields.lessThanCondition:
+						result = value < compareValue;
+						break;
+					case labels.filter_fields.moreThanCondition:
+						result = value > compareValue;
+						break;
+					case labels.filter_fields.lessThanOrEqualCondition:
+						result = value <= compareValue;
+						break;
+					case labels.filter_fields.moreThanOrEqualCondition:
+						result = value >= compareValue;
+						break;
+				}
+
+				return result;
+
+			},
+
+			listValid: function (value, comparer, compareValue) {
+
+				var result = false;
+
+				compareValue = compareValue.toLowerCase();
+
+				switch (comparer) {
+					case "equals":
+						if (value)
+							result = compareValue.indexOf(value) > -1;
+						break;
+					case "does not equal":
+						if (value)
+							result = compareValue.indexOf(value) < 0;
+						else
+							result = true;
+						break;
+				}
+
+				return result;
+
+			},
+
+			booleanValid: function (value, comparer, compareValue) {
+
+				var result = false;
+
+				switch (comparer) {
+					case "is checked":
+						result = (value === true || value === 1);
+						break;
+					case "is not checked":
+						result = !value;
+						break;
+				}
+
+				return result;
+
+			},
+
+			userValid: function (value, comparer, compareValue) {
+
+				var result = false;
+
+				if (Array.isArray(value))
+					value = [value];
+
+				switch (comparer) {
+					case "equals":
+						result = value.indexOf(compareValue) > -1;
+						break;
+					case "does not equal":
+						result = value.indexOf(compareValue) < 0;
+						break;
+				}
+
+				return result;
 			}
 
 		};
@@ -540,6 +738,7 @@ export default class RowFilter extends OP.Component {
 		this.fieldsLoad = _logic.fieldsLoad;
 		this.getValue = _logic.getValue;
 		this.setValue = _logic.setValue;
+		this.isValid = _logic.isValid;
 
 	}
 
