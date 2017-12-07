@@ -181,6 +181,9 @@ export default class ABViewForm extends ABViewContainer {
 
 			}
 
+			// Update field options in property
+			this.propertyUpdateRules(ids, currView, dcId);
+
 		};
 
 		_logic.listTemplate = (field, common) => {
@@ -442,17 +445,12 @@ export default class ABViewForm extends ABViewContainer {
 		$$(ids.labelWidth).setValue(view.settings.labelWidth || ABViewFormPropertyComponentDefaults.labelWidth);
 		$$(ids.height).setValue(view.settings.height || ABViewFormPropertyComponentDefaults.height);
 
-		// Populate values to rules
-		var selectedDc = view.dataCollection();
-		if (selectedDc) {
-			PopupDisplayRule.objectLoad(selectedDc.datasource);
-			PopupRecordRule.objectLoad(selectedDc.datasource);
-			PopupSubmitRule.objectLoad(selectedDc.datasource);
-		}
+		this.propertyUpdateRules(ids, view, dataCollectionId);
 
 		PopupDisplayRule.setValue(view.settings.displayRules);
 		PopupRecordRule.setValue(view.settings.recordRules);
 		PopupSubmitRule.setValue(view.settings.submitRules);
+
 	}
 
 	static propertyEditorValues(ids, view) {
@@ -498,6 +496,18 @@ export default class ABViewForm extends ABViewContainer {
 
 		$$(ids.fields).clearAll();
 		$$(ids.fields).parse(fieldOptions);
+
+	}
+
+	static propertyUpdateRules(ids, view, dcId) {
+
+		// Populate values to rules
+		var selectedDc = view.dataCollection();
+		if (selectedDc) {
+			PopupDisplayRule.objectLoad(selectedDc.datasource);
+			PopupRecordRule.objectLoad(selectedDc.datasource);
+			PopupSubmitRule.objectLoad(selectedDc.datasource);
+		}
 
 	}
 

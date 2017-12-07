@@ -421,7 +421,7 @@ export default class RowFilter extends OP.Component {
 				if (field.key == 'list') {
 					var options = field.settings.options.map(function (x) {
 						return {
-							id: x.text,
+							id: x.id,
 							value: x.text
 						}
 					});
@@ -473,13 +473,13 @@ export default class RowFilter extends OP.Component {
 					var comparer = null;
 					var comparerViewId = $viewCond.$$(ids.comparer).getActiveId();
 					var $viewComparer = $viewCond.$$(ids.comparer).queryView({ id: comparerViewId });
-					if ($viewComparer)
+					if ($viewComparer && $viewComparer.getValue)
 						comparer = $viewComparer.getValue();
 
 					var value = null;
 					var valueViewId = $viewCond.$$(ids.conditionValue).getActiveId();
 					var $viewConditionValue = $viewCond.$$(ids.conditionValue).queryView({ id: valueViewId });
-					if ($viewConditionValue)
+					if ($viewConditionValue && $viewConditionValue.getValue)
 						value = $viewConditionValue.getValue();
 
 
@@ -522,12 +522,12 @@ export default class RowFilter extends OP.Component {
 
 					var comparerViewId = $viewCond.$$(ids.comparer).getActiveId();
 					var $viewComparer = $viewCond.$$(ids.comparer).queryView({ id: comparerViewId });
-					if ($viewComparer)
+					if ($viewComparer && $viewComparer.setValue)
 						$viewComparer.setValue(f.comparer);
 
 					var valueViewId = $viewCond.$$(ids.conditionValue).getActiveId();
 					var $viewConditionValue = $viewCond.$$(ids.conditionValue).queryView({ id: valueViewId });
-					if ($viewConditionValue)
+					if ($viewConditionValue && $viewConditionValue.setValue)
 						$viewConditionValue.setValue(f.value);
 
 				});
@@ -673,6 +673,9 @@ export default class RowFilter extends OP.Component {
 
 				compareValue = compareValue.toLowerCase();
 
+				if (Array.isArray(compareValue))
+					compareValue = [compareValue];
+
 				switch (comparer) {
 					case "equals":
 						if (value)
@@ -737,9 +740,7 @@ export default class RowFilter extends OP.Component {
 					view: "form",
 					id: ids.filterForm,
 					isolate: true,
-					elements: [
-						_logic.getFilterUI()
-					]
+					elements: []
 				},
 				{
 					view: "button",
@@ -758,6 +759,7 @@ export default class RowFilter extends OP.Component {
 
 		// Interface methods for parent component:
 		this.fieldsLoad = _logic.fieldsLoad;
+		this.addNewFilter = _logic.addNewFilter;
 		this.getValue = _logic.getValue;
 		this.setValue = _logic.setValue;
 		this.isValid = _logic.isValid;

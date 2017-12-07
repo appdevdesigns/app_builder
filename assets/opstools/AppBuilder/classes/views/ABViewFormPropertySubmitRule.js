@@ -295,7 +295,14 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 
 				var ruleUI = _logic.getRuleUI();
 
-				return $$(ids.rules).addView(ruleUI);
+				var viewId = $$(ids.rules).addView(ruleUI);
+
+				var $whenContainer = $$(viewId).$$(ids.when);
+
+				// Add a filter to default
+				ruleUI.when.addNewFilter($whenContainer);
+
+				return viewId;
 			},
 
 			removeRule: (viewRule) => {
@@ -357,7 +364,7 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 					// Define 'value'
 					var valueViewId = $viewRule.$$(ids.actionValue).getActiveId();
 					var $viewActionValue = $viewRule.$$(ids.actionValue).queryView({ id: valueViewId });
-					if ($viewActionValue)
+					if ($viewActionValue && $viewActionValue.setValue)
 						$viewActionValue.setValue(r.value);
 
 				});
