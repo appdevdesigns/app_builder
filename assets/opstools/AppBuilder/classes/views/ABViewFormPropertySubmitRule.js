@@ -319,7 +319,7 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 			objectLoad: function (object) {
 				_currentObject = object;
 
-				if(!_currentObject) return;
+				if (!_currentObject) return;
 
 				// Pull page list to "Redirect to an existing page"
 				_pageOptions = [];
@@ -356,7 +356,9 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 
 					// Define 'value'
 					var valueViewId = $viewRule.$$(ids.actionValue).getActiveId();
-					$viewRule.$$(ids.actionValue).queryView({ id: valueViewId }).setValue(r.value);
+					var $viewActionValue = $viewRule.$$(ids.actionValue).queryView({ id: valueViewId });
+					if ($viewActionValue)
+						$viewActionValue.setValue(r.value);
 
 				});
 

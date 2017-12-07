@@ -924,7 +924,7 @@ module.exports = {
     updateNavView: function (application, page) {
 
         if (!page) return Promise.reject(new Error('invalid page'));
-console.log('page: ', page);
+
          // find page name
          var pageLabel;
          page.translations.forEach((trans) => {

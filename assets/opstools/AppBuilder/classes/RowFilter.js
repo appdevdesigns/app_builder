@@ -466,12 +466,19 @@ export default class RowFilter extends OP.Component {
 
 
 					var fieldId = $viewCond.$$(ids.field).getValue();
+					if (!fieldId) return;
 
+					var comparer = null;
 					var comparerViewId = $viewCond.$$(ids.comparer).getActiveId();
-					var comparer = $viewCond.$$(ids.comparer).queryView({ id: comparerViewId }).getValue();
+					var $viewComparer = $viewCond.$$(ids.comparer).queryView({ id: comparerViewId });
+					if ($viewComparer)
+						comparer = $viewComparer.getValue();
 
+					var value = null;
 					var valueViewId = $viewCond.$$(ids.conditionValue).getActiveId();
-					var value = $viewCond.$$(ids.conditionValue).queryView({ id: valueViewId }).getValue();
+					var $viewConditionValue = $viewCond.$$(ids.conditionValue).queryView({ id: valueViewId });
+					if ($viewConditionValue)
+						value = $viewConditionValue.getValue();
 
 
 					config_settings.filters.push({
@@ -512,10 +519,14 @@ export default class RowFilter extends OP.Component {
 					$viewCond.$$(ids.field).setValue(f.fieldId);
 
 					var comparerViewId = $viewCond.$$(ids.comparer).getActiveId();
-					$viewCond.$$(ids.comparer).queryView({ id: comparerViewId }).setValue(f.comparer);
+					var $viewComparer = $viewCond.$$(ids.comparer).queryView({ id: comparerViewId });
+					if ($viewComparer)
+						$viewComparer.setValue(f.comparer);
 
 					var valueViewId = $viewCond.$$(ids.conditionValue).getActiveId();
-					$viewCond.$$(ids.conditionValue).queryView({ id: valueViewId }).setValue(f.value);
+					var $viewConditionValue = $viewCond.$$(ids.conditionValue).queryView({ id: valueViewId });
+					if ($viewConditionValue)
+						$viewConditionValue.setValue(f.value);
 
 				});
 
