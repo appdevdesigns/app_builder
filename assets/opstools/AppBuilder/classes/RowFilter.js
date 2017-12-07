@@ -51,29 +51,6 @@ export default class RowFilter extends OP.Component {
 			listOptions: this.unique('listOptions')
 		};
 
-		// webix UI definition:
-		this.ui = {
-			isolate: true,
-			rows: [
-				{
-					view: "form",
-					id: ids.filterForm,
-					isolate: true,
-					elements: []
-				},
-				{
-					view: "button",
-					id: ids.newfilterbutton,
-					value: labels.component.addNewFilter,
-					click: function () {
-
-						_logic.addNewFilter(this.getTopParentView());
-
-					}
-				}
-			]
-		};
-
 		// setting up UI
 		this.init = (options) => {
 
@@ -514,18 +491,23 @@ export default class RowFilter extends OP.Component {
 
 			setValue: function (settings, $container) {
 
-				config_settings = settings;
+				config_settings = settings || {};
 
 				if (!$container) return;
 
 				var $viewForm = $container.$$(ids.filterForm);
 
-				settings.filters = settings.filters || [];
-				settings.filters.forEach(f => {
+				// Rebuild
+				$viewForm.getChildViews().forEach(v => {
+					$viewForm.removeView(v);
+				});
+
+				config_settings.filters = config_settings.filters || [];
+				config_settings.filters.forEach(f => {
 
 					var $viewCond = $$(_logic.addNewFilter($container));
 
-					_logic.selectCombineCondition(settings.combineCondition, $viewCond);
+					_logic.selectCombineCondition(config_settings.combineCondition, $viewCond);
 
 					$viewCond.$$(ids.field).setValue(f.fieldId);
 
@@ -732,6 +714,33 @@ export default class RowFilter extends OP.Component {
 			}
 
 		};
+
+
+		// webix UI definition:
+		this.ui = {
+			isolate: true,
+			rows: [
+				{
+					view: "form",
+					id: ids.filterForm,
+					isolate: true,
+					elements: [
+						_logic.getFilterUI()
+					]
+				},
+				{
+					view: "button",
+					id: ids.newfilterbutton,
+					value: labels.component.addNewFilter,
+					click: function () {
+
+						_logic.addNewFilter(this.getTopParentView());
+
+					}
+				}
+			]
+		};
+
 
 
 		// Interface methods for parent component:

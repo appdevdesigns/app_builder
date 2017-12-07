@@ -119,6 +119,7 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 
 		var _currentObject = null;
 		var _rules = [];
+		var _pageOptions = [];
 
 		// for setting up UI
 		this.init = (options) => {
@@ -270,7 +271,7 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 									batch: "existsPage",
 									label: labels.component.page,
 									labelWidth: App.config.labelWidthLarge,
-									options: []
+									options: _pageOptions
 								},
 								// Redirect to another website URL
 								{
@@ -317,9 +318,26 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 
 			objectLoad: function (object) {
 				_currentObject = object;
+
+				// Pull page list to "Redirect to an existing page"
+				_pageOptions = [];
+
+				var addPage = function (page, indent) {
+					indent = indent || '';
+					_pageOptions.push({ id: page.id, value: indent + page.label });
+					page.pages().forEach(function (p) {
+						addPage(p, indent + '-');
+					})
+				}
+				_currentObject.application.pages().forEach(function (page) {
+					addPage(page, '');
+				});
+
 			},
 
 			setValue: function (rules) {
+
+				$$(ids.rules).reconstruct();
 
 				_rules = rules || [];
 				_rules.forEach(r => {

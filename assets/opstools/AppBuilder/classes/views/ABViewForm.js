@@ -990,16 +990,27 @@ export default class ABViewForm extends ABViewContainer {
 
 			if (isMatch) {
 				switch (r.action) {
+
 					case "message":
-						// r.value
+						webix.message({
+							text: r.value,
+							type: "info"
+						});
 						break;
+
 					case "parentPage":
+						var pageCurrent = this.pageParent();
+						var pageParent = pageCurrent.pageParent().id;
+
+						this.changePage(pageParent.id);
 						break;
+
 					case "existsPage":
-						// r.value
+						this.changePage(r.value);
 						break;
+
 					case "website":
-						// r.value
+						window.location.href = "http://" + r.value.replace("http://", "");
 						break;
 				}
 			}
