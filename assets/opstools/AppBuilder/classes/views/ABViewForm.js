@@ -443,10 +443,12 @@ export default class ABViewForm extends ABViewContainer {
 		$$(ids.height).setValue(view.settings.height || ABViewFormPropertyComponentDefaults.height);
 
 		// Populate values to rules
-		var selectedDc = view.dataCollection() || {};
-		PopupDisplayRule.objectLoad(selectedDc.datasource);
-		PopupRecordRule.objectLoad(selectedDc.datasource);
-		PopupSubmitRule.objectLoad(selectedDc.datasource);
+		var selectedDc = view.dataCollection();
+		if (selectedDc) {
+			PopupDisplayRule.objectLoad(selectedDc.datasource);
+			PopupRecordRule.objectLoad(selectedDc.datasource);
+			PopupSubmitRule.objectLoad(selectedDc.datasource);
+		}
 
 		PopupDisplayRule.setValue(view.settings.displayRules);
 		PopupRecordRule.setValue(view.settings.recordRules);

@@ -319,12 +319,16 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 			objectLoad: function (object) {
 				_currentObject = object;
 
+				if(!_currentObject) return;
+
 				// Pull page list to "Redirect to an existing page"
 				_pageOptions = [];
 
 				var addPage = function (page, indent) {
 					indent = indent || '';
+
 					_pageOptions.push({ id: page.id, value: indent + page.label });
+
 					page.pages().forEach(function (p) {
 						addPage(p, indent + '-');
 					})
