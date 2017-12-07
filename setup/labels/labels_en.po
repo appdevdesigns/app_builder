@@ -1207,6 +1207,24 @@ msgstr "Pie Chart"
 
 #. path: app_builder
 #. code: en
+#. key: ab.components.chart.bar
+msgid "Bar"
+msgstr "Bar Chart"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.chart.line
+msgid "Line"
+msgstr "Line Chart"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.chart.area
+msgid "Area"
+msgstr "Area Chart"
+
+#. path: app_builder
+#. code: en
 #. key: ab.interface.component.confirmDeleteTitle
 msgid "Delete Component"
 msgstr "Delete Component"

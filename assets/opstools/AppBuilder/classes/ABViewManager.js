@@ -8,6 +8,9 @@
 import ABView from "./views/ABView"
 import ABViewChart from "./views/ABViewChart"
 import ABViewChartPie from "./views/ABViewChartPie"
+import ABViewChartBar from "./views/ABViewChartBar"
+import ABViewChartLine from "./views/ABViewChartLine"
+//import ABViewChartArea from "./views/ABViewChartArea"
 import ABViewContainer from "./views/ABViewContainer"
 import ABViewDataCollection from "./views/ABViewDataCollection"
 import ABViewPage from "./views/ABViewPage"
@@ -42,7 +45,13 @@ import ABViewFormTextbox from "./views/ABViewFormTextbox"
  */
 var Views = {};
 Views[ABView.common().key] = ABView;
+
+Views[ABViewChart.common().key] = ABViewChart;
 Views[ABViewChartPie.common().key] = ABViewChartPie;
+Views[ABViewChartBar.common().key] = ABViewChartBar;
+Views[ABViewChartLine.common().key] = ABViewChartLine;
+// Views[ABViewChartArea.common().key] = ABViewChartArea;
+
 Views[ABViewContainer.common().key] = ABViewContainer;
 Views[ABViewDataCollection.common().key] = ABViewDataCollection;
 Views[ABViewPage.common().key] = ABViewPage;
