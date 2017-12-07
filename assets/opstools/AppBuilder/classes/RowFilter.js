@@ -291,6 +291,7 @@ export default class RowFilter extends OP.Component {
 						// Value
 						{
 							id: ids.conditionValue,
+							isolate: true,
 							cells: [
 								{},
 								// Date
@@ -318,6 +319,7 @@ export default class RowFilter extends OP.Component {
 								// List
 								{
 									batch: "list",
+									id: ids.listOptions,
 									view: "combo",
 									options: [],
 									on: {
