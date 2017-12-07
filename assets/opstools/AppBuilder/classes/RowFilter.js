@@ -42,6 +42,7 @@ export default class RowFilter extends OP.Component {
 		// internal list of Webix IDs to reference our UI components.
 		var ids = {
 			filterForm: this.unique('filterForm'),
+			addNewFilter: this.unique('addNewFilter'),
 
 			combineCondition: this.unique('combineCondition'),
 			field: this.unique('field'),
@@ -53,18 +54,12 @@ export default class RowFilter extends OP.Component {
 
 		// setting up UI
 		this.init = (options) => {
-
-			// register our callbacks:
-			for (var c in _logic.callbacks) {
-				_logic.callbacks[c] = options[c] || _logic.callbacks[c];
-			}
-
-			webix.ui(this.ui);
-
 		};
 
 		var fields = null;
-		var config_settings = {};
+		var config_settings = {
+			combineCondition: 'And' // Default
+		};
 
 		// internal business logic 
 		var _logic = this._logic = {
@@ -362,26 +357,86 @@ export default class RowFilter extends OP.Component {
 						},
 						{
 							view: "button",
+							icon: "plus",
+							type: "icon",
+							width: 30,
+							click: function () {
+								var $viewForm = this.getFormView();
+								var $viewContainer = $viewForm.getTopParentView();
+
+								var indexView = $viewForm.index(this.getParentView());
+
+								_logic.addNewFilter($viewContainer, indexView + 1);
+							}
+						},
+						{
+							view: "button",
 							icon: "trash",
 							type: "icon",
 							width: 30,
 							click: function () {
-								var $viewCond = this.getParentView();
-								this.getFormView().removeView($viewCond);
 
-								_logic.onChange();
+								var $viewForm = this.getFormView();
+								var $viewCond = this.getParentView();
+								var $viewContainer = $viewForm.getTopParentView();
+
+								_logic.removeNewFilter($viewContainer, $viewCond);
 							}
 						}
 					]
 				};
 			},
 
-			addNewFilter: function ($container) {
+			addNewFilter: function ($container, index) {
 				var ui = _logic.getFilterUI();
 
 				var $viewForm = $container.$$(ids.filterForm);
 
-				return $viewForm.addView(ui);
+				var viewId = $viewForm.addView(ui, index);
+
+				_logic.toggleAddNewButton($viewForm);
+
+				return viewId;
+			},
+
+			removeNewFilter: function ($container, $viewCond) {
+
+				var $viewForm = $container.$$(ids.filterForm);
+				$viewForm.removeView($viewCond);
+
+				_logic.toggleAddNewButton($viewForm);
+
+				_logic.onChange();
+
+			},
+
+			toggleAddNewButton: function ($viewForm) {
+
+				// Add "Add new filter" button
+				if ($viewForm.getChildViews().length < 1) {
+					$viewForm.addView({
+						view: "button",
+						id: ids.addNewFilter,
+						icon: "plus",
+						type: "iconButton",
+						label: labels.component.addNewFilter,
+						width: 150,
+						click: function () {
+
+							var $viewContainer = $viewForm.getTopParentView();
+							_logic.addNewFilter($viewContainer);
+
+						}
+					});
+				}
+				// Remove "Add new filter" button
+				else {
+					if ($viewForm.$$(ids.addNewFilter))
+						$viewForm.removeView(ids.addNewFilter);
+
+				}
+
+
 			},
 
 			selectCombineCondition: function (val, $view) {
@@ -742,6 +797,7 @@ export default class RowFilter extends OP.Component {
 
 		// webix UI definition:
 		this.ui = {
+			view: 'layout',
 			isolate: true,
 			rows: [
 				{
@@ -749,16 +805,6 @@ export default class RowFilter extends OP.Component {
 					id: ids.filterForm,
 					isolate: true,
 					elements: []
-				},
-				{
-					view: "button",
-					id: ids.newfilterbutton,
-					value: labels.component.addNewFilter,
-					click: function () {
-
-						_logic.addNewFilter(this.getTopParentView());
-
-					}
 				}
 			]
 		};

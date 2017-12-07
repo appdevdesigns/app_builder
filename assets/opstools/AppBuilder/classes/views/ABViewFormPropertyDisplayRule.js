@@ -36,15 +36,7 @@ export default class ABViewFormPropertyDisplayRule extends OP.Component {
 			head: {
 				view: "toolbar",
 				cols: [
-					{ view: "label", label: L("ab.component.form.displayrule", "*Display Rules") },
-					{
-						view: "button", label: "Close", width: 100, align: "right",
-						click: function () {
-
-							_logic.hide();
-
-						}
-					}
+					{ view: "label", label: L("ab.component.form.displayrule", "*Display Rules") }
 				]
 			},
 			body: {

@@ -226,9 +226,49 @@ export default class ABViewForm extends ABViewContainer {
 
 		};
 
+
+		// Display rule
+		_logic.displayRuleShow = () => {
+
+			var currView = _logic.currentEditObject();
+
+			PopupDisplayRule.setValue(currView.settings.displayRules);
+			PopupDisplayRule.show();
+
+		};
+
+		_logic.displayRuleSave = () => {
+
+		};
+
+
+		// Record rule
+		_logic.recordRuleShow = () => {
+
+			var currView = _logic.currentEditObject();
+
+			PopupRecordRule.setValue(currView.settings.recordRules);
+			PopupRecordRule.show();
+
+		};
+
+		_logic.recordRuleSave = (settings) => {
+
+			var currView = _logic.currentEditObject();
+			currView.settings.recordRules = settings;
+
+			// trigger a save()
+			this.propertyEditorSave(ids, currView);
+
+		};
+
+
+		// Submit rule
 		_logic.submitRuleShow = () => {
 
 			var currView = _logic.currentEditObject();
+
+			PopupSubmitRule.setValue(currView.settings.submitRules);
 			PopupSubmitRule.show();
 
 		};
@@ -243,37 +283,18 @@ export default class ABViewForm extends ABViewContainer {
 
 		};
 
-		_logic.displayRuleShow = () => {
-
-			var currView = _logic.currentEditObject();
-
-			PopupDisplayRule.show();
-
-		};
-
-		_logic.recordRuleShow = () => {
-
-			var currView = _logic.currentEditObject();
-
-			PopupRecordRule.show();
-
-		};
-
 
 
 		/** Initial rule popups */
 		PopupDisplayRule.init({
-			// onCancel: _logic.
-			// onSave: _logic.
+			onSave: _logic.displayRuleSave
 		});
 
 		PopupRecordRule.init({
-			// onCancel: _logic.
-			// onSave: _logic.
+			onSave: _logic.recordRuleSave
 		});
 
 		PopupSubmitRule.init({
-			// onCancel: _logic.submitRuleCancel,
 			onSave: _logic.submitRuleSave
 		});
 
@@ -446,10 +467,6 @@ export default class ABViewForm extends ABViewContainer {
 		$$(ids.height).setValue(view.settings.height || ABViewFormPropertyComponentDefaults.height);
 
 		this.propertyUpdateRules(ids, view, dataCollectionId);
-
-		PopupDisplayRule.setValue(view.settings.displayRules);
-		PopupRecordRule.setValue(view.settings.recordRules);
-		PopupSubmitRule.setValue(view.settings.submitRules);
 
 	}
 

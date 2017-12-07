@@ -1,6 +1,5 @@
 import RowFilter from '../RowFilter'
 
-
 export default class ABViewFormPropertySubmitRule extends OP.Component {
 
 	/**
@@ -20,11 +19,11 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 				addNewRule: L("ab.component.form.addNewRule", "*Add new rule"),
 
 				action: L("ab.component.form.action", "*Action"),
-				actionOption1: L("ab.component.form.action.message", "*Show a confirmation message"),
-				actionOption2: L("ab.component.form.action.parentPage", "*Redirect to the parent page"),
-				actionOption3: L("ab.component.form.action.existsPage", "*Redirect to an existing page"),
-				actionOption4: L("ab.component.form.action.website", "*Redirect to another website URL"),
-				actionOption5: L("ab.component.form.action.newPage", "*Redirect to a new child page"),
+				actionOption1: L("ab.component.form.submitrule.action.message", "*Show a confirmation message"),
+				actionOption2: L("ab.component.form.submitrule.action.parentPage", "*Redirect to the parent page"),
+				actionOption3: L("ab.component.form.submitrule.action.existsPage", "*Redirect to an existing page"),
+				actionOption4: L("ab.component.form.submitrule.action.website", "*Redirect to another website URL"),
+				actionOption5: L("ab.component.form.submitrule.action.newPage", "*Redirect to a new child page"),
 
 				when: L("ab.component.form.when", "*When"),
 				message: L("ab.component.form.message", "*Message"),
@@ -42,6 +41,16 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 			when: this.unique('when'),
 			actionValue: this.unique('actionValue')
 		};
+
+
+		var actionOptions = [
+			{ id: "message", value: labels.component.actionOption1 },
+			{ id: "parentPage", value: labels.component.actionOption2 },
+			{ id: "existsPage", value: labels.component.actionOption3 },
+			{ id: "website", value: labels.component.actionOption4 },
+			// { id: "newPage", value: labels.component.actionOption5 }
+		];
+
 
 		// webix UI definition:
 		this.ui = {
@@ -67,7 +76,7 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 						body: {
 							view: "layout",
 							id: ids.rules,
-							margin: 10,
+							margin: 20,
 							rows: []
 						}
 					},
@@ -223,13 +232,7 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 							label: labels.component.action,
 							labelWidth: App.config.labelWidthLarge,
 							value: "message",
-							options: [
-								{ id: "message", value: labels.component.actionOption1 },
-								{ id: "parentPage", value: labels.component.actionOption2 },
-								{ id: "existsPage", value: labels.component.actionOption3 },
-								{ id: "website", value: labels.component.actionOption4 },
-								// { id: "newPage", value: labels.component.actionOption5 }
-							],
+							options: actionOptions,
 							on: {
 								onChange: function (newVal, oldVal) {
 									_logic.selectAction(newVal, this.getParentView());
