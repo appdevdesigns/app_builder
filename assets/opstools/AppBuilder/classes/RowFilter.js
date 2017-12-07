@@ -543,36 +543,44 @@ export default class RowFilter extends OP.Component {
 			 */
 			isValid: function (rowData) {
 
-				var result = false;
+				var result = (config_settings.combineCondition === "And" ? true : false);
 
 				config_settings.filters.forEach(filter => {
 
 					var fieldInfo = fields.filter(f => f.id == filter.fieldId)[0];
 					if (!fieldInfo) return;
 
+					var condResult;
+
 					var value = rowData[fieldInfo.columnName];
 
 					switch (fieldInfo.key) {
 						case "string":
 						case "LongText":
-							result = _logic.textValid(value, filter.comparer, filter.value);
+							condResult = _logic.textValid(value, filter.comparer, filter.value);
 							break;
 						case "date":
 						case "datetime":
-							result = _logic.dateValid(value, filter.comparer, filter.value);
+							condResult = _logic.dateValid(value, filter.comparer, filter.value);
 							break;
 						case "number":
-							result = _logic.numberValid(value, filter.comparer, filter.value);
+							condResult = _logic.numberValid(value, filter.comparer, filter.value);
 							break;
 						case "list":
-							result = _logic.listValid(value, filter.comparer, filter.value);
+							condResult = _logic.listValid(value, filter.comparer, filter.value);
 							break;
 						case "boolean":
-							result = _logic.booleanValid(value, filter.comparer, filter.value);
+							condResult = _logic.booleanValid(value, filter.comparer, filter.value);
 							break;
 						case "user":
-							result = _logic.userValid(value, filter.comparer, filter.value);
+							condResult = _logic.userValid(value, filter.comparer, filter.value);
 							break;
+					}
+
+					if (config_settings.combineCondition === "And") {
+						result = result && condResult;
+					} else {
+						result = result || condResult;
 					}
 				});
 
