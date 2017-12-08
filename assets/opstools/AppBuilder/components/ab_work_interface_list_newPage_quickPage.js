@@ -367,29 +367,30 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 				var subValues = $$(ids.subObjs).getValues();
 
 				var addPageId = null;
+				var editPageId = null;
 				var viewPageId = null;
 
 				var addDc = null;
 				var editDc = null;
 
-				// Edit page
-				if (formValues.addable || formValues.editable) {
+				// Add a 'add' page
+				if (formValues.addable) {
 
 					addPageId = OP.Util.uuid();
 
 					// a data collection for edit
-					var editDcLabel = "Edit " + CurrentObj.label;
-					editDc = _logic.getDataCollection(editDcLabel, CurrentObj);
-					dataCollections.push(editDc.toObj());
+					var addDcLabel = "Add " + CurrentObj.label;
+					addDc = _logic.getDataCollection(addDcLabel, CurrentObj);
+					dataCollections.push(addDc.toObj());
 
-					var addForm = _logic.getFormView(editDc);
+					var addForm = _logic.getFormView(addDc);
 
-					// Add a edit page
+					// Add a 'add' page
 					pages.push({
 						id: addPageId,
 						key: ABViewPage.common().key,
 						icon: ABViewPage.common().icon,
-						name: "Edit " + CurrentObj.label,
+						name: "Add " + CurrentObj.label,
 						settings: {
 							type: "popup"
 						},
@@ -399,7 +400,7 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 								key: ABViewLabel.common().key,
 								icon: ABViewLabel.common().icon,
 								label: "Title",
-								text: "Edit " + CurrentObj.label,
+								text: "Add " + CurrentObj.label,
 								settings: {
 									format: 1
 								}
@@ -421,6 +422,46 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 							}
 						});
 					}
+
+				}
+
+
+				// Add a 'edit' page
+				if (formValues.editable) {
+
+					editPageId = OP.Util.uuid();
+
+					// a data collection for edit
+					var editDcLabel = "Edit " + CurrentObj.label;
+					editDc = _logic.getDataCollection(editDcLabel, CurrentObj);
+					dataCollections.push(editDc.toObj());
+
+					var editForm = _logic.getFormView(editDc);
+
+					// Add a 'edit' page
+					pages.push({
+						id: editPageId,
+						key: ABViewPage.common().key,
+						icon: ABViewPage.common().icon,
+						name: "Edit " + CurrentObj.label,
+						settings: {
+							type: "popup"
+						},
+						views: [
+							// Title
+							{
+								key: ABViewLabel.common().key,
+								icon: ABViewLabel.common().icon,
+								label: "Title",
+								text: "Edit " + CurrentObj.label,
+								settings: {
+									format: 1
+								}
+							},
+							// Form
+							editForm.toObj()
+						]
+					});
 
 				}
 
@@ -464,16 +505,14 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 
 							var childObj = CurrentApplication.objects(obj => obj.id == objId)[0];
 
-							// create a data collection
-							var childDc = dataCollections.filter(dc => dc.settings.object == childObj.id)[0];
-							if (!childDc) {
-								var dcLabel = "Edit " + childObj.label;
-								childDc = _logic.getDataCollection(dcLabel, childObj, editDc);
-								dataCollections.push(childDc.toObj());
-							}
-
 							// Add grids of sub-dcs
 							if (flag == 'list') {
+
+								// create a data collection
+								var dcLabel = "Edit " + childObj.label;
+								var childEditDc = _logic.getDataCollection(dcLabel, childObj, editDc);
+								dataCollections.push(childEditDc.toObj());
+
 								viewsOfDetail.push(
 									// Title
 									{
@@ -494,7 +533,7 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 										icon: ABViewGrid.common().icon,
 										label: childObj.label + "'s grid",
 										settings: {
-											dataSource: childDc.id,
+											dataSource: childEditDc.id,
 											height: 300
 										},
 										position: {
@@ -508,16 +547,21 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 
 								var subPageId = OP.Util.uuid();
 
+								// create a data collection
+								var dcLabel = "Add " + childObj.label;
+								var childAddDc = _logic.getDataCollection(dcLabel, childObj, editDc);
+								dataCollections.push(childAddDc.toObj());
+
 								// add to menu
 								menuSubPages.push(subPageId);
 
-								var newForm = _logic.getFormView(childDc);
+								var newForm = _logic.getFormView(childAddDc);
 
 								pages.push({
 									id: subPageId,
 									key: ABViewPage.common().key,
 									icon: ABViewPage.common().icon,
-									name: "Add/Edit " + childObj.label,
+									name: "Add " + childObj.label,
 									settings: {
 										type: "popup"
 									},
@@ -527,7 +571,7 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 											key: ABViewLabel.common().key,
 											icon: ABViewLabel.common().icon,
 											label: "Title",
-											text: "Add/Edit " + childObj.label,
+											text: "Add " + childObj.label,
 											settings: {
 												format: 1
 											}
@@ -578,7 +622,7 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 						settings: {
 							dataSource: editDc.id,
 							height: 300,
-							editPage: formValues.editable ? addPageId : null,
+							editPage: formValues.editable ? editPageId : null,
 							detailsPage: formValues.viewable ? viewPageId : null
 						}
 					});
@@ -590,7 +634,8 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 
 					// a data collection for add
 					var addDcLabel = "Add " + CurrentObj.label;
-					addDc = _logic.getDataCollection(addDcLabel, CurrentObj);
+					if (addDc == null)
+						addDc = _logic.getDataCollection(addDcLabel, CurrentObj);
 					dataCollections.push(addDc.toObj());
 
 					// add the title to the form
@@ -604,10 +649,10 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 						}
 					});
 
-					var addForm = _logic.getFormView(addDc);
+					var editForm = _logic.getFormView(addDc);
 
 					// add the new form to page
-					views.push(addForm.toObj());
+					views.push(editForm.toObj());
 
 				}
 

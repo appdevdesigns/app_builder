@@ -15,6 +15,9 @@ export default class ABViewFormPropertyDisplayRule extends OP.Component {
 		var labels = {
 			common: App.labels,
 			component: {
+				header: L("ab.component.form.displayRule", "*Display Rules"),
+				addNewRule: L("ab.component.form.addNewRule", "*Add new rule"),
+
 			}
 		};
 
@@ -36,15 +39,64 @@ export default class ABViewFormPropertyDisplayRule extends OP.Component {
 			head: {
 				view: "toolbar",
 				cols: [
-					{ view: "label", label: L("ab.component.form.displayrule", "*Display Rules") }
+					{ view: "label", label: labels.component.header }
 				]
 			},
 			body: {
-				view: "scrollview",
-				scroll: true,
-				body: {
-
-				}
+				rows: [
+					{
+						view: "scrollview",
+						scroll: true,
+						body: {
+							view: "layout",
+							id: ids.rules,
+							margin: 20,
+							rows: []
+						}
+					},
+					{
+						css: { 'background-color': '#fff' },
+						cols: [
+							{
+								view: "button",
+								icon: "plus",
+								type: "iconButton",
+								label: labels.component.addNewRule,
+								width: 150,
+								click: function () {
+									_logic.addRule();
+								}
+							},
+							{ fillspace: true }
+						]
+					},
+					{
+						css: { 'background-color': '#fff' },
+						cols: [
+							{ fillspace: true },
+							{
+								view: "button",
+								name: "cancel",
+								value: labels.common.cancel,
+								css: "ab-cancel-button",
+								autowidth: true,
+								click: function () {
+									_logic.buttonCancel();
+								}
+							},
+							{
+								view: "button",
+								name: "save",
+								label: labels.common.save,
+								type: "form",
+								autowidth: true,
+								click: function () {
+									_logic.buttonSave();
+								}
+							}
+						]
+					}
+				]
 			}
 		};
 

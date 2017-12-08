@@ -950,6 +950,15 @@ export default class ABViewForm extends ABViewContainer {
 
 				// form ready function
 				var formReady = () => {
+
+					// when add a new data, then clear form inputs
+					if (dc) {
+						var currCursor = dc.getCursor();
+						if (currCursor == null) {
+							formView.clear();
+						}
+					}
+
 					if (formView.hideProgress)
 						formView.hideProgress();
 				}

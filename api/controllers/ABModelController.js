@@ -303,6 +303,10 @@ module.exports = {
                     var query2 = object.model().query();
                     var updateTasks = updateRelationValues(query2, newObj.id, updateRelationParams);
 
+                    if (updateTasks.length == 0) {
+                        updateTasks.push(new Promise((resolve, reject) => { resolve(); }));
+                    }
+
                     // update relation values sequentially
                     return updateTasks.reduce((promiseChain, currTask) => {
                             return promiseChain.then(currTask);
@@ -578,6 +582,10 @@ console.log('... catch(err) !');
                     // create a new query when use same query, then new data are created duplicate
                     var query2 = object.model().query();
                     var updateTasks = updateRelationValues(query2, id, updateRelationParams);
+
+                    if (updateTasks.length == 0) {
+                        updateTasks.push(new Promise((resolve, reject) => { resolve(); }));
+                    }
 
                     // update relation values sequentially
                     return updateTasks.reduce((promiseChain, currTask) => {

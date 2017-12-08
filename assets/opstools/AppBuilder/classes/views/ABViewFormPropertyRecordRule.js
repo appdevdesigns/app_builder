@@ -58,7 +58,7 @@ export default class ABViewFormPropertyRecordRule extends OP.Component {
 			head: {
 				view: "toolbar",
 				cols: [
-					{ view: "label", label: L("ab.component.form.recordrule", "*Record Rules") }
+					{ view: "label", label: labels.component.header }
 				]
 			},
 			body: {
