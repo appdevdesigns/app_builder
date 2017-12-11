@@ -1099,11 +1099,21 @@ export default class ABViewGrid extends ABViewWidget  {
 			},
 		
 		}
-		
+
+
+		var _onShow = () => {
+
+			if ($$(DataTable.ui.id))
+				$$(DataTable.ui.id).adjust();
+		};
+
+
 		return {
 			ui: tableUI,
 			init: _init,
-			logic: _logic
+			logic: _logic,
+
+			onShow: _onShow
 		};
 	}
 
