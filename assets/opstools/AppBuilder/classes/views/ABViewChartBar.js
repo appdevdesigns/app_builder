@@ -19,7 +19,7 @@ var ABViewChartBarPropertyComponentDefaults = {
 	barPreset: 'column',
 	isLegend: true,
 	// chartWidth: 600,
-	// chartHeight: 400,
+	height: 200,
 	labelFontSize: 12,
 
 }
@@ -70,7 +70,7 @@ export default class ABViewChartBar extends ABViewWidget {
 		this.settings.isLegend = JSON.parse(this.settings.isLegend || ABViewChartBarPropertyComponentDefaults.isLegend);
 
 		// this.settings.chartWidth = parseInt(this.settings.chartWidth || ABViewChartBarPropertyComponentDefaults.chartWidth);
-		// this.settings.chartHeight = parseInt(this.settings.chartHeight || ABViewChartBarPropertyComponentDefaults.chartHeight);
+		this.settings.height = parseInt(this.settings.height || ABViewChartBarPropertyComponentDefaults.height);
 
 		this.settings.labelFontSize = parseInt(this.settings.labelFontSize || ABViewChartBarPropertyComponentDefaults.labelFontSize);
 
@@ -155,12 +155,12 @@ export default class ABViewChartBar extends ABViewWidget {
 			// 	min: 1,
 			// 	label: L('ab.component.chart.bar.chartWidth', '*Width')
 			// },
-			// {
-			// 	name: 'chartHeight',
-			// 	view: 'counter',
-			// 	min: 1,
-			// 	label: L('ab.component.chart.bar.chartHeight', '*Height')
-			// },
+			{
+				name: 'height',
+				view: 'counter',
+				min: 1,
+				label: L('ab.component.chart.bar.chartHeight', '*Height')
+			},
 			{
 				name: 'labelFontSize',
 				view: 'counter',
@@ -186,7 +186,7 @@ export default class ABViewChartBar extends ABViewWidget {
 
 		// Make sure you set the values for this property editor in Webix
 		// $$(ids.chartWidth).setValue(view.settings.chartWidth != null ? view.settings.chartWidth : ABViewChartBarPropertyComponentDefaults.chartWidth);
-		// $$(ids.chartHeight).setValue(view.settings.chartHeight != null ? view.settings.chartHeight : ABViewChartBarPropertyComponentDefaults.chartHeight);
+		$$(ids.height).setValue(view.settings.height != null ? view.settings.height : ABViewChartBarPropertyComponentDefaults.height);
 		$$(ids.labelFontSize).setValue(view.settings.labelFontSize != null ? view.settings.labelFontSize : ABViewChartBarPropertyComponentDefaults.labelFontSize);
 		$$(ids.barType).setValue(view.settings.barType != null ? view.settings.barType : ABViewChartBarPropertyComponentDefaults.barType);
 		$$(ids.barPreset).setValue(view.settings.barPreset != null ? view.settings.barPreset : ABViewChartBarPropertyComponentDefaults.barPreset);
@@ -203,7 +203,7 @@ export default class ABViewChartBar extends ABViewWidget {
 		view.settings.barPreset = $$(ids.barPreset).getValue();
 		view.settings.isLegend = $$(ids.isLegend).getValue();
 		// view.settings.chartWidth = $$(ids.chartWidth).getValue();
-		// view.settings.chartHeight = $$(ids.chartHeight).getValue();
+		view.settings.height = $$(ids.height).getValue();
 		view.settings.labelFontSize = $$(ids.labelFontSize).getValue();
 
 	}
@@ -265,7 +265,7 @@ export default class ABViewChartBar extends ABViewWidget {
 					template: this.settings.isLegend == true ? "<div style='font-size:" + this.settings.labelFontSize + "px;'>#label#</div>" : ""
 				},
 				legend: this.settings.isLegend == true ? "<div style='font-size:" + this.settings.labelFontSize + "px;'>#label#</div>" : "",
-				// height: this.settings.chartHeight != null ? this.settings.chartHeight : ABViewChartBarPropertyComponentDefaults.chartHeight,
+				height: this.settings.height != null ? this.settings.height : ABViewChartBarPropertyComponentDefaults.height,
 				// width: this.settings.chartWidth != null ? this.settings.chartWidth : ABViewChartBarPropertyComponentDefaults.chartWidth,
 				data: reportData
 			});
@@ -286,7 +286,7 @@ export default class ABViewChartBar extends ABViewWidget {
 					end: endValue
 				},
 				legend: this.settings.isLegend == true ? "<div style='font-size:" + this.settings.labelFontSize + "px;'>#label#</div>" : "",
-				// height: this.settings.chartHeight != null ? this.settings.chartHeight : ABViewChartBarPropertyComponentDefaults.chartHeight,
+				height: this.settings.height != null ? this.settings.height : ABViewChartBarPropertyComponentDefaults.height,
 				// width: this.settings.chartWidth != null ? this.settings.chartWidth : ABViewChartBarPropertyComponentDefaults.chartWidth,
 				data: reportData
 			});

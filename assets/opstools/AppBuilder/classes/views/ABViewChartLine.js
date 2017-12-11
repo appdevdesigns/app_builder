@@ -19,7 +19,7 @@ var ABViewChartLinePropertyComponentDefaults = {
 	linePreset: 'plot',
 	isLegend: true,
 	// chartWidth: 600,
-	// chartHeight: 400,
+	chartHeight: 200,
 	labelFontSize: 12,
 
 }
@@ -70,7 +70,7 @@ export default class ABViewChartLine extends ABViewWidget {
 		this.settings.isLegend = JSON.parse(this.settings.isLegend || ABViewChartLinePropertyComponentDefaults.isLegend);
 
 		// this.settings.chartWidth = parseInt(this.settings.chartWidth || ABViewChartLinePropertyComponentDefaults.chartWidth);
-		// this.settings.chartHeight = parseInt(this.settings.chartHeight || ABViewChartLinePropertyComponentDefaults.chartHeight);
+		this.settings.height = parseInt(this.settings.height || ABViewChartLinePropertyComponentDefaults.height);
 
 		this.settings.labelFontSize = parseInt(this.settings.labelFontSize || ABViewChartLinePropertyComponentDefaults.labelFontSize);
 
@@ -155,12 +155,12 @@ export default class ABViewChartLine extends ABViewWidget {
 			// 	min: 1,
 			// 	label: L('ab.component.chart.line.chartWidth', '*Width')
 			// },
-			// {
-			// 	name: 'chartHeight',
-			// 	view: 'counter',
-			// 	min: 1,
-			// 	label: L('ab.component.chart.line.chartHeight', '*Height')
-			// },
+			{
+				name: 'height',
+				view: 'counter',
+				min: 1,
+				label: L('ab.component.chart.line.chartHeight', '*Height')
+			},
 			{
 				name: 'labelFontSize',
 				view: 'counter',
@@ -264,7 +264,7 @@ export default class ABViewChartLine extends ABViewWidget {
 				template: this.settings.isLegend == true ? "<div style='font-size:" + this.settings.labelFontSize + "px;'>#label#</div>" : ""
 			},
 			legend: this.settings.isLegend == true ? "<div style='font-size:" + this.settings.labelFontSize + "px;'>#label#</div>" : "",
-			// height: this.settings.chartHeight != null ? this.settings.chartHeight : ABViewChartLinePropertyComponentDefaults.chartHeight,
+			height: this.settings.height != null ? this.settings.height : ABViewChartLinePropertyComponentDefaults.height,
 			// width: this.settings.chartWidth != null ? this.settings.chartWidth : ABViewChartLinePropertyComponentDefaults.chartWidth,
 			data: reportData
 		});

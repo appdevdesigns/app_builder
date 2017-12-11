@@ -18,7 +18,7 @@ var ABViewChartPiePropertyComponentDefaults = {
 	pieType: 'pie',
 	isLegend: true,
 	// chartWidth: 600,
-	// chartHeight: 400,
+	height: 200,
 	innerFontSize: 12,
 	labelFontSize: 12,
 
@@ -70,7 +70,7 @@ export default class ABViewChartPie extends ABViewWidget {
 		this.settings.isLegend = JSON.parse(this.settings.isLegend || ABViewChartPiePropertyComponentDefaults.isLegend);
 
 		// this.settings.chartWidth = parseInt(this.settings.chartWidth || ABViewChartPiePropertyComponentDefaults.chartWidth);
-		// this.settings.chartHeight = parseInt(this.settings.chartHeight || ABViewChartPiePropertyComponentDefaults.chartHeight);
+		this.settings.height = parseInt(this.settings.height || ABViewChartPiePropertyComponentDefaults.height);
 
 		this.settings.innerFontSize = parseInt(this.settings.innerFontSize || ABViewChartPiePropertyComponentDefaults.innerFontSize);
 		this.settings.labelFontSize = parseInt(this.settings.labelFontSize || ABViewChartPiePropertyComponentDefaults.labelFontSize);
@@ -146,12 +146,12 @@ export default class ABViewChartPie extends ABViewWidget {
 			// 	min: 1,
 			// 	label: L('ab.component.chart.pie.chartWidth', '*Width')
 			// },
-			// {
-			// 	name: 'chartHeight',
-			// 	view: 'counter',
-			// 	min: 1,
-			// 	label: L('ab.component.chart.pie.chartHeight', '*Height')
-			// },
+			{
+				name: 'height',
+				view: 'counter',
+				min: 1,
+				label: L('ab.component.chart.pie.chartHeight', '*Height')
+			},
 			{
 				name: 'innerFontSize',
 				view: 'counter',
@@ -184,7 +184,7 @@ export default class ABViewChartPie extends ABViewWidget {
 
 		// Make sure you set the values for this property editor in Webix
 		// $$(ids.chartWidth).setValue(view.settings.chartWidth != null ? view.settings.chartWidth : ABViewChartPiePropertyComponentDefaults.chartWidth);
-		// $$(ids.chartHeight).setValue(view.settings.chartHeight != null ? view.settings.chartHeight : ABViewChartPiePropertyComponentDefaults.chartHeight);
+		$$(ids.height).setValue(view.settings.height != null ? view.settings.height : ABViewChartPiePropertyComponentDefaults.height);
 		$$(ids.innerFontSize).setValue(view.settings.innerFontSize != null ? view.settings.innerFontSize : ABViewChartPiePropertyComponentDefaults.innerFontSize);
 		$$(ids.labelFontSize).setValue(view.settings.labelFontSize != null ? view.settings.labelFontSize : ABViewChartPiePropertyComponentDefaults.labelFontSize);
 		$$(ids.pieType).setValue(view.settings.pieType != null ? view.settings.pieType : ABViewChartPiePropertyComponentDefaults.pieType);
@@ -200,7 +200,7 @@ export default class ABViewChartPie extends ABViewWidget {
 		view.settings.pieType = $$(ids.pieType).getValue();
 		view.settings.isLegend = $$(ids.isLegend).getValue();
 		// view.settings.chartWidth = $$(ids.chartWidth).getValue();
-		// view.settings.chartHeight = $$(ids.chartHeight).getValue();
+		view.settings.height = $$(ids.height).getValue();
 		view.settings.innerFontSize = $$(ids.innerFontSize).getValue();
 		view.settings.labelFontSize = $$(ids.labelFontSize).getValue();
 
@@ -241,7 +241,7 @@ export default class ABViewChartPie extends ABViewWidget {
 			legend: this.settings.isLegend == true ? "<div style='font-size:" + this.settings.labelFontSize + "px;'>#label#</div>" : "",
 			pieInnerText: "<div style='font-size:" + this.settings.innerFontSize + "px;'>#value#</div>",
 			shadow: 1,
-			// height: this.settings.chartHeight != null ? this.settings.chartHeight : ABViewChartPiePropertyComponentDefaults.chartHeight,
+			height: this.settings.height != null ? this.settings.height : ABViewChartPiePropertyComponentDefaults.height,
 			// width: this.settings.chartWidth != null ? this.settings.chartWidth : ABViewChartPiePropertyComponentDefaults.chartWidth,
 			data: reportData
 		});
