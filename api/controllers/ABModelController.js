@@ -27,27 +27,38 @@ function updateRelationValues(query, id, updateRelationParams) {
     // - (insert, update, patch, delete, relate, unrelate, increment, decrement) and only once per query builder
     if (updateRelationParams != null && Object.keys(updateRelationParams).length > 0) {
 
-        for (var colName in updateRelationParams) {
+        // clear relative values
+        Object.keys(updateRelationParams).forEach((colName) => {
 
-            // clear relation values of relation
-            updateTasks.push(new Promise((resolve, reject) => {
+            updateTasks.push(() => {
 
                 var clearRelationName = AppBuilder.rules.toFieldRelationFormat(colName);
 
-                return query.where('id', id).first()
-                .catch(err => reject(err))
-                .then(record => {
+                return new Promise((resolve, reject) => {
 
-                    if (record == null) return record;
+                    query.where('id', id).first()
+                        .catch(err => reject(err))
+                        .then(record => {
 
-                    record = record.$relatedQuery(clearRelationName).unrelate();
+                            if (record == null) return resolve();
 
-                    return record;
-                })
-                .then(resolve);
+                            record.$relatedQuery(clearRelationName).unrelate()
+                                .catch(err => reject(err))
+                                .then(() => { resolve(); });
 
-            }));
-                
+                        });
+
+                });
+
+
+            });
+
+
+        });
+
+
+        // update relative values
+        Object.keys(updateRelationParams).forEach((colName) => {
 
             // convert relation data to array
             if (!Array.isArray(updateRelationParams[colName])) {
@@ -58,21 +69,34 @@ function updateRelationValues(query, id, updateRelationParams) {
             // NOTE : Error: batch insert only works with Postgresql
             updateRelationParams[colName].forEach(val => {
 
-                var relationName = AppBuilder.rules.toFieldRelationFormat(colName);
-
                 // insert relation values of relation
-                updateTasks.push(query.where('id', id).first()
-                    .then(record => {
-                        if (record == null) return record;
+                updateTasks.push(() => {
 
-                        record = record.$relatedQuery(relationName).relate(val);
+                    return new Promise((resolve, reject) => {
 
-                        return record;
-                    }));
+                        var relationName = AppBuilder.rules.toFieldRelationFormat(colName);
+
+                        query.where('id', id).first()
+                            .catch(err => reject(err))
+                            .then(record => {
+
+                                if (record == null) return resolve();
+
+                                record.$relatedQuery(relationName).relate(val)
+                                    .catch(err => reject(err))
+                                    .then(() => { resolve(); });
+
+                            });
+                    });
+
+                });
+
+
+
             });
 
+        });
 
-        }
     }
 
     return updateTasks;
@@ -116,14 +140,14 @@ function populateFindConditions(query, object, options) {
             }
 
             // We need to put back together our sql statment
-            switch(w.operator) {
+            switch (w.operator) {
                 case "contains":
                     var operator = "LIKE";
-                    var input = "%"+w.inputValue+"%";
+                    var input = "%" + w.inputValue + "%";
                     break;
                 case "doesn't contain":
                     var operator = "NOT LIKE";
-                    var input = "%"+w.inputValue+"%";
+                    var input = "%" + w.inputValue + "%";
                     break;
                 case "is not":
                     var operator = "!=";
@@ -223,7 +247,7 @@ function populateFindConditions(query, object, options) {
                 query.orWhereRaw(whereRaw);
             } else {
                 // the default whereRaw will provide an "AND" if there is already one present
-                query.whereRaw(whereRaw);                        
+                query.whereRaw(whereRaw);
             }
             index++;
         })
@@ -251,12 +275,12 @@ function populateFindConditions(query, object, options) {
     }
     if (limit) {
         query.limit(limit);
-    }            
+    }
 
     // query relation data
     var relationNames = object.connectFields()
-        .filter((f) => f.fieldLink() != null )
-        .map((f) => f.relationName() );
+        .filter((f) => f.fieldLink() != null)
+        .map((f) => f.relationName());
 
     if (relationNames.length > 0)
         query.eager('[#fieldNames#]'.replace('#fieldNames#', relationNames.join(', ')));
@@ -267,138 +291,137 @@ function populateFindConditions(query, object, options) {
 
 module.exports = {
 
-    create: function(req, res) {   
+    create: function (req, res) {
 
 
         AppBuilder.routes.verifyAndReturnObject(req, res)
-        .then(function(object){
+            .then(function (object) {
 
 
-            var allParams = req.allParams();
-            sails.log.verbose('ABModelController.create(): allParams:', allParams);
+                var allParams = req.allParams();
+                sails.log.verbose('ABModelController.create(): allParams:', allParams);
 
-            // return the parameters from the input params that relate to this object
-            var createParams = object.requestParams(allParams);  
+                // return the parameters from the input params that relate to this object
+                var createParams = object.requestParams(allParams);
 
-            // return the parameters of connectObject data field values 
-            var updateRelationParams = object.requestRelationParams(allParams);
+                // return the parameters of connectObject data field values 
+                var updateRelationParams = object.requestRelationParams(allParams);
 
 
-            var validationErrors = object.isValidData(createParams);
-            if (validationErrors.length == 0) {
+                var validationErrors = object.isValidData(createParams);
+                if (validationErrors.length == 0) {
 
-                // this is a create operation, so ... 
-                // createParams.created_at = (new Date()).toISOString();
-                createParams.created_at = AppBuilder.rules.toSQLDateTime(new Date());
+                    // this is a create operation, so ... 
+                    // createParams.created_at = (new Date()).toISOString();
+                    createParams.created_at = AppBuilder.rules.toSQLDateTime(new Date());
 
-                sails.log.verbose('ABModelController.create(): createParams:', createParams);
+                    sails.log.verbose('ABModelController.create(): createParams:', createParams);
 
-                var query = object.model().query();
+                    var query = object.model().query();
 
-                query.insert(createParams)
-                .then((newObj)=>{
+                    query.insert(createParams)
+                        .then((newObj) => {
 
-                    // create a new query to update relation data
-                    // NOTE: when use same query, it will have a "created duplicate" error
-                    var query2 = object.model().query();
-                    var updateTasks = updateRelationValues(query2, newObj.id, updateRelationParams);
+                            // create a new query to update relation data
+                            // NOTE: when use same query, it will have a "created duplicate" error
+                            var query2 = object.model().query();
+                            var updateTasks = updateRelationValues(query2, newObj.id, updateRelationParams);
 
-                    if (updateTasks.length == 0) {
-                        updateTasks.push(new Promise((resolve, reject) => { resolve(); }));
-                    }
 
-                    // update relation values sequentially
-                    return updateTasks.reduce((promiseChain, currTask) => {
-                            return promiseChain.then(currTask);
+                            // update relation values sequentially
+                            return updateTasks.reduce((promiseChain, currTask) => {
+                                return promiseChain.then(currTask);
+                            }, Promise.resolve([]))
+                                .catch((err) => { return Promise.reject(err); })
+                                .then((values) => {
+
+                                    // Query the new row to response to client
+                                    var query3 = object.model().query();
+                                    populateFindConditions(query3, object, {
+                                        where: [{
+                                            fieldName: "id",
+                                            operator: "equals",
+                                            inputValue: newObj.id
+                                        }],
+                                        offset: 0,
+                                        limit: 1
+                                    });
+
+                                    return query3
+                                        .catch((err) => { return Promise.reject(err); })
+                                        .then((newItem) => {
+
+                                            res.AD.success(newItem[0]);
+                                            Promise.resolve();
+
+                                        });
+
+
+                                });
+
+
+                        }, (err) => {
+
+                            // handle invalid values here:
+                            if (err instanceof ValidationError) {
+
+                                //// TODO: refactor these invalid data handlers to a common OP.Validation.toErrorResponse(err)
+
+                                // return an invalid values response:
+                                var errorResponse = {
+                                    error: 'E_VALIDATION',
+                                    invalidAttributes: {
+
+                                    }
+                                }
+
+                                var attr = errorResponse.invalidAttributes;
+
+                                for (var e in err.data) {
+                                    attr[e] = attr[e] || [];
+                                    err.data[e].forEach((eObj) => {
+                                        eObj.name = e;
+                                        attr[e].push(eObj);
+                                    })
+                                }
+
+                                res.AD.error(errorResponse);
+                            }
+
                         })
-                        .catch((err) => { return Promise.reject(err); })
-                        .then((values)=>{
+                        .catch((err) => {
+                            console.log('... catch(err) !');
 
-                            // Query the new row to response to client
-                            var query3 = object.model().query();
-                            populateFindConditions(query3, object, {
-                                where: [{
-                                    fieldName: "id",
-                                    operator: "equals",
-                                    inputValue: newObj.id
-                                }],
-                                offset: 0,
-                                limit: 1
-                            });
-
-                            return query3
-                            .catch((err) => { return Promise.reject(err); })
-                            .then((newItem) => {
-                                res.AD.success(newItem[0]);
-                                Promise.resolve();
-                            });
+                            if (!(err instanceof ValidationError)) {
+                                ADCore.error.log('Error performing update!', { error: err })
+                                res.AD.error(err);
+                                sails.log.error('!!!! error:', err);
+                            }
+                        })
 
 
-                        });
 
+                } else {
 
-                }, (err)=>{
+                    // return an invalid values response:
+                    var errorResponse = {
+                        error: 'E_VALIDATION',
+                        invalidAttributes: {
 
-                    // handle invalid values here:
-                    if (err instanceof ValidationError) {
-
-//// TODO: refactor these invalid data handlers to a common OP.Validation.toErrorResponse(err)
-
-// return an invalid values response:
-var errorResponse = {
-    error:'E_VALIDATION',
-    invalidAttributes:{
-
-    }
-}
-
-var attr = errorResponse.invalidAttributes;
-
-for(var e in err.data) {
-    attr[e] = attr[e] || [];
-    err.data[e].forEach((eObj)=>{
-        eObj.name = e;
-        attr[e].push(eObj);
-    })
-}
-
-                        res.AD.error(errorResponse);
+                        }
                     }
 
-                })
-                .catch((err)=>{
-console.log('... catch(err) !');
+                    var attr = errorResponse.invalidAttributes;
 
-                    if (!(err instanceof ValidationError)) {
-                        ADCore.error.log('Error performing update!', {error:err})
-                        res.AD.error(err);
-                        sails.log.error('!!!! error:', err);
-                    }
-                })
+                    validationErrors.forEach((e) => {
+                        attr[e.name] = attr[e.name] || [];
+                        attr[e.name].push(e);
+                    })
 
-
-
-            } else {
-
-                // return an invalid values response:
-                var errorResponse = {
-                    error:'E_VALIDATION',
-                    invalidAttributes:{
-
-                    }
+                    res.AD.error(errorResponse);
                 }
 
-                var attr = errorResponse.invalidAttributes;
-
-                validationErrors.forEach((e)=>{
-                    attr[e.name] = attr[e.name] || [];
-                    attr[e.name].push(e);
-                })
-
-                res.AD.error(errorResponse);
-            }
-            
-        })
+            })
 
     },
 
@@ -409,276 +432,272 @@ console.log('... catch(err) !');
      *
      * get /app_builder/model/application/:appID/object/:objID
      */
-    find: function(req, res) {
+    find: function (req, res) {
 
 
         AppBuilder.routes.verifyAndReturnObject(req, res)
-        .then(function(object){
-
-            var query = object.model().query();
-
-            var where = req.options._where.where;
-            var sort = req.options._where.sort;
-            var offset = req.options._offset;
-            var limit = req.options._limit;
-
-            populateFindConditions(query, object, {
-                where: where,
-                sort: sort,
-                offset: offset,
-                limit: limit
-            });
-
-            // promise for the total count. this was moved below the filters because webix will get caught in an infinte loop of queries if you don't pass the right count
-            var query2 = object.model().query();
-            var pCount = query2.count('id as count').first(); 
-
-            Promise.all([
-              pCount,
-              query
-            ]).then(function(values) {
-                var result = {};
-                var count = values[0].count;
-                var rows = values[1];
-                result.data = rows;
-
-                // webix pagination format:
-                result.total_count = count;
-                result.pos = offset;
-
-                result.offset = offset;
-                result.limit = limit;
-                
-                if ((offset + rows.length) < count) {
-                    result.offset_next = offset+limit;
-                }
-
-
-
-//// TODO: evaluate if we really need to do this: 
-//// ?) do we have a data field that actually needs to post process it's data
-////    before returning it to the client?
-
-                // object.postGet(result.data)
-                // .then(()=>{
-
-
-                if(res.header) res.header('Content-type', 'application/json');
-
-                res.send(result, 200);
-
-
-                // })
-
-                
-            })
-            .catch((err)=>{
-
-                res.AD.error(err);
-
-            });
-
-
-        });
-
-    },
-
-
-    delete: function(req, res) {
-
-        var id = req.param('id', -1);
-
-
-        if (id == -1) {
-            var invalidError = ADCore.error.fromKey('E_MISSINGPARAM');
-            invalidError.details = 'missing .id';
-            sails.log.error(invalidError);
-            res.AD.error(invalidError, 400);
-            return;
-        }
-
-        AppBuilder.routes.verifyAndReturnObject(req, res)
-        .then(function(object){
-
-
-                object.model().query()
-                .deleteById(id)
-                .then((numRows)=>{
-
-                    res.AD.success({numRows:numRows});
-
-                }, (err)=>{
-
-// console.log('...  (err) handler!', err);
-
-                    res.AD.error(err);
-                    
-
-                })
-                .catch((err)=>{
-// console.log('... catch(err) !');
-
-                    if (!(err instanceof ValidationError)) {
-                        ADCore.error.log('Error performing update!', {error:err})
-                        res.AD.error(err);
-                        sails.log.error('!!!! error:', err);
-                    }
-                })
-
-        })
-
-    },
-
-
-    update: function(req, res) {
-
-        var id = req.param('id', -1);
-
-
-        if (id == -1) {
-            var invalidError = ADCore.error.fromKey('E_MISSINGPARAM');
-            invalidError.details = 'missing .id';
-            sails.log.error(invalidError);
-            res.AD.error(invalidError, 400);
-            return;
-        }
-
-        AppBuilder.routes.verifyAndReturnObject(req, res)
-        .then(function(object){
-
-
-            var allParams = req.allParams();
-            sails.log.verbose('ABModelController.update(): allParams:', allParams);
-
-            // return the parameters from the input params that relate to this object
-            // exclude connectObject data field values
-            var updateParams = object.requestParams(allParams);
-
-            // return the parameters of connectObject data field values 
-            var updateRelationParams = object.requestRelationParams(allParams);
-
-            var validationErrors = object.isValidData(updateParams);
-            if (validationErrors.length == 0) {
-
-                // this is an update operation, so ... 
-                // updateParams.updated_at = (new Date()).toISOString();
-                updateParams.updated_at = AppBuilder.rules.toSQLDateTime(new Date());
-                
-                // Check if there are any properties set otherwise let it be...let it be...let it be...yeah let it be
-                if (allParams.properties != "") {
-                    updateParams.properties = allParams.properties;
-                } else {
-                    updateParams.properties = null;
-                }
-
-                sails.log.verbose('ABModelController.update(): updateParams:', updateParams);
+            .then(function (object) {
 
                 var query = object.model().query();
 
-                // Do Knex update data tasks
-                query.patch(updateParams || { id: id }).where('id', id)
-                .then((values)=>{
+                var where = req.options._where.where;
+                var sort = req.options._where.sort;
+                var offset = req.options._offset;
+                var limit = req.options._limit;
 
-                    // create a new query when use same query, then new data are created duplicate
-                    var query2 = object.model().query();
-                    var updateTasks = updateRelationValues(query2, id, updateRelationParams);
+                populateFindConditions(query, object, {
+                    where: where,
+                    sort: sort,
+                    offset: offset,
+                    limit: limit
+                });
 
-                    if (updateTasks.length == 0) {
-                        updateTasks.push(new Promise((resolve, reject) => { resolve(); }));
+                // promise for the total count. this was moved below the filters because webix will get caught in an infinte loop of queries if you don't pass the right count
+                var query2 = object.model().query();
+                var pCount = query2.count('id as count').first();
+
+                Promise.all([
+                    pCount,
+                    query
+                ]).then(function (values) {
+                    var result = {};
+                    var count = values[0].count;
+                    var rows = values[1];
+                    result.data = rows;
+
+                    // webix pagination format:
+                    result.total_count = count;
+                    result.pos = offset;
+
+                    result.offset = offset;
+                    result.limit = limit;
+
+                    if ((offset + rows.length) < count) {
+                        result.offset_next = offset + limit;
                     }
 
-                    // update relation values sequentially
-                    return updateTasks.reduce((promiseChain, currTask) => {
-                            return promiseChain.then(currTask);
-                         })
-                        .catch((err) => { return Promise.reject(err); })
-                        .then((values)=>{
 
-                            // Query the new row to response to client
-                            var query3 = object.model().query();
-                            populateFindConditions(query3, object, {
-                                where: [{
-                                    fieldName: "id",
-                                    operator: "equals",
-                                    inputValue: id
-                                }],
-                                offset: 0,
-                                limit: 1
-                            });
 
-                            return query3
-                            .catch((err) => { return Promise.reject(err); })
-                            .then((newItem) => {
-                                res.AD.success(newItem[0]);
-                                Promise.resolve();
-                            });
+                    //// TODO: evaluate if we really need to do this: 
+                    //// ?) do we have a data field that actually needs to post process it's data
+                    ////    before returning it to the client?
 
-                        });
+                    // object.postGet(result.data)
+                    // .then(()=>{
 
-                }, (err)=>{
 
-console.log('...  (err) handler!', err);
+                    if (res.header) res.header('Content-type', 'application/json');
 
-                    // handle invalid values here:
-                    if (err instanceof ValidationError) {
+                    res.send(result, 200);
 
-//// TODO: refactor these invalid data handlers to a common OP.Validation.toErrorResponse(err)
 
-// return an invalid values response:
-var errorResponse = {
-    error:'E_VALIDATION',
-    invalidAttributes:{
+                    // })
 
-    }
-}
-
-var attr = errorResponse.invalidAttributes;
-
-for(var e in err.data) {
-    attr[e] = attr[e] || [];
-    err.data[e].forEach((eObj)=>{
-        eObj.name = e;
-        attr[e].push(eObj);
-    })
-}
-
-                        res.AD.error(errorResponse);
-                    }
 
                 })
-                .catch((err)=>{
-console.log('... catch(err) !');
+                    .catch((err) => {
 
-                    if (!(err instanceof ValidationError)) {
-                        ADCore.error.log('Error performing update!', {error:err})
                         res.AD.error(err);
-                        sails.log.error('!!!! error:', err);
+
+                    });
+
+
+            });
+
+    },
+
+
+    delete: function (req, res) {
+
+        var id = req.param('id', -1);
+
+
+        if (id == -1) {
+            var invalidError = ADCore.error.fromKey('E_MISSINGPARAM');
+            invalidError.details = 'missing .id';
+            sails.log.error(invalidError);
+            res.AD.error(invalidError, 400);
+            return;
+        }
+
+        AppBuilder.routes.verifyAndReturnObject(req, res)
+            .then(function (object) {
+
+
+                object.model().query()
+                    .deleteById(id)
+                    .then((numRows) => {
+
+                        res.AD.success({ numRows: numRows });
+
+                    }, (err) => {
+
+                        // console.log('...  (err) handler!', err);
+
+                        res.AD.error(err);
+
+
+                    })
+                    .catch((err) => {
+                        // console.log('... catch(err) !');
+
+                        if (!(err instanceof ValidationError)) {
+                            ADCore.error.log('Error performing update!', { error: err })
+                            res.AD.error(err);
+                            sails.log.error('!!!! error:', err);
+                        }
+                    })
+
+            })
+
+    },
+
+
+    update: function (req, res) {
+
+        var id = req.param('id', -1);
+
+
+        if (id == -1) {
+            var invalidError = ADCore.error.fromKey('E_MISSINGPARAM');
+            invalidError.details = 'missing .id';
+            sails.log.error(invalidError);
+            res.AD.error(invalidError, 400);
+            return;
+        }
+
+        AppBuilder.routes.verifyAndReturnObject(req, res)
+            .then(function (object) {
+
+
+                var allParams = req.allParams();
+                sails.log.verbose('ABModelController.update(): allParams:', allParams);
+
+                // return the parameters from the input params that relate to this object
+                // exclude connectObject data field values
+                var updateParams = object.requestParams(allParams);
+
+                // return the parameters of connectObject data field values 
+                var updateRelationParams = object.requestRelationParams(allParams);
+
+                var validationErrors = object.isValidData(updateParams);
+                if (validationErrors.length == 0) {
+
+                    // this is an update operation, so ... 
+                    // updateParams.updated_at = (new Date()).toISOString();
+                    updateParams.updated_at = AppBuilder.rules.toSQLDateTime(new Date());
+
+                    // Check if there are any properties set otherwise let it be...let it be...let it be...yeah let it be
+                    if (allParams.properties != "") {
+                        updateParams.properties = allParams.properties;
+                    } else {
+                        updateParams.properties = null;
                     }
-                })
+
+                    sails.log.verbose('ABModelController.update(): updateParams:', updateParams);
+
+                    var query = object.model().query();
+
+                    // Do Knex update data tasks
+                    query.patch(updateParams || { id: id }).where('id', id)
+                        .then((values) => {
+
+                            // create a new query when use same query, then new data are created duplicate
+                            var query2 = object.model().query();
+                            var updateTasks = updateRelationValues(query2, id, updateRelationParams);
+
+                            // update relation values sequentially
+                            return updateTasks.reduce((promiseChain, currTask) => {
+                                return promiseChain.then(currTask);
+                            }, Promise.resolve([]))
+                                .catch((err) => { return Promise.reject(err); })
+                                .then((values) => {
+
+                                    // Query the new row to response to client
+                                    var query3 = object.model().query();
+                                    populateFindConditions(query3, object, {
+                                        where: [{
+                                            fieldName: "id",
+                                            operator: "equals",
+                                            inputValue: id
+                                        }],
+                                        offset: 0,
+                                        limit: 1
+                                    });
+
+                                    return query3
+                                        .catch((err) => { return Promise.reject(err); })
+                                        .then((newItem) => {
+                                            res.AD.success(newItem[0]);
+                                            Promise.resolve();
+                                        });
+
+                                });
+
+                        }, (err) => {
+
+                            console.log('...  (err) handler!', err);
+
+                            // handle invalid values here:
+                            if (err instanceof ValidationError) {
+
+                                //// TODO: refactor these invalid data handlers to a common OP.Validation.toErrorResponse(err)
+
+                                // return an invalid values response:
+                                var errorResponse = {
+                                    error: 'E_VALIDATION',
+                                    invalidAttributes: {
+
+                                    }
+                                }
+
+                                var attr = errorResponse.invalidAttributes;
+
+                                for (var e in err.data) {
+                                    attr[e] = attr[e] || [];
+                                    err.data[e].forEach((eObj) => {
+                                        eObj.name = e;
+                                        attr[e].push(eObj);
+                                    })
+                                }
+
+                                res.AD.error(errorResponse);
+                            }
+
+                        })
+                        .catch((err) => {
+                            console.log('... catch(err) !');
+
+                            if (!(err instanceof ValidationError)) {
+                                ADCore.error.log('Error performing update!', { error: err })
+                                res.AD.error(err);
+                                sails.log.error('!!!! error:', err);
+                            }
+                        })
 
 
 
-            } else {
+                } else {
 
-                // return an invalid values response:
-                var errorResponse = {
-                    error:'E_VALIDATION',
-                    invalidAttributes:{
+                    // return an invalid values response:
+                    var errorResponse = {
+                        error: 'E_VALIDATION',
+                        invalidAttributes: {
 
+                        }
                     }
+
+                    var attr = errorResponse.invalidAttributes;
+
+                    validationErrors.forEach((e) => {
+                        attr[e.name] = attr[e.name] || [];
+                        attr[e.name].push(e);
+                    })
+
+                    res.AD.error(errorResponse);
                 }
 
-                var attr = errorResponse.invalidAttributes;
-
-                validationErrors.forEach((e)=>{
-                    attr[e.name] = attr[e.name] || [];
-                    attr[e.name].push(e);
-                })
-
-                res.AD.error(errorResponse);
-            }
-            
-        })
+            })
 
     },
 
