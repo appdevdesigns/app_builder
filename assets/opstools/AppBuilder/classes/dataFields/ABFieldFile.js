@@ -592,8 +592,8 @@ class ABFieldFile extends ABField {
 		this.deleteFile = true;
 	}
 	
-	getValue(application, object, fieldData, itemNode, rowData, item) {
-		var file = itemNode.querySelector('.file-data-field-name');
+	getValue(item, rowData) {
+		var file = item.$view.querySelector('.file-data-field-name');
 		return file.getAttribute('file-uuid');
 	}
 	

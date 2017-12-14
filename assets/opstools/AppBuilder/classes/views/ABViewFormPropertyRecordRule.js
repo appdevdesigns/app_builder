@@ -1,4 +1,5 @@
 import RowFilter from '../RowFilter'
+import RowUpdater from '../RowUpdater'
 
 export default class ABViewFormPropertyRecordRule extends OP.Component {
 
@@ -26,7 +27,7 @@ export default class ABViewFormPropertyRecordRule extends OP.Component {
 				// actionOption5: L("ab.component.form.recordrule.action.", "*"),
 
 				when: L("ab.component.form.when", "*When"),
-				values: L("ab.component.form.values", "*Values"),
+				values: L("ab.component.form.values", "*Values")
 			}
 		};
 
@@ -37,7 +38,9 @@ export default class ABViewFormPropertyRecordRule extends OP.Component {
 
 			action: this.unique('action'),
 			when: this.unique('when'),
-			values: this.unique('values')
+
+			values: this.unique('values'),
+			set: this.unique('set')
 
 		};
 
@@ -149,16 +152,12 @@ export default class ABViewFormPropertyRecordRule extends OP.Component {
 				$viewRules.forEach(r => {
 
 					var $whenContainer = r.$$(ids.when);
-
-					// TODO
-					// var valueViewId = r.$$(ids.actionValue).getActiveId();
-					// var value = r.$$(ids.actionValue).queryView({ id: valueViewId }).getValue();
-					var value = null;
+					var $setContainer = r.$$(ids.values).getChildViews()[0].$$(ids.set);
 
 					results.push({
 						action: r.$$(ids.action).getValue(),
 						when: r.config.when.getValue($whenContainer),
-						value: value,
+						values: r.config.set.getValue($setContainer),
 					})
 
 				});
@@ -186,18 +185,29 @@ export default class ABViewFormPropertyRecordRule extends OP.Component {
 
 				options = options || {};
 
-				// Create "When" UI - Set fields
+				// Create "When" and "Set" UI - Set fields
 				var when = new RowFilter(App, idBase);
-				if (_currentObject)
+				var set = new RowUpdater(App, idBase);
+
+				if (_currentObject) {
 					when.fieldsLoad(_currentObject.fields());
+					set.fieldsLoad(_currentObject.fields());
+				}
 
 				var when_ui = when.ui;
+				var set_ui = set.ui;
+
 				when_ui.id = ids.when;
+				set_ui.id = ids.set;
+				set_ui.width = 560;
+
 
 				return {
 					view: "layout",
 					css: "ab-component-form-rule",
 					when: when, // Store a instance of when
+					set: set, // Store a instance of set
+					width: 680,
 					isolate: true,
 					rows: [
 						{
@@ -244,11 +254,13 @@ export default class ABViewFormPropertyRecordRule extends OP.Component {
 						// Values
 						{
 							id: ids.values,
+							isolate: true,
 							cells: [
 								// Update this record
 								{
 									view: 'layout',
 									batch: actionOptions[0].id,
+									isolate: true,
 									cols: [
 										{
 											view: 'label',
@@ -256,10 +268,7 @@ export default class ABViewFormPropertyRecordRule extends OP.Component {
 											css: 'ab-text-bold',
 											width: App.config.labelWidthLarge
 										},
-										{
-											view: 'layout',
-											rows: []
-										}
+										set_ui
 									]
 								},
 							]
@@ -274,11 +283,6 @@ export default class ABViewFormPropertyRecordRule extends OP.Component {
 				var ruleUI = _logic.getRuleUI();
 
 				var viewId = $$(ids.rules).addView(ruleUI);
-
-				var $whenContainer = $$(viewId).$$(ids.when);
-
-				// Add a filter to default
-				ruleUI.when.addNewFilter($whenContainer);
 
 				return viewId;
 			},
@@ -321,6 +325,8 @@ export default class ABViewFormPropertyRecordRule extends OP.Component {
 					$viewRule.config.when.setValue(r.when, $viewWhen);
 
 					// Define 'value'
+					var $viewSet = $viewRule.$$(ids.values).getChildViews()[0].$$(ids.set);
+					$viewRule.config.set.setValue(r.values, $viewSet);
 
 				});
 

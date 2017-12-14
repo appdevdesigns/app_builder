@@ -37,6 +37,23 @@ var ABViewFormPropertyComponentDefaults = {
 	labelWidth: 120,
 	height: 200,
 	displayRules: [],
+
+	//	[{
+	//		action: {string},
+	//		when: [
+	//			{
+	//				fieldId: {UUID},
+	//				comparer: {string},
+	//				value: {string}
+	//			}
+	//		],
+	//		values: [
+	//			{
+	//				fieldId: {UUID},
+	//				value: {object}
+	//			}
+	//		]
+	//	}]
 	recordRules: [],
 
 	//	[{
@@ -966,6 +983,8 @@ export default class ABViewForm extends ABViewContainer {
 				return new Promise(
 					(resolve, reject) => {
 
+						this.doRecordRules(formVals);
+
 						// update exists row
 						if (formVals.id) {
 							model.update(formVals.id, formVals)
@@ -1015,12 +1034,47 @@ export default class ABViewForm extends ABViewContainer {
 	}
 
 
+	doRecordRules(rowData) {
+
+		var object = this.dataCollection().datasource;
+
+		var recordRules = this.settings.recordRules || [];
+		recordRules.forEach(r => {
+
+			var filterer = new RowFilter();
+			filterer.fieldsLoad(object.fields());
+			filterer.setValue(r.when);
+			var isMatch = filterer.isValid(rowData);
+
+			if (isMatch) {
+				switch (r.action) {
+
+					case "updateThisRecord":
+
+						r.values.forEach(updateVal => {
+
+							var fieldInfo = object.fields(f => f.id == updateVal.fieldId)[0];
+							if (!fieldInfo) return;
+
+							rowData[fieldInfo.columnName] = updateVal.value;
+						});
+
+						break;
+
+				}
+			}
+
+		});
+
+	}
+
 	doSubmitRules(rowData) {
+
+		var object = this.dataCollection().datasource;
 
 		var submitRules = this.settings.submitRules || [];
 		submitRules.forEach(r => {
 
-			var object = this.dataCollection().datasource;
 			var filterer = new RowFilter();
 			filterer.fieldsLoad(object.fields());
 			filterer.setValue(r.when);

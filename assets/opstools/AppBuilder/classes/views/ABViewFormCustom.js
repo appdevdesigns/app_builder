@@ -29,9 +29,9 @@ export default class ABViewFormCustom extends ABViewFormField {
 	 * @param {ABApplication} application the application object this view is under
 	 * @param {ABView} parent the ABView this view is a child of. (can be null)
 	 */
-	 constructor(values, application, parent, defaultValues) {
+	constructor(values, application, parent, defaultValues) {
 
-  		super(values, application, parent, (defaultValues || ABViewFormCustomDefaults));
+		super(values, application, parent, (defaultValues || ABViewFormCustomDefaults));
 
 		// OP.Multilingual.translate(this, this, ['text']);
 
@@ -157,9 +157,12 @@ export default class ABViewFormCustom extends ABViewFormField {
 		component.ui.template = '<div class="customField">' + template + '</div>';
 		component.ui.onClick = {
 			"customField": function (id, e, trg) {
-				var rowData = {},
-					node = $$(ids.component).$view;
-				field.customEdit(rowData, App, node);
+				var rowData = {};
+
+				if ($$(ids.component)) {
+					var node = $$(ids.component).$view;
+					field.customEdit(rowData, App, node);
+				}
 			}
 		};
 
@@ -186,19 +189,9 @@ export default class ABViewFormCustom extends ABViewFormField {
 
 			getValue: (rowData) => {
 
-				var application = this.application,
-					object = field.object,
-					elem = $$(ids.component),
-					dom = $$(ids.component).$view;
+				var elem = $$(ids.component);
 
-
-				return field.getValue(application,
-					object,
-					field,
-					dom,
-					rowData,
-					elem
-				);
+				return field.getValue(elem, rowData);
 
 			}
 

@@ -158,7 +158,7 @@ export default class ABViewChartPie extends ABViewWidget {
 				min: 1,
 				label: L('ab.component.chart.pie.innerFontSize', '*Inner Font Size'),
 				labelWidth: App.config.labelWidthXLarge
-			},			
+			},
 			{
 				name: 'labelFontSize',
 				view: 'counter',
@@ -226,14 +226,28 @@ export default class ABViewChartPie extends ABViewWidget {
 			component: App.unique(idBase + '_component'),
 		}
 
-		var _ui = {
-			id: ids.component,
-			cols: []
-		};
+		// var _ui = {
+		// 	id: ids.component,
+		// 	cols: []
+		// };
 
 		var reportData = this.parent.getReportData();
 
-		_ui.cols.push({
+		// _ui.cols.push({
+		// 	view: "chart",
+		// 	type: this.settings.pieType != null ? this.settings.pieType : ABViewChartPiePropertyComponentDefaults.pieType,
+		// 	value: "#value#",
+		// 	color: "#color#",
+		// 	legend: this.settings.isLegend == true ? "<div style='font-size:" + this.settings.labelFontSize + "px;'>#label#</div>" : "",
+		// 	pieInnerText: "<div style='font-size:" + this.settings.innerFontSize + "px;'>#value#</div>",
+		// 	shadow: 1,
+		// 	height: this.settings.height != null ? this.settings.height : ABViewChartPiePropertyComponentDefaults.height,
+		// 	// width: this.settings.chartWidth != null ? this.settings.chartWidth : ABViewChartPiePropertyComponentDefaults.chartWidth,
+		// 	data: reportData
+		// });
+
+		var _ui = {
+			id: ids.component,
 			view: "chart",
 			type: this.settings.pieType != null ? this.settings.pieType : ABViewChartPiePropertyComponentDefaults.pieType,
 			value: "#value#",
@@ -244,7 +258,7 @@ export default class ABViewChartPie extends ABViewWidget {
 			height: this.settings.height != null ? this.settings.height : ABViewChartPiePropertyComponentDefaults.height,
 			// width: this.settings.chartWidth != null ? this.settings.chartWidth : ABViewChartPiePropertyComponentDefaults.chartWidth,
 			data: reportData
-		});
+		};
 
 		// make sure each of our child views get .init() called
 		var _init = (options) => {

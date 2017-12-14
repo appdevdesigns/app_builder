@@ -344,6 +344,10 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 					})
 				}
 				_currentObject.application.pages().forEach(function (page) {
+
+					// TODO : filter
+					// if ( (parentPage && p == parentPage) || p == currentPage ) {
+
 					addPage(page, '');
 				});
 

@@ -642,8 +642,8 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 		this.deleteImage = true;
 	}
 	
-	getValue(application, object, fieldData, itemNode, rowData, item) {
-		var image = itemNode.querySelector('.image-data-field-image');
+	getValue(item, rowData) {
+		var image = item.$view.querySelector('.image-data-field-image');
 		return image.getAttribute('image-uuid');
 	}
 	

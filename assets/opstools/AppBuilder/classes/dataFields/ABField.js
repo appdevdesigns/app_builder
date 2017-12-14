@@ -463,16 +463,12 @@ export default class ABField extends ABFieldBase {
 	 * this function uses for form component and mass update popup
 	 * to get value of fields that apply custom editor
 	 * 
-	 * @param {ABApplication} application 
-	 * @param {ABObject} object 
-	 * @param {ABField} fieldData 
-	 * @param {DOM} itemNode - HTML DOM
-	 * @param {Object} rowData - data of row
 	 * @param {Object} item - Webix element
+	 * @param {Object} rowData - data of row
 	 * 
 	 * @return {Object}
 	 */
-	getValue(application, object, fieldData, itemNode, rowData, item) {
+	getValue(item, rowData) {
 		return item.getValue();
 	};
 

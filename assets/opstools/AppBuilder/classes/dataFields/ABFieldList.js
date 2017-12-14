@@ -707,10 +707,10 @@ class ABFieldList extends ABFieldSelectivity {
 		return detailComponentSetting;
 	}
 	
-	getValue(application, object, fieldData, itemNode, rowData, item) {
+	getValue(item, rowData) {
 		var values = {};
 		if (this.settings.isMultiple) {
-			var domNode = itemNode.querySelector('.list-data-values');
+			var domNode = item.$view.querySelector('.list-data-values');
 			values = this.selectivityGet(domNode);
 		} else {
 			values = $$(item).getValue();

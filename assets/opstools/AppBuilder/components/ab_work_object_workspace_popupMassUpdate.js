@@ -93,7 +93,7 @@ export default class AB_Work_Object_Workspace_PopupMassUpdate extends OP.Compone
 					                $$(DataTable.ui.id).data.each(function(obj){
 					                    if (typeof(obj) != "undefined" && obj.hasOwnProperty("appbuilder_select_item") && obj.appbuilder_select_item == 1) {
 											
-											var object = $$(DataTable.ui.id).getItem(obj.id);
+											var rowData = $$(DataTable.ui.id).getItem(obj.id);
 											
 											update_items.forEach(function (item) {
 												var colSelector = item.getChildViews()[0],
@@ -102,13 +102,13 @@ export default class AB_Work_Object_Workspace_PopupMassUpdate extends OP.Compone
 
 												// Get value from data field manager
 												// var val = null;
-												var val = columnData.getValue(App, CurrentObject, columnData, valEditor.$view, object, valEditor);
+												var val = columnData.getValue(valEditor, rowData);
 
 												// Get value from webix components
 												// if (val == null && valEditor.getValue)
 												// 	val = valEditor.getValue();
 												
-												object[columnData.columnName] = val;										
+												rowData[columnData.columnName] = val;										
 												// console.log(object);
 												// modelData.attr(colSelector.getValue(), val);
 											});
@@ -116,7 +116,7 @@ export default class AB_Work_Object_Workspace_PopupMassUpdate extends OP.Compone
 
 					                        updateTasks.push(function (next) {
 								                CurrentObject.model()
-								                .update(object.id, object)
+								                .update(rowData.id, rowData)
 								                .then(()=>{
 								                    DataTable.refresh(); // We need this in the object builder
 													next();

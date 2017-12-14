@@ -52,13 +52,13 @@ export default class RowFilter extends OP.Component {
 			listOptions: this.unique('listOptions')
 		};
 
-		// setting up UI
-		this.init = (options) => {
-		};
-
-		var fields = null;
+		var _Fields = null;
 		var config_settings = {
 			combineCondition: 'And' // Default
+		};
+
+		// setting up UI
+		this.init = (options) => {
 		};
 
 		// internal business logic 
@@ -72,7 +72,7 @@ export default class RowFilter extends OP.Component {
 			 */
 			fieldsLoad: function (fieldList) {
 
-				fields = fieldList.filter(f => f.fieldIsFilterable());
+				_Fields = fieldList.filter(f => f.fieldIsFilterable());
 
 			},
 
@@ -82,7 +82,7 @@ export default class RowFilter extends OP.Component {
 			 */
 			getFieldList: function () {
 
-				return (fields || []).map(f => {
+				return (_Fields || []).map(f => {
 					return {
 						id: f.id,
 						value: f.label
@@ -362,11 +362,10 @@ export default class RowFilter extends OP.Component {
 							width: 30,
 							click: function () {
 								var $viewForm = this.getFormView();
-								var $viewContainer = $viewForm.getTopParentView();
 
 								var indexView = $viewForm.index(this.getParentView());
 
-								_logic.addNewFilter($viewContainer, indexView + 1);
+								_logic.addNewFilter($viewForm, indexView + 1);
 							}
 						},
 						{
@@ -378,19 +377,32 @@ export default class RowFilter extends OP.Component {
 
 								var $viewForm = this.getFormView();
 								var $viewCond = this.getParentView();
-								var $viewContainer = $viewForm.getTopParentView();
 
-								_logic.removeNewFilter($viewContainer, $viewCond);
+								_logic.removeNewFilter($viewForm, $viewCond);
 							}
 						}
 					]
 				};
 			},
 
-			addNewFilter: function ($container, index) {
-				var ui = _logic.getFilterUI();
+			getAddButtonUI: function () {
+				return {
+					view: "button",
+					id: ids.addNewFilter,
+					icon: "plus",
+					type: "iconButton",
+					label: labels.component.addNewFilter,
+					click: function () {
 
-				var $viewForm = $container.$$(ids.filterForm);
+						var $viewForm = this.getFormView();
+						_logic.addNewFilter($viewForm);
+
+					}
+				};
+			},
+
+			addNewFilter: function ($viewForm, index) {
+				var ui = _logic.getFilterUI();
 
 				var viewId = $viewForm.addView(ui, index);
 
@@ -399,9 +411,8 @@ export default class RowFilter extends OP.Component {
 				return viewId;
 			},
 
-			removeNewFilter: function ($container, $viewCond) {
+			removeNewFilter: function ($viewForm, $viewCond) {
 
-				var $viewForm = $container.$$(ids.filterForm);
 				$viewForm.removeView($viewCond);
 
 				_logic.toggleAddNewButton($viewForm);
@@ -414,20 +425,7 @@ export default class RowFilter extends OP.Component {
 
 				// Add "Add new filter" button
 				if ($viewForm.getChildViews().length < 1) {
-					$viewForm.addView({
-						view: "button",
-						id: ids.addNewFilter,
-						icon: "plus",
-						type: "iconButton",
-						label: labels.component.addNewFilter,
-						width: 150,
-						click: function () {
-
-							var $viewContainer = $viewForm.getTopParentView();
-							_logic.addNewFilter($viewContainer);
-
-						}
-					});
+					$viewForm.addView(_logic.getAddButtonUI());
 				}
 				// Remove "Add new filter" button
 				else {
@@ -457,9 +455,9 @@ export default class RowFilter extends OP.Component {
 
 			selectField: function (columnId, $viewCond) {
 
-				if (!fields) return;
+				if (!_Fields) return;
 
-				var field = fields.filter(f => f.id == columnId)[0];
+				var field = _Fields.filter(f => f.id == columnId)[0];
 
 				var conditionList = [];
 				var inputView = {};
@@ -502,7 +500,7 @@ export default class RowFilter extends OP.Component {
 			/**
 			 * @method getValue
 			 * 
-			 * @param $container {Webix elem}
+			 * @param $viewForm {Webix elem}
 			 * 
 			 * @return {JSON} - {
 			 * 		combineCondition: 'And'/'Or',
@@ -515,14 +513,16 @@ export default class RowFilter extends OP.Component {
 			 * 		]
 			 * }
 			 */
-			getValue: function ($container) {
+			getValue: function ($viewForm) {
 
 				config_settings.filters = [];
 
-				$container.$$(ids.filterForm).getChildViews().forEach($viewCond => {
+				$viewForm.getChildViews().forEach($viewCond => {
 
+					var $fieldElem = $viewCond.$$(ids.field);
+					if (!$fieldElem) return;
 
-					var fieldId = $viewCond.$$(ids.field).getValue();
+					var fieldId = $fieldElem.getValue();
 					if (!fieldId) return;
 
 					var comparer = null;
@@ -553,13 +553,11 @@ export default class RowFilter extends OP.Component {
 
 
 
-			setValue: function (settings, $container) {
+			setValue: function (settings, $viewForm) {
 
 				config_settings = settings || {};
 
-				if (!$container) return;
-
-				var $viewForm = $container.$$(ids.filterForm);
+				if (!$viewForm) return;
 
 				// Rebuild
 				$viewForm.getChildViews().forEach(v => {
@@ -569,7 +567,7 @@ export default class RowFilter extends OP.Component {
 				config_settings.filters = config_settings.filters || [];
 				config_settings.filters.forEach(f => {
 
-					var $viewCond = $$(_logic.addNewFilter($container));
+					var $viewCond = $$(_logic.addNewFilter($viewForm));
 
 					_logic.selectCombineCondition(config_settings.combineCondition, $viewCond);
 
@@ -602,7 +600,7 @@ export default class RowFilter extends OP.Component {
 
 				config_settings.filters.forEach(filter => {
 
-					var fieldInfo = fields.filter(f => f.id == filter.fieldId)[0];
+					var fieldInfo = _Fields.filter(f => f.id == filter.fieldId)[0];
 					if (!fieldInfo) return;
 
 					var condResult;
@@ -797,15 +795,11 @@ export default class RowFilter extends OP.Component {
 
 		// webix UI definition:
 		this.ui = {
-			view: 'layout',
+			view: "form",
+			id: ids.filterForm,
 			isolate: true,
-			rows: [
-				{
-					view: "form",
-					id: ids.filterForm,
-					isolate: true,
-					elements: []
-				}
+			elements: [
+				_logic.getAddButtonUI()
 			]
 		};
 

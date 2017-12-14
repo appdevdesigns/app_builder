@@ -190,9 +190,12 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 		component.ui.template = '<div class="customField">' + template + '</div>';
 		component.ui.onClick = {
 			"customField": function (id, e, trg) {
-				var rowData = {},
-					node = $$(ids.component).$view;
-				field.customEdit(rowData, App, node);
+				var rowData = {};
+
+				if ($$(ids.component)) {
+					var node = $$(ids.component).$view;
+					field.customEdit(rowData, App, node);
+				}
 			},
 			"ab-connect-add-new-link": function (id, e, trg) {
 				component.logic.openFormPopup();
@@ -222,19 +225,9 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 
 			getValue: (rowData) => {
 
-				var application = this.application,
-					object = field.object,
-					elem = $$(ids.component),
-					dom = $$(ids.component).$view;
+				var elem = $$(ids.component);
 
-
-				return field.getValue(application,
-					object,
-					field,
-					dom,
-					rowData,
-					elem
-				);
+				return field.getValue(elem, rowData);
 
 			},
 			
