@@ -275,7 +275,7 @@ export default class ABViewChart extends ABViewContainer  {
 	 * return the list of components available on this view to display in the editor.
 	 */
 	componentList() {
-		var viewsToAllow = ['pie', 'bar', 'line'/*, 'area'*/],
+		var viewsToAllow = ['label', 'pie', 'bar', 'line'/*, 'area'*/],
 			allComponents = ABViewManager.allViews();
 
 		var ret = allComponents.filter((c) => {
