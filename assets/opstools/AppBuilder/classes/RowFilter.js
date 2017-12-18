@@ -596,6 +596,9 @@ export default class RowFilter extends OP.Component {
 			 */
 			isValid: function (rowData) {
 
+				// If no conditions, then return true
+				if (config_settings == null || config_settings.filters == null) return true;
+
 				var result = (config_settings.combineCondition === "And" ? true : false);
 
 				config_settings.filters.forEach(filter => {
