@@ -235,6 +235,13 @@ export default class ABViewDataCollection extends ABView {
 
 		_logic.selectObject = (objectId) => {
 
+			var view = _logic.currentEditObject();
+
+			var object = view.application.objects(obj => obj.id == objectId)[0];
+
+			// populate fix selector
+			this.populateFixSelector(ids, view, object);
+
 			// re-create filter & sort popups
 			this.initPopupEditors(App, _logic);
 
@@ -375,9 +382,8 @@ export default class ABViewDataCollection extends ABView {
 		objects.unshift({ id: '', value: L('ab.component.datacollection.selectObject', '*Select an object') });
 
 		$$(ids.dataSource).define("options", objects);
+		$$(ids.dataSource).define("value", view.settings.object || '');
 		$$(ids.dataSource).refresh();
-		$$(ids.dataSource).setValue(view.settings.object || '');
-
 
 		// populate link data collection options
 		this.initLinkDataCollectionOptions(ids, view);
@@ -393,25 +399,7 @@ export default class ABViewDataCollection extends ABView {
 
 		// populate data items to fix select options
 		var object = view.datasource;
-		var dataItems = view.getData().map((item) => {
-			return {
-				id: item.id,
-				value: object.displayData(item)
-			}
-		});
-
-		// Add a current user option to allow select first row that match the current user
-		if (object) {
-			var userFields = object.fields((f) => f.key == 'user');
-			if (userFields.length > 0)
-				dataItems.unshift({ id: '_CurrentUser', value: L('ab.component.datacollection.currentUser', '[Current User]') });
-		}
-
-		dataItems.unshift({ id: '', value: L('ab.component.datacollection.fixSelect', '*Select fix cursor') });
-
-		$$(ids.fixSelect).define("options", dataItems);
-		$$(ids.fixSelect).refresh();
-		$$(ids.fixSelect).setValue(view.settings.fixSelect || '');
+		this.populateFixSelector(ids, view, object);
 
 		// when a change is made in the properties the popups need to reflect the change
 		this.updateEventIds = this.updateEventIds || {}; // { viewId: boolean, ..., viewIdn: boolean }
@@ -422,8 +410,6 @@ export default class ABViewDataCollection extends ABView {
 				this.populatePopupEditors(view);
 			});
 		}
-
-
 
 	}
 
@@ -492,6 +478,30 @@ export default class ABViewDataCollection extends ABView {
 
 		// refresh data collection
 		view.init();
+
+	}
+
+	static populateFixSelector(ids, view, object) {
+
+		var dataItems = view.getData().map((item) => {
+			return {
+				id: item.id,
+				value: object ? object.displayData(item) : ""
+			}
+		});
+
+		// Add a current user option to allow select first row that match the current user
+		if (object) {
+			var userFields = object.fields((f) => f.key == 'user');
+			if (userFields.length > 0)
+				dataItems.unshift({ id: '_CurrentUser', value: L('ab.component.datacollection.currentUser', '[Current User]') });
+		}
+
+		dataItems.unshift({ id: '', value: L('ab.component.datacollection.fixSelect', '*Select fix cursor') });
+
+		$$(ids.fixSelect).define("options", dataItems);
+		$$(ids.fixSelect).refresh();
+		$$(ids.fixSelect).setValue(view.settings.fixSelect || '');
 
 	}
 
