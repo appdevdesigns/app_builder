@@ -599,10 +599,16 @@ class ABFieldFile extends ABField {
 	
 	setValue(item, value) {
 		var domNode = item.$view;
-		domNode.querySelector('.file-data-field-icon').style.display = 'none';
+
+		var fileicon = domNode.querySelector('.file-data-field-icon');
+		if (fileicon)
+			fileicon.style.display = 'none';
+
 		var file = domNode.querySelector('.file-data-field-name');
-		file.style.display = '';
-		file.setAttribute('file-uuid', value );
+		if (file) {
+			file.style.display = '';
+			file.setAttribute('file-uuid', value );
+		}
 	}
 	
 	/**
