@@ -659,7 +659,7 @@ export default class ABViewForm extends ABViewContainer {
 
 						f.field().setValue($$(comp.ui.id), values[colName]);
 					});
-					var normalFields = this.fieldComponents((comp) => !(comp instanceof ABViewFormCustom));
+					var normalFields = this.fieldComponents((comp) => comp instanceof ABViewFormField);
 					normalFields.forEach((f) => {
 
 						var comp = this.viewComponents[f.id];
