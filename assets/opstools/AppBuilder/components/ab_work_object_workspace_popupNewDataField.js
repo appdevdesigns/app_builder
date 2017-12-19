@@ -199,8 +199,11 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
             // now remove the 'del_me' definition editor placeholder.
             webix.ui(newEditorList, $$(ids.editDefinitions));
 
-            // hide all the unused editors:
+            // init & hide all the unused editors:
             for (var c in _componentHash) {
+
+                _componentHash[c].init();
+
                 _componentHash[c].hide();
             }
 

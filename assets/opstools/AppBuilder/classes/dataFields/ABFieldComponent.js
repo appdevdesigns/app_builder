@@ -144,7 +144,7 @@ export default class ABFieldComponent {
 		var _init = function() {
 
 			// call our provided .init() routine
-			this.init(ids);
+			// this.init(ids);
 		}
 
 
