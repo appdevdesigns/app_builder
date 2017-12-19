@@ -565,6 +565,12 @@ export default class RowFilter extends OP.Component {
 				});
 
 				config_settings.filters = config_settings.filters || [];
+
+				// Add "new filter" button
+				if (config_settings.filters.length == 0) {
+					_logic.toggleAddNewButton($viewForm);
+				}
+
 				config_settings.filters.forEach(f => {
 
 					var $viewCond = $$(_logic.addNewFilter($viewForm));
