@@ -28,7 +28,8 @@ export default class ABFieldComponent {
 
     	this.logic = options.logic || {};
 
-    	this.init = options.init || function() {};
+		// this.init = options.init || function() {};
+		this.initialize = options.init || function() {};
 
 
 
@@ -141,10 +142,10 @@ export default class ABFieldComponent {
 
 
 
-		var _init = function() {
+		var _init = () => {
 
-			// call our provided .init() routine
-			// this.init(ids);
+			// call our provided .initialize() routine
+			this.initialize(ids);
 		}
 
 
