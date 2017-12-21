@@ -344,7 +344,8 @@ export default class ABViewDetail extends ABViewContainer {
 						val = field.pullRelationValues(data);
 					}
 					else {
-						val = data[field.columnName];
+						if (data)
+							val = data[field.columnName];
 					}
 
 					if (field.key == "date") {
