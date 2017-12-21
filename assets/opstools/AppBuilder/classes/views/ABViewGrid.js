@@ -785,7 +785,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		};
 		if (this.settings.dataSource != "") {
 			tableUI = {
-				type: "space",
+				type: "layout",
 				rows: [
 					{
 						view: 'toolbar',
@@ -1103,8 +1103,9 @@ export default class ABViewGrid extends ABViewWidget  {
 
 		var _onShow = () => {
 
-			if ($$(DataTable.ui.id))
+			if ($$(DataTable.ui.id)) {
 				$$(DataTable.ui.id).adjust();
+			}
 		};
 
 
