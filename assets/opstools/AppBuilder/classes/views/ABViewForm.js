@@ -187,7 +187,9 @@ export default class ABViewForm extends ABViewContainer {
 
 						var yPosition = (fields.length - index - 1);
 
-						currView.addFieldToForm(f, yPosition);
+						// Add new form field
+						var newFieldView = currView.addFieldToForm(f, yPosition);
+						newFieldView.once('destroyed', () => this.propertyEditorPopulate(ids, currView));
 
 						// update item to UI list
 						f.selected = 1;
@@ -226,7 +228,8 @@ export default class ABViewForm extends ABViewContainer {
 
 			// add a field to the form
 			if (item.selected) {
-				currView.addFieldToForm(item);
+				var fieldView = currView.addFieldToForm(item);
+				fieldView.once('destroyed', () => this.propertyEditorPopulate(ids, currView));
 			}
 			// remove field in the form
 			else {
@@ -534,6 +537,8 @@ export default class ABViewForm extends ABViewContainer {
 	}
 
 	static propertyUpdateRules(ids, view, dcId) {
+
+		if (!view) return;
 
 		// Populate values to rules
 		var selectedDc = view.dataCollection();
@@ -893,7 +898,9 @@ export default class ABViewForm extends ABViewContainer {
 		if (field == null)
 			return;
 
-		var newView = field.formComponent().newInstance(this.application, this);
+		var formView = field.formComponent();
+
+		var newView = formView.newInstance(this.application, this);
 		if (newView == null)
 			return;
 
@@ -908,8 +915,8 @@ export default class ABViewForm extends ABViewContainer {
 		// add a new component
 		this._views.push(newView);
 
-		// update properties when a sub-view is destroyed
-		newView.once('destroyed', () => { ABViewForm.propertyEditorPopulate(ids, this); });
+
+		return newView;
 
 	}
 
