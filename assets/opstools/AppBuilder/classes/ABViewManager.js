@@ -26,6 +26,7 @@ import ABViewDetailCustom from "./views/ABViewDetailCustom"
 import ABViewDetailImage from "./views/ABViewDetailImage"
 import ABViewDetailSelectivity from "./views/ABViewDetailSelectivity"
 import ABViewDetailText from "./views/ABViewDetailText"
+import ABViewDetailTree from "./views/ABViewDetailTree"
 
 import ABViewForm from "./views/ABViewForm"
 import ABViewFormButton from "./views/ABViewFormButton"
@@ -36,6 +37,7 @@ import ABViewFormDatepicker from "./views/ABViewFormDatepicker"
 import ABViewFormNumber from "./views/ABViewFormNumber"
 import ABViewFormSelectSingle from "./views/ABViewFormSelectSingle"
 import ABViewFormTextbox from "./views/ABViewFormTextbox"
+import ABViewFormTree from "./views/ABViewFormTree"
 
 // import ABViewFormText from "./views/ABViewFormText"
 
@@ -67,6 +69,7 @@ Views[ABViewDetailCustom.common().key] = ABViewDetailCustom;
 Views[ABViewDetailImage.common().key] = ABViewDetailImage;
 Views[ABViewDetailSelectivity.common().key] = ABViewDetailSelectivity;
 Views[ABViewDetailText.common().key] = ABViewDetailText;
+Views[ABViewDetailTree.common().key] = ABViewDetailTree;
 
 Views[ABViewForm.common().key] = ABViewForm;
 Views[ABViewFormButton.common().key] = ABViewFormButton;
@@ -77,6 +80,7 @@ Views[ABViewFormDatepicker.common().key] = ABViewFormDatepicker;
 Views[ABViewFormNumber.common().key] = ABViewFormNumber;
 Views[ABViewFormSelectSingle.common().key] = ABViewFormSelectSingle;
 Views[ABViewFormTextbox.common().key] = ABViewFormTextbox;
+Views[ABViewFormTree.common().key] = ABViewFormTree;
 // Views[ABViewForm.common().key] = ABViewForm;
 // Views[ABViewFormText.common().key] = ABViewFormText;
 

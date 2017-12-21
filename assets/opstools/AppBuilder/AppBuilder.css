@@ -121,6 +121,9 @@
 }
 
 /* Webix list */
+.webix_tree_item.webix_selected {
+	background: gray;
+}
 .ab-main-container .webix_list_item .webix_selected,
 .ab-main-container .webix_tree_item.webix_selected {
 	color: #fff !important;
@@ -395,6 +398,18 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 .selectivity-single-select {
 	background: transparent !important;
 }
+.form-entry {
+	border-radius: 6px;
+	height: 100%;
+    border: 1px solid #ddd;
+    color: #666;
+    background: #fff;
+    border-color: #ccc;
+	margin-right: 2px;
+}
+.form-entry .selectivity-multiple-selected-item {
+	float: none;
+}
 .webix_template .selectivity-single-select {
 	padding: 0;
 	border: 1px solid #CCC;
@@ -574,6 +589,73 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 	background: #EEE;
 }
 
+/* App Builder Data Tree */
+.ab-data-tree .webix_tree_branch_1 {
+ 	padding: 0 10px 10px 10px;
+}
+
+.ab-data-tree .webix_view {
+	font-family: Helvetica;
+}
+
+.ab-data-tree .webix_tree_item.webix_selected {
+	color: unset;
+}
+
+.ab-data-tree .webix_tree_branch_1 .webix_tree_item {
+	margin: 5px 0 0 0;
+}
+
+.ab-data-tree .webix_tree_branch_2 .webix_tree_checkbox {
+	display: none;
+}
+
+.ab-data-tree .webix_tree_branch_2, .ab-data-tree .webix_tree_branch_3, .ab-data-tree .webix_tree_branch_4, .ab-data-tree .webix_tree_branch_5, .ab-data-tree .webix_tree_branch_6, .ab-data-tree .webix_tree_branch_7  {
+	display: inline-block;
+}
+
+.ab-data-tree .webix_tree_branch_2 label {
+	display: inline-block;
+	padding: 10px 20px 10px 15px;
+	border: 1px solid lightgray;
+	margin-right: 5px;
+	border-radius: 20px;
+	background: rgba(0, 0, 0, .05);
+}
+
+.ab-data-tree label:hover {
+	cursor: pointer;
+}
+
+.ab-data-tree .webix_tree_item {
+	height: unset;
+	line-height: unset;
+}
+
+.ab-data-tree .webix_tree_item:focus {
+	outline: 0 !important;
+}
+
+.ab-data-tree .webix_tree_branch_2 .selected label {
+	border: 1px solid #4CAF50;
+	position: relative;
+	background: rgba(76, 175, 80, 0.17);
+}
+
+.ab-data-tree .webix_tree_branch_2 .selected:focus {
+	outline: none;
+}
+
+.ab-data-tree .webix_tree_branch_2 label:before {
+	content: "\f00c";
+	font-family: FontAwesome;
+	width: 20px;
+	color: #DDD;
+}
+
+.ab-data-tree .webix_tree_branch_2 .selected label:before {
+	color: #4CAF50;
+}
 /*.ab_layout_pane.ab_interface_draggable .webix_list_item .ab-component-in-page:hover::before {
 	background: #666;
 	content: "\f07d";

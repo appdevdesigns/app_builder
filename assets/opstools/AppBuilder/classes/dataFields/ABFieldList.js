@@ -589,7 +589,7 @@ class ABFieldList extends ABFieldSelectivity {
 			
 			if (hasRendered == null) {
 				if (this.settings.hasColors) {
-					var myHex = "#66666";
+					var myHex = "#666666";
 					this.settings.options.forEach(function(h) {
 						if (h.text == node.innerHTML)
 							myHex = h.hex;
