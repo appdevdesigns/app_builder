@@ -66,7 +66,7 @@ export default class ABViewDetailComponent extends ABViewWidget {
 			if (settings.labelPosition == 'top')
 				templateLabel = "<label style='display:block; text-align: left;' class='webix_inp_top_label'>#label#</label>#display#";
 			else
-				templateLabel = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label>#display#";
+				templateLabel = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label><div style='margin-left: #width#px;'>#display#</div>";
 		}
 
 		var template = (templateLabel)

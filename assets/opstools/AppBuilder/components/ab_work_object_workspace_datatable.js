@@ -887,7 +887,8 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                 var tip = "";
                 if (Array.isArray(obj[common.column.id])) {
                     obj[common.column.id].forEach(function (o) {
-                        tip += o.text + "<br/>";
+                        if (o.text)
+                            tip += o.text + "<br/>";
                     });
                 } else if (typeof obj[common.column.id] == "undefined" && typeof obj[common.column.id+"__relation"] != "undefined") {
                     obj[common.column.id+"__relation"].forEach(function (o) {

@@ -886,9 +886,9 @@ export default class ABView extends ABViewBase {
 		// views not allowed to drop onto this View:
 		var viewsToIgnore = ['view', 'page', 'formpanel', 'datacollection', 'viewcontainer',
 			// not allowed Detail's widgets
-			'detailcheckbox', 'detailcustom', 'detailimage', 'detailselectivity', 'detailtext',
+			'detailcheckbox', 'detailcustom', 'detailimage', 'detailselectivity', 'detailtext', 'detailtree', 
 			// not allowed Form's widgets
-			'button', 'checkbox', 'datepicker', 'fieldcustom', 'textbox', 'numberbox', 'selectsingle',
+			'button', 'checkbox', 'datepicker', 'fieldcustom', 'textbox', 'numberbox', 'selectsingle', 'tree',
 			// not allowed Chart's Widgets
 			'pie', 'bar', 'line', /*'area'*/
 		];
