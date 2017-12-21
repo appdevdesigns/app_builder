@@ -141,7 +141,8 @@ export default class ABViewFormButton extends ABView {
 			{
 				name:'saveLabel',
 				view: "text",
-				label: L('ab.component.button.saveLabel', '*Save'),
+				labelWidth: App.config.labelWidthLarge,
+				label: L('ab.component.button.saveLabel', '*Save Label'),
 				placeholder: L('ab.component.button.saveLabelPlaceholder', '*Save Placeholder'),
 			},
 			{
@@ -152,7 +153,8 @@ export default class ABViewFormButton extends ABView {
 			{
 				name:'cancelLabel',
 				view: "text",
-				label: L('ab.component.button.cancelLabel', '*Cancel'),
+				labelWidth: App.config.labelWidthLarge,
+				label: L('ab.component.button.cancelLabel', '*Cancel Label'),
 				placeholder: L('ab.component.button.cancelLabelPlaceholder', '*Cancel Placeholder'),
 			},
 			{
@@ -163,24 +165,28 @@ export default class ABViewFormButton extends ABView {
 			{
 				name:'resetLabel',
 				view: "text",
-				label: L('ab.component.button.resetLabel', '*Reset'),
+				labelWidth: App.config.labelWidthLarge,
+				label: L('ab.component.button.resetLabel', '*Reset Label'),
 				placeholder: L('ab.component.button.resetLabelPlaceholder', '*Reset Placeholder'),
 			},
 			{
 				name: 'afterSave',
 				view: 'richselect',
+				labelWidth: App.config.labelWidthLarge,
 				label: L('ab.component.button.afterSave', '*After Save')
 				// options: []
 			},
 			{
 				name: 'afterCancel',
 				view: 'richselect',
+				labelWidth: App.config.labelWidthLarge,
 				label: L('ab.component.button.afterCancel', '*After Cancel')
 				// options: []
 			},
 			{
 				name: 'alignment',
 				view: 'richselect',
+				labelWidth: App.config.labelWidthLarge,
 				label: L('ab.component.button.alignment', '*Alignment'),
 				options: [
 					{ id: 'left', value: L('ab.component.button.alignment.left', '*Left') },
@@ -271,10 +277,24 @@ export default class ABViewFormButton extends ABView {
 				view: "button",
 				type: "standard",
 				css: "ab-cancel-button",
-				width: 80,
+				autowidth: true,
 				value: this.settings.cancelLabel != null ? this.settings.cancelLabel : ABViewFormButtonPropertyComponentDefaults.cancelLabel,
 				click: function () {
 					_logic.onCancel(this);
+				}
+			});
+		}
+		
+		// reset button
+		if (this.settings.includeReset != null ? JSON.parse(this.settings.includeReset) : ABViewFormButtonPropertyComponentDefaults.includeReset) {
+			_ui.cols.push({
+				view: "button",
+				type: "standard",
+				css: "ab-reset-button",
+				autowidth: true,
+				value: this.settings.resetLabel != null ? this.settings.resetLabel : ABViewFormButtonPropertyComponentDefaults.resetLabel,
+				click: function () {
+					_logic.onClear(this);
 				}
 			});
 		}
@@ -284,23 +304,10 @@ export default class ABViewFormButton extends ABView {
 			_ui.cols.push({
 				view: "button",
 				type: "form",
-				width: 80,
+				autowidth: true,
 				value: this.settings.saveLabel != null ? this.settings.saveLabel : ABViewFormButtonPropertyComponentDefaults.saveLabel,
 				click: function () {
 					_logic.onSave(this);
-				}
-			});
-		}
-
-		// reset button
-		if (this.settings.includeReset != null ? JSON.parse(this.settings.includeReset) : ABViewFormButtonPropertyComponentDefaults.includeReset) {
-			_ui.cols.push({
-				view: "button",
-				type: "form",
-				width: 80,
-				value: this.settings.resetLabel != null ? this.settings.resetLabel : ABViewFormButtonPropertyComponentDefaults.resetLabel,
-				click: function () {
-					_logic.onClear(this);
 				}
 			});
 		}

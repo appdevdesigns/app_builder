@@ -851,6 +851,10 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 	color: #666 !important;
 	box-shadow: none !important;
 }
+.ab-reset-button button {
+	background: #BBB;
+	border-color: #AAA;
+}
 .ab-cancel-button button {
 	background: transparent !important;
 	color: #AAA;
