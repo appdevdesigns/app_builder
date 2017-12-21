@@ -426,27 +426,28 @@ class ABFieldTree extends ABField {
               // works for the same-level children only
               // except root items
               if (this.getParentId(id)) {
+                tree.blockEvent(); // prevents endless loop
+
                 var rootid = id;
                 while (this.getParentId(rootid)) {
                   rootid = this.getParentId(rootid);
+                  if (rootid != id)
+                    tree.uncheckItem(rootid);
                 }
-                tree.blockEvent(); // prevents endless loop
-                if (rootid != id)
-                  tree.uncheckItem(rootid);
-                tree.unblockEvent();
 
                 this.data.eachSubItem(rootid, function(item) {
-                  tree.blockEvent(); // prevents endless loop
                   if (item.id != id)
                     tree.uncheckItem(item.id);
-                  tree.unblockEvent();
                 });
+
+                tree.unblockEvent();
               } else {
-                this.data.eachChild(id, function(obj) {
-                  tree.blockEvent(); // prevents endless loop
-                  tree.uncheckItem(obj.id);
-                  tree.unblockEvent();
-                }, this); // because of the notation, "this" in eachChild 
+                tree.blockEvent(); // prevents endless loop
+                this.data.eachSubItem(id, function(obj) {
+                  if (obj.id != id)
+                    tree.uncheckItem(obj.id);
+                }); 
+                tree.unblockEvent();
               };
               var values = {};
               values[field.columnName] = $$(idTree).getChecked();
