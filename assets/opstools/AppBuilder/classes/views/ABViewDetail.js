@@ -165,6 +165,7 @@ export default class ABViewDetail extends ABViewContainer {
 				name: 'datacollection',
 				view: 'richselect',
 				label: L('ab.components.detail.dataSource', "*Data Source"),
+				labelWidth: App.config.labelWidthLarge,
 				on: {
 					onChange: _logic.selectSource
 				}
@@ -187,12 +188,14 @@ export default class ABViewDetail extends ABViewContainer {
 			{
 				name: 'showLabel',
 				view: 'checkbox',
-				label: L('ab.components.detail.showlabel', "*Display Label")
+				label: L('ab.components.detail.showlabel', "*Display Label"),
+				labelWidth: App.config.labelWidthLarge,
 			},
 			{
 				name: 'labelPosition',
 				view: 'richselect',
 				label: L('ab.components.detail.labelPosition', "*Label Position"),
+				labelWidth: App.config.labelWidthLarge,
 				options: [
 					{
 						id: 'left',
@@ -208,6 +211,7 @@ export default class ABViewDetail extends ABViewContainer {
 				name: 'labelWidth',
 				view: 'counter',
 				label: L('ab.components.detail.labelWidth', "*Label Width"),
+				labelWidth: App.config.labelWidthLarge,
 			},
 			{
 				view: 'counter',
