@@ -59,10 +59,30 @@ export default class RowFilter extends OP.Component {
 
 		// setting up UI
 		this.init = (options) => {
+
+			// register our callbacks:
+			for (var c in _logic.callbacks) {
+				_logic.callbacks[c] = options[c] || _logic.callbacks[c];
+			}
+
 		};
 
 		// internal business logic 
 		var _logic = this._logic = {
+
+			callbacks: {
+
+				/**
+				 * @function onChange
+				 * called when we have made changes to the filter field settings
+				 * of our Current Object.
+				 *
+				 * this is meant to alert our parent component to respond to the
+				 * change.
+				 */
+				onChange: function () { }
+			},
+
 
 			/**
 			 * @method fieldsLoad
@@ -494,6 +514,8 @@ export default class RowFilter extends OP.Component {
 			},
 
 			onChange: function () {
+
+				_logic.callbacks.onChange();
 
 			},
 

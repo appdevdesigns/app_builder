@@ -467,6 +467,10 @@ export default class ABViewForm extends ABViewContainer {
 			};
 		});
 
+		dcOptions.unshift({
+			id: null,
+			value: '[Select]'
+		});
 		SourceSelector.define('options', dcOptions);
 		SourceSelector.define('value', dataCollectionId);
 		SourceSelector.refresh();
@@ -480,7 +484,7 @@ export default class ABViewForm extends ABViewContainer {
 				v.once('destroyed', () => this.propertyEditorPopulate(ids, view));
 		});
 
-		$$(ids.datacollection).enable();
+		SourceSelector.enable();
 		$$(ids.showLabel).setValue(view.settings.showLabel);
 		$$(ids.labelPosition).setValue(view.settings.labelPosition || ABViewFormPropertyComponentDefaults.labelPosition);
 		$$(ids.labelWidth).setValue(view.settings.labelWidth || ABViewFormPropertyComponentDefaults.labelWidth);

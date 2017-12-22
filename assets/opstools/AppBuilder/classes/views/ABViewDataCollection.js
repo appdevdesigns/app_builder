@@ -6,9 +6,10 @@
 
 import ABView from "./ABView"
 import ABPropertyComponent from "../ABPropertyComponent"
-import ABPopupFilterDataTable from "../../components/ab_work_object_workspace_popupFilterDataTable"
 import ABPopupSortField from "../../components/ab_work_object_workspace_popupSortFields"
 import ABWorkspaceDatatable from "../../components/ab_work_object_workspace_datatable"
+
+import RowFilter from "../RowFilter"
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -55,7 +56,7 @@ var ABViewDefaults = {
 	labelKey: 'ab.components.datacollection' // {string} the multilingual label key for the class label
 }
 
-var PopupFilterDataTableComponent = null;
+var FilterComponent = null;
 var PopupSortFieldComponent = null;
 
 export default class ABViewDataCollection extends ABView {
@@ -226,9 +227,8 @@ export default class ABViewDataCollection extends ABView {
 
 		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
 
-
 		// create filter & sort popups
-		this.initPopupEditors(App, _logic);
+		this.initPopupEditors(App, ids, _logic);
 
 
 		// == Logic ==
@@ -243,17 +243,24 @@ export default class ABViewDataCollection extends ABView {
 			this.populateFixSelector(ids, view, object);
 
 			// re-create filter & sort popups
-			this.initPopupEditors(App, _logic);
+			this.initPopupEditors(App, ids, _logic);
 
 		};
 
 		_logic.toolbarFilter = ($view) => {
-			PopupFilterDataTableComponent.show($view, null, { pos: "top" });
-		}
+			this.filter_popup.show($view, null, { pos: "top" });
+		};
 
 		_logic.toolbarSort = ($view) => {
 			PopupSortFieldComponent.show($view, null, { pos: "top" });
-		}
+		};
+
+		_logic.onFilterChange = () => {
+			var $viewLayout = this.filter_popup.getChildViews()[0];
+			var filter_conditions = FilterComponent.getValue(this.filter_popup, $viewLayout);
+
+			alert(filter_conditions);
+		};
 
 		return commonUI.concat([
 			{
@@ -364,6 +371,7 @@ export default class ABViewDataCollection extends ABView {
 					]
 				}
 			}
+
 		]);
 
 	}
@@ -410,6 +418,9 @@ export default class ABViewDataCollection extends ABView {
 				this.populatePopupEditors(view);
 			});
 		}
+
+		// Set UI of the filter popup
+		// $$(ids.filter_popup).define('body', FilterComponent.ui);
 
 	}
 
@@ -579,15 +590,24 @@ export default class ABViewDataCollection extends ABView {
 	}
 
 
-	static initPopupEditors(App, _logic) {
+	static initPopupEditors(App, ids, _logic) {
 
 		var idBase = 'ABViewDataCollectionPropertyEditor';
 
-		PopupFilterDataTableComponent = new ABPopupFilterDataTable(App, idBase + "_filter");
-		PopupFilterDataTableComponent.init({
+
+		FilterComponent = new RowFilter(App, idBase + "_filter");
+		FilterComponent.init({
 			// when we make a change in the popups we want to make sure we save the new workspace to the properties to do so just fire an onChange event
-			onChange: _logic.onChange
+			onChange: _logic.onFilterChange
 		});
+
+		this.filter_popup = webix.ui({
+			view: "popup",
+			width: 800,
+			hidden: true,
+			body: FilterComponent.ui
+		});
+
 
 		PopupSortFieldComponent = new ABPopupSortField(App, idBase + "_sort");
 		PopupSortFieldComponent.init({
@@ -606,7 +626,11 @@ export default class ABViewDataCollection extends ABView {
 		objectCopy.objectWorkspace = view.settings.objectWorkspace;
 
 		// Populate data to popups
-		PopupFilterDataTableComponent.objectLoad(objectCopy, view);
+		var $viewLayout = this.filter_popup.getChildViews()[0];
+		FilterComponent.fieldsLoad(objectCopy.fields());
+		FilterComponent.setValue(objectCopy.objectWorkspace.filterConditions, $viewLayout);
+		FilterComponent.ini
+
 		PopupSortFieldComponent.objectLoad(objectCopy, view);
 
 	}
