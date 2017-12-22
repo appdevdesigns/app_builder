@@ -398,6 +398,9 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 .selectivity-single-select {
 	background: transparent !important;
 }
+.webix_cell .form-entry {
+	border: 0;
+}
 .form-entry {
 	border-radius: 6px;
 	height: 100%;

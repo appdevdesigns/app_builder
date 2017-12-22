@@ -488,21 +488,74 @@ class ABFieldList extends ABFieldSelectivity {
 	///
 
 	// return the grid column header definition for this instance of ABFieldList
-	columnHeader(isObjectWorkspace, width) {
+	columnHeader(isObjectWorkspace, width, editable) {
 		var config = super.columnHeader(isObjectWorkspace);
+		var field = this;
+		var App = App;
 
 		// Multiple select list
 		if (this.settings.isMultiple == true) {
-			if (typeof width != "undefined") {
-				config.template = '<div style="margin-left: '+width+'px;" class="list-data-values"></div>';				
-			} else {
-				config.template = '<div class="list-data-values"></div>';				
+			
+			config.template = function(row) {
+
+				var node = document.createElement("div");
+				node.classList.add("list-data-values");
+				if (typeof width != "undefined") {
+					node.style.marginLeft = width+'px';				
+				}
+				
+				var domNode = node;
+
+				var placeholder = L('ab.dataField.list.placeholder', '*Select items');
+				var readOnly = false;
+				if (editable != null && editable == false) {
+					readOnly = true;
+					placeholder = "";
+				}
+
+				// var domNode = node.querySelector('.list-data-values');
+
+				// get selected values
+				var selectedData = [];
+				if (row[field.columnName] != null) {
+					selectedData = row[field.columnName];
+				}
+
+				// Render selectivity
+				field.selectivityRender(domNode, {
+					multiple: true,
+					readOnly: readOnly,
+					placeholder: placeholder,
+					hasColors: field.settings.hasColors,
+					items: field.settings.options,
+					data: selectedData
+				}, App, row);
+
+				return node.outerHTML;
+
 			}
+			
 		}
 		// Single select list
 		else {
+			config.template = function(obj) {
+				var myHex = "#666666";
+				var myText = "";
+				field.settings.options.forEach(function(h) {
+					if (h.id == obj[field.columnName]) {
+						myHex = h.hex;
+						myText = h.text;
+					}
+				});
+				if (field.settings.hasColors) {
+					return '<span class="selectivity-multiple-selected-item rendered" style="background-color:'+myHex+' !important;">'+myText+'</span>';
+				} else {
+					return myText;
+				}		
+			}
+
 			config.editor = 'richselect';
-			config.options = this.settings.options.map(function (opt) {
+			config.options = field.settings.options.map(function (opt) {
 				return {
 					id: opt.id,
 					value: opt.text,
@@ -564,7 +617,7 @@ class ABFieldList extends ABFieldSelectivity {
 
 					// pass null because it could not put empty array in REST api
 					if (values[this.columnName].length == 0)
-						values[this.columnName] = [];
+						values[this.columnName] = "";
 
 					this.object.model().update(row.id, values)
 						.then(() => {

@@ -775,9 +775,12 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                     DataTable.define('rightSplit', 0);
     				DataTable.clearAll();
 
+                    var isEditable = false;
+                    if (settings.isEditable)
+                        isEditable = settings.isEditable;
     				//// update DataTable structure:
     				// get column list from our CurrentObject
-    				var columnHeaders = CurrentObject.columnHeaders(true);
+    				var columnHeaders = CurrentObject.columnHeaders(true, settings.isEditable);
                     
                     if (settings.isEditable == 0) {
                         columnHeaders.forEach(function(col) {
