@@ -382,13 +382,56 @@ class ABFieldConnect extends ABFieldSelectivity {
 	///
 
 	// return the grid column header definition for this instance of ABFieldConnect
-	columnHeader(isObjectWorkspace, width) {
+	columnHeader(isObjectWorkspace, width, editable) {
 		var config = super.columnHeader(isObjectWorkspace);
+		var field = this;
+		var App = App;
 
-		if (typeof width != "undefined") {
-			config.template = '<div style="margin-left: '+width+'px" class="connect-data-values"></div>';			
-		} else {
-			config.template = '<div class="connect-data-values"></div>';
+		// if (typeof width != "undefined") {
+		// 	config.template = '<div style="margin-left: '+width+'px" class="connect-data-values"></div>';			
+		// } else {
+		// 	config.template = '<div class="connect-data-values"></div>';
+		// }
+
+		config.template = function(row) {
+
+			var node = document.createElement("div");
+			node.classList.add("connect-data-values");
+			if (typeof width != "undefined") {
+				node.style.marginLeft = width+'px';				
+			}
+			
+			var domNode = node;
+
+			var multiselect = (field.settings.linkType == 'many');
+
+			var placeholder = L('ab.dataField.connect.placeholder_single', '*Select item');
+			if (multiselect) {
+				placeholder = L('ab.dataField.connect.placeholder_multiple', '*Select items');			
+			}
+			var readOnly = false;
+			if (editable != null && editable == false) {
+				readOnly = true;
+				placeholder = "";
+			}
+
+			// var domNode = node.querySelector('.list-data-values');
+
+			// get selected values
+			var selectedData = field.pullRelationValues(row);
+			
+			var multiselect = (field.settings.linkType == 'many');
+
+			// Render selectivity
+			field.selectivityRender(domNode, {
+				multiple: multiselect,
+				readOnly: readOnly,
+				placeholder: placeholder,
+				data: selectedData
+			}, App, row);
+
+			return node.outerHTML;
+
 		}
 
 		return config;
@@ -422,15 +465,21 @@ class ABFieldConnect extends ABFieldSelectivity {
 		// get selected values
 		var selectedData = this.pullRelationValues(row);
 
+		var placeholder = L('ab.dataField.connect.placeholder_single', '*Select item');
+		if (multiselect) {
+			placeholder = L('ab.dataField.connect.placeholder_multiple', '*Select items');			
+		}
 		var readOnly = false;
 		if (editable != null && editable == false) {
 			readOnly = true;
+			placeholder = "";
 		}
 
 		// Render selectivity
 		this.selectivityRender(domNode, {
 			multiple: multiselect,
 			data: selectedData,
+			placeholder: placeholder,
 			readOnly: readOnly,
 			ajax: {
 				url: 'It will call url in .getOptions function', // require
@@ -467,6 +516,8 @@ class ABFieldConnect extends ABFieldSelectivity {
 						values[this.relationName()] = values[this.columnName];
 
 						// update new value to item of DataTable .updateItem
+						if (values[this.columnName] == "")
+							values[this.columnName] = [];
 						if ($$(node) && $$(node).updateItem)
 							$$(node).updateItem(row.id, values);
 					})

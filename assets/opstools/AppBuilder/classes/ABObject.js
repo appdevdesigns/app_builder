@@ -278,7 +278,6 @@ export default class ABObject extends ABObjectBase {
 		var columnNameLookup = {};
 
 		// get the header for each of our fields:
-		console.log(isObjectWorkspace);
 		this._fields.forEach(function(f){
 			var header = f.columnHeader(isObjectWorkspace, null, isEditable);
 			if (f.settings.width != 0) {

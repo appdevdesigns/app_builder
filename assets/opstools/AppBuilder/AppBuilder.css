@@ -363,6 +363,9 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 }
 
 /* Custom selectivity */
+.selectivity-placeholder {
+	color: #CCC;
+}
 .selectivity-multiple-input-container {
 	background: none !important;
 	padding: 0px !important;
@@ -428,9 +431,6 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 }
 .selectivity-single-result-container {
 	top: .0em !important;
-}
-.selectivity-single-selected-item-remove {
-	padding: 10 5px !important;
 }
 .selectivity-caret {
 	top: .4em !important;

@@ -951,9 +951,9 @@ export default class ABViewForm extends ABViewContainer {
 
 			});
 
-			// clear undefined values
+			// clear undefined values or empty arrays
 			for (var prop in formVals) {
-				if (formVals[prop] == null)
+				if (formVals[prop] == null || formVals[prop].length == 0)
 					formVals[prop] = '';
 			}
 

@@ -506,7 +506,7 @@ class ABFieldList extends ABFieldSelectivity {
 				
 				var domNode = node;
 
-				var placeholder = L('ab.dataField.list.placeholder', '*Select items');
+				var placeholder = L('ab.dataField.list.placeholder_multiple', '*Select items');
 				var readOnly = false;
 				if (editable != null && editable == false) {
 					readOnly = true;
@@ -582,7 +582,7 @@ class ABFieldList extends ABFieldSelectivity {
 		if (!node) { return }
 
 		if (this.settings.isMultiple == true) {
-			var placeholder = L('ab.dataField.list.placeholder', '*Select items');
+			var placeholder = L('ab.dataField.list.placeholder_multiple', '*Select items');
 			var readOnly = false;
 			if (editable != null && editable == false) {
 				readOnly = true;
@@ -622,6 +622,8 @@ class ABFieldList extends ABFieldSelectivity {
 					this.object.model().update(row.id, values)
 						.then(() => {
 							// update the client side data object as well so other data changes won't cause this save to be reverted
+							if (values[this.columnName] == "")
+								values[this.columnName] = [];
 							if ($$(node) && $$(node).updateItem)
 								$$(node).updateItem(row.id, values);
 						})
