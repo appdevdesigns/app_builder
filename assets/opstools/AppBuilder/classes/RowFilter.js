@@ -54,6 +54,7 @@ export default class RowFilter extends OP.Component {
 
 		var _Object;
 		var _Fields;
+		var config_settings = {};
 
 		// setting up UI
 		this.init = (options) => {
@@ -120,7 +121,7 @@ export default class RowFilter extends OP.Component {
 							view: "combo",
 							id: ids.combineCondition,
 							width: 80,
-							value: this.config_settings.combineCondition,
+							value: config_settings.combineCondition,
 							options: [
 								{
 									value: labels.component.and,
@@ -428,7 +429,7 @@ export default class RowFilter extends OP.Component {
 
 					viewId = $viewForm.addView(ui, index);
 
-					_logic.toggleAddNewButton($viewForm);
+					_logic.toggleAddNewButton();
 				}
 
 				return viewId;
@@ -440,7 +441,7 @@ export default class RowFilter extends OP.Component {
 
 				$viewForm.removeView($viewCond);
 
-				_logic.toggleAddNewButton($viewForm);
+				_logic.toggleAddNewButton();
 
 				_logic.onChange();
 
@@ -469,7 +470,7 @@ export default class RowFilter extends OP.Component {
 			selectCombineCondition: (val, ignoreNotify) => {
 
 				// define combine value to configuration
-				this.config_settings.combineCondition = val;
+				config_settings.combineCondition = val;
 
 				// update value of every combine conditions
 				var $viewConds = $$(ids.filterForm).getChildViews();
@@ -546,7 +547,7 @@ export default class RowFilter extends OP.Component {
 			 */
 			getValue: () => {
 
-				this.config_settings.filters = [];
+				config_settings.filters = [];
 
 				var $viewForm = $$(ids.filterForm);
 
@@ -571,7 +572,7 @@ export default class RowFilter extends OP.Component {
 						value = $viewConditionValue.getValue();
 
 
-					this.config_settings.filters.push({
+					config_settings.filters.push({
 						fieldId: fieldId,
 						operator: operator,
 						inputValue: value
@@ -580,7 +581,7 @@ export default class RowFilter extends OP.Component {
 
 				});
 
-				return this.config_settings;
+				return config_settings;
 
 			},
 
@@ -588,21 +589,21 @@ export default class RowFilter extends OP.Component {
 
 			setValue: (settings) => {
 
-				this.config_settings = settings || {};
+				config_settings = settings || {};
 
 				// Redraw form with no elements
 				var $viewForm = $$(ids.filterForm);
 				if ($viewForm)
 					webix.ui([], $viewForm);
 
-				this.config_settings.filters = this.config_settings.filters || [];
+				config_settings.filters = config_settings.filters || [];
 
 				// Add "new filter" button
-				if (this.config_settings.filters.length == 0) {
+				if (config_settings.filters.length == 0) {
 					_logic.toggleAddNewButton();
 				}
 
-				this.config_settings.filters.forEach(f => {
+				config_settings.filters.forEach(f => {
 
 					var viewId = _logic.addNewFilter(),
 						$viewCond = $$(viewId);
@@ -610,7 +611,7 @@ export default class RowFilter extends OP.Component {
 					if ($viewCond == null) return;
 
 					// "And" "Or"
-					$viewCond.$$(ids.combineCondition).define('value', this.config_settings.combineCondition);
+					$viewCond.$$(ids.combineCondition).define('value', config_settings.combineCondition);
 					$viewCond.$$(ids.combineCondition).refresh();
 
 					// Select Field
@@ -648,11 +649,11 @@ export default class RowFilter extends OP.Component {
 			isValid: (rowData) => {
 
 				// If no conditions, then return true
-				if (this.config_settings == null || this.config_settings.filters == null) return true;
+				if (config_settings == null || config_settings.filters == null) return true;
 
-				var result = (this.config_settings.combineCondition === "And" ? true : false);
+				var result = (config_settings.combineCondition === "And" ? true : false);
 
-				this.config_settings.filters.forEach(filter => {
+				config_settings.filters.forEach(filter => {
 
 					var fieldInfo = _Fields.filter(f => f.id == filter.fieldId)[0];
 					if (!fieldInfo) return;
@@ -684,7 +685,7 @@ export default class RowFilter extends OP.Component {
 							break;
 					}
 
-					if (this.config_settings.combineCondition === "And") {
+					if (config_settings.combineCondition === "And") {
 						result = result && condResult;
 					} else {
 						result = result || condResult;
@@ -853,6 +854,7 @@ export default class RowFilter extends OP.Component {
 				{
 					view: "form",
 					id: ids.filterForm,
+					hidden: true,
 					elements: []
 				},
 				_logic.getAddButtonUI()

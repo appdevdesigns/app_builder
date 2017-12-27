@@ -25,10 +25,12 @@ export default class RowUpdater extends OP.Component {
 
 		// internal list of Webix IDs to reference our UI components.
 		var ids = {
-			updateForm: this.unique('updateForm'),
+			updateForm: this.unique(idBase + '_updateForm'),
+			addNew: this.unique(idBase + '_addNew'),
+
 			field: this.unique('field'),
 			updateAction: this.unique('updateAction'),
-			addNew: this.unique('addNew')
+
 		};
 
 		var _Object;
@@ -136,7 +138,7 @@ export default class RowUpdater extends OP.Component {
 
 								var indexView = $viewForm.index(this.getParentView());
 
-								_logic.addUpdateValue($viewForm, indexView + 1);
+								_logic.addUpdateValue(indexView + 1);
 							}
 						},
 						{
@@ -147,10 +149,9 @@ export default class RowUpdater extends OP.Component {
 							width: 30,
 							click: function () {
 
-								var $viewForm = this.getFormView();
 								var $viewCond = this.getParentView();
 
-								_logic.removeUpdateValue($viewForm, $viewCond);
+								_logic.removeUpdateValue($viewCond);
 							}
 						}
 					]
@@ -167,14 +168,15 @@ export default class RowUpdater extends OP.Component {
 					label: labels.component.addNew,
 					click: function () {
 
-						var $viewForm = this.getFormView();
-						_logic.addUpdateValue($viewForm);
+						_logic.addUpdateValue();
 
 					}
 				}
 			},
 
-			addUpdateValue: function ($viewForm, index) {
+			addUpdateValue: function (index) {
+
+				var $viewForm = $$(ids.updateForm);
 
 				var remainFields = _logic.getFieldList(true);
 				if (remainFields.length < 1) return;
@@ -183,30 +185,37 @@ export default class RowUpdater extends OP.Component {
 
 				var viewId = $viewForm.addView(ui, index);
 
-				_logic.toggleAddNewButton($viewForm);
+				_logic.toggleAddNewButton();
 
 				return viewId;
 			},
 
-			removeUpdateValue: function ($viewForm, $viewCond) {
+			removeUpdateValue: function ($viewCond) {
+
+				var $viewForm = $$(ids.updateForm);
 
 				$viewForm.removeView($viewCond);
 
-				_logic.toggleAddNewButton($viewForm);
+				_logic.toggleAddNewButton();
 
 			},
 
-			toggleAddNewButton: function ($viewForm) {
+			toggleAddNewButton: function () {
 
-				// Add "Add new filter" button
+				var $viewForm = $$(ids.updateForm);
+				if (!$viewForm) return;
+
+				// Show "Add new filter" button
 				if ($viewForm.getChildViews().length < 1) {
-					$viewForm.addView(_logic.getAddButtonUI());
-				}
-				// Remove "Add new filter" button
-				else {
-					if ($viewForm.$$(ids.addNew))
-						$viewForm.removeView(ids.addNew);
 
+					$viewForm.hide();
+					$$(ids.addNew).show();
+				}
+				// Hide "Add new filter" button
+				else {
+
+					$viewForm.show();
+					$$(ids.addNew).hide();
 				}
 
 			},
@@ -234,10 +243,11 @@ export default class RowUpdater extends OP.Component {
 
 			},
 
-			getValue: function ($viewForm) {
+			getValue: function () {
 
 				var result = [];
 
+				var $viewForm = $$(ids.updateForm);
 
 				$viewForm.getChildViews().forEach($viewCond => {
 
@@ -271,20 +281,24 @@ export default class RowUpdater extends OP.Component {
 
 			},
 
-			setValue: function (settings, $viewForm) {
+			setValue: function (settings) {
 
 				settings = settings || [];
 
+				var $viewForm = $$(ids.updateForm);
 				if (!$viewForm || settings.length < 1) return;
 
-				// Rebuild
-				$viewForm.getChildViews().forEach(v => {
-					$viewForm.removeView(v);
-				});
+				// Redraw form with no elements
+				webix.ui([], $viewForm);
+
+				// Add "new filter" button
+				if (settings.length == 0) {
+					_logic.toggleAddNewButton();
+				}
 
 				settings.forEach(item => {
 
-					var $viewCond = $$(_logic.addUpdateValue($viewForm));
+					var $viewCond = $$(_logic.addUpdateValue());
 
 					$viewCond.$$(ids.field).setValue(item.fieldId);
 
@@ -299,6 +313,8 @@ export default class RowUpdater extends OP.Component {
 
 				});
 
+				$viewForm.adjust();
+
 			}
 
 
@@ -306,10 +322,13 @@ export default class RowUpdater extends OP.Component {
 
 		// webix UI definition:
 		this.ui = {
-			view: "form",
-			id: ids.updateForm,
-			isolate: true,
-			elements: [
+			rows: [
+				{
+					view: "form",
+					id: ids.updateForm,
+					hidden: true,
+					elements: []
+				},
 				_logic.getAddButtonUI()
 			]
 		};

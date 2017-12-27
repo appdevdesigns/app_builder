@@ -72,7 +72,6 @@ export default class ABViewFormPropertyRecordRule extends OP.Component {
 						body: {
 							view: "layout",
 							id: ids.rules,
-							isolate: true,
 							margin: 20,
 							rows: []
 						}
@@ -153,13 +152,10 @@ export default class ABViewFormPropertyRecordRule extends OP.Component {
 				var $viewRules = $$(ids.rules).getChildViews();
 				$viewRules.forEach(r => {
 
-					var $whenContainer = r.$$(ids.when);
-					var $setContainer = r.$$(ids.values).getChildViews()[0].$$(ids.set);
-
 					results.push({
-						action: r.$$(ids.action).getValue(),
-						when: r.config.when.getValue($whenContainer),
-						values: r.config.set.getValue($setContainer),
+						action: r.queryView({ for: "action" }).getValue(),
+						when: r.config.when.getValue(),
+						values: r.config.set.getValue(),
 					})
 
 				});
@@ -196,10 +192,7 @@ export default class ABViewFormPropertyRecordRule extends OP.Component {
 					set.objectLoad(_currentObject);
 				}
 
-				var when_ui = when.ui;
 				var set_ui = set.ui;
-
-				when_ui.id = ids.when;
 				set_ui.id = ids.set;
 				set_ui.width = 560;
 
@@ -229,7 +222,7 @@ export default class ABViewFormPropertyRecordRule extends OP.Component {
 						// Action
 						{
 							view: "richselect",
-							id: ids.action,
+							for: "action",
 							label: labels.component.action,
 							labelWidth: App.config.labelWidthLarge,
 							value: actionOptions[0].id,
@@ -249,12 +242,12 @@ export default class ABViewFormPropertyRecordRule extends OP.Component {
 									label: labels.component.when,
 									width: App.config.labelWidthLarge
 								},
-								when_ui
+								when.ui
 							]
 						},
 						// Values
 						{
-							id: ids.values,
+							for: "values",
 							cells: [
 								// Update this record
 								{
@@ -293,7 +286,7 @@ export default class ABViewFormPropertyRecordRule extends OP.Component {
 			selectAction: (action, $viewRule) => {
 
 				// Swtich the view of values
-				$viewRule.$$(ids.values).showBatch(action);
+				$viewRule.queryView({ for: "values" }).showBatch(action);
 			},
 
 			hide: function () {
@@ -315,17 +308,16 @@ export default class ABViewFormPropertyRecordRule extends OP.Component {
 				_rules = rules || [];
 				_rules.forEach(r => {
 
-					// Select 'action'
 					var $viewRule = $$(_logic.addRule());
-					$viewRule.$$(ids.action).setValue(r.action);
+
+					// Select 'action'
+					$viewRule.queryView({ for: "action" }).setValue(r.action);
 
 					// Set 'when'
-					var $viewWhen = $viewRule.$$(ids.when);
-					$viewRule.config.when.setValue(r.when, $viewWhen);
+					$viewRule.config.when.setValue(r.when);
 
 					// Define 'value'
-					var $viewSet = $viewRule.$$(ids.values).getChildViews()[0].$$(ids.set);
-					$viewRule.config.set.setValue(r.values, $viewSet);
+					$viewRule.config.set.setValue(r.values);
 
 				});
 
