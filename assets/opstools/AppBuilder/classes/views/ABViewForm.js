@@ -672,7 +672,7 @@ export default class ABViewForm extends ABViewContainer {
 							var values = {};
 							f.field().defaultValue(values);
 
-							if (values[colName] != null)
+							if (values[colName] != null && $$(comp.ui.id).setValue)
 								$$(comp.ui.id).setValue(values[colName]);
 						}
 					});

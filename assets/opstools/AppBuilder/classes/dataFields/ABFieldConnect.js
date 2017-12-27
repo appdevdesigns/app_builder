@@ -387,12 +387,6 @@ class ABFieldConnect extends ABFieldSelectivity {
 		var field = this;
 		var App = App;
 
-		// if (typeof width != "undefined") {
-		// 	config.template = '<div style="margin-left: '+width+'px" class="connect-data-values"></div>';			
-		// } else {
-		// 	config.template = '<div class="connect-data-values"></div>';
-		// }
-
 		config.template = function(row) {
 
 			var node = document.createElement("div");

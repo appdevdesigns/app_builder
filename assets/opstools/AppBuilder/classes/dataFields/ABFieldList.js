@@ -538,17 +538,25 @@ class ABFieldList extends ABFieldSelectivity {
 		}
 		// Single select list
 		else {
+			
+			var formClass = "";
+		    var placeHolder = "";
+		    if (editable) {
+		        formClass = " form-entry";
+		        placeHolder = "<span style='color: #CCC; padding: 0 5px;'>"+L('ab.dataField.list.placeholder', '*Select item')+"</span>";
+		    }
+			
 			config.template = function(obj) {
 				var myHex = "#666666";
-				var myText = "";
+				var myText = placeHolder;
 				field.settings.options.forEach(function(h) {
 					if (h.id == obj[field.columnName]) {
 						myHex = h.hex;
 						myText = h.text;
 					}
 				});
-				if (field.settings.hasColors) {
-					return '<span class="selectivity-multiple-selected-item rendered" style="background-color:'+myHex+' !important;">'+myText+'</span>';
+				if (field.settings.hasColors && obj[field.columnName]) {
+					return '<span class="selectivity-multiple-selected-item rendered'+formClass+'" style="background-color:'+myHex+' !important;">'+myText+'</span>';
 				} else {
 					return myText;
 				}		
@@ -640,18 +648,22 @@ class ABFieldList extends ABFieldSelectivity {
 			}
 
 		} else {
-			var hasRendered = node.querySelector('.rendered');
-			
-			if (hasRendered == null) {
-				if (this.settings.hasColors) {
-					var myHex = "#666666";
-					this.settings.options.forEach(function(h) {
-						if (h.text == node.innerHTML)
-							myHex = h.hex;
-					});
-					node.innerHTML = '<span class="selectivity-multiple-selected-item rendered" style="background-color:'+myHex+' !important;">'+node.innerHTML+'</span>';
-				}				
-			}
+			// var hasRendered = node.querySelector('.rendered');
+            // 
+			// if (hasRendered == null) {
+			// 	if (this.settings.hasColors) {
+			// 		var myHex = "#666666";
+			// 		this.settings.options.forEach(function(h) {
+			// 			if (h.text == node.innerHTML)
+			// 				myHex = h.hex;
+			// 		});
+			// 		if (node.innerHTML != L('ab.dataField.list.placeholder', '*Select item')) {
+			// 			node.innerHTML = '<span class="selectivity-multiple-selected-item rendered" style="background-color:'+myHex+' !important;">'+node.innerHTML+'</span>';
+			// 		} else {
+			// 			node.innerHTML = "<span style='color: #CCC; padding: 0 5px;'>"+node.innerHTML+"</span>";
+			// 		}
+			// 	}				
+			// }
 		}
 
 	}
