@@ -74,6 +74,11 @@ export default class ABViewDataCollection extends ABView {
 
 		this.__dataCollection = dataCollectionNew();
 
+		// Set filter value
+		this.__filterComponent = new RowFilter();
+		this.__filterComponent.objectLoad(this.datasource);
+		this.__filterComponent.setValue(this.settings.objectWorkspace.filterConditions || ABViewPropertyDefaults.objectWorkspace.filterConditions);
+
 		// refresh a data collection
 		// this.init();
 
@@ -635,9 +640,10 @@ export default class ABViewDataCollection extends ABView {
 		}
 
 		// Populate data to popups
-		var $viewLayout = this.filter_popup.getChildViews()[0];
 		FilterComponent.objectLoad(objectCopy);
 		FilterComponent.setValue(filterConditions);
+		view.__filterComponent.objectLoad(objectCopy);
+		view.__filterComponent.setValue(filterConditions);
 
 		PopupSortFieldComponent.objectLoad(objectCopy, view);
 
@@ -751,7 +757,7 @@ export default class ABViewDataCollection extends ABView {
 			var rowData = data.data;
 
 			// filter condition before add 
-			if (!FilterComponent.isValid(rowData))
+			if (!this.__filterComponent.isValid(rowData))
 				return;
 
 			if (!this.__dataCollection.exists(rowData.id)) {
