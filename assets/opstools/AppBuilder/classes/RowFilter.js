@@ -41,8 +41,8 @@ export default class RowFilter extends OP.Component {
 
 		// internal list of Webix IDs to reference our UI components.
 		var ids = {
-			filterForm: this.unique('filterForm'),
-			addNewFilter: this.unique('addNewFilter'),
+			filterForm: this.unique(idBase + '_filterForm'),
+			addNewFilter: this.unique(idBase + '_addNewFilter'),
 
 			combineCondition: this.unique('combineCondition'),
 			field: this.unique('field'),
@@ -52,6 +52,7 @@ export default class RowFilter extends OP.Component {
 			listOptions: this.unique('listOptions')
 		};
 
+		var _Object = null;
 		var _Fields = null;
 		var config_settings = {
 			combineCondition: 'And' // Default
@@ -85,14 +86,15 @@ export default class RowFilter extends OP.Component {
 
 
 			/**
-			 * @method fieldsLoad
-			 * set field list
+			 * @method objectLoad
+			 * set object
 			 * 
-			 * @param fieldList {Array} - [ABField1, ..., ABFieldn]
+			 * @param object {Object}
 			 */
-			fieldsLoad: function (fieldList) {
+			objectLoad: function (object) {
 
-				_Fields = fieldList.filter(f => f.fieldIsFilterable());
+				_Object = object;
+				_Fields = _Object ? _Object.fields(f => f.fieldIsFilterable()) : [];
 
 			},
 
@@ -385,7 +387,7 @@ export default class RowFilter extends OP.Component {
 
 								var indexView = $viewForm.index(this.getParentView());
 
-								_logic.addNewFilter($viewForm, indexView + 1);
+								_logic.addNewFilter(indexView + 1);
 							}
 						},
 						{
@@ -395,10 +397,9 @@ export default class RowFilter extends OP.Component {
 							width: 30,
 							click: function () {
 
-								var $viewForm = this.getFormView();
 								var $viewCond = this.getParentView();
 
-								_logic.removeNewFilter($viewForm, $viewCond);
+								_logic.removeNewFilter($viewCond);
 							}
 						}
 					]
@@ -414,15 +415,17 @@ export default class RowFilter extends OP.Component {
 					label: labels.component.addNewFilter,
 					click: function () {
 
-						var $viewForm = this.getFormView();
-						_logic.addNewFilter($viewForm);
+						_logic.addNewFilter();
 
 					}
 				};
 			},
 
-			addNewFilter: function ($viewForm, index) {
+			addNewFilter: function (index) {
+
 				var ui = _logic.getFilterUI();
+
+				var $viewForm = $$(ids.filterForm);
 
 				var viewId = $viewForm.addView(ui, index);
 
@@ -431,7 +434,9 @@ export default class RowFilter extends OP.Component {
 				return viewId;
 			},
 
-			removeNewFilter: function ($viewForm, $viewCond) {
+			removeNewFilter: function ($viewCond) {
+
+				var $viewForm = $$(ids.filterForm);
 
 				$viewForm.removeView($viewCond);
 
@@ -441,39 +446,42 @@ export default class RowFilter extends OP.Component {
 
 			},
 
-			toggleAddNewButton: function ($viewForm) {
+			toggleAddNewButton: function () {
 
-				// Add "Add new filter" button
-				if ($viewForm.getChildViews().length < 1) {
-					$viewForm.addView(_logic.getAddButtonUI());
+				// Show "Add new filter" button
+				if ($$(ids.filterForm).getChildViews().length < 1) {
+
+					$$(ids.filterForm).hide();
+					$$(ids.addNewFilter).show();
 				}
-				// Remove "Add new filter" button
+				// Hide "Add new filter" button
 				else {
-					if ($viewForm.$$(ids.addNewFilter))
-						$viewForm.removeView(ids.addNewFilter);
 
+					$$(ids.filterForm).show();
+					$$(ids.addNewFilter).hide();
 				}
 
 
 			},
 
-			selectCombineCondition: function (val, $view) {
+			selectCombineCondition: function (val, ignoreNotify) {
 
 				// define combine value to configuration
 				config_settings.combineCondition = val;
 
 				// update value of every combine conditions
-				var $viewConds = $view.getFormView().getChildViews();
+				var $viewConds = $$(ids.filterForm).getChildViews();
 				$viewConds.forEach(v => {
 					if (v.$$ && v.$$(ids.combineCondition))
 						v.$$(ids.combineCondition).setValue(val);
 				});
 
-				_logic.onChange();
+				if (!ignoreNotify)
+					_logic.onChange();
 
 			},
 
-			selectField: function (columnId, $viewCond) {
+			selectField: function (columnId, $viewCond, ignoreNotify) {
 
 				if (!_Fields) return;
 
@@ -509,7 +517,8 @@ export default class RowFilter extends OP.Component {
 					// isMultiLingualCheckbox.setValue(field.settings.supportMultilingual);
 				}
 
-				_logic.onChange();
+				if (!ignoreNotify)
+					_logic.onChange();
 
 			},
 
@@ -522,8 +531,6 @@ export default class RowFilter extends OP.Component {
 			/**
 			 * @method getValue
 			 * 
-			 * @param $viewForm {Webix elem}
-			 * 
 			 * @return {JSON} - {
 			 * 		combineCondition: 'And'/'Or',
 			 * 		filters: [
@@ -535,9 +542,11 @@ export default class RowFilter extends OP.Component {
 			 * 		]
 			 * }
 			 */
-			getValue: function ($viewForm) {
+			getValue: function () {
 
 				config_settings.filters = [];
+
+				var $viewForm = $$(ids.filterForm);
 
 				$viewForm.getChildViews().forEach($viewCond => {
 
@@ -575,41 +584,50 @@ export default class RowFilter extends OP.Component {
 
 
 
-			setValue: function (settings, $viewForm) {
+			setValue: function (settings) {
+
+				var $viewForm = $$(ids.filterForm);
 
 				config_settings = settings || {};
 
-				if (!$viewForm) return;
-
-				// Rebuild
-				$viewForm.getChildViews().forEach(v => {
-					$viewForm.removeView(v);
-				});
+				// Redraw form with no elements
+				webix.ui([], $viewForm);
 
 				config_settings.filters = config_settings.filters || [];
 
 				// Add "new filter" button
 				if (config_settings.filters.length == 0) {
-					_logic.toggleAddNewButton($viewForm);
+					_logic.toggleAddNewButton();
 				}
 
 				config_settings.filters.forEach(f => {
 
-					var $viewCond = $$(_logic.addNewFilter($viewForm));
+					var $viewCond = $$(_logic.addNewFilter());
 
-					_logic.selectCombineCondition(config_settings.combineCondition, $viewCond);
+					// "And" "Or"
+					$viewCond.$$(ids.combineCondition).define('value', config_settings.combineCondition);
+					$viewCond.$$(ids.combineCondition).refresh();
+					
+					// Select Field
+					$viewCond.$$(ids.field).define('value', f.fieldId);
+					$viewCond.$$(ids.field).refresh();
+					_logic.selectField(f.fieldId, $viewCond, true);
 
-					$viewCond.$$(ids.field).setValue(f.fieldId);
-
+					// Comparer
 					var comparerViewId = $viewCond.$$(ids.comparer).getActiveId();
 					var $viewComparer = $viewCond.$$(ids.comparer).queryView({ id: comparerViewId });
-					if ($viewComparer && $viewComparer.setValue)
-						$viewComparer.setValue(f.comparer);
+					if ($viewComparer && $viewComparer.setValue) {
+						$viewComparer.define('value', f.comparer);
+						$viewComparer.refresh();
+					}
 
+					// Input
 					var valueViewId = $viewCond.$$(ids.conditionValue).getActiveId();
 					var $viewConditionValue = $viewCond.$$(ids.conditionValue).queryView({ id: valueViewId });
-					if ($viewConditionValue && $viewConditionValue.setValue)
-						$viewConditionValue.setValue(f.value);
+					if ($viewConditionValue && $viewConditionValue.setValue) {
+						$viewConditionValue.define('value', f.value);
+						$viewConditionValue.refresh();
+					}
 
 				});
 
@@ -826,10 +844,12 @@ export default class RowFilter extends OP.Component {
 
 		// webix UI definition:
 		this.ui = {
-			view: "form",
-			id: ids.filterForm,
-			isolate: true,
-			elements: [
+			rows: [
+				{
+					view: "form",
+					id: ids.filterForm,
+					elements: []
+				},
 				_logic.getAddButtonUI()
 			]
 		};
@@ -837,7 +857,7 @@ export default class RowFilter extends OP.Component {
 
 
 		// Interface methods for parent component:
-		this.fieldsLoad = _logic.fieldsLoad;
+		this.objectLoad = _logic.objectLoad;
 		this.addNewFilter = _logic.addNewFilter;
 		this.getValue = _logic.getValue;
 		this.setValue = _logic.setValue;

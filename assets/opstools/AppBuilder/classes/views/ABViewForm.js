@@ -1053,7 +1053,7 @@ export default class ABViewForm extends ABViewContainer {
 		recordRules.forEach(r => {
 
 			var filterer = new RowFilter();
-			filterer.fieldsLoad(object.fields());
+			filterer.objectLoad(object);
 			filterer.setValue(r.when);
 			var isMatch = filterer.isValid(rowData);
 
@@ -1087,7 +1087,7 @@ export default class ABViewForm extends ABViewContainer {
 		submitRules.forEach(r => {
 
 			var filterer = new RowFilter();
-			filterer.fieldsLoad(object.fields());
+			filterer.objectLoad(object);
 			filterer.setValue(r.when);
 			var isMatch = filterer.isValid(rowData);
 

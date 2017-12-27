@@ -33,14 +33,14 @@ export default class ABViewFormPropertyRecordRule extends OP.Component {
 
 		// internal list of Webix IDs to reference our UI components.
 		var ids = {
-			component: this.unique('component'),
-			rules: this.unique('rules'),
+			component: this.unique(idBase + '_component'),
+			rules: this.unique(idBase + '_rules'),
 
-			action: this.unique('action'),
-			when: this.unique('when'),
+			action: this.unique(idBase + '_action'),
+			when: this.unique(idBase + '_when'),
 
-			values: this.unique('values'),
-			set: this.unique('set')
+			values: this.unique(idBase + '_values'),
+			set: this.unique(idBase + '_set')
 
 		};
 
@@ -72,6 +72,7 @@ export default class ABViewFormPropertyRecordRule extends OP.Component {
 						body: {
 							view: "layout",
 							id: ids.rules,
+							isolate: true,
 							margin: 20,
 							rows: []
 						}
@@ -148,6 +149,7 @@ export default class ABViewFormPropertyRecordRule extends OP.Component {
 
 				var results = [];
 
+				// Pull rules
 				var $viewRules = $$(ids.rules).getChildViews();
 				$viewRules.forEach(r => {
 
@@ -190,8 +192,8 @@ export default class ABViewFormPropertyRecordRule extends OP.Component {
 				var set = new RowUpdater(App, idBase);
 
 				if (_currentObject) {
-					when.fieldsLoad(_currentObject.fields());
-					set.fieldsLoad(_currentObject.fields());
+					when.objectLoad(_currentObject);
+					set.objectLoad(_currentObject);
 				}
 
 				var when_ui = when.ui;
@@ -208,7 +210,6 @@ export default class ABViewFormPropertyRecordRule extends OP.Component {
 					when: when, // Store a instance of when
 					set: set, // Store a instance of set
 					width: 680,
-					isolate: true,
 					rows: [
 						{
 							view: "template",
@@ -254,13 +255,11 @@ export default class ABViewFormPropertyRecordRule extends OP.Component {
 						// Values
 						{
 							id: ids.values,
-							isolate: true,
 							cells: [
 								// Update this record
 								{
 									view: 'layout',
 									batch: actionOptions[0].id,
-									isolate: true,
 									cols: [
 										{
 											view: 'label',
@@ -287,8 +286,8 @@ export default class ABViewFormPropertyRecordRule extends OP.Component {
 				return viewId;
 			},
 
-			removeRule: (viewRule) => {
-				$$(ids.rules).removeView(viewRule);
+			removeRule: ($viewRule) => {
+				$$(ids.rules).removeView($viewRule);
 			},
 
 			selectAction: (action, $viewRule) => {

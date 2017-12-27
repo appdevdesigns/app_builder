@@ -1,5 +1,5 @@
 
-export default class RowFilter extends OP.Component {
+export default class RowUpdater extends OP.Component {
 
 	constructor(App, idBase) {
 
@@ -31,7 +31,7 @@ export default class RowFilter extends OP.Component {
 			addNew: this.unique('addNew')
 		};
 
-		var _Fields;
+		var _Object;
 
 		var updateValueOptions = [
 			{ id: "customValue", value: labels.component.setOption1 },
@@ -47,21 +47,21 @@ export default class RowFilter extends OP.Component {
 		var _logic = this._logic = {
 
 			/**
-			 * @method fieldsLoad
-			 * set field list
+			 * @method objectLoad
+			 * set object
 			 *
-			 * @param fieldList {Array} - [ABField1, ..., ABFieldn]
+			 * @param object {Object}
 			 */
-			fieldsLoad: function (fieldList) {
+			objectLoad: function (object) {
 
-				_Fields = fieldList;
+				_Object = object;
 
 			},
 
 
 			getFieldList: function (excludeSelected) {
 
-				var options = (_Fields || []).map(f => {
+				var options = (_Object.fields() || []).map(f => {
 					return {
 						id: f.id,
 						value: f.label
@@ -212,7 +212,7 @@ export default class RowFilter extends OP.Component {
 			},
 
 			selectField: function (columnId, $viewCond) {
-				var fieldInfo = _Fields.filter(function (col) { return col.id == columnId; })[0],
+				var fieldInfo = _Object.fields(col => col.id == columnId)[0],
 					fieldComponent = fieldInfo.formComponent(),
 					abView = fieldComponent.newInstance(fieldInfo.object.application),
 					inputView = abView.component(App).ui;
@@ -253,7 +253,7 @@ export default class RowFilter extends OP.Component {
 					var $valueElem = $viewCond.getChildViews()[3];
 					if (!$valueElem) return;
 
-					var fieldInfo = _Fields.filter(f => f.id == fieldId)[0];
+					var fieldInfo = _Object.fields(f => f.id == fieldId)[0];
 
 					// Get value from data field manager
 					var val = fieldInfo.getValue($valueElem);
@@ -291,7 +291,7 @@ export default class RowFilter extends OP.Component {
 					var $valueElem = $viewCond.getChildViews()[3];
 					if (!$valueElem) return;
 
-					var fieldInfo = _Fields.filter(f => f.id == item.fieldId)[0];
+					var fieldInfo = _Object.fields(f => f.id == item.fieldId)[0];
 					if (!fieldInfo) return;
 
 					// Set value
@@ -315,7 +315,7 @@ export default class RowFilter extends OP.Component {
 		};
 
 		// Interface methods for parent component:
-		this.fieldsLoad = _logic.fieldsLoad;
+		this.objectLoad = _logic.objectLoad;
 		this.addUpdateValue = _logic.addUpdateValue;
 		this.getValue = _logic.getValue;
 		this.setValue = _logic.setValue;

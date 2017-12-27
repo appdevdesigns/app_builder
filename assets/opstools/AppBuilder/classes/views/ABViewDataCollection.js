@@ -43,7 +43,7 @@ var ABViewPropertyComponentDefaults = {
 	object: '', // id of ABObject
 	objectUrl: '', // url of ABObject
 	objectWorkspace: {
-		filterConditions: [], // array of filters to apply to the data table
+		filterConditions: {}, // array of filters to apply to the data table
 		sortFields: [] // array of columns with their sort configurations
 	},
 	loadAll: false
@@ -227,10 +227,6 @@ export default class ABViewDataCollection extends ABView {
 
 		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
 
-		// create filter & sort popups
-		this.initPopupEditors(App, ids, _logic);
-
-
 		// == Logic ==
 
 		_logic.selectObject = (objectId) => {
@@ -247,20 +243,26 @@ export default class ABViewDataCollection extends ABView {
 
 		};
 
-		_logic.toolbarFilter = ($view) => {
+		_logic.showFilterPopup = ($view) => {
 			this.filter_popup.show($view, null, { pos: "top" });
 		};
 
-		_logic.toolbarSort = ($view) => {
+		_logic.showSortPopup = ($view) => {
 			PopupSortFieldComponent.show($view, null, { pos: "top" });
 		};
 
 		_logic.onFilterChange = () => {
-			var $viewLayout = this.filter_popup.getChildViews()[0];
-			var filter_conditions = FilterComponent.getValue(this.filter_popup, $viewLayout);
 
-			alert(filter_conditions);
+			var view = _logic.currentEditObject();
+
+			view.settings.objectWorkspace.filterConditions = FilterComponent.getValue();
+
+			this.propertyEditorSave(ids, view);
+
 		};
+
+		// create filter & sort popups
+		this.initPopupEditors(App, ids, _logic);
 
 		return commonUI.concat([
 			{
@@ -323,7 +325,7 @@ export default class ABViewDataCollection extends ABView {
 									type: "icon",
 									badge: 0,
 									click: function () {
-										_logic.toolbarFilter(this.$view);
+										_logic.showFilterPopup(this.$view);
 									}
 								}
 							]
@@ -342,7 +344,7 @@ export default class ABViewDataCollection extends ABView {
 									type: "icon",
 									badge: 0,
 									click: function () {
-										_logic.toolbarSort(this.$view);
+										_logic.showSortPopup(this.$view);
 									}
 								}
 							]
@@ -437,8 +439,6 @@ export default class ABViewDataCollection extends ABView {
 				sortFields: []
 			};
 
-			this.populatePopupEditors(view);
-
 		}
 
 
@@ -474,6 +474,8 @@ export default class ABViewDataCollection extends ABView {
 		if (!view.settings.linkField)
 			delete view.settings.linkField;
 
+		// populate filter & sort values to popups
+		this.populatePopupEditors(view);
 
 		// populate link data collections
 		this.initLinkDataCollectionOptions(ids, view);
@@ -619,17 +621,21 @@ export default class ABViewDataCollection extends ABView {
 
 
 	static populatePopupEditors(view) {
-		if (view.datasource == null) return;
+
+		var filterConditions = {};
 
 		// Clone ABObject
 		var objectCopy = _.cloneDeep(view.datasource);
-		objectCopy.objectWorkspace = view.settings.objectWorkspace;
+		if (objectCopy) {
+			objectCopy.objectWorkspace = view.settings.objectWorkspace;
+
+			filterConditions = objectCopy.objectWorkspace.filterConditions || {};
+		}
 
 		// Populate data to popups
 		var $viewLayout = this.filter_popup.getChildViews()[0];
-		FilterComponent.fieldsLoad(objectCopy.fields());
-		FilterComponent.setValue(objectCopy.objectWorkspace.filterConditions, $viewLayout);
-		FilterComponent.ini
+		FilterComponent.objectLoad(objectCopy);
+		FilterComponent.setValue(filterConditions);
 
 		PopupSortFieldComponent.objectLoad(objectCopy, view);
 
@@ -740,9 +746,11 @@ export default class ABViewDataCollection extends ABView {
 				this.datasource.id != data.objectId)
 				return;
 
-			// TODO : filter condition before add 
-
 			var rowData = data.data;
+
+			// filter condition before add 
+			if (!FilterComponent.isValid(rowData))
+				return;
 
 			if (!this.__dataCollection.exists(rowData.id)) {
 				this.__dataCollection.add(rowData, 0);

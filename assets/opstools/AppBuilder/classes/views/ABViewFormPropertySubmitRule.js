@@ -38,7 +38,6 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 			rules: this.unique('rules'),
 
 			action: this.unique('action'),
-			when: this.unique('when'),
 			actionValue: this.unique('actionValue')
 		};
 
@@ -161,14 +160,12 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 				var $viewRules = $$(ids.rules).getChildViews();
 				$viewRules.forEach(r => {
 
-					var $whenContainer = r.$$(ids.when);
-
 					var valueViewId = r.$$(ids.actionValue).getActiveId();
 					var value = r.$$(ids.actionValue).queryView({ id: valueViewId }).getValue();
 
 					results.push({
 						action: r.$$(ids.action).getValue(),
-						when: r.config.when.getValue($whenContainer),
+						when: r.config.when.getValue(),
 						value: value,
 					})
 
@@ -199,10 +196,7 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 				// Create "When" UI - Set fields
 				var when = new RowFilter(App, idBase);
 				if (_currentObject)
-					when.fieldsLoad(_currentObject.fields());
-
-				var when_ui = when.ui;
-				when_ui.id = ids.when;
+					when.objectLoad(_currentObject);
 
 				return {
 					view: "layout",
@@ -248,7 +242,7 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 									label: labels.component.when,
 									width: App.config.labelWidthLarge
 								},
-								when_ui
+								when.ui
 							]
 						},
 						// Action Options
@@ -300,10 +294,8 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 
 				var viewId = $$(ids.rules).addView(ruleUI);
 
-				var $whenContainer = $$(viewId).$$(ids.when);
-
 				// Add a filter to default
-				ruleUI.when.addNewFilter($whenContainer);
+				ruleUI.when.addNewFilter();
 
 				return viewId;
 			},
@@ -365,8 +357,7 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 					$viewRule.$$(ids.action).setValue(r.action);
 
 					// Set 'when'
-					var $viewWhen = $viewRule.$$(ids.when);
-					$viewRule.config.when.setValue(r.when, $viewWhen);
+					$viewRule.config.when.setValue(r.when);
 
 					// Define 'value'
 					var valueViewId = $viewRule.$$(ids.actionValue).getActiveId();
