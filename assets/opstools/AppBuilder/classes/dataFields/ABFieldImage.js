@@ -326,20 +326,31 @@ OP.Dialog.Alert({
 	// return the grid column header definition for this instance of ABFieldImage
 	columnHeader (isObjectWorkspace) {
 		var config = super.columnHeader(isObjectWorkspace);
+		var field = this;
 
 		config.editor = false;  // 'text';  // '[edit_type]'   for your unique situation
 		// config.sort   = 'string' // '[sort_type]'   for your unique situation
 
+		var height = "100%";
+		var width = "100%";
 		if (this.settings.useWidth) {
-			config.width = this.settings.imageWidth;
+			config.width = field.settings.imageWidth;
+			height = field.settings.imageHeight + "px";
+			width = field.settings.imageWidth + "px";
 		}
+		
+		console.log(field.settings);
 
 		// populate our default template:
 		config.template = (obj) => {
 
 			var imgDiv = [
 				'<div id="#id#" class="ab-image-data-field">',
+				'<div class="webix_view ab-image-holder" style="width: '+width+'; height: '+height+';">',
+				'<div class="webix_template">',
 				this.imageTemplate(obj),
+				'</div>',
+				'</div>',
 				'</div>'
 			].join('');
 
@@ -493,9 +504,9 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 			});
 			uploader.addDropZone(webixContainer.$view);
 
-			if (editable == false) {
-				var domNode = parentContainer.querySelector(".delete-image");
-				domNode.style.display = "none";
+			if (editable) {
+				var domNode = parentContainer.querySelector(".ab-delete-photo");
+				domNode.style.visibility = "visible";
 			}
 
 			// open file upload dialog when's click
@@ -619,7 +630,7 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 		return [
 			'<div class="image-data-field-icon" style="text-align: center; height: 100%; position: relative; '+iconDisplay+'"><i class="fa fa-picture-o fa-2x" style="opacity: 0.6; position: absolute; top: 50%; margin-top: -15px; right: 50%; margin-right: -10px;"></i></div>',
 			'<div class="image-data-field-image" style="'+imageDisplay+' width:100%; height:100%; background-repeat: no-repeat; background-position: center center; background-size: cover; '+imageURL+'"></div>',
-			'<a style="'+imageDisplay+'" class="ab-delete-photo" href="javascript:void(0);"><i class="fa fa-times delete-image"></i></a>'
+			'<a style="'+imageDisplay+' visibility:hidden;" class="ab-delete-photo" href="javascript:void(0);"><i class="fa fa-times delete-image"></i></a>'
 		].join('');
 
 	}

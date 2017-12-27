@@ -1108,6 +1108,8 @@ a.ab-delete-photo:hover {
 }
 .ab-image-data-field {
 	padding: 10px 0;
+	width: 100%;
+	height: 100%;
 }
 .detailView {
 	padding: 10px;
