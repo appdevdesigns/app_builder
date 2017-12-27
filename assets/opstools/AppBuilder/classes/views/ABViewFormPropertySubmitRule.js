@@ -35,10 +35,7 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 		// internal list of Webix IDs to reference our UI components.
 		var ids = {
 			component: this.unique('component'),
-			rules: this.unique('rules'),
-
-			action: this.unique('action'),
-			actionValue: this.unique('actionValue')
+			rules: this.unique('rules')
 		};
 
 
@@ -160,11 +157,16 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 				var $viewRules = $$(ids.rules).getChildViews();
 				$viewRules.forEach(r => {
 
-					var valueViewId = r.$$(ids.actionValue).getActiveId();
-					var value = r.$$(ids.actionValue).queryView({ id: valueViewId }).getValue();
+					// Action
+					var actionSelector = r.queryView({ for: "action" });
+
+					// Value
+					var actionInput = r.queryView({ for: "actionValue" });
+					var valueViewId = actionInput.getActiveId();
+					var value = actionInput.queryView({ id: valueViewId }).getValue();
 
 					results.push({
-						action: r.$$(ids.action).getValue(),
+						action: actionSelector.getValue(),
 						when: r.config.when.getValue(),
 						value: value,
 					})
@@ -194,7 +196,7 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 				options = options || {};
 
 				// Create "When" UI - Set fields
-				var when = new RowFilter(App, idBase);
+				var when = new RowFilter(App, idBase + OP.Util.uuid());
 				if (_currentObject)
 					when.objectLoad(_currentObject);
 
@@ -202,7 +204,6 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 					view: "layout",
 					css: "ab-component-form-rule",
 					when: when, // Store a instance of when
-					isolate: true,
 					rows: [
 						{
 							view: "template",
@@ -222,7 +223,7 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 						// Action
 						{
 							view: "richselect",
-							id: ids.action,
+							for: "action",
 							label: labels.component.action,
 							labelWidth: App.config.labelWidthLarge,
 							value: "message",
@@ -247,7 +248,7 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 						},
 						// Action Options
 						{
-							id: ids.actionValue,
+							for: "actionValue",
 							cells: [
 								// Show a confirmation message
 								{
@@ -307,7 +308,7 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 			selectAction: (action, $viewRule) => {
 
 				// Swtich the view of action option
-				$viewRule.$$(ids.actionValue).showBatch(action);
+				$viewRule.queryView({ id: "actionValue" }).showBatch(action);
 			},
 
 			hide: function () {
@@ -354,14 +355,15 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 
 					// Select 'action'
 					var $viewRule = $$(_logic.addRule());
-					$viewRule.$$(ids.action).setValue(r.action);
+					$viewRule.queryView({ for: "action" }).setValue(r.action);
 
 					// Set 'when'
 					$viewRule.config.when.setValue(r.when);
 
 					// Define 'value'
-					var valueViewId = $viewRule.$$(ids.actionValue).getActiveId();
-					var $viewActionValue = $viewRule.$$(ids.actionValue).queryView({ id: valueViewId });
+					var actionInput = $viewRule.queryView({ for: "actionValue" });
+					var valueViewId = actionInput.getActiveId();
+					var $viewActionValue = actionInput.queryView({ id: valueViewId });
 					if ($viewActionValue && $viewActionValue.setValue)
 						$viewActionValue.setValue(r.value);
 

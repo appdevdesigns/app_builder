@@ -454,6 +454,7 @@ module.exports = {
 
                 // promise for the total count. this was moved below the filters because webix will get caught in an infinte loop of queries if you don't pass the right count
                 var query2 = object.model().query();
+                populateFindConditions(query2, object, { where: where });
                 var pCount = query2.count('id as count').first();
 
                 Promise.all([

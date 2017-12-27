@@ -39,7 +39,7 @@ function dataCollectionNew(data) {
 
 
 
-var ABViewPropertyComponentDefaults = {
+var ABViewPropertyDefaults = {
 	object: '', // id of ABObject
 	objectUrl: '', // url of ABObject
 	objectWorkspace: {
@@ -145,13 +145,13 @@ export default class ABViewDataCollection extends ABView {
 		super.fromValues(values);
 
 		// if this is being instantiated on a read from the Property UI,
-		this.settings.object = this.settings.object || ABViewPropertyComponentDefaults.object;
-		this.settings.objectUrl = this.settings.objectUrl || ABViewPropertyComponentDefaults.objectUrl;
+		this.settings.object = this.settings.object || ABViewPropertyDefaults.object;
+		this.settings.objectUrl = this.settings.objectUrl || ABViewPropertyDefaults.objectUrl;
 		this.settings.objectWorkspace = this.settings.objectWorkspace || {
-			filterConditions: [],
-			sortFields: []
+			filterConditions: ABViewPropertyDefaults.objectWorkspace.filterConditions,
+			sortFields: ABViewPropertyDefaults.objectWorkspace.sortFields
 		};
-		this.settings.loadAll = JSON.parse(this.settings.loadAll || ABViewPropertyComponentDefaults.loadAll);
+		this.settings.loadAll = JSON.parse(this.settings.loadAll || ABViewPropertyDefaults.loadAll);
 
 	}
 
@@ -405,7 +405,7 @@ export default class ABViewDataCollection extends ABView {
 		this.populatePopupEditors(view);
 
 		// set .loadAll flag
-		$$(ids.loadAll).setValue(view.settings.loadAll != null ? view.settings.loadAll : ABViewPropertyComponentDefaults.loadAll);
+		$$(ids.loadAll).setValue(view.settings.loadAll != null ? view.settings.loadAll : ABViewPropertyDefaults.loadAll);
 
 		// populate data items to fix select options
 		var object = view.datasource;
@@ -418,6 +418,8 @@ export default class ABViewDataCollection extends ABView {
 
 			view.addListener('properties.updated', () => {
 				this.populatePopupEditors(view);
+
+				view.loadData();
 			});
 		}
 
@@ -435,8 +437,8 @@ export default class ABViewDataCollection extends ABView {
 		if (view.settings.object != $$(ids.dataSource).getValue()) {
 
 			view.settings.objectWorkspace = {
-				filterConditions: [],
-				sortFields: []
+				filterConditions: ABViewPropertyDefaults.objectWorkspace.filterConditions,
+				sortFields: ABViewPropertyDefaults.objectWorkspace.sortFields
 			};
 
 		}
@@ -622,14 +624,14 @@ export default class ABViewDataCollection extends ABView {
 
 	static populatePopupEditors(view) {
 
-		var filterConditions = {};
+		var filterConditions = ABViewPropertyDefaults.objectWorkspace.filterConditions;
 
 		// Clone ABObject
 		var objectCopy = _.cloneDeep(view.datasource);
 		if (objectCopy) {
 			objectCopy.objectWorkspace = view.settings.objectWorkspace;
 
-			filterConditions = objectCopy.objectWorkspace.filterConditions || {};
+			filterConditions = objectCopy.objectWorkspace.filterConditions || ABViewPropertyDefaults.objectWorkspace.filterConditions;
 		}
 
 		// Populate data to popups
@@ -815,71 +817,7 @@ export default class ABViewDataCollection extends ABView {
 
 
 		// load data to initial the data collection
-		this.loadData()
-			.then(() => {
-
-				// set static cursor
-				if (this.settings.fixSelect) {
-
-					// set cursor to the current user
-					if (this.settings.fixSelect == "_CurrentUser") {
-
-						var username = OP.User.username();
-						var userFields = this.datasource.fields((f) => f.key == "user");
-
-						// find a row that contains the current user
-						var row = this.__dataCollection.find((r) => {
-
-							var found = false;
-
-							userFields.forEach((f) => {
-
-								if (found) return;
-
-								if (r[f.columnName].filter) { // Array - isMultiple
-									found = r[f.colName].filter((data) => data.id == username).length > 0;
-								}
-								else if (r[f.columnName] == username) {
-									found = true;
-								}
-
-							});
-
-							return found;
-
-						}, true);
-
-						// set a first row of current user to cursor
-						if (row)
-							this.__dataCollection.setCursor(row.id);
-					}
-					else {
-						this.setCursor(this.settings.fixSelect);
-					}
-
-				}
-
-
-				var linkDc = this.dataCollectionLink;
-				if (linkDc) {
-
-					// filter data by match link data collection
-					var linkData = linkDc.getCursor();
-					this.filterLinkCursor(linkData);
-
-					// add listeners when cursor of link data collection is changed
-					// linkDc.removeListener("changeCursor", this.filterLinkCursor)
-					// 	.on("changeCursor", this.filterLinkCursor);
-
-					if (this.changeCursorParentEventId == null)
-						this.changeCursorParentEventId = linkDc.on("changeCursor", (currData) => {
-							this.filterLinkCursor(currData);
-						});
-
-				}
-
-			});
-
+		this.loadData();
 
 	}
 
@@ -1011,8 +949,30 @@ export default class ABViewDataCollection extends ABView {
 		if (model == null) return Promise.resolve([]);
 
 		var dc = this.__dataCollection;
-		var wheres = this.settings.objectWorkspace.filterConditions || {};
 		var sorts = this.settings.objectWorkspace.sortConditions || {};
+
+		// pull filter conditions
+		var wheres = [];
+		var filterConditions = this.settings.objectWorkspace.filterConditions || ABViewPropertyDefaults.objectWorkspace.filterConditions;
+		(filterConditions.filters || []).forEach((f) => {
+
+			// Get field name
+			var fieldName = "";
+			var object = this.datasource;
+			if (object) {
+				var selectField = object.fields(field => field.id == f.fieldId)[0];
+				fieldName = selectField ? selectField.columnName : "";
+			}
+
+			wheres.push({
+				combineCondition: filterConditions.combineCondition,
+				fieldName: fieldName,
+				operator: f.operator,
+				inputValue: f.inputValue
+			});
+
+		});
+
 
 		// calculate default value of $height of rows
 		var defaultHeight = 0;
@@ -1059,7 +1019,68 @@ export default class ABViewDataCollection extends ABView {
 
 				});
 
+				dc.clearAll();
 				dc.parse(data);
+
+				// set static cursor
+				if (this.settings.fixSelect) {
+
+					// set cursor to the current user
+					if (this.settings.fixSelect == "_CurrentUser") {
+
+						var username = OP.User.username();
+						var userFields = this.datasource.fields((f) => f.key == "user");
+
+						// find a row that contains the current user
+						var row = this.__dataCollection.find((r) => {
+
+							var found = false;
+
+							userFields.forEach((f) => {
+
+								if (found) return;
+
+								if (r[f.columnName].filter) { // Array - isMultiple
+									found = r[f.colName].filter((data) => data.id == username).length > 0;
+								}
+								else if (r[f.columnName] == username) {
+									found = true;
+								}
+
+							});
+
+							return found;
+
+						}, true);
+
+						// set a first row of current user to cursor
+						if (row)
+							this.__dataCollection.setCursor(row.id);
+					}
+					else {
+						this.setCursor(this.settings.fixSelect);
+					}
+
+				}
+
+
+				var linkDc = this.dataCollectionLink;
+				if (linkDc) {
+
+					// filter data by match link data collection
+					var linkData = linkDc.getCursor();
+					this.filterLinkCursor(linkData);
+
+					// add listeners when cursor of link data collection is changed
+					// linkDc.removeListener("changeCursor", this.filterLinkCursor)
+					// 	.on("changeCursor", this.filterLinkCursor);
+
+					if (this.changeCursorParentEventId == null)
+						this.changeCursorParentEventId = linkDc.on("changeCursor", (currData) => {
+							this.filterLinkCursor(currData);
+						});
+
+				}
 
 			});
 

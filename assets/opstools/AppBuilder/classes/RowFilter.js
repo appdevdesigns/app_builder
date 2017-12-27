@@ -46,8 +46,8 @@ export default class RowFilter extends OP.Component {
 
 			combineCondition: this.unique('combineCondition'),
 			field: this.unique('field'),
-			comparer: this.unique('comparer'),
-			conditionValue: this.unique('conditionValue'),
+			operator: this.unique('operator'),
+			inputValue: this.unique('inputValue'),
 
 			listOptions: this.unique('listOptions')
 		};
@@ -158,7 +158,7 @@ export default class RowFilter extends OP.Component {
 						},
 						// Comparer
 						{
-							id: ids.comparer,
+							id: ids.operator,
 							width: 155,
 							cells: [
 								{},
@@ -307,7 +307,7 @@ export default class RowFilter extends OP.Component {
 						},
 						// Value
 						{
-							id: ids.conditionValue,
+							id: ids.inputValue,
 							isolate: true,
 							cells: [
 								{},
@@ -423,13 +423,16 @@ export default class RowFilter extends OP.Component {
 
 			addNewFilter: function (index) {
 
+				var viewId;
 				var ui = _logic.getFilterUI();
 
 				var $viewForm = $$(ids.filterForm);
+				if ($viewForm) {
 
-				var viewId = $viewForm.addView(ui, index);
+					viewId = $viewForm.addView(ui, index);
 
-				_logic.toggleAddNewButton($viewForm);
+					_logic.toggleAddNewButton($viewForm);
+				}
 
 				return viewId;
 			},
@@ -495,8 +498,8 @@ export default class RowFilter extends OP.Component {
 				// switch view
 				var batchName = field.key;
 				if (batchName == 'LongText') batchName = 'string';
-				$viewCond.$$(ids.comparer).showBatch(batchName);
-				$viewCond.$$(ids.conditionValue).showBatch(batchName);
+				$viewCond.$$(ids.operator).showBatch(batchName);
+				$viewCond.$$(ids.inputValue).showBatch(batchName);
 
 				// populate options of list
 				if (field.key == 'list') {
@@ -507,8 +510,8 @@ export default class RowFilter extends OP.Component {
 						}
 					});
 
-					$viewCond.$$(ids.conditionValue).$$(ids.listOptions).define("options", options);
-					$viewCond.$$(ids.conditionValue).$$(ids.listOptions).refresh();
+					$viewCond.$$(ids.inputValue).$$(ids.listOptions).define("options", options);
+					$viewCond.$$(ids.inputValue).$$(ids.listOptions).refresh();
 				}
 
 				// TODO: multilingual of string
@@ -536,8 +539,8 @@ export default class RowFilter extends OP.Component {
 			 * 		filters: [
 			 * 			{
 			 * 				fieldId: {UUID},
-			 * 				comparer: {string},
-			 * 				value: {string}
+			 * 				operator: {string},
+			 * 				inputValue: {string}
 			 * 			}
 			 * 		]
 			 * }
@@ -556,23 +559,23 @@ export default class RowFilter extends OP.Component {
 					var fieldId = $fieldElem.getValue();
 					if (!fieldId) return;
 
-					var comparer = null;
-					var comparerViewId = $viewCond.$$(ids.comparer).getActiveId();
-					var $viewComparer = $viewCond.$$(ids.comparer).queryView({ id: comparerViewId });
+					var operator = null,
+						operatorViewId = $viewCond.$$(ids.operator).getActiveId(),
+						$viewComparer = $viewCond.$$(ids.operator).queryView({ id: operatorViewId });
 					if ($viewComparer && $viewComparer.getValue)
-						comparer = $viewComparer.getValue();
+						operator = $viewComparer.getValue();
 
-					var value = null;
-					var valueViewId = $viewCond.$$(ids.conditionValue).getActiveId();
-					var $viewConditionValue = $viewCond.$$(ids.conditionValue).queryView({ id: valueViewId });
+					var value = null,
+						valueViewId = $viewCond.$$(ids.inputValue).getActiveId(),
+						$viewConditionValue = $viewCond.$$(ids.inputValue).queryView({ id: valueViewId });
 					if ($viewConditionValue && $viewConditionValue.getValue)
 						value = $viewConditionValue.getValue();
 
 
 					config_settings.filters.push({
 						fieldId: fieldId,
-						comparer: comparer,
-						value: value
+						operator: operator,
+						inputValue: value
 					});
 
 
@@ -586,12 +589,12 @@ export default class RowFilter extends OP.Component {
 
 			setValue: function (settings) {
 
-				var $viewForm = $$(ids.filterForm);
-
 				config_settings = settings || {};
 
 				// Redraw form with no elements
-				webix.ui([], $viewForm);
+				var $viewForm = $$(ids.filterForm);
+				if ($viewForm)
+					webix.ui([], $viewForm);
 
 				config_settings.filters = config_settings.filters || [];
 
@@ -602,30 +605,33 @@ export default class RowFilter extends OP.Component {
 
 				config_settings.filters.forEach(f => {
 
-					var $viewCond = $$(_logic.addNewFilter());
+					var viewId = _logic.addNewFilter(),
+						$viewCond = $$(viewId);
+
+					if ($viewCond == null) return;
 
 					// "And" "Or"
 					$viewCond.$$(ids.combineCondition).define('value', config_settings.combineCondition);
 					$viewCond.$$(ids.combineCondition).refresh();
-					
+
 					// Select Field
 					$viewCond.$$(ids.field).define('value', f.fieldId);
 					$viewCond.$$(ids.field).refresh();
 					_logic.selectField(f.fieldId, $viewCond, true);
 
 					// Comparer
-					var comparerViewId = $viewCond.$$(ids.comparer).getActiveId();
-					var $viewComparer = $viewCond.$$(ids.comparer).queryView({ id: comparerViewId });
+					var operatorViewId = $viewCond.$$(ids.operator).getActiveId(),
+						$viewComparer = $viewCond.$$(ids.operator).queryView({ id: operatorViewId });
 					if ($viewComparer && $viewComparer.setValue) {
-						$viewComparer.define('value', f.comparer);
+						$viewComparer.define('value', f.operator);
 						$viewComparer.refresh();
 					}
 
 					// Input
-					var valueViewId = $viewCond.$$(ids.conditionValue).getActiveId();
-					var $viewConditionValue = $viewCond.$$(ids.conditionValue).queryView({ id: valueViewId });
+					var valueViewId = $viewCond.$$(ids.inputValue).getActiveId(),
+						$viewConditionValue = $viewCond.$$(ids.inputValue).queryView({ id: valueViewId });
 					if ($viewConditionValue && $viewConditionValue.setValue) {
-						$viewConditionValue.define('value', f.value);
+						$viewConditionValue.define('value', f.inputValue);
 						$viewConditionValue.refresh();
 					}
 
@@ -659,23 +665,23 @@ export default class RowFilter extends OP.Component {
 					switch (fieldInfo.key) {
 						case "string":
 						case "LongText":
-							condResult = _logic.textValid(value, filter.comparer, filter.value);
+							condResult = _logic.textValid(value, filter.operator, filter.value);
 							break;
 						case "date":
 						case "datetime":
-							condResult = _logic.dateValid(value, filter.comparer, filter.value);
+							condResult = _logic.dateValid(value, filter.operator, filter.value);
 							break;
 						case "number":
-							condResult = _logic.numberValid(value, filter.comparer, filter.value);
+							condResult = _logic.numberValid(value, filter.operator, filter.value);
 							break;
 						case "list":
-							condResult = _logic.listValid(value, filter.comparer, filter.value);
+							condResult = _logic.listValid(value, filter.operator, filter.value);
 							break;
 						case "boolean":
-							condResult = _logic.booleanValid(value, filter.comparer, filter.value);
+							condResult = _logic.booleanValid(value, filter.operator, filter.value);
 							break;
 						case "user":
-							condResult = _logic.userValid(value, filter.comparer, filter.value);
+							condResult = _logic.userValid(value, filter.operator, filter.value);
 							break;
 					}
 
@@ -690,14 +696,14 @@ export default class RowFilter extends OP.Component {
 
 			},
 
-			textValid: function (value, comparer, compareValue) {
+			textValid: function (value, operator, compareValue) {
 
 				var result = false;
 
 				value = value.trim().toLowerCase();
 				compareValue = compareValue.trim().toLowerCase();
 
-				switch (comparer) {
+				switch (operator) {
 					case "contains":
 						result = value.indexOf(compareValue) > -1;
 						break;
@@ -716,7 +722,7 @@ export default class RowFilter extends OP.Component {
 
 			},
 
-			dateValid: function (value, comparer, compareValue) {
+			dateValid: function (value, operator, compareValue) {
 
 				var result = false;
 
@@ -726,7 +732,7 @@ export default class RowFilter extends OP.Component {
 				if (!(compareValue instanceof Date))
 					compareValue = new Date(compareValue);
 
-				switch (comparer) {
+				switch (operator) {
 					case "is before":
 						result = value < compareValue;
 						break;
@@ -745,14 +751,14 @@ export default class RowFilter extends OP.Component {
 
 			},
 
-			numberValid: function (value, comparer, compareValue) {
+			numberValid: function (value, operator, compareValue) {
 
 				var result = false;
 
 				value = Number(value);
 				compareValue = Number(compareValue);
 
-				switch (comparer) {
+				switch (operator) {
 					case labels.filter_fields.equalCondition:
 						result = value == compareValue;
 						break;
@@ -777,7 +783,7 @@ export default class RowFilter extends OP.Component {
 
 			},
 
-			listValid: function (value, comparer, compareValue) {
+			listValid: function (value, operator, compareValue) {
 
 				var result = false;
 
@@ -786,7 +792,7 @@ export default class RowFilter extends OP.Component {
 				if (Array.isArray(compareValue))
 					compareValue = [compareValue];
 
-				switch (comparer) {
+				switch (operator) {
 					case "equals":
 						if (value)
 							result = compareValue.indexOf(value) > -1;
@@ -803,11 +809,11 @@ export default class RowFilter extends OP.Component {
 
 			},
 
-			booleanValid: function (value, comparer, compareValue) {
+			booleanValid: function (value, operator, compareValue) {
 
 				var result = false;
 
-				switch (comparer) {
+				switch (operator) {
 					case "is checked":
 						result = (value === true || value === 1);
 						break;
@@ -820,14 +826,14 @@ export default class RowFilter extends OP.Component {
 
 			},
 
-			userValid: function (value, comparer, compareValue) {
+			userValid: function (value, operator, compareValue) {
 
 				var result = false;
 
 				if (Array.isArray(value))
 					value = [value];
 
-				switch (comparer) {
+				switch (operator) {
 					case "equals":
 						result = value.indexOf(compareValue) > -1;
 						break;
