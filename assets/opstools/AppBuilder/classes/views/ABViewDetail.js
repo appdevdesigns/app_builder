@@ -376,7 +376,7 @@ export default class ABViewDetail extends ABViewContainer {
 					}
 
 					if (field.key == "number") {
-						val = field.getNumberFormat(data[field.columnName]);
+						val = field.format(data[field.columnName]);
 					}
 
 					if (field.key == "user" && field.settings.isMultiple == 0 && val != "") {
