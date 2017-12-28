@@ -1185,8 +1185,9 @@ export default class ABViewGrid extends ABViewWidget  {
 		
 		// Set the options of the possible detail views
 		var detailViews = [
-			{id:'', value:L('ab.component.label.noLinkedView', '*No linked view')}
+			{ id:'', value:L('ab.component.label.noLinkedView', '*No linked view') }
 		];
+
 		detailViews = view.loopPages(view, view.application._pages, detailViews, "detail");
 		$$(ids.detailsPage).define("options", detailViews);
 		$$(ids.detailsPage).refresh();
@@ -1238,27 +1239,39 @@ export default class ABViewGrid extends ABViewWidget  {
 		// }
 	}
 	
-	loopPages(view, o, detailViews, type) {
-		if (typeof o == "array" || typeof o == "object") {
-			o.forEach((p)=>{
+	loopPages(view, pages, detailViews, type) {
+		if (typeof pages == "array" || typeof pages == "object") {
+			pages.forEach((p)=>{
 				if (p._pages.length > 0) {
 					detailViews = view.loopPages(view, p._pages, detailViews, type);
 				}
 				detailViews = view.loopViews(view, p._views, detailViews, type);
 			});
 		}
-		detailViews = view.loopViews(view, o, detailViews);
+		detailViews = view.loopViews(view, pages, detailViews);
 		return detailViews;
 	}
 	
-	loopViews(view, o, detailViews, type) {
-		if (typeof o == "array" || typeof o == "object") {
-			o.forEach((j)=>{
-				if (j.key == type && j.settings.datacollection == view.settings.dataSource) {
-					detailViews.push({id:j.parent.id, value:j.label});				
+	loopViews(view, views, detailViews, type) {
+		if (typeof views == "array" || typeof views == "object") {
+			views.forEach((v)=>{
+				if (v.key == type && v.settings.datacollection == view.settings.dataSource) {
+					detailViews.push({id:v.pageParent().id, value:v.label});
+				}
+				// find views inside Tab component
+				else if (v.key == "tab") {
+					var tabViews = v.views();
+					tabViews.forEach(tab => {
+
+						var subViews = tab.views(subV => subV.key == type && subV.settings.datacollection == view.settings.dataSource);
+						if (subViews.length > 0)
+							detailViews.push({id:v.pageParent().id, value:v.label});
+
+					});
+
 				}
 			});
-			return detailViews;			
+			return detailViews;
 		}
 		return detailViews;
 	}
