@@ -313,8 +313,6 @@ export default class RowUpdater extends OP.Component {
 
 				});
 
-				$viewForm.adjust();
-
 			}
 
 

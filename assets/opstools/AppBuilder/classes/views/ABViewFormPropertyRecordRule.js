@@ -319,6 +319,8 @@ export default class ABViewFormPropertyRecordRule extends OP.Component {
 					// Define 'value'
 					$viewRule.config.set.setValue(r.values);
 
+					$viewRule.adjust();
+
 				});
 
 
