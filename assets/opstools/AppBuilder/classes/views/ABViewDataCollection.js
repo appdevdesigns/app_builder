@@ -15,19 +15,33 @@ function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
-function toDC(data) {
-	return new webix.DataCollection({
-		data: data,
-	});
-}
-
-function dataCollectionNew(data) {
+function dataCollectionNew(instance, data) {
 	// get a webix data collection
-	var dc = toDC(data || []);
+	var dc = new webix.DataCollection({
+		data: data || [],
+	});
 
 	// Apply this data collection to support multi-selection
 	// https://docs.webix.com/api__refs__selectionmodel.html
 	webix.extend(dc, webix.SelectionModel);
+
+	// Implement .onDataRequest for paging loading
+	if (!instance.settings.loadAll) {
+
+		dc.___AD = dc.___AD || {};
+		if (dc.___AD.onDataRequestEvent) dc.detachEvent(dc.___AD.onDataRequestEvent);
+		dc.___AD.onDataRequestEvent = dc.attachEvent("onDataRequest", (start, count) => {
+
+			if (start < 0) start = 0;
+
+			// load more data to the data collection
+			instance.loadData(start, count);
+
+			return false;	// <-- prevent the default "onDataRequest"
+		});
+
+	}
+
 
 	// override unused functions of selection model
 	dc.addCss = function () { };
@@ -72,7 +86,7 @@ export default class ABViewDataCollection extends ABView {
 
 		// OP.Multilingual.translate(this, this, ['label']);
 
-		this.__dataCollection = dataCollectionNew();
+		this.__dataCollection = dataCollectionNew(this, []);
 
 		// Set filter value
 		this.__filterComponent = new RowFilter();
@@ -423,6 +437,8 @@ export default class ABViewDataCollection extends ABView {
 
 			view.addListener('properties.updated', () => {
 				this.populatePopupEditors(view);
+
+				this.__dataCollection.clearAll();
 
 				view.loadData();
 			});
@@ -823,7 +839,7 @@ export default class ABViewDataCollection extends ABView {
 
 
 		// load data to initial the data collection
-		this.loadData();
+		this.__dataCollection.loadNext(20, 0);
 
 	}
 
@@ -873,24 +889,15 @@ export default class ABViewDataCollection extends ABView {
 
 				component.data.sync(dc);
 
-				// Implement .onDataRequestonDataRequest for paging loading
+				// Implement .onDataRequest for paging loading
 				if (!this.settings.loadAll) {
 
 					component.___AD = component.___AD || {};
 					if (component.___AD.onDataRequestEvent) component.detachEvent(component.___AD.onDataRequestEvent);
 					component.___AD.onDataRequestEvent = component.attachEvent("onDataRequest", (start, count) => {
 
-						if (component.showProgress)
-							component.showProgress({ type: "icon" });
-
 						// load more data to the data collection
-						this.loadData(start, count)
-							.then((data) => {
-
-								if (component.hideProgress)
-									component.hideProgress();
-
-							});
+						dc.loadNext(count, start);
 
 						return false;	// <-- prevent the default "onDataRequest"
 					});
@@ -1025,7 +1032,6 @@ export default class ABViewDataCollection extends ABView {
 
 				});
 
-				dc.clearAll();
 				dc.parse(data);
 
 				// set static cursor
