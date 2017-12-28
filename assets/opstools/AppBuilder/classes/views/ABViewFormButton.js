@@ -18,9 +18,8 @@ var ABViewFormButtonPropertyComponentDefaults = {
 	saveLabel: '*save',
 	includeCancel: true,
 	cancelLabel: '*cancel',
-	includeReset: true,
+	includeReset: false,
 	resetLabel: '*reset',
-	afterSave: null,
 	afterCancel: null,
 	alignment: 'right'
 }
@@ -170,13 +169,6 @@ export default class ABViewFormButton extends ABView {
 				placeholder: L('ab.component.button.resetLabelPlaceholder', '*Reset Placeholder'),
 			},
 			{
-				name: 'afterSave',
-				view: 'richselect',
-				labelWidth: App.config.labelWidthLarge,
-				label: L('ab.component.button.afterSave', '*After Save')
-				// options: []
-			},
-			{
 				name: 'afterCancel',
 				view: 'richselect',
 				labelWidth: App.config.labelWidthLarge,
@@ -212,7 +204,6 @@ export default class ABViewFormButton extends ABView {
 				value: opt.value
 			}
 		});
-		$$(ids.afterSave).define('options', opts);
 		$$(ids.afterCancel).define('options', opts);
 
 		$$(ids.includeSave).setValue(view.settings.includeSave != null ? view.settings.includeSave : ABViewFormButtonPropertyComponentDefaults.includeSave);
@@ -221,7 +212,6 @@ export default class ABViewFormButton extends ABView {
 		$$(ids.cancelLabel).setValue(view.settings.cancelLabel != null ? view.settings.cancelLabel : ABViewFormButtonPropertyComponentDefaults.cancelLabel);
 		$$(ids.includeReset).setValue(view.settings.includeReset != null ? view.settings.includeReset : ABViewFormButtonPropertyComponentDefaults.includeReset);
 		$$(ids.resetLabel).setValue(view.settings.resetLabel != null ? view.settings.resetLabel : ABViewFormButtonPropertyComponentDefaults.resetLabel);
-		$$(ids.afterSave).setValue(view.settings.afterSave || ABViewFormButtonPropertyComponentDefaults.afterSave);
 		$$(ids.afterCancel).setValue(view.settings.afterCancel || ABViewFormButtonPropertyComponentDefaults.afterCancel);
 		$$(ids.alignment).setValue(view.settings.alignment || ABViewFormButtonPropertyComponentDefaults.alignment);
 
@@ -237,7 +227,6 @@ export default class ABViewFormButton extends ABView {
 		view.settings.cancelLabel = $$(ids.cancelLabel).getValue();
 		view.settings.includeReset = $$(ids.includeReset).getValue();
 		view.settings.resetLabel = $$(ids.resetLabel).getValue();
-		view.settings.afterSave = $$(ids.afterSave).getValue();
 		view.settings.afterCancel = $$(ids.afterCancel).getValue();
 		view.settings.alignment = $$(ids.alignment).getValue();
 
@@ -373,7 +362,6 @@ export default class ABViewFormButton extends ABView {
 					.catch(() => { saveButton.enable(); })
 					.then(() => { saveButton.enable(); });
 
-				super.changePage(this.settings.afterSave);
 			},
 
 		};
