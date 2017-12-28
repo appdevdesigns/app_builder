@@ -488,21 +488,82 @@ class ABFieldList extends ABFieldSelectivity {
 	///
 
 	// return the grid column header definition for this instance of ABFieldList
-	columnHeader(isObjectWorkspace, width) {
+	columnHeader(isObjectWorkspace, width, editable) {
 		var config = super.columnHeader(isObjectWorkspace);
+		var field = this;
+		var App = App;
 
 		// Multiple select list
 		if (this.settings.isMultiple == true) {
-			if (typeof width != "undefined") {
-				config.template = '<div style="margin-left: '+width+'px;" class="list-data-values"></div>';				
-			} else {
-				config.template = '<div class="list-data-values"></div>';				
+			
+			config.template = function(row) {
+
+				var node = document.createElement("div");
+				node.classList.add("list-data-values");
+				if (typeof width != "undefined") {
+					node.style.marginLeft = width+'px';				
+				}
+				
+				var domNode = node;
+
+				var placeholder = L('ab.dataField.list.placeholder_multiple', '*Select items');
+				var readOnly = false;
+				if (editable != null && editable == false) {
+					readOnly = true;
+					placeholder = "";
+				}
+
+				// var domNode = node.querySelector('.list-data-values');
+
+				// get selected values
+				var selectedData = [];
+				if (row[field.columnName] != null) {
+					selectedData = row[field.columnName];
+				}
+
+				// Render selectivity
+				field.selectivityRender(domNode, {
+					multiple: true,
+					readOnly: readOnly,
+					placeholder: placeholder,
+					hasColors: field.settings.hasColors,
+					items: field.settings.options,
+					data: selectedData
+				}, App, row);
+
+				return node.outerHTML;
+
 			}
+			
 		}
 		// Single select list
 		else {
+			
+			var formClass = "";
+		    var placeHolder = "";
+		    if (editable) {
+		        formClass = " form-entry";
+		        placeHolder = "<span style='color: #CCC; padding: 0 5px;'>"+L('ab.dataField.list.placeholder', '*Select item')+"</span>";
+		    }
+			
+			config.template = function(obj) {
+				var myHex = "#666666";
+				var myText = placeHolder;
+				field.settings.options.forEach(function(h) {
+					if (h.id == obj[field.columnName]) {
+						myHex = h.hex;
+						myText = h.text;
+					}
+				});
+				if (field.settings.hasColors && obj[field.columnName]) {
+					return '<span class="selectivity-multiple-selected-item rendered'+formClass+'" style="background-color:'+myHex+' !important;">'+myText+'</span>';
+				} else {
+					return myText;
+				}		
+			}
+
 			config.editor = 'richselect';
-			config.options = this.settings.options.map(function (opt) {
+			config.options = field.settings.options.map(function (opt) {
 				return {
 					id: opt.id,
 					value: opt.text,
@@ -529,7 +590,7 @@ class ABFieldList extends ABFieldSelectivity {
 		if (!node) { return }
 
 		if (this.settings.isMultiple == true) {
-			var placeholder = L('ab.dataField.list.placeholder', '*Select items');
+			var placeholder = L('ab.dataField.list.placeholder_multiple', '*Select items');
 			var readOnly = false;
 			if (editable != null && editable == false) {
 				readOnly = true;
@@ -564,11 +625,13 @@ class ABFieldList extends ABFieldSelectivity {
 
 					// pass null because it could not put empty array in REST api
 					if (values[this.columnName].length == 0)
-						values[this.columnName] = [];
+						values[this.columnName] = "";
 
 					this.object.model().update(row.id, values)
 						.then(() => {
 							// update the client side data object as well so other data changes won't cause this save to be reverted
+							if (values[this.columnName] == "")
+								values[this.columnName] = [];
 							if ($$(node) && $$(node).updateItem)
 								$$(node).updateItem(row.id, values);
 						})
@@ -585,18 +648,22 @@ class ABFieldList extends ABFieldSelectivity {
 			}
 
 		} else {
-			var hasRendered = node.querySelector('.rendered');
-			
-			if (hasRendered == null) {
-				if (this.settings.hasColors) {
-					var myHex = "#666666";
-					this.settings.options.forEach(function(h) {
-						if (h.text == node.innerHTML)
-							myHex = h.hex;
-					});
-					node.innerHTML = '<span class="selectivity-multiple-selected-item rendered" style="background-color:'+myHex+' !important;">'+node.innerHTML+'</span>';
-				}				
-			}
+			// var hasRendered = node.querySelector('.rendered');
+            // 
+			// if (hasRendered == null) {
+			// 	if (this.settings.hasColors) {
+			// 		var myHex = "#666666";
+			// 		this.settings.options.forEach(function(h) {
+			// 			if (h.text == node.innerHTML)
+			// 				myHex = h.hex;
+			// 		});
+			// 		if (node.innerHTML != L('ab.dataField.list.placeholder', '*Select item')) {
+			// 			node.innerHTML = '<span class="selectivity-multiple-selected-item rendered" style="background-color:'+myHex+' !important;">'+node.innerHTML+'</span>';
+			// 		} else {
+			// 			node.innerHTML = "<span style='color: #CCC; padding: 0 5px;'>"+node.innerHTML+"</span>";
+			// 		}
+			// 	}				
+			// }
 		}
 
 	}

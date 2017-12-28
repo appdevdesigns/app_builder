@@ -256,13 +256,68 @@ class ABFieldTree extends ABField {
   }
 
   // return the grid column header definition for this instance of ABFieldTree
-  columnHeader(isObjectWorkspace, width) {
+  columnHeader(isObjectWorkspace, width, isForm) {
     var config = super.columnHeader(isObjectWorkspace);
+    var field = this;
+    
+    var formClass = "";
+    var placeHolder = "";
+    if (isForm) {
+        formClass = " form-entry";
+        placeHolder = "<span style='color: #CCC; padding: 0 5px;'>"+L('ab.dataField.tree.placeholder', '*Select items')+"</span>";
+    }
 
-    if (typeof width != "undefined") {
-      config.template = '<div style="margin-left: ' + width + 'px;" class="list-data-values form-entry"></div>';
-    } else {
-      config.template = '<div class="list-data-values form-entry"></div>';
+    
+    config.template = function (obj) {
+        var branches = [];
+        var options = _.cloneDeep(field.settings.options);
+        options = new webix.TreeCollection({
+          data: options
+        });
+
+        var values = obj;
+        if (obj[field.columnName] != null) {
+          values = obj[field.columnName];
+        }
+
+        options.data.each(function(obj) {
+          if (typeof values.indexOf != "undefined" && values.indexOf(obj.id) != -1) {
+            var html = "";
+
+            var rootid = obj.id;
+            while (this.getParentId(rootid)) {
+              options.data.each(function(par) {
+                if (options.data.getParentId(rootid) == par.id) {
+                  html = par.text + ": " + html;
+                }
+              });
+              rootid = this.getParentId(rootid);
+            }
+
+            html += obj.text;
+            branches.push(html);
+          }
+        });
+
+        var myHex = "#4CAF50";
+        var nodeHTML = "";
+        nodeHTML += "<div class='list-data-values'>";
+        if (branches.length == 0) {
+            nodeHTML += placeHolder;
+        } else {
+            branches.forEach(function(item) {
+                nodeHTML += '<span class="selectivity-multiple-selected-item rendered" style="background-color:' + myHex + ' !important;">' + item + '</span>';
+            });
+        }
+        nodeHTML += "</div>";
+
+        // field.setBadge(node, App, row);
+        
+        if (typeof width != "undefined") {
+          return '<div style="margin-left: ' + width + 'px;" class="list-data-values'+formClass+'">'+nodeHTML+'</div>';
+        } else {
+          return '<div class="list-data-values'+formClass+'">'+nodeHTML+'</div>';
+        }
     }
 
     return config;
@@ -278,7 +333,7 @@ class ABFieldTree extends ABField {
    *					unique id references.
    * @param {HtmlDOM} node  the HTML Dom object for this field's display.
    */
-  customDisplay(row, App, node, editable, resize) {
+  customDisplay(row, App, node, editable, isForm) {
     // sanity check.
     if (!node) {
       return
@@ -286,51 +341,53 @@ class ABFieldTree extends ABField {
     
     var field = this;
 
-    if (!row || row.length == 0) {
-      node.innerHTML = "<em style='color: #AAA; padding: 0 5px;'>Click to select</em>";
-      return
-    }
-
-    var row = row;
-    var branches = [];
-    var options = _.cloneDeep(field.settings.options);
-    options = new webix.TreeCollection({
-      data: options
-    });
-
-    var values = row;
-    if (row[field.columnName] != null) {
-      values = row[field.columnName];
-    }
-
-    options.data.each(function(obj) {
-      if (typeof values.indexOf != "undefined" && values.indexOf(obj.id) != -1) {
-        var html = "";
-
-        var rootid = obj.id;
-        while (this.getParentId(rootid)) {
-          options.data.each(function(par) {
-            if (options.data.getParentId(rootid) == par.id) {
-              html = par.text + ": " + html;
-            }
-          });
-          rootid = this.getParentId(rootid);
+    if (isForm) {
+        if (!row || row.length == 0) {
+          node.innerHTML = "<div class='list-data-values form-entry'><span style='color: #CCC; padding: 0 5px;'>"+L('ab.dataField.tree.placeholder', '*Select items')+"</span></div>";
+          return
         }
 
-        html += obj.text;
-        branches.push(html);
-      }
-    });
+        var row = row;
+        var branches = [];
+        var options = _.cloneDeep(field.settings.options);
+        options = new webix.TreeCollection({
+          data: options
+        });
 
-    var myHex = "#4CAF50";
-    var nodeHTML = "";
-    nodeHTML += "<div class='list-data-values'>";
-    branches.forEach(function(item) {
-      nodeHTML += '<span class="selectivity-multiple-selected-item rendered" style="background-color:' + myHex + ' !important;">' + item + '</span>';
-    });
-    nodeHTML += "</div>";
+        var values = row;
+        if (row[field.columnName] != null) {
+          values = row[field.columnName];
+        }
 
-    node.innerHTML = nodeHTML;
+        options.data.each(function(obj) {
+          if (typeof values.indexOf != "undefined" && values.indexOf(obj.id) != -1) {
+            var html = "";
+
+            var rootid = obj.id;
+            while (this.getParentId(rootid)) {
+              options.data.each(function(par) {
+                if (options.data.getParentId(rootid) == par.id) {
+                  html = par.text + ": " + html;
+                }
+              });
+              rootid = this.getParentId(rootid);
+            }
+
+            html += obj.text;
+            branches.push(html);
+          }
+        });
+
+        var myHex = "#4CAF50";
+        var nodeHTML = "";
+        nodeHTML += "<div class='list-data-values form-entry'>";
+        branches.forEach(function(item) {
+          nodeHTML += '<span class="selectivity-multiple-selected-item rendered" style="background-color:' + myHex + ' !important;">' + item + '</span>';
+        });
+        nodeHTML += "</div>";
+
+        node.innerHTML = nodeHTML;
+    }
 
     field.setBadge(node, App, row);
 
@@ -609,7 +666,7 @@ class ABFieldTree extends ABField {
     if (!dom) return false;
 
     // set value to selectivity
-    this.customDisplay(val, this.App, dom, true);
+    this.customDisplay(val, this.App, dom, true, true);
 
     setTimeout(function() {
         var height = 33;

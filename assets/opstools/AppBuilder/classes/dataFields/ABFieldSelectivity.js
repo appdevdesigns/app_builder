@@ -162,6 +162,7 @@ export default class ABFieldSelectivity extends ABField {
 
 	selectivitySetBadge(domNode, App, row) {
 		var field = this;
+		if (!domNode.clientHeight) return;
 		var innerHeight = domNode.clientHeight;
 		var outerHeight = domNode.parentElement.clientHeight;
 		if (innerHeight - outerHeight > 5) {

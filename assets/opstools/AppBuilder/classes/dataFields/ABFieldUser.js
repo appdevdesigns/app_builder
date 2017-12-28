@@ -220,22 +220,80 @@ class ABFieldUser extends ABFieldSelectivity {
 	///
 
 	// return the grid column header definition for this instance of ABFieldUser
-	columnHeader(isObjectWorkspace, width) {
+	columnHeader(isObjectWorkspace, width, editable) {
 		var config = super.columnHeader(isObjectWorkspace);
+		var field = this;
+		var App = App;
 
 		// Multiple select list
-		if (this.settings.isMultiple) {
-			if (typeof width != "undefined") {
-				config.template = '<div style="margin-left: '+width+'px" class="list-data-values"></div>';				
-			} else {
-				config.template = '<div class="list-data-values"></div>';
+		if (field.settings.isMultiple) {
+			config.template = function(row) {
+				
+				var node = document.createElement("div");
+				node.classList.add("list-data-values");
+				if (typeof width != "undefined") {
+					node.style.marginLeft = width+'px';				
+				}
+				
+				var domNode = node;
+				
+				var readOnly = false;
+				if (editable != null && editable == false) {
+					readOnly = true;
+				}
+
+				var placeholder = "";
+				if (field.settings.editable && readOnly == false) {
+					placeholder = L('ab.dataField.user.placeHolder_single', '*Select users');
+				}
+				
+				var data = row[field.columnName];
+				if (data == "")
+					data = [];
+				
+				field.selectivityRender(domNode, {
+					multiple: true,
+					placeholder: placeholder,
+					data: data,
+					isUsers: true,
+					readOnly: readOnly
+				}, App, row);
+				
+				return node.outerHTML;
+				
 			}
+
 		}
 		// Single select list
 		else {
-			if (this.settings.editable = 1) {
+			
+			var formClass = "";
+			var placeHolder = "";
+			if (editable) {
+				formClass = " form-entry";
+				placeHolder = "<span style='color: #CCC; padding: 0 5px;'>"+L('ab.dataField.user.placeholder_single', '*Select user')+"</span>";
+			}
+			
+			config.template = function(obj) {
+				var myHex = "#666666";
+				var myText = placeHolder;
+				var users = field.getUsers();
+
+				users.forEach(function(h) {
+					if (h.id == obj[field.columnName]) {
+						myText = h.value;
+					}
+				});
+				if (obj[field.columnName]) {
+					return '<span class="selectivity-multiple-selected-item rendered" style="background-color:#eee !important; color: #666 !important; box-shadow: inset 0px 1px 1px #333;"><i style="opacity: 0.6;" class="fa fa-user"></i> '+myText+'</span>';
+				} else {
+					return myText;
+				}
+			}
+
+			if (field.settings.editable = 1) {
 				config.editor = 'richselect';
-				config.options = this.getUsers();
+				config.options = field.getUsers();
 			}
 		}
 		return config;
@@ -267,13 +325,17 @@ class ABFieldUser extends ABFieldSelectivity {
 			var placeholder = "";
 			if (this.settings.editable && readOnly == false) {
 				// readOnly = false;
-				placeholder = L('ab.dataField.user.placeHolder', '*Select users');
+				placeholder = L('ab.dataField.user.placeHolder_multiple', '*Select users');
 			}
+
+			var data = row[this.columnName];
+			if (data == "")
+				data = [];
 
 			this.selectivityRender(domNode, {
 				multiple: true,
 				placeholder: placeholder,
-				data: row[this.columnName],
+				data: data,
 				items: this.getUsers(),
 				isUsers: true,
 				// ajax: {
@@ -321,11 +383,11 @@ class ABFieldUser extends ABFieldSelectivity {
 				}, false);				
 			}
 		} else {
-			var hasRendered = node.querySelector('.rendered');
-			
-			if (hasRendered == null && node.innerHTML != "") {
-				node.innerHTML = '<span class="selectivity-multiple-selected-item rendered" style="background-color:#eee !important; color: #666 !important; box-shadow: inset 0px 1px 1px #333;"><i style="opacity: 0.6;" class="fa fa-user"></i> '+node.innerHTML+'</span>';
-			}
+			// var hasRendered = node.querySelector('.rendered');
+            // 
+			// if (hasRendered == null && node.innerHTML != "") {
+			// 	node.innerHTML = '<span class="selectivity-multiple-selected-item rendered" style="background-color:#eee !important; color: #666 !important; box-shadow: inset 0px 1px 1px #333;"><i style="opacity: 0.6;" class="fa fa-user"></i> '+node.innerHTML+'</span>';
+			// }
 		}
 
 	}

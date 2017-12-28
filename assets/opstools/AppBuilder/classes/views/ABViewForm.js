@@ -681,7 +681,7 @@ export default class ABViewForm extends ABViewContainer {
 							var values = {};
 							f.field().defaultValue(values);
 
-							if (values[colName] != null)
+							if (values[colName] != null && $$(comp.ui.id).setValue)
 								$$(comp.ui.id).setValue(values[colName]);
 						}
 					});
@@ -962,9 +962,9 @@ export default class ABViewForm extends ABViewContainer {
 
 			});
 
-			// clear undefined values
+			// clear undefined values or empty arrays
 			for (var prop in formVals) {
-				if (formVals[prop] == null)
+				if (formVals[prop] == null || formVals[prop].length == 0)
 					formVals[prop] = '';
 			}
 

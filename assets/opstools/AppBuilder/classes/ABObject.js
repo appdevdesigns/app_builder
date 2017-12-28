@@ -272,14 +272,14 @@ export default class ABObject extends ABObjectBase {
 
 	// return the column headers for this object
 	// @param {bool} isObjectWorkspace  return the settings saved for the object workspace
-	columnHeaders (isObjectWorkspace) {
+	columnHeaders (isObjectWorkspace, isEditable) {
 
 		var headers = [];
 		var columnNameLookup = {};
 
 		// get the header for each of our fields:
 		this._fields.forEach(function(f){
-			var header = f.columnHeader(isObjectWorkspace);
+			var header = f.columnHeader(isObjectWorkspace, null, isEditable);
 			if (f.settings.width != 0) {
 				// set column width to the customized width
 				header.width = f.settings.width;
