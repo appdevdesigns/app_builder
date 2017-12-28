@@ -114,6 +114,7 @@ function updateRelationValues(query, id, updateRelationParams) {
  *                              sort :  {Array}
  *                              offset: {Integer}
  *                              limit:  {Integer}
+ *                              includeRelativeData: {Boolean}
  *                           }
  */
 function populateFindConditions(query, object, options) {
@@ -278,12 +279,14 @@ function populateFindConditions(query, object, options) {
     }
 
     // query relation data
-    var relationNames = object.connectFields()
-        .filter((f) => f.fieldLink() != null)
-        .map((f) => f.relationName());
+    if (options.includeRelativeData) {
+        var relationNames = object.connectFields()
+            .filter((f) => f.fieldLink() != null)
+            .map((f) => f.relationName());
 
-    if (relationNames.length > 0)
-        query.eager('[#fieldNames#]'.replace('#fieldNames#', relationNames.join(', ')));
+        if (relationNames.length > 0)
+            query.eager('[#fieldNames#]'.replace('#fieldNames#', relationNames.join(', ')));
+    }
 
 }
 
@@ -341,7 +344,8 @@ module.exports = {
                                         where: [{
                                             fieldName: "id",
                                             operator: "equals",
-                                            inputValue: newObj.id
+                                            inputValue: newObj.id,
+                                            includeRelativeData: true
                                         }],
                                         offset: 0,
                                         limit: 1
@@ -449,12 +453,13 @@ module.exports = {
                     where: where,
                     sort: sort,
                     offset: offset,
-                    limit: limit
+                    limit: limit,
+                    includeRelativeData: true
                 });
 
                 // promise for the total count. this was moved below the filters because webix will get caught in an infinte loop of queries if you don't pass the right count
                 var query2 = object.model().query();
-                populateFindConditions(query2, object, { where: where });
+                populateFindConditions(query2, object, { where: where, includeRelativeData: false });
                 var pCount = query2.count('id as count').first();
 
                 Promise.all([
@@ -623,7 +628,8 @@ module.exports = {
                                             inputValue: id
                                         }],
                                         offset: 0,
-                                        limit: 1
+                                        limit: 1,
+                                        includeRelativeData: true
                                     });
 
                                     return query3
