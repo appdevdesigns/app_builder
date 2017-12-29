@@ -336,16 +336,17 @@ steal(
 
 
 							// Trigger .onShow to the component
-							setTimeout(function () {
+							var loadPage = setInterval(function () {
 
 								if (self.pageComponents[pageId] && self.pageComponents[pageId].onShow) {
+									clearInterval(loadPage);
 									for (const element of document.getElementById(self.containerDomID).getElementsByClassName("ab-loading")) {
 										element.style.display = "none";
 									}
 									self.pageComponents[pageId].onShow();
 								}
 
-							}, 50);
+							}, 1000);
 
 						},
 
