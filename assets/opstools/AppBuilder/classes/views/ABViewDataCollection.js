@@ -438,7 +438,8 @@ export default class ABViewDataCollection extends ABView {
 			view.addListener('properties.updated', () => {
 				this.populatePopupEditors(view);
 
-				this.__dataCollection.clearAll();
+				if (this.__dataCollection)
+					this.__dataCollection.clearAll();
 
 				view.loadData();
 			});
