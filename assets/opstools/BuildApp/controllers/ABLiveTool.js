@@ -60,6 +60,8 @@ steal(
 								self.height = data.height;
 								self.resize(data.height);
 							});
+							
+							console.log("live view initialized");
 
 
 						},
@@ -158,9 +160,10 @@ steal(
 
 							self.initPage();
 
-							// webix.ready(function () {
-							self.showPage();
-							// });
+							webix.ready(function () {
+								console.log("showing page");
+								self.showPage();
+							});
 
 						},
 
@@ -305,6 +308,7 @@ steal(
 						*      the root page.
 						*/
 						showPage: function (pageId) {
+							console.log("showPage");
 							var self = this;
 
 							pageId = pageId ||
@@ -337,8 +341,10 @@ steal(
 
 							// Trigger .onShow to the component
 							var loadPage = setInterval(function () {
+								console.log("loading page");
 
 								if (self.pageComponents[pageId] && self.pageComponents[pageId].onShow) {
+									console.log("canceling load");
 									clearInterval(loadPage);
 									for (const element of document.getElementById(self.containerDomID).getElementsByClassName("ab-loading")) {
 										element.style.display = "none";

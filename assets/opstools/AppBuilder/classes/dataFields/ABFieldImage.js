@@ -339,8 +339,6 @@ OP.Dialog.Alert({
 			width = field.settings.imageWidth + "px";
 		}
 		
-		console.log(field.settings);
-
 		// populate our default template:
 		config.template = (obj) => {
 
