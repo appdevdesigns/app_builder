@@ -111,12 +111,15 @@ export default class ABViewGrid extends ABViewWidget  {
 		super.fromValues(values);
 
     	// if this is being instantiated on a read from the Property UI,
-    	this.settings.dataSource = this.settings.dataSource || ABViewGridPropertyComponentDefaults.dataSource;
-		this.settings.isEditable = this.settings.isEditable || ABViewGridPropertyComponentDefaults.isEditable;
-		this.settings.massUpdate = this.settings.massUpdate || ABViewGridPropertyComponentDefaults.massUpdate;
-		this.settings.allowDelete = this.settings.allowDelete || ABViewGridPropertyComponentDefaults.allowDelete;
-		this.settings.isFilterable = this.settings.isFilterable || ABViewGridPropertyComponentDefaults.isFilterable;
-		this.settings.isSortable = this.settings.isSortable || ABViewGridPropertyComponentDefaults.isSortable;
+		this.settings.dataSource = this.settings.dataSource || ABViewGridPropertyComponentDefaults.dataSource;
+		
+		// Convert to boolean
+		this.settings.isEditable = JSON.parse(this.settings.isEditable || ABViewGridPropertyComponentDefaults.isEditable);
+		this.settings.massUpdate = JSON.parse(this.settings.massUpdate || ABViewGridPropertyComponentDefaults.massUpdate);
+		this.settings.allowDelete = JSON.parse(this.settings.allowDelete || ABViewGridPropertyComponentDefaults.allowDelete);
+		this.settings.isFilterable = JSON.parse(this.settings.isFilterable || ABViewGridPropertyComponentDefaults.isFilterable);
+		this.settings.isSortable = JSON.parse(this.settings.isSortable || ABViewGridPropertyComponentDefaults.isSortable);
+
 		// this.settings.linkedObject = this.settings.linkedObject || ABViewGridPropertyComponentDefaults.linkedObject;
 		// this.settings.linkedField = this.settings.linkedField || ABViewGridPropertyComponentDefaults.linkedField;
 		// this.settings.linkedPage = this.settings.linkedPage || ABViewGridPropertyComponentDefaults.linkedPage;
@@ -654,21 +657,21 @@ export default class ABViewGrid extends ABViewWidget  {
 		// }
 		
 		// there must be a better way...
-		if (this.settings.allowDelete == "1") {
-			this.settings.allowDelete = true;
-		} else {
-			this.settings.allowDelete = false;
-		}
-		if (this.settings.isEditable == "1") {
-			this.settings.isEditable = true;
-		} else {
-			this.settings.isEditable = false;
-		}
-		if (this.settings.massUpdate == "1") {
-			this.settings.massUpdate = true;
-		} else {
-			this.settings.massUpdate = false;
-		}
+		// if (this.settings.allowDelete == "1") {
+		// 	this.settings.allowDelete = true;
+		// } else {
+		// 	this.settings.allowDelete = false;
+		// }
+		// if (this.settings.isEditable == "1") {
+		// 	this.settings.isEditable = true;
+		// } else {
+		// 	this.settings.isEditable = false;
+		// }
+		// if (this.settings.massUpdate == "1") {
+		// 	this.settings.massUpdate = true;
+		// } else {
+		// 	this.settings.massUpdate = false;
+		// }
 		var settings = {
 			allowDelete: this.settings.allowDelete,
 			detailsView: this.settings.detailsPage,

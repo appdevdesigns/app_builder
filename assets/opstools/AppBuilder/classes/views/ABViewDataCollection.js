@@ -170,6 +170,8 @@ export default class ABViewDataCollection extends ABView {
 			filterConditions: ABViewPropertyDefaults.objectWorkspace.filterConditions,
 			sortFields: ABViewPropertyDefaults.objectWorkspace.sortFields
 		};
+
+		// Convert to boolean
 		this.settings.loadAll = JSON.parse(this.settings.loadAll || ABViewPropertyDefaults.loadAll);
 
 	}
