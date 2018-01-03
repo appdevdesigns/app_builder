@@ -486,7 +486,7 @@ class ABFieldFile extends ABField {
 					if (confirmDelete) {
 						// update just this value on our current object.model
 						var values = {};
-						values[this.columnName] = {};
+						values[this.columnName] = "";
 						this.object.model().update(row.id, values)
 						.then(()=>{
 							// update the client side data object as well so other data changes won't cause this save to be reverted
