@@ -77,6 +77,25 @@ export default class ABViewDetail extends ABViewContainer {
 
 	}
 
+	/** 
+	 * @method editorComponent
+	 * return the Editor for this UI component.
+	 * the editor should display either a "block" view or "preview" of 
+	 * the current layout of the view.
+	 * @param {string} mode what mode are we in ['block', 'preview']
+	 * @return {Component} 
+	 */
+	editorComponent(App, mode) {
+		
+		var comp = super.editorComponent(App, mode);
+
+		// Define height of cell
+		comp.ui.rows[0].cellHeight = 75;
+
+		return comp;
+	}
+		
+
 
 	//
 	// Property Editor
