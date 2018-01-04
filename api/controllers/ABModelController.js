@@ -244,7 +244,7 @@ function populateFindConditions(query, object, options, languageCode) {
             var whereRaw = '{fieldName} {operator} {input}'
                 .replace('{fieldName}', fieldName)
                 .replace('{operator}', operator)
-                .replace('{input}', ((input != null) ? "'" + input + "'" : "''"));
+                .replace('{input}', ((input != null) ? "'" + input + "'" : ''));
 
             // Now we add in all of our where statements
             if (index == 0) {
