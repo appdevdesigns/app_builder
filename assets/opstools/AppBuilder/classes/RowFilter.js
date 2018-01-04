@@ -655,6 +655,8 @@ export default class RowFilter extends OP.Component {
 
 				config_settings.filters.forEach(filter => {
 
+					if (!filter.fieldId || !filter.operator) return;
+
 					var fieldInfo = _Fields.filter(f => f.id == filter.fieldId)[0];
 					if (!fieldInfo) return;
 

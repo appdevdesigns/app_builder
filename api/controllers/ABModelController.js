@@ -129,6 +129,8 @@ function populateFindConditions(query, object, options) {
         var index = 0;
         where.forEach(function (w) {
 
+            if (w.fieldName || w.operator) return;
+
             // 1:1 - Get rows that no relation with 
             if (w.operator == 'have no relation') {
                 var relation_name = AppBuilder.rules.toFieldRelationFormat(w.fieldName);
