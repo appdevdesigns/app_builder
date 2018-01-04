@@ -116,8 +116,9 @@ function updateRelationValues(query, id, updateRelationParams) {
  *                              limit:  {Integer}
  *                              includeRelativeData: {Boolean}
  *                           }
+ * @param {string} languageCode
  */
-function populateFindConditions(query, object, options) {
+function populateFindConditions(query, object, options, languageCode) {
 
     var where = options.where,
         sort = options.sort,
@@ -129,7 +130,7 @@ function populateFindConditions(query, object, options) {
         var index = 0;
         where.forEach(function (w) {
 
-            if (w.fieldName || w.operator) return;
+            if (!w.fieldName || !w.operator) return;
 
             // 1:1 - Get rows that no relation with 
             if (w.operator == 'have no relation') {
@@ -225,23 +226,25 @@ function populateFindConditions(query, object, options) {
                     var input = w.inputValue;
             }
             // if we are searching a multilingual field it is stored in translations so we need to search JSON
-            if (w.isMultiLingual == 1) {
-                var fieldName = 'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH(translations, "one", "' + w.languageCode + '")), 1, 4)), \'$."' + w.fieldName + '"\'))';
+            var field = object._fields.filter(field => field.columnName == w.fieldName)[0];
+            if (field && field.settings.supportMultilingual == 1) {
+                var fieldName = 'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH(translations, "one", "' + languageCode + '")), 1, 4)), \'$."' + w.fieldName + '"\'))';
             } else { // If we are just searching a field it is much simpler
                 var fieldName = '`' + w.fieldName + '`';
             }
 
-            var field = object._fields.filter(field => field.columnName == w.fieldName)[0];
-            if (field && field.settings && field.settings.options && field.settings.options.filter) {
-                var inputID = field.settings.options.filter(option => option.text == input);
-                input = inputID[0].id;
+            if (field && field.key == "list" && field.settings && field.settings.options && field.settings.options.filter) {
+                // NOTE: Should get 'id' or 'text' from client ??
+                var inputID = field.settings.options.filter(option => (option.id == input || option.text == input))[0];
+                if (inputID)
+                    input = inputID.id;
             }
 
             // We are going to use the 'raw' queries for knex becuase the '.' for JSON searching is misinterpreted as a sql identifier
             var whereRaw = '{fieldName} {operator} {input}'
                 .replace('{fieldName}', fieldName)
                 .replace('{operator}', operator)
-                .replace('{input}', ((input != null) ? "'" + input + "'" : ''));
+                .replace('{input}', ((input != null) ? "'" + input + "'" : "''"));
 
             // Now we add in all of our where statements
             if (index == 0) {
@@ -263,7 +266,7 @@ function populateFindConditions(query, object, options) {
             // because we are going to sort by the users language not the builder's so the view will be sorted differntly depending on which languageCode
             // you are using but the intent of the sort is maintained
             if (o.isMulti == 1) {
-                var by = 'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH(translations, "one", "' + req.user.data.languageCode + '")), 1, 4)), \'$."' + o.by + '"\'))';
+                var by = 'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH(translations, "one", "' + languageCode + '")), 1, 4)), \'$."' + o.by + '"\'))';
             } else { // If we are just sorting a field it is much simpler
                 var by = "`" + o.by + "`";
             }
@@ -351,7 +354,8 @@ module.exports = {
                                         }],
                                         offset: 0,
                                         limit: 1
-                                    });
+                                    },
+                                    req.user.data.languageCode);
 
                                     return query3
                                         .catch((err) => { return Promise.reject(err); })
@@ -457,11 +461,12 @@ module.exports = {
                     offset: offset,
                     limit: limit,
                     includeRelativeData: true
-                });
+                },
+                req.user.data.languageCode);
 
                 // promise for the total count. this was moved below the filters because webix will get caught in an infinte loop of queries if you don't pass the right count
                 var query2 = object.model().query();
-                populateFindConditions(query2, object, { where: where, includeRelativeData: false });
+                populateFindConditions(query2, object, { where: where, includeRelativeData: false }, req.user.data.languageCode);
                 var pCount = query2.count('id as count').first();
 
                 Promise.all([
@@ -632,7 +637,8 @@ module.exports = {
                                         offset: 0,
                                         limit: 1,
                                         includeRelativeData: true
-                                    });
+                                    },
+                                    req.user.data.languageCode);
 
                                     return query3
                                         .catch((err) => { return Promise.reject(err); })
