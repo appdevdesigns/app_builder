@@ -425,16 +425,18 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 
 				}
 
+				if (formValues.editable || formValues.showGrid || formValues.viewable) {
+					// a data collection for edit
+					var editDcLabel = "Edit " + CurrentObj.label;
+					editDc = _logic.getDataCollection(editDcLabel, CurrentObj);
+					dataCollections.push(editDc.toObj());
+				}
+
 
 				// Add a 'edit' page
 				if (formValues.editable) {
 
 					editPageId = OP.Util.uuid();
-
-					// a data collection for edit
-					var editDcLabel = "Edit " + CurrentObj.label;
-					editDc = _logic.getDataCollection(editDcLabel, CurrentObj);
-					dataCollections.push(editDc.toObj());
 
 					var editForm = _logic.getFormView(editDc);
 
