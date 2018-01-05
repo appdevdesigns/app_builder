@@ -308,7 +308,7 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 			selectAction: (action, $viewRule) => {
 
 				// Swtich the view of action option
-				$viewRule.queryView({ id: "actionValue" }).showBatch(action);
+				$viewRule.queryView({ for: "actionValue" }).showBatch(action);
 			},
 
 			hide: function () {
