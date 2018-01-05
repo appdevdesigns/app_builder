@@ -349,11 +349,11 @@ module.exports = {
                                         where: [{
                                             fieldName: "id",
                                             operator: "equals",
-                                            inputValue: newObj.id,
-                                            includeRelativeData: true
+                                            inputValue: newObj.id
                                         }],
                                         offset: 0,
-                                        limit: 1
+                                        limit: 1,
+                                        includeRelativeData: true
                                     },
                                     req.user.data.languageCode);
 
@@ -465,9 +465,9 @@ module.exports = {
                 req.user.data.languageCode);
 
                 // promise for the total count. this was moved below the filters because webix will get caught in an infinte loop of queries if you don't pass the right count
-                var query2 = object.model().query();
-                populateFindConditions(query2, object, { where: where, includeRelativeData: false }, req.user.data.languageCode);
-                var pCount = query2.count('id as count').first();
+                var queryCount = object.model().query();
+                populateFindConditions(queryCount, object, { where: where, includeRelativeData: false }, req.user.data.languageCode);
+                var pCount = queryCount.count('id as count').first();
 
                 Promise.all([
                     pCount,
