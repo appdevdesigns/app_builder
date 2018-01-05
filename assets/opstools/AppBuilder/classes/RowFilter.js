@@ -649,7 +649,7 @@ export default class RowFilter extends OP.Component {
 			isValid: (rowData) => {
 
 				// If no conditions, then return true
-				if (config_settings == null || config_settings.filters == null) return true;
+				if (config_settings == null || config_settings.filters == null || config_settings.filters.length == 0) return true;
 
 				var result = (config_settings.combineCondition === "And" ? true : false);
 
@@ -791,7 +791,7 @@ export default class RowFilter extends OP.Component {
 
 				compareValue = compareValue.toLowerCase();
 
-				if (Array.isArray(compareValue))
+				if (!Array.isArray(compareValue))
 					compareValue = [compareValue];
 
 				switch (operator) {
