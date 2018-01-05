@@ -965,7 +965,7 @@ export default class ABViewDataCollection extends ABView {
 		if (model == null) return Promise.resolve([]);
 
 		var dc = this.__dataCollection;
-		var sorts = this.settings.objectWorkspace.sortConditions || {};
+		var sorts = this.settings.objectWorkspace.sortFields || [];
 
 		// pull filter conditions
 		var wheres = [];
