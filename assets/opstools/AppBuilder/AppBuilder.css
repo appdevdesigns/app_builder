@@ -1249,3 +1249,8 @@ a.ab-delete-photo:hover {
     transform: rotate(360deg);
   }
 }
+
+.ab-rich-text fieldset {
+	padding-left: 0px;
+	padding-right: 0px;
+}
