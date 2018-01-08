@@ -22,7 +22,17 @@ var AD = require('ad-utils');
     	// build out our npm devdependencies so we have access to WebPack
     	AD.spawn.command({
            command:'npm',
-           options:['install'],
+           options:['install', 
+				"babel-core",
+				"babel-loader",
+				"babel-polyfill",
+				"babel-preset-es2015", 
+				"css-loader", 
+				"extract-text-webpack-plugin", 
+				"style-loader", 
+				"uglifyjs-webpack-plugin", 
+				"webpack"
+           ],
            shouldEcho:true
        })
        .fail(function(err){
