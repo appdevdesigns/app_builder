@@ -21,8 +21,17 @@ var AD = require('ad-utils');
 
     	var commands = [];
 
+//// LEFT OFF HERE
+////
+// testing out our problem with loading the AppBuilder on a new install
+// attempting to install these specific packages to see if they will work
+// as expected.
+//
+// problem: .setup_install is alredy there by the time this is run the first time
+// - look for a local .setup_install, not the global one.
+
     	// only the 1st time do we install our webpack dependencies
-    	var pathInstall = path.join(__dirname, '..', '..', '..', '.setup_install')
+    	var pathInstall = path.join(__dirname, '.setup_install')
     	if ( !fs.existsSync(pathInstall)) {
 
     		commands.push({
@@ -42,6 +51,8 @@ var AD = require('ad-utils');
 	           log:'<green><bold>installing:</bold> webpack dependencies </green>',
 	           shouldEcho:true
 	       	})
+
+	       	fs.renameSync(path.join(__dirname, '.notsetup'), path.join(__dirname, '.setup_install'));
     	}
 
     	// but everytime run our webpack build:
