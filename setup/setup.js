@@ -16,6 +16,30 @@ var AD = require('ad-utils');
         localOptions = require(pathOptions);
     }
 
-    AD.module.setup(localOptions);
+    if (process.env.NODE_ENV != 'production') {
+
+
+    	// build out our npm devdependencies so we have access to WebPack
+    	AD.spawn.command({
+           command:'npm',
+           options:['init'],
+           shouldEcho:true
+       })
+       .fail(function(err){
+           AD.log.error('<red> appbuilder: webpack init: NPM init exited with an error</red>');
+           AD.log(err);
+       })
+       .then(function(code){
+           AD.module.setup(localOptions);
+       });
+
+    } else {
+
+	    AD.module.setup(localOptions);
+    }
+
+
+
+
 
 })();
