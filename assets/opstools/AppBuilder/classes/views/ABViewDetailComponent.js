@@ -50,7 +50,7 @@ export default class ABViewDetailComponent extends ABViewWidget {
 
 		// setup 'label' of the element
 		var detailView = this.detailComponent(),
-			field = this.field(),
+			field = this.field() || {},
 			label = '';
 
 		var settings = {};
@@ -77,7 +77,7 @@ export default class ABViewDetailComponent extends ABViewWidget {
 		if (settings.labelPosition == 'top')
 			height = height * 2;
 
-		if (typeof field.settings.useHeight != "undefined" && field.settings.useHeight == 1) {
+		if (field.settings && typeof field.settings.useHeight != "undefined" && field.settings.useHeight == 1) {
 			height = parseInt(field.settings.imageHeight);
 		}
 

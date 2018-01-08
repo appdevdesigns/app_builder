@@ -79,8 +79,11 @@ export default class ABViewFormField extends ABView {
 			}
 		}
 
+		var _init = () => {}
+
 		return {
-			ui: _ui
+			ui: _ui,
+			init: _init
 		}
 	}
 
