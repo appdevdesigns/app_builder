@@ -34,22 +34,31 @@ var AD = require('ad-utils');
     	var pathInstall = path.join(__dirname, '.setup_install')
     	if ( !fs.existsSync(pathInstall)) {
 
+// attempt to limit install so we speed things up:
+
+    	// 	commands.push({
+	    //         command:'npm',
+	    //         options:['install', 
+					// "babel-core@6.24.1",
+					// "babel-loader@6.4.1",
+					// "babel-polyfill@6.23.0",
+					// "babel-preset-es2015@6.24.1", 
+					// "css-loader@0.28.1", 
+					// "es6-promise@4.1.0",
+					// "extract-text-webpack-plugin@2.1.0", 
+					// "style-loader@0.16.1", 
+					// "uglifyjs-webpack-plugin@0.4.3", 
+					// "webpack@2.5.1"
+	    //        ],
+	    //        log:'<green><bold>installing:</bold> webpack dependencies </green>',
+	    //        shouldEcho:true
+	    //    	})
+
     		commands.push({
 	            command:'npm',
-	            options:['install', 
-					"babel-core@6.24.1",
-					"babel-loader@6.4.1",
-					"babel-polyfill@6.23.0",
-					"babel-preset-es2015@6.24.1", 
-					"css-loader@0.28.1", 
-					"es6-promise@4.1.0",
-					"extract-text-webpack-plugin@2.1.0", 
-					"style-loader@0.16.1", 
-					"uglifyjs-webpack-plugin@0.4.3", 
-					"webpack@2.5.1"
-	           ],
-	           log:'<green><bold>installing:</bold> webpack dependencies </green>',
-	           shouldEcho:true
+	            options:['install'],
+	            log:'<green><bold>installing:</bold> webpack dependencies </green>',
+	            shouldEcho:true
 	       	})
 
 	       	fs.renameSync(path.join(__dirname, '.notsetup'), path.join(__dirname, '.setup_install'));
