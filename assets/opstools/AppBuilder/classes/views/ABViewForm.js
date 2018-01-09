@@ -36,6 +36,7 @@ var ABViewFormPropertyComponentDefaults = {
 	labelPosition: 'left',
 	labelWidth: 120,
 	height: 200,
+	clearOnLoad: false,
 	displayRules: [],
 
 	//	[{
@@ -138,6 +139,7 @@ export default class ABViewForm extends ABViewContainer {
 
 		// convert from "0" => true/false
 		this.settings.showLabel = JSON.parse(this.settings.showLabel != null ? this.settings.showLabel : ABViewFormPropertyComponentDefaults.showLabel);
+		this.settings.clearOnLoad = JSON.parse(this.settings.clearOnLoad != null ? this.settings.clearOnLoad : ABViewFormPropertyComponentDefaults.clearOnLoad);
 
 		// convert from "0" => 0
 		this.settings.labelWidth = parseInt(this.settings.labelWidth || ABViewFormPropertyComponentDefaults.labelWidth);
@@ -367,8 +369,8 @@ export default class ABViewForm extends ABViewContainer {
 			{
 				name: 'showLabel',
 				view: 'checkbox',
-				labelRight: L('ab.components.form.showlabel', "*Display Label"),
-				labelWidth: App.config.labelCheckbox
+				label: L('ab.components.form.showlabel', "*Display Label"),
+				labelWidth: App.config.labelWidthLarge
 			},
 			{
 				name: 'labelPosition',
@@ -397,6 +399,12 @@ export default class ABViewForm extends ABViewContainer {
 				name: "height",
 				label: L("ab.component.form.height", "*Height:"),
 				labelWidth: App.config.labelWidthLarge,
+			},
+			{
+				name: 'clearOnLoad',
+				view: 'checkbox',
+				label: L('ab.components.form.clearOnLoad', "*Clear on load"),
+				labelWidth: App.config.labelWidthLarge
 			},
 			{
 				view: "fieldset",
@@ -508,6 +516,7 @@ export default class ABViewForm extends ABViewContainer {
 		$$(ids.labelPosition).setValue(view.settings.labelPosition || ABViewFormPropertyComponentDefaults.labelPosition);
 		$$(ids.labelWidth).setValue(view.settings.labelWidth || ABViewFormPropertyComponentDefaults.labelWidth);
 		$$(ids.height).setValue(view.settings.height || ABViewFormPropertyComponentDefaults.height);
+		$$(ids.clearOnLoad).setValue(view.settings.clearOnLoad || ABViewFormPropertyComponentDefaults.clearOnLoad);
 
 		this.propertyUpdateRules(ids, view, dataCollectionId);
 
@@ -522,6 +531,7 @@ export default class ABViewForm extends ABViewContainer {
 		view.settings.labelPosition = $$(ids.labelPosition).getValue() || ABViewFormPropertyComponentDefaults.labelPosition;
 		view.settings.labelWidth = $$(ids.labelWidth).getValue() || ABViewFormPropertyComponentDefaults.labelWidth;
 		view.settings.height = $$(ids.height).getValue();
+		view.settings.clearOnLoad = $$(ids.clearOnLoad).getValue();
 
 	}
 
@@ -671,6 +681,7 @@ export default class ABViewForm extends ABViewContainer {
 		var _logic = {
 
 			displayData: (data) => {
+
 				// Set default values
 				if (data == null) {
 					var customFields = this.fieldComponents((comp) => comp instanceof ABViewFormCustom);
@@ -809,6 +820,11 @@ export default class ABViewForm extends ABViewContainer {
 					dc.bind(Form);
 
 				data = dc.getCursor();
+
+				// clear current cursor on load
+				if (data && this.settings.clearOnLoad) {
+					dc.setCursor(null);
+				}
 
 				// do this for the initial form display so we can see defaults
 				_logic.displayData(data);
