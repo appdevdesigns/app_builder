@@ -352,7 +352,7 @@ steal(
 									self.pageComponents[pageId].onShow();
 								}
 
-							}, 1000);
+							}, 10);
 
 						},
 
