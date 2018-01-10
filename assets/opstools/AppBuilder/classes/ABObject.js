@@ -362,7 +362,12 @@ export default class ABObject extends ABObjectBase {
 		
 		// default label
 		if (!labelData && this._fields.length > 0) {
-			labelData = '{' + this._fields[0].id + '}';
+
+			var defaultField = this.fields(f => f.fieldUseAsLabel())[0];
+			if (defaultField)
+				labelData = '{' + defaultField.id + '}';
+			else
+				labelData = 'ID: ' + rowData.id; // show id of row
 		}
 
 		// get column ids in {colId} template
