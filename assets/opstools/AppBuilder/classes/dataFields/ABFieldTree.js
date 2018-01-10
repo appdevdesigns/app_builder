@@ -535,8 +535,12 @@ class ABFieldTree extends ABField {
                     console.error(err);
                   })
               } else {
-                var selectedItems = $$(idTree).getChecked();
-                field.setValue($$(parentComponent.ui.id), selectedItems);
+
+                var rowData = {};
+                rowData[field.columnName] = $$(idTree).getChecked();
+
+                field.setValue($$(parentComponent.ui.id), rowData);
+
               }
             },
           }
@@ -650,14 +654,14 @@ class ABFieldTree extends ABField {
   }
 
 
-  getValue(application, object, fieldData, itemNode, rowData, item) {
+  getValue(item, rowData) {
     var values = {};
     values = item.getValues();
     return values;
   }
 
-  setValue(item, value) {
-    var val = (typeof value == "undefined" || value == null) ? [] : value;
+  setValue(item, rowData) {
+    var val = rowData[this.columnName] || [];
     
     item.setValues(val);
     // get dom

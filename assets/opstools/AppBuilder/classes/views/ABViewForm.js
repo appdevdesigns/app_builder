@@ -687,29 +687,35 @@ export default class ABViewForm extends ABViewContainer {
 					var customFields = this.fieldComponents((comp) => comp instanceof ABViewFormCustom);
 					customFields.forEach((f) => {
 
+						var field = f.field();
+						if (!field) return;
+
 						var comp = this.viewComponents[f.id];
 						if (comp == null) return;
 
-						var colName = f.field().columnName;
+						var colName = field.columnName;
 
 						// set value to each components
-						var values = {};
-						f.field().defaultValue(values);
+						var rowData = {};
+						field.defaultValue(rowData);
+						field.setValue($$(comp.ui.id), rowData);
 
-						f.field().setValue($$(comp.ui.id), values[colName]);
 					});
 					var normalFields = this.fieldComponents((comp) => ((comp instanceof ABViewFormField) && !(comp instanceof ABViewFormCustom)));
 					normalFields.forEach((f) => {
+
+						var field = f.field();
+						if (!field) return;
 
 						var comp = this.viewComponents[f.id];
 						if (comp == null) return;
 
 						if (f.key != "button") {
-							var colName = f.field().columnName;
+							var colName = field.columnName;
 
 							// set value to each components
 							var values = {};
-							f.field().defaultValue(values);
+							field.defaultValue(values);
 
 							if (values[colName] != null && $$(comp.ui.id).setValue)
 								$$(comp.ui.id).setValue(values[colName]);
@@ -725,17 +731,8 @@ export default class ABViewForm extends ABViewContainer {
 						var comp = this.viewComponents[f.id];
 						if (comp == null) return;
 
-						var colName = f.field().columnName;
-						var val = data[colName];
-
-						if (f.field().key == "connectObject") {
-							val = f.field().pullRelationValues(data);
-						}
-
 						// set value to each components
-						// if (val != null) {
-						f.field().setValue($$(comp.ui.id), val);
-						// }
+						f.field().setValue($$(comp.ui.id), data);
 					});
 				}
 			},
@@ -770,20 +767,8 @@ export default class ABViewForm extends ABViewContainer {
 				var formData = {};
 				formData[relationName] = data;
 
-				var val = null;
-
-				if (formData[relationName]) {
-
-					// convert to array
-					if (relationField.settings.linkType == 'many')
-						formData[relationName] = [formData[relationName]];
-
-					val = relationField.pullRelationValues(formData);
-
-				}
-
 				// set data of parent to default value
-				relationField.setValue(relationElem, val);
+				relationField.setValue(relationElem, formData);
 
 			}
 
@@ -796,20 +781,22 @@ export default class ABViewForm extends ABViewContainer {
 			var customFields = this.fieldComponents((comp) => comp instanceof ABViewFormCustom);
 			customFields.forEach((f) => {
 
+				var field = f.field();
+				if (!field) return;
+
 				var component = this.viewComponents[f.id];
 				if (!component) return;
 
-				var colName = f.field().columnName;
+				var colName = field.columnName;
 
 				// call .customDisplay again here
 				component.onShow();
 
 				// set value to each components
-				var values = {};
-				f.field().defaultValue(values);
+				var rowData = {};
+				field.defaultValue(rowData);
+				field.setValue($$(component.ui.id), rowData);
 
-				if (values[colName] != null)
-					f.field().setValue($$(component.ui.id), values[colName]);
 			});
 
 			var data = null;

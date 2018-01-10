@@ -309,7 +309,9 @@ export default class RowUpdater extends OP.Component {
 					if (!fieldInfo) return;
 
 					// Set value
-					fieldInfo.setValue($valueElem, item.value);
+					var rowData = {};
+					rowData[fieldInfo.columnName] = item.value;
+					fieldInfo.setValue($valueElem, rowData);
 
 				});
 

@@ -35,13 +35,6 @@ var ABFieldUserDefaults = {
 		} else {
 			return true;
 		}
-	},
-	useAsLabel: (field) => {
-		if (field.settings.isMultiple) {
-			return false;
-		} else {
-			return true;
-		}
 	}
 
 }
@@ -502,15 +495,26 @@ class ABFieldUser extends ABFieldSelectivity {
 	}
 
 
-	setValue(item, value) {
+	setValue(item, rowData) {
 		if (this.settings.isMultiple) {
 			// get selectivity dom
 			var domSelectivity = item.$view.querySelector('.list-data-values');
 			// set value to selectivity
-			this.selectivitySet(domSelectivity, value, this.App);
+			this.selectivitySet(domSelectivity, rowData[this.columnName], this.App);
 		} else {
 			item.setValue();
 		}
+	}
+
+	format(rowData) {
+
+		var val = rowData[this.columnName] || [];
+
+		if (!Array.isArray(val) || val)
+			val = [val];
+
+		return val.map(v => v.text).join(', ');
+
 	}
 	
 	getUsers() {

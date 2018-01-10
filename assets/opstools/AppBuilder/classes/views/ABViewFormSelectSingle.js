@@ -201,17 +201,11 @@ export default class ABViewFormSelectSingle extends ABViewFormField {
 
 		// make sure each of our child views get .init() called
 		component.init = (options) => {
+
 			if (field && field.key == "user") {
 
-				if (App.__users == null) {
-					App.__userlist = field.getUsers();
-					if ($$(component.ui.id))
-						$$(component.ui.id).define("options", App.__userlist);
-				}
-				else {
-					if ($$(component.ui.id))
-						$$(component.ui.id).define("options", App.__userlist);
-				}
+				if ($$(component.ui.id))
+					$$(component.ui.id).define("options", field.getUsers());
 
 			}
 		}

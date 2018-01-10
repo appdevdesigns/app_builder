@@ -27,7 +27,6 @@ var ABFieldConnectDefaults = {
 
 	isSortable: false,
 	isFilterable: false,
-	useAsLabel: false,
 
 	// supportImport: flag to support import object across applications
 	supportImport: false
@@ -728,10 +727,10 @@ class ABFieldConnect extends ABFieldSelectivity {
 		var selectedData = [];
 
 		// Get linked object
-		var linkedObject = this.object.application.objects((obj) => obj.id == this.settings.linkObject)[0];
+		var linkedObject = this.datasourceLink;
 
 		var relationName = this.relationName();
-		if (row[relationName]) {
+		if (row[relationName] && linkedObject) {
 
 			// if this select value is array
 			if (row[relationName].map) {
@@ -761,11 +760,41 @@ class ABFieldConnect extends ABFieldSelectivity {
 		return values;
 	}
 
-	setValue(item, value) {
+	setValue(item, rowData) {
+
+		var val = rowData[this.columnName];
+
+		// convert to array
+		if (val && this.settings.linkType == 'many' && !Array.isArray(val))
+			rowData[this.columnName] = [val];
+
+		// get label to display
+		var displayVal = this.pullRelationValues(rowData);
+
 		// get selectivity dom
 		var domSelectivity = item.$view.querySelector('.connect-data-values');
+
 		// set value to selectivity
-		this.selectivitySet(domSelectivity, value, this.App);
+		this.selectivitySet(domSelectivity, displayVal, this.App);
+	}
+
+	format(rowData) {
+
+		var val = this.pullRelationValues(rowData);
+
+		// array
+		if (Array.isArray(val))
+			return val.map(v => v.text).join(', ');
+
+		// string
+		else if (val && val.text)
+			return val.text;
+
+		// empty string
+		else
+			return "";
+
+
 	}
 
 

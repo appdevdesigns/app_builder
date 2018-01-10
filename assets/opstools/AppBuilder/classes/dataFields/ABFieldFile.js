@@ -23,7 +23,9 @@ var ABFieldFileDefaults = {
 	menuName : L('ab.dataField.file.menuName', '*File Attachment'),
 	
 	// description: what gets displayed in the Editor description.
-	description: L('ab.dataField.file.description', '*Attach a File to this object.')
+	description: L('ab.dataField.file.description', '*Attach a File to this object.'),
+
+	useAsLabel: false
 
 }
 
@@ -597,7 +599,7 @@ class ABFieldFile extends ABField {
 		return file.getAttribute('file-uuid');
 	}
 	
-	setValue(item, value) {
+	setValue(item, rowData) {
 		var domNode = item.$view;
 
 		var fileicon = domNode.querySelector('.file-data-field-icon');
@@ -607,7 +609,7 @@ class ABFieldFile extends ABField {
 		var file = domNode.querySelector('.file-data-field-name');
 		if (file) {
 			file.style.display = '';
-			file.setAttribute('file-uuid', value );
+			file.setAttribute('file-uuid', rowData[this.columnName] );
 		}
 	}
 	

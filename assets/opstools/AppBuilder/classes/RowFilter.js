@@ -514,12 +514,6 @@ export default class RowFilter extends OP.Component {
 					$viewCond.$$(ids.inputValue).$$(ids.listOptions).refresh();
 				}
 
-				// TODO: multilingual of string
-				if (field.key == 'string') {
-					// var isMultiLingualCheckbox = filter_item.getChildViews()[5];
-					// isMultiLingualCheckbox.setValue(field.settings.supportMultilingual);
-				}
-
 				if (!ignoreNotify)
 					_logic.onChange();
 

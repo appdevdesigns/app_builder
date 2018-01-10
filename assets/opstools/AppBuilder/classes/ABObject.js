@@ -376,7 +376,7 @@ export default class ABObject extends ABObjectBase {
 				var field = this.fields((f) => f.id == colIdNoBracket)[0]
 				if (field == null) return;
 
-				labelData = labelData.replace(colId, rowData[field.columnName] || '');
+				labelData = labelData.replace(colId, field.format(rowData) || '');
 			});
 		}
 

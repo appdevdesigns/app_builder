@@ -23,7 +23,9 @@ var ABFieldImageDefaults = {
 	menuName : L('ab.dataField.image.menuName', '*Image Attachment'),
 	
 	// description: what gets displayed in the Editor description.
-	description: L('ab.dataField.image.description', '*Attach an image to this object.')
+	description: L('ab.dataField.image.description', '*Attach an image to this object.'),
+
+	useAsLabel: false
 
 }
 
@@ -656,14 +658,14 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 		return image.getAttribute('image-uuid');
 	}
 	
-	setValue(item, value) {
+	setValue(item, rowData) {
 		var domNode = item.$view;
 		if (domNode.querySelector('.image-data-field-icon')) {
 			domNode.querySelector('.image-data-field-icon').style.display = 'none';
 			var image = domNode.querySelector('.image-data-field-image');
 			image.style.display = '';
-			image.style.backgroundImage = "url('/opsportal/image/" + this.object.application.name+"/"+value+"')";
-			image.setAttribute('image-uuid', value );			
+			image.style.backgroundImage = "url('/opsportal/image/" + this.object.application.name+"/"+rowData+"')";
+			image.setAttribute('image-uuid', rowData[this.columnName] );
 		}
 	}
 	
