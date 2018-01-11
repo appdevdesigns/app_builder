@@ -56,20 +56,10 @@ steal(
 
 							self.getData();
 
-							if (!self.areaShowEventId)
-								self.areaShowEventId = AD.comm.hub.subscribe('opsportal.area.show', function (message, data) {
-
-									self.currentAreaKey = data.area.toLowerCase();
-
-									self.checkActivatePage(self.currentAreaKey);
-								});
-
-							if (!self.resizeEventId)
-								self.resizeEventId = AD.comm.hub.subscribe('opsportal.resize', function (message, data) {
-									self.height = data.height;
-									self.resize(data.height);
-								});
-
+							AD.comm.hub.subscribe('opsportal.resize', function (message, data) {
+								self.height = data.height;
+								self.resize(data.height);
+							});
 
 							console.log("live view initialized");
 
@@ -101,15 +91,6 @@ steal(
 
 						},
 
-						getAreaKey: function () {
-
-							var areaKey = 'ab-' + this.data.application.name.trim();
-							areaKey = areaKey.toLowerCase().replace(/'/g, '').replace(/_/g, '-');
-
-							return areaKey;
-
-						},
-
 						getData: function () {
 							var self = this,
 								q = $.Deferred();
@@ -129,17 +110,37 @@ steal(
 								function (next) {
 
 									// Wait until the tool's area has been shown
-									var areaKey = self.getAreaKey();
+									var areaKey = 'ab-' + self.data.application.name.trim();
+									areaKey = areaKey.toLowerCase().replace(/'/g, '').replace(/_/g, '-');
 
-									// If there is only one ops-area, it should trigger that ops-area to render page
+									var callback = function (message, data) {
+										if (!self.activated && data.area.toLowerCase() == areaKey) {
+											self.activated = true;
+
+											self.startPage();
+
+										}
+									};
+
+									if (self.subID1 == null)
+										self.subID1 = AD.comm.hub.subscribe('opsportal.tool.show', callback);
+
+									if (self.subID2 == null)
+										self.subID2 = AD.comm.hub.subscribe('opsportal.area.show', callback);
+
+									// If there is a ops-area, it should trigger that ops-area to render page
 									// Because 'opsportal.tool.show' and 'opsportal.area.show' are not trigger
 									var opsMenus = document.body.querySelectorAll('#op-list-menu > .op-container');
 									if (opsMenus.length == 1) {
 										opsMenus[0].click();
 									}
 									// If this area is showing
-									else if (self.currentAreaKey == areaKey) {
-										self.checkActivatePage(areaKey);
+									else {
+										var currPanel = document.body.querySelector('#op-masthead-sublinks > ul:not([style*="display:none"]):not([style*="display: none"])');
+
+										if (currPanel.getAttribute('area') == areaKey) {
+											callback(null, { area: areaKey });
+										}
 									}
 
 									next();
@@ -152,21 +153,6 @@ steal(
 							});
 
 							return q;
-						},
-
-						checkActivatePage: function (areaKey) {
-
-							var self = this;
-
-							if (!self.activated &&
-								self.data.application && // Get application data completely
-								self.currentAreaKey == areaKey) {
-
-								self.activated = true;
-
-								self.startPage();
-							}
-
 						},
 
 						startPage: function () {
@@ -186,7 +172,7 @@ steal(
 								console.log("showing page");
 								self.showPage();
 
-								self.resize(self.height);
+								self.resize(self.height || 500);
 							});
 
 						},
