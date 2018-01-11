@@ -42,12 +42,6 @@ function dataCollectionNew(instance, data) {
 
 	}
 
-	// load all
-	else {
-		instance.loadData();
-	}
-
-
 	// override unused functions of selection model
 	dc.addCss = function () { };
 	dc.removeCss = function () { };
@@ -847,7 +841,10 @@ export default class ABViewDataCollection extends ABView {
 
 
 		// load data to initial the data collection
-		this.__dataCollection.loadNext(20, 0);
+		if (this.settings.loadAll)
+			this.loadData();
+		else
+			this.__dataCollection.loadNext(20, 0);
 
 	}
 
@@ -1022,7 +1019,6 @@ export default class ABViewDataCollection extends ABView {
 		// load all data
 		if (this.settings.loadAll) {
 			delete cond.limit;
-			delete cond.skip;
 		}
 
 		// get data to data collection
