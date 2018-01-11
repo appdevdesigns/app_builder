@@ -42,6 +42,11 @@ function dataCollectionNew(instance, data) {
 
 	}
 
+	// load all
+	else {
+		instance.loadData();
+	}
+
 
 	// override unused functions of selection model
 	dc.addCss = function () { };
