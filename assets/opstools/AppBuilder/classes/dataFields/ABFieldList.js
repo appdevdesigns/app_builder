@@ -786,7 +786,7 @@ class ABFieldList extends ABFieldSelectivity {
 			// set value to selectivity
 			this.selectivitySet(domSelectivity, rowData[this.columnName], this.App);
 		} else {
-			item.setValue();
+			item.setValue(rowData[this.columnName]);
 		}
 	}
 
