@@ -163,7 +163,10 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 					// Value
 					var actionInput = r.queryView({ for: "actionValue" });
 					var valueViewId = actionInput.getActiveId();
-					var value = actionInput.queryView({ id: valueViewId }).getValue();
+					var actionValue = actionInput.queryView({ id: valueViewId });
+					var value;
+					if (actionValue && actionValue.getValue)
+						value = actionValue.getValue();
 
 					results.push({
 						action: actionSelector.getValue(),
