@@ -806,12 +806,12 @@ export default class ABViewForm extends ABViewContainer {
 				if (Form)
 					dc.bind(Form);
 
-				data = dc.getCursor();
-
 				// clear current cursor on load
-				if (data && this.settings.clearOnLoad) {
+				if (this.settings.clearOnLoad) {
 					dc.setCursor(null);
 				}
+
+				data = dc.getCursor();
 
 				// do this for the initial form display so we can see defaults
 				_logic.displayData(data);
