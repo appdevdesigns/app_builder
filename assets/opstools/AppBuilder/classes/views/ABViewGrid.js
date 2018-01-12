@@ -39,8 +39,8 @@ var ABViewGridPropertyComponentDefaults = {
 	detailsPage:'',
 	editPage:'',
 	objectWorkspace: {
-		sortFields:[], // array of columns with their sort configurations
-		filterConditions:[], // array of filters to apply to the data table
+		// sortFields:[], // array of columns with their sort configurations
+		// filterConditions:[], // array of filters to apply to the data table
 		frozenColumnID:"", // id of column you want to stop freezing
 		hiddenFields:[], // array of [ids] to add hidden:true to
 	},
@@ -440,7 +440,7 @@ export default class ABViewGrid extends ABViewWidget  {
 								},
 								{
 									view: view,
-									// id: ids.buttonFieldsVisible,
+									name: "buttonFieldsVisible",
 									label: L("ab.component.label.settings", "*Settings"),
 									icon: "gear",
 									type: "icon",
@@ -499,6 +499,7 @@ export default class ABViewGrid extends ABViewWidget  {
 								},
 								{
 									view: view,
+									name: "buttonFieldsFreeze",
 									label: L("ab.component.label.settings", "*Settings"),
 									icon: "gear",
 									type: "icon",
@@ -547,11 +548,12 @@ export default class ABViewGrid extends ABViewWidget  {
 		$$(ids.detailsPage).setValue(view.settings.detailsPage);
 		$$(ids.editPage).setValue(view.settings.editPage);
 		$$(ids.height).setValue(view.settings.height);
-		
+
 		// initial populate of properties and popups
 		view.populateEditor(ids, view);
 		view.populatePopupEditors(view);
-		
+		view.populateBadgeNumber(ids, view);
+
 		// when a change is made in the properties the popups need to reflect the change
 		this.updateEventIds = this.updateEventIds || {}; // { viewId: boolean, ..., viewIdn: boolean }
 		if (!this.updateEventIds[view.id]) {
@@ -560,6 +562,7 @@ export default class ABViewGrid extends ABViewWidget  {
 			view.addListener('properties.updated', function() {
 				view.populateEditor(ids, view);
 				view.populatePopupEditors(view);
+				view.populateBadgeNumber(ids, view);
 			}, this);
 		}
 	
@@ -1265,6 +1268,32 @@ export default class ABViewGrid extends ABViewWidget  {
 			// PopupSortFieldComponent.objectLoad(dataCopy, view);
 			PopupFrozenColumnsComponent.objectLoad(dataCopy, view);
 		// }
+	}
+
+	populateBadgeNumber(ids, view) {
+
+		// set badge numbers to setting buttons
+		if (view.settings.objectWorkspace && 
+			view.settings.objectWorkspace.hiddenFields) {
+			$$(ids.buttonFieldsVisible).define('badge', view.settings.objectWorkspace.hiddenFields.length);
+			$$(ids.buttonFieldsVisible).refresh();
+		}
+		else {
+			$$(ids.buttonFieldsVisible).define('badge', 0);
+			$$(ids.buttonFieldsVisible).refresh();
+		}
+
+
+		if (view.settings.objectWorkspace &&
+			view.settings.objectWorkspace.frozenColumnID) {
+			$$(ids.buttonFieldsFreeze).define('badge', "Y");
+			$$(ids.buttonFieldsFreeze).refresh();
+		}
+		else {
+			$$(ids.buttonFieldsFreeze).define('badge', 0);
+			$$(ids.buttonFieldsFreeze).refresh();
+		}
+
 	}
 	
 	loopPages(view, pages, detailViews, type) {

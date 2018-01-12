@@ -340,6 +340,7 @@ export default class ABViewDataCollection extends ABView {
 								},
 								{
 									view: "button",
+									name: "buttonFilter",
 									label: L("ab.component.datacollection.settings", "*Settings"),
 									icon: "gear",
 									type: "icon",
@@ -359,6 +360,7 @@ export default class ABViewDataCollection extends ABView {
 								},
 								{
 									view: "button",
+									name: "buttonSort",
 									label: L("ab.component.datacollection.settings", "*Settings"),
 									icon: "gear",
 									type: "icon",
@@ -424,6 +426,8 @@ export default class ABViewDataCollection extends ABView {
 		// initial populate of popups
 		this.populatePopupEditors(view);
 
+		this.populateBadgeNumber(ids, view);
+
 		// set .loadAll flag
 		$$(ids.loadAll).setValue(view.settings.loadAll != null ? view.settings.loadAll : ABViewPropertyDefaults.loadAll);
 
@@ -438,6 +442,7 @@ export default class ABViewDataCollection extends ABView {
 
 			view.addListener('properties.updated', () => {
 				this.populatePopupEditors(view);
+				this.populateBadgeNumber(ids, view);
 
 				if (view.__dataCollection)
 					view.__dataCollection.clearAll();
@@ -517,6 +522,30 @@ export default class ABViewDataCollection extends ABView {
 		// refresh data collection
 		view.init();
 
+	}
+
+	static populateBadgeNumber(ids, view) {
+
+		if (view.settings.objectWorkspace &&
+			view.settings.objectWorkspace.filterConditions && 
+			view.settings.objectWorkspace.filterConditions.filters) {
+			$$(ids.buttonFilter).define('badge', view.settings.objectWorkspace.filterConditions.filters.length);
+			$$(ids.buttonFilter).refresh();
+		}
+		else {
+			$$(ids.buttonFilter).define('badge', 0);
+			$$(ids.buttonFilter).refresh();
+		}
+
+		if (view.settings.objectWorkspace &&
+			view.settings.objectWorkspace.sortFields) {
+			$$(ids.buttonSort).define('badge', view.settings.objectWorkspace.sortFields.length);
+			$$(ids.buttonSort).refresh();
+		}
+		else {
+			$$(ids.buttonSort).define('badge', 0);
+			$$(ids.buttonSort).refresh();
+		}
 	}
 
 	static populateFixSelector(ids, view, object) {
