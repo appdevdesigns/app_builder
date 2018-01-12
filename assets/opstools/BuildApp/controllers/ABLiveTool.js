@@ -37,6 +37,11 @@ steal(
 								return;
 							}
 
+							AD.comm.hub.subscribe('opsportal.resize', function (message, data) {
+								self.height = data.height;
+								self.resize(data.height);
+							});
+
 							self.containerDomID = self.unique('ab_live_tool', self.options.app, self.options.page);
 
 							self.debounceResize = false;
@@ -55,11 +60,6 @@ steal(
 							self.initModels();
 
 							self.getData();
-
-							AD.comm.hub.subscribe('opsportal.resize', function (message, data) {
-								self.height = data.height;
-								self.resize(data.height);
-							});
 
 							console.log("live view initialized");
 
@@ -136,9 +136,10 @@ steal(
 									}
 									// If this area is showing
 									else {
+										// TODO: How to get current area ?
 										var currPanel = document.body.querySelector('#op-masthead-sublinks > ul:not([style*="display:none"]):not([style*="display: none"])');
-
-										if (currPanel.getAttribute('area') == areaKey) {
+										var currArea = currPanel.getAttribute('area');
+										if (currArea == areaKey) {
 											callback(null, { area: areaKey });
 										}
 									}
@@ -169,10 +170,11 @@ steal(
 							self.initPage();
 
 							webix.ready(function () {
+
 								console.log("showing page");
 								self.showPage();
+								self.resize(self.height || 600);
 
-								self.resize(self.height || 500);
 							});
 
 						},
