@@ -135,7 +135,7 @@ export default class RowFilter extends OP.Component {
 							on: {
 								onChange: function (newVal, oldVal) {
 
-									_logic.selectCombineCondition(newVal, this);
+									_logic.selectCombineCondition(newVal);
 
 								}
 							}
@@ -520,6 +520,9 @@ export default class RowFilter extends OP.Component {
 			},
 
 			onChange: function () {
+
+				// refresh config settings before notify
+				_logic.getValue();
 
 				_logic.callbacks.onChange();
 

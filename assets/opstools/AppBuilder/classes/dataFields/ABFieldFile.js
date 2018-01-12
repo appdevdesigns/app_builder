@@ -25,6 +25,8 @@ var ABFieldFileDefaults = {
 	// description: what gets displayed in the Editor description.
 	description: L('ab.dataField.file.description', '*Attach a File to this object.'),
 
+	isSortable: false,
+	isFilterable: false,
 	useAsLabel: false
 
 }

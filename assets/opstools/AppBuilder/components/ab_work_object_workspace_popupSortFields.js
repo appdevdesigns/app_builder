@@ -34,41 +34,43 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 
 		// internal list of Webix IDs to reference our UI components
 		var ids = {
-			component: this.unique('component'),
-			list: this.unique('list'),
-			form: this.unique("form"),
+			component: this.unique(idBase + '_component'),
+			list: this.unique(idBase + '_list'),
+			form: this.unique(idBase + "_form"),
 		}
 
 
 		// Our webix UI definition:
+		var formUI = {
+			view: "form",
+			id: ids.form,
+			// autoheight: true,
+			borderless: true,
+			elements: [
+				{
+					view: "button", 
+					value: labels.component.addNewSort, 
+					on: {
+						onItemClick: function(id, e, node) {
+							_logic.clickAddNewSort();
+						}
+					}
+				}
+			]
+		};
+
 		this.ui = {
 			view:"popup",
 			id: ids.component,
 			// autoheight:true,
 			width: 500,
-			body: {
-				view: "form",
-				id: ids.form,
-				// autoheight: true,
-				borderless: true,
-				elements: [
-					{
-						view: "button", 
-						value: labels.component.addNewSort, 
-						on: {
-							onItemClick: function(id, e, node) {
-								_logic.clickAddNewSort();
-							}
-						}
-					}
-				]
-			},
+			body: formUI,
 			on: {
 				onShow: function () {
 					_logic.onShow();
 				}
 			}
-	    }
+		};
 
 
 
@@ -101,6 +103,7 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 				 */
 				onChange:function(){}
 			},
+
 
 			/**
 			 * @function clickAddNewSort
@@ -309,12 +312,14 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 				var sort_popup = $$(ids.component),
 					sort_form = $$(ids.form);
 
-				var childViews = sort_form.getChildViews();
-				childViews.forEach(function(i, idx, array){
-					if (idx !== array.length - 1){ 
-						sort_form.removeView(i);
-					}
-				});
+				// clear field options in the form
+				webix.ui(formUI, sort_form);
+				// var childViews = sort_form.getChildViews();
+				// childViews.forEach(function(i, idx, array){
+				// 	if (idx !== array.length - 1){ 
+				// 		sort_form.removeView(i);
+				// 	}
+				// });
 
 				var sorts = CurrentObject.workspaceSortFields;
 				if (sorts && sorts.forEach) {
@@ -426,6 +431,8 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 				}
 
 				if (CurrentView != null) {
+					CurrentView.settings = CurrentView.settings || {};
+					CurrentView.settings.objectWorkspace = CurrentView.settings.objectWorkspace || {};
 					CurrentView.settings.objectWorkspace.sortFields = sortFields;
 					_logic.callbacks.onChange(CurrentView.settings.objectWorkspace);
 				} else {
@@ -457,6 +464,55 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 				if (columnName) {
 					_logic.clickAddNewSort(columnName);
 				}
+			},
+
+			/**
+			 * @function sort()
+			 * client sort data in list
+			 * 
+			 * @param {Object} a
+			 * @param {Object} b
+			 */
+			sort: function(a, b) {
+
+				var result = 0;
+
+				var childViews = $$(ids.form).getChildViews();
+				if (childViews.length > 1) { // Ignore 'Add new sort' button
+					childViews.forEach(function (cView, index) {
+						if (childViews.length - 1 <= index ||
+							result != 0)
+							return;
+
+						var by = cView.getChildViews()[0].getValue();
+						var dir = cView.getChildViews()[1].getValue();
+
+						var aValue = a[by],
+							bValue = b[by];
+
+						if ($.isArray(aValue)) {
+							aValue = $.map(aValue, function (item) { return item.text }).join(' ');
+						}
+
+						if ($.isArray(bValue)) {
+							bValue = $.map(bValue, function (item) { return item.text }).join(' ');
+						}
+
+						if (aValue != bValue) {
+							if (dir == 'asc') {
+								result = aValue > bValue ? 1 : -1;
+							}
+							else {
+								result = aValue < bValue ? 1 : -1;
+							}
+							return;
+						}
+
+					});
+				}
+
+				return result;
+
 			}
 
 
@@ -476,6 +532,7 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 		// 
 		this.objectLoad = _logic.objectLoad;
 		this.show = _logic.show;
+		this.sort = _logic.sort;
 
 	}
 

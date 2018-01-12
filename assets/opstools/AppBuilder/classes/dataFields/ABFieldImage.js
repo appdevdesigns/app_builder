@@ -25,6 +25,8 @@ var ABFieldImageDefaults = {
 	// description: what gets displayed in the Editor description.
 	description: L('ab.dataField.image.description', '*Attach an image to this object.'),
 
+	isSortable: false,
+	isFilterable: false,
 	useAsLabel: false
 
 }
