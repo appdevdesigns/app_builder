@@ -783,6 +783,10 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
     				// get column list from our CurrentObject
     				var columnHeaders = CurrentObject.columnHeaders(true, settings.isEditable);
                     
+                    columnHeaders.forEach(function(col) {
+                        col.fillspace = false;
+                    });
+                    
                     if (settings.isEditable == 0) {
                         columnHeaders.forEach(function(col) {
                             
@@ -840,6 +844,11 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
         				});
                         columnSplitRight++;
                     }
+                    
+                    // add fillspace to last editiable column
+                    columnHeaders[columnHeaders.length-1-columnSplitRight].fillspace = true;
+                    columnHeaders[columnHeaders.length-1-columnSplitRight].minWidth = columnHeaders[columnHeaders.length-1-columnSplitRight].width;
+                    
     				DataTable.refreshColumns(columnHeaders)
 
 
