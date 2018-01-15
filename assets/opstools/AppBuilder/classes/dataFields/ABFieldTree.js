@@ -221,6 +221,15 @@ class ABFieldTree extends ABField {
       
       super.fromValues(values);
       
+      console.log(this.settings);
+      // translate options list
+      if (this.settings.options && this.settings.options.length > 0) {
+          this.settings.options.forEach(function (opt) {
+              OP.Multilingual.translate(opt, opt, ["text"]);
+          });
+      }
+
+      
   }
 
 
@@ -238,6 +247,12 @@ class ABFieldTree extends ABField {
    toObj() {
 
        var obj = super.toObj();
+       
+       console.log(obj.settings);
+       // Un-translate options list
+       obj.settings.options.forEach(function (opt) {
+           OP.Multilingual.unTranslate(opt, opt, ["text"]);
+       });
        
        return obj;
 
