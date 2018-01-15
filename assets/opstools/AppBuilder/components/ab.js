@@ -67,8 +67,8 @@ export default class AB extends OP.Component {    //('ab', function(App) {
 
 
 			// Data Field  common Property labels:
-			dataFieldHeaderLabel: L('ab.dataField.common.headerLabel', '*Label'),
-			dataFieldHeaderLabelPlaceholder: L('ab.dataField.common.headerLabelPlaceholder', '*Header Name'),
+			dataFieldHeaderLabel: L('ab.dataField.common.headerLabel', '*Section Title'),
+			dataFieldHeaderLabelPlaceholder: L('ab.dataField.common.headerLabelPlaceholder', '*Section Name'),
 
 			dataFieldColumnName: L('ab.dataField.common.columnName', '*Name'),
 			dataFieldColumnNamePlaceholder: L('ab.dataField.common.columnNamePlaceholder', '*Column Name'),

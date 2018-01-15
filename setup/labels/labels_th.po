@@ -1275,14 +1275,14 @@ msgstr "[th] No Components"
 #. path: app_builder
 #. code: th
 #. key: ab.dataField.common.headerLabel
-msgid "Label"
-msgstr "[th] Label"
+msgid "Section Title"
+msgstr "[th] Section Title"
 
 #. path: app_builder
 #. code: th
 #. key: ab.dataField.common.headerLabelPlaceholder
-msgid "Header Name"
-msgstr "[th] Header Name"
+msgid "Section Name"
+msgstr "[th] Section Name"
 
 #. path: app_builder
 #. code: th

@@ -784,7 +784,7 @@ export default class ABView extends ABViewBase {
 				name: 'label',
 				label: App.labels.dataFieldHeaderLabel,
 				placeholder: App.labels.dataFieldHeaderLabelPlaceholder,
-				// labelWidth: App.config.labelWidthMedium,
+				labelWidth: App.config.labelWidthLarge,
 				css: 'ab-new-label-name',
 				// 				on: {
 				// 					onChange: function (newVal, oldVal) {
