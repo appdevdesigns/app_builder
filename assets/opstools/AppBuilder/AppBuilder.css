@@ -631,7 +631,7 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 }
 
 .ab-data-tree .webix_tree_item {
-	height: unset;
+	height: fit-content;
 	line-height: unset;
 }
 

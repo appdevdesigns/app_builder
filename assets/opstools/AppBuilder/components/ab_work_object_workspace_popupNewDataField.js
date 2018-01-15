@@ -44,8 +44,8 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
             id: ids.component,
             autoheight: true,
             maxHeight: 500,
-            minWidth: 350,
-            head:"Add new field",
+            minWidth: 400,
+            head:L('ab.add_fields.fieldAddNew', "*Add new field"),
 
             // ready: function () {
             //  console.error('ready() called!!!')

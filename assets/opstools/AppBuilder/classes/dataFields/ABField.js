@@ -136,8 +136,8 @@ export default class ABField extends ABFieldBase {
 					view: "text",
 					id: ids.label,
 					name:'label',
-					label: App.labels.dataFieldHeaderLabel,
-					placeholder: App.labels.dataFieldHeaderLabelPlaceholder,
+					label: App.labels.dataFieldLabel, // Label
+					placeholder: App.labels.dataFieldLabelPlaceholder, // Label
 					labelWidth: App.config.labelWidthLarge,
 					css: 'ab-new-label-name',
 					on: {
@@ -151,9 +151,9 @@ export default class ABField extends ABFieldBase {
 					id: ids.columnName,
 					name:'columnName',
 					disallowEdit: true,
-					label: App.labels.dataFieldColumnName, // 'Name',
-					labelWidth: App.config.labelWidthMedium,
-					placeholder: App.labels.dataFieldColumnNamePlaceholder, // 'Column name',
+					label: App.labels.dataFieldColumnName, // 'Field Name',
+					labelWidth: App.config.labelWidthLarge,
+					placeholder: App.labels.dataFieldColumnNamePlaceholder, // 'Database field name',
 				},
 				{
 					view: "label",
