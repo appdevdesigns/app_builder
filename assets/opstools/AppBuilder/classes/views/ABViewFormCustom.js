@@ -140,17 +140,28 @@ export default class ABViewFormCustom extends ABViewFormField {
 				templateLabel = '<label style="width: #width#px; display: inline-block; line-height: 32px; float: left; margin: 0; padding:1px 7.5px 0 3px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">#label#</label>';
 		}
 
+		var newWidth = settings.labelWidth;
+		if (this.settings.formView)
+			newWidth += 40;
+		else if (settings.showLabel == true && settings.labelPosition == 'top')
+			newWidth = 0;
+
 		var template = (templateLabel + "#template#")
 			.replace(/#width#/g, settings.labelWidth)
 			.replace(/#label#/g, field.label)
-			.replace(/#template#/g, field.columnHeader(null, settings.labelWidth, true).template);
+			.replace(/#template#/g, field.columnHeader(null, newWidth, true).template);
 
 		component.ui.id = ids.component;
 		component.ui.view = "template";
 		component.ui.css = "webix_el_box";
-		if (typeof field.settings.useHeight != "undefined" && field.settings.useHeight == 1) {
+
+		if (settings.showLabel == true && settings.labelPosition == 'top') {
+			component.ui.height = 80;
+		}
+		else if (field.settings.useHeight) {
 			component.ui.height = parseInt(field.settings.imageHeight);
-		} else {
+		}
+		else {
 			component.ui.height = 38;
 		}
 		component.ui.borderless = true;
