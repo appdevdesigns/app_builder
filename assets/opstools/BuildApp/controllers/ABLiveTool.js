@@ -60,8 +60,6 @@ steal(
 								self.height = data.height;
 								self.resize(data.height);
 							});
-							
-							console.log("live view initialized");
 
 
 						},
@@ -160,10 +158,9 @@ steal(
 
 							self.initPage();
 
-							webix.ready(function () {
-								console.log("showing page");
-								self.showPage();
-							});
+							// webix.ready(function () {
+							self.showPage();
+							// });
 
 						},
 
@@ -308,7 +305,6 @@ steal(
 						*      the root page.
 						*/
 						showPage: function (pageId) {
-							console.log("showPage");
 							var self = this;
 
 							pageId = pageId ||
