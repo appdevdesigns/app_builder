@@ -9,11 +9,12 @@ import ABViewWidget from "./ABViewWidget"
 import ABPropertyComponent from "../ABPropertyComponent"
 import ABWorkspaceDatatable from "../../components/ab_work_object_workspace_datatable"
 import ABPopupHideFields from "../../components/ab_work_object_workspace_popupHideFields"
-import ABPopupFilterDataTable from "../../components/ab_work_object_workspace_popupFilterDataTable"
-// import ABPopupSortField from "../../components/ab_work_object_workspace_popupSortFields"
+// import ABPopupFilterDataTable from "../../components/ab_work_object_workspace_popupFilterDataTable"
+import ABPopupSortField from "../../components/ab_work_object_workspace_popupSortFields"
 import ABPopupFrozenColumns from "../../components/ab_work_object_workspace_popupFrozenColumns"
 import ABPopupMassUpdate from "../../components/ab_work_object_workspace_popupMassUpdate"
 
+import RowFilter from '../RowFilter'
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -38,8 +39,8 @@ var ABViewGridPropertyComponentDefaults = {
 	detailsPage:'',
 	editPage:'',
 	objectWorkspace: {
-		sortFields:[], // array of columns with their sort configurations
-		filterConditions:[], // array of filters to apply to the data table
+		// sortFields:[], // array of columns with their sort configurations
+		// filterConditions:[], // array of filters to apply to the data table
 		frozenColumnID:"", // id of column you want to stop freezing
 		hiddenFields:[], // array of [ids] to add hidden:true to
 	},
@@ -54,8 +55,6 @@ var ABViewDefaults = {
 }
 
 var PopupHideFieldComponent = null;
-var PopupFilterDataTableComponent = null;
-var PopupSortFieldComponent = null;
 var PopupFrozenColumnsComponent = null;
 
 export default class ABViewGrid extends ABViewWidget  {
@@ -111,12 +110,15 @@ export default class ABViewGrid extends ABViewWidget  {
 		super.fromValues(values);
 
     	// if this is being instantiated on a read from the Property UI,
-    	this.settings.dataSource = this.settings.dataSource || ABViewGridPropertyComponentDefaults.dataSource;
-		this.settings.isEditable = this.settings.isEditable || ABViewGridPropertyComponentDefaults.isEditable;
-		this.settings.massUpdate = this.settings.massUpdate || ABViewGridPropertyComponentDefaults.massUpdate;
-		this.settings.allowDelete = this.settings.allowDelete || ABViewGridPropertyComponentDefaults.allowDelete;
-		this.settings.isFilterable = this.settings.isFilterable || ABViewGridPropertyComponentDefaults.isFilterable;
-		this.settings.isSortable = this.settings.isSortable || ABViewGridPropertyComponentDefaults.isSortable;
+		this.settings.dataSource = this.settings.dataSource || ABViewGridPropertyComponentDefaults.dataSource;
+		
+		// Convert to boolean
+		this.settings.isEditable = JSON.parse(this.settings.isEditable || ABViewGridPropertyComponentDefaults.isEditable);
+		this.settings.massUpdate = JSON.parse(this.settings.massUpdate || ABViewGridPropertyComponentDefaults.massUpdate);
+		this.settings.allowDelete = JSON.parse(this.settings.allowDelete || ABViewGridPropertyComponentDefaults.allowDelete);
+		this.settings.isFilterable = JSON.parse(this.settings.isFilterable || ABViewGridPropertyComponentDefaults.isFilterable);
+		this.settings.isSortable = JSON.parse(this.settings.isSortable || ABViewGridPropertyComponentDefaults.isSortable);
+
 		// this.settings.linkedObject = this.settings.linkedObject || ABViewGridPropertyComponentDefaults.linkedObject;
 		// this.settings.linkedField = this.settings.linkedField || ABViewGridPropertyComponentDefaults.linkedField;
 		// this.settings.linkedPage = this.settings.linkedPage || ABViewGridPropertyComponentDefaults.linkedPage;
@@ -192,8 +194,6 @@ export default class ABViewGrid extends ABViewWidget  {
 
 		// initialize our popup editors with unique names so we don't overwrite the previous editor each time
 		PopupHideFieldComponent = new ABPopupHideFields(App, idBase+"_hide");
-		// PopupFilterDataTableComponent = new ABPopupFilterDataTable(App, idBase+"_filter");
-		// PopupSortFieldComponent = new ABPopupSortField(App, idBase+"_sort");
 		PopupFrozenColumnsComponent = new ABPopupFrozenColumns(App, idBase+"_freeze");
 		
 		_logic.newObject = () => {
@@ -440,7 +440,7 @@ export default class ABViewGrid extends ABViewWidget  {
 								},
 								{
 									view: view,
-									// id: ids.buttonFieldsVisible,
+									name: "buttonFieldsVisible",
 									label: L("ab.component.label.settings", "*Settings"),
 									icon: "gear",
 									type: "icon",
@@ -499,6 +499,7 @@ export default class ABViewGrid extends ABViewWidget  {
 								},
 								{
 									view: view,
+									name: "buttonFieldsFreeze",
 									label: L("ab.component.label.settings", "*Settings"),
 									icon: "gear",
 									type: "icon",
@@ -547,11 +548,12 @@ export default class ABViewGrid extends ABViewWidget  {
 		$$(ids.detailsPage).setValue(view.settings.detailsPage);
 		$$(ids.editPage).setValue(view.settings.editPage);
 		$$(ids.height).setValue(view.settings.height);
-		
+
 		// initial populate of properties and popups
 		view.populateEditor(ids, view);
 		view.populatePopupEditors(view);
-		
+		view.populateBadgeNumber(ids, view);
+
 		// when a change is made in the properties the popups need to reflect the change
 		this.updateEventIds = this.updateEventIds || {}; // { viewId: boolean, ..., viewIdn: boolean }
 		if (!this.updateEventIds[view.id]) {
@@ -560,6 +562,7 @@ export default class ABViewGrid extends ABViewWidget  {
 			view.addListener('properties.updated', function() {
 				view.populateEditor(ids, view);
 				view.populatePopupEditors(view);
+				view.populateBadgeNumber(ids, view);
 			}, this);
 		}
 	
@@ -601,11 +604,11 @@ export default class ABViewGrid extends ABViewWidget  {
 		var ids = {
 			component: App.unique(idBase+'_component'),
 			toolbar: App.unique(idBase+'_toolbar'),
-			buttonDeleteSelected: App.unique('deleteSelected'),
+			buttonDeleteSelected: App.unique(idBase+'_deleteSelected'),
 			// buttonExport: App.unique('buttonExport'),
-			buttonFilter: App.unique('buttonFilter'),
-			buttonMassUpdate: App.unique('buttonMassUpdate'),
-			buttonSort: App.unique('buttonSort'),
+			buttonFilter: App.unique(idBase+'_buttonFilter'),
+			buttonMassUpdate: App.unique(idBase+'_buttonMassUpdate'),
+			buttonSort: App.unique(idBase+'_buttonSort'),
 
 		}
 		
@@ -654,21 +657,21 @@ export default class ABViewGrid extends ABViewWidget  {
 		// }
 		
 		// there must be a better way...
-		if (this.settings.allowDelete == "1") {
-			this.settings.allowDelete = true;
-		} else {
-			this.settings.allowDelete = false;
-		}
-		if (this.settings.isEditable == "1") {
-			this.settings.isEditable = true;
-		} else {
-			this.settings.isEditable = false;
-		}
-		if (this.settings.massUpdate == "1") {
-			this.settings.massUpdate = true;
-		} else {
-			this.settings.massUpdate = false;
-		}
+		// if (this.settings.allowDelete == "1") {
+		// 	this.settings.allowDelete = true;
+		// } else {
+		// 	this.settings.allowDelete = false;
+		// }
+		// if (this.settings.isEditable == "1") {
+		// 	this.settings.isEditable = true;
+		// } else {
+		// 	this.settings.isEditable = false;
+		// }
+		// if (this.settings.massUpdate == "1") {
+		// 	this.settings.massUpdate = true;
+		// } else {
+		// 	this.settings.massUpdate = false;
+		// }
 		var settings = {
 			allowDelete: this.settings.allowDelete,
 			detailsView: this.settings.detailsPage,
@@ -684,7 +687,15 @@ export default class ABViewGrid extends ABViewWidget  {
 
 		var DataTable = new ABWorkspaceDatatable(App, idBase, settings);
 		var PopupMassUpdateComponent = new ABPopupMassUpdate(App, idBase+"_mass");
-		var PopupFilterDataTableComponent = new ABPopupFilterDataTable(App, idBase+"_filter");
+		var PopupSortDataTableComponent = new ABPopupSortField(App, idBase+"_sort");
+		var rowFilter = new RowFilter(App, idBase+"_filter");
+		var filter_popup = webix.ui({
+			view: "popup",
+			width: 800,
+			hidden: true,
+			body: rowFilter.ui
+		});
+
 
 
 		var _init = () => {
@@ -697,13 +708,17 @@ export default class ABViewGrid extends ABViewWidget  {
 				PopupMassUpdateComponent.init({
 					// onSave:_logic.callbackAddFields			// be notified of something...who knows...
 				});
-				
-				PopupFilterDataTableComponent.init({
-					onChange:_logic.callbackFilterData		// be notified when there is a change in the hidden fields
+
+				PopupSortDataTableComponent.init({
+					onChange: _logic.callbackSortData
+				});
+
+				rowFilter.init({
+					onChange:_logic.callbackFilterData		// be notified when there is a change in the filter
 				});
 				
 				if (this.settings.massUpdate == false && this.settings.isFilterable == false && this.settings.isSortable == false) {
-					$$(ids.toolbar).hide();			
+					$$(ids.toolbar).hide();
 				}
 				
 				if (this.settings.massUpdate == false) {
@@ -736,9 +751,10 @@ export default class ABViewGrid extends ABViewWidget  {
 
 					DataTable.objectLoad(CurrentObject);
 					PopupMassUpdateComponent.objectLoad(CurrentObject, DataTable);
-					PopupFilterDataTableComponent.objectLoad(CurrentObject, this);
+					PopupSortDataTableComponent.objectLoad(CurrentObject, this);
+					rowFilter.objectLoad(CurrentObject);
 					DataTable.refreshHeader();
-					
+
 					dc.bind($$(ids.component));
 
 					var editPage = this.settings.editPage;
@@ -755,9 +771,9 @@ export default class ABViewGrid extends ABViewWidget  {
 						}
 					});
 
-					$$(DataTable.ui.id).attachEvent('onBeforeRender', function (data) {
-						_logic.clientSideDataFilter(data);
-					});					
+					// $$(DataTable.ui.id).attachEvent('onBeforeRender', function (data) {
+					// 	_logic.clientSideDataFilter();
+					// });
 
 					$$(ids.component).adjust();
 				}
@@ -839,7 +855,7 @@ export default class ABViewGrid extends ABViewWidget  {
 								badge: 0,
 								autowidth: true,
 								click: function () {
-									// _logic.toolbarSort(this.$view);
+									_logic.toolbarSort(this.$view);
 								}
 							},
 							/*
@@ -866,168 +882,179 @@ export default class ABViewGrid extends ABViewWidget  {
 			
 			callbackCheckboxChecked: (state) => {
 				if (state == "enable") {
-                    _logic.enableUpdateDelete();
-                } else {
-                    _logic.disableUpdateDelete();
-                }
-			},
-			
-			callbackFilterData: (data) => {
-				
-				$$(DataTable.ui.id).custom_filters = $$(DataTable.ui.id).custom_filters || {};
-				$$(DataTable.ui.id).custom_filters['filter_popup'] = function (obj) {
-
-					if (typeof obj == "undefined") return;
-
-					// var combineCond = (data.filterConditions && data.filterConditions.length > 0 ? data.filterConditions[0].combineCondtion : labels.component.and);
-					var combineCond = data.filterConditions[0] ? data.filterConditions[0].combineCondition : labels.component.and;
-					var isValid = (combineCond === labels.component.and ? true : false);
-					
-					if (data.filterConditions.length) {
-						_.forEach(data.filterConditions, function(cond) {
-
-                            var condResult;
-                            var objValue = $$(DataTable.ui.id).getColumnConfig(cond.fieldName).filter_value ? $$(DataTable.ui.id).getColumnConfig(cond.fieldName).filter_value(obj) : obj[cond.fieldName];
-
-                            // Empty value
-                            if (!objValue) {
-                                if (cond.inputValue) {
-                                    isValid = (combineCond === labels.component.and ? false : true);
-                                }
-
-                                return;
-                            }
-
-                            if ($.isArray(objValue))
-                                objValue = $.map(objValue, function (o) { return o.text; }).join(' ');
-
-                            if (objValue.trim)
-                                objValue = objValue.trim().toLowerCase();
-
-                            switch (cond.operator) {
-                                // Text filter
-                                case labels.component.containsCondition:
-                                    condResult = objValue.indexOf(cond.inputValue.trim().toLowerCase()) > -1;
-                                    break;
-                                case labels.component.notContainCondition:
-                                    condResult = objValue.indexOf(cond.inputValue.trim().toLowerCase()) < 0;
-                                    break;
-                                case labels.component.isCondition:
-                                    condResult = objValue == cond.inputValue.trim().toLowerCase();
-                                    break;
-                                case labels.component.isNotCondition:
-                                    condResult = objValue != cond.inputValue.trim().toLowerCase();
-                                    break;
-                                // Date filter
-                                case labels.component.beforeCondition:
-                                    if (!(objValue instanceof Date)) objValue = new Date(objValue);
-                                    condResult = objValue < cond.inputValue;
-                                    break;
-                                case labels.component.afterCondition:
-                                    if (!(objValue instanceof Date)) objValue = new Date(objValue);
-                                    condResult = objValue > cond.inputValue;
-                                    break;
-                                case labels.component.onOrBeforeCondition:
-                                    if (!(objValue instanceof Date)) objValue = new Date(objValue);
-                                    condResult = objValue <= cond.inputValue;
-                                    break;
-                                case labels.component.onOrAfterCondition:
-                                    if (!(objValue instanceof Date)) objValue = new Date(objValue);
-                                    condResult = objValue >= cond.inputValue;
-                                    break;
-                                // Number filter
-                                case labels.component.equalCondition:
-                                    condResult = Number(objValue) == Number(cond.inputValue);
-                                    break;
-                                case labels.component.notEqualCondition:
-                                    condResult = Number(objValue) != Number(cond.inputValue);
-                                    break;
-                                case labels.component.lessThanCondition:
-                                    condResult = Number(objValue) < Number(cond.inputValue);
-                                    break;
-                                case labels.component.moreThanCondition:
-                                    condResult = Number(objValue) > Number(cond.inputValue);
-                                    break;
-                                case labels.component.lessThanOrEqualCondition:
-                                    condResult = Number(objValue) <= Number(cond.inputValue);
-                                    break;
-                                case labels.component.moreThanOrEqualCondition:
-                                    condResult = Number(objValue) >= Number(cond.inputValue);
-                                    break;
-                                // List filter
-                                case labels.component.equalListCondition:
-                                    if (objValue)
-                                        condResult = cond.inputValue.toLowerCase().indexOf(objValue) > -1;
-                                    break;
-                                case labels.component.notEqualListCondition:
-                                    if (objValue)
-                                        condResult = cond.inputValue.toLowerCase().indexOf(objValue) < 0;
-                                    else
-                                        condResult = true;
-                                    break;
-                                // Boolean/Checkbox filter
-                                case labels.component.checkedCondition:
-                                    condResult = (objValue === true || objValue === 1);
-                                    break;
-                                case labels.component.notCheckedCondition:
-                                    condResult = !objValue;
-                                    break;
-                            }
-                            if (combineCond === labels.component.and) {
-                                isValid = isValid && condResult;
-                            } else {
-                                isValid = isValid || condResult;
-                            }
-                        });
-
-                        return isValid;
-					} else {
-						return isValid;
-					}
+					_logic.enableUpdateDelete();
+				} else {
+					_logic.disableUpdateDelete();
 				}
-				_logic.clientSideDataFilter($$(DataTable.ui.id).data);
 			},
 			
+			callbackSortData: () => {
+
+				// client sort data
+				$$(DataTable.ui.id).sort(PopupSortDataTableComponent.sort);
+
+			},
+
+			callbackFilterData: () => {
+
+				$$(DataTable.ui.id).filter(function(rowData) {
+
+					return rowFilter.isValid(rowData);
+
+				});
+
+				// $$(DataTable.ui.id).custom_filters = $$(DataTable.ui.id).custom_filters || {};
+				// $$(DataTable.ui.id).custom_filters['filter_popup'] = function (obj) {
+
+				// 		if (typeof obj == "undefined") return;
+
+				// 		// var combineCond = (data.filterConditions && data.filterConditions.length > 0 ? data.filterConditions[0].combineCondtion : labels.component.and);
+				// 		var combineCond = data.filterConditions[0] ? data.filterConditions[0].combineCondition : labels.component.and;
+				// 		var isValid = (combineCond === labels.component.and ? true : false);
+						
+				// 		if (data.filterConditions.length) {
+				// 			_.forEach(data.filterConditions, function(cond) {
+
+				//                 var condResult;
+				//                 var objValue = $$(DataTable.ui.id).getColumnConfig(cond.fieldName).filter_value ? $$(DataTable.ui.id).getColumnConfig(cond.fieldName).filter_value(obj) : obj[cond.fieldName];
+
+				//                 // Empty value
+				//                 if (!objValue) {
+				//                     if (cond.inputValue) {
+				//                         isValid = (combineCond === labels.component.and ? false : true);
+				//                     }
+
+				//                     return;
+				//                 }
+
+				//                 if ($.isArray(objValue))
+				//                     objValue = $.map(objValue, function (o) { return o.text; }).join(' ');
+
+				//                 if (objValue.trim)
+				//                     objValue = objValue.trim().toLowerCase();
+
+				//                 switch (cond.operator) {
+				//                     // Text filter
+				//                     case labels.component.containsCondition:
+				//                         condResult = objValue.indexOf(cond.inputValue.trim().toLowerCase()) > -1;
+				//                         break;
+				//                     case labels.component.notContainCondition:
+				//                         condResult = objValue.indexOf(cond.inputValue.trim().toLowerCase()) < 0;
+				//                         break;
+				//                     case labels.component.isCondition:
+				//                         condResult = objValue == cond.inputValue.trim().toLowerCase();
+				//                         break;
+				//                     case labels.component.isNotCondition:
+				//                         condResult = objValue != cond.inputValue.trim().toLowerCase();
+				//                         break;
+				//                     // Date filter
+				//                     case labels.component.beforeCondition:
+				//                         if (!(objValue instanceof Date)) objValue = new Date(objValue);
+				//                         condResult = objValue < cond.inputValue;
+				//                         break;
+				//                     case labels.component.afterCondition:
+				//                         if (!(objValue instanceof Date)) objValue = new Date(objValue);
+				//                         condResult = objValue > cond.inputValue;
+				//                         break;
+				//                     case labels.component.onOrBeforeCondition:
+				//                         if (!(objValue instanceof Date)) objValue = new Date(objValue);
+				//                         condResult = objValue <= cond.inputValue;
+				//                         break;
+				//                     case labels.component.onOrAfterCondition:
+				//                         if (!(objValue instanceof Date)) objValue = new Date(objValue);
+				//                         condResult = objValue >= cond.inputValue;
+				//                         break;
+				//                     // Number filter
+				//                     case labels.component.equalCondition:
+				//                         condResult = Number(objValue) == Number(cond.inputValue);
+				//                         break;
+				//                     case labels.component.notEqualCondition:
+				//                         condResult = Number(objValue) != Number(cond.inputValue);
+				//                         break;
+				//                     case labels.component.lessThanCondition:
+				//                         condResult = Number(objValue) < Number(cond.inputValue);
+				//                         break;
+				//                     case labels.component.moreThanCondition:
+				//                         condResult = Number(objValue) > Number(cond.inputValue);
+				//                         break;
+				//                     case labels.component.lessThanOrEqualCondition:
+				//                         condResult = Number(objValue) <= Number(cond.inputValue);
+				//                         break;
+				//                     case labels.component.moreThanOrEqualCondition:
+				//                         condResult = Number(objValue) >= Number(cond.inputValue);
+				//                         break;
+				//                     // List filter
+				//                     case labels.component.equalListCondition:
+				//                         if (objValue)
+				//                             condResult = cond.inputValue.toLowerCase().indexOf(objValue) > -1;
+				//                         break;
+				//                     case labels.component.notEqualListCondition:
+				//                         if (objValue)
+				//                             condResult = cond.inputValue.toLowerCase().indexOf(objValue) < 0;
+				//                         else
+				//                             condResult = true;
+				//                         break;
+				//                     // Boolean/Checkbox filter
+				//                     case labels.component.checkedCondition:
+				//                         condResult = (objValue === true || objValue === 1);
+				//                         break;
+				//                     case labels.component.notCheckedCondition:
+				//                         condResult = !objValue;
+				//                         break;
+				//                 }
+				//                 if (combineCond === labels.component.and) {
+				//                     isValid = isValid && condResult;
+				//                 } else {
+				//                     isValid = isValid || condResult;
+				//                 }
+				//             });
+
+				//             return isValid;
+				// 		} else {
+				// 			return isValid;
+				// 		}
+				// }
+				// _logic.clientSideDataFilter();
+			},
+
+			// clientSideDataFilter: () => {
+				
+			// 	if (filterTimeoutId) clearTimeout(filterTimeoutId);
+
+			// 	filterTimeoutId = setTimeout(function () {
+			// 		// Prevent repeat filter
+			// 		if (isFiltered == false) {
+			// 			isFiltered = true;
+
+			// 			if ($$(DataTable.ui.id).custom_filters && Object.keys($$(DataTable.ui.id).custom_filters).length > 0) {
+			// 				$$(DataTable.ui.id).filter(function (item) {
+			// 					var isVisible = true;
+			// 					Object.keys($$(DataTable.ui.id).custom_filters).forEach(function (filter_key) {
+			// 						if (isVisible == false) return;
+
+			// 						isVisible = isVisible && $$(DataTable.ui.id).custom_filters[filter_key](item);
+			// 					});
+
+			// 					return isVisible;
+			// 				});
+			// 			}
+			// 			else {
+			// 				$$(DataTable.ui.id).filter(function (item) { return true });
+			// 			}
+
+			// 			setTimeout(function () {
+			// 				isFiltered = false
+			// 			}, waitMilliseconds + 100);
+			// 		}
+			// 	}, waitMilliseconds);
+
+			// },
+
 			changePage: (dc, id, page) => {
 				dc.setCursor(id);
 				super.changePage(page);
 			},
-			
-			clientSideDataFilter: (data) => {
-				
-				if (filterTimeoutId) clearTimeout(filterTimeoutId);
 
-				filterTimeoutId = setTimeout(function () {
-					// Prevent repeat filter
-					if (isFiltered == false) {
-						isFiltered = true;
-
-						if ($$(DataTable.ui.id).custom_filters && Object.keys($$(DataTable.ui.id).custom_filters).length > 0) {
-							$$(DataTable.ui.id).filter(function (item) {
-								var isVisible = true;
-								Object.keys($$(DataTable.ui.id).custom_filters).forEach(function (filter_key) {
-									if (isVisible == false) return;
-
-									isVisible = isVisible && $$(DataTable.ui.id).custom_filters[filter_key](item);
-								});
-
-								return isVisible;
-							});
-						}
-						else {
-							$$(DataTable.ui.id).filter(function (item) { return true });
-						}
-
-						setTimeout(function () {
-							isFiltered = false
-						}, waitMilliseconds + 100);
-					}
-				}, waitMilliseconds);
-
-				return isFiltered;
-
-			},
-			
 			/**
 			 * @function enableUpdateDelete
 			 * 
@@ -1080,7 +1107,7 @@ export default class ABViewGrid extends ABViewWidget  {
 								});
 							}
 						}
-					});                    
+					});
 				} else {
 					OP.Dialog.Alert({
 						title: 'No Records Selected',
@@ -1091,7 +1118,11 @@ export default class ABViewGrid extends ABViewWidget  {
 			},
 			
 			toolbarFilter: ($view) => {
-				PopupFilterDataTableComponent.show($view, null);
+				filter_popup.show($view);
+			},
+
+			toolbarSort: ($view) => {
+				PopupSortDataTableComponent.show($view);
 			},
 
 			toolbarMassUpdate: function ($view) {
@@ -1237,6 +1268,32 @@ export default class ABViewGrid extends ABViewWidget  {
 			// PopupSortFieldComponent.objectLoad(dataCopy, view);
 			PopupFrozenColumnsComponent.objectLoad(dataCopy, view);
 		// }
+	}
+
+	populateBadgeNumber(ids, view) {
+
+		// set badge numbers to setting buttons
+		if (view.settings.objectWorkspace && 
+			view.settings.objectWorkspace.hiddenFields) {
+			$$(ids.buttonFieldsVisible).define('badge', view.settings.objectWorkspace.hiddenFields.length);
+			$$(ids.buttonFieldsVisible).refresh();
+		}
+		else {
+			$$(ids.buttonFieldsVisible).define('badge', 0);
+			$$(ids.buttonFieldsVisible).refresh();
+		}
+
+
+		if (view.settings.objectWorkspace &&
+			view.settings.objectWorkspace.frozenColumnID) {
+			$$(ids.buttonFieldsFreeze).define('badge', "Y");
+			$$(ids.buttonFieldsFreeze).refresh();
+		}
+		else {
+			$$(ids.buttonFieldsFreeze).define('badge', 0);
+			$$(ids.buttonFieldsFreeze).refresh();
+		}
+
 	}
 	
 	loopPages(view, pages, detailViews, type) {

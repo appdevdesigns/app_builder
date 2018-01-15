@@ -135,7 +135,7 @@ export default class RowFilter extends OP.Component {
 							on: {
 								onChange: function (newVal, oldVal) {
 
-									_logic.selectCombineCondition(newVal, this);
+									_logic.selectCombineCondition(newVal);
 
 								}
 							}
@@ -514,18 +514,15 @@ export default class RowFilter extends OP.Component {
 					$viewCond.$$(ids.inputValue).$$(ids.listOptions).refresh();
 				}
 
-				// TODO: multilingual of string
-				if (field.key == 'string') {
-					// var isMultiLingualCheckbox = filter_item.getChildViews()[5];
-					// isMultiLingualCheckbox.setValue(field.settings.supportMultilingual);
-				}
-
 				if (!ignoreNotify)
 					_logic.onChange();
 
 			},
 
 			onChange: function () {
+
+				// refresh config settings before notify
+				_logic.getValue();
 
 				_logic.callbacks.onChange();
 
@@ -649,11 +646,13 @@ export default class RowFilter extends OP.Component {
 			isValid: (rowData) => {
 
 				// If no conditions, then return true
-				if (config_settings == null || config_settings.filters == null) return true;
+				if (config_settings == null || config_settings.filters == null || config_settings.filters.length == 0) return true;
 
 				var result = (config_settings.combineCondition === "And" ? true : false);
 
 				config_settings.filters.forEach(filter => {
+
+					if (!filter.fieldId || !filter.operator) return;
 
 					var fieldInfo = _Fields.filter(f => f.id == filter.fieldId)[0];
 					if (!fieldInfo) return;
@@ -789,7 +788,7 @@ export default class RowFilter extends OP.Component {
 
 				compareValue = compareValue.toLowerCase();
 
-				if (Array.isArray(compareValue))
+				if (!Array.isArray(compareValue))
 					compareValue = [compareValue];
 
 				switch (operator) {

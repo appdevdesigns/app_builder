@@ -9,8 +9,10 @@
 
 export default class ABWorkObjectPopupHeaderEditMenu extends OP.Component {
 
-    constructor(App) {
-        super(App, 'ab_work_object_workspace_popupHeaderEditMenu');
+    constructor(App, idBase) {
+        idBase = idBase + '_popupHeaderEditMenu';
+
+        super(App, idBase);
         var L = this.Label;
         
         var labels = {

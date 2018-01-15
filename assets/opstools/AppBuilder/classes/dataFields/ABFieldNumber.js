@@ -474,7 +474,11 @@ class ABFieldNumber extends ABField {
 		config.editor = 'number';		// [edit_type] simple inline editing.
 
 		config.format = (d) => {
-			return this.format(d);
+
+			var rowData = {};
+			rowData[this.columnName] = d;
+
+			return this.format(rowData);
 		};
 
 		return config;
@@ -594,7 +598,9 @@ class ABFieldNumber extends ABField {
 	}
 
 
-	format(data) {
+	format(rowData) {
+
+		var data = rowData[this.columnName] || 0;
 
 		// Validate number
 		if (isNaN(parseFloat(data))) data = 0;

@@ -101,9 +101,9 @@ export default class ABViewContainer extends ABView {
 		}
 
 		var cellHeight = 250;
-		if (this.key == "form" || this.key == "detail") {
-			cellHeight = 70;
-		}
+		// if (this.key == "form" || this.key == "detail") {
+		// 	cellHeight = 80;
+		// }
 
 		var _ui = {
 			rows: [{

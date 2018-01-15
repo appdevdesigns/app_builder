@@ -77,6 +77,25 @@ export default class ABViewDetail extends ABViewContainer {
 
 	}
 
+	/** 
+	 * @method editorComponent
+	 * return the Editor for this UI component.
+	 * the editor should display either a "block" view or "preview" of 
+	 * the current layout of the view.
+	 * @param {string} mode what mode are we in ['block', 'preview']
+	 * @return {Component} 
+	 */
+	editorComponent(App, mode) {
+		
+		var comp = super.editorComponent(App, mode);
+
+		// Define height of cell
+		comp.ui.rows[0].cellHeight = 75;
+
+		return comp;
+	}
+		
+
 
 	//
 	// Property Editor
@@ -347,44 +366,37 @@ export default class ABViewDetail extends ABViewContainer {
 					if (field.key == "connectObject") {
 						val = field.pullRelationValues(data);
 					}
-					else {
-						if (data)
-							val = data[field.columnName];
-					}
+					else if (field.key == "list") {
+						val = data[field.columnName];
 
-					if (field.key == "date") {
-						val = field.format(data[field.columnName]);
-					}
-
-					if (field.key == "list" && field.settings.isMultiple == 0) {
-						let myVal = "";
-						let selected = field.settings.options.forEach(function (options) {
-							if (options.id == val)
-								myVal = options.text;
-						});
-
-						if (field.settings.hasColors) {
-							let myHex = "#66666";
-							field.settings.options.forEach(function (h) {
-								if (h.text == myVal)
-									myHex = h.hex;
+						if (field.settings.isMultiple == 0) {
+							let myVal = "";
+							let selected = field.settings.options.forEach(function (options) {
+								if (options.id == val)
+									myVal = options.text;
 							});
-							myVal = '<span class="selectivity-multiple-selected-item rendered" style="background-color:' + myHex + ' !important;">' + myVal + '</span>';
+
+							if (field.settings.hasColors) {
+								let myHex = "#66666";
+								field.settings.options.forEach(function (h) {
+									if (h.text == myVal)
+										myHex = h.hex;
+								});
+								myVal = '<span class="selectivity-multiple-selected-item rendered" style="background-color:' + myHex + ' !important;">' + myVal + '</span>';
+							}
+
+							val = myVal;
 						}
-
-						val = myVal;
 					}
+					else if (field.key == "user") {
+						val = data[field.columnName];
 
-					if (field.key == "number") {
-						val = field.format(data[field.columnName]);
+						if (field.settings.isMultiple == 0)
+							val = val ? '<span class="selectivity-multiple-selected-item rendered" style="background-color:#eee !important; color: #666 !important; box-shadow: inset 0px 1px 1px #333;"><i style="opacity: 0.6;" class="fa fa-user"></i> ' + val + '</span>' : "";
+
 					}
-
-					if (field.key == "user" && field.settings.isMultiple == 0 && val != "") {
-						if (val == null) {
-							val = "";
-						} else {
-							val = '<span class="selectivity-multiple-selected-item rendered" style="background-color:#eee !important; color: #666 !important; box-shadow: inset 0px 1px 1px #333;"><i style="opacity: 0.6;" class="fa fa-user"></i> ' + val + '</span>';
-						}
+					else if (data) {
+						val = field.format(data);
 					}
 
 					// set value to each components

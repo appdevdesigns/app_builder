@@ -818,7 +818,11 @@ class ABFieldDate extends ABField {
 		// config.map = '(date)#'+this.columnName+'#';   // so don't use this.
 
 		config.format = (d) => {
-			return this.format(d);
+
+			var rowData = {};
+			rowData[this.columnName] = d;
+
+			return this.format(rowData);
 		};
 
 
@@ -1045,7 +1049,10 @@ class ABFieldDate extends ABField {
 	}
 
 
-	format(d) {
+	format(rowData) {
+
+		var d = rowData[this.columnName];
+
 		if ((d == '') || (d == null)) {
 			return '';
 		}

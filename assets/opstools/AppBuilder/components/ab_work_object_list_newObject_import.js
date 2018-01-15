@@ -121,7 +121,7 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
             filter: function () {
                 // `this` should be from the Webix event
                 var filterText = this.getValue();
-                $$(ids.objectList).filter('#id#', filterText);
+                $$(ids.objectList).filter('#label#', filterText);
             },
 
 
@@ -286,7 +286,7 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
                         view: 'list',
                         id: ids.objectList,
                         select: true,
-                        height: 250,
+                        height: 200,
                         minHeight: 250,
                         maxHeight: 250,
                         data: [],

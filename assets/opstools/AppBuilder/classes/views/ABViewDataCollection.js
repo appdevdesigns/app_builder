@@ -42,7 +42,6 @@ function dataCollectionNew(instance, data) {
 
 	}
 
-
 	// override unused functions of selection model
 	dc.addCss = function () { };
 	dc.removeCss = function () { };
@@ -170,6 +169,8 @@ export default class ABViewDataCollection extends ABView {
 			filterConditions: ABViewPropertyDefaults.objectWorkspace.filterConditions,
 			sortFields: ABViewPropertyDefaults.objectWorkspace.sortFields
 		};
+
+		// Convert to boolean
 		this.settings.loadAll = JSON.parse(this.settings.loadAll || ABViewPropertyDefaults.loadAll);
 
 	}
@@ -339,6 +340,7 @@ export default class ABViewDataCollection extends ABView {
 								},
 								{
 									view: "button",
+									name: "buttonFilter",
 									label: L("ab.component.datacollection.settings", "*Settings"),
 									icon: "gear",
 									type: "icon",
@@ -358,6 +360,7 @@ export default class ABViewDataCollection extends ABView {
 								},
 								{
 									view: "button",
+									name: "buttonSort",
 									label: L("ab.component.datacollection.settings", "*Settings"),
 									icon: "gear",
 									type: "icon",
@@ -423,6 +426,8 @@ export default class ABViewDataCollection extends ABView {
 		// initial populate of popups
 		this.populatePopupEditors(view);
 
+		this.populateBadgeNumber(ids, view);
+
 		// set .loadAll flag
 		$$(ids.loadAll).setValue(view.settings.loadAll != null ? view.settings.loadAll : ABViewPropertyDefaults.loadAll);
 
@@ -437,8 +442,10 @@ export default class ABViewDataCollection extends ABView {
 
 			view.addListener('properties.updated', () => {
 				this.populatePopupEditors(view);
+				this.populateBadgeNumber(ids, view);
 
-				this.__dataCollection.clearAll();
+				if (view.__dataCollection)
+					view.__dataCollection.clearAll();
 
 				view.loadData();
 			});
@@ -515,6 +522,30 @@ export default class ABViewDataCollection extends ABView {
 		// refresh data collection
 		view.init();
 
+	}
+
+	static populateBadgeNumber(ids, view) {
+
+		if (view.settings.objectWorkspace &&
+			view.settings.objectWorkspace.filterConditions && 
+			view.settings.objectWorkspace.filterConditions.filters) {
+			$$(ids.buttonFilter).define('badge', view.settings.objectWorkspace.filterConditions.filters.length);
+			$$(ids.buttonFilter).refresh();
+		}
+		else {
+			$$(ids.buttonFilter).define('badge', 0);
+			$$(ids.buttonFilter).refresh();
+		}
+
+		if (view.settings.objectWorkspace &&
+			view.settings.objectWorkspace.sortFields) {
+			$$(ids.buttonSort).define('badge', view.settings.objectWorkspace.sortFields.length);
+			$$(ids.buttonSort).refresh();
+		}
+		else {
+			$$(ids.buttonSort).define('badge', 0);
+			$$(ids.buttonSort).refresh();
+		}
 	}
 
 	static populateFixSelector(ids, view, object) {
@@ -839,7 +870,10 @@ export default class ABViewDataCollection extends ABView {
 
 
 		// load data to initial the data collection
-		this.__dataCollection.loadNext(20, 0);
+		if (this.settings.loadAll)
+			this.loadData();
+		else
+			this.__dataCollection.loadNext(20, 0);
 
 	}
 
@@ -962,7 +996,7 @@ export default class ABViewDataCollection extends ABView {
 		if (model == null) return Promise.resolve([]);
 
 		var dc = this.__dataCollection;
-		var sorts = this.settings.objectWorkspace.sortConditions || {};
+		var sorts = this.settings.objectWorkspace.sortFields || [];
 
 		// pull filter conditions
 		var wheres = [];
@@ -1014,7 +1048,6 @@ export default class ABViewDataCollection extends ABView {
 		// load all data
 		if (this.settings.loadAll) {
 			delete cond.limit;
-			delete cond.skip;
 		}
 
 		// get data to data collection

@@ -37,6 +37,11 @@ steal(
 								return;
 							}
 
+							AD.comm.hub.subscribe('opsportal.resize', function (message, data) {
+								self.height = data.height;
+								self.resize(data.height);
+							});
+
 							self.containerDomID = self.unique('ab_live_tool', self.options.app, self.options.page);
 
 							self.debounceResize = false;
@@ -109,7 +114,7 @@ steal(
 
 									// Wait until the tool's area has been shown
 									var areaKey = 'ab-' + self.data.application.name.trim();
-									areaKey = areaKey.toLowerCase().replace(/_/g, '-');
+									areaKey = areaKey.toLowerCase().replace(/'/g, '').replace(/_/g, '-');
 
 									var callback = function (message, data) {
 										if (!self.activated && data.area.toLowerCase() == areaKey) {
@@ -131,6 +136,15 @@ steal(
 									var opsMenus = document.body.querySelectorAll('#op-list-menu > .op-container');
 									if (opsMenus.length == 1) {
 										opsMenus[0].click();
+									}
+									// If this area is showing
+									else {
+										// TODO: How to get current area ?
+										var currPanel = document.body.querySelector('#op-masthead-sublinks > ul:not([style*="display:none"]):not([style*="display: none"])');
+										var currArea = currPanel.getAttribute('area');
+										if (currArea == areaKey) {
+											callback(null, { area: areaKey });
+										}
 									}
 
 									next();
@@ -161,6 +175,13 @@ steal(
 							// webix.ready(function () {
 							self.showPage();
 							// });
+							webix.ready(function () {
+
+								console.log("showing page");
+								self.showPage();
+								self.resize(self.height || 600);
+
+							});
 
 						},
 
@@ -348,7 +369,7 @@ steal(
 									self.pageComponents[pageId].onShow();
 								}
 
-							}, 1000);
+							}, 10);
 
 						},
 

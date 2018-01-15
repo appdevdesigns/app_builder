@@ -256,6 +256,19 @@ class ABFieldLongText extends ABField {
 		}
 	}
 
+
+	/**
+	 * @method isValidData
+	 * Parse through the given data and return an error if this field's
+	 * data seems invalid.
+	 * @param {obj} data  a key=>value hash of the inputs to parse.
+	 * @param {OPValidator} validator  provided Validator fn
+	 * @return {array} 
+	 */
+	isValidData(data, validator) {
+	}
+
+
 	/*
 	* @funciton formComponent
 	* returns a drag and droppable component that is used on the UI

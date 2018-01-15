@@ -36,6 +36,7 @@ var ABViewFormPropertyComponentDefaults = {
 	labelPosition: 'left',
 	labelWidth: 120,
 	height: 200,
+	clearOnLoad: false,
 	displayRules: [],
 
 	//	[{
@@ -138,12 +139,32 @@ export default class ABViewForm extends ABViewContainer {
 
 		// convert from "0" => true/false
 		this.settings.showLabel = JSON.parse(this.settings.showLabel != null ? this.settings.showLabel : ABViewFormPropertyComponentDefaults.showLabel);
+		this.settings.clearOnLoad = JSON.parse(this.settings.clearOnLoad != null ? this.settings.clearOnLoad : ABViewFormPropertyComponentDefaults.clearOnLoad);
 
 		// convert from "0" => 0
 		this.settings.labelWidth = parseInt(this.settings.labelWidth || ABViewFormPropertyComponentDefaults.labelWidth);
 		this.settings.height = parseInt(this.settings.height || ABViewFormPropertyComponentDefaults.height);
 
 	}
+
+	/** 
+	 * @method editorComponent
+	 * return the Editor for this UI component.
+	 * the editor should display either a "block" view or "preview" of 
+	 * the current layout of the view.
+	 * @param {string} mode what mode are we in ['block', 'preview']
+	 * @return {Component} 
+	 */
+	editorComponent(App, mode) {
+
+		var comp = super.editorComponent(App, mode);
+
+		// Define height of cell
+		comp.ui.rows[0].cellHeight = 75;
+
+		return comp;
+	}
+
 
 	//
 	// Property Editor
@@ -348,8 +369,8 @@ export default class ABViewForm extends ABViewContainer {
 			{
 				name: 'showLabel',
 				view: 'checkbox',
-				labelRight: L('ab.components.form.showlabel', "*Display Label"),
-				labelWidth: App.config.labelCheckbox
+				label: L('ab.components.form.showlabel', "*Display Label"),
+				labelWidth: App.config.labelWidthLarge
 			},
 			{
 				name: 'labelPosition',
@@ -378,6 +399,12 @@ export default class ABViewForm extends ABViewContainer {
 				name: "height",
 				label: L("ab.component.form.height", "*Height:"),
 				labelWidth: App.config.labelWidthLarge,
+			},
+			{
+				name: 'clearOnLoad',
+				view: 'checkbox',
+				label: L('ab.components.form.clearOnLoad', "*Clear on load"),
+				labelWidth: App.config.labelWidthLarge
 			},
 			{
 				view: "fieldset",
@@ -489,6 +516,7 @@ export default class ABViewForm extends ABViewContainer {
 		$$(ids.labelPosition).setValue(view.settings.labelPosition || ABViewFormPropertyComponentDefaults.labelPosition);
 		$$(ids.labelWidth).setValue(view.settings.labelWidth || ABViewFormPropertyComponentDefaults.labelWidth);
 		$$(ids.height).setValue(view.settings.height || ABViewFormPropertyComponentDefaults.height);
+		$$(ids.clearOnLoad).setValue(view.settings.clearOnLoad || ABViewFormPropertyComponentDefaults.clearOnLoad);
 
 		this.propertyUpdateRules(ids, view, dataCollectionId);
 
@@ -503,6 +531,7 @@ export default class ABViewForm extends ABViewContainer {
 		view.settings.labelPosition = $$(ids.labelPosition).getValue() || ABViewFormPropertyComponentDefaults.labelPosition;
 		view.settings.labelWidth = $$(ids.labelWidth).getValue() || ABViewFormPropertyComponentDefaults.labelWidth;
 		view.settings.height = $$(ids.height).getValue();
+		view.settings.clearOnLoad = $$(ids.clearOnLoad).getValue();
 
 	}
 
@@ -652,34 +681,41 @@ export default class ABViewForm extends ABViewContainer {
 		var _logic = {
 
 			displayData: (data) => {
+
 				// Set default values
 				if (data == null) {
 					var customFields = this.fieldComponents((comp) => comp instanceof ABViewFormCustom);
 					customFields.forEach((f) => {
 
+						var field = f.field();
+						if (!field) return;
+
 						var comp = this.viewComponents[f.id];
 						if (comp == null) return;
 
-						var colName = f.field().columnName;
+						var colName = field.columnName;
 
 						// set value to each components
-						var values = {};
-						f.field().defaultValue(values);
+						var rowData = {};
+						field.defaultValue(rowData);
+						field.setValue($$(comp.ui.id), rowData);
 
-						f.field().setValue($$(comp.ui.id), values[colName]);
 					});
 					var normalFields = this.fieldComponents((comp) => ((comp instanceof ABViewFormField) && !(comp instanceof ABViewFormCustom)));
 					normalFields.forEach((f) => {
+
+						var field = f.field();
+						if (!field) return;
 
 						var comp = this.viewComponents[f.id];
 						if (comp == null) return;
 
 						if (f.key != "button") {
-							var colName = f.field().columnName;
+							var colName = field.columnName;
 
 							// set value to each components
 							var values = {};
-							f.field().defaultValue(values);
+							field.defaultValue(values);
 
 							if (values[colName] != null && $$(comp.ui.id).setValue)
 								$$(comp.ui.id).setValue(values[colName]);
@@ -695,17 +731,8 @@ export default class ABViewForm extends ABViewContainer {
 						var comp = this.viewComponents[f.id];
 						if (comp == null) return;
 
-						var colName = f.field().columnName;
-						var val = data[colName];
-
-						if (f.field().key == "connectObject") {
-							val = f.field().pullRelationValues(data);
-						}
-
 						// set value to each components
-						// if (val != null) {
-						f.field().setValue($$(comp.ui.id), val);
-						// }
+						f.field().setValue($$(comp.ui.id), data);
 					});
 				}
 			},
@@ -740,20 +767,8 @@ export default class ABViewForm extends ABViewContainer {
 				var formData = {};
 				formData[relationName] = data;
 
-				var val = null;
-
-				if (formData[relationName]) {
-
-					// convert to array
-					if (relationField.settings.linkType == 'many')
-						formData[relationName] = [formData[relationName]];
-
-					val = relationField.pullRelationValues(formData);
-
-				}
-
 				// set data of parent to default value
-				relationField.setValue(relationElem, val);
+				relationField.setValue(relationElem, formData);
 
 			}
 
@@ -766,20 +781,22 @@ export default class ABViewForm extends ABViewContainer {
 			var customFields = this.fieldComponents((comp) => comp instanceof ABViewFormCustom);
 			customFields.forEach((f) => {
 
+				var field = f.field();
+				if (!field) return;
+
 				var component = this.viewComponents[f.id];
 				if (!component) return;
 
-				var colName = f.field().columnName;
+				var colName = field.columnName;
 
 				// call .customDisplay again here
 				component.onShow();
 
 				// set value to each components
-				var values = {};
-				f.field().defaultValue(values);
+				var rowData = {};
+				field.defaultValue(rowData);
+				field.setValue($$(component.ui.id), rowData);
 
-				if (values[colName] != null)
-					f.field().setValue($$(component.ui.id), values[colName]);
 			});
 
 			var data = null;
@@ -788,6 +805,11 @@ export default class ABViewForm extends ABViewContainer {
 
 				if (Form)
 					dc.bind(Form);
+
+				// clear current cursor on load
+				if (this.settings.clearOnLoad) {
+					dc.setCursor(null);
+				}
 
 				data = dc.getCursor();
 

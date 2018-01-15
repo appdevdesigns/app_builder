@@ -163,7 +163,10 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 					// Value
 					var actionInput = r.queryView({ for: "actionValue" });
 					var valueViewId = actionInput.getActiveId();
-					var value = actionInput.queryView({ id: valueViewId }).getValue();
+					var actionValue = actionInput.queryView({ id: valueViewId });
+					var value;
+					if (actionValue && actionValue.getValue)
+						value = actionValue.getValue();
 
 					results.push({
 						action: actionSelector.getValue(),
@@ -308,7 +311,7 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 			selectAction: (action, $viewRule) => {
 
 				// Swtich the view of action option
-				$viewRule.queryView({ id: "actionValue" }).showBatch(action);
+				$viewRule.queryView({ for: "actionValue" }).showBatch(action);
 			},
 
 			hide: function () {

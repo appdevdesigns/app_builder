@@ -194,6 +194,7 @@ export default class ABViewFormTextbox extends ABViewFormField {
 			case 'rich':
 				component.ui.view = 'forminput';
 				component.ui.height = 200;
+				component.ui.css = "ab-rich-text";
 				component.ui.body = {
 					view: 'tinymce-editor'
 				};

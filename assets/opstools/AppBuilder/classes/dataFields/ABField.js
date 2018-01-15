@@ -478,16 +478,39 @@ export default class ABField extends ABFieldBase {
 	 * to get value of fields that apply custom editor
 	 * 
 	 * @param {Object} item - Webix element
+	 * @param {Object} rowData - data of row
 	 * 
 	 * @return {Object}
 	 */
-	setValue(item, value) {
-		return item.setValue(value);
+	setValue(item, rowData) {
+
+		var val = rowData[this.columnName];
+
+		return item.setValue(val);
 	};
 
 
-	/*
-	 * @funciton formComponent
+
+
+	/**
+	 * @method format
+	 * return display text to detail comonent and define label of object
+	 * 
+	 * @param {Object} rowData - data
+	 */
+	format(rowData) {
+
+		if (rowData && rowData[this.columnName] != null)
+			return rowData[this.columnName];
+		else
+			return "";
+
+	};
+
+
+
+	/**
+	 * @method formComponent
 	 * returns a drag and droppable component that is used on the UI
 	 * interface builder to place form components related to this ABField.
 	 * 
@@ -545,8 +568,8 @@ export default class ABField extends ABFieldBase {
 
 
 
-	/*
-	 * @funciton detailComponent
+	/**
+	 * @method detailComponent
 	 */
 	detailComponent() {
 		

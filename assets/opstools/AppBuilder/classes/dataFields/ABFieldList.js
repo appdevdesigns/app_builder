@@ -37,13 +37,6 @@ var ABFieldListDefaults = {
 			return true;
 		}
 	},
-	useAsLabel: (field) => {
-		if (field.settings.isMultiple) {
-			return false;
-		} else {
-			return true;
-		}
-	},
 	hasColors: (field) => {
 		if (field.settings.hasColors) {
 			return true;
@@ -786,15 +779,32 @@ class ABFieldList extends ABFieldSelectivity {
 	}
 
 
-	setValue(item, value) {
+	setValue(item, rowData) {
 		if (this.settings.isMultiple) {
 			// get selectivity dom
 			var domSelectivity = item.$view.querySelector('.list-data-values');
 			// set value to selectivity
-			this.selectivitySet(domSelectivity, value, this.App);
+			this.selectivitySet(domSelectivity, rowData[this.columnName], this.App);
 		} else {
-			item.setValue();
+			item.setValue(rowData[this.columnName]);
 		}
+	}
+
+
+	format(rowData) {
+
+		var val = rowData[this.columnName] || [];
+
+		// Convert to array
+		if (!Array.isArray(val))
+			val = [val];
+
+		var displayOpts = this.settings.options
+							.filter(opt => val.filter(v => v == opt.id).length > 0)
+							.map(opt => opt.text);
+
+		return displayOpts.join(', ');
+
 	}
 
 
