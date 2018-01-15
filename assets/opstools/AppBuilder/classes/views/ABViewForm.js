@@ -990,6 +990,13 @@ export default class ABViewForm extends ABViewContainer {
 					formVals[prop] = '';
 			}
 
+			// add default values to hidden fields
+			obj.fields().forEach(f => {
+				if (formVals[f.columnName] === undefined) {
+					f.defaultValue(formVals);
+				}
+			});
+
 			// validate
 			var validator = obj.isValidData(formVals);
 			if (validator.pass()) {
