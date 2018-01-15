@@ -116,7 +116,7 @@ export default  {
 
 		parent = parent || null;
 		
-		if (values.key) {
+		if ((values.key) && (Views[values.key])) {
 			return new Views[values.key](values, application, parent);
 		} else {
 			var err = new Error('unknown view key');
