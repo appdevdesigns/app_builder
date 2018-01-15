@@ -172,16 +172,19 @@ class ABFieldDate extends ABField {
 
 							var currCol;
 
-							// create a column that has date/time type
-							if (this.settings.includeTime == true) {
+							// Need to use date time type to support timezone
+							currCol = t.dateTime(this.columnName);
 
-								currCol = t.dateTime(this.columnName);
+							// // create a column that has date/time type
+							// if (this.settings.includeTime == true) {
 
-								// create a column that has date type
-							} else {
+							// 	currCol = t.dateTime(this.columnName);
 
-								currCol = t.date(this.columnName);
-							}
+							// 	// create a column that has date type
+							// } else {
+
+							// 	currCol = t.date(this.columnName);
+							// }
 
 							currCol.nullable();
 
@@ -312,6 +315,7 @@ class ABFieldDate extends ABField {
 
 		return errors;
 	}
+
 
 }
 
