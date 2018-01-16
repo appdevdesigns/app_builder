@@ -278,7 +278,7 @@ class ABFieldUser extends ABFieldSelectivity {
 					}
 				});
 				if (obj[field.columnName]) {
-					return '<span class="selectivity-multiple-selected-item rendered" style="background-color:#eee !important; color: #666 !important; box-shadow: inset 0px 1px 1px #333;"><i style="opacity: 0.6;" class="fa fa-user"></i> '+myText+'</span>';
+					return '<span class="selectivity-multiple-selected-item rendered" style="background-color:#eee !important; color: #666 !important; box-shadow: inset 0px 1px 1px #333;"><i style="opacity: 0.6;" class="fa fa-user"></i> '+myText+' <a class="selectivity-multiple-selected-item-remove" style="color: #333;"><i class="fa fa-remove"></i></a></span>';
 				} else {
 					return myText;
 				}
@@ -376,11 +376,27 @@ class ABFieldUser extends ABFieldSelectivity {
 				}, false);				
 			}
 		} else {
-			// var hasRendered = node.querySelector('.rendered');
-            // 
-			// if (hasRendered == null && node.innerHTML != "") {
-			// 	node.innerHTML = '<span class="selectivity-multiple-selected-item rendered" style="background-color:#eee !important; color: #666 !important; box-shadow: inset 0px 1px 1px #333;"><i style="opacity: 0.6;" class="fa fa-user"></i> '+node.innerHTML+'</span>';
-			// }
+			var clearButton = node.querySelector('.selectivity-multiple-selected-item-remove');
+			if (clearButton) {
+				clearButton.addEventListener("click", (e) => {
+					e.stopPropagation();
+					var values = {};
+					values[this.columnName] = "";
+					this.object.model().update(row.id, values)
+					.then(() => {
+						// update the client side data object as well so other data changes won't cause this save to be reverted
+						if ($$(node) && $$(node).updateItem)
+							$$(node).updateItem(row.id, values);
+					})
+					.catch((err) => {
+
+						node.classList.add('webix_invalid');
+						node.classList.add('webix_invalid_cell');
+
+						OP.Error.log('Error updating our entry.', { error: err, row: row, values: "" });
+					});
+				});
+			}
 		}
 
 	}

@@ -212,6 +212,7 @@ class ABFieldString extends ABField {
 		var config = super.columnHeader(isObjectWorkspace);
 
 		config.editor = 'text';
+		config.css = 'textCell';
 		// config.sort   = 'string'
 
 		return config;
