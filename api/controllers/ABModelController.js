@@ -116,9 +116,14 @@ function updateRelationValues(query, id, updateRelationParams) {
  *                              limit:  {Integer}
  *                              includeRelativeData: {Boolean}
  *                           }
- * @param {string} languageCode
+ * @param {string} userData - {
+ *                              username: {string},
+ *                              guid: {string},
+ *                              languageCode: {string}, - 'en', 'th'
+ *                              ...
+ *                             }
  */
-function populateFindConditions(query, object, options, languageCode) {
+function populateFindConditions(query, object, options, userData) {
 
     var where = options.where,
         sort = options.sort,
@@ -221,6 +226,14 @@ function populateFindConditions(query, object, options, languageCode) {
                     var operator = "IS NOT NULL";
                     var input = null;
                     break;
+                case "is current user":
+                    var operator = "=";
+                    var input = userData.username;
+                    break;
+                case "is not current user":
+                    var operator = "!=";
+                    var input = userData.username;
+                    break;
                 default:
                     var operator = "=";
                     var input = w.inputValue;
@@ -228,7 +241,7 @@ function populateFindConditions(query, object, options, languageCode) {
             // if we are searching a multilingual field it is stored in translations so we need to search JSON
             var field = object._fields.filter(field => field.columnName == w.fieldName)[0];
             if (field && field.settings.supportMultilingual == 1) {
-                var fieldName = 'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH(translations, "one", "' + languageCode + '")), 1, 4)), \'$."' + w.fieldName + '"\'))';
+                var fieldName = 'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH(translations, "one", "' + userData.languageCode + '")), 1, 4)), \'$."' + w.fieldName + '"\'))';
             } else { // If we are just searching a field it is much simpler
                 var fieldName = '`' + w.fieldName + '`';
             }
@@ -266,7 +279,7 @@ function populateFindConditions(query, object, options, languageCode) {
             // because we are going to sort by the users language not the builder's so the view will be sorted differntly depending on which languageCode
             // you are using but the intent of the sort is maintained
             if (o.isMulti == 1) {
-                var by = 'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH(translations, "one", "' + languageCode + '")), 1, 4)), \'$."' + o.by + '"\'))';
+                var by = 'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH(translations, "one", "' + userData.languageCode + '")), 1, 4)), \'$."' + o.by + '"\'))';
             } else { // If we are just sorting a field it is much simpler
                 var by = "`" + o.by + "`";
             }
@@ -355,7 +368,7 @@ module.exports = {
                                         limit: 1,
                                         includeRelativeData: true
                                     },
-                                    req.user.data.languageCode);
+                                    req.user.data);
 
                                     return query3
                                         .catch((err) => { return Promise.reject(err); })
@@ -462,11 +475,11 @@ module.exports = {
                     limit: limit,
                     includeRelativeData: true
                 },
-                req.user.data.languageCode);
+                req.user.data);
 
                 // promise for the total count. this was moved below the filters because webix will get caught in an infinte loop of queries if you don't pass the right count
                 var queryCount = object.model().query();
-                populateFindConditions(queryCount, object, { where: where, includeRelativeData: false }, req.user.data.languageCode);
+                populateFindConditions(queryCount, object, { where: where, includeRelativeData: false }, req.user.data);
                 var pCount = queryCount.count('id as count').first();
 
                 Promise.all([
@@ -638,7 +651,7 @@ module.exports = {
                                         limit: 1,
                                         includeRelativeData: true
                                     },
-                                    req.user.data.languageCode);
+                                    req.user.data);
 
                                     return query3
                                         .catch((err) => { return Promise.reject(err); })
