@@ -227,6 +227,15 @@ export default class RowUpdater extends OP.Component {
 					formFieldComponent = abView.component(App),
 					inputView = formFieldComponent.ui;
 
+// WORKAROUND: add '[Current User]' option to the user data field
+if (fieldInfo.key == 'user') {
+	inputView.options = inputView.options || [];
+	inputView.options.unshift({
+		id: 'ab-current-user',
+		value: '*[Current User]'
+	});
+}
+
 				// Change component to display value
 				$viewCond.removeView($viewCond.getChildViews()[3]);
 				$viewCond.addView(inputView, 3);
