@@ -76,6 +76,7 @@ export default class AB_Work_Interface extends OP.Component {
 			 */
 			applicationLoad:function(application) {
 
+				App.actions.clearInterfaceWorkspace();
 				ViewList.applicationLoad(application);
 
 			},
