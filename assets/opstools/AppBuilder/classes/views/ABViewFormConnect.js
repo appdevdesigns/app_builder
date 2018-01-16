@@ -170,8 +170,10 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 		}
 
 		var newWidth = settings.labelWidth;
-		if (typeof this.settings.formView != "undefined")
+		if (this.settings.formView)
 			newWidth += 40;
+		else if (settings.showLabel == true && settings.labelPosition == 'top')
+			newWidth = 0;
 
 		var template = (templateLabel + "#template#")
 			.replace(/#width#/g, settings.labelWidth)
@@ -181,9 +183,14 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 		component.ui.id = ids.component;
 		component.ui.view = "template";
 		component.ui.css = "webix_el_box";
-		if (typeof field.settings.useHeight != "undefined" && field.settings.useHeight == 1) {
+
+		if (settings.showLabel == true && settings.labelPosition == 'top') {
+			component.ui.height = 80;
+		}
+		else if (field.settings.useHeight) {
 			component.ui.height = parseInt(field.settings.imageHeight);
-		} else {
+		}
+		else {
 			component.ui.height = 38;
 		}
 		component.ui.borderless = true;

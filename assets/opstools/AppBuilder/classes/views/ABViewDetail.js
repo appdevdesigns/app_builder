@@ -362,6 +362,8 @@ export default class ABViewDetail extends ABViewContainer {
 					var field = f.field();
 					var val;
 
+					if (!field) return;
+
 					// get value of relation when field is a connect field
 					if (field.key == "connectObject") {
 						val = field.pullRelationValues(data);

@@ -421,6 +421,7 @@ export default class ABViewForm extends ABViewContainer {
 								},
 								{
 									view: "button",
+									name: "buttonSubmitRules",
 									label: L("ab.component.form.settings", "*Settings"),
 									icon: "gear",
 									type: "icon",
@@ -440,6 +441,7 @@ export default class ABViewForm extends ABViewContainer {
 								},
 								{
 									view: "button",
+									name: "buttonDisplayRules",
 									label: L("ab.component.form.settings", "*Settings"),
 									icon: "gear",
 									type: "icon",
@@ -459,6 +461,7 @@ export default class ABViewForm extends ABViewContainer {
 								},
 								{
 									view: "button",
+									name: "buttonRecordRules",
 									label: L("ab.component.form.settings", "*Settings"),
 									icon: "gear",
 									type: "icon",
@@ -519,6 +522,18 @@ export default class ABViewForm extends ABViewContainer {
 		$$(ids.clearOnLoad).setValue(view.settings.clearOnLoad || ABViewFormPropertyComponentDefaults.clearOnLoad);
 
 		this.propertyUpdateRules(ids, view, dataCollectionId);
+		this.populateBadgeNumber(ids, view);
+
+		// when a change is made in the properties the popups need to reflect the change
+		this.updateEventIds = this.updateEventIds || {}; // { viewId: boolean, ..., viewIdn: boolean }
+		if (!this.updateEventIds[view.id]) {
+			this.updateEventIds[view.id] = true;
+
+			view.addListener('properties.updated', () => {
+				this.populateBadgeNumber(ids, view);
+			});
+		}
+		
 
 	}
 
@@ -579,6 +594,39 @@ export default class ABViewForm extends ABViewContainer {
 			PopupDisplayRule.objectLoad(selectedDc.datasource);
 			PopupRecordRule.objectLoad(selectedDc.datasource);
 			PopupSubmitRule.objectLoad(selectedDc.datasource);
+		}
+
+	}
+
+	static populateBadgeNumber(ids, view) {
+
+		if (!view) return;
+
+		if (view.settings.submitRules) {
+			$$(ids.buttonSubmitRules).define('badge', view.settings.submitRules.length || 0);
+			$$(ids.buttonSubmitRules).refresh();
+		}
+		else {
+			$$(ids.buttonSubmitRules).define('badge', 0);
+			$$(ids.buttonSubmitRules).refresh();
+		}
+
+		if (view.settings.displayRules) {
+			$$(ids.buttonDisplayRules).define('badge', view.settings.displayRules.length || 0);
+			$$(ids.buttonDisplayRules).refresh();
+		}
+		else {
+			$$(ids.buttonDisplayRules).define('badge', 0);
+			$$(ids.buttonDisplayRules).refresh();
+		}
+
+		if (view.settings.recordRules) {
+			$$(ids.buttonRecordRules).define('badge', view.settings.recordRules.length || 0);
+			$$(ids.buttonRecordRules).refresh();
+		}
+		else {
+			$$(ids.buttonRecordRules).define('badge', 0);
+			$$(ids.buttonRecordRules).refresh();
 		}
 
 	}
@@ -989,6 +1037,13 @@ export default class ABViewForm extends ABViewContainer {
 				if (formVals[prop] == null || formVals[prop].length == 0)
 					formVals[prop] = '';
 			}
+
+			// add default values to hidden fields
+			obj.fields().forEach(f => {
+				if (formVals[f.columnName] === undefined) {
+					f.defaultValue(formVals);
+				}
+			});
 
 			// validate
 			var validator = obj.isValidData(formVals);

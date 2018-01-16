@@ -328,7 +328,14 @@ export default class ABViewFormButton extends ABView {
 				// if (cancelButton.getFormView())
 				// 	cancelButton.getFormView().clear();
 
-				super.changePage(this.settings.afterCancel);
+				if (this.settings.afterCancel)
+					super.changePage(this.settings.afterCancel);
+				// If the redirect page does not define, then redirect to parent page
+				else {
+					var pageCurr = this.pageParent();
+					var pageParent = pageCurr.pageParent() || pageCurr;
+					super.changePage(pageParent.id);
+				}
 			},
 
 			onClear: (resetButton) => {
