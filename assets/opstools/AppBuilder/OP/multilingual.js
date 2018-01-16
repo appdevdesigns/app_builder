@@ -38,9 +38,19 @@ export default {
 
 		if (fields && fields.length > 0) {
 
+			// [fix] if no matching translation is in our json.translations
+			// 		 object, then just use the 1st one.
+			var first = null;	// the first translation entry encountered
+			var found = false;	// did we find a matching translation?
+
 			json.translations.forEach(function(t){
+
+				if (!first) first = t;
+
 				// find the translation for the current language code
 				if (t.language_code == currLanguage) {
+
+					found = true;
 
 					// copy each field to the root object
 					fields.forEach(function(f){
@@ -49,6 +59,16 @@ export default {
 				}
 			})
 
+
+			// if !found, then use the 1st entry we did find.  prepend desired 
+			// [language_code] to each of the fields.
+			if ((!found) && (first)) {
+
+				// copy each field to the root object
+				fields.forEach(function(f){
+					obj[f] = "[" + currLanguage + "]" + (first[f] || '');  // default to '' if not found. 
+				})
+			}
 
 		}
 	},
