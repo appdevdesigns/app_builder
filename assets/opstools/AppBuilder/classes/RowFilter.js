@@ -580,36 +580,36 @@ export default class RowFilter extends OP.Component {
 				config_settings.filters = [];
 
 				var $viewForm = $$(ids.filterForm);
+				if ($viewForm) {
+					$viewForm.getChildViews().forEach($viewCond => {
 
-				$viewForm.getChildViews().forEach($viewCond => {
+						var $fieldElem = $viewCond.$$(ids.field);
+						if (!$fieldElem) return;
 
-					var $fieldElem = $viewCond.$$(ids.field);
-					if (!$fieldElem) return;
+						var fieldId = $fieldElem.getValue();
+						if (!fieldId) return;
 
-					var fieldId = $fieldElem.getValue();
-					if (!fieldId) return;
+						var operator = null,
+							operatorViewId = $viewCond.$$(ids.operator).getActiveId(),
+							$viewComparer = $viewCond.$$(ids.operator).queryView({ id: operatorViewId });
+						if ($viewComparer && $viewComparer.getValue)
+							operator = $viewComparer.getValue();
 
-					var operator = null,
-						operatorViewId = $viewCond.$$(ids.operator).getActiveId(),
-						$viewComparer = $viewCond.$$(ids.operator).queryView({ id: operatorViewId });
-					if ($viewComparer && $viewComparer.getValue)
-						operator = $viewComparer.getValue();
-
-					var value = null,
-						valueViewId = $viewCond.$$(ids.inputValue).getActiveId(),
-						$viewConditionValue = $viewCond.$$(ids.inputValue).queryView({ id: valueViewId });
-					if ($viewConditionValue && $viewConditionValue.getValue)
-						value = $viewConditionValue.getValue();
+						var value = null,
+							valueViewId = $viewCond.$$(ids.inputValue).getActiveId(),
+							$viewConditionValue = $viewCond.$$(ids.inputValue).queryView({ id: valueViewId });
+						if ($viewConditionValue && $viewConditionValue.getValue)
+							value = $viewConditionValue.getValue();
 
 
-					config_settings.filters.push({
-						fieldId: fieldId,
-						operator: operator,
-						inputValue: value
+						config_settings.filters.push({
+							fieldId: fieldId,
+							operator: operator,
+							inputValue: value
+						});
+
 					});
-
-
-				});
+				}
 
 				return config_settings;
 
