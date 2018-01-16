@@ -478,9 +478,23 @@ class ABFieldUser extends ABFieldSelectivity {
 
 		// .common() is used to create the display in the list
 		formComponentSetting.common = () => {
-			return {
-				key: (this.settings.isMultiple ? 'fieldcustom' : 'selectsingle')
+
+			if (this.settings.isMultiple) {
+
+				return {
+					key: 'fieldcustom'
+				};
+	
 			}
+			else {
+
+				return {
+					key: 'selectsingle',
+					options: this.getUsers()
+				};
+
+			}
+
 		};
 
 		return formComponentSetting;
@@ -541,7 +555,6 @@ class ABFieldUser extends ABFieldSelectivity {
 			};
 
 			if (this.settings.isMultiple) {
-				result.id = u.username;
 				result.text = u.username;
 			}
 			else {

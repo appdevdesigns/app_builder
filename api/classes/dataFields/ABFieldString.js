@@ -166,22 +166,32 @@ class ABFieldString extends ABField {
 				
 				// create/alter the actual column
 				(next) => {
-					knex.schema.hasColumn(tableName, this.columnName)
-					.then((exists) => {
-						knex.schema.table(tableName, (t) => {
-							var currCol = t.string(this.columnName)
-							.defaultTo(this.settings.textDefault);
 
-							// alter default value of column
-							if (exists)
-								currCol.alter();
-						})
-						.then(() => {
-							next();
+					// [fix]: don't create a column for a multilingual field
+					if (!this.settings.supportMultilingual) {
+
+						knex.schema.hasColumn(tableName, this.columnName)
+						.then((exists) => {
+							knex.schema.table(tableName, (t) => {
+								var currCol = t.string(this.columnName)
+								.defaultTo(this.settings.textDefault);
+
+								// alter default value of column
+								if (exists)
+									currCol.alter();
+							})
+							.then(() => {
+								next();
+							})
+							.catch(next);
 						})
 						.catch(next);
-					})
-					.catch(next);
+
+					} else {
+
+						// just continue.
+						next();
+					}
 				}
 				
 			], (err) => {

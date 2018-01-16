@@ -224,13 +224,14 @@ export default class RowUpdater extends OP.Component {
 				var fieldInfo = _Object.fields(col => col.id == columnId)[0],
 					fieldComponent = fieldInfo.formComponent(),
 					abView = fieldComponent.newInstance(fieldInfo.object.application),
-					inputView = abView.component(App).ui;
+					formFieldComponent = abView.component(App),
+					inputView = formFieldComponent.ui;
 
 				// Change component to display value
 				$viewCond.removeView($viewCond.getChildViews()[3]);
 				$viewCond.addView(inputView, 3);
 
-				abView.component(App).init();
+				formFieldComponent.init();
 
 				// Show custom display of data field
 				if (fieldInfo.customDisplay)
