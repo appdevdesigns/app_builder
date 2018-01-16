@@ -522,7 +522,7 @@ class ABFieldUser extends ABFieldSelectivity {
 			// set value to selectivity
 			this.selectivitySet(domSelectivity, val, this.App);
 		} else {
-			item.setValue(val);
+			item.setValue(rowData[this.columnName]);
 		}
 	}
 
