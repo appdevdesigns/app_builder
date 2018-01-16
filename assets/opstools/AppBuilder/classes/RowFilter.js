@@ -665,7 +665,9 @@ export default class RowFilter extends OP.Component {
 						$viewConditionValue.refresh();
 					}
 
-					_logic.onChangeUser(f.operator, $viewCond);
+					var field = _Fields.filter(col => col.id == f.fieldId)[0];
+					if (field && field.key == 'user')
+						_logic.onChangeUser(f.operator, $viewCond);
 
 				});
 
