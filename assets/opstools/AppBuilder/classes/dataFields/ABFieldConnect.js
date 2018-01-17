@@ -763,6 +763,8 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 	setValue(item, rowData) {
 
+		if (!item) return;
+
 		var val = rowData[this.columnName];
 
 		// convert to array

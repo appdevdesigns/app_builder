@@ -424,7 +424,7 @@ export default class ABModel {
 
 				// convert the data to date object
 				dateFields.forEach((date) => {
-					if (d[date.columnName] != null)
+					if (d && d[date.columnName] != null)
 						d[date.columnName] = new Date(d[date.columnName]);
 				});
 

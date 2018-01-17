@@ -526,13 +526,19 @@ class ABFieldUser extends ABFieldSelectivity {
 
 
 	setValue(item, rowData) {
+
+		var val = rowData[this.columnName];
+		// Select "[Current user]" to update
+		if (val == 'ab-current-user') 
+			val = OP.User.username();
+
 		if (this.settings.isMultiple) {
 			// get selectivity dom
 			var domSelectivity = item.$view.querySelector('.list-data-values');
 			// set value to selectivity
-			this.selectivitySet(domSelectivity, rowData[this.columnName], this.App);
+			this.selectivitySet(domSelectivity, val, this.App);
 		} else {
-			item.setValue();
+			item.setValue(rowData[this.columnName]);
 		}
 	}
 

@@ -35,7 +35,11 @@ export default class RowFilter extends OP.Component {
 				notEqualListCondition: L('ab.filter_fields.notEqualListCondition', "*does not equal"),
 
 				checkedCondition: L('ab.filter_fields.checkedCondition', "*is checked"),
-				notCheckedCondition: L('ab.filter_fields.notCheckedCondition', "*is not checked")
+				notCheckedCondition: L('ab.filter_fields.notCheckedCondition', "*is not checked"),
+
+				isCurrentUserCondition: L('ab.filter_fields.isCurrentUserCondition', "*is current user"),
+				isNotCurrentUserCondition: L('ab.filter_fields.isNotCurrentUserCondition', "*is not current user")
+
 			}
 		};
 
@@ -262,6 +266,14 @@ export default class RowFilter extends OP.Component {
 									view: "combo",
 									options: [
 										{
+											value: labels.component.isCurrentUserCondition,
+											id: "is current user"
+										},
+										{
+											value: labels.component.isNotCurrentUserCondition,
+											id: "is not current user"
+										},
+										{
 											value: labels.component.equalListCondition,
 											id: "equals"
 										},
@@ -271,7 +283,15 @@ export default class RowFilter extends OP.Component {
 										}
 									],
 									on: {
-										onChange: _logic.onChange
+										onChange: function (userCondition) {
+
+											var $viewComparer = this.getParentView();
+											var $viewCond = $viewComparer.getParentView();
+											_logic.onChangeUser(userCondition, $viewCond);
+
+											_logic.onChange();
+
+										}
 									}
 								},
 								// String
@@ -308,7 +328,9 @@ export default class RowFilter extends OP.Component {
 							id: ids.inputValue,
 							isolate: true,
 							cells: [
-								{},
+								{
+									batch: "empty"
+								},
 								// Date
 								{
 									// inputView.format = field.getDateFormat();
@@ -519,6 +541,17 @@ export default class RowFilter extends OP.Component {
 
 			},
 
+			onChangeUser: function (operator, $viewCond) {
+
+				if (operator == "is current user" ||
+					operator == "is not current user") {
+					$viewCond.$$(ids.inputValue).showBatch("empty");
+				}
+				else {
+					$viewCond.$$(ids.inputValue).showBatch("user");
+				}
+			},
+
 			onChange: function () {
 
 				// refresh config settings before notify
@@ -547,36 +580,36 @@ export default class RowFilter extends OP.Component {
 				config_settings.filters = [];
 
 				var $viewForm = $$(ids.filterForm);
+				if ($viewForm) {
+					$viewForm.getChildViews().forEach($viewCond => {
 
-				$viewForm.getChildViews().forEach($viewCond => {
+						var $fieldElem = $viewCond.$$(ids.field);
+						if (!$fieldElem) return;
 
-					var $fieldElem = $viewCond.$$(ids.field);
-					if (!$fieldElem) return;
+						var fieldId = $fieldElem.getValue();
+						if (!fieldId) return;
 
-					var fieldId = $fieldElem.getValue();
-					if (!fieldId) return;
+						var operator = null,
+							operatorViewId = $viewCond.$$(ids.operator).getActiveId(),
+							$viewComparer = $viewCond.$$(ids.operator).queryView({ id: operatorViewId });
+						if ($viewComparer && $viewComparer.getValue)
+							operator = $viewComparer.getValue();
 
-					var operator = null,
-						operatorViewId = $viewCond.$$(ids.operator).getActiveId(),
-						$viewComparer = $viewCond.$$(ids.operator).queryView({ id: operatorViewId });
-					if ($viewComparer && $viewComparer.getValue)
-						operator = $viewComparer.getValue();
-
-					var value = null,
-						valueViewId = $viewCond.$$(ids.inputValue).getActiveId(),
-						$viewConditionValue = $viewCond.$$(ids.inputValue).queryView({ id: valueViewId });
-					if ($viewConditionValue && $viewConditionValue.getValue)
-						value = $viewConditionValue.getValue();
+						var value = null,
+							valueViewId = $viewCond.$$(ids.inputValue).getActiveId(),
+							$viewConditionValue = $viewCond.$$(ids.inputValue).queryView({ id: valueViewId });
+						if ($viewConditionValue && $viewConditionValue.getValue)
+							value = $viewConditionValue.getValue();
 
 
-					config_settings.filters.push({
-						fieldId: fieldId,
-						operator: operator,
-						inputValue: value
+						config_settings.filters.push({
+							fieldId: fieldId,
+							operator: operator,
+							inputValue: value
+						});
+
 					});
-
-
-				});
+				}
 
 				return config_settings;
 
@@ -631,6 +664,10 @@ export default class RowFilter extends OP.Component {
 						$viewConditionValue.define('value', f.inputValue);
 						$viewConditionValue.refresh();
 					}
+
+					var field = _Fields.filter(col => col.id == f.fieldId)[0];
+					if (field && field.key == 'user')
+						_logic.onChangeUser(f.operator, $viewCond);
 
 				});
 
@@ -833,6 +870,12 @@ export default class RowFilter extends OP.Component {
 					value = [value];
 
 				switch (operator) {
+					case "is current user":
+						result = value == OP.User.username();
+						break;
+					case "is not current user":
+						result = value != OP.User.username();
+						break;
 					case "equals":
 						result = value.indexOf(compareValue) > -1;
 						break;

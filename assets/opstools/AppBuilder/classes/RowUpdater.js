@@ -227,6 +227,15 @@ export default class RowUpdater extends OP.Component {
 					formFieldComponent = abView.component(App),
 					inputView = formFieldComponent.ui;
 
+// WORKAROUND: add '[Current User]' option to the user data field
+if (fieldInfo.key == 'user') {
+	inputView.options = inputView.options || [];
+	inputView.options.unshift({
+		id: 'ab-current-user',
+		value: '*[Current User]'
+	});
+}
+
 				// Change component to display value
 				$viewCond.removeView($viewCond.getChildViews()[3]);
 				$viewCond.addView(inputView, 3);
@@ -249,33 +258,34 @@ export default class RowUpdater extends OP.Component {
 				var result = [];
 
 				var $viewForm = $$(ids.updateForm);
+				if ($viewForm) {
+					$viewForm.getChildViews().forEach($viewCond => {
 
-				$viewForm.getChildViews().forEach($viewCond => {
+						// Ignore "Add new" button
+						if (!$viewCond || !$viewCond.$$) return;
 
-					// Ignore "Add new" button
-					if (!$viewCond || !$viewCond.$$) return;
+						var $fieldElem = $viewCond.$$(ids.field);
+						if (!$fieldElem) return;
 
-					var $fieldElem = $viewCond.$$(ids.field);
-					if (!$fieldElem) return;
+						var fieldId = $fieldElem.getValue();
+						if (!fieldId) return;
 
-					var fieldId = $fieldElem.getValue();
-					if (!fieldId) return;
+						var $valueElem = $viewCond.getChildViews()[3];
+						if (!$valueElem) return;
 
-					var $valueElem = $viewCond.getChildViews()[3];
-					if (!$valueElem) return;
+						var fieldInfo = _Object.fields(f => f.id == fieldId)[0];
 
-					var fieldInfo = _Object.fields(f => f.id == fieldId)[0];
+						// Get value from data field manager
+						var val = fieldInfo.getValue($valueElem);
 
-					// Get value from data field manager
-					var val = fieldInfo.getValue($valueElem);
+						// Add to output
+						result.push({
+							fieldId: fieldId,
+							value: val
+						});
 
-					// Add to output
-					result.push({
-						fieldId: fieldId,
-						value: val
 					});
-
-				});
+				}
 
 
 				return result;
