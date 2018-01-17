@@ -433,10 +433,10 @@ class ABFieldUser extends ABFieldSelectivity {
 
 			if (this.settings.isMultiple) {
 
-				values[this.columnName] = {
+				values[this.columnName] = [{
 					id: OP.User.username(),
 					text: OP.User.username()
-				};
+				}];
 			}
 			else {
 				values[this.columnName] = OP.User.username();
