@@ -72,9 +72,9 @@ export default class AB_Work_Object extends OP.Component {   //.extend(idBase, f
 			 * @param {ABApplication} application
 			 */
 			applicationLoad: function(application) {
+				App.actions.clearObjectWorkspace();
 				ObjectList.applicationLoad(application);
 				ObjectWorkspace.applicationLoad(application);
-				App.actions.clearObjectWorkspace();
 			},
 
 

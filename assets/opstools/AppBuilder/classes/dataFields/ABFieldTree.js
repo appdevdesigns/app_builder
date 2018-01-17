@@ -221,7 +221,6 @@ class ABFieldTree extends ABField {
       
       super.fromValues(values);
       
-      console.log(this.settings);
       // translate options list
       if (this.settings.options && this.settings.options.length > 0) {
           this.settings.options.forEach(function (opt) {
@@ -328,7 +327,7 @@ class ABFieldTree extends ABField {
 
         // field.setBadge(node, App, row);
         
-        if (typeof width != "undefined") {
+        if (width) {
           return '<div style="margin-left: ' + width + 'px;" class="list-data-values'+formClass+'">'+nodeHTML+'</div>';
         } else {
           return '<div class="list-data-values'+formClass+'">'+nodeHTML+'</div>';

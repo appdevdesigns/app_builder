@@ -381,10 +381,11 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 .selectivity-multiple-selected-item, .selectivity-single-selected-item {
 	background: #3498db !important;
 	padding: 0 10px;
-	border-radius: 15px;
+	border-radius: 15px !important;
 	color: #FFF !important;
 	line-height: 29px;
 	display: inline-block;
+	height: unset !important;
 	/*max-width: 100px !important;*/
 }
 .selectivity-multiple-input, input[type=text].selectivity-multiple-input {
@@ -820,6 +821,10 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 }
 
 /* Grid component */
+.textCell .webix_cell {
+	padding: 7px;
+	line-height: 18px !important;
+}
 .ab-page-grid-column-item .column-checkbox {
 	display: inline-block;
 	position: relative;
@@ -991,8 +996,12 @@ div.webix_item_tab {
 .customField .connect-data-values, .customField .list-data-values {
 	display: inline-block;
 }*/
+.ab-image-holder {
+	overflow: visible;
+}
 .ab-image-holder .webix_template {
 	position: relative;
+	height: inherit;
 }
 .webix_template {
 	line-height: 33px;
@@ -1000,16 +1009,17 @@ div.webix_item_tab {
 }
 .ab-delete-photo {
 	position: absolute; 
-	top: 5px; 
-	right: 5px;
+	top: -5px; 
+	right: -5px;
 	background: red; 
 	color: white; 
 	opacity: 1;
 	line-height: 25px;
-	opacity: 0.8;
+	opacity: 1;
+	border-radius: 100%;
 }
 .ab-delete-photo i {
-	padding: 5px;
+	padding: 5px 6px;
 }
 .ab-delete-photo:focus {
 	color: white;
@@ -1106,8 +1116,10 @@ a.ab-delete-photo:hover {
 .webix_multiview .webix_layout_space .webix_layout_space {
 	background: #FFF;
 }
-.ab-image-data-field {
+.webix_cell .ab-image-data-field {
 	padding: 10px 0;
+}
+.ab-image-data-field {
 	width: 100%;
 	height: 100%;
 }
@@ -1137,7 +1149,7 @@ a.ab-delete-photo:hover {
   z-index: 999;
   height: 2em;
   width: 2em;
-  overflow: show;
+  overflow: visible;
   margin: auto;
   top: 0;
   left: 0;
@@ -1253,4 +1265,11 @@ a.ab-delete-photo:hover {
 .ab-rich-text fieldset {
 	padding-left: 0px;
 	padding-right: 0px;
+}
+.stop-scrolling {
+  height: 100%;
+  overflow: hidden;
+}
+.customFieldCls {
+	overflow: visible;
 }

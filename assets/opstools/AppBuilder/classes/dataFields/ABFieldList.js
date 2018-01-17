@@ -549,9 +549,13 @@ class ABFieldList extends ABFieldSelectivity {
 					}
 				});
 				if (field.settings.hasColors && obj[field.columnName]) {
-					return '<span class="selectivity-multiple-selected-item rendered'+formClass+'" style="background-color:'+myHex+' !important;">'+myText+'</span>';
+					return '<span class="selectivity-single-selected-item rendered'+formClass+'" style="background-color:'+myHex+' !important;">'+myText+' <a class="selectivity-single-selected-item-remove"><i class="fa fa-remove"></i></a></span>';
 				} else {
-					return myText;
+					if (myText != placeHolder) {
+						return myText + ' <a class="selectivity-single-selected-item-remove" style="color: #333;"><i class="fa fa-remove"></i></a>';
+					} else {
+						return myText;
+					}
 				}		
 			}
 
@@ -641,22 +645,27 @@ class ABFieldList extends ABFieldSelectivity {
 			}
 
 		} else {
-			// var hasRendered = node.querySelector('.rendered');
-            // 
-			// if (hasRendered == null) {
-			// 	if (this.settings.hasColors) {
-			// 		var myHex = "#666666";
-			// 		this.settings.options.forEach(function(h) {
-			// 			if (h.text == node.innerHTML)
-			// 				myHex = h.hex;
-			// 		});
-			// 		if (node.innerHTML != L('ab.dataField.list.placeholder', '*Select item')) {
-			// 			node.innerHTML = '<span class="selectivity-multiple-selected-item rendered" style="background-color:'+myHex+' !important;">'+node.innerHTML+'</span>';
-			// 		} else {
-			// 			node.innerHTML = "<span style='color: #CCC; padding: 0 5px;'>"+node.innerHTML+"</span>";
-			// 		}
-			// 	}				
-			// }
+			var clearButton = node.querySelector('.selectivity-single-selected-item-remove');
+			if (clearButton) {
+				clearButton.addEventListener("click", (e) => {
+					e.stopPropagation();
+					var values = {};
+					values[this.columnName] = "";
+					this.object.model().update(row.id, values)
+					.then(() => {
+						// update the client side data object as well so other data changes won't cause this save to be reverted
+						if ($$(node) && $$(node).updateItem)
+							$$(node).updateItem(row.id, values);
+					})
+					.catch((err) => {
+
+						node.classList.add('webix_invalid');
+						node.classList.add('webix_invalid_cell');
+
+						OP.Error.log('Error updating our entry.', { error: err, row: row, values: "" });
+					});
+				});
+			}
 		}
 
 	}

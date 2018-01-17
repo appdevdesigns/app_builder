@@ -135,9 +135,9 @@ export default class AB_Work_Interface_Workspace extends OP.Component {
             
 
             /**
-             * @function clearObjectWorkspace()
+             * @function clearInterfaceWorkspace()
              *
-             * Clear the object workspace.
+             * Clear the interface workspace.
              */
             clearInterfaceWorkspace:function(){
 
