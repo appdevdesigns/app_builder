@@ -328,9 +328,13 @@ OP.Dialog.Alert({
 
 
 	// return the grid column header definition for this instance of ABFieldImage
-	columnHeader (isObjectWorkspace) {
+	columnHeader (isObjectWorkspace, newWidth, editable) {
 		var config = super.columnHeader(isObjectWorkspace);
 		var field = this;
+		var dropWidth = 0;
+		if (newWidth) {
+			dropWidth = newWidth;
+		}
 
 		config.editor = false;  // 'text';  // '[edit_type]'   for your unique situation
 		// config.sort   = 'string' // '[sort_type]'   for your unique situation
@@ -347,10 +351,10 @@ OP.Dialog.Alert({
 		config.template = (obj) => {
 
 			var imgDiv = [
-				'<div id="#id#" class="ab-image-data-field">',
+				'<div id="#id#" class="ab-image-data-field" style="float: left; width: '+width+'; height: '+height+';">',
 				'<div class="webix_view ab-image-holder" style="width: '+width+'; height: '+height+';">',
 				'<div class="webix_template">',
-				this.imageTemplate(obj),
+				this.imageTemplate(obj, editable),
 				'</div>',
 				'</div>',
 				'</div>'
@@ -415,7 +419,7 @@ OP.Dialog.Alert({
 				id: ids.container,
 				container: idBase,
 				
-				template:this.imageTemplate(row),
+				template:this.imageTemplate(row, editable),
 
 				borderless:true,
 				height: imgHeight,
@@ -483,7 +487,13 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 							this.object.model().update(row.id, values)
 							.then(()=>{
 								// update the client side data object as well so other data changes won't cause this save to be reverted
-								$$(node).updateItem(row.id, values);
+								if ($$(node) && $$(node).getItem(row.id)) {
+									$$(node).updateItem(row.id, values);
+								} else {
+									// if you scroll the table the connection to the datatable is lost so we need to find it again
+									var dataTable = document.querySelector(".webix_dtable");
+									$$(dataTable).updateItem(row.id, values);
+								}
 							})
 							.catch((err)=>{
 
@@ -614,12 +624,15 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 	}
 
 
-	imageTemplate(obj) {
+	imageTemplate(obj, editable) {
 
 		// deault view is icon:
 		var iconDisplay = '';
+		if (editable == false) {
+			iconDisplay = "display: none;";
+		}
 		var imageDisplay = 'display:none;';
-		var imageURL    = ''
+		var imageURL = ''
 		
 		// if we have a value for this field, then switch to image:
 		var value = obj[this.columnName];
@@ -630,7 +643,7 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 		}
 
 		return [
-			'<div class="image-data-field-icon" style="text-align: center; height: 100%; position: relative; '+iconDisplay+'"><i class="fa fa-picture-o fa-2x" style="opacity: 0.6; position: absolute; top: 50%; margin-top: -15px; right: 50%; margin-right: -10px;"></i></div>',
+			'<div class="image-data-field-icon" style="text-align: center; height: inherit; display: table-cell; vertical-align: middle; border: 2px dotted #CCC; border-radius: 10px; font-size: 11px; line-height: 13px; padding: 0 8px; '+iconDisplay+'"><i class="fa fa-picture-o fa-2x" style="opacity: 0.6; font-size: 32px; margin-bottom: 5px;"></i><br/>Drag and drop or click here</div>',
 			'<div class="image-data-field-image" style="'+imageDisplay+' width:100%; height:100%; background-repeat: no-repeat; background-position: center center; background-size: cover; '+imageURL+'"></div>',
 			'<a style="'+imageDisplay+' visibility:hidden;" class="ab-delete-photo" href="javascript:void(0);"><i class="fa fa-times delete-image"></i></a>'
 		].join('');
@@ -661,13 +674,15 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 	}
 	
 	setValue(item, rowData) {
-		var domNode = item.$view;
-		if (domNode.querySelector('.image-data-field-icon')) {
-			domNode.querySelector('.image-data-field-icon').style.display = 'none';
-			var image = domNode.querySelector('.image-data-field-image');
-			image.style.display = '';
-			image.style.backgroundImage = "url('/opsportal/image/" + this.object.application.name+"/"+rowData+"')";
-			image.setAttribute('image-uuid', rowData[this.columnName] );
+		if (typeof rowData == "string") {
+			var domNode = item.$view;
+			if (domNode.querySelector('.image-data-field-icon')) {
+				domNode.querySelector('.image-data-field-icon').style.display = 'none';
+				var image = domNode.querySelector('.image-data-field-image');
+				image.style.display = '';
+				image.style.backgroundImage = "url('/opsportal/image/" + this.object.application.name+"/"+rowData+"')";
+				image.setAttribute('image-uuid', rowData );
+			}
 		}
 	}
 	

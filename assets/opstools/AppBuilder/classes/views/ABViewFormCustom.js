@@ -153,7 +153,7 @@ export default class ABViewFormCustom extends ABViewFormField {
 
 		component.ui.id = ids.component;
 		component.ui.view = "template";
-		component.ui.css = "webix_el_box";
+		component.ui.css = "customFieldCls";
 
 		if (settings.showLabel == true && settings.labelPosition == 'top') {
 			component.ui.height = 80;
