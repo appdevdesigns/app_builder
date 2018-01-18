@@ -219,7 +219,7 @@ export default class ABViewFormTextbox extends ABViewFormField {
 		}
 
 
-		return component;
+		return webix.copy(component);
 	}
 
 
