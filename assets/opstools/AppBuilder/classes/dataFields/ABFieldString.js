@@ -315,6 +315,26 @@ class ABFieldString extends ABField {
 	}
 
 
+	/**
+	 * @method setValue
+	 * this function uses for form component and mass update popup
+	 * to get value of fields that apply custom editor
+	 * 
+	 * @param {Object} item - Webix element
+	 * @param {Object} rowData - data of row
+	 * 
+	 * @return {Object}
+	 */
+	setValue(item, rowData) {
+		
+		if (!item) return;
+
+		var val = rowData[this.columnName] || "";
+
+		return item.setValue(val);
+	};
+		
+
 }
 
 

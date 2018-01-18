@@ -196,7 +196,8 @@ export default class ABViewFormTextbox extends ABViewFormField {
 				component.ui.height = 200;
 				component.ui.css = "ab-rich-text";
 				component.ui.body = {
-					view: 'tinymce-editor'
+					view: 'tinymce-editor',
+					value: ""
 				};
 				break;
 		}
@@ -206,14 +207,14 @@ export default class ABViewFormTextbox extends ABViewFormField {
 
 			// WORKAROUND : to fix breaks TinyMCE when switch pages/tabs
 			// https://forum.webix.com/discussion/6772/switching-tabs-breaks-tinymce
-			// if (this.settings.type && this.settings.type == 'rich') {
-			// 	if ($$(component.ui.id)) {
+			if (this.settings.type && this.settings.type == 'rich') {
+				if ($$(component.ui.id)) {
 
-			// 		// recreate rich editor
-			// 		webix.ui(component.ui, $$(component.ui.id));
+					// recreate rich editor
+					webix.ui(component.ui, $$(component.ui.id));
 
-			// 	}
-			// }
+				}
+			}
 
 		}
 

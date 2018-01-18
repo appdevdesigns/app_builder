@@ -1010,6 +1010,7 @@ export default class ABViewForm extends ABViewContainer {
 
 		// form validate
 		if (formView && formView.validate()) {
+			formView.clearValidation();
 
 			// get ABViewDataCollection
 			var dc = this.dataCollection();
