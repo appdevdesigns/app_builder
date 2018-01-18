@@ -92,7 +92,7 @@ var ids = {
 };
 
 var delimiterList = [
-	{ id: 'comma', value: "Comma", sign: "," },
+	{ id: 'comma', value: "Comma", sign: ", " },
 	{ id: 'slash', value: "Slash", sign: "/" },
 	{ id: 'space', value: "Space", sign: " " },
 	{ id: 'dash', value: "Dash", sign: "-" },
@@ -133,7 +133,7 @@ function getDateFormat(setting) {
 			.replace('{hour}', setting.hourFormat)
 			.replace('{delimiter}', getDelimiterSign(setting.timeDelimiter))
 			.replace('{minute}', '%i')
-			.replace('{period}', setting.periodFormat != 'none' ? setting.periodFormat : '')
+			.replace('{period}', setting.periodFormat != 'none' ? ' '+setting.periodFormat : '')
 		);
 	}
 
@@ -147,6 +147,21 @@ function getDateDisplay(dateData, settings) {
 }
 
 function dateDisplayRefresh() {
+
+	if ($$(ids.includeTime).getValue()) {
+		//if user chooses an hour format for time that is 1-12 we need to force a "Period" format
+		//a lowercase letter signifies that it will be lowercase so we just need to look for lowercase letters
+		if ( /[a-z]/.test($$(ids.hourFormat).getValue()) ) {
+			//only set if one hasn't been set already
+			if ($$(ids.periodFormat).getValue() == "none") {
+				$$(ids.periodFormat).setValue("%a"); // set to the first one
+			}
+		} else {
+			//if user chooses an hour format for time that is 0-23 we need to remove the "Period" format
+			$$(ids.periodFormat).setValue("none"); 
+		}
+	}
+	
 	var dateFormat = getDateFormat({
 		dayOrder: $$(ids.dayOrder).getValue(),
 		monthOrder: $$(ids.monthOrder).getValue(),
@@ -458,8 +473,8 @@ var ABFieldDateComponent = new ABFieldComponent({
 									labelWidth: 100,
 									value: '%h',
 									options: [
-										{ id: '%h', value: "00 01 ... 10 11" },
-										{ id: '%g', value: "0 1 ... 10 11" },
+										{ id: '%h', value: "01 02 ... 11 12" },
+										{ id: '%g', value: "1 2 ... 11 12" },
 										{ id: '%H', value: "00 01 ... 22 23" },
 										{ id: '%G', value: "0 1 ... 22 23" }
 									],
@@ -1088,7 +1103,7 @@ class ABFieldDate extends ABField {
 				.replace('{hour}', setting.hourFormat)
 				.replace('{delimiter}', getDelimiterSign(setting.timeDelimiter))
 				.replace('{minute}', '%i')
-				.replace('{period}', setting.periodFormat != 'none' ? setting.periodFormat : '')
+				.replace('{period}', setting.periodFormat != 'none' ? ' '+setting.periodFormat : '')
 			);
 		}
 
