@@ -795,22 +795,22 @@ export default class RowFilter extends OP.Component {
 				compareValue = Number(compareValue);
 
 				switch (operator) {
-					case labels.filter_fields.equalCondition:
+					case ":":
 						result = value == compareValue;
 						break;
-					case labels.filter_fields.notEqualCondition:
+					case "≠":
 						result = value != compareValue;
 						break;
-					case labels.filter_fields.lessThanCondition:
+					case "<":
 						result = value < compareValue;
 						break;
-					case labels.filter_fields.moreThanCondition:
+					case ">":
 						result = value > compareValue;
 						break;
-					case labels.filter_fields.lessThanOrEqualCondition:
+					case "≤":
 						result = value <= compareValue;
 						break;
-					case labels.filter_fields.moreThanOrEqualCondition:
+					case "≥":
 						result = value >= compareValue;
 						break;
 				}
