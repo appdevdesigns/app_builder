@@ -266,6 +266,15 @@ class ABFieldLongText extends ABField {
 	 * @return {array} 
 	 */
 	isValidData(data, validator) {
+
+		if (data && data[this.columnName]) {
+			var max_length = 5000;
+			
+			if (data[this.columnName].length > max_length) {
+				validator.addError(this.columnName, 'should NOT be longer than {max} characters'.replace('{max}', max_length));
+			}
+		}
+
 	}
 
 
