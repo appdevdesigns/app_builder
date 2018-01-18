@@ -170,16 +170,20 @@ steal(
 							if (self.rootPage == null)
 								self.rootPage = self.data.application.urlResolve(self.options.page);
 
+							webix.codebase = "/js/webix/extras/";
+
 							self.initPage();
 
 							// webix.ready(function () {
-							self.showPage();
+							// self.showPage();
 							// });
+
 							webix.ready(function () {
 
-								console.log("showing page");
-								self.showPage();
-								self.resize(self.height || 600);
+								webix.require("tinymce/tinymce.min.js" , function() {
+									self.showPage();
+									self.resize(self.height || 600);
+								});
 
 							});
 

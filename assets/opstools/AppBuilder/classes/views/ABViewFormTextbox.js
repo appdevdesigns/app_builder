@@ -202,27 +202,18 @@ export default class ABViewFormTextbox extends ABViewFormField {
 		}
 
 
-		// make sure each of our child views get .init() called
-		component.init = (options) => {
+		component.onShow = () => {
 
-
-			// // WORKAROUND : to fix breaks TinyMCE when switch pages/tabs
-			// // https://forum.webix.com/discussion/6772/switching-tabs-breaks-tinymce
+			// WORKAROUND : to fix breaks TinyMCE when switch pages/tabs
+			// https://forum.webix.com/discussion/6772/switching-tabs-breaks-tinymce
 			// if (this.settings.type && this.settings.type == 'rich') {
 			// 	if ($$(component.ui.id)) {
 
 			// 		// recreate rich editor
-			// 		webix.ui({
-			// 			view: 'forminput',
-			// 			height: 200,
-			// 			body: {
-			// 				view: 'tinymce-editor'
-			// 			}
-			// 		}, $$(component.ui.id));
+			// 		webix.ui(component.ui, $$(component.ui.id));
 
 			// 	}
 			// }
-
 
 		}
 
