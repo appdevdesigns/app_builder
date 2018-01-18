@@ -16,7 +16,7 @@ function L(key, altText) {
 
 
 var ABViewTabPropertyComponentDefaults = {
-	height: 300
+	height: 0
 }
 
 
