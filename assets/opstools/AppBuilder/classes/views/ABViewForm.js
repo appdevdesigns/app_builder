@@ -1111,7 +1111,11 @@ export default class ABViewForm extends ABViewContainer {
 
 			}
 			else {
-				// TODO : error message
+
+				// error message
+				validator.errors.forEach(err => {
+					formView.markInvalid(err.name, err.message);
+				});
 
 				return Promise.resolve();
 			}
