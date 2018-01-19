@@ -10,6 +10,7 @@ import ABViewContainer from "./ABViewContainer"
 import ABViewFormCustom from "./ABViewFormCustom"
 import ABViewFormDatepicker from "./ABViewFormDatepicker"
 import ABViewFormField from "./ABViewFormField"
+import ABViewFormTextbox from "./ABViewFormTextbox"
 import ABViewManager from "../ABViewManager"
 import ABPropertyComponent from "../ABPropertyComponent"
 
@@ -765,7 +766,7 @@ export default class ABViewForm extends ABViewContainer {
 							var values = {};
 							field.defaultValue(values);
 
-							if (values[colName] != null && $$(comp.ui.id).setValue)
+							if (values[colName] != null && $$(comp.ui.id) && $$(comp.ui.id).setValue)
 								$$(comp.ui.id).setValue(values[colName]);
 						}
 					});
@@ -826,7 +827,11 @@ export default class ABViewForm extends ABViewContainer {
 
 			var Form = $$(ids.component);
 
-			var customFields = this.fieldComponents((comp) => comp instanceof ABViewFormCustom);
+			var customFields = this.fieldComponents((comp) => {
+				return (comp instanceof ABViewFormCustom) || 
+						// rich text
+						((comp instanceof ABViewFormTextbox) && comp.settings.type == 'rich')
+			});
 			customFields.forEach((f) => {
 
 				var field = f.field();
@@ -834,8 +839,6 @@ export default class ABViewForm extends ABViewContainer {
 
 				var component = this.viewComponents[f.id];
 				if (!component) return;
-
-				var colName = field.columnName;
 
 				// call .customDisplay again here
 				component.onShow();
@@ -1007,6 +1010,7 @@ export default class ABViewForm extends ABViewContainer {
 
 		// form validate
 		if (formView && formView.validate()) {
+			formView.clearValidation();
 
 			// get ABViewDataCollection
 			var dc = this.dataCollection();
@@ -1108,7 +1112,11 @@ export default class ABViewForm extends ABViewContainer {
 
 			}
 			else {
-				// TODO : error message
+
+				// error message
+				validator.errors.forEach(err => {
+					formView.markInvalid(err.name, err.message);
+				});
 
 				return Promise.resolve();
 			}

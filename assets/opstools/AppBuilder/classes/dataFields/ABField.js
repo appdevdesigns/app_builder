@@ -484,6 +484,8 @@ export default class ABField extends ABFieldBase {
 	 */
 	setValue(item, rowData) {
 
+		if (!item) return;
+
 		var val = rowData[this.columnName];
 
 		return item.setValue(val);

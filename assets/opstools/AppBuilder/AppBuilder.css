@@ -1265,6 +1265,12 @@ a.ab-delete-photo:hover {
 .ab-rich-text fieldset {
 	padding-left: 0px;
 	padding-right: 0px;
+    background: none;
+}
+.ab-rich-text legend {
+	background: none;
+	font-weight: bold;
+	font-size: 15px;
 }
 .stop-scrolling {
   height: 100%;

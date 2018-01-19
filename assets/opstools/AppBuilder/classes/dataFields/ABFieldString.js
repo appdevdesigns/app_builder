@@ -249,6 +249,16 @@ class ABFieldString extends ABField {
 	 * @return {array} 
 	 */
 	isValidData(data, validator) {
+
+		if (data && data[this.columnName]) {
+			var max_length = 255;
+			
+			if (data[this.columnName].length > max_length) {
+				validator.addError(this.columnName, 'should NOT be longer than {max} characters'.replace('{max}', max_length));
+			}
+		}
+
+		
 	}
 
 
@@ -304,6 +314,26 @@ class ABFieldString extends ABField {
 		return detailComponentSetting;
 	}
 
+
+	/**
+	 * @method setValue
+	 * this function uses for form component and mass update popup
+	 * to get value of fields that apply custom editor
+	 * 
+	 * @param {Object} item - Webix element
+	 * @param {Object} rowData - data of row
+	 * 
+	 * @return {Object}
+	 */
+	setValue(item, rowData) {
+		
+		if (!item) return;
+
+		var val = rowData[this.columnName] || "";
+
+		return item.setValue(val);
+	};
+		
 
 }
 
