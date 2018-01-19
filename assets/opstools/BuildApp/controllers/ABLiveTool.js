@@ -117,11 +117,17 @@ steal(
 									areaKey = areaKey.toLowerCase().replace(/'/g, '').replace(/_/g, '-');
 
 									var callback = function (message, data) {
-										if (!self.activated && data.area.toLowerCase() == areaKey) {
-											self.activated = true;
 
-											self.startPage();
+										if (data.area.toLowerCase() == areaKey) {
 
+											if (!self.activated) {
+												self.activated = true;
+
+												self.startPage();
+											}
+											else {
+												self.showPage();
+											}
 										}
 									};
 
