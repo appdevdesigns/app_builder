@@ -594,7 +594,7 @@ export default class ABViewForm extends ABViewContainer {
 		if (selectedDc) {
 			PopupDisplayRule.objectLoad(selectedDc.datasource);
 			PopupRecordRule.objectLoad(selectedDc.datasource);
-			PopupSubmitRule.objectLoad(selectedDc.datasource);
+			PopupSubmitRule.objectLoad(selectedDc.datasource, view);
 		}
 
 	}
