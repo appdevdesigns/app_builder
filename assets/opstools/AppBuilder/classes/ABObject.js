@@ -180,7 +180,8 @@ export default class ABObject extends ABObjectBase {
 						this.migrateCreate()
 						.then(()=>{
 							resolve(this);
-						}, reject);
+						})
+						.catch(reject);
 
 					} else {
 						resolve(this);

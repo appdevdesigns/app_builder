@@ -8,7 +8,6 @@ var _restURLs = {
 	destroy: 'DELETE #url#/{id}',
 }
 
-
 var _Models = {};
 
 
@@ -43,9 +42,9 @@ class OPModel {
 
 				var service = this.service('findAll');
 
-				AD.comm.service[service.verb]({ url:service.url, params: cond })
-				.fail(reject)
-				.done((data) => {
+
+				OP.Comm.Service[service.verb]({ url:service.url, params:cond })
+				.then((data)=>{
 
 					data = data.data || data;
 
@@ -93,8 +92,9 @@ class OPModel {
 
 
 					resolve(dc);
+				})
+				.catch(reject);
 
-				});
 			}
 		);
 	}
@@ -117,13 +117,14 @@ class OPModel {
                 }
                 service.url = nURI;
 
-				AD.comm.service[service.verb]({ url:service.url, params: cond })
-				.fail(reject)
-				.done(function(item){
+                OP.Comm.Service[service.verb]({ url:service.url, params: cond })
+                .then((item)=>{
 					if (item.translate) item.translate();
 
 					resolve(item.attr?item.attr():item);
-				});
+                })
+                .catch(reject)
+
 			}
 		);
 	}
@@ -134,13 +135,14 @@ class OPModel {
 
 				var service = this.service('create');
 
-				AD.comm.service[service.verb]({ url:service.url, params: attr })
-				.fail(reject)
-				.done(function(item){
+				OP.Comm.Service[service.verb]({ url:service.url, params: attr })
+				.then((item)=>{
 					if (item.translate) item.translate();
 
 					resolve(item.attr?item.attr():item);
-				});
+				})
+				.catch(reject)
+
 			}
 		);
 	}
@@ -151,9 +153,11 @@ class OPModel {
 
 				var service = this.service('update', id);
 
-				AD.comm.service[service.verb]({ url:service.url, params: attr })
-				.fail(reject)
-				.done(resolve);
+
+				OP.Comm.Service[service.verb]({ url:service.url, params: attr })
+				.then(resolve)
+				.catch(reject);
+
 			}
 		);
 	}
@@ -164,9 +168,10 @@ class OPModel {
 
 				var service = this.service('destroy', id);
 
-				AD.comm.service[service.verb]({ url:service.url, params: {} })
-				.fail(reject)
-				.done(resolve);
+				OP.Comm.Service[service.verb]({ url:service.url, params: {} })
+				.then(resolve)
+				.catch(reject);
+
 			}
 		);
 	}
@@ -189,11 +194,9 @@ class OPModel {
 	}
 }
 
-
 export default {
 
 	extend:function(key, staticData, instance) {
-
 
 		//
 		// Create the AD.Model from this definition
@@ -220,124 +223,119 @@ export default {
 		var modelName = objectName(key);
 
 		curr[modelName] = new OPModel(key, staticData, instance);
-
 	},
 
 	get: function(key) {
+
 		return findObject(_Models, key);
 	}
 }
 
 
 
+/*
+ * @function findObject
+ *
+ * Return the object specified by the given name space:
+ *
+ * @param {object} baseObj  The base object to search on
+ *                          usually AD.models or AD.models_base
+ *
+ * @param {string} name   The provided namespace to parse and search for
+ *                        The name can be spaced using '.' 
+ *                        eg.  'coolTool.Resource1' => AD.models.coolTool.Resource1
+ *                             'coolerApp.tool1.Resource1' => AD.models.coolerApp.tool1.Resource1
+ *
+ * @returns {object}  the object resolved by the namespaced base 
+ *                    eg:  findObject(AD.models, 'Resource') => return AD.models.Resource
+ *                         findObject(AD.models, 'coolTool.Resource1') => AD.models.coolTool.Resource1
+ *
+ *                    if an object is not found, null is returned.
+ */
+var findObject = function (baseObj, name) {
 
+    // first lets figure out our namespacing:
+    var nameList = name.split('.');
 
+    // for each remaining name segments, make sure we have a 
+    // namespace container for it:
+    var curr = baseObj;
+    nameList.forEach(function (name) {
 
-
-
-            /*
-             * @function findObject
-             *
-             * Return the object specified by the given name space:
-             *
-             * @param {object} baseObj  The base object to search on
-             *                          usually AD.models or AD.models_base
-             *
-             * @param {string} name   The provided namespace to parse and search for
-             *                        The name can be spaced using '.' 
-             *                        eg.  'coolTool.Resource1' => AD.models.coolTool.Resource1
-             *                             'coolerApp.tool1.Resource1' => AD.models.coolerApp.tool1.Resource1
-             *
-             * @returns {object}  the object resolved by the namespaced base 
-             *                    eg:  findObject(AD.models, 'Resource') => return AD.models.Resource
-             *                         findObject(AD.models, 'coolTool.Resource1') => AD.models.coolTool.Resource1
-             *
-             *                    if an object is not found, null is returned.
-             */
-            var findObject = function (baseObj, name) {
-
-                // first lets figure out our namespacing:
-                var nameList = name.split('.');
-
-                // for each remaining name segments, make sure we have a 
-                // namespace container for it:
-                var curr = baseObj;
-                nameList.forEach(function (name) {
-
-                    if (curr == null) {
-                        var whoops = true;
-                        console.error('! current name segment is null.  Check your given name to make sure it is properly given: ', name);
-                    }
-                    if (curr) {
-                        if (typeof curr[name] == 'undefined') {
-                            curr = null;
-                        }
-                        if (curr) curr = curr[name];
-                    }
-                })
-
-                return curr;
+        if (curr == null) {
+            var whoops = true;
+            console.error('! current name segment is null.  Check your given name to make sure it is properly given: ', name);
+        }
+        if (curr) {
+            if (typeof curr[name] == 'undefined') {
+                curr = null;
             }
+            if (curr) curr = curr[name];
+        }
+    })
+
+    return curr;
+}
 
 
 
-            /*
-             * @function objectName
-             *
-             * parse the name and return the name of the object we will create.
-             *
-             * @param {string} name   The provided namespace to parse 
-             *                        The name can be spaced using '.' 
-             *
-             * @returns {string}  the name of the model object 
-             *                    eg:  objectName('Resource') => return 'Resource'
-             *                         objectName('coolTool.Resource1') => 'Resource1'
-             */
-            var objectName = function (name) {
+/*
+ * @function objectName
+ *
+ * parse the name and return the name of the object we will create.
+ *
+ * @param {string} name   The provided namespace to parse 
+ *                        The name can be spaced using '.' 
+ *
+ * @returns {string}  the name of the model object 
+ *                    eg:  objectName('Resource') => return 'Resource'
+ *                         objectName('coolTool.Resource1') => 'Resource1'
+ */
+var objectName = function (name) {
 
-                // first lets figure out our namespacing:
-                var nameList = name.split('.');
-                var objName = nameList.pop(); // remove the last one.
+    // first lets figure out our namespacing:
+    var nameList = name.split('.');
+    var objName = nameList.pop(); // remove the last one.
 
-                return objName;
-            }
+    return objName;
+}
 
 
 
-            /*
-             * @function nameSpace
-             *
-             * Make sure the proper name space is created on the given base.
-             *
-             * @param {object} baseObj  The base object to create the namespace on
-             *                          usually AD.models or AD.models_base
-             *
-             * @param {string} name   The provided namespace to parse and create
-             *                        The name can be spaced using '.' 
-             *                        eg.  'coolTool.Resource1' => AD.models.coolTool.Resource1
-             *                             'coolerApp.tool1.Resource1' => AD.models.coolerApp.tool1.Resource1
-             *
-             * @returns {object}  the object that represents the namespaced base 
-             *                    that the Model is to be created on.
-             *                    eg:  nameSpace(AD.models, 'Resource') => return AD.models
-             *                         nameSpace(AD.models, 'coolTool.Resource1') => AD.models.coolTool
-             */
-            var nameSpace = function (baseObj, name) {
+/*
+ * @function nameSpace
+ *
+ * Make sure the proper name space is created on the given base.
+ *
+ * @param {object} baseObj  The base object to create the namespace on
+ *                          usually AD.models or AD.models_base
+ *
+ * @param {string} name   The provided namespace to parse and create
+ *                        The name can be spaced using '.' 
+ *                        eg.  'coolTool.Resource1' => AD.models.coolTool.Resource1
+ *                             'coolerApp.tool1.Resource1' => AD.models.coolerApp.tool1.Resource1
+ *
+ * @returns {object}  the object that represents the namespaced base 
+ *                    that the Model is to be created on.
+ *                    eg:  nameSpace(AD.models, 'Resource') => return AD.models
+ *                         nameSpace(AD.models, 'coolTool.Resource1') => AD.models.coolTool
+ */
+var nameSpace = function (baseObj, name) {
 
-                // first lets figure out our namespacing:
-                var nameList = name.split('.');
-                var controlName = nameList.pop(); // remove the last one.
+    // first lets figure out our namespacing:
+    var nameList = name.split('.');
+    var controlName = nameList.pop(); // remove the last one.
 
-                // for each remaining name segments, make sure we have a 
-                // namespace container for it:
-                var curr = baseObj;
-                nameList.forEach(function (name) {
+    // for each remaining name segments, make sure we have a 
+    // namespace container for it:
+    var curr = baseObj;
+    nameList.forEach(function (name) {
 
-                    if (typeof curr[name] == 'undefined') {
-                        curr[name] = {};
-                    }
-                    curr = curr[name];
-                })
+        if (typeof curr[name] == 'undefined') {
+            curr[name] = {};
+        }
+        curr = curr[name];
+    })
 
-                return curr;
-            }
+    return curr;
+}

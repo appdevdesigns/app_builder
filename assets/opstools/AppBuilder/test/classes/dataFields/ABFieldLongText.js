@@ -61,8 +61,8 @@ describe("ABFieldLongText unit tests", () => {
 
 		it('.columnHeader: should return column config', () => {
 			var columnConfig = longTextField.columnHeader();
-			assert.equal('text', columnConfig.editor);
-			assert.equal('string', columnConfig.sort);
+			assert.equal('text', columnConfig.editor, ': .editor should == text');
+			assert.isUndefined(columnConfig.sort, ': .sort should not be defined');
 		});
 
 		it('.defaultValue: should follow empty textDefault setting', () => {

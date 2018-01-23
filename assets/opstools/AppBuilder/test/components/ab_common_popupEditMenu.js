@@ -17,6 +17,7 @@ describe('ab_common_popupEditMenu component', () => {
 		mockApp = ab._app;
 
 		target = new ABCommonPopup(mockApp);
+
 	});
 
 	/*

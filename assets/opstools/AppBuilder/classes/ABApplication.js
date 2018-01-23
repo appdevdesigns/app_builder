@@ -36,10 +36,12 @@ export default class ABApplication extends ABApplicationBase {
 		// multilingual fields: label, description
 		OP.Multilingual.translate(this, this.json, ABApplication.fieldsMultilingual());
 
-
 		// instance keeps a link to our Model for .save() and .destroy();
 		this.Model = OP.Model.get('opstools.BuildApp.ABApplication');
-		this.Model.Models(ABApplication);
+
+		// [fix] prevent crash if no model was returned
+		// NOTE: this is actually a pretty big error!  What should we do here?
+		if (this.Model) this.Model.Models(ABApplication);
 	}
 
 
@@ -309,18 +311,12 @@ export default class ABApplication extends ABApplicationBase {
 	 * @return {Promise}
 	 */
 	assignPermissions(permItems) {
-		return new Promise(
-			(resolve, reject) => {
-				AD.comm.service.put({
-					url: '/app_builder/' + this.id + '/role/assign',
-					data: {
-						roles: permItems
-					}
-				})
-					.fail(reject)
-					.done(resolve);
+		return OP.Comm.Service.put({
+			url: '/app_builder/' + this.id + '/role/assign',
+			data: {
+				roles: permItems
 			}
-		)
+		});
 	}
 
 
@@ -333,15 +329,7 @@ export default class ABApplication extends ABApplicationBase {
 	 * @return {Promise} 	resolve(list) : list {array} Role assignments
 	 */
 	getPermissions() {
-
-		return new Promise(
-			(resolve, reject) => {
-
-				AD.comm.service.get({ url: '/app_builder/' + this.id + '/role' })
-					.fail(reject)
-					.done(resolve)
-			}
-		);
+		return OP.Comm.Service.get({ url: '/app_builder/' + this.id + '/role' });
 	}
 
 
@@ -353,17 +341,10 @@ export default class ABApplication extends ABApplicationBase {
 	 * @return {Promise}
 	 */
 	createPermission() {
-		return new Promise(
-			(resolve, reject) => {
 
-				// TODO: need to take created role and store as : .json.applicationRole = role.id
+		// TODO: need to take created role and store as : .json.applicationRole = role.id
 
-				AD.comm.service.post({ url: '/app_builder/' + this.id + '/role' })
-					.fail(reject)
-					.done(resolve)
-
-			}
-		);
+		return OP.Comm.Service.post({ url: '/app_builder/' + this.id + '/role' });
 	}
 
 
@@ -376,16 +357,10 @@ export default class ABApplication extends ABApplicationBase {
 	 * @return {Promise}
 	 */
 	deletePermission() {
-		return new Promise(
-			(resolve, reject) => {
 
-				// TODO: need to remove created role from : .json.applicationRole
-				AD.comm.service.delete({ url: '/app_builder/' + this.id + '/role' })
-					.fail(reject)
-					.done(resolve)
-
-			}
-		);
+		// TODO: need to remove created role from : .json.applicationRole
+		
+		return OP.Comm.Service.delete({ url: '/app_builder/' + this.id + '/role' });
 	}
 
 
@@ -448,6 +423,9 @@ export default class ABApplication extends ABApplicationBase {
 		return this.Model.staticData.objectSave(this.id, object.toObj())
 			.then(() => {
 				// TODO : Should update _AllApplications in 
+			})
+			.catch(()=>{
+				console.error('!!! error with .ABApplication.objectSave()');
 			});
 	}
 

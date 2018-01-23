@@ -538,6 +538,10 @@ class ABFieldConnect extends ABFieldSelectivity {
 	 *					unique id references.
 	 * @param {HtmlDOM} node  the HTML Dom object for this field's display.
 	 */
+
+//// NOTE: why do we pass in row, App, and node?  is this something we do in our external components?
+////       are these values present when this Object is instanciated? Can't we just pass these into the
+////       object constructor and have it internally track these things?
 	customEdit(row, App, node) {
 		if (this.settings.linkType == "many") {
 			var domNode = node.querySelector('.connect-data-values');

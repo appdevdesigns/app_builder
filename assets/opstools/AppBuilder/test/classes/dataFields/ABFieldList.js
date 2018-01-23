@@ -20,10 +20,16 @@ describe("ABFieldList unit tests", () => {
 
 	var columnName = 'TEST_LIST_COLUMN';
 
+	var xlatedTestOptions = [
+		{ id: 1, text: '1st' },
+		{ id: 2, text: '2nd' },
+		{ id: 3, text: '3rd' }
+	];
+
 	var testOptions = [
-		{ id: 1, text: 'First' },
-		{ id: 2, text: 'Second' },
-		{ id: 3, text: 'Third' }
+		{ id: 1, text: 'First', translations:[{ language_code:'en', text:'1st'}] },
+		{ id: 2, text: 'Second', translations:[{ language_code:'en', text:'2nd'}] },
+		{ id: 3, text: 'Third', translations:[{ language_code:'en', text:'3rd'}] }
 	];
 
 	before(() => {
@@ -83,7 +89,11 @@ describe("ABFieldList unit tests", () => {
 			target.fromValues(target);
 
 			target.settings.options.forEach((opt) => {
-				assert.isDefined(opt.translations);
+				
+				assert.isDefined(opt.translations, ' translations exist');
+
+				var xlated = xlatedTestOptions.filter((o)=>{ return (o.id == opt.id)})[0];
+				assert.equal(opt.text, xlated.text, ' entries are properly translated');
 			});
 
 		});
@@ -120,7 +130,7 @@ describe("ABFieldList unit tests", () => {
 
 			var columnConfig = target.columnHeader();
 
-			assert.equal('<div class="list-data-values"></div>', columnConfig.template);
+			assert.isFunction(columnConfig.template);
 		});
 
 		it('.defaultValue: should set default single value to data', () => {

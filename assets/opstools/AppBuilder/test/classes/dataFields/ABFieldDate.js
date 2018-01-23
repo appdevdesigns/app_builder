@@ -368,7 +368,7 @@ describe("ABFieldDate unit tests", () => {
 				// clone default settings
 				formatSettings = JSON.parse(JSON.stringify(target.settings));
 
-			var expectedDate = '28,02,1986 02:12';
+			var expectedDate = '28, 02, 1986 02:12';
 
 			formatSettings.includeTime = 1;
 			formatSettings.dayDelimiter = 'comma';
@@ -422,7 +422,7 @@ describe("ABFieldDate unit tests", () => {
 				// clone default settings
 				formatSettings = JSON.parse(JSON.stringify(target.settings));
 
-			var expectedDate = '28/02/1986 10-08pm';
+			var expectedDate = '28/02/1986 10-08 pm';
 
 			formatSettings.includeTime = 1;
 			formatSettings.hourFormat = '%g'; // "0 1 ... 10 11"

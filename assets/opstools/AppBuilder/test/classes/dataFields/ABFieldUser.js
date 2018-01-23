@@ -73,22 +73,11 @@ describe("ABFieldUser unit tests", () => {
 			target._options = {
 				users: {}
 			};
-			var columnConfig = target.columnHeader();
-			
+			var columnConfig = target.columnHeader();		
 			assert.equal('richselect', columnConfig.editor, 'should be "richselect" editor');
-			assert.isUndefined(columnConfig.template, 'should not define "template" for a single select user');
-			assert.isUndefined(columnConfig.sort, 'should not define "sort" in webix datatable');
-		});
+			assert.isDefined(columnConfig.template, 'should not define "template" for a single select user');
+			assert.isDefined(columnConfig.options, 'should have default list of users defined.');
 
-		it('.columnHeader: should return valid column config when it is a single select field using richselect and is editable', () => {
-			target.settings.editable = 1;
-			target._options = {
-				users: {}
-			};
-			var columnConfig = target.columnHeader();
-			
-			assert.equal('richselect', columnConfig.editor, 'should be "richselect" editor');
-			assert.isUndefined(columnConfig.template, 'should not define "template" for a single select user');
 			assert.isUndefined(columnConfig.sort, 'should not define "sort" in webix datatable');
 		});
 
@@ -96,27 +85,27 @@ describe("ABFieldUser unit tests", () => {
 			target.settings.isMultiple = 1;
 			var columnConfig = target.columnHeader();
 
-			assert.equal('<div class="list-data-values"></div>', columnConfig.template);
 			assert.isUndefined(columnConfig.editor, 'should not define "editor" for a single select user');
+			assert.isDefined(columnConfig.template, 'should define "template" for a single select user');
 			assert.isUndefined(columnConfig.sort, 'should not define "sort" in webix datatable');
 		});
 
 
 		it('.defaultValue: should set current user', () => {
 			var currentUser = {
-				user: "james"
+				id:"james",
+				text: "james"
 			};
 		
 			// set default to true
+			target.settings.isMultiple = 1;
 			target.settings.isCurrentUser = 1;
-			target._currentUser = {
-				user: "james"
-			};
 
 			target.defaultValue(currentUser);
 		
-			assert.isDefined(currentUser[columnName]);
-			assert.equal(currentUser[columnName], "james");
+			assert.isDefined(currentUser[columnName], ' --> our new column should be inserted into our provided values');
+			assert.isArray(currentUser[columnName], ' --> should be an array')
+			assert.equal(currentUser[columnName][0].text, OP.User.username(), ' --> set to what the OP.User is');
 		});
 
 	});
