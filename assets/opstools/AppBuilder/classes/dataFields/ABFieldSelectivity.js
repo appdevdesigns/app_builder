@@ -13,7 +13,8 @@ var defaultSettings = {
 	readOnly: false,
 	showDropdown: true,
 	showSearchInputInDropdown: false,
-	placeholder: ""
+	placeholder: "",
+	multiple:false
 }
 
 export default class ABFieldSelectivity extends ABField {
@@ -30,8 +31,11 @@ export default class ABFieldSelectivity extends ABField {
 		// setting up our specific settings:
 		settings = settings || {};
 		for (var dv in defaultSettings) {
-			settings[dv] = settings[dv] || defaultSettings[dv];
+			if (settings[dv] === null) { settings[dv] = null; } else {
+				settings[dv] = settings[dv] || defaultSettings[dv];
+			}
 		}
+
 		if (settings.multiple && settings.items && (settings.data && settings.data.length)) {
 			settings.data.forEach(function(d) {
 				var matchHex = settings.items.map(function(i) {
@@ -116,19 +120,35 @@ export default class ABFieldSelectivity extends ABField {
 			selectivityInput = new Selectivity.Inputs.Single(settings);
 			domNode.selectivity = selectivityInput;
 		}
+
+		// remember our settings values
+		this.selectivitySettings = settings;
 	}
 
 	selectivityGet(domNode) {
-		if (domNode && domNode.selectivity)
-			return domNode.selectivity.getData() || [];
-		else
-			return [];
+		if (domNode && domNode.selectivity) {
+			if (( this.selectivitySettings) && (this.selectivitySettings.multiple)) {
+				// on a multiple select, return an array of results, or empty array
+				return domNode.selectivity.getData() || [];
+			} else {
+				// if a single select, return the object or null
+				return domNode.selectivity.getData() || null;
+			}
+		}
+		else {
+
+			if ((this.selectivitySettings) && (this.selectivitySettings.multiple))
+				return [];
+			else
+				return null;
+		}
+			
 	}
 
 	selectivitySet(domNode, data, App, row) {
 		if (domNode && domNode.selectivity) {
 
-			data = this.prepareData(data, domNode.selectivity.options.multiple);
+			data = this.prepareData(data, this.selectivitySettings.multiple);
 
 			if ((Array.isArray(data) && data[0]) || // Check Array
 				(data && data.id)) // Check a object
@@ -156,7 +176,6 @@ export default class ABFieldSelectivity extends ABField {
 		} else if (multiple && !Array.isArray(data)) {
 			data = [data];
 		}
-
 		return data;
 	}
 

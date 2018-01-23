@@ -65,7 +65,7 @@ describe("ABFieldConnect unit tests", () => {
 			let defaultValues = ABFieldConnect.defaults();
 
 			let menuName = L('ab.dataField.connectObject.menuName', '*Connect to another record');
-			let description = '';
+			let description = L('ab.dataField.connectObject.description', '*Connect two data objects together');;
 
 			assert.equal('connectObject', defaultValues.key);
 			assert.equal('external-link', defaultValues.icon);
@@ -79,7 +79,7 @@ describe("ABFieldConnect unit tests", () => {
 		it('.columnHeader: should return valid column config', () => {
 			var columnConfig = target.columnHeader();
 
-			assert.equal('<div class="connect-data-values"></div>', columnConfig.template);
+			assert.isFunction(columnConfig.template, ' should return a function() ');
 		});
 
 		it('.customDisplay: should render single selectivity when link type is one', () => {
@@ -126,7 +126,17 @@ describe("ABFieldConnect unit tests", () => {
 		});
 
 		it('.customEdit: should return false', () => {
-			var result = target.customEdit();
+
+			var rowData = {},
+				domNode = document.createElement("div"),
+				domSelectArea = document.createElement("div");
+
+			domSelectArea.className = "connect-data-values";
+			domNode.appendChild(domSelectArea);
+
+
+
+			var result = target.customEdit(rowData, mockApp, domNode);
 
 			assert.isFalse(result);
 		});
