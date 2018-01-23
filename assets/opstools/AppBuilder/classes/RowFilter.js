@@ -732,12 +732,24 @@ export default class RowFilter extends OP.Component {
 
 			},
 
+			removeHtmlTags: function(text) {
+
+				var div = document.createElement("div");
+				div.innerHTML = text;
+
+				return div.textContent || div.innerText || "";
+
+			},
+
 			textValid: function (value, operator, compareValue) {
 
 				var result = false;
 
 				value = value.trim().toLowerCase();
 				compareValue = compareValue.trim().toLowerCase();
+
+				// remove html tags - rich text editor
+				value = _logic.removeHtmlTags(value);
 
 				switch (operator) {
 					case "contains":
