@@ -368,7 +368,15 @@ export default class ABViewContainer extends ABView {
 				view: 'counter',
 				min: 1,
 				label: L('ab.components.container.columns', "*Columns"),
-				labelWidth: App.config.labelWidthLarge
+				labelWidth: App.config.labelWidthLarge,
+				on: {
+					onChange: function (newVal, oldVal) {
+
+						if (newVal > 8) 
+							$$(ids.columns).setValue(8);
+
+					}
+				}
 			}
 		]);
 
@@ -440,8 +448,8 @@ export default class ABViewContainer extends ABView {
 						curRowIndex = v.position.y || rows.length;
 						curColIndex = 0;
 
-						var rowNew = { 
-							cols: [] 
+						var rowNew = {
+							cols: []
 						};
 
 						// Create columns following setting value

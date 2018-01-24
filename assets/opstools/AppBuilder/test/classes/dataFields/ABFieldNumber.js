@@ -236,68 +236,80 @@ describe("ABFieldNumber unit tests", () => {
 			sandbox.assert.calledWith(spyAddError, columnName, 'should be greater than {min}'.replace('{min}', target.settings.validateMinimum));
 		});
 
-		it('.getNumberFormat - should have valid number with dollar format', () => {
+		it('.format - should have valid number with dollar format', () => {
 			target.settings.typeFormat = 'dollar';
 
 			var value = 1000;
+			var rowData = {};
+			rowData[columnName] = value;
 
-			var result = target.getNumberFormat(value);
+			var result = target.format(rowData);
 
 			assert.equal('$ 1000', result.trim());
 		});
 
-		it('.getNumberFormat - should have valid number with pound format', () => {
+		it('.format - should have valid number with pound format', () => {
 			target.settings.typeFormat = 'pound';
 
 			var value = 1000;
+			var rowData = {};
+			rowData[columnName] = value;
 
-			var result = target.getNumberFormat(value);
+			var result = target.format(rowData);
 
 			assert.equal('£ 1000', result.trim());
 		});
 
-		it('.getNumberFormat - should have valid number with euro prefix format', () => {
+		it('.format - should have valid number with euro prefix format', () => {
 			target.settings.typeFormat = 'euroBefore';
 
 			var value = 1000;
+			var rowData = {};
+			rowData[columnName] = value;
 
-			var result = target.getNumberFormat(value);
+			var result = target.format(rowData);
 
 			assert.equal('€ 1000', result.trim());
 		});
 
-		it('.getNumberFormat - should have valid number with euro postfix format', () => {
+		it('.format - should have valid number with euro postfix format', () => {
 			target.settings.typeFormat = 'euroAfter';
 
 			var value = 1000;
+			var rowData = {};
+			rowData[columnName] = value;
 
-			var result = target.getNumberFormat(value);
+			var result = target.format(rowData);
 
 			assert.equal('1000 €', result.trim());
 		});
 
-		it('.getNumberFormat - should have valid number with percent postfix format', () => {
+		it('.format - should have valid number with percent postfix format', () => {
 			target.settings.typeFormat = 'percent';
 
 			var value = 1000;
+			var rowData = {};
+			rowData[columnName] = value;
 
-			var result = target.getNumberFormat(value);
+			var result = target.format(rowData);
 
 			assert.equal('1000 %', result.trim());
 		});
 
-		it('.getNumberFormat - should have valid number with group delimiter', () => {
+		it('.format - should have valid number with group delimiter', () => {
 			target.settings.typeFormat = 'none';
 			target.settings.typeThousands = 'comma';
 
 			var value = 1000;
+			var rowData = {};
+			rowData[columnName] = value;
 
-			var result = target.getNumberFormat(value);
+			var result = target.format(rowData);
 
 			assert.equal('1,000', result.trim());
 		});
 
-		it('.getNumberFormat - should have valid decimal with round up value', () => {
+		it('.format - should have valid decimal with round up value', () => {
 			target.settings.typeFormat = 'none';
 			target.settings.typeThousands = 'none';
 			target.settings.typeDecimals = 'period';
@@ -305,13 +317,15 @@ describe("ABFieldNumber unit tests", () => {
 			target.settings.typeRounding = 'roundUp';
 
 			var value = 1000.986;
+			var rowData = {};
+			rowData[columnName] = value;
 
-			var result = target.getNumberFormat(value);
+			var result = target.format(rowData);
 
 			assert.equal('1000.99', result.trim());
 		});
 
-		it('.getNumberFormat - should have valid decimal with round down value', () => {
+		it('.format - should have valid decimal with round down value', () => {
 			target.settings.typeFormat = 'none';
 			target.settings.typeThousands = 'none';
 			target.settings.typeDecimals = 'period';
@@ -319,13 +333,15 @@ describe("ABFieldNumber unit tests", () => {
 			target.settings.typeRounding = 'roundDown';
 
 			var value = 1000.256;
+			var rowData = {};
+			rowData[columnName] = value;
 
-			var result = target.getNumberFormat(value);
+			var result = target.format(rowData);
 
 			assert.equal('1000.25', result.trim());
 		});
 
-		it('.getNumberFormat - should have valid decimal with decimal 3 places', () => {
+		it('.format - should have valid decimal with decimal 3 places', () => {
 			target.settings.typeFormat = 'none';
 			target.settings.typeThousands = 'none';
 			target.settings.typeDecimals = 'period';
@@ -333,8 +349,10 @@ describe("ABFieldNumber unit tests", () => {
 			target.settings.typeRounding = 'none';
 
 			var value = 1000.1;
+			var rowData = {};
+			rowData[columnName] = value;
 
-			var result = target.getNumberFormat(value);
+			var result = target.format(rowData);
 
 			assert.equal('1000.100', result.trim());
 		});

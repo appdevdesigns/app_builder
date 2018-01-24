@@ -322,7 +322,7 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 				$$(ids.component).show();
 			},
 
-			objectLoad: function (object) {
+			objectLoad: function (object, currView) {
 				_currentObject = object;
 
 				if (!_currentObject) return;
@@ -330,7 +330,7 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 				// Pull page list to "Redirect to an existing page"
 				_pageOptions = [];
 
-				var addPage = function (page, indent) {
+				var addPage = (page, indent) => {
 					indent = indent || '';
 
 					_pageOptions.push({ id: page.id, value: indent + page.label });
@@ -338,14 +338,9 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 					page.pages().forEach(function (p) {
 						addPage(p, indent + '-');
 					})
-				}
-				_currentObject.application.pages().forEach(function (page) {
+				};
 
-					// TODO : filter
-					// if ( (parentPage && p == parentPage) || p == currentPage ) {
-
-					addPage(page, '');
-				});
+				addPage(currView.pageRoot(), '');
 
 			},
 
