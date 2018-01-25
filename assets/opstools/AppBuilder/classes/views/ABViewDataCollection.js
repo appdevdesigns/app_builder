@@ -965,7 +965,12 @@ export default class ABViewDataCollection extends ABView {
 
 		var dc = this.__dataCollection;
 		if (dc) {
-			dc.setCursor(rowId);
+
+			if (dc.getCursor() != rowId)
+				dc.setCursor(rowId);
+			// If set rowId equal current cursor, it will not trigger .onAfterCursorChange event
+			else 
+				this.emit("changeCursor", rowId);
 		}
 
 	}
@@ -995,7 +1000,6 @@ export default class ABViewDataCollection extends ABView {
 		var model = obj.model();
 		if (model == null) return Promise.resolve([]);
 
-		var dc = this.__dataCollection;
 		var sorts = this.settings.objectWorkspace.sortFields || [];
 
 		// pull filter conditions
@@ -1065,7 +1069,7 @@ export default class ABViewDataCollection extends ABView {
 
 				});
 
-				dc.parse(data);
+				this.__dataCollection.parse(data);
 
 				// set static cursor
 				if (this.settings.fixSelect) {

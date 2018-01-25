@@ -352,9 +352,9 @@ export default class ABViewFormButton extends ABView {
 					dc.setCursor(null);
 				}
 
-				// if (resetButton.getFormView())
-				// 	resetButton.getFormView().clear();
-				
+				if (resetButton.getFormView())
+					resetButton.getFormView().clear();
+
 			},
 			
 			onSave: (saveButton) => {
