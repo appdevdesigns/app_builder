@@ -19,7 +19,7 @@ function L(key, altText) {
 }
 
 var ABPropertyComponentDefaults = {
-    type: 'page',
+    type: 'page', // 'page' or 'popup'
 }
 
 var ABViewDefaults = {
