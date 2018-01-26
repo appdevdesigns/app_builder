@@ -302,7 +302,10 @@ export default class ABView extends ABViewBase {
 
 
 
-	pageParent() {
+	pageParent(filterFn) {
+
+		if (filterFn == null) filterFn = () => true;
+
 		var parentPage = this.parent;
 
 		// if current page is the root page, then return itself.
@@ -310,7 +313,7 @@ export default class ABView extends ABViewBase {
 			return this;
 		}
 
-		while (parentPage && parentPage.key != 'page') {
+		while (parentPage && (parentPage.key != 'page' || !filterFn(parentPage))) {
 			parentPage = parentPage.parent;
 		}
 

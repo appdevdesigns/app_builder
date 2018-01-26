@@ -332,8 +332,10 @@ export default class ABViewFormButton extends ABView {
 					super.changePage(this.settings.afterCancel);
 				// If the redirect page does not define, then redirect to parent page
 				else {
+					var noPopupFilter = p => p.settings && p.settings.type != 'popup';
+
 					var pageCurr = this.pageParent();
-					var pageParent = pageCurr.pageParent() || pageCurr;
+					var pageParent = pageCurr.pageParent(noPopupFilter) || pageCurr;
 					super.changePage(pageParent.id);
 				}
 			},
@@ -350,9 +352,9 @@ export default class ABViewFormButton extends ABView {
 					dc.setCursor(null);
 				}
 
-				// if (resetButton.getFormView())
-				// 	resetButton.getFormView().clear();
-				
+				if (resetButton.getFormView())
+					resetButton.getFormView().clear();
+
 			},
 			
 			onSave: (saveButton) => {
