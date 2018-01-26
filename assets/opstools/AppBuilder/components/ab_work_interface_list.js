@@ -478,7 +478,8 @@ console.error('!! todo: onBeforeEditStop() editing');
 
 			refreshTemplateItem: function(view) {
 				// make sure this item is updated in our list:
-				$$(ids.list).updateItem(view.id, view);
+				viewList.updateItem(view.id, view);
+				// $$(ids.list).updateItem(view.id, view);
 			},
 
 			// rename: function () {
