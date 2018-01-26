@@ -90,7 +90,7 @@ export default class ABWorkObjectDatatable extends OP.Component {
     		dragColumn: true,
     		on: {
     			onBeforeSelect: function (data, preserve) {
-                    var skippable = ["appbuilder_select_item", "appbuilder_view_detail", "appbuilder_view_detail", "appbuilder_view_edit", "appbuilder_trash"];
+                    var skippable = ["appbuilder_select_item", "appbuilder_view_detail", "appbuilder_view_edit", "appbuilder_trash"];
                     if (skippable.indexOf(data.column) != -1) {
                         return false;
                     } else if (settings.isEditable) {
@@ -166,30 +166,52 @@ console.warn('!! ToDo: onBeforeEditStop()');
     			// 	_logic.onAfterLoad();
     			// },
     			onColumnResize: function (columnName, newWidth, oldWidth, user_action) {
+                    // if we resize the delete column we want to resize the last column but Webix will not allow since the column is split
+                    var rightSplitItems = ["appbuilder_view_detail", "appbuilder_view_edit", "appbuilder_trash"];
+                    if (rightSplitItems.indexOf(columnName) != -1) {
+                        // Block events so we can leave the delete column alone
+                        this.blockEvent();
+                        this.setColumnWidth(columnName, oldWidth); // keeps original width
+                        this.unblockEvent();
+                        // Listen to events again
+                        
+                        // find the last column's config
+                        var column = _logic.getLastColumn();
+                        
+                        columnName = column.id;
+                        
+                        // determine if we are making the column larger or smaller
+                        if (newWidth < oldWidth) {
+                            newWidth = column.width+40; // add 40 because there is not any more space to drag so we will allow 40px increments
+                        } else {
+                            newWidth = column.width - (newWidth - 40); // take the column's width and subtrack the difference of the expanded delet column drag
+                        }
+                        // we don't want columns to be smaller than 50 ?? do we ?? I could be wrong maybe a checkbox could be smaller so this could change
+                        if (newWidth < 50) {
+                            newWidth = 50;
+                        }
+                        // minWidth is important because we are using fillspace:true
+                        column.minWidth = newWidth;
+                        // Sets the UI
+                        this.setColumnWidth(columnName, newWidth);
+                    }
+                    // Saves the new width
                     _logic.onColumnResize(columnName, newWidth, oldWidth, user_action);
     			},
                 onRowResize: function (rowId) {
                     _logic.onRowResize(rowId);
     			},
     			onBeforeColumnDrag: function (sourceId, event) {
-    				if (sourceId === 'appbuilder_trash') // Remove column
-    					return false;
+                    var skippable = ["appbuilder_select_item", "appbuilder_view_detail", "appbuilder_view_edit", "appbuilder_trash"];
+                    if (skippable.indexOf(sourceId) != -1)
+                        return false;
     				else
     					return true;
     			},
     			onBeforeColumnDrop: function (sourceId, targetId, event) {
-    				if (targetId === 'appbuilder_trash') // Remove column
-    					return false;
-
-    				// if ($$(self.webixUiId.visibleButton).config.badge > 0) {
-    				// 	webix.alert({
-    				// 		title: self.labels.object.couldNotReorderField,
-    				// 		ok: self.labels.common.ok,
-    				// 		text: self.labels.object.couldNotReorderFieldDetail
-    				// 	});
-
-    				// 	return false;
-    				// }
+                    var skippable = ["appbuilder_select_item", "appbuilder_view_detail", "appbuilder_view_edit", "appbuilder_trash"];
+                    if (skippable.indexOf(targetId) != -1)
+                        return false;
     			},
     			onAfterColumnDrop: function (sourceId, targetId, event) {
                     _logic.onAfterColumnDrop(sourceId, targetId, event);
@@ -429,13 +451,33 @@ console.warn('!! ToDo: onAfterColumnHide()');
     		 * @function getFieldList
     		 *
     		 * return the column config of a datagrid
-    		 * @param {string} id datagrid id you want the column info from
     		 */
     		getFieldList: function() {
     			var DataTable = $$(ids.component);
 
     			return DataTable.fieldList;
     		},
+            
+            /**
+             * @function getLastColumn
+             *
+             * return the last column of a datagrid that is resizeable
+             */
+            getLastColumn: function() {
+                var DataTable = $$(ids.component);
+                var lastColumn = {};
+                
+                // Loop through each columns config to find out if it is in the split 1 region and set it as the last item...then it will be overwritten by next in line
+                DataTable.eachColumn (
+                    function (columnId){ 
+                        var columnConfig = DataTable.getColumnConfig(columnId);
+                        if (columnConfig.split == 1)
+                            lastColumn = columnConfig;
+                    }
+                )
+                
+                return lastColumn;
+            },
             
             freezeDeleteColumn: function() {
                 var DataTable = $$(ids.component);
@@ -685,8 +727,9 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
     		onHeaderClick: function (id, e, node) {
 
     			// Ignore system columns
-    			if (id.column == 'appbuilder_trash')
-    				return false;
+                var skippable = ["appbuilder_select_item", "appbuilder_view_detail", "appbuilder_view_edit", "appbuilder_trash"];
+                if (skippable.indexOf(id.column) != -1)
+                    return false;
 
     			// save our EditNode & EditField:
     			EditNode = node;

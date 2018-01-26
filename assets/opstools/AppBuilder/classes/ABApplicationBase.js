@@ -27,6 +27,8 @@ module.exports = class ABApplicationBase {
     	// ABApplication Attributes
     	this.id    = attributes.id;
     	this.json  = attributes.json || {};
+		if (typeof this.json == "string")
+			this.json = JSON.parse(this.json);
     	this.name  = attributes.name || this.json.name || "";
     	this.role  = attributes.role;
 

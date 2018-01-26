@@ -226,10 +226,12 @@ module.exports =  class ABObjectBase {
         // so first we want to splice the item moved out of the array of fields
         // and store it so we can put it somewhere else
         let itemMoved = null;
+        let oPos = 0; // original position
         for(var i=0; i<this._fields.length; i++) {
             if (this._fields[i].columnName == sourceId) {
                 itemMoved = this._fields[i];
                 this._fields.splice(i, 1);
+                oPos = i;
                 break;
             }
         }
@@ -238,6 +240,10 @@ module.exports =  class ABObjectBase {
         // is going to push forward
         for(var j=0; j<this._fields.length; j++) {
             if (this._fields[j].columnName == targetId) {
+                // if the original position was before the new position we will follow webix's logic that the drop should go after the item it was placed on 
+                if (oPos <= j) {
+                    j++;
+                }
                 this._fields.splice(j, 0, itemMoved);
                 break;
             }

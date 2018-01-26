@@ -247,7 +247,6 @@ class ABFieldTree extends ABField {
 
        var obj = super.toObj();
        
-       console.log(obj.settings);
        // Un-translate options list
        obj.settings.options.forEach(function (opt) {
            OP.Multilingual.unTranslate(opt, opt, ["text"]);
