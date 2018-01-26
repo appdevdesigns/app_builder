@@ -10,6 +10,8 @@ import ABComponentMenu from "./ab_work_interface_workspace_editor_components"
 import ABEditorLayout from "./ab_work_interface_workspace_editor_layout"
 import ABEditorData from "./ab_work_interface_workspace_editor_data"
 
+import ABViewDataCollection from "../classes/views/ABViewDataCollection"
+
 export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
     
     constructor(App) {
@@ -346,6 +348,11 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                     EditorLayout.show();
                     _logic.showLayoutButtons();
                     _logic.hideNewDataCollection();
+
+                    // if user is editing "data", then change to parent page when swtich "layout"
+                    if (CurrentView instanceof ABViewDataCollection){
+                        CurrentView = CurrentView.pageParent();
+                    }
 
                     App.actions.populateInterfaceWorkspace(CurrentView);
 
