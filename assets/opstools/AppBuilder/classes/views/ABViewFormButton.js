@@ -325,8 +325,8 @@ export default class ABViewFormButton extends ABView {
 					dc.setCursor(null);
 				}
 
-				// if (cancelButton.getFormView())
-				// 	cancelButton.getFormView().clear();
+				if (cancelButton.getFormView())
+					cancelButton.getFormView().clear();
 
 				if (this.settings.afterCancel)
 					super.changePage(this.settings.afterCancel);
