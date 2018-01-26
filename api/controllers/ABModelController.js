@@ -480,8 +480,9 @@ module.exports = {
                 // promise for the total count. this was moved below the filters because webix will get caught in an infinte loop of queries if you don't pass the right count
                 var queryCount = object.model().query();
                 populateFindConditions(queryCount, object, { where: where, includeRelativeData: false }, req.user.data);
-                var pCount = queryCount.count('id as count').first();
-
+                // added tableName to id because of non unique field error
+                var pCount = queryCount.count('{tableName}.id as count'.replace("{tableName}", object.model().tableName)).first();
+                    
                 Promise.all([
                     pCount,
                     query
