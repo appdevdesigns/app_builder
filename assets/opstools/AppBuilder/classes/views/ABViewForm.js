@@ -15,7 +15,8 @@ import ABViewManager from "../ABViewManager"
 import ABPropertyComponent from "../ABPropertyComponent"
 
 import ABDisplayRule from "./ABViewFormPropertyDisplayRule"
-import ABRecordRule from "./ABViewFormPropertyRecordRule"
+// import ABRecordRule from "./ABViewFormPropertyRecordRule"
+import ABRecordRule from "../rules/ABViewRuleListFormRecordRules"
 import ABSubmitRule from "./ABViewFormPropertySubmitRule"
 
 import RowFilter from '../RowFilter'
