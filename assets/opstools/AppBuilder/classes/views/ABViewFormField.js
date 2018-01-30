@@ -30,9 +30,9 @@ export default class ABViewFormField extends ABView {
 	}
 
 
-	static propertyEditorPopulate(ids, view) {
+	static propertyEditorPopulate(App, ids, view) {
 
-		super.propertyEditorPopulate(ids, view);
+		super.propertyEditorPopulate(App, ids, view);
 
 		var field = view.field();
 

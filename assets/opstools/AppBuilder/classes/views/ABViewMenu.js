@@ -219,9 +219,9 @@ export default class ABViewMenu extends ABViewWidget {
 
 	}
 
-	static propertyEditorPopulate(ids, view) {
+	static propertyEditorPopulate(App, ids, view) {
 
-		super.propertyEditorPopulate(ids, view);
+		super.propertyEditorPopulate(App, ids, view);
 
 		$$(ids.orientation).setValue(view.settings.orientation || ABViewMenuPropertyComponentDefaults.orientation);
 		$$(ids.buttonStyle).setValue(view.settings.buttonStyle || ABViewMenuPropertyComponentDefaults.buttonStyle);

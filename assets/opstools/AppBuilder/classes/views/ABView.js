@@ -800,7 +800,7 @@ export default class ABView extends ABViewBase {
 	}
 
 
-	static propertyEditorPopulate(ids, view) {
+	static propertyEditorPopulate(App, ids, view) {
 
 		$$(ids.label).setValue(view.label);
 

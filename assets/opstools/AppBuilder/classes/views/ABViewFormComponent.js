@@ -223,7 +223,7 @@ var field = { columnName:'columnNameToDo'}
 	}
 
 
-	static propertyEditorPopulate(ids, view) {
+	static propertyEditorPopulate(App, ids, view) {
 
 		$$(ids.formLabel).setValue(view.formLabel);
 	}

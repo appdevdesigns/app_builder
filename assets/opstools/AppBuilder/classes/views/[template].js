@@ -196,9 +196,9 @@ export default class ABView[template] extends ABViewWidget  {
 	}
 
 
-	static propertyEditorPopulate(ids, view) {
+	static propertyEditorPopulate(App, ids, view) {
 
-		super.propertyEditorPopulate(ids, view);
+		super.propertyEditorPopulate(App, ids, view);
 
 		// Make sure you set the values for this property editor in Webix
 		// $$(ids.text).setValue(view.text);

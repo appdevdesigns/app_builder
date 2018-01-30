@@ -200,9 +200,9 @@ export default class ABViewPage extends ABViewContainer {
     }
 
 
-    static propertyEditorPopulate(ids, view) {
+    static propertyEditorPopulate(App, ids, view) {
 
-        super.propertyEditorPopulate(ids, view);
+        super.propertyEditorPopulate(App, ids, view);
 
         $$(ids.type).setValue(view.settings.type || ABPropertyComponentDefaults.type);
 

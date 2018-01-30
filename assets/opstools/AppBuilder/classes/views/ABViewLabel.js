@@ -219,9 +219,9 @@ export default class ABViewLabel extends ABViewWidget  {
 	}
 
 
-	static propertyEditorPopulate(ids, view) {
+	static propertyEditorPopulate(App, ids, view) {
 
-		super.propertyEditorPopulate(ids, view);
+		super.propertyEditorPopulate(App, ids, view);
 
 		$$(ids.text).setValue(view.text);
 		$$(ids.format).setValue(view.settings.format);
