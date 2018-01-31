@@ -221,7 +221,7 @@ export default class ABViewChart extends ABViewContainer  {
 
 	static propertyEditorPopulate(App, ids, view) {
 
-		super.propertyEditorPopulate(ids, view);
+		super.propertyEditorPopulate(App, ids, view);
 
 		this.populateDataCollection(ids, view);
 		this.populateFieldOptions(ids, view);

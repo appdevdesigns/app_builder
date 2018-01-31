@@ -288,7 +288,10 @@ export default class ABViewChartBar extends ABViewWidget {
 					step: "#stepValue#",
 					end: "#maxValue#"
 				},
-				legend: this.settings.isLegend == true ? "<div style='font-size:" + this.settings.labelFontSize + "px;'>#label#</div>" : "",
+				legend: this.settings.isLegend == true ? {
+					template: "<div style='font-size:" + this.settings.labelFontSize + "px;'>#label#</div>",
+					values: [] // TODO : bug in webix 5.1.7
+				} : null,
 				height: this.settings.height != null ? this.settings.height : ABViewChartBarPropertyComponentDefaults.height,
 				// width: this.settings.chartWidth != null ? this.settings.chartWidth : ABViewChartBarPropertyComponentDefaults.chartWidth,
 				// data: reportData
