@@ -103,7 +103,8 @@ export default class ABViewChartPie extends ABViewWidget {
 		_ui.id = ids.component;
 
 		var _init = (options) => {
-			component.init(options);
+			var reportData = this.parent.getReportData();
+			$$(ids.component).data.sync(reportData);
 		}
 
 		var _logic = component.logic;
@@ -114,7 +115,6 @@ export default class ABViewChartPie extends ABViewWidget {
 			logic: _logic
 		}
 	}
-
 
 
 	//
@@ -225,27 +225,7 @@ export default class ABViewChartPie extends ABViewWidget {
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		}
-
-		// var _ui = {
-		// 	id: ids.component,
-		// 	cols: []
-		// };
-
-		var reportData = this.parent.getReportData();
-
-		// _ui.cols.push({
-		// 	view: "chart",
-		// 	type: this.settings.pieType != null ? this.settings.pieType : ABViewChartPiePropertyComponentDefaults.pieType,
-		// 	value: "#value#",
-		// 	color: "#color#",
-		// 	legend: this.settings.isLegend == true ? "<div style='font-size:" + this.settings.labelFontSize + "px;'>#label#</div>" : "",
-		// 	pieInnerText: "<div style='font-size:" + this.settings.innerFontSize + "px;'>#value#</div>",
-		// 	shadow: 1,
-		// 	height: this.settings.height != null ? this.settings.height : ABViewChartPiePropertyComponentDefaults.height,
-		// 	// width: this.settings.chartWidth != null ? this.settings.chartWidth : ABViewChartPiePropertyComponentDefaults.chartWidth,
-		// 	data: reportData
-		// });
-
+		
 		var _ui = {
 			id: ids.component,
 			view: "chart",
@@ -257,11 +237,13 @@ export default class ABViewChartPie extends ABViewWidget {
 			shadow: 1,
 			height: this.settings.height != null ? this.settings.height : ABViewChartPiePropertyComponentDefaults.height,
 			// width: this.settings.chartWidth != null ? this.settings.chartWidth : ABViewChartPiePropertyComponentDefaults.chartWidth,
-			data: reportData
+			// data: reportData
 		};
 
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
+			var reportData = this.parent.getReportData();
+			$$(ids.component).data.sync(reportData);
 		}
 
 

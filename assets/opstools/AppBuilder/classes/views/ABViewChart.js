@@ -20,11 +20,13 @@ var ABViewChartPropertyComponentDefaults = {
 	dataSource: null,
 	columnValue: null,
 	columnLabel: null,
+	columnValue2: null,
 	isPercentage: true,
 	showLabel: true,
 	labelPosition: 'left',
 	labelWidth: 120,
-	height: 200
+	height: 200,
+	multipleSeries: false,
 }
 
 
@@ -94,11 +96,30 @@ export default class ABViewChart extends ABViewContainer  {
 
 		// convert from "0" => true/false
 		this.settings.showLabel = JSON.parse(this.settings.showLabel != null ? this.settings.showLabel : ABViewChartPropertyComponentDefaults.showLabel);
+		this.settings.multipleSeries = JSON.parse(this.settings.multipleSeries != null ? this.settings.multipleSeries : ABViewChartPropertyComponentDefaults.multipleSeries);
 
 		// convert from "0" => 0
 		this.settings.labelWidth = parseInt(this.settings.labelWidth || ABViewChartPropertyComponentDefaults.labelWidth);
 		this.settings.height = parseInt(this.settings.height || ABViewChartPropertyComponentDefaults.height);
 
+	}
+
+	/** 
+	 * @method editorComponent
+	 * return the Editor for this UI component.
+	 * the editor should display either a "block" view or "preview" of 
+	 * the current layout of the view.
+	 * @param {string} mode what mode are we in ['block', 'preview']
+	 * @return {Component} 
+	 */
+	editorComponent(App, mode) {
+
+		var comp = super.editorComponent(App, mode);
+
+		// Define height of cell
+		comp.ui.rows[0].cellHeight = 400;
+
+		return comp;
 	}
 
 	//
@@ -108,24 +129,51 @@ export default class ABViewChart extends ABViewContainer  {
 	static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
 
 		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
+		_logic.enableMultipleSeries = (isEnable) => {
 
+			var currView = _logic.currentEditObject();
+
+			if(isEnable) {
+				this.populateFieldOptions2(ids, currView);
+			} else {
+		
+				$$(ids.columnValue2).define("options", []);
+				$$(ids.columnValue2).refresh();
+				$$(ids.columnValue2).disable();
+			}
+		}
 		return commonUI.concat([
+			{
+				name: 'multipleSeries',
+				view: 'checkbox',
+				label: L('ab.component.chart.isMultipleSeries', '*Multiple Series'),
+				labelWidth: App.config.labelWidthLarge,
+				on: {
+					onChange: _logic.enableMultipleSeries
+				}
+			},
 			{
 				name: 'dataSource',
 				view: 'richselect',
-				label: L('ab.component.chart.pie.dataSource', '*Chart Data'),
+				label: L('ab.component.chart.dataSource', '*Chart Data'),
 				labelWidth: App.config.labelWidthLarge
 			},
 			{
 				name: 'columnLabel',
 				view: 'richselect',
-				label: L('ab.component.chart.pie.columnLabel', '*Label Column'),
+				label: L('ab.component.chart.columnLabel', '*Label Column'),
 				labelWidth: App.config.labelWidthLarge
 			},
 			{
 				name: 'columnValue',
 				view: 'richselect',
-				label: L('ab.component.chart.pie.columnValue', '*Value Column'),
+				label: L('ab.component.chart.columnValue', '*Value Column'),
+				labelWidth: App.config.labelWidthLarge
+			},
+			{
+				name: 'columnValue2',
+				view: 'richselect',
+				label: L('ab.component.chart.columnValue2', '*Value Column 2'),
 				labelWidth: App.config.labelWidthLarge
 			},
 			{
@@ -178,6 +226,7 @@ export default class ABViewChart extends ABViewContainer  {
 		this.populateDataCollection(ids, view);
 		this.populateFieldOptions(ids, view);
 
+		$$(ids.multipleSeries).setValue(view.settings.multipleSeries || ABViewChartPropertyComponentDefaults.multipleSeries);
 		$$(ids.dataSource).setValue(view.settings.dataSource || ABViewChartPropertyComponentDefaults.dataSource);
 		$$(ids.columnValue).setValue(view.settings.columnValue || ABViewChartPropertyComponentDefaults.columnValue);
 		$$(ids.columnLabel).setValue(view.settings.columnLabel || ABViewChartPropertyComponentDefaults.columnLabel);
@@ -188,6 +237,11 @@ export default class ABViewChart extends ABViewContainer  {
 		$$(ids.labelWidth).setValue(view.settings.labelWidth || ABViewChartPropertyComponentDefaults.labelWidth);
 		$$(ids.height).setValue(view.settings.height || ABViewChartPropertyComponentDefaults.height);
 
+		if(view.settings.multipleSeries) {
+			this.populateFieldOptions2(ids, view);
+			$$(ids.columnValue2).setValue(view.settings.columnValue2 || ABViewChartPropertyComponentDefaults.columnValue2);
+		}
+
 	}
 
 
@@ -195,6 +249,7 @@ export default class ABViewChart extends ABViewContainer  {
 
 		super.propertyEditorValues(ids, view);
 
+		view.settings.multipleSeries = $$(ids.multipleSeries).getValue();
 		view.settings.dataSource = $$(ids.dataSource).getValue();
 		view.settings.columnValue = $$(ids.columnValue).getValue();
 		view.settings.columnLabel = $$(ids.columnLabel).getValue();
@@ -206,6 +261,11 @@ export default class ABViewChart extends ABViewContainer  {
 		view.settings.height = $$(ids.height).getValue();
 
 		this.populateFieldOptions(ids, view);
+
+		if(view.settings.multipleSeries) {
+			view.settings.columnValue2 = $$(ids.columnValue2).getValue();
+			this.populateFieldOptions2(ids, view);
+		}
 	}
 
 	static populateDataCollection(ids, view) {
@@ -236,7 +296,6 @@ export default class ABViewChart extends ABViewContainer  {
 		$$(ids.columnValue).define("options", []);
 		$$(ids.columnValue).refresh();
 
-
 		var dc = view.dataCollection();
 		if (dc == null) return;
 
@@ -264,18 +323,54 @@ export default class ABViewChart extends ABViewContainer  {
 
 		$$(ids.columnLabel).define("options", columnLabelOptions);
 		$$(ids.columnLabel).refresh();
+		$$(ids.columnLabel).enable();
 
 		$$(ids.columnValue).define("options", columnValueOptions);
 		$$(ids.columnValue).refresh();
+		$$(ids.columnValue).enable();
 
 	}
 
+	static populateFieldOptions2(ids, view) {
+
+		// clear options
+
+		$$(ids.columnValue2).define("options", []);
+		$$(ids.columnValue2).refresh();
+		$$(ids.columnValue2).enable();
+
+		var dc = view.dataCollection();
+		if (dc == null) return;
+
+		var obj = dc.datasource;
+		var allFields = obj.fields();
+		var numFields = obj.fields((f) => f.key == 'number');
+
+
+		var convertOption = (opt) => {
+			return {
+				id: opt.id,
+				value: opt.columnName,
+				key: opt.key
+			}
+		};
+
+		var columnValueOptions = numFields.map(convertOption);
+
+
+		var defaultOption = { id: '', value: L('ab.component.label.selectColumn', '*Select a column'), key: '' };
+		columnValueOptions.unshift(defaultOption);
+
+		$$(ids.columnValue2).define("options", columnValueOptions);
+		$$(ids.columnValue2).refresh();
+
+	}
 	/*
 	 * @method componentList
 	 * return the list of components available on this view to display in the editor.
 	 */
 	componentList() {
-		var viewsToAllow = ['label', 'pie', 'bar', 'line'/*, 'area'*/],
+		var viewsToAllow = ['label', 'pie', 'bar', 'line', 'area'],
 			allComponents = ABViewManager.allViews();
 
 		var ret = allComponents.filter((c) => {
@@ -303,6 +398,8 @@ export default class ABViewChart extends ABViewContainer  {
 		// get webix.dashboard
 		var container = super.component(App);
 
+		this.viewComponents = this.viewComponents || {};
+
 		var _ui = {
 			type: "form",
 			borderless: true,
@@ -317,18 +414,36 @@ export default class ABViewChart extends ABViewContainer  {
 
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
+			container.init(options);
+			
+			var currentComponent = $$(ids.component);
+			if (currentComponent) {
+				webix.extend(currentComponent, webix.ProgressBar);
+			}
+
+			// attach all the .UI views:
+			var subviews = this.views();
+			subviews.forEach((child) => {
+
+				var subComponent = child.component(App);
+
+				this.viewComponents[child.id] = subComponent;
+
+				subComponent.init();
+
+			});
 		}
 
 		var _logic = {
+
 		};
 
 		return {
 			ui: _ui,
 			init: _init,
-			logic: _logic
+			logic: _logic,
 		}
 	}
-
 
 	/**
 	 * @method dataCollection
@@ -358,83 +473,166 @@ export default class ABViewChart extends ABViewContainer  {
 		return obj.fields((f) => f.id == this.settings.columnValue)[0]
 	}
 
-	getReportData() {
-
+	valueField2() {
 		var dc = this.dataCollection();
-		if (dc == null) return [];
+		if (!dc) return null;
 
 		var obj = dc.datasource;
-		var dInfo = dc.getData();
+		
+		return obj.fields((f) => f.id == this.settings.columnValue2)[0]
+	}
 
-		var colorList = ["#ee4339", "#ee9336", "#eed236", "#d3ee36", "#a7ee70", "#58dccd", "#36abee", "#476cee", "#a244ea", "#e33fc7"];
+	getReportData() {
+		if (!this.dcChart) {
+			this.dcChart = new webix.DataCollection();
+		}
+
+		var dc = this.dataCollection();
+		if (dc == null) return this.dcChart;
+
 
 		var labelCol = this.labelField();
 		var valueCol = this.valueField();
+		var valueCol2 = this.valueField2();
 
-		if (!labelCol || !valueCol) return [];
+		if (!labelCol || !valueCol) return this.dcChart;
 
 		var labelColName = labelCol.columnName;
 		var numberColName = valueCol.columnName;
+		var numberColName2 = "";
 
-
-		var result = [];
-		var sumData = {};
-		var sumNumber = 0;
-
-		dInfo.forEach((item) => {
-
-			var labelKey = item[labelColName] || item.id;
-			var numberVal = parseFloat(item[numberColName] || 0);
-
-			if (sumData[labelKey] == null) {
-
-				var label = labelKey;
-
-				// Get label of the connect field
-				if (labelCol.key == "connectObject") {
-					var relateValues = labelCol.pullRelationValues(item);
-					if (relateValues != null)
-						label = relateValues.text;
-				}
-
-				sumData[labelKey] = {
-					label: label || item.id,
-					value: 0
-				};
-			}
-
-			sumData[labelKey].value += numberVal;
-
-			sumNumber += numberVal;
-
-		});
-
-		var index = 0;
-		for (var key in sumData) {
-
-			var val = sumData[key].value;
-			if (val <= 0) continue;
-
-			// Display to percent values
-			if (this.settings.isPercentage) {
-				val = (val / sumNumber * 100);
-				val = Math.round(val * 100) / 100; // round decimal 2 digits
-				val = val + ' %';
-			}
-
-
-
-			result.push({
-				label: sumData[key].label,
-				value: val,
-				color: colorList[index % colorList.length]
-			});
-
-			index += 1;
+		if (this.settings.multipleSeries && valueCol2) {
+			numberColName2 = valueCol2.columnName;
 		}
 
-		return result;
-	}
+		var colorList = ["#ee4339", "#ee9336", "#eed236", "#d3ee36", "#a7ee70", "#58dccd", "#36abee", "#476cee", "#a244ea", "#e33fc7"];
 
+		var refreshData = () => { 
+			
+			var dInfo = dc.getData();
+
+			var result = [];
+			var sumData = {};
+			var sumNumber = 0;
+			var sumNumber2 = 0;
+			var countNumber = dInfo.length; 
+
+			dInfo.forEach((item) => {
+
+				var labelKey = item[labelColName] || item.id;
+				var numberVal = parseFloat(item[numberColName] || 0);
+				if (this.settings.multipleSeries) {
+					var numberVal2 = parseFloat(item[numberColName2]) || 0;
+				}
+
+				if (sumData[labelKey] == null) {
+
+					var label = labelKey;
+
+					// Get label of the connect field
+					if (labelCol.key == "connectObject") {
+						var relateValues = labelCol.pullRelationValues(item);
+						if (relateValues != null)
+							label = relateValues.text;
+					}
+
+					if (this.settings.multipleSeries) {
+						sumData[labelKey] = {
+							label: label || item.id,
+							value: 0,
+							value2: 0
+						};
+					} else {
+						sumData[labelKey] = {
+							label: label || item.id,
+							value: 0
+						};
+					}
+				}
+
+				sumData[labelKey].value += numberVal;
+				sumNumber += numberVal;
+
+				if (this.settings.multipleSeries) {
+					sumData[labelKey].value2 += numberVal2;
+					sumNumber2 += numberVal2;
+				}
+
+			});
+
+
+			var index = 0;
+
+			for (var key in sumData) {
+
+				var val = sumData[key].value;
+				if (val <= 0) continue;
+
+				// Display to percent values
+				if (this.settings.isPercentage) {
+					val = (val / sumNumber * 100);
+					val = Math.round(val * 100) / 100; // round decimal 2 digits
+					val = val + ' %';
+				}
+
+				if (this.settings.multipleSeries) {
+
+					var val2 = sumData[key].value2;
+					if (val2 <= 0) continue;
+
+					// Display to percent values
+					if (this.settings.isPercentage) {
+						val2 = (val2 / sumNumber2 * 100);
+						val2 = Math.round(val2 * 100) / 100; // round decimal 2 digits
+						val2 = val2 + ' %';
+					}
+
+					result.push({
+						label: sumData[key].label,
+						value: val,
+						value2: val2,
+						color: colorList[index % colorList.length],
+						count: countNumber,
+
+					});
+				}
+				else {
+					result.push({
+						label: sumData[key].label,
+						value: val,
+						color: colorList[index % colorList.length],
+						count: countNumber,
+
+					});
+				}
+
+
+				index += 1;
+			}
+
+			this.dcChart.clearAll();
+			this.dcChart.parse(result);
+
+		}
+
+		refreshData();
+
+		dc.__dataCollection.attachEvent("onAfterAdd", function(id, index){
+			refreshData();
+		});
+
+		dc.__dataCollection.attachEvent("onAfterDelete", function(id){
+			refreshData();
+		});
+
+		dc.__dataCollection.attachEvent("onDataUpdate", function(id, data){
+			refreshData();
+			return true;
+		});
+		dc.__dataCollection.attachEvent("onAfterLoad", function(){
+			refreshData();
+		});
+		return this.dcChart;
+	}
 
 }

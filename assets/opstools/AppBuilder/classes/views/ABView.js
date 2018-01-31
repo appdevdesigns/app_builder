@@ -893,7 +893,7 @@ export default class ABView extends ABViewBase {
 			// not allowed Form's widgets
 			'button', 'checkbox', 'datepicker', 'fieldcustom', 'textbox', 'numberbox', 'selectsingle', 'tree',
 			// not allowed Chart's Widgets
-			'pie', 'bar', 'line', /*'area'*/
+			'pie', 'bar', 'line', 'area'
 		];
 
 		var allComponents = ABViewManager.allViews();
