@@ -43,7 +43,7 @@ export default class ABViewRule extends OP.Component {
 			this.actionDropList.push({ id:a.key, value: a.label })
 		})
 
-		this.selectedAction = null;				// the currently selected Action
+		this.selectedAction = null;				// the currently selected Action.key 
 		if (this.actionDropList.length > 0) {
 			this.selectedAction = this.actionDropList[0].id;
 		}
@@ -101,6 +101,30 @@ export default class ABViewRule extends OP.Component {
 				onSave: function (field) { console.warn('NO onSave()!') },
 			},
 
+
+			selectAction:(newValue, oldVal) => {
+
+				var QB = $$(ids.queryBuilder);
+
+				// bonus:  save current state of previous Action
+				var prevAction = this.getAction(oldVal);
+				prevAction.stashCondition(QB.getValue());
+
+				// now switch to the new Action
+				this.selectedAction = newValue;
+				var currAction = this.currentAction();
+				if (currAction) {
+
+					// reset Condition filters.
+					QB.setValue(currAction.condition());
+
+
+// reset Value display
+
+				}
+
+			}
+
 		}
 
 
@@ -141,8 +165,8 @@ width: 680,
 					value: this.selectedAction,
 					options: this.actionDropList,
 					on: {
-						onChange: function (newVal, oldVal) {
-this._logic.selectAction(newVal, this.getParentView());
+						onChange: (newVal, oldVal) => {
+							this._logic.selectAction(newVal, oldVal);
 						}
 					}
 				},
@@ -208,8 +232,12 @@ this._logic.selectAction(newVal, this.getParentView());
 
 
 	currentAction(){
-		return  this.listActions.filter((a) => {
-			return a.key == this.selectedAction;
+		return  this.getAction(this.selectedAction);
+	}
+
+	getAction(key) {
+		return this.listActions.filter((a) => {
+			return a.key == key;
 		})[0];
 	}
 

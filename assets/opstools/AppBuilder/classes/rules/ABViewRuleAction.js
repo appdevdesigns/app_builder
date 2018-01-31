@@ -38,7 +38,9 @@ export default class ABViewRuleAction extends OP.Component {
 		this.label = L('ab.component.ruleaction.abviewruleAction', '*generic abviewruleaction');
 
 		this.currentObject = null;  // the current ABObject we are associated with.
-		
+
+		this.queryRules = {};	// default set of rules for the Query Builder condition 
+
 
 		// Labels for UI components
 		var labels = this.labels = {
@@ -89,7 +91,49 @@ export default class ABViewRuleAction extends OP.Component {
 	}
 
 
-	// fields()
+
+	// condition
+	// Return the querybuilder setup structure for this Action.
+	// @return {array}  of querybuilder setup 
+	//					[
+	//						{rules},
+	//						[fields]
+	//					]
+	condition () {
+		return [ this.conditionRules(), this.conditionfields() ];
+	}
+
+
+	// stashCondition
+	// capture the current set of rules provided by the QB object.
+	// This doesn't guarantee these will be saved to the App settings.  
+	// Instead it is a temporary stash. Only the selected Action's 
+	// values will be persisited to the App settings.
+	// @param {obj/Array} rules  The QueryBuilder rule value returned from 
+	//							 .getValue()
+	//							 note: it is the first entry .getValue()[0]
+	// 
+	stashCondition(rules) {
+
+		// check to see if they sent us the raw QueryBuilder values and only
+		// pull off the rules if they did
+		if (Array.isArray(rules)) {
+			rules = rules[0];
+		}
+
+		// sanity check on glue value: don't update if null or not given.
+		if (rules) {
+
+			// sometimes .glue is undefined  so default to 'and'
+			if (rules.glue != 'or') rules.glue = 'and';
+
+			this.queryRules = rules;
+		}
+
+	}
+
+
+	// conditionFields()
 	// Return the list of fields we are able to update.
 	// @return {array} of querybuilder field definitions: 
 	//					[
@@ -98,8 +142,8 @@ export default class ABViewRuleAction extends OP.Component {
 	//					    { id:"age",     value:"Age",        type:"number" },
 	//					    { id:"bdate",   value:"Birth Date", type:"date" }
 	//					]
-	fields() {
-		console.error('!!! ABViewRuleAction.fields() should be overridden by child object.');
+	conditionFields() {
+		console.error('!!! ABViewRuleAction.conditionFields() should be overridden by child object.');
 		return [];
 	}
 
@@ -111,5 +155,11 @@ export default class ABViewRuleAction extends OP.Component {
 	}
 
 
+	// rules()
+	// Return the current rule definition object for this Action.
+	// @return {obj} 
+	conditionRules() {
+		return this.queryRules;
+	}
 
 }

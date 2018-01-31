@@ -1,13 +1,13 @@
 //
-// ABViewRuleActionFormRecordRuleUpdate
+// ABViewRuleActionFormRecordRuleInsertConnected
 //
-// An action that allows you to update fields on an object. 
+// An action that allows you to insert a connected object. 
 //
 //
 import ABViewRuleAction from "../ABViewRuleAction"
 
 
-export default class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleAction {
+export default class ABViewRuleActionFormRecordRuleInsertConnected extends ABViewRuleAction {
 
 	/**
 	 * @param {object} App 
@@ -21,8 +21,8 @@ export default class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleActi
 		var L = this.Label;
 
 
-		this.key = 'ABViewRuleActionFormRecordRuleUpdate';
-		this.label = L('ab.component.ruleaction.abviewruleActionFormRecordRuleUpdate', '*Update Record');
+		this.key = 'ABViewRuleActionFormRecordRuleInsertConnected';
+		this.label = L('ab.component.ruleaction.abviewruleActionFormRecordRuleInsertConnected', '*Insert Connected Object');
 
 
 		this.currentObject = null;  // the object this Action is tied to.
@@ -76,15 +76,6 @@ export default class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleActi
 
 	}
 
-////
-//// LEFT OFF HERE:
-// - explore webix querybuilder data types and how to define a new one
-// - Rule.onSelect() needs to update the condition area with the new Conditions.
-// - Action needs to return a data section
-// - Rule.onSelect() neds to update the data entry section
-// - empty conditions start with an "Always" display, and a button to add query
-// - displaying the Rule should populate QB with existing data.
-
 
 	conditionFields() {
 		
@@ -92,18 +83,18 @@ export default class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleActi
 
 		var currFields = [];
 
-		if (this.currentObject) {
-			this.currentObject.fields().forEach((f)=>{
+		// if (this.currentObject) {
+		// 	this.currentObject.fields().forEach((f)=>{
 
-				if (fieldTypes.indexOf(f.key) != -1) {
-					currFields.push({
-						id: f.id,
-						value: f.label,
-						type: f.key
-					});
-				}
-			})
-		}
+		// 		if (fieldTypes.indexOf(f.key) != -1) {
+		// 			currFields.push({
+		// 				id: f.id,
+		// 				value: f.label,
+		// 				type: f.key
+		// 			});
+		// 		}
+		// 	})
+		// }
 
 		return currFields;
 
