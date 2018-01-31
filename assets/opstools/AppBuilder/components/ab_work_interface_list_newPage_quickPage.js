@@ -76,40 +76,6 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 			 */
 			applicationLoad: function (application) {
 				CurrentApplication = application;
-
-				var pageOptions = [{ id: '-', value: labels.component.rootPage }];
-
-				/* Pages */
-				var addPage = function (page, indent) {
-					indent = indent || '';
-					pageOptions.push({ id: page.urlPointer(), value: indent + page.label });
-					page.pages().forEach(function (p) {
-						addPage(p, indent + '-');
-					})
-				}
-				application.pages().forEach(function (page) {
-					addPage(page, '');
-				});
-
-				$$(ids.parentList).define('options', pageOptions);
-				$$(ids.parentList).refresh();
-
-				/* Objects */
-				var objOptions = CurrentApplication.objects().map((obj) => {
-					return {
-						id: obj.id,
-						value: obj.label
-					}
-				}) || [];
-
-				objOptions.unshift({
-					id: '',
-					value: labels.component.selectObject
-				});
-
-				$$(ids.selectObject).define('options', objOptions);
-				$$(ids.selectObject).refresh();
-
 			},
 
 			/**
@@ -234,31 +200,38 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 			 */
 			show: function () {
 
-				// $$(componentId.addNewForm).clearValidation();
-				// $$(componentId.addNewForm).clear();
+				var pageOptions = [{ id: '-', value: labels.component.rootPage }];
+				
+				/* Pages */
+				var addPage = function (page, indent) {
+					indent = indent || '';
+					pageOptions.push({ id: page.urlPointer(), value: indent + page.label });
+					page.pages().forEach(function (p) {
+						addPage(p, indent + '-');
+					})
+				}
+				CurrentApplication.pages().forEach(function (page) {
+					addPage(page, '');
+				});
 
-				// var options = [{ id: '', value: '[Root page]' }];
-				// application.pages.each(function (d) {
-				// 	if (!d.parent) { // Get only root pages
-				// 		options.push({ id: d.id, value: d.label });
-				// 	}
-				// });
+				$$(ids.parentList).define('options', pageOptions);
+				$$(ids.parentList).refresh();
 
-				// $$(componentId.addNewParentList).define('options', options);
+				/* Objects */
+				var objOptions = CurrentApplication.objects().map((obj) => {
+					return {
+						id: obj.id,
+						value: obj.label
+					}
+				}) || [];
 
-				// // Default select parent page
-				// if (selectedPage) {
-				// 	var selected_page_id = selectedPage.id;
+				objOptions.unshift({
+					id: '',
+					value: labels.component.selectObject
+				});
 
-				// 	if (selectedPage.parent)
-				// 		selected_page_id = selectedPage.parent.id || selectedPage.parent;
-
-				// 	$$(componentId.addNewParentList).setValue(selected_page_id);
-				// }
-				// else
-				// 	$$(componentId.addNewParentList).setValue('');
-
-				// $$(componentId.addNewParentList).render();
+				$$(ids.selectObject).define('options', objOptions);
+				$$(ids.selectObject).refresh();
 
 
 				$$(ids.component).show();
