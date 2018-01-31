@@ -63,16 +63,24 @@ export default class ABViewRule extends OP.Component {
 			}
 		};
 
+
+		// this is different because multiple instances of this View can be displayed
+		// at the same time.  So make each instance Unique:
 		var uniqueInstanceID = webix.uid();
+		var myUnique = (key) => {
+			return this.unique(idBase + key ) + '_' + uniqueInstanceID;
+		}
+
+
 		// internal list of Webix IDs to reference our UI components.
 		var ids = this.ids = {
+
 			// each instance must be unique
-			component: this.unique(idBase + '_component')+'_'+uniqueInstanceID,	
+			component: myUnique('_component'),	
 			
+			queryBuilder: myUnique('_queryBuilder'),  
 
-			queryBuilder: this.unique(idBase+ '_queryBuilder')+'_'+uniqueInstanceID,  
-
-
+			valueDisplay: myUnique('_valueArea'),
 			// action: this.unique(idBase + '_action'),
 			// when: this.unique(idBase + '_when'),
 
@@ -91,6 +99,19 @@ export default class ABViewRule extends OP.Component {
 			for (var c in _logic.callbacks) {
 				_logic.callbacks[c] = options[c] || _logic.callbacks[c];
 			}
+
+			// make sure the current Action's value display is initialized:
+			var Action = this.currentAction();
+			if (Action) {
+
+				var comp = Action.valueDisplay(ids.valueDisplay);
+
+				_logic.replaceValueDisplay(comp);
+				
+				// webix.ui(comp.ui, $$(this.ids.valueDisplay));
+				comp.init();
+			}
+
 		};
 
 		// internal business logic 
@@ -99,6 +120,21 @@ export default class ABViewRule extends OP.Component {
 			callbacks: {
 				onDelete: function () { console.warn('NO onDelete()!') },
 				onSave: function (field) { console.warn('NO onSave()!') },
+			},
+
+
+			replaceValueDisplay:(component) => {
+
+				// remove current content area:
+				var $ValueDisplay = $$(this.ids.valueDisplay);
+				if (!$ValueDisplay) return;
+
+				var children = $ValueDisplay.getChildViews();
+				children.forEach((c)=>{
+					$ValueDisplay.removeView(c);
+				})
+
+				$ValueDisplay.addView(component.ui);
 			},
 
 
@@ -118,9 +154,11 @@ export default class ABViewRule extends OP.Component {
 					// reset Condition filters.
 					QB.setValue(currAction.condition());
 
-
-// reset Value display
-
+					// have Action display it's values form
+					var component = currAction.valueDisplay(ids.ValueDisplay);
+					_logic.replaceValueDisplay(component);
+					component.init()
+					// currAction.valueDisplay(ids.valueDisplay);
 				}
 
 			}
@@ -134,6 +172,8 @@ export default class ABViewRule extends OP.Component {
 
 	// not intended to be called externally
 	_generateUI () {
+
+
 		return {
 			id: this.ids.component,
 			view: "layout",
@@ -201,13 +241,13 @@ width: 680,
 									css: 'ab-text-bold',
 									width: this.App.config.labelWidthLarge
 								},
-//set_ui
-{
-	view: 'label',
-	label: ' ABViewRule: This should be the Set Area',
-	css: 'ab-text-bold',
-	// width: this.App.config.labelWidthLarge
-}
+								{
+									id: this.ids.valueDisplay,
+									view: 'layout',
+									rows: [
+										{ label: ' ABViewRule: This should be the Set Area', css: 'ab-text-bold', height:30 }
+									]
+								}
 							]
 						},
 					]
@@ -224,7 +264,7 @@ width: 680,
 
 		var selectedAction = this.currentAction();
 		if (selectedAction) {
-			fields = selectedAction.fields();
+			fields = selectedAction.conditionFields();
 		}
 
 		return fields;

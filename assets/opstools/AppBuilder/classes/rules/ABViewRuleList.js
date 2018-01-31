@@ -318,6 +318,9 @@ return {};
 				var Rule = this.getRule();
 				this.listRules.push(Rule);
 
+				// make sure Rule.ui is created before calling .init()
+				var viewId = $$(ids.rules).addView(Rule.ui);
+
 				Rule.init({
 					onDelete: (deletedRule) => {
 
@@ -330,7 +333,7 @@ return {};
 // save()
 					}
 				});
-				var viewId = $$(ids.rules).addView(Rule.ui);
+				
 
 				return viewId;
 			},

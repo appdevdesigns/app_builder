@@ -41,6 +41,8 @@ export default class ABViewRuleAction extends OP.Component {
 
 		this.queryRules = {};	// default set of rules for the Query Builder condition 
 
+		this.valueRules = [];   // the initial Value Rules for this Action
+
 
 		// Labels for UI components
 		var labels = this.labels = {
@@ -67,7 +69,7 @@ export default class ABViewRuleAction extends OP.Component {
 		};
 
 
-		this.ui = {};
+		this._ui = null;		// internally track our UI Component value Rules
 
 
 		// for setting up UI
@@ -100,7 +102,7 @@ export default class ABViewRuleAction extends OP.Component {
 	//						[fields]
 	//					]
 	condition () {
-		return [ this.conditionRules(), this.conditionfields() ];
+		return [ this.conditionRules(), this.conditionFields() ];
 	}
 
 
@@ -148,6 +150,14 @@ export default class ABViewRuleAction extends OP.Component {
 	}
 
 
+	// conditionRules()
+	// Return the current rule definition object for this Action.
+	// @return {obj} 
+	conditionRules() {
+		return this.queryRules;
+	}
+
+
 	// objectLoad
 	// save the current object this Action is associated with.
 	objectLoad(object) {
@@ -155,11 +165,34 @@ export default class ABViewRuleAction extends OP.Component {
 	}
 
 
-	// rules()
-	// Return the current rule definition object for this Action.
-	// @return {obj} 
-	conditionRules() {
-		return this.queryRules;
+	// valueDisplay
+	// create the form to collect the specific data this Action needs to function.
+	// @param {string} webixID  the $$(webixID) of the area to insert our display.
+	valueDisplay( webixID ) {
+		return this.valueDisplayComponent(webixID);
+		
+		var view = this.valueDisplayComponent(webixID);
+		view.ui.id = webixID;
+		webix.ui(view.ui, $$(webixID));
+		view.init(this.valueRules);
+		$$(webixID).adjust();
+	}
+
+
+	// valueDisplayComponent
+	// Return an ABView to display our values form.
+	// 
+	valueDisplayComponent(idBase) {
+
+		return this._ui = {
+			ui: {
+				template:"ABViewRuleAction.valueDisplayComponent"
+			},
+			init:(data)=>{
+				console.error("!!! ABViewRuleAction.valueDisplayComponent() should be overridden.");
+				console.warn(" --> passed in data:", data);
+			}
+		}
 	}
 
 }
