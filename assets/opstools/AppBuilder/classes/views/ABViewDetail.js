@@ -243,9 +243,9 @@ export default class ABViewDetail extends ABViewContainer {
 
 	}
 
-	static propertyEditorPopulate(ids, view) {
+	static propertyEditorPopulate(App, ids, view) {
 
-		super.propertyEditorPopulate(ids, view);
+		super.propertyEditorPopulate(App, ids, view);
 
 		var SourceSelector = $$(ids.datacollection);
 		var dataCollectionId = view.settings.datacollection;
@@ -274,7 +274,7 @@ export default class ABViewDetail extends ABViewContainer {
 		// update properties when a field component is deleted
 		view.views().forEach((v) => {
 			if (v instanceof ABViewDetailComponent)
-				v.once('destroyed', () => this.propertyEditorPopulate(ids, view));
+				v.once('destroyed', () => this.propertyEditorPopulate(App, ids, view));
 		});
 	}
 

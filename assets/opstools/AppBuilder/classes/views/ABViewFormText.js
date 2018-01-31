@@ -290,9 +290,9 @@ export default class ABViewFormText extends ABViewFormComponent  {
 	}
 
 
-	static propertyEditorPopulate(ids, view) {
+	static propertyEditorPopulate(App, ids, view) {
 
-		super.propertyEditorPopulate(ids, view);
+		super.propertyEditorPopulate(App, ids, view);
 
 		$$(ids.useFormDefaults).setValue(view.settings.useFormDefaults);
 		$$(ids.labelPosition).setValue(view.settings.labelPosition);

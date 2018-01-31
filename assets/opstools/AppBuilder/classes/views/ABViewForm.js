@@ -212,7 +212,7 @@ export default class ABViewForm extends ABViewContainer {
 
 						// Add new form field
 						var newFieldView = currView.addFieldToForm(f, yPosition);
-						newFieldView.once('destroyed', () => this.propertyEditorPopulate(ids, currView));
+						newFieldView.once('destroyed', () => this.propertyEditorPopulate(App, ids, currView));
 
 						// update item to UI list
 						f.selected = 1;
@@ -252,7 +252,7 @@ export default class ABViewForm extends ABViewContainer {
 			// add a field to the form
 			if (item.selected) {
 				var fieldView = currView.addFieldToForm(item);
-				fieldView.once('destroyed', () => this.propertyEditorPopulate(ids, currView));
+				fieldView.once('destroyed', () => this.propertyEditorPopulate(App, ids, currView));
 			}
 			// remove field in the form
 			else {
@@ -482,9 +482,9 @@ export default class ABViewForm extends ABViewContainer {
 
 	}
 
-	static propertyEditorPopulate(ids, view) {
+	static propertyEditorPopulate(App, ids, view) {
 
-		super.propertyEditorPopulate(ids, view);
+		super.propertyEditorPopulate(App, ids, view);
 
 		var formCom = view.formComponent();
 		var dataCollectionId = formCom.settings.datacollection;
@@ -513,7 +513,7 @@ export default class ABViewForm extends ABViewContainer {
 		// update properties when a field component is deleted
 		view.views().forEach((v) => {
 			if (v instanceof ABViewFormField)
-				v.once('destroyed', () => this.propertyEditorPopulate(ids, view));
+				v.once('destroyed', () => this.propertyEditorPopulate(App, ids, view));
 		});
 
 		SourceSelector.enable();

@@ -160,13 +160,11 @@ export default class ABViewContainer extends ABView {
 
 					// dx: _logic.validatePosition(child.position.dx, 1, Dashboard.config.gridColumns),
 					// dy: _logic.validatePosition(child.position.dy, 1, Dashboard.config.gridRows),
-					// x: _logic.validatePosition(child.position.x, 0, Dashboard.config.gridColumns - 1),
-					// y: _logic.validatePosition(child.position.y, 0, Dashboard.config.gridRows - 1)
 
 					dx: child.position.dx || 1,
 					dy: child.position.dy || 1,
-					x: child.position.x || 0,
-					y: child.position.y || 0,
+					x: _logic.validatePosition(child.position.x, 0, Dashboard.config.gridColumns - 1),
+					y: child.position.y || 0
 
 				});
 
@@ -292,6 +290,9 @@ export default class ABViewContainer extends ABView {
 
 				var Dashboard = $$(ids.component);
 
+				// ignore in "preview" mode
+				if (Dashboard == null || Dashboard.config.view != "dashboard") return;
+
 				var viewState = Dashboard.serialize();
 
 				// save view position state to views
@@ -302,6 +303,10 @@ export default class ABViewContainer extends ABView {
 
 						v.position.x = state.x;
 						v.position.y = state.y;
+
+						// validate position data
+						if (v.position.x < 0) v.position.x = 0;
+						if (v.position.y < 0) v.position.y = 0;
 					}
 
 				});
@@ -372,7 +377,7 @@ export default class ABViewContainer extends ABView {
 				on: {
 					onChange: function (newVal, oldVal) {
 
-						if (newVal > 8) 
+						if (newVal > 8)
 							$$(ids.columns).setValue(8);
 
 					}
@@ -383,11 +388,27 @@ export default class ABViewContainer extends ABView {
 	}
 
 
-	static propertyEditorPopulate(ids, view) {
+	static propertyEditorPopulate(App, ids, view) {
 
-		super.propertyEditorPopulate(ids, view);
+		super.propertyEditorPopulate(App, ids, view);
 
 		$$(ids.columns).setValue(view.settings.columns || ABPropertyComponentDefaults.columns);
+
+		// when a change is made in the properties the popups need to reflect the change
+		this.updateEventIds = this.updateEventIds || {}; // { viewId: boolean, ..., viewIdn: boolean }
+		if (!this.updateEventIds[view.id]) {
+			this.updateEventIds[view.id] = true;
+
+			// refresh dashboard to update "position.x" and "position.y" of child views
+			view.addListener('properties.updated', function () {
+
+				setTimeout(() => {
+					view.editorComponent(App).logic.onChange();
+				}, 100)
+
+			}, this);
+		}
+
 
 	}
 

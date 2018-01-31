@@ -104,9 +104,9 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 
 	}
 
-	static propertyEditorPopulate(ids, view) {
+	static propertyEditorPopulate(App, ids, view) {
 
-		super.propertyEditorPopulate(ids, view);
+		super.propertyEditorPopulate(App, ids, view);
 		
 		// Set the options of the possible edit forms
 		var editForms = [
