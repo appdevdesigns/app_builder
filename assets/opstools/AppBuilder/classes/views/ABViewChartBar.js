@@ -21,6 +21,8 @@ var ABViewChartBarPropertyComponentDefaults = {
 	// chartWidth: 600,
 	height: 200,
 	labelFontSize: 12,
+	stepValue: 20,
+	maxValue: 100,
 
 }
 
@@ -73,6 +75,8 @@ export default class ABViewChartBar extends ABViewWidget {
 		this.settings.height = parseInt(this.settings.height || ABViewChartBarPropertyComponentDefaults.height);
 
 		this.settings.labelFontSize = parseInt(this.settings.labelFontSize || ABViewChartBarPropertyComponentDefaults.labelFontSize);
+		this.settings.stepValue = parseInt(this.settings.stepValue || ABViewChartBarPropertyComponentDefaults.stepValue);
+		this.settings.maxValue = parseInt(this.settings.maxValue || ABViewChartBarPropertyComponentDefaults.maxValue);
 
 	}
 
@@ -102,7 +106,8 @@ export default class ABViewChartBar extends ABViewWidget {
 		_ui.id = ids.component;
 
 		var _init = (options) => {
-			component.init(options);
+			var reportData = this.parent.getReportData();
+			$$(ids.component).data.sync(reportData);
 		}
 
 		var _logic = component.logic;
@@ -162,6 +167,18 @@ export default class ABViewChartBar extends ABViewWidget {
 				label: L('ab.component.chart.bar.chartHeight', '*Height')
 			},
 			{
+				name: 'stepValue',
+				view: 'counter',
+				min: 1,
+				label: L('ab.component.chart.bar.stepValue', '*Step')
+			},
+			{
+				name: 'maxValue',
+				view: 'counter',
+				min: 1,
+				label: L('ab.component.chart.bar.maxValue', '*Max Value')
+			},
+			{
 				name: 'labelFontSize',
 				view: 'counter',
 				min: 1,
@@ -188,6 +205,8 @@ export default class ABViewChartBar extends ABViewWidget {
 		// $$(ids.chartWidth).setValue(view.settings.chartWidth != null ? view.settings.chartWidth : ABViewChartBarPropertyComponentDefaults.chartWidth);
 		$$(ids.height).setValue(view.settings.height != null ? view.settings.height : ABViewChartBarPropertyComponentDefaults.height);
 		$$(ids.labelFontSize).setValue(view.settings.labelFontSize != null ? view.settings.labelFontSize : ABViewChartBarPropertyComponentDefaults.labelFontSize);
+		$$(ids.stepValue).setValue(view.settings.stepValue != null ? view.settings.stepValue : ABViewChartBarPropertyComponentDefaults.stepValue);
+		$$(ids.maxValue).setValue(view.settings.maxValue != null ? view.settings.maxValue : ABViewChartBarPropertyComponentDefaults.maxValue);
 		$$(ids.barType).setValue(view.settings.barType != null ? view.settings.barType : ABViewChartBarPropertyComponentDefaults.barType);
 		$$(ids.barPreset).setValue(view.settings.barPreset != null ? view.settings.barPreset : ABViewChartBarPropertyComponentDefaults.barPreset);
 		$$(ids.isLegend).setValue(view.settings.isLegend != null ? view.settings.isLegend : ABViewChartBarPropertyComponentDefaults.isLegend);
@@ -205,6 +224,8 @@ export default class ABViewChartBar extends ABViewWidget {
 		// view.settings.chartWidth = $$(ids.chartWidth).getValue();
 		view.settings.height = $$(ids.height).getValue();
 		view.settings.labelFontSize = $$(ids.labelFontSize).getValue();
+		view.settings.stepValue = $$(ids.stepValue).getValue();
+		view.settings.maxValue = $$(ids.maxValue).getValue();
 
 	}
 
@@ -228,29 +249,10 @@ export default class ABViewChartBar extends ABViewWidget {
 			component: App.unique(idBase + '_component'),
 		}
 
-		var _ui = {
-			id: ids.component,
-			cols: []
-		};
-
-		var reportData = this.parent.getReportData();
-		var maxValue = this.getMaxValue(reportData, "value");
-		var dataCount = Object.keys(reportData).length;
-		var stepValue = 0;
-		var endValue = 0;
-		if (dataCount > 0 && maxValue) {
-			if(this.parent.settings.isPercentage) {
-				endValue = 100;
-				stepValue = 20;
-			}
-			else {
-				endValue = maxValue["value"];
-				stepValue = Math.round(endValue / dataCount);
-			}
-		};
 
 		if (this.settings.barType == "bar" || this.settings.barType == null) {
-			_ui.cols.push({
+			var _ui = {
+				id: ids.component,
 				view: "chart",
 				type: this.settings.barType != null ? this.settings.barType : ABViewChartBarPropertyComponentDefaults.barType,
 				preset: this.settings.barPreset != null ? this.settings.barPreset : ABViewChartBarPropertyComponentDefaults.barPreset,
@@ -258,8 +260,8 @@ export default class ABViewChartBar extends ABViewWidget {
 				color: "#color#",
 				yAxis: {
 					start: 0,
-					step: stepValue,
-					end: endValue
+					step:  this.settings.stepValue != null ? this.settings.stepValue : ABViewChartBarPropertyComponentDefaults.stepValue,//"#stepValue#",
+					end:  this.settings.maxValue != null ? this.settings.maxValue : ABViewChartBarPropertyComponentDefaults.maxValue,//"#maxValue#"
 				},
 				xAxis: {
 					template: this.settings.isLegend == true ? "<div style='font-size:" + this.settings.labelFontSize + "px;'>#label#</div>" : ""
@@ -267,11 +269,12 @@ export default class ABViewChartBar extends ABViewWidget {
 				legend: this.settings.isLegend == true ? "<div style='font-size:" + this.settings.labelFontSize + "px;'>#label#</div>" : "",
 				height: this.settings.height != null ? this.settings.height : ABViewChartBarPropertyComponentDefaults.height,
 				// width: this.settings.chartWidth != null ? this.settings.chartWidth : ABViewChartBarPropertyComponentDefaults.chartWidth,
-				data: reportData
-			});
+				// data: reportData
+			};
 		}
 		else {
-			_ui.cols.push({
+			var _ui = {
+				id: ids.component,
 				view: "chart",
 				type: this.settings.barType != null ? this.settings.barType : ABViewChartBarPropertyComponentDefaults.barType,
 				preset: this.settings.barPreset != null ? this.settings.barPreset : ABViewChartBarPropertyComponentDefaults.barPreset,
@@ -282,19 +285,25 @@ export default class ABViewChartBar extends ABViewWidget {
 				},
 				xAxis: {
 					start: 0,
-					step: stepValue,
-					end: endValue
+					step: "#stepValue#",
+					end: "#maxValue#"
 				},
-				legend: this.settings.isLegend == true ? "<div style='font-size:" + this.settings.labelFontSize + "px;'>#label#</div>" : "",
+				legend: this.settings.isLegend == true ? {
+					template: "<div style='font-size:" + this.settings.labelFontSize + "px;'>#label#</div>",
+					values: [] // TODO : bug in webix 5.1.7
+				} : null,
 				height: this.settings.height != null ? this.settings.height : ABViewChartBarPropertyComponentDefaults.height,
 				// width: this.settings.chartWidth != null ? this.settings.chartWidth : ABViewChartBarPropertyComponentDefaults.chartWidth,
-				data: reportData
-			});
+				// data: reportData
+			};
 
 		};
 
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
+			var reportData = this.parent.getReportData();
+			$$(ids.component).data.sync(reportData);
+
 		}
 
 
@@ -316,15 +325,6 @@ export default class ABViewChartBar extends ABViewWidget {
 	 */
 	componentList() {
 		return [];
-	}
-
-	getMaxValue (arr, prop) {
-		var max;
-		for (var i=0 ; i<arr.length ; i++) {
-			if (!max || parseInt(arr[i][prop]) > parseInt(max[prop]))
-			max = arr[i];
-		}
-		return max;
 	}
 
 }

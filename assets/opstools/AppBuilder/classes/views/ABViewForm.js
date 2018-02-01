@@ -487,7 +487,7 @@ export default class ABViewForm extends ABViewContainer {
 		super.propertyEditorPopulate(App, ids, view);
 
 		var formCom = view.formComponent();
-		var dataCollectionId = formCom.settings.datacollection;
+		var dataCollectionId = (formCom.settings.datacollection ? formCom.settings.datacollection : null);
 		var SourceSelector = $$(ids.datacollection);
 
 		// Pull data collections to options

@@ -889,8 +889,11 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                     }
                     
                     // add fillspace to last editiable column
-                    columnHeaders[columnHeaders.length-1-columnSplitRight].fillspace = true;
-                    columnHeaders[columnHeaders.length-1-columnSplitRight].minWidth = columnHeaders[columnHeaders.length-1-columnSplitRight].width;
+                    var lastCol = columnHeaders[columnHeaders.length-1-columnSplitRight];
+                    if (lastCol) {
+                        lastCol.fillspace = true;
+                        lastCol.minWidth = lastCol.width;
+                    }
                     
     				DataTable.refreshColumns(columnHeaders)
 
