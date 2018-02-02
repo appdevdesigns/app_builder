@@ -32,10 +32,6 @@
 //  }
 
 
-//// LEFT OFF HERE:
-//// create ABViewRuleActionFormRecordRuleUpdate()
-
-
 export default class ABViewRuleList extends OP.Component {
 
 	/**
@@ -68,15 +64,15 @@ export default class ABViewRuleList extends OP.Component {
 		};
 
 		// internal list of Webix IDs to reference our UI components.
-		var ids = {
-			component: this.unique(idBase + '_component'),
-			rules: this.unique(idBase + '_rules'),
+		var ids = this.ids = {
+			component: idBase + '_component',
+			rules: idBase + '_rules',
 
-			action: this.unique(idBase + '_action'),
-			when: this.unique(idBase + '_when'),
+			action: idBase + '_action',
+			when: idBase + '_when',
 
-			values: this.unique(idBase + '_values'),
-			set: this.unique(idBase + '_set')
+			values: idBase + '_values',
+			set: idBase + '_set'
 
 		};
 
@@ -176,25 +172,12 @@ export default class ABViewRuleList extends OP.Component {
 				$$(ids.component).hide();
 			},
 
-			buttonSave: function () {
+			buttonSave: () => {
 
-				var results = [];
-
-				// Pull rules
-				var $viewRules = $$(ids.rules).getChildViews();
-				$viewRules.forEach(r => {
-
-					results.push({
-						action: r.queryView({ for: "action" }).getValue(),
-						when: r.config.when.getValue(),
-						values: r.config.set.getValue(),
-					})
-
-				});
+				var results = this.toSettings();
 
 				_logic.callbacks.onSave(results);
 				_logic.hide();
-
 			},
 
 			callbacks: {
@@ -202,118 +185,8 @@ export default class ABViewRuleList extends OP.Component {
 				onSave: function (field) { console.warn('NO onSave()!') },
 			},
 
-			/**
-			 * @method getRuleUI
-			 * get UI of rule view
-			 * 
-			 * @param options - {
-			 *		removable: boolean
-			 * }
-			 * 	
-			 */
-			getRuleUI: (options) => {
 
-// in ABViewRuleListFormRecordRules:
-// var listActions = [
-//		new ABViewRuleActionFormRecordUpdateExisting(),
-//		new ABViewRuleActionFormRecordInsertConnected(),
-//		new ABViewRuleActionFormRecordUpdateConnected()
-// ]
-// var Rule = new ABViewRule(App, idBase, listActions);
-// return Rule.getUI();
-console.error('!!! old ...  getRuleUI()');
-return {};
-				options = options || {};
-
-				// Create "When" and "Set" UI - Set fields
-				var when = new RowFilter(App, idBase);
-				var set = new RowUpdater(App, idBase);
-
-				if (_currentObject) {
-					when.objectLoad(_currentObject);
-					set.objectLoad(_currentObject);
-				}
-
-				var set_ui = set.ui;
-				set_ui.id = ids.set;
-				set_ui.width = 560;
-
-
-				return {
-					view: "layout",
-					css: "ab-component-form-rule",
-					when: when, // Store a instance of when
-					set: set, // Store a instance of set
-					width: 680,
-					rows: [
-						{
-							view: "template",
-							css: "ab-component-form-rule",
-							template: '<i class="fa fa-trash ab-component-remove"></i>',
-							height: 30,
-							hidden: options.removable == false,
-							onClick: {
-								"ab-component-remove": function (e, id, trg) {
-
-									var viewRule = this.getParentView();
-									_logic.removeRule(viewRule);
-
-								}
-							}
-						},
-						// Action
-						{
-							view: "richselect",
-							for: "action",
-							label: labels.component.action,
-							labelWidth: App.config.labelWidthLarge,
-							value: actionOptions[0].id,
-							options: actionOptions,
-							on: {
-								onChange: function (newVal, oldVal) {
-									_logic.selectAction(newVal, this.getParentView());
-								}
-							}
-						},
-						// When
-						{
-							cols: [
-								{
-									view: 'label',
-									css: 'ab-text-bold',
-									label: labels.component.when,
-									width: App.config.labelWidthLarge
-								},
-								when.ui
-							]
-						},
-						// Values
-						{
-							for: "values",
-							cells: [
-								// Update this record
-								{
-									view: 'layout',
-									batch: actionOptions[0].id,
-									cols: [
-										{
-											view: 'label',
-											label: labels.component.values,
-											css: 'ab-text-bold',
-											width: App.config.labelWidthLarge
-										},
-										set_ui
-									]
-								},
-							]
-						}
-					]
-				}
-
-			},
-
-
-			addRule: () => {
+			addRule: (settings) => {
 
 				var Rule = this.getRule();
 				this.listRules.push(Rule);
@@ -333,20 +206,15 @@ return {};
 // save()
 					}
 				});
+
+
+				if (settings) {
+					Rule.fromSettings(settings);
+				}
 				
 
 				return viewId;
 			},
-
-// removeRule: ($viewRule) => {
-// 	$$(ids.rules).removeView($viewRule);
-// },
-
-// selectAction: (action, $viewRule) => {
-
-// 	// Swtich the view of values
-// 	$viewRule.queryView({ for: "values" }).showBatch(action);
-// },
 
 			hide: function () {
 				$$(ids.component).hide();
@@ -363,33 +231,7 @@ return {};
 				this.listRules.forEach((r)=>{
 					r.objectLoad(object);
 				})
-			},
-
-// convert to fromSettings( configSettings )
-setValue: function (rules) {
-
-	$$(ids.rules).reconstruct();
-
-	_rules = rules || [];
-	_rules.forEach(r => {
-
-		var $viewRule = $$(_logic.addRule());
-
-		// Select 'action'
-		$viewRule.queryView({ for: "action" }).setValue(r.action);
-
-		// Set 'when'
-		$viewRule.config.when.setValue(r.when);
-
-		// Define 'value'
-		$viewRule.config.set.setValue(r.values);
-
-		$viewRule.adjust();
-
-	});
-
-
-}
+			}
 
 		};
 
@@ -403,6 +245,42 @@ setValue: function (rules) {
 		this.objectLoad = _logic.objectLoad;
 		this.setValue = _logic.setValue;
 
+	}
+
+
+	// fromSettings
+	// Create an initial set of default values based upon our settings object.
+	// @param {obj} settings  The settings object we created in .toSettings()
+	fromSettings (settings) {
+		// settings: [
+		//  { rule.settings },
+		//  { rule.settings }
+		// ]
+
+		// clear any existing Rules:
+		this.listRules.forEach((rule)=>{
+			$$(this.ids.rules).removeView(rule.ids.component);
+		})
+		this.listRules = [];
+
+
+		if (settings) {
+			settings.forEach((ruleSettings)=>{
+				this._logic.addRule(ruleSettings);
+			})
+		}
+	}
+
+
+	// toSettings
+	// create a settings object to be persisted with the application.
+	// @return {array} of rule settings.
+	toSettings () {
+		var settings = [];
+		this.listRules.forEach((r)=>{
+			settings.push(r.toSettings());
+		})
+		return settings;
 	}
 
 

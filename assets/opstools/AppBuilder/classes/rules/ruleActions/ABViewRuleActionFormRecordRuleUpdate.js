@@ -27,6 +27,10 @@ export default class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleActi
 
 		this.currentObject = null;  // the object this Action is tied to.
 
+		this.formRows = [];	// keep track of the Value Components being set
+							// [
+							//		{ fieldId: xxx, value:yyy, type:key['string', 'number', 'date',...]} 
+							// ]
 
 		// Labels for UI components
 		var labels = this.labels = {
@@ -38,49 +42,7 @@ export default class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleActi
 			}
 		};
 
-		// // internal list of Webix IDs to reference our UI components.
-		// var ids = this.ids = {
-		// 	// each instance must be unique
-		// 	component: this.unique(idBase + '_component')+'_'+webix.uid(),	
-		// 	// rules: this.unique(idBase + '_rules'),
-
-		// 	// action: this.unique(idBase + '_action'),
-		// 	// when: this.unique(idBase + '_when'),
-
-		// 	// values: this.unique(idBase + '_values'),
-		// 	// set: this.unique(idBase + '_set')
-
-		// };
-
-
-		// this.ui = {};
-
-
-		// // for setting up UI
-		// this.init = (options) => {
-		// 	// register callbacks:
-		// 	for (var c in _logic.callbacks) {
-		// 		_logic.callbacks[c] = options[c] || _logic.callbacks[c];
-		// 	}
-		// };
-
-		// // internal business logic 
-		// var _logic = this._logic = {
-
-		// 	callbacks: {
-		// 		onDelete: function () { console.warn('NO onDelete()!') },
-		// 		onSave: function (field) { console.warn('NO onSave()!') },
-		// 	},
-
-		// }
-
 	}
-
-////
-//// LEFT OFF HERE:
-// - persist data 
-// - displaying the Rule should populate QB with existing data.
-
 
 	conditionFields() {
 		
@@ -132,7 +94,6 @@ export default class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleActi
 		var _ui = {
 			view: "form",
 			id: ids.updateForm,
-// hidden: true,
 			elements: []
 		};
 
@@ -169,7 +130,10 @@ export default class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleActi
 					UpdateForm.removeView($$(row.ui.id));
 				}, data:data});
 
-				UpdateForm.adjust();
+// UpdateForm.adjust();
+
+				// store this row
+				this.formRows.push(row);
 			},
 
 
@@ -198,7 +162,14 @@ export default class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleActi
 
 			setValues: (valueRules ) => {
 
-				valueRules = valueRules || [];
+				// valueRules = {
+				//	fieldOperations:[
+				//		{ fieldID:xxx, value:yyyy, type:zzz, op:aaa }
+				//	]
+				// }
+
+				valueRules = valueRules || {};
+				valueRules.fieldOperations = valueRules.fieldOperations || [];
 
 				// find the form
 				var UpdateForm = _logic.formGet();
@@ -208,18 +179,43 @@ export default class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleActi
 				_logic.formClear();
 
 				// if there are values to 
-				if (valueRules.length > 0) {
+				if (valueRules.fieldOperations.length > 0) {
 
-					valueRules.forEach((r) => {
+					valueRules.fieldOperations.forEach((r) => {
 						_logic.addRow(r);
 					})
+				} 
 
-				} else {
+				// display an empty row
+				_logic.addRow(); 
 
-					// display an empty row
-					_logic.addRow(); 
-				}
+			}, 
 
+			fromSettings: (settings) => {
+
+				// make sure UI is updated:
+				_logic.setValues(settings)
+
+			},
+
+			toSettings:() => {
+
+				// valueRules = {
+				//	fieldOperations:[
+				//		{ fieldID:xxx, value:yyyy, type:zzz, op:aaa }
+				//	]
+				// }
+				var settings = {fieldOperations:[]};
+
+				// for each of our formRows, decode the propery {} 
+				this.formRows.forEach((fr) => {
+					var rowSettings = fr.toSettings();
+					if (rowSettings) {
+						settings.fieldOperations.push(fr.toSettings());
+					}
+				})
+
+				return settings;
 			}
 			
 		};
@@ -227,6 +223,8 @@ export default class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleActi
 		return {
 			ui: _ui,
 			init:init,
+			fromSettings: (settings) => { _logic.fromSettings(settings); },
+			toSettings: ()=> { return _logic.toSettings() },
 			_logic:_logic
 		};
 	}
@@ -236,15 +234,17 @@ export default class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleActi
 
 		var uniqueInstanceID = webix.uid();
 		var myUnique = (key) => {
-			return idBase + key  + '_' + uniqueInstanceID;
+			// return idBase + '_' + key  + '_' + uniqueInstanceID;
+			return key  + '_' + uniqueInstanceID;
 		}
 
 		var ids = {
-			row:      		myUnique('_row'),
-			updateForm: 	myUnique('_updateFormRow'),	
-			field: 			myUnique('_field'),
-			buttonAdd: 		myUnique('_add'),
-			buttonDelete: 	myUnique('_delete')
+			row:      		myUnique('row'),
+			updateForm: 	myUnique('updateFormRow'),	
+			field: 			myUnique('field'),
+			value:  		myUnique('value'),
+			buttonAdd: 		myUnique('add'),
+			buttonDelete: 	myUnique('delete')
 		};
 
 
@@ -287,9 +287,13 @@ export default class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleActi
 
 			},
 
+			getObjectField: (fieldID) => {
+				return this.currentObject.fields((f)=>{ return f.id == fieldID })[0];
+			}, 
+
 			selectField: (columnID) => {
 
-				var field = this.currentObject.fields((f)=>{ return f.id == columnID })[0];
+				var field = _logic.getObjectField(columnID );
 				if (!field) return;
 
 				var fieldComponent = field.formComponent(),
@@ -297,6 +301,7 @@ export default class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleActi
 					formFieldComponent = abView.component(this.App),
 					inputView = formFieldComponent.ui;
 
+					inputView.id = ids.value;  // set our expected id 
 
 // WORKAROUND: add '[Current User]' option to the user data field
 if (field.key == 'user') {
@@ -319,15 +324,38 @@ if (field.key == 'user') {
 				if (field.customDisplay)
 					field.customDisplay(field, this.App, $row.getChildViews()[3].$view);
 
-				// _logic.refreshFieldList();
-				// $$(this).adjust();
-				$$($row).adjust();
-				$row.getFormView().adjust();
+// $$($row).adjust();
+// $row.getFormView().adjust();
 			
 			},
 
 			setValue: (data) => {
-console.error('!!! setValue():', data);				
+				$$(ids.field).setValue(data.fieldID);
+					// note: this triggers our _logic.selectField() fn.
+				$$(ids.value).setValue(data.value);	
+			},
+
+			toSettings: () => {
+
+				// if this isn't the last entry row
+				// * a row with valid data has the [delete] button showing.
+				var buttonDelete = $$(ids.buttonDelete);
+				if (buttonDelete && buttonDelete.isVisible()) {
+
+					var data = {};
+					data.fieldID = $$(ids.field).getValue();
+					data.value = $$(ids.value).getValue();
+
+					data.op = 'set';  // possible to create other types of operations.
+
+					var field = _logic.getObjectField(data.fieldID);
+					data.type = field.type;
+
+					return data;
+				}
+				else {
+					return null;
+				}
 			}
 		}
 
@@ -335,7 +363,6 @@ console.error('!!! setValue():', data);
 		var _ui = {
 			id: ids.row,
 			view: 'layout',
-			isolate: true,
 			cols: [
 				{
 					// Label
@@ -350,9 +377,7 @@ console.error('!!! setValue():', data);
 					options: _logic.getFieldList(true),
 					on: {
 						onChange: function (columnId) {
-// var $viewCond = this.getParentView();
 							_logic.selectField(columnId);
-
 						}
 					}
 				},
@@ -399,11 +424,6 @@ console.error('!!! setValue():', data);
 						_logic.buttonsToggle();
 
 						_logic.callbacks.onAdd();
-// var $viewForm = this.getFormView();
-
-// var indexView = $viewForm.index(this.getParentView());
-
-// _logic.addUpdateValue(indexView + 1);
 					}
 				},
 				{
@@ -415,11 +435,7 @@ console.error('!!! setValue():', data);
 					width: 30,
 					hidden:true,
 					click: function () {
-
 						_logic.callbacks.onDelete();
-// var $viewCond = this.getParentView();
-
-// _logic.removeUpdateValue($viewCond);
 					}
 				}
 			]
@@ -432,6 +448,7 @@ console.error('!!! setValue():', data);
 			}
 
 			if (options.data) {
+				// options.data = { formID:xxx, value:yyy,  type:zzzz }
 				_logic.setValue(options.data);
 
 				_logic.buttonsToggle();
@@ -443,9 +460,44 @@ console.error('!!! setValue():', data);
 		return {
 			ui: _ui,
 			init:init,
+			toSettings: () => { return _logic.toSettings() },
 			_logic:_logic
 		};
 
+	}
+
+
+	// fromSettings
+	// initialize this Action from a given set of setting values.
+	// @param {obj}  settings
+	fromSettings(settings) {
+		settings = settings || {};
+		super.fromSettings(settings); // let the parent handle the QB
+
+		// now we handle our valueRules:{} object settings.
+		// pass the settings off to our DisplayList component:
+		this._ui.fromSettings(settings.valueRules);
+	}
+
+
+	// toSettings
+	// return an object that represents the current state of this Action
+	// @return {obj}
+	toSettings() {
+
+		// settings: {
+		//	querycondition:{},
+		//	values:{}
+		// }
+
+		// let our parent store our QB settings
+		var settings = super.toSettings();
+
+		// settings = { queryRules:{} }
+
+		settings.valueRules = this._ui.toSettings();
+
+		return settings;
 	}
 
 

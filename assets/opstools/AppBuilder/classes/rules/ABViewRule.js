@@ -68,7 +68,8 @@ export default class ABViewRule extends OP.Component {
 		// at the same time.  So make each instance Unique:
 		var uniqueInstanceID = webix.uid();
 		var myUnique = (key) => {
-			return this.unique(idBase + key ) + '_' + uniqueInstanceID;
+			// return this.unique(idBase + key ) + '_' + uniqueInstanceID;
+			return idBase + '_' + key  + '_' + uniqueInstanceID;
 		}
 
 
@@ -76,11 +77,11 @@ export default class ABViewRule extends OP.Component {
 		var ids = this.ids = {
 
 			// each instance must be unique
-			component: myUnique('_component'),	
+			component: myUnique('component'),	
 			
-			queryBuilder: myUnique('_queryBuilder'),  
+			queryBuilder: myUnique('queryBuilder'),  
 
-			valueDisplay: myUnique('_valueArea'),
+			valueDisplay: myUnique('valueArea'),
 			// action: this.unique(idBase + '_action'),
 			// when: this.unique(idBase + '_when'),
 
@@ -123,6 +124,12 @@ export default class ABViewRule extends OP.Component {
 			},
 
 
+			queryBuilderRules: () => {
+				var QB = $$(ids.queryBuilder);
+				return QB.getValue();
+			},
+
+
 			replaceValueDisplay:(component) => {
 
 				// remove current content area:
@@ -144,7 +151,9 @@ export default class ABViewRule extends OP.Component {
 
 				// bonus:  save current state of previous Action
 				var prevAction = this.getAction(oldVal);
-				prevAction.stashCondition(QB.getValue());
+				if (prevAction) {
+					prevAction.stashCondition(QB.getValue());
+				}
 
 				// now switch to the new Action
 				this.selectedAction = newValue;
@@ -155,7 +164,7 @@ export default class ABViewRule extends OP.Component {
 					QB.setValue(currAction.condition());
 
 					// have Action display it's values form
-					var component = currAction.valueDisplay(ids.ValueDisplay);
+					var component = currAction.valueDisplay(ids.valueDisplay);
 					_logic.replaceValueDisplay(component);
 					component.init()
 					// currAction.valueDisplay(ids.valueDisplay);
@@ -290,6 +299,39 @@ width: 680,
 
 		// regenerate our UI when a new object is loaded.
 		this.ui = this._generateUI();
+	}
+
+
+	fromSettings (settings) {
+		settings = settings || {};
+
+		if (settings.selectedAction) {
+
+			// store our Query Rules
+			this.selectedAction = settings.selectedAction;
+			var selectedAction = this.currentAction();
+			selectedAction.stashCondition(settings.queryRules || {} );
+
+			// Trigger our UI to refresh with this selected Action:
+			// NOTE: this also populates the QueryBuilder
+			this._logic.selectAction(this.selectedAction);
+
+			// now continue with setting up our settings:
+			selectedAction.fromSettings(settings.actionSettings);
+		}
+	}
+
+
+	toSettings() {
+		var settings = {};
+
+		if (this.selectedAction) {
+			settings.selectedAction = this.selectedAction;
+			settings.queryRules = this._logic.queryBuilderRules();
+			settings.actionSettings = this.currentAction().toSettings();
+		}
+		
+		return settings;
 	}
 
 }

@@ -41,8 +41,8 @@ export default class ABViewRuleAction extends OP.Component {
 
 		this.queryRules = {};	// default set of rules for the Query Builder condition 
 
-		this.valueRules = [];   // the initial Value Rules for this Action
-
+		this.valueRules = {};   // the initial Value Rules for this Action
+								// The Action Subclass defines what this {} is.
 
 		// Labels for UI components
 		var labels = this.labels = {
@@ -170,12 +170,6 @@ export default class ABViewRuleAction extends OP.Component {
 	// @param {string} webixID  the $$(webixID) of the area to insert our display.
 	valueDisplay( webixID ) {
 		return this.valueDisplayComponent(webixID);
-		
-		var view = this.valueDisplayComponent(webixID);
-		view.ui.id = webixID;
-		webix.ui(view.ui, $$(webixID));
-		view.init(this.valueRules);
-		$$(webixID).adjust();
 	}
 
 
@@ -193,6 +187,31 @@ export default class ABViewRuleAction extends OP.Component {
 				console.warn(" --> passed in data:", data);
 			}
 		}
+	}
+
+
+	// fromSettings
+	// initialize this Action from a given set of setting values.
+	// @param {obj}  settings
+	fromSettings(settings) {
+		// settings: {
+		//	valueRules:{}
+		// }
+		settings = settings || {};
+		this.valueRules = settings.valueRules || {};
+
+	}
+
+
+	// toSettings
+	// return an object that represents the current state of this Action
+	// @return {obj}
+	toSettings() {
+		var settings = {};
+
+		console.error('!!! ABViewRuleAction.toSettings(): should be overridden by Child!');
+		// require the child to insert the valueRules
+		return settings;
 	}
 
 }
