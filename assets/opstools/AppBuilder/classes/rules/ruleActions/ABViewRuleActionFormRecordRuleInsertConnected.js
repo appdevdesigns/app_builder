@@ -15,10 +15,12 @@ export default class ABViewRuleActionFormRecordRuleInsertConnected extends ABVie
 	 * @param {string} idBase
 	 *      Identifier for this component
 	 */
-	constructor(App, idBase) {
+	constructor() {
 
-		super(App, idBase);
-		var L = this.Label;
+		super();
+		var L = function(key, altText) {
+			return AD.lang.label.getLabel(key) || altText;
+		}
 
 
 		this.key = 'ABViewRuleActionFormRecordRuleInsertConnected';

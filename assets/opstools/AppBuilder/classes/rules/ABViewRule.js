@@ -22,7 +22,7 @@
 //
 
 
-export default class ABViewRule extends OP.Component {
+export default class ABViewRule {
 
 	/**
 	 * @param {object} App 
@@ -30,10 +30,8 @@ export default class ABViewRule extends OP.Component {
 	 * @param {string} idBase
 	 *      Identifier for this component
 	 */
-	constructor(App, idBase, listActions) {
+	constructor(listActions) {
 
-		super(App, idBase);
-		var L = this.Label;
 
 
 		this.listActions = listActions || []; 	// the list of Actions this Rule manages
@@ -52,6 +50,18 @@ export default class ABViewRule extends OP.Component {
 
 		this.currentObject = null;				// What ABObject is this associated with
 												// NOTE: this is important for Actions.
+	
+
+	}
+
+
+	component(App, idBase) {
+		this.App = App;
+		this.idBase = idBase;
+
+		var L = function(key, altText) {
+			return AD.lang.label.getLabel(key) || altText;
+		}
 
 
 		var labels = this.labels = {
@@ -82,11 +92,6 @@ export default class ABViewRule extends OP.Component {
 			queryBuilder: myUnique('queryBuilder'),  
 
 			valueDisplay: myUnique('valueArea'),
-			// action: this.unique(idBase + '_action'),
-			// when: this.unique(idBase + '_when'),
-
-			// values: this.unique(idBase + '_values'),
-			// set: this.unique(idBase + '_set')
 
 		};
 
@@ -105,6 +110,7 @@ export default class ABViewRule extends OP.Component {
 			var Action = this.currentAction();
 			if (Action) {
 
+				Action.component(this.App, this.idBase);
 				var comp = Action.valueDisplay(ids.valueDisplay);
 
 				_logic.replaceValueDisplay(comp);
@@ -173,8 +179,6 @@ export default class ABViewRule extends OP.Component {
 			}
 
 		}
-
-
 
 	}
 
@@ -298,8 +302,50 @@ width: 680,
 		})
 
 		// regenerate our UI when a new object is loaded.
-		this.ui = this._generateUI();
+		if (this.ids) {
+			this.ui = this._generateUI();
+		}
 	}
+
+
+
+	// process
+	// Take the provided data and process this rule
+	// @param {obj} options
+	// @return {Promise}
+	process(options) {
+
+		var currentAction = this.currentAction();
+
+		var id = "hiddenQB_"+webix.uid();
+
+		// if our data passes the QueryRules then tell Action to process
+		var ui = {
+			id:id,
+			hidden:true,
+			view:'querybuilder'
+		}
+		var hiddenQB = webix.ui(ui);
+
+		hiddenQB.setValue(currentAction.condition());
+
+		var QBHelper = hiddenQB.getFilterHelper();
+		var isValid = QBHelper(options.data);
+
+// QBHelper.destructor();	// remove the QB 
+		
+		if (isValid) {
+			return currentAction.process(options);
+		} else {
+
+			// else just resolve and continue on
+			return new Promise( (resolve, reject) => {
+				resolve();
+			})
+		}
+
+	}
+
 
 
 	fromSettings (settings) {
@@ -312,9 +358,13 @@ width: 680,
 			var selectedAction = this.currentAction();
 			selectedAction.stashCondition(settings.queryRules || {} );
 
-			// Trigger our UI to refresh with this selected Action:
-			// NOTE: this also populates the QueryBuilder
-			this._logic.selectAction(this.selectedAction);
+			// if our UI components are present, populate them properly:
+			if (this.ids) {
+
+				// Trigger our UI to refresh with this selected Action:
+				// NOTE: this also populates the QueryBuilder
+				this._logic.selectAction(this.selectedAction);
+			}
 
 			// now continue with setting up our settings:
 			selectedAction.fromSettings(settings.actionSettings);

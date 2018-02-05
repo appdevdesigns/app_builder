@@ -18,7 +18,7 @@ export default class ABViewRuleListFormRecordRules extends ABViewRuleList {
 	 * @param {string} idBase
 	 *      Identifier for this component
 	 */
-	constructor(App, idBase) {
+	constructor() {
 
 		var settings = {
 			labels: {
@@ -26,10 +26,8 @@ export default class ABViewRuleListFormRecordRules extends ABViewRuleList {
 				headerDefault: "*Record Rules"
 			}
 		}
-		super(App, idBase, settings);
+		super(settings);
 		var L = this.Label;
-
-
 
 	}
 
@@ -45,7 +43,7 @@ export default class ABViewRuleListFormRecordRules extends ABViewRuleList {
 			// new ABViewRuleActionFormRecordUpdateConnected()
 		]
 
-		var Rule = new ABViewRule(this.App, this.idBase+'_ruleList', listActions);
+		var Rule = new ABViewRule(listActions);
 		Rule.objectLoad(this.currentObject);
 		return Rule;
 	}

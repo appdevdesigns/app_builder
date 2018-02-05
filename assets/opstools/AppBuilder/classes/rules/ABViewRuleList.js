@@ -32,7 +32,7 @@
 //  }
 
 
-export default class ABViewRuleList extends OP.Component {
+export default class ABViewRuleList {
 
 	/**
 	 * @param {object} App 
@@ -40,10 +40,7 @@ export default class ABViewRuleList extends OP.Component {
 	 * @param {string} idBase
 	 *      Identifier for this component
 	 */
-	constructor(App, idBase, childSettings) {
-		super(App, idBase);
-		var L = this.Label;
-
+	constructor(childSettings) {
 
 		this.listRules = [];
 		this.currentObject = null;
@@ -53,12 +50,26 @@ export default class ABViewRuleList extends OP.Component {
 		childSettings.labels = childSettings.labels || {};
 		childSettings.labels.header = childSettings.labels.header || 'ab.component.form.ruleList';
 		childSettings.labels.headerDefault = childSettings.labels.headerDefault || '*Rule List';
+		this.childSettings = childSettings;
 
+	}
+
+
+	// component
+	// initialize the UI display for this popup editor.
+	component(App, idBase) {
+
+		this.App = App;
+		this.idBase = idBase;
+
+		var L = function(key, altText) {
+			return AD.lang.label.getLabel(key) || altText;
+		}
 
 		var labels = this.labels = {
 			common: App.labels,
 			component: {
-				header: L(childSettings.labels.header, childSettings.labels.headerDefault),	
+				header: L(this.childSettings.labels.header, this.childSettings.labels.headerDefault),	
 				addNewRule: L("ab.component.form.addNewRule", "*Add new rule"),
 			}
 		};
@@ -113,8 +124,8 @@ export default class ABViewRuleList extends OP.Component {
 								type: "iconButton",
 								label: labels.component.addNewRule,
 								width: 150,
-								click: function () {
-									_logic.addRule();
+								click: () => {
+									this.addRule();
 								}
 							},
 							{ fillspace: true }
@@ -150,7 +161,7 @@ export default class ABViewRuleList extends OP.Component {
 			}
 		};
 
-		var _currentObject = null;
+		// var _currentObject = null;
 		var _rules = [];
 
 		// for setting up UI
@@ -186,65 +197,57 @@ export default class ABViewRuleList extends OP.Component {
 			},
 
 
-			addRule: (settings) => {
-
-				var Rule = this.getRule();
-				this.listRules.push(Rule);
-
-				// make sure Rule.ui is created before calling .init()
-				var viewId = $$(ids.rules).addView(Rule.ui);
-
-				Rule.init({
-					onDelete: (deletedRule) => {
-
-						$$(ids.rules).removeView(Rule.ids.component);
-
-						var index = this.listRules.indexOf(deletedRule);
-					    if (index !== -1) {
-					        this.listRules.splice(index, 1);
-					    }
-// save()
-					}
-				});
-
-
-				if (settings) {
-					Rule.fromSettings(settings);
-				}
-				
-
-				return viewId;
-			},
-
 			hide: function () {
 				$$(ids.component).hide();
 			},
 
 			show: function () {
 				$$(ids.component).show();
-			},
-
-			objectLoad: function (object) {
-				_currentObject = this.currentObject = object;
-
-				// tell each of our rules about our object
-				this.listRules.forEach((r)=>{
-					r.objectLoad(object);
-				})
 			}
 
 		};
 
 
-
-		// Expose any globally accessible Actions:
-		this.actions({
-		});
-
 		this.show = _logic.show;
-		this.objectLoad = _logic.objectLoad;
 		this.setValue = _logic.setValue;
+	}
 
+
+
+	addRule(settings) {
+
+		var Rule = this.getRule();
+		this.listRules.push(Rule);
+
+
+		// if our UI is available, then populate it:
+		if (this.ids) {
+			
+			// if our UI is available, then populate it:
+			var RulesUI = $$(this.ids.rules);
+			if (RulesUI) {
+
+				// make sure Rule.ui is created before calling .init()
+				Rule.component(this.App, this.idBase);  // prepare the UI component
+				var viewId = RulesUI.addView(Rule.ui);
+
+				Rule.init({
+					onDelete: (deletedRule) => {
+
+						$$(this.ids.rules).removeView(Rule.ids.component);
+
+						var index = this.listRules.indexOf(deletedRule);
+					    if (index !== -1) {
+					        this.listRules.splice(index, 1);
+					    }
+					}
+				});
+			}
+		}
+
+		if (settings) {
+			Rule.fromSettings(settings);
+		}
 	}
 
 
@@ -266,9 +269,55 @@ export default class ABViewRuleList extends OP.Component {
 
 		if (settings) {
 			settings.forEach((ruleSettings)=>{
-				this._logic.addRule(ruleSettings);
+				this.addRule(ruleSettings);
 			})
 		}
+	}
+
+
+	objectLoad(object) {
+		this.currentObject = object;
+
+		// tell each of our rules about our object
+		this.listRules.forEach((r)=>{
+			r.objectLoad(object);
+		})
+	}
+
+
+	// process
+	// Take the provided data and process each of our rules.
+	// @param {obj} options
+	// @return {promise}
+	process(options) {
+
+		return new Promise((resolve, reject) => {
+
+			var numDone = 0;
+			var onDone =  () => {
+				numDone++;
+				if (numDone >= this.listRules.length) {
+					resolve();
+				}
+			}
+
+			this.listRules.forEach((rule)=>{
+
+				rule.process(options)
+				.then(function(){
+					onDone();
+				})
+				.catch((err)=>{
+					reject(err);
+				})
+
+			})
+
+
+			if (this.listRules.length == 0) {
+				resolve();
+			}
+		});
 	}
 
 

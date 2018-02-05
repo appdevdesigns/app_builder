@@ -15,10 +15,12 @@ export default class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleActi
 	 * @param {string} idBase
 	 *      Identifier for this component
 	 */
-	constructor(App, idBase) {
+	constructor() {
 
-		super(App, idBase);
-		var L = this.Label;
+		super();
+		var L = function(key, altText) {
+			return AD.lang.label.getLabel(key) || altText;
+		}
 
 
 		this.key = 'ABViewRuleActionFormRecordRuleUpdate';
@@ -34,7 +36,7 @@ export default class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleActi
 
 		// Labels for UI components
 		var labels = this.labels = {
-			common: App.labels,
+			// common: App.labels,
 			component: {
 
 				set: L("ab.component.form.set", "*Set"),
@@ -43,6 +45,7 @@ export default class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleActi
 		};
 
 	}
+
 
 	conditionFields() {
 		
@@ -54,11 +57,22 @@ export default class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleActi
 			this.currentObject.fields().forEach((f)=>{
 
 				if (fieldTypes.indexOf(f.key) != -1) {
+
+					// NOTE: the .id value must match the obj[.id]  in the data set
+					// so if your object data looks like:
+					// 	{
+					//		name_first:'Neo',
+					//		name_last: 'The One'
+					//  },
+					// then the ids should be:
+					// { id:'name_first', value:'xxx', type:'string' }
 					currFields.push({
-						id: f.id,
+						id: f.columnName,
 						value: f.label,
 						type: f.key
 					});
+				
+					
 				}
 			})
 		}
@@ -287,13 +301,10 @@ export default class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleActi
 
 			},
 
-			getObjectField: (fieldID) => {
-				return this.currentObject.fields((f)=>{ return f.id == fieldID })[0];
-			}, 
 
 			selectField: (columnID) => {
 
-				var field = _logic.getObjectField(columnID );
+				var field = this.getObjectField(columnID );
 				if (!field) return;
 
 				var fieldComponent = field.formComponent(),
@@ -348,8 +359,8 @@ if (field.key == 'user') {
 
 					data.op = 'set';  // possible to create other types of operations.
 
-					var field = _logic.getObjectField(data.fieldID);
-					data.type = field.type;
+					var field = this.getObjectField(data.fieldID);
+					data.type = field.key;
 
 					return data;
 				}
@@ -467,6 +478,70 @@ if (field.key == 'user') {
 	}
 
 
+
+	getObjectField(fieldID) {
+		return this.currentObject.fields((f)=>{ return f.id == fieldID })[0];
+	}
+
+	// process
+	// gets called when a form is submitted and the data passes the Query Builder Rules.
+	// @param {obj} options
+	// @return {Promise}
+	process(options) {
+
+		return new Promise( (resolve, reject) => {
+
+			var isUpdated = false;
+
+			this.valueRules = this.valueRules || {};
+			this.valueRules.fieldOperations = this.valueRules.fieldOperations || [];
+
+			// for each of our operations
+			this.valueRules.fieldOperations.forEach((op) => {
+				// op = {
+				// 	fieldID:'zzzzz', 
+				//	value: 'xxx',
+				//	op: 'set',
+				//  type:''
+				// }
+
+				var field = this.getObjectField(op.fieldID);
+				if (field) { 
+
+					switch(op.op) {
+
+						case 'set': 
+							options.data[field.columnName] = op.value; 
+							break;
+					}
+					
+					isUpdated = true;
+				}
+			})
+
+			if (!isUpdated) {
+				resolve();
+			} else {
+
+				// get the model from the provided Form Obj:
+				var dc = options.form.dataCollection();
+				if (!dc) return resolve();
+
+				var model = dc.model;
+				model.update(options.data.id, options.data)
+				.catch((err)=>{
+					OP.Error.log('!!! ABViewRuleActionFormRecordRuleUpdate.process(): update error:', {error:err, data:options.data });
+					reject(err);
+				})
+				.then(resolve);
+
+			}
+		})
+	}
+
+
+
+
 	// fromSettings
 	// initialize this Action from a given set of setting values.
 	// @param {obj}  settings
@@ -474,9 +549,14 @@ if (field.key == 'user') {
 		settings = settings || {};
 		super.fromSettings(settings); // let the parent handle the QB
 
-		// now we handle our valueRules:{} object settings.
-		// pass the settings off to our DisplayList component:
-		this._ui.fromSettings(settings.valueRules);
+
+		// if we have a display component, then populate it:
+		if (this._ui) {
+
+			// now we handle our valueRules:{} object settings.
+			// pass the settings off to our DisplayList component:
+			this._ui.fromSettings(settings.valueRules);
+		}
 	}
 
 
@@ -486,14 +566,11 @@ if (field.key == 'user') {
 	toSettings() {
 
 		// settings: {
-		//	querycondition:{},
-		//	values:{}
+		//	valueRules:{}
 		// }
 
 		// let our parent store our QB settings
 		var settings = super.toSettings();
-
-		// settings = { queryRules:{} }
 
 		settings.valueRules = this._ui.toSettings();
 

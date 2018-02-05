@@ -20,7 +20,7 @@
 //
 
 
-export default class ABViewRuleAction extends OP.Component {
+export default class ABViewRuleAction {
 
 	/**
 	 * @param {object} App 
@@ -28,14 +28,9 @@ export default class ABViewRuleAction extends OP.Component {
 	 * @param {string} idBase
 	 *      Identifier for this component
 	 */
-	constructor(App, idBase) {
-
-		super(App, idBase);
-		var L = this.Label;
-
+	constructor() {
 
 		this.key = 'ABViewRuleAction';
-		this.label = L('ab.component.ruleaction.abviewruleAction', '*generic abviewruleaction');
 
 		this.currentObject = null;  // the current ABObject we are associated with.
 
@@ -43,6 +38,20 @@ export default class ABViewRuleAction extends OP.Component {
 
 		this.valueRules = {};   // the initial Value Rules for this Action
 								// The Action Subclass defines what this {} is.
+	}
+
+
+	component(App, idBase) {
+
+		this.App = App;
+		this.idBase = idBase;
+
+		var L = function(key, altText) {
+			return AD.lang.label.getLabel(key) || altText;
+		}
+
+		this.label = L('ab.component.ruleaction.abviewruleAction', '*generic abviewruleaction');
+
 
 		// Labels for UI components
 		var labels = this.labels = {
@@ -54,18 +63,14 @@ export default class ABViewRuleAction extends OP.Component {
 			}
 		};
 
+		function myUnique(key) {
+			return App.unique(idBase + '_' + key)
+		}
+
 		// internal list of Webix IDs to reference our UI components.
 		var ids = this.ids = {
 			// each instance must be unique
-			component: this.unique(idBase + '_component')+'_'+webix.uid(),	
-			// rules: this.unique(idBase + '_rules'),
-
-			// action: this.unique(idBase + '_action'),
-			// when: this.unique(idBase + '_when'),
-
-			// values: this.unique(idBase + '_values'),
-			// set: this.unique(idBase + '_set')
-
+			component: myUnique('component')+'_'+webix.uid(),	
 		};
 
 
@@ -103,6 +108,13 @@ export default class ABViewRuleAction extends OP.Component {
 	//					]
 	condition () {
 		return [ this.conditionRules(), this.conditionFields() ];
+	}
+
+
+
+	component (App, idBase) {
+		this.App = App;
+		this.idBase = idBase;
 	}
 
 
@@ -144,7 +156,7 @@ export default class ABViewRuleAction extends OP.Component {
 	//					    { id:"age",     value:"Age",        type:"number" },
 	//					    { id:"bdate",   value:"Birth Date", type:"date" }
 	//					]
-	conditionFields() {
+	conditionFields(isProcessing) {
 		console.error('!!! ABViewRuleAction.conditionFields() should be overridden by child object.');
 		return [];
 	}
@@ -164,6 +176,17 @@ export default class ABViewRuleAction extends OP.Component {
 		this.currentObject = object;
 	}
 
+
+	// process
+	// gets called when a form is submitted and the data passes the Query Builder Rules.
+	// @param {obj} options
+	// @return {Promise}
+	process(options) {
+		console.error('!!! ABViewRuleAction.process() should be overridden by its child class.');
+		return new Promise( (resolve, reject) => {
+			reject(new Error('ABViewRuleAction.process() should be overridden by its child class.'));
+		})
+	}
 
 	// valueDisplay
 	// create the form to collect the specific data this Action needs to function.
@@ -209,7 +232,6 @@ export default class ABViewRuleAction extends OP.Component {
 	toSettings() {
 		var settings = {};
 
-		console.error('!!! ABViewRuleAction.toSettings(): should be overridden by Child!');
 		// require the child to insert the valueRules
 		return settings;
 	}
