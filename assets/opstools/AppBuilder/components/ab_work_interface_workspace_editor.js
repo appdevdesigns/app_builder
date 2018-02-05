@@ -98,9 +98,7 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                             },
                             on: {
                                 onItemClick: function(id, e, node){
-                                    var clickedView = this.getItem(id);
-
-                                    App.actions.populateInterfaceWorkspace(clickedView);
+                                    _logic.pageMap(id);
                                 }
                             }
                         },
@@ -143,22 +141,23 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                     type: "space",
                     css: "gray",
                     cols: [
-                        {
-                            view: "segmented",
-                            id: ids.toolbarViewPage,
-                            css: "ab-view-chooser",
-                            options: [
-                                { id: "layout", value: labels.component.viewModeLayout },
-                                { id: "data", value: labels.component.viewModeData }
-                            ],
-                            inputWidth: 200,
-                            align: "left",
-                            on: {
-                                onChange: function (newValue, oldValue) {
-                                    _logic.viewPartChange(newValue, oldValue);
-                                }
-                            }
-                        },
+                        // {
+                        //     view: "segmented",
+                        //     id: ids.toolbarViewPage,
+                        //     css: "ab-view-chooser",
+                        //     options: [
+                        //         { id: "layout", value: labels.component.viewModeLayout },
+                        //         { id: "data", value: labels.component.viewModeData }
+                        //     ],
+                        //     inputWidth: 200,
+                        //     align: "left",
+                        //     on: {
+                        //         onChange: function (newValue, oldValue) {
+                        //             _logic.viewPartChange(newValue, oldValue);
+                        //         }
+                        //     }
+                        // },
+                        {},
                         {
                             view: "checkbox",
                             id: ids.toolbarViewMode,
@@ -248,17 +247,39 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                     // reset current view so it doesn't get added.
                     CurrentView = null; 
 
+                    // reset view part to 'layout'
+                    CurrentViewPart = 'layout';
+
                     App.actions.populateInterfaceWorkspace(view);
+                }
+                // Switch from 'data' to 'layout' mode
+                else if (CurrentViewPart == 'data') {
+
+                    // reset view part to 'layout'
+                    CurrentViewPart = 'layout';
+
+                    App.actions.populateInterfaceWorkspace(CurrentView);
                 }
             },
 
-            buttonCancel:function() {
+            pageMap: function(pageId) {
+
+                var clickedView = $$(ids.toolbarMap).getItem(pageId);
+
+                // reset view part to 'layout'
+                CurrentViewPart = 'layout';
+
+                App.actions.populateInterfaceWorkspace(clickedView);
 
             },
 
-            buttonSave: function() {
+            // buttonCancel:function() {
 
-            },
+            // },
+
+            // buttonSave: function() {
+
+            // },
             
             
             infoAlert: function() {
@@ -317,10 +338,16 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                 $$(ids.toolbarMap).refresh();
 
                 // 
-                if (CurrentViewPart == 'data') {
+                if (CurrentViewPart == 'data' &&
+                    (CurrentView.isRoot() || 
+                    CurrentView instanceof ABViewDataCollection)) {
+
+                    _logic.showDataPart();
                     EditorData.viewLoad(view);
                 }
                 else {
+
+                    _logic.showLayoutPart();
                     EditorLayout.viewLoad(view);
                     ComponentMenu.viewLoad(view);
                 }
@@ -334,29 +361,34 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
 
                 // data
                 if (CurrentViewPart == 'data') {
-                    EditorData.show();
-
-                    _logic.hideLayoutButtons();
-                    _logic.showNewDataCollection();
-
-                    App.actions.populateInterfaceWorkspace(CurrentView);
-
+                    _logic.showDataPart();
                 }
                 // layout
                 else {
-
-                    EditorLayout.show();
-                    _logic.showLayoutButtons();
-                    _logic.hideNewDataCollection();
-
-                    // if user is editing "data", then change to parent page when swtich "layout"
-                    if (CurrentView instanceof ABViewDataCollection){
-                        CurrentView = CurrentView.pageParent();
-                    }
-
-                    App.actions.populateInterfaceWorkspace(CurrentView);
-
+                    _logic.showLayoutPart();
                 }
+
+                App.actions.populateInterfaceWorkspace(CurrentView);                
+
+            },
+
+            showDataPart: function() {
+
+                EditorData.show();
+                
+                _logic.hideLayoutButtons();
+                _logic.showNewDataCollection();
+                
+            },
+
+            showLayoutPart: function() {
+
+                // Change view part to 'layout'
+                CurrentViewPart = 'layout';
+
+                EditorLayout.show();
+                _logic.showLayoutButtons();
+                _logic.hideNewDataCollection();
 
             },
 
@@ -436,7 +468,9 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
             // 	_logic.permissionPopulate(Application);
             // 	_logic.show();
             // }
-            
+
+            interfaceViewPartChange: _logic.viewPartChange
+
         });
         
         

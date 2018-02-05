@@ -6,7 +6,6 @@
  *
  */
 
-// import ABWorkspaceComponents from "./ab_work_interface_workspace_details_components"
 import ABWorkspaceProperties from "./ab_work_interface_workspace_details_properties"
 
 export default class AB_Work_Interface_Workspace_Details extends OP.Component {

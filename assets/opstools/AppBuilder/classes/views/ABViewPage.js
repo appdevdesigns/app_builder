@@ -194,6 +194,37 @@ export default class ABViewPage extends ABViewContainer {
                     { id: 'page', value: L('ab.components.page.page', "*Page") },
                     { id: 'popup', value: L('ab.components.page.popup', "*Popup") }
                 ]
+            },
+            {
+                view: "fieldset",
+                name: "dataCollectionPanel",
+                label: L('ab.component.page.dataCollections', '*Data Collections:'),
+                labelWidth: App.config.labelWidthLarge,
+                body: {
+                    rows: [
+                        {
+                            cols: [
+                                {
+                                    view: "label",
+                                    label: L("ab.component.page.collections", "*Collections:"),
+                                    width: App.config.labelWidthLarge,
+                                },
+                                {
+                                    view: "button",
+                                    name: "datacollection",
+                                    label: L("ab.component.page.settings", "*Settings"),
+                                    icon: "gear",
+                                    type: "icon",
+                                    badge: 0,
+                                    click: function () {
+                                        App.actions.interfaceViewPartChange('data');
+                                    }
+                                }
+                            ]
+                        }
+
+                    ]
+                }
             }
         ]);
 
@@ -207,10 +238,30 @@ export default class ABViewPage extends ABViewContainer {
         $$(ids.type).setValue(view.settings.type || ABPropertyComponentDefaults.type);
 
         // Disable select type of page when this page is root 
-        if (view.isRoot())
+        if (view.isRoot()) {
             $$(ids.type).hide();
-        else
+            $$(ids.dataCollectionPanel).show();
+        }
+        else {
             $$(ids.type).show();
+            $$(ids.dataCollectionPanel).hide();
+        }
+
+        this.populateBadgeNumber(ids, view);
+
+        // when data collections are added/deleted, then update number of badge
+        this.viewUpdateEventIds = this.viewUpdateEventIds || {}; // { viewId: number, ..., viewIdn: number }
+        if (!this.viewUpdateEventIds[view.id]) {
+            this.viewUpdateEventIds[view.id] = AD.comm.hub.subscribe('ab.interface.update', (message, data) => {
+
+                if (data.rootPage && data.rootPage.id == view.id) {
+                    this.populateBadgeNumber(ids, view);
+                }
+
+            });
+
+        }
+
 
     }
 
@@ -220,6 +271,21 @@ export default class ABViewPage extends ABViewContainer {
         super.propertyEditorValues(ids, view);
 
         view.settings.type = $$(ids.type).getValue();
+
+    }
+
+
+    static populateBadgeNumber(ids, view) {
+
+        var dataCols = view.dataCollections();
+        if (dataCols && dataCols.length > 0) {
+            $$(ids.datacollection).define('badge', dataCols.length);
+            $$(ids.datacollection).refresh();
+        }
+        else {
+            $$(ids.datacollection).define('badge', 0);
+            $$(ids.datacollection).refresh();
+        }
 
     }
 

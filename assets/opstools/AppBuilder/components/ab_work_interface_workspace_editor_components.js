@@ -8,7 +8,7 @@
 export default class AB_Work_Interface_Workspace_Editor_Components extends OP.Component {
 
 	constructor(App) {
-		super(App, 'ab_work_interface_workspace_details_components');
+		super(App, 'ab_work_interface_workspace_editor_components');
 		var L = this.Label;
 
 		var labels = {
