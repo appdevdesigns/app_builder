@@ -121,10 +121,14 @@ export default class ABViewContainer extends ABView {
 			var Dashboard = $$(ids.component);
 			webix.extend(Dashboard, webix.OverlayBox);
 
+			// this.views().reverse().forEach((child) => {
+
+			// NOTE: need to sorting before .addView because there is a render position bug in webix 5.1.7
+			// https://webix.com/snippet/404cf0c7
+			var childViews = this.viewsSortByPosition();
 
 			// attach all the .UI views:
-			// this.views().reverse().forEach((child) => {
-			this.views().forEach((child) => {
+			childViews.forEach((child) => {
 
 				var component = child.component(App);
 
@@ -443,16 +447,6 @@ export default class ABViewContainer extends ABView {
 				this.changePage(pageId);
 			},
 
-			sortByPosition: (views) => {
-
-				// Sort views from y, x positions
-				return views.sort((a, b) => {
-					if (a.position.y == b.position.y) return a.position.x - b.position.x;
-					return a.position.y - b.position.y;
-				});
-
-			},
-
 			getElements: (views) => {
 				var rows = [];
 				var curRowIndex;
@@ -505,7 +499,7 @@ export default class ABViewContainer extends ABView {
 		};
 
 		// Generate rows & cols of views to .layout
-		var views = _logic.sortByPosition(this.views());
+		var views = this.viewsSortByPosition();
 		var rowViews = _logic.getElements(views);
 
 
@@ -554,6 +548,16 @@ export default class ABViewContainer extends ABView {
 
 			onShow: _onShow
 		};
+	}
+
+	viewsSortByPosition() {
+		
+		// Sort views from y, x positions
+		return this.views().sort((a, b) => {
+			if (a.position.y == b.position.y) return a.position.x - b.position.x;
+			return a.position.y - b.position.y;
+		});
+
 	}
 
 
