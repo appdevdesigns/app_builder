@@ -224,7 +224,7 @@ export default class ABViewForm extends ABViewContainer {
 				});
 
 				// Add a default button
-				var newButton = ABViewFormButton.newInstance(this.application, formView);
+				var newButton = ABViewFormButton.newInstance(formView.application, formView);
 				newButton.position.y = fields.length;
 				formView._views.push(newButton);
 
