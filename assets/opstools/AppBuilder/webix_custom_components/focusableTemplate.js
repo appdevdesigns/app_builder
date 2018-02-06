@@ -1,15 +1,14 @@
 
 /*
- * custom_edittree
+ * custom_activelist
  *
  * Create a custom webix component.
  *
  */
 
+export default class ABCustomFocusableTemplate {
 
-export default class ABCustomEditTree {   // .extend(ComponentKey, function(App, componentKey ) {
-
-	get key() { return 'edittree'; } 
+	get key() { return 'focusabletemplate'; } 
 
 	constructor(App) {
 		// App 	{obj}	our application instance object.
@@ -22,7 +21,7 @@ export default class ABCustomEditTree {   // .extend(ComponentKey, function(App,
 
 		var labels = {
 
-			common : App.labels,
+			common: App.labels,
 
 			component: {
 
@@ -40,13 +39,14 @@ export default class ABCustomEditTree {   // .extend(ComponentKey, function(App,
 
 		// Our webix UI definition:
 		var _ui = {
-	        name: this.key
-	    };
-	    this.view = this.key;
+			name: this.key,
+			focus:function(){ return false; }
+		};
+		this.view = this.key;
 
 
 
-	    // our internal business logic 
+		// our internal business logic 
 		var _logic = {
 
 		}
@@ -55,7 +55,7 @@ export default class ABCustomEditTree {   // .extend(ComponentKey, function(App,
 
 
 		// Tell Webix to create an INSTANCE of our custom component:
-	    webix.protoUI(_ui, webix.EditAbility, webix.ui.tree);
+		webix.protoUI(_ui, webix.ui.template, webix.UIManager);
 	}
 
 }

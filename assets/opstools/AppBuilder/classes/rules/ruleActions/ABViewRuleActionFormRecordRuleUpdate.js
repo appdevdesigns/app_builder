@@ -293,10 +293,21 @@ export default class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleActi
 						};
 					});
 
-					// // Remove fields who are selected
-					// if (excludeSelected) {
-					// 	console.log("PONG: ", $$(ids.updateForm).getValues());
-					// }
+					// Remove fields who are selected
+					if (shouldFilter) {
+
+						// store this row
+						var usedHash = {};
+						this.formRows.forEach((row) => {
+							var rowView = $$(row.ui.id);
+							if (rowView) {
+								var field = rowView.getChildViews()[1];
+								usedHash[field.getValue()] = true;
+							}
+						});
+						options = options.filter((o)=>{ return (! usedHash[o.id]); });
+						
+					}
 
 				}
 				return options;
@@ -308,7 +319,15 @@ export default class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleActi
 
 				var field = this.getObjectField( $$(ids.field).getValue() );
 				var valueField = $$(ids.row).getChildViews()[3];
-				var value = valueField.getValue();
+				var value = field.getValue(valueField, {});
+
+				// // if a standard component that supports .getValue()
+				// if (valueField.getValue) {
+				// 	value = valueField.getValue();
+				// } else {
+				// 	// else use for field.getValue();
+				// 	value = field.getValue(valueField, {});
+				// }
 
 				// our .isValidData() wants value in an object:
 				var obj = {};
@@ -318,7 +337,9 @@ export default class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleActi
 				field.isValidData(obj, validator);
 
 				// if value is empty, this is also an error:
-				if (value == '') {
+				if ((value == '') 
+					|| ((Array.isArray(value)) && (value.length == 0))) {
+
 					validator.addError(field.columnName, this.labels.component.errorRequired);
 				}
 

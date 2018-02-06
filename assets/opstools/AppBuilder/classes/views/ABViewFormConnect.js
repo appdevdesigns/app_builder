@@ -180,22 +180,50 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 			.replace(/#label#/g, field.label)
 			.replace(/#template#/g, field.columnHeader(null, newWidth).template);
 
+/*
+
+{
+    view:"forminput", 
+    name:"access", 
+    body:{
+		view:'template',
+		template:template
+    }, 
+    labelWidth: 140,
+    labelAlign:"right", 
+    label:"Access levels" 
+}
+
+*/
+
+
+
+
 		component.ui.id = ids.component;
-		component.ui.view = "template";
-		component.ui.css = "webix_el_box";
+		// component.ui.view = "template";
+		component.ui.view = 'forminput';
+		// component.ui.focus = ()=>{};
+
+		component.ui.body = {
+			view: App.custom.focusabletemplate.view,
+			template:'<div class="customField">' + template + '</div>',
+			// focus: function() {}
+		}
+
+		component.ui.body.css = "webix_el_box";
 
 		if (settings.showLabel == true && settings.labelPosition == 'top') {
-			component.ui.height = 80;
+			component.ui.body.height = 80;
 		}
 		else if (field.settings.useHeight) {
-			component.ui.height = parseInt(field.settings.imageHeight);
+			component.ui.body.height = parseInt(field.settings.imageHeight);
 		}
 		else {
-			component.ui.height = 38;
+			component.ui.body.height = 38;
 		}
-		component.ui.borderless = true;
-		component.ui.template = '<div class="customField">' + template + '</div>';
-		component.ui.onClick = {
+		component.ui.body.borderless = true;
+component.ui.body.template = '<div class="customField">' + template + '</div>';
+		component.ui.body.onClick = {
 			"customField": function (id, e, trg) {
 				var rowData = {};
 

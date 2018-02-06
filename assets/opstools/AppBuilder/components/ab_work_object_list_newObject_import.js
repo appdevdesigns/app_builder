@@ -303,7 +303,7 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
                         height: 20
                     },
                     {
-                        view: 'ab_custom_activelist',
+                        view: App.custom.activelist.view,
                         id: ids.columnList,
                         datatype: 'json',
                         multiselect: false,

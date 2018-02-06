@@ -7,16 +7,18 @@
  */
 
 
-var ComponentKey = 'ab_custom_editunitlist';
-export default class ABCustomEditUnitList extends OP.CustomComponent { // .extend(ComponentKey, function(App, componentKey ) {
 
-	constructor(App, key) {
+export default class ABCustomEditUnitList { // .extend(ComponentKey, function(App, componentKey ) {
+
+	get key() { return 'editunitlist'; } 
+
+	constructor(App) {
 		// App 	{obj}	our application instance object.
 		// key {string}	the destination key in App.custom[componentKey] for the instance of this component:
 
-		super(App, key);
+		// super(App, key);
 
-		var L = this.Label;
+		var L = App.Label;
 
 
 		var labels = {
@@ -31,16 +33,16 @@ export default class ABCustomEditUnitList extends OP.CustomComponent { // .exten
 
 		// internal list of Webix IDs to reference our UI components.
 		var ids = {
-			component: App.unique(ComponentKey),
+			component: App.unique(this.key),
 		}
 
 
 
 		// Our webix UI definition:
 		var _ui = {
-	        name: ComponentKey
+	        name: this.key
 	    };
-	    this.view = ComponentKey;
+	    this.view = this.key;
 
 
 
