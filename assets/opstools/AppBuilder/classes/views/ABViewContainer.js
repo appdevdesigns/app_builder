@@ -551,11 +551,15 @@ export default class ABViewContainer extends ABView {
 	}
 
 	viewsSortByPosition() {
-		
+
 		// Sort views from y, x positions
 		return this.views().sort((a, b) => {
-			if (a.position.y == b.position.y) return a.position.x - b.position.x;
-			return a.position.y - b.position.y;
+
+			if (a.position.y == b.position.y) 
+				return a.position.x - b.position.x;
+			else
+				return a.position.y - b.position.y;
+
 		});
 
 	}
