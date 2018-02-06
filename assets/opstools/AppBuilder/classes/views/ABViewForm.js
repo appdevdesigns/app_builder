@@ -7,6 +7,7 @@
  */
 
 import ABViewContainer from "./ABViewContainer"
+import ABViewFormButton from "./ABViewFormButton"
 import ABViewFormCustom from "./ABViewFormCustom"
 import ABViewFormDatepicker from "./ABViewFormDatepicker"
 import ABViewFormField from "./ABViewFormField"
@@ -191,9 +192,11 @@ export default class ABViewForm extends ABViewContainer {
 			var currView = _logic.currentEditObject();
 			var formView = currView.formComponent();
 
-			// remove all old field components
-			if (oldDcId != null)
-				formView.clearFieldComponents();
+			// remove all old components
+			if (oldDcId != null) {
+				var oldComps = formView.views();
+				oldComps.forEach(child => child.destroy());
+			}
 
 			// Update field options in property
 			this.propertyUpdateFieldOptions(ids, currView, dcId);
@@ -219,6 +222,11 @@ export default class ABViewForm extends ABViewContainer {
 					}
 
 				});
+
+				// Add a default button
+				var newButton = ABViewFormButton.newInstance(this.application, formView);
+				newButton.position.y = fields.length;
+				formView._views.push(newButton);
 
 			}
 
@@ -534,7 +542,7 @@ export default class ABViewForm extends ABViewContainer {
 				this.populateBadgeNumber(ids, view);
 			});
 		}
-		
+
 
 	}
 
@@ -766,7 +774,7 @@ export default class ABViewForm extends ABViewContainer {
 							var values = {};
 							field.defaultValue(values);
 
-							if ($$(comp.ui.id) && 
+							if ($$(comp.ui.id) &&
 								$$(comp.ui.id).setValue)
 								$$(comp.ui.id).setValue((values[colName] == null ? '' : values[colName]));
 						}
@@ -829,9 +837,9 @@ export default class ABViewForm extends ABViewContainer {
 			var Form = $$(ids.component);
 
 			var customFields = this.fieldComponents((comp) => {
-				return (comp instanceof ABViewFormCustom) || 
-						// rich text
-						((comp instanceof ABViewFormTextbox) && comp.settings.type == 'rich')
+				return (comp instanceof ABViewFormCustom) ||
+					// rich text
+					((comp instanceof ABViewFormTextbox) && comp.settings.type == 'rich')
 			});
 			customFields.forEach((f) => {
 
@@ -965,20 +973,14 @@ export default class ABViewForm extends ABViewContainer {
 		}
 	}
 
-	clearFieldComponents() {
-		this.fieldComponents().forEach((comp) => {
-			comp.destroy();
-		});
-	}
-
 	addFieldToForm(field, yPosition) {
 
 		if (field == null)
 			return;
 
-		var formView = field.formComponent();
+		var fieldComponent = field.formComponent();
 
-		var newView = formView.newInstance(this.application, this);
+		var newView = fieldComponent.newInstance(this.application, this);
 		if (newView == null)
 			return;
 

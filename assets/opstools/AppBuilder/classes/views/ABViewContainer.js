@@ -156,11 +156,12 @@ export default class ABViewContainer extends ABView {
 									}
 								}
 							},
-							(mode == 'preview' ? component.ui : {
-								// empty element
-								view: 'spacer',
-								hidden: true,
-							})
+							component.ui
+							// (mode == 'preview' ? component.ui : {
+							// 	// empty element
+							// 	view: 'spacer',
+							// 	hidden: true,
+							// })
 						]
 					},
 
