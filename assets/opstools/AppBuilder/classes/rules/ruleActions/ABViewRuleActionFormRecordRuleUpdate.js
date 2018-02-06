@@ -39,6 +39,8 @@ export default class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleActi
 			// common: App.labels,
 			component: {
 
+
+				errorRequired: L("ab.ruleAction.Update.required", "*A value is required"),
 				set: L("ab.component.form.set", "*Set"),
 				to: L("ab.component.form.to", "*To"),
 			}
@@ -302,6 +304,34 @@ export default class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleActi
 			},
 
 
+			isValid: () => {
+
+				var field = this.getObjectField( $$(ids.field).getValue() );
+				var valueField = $$(ids.row).getChildViews()[3];
+				var value = valueField.getValue();
+
+				// our .isValidData() wants value in an object:
+				var obj = {};
+				obj[field.columnName] = value;
+
+				var validator = OP.Validation.validator();
+				field.isValidData(obj, validator);
+
+				// if value is empty, this is also an error:
+				if (value == '') {
+					validator.addError(field.columnName, this.labels.component.errorRequired);
+				}
+
+				// field.getParentView()  ->  row
+				// row.getParentView()  -> Form
+				var FormView = valueField.getParentView().getParentView();
+				FormView.clearValidation();
+				validator.updateForm(FormView);
+
+				return validator.pass();
+			},
+
+
 			selectField: (columnID) => {
 
 				var field = this.getObjectField(columnID );
@@ -432,9 +462,12 @@ if (field.key == 'user') {
 					// hidden:true,
 					click: function () {
 
-						_logic.buttonsToggle();
+						if (_logic.isValid()) {
 
-						_logic.callbacks.onAdd();
+							_logic.buttonsToggle();
+							_logic.callbacks.onAdd();
+						}
+						
 					}
 				},
 				{
