@@ -549,10 +549,10 @@ class ABFieldList extends ABFieldSelectivity {
 					}
 				});
 				if (field.settings.hasColors && obj[field.columnName]) {
-					return '<span class="selectivity-single-selected-item rendered'+formClass+'" style="background-color:'+myHex+' !important;">'+myText+' <a class="selectivity-single-selected-item-remove"><i class="fa fa-remove"></i></a></span>';
+					return '<span class="selectivity-single-selected-item rendered'+formClass+'" style="background-color:'+myHex+' !important;">'+myText+ (editable ? ' <a class="selectivity-single-selected-item-remove"><i class="fa fa-remove"></i></a>' : '') + '</span>';
 				} else {
 					if (myText != placeHolder) {
-						return myText + ' <a class="selectivity-single-selected-item-remove" style="color: #333;"><i class="fa fa-remove"></i></a>';
+						return myText + (editable ? ' <a class="selectivity-single-selected-item-remove" style="color: #333;"><i class="fa fa-remove"></i></a>' : '');
 					} else {
 						return myText;
 					}
