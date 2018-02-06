@@ -125,7 +125,7 @@ export default class ABViewDetail extends ABViewContainer {
 			if (currView._views.length < 1) {
 
 				var fields = $$(ids.fields).find({});
-				fields.reverse();
+				// fields.reverse();
 				fields.forEach((f, index) => {
 
 					if (!f.selected) {
@@ -248,7 +248,7 @@ export default class ABViewDetail extends ABViewContainer {
 		super.propertyEditorPopulate(App, ids, view);
 
 		var SourceSelector = $$(ids.datacollection);
-		var dataCollectionId = view.settings.datacollection;
+		var dataCollectionId = (view.settings.datacollection ? view.settings.datacollection : null);
 
 		// Pull data collections to options
 		var dcOptions = view.pageRoot().dataCollections().map((dc) => {

@@ -202,7 +202,7 @@ export default class ABViewForm extends ABViewContainer {
 			if (currView._views.length < 1) {
 
 				var fields = $$(ids.fields).find({});
-				fields.reverse();
+				// fields.reverse();
 				fields.forEach((f, index) => {
 
 					if (!f.selected) {

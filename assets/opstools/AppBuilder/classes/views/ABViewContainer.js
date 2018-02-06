@@ -123,7 +123,8 @@ export default class ABViewContainer extends ABView {
 
 
 			// attach all the .UI views:
-			this.views().reverse().forEach((child) => {
+			// this.views().reverse().forEach((child) => {
+			this.views().forEach((child) => {
 
 				var component = child.component(App);
 
