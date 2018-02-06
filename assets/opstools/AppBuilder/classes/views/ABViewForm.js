@@ -16,7 +16,8 @@ import ABViewManager from "../ABViewManager"
 import ABPropertyComponent from "../ABPropertyComponent"
 
 import ABDisplayRule from "./ABViewFormPropertyDisplayRule"
-import ABRecordRule from "./ABViewFormPropertyRecordRule"
+// import ABRecordRule from "./ABViewFormPropertyRecordRule"
+import ABRecordRule from "../rules/ABViewRuleListFormRecordRules"
 import ABSubmitRule from "./ABViewFormPropertySubmitRule"
 
 import RowFilter from '../RowFilter'
@@ -179,7 +180,10 @@ export default class ABViewForm extends ABViewContainer {
 		var idBase = "ABViewForm";
 
 		PopupDisplayRule = new ABDisplayRule(App, idBase + "_displayrule");
-		PopupRecordRule = new ABRecordRule(App, idBase + "_recordrule");
+
+		PopupRecordRule = new ABRecordRule();
+		PopupRecordRule.component(App, idBase + "_recordrule");		// prepare the UI component.
+
 		PopupSubmitRule = new ABSubmitRule(App, idBase + "_submitrule");
 
 
@@ -297,7 +301,7 @@ export default class ABViewForm extends ABViewContainer {
 
 			var currView = _logic.currentEditObject();
 
-			PopupRecordRule.setValue(currView.settings.recordRules);
+			PopupRecordRule.fromSettings(currView.settings.recordRules);
 			PopupRecordRule.show();
 
 		};
@@ -543,8 +547,8 @@ export default class ABViewForm extends ABViewContainer {
 			});
 		}
 
-
 	}
+
 
 	static propertyEditorValues(ids, view) {
 
@@ -1078,7 +1082,6 @@ export default class ABViewForm extends ABViewContainer {
 				return new Promise(
 					(resolve, reject) => {
 
-						this.doRecordRules(formVals);
 
 						// update exists row
 						if (formVals.id) {
@@ -1087,12 +1090,16 @@ export default class ABViewForm extends ABViewContainer {
 									formReady();
 									reject(err);
 								})
-								.then(() => {
+								.then((newFormVals) => {
 
-									this.doSubmitRules(formVals);
+									this.doRecordRules(newFormVals)
+									.then(()=>{
 
-									formReady();
-									resolve();
+										this.doSubmitRules(formVals);
+
+										formReady();
+										resolve();
+									})
 								});
 						}
 						// add new row
@@ -1102,12 +1109,17 @@ export default class ABViewForm extends ABViewContainer {
 									formReady();
 									reject(err);
 								})
-								.then(() => {
+								.then((newFormVals) => {
 
-									this.doSubmitRules(formVals);
+									this.doRecordRules(newFormVals)
+									.then(()=>{
 
-									formReady();
-									resolve();
+										this.doSubmitRules(formVals);
+
+										formReady();
+										resolve();
+									})
+									
 								});
 						}
 					}
@@ -1137,33 +1149,11 @@ export default class ABViewForm extends ABViewContainer {
 
 		var object = this.dataCollection().datasource;
 
-		var recordRules = this.settings.recordRules || [];
-		recordRules.forEach(r => {
+		var RecordRules = new ABRecordRule();
+		RecordRules.fromSettings(this.settings.recordRules);
+		RecordRules.objectLoad(object);
 
-			var filterer = new RowFilter();
-			filterer.objectLoad(object);
-			filterer.setValue(r.when);
-			var isMatch = filterer.isValid(rowData);
-
-			if (isMatch) {
-				switch (r.action) {
-
-					case "updateThisRecord":
-
-						r.values.forEach(updateVal => {
-
-							var fieldInfo = object.fields(f => f.id == updateVal.fieldId)[0];
-							if (!fieldInfo) return;
-
-							rowData[fieldInfo.columnName] = updateVal.value;
-						});
-
-						break;
-
-				}
-			}
-
-		});
+		return RecordRules.process({data:rowData, form:this });
 
 	}
 
@@ -1210,6 +1200,7 @@ export default class ABViewForm extends ABViewContainer {
 		});
 
 	}
+
 
 
 
