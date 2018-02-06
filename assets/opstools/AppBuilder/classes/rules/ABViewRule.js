@@ -332,7 +332,7 @@ width: 680,
 		var QBHelper = hiddenQB.getFilterHelper();
 		var isValid = QBHelper(options.data);
 
-// QBHelper.destructor();	// remove the QB 
+		hiddenQB.destructor();	// remove the QB 
 		
 		if (isValid) {
 			return currentAction.process(options);
