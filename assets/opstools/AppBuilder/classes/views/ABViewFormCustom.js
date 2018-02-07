@@ -146,14 +146,32 @@ export default class ABViewFormCustom extends ABViewFormField {
 		else if (settings.showLabel == true && settings.labelPosition == 'top')
 			newWidth = 0;
 
-		var template = (templateLabel + "#template#")
+		var template = ('<div class="customField">' + templateLabel + "#template#" + '</div>')
 			.replace(/#width#/g, settings.labelWidth)
 			.replace(/#label#/g, field.label)
 			.replace(/#template#/g, field.columnHeader(null, newWidth, true).template);
 
-		component.ui.id = ids.component;
-		component.ui.view = "template";
-		component.ui.css = "customFieldCls";
+
+		component.ui = {
+			id: ids.component,
+			view: "template",
+			css:  "customFieldCls", 
+			borderless: true,
+			template: template,
+			onClick: {
+				"customField": function (id, e, trg) {
+					var rowData = {};
+
+					if ($$(ids.component)) {
+						var node = $$(ids.component).$view;
+						field.customEdit(rowData, App, node);
+					}
+				}
+			}
+		}
+// component.ui.id = ids.component;
+// component.ui.view = "template";
+// component.ui.css = "customFieldCls";
 
 		if (settings.showLabel == true && settings.labelPosition == 'top') {
 			component.ui.height = 80;
@@ -164,18 +182,18 @@ export default class ABViewFormCustom extends ABViewFormField {
 		else {
 			component.ui.height = 38;
 		}
-		component.ui.borderless = true;
-		component.ui.template = '<div class="customField">' + template + '</div>';
-		component.ui.onClick = {
-			"customField": function (id, e, trg) {
-				var rowData = {};
+// component.ui.borderless = true;
+// component.ui.template = '<div class="customField">' + template + '</div>';
+// component.ui.onClick = {
+// 	"customField": function (id, e, trg) {
+// 		var rowData = {};
 
-				if ($$(ids.component)) {
-					var node = $$(ids.component).$view;
-					field.customEdit(rowData, App, node);
-				}
-			}
-		};
+// 		if ($$(ids.component)) {
+// 			var node = $$(ids.component).$view;
+// 			field.customEdit(rowData, App, node);
+// 		}
+// 	}
+// };
 
 		component.onShow = () => {
 

@@ -302,7 +302,7 @@ class ABFieldFile extends ABField {
 		return config;
 	}
 
-/*
+	/*
 	 * @function customDisplay
 	 * perform any custom display modifications for this field.  
 	 * @param {object} row is the {name=>value} hash of the current row of data.
