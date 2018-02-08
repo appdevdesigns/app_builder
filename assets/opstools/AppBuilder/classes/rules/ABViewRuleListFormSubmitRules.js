@@ -46,6 +46,7 @@ export default class ABViewRuleListFormSubmitRules extends ABViewRuleList {
 
 		var Rule = new ABViewRule(listActions);
 		Rule.objectLoad(this.currentObject);
+		Rule.formLoad(this.currentForm);
 		return Rule;
 	}
 

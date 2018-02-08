@@ -342,17 +342,21 @@ OP.Dialog.Alert({
 		var height = "100%";
 		var width = "100%";
 		if (this.settings.useWidth) {
-			config.width = field.settings.imageWidth;
-			height = field.settings.imageHeight + "px";
-			width = field.settings.imageWidth + "px";
+			config.width = field.settings.imageWidth || 100;
+			height = (field.settings.imageHeight || 33) + "px";
+			width = (field.settings.imageWidth || 100) + "px";
 		}
 		
 		// populate our default template:
 		config.template = (obj) => {
 
+			var widthStyle = 'width: #width#; height: #height#'
+								.replace('#width#', width)
+								.replace('#height#', height);
+
 			var imgDiv = [
-				'<div id="#id#" class="ab-image-data-field" style="float: left; width: '+width+'; height: '+height+';">',
-				'<div class="webix_view ab-image-holder" style="width: '+width+'; height: '+height+';">',
+				'<div id="#id#" class="ab-image-data-field" style="float: left; #useWidth#">'.replace('#useWidth#', widthStyle),
+				'<div class="webix_view ab-image-holder" style="#useWidth#">'.replace('#useWidth#', widthStyle),
 				'<div class="webix_template">',
 				this.imageTemplate(obj, editable),
 				'</div>',

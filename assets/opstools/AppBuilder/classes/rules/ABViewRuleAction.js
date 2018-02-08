@@ -34,6 +34,8 @@ export default class ABViewRuleAction {
 
 		this.currentObject = null;  // the current ABObject we are associated with.
 
+		this.currentForm = null;
+
 		this.queryRules = {};	// default set of rules for the Query Builder condition 
 
 		this.valueRules = {};   // the initial Value Rules for this Action
@@ -174,6 +176,10 @@ export default class ABViewRuleAction {
 	// save the current object this Action is associated with.
 	objectLoad(object) {
 		this.currentObject = object;
+	}
+
+	formLoad(form) {
+		this.currentForm = form;
 	}
 
 
