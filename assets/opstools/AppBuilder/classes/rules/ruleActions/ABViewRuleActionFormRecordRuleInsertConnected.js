@@ -24,7 +24,7 @@ export default class ABViewRuleActionFormRecordRuleInsertConnected extends ABVie
 
 
 		this.key = 'ABViewRuleActionFormRecordRuleInsertConnected';
-		this.label = L('ab.component.ruleaction.abviewruleActionFormRecordRuleInsertConnected', '*Insert Connected Object');
+		this.label = L('ab.component.ruleaction.insertConnectedObject', '*Insert Connected Object');
 
 
 		this.currentObject = null;  // the object this Action is tied to.
@@ -100,22 +100,71 @@ export default class ABViewRuleActionFormRecordRuleInsertConnected extends ABVie
 
 		return currFields;
 
-// if (this.currentObject) {
-// console.warn(' ... ABView.fields(): ', this.currentObject.fields() );
-// }
-
-// return [
-//     { id:"fname",   value:"First Name", type:"string" },
-//     { id:"lname",   value:"Last Name",  type:"string" },
-//     { id:"age",     value:"Age",        type:"number" },
-//     { id:"bdate",   value:"Birth Date", type:"date" }
-// ];
 	}
 
 
-	// setObject(object) {
-	// 	this.currentObject = object;
-	// }
+	// valueDisplayComponent
+	// Return an ABView to display our values form.
+	// 
+	valueDisplayComponent(idBase) {
+
+		if (this._ui == null) {
+			this._ui = this.valueDisplayList(idBase);
+		}
+
+		return this._ui;
+	}
+
+	// process
+	// gets called when a form is submitted and the data passes the Query Builder Rules.
+	// @param {obj} options
+	// @return {Promise}
+	process(options) {
+
+		return new Promise( (resolve, reject) => {
+console.log(" Insert Connected Object .... .process() ")
+resolve();
+
+		})
+	}
+
+
+
+
+	// fromSettings
+	// initialize this Action from a given set of setting values.
+	// @param {obj}  settings
+	fromSettings(settings) {
+		settings = settings || {};
+		super.fromSettings(settings); // let the parent handle the QB
+
+
+		// if we have a display component, then populate it:
+		if (this._ui) {
+
+			// now we handle our valueRules:{} object settings.
+			// pass the settings off to our DisplayList component:
+			this._ui.fromSettings(settings.valueRules);
+		}
+	}
+
+
+	// toSettings
+	// return an object that represents the current state of this Action
+	// @return {obj}
+	toSettings() {
+
+		// settings: {
+		//	valueRules:{}
+		// }
+
+		// let our parent store our QB settings
+		var settings = super.toSettings();
+
+		settings.valueRules = this._ui.toSettings();
+
+		return settings;
+	}
 
 
 

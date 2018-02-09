@@ -170,6 +170,7 @@ export default class ABViewRule {
 					QB.setValue(currAction.condition());
 
 					// have Action display it's values form
+					currAction.component(this.App, this.idBase);
 					var component = currAction.valueDisplay(ids.valueDisplay);
 					_logic.replaceValueDisplay(component);
 					component.init()
@@ -191,8 +192,6 @@ export default class ABViewRule {
 			id: this.ids.component,
 			view: "layout",
 			css: "ab-component-form-rule",
-			// when: when, // Store a instance of when
-			// set: set, // Store a instance of set
 
 // this should be a CSS setting: App.config.xxxx
 width: 680,
@@ -243,10 +242,8 @@ width: 680,
 				{
 					for: "values",
 					cells: [
-						// Update this record
 						{
 							view: 'layout',
-//batch: actionOptions[0].id,
 							cols: [
 								{
 									view: 'label',

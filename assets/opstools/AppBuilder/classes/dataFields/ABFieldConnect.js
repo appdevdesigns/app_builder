@@ -712,7 +712,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 
 	get fieldLink() {
-		var objectLink = this. datasourceLink;
+		var objectLink = this.datasourceLink;
 		if (!objectLink) return null
 
 		return objectLink.fields((f) => f.id == this.settings.linkColumn)[0];

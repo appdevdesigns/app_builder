@@ -1,14 +1,13 @@
 //
-// ABViewRuleActionFormRecordRuleUpdate
+// ABViewRuleActionObjectUpdater
 //
-// An action that allows you to update fields on an object that was currently 
-// Added/Updated. 
+// An action that allows you to update fields on an object. 
 //
 //
-import ABViewRuleActionObjectUpdater from "./ABViewRuleActionObjectUpdater"
+import ABViewRuleAction from "../ABViewRuleAction"
 
 
-export default class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleActionObjectUpdater {
+export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 
 	/**
 	 * @param {object} App 
@@ -27,6 +26,26 @@ export default class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleActi
 		this.key = 'ABViewRuleActionFormRecordRuleUpdate';
 		this.label = L('ab.component.ruleaction.updateRecord', '*Update Record');
 
+
+		this.updateObject = null;  // the object this Action will Update.
+
+		this.formRows = [];	// keep track of the Value Components being set
+							// [
+							//		{ fieldId: xxx, value:yyy, type:key['string', 'number', 'date',...]} 
+							// ]
+
+		// Labels for UI components
+		var labels = this.labels = {
+			// common: App.labels,
+			component: {
+
+
+				errorRequired: L("ab.ruleAction.Update.required", "*A value is required"),
+				set: L("ab.component.form.set", "*Set"),
+				to: L("ab.component.form.to", "*To"),
+			}
+		};
+
 	}
 
 
@@ -36,8 +55,8 @@ export default class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleActi
 
 	// 	var currFields = [];
 
-	// 	if (this.currentObject) {
-	// 		this.currentObject.fields().forEach((f)=>{
+	// 	if (this.updateObject) {
+	// 		this.updateObject.fields().forEach((f)=>{
 
 	// 			if (fieldTypes.indexOf(f.key) != -1) {
 
@@ -65,23 +84,23 @@ export default class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleActi
 	// }
 
 
-	// // valueDisplayComponent
-	// // Return an ABView to display our values form.
-	// // 
-	// valueDisplayComponent(idBase) {
+	// valueDisplayComponent
+	// Return an ABView to display our values form.
+	// 
+	valueDisplayComponent(idBase) {
 
-	// 	if (this._ui == null) {
-	// 		this._ui = this.valueDisplayList(idBase);
-	// 	}
+		if (this._ui == null) {
+			this._ui = this.valueDisplayList(idBase);
+		}
 
-	// 	return this._ui;
-	// }
+		return this._ui;
+	}
 
 
 	// Our Values Display is a List of ValueRows
 	// Each ValueRow will display an additional set of [add] [delete] buttons.
 
-/*
+
 	valueDisplayList(idBase) {
 
 		var ids = {
@@ -265,9 +284,9 @@ export default class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleActi
 			getFieldList: (shouldFilter) => {
 
 				var options = [];
-				if (this.currentObject) {
+				if (this.updateObject) {
 
-					options = (this.currentObject.fields() || []).map(f => {
+					options = (this.updateObject.fields() || []).map(f => {
 						return {
 							id: f.id,
 							value: f.label
@@ -298,7 +317,7 @@ export default class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleActi
 
 			isValid: () => {
 
-				var field = this.getObjectField( $$(ids.field).getValue() );
+				var field = this.getUpdateObjectField( $$(ids.field).getValue() );
 				var valueField = $$(ids.row).getChildViews()[3];
 				var value = field.getValue(valueField, {});
 
@@ -336,7 +355,7 @@ export default class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleActi
 
 			selectField: (columnID) => {
 
-				var field = this.getObjectField(columnID );
+				var field = this.getUpdateObjectField(columnID );
 				if (!field) return;
 
 				var fieldComponent = field.formComponent(),
@@ -391,7 +410,7 @@ if (field.key == 'user') {
 
 					data.op = 'set';  // possible to create other types of operations.
 
-					var field = this.getObjectField(data.fieldID);
+					var field = this.getUpdateObjectField(data.fieldID);
 					data.type = field.key;
 
 					return data;
@@ -514,8 +533,8 @@ if (field.key == 'user') {
 
 
 
-	getObjectField(fieldID) {
-		return this.currentObject.fields((f)=>{ return f.id == fieldID })[0];
+	getUpdateObjectField(fieldID) {
+		return this.updateObject.fields((f)=>{ return f.id == fieldID })[0];
 	}
 
 	// process
@@ -540,7 +559,7 @@ if (field.key == 'user') {
 				//  type:''
 				// }
 
-				var field = this.getObjectField(op.fieldID);
+				var field = this.getUpdateObjectField(op.fieldID);
 				if (field) { 
 
 					switch(op.op) {
@@ -559,7 +578,7 @@ if (field.key == 'user') {
 			} else {
 
 				// get the model from the provided Form Obj:
-				var dc = options.form.dataCollection();
+var dc = options.form.dataCollection();
 				if (!dc) return resolve();
 
 				var model = dc.model;
@@ -575,7 +594,18 @@ if (field.key == 'user') {
 	}
 
 
+	// objectLoad
+	// save the current object this Action is associated with.
+	objectLoad(object) {
+		super.objectLoad(object);
+		this.updateObjectLoad(object);
+	}
 
+	// updateObjectLoad
+	// save the given object as the object we will update.
+	updateObjectLoad(object) {
+		this.updateObject = object;
+	}
 
 	// fromSettings
 	// initialize this Action from a given set of setting values.
@@ -611,6 +641,6 @@ if (field.key == 'user') {
 
 		return settings;
 	}
-*/
+
 
 }

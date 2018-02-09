@@ -1,14 +1,23 @@
 //
-// ABViewRuleActionFormRecordRuleUpdate
+// ABViewRuleActionFormRecordRuleUpdateConnected
 //
-// An action that allows you to update fields on an object that was currently 
-// Added/Updated. 
+// An action that allows you to update fields on an object that is connected to 
+// the current object we just Added/Updated
 //
 //
 import ABViewRuleActionObjectUpdater from "./ABViewRuleActionObjectUpdater"
+// import ABFieldConnect from "../../dataFields/ABFieldConnect"
+
+import ObjectQueryBuilder from "../ABViewQueryBuilderObjectFieldConditions"
 
 
-export default class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleActionObjectUpdater {
+//// LEFT OFF HERE:
+// Now implement Update Connected Object:
+// - toSettings() and fromSettings();
+// - debug importing ABFieldConnect errors
+//
+
+export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABViewRuleActionObjectUpdater {
 
 	/**
 	 * @param {object} App 
@@ -24,174 +33,210 @@ export default class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleActi
 		}
 
 
-		this.key = 'ABViewRuleActionFormRecordRuleUpdate';
-		this.label = L('ab.component.ruleaction.updateRecord', '*Update Record');
+		this.key = 'ABViewRuleActionFormRecordRuleUpdateConnected';
+		this.label = L('ab.component.ruleaction.updateConnectedRecord', '*Update Connected Record');
 
+		this.baseObject = null;  // the object the current form is working with.  
+								 // Use this to find our connected fields.
+
+		this.selectedFieldID = null;  // the selected field ID in the .baseObject that is 
+									  // used for updating.  This should be one of the connection Fields.
+
+		this.fieldDropList = [];	// the list of fields to offer based upon the current .baseObject.
+
+
+		this.objectQB = null;		// the QueryBuilder used for offering conditions based upon our connected Object.
+
+
+
+		this.labels.component.selectField = L("ab.ruleAction.UpdateConnected.selectField", "*Select which connected object to update.");
+		this.labels.component.remoteCondition = L("ab.ruleAction.UpdateConnected.remoteCondition", "*How to choose which object:");
 	}
 
 
-	// conditionFields() {
-		
-	// 	var fieldTypes = ['string', 'number', 'date'];
+	// field
 
-	// 	var currFields = [];
+	// objectLoad
+	// save the current object this Action is associated with.
+	// in the case of the UpdateConnected Action, assigning us 
+	// this object only impacts the queryObject.
+	// 
+	// The Updater form will use another object we select in 
+	// the form dropdown.
+	// @param {obj} object
+	//
+	objectLoad(object) {
+		this.queryObjectLoad(object);
+		this.baseObject = object;
 
-	// 	if (this.currentObject) {
-	// 		this.currentObject.fields().forEach((f)=>{
-
-	// 			if (fieldTypes.indexOf(f.key) != -1) {
-
-	// 				// NOTE: the .id value must match the obj[.id]  in the data set
-	// 				// so if your object data looks like:
-	// 				// 	{
-	// 				//		name_first:'Neo',
-	// 				//		name_last: 'The One'
-	// 				//  },
-	// 				// then the ids should be:
-	// 				// { id:'name_first', value:'xxx', type:'string' }
-	// 				currFields.push({
-	// 					id: f.columnName,
-	// 					value: f.label,
-	// 					type: f.key
-	// 				});
-				
-					
-	// 			}
-	// 		})
-	// 	}
-
-	// 	return currFields;
-
-	// }
+		// now build our fieldDropList for the select 
+		var connectionFields = this.connectedFieldList();
+		connectionFields.forEach((cf) => {
+			this.fieldDropList.push({
+				id: cf.id,
+				value: cf.label
+			})
+		})
+	}
 
 
-	// // valueDisplayComponent
-	// // Return an ABView to display our values form.
-	// // 
-	// valueDisplayComponent(idBase) {
+	connectedFieldList() {
+		var connectKey = "connectObject"; // ABFieldConnect.defaults().key;
+		return this.baseObject.fields((f)=>{ return f.key == connectKey; });
+	}
 
-	// 	if (this._ui == null) {
-	// 		this._ui = this.valueDisplayList(idBase);
-	// 	}
+	connectedObject() {
 
-	// 	return this._ui;
-	// }
+		if (this.selectedFieldID) {
+			var selectedField = this.selectedField();
+			if (selectedField) {
+				return selectedField.datasourceLink;
+			}
+		}
+
+		return null;
+	}
 
 
-	// Our Values Display is a List of ValueRows
-	// Each ValueRow will display an additional set of [add] [delete] buttons.
+	selectedField() {
+		return this.connectedFieldList().filter((f)=>{ return f.id == this.selectedFieldID; })[0];
+	}
 
-/*
-	valueDisplayList(idBase) {
+
+
+
+
+
+	// valueDisplayComponent
+	// Return an ABView to display our values form.
+	// 
+	valueDisplayComponent(idBase) {
+
+		if (this._ui == null) {
+			this._ui = this.valueDisplayChooser(idBase);
+		}
+
+		return this._ui;
+	}
+
+
+	// Our Values Display is a Select Box with a choice of connected fields.
+	// Once a field is chosen, then we display the Updater form.
+	valueDisplayChooser(idBase) {
+
+		var uniqueInstanceID = webix.uid();
+		var myUnique = (key) => {
+			// return idBase + '_' + key  + '_' + uniqueInstanceID;
+			return key  + '_' + uniqueInstanceID;
+		}
 
 		var ids = {
-			updateForm: idBase + '_updateForm',	
+			component: myUnique('updateConnectedValues'),
+			updateForm: myUnique('updateChooser'),
+			selectConnectedField: myUnique('updateSelect'),
+			updateFieldsForm: myUnique('updateForm') 
 		};
 
 		var _ui = {
-			view: "form",
-			id: ids.updateForm,
-			elements: []
+			id: ids.component,
+			view: "layout",
+			css: "ab-component-form-rule",
+			rows: [
+				{
+					id: ids.selectConnectedField,
+					view: "richselect",
+					label: this.labels.component.selectField,
+					labelWidth: this.App.config.labelWidthLarge,
+					value: this.selectedField,
+					options: this.fieldDropList,
+					on: {
+						onChange: (newVal, oldVal) => {
+							_logic.selectAction(newVal, oldVal);
+						}
+					}
+				}
+			]
 		};
 
 
 		var init = (valueRules) => {
 			valueRules = valueRules || this.valueRules;
-			_logic.setValues(valueRules);
+// _logic.setValues(valueRules);
 		}
 
-		var _logic = {
+		var _logic =  {
 
-			// addRow
-			// add a new data entry to this form.
-			// @param {obj} data  (optional) initial values for this row.
-			addRow: (data) => {
 
-				// get a new Row Component
-				var row = this.valueDisplayRow(idBase);
+			addDisplay: ( view ) => {
 
-				// get our Form
-				var UpdateForm = _logic.formGet();
-				if (!UpdateForm) return;
-
-				// add row to Form
-				UpdateForm.addView(row.ui);
-
-				// initialize row with any provided data:
-				row.init({ onAdd:()=>{
-
-					// add a new Row
-					_logic.addRow();
-
-				}, onDelete:()=>{
-					UpdateForm.removeView($$(row.ui.id));
-				}, data:data});
-
-// UpdateForm.adjust();
-
-				// store this row
-				this.formRows.push(row);
+				$$(ids.component).addView(view);
 			},
 
 
-			formClear: () => {
-				var UpdateForm = _logic.formGet();
-				if (!UpdateForm) return;
+			// removePreviousDisplays
+			// remove the previous components that reflected the conditions and 
+			// update values of the previously selected field.
+			removePreviousDisplays: () => {
 
-				var children = UpdateForm.getChildViews();
-				children.forEach((c)=>{
-					UpdateForm.removeView(c);
+				var allViews = $$(ids.component).getChildViews();
+				allViews.forEach((v)=>{
+
+					// don't remove the field picker
+					if (v.config.id != ids.selectConnectedField) {
+						$$(ids.component).removeView(v);
+					}
 				})
 			},
 
 
-			formGet: () => {
-				var UpdateForm = $$(ids.updateForm);
-				if (!UpdateForm) {
-					 // this is a problem!
-					OP.Error.log('ABViewRuleActionFormRecordRuleUpdate.init() could not find webix form.', {id:ids.updateForm });
-					return null; 
+			selectAction: (newVal, oldVal) => {
+
+				_logic.removePreviousDisplays(); // of the Query Builder and Update form for old selection:
+
+				this.selectedFieldID = newVal;
+				var connectedObject = this.connectedObject();
+
+				if (connectedObject) {
+
+					// it is the remote object that we are allowed to Update fields on.
+					this.updateObjectLoad(connectedObject);
+					var updateComponent = this.valueDisplayList(ids.updateFieldsForm);
+
+					_logic.showQBIfNeeded();
+
+					// create a new blank update form
+					_logic.addDisplay( updateComponent.ui);
+					updateComponent.init();		
+
+
+				} else {
+					OP.Error.log("!!! No connectedObject found.", {fieldID:this.selectedFieldID});
+				}
+			},
+
+			showQBIfNeeded:() => {
+
+				var field = this.selectedField();
+
+				// we don't need the QB if the destination object link type if 'one'.
+				// there will only be one to get back, so no conditions needed.
+				if (field.settings.linkType != 'one') {
+
+					var qbComponent = this.queryBuilderDisplay();
+
+					qbComponent.component(this.App, this.idBase)
+					_logic.addDisplay(qbComponent.ui);
+					qbComponent.init({});
+
 				}
 
-				return UpdateForm;
 			},
 
 
-			setValues: (valueRules ) => {
-
-				// valueRules = {
-				//	fieldOperations:[
-				//		{ fieldID:xxx, value:yyyy, type:zzz, op:aaa }
-				//	]
-				// }
-
-				valueRules = valueRules || {};
-				valueRules.fieldOperations = valueRules.fieldOperations || [];
-
-				// find the form
-				var UpdateForm = _logic.formGet();
-				if (!UpdateForm) return; 
-			
-				// clear form:
-				_logic.formClear();
-
-				// if there are values to 
-				if (valueRules.fieldOperations.length > 0) {
-
-					valueRules.fieldOperations.forEach((r) => {
-						_logic.addRow(r);
-					})
-				} 
-
-				// display an empty row
-				_logic.addRow(); 
-
-			}, 
-
 			fromSettings: (settings) => {
 
-				// make sure UI is updated:
-				_logic.setValues(settings)
+// // make sure UI is updated:
+// _logic.setValues(settings)
 
 			},
 
@@ -204,13 +249,13 @@ export default class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleActi
 				// }
 				var settings = {fieldOperations:[]};
 
-				// for each of our formRows, decode the propery {} 
-				this.formRows.forEach((fr) => {
-					var rowSettings = fr.toSettings();
-					if (rowSettings) {
-						settings.fieldOperations.push(fr.toSettings());
-					}
-				})
+// // for each of our formRows, decode the propery {} 
+// this.formRows.forEach((fr) => {
+// 	var rowSettings = fr.toSettings();
+// 	if (rowSettings) {
+// 		settings.fieldOperations.push(fr.toSettings());
+// 	}
+// })
 
 				return settings;
 			}
@@ -226,6 +271,22 @@ export default class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleActi
 		};
 	}
 
+
+
+	queryBuilderDisplay() {
+
+		if (!this.objectQB) {
+			this.objectQB = new ObjectQueryBuilder(this.labels.component.remoteCondition);
+
+			var connObj = this.connectedObject();
+			if (connObj) this.objectQB.objectLoad(connObj);
+		}
+		return this.objectQB;		
+	}
+
+
+
+/*
 
 	valueDisplayRow(idBase) {
 

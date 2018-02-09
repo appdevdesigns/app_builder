@@ -9,6 +9,7 @@ import ABViewRule from "./ABViewRule"
 
 import RoleUpdateExisting from "./ruleActions/ABViewRuleActionFormRecordRuleUpdate"
 import RoleInsertConnected from "./ruleActions/ABViewRuleActionFormRecordRuleInsertConnected"
+import RoleUpdateConnected from "./ruleActions/ABViewRuleActionFormRecordRuleUpdateConnected"
 
 export default class ABViewRuleListFormRecordRules extends ABViewRuleList {
 
@@ -37,10 +38,8 @@ export default class ABViewRuleListFormRecordRules extends ABViewRuleList {
 
 		var listActions = [
 			new RoleUpdateExisting(this.App, this.idBase+'_ruleActionUpdate'),
-			new RoleInsertConnected(this.App, this.idBase+'_ruleActionInsert')
-			// new ABViewRuleActionFormRecordUpdateExisting(),
-			// new ABViewRuleActionFormRecordInsertConnected(),
-			// new ABViewRuleActionFormRecordUpdateConnected()
+			new RoleInsertConnected(this.App, this.idBase+'_ruleActionInsert'),
+			new RoleUpdateConnected(this.App, this.idBase+'_ruleActionUpdateConnected')
 		]
 
 		var Rule = new ABViewRule(listActions);
