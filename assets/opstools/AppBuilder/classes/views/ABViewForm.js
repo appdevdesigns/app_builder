@@ -1159,7 +1159,7 @@ export default class ABViewForm extends ABViewContainer {
 		var object = this.dataCollection().datasource;
 
 		var RecordRules = new ABRecordRule();
-		SubmitRules.formLoad(this);
+		RecordRules.formLoad(this);
 		RecordRules.fromSettings(this.settings.recordRules);
 		RecordRules.objectLoad(object);
 		

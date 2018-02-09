@@ -33,9 +33,9 @@ var ABFieldFileDefaults = {
 
 
 var defaultValues = {
-	'removeExistingData': 0,
-	'fileSize': 0,
-	'fileType': ""
+	removeExistingData: 0,
+	fileSize: 0,
+	fileType: ""
 }
 
 
@@ -184,7 +184,7 @@ class ABFieldFile extends ABField {
     	// text to Int:
     	this.settings.fileSize = parseInt(this.settings.fileSize);
     	this.settings.limitFileSize = parseInt(this.settings.limitFileSize);
-    	this.settings.limitFileType = parseInt(this.settings.limitFileType);
+		this.settings.limitFileType = parseInt(this.settings.limitFileType);
     	this.settings.removeExistingData = parseInt(this.settings.removeExistingData);
   	}
 
@@ -281,7 +281,7 @@ class ABFieldFile extends ABField {
 
 
 	// return the grid column header definition for this instance of ABFieldFile
-	columnHeader (isObjectWorkspace) {
+	columnHeader (isObjectWorkspace, newWidth, editable) {
 		var config = super.columnHeader(isObjectWorkspace);
 
 		config.editor = false; 
@@ -323,19 +323,17 @@ class ABFieldFile extends ABField {
 			file: idBase+'-file'
 		}
 
-		var typesList = "";
+		var typesList = [];
 		var maximumSize = 0;
 
-		if (this.settings.limitFileType) {
-			if (this.settings.fileType &&  this.settings.fileType != '') {
-				typesList = this.settings.fileType.split(',');
-			};
+		if (this.settings.limitFileType && 
+			this.settings.fileType) {
+			typesList = this.settings.fileType.split(',');
 		};
 
-		if (this.settings.limitFileSize) {
-			if (this.settings.fileSize) {
+		if (this.settings.limitFileSize &&
+			this.settings.fileSize) {
 				maximumSize = this.settings.fileSize;
-			};
 		};
 
 // 		// safety check:
@@ -349,6 +347,7 @@ class ABFieldFile extends ABField {
 
 // 			// use a webix component for displaying the content.
 // 			// do this so I can use the progress spinner
+
 			var webixContainer = webix.ui({
 				view:'template',
 				css:'ab-file-holder',
@@ -357,7 +356,8 @@ class ABFieldFile extends ABField {
 				
 				template:this.fileTemplate(row),
 
-				borderless:true
+				borderless:true,
+				width: 200
 			});
 			webix.extend(webixContainer, webix.ProgressBar);
 
@@ -597,8 +597,12 @@ class ABFieldFile extends ABField {
 	}
 	
 	getValue(item, rowData) {
+
 		var file = item.$view.querySelector('.file-data-field-name');
-		return file.getAttribute('file-uuid');
+		return {
+			uuid: file.getAttribute('file-uuid'),
+			filename: file.innerHTML
+		};
 	}
 	
 	setValue(item, rowData) {
@@ -606,12 +610,20 @@ class ABFieldFile extends ABField {
 
 		var fileicon = domNode.querySelector('.file-data-field-icon');
 		if (fileicon)
-			fileicon.style.display = 'none';
+			fileicon.style.display = rowData[this.columnName] ? 'none' : 'block';
 
 		var file = domNode.querySelector('.file-data-field-name');
 		if (file) {
-			file.style.display = '';
-			file.setAttribute('file-uuid', rowData[this.columnName] );
+			file.style.display = rowData[this.columnName] ? 'block' : 'none';
+
+			if (rowData[this.columnName]) {
+				file.setAttribute('file-uuid', rowData[this.columnName].uuid );
+
+				var fileLink = file.querySelector('a');
+				var fileURL =  '/opsportal/file/' + this.object.application.name + '/' + rowData[this.columnName].uuid;
+				fileLink.href = fileURL;
+				fileLink.innerHTML = rowData[this.columnName].filename;
+			}
 		}
 	}
 	

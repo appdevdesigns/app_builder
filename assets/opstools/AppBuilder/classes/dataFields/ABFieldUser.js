@@ -278,7 +278,9 @@ class ABFieldUser extends ABFieldSelectivity {
 					}
 				});
 				if (obj[field.columnName]) {
-					return '<span class="selectivity-multiple-selected-item rendered" style="background-color:#eee !important; color: #666 !important; box-shadow: inset 0px 1px 1px #333;"><i style="opacity: 0.6;" class="fa fa-user"></i> '+myText+' <a class="selectivity-multiple-selected-item-remove" style="color: #333;"><i class="fa fa-remove"></i></a></span>';
+					var removeIcon = editable ? '<a class="selectivity-multiple-selected-item-remove" style="color: #333;"><i class="fa fa-remove"></i></a>' : '';
+
+					return '<span class="selectivity-multiple-selected-item rendered" style="background-color:#eee !important; color: #666 !important; box-shadow: inset 0px 1px 1px #333;"><i style="opacity: 0.6;" class="fa fa-user"></i> '+myText+ removeIcon + ' </span>';
 				} else {
 					return myText;
 				}
