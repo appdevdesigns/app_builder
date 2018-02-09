@@ -149,38 +149,47 @@ export default class ABViewFormCustom extends ABViewFormField {
 		var template = ('<div class="customField">' + templateLabel + "#template#" + '</div>')
 			.replace(/#width#/g, settings.labelWidth)
 			.replace(/#label#/g, field.label)
-			.replace(/#template#/g, field.columnHeader(null, newWidth, true).template);
+			.replace(/#template#/g, field.columnHeader(null, newWidth, true).template({}));
 
 
 		component.ui = {
-			id: ids.component,
-			view: "template",
-			css:  "customFieldCls", 
-			borderless: true,
-			template: template,
-			onClick: {
-				"customField": function (id, e, trg) {
-					var rowData = {};
+			id: 	ids.component,
+		    view: 	"forminput",
+			css:    "ab-custom-field",
+			name:   component.ui.name,
+			// label:  field.label,
+			// labelPosition: settings.labelPosition, // webix.forminput does not have .labelPosition T T
+			// labelWidth: settings.labelWidth,
+		    body:{
+				id: ids.component,
+				view: App.custom.focusabletemplate.view,
+				css:  "customFieldCls", 
+				borderless: true,
+				template: template,
+				onClick: {
+					"customField": function (id, e, trg) {
+						var rowData = {};
 
-					if ($$(ids.component)) {
-						var node = $$(ids.component).$view;
-						field.customEdit(rowData, App, node);
+						if ($$(ids.component)) {
+							var node = $$(ids.component).$view;
+							field.customEdit(rowData, App, node);
+						}
 					}
 				}
 			}
-		}
+		};
 // component.ui.id = ids.component;
 // component.ui.view = "template";
 // component.ui.css = "customFieldCls";
 
 		if (settings.showLabel == true && settings.labelPosition == 'top') {
-			component.ui.height = 80;
+			component.ui.body.height = 80;
 		}
 		else if (field.settings.useHeight) {
-			component.ui.height = parseInt(field.settings.imageHeight);
+			component.ui.body.height = parseInt(field.settings.imageHeight) || 38;
 		}
 		else {
-			component.ui.height = 38;
+			component.ui.body.height = 38;
 		}
 // component.ui.borderless = true;
 // component.ui.template = '<div class="customField">' + template + '</div>';

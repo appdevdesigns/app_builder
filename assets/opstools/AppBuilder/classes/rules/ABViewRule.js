@@ -51,7 +51,7 @@ export default class ABViewRule {
 		this.currentObject = null;				// What ABObject is this associated with
 												// NOTE: this is important for Actions.
 	
-
+		this.currentForm = null;
 	}
 
 
@@ -201,7 +201,7 @@ width: 680,
 					css: "ab-component-form-rule",
 					template: '<i class="fa fa-trash ab-component-remove"></i>',
 					height: 30,
-					hidden: this.removable == false,
+					hidddatasourceen: this.removable == false,
 					onClick: {
 						"ab-component-remove":  (e, id, trg) => {
 							this._logic.callbacks.onDelete(this);
@@ -304,6 +304,13 @@ width: 680,
 		}
 	}
 
+	
+	formLoad(form) {
+		this.currentForm = form;
+		this.listActions.forEach((a)=>{
+			a.formLoad(form);
+		})
+	}
 
 
 	// process

@@ -66,6 +66,8 @@ export default class ABViewRuleList {
 			return AD.lang.label.getLabel(key) || altText;
 		}
 
+		this.currentForm = null;
+
 		var labels = this.labels = {
 			common: App.labels,
 			component: {
@@ -336,6 +338,10 @@ export default class ABViewRuleList {
 	getRule () {
 		console.error('!!! ABViewRuleList.getRule() should be overridded by a child object.');
 		return {};
+	}
+
+	formLoad(form) {
+		this.currentForm = form;
 	}
 
 }

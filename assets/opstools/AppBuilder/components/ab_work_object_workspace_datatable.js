@@ -496,6 +496,15 @@ console.warn('!! ToDo: onAfterColumnHide()');
             onAfterColumnDrop: function (sourceId, targetId, event) {
                 CurrentObject.fieldReorder(sourceId, targetId)
                 .then(()=>{
+                    // reset each column after a drop so we do not have multiple fillspace and minWidth settings
+                    var columnHeaders = CurrentObject.columnHeaders(true, settings.isEditable);
+                    columnHeaders.forEach(function(col) {
+                        if (col.id == sourceId && col.fillspace == true) {
+                            columnHeader.fillspace = false;
+                            columnHeader.minWidth = columnHeader.width;
+                        }
+                    });
+
                     _logic.callbacks.onColumnOrderChange(CurrentObject);
                     // freeze columns:
                     var DataTable = $$(ids.component);
@@ -893,9 +902,10 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                     if (lastCol) {
                         lastCol.fillspace = true;
                         lastCol.minWidth = lastCol.width;
+                        lastCol.width = 150; // set a width for last column but by default it will fill the available space or use the minWidth to take up more
                     }
                     
-    				DataTable.refreshColumns(columnHeaders)
+    				DataTable.refreshColumns(columnHeaders);
 
 
     				// freeze columns:

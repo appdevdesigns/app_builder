@@ -17,8 +17,10 @@ import ABPropertyComponent from "../ABPropertyComponent"
 
 import ABDisplayRule from "./ABViewFormPropertyDisplayRule"
 // import ABRecordRule from "./ABViewFormPropertyRecordRule"
+// import ABSubmitRule from "./ABViewFormPropertySubmitRule"
 import ABRecordRule from "../rules/ABViewRuleListFormRecordRules"
-import ABSubmitRule from "./ABViewFormPropertySubmitRule"
+import ABSubmitRule from "../rules/ABViewRuleListFormSubmitRules"
+
 
 import RowFilter from '../RowFilter'
 
@@ -184,7 +186,8 @@ export default class ABViewForm extends ABViewContainer {
 		PopupRecordRule = new ABRecordRule();
 		PopupRecordRule.component(App, idBase + "_recordrule");		// prepare the UI component.
 
-		PopupSubmitRule = new ABSubmitRule(App, idBase + "_submitrule");
+		PopupSubmitRule = new ABSubmitRule();
+		PopupSubmitRule.component(App, idBase + "_submitrule");
 
 
 		// _logic functions
@@ -322,8 +325,9 @@ export default class ABViewForm extends ABViewContainer {
 
 			var currView = _logic.currentEditObject();
 
-			PopupSubmitRule.setValue(currView.settings.submitRules);
+			PopupSubmitRule.fromSettings(currView.settings.submitRules);
 			PopupSubmitRule.show();
+
 
 		};
 
@@ -606,8 +610,13 @@ export default class ABViewForm extends ABViewContainer {
 		if (selectedDc) {
 			PopupDisplayRule.objectLoad(selectedDc.datasource);
 			PopupRecordRule.objectLoad(selectedDc.datasource);
-			PopupSubmitRule.objectLoad(selectedDc.datasource, view);
+			PopupSubmitRule.objectLoad(selectedDc.datasource);
 		}
+
+
+		// PopupDisplayRule.formLoad(view);
+		PopupRecordRule.formLoad(view);
+		PopupSubmitRule.formLoad(view);
 
 	}
 
@@ -1150,9 +1159,10 @@ export default class ABViewForm extends ABViewContainer {
 		var object = this.dataCollection().datasource;
 
 		var RecordRules = new ABRecordRule();
+		SubmitRules.formLoad(this);
 		RecordRules.fromSettings(this.settings.recordRules);
 		RecordRules.objectLoad(object);
-
+		
 		return RecordRules.process({data:rowData, form:this });
 
 	}
@@ -1160,44 +1170,13 @@ export default class ABViewForm extends ABViewContainer {
 	doSubmitRules(rowData) {
 
 		var object = this.dataCollection().datasource;
-
-		var submitRules = this.settings.submitRules || [];
-		submitRules.forEach(r => {
-
-			var filterer = new RowFilter();
-			filterer.objectLoad(object);
-			filterer.setValue(r.when);
-			var isMatch = filterer.isValid(rowData);
-
-			if (isMatch) {
-				switch (r.action) {
-
-					case "message":
-						webix.message({
-							text: r.value,
-							type: "info"
-						});
-						break;
-
-					case "parentPage":
-						var pageCurrent = this.pageParent();
-						var pageParent = pageCurrent.pageParent().id;
-
-						this.changePage(pageParent.id);
-						break;
-
-					case "existsPage":
-						this.changePage(r.value);
-						break;
-
-					case "website":
-						window.location.href = "http://" + r.value.replace("http://", "");
-						break;
-				}
-			}
-
-
-		});
+		
+		var SubmitRules = new ABSubmitRule();
+		SubmitRules.formLoad(this);
+		SubmitRules.fromSettings(this.settings.submitRules);
+		SubmitRules.objectLoad(object);
+		
+		return SubmitRules.process({data:rowData, form:this });
 
 	}
 
