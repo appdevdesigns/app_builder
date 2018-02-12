@@ -555,7 +555,7 @@ class ABFieldFile extends ABField {
 
 		detailComponentSetting.common = () => {
 			return {
-				key: 'detailfile'
+				key: 'detailcustom'
 			}
 		};
 

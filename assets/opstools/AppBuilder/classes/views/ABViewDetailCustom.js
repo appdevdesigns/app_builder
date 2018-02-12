@@ -84,8 +84,9 @@ export default class ABViewDetailCustom extends ABViewDetailComponent {
 			component: App.unique(idBase + '_component')
 		}
 
+		var component = this.component(App);
 
-		var textElem = this.component(App).ui;
+		var textElem = component.ui;
 		textElem.id = ids.component;
 
 		var _ui = {
@@ -95,17 +96,18 @@ export default class ABViewDetailCustom extends ABViewDetailComponent {
 			]
 		};
 
-		var _init = (options) => {
-		}
+		var _init = component.init;
+		var _logic = component.logic;
 
-		var _logic = {
-		}
+		var _onShow = component.onShow;
 
 
 		return {
 			ui: _ui,
 			init: _init,
-			logic: _logic
+			logic: _logic,
+
+			onShow: _onShow
 		}
 	}
 
@@ -181,7 +183,28 @@ export default class ABViewDetailCustom extends ABViewDetailComponent {
 
 		// make sure each of our child views get .init() called
 		component.init = (options) => {
-		}
+		};
+
+		component.onShow = () => {
+
+			var elem = $$(ids.component);
+			if (!elem) return;
+
+			var rowData = {},
+				node = elem.$view,
+				editable = false;
+
+			field.customDisplay(rowData, App, node, editable);
+
+		};
+
+		component.logic.setValue = (val) => {
+
+			var rowData = {};
+			rowData[field.columnName] = val;
+
+			field.setValue($$(ids.component), rowData);
+		};
 
 
 		return component;
