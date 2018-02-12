@@ -613,6 +613,30 @@ export default class ABViewPage extends ABViewContainer {
             return this.application.urlPage() + this.id;
         }
     }
+    
+    removeFieldSubPages(field, cb) {
+        var done = 0;
+        
+        // for each subpage, removeField(field)
+        var subPages = this.pages();
+        subPages.forEach((sp)=>{
+            sp.removeField(field, (err)=>{
+                if (err) {
+                    cb(err);
+                } else {
+                    done ++;
+                    if (done >= subPages.length) {
+                        cb();
+                    }
+                }
+            })
+        });
+
+        if (subPages.length == 0) {
+            cb();
+        }
+
+    }
 
 
     removeField(field, cb) {
@@ -624,21 +648,6 @@ export default class ABViewPage extends ABViewContainer {
             } else {
                 var done = 0;
                 
-                // for each subpage, removeField(field)
-                var subPages = this.pages();
-                subPages.forEach((sp)=>{
-                    sp.removeField(field, (err)=>{
-                        if (err) {
-                            cb(err);
-                        } else {
-                            done ++;
-                            if (done >= subPages.length) {
-                                cb();
-                            }
-                        }
-                    })
-                });
-
                 // for each data collection, removeField(field)
                 var listDC = this.dataCollections();
                 listDC.forEach((dc)=>{
@@ -648,14 +657,15 @@ export default class ABViewPage extends ABViewContainer {
                         } else {
                             done ++;
                             if (done >= listDC.length) {
-                                cb();
+                                // for each subpage, removeField(field)
+                                this.removeFieldSubPages(field, cb);
                             }
                         }
                     })
                 });
                 
-                if (listDC.length == 0 && subPages.length == 0) {
-                    cb();
+                if (listDC.length == 0) {
+                    this.removeFieldSubPages(field, cb);
                 }
             }
         });
