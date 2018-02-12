@@ -111,8 +111,7 @@ export default class ABViewRuleActionFormSubmitRuleExistPage extends ABViewRuleA
 					})
 				};
 
-				// this.currentObject.application
-				// addPage(currView.pageRoot(), '');
+				addPage(this.currentForm.pageRoot(), '');
 
 				$$(ids.existsPages).define('options', _pageOptions);
 				$$(ids.existsPages).refresh();

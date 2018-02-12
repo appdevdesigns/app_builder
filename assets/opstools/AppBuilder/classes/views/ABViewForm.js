@@ -328,6 +328,7 @@ export default class ABViewForm extends ABViewContainer {
 			PopupSubmitRule.fromSettings(currView.settings.submitRules);
 			PopupSubmitRule.show();
 
+
 		};
 
 		_logic.submitRuleSave = (settings) => {
@@ -611,6 +612,11 @@ export default class ABViewForm extends ABViewContainer {
 			PopupRecordRule.objectLoad(selectedDc.datasource);
 			PopupSubmitRule.objectLoad(selectedDc.datasource);
 		}
+
+
+		// PopupDisplayRule.formLoad(view);
+		PopupRecordRule.formLoad(view);
+		PopupSubmitRule.formLoad(view);
 
 	}
 
@@ -1153,9 +1159,10 @@ export default class ABViewForm extends ABViewContainer {
 		var object = this.dataCollection().datasource;
 
 		var RecordRules = new ABRecordRule();
+		RecordRules.formLoad(this);
 		RecordRules.fromSettings(this.settings.recordRules);
 		RecordRules.objectLoad(object);
-
+		
 		return RecordRules.process({data:rowData, form:this });
 
 	}
@@ -1165,50 +1172,11 @@ export default class ABViewForm extends ABViewContainer {
 		var object = this.dataCollection().datasource;
 		
 		var SubmitRules = new ABSubmitRule();
+		SubmitRules.formLoad(this);
 		SubmitRules.fromSettings(this.settings.submitRules);
 		SubmitRules.objectLoad(object);
-
+		
 		return SubmitRules.process({data:rowData, form:this });
-
-		// var object = this.dataCollection().datasource;
-
-		// var submitRules = this.settings.submitRules || [];
-		// submitRules.forEach(r => {
-
-		// 	var filterer = new RowFilter();
-		// 	filterer.objectLoad(object);
-		// 	filterer.setValue(r.when);
-		// 	var isMatch = filterer.isValid(rowData);
-
-		// 	if (isMatch) {
-		// 		switch (r.action) {
-
-		// 			case "message":
-		// 				webix.message({
-		// 					text: r.value,
-		// 					type: "info"
-		// 				});
-		// 				break;
-
-		// 			case "parentPage":
-		// 				var pageCurrent = this.pageParent();
-		// 				var pageParent = pageCurrent.pageParent().id;
-
-		// 				this.changePage(pageParent.id);
-		// 				break;
-
-		// 			case "existsPage":
-		// 				this.changePage(r.value);
-		// 				break;
-
-		// 			case "website":
-		// 				window.location.href = "http://" + r.value.replace("http://", "");
-		// 				break;
-		// 		}
-		// 	}
-
-
-		// });
 
 	}
 

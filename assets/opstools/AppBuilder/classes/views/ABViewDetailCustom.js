@@ -170,7 +170,7 @@ export default class ABViewDetailCustom extends ABViewDetailComponent {
 		var template = (templateLabel)
 			.replace(/#width#/g, detailView.settings.labelWidth)
 			.replace(/#label#/g, field.label)
-			.replace(/#result#/g, field.columnHeader().template);
+			.replace(/#result#/g, field.columnHeader().template({}));
 
 		component.ui.id = ids.component;
 		component.ui.view = "template";
