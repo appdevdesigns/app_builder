@@ -46,7 +46,7 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 
 
 		this.objectQB = null;		// the QueryBuilder used for offering conditions based upon our connected Object.
-
+		this.qbCondition = null;	// the QB condition entered for selecting which remote object.
 
 
 		this.labels.component.selectField = L("ab.ruleAction.UpdateConnected.selectField", "*Select which connected object to update.");
@@ -112,11 +112,11 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 	// 
 	valueDisplayComponent(idBase) {
 
-		if (this._ui == null) {
-			this._ui = this.valueDisplayChooser(idBase);
+		if (this._uiChooser == null) {
+			this._uiChooser = this.valueDisplayChooser(idBase);
 		}
 
-		return this._ui;
+		return this._uiChooser;
 	}
 
 
@@ -164,7 +164,7 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 // _logic.setValues(valueRules);
 		}
 
-		var _logic =  {
+		var _logic =  this._logic =  {
 
 
 			addDisplay: ( view ) => {
@@ -200,13 +200,14 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 
 					// it is the remote object that we are allowed to Update fields on.
 					this.updateObjectLoad(connectedObject);
-					var updateComponent = this.valueDisplayList(ids.updateFieldsForm);
+					///// NOTE: important to call super.valueDisplayComponent()
+					this.updateComponent = super.valueDisplayComponent(ids.updateFieldsForm);  // parent obj
 
 					_logic.showQBIfNeeded();
 
 					// create a new blank update form
-					_logic.addDisplay( updateComponent.ui);
-					updateComponent.init();		
+					_logic.addDisplay( this.updateComponent.ui);
+					this.updateComponent.init();		
 
 
 				} else {
@@ -235,8 +236,17 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 
 			fromSettings: (settings) => {
 
-// // make sure UI is updated:
-// _logic.setValues(settings)
+				// this triggers the update of the display, creation of QB, 
+				$$(ids.selectConnectedField).setValue(settings.selectedFieldID);
+
+				if (this.objectQB) {
+					this.objectQB.setValue(this.qbCondition);
+				}
+
+				if (this.updateComponent) {
+					this.updateComponent.fromSettings(settings);
+				}
+
 
 			},
 
@@ -636,22 +646,21 @@ if (field.key == 'user') {
 	}
 
 
-
+*/
 
 	// fromSettings
 	// initialize this Action from a given set of setting values.
 	// @param {obj}  settings
 	fromSettings(settings) {
 		settings = settings || {};
-		super.fromSettings(settings); // let the parent handle the QB
+
+		this.selectedFieldID = settings.selectedFieldID || null;
+		this.qbCondition = settings.qbCondition || {};
 
 
 		// if we have a display component, then populate it:
-		if (this._ui) {
-
-			// now we handle our valueRules:{} object settings.
-			// pass the settings off to our DisplayList component:
-			this._ui.fromSettings(settings.valueRules);
+		if (this._uiChooser) {
+			this._logic.fromSettings(settings);
 		}
 	}
 
@@ -662,16 +671,19 @@ if (field.key == 'user') {
 	toSettings() {
 
 		// settings: {
-		//	valueRules:{}
+		// 	selectedFieldID: 'guid',
+		//  qbCondition: [],
+		//	valueRules:{}		// from ABViewRuleActionObjectUpdater
 		// }
 
 		// let our parent store our QB settings
 		var settings = super.toSettings();
 
-		settings.valueRules = this._ui.toSettings();
+		settings.selectedFieldID = this.selectedFieldID;
+		settings.qbCondition = this.objectQB ? this.objectQB.getValue()[0] : null;
 
 		return settings;
 	}
-*/
+
 
 }

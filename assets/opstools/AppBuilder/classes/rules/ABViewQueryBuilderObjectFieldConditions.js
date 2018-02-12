@@ -91,9 +91,52 @@ export default class ABViewQueryBuilderObjectFieldConditions {
 				onSave: function (field) { console.warn('NO onSave()!') },
 			},
 
+			getValue: () => {
+				var values = null;
+				var QB = $$(ids.queryBuilder);
+				if (QB) {
+					values = QB.getValue();
+				}
+
+
+				// convert dates to simpler format:
+				// by default we're getting long values: "Mon Feb 2, 2018 GMT xxxxxxx",
+				// and webix doesn't seem to understand them when we send them back.
+				// so save simple date values: "mm/dd/yyyy"
+				var rules = values[0];
+				if (rules) {
+					var fields = values[1];
+
+					rules.rules.forEach((r)=>{
+						var field = fields.filter((f)=>{ return f.id == r.key;})[0];
+						if (field) {
+							if (field.type == 'date') {
+								r.value = webix.i18n.dateFormatStr(r.value);
+							}
+						}
+					})
+				}
+
+
+				return values;
+			
+			},
+
+			setValue: (values) => {
+
+				values = values || [];
+				if (values.length == 0) { values.push({}); };	// push default rules
+				if (values.length < 2) { values.push(this.conditionFields())}
+
+				var QB = $$(ids.queryBuilder);
+				if (QB) {
+					QB.setValue(values);
+				}
+			}
+
 		};
 
-
+		this.getValue = _logic.getValue;
 		this.show = _logic.show;
 		this.setValue = _logic.setValue;
 	}
@@ -183,40 +226,40 @@ export default class ABViewQueryBuilderObjectFieldConditions {
 
 
 
-	// fromSettings
-	// Create an initial set of default values based upon our settings object.
-	// @param {obj} settings  The settings object we created in .toSettings()
-	fromSettings (settings) {
-		// settings: [
-		//  { rule.settings },
-		//  { rule.settings }
-		// ]
+	// // fromSettings
+	// // Create an initial set of default values based upon our settings object.
+	// // @param {obj} settings  The settings object we created in .toSettings()
+	// fromSettings (settings) {
+	// 	// settings: [
+	// 	//  { rule.settings },
+	// 	//  { rule.settings }
+	// 	// ]
 
-		// clear any existing Rules:
-		this.listRules.forEach((rule)=>{
-			$$(this.ids.rules).removeView(rule.ids.component);
-		})
-		this.listRules = [];
-
-
-		if (settings) {
-			settings.forEach((ruleSettings)=>{
-				this.addRule(ruleSettings);
-			})
-		}
-	}
+	// 	// clear any existing Rules:
+	// 	this.listRules.forEach((rule)=>{
+	// 		$$(this.ids.rules).removeView(rule.ids.component);
+	// 	})
+	// 	this.listRules = [];
 
 
-	// toSettings
-	// create a settings object to be persisted with the application.
-	// @return {array} of rule settings.
-	toSettings () {
-		var settings = [];
-		this.listRules.forEach((r)=>{
-			settings.push(r.toSettings());
-		})
-		return settings;
-	}
+	// 	if (settings) {
+	// 		settings.forEach((ruleSettings)=>{
+	// 			this.addRule(ruleSettings);
+	// 		})
+	// 	}
+	// }
+
+
+	// // toSettings
+	// // create a settings object to be persisted with the application.
+	// // @return {array} of rule settings.
+	// toSettings () {
+	// 	var settings = [];
+	// 	this.listRules.forEach((r)=>{
+	// 		settings.push(r.toSettings());
+	// 	})
+	// 	return settings;
+	// }
 
 
 }

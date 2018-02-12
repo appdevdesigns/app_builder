@@ -88,6 +88,8 @@ export default class ABViewRule {
 
 			// each instance must be unique
 			component: myUnique('component'),	
+
+			selectAction: myUnique('chooseAction'),
 			
 			queryBuilder: myUnique('queryBuilder'),  
 
@@ -210,6 +212,7 @@ width: 680,
 				},
 				// Action
 				{
+					id: this.ids.selectAction,
 					view: "richselect",
 					// for: "action",
 					label: this.labels.component.action,
@@ -367,7 +370,8 @@ width: 680,
 
 				// Trigger our UI to refresh with this selected Action:
 				// NOTE: this also populates the QueryBuilder
-				this._logic.selectAction(this.selectedAction);
+				$$(this.ids.selectAction).setValue(this.selectedAction);
+// this._logic.selectAction(this.selectedAction);
 			}
 
 			// now continue with setting up our settings:

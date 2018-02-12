@@ -89,11 +89,11 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 	// 
 	valueDisplayComponent(idBase) {
 
-		if (this._ui == null) {
-			this._ui = this.valueDisplayList(idBase);
+		if (this._uiUpdater == null) {
+			this._uiUpdater = this.valueDisplayList(idBase);
 		}
 
-		return this._ui;
+		return this._uiUpdater;
 	}
 
 
@@ -210,7 +210,9 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 			fromSettings: (settings) => {
 
 				// make sure UI is updated:
-				_logic.setValues(settings)
+				// Note: we just want the { valueRules:[] } here:
+				var mySettings = settings.valueRules || settings;
+				_logic.setValues(mySettings)
 
 			},
 
@@ -317,39 +319,59 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 
 			isValid: () => {
 
-				var field = this.getUpdateObjectField( $$(ids.field).getValue() );
-				var valueField = $$(ids.row).getChildViews()[3];
-				var value = field.getValue(valueField, {});
-
-				// // if a standard component that supports .getValue()
-				// if (valueField.getValue) {
-				// 	value = valueField.getValue();
-				// } else {
-				// 	// else use for field.getValue();
-				// 	value = field.getValue(valueField, {});
-				// }
-
-				// our .isValidData() wants value in an object:
-				var obj = {};
-				obj[field.columnName] = value;
-
 				var validator = OP.Validation.validator();
-				field.isValidData(obj, validator);
-
-				// if value is empty, this is also an error:
-				if ((value == '') 
-					|| ((Array.isArray(value)) && (value.length == 0))) {
-
-					validator.addError(field.columnName, this.labels.component.errorRequired);
-				}
-
-				// field.getParentView()  ->  row
-				// row.getParentView()  -> Form
+				var valueField = $$(ids.row).getChildViews()[3];
 				var FormView = valueField.getParentView().getParentView();
-				FormView.clearValidation();
-				validator.updateForm(FormView);
 
-				return validator.pass();
+
+				var field = this.getUpdateObjectField( $$(ids.field).getValue() );
+				if (field) {
+					
+					var value = field.getValue(valueField, {});
+
+					// // if a standard component that supports .getValue()
+					// if (valueField.getValue) {
+					// 	value = valueField.getValue();
+					// } else {
+					// 	// else use for field.getValue();
+					// 	value = field.getValue(valueField, {});
+					// }
+
+					// our .isValidData() wants value in an object:
+					var obj = {};
+					obj[field.columnName] = value;
+
+					field.isValidData(obj, validator);
+
+					// if value is empty, this is also an error:
+					if ((value == '') 
+						|| ((Array.isArray(value)) && (value.length == 0))) {
+
+						validator.addError(field.columnName, this.labels.component.errorRequired);
+					}
+
+					// field.getParentView()  ->  row
+					// row.getParentView()  -> Form
+					FormView.clearValidation();
+					validator.updateForm(FormView);
+
+					return validator.pass();
+
+				} else {
+
+					// if we didn't find an associated field ... then this isn't good
+					// data.
+
+
+//// TODO: display error for our field picker.  Note, it doesn't have a unique .name 
+// field.
+var fieldField = $$(ids.row).getChildViews()[1];
+fieldField.define('invalidMessage', this.labels.component.errorRequired);
+fieldField.define('invalid', true);
+fieldField.refresh();
+					// fieldField.markInvalid(this.labels.component.errorRequired);
+					return false;
+				}
 			},
 
 
@@ -616,11 +638,11 @@ var dc = options.form.dataCollection();
 
 
 		// if we have a display component, then populate it:
-		if (this._ui) {
+		if (this._uiUpdater) {
 
 			// now we handle our valueRules:{} object settings.
 			// pass the settings off to our DisplayList component:
-			this._ui.fromSettings(settings.valueRules);
+			this._uiUpdater.fromSettings(settings);
 		}
 	}
 
@@ -637,7 +659,7 @@ var dc = options.form.dataCollection();
 		// let our parent store our QB settings
 		var settings = super.toSettings();
 
-		settings.valueRules = this._ui.toSettings();
+		settings.valueRules = this._uiUpdater.toSettings();
 
 		return settings;
 	}
