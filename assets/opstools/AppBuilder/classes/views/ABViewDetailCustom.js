@@ -168,8 +168,8 @@ export default class ABViewDetailCustom extends ABViewDetailComponent {
 				templateLabel = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label>";
 		}
 
-		// var template = (templateLabel + "#result#")
-		var template = (templateLabel)
+		var template = (templateLabel + "#result#")
+		// var template = (templateLabel)
 			.replace(/#width#/g, detailView.settings.labelWidth)
 			.replace(/#label#/g, field.label)
 			.replace(/#result#/g, field.columnHeader().template({}));
@@ -190,7 +190,8 @@ export default class ABViewDetailCustom extends ABViewDetailComponent {
 			var elem = $$(ids.component);
 			if (!elem) return;
 
-			var rowData = {},
+			var detailCom = this.detailComponent(),
+				rowData = detailCom.dataCollection().getCursor() || {},
 				node = elem.$view,
 				editable = false;
 
