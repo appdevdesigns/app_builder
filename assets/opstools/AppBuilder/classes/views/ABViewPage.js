@@ -615,5 +615,51 @@ export default class ABViewPage extends ABViewContainer {
     }
 
 
+    removeField(field, cb) {
+		
+        super.removeField(field, (err)=>{
+            
+            if (err) {
+                cb(err);
+            } else {
+                var done = 0;
+                
+                // for each subpage, removeField(field)
+                var subPages = this.pages();
+                subPages.forEach((sp)=>{
+                    sp.removeField(field, (err)=>{
+                        if (err) {
+                            cb(err);
+                        } else {
+                            done ++;
+                            if (done >= subPages.length) {
+                                cb();
+                            }
+                        }
+                    })
+                });
+
+                // for each data collection, removeField(field)
+                var listDC = this.dataCollections();
+                listDC.forEach((dc)=>{
+                    dc.removeField(field, (err)=>{
+                        if (err) {
+                            cb(err);
+                        } else {
+                            done ++;
+                            if (done >= listDC.length) {
+                                cb();
+                            }
+                        }
+                    })
+                });
+                
+                if (listDC.length == 0 && subPages.length == 0) {
+                    cb();
+                }
+            }
+        });
+        
+	}        
 
 }

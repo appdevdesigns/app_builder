@@ -911,6 +911,71 @@ export default class ABView extends ABViewBase {
 	changePage(pageId) {
 		this.emit('changePage', pageId);
 	}
+	
+	
+	removeField(field, cb) {
+		
+		// if this view has matching field then destroy()
+		if ( this.settings.fieldId == field.id ) {
+
+	        this.destroy()
+	            .then(() => {
+
+	                // signal the current view has been deleted.
+	                this.emit('destroyed', this);
+					cb(null, true);
+
+	            })
+	            .catch((err) => {
+	                OP.Error.log('Error trying to delete selected View:', { error: err, view: this })
+	                cb(err);
+	            });
+				
+	    } else { // if not check for subViews then call removeField on them
+			
+			var shouldSave = false;
+
+			var finish = () => {
+				if (shouldSave) {
+					this.save()
+					.then(()=>{
+						cb();
+					})
+					.catch(cb);
+				} else {
+					cb();
+				}
+			}
+			
+			// for each sub view, view.removeField(field);
+			var listViews = this.views();
+			var done = 0;
+			listViews.forEach((v)=>{
+				v.removeField(field, (err, updateMade)=>{
+					if (err) {
+						cb(err);
+					} else {
+						
+						if(updateMade) {
+							shouldSave = true;
+						}
+						
+						done++;
+						if (done >= listViews.length){
+							finish();
+							
+						}
+					}
+				})
+			});
+			
+			if (listViews.length == 0) {
+				finish();
+			}
+			
+		}
+
+	}
 
 }
 
