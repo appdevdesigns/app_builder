@@ -482,6 +482,33 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     								.then(()=>{
                                         DataTable.refreshHeader();
     									DataTable.refresh();
+                                        
+                                        // recursive fn to remove any form/detail fields related to this field
+                                        function checkPages(list, cb) {
+                                            if (list.length == 0) {
+                                                cb();
+                                            } else {
+                                                
+                                                var page = list.shift();
+                                                
+                                                // begin calling removeField for each main page in the app 
+                                                // this will kick off a chain of events that will have removeField called on 
+                                                // all pages, subpages, widgets and views.
+                                                page.removeField(field, (err)=>{
+                                                    if (err) {
+                                                        cb(err);
+                                                    } else {
+                                                        checkPages(list, cb);
+                                                    }
+                                                });
+                                                
+                                                
+                                            }
+                                        }
+                                        checkPages(CurrentApplication.pages(), (err)=> {
+                                            
+                                        })
+                                        
     								});
 
     							}

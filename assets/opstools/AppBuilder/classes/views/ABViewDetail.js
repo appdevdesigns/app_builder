@@ -132,7 +132,7 @@ export default class ABViewDetail extends ABViewContainer {
 
 						var yPosition = (fields.length - index - 1);
 
-						currView.addFieldToView(f, yPosition);
+						currView.addFieldToView(f, yPosition, ids, App);
 
 						// update item to UI list
 						f.selected = 1;
@@ -163,7 +163,7 @@ export default class ABViewDetail extends ABViewContainer {
 
 			// add a field to the form
 			if (item.selected) {
-				currView.addFieldToView(item);
+				currView.addFieldToView(item, null, ids, App);
 			}
 			// remove field in the form
 			else {
@@ -472,7 +472,7 @@ export default class ABViewDetail extends ABViewContainer {
 		});
 	}
 
-	addFieldToView(field, yPosition) {
+	addFieldToView(field, yPosition, ids, App) {
 
 		if (field == null)
 			return;
@@ -493,7 +493,7 @@ export default class ABViewDetail extends ABViewContainer {
 
 
 		// update properties when a sub-view is destroyed
-		newView.once('destroyed', () => { ABViewDetail.propertyEditorPopulate(ids, this); });
+		newView.once('destroyed', () => { ABViewDetail.propertyEditorPopulate(App, ids, this); });
 
 	}
 

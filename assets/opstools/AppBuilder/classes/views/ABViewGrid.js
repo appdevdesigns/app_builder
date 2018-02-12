@@ -1342,6 +1342,37 @@ export default class ABViewGrid extends ABViewWidget  {
 	dataCollection() {
 		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.dataSource)[0];
 	}
+	
+	removeField(field, cb) {
+		
+		var shouldSave = false;
+
+		// check to see if there is a frozenColumnID and if it matches the deleted field
+		if (this.settings.objectWorkspace.frozenColumnID && this.settings.objectWorkspace.frozenColumnID == field.columnName) {
+			// remove the column name from the frozen column id
+			this.settings.objectWorkspace.frozenColumnID = "";
+			// flag the object to be saved later
+			shouldSave = true;
+		}
+		
+		// check to see if there are hidden fields
+		if (this.settings.objectWorkspace.hiddenFields && this.settings.objectWorkspace.hiddenFields.length) {
+			// find if the deleted field is in the array
+			var index = this.settings.objectWorkspace.hiddenFields.indexOf(field.columnName);
+			// if so splice it out of the array
+			if (index > -1) {
+				this.settings.objectWorkspace.hiddenFields.splice(index, 1);
+				// flag the object to be saved later
+				shouldSave = true;
+			}
+		}
+		
+		// if settings were changed call the callback
+	
+		cb(null, shouldSave);
+		
+		
+	}
 
 	// Custom functions needed for UI
 

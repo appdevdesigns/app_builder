@@ -237,6 +237,41 @@ export default class ABViewDataCollection extends ABView {
 			logic: _logic
 		}
 	}
+	
+	removeField(field, cb) {
+		
+		var shouldSave = false;
+
+		// check filter conditions for any settings
+		if (this.settings.objectWorkspace.filterConditions && this.settings.objectWorkspace.filterConditions.filters && this.settings.objectWorkspace.filterConditions.filters.length) {
+			// if settings are present look for deleted field id in each one
+			this.settings.objectWorkspace.filterConditions.filters.find((o, i) => {
+				if (o.fieldId === field.id) {
+					// if found splice from array
+					this.settings.objectWorkspace.filterConditions.filters.splice(i, 1);
+					// flag the object to be saved later
+					shouldSave = true;
+				}
+			});
+		}
+		
+		// check to see if sort fields settings are present
+		if (this.settings.objectWorkspace.sortFields && this.settings.objectWorkspace.sortFields.length) {
+			// if so look for deleted field in settings
+			this.settings.objectWorkspace.sortFields.find((o, i) => {
+				if (o.by === field.columnName) {
+					// if found splice setting from array
+					this.settings.objectWorkspace.sortFields.splice(i, 1);
+					// flag the object to be saved later
+					shouldSave = true;
+				}
+			});
+		}
+		
+		// if settings were changed call the callback
+		cb(null, shouldSave);
+		
+	}
 
 
 	//

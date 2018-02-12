@@ -500,8 +500,9 @@ class ABFieldConnect extends ABFieldSelectivity {
 				// check data does not be changed
 				if (Object.is(values[this.columnName], row[this.columnName])) return;
 
-				// pass null because it could not put empty array in REST api
-				if (values[this.columnName].length == 0)
+				// pass empty string because it could not put empty array in REST api
+				// added check for null because default value of field is null
+				if (values[this.columnName] == null || values[this.columnName].length == 0)
 					values[this.columnName] = '';
 
 				this.object.model().update(row.id, values)
