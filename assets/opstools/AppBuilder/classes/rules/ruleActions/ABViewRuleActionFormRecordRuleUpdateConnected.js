@@ -13,7 +13,9 @@ import ObjectQueryBuilder from "../ABViewQueryBuilderObjectFieldConditions"
 
 //// LEFT OFF HERE:
 // Now implement Update Connected Object:
-// - toSettings() and fromSettings();
+// - solve missing connected field info required for creating 2nary table
+// - server side needs to support BOTH QueryBuilder and Sails where clause formats
+// - 
 // - debug importing ABFieldConnect errors
 //
 
@@ -80,11 +82,22 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 	}
 
 
+	// connectedFieldList
+	// return the fields in our .baseObject that are connections to other objects.
+	// @return {array} of {ABField} 
 	connectedFieldList() {
 		var connectKey = "connectObject"; // ABFieldConnect.defaults().key;
-		return this.baseObject.fields((f)=>{ return f.key == connectKey; });
+		if (this.baseObject  && this.baseObject.fields) {
+			return this.baseObject.fields((f)=>{ return f.key == connectKey; });
+		} else {
+			return [];
+		}
+		
 	}
 
+	// connectedObject
+	// return the ABObject associated with the selected connection field.
+	// @return {ABObject}
 	connectedObject() {
 
 		if (this.selectedFieldID) {
@@ -98,6 +111,9 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 	}
 
 
+	// selectedField
+	// return the selected {ABField} object.
+	// @return {ABField} 
 	selectedField() {
 		return this.connectedFieldList().filter((f)=>{ return f.id == this.selectedFieldID; })[0];
 	}
@@ -296,357 +312,150 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 
 
 
-/*
-
-	valueDisplayRow(idBase) {
-
-		var uniqueInstanceID = webix.uid();
-		var myUnique = (key) => {
-			// return idBase + '_' + key  + '_' + uniqueInstanceID;
-			return key  + '_' + uniqueInstanceID;
-		}
-
-		var ids = {
-			row:      		myUnique('row'),
-			updateForm: 	myUnique('updateFormRow'),	
-			field: 			myUnique('field'),
-			value:  		myUnique('value'),
-			buttonAdd: 		myUnique('add'),
-			buttonDelete: 	myUnique('delete')
-		};
-
-
-		var _logic = {
-
-			callbacks: {
-				onAdd: () => {
-
-				},
-				onDelete: () => {
-
-				}
-			},
-
-
-			buttonsToggle: () => {
-				$$(ids.row).getChildViews()[4].hide();
-				$$(ids.row).getChildViews()[5].show();
-			},
-
-			getFieldList: (shouldFilter) => {
-
-				var options = [];
-				if (this.currentObject) {
-
-					options = (this.currentObject.fields() || []).map(f => {
-						return {
-							id: f.id,
-							value: f.label
-						};
-					});
-
-					// Remove fields who are selected
-					if (shouldFilter) {
-
-						// store this row
-						var usedHash = {};
-						this.formRows.forEach((row) => {
-							var rowView = $$(row.ui.id);
-							if (rowView) {
-								var field = rowView.getChildViews()[1];
-								usedHash[field.getValue()] = true;
-							}
-						});
-						options = options.filter((o)=>{ return (! usedHash[o.id]); });
-						
-					}
-
-				}
-				return options;
-
-			},
-
-
-			isValid: () => {
-
-				var field = this.getObjectField( $$(ids.field).getValue() );
-				var valueField = $$(ids.row).getChildViews()[3];
-				var value = field.getValue(valueField, {});
-
-				// // if a standard component that supports .getValue()
-				// if (valueField.getValue) {
-				// 	value = valueField.getValue();
-				// } else {
-				// 	// else use for field.getValue();
-				// 	value = field.getValue(valueField, {});
-				// }
-
-				// our .isValidData() wants value in an object:
-				var obj = {};
-				obj[field.columnName] = value;
-
-				var validator = OP.Validation.validator();
-				field.isValidData(obj, validator);
-
-				// if value is empty, this is also an error:
-				if ((value == '') 
-					|| ((Array.isArray(value)) && (value.length == 0))) {
-
-					validator.addError(field.columnName, this.labels.component.errorRequired);
-				}
-
-				// field.getParentView()  ->  row
-				// row.getParentView()  -> Form
-				var FormView = valueField.getParentView().getParentView();
-				FormView.clearValidation();
-				validator.updateForm(FormView);
-
-				return validator.pass();
-			},
-
-
-			selectField: (columnID) => {
-
-				var field = this.getObjectField(columnID );
-				if (!field) return;
-
-				var fieldComponent = field.formComponent(),
-					abView = fieldComponent.newInstance(field.object.application),
-					formFieldComponent = abView.component(this.App),
-					inputView = formFieldComponent.ui;
-
-					inputView.id = ids.value;  // set our expected id 
-
-// WORKAROUND: add '[Current User]' option to the user data field
-if (field.key == 'user') {
-	inputView.options = inputView.options || [];
-	inputView.options.unshift({
-		id: 'ab-current-user',
-		value: '*[Current User]'
-	});
-}
-
-				// Change component to display this field's form input
-				var $row = $$(ids.row);
-				$row.removeView($row.getChildViews()[3]);
-				$row.addView(inputView, 3);
-
-				formFieldComponent.init();
-
-
-				// Show custom display of data field
-				if (field.customDisplay)
-					field.customDisplay(field, this.App, $row.getChildViews()[3].$view);
-
-// $$($row).adjust();
-// $row.getFormView().adjust();
-			
-			},
-
-			setValue: (data) => {
-				$$(ids.field).setValue(data.fieldID);
-					// note: this triggers our _logic.selectField() fn.
-				$$(ids.value).setValue(data.value);	
-			},
-
-			toSettings: () => {
-
-				// if this isn't the last entry row
-				// * a row with valid data has the [delete] button showing.
-				var buttonDelete = $$(ids.buttonDelete);
-				if (buttonDelete && buttonDelete.isVisible()) {
-
-					var data = {};
-					data.fieldID = $$(ids.field).getValue();
-					data.value = $$(ids.value).getValue();
-
-					data.op = 'set';  // possible to create other types of operations.
-
-					var field = this.getObjectField(data.fieldID);
-					data.type = field.key;
-
-					return data;
-				}
-				else {
-					return null;
-				}
-			}
-		}
-
-
-		var _ui = {
-			id: ids.row,
-			view: 'layout',
-			cols: [
-				{
-					// Label
-					view: 'label',
-					width: 40,
-					label: this.labels.component.set
-				},
-				{
-					// Field list
-					view: "combo",
-					id: ids.field,
-					options: _logic.getFieldList(true),
-					on: {
-						onChange: function (columnId) {
-							_logic.selectField(columnId);
-						}
-					}
-				},
-				{
-					// Label
-					view: 'label',
-					width: 40,
-					label: this.labels.component.to
-				},
-
-				// Field value
-				// NOTE: this view gets replaced each time a field is selected.
-				// We replace it with a component associated with the Field 
-				{},
-
-
-				// {
-				// 	// Update action
-				// 	view: "combo",
-				// 	id: ids.updateAction,
-				// 	options: updateValueOptions,
-				// 	on: {
-				// 		onChange: function (updateValue) {
-
-				// 			var $viewCond = this.getParentView();
-				// 			// _logic.selectField(columnId, $viewCond);
-
-				// 		}
-				// 	}
-				// },
-
-				// by default, we show the add button
-				// if the row has data, we show the [remove] button.
-				{
-					// "Add" button 
-					view: "button",
-					id:   ids.buttonAdd,
-					icon: "plus",
-					type: "icon",
-					width: 30,
-					// hidden:true,
-					click: function () {
-
-						if (_logic.isValid()) {
-
-							_logic.buttonsToggle();
-							_logic.callbacks.onAdd();
-						}
-						
-					}
-				},
-				{
-					// "Remove" button  
-					view: "button",
-					id:   ids.buttonDelete,
-					icon: "trash",
-					type: "icon",
-					width: 30,
-					hidden:true,
-					click: function () {
-						_logic.callbacks.onDelete();
-					}
-				}
-			]
-		};
-
-
-		var init = (options) => {
-			for( var c in _logic.callbacks){
-				_logic.callbacks[c] = options[c] || _logic.callbacks[c];
-			}
-
-			if (options.data) {
-				// options.data = { formID:xxx, value:yyy,  type:zzzz }
-				_logic.setValue(options.data);
-
-				_logic.buttonsToggle();
-			}
-		}
-
-		
-
-		return {
-			ui: _ui,
-			init:init,
-			toSettings: () => { return _logic.toSettings() },
-			_logic:_logic
-		};
-
-	}
-
-
-
-	getObjectField(fieldID) {
-		return this.currentObject.fields((f)=>{ return f.id == fieldID })[0];
-	}
-
 	// process
 	// gets called when a form is submitted and the data passes the Query Builder Rules.
 	// @param {obj} options
 	// @return {Promise}
 	process(options) {
 
+		// prepare .valueRules
+		this.valueRules = this.valueRules || {};
+		this.valueRules.fieldOperations = this.valueRules.fieldOperations || [];
+
+		// get connected object
+		var connObj = this.connectedObject();
+		var model = connObj.model();
+
+		var connectionField = this.selectedField();
+
+		var condition = null;	// our lookup condition
+
+
+		// add a condition based upon our connection type:
+		switch(connectionField.settings.linkType) {
+
+			case "one":
+
+//// PROBLEM: how do we ensure we have a value for: options.data[connectionField.columnName]
+////   If we just tie two forms together, the 2nd Form doesn't know how to populate this, or 
+////   where to find it.
+
+
+				// if connectionField.linkType == 'one'  && connectionField.isSource 
+				// then this object can only have 1 of the connectedObjects
+				//		the ID of the connectedObject is contained in my field
+				//		I need to AND our condition to include the id:
+				if (connectionField.settings.isSource) {
+
+					 condition = {
+						"glue": "and",
+						"rules": [{
+							"key": "id",
+							"rule": "equals",
+							"value": options.data[connectionField.columnName]
+						}]
+					}
+
+				}
+
+				break;
+		}
+
+
+
+
 		return new Promise( (resolve, reject) => {
 
-			var isUpdated = false;
 
-			this.valueRules = this.valueRules || {};
-			this.valueRules.fieldOperations = this.valueRules.fieldOperations || [];
+			// upateIt()
+			// updates a given item with our changes.
+			var updateIt = (item, cb) => {
 
-			// for each of our operations
-			this.valueRules.fieldOperations.forEach((op) => {
-				// op = {
-				// 	fieldID:'zzzzz', 
-				//	value: 'xxx',
-				//	op: 'set',
-				//  type:''
-				// }
+				var isUpdated = false;
 
-				var field = this.getObjectField(op.fieldID);
-				if (field) { 
+				// for each of our operations
+				this.valueRules.fieldOperations.forEach((op) => {
+					// op = {
+					// 	fieldID:'zzzzz', 
+					//	value: 'xxx',
+					//	op: 'set',
+					//  type:''
+					// }
 
-					switch(op.op) {
+					var field = connObj.fields((f)=>{ return f.id == op.fieldID })[0];
+					if (field) { 
 
-						case 'set': 
-							options.data[field.columnName] = op.value; 
-							break;
+						switch(op.op) {
+
+							case 'set': 
+								item[field.columnName] = op.value; 
+								break;
+						}
+						
+						isUpdated = true;
 					}
-					
-					isUpdated = true;
-				}
-			})
-
-			if (!isUpdated) {
-				resolve();
-			} else {
-
-				// get the model from the provided Form Obj:
-				var dc = options.form.dataCollection();
-				if (!dc) return resolve();
-
-				var model = dc.model;
-				model.update(options.data.id, options.data)
-				.catch((err)=>{
-					OP.Error.log('!!! ABViewRuleActionFormRecordRuleUpdate.process(): update error:', {error:err, data:options.data });
-					reject(err);
 				})
-				.then(resolve);
+
+				if (!isUpdated) {
+					cb();
+				} else {
+
+				
+					model.update(item.id, item)
+					.catch((err)=>{
+						OP.Error.log('!!! ABViewRuleActionFormRecordRuleUpdateConnected.process(): update error:', {error:err, data:options.data });
+						cb(err);
+					})
+					.then(()=>{
+						cb();
+					});
+
+				}
 
 			}
+
+
+
+
+			if (condition) {
+				condition.rules.push(this.qbCondition);
+			} else {
+				condition = this.qbCondition;
+			}
+
+
+			model.findAll({ where: condition })
+			.then((list)=>{
+
+				var done = 0;
+
+				// list : {data: Array(4), total_count: 4, pos: null, offset: null, limit: null}
+				if (list && list.data) {  list = list.data; }
+
+				list.forEach((item) => {
+					updateIt(item, (err) => {
+
+						done++;
+						if (done >= list.length) {
+							resolve();
+						}
+					})
+				})
+				
+				
+			})
+			.catch(reject);
+
+
+			
+
+
+			
 		})
 	}
 
 
-*/
+
 
 	// fromSettings
 	// initialize this Action from a given set of setting values.
@@ -656,6 +465,8 @@ if (field.key == 'user') {
 
 		this.selectedFieldID = settings.selectedFieldID || null;
 		this.qbCondition = settings.qbCondition || {};
+
+		super.fromSettings(settings);
 
 
 		// if we have a display component, then populate it:

@@ -208,10 +208,10 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 			}, 
 
 			fromSettings: (settings) => {
-
-				// make sure UI is updated:
+				
 				// Note: we just want the { valueRules:[] } here:
 				var mySettings = settings.valueRules || settings;
+
 				_logic.setValues(mySettings)
 
 			},
@@ -634,7 +634,10 @@ var dc = options.form.dataCollection();
 	// @param {obj}  settings
 	fromSettings(settings) {
 		settings = settings || {};
+
 		super.fromSettings(settings); // let the parent handle the QB
+
+// make sure UI is updated:
 
 
 		// if we have a display component, then populate it:

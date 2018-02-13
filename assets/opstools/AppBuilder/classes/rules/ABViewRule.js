@@ -217,7 +217,6 @@ width: 680,
 					// for: "action",
 					label: this.labels.component.action,
 					labelWidth: this.App.config.labelWidthLarge,
-					value: this.selectedAction,
 					options: this.actionDropList,
 					on: {
 						onChange: (newVal, oldVal) => {
