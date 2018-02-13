@@ -84,8 +84,9 @@ export default class ABViewDetailCustom extends ABViewDetailComponent {
 			component: App.unique(idBase + '_component')
 		}
 
+		var component = this.component(App);
 
-		var textElem = this.component(App).ui;
+		var textElem = component.ui;
 		textElem.id = ids.component;
 
 		var _ui = {
@@ -95,17 +96,18 @@ export default class ABViewDetailCustom extends ABViewDetailComponent {
 			]
 		};
 
-		var _init = (options) => {
-		}
+		var _init = component.init;
+		var _logic = component.logic;
 
-		var _logic = {
-		}
+		var _onShow = component.onShow;
 
 
 		return {
 			ui: _ui,
 			init: _init,
-			logic: _logic
+			logic: _logic,
+
+			onShow: _onShow
 		}
 	}
 
@@ -166,8 +168,8 @@ export default class ABViewDetailCustom extends ABViewDetailComponent {
 				templateLabel = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label>";
 		}
 
-		// var template = (templateLabel + "#result#")
-		var template = (templateLabel)
+		var template = (templateLabel + "#result#")
+		// var template = (templateLabel)
 			.replace(/#width#/g, detailView.settings.labelWidth)
 			.replace(/#label#/g, field.label)
 			.replace(/#result#/g, field.columnHeader().template({}));
@@ -181,7 +183,32 @@ export default class ABViewDetailCustom extends ABViewDetailComponent {
 
 		// make sure each of our child views get .init() called
 		component.init = (options) => {
-		}
+		};
+
+		component.onShow = () => {
+
+			var elem = $$(ids.component);
+			if (!elem) return;
+
+			var detailCom = this.detailComponent(),
+				rowData = detailCom.dataCollection().getCursor() || {},
+				node = elem.$view,
+				editable = false;
+
+			field.customDisplay(rowData, App, node, editable);
+
+		};
+
+		component.logic.setValue = (val) => {
+
+			var elem = $$(ids.component);
+			if (!elem) return;
+
+			var rowData = {};
+			rowData[field.columnName] = val;
+
+			field.setValue(elem, rowData);
+		};
 
 
 		return component;

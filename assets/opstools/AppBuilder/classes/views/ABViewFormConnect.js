@@ -178,17 +178,18 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 		var template = ('<div class="customField">' + templateLabel + "#template#" + '</div>')
 			.replace(/#width#/g, settings.labelWidth)
 			.replace(/#label#/g, field.label)
-			.replace(/#template#/g, field.columnHeader(null, newWidth).template);
+			.replace(/#template#/g, field.columnHeader(null, newWidth, true).template({}));
 
 
 
 		component.ui = {
 			id: 	ids.component,
-		    view: 	"forminput",  
+			view: 	"forminput",
+			css:    "ab-custom-field",
 		    name:   component.ui.name,
 		    body:{
 				view: App.custom.focusabletemplate.view,
-				css:  "webix_el_box",
+				// css:  "webix_el_box",
 				borderless: true,
 				height: component.ui.height,
 				template: template,
@@ -207,6 +208,14 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 				}
 		    }, 
 		}
+
+		if (settings.showLabel == true && settings.labelPosition == 'top') {
+			component.ui.body.height = 80;
+		}
+		else {
+			component.ui.body.height = 38;
+		}
+
 
 // component.ui.id = ids.component;
 // // component.ui.view = "template";

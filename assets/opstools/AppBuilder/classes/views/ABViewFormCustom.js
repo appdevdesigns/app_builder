@@ -170,7 +170,7 @@ export default class ABViewFormCustom extends ABViewFormField {
 					"customField": (id, e, trg) => {
 
 						var formView = this.formComponent(),
-							dc = formView.datacollection(),
+							dc = formView.dataCollection(),
 							rowData = dc.getCursor() || {};
 
 						if ($$(ids.component)) {
@@ -213,9 +213,10 @@ export default class ABViewFormCustom extends ABViewFormField {
 			if (!elem) return;
 
 			var rowData = {},
-				node = elem.$view;
+				node = elem.$view,
+				editable = true;
 
-			field.customDisplay(rowData, App, node);
+			field.customDisplay(rowData, App, node, editable);
 
 		};
 

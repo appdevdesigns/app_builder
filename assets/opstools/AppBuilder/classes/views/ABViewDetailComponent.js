@@ -78,7 +78,7 @@ export default class ABViewDetailComponent extends ABViewWidget {
 			height = height * 2;
 
 		if (field.settings && typeof field.settings.useHeight != "undefined" && field.settings.useHeight == 1) {
-			height = parseInt(field.settings.imageHeight);
+			height = parseInt(field.settings.imageHeight) || height;
 		}
 
 		var _ui = {

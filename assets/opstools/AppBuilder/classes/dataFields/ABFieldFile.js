@@ -357,7 +357,8 @@ class ABFieldFile extends ABField {
 				template:this.fileTemplate(row),
 
 				borderless:true,
-				width: 200
+				width: 200,
+				height: 32
 			});
 			webix.extend(webixContainer, webix.ProgressBar);
 
@@ -428,7 +429,8 @@ class ABFieldFile extends ABField {
 							this.object.model().update(row.id, values)
 							.then(()=>{
 								// update the client side data object as well so other data changes won't cause this save to be reverted
-								$$(node).updateItem(row.id, values);
+								if ($$(node) && $$(node).updateItem)
+									$$(node).updateItem(row.id, values);
 							})
 							.catch((err)=>{
 
@@ -453,7 +455,8 @@ class ABFieldFile extends ABField {
 
 			if (editable == false) {
 				var domNode = parentContainer.querySelector(".delete-image");
-				domNode.style.display = "none";
+				if (domNode)
+					domNode.style.display = "none";
 			}
 
 			// open file upload dialog when's click
@@ -494,7 +497,8 @@ class ABFieldFile extends ABField {
 						this.object.model().update(row.id, values)
 						.then(()=>{
 							// update the client side data object as well so other data changes won't cause this save to be reverted
-							$$(node).updateItem(row.id, values);
+							if ($$(node) && $$(node).updateItem)
+								$$(node).updateItem(row.id, values);
 						})
 						.catch((err)=>{
 
@@ -552,7 +556,7 @@ class ABFieldFile extends ABField {
 
 		detailComponentSetting.common = () => {
 			return {
-				key: 'detailfile'
+				key: 'detailcustom'
 			}
 		};
 
@@ -614,7 +618,10 @@ class ABFieldFile extends ABField {
 
 		var file = domNode.querySelector('.file-data-field-name');
 		if (file) {
+			var fileDeleteIcon = file.querySelector('.ab-delete-photo');
+
 			file.style.display = rowData[this.columnName] ? 'block' : 'none';
+			fileDeleteIcon.style.display = rowData[this.columnName] ? 'block' : 'none';
 
 			if (rowData[this.columnName]) {
 				file.setAttribute('file-uuid', rowData[this.columnName].uuid );
