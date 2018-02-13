@@ -310,7 +310,7 @@ export default class ABViewDataCollection extends ABView {
 
 			var view = _logic.currentEditObject();
 
-			view.settings.objectWorkspace.filterConditions = FilterComponent.getValue();
+			view.settings.objectWorkspace.filterConditions = _.cloneDeep(FilterComponent.getValue());
 
 			this.propertyEditorSave(ids, view);
 
