@@ -405,12 +405,12 @@ OP.Dialog.Alert({
 
 			var imgHeight = 33;
 			if (this.settings.useHeight){
-				imgHeight = parseInt(this.settings.imageHeight);
+				imgHeight = parseInt(this.settings.imageHeight) || imgHeight;
 			}
 
 			var imgWidth = 50;
 			if (this.settings.useWidth){
-				imgWidth = parseInt(this.settings.imageWidth);
+				imgWidth = parseInt(this.settings.imageWidth) || imgWidth;
 			}
 //// TODO: actually pay attention to the height and width when 
 //// displaying the images.
@@ -678,14 +678,23 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 	}
 	
 	setValue(item, rowData) {
-		if (typeof rowData == "string") {
-			var domNode = item.$view;
-			if (domNode.querySelector('.image-data-field-icon')) {
-				domNode.querySelector('.image-data-field-icon').style.display = 'none';
-				var image = domNode.querySelector('.image-data-field-image');
-				image.style.display = '';
-				image.style.backgroundImage = "url('/opsportal/image/" + this.object.application.name+"/"+rowData+"')";
-				image.setAttribute('image-uuid', rowData );
+
+		var domNode = item.$view;
+		if (domNode) {
+
+			var imageIcon = domNode.querySelector('.image-data-field-icon');
+			if (imageIcon)
+				imageIcon.style.display = rowData[this.columnName] ? 'none' : 'block';
+
+			var image = domNode.querySelector('.image-data-field-image');
+			if (image) {
+				image.style.display = rowData[this.columnName] ? 'block' : 'none';
+
+				if (rowData[this.columnName]) {
+					image.style.backgroundImage = "url('/opsportal/image/" + this.object.application.name+"/"+rowData[this.columnName]+"')";
+					image.setAttribute('image-uuid', rowData[this.columnName] );
+				}
+
 			}
 		}
 	}

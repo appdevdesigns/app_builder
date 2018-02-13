@@ -455,7 +455,8 @@ class ABFieldFile extends ABField {
 
 			if (editable == false) {
 				var domNode = parentContainer.querySelector(".delete-image");
-				domNode.style.display = "none";
+				if (domNode)
+					domNode.style.display = "none";
 			}
 
 			// open file upload dialog when's click

@@ -201,10 +201,13 @@ export default class ABViewDetailCustom extends ABViewDetailComponent {
 
 		component.logic.setValue = (val) => {
 
+			var elem = $$(ids.component);
+			if (!elem) return;
+
 			var rowData = {};
 			rowData[field.columnName] = val;
 
-			field.setValue($$(ids.component), rowData);
+			field.setValue(elem, rowData);
 		};
 
 
