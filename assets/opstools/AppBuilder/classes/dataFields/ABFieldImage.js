@@ -421,8 +421,8 @@ OP.Dialog.Alert({
 				view:'template',
 				css:'ab-image-holder',
 				id: ids.container,
-				container: idBase,
-				
+				container: parentContainer,
+
 				template:this.imageTemplate(row, editable),
 
 				borderless:true,
