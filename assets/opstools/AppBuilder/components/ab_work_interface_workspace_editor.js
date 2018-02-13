@@ -311,7 +311,7 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                 if (CurrentView) {
 
                     // don't keep storing the same view over and over:
-                    if (view.id != CurrentView.id) {
+                    if (view && view.id != CurrentView.id) {
                         PreviousViews.push(CurrentView);
 
 // TODO: make this a setting?
