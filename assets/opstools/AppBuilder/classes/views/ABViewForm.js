@@ -803,7 +803,8 @@ export default class ABViewForm extends ABViewContainer {
 						if (comp == null) return;
 
 						// set value to each components
-						f.field().setValue($$(comp.ui.id), data);
+						if (f.field())
+							f.field().setValue($$(comp.ui.id), data);
 					});
 				}
 			},
@@ -823,7 +824,7 @@ export default class ABViewForm extends ABViewContainer {
 				var relationFieldCom = this.fieldComponents((comp) => {
 					if (!(comp instanceof ABViewFormField)) return false;
 
-					return (comp.field().id == relationField.id);
+					return comp.field() && (comp.field().id == relationField.id);
 				})[0];
 
 				if (relationFieldCom == null) return;
@@ -1048,7 +1049,8 @@ export default class ABViewForm extends ABViewContainer {
 				var vComponent = this.viewComponents[f.id];
 				if (vComponent == null) return;
 
-				formVals[f.field().columnName] = vComponent.logic.getValue();
+				if (f.field())
+					formVals[f.field().columnName] = vComponent.logic.getValue();
 
 			});
 
