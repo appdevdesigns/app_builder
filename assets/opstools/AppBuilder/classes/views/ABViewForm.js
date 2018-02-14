@@ -1067,6 +1067,31 @@ export default class ABViewForm extends ABViewContainer {
 				}
 			});
 
+			// Add parent's data collection cursor when a connect field does not show
+			var dcLink  = dc.dataCollectionLink;
+			if (dcLink && dcLink.getCursor()) {
+
+				var objectLink = dcLink.datasource;
+
+				var connectFields = obj.fields(f => f.key == 'connectObject');
+				connectFields.forEach((f) => {
+
+					var formFieldCom = this.fieldComponents((fComp) => {
+						return fComp.field && fComp.field().id != f.id; 
+					});
+
+					if (objectLink.id == f.settings.linkObject &&
+						formFieldCom.length < 1 && // check field does not show
+						formVals[f.columnName] === undefined) { 
+						formVals[f.columnName] = {
+							id: dcLink.getCursor().id
+						}
+					}
+
+				});
+
+			}
+
 			// validate
 			var validator = obj.isValidData(formVals);
 			if (validator.pass()) {
