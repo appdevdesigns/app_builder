@@ -611,7 +611,7 @@ export default class RowFilter extends OP.Component {
 					});
 				}
 
-				return config_settings;
+				return _.cloneDeep(config_settings);
 
 			},
 
