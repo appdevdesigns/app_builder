@@ -1077,7 +1077,7 @@ export default class ABViewForm extends ABViewContainer {
 				connectFields.forEach((f) => {
 
 					var formFieldCom = this.fieldComponents((fComp) => {
-						return fComp.field && fComp.field().id != f.id; 
+						return fComp.field && fComp.field().id == f.id; 
 					});
 
 					if (objectLink.id == f.settings.linkObject &&
