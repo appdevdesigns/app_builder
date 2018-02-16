@@ -321,9 +321,6 @@ export default class ABViewDetail extends ABViewContainer {
 	*/
 	component(App) {
 
-		// get a UI component for each of our child views
-		var viewComponents = {}; // { viewId: viewComponent }
-
 		var idBase = 'ABViewDetail_' + this.id;
 		var ids = {
 			component: App.unique(idBase + '_component'),
@@ -350,12 +347,13 @@ export default class ABViewDetail extends ABViewContainer {
 			// populate .views to webix.dashboard
 			container.init(options);
 
-			_onShow();
 		}
 
 		var _logic = {
 
 			displayData: (data) => {
+
+				data = data || {};
 
 				this.views().forEach((f) => {
 
@@ -419,6 +417,8 @@ export default class ABViewDetail extends ABViewContainer {
 		};
 
 		var _onShow = () => {
+
+			container.onShow();
 
 			// listen DC events
 			var dc = this.dataCollection();

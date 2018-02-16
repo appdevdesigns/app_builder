@@ -685,8 +685,6 @@ export default class ABViewForm extends ABViewContainer {
 
 		var component = super.component(App);
 
-		this.viewComponents = this.viewComponents || {}; // { fieldId: viewComponent }
-
 		// an ABViewForm_ is a collection of rows:
 		var _ui = {
 			// view: "scrollview",
@@ -709,20 +707,6 @@ export default class ABViewForm extends ABViewContainer {
 				webix.extend(Form, webix.ProgressBar);
 			}
 
-
-			// attach all the .UI views:
-			var subviews = this.views();
-			subviews.forEach((child) => {
-
-				var subComponent = child.component(App);
-
-				this.viewComponents[child.id] = subComponent;
-
-				subComponent.init();
-
-			});
-
-
 			// bind a data collection to form component
 			var dc = this.dataCollection();
 			if (dc) {
@@ -743,8 +727,6 @@ export default class ABViewForm extends ABViewContainer {
 
 			}
 
-			_onShow();
-
 		}
 
 
@@ -754,7 +736,11 @@ export default class ABViewForm extends ABViewContainer {
 
 				// Set default values
 				if (data == null) {
-					var customFields = this.fieldComponents((comp) => comp instanceof ABViewFormCustom);
+					var customFields = this.fieldComponents((comp) => {
+						return (comp instanceof ABViewFormCustom) ||
+							// rich text
+							((comp instanceof ABViewFormTextbox) && comp.settings.type == 'rich')
+					});
 					customFields.forEach((f) => {
 
 						var field = f.field();
@@ -796,7 +782,11 @@ export default class ABViewForm extends ABViewContainer {
 
 				// Populate value to custom fields
 				else {
-					var customFields = this.fieldComponents((comp) => comp instanceof ABViewFormCustom);
+					var customFields = this.fieldComponents((comp) => {
+						return (comp instanceof ABViewFormCustom) ||
+							// rich text
+							((comp instanceof ABViewFormTextbox) && comp.settings.type == 'rich')
+					});
 					customFields.forEach((f) => {
 
 						var comp = this.viewComponents[f.id];
@@ -848,6 +838,9 @@ export default class ABViewForm extends ABViewContainer {
 
 		var _onShow = () => {
 
+			// call .onShow in the base component
+			component.onShow();
+
 			var Form = $$(ids.component);
 
 			var customFields = this.fieldComponents((comp) => {
@@ -862,9 +855,6 @@ export default class ABViewForm extends ABViewContainer {
 
 				var component = this.viewComponents[f.id];
 				if (!component) return;
-
-				// call .customDisplay again here
-				component.onShow();
 
 				// set value to each components
 				var rowData = {};

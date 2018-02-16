@@ -172,7 +172,9 @@ export default class ABViewPage extends ABViewContainer {
         return {
             ui: comp.ui,
             init: _init,
-            logic: comp.logic
+            logic: comp.logic,
+
+            onShow: comp.onShow
         }
 
     }

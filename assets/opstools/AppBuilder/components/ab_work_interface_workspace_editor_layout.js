@@ -90,6 +90,9 @@ export default class AB_Work_Interface_Workspace_Editor_Layout extends OP.Compon
 				$$(ids.editArea).addView(editorComponent.ui);
 				editorComponent.init();
 
+				if (editorComponent.onShow)
+					editorComponent.onShow();
+
 			},
 
 

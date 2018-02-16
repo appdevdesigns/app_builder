@@ -331,7 +331,7 @@ class ABFieldString extends ABField {
 
 		var val = rowData[this.columnName] || "";
 
-		return item.setValue(val);
+		item.setValue(val);
 	};
 		
 
