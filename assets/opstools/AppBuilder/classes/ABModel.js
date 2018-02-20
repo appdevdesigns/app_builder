@@ -179,6 +179,12 @@ export default class ABModel {
 			newCond.where = cond;
 		}
 
+/// if this is our depreciated format:
+if (newCond.where.where) {
+	OP.Error.log('Depreciated Embedded .where condition.');
+}
+
+
 		return new Promise(
 			(resolve, reject) => {
 
@@ -197,6 +203,106 @@ export default class ABModel {
 			}
 		)
 
+	}
+
+
+	/**
+	 * @method findConnected
+	 * return the connected data associated with an instance of this model.
+	 *
+	 * to limit the result to only a single connected column:
+	 * 		model.findConnected( 'col1', {data})
+	 *		then ((data) => {
+	 *			// data = [{obj1}, {obj2}, ... {objN}]
+	 *		})
+	 *
+	 * To find >1 connected field data:
+	 *		model.findConnected( ['col1', 'col2'], {data} )
+	 *		.then((data) =>{
+	 *		
+	 *			// data = {
+	 *			//	   col1 : [{obj1}, {obj2}, ... {objN}],
+	 *			//     col2 : [{obj1}, {obj2}, ... {objN}]
+	 *			// }
+	 *		})
+	 *
+	 * To find all connected field data:
+	 *		model.findConnected( {data} )
+	 *		.then((data) =>{
+	 *		
+	 *			// data = {
+	 *			//	   connectedColName1 : [{obj1}, {obj2}, ... {objN}],
+	 *			//     connectedColName2 : [{obj1}, {obj2}, ... {objN}],
+	 *			//		...
+	 *			//     connectedColNameN : [{obj1}, {obj2}, ... {objN}]
+	 *			// }
+	 *		})
+
+	 * @param {string/array} fields  [optional] an array of connected fields you want to return.
+	 * @param {obj} data  the current object instance (data) to lookup
+	 * @return {Promise}
+	 */
+	findConnected(fields, data) {
+
+		if (typeof data == 'undefined') {
+			if ((!Array.isArray(fields)) && (typeof fields == 'object')){
+				data = fields;
+				fields = [];  // return all fields
+			}
+		}
+
+		if (typeof fields == 'string') {
+			fields = [fields];	// convert to an array of values
+		}
+
+		return new Promise(
+			(resolve, reject) => {
+
+				// sanity checking:
+				if (!data.id) {
+					// I can't find any connected items, if I can't find this one:
+					resolve(null);
+					return;
+				}
+
+				this.findAll({where:[{fieldName:'id', operator:'equals', inputValue:data.id }], includeRelativeData: true })
+				.then((results) => {
+
+					if ( !results.data  || (!Array.isArray(results.data)) || (results.data.length == 0)) {
+						resolve([]); // no data to return.
+						return;
+					}
+
+
+					// work with the first object.
+					var myObj = results.data[0];
+
+					// if only 1 field requested, then return that 
+					if (fields.length == 1) {
+						resolve( [ myObj[fields[0]+'__relation'] ])
+						return;
+					}
+
+					// if no fields requested, return them all:
+					if (fields.length == 0) {
+						var allFields = this.object.fields((f)=>{ return f.settings.linkType; });
+						allFields.forEach((f)=>{
+							fields.push(f.columnName);
+						})
+					}
+
+					var returnData = {};
+					fields.forEach((colName) => {
+						returnData[colName] = myObj[colName + '__relation'];
+					})
+
+					resolve(returnData);
+
+				})
+				.catch(reject);
+
+			}
+		)
 	}
 
 

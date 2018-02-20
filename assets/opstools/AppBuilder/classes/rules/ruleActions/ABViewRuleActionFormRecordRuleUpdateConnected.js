@@ -15,7 +15,7 @@ import ObjectQueryBuilder from "../ABViewQueryBuilderObjectFieldConditions"
 // Now implement Update Connected Object:
 // - solve missing connected field info required for creating 2nary table
 // - server side needs to support BOTH QueryBuilder and Sails where clause formats
-// - 
+// - Continue filling out update Connected connection conditions
 // - debug importing ABFieldConnect errors
 //
 
@@ -331,37 +331,173 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 		var condition = null;	// our lookup condition
 
 
-		// add a condition based upon our connection type:
-		switch(connectionField.settings.linkType) {
 
-			case "one":
+		// configureRemoteLinkToMe()
+		// this fn() will add a condition for a 1:1, or M:1 connection where the
+		// connectedObject has a link back to me.
+		var configureRemoteLinkToMe = () => {
 
-//// PROBLEM: how do we ensure we have a value for: options.data[connectionField.columnName]
-////   If we just tie two forms together, the 2nd Form doesn't know how to populate this, or 
-////   where to find it.
+// get a reference to the link field on the connected Object:
+			var connectedObjectField = connectedObject.fields((f)=>{ return f.id == connectionField.settings.linkColumn; })[0];
+			if (connectedObjectField && options.data.id) {
 
-
-				// if connectionField.linkType == 'one'  && connectionField.isSource 
-				// then this object can only have 1 of the connectedObjects
-				//		the ID of the connectedObject is contained in my field
-				//		I need to AND our condition to include the id:
-				if (connectionField.settings.isSource) {
-
-					 condition = {
-						"glue": "and",
-						"rules": [{
-							"key": "id",
+				// so we want: ('baseObject.fieldName' = my.id ) AND (whatever QB says here)
+				condition = {
+					"glue": "and",
+					"rules": [
+						{
+							"key": connectedObjectField.columnName,
 							"rule": "equals",
-							"value": options.data[connectionField.columnName]
-						}]
-					}
-
+							"value": options.data.id
+						},
+						this.qbCondition
+					]
 				}
 
-				break;
+			} else {
+
+				// without either of these points of data, we can't update what we intend.
+
+			}
 		}
 
 
+
+		var modifyCondition = (cb) => {
+
+			// So, let's get a copy of our current data, with all it's connected items 
+			// attached.
+			var thisModel = this.baseObject.model();
+			thisModel.findConnected(connectionField.columnName, options.data)
+			.then((items) => {
+
+				// if we didn't get any results, then return
+				// NOTE: this will leave condition == null and cancel this update.
+				if ((!items) || (items.length==0)) {
+					cb();
+					return;
+				}
+
+				
+				// then use these to limit the connected data of our Action:
+
+				// get all the ids
+				var ids = items.map((i)=>{ return i.id });
+
+
+				// resulting condition: { id in [listIDs]} AND { QB Condition }
+				condition = {
+					"glue": "and",
+					"rules": [
+						{
+							"key": "id",
+							"rule": "in",
+							"value": ids
+						},
+						this.qbCondition
+					]
+				}
+
+			})
+			.catch(cb)
+
+				
+	// 					thisModel.findAll({ includeRelativeData: true })
+			
+
+
+
+	// 		// add a condition based upon our connection type:
+	// 		switch(connectionField.settings.linkType) {
+
+	// 			case "one":
+
+	// //// PROBLEM: how do we ensure we have a value for: options.data[connectionField.columnName]
+	// ////   If we just tie two forms together, the 2nd Form doesn't know how to populate this, or 
+	// ////   where to find it.
+
+
+	// 				// if connectionField.linkType == 'one'  && connectionField.isSource 
+	// 				// then this object can only have 1 of the connectedObjects
+	// 				//		the ID of the connectedObject is contained in my field
+	// 				//		I need to AND our condition to include the id:
+	// 				if (connectionField.settings.isSource) {
+
+
+	// 					// for this case to work, the id of our connectedObject must already
+	// 					// be in our data:
+	// 					if ( options.data[connectionField.columnName] ) {
+
+	// 						// good to go, so update our condition.
+	// 						// so we want: (id = "connectedObject.id" ) AND (whatever QB says here)
+	// 						condition = {
+	// 							"glue": "and",
+	// 							"rules": [
+	// 								{
+	// 									"key": "id",
+	// 									"rule": "equals",
+	// 									"value": options.data[connectionField.columnName]
+	// 								},
+	// 								this.qbCondition
+	// 							]
+	// 						}
+
+	// 					} else {
+
+	// 						// Without the connected .id set, we can't lookup what is intended.
+	// 						// so we keep condition == NULL and this will prevent the rule 
+	// 						// from operating:
+
+	// 					}
+
+
+	// 				} else {
+
+	// 					// if connectionField.linkType == 'one'  && ! connectionField.isSource 
+	// 					// then this object can only have 1 of the connectedObjects
+	// 					//		the ID of the baseObject is contained in the connectedObject's field
+	// 					//		I need to AND our condition to include the id:
+
+	// 					configureRemoteLinkToMe();
+
+	// 				}
+
+	// 				// in either case, return
+	// 				cb();
+	// 				break;
+
+
+	// 			case "many" :
+
+
+	// 				// M:1 
+	// 				// if linkViaType == one, then the connected object has a link back to my id:
+	// 				if (connectionField.settings.linkViaType == "one" ) {
+
+	// 					// this behaves the same as the 1:1 !isSource option:
+	// 					configureRemoteLinkToMe();
+	// 					cb();	// return
+
+	// 				} else {
+
+
+	// 					// M:N
+	// 					// There could be a number of connected objects.
+	// 					// the connections are made in a 3rd table that we can't access.
+	// 					// So, we need to do a lookup of all our possible entries, and limit the 
+	// 					// condition to only work on those:
+	// 					var thisModel = this.baseObject.model();
+	// 					thisModel.findAll({ includeRelativeData: true })
+
+	// 				}
+	// 				break;
+	// 		}
+
+		}
+
+//// LEFT OFF HERE:
+// update Server to handle QB conditions
+//
 
 
 		return new Promise( (resolve, reject) => {
@@ -416,42 +552,58 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 
 
 
-
-			if (condition) {
-				condition.rules.push(this.qbCondition);
-			} else {
-				condition = this.qbCondition;
-			}
+			modifyCondition((err) => {
 
 
-			model.findAll({ where: condition })
-			.then((list)=>{
+				if (err) {
+					reject(err);
+					return;
+				}
 
-				var done = 0;
 
-				// list : {data: Array(4), total_count: 4, pos: null, offset: null, limit: null}
-				if (list && list.data) {  list = list.data; }
+				if (condition === null) {
 
-				list.forEach((item) => {
-					updateIt(item, (err) => {
+					// this is the case where we didn't have the proper data to complete our 
+					// update.  So let's just fail gracefully, and continue on.
 
-						done++;
-						if (done >= list.length) {
-							resolve();
-						}
+	// QUESTION: is this the right way to handle it?
+					resolve();
+
+				} else {
+
+
+					// get all the entries that match our condition:
+					model.findAll({ where: condition })
+					.then((list)=>{
+
+						var done = 0;
+
+						// list : {data: Array(4), total_count: 4, pos: null, offset: null, limit: null}
+						if (list && list.data) {  list = list.data; }
+
+
+						// for each entry, update it with our values:
+						list.forEach((item) => {
+							updateIt(item, (err) => {
+
+								done++;
+								if (done >= list.length) {
+
+									// now they are all updated, so continue.
+									resolve();
+								}
+							})
+						})
+						
+						
 					})
-				})
-				
-				
-			})
-			.catch(reject);
+					.catch(reject);
 
+				} 
 
+			})  // end modifyCondition()
 			
-
-
-			
-		})
+		})  // end Promise()
 	}
 
 

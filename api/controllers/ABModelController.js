@@ -132,7 +132,14 @@ function populateFindConditions(query, object, options, userData) {
 
     // Apply filters
     if (!_.isEmpty(where)) {
-        var index = 0;
+
+
+console.log('', '-----------------');
+console.log('WHERE:', JSON.stringify(where, null, 4));
+console.log();
+
+
+/*
         where.forEach(function (w) {
 
             if (!w.fieldName || !w.operator) return;
@@ -238,6 +245,7 @@ function populateFindConditions(query, object, options, userData) {
                     var operator = "=";
                     var input = w.inputValue;
             }
+
             // if we are searching a multilingual field it is stored in translations so we need to search JSON
             var field = object._fields.filter(field => field.columnName == w.fieldName)[0];
             if (field && field.settings.supportMultilingual == 1) {
@@ -270,6 +278,154 @@ function populateFindConditions(query, object, options, userData) {
             }
             index++;
         })
+*/
+
+        function parseCondition(condition) {
+
+            // if this is a grouping condition, then decide how to group and 
+            // process our sub rules:
+            if (condition.glue) {
+
+                var nextCombineKey = 'where';
+                if (condition.glue == 'or') {
+                    nextCombineKey = 'orWhere';
+                }
+                condition.rules.forEach((r)=>{
+
+                    query[nextCombineKey]( function() { parseCondition(r); });
+                    
+                })
+                
+                return;
+            }
+
+
+            //// Handle a basic rule:
+            // { 
+            //     key: fieldName,
+            //     rule: 'qb_rule',
+            //     value: ''
+            // }
+
+console.log('... condition:', JSON.stringify(condition, null, 4));
+
+            // We are going to use the 'raw' queries for knex becuase the '.' 
+            // for JSON searching is misinterpreted as a sql identifier
+            // our basic where statement will be:
+             var whereRaw = '{fieldName} {operator} {input}';
+
+
+            // convert QB Rule to SQL operation:
+            var conversionHash = {
+                'equals'        : '=',
+                'not_equals'    : '<>',
+                'is_null'       : 'IS NULL',
+                'is_not_null'   : 'IS NOT NULL',
+                'is_empty'      : '=',
+                'is_not_empty'  : '<>',
+                'greater'       : '>',
+                'greater_or_equal' : '>=',
+                'less'          : '<',
+                'less_or_equal' : '<=' 
+            }
+
+            // basic case:  simple conversion
+            var operator = conversionHash[condition.rule];
+            var value = condition.value;
+console.log('operator:', operator);
+console.log('value:', value);
+
+
+            // special operation cases:
+            switch (condition.rule) {
+                case "begins_with":
+                    operator = 'LIKE';
+                    value = value + '%';
+                    break;
+
+                case "not_begins_with":
+                    operator = "NOT LIKE";
+                    value = value + '%';
+                    break;
+
+                case "contains":
+                    operator = 'LIKE';
+                    value = '%' + value + '%';
+                    break;
+
+                case "not_contains":
+                    operator = "NOT LIKE";
+                    value = '%' + value + '%';
+                    break;
+
+                case "ends_with":
+                    operator = 'LIKE';
+                    value = '%' + value;
+                    break;
+
+                case "not_ends_with":
+                    operator = "NOT LIKE";
+                    value = '%' + value;
+                    break;
+
+                case "between": 
+                    operator = "BETWEEN";
+                    value = condition.value.join(' AND ');
+                    break;
+
+                case 'not_between':
+                    operator = "NOT BETWEEN";
+                    value = condition.value.join(' AND ');
+                    break;
+
+                case "is_current_user":
+                    var operator = "=";
+                    var value = userData.username;
+                    break;
+
+                case "is_not_current_user":
+                    var operator = "<>";
+                    var value = userData.username;
+                    break;
+
+            }
+
+console.log('    -> operator:', operator);
+console.log('    -> value:', value );
+
+            // normal field name:
+            var fieldName = '`' + condition.key + '`';
+
+            // if we are searching a multilingual field it is stored in translations so we need to search JSON
+            var field = object._fields.filter(field => field.columnName == condition.key)[0];
+            if (field && field.settings.supportMultilingual == 1) {
+                fieldName = 'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH(translations, "one", "' + userData.languageCode + '")), 1, 4)), \'$."' + condition.key + '"\'))';
+            } 
+
+            // if this is from a LIST, then make sure our value is the .ID
+            if (field && field.key == "list" && field.settings && field.settings.options && field.settings.options.filter) {
+                // NOTE: Should get 'id' or 'text' from client ??
+                var inputID = field.settings.options.filter(option => (option.id == value || option.text == value))[0];
+                if (inputID)
+                    value = inputID.id;
+            }
+
+console.log('  fieldName:', fieldName);
+
+            // update our where statement:
+            whereRaw = whereRaw
+                .replace('{fieldName}', fieldName)
+                .replace('{operator}', operator)
+                .replace('{input}', ((value != null) ? "'" + value + "'" : ''));
+
+
+            // Now we add in our where
+            query.whereRaw(whereRaw);
+        }
+
+        parseCondition(where);
+
+
     }
 
     // Apply Sorts
@@ -305,6 +461,10 @@ function populateFindConditions(query, object, options, userData) {
         if (relationNames.length > 0)
             query.eager('[#fieldNames#]'.replace('#fieldNames#', relationNames.join(', ')));
     }
+
+console.log('');
+console.log('SQL:', query.toString() );
+console.log('');
 
 }
 
@@ -359,11 +519,16 @@ module.exports = {
                                     // Query the new row to response to client
                                     var query3 = object.model().query();
                                     populateFindConditions(query3, object, {
-                                        where: [{
-                                            fieldName: "id",
-                                            operator: "equals",
-                                            inputValue: newObj.id
-                                        }],
+                                        where: {
+                                            glue:'and',
+                                            rules:[
+                                                {
+                                                    key: "id",
+                                                    rule: "equals",
+                                                    vlue: newObj.id
+                                                }
+                                            ]
+                                        },
                                         offset: 0,
                                         limit: 1,
                                         includeRelativeData: true
@@ -463,8 +628,9 @@ module.exports = {
 
                 var query = object.model().query();
 
-                var where = req.options._where.where;
-                var sort = req.options._where.sort;
+
+                var where = req.options._where;
+                var sort = req.options._sort;
                 var offset = req.options._offset;
                 var limit = req.options._limit;
 
@@ -643,11 +809,14 @@ module.exports = {
                                     // Query the new row to response to client
                                     var query3 = object.model().query();
                                     populateFindConditions(query3, object, {
-                                        where: [{
-                                            fieldName: "id",
-                                            operator: "equals",
-                                            inputValue: id
-                                        }],
+                                        where: {
+                                            glue:'and',
+                                            rules:[{
+                                                key: "id",
+                                                rule: "equals",
+                                                value: id
+                                            }]
+                                        },
                                         offset: 0,
                                         limit: 1,
                                         includeRelativeData: true

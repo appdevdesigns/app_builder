@@ -134,6 +134,8 @@ export default class ABViewRule {
 
 			queryBuilderRules: () => {
 				var QB = $$(ids.queryBuilder);
+console.log('QB:', QB.getValue() );
+console.log('QB.sql():', QB.toSQL() );
 				return QB.getValue();
 			},
 
