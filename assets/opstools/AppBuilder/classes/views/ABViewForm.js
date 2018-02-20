@@ -685,8 +685,6 @@ export default class ABViewForm extends ABViewContainer {
 
 		var component = super.component(App);
 
-		this.viewComponents = this.viewComponents || {}; // { fieldId: viewComponent }
-
 		// an ABViewForm_ is a collection of rows:
 		var _ui = {
 			// view: "scrollview",
@@ -701,6 +699,12 @@ export default class ABViewForm extends ABViewContainer {
 
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
+			// register our callbacks:
+			if (options) {
+				for(var c in _logic.callbacks) {
+					_logic.callbacks[c] = options[c] || _logic.callbacks[c];
+				}
+			}
 
 			component.init(options);
 
@@ -708,20 +712,6 @@ export default class ABViewForm extends ABViewContainer {
 			if (Form) {
 				webix.extend(Form, webix.ProgressBar);
 			}
-
-
-			// attach all the .UI views:
-			var subviews = this.views();
-			subviews.forEach((child) => {
-
-				var subComponent = child.component(App);
-
-				this.viewComponents[child.id] = subComponent;
-
-				subComponent.init();
-
-			});
-
 
 			// bind a data collection to form component
 			var dc = this.dataCollection();
@@ -743,18 +733,26 @@ export default class ABViewForm extends ABViewContainer {
 
 			}
 
-			_onShow();
-
 		}
 
 
-		var _logic = {
+		var _logic = this._logic = {
+			
+			callbacks:{
+			
+				onSaveData:function(saveData){}
+			
+			},			
 
 			displayData: (data) => {
 
 				// Set default values
 				if (data == null) {
-					var customFields = this.fieldComponents((comp) => comp instanceof ABViewFormCustom);
+					var customFields = this.fieldComponents((comp) => {
+						return (comp instanceof ABViewFormCustom) ||
+							// rich text
+							((comp instanceof ABViewFormTextbox) && comp.settings.type == 'rich')
+					});
 					customFields.forEach((f) => {
 
 						var field = f.field();
@@ -796,7 +794,11 @@ export default class ABViewForm extends ABViewContainer {
 
 				// Populate value to custom fields
 				else {
-					var customFields = this.fieldComponents((comp) => comp instanceof ABViewFormCustom);
+					var customFields = this.fieldComponents((comp) => {
+						return (comp instanceof ABViewFormCustom) ||
+							// rich text
+							((comp instanceof ABViewFormTextbox) && comp.settings.type == 'rich')
+					});
 					customFields.forEach((f) => {
 
 						var comp = this.viewComponents[f.id];
@@ -848,6 +850,9 @@ export default class ABViewForm extends ABViewContainer {
 
 		var _onShow = () => {
 
+			// call .onShow in the base component
+			component.onShow();
+
 			var Form = $$(ids.component);
 
 			var customFields = this.fieldComponents((comp) => {
@@ -862,9 +867,6 @@ export default class ABViewForm extends ABViewContainer {
 
 				var component = this.viewComponents[f.id];
 				if (!component) return;
-
-				// call .customDisplay again here
-				component.onShow();
 
 				// set value to each components
 				var rowData = {};
@@ -1067,6 +1069,31 @@ export default class ABViewForm extends ABViewContainer {
 				}
 			});
 
+			// Add parent's data collection cursor when a connect field does not show
+			var dcLink  = dc.dataCollectionLink;
+			if (dcLink && dcLink.getCursor()) {
+
+				var objectLink = dcLink.datasource;
+
+				var connectFields = obj.fields(f => f.key == 'connectObject');
+				connectFields.forEach((f) => {
+
+					var formFieldCom = this.fieldComponents((fComp) => {
+						return fComp.field && fComp.field().id == f.id; 
+					});
+
+					if (objectLink.id == f.settings.linkObject &&
+						formFieldCom.length < 1 && // check field does not show
+						formVals[f.columnName] === undefined) { 
+						formVals[f.columnName] = {
+							id: dcLink.getCursor().id
+						}
+					}
+
+				});
+
+			}
+
 			// validate
 			var validator = obj.isValidData(formVals);
 			if (validator.pass()) {
@@ -1076,7 +1103,7 @@ export default class ABViewForm extends ABViewContainer {
 					formView.showProgress({ type: "icon" });
 
 				// form ready function
-				var formReady = () => {
+				var formReady = (newFormVals) => {
 
 					// when add a new data, then clear form inputs
 					if (dc) {
@@ -1085,6 +1112,10 @@ export default class ABViewForm extends ABViewContainer {
 							formView.clear();
 						}
 					}
+					
+					// if there was saved data pass it up to the onSaveData callback
+					if (newFormVals) 
+						this._logic.callbacks.onSaveData(newFormVals);
 
 					if (formView.hideProgress)
 						formView.hideProgress();
@@ -1108,7 +1139,7 @@ export default class ABViewForm extends ABViewContainer {
 
 										this.doSubmitRules(formVals);
 
-										formReady();
+										formReady(newFormVals);
 										resolve();
 									})
 								});
@@ -1121,13 +1152,13 @@ export default class ABViewForm extends ABViewContainer {
 									reject(err);
 								})
 								.then((newFormVals) => {
-
+									console.log("newFormVals: ", newFormVals);
 									this.doRecordRules(newFormVals)
 									.then(()=>{
 
 										this.doSubmitRules(formVals);
 
-										formReady();
+										formReady(newFormVals);
 										resolve();
 									})
 									

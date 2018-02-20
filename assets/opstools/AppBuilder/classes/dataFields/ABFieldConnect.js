@@ -382,7 +382,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 	///
 
 	// return the grid column header definition for this instance of ABFieldConnect
-	columnHeader(isObjectWorkspace, width, editable) {
+	columnHeader(isObjectWorkspace, width, editable, showAddButton) {
 		var config = super.columnHeader(isObjectWorkspace);
 		var field = this;
 		var App = App;
@@ -423,8 +423,16 @@ class ABFieldConnect extends ABFieldSelectivity {
 				placeholder: placeholder,
 				data: selectedData
 			}, App, row);
-
-			return node.outerHTML;
+			
+			if (showAddButton) {
+				var iDiv = document.createElement('div');
+				iDiv.className = 'ab-connect-add-new';
+				iDiv.innerHTML = '<a href="javascript:void(0);" class="fa fa-plus ab-connect-add-new-link"></a>';
+				iDiv.appendChild(node);
+				return iDiv.outerHTML;
+			} else {				
+				return node.outerHTML;
+			}
 
 		}
 
@@ -440,20 +448,13 @@ class ABFieldConnect extends ABFieldSelectivity {
 	 *					unique id references.
 	 * @param {HtmlDOM} node  the HTML Dom object for this field's display.
 	 */
-	customDisplay(row, App, node, editable, addNewViewId) {
+	customDisplay(row, App, node, editable) {
 		// sanity check.
 		if (!node) { return }
 
 		var domNode = node.querySelector('.connect-data-values');
 		if (!domNode) return;
 		
-		if (typeof addNewViewId != "undefined" && domNode.parentElement.querySelector(".ab-connect-add-new") == null) {
-			var iDiv = document.createElement('div');
-			iDiv.className = 'ab-connect-add-new';
-			iDiv.innerHTML = '<a href="javascript:void(0);" class="fa fa-plus ab-connect-add-new-link"></a>';
-			domNode.parentElement.insertBefore(iDiv, domNode.parentElement.firstChild.nextSibling);
-		}
-
 		var multiselect = (this.settings.linkType == 'many');
 
 		// get selected values

@@ -387,9 +387,6 @@ export default class ABViewChart extends ABViewContainer  {
 	 */
 	component(App) {
 
-		// get a UI component for each of our child views
-		var viewComponents = {}; // { viewId: viewComponent }
-
 		var idBase = 'ABViewChart_' + this.id;
 		var ids = {
 			component: App.unique(idBase + '_component'),
@@ -397,8 +394,6 @@ export default class ABViewChart extends ABViewContainer  {
 
 		// get webix.dashboard
 		var container = super.component(App);
-
-		this.viewComponents = this.viewComponents || {};
 
 		var _ui = {
 			type: "form",
@@ -414,6 +409,7 @@ export default class ABViewChart extends ABViewContainer  {
 
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
+
 			container.init(options);
 			
 			var currentComponent = $$(ids.component);
@@ -421,17 +417,6 @@ export default class ABViewChart extends ABViewContainer  {
 				webix.extend(currentComponent, webix.ProgressBar);
 			}
 
-			// attach all the .UI views:
-			var subviews = this.views();
-			subviews.forEach((child) => {
-
-				var subComponent = child.component(App);
-
-				this.viewComponents[child.id] = subComponent;
-
-				subComponent.init();
-
-			});
 		}
 
 		var _logic = {

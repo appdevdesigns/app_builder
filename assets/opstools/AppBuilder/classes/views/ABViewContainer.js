@@ -98,7 +98,9 @@ export default class ABViewContainer extends ABView {
 		var idBase = 'ABViewContainerEditorComponent';
 		var ids = {
 			component: App.unique(idBase + '_component')
-		}
+		};
+
+		var subComponents = {} // { viewId: viewComponent, ..., viewIdn: viewComponent }
 
 		var cellHeight = 250;
 		// if (this.key == "form" || this.key == "detail") {
@@ -131,6 +133,9 @@ export default class ABViewContainer extends ABView {
 			childViews.forEach((child) => {
 
 				var component = child.component(App);
+
+				// store
+				subComponents[child.id] = component;
 
 				Dashboard.addView({
 
@@ -348,11 +353,27 @@ export default class ABViewContainer extends ABView {
 
 		};
 
+		var _onShow = () => {
+
+			this.views().forEach((v) => {
+
+				var component = subComponents[v.id];
+
+				if (component &&
+					component.onShow) {
+					component.onShow();
+				}
+
+			});
+
+		};
 
 		return {
 			ui: _ui,
 			init: _init,
-			logic: _logic
+			logic: _logic,
+
+			onShow: _onShow
 		}
 	}
 
@@ -441,12 +462,17 @@ export default class ABViewContainer extends ABView {
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		};
-		var subComponents = {}; // { viewId: componentId, ..., viewIdn: componentIdn }
+
+		this.viewComponents = this.viewComponents || {}; // { viewId: viewComponent, ..., viewIdn: viewComponent }
 
 		var _logic = {
 
 			changePage: (pageId) => {
 				this.changePage(pageId);
+			},
+			
+			callbacks: {
+				
 			},
 
 			getElements: (views) => {
@@ -457,7 +483,14 @@ export default class ABViewContainer extends ABView {
 				views.forEach((v) => {
 
 					var component = v.component(App);
-					subComponents[v.id] = component;
+					
+					this.viewComponents[v.id] = component;
+					
+					// if key == "form" or "button" register the callbacks to the parent
+					// NOTE this will only work on the last form of a page!
+					if ( (v.key == "form") && v._logic.callbacks) {
+						_logic.callbacks = v._logic.callbacks;
+					}
 
 					// Create a new row
 					if (v.position.y == null ||
@@ -514,17 +547,21 @@ export default class ABViewContainer extends ABView {
 
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
-
-			// attach all the .UI views:
-			for (var key in subComponents) {
-
-				var component = subComponents[key];
-
-				// Initial component
-				component.init();
+			// register our callbacks:
+			if (options) {
+				for(var c in _logic.callbacks) {
+					_logic.callbacks[c] = options[c] || _logic.callbacks[c];
+				}
 			}
 
-			_onShow();
+			// attach all the .UI views:
+			for (var key in this.viewComponents) {
+
+				var component = this.viewComponents[key];
+
+				// Initial component along with options in case there are callbacks we need to listen for
+				component.init(options);
+			}
 
 		};
 
@@ -532,7 +569,7 @@ export default class ABViewContainer extends ABView {
 
 			this.views().forEach((v) => {
 
-				var component = subComponents[v.id];
+				var component = this.viewComponents[v.id];
 
 				if (component &&
 					component.onShow) {
