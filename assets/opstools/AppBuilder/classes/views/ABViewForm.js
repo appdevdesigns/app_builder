@@ -699,6 +699,12 @@ export default class ABViewForm extends ABViewContainer {
 
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
+			// register our callbacks:
+			if (options) {
+				for(var c in _logic.callbacks) {
+					_logic.callbacks[c] = options[c] || _logic.callbacks[c];
+				}
+			}
 
 			component.init(options);
 
@@ -730,7 +736,13 @@ export default class ABViewForm extends ABViewContainer {
 		}
 
 
-		var _logic = {
+		var _logic = this._logic = {
+			
+			callbacks:{
+			
+				onSaveData:function(saveData){}
+			
+			},			
 
 			displayData: (data) => {
 
@@ -1091,7 +1103,7 @@ export default class ABViewForm extends ABViewContainer {
 					formView.showProgress({ type: "icon" });
 
 				// form ready function
-				var formReady = () => {
+				var formReady = (newFormVals) => {
 
 					// when add a new data, then clear form inputs
 					if (dc) {
@@ -1100,6 +1112,10 @@ export default class ABViewForm extends ABViewContainer {
 							formView.clear();
 						}
 					}
+					
+					// if there was saved data pass it up to the onSaveData callback
+					if (newFormVals) 
+						this._logic.callbacks.onSaveData(newFormVals);
 
 					if (formView.hideProgress)
 						formView.hideProgress();
@@ -1123,7 +1139,7 @@ export default class ABViewForm extends ABViewContainer {
 
 										this.doSubmitRules(formVals);
 
-										formReady();
+										formReady(newFormVals);
 										resolve();
 									})
 								});
@@ -1136,13 +1152,13 @@ export default class ABViewForm extends ABViewContainer {
 									reject(err);
 								})
 								.then((newFormVals) => {
-
+									console.log("newFormVals: ", newFormVals);
 									this.doRecordRules(newFormVals)
 									.then(()=>{
 
 										this.doSubmitRules(formVals);
 
-										formReady();
+										formReady(newFormVals);
 										resolve();
 									})
 									

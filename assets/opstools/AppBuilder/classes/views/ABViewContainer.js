@@ -470,6 +470,10 @@ export default class ABViewContainer extends ABView {
 			changePage: (pageId) => {
 				this.changePage(pageId);
 			},
+			
+			callbacks: {
+				
+			},
 
 			getElements: (views) => {
 				var rows = [];
@@ -479,7 +483,14 @@ export default class ABViewContainer extends ABView {
 				views.forEach((v) => {
 
 					var component = v.component(App);
+					
 					this.viewComponents[v.id] = component;
+					
+					// if key == "form" or "button" register the callbacks to the parent
+					// NOTE this will only work on the last form of a page!
+					if ( (v.key == "form") && v._logic.callbacks) {
+						_logic.callbacks = v._logic.callbacks;
+					}
 
 					// Create a new row
 					if (v.position.y == null ||
@@ -536,14 +547,20 @@ export default class ABViewContainer extends ABView {
 
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
+			// register our callbacks:
+			if (options) {
+				for(var c in _logic.callbacks) {
+					_logic.callbacks[c] = options[c] || _logic.callbacks[c];
+				}
+			}
 
 			// attach all the .UI views:
 			for (var key in this.viewComponents) {
 
 				var component = this.viewComponents[key];
 
-				// Initial component
-				component.init();
+				// Initial component along with options in case there are callbacks we need to listen for
+				component.init(options);
 			}
 
 		};
