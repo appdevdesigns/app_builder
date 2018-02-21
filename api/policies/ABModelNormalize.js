@@ -38,7 +38,6 @@ module.exports = function(req, res, next) {
     // More normal request would include:
       // skip: xx
       // limit: xx
-
       req.options = req.options || {};
       req.options._where = {};
       req.options._offset = null;
@@ -51,7 +50,7 @@ module.exports = function(req, res, next) {
 
       sails.log.verbose('ABModelNormalize(): allParams:', allParams);
       if (allParams.where || allParams.limit || allParams.offset || allParams.sort) {
-        
+      
         req.options._where = allParams.where || {};
 
 

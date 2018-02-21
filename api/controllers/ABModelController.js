@@ -280,7 +280,7 @@ console.log();
         })
 */
 
-        function parseCondition(condition) {
+        function parseCondition(condition, Query) {
 
             // if this is a grouping condition, then decide how to group and 
             // process our sub rules:
@@ -292,7 +292,12 @@ console.log();
                 }
                 condition.rules.forEach((r)=>{
 
-                    query[nextCombineKey]( function() { parseCondition(r); });
+                    Query[nextCombineKey]( function() { 
+
+                        // NOTE: pass 'this' as the Query object
+                        // so we can perform embedded queries:
+                        parseCondition(r, this); 
+                    });
                     
                 })
                 
@@ -332,8 +337,8 @@ console.log('... condition:', JSON.stringify(condition, null, 4));
             // basic case:  simple conversion
             var operator = conversionHash[condition.rule];
             var value = condition.value;
-console.log('operator:', operator);
-console.log('value:', value);
+// console.log('operator:', operator);
+// console.log('value:', value);
 
 
             // special operation cases:
@@ -390,8 +395,8 @@ console.log('value:', value);
 
             }
 
-console.log('    -> operator:', operator);
-console.log('    -> value:', value );
+// console.log('    -> operator:', operator);
+// console.log('    -> value:', value );
 
             // normal field name:
             var fieldName = '`' + condition.key + '`';
@@ -410,7 +415,7 @@ console.log('    -> value:', value );
                     value = inputID.id;
             }
 
-console.log('  fieldName:', fieldName);
+// console.log('  fieldName:', fieldName);
 
             // update our where statement:
             whereRaw = whereRaw
@@ -420,10 +425,10 @@ console.log('  fieldName:', fieldName);
 
 
             // Now we add in our where
-            query.whereRaw(whereRaw);
+            Query.whereRaw(whereRaw);
         }
 
-        parseCondition(where);
+        parseCondition(where, query);
 
 
     }

@@ -166,7 +166,7 @@ module.exports = function(req, res, next) {
     }
 
     // skip QB conditions:
-    if (req.options._where.glue) {
+    if (!_.isUndefined(req.options._where.glue)) {
         next();
         return;
     }

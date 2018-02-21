@@ -335,7 +335,8 @@ console.log('ABModelConvertSailsCondition: ');
     // move along if no or empty where clause
     if (_.isEmpty(req.options._where)) {
 console.log('ABModelConvertSailsCondition : thinking its emptty');
-console.log('==>', JSON.stringify(req.options._where, null, 4));
+console.log('allParams() ==>', JSON.stringify(req.allParams(), null, 4));
+console.log('req.options ==>', JSON.stringify(req.options, null, 4));
         next();
         return;
     }
@@ -359,7 +360,7 @@ console.log('ABModelConvertSailsCondition : thinking its filter Condition');
 
 
     // skip QB conditions:
-    if (req.options._where.glue) {
+    if (!_.isUndefined(req.options._where.glue)) {
         next();
         return;
     }
