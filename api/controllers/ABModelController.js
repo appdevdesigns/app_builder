@@ -308,6 +308,44 @@ function populateFindConditions(query, object, options, userData) {
 
 }
 
+/**
+ * @function updateConnectedFields
+ * Look at a saved record's object to broadcast a "stale" action on its connected fields
+ * 
+ * @param {ABObject} object 
+ * @param {string} data // updated data
+ *
+ */
+function updateConnectedFields(object, data) {
+    // Check to see if the object has any connected fields that need to be updated
+    var connectFields = object.connectFields();
+    // Parse through the connected fields
+    connectFields.forEach((f)=>{
+        // Get the field object that the field is linked to
+        var field = f.fieldLink();
+        // Get the relation name so we can separate the linked fields updates from the rest
+        var relationName = f.relationName();
+        // Get all the values of the linked field from the save
+        var items = data[relationName];
+        // If there was only one it is not returned as an array so lets put it in an array to normalize
+        if (!Array.isArray(items)) {
+            items = [items];
+        }
+        // parse through all items and broadcast a "stale" action so we can tell the client side the data may have updated
+        // We can improve this later and try to discover what items are different from the original
+        items.forEach((i) => {
+            // Make sure you put the payload together just like before
+            var payload = {
+                objectId: field.object.id, // get the fields object id
+                data: i // pass the whole item 
+            }
+            // Broadcast the payload and let the clientside figure out what to do next
+            sails.sockets.broadcast(field.object.id, "ab.datacollection.stale", payload);
+        })
+    });
+}
+
+
 
 
 module.exports = {
@@ -375,6 +413,19 @@ module.exports = {
                                         .then((newItem) => {
 
                                             res.AD.success(newItem[0]);
+                                            
+                                            // We want to broadcast the change from the server to the client so all datacollections can properly update
+                                            // Build a payload that tells us what was updated
+                                            var payload = {
+                                                objectId: object.id,
+                                                data: newItem[0]
+                                            }
+                                            
+                                            // Broadcast the create
+                                            sails.sockets.broadcast(object.id, "ab.datacollection.create", payload);
+                                            
+                                            updateConnectedFields(object, newItem[0]);
+                                            
                                             Promise.resolve();
 
                                         });
@@ -460,6 +511,12 @@ module.exports = {
 
         AppBuilder.routes.verifyAndReturnObject(req, res)
             .then(function (object) {
+            
+                // verify that the request is from a socket not a normal HTTP
+                if (req.isSocket) {
+                    // Subscribe socket to a room with the name of the object's ID
+                    sails.sockets.join(req, object.id);
+                }
 
                 var query = object.model().query();
 
@@ -556,6 +613,19 @@ module.exports = {
                     .then((numRows) => {
 
                         res.AD.success({ numRows: numRows });
+                        
+                        // We want to broadcast the change from the server to the client so all datacollections can properly update
+                        // Build a payload that tells us what was updated
+                        var payload = {
+                            objectId: object.id,
+                            id: id
+                        }
+                        
+                        // Broadcast the delete
+                        sails.sockets.broadcast(object.id, "ab.datacollection.delete", payload);
+                        
+                        // Start here tomrorow...find out if you need to store the old data temporarily so you can know what items to loop through that are stale now
+                        // updateConnectedFields(object, newItem[0]);
 
                     }, (err) => {
 
@@ -658,6 +728,19 @@ module.exports = {
                                         .catch((err) => { return Promise.reject(err); })
                                         .then((newItem) => {
                                             res.AD.success(newItem[0]);
+                                            
+                                            // We want to broadcast the change from the server to the client so all datacollections can properly update
+                                            // Build a payload that tells us what was updated
+                                            var payload = {
+                                                objectId: object.id,
+                                                data: newItem[0]
+                                            }
+                                            
+                                            // Broadcast the update
+                                            sails.sockets.broadcast(object.id, "ab.datacollection.update", payload);
+                                            
+                                            updateConnectedFields(object, newItem[0]);
+
                                             Promise.resolve();
                                         });
 

@@ -38,6 +38,24 @@ function triggerEvent(action, object, data) {
 	
 }
 
+// Start listening for server events for object updates and call triggerEvent as the callback
+io.socket.on("ab.datacollection.create", function (msg) {
+  triggerEvent("create", {id:msg.objectId}, msg.data);
+});
+
+io.socket.on("ab.datacollection.delete", function (msg) {
+  triggerEvent("delete", {id:msg.objectId}, msg.id);
+});
+
+io.socket.on("ab.datacollection.stale", function (msg) {
+  triggerEvent("stale", {id:msg.objectId}, msg.data);
+});
+
+io.socket.on("ab.datacollection.update", function (msg) {
+  triggerEvent("update", {id:msg.objectId}, msg.data);
+});
+
+
 export default class ABModel {
 
 	constructor(object) {
@@ -176,13 +194,15 @@ export default class ABModel {
 		} else {
 
 			// else, assume the provided condition is the .where clause.
-			newCond.where = cond;
+			newCond.where = {
+				where: [cond]
+			};
 		}
 
 		return new Promise(
 			(resolve, reject) => {
 
-				OP.Comm.Service.get({
+				OP.Comm.Socket.get({
 					url: this.modelURL(),
 					params: newCond
 				})
