@@ -195,7 +195,9 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 			removePreviousDisplays: () => {
 
 				var allViews = $$(ids.component).getChildViews();
-				allViews.forEach((v)=>{
+				var cloneAllViews = [];
+				allViews.forEach((v)=>{ cloneAllViews.push(v); });
+				cloneAllViews.forEach((v)=>{
 
 					// don't remove the field picker
 					if (v.config.id != ids.selectConnectedField) {

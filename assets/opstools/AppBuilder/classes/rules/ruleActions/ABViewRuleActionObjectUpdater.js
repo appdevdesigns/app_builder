@@ -161,6 +161,9 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 				children.forEach((c)=>{
 					UpdateForm.removeView(c);
 				})
+
+				// clear our stored .formRows
+				this.formRows = [];
 			},
 
 
@@ -627,6 +630,10 @@ var dc = options.form.dataCollection();
 	// save the given object as the object we will update.
 	updateObjectLoad(object) {
 		this.updateObject = object;
+
+		// with a new updateObject, then reset our UI
+		this._uiUpdater = null; 
+		this.valueRules = {};
 	}
 
 	// fromSettings
