@@ -331,7 +331,9 @@ console.log('... condition:', JSON.stringify(condition, null, 4));
                 'greater'       : '>',
                 'greater_or_equal' : '>=',
                 'less'          : '<',
-                'less_or_equal' : '<=' 
+                'less_or_equal' : '<=',
+                'in'            : 'IN',
+                'not_in'        : 'NOT IN'
             }
 
             // basic case:  simple conversion

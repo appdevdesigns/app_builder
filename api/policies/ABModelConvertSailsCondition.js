@@ -107,6 +107,17 @@ function parseCondition(field, opValue) {
   }
 
 
+  // field : [1,2,3,...]
+  if (Array.isArray(opValue)) {
+
+    return {
+        key:field,
+        rule:'in',
+        value: opValue
+    }
+    
+  }
+
 
   // now lookup the standard key value conditions:
   var ruleHash = {
