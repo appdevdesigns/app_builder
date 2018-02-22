@@ -164,7 +164,10 @@ function parseCondition(field, opValue) {
   }
 
 
-console.log("!!!!! NULL condition!  field:["+field+"]  opValue:", opValue);
+  ADCore.error.log("app_builder:policy:ABModelConvertSailsCondition(): parseCondition() resulted in a NULL condition.", {
+    field:field,
+    opValue:opValue
+  })
   return null
 }
 
@@ -328,15 +331,10 @@ module.exports = function(req, res, next) {
     //     },
     //      ...
     // ]
-console.log('', '+++++++++++++++++++++');
-console.log('ABModelConvertSailsCondition: ');
 
 
     // move along if no or empty where clause
     if (_.isEmpty(req.options._where)) {
-console.log('ABModelConvertSailsCondition : thinking its emptty');
-console.log('allParams() ==>', JSON.stringify(req.allParams(), null, 4));
-console.log('req.options ==>', JSON.stringify(req.options, null, 4));
         next();
         return;
     }
@@ -353,7 +351,6 @@ console.log('req.options ==>', JSON.stringify(req.options, null, 4));
         firstOption = req.options._where[0];
     }
     if (firstOption.combineCondition) {
-console.log('ABModelConvertSailsCondition : thinking its filter Condition');
         next();
         return;
     }
@@ -368,9 +365,6 @@ console.log('ABModelConvertSailsCondition : thinking its filter Condition');
 
     // Must be a Sails compatibal condition:
     req.options._where = processCondition(req.options._where);
-console.log('ABModelConvertSailsCondition.JS : ', JSON.stringify(req.options._where, null, 4));
-
-
     next();
 
 };

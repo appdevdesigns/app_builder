@@ -1075,13 +1075,10 @@ export default class ABViewDataCollection extends ABView {
 
 		// set query condition
 		var cond = {
-			where: {
-				where: wheres,
-				sort: sorts,
-				height: defaultHeight
-			},
+			where: wheres,
 			limit: limit || 20,
-			skip: start || 0
+			skip: start || 0,
+			sort: sorts,
 		};
 
 		// load all data
