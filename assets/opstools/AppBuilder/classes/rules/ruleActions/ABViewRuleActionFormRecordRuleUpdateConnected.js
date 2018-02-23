@@ -13,23 +13,17 @@ import ObjectQueryBuilder from "../ABViewQueryBuilderObjectFieldConditions"
 
 //// LEFT OFF HERE:
 // Now implement Update Connected Object:
-// - solve missing connected field info required for creating 2nary table
-// - server side needs to support BOTH QueryBuilder and Sails where clause formats
-// - Continue filling out update Connected connection conditions
-// - debug importing ABFieldConnect errors
+// - Continue filling out update Connected connection conditions:
+//		- initial Record Rule Popup has extra row
+// - debug importing ABFieldConnect errors (see commented out import above)
 //
 
 export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABViewRuleActionObjectUpdater {
 
-	/**
-	 * @param {object} App 
-	 *      The shared App object that is created in OP.Component
-	 * @param {string} idBase
-	 *      Identifier for this component
-	 */
-	constructor() {
 
-		super();
+	constructor(App, idBase, currentForm) {
+
+		super(App, idBase, currentForm);
 		var L = function(key, altText) {
 			return AD.lang.label.getLabel(key) || altText;
 		}
@@ -58,15 +52,18 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 
 	// field
 
-	// objectLoad
-	// save the current object this Action is associated with.
-	// in the case of the UpdateConnected Action, assigning us 
-	// this object only impacts the queryObject.
-	// 
-	// The Updater form will use another object we select in 
-	// the form dropdown.
-	// @param {obj} object
-	//
+	/**
+	 * objectLoad
+	 * save the current object this Action is associated with.
+	 * in the case of the UpdateConnected Action, assigning us 
+	 * this object only impacts the queryObject.
+	 *
+	 * The Updater form will use another object we select in 
+	 * the form dropdown.
+	 *
+	 * @param {object} object 
+	 *      
+	 */
 	objectLoad(object) {
 		this.queryObjectLoad(object);
 		this.baseObject = object;
@@ -82,9 +79,11 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 	}
 
 
-	// connectedFieldList
-	// return the fields in our .baseObject that are connections to other objects.
-	// @return {array} of {ABField} 
+	/**
+	 * connectedFieldList
+	 * return the fields in our .baseObject that are connections to other objects.
+	 * @return {array} of {ABField}     
+	 */
 	connectedFieldList() {
 		var connectKey = "connectObject"; // ABFieldConnect.defaults().key;
 		if (this.baseObject  && this.baseObject.fields) {
@@ -95,9 +94,12 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 		
 	}
 
-	// connectedObject
-	// return the ABObject associated with the selected connection field.
-	// @return {ABObject}
+
+	/**
+	 * connectedObject
+	 * return the ABObject associated with the selected connection field.
+	 * @return {ABObject}  
+	 */
 	connectedObject() {
 
 		if (this.selectedFieldID) {
@@ -111,21 +113,21 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 	}
 
 
-	// selectedField
-	// return the selected {ABField} object.
-	// @return {ABField} 
+	/**
+	 * selectedField
+	 * return the selected {ABField} object.
+	 * @return {ABField}  
+	 */
 	selectedField() {
 		return this.connectedFieldList().filter((f)=>{ return f.id == this.selectedFieldID; })[0];
 	}
 
 
-
-
-
-
-	// valueDisplayComponent
-	// Return an ABView to display our values form.
-	// 
+	/**
+	 * valueDisplayComponent
+	 * Return an ABView to display our values form.
+	 * @param {string}  idBase  a unique webix id to base our sub components on.
+	 */
 	valueDisplayComponent(idBase) {
 
 		if (this._uiChooser == null) {
@@ -136,8 +138,12 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 	}
 
 
-	// Our Values Display is a Select Box with a choice of connected fields.
-	// Once a field is chosen, then we display the Updater form.
+	/**
+	 * valueDisplayChooser
+	 * Our Values Display is a Select Box with a choice of connected fields.
+	 * Once a field is chosen, then we display the Updater form.
+	 * @param {string}  idBase  a unique webix id to base our sub components on.
+	 */
 	valueDisplayChooser(idBase) {
 
 		var uniqueInstanceID = webix.uid();
@@ -254,6 +260,10 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 
 			fromSettings: (settings) => {
 
+				// // first time through, be sure to set the connectedObject first
+				// this.selectedFieldID = settings.selectedFieldID;
+				// var connectedObject = this.connectedObject();
+
 				// this triggers the update of the display, creation of QB, 
 				$$(ids.selectConnectedField).setValue(settings.selectedFieldID);
 
@@ -300,7 +310,12 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 	}
 
 
-
+	/**
+	 * queryBuilderDisplay
+	 * returns our Query Builder object used in our display. 
+	 * It is called by the .showQBIfNeeded() method.
+	 * @return {ABViewQueryBuilderObjectFieldConditions} 
+	 */
 	queryBuilderDisplay() {
 
 		if (!this.objectQB) {
@@ -314,10 +329,14 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 
 
 
-	// process
-	// gets called when a form is submitted and the data passes the Query Builder Rules.
-	// @param {obj} options
-	// @return {Promise}
+	/**
+	 * process
+	 * gets called when a form is submitted and the data passes the Query Builder Rules.
+	 * @param {obj} options
+	 *				options.data : {obj} the key=>value of the data just entered by the form
+	 *				options.form : {ABViewForm} the Form object that is processing this rule
+	 * @return {Promise}
+	 */
 	process(options) {
 
 		// prepare .valueRules
@@ -334,37 +353,42 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 
 
 
-		// configureRemoteLinkToMe()
-		// this fn() will add a condition for a 1:1, or M:1 connection where the
-		// connectedObject has a link back to me.
-		var configureRemoteLinkToMe = () => {
+// 		// configureRemoteLinkToMe()
+// 		// this fn() will add a condition for a 1:1, or M:1 connection where the
+// 		// connectedObject has a link back to me.
+// 		var configureRemoteLinkToMe = () => {
 
-// get a reference to the link field on the connected Object:
-			var connectedObjectField = connectedObject.fields((f)=>{ return f.id == connectionField.settings.linkColumn; })[0];
-			if (connectedObjectField && options.data.id) {
+// // get a reference to the link field on the connected Object:
+// 			var connectedObjectField = connectedObject.fields((f)=>{ return f.id == connectionField.settings.linkColumn; })[0];
+// 			if (connectedObjectField && options.data.id) {
 
-				// so we want: ('baseObject.fieldName' = my.id ) AND (whatever QB says here)
-				condition = {
-					"glue": "and",
-					"rules": [
-						{
-							"key": connectedObjectField.columnName,
-							"rule": "equals",
-							"value": options.data.id
-						},
-						this.qbCondition
-					]
-				}
+// 				// so we want: ('baseObject.fieldName' = my.id ) AND (whatever QB says here)
+// 				condition = {
+// 					"glue": "and",
+// 					"rules": [
+// 						{
+// 							"key": connectedObjectField.columnName,
+// 							"rule": "equals",
+// 							"value": options.data.id
+// 						},
+// 						this.qbCondition
+// 					]
+// 				}
 
-			} else {
+// 			} else {
 
-				// without either of these points of data, we can't update what we intend.
+// 				// without either of these points of data, we can't update what we intend.
 
-			}
-		}
+// 			}
+// 		}
 
 
 
+		// modifyCondition
+		// async fn() to fill out what the condition should be for limiting the remote
+		// objects to values in use by the current object.
+		// @param {fn} cb  the callback to use when we are finished:
+		//					cb(err, )
 		var modifyCondition = (cb) => {
 
 			// So, let's get a copy of our current data, with all it's connected items 
@@ -373,7 +397,7 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 			thisModel.findConnected(connectionField.columnName, options.data)
 			.then((items) => {
 
-				// if we didn't get any results, then return
+				// if we didn't get any results, then simply return
 				// NOTE: this will leave condition == null and cancel this update.
 				if ((!items) || (items.length==0)) {
 					cb();
@@ -497,9 +521,6 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 
 		}
 
-//// LEFT OFF HERE:
-// update Server to handle QB conditions
-//
 
 
 		return new Promise( (resolve, reject) => {
@@ -568,7 +589,7 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 					// this is the case where we didn't have the proper data to complete our 
 					// update.  So let's just fail gracefully, and continue on.
 
-	// QUESTION: is this the right way to handle it?
+// QUESTION: is this the right way to handle it?
 					resolve();
 
 				} else {
@@ -610,10 +631,11 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 
 
 
-
-	// fromSettings
-	// initialize this Action from a given set of setting values.
-	// @param {obj}  settings
+	/**
+	 * fromSettings
+	 * initialize this Action from a given set of setting values.
+	 * @param {obj} settings  the settings {} returned from toSettings()
+	 */
 	fromSettings(settings) {
 		settings = settings || {};
 
@@ -630,9 +652,12 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 	}
 
 
-	// toSettings
-	// return an object that represents the current state of this Action
-	// @return {obj}
+
+	/**
+	 * toSettings
+	 * return an object that represents the current state of this Action
+	 * @return {obj} 
+	 */
 	toSettings() {
 
 		// settings: {

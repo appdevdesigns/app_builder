@@ -103,18 +103,20 @@ export default class ABViewQueryBuilderObjectFieldConditions {
 				// by default we're getting long values: "Mon Feb 2, 2018 GMT xxxxxxx",
 				// and webix doesn't seem to understand them when we send them back.
 				// so save simple date values: "mm/dd/yyyy"
-				var rules = values[0];
-				if (rules) {
-					var fields = values[1];
+				if (values) {
+					var rules = values[0];
+					if (rules) {
+						var fields = values[1];
 
-					rules.rules.forEach((r)=>{
-						var field = fields.filter((f)=>{ return f.id == r.key;})[0];
-						if (field) {
-							if (field.type == 'date') {
-								r.value = webix.i18n.dateFormatStr(r.value);
+						rules.rules.forEach((r)=>{
+							var field = fields.filter((f)=>{ return f.id == r.key;})[0];
+							if (field) {
+								if (field.type == 'date') {
+									r.value = webix.i18n.dateFormatStr(r.value);
+								}
 							}
-						}
-					})
+						})
+					}
 				}
 
 

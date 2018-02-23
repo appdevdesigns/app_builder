@@ -28,7 +28,7 @@ export default class ABViewRuleAction {
 	 * @param {string} idBase
 	 *      Identifier for this component
 	 */
-	constructor() {
+	constructor(App, idBase, currentForm) {
 
 		this.key = 'ABViewRuleAction';
 
@@ -40,6 +40,9 @@ export default class ABViewRuleAction {
 
 		this.valueRules = {};   // the initial Value Rules for this Action
 								// The Action Subclass defines what this {} is.
+
+
+		this.currentForm = currentForm;  // the ABViewForm object that this rule Action is tied to.
 	}
 
 
@@ -206,8 +209,8 @@ export default class ABViewRuleAction {
 	}
 
 
-	// objectLoad
-	// save the current object this Action is associated with.
+	// queryObjectLoad
+	// save the current object this Action is using to build query rules.
 	queryObjectLoad(object) {
 		this.queryObject = object;
 	}

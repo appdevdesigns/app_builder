@@ -15,9 +15,9 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 	 * @param {string} idBase
 	 *      Identifier for this component
 	 */
-	constructor() {
+	constructor(App, idBase, currentForm) {
 
-		super();
+		super(App, idBase, currentForm);
 		var L = function(key, altText) {
 			return AD.lang.label.getLabel(key) || altText;
 		}
@@ -33,6 +33,9 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 							// [
 							//		{ fieldId: xxx, value:yyy, type:key['string', 'number', 'date',...]} 
 							// ]
+
+		this.stashRules = {}; // keep track of rule settings among our selected objects.
+
 
 		// Labels for UI components
 		var labels = this.labels = {
@@ -629,11 +632,19 @@ var dc = options.form.dataCollection();
 	// updateObjectLoad
 	// save the given object as the object we will update.
 	updateObjectLoad(object) {
+
+		// stash rules for old object
+		if (this.updateObject) {
+			this.stashRules[this.updateObject.id] = this.valueRules;
+		}
+
 		this.updateObject = object;
 
 		// with a new updateObject, then reset our UI
 		this._uiUpdater = null; 
-		this.valueRules = {};
+
+		// reload any stashed rules, or set to {}
+		this.valueRules = this.stashRules[this.updateObject.id] || {};
 	}
 
 	// fromSettings
@@ -645,6 +656,11 @@ var dc = options.form.dataCollection();
 		super.fromSettings(settings); // let the parent handle the QB
 
 // make sure UI is updated:
+// set our updateObject
+if (settings.updateObjectURL) {
+	var updateObject = this.currentForm.application.urlResolve(settings.updateObjectURL);
+	this.updateObject = updateObject;
+}
 
 
 		// if we have a display component, then populate it:
@@ -670,6 +686,7 @@ var dc = options.form.dataCollection();
 		var settings = super.toSettings();
 
 		settings.valueRules = this._uiUpdater.toSettings();
+		settings.updateObjectURL = this.updateObject.urlPointer();
 
 		return settings;
 	}

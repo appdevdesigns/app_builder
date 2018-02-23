@@ -303,7 +303,8 @@ export default class ABViewForm extends ABViewContainer {
 		_logic.recordRuleShow = () => {
 
 			var currView = _logic.currentEditObject();
-
+			
+			PopupRecordRule.formLoad(currView);
 			PopupRecordRule.fromSettings(currView.settings.recordRules);
 			PopupRecordRule.show();
 

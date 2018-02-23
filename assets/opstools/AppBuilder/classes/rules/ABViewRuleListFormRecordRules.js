@@ -37,9 +37,9 @@ export default class ABViewRuleListFormRecordRules extends ABViewRuleList {
 	getRule () {
 
 		var listActions = [
-			new RoleUpdateExisting(this.App, this.idBase+'_ruleActionUpdate'),
-			new RoleInsertConnected(this.App, this.idBase+'_ruleActionInsert'),
-			new RoleUpdateConnected(this.App, this.idBase+'_ruleActionUpdateConnected')
+			new RoleUpdateExisting(this.App, this.idBase+'_ruleActionUpdate', this.currentForm),
+			new RoleInsertConnected(this.App, this.idBase+'_ruleActionInsert', this.currentForm),
+			new RoleUpdateConnected(this.App, this.idBase+'_ruleActionUpdateConnected', this.currentForm)
 		]
 
 		var Rule = new ABViewRule(listActions);
