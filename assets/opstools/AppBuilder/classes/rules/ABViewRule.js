@@ -134,8 +134,8 @@ export default class ABViewRule {
 
 			queryBuilderRules: () => {
 				var QB = $$(ids.queryBuilder);
-console.log('QB:', QB.getValue() );
-console.log('QB.sql():', QB.toSQL() );
+// console.log('QB:', QB.getValue() );
+// console.log('QB.sql():', QB.toSQL() );
 				return QB.getValue();
 			},
 
@@ -147,7 +147,9 @@ console.log('QB.sql():', QB.toSQL() );
 				if (!$ValueDisplay) return;
 
 				var children = $ValueDisplay.getChildViews();
-				children.forEach((c)=>{
+				var cloneChildren = [];
+				children.forEach((c)=>{ cloneChildren.push(c); });
+				cloneChildren.forEach((c)=>{
 					$ValueDisplay.removeView(c);
 				})
 

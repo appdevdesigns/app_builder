@@ -27,6 +27,7 @@ export default class ABViewRuleAction {
 	 *      The shared App object that is created in OP.Component
 	 * @param {string} idBase
 	 *      Identifier for this component
+	 * @param {ABViewForm} currentForm	the current form this Action is associated with.
 	 */
 	constructor(App, idBase, currentForm) {
 

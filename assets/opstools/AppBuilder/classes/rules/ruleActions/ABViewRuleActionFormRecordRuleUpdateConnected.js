@@ -14,7 +14,7 @@ import ObjectQueryBuilder from "../ABViewQueryBuilderObjectFieldConditions"
 //// LEFT OFF HERE:
 // Now implement Update Connected Object:
 // - Continue filling out update Connected connection conditions:
-//		- initial Record Rule Popup has extra row
+//		- QueryBuilder: initial value on a numeric field & Date is not being set properly!
 // - debug importing ABFieldConnect errors (see commented out import above)
 //
 
@@ -183,7 +183,15 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 
 		var init = (valueRules) => {
 			valueRules = valueRules || this.valueRules;
-// _logic.setValues(valueRules);
+
+			// make sure our currently selected field is selected.
+			if (this.selectedFieldID) {
+				var select = $$(ids.selectConnectedField);
+				if (select){
+					select.setValue(this.selectedFieldID);
+				}
+			}
+	
 		}
 
 		var _logic =  this._logic =  {

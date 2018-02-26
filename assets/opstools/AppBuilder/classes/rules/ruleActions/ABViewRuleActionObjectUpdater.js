@@ -52,41 +52,6 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 	}
 
 
-	// conditionFields() {
-		
-	// 	var fieldTypes = ['string', 'number', 'date'];
-
-	// 	var currFields = [];
-
-	// 	if (this.updateObject) {
-	// 		this.updateObject.fields().forEach((f)=>{
-
-	// 			if (fieldTypes.indexOf(f.key) != -1) {
-
-	// 				// NOTE: the .id value must match the obj[.id]  in the data set
-	// 				// so if your object data looks like:
-	// 				// 	{
-	// 				//		name_first:'Neo',
-	// 				//		name_last: 'The One'
-	// 				//  },
-	// 				// then the ids should be:
-	// 				// { id:'name_first', value:'xxx', type:'string' }
-	// 				currFields.push({
-	// 					id: f.columnName,
-	// 					value: f.label,
-	// 					type: f.key
-	// 				});
-				
-					
-	// 			}
-	// 		})
-	// 	}
-
-	// 	return currFields;
-
-	// }
-
-
 	// valueDisplayComponent
 	// Return an ABView to display our values form.
 	// 
@@ -153,8 +118,6 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 				}, onDelete:()=>{
 					UpdateForm.removeView($$(row.ui.id));
 				}, data:data});
-
-// UpdateForm.adjust();
 
 				// store this row
 				this.formRows.push(row);
@@ -428,8 +391,6 @@ if (field.key == 'user') {
 				if (field.customDisplay)
 					field.customDisplay(field, this.App, $row.getChildViews()[3].$view);
 
-// $$($row).adjust();
-// $row.getFormView().adjust();
 			
 			},
 
@@ -522,7 +483,6 @@ if (field.key == 'user') {
 					icon: "plus",
 					type: "icon",
 					width: 30,
-					// hidden:true,
 					click: function () {
 
 						if (_logic.isValid()) {
@@ -669,12 +629,13 @@ var dc = options.form.dataCollection();
 
 		super.fromSettings(settings); // let the parent handle the QB
 
-// make sure UI is updated:
-// set our updateObject
-if (settings.updateObjectURL) {
-	var updateObject = this.currentForm.application.urlResolve(settings.updateObjectURL);
-	this.updateObject = updateObject;
-}
+
+		// make sure UI is updated:
+		// set our updateObject
+		if (settings.updateObjectURL) {
+			var updateObject = this.currentForm.application.urlResolve(settings.updateObjectURL);
+			this.updateObject = updateObject;
+		}
 
 
 		// if we have a display component, then populate it:
