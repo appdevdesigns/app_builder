@@ -106,8 +106,13 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 
 	valueDisplayList(idBase) {
 
+		var uniqueInstanceID = webix.uid();
+		var myUnique = (key) => {
+			// return idBase + '_' + key  + '_' + uniqueInstanceID;
+			return idBase + '_' + key  + '_' + uniqueInstanceID;
+		}
 		var ids = {
-			updateForm: idBase + '_updateForm',	
+			updateForm: myUnique('updateForm'),	
 		};
 
 		var _ui = {
@@ -161,7 +166,16 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 				if (!UpdateForm) return;
 
 				var children = UpdateForm.getChildViews();
-				children.forEach((c)=>{
+
+				// NOTE: need to clone this array, because it is connected with the UpdatForm's 
+				// internal array of items.  Once we start .removeView() the element actually 
+				// is removed from the internal array, which then upset's the .forEach() from 
+				// properly iterating through the structure.  It results in missed items from
+				// being sent to the .forEach().
+				// So Clone it and use that for .forEach()
+				var cloneChildren = [];
+				children.forEach((c)=>{ cloneChildren.push(c);})
+				cloneChildren.forEach((c)=>{
 					UpdateForm.removeView(c);
 				})
 
