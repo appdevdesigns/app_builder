@@ -216,7 +216,6 @@ width: 680,
 				{
 					id: this.ids.selectAction,
 					view: "richselect",
-					// for: "action",
 					label: this.labels.component.action,
 					labelWidth: this.App.config.labelWidthLarge,
 					options: this.actionDropList,
@@ -357,7 +356,6 @@ width: 680,
 		settings = settings || {};
 
 		if (settings.selectedAction) {
-
 
 
 			// store our Query Rules
