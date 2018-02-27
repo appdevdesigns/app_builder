@@ -317,6 +317,9 @@ export default class ABViewForm extends ABViewContainer {
 			// trigger a save()
 			this.propertyEditorSave(ids, currView);
 
+			// update badge number of rules
+			this.populateBadgeNumber(ids, currView);
+
 		};
 
 
@@ -338,6 +341,9 @@ export default class ABViewForm extends ABViewContainer {
 
 			// trigger a save()
 			this.propertyEditorSave(ids, currView);
+
+			// update badge number of rules
+			this.populateBadgeNumber(ids, currView);
 
 		};
 
