@@ -139,7 +139,7 @@ export default class ABViewRuleActionFormSubmitRuleWebsite extends ABViewRuleAct
 
 			// redirect to website
 			if (this.valueRules.website)
-				window.location.href = "http://" + this.valueRules.website.replace("http://", "");
+				window.open("http://" + this.valueRules.website.replace("http://", ""), '_blank');
 
 			resolve();
 
