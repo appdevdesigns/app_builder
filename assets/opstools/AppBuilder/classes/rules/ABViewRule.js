@@ -88,7 +88,9 @@ export default class ABViewRule {
 
 			// each instance must be unique
 			component: myUnique('component'),	
-			
+
+			actionSelector: myUnique('actionSelector'),
+
 			queryBuilder: myUnique('queryBuilder'),  
 
 			valueDisplay: myUnique('valueArea'),
@@ -213,6 +215,7 @@ width: 680,
 				{
 					view: "richselect",
 					// for: "action",
+					id: this.ids.actionSelector,
 					label: this.labels.component.action,
 					labelWidth: this.App.config.labelWidthLarge,
 					value: this.selectedAction,
@@ -359,6 +362,10 @@ width: 680,
 		settings = settings || {};
 
 		if (settings.selectedAction) {
+
+			// update UI selector
+			$$(this.ids.actionSelector).define('value', settings.selectedAction);
+			$$(this.ids.actionSelector).refresh();
 
 			// store our Query Rules
 			this.selectedAction = settings.selectedAction;
