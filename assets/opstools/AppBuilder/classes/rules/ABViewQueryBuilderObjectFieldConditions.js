@@ -91,6 +91,78 @@ export default class ABViewQueryBuilderObjectFieldConditions {
 				onSave: function (field) { console.warn('NO onSave()!') },
 			},
 
+
+			/**
+			 * cleanRules
+			 * walk through all the QueryBuilder (QB) rules and make conversions
+			 * of the data into their proper formats.
+			 * @param {obj} rules  the {rules} obj that is returned from the QB object
+			 * @param {array} fields  an array of field definitions from the QB object
+			 * @param {bool} dateToString  convert Dates to String format?
+			 */
+			cleanRules:(rules, fields, dateToString) => {
+
+				if (typeof dateToString == 'undefined') dateToString = true;
+
+				// walk the given condition rules / values, walk them and make sure 
+				// any given rules have properly formatted values.
+				function processCondition(rule) {
+
+					if (rule.glue) {
+						rule.rules.forEach((r)=>{
+							processCondition(r);
+						})
+					} else {
+
+						// converting a single rule:
+
+						var field = fields.filter((f)=>{ return f.id == rule.key; })[0];
+						if (field) {
+							switch(field.type) {
+								case "number" :
+
+									// when getting data from the server, the numbers are 
+									// sent back as strings ("100.25").
+									// make sure to convert strings to numbers:
+									if (typeof rule.value == 'string') {
+
+										if (rule.value.indexOf('.') == -1) {
+											rule.value = parseInt(rule.value);
+										} else {
+											rule.value = parseFloat(rule.value);
+										}
+									}
+									break;
+								case "date":
+
+
+									// in some cases we want to convert the Date() object returned
+									// by QueryBuilder into a string for saving on the Server.
+									if (dateToString) {
+										// if we have a Date() obj returned from QueryBuilder,
+										// convert to a string format:
+										if(rule.value instanceof Date) {
+											rule.value = webix.i18n.dateFormatStr(rule.value);
+										}
+									} else {
+
+										// in other cases we want to convert the string returned
+										// by the server into a Date() for the QB
+										if(typeof rule.value == 'string') {
+											rule.value = new Date(rule.value);
+										}
+									}
+
+									break;	
+							}
+						}
+					}
+
+				}
+				processCondition(rules);
+			},
+
+
 			getValue: () => {
 				var values = null;
 				var QB = $$(ids.queryBuilder);
@@ -104,31 +176,27 @@ export default class ABViewQueryBuilderObjectFieldConditions {
 				// and webix doesn't seem to understand them when we send them back.
 				// so save simple date values: "mm/dd/yyyy"
 				if (values) {
-					var rules = values[0];
-					if (rules) {
-						var fields = values[1];
-
-						rules.rules.forEach((r)=>{
-							var field = fields.filter((f)=>{ return f.id == r.key;})[0];
-							if (field) {
-								if (field.type == 'date') {
-									r.value = webix.i18n.dateFormatStr(r.value);
-								}
-							}
-						})
-					}
+					_logic.cleanRules(values[0], values[1], true);
 				}
+				
 
 
 				return values;
 			
 			},
 
+
 			setValue: (values) => {
 
 				values = values || [];
 				if (values.length == 0) { values.push({}); };	// push default rules
 				if (values.length < 2) { values.push(this.conditionFields())}
+
+
+				// convert dates from our server side "string" format into 
+				// Date() objects.
+				_logic.cleanRules(values[0], values[1], false);
+	
 
 				var QB = $$(ids.queryBuilder);
 				if (QB) {

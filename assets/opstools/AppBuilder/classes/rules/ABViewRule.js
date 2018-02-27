@@ -20,6 +20,7 @@
 // A Rule needs to save it's current state to an objects settings, and to 
 // initialize itself from those settings.
 //
+import ObjectQueryBuilder from "./ABViewQueryBuilderObjectFieldConditions"
 
 
 export default class ABViewRule {
@@ -50,7 +51,9 @@ export default class ABViewRule {
 
 		this.currentObject = null;				// What ABObject is this associated with
 												// NOTE: this is important for Actions.
-	
+		
+		this.objectQB = null;					// The QueryBuilder (QB) object 
+
 		this.currentForm = null;
 	}
 
@@ -97,7 +100,8 @@ export default class ABViewRule {
 
 		};
 
-
+		this.objectQB.label = this.labels.component.when;
+		this.objectQB.component(this.App, this.idBase);
 		this.ui = this._generateUI();
 
 
@@ -107,6 +111,8 @@ export default class ABViewRule {
 			for (var c in _logic.callbacks) {
 				_logic.callbacks[c] = options[c] || _logic.callbacks[c];
 			}
+
+			this.objectQB.init();
 
 			// make sure the current Action's value display is initialized:
 			var Action = this.currentAction();
@@ -132,14 +138,6 @@ export default class ABViewRule {
 			},
 
 
-			queryBuilderRules: () => {
-				var QB = $$(ids.queryBuilder);
-// console.log('QB:', QB.getValue() );
-// console.log('QB.sql():', QB.toSQL() );
-				return QB.getValue();
-			},
-
-
 			replaceValueDisplay:(component) => {
 
 				// remove current content area:
@@ -159,12 +157,10 @@ export default class ABViewRule {
 
 			selectAction:(newValue, oldVal) => {
 
-				var QB = $$(ids.queryBuilder);
-
 				// bonus:  save current state of previous Action
 				var prevAction = this.getAction(oldVal);
 				if (prevAction) {
-					prevAction.stashCondition(QB.getValue());
+					prevAction.stashCondition(this.objectQB.getValue());
 				}
 
 				// now switch to the new Action
@@ -173,7 +169,7 @@ export default class ABViewRule {
 				if (currAction) {
 
 					// reset Condition filters.
-					QB.setValue(currAction.condition());
+					this.objectQB.setValue(currAction.condition());
 
 					// have Action display it's values form
 					currAction.component(this.App, this.idBase);
@@ -192,6 +188,8 @@ export default class ABViewRule {
 
 	// not intended to be called externally
 	_generateUI () {
+
+
 
 
 		return {
@@ -228,22 +226,12 @@ width: 680,
 						}
 					}
 				},
+
+
 				// When
-				{
-					cols: [
-						{
-							view: 'label',
-							css: 'ab-text-bold',
-							label: this.labels.component.when,
-							width: this.App.config.labelWidthLarge
-						},
-						{
-						    view: "querybuilder",
-						    id: this.ids.queryBuilder,
-						    fields: this.conditionFields()
-						}
-					]
-				},
+				this.objectQB.ui,
+
+
 				// Values
 				{
 					for: "values",
@@ -304,6 +292,13 @@ width: 680,
 			a.objectLoad(object);
 		})
 
+		var label = "*When";
+		if (this.labels) label = this.labels.component.when;
+
+		this.objectQB = new ObjectQueryBuilder(label);
+		this.objectQB.objectLoad(object);
+		
+
 		// regenerate our UI when a new object is loaded.
 		if (this.ids) {
 			this.ui = this._generateUI();
@@ -363,6 +358,8 @@ width: 680,
 
 		if (settings.selectedAction) {
 
+
+
 			// store our Query Rules
 			this.selectedAction = settings.selectedAction;
 			var selectedAction = this.currentAction();
@@ -388,7 +385,7 @@ width: 680,
 
 		if (this.selectedAction) {
 			settings.selectedAction = this.selectedAction;
-			settings.queryRules = this._logic.queryBuilderRules();
+			settings.queryRules = this.objectQB.getValue();
 			settings.actionSettings = this.currentAction().toSettings();
 		}
 		
