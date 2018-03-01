@@ -248,9 +248,11 @@ class ABFieldTree extends ABField {
        var obj = super.toObj();
        
        // Un-translate options list
-       obj.settings.options.forEach(function (opt) {
-           OP.Multilingual.unTranslate(opt, opt, ["text"]);
-       });
+       if (obj.settings.options && obj.settings.options.length > 0) {
+          obj.settings.options.forEach(function (opt) {
+            OP.Multilingual.unTranslate(opt, opt, ["text"]);
+          });
+      }
        
        return obj;
 
@@ -674,6 +676,9 @@ class ABFieldTree extends ABField {
   }
 
   setValue(item, rowData) {
+
+    if (!item) return false;
+
     var val = rowData[this.columnName] || [];
     
     item.setValues(val);
