@@ -119,15 +119,29 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 		var editForms = [
 			{id:L('ab.component.connect.no', '*No add new option'), value:L('ab.component.connect.no', '*No add new option')}
 		];
-		editForms = view.loopPages(view, view.application._pages, editForms, "form");
-		view.application._pages.forEach((o)=>{
-			o._views.forEach((j)=>{
-				if (j.key == "form" && j.settings.object == view.settings.dataSource) {
-					// editForms.push({id:j.parent.id+"|"+j.id, value:j.label});
-					editForms.push({id:j.parent.id, value:j.label});				
+		// editForms = view.loopPages(view, view.application._pages, editForms, "form");
+		// view.application._pages.forEach((o)=>{
+		// 	o._views.forEach((j)=>{
+		// 		if (j.key == "form" && j.settings.object == view.settings.dataSource) {
+		// 			// editForms.push({id:j.parent.id+"|"+j.id, value:j.label});
+		// 			editForms.push({id:j.parent.id, value:j.label});				
+		// 		}
+		// 	});
+		// });
+
+		var pagesHasForm = view.pageRoot()
+			.pages(p => {
+				return p.views(v => v.key == "form" && v.dataCollection().datasource.id == view.field().settings.linkObject).length;
+			}, true)
+			.map(p => {
+				return {
+					id: p.id,
+					value: p.label
 				}
 			});
-		});
+
+		editForms = editForms.concat(pagesHasForm);
+
 		$$(ids.formView).define("options", editForms);
 		$$(ids.formView).refresh();
 
