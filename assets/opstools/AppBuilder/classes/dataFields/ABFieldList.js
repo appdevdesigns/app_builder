@@ -167,6 +167,7 @@ var ABFieldListComponent = new ABFieldComponent({
 			{
 				view: "checkbox",
 				name: "isMultiple",
+				disallowEdit: true,
 				id: ids.isMultiple,
 				labelRight: L('ab.dataField.list.isMultiple', 'Multiselect'),
 				labelWidth: 0,
