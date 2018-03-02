@@ -420,12 +420,13 @@ class ABFieldFile extends ABField {
 						webixContainer.hideProgress();
 						// this.showFile(idBase, response.data.uuid);
 						
+						var values = {};
+						values[this.columnName] = {}
+						values[this.columnName].uuid = response.data.uuid;
+						values[this.columnName].filename = item.name;
+
 						// update just this value on our current object.model
 						if (row.id) {
-							var values = {};
-							values[this.columnName] = {}
-							values[this.columnName].uuid = response.data.uuid;
-							values[this.columnName].filename = item.name;
 							this.object.model().update(row.id, values)
 							.then(()=>{
 								// update the client side data object as well so other data changes won't cause this save to be reverted
@@ -440,6 +441,10 @@ class ABFieldFile extends ABField {
 								OP.Error.log('Error updating our entry.', { error:err, row:row, values:values });
 								console.error(err);
 							})
+						}
+						// update value in the form component
+						else {
+							this.setValue($$(node), values);
 						}
 
 					},
@@ -494,20 +499,28 @@ class ABFieldFile extends ABField {
 						// update just this value on our current object.model
 						var values = {};
 						values[this.columnName] = "";
-						this.object.model().update(row.id, values)
-						.then(()=>{
-							// update the client side data object as well so other data changes won't cause this save to be reverted
-							if ($$(node) && $$(node).updateItem)
-								$$(node).updateItem(row.id, values);
-						})
-						.catch((err)=>{
 
-							node.classList.add('webix_invalid');
-							node.classList.add('webix_invalid_cell');
-						
-							OP.Error.log('Error updating our entry.', {error:err, row:row, values:values });
-							console.error(err);
-						})
+						if (row.id) {
+							this.object.model().update(row.id, values)
+							.then(()=>{
+								// update the client side data object as well so other data changes won't cause this save to be reverted
+								if ($$(node) && $$(node).updateItem)
+									$$(node).updateItem(row.id, values);
+							})
+							.catch((err)=>{
+
+								node.classList.add('webix_invalid');
+								node.classList.add('webix_invalid_cell');
+							
+								OP.Error.log('Error updating our entry.', {error:err, row:row, values:values });
+								console.error(err);
+							})
+						}
+						// update value in the form component
+						else {
+							this.setValue($$(node), values);
+						}
+
 					}
 				}
 			})
@@ -603,9 +616,11 @@ class ABFieldFile extends ABField {
 	getValue(item, rowData) {
 
 		var file = item.$view.querySelector('.file-data-field-name');
+		var fileLink = file.querySelector('a');
+
 		return {
 			uuid: file.getAttribute('file-uuid'),
-			filename: file.innerHTML
+			filename: fileLink.innerHTML
 		};
 	}
 	
@@ -623,14 +638,12 @@ class ABFieldFile extends ABField {
 			file.style.display = rowData[this.columnName] ? 'block' : 'none';
 			fileDeleteIcon.style.display = rowData[this.columnName] ? 'block' : 'none';
 
-			if (rowData[this.columnName]) {
-				file.setAttribute('file-uuid', rowData[this.columnName].uuid );
-
-				var fileLink = file.querySelector('a');
-				var fileURL =  '/opsportal/file/' + this.object.application.name + '/' + rowData[this.columnName].uuid;
-				fileLink.href = fileURL;
-				fileLink.innerHTML = rowData[this.columnName].filename;
-			}
+			file.setAttribute('file-uuid', rowData[this.columnName] ? rowData[this.columnName].uuid : "");
+			
+			var fileLink = file.querySelector('a');
+			var fileURL =  '/opsportal/file/' + this.object.application.name + '/' + (rowData[this.columnName] ? rowData[this.columnName].uuid : "");
+			fileLink.href = fileURL;
+			fileLink.innerHTML = (rowData[this.columnName] ? rowData[this.columnName].filename : "");
 		}
 	}
 	
