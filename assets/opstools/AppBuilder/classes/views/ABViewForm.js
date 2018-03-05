@@ -1125,6 +1125,7 @@ export default class ABViewForm extends ABViewContainer {
 					if (dc) {
 						var currCursor = dc.getCursor();
 						if (currCursor == null) {
+							dc.setCursor(null);
 							formView.clear();
 						}
 					}
