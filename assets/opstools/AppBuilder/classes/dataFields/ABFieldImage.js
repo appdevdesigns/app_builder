@@ -320,10 +320,19 @@ OP.Dialog.Alert({
 	/// Working with Actual Object Values:
 	///
 
-	idCustomContainer(obj) {
-		return "#columnName#-#id#-image"
-			.replace('#id#', obj.id)
-			.replace('#columnName#', this.columnName.replace(/ /g, '_'));
+	idCustomContainer(obj, formId) {
+		// if formId is passed the field is in a form view not a grid and
+		// we won't have the obj and each time this 
+		// field is in a form it will conflict with the last one rendered
+		if (formId) {
+			return "#columnName#-#id#-image"
+				.replace('#id#', formId)
+				.replace('#columnName#', this.columnName.replace(/ /g, '_'));
+		} else {
+			return "#columnName#-#id#-image"
+				.replace('#id#', obj.id)
+				.replace('#columnName#', this.columnName.replace(/ /g, '_'));
+		}
 	}
 
 
@@ -379,13 +388,15 @@ OP.Dialog.Alert({
 	 * @param {App} App the shared ui App object useful more making globally
 	 *					unique id references.
 	 * @param {HtmlDOM} node  the HTML Dom object for this field's display.
+	 * @param {Bool} editable  where or not this field is currently editable
+	 * @param {string} formId  the id of the presenting form if any
 	 */
-	customDisplay(row, App, node, editable) {
+	customDisplay(row, App, node, editable, formId) {
 		// sanity check.
 		if (!node) { return }
 
 
-		var idBase = App.unique(this.idCustomContainer(row));
+		var idBase = App.unique(this.idCustomContainer(row, formId));
 		var ids = {
 			container:idBase+'-container',
 			uploader: idBase+'-uploader',
@@ -398,6 +409,10 @@ OP.Dialog.Alert({
 		// webix seems to crash if you specify a .container that doesn't exists:
 		// Note: when the template is first created, we don't have App.unique() 
 		var parentContainer = node.querySelector('#'+this.idCustomContainer(row)); // $$(this.idCustomContainer(obj));
+		// When we are not in a grid the custom field has already assigned a unique value as the ID
+		if (parentContainer == null) {
+			var parentContainer = node.querySelector('#'+idBase); 
+		}
 		if(parentContainer) {
 
 			parentContainer.innerHTML = '';
@@ -480,7 +495,7 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 			    	onFileUpload:(item, response)=>{
 						
 						webixContainer.hideProgress();
-						this.showImage(idBase, response.data.uuid);
+						this.showImage(idBase, response.data.uuid, node);
 
 // TODO: delete previous image from our OPsPortal service?
 						
@@ -544,7 +559,7 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 	*					unique id references.
 	* @param {HtmlDOM} node  the HTML Dom object for this field's display.
 	*/
-	customEdit(row, App, node) {
+	customEdit(row, App, node, formId) {
 
 		
 		if (this.deleteImage == true) {
@@ -579,10 +594,19 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 			})
 			
 		} else {
-			var idBase = App.unique(this.idCustomContainer(row)),
-				idUploader = idBase + '-uploader';
+			// if the field is in a form we need to select the proper uploader so we don't use one set up for a grid already
+			if (formId && formId.length) {
+				var idBase = App.unique(this.idCustomContainer({}, formId)),
+					idUploader = idBase + '-uploader';
 
-			$$(idUploader).fileDialog({ rowid: row.id });
+				$$(idUploader).fileDialog({});
+			} else {
+				var idBase = App.unique(this.idCustomContainer(row)),
+					idUploader = idBase + '-uploader';
+
+				$$(idUploader).fileDialog({ rowid: row.id });
+			}
+			
 		}
 
 		return false;
@@ -655,8 +679,8 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 	}
 
 
-	showImage(id, uuid) {
-		var parentContainer = document.getElementById(id); // $$(this.idCustomContainer(obj));
+	showImage(id, uuid, node) {
+		var parentContainer = node.querySelector("#"+id); // $$(this.idCustomContainer(obj));
 		if(parentContainer) {
 
 			parentContainer.querySelector('.image-data-field-icon').style.display = 'none';
