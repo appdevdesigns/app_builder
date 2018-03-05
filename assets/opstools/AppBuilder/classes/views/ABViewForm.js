@@ -683,11 +683,15 @@ export default class ABViewForm extends ABViewContainer {
 	 */
 	component(App) {
 
-		var idBase = 'ABViewForm_' + this.id,
-			ids = {
-				component: App.unique(idBase + '_component'),
-				layout: App.unique(idBase + '_form_layout'),
-			};
+		var idBase = 'ABViewForm_' + this.id;
+		this.uniqueInstanceID = webix.uid();
+		var myUnique = (key) => {
+			return App.unique(idBase + '_' + key  + '_' + this.uniqueInstanceID);
+		}
+		var ids = {
+			component: myUnique('_component'),	
+			layout: myUnique('_form_layout'),	
+		};
 
 		var component = super.component(App);
 
@@ -764,7 +768,8 @@ export default class ABViewForm extends ABViewContainer {
 			
 			callbacks:{
 			
-				onSaveData:function(saveData){}
+				onSaveData:function(saveData){},
+				clearOnLoad:function(){ return false }
 			
 			},			
 
@@ -899,7 +904,7 @@ export default class ABViewForm extends ABViewContainer {
 					dc.bind(Form);
 
 				// clear current cursor on load
-				if (this.settings.clearOnLoad) {
+				if (this.settings.clearOnLoad || _logic.callbacks.clearOnLoad() ) {
 					dc.setCursor(null);
 				}
 
