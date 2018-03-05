@@ -136,8 +136,9 @@ export default class ABViewFormDatepicker extends ABViewFormField {
 
 		var component = super.component(App);
 		var field = this.field();
+		var form = this.formComponent();
 
-		var idBase = 'ABViewFormDatepicker_' + this.id;
+		var idBase = 'ABViewFormDatepicker_' + this.id + "_f_" + form.uniqueInstanceID;
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		}
