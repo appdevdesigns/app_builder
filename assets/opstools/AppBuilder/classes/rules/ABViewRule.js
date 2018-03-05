@@ -363,10 +363,6 @@ width: 680,
 
 		if (settings.selectedAction) {
 
-			// update UI selector
-			$$(this.ids.actionSelector).define('value', settings.selectedAction);
-			$$(this.ids.actionSelector).refresh();
-
 			// store our Query Rules
 			this.selectedAction = settings.selectedAction;
 			var selectedAction = this.currentAction();
