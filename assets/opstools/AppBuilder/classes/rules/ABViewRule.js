@@ -354,7 +354,6 @@ width: 680,
 
 		if (settings.selectedAction) {
 
-
 			// store our Query Rules
 			this.selectedAction = settings.selectedAction;
 			var selectedAction = this.currentAction();

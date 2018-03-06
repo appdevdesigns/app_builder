@@ -241,8 +241,9 @@ export default class ABViewFormButton extends ABView {
 	 * @return {obj} UI component
 	 */
 	component(App) {
+		var form = this.formComponent();
 
-		var idBase = 'ABViewFormButton_' + this.id;
+		var idBase = 'ABViewFormButton_' + this.id + "_f_" + form.uniqueInstanceID;
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		}

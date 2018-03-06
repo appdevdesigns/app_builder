@@ -119,15 +119,29 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 		var editForms = [
 			{id:L('ab.component.connect.no', '*No add new option'), value:L('ab.component.connect.no', '*No add new option')}
 		];
-		editForms = view.loopPages(view, view.application._pages, editForms, "form");
-		view.application._pages.forEach((o)=>{
-			o._views.forEach((j)=>{
-				if (j.key == "form" && j.settings.object == view.settings.dataSource) {
-					// editForms.push({id:j.parent.id+"|"+j.id, value:j.label});
-					editForms.push({id:j.parent.id, value:j.label});				
+		// editForms = view.loopPages(view, view.application._pages, editForms, "form");
+		// view.application._pages.forEach((o)=>{
+		// 	o._views.forEach((j)=>{
+		// 		if (j.key == "form" && j.settings.object == view.settings.dataSource) {
+		// 			// editForms.push({id:j.parent.id+"|"+j.id, value:j.label});
+		// 			editForms.push({id:j.parent.id, value:j.label});				
+		// 		}
+		// 	});
+		// });
+
+		var pagesHasForm = view.pageRoot()
+			.pages(p => {
+				return p.views(v => v.key == "form" && v.dataCollection().datasource.id == view.field().settings.linkObject).length;
+			}, true)
+			.map(p => {
+				return {
+					id: p.id,
+					value: p.label
 				}
 			});
-		});
+
+		editForms = editForms.concat(pagesHasForm);
+
 		$$(ids.formView).define("options", editForms);
 		$$(ids.formView).refresh();
 
@@ -159,7 +173,7 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 		// this field may be deleted
 		if (!field) return component;
 
-		var idBase = 'ABViewFormCustom_' + this.id;
+		var idBase = 'ABViewFormConnect_' + this.id + "_f_" + form.uniqueInstanceID;
 		var ids = {
 			component: App.unique(idBase + '_component'),
 			popup: App.unique(idBase + '_popup_add_new')
@@ -214,7 +228,8 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 						}
 					},
 					"ab-connect-add-new-link": function (e, id, trg) {
-						component.logic.openFormPopup();
+						var topParentView = this.getTopParentView();
+						component.logic.openFormPopup(topParentView.config.left, topParentView.config.top);
 						e.stopPropagation();
 						return false;
 					}
@@ -313,14 +328,18 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 					// set the value of selectivity to the matching item that was just created
 					field.setValue(elem, values);
 					// close the popup when we are finished
-					$$(ids.popup).hide();
+					$$(ids.popup).close();
 				});
 
 			},
 			
 			callbackCancel: () => {
-				$$(ids.popup).hide();
+				$$(ids.popup).close();
 				return false;
+			},
+			
+			callbackClearOnLoad: () => {
+				return true;
 			},
 
 			getValue: (rowData) => {
@@ -331,20 +350,33 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 
 			},
 			
-			openFormPopup: () => {
+			openFormPopup: (x, y) => {
+				if ($$(ids.popup)) {
+					$$(ids.popup).show();
+					return;
+				}
+				
 				var pageId = this.settings.formView;
 				var page = this.application.pages(function (p) {
 					return p.id == pageId;
 				}, true)[0];
 				
-				var popUpComp = page.component(App);
+				
+				// Clone page so we modify without causing problems
+				var pageClone = _.cloneDeep(page);
+				var instance = webix.uid();
+				pageClone.id = pageClone.id + "-" + instance; // lets take the stored id can create a new dynamic one so our views don't duplicate
+				var popUpComp = pageClone.component(App);
 				var ui = popUpComp.ui;
 				
 				var popupTemplate = {
 					view: "window",
 					id: ids.popup,
 					modal: true,
-					position: "center",
+					position:function(state){
+						state.left = x + 20; // offset the popups
+						state.top = y + 20;
+					},
 					resize: true,
 					width: 700,
 					height: 450,
@@ -358,7 +390,7 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 								click: function () {
 
 									var popup = this.getTopParentView();
-									popup.hide();
+									popup.close();
 
 								}
 							}
@@ -379,7 +411,8 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 					
 					popUpComp.init({
 						onSaveData:component.logic.callbackSaveData,
-						onCancelClick:component.logic.callbackCancel
+						onCancelClick:component.logic.callbackCancel,
+						clearOnLoad:component.logic.callbackClearOnLoad
 					});
 				
 				}, 50);

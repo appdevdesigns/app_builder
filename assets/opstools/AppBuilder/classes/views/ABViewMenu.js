@@ -16,7 +16,15 @@ function L(key, altText) {
 var ABViewMenuPropertyComponentDefaults = {
 	orientation: 'x',
 	buttonStyle: 'ab-menu-default',
-	pages: [] // [pageId, ..., pageIdn]
+	// [
+	// 		{
+	//			pageId: uuid,
+	//			isChecked: bool,
+	//			aliasname: string,
+	//			translations: []
+	//		}
+	// ]
+	pages: []
 }
 
 
@@ -63,7 +71,35 @@ export default class ABViewMenu extends ABViewWidget {
 		return ABMenuDefaults;
 	}
 
+	/**
+	 * @method fromValues()
+	 *
+	 * initialze this object with the given set of values.
+	 * @param {obj} values
+	 */
+	fromValues (values) {
 
+		super.fromValues(values);
+		
+		this.settings.pages = this.settings.pages || ABViewMenuPropertyComponentDefaults.pages;
+
+		for (var i = 0; i < this.settings.pages.length; i++) {
+
+			var page = this.settings.pages[i];
+			if (page instanceof Object) {
+				page.isChecked = JSON.parse(page.isChecked || false);
+			}
+			// Compatible with old data
+			else if (typeof page == 'string') {
+				this.settings.pages[i] = {
+					pageId: page,
+					isChecked: true
+				};
+			}
+
+		}
+
+	}
 
 	///
 	/// Instance Methods
@@ -184,9 +220,13 @@ export default class ABViewMenu extends ABViewWidget {
 					rows: [
 						{
 							name: "pages",
-							view: 'tree',
+							view: 'edittree',
 							borderless: true,
 							css: "transparent",
+							editor: "inline-text",
+							editable: true,
+							editValue: "aliasname",
+							editor: "text",
 							template: function (item, common) {
 								return ("<div class='ab-page-list-item'>" +
 									"{common.icon()} " +
@@ -202,11 +242,19 @@ export default class ABViewMenu extends ABViewWidget {
 									.replace('{common.icon()}', common.icon(item))
 									.replace('{common.checkbox()}', common.checkbox(item, false))
 									.replace('{common.folder()}', common.folder(item))
-									.replace('#label#', item.label);
+									.replace('#label#', item.aliasname ? item.aliasname : item.label);
 							},
 							on: {
 								onItemCheck: function () {
 									// trigger to save settings
+									_logic.onChange();
+								},
+								onBeforeEditStop: function(state, editor) {
+									var item = this.getItem(editor.id);
+									if(item) {
+										item.aliasname = state.value;
+										this.updateItem(item);
+									}
 									_logic.onChange();
 								}
 							}
@@ -232,13 +280,20 @@ export default class ABViewMenu extends ABViewWidget {
 		var parentPage = currentPage.pageParent();
 		
 		var addPage = function (page, index, parentId) {
+			if(view.settings.pages) {
+				view.settings.pages.forEach((localpage)=> {
+					if(localpage.pageId == page.id) {
+						page.aliasname = localpage.aliasname;
+					}
+				});
+			}
 			pageTree.add(page, index, parentId);
 
 			page.pages().forEach((childPage, childIndex)=>{
 				addPage(childPage, childIndex, page.id);
 			});
 		}
-		
+
 		application.pages().forEach((p, index)=>{
  			if ( (parentPage && p == parentPage) || p == currentPage ) {
  				addPage(p, index);				
@@ -254,10 +309,11 @@ export default class ABViewMenu extends ABViewWidget {
 
 		// Select pages
 		if (view.settings.pages && view.settings.pages.forEach) {
-			view.settings.pages.forEach((pageId) => {
+			view.settings.pages.forEach((page) => {
 
-				if ($$(ids.pages).exists(pageId))
-					$$(ids.pages).checkItem(pageId);
+				if(page.isChecked) {
+					$$(ids.pages).checkItem(page.pageId);
+				}
 
 			});
 		}
@@ -272,7 +328,21 @@ export default class ABViewMenu extends ABViewWidget {
 
 		view.settings.orientation = $$(ids.orientation).getValue();
 		view.settings.buttonStyle = $$(ids.buttonStyle).getValue();
-		view.settings.pages = $$(ids.pages).getChecked() || [];
+
+		var pagesIdList = []
+		var temp = $$(ids.pages).data.count();
+		if ($$(ids.pages)) {
+			for (var i=0; i < $$(ids.pages).data.count(); i++) {
+				var currentPageId = $$(ids.pages).getIdByIndex(i);
+				var currentItem = $$(ids.pages).getItem(currentPageId);
+				pagesIdList.push({ pageId: currentPageId,
+								   isChecked: currentItem.checked,
+								   aliasname: currentItem.aliasname,
+								   translations: []
+								 });
+			}
+		}
+		view.settings.pages = pagesIdList;
 
 	}
 
@@ -353,24 +423,26 @@ export default class ABViewMenu extends ABViewWidget {
 		}
 	}
 
-	AddPagesToView(parent, menu, pageIds, insertPages) {
+	AddPagesToView(parent, menu, pages, insertPages) {
 
-		if (!parent || !parent.pages || !menu || !pageIds) return;
+		if (!parent || !parent.pages || !menu || !pages) return;
 
-		var pages = parent.pages() || [];
+		var parentPages = parent.pages() || [];
 
 		var insertPages = insertPages;
 
-		pages.forEach((page) => {
+		parentPages.forEach((parentPage) => {
 
-			if (pageIds.indexOf(page.id) > -1) {
-				insertPages[page.id] = {
-					id: page.id,
-					value: page.label
-				};
-			}
+			pages.forEach((localPage) => {
+				if(localPage.pageId == parentPage.id && localPage.isChecked) {
+					insertPages[parentPage.id] = {
+						id: parentPage.id,
+						value: localPage.aliasname ? localPage.aliasname : parentPage.label
+					};
+				}
+			});
 
-			this.AddPagesToView(page, menu, pageIds, insertPages);
+			this.AddPagesToView(parentPage, menu, pages, insertPages);
 
 		});
 
@@ -381,10 +453,9 @@ export default class ABViewMenu extends ABViewWidget {
 	AddOrderedPagesToView(parent, menu, pageIds, orderMenu) {
 		var orderMenu = orderMenu;
 		pageIds.forEach((page) => {
-			if (orderMenu[page])
-				menu.add(orderMenu[page]);
+			if (orderMenu[page.pageId])
+				menu.add(orderMenu[page.pageId]);
 		});
 	}
-
 
 };

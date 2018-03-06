@@ -452,21 +452,21 @@ export default class ABApplication extends ABApplicationBase {
 
 		var result = [];
 
+		if (!this._pages || this._pages.length < 1)
+			return result;
+
 		// find into sub-pages recursively
 		if (filter && deep) {
 
-			if (this._pages && this._pages.length > 0) {
+			result = this._pages.filter(filter);
 
-				result = this._pages.filter(filter);
-
-				if (result.length < 1) {
-					this._pages.forEach((p) => {
-						var subPages = p.pages(filter, deep);
-						if (subPages && subPages.length > 0) {
-							result = subPages;
-						}
-					});
-				}
+			if (result.length < 1) {
+				this._pages.forEach((p) => {
+					var subPages = p.pages(filter, deep);
+					if (subPages && subPages.length > 0) {
+						result = subPages;
+					}
+				});
 			}
 
 		}

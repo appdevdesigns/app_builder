@@ -123,7 +123,7 @@ export default class ABViewFormCustom extends ABViewFormField {
 		// this field may be deleted
 		if (!field) return component;
 
-		var idBase = 'ABViewFormCustom_' + this.id;
+		var idBase = 'ABViewFormCustom_' + this.id + "_f_" + form.uniqueInstanceID;
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		}
@@ -161,7 +161,7 @@ export default class ABViewFormCustom extends ABViewFormField {
 			// labelPosition: settings.labelPosition, // webix.forminput does not have .labelPosition T T
 			// labelWidth: settings.labelWidth,
 		    body:{
-				id: ids.component,
+				// id: ids.component,
 				view: App.custom.focusabletemplate.view,
 				css:  "customFieldCls", 
 				borderless: true,
@@ -175,7 +175,7 @@ export default class ABViewFormCustom extends ABViewFormField {
 
 						if ($$(ids.component)) {
 							var node = $$(ids.component).$view;
-							field.customEdit(rowData, App, node);
+							field.customEdit(rowData, App, node, ids.component);
 						}
 					}
 				}
@@ -216,7 +216,7 @@ export default class ABViewFormCustom extends ABViewFormField {
 				node = elem.$view,
 				editable = true;
 
-			field.customDisplay(rowData, App, node, editable);
+			field.customDisplay(rowData, App, node, editable, ids.component);
 
 		};
 
