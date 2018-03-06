@@ -586,7 +586,7 @@ module.exports = {
                                                 {
                                                     key: "id",
                                                     rule: "equals",
-                                                    vlue: newObj.id
+                                                    value: newObj.id
                                                 }
                                             ]
                                         },
