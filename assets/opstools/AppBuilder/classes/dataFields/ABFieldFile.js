@@ -290,10 +290,15 @@ class ABFieldFile extends ABField {
 		config.template = (obj) => {
 
 			var fileDiv = [
-				'<div id="#id#" class="ab-file-data-field">',
+				'<div id="#id#" class="ab-file-data-field" style="float: left;">',
+				'<div class="webix_view ab-file-holder">',
+				'<div class="webix_template">',
 				this.fileTemplate(obj),
+				'</div>',
+				'</div>',
 				'</div>'
 			].join('');
+
 
 			return fileDiv
 				.replace('#id#', this.idCustomContainer(obj) )
@@ -357,8 +362,8 @@ class ABFieldFile extends ABField {
 				template:this.fileTemplate(row),
 
 				borderless:true,
-				width: 200,
-				height: 32
+				width: 160,
+				height: 60
 			});
 			webix.extend(webixContainer, webix.ProgressBar);
 
@@ -366,56 +371,64 @@ class ABFieldFile extends ABField {
 // 			//// Prepare the Uploader
 // 			////
 
+			if (!editable) {
+				var domNode = parentContainer.querySelector(".delete-image");
+				if (domNode)
+					domNode.style.display = "none";
+	
+				return;
+			}
+
 // 			// The Server Side action key format for this Application:
 			var actionKey = 'opstool.AB_'+this.object.application.name.replace('_','')+'.view';
 			var url = '/'+[ 'opsportal', 'file', this.object.application.name, actionKey, '1'].join('/');
 
 			var uploader = webix.ui({ 
-			    view:"uploader",  
-			    id:ids.uploader, 
-			    apiOnly: true, 
-			    upload:url,
-			    inputName:'file',
-			    multiple: false,
-			    on: {
+				view:"uploader",  
+				id:ids.uploader, 
+				apiOnly: true, 
+				upload:url,
+				inputName:'file',
+				multiple: false,
+				on: {
 
-			    	// when a file is added to the uploader
-			    	onBeforeFileAdd:function(item){
+					// when a file is added to the uploader
+					onBeforeFileAdd:function(item){
 
 						node.classList.remove('webix_invalid');
 						node.classList.remove('webix_invalid_cell');
 						
-			    		// verify file type
-	    				var acceptableTypes = typesList;
-	    				if (acceptableTypes && acceptableTypes != '') {
-						    var type = item.type.toLowerCase();
-						    if (acceptableTypes.indexOf(type) == -1){
+						// verify file type
+						var acceptableTypes = typesList;
+						if (acceptableTypes && acceptableTypes != '') {
+							var type = item.type.toLowerCase();
+							if (acceptableTypes.indexOf(type) == -1){
 								webix.message("Only ["+acceptableTypes.join(", ")+"] file are supported");
-						        return false;
-						    }
-	    				};
+								return false;
+							}
+						};
 
-	    				//verify file size
-	    				//Convert to MegaBytes
-	    				if (maximumSize > 0) {
-		    				var acceptableSizes = maximumSize * 1000000;
-		    				if (item.size > acceptableSizes) {
+						//verify file size
+						//Convert to MegaBytes
+						if (maximumSize > 0) {
+							var acceptableSizes = maximumSize * 1000000;
+							if (item.size > acceptableSizes) {
 								webix.message("Maximum file size is " + maximumSize + "MB");
 								return false;
-		    				};
+							};
 
-	    				};
+						};
 
 
 						// start progress indicator
 						webixContainer.showProgress({
-						   type:"icon",
-						   delay:2000
+						type:"icon",
+						delay:2000
 						});
 					},
 
-			    	// when upload is complete:
-			    	onFileUpload:(item, response)=>{
+					// when upload is complete:
+					onFileUpload:(item, response)=>{
 						
 						webixContainer.hideProgress();
 						// this.showFile(idBase, response.data.uuid);
@@ -454,15 +467,9 @@ class ABFieldFile extends ABField {
 						OP.Error.log('Error loading file', response);
 						webixContainer.hideProgress();
 					}
-			    }
+				}
 			});
 			uploader.addDropZone(webixContainer.$view);
-
-			if (editable == false) {
-				var domNode = parentContainer.querySelector(".delete-image");
-				if (domNode)
-					domNode.style.display = "none";
-			}
 
 			// open file upload dialog when's click
 			parentContainer.addEventListener("click", (e) => {
@@ -471,7 +478,7 @@ class ABFieldFile extends ABField {
 				}
 			});
 
-		}	
+		}
 	}
 
 
@@ -600,7 +607,7 @@ class ABFieldFile extends ABField {
 		}
 
 		return [
-			'<div class="file-data-field-icon" style="text-align: center; height: 100%; position: relative; ' + iconDisplay + '"><i class="fa fa-file fa-2x" style="opacity: 0.6; position: absolute; top: 50%; margin-top: -15px; right: 50%; margin-right: -10px;"></i></div>',
+			'<div class="file-data-field-icon" style="text-align: center; height: inherit; display: table-cell; vertical-align: middle; border: 2px dotted #CCC; border-radius: 10px; font-size: 11px; line-height: 13px; padding: 0 10px; '+iconDisplay+'"><i class="fa fa-file fa-2x" style="opacity: 0.6; font-size: 32px; margin-top: 3px; margin-bottom: 5px;"></i><br/>Drag and drop or click here</div>',
 			'<div class="file-data-field-name" style="' + fileDisplay + ' width:100%; height:100%; position:relative; "><a target="_blank" href="' + fileURL +'">' + name + '</a>',
 			'<a style="' + fileDisplay + '" class="ab-delete-photo" href="javascript:void(0);"><i class="fa fa-times delete-image"></i></a></div>'
 		].join('');
