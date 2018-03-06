@@ -999,10 +999,10 @@ div.webix_item_tab {
 .customField .connect-data-values, .customField .list-data-values {
 	display: inline-block;
 }*/
-.ab-image-holder {
+.ab-image-holder, .ab-file-holder {
 	overflow: visible;
 }
-.ab-image-holder .webix_template {
+.ab-image-holder, .ab-file-holder > .webix_template {
 	position: relative;
 	height: inherit;
 }
