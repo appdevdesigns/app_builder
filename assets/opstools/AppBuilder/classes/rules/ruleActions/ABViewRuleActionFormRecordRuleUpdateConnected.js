@@ -295,13 +295,13 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 				// }
 				var settings = {fieldOperations:[]};
 
-// // for each of our formRows, decode the propery {} 
-// this.formRows.forEach((fr) => {
-// 	var rowSettings = fr.toSettings();
-// 	if (rowSettings) {
-// 		settings.fieldOperations.push(fr.toSettings());
-// 	}
-// })
+				// for each of our formRows, decode the propery {} 
+				this.formRows.forEach((fr) => {
+					var rowSettings = fr.toSettings();
+					if (rowSettings) {
+						settings.fieldOperations.push(rowSettings);
+					}
+				})
 
 				return settings;
 			}
@@ -680,6 +680,12 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 		settings.selectedFieldID = this.selectedFieldID;
 		settings.qbCondition = this.objectQB ? this.objectQB.getValue()[0] : null;
 
+
+		// if we have a display component, then request our details from it:
+		if (this._uiChooser) {
+			settings.valueRules = this._logic.toSettings();
+		}
+
 		return settings;
 	}
 
@@ -692,7 +698,7 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 // on the popup.
 // When they've fixed the bug, we'll remove this workaround:
 qbFixAfterShow() {
-	
+
 	if (this.objectQB) {
 		this.objectQB.setValue(this.qbCondition);
 	}

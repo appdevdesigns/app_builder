@@ -189,6 +189,7 @@ export default class ABViewQueryBuilderObjectFieldConditions {
 			setValue: (values) => {
 
 				values = values || [];
+				if (!Array.isArray(values)) values = [values];
 				if (values.length == 0) { values.push({}); };	// push default rules
 				if (values.length < 2) { values.push(this.conditionFields())}
 
