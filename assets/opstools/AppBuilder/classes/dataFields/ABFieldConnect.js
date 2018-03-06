@@ -684,9 +684,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 				// Pull linked object data
 				linkedModel.findAll({
-					where: {
-						where: where
-					}
+					where: where
 				}).then((result) => {
 
 					// cache linked object data

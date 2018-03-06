@@ -194,9 +194,7 @@ export default class ABModel {
 		} else {
 
 			// else, assume the provided condition is the .where clause.
-			newCond.where = {
-				where: [cond]
-			};
+			newCond.where = cond;
 		}
 
 /// if this is our depreciated format:
