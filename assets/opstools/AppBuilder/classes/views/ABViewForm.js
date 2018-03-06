@@ -308,6 +308,14 @@ export default class ABViewForm extends ABViewContainer {
 			PopupRecordRule.fromSettings(currView.settings.recordRules);
 			PopupRecordRule.show();
 
+// NOTE: Querybuilder v5.2 has a bug where it won't display the [and/or] 
+// choosers properly if it hasn't been shown before the .setValue() call.
+// so this work around allows us to refresh the display after the .show()
+// on the popup.
+// When they've fixed the bug, we'll remove this workaround:
+PopupRecordRule.qbFixAfterShow();
+
+
 		};
 
 		_logic.recordRuleSave = (settings) => {

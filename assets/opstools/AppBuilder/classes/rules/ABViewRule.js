@@ -190,8 +190,6 @@ export default class ABViewRule {
 	_generateUI () {
 
 
-
-
 		return {
 			id: this.ids.component,
 			view: "layout",
@@ -351,7 +349,6 @@ width: 680,
 	}
 
 
-
 	fromSettings (settings) {
 		settings = settings || {};
 
@@ -389,5 +386,20 @@ width: 680,
 		
 		return settings;
 	}
+
+
+// NOTE: Querybuilder v5.2 has a bug where it won't display the [and/or] 
+// choosers properly if it hasn't been shown before the .setValue() call.
+// so this work around allows us to refresh the display after the .show()
+// on the popup.
+// When they've fixed the bug, we'll remove this workaround:
+qbFixAfterShow() {
+	var currAction = this.currentAction();
+	if (currAction && this.objectQB) {
+		this.objectQB.setValue(currAction.condition());
+		currAction.qbFixAfterShow();
+	}
+}	
+
 
 }

@@ -684,4 +684,20 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 	}
 
 
+
+
+// NOTE: Querybuilder v5.2 has a bug where it won't display the [and/or] 
+// choosers properly if it hasn't been shown before the .setValue() call.
+// so this work around allows us to refresh the display after the .show()
+// on the popup.
+// When they've fixed the bug, we'll remove this workaround:
+qbFixAfterShow() {
+	
+	if (this.objectQB) {
+		this.objectQB.setValue(this.qbCondition);
+	}
+}
+
+
+
 }
