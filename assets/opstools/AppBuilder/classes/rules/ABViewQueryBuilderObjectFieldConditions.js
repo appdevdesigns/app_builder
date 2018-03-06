@@ -108,52 +108,56 @@ export default class ABViewQueryBuilderObjectFieldConditions {
 				// any given rules have properly formatted values.
 				function processCondition(rule) {
 
-					if (rule.glue) {
-						rule.rules.forEach((r)=>{
-							processCondition(r);
-						})
-					} else {
+					// make sure rule is provided
+					if (rule) {
 
-						// converting a single rule:
+						if (rule.glue) {
+							rule.rules.forEach((r)=>{
+								processCondition(r);
+							})
+						} else {
 
-						var field = fields.filter((f)=>{ return f.id == rule.key; })[0];
-						if (field) {
-							switch(field.type) {
-								case "number" :
+							// converting a single rule:
 
-									// when getting data from the server, the numbers are 
-									// sent back as strings ("100.25").
-									// make sure to convert strings to numbers:
-									if (typeof rule.value == 'string') {
+							var field = fields.filter((f)=>{ return f.id == rule.key; })[0];
+							if (field) {
+								switch(field.type) {
+									case "number" :
 
-										if (rule.value.indexOf('.') == -1) {
-											rule.value = parseInt(rule.value);
+										// when getting data from the server, the numbers are 
+										// sent back as strings ("100.25").
+										// make sure to convert strings to numbers:
+										if (typeof rule.value == 'string') {
+
+											if (rule.value.indexOf('.') == -1) {
+												rule.value = parseInt(rule.value);
+											} else {
+												rule.value = parseFloat(rule.value);
+											}
+										}
+										break;
+									case "date":
+
+
+										// in some cases we want to convert the Date() object returned
+										// by QueryBuilder into a string for saving on the Server.
+										if (dateToString) {
+											// if we have a Date() obj returned from QueryBuilder,
+											// convert to a string format:
+											if(rule.value instanceof Date) {
+												rule.value = webix.i18n.dateFormatStr(rule.value);
+											}
 										} else {
-											rule.value = parseFloat(rule.value);
+
+											// in other cases we want to convert the string returned
+											// by the server into a Date() for the QB
+											if(typeof rule.value == 'string') {
+												rule.value = new Date(rule.value);
+											}
 										}
-									}
-									break;
-								case "date":
 
-
-									// in some cases we want to convert the Date() object returned
-									// by QueryBuilder into a string for saving on the Server.
-									if (dateToString) {
-										// if we have a Date() obj returned from QueryBuilder,
-										// convert to a string format:
-										if(rule.value instanceof Date) {
-											rule.value = webix.i18n.dateFormatStr(rule.value);
-										}
-									} else {
-
-										// in other cases we want to convert the string returned
-										// by the server into a Date() for the QB
-										if(typeof rule.value == 'string') {
-											rule.value = new Date(rule.value);
-										}
-									}
-
-									break;	
+										break;	
+								}
 							}
 						}
 					}

@@ -43,7 +43,9 @@ export default class ABViewRuleListFormRecordRules extends ABViewRuleList {
 		]
 
 		var Rule = new ABViewRule(listActions);
-		Rule.objectLoad(this.currentObject);
+		if (this.currentObject) {
+			Rule.objectLoad(this.currentObject);
+		}
 		return Rule;
 	}
 

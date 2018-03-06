@@ -678,7 +678,15 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 		var settings = super.toSettings();
 
 		settings.selectedFieldID = this.selectedFieldID;
-		settings.qbCondition = this.objectQB ? this.objectQB.getValue()[0] : null;
+
+		var qbCond = null;
+		if (this.objectQB) {
+			qbCond = this.objectQB.getValue();
+			if (Array.isArray(qbCond)) {
+				qbCond = qbCond[0];
+			}
+		}
+		settings.qbCondition = qbCond;
 
 
 		// if we have a display component, then request our details from it:
