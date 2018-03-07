@@ -153,7 +153,7 @@ export default class ABView extends ABViewBase {
 			(resolve, reject) => {
 
 				// unsubscribe events
-				this.eventClear();
+				this.eventClear(true);
 
 
 				// verify we have been .save() before:
@@ -472,8 +472,15 @@ export default class ABView extends ABViewBase {
 	 * unsubscribe all events.
 	 * should do it before destroy a component
 	 *
+	 * @param {bool} deep - id of the active view
 	 */
-	eventClear() {
+	eventClear(deep) {
+
+		if (deep) {
+			this.views().forEach(v => {
+				v.eventClear(deep);
+			});
+		}
 
 		if (this.__events && this.__events.length > 0) {
 			this.__events.forEach(e => {
