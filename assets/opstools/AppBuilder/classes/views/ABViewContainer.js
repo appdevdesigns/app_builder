@@ -521,10 +521,11 @@ export default class ABViewContainer extends ABView {
 					curColIndex += 1;
 
 					// Trigger 'changePage' event to parent
-					this.changePageEventIds = this.changePageEventIds || {}; // { pageId: eventId, ..., pageIdn: eventIdn }
-					if (this.changePageEventIds[v.id] == null) {
-						this.changePageEventIds[v.id] = v.on('changePage', _logic.changePage);
-					}
+					this.eventAdd({
+						emitter: v,
+						eventName: 'changePage',
+						listener: _logic.changePage
+					});
 
 				});
 
