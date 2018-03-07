@@ -188,7 +188,12 @@ export default class ABField extends ABFieldBase {
   		delete settings.columnName;
 
   		return obj;
-  	}
+	  }
+	  
+
+	static get reservedNames() {
+		return ['id', 'created_at', 'updated_at', 'properties'];
+	}
 
 
   	/*
