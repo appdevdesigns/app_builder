@@ -293,7 +293,7 @@ class ABFieldFile extends ABField {
 				'<div id="#id#" class="ab-file-data-field" style="float: left;">',
 				'<div class="webix_view ab-file-holder">',
 				'<div class="webix_template">',
-				this.fileTemplate(obj),
+				this.fileTemplate(obj, editable),
 				'</div>',
 				'</div>',
 				'</div>'
@@ -359,7 +359,7 @@ class ABFieldFile extends ABField {
 				id: ids.container,
 				container: idBase,
 				
-				template:this.fileTemplate(row),
+				template:this.fileTemplate(row, editable),
 
 				borderless:true,
 				width: 160,
@@ -585,7 +585,7 @@ class ABFieldFile extends ABField {
 
 	//File Template
 
-	fileTemplate(obj) {
+	fileTemplate(obj, editable) {
 
 		var iconDisplay = '';
 		var fileDisplay = 'display:none';
@@ -606,11 +606,15 @@ class ABFieldFile extends ABField {
 			fileURL =  '/opsportal/file/' + this.object.application.name + '/' + value;
 		}
 
-		return [
-			'<div class="file-data-field-icon" style="text-align: center; height: inherit; display: table-cell; vertical-align: middle; border: 2px dotted #CCC; border-radius: 10px; font-size: 11px; line-height: 13px; padding: 0 10px; '+iconDisplay+'"><i class="fa fa-file fa-2x" style="opacity: 0.6; font-size: 32px; margin-top: 3px; margin-bottom: 5px;"></i><br/>Drag and drop or click here</div>',
-			'<div class="file-data-field-name" style="' + fileDisplay + ' width:100%; height:100%; position:relative; "><a target="_blank" href="' + fileURL +'">' + name + '</a>',
-			'<a style="' + fileDisplay + '" class="ab-delete-photo" href="javascript:void(0);"><i class="fa fa-times delete-image"></i></a></div>'
+		var html = [
+			'<div class="file-data-field-icon" style="text-align: center; height: inherit; display: table-cell; vertical-align: middle; border: 2px dotted #CCC; border-radius: 10px; font-size: 11px; line-height: 13px; padding: 0 10px; '+iconDisplay+'"><i class="fa fa-file fa-2x" style="opacity: 0.6; font-size: 32px; margin-top: 3px; margin-bottom: 5px;"></i>#drag#</div>',
+			'<div class="file-data-field-name" style="' + fileDisplay + ' width:100%; height:100%; position:relative; "><a target="_blank" href="' + fileURL +'">' + name + '</a>#remove#</div>',
 		].join('');
+
+		html = html.replace('#drag#', editable ? '<br/>Drag and drop or click here' : '');
+		html = html.replace('#remove#', editable ? '<a style="' + fileDisplay + '" class="ab-delete-photo" href="javascript:void(0);"><i class="fa fa-times delete-image"></i></a>' : '');
+
+		return html;
 
 
 	}
@@ -640,11 +644,12 @@ class ABFieldFile extends ABField {
 
 		var file = domNode.querySelector('.file-data-field-name');
 		if (file) {
+
 			var fileDeleteIcon = file.querySelector('.ab-delete-photo');
+			if (fileDeleteIcon)
+				fileDeleteIcon.style.display = rowData[this.columnName] ? 'block' : 'none';
 
 			file.style.display = rowData[this.columnName] ? 'block' : 'none';
-			fileDeleteIcon.style.display = rowData[this.columnName] ? 'block' : 'none';
-
 			file.setAttribute('file-uuid', rowData[this.columnName] ? rowData[this.columnName].uuid : "");
 			
 			var fileLink = file.querySelector('a');
