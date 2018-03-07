@@ -156,13 +156,15 @@ export default class AB_Work_Object_List_NewObject_Blank extends OP.Component { 
 
                         // get notified if there was an error saving.
                         saveButton.enable();
-                        return false;
+                        return Promise.reject("the enter data is invalid");
                     } 
 
                     // if there was no error, clear the form for the next
                     // entry:
                     _logic.formClear();
                     saveButton.enable();
+
+                    return Promise.resolve();
                 });
 
             },
