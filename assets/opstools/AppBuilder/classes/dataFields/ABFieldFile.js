@@ -273,13 +273,6 @@ class ABFieldFile extends ABField {
 	/// Working with Actual Object Values:
 	///
 
-	idCustomContainer(obj) {
-		return "#columnName#-#id#-file"
-			.replace('#id#', obj.id)
-			.replace('#columnName#', this.columnName.replace(/ /g, '_'));
-	}
-
-
 	// return the grid column header definition for this instance of ABFieldFile
 	columnHeader (isObjectWorkspace, newWidth, editable) {
 		var config = super.columnHeader(isObjectWorkspace);
@@ -290,7 +283,7 @@ class ABFieldFile extends ABField {
 		config.template = (obj) => {
 
 			var fileDiv = [
-				'<div id="#id#" class="ab-file-data-field" style="float: left;">',
+				'<div class="ab-file-data-field" style="float: left;">',
 				'<div class="webix_view ab-file-holder">',
 				'<div class="webix_template">',
 				this.fileTemplate(obj, editable),
@@ -300,8 +293,7 @@ class ABFieldFile extends ABField {
 			].join('');
 
 
-			return fileDiv
-				.replace('#id#', this.idCustomContainer(obj) )
+			return fileDiv;
 		}
 
 		return config;
@@ -320,14 +312,6 @@ class ABFieldFile extends ABField {
 		if (!node) { return }
 
 
-		var idBase = App.unique(this.idCustomContainer(row));
-		var ids = {
-			container:idBase+'-container',
-			uploader: idBase+'-uploader',
-			icon: idBase+'-icon',
-			file: idBase+'-file'
-		}
-
 		var typesList = [];
 		var maximumSize = 0;
 
@@ -344,20 +328,18 @@ class ABFieldFile extends ABField {
 // 		// safety check:
 // 		// webix seems to crash if you specify a .container that doesn't exists:
 // 		// Note: when the template is first created, we don't have App.unique() 
-		var parentContainer = node.querySelector('#'+this.idCustomContainer(row)); // $$(this.idCustomContainer(obj));
+		var parentContainer = node.querySelector('.ab-file-holder');
 		if(parentContainer) {
 
 			parentContainer.innerHTML = '';
-			parentContainer.id = idBase;	// change it to the unique one.
+			// parentContainer.id = idBase;	// change it to the unique one.
 
 // 			// use a webix component for displaying the content.
 // 			// do this so I can use the progress spinner
 
 			var webixContainer = webix.ui({
 				view:'template',
-				css:'ab-file-holder',
-				id: ids.container,
-				container: idBase,
+				container: parentContainer,
 				
 				template:this.fileTemplate(row, editable),
 
@@ -385,7 +367,6 @@ class ABFieldFile extends ABField {
 
 			var uploader = webix.ui({ 
 				view:"uploader",  
-				id:ids.uploader, 
 				apiOnly: true, 
 				upload:url,
 				inputName:'file',
@@ -471,10 +452,13 @@ class ABFieldFile extends ABField {
 			});
 			uploader.addDropZone(webixContainer.$view);
 
+			// store upload id into html element (it will be used in .customEdit)
+			node.dataset['uploaderId'] = uploader.config.id;
+
 			// open file upload dialog when's click
-			parentContainer.addEventListener("click", (e) => {
+			node.addEventListener("click", (e) => {
 				if (e.target.className.indexOf('delete-image') > -1) {
-					this.deleteFile(e);
+					this.deleteFile = true;
 				}
 			});
 
@@ -534,10 +518,12 @@ class ABFieldFile extends ABField {
 			
 		}
 		else if (!row[this.columnName]) {
-			var idBase = App.unique(this.idCustomContainer(row)),
-				idUploader = idBase + '-uploader';
 
-			$$(idUploader).fileDialog({ rowid: row.id });
+			var uploaderId = node.dataset['uploaderId'],
+				uploader = $$(uploaderId);
+
+			if (uploader && uploader.fileDialog)
+				uploader.fileDialog({ rowid: row.id });
 		};
 
 		return false;
@@ -619,11 +605,7 @@ class ABFieldFile extends ABField {
 
 	}
 
-	
-	deleteFile(e) {
-		this.deleteFile = true;
-	}
-	
+
 	getValue(item, rowData) {
 
 		var file = item.$view.querySelector('.file-data-field-name');
