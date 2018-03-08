@@ -85,42 +85,87 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 
 		var ids = {
 			form: idBase + 'form',
+			popup: idBase + 'popup',
+			list: idBase + 'fieldList'
 		};
 
 		this._ui = {
 			ui: {
 				id: ids.form,
 				view: 'form',
-				elements: [
+				elementsConfig: {
+					labelPosition: "left",
+					labelWidth: 100
+				},
+				cols: [
+					// email form
 					{
-						view: 'text',
-						label: 'From Name', 
-						labelWidth: 100
+						rows: [
+							{
+								view: 'text',
+								name: 'fromName',
+								label: 'From Name'
+							},
+							{
+								view: 'text',
+								name: 'fromEmail',
+								label: 'From Email'
+							},
+							{
+								view: 'text',
+								name: 'toEmail',
+								label: 'To'
+							},
+							{
+								view: 'text',
+								name: 'subject',
+								label: 'Subject'
+							},
+							{
+								view: 'forminput',
+								name: 'message',
+								label: 'Message',
+								css: "ab-rich-text",
+								height: 200,
+								body: {
+									view: 'tinymce-editor'
+								}
+							}
+						]
 					},
+					// field list
 					{
-						view: 'text',
-						label: 'From Email',
-						labelWidth: 100
-					},
-					{
-						view: 'text',
-						label: 'Subject',
-						labelWidth: 100
-					},
-					{
-						view: 'forminput',
-						label: 'Message',
-						css: "ab-rich-text",
-						labelWidth: 100,
-						height: 200,
-						body: {
-							view: 'tinymce-editor'
-						}
+						rows: [
+							{
+								view:"template",
+								type:"header",
+								template:"Fields"
+							},
+							{
+								id: ids.list,
+								view: 'list',
+								width: 120,
+								template: function (obj, common) {
+									return _logic.fieldTemplate(obj, common);
+								},
+								on: {
+									onItemClick: function (id, e, node) {
+										var component = this.getItem(id);
+
+										_logic.enterField(component);
+									}
+								}
+							}
+						]
 					}
 				]
 			},
 
 			init: () => {
+
+				$$(ids.list).parse(this.currentObject.fields());
+				$$(ids.list).refresh();
+
 			},
 
 			_logic: _logic,
@@ -136,18 +181,45 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 
 				valueRules = valueRules || {};
 
-				$$(ids.website).setValue(valueRules.website || '');
+				$$(ids.form).setValues(valueRules);
 
 			},
 
 			toSettings: () => {
 
+				var formVals = $$(ids.form).getValues() || {};
+
 				// return the confirm message
 				return {
-					website: $$(ids.website).getValue() || ''
-				}
+					fromName: formVals['fromName'],
+					fromEmail: formVals['fromEmail'],
+					toEmail: formVals['toEmail'],
+					subject: formVals['subject'],
+					message: formVals['message']
+				};
+			},
+
+			fieldTemplate: (field, common) => {
+				return "<i class='fa fa-#icon# webix_icon_btn' aria-hidden='true'></i> #label#"
+					.replace("#icon#", field.icon)
+					.replace("#label#", field.label);
+			},
+
+			enterField: (field) => {
+
+				var focusElem = webix.UIManager.getFocus();
+				var val = "";
+
+				if (focusElem.getValue)
+					val = focusElem.getValue();
+
+				if (focusElem.setValue)
+					focusElem.setValue(val + '{#label#}'.replace('#label#', field.label));
+
+				webix.UIManager.setFocus(focusElem);
 
 			}
+
 		};
 
 
