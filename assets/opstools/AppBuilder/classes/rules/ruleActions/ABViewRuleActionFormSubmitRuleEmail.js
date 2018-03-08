@@ -1,12 +1,12 @@
 //
-// ABViewRuleActionFormSubmitRuleExistPage
+// ABViewRuleActionFormSubmitRuleWebsite
 //
 //
 //
 import ABViewRuleAction from "../ABViewRuleAction"
 
 
-export default class ABViewRuleActionFormSubmitRuleExistPage extends ABViewRuleAction {
+export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleAction {
 
 	/**
 	 * @param {object} App 
@@ -22,8 +22,8 @@ export default class ABViewRuleActionFormSubmitRuleExistPage extends ABViewRuleA
 		}
 
 		this.App = App;
-		this.key = 'ABViewRuleActionFormSubmitRuleExistPage';
-		this.label = L('ab.component.ruleaction.abviewruleActionFormSubmitRuleExistPage', '*Redirect to an existing page');
+		this.key = 'ABViewRuleActionFormSubmitRuleEmail';
+		this.label = L('ab.component.ruleaction.abviewruleActionFormSubmitRuleEmail', '*Send a custom email');
 
 
 		this.currentObject = null;  // the object this Action is tied to.
@@ -84,42 +84,50 @@ export default class ABViewRuleActionFormSubmitRuleExistPage extends ABViewRuleA
 	valueDisplayComponent(idBase) {
 
 		var ids = {
-			existsPages: idBase + '_existsPages',
+			form: idBase + 'form',
 		};
-
 
 		this._ui = {
 			ui: {
-				id: ids.existsPages,
-				view: 'richselect',
-				options: []
+				id: ids.form,
+				view: 'form',
+				elements: [
+					{
+						view: 'text',
+						label: 'From Name', 
+						labelWidth: 100
+					},
+					{
+						view: 'text',
+						label: 'From Email',
+						labelWidth: 100
+					},
+					{
+						view: 'text',
+						label: 'Subject',
+						labelWidth: 100
+					},
+					{
+						view: 'forminput',
+						label: 'Message',
+						css: "ab-rich-text",
+						labelWidth: 100,
+						height: 200,
+						body: {
+							view: 'tinymce-editor'
+						}
+					}
+				]
 			},
 
 			init: () => {
-
-				// Pull page list to "Redirect to an existing page"
-				var _pageOptions = [];
-
-				var addPage = (page, indent) => {
-					indent = indent || '';
-
-					_pageOptions.push({ id: page.id, value: indent + page.label });
-
-					page.pages().forEach(function (p) {
-						addPage(p, indent + '-');
-					})
-				};
-
-				addPage(this.currentForm.pageRoot(), '');
-
-				$$(ids.existsPages).define('options', _pageOptions);
-				$$(ids.existsPages).refresh();
 			},
 
 			_logic: _logic,
 
 			fromSettings: (valueRules) => { _logic.fromSettings(valueRules); },
 			toSettings: () => { return _logic.toSettings() },
+
 		}
 
 		var _logic = {
@@ -128,7 +136,7 @@ export default class ABViewRuleActionFormSubmitRuleExistPage extends ABViewRuleA
 
 				valueRules = valueRules || {};
 
-				$$(ids.existsPages).setValue(valueRules.pageId || '');
+				$$(ids.website).setValue(valueRules.website || '');
 
 			},
 
@@ -136,7 +144,7 @@ export default class ABViewRuleActionFormSubmitRuleExistPage extends ABViewRuleA
 
 				// return the confirm message
 				return {
-					pageId: $$(ids.existsPages).getValue() || ''
+					website: $$(ids.website).getValue() || ''
 				}
 
 			}
@@ -155,17 +163,14 @@ export default class ABViewRuleActionFormSubmitRuleExistPage extends ABViewRuleA
 
 		return new Promise((resolve, reject) => {
 
-			// redirect page
-			if (this.valueRules.pageId)
-				options.form.changePage(this.valueRules.pageId);
+			// TODO: send a email
+
 
 			resolve();
 
 		});
 
 	}
-
-
 
 
 	// fromSettings
