@@ -394,6 +394,9 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 .selectivity-single-selected-item-remove {
 	color: #FFF;
 }
+.customField {
+	line-height: 33px;
+}
 .customField .selectivity-multiple-input-container {
 	border: 1px solid #CCC;
 	border-radius: 6px;
@@ -996,15 +999,15 @@ div.webix_item_tab {
 .customField .connect-data-values, .customField .list-data-values {
 	display: inline-block;
 }*/
-.ab-image-holder {
+.ab-image-holder, .ab-file-holder {
 	overflow: visible;
 }
-.ab-image-holder .webix_template {
+.ab-image-holder, .ab-file-holder > .webix_template {
 	position: relative;
 	height: inherit;
 }
 .webix_template {
-	line-height: 33px;
+	line-height: normal;
 	padding: 0px;
 }
 .ab-delete-photo {
@@ -1278,4 +1281,23 @@ a.ab-delete-photo:hover {
 }
 .customFieldCls {
 	overflow: visible;
+}
+.panel_icon_span {
+	padding: 6px 0 0 8px;
+}
+.panel_icon {
+	color: #FFF;
+	background: #999;
+	width: 33px;
+	height: 31px;
+	opacity: 1 !important;
+	top: 0 !important;
+	right: 0 !important;
+}
+.panel_drag_view {
+	background: #FFF !important;
+}
+.panel_target {
+	background: rgba(210, 227, 239, 0.8) !important;
+	box-shadow: none;
 }

@@ -175,7 +175,7 @@ export default class ABViewFormTree extends ABViewFormCustom {
  		// this field may be deleted
  		if (!field) return component;
 
- 		var idBase = 'ABViewFormCustom_' + this.id;
+ 		var idBase = 'ABViewFormTree_' + this.id + "_f_" + form.uniqueInstanceID;
  		var ids = {
  			component: App.unique(idBase + '_component')
  		}

@@ -317,6 +317,9 @@ export default class ABViewForm extends ABViewContainer {
 			// trigger a save()
 			this.propertyEditorSave(ids, currView);
 
+			// update badge number of rules
+			this.populateBadgeNumber(ids, currView);
+
 		};
 
 
@@ -338,6 +341,9 @@ export default class ABViewForm extends ABViewContainer {
 
 			// trigger a save()
 			this.propertyEditorSave(ids, currView);
+
+			// update badge number of rules
+			this.populateBadgeNumber(ids, currView);
 
 		};
 
@@ -677,11 +683,15 @@ export default class ABViewForm extends ABViewContainer {
 	 */
 	component(App) {
 
-		var idBase = 'ABViewForm_' + this.id,
-			ids = {
-				component: App.unique(idBase + '_component'),
-				layout: App.unique(idBase + '_form_layout'),
-			};
+		var idBase = 'ABViewForm_' + this.id;
+		this.uniqueInstanceID = webix.uid();
+		var myUnique = (key) => {
+			return App.unique(idBase + '_' + key  + '_' + this.uniqueInstanceID);
+		}
+		var ids = {
+			component: myUnique('_component'),	
+			layout: myUnique('_form_layout'),	
+		};
 
 		var component = super.component(App);
 
@@ -701,6 +711,12 @@ export default class ABViewForm extends ABViewContainer {
 
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
+			// register our callbacks:
+			if (options) {
+				for(var c in _logic.callbacks) {
+					_logic.callbacks[c] = options[c] || _logic.callbacks[c];
+				}
+			}
 
 			component.init(options);
 
@@ -748,7 +764,14 @@ export default class ABViewForm extends ABViewContainer {
 		}
 
 
-		var _logic = {
+		var _logic = this._logic = {
+			
+			callbacks:{
+			
+				onSaveData:function(saveData){},
+				clearOnLoad:function(){ return false }
+			
+			},			
 
 			displayData: (data) => {
 
@@ -881,7 +904,7 @@ export default class ABViewForm extends ABViewContainer {
 					dc.bind(Form);
 
 				// clear current cursor on load
-				if (this.settings.clearOnLoad) {
+				if (this.settings.clearOnLoad || _logic.callbacks.clearOnLoad() ) {
 					dc.setCursor(null);
 				}
 
@@ -1101,15 +1124,20 @@ export default class ABViewForm extends ABViewContainer {
 					formView.showProgress({ type: "icon" });
 
 				// form ready function
-				var formReady = () => {
+				var formReady = (newFormVals) => {
 
 					// when add a new data, then clear form inputs
 					if (dc) {
 						var currCursor = dc.getCursor();
 						if (currCursor == null) {
+							dc.setCursor(null);
 							formView.clear();
 						}
 					}
+					
+					// if there was saved data pass it up to the onSaveData callback
+					if (newFormVals) 
+						this._logic.callbacks.onSaveData(newFormVals);
 
 					if (formView.hideProgress)
 						formView.hideProgress();
@@ -1133,7 +1161,7 @@ export default class ABViewForm extends ABViewContainer {
 
 										this.doSubmitRules(formVals);
 
-										formReady();
+										formReady(newFormVals);
 										resolve();
 									})
 								});
@@ -1146,13 +1174,13 @@ export default class ABViewForm extends ABViewContainer {
 									reject(err);
 								})
 								.then((newFormVals) => {
-
+									console.log("newFormVals: ", newFormVals);
 									this.doRecordRules(newFormVals)
 									.then(()=>{
 
 										this.doSubmitRules(formVals);
 
-										formReady();
+										formReady(newFormVals);
 										resolve();
 									})
 									

@@ -241,8 +241,9 @@ export default class ABViewFormButton extends ABView {
 	 * @return {obj} UI component
 	 */
 	component(App) {
+		var form = this.formComponent();
 
-		var idBase = 'ABViewFormButton_' + this.id;
+		var idBase = 'ABViewFormButton_' + this.id + "_f_" + form.uniqueInstanceID;
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		}
@@ -308,12 +309,35 @@ export default class ABViewFormButton extends ABView {
 
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
-
+			// register our callbacks:
+			if (options) {
+				for(var c in _logic.callbacks) {
+					_logic.callbacks[c] = options[c] || _logic.callbacks[c];
+				}
+			}
 		};
 
-		var _logic = {
+		var _logic = this._logic = {
+			
+			callbacks:{
+			
+				onCancelClick:function(){
+					return true;
+				}
+			
+			},			
+
 
 			onCancel: (cancelButton) => {
+				
+				// attempt to call onCancleClick callback...if no override is set we simply return false
+				var shouldContinue = _logic.callbacks.onCancelClick();
+				
+				// if override was called we should have returned true so we can stop now
+				if (!shouldContinue ) {
+					return false;
+				}
+					
 				// get form component
 				var form = this.formComponent();
 
@@ -330,7 +354,7 @@ export default class ABViewFormButton extends ABView {
 
 				if (this.settings.afterCancel)
 					super.changePage(this.settings.afterCancel);
-				// If the redirect page does not define, then redirect to parent page
+				// If the redirect page is not defined, then redirect to parent page
 				else {
 					var noPopupFilter = p => p.settings && p.settings.type != 'popup';
 
