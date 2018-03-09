@@ -38,7 +38,7 @@ export default class ABViewMenu extends ABViewWidget {
 
 		super(values, application, parent, ABMenuDefaults);
 
-		// OP.Multilingual.translate(this, this, ['text']);
+		OP.Multilingual.translate(this, this, ['menulabel']);
 
 		// 	{
 		// 		id:'uuid',					// uuid value for this obj
@@ -63,6 +63,32 @@ export default class ABViewMenu extends ABViewWidget {
 		return ABMenuDefaults;
 	}
 
+	///
+	/// Instance Methods
+	///
+
+	/**
+	 * @method toObj()
+	 *
+	 * properly compile the current state of this ABViewLabel instance
+	 * into the values needed for saving.
+	 *
+	 * @return {json}
+	 */
+	toObj () {
+		
+		if (this.settings.pages) {
+			this.settings.pages.forEach(page => {
+				OP.Multilingual.unTranslate(page, page, ["aliasname"]);
+			});
+		}
+		
+		var obj = super.toObj();
+		obj.views = [];
+		return obj;
+	}
+
+
 	/**
 	 * @method fromValues()
 	 *
@@ -75,7 +101,8 @@ export default class ABViewMenu extends ABViewWidget {
 		
 		if (this.settings.pages){
 			this.settings.pages.forEach(page => { 
-				page.isChecked = JSON.parse(page.isChecked)
+				page.isChecked = JSON.parse(page.isChecked),
+				page.translations = OP.Multilingual.translate(page, page, ["aliasname"]);
 			});
 		}
 		else {
@@ -84,10 +111,7 @@ export default class ABViewMenu extends ABViewWidget {
 
 	}
 
-	///
-	/// Instance Methods
-	///
-
+	
 	//
 	//	Editor Related
 	//
