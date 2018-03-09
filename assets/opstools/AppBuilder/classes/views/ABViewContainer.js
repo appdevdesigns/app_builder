@@ -98,7 +98,9 @@ export default class ABViewContainer extends ABView {
 		var idBase = 'ABViewContainerEditorComponent';
 		var ids = {
 			component: App.unique(idBase + '_component')
-		}
+		};
+
+		var subComponents = {} // { viewId: viewComponent, ..., viewIdn: viewComponent }
 
 		var cellHeight = 250;
 		// if (this.key == "form" || this.key == "detail") {
@@ -131,6 +133,9 @@ export default class ABViewContainer extends ABView {
 			childViews.forEach((child) => {
 
 				var component = child.component(App);
+
+				// store
+				subComponents[child.id] = component;
 
 				Dashboard.addView({
 
@@ -348,11 +353,27 @@ export default class ABViewContainer extends ABView {
 
 		};
 
+		var _onShow = () => {
+
+			this.views().forEach((v) => {
+
+				var component = subComponents[v.id];
+
+				if (component &&
+					component.onShow) {
+					component.onShow();
+				}
+
+			});
+
+		};
 
 		return {
 			ui: _ui,
 			init: _init,
-			logic: _logic
+			logic: _logic,
+
+			onShow: _onShow
 		}
 	}
 
@@ -441,7 +462,8 @@ export default class ABViewContainer extends ABView {
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		};
-		var subComponents = {}; // { viewId: componentId, ..., viewIdn: componentIdn }
+
+		this.viewComponents = this.viewComponents || {}; // { viewId: viewComponent, ..., viewIdn: viewComponent }
 
 		var _logic = {
 
@@ -461,7 +483,9 @@ export default class ABViewContainer extends ABView {
 				views.forEach((v) => {
 
 					var component = v.component(App);
-					subComponents[v.id] = component;
+					
+					this.viewComponents[v.id] = component;
+					
 					// if key == "form" or "button" register the callbacks to the parent
 					// NOTE this will only work on the last form of a page!
 					if ( (v.key == "form") && v._logic.callbacks) {
@@ -497,10 +521,11 @@ export default class ABViewContainer extends ABView {
 					curColIndex += 1;
 
 					// Trigger 'changePage' event to parent
-					this.changePageEventIds = this.changePageEventIds || {}; // { pageId: eventId, ..., pageIdn: eventIdn }
-					if (this.changePageEventIds[v.id] == null) {
-						this.changePageEventIds[v.id] = v.on('changePage', _logic.changePage);
-					}
+					this.eventAdd({
+						emitter: v,
+						eventName: 'changePage',
+						listener: _logic.changePage
+					});
 
 				});
 
@@ -531,15 +556,13 @@ export default class ABViewContainer extends ABView {
 			}
 
 			// attach all the .UI views:
-			for (var key in subComponents) {
+			for (var key in this.viewComponents) {
 
-				var component = subComponents[key];
+				var component = this.viewComponents[key];
 
 				// Initial component along with options in case there are callbacks we need to listen for
 				component.init(options);
 			}
-
-			_onShow();
 
 		};
 
@@ -547,7 +570,7 @@ export default class ABViewContainer extends ABView {
 
 			this.views().forEach((v) => {
 
-				var component = subComponents[v.id];
+				var component = this.viewComponents[v.id];
 
 				if (component &&
 					component.onShow) {

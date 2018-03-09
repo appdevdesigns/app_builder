@@ -208,16 +208,15 @@ export default class ABViewFormTextbox extends ABViewFormField {
 
 			// WORKAROUND : to fix breaks TinyMCE when switch pages/tabs
 			// https://forum.webix.com/discussion/6772/switching-tabs-breaks-tinymce
-			if (this.settings.type && this.settings.type == 'rich') {
-				if ($$(component.ui.id)) {
+			if (this.settings.type &&
+				this.settings.type == 'rich' &&
+				$$(component.ui.id)) {
 
 					// recreate rich editor
 					webix.ui(component.ui, $$(component.ui.id));
 
 				}
 			}
-
-		}
 
 
 		return webix.copy(component);

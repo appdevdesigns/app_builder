@@ -188,7 +188,12 @@ export default class ABField extends ABFieldBase {
   		delete settings.columnName;
 
   		return obj;
-  	}
+	  }
+	  
+
+	static get reservedNames() {
+		return ['id', 'created_at', 'updated_at', 'properties'];
+	}
 
 
   	/*
@@ -480,7 +485,6 @@ export default class ABField extends ABFieldBase {
 	 * @param {Object} item - Webix element
 	 * @param {Object} rowData - data of row
 	 * 
-	 * @return {Object}
 	 */
 	setValue(item, rowData) {
 
@@ -488,7 +492,7 @@ export default class ABField extends ABFieldBase {
 
 		var val = rowData[this.columnName];
 
-		return item.setValue(val);
+		item.setValue(val);
 	};
 
 

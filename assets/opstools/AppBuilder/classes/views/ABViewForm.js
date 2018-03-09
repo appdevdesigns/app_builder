@@ -695,8 +695,6 @@ export default class ABViewForm extends ABViewContainer {
 
 		var component = super.component(App);
 
-		this.viewComponents = this.viewComponents || {}; // { fieldId: viewComponent }
-
 		// an ABViewForm_ is a collection of rows:
 		var _ui = {
 			// view: "scrollview",
@@ -725,44 +723,33 @@ export default class ABViewForm extends ABViewContainer {
 				webix.extend(Form, webix.ProgressBar);
 			}
 
-
-			// attach all the .UI views:
-			var subviews = this.views();
-			subviews.forEach((child) => {
-
-				var subComponent = child.component(App);
-
-				this.viewComponents[child.id] = subComponent;
-
-				subComponent.init();
-
-			});
-
-
 			// bind a data collection to form component
 			var dc = this.dataCollection();
 			if (dc) {
 
 				// listen DC events
-				if (this.changeCursorEventId == null)
-					this.changeCursorEventId = dc.on('changeCursor', _logic.displayData);
+				this.eventAdd({
+					emitter: dc,
+					eventName: 'changeCursor',
+					listener: _logic.displayData
+				});
 
 				// bind the cursor event of the parent DC
 				var linkDc = dc.dataCollectionLink;
 				if (linkDc) {
 
 					// update the value of link field when data of the parent dc is changed
-					if (this.changeParentCursorEventId == null)
-						this.changeParentCursorEventId = linkDc.on('changeCursor', _logic.displayParentData);
+					this.eventAdd({
+						emitter: linkDc,
+						eventName: 'changeCursor',
+						listener: _logic.displayParentData
+					});
 
 				}
 
 			}
 
-			_onShow();
-
 		}
-
 
 		var _logic = this._logic = {
 			
@@ -777,7 +764,11 @@ export default class ABViewForm extends ABViewContainer {
 
 				// Set default values
 				if (data == null) {
-					var customFields = this.fieldComponents((comp) => comp instanceof ABViewFormCustom);
+					var customFields = this.fieldComponents((comp) => {
+						return (comp instanceof ABViewFormCustom) ||
+							// rich text
+							((comp instanceof ABViewFormTextbox) && comp.settings.type == 'rich')
+					});
 					customFields.forEach((f) => {
 
 						var field = f.field();
@@ -819,7 +810,11 @@ export default class ABViewForm extends ABViewContainer {
 
 				// Populate value to custom fields
 				else {
-					var customFields = this.fieldComponents((comp) => comp instanceof ABViewFormCustom);
+					var customFields = this.fieldComponents((comp) => {
+						return (comp instanceof ABViewFormCustom) ||
+							// rich text
+							((comp instanceof ABViewFormTextbox) && comp.settings.type == 'rich')
+					});
 					customFields.forEach((f) => {
 
 						var comp = this.viewComponents[f.id];
@@ -871,6 +866,9 @@ export default class ABViewForm extends ABViewContainer {
 
 		var _onShow = () => {
 
+			// call .onShow in the base component
+			component.onShow();
+
 			var Form = $$(ids.component);
 
 			var customFields = this.fieldComponents((comp) => {
@@ -885,9 +883,6 @@ export default class ABViewForm extends ABViewContainer {
 
 				var component = this.viewComponents[f.id];
 				if (!component) return;
-
-				// call .customDisplay again here
-				component.onShow();
 
 				// set value to each components
 				var rowData = {};

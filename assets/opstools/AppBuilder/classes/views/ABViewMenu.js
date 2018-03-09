@@ -16,7 +16,15 @@ function L(key, altText) {
 var ABViewMenuPropertyComponentDefaults = {
 	orientation: 'x',
 	buttonStyle: 'ab-menu-default',
-	pages: [] // [pageId, ..., pageIdn]
+	// [
+	// 		{
+	//			pageId: uuid,
+	//			isChecked: bool,
+	//			aliasname: string,
+	//			translations: []
+	//		}
+	// ]
+	pages: []
 }
 
 
@@ -98,15 +106,24 @@ export default class ABViewMenu extends ABViewWidget {
 	fromValues (values) {
 
 		super.fromValues(values);
-		
-		if (this.settings.pages){
-			this.settings.pages.forEach(page => { 
-				page.isChecked = JSON.parse(page.isChecked),
+
+		this.settings.pages = this.settings.pages || ABViewMenuPropertyComponentDefaults.pages;
+
+		for (var i = 0; i < this.settings.pages.length; i++) {
+
+			var page = this.settings.pages[i];
+			if (page instanceof Object) {
+				page.isChecked = JSON.parse(page.isChecked || false);
 				page.translations = OP.Multilingual.translate(page, page, ["aliasname"]);
-			});
-		}
-		else {
-			this.settings.pages = ABViewMenuPropertyComponentDefaults.pages;
+			}
+			// Compatible with old data
+			else if (typeof page == 'string') {
+				this.settings.pages[i] = {
+					pageId: page,
+					isChecked: true
+				};
+			}
+			
 		}
 
 	}

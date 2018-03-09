@@ -204,10 +204,11 @@ export default class ABViewFormNumber extends ABViewFormField {
 			component: App.unique(idBase + '_component'),
 		}
 		
-		var viewType = this.settings.isStepper ? "counter" : "text";
+		var viewType = this.settings.isStepper ? "counter" : App.custom.numbertext.view;
 
 		component.ui.id = ids.component;
 		component.ui.view = viewType;
+		component.ui.type = "number";
 		component.ui.validate = (val) => { return !isNaN(val * 1); };
 
 		// make sure each of our child views get .init() called

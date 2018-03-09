@@ -328,6 +328,11 @@ steal(
 						*/
 						showPage: function (pageId) {
 							var self = this;
+							
+							// if pageId is not passed we will clear the peviousPageId so it won't load, this fixes a bug with the popup pages
+							if (pageId == null) {
+								self.previousPageId = null;
+							}
 
 							pageId = pageId ||
 								(self.previousPageId == self.activePageId ? null : self.previousPageId) ||

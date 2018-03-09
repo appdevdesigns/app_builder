@@ -883,6 +883,48 @@ export default class ABViewDataCollection extends ABView {
 
 		});
 
+		// We are subscribing to notifications from the server that an item may be stale and needs updating
+		// We will improve this later and verify that it needs updating before attempting the update on the client side
+		AD.comm.hub.subscribe('ab.datacollection.stale', (msg, data) => {
+			// Verify the datasource has the object we are listening for if not just stop here
+			if (this.datasource &&
+				this.datasource.id != data.objectId)
+				return;
+
+			// updated values
+			var values = data.data;
+
+			if (this.__dataCollection.exists(values.id)) {
+				// this data collection has the record so we need to query the server to find out what it's latest data is so we can update all instances
+				this.model.findAll({
+					fieldName: "id",
+					operator: "equals",
+					inputValue: values.id
+				}).then((res)=>{
+					// check to make sure there is data to work with
+					if (Array.isArray(res.data) && res.data.length) {
+						// tell the webix data collection to update using their API with the row id (values.id) and content (res.data[0]) 
+						this.__dataCollection.updateItem(values.id, res.data[0]);
+
+						// If the update item is current cursor, then should tell components to update.
+						var currData = this.getCursor();
+						if (currData && currData.id == values.id) {
+							this.emit("changeCursor", currData);
+						}
+					}
+				});
+
+			}
+
+			// filter link data collection's cursor
+			var linkDc = this.dataCollectionLink;
+			if (linkDc) {
+				var linkCursor = linkDc.getCursor();
+				this.filterLinkCursor(linkCursor);
+			}
+
+		});
+
 		AD.comm.hub.subscribe('ab.datacollection.delete', (msg, data) => {
 
 			if (this.datasource &&
@@ -1156,13 +1198,13 @@ export default class ABViewDataCollection extends ABView {
 					this.filterLinkCursor(linkData);
 
 					// add listeners when cursor of link data collection is changed
-					// linkDc.removeListener("changeCursor", this.filterLinkCursor)
-					// 	.on("changeCursor", this.filterLinkCursor);
-
-					if (this.changeCursorParentEventId == null)
-						this.changeCursorParentEventId = linkDc.on("changeCursor", (currData) => {
+					this.eventAdd({
+						emitter: linkDc,
+						eventName: "changeCursor",
+						listener: (currData) => {
 							this.filterLinkCursor(currData);
-						});
+						}
+					});
 
 				}
 

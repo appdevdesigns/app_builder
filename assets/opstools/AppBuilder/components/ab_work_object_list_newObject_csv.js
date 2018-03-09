@@ -5,6 +5,7 @@
  * Display the form for import CSV file to a object.
  *
  */
+import ABField from "../classes/dataFields/ABField"
 
 export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 
@@ -305,6 +306,22 @@ export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 					return false;
 				}
 
+				// Validate reserve column names
+				var reservedColNames = $$(ids.columnList).data.find(col => {
+					return col.include && ABField.reservedNames.indexOf(col.columnName.trim().toLowerCase()) > -1;
+				});
+				if (reservedColNames.length > 0) {
+					webix.alert({
+						title: "Column name is invalid",
+						text: "Please enter column name does not match [" + ABField.reservedNames.join(', ') + "]",
+						ok: labels.common.ok
+					});
+
+					saveButton.enable();
+					return false;
+				}
+
+
 				// create new object
 				var newObjAttr = {
 					name: $$(ids.form).getValues()['name'],
@@ -316,7 +333,7 @@ export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 					if (item.include) {
 
 						var newField = {
-							id:  OP.Util.uuid(),
+							id: OP.Util.uuid(),
 							columnName: item.columnName,
 							label: item.columnName,
 							key: item.dataType,
@@ -341,20 +358,27 @@ export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 				_logic.callbacks.onSave(newObjAttr, (validator, newObj) => {
 
 					if (validator) {
-						validator.updateForm($$(ids.form));
+
+						if (validator.updateForm)
+							validator.updateForm($$(ids.form));
 
 						// get notified if there was an error saving.
 						saveButton.enable();
-						return false;
+						return Promise.reject("the enter data is invalid");
 					}
 
 					// add rows to Server
 					var objModel = newObj.model();
 
-					dataRows
-						.filter((row) => row && row.length > 0)
-						.forEach((data, index) => {
-							if ($$(ids.headerOnFirstLine).getValue() && index == 0) return;
+					dataRows = dataRows.filter((row) => row && row.length > 0);
+
+					// Add each records sequentially
+					var subTasks = Promise.resolve();
+					dataRows.forEach((data, index) => {
+						subTasks = subTasks.then(x => {
+
+							if ($$(ids.headerOnFirstLine).getValue() && index == 0) 
+								return Promise.resolve();
 
 							var rowData = {};
 							var colValues = data.split(getSeparatedBy());
@@ -365,15 +389,20 @@ export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 							})
 
 							// Add row data
-							objModel.create(rowData);
+							return objModel.create(rowData);
 
 						});
-
+					});
 
 					// if there was no error, clear the form for the next
 					// entry:
-					_logic.formClear();
-					saveButton.enable();
+					return subTasks.then(() => {
+						_logic.formClear();
+						saveButton.enable();
+
+						return Promise.resolve();
+					});
+
 				});
 			},
 
