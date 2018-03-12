@@ -186,6 +186,7 @@ export default class AB_Work_Object_List_NewObject extends OP.Component {   //.e
 			 *
 			 * @param {obj} values  key=>value hash of model values.
 			 * @param {fn}  cb 		node style callback to indicate success/failure
+			 * 						return Promise
 			 */
 			save:function (values, cb) {
 
@@ -219,8 +220,8 @@ export default class AB_Work_Object_List_NewObject extends OP.Component {   //.e
 					.then(function(obj){
 
 						// successfully done:
-						cb(null, obj);									// tell current tab component save successful
-						_logic.done(obj);
+						cb(null, obj)									// tell current tab component save successful
+							.then(() => _logic.done(obj));
 					})
 					.catch(function(err){
 						// hide progress
