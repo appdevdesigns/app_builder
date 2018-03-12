@@ -98,6 +98,10 @@ module.exports = {
 'get /app_builder/migrate/application/:appID/object/:objID' : 
     'app_builder/ABMigrationController.createObject',
 
+    // Email
+    'post /app_builder/email' : 
+        'app_builder/ABEmailController.send',
+
   /*
 
   '/': {

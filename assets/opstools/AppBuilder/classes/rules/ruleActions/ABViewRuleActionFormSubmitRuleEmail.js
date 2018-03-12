@@ -86,7 +86,8 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 		var ids = {
 			form: idBase + 'form',
 			popup: idBase + 'popup',
-			list: idBase + 'fieldList'
+			list: idBase + 'fieldList',
+			toEmails: idBase + 'toEmails'
 		};
 
 		this._ui = {
@@ -109,12 +110,49 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 							{
 								view: 'text',
 								name: 'fromEmail',
-								label: 'From Email'
+								label: 'From Email',
+								validate: webix.rules.isEmail,
+								on: {
+									onChange: function (newVal, oldVal) {
+
+										if (this.getValue() && !this.validate()) {
+											$$(ids.form).markInvalid('fromEmail', 'Email is invalid');
+										}
+										else {
+											$$(ids.form).markInvalid('fromEmail', false);
+										}
+
+									}
+								}
 							},
 							{
-								view: 'text',
-								name: 'toEmail',
-								label: 'To'
+								view: 'forminput',
+								name: 'toEmails',
+								label: 'Send',
+								css: "ab-rich-text",
+								body: {
+									rows: [
+										{
+											id: ids.toEmails,
+											view: 'layout',
+											rows: []
+										},
+										{
+											cols: [
+												{
+													view: "button",
+													type: "icon",
+													icon: "plus",
+													label: "Add a recipient",
+													click: () => {
+														_logic.toEmailAdd();
+													}
+												},
+												{}
+											]
+										}
+									]
+								}
 							},
 							{
 								view: 'text',
@@ -137,9 +175,9 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 					{
 						rows: [
 							{
-								view:"template",
-								type:"header",
-								template:"Fields"
+								view: "template",
+								type: "header",
+								template: "Fields"
 							},
 							{
 								id: ids.list,
@@ -183,20 +221,119 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 
 				$$(ids.form).setValues(valueRules);
 
+				// Populate recipients
+				var recipients = valueRules.toEmails || [];
+				recipients.forEach((r) => {
+					_logic.toEmailAdd(r.type, r.email);
+				});
+
 			},
 
 			toSettings: () => {
 
 				var formVals = $$(ids.form).getValues() || {};
 
+				// Get recipients
+				var recipients = [];
+				$$(ids.toEmails).getChildViews().forEach(e => {
+
+					var type = e.queryView({ name: 'type' }).getValue();
+					var email = e.queryView({ name: 'email' }).getValue();
+
+					recipients.push({
+						type: type,
+						email: email
+					});
+
+				});
+
 				// return the confirm message
 				return {
 					fromName: formVals['fromName'],
 					fromEmail: formVals['fromEmail'],
-					toEmail: formVals['toEmail'],
+					toEmails: recipients,
 					subject: formVals['subject'],
 					message: formVals['message']
 				};
+			},
+
+			toEmailTemplate: (type, email) => {
+
+				return {
+					cols: [
+						{
+							view: 'richselect',
+							name: 'type',
+							value: type || 'to',
+							options: [
+								{ id: 'to', value: "To:" },
+								{ id: 'cc', value: "Cc:" },
+								{ id: 'bcc', value: "Bcc:" },
+								{ id: 'reply', value: "Reply-To:" }
+							]
+						},
+						{
+							view: 'text',
+							name: 'email',
+							value: email || '',
+							validate: webix.rules.isEmail,
+							on: {
+								onChange: function (newVal, oldVal) {
+
+									_logic.toEmailValidate();
+								}
+							}
+						},
+						{
+							view: "button",
+							type: "icon",
+							icon: "trash-o",
+							width: 32,
+							click: function () {
+
+								var $toView = this.getParentView();
+
+								_logic.toEmailRemove($toView);
+							}
+						}
+					]
+				};
+
+			},
+
+			toEmailAdd: (type, email) => {
+
+				var count = $$(ids.toEmails).getChildViews().length;
+
+				$$(ids.toEmails).addView(_logic.toEmailTemplate(type, email), count);
+
+			},
+
+			toEmailRemove: ($toView) => {
+
+				$$(ids.toEmails).removeView($toView);
+
+			},
+
+			toEmailValidate: () => {
+
+				var isAllValid = true;
+
+
+				$$(ids.toEmails).getChildViews().forEach((v) => {
+
+					let emailText = v.queryView({ name: "email" });
+					if (emailText.getValue() && !emailText.validate()) {
+						isAllValid = false;
+					}
+
+				});
+
+				if (isAllValid)
+					$$(ids.form).markInvalid('toEmails', false);
+				else
+					$$(ids.form).markInvalid('toEmails', 'Email is invalid');
+
 			},
 
 			fieldTemplate: (field, common) => {
@@ -209,6 +346,8 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 
 				var focusElem = webix.UIManager.getFocus();
 				var val = "";
+
+				if (focusElem.config.view != 'text') return;
 
 				if (focusElem.getValue)
 					val = focusElem.getValue();
@@ -235,10 +374,33 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 
 		return new Promise((resolve, reject) => {
 
-			// TODO: send a email
+			// If sender email is invalid
+			if (!webix.rules.isEmail(this.valueRules.fromEmail)) {
+				resolve();
+				return;
+			}
 
+			var recipients = (this.valueRules.toEmails || [])
+				// TODO: Cc, Bcc
+				.map(r => r.email);
 
-			resolve();
+			// send a email
+			OP.Comm.Service.post({
+				url: "/app_builder/email",
+				params: {
+					fromName: this.valueRules.fromName,
+					fromEmail: this.valueRules.fromEmail,
+					subject: this.valueRules.subject,
+					message: this.valueRules.message,
+					recipients: recipients
+				}
+			})
+				.then(() => {
+
+					resolve();
+
+				})
+				.catch(reject);
 
 		});
 
