@@ -6,21 +6,12 @@
  */
 
 module.exports = {
-
-    /* Pages */
-
-    /**
-     * POST /app_builder/email'
-     * 
-     * Add/Update a page into ABApplication
-     */
-    send: function (req, res) {
-
-
-            res.AD.error(true);
-            res.AD.success(true);
-
-    }
-	
-};
-
+    
+        _config: {
+            model: "ablist", // all lowercase model name
+            actions: false,
+            shortcuts: false,
+            rest: true
+        }
+        
+    };
