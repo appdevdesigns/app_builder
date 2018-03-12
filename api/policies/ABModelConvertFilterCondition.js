@@ -177,7 +177,10 @@ module.exports = function(req, res, next) {
     if (Array.isArray(req.options._where)) {
         firstOption = req.options._where[0];
     }
-    if (typeof firstOption.combineCondition == 'undefined') {
+    // if (typeof firstOption.combineCondition == 'undefined') {
+    if ( _.isUndefined(firstOption.fieldName) 
+        && _.isUndefined(firstOption.operator) 
+        && _.isUndefined(firstOption.inputValue) ) {
         next();
         return;
     }

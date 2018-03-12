@@ -361,7 +361,8 @@ module.exports = function(req, res, next) {
     if (Array.isArray(req.options._where)) {
         firstOption = req.options._where[0];
     }
-    if (firstOption.combineCondition) {
+    if ((firstOption.combineCondition)
+        || (firstOption.fieldName && firstOption.operator && firstOption.inputValue)) {
         next();
         return;
     }
