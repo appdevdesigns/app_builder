@@ -174,9 +174,18 @@ export default class ABViewFormTextbox extends ABViewFormField {
 
 		var component = super.component(App);
 		var field = this.field();
-		var form = this.formComponent();		
 
-		var idBase = 'ABViewFormTextbox_' + this.id + "_f_" + form.uniqueInstanceID;
+
+		// FIX: it is possible this.formComponent() might return null.  If so, make sure we still
+		// produce a unique ID here:
+		var form = this.formComponent();	
+		var uniqueInstanceID = webix.uid();
+		if (form) {
+			uniqueInstanceID = form.uniqueInstanceID;
+		}
+
+
+		var idBase = 'ABViewFormTextbox_' + this.id + "_f_" + uniqueInstanceID;
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		}
