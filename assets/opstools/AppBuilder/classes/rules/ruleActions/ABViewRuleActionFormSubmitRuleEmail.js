@@ -164,7 +164,7 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 								name: 'message',
 								label: 'Message',
 								css: "ab-rich-text",
-								height: 200,
+								height: 400,
 								body: {
 									view: 'tinymce-editor'
 								}
@@ -201,7 +201,7 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 
 			init: () => {
 
-				$$(ids.list).parse(this.currentObject.fields());
+				$$(ids.list).parse(this.currentObject.fields(f => f.fieldUseAsLabel()));
 				$$(ids.list).refresh();
 
 			},
@@ -369,7 +369,10 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 
 	// process
 	// gets called when a form is submitted and the data passes the Query Builder Rules.
-	// @param {obj} options
+	// @param {obj} options - {
+	//							data: {obj} rowData,
+	//							form: {ABViewForm}
+	//						}
 	process(options) {
 
 		return new Promise((resolve, reject) => {
@@ -384,14 +387,31 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 				// TODO: Cc, Bcc
 				.map(r => r.email);
 
+			// replace form value to template
+			var fromName = this.valueRules.fromName,
+				subject = this.valueRules.subject,
+				message = this.valueRules.message;
+
+			this.currentObject.fields(f => f.fieldUseAsLabel())
+				.forEach(f => {
+
+					var template = new RegExp('{' + f.columnName + '}', 'g'),
+						data = f.format(options.data);
+
+					fromName = fromName.replace(template, data);
+					subject = subject.replace(template, data);
+					message = message.replace(template, data);
+
+				});
+
 			// send a email
 			OP.Comm.Service.post({
 				url: "/app_builder/email",
 				params: {
-					fromName: this.valueRules.fromName,
+					fromName: fromName,
 					fromEmail: this.valueRules.fromEmail,
-					subject: this.valueRules.subject,
-					message: this.valueRules.message,
+					subject: subject,
+					message: message,
 					recipients: recipients
 				}
 			})
