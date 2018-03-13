@@ -179,8 +179,7 @@ module.exports = function(req, res, next) {
     }
     // if (typeof firstOption.combineCondition == 'undefined') {
     if ( _.isUndefined(firstOption.fieldName) 
-        && _.isUndefined(firstOption.operator) 
-        && _.isUndefined(firstOption.inputValue) ) {
+        && _.isUndefined(firstOption.operator) ) {
         next();
         return;
     }

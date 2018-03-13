@@ -1163,7 +1163,7 @@ PopupRecordRule.qbFixAfterShow();
 									this.doRecordRules(newFormVals)
 									.then(()=>{
 
-										this.doSubmitRules(formVals);
+										this.doSubmitRules(newFormVals);
 
 										formReady(newFormVals);
 										resolve();
@@ -1182,7 +1182,7 @@ PopupRecordRule.qbFixAfterShow();
 									this.doRecordRules(newFormVals)
 									.then(()=>{
 
-										this.doSubmitRules(formVals);
+										this.doSubmitRules(newFormVals);
 
 										formReady(newFormVals);
 										resolve();

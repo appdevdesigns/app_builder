@@ -1,8 +1,8 @@
 /**
- * ABModelConvertQBCondition
+ * ABModelConvertSailsCondition
  * 
  * @module      :: Policy
- * @description :: Convert any provided QueryBuilder condition is in our sails like
+ * @description :: Convert any provided Sails condition into our QB like
  *                 condition format.
  * @docs        :: http://sailsjs.org/#!documentation/policies
  *
@@ -12,7 +12,7 @@ var url = require('url');
 var AD = require('ad-utils');
 var _ = require('lodash');
 
-
+var DebugWhere = '';
 
 /**
  * packageBetween
@@ -42,6 +42,16 @@ function parseCondition(field, opValue) {
 
   result = null;
 
+
+  // check for a NULL value:
+  if ((opValue == "null") 
+      || (opValue == null)) {
+    return {
+      key:field,
+      rule:'is_null',
+      value:""
+    }
+  }
 
   if (typeof opValue['!'] != 'undefined') {
 
@@ -73,7 +83,8 @@ function parseCondition(field, opValue) {
 
 
   // if this is a discrete value:
-  if (typeof opValue == 'string') {
+  if ((typeof opValue == 'string')
+      || (typeof opValue == 'number')) {
 
     // Check for an Empty value:
     if (opValue == "") {
@@ -84,16 +95,6 @@ function parseCondition(field, opValue) {
         value: ""
       }
 
-    }
-
-
-    // check for a NULL value:
-    if (opValue == "null") {
-      return {
-        key:field,
-        rule:'is_null',
-        value:""
-      }
     }
 
 
@@ -177,7 +178,8 @@ function parseCondition(field, opValue) {
 
   ADCore.error.log("app_builder:policy:ABModelConvertSailsCondition(): parseCondition() resulted in a NULL condition.", {
     field:field,
-    opValue:opValue
+    opValue:opValue,
+    debugWhere: DebugWhere
   })
   return null
 }
@@ -362,7 +364,7 @@ module.exports = function(req, res, next) {
         firstOption = req.options._where[0];
     }
     if ((firstOption.combineCondition)
-        || (firstOption.fieldName && firstOption.operator && firstOption.inputValue)) {
+        || (firstOption.fieldName && firstOption.operator )) {
         next();
         return;
     }
@@ -374,6 +376,7 @@ module.exports = function(req, res, next) {
         return;
     }
 
+DebugWhere = JSON.stringify(req.options._where);
 
     // Must be a Sails compatibal condition:
     req.options._where = processCondition(req.options._where);

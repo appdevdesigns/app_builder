@@ -249,11 +249,17 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 
 			showQBIfNeeded:() => {
 
-				var field = this.selectedField();
+				//// NOTE: we decided to go ahead and display the QB in ALL situations to give 
+				//// the user the ability to set a condition on the update even if the field
+				//// is only a one to one.  
+				//// If we want to remove the filter in case of a "one" linkType, then put 
+				//// these conditions back in:
 
-				// we don't need the QB if the destination object link type if 'one'.
-				// there will only be one to get back, so no conditions needed.
-				if (field.settings.linkType != 'one') {
+				// var field = this.selectedField();
+
+				// // we don't need the QB if the destination object link type if 'one'.
+				// // there will only be one to get back, so no conditions needed.
+				// if (field.settings.linkType != 'one') {
 
 					var qbComponent = this.queryBuilderDisplay();
 
@@ -261,7 +267,7 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 					_logic.addDisplay(qbComponent.ui);
 					qbComponent.init({});
 
-				}
+				// }
 
 			},
 
@@ -427,10 +433,17 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 							"key": "id",
 							"rule": "in",
 							"value": ids
-						},
-						this.qbCondition
+						}
 					]
 				}
+
+				// check to make sure qbCondition actually has a condition before adding it
+				// to our condition:
+				if (Object.keys(this.qbCondition).length > 0) {
+					condition.rules.push(this.qbCondition);
+				}
+
+				cb();
 
 			})
 			.catch(cb)
@@ -625,7 +638,12 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 								}
 							})
 						})
-						
+
+
+						// if there were no entries to update -> continue
+						if (list.length == 0) {
+							resolve();
+						}
 						
 					})
 					.catch(reject);
@@ -684,6 +702,11 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 			qbCond = this.objectQB.getValue();
 			if (Array.isArray(qbCond)) {
 				qbCond = qbCond[0];
+			}
+
+			// FIX: make sure qbCond root element has a 'glue'
+			if (qbCond) {
+				qbCond.glue = qbCond.glue || 'and';
 			}
 		}
 		settings.qbCondition = qbCond;

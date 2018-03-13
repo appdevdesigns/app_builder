@@ -329,7 +329,13 @@ width: 680,
 		}
 		var hiddenQB = webix.ui(ui);
 
-		hiddenQB.setValue(currentAction.condition());
+		var QBCondition = currentAction.condition();
+
+		if (this.objectQB) {
+			this.objectQB.cleanRules(QBCondition[0], QBCondition[1], false);
+		}
+
+		hiddenQB.setValue(QBCondition);
 
 		var QBHelper = hiddenQB.getFilterHelper();
 		var isValid = QBHelper(options.data);

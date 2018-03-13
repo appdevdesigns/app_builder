@@ -282,6 +282,14 @@ console.log();
 
         function parseCondition(condition, Query) {
 
+            // FIX: some improper inputs:
+            // if they didn't provide a .glue, then default to 'and'
+            // current webix behavior, might not return this 
+            // if there is a .rules property, then there should be a .glue:
+            if (condition.rules) {
+                condition.glue = condition.glue || 'and';
+            }
+
             // if this is a grouping condition, then decide how to group and 
             // process our sub rules:
             if (condition.glue) {
@@ -317,88 +325,106 @@ console.log('... condition:', JSON.stringify(condition, null, 4));
             // We are going to use the 'raw' queries for knex becuase the '.' 
             // for JSON searching is misinterpreted as a sql identifier
             // our basic where statement will be:
-             var whereRaw = '{fieldName} {operator} {input}';
+            var whereRaw = '{fieldName} {operator} {input}';
+
+
+            function quoteMe(value) {
+                return "'"+value+"'"
+            }
 
 
             // convert QB Rule to SQL operation:
             var conversionHash = {
                 'equals'        : '=',
-                'not_equals'    : '<>',
-                'is_null'       : 'IS NULL',
-                'is_not_null'   : 'IS NOT NULL',
+                'not_equal'     : '<>',
                 'is_empty'      : '=',
                 'is_not_empty'  : '<>',
                 'greater'       : '>',
                 'greater_or_equal' : '>=',
                 'less'          : '<',
-                'less_or_equal' : '<=',
-                'in'            : 'IN',
-                'not_in'        : 'NOT IN'
+                'less_or_equal' : '<='
             }
 
             // basic case:  simple conversion
             var operator = conversionHash[condition.rule];
-            var value = condition.value;
-// console.log('operator:', operator);
-// console.log('value:', value);
+            var value = quoteMe(condition.value);
+
 
 
             // special operation cases:
             switch (condition.rule) {
                 case "begins_with":
                     operator = 'LIKE';
-                    value = value + '%';
+                    value = quoteMe(value + '%');
                     break;
 
                 case "not_begins_with":
                     operator = "NOT LIKE";
-                    value = value + '%';
+                    value = quoteMe(value + '%');
                     break;
 
                 case "contains":
                     operator = 'LIKE';
-                    value = '%' + value + '%';
+                    value = quoteMe('%' + value + '%');
                     break;
 
                 case "not_contains":
                     operator = "NOT LIKE";
-                    value = '%' + value + '%';
+                    value = quoteMe('%' + value + '%');
                     break;
 
                 case "ends_with":
                     operator = 'LIKE';
-                    value = '%' + value;
+                    value = quoteMe('%' + value);
                     break;
 
                 case "not_ends_with":
                     operator = "NOT LIKE";
-                    value = '%' + value;
+                    value = quoteMe('%' + value);
                     break;
 
                 case "between": 
                     operator = "BETWEEN";
-                    value = condition.value.join(' AND ');
+                    value = condition.value.map(function(v){ return quoteMe(v)}).join(' AND ');
                     break;
 
                 case 'not_between':
                     operator = "NOT BETWEEN";
-                    value = condition.value.join(' AND ');
+                    value = condition.value.map(function(v){ return quoteMe(v)}).join(' AND ');
                     break;
 
                 case "is_current_user":
-                    var operator = "=";
-                    var value = userData.username;
+                    operator = "=";
+                    value = quoteMe(userData.username);
                     break;
 
                 case "is_not_current_user":
-                    var operator = "<>";
-                    var value = userData.username;
+                    operator = "<>";
+                    value = quoteMe(userData.username);
+                    break;
+
+                case 'is_null': 
+                    operator = "IS NULL";
+                    value = '';
+                    break;
+
+                case 'is_not_null': 
+                    operator = "IS NOT NULL";
+                    value = '';
+                    break;
+
+                case "in":
+                    operator = "IN";
+                    value = '(' + condition.value.map(function(v){ return quoteMe(v)}).join(', ') + ')';
+                    break;
+
+                case "not_in":
+                    operator = "NOT IN";
+                    value = '(' + condition.value.map(function(v){ return quoteMe(v)}).join(', ') + ')';
                     break;
 
             }
 
-// console.log('    -> operator:', operator);
-// console.log('    -> value:', value );
 
             // normal field name:
             var fieldName = '`' + condition.key + '`';
@@ -417,13 +443,12 @@ console.log('... condition:', JSON.stringify(condition, null, 4));
                     value = inputID.id;
             }
 
-// console.log('  fieldName:', fieldName);
 
             // update our where statement:
             whereRaw = whereRaw
                 .replace('{fieldName}', fieldName)
                 .replace('{operator}', operator)
-                .replace('{input}', ((value != null) ? "'" + value + "'" : ''));
+                .replace('{input}', ((value != null) ?  value  : ''));
 
 
             // Now we add in our where
@@ -431,7 +456,6 @@ console.log('... condition:', JSON.stringify(condition, null, 4));
         }
 
         parseCondition(where, query);
-
 
     }
 

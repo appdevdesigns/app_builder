@@ -216,7 +216,22 @@ if (newCond.where.where) {
 
 						resolve(data);
 					})
-					.catch(reject);
+					.catch((err) => {
+
+						if (err.code) {
+							switch(err.code) {
+								case "ER_PARSE_ERROR":
+									OP.Error.log('AppBuilder:ABModel:findAll(): Parse Error with provided condition', { error: err, condition:newCond })
+									break;
+
+								default:
+									OP.Error.log('AppBuilder:ABModel:findAll(): Unknown Error with provided condition', { error: err, condition:newCond })
+									break;
+							}
+
+						}
+						reject(err);
+					})
 
 			}
 		)
@@ -283,7 +298,7 @@ if (newCond.where.where) {
 					return;
 				}
 
-				this.findAll({where:[{fieldName:'id', operator:'equals', inputValue:data.id }], includeRelativeData: true })
+				this.findAll({where:{id:data.id}, includeRelativeData: true })
 				.then((results) => {
 
 					if ( !results.data  || (!Array.isArray(results.data)) || (results.data.length == 0)) {
@@ -317,7 +332,10 @@ if (newCond.where.where) {
 					resolve(returnData);
 
 				})
-				.catch(reject);
+				.catch((err) =>{
+console.error('!!! error with findConnected() attempt:', err);
+reject(err);
+				});
 
 			}
 		)
