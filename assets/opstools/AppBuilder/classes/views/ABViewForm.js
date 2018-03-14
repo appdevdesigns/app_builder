@@ -956,27 +956,6 @@ PopupRecordRule.qbFixAfterShow();
 		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.datacollection)[0];
 	}
 
-	/**
-	 * @method formComponent()
-	 *
-	 * return a form component
-	 *
-	 * @return {ABViewForm}
-	 */
-	formComponent() {
-		var form = null;
-		var curr = this;
-
-		while (curr.key != 'form' && !curr.isRoot() && curr.parent) {
-			curr = curr.parent;
-		}
-
-		if (curr.key == 'form') {
-			form = curr;
-		}
-
-		return form;
-	}
 
 	/**
 	 * @method fieldComponents()
@@ -1178,7 +1157,7 @@ PopupRecordRule.qbFixAfterShow();
 									reject(err);
 								})
 								.then((newFormVals) => {
-									console.log("newFormVals: ", newFormVals);
+// console.log("newFormVals: ", newFormVals);
 									this.doRecordRules(newFormVals)
 									.then(()=>{
 
