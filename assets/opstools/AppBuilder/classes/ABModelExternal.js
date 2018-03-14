@@ -24,29 +24,41 @@ export default class ABModelExternal extends ABModel {
 
 		cond = cond || {};
 
-
 		// prepare our condition:
 		var newCond = {};
 
-		// if the provided cond looks like our { where:{}, skip:xx, limit:xx } format,
-		// just use this one.
-		if (cond.where) {
-			newCond = cond;
-		} else {
-
-			// else, assume the provided condition is the .where clause.
-			newCond.where = {
-				where: [cond]
-			};
+		// [where]
+		if (cond.where &&
+			cond.where.where) {
+			newCond.where = cond.where.where;
 		}
 
-		// WORKAROUND
-		newCond = {};
+		// [sort]
+		if (cond.where &&
+			cond.where.sort) {
+			newCond.sort = cond.where.sort;
+		}
+
+		// [limit]
+		if (cond.limit)
+			newCond.limit = cond.limit;
+
+		// [skip]
+		if (cond.skip)
+			newCond.skip = cond.skip;
+
+		// {
+		// 	where: { name: 'mary' },
+		// 	skip: 20,
+		// 	limit: 10,
+		// 	sort: 'createdAt DESC'
+		//   }
 
 		return new Promise(
 			(resolve, reject) => {
 
-				OP.Comm.Socket.get({
+				// OP.Comm.Socket.get({
+				OP.Comm.Service.get({
 					url: this.modelURL(),
 					params: newCond
 				})
@@ -54,9 +66,10 @@ export default class ABModelExternal extends ABModel {
 
 						this.normalizeData(data);
 
-						// TODO: position of data
 						resolve({
-							data: data
+							data: data,
+							pos: newCond.skip || 0,  // specify position of insert new data
+							total_count: null // TODO
 						});
 					})
 					.catch(reject);

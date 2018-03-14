@@ -7,9 +7,15 @@ module.exports = {
 	 */
 	findModels: function (req, res) {
 
-		var modelNames = ABExternal.getModels();
+		var appID = req.param('appID');
 
-		res.AD.success(modelNames);
+		ABExternal.getModels(appID)
+			.catch(err => {
+				res.AD.error(err, 500);
+			})
+			.then((modelNames) => {
+				res.AD.success(modelNames);
+			});
 
 	},
 

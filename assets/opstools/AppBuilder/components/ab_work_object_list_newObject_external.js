@@ -223,7 +223,9 @@ export default class AB_Work_Object_List_NewObject_External extends OP.Component
                         saveButton.enable();
                         _logic.busyEnd();
 
-                        var newObj = new ABObject(objValues, currentApp);
+                        // Add new object to list
+                        var newObj = currentApp.objectNew(objValues);
+                        currentApp._objects.push(newObj);
 
                         _logic.callbacks.onDone(newObj);
                     })

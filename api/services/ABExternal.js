@@ -1,7 +1,7 @@
 var uuid = require('node-uuid');
 var path = require('path');
 
-var ABObject = require(path.join(__dirname,  "..", "classes",  "ABObject.js"));
+var ABObject = require(path.join(__dirname, "..", "classes", "ABObject.js"));
 
 // Build a reference of AB defaults for all supported Sails data field types
 var FieldManager = require(path.join('..', 'classes', 'ABFieldManager.js'));
@@ -17,6 +17,33 @@ FieldManager.allFields().forEach((Field) => {
 	});
 });
 
+function getModelURL(modelName) {
+
+	var lcModelName = modelName.toLowerCase();
+	var controllerInfo = _.find(sails.controllers, (c) => {
+		// 1st try: look for `model` config in the controllers
+		if (c._config && c._config.model == lcModelName)
+			return true;
+		else
+			return false;
+	});
+	if (!controllerInfo) {
+		// 2nd try: look for matching controller-model name
+		controllerInfo = _.find(sails.controllers, (c) => {
+			if (!c.identity) return false;
+			var nameParts = c.identity.split('/');
+			var finalName = nameParts[nameParts.length - 1];
+			if (finalName == lcModelName)
+				return true;
+			else
+				return false;
+		});
+	}
+
+	// get model's URL
+	return controllerInfo && controllerInfo.identity || '';
+}
+
 module.exports = {
 
 	/**
@@ -25,12 +52,69 @@ module.exports = {
 	 * @return Array
 	 * 		Return an array contains model names
 	 */
-	getModels: function () {
+	getModels: function (appID) {
 
-		return Object.keys(sails.models);
+		var existsObjects = [],
+			sailsModelNames = [];
+
+		return Promise.resolve()
+			// Pull exists object names
+			.then(function () {
+
+				return new Promise((resolve, reject) => {
+
+					ABApplication.find({ id: appID })
+						.exec(function (err, list) {
+							if (err) reject(err);
+							else if (!list || !list[0]) {
+								reject(new Error('Application not found: ' + appID));
+							}
+							else {
+								let application = list[0],
+									json = application.json;
+
+								if (Array.isArray(json.objects)) {
+									let appObjects = json.objects.concat();
+									appObjects.forEach((obj) => {
+
+										existsObjects.push(obj.name);
+
+									});
+								}
+								resolve();
+							}
+						});
+
+				});
+
+			})
+			// Get sails model names
+			.then(function () {
+
+				return new Promise((resolve, reject) => {
+
+					// Result is all the sails models that are not currently in
+					// this application.
+					var sailsModels = Object.keys(sails.models);
+
+					sailsModels.forEach((modelName) => {
+						if (existsObjects.indexOf(modelName) < 0 &&
+							// check blueprint of model
+							getModelURL(modelName)) {
+
+							sailsModelNames.push(modelName);
+
+						}
+					});
+
+
+					return resolve(sailsModelNames);
+
+				});
+
+			});
 
 	},
-
 
 
 	/**
@@ -73,28 +157,8 @@ module.exports = {
 
 				// Find server side controller & blueprints URL
 				(next) => {
-					var lcModelName = modelName.toLowerCase();
-					var controllerInfo = _.find(sails.controllers, (c) => {
-						// 1st try: look for `model` config in the controllers
-						if (c._config && c._config.model == lcModelName)
-							return true;
-						else
-							return false;
-					});
-					if (!controllerInfo) {
-						// 2nd try: look for matching controller-model name
-						controllerInfo = _.find(sails.controllers, (c) => {
-							if (!c.identity) return false;
-							var nameParts = c.identity.split('/');
-							var finalName = nameParts[nameParts.length - 1];
-							if (finalName == lcModelName)
-								return true;
-							else
-								return false;
-						});
-					}
+					modelURL = getModelURL(modelName);
 
-					modelURL = controllerInfo && controllerInfo.identity || '';
 					next();
 				},
 
@@ -203,7 +267,7 @@ module.exports = {
 						colData.columnName = colName;
 						colData.settings.default = defaultValue;
 						colData.settings.isImported = true;
-						colData.settings.showIcon = true;
+						colData.settings.showIcon = 1;
 
 						// Label translations
 						colData.translations = [];
@@ -338,6 +402,7 @@ module.exports = {
 
 				// Save to database
 				(next) => {
+					application.json.objects = application.json.objects || [];
 					application.json.objects.push(objectData);
 
 					ABApplication.update(
