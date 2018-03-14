@@ -192,7 +192,7 @@ export default class ABField extends ABFieldBase {
 	  
 
 	static get reservedNames() {
-		return ['id', 'created_at', 'updated_at', 'properties'];
+		return ['id', 'created_at', 'updated_at', 'properties', 'createdAt', 'updatedAt'];
 	}
 
 

@@ -24,7 +24,7 @@ var ABFieldBooleanDefaults = {
 	
 	// what types of Sails ORM attributes can be imported into this data type?
 	// http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
-	compatibleOrmTypes: ['boolean'],
+	compatibleOrmTypes: ['boolean', 'binary'],
 };
 
 var defaultValues = {

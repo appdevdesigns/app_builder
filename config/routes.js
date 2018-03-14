@@ -92,7 +92,20 @@ module.exports = {
 
     'put /app_builder/model/application/:appID/refreshobject/:objID' : 
         'app_builder/ABModelController.refresh',
-        
+
+
+
+
+    /* Import Sails models */
+    'get /app_builder/external/application/:appID' : 
+        'app_builder/ABExternalController.findModels',
+
+    'get /app_builder/external/model/:name/attributes' : 
+        'app_builder/ABExternalController.findModelAttributes',
+
+    'post /app_builder/external/application/:appID/model/:name' : 
+        'app_builder/ABExternalController.importModel',
+
 
 // only for easy development/testing purposes:
 'get /app_builder/migrate/application/:appID/object/:objID' : 

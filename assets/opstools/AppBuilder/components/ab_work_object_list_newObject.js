@@ -18,6 +18,7 @@
 import ABBlankObject from "./ab_work_object_list_newObject_blank"
 import ABCsvObject from "./ab_work_object_list_newObject_csv"
 import ABImportObject from "./ab_work_object_list_newObject_import"
+import ABImportExternal from "./ab_work_object_list_newObject_external"
 
 
 
@@ -46,6 +47,7 @@ export default class AB_Work_Object_List_NewObject extends OP.Component {   //.e
 		var BlankTab = new ABBlankObject(App);
 		var CsvTab = new ABCsvObject(App);
 		var ImportTab = new ABImportObject(App);
+		var ExternalTab = new ABImportExternal(App);
 
 
 		// Our webix UI definition:
@@ -63,7 +65,8 @@ export default class AB_Work_Object_List_NewObject extends OP.Component {   //.e
 				cells: [
 					BlankTab.ui,
 					CsvTab.ui,
-					ImportTab.ui
+					ImportTab.ui,
+					ExternalTab.ui
 				],
 				tabbar: {
 					on: {
@@ -109,6 +112,7 @@ export default class AB_Work_Object_List_NewObject extends OP.Component {   //.e
 			BlankTab.init(ourCBs);
 			CsvTab.init(ourCBs);
 			ImportTab.init(ourCBs);
+			ExternalTab.init(ourCBs);
 
 		}
 
@@ -259,6 +263,10 @@ export default class AB_Work_Object_List_NewObject extends OP.Component {   //.e
 				else if (tabId == ImportTab.ui.body.id) {
 					if (ImportTab.onShow)
 						ImportTab.onShow(currentApplication);
+				}
+				else if (tabId == ExternalTab.ui.body.id) {
+					if (ExternalTab.onShow)
+						ExternalTab.onShow(currentApplication);
 				}
 
 			}

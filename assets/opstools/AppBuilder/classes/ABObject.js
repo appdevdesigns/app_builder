@@ -6,6 +6,7 @@ import ABObjectBase from "./ABObjectBase"
 // import OP from "OP"
 import ABFieldManager from "./ABFieldManager"
 import ABModel from "./ABModel"
+import ABModelExternal from "./ABModelExternal"
 
 
 function L(key, altText) {
@@ -21,7 +22,8 @@ export default class ABObject extends ABObjectBase {
 	id: uuid(),
 	name: 'name',
 	labelFormat: 'xxxxx',
-	isImported: 1/0,
+	isImported: 1/0,		// import from another application
+	isExternal: 1/0,		// flag it is a sails model
 	urlPath:'string',
 	importFromObject: 'string', // JSON Schema style reference:  '#[ABApplication.id]/objects/[ABObject.id]'
 								// to get other object:  ABApplication.objectFromRef(obj.importFromObject);
@@ -408,6 +410,9 @@ export default class ABObject extends ABObjectBase {
 			if (this.isImported) {
 				var obj = ABApplication.objectFromRef(this.importFromObject);
 				this._model = new ABModel(obj);
+			}
+			else if (this.isExternal) {
+				this._model = new ABModelExternal(this);
 			}
 			else {
 				this._model = new ABModel(this);

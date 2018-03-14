@@ -36,7 +36,8 @@ module.exports = class ABObject extends ABObjectBase {
 	id: uuid(),
 	name: 'name',
 	labelFormat: 'xxxxx',
-	isImported: 1/0,
+	isImported: 1/0,		// import from another application
+	isExternal: 1/0,		// flag it is a sails model
 	tableName:'string',  // NOTE: store table name of import object to ignore async
 	urlPath:'string',
 	importFromObject: 'string', // JSON Schema style reference:  '#[ABApplication.id]/objects/[ABObject.id]'
