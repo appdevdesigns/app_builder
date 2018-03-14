@@ -6,17 +6,10 @@
 //
 //
 import ABViewRuleActionObjectUpdater from "./ABViewRuleActionObjectUpdater"
-// import ABFieldConnect from "../../dataFields/ABFieldConnect"
-
+import ABFieldConnect from "../../dataFields/ABFieldConnect"
 import ObjectQueryBuilder from "../ABViewQueryBuilderObjectFieldConditions"
 
 
-//// LEFT OFF HERE:
-// Now implement Update Connected Object:
-// - Continue filling out update Connected connection conditions:
-//		- QueryBuilder: initial value on a numeric field & Date is not being set properly!
-// - debug importing ABFieldConnect errors (see commented out import above)
-//
 
 export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABViewRuleActionObjectUpdater {
 
@@ -85,7 +78,7 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 	 * @return {array} of {ABField}     
 	 */
 	connectedFieldList() {
-		var connectKey = "connectObject"; // ABFieldConnect.defaults().key;
+		var connectKey =  ABFieldConnect.defaults().key; 
 		if (this.baseObject  && this.baseObject.fields) {
 			return this.baseObject.fields((f)=>{ return f.key == connectKey; });
 		} else {

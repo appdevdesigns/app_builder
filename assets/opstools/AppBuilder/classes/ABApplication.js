@@ -504,7 +504,13 @@ export default class ABApplication extends ABApplicationBase {
 		return new ABViewManager.newView(values, this, null);
 	}
 
+	viewNew(values, application, parent) {
+		return ABViewManager.newView(values, application, parent);
+	}
 
+	viewAll() {
+		return ABViewManager.allViews();
+	}
 
 	/**
 	 * @method pageDestroy()

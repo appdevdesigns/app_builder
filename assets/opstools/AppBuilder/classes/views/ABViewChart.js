@@ -7,7 +7,7 @@
 
 // import ABViewWidget from "./ABViewWidget"
 import ABViewContainer from "./ABViewContainer"
-import ABViewManager from "../ABViewManager"
+// import ABViewManager from "../ABViewManager"
 import ABViewChartComponent from "./ABViewChartComponent"
 import ABPropertyComponent from "../ABPropertyComponent"
 
@@ -371,7 +371,7 @@ export default class ABViewChart extends ABViewContainer  {
 	 */
 	componentList() {
 		var viewsToAllow = ['label', 'pie', 'bar', 'line', 'area'],
-			allComponents = ABViewManager.allViews();
+			allComponents = this.application.viewAll();  // ABViewManager.allViews();
 
 		var ret = allComponents.filter((c) => {
 			return viewsToAllow.indexOf(c.common().key) > -1;

@@ -6,7 +6,7 @@
  */
 
 import ABFieldBase from "./ABFieldBase"
-import ABViewManager from "../ABViewManager"
+// import ABViewManager from "../ABViewManager"
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -562,7 +562,7 @@ export default class ABField extends ABFieldBase {
 				values.settings.fieldId = this.id;
 				// values.id = this.id;
 
-				var ABFieldPlaceholder = ABViewManager.newView(values, application, parent);
+				var ABFieldPlaceholder = application.viewNew(values, application, parent); // ABViewManager.newView(values, application, parent);
 				// ABFieldPlaceholder.formatTitle();
 				// ABFieldPlaceholder.text = "ABFieldPlaceholder";
 
@@ -598,7 +598,7 @@ export default class ABField extends ABFieldBase {
 				values.settings.objectId = this.object.id;
 				values.settings.fieldId = this.id;
 
-				var ABFieldPlaceholder = ABViewManager.newView(values, application, parent);
+				var ABFieldPlaceholder = application.viewNew(values, application, parent); // ABViewManager.newView(values, application, parent);
 
 				return ABFieldPlaceholder;
 			}
