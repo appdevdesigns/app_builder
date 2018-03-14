@@ -285,7 +285,7 @@ console.log();
             // FIX: some improper inputs:
             // if they didn't provide a .glue, then default to 'and'
             // current webix behavior, might not return this 
-            // if there is a .rules property, then there should be a .glue:
+            // so if there is a .rules property, then there should be a .glue:
             if (condition.rules) {
                 condition.glue = condition.glue || 'and';
             }
@@ -311,6 +311,21 @@ console.log();
                 
                 return;
             }
+
+
+
+            //// Special Case:  'have_no_relation'
+            // 1:1 - Get rows that no relation with 
+            if (condition.rule == 'have_no_relation') {
+                var relation_name = AppBuilder.rules.toFieldRelationFormat(condition.key);
+
+                Query
+                    .leftJoinRelation(relation_name)
+                    .whereRaw('{relation_name}.id IS NULL'.replace('{relation_name}', relation_name));
+
+                return;
+            }
+
 
 
             //// Handle a basic rule:
@@ -344,6 +359,7 @@ console.log('... condition:', JSON.stringify(condition, null, 4));
                 'less'          : '<',
                 'less_or_equal' : '<='
             }
+
 
             // basic case:  simple conversion
             var operator = conversionHash[condition.rule];

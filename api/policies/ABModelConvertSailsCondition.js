@@ -132,8 +132,11 @@ function parseCondition(field, opValue) {
     '>'                 : 'greater',
     '>='                : 'greater_or_equal',
     
-    //     between:          { op: 'BETWEEN ?',      sep: ' AND ' },
-    // not_between:      { op: 'NOT BETWEEN ?',  sep: ' AND ' },
+
+    // NOTE: this isn't a Sails condition, it is one of our own 
+    // special conditions, we need to pass on:
+    // { 'fieldName': { 'haveNoRelation':XX } }  // the value XX isn't important.
+    'haveNoRelation'    : 'have_no_relation'
 
   }
 
