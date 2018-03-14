@@ -56,7 +56,7 @@ module.exports = {
 				return reject(new Error('unrecognized model: ' + modelName));
 
 			var application;
-			var objectExternal;
+			var objectData;
 			var languages = [];
 			var columns = [];
 			var associations = [];
@@ -135,7 +135,7 @@ module.exports = {
 
 				// Prepare object
 				(next) => {
-					var objectData = {
+					objectData = {
 						id: uuid(),
 						name: modelName,
 						tableName: model.tableName,
@@ -153,9 +153,6 @@ module.exports = {
 							label: modelName
 						});
 					});
-
-					// get ABObject
-					objectExternal = new ABObject(objectData, application.toABClass());
 
 					next();
 				},
@@ -205,7 +202,8 @@ module.exports = {
 						colData.id = uuid.v4();
 						colData.columnName = colName;
 						colData.settings.default = defaultValue;
-						colData.settings.imported = true;
+						colData.settings.isImported = true;
+						colData.settings.showIcon = true;
 
 						// Label translations
 						colData.translations = [];
@@ -218,7 +216,7 @@ module.exports = {
 
 						console.log('Adding column:', colData);
 
-						objectExternal.fieldNew(colData);
+						objectData.fields.push(colData);
 					}
 					next();
 				},
@@ -340,7 +338,7 @@ module.exports = {
 
 				// Save to database
 				(next) => {
-					application.json.objects.push(objectExternal.toObj());
+					application.json.objects.push(objectData);
 
 					ABApplication.update(
 						{ id: appID },
@@ -362,7 +360,7 @@ module.exports = {
 
 			], function (err) {
 				if (err) reject(err);
-				else resolve(objectExternal.toObj());
+				else resolve(objectData);
 			});
 
 		});

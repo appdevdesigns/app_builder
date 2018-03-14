@@ -110,7 +110,7 @@ module.exports = {
                     // save to database
                     app.save(function (err) {
                         if (err)
-                            res.AD.error(true);
+                            res.AD.error(err);
                         else
                             res.AD.success(true);
                     });

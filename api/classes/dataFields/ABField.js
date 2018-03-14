@@ -70,7 +70,8 @@ module.exports =  class ABField extends ABFieldBase {
 				if (this.columnName == '') return resolve();
 
 				// if field is imported, then it will not remove column in table
-				if (this.isImported) return resolve();
+				if (this.object.isImported || this.object.isExternal)
+					return resolve();
 
 				var tableName = this.object.dbTableName();
 

@@ -66,7 +66,9 @@ module.exports = {
 
         var knex = ABMigration.connection();
 
-        delete knex.$$objection.boundModels[tableName];
+        if (knex.$$objection && 
+            knex.$$objection.boundModels)
+            delete knex.$$objection.boundModels[tableName];
 
     },
 

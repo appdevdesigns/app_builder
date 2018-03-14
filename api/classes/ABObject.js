@@ -124,7 +124,7 @@ module.exports = class ABObject extends ABObjectBase {
 	///
 
 	dbTableName() {
-		if (this.isImported) {
+		if (this.isImported || this.isExternal) {
 			// NOTE: store table name of import object to ignore async
 			return this.tableName;
 		}
@@ -213,9 +213,9 @@ module.exports = class ABObject extends ABObjectBase {
 			(resolve, reject) => {
 				sails.log.silly('.... .migrateDropTable()  before knex:');
 				
-				if (this.isImported) {
-					sails.log.silly('.... aborted drop of imported table');
-					reject(new Error('Cannot drop an imported object'));
+				if (this.isImported || this.isExternal) {
+					sails.log.silly('.... aborted drop of imported/external table');
+					resolve();
 					return;
 				}
 
