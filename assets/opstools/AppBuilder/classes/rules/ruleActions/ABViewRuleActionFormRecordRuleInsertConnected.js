@@ -3,11 +3,20 @@
 //
 // An action that allows you to insert a connected object. 
 //
+// NOTE: this is very similar to the Update Connected Rule, so we subclass that one and
+// modify it to only Insert data.
 //
-import ABViewRuleAction from "../ABViewRuleAction"
+//
+import UpdateConnected from "./ABViewRuleActionFormRecordRuleUpdateConnected"
 
 
-export default class ABViewRuleActionFormRecordRuleInsertConnected extends ABViewRuleAction {
+//// LEFT OFF HERE:
+// - finish up .process() command
+//		- Question: API: ABModelController : does it handle related data on an update/create ? How?
+
+
+
+export default class ABViewRuleActionFormRecordRuleInsertConnected extends UpdateConnected {
 
 	/**
 	 * @param {object} App 
@@ -26,146 +35,116 @@ export default class ABViewRuleActionFormRecordRuleInsertConnected extends ABVie
 		this.key = 'ABViewRuleActionFormRecordRuleInsertConnected';
 		this.label = L('ab.component.ruleaction.insertConnectedObject', '*Insert Connected Object');
 
-
-		this.currentObject = null;  // the object this Action is tied to.
-
-
-		// Labels for UI components
-		// var labels = this.labels = {
-		// 	common: App.labels,
-		// 	component: {
-		// 		// action: L("ab.component.form.action", "*Action"),
-		// 		// when: L("ab.component.form.when", "*When"),
-		// 		// values: L("ab.component.form.values", "*Values")
-		// 	}
-		// };
-
-		// // internal list of Webix IDs to reference our UI components.
-		// var ids = this.ids = {
-		// 	// each instance must be unique
-		// 	component: this.unique(idBase + '_component')+'_'+webix.uid(),	
-		// 	// rules: this.unique(idBase + '_rules'),
-
-		// 	// action: this.unique(idBase + '_action'),
-		// 	// when: this.unique(idBase + '_when'),
-
-		// 	// values: this.unique(idBase + '_values'),
-		// 	// set: this.unique(idBase + '_set')
-
-		// };
-
-
-		// this.ui = {};
-
-
-		// // for setting up UI
-		// this.init = (options) => {
-		// 	// register callbacks:
-		// 	for (var c in _logic.callbacks) {
-		// 		_logic.callbacks[c] = options[c] || _logic.callbacks[c];
-		// 	}
-		// };
-
-		// // internal business logic 
-		// var _logic = this._logic = {
-
-		// 	callbacks: {
-		// 		onDelete: function () { console.warn('NO onDelete()!') },
-		// 		onSave: function (field) { console.warn('NO onSave()!') },
-		// 	},
-
-		// }
-
 	}
 
 
-	conditionFields() {
-		
-		var fieldTypes = ['string', 'number', 'date'];
 
-		var currFields = [];
+	/**
+	 * valueDisplayChooser
+	 * Our Values Display is a Select Box with a choice of connected fields.
+	 * Once a field is chosen, then we display the Updater form.
+	 * @param {string}  idBase  a unique webix id to base our sub components on.
+	 */
+	valueDisplayChooser(idBase) {
 
-		// if (this.currentObject) {
-		// 	this.currentObject.fields().forEach((f)=>{
+		var Component = super.valueDisplayChooser(idBase);
 
-		// 		if (fieldTypes.indexOf(f.key) != -1) {
-		// 			currFields.push({
-		// 				id: f.id,
-		// 				value: f.label,
-		// 				type: f.key
-		// 			});
-		// 		}
-		// 	})
-		// }
+		// in our case, there are no additional QB conditions:
+		// so overwrite the .showQBIfNeeded() routine to not show anything:
+		Component._logic.showQBIfNeeded = function() {};
 
-		return currFields;
-
+		return Component;
 	}
 
 
-	// valueDisplayComponent
-	// Return an ABView to display our values form.
-	// 
-	valueDisplayComponent(idBase) {
 
-		if (this._ui == null) {
-			this._ui = this.valueDisplayList(idBase);
-		}
+	/**
+	 * queryBuilderDisplay
+	 * override our parent .queryBuilderDisplay to not create a new .objectQB
+	 * @return {null} 
+	 */
+	queryBuilderDisplay() {
 
-		return this._ui;
+		return null;	
 	}
 
-	// process
-	// gets called when a form is submitted and the data passes the Query Builder Rules.
-	// @param {obj} options
-	// @return {Promise}
+
+
+	/**
+	 * process
+	 * gets called when a form is submitted and the data passes the Query Builder Rules.
+	 * @param {obj} options
+	 *				options.data : {obj} the key=>value of the data just entered by the form
+	 *				options.form : {ABViewForm} the Form object that is processing this rule
+	 * @return {Promise}
+	 */
 	process(options) {
 
-		return new Promise( (resolve, reject) => {
-console.log(" Insert Connected Object .... .process() ")
-resolve();
+		// prepare .valueRules
+		this.valueRules = this.valueRules || {};
+		this.valueRules.fieldOperations = this.valueRules.fieldOperations || [];
 
-		})
+		// get connected object
+		var connObj = this.connectedObject();
+		var model = connObj.model();
+
+		var connectionField = this.selectedField();
+
+		var condition = null;	// our lookup condition
+
+
+		// determine our connection type
+			// "one" type of connection
+				// if my connectionField is the source
+					// this field contains the .id of the newly inserted object
+					// so create the object,
+					// and update this connection field with it's .id
+
+				// else 
+
+					// the new object needs to contain my .id in it's field
+					// add my id to the data to store
+					// create the object
+
+			// "many" type of connection
+				// M:1
+				// if linkViaType == one, then the new object needs to contain my .id in it's field
+				// same as 1:1,  ! source
+
+
+				// else
+
+					// M:N
+
+
+
+		// perform the update/insert
+
+
+
 	}
 
 
-
-
-	// fromSettings
-	// initialize this Action from a given set of setting values.
-	// @param {obj}  settings
-	fromSettings(settings) {
-		settings = settings || {};
-		super.fromSettings(settings); // let the parent handle the QB
-
-
-		// if we have a display component, then populate it:
-		if (this._ui) {
-
-			// now we handle our valueRules:{} object settings.
-			// pass the settings off to our DisplayList component:
-			this._ui.fromSettings(settings.valueRules);
-		}
-	}
-
-
-	// toSettings
-	// return an object that represents the current state of this Action
-	// @return {obj}
+	/**
+	 * toSettings
+	 * return an object that represents the current state of this Action
+	 * @return {obj} 
+	 */
 	toSettings() {
 
 		// settings: {
-		//	valueRules:{}
+		// 	selectedFieldID: 'guid',
+		//	valueRules:{}		// from ABViewRuleActionObjectUpdater
 		// }
 
 		// let our parent store our QB settings
 		var settings = super.toSettings();
 
-		settings.valueRules = this._ui.toSettings();
+		// we don't use .qpCondition
+		delete settings.qbCondition
+
 
 		return settings;
 	}
-
-
 
 }
