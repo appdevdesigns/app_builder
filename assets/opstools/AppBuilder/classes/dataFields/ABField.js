@@ -524,7 +524,7 @@ export default class ABField extends ABFieldBase {
 	 * However, what is returned here, needs to be able to create an instance of
 	 * the component that will be stored with the ABViewForm.
 	 */
-	formComponent() {
+	formComponent(formKey) {
 		
 		// NOTE: what is being returned here needs to mimic an ABView CLASS.
 		// primarily the .common() and .newInstance() methods.
@@ -535,13 +535,12 @@ export default class ABField extends ABFieldBase {
 			common: () => {
 				return {
 					
-					// NOTE: form components should return .label:
-					// label: 'PlaceHolder',  // form components should return .label
+					key: formKey,
 
-					// but since this is a common place holder: use the 
-					// multilingual label here:
-					labelKey: 'ab.abfield.labelPlaceholder',
-					icon:  'square'
+					// // but since this is a common place holder: use the 
+					// // multilingual label here:
+					// labelKey: 'ab.abfield.labelPlaceholder',
+					// icon:  'square'
 				}
 			},
 
