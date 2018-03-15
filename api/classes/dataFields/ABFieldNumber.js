@@ -16,7 +16,7 @@ function L(key, altText) {
 
 var ABFieldNumberDefaults = {
 	key: 'number', // unique key to reference this specific DataField
-	icon: 'slack',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
+	icon: 'hashtag',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
 
 	// menuName: what gets displayed in the Editor drop list
 	menuName: L('ab.dataField.number.menuName', '*Number'),
@@ -27,6 +27,12 @@ var ABFieldNumberDefaults = {
 	// what types of Sails ORM attributes can be imported into this data type?
 	// http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
 	compatibleOrmTypes: ['integer', 'float'],
+
+
+	// what types of MySql column types can be imported into this data type?
+	// https://www.techonthenet.com/mysql/datatypes.php
+	compatibleMysqlTypes: ['tinyint', 'smallint', 'mediumint', 'int', 'integer', 'bigint', 'decimal', 'dec', 'numeric', 'fixed', 'float', 'real']
+
 }
 
 

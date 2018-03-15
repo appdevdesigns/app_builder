@@ -388,7 +388,8 @@ module.exports = {
 
                     // this is a create operation, so ... 
                     // createParams.created_at = (new Date()).toISOString();
-                    createParams.created_at = AppBuilder.rules.toSQLDateTime(new Date());
+                    if (!object.isExternal)
+                        createParams.created_at = AppBuilder.rules.toSQLDateTime(new Date());
 
                     sails.log.verbose('ABModelController.create(): createParams:', createParams);
 
@@ -753,13 +754,15 @@ module.exports = {
 
                             // this is an update operation, so ... 
                             // updateParams.updated_at = (new Date()).toISOString();
-                            updateParams.updated_at = AppBuilder.rules.toSQLDateTime(new Date());
+                            if (!object.isExternal) {
+                                updateParams.updated_at = AppBuilder.rules.toSQLDateTime(new Date());
 
-                            // Check if there are any properties set otherwise let it be...let it be...let it be...yeah let it be
-                            if (allParams.properties != "") {
-                                updateParams.properties = allParams.properties;
-                            } else {
-                                updateParams.properties = null;
+                                // Check if there are any properties set otherwise let it be...let it be...let it be...yeah let it be
+                                if (allParams.properties != "") {
+                                    updateParams.properties = allParams.properties;
+                                } else {
+                                    updateParams.properties = null;
+                                }
                             }
 
                             sails.log.verbose('ABModelController.update(): updateParams:', updateParams);

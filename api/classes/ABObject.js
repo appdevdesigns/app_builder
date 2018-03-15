@@ -37,6 +37,7 @@ module.exports = class ABObject extends ABObjectBase {
 	name: 'name',
 	labelFormat: 'xxxxx',
 	isImported: 1/0,
+	isExternal: 1/0,
 	tableName:'string',  // NOTE: store table name of import object to ignore async
 	urlPath:'string',
 	importFromObject: 'string', // JSON Schema style reference:  '#[ABApplication.id]/objects/[ABObject.id]'
@@ -123,7 +124,7 @@ module.exports = class ABObject extends ABObjectBase {
 	///
 
 	dbTableName() {
-		if (this.isImported) {
+		if (this.isImported || this.isExternal) {
 			// NOTE: store table name of import object to ignore async
 			return this.tableName;
 		}
@@ -212,9 +213,9 @@ module.exports = class ABObject extends ABObjectBase {
 			(resolve, reject) => {
 				sails.log.silly('.... .migrateDropTable()  before knex:');
 				
-				if (this.isImported) {
+				if (this.isImported || this.isExternal) {
 					sails.log.silly('.... aborted drop of imported table');
-					reject(new Error('Cannot drop an imported object'));
+					resolve();
 					return;
 				}
 

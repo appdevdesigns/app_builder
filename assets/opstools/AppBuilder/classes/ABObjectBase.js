@@ -15,6 +15,7 @@ module.exports =  class ABObjectBase {
 	name: 'name',
 	labelFormat: 'xxxxx',
 	isImported: 1/0,
+	isExternal: 1/0,
 	urlPath:'string',
 	importFromObject: 'string', // JSON Schema style reference:  '#[ABApplication.id]/objects/[ABObject.id]'
 								// to get other object:  ABApplication.objectFromRef(obj.importFromObject);
@@ -32,6 +33,7 @@ module.exports =  class ABObjectBase {
     	this.name  = attributes.name || "";
     	this.labelFormat = attributes.labelFormat || "";
 		this.isImported  = parseInt(attributes.isImported || 0);
+		this.isExternal  = parseInt(attributes.isExternal || 0);
 		this.tableName	 = attributes.tableName || ""; // NOTE: store table name of import object to ignore async
     	this.urlPath	 = attributes.urlPath     || "";
     	this.importFromObject = attributes.importFromObject || "";
@@ -59,10 +61,6 @@ module.exports =  class ABObjectBase {
 	  	})
 	  	this._fields = newFields;
 
-
-	  	// convert '0' to 0
-	  	this.isImported = parseInt(this.isImported || 0);
-	  	
 
 	  	// link me to my parent ABApplication
 	  	this.application = application;
@@ -110,7 +108,8 @@ module.exports =  class ABObjectBase {
 			id: 			this.id,
 			name: 			this.name,
     		labelFormat: 	this.labelFormat,
-    		isImported:  	this.isImported,
+			isImported:  	this.isImported,
+			isExternal:  	this.isExternal,
 			tableName:		this.tableName, // NOTE: store table name of import object to ignore async
 			urlPath: 		this.urlPath,
     		importFromObject: this.importFromObject,
