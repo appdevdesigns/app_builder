@@ -197,7 +197,7 @@ export default class ABViewForm extends ABViewContainer {
 			// TODO : warning message
 
 			var currView = _logic.currentEditObject();
-			var formView = currView.formComponent();
+			var formView = currView.parentFormComponent();
 
 			// remove all old components
 			if (oldDcId != null) {
@@ -270,7 +270,7 @@ export default class ABViewForm extends ABViewContainer {
 			}
 			// remove field in the form
 			else {
-				var formView = currView.formComponent();
+				var formView = currView.parentFormComponent();
 				var fieldView = formView.fieldComponents().filter(c => c.settings.fieldId == fieldId)[0];
 
 				if (fieldView)
@@ -516,7 +516,7 @@ PopupRecordRule.qbFixAfterShow();
 
 		super.propertyEditorPopulate(App, ids, view);
 
-		var formCom = view.formComponent();
+		var formCom = view.parentFormComponent();
 		var dataCollectionId = (formCom.settings.datacollection ? formCom.settings.datacollection : null);
 		var SourceSelector = $$(ids.datacollection);
 
@@ -593,7 +593,7 @@ PopupRecordRule.qbFixAfterShow();
 	 */
 	static propertyUpdateFieldOptions(ids, view, dcId) {
 
-		var formComponent = view.formComponent();
+		var formComponent = view.parentFormComponent();
 		var existsFields = formComponent.fieldComponents();
 		var datacollection = view.pageRoot().dataCollections(dc => dc.id == dcId)[0];
 		var object = datacollection ? datacollection.datasource : null;
@@ -945,6 +945,7 @@ PopupRecordRule.qbFixAfterShow();
 
 		}
 	}
+
 
 	/**
 	 * @method dataCollection
