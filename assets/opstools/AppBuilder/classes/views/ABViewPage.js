@@ -191,10 +191,9 @@ export default class ABViewPage extends ABViewContainer {
             if (item.markCheckbox) {
 
                 OP.Comm.Service.delete({
-                    url: "/site/permission/page/roles/delete",
+                    url: "/app_builder/page/"+item.action_key+"/role",
                     data: {
-                        role_id: item.id,
-                        action_key: item.action_key
+                        role_id: item.id
                     }
                 }).then((data) => {
 
@@ -206,10 +205,9 @@ export default class ABViewPage extends ABViewContainer {
             } else {
 
                 OP.Comm.Service.put({
-                    url: "/site/permission/page/roles/add",
+                    url: "/app_builder/page/"+item.action_key+"/role",
                     data: {
-                        role_id: item.id,
-                        action_key: item.action_key
+                        role_id: item.id
                     }
                 }).then((data) => {
 
@@ -376,10 +374,7 @@ export default class ABViewPage extends ABViewContainer {
         var action_key = this.getPageActionKey(view);
         
         OP.Comm.Service.get({
-            url: "/site/permission/page/roles",
-            data: {
-                action_key: action_key
-            }
+            url: "/app_builder/page/"+action_key+"/role"
         }).then((data) => {
 
             var selectedRoles = [];
