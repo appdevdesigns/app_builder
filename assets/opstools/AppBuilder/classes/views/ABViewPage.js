@@ -372,30 +372,42 @@ export default class ABViewPage extends ABViewContainer {
     static propertyUpdatePermissionsOptions(ids, view) {
 
         var action_key = this.getPageActionKey(view);
+        var roles = [];
         
-        OP.Comm.Service.get({
-            url: "/app_builder/page/"+action_key+"/role"
-        }).then((data) => {
+        view.application.getPermissions()
+            .then(function (selected_role_ids) {
+                var app_roles = selected_role_ids;
 
-            var selectedRoles = [];
-            data.selected.forEach((s) => {
-                selectedRoles.push(s.id);
-            });
-            
-            data.roles.forEach((r) => {
-                if (selectedRoles.indexOf(r.id) != -1) {
-                    r.markCheckbox = true;
-                } else {
-                    r.markCheckbox = false;
-                }
-                r.action_key = action_key;
+                OP.Comm.Service.get({
+                    url: "/app_builder/page/"+action_key+"/role"
+                }).then((data) => {
+
+                    var selectedRoles = [];
+                    data.selected.forEach((s) => {
+                        selectedRoles.push(s.id);
+                    });
+                    
+                    data.roles.forEach((r) => {
+                        if (app_roles.indexOf(r.id) != -1) {
+                            if (selectedRoles.indexOf(r.id) != -1) {
+                                r.markCheckbox = true;
+                            } else {
+                                r.markCheckbox = false;
+                            }
+                            r.action_key = action_key;
+                            roles.push(r);
+                        }
+                    });
+                    
+                    roles = _.orderBy(roles, 'id', 'asc');
+                    
+                    $$(ids.permissions).clearAll();
+                    $$(ids.permissions).parse(roles);
+
+                });
+
             })
-            
-            $$(ids.permissions).clearAll();
-            $$(ids.permissions).parse(data.roles);
-
-        });
-
+            .catch(function (err) { next(err); });
         
     }
 

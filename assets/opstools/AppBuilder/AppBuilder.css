@@ -1274,6 +1274,8 @@ a.ab-delete-photo:hover {
     background: none;
 }
 .ab-custom-field legend, .ab-rich-text legend {
+	display: block;
+	float: none !important;
 	background: none;
 	font-weight: bold;
 	font-size: 15px;
