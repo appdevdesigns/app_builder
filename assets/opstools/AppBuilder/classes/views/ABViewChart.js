@@ -185,32 +185,32 @@ export default class ABViewChart extends ABViewContainer  {
 			{
 				name: 'showLabel',
 				view: 'checkbox',
-				label: L('ab.components.chart.showlabel', "*Display Label")
+				label: L('ab.components.common.showlabel', "*Display Label")
 			},
 			{
 				name: 'labelPosition',
 				view: 'richselect',
-				label: L('ab.components.chart.labelPosition', "*Label Position"),
+				label: L('ab.components.common.labelPosition', "*Label Position"),
 				options: [
 					{
 						id: 'left',
-						value: L('ab.components.chart.left', "*Left")
+						value: L('ab.components.common.left', "*Left")
 					},
 					{
 						id: 'top',
-						value: L('ab.components.chart.top', "*Top")
+						value: L('ab.components.common.top', "*Top")
 					}
 				]
 			},
 			{
 				name: 'labelWidth',
 				view: 'counter',
-				label: L('ab.components.chart.labelWidth', "*Label Width"),
+				label: L('ab.components.common.labelWidth', "*Label Width"),
 			},
 			{
 				view: 'counter',
 				name: "height",
-				label: L("ab.component.chart.height", "*Height:"),
+				label: L("ab.component.common.height", "*Height:"),
 				labelWidth: App.config.labelWidthLarge,
 			}
 

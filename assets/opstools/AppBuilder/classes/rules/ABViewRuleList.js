@@ -48,7 +48,7 @@ export default class ABViewRuleList {
 		// ensure required values:
 		childSettings = childSettings || {};
 		childSettings.labels = childSettings.labels || {};
-		childSettings.labels.header = childSettings.labels.header || 'ab.component.form.ruleList';
+		childSettings.labels.header = childSettings.labels.header || 'ab.components.form.ruleList';
 		childSettings.labels.headerDefault = childSettings.labels.headerDefault || '*Rule List';
 		this.childSettings = childSettings;
 
@@ -76,7 +76,7 @@ export default class ABViewRuleList {
 			common: App.labels,
 			component: {
 				header: L(this.childSettings.labels.header, this.childSettings.labels.headerDefault),	
-				addNewRule: L("ab.component.form.addNewRule", "*Add new rule"),
+				addNewRule: L("ab.components.form.addNewRule", "*Add new rule"),
 			}
 		};
 

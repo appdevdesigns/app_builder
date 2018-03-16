@@ -23,7 +23,7 @@ export default class ABViewRuleListFormRecordRules extends ABViewRuleList {
 
 		var settings = {
 			labels: {
-				header: "ab.component.form.recordRule", 
+				header: "ab.components.form.recordRules", 
 				headerDefault: "*Record Rules"
 			}
 		}
