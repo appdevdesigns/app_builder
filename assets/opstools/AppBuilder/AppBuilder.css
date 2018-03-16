@@ -361,9 +361,6 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 .ab-connect-data-disable {
 	background-color: #aaa;
 }
-.webix_dtable {
-	z-index: auto;
-}
 /* Custom selectivity */
 .selectivity-placeholder {
 	color: #CCC;
