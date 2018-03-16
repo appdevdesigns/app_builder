@@ -385,6 +385,7 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 	line-height: 29px;
 	display: inline-block;
 	height: unset !important;
+	margin: 2px;
 	/*max-width: 100px !important;*/
 }
 .selectivity-multiple-input, input[type=text].selectivity-multiple-input {
@@ -392,6 +393,7 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 }
 .selectivity-single-selected-item-remove {
 	color: #FFF;
+	padding: 7px 5px;
 }
 .customField {
 	line-height: 33px;
