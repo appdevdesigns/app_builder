@@ -361,7 +361,9 @@ export default class ABViewPage extends ABViewContainer {
     }
     
     static getPageActionKey(view) {
-        return ['opstools', "AB_" + view.application.name.replace("_", "").replace(" ", ""), view.name.toLowerCase().replace(" ", ""), "view"].join('.');
+        
+        return ['opstools', "AB_" + String(view.application.name).replace(/[^a-z0-9]/gi, ''), String(view.name).replace(/[^a-z0-9]/gi, '').toLowerCase(), "view"].join('.');
+        
     }
     
     /**
