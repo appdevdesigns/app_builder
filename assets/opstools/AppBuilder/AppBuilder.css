@@ -1037,7 +1037,8 @@ a.ab-delete-photo:hover {
 .webix_view legend {
 	margin: 0 0 -30px -10px;
 	border: 0;
-	padding: 10px 15px;
+	padding: 8px 10px;
+	height: 40px;
 	background: #EEE;
 	width: auto;
 	border-radius: 5px;
@@ -1273,6 +1274,8 @@ a.ab-delete-photo:hover {
     background: none;
 }
 .ab-custom-field legend, .ab-rich-text legend {
+	display: block;
+	float: none !important;
 	background: none;
 	font-weight: bold;
 	font-size: 15px;

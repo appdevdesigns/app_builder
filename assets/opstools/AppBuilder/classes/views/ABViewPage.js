@@ -184,6 +184,42 @@ export default class ABViewPage extends ABViewContainer {
 
         var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
 
+        _logic.permissionClick = (id, e, node) => {
+            var List = $$(ids.permissions);
+            var item = List.getItem(id); 
+
+            if (item.markCheckbox) {
+
+                OP.Comm.Service.delete({
+                    url: "/app_builder/page/"+item.action_key+"/role",
+                    data: {
+                        role_id: item.id
+                    }
+                }).then((data) => {
+
+                    item.markCheckbox = false;
+                    List.updateItem(id, item); 
+
+                });
+
+            } else {
+
+                OP.Comm.Service.put({
+                    url: "/app_builder/page/"+item.action_key+"/role",
+                    data: {
+                        role_id: item.id
+                    }
+                }).then((data) => {
+
+                    item.markCheckbox = true;
+                    List.updateItem(id, item); 
+
+                });
+
+            }
+            
+
+        };
 
         // in addition to the common .label  values, we 
         // ask for:
@@ -227,8 +263,36 @@ export default class ABViewPage extends ABViewContainer {
 
                     ]
                 }
+            },
+            {
+                view: "fieldset",
+                name: "pagePermissionPanel",
+                label: L('ab.component.page.pagePermissions', '*Page Pemissions:'),
+                labelWidth: App.config.labelWidthLarge,
+                body: {
+                    rows: [
+                        {
+            				name: 'permissions',
+            				view: 'list',
+            				select: false,
+            				minHeight: 200,
+            				template: "{common.markCheckbox()} #name#",
+                            type:{
+                                markCheckbox:function(obj ){
+                                    return "<span class='check webix_icon fa-"+(obj.markCheckbox?"check-":"")+"square-o'></span>";
+                                }
+                            },
+                            on: {
+                                onItemClick: function (id, e, node) {
+                                    _logic.permissionClick(id, e, node);
+                                }
+                            }
+            			}
+                    ]
+                }
             }
         ]);
+
 
     }
 
@@ -243,8 +307,13 @@ export default class ABViewPage extends ABViewContainer {
         if (view.isRoot()) {
             $$(ids.type).hide();
             $$(ids.dataCollectionPanel).show();
+            
+            // Update permission options
+            $$(ids.pagePermissionPanel).show();
+            this.propertyUpdatePermissionsOptions(ids, view);
         }
         else {
+            $$(ids.pagePermissionPanel).hide();
             $$(ids.type).show();
             $$(ids.dataCollectionPanel).hide();
         }
@@ -289,6 +358,57 @@ export default class ABViewPage extends ABViewContainer {
             $$(ids.datacollection).refresh();
         }
 
+    }
+    
+    static getPageActionKey(view) {
+        return ['opstools', "AB_" + view.application.name.replace("_", "").replace(" ", ""), view.name.toLowerCase().replace(" ", ""), "view"].join('.');
+    }
+    
+    /**
+     * @method propertyUpdatePermissionsOptions
+     * Populate permissions of Ops Portal to select list in property
+     * 
+     */
+    static propertyUpdatePermissionsOptions(ids, view) {
+
+        var action_key = this.getPageActionKey(view);
+        var roles = [];
+        
+        view.application.getPermissions()
+            .then(function (selected_role_ids) {
+                var app_roles = selected_role_ids;
+
+                OP.Comm.Service.get({
+                    url: "/app_builder/page/"+action_key+"/role"
+                }).then((data) => {
+
+                    var selectedRoles = [];
+                    data.selected.forEach((s) => {
+                        selectedRoles.push(s.id);
+                    });
+                    
+                    data.roles.forEach((r) => {
+                        if (app_roles.indexOf(r.id) != -1) {
+                            if (selectedRoles.indexOf(r.id) != -1) {
+                                r.markCheckbox = true;
+                            } else {
+                                r.markCheckbox = false;
+                            }
+                            r.action_key = action_key;
+                            roles.push(r);
+                        }
+                    });
+                    
+                    roles = _.orderBy(roles, 'id', 'asc');
+                    
+                    $$(ids.permissions).clearAll();
+                    $$(ids.permissions).parse(roles);
+
+                });
+
+            })
+            .catch(function (err) { next(err); });
+        
     }
 
 	/*
