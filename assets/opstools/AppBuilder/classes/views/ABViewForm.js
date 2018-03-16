@@ -1131,7 +1131,7 @@ PopupRecordRule.qbFixAfterShow();
 					(resolve, reject) => {
 
 
-						// update exists row
+						// If this object already exists, just .update()
 						if (formVals.id) {
 							model.update(formVals.id, formVals)
 								.catch((err) => {
@@ -1144,13 +1144,20 @@ PopupRecordRule.qbFixAfterShow();
 									.then(()=>{
 
 										this.doSubmitRules(newFormVals);
-
 										formReady(newFormVals);
 										resolve();
 									})
+									.catch((err)=>{
+										OP.Error.log('Error processing Record Rules.', {error:err, newFormVals:newFormVals });
+// Question:  how do we respond to an error?
+// ?? just keep going ??
+this.doSubmitRules(newFormVals);
+formReady(newFormVals);
+resolve(); 	
+									})
 								});
 						}
-						// add new row
+						// else add new row
 						else {
 							model.create(formVals)
 								.catch((err) => {
@@ -1158,14 +1165,21 @@ PopupRecordRule.qbFixAfterShow();
 									reject(err);
 								})
 								.then((newFormVals) => {
-// console.log("newFormVals: ", newFormVals);
+
 									this.doRecordRules(newFormVals)
 									.then(()=>{
 
 										this.doSubmitRules(newFormVals);
-
 										formReady(newFormVals);
 										resolve();
+									})
+									.catch((err)=>{
+										OP.Error.log('Error processing Record Rules.', {error:err, newFormVals:newFormVals });
+// Question:  how do we respond to an error?
+// ?? just keep going ??
+this.doSubmitRules(newFormVals);
+formReady(newFormVals);
+resolve(); 	
 									})
 									
 								});

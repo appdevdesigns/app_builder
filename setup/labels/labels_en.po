@@ -235,42 +235,6 @@ msgstr "Application description"
 
 #. path: app_builder
 #. code: en
-#. key: ab.object.list.setting
-msgid "Settings"
-msgstr "Settings"
-
-#. path: app_builder
-#. code: en
-#. key: ab.object.list.search
-msgid "Search"
-msgstr "Search"
-
-#. path: app_builder
-#. code: en
-#. key: ab.object.list.sort
-msgid "Sort"
-msgstr "Sort"
-
-#. path: app_builder
-#. code: en
-#. key: ab.object.list.sort.asc
-msgid "asc"
-msgstr "A -> Z"
-
-#. path: app_builder
-#. code: en
-#. key: ab.object.list.sort.desc
-msgid "desc"
-msgstr "Z -> A"
-
-#. path: app_builder
-#. code: en
-#. key: ab.object.list.group
-msgid "group"
-msgstr "Group"
-
-#. path: app_builder
-#. code: en
 #. key: ab.object.title
 msgid "Objects"
 msgstr "Objects"
@@ -292,6 +256,12 @@ msgstr "<b>{0}</b> is duplicate"
 #. key: ab.object.addNew
 msgid "Add new object"
 msgstr "Add new object"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.menu
+msgid "Object Menu"
+msgstr "Object Menu"
 
 #. path: app_builder
 #. code: en
@@ -1051,18 +1021,6 @@ msgstr "#appName# is duplicate."
 
 #. path: app_builder
 #. code: en
-#. key: ab.components.button
-msgid "Button"
-msgstr "Button"
-
-#. path: app_builder
-#. code: en
-#. key: ab.components.form
-msgid "Form"
-msgstr "Form"
-
-#. path: app_builder
-#. code: en
 #. key: ab.components.label
 msgid "Label"
 msgstr "Label"
@@ -1105,78 +1063,6 @@ msgstr "description"
 
 #. path: app_builder
 #. code: en
-#. key: ab.components.checkbox
-msgid "Checkbox"
-msgstr "Checkbox"
-
-#. path: app_builder
-#. code: en
-#. key: ab.components.connect
-msgid "Connect"
-msgstr "Connect"
-
-#. path: app_builder
-#. code: en
-#. key: ab.components.custom
-msgid "Custom"
-msgstr "Custom"
-
-#. path: app_builder
-#. code: en
-#. key: ab.components.detail
-msgid "Detail"
-msgstr "Detail"
-
-#. path: app_builder
-#. code: en
-#. key: ab.components.datepicker
-msgid "Date Picker"
-msgstr "Date Picker"
-
-#. path: app_builder
-#. code: en
-#. key: ab.components.grid
-msgid "Grid"
-msgstr "Grid"
-
-#. path: app_builder
-#. code: en
-#. key: ab.components.layout
-msgid "Layout"
-msgstr "Layout"
-
-#. path: app_builder
-#. code: en
-#. key: ab.components.menu
-msgid "Menu"
-msgstr "Menu"
-
-#. path: app_builder
-#. code: en
-#. key: ab.components.number
-msgid "Number"
-msgstr "Number"
-
-#. path: app_builder
-#. code: en
-#. key: ab.components.selectsingle
-msgid "Single Select"
-msgstr "Single Select"
-
-#. path: app_builder
-#. code: en
-#. key: ab.components.tab
-msgid "Tab"
-msgstr "Tab"
-
-#. path: app_builder
-#. code: en
-#. key: ab.components.textbox
-msgid "Textbox"
-msgstr "Textbox"
-
-#. path: app_builder
-#. code: en
 #. key: ab.components.view
 msgid "View"
 msgstr "View"
@@ -1192,36 +1078,6 @@ msgstr "View label must be unique among peers."
 #. key: ab.components.view.dropHere
 msgid "Drop Component Here"
 msgstr "Drop Component Here"
-
-#. path: app_builder
-#. code: en
-#. key: ab.components.chart
-msgid "Chart"
-msgstr "Chart"
-
-#. path: app_builder
-#. code: en
-#. key: ab.components.chart.pie
-msgid "Pie"
-msgstr "Pie Chart"
-
-#. path: app_builder
-#. code: en
-#. key: ab.components.chart.bar
-msgid "Bar"
-msgstr "Bar Chart"
-
-#. path: app_builder
-#. code: en
-#. key: ab.components.chart.line
-msgid "Line"
-msgstr "Line Chart"
-
-#. path: app_builder
-#. code: en
-#. key: ab.components.chart.area
-msgid "Area"
-msgstr "Area Chart"
 
 #. path: app_builder
 #. code: en
@@ -1318,4 +1174,250 @@ msgstr "Interface"
 #. key: ab.object.selectObject
 msgid "Select an object to work with."
 msgstr "Select an object to work with."
+
+#. path: app_builder
+#. code: en
+#. key: ab.common.none
+msgid "None"
+msgstr "None"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.form.dataSource
+msgid "Data Source"
+msgstr "Data Source"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.form.object
+msgid "Object"
+msgstr "Object"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.form.linkedTo
+msgid "Linked To"
+msgstr "Linked To"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.form.linkField
+msgid "Link Field"
+msgstr "Link Field"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.form.text
+msgid "Text"
+msgstr "Text"
+
+#. path: app_builder
+#. code: en
+#. key: ab.abfield.labelPlaceholder
+msgid "label placeholder"
+msgstr "label placeholder"
+
+#. path: app_builder
+#. code: en
+#. key: ab.component.form.text.useFormDefaults
+msgid "use form defaults"
+msgstr "use form defaults"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.button
+msgid "Button"
+msgstr "Button"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.form
+msgid "Form"
+msgstr "Form"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.checkbox
+msgid "Checkbox"
+msgstr "Checkbox"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.custom
+msgid "Custom"
+msgstr "Custom"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.detail
+msgid "Detail"
+msgstr "Detail"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.datepicker
+msgid "Date Picker"
+msgstr "Date Picker"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.grid
+msgid "Grid"
+msgstr "Grid"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.layout
+msgid "Layout"
+msgstr "Layout"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.menu
+msgid "Menu"
+msgstr "Menu"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.number
+msgid "Number"
+msgstr "Number"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.selectsingle
+msgid "Single Select"
+msgstr "Single Select"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.tab
+msgid "Tab"
+msgstr "Tab"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.textbox
+msgid "Textbox"
+msgstr "Textbox"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.list.setting
+msgid "Settings"
+msgstr "Settings"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.list.search
+msgid "Search"
+msgstr "Search"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.list.sort
+msgid "Sort"
+msgstr "Sort"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.list.sort.asc
+msgid "A -> Z"
+msgstr "A -> Z"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.list.sort.desc
+msgid "Z -> A"
+msgstr "Z -> A"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.list.group
+msgid "Group"
+msgstr "Group"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.connect
+msgid "Connect"
+msgstr "Connect"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.chart
+msgid "Chart"
+msgstr "Chart"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.chart.pie
+msgid "Pie Chart"
+msgstr "Pie Chart"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.chart.bar
+msgid "Bar Chart"
+msgstr "Bar Chart"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.chart.line
+msgid "Line Chart"
+msgstr "Line Chart"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.chart.area
+msgid "Area Chart"
+msgstr "Area Chart"
+
+#. path: app_builder
+#. code: en
+#. key: ab.component.ruleaction.updateRecord
+msgid "Update Record"
+msgstr "Update Record"
+
+#. path: app_builder
+#. code: en
+#. key: ab.component.ruleaction.insertConnectedObject
+msgid "Insert Connected Object"
+msgstr "Insert Connected Object"
+
+#. path: app_builder
+#. code: en
+#. key: ab.component.ruleaction.updateConnectedRecord
+msgid "Update Connected Record"
+msgstr "Update Connected Record"
+
+#. path: app_builder
+#. code: en
+#. key: ab.ruleAction.Update.required
+msgid "A value is required"
+msgstr "A value is required"
+
+#. path: app_builder
+#. code: en
+#. key: ab.component.form.set
+msgid "Set"
+msgstr "Set"
+
+#. path: app_builder
+#. code: en
+#. key: ab.component.form.to
+msgid "To"
+msgstr "To"
+
+#. path: app_builder
+#. code: en
+#. key: ab.ruleAction.UpdateConnected.selectField
+msgid "Select which connected object to update."
+msgstr "Select which connected object to update."
+
+#. path: app_builder
+#. code: en
+#. key: ab.ruleAction.UpdateConnected.remoteCondition
+msgid "How to choose which object:"
+msgstr "How to choose which object:"
 

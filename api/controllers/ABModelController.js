@@ -18,9 +18,28 @@ const ValidationError = require('objection').ValidationError;
 var reloading = null;
 
 
+/**
+ * @function updateRelationValues
+ * Make sure an object's relationships are properly updated.
+ * We expect that when a create or update happens, that the data in the 
+ * related fields represent the CURRENT STATE of all it's relations. Any 
+ * field not in the relation value is no longer part of the related data.
+ * @param {Objection.JS Query} query
+ * @param {integer} id  the .id of the base object we are working with
+ * @param {obj} updateRelationParams  "key"=>"value" hash of the related 
+ *                      fields and current state of values.
+ * @return {array}  array of update operations to perform the relations.
+ */ 
 function updateRelationValues(query, id, updateRelationParams) {
 
     var updateTasks = [];
+
+    //// 
+    //// We are given a current state of values that should be related to our object.
+    //// It is not clear if these are new relations or existing ones, so we first
+    //// remove any existing relation and then go back and add in the one we have been
+    //// told to keep.
+    //// 
 
     // NOTE : There is a error when update values and foreign keys at same time
     // - Error: Double call to a write method. You can only call one of the write methods 
@@ -134,152 +153,14 @@ function populateFindConditions(query, object, options, userData) {
     if (!_.isEmpty(where)) {
 
 
-console.log('', '-----------------');
-console.log('WHERE:', JSON.stringify(where, null, 4));
-console.log();
+        sails.log.debug('initial .where condition:', JSON.stringify(where, null, 4));
 
 
-/*
-        where.forEach(function (w) {
-
-            if (!w.fieldName || !w.operator) return;
-
-            // 1:1 - Get rows that no relation with 
-            if (w.operator == 'have no relation') {
-                var relation_name = AppBuilder.rules.toFieldRelationFormat(w.fieldName);
-
-                query
-                    .leftJoinRelation(relation_name)
-                    .whereRaw('{relation_name}.id IS NULL'.replace('{relation_name}', relation_name));
-
-                return;
-            }
-
-            // We need to put back together our sql statment
-            switch (w.operator) {
-                case "contains":
-                    var operator = "LIKE";
-                    var input = "%" + w.inputValue + "%";
-                    break;
-                case "doesn't contain":
-                    var operator = "NOT LIKE";
-                    var input = "%" + w.inputValue + "%";
-                    break;
-                case "is not":
-                    var operator = "!=";
-                    var input = w.inputValue;
-                    break
-                case "is before":
-                    var operator = "<";
-                    var input = w.inputValue;
-                    break;
-                case "is after":
-                    var operator = ">";
-                    var input = w.inputValue;
-                    break;
-                case "is on or before":
-                    var operator = "<=";
-                    var input = w.inputValue;
-                    break;
-                case "is on or after":
-                    var operator = ">=";
-                    var input = w.inputValue;
-                    break;
-                case ":":
-                    var operator = "=";
-                    var input = w.inputValue;
-                    break;
-                case "≠":
-                    var operator = "!=";
-                    var input = w.inputValue;
-                    break;
-                case "<":
-                    var operator = "<";
-                    var input = w.inputValue;
-                    break;
-                case ">":
-                    var operator = ">";
-                    var input = w.inputValue;
-                    break;
-                case "≤":
-                    var operator = "<=";
-                    var input = w.inputValue;
-                    break;
-                case "≥":
-                    var operator = ">=";
-                    var input = w.inputValue;
-                    break;
-                case "equals":
-                    var operator = "=";
-                    var input = w.inputValue;
-                    break;
-                case "does not equal":
-                    var operator = "!=";
-                    var input = w.inputValue;
-                    break;
-                case "is checked":
-                    var operator = "=";
-                    var input = w.inputValue;
-                    break;
-                case "is not checked":
-                    var operator = "=";
-                    var input = w.inputValue;
-                    break;
-                case "is null":
-                    var operator = "IS NULL";
-                    var input = null;
-                    break;
-                case "is not null":
-                    var operator = "IS NOT NULL";
-                    var input = null;
-                    break;
-                case "is current user":
-                    var operator = "=";
-                    var input = userData.username;
-                    break;
-                case "is not current user":
-                    var operator = "!=";
-                    var input = userData.username;
-                    break;
-                default:
-                    var operator = "=";
-                    var input = w.inputValue;
-            }
-
-            // if we are searching a multilingual field it is stored in translations so we need to search JSON
-            var field = object._fields.filter(field => field.columnName == w.fieldName)[0];
-            if (field && field.settings.supportMultilingual == 1) {
-                var fieldName = 'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH(translations, "one", "' + userData.languageCode + '")), 1, 4)), \'$."' + w.fieldName + '"\'))';
-            } else { // If we are just searching a field it is much simpler
-                var fieldName = '`' + w.fieldName + '`';
-            }
-
-            if (field && field.key == "list" && field.settings && field.settings.options && field.settings.options.filter) {
-                // NOTE: Should get 'id' or 'text' from client ??
-                var inputID = field.settings.options.filter(option => (option.id == input || option.text == input))[0];
-                if (inputID)
-                    input = inputID.id;
-            }
-
-            // We are going to use the 'raw' queries for knex becuase the '.' for JSON searching is misinterpreted as a sql identifier
-            var whereRaw = '{fieldName} {operator} {input}'
-                .replace('{fieldName}', fieldName)
-                .replace('{operator}', operator)
-                .replace('{input}', ((input != null) ? "'" + input + "'" : ''));
-
-            // Now we add in all of our where statements
-            if (index == 0) {
-                query.whereRaw(whereRaw);
-            } else if (w.combineCondition == "Or") {
-                query.orWhereRaw(whereRaw);
-            } else {
-                // the default whereRaw will provide an "AND" if there is already one present
-                query.whereRaw(whereRaw);
-            }
-            index++;
-        })
-*/
-
+        // @function parseCondition
+        // recursive fn() to step through each of our provided conditions and
+        // translate them into query.XXXX() operations.
+        // @param {obj} condition  a QueryBuilder compatible condition object
+        // @param {ObjectionJS Query} Query the query object to perform the operations.
         function parseCondition(condition, Query) {
 
             // FIX: some improper inputs:
@@ -313,7 +194,6 @@ console.log();
             }
 
 
-
             //// Special Case:  'have_no_relation'
             // 1:1 - Get rows that no relation with 
             if (condition.rule == 'have_no_relation') {
@@ -335,7 +215,7 @@ console.log();
             //     value: ''
             // }
 
-console.log('... condition:', JSON.stringify(condition, null, 4));
+            sails.log.verbose('... basic condition:', JSON.stringify(condition, null, 4));
 
             // We are going to use the 'raw' queries for knex becuase the '.' 
             // for JSON searching is misinterpreted as a sql identifier
@@ -343,6 +223,7 @@ console.log('... condition:', JSON.stringify(condition, null, 4));
             var whereRaw = '{fieldName} {operator} {input}';
 
 
+            // make sure a value is properly Quoted:
             function quoteMe(value) {
                 return "'"+value+"'"
             }
@@ -371,32 +252,32 @@ console.log('... condition:', JSON.stringify(condition, null, 4));
             switch (condition.rule) {
                 case "begins_with":
                     operator = 'LIKE';
-                    value = quoteMe(value + '%');
+                    value = quoteMe(condition.value + '%');
                     break;
 
                 case "not_begins_with":
                     operator = "NOT LIKE";
-                    value = quoteMe(value + '%');
+                    value = quoteMe(condition.value + '%');
                     break;
 
                 case "contains":
                     operator = 'LIKE';
-                    value = quoteMe('%' + value + '%');
+                    value = quoteMe('%' + condition.value + '%');
                     break;
 
                 case "not_contains":
                     operator = "NOT LIKE";
-                    value = quoteMe('%' + value + '%');
+                    value = quoteMe('%' + condition.value + '%');
                     break;
 
                 case "ends_with":
                     operator = 'LIKE';
-                    value = quoteMe('%' + value);
+                    value = quoteMe('%' + condition.value);
                     break;
 
                 case "not_ends_with":
                     operator = "NOT LIKE";
-                    value = quoteMe('%' + value);
+                    value = quoteMe('%' + condition.value);
                     break;
 
                 case "between": 
@@ -509,10 +390,7 @@ console.log('... condition:', JSON.stringify(condition, null, 4));
             query.eager('[#fieldNames#]'.replace('#fieldNames#', relationNames.join(', ')));
     }
 
-console.log('');
-console.log('SQL:', query.toString() );
-console.log('');
-
+    sails.log.debug('SQL:', query.toString() );
 }
 
 /**

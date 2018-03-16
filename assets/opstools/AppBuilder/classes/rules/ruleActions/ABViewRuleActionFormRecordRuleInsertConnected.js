@@ -10,12 +10,6 @@
 import UpdateConnected from "./ABViewRuleActionFormRecordRuleUpdateConnected"
 
 
-//// LEFT OFF HERE:
-// - finish up .process() command
-//		- Question: API: ABModelController : does it handle related data on an update/create ? How?
-
-
-
 export default class ABViewRuleActionFormRecordRuleInsertConnected extends UpdateConnected {
 
 	/**
@@ -80,10 +74,6 @@ export default class ABViewRuleActionFormRecordRuleInsertConnected extends Updat
 	 */
 	process(options) {
 
-		// prepare .valueRules
-		this.valueRules = this.valueRules || {};
-		this.valueRules.fieldOperations = this.valueRules.fieldOperations || [];
-
 		// get connected object
 		var connObj = this.connectedObject();
 		var model = connObj.model();
@@ -93,35 +83,24 @@ export default class ABViewRuleActionFormRecordRuleInsertConnected extends Updat
 		var condition = null;	// our lookup condition
 
 
-		// determine our connection type
-			// "one" type of connection
-				// if my connectionField is the source
-					// this field contains the .id of the newly inserted object
-					// so create the object,
-					// and update this connection field with it's .id
-
-				// else 
-
-					// the new object needs to contain my .id in it's field
-					// add my id to the data to store
-					// create the object
-
-			// "many" type of connection
-				// M:1
-				// if linkViaType == one, then the new object needs to contain my .id in it's field
-				// same as 1:1,  ! source
+		// we are going to create a new instance of the connected object
+		// and make sure our .id is in the connected object's connectionField
+		// the server side will take care of making the proper relationship.
 
 
-				// else
+		// first, create a new set of values:
+		var newObjectValues = {};
 
-					// M:N
+		// update them according to our rules
+		this.processUpdateObject({}, newObjectValues);
 
+		// now add our .id to the proper field in newObjectValues
+		var connectedObjectField = connObj.fields((f)=>{ return f.id == connectionField.settings.linkColumn; })[0];
+		newObjectValues[connectedObjectField.columnName] = options.data.id; 
 
 
 		// perform the update/insert
-
-
-
+		return model.create(newObjectValues);
 	}
 
 

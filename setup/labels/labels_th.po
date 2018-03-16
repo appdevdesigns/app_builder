@@ -233,43 +233,6 @@ msgstr "ชื่อแอปพลิเคชั่น"
 msgid "Application description"
 msgstr "รายละเอียดแอปพลิเคชั่น"
 
-
-#. path: app_builder
-#. code: th
-#. key: ab.object.list.setting
-msgid "Settings"
-msgstr "ตั้งค่า"
-
-#. path: app_builder
-#. code: th
-#. key: ab.object.list.search
-msgid "Search"
-msgstr "ค้นหา"
-
-#. path: app_builder
-#. code: th
-#. key: ab.object.list.sort
-msgid "Sort"
-msgstr "จัดเรียง"
-
-#. path: app_builder
-#. code: th
-#. key: ab.object.list.sort.asc
-msgid "asc"
-msgstr "ก -> ฮ"
-
-#. path: app_builder
-#. code: th
-#. key: ab.object.list.sort.desc
-msgid "desc"
-msgstr "ฮ -> ก"
-
-#. path: app_builder
-#. code: th
-#. key: ab.object.list.group
-msgid "group"
-msgstr "จัดกลุ่ม"
-
 #. path: app_builder
 #. code: th
 #. key: ab.object.title
@@ -293,6 +256,12 @@ msgstr "<b>{0}</b> มีซ้ำแล้ว"
 #. key: ab.object.addNew
 msgid "Add new object"
 msgstr "เพิ่มที่เก็บข้อมูลใหม่"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.menu
+msgid "Object Menu"
+msgstr "Object Menu"
 
 #. path: app_builder
 #. code: th
@@ -1040,18 +1009,6 @@ msgstr "#appName# ซ้ำกับชื่อแอปพลิเคชั�
 
 #. path: app_builder
 #. code: th
-#. key: ab.components.button
-msgid "Button"
-msgstr "[th] Button"
-
-#. path: app_builder
-#. code: th
-#. key: ab.components.form
-msgid "Form"
-msgstr "[th] Form"
-
-#. path: app_builder
-#. code: th
 #. key: ab.components.label
 msgid "Label"
 msgstr "[th] Label"
@@ -1094,78 +1051,6 @@ msgstr "[th] description"
 
 #. path: app_builder
 #. code: th
-#. key: ab.components.checkbox
-msgid "Checkbox"
-msgstr "[th] Checkbox"
-
-#. path: app_builder
-#. code: th
-#. key: ab.components.connect
-msgid "Connect"
-msgstr "[th] Connect"
-
-#. path: app_builder
-#. code: th
-#. key: ab.components.custom
-msgid "Custom"
-msgstr "[th] Custom"
-
-#. path: app_builder
-#. code: th
-#. key: ab.components.detail
-msgid "Detail"
-msgstr "[th] Detail"
-
-#. path: app_builder
-#. code: th
-#. key: ab.components.datepicker
-msgid "Date Picker"
-msgstr "[th] Date Picker"
-
-#. path: app_builder
-#. code: th
-#. key: ab.components.grid
-msgid "Grid"
-msgstr "[th] Grid"
-
-#. path: app_builder
-#. code: th
-#. key: ab.components.layout
-msgid "Layout"
-msgstr "[th] Layout"
-
-#. path: app_builder
-#. code: th
-#. key: ab.components.menu
-msgid "Menu"
-msgstr "[th] Menu"
-
-#. path: app_builder
-#. code: th
-#. key: ab.components.number
-msgid "Number"
-msgstr "[th] Number"
-
-#. path: app_builder
-#. code: th
-#. key: ab.components.selectsingle
-msgid "Single Select"
-msgstr "[th] Single Select"
-
-#. path: app_builder
-#. code: th
-#. key: ab.components.tab
-msgid "Tab"
-msgstr "[th] Tab"
-
-#. path: app_builder
-#. code: th
-#. key: ab.components.textbox
-msgid "Textbox"
-msgstr "[th] Textbox"
-
-#. path: app_builder
-#. code: th
 #. key: ab.components.view
 msgid "View"
 msgstr "[th] View"
@@ -1181,36 +1066,6 @@ msgstr "[th] View label must be unique among peers."
 #. key: ab.components.view.dropHere
 msgid "Drop Component Here"
 msgstr "[th] Drop Component Here"
-
-#. path: app_builder
-#. code: th
-#. key: ab.components.chart
-msgid "Chart"
-msgstr "[th] Chart"
-
-#. path: app_builder
-#. code: th
-#. key: ab.components.chart.pie
-msgid "Pie"
-msgstr "[th] Pie Chart"
-
-#. path: app_builder
-#. code: th
-#. key: ab.components.chart.bar
-msgid "Bar"
-msgstr "[th] Bar Chart"
-
-#. path: app_builder
-#. code: th
-#. key: ab.components.chart.line
-msgid "Line"
-msgstr "[th] Line Chart"
-
-#. path: app_builder
-#. code: th
-#. key: ab.components.chart.area
-msgid "Area"
-msgstr "[th] Area Chart"
 
 #. path: app_builder
 #. code: th
@@ -1307,4 +1162,238 @@ msgstr "ส่วนแสดงผล"
 #. key: ab.object.selectObject
 msgid "Select an object to work with."
 msgstr "เลือกที่เก็บข้อมูล"
+
+#. path: app_builder
+#. code: th
+#. key: ab.common.none
+msgid "None"
+msgstr "[th] None"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.form.dataSource
+msgid "Data Source"
+msgstr "[th] Data Source"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.form.object
+msgid "Object"
+msgstr "[th] Object"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.form.linkedTo
+msgid "Linked To"
+msgstr "[th] Linked To"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.form.linkField
+msgid "Link Field"
+msgstr "[th] Link Field"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.form.text
+msgid "Text"
+msgstr "[th] Text"
+
+#. path: app_builder
+#. code: th
+#. key: ab.abfield.labelPlaceholder
+msgid "label placeholder"
+msgstr "[th] label placeholder"
+
+#. path: app_builder
+#. code: th
+#. key: ab.component.form.text.useFormDefaults
+msgid "use form defaults"
+msgstr "[th] use form defaults"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.button
+msgid "Button"
+msgstr "[th] Button"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.form
+msgid "Form"
+msgstr "[th] Form"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.checkbox
+msgid "Checkbox"
+msgstr "[th] Checkbox"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.custom
+msgid "Custom"
+msgstr "[th] Custom"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.detail
+msgid "Detail"
+msgstr "[th] Detail"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.datepicker
+msgid "Date Picker"
+msgstr "[th] Date Picker"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.grid
+msgid "Grid"
+msgstr "[th] Grid"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.layout
+msgid "Layout"
+msgstr "[th] Layout"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.menu
+msgid "Menu"
+msgstr "[th] Menu"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.number
+msgid "Number"
+msgstr "[th] Number"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.selectsingle
+msgid "Single Select"
+msgstr "[th] Single Select"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.tab
+msgid "Tab"
+msgstr "[th] Tab"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.textbox
+msgid "Textbox"
+msgstr "[th] Textbox"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.list.setting
+msgid "Settings"
+msgstr "ตั้งค่า"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.list.search
+msgid "Search"
+msgstr "ค้นหา"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.list.sort
+msgid "Sort"
+msgstr "จัดเรียง"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.list.sort.asc
+msgid "A -> Z"
+msgstr "ก -> ฮ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.list.sort.desc
+msgid "Z -> A"
+msgstr "ฮ -> ก"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.list.group
+msgid "Group"
+msgstr "จัดกลุ่ม"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.connect
+msgid "Connect"
+msgstr "[th] Connect"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.chart
+msgid "Chart"
+msgstr "[th] Chart"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.chart.pie
+msgid "Pie Chart"
+msgstr "[th] Pie Chart"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.chart.bar
+msgid "Bar Chart"
+msgstr "[th] Bar Chart"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.chart.line
+msgid "Line Chart"
+msgstr "[th] Line Chart"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.chart.area
+msgid "Area Chart"
+msgstr "[th] Area Chart"
+
+#. path: app_builder
+#. code: th
+#. key: ab.component.ruleaction.updateConnectedRecord
+msgid "Update Connected Record"
+msgstr "[th] Update Connected Record"
+
+#. path: app_builder
+#. code: th
+#. key: ab.ruleAction.Update.required
+msgid "A value is required"
+msgstr "[th] A value is required"
+
+#. path: app_builder
+#. code: th
+#. key: ab.component.form.set
+msgid "Set"
+msgstr "[th] Set"
+
+#. path: app_builder
+#. code: th
+#. key: ab.component.form.to
+msgid "To"
+msgstr "[th] To"
+
+#. path: app_builder
+#. code: th
+#. key: ab.ruleAction.UpdateConnected.selectField
+msgid "Select which connected object to update."
+msgstr "[th] Select which connected object to update."
+
+#. path: app_builder
+#. code: th
+#. key: ab.ruleAction.UpdateConnected.remoteCondition
+msgid "How to choose which object:"
+msgstr "[th] How to choose which object:"
 

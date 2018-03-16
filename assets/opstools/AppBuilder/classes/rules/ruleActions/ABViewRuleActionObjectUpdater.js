@@ -539,6 +539,51 @@ if (field.key == 'user') {
 		return this.updateObject.fields((f)=>{ return f.id == fieldID })[0];
 	}
 
+
+
+	/**
+	 * @method processUpdateObject
+	 * Perform the specified update actions on the provided objectToUpdate
+	 * @param {obj} options  Additional information required to make updates.
+	 * @param {obj} objectToUpdate  The object to make the updates on.
+	 * @return {bool}   true if an update took place, false if no updates.
+	 */
+	processUpdateObject(options, objectToUpdate) {
+
+		var isUpdated = false;
+
+		this.valueRules = this.valueRules || {};
+		this.valueRules.fieldOperations = this.valueRules.fieldOperations || [];
+
+		// for each of our operations
+		this.valueRules.fieldOperations.forEach((op) => {
+			// op = {
+			// 	fieldID:'zzzzz', 
+			//	value: 'xxx',
+			//	op: 'set',
+			//  type:''
+			// }
+
+			var field = this.getUpdateObjectField(op.fieldID);
+			if (field) { 
+
+				switch(op.op) {
+
+					case 'set': 
+						objectToUpdate[field.columnName] = op.value; 
+						break;
+				}
+				
+				isUpdated = true;
+			}
+		})
+
+
+		return isUpdated;
+	}
+
+
+
 	// process
 	// gets called when a form is submitted and the data passes the Query Builder Rules.
 	// @param {obj} options
@@ -547,40 +592,14 @@ if (field.key == 'user') {
 
 		return new Promise( (resolve, reject) => {
 
-			var isUpdated = false;
-
-			this.valueRules = this.valueRules || {};
-			this.valueRules.fieldOperations = this.valueRules.fieldOperations || [];
-
-			// for each of our operations
-			this.valueRules.fieldOperations.forEach((op) => {
-				// op = {
-				// 	fieldID:'zzzzz', 
-				//	value: 'xxx',
-				//	op: 'set',
-				//  type:''
-				// }
-
-				var field = this.getUpdateObjectField(op.fieldID);
-				if (field) { 
-
-					switch(op.op) {
-
-						case 'set': 
-							options.data[field.columnName] = op.value; 
-							break;
-					}
-					
-					isUpdated = true;
-				}
-			})
+			var isUpdated = this.processUpdateObject({}, options.data);
 
 			if (!isUpdated) {
 				resolve();
 			} else {
 
 				// get the model from the provided Form Obj:
-var dc = options.form.dataCollection();
+				var dc = options.form.dataCollection();
 				if (!dc) return resolve();
 
 				var model = dc.model;
