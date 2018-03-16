@@ -361,9 +361,6 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 .ab-connect-data-disable {
 	background-color: #aaa;
 }
-.webix_dtable {
-	z-index: auto;
-}
 /* Custom selectivity */
 .selectivity-placeholder {
 	color: #CCC;
@@ -388,6 +385,7 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 	line-height: 29px;
 	display: inline-block;
 	height: unset !important;
+	margin: 2px;
 	/*max-width: 100px !important;*/
 }
 .selectivity-multiple-input, input[type=text].selectivity-multiple-input {
@@ -395,6 +393,7 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 }
 .selectivity-single-selected-item-remove {
 	color: #FFF;
+	padding: 7px 5px;
 }
 .customField {
 	line-height: 33px;
@@ -1037,7 +1036,8 @@ a.ab-delete-photo:hover {
 .webix_view legend {
 	margin: 0 0 -30px -10px;
 	border: 0;
-	padding: 10px 15px;
+	padding: 8px 10px;
+	height: 40px;
 	background: #EEE;
 	width: auto;
 	border-radius: 5px;
@@ -1273,6 +1273,8 @@ a.ab-delete-photo:hover {
     background: none;
 }
 .ab-custom-field legend, .ab-rich-text legend {
+	display: block;
+	float: none !important;
 	background: none;
 	font-weight: bold;
 	font-size: 15px;
