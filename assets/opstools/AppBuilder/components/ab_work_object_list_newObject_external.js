@@ -134,7 +134,7 @@ export default class AB_Work_Object_List_NewObject_External extends OP.Component
 
                                 colNames.push({
                                     id: attrName,
-                                    label: attrName,
+                                    label: attrName.replace(/_/g, ' '),
                                     isvisible: true,
 
                                     icon: att.icon,

@@ -260,10 +260,11 @@ module.exports = {
 					};
 
 					// Add label translations
+					let tableLabel = tableName.replace(/_/g, ' ');
 					languages.forEach((langCode) => {
 						objectData.translations.push({
 							language_code: langCode,
-							label: tableName
+							label: tableLabel
 						});
 					});
 
