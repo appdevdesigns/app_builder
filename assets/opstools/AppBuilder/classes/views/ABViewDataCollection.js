@@ -893,27 +893,26 @@ export default class ABViewDataCollection extends ABView {
 
 			// updated values
 			var values = data.data;
+			if (values) {
 
-			if (this.__dataCollection.exists(values.id)) {
-				// this data collection has the record so we need to query the server to find out what it's latest data is so we can update all instances
-				this.model.findAll({
-					fieldName: "id",
-					operator: "equals",
-					inputValue: values.id
-				}).then((res)=>{
-					// check to make sure there is data to work with
-					if (Array.isArray(res.data) && res.data.length) {
-						// tell the webix data collection to update using their API with the row id (values.id) and content (res.data[0]) 
-						this.__dataCollection.updateItem(values.id, res.data[0]);
+				if (this.__dataCollection.exists(values.id)) {
+					// this data collection has the record so we need to query the server to find out what it's latest data is so we can update all instances
+					this.model.findAll({ id:values.id }).then((res)=>{
+						
+						// check to make sure there is data to work with
+						if (Array.isArray(res.data) && res.data.length) {
+							// tell the webix data collection to update using their API with the row id (values.id) and content (res.data[0]) 
+							this.__dataCollection.updateItem(values.id, res.data[0]);
 
-						// If the update item is current cursor, then should tell components to update.
-						var currData = this.getCursor();
-						if (currData && currData.id == values.id) {
-							this.emit("changeCursor", currData);
+							// If the update item is current cursor, then should tell components to update.
+							var currData = this.getCursor();
+							if (currData && currData.id == values.id) {
+								this.emit("changeCursor", currData);
+							}
 						}
-					}
-				});
+					});
 
+				}
 			}
 
 			// filter link data collection's cursor
@@ -1117,13 +1116,10 @@ export default class ABViewDataCollection extends ABView {
 
 		// set query condition
 		var cond = {
-			where: {
-				where: wheres,
-				sort: sorts,
-				height: defaultHeight
-			},
+			where: wheres,
 			limit: limit || 20,
-			skip: start || 0
+			skip: start || 0,
+			sort: sorts,
 		};
 
 		// load all data

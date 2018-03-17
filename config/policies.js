@@ -11,7 +11,7 @@
  * http://sailsjs.org/#documentation
  */
 
-var findStack = ADCore.policy.serviceStack([ 'ABModelNormalize' ]);
+var findStack = ADCore.policy.serviceStack([ 'ABModelNormalize', 'ABModelConvertSailsCondition', 'ABModelConvertFilterCondition' ]);
 
 module.exports = {
 

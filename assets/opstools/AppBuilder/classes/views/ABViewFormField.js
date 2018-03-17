@@ -50,7 +50,7 @@ export default class ABViewFormField extends ABView {
 	component(App) {
 
 		// setup 'label' of the element
-		var form = this.formComponent(),
+		var form = this.parentFormComponent(),
 			field = this.field(),
 			label = '';
 
@@ -91,20 +91,20 @@ export default class ABViewFormField extends ABView {
 
 
 
-	formComponent() {
-		var form = null;
+	// formComponent() {
+	// 	var form = null;
 
-		var curr = this;
-		while (curr.key != 'form' && !curr.isRoot() && curr.parent) {
-			curr = curr.parent;
-		}
+	// 	var curr = this;
+	// 	while (curr.key != 'form' && !curr.isRoot() && curr.parent) {
+	// 		curr = curr.parent;
+	// 	}
 
-		if (curr.key == 'form') {
-			form = curr;
-		}
+	// 	if (curr.key == 'form') {
+	// 		form = curr;
+	// 	}
 
-		return form;
-	}
+	// 	return form;
+	// }
 
 	field() {
 		var object = this.application.objects((obj) => obj.id == this.settings.objectId)[0];

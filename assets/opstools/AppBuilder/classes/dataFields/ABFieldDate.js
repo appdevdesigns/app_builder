@@ -1034,7 +1034,7 @@ class ABFieldDate extends ABField {
 		
 		// NOTE: what is being returned here needs to mimic an ABView CLASS.
 		// primarily the .common() and .newInstance() methods.
-		var formComponentSetting = super.formComponent();
+		var formComponentSetting = super.formComponent('datepicker');
 
 		// .common() is used to create the display in the list
 		formComponentSetting.common = () => {

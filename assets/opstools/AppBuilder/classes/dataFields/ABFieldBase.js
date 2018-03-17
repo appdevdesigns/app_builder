@@ -13,7 +13,7 @@ function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
-module.exports = class ABField {
+module.exports = class ABFieldBase {
 
     constructor(values, object, fieldDefaults) {
 
