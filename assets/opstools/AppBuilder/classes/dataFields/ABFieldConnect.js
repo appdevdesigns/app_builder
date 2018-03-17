@@ -5,9 +5,10 @@
  *
  */
 
-import ABField from "./ABField"
-import ABFieldSelectivity from "./ABFieldSelectivity"
+// import ABField from "./ABField"
 import ABFieldComponent from "./ABFieldComponent"
+import ABFieldSelectivity from "./ABFieldSelectivity"
+
 
 
 function L(key, altText) {
@@ -592,20 +593,9 @@ class ABFieldConnect extends ABFieldSelectivity {
 	* the component that will be stored with the ABViewForm.
 	*/
 	formComponent() {
-
-		// NOTE: what is being returned here needs to mimic an ABView CLASS.
-		// primarily the .common() and .newInstance() methods.
-		var formComponentSetting = super.formComponent();
-
-		// .common() is used to create the display in the list
-		formComponentSetting.common = () => {
-			return {
-				key: 'connect'
-			}
-		};
-
-		return formComponentSetting;
+		return super.formComponent('connect');
 	}
+	
 
 	detailComponent() {
 
@@ -655,38 +645,30 @@ class ABFieldConnect extends ABFieldSelectivity {
 				// Get linked object model
 				var linkedModel = linkedObj.model();
 
-				var where = [];
+				var where = {};
 
 				// M:1 - get data that's only empty relation value
 				if (this.settings.linkType == 'many' && this.settings.linkViaType == 'one') {
-					where.push({
-						fieldName: linkedCol.columnName,
-						operator: 'is null'
-					});
+					where[linkedCol.columnName] = null;
 				}
 				// 1:1
 				else if (this.settings.linkType == 'one' && this.settings.linkViaType == 'one') {
 					// 1:1 - get data is not match link id that we have
 					if (this.settings.isSource == true) {
-						where.push({
-							fieldName: linkedCol.columnName,
-							operator: 'have no relation'
-						});
+
+						// NOTE: make sure "haveNoRelation" shows up as an operator
+						// the value ":0" doesn't matter, we just need 'haveNoRelation' as an operator.
+						where[linkedCol.columnName] = {'haveNoRelation':0};
 					}
 					// 1:1 - get data that's only empty relation value by query null value from link table
 					else {
-						where.push({
-							fieldName: linkedCol.columnName,
-							operator: 'is null'
-						});
+						where[linkedCol.columnName] = null;
 					}
 				}
 
 				// Pull linked object data
 				linkedModel.findAll({
-					where: {
-						where: where
-					}
+					where: where
 				}).then((result) => {
 
 					// cache linked object data
@@ -714,7 +696,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 
 	get fieldLink() {
-		var objectLink = this. datasourceLink;
+		var objectLink = this.datasourceLink;
 		if (!objectLink) return null
 
 		return objectLink.fields((f) => f.id == this.settings.linkColumn)[0];

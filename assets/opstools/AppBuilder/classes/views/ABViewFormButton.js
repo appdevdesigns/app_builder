@@ -241,9 +241,8 @@ export default class ABViewFormButton extends ABView {
 	 * @return {obj} UI component
 	 */
 	component(App) {
-		var form = this.formComponent();
 
-		var idBase = 'ABViewFormButton_' + this.id + "_f_" + form.uniqueInstanceID;
+		var idBase = this.parentFormUniqueID('ABViewFormButton_' + this.id + "_f_"); 
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		}
@@ -339,7 +338,7 @@ export default class ABViewFormButton extends ABView {
 				}
 					
 				// get form component
-				var form = this.formComponent();
+				var form = this.parentFormComponent();
 
 				// get ABViewDataCollection
 				var dc = form.dataCollection();
@@ -366,7 +365,7 @@ export default class ABViewFormButton extends ABView {
 
 			onClear: (resetButton) => {
 				// get form component
-				var form = this.formComponent();
+				var form = this.parentFormComponent();
 
 				// get ABViewDataCollection
 				var dc = form.dataCollection();
@@ -384,7 +383,7 @@ export default class ABViewFormButton extends ABView {
 			onSave: (saveButton) => {
 
 				// get form component
-				var form = this.formComponent();
+				var form = this.parentFormComponent();
 				var formView = saveButton.getFormView();
 
 				// disable the save button
@@ -416,25 +415,6 @@ export default class ABViewFormButton extends ABView {
 		return [];
 	}
 
-
-	/**
-	 * @method formComponent
-	 * return the list of components available on this view to display in the editor.
-	 */
-	formComponent() {
-		var form = null;
-
-		var curr = this;
-		while (curr.key != 'form' && !curr.isRoot() && curr.parent) {
-			curr = curr.parent;
-		}
-
-		if (curr.key == 'form') {
-			form = curr;
-		}
-
-		return form;
-	}
 
 	AddPagesToList(pagesList, parent, rootPageId) {
 	

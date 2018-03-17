@@ -6,7 +6,7 @@
  */
 import ABViewBase from "./ABViewBase"
 import ABPropertyComponent from "../ABPropertyComponent"
-import ABViewManager from "../ABViewManager"
+// import ABViewManager from "../ABViewManager"
 
 
 var ABViewPropertyComponentDefaults = {
@@ -86,7 +86,7 @@ export default class ABView extends ABViewBase {
 	static newInstance(application, parent) {
 
 		// return a new instance from ABViewManager:
-		return ABViewManager.newView({ key: this.common().key }, application, parent);
+		return application.viewNew({ key: this.common().key }, application, parent); // ABViewManager.newView({ key: this.common().key }, application, parent);
 	}
 
 
@@ -266,7 +266,8 @@ export default class ABView extends ABViewBase {
 
 		var views = [];
 		(values.views || []).forEach((child) => {
-			views.push(ABViewManager.newView(child, this.application, this));
+			// views.push(ABViewManager.newView(child, this.application, this));
+			views.push(this.application.viewNew(child, this.application, this));
 		})
 		this._views = views;
 
@@ -315,6 +316,44 @@ export default class ABView extends ABViewBase {
 		return parents;
 	}
 
+
+	/**
+	 * @method parentFormComponent
+	 * return the closest form object this component is on.
+	 */
+	parentFormComponent() {
+		var form = null;
+
+		var curr = this;
+		while (curr.key != 'form' && !curr.isRoot() && curr.parent) {
+			curr = curr.parent;
+		}
+
+		if (curr.key == 'form') {
+			form = curr;
+		}
+
+		return form;
+	}
+
+
+	/**
+	 * @method parentFormUniqueID
+	 * return a unique ID based upon the closest form object this component is on.
+	 * @param {string} key  The basic id string we will try to make unique
+	 * @return {string} 
+	 */
+	parentFormUniqueID( key ) {
+		var form = this.parentFormComponent();	
+		var uniqueInstanceID;
+		if (form) {
+			uniqueInstanceID = form.uniqueInstanceID;
+		} else {
+			uniqueInstanceID = webix.uid()
+		}
+
+		return key+uniqueInstanceID;
+	}
 
 
 	pageParent(filterFn) {
@@ -972,7 +1011,7 @@ export default class ABView extends ABViewBase {
 			'pie', 'bar', 'line', 'area'
 		];
 
-		var allComponents = ABViewManager.allViews();
+		var allComponents = this.application.viewAll();  // ABViewManager.allViews();
 		var allowedComponents = allComponents.filter((c) => {
 			return (viewsToIgnore.indexOf(c.common().key) == -1)
 		});

@@ -197,7 +197,7 @@ export default class ABViewForm extends ABViewContainer {
 			// TODO : warning message
 
 			var currView = _logic.currentEditObject();
-			var formView = currView.formComponent();
+			var formView = currView.parentFormComponent();
 
 			// remove all old components
 			if (oldDcId != null) {
@@ -270,7 +270,7 @@ export default class ABViewForm extends ABViewContainer {
 			}
 			// remove field in the form
 			else {
-				var formView = currView.formComponent();
+				var formView = currView.parentFormComponent();
 				var fieldView = formView.fieldComponents().filter(c => c.settings.fieldId == fieldId)[0];
 
 				if (fieldView)
@@ -303,9 +303,18 @@ export default class ABViewForm extends ABViewContainer {
 		_logic.recordRuleShow = () => {
 
 			var currView = _logic.currentEditObject();
-
+			
+			PopupRecordRule.formLoad(currView);
 			PopupRecordRule.fromSettings(currView.settings.recordRules);
 			PopupRecordRule.show();
+
+// NOTE: Querybuilder v5.2 has a bug where it won't display the [and/or] 
+// choosers properly if it hasn't been shown before the .setValue() call.
+// so this work around allows us to refresh the display after the .show()
+// on the popup.
+// When they've fixed the bug, we'll remove this workaround:
+PopupRecordRule.qbFixAfterShow();
+
 
 		};
 
@@ -392,35 +401,35 @@ export default class ABViewForm extends ABViewContainer {
 			{
 				name: 'showLabel',
 				view: 'checkbox',
-				label: L('ab.components.form.showlabel', "*Display Label"),
+				label: L('ab.components.common.showlabel', "*Display Label"),
 				labelWidth: App.config.labelWidthLarge
 			},
 			{
 				name: 'labelPosition',
 				view: 'richselect',
-				label: L('ab.components.form.labelPosition', "*Label Position"),
+				label: L('ab.components.common.labelPosition', "*Label Position"),
 				labelWidth: App.config.labelWidthLarge,
 				options: [
 					{
 						id: 'left',
-						value: L('ab.components.form.left', "*Left")
+						value: L('ab.components.common.left', "*Left")
 					},
 					{
 						id: 'top',
-						value: L('ab.components.form.top', "*Top")
+						value: L('ab.components.common.top', "*Top")
 					}
 				]
 			},
 			{
 				name: 'labelWidth',
 				view: 'counter',
-				label: L('ab.components.form.labelWidth', "*Label Width"),
+				label: L('ab.components.common.labelWidth', "*Label Width"),
 				labelWidth: App.config.labelWidthLarge
 			},
 			{
 				view: 'counter',
 				name: "height",
-				label: L("ab.component.form.height", "*Height:"),
+				label: L("ab.components.common.height", "*Height:"),
 				labelWidth: App.config.labelWidthLarge,
 			},
 			{
@@ -431,7 +440,7 @@ export default class ABViewForm extends ABViewContainer {
 			},
 			{
 				view: "fieldset",
-				label: L('ab.component.form.rules', '*Rules:'),
+				label: L('ab.components.form.rules', '*Rules:'),
 				labelWidth: App.config.labelWidthLarge,
 				body: {
 					rows: [
@@ -439,13 +448,13 @@ export default class ABViewForm extends ABViewContainer {
 							cols: [
 								{
 									view: "label",
-									label: L("ab.component.form.submitRules", "*Submit Rules:"),
+									label: L("ab.components.form.submitRules", "*Submit Rules:"),
 									width: App.config.labelWidthLarge,
 								},
 								{
 									view: "button",
 									name: "buttonSubmitRules",
-									label: L("ab.component.form.settings", "*Settings"),
+									label: L("ab.components.form.settings", "*Settings"),
 									icon: "gear",
 									type: "icon",
 									badge: 0,
@@ -459,13 +468,13 @@ export default class ABViewForm extends ABViewContainer {
 							cols: [
 								{
 									view: "label",
-									label: L("ab.component.form.displayRules", "*Display Rules:"),
+									label: L("ab.components.form.displayRules", "*Display Rules:"),
 									width: App.config.labelWidthLarge,
 								},
 								{
 									view: "button",
 									name: "buttonDisplayRules",
-									label: L("ab.component.form.settings", "*Settings"),
+									label: L("ab.components.form.settings", "*Settings"),
 									icon: "gear",
 									type: "icon",
 									badge: 0,
@@ -479,13 +488,13 @@ export default class ABViewForm extends ABViewContainer {
 							cols: [
 								{
 									view: "label",
-									label: L("ab.component.form.recordRules", "*Record Rules:"),
+									label: L("ab.components.form.recordRules", "*Record Rules:"),
 									width: App.config.labelWidthLarge,
 								},
 								{
 									view: "button",
 									name: "buttonRecordRules",
-									label: L("ab.component.form.settings", "*Settings"),
+									label: L("ab.components.form.settings", "*Settings"),
 									icon: "gear",
 									type: "icon",
 									badge: 0,
@@ -507,7 +516,7 @@ export default class ABViewForm extends ABViewContainer {
 
 		super.propertyEditorPopulate(App, ids, view);
 
-		var formCom = view.formComponent();
+		var formCom = view.parentFormComponent();
 		var dataCollectionId = (formCom.settings.datacollection ? formCom.settings.datacollection : null);
 		var SourceSelector = $$(ids.datacollection);
 
@@ -584,7 +593,7 @@ export default class ABViewForm extends ABViewContainer {
 	 */
 	static propertyUpdateFieldOptions(ids, view, dcId) {
 
-		var formComponent = view.formComponent();
+		var formComponent = view.parentFormComponent();
 		var existsFields = formComponent.fieldComponents();
 		var datacollection = view.pageRoot().dataCollections(dc => dc.id == dcId)[0];
 		var object = datacollection ? datacollection.datasource : null;
@@ -937,6 +946,7 @@ export default class ABViewForm extends ABViewContainer {
 		}
 	}
 
+
 	/**
 	 * @method dataCollection
 	 * return ABViewDataCollection of this form
@@ -947,27 +957,6 @@ export default class ABViewForm extends ABViewContainer {
 		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.datacollection)[0];
 	}
 
-	/**
-	 * @method formComponent()
-	 *
-	 * return a form component
-	 *
-	 * @return {ABViewForm}
-	 */
-	formComponent() {
-		var form = null;
-		var curr = this;
-
-		while (curr.key != 'form' && !curr.isRoot() && curr.parent) {
-			curr = curr.parent;
-		}
-
-		if (curr.key == 'form') {
-			form = curr;
-		}
-
-		return form;
-	}
 
 	/**
 	 * @method fieldComponents()
@@ -1142,7 +1131,7 @@ export default class ABViewForm extends ABViewContainer {
 					(resolve, reject) => {
 
 
-						// update exists row
+						// If this object already exists, just .update()
 						if (formVals.id) {
 							model.update(formVals.id, formVals)
 								.catch((err) => {
@@ -1154,14 +1143,21 @@ export default class ABViewForm extends ABViewContainer {
 									this.doRecordRules(newFormVals)
 									.then(()=>{
 
-										this.doSubmitRules(formVals);
-
+										this.doSubmitRules(newFormVals);
 										formReady(newFormVals);
 										resolve();
 									})
+									.catch((err)=>{
+										OP.Error.log('Error processing Record Rules.', {error:err, newFormVals:newFormVals });
+// Question:  how do we respond to an error?
+// ?? just keep going ??
+this.doSubmitRules(newFormVals);
+formReady(newFormVals);
+resolve(); 	
+									})
 								});
 						}
-						// add new row
+						// else add new row
 						else {
 							model.create(formVals)
 								.catch((err) => {
@@ -1169,14 +1165,21 @@ export default class ABViewForm extends ABViewContainer {
 									reject(err);
 								})
 								.then((newFormVals) => {
-									console.log("newFormVals: ", newFormVals);
+
 									this.doRecordRules(newFormVals)
 									.then(()=>{
 
-										this.doSubmitRules(formVals);
-
+										this.doSubmitRules(newFormVals);
 										formReady(newFormVals);
 										resolve();
+									})
+									.catch((err)=>{
+										OP.Error.log('Error processing Record Rules.', {error:err, newFormVals:newFormVals });
+// Question:  how do we respond to an error?
+// ?? just keep going ??
+this.doSubmitRules(newFormVals);
+formReady(newFormVals);
+resolve(); 	
 									})
 									
 								});

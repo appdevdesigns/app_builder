@@ -541,19 +541,8 @@ class ABFieldFile extends ABField {
 	* the component that will be stored with the ABViewForm.
 	*/
 	formComponent() {
-		
-		// NOTE: what is being returned here needs to mimic an ABView CLASS.
-		// primarily the .common() and .newInstance() methods.
-		var formComponentSetting = super.formComponent();
 
-		// .common() is used to create the display in the list
-		formComponentSetting.common = () => {
-			return {
-				key: 'fieldcustom'
-			}
-		};
-
-		return formComponentSetting; 
+		return super.formComponent('fieldcustom');
 	}
 
 	detailComponent() {

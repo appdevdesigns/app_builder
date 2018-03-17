@@ -38,6 +38,15 @@ module.exports = {
     'put /app_builder/:id/role/assign':
         'app_builder/ABRoleController.assignRole',
         
+    /* Application page permissions */
+    'get /app_builder/page/:action_key/role': 
+        'app_builder/ABApplicationController.getPageRoles',
+    'delete /app_builder/page/:action_key/role': 
+        'app_builder/ABApplicationController.deletePageRoles',
+    'put /app_builder/page/:action_key/role': 
+        'app_builder/ABApplicationController.addPageRoles',
+
+        
     /* Import & Export */
     'get /app_builder/appJSON/:id':
         'app_builder/ABApplicationController.jsonExport',
