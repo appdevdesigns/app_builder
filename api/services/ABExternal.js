@@ -397,7 +397,7 @@ module.exports = {
 
 						// Add a hidden field
 						if (inputCol && JSON.parse(inputCol.isHidden || false)) {
-							objectData.objectWorkspace.hiddenFields.push(colData.id);
+							objectData.objectWorkspace.hiddenFields.push(colData.columnName);
 
 						}
 
