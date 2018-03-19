@@ -134,8 +134,9 @@ export default class ABModel {
 
 						resolve(data);
 
+						// FIX: now with sockets, the triggers are fired from socket updates.
 						// trigger a create event
-						triggerEvent('create', this.object, data);
+						// triggerEvent('create', this.object, data);
 
 					})
 					.catch(reject);
@@ -163,8 +164,9 @@ export default class ABModel {
 					.then((data) => {
 						resolve(data);
 
+						// FIX: now with sockets, the triggers are fired from socket updates.
 						// trigger a delete event
-						triggerEvent('delete', this.object, id);
+						// triggerEvent('delete', this.object, id);
 
 					})
 					.catch(reject);
@@ -495,8 +497,9 @@ reject(err);
 
 						resolve(data);
 
+						// FIX: now with sockets, the triggers are fired from socket updates.
 						// trigger a update event
-						triggerEvent('update', this.object, data);
+						// triggerEvent('update', this.object, data);
 
 					})
 					.catch(reject);
