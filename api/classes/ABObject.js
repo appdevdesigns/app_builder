@@ -315,6 +315,45 @@ module.exports = class ABObject extends ABObjectBase {
 				// Compile our relations from our DataFields
 				var relationMappings = {};
 
+				// Add a translation relation of the external table
+				if (currObject.isExternal) {
+
+					// Populate fields of the trans table
+					var transJsonSchema = { language_code: { type: 'string' } };
+					var multilingualFields = currObject.fields(f => f.settings.supportMultilingual == 1);
+					multilingualFields.forEach(f => {
+						f.jsonSchemaProperties(transJsonSchema);
+					});
+
+					class TransModel extends Model {
+
+						// Table name is the only required property.
+						static get tableName() {
+							return tableName + '_trans';
+						}
+
+						static get jsonSchema () {
+							return {
+								type: 'object',
+								properties: transJsonSchema
+							};
+						}
+
+					};
+
+					relationMappings['translations'] = {
+						relation: Model.HasManyRelation,
+						modelClass: TransModel,
+						join: {
+							from: '{targetTable}.id'.replace('{targetTable}', tableName),
+							to: '{sourceTable}.{field}'
+								.replace('{sourceTable}', TransModel.tableName)
+								.replace('{field}', 'permissionaction') // TODO
+						}
+					}
+				}
+
+
 				var connectFields = currObject.connectFields();
 
 				// linkObject: '', // ABObject.id

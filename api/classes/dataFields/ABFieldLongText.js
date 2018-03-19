@@ -47,7 +47,7 @@ class ABFieldLongText extends ABField {
     	{
 			settings: {
 				textDefault: 'string',
-				supportMultilingual: true/false
+				supportMultilingual: 1/0
 			}
     	}
     	*/

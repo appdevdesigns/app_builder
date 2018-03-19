@@ -386,6 +386,11 @@ function populateFindConditions(query, object, options, userData) {
             .filter((f) => f.fieldLink() != null)
             .map((f) => f.relationName());
 
+        // includes 'translations' of the external object
+        if (object.isExternal &&
+            object.model().relationMappings()['translations'])
+            relationNames.push('translations');
+
         if (relationNames.length > 0)
             query.eager('[#fieldNames#]'.replace('#fieldNames#', relationNames.join(', ')));
     }

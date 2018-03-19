@@ -1,7 +1,7 @@
 var uuid = require('node-uuid');
 var path = require('path');
 
-var ABFieldBase = require(path.join(__dirname,  "..", "..", "assets", "opstools", "AppBuilder", "classes", "dataFields", "ABFieldBase.js"));
+var ABFieldBase = require(path.join(__dirname, "..", "..", "assets", "opstools", "AppBuilder", "classes", "dataFields", "ABFieldBase.js"));
 
 // Build a reference of AB defaults for all supported Sails data field types
 var FieldManager = require(path.join('..', 'classes', 'ABFieldManager.js'));
@@ -20,6 +20,10 @@ FieldManager.allFields().forEach((Field) => {
 
 function isSupportType(type) {
 	return mysqlTypeToABFields[type] != null;
+}
+
+function getTransTableName(tableName) {
+	return tableName + '_trans';
 }
 
 module.exports = {
@@ -121,26 +125,48 @@ module.exports = {
 	 * 								nullable: {boolean},
 	 * 
 	 * 								supported: {boolean}, // flag support to convert to ABField
-	 * 								icon: {string} [Optional]
+	 * 								icon: {string} [Optional],
+	 * 
+	 * 								multilingual: {boolean} [Optional]
 	 * 							}
 	 * 			}
 	 */
 	getColumns: (tableName) => {
 
+		var knex = ABMigration.connection();
+		var transTableName = getTransTableName(tableName);
 		var columns = [];
 
 		return Promise.resolve()
+			// Get columns of the table
 			.then(function () {
 
 				return new Promise((resolve, reject) => {
-
-					var knex = ABMigration.connection();
 
 					knex(tableName).columnInfo()
 						.catch(reject)
 						.then(function (result) {
 
 							columns = result;
+
+							Object.keys(columns).forEach(name => {
+
+								// remove reserved column
+								if (ABFieldBase.reservedNames.indexOf(name) > -1) {
+									delete columns[name];
+									return;
+								}
+
+								var col = columns[name];
+								col.supported = isSupportType(col.type);
+
+								if (col.supported) {
+									col.icon = mysqlTypeToABFields[col.type].icon;
+								}
+
+							});
+
+
 							resolve();
 
 						});
@@ -148,22 +174,73 @@ module.exports = {
 				});
 
 			})
+
+			// Check exists the trans table
 			.then(function () {
 
 				return new Promise((resolve, reject) => {
 
-					Object.keys(columns).forEach(name => {
+					knex.schema.hasTable(transTableName)
+						.catch(reject)
+						.then(function (exists) {
 
-						var col = columns[name];
-						col.supported = isSupportType(col.type);
+							resolve(exists);
+						});
+				});
 
-						if (col.supported) {
-							col.icon = mysqlTypeToABFields[col.type].icon;
-						}
+			})
 
-					});
+			// Get columns of the trans table
+			.then(function (existsTrans) {
 
-					resolve(columns);
+				return new Promise((resolve, reject) => {
+
+					// no trans table
+					if (!existsTrans) {
+						resolve(columns);
+						return;
+					}
+
+					var reservedNames = ABFieldBase.reservedNames.concat([
+						'language_code'
+					]);
+
+					knex(transTableName).columnInfo()
+						.catch(reject)
+						.then(function (transCols) {
+
+							Object.keys(transCols).forEach(name => {
+
+								var col = transCols[name];
+
+								// ignore the foreign key
+								if (col.type == 'int')
+									return;
+
+								// remove reserved column
+								if (reservedNames.indexOf(name) > -1) {
+									delete transCols[name];
+									return;
+								}
+
+								// flag to be a multilingual field
+								col.multilingual = true;
+
+								col.supported = isSupportType(col.type);
+								if (col.supported)
+									col.icon = mysqlTypeToABFields[col.type].icon;
+
+								// add a trans column
+								columns[name] = col;
+
+
+							});
+
+							resolve(columns);
+
+						});
+
+
 
 				});
 
@@ -301,7 +378,7 @@ module.exports = {
 
 						var col = columns[colName];
 
-						if (!col.supported || 
+						if (!col.supported ||
 							ABFieldBase.reservedNames.indexOf(colName) > -1) return;
 
 						// Clone the reference defaults for this type
@@ -314,9 +391,14 @@ module.exports = {
 
 						let inputCol = columnList.filter(enterCol => enterCol.name == colName)[0];
 
+						// Flag support multilingual 
+						if (col.multilingual)
+							colData.settings.supportMultilingual = 1;
+
 						// Add a hidden field
 						if (inputCol && JSON.parse(inputCol.isHidden || false)) {
 							objectData.objectWorkspace.hiddenFields.push(colData.id);
+
 						}
 
 						// Label of the column
