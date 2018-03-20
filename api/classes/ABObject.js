@@ -39,6 +39,7 @@ module.exports = class ABObject extends ABObjectBase {
 	isImported: 1/0,
 	isExternal: 1/0,
 	tableName:'string',  // NOTE: store table name of import object to ignore async
+	transColumnName: 'string', // NOTE: store column name of translations table
 	urlPath:'string',
 	importFromObject: 'string', // JSON Schema style reference:  '#[ABApplication.id]/objects/[ABObject.id]'
 								// to get other object:  ABApplication.objectFromRef(obj.importFromObject);
@@ -316,10 +317,13 @@ module.exports = class ABObject extends ABObjectBase {
 				var relationMappings = {};
 
 				// Add a translation relation of the external table
-				if (currObject.isExternal) {
+				if (currObject.isExternal && currObject.transColumnName) {
+
+					var transJsonSchema = {
+						language_code: { type: 'string' }
+					};
 
 					// Populate fields of the trans table
-					var transJsonSchema = { language_code: { type: 'string' } };
 					var multilingualFields = currObject.fields(f => f.settings.supportMultilingual == 1);
 					multilingualFields.forEach(f => {
 						f.jsonSchemaProperties(transJsonSchema);
@@ -348,7 +352,7 @@ module.exports = class ABObject extends ABObjectBase {
 							from: '{targetTable}.id'.replace('{targetTable}', tableName),
 							to: '{sourceTable}.{field}'
 								.replace('{sourceTable}', TransModel.tableName)
-								.replace('{field}', 'permissionaction') // TODO
+								.replace('{field}', currObject.transColumnName)
 						}
 					}
 				}

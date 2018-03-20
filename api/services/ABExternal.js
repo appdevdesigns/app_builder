@@ -197,7 +197,7 @@ module.exports = {
 
 					// no trans table
 					if (!existsTrans) {
-						resolve(columns);
+						resolve();
 						return;
 					}
 
@@ -213,15 +213,15 @@ module.exports = {
 
 								var col = transCols[name];
 
-								// ignore the foreign key
-								if (col.type == 'int')
-									return;
-
 								// remove reserved column
 								if (reservedNames.indexOf(name) > -1) {
 									delete transCols[name];
 									return;
 								}
+
+								// ignore the foreign key
+								if (col.type == 'int')
+									return;
 
 								// flag to be a multilingual field
 								col.multilingual = true;
@@ -236,12 +236,21 @@ module.exports = {
 
 							});
 
-							resolve(columns);
+							resolve();
 
 						});
 
 
 
+				});
+
+			})
+
+			// Finally - return column infos
+			.then(function () {
+
+				return new Promise((resolve, reject) => {
+					resolve(columns);
 				});
 
 			});
@@ -267,6 +276,7 @@ module.exports = {
 		var knex = ABMigration.connection(),
 			application,
 			languages = [],
+			transColumnName = '',
 			columns = {},
 			objectData = {};
 
@@ -318,6 +328,56 @@ module.exports = {
 
 			})
 
+			// Pull trans's relation name
+			.then(function () {
+
+				return new Promise((resolve, reject) => {
+
+					var transTableName = getTransTableName(tableName);
+
+					Promise.resolve()
+						.catch(reject)
+						.then(function () {
+
+							return new Promise((next, err) => {
+
+								knex.schema.hasTable(transTableName)
+									.catch(err)
+									.then(function (exists) {
+										next(exists);
+									});
+
+							});
+
+						})
+						.then(function (exists) {
+
+							return new Promise((next, err) => {
+								if (!exists) return next();
+
+								knex(transTableName).columnInfo()
+									.catch(err)
+									.then(function (transCols) {
+
+										Object.keys(transCols).forEach(colName => {
+											var col = transCols[colName];
+
+											if (colName != 'id' && col.type == 'int')
+												transColumnName = colName;
+										});
+
+										next();
+									});
+
+							});
+
+						})
+						.then(resolve);
+
+				});
+
+			})
+
 			// Prepare object
 			.then(function () {
 
@@ -327,6 +387,7 @@ module.exports = {
 						id: uuid(),
 						name: tableName,
 						tableName: tableName,
+						transColumnName: transColumnName,
 						labelFormat: "",
 						isExternal: 1,
 						translations: [],
