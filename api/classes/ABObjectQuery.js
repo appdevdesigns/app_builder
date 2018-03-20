@@ -1,17 +1,11 @@
 
 var path = require('path');
 
-var ABObjectBase = require(path.join(__dirname,  "..", "..", "assets", "opstools", "AppBuilder", "classes",  "ABObjectBase.js"));
-// var ABFieldManager = require(path.join(__dirname, 'ABFieldManager'));
-var Model = require('objection').Model;
-
-
-var __ModelPool = {};  // reuse any previously created Model connections
-					   // to minimize .knex bindings (and connection pools!)
+var ABObject = require(path.join(__dirname, 'ABObject'));
 
 
 
-module.exports = class ABObject extends ABObjectBase {
+module.exports = class ABObjectQuery extends ABObject {
 
     constructor(attributes, application) {
 		super(attributes, application);
@@ -83,23 +77,39 @@ module.exports = class ABObject extends ABObjectBase {
 	///
 
 
-	// *
-	//  * @method fieldNew()
-	//  *
-	//  * return an instance of a new (unsaved) ABField that is tied to this
-	//  * ABObject.
-	//  *
-	//  * NOTE: this new field is not included in our this.fields until a .save()
-	//  * is performed on the field.
-	//  *
-	//  * @return {ABField}
-	 
+	/**
+	 * @method fieldNew()
+	 *
+	 * return an instance of a new (unsaved) ABField that is tied to this
+	 * ABObject.
+	 *
+	 * NOTE: this new field is not included in our this.fields until a .save()
+	 * is performed on the field.
+	 *
+	 * @return {ABField}
+	 */
 	// fieldNew ( values ) {
 	// 	// NOTE: ABFieldManager.newField() returns the proper ABFieldXXXX instance.
 	// 	return ABFieldManager.newField( values, this );
 	// }
 
 
+
+	/**
+	 * @method importFields
+	 * instantiate a set of fields from the given attributes.
+	 * Our attributes are a set of field URLs That should already be created in their respective
+	 * ABObjects.
+	 * @param {array} fieldSettings The different field urls for each field
+	 *					{ }
+	 */
+	importFields(fieldSettings) {
+		var newFields = [];
+	  	fieldSettings.forEach((field) => {
+	  		newFields.push( this.application.urlResolve(field.fieldURL) );
+	  	})
+	  	this._fields = newFields;
+	}
 
 
 

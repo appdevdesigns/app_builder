@@ -3,8 +3,10 @@
 import ABApplicationBase from "./ABApplicationBase"
 import "../data/ABApplication"
 import ABObject from "./ABObject"
+import ABObjectQuery from "./ABObjectQuery"
 import ABViewManager from "./ABViewManager"
 import ABViewPage from "./views/ABViewPage"
+import ABFieldManager from "./ABFieldManager"
 
 
 var _AllApplications = [];
@@ -430,6 +432,29 @@ export default class ABApplication extends ABApplicationBase {
 	}
 
 
+	///
+	/// Fields
+	/// 
+
+
+	/**
+	 * @method fieldNew()
+	 *
+	 * return an instance of a new (unsaved) ABField that is tied to this
+	 * ABObject.
+	 *
+	 * NOTE: this new field is not included in our this.fields until a .save()
+	 * is performed on the field.
+	 *
+	 * @param {obj} values  the initial values for this field.  
+	 *						{ key:'{string}'} is required 
+	 * @param {ABObject} parent  the parent object this field belongs to.
+	 * @return {ABField}
+	 */
+	fieldNew ( values, parent ) {
+		// NOTE: ABFieldManager returns the proper ABFieldXXXX instance.
+		return ABFieldManager.newField( values, parent );
+	}
 
 
 	///
@@ -606,6 +631,27 @@ export default class ABApplication extends ABApplicationBase {
 		return this.urlPointer() + '_pages/'
 	}
 
+
+
+
+	///
+	/// Queries
+	///
+
+	/**
+	 * @method queryNew()
+	 *
+	 * return an instance of a new (unsaved) ABObjectQuery that is tied to this
+	 * ABApplication.
+	 *
+	 * NOTE: this new object is not included in our this.objects until a .save()
+	 * is performed on the object.
+	 *
+	 * @return {ABObjectQuery}
+	 */
+	queryNew(values) {
+		return new ABObjectQuery(values, this);
+	}
 }
 
 // export to ABLiveTool

@@ -4,7 +4,7 @@ import ABApplication from "./ABApplication"
 import ABObjectBase from "./ABObjectBase"
 
 // import OP from "OP"
-import ABFieldManager from "./ABFieldManager"
+// import ABFieldManager from "./ABFieldManager"
 import ABModel from "./ABModel"
 
 
@@ -91,9 +91,9 @@ export default class ABObject extends ABObjectBase {
 	/**
 	 * @method destroy()
 	 *
-	 * destroy the current instance of ABApplication
+	 * destroy the current instance of ABObject
 	 *
-	 * also remove it from our _AllApplications
+	 * also remove it from our parent application
 	 *
 	 * @return {Promise}
 	 */
@@ -242,27 +242,6 @@ export default class ABObject extends ABObjectBase {
 		})
 	}
 
-
-	///
-	/// Fields
-	///
-
-
-	/**
-	 * @method fieldNew()
-	 *
-	 * return an instance of a new (unsaved) ABField that is tied to this
-	 * ABObject.
-	 *
-	 * NOTE: this new field is not included in our this.fields until a .save()
-	 * is performed on the field.
-	 *
-	 * @return {ABField}
-	 */
-	fieldNew ( values ) {
-		// NOTE: ABFieldManager returns the proper ABFieldXXXX instance.
-		return ABFieldManager.newField( values, this );
-	}
 
 
 

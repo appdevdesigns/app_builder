@@ -53,6 +53,17 @@ module.exports = class ABApplicationBase {
 		this._pages = newPages;
 
 
+		// NOTE: keep this after ABObjects are loaded
+		// import our ABObjectQueries
+		// just like the .objectNew() both ABApplication.js (client and server) need to 
+		// implement .queryNew()
+		var newQueries = [];
+		(attributes.json.queries || []).forEach((query) => {
+	  		newQueries.push( this.queryNew(query) );  
+	  	})
+		this._queries = newQueries;
+
+
 		// Object List Settings
 		attributes.json.objectListSettings 		= attributes.json.objectListSettings || {};
 		this.objectListSettings 				= this.objectListSettings || {};
