@@ -125,7 +125,7 @@ module.exports = {
 	 * 								nullable: {boolean},
 	 * 
 	 * 								supported: {boolean}, // flag support to convert to ABField
-	 * 								icon: {string} [Optional],
+	 * 								fieldKey: {string} - ABField's key name [Optional],
 	 * 
 	 * 								multilingual: {boolean} [Optional]
 	 * 							}
@@ -161,7 +161,7 @@ module.exports = {
 								col.supported = isSupportType(col.type);
 
 								if (col.supported) {
-									col.icon = mysqlTypeToABFields[col.type].icon;
+									col.fieldKey = mysqlTypeToABFields[col.type].key;
 								}
 
 							});
@@ -228,7 +228,7 @@ module.exports = {
 
 								col.supported = isSupportType(col.type);
 								if (col.supported)
-									col.icon = mysqlTypeToABFields[col.type].icon;
+									col.fieldKey = mysqlTypeToABFields[col.type].key;
 
 								// add a trans column
 								columns[name] = col;
@@ -266,7 +266,8 @@ module.exports = {
 	 * @param [{
 	 *      name: string,
 	 *      label: string,
-	 * 		isVisible: bool
+	 * 		fieldKey: string,
+	 * 		isHidden: bool
 	 * }] columnList
 	 * @return Promise
 	 *     Resolves with the data of the new imported object
@@ -442,15 +443,26 @@ module.exports = {
 						if (!col.supported ||
 							ABFieldBase.reservedNames.indexOf(colName) > -1) return;
 
-						// Clone the reference defaults for this type
-						let colData = _.cloneDeep(mysqlTypeToABFields[col.type]);
-						// Populate with imported values
-						colData.id = uuid.v4();
-						colData.columnName = colName;
-						colData.settings.isImported = true;
-						colData.settings.showIcon = 1;
-
 						let inputCol = columnList.filter(enterCol => enterCol.name == colName)[0];
+
+						// Clone the reference defaults for this type
+						let colData = FieldManager.newField({
+							key: inputCol.fieldKey,
+
+							id: uuid.v4(),
+							columnName: colName,
+							settings: {
+								isImported: true,
+								showIcon: 1
+							}
+						}, objectData).toObj();
+
+						// let colData = _.cloneDeep(mysqlTypeToABFields[inputCol.fieldKey]);
+						// // Populate with imported values
+						// colData.id = uuid.v4();
+						// colData.columnName = colName;
+						// colData.settings.isImported = true;
+						// colData.settings.showIcon = 1;
 
 						// Flag support multilingual 
 						if (col.multilingual)

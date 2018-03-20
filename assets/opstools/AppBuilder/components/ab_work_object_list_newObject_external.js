@@ -102,6 +102,28 @@ export default class AB_Work_Object_List_NewObject_External extends OP.Component
                 }
             },
 
+            getTypeOptions: function () {
+
+                // [
+                //     {
+                //         id: fieldName,
+                //         name: label,
+                //         icon: "envelope"
+                //     }
+                // ]
+                return ABFieldManager.allFields().map(f => {
+
+                    var fieldInfo = f.defaults();
+
+                    return {
+                        id: fieldInfo.key,
+                        name: fieldInfo.menuName,
+                        icon: fieldInfo.icon
+                    };
+
+                });
+
+            },
 
             filter: function () {
                 // `this` should be from the Webix event
@@ -136,8 +158,8 @@ export default class AB_Work_Object_List_NewObject_External extends OP.Component
                                     id: attrName,
                                     label: attrName.replace(/_/g, ' '),
                                     isvisible: true,
+                                    fieldKey: att.fieldKey,
 
-                                    icon: att.icon,
                                     disabled: !att.supported
                                 });
 
@@ -203,6 +225,7 @@ export default class AB_Work_Object_List_NewObject_External extends OP.Component
                         return {
                             name: col.id,
                             label: col.label,
+                            fieldKey: col.fieldKey,
                             isHidden: !col.isvisible
                         };
                     });
@@ -302,11 +325,21 @@ export default class AB_Work_Object_List_NewObject_External extends OP.Component
                                 view: 'checkbox',
                                 width: 30
                             },
+                            fieldKey: {
+                                view: 'combo',
+                                width: 120,
+                                options: {
+                                    body: {
+                                        template: '<span class="float-left webix_icon fa-#icon#" style="line-height: 30px;"></span>' +
+                                                    '<span class="float-left" style="width: 40px;">#name#</span>',
+                                        data: _logic.getTypeOptions()
+                                    }
+                                }
+                            },
                             label: {
                                 view: 'text',
-                                width: 260
+                                width: 170
                             }
-
                         },
                         template: (obj, common) => {
 
@@ -327,9 +360,9 @@ export default class AB_Work_Object_List_NewObject_External extends OP.Component
                             else {
                                 return `
                                         <span class="float-left">${common.isvisible(obj, common)}</span>
-                                        <span class="float-left webix_icon fa-${obj.icon}" style="line-height: 38px;"></span>
+                                        <span class="float-left">${common.fieldKey(obj, common)}</span>
                                         <span class="float-left">${common.label(obj, common)}</span>
-                                    `;
+                                        `;
                             }
 
                         }
