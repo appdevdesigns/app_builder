@@ -1,6 +1,8 @@
 var uuid = require('node-uuid');
 var path = require('path');
+var _ = require('lodash');
 
+var ABObject = require(path.join(__dirname, "..", "classes", "ABObject.js"));
 var ABFieldBase = require(path.join(__dirname, "..", "..", "assets", "opstools", "AppBuilder", "classes", "dataFields", "ABFieldBase.js"));
 
 // Build a reference of AB defaults for all supported Sails data field types
@@ -24,6 +26,39 @@ function isSupportType(type) {
 
 function getTransTableName(tableName) {
 	return tableName + '_trans';
+}
+
+/**
+ * @method getAssociations
+ * Get associations of sails.model from table name
+ * 
+ * @param {string} tableName
+ * 
+ * @return {array} [ 
+ * 		{ 
+ * 			alias: 'ATTRIBUTE_NAME',
+ * 			type: 'model',
+ * 			model: 'MODEL_NAME'
+ * 		},
+ * 		{ 
+ * 			alias: 'ATTRIBUTE_NAME', 
+ * 			type: 'collection',
+ * 			collection: 'MODEL_NAME',
+ * 			via: 'ATTRIBUTE_NAME'
+ * 		}
+ * 		...
+ * ]
+ */
+function getAssociations(tableName) {
+
+	var model = _.filter(sails.models, (m, model_name) => m.tableName == tableName)[0];
+	if (model) {
+		return model.associations;
+	}
+	else {
+		return [];
+	}
+
 }
 
 module.exports = {
@@ -125,9 +160,9 @@ module.exports = {
 	 * 								nullable: {boolean},
 	 * 
 	 * 								supported: {boolean}, // flag support to convert to ABField
-	 * 								fieldKey: {string} - ABField's key name [Optional],
+	 * 								fieldKey: {string}, - ABField's key name [Optional],
 	 * 
-	 * 								multilingual: {boolean} [Optional]
+	 * 								multilingual: {boolean}, [Optional]
 	 * 							}
 	 * 			}
 	 */
@@ -170,6 +205,27 @@ module.exports = {
 							resolve();
 
 						});
+
+				});
+
+			})
+
+			//
+			.then(function () {
+
+				return new Promise((resolve, reject) => {
+
+					var associations = getAssociations(tableName);
+					associations.forEach(asso => {
+
+						var col = columns[asso.alias];
+						if (col) {
+							col.fieldKey = "connectObject";
+						}
+
+					});
+
+					resolve();
 
 				});
 
@@ -274,12 +330,25 @@ module.exports = {
 	 **/
 	tableToObject: function (appID, tableName, columnList) {
 
-		var knex = ABMigration.connection(),
+		let knex = ABMigration.connection(),
 			application,
 			languages = [],
 			transColumnName = '',
 			columns = {},
 			objectData = {};
+
+
+		let labelField = (colData, label) => {
+
+			// Label translations
+			colData.translations = [];
+			languages.forEach((langCode) => {
+				colData.translations.push({
+					language_code: langCode,
+					label: label
+				});
+			});
+		};
 
 		return Promise.resolve()
 
@@ -436,6 +505,8 @@ module.exports = {
 
 				return new Promise((resolve, reject) => {
 
+					let associations = getAssociations(tableName);
+
 					Object.keys(columns).forEach(colName => {
 
 						var col = columns[colName];
@@ -457,34 +528,90 @@ module.exports = {
 							}
 						}, objectData).toObj();
 
-						// let colData = _.cloneDeep(mysqlTypeToABFields[inputCol.fieldKey]);
-						// // Populate with imported values
-						// colData.id = uuid.v4();
-						// colData.columnName = colName;
-						// colData.settings.isImported = true;
-						// colData.settings.showIcon = 1;
-
 						// Flag support multilingual 
 						if (col.multilingual)
 							colData.settings.supportMultilingual = 1;
 
+						// Define Connect column settings
+						if (inputCol.fieldKey == 'connectObject') {
+
+							let associateInfo = associations.filter(asso => asso.alias == colName)[0];
+							if (associateInfo) {
+
+								// Pull table name of link
+								let targetModel = "",
+									targetColId = uuid.v4(),
+									targetColName = "",
+									targetType = ""; // model, many
+
+								if (associateInfo.type == 'model') {
+									targetModel = sails.models[associateInfo.model];
+
+									let targetAssociate = targetModel.associations.filter(asso => asso.via == colName)[0];
+									if (targetAssociate) {
+										targetColName = targetAssociate.alias;
+										targetType = targetAssociate.type;
+									}
+								}
+								else {
+									targetModel = sails.models[associateInfo.collection];
+									targetColName = targetModel.via;
+
+									// Pull via type
+									let targetAssociate = targetModel.associations.filter(asso => asso.alias == targetColName)[0];
+									if (targetAssociate)
+										targetType = targetModel.associations.filter(asso => asso.alias == targetColName)[0].type;
+								}
+
+								// Get id of ABObject and ABColumn
+								let targetObj = (application.json.objects || []).filter(o => o.tableName == targetModel.tableName)[0];
+								if (!targetObj)
+									return;
+
+								colData.settings.linkObject = targetObj.id; // ABObject.id
+								colData.settings.linkType = (associateInfo.type == 'model' ? 'one' : 'many');
+								colData.settings.linkViaType = (targetType == 'model' ? 'one' : 'many'); // one, many
+
+								colData.settings.linkColumn = targetColId; // ABColumn.id
+								colData.settings.isSource = 1;
+
+
+								// Add target connect field to the target object
+								let targetColData = FieldManager.newField({
+									key: 'connectObject',
+
+									id: targetColId,
+									columnName: targetColName,
+									settings: {
+										isImported: true,
+										showIcon: 1,
+										linkObject: objectData.id,
+										linkType: (targetType == 'model' ? 'one' : 'many'),
+										linkViaType: (associateInfo.type == 'model' ? 'one' : 'many'),
+										linkColumn: colData.id,
+										isSource: 0
+									}
+								}, targetObj).toObj();
+
+								labelField(targetColData, targetColName.replace(/_/g, ' '));
+
+								targetObj.fields.push(targetColData);
+
+								// Refresh the target model
+								let targetObjClass = new ABObject(targetObj, application);
+								targetObjClass.modelRefresh();
+
+							}
+						}
+
 						// Add a hidden field
 						if (inputCol && JSON.parse(inputCol.isHidden || false)) {
 							objectData.objectWorkspace.hiddenFields.push(colData.columnName);
-
 						}
 
 						// Label of the column
 						let colLabel = inputCol ? inputCol.label : colName;
-
-						// Label translations
-						colData.translations = [];
-						languages.forEach((langCode) => {
-							colData.translations.push({
-								language_code: langCode,
-								label: colLabel
-							});
-						});
+						labelField(colData, colLabel);
 
 						objectData.fields.push(colData);
 

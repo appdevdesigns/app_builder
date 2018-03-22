@@ -26,7 +26,8 @@ export default class ABExternal {
 
 		return new Promise((resolve, reject) => {
 
-			OP.Comm.Socket.get({
+			// OP.Comm.Socket.get({
+			OP.Comm.Service.get({
 				url: '/app_builder/external/model/' + tableName + '/columns'
 			})
 				.then((columnInfos) => {

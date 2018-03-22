@@ -296,6 +296,12 @@ class ABFieldConnect extends ABField {
 	migrateDrop(knex) {
 		return new Promise(
 			(resolve, reject) => {
+
+				// if field is imported, then it will not remove column in table
+				if (this.object.isImported ||
+					this.object.isExternal ||
+					this.isImported) return resolve();
+
 				var tableName = this.object.dbTableName();
 
 				// M:N
