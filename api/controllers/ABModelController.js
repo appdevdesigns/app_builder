@@ -416,7 +416,12 @@ function updateConnectedFields(object, newData, oldData) {
         var field = f.fieldLink();
         // Get the relation name so we can separate the linked fields updates from the rest
         var relationName = f.relationName();
-        
+        if (Array.isArray(newData)) {
+            newData[relationName] = [];
+            newData.forEach((n) => {
+                newData[relationName] = newData[relationName].concat(n[relationName]);
+            });
+        }
         // Get all the values of the linked field from the save
         var newItems = newData[relationName];
         // If there was only one it is not returned as an array so lets put it in an array to normalize
@@ -788,6 +793,9 @@ module.exports = {
     delete: function (req, res) {
 
         var id = req.param('id', -1);
+        var object;
+        var oldItem;
+        var relatedItems = [];
 
 
         if (id == -1) {
@@ -798,10 +806,21 @@ module.exports = {
             return;
         }
 
-        AppBuilder.routes.verifyAndReturnObject(req, res)
-            .then(function (object) {
+        async.series([
+            // step #1
+            function (next) {
 
+                AppBuilder.routes.verifyAndReturnObject(req, res)
+                    .catch(next)
+                    .then(function (obj) {
+                        object = obj;
+                        next();
+                    });
 
+            },
+
+            // step #2
+            function (next) {
                 // We are deleting an item...but first fetch its current data  
                 // so we can clean up any relations on the client side after the delete
                 var queryPrevious = object.model().query();
@@ -818,58 +837,261 @@ module.exports = {
                 }, req.user.data);
                 
                 queryPrevious
-                    .catch((err) => { 
-                        if (!(err instanceof ValidationError)) {
-                            ADCore.error.log('Error performing find!', { error: err })
-                            res.AD.error(err);
-                            sails.log.error('!!!! error:', err);
-                        }
-                    })
-                    .then((oldItem) => {
-                        
-                        // Now we can delete because we have the current record saved as oldItem
-                        object.model().query()
-                            .deleteById(id)
-                            .then((numRows) => {
-
-                                res.AD.success({ numRows: numRows });
-                                
-                                // We want to broadcast the change from the server to the client so all datacollections can properly update
-                                // Build a payload that tells us what was updated
-                                var payload = {
-                                    objectId: object.id,
-                                    id: id
-                                }
-                                
-                                // Broadcast the delete
-                                sails.sockets.broadcast(object.id, "ab.datacollection.delete", payload);
-                                
-                                // Using the data from the oldItem we can update all instances of it and tell the client side it is stale and needs to be refreshed
-                                updateConnectedFields(object, oldItem[0]);
-
-                            }
-                            // , (err) => {
-                            // 
-                            //     // console.log('...  (err) handler!', err);
-                            // 
-                            //     res.AD.error(err);
-                            // 
-                            // 
-                            // }
-                            )
-                            .catch((err) => {
-                                // console.log('... catch(err) !');
-
-                                if (!(err instanceof ValidationError)) {
-                                    ADCore.error.log('Error performing update!', { error: err })
-                                    res.AD.error(err);
-                                    sails.log.error('!!!! error:', err);
-                                }
-                            });
-
+                    .catch(next)
+                    .then((old_item) => {
+                        oldItem = old_item;
+                        next();
                     });
+                    
+            },
+            
+            // step #3
+            function (next) {
+                // Check to see if the object has any connected fields that need to be updated
+                var connectFields = object.connectFields();
+                
+                // If there are no connected fields continue on
+                if (connectFields.length == 0) next();
+                
+                var relationQueue = [];
+                
+                // Parse through the connected fields
+                connectFields.forEach((f)=>{
+                    // Get the field object that the field is linked to
+                    var relatedObject = f.objectLink();
+                    // Get the relation name so we can separate the linked fields updates from the rest
+                    var relationName = f.relationName();
+                    
+                    // If we have any related item data we need to build a query to report the delete...otherwise just move on
+                    if (oldItem[0][relationName].length) {
+                        // Push the ids of the related data into an array so we can use them in a query
+                        var relatedIds = [];
+                        oldItem[0][relationName].forEach((old) => {
+                            relatedIds.push(old.id);
+                        });
+                        // Get all related items info
+                        var queryRelated = relatedObject.model().query();
+                        populateFindConditions(queryRelated, relatedObject, {
+                            where: {
+                                glue:'and',
+                                rules:[{
+                                    key: "id",
+                                    rule: "in",
+                                    value: relatedIds
+                                }]
+                            },
+                            includeRelativeData: true
+                        }, req.user.data);
 
-            })
+                        var p = queryRelated
+                            .catch(next)
+                            .then((items) => {
+                                // push new realted items into the larger related items array
+                                relatedItems.push({
+                                    object: relatedObject,
+                                    items: items
+                                });
+                            });
+                            
+                        relationQueue.push(p);
+                    }
+                });
+                
+                Promise.all(relationQueue).then(function(values) {
+                    console.log("relatedItems: ", relatedItems)
+                    next();
+                })
+                .catch(next);
+
+            },
+            
+            // step #4
+            function (next) {
+                // Now we can delete because we have the current record saved as oldItem and our related records saved as relatedItems
+                object.model().query()
+                    .deleteById(id)
+                    .then((numRows) => {
+
+                        res.AD.success({ numRows: numRows });
+
+                        // We want to broadcast the change from the server to the client so all datacollections can properly update
+                        // Build a payload that tells us what was updated
+                        var payload = {
+                            objectId: object.id,
+                            id: id
+                        }
+
+                        // Broadcast the delete
+                        sails.sockets.broadcast(object.id, "ab.datacollection.delete", payload);
+
+                        // Using the data from the oldItem and relateditems we can update all instances of it and tell the client side it is stale and needs to be refreshed
+                        updateConnectedFields(object, oldItem[0]);
+                        if (relatedItems.length) {
+                            relatedItems.forEach((r) => {
+                                updateConnectedFields(r.object, r.items);
+                            });
+                        }
+                        next();
+                
+                    })
+                    .catch(next);
+    
+            },
+
+        ], function (err) {
+            if (err) {
+                if (!(err instanceof ValidationError)) {
+                    ADCore.error.log('Error performing delete!', { error: err })
+                    res.AD.error(err);
+                    sails.log.error('!!!! error:', err);
+                }                
+            }
+        });
+
+
+
+        // AppBuilder.routes.verifyAndReturnObject(req, res)
+        //     .then(function (object) {
+        // 
+        // 
+        //         // We are deleting an item...but first fetch its current data  
+        //         // so we can clean up any relations on the client side after the delete
+        //         var queryPrevious = object.model().query();
+        //         populateFindConditions(queryPrevious, object, {
+        //             where: {
+        //                 glue:'and',
+        //                 rules:[{
+        //                     key: "id",
+        //                     rule: "equals",
+        //                     value: id
+        //                 }]
+        //             },
+        //             includeRelativeData: true
+        //         }, req.user.data);
+        // 
+        //         queryPrevious
+        //             .catch((err) => { 
+        //                 if (!(err instanceof ValidationError)) {
+        //                     ADCore.error.log('Error performing find!', { error: err })
+        //                     res.AD.error(err);
+        //                     sails.log.error('!!!! error:', err);
+        //                 }
+        //             })
+        //             .then((oldItem) => {
+        // 
+        //                 // Check to see if the object has any connected fields that need to be updated
+        //                 var connectFields = object.connectFields();
+        //                 // Parse through the connected fields
+        //                 connectFields.forEach((f)=>{
+        //                     // Get the field object that the field is linked to
+        //                     var relatedObject = f.objectLink();
+        //                     // Get the relation name so we can separate the linked fields updates from the rest
+        //                     var relationName = f.relationName();
+        // 
+        //                     // If we have any related item data we need to build a query to report the delete...otherwise just move on
+        //                     if (oldItem[0][relationName].length) {
+        //                         // Push the ids of the related data into an array so we can use them in a query
+        //                         var relatedIds = [];
+        //                         oldItem[0][relationName].forEach((old) => {
+        //                             relatedIds.push(old.id);
+        //                         });
+        //                         // Get all related items info
+        //                         var queryRelated = relatedObject.model().query();
+        //                         populateFindConditions(queryRelated, relatedObject, {
+        //                             where: {
+        //                                 glue:'and',
+        //                                 rules:[{
+        //                                     key: "id",
+        //                                     rule: "in",
+        //                                     value: relatedIds
+        //                                 }]
+        //                             },
+        //                             includeRelativeData: true
+        //                         }, req.user.data);
+        // 
+        //                         queryRelated
+        //                             .catch((err) => { 
+        //                                 if (!(err instanceof ValidationError)) {
+        //                                     ADCore.error.log('Error performing find!', { error: err })
+        //                                     res.AD.error(err);
+        //                                     sails.log.error('!!!! error:', err);
+        //                                 }
+        //                             })
+        //                             .then((relatedItems) => {
+        // 
+        //                                 // Now we can delete because we have the current record saved as oldItem and our related records saved as relatedItems
+        //                                 object.model().query()
+        //                                     .deleteById(id)
+        //                                     .then((numRows) => {
+        // 
+        //                                         res.AD.success({ numRows: numRows });
+        // 
+        //                                         // We want to broadcast the change from the server to the client so all datacollections can properly update
+        //                                         // Build a payload that tells us what was updated
+        //                                         var payload = {
+        //                                             objectId: object.id,
+        //                                             id: id
+        //                                         }
+        // 
+        //                                         // Broadcast the delete
+        //                                         sails.sockets.broadcast(object.id, "ab.datacollection.delete", payload);
+        // 
+        //                                         // Using the data from the oldItem and relateditems we can update all instances of it and tell the client side it is stale and needs to be refreshed
+        //                                         updateConnectedFields(object, oldItem[0]);
+        //                                         updateConnectedFields(relatedObject, relatedItems);
+        // 
+        //                                     })
+        //                                     .catch((err) => {
+        //                                         // console.log('... catch(err) !');
+        // 
+        //                                         if (!(err instanceof ValidationError)) {
+        //                                             ADCore.error.log('Error performing update!', { error: err })
+        //                                             res.AD.error(err);
+        //                                             sails.log.error('!!!! error:', err);
+        //                                         }
+        //                                     });
+        // 
+        // 
+        //                             });
+        //                     } else {
+        //                         // Now we can delete because we have the current record saved as oldItem and our related records saved as relatedItems
+        //                         object.model().query()
+        //                             .deleteById(id)
+        //                             .then((numRows) => {
+        // 
+        //                                 res.AD.success({ numRows: numRows });
+        // 
+        //                                 // We want to broadcast the change from the server to the client so all datacollections can properly update
+        //                                 // Build a payload that tells us what was updated
+        //                                 var payload = {
+        //                                     objectId: object.id,
+        //                                     id: id
+        //                                 }
+        // 
+        //                                 // Broadcast the delete
+        //                                 sails.sockets.broadcast(object.id, "ab.datacollection.delete", payload);
+        // 
+        //                                 // Using the data from the oldItem we can update all instances of it and tell the client side it is stale and needs to be refreshed
+        //                                 updateConnectedFields(object, oldItem[0]);
+        // 
+        //                             })
+        //                             .catch((err) => {
+        //                                 // console.log('... catch(err) !');
+        // 
+        //                                 if (!(err instanceof ValidationError)) {
+        //                                     ADCore.error.log('Error performing update!', { error: err })
+        //                                     res.AD.error(err);
+        //                                     sails.log.error('!!!! error:', err);
+        //                                 }
+        //                             });
+        //                     }
+        //                 });
+        // 
+        // 
+        // 
+        //             });
+        // 
+        //     })
 
     },
 

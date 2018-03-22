@@ -909,6 +909,14 @@ export default class ABViewDataCollection extends ABView {
 							if (currData && currData.id == values.id) {
 								this.emit("changeCursor", currData);
 							}
+						} else {
+							// If there is no data in the object then it was deleted...lets clean things up
+							// If the deleted item is current cursor, then the current cursor should be cleared.
+							var currId = this.getCursor();
+							if (currId == values.id)
+								this.emit("changeCursor", null);
+
+							this.__dataCollection.remove(values.id);
 						}
 					});
 
@@ -936,9 +944,9 @@ export default class ABViewDataCollection extends ABView {
 			if (this.__dataCollection.exists(deleteId)) {
 
 				// If the deleted item is current cursor, then the current cursor should be cleared.
-				var currId = this.__dataCollection.getCursor();
+				var currId = this.getCursor();
 				if (currId == deleteId)
-					this.__dataCollection.setCursor(null);
+					this.emit("changeCursor", null);
 
 				this.__dataCollection.remove(deleteId);
 			}
