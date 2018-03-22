@@ -49,9 +49,9 @@ module.exports = {
 			columnList = req.body.columns || [];
 
 		ABExternal.tableToObject(appID, tableName, columnList)
-			.then(function (objectData) {
+			.then(function (objectList) {
 
-				res.AD.success(objectData);
+				res.AD.success(objectList);
 
 			})
 			.catch(function (err) {

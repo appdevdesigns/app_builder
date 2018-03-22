@@ -51,9 +51,9 @@ export default class ABExternal {
 					columns: columnNames
 				}
 			})
-				.then((objectData) => {
+				.then((objectList) => {
 
-					resolve(objectData);
+					resolve(objectList);
 
 				})
 				.catch(reject);

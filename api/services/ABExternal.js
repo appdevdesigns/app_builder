@@ -654,7 +654,7 @@ module.exports = {
 							reject(new Error('Application not updated'));
 						}
 						else {
-							resolve(objectData);
+							resolve(application.json.objects);
 						}
 					});
 
