@@ -3,6 +3,7 @@ var path = require('path');
 
 var ABObject = require(path.join(__dirname, 'ABObject'));
 
+var Model = require('objection').Model;
 
 
 module.exports = class ABObjectQuery extends ABObject {
@@ -29,6 +30,9 @@ module.exports = class ABObjectQuery extends ABObject {
 }
 */
 
+		// import all our ABObjects 
+	  	this.importObjects(attributes.objects || []);
+	  	this.where = attributes.where || {};
 
   	}
 
@@ -64,8 +68,10 @@ module.exports = class ABObjectQuery extends ABObject {
 
 		var result = super.toObj();
 
-		// NOTE: store table name of import object to ignore async
-		result.tableName = this.tableName;
+		/// include our additional objects and where settings:
+
+		result.objects = this.exportObjects();  //objects;
+		result.where  = this.where;
 
 		return result;
 
@@ -114,25 +120,106 @@ module.exports = class ABObjectQuery extends ABObject {
 
 
 	///
+	/// Objects
+	///
+
+
+
+	/**
+	 * @method objects()
+	 *
+	 * return an array of all the ABObjects for this Query.
+	 *
+	 * @return {array}
+	 */
+	objects (filter) {
+
+		filter = filter || function(){ return true; };
+
+		return this._objects.filter(filter);
+	}
+
+
+	/** 
+	 * @method objectBase
+	 * return the object in our object list that is considered the 'base' object.
+	 * (ie the 1st one added).
+	 * @return {ABObject}
+	 */
+	objectBase() {
+		return this.objects((o)=>{ return o.linkInfo.type.toLowerCase() == 'base'})[0];
+	}
+
+	/**
+	 * @method importObjects
+	 * instantiate a set of objects from the given attributes.
+	 * Our attributes contain a set of ABObject URLs that should already be created in our Application.
+	 * @param {array} settings The different field urls for each field
+	 *					{ }
+	 */
+	importObjects(settings) {
+		var newObjects = [];
+	  	settings.forEach((obj) => {
+
+	  		// Convert our saved settings:
+	  		// {
+	  		// 	   objectURL: 'xxxx',
+	  		//     linkInfo: {} 
+	  		// }
+	  		// into an ABObject with .linkInfo added
+
+	  		var object = this.application.urlResolve(obj.objectURL);
+	  		object.linkInfo = obj.linkInfo;
+
+	  		newObjects.push( object );
+	  	})
+	  	this._objects = newObjects;
+	}
+
+
+	/**
+	 * @method exportObjects
+	 * save our list of objects into our format for persisting on the server
+	 * @param {array} settings 
+	 */
+	exportObjects() {
+
+		var objects = [];
+		this._objects.forEach((obj)=>{
+			var setting = {
+				objectURL: obj.urlPointer(),
+				linkInfo: obj.linkInfo
+			}
+			objects.push(setting);
+		})
+		return objects;
+	}
+
+
+
+
+
+
+	///
 	/// Migration Services
 	///
 
-	dbTableName() {
-		if (this.isImported) {
-			// NOTE: store table name of import object to ignore async
-			return this.tableName;
-		}
-		else {
-			return AppBuilder.rules.toObjectNameFormat(this.application.dbApplicationName(), this.name);
-			// var modelName = this.name.toLowerCase();
-			// if (!sails.models[modelName]) {
-			// 	throw new Error(`Imported object model not found: ${modelName}`);
-			// }
-			// else {
-			// 	return sails.models[modelName].waterline.schema[modelName].tableName;
-			// }
-		}
-	}
+	// dbTableName() {
+	// 	if (this.isImported) {
+	// 		// NOTE: store table name of import object to ignore async
+	// 		return this.tableName;
+	// 	}
+	// 	else {
+	// 		return AppBuilder.rules.toObjectNameFormat(this.application.dbApplicationName(), this.name);
+	// 		// var modelName = this.name.toLowerCase();
+	// 		// if (!sails.models[modelName]) {
+	// 		// 	throw new Error(`Imported object model not found: ${modelName}`);
+	// 		// }
+	// 		// else {
+	// 		// 	return sails.models[modelName].waterline.schema[modelName].tableName;
+	// 		// }
+	// 	}
+	// }
 
 
 	/**
@@ -142,49 +229,15 @@ module.exports = class ABObjectQuery extends ABObject {
 	 * @return {Promise}
 	 */
 	migrateCreate(knex) {
-		sails.log.verbose('ABObject.migrateCreate()');
+		sails.log.verbose('ABObjectQuery.migrateCreate()');
+		sails.log.debug('ABObjectQuery.migrateCreate() called, but no migrations allowed.')
 
-		var tableName = this.dbTableName();
-		sails.log.verbose('.... dbTableName:'+ tableName);
-
+		// just continue gracefully:
 		return new Promise(
 			(resolve, reject) => {
-
-				knex.schema.hasTable(tableName).then((exists) => {
-					
-					// if it doesn't exist, then create it and any known fields:
-					if (!exists) {
-						sails.log.verbose('... creating!!!');
-						return knex.schema.createTable(tableName, (t) => {
-							t.increments('id').primary();
-							t.timestamps();
-							t.engine('InnoDB');
-							t.charset('utf8');
-							t.collate('utf8_unicode_ci');
-
-							var fieldUpdates = [];
-							this.fields().forEach((f)=>{
-
-								fieldUpdates.push(f.migrateCreate(knex));
-
-							})
-							
-							// Adding a new field to store various item properties in JSON (ex: height)
-							fieldUpdates.push(t.text("properties"));
-
-							Promise.all(fieldUpdates)
-							.then(resolve, reject);
-
-						})
-
-					} else {
-						sails.log.verbose('... already there.');
-						resolve();
-					}
-				});
-
+				resolve();
 			}
-		)
+		);
 	}
 
 
@@ -199,52 +252,14 @@ module.exports = class ABObjectQuery extends ABObject {
 	 */
 	migrateDrop(knex) {
 		sails.log.verbose('ABObject.migrateDrop()');
+		sails.log.debug('ABObjectQuery.migrateDrop() called, but no migrations allowed.')
 
-		var tableName = this.dbTableName();
-		sails.log.verbose('.... dbTableName:'+ tableName);
-
+		// just continue gracefully:
 		return new Promise(
 			(resolve, reject) => {
-				sails.log.silly('.... .migrateDropTable()  before knex:');
-				
-				if (this.isImported) {
-					sails.log.silly('.... aborted drop of imported table');
-					reject(new Error('Cannot drop an imported object'));
-					return;
-				}
-
-				//BEFORE we just go drop the table, let's give each of our
-				// fields the chance to perform any clean up actions related
-				// to their columns being removed from the system.
-				//   Image Fields, Attachment Fields, Connection Fields, etc... 
-
-
-// QUESTION: When removing ConnectionFields:  If other objects connect to this object, we
-// need to decide how to handle that:
-// - auto remove those fields from other objects?
-// - perform the corrections here, or alert the USER in the UI and expect them to 
-//   make the changes manually? 
-
-
-				var fieldDrops = [];
-				this.fields().forEach((f)=>{
-					fieldDrops.push(f.migrateDrop(knex));
-				})
-
-				Promise.all(fieldDrops)
-				.then(function(){
-
-					knex.schema.dropTableIfExists(tableName)
-					.then(resolve)
-					.catch(reject);
-
-				})
-				.catch(reject);
-
-				
-
+				resolve();
 			}
-		)
+		);
 	}
 
 
@@ -259,193 +274,195 @@ module.exports = class ABObjectQuery extends ABObject {
 	 */
 	model() {
 
-		var tableName = this.dbTableName();
+		// var tableName = this.dbTableName();
 
-		if (!__ModelPool[tableName]) {
+		// if (!__ModelPool[tableName]) {
 
-			var knex = ABMigration.connection();
+		// 	var knex = ABMigration.connection();
 
-			// Compile our jsonSchema from our DataFields
-			var jsonSchema = {
-				type: 'object',
-				required: [],
-				properties: {
+		// 	// Compile our jsonSchema from our DataFields
+		// 	var jsonSchema = {
+		// 		type: 'object',
+		// 		required: [],
+		// 		properties: {
 
-					created_at:{ type:['null', 'string'], pattern: AppBuilder.rules.SQLDateTimeRegExp },
-					updated_at:{ type:['null', 'string'], pattern: AppBuilder.rules.SQLDateTimeRegExp },
-					properties:{ type:['null', 'object'] }
+		// 			created_at:{ type:['null', 'string'], pattern: AppBuilder.rules.SQLDateTimeRegExp },
+		// 			updated_at:{ type:['null', 'string'], pattern: AppBuilder.rules.SQLDateTimeRegExp },
+		// 			properties:{ type:['null', 'object'] }
 
-				}
-			}
-			var currObject = this;
-			var allFields = this.fields();
-			allFields.forEach(function(f) {
-				f.jsonSchemaProperties(jsonSchema.properties);
-			})
-
-
-			class MyModel extends Model {
-
-				// Table name is the only required property.
-				static get tableName() {
-					return tableName;
-				}
-
-				static get jsonSchema () {
-    				return jsonSchema
-    			}
-
-				// Move relation setup to below
-				// static get relationMappings () {
-				// }
-
-			}
-
-			__ModelPool[tableName] = MyModel;
-
-			// NOTE : there is relation setup here because prevent circular loop when get linked object.
-			// have to define object models to __ModelPool[tableName] first
-			MyModel.relationMappings = function () {
-				// Compile our relations from our DataFields
-				var relationMappings = {};
-
-				var connectFields = currObject.connectFields();
-
-				// linkObject: '', // ABObject.id
-				// linkType: 'one', // one, many
-				// linkViaType: 'many' // one, many
-
-				connectFields.forEach((f) => {
-					// find linked object name
-					var linkObject = currObject.application.objects((obj) => { return obj.id == f.settings.linkObject; })[0];
-					if (linkObject == null) return;
-
-					var linkField = f.fieldLink();
-					if (linkField == null) return;
-
-					var linkModel = linkObject.model();
-					var relationName = f.relationName();
-
-					// 1:1
-					if (f.settings.linkType == 'one' && f.settings.linkViaType == 'one') {
-
-						var sourceTable,
-							targetTable,
-							relation,
-							columnName;
-
-						if (f.settings.isSource == true) {
-							sourceTable = tableName;
-							targetTable = linkObject.dbTableName();
-							relation = Model.BelongsToOneRelation;
-							columnName = f.columnName;
-						}
-						else {
-							sourceTable = linkObject.dbTableName();
-							targetTable = tableName;
-							relation = Model.HasOneRelation;
-							columnName = linkField.columnName;
-						}
-
-						relationMappings[relationName] = {
-							relation: relation,
-							modelClass: linkModel,
-							join: {
-								from: '{targetTable}.id'
-									.replace('{targetTable}', targetTable),
-
-								to: '{sourceTable}.{field}'
-									.replace('{sourceTable}', sourceTable)
-									.replace('{field}', columnName)
-							}
-						};
-					}
-					// M:N
-					else if (f.settings.linkType == 'many' && f.settings.linkViaType == 'many') {
-						// get join table name
-						var joinTablename = f.joinTableName(),
-							sourceObjectName,
-							sourceTableName,
-							targetObjectName,
-							targetTableName;
-
-						if (f.settings.isSource == true) {
-							sourceObjectName = f.object.name;
-							sourceTableName = f.object.dbTableName();
-							targetObjectName = linkObject.name;
-							targetTableName = linkObject.dbTableName();
-						}
-						else {
-							sourceObjectName = linkObject.name;
-							sourceTableName = linkObject.dbTableName();
-							targetObjectName = f.object.name;
-							targetTableName = f.object.dbTableName();
-						}
-
-						relationMappings[relationName] = {
-							relation: Model.ManyToManyRelation,
-							modelClass: linkModel,
-							join: {
-								from: '{sourceTable}.id'.replace('{sourceTable}', sourceTableName),
-
-								through: {
-									from: '{joinTable}.{sourceColName}'
-										.replace('{joinTable}', joinTablename)
-										.replace('{sourceColName}', sourceObjectName),
+		// 		}
+		// 	}
+		// 	var currObject = this;
+		// 	var allFields = this.fields();
+		// 	allFields.forEach(function(f) {
+		// 		f.jsonSchemaProperties(jsonSchema.properties);
+		// 	})
 
 
-									to: '{joinTable}.{targetColName}'
-										.replace('{joinTable}', joinTablename)
-										.replace('{targetColName}', targetObjectName)
-								},
+		// 	class MyModel extends Model {
 
-								to: '{targetTable}.id'.replace('{targetTable}', targetTableName)
-							}
+		// 		// Table name is the only required property.
+		// 		static get tableName() {
+		// 			return tableName;
+		// 		}
 
-						};
-					}
-					// 1:M
-					else if (f.settings.linkType == 'one' && f.settings.linkViaType == 'many') {
-						relationMappings[relationName] = {
-							relation: Model.BelongsToOneRelation,
-							modelClass: linkModel,
-							join: {
-								from: '{sourceTable}.{field}'
-									.replace('{sourceTable}', tableName)
-									.replace('{field}', f.columnName),
+		// 		static get jsonSchema () {
+  //   				return jsonSchema
+  //   			}
 
-								to: '{targetTable}.id'
-									.replace('{targetTable}', linkObject.dbTableName())
-							}
-						};
-					}
-					// M:1
-					else if (f.settings.linkType == 'many' && f.settings.linkViaType == 'one') {
-						relationMappings[relationName] = {
-							relation: Model.HasManyRelation,
-							modelClass: linkModel,
-							join: {
-								from: '{sourceTable}.id'
-									.replace('{sourceTable}', tableName),
+		// 		// Move relation setup to below
+		// 		// static get relationMappings () {
+		// 		// }
 
-								to: '{targetTable}.{field}'
-									.replace('{targetTable}', linkObject.dbTableName())
-									.replace('{field}', linkField.columnName)
-							}
-						};
-					}
-				});
+		// 	}
 
-				return relationMappings
-			};
+		// 	__ModelPool[tableName] = MyModel;
 
-			// bind knex connection to object model
-			// NOTE : when model is bound, then relation setup will be executed
-			__ModelPool[tableName] = __ModelPool[tableName].bindKnex(knex);
+		// 	// NOTE : there is relation setup here because prevent circular loop when get linked object.
+		// 	// have to define object models to __ModelPool[tableName] first
+		// 	MyModel.relationMappings = function () {
+		// 		// Compile our relations from our DataFields
+		// 		var relationMappings = {};
 
-		}
+		// 		var connectFields = currObject.connectFields();
 
-		return __ModelPool[tableName];
+		// 		// linkObject: '', // ABObject.id
+		// 		// linkType: 'one', // one, many
+		// 		// linkViaType: 'many' // one, many
+
+		// 		connectFields.forEach((f) => {
+		// 			// find linked object name
+		// 			var linkObject = currObject.application.objects((obj) => { return obj.id == f.settings.linkObject; })[0];
+		// 			if (linkObject == null) return;
+
+		// 			var linkField = f.fieldLink();
+		// 			if (linkField == null) return;
+
+		// 			var linkModel = linkObject.model();
+		// 			var relationName = f.relationName();
+
+		// 			// 1:1
+		// 			if (f.settings.linkType == 'one' && f.settings.linkViaType == 'one') {
+
+		// 				var sourceTable,
+		// 					targetTable,
+		// 					relation,
+		// 					columnName;
+
+		// 				if (f.settings.isSource == true) {
+		// 					sourceTable = tableName;
+		// 					targetTable = linkObject.dbTableName();
+		// 					relation = Model.BelongsToOneRelation;
+		// 					columnName = f.columnName;
+		// 				}
+		// 				else {
+		// 					sourceTable = linkObject.dbTableName();
+		// 					targetTable = tableName;
+		// 					relation = Model.HasOneRelation;
+		// 					columnName = linkField.columnName;
+		// 				}
+
+		// 				relationMappings[relationName] = {
+		// 					relation: relation,
+		// 					modelClass: linkModel,
+		// 					join: {
+		// 						from: '{targetTable}.id'
+		// 							.replace('{targetTable}', targetTable),
+
+		// 						to: '{sourceTable}.{field}'
+		// 							.replace('{sourceTable}', sourceTable)
+		// 							.replace('{field}', columnName)
+		// 					}
+		// 				};
+		// 			}
+		// 			// M:N
+		// 			else if (f.settings.linkType == 'many' && f.settings.linkViaType == 'many') {
+		// 				// get join table name
+		// 				var joinTablename = f.joinTableName(),
+		// 					sourceObjectName,
+		// 					sourceTableName,
+		// 					targetObjectName,
+		// 					targetTableName;
+
+		// 				if (f.settings.isSource == true) {
+		// 					sourceObjectName = f.object.name;
+		// 					sourceTableName = f.object.dbTableName();
+		// 					targetObjectName = linkObject.name;
+		// 					targetTableName = linkObject.dbTableName();
+		// 				}
+		// 				else {
+		// 					sourceObjectName = linkObject.name;
+		// 					sourceTableName = linkObject.dbTableName();
+		// 					targetObjectName = f.object.name;
+		// 					targetTableName = f.object.dbTableName();
+		// 				}
+
+		// 				relationMappings[relationName] = {
+		// 					relation: Model.ManyToManyRelation,
+		// 					modelClass: linkModel,
+		// 					join: {
+		// 						from: '{sourceTable}.id'.replace('{sourceTable}', sourceTableName),
+
+		// 						through: {
+		// 							from: '{joinTable}.{sourceColName}'
+		// 								.replace('{joinTable}', joinTablename)
+		// 								.replace('{sourceColName}', sourceObjectName),
+
+
+		// 							to: '{joinTable}.{targetColName}'
+		// 								.replace('{joinTable}', joinTablename)
+		// 								.replace('{targetColName}', targetObjectName)
+		// 						},
+
+		// 						to: '{targetTable}.id'.replace('{targetTable}', targetTableName)
+		// 					}
+
+		// 				};
+		// 			}
+		// 			// 1:M
+		// 			else if (f.settings.linkType == 'one' && f.settings.linkViaType == 'many') {
+		// 				relationMappings[relationName] = {
+		// 					relation: Model.BelongsToOneRelation,
+		// 					modelClass: linkModel,
+		// 					join: {
+		// 						from: '{sourceTable}.{field}'
+		// 							.replace('{sourceTable}', tableName)
+		// 							.replace('{field}', f.columnName),
+
+		// 						to: '{targetTable}.id'
+		// 							.replace('{targetTable}', linkObject.dbTableName())
+		// 					}
+		// 				};
+		// 			}
+		// 			// M:1
+		// 			else if (f.settings.linkType == 'many' && f.settings.linkViaType == 'one') {
+		// 				relationMappings[relationName] = {
+		// 					relation: Model.HasManyRelation,
+		// 					modelClass: linkModel,
+		// 					join: {
+		// 						from: '{sourceTable}.id'
+		// 							.replace('{sourceTable}', tableName),
+
+		// 						to: '{targetTable}.{field}'
+		// 							.replace('{targetTable}', linkObject.dbTableName())
+		// 							.replace('{field}', linkField.columnName)
+		// 					}
+		// 				};
+		// 			}
+		// 		});
+
+		// 		return relationMappings
+		// 	};
+
+		// 	// bind knex connection to object model
+		// 	// NOTE : when model is bound, then relation setup will be executed
+		// 	__ModelPool[tableName] = __ModelPool[tableName].bindKnex(knex);
+
+		// }
+
+		// return __ModelPool[tableName];
+
+		return Model;
 	}
 
 
@@ -455,55 +472,39 @@ module.exports = class ABObjectQuery extends ABObject {
 	 * model definitions.
 	 * NOTE: called from our ABField.migrateXXX methods.
 	 */
-	modelRefresh() {
+	// modelRefresh() {
 
-		var tableName = this.dbTableName();
-		delete __ModelPool[tableName];
+	// 	var tableName = this.dbTableName();
+	// 	delete __ModelPool[tableName];
 
-		ABMigration.refreshObject(tableName);
+	// 	ABMigration.refreshObject(tableName);
 
-	}
+	// }
+
+
 
 
 	/**
-	 * @method requestParams
-	 * Parse through the given parameters and return a subset of data that
-	 * relates to the fields in this object.
-	 * @param {obj} allParameters  a key=>value hash of the inputs to parse.
-	 * @return {obj} 
+	 * @method queryFind
+	 * return a a knex QueryBuilder ready to perform a select() statment.
+	 * NOTE: ObjectQuery overrides this to return queries already joined with 
+	 * multiple tables.
+	 * @return {QueryBuilder}
 	 */
-	requestParams(allParameters) {
-		var usefulParameters = {};
-		this.fields().forEach((f) => {
-			var p = f.requestParam(allParameters);
-			if (p) {
-				for (var a in p) {
-					usefulParameters[a] = p[a];
-				}
-			}
+	queryFind() {
+
+		var query = ABMigration.connection().queryBuilder();
+
+		// step through objects to add in tables:
+		var baseObject = this.objects((o)=>{ return });
+		objects.forEach((o)=>{
+
 		})
 
-		return usefulParameters;
+		return query;
+		
 	}
 
-
-	requestRelationParams(allParameters) {
-		var usefulParameters = {};
-		this.connectFields().forEach((f) => {
-
-			if (f.requestRelationParam) {
-				var p = f.requestRelationParam(allParameters);
-				if (p) {
-					for (var a in p) {
-						usefulParameters[a] = p[a];
-					}
-				}
-			}
-
-		});
-
-		return usefulParameters;
-	}
 
 
 
@@ -527,34 +528,5 @@ module.exports = class ABObjectQuery extends ABObject {
 		return errors;
 	}
 
-
-
-	/**
-	 * @method postGet
-	 * Allow our DataFields another pass at the data before returning it to the
-	 * client.  Our DataFields can do any post conditioning of their data 
-	 * before it is sent back.
-	 * @param {array} data  array of table rows returned from our table.
-	 * @return {Objection.Model} 
-	 */
-	postGet( data ) {
-		return new Promise(
-			(resolve, reject) => {
-
-				var allActions = [];
-
-				data.forEach((d)=>{
-					this.fields().forEach((f) => {
-						allActions.push(f.postGet(d));  // update data in place.
-					})
-				})
-
-				Promise.all(allActions)
-				.then(resolve)
-				.catch(reject);
-
-			}
-		)
-	}
 
 }

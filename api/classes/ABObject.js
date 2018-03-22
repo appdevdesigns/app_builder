@@ -256,6 +256,9 @@ module.exports = class ABObject extends ABObjectBase {
 			var knex = ABMigration.connection();
 
 			// Compile our jsonSchema from our DataFields
+			// jsonSchema is only used by Objection.js to validate data before
+			// performing an insert/update.
+			// This does not DEFINE the DB Table.
 			var jsonSchema = {
 				type: 'object',
 				required: [],
@@ -452,6 +455,19 @@ module.exports = class ABObject extends ABObjectBase {
 
 		ABMigration.refreshObject(tableName);
 
+	}
+
+
+	/**
+	 * @method queryFind
+	 * return an Objection.js QueryBuilder (basically a knex QueryBuilder with 
+	 * a few additional methods).
+	 * NOTE: ObjectQuery overrides this to return queries already joined with 
+	 * multiple tables.
+	 * @return {QueryBuilder}
+	 */
+	queryFind() {
+		return this.model().query();
 	}
 
 

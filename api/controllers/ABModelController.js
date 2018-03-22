@@ -382,12 +382,16 @@ function populateFindConditions(query, object, options, userData) {
 
     // query relation data
     if (options.includeRelativeData) {
-        var relationNames = object.connectFields()
-            .filter((f) => f.fieldLink() != null)
-            .map((f) => f.relationName());
+        if (query.eager) {
+            
+            var relationNames = object.connectFields()
+                .filter((f) => f.fieldLink() != null)
+                .map((f) => f.relationName());
 
-        if (relationNames.length > 0)
-            query.eager('[#fieldNames#]'.replace('#fieldNames#', relationNames.join(', ')));
+            if (relationNames.length > 0)
+                query.eager('[#fieldNames#]'.replace('#fieldNames#', relationNames.join(', ')));
+        }
+
     }
 
     sails.log.debug('SQL:', query.toString() );
@@ -627,7 +631,7 @@ module.exports = {
                     sails.sockets.join(req, object.id);
                 }
 
-                var query = object.model().query();
+                var query = object.queryFind();
 
 
                 var where = req.options._where;
