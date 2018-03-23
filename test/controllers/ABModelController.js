@@ -52,55 +52,55 @@ describe('ABModelController ', function () {
     })
     
     
-    it('should be able to request an object ', function(ok) {
-        this.timeout(16000);
-        var url = urlForObject(appId, objectId);
-        request
-            .get(url)
-            .set('Accept', 'application/json')
-            .expect(200)
-            .end(function(err, res){
+    // it('should be able to request an object ', function(ok) {
+    //     this.timeout(16000);
+    //     var url = urlForObject(appId, objectId);
+    //     request
+    //         .get(url)
+    //         .set('Accept', 'application/json')
+    //         .expect(200)
+    //         .end(function(err, res){
     
-                assert.isNull(err, ' --> err should be undefined ');
+    //             assert.isNull(err, ' --> err should be undefined ');
     
-                defaultResponseTest(res);
+    //             defaultResponseTest(res);
     
-                ok(err);
-            });
-    })
+    //             ok(err);
+    //         });
+    // })
 
-    it('should be able to request an object ', function(ok) {
+    // it('should be able to request an object ', function(ok) {
 
-        // get a field that is a connected object
-        var connectedField = testObj.fields( function(f) {
-            return f.key == "connectObject";
-        })[0];
+    //     // get a field that is a connected object
+    //     var connectedField = testObj.fields( function(f) {
+    //         return f.key == "connectObject";
+    //     })[0];
 
-        // determine if the connected field is the source or not and set the operator query param to the proper setting
-        var operator = "";
-        if (connectedField.settings.linkType == "one" && connectedField.settings.linkViaType == "one") {
-            if (connectedField.settings.isSource) {
-                operator = "is null";
-            } else {
-                operator = "have no relation";
-            }
-        }
+    //     // determine if the connected field is the source or not and set the operator query param to the proper setting
+    //     var operator = "";
+    //     if (connectedField.settings.linkType == "one" && connectedField.settings.linkViaType == "one") {
+    //         if (connectedField.settings.isSource) {
+    //             operator = "is null";
+    //         } else {
+    //             operator = "have no relation";
+    //         }
+    //     }
         
-        this.timeout(16000);
-        var url = urlForObject(appId, objectId);
-        request
-            .get(url)
-            .set('Accept', 'application/json')
-            .query({ 
-                "where[where][0][fieldName]": connectedField.columnName,
-                "where[where][0][operator]": operator
-            })
-            .expect(200)
-            .end(function(err, res){
-                assert.isNull(err, ' --> err should be undefined ');
-                defaultResponseTest(res);
-                ok(err);
-            });
-    })
+    //     this.timeout(16000);
+    //     var url = urlForObject(appId, objectId);
+    //     request
+    //         .get(url)
+    //         .set('Accept', 'application/json')
+    //         .query({ 
+    //             "where[where][0][fieldName]": connectedField.columnName,
+    //             "where[where][0][operator]": operator
+    //         })
+    //         .expect(200)
+    //         .end(function(err, res){
+    //             assert.isNull(err, ' --> err should be undefined ');
+    //             defaultResponseTest(res);
+    //             ok(err);
+    //         });
+    // })
 
 });

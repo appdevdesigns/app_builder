@@ -16,8 +16,9 @@ module.exports = function(req, res, next) {
     // we need to take our current inputs, and normalize them into a:
     // { 
     //    where:{},
-    //    limit:xx,   // optional
-    //    skip:xx     // optional
+    //    limit:xx,     // optional
+    //    offset:xx,    // optional
+    //    sort:[]       // optional
     // }
     //
     // structure. 
@@ -37,30 +38,62 @@ module.exports = function(req, res, next) {
     // More normal request would include:
       // skip: xx
       // limit: xx
-
       req.options = req.options || {};
       req.options._where = {};
       req.options._offset = null;
       req.options._limit = null;
+      req.options._sort = null;
 
       var allParams = req.allParams();
       delete allParams.appID    // don't want these
       delete allParams.objID
 
-// console.log('... allParams', allParams);
       sails.log.verbose('ABModelNormalize(): allParams:', allParams);
-      if (allParams.where || allParams.limit) {
+      if (allParams.where || allParams.limit || allParams.offset || allParams.sort) {
+      
         req.options._where = allParams.where || {};
 
-        if (allParams.skip) {
+
+        // Our standard expected parameter for paging, or loading chunks of data.
+        if (allParams.offset) {
+          req.options._offset = parseInt(allParams.offset);
+        }
+        // NOTE: some webix components provide a .start parameter
+        else if (allParams.start) {
+          req.options._offset = parseInt(allParams.start);
+        }
+        // And we handle any previous case using .skip  (Sails uses this)
+        else if (allParams.skip) {
           req.options._offset = parseInt(allParams.skip);
         }
+
 
         if (allParams.limit) {
           req.options._limit = parseInt(allParams.limit);
         }
 
+        if (allParams.sort) {
+          req.options._sort = allParams.sort;
+        }
+
       }
+
+
+/// Convert Depreciated method:
+/// for params that look like:
+/// {
+///     where: {
+///         where : [{}],
+///         sort : []
+///     }
+///     limit:xxx,
+///     skip : xxx
+/// }
+if (req.options._where.where) {
+  req.options._sort = req.options._where.sort || null;
+  req.options._where = req.options._where.where;
+}
+
 
       sails.log.verbose('ABModelNormalize(): req.options:', req.options);
 

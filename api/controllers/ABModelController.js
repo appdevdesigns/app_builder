@@ -18,9 +18,28 @@ const ValidationError = require('objection').ValidationError;
 var reloading = null;
 
 
+/**
+ * @function updateRelationValues
+ * Make sure an object's relationships are properly updated.
+ * We expect that when a create or update happens, that the data in the 
+ * related fields represent the CURRENT STATE of all it's relations. Any 
+ * field not in the relation value is no longer part of the related data.
+ * @param {Objection.JS Query} query
+ * @param {integer} id  the .id of the base object we are working with
+ * @param {obj} updateRelationParams  "key"=>"value" hash of the related 
+ *                      fields and current state of values.
+ * @return {array}  array of update operations to perform the relations.
+ */ 
 function updateRelationValues(query, id, updateRelationParams) {
 
     var updateTasks = [];
+
+    //// 
+    //// We are given a current state of values that should be related to our object.
+    //// It is not clear if these are new relations or existing ones, so we first
+    //// remove any existing relation and then go back and add in the one we have been
+    //// told to keep.
+    //// 
 
     // NOTE : There is a error when update values and foreign keys at same time
     // - Error: Double call to a write method. You can only call one of the write methods 
@@ -132,144 +151,209 @@ function populateFindConditions(query, object, options, userData) {
 
     // Apply filters
     if (!_.isEmpty(where)) {
-        var index = 0;
-        where.forEach(function (w) {
 
-            if (!w.fieldName || !w.operator) return;
 
+        sails.log.debug('initial .where condition:', JSON.stringify(where, null, 4));
+
+
+        // @function parseCondition
+        // recursive fn() to step through each of our provided conditions and
+        // translate them into query.XXXX() operations.
+        // @param {obj} condition  a QueryBuilder compatible condition object
+        // @param {ObjectionJS Query} Query the query object to perform the operations.
+        function parseCondition(condition, Query) {
+
+            // FIX: some improper inputs:
+            // if they didn't provide a .glue, then default to 'and'
+            // current webix behavior, might not return this 
+            // so if there is a .rules property, then there should be a .glue:
+            if (condition.rules) {
+                condition.glue = condition.glue || 'and';
+            }
+
+            // if this is a grouping condition, then decide how to group and 
+            // process our sub rules:
+            if (condition.glue) {
+
+                var nextCombineKey = 'where';
+                if (condition.glue == 'or') {
+                    nextCombineKey = 'orWhere';
+                }
+                condition.rules.forEach((r)=>{
+
+                    Query[nextCombineKey]( function() { 
+
+                        // NOTE: pass 'this' as the Query object
+                        // so we can perform embedded queries:
+                        parseCondition(r, this); 
+                    });
+                    
+                })
+                
+                return;
+            }
+
+
+            //// Special Case:  'have_no_relation'
             // 1:1 - Get rows that no relation with 
-            if (w.operator == 'have no relation') {
-                var relation_name = AppBuilder.rules.toFieldRelationFormat(w.fieldName);
+            if (condition.rule == 'have_no_relation') {
+                var relation_name = AppBuilder.rules.toFieldRelationFormat(condition.key);
 
-                query
+                Query
                     .leftJoinRelation(relation_name)
                     .whereRaw('{relation_name}.id IS NULL'.replace('{relation_name}', relation_name));
 
                 return;
             }
 
-            // We need to put back together our sql statment
-            switch (w.operator) {
-                case "contains":
-                    var operator = "LIKE";
-                    var input = "%" + w.inputValue + "%";
-                    break;
-                case "doesn't contain":
-                    var operator = "NOT LIKE";
-                    var input = "%" + w.inputValue + "%";
-                    break;
-                case "is not":
-                    var operator = "!=";
-                    var input = w.inputValue;
-                    break
-                case "is before":
-                    var operator = "<";
-                    var input = w.inputValue;
-                    break;
-                case "is after":
-                    var operator = ">";
-                    var input = w.inputValue;
-                    break;
-                case "is on or before":
-                    var operator = "<=";
-                    var input = w.inputValue;
-                    break;
-                case "is on or after":
-                    var operator = ">=";
-                    var input = w.inputValue;
-                    break;
-                case ":":
-                    var operator = "=";
-                    var input = w.inputValue;
-                    break;
-                case "≠":
-                    var operator = "!=";
-                    var input = w.inputValue;
-                    break;
-                case "<":
-                    var operator = "<";
-                    var input = w.inputValue;
-                    break;
-                case ">":
-                    var operator = ">";
-                    var input = w.inputValue;
-                    break;
-                case "≤":
-                    var operator = "<=";
-                    var input = w.inputValue;
-                    break;
-                case "≥":
-                    var operator = ">=";
-                    var input = w.inputValue;
-                    break;
-                case "equals":
-                    var operator = "=";
-                    var input = w.inputValue;
-                    break;
-                case "does not equal":
-                    var operator = "!=";
-                    var input = w.inputValue;
-                    break;
-                case "is checked":
-                    var operator = "=";
-                    var input = w.inputValue;
-                    break;
-                case "is not checked":
-                    var operator = "=";
-                    var input = w.inputValue;
-                    break;
-                case "is null":
-                    var operator = "IS NULL";
-                    var input = null;
-                    break;
-                case "is not null":
-                    var operator = "IS NOT NULL";
-                    var input = null;
-                    break;
-                case "is current user":
-                    var operator = "=";
-                    var input = userData.username;
-                    break;
-                case "is not current user":
-                    var operator = "!=";
-                    var input = userData.username;
-                    break;
-                default:
-                    var operator = "=";
-                    var input = w.inputValue;
-            }
-            // if we are searching a multilingual field it is stored in translations so we need to search JSON
-            var field = object._fields.filter(field => field.columnName == w.fieldName)[0];
-            if (field && field.settings.supportMultilingual == 1) {
-                var fieldName = 'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH(translations, "one", "' + userData.languageCode + '")), 1, 4)), \'$."' + w.fieldName + '"\'))';
-            } else { // If we are just searching a field it is much simpler
-                var fieldName = '`' + w.fieldName + '`';
+
+
+            //// Handle a basic rule:
+            // { 
+            //     key: fieldName,
+            //     rule: 'qb_rule',
+            //     value: ''
+            // }
+
+            sails.log.verbose('... basic condition:', JSON.stringify(condition, null, 4));
+
+            // We are going to use the 'raw' queries for knex becuase the '.' 
+            // for JSON searching is misinterpreted as a sql identifier
+            // our basic where statement will be:
+            var whereRaw = '{fieldName} {operator} {input}';
+
+
+            // make sure a value is properly Quoted:
+            function quoteMe(value) {
+                return "'"+value+"'"
             }
 
+
+            // convert QB Rule to SQL operation:
+            var conversionHash = {
+                'equals'        : '=',
+                'not_equal'     : '<>',
+                'is_empty'      : '=',
+                'is_not_empty'  : '<>',
+                'greater'       : '>',
+                'greater_or_equal' : '>=',
+                'less'          : '<',
+                'less_or_equal' : '<='
+            }
+
+
+            // basic case:  simple conversion
+            var operator = conversionHash[condition.rule];
+            var value = quoteMe(condition.value);
+
+
+
+            // special operation cases:
+            switch (condition.rule) {
+                case "begins_with":
+                    operator = 'LIKE';
+                    value = quoteMe(condition.value + '%');
+                    break;
+
+                case "not_begins_with":
+                    operator = "NOT LIKE";
+                    value = quoteMe(condition.value + '%');
+                    break;
+
+                case "contains":
+                    operator = 'LIKE';
+                    value = quoteMe('%' + condition.value + '%');
+                    break;
+
+                case "not_contains":
+                    operator = "NOT LIKE";
+                    value = quoteMe('%' + condition.value + '%');
+                    break;
+
+                case "ends_with":
+                    operator = 'LIKE';
+                    value = quoteMe('%' + condition.value);
+                    break;
+
+                case "not_ends_with":
+                    operator = "NOT LIKE";
+                    value = quoteMe('%' + condition.value);
+                    break;
+
+                case "between": 
+                    operator = "BETWEEN";
+                    value = condition.value.map(function(v){ return quoteMe(v)}).join(' AND ');
+                    break;
+
+                case 'not_between':
+                    operator = "NOT BETWEEN";
+                    value = condition.value.map(function(v){ return quoteMe(v)}).join(' AND ');
+                    break;
+
+                case "is_current_user":
+                    operator = "=";
+                    value = quoteMe(userData.username);
+                    break;
+
+                case "is_not_current_user":
+                    operator = "<>";
+                    value = quoteMe(userData.username);
+                    break;
+
+                case 'is_null': 
+                    operator = "IS NULL";
+                    value = '';
+                    break;
+
+                case 'is_not_null': 
+                    operator = "IS NOT NULL";
+                    value = '';
+                    break;
+
+                case "in":
+                    operator = "IN";
+                    value = '(' + condition.value.map(function(v){ return quoteMe(v)}).join(', ') + ')';
+                    break;
+
+                case "not_in":
+                    operator = "NOT IN";
+                    value = '(' + condition.value.map(function(v){ return quoteMe(v)}).join(', ') + ')';
+                    break;
+
+            }
+
+
+            // normal field name:
+            var fieldName = '`' + condition.key + '`';
+
+            // if we are searching a multilingual field it is stored in translations so we need to search JSON
+            var field = object._fields.filter(field => field.columnName == condition.key)[0];
+            if (field && field.settings.supportMultilingual == 1) {
+                fieldName = 'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH(translations, "one", "' + userData.languageCode + '")), 1, 4)), \'$."' + condition.key + '"\'))';
+            } 
+
+            // if this is from a LIST, then make sure our value is the .ID
             if (field && field.key == "list" && field.settings && field.settings.options && field.settings.options.filter) {
                 // NOTE: Should get 'id' or 'text' from client ??
-                var inputID = field.settings.options.filter(option => (option.id == input || option.text == input))[0];
+                var inputID = field.settings.options.filter(option => (option.id == value || option.text == value))[0];
                 if (inputID)
-                    input = inputID.id;
+                    value = inputID.id;
             }
 
-            // We are going to use the 'raw' queries for knex becuase the '.' for JSON searching is misinterpreted as a sql identifier
-            var whereRaw = '{fieldName} {operator} {input}'
+
+            // update our where statement:
+            whereRaw = whereRaw
                 .replace('{fieldName}', fieldName)
                 .replace('{operator}', operator)
-                .replace('{input}', ((input != null) ? "'" + input + "'" : ''));
+                .replace('{input}', ((value != null) ?  value  : ''));
 
-            // Now we add in all of our where statements
-            if (index == 0) {
-                query.whereRaw(whereRaw);
-            } else if (w.combineCondition == "Or") {
-                query.orWhereRaw(whereRaw);
-            } else {
-                // the default whereRaw will provide an "AND" if there is already one present
-                query.whereRaw(whereRaw);
-            }
-            index++;
-        })
+
+            // Now we add in our where
+            Query.whereRaw(whereRaw);
+        }
+
+        parseCondition(where, query);
+
     }
 
     // Apply Sorts
@@ -306,6 +390,7 @@ function populateFindConditions(query, object, options, userData) {
             query.eager('[#fieldNames#]'.replace('#fieldNames#', relationNames.join(', ')));
     }
 
+    sails.log.debug('SQL:', query.toString() );
 }
 
 /**
@@ -325,7 +410,12 @@ function updateConnectedFields(object, newData, oldData) {
         var field = f.fieldLink();
         // Get the relation name so we can separate the linked fields updates from the rest
         var relationName = f.relationName();
-        
+        if (Array.isArray(newData)) {
+            newData[relationName] = [];
+            newData.forEach((n) => {
+                newData[relationName] = newData[relationName].concat(n[relationName]);
+            });
+        }
         // Get all the values of the linked field from the save
         var newItems = newData[relationName];
         // If there was only one it is not returned as an array so lets put it in an array to normalize
@@ -413,11 +503,16 @@ module.exports = {
                                     // Query the new row to response to client
                                     var query3 = object.model().query();
                                     populateFindConditions(query3, object, {
-                                        where: [{
-                                            fieldName: "id",
-                                            operator: "equals",
-                                            inputValue: newObj.id
-                                        }],
+                                        where: {
+                                            glue:'and',
+                                            rules:[
+                                                {
+                                                    key: "id",
+                                                    rule: "equals",
+                                                    value: newObj.id
+                                                }
+                                            ]
+                                        },
                                         offset: 0,
                                         limit: 1,
                                         includeRelativeData: true
@@ -539,8 +634,9 @@ module.exports = {
 
                 var query = object.model().query();
 
-                var where = req.options._where.where;
-                var sort = req.options._where.sort;
+
+                var where = req.options._where;
+                var sort = req.options._sort;
                 var offset = req.options._offset;
                 var limit = req.options._limit;
 
@@ -613,6 +709,9 @@ module.exports = {
     delete: function (req, res) {
 
         var id = req.param('id', -1);
+        var object;
+        var oldItem;
+        var relatedItems = [];
 
 
         if (id == -1) {
@@ -623,75 +722,292 @@ module.exports = {
             return;
         }
 
-        AppBuilder.routes.verifyAndReturnObject(req, res)
-            .then(function (object) {
+        async.series([
+            // step #1
+            function (next) {
 
+                AppBuilder.routes.verifyAndReturnObject(req, res)
+                    .catch(next)
+                    .then(function (obj) {
+                        object = obj;
+                        next();
+                    });
 
+            },
+
+            // step #2
+            function (next) {
                 // We are deleting an item...but first fetch its current data  
                 // so we can clean up any relations on the client side after the delete
                 var queryPrevious = object.model().query();
                 populateFindConditions(queryPrevious, object, {
-                    where: [{
-                        fieldName: "id",
-                        operator: "equals",
-                        inputValue: id
-                    }],
+                    where: {
+                        glue:'and',
+                        rules:[{
+                            key: "id",
+                            rule: "equals",
+                            value: id
+                        }]
+                    },
                     includeRelativeData: true
                 }, req.user.data);
                 
                 queryPrevious
-                    .catch((err) => { 
-                        if (!(err instanceof ValidationError)) {
-                            ADCore.error.log('Error performing find!', { error: err })
-                            res.AD.error(err);
-                            sails.log.error('!!!! error:', err);
-                        }
-                    })
-                    .then((oldItem) => {
-                        
-                        // Now we can delete because we have the current record saved as oldItem
-                        object.model().query()
-                            .deleteById(id)
-                            .then((numRows) => {
-
-                                res.AD.success({ numRows: numRows });
-                                
-                                // We want to broadcast the change from the server to the client so all datacollections can properly update
-                                // Build a payload that tells us what was updated
-                                var payload = {
-                                    objectId: object.id,
-                                    id: id
-                                }
-                                
-                                // Broadcast the delete
-                                sails.sockets.broadcast(object.id, "ab.datacollection.delete", payload);
-                                
-                                // Using the data from the oldItem we can update all instances of it and tell the client side it is stale and needs to be refreshed
-                                updateConnectedFields(object, oldItem[0]);
-
-                            }
-                            // , (err) => {
-                            // 
-                            //     // console.log('...  (err) handler!', err);
-                            // 
-                            //     res.AD.error(err);
-                            // 
-                            // 
-                            // }
-                            )
-                            .catch((err) => {
-                                // console.log('... catch(err) !');
-
-                                if (!(err instanceof ValidationError)) {
-                                    ADCore.error.log('Error performing update!', { error: err })
-                                    res.AD.error(err);
-                                    sails.log.error('!!!! error:', err);
-                                }
-                            });
-
+                    .catch(next)
+                    .then((old_item) => {
+                        oldItem = old_item;
+                        next();
                     });
+                    
+            },
+            
+            // step #3
+            function (next) {
+                // Check to see if the object has any connected fields that need to be updated
+                var connectFields = object.connectFields();
+                
+                // If there are no connected fields continue on
+                if (connectFields.length == 0) next();
+                
+                var relationQueue = [];
+                
+                // Parse through the connected fields
+                connectFields.forEach((f)=>{
+                    // Get the field object that the field is linked to
+                    var relatedObject = f.objectLink();
+                    // Get the relation name so we can separate the linked fields updates from the rest
+                    var relationName = f.relationName();
+                    
+                    // If we have any related item data we need to build a query to report the delete...otherwise just move on
+                    if (oldItem[0][relationName].length) {
+                        // Push the ids of the related data into an array so we can use them in a query
+                        var relatedIds = [];
+                        oldItem[0][relationName].forEach((old) => {
+                            relatedIds.push(old.id);
+                        });
+                        // Get all related items info
+                        var queryRelated = relatedObject.model().query();
+                        populateFindConditions(queryRelated, relatedObject, {
+                            where: {
+                                glue:'and',
+                                rules:[{
+                                    key: "id",
+                                    rule: "in",
+                                    value: relatedIds
+                                }]
+                            },
+                            includeRelativeData: true
+                        }, req.user.data);
 
-            })
+                        var p = queryRelated
+                            .catch(next)
+                            .then((items) => {
+                                // push new realted items into the larger related items array
+                                relatedItems.push({
+                                    object: relatedObject,
+                                    items: items
+                                });
+                            });
+                            
+                        relationQueue.push(p);
+                    }
+                });
+                
+                Promise.all(relationQueue).then(function(values) {
+                    console.log("relatedItems: ", relatedItems)
+                    next();
+                })
+                .catch(next);
+
+            },
+            
+            // step #4
+            function (next) {
+                // Now we can delete because we have the current record saved as oldItem and our related records saved as relatedItems
+                object.model().query()
+                    .deleteById(id)
+                    .then((numRows) => {
+
+                        res.AD.success({ numRows: numRows });
+
+                        // We want to broadcast the change from the server to the client so all datacollections can properly update
+                        // Build a payload that tells us what was updated
+                        var payload = {
+                            objectId: object.id,
+                            id: id
+                        }
+
+                        // Broadcast the delete
+                        sails.sockets.broadcast(object.id, "ab.datacollection.delete", payload);
+
+                        // Using the data from the oldItem and relateditems we can update all instances of it and tell the client side it is stale and needs to be refreshed
+                        updateConnectedFields(object, oldItem[0]);
+                        if (relatedItems.length) {
+                            relatedItems.forEach((r) => {
+                                updateConnectedFields(r.object, r.items);
+                            });
+                        }
+                        next();
+                
+                    })
+                    .catch(next);
+    
+            },
+
+        ], function (err) {
+            if (err) {
+                if (!(err instanceof ValidationError)) {
+                    ADCore.error.log('Error performing delete!', { error: err })
+                    res.AD.error(err);
+                    sails.log.error('!!!! error:', err);
+                }                
+            }
+        });
+
+
+
+        // AppBuilder.routes.verifyAndReturnObject(req, res)
+        //     .then(function (object) {
+        // 
+        // 
+        //         // We are deleting an item...but first fetch its current data  
+        //         // so we can clean up any relations on the client side after the delete
+        //         var queryPrevious = object.model().query();
+        //         populateFindConditions(queryPrevious, object, {
+        //             where: {
+        //                 glue:'and',
+        //                 rules:[{
+        //                     key: "id",
+        //                     rule: "equals",
+        //                     value: id
+        //                 }]
+        //             },
+        //             includeRelativeData: true
+        //         }, req.user.data);
+        // 
+        //         queryPrevious
+        //             .catch((err) => { 
+        //                 if (!(err instanceof ValidationError)) {
+        //                     ADCore.error.log('Error performing find!', { error: err })
+        //                     res.AD.error(err);
+        //                     sails.log.error('!!!! error:', err);
+        //                 }
+        //             })
+        //             .then((oldItem) => {
+        // 
+        //                 // Check to see if the object has any connected fields that need to be updated
+        //                 var connectFields = object.connectFields();
+        //                 // Parse through the connected fields
+        //                 connectFields.forEach((f)=>{
+        //                     // Get the field object that the field is linked to
+        //                     var relatedObject = f.objectLink();
+        //                     // Get the relation name so we can separate the linked fields updates from the rest
+        //                     var relationName = f.relationName();
+        // 
+        //                     // If we have any related item data we need to build a query to report the delete...otherwise just move on
+        //                     if (oldItem[0][relationName].length) {
+        //                         // Push the ids of the related data into an array so we can use them in a query
+        //                         var relatedIds = [];
+        //                         oldItem[0][relationName].forEach((old) => {
+        //                             relatedIds.push(old.id);
+        //                         });
+        //                         // Get all related items info
+        //                         var queryRelated = relatedObject.model().query();
+        //                         populateFindConditions(queryRelated, relatedObject, {
+        //                             where: {
+        //                                 glue:'and',
+        //                                 rules:[{
+        //                                     key: "id",
+        //                                     rule: "in",
+        //                                     value: relatedIds
+        //                                 }]
+        //                             },
+        //                             includeRelativeData: true
+        //                         }, req.user.data);
+        // 
+        //                         queryRelated
+        //                             .catch((err) => { 
+        //                                 if (!(err instanceof ValidationError)) {
+        //                                     ADCore.error.log('Error performing find!', { error: err })
+        //                                     res.AD.error(err);
+        //                                     sails.log.error('!!!! error:', err);
+        //                                 }
+        //                             })
+        //                             .then((relatedItems) => {
+        // 
+        //                                 // Now we can delete because we have the current record saved as oldItem and our related records saved as relatedItems
+        //                                 object.model().query()
+        //                                     .deleteById(id)
+        //                                     .then((numRows) => {
+        // 
+        //                                         res.AD.success({ numRows: numRows });
+        // 
+        //                                         // We want to broadcast the change from the server to the client so all datacollections can properly update
+        //                                         // Build a payload that tells us what was updated
+        //                                         var payload = {
+        //                                             objectId: object.id,
+        //                                             id: id
+        //                                         }
+        // 
+        //                                         // Broadcast the delete
+        //                                         sails.sockets.broadcast(object.id, "ab.datacollection.delete", payload);
+        // 
+        //                                         // Using the data from the oldItem and relateditems we can update all instances of it and tell the client side it is stale and needs to be refreshed
+        //                                         updateConnectedFields(object, oldItem[0]);
+        //                                         updateConnectedFields(relatedObject, relatedItems);
+        // 
+        //                                     })
+        //                                     .catch((err) => {
+        //                                         // console.log('... catch(err) !');
+        // 
+        //                                         if (!(err instanceof ValidationError)) {
+        //                                             ADCore.error.log('Error performing update!', { error: err })
+        //                                             res.AD.error(err);
+        //                                             sails.log.error('!!!! error:', err);
+        //                                         }
+        //                                     });
+        // 
+        // 
+        //                             });
+        //                     } else {
+        //                         // Now we can delete because we have the current record saved as oldItem and our related records saved as relatedItems
+        //                         object.model().query()
+        //                             .deleteById(id)
+        //                             .then((numRows) => {
+        // 
+        //                                 res.AD.success({ numRows: numRows });
+        // 
+        //                                 // We want to broadcast the change from the server to the client so all datacollections can properly update
+        //                                 // Build a payload that tells us what was updated
+        //                                 var payload = {
+        //                                     objectId: object.id,
+        //                                     id: id
+        //                                 }
+        // 
+        //                                 // Broadcast the delete
+        //                                 sails.sockets.broadcast(object.id, "ab.datacollection.delete", payload);
+        // 
+        //                                 // Using the data from the oldItem we can update all instances of it and tell the client side it is stale and needs to be refreshed
+        //                                 updateConnectedFields(object, oldItem[0]);
+        // 
+        //                             })
+        //                             .catch((err) => {
+        //                                 // console.log('... catch(err) !');
+        // 
+        //                                 if (!(err instanceof ValidationError)) {
+        //                                     ADCore.error.log('Error performing update!', { error: err })
+        //                                     res.AD.error(err);
+        //                                     sails.log.error('!!!! error:', err);
+        //                                 }
+        //                             });
+        //                     }
+        //                 });
+        // 
+        // 
+        // 
+        //             });
+        // 
+        //     })
 
     },
 
@@ -719,11 +1035,14 @@ module.exports = {
                 // so assuming creates can be problematic
                 var queryPrevious = object.model().query();
                 populateFindConditions(queryPrevious, object, {
-                    where: [{
-                        fieldName: "id",
-                        operator: "equals",
-                        inputValue: id
-                    }],
+                    where: {
+                        glue:'and',
+                        rules:[{
+                            key: "id",
+                            rule: "equals",
+                            value: id
+                        }]
+                    },
                     includeRelativeData: true
                 }, req.user.data);
                 
@@ -784,11 +1103,14 @@ module.exports = {
                                             // Query the new row to response to client
                                             var query3 = object.model().query();
                                             populateFindConditions(query3, object, {
-                                                where: [{
-                                                    fieldName: "id",
-                                                    operator: "equals",
-                                                    inputValue: id
-                                                }],
+                                                where: {
+                                                    glue:'and',
+                                                    rules:[{
+                                                        key: "id",
+                                                        rule: "equals",
+                                                        value: id
+                                                    }]
+                                                },
                                                 offset: 0,
                                                 limit: 1,
                                                 includeRelativeData: true

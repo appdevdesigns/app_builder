@@ -893,27 +893,34 @@ export default class ABViewDataCollection extends ABView {
 
 			// updated values
 			var values = data.data;
+			if (values) {
 
-			if (this.__dataCollection.exists(values.id)) {
-				// this data collection has the record so we need to query the server to find out what it's latest data is so we can update all instances
-				this.model.findAll({
-					fieldName: "id",
-					operator: "equals",
-					inputValue: values.id
-				}).then((res)=>{
-					// check to make sure there is data to work with
-					if (Array.isArray(res.data) && res.data.length) {
-						// tell the webix data collection to update using their API with the row id (values.id) and content (res.data[0]) 
-						this.__dataCollection.updateItem(values.id, res.data[0]);
+				if (this.__dataCollection.exists(values.id)) {
+					// this data collection has the record so we need to query the server to find out what it's latest data is so we can update all instances
+					this.model.findAll({ id:values.id }).then((res)=>{
+						
+						// check to make sure there is data to work with
+						if (Array.isArray(res.data) && res.data.length) {
+							// tell the webix data collection to update using their API with the row id (values.id) and content (res.data[0]) 
+							this.__dataCollection.updateItem(values.id, res.data[0]);
 
-						// If the update item is current cursor, then should tell components to update.
-						var currData = this.getCursor();
-						if (currData && currData.id == values.id) {
-							this.emit("changeCursor", currData);
+							// If the update item is current cursor, then should tell components to update.
+							var currData = this.getCursor();
+							if (currData && currData.id == values.id) {
+								this.emit("changeCursor", currData);
+							}
+						} else {
+							// If there is no data in the object then it was deleted...lets clean things up
+							// If the deleted item is current cursor, then the current cursor should be cleared.
+							var currId = this.getCursor();
+							if (currId == values.id)
+								this.emit("changeCursor", null);
+
+							this.__dataCollection.remove(values.id);
 						}
-					}
-				});
+					});
 
+				}
 			}
 
 			// filter link data collection's cursor
@@ -937,9 +944,9 @@ export default class ABViewDataCollection extends ABView {
 			if (this.__dataCollection.exists(deleteId)) {
 
 				// If the deleted item is current cursor, then the current cursor should be cleared.
-				var currId = this.__dataCollection.getCursor();
+				var currId = this.getCursor();
 				if (currId == deleteId)
-					this.__dataCollection.setCursor(null);
+					this.emit("changeCursor", null);
 
 				this.__dataCollection.remove(deleteId);
 			}
@@ -1117,13 +1124,10 @@ export default class ABViewDataCollection extends ABView {
 
 		// set query condition
 		var cond = {
-			where: {
-				where: wheres,
-				sort: sorts,
-				height: defaultHeight
-			},
+			where: wheres,
 			limit: limit || 20,
-			skip: start || 0
+			skip: start || 0,
+			sort: sorts,
 		};
 
 		// load all data

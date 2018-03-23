@@ -332,9 +332,8 @@ export default class ABViewFormText extends ABViewFormComponent  {
 
 		var component = super.component(App);
 		var field = this.field();
-		var form = this.formComponent();
 
-		var idBase = 'ABViewFormText_'+this.id + "_f_" + form.uniqueInstanceID;
+		var idBase = this.parentFormUniqueID('ABViewFormText_'+this.id + "_f_");
 		var ids = {
 			component: App.unique(idBase+'_component'),
 		}

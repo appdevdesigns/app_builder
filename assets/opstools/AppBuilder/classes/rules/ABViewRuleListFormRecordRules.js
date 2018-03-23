@@ -9,6 +9,7 @@ import ABViewRule from "./ABViewRule"
 
 import RoleUpdateExisting from "./ruleActions/ABViewRuleActionFormRecordRuleUpdate"
 import RoleInsertConnected from "./ruleActions/ABViewRuleActionFormRecordRuleInsertConnected"
+import RoleUpdateConnected from "./ruleActions/ABViewRuleActionFormRecordRuleUpdateConnected"
 
 export default class ABViewRuleListFormRecordRules extends ABViewRuleList {
 
@@ -22,7 +23,7 @@ export default class ABViewRuleListFormRecordRules extends ABViewRuleList {
 
 		var settings = {
 			labels: {
-				header: "ab.component.form.recordRule", 
+				header: "ab.components.form.recordRules", 
 				headerDefault: "*Record Rules"
 			}
 		}
@@ -36,15 +37,15 @@ export default class ABViewRuleListFormRecordRules extends ABViewRuleList {
 	getRule () {
 
 		var listActions = [
-			new RoleUpdateExisting(this.App, this.idBase+'_ruleActionUpdate'),
-			new RoleInsertConnected(this.App, this.idBase+'_ruleActionInsert')
-			// new ABViewRuleActionFormRecordUpdateExisting(),
-			// new ABViewRuleActionFormRecordInsertConnected(),
-			// new ABViewRuleActionFormRecordUpdateConnected()
+			new RoleUpdateExisting(this.App, this.idBase+'_ruleActionUpdate', this.currentForm),
+			new RoleInsertConnected(this.App, this.idBase+'_ruleActionInsert', this.currentForm),
+			new RoleUpdateConnected(this.App, this.idBase+'_ruleActionUpdateConnected', this.currentForm)
 		]
 
 		var Rule = new ABViewRule(listActions);
-		Rule.objectLoad(this.currentObject);
+		if (this.currentObject) {
+			Rule.objectLoad(this.currentObject);
+		}
 		return Rule;
 	}
 

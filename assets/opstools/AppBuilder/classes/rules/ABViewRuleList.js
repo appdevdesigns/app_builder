@@ -48,15 +48,19 @@ export default class ABViewRuleList {
 		// ensure required values:
 		childSettings = childSettings || {};
 		childSettings.labels = childSettings.labels || {};
-		childSettings.labels.header = childSettings.labels.header || 'ab.component.form.ruleList';
+		childSettings.labels.header = childSettings.labels.header || 'ab.components.form.ruleList';
 		childSettings.labels.headerDefault = childSettings.labels.headerDefault || '*Rule List';
 		this.childSettings = childSettings;
 
 	}
 
 
-	// component
-	// initialize the UI display for this popup editor.
+	/**
+	 * @method component
+	 * initialize the UI display for this popup editor.
+	 * @param {obj} App  The common UI App object shared among our UI components
+	 * @param {string} idBase A unique Key used the the base of our unique ids
+	 */
 	component(App, idBase) {
 
 		this.App = App;
@@ -72,7 +76,7 @@ export default class ABViewRuleList {
 			common: App.labels,
 			component: {
 				header: L(this.childSettings.labels.header, this.childSettings.labels.headerDefault),	
-				addNewRule: L("ab.component.form.addNewRule", "*Add new rule"),
+				addNewRule: L("ab.components.form.addNewRule", "*Add new rule"),
 			}
 		};
 
@@ -215,17 +219,21 @@ export default class ABViewRuleList {
 	}
 
 
-
+	/**
+	 * @method addRule
+	 * Instantiate a new Rule in our list.
+	 * @param {obj} settings  The settings object from the Rule we created in .toSettings()
+	 */
 	addRule(settings) {
 
 		var Rule = this.getRule();
 		this.listRules.push(Rule);
 
 
-		// if our UI is available, then populate it:
+		// if we have tried to create our component:
 		if (this.ids) {
 			
-			// if our UI is available, then populate it:
+			// if our actually exists, then populate it:
 			var RulesUI = $$(this.ids.rules);
 			if (RulesUI) {
 
@@ -253,9 +261,11 @@ export default class ABViewRuleList {
 	}
 
 
-	// fromSettings
-	// Create an initial set of default values based upon our settings object.
-	// @param {obj} settings  The settings object we created in .toSettings()
+	/**
+	 * @method fromSettings
+	 * Create an initial set of default values based upon our settings object.
+	 * @param {obj} settings  The settings object we created in .toSettings()
+	 */
 	fromSettings (settings) {
 		// settings: [
 		//  { rule.settings },
@@ -277,6 +287,13 @@ export default class ABViewRuleList {
 	}
 
 
+	/**
+	 * @method objectLoad
+	 * A rule is based upon a Form that was working with an Object.
+	 * .objectLoad() is how we specify which object we are working with.
+	 * 
+	 * @param {ABObject} The object that will be used to evaluate the Rules
+	 */
 	objectLoad(object) {
 		this.currentObject = object;
 
@@ -287,10 +304,12 @@ export default class ABViewRuleList {
 	}
 
 
-	// process
-	// Take the provided data and process each of our rules.
-	// @param {obj} options
-	// @return {promise}
+	/**
+	 * @method process
+	 * Take the provided data and process each of our rules.
+	 * @param {obj} options
+	 * @return {promise}
+	 */
 	process(options) {
 
 		return new Promise((resolve, reject) => {
@@ -323,9 +342,11 @@ export default class ABViewRuleList {
 	}
 
 
-	// toSettings
-	// create a settings object to be persisted with the application.
-	// @return {array} of rule settings.
+	/**
+	 * @method toSettings
+	 * create a settings object to be persisted with the application.
+	 * @return {array} of rule settings.
+	 */
 	toSettings () {
 		var settings = [];
 		this.listRules.forEach((r)=>{
@@ -343,5 +364,19 @@ export default class ABViewRuleList {
 	formLoad(form) {
 		this.currentForm = form;
 	}
+
+
+// NOTE: Querybuilder v5.2 has a bug where it won't display the [and/or] 
+// choosers properly if it hasn't been shown before the .setValue() call.
+// so this work around allows us to refresh the display after the .show()
+// on the popup.
+// When they've fixed the bug, we'll remove this workaround:
+qbFixAfterShow() {
+	this.listRules.forEach((r)=>{
+		r.qbFixAfterShow();
+	})
+}
+
+
 
 }

@@ -507,6 +507,40 @@ export default class ABApplication extends ABApplicationBase {
 
 
 	/**
+	 * @method viewNew()
+	 *
+	 * return an ABView based upon the given values.
+	 *
+	 * 
+	 * @param {obj} values  an object (containing setup info) for the view you
+	 *						are requesting.
+	 *						values.key {string}  the unique key for which view
+	 * @param {ABApplication} application  the current ABApplication instance for
+	 *						this application.
+	 * @param {ABView} parent  the ABView that is the parent of this view you are
+	 * 						requesting.
+	 * @return {ABView}
+	 */
+	viewNew(values, application, parent) {
+		return ABViewManager.newView(values, application, parent);
+	}
+
+
+
+	/**
+	 * @method viewAll()
+	 *
+	 * return a list of all the views available.
+	 *
+	 * @return {array} of ABView objects
+	 */
+	viewAll() {
+		return ABViewManager.allViews();
+	}
+
+
+
+	/**
 	 * @method pageDestroy()
 	 *
 	 * remove the current ABViewPage from our list of ._pages.
