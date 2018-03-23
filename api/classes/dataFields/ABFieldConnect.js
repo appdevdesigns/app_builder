@@ -8,6 +8,7 @@
 var path = require('path');
 var ABField = require(path.join(__dirname, "ABField.js"));
 var async = require('async');
+var _ = require('lodash');
 
 function L(key, altText) {
 	return altText;  // AD.lang.label.getLabel(key) || altText;
@@ -22,11 +23,7 @@ var ABFieldConnectDefaults = {
 	menuName: L('ab.dataField.connectObject.menuName', '*Connect to another record'),
 
 	// description: what gets displayed in the Editor description.
-	description: '',
-	
-	// what types of Sails ORM attributes can be imported into this data type?
-	// http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
-	compatibleOrmTypes: ['connectObject'],
+	description: ''
 }
 
 var defaultValues = {
@@ -38,6 +35,66 @@ var defaultValues = {
 	linkColumn: '', // ABColumn.id
 	isSource: null // bit
 };
+
+
+/**
+ * @method getJunctionInfo
+ * @param {string} objectName 
+ * @param {string} linkObjectName 
+ * 
+ * @return {Object} {
+ * 		tableName {string},
+ * 		sourceColumnName {string},
+ * 		targetColumnName {string}
+ * }
+ */
+function getJuntionInfo(objectName, linkObjectName) {
+
+	var sourceModel = _.filter(sails.models, m => m.tableName == objectName)[0];
+	var targetModel = _.filter(sails.models, m => m.tableName == linkObjectName)[0];
+	var juntionModel = _.filter(sails.models, m => {
+			return m.meta.junctionTable && // true / false
+
+					// definition: { 
+					//	id: { 
+					//		primaryKey: true,
+					// 	 	unique: true,
+					// 	 	autoIncrement: true,
+					// 	 	type: 'integer'
+					//	},
+					//  permissionaction_roles: { 
+					//		type: 'integer',
+					// 	 	foreignKey: true,
+					// 	 	references: 'permissionaction',
+					// 	 	on: 'id',
+					// 	 	via: 'permissionrole_actions'
+					//	},
+					//  permissionrole_actions: { 
+					//		type: 'integer',
+					// 	 	foreignKey: true,
+					// 	 	references: 'permissionrole',
+					// 	 	on: 'id',
+					// 	 	via: 'permissionaction_roles'
+					//	} }
+					_.filter(m.definition, def => {
+						return def.foreignKey == true &&
+								(def.references == sourceModel.identity || def.references == targetModel.identity);
+					}).length >= 2;
+		})[0];
+
+console.log('junction: ', juntionModel);
+console.log('source col: ', _.filter(juntionModel.definition, def => def.foreignKey == true && def.references == sourceModel.identity )[0]);
+
+	// Get columns info
+	var sourceColumnName = _.filter(juntionModel.definition, def => def.foreignKey == true && def.references == sourceModel.identity )[0].via,
+		targetColumnName = _.filter(juntionModel.definition, def => def.foreignKey == true && def.references == targetModel.identity )[0].via;
+
+	return {
+		tableName: juntionModel.tableName,
+		sourceColumnName: sourceColumnName,
+		targetColumnName: targetColumnName
+	};
+}
 
 class ABFieldConnect extends ABField {
 
@@ -300,6 +357,12 @@ class ABFieldConnect extends ABField {
 	migrateDrop(knex) {
 		return new Promise(
 			(resolve, reject) => {
+
+				// if field is imported, then it will not remove column in table
+				if (this.object.isImported ||
+					this.object.isExternal ||
+					this.isImported) return resolve();
+
 				var tableName = this.object.dbTableName();
 
 				// M:N
@@ -445,30 +508,81 @@ class ABFieldConnect extends ABField {
 	}
 
 	joinTableName() {
-		var sourceObjectName,
-			targetObjectName,
-			columnName;
 
-		var linkObject = this.object.application.objects((obj) => { return obj.id == this.settings.linkObject; })[0];
+		if (this.object.isExternal) {
 
-		if (this.settings.isSource == true) {
-			sourceObjectName = this.object.name;
-			targetObjectName = linkObject.name;
-			columnName = this.columnName;
+			var juntionModel = getJuntionInfo(this.object.tableName, this.objectLink().tableName);
+
+			return juntionModel.tableName;
+
 		}
 		else {
-			sourceObjectName = linkObject.name;
-			targetObjectName = this.object.name;
-			columnName = this.fieldLink().columnName;
+
+			var sourceObjectName,
+				targetObjectName,
+				columnName;
+
+			var linkObject = this.object.application.objects((obj) => { return obj.id == this.settings.linkObject; })[0];
+
+			if (this.settings.isSource == true) {
+				sourceObjectName = this.object.name;
+				targetObjectName = linkObject.name;
+				columnName = this.columnName;
+			}
+			else {
+				sourceObjectName = linkObject.name;
+				targetObjectName = this.object.name;
+				columnName = this.fieldLink().columnName;
+			}
+
+			// return join table name
+			return AppBuilder.rules.toJunctionTableNameFormat(
+				this.object.application.name, // application name
+				sourceObjectName, // table name
+				targetObjectName, // linked table name
+				columnName); // column name
+		}
+	}
+
+	/**
+	 * @method joinColumnNames
+	 * 
+	 * @return {Object} - {
+	 * 		sourceColName {string},
+	 * 		targetColName {string}
+	 * }
+	 */
+	joinColumnNames() {
+
+		var sourceColumnName = "",
+			targetColumnName = "";
+
+		if (this.object.isExternal) {
+
+			var juntionModel = getJuntionInfo(this.object.tableName, this.objectLink().tableName);
+
+			sourceColumnName = juntionModel.sourceColumnName;
+			targetColumnName = juntionModel.targetColumnName;
+		}
+		else {
+
+			if (this.settings.isSource == true) {
+				sourceColumnName = this.object.name;
+				targetColumnName = this.objectLink().name;
+			}
+			else {
+				sourceColumnName = this.objectLink().name;
+				targetColumnName = this.object.name;
+			}
 		}
 
-		// return join table name
-		return AppBuilder.rules.toJunctionTableNameFormat(
-			this.object.application.name, // application name
-			sourceObjectName, // table name
-			targetObjectName, // linked table name
-			columnName); // column name
+		return {
+			sourceColumnName: sourceColumnName,
+			targetColumnName: targetColumnName
+		};
+
 	}
+
 
 }
 

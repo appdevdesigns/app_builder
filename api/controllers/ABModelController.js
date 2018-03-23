@@ -13,6 +13,7 @@ var cJSON = require('circular-json');
 
 
 const ValidationError = require('objection').ValidationError;
+const {ref, raw} = require('objection');
 
 
 var reloading = null;
@@ -386,6 +387,11 @@ function populateFindConditions(query, object, options, userData) {
             .filter((f) => f.fieldLink() != null)
             .map((f) => f.relationName());
 
+        // includes 'translations' of the external object
+        if (object.isExternal &&
+            object.model().relationMappings()['translations'])
+            relationNames.push('translations');
+
         if (relationNames.length > 0)
             query.eager('[#fieldNames#]'.replace('#fieldNames#', relationNames.join(', ')));
     }
@@ -452,6 +458,78 @@ function updateConnectedFields(object, newData, oldData) {
 }
 
 
+/**
+ * @function updateTranslationsValues
+ * Update translations value of the external table
+ * 
+ * @param {ABObject} object 
+ * @param {int} id 
+ * @param {Array} translations - translations data
+ * @param {boolean} isInsert
+ *
+ */
+function updateTranslationsValues(object, id, translations, isInsert) {
+
+    if (!object.isExternal)
+        return Promise.resolve();
+        
+    let transModel = object.model().relationMappings()['translations'];
+    if (!transModel)
+        return Promise.resolve();
+
+    let tasks = [],
+        transTableName = transModel.modelClass.tableName;
+        multilingualFields = object.fields(f => f.settings.supportMultilingual);
+
+    translations.forEach(trans => {
+
+        tasks.push(new Promise((next, err) => {
+
+            let transKnex = ABMigration.connection()(transTableName);
+
+            // values
+            let vals = {};
+            vals[object.transColumnName] = id;
+            vals['language_code'] = trans['language_code'];
+
+            multilingualFields.forEach(f => {
+                vals[f.columnName] = trans[f.columnName];
+            });
+
+            // where clause
+            let where = {};
+            where[object.transColumnName] = id;
+            where['language_code'] = trans['language_code'];
+
+            // insert
+            if (isInsert) {
+
+                transKnex.insert(vals)
+                    .catch(err)
+                    .then(function() {
+                        next();
+                    });
+            }
+            // update
+            else {
+
+                transKnex.update(vals).where(where)
+                    .catch(err)
+                    .then(function() {
+                        next();
+                    });
+            }
+
+        }));
+
+    });
+
+    return Promise.all(tasks);
+
+}
+
+
+
 
 
 module.exports = {
@@ -478,7 +556,8 @@ module.exports = {
 
                     // this is a create operation, so ... 
                     // createParams.created_at = (new Date()).toISOString();
-                    createParams.created_at = AppBuilder.rules.toSQLDateTime(new Date());
+                    if (!object.isExternal)
+                        createParams.created_at = AppBuilder.rules.toSQLDateTime(new Date());
 
                     sails.log.verbose('ABModelController.create(): createParams:', createParams);
 
@@ -493,7 +572,12 @@ module.exports = {
                             var updateTasks = updateRelationValues(query2, newObj.id, updateRelationParams);
 
 
-                            // update relation values sequentially
+                            if (object.isExternal &&
+                                createParams.translations)
+                                updateTasks.push(updateTranslationsValues(object, newObj.id, createParams.translations, true));
+
+
+                                // update relation values sequentially
                             return updateTasks.reduce((promiseChain, currTask) => {
                                 return promiseChain.then(currTask);
                             }, Promise.resolve([]))
@@ -1067,31 +1151,52 @@ module.exports = {
                         // return the parameters of connectObject data field values 
                         var updateRelationParams = object.requestRelationParams(allParams);
 
+                        // get translations values for the external object
+                        // it will update to translations table after model values updated
+                        var transParams = _.cloneDeep(updateParams.translations);
+
                         var validationErrors = object.isValidData(updateParams);
                         if (validationErrors.length == 0) {
 
-                            // this is an update operation, so ... 
-                            // updateParams.updated_at = (new Date()).toISOString();
-                            updateParams.updated_at = AppBuilder.rules.toSQLDateTime(new Date());
-
-                            // Check if there are any properties set otherwise let it be...let it be...let it be...yeah let it be
-                            if (allParams.properties != "") {
-                                updateParams.properties = allParams.properties;
-                            } else {
-                                updateParams.properties = null;
+                            if (object.isExternal) {
+                                // translations values does not in same table of the external object
+                                delete updateParams.translations;
                             }
+                            else {
+                                // this is an update operation, so ... 
+                                // updateParams.updated_at = (new Date()).toISOString();
+                                updateParams.updated_at = AppBuilder.rules.toSQLDateTime(new Date());
+
+                                // Check if there are any properties set otherwise let it be...let it be...let it be...yeah let it be
+                                if (allParams.properties != "") {
+                                    updateParams.properties = allParams.properties;
+                                } else {
+                                    updateParams.properties = null;
+                                }
+                            }
+
+                            // Prevent ER_PARSE_ERROR: when no properties of update params
+                            // update `TABLE_NAME` set  where `id` = 'ID'
+                            if (updateParams && Object.keys(updateParams).length == 0)
+                                updateParams = null;
+
+                            updateParams = updateParams || { id: ref('id') };
 
                             sails.log.verbose('ABModelController.update(): updateParams:', updateParams);
 
                             var query = object.model().query();
 
                             // Do Knex update data tasks
-                            query.patch(updateParams || { id: id }).where('id', id)
+                            query.patch(updateParams).where('id', id)
                                 .then((values) => {
 
                                     // create a new query when use same query, then new data are created duplicate
                                     var query2 = object.model().query();
                                     var updateTasks = updateRelationValues(query2, id, updateRelationParams);
+
+                                    // update translation of the external table
+                                    if (object.isExternal)
+                                        updateTasks.push(updateTranslationsValues(object, id, transParams));
 
                                     // update relation values sequentially
                                     return updateTasks.reduce((promiseChain, currTask) => {

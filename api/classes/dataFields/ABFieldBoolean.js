@@ -25,6 +25,11 @@ var ABFieldBooleanDefaults = {
 	// what types of Sails ORM attributes can be imported into this data type?
 	// http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
 	compatibleOrmTypes: ['boolean'],
+
+	// what types of MySql column types can be imported into this data type?
+	// https://www.techonthenet.com/mysql/datatypes.php
+	compatibleMysqlTypes: ['bool', 'boolean']
+
 };
 
 var defaultValues = {
