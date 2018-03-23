@@ -29,6 +29,44 @@ function getTransTableName(tableName) {
 }
 
 /**
+ * @method getPrimaryKey
+ *
+ * @param {*} knex 
+ * @param {*} tableName
+ * 
+ * @return {Promise}
+ */
+function getPrimaryKey(knex, tableName) {
+
+	return new Promise((resolve, reject) => {
+
+		// SELECT `column_name`
+		// FROM information_schema.key_column_usage
+		// WHERE `CONSTRAINT_NAME` = 'PRIMARY'
+		// AND `TABLE_SCHEMA` = '[DATABASE NAME]'
+		// AND `TABLE_NAME` = '[TABLE NAME]';
+		knex.select('column_name')
+		.from('information_schema.key_column_usage')
+		.where('CONSTRAINT_NAME', '=', 'PRIMARY')
+		.andWhere('TABLE_SCHEMA', '=', sails.config.connections.appBuilder.database)
+		.andWhere('TABLE_NAME', '=', tableName)
+			.catch(reject)
+			.then(function (result) {
+
+				var pkColName = "";
+
+				if (result[0])
+					pkColName = result[0].column_name;
+
+				resolve(pkColName);
+
+			});
+
+	});
+
+}
+
+/**
  * @method getAssociations
  * Get associations of sails.model from table name
  * 
@@ -185,8 +223,16 @@ module.exports = {
 		var columns = [];
 
 		return Promise.resolve()
-			// Get columns of the table
+
+			// Get the primary key info
 			.then(function () {
+
+				return getPrimaryKey(knex, tableName);
+
+			})
+
+			// Get columns of the table
+			.then(function (pkColName) {
 
 				return new Promise((resolve, reject) => {
 
@@ -199,7 +245,8 @@ module.exports = {
 							Object.keys(columns).forEach(name => {
 
 								// remove reserved column
-								if (ABFieldBase.reservedNames.indexOf(name) > -1) {
+								if (ABFieldBase.reservedNames.indexOf(name) > -1 || 
+									pkColName == name) {
 									delete columns[name];
 									return;
 								}
@@ -229,6 +276,10 @@ module.exports = {
 
 					var associations = getAssociations(tableName);
 					associations.forEach(asso => {
+
+						// Ignore the 'translations' association to connect fields
+						if (asso.alias == 'translations')
+							return;
 
 						var col = columns[asso.alias];
 						if (col) {
@@ -358,6 +409,7 @@ module.exports = {
 			application,
 			languages = [],
 			transColumnName = '',
+			pkColName = '',
 			columns = {},
 			objectData = {};
 
@@ -472,6 +524,25 @@ module.exports = {
 
 			})
 
+			// Get the primary key info
+			.then(function () {
+				
+				return new Promise((resolve, reject) => {
+
+					getPrimaryKey(knex, tableName)
+						.catch(reject)
+						.then(colName => {
+
+							pkColName = colName;
+
+							resolve();
+
+						});
+
+				});
+				
+			})
+
 			// Prepare object
 			.then(function () {
 
@@ -491,6 +562,9 @@ module.exports = {
 						fields: []
 					};
 
+					if (pkColName)
+						objectData.primaryColumnName = pkColName;
+
 					// Add label translations
 					let tableLabel = tableName.replace(/_/g, ' ');
 					languages.forEach((langCode) => {
@@ -501,7 +575,6 @@ module.exports = {
 					});
 
 					resolve();
-
 
 				});
 
@@ -536,6 +609,7 @@ module.exports = {
 						var col = columns[colName];
 
 						if (!col.supported ||
+							pkColName == colName ||
 							ABFieldBase.reservedNames.indexOf(colName) > -1) return;
 
 						let inputCol = columnList.filter(enterCol => enterCol.name == colName)[0];

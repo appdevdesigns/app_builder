@@ -17,6 +17,7 @@ module.exports =  class ABObjectBase {
 	isImported: 1/0,
 	isExternal: 1/0,
 	tableName:'string',  // NOTE: store table name of import object to ignore async
+	primaryColumnName: 'string', // NOTE: store column name of PK
 	transColumnName: 'string', // NOTE: store column name of translations table
 	urlPath:'string',
 	importFromObject: 'string', // JSON Schema style reference:  '#[ABApplication.id]/objects/[ABObject.id]'
@@ -37,6 +38,7 @@ module.exports =  class ABObjectBase {
 		this.isImported  = parseInt(attributes.isImported || 0);
 		this.isExternal  = parseInt(attributes.isExternal || 0);
 		this.tableName	 = attributes.tableName || ""; // NOTE: store table name of import object to ignore async
+		this.primaryColumnName = attributes.primaryColumnName || ""; // NOTE: store column name of PK
 		this.transColumnName = attributes.transColumnName || ""; // NOTE: store column name of translations table
     	this.urlPath	 = attributes.urlPath     || "";
     	this.importFromObject = attributes.importFromObject || "";
@@ -114,6 +116,7 @@ module.exports =  class ABObjectBase {
 			isImported:  	this.isImported,
 			isExternal:  	this.isExternal,
 			tableName:		this.tableName, // NOTE: store table name of import object to ignore async
+			primaryColumnName: this.primaryColumnName, // NOTE: store column name of PK
 			transColumnName:this.transColumnName, // NOTE: store column name of translations table
 			urlPath: 		this.urlPath,
     		importFromObject: this.importFromObject,
@@ -390,4 +393,16 @@ module.exports =  class ABObjectBase {
 	 }
 
 
+	/**
+	  * @method PK
+	  * return a string of the primary column name
+	  *
+	  * @return {string}
+	  */
+	PK() {
+		return this.primaryColumnName || 'id';
+	}
+
+
 }
+
