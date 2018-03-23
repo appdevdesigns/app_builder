@@ -1142,10 +1142,10 @@ PopupRecordRule.qbFixAfterShow();
 
 									this.doRecordRules(newFormVals)
 									.then(()=>{
-
+// make sure any updates from RecordRules get passed along here.
 										this.doSubmitRules(newFormVals);
 										formReady(newFormVals);
-										resolve();
+										resolve(newFormVals);
 									})
 									.catch((err)=>{
 										OP.Error.log('Error processing Record Rules.', {error:err, newFormVals:newFormVals });
@@ -1171,7 +1171,7 @@ resolve();
 
 										this.doSubmitRules(newFormVals);
 										formReady(newFormVals);
-										resolve();
+										resolve(newFormVals);
 									})
 									.catch((err)=>{
 										OP.Error.log('Error processing Record Rules.', {error:err, newFormVals:newFormVals });

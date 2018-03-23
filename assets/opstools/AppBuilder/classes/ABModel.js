@@ -101,9 +101,20 @@ export default class ABModel {
 			.replace('#objID#', this.object.id);
 	}
 
-
-
-
+	// Prepare multilingual fields to be untranslated
+	// Before untranslating we need to ensure that values.translations is set.
+	prepareMultilingualData(values) {
+		
+		// if this object has some multilingual fields, translate the data:
+		var mlFields = this.object.multilingualFields();
+		if (mlFields.length) {
+			if (values.translations == null || typeof values.translations == "undefined" || values.translations == "") {
+				values.translations = [];
+			}
+			OP.Multilingual.unTranslate(values, values, mlFields);
+		}
+			
+	}
 
 
 
@@ -113,13 +124,7 @@ export default class ABModel {
 	 */
 	create(values) {
 
-		// if this object has some multilingual fields, translate the data:
-		var mlFields = this.object.multilingualFields();
-		if (mlFields.length) {
-			// if (values.translations) {
-			OP.Multilingual.unTranslate(values, values, mlFields);
-			// }
-		}
+		this.prepareMultilingualData(values);
 
 		return new Promise(
 			(resolve, reject) => {
@@ -467,14 +472,7 @@ reject(err);
 	 */
 	update(id, values) {
 
-		// if this object has some multilingual fields, translate the data:
-		var mlFields = this.object.multilingualFields();
-		if (mlFields.length) {
-			if (Object.keys(values).length == 0 || // When a row is empty values, then should create .translations
-				values.translations) {
-				OP.Multilingual.unTranslate(values, values, mlFields);
-			}
-		}
+		this.prepareMultilingualData(values);
 
 		// remove empty properties
 		for (var key in values) {
