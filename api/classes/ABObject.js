@@ -349,7 +349,9 @@ module.exports = class ABObject extends ABObjectBase {
 						relation: Model.HasManyRelation,
 						modelClass: TransModel,
 						join: {
-							from: '{targetTable}.id'.replace('{targetTable}', tableName),
+							from: '{targetTable}.{primaryField}'
+								.replace('{targetTable}', tableName)
+								.replace('{primaryField}', currObject.PK()),
 							to: '{sourceTable}.{field}'
 								.replace('{sourceTable}', TransModel.tableName)
 								.replace('{field}', currObject.transColumnName)
@@ -380,18 +382,21 @@ module.exports = class ABObject extends ABObjectBase {
 
 						var sourceTable,
 							targetTable,
+							targetPkName,
 							relation,
 							columnName;
 
 						if (f.settings.isSource == true) {
 							sourceTable = tableName;
 							targetTable = linkObject.dbTableName();
+							targetPkName = linkObject.PK();
 							relation = Model.BelongsToOneRelation;
 							columnName = f.columnName;
 						}
 						else {
 							sourceTable = linkObject.dbTableName();
 							targetTable = tableName;
+							targetPkName = currObject.PK();
 							relation = Model.HasOneRelation;
 							columnName = linkField.columnName;
 						}
@@ -400,8 +405,9 @@ module.exports = class ABObject extends ABObjectBase {
 							relation: relation,
 							modelClass: linkModel,
 							join: {
-								from: '{targetTable}.id'
-									.replace('{targetTable}', targetTable),
+								from: '{targetTable}.{primaryField}'
+									.replace('{targetTable}', targetTable)
+									.replace('{primaryField}', targetPkName),
 
 								to: '{sourceTable}.{field}'
 									.replace('{sourceTable}', sourceTable)
@@ -415,22 +421,30 @@ module.exports = class ABObject extends ABObjectBase {
 						var joinTablename = f.joinTableName(),
 							joinColumnNames = f.joinColumnNames(),
 							sourceTableName,
-							targetTableName;
+							sourcePkName
+							targetTableName,
+							targetPkName;
 
 						if (f.settings.isSource == true) {
 							sourceTableName = f.object.dbTableName();
+							sourcePkName = f.object.PK();
 							targetTableName = linkObject.dbTableName();
+							targetPkName = linkObject.PK();
 						}
 						else {
 							sourceTableName = linkObject.dbTableName();
+							sourcePkName = linkObject.PK();
 							targetTableName = f.object.dbTableName();
+							targetPkName = f.object.PK();
 						}
 
 						relationMappings[relationName] = {
 							relation: Model.ManyToManyRelation,
 							modelClass: linkModel,
 							join: {
-								from: '{sourceTable}.id'.replace('{sourceTable}', sourceTableName),
+								from: '{sourceTable}.{primaryField}'
+										.replace('{sourceTable}', sourceTableName)
+										.replace('{primaryField}', sourcePkName),
 
 								through: {
 									from: '{joinTable}.{sourceColName}'
@@ -443,7 +457,9 @@ module.exports = class ABObject extends ABObjectBase {
 										.replace('{targetColName}', joinColumnNames.targetColumnName)
 								},
 
-								to: '{targetTable}.id'.replace('{targetTable}', targetTableName)
+								to: '{targetTable}.{primaryField}'
+									.replace('{targetTable}', targetTableName)
+									.replace('{primaryField}', targetPkName)
 							}
 
 						};
@@ -458,8 +474,9 @@ module.exports = class ABObject extends ABObjectBase {
 									.replace('{sourceTable}', tableName)
 									.replace('{field}', f.columnName),
 
-								to: '{targetTable}.id'
+								to: '{targetTable}.{primaryField}'
 									.replace('{targetTable}', linkObject.dbTableName())
+									.replace('{primaryField}', linkObject.PK())
 							}
 						};
 					}
@@ -469,8 +486,9 @@ module.exports = class ABObject extends ABObjectBase {
 							relation: Model.HasManyRelation,
 							modelClass: linkModel,
 							join: {
-								from: '{sourceTable}.id'
-									.replace('{sourceTable}', tableName),
+								from: '{sourceTable}.{primaryField}'
+									.replace('{sourceTable}', tableName)
+									.replace('{primaryField}', currObject.PK()),
 
 								to: '{targetTable}.{field}'
 									.replace('{targetTable}', linkObject.dbTableName())
@@ -602,3 +620,4 @@ module.exports = class ABObject extends ABObjectBase {
 	}
 
 }
+
