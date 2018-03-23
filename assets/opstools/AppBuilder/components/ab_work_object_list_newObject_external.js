@@ -241,22 +241,23 @@ export default class AB_Work_Object_List_NewObject_External extends OP.Component
 
                             var indexObj = -1;
 
-                            currentApp._objects.forEach((obj, index) => {
+                            currentApp.objects().forEach((obj, index) => {
                                 if (obj.id == objValue.id)
                                     indexObj = index;
                             });
 
                             // Update a object into list
                             if (indexObj > -1){
-                                currentApp._objects[indexObj] = currentApp.objectNew(objValue);
+                                currentApp.objects()[indexObj] = currentApp.objectNew(objValue);
                             }
                             // Add new object to list
                             else {
                                 newObj = currentApp.objectNew(objValue);
-                                currentApp._objects.push(newObj);
+                                currentApp.objects().push(newObj);
                             }
 
                         });
+
 
                         _logic.callbacks.onDone(newObj);
                     })

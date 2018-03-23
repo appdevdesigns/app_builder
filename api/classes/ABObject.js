@@ -413,21 +413,16 @@ module.exports = class ABObject extends ABObjectBase {
 					else if (f.settings.linkType == 'many' && f.settings.linkViaType == 'many') {
 						// get join table name
 						var joinTablename = f.joinTableName(),
-							sourceObjectName,
+							joinColumnNames = f.joinColumnNames(),
 							sourceTableName,
-							targetObjectName,
 							targetTableName;
 
 						if (f.settings.isSource == true) {
-							sourceObjectName = f.object.name;
 							sourceTableName = f.object.dbTableName();
-							targetObjectName = linkObject.name;
 							targetTableName = linkObject.dbTableName();
 						}
 						else {
-							sourceObjectName = linkObject.name;
 							sourceTableName = linkObject.dbTableName();
-							targetObjectName = f.object.name;
 							targetTableName = f.object.dbTableName();
 						}
 
@@ -440,12 +435,12 @@ module.exports = class ABObject extends ABObjectBase {
 								through: {
 									from: '{joinTable}.{sourceColName}'
 										.replace('{joinTable}', joinTablename)
-										.replace('{sourceColName}', sourceObjectName),
+										.replace('{sourceColName}', joinColumnNames.sourceColumnName),
 
 
 									to: '{joinTable}.{targetColName}'
 										.replace('{joinTable}', joinTablename)
-										.replace('{targetColName}', targetObjectName)
+										.replace('{targetColName}', joinColumnNames.targetColumnName)
 								},
 
 								to: '{targetTable}.id'.replace('{targetTable}', targetTableName)

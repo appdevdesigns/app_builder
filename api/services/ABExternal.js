@@ -131,13 +131,25 @@ module.exports = {
 				});
 
 			})
+			// Get only not exists table names
 			.then(function () {
 
-				// Get only not exists table names
 				return new Promise((resolve, reject) => {
 
 					resolve(allTableNames.filter(name => {
 						return existsTableNames.indexOf(name) < 0;
+					}));
+
+				});
+
+			})
+			// Filter tables are not junction
+			.then(function (tableNames) {
+
+				return new Promise((resolve, reject) => {
+					
+					resolve(tableNames.filter(name => {
+						return _.filter(sails.models, m => m.tableName == name && (!m.meta || !m.meta.junctionTable)).length;
 					}));
 
 				});
@@ -221,6 +233,18 @@ module.exports = {
 						var col = columns[asso.alias];
 						if (col) {
 							col.fieldKey = "connectObject";
+						}
+						else {
+							columns[asso.alias] = {
+								fieldKey: "connectObject",
+
+								defaultValue: null,
+								type: null,
+								maxLength: null,
+								nullable: true,
+
+								supported: true
+							};
 						}
 
 					});
@@ -532,6 +556,16 @@ module.exports = {
 						if (col.multilingual)
 							colData.settings.supportMultilingual = 1;
 
+						// Add a hidden field
+						if (inputCol && JSON.parse(inputCol.isHidden || false)) {
+							objectData.objectWorkspace.hiddenFields.push(colData.columnName);
+						}
+
+						// Label of the column
+						let colLabel = inputCol ? inputCol.label : colName;
+						labelField(colData, colLabel);
+						
+
 						// Define Connect column settings
 						if (inputCol.fieldKey == 'connectObject') {
 
@@ -540,6 +574,7 @@ module.exports = {
 
 								// Pull table name of link
 								let targetModel = "",
+									targetAssociate,
 									targetColId = uuid.v4(),
 									targetColName = "",
 									targetType = ""; // model, many
@@ -547,7 +582,7 @@ module.exports = {
 								if (associateInfo.type == 'model') {
 									targetModel = sails.models[associateInfo.model];
 
-									let targetAssociate = targetModel.associations.filter(asso => asso.via == colName)[0];
+									targetAssociate = targetModel.associations.filter(asso => asso.via == colName)[0];
 									if (targetAssociate) {
 										targetColName = targetAssociate.alias;
 										targetType = targetAssociate.type;
@@ -555,13 +590,15 @@ module.exports = {
 								}
 								else {
 									targetModel = sails.models[associateInfo.collection];
-									targetColName = targetModel.via;
+									targetColName = associateInfo.via;
 
-									// Pull via type
-									let targetAssociate = targetModel.associations.filter(asso => asso.alias == targetColName)[0];
-									if (targetAssociate)
-										targetType = targetModel.associations.filter(asso => asso.alias == targetColName)[0].type;
+									// Pull type of associate
+									targetAssociate = targetModel.associations.filter(asso => asso.alias == targetColName)[0];
+									if (targetAssociate) {
+										targetType = targetAssociate.type;
+									}
 								}
+
 
 								// Get id of ABObject and ABColumn
 								let targetObj = (application.json.objects || []).filter(o => o.tableName == targetModel.tableName)[0];
@@ -593,7 +630,7 @@ module.exports = {
 									}
 								}, targetObj).toObj();
 
-								labelField(targetColData, targetColName.replace(/_/g, ' '));
+								labelField(targetColData, (targetColName || '').replace(/_/g, ' '));
 
 								targetObj.fields.push(targetColData);
 
@@ -603,15 +640,6 @@ module.exports = {
 
 							}
 						}
-
-						// Add a hidden field
-						if (inputCol && JSON.parse(inputCol.isHidden || false)) {
-							objectData.objectWorkspace.hiddenFields.push(colData.columnName);
-						}
-
-						// Label of the column
-						let colLabel = inputCol ? inputCol.label : colName;
-						labelField(colData, colLabel);
 
 						objectData.fields.push(colData);
 
