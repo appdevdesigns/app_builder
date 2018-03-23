@@ -31,7 +31,7 @@ export default {
 		fields = fields || [];
 
 		if (!json.translations) {
-			return;
+			json.translations = [];
 		}
 
 		var currLanguage = AD.lang.currentLanguage || 'en';
