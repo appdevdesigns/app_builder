@@ -25,15 +25,21 @@ var reloading = null;
  * We expect that when a create or update happens, that the data in the 
  * related fields represent the CURRENT STATE of all it's relations. Any 
  * field not in the relation value is no longer part of the related data.
- * @param {Objection.JS Query} query
+ * @param {ABObject} object
  * @param {integer} id  the .id of the base object we are working with
  * @param {obj} updateRelationParams  "key"=>"value" hash of the related 
  *                      fields and current state of values.
  * @return {array}  array of update operations to perform the relations.
  */ 
-function updateRelationValues(query, id, updateRelationParams) {
+function updateRelationValues(object, id, updateRelationParams) {
 
     var updateTasks = [];
+
+
+    // create a new query to update relation data
+    // NOTE: when use same query, it will have a "created duplicate" error
+    var query = object.model().query();
+
 
     //// 
     //// We are given a current state of values that should be related to our object.
@@ -56,13 +62,22 @@ function updateRelationValues(query, id, updateRelationParams) {
 
                 return new Promise((resolve, reject) => {
 
-                    query.where('id', id).first()
+                    query.where(object.PK(), id).first()
                         .catch(err => reject(err))
                         .then(record => {
 
                             if (record == null) return resolve();
 
-                            record.$relatedQuery(clearRelationName).unrelate()
+                            var fieldLink = object.fields(f => f.columnName == colName)[0];
+                            if (fieldLink == null) return resolve();
+
+                            var objectLink = fieldLink.object;
+                            if (objectLink == null) return resolve();
+
+                            record
+                                .$relatedQuery(clearRelationName)
+                                .unrelate()
+                                .where(objectLink.PK(), '=', objectLink.PK()) // Unrelates all of data
                                 .catch(err => reject(err))
                                 .then(() => { resolve(); });
 
@@ -96,7 +111,7 @@ function updateRelationValues(query, id, updateRelationParams) {
 
                         var relationName = AppBuilder.rules.toFieldRelationFormat(colName);
 
-                        query.where('id', id).first()
+                        query.where(object.PK(), id).first()
                             .catch(err => reject(err))
                             .then(record => {
 
@@ -200,9 +215,19 @@ function populateFindConditions(query, object, options, userData) {
             if (condition.rule == 'have_no_relation') {
                 var relation_name = AppBuilder.rules.toFieldRelationFormat(condition.key);
 
+                var field = object._fields.filter(field => field.columnName == condition.key)[0];
+                if (!field) return;
+
+                var objectLink = field.objectLink();
+                if (!objectLink) return;
+
+                var pkObjectLink = objectLink.PK();
+
                 Query
                     .leftJoinRelation(relation_name)
-                    .whereRaw('{relation_name}.id IS NULL'.replace('{relation_name}', relation_name));
+                    .whereRaw('{relation_name}.{primary_name} IS NULL'
+                        .replace('{relation_name}', relation_name)
+                        .replace('{primary_name}', pkObjectLink));
 
                 return;
             }
@@ -443,7 +468,7 @@ function updateConnectedFields(object, newData, oldData) {
         }
         
         // filter array to only show unique items
-        items = _.uniqBy(items, "id");
+        items = _.uniqBy(items, object.PK());
         // parse through all items and broadcast a "stale" action so we can tell the client side the data may have updated
         items.forEach((i) => {
             // Make sure you put the payload together just like before
@@ -566,10 +591,7 @@ module.exports = {
                     query.insert(createParams)
                         .then((newObj) => {
 
-                            // create a new query to update relation data
-                            // NOTE: when use same query, it will have a "created duplicate" error
-                            var query2 = object.model().query();
-                            var updateTasks = updateRelationValues(query2, newObj.id, updateRelationParams);
+                            var updateTasks = updateRelationValues(object, newObj.id, updateRelationParams);
 
 
                             if (object.isExternal &&
@@ -591,7 +613,7 @@ module.exports = {
                                             glue:'and',
                                             rules:[
                                                 {
-                                                    key: "id",
+                                                    key: object.PK(),
                                                     rule: "equals",
                                                     value: newObj.id
                                                 }
@@ -831,7 +853,7 @@ module.exports = {
                     where: {
                         glue:'and',
                         rules:[{
-                            key: "id",
+                            key: object.PK(),
                             rule: "equals",
                             value: id
                         }]
@@ -866,7 +888,9 @@ module.exports = {
                     var relationName = f.relationName();
                     
                     // If we have any related item data we need to build a query to report the delete...otherwise just move on
-                    if (oldItem[0][relationName].length) {
+                    if (oldItem[0] &&
+                        oldItem[0][relationName] &&
+                        oldItem[0][relationName].length) {
                         // Push the ids of the related data into an array so we can use them in a query
                         var relatedIds = [];
                         oldItem[0][relationName].forEach((old) => {
@@ -878,7 +902,7 @@ module.exports = {
                             where: {
                                 glue:'and',
                                 rules:[{
-                                    key: "id",
+                                    key: relatedObject.PK(),
                                     rule: "in",
                                     value: relatedIds
                                 }]
@@ -912,7 +936,9 @@ module.exports = {
             function (next) {
                 // Now we can delete because we have the current record saved as oldItem and our related records saved as relatedItems
                 object.model().query()
-                    .deleteById(id)
+                    .delete()
+                    .where(object.PK(), '=', id)
+                    // .deleteById(id)
                     .then((numRows) => {
 
                         res.AD.success({ numRows: numRows });
@@ -1125,7 +1151,7 @@ module.exports = {
                     where: {
                         glue:'and',
                         rules:[{
-                            key: "id",
+                            key: object.PK(),
                             rule: "equals",
                             value: id
                         }]
@@ -1183,19 +1209,20 @@ module.exports = {
                             if (updateParams && Object.keys(updateParams).length == 0)
                                 updateParams = null;
 
-                            updateParams = updateParams || { id: ref('id') };
+                            if (updateParams == null) {
+                                updateParams = {};
+                                updateParams[object.PK()] = ref(object.PK());
+                            }
 
                             sails.log.verbose('ABModelController.update(): updateParams:', updateParams);
 
                             var query = object.model().query();
 
                             // Do Knex update data tasks
-                            query.patch(updateParams).where('id', id)
+                            query.patch(updateParams).where(object.PK(), id)
                                 .then((values) => {
 
-                                    // create a new query when use same query, then new data are created duplicate
-                                    var query2 = object.model().query();
-                                    var updateTasks = updateRelationValues(query2, id, updateRelationParams);
+                                    var updateTasks = updateRelationValues(object, id, updateRelationParams);
 
                                     // update translation of the external table
                                     if (object.isExternal)
@@ -1214,7 +1241,7 @@ module.exports = {
                                                 where: {
                                                     glue:'and',
                                                     rules:[{
-                                                        key: "id",
+                                                        key: object.PK(),
                                                         rule: "equals",
                                                         value: id
                                                     }]
@@ -1333,3 +1360,4 @@ module.exports = {
 
 
 };
+
