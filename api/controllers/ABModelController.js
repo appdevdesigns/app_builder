@@ -737,7 +737,10 @@ module.exports = {
                 var queryCount = object.model().query();
                 populateFindConditions(queryCount, object, { where: where, includeRelativeData: false }, req.user.data);
                 // added tableName to id because of non unique field error
-                var pCount = queryCount.count('{tableName}.id as count'.replace("{tableName}", object.model().tableName)).first();
+                var pCount = queryCount.count('{tableName}.{pkName} as count'
+                                                .replace("{tableName}", object.model().tableName)
+                                                .replace("{pkName}", object.PK())
+                                            ).first();
                     
                 Promise.all([
                     pCount,

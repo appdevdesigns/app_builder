@@ -82,9 +82,6 @@ function getJuntionInfo(objectName, linkObjectName) {
 					}).length >= 2;
 		})[0];
 
-console.log('junction: ', juntionModel);
-console.log('source col: ', _.filter(juntionModel.definition, def => def.foreignKey == true && def.references == sourceModel.identity )[0]);
-
 	// Get columns info
 	var sourceColumnName = _.filter(juntionModel.definition, def => def.foreignKey == true && def.references == sourceModel.identity )[0].via,
 		targetColumnName = _.filter(juntionModel.definition, def => def.foreignKey == true && def.references == targetModel.identity )[0].via;
