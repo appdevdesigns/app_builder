@@ -19,7 +19,7 @@ const {ref, raw} = require('objection');
 var reloading = null;
 
 
-/**
+/** 
  * @function updateRelationValues
  * Make sure an object's relationships are properly updated.
  * We expect that when a create or update happens, that the data in the 
