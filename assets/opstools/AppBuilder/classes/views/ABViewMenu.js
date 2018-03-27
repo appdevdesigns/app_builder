@@ -273,6 +273,13 @@ export default class ABViewMenu extends ABViewWidget {
 									// trigger to save settings
 									_logic.onChange();
 								},
+								onBeforeEditStart: function(id) {
+									var item = this.getItem(id);
+									if(!item.aliasname) {
+										item.aliasname = item.label;
+										this.updateItem(item);
+									}
+								},
 								onBeforeEditStop: function(state, editor) {
 									var item = this.getItem(editor.id);
 									if(item) {
