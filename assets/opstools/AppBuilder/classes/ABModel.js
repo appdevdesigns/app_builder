@@ -549,6 +549,13 @@ reject(err);
 		if (!(data instanceof Array))
 			data = [data];
 
+		// various primary key name
+		if (this.object.PK() != 'id') {
+			data.forEach(d => {
+				d.id = d[this.object.PK()];
+			});
+		}
+
 		// if this object has some multilingual fields, translate the data:
 		var mlFields = this.object.multilingualFields();
 		
@@ -578,3 +585,4 @@ reject(err);
 	}
 
 }
+
