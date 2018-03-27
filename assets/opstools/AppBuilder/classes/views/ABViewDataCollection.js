@@ -838,6 +838,10 @@ export default class ABViewDataCollection extends ABView {
 
 			var rowData = data.data;
 
+			// normalize data before add to data collection
+			var model = this.datasource.model();
+			model.normalizeData(rowData);
+
 			// filter condition before add 
 			if (!this.__filterComponent.isValid(rowData))
 				return;
@@ -865,6 +869,9 @@ export default class ABViewDataCollection extends ABView {
 			var values = data.data;
 
 			if (this.__dataCollection.exists(values.id)) {
+				// normalize data before update data collection
+				var model = this.datasource.model();
+				model.normalizeData(values);
 				this.__dataCollection.updateItem(values.id, values);
 
 				// If the update item is current cursor, then should tell components to update.
