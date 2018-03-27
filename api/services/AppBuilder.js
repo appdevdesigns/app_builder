@@ -200,13 +200,22 @@ module.exports = {
 
                                 } else {
 
-                                    // error: object not found!
-                                    var err = ADCore.error.fromKey('E_NOTFOUND');
-                                    err.message = "Object not found.";
-                                    err.objid = objID;
-                                    sails.log.error(err);
-                                    res.AD.error(err, 404);
-                                    reject();
+                                    // check to see if provided objID is actually a query:
+                                    var query = Application.queries((q) => { return q.id == objID; })[0];
+                                    if (query) {
+                                        resolve(query);
+                                    } else {
+
+                                        // error: object not found!
+                                        var err = ADCore.error.fromKey('E_NOTFOUND');
+                                        err.message = "Object not found.";
+                                        err.objid = objID;
+                                        sails.log.error(err);
+                                        res.AD.error(err, 404);
+                                        reject();
+
+                                    }
+
                                 }
 
                             } else {

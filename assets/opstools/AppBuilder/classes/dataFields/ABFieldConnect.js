@@ -36,11 +36,27 @@ var ABFieldConnectDefaults = {
 };
 
 var defaultValues = {
-	linkObject: '', // ABObject.id
-	linkType: 'one', // one, many
-	linkViaType: 'many', // one, many
-	linkColumn: '', // ABField.id
-	isSource: null // bit
+	linkObject: '', 	// ABObject.id
+						// the .id of the ABObject we are connected to
+
+	linkType: 'one', 	// [one, many]
+						// 'one' : this object can have only 1 of our linkObject
+						// 'many': this object can have MANY of our linkObject
+
+	linkViaType: 'many', // [one, many]
+						// 'one' : the linkedObject can only have 1 of me
+						// 'many' : the linkedObject can have many of me
+
+	linkColumn: '', 	// ABField.id
+						// the .id of the field in the linkedObject that is our 
+						// connected field.
+
+	isSource: null 		// bit : 1,0
+						// isSource indicates that this object is the source of the connection:
+						// if linkType==one, and isSource=1, then the value in this object's field
+						// 		is the connected object's id
+						// if linkType == one, and isSource = 0, then the linkObject has this obj.id
+						//  	in it's connected field (linkColumn)
 };
 
 var ids = {
@@ -690,11 +706,22 @@ class ABFieldConnect extends ABFieldSelectivity {
 	}
 
 
+	/**
+	 * @method datasourceLink
+	 * return the ABObject that this field connection links to
+	 * @return {ABObject}
+	 */
 	get datasourceLink() {
 		return this.object.application.objects((obj) => obj.id == this.settings.linkObject)[0];
 	}
 
 
+
+	/**
+	 * @method fieldLink
+	 * return the ABField that we are linked to.
+	 * @return {ABDataField}  or undefined if not found.
+	 */
 	get fieldLink() {
 		var objectLink = this.datasourceLink;
 		if (!objectLink) return null
@@ -788,6 +815,37 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 	}
 
+
+
+	/**
+	 * @method linkType
+	 * return the type of connection we have to our connected object
+	 * @return {string}
+	 */
+	linkType() {
+		return this.settings.linkType;
+	}
+
+
+
+	/**
+	 * @method linkType
+	 * return the type of connection we have to our connected object
+	 * @return {string}
+	 */
+	linkViaType() {
+		return this.settings.linkViaType;
+	}
+
+
+	/**
+	 * @method isSource
+	 * does this object contain the .id of the remote object (in case of linkType : one )
+	 * @return {bool}
+	 */
+	isSource() {
+		return this.settings.isSource;
+	}
 
 
 };

@@ -42,6 +42,7 @@ export default class ABObjectQuery extends ABObject {
 
 	// ABOBjectQuery Specific Changes
 
+	// we store a list of fields by their urls:
 	fields:[
 		{ 
 			fieldURL:'#/url/to/field',
@@ -49,16 +50,23 @@ export default class ABObjectQuery extends ABObject {
 	],
 
 
-	objects:[
-		{ 
-			objectURL:'#/url/to/object',
-			link:{
-				type:'[left,right,inner,outer]',
-				as:'a',
-				on:''
-			} 
+	// we store a list of joins:
+	joins: [
+		{
+			objectURL:"#/...",					// the base object of the join
+			fieldID:'adf3we666r77ewsfe',		// the connection field of the object we are joining with.
+			type:[left, right, inner, outer]    // join type: these should match the names of the knex methods
+					=> innerJoin, leftJoin, leftOuterJoin, rightJoin, rightOuterJoin, fullOuterJoin
+
+
+// maybe we'll implement this in the future:
+// this can allow us to specify complex join conditions:
+// on: { }
+			on: { fieldAID: '', op:'=', fieldBID:''} //fieldBID: the field in the connected 
+
 		}
-	], 
+	],
+
 
 	where: { QBWhere }
 }
@@ -66,7 +74,7 @@ export default class ABObjectQuery extends ABObject {
 
 
 		// import all our ABObjects 
-	  	this.importObjects(attributes.objects || []);
+	  	this.importJoins(attributes.joins || []);
 	  	this.where = attributes.where || {};
 
   	}
@@ -146,7 +154,7 @@ export default class ABObjectQuery extends ABObject {
 
 		/// include our additional objects and where settings:
 
-		settings.objects = this.exportObjects();  //objects;
+		settings.joins = this.exportJoins();  //objects;
 		settings.where  = this.where;
 
 
@@ -227,9 +235,24 @@ export default class ABObjectQuery extends ABObject {
 
 
 	///
-	/// Objects
+	/// Joins & Objects
 	///
 
+
+
+	/**
+	 * @method joins()
+	 *
+	 * return an array of all the ABObjects for this Query.
+	 *
+	 * @return {array}
+	 */
+	joins (filter) {
+
+		filter = filter || function(){ return true; };
+
+		return this._joins.filter(filter);
+	}
 
 
 	/**
@@ -248,28 +271,32 @@ export default class ABObjectQuery extends ABObject {
 
 
 	/**
-	 * @method importObjects
-	 * instantiate a set of objects from the given attributes.
-	 * Our attributes contain a set of ABObject URLs that should already be created in our Application.
+	 * @method importJoins
+	 * instantiate a set of joins from the given attributes.
+	 * Our joins contain a set of ABObject URLs that should already be created in our Application.
 	 * @param {array} settings The different field urls for each field
 	 *					{ }
 	 */
-	importObjects(settings) {
+	importJoins(settings) {
+		var newJoins = [];
 		var newObjects = [];
-	  	settings.forEach((obj) => {
+	  	settings.forEach((join) => {
 
 	  		// Convert our saved settings:
-	  		// {
-	  		// 	   objectURL: 'xxxx',
-	  		//     linkInfo: {} 
-	  		// }
-	  		// into an ABObject with .linkInfo added
+	  		// 		{
+			// 			objectURL:"#/...",
+			// 			fieldID:'adf3we666r77ewsfe',
+			// 			type:[left, right, inner, outer]  // these should match the names of the knex methods
+			// 					=> innerJoin, leftJoin, leftOuterJoin, rightJoin, rightOuterJoin, fullOuterJoin
+			// 		}
 
-	  		var object = this.application.urlResolve(obj.objectURL);
-	  		object.linkInfo = obj.linkInfo;
+	  		var object = this.application.urlResolve(join.objectURL);
 
-	  		newObjects.push( object );
+
+	  		newJoins.push( join );
+	  		newObjects.push(object);
 	  	})
+	  	this._joins = newJoins;
 	  	this._objects = newObjects;
 	}
 
@@ -279,17 +306,13 @@ export default class ABObjectQuery extends ABObject {
 	 * save our list of objects into our format for persisting on the server
 	 * @param {array} settings 
 	 */
-	exportObjects() {
+	exportJoins() {
 
-		var objects = [];
-		this._objects.forEach((obj)=>{
-			var setting = {
-				objectURL: obj.urlPointer(),
-				linkInfo: obj.linkInfo
-			}
-			objects.push(setting);
+		var joins = [];
+		this._joins.forEach((join)=>{
+			joins.push(join);
 		})
-		return objects;
+		return joins;
 	}
 
 

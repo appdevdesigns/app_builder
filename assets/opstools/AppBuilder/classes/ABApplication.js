@@ -652,6 +652,52 @@ export default class ABApplication extends ABApplicationBase {
 	queryNew(values) {
 		return new ABObjectQuery(values, this);
 	}
+
+
+	/**
+	 * @method queryDestroy()
+	 *
+	 * remove the current ABObjectQuery from our list of ._queries.
+	 *
+	 * @param {ABObject} query
+	 * @return {Promise}
+	 */
+	queryDestroy(query) {
+
+		var remaininQueries = this.queries(function (q) { return q.id != query.id; })
+		this._queries = remaininQueries;
+
+		return this.Model.staticData.queryDestroy(this.id, query.id)
+			.then(() => {
+				// TODO : Should update _AllApplications in 
+			});
+	}
+
+
+	/**
+	 * @method querySave()
+	 *
+	 * persist the current ABObjectQuery in our list of ._queries.
+	 *
+	 * @param {ABObjectQuery} query
+	 * @return {Promise}
+	 */
+	querySave(query) {
+		var isIncluded = (this.queries(function (q) { return q.id == query.id }).length > 0);
+		if (!isIncluded) {
+			this._queries.push(query);
+		}
+
+		return this.Model.staticData.querySave(this.id, query.toObj())
+			.then(() => {
+				// TODO : Should update _AllApplications in 
+			})
+			.catch(()=>{
+				console.error('!!! error with .ABApplication.querySave()');
+			});
+	}
+
+
 }
 
 // export to ABLiveTool

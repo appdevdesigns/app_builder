@@ -8,6 +8,7 @@
 
 // import ABApplication from "../classes/ABApplication"
 import AB_Work_Object from "./ab_work_object"
+import AB_Work_Query from "./ab_work_query"
 import AB_Work_Interface from "./ab_work_interface"
 
 
@@ -31,6 +32,7 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 				backToApplication: L('ab.application.backToApplication', "*Back to Applications page"),
 				synchronize: L('ab.application.synchronize', "*Synchronize"),
 				objectTitle: L('ab.object.title', "*Objects"),
+				queryTitle: L('ab.object.query', "*Queries"),
 				interfaceTitle: L('ab.interface.title', "*Interface")
 			}
 		}
@@ -45,12 +47,14 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 			labelAppName:  	this.unique('label_appname'),
 			tabbar:  		this.unique('tabbar'),
 			tab_object: 	this.unique('tab_object'),
+			tab_query:      this.unique('tab_query'),
 			tab_interface: 	this.unique('tab_interface'),
 			workspace: 		this.unique('workspace'),
 		}
 
 
 		var AppObjectWorkspace = new AB_Work_Object(App);
+		var AppQueryWorkspace = new AB_Work_Query(App);
 		var AppInterfaceWorkspace = new AB_Work_Interface(App);
 
 
@@ -148,6 +152,11 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 											width: App.config.tabWidthMedium
 										},
 										{
+											id: ids.tab_query,
+											value: labels.component.queryTitle,
+											width: App.config.tabWidthMedium
+										},
+										{
 											id: ids.tab_interface,
 											value: labels.component.interfaceTitle,
 											width: App.config.tabWidthMedium
@@ -165,6 +174,7 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 									id: ids.workspace,
 									cells: [
 										AppObjectWorkspace.ui,
+										AppQueryWorkspace.ui,
 										AppInterfaceWorkspace.ui
 									]
 								}
@@ -185,6 +195,7 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 		this.init = function() {
 
 			AppObjectWorkspace.init();
+			AppQueryWorkspace.init();
 			AppInterfaceWorkspace.init();
 
 //// TODO: keep track of the last workspace in application.workspace.lastWorkspace on every
@@ -258,6 +269,13 @@ console.error('TODO: ab_work.logic.synchronize()!');
 						AppObjectWorkspace.show();
 						break;
 
+					// Query Workspace Tab
+					case ids.tab_query:
+
+						// $$(ids.buttonSync).show();
+						AppQueryWorkspace.show();
+						break;
+
 					// Interface Workspace Tab
 					case ids.tab_interface:
 
@@ -285,6 +303,7 @@ console.error('TODO: ab_work.logic.synchronize()!');
 
 				_logic.applicationInit(application);
 				AppObjectWorkspace.applicationLoad(application);
+				AppQueryWorkspace.applicationLoad(application);
 				AppInterfaceWorkspace.applicationLoad(application);
 
 

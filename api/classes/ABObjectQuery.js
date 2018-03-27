@@ -30,8 +30,8 @@ module.exports = class ABObjectQuery extends ABObject {
 }
 */
 
-		// import all our ABObjects 
-	  	this.importObjects(attributes.objects || []);
+		// import all our Joins 
+	  	this.importJoins(attributes.joins || []);
 	  	this.where = attributes.where || {};
 
   	}
@@ -70,7 +70,7 @@ module.exports = class ABObjectQuery extends ABObject {
 
 		/// include our additional objects and where settings:
 
-		result.objects = this.exportObjects();  //objects;
+		result.joins = this.exportJoins();  //objects;
 		result.where  = this.where;
 
 		return result;
@@ -120,9 +120,24 @@ module.exports = class ABObjectQuery extends ABObject {
 
 
 	///
-	/// Objects
+	/// Joins & Objects
 	///
 
+
+
+	/**
+	 * @method joins()
+	 *
+	 * return an array of all the ABObjects for this Query.
+	 *
+	 * @return {array}
+	 */
+	joins (filter) {
+
+		filter = filter || function(){ return true; };
+
+		return this._joins.filter(filter);
+	}
 
 
 	/**
@@ -140,39 +155,33 @@ module.exports = class ABObjectQuery extends ABObject {
 	}
 
 
-	/** 
-	 * @method objectBase
-	 * return the object in our object list that is considered the 'base' object.
-	 * (ie the 1st one added).
-	 * @return {ABObject}
-	 */
-	objectBase() {
-		return this.objects((o)=>{ return o.linkInfo.type.toLowerCase() == 'base'})[0];
-	}
-
 	/**
-	 * @method importObjects
-	 * instantiate a set of objects from the given attributes.
-	 * Our attributes contain a set of ABObject URLs that should already be created in our Application.
+	 * @method importJoins
+	 * instantiate a set of joins from the given attributes.
+	 * Our joins contain a set of ABObject URLs that should already be created in our Application.
 	 * @param {array} settings The different field urls for each field
 	 *					{ }
 	 */
-	importObjects(settings) {
+	importJoins(settings) {
+		var newJoins = [];
 		var newObjects = [];
-	  	settings.forEach((obj) => {
+	  	settings.forEach((join) => {
 
 	  		// Convert our saved settings:
-	  		// {
-	  		// 	   objectURL: 'xxxx',
-	  		//     linkInfo: {} 
-	  		// }
-	  		// into an ABObject with .linkInfo added
+	  		// 		{
+			// 			objectURL:"#/...",
+			// 			fieldID:'adf3we666r77ewsfe',
+			// 			type:[left, right, inner, outer]  // these should match the names of the knex methods
+			// 					=> innerJoin, leftJoin, leftOuterJoin, rightJoin, rightOuterJoin, fullOuterJoin
+			// 		}
 
-	  		var object = this.application.urlResolve(obj.objectURL);
-	  		object.linkInfo = obj.linkInfo;
+	  		var object = this.application.urlResolve(join.objectURL);
 
-	  		newObjects.push( object );
+
+	  		newJoins.push( join );
+	  		newObjects.push(object);
 	  	})
+	  	this._joins = newJoins;
 	  	this._objects = newObjects;
 	}
 
@@ -182,18 +191,15 @@ module.exports = class ABObjectQuery extends ABObject {
 	 * save our list of objects into our format for persisting on the server
 	 * @param {array} settings 
 	 */
-	exportObjects() {
+	exportJoins() {
 
-		var objects = [];
-		this._objects.forEach((obj)=>{
-			var setting = {
-				objectURL: obj.urlPointer(),
-				linkInfo: obj.linkInfo
-			}
-			objects.push(setting);
+		var joins = [];
+		this._joins.forEach((join)=>{
+			joins.push(join);
 		})
-		return objects;
+		return joins;
 	}
+
 
 
 
@@ -495,9 +501,98 @@ module.exports = class ABObjectQuery extends ABObject {
 
 		var query = ABMigration.connection().queryBuilder();
 
-		// step through objects to add in tables:
-		var baseObject = this.objects((o)=>{ return });
-		objects.forEach((o)=>{
+		var registeredBase = false;  // have we marked the base object/table?
+
+
+
+		function makeLink(link, joinTable, A, op, B) {
+			query[link.type](joinTable, function() {
+				this.on(A, op, B);
+			});
+		}
+
+
+		this.links().forEach((link)=>{
+
+			var baseObject = this.application.urlResolve(link.objectURL);
+
+
+			// mark the 1st object as our initial .from() 
+			if (!registeredBase) {
+				query.from(baseObject.dbTableName());
+				registeredBase = true;
+			}
+
+
+			var connectionField = baseObject.fields((f)=>{ return f.id == link.fieldID; })[0];
+			if (!connectionField) return; // no link so skip this turn.
+
+
+			var connectedObject = connectionField.datasourceLink();
+			var joinTable = connectedObject.dbTableName();
+
+			var fieldLinkType = connectionField.linkType();
+			switch(fieldLinkType) {
+
+				case 'one':
+
+					if (connectionField.isSource()) {
+						// the base object can have 1 connected object
+						// the base object has the remote obj's .id in our field
+						// baseObject JOIN  connectedObject ON baseObject.columnName = connectedObject.id
+
+
+						// columnName comes from the baseObject
+						var columnName = connectionField.columnName;
+						var baseClause = baseObject.dbTableName() + '.' + columnName;
+						var connectedClause = joinTable + '.id';
+						makeLink( link, joinTable, baseClause, '=', connectedClause );
+
+					} else {
+						// the base object can have 1 connected object
+						// the base object's .id is in the connected Objects' colum 
+						// baseObject JOIN  connectedObject ON baseObject.id = connectedObject.columnName
+
+						// columnName comes from the baseObject
+						var connectedField = connectionField.fieldLink();
+						if (!connectedField) return;  // this is a problem!
+
+
+						var columnName = connectedField.columnName;
+						var baseClause = baseObject.dbTableName() + '.id';
+						var connectedClause = joinTable + '.' + columnName;
+						makeLink( link, joinTable, baseClause, '=', connectedClause );
+
+					}
+					break;
+
+				case 'many':
+
+					if (connectionField.linkViaType() == 'one') {
+						// the base object can have many connectedObjects
+						// the connected object can only have one base object
+						// the base object's .id is stored in connected objects column
+						// baseObject JOIN connectedObject ON baseObject.id == connectedObject.columnName
+
+						// columnName comes from the baseObject
+						var connectedField = connectionField.fieldLink();
+						if (!connectedField) return;  // this is a problem!
+
+
+						var columnName = connectedField.columnName;
+						var baseClause = baseObject.dbTableName() + '.id';
+						var connectedClause = joinTable + '.' + columnName;
+						makeLink( link, joinTable, baseClause, '=', connectedClause );
+
+					} else {
+
+//// HOW to handle many to many ?
+
+					}
+					break;
+
+			}
+
 
 		})
 
