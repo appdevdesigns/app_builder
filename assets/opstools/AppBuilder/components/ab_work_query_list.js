@@ -527,7 +527,7 @@ select A.subaccount, B.user
 						{
 							objectURL:"#/_objects/5ee6db45-4d9c-458a-9a27-5b7918e7f482",	// Subaccount
 							fieldID:'98258e35-3acc-4413-adfd-69d6c5910fa1',					// Staff
-							type: 'left'													// left join
+							type: 'leftJoin'												// left join
 						}
 					],
 

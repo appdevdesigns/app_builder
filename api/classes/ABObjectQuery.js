@@ -506,13 +506,30 @@ module.exports = class ABObjectQuery extends ABObject {
 
 
 		function makeLink(link, joinTable, A, op, B) {
-			query[link.type](joinTable, function() {
+console.log('link.type:'+ link.type);
+
+			// try to correct some type mistakes:
+			var type = link.type.toLowerCase();
+			var convertHash = {
+				'left':				'leftJoin',
+				'leftjoin':			'leftJoin',
+				'leftouterjoin':	'leftOuterJoin',
+				'right':			'rightJoin',
+				'rightjoin':		'rightJoin',
+				'rightouterjoin':	'rightOuterJoin', 
+				'innerjoin':		'innerJoin',
+				'fullouterjoin':	'fullOuterJoin'
+			}
+			if (convertHash[type]) {
+				type = convertHash[type];
+			}
+			query[type](joinTable, function() {
 				this.on(A, op, B);
 			});
 		}
 
 
-		this.links().forEach((link)=>{
+		this.joins().forEach((link)=>{
 
 			var baseObject = this.application.urlResolve(link.objectURL);
 
@@ -528,7 +545,7 @@ module.exports = class ABObjectQuery extends ABObject {
 			if (!connectionField) return; // no link so skip this turn.
 
 
-			var connectedObject = connectionField.datasourceLink();
+			var connectedObject = connectionField.objectLink();
 			var joinTable = connectedObject.dbTableName();
 
 			var fieldLinkType = connectionField.linkType();
@@ -586,7 +603,38 @@ module.exports = class ABObjectQuery extends ABObject {
 
 					} else {
 
-//// HOW to handle many to many ?
+						// M:N connection
+						// the base object can have Many connectedObjects
+						// the connected object can have Many baseObjects
+						// There is going to be a join table connecting the two:
+						// the base object's .id is stored in connected objects column
+						// baseObject JOIN joinTable ON baseObject.id == joinTable.[baseColumnName]
+						// 		JOIN connectedObject ON joinTable.[connectedObjectName] == connectedObject.id
+
+						//// Make Base Connection
+						// get joinTable
+						joinTable = connectionField.joinTableName();
+
+						// get baseObjectColumn in joinTable
+						var baseObjectColumn = baseObject.name; // AppBuilder.rules.toJunctionTableFK(baseObject.name, connectionField.columnName);
+
+						var baseClause = baseObject.dbTableName()+'.id';
+						var joinClause = joinTable + '.' + baseObjectColumn;
+
+						// make JOIN
+						makeLink(link, joinTable, baseClause, '=', joinClause);
+
+
+						//// Now connect connectedObject
+						// get connectedObjectColumn in joinTable
+						var connectedField = connectionField.fieldLink();
+						var connectedObjectColumn = connectedObject.name; // AppBuilder.rules.toJunctionTableFK(connectedObject.name, connectedField.columnName);
+
+						var connectedClause = connectedObject.dbTableName()+'.id';
+						joinClause = joinTable +'.' + connectedObjectColumn;
+
+						// make JOIN
+						makeLink(link, connectedObject.dbTableName(), connectedClause, '=', joinClause);
 
 					}
 					break;
@@ -595,6 +643,10 @@ module.exports = class ABObjectQuery extends ABObject {
 
 
 		})
+
+console.log();
+console.log('... ending queryFind(): ', query.toSQL() );
+console.log();
 
 		return query;
 		

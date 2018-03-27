@@ -654,7 +654,7 @@ module.exports = {
                 req.user.data);
 
                 // promise for the total count. this was moved below the filters because webix will get caught in an infinte loop of queries if you don't pass the right count
-                var queryCount = object.model().query();
+                var queryCount = object.queryFind();
                 populateFindConditions(queryCount, object, { where: where, includeRelativeData: false }, req.user.data);
                 // added tableName to id because of non unique field error
                 var pCount = queryCount.count('{tableName}.id as count'.replace("{tableName}", object.model().tableName)).first();
@@ -662,7 +662,8 @@ module.exports = {
                 Promise.all([
                     pCount,
                     query
-                ]).then(function (values) {
+                ])
+                .then(function (values) {
                     var result = {};
                     var count = values[0].count;
                     var rows = values[1];
@@ -698,13 +699,17 @@ module.exports = {
 
 
                 })
-                    .catch((err) => {
+                .catch((err) => {
 
-                        res.AD.error(err);
+                    res.AD.error(err);
 
-                    });
+                });
 
 
+            })
+            .catch((err) => {
+                ADCore.error.log("AppBuilder:ABModelController:find(): find() did not complete", {error:err});
+                res.AD.error(err);
             });
 
     },

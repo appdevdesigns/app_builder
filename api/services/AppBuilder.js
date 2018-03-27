@@ -357,6 +357,26 @@ module.exports = {
                 .replace('{sourceName}', sourceTableName)
                 .replace('{targetName}', targetTableName)
                 .replace('{colName}', colName);
+        }, 
+
+
+        /**
+         * AppBuilder.rules.toJunctionTableFK
+         * 
+         * return foriegnkey (FK) column name for a junction table name
+         * 
+         * @param {string} objectName  The name of the Object with a connection
+         * @param {string} columnName  The name of the connection columnName.
+         * @return {string}
+         */
+        toJunctionTableFK: function(objectName, columnName) {
+            
+            var fkName = objectName + '_' + columnName;
+
+            if (fkName.length > 64)
+                fkName = fkName.substring(0, 64);
+
+            return fkName;
         }
     },
 
