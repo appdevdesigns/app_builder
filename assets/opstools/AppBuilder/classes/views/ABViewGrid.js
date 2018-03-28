@@ -285,6 +285,9 @@ export default class ABViewGrid extends ABViewWidget  {
 				label: L('ab.component.label.gridProperties', '*Grid Properties:'),
 				labelWidth: App.config.labelWidthLarge,
 				body:{
+					type: "clean",
+					paddingY: 20,
+					paddingX: 10,
 					rows:[
 						{
 							view:"checkbox",
@@ -324,6 +327,9 @@ export default class ABViewGrid extends ABViewWidget  {
 				label: L('ab.component.label.dataSource', '*Grid Data:'),
 				labelWidth: App.config.labelWidthLarge,
 				body:{
+					type: "clean",
+					paddingY: 20,
+					paddingX: 10,
 			        rows:[
 						{
 							view:"select",
@@ -375,6 +381,9 @@ export default class ABViewGrid extends ABViewWidget  {
 				label: L('ab.component.label.linkedPages', '*Linked Pages:'),
 				labelWidth: App.config.labelWidthLarge,
 				body:{
+					type: "clean",
+					paddingY: 20,
+					paddingX: 10,
 			        rows:[
 						{
 							view:"select",
@@ -430,13 +439,17 @@ export default class ABViewGrid extends ABViewWidget  {
 				label: L('ab.component.label.customizeDisplay', '*Customize Display:'),
 				labelWidth: App.config.labelWidthLarge,
 				body:{
+					type: "clean",
+					paddingY: 20,
+					paddingX: 10,
 					rows: [
 						{
 							cols: [
 								{ 
 								    view:"label", 
 								    label: L("ab.component.label.hiddenFields", "*Hidden Fields:"),
-									width: App.config.labelWidthLarge,
+									css: 'ab-text-bold',
+									width: App.config.labelWidthXLarge,
 								},
 								{
 									view: view,
@@ -495,7 +508,8 @@ export default class ABViewGrid extends ABViewWidget  {
 								{ 
 								    view:"label", 
 								    label: L("ab.component.label.freezeColumns", "*Freeze Columns:"),
-									width: App.config.labelWidthLarge,
+									css: 'ab-text-bold',
+									width: App.config.labelWidthXLarge,
 								},
 								{
 									view: view,
@@ -515,7 +529,7 @@ export default class ABViewGrid extends ABViewWidget  {
 							view: 'counter',
 							name: "height",
 							label: L("ab.component.grid.height", "*Height:"),
-							labelWidth: App.config.labelWidthLarge,
+							labelWidth: App.config.labelWidthXLarge,
 						}
 
 					]

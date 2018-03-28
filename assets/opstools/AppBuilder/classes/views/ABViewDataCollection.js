@@ -325,6 +325,9 @@ export default class ABViewDataCollection extends ABView {
 				label: L('ab.component.datacollection.dataSource', '*Data Source:'),
 				labelWidth: App.config.labelWidthLarge,
 				body: {
+					type: "clean",
+					paddingY: 20,
+					paddingX: 10,
 					rows: [
 						{
 							view: "select",
@@ -365,6 +368,9 @@ export default class ABViewDataCollection extends ABView {
 				label: L('ab.component.datacollection.advancedOptions', '*Advanced Options:'),
 				labelWidth: App.config.labelWidthLarge,
 				body: {
+					type: "clean",
+					paddingY: 20,
+					paddingX: 10,
 					rows: [
 						{
 							cols: [

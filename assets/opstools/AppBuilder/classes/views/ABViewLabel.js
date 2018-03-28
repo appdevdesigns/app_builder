@@ -196,8 +196,11 @@ export default class ABViewLabel extends ABViewWidget  {
 			},
 			{ 
 				view: "fieldset", 
-				label: L('ab.component.label.formatting','*format options:'), 
+				label: L('ab.component.label.formatting','*Format Options:'), 
 				body:{
+					type: "clean",
+					paddingY: 20,
+					paddingX: 10,
 			        rows:[
 						{
 							view: "radio", 
