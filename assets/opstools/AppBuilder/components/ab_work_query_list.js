@@ -533,7 +533,7 @@ select A.subaccount, B.user
 
 					where: { 
 						glue:'and', 
-						rows:[
+						rules:[
 							{
 								"key": "user",
 								"rule": "equals",

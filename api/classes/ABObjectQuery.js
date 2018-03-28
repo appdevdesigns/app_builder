@@ -1,5 +1,6 @@
 
 var path = require('path');
+var _ = require('lodash');
 
 var ABObject = require(path.join(__dirname, 'ABObject'));
 
@@ -495,9 +496,13 @@ module.exports = class ABObjectQuery extends ABObject {
 	 * return a a knex QueryBuilder ready to perform a select() statment.
 	 * NOTE: ObjectQuery overrides this to return queries already joined with 
 	 * multiple tables.
+	 * @param {obj} options  
+	 *		A set of optional conditions to add to the find():
+	 * @param {obj} userData 
+	 * 		The current user's data (which can be used in our conditions.)
 	 * @return {QueryBuilder}
 	 */
-	queryFind() {
+	queryFind(options, userData)  {
 
 		var query = ABMigration.connection().queryBuilder();
 
@@ -656,9 +661,39 @@ console.log('link.type:'+ link.type);
 
 		})
 
-console.log();
-console.log('... ending queryFind(): ', query.toSQL() );
-console.log();
+
+
+		// update our condition to include the one we are defined with:
+		// 
+		if (this.where && this.where.glue) {
+			if (options.where && options.where.glue) {
+
+				// in the case where we have a condition and a condition was passed in
+				// combine our conditions
+				// queryCondition AND givenConditions:
+				var oWhere = _.clone(options.where);
+
+				var newWhere = {
+					glue:'and',
+					rules:[
+						this.where,
+						oWhere
+					]
+				}
+
+				options.where = newWhere;
+
+			} else {
+
+				// if we had a condition and no condition was passed in, 
+				// just use ours:
+				options.where = this.where;
+			}
+		}
+
+		if (options) {
+			this.populateFindConditions(query, options, userData);
+		}
 
 		return query;
 		
@@ -669,15 +704,24 @@ console.log();
 	 * @method queryCount
 	 * return an Objection.js QueryBuilder that is already setup for this object.
 	 * This query is setup to add our count parameter to our returns.
+	 * @param {obj} options  
+	 *		A set of optional conditions to add to the find():
+	 * @param {obj} userData 
+	 * 		The current user's data (which can be used in our conditions.)
+	 * @param {string} tableName 
+	 * 		[optional] the table name to use for the count
 	 * @return {QueryBuilder}
 	 */
-	queryCount() {
+	queryCount(options, userData, tableName) {
 
-		var firstLink = this.joins()[0];
-		var baseObject = this.application.urlResolve(firstLink.objectURL);
+		if (_.isUndefined(tableName)) {
+			var firstLink = this.joins()[0];
+			var baseObject = this.application.urlResolve(firstLink.objectURL);
+			tableName = baseObject.dbTableName();
+		}
 		
-		// added tableName to id because of non unique field error
-		return this.queryFind().count('{tableName}.id as count'.replace("{tableName}", baseObject.dbTableName()));
+		// call our parent queryCount() with correct tableName
+		return super.queryCount(options, userData, tableName);
 	}
 
 
