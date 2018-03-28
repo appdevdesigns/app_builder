@@ -187,8 +187,8 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 
                 // set data:
                 query.model().findAll()
-                .then((data)=>{
-                    data.forEach((d)=>{
+                .then((response)=>{
+                    response.data.forEach((d)=>{
                         DataTable.add(d);
                     })
                 })

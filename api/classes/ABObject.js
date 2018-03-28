@@ -472,6 +472,19 @@ module.exports = class ABObject extends ABObjectBase {
 
 
 	/**
+	 * @method queryCount
+	 * return an Objection.js QueryBuilder that is already setup for this object.
+	 * NOTE: ObjectQuery overrides this to return queries already joined with 
+	 * multiple tables.
+	 * @return {QueryBuilder}
+	 */
+	queryCount() {
+		// added tableName to id because of non unique field error
+		return this.queryFind().count('{tableName}.id as count'.replace("{tableName}", this.model().tableName));
+	}
+
+
+	/**
 	 * @method requestParams
 	 * Parse through the given parameters and return a subset of data that
 	 * relates to the fields in this object.

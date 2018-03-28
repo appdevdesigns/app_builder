@@ -504,6 +504,18 @@ module.exports = class ABObjectQuery extends ABObject {
 		var registeredBase = false;  // have we marked the base object/table?
 
 
+		//// Add in our fields:
+		var columns = [];
+		this.fields().forEach((f)=>{
+			var obj = f.object;
+			var field = obj.dbTableName()+'.'+f.columnName;
+			columns.push(field);
+		})
+		query.columns(columns);
+
+
+
+		//// Now compile our joins:
 
 		function makeLink(link, joinTable, A, op, B) {
 console.log('link.type:'+ link.type);
@@ -650,6 +662,22 @@ console.log();
 
 		return query;
 		
+	}
+
+
+	/**
+	 * @method queryCount
+	 * return an Objection.js QueryBuilder that is already setup for this object.
+	 * This query is setup to add our count parameter to our returns.
+	 * @return {QueryBuilder}
+	 */
+	queryCount() {
+
+		var firstLink = this.joins()[0];
+		var baseObject = this.application.urlResolve(firstLink.objectURL);
+		
+		// added tableName to id because of non unique field error
+		return this.queryFind().count('{tableName}.id as count'.replace("{tableName}", baseObject.dbTableName()));
 	}
 
 
