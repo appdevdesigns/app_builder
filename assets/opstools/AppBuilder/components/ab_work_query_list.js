@@ -6,7 +6,7 @@
  *
  */
 
-// import ABListNewObject from "./ab_work_query_list_newObject"
+import ABListNewQuery from "./ab_work_query_list_newQuery"
 import ABListEditMenu from "./ab_common_popupEditMenu"   // "./ab_work_object_list_popupEditMenu"
 
 
@@ -54,7 +54,7 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 
 
 // // There is a Popup for adding a new Object:
-// var PopupNewObjectComponent = new ABListNewObject(App);
+		var PopupNewQueryComponent = new ABListNewQuery(App);
 
 		// the popup edit list for each entry in the list.
 		var PopupEditObjectComponent = new ABListEditMenu(App);
@@ -205,9 +205,9 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 				$$(ids.list).adjust();
 			}
 
-// PopupNewObjectComponent.init({
-// 	onDone: _logic.callbackNewObject
-// });
+			PopupNewQueryComponent.init({
+				onDone: _logic.callbackNewObject
+			});
 
 			PopupEditObjectComponent.init({
 				onClick: _logic.callbackObjectEditorMenu
@@ -280,7 +280,7 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 
 
 				// prepare our Popup with the current Application
-// PopupNewObjectComponent.applicationLoad(application);
+				PopupNewQueryComponent.applicationLoad(application);
 				
 			},
 
@@ -492,7 +492,7 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 			 */
 			clickNewObject:function(selectNew, callback) {
 				// show the new popup
-				// PopupNewObjectComponent.show(selectNew, callback);
+				PopupNewQueryComponent.show(selectNew, callback);
 
 
 // MY TEST QUERY:
@@ -515,18 +515,18 @@ select A.subaccount, B.user
 
 					fields:[
 						{   // left off: only define fields that exist in objects:
-							// Subaccount.Subaccount 
-							fieldURL:"#/_objects/5ee6db45-4d9c-458a-9a27-5b7918e7f482/_fields/223d227d-bdf9-4a1c-8d3d-990722d4e6fb",
+							// Family.Name 
+							fieldURL:"#/_objects/4dffd3c3-f64a-4e48-85e4-4f27943f9d22/_fields/c0388bf7-f5f2-4fb7-8b33-6843dba4db7c",
 						},
-						{   // Staff.User
-							fieldURL:"#/_objects/1e32fa67-05d1-4c3c-ad76-606101e19399/_fields/ab4e8105-9522-4605-bb84-217fcb349514",
+						{   // Pets.Name
+							fieldURL:"#/_objects/b738b3d1-84fe-46ff-aab3-7c9a3ea2b3bd/_fields/44f8e001-f669-4a52-9cb6-f3bfcd4f5c82",
 						},
 					],
 
 					joins: [
 						{
-							objectURL:"#/_objects/5ee6db45-4d9c-458a-9a27-5b7918e7f482",	// Subaccount
-							fieldID:'98258e35-3acc-4413-adfd-69d6c5910fa1',					// Staff
+							objectURL:"#/_objects/4dffd3c3-f64a-4e48-85e4-4f27943f9d22",	// Family
+							fieldID:'4ad1094e-6ba9-491b-a471-4700b6c3b707',					// Pet
 							type: 'leftJoin'												// left join
 						}
 					],
