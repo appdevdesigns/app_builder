@@ -259,6 +259,7 @@ function populateFindConditions(query, object, options, userData) {
             var conversionHash = {
                 'equals'        : '=',
                 'not_equal'     : '<>',
+                'not_equals'    : '<>',   // catch existing wrong entries
                 'is_empty'      : '=',
                 'is_not_empty'  : '<>',
                 'greater'       : '>',
@@ -803,13 +804,16 @@ module.exports = {
 
 
                 })
-                    .catch((err) => {
+                .catch((err) => {
+console.log(err);
+                    res.AD.error(err);
 
-                        res.AD.error(err);
-
-                    });
+                });
 
 
+            })
+            .catch((err) => {
+console.log(err);
             });
 
     },
