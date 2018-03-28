@@ -327,11 +327,8 @@ class ABFieldString extends ABField {
 	 */
 	setValue(item, rowData) {
 		
-		if (!item) return;
-
-		var val = rowData[this.columnName] || "";
-
-		item.setValue(val);
+		super.setValue(item, rowData, "");
+	
 	};
 		
 

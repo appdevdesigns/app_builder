@@ -582,7 +582,7 @@ class ABFieldFile extends ABField {
 		}
 
 		var html = [
-			'<div class="file-data-field-icon" style="text-align: center; height: inherit; display: table-cell; vertical-align: middle; border: 2px dotted #CCC; border-radius: 10px; font-size: 11px; line-height: 13px; padding: 0 10px; '+iconDisplay+'"><i class="fa fa-file fa-2x" style="opacity: 0.6; font-size: 32px; margin-top: 3px; margin-bottom: 5px;"></i>#drag#</div>',
+			'<div class="file-data-field-icon" style="text-align: center; height: inherit; display: table-cell; vertical-align: middle; border: 2px dotted #CCC; background: #FFF; border-radius: 10px; font-size: 11px; line-height: 13px; padding: 0 10px; '+iconDisplay+'"><i class="fa fa-file fa-2x" style="opacity: 0.6; font-size: 32px; margin-top: 3px; margin-bottom: 5px;"></i>#drag#</div>',
 			'<div class="file-data-field-name" style="' + fileDisplay + ' width:100%; height:100%; position:relative; "><a target="_blank" href="' + fileURL +'">' + name + '</a>#remove#</div>',
 		].join('');
 
@@ -608,26 +608,35 @@ class ABFieldFile extends ABField {
 	
 	setValue(item, rowData) {
 		var domNode = item.$view;
+		
+		if (!domNode) return;
+		
+		var val = rowData[this.columnName];
+		if (typeof val == 'undefined') {
+			// assume they just sent us a single value
+			val = rowData;
+		}		
 
 		var fileicon = domNode.querySelector('.file-data-field-icon');
 		if (fileicon)
-			fileicon.style.display = rowData[this.columnName] ? 'none' : 'block';
+			fileicon.style.display = val ? 'none' : 'block';
 
 		var file = domNode.querySelector('.file-data-field-name');
 		if (file) {
 
 			var fileDeleteIcon = file.querySelector('.ab-delete-photo');
 			if (fileDeleteIcon)
-				fileDeleteIcon.style.display = rowData[this.columnName] ? 'block' : 'none';
+				fileDeleteIcon.style.display = val ? 'block' : 'none';
 
-			file.style.display = rowData[this.columnName] ? 'block' : 'none';
-			file.setAttribute('file-uuid', rowData[this.columnName] ? rowData[this.columnName].uuid : "");
+			file.style.display = val ? 'block' : 'none';
+			file.setAttribute('file-uuid', val ? val.uuid : "");
 			
 			var fileLink = file.querySelector('a');
-			var fileURL =  '/opsportal/file/' + this.object.application.name + '/' + (rowData[this.columnName] ? rowData[this.columnName].uuid : "");
+			var fileURL =  '/opsportal/file/' + this.object.application.name + '/' + (val ? val.uuid : "");
 			fileLink.href = fileURL;
-			fileLink.innerHTML = (rowData[this.columnName] ? rowData[this.columnName].filename : "");
+			fileLink.innerHTML = (val ? val.filename : "");
 		}
+
 	}
 	
 	/**
