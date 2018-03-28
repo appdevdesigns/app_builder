@@ -235,11 +235,10 @@ export default class AB_Work_Object_List_NewObject_External extends OP.Component
                         saveButton.enable();
                         _logic.busyEnd();
 
-                        var newObj = {}; // the import object                       
-
                         objectList.forEach(objValue => {
 
-                            var indexObj = -1;
+                            var indexObj = -1,
+                                updateObj = currentApp.objectNew(objValue); // the import object
 
                             currentApp.objects().forEach((obj, index) => {
                                 if (obj.id == objValue.id)
@@ -248,18 +247,18 @@ export default class AB_Work_Object_List_NewObject_External extends OP.Component
 
                             // Update a object into list
                             if (indexObj > -1){
-                                currentApp.objects()[indexObj] = currentApp.objectNew(objValue);
+                                currentApp._objects[indexObj] = updateObj;
                             }
                             // Add new object to list
                             else {
-                                newObj = currentApp.objectNew(objValue);
-                                currentApp.objects().push(newObj);
+                                currentApp._objects.push(updateObj);
                             }
+
+                            _logic.callbacks.onDone(updateObj);
 
                         });
 
-
-                        _logic.callbacks.onDone(newObj);
+                        // _logic.callbacks.onDone(newObj);
                     })
                     .catch((err) => {
                         console.log('ERROR:', err);
