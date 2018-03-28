@@ -383,19 +383,33 @@ PopupRecordRule.qbFixAfterShow();
 					onChange: _logic.selectSource
 				}
 			},
+			
+			
 			{
-				name: 'fields',
-				view: 'list',
-				select: false,
-				minHeight: 200,
-				template: _logic.listTemplate,
-				type: {
-					markCheckbox: function (item) {
-						return "<span class='check webix_icon fa-" + (item.selected ? "check-" : "") + "square-o'></span>";
-					}
-				},
-				onClick: {
-					"check": _logic.check
+				view: "fieldset",
+				label: L('ab.components.form.formFields', '*Form Fields:'),
+				labelWidth: App.config.labelWidthLarge,
+				body: {
+					type: "clean",
+					paddingY: 20,
+					paddingX: 10,
+					rows: [
+						{
+							name: 'fields',
+							view: 'list',
+							select: false,
+							minHeight: 200,
+							template: _logic.listTemplate,
+							type: {
+								markCheckbox: function (item) {
+									return "<span class='check webix_icon fa-" + (item.selected ? "check-" : "") + "square-o'></span>";
+								}
+							},
+							onClick: {
+								"check": _logic.check
+							}
+						}
+					]
 				}
 			},
 			{
@@ -443,6 +457,9 @@ PopupRecordRule.qbFixAfterShow();
 				label: L('ab.components.form.rules', '*Rules:'),
 				labelWidth: App.config.labelWidthLarge,
 				body: {
+					type: "clean",
+					paddingY: 20,
+					paddingX: 10,
 					rows: [
 						{
 							cols: [

@@ -239,6 +239,9 @@ export default class ABViewPage extends ABViewContainer {
                 label: L('ab.component.page.dataCollections', '*Data Collections:'),
                 labelWidth: App.config.labelWidthLarge,
                 body: {
+                    type: "clean",
+                    paddingY: 20,
+                    paddingX: 10,
                     rows: [
                         {
                             cols: [
@@ -267,9 +270,12 @@ export default class ABViewPage extends ABViewContainer {
             {
                 view: "fieldset",
                 name: "pagePermissionPanel",
-                label: L('ab.component.page.pagePermissions', '*Page Pemissions:'),
+                label: L('ab.component.page.pagePermissions', '*Page Permissions:'),
                 labelWidth: App.config.labelWidthLarge,
                 body: {
+                    type: "clean",
+                    paddingY: 20,
+                    paddingX: 10,
                     rows: [
                         {
             				name: 'permissions',

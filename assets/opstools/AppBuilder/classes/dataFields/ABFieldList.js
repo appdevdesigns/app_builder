@@ -790,13 +790,22 @@ class ABFieldList extends ABFieldSelectivity {
 
 
 	setValue(item, rowData) {
+
 		if (this.settings.isMultiple) {
+			
+			var val = rowData[this.columnName];
+			if (typeof val == 'undefined') {
+				// assume they just sent us a single value
+				val = rowData;
+			}
+			
 			// get selectivity dom
 			var domSelectivity = item.$view.querySelector('.list-data-values');
 			// set value to selectivity
-			this.selectivitySet(domSelectivity, rowData[this.columnName], this.App);
+			this.selectivitySet(domSelectivity, val, this.App);
+			
 		} else {
-			item.setValue(rowData[this.columnName]);
+			super.setValue(item, rowData);  
 		}
 	}
 
