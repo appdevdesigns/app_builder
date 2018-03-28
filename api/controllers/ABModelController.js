@@ -77,7 +77,6 @@ function updateRelationValues(object, id, updateRelationParams) {
                             record
                                 .$relatedQuery(clearRelationName)
                                 .unrelate()
-                                .where(objectLink.PK(), '=', objectLink.PK()) // Unrelates all of data
                                 .catch(err => reject(err))
                                 .then(() => { resolve(); });
 
@@ -117,7 +116,8 @@ function updateRelationValues(object, id, updateRelationParams) {
 
                                 if (record == null) return resolve();
 
-                                record.$relatedQuery(relationName).relate(val)
+                                record.$relatedQuery(relationName)
+                                    .relate(val)
                                     .catch(err => reject(err))
                                     .then(() => { resolve(); });
 
@@ -592,12 +592,12 @@ module.exports = {
                     query.insert(createParams)
                         .then((newObj) => {
 
-                            var updateTasks = updateRelationValues(object, newObj.id, updateRelationParams);
+                            var updateTasks = updateRelationValues(object, newObj[object.PK()], updateRelationParams);
 
 
                             if (object.isExternal &&
                                 createParams.translations)
-                                updateTasks.push(updateTranslationsValues(object, newObj.id, createParams.translations, true));
+                                updateTasks.push(updateTranslationsValues(object, newObj[object.PK()], createParams.translations, true));
 
 
                                 // update relation values sequentially
@@ -616,7 +616,7 @@ module.exports = {
                                                 {
                                                     key: object.PK(),
                                                     rule: "equals",
-                                                    value: newObj.id
+                                                    value: newObj[object.PK()] || ''
                                                 }
                                             ]
                                         },
@@ -898,7 +898,7 @@ console.log(err);
                         // Push the ids of the related data into an array so we can use them in a query
                         var relatedIds = [];
                         oldItem[0][relationName].forEach((old) => {
-                            relatedIds.push(old.id);
+                            relatedIds.push(old.id); // TODO: support various id
                         });
                         // Get all related items info
                         var queryRelated = relatedObject.model().query();
@@ -940,9 +940,7 @@ console.log(err);
             function (next) {
                 // Now we can delete because we have the current record saved as oldItem and our related records saved as relatedItems
                 object.model().query()
-                    .delete()
-                    .where(object.PK(), '=', id)
-                    // .deleteById(id)
+                    .deleteById(id)
                     .then((numRows) => {
 
                         res.AD.success({ numRows: numRows });

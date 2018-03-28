@@ -298,6 +298,10 @@ module.exports = class ABObject extends ABObjectBase {
 					return tableName;
 				}
 
+				static get idColumn() {
+					return currObject.PK();
+				}
+
 				static get jsonSchema () {
     				return jsonSchema
     			}

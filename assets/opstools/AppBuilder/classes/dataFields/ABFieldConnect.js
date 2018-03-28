@@ -661,7 +661,8 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 				// M:1 - get data that's only empty relation value
 				if (this.settings.linkType == 'many' && this.settings.linkViaType == 'one') {
-					where[linkedCol.columnName] = null;
+					where[linkedCol.columnName] = 'null';
+					// where[linkedCol.columnName] = null;
 				}
 				// 1:1
 				else if (this.settings.linkType == 'one' && this.settings.linkViaType == 'one') {
@@ -674,7 +675,8 @@ class ABFieldConnect extends ABFieldSelectivity {
 					}
 					// 1:1 - get data that's only empty relation value by query null value from link table
 					else {
-						where[linkedCol.columnName] = null;
+						where[linkedCol.columnName] = 'null';
+						// where[linkedCol.columnName] = null;
 					}
 				}
 
