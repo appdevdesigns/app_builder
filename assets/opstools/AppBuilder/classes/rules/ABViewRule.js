@@ -71,6 +71,7 @@ export default class ABViewRule {
 			common: App.labels,
 			component: {
 				action: L("ab.component.form.action", "*Action"),
+				actionPlaceholder: L("ab.component.form.actionPlaceholder", "*Choose an action"),
 				when: L("ab.component.form.when", "*When"),
 				values: L("ab.component.form.values", "*Values")
 			}
@@ -156,7 +157,11 @@ export default class ABViewRule {
 
 
 			selectAction:(newValue, oldVal) => {
-
+				if (newValue) {
+					$$(this.ids.component).getChildViews().forEach((views) => {
+						views.show();
+					});
+				}
 				// bonus:  save current state of previous Action
 				var prevAction = this.getAction(oldVal);
 				if (prevAction) {
@@ -193,16 +198,20 @@ export default class ABViewRule {
 		return {
 			id: this.ids.component,
 			view: "layout",
-			css: "ab-component-form-rule",
+			css: "ab-component-form-rules",
+			padding: 20,
+			// margin: 10,
 
-// this should be a CSS setting: App.config.xxxx
-width: 680,
+			// this should be a CSS setting: App.config.xxxx
+			// width: 680,
+			type: "line",
 			rows: [
 				{
 					view: "template",
-					css: "ab-component-form-rule",
+					css: "ab-component-form-rules-delete",
 					template: '<i class="fa fa-trash ab-component-remove"></i>',
 					height: 30,
+					borderless: true,
 					hidddatasourceen: this.removable == false,
 					onClick: {
 						"ab-component-remove":  (e, id, trg) => {
@@ -215,6 +224,7 @@ width: 680,
 					id: this.ids.selectAction,
 					view: "richselect",
 					label: this.labels.component.action,
+					placeholder: this.labels.component.actionPlaceholder,
 					labelWidth: this.App.config.labelWidthLarge,
 					options: this.actionDropList,
 					on: {
@@ -225,13 +235,10 @@ width: 680,
 				},
 
 
-				// When
-				this.objectQB.ui,
-
-
 				// Values
 				{
 					for: "values",
+					hidden: true,
 					cells: [
 						{
 							view: 'layout',
@@ -252,7 +259,12 @@ width: 680,
 							]
 						},
 					]
-				}
+				},
+				
+				// When
+				this.objectQB.ui,
+
+
 			]
 		}
 	}

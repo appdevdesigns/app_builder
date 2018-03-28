@@ -118,24 +118,53 @@ export default class ABViewQueryBuilderObjectFieldConditions {
 		// internal list of Webix IDs to reference our UI components.
 		var ids = this.ids = {
 			component: myUnique('qbObjectFieldConditions'),
-			queryBuilder: myUnique('qBuilder')
+			queryBuilder: myUnique('qBuilder'),
+			queryBuilderContainer: myUnique('qBuilderContainer'),
+			showQBButton: myUnique('showQBButton')
 		};
 
 
 		// webix UI definition:
 		this.ui = {
-			cols: [
+			view: "layout",
+			hidden: true,
+			type: "line",
+			rows: [
 				{
-				    view: "querybuilder",
-				    id: ids.queryBuilder,
-				    fields: this.conditionFields()
+					id: ids.showQBButton,
+					cols: [
+						{ fillspace: true },
+						{
+							view: "button",
+							name: "addqb",
+							value: "Add Custom Conditions",
+							autowidth: true,
+							click: function () {
+								$$(ids.queryBuilderContainer).show();
+								$$(ids.showQBButton).hide();
+								// _logic.buttonCancel();
+							}
+						},
+						{ fillspace: true }
+					]
+				},
+				{
+					hidden: true,
+					id: ids.queryBuilderContainer,
+					cols: [
+						{
+							view: "querybuilder",
+							id: ids.queryBuilder,
+							fields: this.conditionFields()
+						}
+					]
 				}
 			]
 		};
 
 		// tack on a label if provided.
 		if (this.label) {
-			this.ui.cols.unshift({
+			this.ui.rows[1].cols.unshift({
 				view: 'label',
 				css: 'ab-text-bold',
 				label: this.label,
@@ -221,6 +250,10 @@ export default class ABViewQueryBuilderObjectFieldConditions {
 				var QB = $$(ids.queryBuilder);
 				if (QB) {
 					QB.setValue(values);
+					if (values[0].rules && values[0].rules.length) {
+						$$(ids.queryBuilderContainer).show();
+						$$(ids.showQBButton).hide();
+					}
 				}
 			}
 

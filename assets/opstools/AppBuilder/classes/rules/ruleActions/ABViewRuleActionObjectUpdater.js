@@ -45,6 +45,7 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 
 				errorRequired: L("ab.ruleAction.Update.required", "*A value is required"),
 				set: L("ab.component.form.set", "*Set"),
+				setPlaceholder: L("ab.component.form.setPlaceholder", "*Choose a field"),
 				to: L("ab.component.form.to", "*To"),
 			}
 		};
@@ -327,7 +328,7 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 					field.isValidData(obj, validator);
 
 					// if value is empty, this is also an error:
-					if ((value == '') 
+					if ((value == '' || value == null) 
 						|| ((Array.isArray(value)) && (value.length == 0))) {
 
 						validator.addError(field.columnName, this.labels.component.errorRequired);
@@ -389,7 +390,7 @@ if (field.key == 'user') {
 
 				// Show custom display of data field
 				if (field.customDisplay)
-					field.customDisplay(field, this.App, $row.getChildViews()[3].$view);
+					field.customDisplay(field, this.App, $row.getChildViews()[3].$view, true, true);
 
 			
 			},
@@ -397,7 +398,8 @@ if (field.key == 'user') {
 			setValue: (data) => {
 				$$(ids.field).setValue(data.fieldID);
 					// note: this triggers our _logic.selectField() fn.
-				$$(ids.value).setValue(data.value);	
+				var field = this.getUpdateObjectField( data.fieldID );
+				field.setValue($$(ids.value), data.value);
 			},
 
 			toSettings: () => {
@@ -409,11 +411,12 @@ if (field.key == 'user') {
 
 					var data = {};
 					data.fieldID = $$(ids.field).getValue();
-					data.value = $$(ids.value).getValue();
 
+					var valueField = $$(ids.value);
+					var field = this.getUpdateObjectField( data.fieldID );
+					
+					data.value = field.getValue(valueField, {});
 					data.op = 'set';  // possible to create other types of operations.
-
-					var field = this.getUpdateObjectField(data.fieldID);
 					data.type = field.key;
 
 					return data;
@@ -432,13 +435,15 @@ if (field.key == 'user') {
 				{
 					// Label
 					view: 'label',
-					width: 40,
+					autowidth: true,
 					label: this.labels.component.set
 				},
 				{
 					// Field list
 					view: "combo",
+					placeholder: this.labels.component.setPlaceholder,
 					id: ids.field,
+					height: 32,
 					options: _logic.getFieldList(true),
 					on: {
 						onChange: function (columnId) {
@@ -449,7 +454,7 @@ if (field.key == 'user') {
 				{
 					// Label
 					view: 'label',
-					width: 40,
+					autowidth: true,
 					label: this.labels.component.to
 				},
 
