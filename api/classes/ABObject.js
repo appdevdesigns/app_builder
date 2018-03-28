@@ -421,7 +421,7 @@ module.exports = class ABObject extends ABObjectBase {
 						var joinTablename = f.joinTableName(),
 							joinColumnNames = f.joinColumnNames(),
 							sourceTableName,
-							sourcePkName
+							sourcePkName,
 							targetTableName,
 							targetPkName;
 
