@@ -10,6 +10,7 @@ import AB_Work_Interface_List_NewPage_BlankPage from "./ab_work_interface_list_n
 import AB_Work_Interface_List_NewPage_QuickPage from "./ab_work_interface_list_newPage_quickPage"
 import ABPage from '../classes/views/ABViewPage'
 
+var uuid = require('uuid');
 
 
 export default class AB_Work_Interface_List_NewPage extends OP.Component {  
@@ -184,6 +185,11 @@ width: 650,
 				} else {
 					page = CurrentApplication.pageNew(values);
 				}
+				
+				// Our page.name needs to be unique and just using the label as the value has caused problems
+				// when a user changes the page name on an old page and creates a new page with the old pages name,
+				// placing the code here will prevent this from happening with both blank and quick pages
+				page.name = page.name + "_" + uuid("v4").split("-")[1];
 
 				var validator = page.isValid(values);
 				if (validator.fail()) {
