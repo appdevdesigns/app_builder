@@ -170,9 +170,9 @@ export default class ABViewFormSelectSingle extends ABViewFormField {
 
 		var component = super.component(App);
 		var field = this.field();
-		var form = this.formComponent();
+		
 
-		var idBase = 'ABViewFormSelectSingle_' + this.id + "_f_" + form.uniqueInstanceID;
+		var idBase = this.parentFormUniqueID('ABViewFormSelectSingle_' + this.id + "_f_");
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		}

@@ -325,6 +325,9 @@ export default class ABViewDataCollection extends ABView {
 				label: L('ab.component.datacollection.dataSource', '*Data Source:'),
 				labelWidth: App.config.labelWidthLarge,
 				body: {
+					type: "clean",
+					paddingY: 20,
+					paddingX: 10,
 					rows: [
 						{
 							view: "select",
@@ -365,6 +368,9 @@ export default class ABViewDataCollection extends ABView {
 				label: L('ab.component.datacollection.advancedOptions', '*Advanced Options:'),
 				labelWidth: App.config.labelWidthLarge,
 				body: {
+					type: "clean",
+					paddingY: 20,
+					paddingX: 10,
 					rows: [
 						{
 							cols: [
@@ -838,6 +844,10 @@ export default class ABViewDataCollection extends ABView {
 
 			var rowData = data.data;
 
+			// normalize data before add to data collection
+			var model = this.datasource.model();
+			model.normalizeData(rowData);
+
 			// filter condition before add 
 			if (!this.__filterComponent.isValid(rowData))
 				return;
@@ -865,12 +875,64 @@ export default class ABViewDataCollection extends ABView {
 			var values = data.data;
 
 			if (this.__dataCollection.exists(values.id)) {
+				// normalize data before update data collection
+				var model = this.datasource.model();
+				model.normalizeData(values);
 				this.__dataCollection.updateItem(values.id, values);
 
 				// If the update item is current cursor, then should tell components to update.
 				var currData = this.getCursor();
 				if (currData && currData.id == values.id) {
 					this.emit("changeCursor", currData);
+				}
+			}
+
+			// filter link data collection's cursor
+			var linkDc = this.dataCollectionLink;
+			if (linkDc) {
+				var linkCursor = linkDc.getCursor();
+				this.filterLinkCursor(linkCursor);
+			}
+
+		});
+
+		// We are subscribing to notifications from the server that an item may be stale and needs updating
+		// We will improve this later and verify that it needs updating before attempting the update on the client side
+		AD.comm.hub.subscribe('ab.datacollection.stale', (msg, data) => {
+			// Verify the datasource has the object we are listening for if not just stop here
+			if (this.datasource &&
+				this.datasource.id != data.objectId)
+				return;
+
+			// updated values
+			var values = data.data;
+			if (values) {
+
+				if (this.__dataCollection.exists(values.id)) {
+					// this data collection has the record so we need to query the server to find out what it's latest data is so we can update all instances
+					this.model.findAll({ id:values.id }).then((res)=>{
+						
+						// check to make sure there is data to work with
+						if (Array.isArray(res.data) && res.data.length) {
+							// tell the webix data collection to update using their API with the row id (values.id) and content (res.data[0]) 
+							this.__dataCollection.updateItem(values.id, res.data[0]);
+
+							// If the update item is current cursor, then should tell components to update.
+							var currData = this.getCursor();
+							if (currData && currData.id == values.id) {
+								this.emit("changeCursor", currData);
+							}
+						} else {
+							// If there is no data in the object then it was deleted...lets clean things up
+							// If the deleted item is current cursor, then the current cursor should be cleared.
+							var currId = this.getCursor();
+							if (currId == values.id)
+								this.emit("changeCursor", null);
+
+							this.__dataCollection.remove(values.id);
+						}
+					});
+
 				}
 			}
 
@@ -895,9 +957,9 @@ export default class ABViewDataCollection extends ABView {
 			if (this.__dataCollection.exists(deleteId)) {
 
 				// If the deleted item is current cursor, then the current cursor should be cleared.
-				var currId = this.__dataCollection.getCursor();
+				var currId = this.getCursor();
 				if (currId == deleteId)
-					this.__dataCollection.setCursor(null);
+					this.emit("changeCursor", null);
 
 				this.__dataCollection.remove(deleteId);
 			}
@@ -1075,13 +1137,10 @@ export default class ABViewDataCollection extends ABView {
 
 		// set query condition
 		var cond = {
-			where: {
-				where: wheres,
-				sort: sorts,
-				height: defaultHeight
-			},
+			where: wheres,
 			limit: limit || 20,
-			skip: start || 0
+			skip: start || 0,
+			sort: sorts,
 		};
 
 		// load all data
@@ -1156,13 +1215,13 @@ export default class ABViewDataCollection extends ABView {
 					this.filterLinkCursor(linkData);
 
 					// add listeners when cursor of link data collection is changed
-					// linkDc.removeListener("changeCursor", this.filterLinkCursor)
-					// 	.on("changeCursor", this.filterLinkCursor);
-
-					if (this.changeCursorParentEventId == null)
-						this.changeCursorParentEventId = linkDc.on("changeCursor", (currData) => {
+					this.eventAdd({
+						emitter: linkDc,
+						eventName: "changeCursor",
+						listener: (currData) => {
 							this.filterLinkCursor(currData);
-						});
+						}
+					});
 
 				}
 

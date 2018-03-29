@@ -203,7 +203,14 @@ export default class ABFieldComponent {
 			 */
 			isValid: () => {
 
-				var isValid = $$(ids.component).validate();
+				var isValid = $$(ids.component).validate(),
+					colName = $$(ids.component).getValues()['columnName'];
+
+				// validate reserve column names
+				if (ABField.reservedNames.indexOf(colName.trim().toLowerCase()) > -1) {
+					$$(ids.component).markInvalid('columnName', 'Could not use this column name');
+					return false;
+				}
 
 				// perform provided .isValid()
 				if (this.logic.isValid) {

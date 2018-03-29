@@ -16,8 +16,8 @@ export default class ABViewFormPropertyRecordRule extends OP.Component {
 		var labels = {
 			common: App.labels,
 			component: {
-				header: L("ab.component.form.recordRule", "*Record Rules"),
-				addNewRule: L("ab.component.form.addNewRule", "*Add new rule"),
+				header: L("ab.components.form.recordRules", "*Record Rules"),
+				addNewRule: L("ab.components.form.addNewRule", "*Add new rule"),
 
 				action: L("ab.component.form.action", "*Action"),
 				actionOption1: L("ab.component.form.recordrule.action.updateThisRecord", "*Update this record"),

@@ -27,12 +27,13 @@ export default class ABViewRuleAction {
 	 *      The shared App object that is created in OP.Component
 	 * @param {string} idBase
 	 *      Identifier for this component
+	 * @param {ABViewForm} currentForm	the current form this Action is associated with.
 	 */
-	constructor() {
+	constructor(App, idBase, currentForm) {
 
 		this.key = 'ABViewRuleAction';
 
-		this.currentObject = null;  // the current ABObject we are associated with.
+		this.queryObject = null;  // the current ABObject we use to create QueryBuilder information.
 
 		this.currentForm = null;
 
@@ -40,6 +41,9 @@ export default class ABViewRuleAction {
 
 		this.valueRules = {};   // the initial Value Rules for this Action
 								// The Action Subclass defines what this {} is.
+
+
+		this.currentForm = currentForm;  // the ABViewForm object that this rule Action is tied to.
 	}
 
 
@@ -158,9 +162,35 @@ export default class ABViewRuleAction {
 	//					    { id:"age",     value:"Age",        type:"number" },
 	//					    { id:"bdate",   value:"Birth Date", type:"date" }
 	//					]
-	conditionFields(isProcessing) {
-		console.error('!!! ABViewRuleAction.conditionFields() should be overridden by child object.');
-		return [];
+	conditionFields() {
+		
+		var fieldTypes = ['string', 'number', 'date'];
+
+		var currFields = [];
+
+		if (this.queryObject) {
+			this.queryObject.fields().forEach((f)=>{
+
+				if (fieldTypes.indexOf(f.key) != -1) {
+
+					// NOTE: the .id value must match the obj[.id]  in the data set
+					// so if your object data looks like:
+					// 	{
+					//		name_first:'Neo',
+					//		name_last: 'The One'
+					//  },
+					// then the ids should be:
+					// { id:'name_first', value:'xxx', type:'string' }
+					currFields.push({
+						id: f.columnName,
+						value: f.label,
+						type: f.key
+					});
+				}
+			})
+		}
+
+		return currFields;
 	}
 
 
@@ -175,7 +205,15 @@ export default class ABViewRuleAction {
 	// objectLoad
 	// save the current object this Action is associated with.
 	objectLoad(object) {
-		this.currentObject = object;
+// this.currentObject = object;				// DO WE NEED THIS?
+		this.queryObjectLoad(object);
+	}
+
+
+	// queryObjectLoad
+	// save the current object this Action is using to build query rules.
+	queryObjectLoad(object) {
+		this.queryObject = object;
 	}
 
 	formLoad(form) {
@@ -241,5 +279,17 @@ export default class ABViewRuleAction {
 		// require the child to insert the valueRules
 		return settings;
 	}
+
+
+
+// NOTE: Querybuilder v5.2 has a bug where it won't display the [and/or] 
+// choosers properly if it hasn't been shown before the .setValue() call.
+// so this work around allows us to refresh the display after the .show()
+// on the popup.
+// When they've fixed the bug, we'll remove this workaround:
+qbFixAfterShow() {
+	// our child classes can implement this if needed.
+	// 	- ABViewRuleActionFormRecordRuleUpdateConnected
+}
 
 }

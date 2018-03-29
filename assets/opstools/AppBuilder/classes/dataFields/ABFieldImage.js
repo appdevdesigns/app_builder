@@ -623,19 +623,8 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 	* the component that will be stored with the ABViewForm.
 	*/
 	formComponent() {
-		
-		// NOTE: what is being returned here needs to mimic an ABView CLASS.
-		// primarily the .common() and .newInstance() methods.
-		var formComponentSetting = super.formComponent();
-
-		// .common() is used to create the display in the list
-		formComponentSetting.common = () => {
-			return {
-				key: 'fieldcustom'
-			}
-		};
-
-		return formComponentSetting; 
+		 
+		return super.formComponent('fieldcustom');
 	}
 
 	detailComponent() {
@@ -671,7 +660,7 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 		}
 
 		return [
-			'<div class="image-data-field-icon" style="text-align: center; height: inherit; display: table-cell; vertical-align: middle; border: 2px dotted #CCC; border-radius: 10px; font-size: 11px; line-height: 13px; padding: 0 8px; '+iconDisplay+'"><i class="fa fa-picture-o fa-2x" style="opacity: 0.6; font-size: 32px; margin-bottom: 5px;"></i><br/>Drag and drop or click here</div>',
+			'<div class="image-data-field-icon" style="text-align: center; height: inherit; display: table-cell; vertical-align: middle; border: 2px dotted #CCC; background: #FFF; border-radius: 10px; font-size: 11px; line-height: 13px; padding: 0 8px; '+iconDisplay+'"><i class="fa fa-picture-o fa-2x" style="opacity: 0.6; font-size: 32px; margin-bottom: 5px;"></i><br/>Drag and drop or click here</div>',
 			'<div class="image-data-field-image" style="'+imageDisplay+' width:100%; height:100%; background-repeat: no-repeat; background-position: center center; background-size: cover; '+imageURL+'"></div>',
 			'<a style="'+imageDisplay+' visibility:hidden;" class="ab-delete-photo" href="javascript:void(0);"><i class="fa fa-times delete-image"></i></a>'
 		].join('');
@@ -705,18 +694,24 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 
 		var domNode = item.$view;
 		if (domNode) {
+			
+			var val = rowData[this.columnName];
+			if (typeof val == 'undefined') {
+				// assume they just sent us a single value
+				val = rowData;
+			}
 
 			var imageIcon = domNode.querySelector('.image-data-field-icon');
 			if (imageIcon)
-				imageIcon.style.display = rowData[this.columnName] ? 'none' : 'block';
+				imageIcon.style.display = val ? 'none' : 'block';
 
 			var image = domNode.querySelector('.image-data-field-image');
 			if (image) {
-				image.style.display = rowData[this.columnName] ? 'block' : 'none';
+				image.style.display = val ? 'block' : 'none';
 
-				if (rowData[this.columnName]) {
-					image.style.backgroundImage = "url('/opsportal/image/" + this.object.application.name+"/"+rowData[this.columnName]+"')";
-					image.setAttribute('image-uuid', rowData[this.columnName] );
+				if (val) {
+					image.style.backgroundImage = "url('/opsportal/image/" + this.object.application.name+"/"+val+"')";
+					image.setAttribute('image-uuid', val );
 				}
 
 			}

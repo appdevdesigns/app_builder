@@ -6,7 +6,7 @@
  */
 import ABViewBase from "./ABViewBase"
 import ABPropertyComponent from "../ABPropertyComponent"
-import ABViewManager from "../ABViewManager"
+// import ABViewManager from "../ABViewManager"
 
 
 var ABViewPropertyComponentDefaults = {
@@ -57,6 +57,17 @@ export default class ABView extends ABViewBase {
 		//		translations:[]
 		// 	}
 
+
+		// store events
+		// [
+		// 	{
+		// 		emitter: object,
+		// 		eventName: string,
+		// 		listener: fn
+		// 	}
+		// ];
+		this.__events = [];
+
 	}
 
 
@@ -75,7 +86,7 @@ export default class ABView extends ABViewBase {
 	static newInstance(application, parent) {
 
 		// return a new instance from ABViewManager:
-		return ABViewManager.newView({ key: this.common().key }, application, parent);
+		return application.viewNew({ key: this.common().key }, application, parent); // ABViewManager.newView({ key: this.common().key }, application, parent);
 	}
 
 
@@ -140,6 +151,10 @@ export default class ABView extends ABViewBase {
 	destroy() {
 		return new Promise(
 			(resolve, reject) => {
+
+				// unsubscribe events
+				this.eventClear(true);
+
 
 				// verify we have been .save() before:
 				if (this.id) {
@@ -251,7 +266,8 @@ export default class ABView extends ABViewBase {
 
 		var views = [];
 		(values.views || []).forEach((child) => {
-			views.push(ABViewManager.newView(child, this.application, this));
+			// views.push(ABViewManager.newView(child, this.application, this));
+			views.push(this.application.viewNew(child, this.application, this));
 		})
 		this._views = views;
 
@@ -300,6 +316,44 @@ export default class ABView extends ABViewBase {
 		return parents;
 	}
 
+
+	/**
+	 * @method parentFormComponent
+	 * return the closest form object this component is on.
+	 */
+	parentFormComponent() {
+		var form = null;
+
+		var curr = this;
+		while (curr.key != 'form' && !curr.isRoot() && curr.parent) {
+			curr = curr.parent;
+		}
+
+		if (curr.key == 'form') {
+			form = curr;
+		}
+
+		return form;
+	}
+
+
+	/**
+	 * @method parentFormUniqueID
+	 * return a unique ID based upon the closest form object this component is on.
+	 * @param {string} key  The basic id string we will try to make unique
+	 * @return {string} 
+	 */
+	parentFormUniqueID( key ) {
+		var form = this.parentFormComponent();	
+		var uniqueInstanceID;
+		if (form) {
+			uniqueInstanceID = form.uniqueInstanceID;
+		} else {
+			uniqueInstanceID = webix.uid()
+		}
+
+		return key+uniqueInstanceID;
+	}
 
 
 	pageParent(filterFn) {
@@ -414,6 +468,67 @@ export default class ABView extends ABViewBase {
 		this.save();
 
 	}
+
+
+
+	/**
+	 * @method eventAdd()
+	 *
+	 * 
+	 *
+	 * @param {object} evt - {
+	 * 							emitter: object,
+	 * 							eventName: string,
+	 * 							listener: function
+	 * 						}
+	 */
+	eventAdd(evt) {
+
+		var exists = this.__events.find(e => {
+			return e.emitter == evt.emitter &&
+					e.eventName == evt.eventName;
+					// && e.listener == evt.listener;
+		});
+
+		if (!exists || exists.length < 1) {
+
+			// add to array
+			this.__events.push({
+				emitter: evt.emitter,
+				eventName: evt.eventName,
+				listener: evt.listener
+			});
+
+			// listening this event
+			evt.emitter.on(evt.eventName, evt.listener);
+		}
+
+	}
+
+
+	/**
+	 * @method eventClear()
+	 * unsubscribe all events.
+	 * should do it before destroy a component
+	 *
+	 * @param {bool} deep - id of the active view
+	 */
+	eventClear(deep) {
+
+		if (deep) {
+			this.views().forEach(v => {
+				v.eventClear(deep);
+			});
+		}
+
+		if (this.__events && this.__events.length > 0) {
+			this.__events.forEach(e => {
+				e.emitter.removeListener(e.eventName, e.listener);
+			});
+		}
+
+	}
+
 
 
 
@@ -896,7 +1011,7 @@ export default class ABView extends ABViewBase {
 			'pie', 'bar', 'line', 'area'
 		];
 
-		var allComponents = ABViewManager.allViews();
+		var allComponents = this.application.viewAll();  // ABViewManager.allViews();
 		var allowedComponents = allComponents.filter((c) => {
 			return (viewsToIgnore.indexOf(c.common().key) == -1)
 		});

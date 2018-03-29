@@ -6,7 +6,7 @@
  */
 
 import ABFieldBase from "./ABFieldBase"
-import ABViewManager from "../ABViewManager"
+// import ABViewManager from "../ABViewManager"
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -188,7 +188,12 @@ export default class ABField extends ABFieldBase {
   		delete settings.columnName;
 
   		return obj;
-  	}
+	  }
+	  
+
+	static get reservedNames() {
+		return ['id', 'created_at', 'updated_at', 'properties'];
+	}
 
 
   	/*
@@ -480,15 +485,22 @@ export default class ABField extends ABFieldBase {
 	 * @param {Object} item - Webix element
 	 * @param {Object} rowData - data of row
 	 * 
-	 * @return {Object}
 	 */
-	setValue(item, rowData) {
+	setValue(item, rowData, defaultValue) {
 
 		if (!item) return;
+	
+		var val;
+		if (rowData[this.columnName]) {
+			val = rowData[this.columnName];
+		} else {
+			val = rowData;
+		}
+		
+		if (typeof val == "undefined")
+			val = defaultValue;
 
-		var val = rowData[this.columnName];
-
-		return item.setValue(val);
+		item.setValue(val);
 	};
 
 
@@ -520,7 +532,7 @@ export default class ABField extends ABFieldBase {
 	 * However, what is returned here, needs to be able to create an instance of
 	 * the component that will be stored with the ABViewForm.
 	 */
-	formComponent() {
+	formComponent(formKey) {
 		
 		// NOTE: what is being returned here needs to mimic an ABView CLASS.
 		// primarily the .common() and .newInstance() methods.
@@ -531,13 +543,12 @@ export default class ABField extends ABFieldBase {
 			common: () => {
 				return {
 					
-					// NOTE: form components should return .label:
-					// label: 'PlaceHolder',  // form components should return .label
+					key: formKey,
 
-					// but since this is a common place holder: use the 
-					// multilingual label here:
-					labelKey: 'ab.abfield.labelPlaceholder',
-					icon:  'square'
+					// // but since this is a common place holder: use the 
+					// // multilingual label here:
+					// labelKey: 'ab.abfield.labelPlaceholder',
+					// icon:  'square'
 				}
 			},
 
@@ -558,7 +569,7 @@ export default class ABField extends ABFieldBase {
 				values.settings.fieldId = this.id;
 				// values.id = this.id;
 
-				var ABFieldPlaceholder = ABViewManager.newView(values, application, parent);
+				var ABFieldPlaceholder = application.viewNew(values, application, parent); // ABViewManager.newView(values, application, parent);
 				// ABFieldPlaceholder.formatTitle();
 				// ABFieldPlaceholder.text = "ABFieldPlaceholder";
 
@@ -594,7 +605,7 @@ export default class ABField extends ABFieldBase {
 				values.settings.objectId = this.object.id;
 				values.settings.fieldId = this.id;
 
-				var ABFieldPlaceholder = ABViewManager.newView(values, application, parent);
+				var ABFieldPlaceholder = application.viewNew(values, application, parent); // ABViewManager.newView(values, application, parent);
 
 				return ABFieldPlaceholder;
 			}

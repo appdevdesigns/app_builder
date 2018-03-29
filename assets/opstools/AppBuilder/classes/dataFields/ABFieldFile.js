@@ -273,13 +273,6 @@ class ABFieldFile extends ABField {
 	/// Working with Actual Object Values:
 	///
 
-	idCustomContainer(obj) {
-		return "#columnName#-#id#-file"
-			.replace('#id#', obj.id)
-			.replace('#columnName#', this.columnName.replace(/ /g, '_'));
-	}
-
-
 	// return the grid column header definition for this instance of ABFieldFile
 	columnHeader (isObjectWorkspace, newWidth, editable) {
 		var config = super.columnHeader(isObjectWorkspace);
@@ -290,18 +283,17 @@ class ABFieldFile extends ABField {
 		config.template = (obj) => {
 
 			var fileDiv = [
-				'<div id="#id#" class="ab-file-data-field" style="float: left;">',
+				'<div class="ab-file-data-field" style="float: left;">',
 				'<div class="webix_view ab-file-holder">',
 				'<div class="webix_template">',
-				this.fileTemplate(obj),
+				this.fileTemplate(obj, editable),
 				'</div>',
 				'</div>',
 				'</div>'
 			].join('');
 
 
-			return fileDiv
-				.replace('#id#', this.idCustomContainer(obj) )
+			return fileDiv;
 		}
 
 		return config;
@@ -320,14 +312,6 @@ class ABFieldFile extends ABField {
 		if (!node) { return }
 
 
-		var idBase = App.unique(this.idCustomContainer(row));
-		var ids = {
-			container:idBase+'-container',
-			uploader: idBase+'-uploader',
-			icon: idBase+'-icon',
-			file: idBase+'-file'
-		}
-
 		var typesList = [];
 		var maximumSize = 0;
 
@@ -344,22 +328,20 @@ class ABFieldFile extends ABField {
 // 		// safety check:
 // 		// webix seems to crash if you specify a .container that doesn't exists:
 // 		// Note: when the template is first created, we don't have App.unique() 
-		var parentContainer = node.querySelector('#'+this.idCustomContainer(row)); // $$(this.idCustomContainer(obj));
+		var parentContainer = node.querySelector('.ab-file-holder');
 		if(parentContainer) {
 
 			parentContainer.innerHTML = '';
-			parentContainer.id = idBase;	// change it to the unique one.
+			// parentContainer.id = idBase;	// change it to the unique one.
 
 // 			// use a webix component for displaying the content.
 // 			// do this so I can use the progress spinner
 
 			var webixContainer = webix.ui({
 				view:'template',
-				css:'ab-file-holder',
-				id: ids.container,
-				container: idBase,
+				container: parentContainer,
 				
-				template:this.fileTemplate(row),
+				template:this.fileTemplate(row, editable),
 
 				borderless:true,
 				width: 160,
@@ -385,7 +367,6 @@ class ABFieldFile extends ABField {
 
 			var uploader = webix.ui({ 
 				view:"uploader",  
-				id:ids.uploader, 
 				apiOnly: true, 
 				upload:url,
 				inputName:'file',
@@ -471,10 +452,13 @@ class ABFieldFile extends ABField {
 			});
 			uploader.addDropZone(webixContainer.$view);
 
+			// store upload id into html element (it will be used in .customEdit)
+			node.dataset['uploaderId'] = uploader.config.id;
+
 			// open file upload dialog when's click
-			parentContainer.addEventListener("click", (e) => {
+			node.addEventListener("click", (e) => {
 				if (e.target.className.indexOf('delete-image') > -1) {
-					this.deleteFile(e);
+					this.deleteFile = true;
 				}
 			});
 
@@ -534,10 +518,12 @@ class ABFieldFile extends ABField {
 			
 		}
 		else if (!row[this.columnName]) {
-			var idBase = App.unique(this.idCustomContainer(row)),
-				idUploader = idBase + '-uploader';
 
-			$$(idUploader).fileDialog({ rowid: row.id });
+			var uploaderId = node.dataset['uploaderId'],
+				uploader = $$(uploaderId);
+
+			if (uploader && uploader.fileDialog)
+				uploader.fileDialog({ rowid: row.id });
 		};
 
 		return false;
@@ -555,19 +541,8 @@ class ABFieldFile extends ABField {
 	* the component that will be stored with the ABViewForm.
 	*/
 	formComponent() {
-		
-		// NOTE: what is being returned here needs to mimic an ABView CLASS.
-		// primarily the .common() and .newInstance() methods.
-		var formComponentSetting = super.formComponent();
 
-		// .common() is used to create the display in the list
-		formComponentSetting.common = () => {
-			return {
-				key: 'fieldcustom'
-			}
-		};
-
-		return formComponentSetting; 
+		return super.formComponent('fieldcustom');
 	}
 
 	detailComponent() {
@@ -585,7 +560,7 @@ class ABFieldFile extends ABField {
 
 	//File Template
 
-	fileTemplate(obj) {
+	fileTemplate(obj, editable) {
 
 		var iconDisplay = '';
 		var fileDisplay = 'display:none';
@@ -606,20 +581,20 @@ class ABFieldFile extends ABField {
 			fileURL =  '/opsportal/file/' + this.object.application.name + '/' + value;
 		}
 
-		return [
-			'<div class="file-data-field-icon" style="text-align: center; height: inherit; display: table-cell; vertical-align: middle; border: 2px dotted #CCC; border-radius: 10px; font-size: 11px; line-height: 13px; padding: 0 10px; '+iconDisplay+'"><i class="fa fa-file fa-2x" style="opacity: 0.6; font-size: 32px; margin-top: 3px; margin-bottom: 5px;"></i><br/>Drag and drop or click here</div>',
-			'<div class="file-data-field-name" style="' + fileDisplay + ' width:100%; height:100%; position:relative; "><a target="_blank" href="' + fileURL +'">' + name + '</a>',
-			'<a style="' + fileDisplay + '" class="ab-delete-photo" href="javascript:void(0);"><i class="fa fa-times delete-image"></i></a></div>'
+		var html = [
+			'<div class="file-data-field-icon" style="text-align: center; height: inherit; display: table-cell; vertical-align: middle; border: 2px dotted #CCC; background: #FFF; border-radius: 10px; font-size: 11px; line-height: 13px; padding: 0 10px; '+iconDisplay+'"><i class="fa fa-file fa-2x" style="opacity: 0.6; font-size: 32px; margin-top: 3px; margin-bottom: 5px;"></i>#drag#</div>',
+			'<div class="file-data-field-name" style="' + fileDisplay + ' width:100%; height:100%; position:relative; "><a target="_blank" href="' + fileURL +'">' + name + '</a>#remove#</div>',
 		].join('');
 
+		html = html.replace('#drag#', editable ? '<br/>Drag and drop or click here' : '');
+		html = html.replace('#remove#', editable ? '<a style="' + fileDisplay + '" class="ab-delete-photo" href="javascript:void(0);"><i class="fa fa-times delete-image"></i></a>' : '');
+
+		return html;
+
 
 	}
 
-	
-	deleteFile(e) {
-		this.deleteFile = true;
-	}
-	
+
 	getValue(item, rowData) {
 
 		var file = item.$view.querySelector('.file-data-field-name');
@@ -633,25 +608,35 @@ class ABFieldFile extends ABField {
 	
 	setValue(item, rowData) {
 		var domNode = item.$view;
+		
+		if (!domNode) return;
+		
+		var val = rowData[this.columnName];
+		if (typeof val == 'undefined') {
+			// assume they just sent us a single value
+			val = rowData;
+		}		
 
 		var fileicon = domNode.querySelector('.file-data-field-icon');
 		if (fileicon)
-			fileicon.style.display = rowData[this.columnName] ? 'none' : 'block';
+			fileicon.style.display = val ? 'none' : 'block';
 
 		var file = domNode.querySelector('.file-data-field-name');
 		if (file) {
+
 			var fileDeleteIcon = file.querySelector('.ab-delete-photo');
+			if (fileDeleteIcon)
+				fileDeleteIcon.style.display = val ? 'block' : 'none';
 
-			file.style.display = rowData[this.columnName] ? 'block' : 'none';
-			fileDeleteIcon.style.display = rowData[this.columnName] ? 'block' : 'none';
-
-			file.setAttribute('file-uuid', rowData[this.columnName] ? rowData[this.columnName].uuid : "");
+			file.style.display = val ? 'block' : 'none';
+			file.setAttribute('file-uuid', val ? val.uuid : "");
 			
 			var fileLink = file.querySelector('a');
-			var fileURL =  '/opsportal/file/' + this.object.application.name + '/' + (rowData[this.columnName] ? rowData[this.columnName].uuid : "");
+			var fileURL =  '/opsportal/file/' + this.object.application.name + '/' + (val ? val.uuid : "");
 			fileLink.href = fileURL;
-			fileLink.innerHTML = (rowData[this.columnName] ? rowData[this.columnName].filename : "");
+			fileLink.innerHTML = (val ? val.filename : "");
 		}
+
 	}
 	
 	/**

@@ -196,7 +196,9 @@ console.warn('!! ToDo: onBeforeEditStop()');
                         this.setColumnWidth(columnName, newWidth);
                     }
                     // Saves the new width
-                    _logic.onColumnResize(columnName, newWidth, oldWidth, user_action);
+                    if (user_action) {
+                        _logic.onColumnResize(columnName, newWidth, oldWidth, user_action);
+                    }
     			},
                 onRowResize: function (rowId) {
                     _logic.onRowResize(rowId);

@@ -174,9 +174,9 @@ export default class ABViewFormTextbox extends ABViewFormField {
 
 		var component = super.component(App);
 		var field = this.field();
-		var form = this.formComponent();		
 
-		var idBase = 'ABViewFormTextbox_' + this.id + "_f_" + form.uniqueInstanceID;
+
+		var idBase = this.parentFormUniqueID( 'ABViewFormTextbox_' + this.id + "_f_" );
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		}
@@ -208,16 +208,15 @@ export default class ABViewFormTextbox extends ABViewFormField {
 
 			// WORKAROUND : to fix breaks TinyMCE when switch pages/tabs
 			// https://forum.webix.com/discussion/6772/switching-tabs-breaks-tinymce
-			if (this.settings.type && this.settings.type == 'rich') {
-				if ($$(component.ui.id)) {
+			if (this.settings.type &&
+				this.settings.type == 'rich' &&
+				$$(component.ui.id)) {
 
 					// recreate rich editor
 					webix.ui(component.ui, $$(component.ui.id));
 
 				}
 			}
-
-		}
 
 
 		return webix.copy(component);

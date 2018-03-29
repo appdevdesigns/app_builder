@@ -207,35 +207,35 @@ export default class ABViewDetail extends ABViewContainer {
 			{
 				name: 'showLabel',
 				view: 'checkbox',
-				label: L('ab.components.detail.showlabel', "*Display Label"),
+				label: L('ab.components.common.showlabel', "*Display Label"),
 				labelWidth: App.config.labelWidthLarge,
 			},
 			{
 				name: 'labelPosition',
 				view: 'richselect',
-				label: L('ab.components.detail.labelPosition', "*Label Position"),
+				label: L('ab.components.common.labelPosition', "*Label Position"),
 				labelWidth: App.config.labelWidthLarge,
 				options: [
 					{
 						id: 'left',
-						value: L('ab.components.detail.left', "*Left")
+						value: L('ab.components.common.left', "*Left")
 					},
 					{
 						id: 'top',
-						value: L('ab.components.detail.top', "*Top")
+						value: L('ab.components.common.top', "*Top")
 					}
 				]
 			},
 			{
 				name: 'labelWidth',
 				view: 'counter',
-				label: L('ab.components.detail.labelWidth', "*Label Width"),
+				label: L('ab.components.common.labelWidth', "*Label Width"),
 				labelWidth: App.config.labelWidthLarge,
 			},
 			{
 				view: 'counter',
 				name: "height",
-				label: L("ab.component.detail.height", "*Height:"),
+				label: L("ab.component.common.height", "*Height:"),
 				labelWidth: App.config.labelWidthLarge,
 			}
 
@@ -321,9 +321,6 @@ export default class ABViewDetail extends ABViewContainer {
 	*/
 	component(App) {
 
-		// get a UI component for each of our child views
-		var viewComponents = {}; // { viewId: viewComponent }
-
 		var idBase = 'ABViewDetail_' + this.id;
 		var ids = {
 			component: App.unique(idBase + '_component'),
@@ -350,12 +347,13 @@ export default class ABViewDetail extends ABViewContainer {
 			// populate .views to webix.dashboard
 			container.init(options);
 
-			_onShow();
 		}
 
 		var _logic = {
 
 			displayData: (data) => {
+
+				data = data || {};
 
 				this.views().forEach((f) => {
 
@@ -420,6 +418,8 @@ export default class ABViewDetail extends ABViewContainer {
 
 		var _onShow = () => {
 
+			container.onShow();
+
 			// listen DC events
 			var dc = this.dataCollection();
 			if (dc) {
@@ -429,8 +429,11 @@ export default class ABViewDetail extends ABViewContainer {
 					_logic.displayData(currData);
 				}
 
-				if (this.changeCursorEventId == null)
-					this.changeCursorEventId = dc.on('changeCursor', _logic.displayData);
+				this.eventAdd({
+					emitter: dc,
+					eventName: 'changeCursor',
+					listener: _logic.displayData
+				})
 
 			}
 

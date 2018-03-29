@@ -29,7 +29,8 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 
 				// formHeader: L('ab.application.form.header', "*Application Info"),
 				parentPage: L('ab.interface.page.parentList', '*Parent Page'),
-				placeholderPageName: L('ab.interface.placeholderPageName', '*Page name'),
+				pageName: L('ab.interface.page.name', '*Page Name'),
+				placeholderPageName: L('ab.interface.placeholderPageName', '*Creat a page name'),
 
 				rootPage: L('ab.interface.rootPage', '*[Root page]'),
 				selectObject: L('ab.interface.selectObject', '*[Select object]')
@@ -41,6 +42,7 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 		var ids = {
 			component: this.unique('component'),
 			form: this.unique('form'),
+			name: this.unique('name'),
 
 			parentList: this.unique('parentList'),
 			selectObject: this.unique('selectObject'),
@@ -97,6 +99,12 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 			selectObject: function (newObjId, oldObjId) {
 
 				CurrentObj = CurrentApplication.objects(obj => obj.id == newObjId)[0];
+				
+				// No data source was choosen
+				if (CurrentObj == null) return;
+				
+				$$(ids.name).show();
+				$$(ids.name).setValue(CurrentObj.label);
 
 				// Rename data source name to template
 				$$(ids.form).getChildViews().forEach(function (r) {
@@ -634,7 +642,7 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 
 				return {
 					parent: CurrentPage, // should be either null or an {}
-					name: CurrentObj.label,
+					name: $$(ids.name).getValue().trim(),
 					key: ABViewPage.common().key,
 					views: views,
 					pages: pages,
@@ -678,6 +686,15 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 								labelWidth: 170,
 								options: [],
 								on: { onChange: _logic.selectObject }
+							},
+							{
+								view: "text",
+								id: ids.name,
+								hidden: true,
+								name: "name",
+								label: labels.component.pageName,
+								placeholder: labels.component.placeholderPageName,
+								labelWidth: 170
 							},
 							{ height: 10 },
 							{

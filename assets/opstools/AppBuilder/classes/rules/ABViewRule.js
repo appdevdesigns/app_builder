@@ -20,6 +20,7 @@
 // A Rule needs to save it's current state to an objects settings, and to 
 // initialize itself from those settings.
 //
+import ObjectQueryBuilder from "./ABViewQueryBuilderObjectFieldConditions"
 
 
 export default class ABViewRule {
@@ -50,7 +51,9 @@ export default class ABViewRule {
 
 		this.currentObject = null;				// What ABObject is this associated with
 												// NOTE: this is important for Actions.
-	
+		
+		this.objectQB = null;					// The QueryBuilder (QB) object 
+
 		this.currentForm = null;
 	}
 
@@ -68,6 +71,7 @@ export default class ABViewRule {
 			common: App.labels,
 			component: {
 				action: L("ab.component.form.action", "*Action"),
+				actionPlaceholder: L("ab.component.form.actionPlaceholder", "*Choose an action"),
 				when: L("ab.component.form.when", "*When"),
 				values: L("ab.component.form.values", "*Values")
 			}
@@ -89,15 +93,16 @@ export default class ABViewRule {
 			// each instance must be unique
 			component: myUnique('component'),	
 
-			actionSelector: myUnique('actionSelector'),
-
+			selectAction: myUnique('chooseAction'),
+			
 			queryBuilder: myUnique('queryBuilder'),  
 
 			valueDisplay: myUnique('valueArea'),
 
 		};
 
-
+		this.objectQB.label = this.labels.component.when;
+		this.objectQB.component(this.App, this.idBase);
 		this.ui = this._generateUI();
 
 
@@ -107,6 +112,8 @@ export default class ABViewRule {
 			for (var c in _logic.callbacks) {
 				_logic.callbacks[c] = options[c] || _logic.callbacks[c];
 			}
+
+			this.objectQB.init();
 
 			// make sure the current Action's value display is initialized:
 			var Action = this.currentAction();
@@ -132,12 +139,6 @@ export default class ABViewRule {
 			},
 
 
-			queryBuilderRules: () => {
-				var QB = $$(ids.queryBuilder);
-				return QB.getValue();
-			},
-
-
 			replaceValueDisplay:(component) => {
 
 				// remove current content area:
@@ -145,7 +146,9 @@ export default class ABViewRule {
 				if (!$ValueDisplay) return;
 
 				var children = $ValueDisplay.getChildViews();
-				children.forEach((c)=>{
+				var cloneChildren = [];
+				children.forEach((c)=>{ cloneChildren.push(c); });
+				cloneChildren.forEach((c)=>{
 					$ValueDisplay.removeView(c);
 				})
 
@@ -154,13 +157,15 @@ export default class ABViewRule {
 
 
 			selectAction:(newValue, oldVal) => {
-
-				var QB = $$(ids.queryBuilder);
-
+				if (newValue) {
+					$$(this.ids.component).getChildViews().forEach((views) => {
+						views.show();
+					});
+				}
 				// bonus:  save current state of previous Action
 				var prevAction = this.getAction(oldVal);
 				if (prevAction) {
-					prevAction.stashCondition(QB.getValue());
+					prevAction.stashCondition(this.objectQB.getValue());
 				}
 
 				// now switch to the new Action
@@ -169,9 +174,10 @@ export default class ABViewRule {
 				if (currAction) {
 
 					// reset Condition filters.
-					QB.setValue(currAction.condition());
+					this.objectQB.setValue(currAction.condition());
 
 					// have Action display it's values form
+					currAction.component(this.App, this.idBase);
 					var component = currAction.valueDisplay(ids.valueDisplay);
 					_logic.replaceValueDisplay(component);
 					component.init()
@@ -192,18 +198,20 @@ export default class ABViewRule {
 		return {
 			id: this.ids.component,
 			view: "layout",
-			css: "ab-component-form-rule",
-			// when: when, // Store a instance of when
-			// set: set, // Store a instance of set
+			css: "ab-component-form-rules",
+			padding: 20,
+			// margin: 10,
 
-// this should be a CSS setting: App.config.xxxx
-width: 680,
+			// this should be a CSS setting: App.config.xxxx
+			// width: 680,
+			type: "line",
 			rows: [
 				{
 					view: "template",
-					css: "ab-component-form-rule",
+					css: "ab-component-form-rules-delete",
 					template: '<i class="fa fa-trash ab-component-remove"></i>',
 					height: 30,
+					borderless: true,
 					hidddatasourceen: this.removable == false,
 					onClick: {
 						"ab-component-remove":  (e, id, trg) => {
@@ -213,12 +221,11 @@ width: 680,
 				},
 				// Action
 				{
+					id: this.ids.selectAction,
 					view: "richselect",
-					// for: "action",
-					id: this.ids.actionSelector,
 					label: this.labels.component.action,
+					placeholder: this.labels.component.actionPlaceholder,
 					labelWidth: this.App.config.labelWidthLarge,
-					value: this.selectedAction,
 					options: this.actionDropList,
 					on: {
 						onChange: (newVal, oldVal) => {
@@ -226,30 +233,15 @@ width: 680,
 						}
 					}
 				},
-				// When
-				{
-					cols: [
-						{
-							view: 'label',
-							css: 'ab-text-bold',
-							label: this.labels.component.when,
-							width: this.App.config.labelWidthLarge
-						},
-						{
-						    view: "querybuilder",
-						    id: this.ids.queryBuilder,
-						    fields: this.conditionFields()
-						}
-					]
-				},
+
+
 				// Values
 				{
 					for: "values",
+					hidden: true,
 					cells: [
-						// Update this record
 						{
 							view: 'layout',
-//batch: actionOptions[0].id,
 							cols: [
 								{
 									view: 'label',
@@ -267,7 +259,12 @@ width: 680,
 							]
 						},
 					]
-				}
+				},
+				
+				// When
+				this.objectQB.ui,
+
+
 			]
 		}
 	}
@@ -304,6 +301,13 @@ width: 680,
 			a.objectLoad(object);
 		})
 
+		var label = "*When";
+		if (this.labels) label = this.labels.component.when;
+
+		this.objectQB = new ObjectQueryBuilder(label);
+		this.objectQB.objectLoad(object);
+		
+
 		// regenerate our UI when a new object is loaded.
 		if (this.ids) {
 			this.ui = this._generateUI();
@@ -337,7 +341,13 @@ width: 680,
 		}
 		var hiddenQB = webix.ui(ui);
 
-		hiddenQB.setValue(currentAction.condition());
+		var QBCondition = currentAction.condition();
+
+		if (this.objectQB) {
+			this.objectQB.cleanRules(QBCondition[0], QBCondition[1], false);
+		}
+
+		hiddenQB.setValue(QBCondition);
 
 		var QBHelper = hiddenQB.getFilterHelper();
 		var isValid = QBHelper(options.data);
@@ -357,7 +367,6 @@ width: 680,
 	}
 
 
-
 	fromSettings (settings) {
 		settings = settings || {};
 
@@ -373,7 +382,8 @@ width: 680,
 
 				// Trigger our UI to refresh with this selected Action:
 				// NOTE: this also populates the QueryBuilder
-				this._logic.selectAction(this.selectedAction);
+				$$(this.ids.selectAction).setValue(this.selectedAction);
+// this._logic.selectAction(this.selectedAction);
 			}
 
 			// now continue with setting up our settings:
@@ -387,11 +397,26 @@ width: 680,
 
 		if (this.selectedAction) {
 			settings.selectedAction = this.selectedAction;
-			settings.queryRules = this._logic.queryBuilderRules();
+			settings.queryRules = this.objectQB.getValue();
 			settings.actionSettings = this.currentAction().toSettings();
 		}
 		
 		return settings;
 	}
+
+
+// NOTE: Querybuilder v5.2 has a bug where it won't display the [and/or] 
+// choosers properly if it hasn't been shown before the .setValue() call.
+// so this work around allows us to refresh the display after the .show()
+// on the popup.
+// When they've fixed the bug, we'll remove this workaround:
+qbFixAfterShow() {
+	var currAction = this.currentAction();
+	if (currAction && this.objectQB) {
+		this.objectQB.setValue(currAction.condition());
+		currAction.qbFixAfterShow();
+	}
+}	
+
 
 }

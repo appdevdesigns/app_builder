@@ -197,7 +197,7 @@ export default class ABViewForm extends ABViewContainer {
 			// TODO : warning message
 
 			var currView = _logic.currentEditObject();
-			var formView = currView.formComponent();
+			var formView = currView.parentFormComponent();
 
 			// remove all old components
 			if (oldDcId != null) {
@@ -270,7 +270,7 @@ export default class ABViewForm extends ABViewContainer {
 			}
 			// remove field in the form
 			else {
-				var formView = currView.formComponent();
+				var formView = currView.parentFormComponent();
 				var fieldView = formView.fieldComponents().filter(c => c.settings.fieldId == fieldId)[0];
 
 				if (fieldView)
@@ -303,9 +303,18 @@ export default class ABViewForm extends ABViewContainer {
 		_logic.recordRuleShow = () => {
 
 			var currView = _logic.currentEditObject();
-
+			
+			PopupRecordRule.formLoad(currView);
 			PopupRecordRule.fromSettings(currView.settings.recordRules);
 			PopupRecordRule.show();
+
+// NOTE: Querybuilder v5.2 has a bug where it won't display the [and/or] 
+// choosers properly if it hasn't been shown before the .setValue() call.
+// so this work around allows us to refresh the display after the .show()
+// on the popup.
+// When they've fixed the bug, we'll remove this workaround:
+PopupRecordRule.qbFixAfterShow();
+
 
 		};
 
@@ -374,53 +383,67 @@ export default class ABViewForm extends ABViewContainer {
 					onChange: _logic.selectSource
 				}
 			},
+			
+			
 			{
-				name: 'fields',
-				view: 'list',
-				select: false,
-				minHeight: 200,
-				template: _logic.listTemplate,
-				type: {
-					markCheckbox: function (item) {
-						return "<span class='check webix_icon fa-" + (item.selected ? "check-" : "") + "square-o'></span>";
-					}
-				},
-				onClick: {
-					"check": _logic.check
+				view: "fieldset",
+				label: L('ab.components.form.formFields', '*Form Fields:'),
+				labelWidth: App.config.labelWidthLarge,
+				body: {
+					type: "clean",
+					paddingY: 20,
+					paddingX: 10,
+					rows: [
+						{
+							name: 'fields',
+							view: 'list',
+							select: false,
+							minHeight: 200,
+							template: _logic.listTemplate,
+							type: {
+								markCheckbox: function (item) {
+									return "<span class='check webix_icon fa-" + (item.selected ? "check-" : "") + "square-o'></span>";
+								}
+							},
+							onClick: {
+								"check": _logic.check
+							}
+						}
+					]
 				}
 			},
 			{
 				name: 'showLabel',
 				view: 'checkbox',
-				label: L('ab.components.form.showlabel', "*Display Label"),
+				label: L('ab.components.common.showlabel', "*Display Label"),
 				labelWidth: App.config.labelWidthLarge
 			},
 			{
 				name: 'labelPosition',
 				view: 'richselect',
-				label: L('ab.components.form.labelPosition', "*Label Position"),
+				label: L('ab.components.common.labelPosition', "*Label Position"),
 				labelWidth: App.config.labelWidthLarge,
 				options: [
 					{
 						id: 'left',
-						value: L('ab.components.form.left', "*Left")
+						value: L('ab.components.common.left', "*Left")
 					},
 					{
 						id: 'top',
-						value: L('ab.components.form.top', "*Top")
+						value: L('ab.components.common.top', "*Top")
 					}
 				]
 			},
 			{
 				name: 'labelWidth',
 				view: 'counter',
-				label: L('ab.components.form.labelWidth', "*Label Width"),
+				label: L('ab.components.common.labelWidth', "*Label Width"),
 				labelWidth: App.config.labelWidthLarge
 			},
 			{
 				view: 'counter',
 				name: "height",
-				label: L("ab.component.form.height", "*Height:"),
+				label: L("ab.components.common.height", "*Height:"),
 				labelWidth: App.config.labelWidthLarge,
 			},
 			{
@@ -431,21 +454,24 @@ export default class ABViewForm extends ABViewContainer {
 			},
 			{
 				view: "fieldset",
-				label: L('ab.component.form.rules', '*Rules:'),
+				label: L('ab.components.form.rules', '*Rules:'),
 				labelWidth: App.config.labelWidthLarge,
 				body: {
+					type: "clean",
+					paddingY: 20,
+					paddingX: 10,
 					rows: [
 						{
 							cols: [
 								{
 									view: "label",
-									label: L("ab.component.form.submitRules", "*Submit Rules:"),
+									label: L("ab.components.form.submitRules", "*Submit Rules:"),
 									width: App.config.labelWidthLarge,
 								},
 								{
 									view: "button",
 									name: "buttonSubmitRules",
-									label: L("ab.component.form.settings", "*Settings"),
+									label: L("ab.components.form.settings", "*Settings"),
 									icon: "gear",
 									type: "icon",
 									badge: 0,
@@ -459,13 +485,13 @@ export default class ABViewForm extends ABViewContainer {
 							cols: [
 								{
 									view: "label",
-									label: L("ab.component.form.displayRules", "*Display Rules:"),
+									label: L("ab.components.form.displayRules", "*Display Rules:"),
 									width: App.config.labelWidthLarge,
 								},
 								{
 									view: "button",
 									name: "buttonDisplayRules",
-									label: L("ab.component.form.settings", "*Settings"),
+									label: L("ab.components.form.settings", "*Settings"),
 									icon: "gear",
 									type: "icon",
 									badge: 0,
@@ -479,13 +505,13 @@ export default class ABViewForm extends ABViewContainer {
 							cols: [
 								{
 									view: "label",
-									label: L("ab.component.form.recordRules", "*Record Rules:"),
+									label: L("ab.components.form.recordRules", "*Record Rules:"),
 									width: App.config.labelWidthLarge,
 								},
 								{
 									view: "button",
 									name: "buttonRecordRules",
-									label: L("ab.component.form.settings", "*Settings"),
+									label: L("ab.components.form.settings", "*Settings"),
 									icon: "gear",
 									type: "icon",
 									badge: 0,
@@ -507,7 +533,7 @@ export default class ABViewForm extends ABViewContainer {
 
 		super.propertyEditorPopulate(App, ids, view);
 
-		var formCom = view.formComponent();
+		var formCom = view.parentFormComponent();
 		var dataCollectionId = (formCom.settings.datacollection ? formCom.settings.datacollection : null);
 		var SourceSelector = $$(ids.datacollection);
 
@@ -584,7 +610,7 @@ export default class ABViewForm extends ABViewContainer {
 	 */
 	static propertyUpdateFieldOptions(ids, view, dcId) {
 
-		var formComponent = view.formComponent();
+		var formComponent = view.parentFormComponent();
 		var existsFields = formComponent.fieldComponents();
 		var datacollection = view.pageRoot().dataCollections(dc => dc.id == dcId)[0];
 		var object = datacollection ? datacollection.datasource : null;
@@ -695,8 +721,6 @@ export default class ABViewForm extends ABViewContainer {
 
 		var component = super.component(App);
 
-		this.viewComponents = this.viewComponents || {}; // { fieldId: viewComponent }
-
 		// an ABViewForm_ is a collection of rows:
 		var _ui = {
 			// view: "scrollview",
@@ -725,44 +749,33 @@ export default class ABViewForm extends ABViewContainer {
 				webix.extend(Form, webix.ProgressBar);
 			}
 
-
-			// attach all the .UI views:
-			var subviews = this.views();
-			subviews.forEach((child) => {
-
-				var subComponent = child.component(App);
-
-				this.viewComponents[child.id] = subComponent;
-
-				subComponent.init();
-
-			});
-
-
 			// bind a data collection to form component
 			var dc = this.dataCollection();
 			if (dc) {
 
 				// listen DC events
-				if (this.changeCursorEventId == null)
-					this.changeCursorEventId = dc.on('changeCursor', _logic.displayData);
+				this.eventAdd({
+					emitter: dc,
+					eventName: 'changeCursor',
+					listener: _logic.displayData
+				});
 
 				// bind the cursor event of the parent DC
 				var linkDc = dc.dataCollectionLink;
 				if (linkDc) {
 
 					// update the value of link field when data of the parent dc is changed
-					if (this.changeParentCursorEventId == null)
-						this.changeParentCursorEventId = linkDc.on('changeCursor', _logic.displayParentData);
+					this.eventAdd({
+						emitter: linkDc,
+						eventName: 'changeCursor',
+						listener: _logic.displayParentData
+					});
 
 				}
 
 			}
 
-			_onShow();
-
 		}
-
 
 		var _logic = this._logic = {
 			
@@ -777,7 +790,11 @@ export default class ABViewForm extends ABViewContainer {
 
 				// Set default values
 				if (data == null) {
-					var customFields = this.fieldComponents((comp) => comp instanceof ABViewFormCustom);
+					var customFields = this.fieldComponents((comp) => {
+						return (comp instanceof ABViewFormCustom) ||
+							// rich text
+							((comp instanceof ABViewFormTextbox) && comp.settings.type == 'rich')
+					});
 					customFields.forEach((f) => {
 
 						var field = f.field();
@@ -819,7 +836,11 @@ export default class ABViewForm extends ABViewContainer {
 
 				// Populate value to custom fields
 				else {
-					var customFields = this.fieldComponents((comp) => comp instanceof ABViewFormCustom);
+					var customFields = this.fieldComponents((comp) => {
+						return (comp instanceof ABViewFormCustom) ||
+							// rich text
+							((comp instanceof ABViewFormTextbox) && comp.settings.type == 'rich')
+					});
 					customFields.forEach((f) => {
 
 						var comp = this.viewComponents[f.id];
@@ -871,6 +892,9 @@ export default class ABViewForm extends ABViewContainer {
 
 		var _onShow = () => {
 
+			// call .onShow in the base component
+			component.onShow();
+
 			var Form = $$(ids.component);
 
 			var customFields = this.fieldComponents((comp) => {
@@ -885,9 +909,6 @@ export default class ABViewForm extends ABViewContainer {
 
 				var component = this.viewComponents[f.id];
 				if (!component) return;
-
-				// call .customDisplay again here
-				component.onShow();
 
 				// set value to each components
 				var rowData = {};
@@ -942,6 +963,7 @@ export default class ABViewForm extends ABViewContainer {
 		}
 	}
 
+
 	/**
 	 * @method dataCollection
 	 * return ABViewDataCollection of this form
@@ -952,27 +974,6 @@ export default class ABViewForm extends ABViewContainer {
 		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.datacollection)[0];
 	}
 
-	/**
-	 * @method formComponent()
-	 *
-	 * return a form component
-	 *
-	 * @return {ABViewForm}
-	 */
-	formComponent() {
-		var form = null;
-		var curr = this;
-
-		while (curr.key != 'form' && !curr.isRoot() && curr.parent) {
-			curr = curr.parent;
-		}
-
-		if (curr.key == 'form') {
-			form = curr;
-		}
-
-		return form;
-	}
 
 	/**
 	 * @method fieldComponents()
@@ -1147,7 +1148,7 @@ export default class ABViewForm extends ABViewContainer {
 					(resolve, reject) => {
 
 
-						// update exists row
+						// If this object already exists, just .update()
 						if (formVals.id) {
 							model.update(formVals.id, formVals)
 								.catch((err) => {
@@ -1158,15 +1159,22 @@ export default class ABViewForm extends ABViewContainer {
 
 									this.doRecordRules(newFormVals)
 									.then(()=>{
-
-										this.doSubmitRules(formVals);
-
+// make sure any updates from RecordRules get passed along here.
+										this.doSubmitRules(newFormVals);
 										formReady(newFormVals);
-										resolve();
+										resolve(newFormVals);
+									})
+									.catch((err)=>{
+										OP.Error.log('Error processing Record Rules.', {error:err, newFormVals:newFormVals });
+// Question:  how do we respond to an error?
+// ?? just keep going ??
+this.doSubmitRules(newFormVals);
+formReady(newFormVals);
+resolve(); 	
 									})
 								});
 						}
-						// add new row
+						// else add new row
 						else {
 							model.create(formVals)
 								.catch((err) => {
@@ -1174,14 +1182,21 @@ export default class ABViewForm extends ABViewContainer {
 									reject(err);
 								})
 								.then((newFormVals) => {
-									console.log("newFormVals: ", newFormVals);
+
 									this.doRecordRules(newFormVals)
 									.then(()=>{
 
-										this.doSubmitRules(formVals);
-
+										this.doSubmitRules(newFormVals);
 										formReady(newFormVals);
-										resolve();
+										resolve(newFormVals);
+									})
+									.catch((err)=>{
+										OP.Error.log('Error processing Record Rules.', {error:err, newFormVals:newFormVals });
+// Question:  how do we respond to an error?
+// ?? just keep going ??
+this.doSubmitRules(newFormVals);
+formReady(newFormVals);
+resolve(); 	
 									})
 									
 								});

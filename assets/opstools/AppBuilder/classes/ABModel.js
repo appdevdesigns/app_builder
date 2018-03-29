@@ -38,6 +38,24 @@ function triggerEvent(action, object, data) {
 	
 }
 
+// Start listening for server events for object updates and call triggerEvent as the callback
+io.socket.on("ab.datacollection.create", function (msg) {
+  triggerEvent("create", {id:msg.objectId}, msg.data);
+});
+
+io.socket.on("ab.datacollection.delete", function (msg) {
+  triggerEvent("delete", {id:msg.objectId}, msg.id);
+});
+
+io.socket.on("ab.datacollection.stale", function (msg) {
+  triggerEvent("stale", {id:msg.objectId}, msg.data);
+});
+
+io.socket.on("ab.datacollection.update", function (msg) {
+  triggerEvent("update", {id:msg.objectId}, msg.data);
+});
+
+
 export default class ABModel {
 
 	constructor(object) {
@@ -83,9 +101,20 @@ export default class ABModel {
 			.replace('#objID#', this.object.id);
 	}
 
-
-
-
+	// Prepare multilingual fields to be untranslated
+	// Before untranslating we need to ensure that values.translations is set.
+	prepareMultilingualData(values) {
+		
+		// if this object has some multilingual fields, translate the data:
+		var mlFields = this.object.multilingualFields();
+		if (mlFields.length) {
+			if (values.translations == null || typeof values.translations == "undefined" || values.translations == "") {
+				values.translations = [];
+			}
+			OP.Multilingual.unTranslate(values, values, mlFields);
+		}
+			
+	}
 
 
 
@@ -95,13 +124,7 @@ export default class ABModel {
 	 */
 	create(values) {
 
-		// if this object has some multilingual fields, translate the data:
-		var mlFields = this.object.multilingualFields();
-		if (mlFields.length) {
-			// if (values.translations) {
-			OP.Multilingual.unTranslate(values, values, mlFields);
-			// }
-		}
+		this.prepareMultilingualData(values);
 
 		return new Promise(
 			(resolve, reject) => {
@@ -116,8 +139,9 @@ export default class ABModel {
 
 						resolve(data);
 
+						// FIX: now with sockets, the triggers are fired from socket updates.
 						// trigger a create event
-						triggerEvent('create', this.object, data);
+						// triggerEvent('create', this.object, data);
 
 					})
 					.catch(reject);
@@ -145,8 +169,9 @@ export default class ABModel {
 					.then((data) => {
 						resolve(data);
 
+						// FIX: now with sockets, the triggers are fired from socket updates.
 						// trigger a delete event
-						triggerEvent('delete', this.object, id);
+						// triggerEvent('delete', this.object, id);
 
 					})
 					.catch(reject);
@@ -179,10 +204,16 @@ export default class ABModel {
 			newCond.where = cond;
 		}
 
+/// if this is our depreciated format:
+if (newCond.where.where) {
+	OP.Error.log('Depreciated Embedded .where condition.');
+}
+
+
 		return new Promise(
 			(resolve, reject) => {
 
-				OP.Comm.Service.get({
+				OP.Comm.Socket.get({
 					url: this.modelURL(),
 					params: newCond
 				})
@@ -192,11 +223,129 @@ export default class ABModel {
 
 						resolve(data);
 					})
-					.catch(reject);
+					.catch((err) => {
+
+						if (err.code) {
+							switch(err.code) {
+								case "ER_PARSE_ERROR":
+									OP.Error.log('AppBuilder:ABModel:findAll(): Parse Error with provided condition', { error: err, condition:newCond })
+									break;
+
+								default:
+									OP.Error.log('AppBuilder:ABModel:findAll(): Unknown Error with provided condition', { error: err, condition:newCond })
+									break;
+							}
+
+						}
+						reject(err);
+					})
 
 			}
 		)
 
+	}
+
+
+	/**
+	 * @method findConnected
+	 * return the connected data associated with an instance of this model.
+	 *
+	 * to limit the result to only a single connected column:
+	 * 		model.findConnected( 'col1', {data})
+	 *		then ((data) => {
+	 *			// data = [{obj1}, {obj2}, ... {objN}]
+	 *		})
+	 *
+	 * To find >1 connected field data:
+	 *		model.findConnected( ['col1', 'col2'], {data} )
+	 *		.then((data) =>{
+	 *		
+	 *			// data = {
+	 *			//	   col1 : [{obj1}, {obj2}, ... {objN}],
+	 *			//     col2 : [{obj1}, {obj2}, ... {objN}]
+	 *			// }
+	 *		})
+	 *
+	 * To find all connected field data:
+	 *		model.findConnected( {data} )
+	 *		.then((data) =>{
+	 *		
+	 *			// data = {
+	 *			//	   connectedColName1 : [{obj1}, {obj2}, ... {objN}],
+	 *			//     connectedColName2 : [{obj1}, {obj2}, ... {objN}],
+	 *			//		...
+	 *			//     connectedColNameN : [{obj1}, {obj2}, ... {objN}]
+	 *			// }
+	 *		})
+
+	 * @param {string/array} fields  [optional] an array of connected fields you want to return.
+	 * @param {obj} data  the current object instance (data) to lookup
+	 * @return {Promise}
+	 */
+	findConnected(fields, data) {
+
+		if (typeof data == 'undefined') {
+			if ((!Array.isArray(fields)) && (typeof fields == 'object')){
+				data = fields;
+				fields = [];  // return all fields
+			}
+		}
+
+		if (typeof fields == 'string') {
+			fields = [fields];	// convert to an array of values
+		}
+
+		return new Promise(
+			(resolve, reject) => {
+
+				// sanity checking:
+				if (!data.id) {
+					// I can't find any connected items, if I can't find this one:
+					resolve(null);
+					return;
+				}
+
+				this.findAll({where:{id:data.id}, includeRelativeData: true })
+				.then((results) => {
+
+					if ( !results.data  || (!Array.isArray(results.data)) || (results.data.length == 0)) {
+						resolve([]); // no data to return.
+						return;
+					}
+
+
+					// work with the first object.
+					var myObj = results.data[0];
+
+					// if only 1 field requested, then return that 
+					if (fields.length == 1) {
+						resolve( [ myObj[fields[0]+'__relation'] ])
+						return;
+					}
+
+					// if no fields requested, return them all:
+					if (fields.length == 0) {
+						var allFields = this.object.fields((f)=>{ return f.settings.linkType; });
+						allFields.forEach((f)=>{
+							fields.push(f.columnName);
+						})
+					}
+
+					var returnData = {};
+					fields.forEach((colName) => {
+						returnData[colName] = myObj[colName + '__relation'];
+					})
+
+					resolve(returnData);
+
+				})
+				.catch((err) =>{
+console.error('!!! error with findConnected() attempt:', err);
+reject(err);
+				});
+
+			}
+		)
 	}
 
 
@@ -323,14 +472,7 @@ export default class ABModel {
 	 */
 	update(id, values) {
 
-		// if this object has some multilingual fields, translate the data:
-		var mlFields = this.object.multilingualFields();
-		if (mlFields.length) {
-			if (Object.keys(values).length == 0 || // When a row is empty values, then should create .translations
-				values.translations) {
-				OP.Multilingual.unTranslate(values, values, mlFields);
-			}
-		}
+		this.prepareMultilingualData(values);
 
 		// remove empty properties
 		for (var key in values) {
@@ -353,8 +495,9 @@ export default class ABModel {
 
 						resolve(data);
 
+						// FIX: now with sockets, the triggers are fired from socket updates.
 						// trigger a update event
-						triggerEvent('update', this.object, data);
+						// triggerEvent('update', this.object, data);
 
 					})
 					.catch(reject);

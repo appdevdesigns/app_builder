@@ -168,12 +168,12 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 	component(App) {		
 		var component = super.component(App);
 		var field = this.field();
-		var form = this.formComponent();
+		var form = this.parentFormComponent();
 
 		// this field may be deleted
 		if (!field) return component;
 
-		var idBase = 'ABViewFormConnect_' + this.id + "_f_" + form.uniqueInstanceID;
+		var idBase = this.parentFormUniqueID('ABViewFormConnect_' + this.id + "_f_");
 		var ids = {
 			component: App.unique(idBase + '_component'),
 			popup: App.unique(idBase + '_popup_add_new')
@@ -210,11 +210,14 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 		component.ui = {
 			id: 	ids.component,
 			view: 	"forminput",
+			labelWidth: 0,
+			paddingY: 0,
+			paddingX: 0,
 			css:    "ab-custom-field",
 		    name:   component.ui.name,
 		    body:{
 				view: App.custom.focusabletemplate.view,
-				// css:  "webix_el_box",
+				css:  "webix_el_box",
 				borderless: true,
 				height: component.ui.height,
 				template: template,

@@ -290,18 +290,7 @@ class ABField[template] extends ABField {
 	*/
 	formComponent() {
 		
-		// NOTE: what is being returned here needs to mimic an ABView CLASS.
-		// primarily the .common() and .newInstance() methods.
-		var formComponentSetting = super.formComponent();
-
-		// .common() is used to create the display in the list
-		formComponentSetting.common = () => {
-			return {
-				key: '[form_component_key]'
-			}
-		};
-
-		return formComponentSetting;
+		return super.formComponent('[form_component_key]');
 	}
 
 

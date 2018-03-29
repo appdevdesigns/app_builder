@@ -118,12 +118,12 @@ export default class ABViewFormCustom extends ABViewFormField {
 
 		var component = super.component(App);
 		var field = this.field();
-		var form = this.formComponent();
+		var form = this.parentFormComponent();
 
 		// this field may be deleted
 		if (!field) return component;
 
-		var idBase = 'ABViewFormCustom_' + this.id + "_f_" + form.uniqueInstanceID;
+		var idBase = this.parentFormUniqueID('ABViewFormCustom_' + this.id + "_f_");
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		}
@@ -154,7 +154,10 @@ export default class ABViewFormCustom extends ABViewFormField {
 
 		component.ui = {
 			id: 	ids.component,
-		    view: 	"forminput",
+			view:	"forminput",
+			labelWidth: 0,
+			paddingY: 0,
+			paddingX: 0,
 			css:    "ab-custom-field",
 			name:   component.ui.name,
 			// label:  field.label,
@@ -169,7 +172,7 @@ export default class ABViewFormCustom extends ABViewFormField {
 				onClick: {
 					"customField": (id, e, trg) => {
 
-						var formView = this.formComponent(),
+						var formView = this.parentFormComponent(),
 							dc = formView.dataCollection(),
 							rowData = dc.getCursor() || {};
 

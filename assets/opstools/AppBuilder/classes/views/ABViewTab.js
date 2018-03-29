@@ -564,9 +564,11 @@ export default class ABViewTab extends ABViewWidget {
 				v.component.init(options);
 
 				// Trigger 'changePage' event to parent
-				if (changePageEventIds[v.view.id] == null) {
-					changePageEventIds[v.view.id] = v.view.on('changePage', _logic.changePage);
-				}
+				this.eventAdd({
+					emitter: v.view,
+					eventName: 'changePage',
+					listener: _logic.changePage
+				});
 
 
 			});
