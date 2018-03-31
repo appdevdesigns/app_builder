@@ -14,6 +14,9 @@ export default class RowFilter extends OP.Component {
 				or: L('ab.filter_fields.or', "*Or"),
 				addNewFilter: L('ab.filter_fields.addNewFilter', "*Add a filter"),
 
+				thisObject: L('ab.filter_fields.thisObject', "*This Object"),
+				inQuery:    L('ab.filter_fields.inQuery', "*In Query"),
+
 				containsCondition: L('ab.filter_fields.containsCondition', "*contains"),
 				notContainCondition: L('ab.filter_fields.notContainCondition', "*doesn't contain"),
 				isCondition: L('ab.filter_fields.isCondition', "*is"),
@@ -53,11 +56,14 @@ export default class RowFilter extends OP.Component {
 			operator: this.unique('operator'),
 			inputValue: this.unique('inputValue'),
 
+			queryCombo: this.unique('queryCombo'),
+
 			listOptions: this.unique('listOptions')
 		};
 
 		var _Object;
 		var _Fields;
+		var _QueryFields=[];
 		var config_settings = {};
 
 		// setting up UI
@@ -97,7 +103,13 @@ export default class RowFilter extends OP.Component {
 
 				_Object = object;
 				_Fields = _Object ? _Object.fields(f => f.fieldIsFilterable()) : [];
+				_QueryFields = _Object.connectFields();
 
+				// insert our 'this object' entry if an Object was given.
+				if (_Object) {
+					_Fields.unshift({ id:'this_object', label:_Object.label });
+				}
+				
 			},
 
 			/**
@@ -164,6 +176,26 @@ export default class RowFilter extends OP.Component {
 							width: 155,
 							cells: [
 								{},
+								// Query
+								{
+									batch:"query",
+									view: "combo",
+									options: [
+										{
+											value: labels.component.inQuery,
+											id: 'in_query'
+										},
+										{	
+											value: labels.component.notInQuery,
+											id: 'not_in_query' 
+										}
+									],
+									on: {
+										onChange: _logic.onChange
+									}
+
+								},
+
 								// Date
 								{
 									batch: "date",
@@ -331,6 +363,20 @@ export default class RowFilter extends OP.Component {
 								{
 									batch: "empty"
 								},
+
+								// Query
+								{
+									id:ids.queryCombo,
+
+									batch: "query",
+									view: "combo",
+									options:[],
+									on: {
+										onChange:_logic.onChange
+									}
+
+								},
+
 								// Date
 								{
 									// inputView.format = field.getDateFormat();
@@ -520,8 +566,50 @@ export default class RowFilter extends OP.Component {
 				// switch view
 				var batchName = field.key;
 				if (batchName == 'LongText') batchName = 'string';
+				if (field.id == 'this_object') batchName = 'query';	// Special this object query
+				var isQueryField = (_QueryFields.filter((f)=>{ return f.id == field.id; }).length > 0);
+				if (isQueryField) {  
+					// we chose a connectField which is now a Query type
+					batchName = 'query';
+				}
 				$viewCond.$$(ids.operator).showBatch(batchName);
 				$viewCond.$$(ids.inputValue).showBatch(batchName);
+
+
+				// populate the list of Queries for this_object:
+				if (field.id == 'this_object') {
+
+					var options = [];
+					var Queries = _Object.application.queries((q)=>{ return q.canFilterObject(_Object);});
+					Queries.forEach((q)=>{
+						options.push({
+							id:q.id,
+							value: q.label
+						})
+					})
+
+					$viewCond.$$(ids.inputValue).$$(ids.queryCombo).define("options", options);
+					$viewCond.$$(ids.inputValue).$$(ids.queryCombo).refresh();
+
+				}
+
+
+				// populate the list of Queries for a query field
+				if (isQueryField) {
+
+					var options = [];
+					var Queries = _Object.application.queries((q)=>{ return q.canFilterField(field);});
+					Queries.forEach((q)=>{
+						options.push({
+							id:q.id,
+							value: q.label
+						})
+					})
+
+					$viewCond.$$(ids.inputValue).$$(ids.queryCombo).define("options", options);
+					$viewCond.$$(ids.inputValue).$$(ids.queryCombo).refresh();
+				}
+
 
 				// populate options of list
 				if (field.key == 'list') {
@@ -559,6 +647,7 @@ export default class RowFilter extends OP.Component {
 
 				_logic.callbacks.onChange();
 
+				return false;
 			},
 
 			/**

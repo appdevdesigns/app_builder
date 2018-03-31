@@ -21,6 +21,9 @@ var _ = require('lodash');
   var RuleHash = {
 
     // filter version   :  QueryBuilder version
+    "in_query"          : 'in_query',           // our special QUERY conditions.
+    "not_in_query"      : 'not_in_query',
+
     "contains"          : 'contains',
     "doesn't contain"   : 'not_contains',
     "is not"            : "not_equals", 

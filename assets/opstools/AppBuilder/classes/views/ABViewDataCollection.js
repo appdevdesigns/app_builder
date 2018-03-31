@@ -1106,11 +1106,16 @@ export default class ABViewDataCollection extends ABView {
 
 			// Get field name
 			var fieldName = "";
-			var object = this.datasource;
-			if (object) {
-				var selectField = object.fields(field => field.id == f.fieldId)[0];
-				fieldName = selectField ? selectField.columnName : "";
+			if (f.fieldId == 'this_object') {
+				fieldName = f.fieldId;
+			} else {
+				var object = this.datasource;
+				if (object) {
+					var selectField = object.fields(field => field.id == f.fieldId)[0];
+					fieldName = selectField ? selectField.columnName : "";
+				}
 			}
+
 
 			wheres.push({
 				combineCondition: filterConditions.combineCondition,

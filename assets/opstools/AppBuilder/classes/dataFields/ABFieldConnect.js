@@ -27,7 +27,7 @@ var ABFieldConnectDefaults = {
 	description: L('ab.dataField.connectObject.description', '*Connect two data objects together'),
 
 	isSortable: false,
-	isFilterable: false,
+	isFilterable: true,  // now we can filter using Queries
 	useAsLabel: false,
 
 	// supportImport: flag to support import object across applications

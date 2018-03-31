@@ -166,6 +166,14 @@ module.exports = class ABObjectQuery extends ABObject {
 	importJoins(settings) {
 		var newJoins = [];
 		var newObjects = [];
+		function storeSingle(object) {
+			if (!object) return;
+			
+			var inThere = newObjects.filter((o)=>{ return o.id == object.id}).length > 0;
+			if (!inThere) {
+				newObjects.push(object);
+			}
+		}
 	  	settings.forEach((join) => {
 
 	  		// Convert our saved settings:
@@ -176,11 +184,17 @@ module.exports = class ABObjectQuery extends ABObject {
 			// 					=> innerJoin, leftJoin, leftOuterJoin, rightJoin, rightOuterJoin, fullOuterJoin
 			// 		}
 
+			// track our base object
 	  		var object = this.application.urlResolve(join.objectURL);
+	  		storeSingle(object);
+
+	  		// track our linked object
+	  		var linkField = object.fields((f)=>{ return f.id == join.fieldID; })[0];
+	  		var linkObject = linkField.datasourceLink;
+	  		storeSingle(linkObject);
 
 
 	  		newJoins.push( join );
-	  		newObjects.push(object);
 	  	})
 	  	this._joins = newJoins;
 	  	this._objects = newObjects;
@@ -203,6 +217,39 @@ module.exports = class ABObjectQuery extends ABObject {
 
 
 
+
+
+	/**
+	 * @method canFilterObject
+	 * evaluate the provided object to see if it can directly be filtered by this
+	 * query.
+	 * @param {ABObject} object
+	 * @return {bool} 
+	 */
+	canFilterObject(object) {
+
+		if (!object) return false;
+
+		// I can filter this object if it is one of the objects in my joins
+		return this.objects((o)=>{ return o.id == object.id; }).length > 0;
+
+	}
+
+	/**
+	 * @method canFilterField
+	 * evaluate the provided field to see if it can be filtered by this
+	 * query.
+	 * @param {ABObject} object
+	 * @return {bool} 
+	 */
+	canFilterField(field) {
+
+		// I can filter a field if it's object OR the object it links to can be filtered:
+		var object = field.object;
+		var linkedObject = field.datasourceLink;
+
+		return this.canFilterObject(object) || this.canFilterObject(linkedObject);
+	}
 
 
 
