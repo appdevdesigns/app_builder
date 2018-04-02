@@ -240,7 +240,7 @@ class ABFieldConnect extends ABField {
 							knex.schema.table(tableName, (t) => {
 
 								t.integer(this.columnName).unsigned().nullable()
-									.references('id').inTable(linkTableName).onDelete('cascade');
+									.references(linkObject.PK()).inTable(linkTableName).onDelete('cascade');
 
 								// 1:1
 								if (this.settings.linkViaType == 'one') {
@@ -279,7 +279,7 @@ class ABFieldConnect extends ABField {
 							knex.schema.table(linkTableName, (t) => {
 
 								t.integer(linkColumnName).unsigned().nullable()
-									.references('id').inTable(tableName).onDelete('cascade');
+									.references(this.object.PK()).inTable(tableName).onDelete('cascade');
 							})
 								.then(() => { next(); })
 								.catch(next);
@@ -322,10 +322,10 @@ class ABFieldConnect extends ABField {
 
 								// create columns
 								t.integer(this.object.name).unsigned().nullable()
-									.references('id').inTable(tableName).withKeyName(sourceFkName).onDelete('cascade');
+									.references(this.object.PK()).inTable(tableName).withKeyName(sourceFkName).onDelete('cascade');
 
 								t.integer(linkObject.name).unsigned().nullable()
-									.references('id').inTable(linkTableName).withKeyName(targetFkName).onDelete('cascade');
+									.references(linkObject.PK()).inTable(linkTableName).withKeyName(targetFkName).onDelete('cascade');
 							})
 								.then(() => { resolve(); })
 								.catch(reject);
