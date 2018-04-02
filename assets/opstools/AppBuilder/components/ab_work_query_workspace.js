@@ -43,6 +43,7 @@ export default class ABWorkQueryWorkspace extends OP.Component {
     	// internal list of Webix IDs to reference our UI components.
     	var ids = {
     		component: this.unique('component'),
+            tree: this.unique('tree'),
 
 // buttonAddField: this.unique('buttonAddField'),
 //       buttonDeleteSelected: this.unique('deleteSelected'),
@@ -111,8 +112,7 @@ export default class ABWorkQueryWorkspace extends OP.Component {
                                         },
                                         {
                                             view:"tree",
-                                            // threeState: true,
-                                            // height: 300,
+                                            id: ids.tree,
                                             css: "ab-tree",
                                             template:"{common.icon()} {common.checkbox()} #value#",
                                             data: [
@@ -127,7 +127,38 @@ export default class ABWorkQueryWorkspace extends OP.Component {
                                                         { id:"2.2", value:"Superb" }
                                                     ]}
                                                 ]}
-                                            ]
+                                            ],
+                                            on: {
+                                                onItemClick: function(id, event, item) {
+                                                    if (this.isChecked(id)) {
+                                                        this.uncheckItem(id);
+                                                    } else {
+                                                        this.checkItem(id);
+                                                    }
+                                                },
+                                                onItemCheck: function(id, value, event) {
+                                                    var tree = this;
+                                                    tree.blockEvent(); // prevents endless loop
+
+                                                    var rootid = id;
+                                                    if (value) {
+                                                        // If check we want to check all of the parents as well
+                                                        while (this.getParentId(rootid)) {
+                                                            rootid = this.getParentId(rootid);
+                                                            if (rootid != id)
+                                                                tree.checkItem(rootid);
+                                                        }                                                            
+                                                    } else {
+                                                        // If uncheck we want to uncheck all of the child items as well.
+                                                        this.data.eachSubItem(rootid, function(item) {
+                                                            if (item.id != id)
+                                                                tree.uncheckItem(item.id);
+                                                        });
+                                                    }
+
+                                                    tree.unblockEvent();
+                                                }
+                                            }
                                         }
                                     ]
                                 },
@@ -153,7 +184,7 @@ export default class ABWorkQueryWorkspace extends OP.Component {
                                                         type: "space",
                                                         rows: [
                                                             {
-                                                                view: "combo", 
+                                                                view: "select", 
                                                                 label: "Join records by:",
                                                                 labelWidth: 200,
                                                                 placeholder: "Choose a type of table join",
@@ -191,7 +222,7 @@ export default class ABWorkQueryWorkspace extends OP.Component {
                                                         type: "space",
                                                         rows: [
                                                             {
-                                                                view: "combo", 
+                                                                view: "select", 
                                                                 label: "Join records by:",
                                                                 labelWidth: 200,
                                                                 placeholder: "Choose a type of table join",
