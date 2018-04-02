@@ -43,6 +43,7 @@ export default class ABWorkQueryWorkspace extends OP.Component {
     	// internal list of Webix IDs to reference our UI components.
     	var ids = {
     		component: this.unique('component'),
+            tree: this.unique('tree'),
 
 // buttonAddField: this.unique('buttonAddField'),
 //       buttonDeleteSelected: this.unique('deleteSelected'),
@@ -97,9 +98,184 @@ export default class ABWorkQueryWorkspace extends OP.Component {
     			},
     			{
     				id: ids.selectedObject,
+                    type: "space",
                     rows:[
                         {
-                            fillspace:true
+                            cols: [
+                                {
+                                    rows: [
+                                        { 
+                                            view:"label", 
+                                            label: "Manage Objects",
+                                            css: "ab-query-label",
+                                            height: 50
+                                        },
+                                        {
+                                            view:"tree",
+                                            id: ids.tree,
+                                            css: "ab-tree",
+                                            template:"{common.icon()} {common.checkbox()} #value#",
+                                            data: [
+                                                {id:"root", value:"Cars", open:true, data:[
+                                                    { id:"1", open:true, value:"Toyota", data:[
+                                                        { id:"1.1", value:"Avalon" },
+                                                        { id:"1.2", value:"Corolla" },
+                                                        { id:"1.3", value:"Camry" }
+                                                    ]},
+                                                    { id:"2", value:"Skoda", open:true, data:[
+                                                        { id:"2.1", value:"Octavia" },
+                                                        { id:"2.2", value:"Superb" }
+                                                    ]}
+                                                ]}
+                                            ],
+                                            on: {
+                                                onItemClick: function(id, event, item) {
+                                                    if (this.isChecked(id)) {
+                                                        this.uncheckItem(id);
+                                                    } else {
+                                                        this.checkItem(id);
+                                                    }
+                                                },
+                                                onItemCheck: function(id, value, event) {
+                                                    var tree = this;
+                                                    tree.blockEvent(); // prevents endless loop
+
+                                                    var rootid = id;
+                                                    if (value) {
+                                                        // If check we want to check all of the parents as well
+                                                        while (this.getParentId(rootid)) {
+                                                            rootid = this.getParentId(rootid);
+                                                            if (rootid != id)
+                                                                tree.checkItem(rootid);
+                                                        }                                                            
+                                                    } else {
+                                                        // If uncheck we want to uncheck all of the child items as well.
+                                                        this.data.eachSubItem(rootid, function(item) {
+                                                            if (item.id != id)
+                                                                tree.uncheckItem(item.id);
+                                                        });
+                                                    }
+
+                                                    tree.unblockEvent();
+                                                }
+                                            }
+                                        }
+                                    ]
+                                },
+                                {
+                                    width: 10
+                                },
+                                {
+                                    gravity:2,
+                                    rows: [
+                                        { 
+                                            view:"label", 
+                                            label: "Manage Fields", 
+                                            css: "ab-query-label",
+                                            height: 50
+                                        },
+                                        { 
+                                            view:"tabview",
+                                            tabMinWidth: 200,
+                                            cells: [
+                                                {
+                                                    header: "Main Object",
+                                                    body: {
+                                                        type: "space",
+                                                        rows: [
+                                                            {
+                                                                view: "select", 
+                                                                label: "Join records by:",
+                                                                labelWidth: 200,
+                                                                placeholder: "Choose a type of table join",
+                                                                options: [
+                                                                    { id: 'innerjoin', value: 'Returns records that have matching values in both tables (INNER JOIN).'},
+                                                                    { id: 'left', value: 'Return all records from the left table, and the matched records from the right table (LEFT JOIN).'},
+                                                    				{ id: 'right', value: 'Return all records from the right table, and the matched records from the left table (RIGHT JOIN).'},
+                                                    				{ id: 'fullouterjoin', value: 'Return all records when there is a match in either left or right table (FULL JOIN)'}
+                                                                ]
+                                                            },
+                                                            {
+                                                                view:"dbllist", 
+                                                                list: {
+                                                                    height: 300
+                                                                },
+                                                                labelLeft:"Available Fields",
+                                                                labelRight:"Included Fields",
+                                                                labelBottomLeft:"Move these fields to the right to include in data set.",
+                                                                labelBottomRight:"These fields will display in your final data set.",
+                                                                data:[
+                                                                    {id:"1", value:"Contacts"},
+                                                                    {id:"2", value:"Products"},
+                                                                    {id:"3", value:"Reports"},
+                                                                    {id:"4", value:"Customers"},
+                                                                    {id:"5", value:"Deals"}
+                                                                ]
+                                                            },
+                                                            { fillspace: true }
+                                                        ]
+                                                    }
+                                                },
+                                                {
+                                                    header: "Connected Object",
+                                                    body: {
+                                                        type: "space",
+                                                        rows: [
+                                                            {
+                                                                view: "select", 
+                                                                label: "Join records by:",
+                                                                labelWidth: 200,
+                                                                placeholder: "Choose a type of table join",
+                                                                options: [
+                                                                    { id: 'innerjoin', value: 'Returns records that have matching values in both tables (INNER JOIN).'},
+                                                                    { id: 'left', value: 'Return all records from the left table, and the matched records from the right table (LEFT JOIN).'},
+                                                    				{ id: 'right', value: 'Return all records from the right table, and the matched records from the left table (RIGHT JOIN).'},
+                                                    				{ id: 'fullouterjoin', value: 'Return all records when there is a match in either left or right table (FULL JOIN)'}
+                                                                ]
+                                                            },
+                                                            {
+                                                                view:"dbllist", 
+                                                                list: {
+                                                                    height: 300
+                                                                },
+                                                                labelLeft:"Available Fields",
+                                                                labelRight:"Included Fields",
+                                                                labelBottomLeft:"Move these fields to the right to include in data set.",
+                                                                labelBottomRight:"These fields will display in your final data set.",
+                                                                data:[
+                                                                    {id:"1", value:"Contacts"},
+                                                                    {id:"2", value:"Products"},
+                                                                    {id:"3", value:"Reports"},
+                                                                    {id:"4", value:"Customers"},
+                                                                    {id:"5", value:"Deals"}
+                                                                ]
+                                                            },
+                                                            { fillspace: true }
+                                                        ]
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        { 
+                            view:"label", 
+                            label: "Manage Field Order",
+                            css: "ab-query-label",
+                            height: 50 
+                        },
+                        {
+                            type: "space",
+                            rows: [
+                                {
+                                    view:"menu", 
+                                    data:["Field #1", "Field #2", "Field #3", "Field #4", "Field #5", "Field #6", "Field #7", "Field #8"],
+                                    drag: true,
+                                    dragscroll: true
+                                }
+                            ]
                         },
                         {
                             id: ids.datatable,
