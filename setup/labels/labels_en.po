@@ -908,8 +908,8 @@ msgstr "Add a new page"
 #. path: app_builder
 #. code: en
 #. key: ab.interface.placeholderPageName
-msgid "Parent Name"
-msgstr "Parent Name"
+msgid "Page Name"
+msgstr "Page Name"
 
 #. path: app_builder
 #. code: en
