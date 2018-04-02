@@ -505,12 +505,12 @@ select A.subaccount, B.user
 	where C.user = 'admin'
 */
 				var queryDef = {
-					name:'SubAccountsByUser',
+					name:'Family Pets',
 					isImported: 0,
 
 					"translations": [{
 						"language_code": "en",
-						"label": "SubAccounts by User"
+						"label": "Family Pets"
 					}],
 
 					fields:[
@@ -535,9 +535,9 @@ select A.subaccount, B.user
 						glue:'and', 
 						rows:[
 							{
-								"key": "user",
+								"key": "pet",
 								"rule": "equals",
-								"value": "admin"
+								"value": "rocket"
 							}
 						]
 					}

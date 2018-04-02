@@ -1333,3 +1333,10 @@ a.ab-delete-photo:hover {
 	background: rgba(210, 227, 239, 0.8) !important;
 	box-shadow: none;
 }
+.ab-tree .webix_tree_checkbox {
+	margin: 0 5px 0 0;
+}
+.ab-query-label {
+	font-weight: bold;
+	font-size: 24px;
+}
