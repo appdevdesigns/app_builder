@@ -454,7 +454,10 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 					return;
 				}
 
-				objectList.add(object);
+				if (objectList.exists(object.id))
+					objectList.updateItem(object.id, object);
+				else
+					objectList.add(object);
 
 				if (selectNew != null && selectNew == true) {
 					$$(ids.list).select(object.id);
