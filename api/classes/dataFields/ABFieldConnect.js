@@ -219,9 +219,7 @@ class ABFieldConnect extends ABField {
 					linkColumnName = this.object.name;
 
 				// 1:M - create a column in the table and references to id of the link table
-				// 1:1 - create a column in the table, references to id of the link table and set to be unique
-				if ((this.settings.linkType == 'one') &&
-					(this.settings.linkViaType == 'many' || this.settings.linkViaType == 'one')) {
+				if (this.settings.linkType == 'one' && this.settings.linkViaType == 'many') {
 
 					async.waterfall([
 						// check column already exist
@@ -242,11 +240,6 @@ class ABFieldConnect extends ABField {
 								t.integer(this.columnName).unsigned().nullable()
 									.references(linkObject.PK()).inTable(linkTableName).onDelete('cascade');
 
-								// 1:1
-								if (this.settings.linkViaType == 'one') {
-									t.unique(this.columnName);
-								}
-
 							})
 								.then(() => { next(); })
 								.catch(next);
@@ -257,6 +250,44 @@ class ABFieldConnect extends ABField {
 							if (err) reject(err);
 							else resolve();
 						});
+
+				}
+
+				// 1:1 - create a column in the table, references to id of the link table and set to be unique
+				if (this.settings.linkType == 'one' && this.settings.linkViaType == 'one' &&
+					this.settings.isSource) {
+
+						async.waterfall([
+							// check column already exist
+							(next) => {
+	
+								knex.schema.hasColumn(tableName, this.columnName)
+									.then((exists) => {
+										next(null, exists);
+									})
+									.catch(next);
+							},
+							// create a column
+							(exists, next) => {
+								if (exists) return next();
+	
+								knex.schema.table(tableName, (t) => {
+	
+									t.integer(this.columnName).unsigned().nullable()
+										.references(linkObject.PK()).inTable(linkTableName).onDelete('cascade');
+
+									t.unique(this.columnName);
+	
+								})
+									.then(() => { next(); })
+									.catch(next);
+							}
+						],
+							(err) => {
+	
+								if (err) reject(err);
+								else resolve();
+							});
 
 				}
 

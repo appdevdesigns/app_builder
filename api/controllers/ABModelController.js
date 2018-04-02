@@ -201,7 +201,10 @@ function populateFindConditions(query, object, options, userData) {
 
                         // NOTE: pass 'this' as the Query object
                         // so we can perform embedded queries:
-                        parseCondition(r, this); 
+                        // parseCondition(r, this); 
+
+                        // 'this' is changed type QueryBuilder to QueryBuilderBase
+                        parseCondition(r, Query);
                     });
                     
                 })
