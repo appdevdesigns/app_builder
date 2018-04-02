@@ -26,7 +26,7 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 		this.label = L('ab.component.ruleaction.abviewruleActionFormSubmitRuleEmail', '*Send a custom email');
 
 
-		this.currentObject = null;  // the object this Action is tied to.
+		this.queryObject = null;  // the object this Action is tied to.
 
 		this.formRows = [];	// keep track of the Value Components being set
 		// [
@@ -49,8 +49,8 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 
 		var currFields = [];
 
-		if (this.currentObject) {
-			this.currentObject.fields().forEach((f) => {
+		if (this.queryObject) {
+			this.queryObject.fields().forEach((f) => {
 
 				if (fieldTypes.indexOf(f.key) != -1) {
 
@@ -87,20 +87,24 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 			form: idBase + 'form',
 			popup: idBase + 'popup',
 			list: idBase + 'fieldList',
-			toEmails: idBase + 'toEmails'
+			toEmailsContainer: idBase + 'toEmailsContainer',
+			toEmails: idBase + 'toEmails',
+			message: idBase + 'message'
 		};
 
 		this._ui = {
 			ui: {
 				id: ids.form,
 				view: 'form',
+				width: 450,
 				elementsConfig: {
-					labelPosition: "left",
+					labelPosition: "top",
 					labelWidth: 100
 				},
 				cols: [
 					// email form
 					{
+						width: 330,
 						rows: [
 							{
 								view: 'text',
@@ -126,30 +130,33 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 								}
 							},
 							{
+								id: ids.toEmailsContainer,
 								view: 'forminput',
 								name: 'toEmails',
 								label: 'Send',
 								css: "ab-rich-text",
+								width: 320,
 								body: {
+									width: 320,
 									rows: [
 										{
+											height: 25
+										},
+										{
 											id: ids.toEmails,
+											width: 320,
 											view: 'layout',
 											rows: []
 										},
 										{
-											cols: [
-												{
-													view: "button",
-													type: "icon",
-													icon: "plus",
-													label: "Add a recipient",
-													click: () => {
-														_logic.toEmailAdd();
-													}
-												},
-												{}
-											]
+											view: "button",
+											type: "icon",
+											icon: "plus",
+											label: "Add a recipient",
+											width: 150,
+											click: () => {
+												_logic.toEmailAdd();
+											}
 										}
 									]
 								}
@@ -160,10 +167,17 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 								label: 'Subject'
 							},
 							{
+								view: 'label',
+								label: 'Message',
+								css: { 'font-weight': 'bold' }
+							},
+							{
 								view: 'forminput',
+								id: ids.message,
 								name: 'message',
 								label: 'Message',
 								css: "ab-rich-text",
+								width: 320,
 								height: 400,
 								body: {
 									view: 'tinymce-editor'
@@ -183,6 +197,7 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 								id: ids.list,
 								view: 'list',
 								width: 120,
+								css: { 'background-color': '#fff !important;' },
 								template: function (obj, common) {
 									return _logic.fieldTemplate(obj, common);
 								},
@@ -201,8 +216,10 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 
 			init: () => {
 
-				$$(ids.list).parse(this.currentObject.fields(f => f.fieldUseAsLabel()));
+				$$(ids.list).parse(this.queryObject.fields(f => f.fieldUseAsLabel()));
 				$$(ids.list).refresh();
+
+				_logic.refreshUI();
 
 			},
 
@@ -226,6 +243,8 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 				recipients.forEach((r) => {
 					_logic.toEmailAdd(r.type, r.email);
 				});
+
+				_logic.refreshUI();
 
 			},
 
@@ -260,16 +279,19 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 			toEmailTemplate: (type, email) => {
 
 				return {
+					width: 320,
 					cols: [
 						{
 							view: 'richselect',
 							name: 'type',
 							value: type || 'to',
+							width: 80,
 							options: [
 								{ id: 'to', value: "To:" },
-								{ id: 'cc', value: "Cc:" },
-								{ id: 'bcc', value: "Bcc:" },
-								{ id: 'reply', value: "Reply-To:" }
+								// EmailNotification does not support cc, bcc and reply.
+								// { id: 'cc', value: "Cc:" },
+								// { id: 'bcc', value: "Bcc:" },
+								// { id: 'reply', value: "Reply-To:" }
 							]
 						},
 						{
@@ -277,6 +299,7 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 							name: 'email',
 							value: email || '',
 							validate: webix.rules.isEmail,
+							width: 200,
 							on: {
 								onChange: function (newVal, oldVal) {
 
@@ -307,11 +330,15 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 
 				$$(ids.toEmails).addView(_logic.toEmailTemplate(type, email), count);
 
+				_logic.refreshUI();
+
 			},
 
 			toEmailRemove: ($toView) => {
 
 				$$(ids.toEmails).removeView($toView);
+
+				_logic.refreshUI();
 
 			},
 
@@ -357,6 +384,11 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 
 				webix.UIManager.setFocus(focusElem);
 
+			},
+
+			refreshUI: () => {
+				$$(ids.toEmailsContainer).adjust();
+				$$(ids.message).adjust();
 			}
 
 		};
@@ -392,7 +424,7 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 				subject = this.valueRules.subject,
 				message = this.valueRules.message;
 
-			this.currentObject.fields(f => f.fieldUseAsLabel())
+			this.queryObject.fields(f => f.fieldUseAsLabel())
 				.forEach(f => {
 
 					var template = new RegExp('{' + f.columnName + '}', 'g'),
