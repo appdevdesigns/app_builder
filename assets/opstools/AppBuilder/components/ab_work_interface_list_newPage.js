@@ -10,6 +10,7 @@ import AB_Work_Interface_List_NewPage_BlankPage from "./ab_work_interface_list_n
 import AB_Work_Interface_List_NewPage_QuickPage from "./ab_work_interface_list_newPage_quickPage"
 import ABPage from '../classes/views/ABViewPage'
 
+var uuid = require('uuid');
 
 
 export default class AB_Work_Interface_List_NewPage extends OP.Component {  
@@ -184,7 +185,7 @@ width: 650,
 				} else {
 					page = CurrentApplication.pageNew(values);
 				}
-
+				
 				var validator = page.isValid(values);
 				if (validator.fail()) {
 					CurrentEditor.errors(validator);

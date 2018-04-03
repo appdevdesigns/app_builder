@@ -154,7 +154,10 @@ export default class ABViewFormCustom extends ABViewFormField {
 
 		component.ui = {
 			id: 	ids.component,
-		    view: 	"forminput",
+			view:	"forminput",
+			labelWidth: 0,
+			paddingY: 0,
+			paddingX: 0,
 			css:    "ab-custom-field",
 			name:   component.ui.name,
 			// label:  field.label,

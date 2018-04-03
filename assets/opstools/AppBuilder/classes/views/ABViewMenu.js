@@ -241,6 +241,9 @@ export default class ABViewMenu extends ABViewWidget {
 				label: L('ab.component.menu.pageList', '*Page List:'),
 				labelWidth: App.config.labelWidthLarge,
 				body: {
+					type: "clean",
+					paddingY: 20,
+					paddingX: 10,
 					rows: [
 						{
 							name: "pages",

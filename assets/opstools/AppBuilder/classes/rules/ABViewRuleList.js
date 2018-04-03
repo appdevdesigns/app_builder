@@ -84,6 +84,7 @@ export default class ABViewRuleList {
 		var ids = this.ids = {
 			component: idBase + '_component',
 			rules: idBase + '_rules',
+			rulesScrollview: idBase + '_rulesScrollview',
 
 			action: idBase + '_action',
 			when: idBase + '_when',
@@ -106,39 +107,54 @@ export default class ABViewRuleList {
 			head: {
 				view: "toolbar",
 				cols: [
-					{ view: "label", label: labels.component.header }
+					{ view: "label", label: labels.component.header },
+					{
+						view: "button",
+						icon: "plus",
+						type: "iconButton",
+						label: labels.component.addNewRule,
+						width: 150,
+						click: () => {
+							this.addRule();
+							console.log($$(ids.rules).$height);
+							$$(ids.rulesScrollview).scrollTo(0, $$(ids.rules).$height);
+						}
+					}
 				]
 			},
 			body: {
+				type: "form",
 				rows: [
 					{
 						view: "scrollview",
-						scroll: true,
+						id: ids.rulesScrollview,
+						scroll: "xy",
 						body: {
 							view: "layout",
 							id: ids.rules,
 							margin: 20,
+							padding: 10,
 							rows: []
 						}
 					},
+					// {
+					// 	css: { 'background-color': '#fff' },
+					// 	cols: [
+					// 		{
+					// 			view: "button",
+					// 			icon: "plus",
+					// 			type: "iconButton",
+					// 			label: labels.component.addNewRule,
+					// 			width: 150,
+					// 			click: () => {
+					// 				this.addRule();
+					// 			}
+					// 		},
+					// 		{ fillspace: true }
+					// 	]
+					// },
 					{
-						css: { 'background-color': '#fff' },
-						cols: [
-							{
-								view: "button",
-								icon: "plus",
-								type: "iconButton",
-								label: labels.component.addNewRule,
-								width: 150,
-								click: () => {
-									this.addRule();
-								}
-							},
-							{ fillspace: true }
-						]
-					},
-					{
-						css: { 'background-color': '#fff' },
+						css: { 'background-color': '#fff' },					
 						cols: [
 							{ fillspace: true },
 							{
@@ -160,7 +176,8 @@ export default class ABViewRuleList {
 								click: function () {
 									_logic.buttonSave();
 								}
-							}
+							},
+							{ fillspace: true },
 						]
 					}
 				]

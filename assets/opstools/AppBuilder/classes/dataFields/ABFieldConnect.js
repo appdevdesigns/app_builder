@@ -449,7 +449,8 @@ class ABFieldConnect extends ABFieldSelectivity {
 	 *					unique id references.
 	 * @param {HtmlDOM} node  the HTML Dom object for this field's display.
 	 */
-	customDisplay(row, App, node, editable) {
+	customDisplay(row, App, node, editable, formView) {
+		var isFormView = (formView != null) ? formView : false;
 		// sanity check.
 		if (!node) { return }
 
@@ -492,7 +493,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 		}, App, row);
 
 		// Listen event when selectivity value updates
-		if (domNode && row.id && node) {
+		if (domNode && row.id && node && !isFormView) {
 			domNode.addEventListener('change', (e) => {
 
 				// update just this value on our current object.model
@@ -526,6 +527,17 @@ class ABFieldConnect extends ABFieldSelectivity {
 						OP.Error.log('Error updating our entry.', { error: err, row: row, values: values });
 						console.error(err);
 					});
+
+			}, false);
+		} else {
+			domNode.addEventListener('change', (e) => {
+
+				if (domNode.clientHeight > 32) {
+					var item = $$(node);
+					item.define("height", domNode.clientHeight + 6);
+					item.resizeChildren();
+					item.resize();					
+				}
 
 			}, false);
 		}
@@ -649,7 +661,8 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 				// M:1 - get data that's only empty relation value
 				if (this.settings.linkType == 'many' && this.settings.linkViaType == 'one') {
-					where[linkedCol.columnName] = null;
+					where[linkedCol.columnName] = 'null';
+					// where[linkedCol.columnName] = null;
 				}
 				// 1:1
 				else if (this.settings.linkType == 'one' && this.settings.linkViaType == 'one') {
@@ -662,7 +675,8 @@ class ABFieldConnect extends ABFieldSelectivity {
 					}
 					// 1:1 - get data that's only empty relation value by query null value from link table
 					else {
-						where[linkedCol.columnName] = null;
+						where[linkedCol.columnName] = 'null';
+						// where[linkedCol.columnName] = null;
 					}
 				}
 
@@ -752,21 +766,39 @@ class ABFieldConnect extends ABFieldSelectivity {
 	setValue(item, rowData) {
 
 		if (!item) return;
+		
+		if (_.isEmpty(rowData)) return;
 
 		var val = rowData[this.columnName];
-
-		// convert to array
-		if (val && this.settings.linkType == 'many' && !Array.isArray(val))
-			rowData[this.columnName] = [val];
-
-		// get label to display
-		var displayVal = this.pullRelationValues(rowData);
-
+		if (typeof val == "undefined") {
+			val = rowData;
+			
+			// if ! val in proper selectivity format ->  strange case
+			var testVal = Array.isArray(val) ? val[0] : val;
+			if( !(testVal.id && testVal.text) ){
+				var relationName = this.relationName();
+				val = this.pullRelationValues(rowData[relationName]);
+			}
+			
+		} else {
+			
+			// convert our val into pullRelationValues
+			// get label to display
+			val = this.pullRelationValues(rowData);
+		}
+		
 		// get selectivity dom
 		var domSelectivity = item.$view.querySelector('.connect-data-values');
 
 		// set value to selectivity
-		this.selectivitySet(domSelectivity, displayVal, this.App);
+		this.selectivitySet(domSelectivity, val);
+		
+		if (domSelectivity.clientHeight > 32) {
+			item.define("height", domSelectivity.clientHeight + 6);
+			item.resizeChildren();
+			item.resize();
+		}
+		
 	}
 
 	format(rowData) {

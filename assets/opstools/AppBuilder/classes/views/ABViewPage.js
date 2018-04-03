@@ -239,6 +239,9 @@ export default class ABViewPage extends ABViewContainer {
                 label: L('ab.component.page.dataCollections', '*Data Collections:'),
                 labelWidth: App.config.labelWidthLarge,
                 body: {
+                    type: "clean",
+                    paddingY: 20,
+                    paddingX: 10,
                     rows: [
                         {
                             cols: [
@@ -267,9 +270,12 @@ export default class ABViewPage extends ABViewContainer {
             {
                 view: "fieldset",
                 name: "pagePermissionPanel",
-                label: L('ab.component.page.pagePermissions', '*Page Pemissions:'),
+                label: L('ab.component.page.pagePermissions', '*Page Permissions:'),
                 labelWidth: App.config.labelWidthLarge,
                 body: {
+                    type: "clean",
+                    paddingY: 20,
+                    paddingX: 10,
                     rows: [
                         {
             				name: 'permissions',
@@ -506,6 +512,7 @@ export default class ABViewPage extends ABViewContainer {
                 // if this is our initial save()
                 if (!this.id) {
                     this.id = OP.Util.uuid();   // setup default .id
+                    this.name = this.name + "_" + this.id.split("-")[1]; // add a unique string to the name so it doesnt collide with a previous page name
                 }
 
                 this.application.pageSave(this)

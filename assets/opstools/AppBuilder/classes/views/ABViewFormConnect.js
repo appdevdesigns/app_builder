@@ -210,11 +210,14 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 		component.ui = {
 			id: 	ids.component,
 			view: 	"forminput",
+			labelWidth: 0,
+			paddingY: 0,
+			paddingX: 0,
 			css:    "ab-custom-field",
 		    name:   component.ui.name,
 		    body:{
 				view: App.custom.focusabletemplate.view,
-				// css:  "webix_el_box",
+				css:  "webix_el_box",
 				borderless: true,
 				height: component.ui.height,
 				template: template,

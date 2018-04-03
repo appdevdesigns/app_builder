@@ -35,7 +35,7 @@ var _ = require('lodash');
     ">"                 : 'greater',
     "≥"                 : 'greater_or_equal',
     "equals"            : 'equals',
-    "does not equal"    : 'not_equals',
+    "does not equal"    : 'not_equal',
     "is checked"        : 'equals',       // == 1
     "is not checked"    : 'equals',       // == 0
     "is null"           : 'is_null',

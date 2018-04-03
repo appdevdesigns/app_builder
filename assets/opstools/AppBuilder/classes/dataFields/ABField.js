@@ -189,11 +189,6 @@ export default class ABField extends ABFieldBase {
 
   		return obj;
 	  }
-	  
-
-	static get reservedNames() {
-		return ['id', 'created_at', 'updated_at', 'properties'];
-	}
 
 
   	/*
@@ -486,11 +481,19 @@ export default class ABField extends ABFieldBase {
 	 * @param {Object} rowData - data of row
 	 * 
 	 */
-	setValue(item, rowData) {
+	setValue(item, rowData, defaultValue) {
 
 		if (!item) return;
-
-		var val = rowData[this.columnName];
+	
+		var val;
+		if (rowData[this.columnName]) {
+			val = rowData[this.columnName];
+		} else {
+			val = rowData;
+		}
+		
+		if (typeof val == "undefined")
+			val = defaultValue;
 
 		item.setValue(val);
 	};
