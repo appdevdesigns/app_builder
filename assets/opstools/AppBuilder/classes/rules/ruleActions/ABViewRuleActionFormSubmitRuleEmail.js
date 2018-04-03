@@ -172,17 +172,25 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 								css: { 'font-weight': 'bold' }
 							},
 							{
-								view: 'forminput',
+								view: 'richtext',
 								id: ids.message,
 								name: 'message',
 								label: 'Message',
-								css: "ab-rich-text",
 								width: 320,
-								height: 400,
-								body: {
-									view: 'tinymce-editor'
-								}
+								height: 400
 							}
+							// {
+							// 	view: 'forminput',
+							// 	id: ids.message,
+							// 	name: 'message',
+							// 	label: 'Message',
+							// 	css: "ab-rich-text",
+							// 	width: 320,
+							// 	height: 400,
+							// 	body: {
+							// 		view: 'tinymce-editor'
+							// 	}
+							// }
 						]
 					},
 					// field list
