@@ -167,18 +167,18 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 								label: 'Subject'
 							},
 							{
-								view: 'label',
-								label: 'Message',
-								css: { 'font-weight': 'bold' }
-							},
-							{
-								view: 'richtext',
+								view: 'textarea',
 								id: ids.message,
 								name: 'message',
 								label: 'Message',
 								width: 320,
 								height: 400
 							}
+							// {
+							// 	view: 'label',
+							// 	label: 'Message',
+							// 	css: { 'font-weight': 'bold' }
+							// },
 							// {
 							// 	view: 'forminput',
 							// 	id: ids.message,
@@ -382,15 +382,18 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 				var focusElem = webix.UIManager.getFocus();
 				var val = "";
 
-				if (focusElem.config.view != 'text') return;
+				if (focusElem.config.view != 'text' ||
+					focusElem.config.view != 'textarea') {
 
-				if (focusElem.getValue)
-					val = focusElem.getValue();
+					if (focusElem.getValue)
+						val = focusElem.getValue();
+	
+					if (focusElem.setValue)
+						focusElem.setValue(val + '{#label#}'.replace('#label#', field.label));
+	
+					webix.UIManager.setFocus(focusElem);
 
-				if (focusElem.setValue)
-					focusElem.setValue(val + '{#label#}'.replace('#label#', field.label));
-
-				webix.UIManager.setFocus(focusElem);
+				}
 
 			},
 
