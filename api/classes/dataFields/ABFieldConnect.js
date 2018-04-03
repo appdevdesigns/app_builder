@@ -141,6 +141,14 @@ class ABFieldConnect extends ABField {
 	}
 
 
+	linkType() {
+		return this.settings.linkType;
+	}
+
+
+	linkViaType() {
+		return this.settings.linkViaType;
+	}
 
 	///
 	/// DB Migrations
@@ -241,7 +249,11 @@ class ABFieldConnect extends ABField {
 				else if (this.settings.linkType == 'many' && this.settings.linkViaType == 'many') {
 
 					var joinTableName = this.joinTableName(),
-						getFkName = (objectName, columnName) => {
+						getFkName = AppBuilder.rules.toJunctionTableFK;  
+						// [add] replaced this with a global rule, so we can reuse it in other 
+						// 		 places.
+						/* 
+						(objectName, columnName) => {
 
 							var fkName = objectName + '_' + columnName;
 
@@ -250,6 +262,7 @@ class ABFieldConnect extends ABField {
 
 							return fkName;
 						};
+						*/
 
 					knex.schema.hasTable(joinTableName).then((exists) => {
 

@@ -82,24 +82,7 @@ export default class ABModel {
 	///
 	/// Instance Methods
 	///
-	modelURL() {
-		return '/app_builder/model/application/#appID#/object/#objID#'
-			.replace('#appID#', this.object.application.id)
-			.replace('#objID#', this.object.id)
-	}
 
-	modelURLItem(id) {
-		return '/app_builder/model/application/#appID#/object/#objID#/#id#'
-			.replace('#appID#', this.object.application.id)
-			.replace('#objID#', this.object.id)
-			.replace('#id#', id);
-	}
-
-	modelURLRefresh() {
-		return '/app_builder/model/application/#appID#/refreshobject/#objID#'
-			.replace('#appID#', this.object.application.id)
-			.replace('#objID#', this.object.id);
-	}
 
 	// Prepare multilingual fields to be untranslated
 	// Before untranslating we need to ensure that values.translations is set.
@@ -117,7 +100,6 @@ export default class ABModel {
 	}
 
 
-
 	/**
 	 * @method create
 	 * update model values on the server.
@@ -130,7 +112,7 @@ export default class ABModel {
 			(resolve, reject) => {
 
 				OP.Comm.Service.post({
-					url: this.modelURL(),
+					url: this.object.urlRest(),
 					params: values
 				})
 					.then((data) => {
@@ -164,7 +146,7 @@ export default class ABModel {
 			(resolve, reject) => {
 
 				OP.Comm.Service['delete']({
-					url: this.modelURLItem(id)
+					url: this.object.urlRestItem(id)
 				})
 					.then((data) => {
 						resolve(data);
@@ -214,7 +196,7 @@ if (newCond.where.where) {
 			(resolve, reject) => {
 
 				OP.Comm.Socket.get({
-					url: this.modelURL(),
+					url: this.object.urlRest(),
 					params: newCond
 				})
 					.then((data) => {
@@ -484,7 +466,7 @@ reject(err);
 			(resolve, reject) => {
 
 				OP.Comm.Service.put({
-					url: this.modelURLItem(id),
+					url: this.object.urlRestItem(id),
 					params: values
 				})
 					.then((data) => {
@@ -530,7 +512,7 @@ reject(err);
 			(resolve, reject) => {
 
 				OP.Comm.Service.put({
-					url: this.modelURLRefresh()
+					url: this.object.urlRestRefresh()
 				})
 					.then(() => {
 						resolve();

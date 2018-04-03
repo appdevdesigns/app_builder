@@ -53,6 +53,20 @@ module.exports = class ABApplicationBase {
 		this._pages = newPages;
 
 
+		// NOTE: keep this after ABObjects are loaded
+		// import our ABObjectQueries
+		// just like the .objectNew() both ABApplication.js (client and server) need to 
+		// implement .queryNew()
+		var newQueries = [];
+		(attributes.json.queries || []).forEach((query) => {
+			// prevent processing of null values.  
+			if (query) {
+		  		newQueries.push( this.queryNew(query) );  
+		  	}
+	  	})
+		this._queries = newQueries;
+
+
 		// Object List Settings
 		attributes.json.objectListSettings 		= attributes.json.objectListSettings || {};
 		this.objectListSettings 				= this.objectListSettings || {};
@@ -263,7 +277,29 @@ module.exports = class ABApplicationBase {
 	// }
 
 
+	///
+	/// Queries
+	///
 
+
+
+
+	/**
+	 * @method queries()
+	 *
+	 * return an array of all the ABObjectQueries for this ABApplication.
+	 *
+	 * @param {fn} filter  	a filter fn to return a set of ABObjectQueries that 
+	 *						this fn returns true for.
+	 * @return {array} 	array of ABObjectQueries
+	 */
+	queries (filter) {
+
+		filter = filter || function() {return true; };
+
+		return this._queries.filter(filter);
+
+	}
 
 	/**
 	 * @method urlResolve()
