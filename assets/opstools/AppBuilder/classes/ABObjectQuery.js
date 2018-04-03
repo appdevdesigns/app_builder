@@ -239,6 +239,16 @@ export default class ABObjectQuery extends ABObject {
 	///
 
 
+	/**
+	 * @method objectMain
+	 * return the main object of query
+	 * 
+	 * @return {ABObject}
+	 */
+	objectMain() {
+		return this.application.urlResolve(this.importFromObject);
+	}
+
 
 	/**
 	 * @method joins()
@@ -325,6 +335,28 @@ export default class ABObjectQuery extends ABObject {
 			joins.push(join);
 		})
 		return joins;
+	}
+
+
+
+	joinAdd(join) {
+
+		// add new join to settings
+		this._joins.push(join);
+
+		// refresh store
+		this.importJoins(this._joins)
+	}
+
+
+	joinRemove(objectURL) {
+
+		// remove join
+		this._joins = this._joins.filter(j => j.objectURL != objectURL);
+
+		// refresh store
+		this.importJoins(this._joins);
+
 	}
 
 

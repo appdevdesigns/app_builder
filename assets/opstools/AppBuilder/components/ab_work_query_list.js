@@ -467,20 +467,22 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 			 *
 			 * Once a New Object was created in the Popup, follow up with it here.
 			 */
-			callbackNewObject:function(err, object, selectNew, callback){
+			callbackNewObject:function(err, query, selectNew, callback) {
 
-// 	if (err) {
-// 		OP.Error.log('Error creating New Object', {error: err});
-// 		return;
-// 	}
+				if (err) {
+					OP.Error.log('Error creating New Query', {error: err});
+					return;
+				}
 
-// 	queryList.add(object);
+				// add it to our list.
+				queryList.add(query);
 
-// 	if (selectNew != null && selectNew == true) {
-// 		$$(ids.list).select(object.id);
-// 	} else {
-// 		callback();
-// 	}
+				if (selectNew != null && selectNew == true) {
+					$$(ids.list).select(query.id);
+				}
+
+				if (callback)
+					callback();
 
 			},
 
@@ -491,65 +493,9 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 			 * Manages initiating the transition to the new Object Popup window
 			 */
 			clickNewObject:function(selectNew, callback) {
+
 				// show the new popup
 				PopupNewQueryComponent.show(selectNew, callback);
-
-
-// MY TEST QUERY:
-/*
-select A.subaccount, B.user
-	from AB_testQuery_Subaccount as A 
-	inner join AB_testQuery_Staff_Subaccount_subaccounts as B on A.id = B.Subaccount
-	inner join AB_testQuery_Staff as C on B.staff = C.id
-
-	where C.user = 'admin'
-*/
-				var queryDef = {
-					name:'Family Pets',
-					isImported: 0,
-
-					"translations": [{
-						"language_code": "en",
-						"label": "Family Pets"
-					}],
-
-					fields:[
-						{   // left off: only define fields that exist in objects:
-							// Family.Name 
-							fieldURL:"#/_objects/4dffd3c3-f64a-4e48-85e4-4f27943f9d22/_fields/c0388bf7-f5f2-4fb7-8b33-6843dba4db7c",
-						},
-						{   // Pets.Name
-							fieldURL:"#/_objects/b738b3d1-84fe-46ff-aab3-7c9a3ea2b3bd/_fields/44f8e001-f669-4a52-9cb6-f3bfcd4f5c82",
-						},
-					],
-
-					joins: [
-						{
-							objectURL:"#/_objects/4dffd3c3-f64a-4e48-85e4-4f27943f9d22",	// Family
-							fieldID:'4ad1094e-6ba9-491b-a471-4700b6c3b707',					// Pet
-							type: 'leftJoin'												// left join
-						}
-					],
-
-					where: { 
-						glue:'and', 
-						rules:[
-							{
-								"key": "pet",
-								"rule": "equals",
-								"value": "rocket"
-							}
-						]
-					}
-				}
-				OP.Multilingual.translate(queryDef, queryDef, ['label']);
-
-				// create an instance of ABObjectQuery
-				var query = CurrentApplication.queryNew(queryDef);
-				query.save();
-
-				// add it to our list.
-				queryList.add(query);
 
 			},
 
@@ -577,6 +523,7 @@ select A.subaccount, B.user
 
 									queryList.remove(selectedObject.id);
 
+									_logic.callbacks.onItemSelected( null );
 // App.actions.clearQueryWorkspace();
 								});
 

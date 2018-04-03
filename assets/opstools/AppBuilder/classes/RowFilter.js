@@ -103,7 +103,7 @@ export default class RowFilter extends OP.Component {
 
 				_Object = object;
 				_Fields = _Object ? _Object.fields(f => f.fieldIsFilterable()) : [];
-				_QueryFields = _Object.connectFields();
+				_QueryFields = _Object ? _Object.connectFields() : [];
 
 				// insert our 'this object' entry if an Object was given.
 				if (_Object) {

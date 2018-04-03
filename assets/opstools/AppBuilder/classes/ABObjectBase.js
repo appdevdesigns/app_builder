@@ -164,6 +164,29 @@ module.exports =  class ABObjectBase {
 
 
 
+	///
+	/// Objects
+	///
+
+
+	/**
+	 * @method objectLinks()
+	 * 
+	 *  return an array of ABObject that's connected.
+	 * 
+	 * @param {object} filter 
+	 * @return {array} - An array of ABObject
+	 */
+	objectLinks (filter) {
+
+		var connectFields = this.connectFields();
+
+		return connectFields.map(f => f.datasourceLink);
+
+	}
+
+
+
 
 	///
 	/// Fields

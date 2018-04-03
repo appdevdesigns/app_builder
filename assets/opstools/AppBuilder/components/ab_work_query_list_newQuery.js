@@ -13,7 +13,7 @@ export default class AB_Work_Query_List_NewQuery extends OP.Component {   //.ext
 		var L = this.Label;
 
 		var labels = {
-			common : App.labels,
+			common: App.labels,
 			component: {
 				addNew: L('ab.query.addNew', '*Add new query'),
 				queryName: L('ab.query.name', '*Name'),
@@ -32,7 +32,7 @@ export default class AB_Work_Query_List_NewQuery extends OP.Component {   //.ext
 			buttonSave: this.unique('buttonSave'),
 			object: this.unique('object')
 		}
-		
+
 		// Our webix UI definition:
 		this.ui = {
 			view: "window",
@@ -46,28 +46,22 @@ export default class AB_Work_Query_List_NewQuery extends OP.Component {   //.ext
 				rules: {
 				},
 				elements: [
-					{ 
-						view: "text", 
-						label: labels.component.queryName, 
-						name: "name", 
-						required: true, 
-						placeholder: labels.component.queryNamePlaceholder, 
-						labelWidth: App.config.labelWidthMedium 
+					{
+						view: "text",
+						label: labels.component.queryName,
+						name: "name",
+						required: true,
+						placeholder: labels.component.queryNamePlaceholder,
+						labelWidth: App.config.labelWidthMedium
 					},
 					{
-					    view: "richselect",
+						view: "richselect",
 						id: ids.object,
 						name: "object",
-					    label: labels.component.object,
+						label: labels.component.object,
 						labelWidth: App.config.labelWidthMedium,
 						placeholder: labels.component.objectPlaceholder,
-						required: true,
-						// TODO: Need to get dynamic list of objects here
-						options:[ 
-					        { "id":1, "value":"Banana"}, 
-					        { "id":2, "value":"Papaya"}, 
-					        { "id":3, "value":"Apple"}
-					    ]
+						required: true
 					},
 					{
 						margin: 5,
@@ -76,18 +70,18 @@ export default class AB_Work_Query_List_NewQuery extends OP.Component {   //.ext
 							{
 								view: "button",
 								id: ids.buttonCancel,
-								value: labels.common.cancel, 
+								value: labels.common.cancel,
 								css: "ab-cancel-button",
 								autowidth: true,
 								click: function () {
-									_logic.cancel();
+									_logic.hide();
 								}
 							},
 							{
 								view: "button",
 								id: ids.buttonSave,
 								value: labels.component.addNewQuery,
-								autowidth: true, 
+								autowidth: true,
 								type: "form",
 								click: function () {
 									return _logic.save();
@@ -107,7 +101,7 @@ export default class AB_Work_Query_List_NewQuery extends OP.Component {   //.ext
 			webix.extend($$(ids.component), webix.ProgressBar);
 
 			// register our callbacks:
-			for(var c in _logic.callbacks) {
+			for (var c in _logic.callbacks) {
 				_logic.callbacks[c] = options[c] || _logic.callbacks[c];
 			}
 
@@ -135,14 +129,14 @@ export default class AB_Work_Query_List_NewQuery extends OP.Component {   //.ext
 			 *
 			 * prepare ourself with the current application
 			 */
-			applicationLoad:function(application) {
+			applicationLoad: function (application) {
 				// _logic.show();
 				currentApplication = application;	// remember our current Application.
 			},
 
 
-			callbacks:{
-				onDone:function(){}
+			callbacks: {
+				onDone: function () { }
 			},
 
 
@@ -151,12 +145,12 @@ export default class AB_Work_Query_List_NewQuery extends OP.Component {   //.ext
 			 *
 			 * remove the busy indicator from the form.
 			 */
-			hide: function() {
+			hide: function () {
 				if ($$(ids.component))
 					$$(ids.component).hide();
 			},
-			
-			
+
+
 			/**
 			 * Show the busy indicator
 			 */
@@ -165,8 +159,8 @@ export default class AB_Work_Query_List_NewQuery extends OP.Component {   //.ext
 					$$(ids.component).showProgress();
 				}
 			},
-			
-			
+
+
 			/**
 			 * Hide the busy indicator
 			 */
@@ -175,16 +169,19 @@ export default class AB_Work_Query_List_NewQuery extends OP.Component {   //.ext
 					$$(ids.component).hideProgress();
 				}
 			},
-			
-			
+
+
 			/**
 			 * Finished saving, so hide the popup and clean up.
-			 * @param {object} obj
+			 * @param {object} query
 			 */
-			done: (obj) => {
+			done: (query) => {
+
+				var selectNew = true;
+
 				_logic.hideBusy();
 				_logic.hide();							// hide our popup
-				_logic.callbacks.onDone(null, obj, selectNew, callback);		// tell parent component we're done
+				_logic.callbacks.onDone(null, query, selectNew, null);		// tell parent component we're done
 			},
 
 
@@ -194,11 +191,36 @@ export default class AB_Work_Query_List_NewQuery extends OP.Component {   //.ext
 			 * take the data gathered by our child creation tabs, and
 			 * add it to our current application.
 			 *
-			 * @param {obj} values  key=>value hash of model values.
-			 * @param {fn}  cb 		node style callback to indicate success/failure
-			 * 						return Promise
 			 */
-			save:function (values, cb) {
+			save: function () {
+
+				// show loading cursor
+				_logic.showBusy();
+
+				var formVals = $$(ids.form).getValues(),
+					queryName = formVals["name"],
+					objectId = formVals["object"];
+
+				var selectedObj = currentApplication.objects(obj => obj.id == objectId)[0];
+
+				// create an instance of ABObjectQuery
+				var query = currentApplication.queryNew({
+					name: queryName,
+					label: queryName,
+					importFromObject: selectedObj.urlPointer()
+				});
+
+				// save to db
+				query.save()
+					.then(() => {
+						_logic.done(query);
+					})
+					.catch(err => {
+
+						_logic.hideBusy();
+						_logic.callbacks.onDone(err);
+		
+					});
 
 			},
 
@@ -208,9 +230,29 @@ export default class AB_Work_Query_List_NewQuery extends OP.Component {   //.ext
 			 *
 			 * Show this component.
 			 */
-			show:function(shouldSelectNew, callbackFunction) {
+			show: function (shouldSelectNew, callbackFunction) {
 				if ($$(ids.component))
 					$$(ids.component).show();
+
+				// populate object list
+				if ($$(ids.object)) {
+
+					let objectOpts = currentApplication.objects().map(obj => {
+						return {
+							id: obj.id,
+							value: obj.label
+						};
+					});
+
+					$$(ids.object).define("options", objectOpts);
+					$$(ids.object).refresh();
+				}
+
+				// clear form
+				$$(ids.form).setValues({
+					name: '',
+					object: ''
+				});
 			}
 
 		}
