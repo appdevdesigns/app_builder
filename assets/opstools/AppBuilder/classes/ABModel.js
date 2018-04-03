@@ -548,6 +548,36 @@ reject(err);
 		// convert to array
 		if (!(data instanceof Array))
 			data = [data];
+			
+		// find all connected fields
+		var connectedFields = this.object.connectFields();
+		
+		// loop through data to find connected fields
+		data.forEach((d) => {
+			// loop through data's connected fields
+			connectedFields.forEach((c) => {
+				// get the relation name so we can change the original object
+				var relationName = c.relationName();
+				// if there is no data we can exit now
+				if (d[relationName] == null) return;
+				// if the data is an array we need to loop through it
+				if (Array.isArray(d[relationName])) {
+					d[relationName].forEach((r) => {
+						// if translations are present and they are still a string
+						if ('translations' in r && typeof r.translations == "string") {
+							// parse the string into an object
+							r.translations = JSON.parse(r.translations);
+						}
+					});
+				} else {
+					// if the data is not an array it is a single item...check that has translations and it is a string
+					if ('translations' in d[relationName] && typeof d[relationName].translations == "string") {
+						// if so parse the string into an object
+						d[relationName].translations = JSON.parse(d[relationName].translations);
+					}
+				}
+			});
+		});
 
 		var connectFields = this.object.connectFields();
 
