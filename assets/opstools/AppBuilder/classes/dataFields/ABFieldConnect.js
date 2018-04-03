@@ -771,23 +771,15 @@ class ABFieldConnect extends ABFieldSelectivity {
 		if (typeof val == "undefined") {
 			val = rowData;
 			
-			// convert to array
-			if (val && this.settings.linkType == 'many' && !Array.isArray(val))
-				val = [val];
-			
 			// if ! val in proper selectivity format ->  strange case
 			var testVal = Array.isArray(val) ? val[0] : val;
 			if( !(testVal.id && testVal.text) ){
 				var relationName = this.relationName();
-				var val = rowData[relationName];
+				val = this.pullRelationValues(rowData[relationName]);
 			}
 			
 		} else {
 			
-			// convert to array
-			if (val && this.settings.linkType == 'many' && !Array.isArray(val))
-				val = [val];
-				
 			// convert our val into pullRelationValues
 			// get label to display
 			val = this.pullRelationValues(rowData);
