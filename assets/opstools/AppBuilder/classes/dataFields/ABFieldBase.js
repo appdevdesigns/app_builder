@@ -51,6 +51,9 @@ module.exports = class ABFieldBase {
   	/// Available to the Class level object.  These methods are not dependent
   	/// on the instance values of the Application.
   	///
+	static get reservedNames() {
+		return ['id', 'created_at', 'updated_at', 'properties', 'createdAt', 'updatedAt'];
+	}
 
 
 
@@ -64,16 +67,32 @@ module.exports = class ABFieldBase {
   	 * @return {Array}
   	 */
   	fieldOrmTypes() {
-  		if (this.defaults.compatibleOrmTypes) {
-  			if (Array.isArray(this.defaults.compatibleOrmTypes)) {
-  				return this.defaults.compatibleOrmTypes;
-  			} else {
-  				return [this.defaults.compatibleOrmTypes];
-  			}
-  		} else {
-  			return [];
-  		}
-  	}
+		if (this.defaults.compatibleOrmTypes) {
+			if (Array.isArray(this.defaults.compatibleOrmTypes)) {
+				return this.defaults.compatibleOrmTypes;
+			} else {
+				return [this.defaults.compatibleOrmTypes];
+			}
+		} else {
+			return [];
+		}
+	}
+
+	/**
+  	 * Mysql data types that can be imported to this DataField
+  	 * @return {Array}
+  	 */
+  	fieldMysqlTypes() {
+		if (this.defaults.compatibleMysqlTypes) {
+			if (Array.isArray(this.defaults.compatibleMysqlTypes)) {
+				return this.defaults.compatibleMysqlTypes;
+			} else {
+				return [this.defaults.compatibleMysqlTypes];
+			}
+		} else {
+			return [];
+		}
+	}
 
   	// font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
   	fieldIcon() {

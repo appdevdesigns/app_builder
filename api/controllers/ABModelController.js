@@ -13,26 +13,33 @@ var cJSON = require('circular-json');
 
 
 const ValidationError = require('objection').ValidationError;
+const {ref, raw} = require('objection');
 
 
 var reloading = null;
 
 
-/**
+/** 
  * @function updateRelationValues
  * Make sure an object's relationships are properly updated.
  * We expect that when a create or update happens, that the data in the 
  * related fields represent the CURRENT STATE of all it's relations. Any 
  * field not in the relation value is no longer part of the related data.
- * @param {Objection.JS Query} query
+ * @param {ABObject} object
  * @param {integer} id  the .id of the base object we are working with
  * @param {obj} updateRelationParams  "key"=>"value" hash of the related 
  *                      fields and current state of values.
  * @return {array}  array of update operations to perform the relations.
  */ 
-function updateRelationValues(query, id, updateRelationParams) {
+function updateRelationValues(object, id, updateRelationParams) {
 
     var updateTasks = [];
+
+
+    // create a new query to update relation data
+    // NOTE: when use same query, it will have a "created duplicate" error
+    var query = object.model().query();
+
 
     //// 
     //// We are given a current state of values that should be related to our object.
@@ -55,13 +62,21 @@ function updateRelationValues(query, id, updateRelationParams) {
 
                 return new Promise((resolve, reject) => {
 
-                    query.where('id', id).first()
+                    query.where(object.PK(), id).first()
                         .catch(err => reject(err))
                         .then(record => {
 
                             if (record == null) return resolve();
 
-                            record.$relatedQuery(clearRelationName).unrelate()
+                            var fieldLink = object.fields(f => f.columnName == colName)[0];
+                            if (fieldLink == null) return resolve();
+
+                            var objectLink = fieldLink.object;
+                            if (objectLink == null) return resolve();
+
+                            record
+                                .$relatedQuery(clearRelationName)
+                                .unrelate()
                                 .catch(err => reject(err))
                                 .then(() => { resolve(); });
 
@@ -95,13 +110,14 @@ function updateRelationValues(query, id, updateRelationParams) {
 
                         var relationName = AppBuilder.rules.toFieldRelationFormat(colName);
 
-                        query.where('id', id).first()
+                        query.where(object.PK(), id).first()
                             .catch(err => reject(err))
                             .then(record => {
 
                                 if (record == null) return resolve();
 
-                                record.$relatedQuery(relationName).relate(val)
+                                record.$relatedQuery(relationName)
+                                    .relate(val)
                                     .catch(err => reject(err))
                                     .then(() => { resolve(); });
 
@@ -185,7 +201,10 @@ function populateFindConditions(query, object, options, userData) {
 
                         // NOTE: pass 'this' as the Query object
                         // so we can perform embedded queries:
-                        parseCondition(r, this); 
+                        // parseCondition(r, this); 
+
+                        // 'this' is changed type QueryBuilder to QueryBuilderBase
+                        parseCondition(r, Query);
                     });
                     
                 })
@@ -199,9 +218,19 @@ function populateFindConditions(query, object, options, userData) {
             if (condition.rule == 'have_no_relation') {
                 var relation_name = AppBuilder.rules.toFieldRelationFormat(condition.key);
 
+                var field = object._fields.filter(field => field.columnName == condition.key)[0];
+                if (!field) return;
+
+                var objectLink = field.objectLink();
+                if (!objectLink) return;
+
+                var pkObjectLink = objectLink.PK();
+
                 Query
                     .leftJoinRelation(relation_name)
-                    .whereRaw('{relation_name}.id IS NULL'.replace('{relation_name}', relation_name));
+                    .whereRaw('{relation_name}.{primary_name} IS NULL'
+                        .replace('{relation_name}', relation_name)
+                        .replace('{primary_name}', pkObjectLink));
 
                 return;
             }
@@ -233,6 +262,7 @@ function populateFindConditions(query, object, options, userData) {
             var conversionHash = {
                 'equals'        : '=',
                 'not_equal'     : '<>',
+                'not_equals'    : '<>',   // catch existing wrong entries
                 'is_empty'      : '=',
                 'is_not_empty'  : '<>',
                 'greater'       : '>',
@@ -386,6 +416,11 @@ function populateFindConditions(query, object, options, userData) {
             .filter((f) => f.fieldLink() != null)
             .map((f) => f.relationName());
 
+        // includes 'translations' of the external object
+        if (object.isExternal &&
+            object.model().relationMappings()['translations'])
+            relationNames.push('translations');
+
         if (relationNames.length > 0)
             query.eager('[#fieldNames#]'.replace('#fieldNames#', relationNames.join(', ')));
     }
@@ -437,7 +472,7 @@ function updateConnectedFields(object, newData, oldData) {
         }
         
         // filter array to only show unique items
-        items = _.uniqBy(items, "id");
+        items = _.uniqBy(items, object.PK());
         // parse through all items and broadcast a "stale" action so we can tell the client side the data may have updated
         items.forEach((i) => {
             // Make sure you put the payload together just like before
@@ -450,6 +485,78 @@ function updateConnectedFields(object, newData, oldData) {
         });
     });
 }
+
+
+/**
+ * @function updateTranslationsValues
+ * Update translations value of the external table
+ * 
+ * @param {ABObject} object 
+ * @param {int} id 
+ * @param {Array} translations - translations data
+ * @param {boolean} isInsert
+ *
+ */
+function updateTranslationsValues(object, id, translations, isInsert) {
+
+    if (!object.isExternal)
+        return Promise.resolve();
+        
+    let transModel = object.model().relationMappings()['translations'];
+    if (!transModel)
+        return Promise.resolve();
+
+    let tasks = [],
+        transTableName = transModel.modelClass.tableName;
+        multilingualFields = object.fields(f => f.settings.supportMultilingual);
+
+    translations.forEach(trans => {
+
+        tasks.push(new Promise((next, err) => {
+
+            let transKnex = ABMigration.connection()(transTableName);
+
+            // values
+            let vals = {};
+            vals[object.transColumnName] = id;
+            vals['language_code'] = trans['language_code'];
+
+            multilingualFields.forEach(f => {
+                vals[f.columnName] = trans[f.columnName];
+            });
+
+            // where clause
+            let where = {};
+            where[object.transColumnName] = id;
+            where['language_code'] = trans['language_code'];
+
+            // insert
+            if (isInsert) {
+
+                transKnex.insert(vals)
+                    .catch(err)
+                    .then(function() {
+                        next();
+                    });
+            }
+            // update
+            else {
+
+                transKnex.update(vals).where(where)
+                    .catch(err)
+                    .then(function() {
+                        next();
+                    });
+            }
+
+        }));
+
+    });
+
+    return Promise.all(tasks);
+
+}
+
 
 
 
@@ -478,7 +585,8 @@ module.exports = {
 
                     // this is a create operation, so ... 
                     // createParams.created_at = (new Date()).toISOString();
-                    createParams.created_at = AppBuilder.rules.toSQLDateTime(new Date());
+                    if (!object.isExternal)
+                        createParams.created_at = AppBuilder.rules.toSQLDateTime(new Date());
 
                     sails.log.verbose('ABModelController.create(): createParams:', createParams);
 
@@ -487,13 +595,15 @@ module.exports = {
                     query.insert(createParams)
                         .then((newObj) => {
 
-                            // create a new query to update relation data
-                            // NOTE: when use same query, it will have a "created duplicate" error
-                            var query2 = object.model().query();
-                            var updateTasks = updateRelationValues(query2, newObj.id, updateRelationParams);
+                            var updateTasks = updateRelationValues(object, newObj[object.PK()], updateRelationParams);
 
 
-                            // update relation values sequentially
+                            if (object.isExternal &&
+                                createParams.translations)
+                                updateTasks.push(updateTranslationsValues(object, newObj[object.PK()], createParams.translations, true));
+
+
+                                // update relation values sequentially
                             return updateTasks.reduce((promiseChain, currTask) => {
                                 return promiseChain.then(currTask);
                             }, Promise.resolve([]))
@@ -507,9 +617,9 @@ module.exports = {
                                             glue:'and',
                                             rules:[
                                                 {
-                                                    key: "id",
+                                                    key: object.PK(),
                                                     rule: "equals",
-                                                    value: newObj.id
+                                                    value: newObj[object.PK()] || ''
                                                 }
                                             ]
                                         },
@@ -653,7 +763,10 @@ module.exports = {
                 var queryCount = object.model().query();
                 populateFindConditions(queryCount, object, { where: where, includeRelativeData: false }, req.user.data);
                 // added tableName to id because of non unique field error
-                var pCount = queryCount.count('{tableName}.id as count'.replace("{tableName}", object.model().tableName)).first();
+                var pCount = queryCount.count('{tableName}.{pkName} as count'
+                                                .replace("{tableName}", object.model().tableName)
+                                                .replace("{pkName}", object.PK())
+                                            ).first();
                     
                 Promise.all([
                     pCount,
@@ -694,13 +807,16 @@ module.exports = {
 
 
                 })
-                    .catch((err) => {
+                .catch((err) => {
+console.log(err);
+                    res.AD.error(err);
 
-                        res.AD.error(err);
-
-                    });
+                });
 
 
+            })
+            .catch((err) => {
+console.log(err);
             });
 
     },
@@ -744,7 +860,7 @@ module.exports = {
                     where: {
                         glue:'and',
                         rules:[{
-                            key: "id",
+                            key: object.PK(),
                             rule: "equals",
                             value: id
                         }]
@@ -779,11 +895,13 @@ module.exports = {
                     var relationName = f.relationName();
                     
                     // If we have any related item data we need to build a query to report the delete...otherwise just move on
-                    if (oldItem[0][relationName].length) {
+                    if (oldItem[0] &&
+                        oldItem[0][relationName] &&
+                        oldItem[0][relationName].length) {
                         // Push the ids of the related data into an array so we can use them in a query
                         var relatedIds = [];
                         oldItem[0][relationName].forEach((old) => {
-                            relatedIds.push(old.id);
+                            relatedIds.push(old.id); // TODO: support various id
                         });
                         // Get all related items info
                         var queryRelated = relatedObject.model().query();
@@ -791,7 +909,7 @@ module.exports = {
                             where: {
                                 glue:'and',
                                 rules:[{
-                                    key: "id",
+                                    key: relatedObject.PK(),
                                     rule: "in",
                                     value: relatedIds
                                 }]
@@ -1038,7 +1156,7 @@ module.exports = {
                     where: {
                         glue:'and',
                         rules:[{
-                            key: "id",
+                            key: object.PK(),
                             rule: "equals",
                             value: id
                         }]
@@ -1067,18 +1185,38 @@ module.exports = {
                         // return the parameters of connectObject data field values 
                         var updateRelationParams = object.requestRelationParams(allParams);
 
+                        // get translations values for the external object
+                        // it will update to translations table after model values updated
+                        var transParams = _.cloneDeep(updateParams.translations);
+
                         var validationErrors = object.isValidData(updateParams);
                         if (validationErrors.length == 0) {
 
-                            // this is an update operation, so ... 
-                            // updateParams.updated_at = (new Date()).toISOString();
-                            updateParams.updated_at = AppBuilder.rules.toSQLDateTime(new Date());
+                            if (object.isExternal) {
+                                // translations values does not in same table of the external object
+                                delete updateParams.translations;
+                            }
+                            else {
+                                // this is an update operation, so ... 
+                                // updateParams.updated_at = (new Date()).toISOString();
+                                updateParams.updated_at = AppBuilder.rules.toSQLDateTime(new Date());
 
-                            // Check if there are any properties set otherwise let it be...let it be...let it be...yeah let it be
-                            if (allParams.properties != "") {
-                                updateParams.properties = allParams.properties;
-                            } else {
-                                updateParams.properties = null;
+                                // Check if there are any properties set otherwise let it be...let it be...let it be...yeah let it be
+                                if (allParams.properties != "") {
+                                    updateParams.properties = allParams.properties;
+                                } else {
+                                    updateParams.properties = null;
+                                }
+                            }
+
+                            // Prevent ER_PARSE_ERROR: when no properties of update params
+                            // update `TABLE_NAME` set  where `id` = 'ID'
+                            if (updateParams && Object.keys(updateParams).length == 0)
+                                updateParams = null;
+
+                            if (updateParams == null) {
+                                updateParams = {};
+                                updateParams[object.PK()] = ref(object.PK());
                             }
 
                             sails.log.verbose('ABModelController.update(): updateParams:', updateParams);
@@ -1086,12 +1224,14 @@ module.exports = {
                             var query = object.model().query();
 
                             // Do Knex update data tasks
-                            query.patch(updateParams || { id: id }).where('id', id)
+                            query.patch(updateParams).where(object.PK(), id)
                                 .then((values) => {
 
-                                    // create a new query when use same query, then new data are created duplicate
-                                    var query2 = object.model().query();
-                                    var updateTasks = updateRelationValues(query2, id, updateRelationParams);
+                                    var updateTasks = updateRelationValues(object, id, updateRelationParams);
+
+                                    // update translation of the external table
+                                    if (object.isExternal)
+                                        updateTasks.push(updateTranslationsValues(object, id, transParams));
 
                                     // update relation values sequentially
                                     return updateTasks.reduce((promiseChain, currTask) => {
@@ -1106,7 +1246,7 @@ module.exports = {
                                                 where: {
                                                     glue:'and',
                                                     rules:[{
-                                                        key: "id",
+                                                        key: object.PK(),
                                                         rule: "equals",
                                                         value: id
                                                     }]
@@ -1225,3 +1365,4 @@ module.exports = {
 
 
 };
+

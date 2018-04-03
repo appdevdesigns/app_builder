@@ -103,9 +103,24 @@ module.exports = {
         'app_builder/ABModelController.refresh',
         
 
+    /* Import External models */
+    'get /app_builder/external/application/:appID' : 
+        'app_builder/ABExternalController.findTableNames',
+
+    'get /app_builder/external/model/:tableName/columns' : 
+        'app_builder/ABExternalController.findColumns',
+
+    'post /app_builder/external/application/:appID/model/:tableName' : 
+        'app_builder/ABExternalController.importTable',
+
+
 // only for easy development/testing purposes:
 'get /app_builder/migrate/application/:appID/object/:objID' : 
     'app_builder/ABMigrationController.createObject',
+
+    // Email
+    'post /app_builder/email' : 
+        'app_builder/ABEmailController.send',
 
   /*
 

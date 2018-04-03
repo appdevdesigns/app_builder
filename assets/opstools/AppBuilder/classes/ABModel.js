@@ -579,6 +579,40 @@ reject(err);
 			});
 		});
 
+		var connectFields = this.object.connectFields();
+
+		// various primary key name
+		data.forEach(d => {
+			if (d == null) return;
+
+			if (this.object.PK() != 'id')
+				d.id = d[this.object.PK()];
+
+			// update .id of relation data
+			connectFields.forEach(f => {
+
+				let objectLink = f.datasourceLink;
+				if (objectLink.PK() != 'id' &&
+					d[f.relationName()]) {
+
+						// is array
+						if (d[f.relationName()].forEach) {
+							d[f.relationName()].forEach(subData => {
+								subData.id = subData[objectLink.PK()];
+							})
+						}
+						else {
+							d[f.relationName()].id = d[f.relationName()][objectLink.PK()];
+						}
+
+					}
+
+			});
+	
+		});
+
+
+
 		// if this object has some multilingual fields, translate the data:
 		var mlFields = this.object.multilingualFields();
 		
@@ -608,3 +642,4 @@ reject(err);
 	}
 
 }
+
