@@ -533,11 +533,23 @@ reject(err);
 			
 		// find all connected fields
 		var connectedFields = this.object.connectFields();
+
+		// if this object has some multilingual fields, translate the data:
+		var mlFields = this.object.multilingualFields();
 		
-		// loop through data to find connected fields
+		// if this object has some date fields, convert the data to date object:
+		var dateFields = this.object.fields(function(f) { return f.key == 'date'; }) || [];
+	
 		data.forEach((d) => {
+			if (d == null) return;
+
+			// various PK name
+			if (this.object.PK() != 'id')
+				d.id = d[this.object.PK()];
+
 			// loop through data's connected fields
 			connectedFields.forEach((c) => {
+
 				// get the relation name so we can change the original object
 				var relationName = c.relationName();
 				// if there is no data we can exit now
@@ -558,69 +570,42 @@ reject(err);
 						d[relationName].translations = JSON.parse(d[relationName].translations);
 					}
 				}
-			});
-		});
 
-		var connectFields = this.object.connectFields();
 
-		// various primary key name
-		data.forEach(d => {
-			if (d == null) return;
-
-			if (this.object.PK() != 'id')
-				d.id = d[this.object.PK()];
-
-			// update .id of relation data
-			connectFields.forEach(f => {
-
-				let objectLink = f.datasourceLink;
+				// set .id to relation columns
+				let objectLink = c.datasourceLink;
 				if (objectLink.PK() != 'id' &&
-					d[f.relationName()]) {
+					d[relationName]) {
 
 						// is array
-						if (d[f.relationName()].forEach) {
-							d[f.relationName()].forEach(subData => {
+						if (d[relationName].forEach) {
+							d[relationName].forEach(subData => {
 								subData.id = subData[objectLink.PK()];
 							})
 						}
 						else {
-							d[f.relationName()].id = d[f.relationName()][objectLink.PK()];
+							d[relationName].id = d[relationName][objectLink.PK()];
 						}
 
 					}
 
 			});
-	
-		});
 
 
-
-		// if this object has some multilingual fields, translate the data:
-		var mlFields = this.object.multilingualFields();
-		
-		// if this object has some date fields, convert the data to date object:
-		var dateFields = this.object.fields(function(f) { return f.key == 'date'; }) || [];
-		
-		if (mlFields.length > 0 || dateFields.length > 0) {
-
-			data.forEach((d) => {
+			if (mlFields.length) {
+				OP.Multilingual.translate(d, d, mlFields);
+			}
 
 
-				if (mlFields.length) {
-					OP.Multilingual.translate(d, d, mlFields);
-				}
-
-
-				// convert the data to date object
-				dateFields.forEach((date) => {
-					if (d && d[date.columnName] != null)
-						d[date.columnName] = new Date(d[date.columnName]);
-				});
-
-
+			// convert the data to date object
+			dateFields.forEach((date) => {
+				if (d && d[date.columnName] != null)
+					d[date.columnName] = new Date(d[date.columnName]);
 			});
 
-		}
+
+		});
+
 	}
 
 }

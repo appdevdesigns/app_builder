@@ -1261,6 +1261,9 @@ export default class ABViewDataCollection extends ABView {
 		if (this.__dataCollection && fieldLink) {
 			this.__dataCollection.filter((item) => {
 
+				// data is empty
+				if (item == null) return null;
+
 				// the parent's cursor is not set.
 				if (linkCursor == null) return false;
 
