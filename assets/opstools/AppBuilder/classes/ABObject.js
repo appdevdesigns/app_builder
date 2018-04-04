@@ -22,6 +22,7 @@ export default class ABObject extends ABObjectBase {
 	name: 'name',
 	labelFormat: 'xxxxx',
 	isImported: 1/0,
+	isExternal: 1/0,
 	urlPath:'string',
 	importFromObject: 'string', // JSON Schema style reference:  '#[ABApplication.id]/objects/[ABObject.id]'
 								// to get other object:  ABApplication.objectFromRef(obj.importFromObject);

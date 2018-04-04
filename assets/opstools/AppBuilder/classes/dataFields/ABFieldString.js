@@ -129,7 +129,7 @@ class ABFieldString extends ABField {
     	{
 			settings: {
 				textDefault: 'string',
-				supportMultilingual: true/false
+				supportMultilingual: 1/0
 			}
     	}
     	*/

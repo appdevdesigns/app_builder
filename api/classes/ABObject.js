@@ -23,7 +23,9 @@ module.exports = class ABObject extends ABObjectBase {
 	name: 'name',
 	labelFormat: 'xxxxx',
 	isImported: 1/0,
+	isExternal: 1/0,
 	tableName:'string',  // NOTE: store table name of import object to ignore async
+	transColumnName: 'string', // NOTE: store column name of translations table
 	urlPath:'string',
 	importFromObject: 'string', // JSON Schema style reference:  '#[ABApplication.id]/objects/[ABObject.id]'
 								// to get other object:  ABApplication.objectFromRef(obj.importFromObject);
@@ -109,7 +111,7 @@ module.exports = class ABObject extends ABObjectBase {
 	///
 
 	dbTableName() {
-		if (this.isImported) {
+		if (this.isImported || this.isExternal) {
 			// NOTE: store table name of import object to ignore async
 			return this.tableName;
 		}
@@ -198,9 +200,9 @@ module.exports = class ABObject extends ABObjectBase {
 			(resolve, reject) => {
 				sails.log.silly('.... .migrateDropTable()  before knex:');
 				
-				if (this.isImported) {
+				if (this.isImported || this.isExternal) {
 					sails.log.silly('.... aborted drop of imported table');
-					reject(new Error('Cannot drop an imported object'));
+					resolve();
 					return;
 				}
 
@@ -285,6 +287,10 @@ module.exports = class ABObject extends ABObjectBase {
 					return tableName;
 				}
 
+				static get idColumn() {
+					return currObject.PK();
+				}
+
 				static get jsonSchema () {
     				return jsonSchema
     			}
@@ -302,6 +308,50 @@ module.exports = class ABObject extends ABObjectBase {
 			MyModel.relationMappings = function () {
 				// Compile our relations from our DataFields
 				var relationMappings = {};
+
+				// Add a translation relation of the external table
+				if (currObject.isExternal && currObject.transColumnName) {
+
+					var transJsonSchema = {
+						language_code: { type: 'string' }
+					};
+
+					// Populate fields of the trans table
+					var multilingualFields = currObject.fields(f => f.settings.supportMultilingual == 1);
+					multilingualFields.forEach(f => {
+						f.jsonSchemaProperties(transJsonSchema);
+					});
+
+					class TransModel extends Model {
+
+						// Table name is the only required property.
+						static get tableName() {
+							return tableName + '_trans';
+						}
+
+						static get jsonSchema () {
+							return {
+								type: 'object',
+								properties: transJsonSchema
+							};
+						}
+
+					};
+
+					relationMappings['translations'] = {
+						relation: Model.HasManyRelation,
+						modelClass: TransModel,
+						join: {
+							from: '{targetTable}.{primaryField}'
+								.replace('{targetTable}', tableName)
+								.replace('{primaryField}', currObject.PK()),
+							to: '{sourceTable}.{field}'
+								.replace('{sourceTable}', TransModel.tableName)
+								.replace('{field}', currObject.transColumnName)
+						}
+					}
+				}
+
 
 				var connectFields = currObject.connectFields();
 
@@ -325,18 +375,21 @@ module.exports = class ABObject extends ABObjectBase {
 
 						var sourceTable,
 							targetTable,
+							targetPkName,
 							relation,
 							columnName;
 
 						if (f.settings.isSource == true) {
 							sourceTable = tableName;
 							targetTable = linkObject.dbTableName();
+							targetPkName = linkObject.PK();
 							relation = Model.BelongsToOneRelation;
 							columnName = f.columnName;
 						}
 						else {
 							sourceTable = linkObject.dbTableName();
 							targetTable = tableName;
+							targetPkName = currObject.PK();
 							relation = Model.HasOneRelation;
 							columnName = linkField.columnName;
 						}
@@ -345,8 +398,9 @@ module.exports = class ABObject extends ABObjectBase {
 							relation: relation,
 							modelClass: linkModel,
 							join: {
-								from: '{targetTable}.id'
-									.replace('{targetTable}', targetTable),
+								from: '{targetTable}.{primaryField}'
+									.replace('{targetTable}', targetTable)
+									.replace('{primaryField}', targetPkName),
 
 								to: '{sourceTable}.{field}'
 									.replace('{sourceTable}', sourceTable)
@@ -358,42 +412,47 @@ module.exports = class ABObject extends ABObjectBase {
 					else if (f.settings.linkType == 'many' && f.settings.linkViaType == 'many') {
 						// get join table name
 						var joinTablename = f.joinTableName(),
-							sourceObjectName,
+							joinColumnNames = f.joinColumnNames(),
 							sourceTableName,
-							targetObjectName,
-							targetTableName;
+							sourcePkName,
+							targetTableName,
+							targetPkName;
 
 						if (f.settings.isSource == true) {
-							sourceObjectName = f.object.name;
 							sourceTableName = f.object.dbTableName();
-							targetObjectName = linkObject.name;
+							sourcePkName = f.object.PK();
 							targetTableName = linkObject.dbTableName();
+							targetPkName = linkObject.PK();
 						}
 						else {
-							sourceObjectName = linkObject.name;
 							sourceTableName = linkObject.dbTableName();
-							targetObjectName = f.object.name;
+							sourcePkName = linkObject.PK();
 							targetTableName = f.object.dbTableName();
+							targetPkName = f.object.PK();
 						}
 
 						relationMappings[relationName] = {
 							relation: Model.ManyToManyRelation,
 							modelClass: linkModel,
 							join: {
-								from: '{sourceTable}.id'.replace('{sourceTable}', sourceTableName),
+								from: '{sourceTable}.{primaryField}'
+										.replace('{sourceTable}', sourceTableName)
+										.replace('{primaryField}', sourcePkName),
 
 								through: {
 									from: '{joinTable}.{sourceColName}'
 										.replace('{joinTable}', joinTablename)
-										.replace('{sourceColName}', sourceObjectName),
+										.replace('{sourceColName}', joinColumnNames.sourceColumnName),
 
 
 									to: '{joinTable}.{targetColName}'
 										.replace('{joinTable}', joinTablename)
-										.replace('{targetColName}', targetObjectName)
+										.replace('{targetColName}', joinColumnNames.targetColumnName)
 								},
 
-								to: '{targetTable}.id'.replace('{targetTable}', targetTableName)
+								to: '{targetTable}.{primaryField}'
+									.replace('{targetTable}', targetTableName)
+									.replace('{primaryField}', targetPkName)
 							}
 
 						};
@@ -408,8 +467,9 @@ module.exports = class ABObject extends ABObjectBase {
 									.replace('{sourceTable}', tableName)
 									.replace('{field}', f.columnName),
 
-								to: '{targetTable}.id'
+								to: '{targetTable}.{primaryField}'
 									.replace('{targetTable}', linkObject.dbTableName())
+									.replace('{primaryField}', linkObject.PK())
 							}
 						};
 					}
@@ -419,8 +479,9 @@ module.exports = class ABObject extends ABObjectBase {
 							relation: Model.HasManyRelation,
 							modelClass: linkModel,
 							join: {
-								from: '{sourceTable}.id'
-									.replace('{sourceTable}', tableName),
+								from: '{sourceTable}.{primaryField}'
+									.replace('{sourceTable}', tableName)
+									.replace('{primaryField}', currObject.PK()),
 
 								to: '{targetTable}.{field}'
 									.replace('{targetTable}', linkObject.dbTableName())
@@ -509,7 +570,9 @@ module.exports = class ABObject extends ABObjectBase {
         delete options.limit;
 
 		// added tableName to id because of non unique field error
-		return this.queryFind(options, userData).count('{tableName}.id as count'.replace("{tableName}", tableName));
+		return this.queryFind(options, userData).count('{tableName}.{pkName} as count'
+															.replace("{tableName}", tableName)
+															.replace("{pkName}", this.PK()));
 	}
 
 
@@ -668,7 +731,10 @@ module.exports = class ABObject extends ABObjectBase {
 
 	                        // NOTE: pass 'this' as the Query object
 	                        // so we can perform embedded queries:
-	                        parseCondition(r, this); 
+							// parseCondition(r, this);
+							
+							// 'this' is changed type QueryBuilder to QueryBuilderBase
+							parseCondition(r, Query);
 	                    });
 	                    
 	                })
@@ -677,17 +743,25 @@ module.exports = class ABObject extends ABObjectBase {
 	            }
 
 
-	            //// Special Case:  'have_no_relation'
-	            // 1:1 - Get rows that no relation with 
-	            if (condition.rule == 'have_no_relation') {
-	                var relation_name = AppBuilder.rules.toFieldRelationFormat(condition.key);
+				//// Special Case:  'have_no_relation'
+				// 1:1 - Get rows that no relation with 
+				if (condition.rule == 'have_no_relation') {
+					var relation_name = AppBuilder.rules.toFieldRelationFormat(condition.key);
 
-	                Query
-	                    .leftJoinRelation(relation_name)
-	                    .whereRaw('{relation_name}.id IS NULL'.replace('{relation_name}', relation_name));
+					var field = this._fields.filter(field => field.columnName == condition.key)[0];
+					if (!field) return;
 
-	                return;
-	            }
+					var objectLink = field.objectLink();
+					if (!objectLink) return;
+
+					Query
+						.leftJoinRelation(relation_name)
+						.whereRaw('{relation_name}.{primary_name} IS NULL'
+							.replace('{relation_name}', relation_name)
+							.replace('{primary_name}', objectLink.PK()));
+
+					return;
+				}
 
 
 
@@ -864,16 +938,15 @@ module.exports = class ABObject extends ABObjectBase {
 	    }
 
 	    // query relation data
-	    if (options.includeRelativeData) {
-	        if (query.eager) {
-	            
-	            var relationNames = this.connectFields()
-	                .filter((f) => f.fieldLink() != null)
-	                .map((f) => f.relationName());
+		if (options.includeRelativeData &&
+			query.eager) {
 
-	            if (relationNames.length > 0)
-	                query.eager('[#fieldNames#]'.replace('#fieldNames#', relationNames.join(', ')));
-	        }
+			var relationNames = this.connectFields()
+				.filter((f) => f.fieldLink() != null)
+				.map((f) => f.relationName());
+
+			if (relationNames.length > 0)
+				query.eager('[#fieldNames#]'.replace('#fieldNames#', relationNames.join(', ')));
 
 	    }
 
@@ -881,3 +954,4 @@ module.exports = class ABObject extends ABObjectBase {
 	}
 
 }
+

@@ -530,6 +530,70 @@ reject(err);
 		// convert to array
 		if (!(data instanceof Array))
 			data = [data];
+			
+		// find all connected fields
+		var connectedFields = this.object.connectFields();
+		
+		// loop through data to find connected fields
+		data.forEach((d) => {
+			// loop through data's connected fields
+			connectedFields.forEach((c) => {
+				// get the relation name so we can change the original object
+				var relationName = c.relationName();
+				// if there is no data we can exit now
+				if (d[relationName] == null) return;
+				// if the data is an array we need to loop through it
+				if (Array.isArray(d[relationName])) {
+					d[relationName].forEach((r) => {
+						// if translations are present and they are still a string
+						if ('translations' in r && typeof r.translations == "string") {
+							// parse the string into an object
+							r.translations = JSON.parse(r.translations);
+						}
+					});
+				} else {
+					// if the data is not an array it is a single item...check that has translations and it is a string
+					if ('translations' in d[relationName] && typeof d[relationName].translations == "string") {
+						// if so parse the string into an object
+						d[relationName].translations = JSON.parse(d[relationName].translations);
+					}
+				}
+			});
+		});
+
+		var connectFields = this.object.connectFields();
+
+		// various primary key name
+		data.forEach(d => {
+			if (d == null) return;
+
+			if (this.object.PK() != 'id')
+				d.id = d[this.object.PK()];
+
+			// update .id of relation data
+			connectFields.forEach(f => {
+
+				let objectLink = f.datasourceLink;
+				if (objectLink.PK() != 'id' &&
+					d[f.relationName()]) {
+
+						// is array
+						if (d[f.relationName()].forEach) {
+							d[f.relationName()].forEach(subData => {
+								subData.id = subData[objectLink.PK()];
+							})
+						}
+						else {
+							d[f.relationName()].id = d[f.relationName()][objectLink.PK()];
+						}
+
+					}
+
+			});
+	
+		});
+
+
 
 		// if this object has some multilingual fields, translate the data:
 		var mlFields = this.object.multilingualFields();
@@ -560,3 +624,4 @@ reject(err);
 	}
 
 }
+
