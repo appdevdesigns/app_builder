@@ -45,6 +45,7 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 			component: this.unique('component'),
 			tree: this.unique('tree'),
 			tabObjects: this.unique('tabObjects'),
+			menu: this.unique('menu'),
 
 			// buttonAddField: this.unique('buttonAddField'),
 			// buttonDeleteSelected: this.unique('deleteSelected'),
@@ -136,6 +137,37 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 
 				$$(ids.selectedObject).show();
 
+
+				// *** List ***
+
+				// set connected objects:
+				$$(ids.tree).clearAll();
+				$$(ids.tree).parse(objLinks.map(o => {
+					return {
+						id: o.id,
+						value: o.label,
+						checked: (CurrentQuery.objects(oLink => oLink.id == o.id).length > 0)
+					};
+				}));
+
+				$$(ids.tree).refresh();
+				// TODO : sub-objects
+				// {id:"root", value:"Cars", open:true, data:[
+				//     { id:"1", open:true, value:"Toyota", data:[
+				//         { id:"1.1", value:"Avalon" },
+				//         { id:"1.2", value:"Corolla" },
+				//         { id:"1.3", value:"Camry" }
+				//     ]},
+				//     { id:"2", value:"Skoda", open:true, data:[
+				//         { id:"2.1", value:"Octavia" },
+				//         { id:"2.2", value:"Superb" }
+				//     ]}
+				// ]}
+
+
+
+				// *** Tabs ***
+
 				// NOTE : Tabview have to contain at least one cell
 				$$(ids.tabObjects).addView({
 					body: {
@@ -153,47 +185,28 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 				});
 
 				// add the main object tab
-				var tabUI = _logic.templateField(objMain, true);
+				let tabUI = _logic.templateField(objMain, true);
 				$$(ids.tabObjects).addView(tabUI);
-
-				// remove a temporary tab
-				$$(ids.tabObjects).removeView('temp');
-
-				// Other object tabs will be added in a check tree item event
-
-				// set connected objects:
-				$$(ids.tree).clearAll();
-				$$(ids.tree).parse(objLinks.map(o => {
-					return {
-						id: o.id,
-						value: o.label
-					};
-				}));
-
-				// default check
-				CurrentQuery.objects().forEach(o => {
-					if ($$(ids.tree).exists(o.id))
-						$$(ids.tree).checkItem(o.id);
-				});
 
 				// select default tab to the main object
 				$$(ids.tabObjects).setValue(objMain.id);
 
-				$$(ids.tree).refresh();
-				// TODO : sub-objects
-				// {id:"root", value:"Cars", open:true, data:[
-				//     { id:"1", open:true, value:"Toyota", data:[
-				//         { id:"1.1", value:"Avalon" },
-				//         { id:"1.2", value:"Corolla" },
-				//         { id:"1.3", value:"Camry" }
-				//     ]},
-				//     { id:"2", value:"Skoda", open:true, data:[
-				//         { id:"2.1", value:"Octavia" },
-				//         { id:"2.2", value:"Superb" }
-				//     ]}
-				// ]}
+				// Other object tabs will be added in a check tree item event
+				CurrentQuery.objects().forEach(obj => {
+					// add tab
+					let tabUI = _logic.templateField(obj);
+					$$(ids.tabObjects).addView(tabUI);
+				});
+
+				// remove a temporary tab
+				$$(ids.tabObjects).removeView('temp');
 
 
+				/** Menu **/
+				_logic.refreshFieldMenu();
+
+
+				/** **/
 				var DataTable = $$(ids.datatable);
 				DataTable.clearAll();
 
@@ -217,13 +230,76 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 			},
 
 
-			checkObjectLink: function (objId, isChecked) {
+			/**
+			 * @method save
+			 * update settings of the current query and save to database
+			 * 
+			 * @return {Promise}
+			 */
+			save: () => {
+
+				var tree = $$(ids.tree);
+
+				var objectMain = CurrentQuery.objectMain();
+
+				/** joins **/
+				var joins = [],
+					selectObjIds = tree.getChecked();
+
+				selectObjIds.forEach(objId => {
+
+					var objectLink = CurrentQuery.application.objects(obj => obj.id == objId)[0];
+					if (!objectLink) return;
+
+					var fieldLink = objectLink.fields(f => {
+						return f.key == 'connectObject' &&
+							f.settings.linkObject == objectMain.id;
+					})[0];
+					if (!fieldLink) return;
+
+					// add new join into query
+					joins.push({
+						objectURL: objectLink.urlPointer(),
+						fieldID: fieldLink.id,
+						type: 'innerjoin' // default
+					});
+
+				});
+				CurrentQuery.importJoins(joins);
+
+
+				/** fields **/
+				var fields = [];
+				var $viewMultiview = $$(ids.tabObjects).getMultiview();
+				$viewMultiview.getChildViews().forEach($viewTab => {
+
+					let $viewDbl = $viewTab.queryView({ name: 'fields' });
+					if ($viewDbl && $viewDbl.getValue()) {
+
+						// pull an array of field's url
+						let fieldUrls = $viewDbl.getValue().split(',').map(fUrl => {
+							return {
+								fieldURL: fUrl
+							};
+						});
+						fields = fields.concat(fieldUrls);
+
+					}
+
+				});
+				CurrentQuery.importFields(fields);
+
+
+				// Save to db
+				return CurrentQuery.save();
+
+			},
+
+
+			checkObjectLink: (objId, isChecked) => {
 
 				var tree = $$(ids.tree);
 				tree.blockEvent(); // prevents endless loop
-
-				var objectMain = CurrentQuery.objectMain(),
-					objectLink = CurrentQuery.application.objects(obj => obj.id == objId)[0];
 
 				var rootid = objId;
 				if (isChecked) {
@@ -233,33 +309,7 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 						if (rootid != objId)
 							tree.checkItem(rootid);
 					}
-
-					var fieldLink = objectLink.fields(f => {
-						return f.key == 'connectObject' && 
-								f.settings.linkObject == objectMain.id;
-					})[0];
-
-					if (fieldLink == null){
-						tree.unblockEvent();
-						return;
-					}
-
-					// add new join into query
-					CurrentQuery.joinAdd({
-						objectURL: objectLink.urlPointer(),
-						fieldID: fieldLink.id,
-						type: 'innerjoin' // default
-					});
-
-					// add tab
-					var tabUI = _logic.templateField(objectLink);
-					$$(ids.tabObjects).addView(tabUI);
-
-					// select tab
-					var tabbar = $$(ids.tabObjects).getTabbar();
-					tabbar.setValue(objectLink.id);
-
-				} 
+				}
 				else {
 					// If uncheck we want to uncheck all of the child items as well.
 					tree.data.eachSubItem(rootid, function (item) {
@@ -267,18 +317,50 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 							tree.uncheckItem(item.id);
 					});
 
-					// remove join from query
-					CurrentQuery.joinRemove(objectLink.urlPointer());
-
-					// remove tab
-					$$(ids.tabObjects).removeView(objId);
-
 				}
 
-				// Save to db
-				CurrentQuery.save();
+				// call save to db
+				_logic.save()
+					.then(() => {
+
+						// update UI -- add new tab
+						this.populateQueryWorkspace(CurrentQuery);
+
+						// // select tab
+						// var tabbar = $$(ids.tabObjects).getTabbar();
+						// tabbar.setValue(objectLink.id);
+
+					});
+
+
 
 				tree.unblockEvent();
+
+			},
+
+
+			tabChange: function () {
+
+				// *** Field double list ***
+				let tabId = $$(ids.tabObjects).getValue(), // object id
+					fieldURLs = CurrentQuery.fields(f => f.object.id == tabId).map(f => f.urlPointer()),
+					$viewDbl = $$(tabId).queryView({ name: 'fields' });
+				if ($viewDbl)
+					$viewDbl.setValue(fieldURLs);
+
+			},
+
+
+			checkFields: function () {
+
+				// call save to db
+				_logic.save()
+					.then(() => {
+
+						// refresh UI menu
+						_logic.refreshFieldMenu();
+
+					});
 
 			},
 
@@ -327,13 +409,33 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 								labelRight: "Included Fields",
 								labelBottomLeft: "Move these fields to the right to include in data set.",
 								labelBottomRight: "These fields will display in your final data set.",
-								data: fields
+								data: fields,
+								on: {
+									onChange: function () {
+										_logic.checkFields();
+									}
+								}
 							},
 							{ fillspace: true }
 						]
 					}
 				};
 			},
+
+
+
+
+			refreshFieldMenu: function() {
+
+				// clear
+				$$(ids.menu).find({}).forEach(item => {
+					$$(ids.menu).remove(item.id);
+				});
+
+				$$(ids.menu).parse(CurrentQuery.fields().map(f => f.label));
+				$$(ids.menu).refresh();
+			},
+
 
 
 
@@ -428,7 +530,14 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 											tabMinWidth: 200,
 											cells: [
 												{} // require
-											]
+											],
+											multiview: {
+												on: {
+													onViewChange: function (prevId, nextId) {
+														_logic.tabChange();
+													}
+												}
+											}
 										}
 									]
 								}
@@ -444,8 +553,9 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 							type: "space",
 							rows: [
 								{
+									id: ids.menu,
 									view: "menu",
-									data: ["Field #1", "Field #2", "Field #3", "Field #4", "Field #5", "Field #6", "Field #7", "Field #8"],
+									data: [],
 									drag: true,
 									dragscroll: true
 								}

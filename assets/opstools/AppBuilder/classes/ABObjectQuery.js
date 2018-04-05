@@ -214,7 +214,9 @@ export default class ABObjectQuery extends ABObject {
 	importFields(fieldSettings) {
 		var newFields = [];
 	  	fieldSettings.forEach((field) => {
-	  		newFields.push( this.application.urlResolve(field.fieldURL) );
+
+			if (newFields.filter(f => f.urlPointer() == field.fieldURL).length < 1)
+				newFields.push( this.application.urlResolve(field.fieldURL) );
 	  	})
 	  	this._fields = newFields;
 	}
@@ -337,27 +339,6 @@ export default class ABObjectQuery extends ABObject {
 		return joins;
 	}
 
-
-
-	joinAdd(join) {
-
-		// add new join to settings
-		this._joins.push(join);
-
-		// refresh store
-		this.importJoins(this._joins)
-	}
-
-
-	joinRemove(objectURL) {
-
-		// remove join
-		this._joins = this._joins.filter(j => j.objectURL != objectURL);
-
-		// refresh store
-		this.importJoins(this._joins);
-
-	}
 
 
 	///
