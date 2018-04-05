@@ -117,7 +117,7 @@ module.exports = {
 
 		return Promise.resolve()
 			.then(function () {
-
+                // Get tables in AppBuilder DB
 				return new Promise((resolve, reject) => {
 
 					var knex = ABMigration.connection();
@@ -141,6 +141,34 @@ module.exports = {
 
 							resolve();
 
+						});
+				});
+			})
+			.then(function () {
+                // Get tables in HRIS DB
+				return new Promise((resolve, reject) => {
+
+					var knex = ABMigration.connection('legacy_hris');
+
+					// SELECT `TABLE_NAME` 
+					// FROM information_schema.tables 
+					// WHERE `TABLE_TYPE` = 'BASE TABLE' 
+					// AND `TABLE_SCHEMA` = [CURRENT DB]
+					// AND `TABLE_NAME`   NOT LIKE 'AB_%'
+					// AND `TABLE_NAME`   NOT LIKE '%_trans';
+					knex.select('TABLE_NAME')
+						.from('information_schema.tables')
+						.where('TABLE_TYPE', '=', 'BASE TABLE')
+						.andWhere('TABLE_SCHEMA', '=', sails.config.connections.legacy_hris.database)
+						.andWhere('TABLE_NAME', 'NOT LIKE', 'AB_%')
+						.andWhere('TABLE_NAME', 'NOT LIKE', '%_trans')
+						.catch(reject)
+						.then(function (result) {
+                            result.forEach((r) => {
+                                allTableNames.push(r.TABLE_NAME);
+                            });
+
+							resolve();
 						});
 				});
 			})

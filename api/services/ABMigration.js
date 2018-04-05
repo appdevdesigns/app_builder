@@ -10,24 +10,30 @@ var path = require('path');
 var AD = require('ad-utils');
 var _ = require('lodash');
 
-var knexConn = null;
-
+var knexConns = {};
 
 module.exports = {
 
 
-    connection:function() {
-
-        if (!knexConn) {
-
-            knexConn = require('knex')({
+    connection: function(name='appBuilder') {
+        
+        if (!knexConns[name]) {
+            
+            if (!sails.config.connections[name]) {
+                throw new Error(`Connection ${name} not found`);
+            }
+            else if (!sails.config.connections[name].database) {
+                throw new Error(`Connection ${name} is not supported`);
+            }
+            
+            knexConns[name] = require('knex')({
                 client: 'mysql',
                 connection: {
-                    host : sails.config.connections.appBuilder.host, // ||  '127.0.0.1',
-                    user : sails.config.connections.appBuilder.user, // ||  'your_database_user',
-                    port : sails.config.connections.appBuilder.port, 
-                    password : sails.config.connections.appBuilder.password, // ||  'your_database_password',
-                    database : sails.config.connections.appBuilder.database, // ||  'appbuilder'
+                    host : sails.config.connections[name].host, // ||  '127.0.0.1',
+                    user : sails.config.connections[name].user, // ||  'your_database_user',
+                    port : sails.config.connections[name].port, 
+                    password : sails.config.connections[name].password, // ||  'your_database_password',
+                    database : sails.config.connections[name].database, // ||  'appbuilder'
                     timezone: 'UTC'
                 },
                 // FIX : ER_CON_COUNT_ERROR: Too many connections
@@ -39,7 +45,7 @@ module.exports = {
             });
         }
 
-        return knexConn;
+        return knexConns[name];
     },
 
 
