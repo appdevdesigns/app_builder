@@ -43,9 +43,9 @@ module.exports = {
     // *************************************************************************** //
     // This builds the OP into same bundle but automatically handles the import    //
     // *************************************************************************** //
-    new webpack.ProvidePlugin({
-        OP: "OP"
-    })
+    // new webpack.ProvidePlugin({
+    //     OP: "OP"
+    // })
 
     // ***************************************** //
     // This builds the OP into a seperate bundle //
