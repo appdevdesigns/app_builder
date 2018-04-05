@@ -513,6 +513,10 @@ class ABFieldList extends ABFieldSelectivity {
 				var selectedData = [];
 				if (row[field.columnName] != null) {
 					selectedData = row[field.columnName];
+
+					if (typeof selectedData == 'string')
+						selectedData = JSON.parse(selectedData);
+	
 				}
 
 				// Render selectivity
@@ -601,6 +605,10 @@ class ABFieldList extends ABFieldSelectivity {
 			var selectedData = [];
 			if (row[this.columnName] != null) {
 				selectedData = row[this.columnName];
+
+				if (typeof selectedData == 'string')
+					selectedData = JSON.parse(selectedData);
+
 			}
 
 			// Render selectivity

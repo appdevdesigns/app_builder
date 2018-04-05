@@ -213,11 +213,19 @@ export default class ABObjectQuery extends ABObject {
 	 */
 	importFields(fieldSettings) {
 		var newFields = [];
-	  	fieldSettings.forEach((field) => {
+	  	fieldSettings.forEach((fieldInfo) => {
 
-			if (newFields.filter(f => f.urlPointer() == field.fieldURL).length < 1)
-				newFields.push( this.application.urlResolve(field.fieldURL) );
-	  	})
+			var field = this.application.urlResolve(fieldInfo.fieldURL);
+
+			// should be a field of base/join objects
+			if ((this.objects(o => o.id == field.object.id)[0] || this.objectBase().id == field.object.id) &&
+			// check duplicate
+				newFields.filter(f => f.urlPointer() == fieldInfo.fieldURL).length < 1) { 
+
+				newFields.push( this.application.urlResolve(fieldInfo.fieldURL) );
+			}
+
+		})
 	  	this._fields = newFields;
 	}
 
@@ -263,7 +271,7 @@ export default class ABObjectQuery extends ABObject {
 
 		filter = filter || function(){ return true; };
 
-		return this._joins.filter(filter);
+		return (this._joins || []).filter(filter);
 	}
 
 
@@ -278,7 +286,12 @@ export default class ABObjectQuery extends ABObject {
 
 		filter = filter || function(){ return true; };
 
-		return this._objects.filter(filter);
+		return (this._objects || []).filter(filter);
+	}
+
+
+	objectBase() {
+		return this.application.urlResolve(this.importFromObject);
 	}
 
 

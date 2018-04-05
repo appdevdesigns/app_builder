@@ -180,8 +180,14 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 				var optionIds = tabbar.config.options.map(opt => opt.id);
 				optionIds.forEach(optId => {
 
-					if (optId != 'temp') // Don't remove a temporary tab (remove later)
+					if (optId != 'temp') { // Don't remove a temporary tab (remove later)
 						$$(ids.tabObjects).removeView(optId);
+					}
+				});
+				var $viewMultiview = $$(ids.tabObjects).getMultiview();
+				$viewMultiview.getChildViews().map($view => $view).forEach($view => {
+					if ($view && $view.config.id != 'temp')
+						$viewMultiview.removeView($view);
 				});
 
 				// add the main object tab
@@ -200,33 +206,15 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 
 				// remove a temporary tab
 				$$(ids.tabObjects).removeView('temp');
-
+				$$(ids.tabObjects).adjust();
+				
 
 				/** Menu **/
 				_logic.refreshFieldMenu();
 
 
-				/** **/
-				var DataTable = $$(ids.datatable);
-				DataTable.clearAll();
-
-
-				// set columns:
-				var columns = query.columnHeaders(false, false);
-				DataTable.refreshColumns(columns);
-
-
-				// TODO: set data:
-				// query.model().findAll()
-				// .then((response)=>{
-				//     response.data.forEach((d)=>{
-				//         DataTable.add(d);
-				//     })
-				// })
-				// .catch((err)=>{
-				//     OP.Error.log('Error running Query:', {error:err, query:query});
-				// })
-
+				/** DataTable **/
+				_logic.refreshDataTable();
 			},
 
 
@@ -360,6 +348,10 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 						// refresh UI menu
 						_logic.refreshFieldMenu();
 
+
+						// refresh Data table
+						_logic.refreshDataTable();
+
 					});
 
 			},
@@ -425,7 +417,7 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 
 
 
-			refreshFieldMenu: function() {
+			refreshFieldMenu: function () {
 
 				// clear
 				$$(ids.menu).find({}).forEach(item => {
@@ -437,6 +429,29 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 			},
 
 
+			refreshDataTable: function () {
+
+				var DataTable = $$(ids.datatable);
+				DataTable.clearAll();
+
+
+				// set columns:
+				var columns = CurrentQuery.columnHeaders(false, false);
+				DataTable.refreshColumns(columns);
+
+
+				// set data:
+				CurrentQuery.model().findAll()
+					.then((response) => {
+						response.data.forEach((d) => {
+							DataTable.add(d);
+						})
+					})
+					.catch((err) => {
+						OP.Error.log('Error running Query:', { error: err, query: CurrentQuery });
+					});
+
+			},
 
 
 			/**
@@ -564,6 +579,7 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 						{
 							id: ids.datatable,
 							view: 'datatable',
+							height: 200,
 							columns: [],
 							data: []
 						},

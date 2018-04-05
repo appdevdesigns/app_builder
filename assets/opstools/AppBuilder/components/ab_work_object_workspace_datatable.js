@@ -807,7 +807,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
     				.where({
                         where: wheres, 
                         sort: sorts,
-                        height: defaultHeight
+                        // height: defaultHeight
                     })
     				.skip(0)
     				.limit(30)

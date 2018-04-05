@@ -195,7 +195,8 @@ if (newCond.where.where) {
 		return new Promise(
 			(resolve, reject) => {
 
-				OP.Comm.Socket.get({
+				// OP.Comm.Socket.get({
+				OP.Comm.Service.get({
 					url: this.object.urlRest(),
 					params: newCond
 				})
