@@ -388,6 +388,56 @@ export default class ABViewContainer extends ABView {
 	// }
 
 
+    /** 
+     * @method propertyEditorFields
+     * return an array of webix UI fields to handle the settings of this
+     * ABView. 
+     * This method should make any modifications to ids, logic, and init
+     * as needed to support the new fields added in this routine.
+     * @param {App} App  The global App object for the current Application instance
+     * @param {obj} options a set of shared data for creating the UI:
+     * 	 options.ids    {obj}  A hash of the settings ids for our fields.
+     *   options.logic  {obj}  A hash of fn() called by our webix components
+     *   options.init   {fn}   An initialization fn() called to setup our fields.
+     * @return {array}  of webix UI definitions.
+     */
+	propertyEditorFields(App, options) { 
+		var components = super.propertyEditorFields(App, options); 
+
+		var ids = options.ids;
+		ids.columns = App.unique('columns');
+
+		components = components.concat([
+			{
+				id: ids.columns,
+				name: 'columns',
+				view: 'counter',
+				min: 1,
+				label: L('ab.components.container.columns', "*Columns"),
+				labelWidth: App.config.labelWidthLarge,
+				on: {
+					onChange: function (newVal, oldVal) {
+
+						if (newVal > 8)
+							$$(ids.columns).setValue(8);
+
+					}
+				}
+			}
+		]);
+
+		var superInit = options.init;
+		options.init = (data) => {
+			if (superInit) superInit(data);
+			if (data.columns) {
+				$$(ids.columns).setValue(data.columns);
+			}
+		}
+
+		return components;
+	}
+
+
 	static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
 
 		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);

@@ -14,6 +14,7 @@ import ABViewChartArea from "./views/ABViewChartArea"
 import ABViewContainer from "./views/ABViewContainer"
 import ABViewDataCollection from "./views/ABViewDataCollection"
 import ABViewPage from "./views/ABViewPage"
+import ABViewPagePlugin from "./views/ABViewPagePlugin"
 import ABViewLabel from "./views/ABViewLabel"
 import ABViewLayout from "./views/ABViewLayout"
 import ABViewMenu from "./views/ABViewMenu"
@@ -57,6 +58,7 @@ Views[ABViewChartArea.common().key] = ABViewChartArea;
 Views[ABViewContainer.common().key] = ABViewContainer;
 Views[ABViewDataCollection.common().key] = ABViewDataCollection;
 Views[ABViewPage.common().key] = ABViewPage;
+Views[ABViewPagePlugin.common().key] = ABViewPagePlugin;
 Views[ABViewLabel.common().key] = ABViewLabel;
 Views[ABViewLayout.common().key] = ABViewLayout;
 Views[ABViewMenu.common().key] = ABViewMenu;

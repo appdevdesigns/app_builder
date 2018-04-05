@@ -1,18 +1,18 @@
 
 /*
- * ab_work_interface_list_newPage_blankPage
+ * ab_work_interface_list_newPage_pluginPage
  *
  * Display the form for creating a new blank page 
  *
  */
 
-import ABPage from '../classes/views/ABViewPage'
+import ABPagePlugin from '../classes/views/ABViewPagePlugin'
 
 
-export default class AB_Work_Interface_List_NewPage_BlankPage extends OP.Component {
+export default class AB_Work_Interface_List_NewPage_PluginPage extends OP.Component {
 
 	constructor(App) {
-		super(App, 'ab_work_interface_list_newPage_blankPage');
+		super(App, 'ab_work_interface_list_newPage_pluginPage');
 
 		var L = this.Label;
 
@@ -24,6 +24,7 @@ export default class AB_Work_Interface_List_NewPage_BlankPage extends OP.Compone
 				parentPage: L('ab.interface.page.parentList', '*Parent Page'),
 				placeholderPageName: L('ab.interface.placeholderPageName', '*Page name'),
 
+				pluginList: L('ab.interface.page.pluginList', '*Plugin'),
 				rootPage: L('ab.interface.rootPage', '*[Root page]')
 			}
 		}
@@ -34,7 +35,8 @@ export default class AB_Work_Interface_List_NewPage_BlankPage extends OP.Compone
 			component: this.unique('component'),
 
 			parentList: this.unique('parentList'),
-			formName: this.unique('formName')
+			formName: this.unique('formName'),
+			pluginList: this.unique('pluginList'),
 
 		}
 
@@ -46,7 +48,7 @@ export default class AB_Work_Interface_List_NewPage_BlankPage extends OP.Compone
 			id: ids.component,
 
 			//// TODO: @James
-			width: 400,
+			// width: 400,
 
 			elements: [
 				{
@@ -65,7 +67,15 @@ export default class AB_Work_Interface_List_NewPage_BlankPage extends OP.Compone
 					required: true,
 					placeholder: labels.component.placeholderPageName,
 					labelWidth: 110
-				}
+				},
+				{
+					view: "select",
+					id: ids.pluginList,
+					label: labels.component.pluginList,
+					name: "plugin",
+					labelWidth: 110,
+					options: []
+				},
 			]
 
 		};
@@ -77,10 +87,13 @@ export default class AB_Work_Interface_List_NewPage_BlankPage extends OP.Compone
 
 			webix.extend($$(ids.component), webix.ProgressBar);
 
+			OP.UIPlugins.on('new', _logic.pluginListUpdate);
+			_logic.pluginListUpdate();
 		}
 
 
 		var CurrentApplication = null;
+		var SelectedPlugin = null;
 
 		// our internal business logic 
 		var _logic = this._logic = {
@@ -164,34 +177,8 @@ export default class AB_Work_Interface_List_NewPage_BlankPage extends OP.Compone
 			 */
 			show: function () {
 
-				// $$(componentId.addNewForm).clearValidation();
-				// $$(componentId.addNewForm).clear();
-
-				// var options = [{ id: '', value: '[Root page]' }];
-				// application.pages.each(function (d) {
-				// 	if (!d.parent) { // Get only root pages
-				// 		options.push({ id: d.id, value: d.label });
-				// 	}
-				// });
-
-				// $$(componentId.addNewParentList).define('options', options);
-
-				// // Default select parent page
-				// if (selectedPage) {
-				// 	var selected_page_id = selectedPage.id;
-
-				// 	if (selectedPage.parent)
-				// 		selected_page_id = selectedPage.parent.id || selectedPage.parent;
-
-				// 	$$(componentId.addNewParentList).setValue(selected_page_id);
-				// }
-				// else
-				// 	$$(componentId.addNewParentList).setValue('');
-
-				// $$(componentId.addNewParentList).render();
-
-
 				$$(ids.component).show();
+				_logic.pluginListUpdate();
 			},
 
 
@@ -206,11 +193,14 @@ export default class AB_Work_Interface_List_NewPage_BlankPage extends OP.Compone
 				}
 
 				// TODO : validate unique page's name 
+				var pluginSettings = null;
+				
 
 				return {
 					parent: parent, // should be either null or an {}
 					name: $$(ids.formName).getValue().trim(),
-					key: ABPage.common().key
+					plugin: $$(ids.pluginList).getValue(),
+					key: ABPagePlugin.common().key
 				}
 
 			},
@@ -224,6 +214,26 @@ export default class AB_Work_Interface_List_NewPage_BlankPage extends OP.Compone
 			formReady: () => {
 				$$(ids.component).hideProgress();
 			},
+
+
+
+			/**
+			 * @method pluginListUpdate
+			 * repopulates the list of plugins to show in our droplist.
+			 * called when OP.UIPlugin.on('new') is triggered.
+			 */
+			pluginListUpdate: () => {
+				var listPlugins = OP.UIPlugins.list();
+				var newOptions = [];
+				listPlugins.forEach((p)=>{
+					newOptions.push({
+						id:p,
+						value:L(p,p)
+					})
+				});
+				$$(ids.pluginList).define('options', listPlugins);
+				$$(ids.pluginList).refresh();
+			}
 
 		}
 

@@ -278,48 +278,30 @@ export default class ABViewDataCollection extends ABView {
 	// Property Editor
 	// 
 
-	static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
 
-		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
 
-		// == Logic ==
+    /** 
+     * @method propertyEditorFields
+     * return an array of webix UI fields to handle the settings of this
+     * ABView. 
+     * This method should make any modifications to ids, logic, and init
+     * as needed to support the new fields added in this routine.
+     * @param {App} App  The global App object for the current Application instance
+     * @param {obj} options a set of shared data for creating the UI:
+     * 	 options.ids    {obj}  A hash of the settings ids for our fields.
+     *   options.logic  {obj}  A hash of fn() called by our webix components
+     *   options.init   {fn}   An initialization fn() called to setup our fields.
+     * @return {array}  of webix UI definitions.
+     */
+	propertyEditorFields(App, options) { 
+		var components = super.propertyEditorFields(App, options); 
 
-		_logic.selectObject = (objectId) => {
+		var ids = options.ids;
+		ids.columns = App.unique('columns');
 
-			var view = _logic.currentEditObject();
+		var _logic = options.logic;
 
-			var object = view.application.objects(obj => obj.id == objectId)[0];
-
-			// populate fix selector
-			this.populateFixSelector(ids, view, object);
-
-			// re-create filter & sort popups
-			this.initPopupEditors(App, ids, _logic);
-
-		};
-
-		_logic.showFilterPopup = ($view) => {
-			this.filter_popup.show($view, null, { pos: "top" });
-		};
-
-		_logic.showSortPopup = ($view) => {
-			PopupSortFieldComponent.show($view, null, { pos: "top" });
-		};
-
-		_logic.onFilterChange = () => {
-
-			var view = _logic.currentEditObject();
-
-			view.settings.objectWorkspace.filterConditions = FilterComponent.getValue();
-
-			this.propertyEditorSave(ids, view);
-
-		};
-
-		// create filter & sort popups
-		this.initPopupEditors(App, ids, _logic);
-
-		return commonUI.concat([
+		components = components.concat([
 			{
 				view: "fieldset",
 				label: L('ab.component.datacollection.dataSource', '*Data Source:'),
@@ -439,7 +421,211 @@ export default class ABViewDataCollection extends ABView {
 
 		]);
 
+
+		var superInit = options.init;
+		options.init = (data) => {
+			if (superInit) superInit(data);
+			if (data.columns) {
+				$$(ids.columns).setValue(data.columns);
+			}
+		}
+
+
+		_logic.selectObject = (objectId) => {
+
+			var object = this.application.objects(obj => obj.id == objectId)[0];
+
+			// populate fix selector
+			this.populateFixSelector(ids, object);
+
+			// re-create filter & sort popups
+			this.initPopupEditors(App, ids, _logic);
+
+		};
+
+		_logic.showFilterPopup = ($view) => {
+			this.filter_popup.show($view, null, { pos: "top" });
+		};
+
+		_logic.showSortPopup = ($view) => {
+			PopupSortFieldComponent.show($view, null, { pos: "top" });
+		};
+
+		_logic.onFilterChange = () => {
+
+			this.settings.objectWorkspace.filterConditions = FilterComponent.getValue();
+
+			this.propertyEditorSave(ids);
+
+		};
+
+		return components;
 	}
+
+
+
+	// static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
+
+	// 	var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
+
+	// 	// == Logic ==
+
+	// 	_logic.selectObject = (objectId) => {
+
+	// 		var view = _logic.currentEditObject();
+
+	// 		var object = view.application.objects(obj => obj.id == objectId)[0];
+
+	// 		// populate fix selector
+	// 		this.populateFixSelector(ids, view, object);
+
+	// 		// re-create filter & sort popups
+	// 		this.initPopupEditors(App, ids, _logic);
+
+	// 	};
+
+	// 	_logic.showFilterPopup = ($view) => {
+	// 		this.filter_popup.show($view, null, { pos: "top" });
+	// 	};
+
+	// 	_logic.showSortPopup = ($view) => {
+	// 		PopupSortFieldComponent.show($view, null, { pos: "top" });
+	// 	};
+
+	// 	_logic.onFilterChange = () => {
+
+	// 		var view = _logic.currentEditObject();
+
+	// 		view.settings.objectWorkspace.filterConditions = FilterComponent.getValue();
+
+	// 		this.propertyEditorSave(ids, view);
+
+	// 	};
+
+	// 	// create filter & sort popups
+	// 	this.initPopupEditors(App, ids, _logic);
+
+	// 	return commonUI.concat([
+	// 		{
+	// 			view: "fieldset",
+	// 			label: L('ab.component.datacollection.dataSource', '*Data Source:'),
+	// 			labelWidth: App.config.labelWidthLarge,
+	// 			body: {
+	// 				type: "clean",
+	// 				paddingY: 20,
+	// 				paddingX: 10,
+	// 				rows: [
+	// 					{
+	// 						view: "select",
+	// 						name: "dataSource",
+	// 						label: L('ab.component.datacollection.object', '*Object:'),
+	// 						labelWidth: App.config.labelWidthLarge,
+	// 						options: [],
+	// 						on: {
+	// 							onChange: function (newv, oldv) {
+	// 								if (newv == oldv) return;
+
+	// 								_logic.selectObject(newv);
+	// 							}
+	// 						}
+	// 					},
+	// 					// link to another data collection
+	// 					{
+	// 						view: "select",
+	// 						name: "linkDataSource",
+	// 						label: L('ab.component.datacollection.linkDataSource', '*Linked To:'),
+	// 						labelWidth: App.config.labelWidthLarge,
+	// 						options: [],
+	// 						hidden: 1
+	// 					},
+	// 					{
+	// 						view: "select",
+	// 						name: "linkField",
+	// 						label: L('ab.component.datacollection.linkedField', '*Linked Field:'),
+	// 						labelWidth: App.config.labelWidthLarge,
+	// 						options: [],
+	// 						hidden: 1
+	// 					}
+	// 				]
+	// 			}
+	// 		},
+	// 		{
+	// 			view: "fieldset",
+	// 			label: L('ab.component.datacollection.advancedOptions', '*Advanced Options:'),
+	// 			labelWidth: App.config.labelWidthLarge,
+	// 			body: {
+	// 				type: "clean",
+	// 				paddingY: 20,
+	// 				paddingX: 10,
+	// 				rows: [
+	// 					{
+	// 						cols: [
+	// 							{
+	// 								view: "label",
+	// 								label: L("ab.component.datacollection.filterData", "*Filter Data:"),
+	// 								width: App.config.labelWidthLarge,
+	// 							},
+	// 							{
+	// 								view: "button",
+	// 								name: "buttonFilter",
+	// 								label: L("ab.component.datacollection.settings", "*Settings"),
+	// 								icon: "gear",
+	// 								type: "icon",
+	// 								badge: 0,
+	// 								click: function () {
+	// 									_logic.showFilterPopup(this.$view);
+	// 								}
+	// 							}
+	// 						]
+	// 					},
+	// 					{
+	// 						cols: [
+	// 							{
+	// 								view: "label",
+	// 								label: L("ab.component.datacollection.sortData", "*Sort Data:"),
+	// 								width: App.config.labelWidthLarge,
+	// 							},
+	// 							{
+	// 								view: "button",
+	// 								name: "buttonSort",
+	// 								label: L("ab.component.datacollection.settings", "*Settings"),
+	// 								icon: "gear",
+	// 								type: "icon",
+	// 								badge: 0,
+	// 								click: function () {
+	// 									_logic.showSortPopup(this.$view);
+	// 								}
+	// 							}
+	// 						]
+	// 					},
+	// 					{
+	// 						cols: [
+	// 							{
+	// 								view: "label",
+	// 								label: L("ab.component.datacollection.loadAll", "*Load all:"),
+	// 								width: App.config.labelWidthLarge,
+	// 							},
+	// 							{
+	// 								view: "checkbox",
+	// 								name: "loadAll",
+	// 								label: ""
+	// 							}
+	// 						]
+	// 					},
+	// 					{
+	// 						view: "select",
+	// 						name: "fixSelect",
+	// 						label: L('ab.component.datacollection.fixSelect', '*Select:'),
+	// 						labelWidth: App.config.labelWidthLarge,
+	// 						options: []
+	// 					}
+	// 				]
+	// 			}
+	// 		}
+
+	// 	]);
+
+	// }
 
 	static propertyEditorPopulate(App, ids, view) {
 
@@ -497,15 +683,14 @@ export default class ABViewDataCollection extends ABView {
 
 	}
 
-	static propertyEditorValues(ids, view) {
-
-		super.propertyEditorValues(ids, view);
+	propertyEditorValues(ids) {
+		super.propertyEditorValues(ids);
 
 
 		// if object is changed, then clear filter & sort settings
-		if (view.settings.object != $$(ids.dataSource).getValue()) {
+		if (this.settings.object != $$(ids.dataSource).getValue()) {
 
-			view.settings.objectWorkspace = {
+			this.settings.objectWorkspace = {
 				filterConditions: ABViewPropertyDefaults.objectWorkspace.filterConditions,
 				sortFields: ABViewPropertyDefaults.objectWorkspace.sortFields
 			};
@@ -513,55 +698,63 @@ export default class ABViewDataCollection extends ABView {
 		}
 
 
-		view.settings.object = $$(ids.dataSource).getValue();
+		this.settings.object = $$(ids.dataSource).getValue();
 
 		// get object url
-		if (view.settings.object) {
-			var obj = view.application.objects(obj => obj.id == view.settings.object)[0];
+		if (this.settings.object) {
+			var obj = this.application.objects(obj => obj.id == this.settings.object)[0];
 
-			view.settings.objectUrl = obj.urlPointer();
+			this.settings.objectUrl = obj.urlPointer();
 
 
-			var defaultLabel = view.parent.label + '.' + view.defaults.key;
+			var defaultLabel = this.parent.label + '.' + this.defaults.key;
 
 			// update label
-			if (view.label == '?label?' || view.label == defaultLabel) {
-				view.label = obj.label;
+			if (this.label == '?label?' || this.label == defaultLabel) {
+				this.label = obj.label;
 				$$(ids.label).define('value', obj.label);
 				$$(ids.label).refresh();
 			}
 		}
 		else {
-			delete view.settings.objectUrl;
+			delete this.settings.objectUrl;
 		}
 
 		// set id of link data collection
-		view.settings.linkDataCollection = $$(ids.linkDataSource).getValue();
-		if (!view.settings.linkDataCollection)
-			delete view.settings.linkDataCollection;
+		this.settings.linkDataCollection = $$(ids.linkDataSource).getValue();
+		if (!this.settings.linkDataCollection)
+			delete this.settings.linkDataCollection;
 
 		// set id of link field
-		view.settings.linkField = $$(ids.linkField).getValue();
-		if (!view.settings.linkField)
-			delete view.settings.linkField;
+		this.settings.linkField = $$(ids.linkField).getValue();
+		if (!this.settings.linkField)
+			delete this.settings.linkField;
+
+
+//// Question:  
+//// we are trying to save the data, why are we performing all
+//// these ui updates?
+//// maybe move these under a .refresh() option?
+
+
 
 		// populate filter & sort values to popups
-		this.populatePopupEditors(view);
+		this.populatePopupEditors();
 
 		// populate link data collections
-		this.initLinkDataCollectionOptions(ids, view);
+		this.initLinkDataCollectionOptions(ids);
 
 		// populate link fields
-		this.initLinkFieldOptions(ids, view);
+		this.initLinkFieldOptions(ids);
 
 		// set loadAll flag
-		view.settings.loadAll = $$(ids.loadAll).getValue();
+		this.settings.loadAll = $$(ids.loadAll).getValue();
 
 		// set fix select value
-		view.settings.fixSelect = $$(ids.fixSelect).getValue();
+		this.settings.fixSelect = $$(ids.fixSelect).getValue();
 
 		// refresh data collection
-		view.init();
+		this.init();
 
 	}
 
@@ -589,9 +782,9 @@ export default class ABViewDataCollection extends ABView {
 		}
 	}
 
-	static populateFixSelector(ids, view, object) {
+	populateFixSelector(ids, object) {
 
-		var dataItems = view.getData().map((item) => {
+		var dataItems = this.getData().map((item) => {
 			return {
 				id: item.id,
 				value: object ? object.displayData(item) : ""
@@ -609,16 +802,16 @@ export default class ABViewDataCollection extends ABView {
 
 		$$(ids.fixSelect).define("options", dataItems);
 		$$(ids.fixSelect).refresh();
-		$$(ids.fixSelect).setValue(view.settings.fixSelect || '');
+		$$(ids.fixSelect).setValue(this.settings.fixSelect || '');
 
 	}
 
 
-	static initLinkDataCollectionOptions(ids, view) {
+	initLinkDataCollectionOptions(ids) {
 
 		// get linked data collection list
-		var rootPage = view.pageRoot();
-		var objSource = view.datasource;
+		var rootPage = this.pageRoot();
+		var objSource = this.datasource;
 		if (objSource != null) {
 			var linkFields = objSource.connectFields();
 			var linkObjectIds = linkFields.map((f) => f.settings.linkObject);
@@ -645,7 +838,7 @@ export default class ABViewDataCollection extends ABView {
 			$$(ids.linkDataSource).show();
 			$$(ids.linkDataSource).define("options", linkDcOptions);
 			$$(ids.linkDataSource).refresh();
-			$$(ids.linkDataSource).setValue(view.settings.linkDataCollection || '');
+			$$(ids.linkDataSource).setValue(this.settings.linkDataCollection || '');
 
 		}
 		else {
@@ -656,14 +849,14 @@ export default class ABViewDataCollection extends ABView {
 	}
 
 
-	static initLinkFieldOptions(ids, view) {
+	initLinkFieldOptions(ids) {
 
 		var linkFieldOptions = [];
 
 		// get fields that link to our ABObject
-		if (view.dataCollectionLink) {
-			var object = view.datasource;
-			var linkObject = view.dataCollectionLink.datasource;
+		if (this.dataCollectionLink) {
+			var object = this.datasource;
+			var linkObject = this.dataCollectionLink.datasource;
 			var relationFields = object.connectFields().filter((link) => link.settings.linkObject == linkObject.id);
 
 			// pull fields to options
@@ -682,12 +875,12 @@ export default class ABViewDataCollection extends ABView {
 
 		$$(ids.linkField).define("options", linkFieldOptions);
 		$$(ids.linkField).refresh();
-		$$(ids.linkField).setValue(view.settings.linkField || (linkFieldOptions[0] ? linkFieldOptions[0].id : ''));
+		$$(ids.linkField).setValue(this.settings.linkField || (linkFieldOptions[0] ? linkFieldOptions[0].id : ''));
 
 	}
 
 
-	static initPopupEditors(App, ids, _logic) {
+	initPopupEditors(App, ids, _logic) {
 
 		var idBase = 'ABViewDataCollectionPropertyEditor';
 
@@ -715,14 +908,14 @@ export default class ABViewDataCollection extends ABView {
 	}
 
 
-	static populatePopupEditors(view) {
+	populatePopupEditors() {
 
 		var filterConditions = ABViewPropertyDefaults.objectWorkspace.filterConditions;
 
 		// Clone ABObject
-		var objectCopy = _.cloneDeep(view.datasource);
+		var objectCopy = _.cloneDeep(this.datasource);
 		if (objectCopy) {
-			objectCopy.objectWorkspace = view.settings.objectWorkspace;
+			objectCopy.objectWorkspace = this.settings.objectWorkspace;
 
 			filterConditions = objectCopy.objectWorkspace.filterConditions || ABViewPropertyDefaults.objectWorkspace.filterConditions;
 		}
@@ -730,11 +923,10 @@ export default class ABViewDataCollection extends ABView {
 		// Populate data to popups
 		FilterComponent.objectLoad(objectCopy);
 		FilterComponent.setValue(filterConditions);
-		view.__filterComponent.objectLoad(objectCopy);
-		view.__filterComponent.setValue(filterConditions);
+		this.__filterComponent.objectLoad(objectCopy);
+		this.__filterComponent.setValue(filterConditions);
 
-		PopupSortFieldComponent.objectLoad(objectCopy, view);
-
+		PopupSortFieldComponent.objectLoad(objectCopy, this);
 	}
 
 

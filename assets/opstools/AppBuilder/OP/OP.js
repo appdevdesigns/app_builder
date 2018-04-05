@@ -14,7 +14,7 @@
 //// TODO: how to disable 'use strict'?  or perform this check without an error
 //// in 'use strict' ?
 
-// if (!window.OP) {
+
 
 import Comm from "./comm/comm"
 import Component from "./component"
@@ -24,11 +24,14 @@ import DateTime from "./dateTime"
 import Model from "./model"
 import Multilingual from "./multilingual"
 import Test from "./test"
+import UIPlugins from "./uiplugins"
 import Util  from "./util"
 import Validation from "./validation"
 import User from "./user"
 
-
+// don't overwrite an existing OP install:
+if (!window.OP) {
+	var OP = {};
     window.OP = OP;
 
 
@@ -55,6 +58,8 @@ import User from "./user"
 
 	OP.Test = Test;
 	
+	OP.UIPlugins = UIPlugins;
+	
 	OP.Util = Util;
 
 	OP.Validation = Validation;
@@ -62,8 +67,9 @@ import User from "./user"
 	OP.User = User;
 	OP.User.init();
 
-	export default OP;
-// }
 
+}
+
+export default OP;
 
 // import "./model.js"

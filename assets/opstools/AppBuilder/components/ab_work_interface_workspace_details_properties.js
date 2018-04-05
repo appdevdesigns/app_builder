@@ -5,7 +5,7 @@
  * Display the properties available for the current view.
  *
  */
-import ABViewManager from "../classes/ABViewManager"
+// import ABViewManager from "../classes/ABViewManager"
 
 export default class AB_Work_Interface_Workspace_Details_Properties extends OP.Component {
 
@@ -58,7 +58,7 @@ export default class AB_Work_Interface_Workspace_Details_Properties extends OP.C
                     ]
                 },
                 {
-                    view:'multiview',
+                    // view:'multiview',
                     id:ids.editors,
                     rows:[
                         {id:'delme', view:'label',  label:'delme'}
@@ -68,35 +68,36 @@ export default class AB_Work_Interface_Workspace_Details_Properties extends OP.C
         };
 
         var CurrentView = null;
-        var _editorsByType = {};
-
+        var CurrentComponent = null;
+     
         // setting up UI
         this.init = function () {
             // webix.extend($$(ids.form), webix.ProgressBar);
 
-            var newEditorList = {
-                view: 'multiview',
-                id: ids.editors,
-                rows: [
-                ]
-            }
 
-            // Load in ALL the property editors for our known Views:
-            var allViews = ABViewManager.allViews();
-            allViews.forEach((view) => {
+            // var newEditorList = {
+            //     view: 'multiview',
+            //     id: ids.editors,
+            //     rows: [
+            //     ]
+            // }
 
-                var propertyComponent = view.propertyEditorComponent(App);
+            // // Load in ALL the property editors for our known Views:
+            // var allViews = ABViewManager.allViews();
+            // allViews.forEach((view) => {
 
-                var key = view.common().key;
-                _editorsByType[key] = propertyComponent;
+            //     var propertyComponent = view.propertyEditorComponent(App);
 
-                newEditorList.rows.push(propertyComponent.ui);
+            //     var key = view.common().key;
+            //     _editorsByType[key] = propertyComponent;
 
-            })
+            //     newEditorList.rows.push(propertyComponent.ui);
+
+            // })
 
 
-            // now remove the 'del_me' definition editor placeholder.
-            webix.ui(newEditorList, $$(ids.editors));
+            // // now remove the 'del_me' definition editor placeholder.
+            // webix.ui(newEditorList, $$(ids.editors));
 
         };
 
@@ -151,15 +152,16 @@ export default class AB_Work_Interface_Workspace_Details_Properties extends OP.C
             viewLoad: function (view) {
                 CurrentView = view;
 
-                for (var e in _editorsByType) {
+                CurrentComponent = view.propertyEditor(App);
 
-                    if (e == view.key) {
-                        _editorsByType[e].populate(view);
-                        _editorsByType[e].show(false, false);
-                    } else {
-                        _editorsByType[e].hide();
-                    }
-                }
+                CurrentComponent.ui.id = ids.editors;
+                
+                // now remove the 'del_me' definition editor placeholder.
+                webix.ui(CurrentComponent.ui, $$(ids.editors));
+
+
+                // initialize the Component:
+                CurrentComponent.init(view.settings);
 
             },
         };

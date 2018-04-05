@@ -1,7 +1,4 @@
 
-// import 'OP';
-// import '../../../../../assets/js/webix/webix'
-
 
 import AB from './components/ab'
 

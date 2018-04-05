@@ -499,7 +499,7 @@ export default class ABApplication extends ABApplicationBase {
 	pageNew(values) {
 
 		// make sure this is an ABViewPage description
-		values.key = ABViewPage.common().key;
+		values.key = values.key || ABViewPage.common().key;
 
 		return new ABViewManager.newView(values, this, null);
 	}

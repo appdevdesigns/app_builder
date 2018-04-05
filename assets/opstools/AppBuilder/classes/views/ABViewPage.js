@@ -30,9 +30,9 @@ var ABViewDefaults = {
 
 export default class ABViewPage extends ABViewContainer {
 
-    constructor(values, application, parent) {
+    constructor(values, application, parent, defaultValues) {
 
-        super(values, application, parent, ABViewDefaults);
+        super(values, application, parent, (defaultValues || ABViewDefaults));
 
 
         // 	{
@@ -138,9 +138,10 @@ export default class ABViewPage extends ABViewContainer {
 
     }
 
-    //
-    //	Editor Related
-    //
+
+    ////
+    ////    Interface Editor Related
+    ////
 
 
 	/** 
@@ -180,9 +181,208 @@ export default class ABViewPage extends ABViewContainer {
     }
 
 
-    static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
+    /** 
+     * @method propertyEditorFields
+     * return an array of webix UI fields to handle the settings of this
+     * ABViewPage. 
+     * This method should make any modifications to ids, logic, and init
+     * as needed to support the new fields added in this routine.
+     * @param {App} App  The global App object for the current Application instance
+     * @param {obj} ids  A hash of the settings ids for our fields.
+     * @param {obj} logic  a hash of fn() called by our webix components
+     * @param {fn}  init  An initialization fn() called to setup our fields.
+     * @return {array}  of webix UI definitions.
+     */
+    propertyEditorFields(App, options) { 
+        var components = super.propertyEditorFields(App, options); 
+        
+        var ids = options.ids;
+        ids.type = App.unique('type');
 
-        var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
+        components = components.concat([
+            {
+                id: ids.type,
+                name: 'type',
+                view: 'richselect',
+                label: L('ab.components.page.type', "*Type"),
+                options: [
+                    { id: 'page', value: L('ab.components.page.page', "*Page") },
+                    { id: 'popup', value: L('ab.components.page.popup', "*Popup") }
+                ]
+            }
+        ]);
+
+
+        // init()
+        // perform any initialization of the Property Editor
+        // fields.
+        // @param {obj} data  key=>value of our view's settings;
+        var superInit = options.init;
+        options.init = ( data ) => {
+            if (superInit) superInit(data);  // call the super() first
+
+            $$(ids.type).setValue(data.type || ABPropertyComponentDefaults.type);            
+        }
+
+        return components;
+    }
+
+
+
+    // static propertyEditorDefaultElementsPage(App, ids, _logic, ObjectDefaults) {
+        
+    //     return [
+    //         {
+    //             name: 'type',
+    //             view: 'richselect',
+    //             label: L('ab.components.page.type', "*Type"),
+    //             options: [
+    //                 { id: 'page', value: L('ab.components.page.page', "*Page") },
+    //                 { id: 'popup', value: L('ab.components.page.popup', "*Popup") }
+    //             ]
+    //         }
+    //     ];
+    // }
+
+
+    /** 
+     * @method propertyEditor
+     * return a UI component for use in updating the properties for this 
+     * ABViewPage.
+     * NOTE: we override the base ABView version to include additional values
+     * relevant to any ABViewPage object (datacollections, page properties).
+     * @param {App} App  The global App object for the current Application instance
+     * @return {UIComponent}  to display as our Editor.
+     */
+    propertyEditor(App) {
+
+        var ids = {};
+        var _logic = {};
+        var init = function(){};
+
+        var options = { ids:ids, logic:_logic, init:init };
+        var elements = this.propertyEditorFields(App, options); // ids, _logic, init);
+
+        ids.dataCollectionPanel = App.unique('dataCollectionPanel');
+        ids.datacollection      = App.unique('datacollection');
+        ids.pagePermissionPanel = App.unique('pagePermissionPanel');
+        ids.permissions         = App.unique('permissions');
+
+
+        elements = elements.concat([
+            {
+                id: ids.dataCollectionPanel,
+                view: "fieldset",
+                name: "dataCollectionPanel",
+                label: L('ab.component.page.dataCollections', '*Data Collections:'),
+                labelWidth: App.config.labelWidthLarge,
+                body: {
+                    type: "clean",
+                    paddingY: 20,
+                    paddingX: 10,
+                    rows: [
+                        {
+                            cols: [
+                                {
+                                    view: "label",
+                                    label: L("ab.component.page.collections", "*Collections:"),
+                                    width: App.config.labelWidthLarge,
+                                },
+                                {
+                                    id:ids.datacollection,
+                                    view: "button",
+                                    name: "datacollection",
+                                    label: L("ab.component.page.settings", "*Settings"),
+                                    icon: "gear",
+                                    type: "icon",
+                                    badge: 0,
+                                    click: function () {
+                                        App.actions.interfaceViewPartChange('data');
+                                    }
+                                }
+                            ]
+                        }
+
+                    ]
+                }
+            },
+            {
+                id: ids.pagePermissionPanel,
+                view: "fieldset",
+                name: "pagePermissionPanel",
+                label: L('ab.component.page.pagePermissions', '*Page Permissions:'),
+                labelWidth: App.config.labelWidthLarge,
+                body: {
+                    type: "clean",
+                    paddingY: 20,
+                    paddingX: 10,
+                    rows: [
+                        {
+                            id: ids.permissions,
+                            name: 'permissions',
+                            view: 'list',
+                            select: false,
+                            minHeight: 200,
+                            template: "{common.markCheckbox()} #name#",
+                            type:{
+                                markCheckbox:function(obj ){
+                                    return "<span class='check webix_icon fa-"+(obj.markCheckbox?"check-":"")+"square-o'></span>";
+                                }
+                            },
+                            on: {
+                                onItemClick: function (id, e, node) {
+                                    _logic.permissionClick(id, e, node);
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ]);
+
+
+        var ui = {
+            rows: elements
+        }
+
+        var superInit = options.init;
+        init = (data)=>{
+            if (superInit) superInit(data);
+
+            // Disable select type of page when this page is root 
+            if (this.isRoot()) {
+                $$(ids.type).hide();
+                $$(ids.dataCollectionPanel).show();
+                
+                // Update permission options
+                $$(ids.pagePermissionPanel).show();
+                this.propertyUpdatePermissionsOptions(ids);
+            }
+            else {
+                $$(ids.pagePermissionPanel).hide();
+                $$(ids.type).show();
+                $$(ids.dataCollectionPanel).hide();
+            }
+
+            this.populateBadgeNumber(ids);
+
+//// TODO:
+//// replace AD.*  with OP.Comm.Events.*  (use EventEmitter);
+
+            // when data collections are added/deleted, then update number of badge
+            if (!this.viewUpdateEventIds) {
+                this.viewUpdateEventIds = AD.comm.hub.subscribe('ab.interface.update', (message, data) => {
+
+                    if (data.rootPage && data.rootPage.id == this.id) {
+                        this.populateBadgeNumber(ids);
+                    }
+
+                });
+
+            }
+
+        }  // end init()
+
 
         _logic.permissionClick = (id, e, node) => {
             var List = $$(ids.permissions);
@@ -221,126 +421,179 @@ export default class ABViewPage extends ABViewContainer {
 
         };
 
-        // in addition to the common .label  values, we 
-        // ask for:
-        return commonUI.concat([
-            {
-                name: 'type',
-                view: 'richselect',
-                label: L('ab.components.page.type', "*Type"),
-                options: [
-                    { id: 'page', value: L('ab.components.page.page', "*Page") },
-                    { id: 'popup', value: L('ab.components.page.popup', "*Popup") }
-                ]
-            },
-            {
-                view: "fieldset",
-                name: "dataCollectionPanel",
-                label: L('ab.component.page.dataCollections', '*Data Collections:'),
-                labelWidth: App.config.labelWidthLarge,
-                body: {
-                    type: "clean",
-                    paddingY: 20,
-                    paddingX: 10,
-                    rows: [
-                        {
-                            cols: [
-                                {
-                                    view: "label",
-                                    label: L("ab.component.page.collections", "*Collections:"),
-                                    width: App.config.labelWidthLarge,
-                                },
-                                {
-                                    view: "button",
-                                    name: "datacollection",
-                                    label: L("ab.component.page.settings", "*Settings"),
-                                    icon: "gear",
-                                    type: "icon",
-                                    badge: 0,
-                                    click: function () {
-                                        App.actions.interfaceViewPartChange('data');
-                                    }
-                                }
-                            ]
-                        }
 
-                    ]
-                }
-            },
-            {
-                view: "fieldset",
-                name: "pagePermissionPanel",
-                label: L('ab.component.page.pagePermissions', '*Page Permissions:'),
-                labelWidth: App.config.labelWidthLarge,
-                body: {
-                    type: "clean",
-                    paddingY: 20,
-                    paddingX: 10,
-                    rows: [
-                        {
-            				name: 'permissions',
-            				view: 'list',
-            				select: false,
-            				minHeight: 200,
-            				template: "{common.markCheckbox()} #name#",
-                            type:{
-                                markCheckbox:function(obj ){
-                                    return "<span class='check webix_icon fa-"+(obj.markCheckbox?"check-":"")+"square-o'></span>";
-                                }
-                            },
-                            on: {
-                                onItemClick: function (id, e, node) {
-                                    _logic.permissionClick(id, e, node);
-                                }
-                            }
-            			}
-                    ]
-                }
-            }
-        ]);
-
+        return {
+            ui:ui,
+            init:init,
+        }
 
     }
 
 
-    static propertyEditorPopulate(App, ids, view) {
 
-        super.propertyEditorPopulate(App, ids, view);
+    // static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
 
-        $$(ids.type).setValue(view.settings.type || ABPropertyComponentDefaults.type);
+    //     var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
 
-        // Disable select type of page when this page is root 
-        if (view.isRoot()) {
-            $$(ids.type).hide();
-            $$(ids.dataCollectionPanel).show();
+    //     _logic.permissionClick = (id, e, node) => {
+    //         var List = $$(ids.permissions);
+    //         var item = List.getItem(id); 
+
+    //         if (item.markCheckbox) {
+
+    //             OP.Comm.Service.delete({
+    //                 url: "/app_builder/page/"+item.action_key+"/role",
+    //                 data: {
+    //                     role_id: item.id
+    //                 }
+    //             }).then((data) => {
+
+    //                 item.markCheckbox = false;
+    //                 List.updateItem(id, item); 
+
+    //             });
+
+    //         } else {
+
+    //             OP.Comm.Service.put({
+    //                 url: "/app_builder/page/"+item.action_key+"/role",
+    //                 data: {
+    //                     role_id: item.id
+    //                 }
+    //             }).then((data) => {
+
+    //                 item.markCheckbox = true;
+    //                 List.updateItem(id, item); 
+
+    //             });
+
+    //         }
             
-            // Update permission options
-            $$(ids.pagePermissionPanel).show();
-            this.propertyUpdatePermissionsOptions(ids, view);
-        }
-        else {
-            $$(ids.pagePermissionPanel).hide();
-            $$(ids.type).show();
-            $$(ids.dataCollectionPanel).hide();
-        }
 
-        this.populateBadgeNumber(ids, view);
+    //     };
 
-        // when data collections are added/deleted, then update number of badge
-        this.viewUpdateEventIds = this.viewUpdateEventIds || {}; // { viewId: number, ..., viewIdn: number }
-        if (!this.viewUpdateEventIds[view.id]) {
-            this.viewUpdateEventIds[view.id] = AD.comm.hub.subscribe('ab.interface.update', (message, data) => {
+    //     // in addition to the common .label  values, we 
+    //     // ask for:
+    //     return commonUI.concat(
 
-                if (data.rootPage && data.rootPage.id == view.id) {
-                    this.populateBadgeNumber(ids, view);
-                }
+    //     // fields for normal page elements
+    //     this.propertyEditorDefaultElementsPage(App, ids, _logic, ObjectDefaults),
 
-            });
+    //     // all page types should include datacollections and permissions
+    //     [
+            
+    //         {
+    //             view: "fieldset",
+    //             name: "dataCollectionPanel",
+    //             label: L('ab.component.page.dataCollections', '*Data Collections:'),
+    //             labelWidth: App.config.labelWidthLarge,
+    //             body: {
+    //                 type: "clean",
+    //                 paddingY: 20,
+    //                 paddingX: 10,
+    //                 rows: [
+    //                     {
+    //                         cols: [
+    //                             {
+    //                                 view: "label",
+    //                                 label: L("ab.component.page.collections", "*Collections:"),
+    //                                 width: App.config.labelWidthLarge,
+    //                             },
+    //                             {
+    //                                 view: "button",
+    //                                 name: "datacollection",
+    //                                 label: L("ab.component.page.settings", "*Settings"),
+    //                                 icon: "gear",
+    //                                 type: "icon",
+    //                                 badge: 0,
+    //                                 click: function () {
+    //                                     App.actions.interfaceViewPartChange('data');
+    //                                 }
+    //                             }
+    //                         ]
+    //                     }
 
-        }
+    //                 ]
+    //             }
+    //         },
+    //         {
+    //             view: "fieldset",
+    //             name: "pagePermissionPanel",
+    //             label: L('ab.component.page.pagePermissions', '*Page Permissions:'),
+    //             labelWidth: App.config.labelWidthLarge,
+    //             body: {
+    //                 type: "clean",
+    //                 paddingY: 20,
+    //                 paddingX: 10,
+    //                 rows: [
+    //                     {
+    //         				name: 'permissions',
+    //         				view: 'list',
+    //         				select: false,
+    //         				minHeight: 200,
+    //         				template: "{common.markCheckbox()} #name#",
+    //                         type:{
+    //                             markCheckbox:function(obj ){
+    //                                 return "<span class='check webix_icon fa-"+(obj.markCheckbox?"check-":"")+"square-o'></span>";
+    //                             }
+    //                         },
+    //                         on: {
+    //                             onItemClick: function (id, e, node) {
+    //                                 _logic.permissionClick(id, e, node);
+    //                             }
+    //                         }
+    //         			}
+    //                 ]
+    //             }
+    //         }
+    //     ]);
 
 
-    }
+    // }
+
+    // static propertyEditorPopulatePageSettings(App, ids, view) {
+    //     $$(ids.type).setValue(view.settings.type || ABPropertyComponentDefaults.type);
+    // }
+
+    // static propertyEditorPopulate(App, ids, view) {
+
+    //     super.propertyEditorPopulate(App, ids, view);
+
+    //     this.propertyEditorPopulatePageSettings(App, ids, view);
+
+        
+    //     // Disable select type of page when this page is root 
+    //     if (view.isRoot()) {
+    //         $$(ids.type).hide();
+    //         $$(ids.dataCollectionPanel).show();
+            
+    //         // Update permission options
+    //         $$(ids.pagePermissionPanel).show();
+    //         this.propertyUpdatePermissionsOptions(ids, view);
+    //     }
+    //     else {
+    //         $$(ids.pagePermissionPanel).hide();
+    //         $$(ids.type).show();
+    //         $$(ids.dataCollectionPanel).hide();
+    //     }
+
+    //     this.populateBadgeNumber(ids, view);
+
+    //     // when data collections are added/deleted, then update number of badge
+    //     this.viewUpdateEventIds = this.viewUpdateEventIds || {}; // { viewId: number, ..., viewIdn: number }
+    //     if (!this.viewUpdateEventIds[view.id]) {
+    //         this.viewUpdateEventIds[view.id] = AD.comm.hub.subscribe('ab.interface.update', (message, data) => {
+
+    //             if (data.rootPage && data.rootPage.id == view.id) {
+    //                 this.populateBadgeNumber(ids, view);
+    //             }
+
+    //         });
+
+    //     }
+
+
+    // }
 
 
     static propertyEditorValues(ids, view) {
@@ -352,9 +605,9 @@ export default class ABViewPage extends ABViewContainer {
     }
 
 
-    static populateBadgeNumber(ids, view) {
+    populateBadgeNumber(ids) {
 
-        var dataCols = view.dataCollections();
+        var dataCols = this.dataCollections();
         if (dataCols && dataCols.length > 0) {
             $$(ids.datacollection).define('badge', dataCols.length);
             $$(ids.datacollection).refresh();
@@ -366,9 +619,9 @@ export default class ABViewPage extends ABViewContainer {
 
     }
     
-    static getPageActionKey(view) {
+    getPageActionKey() {
         
-        return ['opstools', "AB_" + String(view.application.name).replace(/[^a-z0-9]/gi, ''), String(view.name).replace(/[^a-z0-9]/gi, '').toLowerCase(), "view"].join('.');
+        return ['opstools', "AB_" + String(this.application.name).replace(/[^a-z0-9]/gi, ''), String(this.name).replace(/[^a-z0-9]/gi, '').toLowerCase(), "view"].join('.');
         
     }
     
@@ -377,12 +630,12 @@ export default class ABViewPage extends ABViewContainer {
      * Populate permissions of Ops Portal to select list in property
      * 
      */
-    static propertyUpdatePermissionsOptions(ids, view) {
+    propertyUpdatePermissionsOptions(ids) {
 
-        var action_key = this.getPageActionKey(view);
+        var action_key = this.getPageActionKey();
         var roles = [];
         
-        view.application.getPermissions()
+        this.application.getPermissions()
             .then(function (selected_role_ids) {
                 var app_roles = selected_role_ids;
 
@@ -412,12 +665,25 @@ export default class ABViewPage extends ABViewContainer {
                     $$(ids.permissions).clearAll();
                     $$(ids.permissions).parse(roles);
 
+                })
+                .catch(function (err) { 
+                    OP.Error.log('AppBuilder:ABViewPage:propertyUpdatePermissionsOptions(): Error finding OP.Comm.Service.get() roles for view ', { error:err });
                 });
 
             })
-            .catch(function (err) { next(err); });
+            .catch(function (err) { 
+                OP.Error.log('AppBuilder:ABViewPage:propertyUpdatePermissionsOptions(): Error finding application.getPermissions() ', { error:err });
+            });
         
     }
+
+
+
+    ////
+    //// Live View
+    ////
+
+
 
 	/*
 	 * @component()
@@ -455,6 +721,10 @@ export default class ABViewPage extends ABViewContainer {
         }
     }
 
+
+    ////
+    //// Object Lifecycle
+    ////
 
 
     /**
@@ -600,7 +870,7 @@ export default class ABViewPage extends ABViewContainer {
     pageNew(values) {
 
         // make sure this is an ABViewPage description
-        values.key = ABViewDefaults.key;
+        values.key =  values.key || ABViewDefaults.key;
 
         // NOTE: this returns a new ABView component.  
         // when creating a new page, the 3rd param should be null, to signify 
@@ -632,6 +902,7 @@ export default class ABViewPage extends ABViewContainer {
     ///
     /// Data sources
     ///
+
 
     /**
      * @method dataCollections()
@@ -717,11 +988,9 @@ export default class ABViewPage extends ABViewContainer {
     }
 
 
-
-
     /**
-     * @method urlView()
-     * return the url pointer for views in this application.
+     * @method urlPage()
+     * return the url pointer for pages in this application.
      * @return {string} 
      */
     urlPage() {
@@ -744,6 +1013,9 @@ export default class ABViewPage extends ABViewContainer {
         }
     }
     
+
+
+
     removeFieldSubPages(field, cb) {
         var done = 0;
         
