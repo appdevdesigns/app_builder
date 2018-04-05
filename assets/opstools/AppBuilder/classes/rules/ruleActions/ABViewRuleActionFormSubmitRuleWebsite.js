@@ -1,7 +1,6 @@
 //
-// ABViewRuleActionFormRecordRuleUpdate
+// ABViewRuleActionFormSubmitRuleWebsite
 //
-// An action that allows you to update fields on an object. 
 //
 //
 import ABViewRuleAction from "../ABViewRuleAction"

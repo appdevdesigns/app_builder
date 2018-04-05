@@ -661,7 +661,8 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 				// M:1 - get data that's only empty relation value
 				if (this.settings.linkType == 'many' && this.settings.linkViaType == 'one') {
-					where[linkedCol.columnName] = null;
+					where[linkedCol.columnName] = 'null';
+					// where[linkedCol.columnName] = null;
 				}
 				// 1:1
 				else if (this.settings.linkType == 'one' && this.settings.linkViaType == 'one') {
@@ -674,7 +675,8 @@ class ABFieldConnect extends ABFieldSelectivity {
 					}
 					// 1:1 - get data that's only empty relation value by query null value from link table
 					else {
-						where[linkedCol.columnName] = null;
+						where[linkedCol.columnName] = 'null';
+						// where[linkedCol.columnName] = null;
 					}
 				}
 
@@ -771,23 +773,15 @@ class ABFieldConnect extends ABFieldSelectivity {
 		if (typeof val == "undefined") {
 			val = rowData;
 			
-			// convert to array
-			if (val && this.settings.linkType == 'many' && !Array.isArray(val))
-				val = [val];
-			
 			// if ! val in proper selectivity format ->  strange case
 			var testVal = Array.isArray(val) ? val[0] : val;
 			if( !(testVal.id && testVal.text) ){
 				var relationName = this.relationName();
-				var val = rowData[relationName];
+				val = this.pullRelationValues(rowData[relationName]);
 			}
 			
 		} else {
 			
-			// convert to array
-			if (val && this.settings.linkType == 'many' && !Array.isArray(val))
-				val = [val];
-				
 			// convert our val into pullRelationValues
 			// get label to display
 			val = this.pullRelationValues(rowData);

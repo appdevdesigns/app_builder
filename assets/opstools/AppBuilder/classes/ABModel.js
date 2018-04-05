@@ -548,33 +548,83 @@ reject(err);
 		// convert to array
 		if (!(data instanceof Array))
 			data = [data];
+			
+		// find all connected fields
+		var connectedFields = this.object.connectFields();
 
 		// if this object has some multilingual fields, translate the data:
 		var mlFields = this.object.multilingualFields();
 		
 		// if this object has some date fields, convert the data to date object:
 		var dateFields = this.object.fields(function(f) { return f.key == 'date'; }) || [];
-		
-		if (mlFields.length > 0 || dateFields.length > 0) {
+	
+		data.forEach((d) => {
+			if (d == null) return;
 
-			data.forEach((d) => {
+			// various PK name
+			if (this.object.PK() != 'id')
+				d.id = d[this.object.PK()];
 
+			// loop through data's connected fields
+			connectedFields.forEach((c) => {
 
-				if (mlFields.length) {
-					OP.Multilingual.translate(d, d, mlFields);
+				// get the relation name so we can change the original object
+				var relationName = c.relationName();
+				// if there is no data we can exit now
+				if (d[relationName] == null) return;
+				// if the data is an array we need to loop through it
+				if (Array.isArray(d[relationName])) {
+					d[relationName].forEach((r) => {
+						// if translations are present and they are still a string
+						if ('translations' in r && typeof r.translations == "string") {
+							// parse the string into an object
+							r.translations = JSON.parse(r.translations);
+						}
+					});
+				} else {
+					// if the data is not an array it is a single item...check that has translations and it is a string
+					if ('translations' in d[relationName] && typeof d[relationName].translations == "string") {
+						// if so parse the string into an object
+						d[relationName].translations = JSON.parse(d[relationName].translations);
+					}
 				}
 
 
-				// convert the data to date object
-				dateFields.forEach((date) => {
-					if (d && d[date.columnName] != null)
-						d[date.columnName] = new Date(d[date.columnName]);
-				});
+				// set .id to relation columns
+				let objectLink = c.datasourceLink;
+				if (objectLink.PK() != 'id' &&
+					d[relationName]) {
 
+						// is array
+						if (d[relationName].forEach) {
+							d[relationName].forEach(subData => {
+								subData.id = subData[objectLink.PK()];
+							})
+						}
+						else {
+							d[relationName].id = d[relationName][objectLink.PK()];
+						}
+
+					}
 
 			});
 
-		}
+
+			if (mlFields.length) {
+				OP.Multilingual.translate(d, d, mlFields);
+			}
+
+
+			// convert the data to date object
+			dateFields.forEach((date) => {
+				if (d && d[date.columnName] != null)
+					d[date.columnName] = new Date(d[date.columnName]);
+			});
+
+
+		});
+
 	}
 
 }
+

@@ -6,13 +6,12 @@
  */
 
 module.exports = {
-
-    _config: {
-        model: "ablist", // all lowercase model name
-        actions: false,
-        shortcuts: false,
-        rest: true
-    }
-	
-};
-
+    
+        _config: {
+            model: "ablist", // all lowercase model name
+            actions: false,
+            shortcuts: false,
+            rest: true
+        }
+        
+    };

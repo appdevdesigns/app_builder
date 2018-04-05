@@ -46,7 +46,7 @@ export default class ABViewMenu extends ABViewWidget {
 
 		super(values, application, parent, ABMenuDefaults);
 
-		// OP.Multilingual.translate(this, this, ['text']);
+		OP.Multilingual.translate(this, this, ['menulabel']);
 
 		// 	{
 		// 		id:'uuid',					// uuid value for this obj
@@ -71,6 +71,32 @@ export default class ABViewMenu extends ABViewWidget {
 		return ABMenuDefaults;
 	}
 
+	///
+	/// Instance Methods
+	///
+
+	/**
+	 * @method toObj()
+	 *
+	 * properly compile the current state of this ABViewLabel instance
+	 * into the values needed for saving.
+	 *
+	 * @return {json}
+	 */
+	toObj () {
+		
+		if (this.settings.pages) {
+			this.settings.pages.forEach(page => {
+				OP.Multilingual.unTranslate(page, page, ["aliasname"]);
+			});
+		}
+		
+		var obj = super.toObj();
+		obj.views = [];
+		return obj;
+	}
+
+
 	/**
 	 * @method fromValues()
 	 *
@@ -80,7 +106,7 @@ export default class ABViewMenu extends ABViewWidget {
 	fromValues (values) {
 
 		super.fromValues(values);
-		
+
 		this.settings.pages = this.settings.pages || ABViewMenuPropertyComponentDefaults.pages;
 
 		for (var i = 0; i < this.settings.pages.length; i++) {
@@ -88,6 +114,7 @@ export default class ABViewMenu extends ABViewWidget {
 			var page = this.settings.pages[i];
 			if (page instanceof Object) {
 				page.isChecked = JSON.parse(page.isChecked || false);
+				page.translations = OP.Multilingual.translate(page, page, ["aliasname"]);
 			}
 			// Compatible with old data
 			else if (typeof page == 'string') {
@@ -96,15 +123,12 @@ export default class ABViewMenu extends ABViewWidget {
 					isChecked: true
 				};
 			}
-
+			
 		}
 
 	}
 
-	///
-	/// Instance Methods
-	///
-
+	
 	//
 	//	Editor Related
 	//
@@ -251,6 +275,13 @@ export default class ABViewMenu extends ABViewWidget {
 								onItemCheck: function () {
 									// trigger to save settings
 									_logic.onChange();
+								},
+								onBeforeEditStart: function(id) {
+									var item = this.getItem(id);
+									if(!item.aliasname) {
+										item.aliasname = item.label;
+										this.updateItem(item);
+									}
 								},
 								onBeforeEditStop: function(state, editor) {
 									var item = this.getItem(editor.id);

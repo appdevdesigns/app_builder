@@ -195,11 +195,6 @@ width: 650,
 					page = CurrentApplication.pageNew(values);
 				}
 				
-				// Our page.name needs to be unique and just using the label as the value has caused problems
-				// when a user changes the page name on an old page and creates a new page with the old pages name,
-				// placing the code here will prevent this from happening with both blank and quick pages
-				page.name = page.name + "_" + uuid("v4").split("-")[1];
-
 				var validator = page.isValid(values);
 				if (validator.fail()) {
 					CurrentEditor.errors(validator);
