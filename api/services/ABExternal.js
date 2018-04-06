@@ -117,7 +117,7 @@ module.exports = {
 
 		return Promise.resolve()
 			.then(function () {
-                // Get tables in AppBuilder DB
+				// Get tables in AppBuilder DB
 				return new Promise((resolve, reject) => {
 
 					var knex = ABMigration.connection();
@@ -137,7 +137,9 @@ module.exports = {
 						.catch(reject)
 						.then(function (result) {
 
-							allTableNames = result.map(r => { name: r.TABLE_NAME, connection: null });
+							allTableNames = result.map((r) => { 
+								return { name: r.TABLE_NAME, connection: null };
+							});
 
 							resolve();
 
@@ -145,7 +147,7 @@ module.exports = {
 				});
 			})
 			.then(function () {
-                // Get tables in HRIS DB
+				// Get tables in HRIS DB
 				return new Promise((resolve, reject) => {
 
 					var knex = ABMigration.connection('legacy_hris');
@@ -164,9 +166,9 @@ module.exports = {
 						.andWhere('TABLE_NAME', 'NOT LIKE', '%_trans')
 						.catch(reject)
 						.then(function (result) {
-                            result.forEach((r) => {
-                                allTableNames.push({ name: r.TABLE_NAME, connection: 'legacy_hris'});
-                            });
+							result.forEach((r) => {
+								allTableNames.push({ name: r.TABLE_NAME, connection: 'legacy_hris'});
+							});
 
 							resolve();
 						});
@@ -231,9 +233,9 @@ module.exports = {
 	 * 
 	 * @param {string} tableName
 	 * @param {string} [connName]
-	 *     Optional name of the connection where the table is from.
-	 *     By default the table is assumed to be from the 'appBuilder' 
-	 *     connection.
+	 *		Optional name of the connection where the table is from.
+	 *		By default the table is assumed to be from the 'appBuilder' 
+	 *		connection.
 	 *
 	 * @return Promise -
 	 * 			return {
@@ -429,14 +431,14 @@ module.exports = {
 	 * @param integer	appID
 	 * @param string	tableName
 	 * @param [{
-	 *      name: string,
-	 *      label: string,
+	 *		 name: string,
+	 *		 label: string,
 	 * 		fieldKey: string,
 	 * 		isHidden: bool
 	 * }] columnList
-	 * @param string   [connName]
+	 * @param string	[connName]
 	 * @return Promise
-	 *     Resolves with the data of the new imported object
+	 *		Resolves with the data of the new imported object
 	 **/
 	tableToObject: function (appID, tableName, columnList, connName) {
 
