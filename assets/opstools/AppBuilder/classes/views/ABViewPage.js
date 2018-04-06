@@ -555,45 +555,45 @@ export default class ABViewPage extends ABViewContainer {
     //     $$(ids.type).setValue(view.settings.type || ABPropertyComponentDefaults.type);
     // }
 
-    // static propertyEditorPopulate(App, ids, view) {
+    propertyEditorPopulate(App, ids, view) {
 
-    //     super.propertyEditorPopulate(App, ids, view);
+        super.propertyEditorPopulate(App, ids, view);
 
-    //     this.propertyEditorPopulatePageSettings(App, ids, view);
+        this.propertyEditorPopulatePageSettings(App, ids, view);
 
         
-    //     // Disable select type of page when this page is root 
-    //     if (view.isRoot()) {
-    //         $$(ids.type).hide();
-    //         $$(ids.dataCollectionPanel).show();
+        // Disable select type of page when this page is root 
+        if (view.isRoot()) {
+            $$(ids.type).hide();
+            $$(ids.dataCollectionPanel).show();
             
-    //         // Update permission options
-    //         $$(ids.pagePermissionPanel).show();
-    //         this.propertyUpdatePermissionsOptions(ids, view);
-    //     }
-    //     else {
-    //         $$(ids.pagePermissionPanel).hide();
-    //         $$(ids.type).show();
-    //         $$(ids.dataCollectionPanel).hide();
-    //     }
+            // Update permission options
+            $$(ids.pagePermissionPanel).show();
+            this.propertyUpdatePermissionsOptions(ids, view);
+        }
+        else {
+            $$(ids.pagePermissionPanel).hide();
+            $$(ids.type).show();
+            $$(ids.dataCollectionPanel).hide();
+        }
 
-    //     this.populateBadgeNumber(ids, view);
+        this.populateBadgeNumber(ids, view);
 
-    //     // when data collections are added/deleted, then update number of badge
-    //     this.viewUpdateEventIds = this.viewUpdateEventIds || {}; // { viewId: number, ..., viewIdn: number }
-    //     if (!this.viewUpdateEventIds[view.id]) {
-    //         this.viewUpdateEventIds[view.id] = AD.comm.hub.subscribe('ab.interface.update', (message, data) => {
+        // when data collections are added/deleted, then update number of badge
+        this.viewUpdateEventIds = this.viewUpdateEventIds || {}; // { viewId: number, ..., viewIdn: number }
+        if (!this.viewUpdateEventIds[view.id]) {
+            this.viewUpdateEventIds[view.id] = AD.comm.hub.subscribe('ab.interface.update', (message, data) => {
 
-    //             if (data.rootPage && data.rootPage.id == view.id) {
-    //                 this.populateBadgeNumber(ids, view);
-    //             }
+                if (data.rootPage && data.rootPage.id == view.id) {
+                    this.populateBadgeNumber(ids, view);
+                }
 
-    //         });
+            });
 
-    //     }
+        }
 
 
-    // }
+    }
 
 
     static propertyEditorValues(ids, view) {

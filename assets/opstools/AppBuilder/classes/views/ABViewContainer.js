@@ -466,29 +466,31 @@ export default class ABViewContainer extends ABView {
 	}
 
 
-	static propertyEditorPopulate(App, ids, view) {
+	// propertyEditorPopulate(App, ids, data) {
 
-		super.propertyEditorPopulate(App, ids, view);
+	// 	super.propertyEditorPopulate(App, ids, data);
 
-		$$(ids.columns).setValue(view.settings.columns || ABPropertyComponentDefaults.columns);
+	// 	if ($$(ids.columns)) {
+	// 		$$(ids.columns).setValue(data.columns || ABPropertyComponentDefaults.columns);
+	// 	}
 
-		// when a change is made in the properties the popups need to reflect the change
-		this.updateEventIds = this.updateEventIds || {}; // { viewId: boolean, ..., viewIdn: boolean }
-		if (!this.updateEventIds[view.id]) {
-			this.updateEventIds[view.id] = true;
+	// 	// when a change is made in the properties the popups need to reflect the change
+	// 	this.updateEventIds = this.updateEventIds || {}; // { viewId: boolean, ..., viewIdn: boolean }
+	// 	if (!this.updateEventIds[this.id]) {
+	// 		this.updateEventIds[this.id] = true;
 
-			// refresh dashboard to update "position.x" and "position.y" of child views
-			view.addListener('properties.updated', function () {
+	// 		// refresh dashboard to update "position.x" and "position.y" of child views
+	// 		this.addListener('properties.updated', function () {
 
-				setTimeout(() => {
-					view.editorComponent(App).logic.onChange();
-				}, 100)
+	// 			setTimeout(() => {
+	// 				this.editorComponent(App).logic.onChange();
+	// 			}, 100)
 
-			}, this);
-		}
+	// 		}, this);
+	// 	}
 
 
-	}
+	// }
 
 
 	static propertyEditorValues(ids, view) {

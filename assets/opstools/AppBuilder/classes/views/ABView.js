@@ -997,9 +997,9 @@ export default class ABView extends ABViewBase {
 	// }
 
 
-	// static propertyEditorPopulate(App, ids, view) {
+	// propertyEditorPopulate(App, ids, data) {
 
-	// 	$$(ids.label).setValue(view.label);
+	// 	$$(ids.label).setValue(data.label);
 
 	// }
 

@@ -425,9 +425,10 @@ export default class ABViewDataCollection extends ABView {
 		var superInit = options.init;
 		options.init = (data) => {
 			if (superInit) superInit(data);
-			if (data.columns) {
-				$$(ids.columns).setValue(data.columns);
-			}
+
+//// LEFT OFF HERE:
+//// gotta load our data: 
+			this.propertyEditorPopulate(App, ids, data);
 		}
 
 
@@ -627,12 +628,10 @@ export default class ABViewDataCollection extends ABView {
 
 	// }
 
-	static propertyEditorPopulate(App, ids, view) {
-
-		super.propertyEditorPopulate(App, ids, view);
+	propertyEditorPopulate(App, ids, data) {
 
 		// Objects
-		var objects = view.application.objects().map((obj) => {
+		var objects = this.application.objects().map((obj) => {
 			return {
 				id: obj.id,
 				value: obj.label
@@ -641,40 +640,40 @@ export default class ABViewDataCollection extends ABView {
 		objects.unshift({ id: '', value: L('ab.component.datacollection.selectObject', '*Select an object') });
 
 		$$(ids.dataSource).define("options", objects);
-		$$(ids.dataSource).define("value", view.settings.object || '');
+		$$(ids.dataSource).define("value", data.object || '');
 		$$(ids.dataSource).refresh();
 
 		// populate link data collection options
-		this.initLinkDataCollectionOptions(ids, view);
+		this.initLinkDataCollectionOptions(ids);
 
 		// populate link fields
-		this.initLinkFieldOptions(ids, view);
+		this.initLinkFieldOptions(ids);
 
 		// initial populate of popups
-		this.populatePopupEditors(view);
+		this.populatePopupEditors();
 
-		this.populateBadgeNumber(ids, view);
+		this.populateBadgeNumber(ids, data);
 
 		// set .loadAll flag
-		$$(ids.loadAll).setValue(view.settings.loadAll != null ? view.settings.loadAll : ABViewPropertyDefaults.loadAll);
+		$$(ids.loadAll).setValue(data.loadAll != null ? data.loadAll : ABViewPropertyDefaults.loadAll);
 
 		// populate data items to fix select options
-		var object = view.datasource;
-		this.populateFixSelector(ids, view, object);
+		var object = this.datasource;
+		this.populateFixSelector(ids, object);
 
 		// when a change is made in the properties the popups need to reflect the change
 		this.updateEventIds = this.updateEventIds || {}; // { viewId: boolean, ..., viewIdn: boolean }
-		if (!this.updateEventIds[view.id]) {
-			this.updateEventIds[view.id] = true;
+		if (!this.updateEventIds[this.id]) {
+			this.updateEventIds[this.id] = true;
 
-			view.addListener('properties.updated', () => {
-				this.populatePopupEditors(view);
-				this.populateBadgeNumber(ids, view);
+			this.addListener('properties.updated', () => {
+				this.populatePopupEditors();
+				this.populateBadgeNumber(ids, data);
 
-				if (view.__dataCollection)
-					view.__dataCollection.clearAll();
+				if (this.__dataCollection)
+					this.__dataCollection.clearAll();
 
-				view.loadData();
+				this.loadData();
 			});
 		}
 
@@ -758,12 +757,12 @@ export default class ABViewDataCollection extends ABView {
 
 	}
 
-	static populateBadgeNumber(ids, view) {
+	populateBadgeNumber(ids, data) {
 
-		if (view.settings.objectWorkspace &&
-			view.settings.objectWorkspace.filterConditions && 
-			view.settings.objectWorkspace.filterConditions.filters) {
-			$$(ids.buttonFilter).define('badge', view.settings.objectWorkspace.filterConditions.filters.length);
+		if (data.objectWorkspace &&
+			data.objectWorkspace.filterConditions && 
+			data.objectWorkspace.filterConditions.filters) {
+			$$(ids.buttonFilter).define('badge', data.objectWorkspace.filterConditions.filters.length);
 			$$(ids.buttonFilter).refresh();
 		}
 		else {
@@ -771,9 +770,9 @@ export default class ABViewDataCollection extends ABView {
 			$$(ids.buttonFilter).refresh();
 		}
 
-		if (view.settings.objectWorkspace &&
-			view.settings.objectWorkspace.sortFields) {
-			$$(ids.buttonSort).define('badge', view.settings.objectWorkspace.sortFields.length);
+		if (data.objectWorkspace &&
+			data.objectWorkspace.sortFields) {
+			$$(ids.buttonSort).define('badge', data.objectWorkspace.sortFields.length);
 			$$(ids.buttonSort).refresh();
 		}
 		else {
