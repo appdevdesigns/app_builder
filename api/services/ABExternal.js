@@ -137,7 +137,7 @@ module.exports = {
 						.catch(reject)
 						.then(function (result) {
 
-							allTableNames = result.map(r => r.TABLE_NAME);
+							allTableNames = result.map(r => { name: r.TABLE_NAME, connection: null });
 
 							resolve();
 
@@ -165,7 +165,7 @@ module.exports = {
 						.catch(reject)
 						.then(function (result) {
                             result.forEach((r) => {
-                                allTableNames.push(r.TABLE_NAME);
+                                allTableNames.push({ name: r.TABLE_NAME, connection: 'legacy_hris'});
                             });
 
 							resolve();
@@ -202,8 +202,8 @@ module.exports = {
 
 				return new Promise((resolve, reject) => {
 
-					resolve(allTableNames.filter(name => {
-						return existsTableNames.indexOf(name) < 0;
+					resolve(allTableNames.filter(t => {
+						return existsTableNames.indexOf(t.name) < 0;
 					}));
 
 				});
@@ -214,8 +214,8 @@ module.exports = {
 
 				return new Promise((resolve, reject) => {
 					
-					resolve(tableNames.filter(name => {
-						return _.filter(sails.models, m => m.tableName == name && (!m.meta || !m.meta.junctionTable)).length;
+					resolve(tableNames.filter(t => {
+						return _.filter(sails.models, m => m.tableName == t.name && (!m.meta || !m.meta.junctionTable)).length;
 					}));
 
 				});
@@ -229,6 +229,12 @@ module.exports = {
 	 * @method getColumns
 	 * Get the column info list of a table
 	 * 
+	 * @param {string} tableName
+	 * @param {string} [connName]
+	 *     Optional name of the connection where the table is from.
+	 *     By default the table is assumed to be from the 'appBuilder' 
+	 *     connection.
+	 *
 	 * @return Promise -
 	 * 			return {
 	 * 				columnName: {
@@ -244,9 +250,9 @@ module.exports = {
 	 * 							}
 	 * 			}
 	 */
-	getColumns: (tableName) => {
+	getColumns: (tableName, connName) => {
 
-		var knex = ABMigration.connection();
+		var knex = ABMigration.connection(connName);
 		var transTableName = getTransTableName(tableName);
 		var columns = [];
 
@@ -428,12 +434,13 @@ module.exports = {
 	 * 		fieldKey: string,
 	 * 		isHidden: bool
 	 * }] columnList
+	 * @param string   [connName]
 	 * @return Promise
 	 *     Resolves with the data of the new imported object
 	 **/
-	tableToObject: function (appID, tableName, columnList) {
+	tableToObject: function (appID, tableName, columnList, connName) {
 
-		let knex = ABMigration.connection(),
+		let knex = ABMigration.connection(connName),
 			application,
 			languages = [],
 			transColumnName = '',
