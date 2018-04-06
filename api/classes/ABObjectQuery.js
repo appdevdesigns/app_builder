@@ -156,11 +156,6 @@ module.exports = class ABObjectQuery extends ABObject {
 	}
 
 
-	objectBase() {
-		return this.application.urlResolve(this.importFromObject);
-	}
-
-
 	/**
 	 * @method importJoins
 	 * instantiate a set of joins from the given attributes.
@@ -560,26 +555,15 @@ module.exports = class ABObjectQuery extends ABObject {
 
 		var registeredBase = false;  // have we marked the base object/table?
 
-		// register the base object
-		query.from(this.objectBase().dbTableName());
-
 
 		//// Add in our fields:
-		if (!options.ignoreIncludeColumns) {
-			var columns = [];
-			this.fields().forEach((f)=>{
-
-				// TODO: skip multilingual fields ???
-				if(f.settings.supportMultilingual || 
-					f.key == 'connectObject') 
-					return;
-
-				var obj = f.object;
-				var field = obj.dbTableName()+'.'+f.columnName;
-				columns.push(field);
-			})
-			query.columns(columns);
-		}
+		var columns = [];
+		this.fields().forEach((f)=>{
+			var obj = f.object;
+			var field = obj.dbTableName()+'.'+f.columnName;
+			columns.push(field);
+		})
+		query.columns(columns);
 
 
 
@@ -614,11 +598,11 @@ console.log('link.type:'+ link.type);
 			var baseObject = this.application.urlResolve(link.objectURL);
 
 
-			// // mark the 1st object as our initial .from() 
-			// if (!registeredBase) {
-			// 	query.from(baseObject.dbTableName());
-			// 	registeredBase = true;
-			// }
+			// mark the 1st object as our initial .from() 
+			if (!registeredBase) {
+				query.from(baseObject.dbTableName());
+				registeredBase = true;
+			}
 
 
 			var connectionField = baseObject.fields((f)=>{ return f.id == link.fieldID; })[0];
@@ -633,9 +617,7 @@ console.log('link.type:'+ link.type);
 
 				case 'one':
 
-					// if (connectionField.isSource()) {
-					if (connectionField.settings.isSource || // 1:1 - this column is source
-						connectionField.linkViaType() == 'many') { // 1:M 
+					if (connectionField.isSource()) {
 						// the base object can have 1 connected object
 						// the base object has the remote obj's .id in our field
 						// baseObject JOIN  connectedObject ON baseObject.columnName = connectedObject.id
@@ -644,10 +626,10 @@ console.log('link.type:'+ link.type);
 						// columnName comes from the baseObject
 						var columnName = connectionField.columnName;
 						var baseClause = baseObject.dbTableName() + '.' + columnName;
-						var connectedClause = joinTable + '.' + connectedObject.PK();
-						makeLink( link, baseObject.dbTableName(), baseClause, '=', connectedClause );
+						var connectedClause = joinTable + '.id';
+						makeLink( link, joinTable, baseClause, '=', connectedClause );
 
-					} else { // 1:1 - this column is not source
+					} else {
 						// the base object can have 1 connected object
 						// the base object's .id is in the connected Objects' colum 
 						// baseObject JOIN  connectedObject ON baseObject.id = connectedObject.columnName
@@ -658,16 +640,16 @@ console.log('link.type:'+ link.type);
 
 
 						var columnName = connectedField.columnName;
-						var baseClause = baseObject.dbTableName() + '.' + baseObject.PK();
+						var baseClause = baseObject.dbTableName() + '.id';
 						var connectedClause = joinTable + '.' + columnName;
-						makeLink( link, baseObject.dbTableName(), baseClause, '=', connectedClause );
+						makeLink( link, joinTable, baseClause, '=', connectedClause );
 
 					}
 					break;
 
 				case 'many':
 
-					if (connectionField.linkViaType() == 'one') { // M:1
+					if (connectionField.linkViaType() == 'one') {
 						// the base object can have many connectedObjects
 						// the connected object can only have one base object
 						// the base object's .id is stored in connected objects column
@@ -679,9 +661,9 @@ console.log('link.type:'+ link.type);
 
 
 						var columnName = connectedField.columnName;
-						var baseClause = baseObject.dbTableName() + '.' + baseObject.PK();
+						var baseClause = baseObject.dbTableName() + '.id';
 						var connectedClause = joinTable + '.' + columnName;
-						makeLink( link, baseObject.dbTableName(), baseClause, '=', connectedClause );
+						makeLink( link, joinTable, baseClause, '=', connectedClause );
 
 					} else {
 
@@ -700,7 +682,7 @@ console.log('link.type:'+ link.type);
 						// get baseObjectColumn in joinTable
 						var baseObjectColumn = baseObject.name; // AppBuilder.rules.toJunctionTableFK(baseObject.name, connectionField.columnName);
 
-						var baseClause = baseObject.dbTableName()+'.'+baseObject.PK();
+						var baseClause = baseObject.dbTableName()+'.id';
 						var joinClause = joinTable + '.' + baseObjectColumn;
 
 						// make JOIN
@@ -712,7 +694,7 @@ console.log('link.type:'+ link.type);
 						var connectedField = connectionField.fieldLink();
 						var connectedObjectColumn = connectedObject.name; // AppBuilder.rules.toJunctionTableFK(connectedObject.name, connectedField.columnName);
 
-						var connectedClause = connectedObject.dbTableName()+'.'+connectedObject.PK();
+						var connectedClause = connectedObject.dbTableName()+'.id';
 						joinClause = joinTable +'.' + connectedObjectColumn;
 
 						// make JOIN
@@ -780,17 +762,11 @@ console.log('link.type:'+ link.type);
 	queryCount(options, userData, tableName) {
 
 		if (_.isUndefined(tableName)) {
-			// var firstLink = this.joins()[0];
-			// var baseObject = this.application.urlResolve(firstLink.objectURL);
-			// tableName = baseObject.dbTableName();
-
-			tableName = this.objectBase().dbTableName();
+			var firstLink = this.joins()[0];
+			var baseObject = this.application.urlResolve(firstLink.objectURL);
+			tableName = baseObject.dbTableName();
 		}
-
-		// not include columns
-		// to prevent 'ER_MIX_OF_GROUP_FUNC_AND_FIELDS' error
-		options.ignoreIncludeColumns = true;
-
+		
 		// call our parent queryCount() with correct tableName
 		return super.queryCount(options, userData, tableName);
 	}
