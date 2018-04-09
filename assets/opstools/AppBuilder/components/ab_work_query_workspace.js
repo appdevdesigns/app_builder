@@ -324,24 +324,8 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 
 
 					/** where **/
-					// WORKAROUND: convert .where
-					var where = {
-						glue: 'and', // TODO
-						rules: []
-					};
-					(DataFilter.getValue().filters || []).forEach(filter => {
-
-						var filterField = CurrentQuery.fields(f => f.id == filter.fieldId)[0];
-						if (filterField) {
-							where.rules.push({
-								key: filterField.columnName,
-								rule: filter.operator,
-								value: filter.inputValue
-							});
-						}
-
-					});
-					CurrentQuery.where = where;
+					// TODO : use new .where structure
+					CurrentQuery.where = DataFilter.getValue();
 
 					// Save to db
 					CurrentQuery.save()
@@ -508,25 +492,10 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 
 			refreshFilter: function () {
 
-				// WORKAROUND: convert .where
-				var where = {
-					filters: []
-				};
-				(CurrentQuery.where.rules || []).forEach(filter => {
-
-					var filterField = CurrentQuery.fields(f => f.columnName == filter.key)[0];
-					if (filterField) {
-						where.filters.push({
-							fieldId: filterField.id,
-							operator: filter.rule,
-							inputValue: filter.value
-						});
-					}
-
-				});
+				// TODO : use new .where structure
 
 				DataFilter.objectLoad(CurrentQuery);
-				DataFilter.setValue(where);
+				DataFilter.setValue(CurrentQuery.where);
 			},
 
 
@@ -541,9 +510,28 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 				DataTable.refreshColumns(columns);
 
 
+				// TODO: use new .where structure
+				var cond = {
+					where: {
+						where: []
+					}
+				};
+				(CurrentQuery.where.filters || []).forEach(f => {
+
+					var field = CurrentQuery.fields(fld => fld.id == f.fieldId)[0];
+					if (!field) return;
+
+					cond.where.where.push( {
+						combineCondition: 'and',
+						fieldName: field.columnName,
+						operator: f.operator,
+						inputValue: f.inputValue
+					} );
+				});
+
 
 				// set data:
-				CurrentQuery.model().findAll()
+				CurrentQuery.model().findAll(cond)
 					.then((response) => {
 						response.data.forEach((d) => {
 							DataTable.add(d);

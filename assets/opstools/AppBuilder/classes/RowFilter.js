@@ -697,6 +697,17 @@ export default class RowFilter extends OP.Component {
 							inputValue: value
 						});
 
+						// {
+						// glue: ''
+						// rules: [
+						// 	{
+						//		key: [column name],
+						//		rule: [operator],
+						//		value: [value]
+						// 	}
+						// ]
+						// }
+
 					});
 				}
 
