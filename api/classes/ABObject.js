@@ -725,7 +725,7 @@ module.exports = class ABObject extends ABObjectBase {
 	                if (condition.glue == 'or') {
 	                    nextCombineKey = 'orWhere';
 	                }
-	                condition.rules.forEach((r)=>{
+	                (condition.rules || []).forEach((r)=>{
 
 	                    Query[nextCombineKey]( function() { 
 

@@ -6,7 +6,7 @@
  *
  */
 
- import RowFilter from "../classes/RowFilter"
+import RowFilter from "../classes/RowFilter"
 
 
 export default class ABWorkQueryWorkspace extends OP.Component {
@@ -86,7 +86,7 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 			DataFilter.init({
 				onChange: _logic.save
 			});
-	
+
 		}
 
 
@@ -155,7 +155,7 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 					currObj.connectFields().forEach(f => {
 
 						// prevent looping
-						if (f.datasourceLink.id  == (parentField ? parentField.object.id : null))
+						if (f.datasourceLink.id == (parentField ? parentField.object.id : null))
 							return;
 
 						// add items to tree
@@ -172,7 +172,7 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 							null,
 
 							// parent - field's url
-							(parentField ? parentField.urlPointer() : null) 
+							(parentField ? parentField.urlPointer() : null)
 						);
 
 						// add child items to tree
@@ -251,8 +251,7 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 
 
 				/** Filter **/
-				DataFilter.objectLoad(CurrentQuery);
-				DataFilter.setValue(CurrentQuery.where);
+				_logic.refreshFilter();
 
 
 				/** DataTable **/
@@ -268,67 +267,94 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 			 */
 			save: () => {
 
-				var tree = $$(ids.tree);
+				return new Promise((resolve, reject) => {
 
-				var objectBase = CurrentQuery.objectBase();
+					var tree = $$(ids.tree);
 
-				/** joins **/
-				var joins = [],
-					selectFieldUrls = tree.getChecked();
+					var objectBase = CurrentQuery.objectBase();
 
-				selectFieldUrls.forEach(fieldUrl => {
+					/** joins **/
+					var joins = [],
+						selectFieldUrls = tree.getChecked();
 
-					var field = CurrentQuery.application.urlResolve(fieldUrl);
-					if (!field) return;
+					selectFieldUrls.forEach(fieldUrl => {
 
-					// add new join into query
-					joins.push({
-						objectURL: field.object.urlPointer(),
-						fieldID: field.id,
-						type: 'innerjoin' // default
+						var field = CurrentQuery.application.urlResolve(fieldUrl);
+						if (!field) return;
+
+						// add new join into query
+						joins.push({
+							objectURL: field.object.urlPointer(),
+							fieldID: field.id,
+							type: 'innerjoin' // default
+						});
+
 					});
 
-				});
-
-				// if no join, then should add the default
-				if (joins.length == 0) {
-					joins.push({
-						objectURL: CurrentQuery.objectBase().urlPointer()
-					})
-				}
-
-				CurrentQuery.importJoins(joins);
-
-
-				/** fields **/
-				var fields = [];
-				var $viewMultiview = $$(ids.tabObjects).getMultiview();
-				$viewMultiview.getChildViews().forEach($viewTab => {
-
-					let $viewDbl = $viewTab.queryView({ name: 'fields' });
-					if ($viewDbl && $viewDbl.getValue()) {
-
-						// pull an array of field's url
-						let fieldUrls = $viewDbl.getValue().split(',').map(fUrl => {
-							return {
-								fieldURL: fUrl
-							};
-						});
-						fields = fields.concat(fieldUrls);
-
+					// if no join, then should add the default
+					if (joins.length == 0) {
+						joins.push({
+							objectURL: CurrentQuery.objectBase().urlPointer()
+						})
 					}
 
+					CurrentQuery.importJoins(joins);
+
+
+					/** fields **/
+					var fields = [];
+					var $viewMultiview = $$(ids.tabObjects).getMultiview();
+					$viewMultiview.getChildViews().forEach($viewTab => {
+
+						let $viewDbl = $viewTab.queryView({ name: 'fields' });
+						if ($viewDbl && $viewDbl.getValue()) {
+
+							// pull an array of field's url
+							let fieldUrls = $viewDbl.getValue().split(',').map(fUrl => {
+								return {
+									fieldURL: fUrl
+								};
+							});
+							fields = fields.concat(fieldUrls);
+
+						}
+
+					});
+					CurrentQuery.importFields(fields);
+
+
+					/** where **/
+					// WORKAROUND: convert .where
+					var where = {
+						glue: 'and', // TODO
+						rules: []
+					};
+					(DataFilter.getValue().filters || []).forEach(filter => {
+
+						var filterField = CurrentQuery.fields(f => f.id == filter.fieldId)[0];
+						if (filterField) {
+							where.rules.push({
+								key: filterField.columnName,
+								rule: filter.operator,
+								value: filter.inputValue
+							});
+						}
+
+					});
+					CurrentQuery.where = where;
+
+					// Save to db
+					CurrentQuery.save()
+						.catch(reject)
+						.then(() => {
+
+							// refresh data
+							_logic.refreshDataTable();
+
+							resolve();
+						});
+
 				});
-				CurrentQuery.importFields(fields);
-
-
-				/** where **/
-				CurrentQuery.where = DataFilter.getValue();
-
-
-
-				// Save to db
-				return CurrentQuery.save();
 
 			},
 
@@ -397,6 +423,8 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 						// refresh UI menu
 						_logic.refreshFieldMenu();
 
+						// refresh filter
+						_logic.refreshFilter();
 
 						// refresh Data table
 						_logic.refreshDataTable();
@@ -478,6 +506,30 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 			},
 
 
+			refreshFilter: function () {
+
+				// WORKAROUND: convert .where
+				var where = {
+					filters: []
+				};
+				(CurrentQuery.where.rules || []).forEach(filter => {
+
+					var filterField = CurrentQuery.fields(f => f.columnName == filter.key)[0];
+					if (filterField) {
+						where.filters.push({
+							fieldId: filterField.id,
+							operator: filter.rule,
+							inputValue: filter.value
+						});
+					}
+
+				});
+
+				DataFilter.objectLoad(CurrentQuery);
+				DataFilter.setValue(where);
+			},
+
+
 			refreshDataTable: function () {
 
 				var DataTable = $$(ids.datatable);
@@ -489,17 +541,8 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 				DataTable.refreshColumns(columns);
 
 
-				// WORKAROUND: convert .where
-				var where = {
-					glue: 'and',
-					rules: []
-				};
-				(CurrentQuery.where.filters || []).forEach(filter => {
-					where.rules.push(filter);
-				});
 
 				// set data:
-				// CurrentQuery.model().findAll(where)
 				CurrentQuery.model().findAll()
 					.then((response) => {
 						response.data.forEach((d) => {
