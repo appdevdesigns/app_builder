@@ -6,6 +6,8 @@
  *
  */
 
+ import RowFilter from "../classes/RowFilter"
+
 
 export default class ABWorkQueryWorkspace extends OP.Component {
 
@@ -15,6 +17,8 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 	constructor(App) {
 		super(App, 'ab_work_query_workspace');
 		var L = this.Label;
+
+		var idBase = "AB_Query_Workspace";
 
 		var labels = {
 			common: App.labels,
@@ -78,12 +82,19 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 			// webix.extend($$(ids.form), webix.ProgressBar);
 
 			$$(ids.noSelection).show();
+
+			DataFilter.init({
+				onChange: _logic.save
+			});
+	
 		}
 
 
 
 		var CurrentApplication = null;
 		var CurrentQuery = null;
+
+		var DataFilter = new RowFilter(App, idBase + "_filter");
 
 
 		// our internal business logic
@@ -132,23 +143,49 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 					return;
 				}
 
-				var objMain = CurrentQuery.objectMain(),
-					objLinks = objMain.objectLinks();
+				var objBase = CurrentQuery.objectBase();
 
 				$$(ids.selectedObject).show();
 
 
 				// *** List ***
 
+				var fnAddTreeItem = (currObj, parentField) => {
+
+					currObj.connectFields().forEach(f => {
+
+						// prevent looping
+						if (f.datasourceLink.id  == (parentField ? parentField.object.id : null))
+							return;
+
+						// add items to tree
+						$$(ids.tree).add(
+
+							{
+								id: f.urlPointer(), // field's url
+								value: f.datasourceLink.label, // a label of link object
+								checked: CurrentQuery.joins(j => j.fieldID == f.id).length > 0,
+								open: true
+							},
+
+							// order index
+							null,
+
+							// parent - field's url
+							(parentField ? parentField.urlPointer() : null) 
+						);
+
+						// add child items to tree
+						fnAddTreeItem(f.datasourceLink, f);
+
+					});
+
+				};
+
 				// set connected objects:
 				$$(ids.tree).clearAll();
-				$$(ids.tree).parse(objLinks.map(o => {
-					return {
-						id: o.id,
-						value: o.label,
-						checked: (CurrentQuery.objects(oLink => oLink.id == o.id).length > 0)
-					};
-				}));
+
+				fnAddTreeItem(objBase);
 
 				$$(ids.tree).refresh();
 				// TODO : sub-objects
@@ -191,11 +228,11 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 				});
 
 				// add the main object tab
-				let tabUI = _logic.templateField(objMain, true);
+				let tabUI = _logic.templateField(objBase, true);
 				$$(ids.tabObjects).addView(tabUI);
 
 				// select default tab to the main object
-				$$(ids.tabObjects).setValue(objMain.id);
+				$$(ids.tabObjects).setValue(objBase.id);
 
 				// Other object tabs will be added in a check tree item event
 				CurrentQuery.objects().forEach(obj => {
@@ -207,10 +244,15 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 				// remove a temporary tab
 				$$(ids.tabObjects).removeView('temp');
 				$$(ids.tabObjects).adjust();
-				
+
 
 				/** Menu **/
 				_logic.refreshFieldMenu();
+
+
+				/** Filter **/
+				DataFilter.objectLoad(CurrentQuery);
+				DataFilter.setValue(CurrentQuery.where);
 
 
 				/** DataTable **/
@@ -228,31 +270,33 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 
 				var tree = $$(ids.tree);
 
-				var objectMain = CurrentQuery.objectMain();
+				var objectBase = CurrentQuery.objectBase();
 
 				/** joins **/
 				var joins = [],
-					selectObjIds = tree.getChecked();
+					selectFieldUrls = tree.getChecked();
 
-				selectObjIds.forEach(objId => {
+				selectFieldUrls.forEach(fieldUrl => {
 
-					var objectLink = CurrentQuery.application.objects(obj => obj.id == objId)[0];
-					if (!objectLink) return;
-
-					var fieldLink = objectLink.fields(f => {
-						return f.key == 'connectObject' &&
-							f.settings.linkObject == objectMain.id;
-					})[0];
-					if (!fieldLink) return;
+					var field = CurrentQuery.application.urlResolve(fieldUrl);
+					if (!field) return;
 
 					// add new join into query
 					joins.push({
-						objectURL: objectLink.urlPointer(),
-						fieldID: fieldLink.id,
+						objectURL: field.object.urlPointer(),
+						fieldID: field.id,
 						type: 'innerjoin' // default
 					});
 
 				});
+
+				// if no join, then should add the default
+				if (joins.length == 0) {
+					joins.push({
+						objectURL: CurrentQuery.objectBase().urlPointer()
+					})
+				}
+
 				CurrentQuery.importJoins(joins);
 
 
@@ -276,6 +320,11 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 
 				});
 				CurrentQuery.importFields(fields);
+
+
+				/** where **/
+				CurrentQuery.where = DataFilter.getValue();
+
 
 
 				// Save to db
@@ -440,7 +489,17 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 				DataTable.refreshColumns(columns);
 
 
+				// WORKAROUND: convert .where
+				var where = {
+					glue: 'and',
+					rules: []
+				};
+				(CurrentQuery.where.filters || []).forEach(filter => {
+					where.rules.push(filter);
+				});
+
 				// set data:
+				// CurrentQuery.model().findAll(where)
 				CurrentQuery.model().findAll()
 					.then((response) => {
 						response.data.forEach((d) => {
@@ -576,6 +635,14 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 								}
 							]
 						},
+						// filter
+						{
+							view: "label",
+							label: "Manage Filter",
+							css: "ab-query-label",
+							height: 50
+						},
+						DataFilter.ui,
 						{
 							id: ids.datatable,
 							view: 'datatable',

@@ -207,7 +207,11 @@ export default class AB_Work_Query_List_NewQuery extends OP.Component {   //.ext
 				var query = currentApplication.queryNew({
 					name: queryName,
 					label: queryName,
-					importFromObject: selectedObj.urlPointer()
+					joins: [
+						{
+							objectURL: selectedObj.urlPointer()
+						}
+					]
 				});
 
 				// save to db
@@ -219,7 +223,7 @@ export default class AB_Work_Query_List_NewQuery extends OP.Component {   //.ext
 
 						_logic.hideBusy();
 						_logic.callbacks.onDone(err);
-		
+
 					});
 
 			},

@@ -74,7 +74,8 @@ export default class ABObjectQuery extends ABObject {
 
 
 		// import all our ABObjects 
-	  	this.importJoins(attributes.joins || []);
+		this.importJoins(attributes.joins || []);
+		this.importFields(attributes.fields || []); // import after joins are imported
 	  	this.where = attributes.where || {};
 
   	}
@@ -213,16 +214,16 @@ export default class ABObjectQuery extends ABObject {
 	 */
 	importFields(fieldSettings) {
 		var newFields = [];
-	  	fieldSettings.forEach((fieldInfo) => {
+	  	(fieldSettings || []).forEach((fieldInfo) => {
 
 			var field = this.application.urlResolve(fieldInfo.fieldURL);
 
 			// should be a field of base/join objects
-			if ((this.objects(o => o.id == field.object.id)[0] || this.objectBase().id == field.object.id) &&
+			if (this.canFilterField(field) &&
 			// check duplicate
 				newFields.filter(f => f.urlPointer() == fieldInfo.fieldURL).length < 1) { 
 
-				newFields.push( this.application.urlResolve(fieldInfo.fieldURL) );
+				newFields.push( field );
 			}
 
 		})
@@ -247,17 +248,6 @@ export default class ABObjectQuery extends ABObject {
 	///
 	/// Joins & Objects
 	///
-
-
-	/**
-	 * @method objectMain
-	 * return the main object of query
-	 * 
-	 * @return {ABObject}
-	 */
-	objectMain() {
-		return this.application.urlResolve(this.importFromObject);
-	}
 
 
 	/**
@@ -290,8 +280,16 @@ export default class ABObjectQuery extends ABObject {
 	}
 
 
-	objectBase() {
-		return this.application.urlResolve(this.importFromObject);
+	/**
+	 * @method objectBase
+	 * return the origin object
+	 * 
+	 * @return {ABObject}
+	 */
+	objectBase () {
+
+		return this.objects()[0];
+
 	}
 
 
@@ -326,9 +324,11 @@ export default class ABObjectQuery extends ABObject {
 	  		storeSingle(object);
 
 	  		// track our linked object
-	  		var linkField = object.fields((f)=>{ return f.id == join.fieldID; })[0];
-	  		var linkObject = linkField.datasourceLink;
-	  		storeSingle(linkObject);
+			var linkField = object.fields((f)=>{ return f.id == join.fieldID; })[0];
+			if (linkField) {
+				var linkObject = linkField.datasourceLink;
+				storeSingle(linkObject);
+			}
 
 
 	  		newJoins.push( join );
@@ -368,6 +368,8 @@ export default class ABObjectQuery extends ABObject {
 	 */
 	canFilterObject(object) {
 
+		if (!object) return false;
+
 		// I can filter this object if it is one of the objects in my joins
 		return this.objects((o)=>{ return o.id == object.id; }).length > 0;
 
@@ -381,6 +383,8 @@ export default class ABObjectQuery extends ABObject {
 	 * @return {bool} 
 	 */
 	canFilterField(field) {
+
+		if (!field) return false;
 
 		// I can filter a field if it's object OR the object it links to can be filtered:
 		var object = field.object;
