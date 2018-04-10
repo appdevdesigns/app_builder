@@ -9,9 +9,9 @@ import ABPropertyComponent from "../ABPropertyComponent"
 // import ABViewManager from "../ABViewManager"
 
 
-var ABViewPropertyComponentDefaults = {
-	label: ''
-}
+// var ABViewPropertyComponentDefaults = {
+// 	label: ''
+// }
 
 
 var ABViewDefaults = {
@@ -819,6 +819,108 @@ export default class ABView extends ABViewBase {
 	}
 
 
+	//// 
+	//// Property Editor Interface
+	////
+
+	// we have refactored to use ABPropertyComponent and expected classes will implement
+	// a property editor interface:
+	// .propertyEditor()  // return the instance of ABPropertyComponent to implement the editor
+	// .propertyEditorFields() // return the fields to use in the editor
+	// .propertyEditorDefaultValues() // return {obj} of default 'name':'value' for the fields
+	// .propertyEditorInit() // perform any setup of Fields necessary
+	// .propertyEditorPopulate() // initialize your fields with the given settings
+	// .propertyEditorValues()   // store the editor values into this object
+	// .propertyEditorRemove()   // perform any cleanup on fields (remove listeners) before Editor is destroyed
+	// .propertyEditorSave()	 // save the current state of the Editor
+	// 
+	// .propertyEditor() and .propertyEditorSave() are mostly implementd at the Base class level.
+	// the rest should have an implementation at the sub class as long as they are relevant.
+	// 
+
+
+
+    /** 
+     * @method propertyEditor
+     * return a UI component for use in updating the properties for this 
+     * ABView.
+     * @param {App} App  The global App object for the current Application instance
+     * @return {UIComponent}  to display as our Editor.
+     */
+	propertyEditor(App) {
+
+		var editor = new ABPropertyComponent({
+
+			editObject: this,	// ABView
+
+			fieldDefaults: this.defaults, // this.common(), // ABViewDefaults,
+
+			// elements: (App, field) => {
+
+			// 	var ids = {
+			// 		imageWidth: '',
+			// 		imageHeight: ''
+			// 	}
+			// 	ids = field.idsUnique(ids, App);
+
+			// 	return []
+			// },
+
+			// defaultValues: the keys must match a .name of your elements to set it's default value.
+			defaultValues: this.propertyEditorDefaultValues(), 
+
+			// rules: basic form validation rules for webix form entry.
+			// the keys must match a .name of your .elements for it to apply
+			rules: {
+				// 'textDefault':webix.rules.isNotEmpty,
+				// 'supportMultilingual':webix.rules.isNotEmpty
+			},
+
+			// include additional behavior on default component operations here:
+			// The base routines will be processed first, then these.  Any results
+			// from the base routine, will be passed on to these: 
+			// 	@param {obj} ids  the list of ids used to generate the UI.  your 
+			//					  provided .elements will have matching .name keys
+			//					  to access them here.
+			//  @param {obj} values the current set of values provided for this instance
+			// 					  of ABField:
+			//					  {
+			//						id:'',			// if already .saved()
+			// 						label:'',
+			// 						columnName:'',
+			//						settings:{
+			//							showIcon:'',
+			//
+			//							your element key=>values here	
+			//						}
+			//					  }
+			//
+			// 		.clear(ids)  : reset the display to an empty state
+			// 		.isValid(ids, isValid): perform validation on the current editor values
+			// 		.populate(ids, ABField) : populate the form with your current settings
+			// 		.show(ids)   : display the form in the editor
+			// 		.values(ids, values) : return the current values from the form
+			logic: {
+
+			},
+
+			// perform any additional setup actions here.
+			// @param {obj} ids  the hash of id values for all the current form elements.
+			//					 it should have your elements + the default Header elements:
+			//						.label, .columnName, .fieldDescription, .showIcon
+			init: function (ids) {
+				// want to hide the description? :
+				// $$(ids.fieldDescription).hide();
+			}
+
+		})
+
+		return editor.component(App);
+
+	}
+
+
+
     /** 
      * @method propertyEditorFields
      * return an array of webix UI fields to handle the settings of this
@@ -832,200 +934,153 @@ export default class ABView extends ABViewBase {
      *   options.init   {fn}   An initialization fn() called to setup our fields.
      * @return {array}  of webix UI definitions.
      */
-	propertyEditorFields(App, options) {  
+	propertyEditorFields(App, ids, logic) {  
 
-		var ids = options.ids;
-		var logic = options.logic;
 
-		ids.label = App.unique('label');
+		// NOTE: do not inclue the id: ids.label  settings in these descriptions.
+		// the ABPropertyComponent will handle creating a unique version of the
+		// ids[ field.name ] for us to use later.  In the rest of the propertyEditor*()
+		// you can access the ids.label to reference your field.
 
-		options.init = (data) => {
-			if (data.label) {
-				$$(ids.label).setValue(data.label);
-			}
-		}
-
-		// 
-		// common logic functions:
-		// 
-
-		logic.onChange = () => {
-			this.propertyEditorSave(ids);
-		}
+		// So we will create an id.[name]  based on the .name value of your field.
 
 		return [// Component Label 
 			{
-				id: ids.label,
+				// id: ids.label,
 				view: "text",
 				name: 'label',
 				label: App.labels.dataFieldHeaderLabel,
 				placeholder: App.labels.dataFieldHeaderLabelPlaceholder,
 				labelWidth: App.config.labelWidthLarge,
-				css: 'ab-new-label-name',
-				// 				on: {
-				// 					onChange: function (newVal, oldVal) {
-				// console.warn('ABView.onChange()!!!');
-				// 					}
-				// 				}
+				css: 'ab-new-label-name'
 			}
 		];
 	}
 
 
+
     /** 
-     * @method propertyEditor
-     * return a UI component for use in updating the properties for this 
-     * ABView.
-     * @param {App} App  The global App object for the current Application instance
-     * @return {UIComponent}  to display as our Editor.
+     * @method propertyEditorDefaultValues
+     * return an object of [name]:[value] data to set the your fields to a 
+     * default (unused) state.
+     * @return {obj}  
      */
-	propertyEditor(App) {
-
-		var ids = {};
-		var _logic = {};
-		var init = function(){};  // will get set in .propertyEditorFields()
-
-		var options = {ids:ids, logic:_logic, init:init };
-
-		var ui = {
-			rows: this.propertyEditorFields(App, options).concat({ fillspace:true })
-		}
+	propertyEditorDefaultValues() {
+		return { label: '' };
+	}
 
 
-		return {
-			ui:ui,
-			init:options.init,
-		}
+
+    /** 
+     * @method propertyEditorInit
+     * perform any setup instructions on the fields you are displaying.
+     * this is a good time to populate any select lists with data you need to 
+     * look up.  
+     */
+	propertyEditorInit(App, ids, _logic, data) {
+
+
+//// TODO: decide if we really want to do this:
+
+		// // when a change is made in our properties, save our values:
+		// this.updateEventIds = this.updateEventIds || {}; // { viewId: boolean, ..., viewIdn: boolean }
+		// if (!this.updateEventIds['ABView']) { 
+		// 	this.updateEventIds['ABView'] = true;
+
+		// 	// refresh dashboard to update "position.x" and "position.y" of child views
+		// 	this.addListener('properties.updated', function () {
+
+		// 		setTimeout(() => {
+		// 			_logic.onChange();
+		// 		}, 100)
+
+		// 	}, this);
+		// }
 
 	}
 
 
 
-	// static propertyEditorComponent(App) {
-
-	// 	var ABViewPropertyComponent = new ABPropertyComponent({
-
-	// 		editObject: this,	// ABView
-
-	// 		fieldDefaults: this.common(), // ABViewDefaults,
-
-	// 		elements: (App, field) => {
-
-	// 			var ids = {
-	// 				imageWidth: '',
-	// 				imageHeight: ''
-	// 			}
-	// 			ids = field.idsUnique(ids, App);
-
-	// 			return []
-	// 		},
-
-	// 		// defaultValues: the keys must match a .name of your elements to set it's default value.
-	// 		defaultValues: ABViewPropertyComponentDefaults,
-
-	// 		// rules: basic form validation rules for webix form entry.
-	// 		// the keys must match a .name of your .elements for it to apply
-	// 		rules: {
-	// 			// 'textDefault':webix.rules.isNotEmpty,
-	// 			// 'supportMultilingual':webix.rules.isNotEmpty
-	// 		},
-
-	// 		// include additional behavior on default component operations here:
-	// 		// The base routines will be processed first, then these.  Any results
-	// 		// from the base routine, will be passed on to these: 
-	// 		// 	@param {obj} ids  the list of ids used to generate the UI.  your 
-	// 		//					  provided .elements will have matching .name keys
-	// 		//					  to access them here.
-	// 		//  @param {obj} values the current set of values provided for this instance
-	// 		// 					  of ABField:
-	// 		//					  {
-	// 		//						id:'',			// if already .saved()
-	// 		// 						label:'',
-	// 		// 						columnName:'',
-	// 		//						settings:{
-	// 		//							showIcon:'',
-	// 		//
-	// 		//							your element key=>values here	
-	// 		//						}
-	// 		//					  }
-	// 		//
-	// 		// 		.clear(ids)  : reset the display to an empty state
-	// 		// 		.isValid(ids, isValid): perform validation on the current editor values
-	// 		// 		.populate(ids, ABField) : populate the form with your current settings
-	// 		// 		.show(ids)   : display the form in the editor
-	// 		// 		.values(ids, values) : return the current values from the form
-	// 		logic: {
-
-	// 		},
-
-	// 		// perform any additional setup actions here.
-	// 		// @param {obj} ids  the hash of id values for all the current form elements.
-	// 		//					 it should have your elements + the default Header elements:
-	// 		//						.label, .columnName, .fieldDescription, .showIcon
-	// 		init: function (ids) {
-	// 			// want to hide the description? :
-	// 			// $$(ids.fieldDescription).hide();
-	// 		}
-
-	// 	})
-
-	// 	return ABViewPropertyComponent.component(App);
-	// }
+    /** 
+     * @method propertyEditorPopulate
+     * set the initial values of the fields you are displaying.
+     * @param {App} App the common App object shared among our UI components.
+     * @param {obj} ids the id.[name] references to our fields 
+     * @param {data} data the initial settings data for this object
+     */
+	propertyEditorPopulate(App, ids, data) {
+		
+		if (data.label) {
+			$$(ids.label).setValue(data.label);
+		} else {
+			$$(ids.label).setValue(this.label);
+		}
+	}
 
 
-	// static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
 
-	// 	return [
-
-	// 		// Component Label 
-	// 		{
-	// 			view: "text",
-	// 			// id: ids.label,
-	// 			name: 'label',
-	// 			label: App.labels.dataFieldHeaderLabel,
-	// 			placeholder: App.labels.dataFieldHeaderLabelPlaceholder,
-	// 			labelWidth: App.config.labelWidthLarge,
-	// 			css: 'ab-new-label-name',
-	// 			// 				on: {
-	// 			// 					onChange: function (newVal, oldVal) {
-	// 			// console.warn('ABView.onChange()!!!');
-	// 			// 					}
-	// 			// 				}
-	// 		}
-	// 	];
-
-	// }
-
-
-	// propertyEditorPopulate(App, ids, data) {
-
-	// 	$$(ids.label).setValue(data.label);
-
-	// }
-
-
+    /** 
+     * @method propertyEditorValues
+     * pull the values from the Propery Editor and store them in our object.
+     * @param {obj} ids the id.[name] references to our fields 
+     */
 	propertyEditorValues(ids) {
 
 		this.label = $$(ids.label).getValue();
-
 	}
 
 
+
+    /** 
+     * @method propertyEditorRemove
+     * clean up our property editor before it is deleted.
+     */
+	propertyEditorRemove() {
+
+		// clean up our listener:
+
+		// if (this.updateEventIds && this.updateEventIds['ABView']) { 
+		// 	this.updateEventIds['ABView'] = false;
+
+		// 	// refresh dashboard to update "position.x" and "position.y" of child views
+		// 	this.removeListener('properties.updated', function () {
+
+		// 		setTimeout(() => {
+		// 			logic.onChange();
+		// 		}, 100)
+
+		// 	}, this);
+		// }
+	}
+
+
+
+    /** 
+     * @method propertyEditorSave
+     * make sure we save the values in the Property Editor
+     * @param {obj} ids the id.[name] references to our fields 
+     * @return {Promise}
+     */
 	propertyEditorSave(ids) {
 
 		this.propertyEditorValues(ids);
 
 		return this.save()
-			.then(function () {
+			.then(() => {
 				// signal the current view has been updated.
-				this.emit('properties.updated', this);
+// this.emit('properties.updated', this);
 			})
-			.catch(function (err) {
+			.catch((err) => {
 				OP.Error.log('unable to save view:', { error: err, view: this });
 			});
 	}
 
 
+
+	////
+	//// UI Component - Live
+	////
+	
 
 	/*
 	 * @component()

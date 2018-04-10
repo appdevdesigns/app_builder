@@ -150,6 +150,12 @@ export default class AB_Work_Interface_Workspace_Details_Properties extends OP.C
              * @param {ABView} view  current view instance.
              */
             viewLoad: function (view) {
+                if (CurrentView == view) return;
+                
+                if (CurrentComponent && CurrentComponent.remove) {
+                    CurrentComponent.remove();
+                }
+
                 CurrentView = view;
 
                 CurrentComponent = view.propertyEditor(App);

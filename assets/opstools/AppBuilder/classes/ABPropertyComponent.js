@@ -24,7 +24,7 @@ export default class ABPropertyComponent {
 
     	this.fieldDefaults = options.fieldDefaults || {};
 
-    	this.elements = options.elements || function (App) { return []; } ;
+    	// this.elements = options.elements || function (App) { return []; } ;
 
     	this.defaultValues = options.defaultValues || {};
 
@@ -36,7 +36,7 @@ export default class ABPropertyComponent {
 
 
 
-    	this.idBase = this.fieldDefaults.key || '??fieldKey??';
+    	this.idBase = this.EditObject.viewKey() || '??fieldKey??',  // this.fieldDefaults.key || '??fieldKey??';
 
     	// this.ids = options.ids || {};
     	this.ids = {};
@@ -88,37 +88,50 @@ export default class ABPropertyComponent {
 
 		// our base form:
 		var _ui = {
-			view:'form',
-			id: ids.component,
-			scroll: true,
-			elements: [
-				// {
-				// 	view: "text",
-				// 	id: ids.textDefault,
-				// 	name:'textDefault',
-				// 	placeholder: labels.component.defaultText
-				// },
-				// {
-				// 	view: "checkbox",
-				// 	id: ids.supportMultilingual,
-				// 	name:'supportMultilingual',
-				// 	labelRight: labels.component.supportMultilingual,
-				// 	labelWidth: 0,
-				// 	value: true
-				// }
-			],
+			rows:[
+				{
+					view:'form',
+					id: ids.component,
+					scroll: true,
+					elements: [
+						// {
+						// 	view: "text",
+						// 	id: ids.textDefault,
+						// 	name:'textDefault',
+						// 	placeholder: labels.component.defaultText
+						// },
+						// {
+						// 	view: "checkbox",
+						// 	id: ids.supportMultilingual,
+						// 	name:'supportMultilingual',
+						// 	labelRight: labels.component.supportMultilingual,
+						// 	labelWidth: 0,
+						// 	value: true
+						// }
+					],
 
-			rules:{
-				'label':webix.rules.isNotEmpty,
-			}
+					rules:{
+						'label':webix.rules.isNotEmpty,
+					}
+				}
+			]
 		}
+		
 
 
 
-		var _init = function() {
+		var _init = (data) => {
 
 			// call our provided .init() routine
 			this.init(ids);
+
+
+			this.EditObject.propertyEditorInit(App, ids, _logic, data);
+
+			if (data) {
+				_logic.populate(data);
+			}
+
 		}
 
 
@@ -131,8 +144,6 @@ export default class ABPropertyComponent {
 			 * clear the form.
 			 */
 			clear: () => {
-
-				this.EditObject.propertyEditorClear( ids );
 
 				for(var f in this.defaultValues) { 
 					var component = $$(ids[f]);
@@ -226,7 +237,7 @@ export default class ABPropertyComponent {
 			onChange:(newVal, oldVal) => {
 				// ignore onChange() when populating
 				if (!this.isPopulating && typeof this.currentObject != "undefined") {
-					this.EditObject.propertyEditorSave(ids, this.currentObject)
+					this.EditObject.propertyEditorSave(ids)
 				}
 			},
 
@@ -255,6 +266,18 @@ export default class ABPropertyComponent {
 
 
 			/*
+			 * @function remove
+			 *
+			 * called when the interface will remove this component.
+			 * Call the EditObject's propertyEditorRemove() routine to ensure the object
+			 * properly cleans up it's connections.
+			 */
+			remove: () => {
+				this.EditObject.propertyEditorRemove();
+			},
+
+
+			/*
 			 * @function show
 			 *
 			 * show this component.
@@ -276,20 +299,20 @@ export default class ABPropertyComponent {
 			 * return the values for this form.
 			 * @return {obj}  
 			 */
-			values: () => {
+			// values: () => {
 
-				var settings = $$(ids.component).getValues();
-				var values = this.EditObject.propertyEditorValues(settings);
+			// 	var settings = $$(ids.component).getValues();
+			// 	var values = this.EditObject.propertyEditorValues(settings);
 
-				values.key = this.fieldDefaults.key;
+			// 	values.key = this.EditObject.viewKey();  // this.fieldDefaults.key;
 		
-				// perform provided .values()
-				if (this.logic.values) {
-					values = this.logic.values(ids, values)
-				}
+			// 	// perform provided .values()
+			// 	if (this.logic.values) {
+			// 		values = this.logic.values(ids, values)
+			// 	}
 
-				return values;
-			}
+			// 	return values;
+			// }
 
 		}
 
@@ -304,7 +327,7 @@ export default class ABPropertyComponent {
 
 		// get the common UI headers entries, and insert them above ours here:
 		// NOTE: put this here so that _logic is defined.
-		var elements = this.EditObject.propertyEditorDefaultElements(App, ids, _logic, this.fieldDefaults);
+		var elements = this.EditObject.propertyEditorFields(App, ids, _logic);
     	this.eachDeep(elements, (e) => {
     		if (e.name) {
     			// if element has an .id, then use it in our list as is
@@ -355,10 +378,10 @@ export default class ABPropertyComponent {
     	})
 
 
-		_ui.elements = elements;
+		_ui.rows[0].elements = elements;
 
 		// add empty element to fill layout space 
-		_ui.elements.push({});
+		_ui.rows[0].elements.push({});
 
 		for (var r in this.rules) {
 			_ui.rules[r] = this.rules[r];
@@ -379,6 +402,8 @@ export default class ABPropertyComponent {
 			populate: _logic.populate,
 			show: _logic.show,
 			values: _logic.values,
+
+			remove: _logic.remove,
 
 
 			_logic: _logic			// {obj} 	Unit Testing

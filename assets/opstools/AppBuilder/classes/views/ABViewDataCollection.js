@@ -274,9 +274,10 @@ export default class ABViewDataCollection extends ABView {
 	}
 
 
-	//
-	// Property Editor
-	// 
+
+	//// 
+	//// Property Editor Interface
+	////
 
 
 
@@ -287,19 +288,13 @@ export default class ABViewDataCollection extends ABView {
      * This method should make any modifications to ids, logic, and init
      * as needed to support the new fields added in this routine.
      * @param {App} App  The global App object for the current Application instance
-     * @param {obj} options a set of shared data for creating the UI:
-     * 	 options.ids    {obj}  A hash of the settings ids for our fields.
-     *   options.logic  {obj}  A hash of fn() called by our webix components
-     *   options.init   {fn}   An initialization fn() called to setup our fields.
+     * @param {obj} ids the id.[name] references to our fields 
+     * @param {obj} logic A hash of fn() called by our webix components
      * @return {array}  of webix UI definitions.
      */
-	propertyEditorFields(App, options) { 
-		var components = super.propertyEditorFields(App, options); 
+	propertyEditorFields(App, ids, _logic) { 
+		var components = super.propertyEditorFields(App, ids, _logic); 
 
-		var ids = options.ids;
-		ids.columns = App.unique('columns');
-
-		var _logic = options.logic;
 
 		components = components.concat([
 			{
@@ -312,6 +307,7 @@ export default class ABViewDataCollection extends ABView {
 					paddingX: 10,
 					rows: [
 						{
+							// id: ids.dataSource,
 							view: "select",
 							name: "dataSource",
 							label: L('ab.component.datacollection.object', '*Object:'),
@@ -327,6 +323,7 @@ export default class ABViewDataCollection extends ABView {
 						},
 						// link to another data collection
 						{
+							// id: ids.linkDataSource,
 							view: "select",
 							name: "linkDataSource",
 							label: L('ab.component.datacollection.linkDataSource', '*Linked To:'),
@@ -335,6 +332,7 @@ export default class ABViewDataCollection extends ABView {
 							hidden: 1
 						},
 						{
+							// id: ids.linkField,
 							view: "select",
 							name: "linkField",
 							label: L('ab.component.datacollection.linkedField', '*Linked Field:'),
@@ -362,6 +360,7 @@ export default class ABViewDataCollection extends ABView {
 									width: App.config.labelWidthLarge,
 								},
 								{
+									// id: ids.buttonFilter,
 									view: "button",
 									name: "buttonFilter",
 									label: L("ab.component.datacollection.settings", "*Settings"),
@@ -382,6 +381,7 @@ export default class ABViewDataCollection extends ABView {
 									width: App.config.labelWidthLarge,
 								},
 								{
+									// id: ids.buttonSort,
 									view: "button",
 									name: "buttonSort",
 									label: L("ab.component.datacollection.settings", "*Settings"),
@@ -402,6 +402,7 @@ export default class ABViewDataCollection extends ABView {
 									width: App.config.labelWidthLarge,
 								},
 								{
+									// id: ids.loadAll,
 									view: "checkbox",
 									name: "loadAll",
 									label: ""
@@ -409,6 +410,7 @@ export default class ABViewDataCollection extends ABView {
 							]
 						},
 						{
+							// id: ids.fixSelect,
 							view: "select",
 							name: "fixSelect",
 							label: L('ab.component.datacollection.fixSelect', '*Select:'),
@@ -422,15 +424,7 @@ export default class ABViewDataCollection extends ABView {
 		]);
 
 
-		var superInit = options.init;
-		options.init = (data) => {
-			if (superInit) superInit(data);
-
-//// LEFT OFF HERE:
-//// gotta load our data: 
-			this.propertyEditorPopulate(App, ids, data);
-		}
-
+		// Add the logic functions defined in our field values:
 
 		_logic.selectObject = (objectId) => {
 
@@ -465,170 +459,47 @@ export default class ABViewDataCollection extends ABView {
 
 
 
-	// static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
+    /** 
+     * @method propertyEditorDefaultValues
+     * return an object of [name]:[value] data to set the your fields to a 
+     * default (unused) state.
+     * @return {obj}  
+     */
+	propertyEditorDefaultValues() {
+		var defaults = super.propertyEditorDefaultValues();
+		var myDefaults = {
+			object: '', // id of ABObject
+			objectUrl: '', // url of ABObject
+			objectWorkspace: {
+				filterConditions: {}, // array of filters to apply to the data table
+				sortFields: [] // array of columns with their sort configurations
+			},
+			loadAll: false
+		};
+		for(var d in myDefaults) {
+			defaults[d] = myDefaults[d];
+		}
+		return defaults;
+	}
 
-	// 	var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
 
-	// 	// == Logic ==
 
-	// 	_logic.selectObject = (objectId) => {
+    /** 
+     * @method propertyEditorInit
+     * perform any setup instructions on the fields you are displaying.
+     * this is a good time to populate any select lists with data you need to 
+     * look up.  
+     * @param {App} App  The global App object for the current Application instance
+     * @param {obj} ids the id.[name] references to our fields 
+     * @param {obj} _logic A hash of fn() called by our webix components
+     * @param {obj} data  A [name]:[value] hash of the settings data
+     */
+	propertyEditorInit(App, ids, _logic, data) {
+//// TODO: remove data from this parameter.  We have this info in our Obj instance, why pass it along?
 
-	// 		var view = _logic.currentEditObject();
-
-	// 		var object = view.application.objects(obj => obj.id == objectId)[0];
-
-	// 		// populate fix selector
-	// 		this.populateFixSelector(ids, view, object);
-
-	// 		// re-create filter & sort popups
-	// 		this.initPopupEditors(App, ids, _logic);
-
-	// 	};
-
-	// 	_logic.showFilterPopup = ($view) => {
-	// 		this.filter_popup.show($view, null, { pos: "top" });
-	// 	};
-
-	// 	_logic.showSortPopup = ($view) => {
-	// 		PopupSortFieldComponent.show($view, null, { pos: "top" });
-	// 	};
-
-	// 	_logic.onFilterChange = () => {
-
-	// 		var view = _logic.currentEditObject();
-
-	// 		view.settings.objectWorkspace.filterConditions = FilterComponent.getValue();
-
-	// 		this.propertyEditorSave(ids, view);
-
-	// 	};
-
-	// 	// create filter & sort popups
-	// 	this.initPopupEditors(App, ids, _logic);
-
-	// 	return commonUI.concat([
-	// 		{
-	// 			view: "fieldset",
-	// 			label: L('ab.component.datacollection.dataSource', '*Data Source:'),
-	// 			labelWidth: App.config.labelWidthLarge,
-	// 			body: {
-	// 				type: "clean",
-	// 				paddingY: 20,
-	// 				paddingX: 10,
-	// 				rows: [
-	// 					{
-	// 						view: "select",
-	// 						name: "dataSource",
-	// 						label: L('ab.component.datacollection.object', '*Object:'),
-	// 						labelWidth: App.config.labelWidthLarge,
-	// 						options: [],
-	// 						on: {
-	// 							onChange: function (newv, oldv) {
-	// 								if (newv == oldv) return;
-
-	// 								_logic.selectObject(newv);
-	// 							}
-	// 						}
-	// 					},
-	// 					// link to another data collection
-	// 					{
-	// 						view: "select",
-	// 						name: "linkDataSource",
-	// 						label: L('ab.component.datacollection.linkDataSource', '*Linked To:'),
-	// 						labelWidth: App.config.labelWidthLarge,
-	// 						options: [],
-	// 						hidden: 1
-	// 					},
-	// 					{
-	// 						view: "select",
-	// 						name: "linkField",
-	// 						label: L('ab.component.datacollection.linkedField', '*Linked Field:'),
-	// 						labelWidth: App.config.labelWidthLarge,
-	// 						options: [],
-	// 						hidden: 1
-	// 					}
-	// 				]
-	// 			}
-	// 		},
-	// 		{
-	// 			view: "fieldset",
-	// 			label: L('ab.component.datacollection.advancedOptions', '*Advanced Options:'),
-	// 			labelWidth: App.config.labelWidthLarge,
-	// 			body: {
-	// 				type: "clean",
-	// 				paddingY: 20,
-	// 				paddingX: 10,
-	// 				rows: [
-	// 					{
-	// 						cols: [
-	// 							{
-	// 								view: "label",
-	// 								label: L("ab.component.datacollection.filterData", "*Filter Data:"),
-	// 								width: App.config.labelWidthLarge,
-	// 							},
-	// 							{
-	// 								view: "button",
-	// 								name: "buttonFilter",
-	// 								label: L("ab.component.datacollection.settings", "*Settings"),
-	// 								icon: "gear",
-	// 								type: "icon",
-	// 								badge: 0,
-	// 								click: function () {
-	// 									_logic.showFilterPopup(this.$view);
-	// 								}
-	// 							}
-	// 						]
-	// 					},
-	// 					{
-	// 						cols: [
-	// 							{
-	// 								view: "label",
-	// 								label: L("ab.component.datacollection.sortData", "*Sort Data:"),
-	// 								width: App.config.labelWidthLarge,
-	// 							},
-	// 							{
-	// 								view: "button",
-	// 								name: "buttonSort",
-	// 								label: L("ab.component.datacollection.settings", "*Settings"),
-	// 								icon: "gear",
-	// 								type: "icon",
-	// 								badge: 0,
-	// 								click: function () {
-	// 									_logic.showSortPopup(this.$view);
-	// 								}
-	// 							}
-	// 						]
-	// 					},
-	// 					{
-	// 						cols: [
-	// 							{
-	// 								view: "label",
-	// 								label: L("ab.component.datacollection.loadAll", "*Load all:"),
-	// 								width: App.config.labelWidthLarge,
-	// 							},
-	// 							{
-	// 								view: "checkbox",
-	// 								name: "loadAll",
-	// 								label: ""
-	// 							}
-	// 						]
-	// 					},
-	// 					{
-	// 						view: "select",
-	// 						name: "fixSelect",
-	// 						label: L('ab.component.datacollection.fixSelect', '*Select:'),
-	// 						labelWidth: App.config.labelWidthLarge,
-	// 						options: []
-	// 					}
-	// 				]
-	// 			}
-	// 		}
-
-	// 	]);
-
-	// }
-
-	propertyEditorPopulate(App, ids, data) {
+		if (FilterComponent == null) {
+			this.initPopupEditors(App, ids, _logic);
+		}
 
 		// Objects
 		var objects = this.application.objects().map((obj) => {
@@ -640,7 +511,6 @@ export default class ABViewDataCollection extends ABView {
 		objects.unshift({ id: '', value: L('ab.component.datacollection.selectObject', '*Select an object') });
 
 		$$(ids.dataSource).define("options", objects);
-		$$(ids.dataSource).define("value", data.object || '');
 		$$(ids.dataSource).refresh();
 
 		// populate link data collection options
@@ -654,37 +524,58 @@ export default class ABViewDataCollection extends ABView {
 
 		this.populateBadgeNumber(ids, data);
 
-		// set .loadAll flag
-		$$(ids.loadAll).setValue(data.loadAll != null ? data.loadAll : ABViewPropertyDefaults.loadAll);
-
 		// populate data items to fix select options
 		var object = this.datasource;
 		this.populateFixSelector(ids, object);
 
+
+		// this is the event function for the listener below.
+		this.eventFN = () => {
+			this.populatePopupEditors();
+			this.populateBadgeNumber(ids, data);
+
+			if (this.__dataCollection)
+				this.__dataCollection.clearAll();
+
+			this.loadData();
+		};
+
+
 		// when a change is made in the properties the popups need to reflect the change
 		this.updateEventIds = this.updateEventIds || {}; // { viewId: boolean, ..., viewIdn: boolean }
-		if (!this.updateEventIds[this.id]) {
-			this.updateEventIds[this.id] = true;
+		if (!this.updateEventIds['ABViewDataCollection']) { // for ABViewDataCollection
+			this.updateEventIds['ABViewDataCollection'] = true;
 
-			this.addListener('properties.updated', () => {
-				this.populatePopupEditors();
-				this.populateBadgeNumber(ids, data);
-
-				if (this.__dataCollection)
-					this.__dataCollection.clearAll();
-
-				this.loadData();
-			});
+			this.addListener('properties.updated', this.eventFN);
 		}
-
-		// Set UI of the filter popup
-		// $$(ids.filter_popup).define('body', FilterComponent.ui);
 
 	}
 
+
+
+    /** 
+     * @method propertyEditorPopulate
+     * set the initial values of the fields you are displaying.
+     * @param {App} App the common App object shared among our UI components.
+     * @param {obj} ids the id.[name] references to our fields 
+     * @param {data} data the initial settings data for this object
+     */
+	propertyEditorPopulate(App, ids, data) {
+		super.propertyEditorPopulate(App, ids, data);
+
+		$$(ids.dataSource).setValue( data.object || '' );
+		$$(ids.loadAll).setValue(data.loadAll != null ? data.loadAll : ABViewPropertyDefaults.loadAll);
+	}
+
+
+
+    /** 
+     * @method propertyEditorValues
+     * pull the values from the Propery Editor and store them in our object.
+     * @param {obj} ids the id.[name] references to our fields 
+     */
 	propertyEditorValues(ids) {
 		super.propertyEditorValues(ids);
-
 
 		// if object is changed, then clear filter & sort settings
 		if (this.settings.object != $$(ids.dataSource).getValue()) {
@@ -695,7 +586,6 @@ export default class ABViewDataCollection extends ABView {
 			};
 
 		}
-
 
 		this.settings.object = $$(ids.dataSource).getValue();
 
@@ -756,6 +646,33 @@ export default class ABViewDataCollection extends ABView {
 		this.init();
 
 	}
+
+
+
+    /** 
+     * @method propertyEditorRemove
+     * clean up our property editor before it is deleted.
+     */
+	propertyEditorRemove() {
+
+		// clean up our listener:
+
+		// when a change is made in the properties the popups need to reflect the change
+		if (this.updateEventIds && this.updateEventIds['ABViewDataCollection']) { // for ABViewDataCollection
+			this.updateEventIds['ABViewDataCollection'] = false;
+
+			if (this.eventFN) {
+				this.removeListener('properties.updated', this.eventFN);
+				this.eventFN = null;
+			}
+		}
+	}
+
+
+	////
+	//// Property Editor Support fn()
+	//// 
+
 
 	populateBadgeNumber(ids, data) {
 
@@ -927,6 +844,13 @@ export default class ABViewDataCollection extends ABView {
 
 		PopupSortFieldComponent.objectLoad(objectCopy, this);
 	}
+
+
+
+	////
+	//// UI Component - Live
+	////
+
 
 
 	/**
