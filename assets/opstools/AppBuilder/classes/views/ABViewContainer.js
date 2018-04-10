@@ -379,13 +379,10 @@ export default class ABViewContainer extends ABView {
 
 
 
-	//
-	// Property Editor
-	// 
+	//// 
+	//// Property Editor Interface
+	////
 
-	// static propertyEditorComponent(App) {
-	// 	return ABViewPropertyComponent.component(App);
-	// }
 
 
     /** 
@@ -395,21 +392,16 @@ export default class ABViewContainer extends ABView {
      * This method should make any modifications to ids, logic, and init
      * as needed to support the new fields added in this routine.
      * @param {App} App  The global App object for the current Application instance
-     * @param {obj} options a set of shared data for creating the UI:
-     * 	 options.ids    {obj}  A hash of the settings ids for our fields.
-     *   options.logic  {obj}  A hash of fn() called by our webix components
-     *   options.init   {fn}   An initialization fn() called to setup our fields.
+     * @param {obj} ids the id.[name] references to our fields 
+     * @param {obj} logic A hash of fn() called by our webix components
      * @return {array}  of webix UI definitions.
      */
-	propertyEditorFields(App, options) { 
-		var components = super.propertyEditorFields(App, options); 
-
-		var ids = options.ids;
-		ids.columns = App.unique('columns');
+	propertyEditorFields(App, ids, _logic) { 
+		var components = super.propertyEditorFields(App, ids, _logic); 
 
 		components = components.concat([
 			{
-				id: ids.columns,
+				// id: ids.columns,
 				name: 'columns',
 				view: 'counter',
 				min: 1,
@@ -425,81 +417,96 @@ export default class ABViewContainer extends ABView {
 				}
 			}
 		]);
-
-		var superInit = options.init;
-		options.init = (data) => {
-			if (superInit) superInit(data);
-			if (data.columns) {
-				$$(ids.columns).setValue(data.columns);
-			}
-		}
 
 		return components;
 	}
 
 
-	static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
 
-		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
-
-
-		// in addition to the common .label  values, we 
-		// ask for:
-		return commonUI.concat([
-			{
-				name: 'columns',
-				view: 'counter',
-				min: 1,
-				label: L('ab.components.container.columns', "*Columns"),
-				labelWidth: App.config.labelWidthLarge,
-				on: {
-					onChange: function (newVal, oldVal) {
-
-						if (newVal > 8)
-							$$(ids.columns).setValue(8);
-
-					}
-				}
-			}
-		]);
-
+    /** 
+     * @method propertyEditorDefaultValues
+     * return an object of [name]:[value] data to set the your fields to a 
+     * default (unused) state.
+     * @return {obj}  
+     */
+	propertyEditorDefaultValues() {
+		var defaults = super.propertyEditorDefaultValues();
+		var myDefaults = {
+			columns: 1,
+		};
+		for(var d in myDefaults) {
+			defaults[d] = myDefaults[d];
+		}
+		return defaults;
 	}
 
 
-	// propertyEditorPopulate(App, ids, data) {
 
-	// 	super.propertyEditorPopulate(App, ids, data);
+    /** 
+     * @method propertyEditorInit
+     * perform any setup instructions on the fields you are displaying.
+     * this is a good time to populate any select lists with data you need to 
+     * look up.  
+     * @param {App} App  The global App object for the current Application instance
+     * @param {obj} ids the id.[name] references to our fields 
+     * @param {obj} _logic A hash of fn() called by our webix components
+     */
+// 	propertyEditorInit(App, ids, _logic) {
+// 		super.propertyEditorInit(App, ids, _logic);
 
-	// 	if ($$(ids.columns)) {
-	// 		$$(ids.columns).setValue(data.columns || ABPropertyComponentDefaults.columns);
-	// 	}
 
-	// 	// when a change is made in the properties the popups need to reflect the change
-	// 	this.updateEventIds = this.updateEventIds || {}; // { viewId: boolean, ..., viewIdn: boolean }
-	// 	if (!this.updateEventIds[this.id]) {
-	// 		this.updateEventIds[this.id] = true;
 
-	// 		// refresh dashboard to update "position.x" and "position.y" of child views
-	// 		this.addListener('properties.updated', function () {
+// 	}
 
-	// 			setTimeout(() => {
-	// 				this.editorComponent(App).logic.onChange();
-	// 			}, 100)
 
-	// 		}, this);
-	// 	}
 
+    /** 
+     * @method propertyEditorPopulate
+     * set the initial values of the fields you are displaying.
+     * @param {App} App the common App object shared among our UI components.
+     * @param {obj} ids the id.[name] references to our fields 
+     * @param {data} data the initial settings data for this object
+     */
+	propertyEditorPopulate(App, ids, data) {
+		super.propertyEditorPopulate(App, ids, data);
+
+		if (data.columns) {
+			$$(ids.columns).setValue(data.columns);
+		}
+	}
+
+
+
+    /** 
+     * @method propertyEditorValues
+     * pull the values from the Propery Editor and store them in our object.
+     * @param {obj} ids the id.[name] references to our fields 
+     */
+	propertyEditorValues(ids) {
+		super.propertyEditorValues(ids);
+
+		this.settings.columns = $$(ids.columns).getValue();
+	}
+
+
+
+    /** 
+     * @method propertyEditorRemove
+     * clean up our property editor before it is deleted.
+     */
+	// propertyEditorRemove() {
+	// 	super.propertyEditorRemove();
+
+	// 	// clean up our listener:
 
 	// }
 
 
-	static propertyEditorValues(ids, view) {
 
-		super.propertyEditorValues(ids, view);
+	////
+	//// UI Component - Live
+	////
 
-		view.settings.columns = $$(ids.columns).getValue();
-
-	}
 
 
 	/*

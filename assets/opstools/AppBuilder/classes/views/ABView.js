@@ -928,10 +928,8 @@ export default class ABView extends ABViewBase {
      * This method should make any modifications to ids, logic, and init
      * as needed to support the new fields added in this routine.
      * @param {App} App  The global App object for the current Application instance
-     * @param {obj} options a set of shared data for creating the UI:
-     * 	 options.ids    {obj}  A hash of the settings ids for our fields.
-     *   options.logic  {obj}  A hash of fn() called by our webix components
-     *   options.init   {fn}   An initialization fn() called to setup our fields.
+     * @param {obj} ids the id.[name] references to our fields 
+     * @param {obj} logic A hash of fn() called by our webix components
      * @return {array}  of webix UI definitions.
      */
 	propertyEditorFields(App, ids, logic) {  
@@ -976,8 +974,11 @@ export default class ABView extends ABViewBase {
      * perform any setup instructions on the fields you are displaying.
      * this is a good time to populate any select lists with data you need to 
      * look up.  
+     * @param {App} App  The global App object for the current Application instance
+     * @param {obj} ids the id.[name] references to our fields 
+     * @param {obj} _logic A hash of fn() called by our webix components
      */
-	propertyEditorInit(App, ids, _logic, data) {
+	propertyEditorInit(App, ids, _logic) {
 
 
 //// TODO: decide if we really want to do this:
@@ -1068,7 +1069,7 @@ export default class ABView extends ABViewBase {
 		return this.save()
 			.then(() => {
 				// signal the current view has been updated.
-// this.emit('properties.updated', this);
+				this.emit('properties.updated', this);
 			})
 			.catch((err) => {
 				OP.Error.log('unable to save view:', { error: err, view: this });
@@ -1080,7 +1081,7 @@ export default class ABView extends ABViewBase {
 	////
 	//// UI Component - Live
 	////
-	
+
 
 	/*
 	 * @component()

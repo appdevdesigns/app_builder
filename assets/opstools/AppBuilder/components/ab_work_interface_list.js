@@ -244,6 +244,18 @@ export default class AB_Work_Interface_List extends OP.Component {
 			},
 
 
+			/**
+			 * @function clickNewView
+			 *
+			 * Manages initiating the transition to the new Object Popup window
+			 */
+			clickNewView:function() {
+
+				// show the new popup
+				PopupNewPageComponent.show();
+			},
+
+
 			listBusy:function() {
 				$$(ids.list).showProgress({ type: "icon" });
 			},
@@ -354,6 +366,13 @@ console.error('!! todo: onBeforeEditStop() editing');
 			},
 
 
+			refreshTemplateItem: function(view) {
+				// make sure this item is updated in our list:
+				viewList.updateItem(view.id, view);
+				// $$(ids.list).updateItem(view.id, view);
+			},
+
+
 			rename: function() {
 				var pageID = $$(ids.list).getSelectedId(false);
 				$$(ids.list).edit(pageID);
@@ -461,68 +480,8 @@ console.error('!! todo: onBeforeEditStop() editing');
 					.replace('{common.icon()}', common.icon(item))
 					.replace('{common.iconGear}', common.iconGear);
 
-			},
+			}
 
-
-			/**
-			 * @function clickNewView
-			 *
-			 * Manages initiating the transition to the new Object Popup window
-			 */
-			clickNewView:function() {
-
-				// show the new popup
-				PopupNewPageComponent.show();
-			},
-
-
-			refreshTemplateItem: function(view) {
-				// make sure this item is updated in our list:
-				viewList.updateItem(view.id, view);
-				// $$(ids.list).updateItem(view.id, view);
-			},
-
-			// rename: function () {
-			// 	var objectId = $$(ids.list).getSelectedId(false);
-			// 	$$(ids.list).edit(objectId);
-			// },
-
-			// remove: function () {
-
-			// 	var selectedObject = $$(ids.list).getSelectedItem(false);
-
-			// 	// verify they mean to do this:
-			// 	OP.Dialog.Confirm({
-			// 		title: labels.component.confirmDeleteTitle,
-			// 		message: labels.component.confirmDeleteMessage.replace('{0}', selectedObject.label),
-			// 		callback: (isOK) => {
-
-			// 			if (isOK) {
-			// 				_logic.listBusy();
-
-			// 				selectedObject.destroy()
-			// 					.then(() => {
-			// 						_logic.listReady();
-
-			// 						$$(ids.list).remove(selectedObject.id);
-			// 						App.actions.clearObjectWorkspace();
-			// 					});
-
-			// 			}
-			// 		}
-			// 	})
-			// },
-
-			// callbackObjectEditorMenu: function (action) {
-			// 	switch (action) {
-			// 		case 'rename':
-			// 			_logic.rename();
-			// 			break;
-			// 		case 'delete':
-			// 			_logic.remove();
-			// 			break;
-			// 	}
-			// }
 		}
 
 
@@ -536,7 +495,6 @@ console.error('!! todo: onBeforeEditStop() editing');
 				"{common.icon()} <span class='webix_icon #typeIcon#'></span> #label# #iconGear#",
 			"</div>"
 		].join('');
-
 
 
 

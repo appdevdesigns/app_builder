@@ -522,10 +522,10 @@ export default class ABViewDataCollection extends ABView {
      * @param {App} App  The global App object for the current Application instance
      * @param {obj} ids the id.[name] references to our fields 
      * @param {obj} _logic A hash of fn() called by our webix components
-     * @param {obj} data  A [name]:[value] hash of the settings data
      */
-	propertyEditorInit(App, ids, _logic, data) {
-//// TODO: remove data from this parameter.  We have this info in our Obj instance, why pass it along?
+	propertyEditorInit(App, ids, _logic) {
+		super.propertyEditorInit(App, ids, _logic);
+
 
 		if (FilterComponent == null) {
 			this.initPopupEditors(App, ids, _logic);
@@ -552,7 +552,7 @@ export default class ABViewDataCollection extends ABView {
 		// initial populate of popups
 		this.populatePopupEditors();
 
-		this.populateBadgeNumber(ids, data);
+		this.populateBadgeNumber(ids);
 
 		// populate data items to fix select options
 		var object = this.datasource;
@@ -562,7 +562,7 @@ export default class ABViewDataCollection extends ABView {
 		// this is the event function for the listener below.
 		this.eventFN = () => {
 			this.populatePopupEditors();
-			this.populateBadgeNumber(ids, data);
+			this.populateBadgeNumber(ids);
 
 			if (this.__dataCollection)
 				this.__dataCollection.clearAll();
@@ -684,6 +684,7 @@ export default class ABViewDataCollection extends ABView {
      * clean up our property editor before it is deleted.
      */
 	propertyEditorRemove() {
+		super.propertyEditorRemove();
 
 		// clean up our listener:
 
@@ -704,12 +705,12 @@ export default class ABViewDataCollection extends ABView {
 	//// 
 
 
-	populateBadgeNumber(ids, data) {
+	populateBadgeNumber(ids) {
 
-		if (data.objectWorkspace &&
-			data.objectWorkspace.filterConditions && 
-			data.objectWorkspace.filterConditions.filters) {
-			$$(ids.buttonFilter).define('badge', data.objectWorkspace.filterConditions.filters.length);
+		if (this.settings.objectWorkspace &&
+			this.settings.objectWorkspace.filterConditions && 
+			this.settings.objectWorkspace.filterConditions.filters) {
+			$$(ids.buttonFilter).define('badge', this.settings.objectWorkspace.filterConditions.filters.length);
 			$$(ids.buttonFilter).refresh();
 		}
 		else {
@@ -717,9 +718,9 @@ export default class ABViewDataCollection extends ABView {
 			$$(ids.buttonFilter).refresh();
 		}
 
-		if (data.objectWorkspace &&
-			data.objectWorkspace.sortFields) {
-			$$(ids.buttonSort).define('badge', data.objectWorkspace.sortFields.length);
+		if (this.settings.objectWorkspace &&
+			this.settings.objectWorkspace.sortFields) {
+			$$(ids.buttonSort).define('badge', this.settings.objectWorkspace.sortFields.length);
 			$$(ids.buttonSort).refresh();
 		}
 		else {

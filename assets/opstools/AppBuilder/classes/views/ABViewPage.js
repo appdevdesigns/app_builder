@@ -181,27 +181,17 @@ export default class ABViewPage extends ABViewContainer {
     }
 
 
-    /** 
-     * @method propertyEditorFields
-     * return an array of webix UI fields to handle the settings of this
-     * ABViewPage. 
-     * This method should make any modifications to ids, logic, and init
-     * as needed to support the new fields added in this routine.
-     * @param {App} App  The global App object for the current Application instance
-     * @param {obj} ids  A hash of the settings ids for our fields.
-     * @param {obj} logic  a hash of fn() called by our webix components
-     * @param {fn}  init  An initialization fn() called to setup our fields.
-     * @return {array}  of webix UI definitions.
-     */
-    propertyEditorFields(App, options) { 
-        var components = super.propertyEditorFields(App, options); 
-        
-        var ids = options.ids;
-        ids.type = App.unique('type');
 
-        components = components.concat([
+    //// 
+    //// Property Editor Interface
+    ////
+
+
+
+    propertyEditorFieldsPage(App, ids, _logic) { 
+        var components = [
             {
-                id: ids.type,
+                // id: ids.type,
                 name: 'type',
                 view: 'richselect',
                 label: L('ab.components.page.type', "*Type"),
@@ -210,68 +200,35 @@ export default class ABViewPage extends ABViewContainer {
                     { id: 'popup', value: L('ab.components.page.popup', "*Popup") }
                 ]
             }
-        ]);
-
-
-        // init()
-        // perform any initialization of the Property Editor
-        // fields.
-        // @param {obj} data  key=>value of our view's settings;
-        var superInit = options.init;
-        options.init = ( data ) => {
-            if (superInit) superInit(data);  // call the super() first
-
-            $$(ids.type).setValue(data.type || ABPropertyComponentDefaults.type);            
-        }
+        ];
 
         return components;
     }
 
 
-
-    // static propertyEditorDefaultElementsPage(App, ids, _logic, ObjectDefaults) {
-        
-    //     return [
-    //         {
-    //             name: 'type',
-    //             view: 'richselect',
-    //             label: L('ab.components.page.type', "*Type"),
-    //             options: [
-    //                 { id: 'page', value: L('ab.components.page.page', "*Page") },
-    //                 { id: 'popup', value: L('ab.components.page.popup', "*Popup") }
-    //             ]
-    //         }
-    //     ];
-    // }
-
-
     /** 
-     * @method propertyEditor
-     * return a UI component for use in updating the properties for this 
-     * ABViewPage.
-     * NOTE: we override the base ABView version to include additional values
-     * relevant to any ABViewPage object (datacollections, page properties).
+     * @method propertyEditorFields
+     * return an array of webix UI fields to handle the settings of this
+     * ABView. 
+     * This method should make any modifications to ids, logic, and init
+     * as needed to support the new fields added in this routine.
      * @param {App} App  The global App object for the current Application instance
-     * @return {UIComponent}  to display as our Editor.
+     * @param {obj} ids the id.[name] references to our fields 
+     * @param {obj} logic A hash of fn() called by our webix components
+     * @return {array}  of webix UI definitions.
      */
-    propertyEditor(App) {
+    propertyEditorFields(App, ids, _logic) { 
+        var components = super.propertyEditorFields(App, ids, _logic); 
+        
+        // return the page specific elements:
+        // NOTE: we added this so the PagePlugin class could override these fields
+        // and still reuse the rest of this logic:
+        components = components.concat(this.propertyEditorFieldsPage(App, ids, _logic));
 
-        var ids = {};
-        var _logic = {};
-        var init = function(){};
-
-        var options = { ids:ids, logic:_logic, init:init };
-        var elements = this.propertyEditorFields(App, options); // ids, _logic, init);
-
-        ids.dataCollectionPanel = App.unique('dataCollectionPanel');
-        ids.datacollection      = App.unique('datacollection');
-        ids.pagePermissionPanel = App.unique('pagePermissionPanel');
-        ids.permissions         = App.unique('permissions');
-
-
-        elements = elements.concat([
+        // all page types should also have these fields:
+        components = components.concat([
             {
-                id: ids.dataCollectionPanel,
+                // id: ids.dataCollectionPanel,
                 view: "fieldset",
                 name: "dataCollectionPanel",
                 label: L('ab.component.page.dataCollections', '*Data Collections:'),
@@ -289,7 +246,7 @@ export default class ABViewPage extends ABViewContainer {
                                     width: App.config.labelWidthLarge,
                                 },
                                 {
-                                    id:ids.datacollection,
+                                    // id:ids.datacollection,
                                     view: "button",
                                     name: "datacollection",
                                     label: L("ab.component.page.settings", "*Settings"),
@@ -307,7 +264,7 @@ export default class ABViewPage extends ABViewContainer {
                 }
             },
             {
-                id: ids.pagePermissionPanel,
+                // id: ids.pagePermissionPanel,
                 view: "fieldset",
                 name: "pagePermissionPanel",
                 label: L('ab.component.page.pagePermissions', '*Page Permissions:'),
@@ -318,7 +275,7 @@ export default class ABViewPage extends ABViewContainer {
                     paddingX: 10,
                     rows: [
                         {
-                            id: ids.permissions,
+                            // id: ids.permissions,
                             name: 'permissions',
                             view: 'list',
                             select: false,
@@ -339,49 +296,6 @@ export default class ABViewPage extends ABViewContainer {
                 }
             }
         ]);
-
-
-        var ui = {
-            rows: elements
-        }
-
-        var superInit = options.init;
-        init = (data)=>{
-            if (superInit) superInit(data);
-
-            // Disable select type of page when this page is root 
-            if (this.isRoot()) {
-                $$(ids.type).hide();
-                $$(ids.dataCollectionPanel).show();
-                
-                // Update permission options
-                $$(ids.pagePermissionPanel).show();
-                this.propertyUpdatePermissionsOptions(ids);
-            }
-            else {
-                $$(ids.pagePermissionPanel).hide();
-                $$(ids.type).show();
-                $$(ids.dataCollectionPanel).hide();
-            }
-
-            this.populateBadgeNumber(ids);
-
-//// TODO:
-//// replace AD.*  with OP.Comm.Events.*  (use EventEmitter);
-
-            // when data collections are added/deleted, then update number of badge
-            if (!this.viewUpdateEventIds) {
-                this.viewUpdateEventIds = AD.comm.hub.subscribe('ab.interface.update', (message, data) => {
-
-                    if (data.rootPage && data.rootPage.id == this.id) {
-                        this.populateBadgeNumber(ids);
-                    }
-
-                });
-
-            }
-
-        }  // end init()
 
 
         _logic.permissionClick = (id, e, node) => {
@@ -417,159 +331,50 @@ export default class ABViewPage extends ABViewContainer {
                 });
 
             }
-            
 
         };
 
-
-        return {
-            ui:ui,
-            init:init,
-        }
-
+        return components;
     }
 
 
 
-    // static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
-
-    //     var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
-
-    //     _logic.permissionClick = (id, e, node) => {
-    //         var List = $$(ids.permissions);
-    //         var item = List.getItem(id); 
-
-    //         if (item.markCheckbox) {
-
-    //             OP.Comm.Service.delete({
-    //                 url: "/app_builder/page/"+item.action_key+"/role",
-    //                 data: {
-    //                     role_id: item.id
-    //                 }
-    //             }).then((data) => {
-
-    //                 item.markCheckbox = false;
-    //                 List.updateItem(id, item); 
-
-    //             });
-
-    //         } else {
-
-    //             OP.Comm.Service.put({
-    //                 url: "/app_builder/page/"+item.action_key+"/role",
-    //                 data: {
-    //                     role_id: item.id
-    //                 }
-    //             }).then((data) => {
-
-    //                 item.markCheckbox = true;
-    //                 List.updateItem(id, item); 
-
-    //             });
-
-    //         }
-            
-
-    //     };
-
-    //     // in addition to the common .label  values, we 
-    //     // ask for:
-    //     return commonUI.concat(
-
-    //     // fields for normal page elements
-    //     this.propertyEditorDefaultElementsPage(App, ids, _logic, ObjectDefaults),
-
-    //     // all page types should include datacollections and permissions
-    //     [
-            
-    //         {
-    //             view: "fieldset",
-    //             name: "dataCollectionPanel",
-    //             label: L('ab.component.page.dataCollections', '*Data Collections:'),
-    //             labelWidth: App.config.labelWidthLarge,
-    //             body: {
-    //                 type: "clean",
-    //                 paddingY: 20,
-    //                 paddingX: 10,
-    //                 rows: [
-    //                     {
-    //                         cols: [
-    //                             {
-    //                                 view: "label",
-    //                                 label: L("ab.component.page.collections", "*Collections:"),
-    //                                 width: App.config.labelWidthLarge,
-    //                             },
-    //                             {
-    //                                 view: "button",
-    //                                 name: "datacollection",
-    //                                 label: L("ab.component.page.settings", "*Settings"),
-    //                                 icon: "gear",
-    //                                 type: "icon",
-    //                                 badge: 0,
-    //                                 click: function () {
-    //                                     App.actions.interfaceViewPartChange('data');
-    //                                 }
-    //                             }
-    //                         ]
-    //                     }
-
-    //                 ]
-    //             }
-    //         },
-    //         {
-    //             view: "fieldset",
-    //             name: "pagePermissionPanel",
-    //             label: L('ab.component.page.pagePermissions', '*Page Permissions:'),
-    //             labelWidth: App.config.labelWidthLarge,
-    //             body: {
-    //                 type: "clean",
-    //                 paddingY: 20,
-    //                 paddingX: 10,
-    //                 rows: [
-    //                     {
-    //         				name: 'permissions',
-    //         				view: 'list',
-    //         				select: false,
-    //         				minHeight: 200,
-    //         				template: "{common.markCheckbox()} #name#",
-    //                         type:{
-    //                             markCheckbox:function(obj ){
-    //                                 return "<span class='check webix_icon fa-"+(obj.markCheckbox?"check-":"")+"square-o'></span>";
-    //                             }
-    //                         },
-    //                         on: {
-    //                             onItemClick: function (id, e, node) {
-    //                                 _logic.permissionClick(id, e, node);
-    //                             }
-    //                         }
-    //         			}
-    //                 ]
-    //             }
-    //         }
-    //     ]);
+    /** 
+     * @method propertyEditorDefaultValues
+     * return an object of [name]:[value] data to set the your fields to a 
+     * default (unused) state.
+     * @return {obj}  
+     */
+    propertyEditorDefaultValues() {
+        var defaults = super.propertyEditorDefaultValues();
+        for(var d in ABPropertyComponentDefaults) {
+            defaults[d] = ABPropertyComponentDefaults[d];
+        }
+        return defaults;
+    }
 
 
-    // }
 
-    // static propertyEditorPopulatePageSettings(App, ids, view) {
-    //     $$(ids.type).setValue(view.settings.type || ABPropertyComponentDefaults.type);
-    // }
+    /** 
+     * @method propertyEditorInit
+     * perform any setup instructions on the fields you are displaying.
+     * this is a good time to populate any select lists with data you need to 
+     * look up.  
+     * @param {App} App  The global App object for the current Application instance
+     * @param {obj} ids the id.[name] references to our fields 
+     * @param {obj} _logic A hash of fn() called by our webix components
+     */
+     propertyEditorInit(App, ids, _logic) {
+         super.propertyEditorInit(App, ids, _logic);
 
-    propertyEditorPopulate(App, ids, view) {
-
-        super.propertyEditorPopulate(App, ids, view);
-
-        this.propertyEditorPopulatePageSettings(App, ids, view);
-
-        
         // Disable select type of page when this page is root 
-        if (view.isRoot()) {
+        if (this.isRoot()) {
             $$(ids.type).hide();
             $$(ids.dataCollectionPanel).show();
             
             // Update permission options
             $$(ids.pagePermissionPanel).show();
-            this.propertyUpdatePermissionsOptions(ids, view);
+            this.propertyUpdatePermissionsOptions(ids);
         }
         else {
             $$(ids.pagePermissionPanel).hide();
@@ -577,32 +382,68 @@ export default class ABViewPage extends ABViewContainer {
             $$(ids.dataCollectionPanel).hide();
         }
 
-        this.populateBadgeNumber(ids, view);
+        this.populateBadgeNumber(ids);
+
+//// TODO:
+//// replace AD.*  with OP.Comm.Events.*  (use EventEmitter);
 
         // when data collections are added/deleted, then update number of badge
-        this.viewUpdateEventIds = this.viewUpdateEventIds || {}; // { viewId: number, ..., viewIdn: number }
-        if (!this.viewUpdateEventIds[view.id]) {
-            this.viewUpdateEventIds[view.id] = AD.comm.hub.subscribe('ab.interface.update', (message, data) => {
-
-                if (data.rootPage && data.rootPage.id == view.id) {
-                    this.populateBadgeNumber(ids, view);
+        if (!this.viewUpdateEventIds) {
+            this.viewUpdateEventIds = AD.comm.hub.subscribe('ab.interface.update', (message, data) => {
+                if (data.rootPage && data.rootPage.id == this.id) {
+                    this.populateBadgeNumber(ids);
                 }
-
             });
-
         }
 
+     }
 
+
+
+    /** 
+     * @method propertyEditorPopulate
+     * set the initial values of the fields you are displaying.
+     * @param {App} App the common App object shared among our UI components.
+     * @param {obj} ids the id.[name] references to our fields 
+     * @param {data} data the initial settings data for this object
+     */
+    propertyEditorPopulate(App, ids, data) {
+        super.propertyEditorPopulate(App, ids, data);
+
+        $$(ids.type).setValue(data.type || ABPropertyComponentDefaults.type);
     }
 
 
-    static propertyEditorValues(ids, view) {
 
-        super.propertyEditorValues(ids, view);
+    /** 
+     * @method propertyEditorValues
+     * pull the values from the Propery Editor and store them in our object.
+     * @param {obj} ids the id.[name] references to our fields 
+     */
+    propertyEditorValues(ids) {
+        super.propertyEditorValues(ids);
 
-        view.settings.type = $$(ids.type).getValue();
-
+        this.settings.type = $$(ids.type).getValue();
     }
+
+
+
+    /** 
+     * @method propertyEditorRemove
+     * clean up our property editor before it is deleted.
+     */
+    propertyEditorRemove() {
+        super.propertyEditorRemove();
+            
+        // clean up our listener:
+        AD.comm.hub.unsubscribe(this.viewUpdateEventIds);
+        this.viewUpdateEventIds = null;
+    }
+
+
+    ////
+    //// Property Editor Support fn()
+    //// 
 
 
     populateBadgeNumber(ids) {
