@@ -9,12 +9,11 @@ import ABViewWidget from "./ABViewWidget"
 import ABPropertyComponent from "../ABPropertyComponent"
 import ABWorkspaceDatatable from "../../components/ab_work_object_workspace_datatable"
 import ABPopupHideFields from "../../components/ab_work_object_workspace_popupHideFields"
-// import ABPopupFilterDataTable from "../../components/ab_work_object_workspace_popupFilterDataTable"
 import ABPopupSortField from "../../components/ab_work_object_workspace_popupSortFields"
 import ABPopupFrozenColumns from "../../components/ab_work_object_workspace_popupFrozenColumns"
 import ABPopupMassUpdate from "../../components/ab_work_object_workspace_popupMassUpdate"
-
 import RowFilter from '../RowFilter'
+
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -627,35 +626,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		}
 		
 		var labels = {
-			common: App.labels,
-			component: {
-				and: L('ab.filter_fields.and', "And"),
-				or: L('ab.filter_fields.or', "Or"),
-				addNewFilter: L('ab.filter_fields.addNewFilter', "Add a filter"),
-
-				containsCondition: L('ab.filter_fields.containsCondition', "contains"),
-				notContainCondition: L('ab.filter_fields.notContainCondition', "doesn't contain"),
-				isCondition: L('ab.filter_fields.isCondition', "is"),
-				isNotCondition: L('ab.filter_fields.isNotCondition', "is not"),
-
-				beforeCondition: L('ab.filter_fields.beforeCondition', "is before"),
-				afterCondition: L('ab.filter_fields.afterCondition', "is after"),
-				onOrBeforeCondition: L('ab.filter_fields.onOrBeforeCondition', "is on or before"),
-				onOrAfterCondition: L('ab.filter_fields.onOrAfterCondition', "is on or after"),
-
-				equalCondition: L('ab.filter_fields.equalCondition', ":"),
-				notEqualCondition: L('ab.filter_fields.notEqualCondition', "≠"),
-				lessThanCondition: L('ab.filter_fields.lessThanCondition', "<"),
-				moreThanCondition: L('ab.filter_fields.moreThanCondition', ">"),
-				lessThanOrEqualCondition: L('ab.filter_fields.lessThanOrEqualCondition', "≤"),
-				moreThanOrEqualCondition: L('ab.filter_fields.moreThanOrEqualCondition', "≥"),
-
-				equalListCondition: L('ab.filter_fields.equalListCondition', "equals"),
-				notEqualListCondition: L('ab.filter_fields.notEqualListCondition', "does not equal"),
-
-				checkedCondition: L('ab.filter_fields.checkedCondition', "is checked"),
-				notCheckedCondition: L('ab.filter_fields.notCheckedCondition', "is not checked")
-			}
+			common: App.labels
 		};
 		
 		var CurrentObject = null;
@@ -917,152 +888,7 @@ export default class ABViewGrid extends ABViewWidget  {
 
 				});
 
-				// $$(DataTable.ui.id).custom_filters = $$(DataTable.ui.id).custom_filters || {};
-				// $$(DataTable.ui.id).custom_filters['filter_popup'] = function (obj) {
-
-				// 		if (typeof obj == "undefined") return;
-
-				// 		// var combineCond = (data.filterConditions && data.filterConditions.length > 0 ? data.filterConditions[0].combineCondtion : labels.component.and);
-				// 		var combineCond = data.filterConditions[0] ? data.filterConditions[0].combineCondition : labels.component.and;
-				// 		var isValid = (combineCond === labels.component.and ? true : false);
-						
-				// 		if (data.filterConditions.length) {
-				// 			_.forEach(data.filterConditions, function(cond) {
-
-				//                 var condResult;
-				//                 var objValue = $$(DataTable.ui.id).getColumnConfig(cond.fieldName).filter_value ? $$(DataTable.ui.id).getColumnConfig(cond.fieldName).filter_value(obj) : obj[cond.fieldName];
-
-				//                 // Empty value
-				//                 if (!objValue) {
-				//                     if (cond.inputValue) {
-				//                         isValid = (combineCond === labels.component.and ? false : true);
-				//                     }
-
-				//                     return;
-				//                 }
-
-				//                 if ($.isArray(objValue))
-				//                     objValue = $.map(objValue, function (o) { return o.text; }).join(' ');
-
-				//                 if (objValue.trim)
-				//                     objValue = objValue.trim().toLowerCase();
-
-				//                 switch (cond.operator) {
-				//                     // Text filter
-				//                     case labels.component.containsCondition:
-				//                         condResult = objValue.indexOf(cond.inputValue.trim().toLowerCase()) > -1;
-				//                         break;
-				//                     case labels.component.notContainCondition:
-				//                         condResult = objValue.indexOf(cond.inputValue.trim().toLowerCase()) < 0;
-				//                         break;
-				//                     case labels.component.isCondition:
-				//                         condResult = objValue == cond.inputValue.trim().toLowerCase();
-				//                         break;
-				//                     case labels.component.isNotCondition:
-				//                         condResult = objValue != cond.inputValue.trim().toLowerCase();
-				//                         break;
-				//                     // Date filter
-				//                     case labels.component.beforeCondition:
-				//                         if (!(objValue instanceof Date)) objValue = new Date(objValue);
-				//                         condResult = objValue < cond.inputValue;
-				//                         break;
-				//                     case labels.component.afterCondition:
-				//                         if (!(objValue instanceof Date)) objValue = new Date(objValue);
-				//                         condResult = objValue > cond.inputValue;
-				//                         break;
-				//                     case labels.component.onOrBeforeCondition:
-				//                         if (!(objValue instanceof Date)) objValue = new Date(objValue);
-				//                         condResult = objValue <= cond.inputValue;
-				//                         break;
-				//                     case labels.component.onOrAfterCondition:
-				//                         if (!(objValue instanceof Date)) objValue = new Date(objValue);
-				//                         condResult = objValue >= cond.inputValue;
-				//                         break;
-				//                     // Number filter
-				//                     case labels.component.equalCondition:
-				//                         condResult = Number(objValue) == Number(cond.inputValue);
-				//                         break;
-				//                     case labels.component.notEqualCondition:
-				//                         condResult = Number(objValue) != Number(cond.inputValue);
-				//                         break;
-				//                     case labels.component.lessThanCondition:
-				//                         condResult = Number(objValue) < Number(cond.inputValue);
-				//                         break;
-				//                     case labels.component.moreThanCondition:
-				//                         condResult = Number(objValue) > Number(cond.inputValue);
-				//                         break;
-				//                     case labels.component.lessThanOrEqualCondition:
-				//                         condResult = Number(objValue) <= Number(cond.inputValue);
-				//                         break;
-				//                     case labels.component.moreThanOrEqualCondition:
-				//                         condResult = Number(objValue) >= Number(cond.inputValue);
-				//                         break;
-				//                     // List filter
-				//                     case labels.component.equalListCondition:
-				//                         if (objValue)
-				//                             condResult = cond.inputValue.toLowerCase().indexOf(objValue) > -1;
-				//                         break;
-				//                     case labels.component.notEqualListCondition:
-				//                         if (objValue)
-				//                             condResult = cond.inputValue.toLowerCase().indexOf(objValue) < 0;
-				//                         else
-				//                             condResult = true;
-				//                         break;
-				//                     // Boolean/Checkbox filter
-				//                     case labels.component.checkedCondition:
-				//                         condResult = (objValue === true || objValue === 1);
-				//                         break;
-				//                     case labels.component.notCheckedCondition:
-				//                         condResult = !objValue;
-				//                         break;
-				//                 }
-				//                 if (combineCond === labels.component.and) {
-				//                     isValid = isValid && condResult;
-				//                 } else {
-				//                     isValid = isValid || condResult;
-				//                 }
-				//             });
-
-				//             return isValid;
-				// 		} else {
-				// 			return isValid;
-				// 		}
-				// }
-				// _logic.clientSideDataFilter();
 			},
-
-			// clientSideDataFilter: () => {
-				
-			// 	if (filterTimeoutId) clearTimeout(filterTimeoutId);
-
-			// 	filterTimeoutId = setTimeout(function () {
-			// 		// Prevent repeat filter
-			// 		if (isFiltered == false) {
-			// 			isFiltered = true;
-
-			// 			if ($$(DataTable.ui.id).custom_filters && Object.keys($$(DataTable.ui.id).custom_filters).length > 0) {
-			// 				$$(DataTable.ui.id).filter(function (item) {
-			// 					var isVisible = true;
-			// 					Object.keys($$(DataTable.ui.id).custom_filters).forEach(function (filter_key) {
-			// 						if (isVisible == false) return;
-
-			// 						isVisible = isVisible && $$(DataTable.ui.id).custom_filters[filter_key](item);
-			// 					});
-
-			// 					return isVisible;
-			// 				});
-			// 			}
-			// 			else {
-			// 				$$(DataTable.ui.id).filter(function (item) { return true });
-			// 			}
-
-			// 			setTimeout(function () {
-			// 				isFiltered = false
-			// 			}, waitMilliseconds + 100);
-			// 		}
-			// 	}, waitMilliseconds);
-
-			// },
 
 			changePage: (dc, id, page) => {
 				dc.setCursor(id);

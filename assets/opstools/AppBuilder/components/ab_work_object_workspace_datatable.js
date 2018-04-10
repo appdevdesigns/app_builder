@@ -796,19 +796,18 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
     				//// NOTE: this should take advantage of Webix dynamic data loading on
     				//// larger data sets.
                     var wheres = {};
-                    if (CurrentObject.workspaceFilterConditions.length > 0) {
+                    if (CurrentObject.workspaceFilterConditions &&
+                        CurrentObject.workspaceFilterConditions.rules &&
+                        CurrentObject.workspaceFilterConditions.rules.length > 0) {
                         wheres = CurrentObject.workspaceFilterConditions;
                     }
                     var sorts = {};
                     if (CurrentObject.workspaceSortFields.length > 0) {
                         sorts = CurrentObject.workspaceSortFields;
                     }
-    				CurrentObject.model()
-    				.where({
-                        where: wheres, 
-                        sort: sorts,
-                        // height: defaultHeight
-                    })
+                    CurrentObject.model()
+                    .where(wheres)
+                    .sort(sorts)
     				.skip(0)
     				.limit(30)
     				.loadInto(DataTable);

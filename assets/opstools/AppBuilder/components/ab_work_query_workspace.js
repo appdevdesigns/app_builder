@@ -188,18 +188,6 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 				fnAddTreeItem(objBase);
 
 				$$(ids.tree).refresh();
-				// TODO : sub-objects
-				// {id:"root", value:"Cars", open:true, data:[
-				//     { id:"1", open:true, value:"Toyota", data:[
-				//         { id:"1.1", value:"Avalon" },
-				//         { id:"1.2", value:"Corolla" },
-				//         { id:"1.3", value:"Camry" }
-				//     ]},
-				//     { id:"2", value:"Skoda", open:true, data:[
-				//         { id:"2.1", value:"Octavia" },
-				//         { id:"2.2", value:"Superb" }
-				//     ]}
-				// ]}
 
 
 
@@ -324,8 +312,7 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 
 
 					/** where **/
-					// TODO : use new .where structure
-					CurrentQuery.where = DataFilter.getValue();
+					CurrentQuery.workspaceFilterConditions = DataFilter.getValue();
 
 					// Save to db
 					CurrentQuery.save()
@@ -410,9 +397,6 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 						// refresh filter
 						_logic.refreshFilter();
 
-						// refresh Data table
-						_logic.refreshDataTable();
-
 					});
 
 			},
@@ -492,10 +476,8 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 
 			refreshFilter: function () {
 
-				// TODO : use new .where structure
-
 				DataFilter.objectLoad(CurrentQuery);
-				DataFilter.setValue(CurrentQuery.where);
+				DataFilter.setValue(CurrentQuery.workspaceFilterConditions);
 			},
 
 
@@ -510,28 +492,10 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 				DataTable.refreshColumns(columns);
 
 
-				// TODO: use new .where structure
-				var cond = {
-					where: {
-						where: []
-					}
-				};
-				(CurrentQuery.where.filters || []).forEach(f => {
-
-					var field = CurrentQuery.fields(fld => fld.id == f.fieldId)[0];
-					if (!field) return;
-
-					cond.where.where.push( {
-						combineCondition: 'and',
-						fieldName: field.columnName,
-						operator: f.operator,
-						inputValue: f.inputValue
-					} );
-				});
-
-
 				// set data:
-				CurrentQuery.model().findAll(cond)
+				CurrentQuery.model().findAll({
+					where: CurrentQuery.workspaceFilterConditions // filter
+				})
 					.then((response) => {
 						response.data.forEach((d) => {
 							DataTable.add(d);

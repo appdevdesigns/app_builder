@@ -709,7 +709,8 @@ module.exports = class ABObject extends ABObjectBase {
 	        // @param {ObjectionJS Query} Query the query object to perform the operations.
 	        var parseCondition = (condition, Query) => {
 
-	            // FIX: some improper inputs:
+
+				// FIX: some improper inputs:
 	            // if they didn't provide a .glue, then default to 'and'
 	            // current webix behavior, might not return this 
 	            // so if there is a .rules property, then there should be a .glue:
@@ -740,16 +741,17 @@ module.exports = class ABObject extends ABObjectBase {
 	                })
 	                
 	                return;
-	            }
+				}
+
+
+				var field = this.fields(f => f.id == condition.key)[0];
+				if (!field) return;
 
 
 				//// Special Case:  'have_no_relation'
 				// 1:1 - Get rows that no relation with 
 				if (condition.rule == 'have_no_relation') {
-					var relation_name = AppBuilder.rules.toFieldRelationFormat(condition.key);
-
-					var field = this._fields.filter(field => field.columnName == condition.key)[0];
-					if (!field) return;
+					var relation_name = AppBuilder.rules.toFieldRelationFormat(field.columnName);
 
 					var objectLink = field.objectLink();
 					if (!objectLink) return;
@@ -881,12 +883,13 @@ module.exports = class ABObject extends ABObjectBase {
 
 
 	            // normal field name:
-	            var fieldName = '`' + condition.key + '`';
+				var fieldName =  '`{tableName}`.`{columnName}`'
+									.replace('{tableName}', field.object.dbTableName())
+									.replace('{columnName}', field.columnName);
 
 	            // if we are searching a multilingual field it is stored in translations so we need to search JSON
-	            var field = this._fields.filter(field => field.columnName == condition.key)[0];
 	            if (field && field.settings.supportMultilingual == 1) {
-	                fieldName = 'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH(translations, "one", "' + userData.languageCode + '")), 1, 4)), \'$."' + condition.key + '"\'))';
+	                fieldName = 'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH(translations, "one", "' + userData.languageCode + '")), 1, 4)), \'$."' + field.columnName + '"\'))';
 	            } 
 
 	            // if this is from a LIST, then make sure our value is the .ID
@@ -899,7 +902,7 @@ module.exports = class ABObject extends ABObjectBase {
 
 
 	            // update our where statement:
-	            whereRaw = whereRaw
+				whereRaw = whereRaw
 	                .replace('{fieldName}', fieldName)
 	                .replace('{operator}', operator)
 	                .replace('{input}', ((value != null) ?  value  : ''));

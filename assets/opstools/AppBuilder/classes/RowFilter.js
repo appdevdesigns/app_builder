@@ -15,7 +15,7 @@ export default class RowFilter extends OP.Component {
 				addNewFilter: L('ab.filter_fields.addNewFilter', "*Add a filter"),
 
 				thisObject: L('ab.filter_fields.thisObject', "*This Object"),
-				inQuery:    L('ab.filter_fields.inQuery', "*In Query"),
+				inQuery: L('ab.filter_fields.inQuery', "*In Query"),
 
 				containsCondition: L('ab.filter_fields.containsCondition', "*contains"),
 				notContainCondition: L('ab.filter_fields.notContainCondition', "*doesn't contain"),
@@ -51,9 +51,9 @@ export default class RowFilter extends OP.Component {
 			filterForm: this.unique(idBase + '_filterForm'),
 			addNewFilter: this.unique(idBase + '_addNewFilter'),
 
-			combineCondition: this.unique('combineCondition'),
+			glue: this.unique('glue'),
 			field: this.unique('field'),
-			operator: this.unique('operator'),
+			rule: this.unique('rule'),
 			inputValue: this.unique('inputValue'),
 
 			queryCombo: this.unique('queryCombo'),
@@ -63,7 +63,7 @@ export default class RowFilter extends OP.Component {
 
 		var _Object;
 		var _Fields;
-		var _QueryFields=[];
+		var _QueryFields = [];
 		var config_settings = {};
 
 		// setting up UI
@@ -107,9 +107,9 @@ export default class RowFilter extends OP.Component {
 
 				// insert our 'this object' entry if an Object was given.
 				if (_Object) {
-					_Fields.unshift({ id:'this_object', label:_Object.label });
+					_Fields.unshift({ id: 'this_object', label: _Object.label });
 				}
-				
+
 			},
 
 			/**
@@ -135,17 +135,17 @@ export default class RowFilter extends OP.Component {
 						{
 							// Add / Or
 							view: "combo",
-							id: ids.combineCondition,
+							id: ids.glue,
 							width: 80,
-							value: config_settings.combineCondition,
+							value: config_settings.glue,
 							options: [
 								{
 									value: labels.component.and,
-									id: "And"
+									id: "and"
 								},
 								{
 									value: labels.component.or,
-									id: "Or"
+									id: "or"
 								}
 							],
 							on: {
@@ -172,22 +172,23 @@ export default class RowFilter extends OP.Component {
 						},
 						// Comparer
 						{
-							id: ids.operator,
+							id: ids.rule,
 							width: 155,
 							cells: [
 								{},
 								// Query
 								{
-									batch:"query",
+									batch: "query",
 									view: "combo",
+									value: 'in_query',
 									options: [
 										{
 											value: labels.component.inQuery,
 											id: 'in_query'
 										},
-										{	
+										{
 											value: labels.component.notInQuery,
-											id: 'not_in_query' 
+											id: 'not_in_query'
 										}
 									],
 									on: {
@@ -200,22 +201,23 @@ export default class RowFilter extends OP.Component {
 								{
 									batch: "date",
 									view: "combo",
+									value: "less",
 									options: [
 										{
 											value: labels.component.beforeCondition,
-											id: "is before"
+											id: "less"
 										},
 										{
 											value: labels.component.afterCondition,
-											id: "is after"
+											id: "greater"
 										},
 										{
 											value: labels.component.onOrBeforeCondition,
-											id: "is on or before"
+											id: "less_or_equal"
 										},
 										{
 											value: labels.component.onOrAfterCondition,
-											id: "is on or after"
+											id: "greater_or_equal"
 										}
 									],
 									on: {
@@ -226,30 +228,31 @@ export default class RowFilter extends OP.Component {
 								{
 									batch: "number",
 									view: "combo",
+									value: "equals",
 									options: [
 										{
 											value: labels.component.equalCondition,
-											id: ":"
+											id: "equals"
 										},
 										{
 											value: labels.component.notEqualCondition,
-											id: "≠"
+											id: "not_equals"
 										},
 										{
 											value: labels.component.lessThanCondition,
-											id: "<"
+											id: "less"
 										},
 										{
 											value: labels.component.moreThanCondition,
-											id: ">"
+											id: "greater"
 										},
 										{
 											value: labels.component.lessThanOrEqualCondition,
-											id: "≤"
+											id: "less_or_equal"
 										},
 										{
 											value: labels.component.moreThanOrEqualCondition,
-											id: "≥"
+											id: "greater_or_equal"
 										}
 									],
 									on: {
@@ -260,6 +263,7 @@ export default class RowFilter extends OP.Component {
 								{
 									batch: "list",
 									view: "combo",
+									value: "equals",
 									options: [
 										{
 											value: labels.component.equalListCondition,
@@ -267,7 +271,7 @@ export default class RowFilter extends OP.Component {
 										},
 										{
 											value: labels.component.notEqualListCondition,
-											id: "does not equal"
+											id: "not_equal"
 										}
 									],
 									on: {
@@ -278,32 +282,27 @@ export default class RowFilter extends OP.Component {
 								{
 									batch: "boolean",
 									view: "combo",
+									value: "equals",
 									options: [
 										{
-											value: labels.component.checkedCondition,
-											id: "is checked"
-										},
-										{
-											value: labels.component.notCheckedCondition,
-											id: "is not checked"
+											value: labels.component.equalListCondition,
+											id: "equals"
 										}
-									],
-									on: {
-										onChange: _logic.onChange
-									}
+									]
 								},
 								// User
 								{
 									batch: "user",
 									view: "combo",
+									value: "is_current_user",
 									options: [
 										{
 											value: labels.component.isCurrentUserCondition,
-											id: "is current user"
+											id: "is_current_user"
 										},
 										{
 											value: labels.component.isNotCurrentUserCondition,
-											id: "is not current user"
+											id: "is_not_current_user"
 										},
 										{
 											value: labels.component.equalListCondition,
@@ -311,7 +310,7 @@ export default class RowFilter extends OP.Component {
 										},
 										{
 											value: labels.component.notEqualListCondition,
-											id: "does not equal"
+											id: "not_equal"
 										}
 									],
 									on: {
@@ -330,6 +329,7 @@ export default class RowFilter extends OP.Component {
 								{
 									batch: "string",
 									view: "combo",
+									value: "contains",
 									options: [
 										{
 											value: labels.component.containsCondition,
@@ -337,7 +337,7 @@ export default class RowFilter extends OP.Component {
 										},
 										{
 											value: labels.component.notContainCondition,
-											id: "doesn't contain"
+											id: "not_contains"
 										},
 										{
 											value: labels.component.isCondition,
@@ -345,7 +345,7 @@ export default class RowFilter extends OP.Component {
 										},
 										{
 											value: labels.component.isNotCondition,
-											id: "is not"
+											id: "not_equals"
 										}
 									],
 									on: {
@@ -366,13 +366,13 @@ export default class RowFilter extends OP.Component {
 
 								// Query
 								{
-									id:ids.queryCombo,
+									id: ids.queryCombo,
 
 									batch: "query",
 									view: "combo",
-									options:[],
+									options: [],
 									on: {
-										onChange:_logic.onChange
+										onChange: _logic.onChange
 									}
 
 								},
@@ -413,7 +413,13 @@ export default class RowFilter extends OP.Component {
 								},
 								// Boolean
 								{
-									batch: "boolean"
+									batch: "boolean",
+									view: 'checkbox',
+									on: {
+										onChange: function () {
+											_logic.onChange();
+										}
+									}
 								},
 								// User
 								{
@@ -538,13 +544,13 @@ export default class RowFilter extends OP.Component {
 			selectCombineCondition: (val, ignoreNotify) => {
 
 				// define combine value to configuration
-				config_settings.combineCondition = val;
+				config_settings.glue = val;
 
 				// update value of every combine conditions
 				var $viewConds = $$(ids.filterForm).getChildViews();
 				$viewConds.forEach(v => {
-					if (v.$$ && v.$$(ids.combineCondition))
-						v.$$(ids.combineCondition).setValue(val);
+					if (v.$$ && v.$$(ids.glue))
+						v.$$(ids.glue).setValue(val);
 				});
 
 				if (!ignoreNotify)
@@ -567,12 +573,12 @@ export default class RowFilter extends OP.Component {
 				var batchName = field.key;
 				if (batchName == 'LongText') batchName = 'string';
 				if (field.id == 'this_object') batchName = 'query';	// Special this object query
-				var isQueryField = (_QueryFields.filter((f)=>{ return f.id == field.id; }).length > 0);
-				if (isQueryField) {  
+				var isQueryField = (_QueryFields.filter((f) => { return f.id == field.id; }).length > 0);
+				if (isQueryField) {
 					// we chose a connectField which is now a Query type
 					batchName = 'query';
 				}
-				$viewCond.$$(ids.operator).showBatch(batchName);
+				$viewCond.$$(ids.rule).showBatch(batchName);
 				$viewCond.$$(ids.inputValue).showBatch(batchName);
 
 
@@ -580,10 +586,10 @@ export default class RowFilter extends OP.Component {
 				if (field.id == 'this_object') {
 
 					var options = [];
-					var Queries = _Object.application.queries((q)=>{ return q.canFilterObject(_Object);});
-					Queries.forEach((q)=>{
+					var Queries = _Object.application.queries((q) => { return q.canFilterObject(_Object); });
+					Queries.forEach((q) => {
 						options.push({
-							id:q.id,
+							id: q.id,
 							value: q.label
 						})
 					})
@@ -598,10 +604,10 @@ export default class RowFilter extends OP.Component {
 				if (isQueryField) {
 
 					var options = [];
-					var Queries = _Object.application.queries((q)=>{ return q.canFilterField(field);});
-					Queries.forEach((q)=>{
+					var Queries = _Object.application.queries((q) => { return q.canFilterField(field); });
+					Queries.forEach((q) => {
 						options.push({
-							id:q.id,
+							id: q.id,
 							value: q.label
 						})
 					})
@@ -629,10 +635,10 @@ export default class RowFilter extends OP.Component {
 
 			},
 
-			onChangeUser: function (operator, $viewCond) {
+			onChangeUser: function (rule, $viewCond) {
 
-				if (operator == "is current user" ||
-					operator == "is not current user") {
+				if (rule == "is_current_user" ||
+					rule == "is_not_current_user") {
 					$viewCond.$$(ids.inputValue).showBatch("empty");
 				}
 				else {
@@ -653,24 +659,32 @@ export default class RowFilter extends OP.Component {
 			/**
 			 * @method getValue
 			 * 
-			 * @return {JSON} - {
-			 * 		combineCondition: 'And'/'Or',
-			 * 		filters: [
-			 * 			{
-			 * 				fieldId: {UUID},
-			 * 				operator: {string},
-			 * 				inputValue: {string}
-			 * 			}
-			 * 		]
+			 * @return {JSON} -
+			 * {
+			 * 		glue: '', // 'and', 'or'
+			 *		rules: [
+			 *			{
+			 *				key:	'column name',
+			 *				rule:	'rule',
+			 *				value:	'value'
+			 *			}
+			 *		]
 			 * }
 			 */
 			getValue: () => {
 
-				config_settings.filters = [];
+				config_settings = {
+					glue: 'and',
+					rules: []
+				};
 
 				var $viewForm = $$(ids.filterForm);
 				if ($viewForm) {
-					$viewForm.getChildViews().forEach($viewCond => {
+					$viewForm.getChildViews().forEach(($viewCond, index) => {
+
+						if (index == 0) {
+							config_settings.glue = $viewCond.$$(ids.glue).getValue();
+						}
 
 						var $fieldElem = $viewCond.$$(ids.field);
 						if (!$fieldElem) return;
@@ -678,11 +692,11 @@ export default class RowFilter extends OP.Component {
 						var fieldId = $fieldElem.getValue();
 						if (!fieldId) return;
 
-						var operator = null,
-							operatorViewId = $viewCond.$$(ids.operator).getActiveId(),
-							$viewComparer = $viewCond.$$(ids.operator).queryView({ id: operatorViewId });
+						var rule = null,
+							ruleViewId = $viewCond.$$(ids.rule).getActiveId(),
+							$viewComparer = $viewCond.$$(ids.rule).queryView({ id: ruleViewId });
 						if ($viewComparer && $viewComparer.getValue)
-							operator = $viewComparer.getValue();
+							rule = $viewComparer.getValue();
 
 						var value = null,
 							valueViewId = $viewCond.$$(ids.inputValue).getActiveId(),
@@ -691,22 +705,11 @@ export default class RowFilter extends OP.Component {
 							value = $viewConditionValue.getValue();
 
 
-						config_settings.filters.push({
-							fieldId: fieldId,
-							operator: operator,
-							inputValue: value
+						config_settings.rules.push({
+							key: fieldId,
+							rule: rule,
+							value: value
 						});
-
-						// {
-						// glue: ''
-						// rules: [
-						// 	{
-						//		key: [column name],
-						//		rule: [operator],
-						//		value: [value]
-						// 	}
-						// ]
-						// }
 
 					});
 				}
@@ -726,34 +729,34 @@ export default class RowFilter extends OP.Component {
 				if ($viewForm)
 					webix.ui([], $viewForm);
 
-				config_settings.filters = config_settings.filters || [];
+				config_settings.rules = config_settings.rules || [];
 
 				// Add "new filter" button
-				if (config_settings.filters.length == 0) {
+				if (config_settings.rules.length == 0) {
 					_logic.toggleAddNewButton();
 				}
 
-				config_settings.filters.forEach(f => {
+				config_settings.rules.forEach(f => {
 
 					var viewId = _logic.addNewFilter(),
 						$viewCond = $$(viewId);
 
 					if ($viewCond == null) return;
 
-					// "And" "Or"
-					$viewCond.$$(ids.combineCondition).define('value', config_settings.combineCondition);
-					$viewCond.$$(ids.combineCondition).refresh();
+					// "and" "or"
+					$viewCond.$$(ids.glue).define('value', config_settings.glue);
+					$viewCond.$$(ids.glue).refresh();
 
 					// Select Field
-					$viewCond.$$(ids.field).define('value', f.fieldId);
+					$viewCond.$$(ids.field).define('value', f.key);
 					$viewCond.$$(ids.field).refresh();
-					_logic.selectField(f.fieldId, $viewCond, true);
+					_logic.selectField(f.key, $viewCond, true);
 
 					// Comparer
-					var operatorViewId = $viewCond.$$(ids.operator).getActiveId(),
-						$viewComparer = $viewCond.$$(ids.operator).queryView({ id: operatorViewId });
+					var ruleViewId = $viewCond.$$(ids.rule).getActiveId(),
+						$viewComparer = $viewCond.$$(ids.rule).queryView({ id: ruleViewId });
 					if ($viewComparer && $viewComparer.setValue) {
-						$viewComparer.define('value', f.operator);
+						$viewComparer.define('value', f.rule);
 						$viewComparer.refresh();
 					}
 
@@ -761,13 +764,13 @@ export default class RowFilter extends OP.Component {
 					var valueViewId = $viewCond.$$(ids.inputValue).getActiveId(),
 						$viewConditionValue = $viewCond.$$(ids.inputValue).queryView({ id: valueViewId });
 					if ($viewConditionValue && $viewConditionValue.setValue) {
-						$viewConditionValue.define('value', f.inputValue);
+						$viewConditionValue.define('value', f.value);
 						$viewConditionValue.refresh();
 					}
 
-					var field = _Fields.filter(col => col.id == f.fieldId)[0];
+					var field = _Fields.filter(col => col.id == f.key)[0];
 					if (field && field.key == 'user')
-						_logic.onChangeUser(f.operator, $viewCond);
+						_logic.onChangeUser(f.rule, $viewCond);
 
 				});
 
@@ -783,15 +786,16 @@ export default class RowFilter extends OP.Component {
 			isValid: (rowData) => {
 
 				// If no conditions, then return true
-				if (config_settings == null || config_settings.filters == null || config_settings.filters.length == 0) return true;
+				if (config_settings == null || config_settings.rules == null || config_settings.rules.length == 0)
+					return true;
 
-				var result = (config_settings.combineCondition === "And" ? true : false);
+				var result = (config_settings.glue === "glue" ? true : false);
 
-				config_settings.filters.forEach(filter => {
+				config_settings.rules.forEach(filter => {
 
-					if (!filter.fieldId || !filter.operator) return;
+					if (!filter.key || !filter.rule) return;
 
-					var fieldInfo = _Fields.filter(f => f.id == filter.fieldId)[0];
+					var fieldInfo = _Fields.filter(f => f.id == filter.key)[0];
 					if (!fieldInfo) return;
 
 					var condResult;
@@ -801,27 +805,27 @@ export default class RowFilter extends OP.Component {
 					switch (fieldInfo.key) {
 						case "string":
 						case "LongText":
-							condResult = _logic.textValid(value, filter.operator, filter.inputValue);
+							condResult = _logic.textValid(value, filter.rule, filter.value);
 							break;
 						case "date":
 						case "datetime":
-							condResult = _logic.dateValid(value, filter.operator, filter.inputValue);
+							condResult = _logic.dateValid(value, filter.rule, filter.value);
 							break;
 						case "number":
-							condResult = _logic.numberValid(value, filter.operator, filter.inputValue);
+							condResult = _logic.numberValid(value, filter.rule, filter.value);
 							break;
 						case "list":
-							condResult = _logic.listValid(value, filter.operator, filter.inputValue);
+							condResult = _logic.listValid(value, filter.rule, filter.value);
 							break;
 						case "boolean":
-							condResult = _logic.booleanValid(value, filter.operator, filter.inputValue);
+							condResult = _logic.booleanValid(value, filter.rule, filter.value);
 							break;
 						case "user":
-							condResult = _logic.userValid(value, filter.operator, filter.inputValue);
+							condResult = _logic.userValid(value, filter.rule, filter.value);
 							break;
 					}
 
-					if (config_settings.combineCondition === "And") {
+					if (config_settings.glue === "glue") {
 						result = result && condResult;
 					} else {
 						result = result || condResult;
@@ -832,7 +836,7 @@ export default class RowFilter extends OP.Component {
 
 			},
 
-			removeHtmlTags: function(text) {
+			removeHtmlTags: function (text) {
 
 				var div = document.createElement("div");
 				div.innerHTML = text;
@@ -841,7 +845,7 @@ export default class RowFilter extends OP.Component {
 
 			},
 
-			textValid: function (value, operator, compareValue) {
+			textValid: function (value, rule, compareValue) {
 
 				var result = false;
 
@@ -851,17 +855,17 @@ export default class RowFilter extends OP.Component {
 				// remove html tags - rich text editor
 				value = _logic.removeHtmlTags(value);
 
-				switch (operator) {
+				switch (rule) {
 					case "contains":
 						result = value.indexOf(compareValue) > -1;
 						break;
-					case "doesn't contain":
+					case "not_contains":
 						result = value.indexOf(compareValue) < 0;
 						break;
 					case "is":
 						result = value == compareValue;
 						break;
-					case "is not":
+					case "not_equals":
 						result = value != compareValue;
 						break;
 				}
@@ -870,7 +874,7 @@ export default class RowFilter extends OP.Component {
 
 			},
 
-			dateValid: function (value, operator, compareValue) {
+			dateValid: function (value, rule, compareValue) {
 
 				var result = false;
 
@@ -880,17 +884,17 @@ export default class RowFilter extends OP.Component {
 				if (!(compareValue instanceof Date))
 					compareValue = new Date(compareValue);
 
-				switch (operator) {
-					case "is before":
+				switch (rule) {
+					case "less":
 						result = value < compareValue;
 						break;
-					case "is after":
+					case "greater":
 						result = value > compareValue;
 						break;
-					case "is on or before":
+					case "less_or_equal":
 						result = value <= compareValue;
 						break;
-					case "is on or after":
+					case "greater_or_equal":
 						result = value >= compareValue;
 						break;
 				}
@@ -899,30 +903,30 @@ export default class RowFilter extends OP.Component {
 
 			},
 
-			numberValid: function (value, operator, compareValue) {
+			numberValid: function (value, rule, compareValue) {
 
 				var result = false;
 
 				value = Number(value);
 				compareValue = Number(compareValue);
 
-				switch (operator) {
-					case ":":
+				switch (rule) {
+					case "equals":
 						result = value == compareValue;
 						break;
-					case "≠":
+					case "not_equals":
 						result = value != compareValue;
 						break;
-					case "<":
+					case "less":
 						result = value < compareValue;
 						break;
-					case ">":
+					case "greater":
 						result = value > compareValue;
 						break;
-					case "≤":
+					case "less_or_equal":
 						result = value <= compareValue;
 						break;
-					case "≥":
+					case "greater_or_equal":
 						result = value >= compareValue;
 						break;
 				}
@@ -931,7 +935,7 @@ export default class RowFilter extends OP.Component {
 
 			},
 
-			listValid: function (value, operator, compareValue) {
+			listValid: function (value, rule, compareValue) {
 
 				var result = false;
 
@@ -940,12 +944,12 @@ export default class RowFilter extends OP.Component {
 				if (!Array.isArray(compareValue))
 					compareValue = [compareValue];
 
-				switch (operator) {
+				switch (rule) {
 					case "equals":
 						if (value)
 							result = compareValue.indexOf(value) > -1;
 						break;
-					case "does not equal":
+					case "not_equal":
 						if (value)
 							result = compareValue.indexOf(value) < 0;
 						else
@@ -957,41 +961,30 @@ export default class RowFilter extends OP.Component {
 
 			},
 
-			booleanValid: function (value, operator, compareValue) {
+			booleanValid: function (value, rule, compareValue) {
 
-				var result = false;
-
-				switch (operator) {
-					case "is checked":
-						result = (value === true || value === 1);
-						break;
-					case "is not checked":
-						result = !value;
-						break;
-				}
-
-				return result;
+				return (value == compareValue);
 
 			},
 
-			userValid: function (value, operator, compareValue) {
+			userValid: function (value, rule, compareValue) {
 
 				var result = false;
 
 				if (Array.isArray(value))
 					value = [value];
 
-				switch (operator) {
-					case "is current user":
+				switch (rule) {
+					case "is_current_user":
 						result = value == OP.User.username();
 						break;
-					case "is not current user":
+					case "is_not_current_user":
 						result = value != OP.User.username();
 						break;
 					case "equals":
 						result = value.indexOf(compareValue) > -1;
 						break;
-					case "does not equal":
+					case "not_equal":
 						result = value.indexOf(compareValue) < 0;
 						break;
 				}

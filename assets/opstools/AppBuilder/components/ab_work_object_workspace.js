@@ -568,10 +568,16 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		 * we need to set the badge count for filters on load and after filters are added or removed
     		 */            
             getBadgeFilters: function() {
-                var filterConditions = CurrentObject.workspaceFilterConditions;
+				var filterConditions = CurrentObject.workspaceFilterConditions;
+				var numberOfFilter = 0;
 
-                if (typeof(filterConditions) != "undefined") {
-                    $$(ids.buttonFilter).define('badge', filterConditions.length);
+				if (filterConditions &&
+					filterConditions.rules && 
+					filterConditions.rules.length)
+					numberOfFilter = filterConditions.rules.length;
+
+				if (typeof(filterConditions) != "undefined") {
+                    $$(ids.buttonFilter).define('badge', numberOfFilter);
                     $$(ids.buttonFilter).refresh();
                 }
             },

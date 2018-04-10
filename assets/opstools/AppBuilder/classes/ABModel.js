@@ -64,6 +64,7 @@ export default class ABModel {
 		this.object = object;
 
 		this._where = null;
+		this._sort = null;
 		this._skip = null;
 		this._limit = null;
 	}
@@ -173,23 +174,23 @@ export default class ABModel {
 		cond = cond || {};
 
 
-		// prepare our condition:
-		var newCond = {};
+// 		// prepare our condition:
+// 		var newCond = {};
 
-		// if the provided cond looks like our { where:{}, skip:xx, limit:xx } format,
-		// just use this one.
-		if (cond.where) {
-			newCond = cond;
-		} else {
+// 		// if the provided cond looks like our { where:{}, skip:xx, limit:xx } format,
+// 		// just use this one.
+// 		if (cond.where) {
+// 			newCond = cond;
+// 		} else {
 
-			// else, assume the provided condition is the .where clause.
-			newCond.where = cond;
-		}
+// 			// else, assume the provided condition is the .where clause.
+// 			newCond.where = cond;
+// 		}
 
-/// if this is our depreciated format:
-if (newCond.where.where) {
-	OP.Error.log('Depreciated Embedded .where condition.');
-}
+// /// if this is our depreciated format:
+// if (newCond.where.where) {
+// 	OP.Error.log('Depreciated Embedded .where condition.');
+// }
 
 
 		return new Promise(
@@ -197,7 +198,8 @@ if (newCond.where.where) {
 
 				OP.Comm.Socket.get({
 					url: this.object.urlRest(),
-					params: newCond
+					params: cond
+					// params: newCond
 				})
 					.then((data) => {
 
@@ -210,11 +212,11 @@ if (newCond.where.where) {
 						if (err.code) {
 							switch(err.code) {
 								case "ER_PARSE_ERROR":
-									OP.Error.log('AppBuilder:ABModel:findAll(): Parse Error with provided condition', { error: err, condition:newCond })
+									OP.Error.log('AppBuilder:ABModel:findAll(): Parse Error with provided condition', { error: err, condition:cond })
 									break;
 
 								default:
-									OP.Error.log('AppBuilder:ABModel:findAll(): Unknown Error with provided condition', { error: err, condition:newCond })
+									OP.Error.log('AppBuilder:ABModel:findAll(): Unknown Error with provided condition', { error: err, condition:cond })
 									break;
 							}
 
@@ -393,6 +395,7 @@ reject(err);
 		// else just load it all at once:
 		var cond = {};
 		if (this._where) cond.where = this._where;
+		if (this._sort) cond.sort = this._sort;
 		if (this._limit != null) cond.limit = this._limit;
 		if (this._skip != null) cond.skip = this._skip;
 
@@ -498,6 +501,17 @@ reject(err);
 	 */
 	where(cond) {
 		this._where = cond;
+		return this;
+	}
+
+	/**
+	 * @method where
+	 * set the sort condition for the data being loaded.
+	 * @param {json} cond  the json condition statement.
+	 * @return {ABModel} this object that is chainable.
+	 */
+	sort(cond) {
+		this._sort = cond;
 		return this;
 	}
 
