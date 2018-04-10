@@ -29,6 +29,7 @@ import Util  from "./util"
 import Validation from "./validation"
 import User from "./user"
 
+
 // don't overwrite an existing OP install:
 if (!window.OP) {
 	var OP = {};
@@ -66,8 +67,7 @@ if (!window.OP) {
 
 	OP.User = User;
 	OP.User.init();
-
-
+	
 }
 
 export default OP;

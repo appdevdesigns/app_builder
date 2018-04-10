@@ -295,7 +295,6 @@ export default class ABViewDataCollection extends ABView {
 	propertyEditorFields(App, ids, _logic) { 
 		var components = super.propertyEditorFields(App, ids, _logic); 
 
-
 		components = components.concat([
 			{
 				view: "fieldset",
@@ -446,13 +445,44 @@ export default class ABViewDataCollection extends ABView {
 			PopupSortFieldComponent.show($view, null, { pos: "top" });
 		};
 
+
 		_logic.onFilterChange = () => {
 
-			this.settings.objectWorkspace.filterConditions = FilterComponent.getValue();
+			var filterValues = FilterComponent.getValue();
 
-			this.propertyEditorSave(ids);
+			this.settings.objectWorkspace.filterConditions = filterValues; 
+
+			// check to make sure all our filter entries are complete before 
+			// trying to save the interface (and update the filter values)
+			var allComplete = true;
+			filterValues.filters.forEach((f)=>{
+
+				// if all 3 fields are present, we are good.
+				if ((f.fieldId) 
+					&& (f.operator)
+					&& (f.inputValue)) {
+
+					allComplete = allComplete && true;
+				} else {
+
+					// else, we found an entry that wasn't complete:
+					allComplete = false;
+				}
+			})
+
+			// only perform the update if all rows are complete is specified:
+			if (allComplete) {
+
+				// we want to call .save() but give webix a chance to properly update it's 
+				// select boxes before this call causes them to be removed:
+				setTimeout(()=>{
+					this.propertyEditorSave(ids);
+				}, 10);
+				
+			}
 
 		};
+
 
 		return components;
 	}
