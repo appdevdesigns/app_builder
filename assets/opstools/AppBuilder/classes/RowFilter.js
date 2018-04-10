@@ -64,6 +64,7 @@ export default class RowFilter extends OP.Component {
 		var _Object;
 		var _Fields;
 		var _QueryFields = [];
+		var _settings = {};
 		var config_settings = {};
 
 		// setting up UI
@@ -73,6 +74,9 @@ export default class RowFilter extends OP.Component {
 			for (var c in _logic.callbacks) {
 				_logic.callbacks[c] = options[c] || _logic.callbacks[c];
 			}
+
+			if (options.showObjectName)
+				_settings.showObjectName = options.showObjectName;
 
 		};
 
@@ -119,9 +123,18 @@ export default class RowFilter extends OP.Component {
 			getFieldList: function () {
 
 				return (_Fields || []).map(f => {
+
+					let label = f.label;
+
+					// include object's name to options
+					if (_settings.showObjectName && 
+						f.object) {
+						label = f.object.label + '.' + f.label;
+					}
+
 					return {
 						id: f.id,
-						value: f.label
+						value: label
 					};
 				});
 

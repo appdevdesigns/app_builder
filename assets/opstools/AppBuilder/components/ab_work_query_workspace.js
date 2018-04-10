@@ -84,7 +84,8 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 			$$(ids.noSelection).show();
 
 			DataFilter.init({
-				onChange: _logic.save
+				onChange: _logic.save,
+				showObjectName: true
 			});
 
 		}
@@ -469,7 +470,9 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 					$$(ids.menu).remove(item.id);
 				});
 
-				$$(ids.menu).parse(CurrentQuery.fields().map(f => f.label));
+				$$(ids.menu).parse(CurrentQuery.fields().map(f => {
+					return f.object.label + '.' + f.label;
+				}));
 				$$(ids.menu).refresh();
 			},
 
