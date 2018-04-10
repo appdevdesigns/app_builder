@@ -310,9 +310,38 @@ export default class ABViewDataCollection extends ABView {
 
 			var view = _logic.currentEditObject();
 
-			view.settings.objectWorkspace.filterConditions = FilterComponent.getValue();
+			var filterValues = FilterComponent.getValue();
 
-			this.propertyEditorSave(ids, view);
+			view.settings.objectWorkspace.filterConditions = filterValues; 
+
+
+			var allComplete = true;
+			filterValues.filters.forEach((f)=>{
+
+				// if all 3 fields are present, we are good.
+				if ((f.fieldId) 
+					&& (f.operator)
+					&& (f.inputValue)) {
+
+					allComplete = allComplete && true;
+				} else {
+
+					// else, we found an entry that wasn't complete:
+					allComplete = false;
+				}
+			})
+
+			// only perform the update if a complete row is specified:
+			if (allComplete) {
+
+				// we want to call .save() but give webix a chance to properly update it's 
+				// select boxes before this call causes them to be removed:
+				setTimeout(()=>{
+					this.propertyEditorSave(ids, view);
+				}, 10);
+				
+			}
+			
 
 		};
 
