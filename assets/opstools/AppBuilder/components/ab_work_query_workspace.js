@@ -151,13 +151,18 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 
 				// *** List ***
 
+				var existsObjIds = [objBase.id];
 				var fnAddTreeItem = (currObj, parentField) => {
 
 					currObj.connectFields().forEach(f => {
 
 						// prevent looping
-						if (f.datasourceLink.id == (parentField ? parentField.object.id : null))
+						if (f.datasourceLink.id == (parentField ? parentField.object.id : null) ||
+							existsObjIds.indexOf(f.datasourceLink.id) > -1)
 							return;
+
+						// store
+						existsObjIds.push(f.datasourceLink.id);
 
 						// add items to tree
 						$$(ids.tree).add(
