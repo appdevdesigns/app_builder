@@ -565,12 +565,22 @@ module.exports = class ABObjectQuery extends ABObject {
 			var columns = [];
 			this.fields().forEach((f)=>{
 
-				// TODO: skip multilingual fields ???
-				if(f.settings.supportMultilingual || f.key == 'connectObject')
+				// TODO: skip connect fields ???
+				if(f.key == 'connectObject')
 					return;
 
+				var columnName = f.columnName;
+
+				// include .translations column of multilingual
+				if (f.settings.supportMultilingual)
+					columnName = 'translations';
+
+				var columnFormat = '{tableName}.{columnName}';
 				var obj = f.object;
-				var field = obj.dbTableName()+'.'+f.columnName;
+				var field = columnFormat
+							.replace('{tableName}', obj.dbTableName())
+							.replace('{columnName}', columnName);
+
 				columns.push(field);
 			})
 			query.columns(columns);
