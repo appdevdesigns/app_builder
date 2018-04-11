@@ -241,7 +241,7 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 
 
 				/** Menu **/
-				_logic.refreshFieldMenu();
+				_logic.refreshFieldMenu(CurrentQuery.fields());
 
 
 				/** Filter **/
@@ -296,24 +296,11 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 
 
 					/** fields **/
-					var fields = [];
-					var $viewMultiview = $$(ids.tabObjects).getMultiview();
-					$viewMultiview.getChildViews().forEach($viewTab => {
-
-						let $viewDbl = $viewTab.queryView({ name: 'fields' });
-						if ($viewDbl && $viewDbl.getValue()) {
-
-							// pull an array of field's url
-							let fieldUrls = $viewDbl.getValue().split(',').map(fUrl => {
-								return {
-									fieldURL: fUrl
-								};
-							});
-							fields = fields.concat(fieldUrls);
-
-						}
-
-					});
+					var fields = $$(ids.menu).data.order.slice(0).map(fUrl => { // an array of field's url
+						return {
+							fieldURL: fUrl
+						};
+					}); 
 					CurrentQuery.importFields(fields);
 
 
@@ -393,12 +380,32 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 
 			checkFields: function () {
 
+				// pull check fields
+				var fields = [];
+				var $viewMultiview = $$(ids.tabObjects).getMultiview();
+				$viewMultiview.getChildViews().forEach($viewTab => {
+
+					let $viewDbl = $viewTab.queryView({ name: 'fields' });
+					if ($viewDbl && $viewDbl.getValue()) {
+
+						// pull an array of field's url
+						let selectedFields = $viewDbl.getValue().split(',').map(fUrl => {
+							return CurrentQuery.application.urlResolve(fUrl);
+						});
+						fields = fields.concat(selectedFields);
+
+					}
+
+				});
+
+
+				// refresh UI menu
+				_logic.refreshFieldMenu(fields);
+
+
 				// call save to db
 				_logic.save()
 					.then(() => {
-
-						// refresh UI menu
-						_logic.refreshFieldMenu();
 
 						// refresh filter
 						_logic.refreshFilter();
@@ -468,15 +475,18 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 
 
 
-			refreshFieldMenu: function () {
+			refreshFieldMenu: function (fields) {
 
-				// clear
+				// clear all
 				$$(ids.menu).find({}).forEach(item => {
 					$$(ids.menu).remove(item.id);
 				});
 
-				$$(ids.menu).parse(CurrentQuery.fields().map(f => {
-					return f.object.label + '.' + f.label;
+				$$(ids.menu).parse(fields.map(f => {
+					return {
+						id: f.urlPointer(),
+						value: f.object.label + '.' + f.label
+					};
 				}));
 				$$(ids.menu).refresh();
 			},
@@ -634,7 +644,10 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 									view: "menu",
 									data: [],
 									drag: true,
-									dragscroll: true
+									dragscroll: true,
+									on: {
+										onAfterDrop: _logic.save
+									}
 								}
 							]
 						},
