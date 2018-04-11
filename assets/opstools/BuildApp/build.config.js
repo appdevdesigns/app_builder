@@ -6,6 +6,10 @@ module.exports = {
 		"opstools/BuildApp"
 	],
 	"meta": {
+		"opstools/BuildApp/OP_Bundle" : {
+            "format": "global",
+            "sideBundle": true
+        },
 		"opstools/BuildApp": {
 			"deps": [
 				"async",
