@@ -159,16 +159,13 @@ class ABFieldList extends ABField {
 							}
 							// single select list
 							else {
-								var optIds = this.settings.options.map(function (opt) {
-									return opt.id;
-								});
-
-								currCol = t.enum(this.columnName, optIds).nullable();
-
-								// Set default to single select
+								// Changed to string to fix issue where new items could not be added because type of field was ENUM and we do not support field modifications
+								var currCol = t.string(this.columnName).nullable();
+								
 								if (this.settings.singleDefault && this.settings.singleDefault != 'none') {
 									currCol.defaultTo(this.settings.singleDefault);
 								}
+								
 							}
 
 							// create one if it doesn't exist:
