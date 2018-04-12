@@ -47,6 +47,12 @@ var ABFieldListDefaults = {
 
 };
 
+// store the original options (look at logic.populate)
+var originalOptions = [];
+
+// store the current field being edited/created
+var currentField;
+
 var defaultValues = {
 	isMultiple: 0,
 	hasColors: 0,
@@ -216,9 +222,25 @@ var ABFieldListComponent = new ABFieldComponent({
 				editor: "text",
 				editValue: "value",
 				onClick: {
-					"ab-new-field-remove": function (e, itemId, trg) {
+					"ab-new-field-remove": (e, itemId, trg) => {
 						// Remove option item
-						$$(ids.options).remove(itemId);
+						// check that item is in saved data already
+						var matches = originalOptions.filter(function(x) {
+							return x.id == itemId;
+						})[0];
+						if (matches) {
+							// Ask the user if they want to remove option
+							OP.Dialog.Confirm({
+								title: L('ab.dataField.list.optionDeleteTitle', '*Delete Option'),
+								text: L('ab.dataField.list.optionDeleteText', '*All exisiting entries with this value will be cleared. Are you sure you want to delete this option?'),
+								fnYes: function() {
+									// store the item that will be deleted for the save action
+									currentField.pendingDeletions = currentField.pendingDeletions || [];
+									currentField.pendingDeletions.push(itemId);
+									$$(ids.options).remove(itemId);
+								}
+							})
+						}
 					},
 					"ab-color-picker": function (e, itemId, trg) {
 						// alert("open color picker");
@@ -335,6 +357,12 @@ var ABFieldListComponent = new ABFieldComponent({
 
 		populate: (ids, field) => {
 
+			// store the options that currently exisit to compare later for deletes
+			originalOptions = field.settings.options;
+			// we need to access the fields -> object -> model to run updates on save (may be refactored later)
+			currentField = field;
+			// empty this out so we don't try to delete already deleted options (or delete options that we canceled before running)
+			currentField.pendingDeletions = [];
 			// set options to webix list
 			var opts = field.settings.options.map(function (opt) {
 				return {
@@ -417,6 +445,119 @@ class ABFieldList extends ABFieldSelectivity {
 	/// Instance Methods
 	///
 
+
+	save() {
+		
+		return super.save()
+		.then(() => {
+			
+			// Now we want to clear out any entries that had values == to item removed from our list:
+			if (this.pendingDeletions) {
+				
+				var model = this.object.model();
+				
+				if (this.settings.isMultiple == true) {
+					
+					// find all the entries that have one of the deleted values:
+					// use Promise to prevent issues with data being loaded before it is deleted on client side
+					return new Promise((resolve, reject) => {
+						
+						var numDone = 0;
+						var numToDo = 0;
+						
+						model.findAll()
+						.then((list)=>{
+							
+							list = list.data || list;
+
+							// for each list item 
+							list.forEach((item)=>{
+								
+								if (Array.isArray(item[this.columnName])) {
+
+									// get fields not in pendingDeletions
+									var remainingFields = item[this.columnName].filter((i)=>{ return this.pendingDeletions.indexOf(i.id) == -1; });
+									
+									if (remainingFields.length != item[this.columnName].length) {
+										
+										numToDo ++;
+										
+										// update value to new field list
+										if (remainingFields.length == 0) {
+											remainingFields = "";
+										}
+										var value = {};
+										value[this.columnName] = remainingFields;
+										model.update(item.id, value)
+										.then(()=>{
+											// if ($$(node) && $$(node).updateItem)
+											// 	$$(node).updateItem(value.id, value);
+											numDone++;
+											if (numDone >= numToDo) {
+												resolve();
+											}
+										})
+										
+									}
+									
+								}
+								
+							});
+							if (numToDo == 0) {
+								resolve();
+							}
+							
+						})
+						.catch(reject);
+					});
+					
+				} else {
+					
+					// find all the entries that have one of the deleted values:
+					var where = {};
+					where[this.columnName] = this.pendingDeletions;
+					return new Promise((resolve, reject) => {
+						
+						var numDone = 0;
+						
+						model.findAll(where)
+						.then((list)=>{
+							
+							// make sure we just work with the { data:[] } that was returned
+							list = list.data || list;
+							
+							// for each one, set the value to ''
+							// NOTE: jQuery ajax routines filter out null values, so we can't 
+							// set them to null. :(
+							// var numDone = 0;
+							var value = {};
+							value[this.columnName] = '';
+							
+							list.forEach((item)=>{
+
+								model.update(item.id, value)
+								.then(()=>{
+									numDone++;
+									if (numDone >= list.length) {
+										resolve();
+									}
+								})
+							})
+							if (list.length == 0) {
+								resolve();
+							}
+
+						})
+						.catch(reject);
+					});
+					
+				}
+				
+			}
+			
+		});
+		
+	}
 
 	isValid() {
 
