@@ -112,8 +112,17 @@ module.exports = class ABObjectQuery extends ABObject {
 	 */
 	importFields(fieldSettings) {
 		var newFields = [];
-	  	fieldSettings.forEach((field) => {
-	  		newFields.push( this.application.urlResolve(field.fieldURL) );
+	  	fieldSettings.forEach((f) => {
+
+			var field = this.application.urlResolve(fieldInfo.fieldURL);
+			
+			// should be a field of base/join objects
+			if (this.canFilterField(field) &&
+			// check duplicate
+				newFields.filter(f => f.urlPointer() == fieldInfo.fieldURL).length < 1) { 
+
+				newFields.push( field );
+			}
 	  	})
 	  	this._fields = newFields;
 	}
@@ -566,7 +575,7 @@ module.exports = class ABObjectQuery extends ABObject {
 			this.fields().forEach((f)=>{
 
 				// TODO: skip connect fields ???
-				if(f.key == 'connectObject')
+				if(!f || f.key == 'connectObject')
 					return;
 
 				var columnName = f.columnName;
