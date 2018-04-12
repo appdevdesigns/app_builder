@@ -149,7 +149,7 @@ export default class AB_Work_Interface_Workspace extends OP.Component {
 
 
             /**
-             * @function populateObjectWorkspace()
+             * @function populateInterfaceWorkspace()
              *
              * Initialize the Interface Workspace with the provided ABView.
              *

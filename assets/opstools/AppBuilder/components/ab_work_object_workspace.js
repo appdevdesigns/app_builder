@@ -22,8 +22,11 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     /**
      * @param {object} ??
      */
-    constructor(App) {
-        super(App, 'ab_work_object_workspace');
+    constructor(App, idBase) {
+
+		idBase = idBase || 'ab_work_object_workspace';
+
+        super(App, idBase);
         var L = this.Label;
         
         var labels = {
@@ -766,8 +769,43 @@ console.error('TODO: toolbarPermission()');
                     // self.refreshPopupData();
                     // $$(self.webixUiId.sortFieldsPopup).show($view);
                     //console.error('TODO: toolbarSort()');
-    		}
-    	}
+			},
+			
+
+    		/**
+    		 * @function populateObjectWorkspace()
+    		 *
+    		 * Initialize the Object Workspace with the provided ABObject.
+    		 *
+    		 * @param {ABObject} object  	current ABObject instance we are working with.
+    		 */
+    		populateObjectWorkspace: function(object) {
+				
+				$$(ids.toolbar).show();
+				$$(ids.selectedObject).show();
+
+				CurrentObject = object;
+
+				App.actions.populateObjectPopupAddDataField(CurrentObject);
+
+				DataTable.objectLoad(CurrentObject);
+
+				PopupDefineLabelComponent.objectLoad(CurrentObject);
+				PopupFilterDataTableComponent.objectLoad(CurrentObject);
+				PopupFrozenColumnsComponent.objectLoad(CurrentObject);
+				PopupHideFieldComponent.objectLoad(CurrentObject);
+				PopupMassUpdateComponent.objectLoad(CurrentObject, DataTable);
+				PopupSortFieldComponent.objectLoad(CurrentObject);
+
+				// We can hide fields now that data is loaded
+				_logic.callbackFieldsVisible();
+				
+				// get badge counts for server side components
+				_logic.getBadgeSortFields();
+				_logic.getBadgeFilters();
+			}
+
+		}
         this._logic = _logic;
 
 
@@ -787,40 +825,6 @@ console.error('TODO: toolbarPermission()');
     			// NOTE: to clear a visual glitch when multiple views are updating
     			// at one time ... stop the animation on this one:
     			$$(ids.noSelection).show(false, false);
-    		},
-
-
-    		/**
-    		 * @function populateObjectWorkspace()
-    		 *
-    		 * Initialize the Object Workspace with the provided ABObject.
-    		 *
-    		 * @param {ABObject} object  	current ABObject instance we are working with.
-    		 */
-    		populateObjectWorkspace: function(object) {
-
-    			$$(ids.toolbar).show();
-    			$$(ids.selectedObject).show();
-
-    			CurrentObject = object;
-
-    			App.actions.populateObjectPopupAddDataField(CurrentObject);
-
-    			DataTable.objectLoad(CurrentObject);
-
-    			PopupDefineLabelComponent.objectLoad(CurrentObject);
-                PopupFilterDataTableComponent.objectLoad(CurrentObject);
-    			PopupFrozenColumnsComponent.objectLoad(CurrentObject);
-    			PopupHideFieldComponent.objectLoad(CurrentObject);
-                PopupMassUpdateComponent.objectLoad(CurrentObject, DataTable);
-    			PopupSortFieldComponent.objectLoad(CurrentObject);
-
-    			// We can hide fields now that data is loaded
-                _logic.callbackFieldsVisible();
-                
-                // get badge counts for server side components
-                _logic.getBadgeSortFields();
-                _logic.getBadgeFilters();
     		}
 
 
@@ -830,6 +834,7 @@ console.error('TODO: toolbarPermission()');
 		// Define our external interface methods:
 		// 
 		this.applicationLoad = this._logic.applicationLoad;
+		this.populateObjectWorkspace = this._logic.populateObjectWorkspace;
 
     }
 

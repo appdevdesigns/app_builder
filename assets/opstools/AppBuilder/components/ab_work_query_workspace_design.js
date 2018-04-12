@@ -127,7 +127,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 
 			/**
-			 * @function populateObjectWorkspace()
+			 * @function populateQueryWorkspace()
 			 *
 			 * Initialize the Object Workspace with the provided ABObject.
 			 *

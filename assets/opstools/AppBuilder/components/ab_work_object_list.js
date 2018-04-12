@@ -187,7 +187,12 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 
 
 		// Our init() function for setting up our UI
-		this.init = () => {
+		this.init = (options) => {
+
+            // register our callbacks:
+            for (var c in _logic.callbacks) {
+                _logic.callbacks[c] = options[c] || _logic.callbacks[c];
+            }
 
 			if ($$(ids.component))
 				$$(ids.component).adjust();
@@ -210,6 +215,14 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 
 		// our internal business logic
 		var _logic = this._logic = {
+
+			callbacks: {
+				
+				/**
+				 * @function onChange
+				 */
+				onChange: function () { }
+			},
 
 
 			/**
@@ -403,7 +416,8 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 			selectObject: function (id) {
 
 				var object = $$(ids.list).getItem(id);
-				App.actions.populateObjectWorkspace(object);
+
+				_logic.callbacks.onChange(object);
 
 				_logic.showGear(id);
 			},
