@@ -394,45 +394,28 @@ export default class ABObjectQuery extends ABObject {
 	}
 
 
-	// // return the column headers for this object
-	// // @param {bool} isObjectWorkspace  return the settings saved for the object workspace
-	// columnHeaders (isObjectWorkspace, isEditable) {
+	
+	// return the column headers for this object
+	// @param {bool} isObjectWorkspace  return the settings saved for the object workspace
+	columnHeaders (isObjectWorkspace, isEditable) {
+		
+		var headers = super.columnHeaders(isObjectWorkspace, isEditable);
 
-	// 	var headers = [];
-	// 	var columnNameLookup = {};
+		headers.forEach(h => {
 
-	// 	// get the header for each of our fields:
-	// 	this._fields.forEach(function(f){
-	// 		var header = f.columnHeader(isObjectWorkspace, null, isEditable);
-	// 		if (f.settings.width != 0) {
-	// 			// set column width to the customized width
-	// 			header.width = f.settings.width;
-	// 		} else {
-	// 			// set column width to adjust:true by default;
-	// 			header.adjust = true;
-	// 		}
-	// 		headers.push(header);
-	// 		columnNameLookup[header.id] = f.columnName;	// name => id
-	// 	})
+			var field = this.fields(f => f.columnName == h.id)[0];
+			if (field) {
 
+				h.fieldURL = field.urlPointer();
+				h.header = '{objectName}.{fieldName}'
+							.replace('{objectName}', field.object.label)
+							.replace('{fieldName}', field.label);
+			}
 
-	// 	// update our headers with any settings applied in the Object Workspace
-	// 	if (isObjectWorkspace) {
+		});
 
-	// 		// hide any hiddenfields
-	// 		if (this.workspaceHiddenFields.length > 0) {
-	// 			this.workspaceHiddenFields.forEach((hfID)=>{
-	// 				headers.forEach((h)=> {
-	// 					if (columnNameLookup[h.id] == hfID){
-	// 						h.hidden = true;
-	// 					}
-	// 				})
-	// 			});
-	// 		}
-	// 	}
-
-	// 	return headers;
-	// }
+		return headers;
+	}
 
 
 

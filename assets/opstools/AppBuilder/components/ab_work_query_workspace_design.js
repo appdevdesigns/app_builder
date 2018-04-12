@@ -156,6 +156,9 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 						// prevent looping
 						if (f.datasourceLink.id == (parentField ? parentField.object.id : null) ||
+							// - prevent include connect objects of the base object
+							objBase.connectFields().filter(fConnect => fConnect.id != f.id && fConnect.datasourceLink.id == f.datasourceLink.id).length > 0 ||
+							// - check duplicate include objects
 							existsObjIds.indexOf(f.datasourceLink.id) > -1)
 							return;
 
@@ -385,13 +388,33 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 						// pull an array of field's url
 						let selectedFields = $viewDbl.getValue().split(',').map(fUrl => {
-							return CurrentQuery.application.urlResolve(fUrl);
+							return {
+								fieldURL: fUrl
+							};
 						});
 						fields = fields.concat(selectedFields);
 
 					}
 
 				});
+
+				// keep same order of fields
+				var orderFieldUrls = $$(ids.datatable).config.columns.map(col => col.fieldURL);
+				fields.sort((a, b) => {
+
+					var indexA = orderFieldUrls.indexOf(a.fieldURL),
+						indexB = orderFieldUrls.indexOf(b.fieldURL);
+
+					if (indexA < 0) indexA = 999;
+					if (indexB < 0) indexB = 999;
+
+					return indexA - indexB;
+				});
+
+				CurrentQuery.importFields(fields);
+
+				// refresh columns of data table
+				_logic.refreshDataTable();
 
 
 				// call save to db

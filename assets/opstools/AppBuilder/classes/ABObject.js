@@ -268,7 +268,6 @@ export default class ABObject extends ABObjectBase {
 				// set column width to adjust:true by default;
 				header.adjust = true;
 			}
-			header.fieldURL = f.urlPointer();
 			headers.push(header);
 			columnNameLookup[header.id] = f.columnName;	// name => id
 		})
