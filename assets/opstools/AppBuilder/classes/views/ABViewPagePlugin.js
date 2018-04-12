@@ -50,8 +50,7 @@ export default class ABViewPagePlugin extends ABViewPage {
         //		translations:[]
         // 	}
 
-
-        this.parent = null;  // will be set by the pageNew() that creates this obj.
+        this.settings.plugin = values.plugin;  // keep track of this
     }
 
 
@@ -74,8 +73,8 @@ export default class ABViewPagePlugin extends ABViewPage {
 
 //// TODO: 
 //// store the plugin information and settings
-
-        obj.plugin = this.plugin.id;
+        obj.plugin = this.settings.plugin;
+        obj.settings.plugin = this.settings.plugin;
 
         return obj;
     }
@@ -92,8 +91,27 @@ export default class ABViewPagePlugin extends ABViewPage {
 
         super.fromValues(values);
 
-        this.plugin = OP.UIPlugins.get(values.plugin);
+        this.PluginClass = null;
+        this.plugin = null;
+        OP.UIPlugins.get(values.plugin || values.settings.plugin)
+        .then((PluginClass)=>{
+            this.PluginClass = PluginClass;
+        })
+        .catch((err)=>{
+            OP.Error.log('Error trying to load plugin: '+values.plugin, {error:err, values:values });
+        })
+        
     }
+
+
+    initPlugin(App) {
+        if (this.plugin == null) {
+            if (this.PluginClass) {
+                this.plugin = new this.PluginClass(App, this);
+            }
+        }
+    }
+
 
 
     //
@@ -110,38 +128,22 @@ export default class ABViewPagePlugin extends ABViewPage {
 	 * @return {Component} 
 	 */
     editorComponent(App, mode) {
+        this.initPlugin(App);
 
-        var comp = super.editorComponent(App, mode);
-
-
-        var _init = (options) => {
-
-            comp.init(options);
-
-            // initialize data sources
-            this.pageRoot().dataCollections().forEach((dc) => {
-                dc.init();
-            });
-
-
-        };
-
-
-        return {
-            ui: comp.ui,
-            init: _init,
-            logic: comp.logic,
-
-            onShow: comp.onShow
-        }
+        return super.editorComponent(App, mode);
 
     }
 
 
 
+    //// 
+    //// Property Editor Interface
+    ////
+
+
 
     /** 
-     * @method propertyEditorFields
+     * @method propertyEditorFieldsPage
      * return an array of webix UI fields to handle the settings of this
      * ABViewPage. 
      * This method should make any modifications to ids, logic, and init
@@ -149,304 +151,136 @@ export default class ABViewPagePlugin extends ABViewPage {
      * @param {App} App  The global App object for the current Application instance
      * @param {obj} ids  A hash of the settings ids for our fields.
      * @param {obj} logic  a hash of fn() called by our webix components
-     * @param {fn}  init  An initialization fn() called to setup our fields.
      * @return {array}  of webix UI definitions.
      */
-    propertyEditorFields(App, options) { 
-        var components = super.propertyEditorFields(App, options); 
+    propertyEditorFieldsPage(App, ids, _logic) { 
 
-        var ids = options.ids;
-        ids.plugin = App.unique('plugin');
+        var components = super.propertyEditorFieldsPage(App, ids, _logic);
 
-
-        var pluginUIComponent = this.plugin.propertyEditorFields(App);
-       
-
+        this.initPlugin(App);
+        var pluginFields = this.plugin.propertyEditorFields(App, ids, _logic);
+        
         components = components.concat([
             {
-                id: ids.plugin,
+                // id: ids.plugin,
                 name: 'plugin',
                 view: 'text',
                 label: L('ab.components.page.type', "*Plugin"),
                 disabled:true
-            },
-            pluginUIComponent.ui
-        ]);
-
-//// LEFT OFF HERE:
-// follow ABView.propertyEditorSave() logic and figure out how to save
-//
+            }
+        ])
+        .concat(pluginFields);
 
 
 
-        // init()
-        // perform any initialization of the Property Editor
-        // fields.
-        // @param {obj} data  key=>value of our view's settings;
-        var superInit = options.init;
-        options.init = ( data ) => {
-            if (superInit) superInit(data);  // call the super() first
 
-            $$(ids.plugin).setValue(data.plugin);      
+        // // init()
+        // // perform any initialization of the Property Editor
+        // // fields.
+        // // @param {obj} data  key=>value of our view's settings;
+        // var superInit = options.init;
+        // options.init = ( data ) => {
+        //     if (superInit) superInit(data);  // call the super() first
 
-            // initialize our plugin
-            pluginUIComponent.init(data, this);      
-        }
+        //     $$(ids.plugin).setValue(data.plugin);      
+
+        //     // initialize our plugin
+        //     pluginUIComponent.init(data, this);      
+        // }
 
         return components;
     }
 
 
 
-    // static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
+    /** 
+     * @method propertyEditorDefaultValues
+     * return an object of [name]:[value] data to set the your fields to a 
+     * default (unused) state.
+     * @return {obj}  
+     */
+    propertyEditorDefaultValues() {
+        var defaults = super.propertyEditorDefaultValues();
+        for(var d in ABPropertyComponentDefaults) {
+            defaults[d] = ABPropertyComponentDefaults[d];
+        }
 
-    //     var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
+        var pluginDefaults = this.plugin? this.plugin.propertyEditorDefaultValues(): {};
+        for(var d in pluginDefaults) {
+            defaults[d] = pluginDefaults[d];
+        }
 
-    //     _logic.permissionClick = (id, e, node) => {
-    //         var List = $$(ids.permissions);
-    //         var item = List.getItem(id); 
-
-    //         if (item.markCheckbox) {
-
-    //             OP.Comm.Service.delete({
-    //                 url: "/app_builder/page/"+item.action_key+"/role",
-    //                 data: {
-    //                     role_id: item.id
-    //                 }
-    //             }).then((data) => {
-
-    //                 item.markCheckbox = false;
-    //                 List.updateItem(id, item); 
-
-    //             });
-
-    //         } else {
-
-    //             OP.Comm.Service.put({
-    //                 url: "/app_builder/page/"+item.action_key+"/role",
-    //                 data: {
-    //                     role_id: item.id
-    //                 }
-    //             }).then((data) => {
-
-    //                 item.markCheckbox = true;
-    //                 List.updateItem(id, item); 
-
-    //             });
-
-    //         }
-            
-
-    //     };
-
-    //     // in addition to the common .label  values, we 
-    //     // ask for:
-    //     return commonUI.concat([
-    //         {
-    //             name: 'type',
-    //             view: 'richselect',
-    //             label: L('ab.components.page.type', "*Type"),
-    //             options: [
-    //                 { id: 'page', value: L('ab.components.page.page', "*Page") },
-    //                 { id: 'popup', value: L('ab.components.page.popup', "*Popup") }
-    //             ]
-    //         },
-    //         {
-    //             view: "fieldset",
-    //             name: "dataCollectionPanel",
-    //             label: L('ab.component.page.dataCollections', '*Data Collections:'),
-    //             labelWidth: App.config.labelWidthLarge,
-    //             body: {
-    //                 type: "clean",
-    //                 paddingY: 20,
-    //                 paddingX: 10,
-    //                 rows: [
-    //                     {
-    //                         cols: [
-    //                             {
-    //                                 view: "label",
-    //                                 label: L("ab.component.page.collections", "*Collections:"),
-    //                                 width: App.config.labelWidthLarge,
-    //                             },
-    //                             {
-    //                                 view: "button",
-    //                                 name: "datacollection",
-    //                                 label: L("ab.component.page.settings", "*Settings"),
-    //                                 icon: "gear",
-    //                                 type: "icon",
-    //                                 badge: 0,
-    //                                 click: function () {
-    //                                     App.actions.interfaceViewPartChange('data');
-    //                                 }
-    //                             }
-    //                         ]
-    //                     }
-
-    //                 ]
-    //             }
-    //         },
-    //         {
-    //             view: "fieldset",
-    //             name: "pagePermissionPanel",
-    //             label: L('ab.component.page.pagePermissions', '*Page Permissions:'),
-    //             labelWidth: App.config.labelWidthLarge,
-    //             body: {
-    //                 type: "clean",
-    //                 paddingY: 20,
-    //                 paddingX: 10,
-    //                 rows: [
-    //                     {
-    //         				name: 'permissions',
-    //         				view: 'list',
-    //         				select: false,
-    //         				minHeight: 200,
-    //         				template: "{common.markCheckbox()} #name#",
-    //                         type:{
-    //                             markCheckbox:function(obj ){
-    //                                 return "<span class='check webix_icon fa-"+(obj.markCheckbox?"check-":"")+"square-o'></span>";
-    //                             }
-    //                         },
-    //                         on: {
-    //                             onItemClick: function (id, e, node) {
-    //                                 _logic.permissionClick(id, e, node);
-    //                             }
-    //                         }
-    //         			}
-    //                 ]
-    //             }
-    //         }
-    //     ]);
-
-
-    // }
-
-//     static propertyEditorPopulatePageSettings(App, ids, view) {
-
-//         $$(ids.type).setValue(view.settings.type || ABPropertyComponentDefaults.type);
-    
-//     }
-
-    // static propertyEditorPopulate(App, ids, view) {
-
-    //     super.propertyEditorPopulate(App, ids, view);
-
-    //     this.propertyEditorPopulatePageSettings(App, ids, view);
-        
-    //     // Disable select type of page when this page is root 
-    //     if (view.isRoot()) {
-    //         $$(ids.type).hide();
-    //         $$(ids.dataCollectionPanel).show();
-            
-    //         // Update permission options
-    //         $$(ids.pagePermissionPanel).show();
-    //         this.propertyUpdatePermissionsOptions(ids, view);
-    //     }
-    //     else {
-    //         $$(ids.pagePermissionPanel).hide();
-    //         $$(ids.type).show();
-    //         $$(ids.dataCollectionPanel).hide();
-    //     }
-
-    //     this.populateBadgeNumber(ids, view);
-
-    //     // when data collections are added/deleted, then update number of badge
-    //     this.viewUpdateEventIds = this.viewUpdateEventIds || {}; // { viewId: number, ..., viewIdn: number }
-    //     if (!this.viewUpdateEventIds[view.id]) {
-    //         this.viewUpdateEventIds[view.id] = AD.comm.hub.subscribe('ab.interface.update', (message, data) => {
-
-    //             if (data.rootPage && data.rootPage.id == view.id) {
-    //                 this.populateBadgeNumber(ids, view);
-    //             }
-
-    //         });
-
-    //     }
-
-
-    // }
-
-
-    static propertyEditorValues(ids, view) {
-
-        super.propertyEditorValues(ids, view);
-
-//// TODO:
-//// gather the given settings based upon the plugin provided 
-//// data types;
-
-        view.settings.type = $$(ids.type).getValue();
-
+        return defaults;
     }
 
 
-    // static populateBadgeNumber(ids, view) {
 
-    //     var dataCols = view.dataCollections();
-    //     if (dataCols && dataCols.length > 0) {
-    //         $$(ids.datacollection).define('badge', dataCols.length);
-    //         $$(ids.datacollection).refresh();
-    //     }
-    //     else {
-    //         $$(ids.datacollection).define('badge', 0);
-    //         $$(ids.datacollection).refresh();
-    //     }
+    /** 
+     * @method propertyEditorInit
+     * perform any setup instructions on the fields you are displaying.
+     * this is a good time to populate any select lists with data you need to 
+     * look up.  
+     * @param {App} App  The global App object for the current Application instance
+     * @param {obj} ids the id.[name] references to our fields 
+     * @param {obj} _logic A hash of fn() called by our webix components
+     */
+     propertyEditorInit(App, ids, _logic) {
+        super.propertyEditorInit(App, ids, _logic);
 
-    // }
-    
-    // static getPageActionKey(view) {
+        this.plugin.propertyEditorInit(App, ids, _logic);
+     }
+
+
+
+    /** 
+     * @method propertyEditorPopulate
+     * set the initial values of the fields you are displaying.
+     * @param {App} App the common App object shared among our UI components.
+     * @param {obj} ids the id.[name] references to our fields 
+     * @param {data} data the initial settings data for this object
+     */
+    propertyEditorPopulate(App, ids, data) {
+        super.propertyEditorPopulate(App, ids, data);
         
-    //     return ['opstools', "AB_" + String(view.application.name).replace(/[^a-z0-9]/gi, ''), String(view.name).replace(/[^a-z0-9]/gi, '').toLowerCase(), "view"].join('.');
-        
-    // }
-    
-    // /**
-    //  * @method propertyUpdatePermissionsOptions
-    //  * Populate permissions of Ops Portal to select list in property
-    //  * 
-    //  */
-    // static propertyUpdatePermissionsOptions(ids, view) {
+        $$(ids.plugin).setValue(data.plugin);  
+        this.plugin.propertyEditorPopulate(App, ids, data);
+    }
 
-    //     var action_key = this.getPageActionKey(view);
-    //     var roles = [];
-        
-    //     view.application.getPermissions()
-    //         .then(function (selected_role_ids) {
-    //             var app_roles = selected_role_ids;
 
-    //             OP.Comm.Service.get({
-    //                 url: "/app_builder/page/"+action_key+"/role"
-    //             }).then((data) => {
 
-    //                 var selectedRoles = [];
-    //                 data.selected.forEach((s) => {
-    //                     selectedRoles.push(s.id);
-    //                 });
-                    
-    //                 data.roles.forEach((r) => {
-    //                     if (app_roles.indexOf(r.id) != -1) {
-    //                         if (selectedRoles.indexOf(r.id) != -1) {
-    //                             r.markCheckbox = true;
-    //                         } else {
-    //                             r.markCheckbox = false;
-    //                         }
-    //                         r.action_key = action_key;
-    //                         roles.push(r);
-    //                     }
-    //                 });
-                    
-    //                 roles = _.orderBy(roles, 'id', 'asc');
-                    
-    //                 $$(ids.permissions).clearAll();
-    //                 $$(ids.permissions).parse(roles);
+    /** 
+     * @method propertyEditorValues
+     * pull the values from the Propery Editor and store them in our object.
+     * @param {obj} ids the id.[name] references to our fields 
+     */
+    propertyEditorValues(ids) {
+        super.propertyEditorValues(ids);
 
-    //             });
+        this.settings.plugin = $$(ids.plugin).getValue();
 
-    //         })
-    //         .catch(function (err) { next(err); });
-        
-    // }
+        this.plugin.propertyEditorValues(ids);
+    }
 
-	/*
+
+
+    /** 
+     * @method propertyEditorRemove
+     * clean up our property editor before it is deleted.
+     */
+    propertyEditorRemove() {
+        super.propertyEditorRemove();
+        this.plugin.propertyEditorRemove();
+    }
+
+
+
+    ////
+    //// Live View
+    ////
+
+
+
+    /*
 	 * @component()
 	 * return a UI component based upon this view.
 	 * @param {obj} App 

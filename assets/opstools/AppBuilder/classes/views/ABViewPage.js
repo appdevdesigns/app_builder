@@ -187,7 +187,17 @@ export default class ABViewPage extends ABViewContainer {
     ////
 
 
-
+    /** 
+     * @method propertyEditorFieldsPage
+     * return an array of webix UI fields to handle the settings of this
+     * ABViewPage. 
+     * This method should make any modifications to ids, logic, and init
+     * as needed to support the new fields added in this routine.
+     * @param {App} App  The global App object for the current Application instance
+     * @param {obj} ids  A hash of the settings ids for our fields.
+     * @param {obj} logic  a hash of fn() called by our webix components
+     * @return {array}  of webix UI definitions.
+     */
     propertyEditorFieldsPage(App, ids, _logic) { 
         var components = [
             {
@@ -365,7 +375,7 @@ export default class ABViewPage extends ABViewContainer {
      * @param {obj} _logic A hash of fn() called by our webix components
      */
      propertyEditorInit(App, ids, _logic) {
-         super.propertyEditorInit(App, ids, _logic);
+        super.propertyEditorInit(App, ids, _logic);
 
         // Disable select type of page when this page is root 
         if (this.isRoot()) {

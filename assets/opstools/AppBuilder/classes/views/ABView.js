@@ -367,7 +367,8 @@ export default class ABView extends ABViewBase {
 			return this;
 		}
 
-		while (parentPage && (parentPage.key != 'page' || !filterFn(parentPage))) {
+		var pageTypes = ['page', 'pageplugin'];
+		while (parentPage && (pageTypes.indexOf(parentPage.key) == -1  || !filterFn(parentPage))) {
 			parentPage = parentPage.parent;
 		}
 

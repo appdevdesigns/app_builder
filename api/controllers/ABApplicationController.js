@@ -12,6 +12,7 @@ var path = require('path');
 var async = require('async');
 
 var ABViewPage = require(path.join('..', 'classes', 'ABViewPage'));
+var ABViewPagePlugin = require(path.join('..', 'classes', 'ABViewPagePlugin'));
 
 module.exports = {
 
@@ -204,8 +205,18 @@ module.exports = {
                         // add new page/view to the parent
                         if (parent && parent.push) {
 
-                            parent.push(new ABViewPage(vals, data.appClass));
+                            switch(vals.key) {
+                                
+                                case 'pageplugin':
+                                    parent.push(new ABViewPagePlugin(vals, data.appClass));
+                                    break;
 
+                                case 'page':
+                                default:
+                                    parent.push(new ABViewPage(vals, data.appClass));
+                                    break;
+                            }
+                            
                         }
                     }
 

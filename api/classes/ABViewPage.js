@@ -7,7 +7,7 @@ module.exports = class ABViewPage extends ABViewBase {
 	constructor(attributes, application, parent) {
 		super(attributes, application, parent);
 
-		this.fromValues(attributes);
+		// this.fromValues(attributes);
 
 	}
 
