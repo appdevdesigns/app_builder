@@ -32,7 +32,8 @@ module.exports = class ABObjectQuery extends ABObject {
 */
 
 		// import all our Joins 
-	  	this.importJoins(attributes.joins || []);
+		this.importJoins(attributes.joins || []);
+		this.importFields(attributes.fields || []); // import after joins are imported
 	  	this.where = attributes.where || {};
 
   	}
@@ -112,7 +113,7 @@ module.exports = class ABObjectQuery extends ABObject {
 	 */
 	importFields(fieldSettings) {
 		var newFields = [];
-	  	fieldSettings.forEach((f) => {
+	  	fieldSettings.forEach(fieldInfo => {
 
 			var field = this.application.urlResolve(fieldInfo.fieldURL);
 			
