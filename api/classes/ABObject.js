@@ -889,7 +889,8 @@ module.exports = class ABObject extends ABObjectBase {
 
 	            // if we are searching a multilingual field it is stored in translations so we need to search JSON
 	            if (field && field.settings.supportMultilingual == 1) {
-	                fieldName = 'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH(translations, "one", "' + userData.languageCode + '")), 1, 4)), \'$."' + field.columnName + '"\'))';
+					fieldName = 'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({tableName}.translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({tableName}.translations, "one", "' + userData.languageCode + '")), 1, 4)), \'$."' + field.columnName + '"\'))'
+									.replace(/{tableName}/g, field.object.dbTableName());
 	            } 
 
 	            // if this is from a LIST, then make sure our value is the .ID
@@ -918,16 +919,26 @@ module.exports = class ABObject extends ABObjectBase {
 
 	    // Apply Sorts
 	    if (!_.isEmpty(sort)) {
-	        sort.forEach(function (o) {
+	        sort.forEach((o) => {
+
+				var orderField = this.fields(f => f.id == o.key)[0];
+				if (!orderField) return;
+
 	            // if we are ordering by a multilingual field it is stored in translations so we need to search JSON but this is different from filters
 	            // because we are going to sort by the users language not the builder's so the view will be sorted differntly depending on which languageCode
-	            // you are using but the intent of the sort is maintained
-	            if (o.isMulti == 1) {
-	                var by = 'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH(translations, "one", "' + userData.languageCode + '")), 1, 4)), \'$."' + o.by + '"\'))';
-	            } else { // If we are just sorting a field it is much simpler
-	                var by = "`" + o.by + "`";
+				// you are using but the intent of the sort is maintained
+				var sortClause = '';
+	            if (orderField.settings.supportMultilingual == 1) {
+					sortClause = 'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({tableName}.translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({tableName}.translations, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))'
+									.replace(/{tableName}/g, orderField.object.dbTableName())
+									.replace('{languageCode}', userData.languageCode)
+									.replace('{columnName}', orderField.columnName);
+				} 
+				// If we are just sorting a field it is much simpler
+				else { 
+	                sortClause = "`{columnName}`".replace('{columnName}', orderField.columnName);
 	            }
-	            query.orderByRaw(by + " " + o.dir);
+	            query.orderByRaw(sortClause + " " + o.dir);
 	        })
 	    }
 

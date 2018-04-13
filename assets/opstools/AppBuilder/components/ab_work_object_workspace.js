@@ -54,47 +54,47 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 
     	// internal list of Webix IDs to reference our UI components.
     	var ids = {
-    		component: this.unique('component'),
+    		component: this.unique(idBase + '_component'),
 
-    		buttonAddField: this.unique('buttonAddField'),
-            buttonDeleteSelected: this.unique('deleteSelected'),
-    		buttonExport: this.unique('buttonExport'),
-    		buttonFieldsVisible: this.unique('buttonFieldsVisible'),
-    		buttonFilter: this.unique('buttonFilter'),
-    		buttonFrozen: this.unique('buttonFrozen'),
-    		buttonLabel: this.unique('buttonLabel'),
-            buttonMassUpdate: this.unique('buttonMassUpdate'),
-    		buttonRowNew: this.unique('buttonRowNew'),
-    		buttonSort: this.unique('buttonSort'),
+    		buttonAddField: this.unique(idBase + '_buttonAddField'),
+            buttonDeleteSelected: this.unique(idBase + '_deleteSelected'),
+    		buttonExport: this.unique(idBase + '_buttonExport'),
+    		buttonFieldsVisible: this.unique(idBase + '_buttonFieldsVisible'),
+    		buttonFilter: this.unique(idBase + '_buttonFilter'),
+    		buttonFrozen: this.unique(idBase + '_buttonFrozen'),
+    		buttonLabel: this.unique(idBase + '_buttonLabel'),
+            buttonMassUpdate: this.unique(idBase + '_buttonMassUpdate'),
+    		buttonRowNew: this.unique(idBase + '_buttonRowNew'),
+    		buttonSort: this.unique(idBase + '_buttonSort'),
 
-    		datatable: this.unique('datatable'),
+    		datatable: this.unique(idBase + '_datatable'),
 
     		// Toolbar:
-    		toolbar: this.unique('toolbar'),
+    		toolbar: this.unique(idBase + '_toolbar'),
 
-    		noSelection: this.unique('noSelection'),
-    		selectedObject: this.unique('selectedObject'),
+    		noSelection: this.unique(idBase + '_noSelection'),
+    		selectedObject: this.unique(idBase + '_selectedObject'),
 
     	}
 
 
         // The DataTable that displays our object:
-        var DataTable = new ABWorkspaceDatatable(App);
+        var DataTable = new ABWorkspaceDatatable(App, idBase);
 
         // Various Popups on our page:
-        var PopupDefineLabelComponent = new ABPopupDefineLabel(App);
+        var PopupDefineLabelComponent = new ABPopupDefineLabel(App, idBase);
 
-        var PopupFilterDataTableComponent = new ABPopupFilterDataTable(App);
+        var PopupFilterDataTableComponent = new ABPopupFilterDataTable(App, idBase);
 
-        var PopupFrozenColumnsComponent = new ABPopupFrozenColumns(App);
+        var PopupFrozenColumnsComponent = new ABPopupFrozenColumns(App, idBase);
 
-        var PopupHideFieldComponent = new ABPopupHideFields(App);
+        var PopupHideFieldComponent = new ABPopupHideFields(App, idBase);
 
-        var PopupMassUpdateComponent = new ABPopupMassUpdate(App);
+        var PopupMassUpdateComponent = new ABPopupMassUpdate(App, idBase);
 
-        var PopupNewDataFieldComponent = new ABPopupNewDataField(App);
+        var PopupNewDataFieldComponent = new ABPopupNewDataField(App, idBase);
 
-        var PopupSortFieldComponent = new ABPopupSortField(App);
+        var PopupSortFieldComponent = new ABPopupSortField(App, idBase);
         
         var view = "button";
 
@@ -784,12 +784,11 @@ console.error('TODO: toolbarPermission()');
 				$$(ids.toolbar).show();
 				$$(ids.selectedObject).show();
 
-				CurrentObject = object;
-
-				App.actions.populateObjectPopupAddDataField(CurrentObject);
+				CurrentObject = object;			
 
 				DataTable.objectLoad(CurrentObject);
 
+				PopupNewDataFieldComponent.objectLoad(CurrentObject);
 				PopupDefineLabelComponent.objectLoad(CurrentObject);
 				PopupFilterDataTableComponent.objectLoad(CurrentObject);
 				PopupFrozenColumnsComponent.objectLoad(CurrentObject);
@@ -803,6 +802,9 @@ console.error('TODO: toolbarPermission()');
 				// get badge counts for server side components
 				_logic.getBadgeSortFields();
 				_logic.getBadgeFilters();
+
+				// $$(ids.component).setValue(ids.selectedObject);
+				$$(ids.selectedObject).show(true, false);
 			}
 
 		}

@@ -354,10 +354,11 @@ class ABFieldConnect extends ABFieldSelectivity {
 	* return a UI Component that contains the property definitions for this Field.
 	*
 	* @param {App} App the UI App instance passed around the Components.
+	* @param {stirng} idBase
 	* @return {Component}
 	*/
-	static propertiesComponent(App) {
-		return ABFieldConnectComponent.component(App);
+	static propertiesComponent(App, idBase) {
+		return ABFieldConnectComponent.component(App, idBase);
 	}
 
 	///

@@ -169,10 +169,11 @@ class ABField[template] extends ABField {
 	 * return a UI Component that contains the property definitions for this Field.
 	 *
 	 * @param {App} App the UI App instance passed around the Components.
+	 * @param {stirng} idBase
 	 * @return {Component}
 	 */
-  	static propertiesComponent(App) {
-		return ABField[template]Component.component(App);
+  	static propertiesComponent(App, idBase) {
+		return ABField[template]Component.component(App, idBase);
 	}
 
 

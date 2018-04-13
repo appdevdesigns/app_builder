@@ -57,11 +57,12 @@ export default class ABFieldComponent {
 	/// Instance Methods
 	///
 
-	component (App) {
+	component (App, idBase) {
 
 		// for each provided element: create an this.ids for it:
     	var elements = this.elements(App, this);
 
+		this.idBase = (idBase ? idBase + '_' +this.fieldDefaults.key : this.idBase);
 
     	////
     	//// prepare our ids

@@ -11,8 +11,10 @@ import ABFieldManager from "../classes/ABFieldManager"
 
 export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Component {   //.extend(idBase, function(App) {
 
-    constructor(App) {
-        super(App, 'ab_work_object_workspace_popupNewDataField');
+    constructor(App, idBase) {
+        idBase = idBase || 'ab_work_object_workspace_popupNewDataField';
+
+        super(App, idBase);
         var L = this.Label;
 
         var labels = {
@@ -27,12 +29,12 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
 
         // internal list of Webix IDs to reference our UI components.
         var ids = {
-            component: this.unique('component'),
-            types: this.unique('types'),
-            editDefinitions: this.unique('editDefinitions'),
+            component: this.unique(idBase + '_popNewField'),
+            types: this.unique(idBase + '_popNewField_types'),
+            editDefinitions: this.unique(idBase + '_popNewField_editDefinitions'),
 
-            buttonSave: this.unique('buttonSave'),
-            buttonCancel: this.unique('buttonCancel')
+            buttonSave: this.unique(idBase + '_popNewField_buttonSave'),
+            buttonCancel: this.unique(idBase + '_popNewField_buttonCancel')
         }
 
 
@@ -171,7 +173,7 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
 
 
                 // Add the Field's definition editor here:
-                var editorComponent = F.propertiesComponent(App);
+                var editorComponent = F.propertiesComponent(App, idBase);
                 if (!defaultEditorComponent) {
                     defaultEditorComponent = editorComponent;
                     defaultEditorID = menuName;
@@ -234,6 +236,18 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
                     }
                 }
 
+            },
+
+
+            objectLoad: (object) => {
+                _currentObject = object;
+                
+                // TODO : should load current object to data field popup here ?
+                for (var menuName in _componentHash) {
+                    if (_componentHash[menuName] && _componentHash[menuName]._logic.objectLoad) {
+                        _componentHash[menuName]._logic.objectLoad(_currentObject);
+                    }
+                }
             },
 
 
@@ -680,19 +694,6 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
 
         // Expose any globally accessible Actions:
         this.actions({
-
-            populateObjectPopupAddDataField: function (object) {
-                _currentObject = object;
-
-                // TODO : should load current object to data field popup here ?
-                for (var menuName in _componentHash) {
-                    if (_componentHash[menuName] && _componentHash[menuName]._logic.objectLoad) {
-                        _componentHash[menuName]._logic.objectLoad(_currentObject);
-                    }
-                }
-
-            }
-
         })
 
 
@@ -700,8 +701,9 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
         // 
         // Define our external interface methods:
         //
-        this.applicationLoad = _logic.applicationLoad; // {fn}     fn(ABApplication) 
-        this.show = _logic.show;                       // {fn}     fn(node, ABField)
+        this.applicationLoad = _logic.applicationLoad;  // {fn}     fn(ABApplication) 
+        this.objectLoad = _logic.objectLoad;            // {fn}     fn(ABObject) 
+        this.show = _logic.show;                        // {fn}     fn(node, ABField)
     }
 
 }

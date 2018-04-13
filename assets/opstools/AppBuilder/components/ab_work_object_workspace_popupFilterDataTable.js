@@ -12,7 +12,8 @@ import RowFilter from '../classes/RowFilter'
 export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Component {
 
     constructor(App, idBase) {
-        super(App, idBase || 'ab_work_object_workspace_popupFilterDataTable');
+        idBase = idBase || 'ab_work_object_workspace_popupFilterDataTable';
+        super(App, idBase);
 
         var L = this.Label;
 
@@ -23,13 +24,13 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
 
         // internal list of Webix IDs to reference our UI components.
         var ids = {
-            component: this.unique('component'),
-            newfilterbutton: this.unique('new-filter-button'),
-            filterform: this.unique('filter-form')
+            component: this.unique(idBase + '_popupFilter'),
+            newfilterbutton: this.unique(idBase + '_popupFilter_newFilterButton'),
+            filterform: this.unique(idBase + '_popupFilter_filterForm')
         };
 
         var CurrentObject = null;
-        var DataFilter = new RowFilter(App, idBase + "_filter");
+        var DataFilter = new RowFilter(App, idBase + "_popupFilter_filter");
 
 
         // webix UI definition:

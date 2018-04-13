@@ -7,7 +7,7 @@
  */
 
 import ABQueryWorkspaceDesign from "./ab_work_query_workspace_design"
-import ABObjectWorkspaceDataTable from "./ab_work_object_workspace"
+import ABObjectWorkspace from "./ab_work_object_workspace"
 // import ABObjectWorkspaceDataTable from "./ab_work_object_workspace_datatable"
 
 
@@ -37,9 +37,9 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 		};
 
 		var QueryDesignComponent = new ABQueryWorkspaceDesign(App, idBase);
-		var DataTable = new ABObjectWorkspaceDataTable(App, idBase);
+		var DataTable = new ABObjectWorkspace(App, idBase);
 
-		var currentMode = "design"; // 'design' or 'run'
+		var CurrentMode = "design"; // 'design' or 'run'
 
 		// Our webix UI definition:
 		this.ui = {
@@ -57,7 +57,13 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 							type: "icon",
 							width: 140,
 							click: function () {
-								_logic.changeMode();
+
+								if (CurrentMode == 'run')
+									CurrentMode = 'design';
+								else 
+									CurrentMode = 'run';
+
+								_logic.changeMode(CurrentMode);
 							}
 						}
 					]
@@ -129,32 +135,31 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 			 */
 			populateQueryWorkspace: function (query) {
 
-				QueryDesignComponent.populateQueryWorkspace(query);
+				CurrentQuery = query;
 
-
-				DataTable.populateObjectWorkspace(query);
-				// DataTable.objectLoad(query);
-				// DataTable.refreshHeader();
-				// DataTable.refresh();
+				_logic.changeMode(CurrentMode);
 
 			},
 
 
-			changeMode: function () {
+			changeMode: function (mode) {
 
 				// Run
-				if (currentMode == 'design') {
-					currentMode = 'run';
-					$$(ids.modeButton).define('label', labels.run);
+				if (mode == 'run') {
+					$$(ids.modeButton).define('label', labels.design);
 
-					$$(DataTable.ui.id).show();
+					DataTable.populateObjectWorkspace(CurrentQuery);
+					// DataTable.objectLoad(query);
+					// DataTable.refreshHeader();
+					// DataTable.refresh();
 				}
 				// Design
 				else {
-					currentMode = 'design';
-					$$(ids.modeButton).define('label', labels.design);
+					$$(ids.modeButton).define('label', labels.run);
 
-					$$(QueryDesignComponent.ui.id).show();
+					QueryDesignComponent.populateQueryWorkspace(CurrentQuery);
+
+					$$(QueryDesignComponent.ui.id).show(true);
 				}
 
 				$$(ids.modeButton).refresh();

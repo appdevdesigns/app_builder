@@ -49,8 +49,8 @@ export default class ABWorkObjectDatatable extends OP.Component {
 
     	// internal list of Webix IDs to reference our UI components.
     	var ids = {
-    		component: this.unique('component'),
-            tooltip: this.unique('tooltip')
+    		component: this.unique(idBase + '_datatable'),
+            tooltip: this.unique(idBase + '_datatable_tooltip')
     	}
 
         var defaultHeight = 0;
@@ -59,7 +59,7 @@ export default class ABWorkObjectDatatable extends OP.Component {
         var columnSplitRight = 0;
         var columnSplitLeft = 0;
 
-        var PopupHeaderEditComponent = new AB_Work_HeaderEditMenu(App, idBase);
+        var PopupHeaderEditComponent = new AB_Work_HeaderEditMenu(App);
 
     	// Our webix UI definition:
     	this.ui = {

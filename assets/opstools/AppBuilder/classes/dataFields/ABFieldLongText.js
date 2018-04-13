@@ -169,10 +169,11 @@ class ABFieldLongText extends ABField {
 	 * return a UI Component that contains the property definitions for this Field.
 	 *
 	 * @param {App} App the UI App instance passed around the Components.
+	 * @param (string) idBase
 	 * @return {Component}
 	 */
-	static propertiesComponent(App) {
-		return ABFieldLongTextComponent.component(App);
+	static propertiesComponent(App, idBase) {
+		return ABFieldLongTextComponent.component(App, idBase);
 	}
 
 
