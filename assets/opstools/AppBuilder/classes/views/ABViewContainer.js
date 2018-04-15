@@ -132,6 +132,11 @@ export default class ABViewContainer extends ABView {
 			// attach all the .UI views:
 			childViews.forEach((child) => {
 
+				if (child == null) {
+					console.error('!!! got a null child view ... why?', { childViews: childViews});
+					return;
+				}
+
 				var component = child.component(App);
 
 				// store

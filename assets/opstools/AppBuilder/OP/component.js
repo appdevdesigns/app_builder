@@ -2,8 +2,10 @@
 // // Import our Custom Components here:
 import CustomComponentManager from '../webix_custom_components/customComponentManager'
 
+var EventEmitter = require('events').EventEmitter;
 
-export default class UIComponent {
+
+export default class UIComponent extends EventEmitter {
     
     /**
      * @param {object} App 
@@ -12,7 +14,8 @@ export default class UIComponent {
      *      Identifier for this component
      */
 	constructor(App, idBase) {
-
+		super();
+		
 		var L = this.Label;
 
 		if (!App) {

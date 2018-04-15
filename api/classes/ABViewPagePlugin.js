@@ -34,17 +34,17 @@ module.exports = class ABViewPagePlugin extends ABViewPage {
 	 *
 	 * @return {json}
 	 */
-	toObj() {
+	// toObj() {
 
-		var result = super.toObj();
+	// 	var result = super.toObj();
 
-		result.plugin = this.plugin;
-		if (this.plugin.id) {
-			result.plugin = this.plugin.id;
-		}
+	// 	result.plugin = this.plugin;
+	// 	if (this.plugin && this.plugin.id) {
+	// 		result.plugin = this.plugin.id;
+	// 	}
 
 
-		return result;
-	}
+	// 	return result;
+	// }
 
 }

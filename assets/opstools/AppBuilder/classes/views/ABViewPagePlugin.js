@@ -50,7 +50,12 @@ export default class ABViewPagePlugin extends ABViewPage {
         //		translations:[]
         // 	}
 
-        this.settings.plugin = values.plugin;  // keep track of this
+        if (values.plugin) {
+            this.settings.plugin = values.plugin;  // keep track of this
+        } else {
+            this.settings.plugin = values.settings.plugin;
+        }
+        
     }
 
 
@@ -75,6 +80,8 @@ export default class ABViewPagePlugin extends ABViewPage {
 //// store the plugin information and settings
         obj.plugin = this.settings.plugin;
         obj.settings.plugin = this.settings.plugin;
+
+console.warn('ABViewPagePlugin.toObj():', obj);
 
         return obj;
     }
@@ -112,6 +119,11 @@ export default class ABViewPagePlugin extends ABViewPage {
         }
     }
 
+
+
+    views(filter) {
+        return [ this.plugin ];
+    }
 
 
     //
@@ -256,7 +268,7 @@ export default class ABViewPagePlugin extends ABViewPage {
     propertyEditorValues(ids) {
         super.propertyEditorValues(ids);
 
-        this.settings.plugin = $$(ids.plugin).getValue();
+        // this.settings.plugin = $$(ids.plugin).getValue();
 
         this.plugin.propertyEditorValues(ids);
     }
@@ -288,36 +300,10 @@ export default class ABViewPagePlugin extends ABViewPage {
 	 */
     component(App) {
 
+        // make sure the plugin is loaded:
+        this.initPlugin(App);
 
-//// TODO:
-//// how to display this plugin?
-
-        var comp = super.component(App);
-
-        var _ui = {
-            view: "scrollview",
-            body: comp.ui
-        };
-
-        var _init = (options) => {
-
-            comp.init(options);
-
-            // initialize data sources
-            this.pageRoot().dataCollections().forEach((dc) => {
-                dc.init();
-            });
-
-        }
-
-
-        return {
-            ui: _ui,
-            init: _init,
-            logic: comp.logic,
-
-            onShow: comp.onShow
-        }
+        return super.component(App);
     }
 
 
