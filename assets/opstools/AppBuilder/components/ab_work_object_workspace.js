@@ -18,11 +18,23 @@ import ABPopupSortField from "./ab_work_object_workspace_popupSortFields"
 
 
 export default class ABWorkObjectWorkspace extends OP.Component {
-    
+
     /**
-     * @param {object} ??
+     * @param {object} App
+	 * @param {string} idBase
+	 * @param {object} settings - {
+	 * 								allowDelete: bool,
+	 * 								detailsView: string,
+	 * 								editView: string,
+	 * 								isInsertable: bool,
+	 * 								isEditable: bool,
+	 * 								massUpdate: bool,
+	 * 								configureHeaders: bool,
+	 * 
+	 * 								isFieldAddable: bool
+	 * 							}
      */
-    constructor(App, idBase) {
+    constructor(App, idBase, settings) {
 
 		idBase = idBase || 'ab_work_object_workspace';
 
@@ -48,7 +60,27 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                 confirmDeleteTitle : L('ab.object.delete.title', "*Delete data field"),
                 confirmDeleteMessage : L('ab.object.delete.message', "*Do you want to delete <b>{0}</b>?")
             }
-        };
+		};
+
+		// default settings
+		settings = settings || {};
+		if (settings.allowDelete == null)
+			settings.allowDelete = true;
+
+		if (settings.isInsertable == null)
+			settings.isInsertable = true;
+
+		if (settings.isEditable == null)
+			settings.isEditable = true;
+
+		if (settings.massUpdate == null)
+			settings.massUpdate = true;
+
+		if (settings.configureHeaders == null)
+			settings.configureHeaders = true;
+
+		if (settings.isFieldAddable == null)
+			settings.isFieldAddable = true;
 
 
 
@@ -79,7 +111,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 
 
         // The DataTable that displays our object:
-        var DataTable = new ABWorkspaceDatatable(App, idBase);
+        var DataTable = new ABWorkspaceDatatable(App, idBase, settings);
 
         // Various Popups on our page:
         var PopupDefineLabelComponent = new ABPopupDefineLabel(App, idBase);
@@ -136,11 +168,12 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     								label: labels.component.addFields,
     								icon: "plus",
     								type: "icon",
-    								// autowidth: true,
+									disabled: !settings.isFieldAddable,
+									// autowidth: true,
     								click:function() {
     									_logic.toolbarAddFields(this.$view);
     								}
-    							},
+								},
                                 {
     								view: view,
     								id: ids.buttonMassUpdate,
@@ -250,7 +283,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     							}
     						]
     					},
-    					DataTable.ui,
+						DataTable.ui,
+						(settings.isInsertable ? 
     					{
     						cols: [
     							{
@@ -262,7 +296,12 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     								}
     							}
     						]
-    					}
+						} : 
+						{ 
+							view: 'layout',
+							rows: [],
+							hidden: true
+						})
     				]
 
     			}
@@ -451,10 +490,10 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                         })
                         break;
     				case 'filter':
-                        _logic.toolbarFilter($$(ids.buttonFilter).$view, field.columnName);
+                        _logic.toolbarFilter($$(ids.buttonFilter).$view, field.id);
                         break;
     				case 'sort':
-                        _logic.toolbarSort($$(ids.buttonSort).$view, field.columnName);
+                        _logic.toolbarSort($$(ids.buttonSort).$view, field.id);
     					break;
                     case 'freeze':
                         CurrentObject.workspaceFrozenColumnID = field.columnName;
@@ -736,8 +775,8 @@ console.error('TODO: Button Export()');
     		 *
     		 * show the popup to add a filter to the datatable
     		 */
-    		toolbarFilter: function($view, columnName) {
-                PopupFilterDataTableComponent.show($view, columnName);
+    		toolbarFilter: function($view, fieldId) {
+                PopupFilterDataTableComponent.show($view, fieldId);
     		},
 
 
@@ -764,8 +803,8 @@ console.error('TODO: toolbarPermission()');
     		 *
     		 * show the popup to sort the datatable
     		 */
-    		toolbarSort:function($view, columnName) {
-    			PopupSortFieldComponent.show($view, columnName);
+    		toolbarSort:function($view, fieldId) {
+    			PopupSortFieldComponent.show($view, fieldId);
                     // self.refreshPopupData();
                     // $$(self.webixUiId.sortFieldsPopup).show($view);
                     //console.error('TODO: toolbarSort()');

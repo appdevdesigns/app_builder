@@ -36,8 +36,17 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 			modeButton: this.unique('modeButton')
 		};
 
+		var settingsDataTable = {
+			allowDelete: false,
+			isInsertable: false,
+			isEditable: false,
+			massUpdate: false,
+			configureHeaders: false,
+			isFieldAddable: false
+		};
+
 		var QueryDesignComponent = new ABQueryWorkspaceDesign(App, idBase);
-		var DataTable = new ABObjectWorkspace(App, idBase);
+		var DataTable = new ABObjectWorkspace(App, idBase, settingsDataTable);
 
 		var CurrentMode = "design"; // 'design' or 'run'
 
