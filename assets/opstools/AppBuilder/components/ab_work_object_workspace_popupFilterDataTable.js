@@ -30,7 +30,7 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
         };
 
         var CurrentObject = null;
-        var DataFilter = new RowFilter(App, idBase + "_popupFilter_filter");
+        var DataFilter = new RowFilter(App, idBase);
 
 
         // webix UI definition:
@@ -100,9 +100,10 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
              * show the popup
              * 
              */
-            show: function ($view) {
+            show: function ($view, fieldId) {
 
                 $$(ids.component).show($view);
+
             },
 
 

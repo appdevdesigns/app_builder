@@ -889,8 +889,10 @@ module.exports = class ABObject extends ABObjectBase {
 
 	            // if we are searching a multilingual field it is stored in translations so we need to search JSON
 	            if (field && field.settings.supportMultilingual == 1) {
-					fieldName = 'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({tableName}.translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({tableName}.translations, "one", "' + userData.languageCode + '")), 1, 4)), \'$."' + field.columnName + '"\'))'
-									.replace(/{tableName}/g, field.object.dbTableName());
+					fieldName = ('JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({tableName}.translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({tableName}.translations, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))')
+									.replace(/{tableName}/g, field.object.dbTableName())
+									.replace(/{languageCode}/g, userData.languageCode)
+									.replace(/{columnName}/g, field.columnName);
 	            } 
 
 	            // if this is from a LIST, then make sure our value is the .ID
@@ -929,7 +931,7 @@ module.exports = class ABObject extends ABObjectBase {
 				// you are using but the intent of the sort is maintained
 				var sortClause = '';
 	            if (orderField.settings.supportMultilingual == 1) {
-					sortClause = 'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({tableName}.translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({tableName}.translations, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))'
+					sortClause = ('JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({tableName}.translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({tableName}.translations, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))')
 									.replace(/{tableName}/g, orderField.object.dbTableName())
 									.replace('{languageCode}', userData.languageCode)
 									.replace('{columnName}', orderField.columnName);

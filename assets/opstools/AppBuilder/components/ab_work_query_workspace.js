@@ -41,7 +41,7 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 			isInsertable: false,
 			isEditable: false,
 			massUpdate: false,
-			configureHeaders: false,
+			configureHeaders: true,
 			isFieldAddable: false
 		};
 

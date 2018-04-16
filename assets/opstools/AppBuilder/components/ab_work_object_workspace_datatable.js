@@ -59,7 +59,7 @@ export default class ABWorkObjectDatatable extends OP.Component {
         var columnSplitRight = 0;
         var columnSplitLeft = 0;
 
-        var PopupHeaderEditComponent = new AB_Work_HeaderEditMenu(App);
+        var PopupHeaderEditComponent = new AB_Work_HeaderEditMenu(App, idBase);
 
     	// Our webix UI definition:
     	this.ui = {

@@ -3,6 +3,8 @@ export default class RowFilter extends OP.Component {
 
 	constructor(App, idBase) {
 
+		idBase = idBase || 'ab_row_filter';
+
 		super(App, idBase);
 
 		var L = this.Label;
@@ -48,17 +50,17 @@ export default class RowFilter extends OP.Component {
 
 		// internal list of Webix IDs to reference our UI components.
 		var ids = {
-			filterForm: this.unique(idBase + '_filterForm'),
-			addNewFilter: this.unique(idBase + '_addNewFilter'),
+			filterForm: this.unique(idBase + '_rowFilter_form'),
+			addNewFilter: this.unique(idBase + '_rowFilter_addNewFilter'),
 
-			glue: this.unique('glue'),
-			field: this.unique('field'),
-			rule: this.unique('rule'),
-			inputValue: this.unique('inputValue'),
+			glue: this.unique(idBase + '_rowFilter_glue'),
+			field: this.unique(idBase + '_rowFilter_field'),
+			rule: this.unique(idBase + '_rowFilter_rule'),
+			inputValue: this.unique(idBase + '_rowFilter_inputValue'),
 
-			queryCombo: this.unique('queryCombo'),
+			queryCombo: this.unique(idBase + '_rowFilter_queryCombo'),
 
-			listOptions: this.unique('listOptions')
+			listOptions: this.unique(idBase + '_rowFilter_listOptions')
 		};
 
 		var _Object;
@@ -506,7 +508,7 @@ export default class RowFilter extends OP.Component {
 				};
 			},
 
-			addNewFilter: function (index) {
+			addNewFilter: function (index, fieldId) {
 
 				var viewId;
 				var ui = _logic.getFilterUI();
@@ -517,6 +519,10 @@ export default class RowFilter extends OP.Component {
 					viewId = $viewForm.addView(ui, index);
 
 					_logic.toggleAddNewButton();
+
+					// select a option of field
+					if(fieldId)
+						_logic.selectField(fieldId, $$(viewId), true);
 				}
 
 				return viewId;
