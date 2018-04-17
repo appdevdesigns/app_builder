@@ -40,7 +40,9 @@ class OPValidator {
 
 	updateForm(form) {
 		var vObj = this.toValidationObject();
-		OP.Validation.isFormValidationError(vObj, form);
+		if (!OP.Validation.isFormValidationError(vObj, form)) {
+			OP.Error.log('Validation Error:',{error:vObj});
+		}
 	}
 
 	updateGrid(rowID, grid) {
@@ -157,6 +159,7 @@ export default {
 							}
 
 							wasForm = true;
+
 						}
 
 					}

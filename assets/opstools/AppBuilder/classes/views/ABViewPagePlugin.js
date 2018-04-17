@@ -122,7 +122,13 @@ console.warn('ABViewPagePlugin.toObj():', obj);
 
 
     views(filter) {
-        return [ this.plugin ];
+        filter = filter || function() { return true; };
+
+        if (!this.plugin) {
+            this.initPlugin(this.application.App);
+        }
+        
+        return [ this.plugin ].filter(filter);
     }
 
 
