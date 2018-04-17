@@ -362,6 +362,7 @@ reject(err);
 
 				var cond = {
 					where: this._where,
+					sort: this._sort,
 					limit: count,
 					skip: start
 				}
