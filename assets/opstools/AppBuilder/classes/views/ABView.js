@@ -109,6 +109,8 @@ export default class ABView extends ABViewBase {
 	 */
 	isValid() {
 
+		var L = this.App.Label;
+
 		var validator = OP.Validation.validator();
 
 		// // labels must be unique among views on the same parent
@@ -566,9 +568,7 @@ export default class ABView extends ABViewBase {
 	 */
 	editorComponent(App, mode) {
 
-		function L(key, altText) {
-			return AD.lang.label.getLabel(key) || altText;
-		}
+		var L = App.Label;
 
 		var idBase = 'ABViewEditorComponent';
 		var ids = {
