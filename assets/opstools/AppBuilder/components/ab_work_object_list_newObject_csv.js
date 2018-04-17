@@ -217,9 +217,30 @@ export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 			},
 
 			loadCsvFile: (fileInfo) => {
-
+				
 				// validate file type
-				if (fileInfo.file.type.toLowerCase() != "text/csv") {
+				let extensionType = fileInfo.file.type.toLowerCase();
+				if (extensionType == "text/csv" ||
+					extensionType == "application/vnd.ms-excel") {
+
+					// read CSV file
+					var reader = new FileReader();
+					reader.onload = (e) => {
+						dataRows = reader.result.split('\n');
+
+						$$(ids.headerOnFirstLine).enable();
+						$$(ids.columnList).enable();
+						$$(ids.importButton).enable();
+
+						_logic.populateColumnList();
+					}
+					reader.readAsText(fileInfo.file);
+
+					return true;
+				}
+				// invalid file type
+				else {
+
 					webix.alert({
 						title: labels.component.fileTypeErrorTitle,
 						text: labels.component.fileTypeError,
@@ -227,22 +248,8 @@ export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 					});
 
 					return false;
+
 				}
-
-				// read CSV file
-				var reader = new FileReader();
-				reader.onload = (e) => {
-					dataRows = reader.result.split('\n');
-
-					$$(ids.headerOnFirstLine).enable();
-					$$(ids.columnList).enable();
-					$$(ids.importButton).enable();
-
-					_logic.populateColumnList();
-				}
-				reader.readAsText(fileInfo.file);
-
-				return true;
 
 			},
 
