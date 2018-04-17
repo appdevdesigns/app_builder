@@ -403,13 +403,24 @@ export default class ABObjectQuery extends ABObject {
 
 		headers.forEach(h => {
 
-			var field = this.fields(f => f.columnName == h.id)[0];
+			var field = this.application.urlResolve(h.fieldURL);
 			if (field) {
 
-				h.fieldURL = field.urlPointer();
-				h.header = '{objectName}.{fieldName}'
-							.replace('{objectName}', field.object.label)
-							.replace('{fieldName}', field.label);
+				// property name of JSON data
+				if (field.isMultilingual) {
+					h.id = 	'{columnName}'
+							.replace('{columnName}', field.columnName);
+				}
+				else {
+					h.id = 	'{objectName}.{columnName}'
+							.replace('{objectName}', field.object.name)
+							.replace('{columnName}', field.columnName);
+				}
+
+				// label
+				h.header = '{objectLabel}.{fieldLabel}'
+							.replace('{objectLabel}', field.object.label)
+							.replace('{fieldLabel}', field.label);
 			}
 
 		});

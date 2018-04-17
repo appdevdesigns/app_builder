@@ -173,7 +173,7 @@ console.error('!! field not found:', cond.key );
                     }
 
                     // if get the field's linked object and see if it can be filtered:
-                    var linkedObject = field.objectLink();
+                    var linkedObject = field.objectLink;
                     if (!QueryObj.canFilterObject(linkedObject)) {
 console.error('!! linkedObject not filterable by Query:', cond.key );
 //// THIS IS AN ERROR!!

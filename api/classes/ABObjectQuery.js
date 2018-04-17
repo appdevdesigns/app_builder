@@ -575,25 +575,51 @@ module.exports = class ABObjectQuery extends ABObject {
 			var columns = [];
 			this.fields().forEach((f)=>{
 
-				// TODO: skip connect fields ???
-				if(!f || f.key == 'connectObject')
+				if(!f || 
+					f.isMultilingual || // we will include multilingual fields in next step
+					f.key == 'connectObject') // TODO: skip connect fields ???
 					return;
 
 				var columnName = f.columnName;
 
-				// include .translations column of multilingual
-				if (f.settings.supportMultilingual)
-					columnName = 'translations';
-
-				var columnFormat = '{tableName}.{columnName}';
+				var columnFormat = '{tableName}.{columnName}' +
+									' as {objectName}.{columnName}'; // add object's name to alias
 				var obj = f.object;
 				var field = columnFormat
-							.replace('{tableName}', obj.dbTableName())
-							.replace('{columnName}', columnName);
+							.replace(/{tableName}/g, obj.dbTableName())
+							.replace(/{objectName}/g, obj.name)
+							.replace(/{columnName}/g, columnName);
 
 				columns.push(field);
-			})
+			});
+
+			// add the merge column of translations
+			var transCols = this.fields(f => f.isMultilingual).map(f => {
+				
+				var transName = '`{tableName}`.`translations`'
+								.replace(/{tableName}/g, f.object.dbTableName());
+
+				return transName;
+			});
+
+			if (transCols) {
+
+				if (transCols.length == 1) {
+					columns.push(ABMigration.connection().raw(transCols[0] + ' as `translations`'));
+				}
+				// merge values of trans columns
+				else if (transCols.length > 1) {
+
+					var mergeTransFormat = "JSON_MERGE({columnNames}) as `translations`".replace('{columnNames}', transCols.join(','));
+
+					columns.push(ABMigration.connection().raw(mergeTransFormat));
+
+				}
+			}
+
+
 			query.columns(columns);
+
 		}
 
 
@@ -642,7 +668,7 @@ console.log('link.type:'+ link.type);
 			if (!connectionField) return; // no link so skip this turn.
 
 
-			var connectedObject = connectionField.objectLink();
+			var connectedObject = connectionField.datasourceLink;
 			var joinTable = connectedObject.dbTableName();
 
 			var fieldLinkType = connectionField.linkType();

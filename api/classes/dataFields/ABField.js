@@ -180,6 +180,17 @@ module.exports =  class ABField extends ABFieldBase {
 
 
 
+	/*
+	 * @property isMultilingual
+	 * does this field represent multilingual data?
+	 * @return {bool}
+	 */
+	get isMultilingual() {
+		return false;
+	}
+
+
+
 	/**
 	 * @method postGet
 	 * Perform any final conditioning of data returned from our DB table before

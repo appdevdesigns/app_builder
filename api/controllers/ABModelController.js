@@ -717,7 +717,7 @@ module.exports = {
         //                 // Parse through the connected fields
         //                 connectFields.forEach((f)=>{
         //                     // Get the field object that the field is linked to
-        //                     var relatedObject = f.objectLink();
+        //                     var relatedObject = f.objectLink;
         //                     // Get the relation name so we can separate the linked fields updates from the rest
         //                     var relationName = f.relationName();
         // 

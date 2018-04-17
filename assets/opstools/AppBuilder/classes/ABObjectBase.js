@@ -337,7 +337,7 @@ module.exports =  class ABObjectBase {
 	multilingualFields() {
 		var fields = [];
 
-		var found = this.fields(function(f){ return f.isMultilingual(); });
+		var found = this.fields(function(f){ return f.isMultilingual; });
 		found.forEach((f)=>{
 			fields.push(f.columnName);
 		})

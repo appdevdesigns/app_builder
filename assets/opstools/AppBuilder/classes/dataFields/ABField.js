@@ -449,11 +449,11 @@ export default class ABField extends ABFieldBase {
 
 
 	/*
-	 * @function isMultilingual
+	 * @property isMultilingual
 	 * does this field represent multilingual data?
 	 * @return {bool}
 	 */
-	isMultilingual() {
+	get isMultilingual() {
 		return false;
 	}
 

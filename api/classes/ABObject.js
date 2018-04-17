@@ -938,7 +938,9 @@ module.exports = class ABObject extends ABObjectBase {
 				} 
 				// If we are just sorting a field it is much simpler
 				else { 
-	                sortClause = "`{columnName}`".replace('{columnName}', orderField.columnName);
+					sortClause = "`{tableName}`.`{columnName}`"
+									.replace('{tableName}', orderField.object.dbTableName())
+									.replace('{columnName}', orderField.columnName);
 	            }
 	            query.orderByRaw(sortClause + " " + o.dir);
 	        })

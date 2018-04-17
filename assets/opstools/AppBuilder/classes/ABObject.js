@@ -261,6 +261,9 @@ export default class ABObject extends ABObjectBase {
 		// get the header for each of our fields:
 		this._fields.forEach(function(f){
 			var header = f.columnHeader(isObjectWorkspace, null, isEditable);
+
+			header.fieldURL = f.urlPointer();
+
 			if (f.settings.width != 0) {
 				// set column width to the customized width
 				header.width = f.settings.width;

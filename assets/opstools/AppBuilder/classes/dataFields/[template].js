@@ -270,11 +270,11 @@ class ABField[template] extends ABField {
 
 
 	/*
-	 * @function isMultilingual
+	 * @property isMultilingual
 	 * does this field represent multilingual data?
 	 * @return {bool}
 	 */
-	isMultilingual() {
+	get isMultilingual {
 		// return this.settings.supportMultilingual == 1;
 		return false;
 	}
