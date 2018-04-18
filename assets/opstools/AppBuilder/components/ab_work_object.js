@@ -74,7 +74,7 @@ export default class AB_Work_Object extends OP.Component {   //.extend(idBase, f
 			 * @param {ABApplication} application
 			 */
 			applicationLoad: function(application) {
-				App.actions.clearObjectWorkspace();
+				ObjectWorkspace.clearObjectWorkspace();
 				ObjectList.applicationLoad(application);
 				ObjectWorkspace.applicationLoad(application);
 			},
@@ -92,7 +92,10 @@ export default class AB_Work_Object extends OP.Component {   //.extend(idBase, f
 
 			callbackSelectObject: function(object) {
 
-				ObjectWorkspace.populateObjectWorkspace(object);
+				if (object == null)
+					ObjectWorkspace.clearObjectWorkspace();
+				else
+					ObjectWorkspace.populateObjectWorkspace(object);
 			}
 
 		}

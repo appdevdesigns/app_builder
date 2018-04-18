@@ -844,7 +844,21 @@ console.error('TODO: toolbarPermission()');
 
 				// $$(ids.component).setValue(ids.selectedObject);
 				$$(ids.selectedObject).show(true, false);
+			},
+
+
+			/**
+    		 * @function clearObjectWorkspace()
+    		 *
+    		 * Clear the object workspace.
+    		 */
+    		clearObjectWorkspace:function(){
+				
+				// NOTE: to clear a visual glitch when multiple views are updating
+				// at one time ... stop the animation on this one:
+				$$(ids.noSelection).show(false, false);
 			}
+
 
 		}
         this._logic = _logic;
@@ -853,22 +867,6 @@ console.error('TODO: toolbarPermission()');
 
     	// Expose any globally accessible Actions:
     	this.actions({
-
-
-
-    		/**
-    		 * @function clearObjectWorkspace()
-    		 *
-    		 * Clear the object workspace.
-    		 */
-    		clearObjectWorkspace:function(){
-
-    			// NOTE: to clear a visual glitch when multiple views are updating
-    			// at one time ... stop the animation on this one:
-    			$$(ids.noSelection).show(false, false);
-    		}
-
-
     	});
 
 		// 
@@ -876,6 +874,7 @@ console.error('TODO: toolbarPermission()');
 		// 
 		this.applicationLoad = this._logic.applicationLoad;
 		this.populateObjectWorkspace = this._logic.populateObjectWorkspace;
+		this.clearObjectWorkspace = this._logic.clearObjectWorkspace;
 
     }
 
