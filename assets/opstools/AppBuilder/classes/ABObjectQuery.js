@@ -163,6 +163,31 @@ export default class ABObjectQuery extends ABObject {
 	}
 
 
+	/**
+	 * @method multilingualFields()
+	 *
+	 * return an array of columnnames that are multilingual.
+	 *
+	 * @return {array}
+	 */
+	multilingualFields() {
+		var fields = [];
+
+		var found = this.fields(function(f){ return f.isMultilingual; });
+		found.forEach((f)=>{
+
+			var format = "{objectName}.{columnName}"
+							.replace('{objectName}', f.object.name)
+							.replace('{columnName}', f.columnName);
+
+			fields.push(format);
+		})
+
+		return fields;
+	}
+
+
+
 
 
 	///
@@ -407,15 +432,9 @@ export default class ABObjectQuery extends ABObject {
 			if (field) {
 
 				// property name of JSON data
-				if (field.isMultilingual) {
-					h.id = 	'{columnName}'
-							.replace('{columnName}', field.columnName);
-				}
-				else {
-					h.id = 	'{objectName}.{columnName}'
-							.replace('{objectName}', field.object.name)
-							.replace('{columnName}', field.columnName);
-				}
+				h.id = 	'{objectName}.{columnName}'
+						.replace('{objectName}', field.object.name)
+						.replace('{columnName}', field.columnName);
 
 				// label
 				h.header = '{objectLabel}.{fieldLabel}'

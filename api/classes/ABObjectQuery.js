@@ -9,43 +9,43 @@ var Model = require('objection').Model;
 
 module.exports = class ABObjectQuery extends ABObject {
 
-    constructor(attributes, application) {
+	constructor(attributes, application) {
 		super(attributes, application);
 
-/*
-{
-	id: uuid(),
-	name: 'name',
-	labelFormat: 'xxxxx',
-	isImported: 1/0,
-	tableName:'string',  // NOTE: store table name of import object to ignore async
-	urlPath:'string',
-	importFromObject: 'string', // JSON Schema style reference:  '#[ABApplication.id]/objects/[ABObject.id]'
-								// to get other object:  ABApplication.objectFromRef(obj.importFromObject);
-	translations:[
-		{}
-	],
-	fields:[
-		{ABDataField}
-	]
-}
-*/
+		/*
+		{
+			id: uuid(),
+			name: 'name',
+			labelFormat: 'xxxxx',
+			isImported: 1/0,
+			tableName:'string',  // NOTE: store table name of import object to ignore async
+			urlPath:'string',
+			importFromObject: 'string', // JSON Schema style reference:  '#[ABApplication.id]/objects/[ABObject.id]'
+										// to get other object:  ABApplication.objectFromRef(obj.importFromObject);
+			translations:[
+				{}
+			],
+			fields:[
+				{ABDataField}
+			]
+		}
+		*/
 
 		// import all our Joins 
 		this.importJoins(attributes.joins || []);
 		this.importFields(attributes.fields || []); // import after joins are imported
-	  	this.where = attributes.where || {};
+		this.where = attributes.where || {};
 
-  	}
+	}
 
 
 
-  	///
-  	/// Static Methods
-  	///
-  	/// Available to the Class level object.  These methods are not dependent
-  	/// on the instance values of the Application.
-  	///
+	///
+	/// Static Methods
+	///
+	/// Available to the Class level object.  These methods are not dependent
+	/// on the instance values of the Application.
+	///
 
 
 
@@ -66,14 +66,14 @@ module.exports = class ABObjectQuery extends ABObject {
 	 *
 	 * @return {json}
 	 */
-	toObj () {
+	toObj() {
 
 		var result = super.toObj();
 
 		/// include our additional objects and where settings:
 
 		result.joins = this.exportJoins();  //objects;
-		result.where  = this.where;
+		result.where = this.where;
 
 		return result;
 
@@ -113,19 +113,19 @@ module.exports = class ABObjectQuery extends ABObject {
 	 */
 	importFields(fieldSettings) {
 		var newFields = [];
-	  	fieldSettings.forEach(fieldInfo => {
+		fieldSettings.forEach(fieldInfo => {
 
 			var field = this.application.urlResolve(fieldInfo.fieldURL);
-			
+
 			// should be a field of base/join objects
 			if (this.canFilterField(field) &&
-			// check duplicate
-				newFields.filter(f => f.urlPointer() == fieldInfo.fieldURL).length < 1) { 
+				// check duplicate
+				newFields.filter(f => f.urlPointer() == fieldInfo.fieldURL).length < 1) {
 
-				newFields.push( field );
+				newFields.push(field);
 			}
-	  	})
-	  	this._fields = newFields;
+		})
+		this._fields = newFields;
 	}
 
 
@@ -143,9 +143,9 @@ module.exports = class ABObjectQuery extends ABObject {
 	 *
 	 * @return {array}
 	 */
-	joins (filter) {
+	joins(filter) {
 
-		filter = filter || function(){ return true; };
+		filter = filter || function () { return true; };
 
 		return (this._joins || []).filter(filter);
 	}
@@ -158,9 +158,9 @@ module.exports = class ABObjectQuery extends ABObject {
 	 *
 	 * @return {array}
 	 */
-	objects (filter) {
+	objects(filter) {
 
-		filter = filter || function(){ return true; };
+		filter = filter || function () { return true; };
 
 		return (this._objects || []).filter(filter);
 	}
@@ -178,16 +178,16 @@ module.exports = class ABObjectQuery extends ABObject {
 		var newObjects = [];
 		function storeSingle(object) {
 			if (!object) return;
-			
-			var inThere = newObjects.filter((o)=>{ return o.id == object.id}).length > 0;
+
+			var inThere = newObjects.filter((o) => { return o.id == object.id }).length > 0;
 			if (!inThere) {
 				newObjects.push(object);
 			}
 		}
-	  	settings.forEach((join) => {
+		settings.forEach((join) => {
 
-	  		// Convert our saved settings:
-	  		// 		{
+			// Convert our saved settings:
+			// 		{
 			// 			objectURL:"#/...",
 			// 			fieldID:'adf3we666r77ewsfe',
 			// 			type:[left, right, inner, outer]  // these should match the names of the knex methods
@@ -195,21 +195,21 @@ module.exports = class ABObjectQuery extends ABObject {
 			// 		}
 
 			// track our base object
-	  		var object = this.application.urlResolve(join.objectURL);
-	  		storeSingle(object);
+			var object = this.application.urlResolve(join.objectURL);
+			storeSingle(object);
 
-	  		// track our linked object
-			var linkField = object.fields((f)=>{ return f.id == join.fieldID; })[0];
+			// track our linked object
+			var linkField = object.fields((f) => { return f.id == join.fieldID; })[0];
 			if (linkField) {
-	  			var linkObject = linkField.datasourceLink;
+				var linkObject = linkField.datasourceLink;
 				storeSingle(linkObject);
 			}
 
 
-	  		newJoins.push( join );
-	  	})
-	  	this._joins = newJoins;
-	  	this._objects = newObjects;
+			newJoins.push(join);
+		})
+		this._joins = newJoins;
+		this._objects = newObjects;
 	}
 
 
@@ -221,7 +221,7 @@ module.exports = class ABObjectQuery extends ABObject {
 	exportJoins() {
 
 		var joins = [];
-		this._joins.forEach((join)=>{
+		this._joins.forEach((join) => {
 			joins.push(join);
 		})
 		return joins;
@@ -243,7 +243,7 @@ module.exports = class ABObjectQuery extends ABObject {
 		if (!object) return false;
 
 		// I can filter this object if it is one of the objects in my joins
-		return this.objects((o)=>{ return o.id == object.id; }).length > 0;
+		return this.objects((o) => { return o.id == object.id; }).length > 0;
 
 	}
 
@@ -375,8 +375,8 @@ module.exports = class ABObjectQuery extends ABObject {
 		// 		}
 
 		// 		static get jsonSchema () {
-  //   				return jsonSchema
-  //   			}
+		//   				return jsonSchema
+		//   			}
 
 		// 		// Move relation setup to below
 		// 		// static get relationMappings () {
@@ -563,7 +563,7 @@ module.exports = class ABObjectQuery extends ABObject {
 	 * 		The current user's data (which can be used in our conditions.)
 	 * @return {QueryBuilder}
 	 */
-	queryFind(options, userData)  {
+	queryFind(options, userData) {
 
 		var query = ABMigration.connection().queryBuilder();
 
@@ -573,49 +573,56 @@ module.exports = class ABObjectQuery extends ABObject {
 		//// Add in our fields:
 		if (!options.ignoreIncludeColumns) { // get count of rows does not need to include columns
 			var columns = [];
-			this.fields().forEach((f)=>{
+			this.fields().forEach((f) => {
 
-				if(!f || 
-					f.isMultilingual || // we will include multilingual fields in next step
+				if (!f ||
 					f.key == 'connectObject') // TODO: skip connect fields ???
 					return;
 
 				var columnName = f.columnName;
 
+				if (f.isMultilingual)
+					columnName = 'translations';
+
 				var columnFormat = '{tableName}.{columnName}' +
-									' as {objectName}.{columnName}'; // add object's name to alias
+					' as {objectName}.{columnName}'; // add object's name to alias
 				var obj = f.object;
 				var field = columnFormat
-							.replace(/{tableName}/g, obj.dbTableName())
-							.replace(/{objectName}/g, obj.name)
-							.replace(/{columnName}/g, columnName);
+					.replace(/{tableName}/g, obj.dbTableName())
+					.replace(/{objectName}/g, obj.name)
+					.replace(/{columnName}/g, columnName);
 
 				columns.push(field);
 			});
 
-			// add the merge column of translations
-			var transCols = this.fields(f => f.isMultilingual).map(f => {
-				
-				var transName = '`{tableName}`.`translations`'
-								.replace(/{tableName}/g, f.object.dbTableName());
+			// // add the merge column of translations
+			// var transCols = this.fields(f => f.isMultilingual).map(f => {
 
-				return transName;
-			});
+			// 	var transName = '`{tableName}`.`translations`'
+			// 					.replace(/{tableName}/g, f.object.dbTableName());
 
-			if (transCols) {
+			// 	return transName;
+			// });
 
-				if (transCols.length == 1) {
-					columns.push(ABMigration.connection().raw(transCols[0] + ' as `translations`'));
-				}
-				// merge values of trans columns
-				else if (transCols.length > 1) {
+			// if (transCols) {
 
-					var mergeTransFormat = "JSON_MERGE({columnNames}) as `translations`".replace('{columnNames}', transCols.join(','));
+			// 	if (transCols.length == 1) {
 
-					columns.push(ABMigration.connection().raw(mergeTransFormat));
+			// 		var mergeTransFormat = "JSON_UNQUOTE({columnNames} as `translations`)"
+			// 								.replace('{columnNames}', transCols[0]);
 
-				}
-			}
+			// 		columns.push(ABMigration.connection().raw(mergeTransFormat));
+			// 	}
+			// 	// merge values of trans columns
+			// 	else if (transCols.length > 1) {
+
+			// 		var mergeTransFormat = "JSON_UNQUOTE(JSON_MERGE({columnNames}) as `translations`)"
+			// 								.replace('{columnNames}', transCols.join(','));
+
+			// 		columns.push(ABMigration.connection().raw(mergeTransFormat));
+
+			// 	}
+			// }
 
 
 			query.columns(columns);
@@ -627,30 +634,30 @@ module.exports = class ABObjectQuery extends ABObject {
 		//// Now compile our joins:
 
 		function makeLink(link, joinTable, A, op, B) {
-console.log('link.type:'+ link.type);
+			console.log('link.type:' + link.type);
 
 			// try to correct some type mistakes:
 			var type = link.type.toLowerCase();
 			var convertHash = {
-				'left':				'leftJoin',
-				'leftjoin':			'leftJoin',
-				'leftouterjoin':	'leftOuterJoin',
-				'right':			'rightJoin',
-				'rightjoin':		'rightJoin',
-				'rightouterjoin':	'rightOuterJoin', 
-				'innerjoin':		'innerJoin',
-				'fullouterjoin':	'fullOuterJoin'
+				'left': 'leftJoin',
+				'leftjoin': 'leftJoin',
+				'leftouterjoin': 'leftOuterJoin',
+				'right': 'rightJoin',
+				'rightjoin': 'rightJoin',
+				'rightouterjoin': 'rightOuterJoin',
+				'innerjoin': 'innerJoin',
+				'fullouterjoin': 'fullOuterJoin'
 			}
 			if (convertHash[type]) {
 				type = convertHash[type];
 			}
-			query[type](joinTable, function() {
+			query[type](joinTable, function () {
 				this.on(A, op, B);
 			});
 		}
 
 
-		this.joins().forEach((link)=>{
+		this.joins().forEach((link) => {
 
 			var baseObject = this.application.urlResolve(link.objectURL);
 
@@ -664,7 +671,7 @@ console.log('link.type:'+ link.type);
 			// no link column
 			if (!link.fieldID) return;
 
-			var connectionField = baseObject.fields((f)=>{ return f.id == link.fieldID; })[0];
+			var connectionField = baseObject.fields((f) => { return f.id == link.fieldID; })[0];
 			if (!connectionField) return; // no link so skip this turn.
 
 
@@ -672,7 +679,7 @@ console.log('link.type:'+ link.type);
 			var joinTable = connectedObject.dbTableName();
 
 			var fieldLinkType = connectionField.linkType();
-			switch(fieldLinkType) {
+			switch (fieldLinkType) {
 
 				case 'one':
 
@@ -687,7 +694,7 @@ console.log('link.type:'+ link.type);
 						var columnName = connectionField.columnName;
 						var baseClause = baseObject.dbTableName() + '.' + columnName;
 						var connectedClause = joinTable + '.' + connectedObject.PK();
-						makeLink( link, joinTable, baseClause, '=', connectedClause );
+						makeLink(link, joinTable, baseClause, '=', connectedClause);
 
 					} else {
 						// the base object can have 1 connected object
@@ -702,7 +709,7 @@ console.log('link.type:'+ link.type);
 						var columnName = connectedField.columnName;
 						var baseClause = baseObject.dbTableName() + '.' + baseObject.PK();
 						var connectedClause = joinTable + '.' + columnName;
-						makeLink( link, joinTable, baseClause, '=', connectedClause );
+						makeLink(link, joinTable, baseClause, '=', connectedClause);
 
 					}
 					break;
@@ -723,7 +730,7 @@ console.log('link.type:'+ link.type);
 						var columnName = connectedField.columnName;
 						var baseClause = baseObject.dbTableName() + '.' + baseObject.PK();
 						var connectedClause = joinTable + '.' + columnName;
-						makeLink( link, joinTable, baseClause, '=', connectedClause );
+						makeLink(link, joinTable, baseClause, '=', connectedClause);
 
 					} else {
 
@@ -742,7 +749,7 @@ console.log('link.type:'+ link.type);
 						// get baseObjectColumn in joinTable
 						var baseObjectColumn = baseObject.name; // AppBuilder.rules.toJunctionTableFK(baseObject.name, connectionField.columnName);
 
-						var baseClause = baseObject.dbTableName()+'.'+baseObject.PK();
+						var baseClause = baseObject.dbTableName() + '.' + baseObject.PK();
 						var joinClause = joinTable + '.' + baseObjectColumn;
 
 						// make JOIN
@@ -754,8 +761,8 @@ console.log('link.type:'+ link.type);
 						var connectedField = connectionField.fieldLink();
 						var connectedObjectColumn = connectedObject.name; // AppBuilder.rules.toJunctionTableFK(connectedObject.name, connectedField.columnName);
 
-						var connectedClause = connectedObject.dbTableName()+'.'+connectedObject.PK();
-						joinClause = joinTable +'.' + connectedObjectColumn;
+						var connectedClause = connectedObject.dbTableName() + '.' + connectedObject.PK();
+						joinClause = joinTable + '.' + connectedObjectColumn;
 
 						// make JOIN
 						makeLink(link, connectedObject.dbTableName(), connectedClause, '=', joinClause);
@@ -781,8 +788,8 @@ console.log('link.type:'+ link.type);
 				var oWhere = _.clone(options.where);
 
 				var newWhere = {
-					glue:'and',
-					rules:[
+					glue: 'and',
+					rules: [
 						this.where,
 						oWhere
 					]
@@ -802,8 +809,77 @@ console.log('link.type:'+ link.type);
 			this.populateFindConditions(query, options, userData);
 		}
 
+
+
+		// edit property names of .translation
+		// {objectName}.{columnName}
+		if (!options.ignoreEditTranslations) {
+
+			query = query.then((rows) => {
+
+				return new Promise((resolve, reject) => {
+
+					(rows || []).forEach((r) => {
+
+						// each rows
+						Object.keys(r).forEach((rKey) => {
+
+							// objectName.translations
+							if (rKey.endsWith('.translations')) {
+
+								r.translations = r.translations || [];
+
+								var objectName = rKey.replace('.translations', '');
+
+								var translations = [];
+								if (typeof r[rKey] == 'string')
+									translations = JSON.parse(r[rKey]);
+
+								// each elements of trans
+								(translations || []).forEach((tran) => {
+
+									var newTran = {
+										language_code: tran.language_code
+									};
+
+									// include objectName into property - objectName.propertyName
+									Object.keys(tran).forEach(tranKey => {
+
+										if (tranKey == 'language_code') return;
+
+										var newTranKey = "{objectName}.{propertyName}"
+											.replace("{objectName}", objectName)
+											.replace("{propertyName}", tranKey);
+
+										// add new property name
+										newTran[newTranKey] = tran[tranKey]
+
+									});
+
+
+									r.translations.push(newTran);
+
+								});
+
+
+								// remove old translations
+								delete rows[rKey];
+
+							}
+
+						});
+
+					});
+
+					resolve(rows);
+
+				});
+
+			});
+		}
+
 		return query;
-		
+
 	}
 
 
@@ -830,7 +906,10 @@ console.log('link.type:'+ link.type);
 		// not include columns
 		// to prevent 'ER_MIX_OF_GROUP_FUNC_AND_FIELDS' error
 		options.ignoreIncludeColumns = true;
-		
+
+		// not update translations key names
+		options.ignoreEditTranslations = true;
+
 		// call our parent queryCount() with correct tableName
 		return super.queryCount(options, userData, tableName);
 	}
@@ -845,12 +924,12 @@ console.log('link.type:'+ link.type);
 	 * @param {obj} allParameters  a key=>value hash of the inputs to parse.
 	 * @return {array} 
 	 */
-//// TODO: create OP.Validation.validator() and use super.isValidData() instead.
+	//// TODO: create OP.Validation.validator() and use super.isValidData() instead.
 	isValidData(allParameters) {
 		var errors = [];
 		this.fields().forEach((f) => {
 			var p = f.isValidData(allParameters);
-			if (p.length>0) {
+			if (p.length > 0) {
 				errors = errors.concat(p);
 			}
 		})
