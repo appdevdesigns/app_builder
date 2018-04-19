@@ -9,6 +9,10 @@ import ABPropertyComponent from "../ABPropertyComponent"
 // import ABViewManager from "../ABViewManager"
 
 
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
+
 var ABViewPropertyComponentDefaults = {
 	label: ''
 }
@@ -108,8 +112,6 @@ export default class ABView extends ABViewBase {
 	 * @return {OP.Validation.validator()}
 	 */
 	isValid() {
-
-		var L = this.App.Label;
 
 		var validator = OP.Validation.validator();
 
