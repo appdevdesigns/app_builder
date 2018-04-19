@@ -450,19 +450,19 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 						id: object.id,
 						type: "space",
 						rows: [
-							(!isMain ?
-								{
-									view: "select",
-									label: "Join records by:",
-									labelWidth: 200,
-									placeholder: "Choose a type of table join",
-									options: [
-										{ id: 'innerjoin', value: 'Returns records that have matching values in both tables (INNER JOIN).' },
-										{ id: 'left', value: 'Return all records from the left table, and the matched records from the right table (LEFT JOIN).' },
-										{ id: 'right', value: 'Return all records from the right table, and the matched records from the left table (RIGHT JOIN).' },
-										{ id: 'fullouterjoin', value: 'Return all records when there is a match in either left or right table (FULL JOIN)' }
-									]
-								} : {}),
+							{
+								view: "select",
+								label: "Join records by:",
+								labelWidth: 200,
+								placeholder: "Choose a type of table join",
+								hidden: isMain,
+								options: [
+									{ id: 'innerjoin', value: 'Returns records that have matching values in both tables (INNER JOIN).' },
+									{ id: 'left', value: 'Return all records from the left table, and the matched records from the right table (LEFT JOIN).' },
+									{ id: 'right', value: 'Return all records from the right table, and the matched records from the left table (RIGHT JOIN).' },
+									{ id: 'fullouterjoin', value: 'Return all records when there is a match in either left or right table (FULL JOIN)' }
+								]
+							},
 							{
 								view: "dbllist",
 								name: 'fields',

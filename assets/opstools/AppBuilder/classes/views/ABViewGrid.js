@@ -163,15 +163,11 @@ export default class ABViewGrid extends ABViewWidget  {
 	editorComponent(App, mode) {
 		
 		var idBase = 'ABViewGridEditorComponent';
-		var ids = {
-			component: App.unique(idBase+'_component')
-		}
 
 		var DataTable = this.component(App, idBase);
-		DataTable.ui.id = ids.component;
-		
+
 		return DataTable;
-		
+
 	}
 
 
@@ -682,7 +678,6 @@ export default class ABViewGrid extends ABViewWidget  {
 		});
 
 
-
 		var _init = () => {
 
 			if (this.settings.dataSource != "") {
@@ -740,11 +735,11 @@ export default class ABViewGrid extends ABViewWidget  {
 					rowFilter.objectLoad(CurrentObject);
 					DataTable.refreshHeader();
 
-					dc.bind($$(ids.component));
+					dc.bind($$(DataTable.ui.id));
 
 					var editPage = this.settings.editPage;
 					var detailsPage = this.settings.detailsPage;
-					$$(ids.component).attachEvent("onItemClick", function (id, e, node) {
+					$$(DataTable.ui.id).attachEvent("onItemClick", function (id, e, node) {
 
 						if (e.target.className.indexOf('eye') > -1) {
 							var item = id;
@@ -760,7 +755,7 @@ export default class ABViewGrid extends ABViewWidget  {
 					// 	_logic.clientSideDataFilter();
 					// });
 
-					$$(ids.component).adjust();
+					$$(DataTable.ui.id).adjust();
 				}
 				
 				

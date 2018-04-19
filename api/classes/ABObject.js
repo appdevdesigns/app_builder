@@ -744,23 +744,33 @@ module.exports = class ABObject extends ABObjectBase {
 				}
 
 
-				var field = this.fields(f => f.id == condition.key)[0];
-				if (!field) return;
-
-
 				//// Special Case:  'have_no_relation'
 				// 1:1 - Get rows that no relation with 
 				if (condition.rule == 'have_no_relation') {
-					var relation_name = AppBuilder.rules.toFieldRelationFormat(field.columnName);
+					// var relation_name = AppBuilder.rules.toFieldRelationFormat(field.columnName);
 
-					var objectLink = field.objectLink();
-					if (!objectLink) return;
+					// var objectLink = field.objectLink();
+					// if (!objectLink) return;
+
+					// Query
+					// 	.leftJoinRelation(relation_name)
+					// 	.whereRaw('{relation_name}.{primary_name} IS NULL'
+					// 		.replace('{relation_name}', relation_name)
+					// 		.replace('{primary_name}', objectLink.PK()));
+
+					// {
+					//	key: "COLUMN_NAME", // no need to include object name
+					//	rule: "have_no_relation",
+					//	value: "LINK_OBJECT_PK_NAME"
+					// }
+
+					var relation_name = AppBuilder.rules.toFieldRelationFormat(condition.key);
 
 					Query
 						.leftJoinRelation(relation_name)
 						.whereRaw('{relation_name}.{primary_name} IS NULL'
 							.replace('{relation_name}', relation_name)
-							.replace('{primary_name}', objectLink.PK()));
+							.replace('{primary_name}', condition.value));
 
 					return;
 				}
@@ -883,30 +893,28 @@ module.exports = class ABObject extends ABObjectBase {
 
 
 	            // normal field name:
-				var fieldName =  '`{tableName}`.`{columnName}`'
-									.replace('{tableName}', field.object.dbTableName())
-									.replace('{columnName}', field.columnName);
+				var columnName =  condition.key;
 
-	            // if we are searching a multilingual field it is stored in translations so we need to search JSON
-	            if (field && field.settings.supportMultilingual == 1) {
-					fieldName = ('JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({tableName}.translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({tableName}.translations, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))')
-									.replace(/{tableName}/g, field.object.dbTableName())
-									.replace(/{languageCode}/g, userData.languageCode)
-									.replace(/{columnName}/g, field.columnName);
-	            } 
+	            // // if we are searching a multilingual field it is stored in translations so we need to search JSON
+	            // if (field && field.settings.supportMultilingual == 1) {
+				// 	fieldName = ('JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({tableName}.translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({tableName}.translations, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))')
+				// 					.replace(/{tableName}/g, field.object.dbTableName())
+				// 					.replace(/{languageCode}/g, userData.languageCode)
+				// 					.replace(/{columnName}/g, field.columnName);
+	            // } 
 
-	            // if this is from a LIST, then make sure our value is the .ID
-	            if (field && field.key == "list" && field.settings && field.settings.options && field.settings.options.filter) {
-	                // NOTE: Should get 'id' or 'text' from client ??
-	                var inputID = field.settings.options.filter(option => (option.id == value || option.text == value))[0];
-	                if (inputID)
-	                    value = inputID.id;
-	            }
+	            // // if this is from a LIST, then make sure our value is the .ID
+	            // if (field && field.key == "list" && field.settings && field.settings.options && field.settings.options.filter) {
+	            //     // NOTE: Should get 'id' or 'text' from client ??
+	            //     var inputID = field.settings.options.filter(option => (option.id == value || option.text == value))[0];
+	            //     if (inputID)
+	            //         value = inputID.id;
+	            // }
 
 
 	            // update our where statement:
 				whereRaw = whereRaw
-	                .replace('{fieldName}', fieldName)
+	                .replace('{fieldName}', columnName)
 	                .replace('{operator}', operator)
 	                .replace('{input}', ((value != null) ?  value  : ''));
 

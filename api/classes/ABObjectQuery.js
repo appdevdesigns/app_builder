@@ -595,36 +595,6 @@ module.exports = class ABObjectQuery extends ABObject {
 				columns.push(field);
 			});
 
-			// // add the merge column of translations
-			// var transCols = this.fields(f => f.isMultilingual).map(f => {
-
-			// 	var transName = '`{tableName}`.`translations`'
-			// 					.replace(/{tableName}/g, f.object.dbTableName());
-
-			// 	return transName;
-			// });
-
-			// if (transCols) {
-
-			// 	if (transCols.length == 1) {
-
-			// 		var mergeTransFormat = "JSON_UNQUOTE({columnNames} as `translations`)"
-			// 								.replace('{columnNames}', transCols[0]);
-
-			// 		columns.push(ABMigration.connection().raw(mergeTransFormat));
-			// 	}
-			// 	// merge values of trans columns
-			// 	else if (transCols.length > 1) {
-
-			// 		var mergeTransFormat = "JSON_UNQUOTE(JSON_MERGE({columnNames}) as `translations`)"
-			// 								.replace('{columnNames}', transCols.join(','));
-
-			// 		columns.push(ABMigration.connection().raw(mergeTransFormat));
-
-			// 	}
-			// }
-
-
 			query.columns(columns);
 
 		}
