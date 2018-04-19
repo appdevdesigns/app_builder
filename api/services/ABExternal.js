@@ -36,7 +36,7 @@ function getTransTableName(tableName) {
  * 
  * @return {Promise}
  */
-function getPrimaryKey(knex, tableName) {
+function getPrimaryKey(knex, tableName, connName='appBuilder') {
 
 	return new Promise((resolve, reject) => {
 
@@ -48,7 +48,7 @@ function getPrimaryKey(knex, tableName) {
 		knex.select('column_name')
 		.from('information_schema.key_column_usage')
 		.where('CONSTRAINT_NAME', '=', 'PRIMARY')
-		.andWhere('TABLE_SCHEMA', '=', sails.config.connections.appBuilder.database)
+		.andWhere('TABLE_SCHEMA', '=', sails.config.connections[connName].database)
 		.andWhere('TABLE_NAME', '=', tableName)
 			.catch(reject)
 			.then(function (result) {
@@ -263,7 +263,7 @@ module.exports = {
 			// Get the primary key info
 			.then(function () {
 
-				return getPrimaryKey(knex, tableName);
+				return getPrimaryKey(knex, tableName, connName);
 
 			})
 
@@ -566,7 +566,7 @@ module.exports = {
 				
 				return new Promise((resolve, reject) => {
 
-					getPrimaryKey(knex, tableName)
+					getPrimaryKey(knex, tableName, connName)
 						.catch(reject)
 						.then(colName => {
 
@@ -587,6 +587,7 @@ module.exports = {
 
 					objectData = {
 						id: uuid(),
+						connName: connName,
 						name: tableName,
 						tableName: tableName,
 						transColumnName: transColumnName,

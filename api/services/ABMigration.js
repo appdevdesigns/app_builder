@@ -16,14 +16,13 @@ module.exports = {
 
 
     connection: function(name='appBuilder') {
-        
         if (!knexConns[name]) {
             
             if (!sails.config.connections[name]) {
-                throw new Error(`Connection ${name} not found`);
+                throw new Error(`Connection '${name}' not found`);
             }
             else if (!sails.config.connections[name].database) {
-                throw new Error(`Connection ${name} is not supported`);
+                throw new Error(`Connection '${name}' is not supported`);
             }
             
             knexConns[name] = require('knex')({
