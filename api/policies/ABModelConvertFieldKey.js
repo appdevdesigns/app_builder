@@ -24,7 +24,13 @@ module.exports = function (req, res, next) {
 				var field = object.fields(f => f.id == r.key)[0];
 				if (field) {
 
-					// 1:1 - Get rows that no relation with 
+					// convert field's id to column name
+					r.key = '`{tableName}`.`{columnName}`'
+						.replace('{tableName}', field.object.dbTableName())
+						.replace('{columnName}', field.columnName);
+
+
+						// 1:1 - Get rows that no relation with 
 					if (r.rule == 'have_no_relation') {
 						var relation_name = AppBuilder.rules.toFieldRelationFormat(field.columnName);
 
@@ -54,15 +60,6 @@ module.exports = function (req, res, next) {
 						var inputID = field.settings.options.filter(option => (option.id == r.value || option.text == r.value))[0];
 						if (inputID)
 							r.value = inputID.id;
-					}
-
-					// convert field's id to column name
-					else {
-
-						r.key = '`{tableName}`.`{columnName}`'
-							.replace('{tableName}', field.object.dbTableName())
-							.replace('{columnName}', field.columnName);
-
 					}
 
 
