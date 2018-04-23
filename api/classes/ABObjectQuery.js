@@ -593,13 +593,14 @@ module.exports = class ABObjectQuery extends ABObject {
 
 					var field = '';
 					var objLink = f.datasourceLink;
+					var fieldLink = f.fieldLink();
 					
 					// 1:M
 					if (f.settings.linkType == 'one' && f.settings.linkViaType == 'many') {
 
 						field = connectColFormat
 							.replace(/{tableName}/g, obj.dbTableName())
-							.replace(/{columnName}/g, objLink.name)
+							.replace(/{columnName}/g, f.columnName)
 							.replace(/{objectName}/g, obj.name)
 							.replace(/{displayName}/g, f.relationName());
 					}
@@ -609,7 +610,7 @@ module.exports = class ABObjectQuery extends ABObject {
 
 						field = connectColFormat
 							.replace(/{tableName}/g, objLink.dbTableName())
-							.replace(/{columnName}/g, obj.name)
+							.replace(/{columnName}/g, fieldLink.columnName)
 							.replace(/{objectName}/g, obj.name)
 							.replace(/{displayName}/g, f.relationName());
 
@@ -636,7 +637,7 @@ module.exports = class ABObjectQuery extends ABObject {
 						else {
 							field = connectColFormat
 								.replace(/{tableName}/g, objLink.dbTableName())
-								.replace(/{columnName}/g, f.fieldLink().columnName)
+								.replace(/{columnName}/g, fieldLink.columnName)
 								.replace(/{objectName}/g, obj.name)
 								.replace(/{displayName}/g, f.relationName());
 
@@ -645,7 +646,7 @@ module.exports = class ABObjectQuery extends ABObject {
 	
 								let baseClause = obj.dbTableName() + '.' + obj.PK();
 								let linkTable = objLink.dbTableName();
-								let connectedClause = linkTable + '.' + f.fieldLink().columnName;
+								let connectedClause = linkTable + '.' + fieldLink.columnName;
 								makeLink({ type: 'left' }, linkTable, baseClause, '=', connectedClause);
 							}
 	
@@ -653,7 +654,8 @@ module.exports = class ABObjectQuery extends ABObject {
 
 					}
 
-					columns.push(ABMigration.connection().raw(field));
+					if (field)
+						columns.push(ABMigration.connection().raw(field));
 
 				}
 				// Normal fields
