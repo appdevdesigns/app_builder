@@ -431,6 +431,9 @@ export default class ABObjectQuery extends ABObject {
 			var field = this.application.urlResolve(h.fieldURL);
 			if (field) {
 
+				// mark this is a column of query
+				h.isInQuery = true;
+
 				// property name of JSON data
 				h.id = 	'{objectName}.{columnName}'
 						.replace('{objectName}', field.object.name)

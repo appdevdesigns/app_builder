@@ -64,7 +64,7 @@ export default class ABFieldComponent {
 
 		this.idBase = (idBase ? idBase + '_' +this.fieldDefaults.key : this.idBase);
 
-    	////
+		////
     	//// prepare our ids
     	////
 

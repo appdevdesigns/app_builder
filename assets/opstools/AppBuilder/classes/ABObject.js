@@ -369,6 +369,11 @@ export default class ABObject extends ABObjectBase {
 			});
 		}
 
+		// if label is empty, then show .id
+		if (!labelData.trim())
+			labelData = 'ID: ' + rowData.id; // show id of row
+
+
 		return labelData;
 	}
 

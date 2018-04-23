@@ -8,6 +8,7 @@
 // import ABField from "./ABField"
 import ABFieldComponent from "./ABFieldComponent"
 import ABFieldSelectivity from "./ABFieldSelectivity"
+import ABObjectQuery from "../ABObjectQuery"
 
 
 
@@ -128,6 +129,7 @@ var ABFieldConnectComponent = new ABFieldComponent({
 				name: 'linkObject',
 				labelWidth: App.config.labelWidthLarge,
 				placeholder: L('ab.dataField.connectObject.connectToObjectPlaceholder', "*select object"),
+				options: [],
 				// select: true,
 				// height: 140,
 				// template: "<div class='ab-new-connectObject-list-item'>#label#</div>",
@@ -430,7 +432,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 			// var domNode = node.querySelector('.list-data-values');
 
 			// get selected values
-			var selectedData = field.pullRelationValues(row);
+			var selectedData = field.pullRelationValues(row, config.isInQuery);
 			
 			var multiselect = (field.settings.linkType == 'many');
 
@@ -640,9 +642,18 @@ class ABFieldConnect extends ABFieldSelectivity {
 	}
 
 
-	relationName() {
-		return String(this.columnName).replace(/[^a-z0-9]/gi, '') + '__relation';
+	relationName(includeObjectName) {
+
+		var relationName = String(this.columnName).replace(/[^a-z0-9]/gi, '') + '__relation';
+
+		// Query view - {objectName}.{relationName}
+		if (includeObjectName) {
+			relationName = this.object.name + '.' + relationName;
+		}
+
+		return relationName;
 	}
+
 
 
 	/**
@@ -753,15 +764,19 @@ class ABFieldConnect extends ABFieldSelectivity {
 	 * 
 	 * @return {array}
 	 */
-	pullRelationValues(row) {
+	pullRelationValues(row, includeObjectName) {
 
 		var selectedData = [];
 
 		// Get linked object
 		var linkedObject = this.datasourceLink;
 
-		var relationName = this.relationName();
+		var relationName = this.relationName(includeObjectName);
 		if (row[relationName] && linkedObject) {
+
+			// convert to JSON
+			if (typeof row[relationName] == "string")
+				row[relationName] = JSON.parse(row[relationName]);
 
 			// if this select value is array
 			if (row[relationName].map) {

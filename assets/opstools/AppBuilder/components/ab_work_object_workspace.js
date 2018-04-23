@@ -341,9 +341,11 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     			// onSave:_logic.callbackAddFields			// be notified of something...who knows...
     		});
 
-    		PopupNewDataFieldComponent.init({
-    			onSave:_logic.callbackAddFields			// be notified when a new Field is created & saved
-    		});
+			if (settings.isFieldAddable) {
+				PopupNewDataFieldComponent.init({
+					onSave:_logic.callbackAddFields			// be notified when a new Field is created & saved
+				});
+			}
 
 // ?? what is this for ??
     		var fieldList = DataTable.getFieldList();

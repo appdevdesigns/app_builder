@@ -545,7 +545,10 @@ class ABFieldConnect extends ABField {
 
 
 	relationName() {
-		return AppBuilder.rules.toFieldRelationFormat(this.columnName);
+
+		var relationName = AppBuilder.rules.toFieldRelationFormat(this.columnName);
+
+		return relationName;
 	}
 
 	joinTableName() {

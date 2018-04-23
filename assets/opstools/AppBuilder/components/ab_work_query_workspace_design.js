@@ -498,7 +498,6 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 			refreshDataTable: function () {
 
 				var DataTable = $$(ids.datatable);
-				DataTable.clearAll();
 
 
 				// set columns:
@@ -511,6 +510,9 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 					where: CurrentQuery.workspaceFilterConditions // filter
 				})
 					.then((response) => {
+
+						DataTable.clearAll();
+
 						response.data.forEach((d) => {
 							DataTable.add(d);
 						})

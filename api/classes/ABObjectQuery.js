@@ -575,24 +575,105 @@ module.exports = class ABObjectQuery extends ABObject {
 			var columns = [];
 			this.fields().forEach((f) => {
 
-				if (!f ||
-					f.key == 'connectObject') // TODO: skip connect fields ???
+				if (!f)
 					return;
 
-				var columnName = f.columnName;
-
-				if (f.isMultilingual)
-					columnName = 'translations';
-
-				var columnFormat = '{tableName}.{columnName}' +
-					' as {objectName}.{columnName}'; // add object's name to alias
 				var obj = f.object;
-				var field = columnFormat
-					.replace(/{tableName}/g, obj.dbTableName())
-					.replace(/{objectName}/g, obj.name)
-					.replace(/{columnName}/g, columnName);
+				var columnFormat = "{tableName}.{columnName}" +
+									" as {objectName}.{displayName}"; // add object's name to alias
 
-				columns.push(field);
+				// Connect fields
+				if (f.key == 'connectObject') {
+
+					var connectColFormat = 
+						"IF(`{tableName}`.`{columnName}` IS NOT NULL, " +
+						"JSON_OBJECT('id', `{tableName}`.`{columnName}`)," +
+						"NULL)" +
+						" as '{objectName}.{displayName}'"; // add object's name to alias
+
+					var field = '';
+					var objLink = f.datasourceLink;
+					
+					// 1:M
+					if (f.settings.linkType == 'one' && f.settings.linkViaType == 'many') {
+
+						field = connectColFormat
+							.replace(/{tableName}/g, obj.dbTableName())
+							.replace(/{columnName}/g, objLink.name)
+							.replace(/{objectName}/g, obj.name)
+							.replace(/{displayName}/g, f.relationName());
+					}
+
+					// M:1
+					else if (f.settings.linkType == 'many' && f.settings.linkViaType == 'one') {
+
+						field = connectColFormat
+							.replace(/{tableName}/g, objLink.dbTableName())
+							.replace(/{columnName}/g, obj.name)
+							.replace(/{objectName}/g, obj.name)
+							.replace(/{displayName}/g, f.relationName());
+
+						// check need join table ??
+						if (this.canFilterObject(objLink) == false) {
+
+							let baseClause = obj.dbTableName() + '.' + obj.PK();
+							let linkTable = objLink.dbTableName();
+							let connectedClause = linkTable + '.' + obj.name;
+							makeLink({ type: 'left' }, linkTable, baseClause, '=', connectedClause);
+						}
+					}
+
+					// 1:1
+					else if (f.settings.linkType == 'one' && f.settings.linkViaType == 'one') {
+
+						if (f.settings.isSource) {
+							field = connectColFormat
+								.replace(/{tableName}/g, obj.dbTableName())
+								.replace(/{columnName}/g, f.columnName)
+								.replace(/{objectName}/g, obj.name)
+								.replace(/{displayName}/g, f.relationName());
+						}
+						else {
+							field = connectColFormat
+								.replace(/{tableName}/g, objLink.dbTableName())
+								.replace(/{columnName}/g, f.fieldLink().columnName)
+								.replace(/{objectName}/g, obj.name)
+								.replace(/{displayName}/g, f.relationName());
+
+							// check need join table ??
+							if (this.canFilterObject(objLink) == false) {
+	
+								let baseClause = obj.dbTableName() + '.' + obj.PK();
+								let linkTable = objLink.dbTableName();
+								let connectedClause = linkTable + '.' + f.fieldLink().columnName;
+								makeLink({ type: 'left' }, linkTable, baseClause, '=', connectedClause);
+							}
+	
+						}
+
+					}
+
+					columns.push(ABMigration.connection().raw(field));
+
+				}
+				// Normal fields
+				else {
+
+					var columnName = f.columnName;
+
+					if (f.isMultilingual)
+						columnName = 'translations';
+
+					var field = columnFormat
+						.replace(/{tableName}/g, obj.dbTableName())
+						.replace(/{columnName}/g, columnName)
+						.replace(/{objectName}/g, obj.name)
+						.replace(/{displayName}/g, columnName);
+
+					columns.push(field);
+
+				}
+
 			});
 
 			query.columns(columns);
