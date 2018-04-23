@@ -570,120 +570,6 @@ module.exports = class ABObjectQuery extends ABObject {
 		var registeredBase = false;  // have we marked the base object/table?
 
 
-		//// Add in our fields:
-		if (!options.ignoreIncludeColumns) { // get count of rows does not need to include columns
-			var columns = [];
-			this.fields().forEach((f) => {
-
-				if (!f)
-					return;
-
-				var obj = f.object;
-				var columnFormat = "{tableName}.{columnName}" +
-									" as {objectName}.{displayName}"; // add object's name to alias
-
-				// Connect fields
-				if (f.key == 'connectObject') {
-
-					var connectColFormat = 
-						"IF(`{tableName}`.`{columnName}` IS NOT NULL, " +
-						"JSON_OBJECT('id', `{tableName}`.`{columnName}`)," +
-						"NULL)" +
-						" as '{objectName}.{displayName}'"; // add object's name to alias
-
-					var field = '';
-					var objLink = f.datasourceLink;
-					var fieldLink = f.fieldLink();
-					
-					// 1:M
-					if (f.settings.linkType == 'one' && f.settings.linkViaType == 'many') {
-
-						field = connectColFormat
-							.replace(/{tableName}/g, obj.dbTableName())
-							.replace(/{columnName}/g, f.columnName)
-							.replace(/{objectName}/g, obj.name)
-							.replace(/{displayName}/g, f.relationName());
-					}
-
-					// M:1
-					else if (f.settings.linkType == 'many' && f.settings.linkViaType == 'one') {
-
-						field = connectColFormat
-							.replace(/{tableName}/g, objLink.dbTableName())
-							.replace(/{columnName}/g, fieldLink.columnName)
-							.replace(/{objectName}/g, obj.name)
-							.replace(/{displayName}/g, f.relationName());
-
-						// check need join table ??
-						if (this.canFilterObject(objLink) == false) {
-
-							let baseClause = obj.dbTableName() + '.' + obj.PK();
-							let linkTable = objLink.dbTableName();
-							let connectedClause = linkTable + '.' + obj.name;
-							makeLink({ type: 'left' }, linkTable, baseClause, '=', connectedClause);
-						}
-					}
-
-					// 1:1
-					else if (f.settings.linkType == 'one' && f.settings.linkViaType == 'one') {
-
-						if (f.settings.isSource) {
-							field = connectColFormat
-								.replace(/{tableName}/g, obj.dbTableName())
-								.replace(/{columnName}/g, f.columnName)
-								.replace(/{objectName}/g, obj.name)
-								.replace(/{displayName}/g, f.relationName());
-						}
-						else {
-							field = connectColFormat
-								.replace(/{tableName}/g, objLink.dbTableName())
-								.replace(/{columnName}/g, fieldLink.columnName)
-								.replace(/{objectName}/g, obj.name)
-								.replace(/{displayName}/g, f.relationName());
-
-							// check need join table ??
-							if (this.canFilterObject(objLink) == false) {
-	
-								let baseClause = obj.dbTableName() + '.' + obj.PK();
-								let linkTable = objLink.dbTableName();
-								let connectedClause = linkTable + '.' + fieldLink.columnName;
-								makeLink({ type: 'left' }, linkTable, baseClause, '=', connectedClause);
-							}
-	
-						}
-
-					}
-
-					if (field)
-						columns.push(ABMigration.connection().raw(field));
-
-				}
-				// Normal fields
-				else {
-
-					var columnName = f.columnName;
-
-					if (f.isMultilingual)
-						columnName = 'translations';
-
-					var field = columnFormat
-						.replace(/{tableName}/g, obj.dbTableName())
-						.replace(/{columnName}/g, columnName)
-						.replace(/{objectName}/g, obj.name)
-						.replace(/{displayName}/g, columnName);
-
-					columns.push(field);
-
-				}
-
-			});
-
-			query.columns(columns);
-
-		}
-
-
-
 		//// Now compile our joins:
 
 		function makeLink(link, joinTable, A, op, B) {
@@ -827,6 +713,120 @@ module.exports = class ABObjectQuery extends ABObject {
 
 
 		})
+
+
+
+		//// Add in our fields:
+		if (!options.ignoreIncludeColumns) { // get count of rows does not need to include columns
+			var columns = [];
+			this.fields().forEach((f) => {
+
+				if (!f)
+					return;
+
+				var obj = f.object;
+				var columnFormat = "{tableName}.{columnName}" +
+									" as {objectName}.{displayName}"; // add object's name to alias
+
+				// Connect fields
+				if (f.key == 'connectObject') {
+
+					var connectColFormat = 
+						"IF(`{tableName}`.`{columnName}` IS NOT NULL, " +
+						"JSON_OBJECT('id', `{tableName}`.`{columnName}`)," +
+						"NULL)" +
+						" as '{objectName}.{displayName}'"; // add object's name to alias
+
+					var field = '';
+					var objLink = f.datasourceLink;
+					var fieldLink = f.fieldLink();
+					
+					// 1:M
+					if (f.settings.linkType == 'one' && f.settings.linkViaType == 'many') {
+
+						field = connectColFormat
+							.replace(/{tableName}/g, obj.dbTableName())
+							.replace(/{columnName}/g, f.columnName)
+							.replace(/{objectName}/g, obj.name)
+							.replace(/{displayName}/g, f.relationName());
+					}
+
+					// M:1
+					else if (f.settings.linkType == 'many' && f.settings.linkViaType == 'one') {
+
+						field = connectColFormat
+							.replace(/{tableName}/g, objLink.dbTableName())
+							.replace(/{columnName}/g, fieldLink.columnName)
+							.replace(/{objectName}/g, obj.name)
+							.replace(/{displayName}/g, f.relationName());
+
+						// check need join table ??
+						if (this.canFilterObject(objLink) == false) {
+
+							let baseClause = obj.dbTableName() + '.' + obj.PK();
+							let linkTable = objLink.dbTableName();
+							let connectedClause = linkTable + '.' + obj.name;
+							makeLink({ type: 'left' }, linkTable, baseClause, '=', connectedClause);
+						}
+					}
+
+					// 1:1
+					else if (f.settings.linkType == 'one' && f.settings.linkViaType == 'one') {
+
+						if (f.settings.isSource) {
+							field = connectColFormat
+								.replace(/{tableName}/g, obj.dbTableName())
+								.replace(/{columnName}/g, f.columnName)
+								.replace(/{objectName}/g, obj.name)
+								.replace(/{displayName}/g, f.relationName());
+						}
+						else {
+							field = connectColFormat
+								.replace(/{tableName}/g, objLink.dbTableName())
+								.replace(/{columnName}/g, fieldLink.columnName)
+								.replace(/{objectName}/g, obj.name)
+								.replace(/{displayName}/g, f.relationName());
+
+							// check need join table ??
+							if (this.canFilterObject(objLink) == false) {
+	
+								let baseClause = obj.dbTableName() + '.' + obj.PK();
+								let linkTable = objLink.dbTableName();
+								let connectedClause = linkTable + '.' + fieldLink.columnName;
+								makeLink({ type: 'left' }, linkTable, baseClause, '=', connectedClause);
+							}
+	
+						}
+
+					}
+
+					if (field)
+						columns.push(ABMigration.connection().raw(field));
+
+				}
+				// Normal fields
+				else {
+
+					var columnName = f.columnName;
+
+					if (f.isMultilingual)
+						columnName = 'translations';
+
+					var field = columnFormat
+						.replace(/{tableName}/g, obj.dbTableName())
+						.replace(/{columnName}/g, columnName)
+						.replace(/{objectName}/g, obj.name)
+						.replace(/{displayName}/g, columnName);
+
+					columns.push(field);
+
+				}
+
+			});
+
+			query.columns(columns);
+
+		}
 
 
 
