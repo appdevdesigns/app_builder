@@ -797,8 +797,29 @@ module.exports = class ABObjectQuery extends ABObject {
 							}
 	
 						}
+					}
+
+					// M:N
+					else if (f.settings.linkType == 'many' && f.settings.linkViaType == 'many') { 
+
+						let joinTableName = f.joinTableName();
+
+						field = connectColFormat
+								.replace(/{tableName}/g, joinTableName)
+								.replace(/{columnName}/g, objLink.name)
+								.replace(/{objectName}/g, obj.name)
+								.replace(/{displayName}/g, f.relationName());
+
+						// check need join table ??
+						if (this.canFilterObject(objLink) == false) {
+
+							let baseClause = obj.dbTableName() + '.' + obj.PK();
+							let connectedClause = joinTableName + '.' + obj.name;
+							makeLink({ type: 'left' }, joinTableName, baseClause, '=', connectedClause);
+						}
 
 					}
+
 
 					if (field)
 						columns.push(ABMigration.connection().raw(field));
