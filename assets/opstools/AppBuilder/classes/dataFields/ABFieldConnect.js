@@ -432,8 +432,8 @@ class ABFieldConnect extends ABFieldSelectivity {
 			// var domNode = node.querySelector('.list-data-values');
 
 			// get selected values
-			var selectedData = field.pullRelationValues(row, config.isInQuery);
-			
+			var selectedData = field.pullRelationValues(row);
+
 			var multiselect = (field.settings.linkType == 'many');
 
 			// Render selectivity
@@ -642,14 +642,9 @@ class ABFieldConnect extends ABFieldSelectivity {
 	}
 
 
-	relationName(includeObjectName) {
+	relationName() {
 
-		var relationName = String(this.columnName).replace(/[^a-z0-9]/gi, '') + '__relation';
-
-		// Query view - {objectName}.{relationName}
-		if (includeObjectName) {
-			relationName = this.object.name + '.' + relationName;
-		}
+		var relationName = String(this.columnName).replace(/[^a-z0-9\.]/gi, '') + '__relation';
 
 		return relationName;
 	}
@@ -764,14 +759,14 @@ class ABFieldConnect extends ABFieldSelectivity {
 	 * 
 	 * @return {array}
 	 */
-	pullRelationValues(row, includeObjectName) {
+	pullRelationValues(row) {
 
 		var selectedData = [];
 
 		// Get linked object
 		var linkedObject = this.datasourceLink;
 
-		var relationName = this.relationName(includeObjectName);
+		var relationName = this.relationName();
 		if (row[relationName] && linkedObject) {
 
 			// convert to JSON

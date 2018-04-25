@@ -253,13 +253,15 @@ export default class ABObject extends ABObjectBase {
 
 	// return the column headers for this object
 	// @param {bool} isObjectWorkspace  return the settings saved for the object workspace
-	columnHeaders (isObjectWorkspace, isEditable) {
+	columnHeaders (isObjectWorkspace, isEditable, summaryColumns) {
+
+		summaryColumns = summaryColumns || [];
 
 		var headers = [];
 		var columnNameLookup = {};
 
 		// get the header for each of our fields:
-		this._fields.forEach(function(f){
+		this.fields().forEach(function(f){
 			var header = f.columnHeader(isObjectWorkspace, null, isEditable);
 
 			header.fieldURL = f.urlPointer();
@@ -271,6 +273,11 @@ export default class ABObject extends ABObjectBase {
 				// set column width to adjust:true by default;
 				header.adjust = true;
 			}
+
+			// add the summary footer
+			if (summaryColumns.indexOf(f.id) > -1)
+				header.footer = { content: 'summColumn' };
+
 			headers.push(header);
 			columnNameLookup[header.id] = f.columnName;	// name => id
 		})
@@ -345,7 +352,7 @@ export default class ABObject extends ABObjectBase {
 		var labelData = this.labelFormat || '';
 		
 		// default label
-		if (!labelData && this._fields.length > 0) {
+		if (!labelData && this.fields().length > 0) {
 
 			var defaultField = this.fields(f => f.fieldUseAsLabel())[0];
 			if (defaultField)

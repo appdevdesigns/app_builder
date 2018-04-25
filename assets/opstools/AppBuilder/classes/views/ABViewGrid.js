@@ -12,6 +12,7 @@ import ABPopupHideFields from "../../components/ab_work_object_workspace_popupHi
 import ABPopupSortField from "../../components/ab_work_object_workspace_popupSortFields"
 import ABPopupFrozenColumns from "../../components/ab_work_object_workspace_popupFrozenColumns"
 import ABPopupMassUpdate from "../../components/ab_work_object_workspace_popupMassUpdate"
+import ABPopupSummaryColumns from "../../components/ab_work_object_workspace_popupSummaryColumns"
 import RowFilter from '../RowFilter'
 
 
@@ -43,6 +44,7 @@ var ABViewGridPropertyComponentDefaults = {
 		frozenColumnID:"", // id of column you want to stop freezing
 		hiddenFields:[], // array of [ids] to add hidden:true to
 	},
+	summaryFields: [], // array of [field ids] to add the summary column in footer
 	height: 0
 }
 
@@ -55,6 +57,7 @@ var ABViewDefaults = {
 
 var PopupHideFieldComponent = null;
 var PopupFrozenColumnsComponent = null;
+var PopupSummaryColumnsComponent = null;
 
 export default class ABViewGrid extends ABViewWidget  {
 	
@@ -134,6 +137,7 @@ export default class ABViewGrid extends ABViewWidget  {
 			if (typeof(this.settings.objectWorkspace.filterConditions) == "undefined") this.settings.objectWorkspace.filterConditions = [];
 			if (typeof(this.settings.objectWorkspace.frozenColumnID) == "undefined") this.settings.objectWorkspace.frozenColumnID = "";
 			if (typeof(this.settings.objectWorkspace.hiddenFields) == "undefined") this.settings.objectWorkspace.hiddenFields = [];
+			if (typeof(this.settings.objectWorkspace.summaryColumns) == "undefined") this.settings.objectWorkspace.summaryColumns = [];
 		}
 
     	// we are not allowed to have sub views:
@@ -190,6 +194,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		// initialize our popup editors with unique names so we don't overwrite the previous editor each time
 		PopupHideFieldComponent = new ABPopupHideFields(App, idBase+"_hide");
 		PopupFrozenColumnsComponent = new ABPopupFrozenColumns(App, idBase+"_freeze");
+		PopupSummaryColumnsComponent = new ABPopupSummaryColumns(App, idBase+"_summary");
 		
 		_logic.newObject = () => {
 			var currObj = _logic.currentEditObject();
@@ -197,7 +202,8 @@ export default class ABViewGrid extends ABViewWidget  {
 				sortFields:[],
 				filterConditions:[],
 				frozenColumnID:"",
-				hiddenFields:[]
+				hiddenFields:[],
+				summaryColumns:[]
 			};
 			currObj.populatePopupEditors(currObj);
 		}
@@ -217,6 +223,10 @@ export default class ABViewGrid extends ABViewWidget  {
 		
 		_logic.toolbarFrozen = ($view) => {
 			PopupFrozenColumnsComponent.show($view, {pos:"top"});
+		}
+
+		_logic.summaryColumns = ($view) => {
+			PopupSummaryColumnsComponent.show($view, {pos:"top"});
 		}
 		
 		_logic.callbackSaveWorkspace = (data) => {
@@ -270,6 +280,10 @@ export default class ABViewGrid extends ABViewWidget  {
 			onChange:_logic.callbackSaveWorkspace		// be notified when there is a change in the hidden fields
 		});
 		
+		PopupSummaryColumnsComponent.init({
+			onChange: _logic.onChange					// be notified when there is a change in the summary columns
+		});
+
 		var view = "button";
 		// in addition to the common .label  values, we 
 		// ask for:
@@ -521,6 +535,28 @@ export default class ABViewGrid extends ABViewWidget  {
 						},
 
 						{
+							cols: [
+								{ 
+								    view:"label", 
+								    label: L("ab.component.label.summaryFields", "*Summary Fields:"),
+									css: 'ab-text-bold',
+									width: App.config.labelWidthXLarge,
+								},
+								{
+									view: view,
+									name: "buttonSummaryFields",
+									label: L("ab.component.label.settings", "*Settings"),
+									icon: "gear",
+									type: "icon",
+									badge: 0,
+									click: function(){
+										_logic.summaryColumns(this.$view);
+									}
+								}
+							]
+						},
+
+						{
 							view: 'counter',
 							name: "height",
 							label: L("ab.component.grid.height", "*Height:"),
@@ -659,7 +695,8 @@ export default class ABViewGrid extends ABViewWidget  {
 			editView: this.settings.editPage,
 			isEditable: this.settings.isEditable,
 			massUpdate: this.settings.massUpdate,
-			configureHeaders: false
+			configureHeaders: false,
+			summaryColumns: this.settings.objectWorkspace.summaryColumns
 		}
 		
 		var isFiltered = false,
@@ -1102,6 +1139,7 @@ export default class ABViewGrid extends ABViewWidget  {
 			// PopupFilterDataTableComponent.objectLoad(dataCopy, view);
 			// PopupSortFieldComponent.objectLoad(dataCopy, view);
 			PopupFrozenColumnsComponent.objectLoad(dataCopy, view);
+			PopupSummaryColumnsComponent.objectLoad(dataCopy, view);
 		// }
 	}
 

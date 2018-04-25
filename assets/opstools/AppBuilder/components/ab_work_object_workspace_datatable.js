@@ -11,6 +11,21 @@ import AB_Work_HeaderEditMenu from "./ab_work_object_workspace_popupHeaderEditMe
 
 export default class ABWorkObjectDatatable extends OP.Component {
     
+    /**
+     * 
+     * @param {*} App 
+     * @param {*} idBase 
+     * @param {Object} params - {
+     *			allowDelete: bool,
+    			detailsView: {string} - id of page,
+    			editView:	 {string} - id of page,
+    			isEditable:  bool,
+    			massUpdate:  bool,
+				configureHeaders: bool,
+				summaryColumns:	 {array} - an array of field id
+			}
+     */
+
     constructor(App, idBase, params) {
 
         if (params) {
@@ -20,7 +35,8 @@ export default class ABWorkObjectDatatable extends OP.Component {
     			editView: params.editView || null,
     			isEditable: params.isEditable,
     			massUpdate: params.massUpdate,
-                configureHeaders: params.configureHeaders
+				configureHeaders: params.configureHeaders,
+				summaryColumns: params.summaryColumns || []
     		}
         } else {
             var settings = {
@@ -29,7 +45,8 @@ export default class ABWorkObjectDatatable extends OP.Component {
     			editView: null,
     			isEditable: true,
     			massUpdate: true,
-                configureHeaders: true
+				configureHeaders: true,
+				summaryColumns: []
     		}
         }
 
@@ -71,7 +88,8 @@ export default class ABWorkObjectDatatable extends OP.Component {
     		editable: settings.isEditable,
     		fixedRowHeight: false,
     		editaction: "custom",
-    		select: "cell",
+            select: "cell",
+            footer: settings.summaryColumns.length > 0, // show footer when there are summary columns
             tooltip: {
                 id: ids.tooltip,
                 template: function(obj, common){
@@ -834,7 +852,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                         isEditable = settings.isEditable;
     				//// update DataTable structure:
     				// get column list from our CurrentObject
-    				var columnHeaders = CurrentObject.columnHeaders(true, settings.isEditable);
+    				var columnHeaders = CurrentObject.columnHeaders(true, settings.isEditable, settings.summaryColumns);
                     
                     columnHeaders.forEach(function(col) {
                         col.fillspace = false;

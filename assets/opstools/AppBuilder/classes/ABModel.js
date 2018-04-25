@@ -574,14 +574,14 @@ reject(err);
 				if (Array.isArray(d[relationName])) {
 					d[relationName].forEach((r) => {
 						// if translations are present and they are still a string
-						if ('translations' in r && typeof r.translations == "string") {
+						if (r.translations && typeof r.translations == "string") {
 							// parse the string into an object
 							r.translations = JSON.parse(r.translations);
 						}
 					});
 				} else {
 					// if the data is not an array it is a single item...check that has translations and it is a string
-					if ('translations' in d[relationName] && typeof d[relationName].translations == "string") {
+					if (d[relationName].translations  && typeof d[relationName].translations == "string") {
 						// if so parse the string into an object
 						d[relationName].translations = JSON.parse(d[relationName].translations);
 					}

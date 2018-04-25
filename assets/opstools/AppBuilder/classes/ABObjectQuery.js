@@ -163,28 +163,28 @@ export default class ABObjectQuery extends ABObject {
 	}
 
 
-	/**
-	 * @method multilingualFields()
-	 *
-	 * return an array of columnnames that are multilingual.
-	 *
-	 * @return {array}
-	 */
-	multilingualFields() {
-		var fields = [];
+	// /**
+	//  * @method multilingualFields()
+	//  *
+	//  * return an array of columnnames that are multilingual.
+	//  *
+	//  * @return {array}
+	//  */
+	// multilingualFields() {
+	// 	var fields = [];
 
-		var found = this.fields(function(f){ return f.isMultilingual; });
-		found.forEach((f)=>{
+	// 	var found = this.fields(function(f){ return f.isMultilingual; });
+	// 	found.forEach((f)=>{
 
-			var format = "{objectName}.{columnName}"
-							.replace('{objectName}', f.object.name)
-							.replace('{columnName}', f.columnName);
+	// 		var format = "{objectName}.{columnName}"
+	// 						.replace('{objectName}', f.object.name)
+	// 						.replace('{columnName}', f.columnName);
 
-			fields.push(format);
-		})
+	// 		fields.push(format);
+	// 	})
 
-		return fields;
-	}
+	// 	return fields;
+	// }
 
 
 
@@ -245,7 +245,7 @@ export default class ABObjectQuery extends ABObject {
 
 			// should be a field of base/join objects
 			if (this.canFilterField(field) &&
-			// check duplicate
+				// check duplicate
 				newFields.filter(f => f.urlPointer() == fieldInfo.fieldURL).length < 1) { 
 
 				newFields.push( field );
@@ -268,6 +268,33 @@ export default class ABObjectQuery extends ABObject {
 		})
 		return currFields;
 	}
+
+
+	/**
+	 * @method fields()
+	 *
+	 * return an array of all the ABFields for this ABObject.
+	 *
+	 * @return {array}
+	 */
+	fields (filter) {
+
+		var fields = _.cloneDeep(super.fields(filter));
+
+		return fields.map(f => {
+
+			// include object name {objectName}.{columnName}
+			// to use it in grid headers & hidden fields
+			f.columnName = '{objectName}.{columnName}'
+							.replace('{objectName}', f.object.name)
+							.replace('{columnName}', f.columnName);
+
+			return f;
+		});
+
+	}
+
+
 
 
 	///
@@ -431,11 +458,9 @@ export default class ABObjectQuery extends ABObject {
 			var field = this.application.urlResolve(h.fieldURL);
 			if (field) {
 
-				// mark this is a column of query
-				h.isInQuery = true;
-
-				// property name of JSON data
-				h.id = 	'{objectName}.{columnName}'
+				// include object name {objectName}.{columnName}
+				// to use it in grid headers & hidden fields
+				h.id = '{objectName}.{columnName}'
 						.replace('{objectName}', field.object.name)
 						.replace('{columnName}', field.columnName);
 
