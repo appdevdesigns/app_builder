@@ -283,14 +283,22 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 						if (!field) return;
 
 						// pull the join type of UI
+						var joinType;
 						var $tabObject = $$(ids.tabObjects).getMultiview().getChildViews().filter(v => v.config.id == field.datasourceLink.id)[0];
-						var $joinType = $tabObject.queryView({ name: "joinType" });
+						if ($tabObject) {
+							var $joinType = $tabObject.queryView({ name: "joinType" });
+							
+							joinType = $joinType.getValue() || 'innerjoin';
+						}
+						else {
+							joinType = 'innerjoin';
+						}
 
 						// add new join into query
 						joins.push({
 							objectURL: field.object.urlPointer(),
 							fieldID: field.id,
-							type: $joinType.getValue() || 'innerjoin'
+							type: joinType
 						});
 
 					});
