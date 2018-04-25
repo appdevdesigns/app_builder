@@ -223,16 +223,25 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 				});
 
 				// add the main object tab
-				let tabUI = _logic.templateField(objBase, true);
+				let tabUI = _logic.templateField(objBase, null, true);
 				$$(ids.tabObjects).addView(tabUI);
 
 				// select default tab to the main object
 				$$(ids.tabObjects).setValue(objBase.id);
 
 				// Other object tabs will be added in a check tree item event
-				CurrentQuery.objects().forEach(obj => {
+				CurrentQuery.joins().forEach(join => {
+
+					if (!join.fieldID) return;
+
+					var objFrom = CurrentApplication.urlResolve(join.objectURL);
+					var fieldLink = objFrom.fields(f => f.id == join.fieldID)[0];
+					var objLink = fieldLink.datasourceLink;
+
+					if (objLink.id == objBase.id) return;
+
 					// add tab
-					let tabUI = _logic.templateField(obj);
+					let tabUI = _logic.templateField(objLink, join.type);
 					$$(ids.tabObjects).addView(tabUI);
 				});
 
@@ -273,11 +282,15 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 						var field = CurrentQuery.application.urlResolve(fieldUrl);
 						if (!field) return;
 
+						// pull the join type of UI
+						var $tabObject = $$(ids.tabObjects).getMultiview().getChildViews().filter(v => v.config.id == field.datasourceLink.id)[0];
+						var $joinType = $tabObject.queryView({ name: "joinType" });
+
 						// add new join into query
 						joins.push({
 							objectURL: field.object.urlPointer(),
 							fieldID: field.id,
-							type: 'innerjoin' // default
+							type: $joinType.getValue() || 'innerjoin'
 						});
 
 					});
@@ -435,7 +448,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 			 * 
 			 * @return {JSON}
 			 */
-			templateField: function (object, isMain) {
+			templateField: function (object, joinType, isMain) {
 
 				var fields = object.fields().map(f => {
 					return {
@@ -452,16 +465,23 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 						rows: [
 							{
 								view: "select",
+								name: "joinType",
 								label: "Join records by:",
 								labelWidth: 200,
 								placeholder: "Choose a type of table join",
 								hidden: isMain,
+								value: joinType || 'innerjoin',
 								options: [
 									{ id: 'innerjoin', value: 'Returns records that have matching values in both tables (INNER JOIN).' },
 									{ id: 'left', value: 'Return all records from the left table, and the matched records from the right table (LEFT JOIN).' },
 									{ id: 'right', value: 'Return all records from the right table, and the matched records from the left table (RIGHT JOIN).' },
 									{ id: 'fullouterjoin', value: 'Return all records when there is a match in either left or right table (FULL JOIN)' }
-								]
+								],
+								on: {
+									onChange: function () {
+										_logic.save();
+									}
+								}
 							},
 							{
 								view: "dbllist",

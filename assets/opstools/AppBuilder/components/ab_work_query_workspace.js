@@ -117,6 +117,7 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 			applicationLoad: (application) => {
 				CurrentApplication = application;
 
+				QueryDesignComponent.applicationLoad(application);
 				DataTable.applicationLoad(application);
 
 			},
