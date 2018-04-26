@@ -183,6 +183,20 @@ export default class ABModel {
 
 
 	/**
+	 * @method destroy
+	 * remove this model instance from the server.
+	 * NOTE: API compatibility 
+	 * @param {integer} id  the .id of the instance to remove.
+	 * @return {Promise}
+	 */
+	destroy(id) {
+
+		return this.delete(id);
+
+	}
+
+
+	/**
 	 * @method findAll
 	 * performs a data find with the provided condition.
 	 */
