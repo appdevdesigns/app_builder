@@ -346,12 +346,12 @@ module.exports = {
                                             // We want to broadcast the change from the server to the client so all datacollections can properly update
                                             // Build a payload that tells us what was updated
                                             var payload = {
-                                                objectId: object.id,
+                                                objectId: object[object.PK()],
                                                 data: newItem[0]
                                             }
                                             
                                             // Broadcast the create
-                                            sails.sockets.broadcast(object.id, "ab.datacollection.create", payload);
+                                            sails.sockets.broadcast(object[object.PK()], "ab.datacollection.create", payload);
                                             
                                             updateConnectedFields(object, newItem[0]);
                                             
@@ -965,12 +965,12 @@ module.exports = {
                                                     // We want to broadcast the change from the server to the client so all datacollections can properly update
                                                     // Build a payload that tells us what was updated
                                                     var payload = {
-                                                        objectId: object.id,
+                                                        objectId: object[object.PK()],
                                                         data: newItem[0]
                                                     }
                                                     
                                                     // Broadcast the update
-                                                    sails.sockets.broadcast(object.id, "ab.datacollection.update", payload);
+                                                    sails.sockets.broadcast(object[object.PK()], "ab.datacollection.update", payload);
                                                     
                                                     updateConnectedFields(object, newItem[0], oldItem[0]);
                                                     
