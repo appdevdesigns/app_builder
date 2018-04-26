@@ -118,9 +118,16 @@ export default class AB_Work_Object_Workspace_PopupSummaryColumns extends OP.Com
 				 * the user clicked the [hide all] option.  So hide all our fields.
 				 */
 				clickHideAll: function () {
+
+					var List = $$(ids.list);
 	
 					// pass an array is empty
 					SummaryFieldIds = [];
+
+					// hide all icons
+					List.find({}).forEach(item => {
+						_logic.iconHide(item.id);
+					});
 
 					_logic.callbacks.onChange(SummaryFieldIds);
 
@@ -138,6 +145,11 @@ export default class AB_Work_Object_Workspace_PopupSummaryColumns extends OP.Com
 
 					SummaryFieldIds = allFieldIds;
 
+					// show all icons
+					List.find({}).forEach(item => {
+						_logic.iconShow(item.id);
+					});
+
 					_logic.callbacks.onChange(SummaryFieldIds);
 
 				},
@@ -153,13 +165,13 @@ export default class AB_Work_Object_Workspace_PopupSummaryColumns extends OP.Com
 					if (SummaryFieldIds.indexOf(fieldId) < 0) {
 						SummaryFieldIds.push(fieldId);
 
-						_logic.iconShow(node);
+						_logic.iconShow(fieldId);
 					}
 					// unselect
 					else {
 						SummaryFieldIds = SummaryFieldIds.filter(fid => fid != fieldId);
 
-						_logic.iconHide(node);
+						_logic.iconHide(fieldId);
 					}
 
 					_logic.callbacks.onChange(SummaryFieldIds);
@@ -172,9 +184,12 @@ export default class AB_Work_Object_Workspace_PopupSummaryColumns extends OP.Com
 				 * Hide the icon for the given node
 				 * @param {DOM} node  the html dom node of the element that contains our icon
 				 */
-				iconHide: function(node) {
-					if (node) {
-						node.querySelector('.ab-summary-field-icon').classList.remove("fa-circle");
+				iconHide: function(fieldId) {
+
+					var List = $$(ids.list);
+					var $node = List.getItemNode(fieldId);
+					if ($node) {
+						$node.querySelector('.ab-summary-field-icon').classList.remove("fa-circle");
 					}
 				},
 	
@@ -184,9 +199,12 @@ export default class AB_Work_Object_Workspace_PopupSummaryColumns extends OP.Com
 				 * Show the icon for the given node
 				 * @param {DOM} node  the html dom node of the element that contains our icon
 				 */
-				iconShow: function(node) {
-					if (node) {
-						node.querySelector('.ab-summary-field-icon').classList.add("fa-circle");
+				iconShow: function(fieldId) {
+
+					var List = $$(ids.list);
+					var $node = List.getItemNode(fieldId);
+					if ($node) {
+						$node.querySelector('.ab-summary-field-icon').classList.add("fa-circle");
 					}
 				},
 
@@ -231,7 +249,12 @@ export default class AB_Work_Object_Workspace_PopupSummaryColumns extends OP.Com
 
 					$$(ids.list).clearAll();
 					$$(ids.list).parse(numberFields);
-					$$(ids.list).select(SummaryFieldIds);
+
+					// update icons
+					SummaryFieldIds.forEach(fieldId => {
+						_logic.iconShow(fieldId);
+					});
+
 				},
 	
 				/**
@@ -249,13 +272,12 @@ export default class AB_Work_Object_Workspace_PopupSummaryColumns extends OP.Com
 				}
 	
 			}
-	
-	
-	
+
+
 			// Expose any globally accessible Actions:
 			this.actions({
 			})
-	
+
 			// 
 			// Define our external interface methods:
 			// 

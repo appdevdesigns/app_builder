@@ -233,6 +233,15 @@ export default class ABViewGrid extends ABViewWidget  {
 			// when we make a change in the popups we want to make sure we save the new workspace to the properties to do so just fire an onChange event
 			_logic.onChange();
 		}
+
+		_logic.callbackSaveSummaryColumns = (data) => {
+
+			var currObj = _logic.currentEditObject();
+			currObj.settings.objectWorkspace.summaryColumns = data;
+
+			// when we make a change in the popups we want to make sure we save the new workspace to the properties to do so just fire an onChange event
+			_logic.onChange();
+		}
 		
 		// _logic.updateDetailsView = (value) => {
 		// 	if (value != "") {
@@ -281,7 +290,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		});
 		
 		PopupSummaryColumnsComponent.init({
-			onChange: _logic.onChange					// be notified when there is a change in the summary columns
+			onChange: _logic.callbackSaveSummaryColumns	// be notified when there is a change in the summary columns
 		});
 
 		var view = "button";
@@ -1140,6 +1149,7 @@ export default class ABViewGrid extends ABViewWidget  {
 			// PopupSortFieldComponent.objectLoad(dataCopy, view);
 			PopupFrozenColumnsComponent.objectLoad(dataCopy, view);
 			PopupSummaryColumnsComponent.objectLoad(dataCopy, view);
+			PopupSummaryColumnsComponent.setValue(view.settings.objectWorkspace.summaryColumns);
 		// }
 	}
 
@@ -1166,6 +1176,18 @@ export default class ABViewGrid extends ABViewWidget  {
 			$$(ids.buttonFieldsFreeze).define('badge', 0);
 			$$(ids.buttonFieldsFreeze).refresh();
 		}
+
+
+		if (view.settings.objectWorkspace &&
+			view.settings.objectWorkspace.summaryColumns) {
+			$$(ids.buttonSummaryFields).define('badge', view.settings.objectWorkspace.summaryColumns.length);
+			$$(ids.buttonSummaryFields).refresh();
+		}
+		else {
+			$$(ids.buttonSummaryFields).define('badge', 0);
+			$$(ids.buttonSummaryFields).refresh();
+		}
+
 
 	}
 	

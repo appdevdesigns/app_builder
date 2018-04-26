@@ -34,7 +34,7 @@ module.exports = function (req, res, next) {
 					if (r.rule == 'have_no_relation') {
 						var relation_name = AppBuilder.rules.toFieldRelationFormat(field.columnName);
 
-						var objectLink = field.objectLink;
+						var objectLink = field.datasourceLink;
 						if (!objectLink) return;
 
 						r.key = field.columnName;
