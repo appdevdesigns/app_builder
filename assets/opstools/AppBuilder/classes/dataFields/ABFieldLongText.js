@@ -54,17 +54,18 @@ var ABFieldLongTextComponent = new ABFieldComponent({
 	elements: (App, field) => {
 
 		// NOTE: you might not need to define your own ids, but if you do, do it like this:
-		// var ids = {
-		// 	imageWidth: '',
-		// 	imageHeight: ''
-		// }
-		// ids = field.idsUnique(ids, App);
+		var ids = {
+			textDefault: ''
+		}
+		ids = field.idsUnique(ids, App);
 
 		return [
 			{
 				view: "text",
+				id: ids.textDefault,
 				name: 'textDefault',
-				labelWidth: App.config.labelWidthLarge,
+				label: L('ab.dataField.string.defaultLabel', '*Default'),
+				labelPosition:"top",
 				placeholder: L('ab.dataField.string.default', '*Default text')
 			},
 			{
@@ -113,6 +114,26 @@ var ABFieldLongTextComponent = new ABFieldComponent({
 	// 		.show(ids)   : display the form in the editor
 	// 		.values(ids, values) : return the current values from the form
 	logic: {
+		
+		/*
+		 * @function requiredOnChange
+		 *
+		 * The ABField.definitionEditor implements a default operation
+		 * to look for a default field and set it to a required field 
+		 * if the field is set to required
+		 * 
+		 * if you want to override that functionality, implement this fn()
+		 *
+		 * @param {string} newVal	The new value of label
+		 * @param {string} oldVal	The previous value
+		 */
+		requiredOnChange: (newVal, oldVal, ids) => {
+
+			// when require value, then default value needs to be reqired
+			$$(ids.textDefault).define("required", newVal);
+			$$(ids.textDefault).refresh();
+
+		},
 
 	},
 
@@ -267,7 +288,9 @@ class ABFieldLongText extends ABField {
 	 * @return {array} 
 	 */
 	isValidData(data, validator) {
-
+		
+		super.isValidData(data, validator);
+		
 		if (data && data[this.columnName]) {
 			var max_length = 5000;
 			

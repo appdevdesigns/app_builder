@@ -76,6 +76,7 @@ export default class ABFieldComponent {
 			columnName: App.unique(this.idBase+'_columnName'),
 			fieldDescription: App.unique(this.idBase+'_fieldDescription'),
 			showIcon: App.unique(this.idBase+'_showIcon'),
+			required: App.unique(this.idBase+'_required'),
 		}
 
     	this.eachDeep(elements, (e) => {

@@ -648,6 +648,9 @@ class ABFieldFile extends ABField {
 	 * @return {array} 
 	 */
 	isValidData(data, validator) {
+		
+		super.isValidData(data, validator);
+		
 	}
 
 }

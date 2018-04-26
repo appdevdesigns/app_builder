@@ -147,7 +147,14 @@ class ABFieldList extends ABField {
 
 							// multiple select list
 							if (this.settings.isMultiple == true) {
-								currCol = t.json(this.columnName).nullable();
+								
+								// field is required (not null)
+								if (this.settings.required) {
+									currCol = t.json(this.columnName).notNullable();
+								}
+								else {
+									currCol = t.json(this.columnName).nullable();
+								}
 
 								// TODO: Set default to multiple select
 								// MySQL - BLOB and TEXT columns cannot have DEFAULT values.
@@ -160,7 +167,14 @@ class ABFieldList extends ABField {
 							// single select list
 							else {
 								// Changed to string to fix issue where new items could not be added because type of field was ENUM and we do not support field modifications
-								var currCol = t.string(this.columnName).nullable();
+								// field is required (not null)
+								if (this.settings.required) {
+									currCol = t.string(this.columnName).notNullable();
+								}
+								else {
+									currCol = t.string(this.columnName).nullable();
+								}
+
 								
 								if (this.settings.singleDefault && this.settings.singleDefault != 'none') {
 									currCol.defaultTo(this.settings.singleDefault);

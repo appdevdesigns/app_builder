@@ -458,8 +458,9 @@ class ABFieldUser extends ABFieldSelectivity {
 	 * @return {array} 
 	 */
 	isValidData(data, validator) {
-
-
+		
+		super.isValidData(data, validator);
+		
 	}
 
 

@@ -55,7 +55,7 @@ var defaultValues = {
 }
 
 var ids = {
-	default: 'ab-date-default',
+	defaultDate: 'ab-date-default',
 	currentToDefault: 'ab-date-current-to-default',
 
 	dateDisplay: 'ab-date-display',
@@ -213,10 +213,11 @@ var ABFieldDateComponent = new ABFieldComponent({
 							view: 'datepicker',
 							label: "Default",
 							name: 'defaultDate',
-							id: ids.default,
+							id: ids.defaultDate,
 							timepicker: newVal ? true : false,
+							required: $$(ids.defaultDate).config.required == true,
 							disabled: $$(ids.currentToDefault).getValue() == true
-						}, $$(ids.default));
+						}, $$(ids.defaultDate));
 
 						dateDisplayRefresh();
 
@@ -236,17 +237,17 @@ var ABFieldDateComponent = new ABFieldComponent({
 				on: {
 					onChange: (newVal, oldVal) => {
 						if (newVal) {
-							$$(ids.default).disable();
+							$$(ids.defaultDate).disable();
 						}
 						else {
-							$$(ids.default).enable();
+							$$(ids.defaultDate).enable();
 						}
 					}
 				}
 			},
 			{
 				view: 'datepicker',
-				id: ids.default,
+				id: ids.defaultDate,
 				label: "Default",
 				name: 'defaultDate',
 				timepicker: false
@@ -719,8 +720,27 @@ var ABFieldDateComponent = new ABFieldComponent({
 			var dateFormat = getDateFormat(settings);
 
 			return webix.Date.dateToStr(dateFormat)(date);
-		}
+		},
 
+		/*
+		 * @function requiredOnChange
+		 *
+		 * The ABField.definitionEditor implements a default operation
+		 * to look for a default field and set it to a required field 
+		 * if the field is set to required
+		 * 
+		 * if you want to override that functionality, implement this fn()
+		 *
+		 * @param {string} newVal	The new value of label
+		 * @param {string} oldVal	The previous value
+		 */
+		requiredOnChange: (newVal, oldVal, ids) => {
+
+			// when require value, then default value needs to be reqired
+			$$(ids.defaultDate).define("required", newVal);
+			$$(ids.defaultDate).refresh();
+
+		},
 
 	},
 
@@ -892,7 +912,9 @@ class ABFieldDate extends ABField {
 	 * @return {array} 
 	 */
 	isValidData(data, validator) {
-
+		
+		super.isValidData(data, validator);
+		
 		if (data[this.columnName]) {
 			var value = data[this.columnName];
 

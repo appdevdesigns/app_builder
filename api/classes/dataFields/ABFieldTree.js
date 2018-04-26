@@ -140,7 +140,14 @@ class ABFieldTree extends ABField {
 						return knex.schema.table(tableName, (t) => {
 
 							var currCol;
-							currCol = t.json(this.columnName).nullable();
+
+							// field is required (not null)
+							if (this.settings.required) {
+								currCol = t.json(this.columnName).notNullable();
+							}
+							else {
+								currCol = t.json(this.columnName).nullable();
+							}
 
 							// TODO: Set default to multiple select
 							// MySQL - BLOB and TEXT columns cannot have DEFAULT values.

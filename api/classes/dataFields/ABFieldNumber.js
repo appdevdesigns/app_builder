@@ -47,7 +47,7 @@ var formatList = [
 ];
 
 var defaultValues = {
-	'allowRequired': 0,
+	// 'allowRequired': 0,
 	'numberDefault': '',
 	'typeFormat': 'none',
 	'typeDecimals': 'none',
@@ -89,7 +89,7 @@ class ABFieldNumber extends ABField {
 
 
 		// text to Int:
-		this.settings.allowRequired = parseInt(this.settings.allowRequired);
+		// this.settings.allowRequired = parseInt(this.settings.allowRequired);
 		this.settings.validation = parseInt(this.settings.validation);
 
 	}
@@ -180,8 +180,8 @@ class ABFieldNumber extends ABField {
 
 							}
 
-							// not null
-							if (this.settings.allowRequired) {
+							// field is required (not null)
+							if (this.settings.required) {
 								currCol.notNullable();
 							}
 							else {

@@ -96,6 +96,7 @@ export default class UIComponent {
 					dataFieldColumnNamePlaceholder: L('ab.dataField.common.columnNamePlaceholder', '*Database field name'),
 
 					dataFieldShowIcon: L('ab.dataField.common.showIcon', '*show icon?'),
+                    dataFieldRequired: L('ab.dataField.common.required', '*Required'),
 					
 					componentDropZone: L('ab.common.componentDropZone', '*add widgets here')
 				},

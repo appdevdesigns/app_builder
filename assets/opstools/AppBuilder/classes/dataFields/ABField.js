@@ -63,7 +63,8 @@ export default class ABField extends ABFieldBase {
   		var defaultValues = {
   			label: '',
   			columnName:'',
-  			showIcon:1
+  			showIcon:1,
+			required:0,
   		}
 
   		for(var f in defaultValues) {
@@ -78,6 +79,7 @@ export default class ABField extends ABFieldBase {
   		$$(ids.label).setValue(field.label);
   		$$(ids.columnName).setValue(field.columnName);
   		$$(ids.showIcon).setValue(field.settings.showIcon);
+		$$(ids.required).setValue(field.settings.required);
 
   	}
 
@@ -108,7 +110,7 @@ export default class ABField extends ABFieldBase {
 /// if not onChange, then use our default:
 
   		// setup our default labelOnChange functionality:
-  		var onChange = function (newVal, oldVal) {
+  		var labelOnChange = function (newVal, oldVal) {
 
   			oldVal = oldVal || '';
 
@@ -121,7 +123,16 @@ export default class ABField extends ABFieldBase {
 
 		// if they provided a labelOnChange() override, use that:
 		if (_logic.labelOnChange) {
-			onChange = _logic.labelOnChange;
+			labelOnChange = _logic.labelOnChange;
+		}
+		
+		var requiredOnChange = function (newVal, oldVal, ids) {
+			console.error('Field has not implemented .requiredOnChange() is that okay?');
+		}
+		
+		// if the provided a requriedOnChange() override, use that:
+		if (_logic.requiredOnChange) {
+			requiredOnChange = _logic.requiredOnChange;
 		}
 
 
@@ -142,7 +153,7 @@ export default class ABField extends ABFieldBase {
 					css: 'ab-new-label-name',
 					on: {
 						onChange: function (newVal, oldVal) {
-							onChange(newVal, oldVal);
+							labelOnChange(newVal, oldVal);
 						}
 					}
 				},
@@ -168,6 +179,19 @@ export default class ABField extends ABFieldBase {
 					labelRight: App.labels.dataFieldShowIcon, // 'Show icon',
 					labelWidth: App.config.labelWidthCheckbox,
 					value:true
+				},
+				{
+					view: "checkbox",
+					id: ids.required,
+					name: "required",
+					labelRight: App.labels.dataFieldRequired,
+					disallowEdit: true,
+					labelWidth: App.config.labelWidthCheckbox,
+					on: {
+						onChange: (newVal, oldVal) => {
+							requiredOnChange(newVal, oldVal, ids);
+						}
+					}
 				}
 			]
 		}
@@ -442,7 +466,10 @@ export default class ABField extends ABFieldBase {
 	 */
 	isValidData(data, validator) {
 
-		console.error('!!! Field ['+this.fieldKey()+'] has not implemented .isValidData()!!!');
+		// console.error('!!! Field ['+this.fieldKey()+'] has not implemented .isValidData()!!!');
+		if (this.settings.required && (data[this.columnName] == null || data[this.columnName] == '')) {
+			validator.addError(this.columnName, 'This is a required field.');
+		}
 
 	}
 

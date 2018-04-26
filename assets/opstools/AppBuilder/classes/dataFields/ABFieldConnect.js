@@ -592,6 +592,9 @@ class ABFieldConnect extends ABFieldSelectivity {
 	 * @return {array} 
 	 */
 	isValidData(data, validator) {
+		
+		super.isValidData(data, validator);
+		
 	}
 
 

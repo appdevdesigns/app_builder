@@ -27,6 +27,7 @@ module.exports =  class ABField extends ABFieldBase {
   			label:'',					// pulled from translation
 			columnName:'column_name',	// a valid mysql table.column name 
 			isImported: 1/0,			// flag to mark is import from other object
+			required: 1/0,				// field allows does not allow NULL or it does allow NULL 
 			settings: {					// unique settings for the type of field
 				showIcon:true/false,	// only useful in Object Workspace DataTable
 

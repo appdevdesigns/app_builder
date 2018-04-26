@@ -192,7 +192,13 @@ class ABFieldDate extends ABField {
 							// 	currCol = t.date(this.columnName);
 							// }
 
-							currCol.nullable();
+							// field is required (not null)
+							if (this.settings.required) {
+								currCol.notNullable();
+							}
+							else {
+								currCol.nullable();
+							}
 
 							// set default value
 							if (this.settings.defaultDate && moment(this.settings.defaultDate).isValid()) {
