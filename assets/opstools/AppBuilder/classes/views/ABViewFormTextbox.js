@@ -115,19 +115,29 @@ export default class ABViewFormTextbox extends ABViewFormField {
 	}
 
 
-
-	//
-	// Property Editor
-	// 
-
-	static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
-
-		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
+	//// 
+	//// Property Editor Interface
+	////
 
 
-		// in addition to the common .label  values, we 
-		// ask for:
-		return commonUI.concat([
+
+    /** 
+     * @method propertyEditorFields
+     * return an array of webix UI fields to handle the settings of this
+     * ABView. 
+     * This method should make any modifications to ids, logic, and init
+     * as needed to support the new fields added in this routine.
+     * @param {App} App  The global App object for the current Application instance
+     * @param {obj} ids the id.[name] references to our fields 
+     * @param {obj} logic A hash of fn() called by our webix components
+     * @return {array}  of webix UI definitions.
+     */
+	propertyEditorFields(App, ids, _logic) {  
+		var components = super.propertyEditorFields(App, ids, _logic); 
+        
+        var L = App.Label;
+
+        components = components.concat([
 			{
 				name: 'type',
 				view: "radio",
@@ -141,26 +151,87 @@ export default class ABViewFormTextbox extends ABViewFormField {
 			}
 		]);
 
+
+		return components;
 	}
 
-	static propertyEditorPopulate(App, ids, view) {
-
-		super.propertyEditorPopulate(App, ids, view);
 
 
-		$$(ids.type).setValue(view.settings.type || ABViewFormTextboxPropertyComponentDefaults.type);
+    /** 
+     * @method propertyEditorDefaultValues
+     * return an object of [name]:[value] data to set the your fields to a 
+     * default (unused) state.
+     * @return {obj}  
+     */
+    propertyEditorDefaultValues() {
+        var defaults = super.propertyEditorDefaultValues();
+        for(var d in ABViewFormTextboxPropertyComponentDefaults) {
+            defaults[d] = ABViewFormTextboxPropertyComponentDefaults[d];
+        }
+        return defaults;
+    }
 
 
-	}
 
-	static propertyEditorValues(ids, view) {
+    /** 
+     * @method propertyEditorInit
+     * perform any setup instructions on the fields you are displaying.
+     * this is a good time to populate any select lists with data you need to 
+     * look up.  
+     * @param {App} App  The global App object for the current Application instance
+     * @param {obj} ids the id.[name] references to our fields 
+     * @param {obj} _logic A hash of fn() called by our webix components
+     */
+    // propertyEditorInit(App, ids, _logic) {
+    // 	super.propertyEditorInit(App, ids, _logic);
 
-		super.propertyEditorValues(ids, view);
+    // }
 
 
-		view.settings.type = $$(ids.type).getValue();
 
-	}
+    /** 
+     * @method propertyEditorPopulate
+     * set the initial values of the fields you are displaying.
+     * @param {App} App the common App object shared among our UI components.
+     * @param {obj} ids the id.[name] references to our fields 
+     * @param {data} data the initial settings data for this object
+     */
+    propertyEditorPopulate(App, ids, data) {
+        super.propertyEditorPopulate(App, ids, data);
+
+        $$(ids.type).setValue(data.type || ABViewFormTextboxPropertyComponentDefaults.type);
+
+    }
+
+
+
+    /** 
+     * @method propertyEditorValues
+     * pull the values from the Propery Editor and store them in our object.
+     * @param {obj} ids the id.[name] references to our fields 
+     */
+    propertyEditorValues(ids) {
+        super.propertyEditorValues(ids);
+
+		this.settings.type = $$(ids.type).getValue();
+    }
+
+
+
+    /** 
+     * @method propertyEditorRemove
+     * clean up our property editor before it is deleted.
+     */
+    // propertyEditorRemove() {
+    //     super.propertyEditorRemove();
+            
+    // }
+
+
+
+    ////
+    //// Live View
+    ////
 
 
 

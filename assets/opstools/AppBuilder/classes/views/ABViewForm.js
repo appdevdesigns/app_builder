@@ -171,13 +171,28 @@ export default class ABViewForm extends ABViewContainer {
 	}
 
 
-	//
-	// Property Editor
-	// 
+	//// 
+	//// Property Editor Interface
+	////
 
-	static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
 
-		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
+
+    /** 
+     * @method propertyEditorFields
+     * return an array of webix UI fields to handle the settings of this
+     * ABView. 
+     * This method should make any modifications to ids, logic, and init
+     * as needed to support the new fields added in this routine.
+     * @param {App} App  The global App object for the current Application instance
+     * @param {obj} ids the id.[name] references to our fields 
+     * @param {obj} logic A hash of fn() called by our webix components
+     * @return {array}  of webix UI definitions.
+     */
+	propertyEditorFields(App, ids, _logic) {  
+		var components = super.propertyEditorFields(App, ids, _logic); 
+        
+        var L = App.Label;
+
 
 		var idBase = "ABViewForm";
 
@@ -196,8 +211,8 @@ export default class ABViewForm extends ABViewContainer {
 
 			// TODO : warning message
 
-			var currView = _logic.currentEditObject();
-			var formView = currView.parentFormComponent();
+			// var currView = _logic.currentEditObject();
+			var formView = this.parentFormComponent();
 
 			// remove all old components
 			if (oldDcId != null) {
@@ -206,10 +221,10 @@ export default class ABViewForm extends ABViewContainer {
 			}
 
 			// Update field options in property
-			this.propertyUpdateFieldOptions(ids, currView, dcId);
+			this.propertyUpdateFieldOptions(ids, dcId);
 
 			// add all fields to editor by default
-			if (currView._views.length < 1) {
+			if (this._views.length < 1) {
 
 				var fields = $$(ids.fields).find({});
 				fields.reverse();
@@ -220,8 +235,8 @@ export default class ABViewForm extends ABViewContainer {
 						var yPosition = (fields.length - index - 1);
 
 						// Add new form field
-						var newFieldView = currView.addFieldToForm(f, yPosition);
-						newFieldView.once('destroyed', () => this.propertyEditorPopulate(App, ids, currView));
+						var newFieldView = this.addFieldToForm(f, yPosition);
+						newFieldView.once('destroyed', () => this.propertyEditorPopulate(App, ids, this.settings));
 
 						// update item to UI list
 						f.selected = 1;
@@ -238,7 +253,7 @@ export default class ABViewForm extends ABViewContainer {
 			}
 
 			// Update field options in property
-			this.propertyUpdateRules(ids, currView, dcId);
+			this.propertyUpdateRules(ids, dcId);
 
 		};
 
@@ -256,7 +271,7 @@ export default class ABViewForm extends ABViewContainer {
 
 		_logic.check = (e, fieldId) => {
 
-			var currView = _logic.currentEditObject();
+			// var currView = _logic.currentEditObject();
 
 			// update UI list
 			var item = $$(ids.fields).getItem(fieldId);
@@ -265,12 +280,12 @@ export default class ABViewForm extends ABViewContainer {
 
 			// add a field to the form
 			if (item.selected) {
-				var fieldView = currView.addFieldToForm(item);
-				fieldView.once('destroyed', () => this.propertyEditorPopulate(App, ids, currView));
+				var fieldView = this.addFieldToForm(item);
+				fieldView.once('destroyed', () => this.propertyEditorPopulate(App, ids, this.settings));
 			}
 			// remove field in the form
 			else {
-				var formView = currView.parentFormComponent();
+				var formView = this.parentFormComponent();
 				var fieldView = formView.fieldComponents().filter(c => c.settings.fieldId == fieldId)[0];
 
 				if (fieldView)
@@ -279,7 +294,7 @@ export default class ABViewForm extends ABViewContainer {
 			}
 
 			// trigger a save()
-			this.propertyEditorSave(ids, currView);
+			this.propertyEditorSave(ids);
 
 		};
 
@@ -287,9 +302,9 @@ export default class ABViewForm extends ABViewContainer {
 		// Display rule
 		_logic.displayRuleShow = () => {
 
-			var currView = _logic.currentEditObject();
+			// var currView = _logic.currentEditObject();
 
-			PopupDisplayRule.setValue(currView.settings.displayRules);
+			PopupDisplayRule.setValue(this.settings.displayRules);
 			PopupDisplayRule.show();
 
 		};
@@ -302,10 +317,10 @@ export default class ABViewForm extends ABViewContainer {
 		// Record rule
 		_logic.recordRuleShow = () => {
 
-			var currView = _logic.currentEditObject();
+			// var currView = _logic.currentEditObject();
 			
-			PopupRecordRule.formLoad(currView);
-			PopupRecordRule.fromSettings(currView.settings.recordRules);
+			PopupRecordRule.formLoad(this);
+			PopupRecordRule.fromSettings(this.settings.recordRules);
 			PopupRecordRule.show();
 
 // NOTE: Querybuilder v5.2 has a bug where it won't display the [and/or] 
@@ -320,14 +335,14 @@ PopupRecordRule.qbFixAfterShow();
 
 		_logic.recordRuleSave = (settings) => {
 
-			var currView = _logic.currentEditObject();
-			currView.settings.recordRules = settings;
+			// var currView = _logic.currentEditObject();
+			this.settings.recordRules = settings;
 
 			// trigger a save()
-			this.propertyEditorSave(ids, currView);
+			this.propertyEditorSave(ids);
 
 			// update badge number of rules
-			this.populateBadgeNumber(ids, currView);
+			this.populateBadgeNumber(ids);
 
 		};
 
@@ -335,9 +350,9 @@ PopupRecordRule.qbFixAfterShow();
 		// Submit rule
 		_logic.submitRuleShow = () => {
 
-			var currView = _logic.currentEditObject();
+			// var currView = _logic.currentEditObject();
 
-			PopupSubmitRule.fromSettings(currView.settings.submitRules);
+			PopupSubmitRule.fromSettings(this.settings.submitRules);
 			PopupSubmitRule.show();
 
 
@@ -345,14 +360,14 @@ PopupRecordRule.qbFixAfterShow();
 
 		_logic.submitRuleSave = (settings) => {
 
-			var currView = _logic.currentEditObject();
-			currView.settings.submitRules = settings;
+			// var currView = _logic.currentEditObject();
+			this.settings.submitRules = settings;
 
 			// trigger a save()
-			this.propertyEditorSave(ids, currView);
+			this.propertyEditorSave(ids);
 
 			// update badge number of rules
-			this.populateBadgeNumber(ids, currView);
+			this.populateBadgeNumber(ids);
 
 		};
 
@@ -372,8 +387,7 @@ PopupRecordRule.qbFixAfterShow();
 		});
 
 
-
-		return commonUI.concat([
+        components = components.concat([
 			{
 				name: 'datacollection',
 				view: 'richselect',
@@ -527,18 +541,46 @@ PopupRecordRule.qbFixAfterShow();
 			}
 		]);
 
+
+		return components;
 	}
 
-	static propertyEditorPopulate(App, ids, view) {
 
-		super.propertyEditorPopulate(App, ids, view);
 
-		var formCom = view.parentFormComponent();
+    /** 
+     * @method propertyEditorDefaultValues
+     * return an object of [name]:[value] data to set the your fields to a 
+     * default (unused) state.
+     * @return {obj}  
+     */
+    propertyEditorDefaultValues() {
+        var defaults = super.propertyEditorDefaultValues();
+        for(var d in ABViewFormPropertyComponentDefaults) {
+            defaults[d] = ABViewFormPropertyComponentDefaults[d];
+        }
+        return defaults;
+    }
+
+
+
+    /** 
+     * @method propertyEditorInit
+     * perform any setup instructions on the fields you are displaying.
+     * this is a good time to populate any select lists with data you need to 
+     * look up.  
+     * @param {App} App  The global App object for the current Application instance
+     * @param {obj} ids the id.[name] references to our fields 
+     * @param {obj} _logic A hash of fn() called by our webix components
+     */
+    propertyEditorInit(App, ids, _logic) {
+    	super.propertyEditorInit(App, ids, _logic);
+
+      	var formCom = this.parentFormComponent();
 		var dataCollectionId = (formCom.settings.datacollection ? formCom.settings.datacollection : null);
 		var SourceSelector = $$(ids.datacollection);
 
 		// Pull data collections to options
-		var dcOptions = view.pageRoot().dataCollections().map((dc) => {
+		var dcOptions = this.pageRoot().dataCollections().map((dc) => {
 
 			return {
 				id: dc.id,
@@ -551,53 +593,94 @@ PopupRecordRule.qbFixAfterShow();
 			value: '[Select]'
 		});
 		SourceSelector.define('options', dcOptions);
-		SourceSelector.define('value', dataCollectionId);
+		// SourceSelector.define('value', dataCollectionId);
 		SourceSelector.refresh();
 
-		this.propertyUpdateFieldOptions(ids, view, dataCollectionId);
 
 
 		// update properties when a field component is deleted
-		view.views().forEach((v) => {
+		this.views().forEach((v) => {
 			if (v instanceof ABViewFormField)
-				v.once('destroyed', () => this.propertyEditorPopulate(App, ids, view));
+				v.once('destroyed', () => this.propertyEditorPopulate(App, ids, data));
 		});
 
-		SourceSelector.enable();
-		$$(ids.showLabel).setValue(view.settings.showLabel);
-		$$(ids.labelPosition).setValue(view.settings.labelPosition || ABViewFormPropertyComponentDefaults.labelPosition);
-		$$(ids.labelWidth).setValue(view.settings.labelWidth || ABViewFormPropertyComponentDefaults.labelWidth);
-		$$(ids.height).setValue(view.settings.height || ABViewFormPropertyComponentDefaults.height);
-		$$(ids.clearOnLoad).setValue(view.settings.clearOnLoad || ABViewFormPropertyComponentDefaults.clearOnLoad);
 
-		this.propertyUpdateRules(ids, view, dataCollectionId);
-		this.populateBadgeNumber(ids, view);
+		this.propertyUpdateFieldOptions(ids, dataCollectionId);
+
 
 		// when a change is made in the properties the popups need to reflect the change
 		this.updateEventIds = this.updateEventIds || {}; // { viewId: boolean, ..., viewIdn: boolean }
-		if (!this.updateEventIds[view.id]) {
-			this.updateEventIds[view.id] = true;
+		if (!this.updateEventIds['ABViewForm']) {
+			this.updateEventIds['ABViewForm'] = true;
 
-			view.addListener('properties.updated', () => {
-				this.populateBadgeNumber(ids, view);
+			this.addListener('properties.updated', () => {
+				this.populateBadgeNumber(ids);
 			});
 		}
 
-	}
+
+		this.propertyUpdateRules(ids, dataCollectionId);
+		this.populateBadgeNumber(ids);
+
+    }
 
 
-	static propertyEditorValues(ids, view) {
 
-		super.propertyEditorValues(ids, view);
+    /** 
+     * @method propertyEditorPopulate
+     * set the initial values of the fields you are displaying.
+     * @param {App} App the common App object shared among our UI components.
+     * @param {obj} ids the id.[name] references to our fields 
+     * @param {data} data the initial settings data for this object
+     */
+    propertyEditorPopulate(App, ids, data) {
+        super.propertyEditorPopulate(App, ids, data);
 
-		view.settings.datacollection = $$(ids.datacollection).getValue();
-		view.settings.showLabel = $$(ids.showLabel).getValue();
-		view.settings.labelPosition = $$(ids.labelPosition).getValue() || ABViewFormPropertyComponentDefaults.labelPosition;
-		view.settings.labelWidth = $$(ids.labelWidth).getValue() || ABViewFormPropertyComponentDefaults.labelWidth;
-		view.settings.height = $$(ids.height).getValue();
-		view.settings.clearOnLoad = $$(ids.clearOnLoad).getValue();
+        var SourceSelector = $$(ids.datacollection);
+		SourceSelector.setValue(data.dataCollectionId);
+		SourceSelector.enable();
 
-	}
+		$$(ids.showLabel).setValue(data.showLabel);
+		$$(ids.labelPosition).setValue(data.labelPosition || ABViewFormPropertyComponentDefaults.labelPosition);
+		$$(ids.labelWidth).setValue(data.labelWidth || ABViewFormPropertyComponentDefaults.labelWidth);
+		$$(ids.height).setValue(data.height || ABViewFormPropertyComponentDefaults.height);
+		$$(ids.clearOnLoad).setValue(data.clearOnLoad || ABViewFormPropertyComponentDefaults.clearOnLoad);
+
+    }
+
+
+
+    /** 
+     * @method propertyEditorValues
+     * pull the values from the Propery Editor and store them in our object.
+     * @param {obj} ids the id.[name] references to our fields 
+     */
+    propertyEditorValues(ids) {
+        super.propertyEditorValues(ids);
+
+		this.settings.datacollection = $$(ids.datacollection).getValue();
+		this.settings.showLabel = $$(ids.showLabel).getValue();
+		this.settings.labelPosition = $$(ids.labelPosition).getValue() || ABViewFormPropertyComponentDefaults.labelPosition;
+		this.settings.labelWidth = $$(ids.labelWidth).getValue() || ABViewFormPropertyComponentDefaults.labelWidth;
+		this.settings.height = $$(ids.height).getValue();
+		this.settings.clearOnLoad = $$(ids.clearOnLoad).getValue();
+
+    }
+
+
+
+    /** 
+     * @method propertyEditorRemove
+     * clean up our property editor before it is deleted.
+     */
+    propertyEditorRemove() {
+        super.propertyEditorRemove();
+            
+        // // clean up our listener:
+        // AD.comm.hub.unsubscribe(this.viewUpdateEventIds);
+        // this.viewUpdateEventIds = null;
+    }
+
 
 
 	/**
@@ -608,11 +691,11 @@ PopupRecordRule.qbFixAfterShow();
 	 * @param {ABViewForm} view - the current component
 	 * @param {string} dcId - id of ABViewDataCollection
 	 */
-	static propertyUpdateFieldOptions(ids, view, dcId) {
+	propertyUpdateFieldOptions(ids, dcId) {
 
-		var formComponent = view.parentFormComponent();
+		var formComponent = this.parentFormComponent();
 		var existsFields = formComponent.fieldComponents();
-		var datacollection = view.pageRoot().dataCollections(dc => dc.id == dcId)[0];
+		var datacollection = this.pageRoot().dataCollections(dc => dc.id == dcId)[0];
 		var object = datacollection ? datacollection.datasource : null;
 
 		// Pull field list
@@ -633,12 +716,12 @@ PopupRecordRule.qbFixAfterShow();
 
 	}
 
-	static propertyUpdateRules(ids, view, dcId) {
 
-		if (!view) return;
+
+	propertyUpdateRules(ids, dcId) {
 
 		// Populate values to rules
-		var selectedDc = view.dataCollection();
+		var selectedDc = this.dataCollection();
 		if (selectedDc) {
 			PopupDisplayRule.objectLoad(selectedDc.datasource);
 			PopupRecordRule.objectLoad(selectedDc.datasource);
@@ -647,17 +730,17 @@ PopupRecordRule.qbFixAfterShow();
 
 
 		// PopupDisplayRule.formLoad(view);
-		PopupRecordRule.formLoad(view);
-		PopupSubmitRule.formLoad(view);
+		PopupRecordRule.formLoad(this);
+		PopupSubmitRule.formLoad(this);
 
 	}
 
-	static populateBadgeNumber(ids, view) {
 
-		if (!view) return;
 
-		if (view.settings.submitRules) {
-			$$(ids.buttonSubmitRules).define('badge', view.settings.submitRules.length || 0);
+	populateBadgeNumber(ids) {
+
+		if (this.settings.submitRules) {
+			$$(ids.buttonSubmitRules).define('badge', this.settings.submitRules.length || 0);
 			$$(ids.buttonSubmitRules).refresh();
 		}
 		else {
@@ -665,8 +748,8 @@ PopupRecordRule.qbFixAfterShow();
 			$$(ids.buttonSubmitRules).refresh();
 		}
 
-		if (view.settings.displayRules) {
-			$$(ids.buttonDisplayRules).define('badge', view.settings.displayRules.length || 0);
+		if (this.settings.displayRules) {
+			$$(ids.buttonDisplayRules).define('badge', this.settings.displayRules.length || 0);
 			$$(ids.buttonDisplayRules).refresh();
 		}
 		else {
@@ -674,8 +757,8 @@ PopupRecordRule.qbFixAfterShow();
 			$$(ids.buttonDisplayRules).refresh();
 		}
 
-		if (view.settings.recordRules) {
-			$$(ids.buttonRecordRules).define('badge', view.settings.recordRules.length || 0);
+		if (this.settings.recordRules) {
+			$$(ids.buttonRecordRules).define('badge', this.settings.recordRules.length || 0);
 			$$(ids.buttonRecordRules).refresh();
 		}
 		else {
@@ -684,6 +767,12 @@ PopupRecordRule.qbFixAfterShow();
 		}
 
 	}
+
+
+
+    ////
+    //// Live View
+    ////
 
 
 
