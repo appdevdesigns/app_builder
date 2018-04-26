@@ -601,6 +601,8 @@ export default class ABApplication extends ABApplicationBase {
 	//// App
 	////
 
+
+
 	/**
 	 * appSave
 	 * store our App reference with all our Pages & Views.
@@ -612,7 +614,7 @@ export default class ABApplication extends ABApplicationBase {
 		this.pages().forEach((p)=>{
 			p.appSave(App);
 		})
-		
+
 	}
 
 
