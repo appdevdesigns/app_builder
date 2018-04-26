@@ -196,8 +196,8 @@ export default class ABModel {
 		return new Promise(
 			(resolve, reject) => {
 
-				// OP.Comm.Socket.get({
-				OP.Comm.Service.get({
+				OP.Comm.Socket.get({
+				// OP.Comm.Service.get({
 					url: this.object.urlRest(),
 					params: cond
 					// params: newCond
