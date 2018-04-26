@@ -321,12 +321,12 @@ export default class ABViewDataCollection extends ABView {
 
 
 			var allComplete = true;
-			filterValues.filters.forEach((f)=>{
+			filterValues.rules.forEach((f)=>{
 
 				// if all 3 fields are present, we are good.
-				if ((f.fieldId) 
-					&& (f.operator)
-					&& (f.inputValue)) {
+				if ((f.key) 
+					&& (f.rule)
+					&& (f.value)) {
 
 					allComplete = allComplete && true;
 				} else {
