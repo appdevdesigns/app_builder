@@ -924,6 +924,30 @@ export default class ABViewPage extends ABViewContainer {
             }
         });
         
-	}        
+	}   
+
+
+
+    ////
+    //// App
+    ////
+
+
+
+    /**
+     * appSave
+     * store our App reference with all our Pages & Views.
+     * @param {App} App
+     */
+    appSave(App) {
+
+        super.appSave(App);
+
+        // now pass this on to all our sub pages:
+        this.pages().forEach((p)=>{
+            p.appSave(App);
+        });
+
+    }     
 
 }

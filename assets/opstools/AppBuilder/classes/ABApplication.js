@@ -597,6 +597,25 @@ export default class ABApplication extends ABApplicationBase {
 
 
 
+	////
+	//// App
+	////
+
+	/**
+	 * appSave
+	 * store our App reference with all our Pages & Views.
+	 * @param {App} App
+	 */
+	appSave(App) {
+
+		this.App = App;
+		this.pages().forEach((p)=>{
+			p.appSave(App);
+		})
+		
+	}
+
+
 	/**
 	 * @method urlPage()
 	 * return the url pointer for pages in this application.

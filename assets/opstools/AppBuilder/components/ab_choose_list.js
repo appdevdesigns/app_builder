@@ -286,7 +286,7 @@ export default class ABChooseList extends OP.Component {
 				if (selectedApp) {
 
 					// set the common App so it is accessible for all the Applications views
-					selectedApp.App = App;		
+					selectedApp.appSave(App);		
 					_logic.ready();
 
 					// We've selected an Application to work with

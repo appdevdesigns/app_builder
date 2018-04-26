@@ -568,6 +568,8 @@ export default class ABView extends ABViewBase {
 	 */
 	editorComponent(App, mode) {
 
+		if (!this.App) this.App = App;
+
 		var L = App.Label;
 
 		var idBase = 'ABViewEditorComponent';
@@ -849,6 +851,7 @@ export default class ABView extends ABViewBase {
      * @return {UIComponent}  to display as our Editor.
      */
 	propertyEditor(App) {
+		if (!this.App) this.App = App;
 
 		var editor = new ABPropertyComponent({
 
@@ -934,7 +937,7 @@ export default class ABView extends ABViewBase {
      * @return {array}  of webix UI definitions.
      */
 	propertyEditorFields(App, ids, logic) {  
-
+		if (!this.App) this.App = App;
 
 		// NOTE: do not inclue the id: ids.label  settings in these descriptions.
 		// the ABPropertyComponent will handle creating a unique version of the
@@ -1091,6 +1094,7 @@ export default class ABView extends ABViewBase {
 	 * @return {obj} UI component
 	 */
 	component(App) {
+		if (!this.App) this.App = App;
 
 		var idBase = 'ABView_' + this.id;
 		var ids = {
@@ -1228,6 +1232,31 @@ export default class ABView extends ABViewBase {
 			}
 			
 		}
+
+	}
+
+
+
+
+
+
+	////
+	//// App
+	////
+
+
+
+	/**
+	 * appSave
+	 * store our App reference with all our Pages & Views.
+	 * @param {App} App
+	 */
+	appSave(App) {
+
+		this.App = App;
+		this.views().forEach((v)=>{
+			if (v.appSave) v.appSave(App);
+		})
 
 	}
 
