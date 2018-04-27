@@ -468,6 +468,9 @@ export default class ABObjectQuery extends ABObject {
 				h.header = '{objectLabel}.{fieldLabel}'
 							.replace('{objectLabel}', field.object.label)
 							.replace('{fieldLabel}', field.label);
+
+				h.adjust = true;
+				h.minWidth = 120;
 			}
 
 		});
