@@ -667,16 +667,13 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 						{
 							id: ids.datatable,
 							view: 'datatable',
+							minHeight: 200,
 							dragColumn: true,
-							height: 200,
 							columns: [],
 							data: [],
 							on: {
 								onAfterColumnDrop: _logic.save
 							}
-						},
-						{
-							fillspace: true
 						}
 					]
 
