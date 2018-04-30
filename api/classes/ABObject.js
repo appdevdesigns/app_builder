@@ -895,6 +895,9 @@ module.exports = class ABObject extends ABObjectBase {
 	            // normal field name:
 				var columnName =  condition.key;
 
+				// validate input
+				if (columnName == null || operator == null) return;
+
 	            // // if we are searching a multilingual field it is stored in translations so we need to search JSON
 	            // if (field && field.settings.supportMultilingual == 1) {
 				// 	fieldName = ('JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({tableName}.translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({tableName}.translations, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))')

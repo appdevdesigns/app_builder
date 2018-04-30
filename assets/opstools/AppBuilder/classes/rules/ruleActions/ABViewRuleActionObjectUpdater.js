@@ -399,7 +399,8 @@ if (field.key == 'user') {
 				$$(ids.field).setValue(data.fieldID);
 					// note: this triggers our _logic.selectField() fn.
 				var field = this.getUpdateObjectField( data.fieldID );
-				field.setValue($$(ids.value), data.value);
+				if (field)
+					field.setValue($$(ids.value), data.value);
 			},
 
 			toSettings: () => {
