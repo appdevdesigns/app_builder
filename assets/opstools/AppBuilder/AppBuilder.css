@@ -109,6 +109,14 @@
 	background-color: #eee;
 	color: #aaa;
 }
+.webix_cell:hover {
+	background: #EEE;
+}
+.webix_column > div.webix_cell_select, 
+.webix_column > div.webix_column_select, 
+.webix_column > div.webix_row_select {
+	background: #CCC;
+}
 
 /* Webix message */
 .webix_success {
@@ -366,7 +374,7 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 	color: #CCC;
 }
 .selectivity-multiple-input-container {
-	background: #FFF !important;
+	background: transparent !important;
 	padding: 0px !important;
 	overflow: hidden !important;
 	max-height: unset;
@@ -408,7 +416,7 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 	margin-right: 4px;
 }
 .selectivity-single-select {
-	background: #FFF !important;
+	background: transparent !important;
 }
 .webix_cell .form-entry {
 	border: 0;
