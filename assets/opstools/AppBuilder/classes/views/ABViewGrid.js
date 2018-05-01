@@ -861,7 +861,8 @@ export default class ABViewGrid extends ABViewWidget  {
 		};
 		if (this.settings.dataSource != "") {
 			tableUI = {
-				type: "layout",
+				type: "space",
+				padding: 17,
 				rows: [
 					{
 						view: 'toolbar',
