@@ -36,7 +36,8 @@ export default class ABWorkObjectDatatable extends OP.Component {
     			isEditable: params.isEditable,
     			massUpdate: params.massUpdate,
 				configureHeaders: params.configureHeaders,
-				summaryColumns: params.summaryColumns || []
+				summaryColumns: params.summaryColumns || [],
+                labelAsField: params.labelAsField
     		}
         } else {
             var settings = {
@@ -46,7 +47,8 @@ export default class ABWorkObjectDatatable extends OP.Component {
     			isEditable: true,
     			massUpdate: true,
 				configureHeaders: true,
-				summaryColumns: []
+				summaryColumns: [],
+                labelAsField: false
     		}
         }
 
@@ -336,13 +338,9 @@ console.warn('!! ToDo: onAfterColumnHide()');
                 // console.log(e.target.className);
     			if (e.target.className.indexOf('pencil') > -1) {
                     // alert("edit");
-                }
-                // if this was our view icon:
-    			if (e.target.className.indexOf('eye') > -1) {
+                } else if (e.target.className.indexOf('eye') > -1) { // if this was our view icon:
                     // alert("view");
-                }
-    			// if this was our trash icon:
-    			if (e.target.className.indexOf('trash') > -1) {
+                } else if (e.target.className.indexOf('trash') > -1) { // if this was our trash icon:
 
     				OP.Dialog.Confirm({
     					title: labels.component.confirmDeleteRowTitle,
@@ -497,6 +495,12 @@ console.warn('!! ToDo: onAfterColumnHide()');
                 )
                 
                 return lastColumn;
+            },
+            
+            hideHeader: function() {
+                var DataTable = $$(ids.component);
+                DataTable.define("header", false);
+                DataTable.refresh();
             },
             
             freezeDeleteColumn: function() {
@@ -858,6 +862,19 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                         col.fillspace = false;
                     });
                     
+                    if (settings.labelAsField) {
+                        console.log(CurrentObject);
+                        columnHeaders.unshift({
+                            id: "appbuilder_label_field",
+                            header: "Label",
+                            fillspace: true,
+                            template: function(obj){
+                                return CurrentObject.displayData(obj);
+                            },
+                            // css: { 'text-align': 'center' }                            
+                        });
+                    }
+                    
                     if (settings.isEditable == 0) {
                         columnHeaders.forEach(function(col) {
                             
@@ -1103,6 +1120,8 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
         // expose data for column sort UI
         this.getFieldList = _logic.getFieldList;
+        
+        this.hideHeader = _logic.hideHeader;
     }
 
 }
