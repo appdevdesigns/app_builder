@@ -902,7 +902,9 @@ export default class ABViewDataCollection extends ABView {
 
 			// updated values
 			var values = data.data;
+			if (!values) return;
 
+			
 			if (this.__dataCollection.exists(values.id)) {
 				// normalize data before update data collection
 				var model = this.datasource.model();
