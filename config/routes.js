@@ -22,6 +22,13 @@ module.exports = {
     'delete /app_builder/application/:appID/page':
         'app_builder/ABApplicationController.pageDestroy',
 
+    /* Application Queries */
+    'put /app_builder/application/:appID/query':
+        'app_builder/ABApplicationController.querySave',
+
+    'delete /app_builder/application/:appID/query/:id':
+        'app_builder/ABApplicationController.queryDestroy',
+
     /* Application permissions */
     'get /app_builder/user/roles':
         'app_builder/ABUserController.getRoles',

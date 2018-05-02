@@ -31,6 +31,8 @@ module.exports =  class ABObjectBase {
 	]
 }
 */
+	  	// link me to my parent ABApplication
+	  	this.application = application;
 
 		// ABApplication Attributes (or is it ABObject attributes?)
 		this.id	= attributes.id;
@@ -61,13 +63,12 @@ module.exports =  class ABObjectBase {
 		};
 
 
-	  	// import all our ABObjects
-	  	var newFields = [];
-	  	(attributes.fields || []).forEach((field) => {
-	  		newFields.push( this.fieldNew(field) );
-	  	})
-	  	this._fields = newFields;
+	  	// import all our ABField 
+	  	this.importFields(attributes.fields || []);
 
+
+	  	// convert '0' to 0
+	  	this.isImported = parseInt(this.isImported || 0);
 
 	  	// link me to my parent ABApplication
 	  	this.application = application;
@@ -90,6 +91,36 @@ module.exports =  class ABObjectBase {
 
 
 	/**
+	 * @method importFields
+	 * instantiate a set of fields from the given attributes.
+	 * @param {array} fieldSettings The different settings for each field to create.
+	 *							[ { fieldURL: 'xxxxx' }, ... ]
+	 */
+	importFields(fieldSettings) {
+		var newFields = [];
+
+	  	fieldSettings.forEach((field) => {
+	  		newFields.push( this.application.fieldNew(field, this) );
+	  	})
+	  	this._fields = newFields;
+	}
+
+
+	/**
+	 * @method exportFields
+	 * convert our array of fields into a settings object for saving to disk.
+	 * @return {array}
+	 */
+	exportFields() {
+		var currFields = [];
+		this._fields.forEach((obj) => {
+			currFields.push(obj.toObj())
+		})
+		return currFields;
+	}
+
+
+	/**
 	 * @method toObj()
 	 *
 	 * properly compile the current state of this ABApplication instance
@@ -104,12 +135,8 @@ module.exports =  class ABObjectBase {
 
 		// OP.Multilingual.unTranslate(this, this, ["label"]);
 
-		// // for each Object: compile to json
-		var currFields = [];
-		this._fields.forEach((obj) => {
-			currFields.push(obj.toObj())
-		})
-
+		// // for each Field: compile to json
+		var currFields = this.exportFields();
 
 		return {
 			id: 			this.id,
@@ -147,6 +174,29 @@ module.exports =  class ABObjectBase {
 			}
 		}
 		return this.save();
+	}
+
+
+
+	///
+	/// Objects
+	///
+
+
+	/**
+	 * @method objectLinks()
+	 * 
+	 *  return an array of ABObject that's connected.
+	 * 
+	 * @param {object} filter 
+	 * @return {array} - An array of ABObject
+	 */
+	objectLinks (filter) {
+
+		var connectFields = this.connectFields();
+
+		return connectFields.map(f => f.datasourceLink);
+
 	}
 
 
@@ -199,10 +249,9 @@ module.exports =  class ABObjectBase {
 	 *
 	 * @return {ABField}
 	 */
-	// fieldNew ( values ) {
-	// 	// NOTE: ABFieldManager returns the proper ABFieldXXXX instance.
-	// 	return ABFieldManager.newField( values, this );
-	// }
+	fieldNew ( values ) {
+		return this.application.fieldNew( values, this );
+	}
 
 
 
@@ -283,15 +332,65 @@ module.exports =  class ABObjectBase {
 	}
 
 
+	/**
+	 * @method multilingualFields()
+	 *
+	 * return an array of columnnames that are multilingual.
+	 *
+	 * @return {array}
+	 */
 	multilingualFields() {
 		var fields = [];
 
-		var found = this.fields(function(f){ return f.isMultilingual(); });
+		var found = this.fields(function(f){ return f.isMultilingual; });
 		found.forEach((f)=>{
 			fields.push(f.columnName);
 		})
 
 		return fields;
+	}
+
+
+
+	///
+	/// URL
+	///
+
+
+	/**
+	 * @method urlRest
+	 * return the url to access the data for this object.
+	 * @return {string} 
+	 */
+	 urlRest() {
+	 	return '/app_builder/model/application/#appID#/object/#objID#'
+			.replace('#appID#', this.application.id)
+			.replace('#objID#', this.id);
+	 }
+
+
+	/**
+	 * @method urlRestItem
+	 * return the url to access the data for an instance of this object.
+	 * @return {string} 
+	 */
+	urlRestItem(id) {
+		return '/app_builder/model/application/#appID#/object/#objID#/#id#'
+			.replace('#appID#', this.application.id)
+			.replace('#objID#', this.id)
+			.replace('#id#', id);
+	}
+
+
+	/**
+	 * @method urlRestRefresh
+	 * return the url to signal a refresh for this object.
+	 * @return {string} 
+	 */
+	urlRestRefresh() {
+		return '/app_builder/model/application/#appID#/refreshobject/#objID#'
+			.replace('#appID#', this.application.id)
+			.replace('#objID#', this.id);
 	}
 
 

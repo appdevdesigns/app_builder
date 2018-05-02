@@ -10,7 +10,7 @@
 export default class ABWorkObjectPopupHeaderEditMenu extends OP.Component {
 
     constructor(App, idBase) {
-        idBase = idBase + '_popupHeaderEditMenu';
+        idBase = idBase || 'ab_work_object_workspace_popupHeaderEditMenu';
 
         super(App, idBase);
         var L = this.Label;
@@ -28,8 +28,8 @@ export default class ABWorkObjectPopupHeaderEditMenu extends OP.Component {
         };
         
         var ids = {
-            component: this.unique('component'),
-            list: this.unique('list')
+            component: this.unique(idBase + '_popupEditHeader'),
+            list: this.unique(idBase + '_popupEditHeader_list')
         };
 
         // the list of options shown in the popup menu:

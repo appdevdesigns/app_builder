@@ -3,23 +3,10 @@ var path = require('path');
 var ABApplicationBase = require(path.join(__dirname,  "..", "..", "assets", "opstools", "AppBuilder", "classes",  "ABApplicationBase.js"));
 var ABObject = require(path.join(__dirname, 'ABObject'));
 var ABViewPage = require(path.join(__dirname, 'ABViewPage'));
+var ABObjectQuery = require(path.join(__dirname, 'ABObjectQuery'));
+var ABFieldManager = require(path.join(__dirname, 'ABFieldManager'));
 
-function L(key, altText) {
-	return AD.lang.label.getLabel(key) || altText;
-}
 
-function toArray(DC) {
-	var ary = [];
-
-	var id = DC.getFirstId();
-	while(id) {
-		var element = DC.getItem(id);
-		ary.push(element);
-		id = DC.getNextId(id);
-	}
-
-	return ary;
-}
 
 module.exports =  class ABClassApplication extends ABApplicationBase {
 
@@ -28,9 +15,6 @@ module.exports =  class ABClassApplication extends ABApplicationBase {
     	super(attributes);
 
   	}
-
-
-
 
 
 	////
@@ -45,6 +29,25 @@ module.exports =  class ABClassApplication extends ABApplicationBase {
 	///
 	/// Objects
 	///
+
+	/**
+	 * @method fieldNew()
+	 *
+	 * return an instance of a new (unsaved) ABField that is tied to a given
+	 * ABObject.
+	 *
+	 * NOTE: this new field is not included in our this.fields until a .save()
+	 * is performed on the field.
+	 *
+	 * @param {obj} values  the initial values for this field.  
+	 *						{ key:'{string}'} is required 
+	 * @param {ABObject} object  the parent object this field belongs to.
+	 * @return {ABField}
+	 */
+	fieldNew ( values, object ) {
+		// NOTE: ABFieldManager returns the proper ABFieldXXXX instance.
+		return ABFieldManager.newField( values, object );
+	}
 
 
 	/**
@@ -63,7 +66,6 @@ module.exports =  class ABClassApplication extends ABApplicationBase {
 	}
 
 
-
 	/**
 	 * @method pageNew()
 	 *
@@ -72,6 +74,19 @@ module.exports =  class ABClassApplication extends ABApplicationBase {
 	 */
 	pageNew( values ) {
 		return new ABViewPage(values, this);
+	}
+
+
+	/**
+	 * @method queryNew()
+	 *
+	 * return an instance of a new (unsaved) ABObjectQuery that is tied to this
+	 * ABApplication.
+	 *
+	 * @return {ABObjectQuery}
+	 */
+	queryNew( values ) {
+		return new ABObjectQuery(values, this);
 	}
 
 

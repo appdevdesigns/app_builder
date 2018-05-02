@@ -64,6 +64,7 @@ export default class ABModel {
 		this.object = object;
 
 		this._where = null;
+		this._sort = null;
 		this._skip = null;
 		this._limit = null;
 	}
@@ -82,24 +83,7 @@ export default class ABModel {
 	///
 	/// Instance Methods
 	///
-	modelURL() {
-		return '/app_builder/model/application/#appID#/object/#objID#'
-			.replace('#appID#', this.object.application.id)
-			.replace('#objID#', this.object.id)
-	}
 
-	modelURLItem(id) {
-		return '/app_builder/model/application/#appID#/object/#objID#/#id#'
-			.replace('#appID#', this.object.application.id)
-			.replace('#objID#', this.object.id)
-			.replace('#id#', id);
-	}
-
-	modelURLRefresh() {
-		return '/app_builder/model/application/#appID#/refreshobject/#objID#'
-			.replace('#appID#', this.object.application.id)
-			.replace('#objID#', this.object.id);
-	}
 
 	// Prepare multilingual fields to be untranslated
 	// Before untranslating we need to ensure that values.translations is set.
@@ -107,7 +91,16 @@ export default class ABModel {
 		
 		// if this object has some multilingual fields, translate the data:
 		var mlFields = this.object.multilingualFields();
+		// if mlFields are inside of the values saved we want to translate otherwise do not because it will reset the translation field and you may loose unchanged translations
+		var shouldTranslate = false;
 		if (mlFields.length) {
+			mlFields.forEach(function(field) {
+				if (typeof values[field] != "undefined") {
+					shouldTranslate = true;
+				}
+			});
+		}
+		if (shouldTranslate) {
 			if (values.translations == null || typeof values.translations == "undefined" || values.translations == "") {
 				values.translations = [];
 			}
@@ -115,7 +108,6 @@ export default class ABModel {
 		}
 			
 	}
-
 
 
 	/**
@@ -130,7 +122,7 @@ export default class ABModel {
 			(resolve, reject) => {
 
 				OP.Comm.Service.post({
-					url: this.modelURL(),
+					url: this.object.urlRest(),
 					params: values
 				})
 					.then((data) => {
@@ -164,7 +156,7 @@ export default class ABModel {
 			(resolve, reject) => {
 
 				OP.Comm.Service['delete']({
-					url: this.modelURLItem(id)
+					url: this.object.urlRestItem(id)
 				})
 					.then((data) => {
 						resolve(data);
@@ -191,31 +183,33 @@ export default class ABModel {
 		cond = cond || {};
 
 
-		// prepare our condition:
-		var newCond = {};
+// 		// prepare our condition:
+// 		var newCond = {};
 
-		// if the provided cond looks like our { where:{}, skip:xx, limit:xx } format,
-		// just use this one.
-		if (cond.where) {
-			newCond = cond;
-		} else {
+// 		// if the provided cond looks like our { where:{}, skip:xx, limit:xx } format,
+// 		// just use this one.
+// 		if (cond.where) {
+// 			newCond = cond;
+// 		} else {
 
-			// else, assume the provided condition is the .where clause.
-			newCond.where = cond;
-		}
+// 			// else, assume the provided condition is the .where clause.
+// 			newCond.where = cond;
+// 		}
 
-/// if this is our depreciated format:
-if (newCond.where.where) {
-	OP.Error.log('Depreciated Embedded .where condition.');
-}
+// /// if this is our depreciated format:
+// if (newCond.where.where) {
+// 	OP.Error.log('Depreciated Embedded .where condition.');
+// }
 
 
 		return new Promise(
 			(resolve, reject) => {
 
 				OP.Comm.Socket.get({
-					url: this.modelURL(),
-					params: newCond
+				// OP.Comm.Service.get({
+					url: this.object.urlRest(),
+					params: cond
+					// params: newCond
 				})
 					.then((data) => {
 
@@ -228,11 +222,11 @@ if (newCond.where.where) {
 						if (err.code) {
 							switch(err.code) {
 								case "ER_PARSE_ERROR":
-									OP.Error.log('AppBuilder:ABModel:findAll(): Parse Error with provided condition', { error: err, condition:newCond })
+									OP.Error.log('AppBuilder:ABModel:findAll(): Parse Error with provided condition', { error: err, condition:cond })
 									break;
 
 								default:
-									OP.Error.log('AppBuilder:ABModel:findAll(): Unknown Error with provided condition', { error: err, condition:newCond })
+									OP.Error.log('AppBuilder:ABModel:findAll(): Unknown Error with provided condition', { error: err, condition:cond })
 									break;
 							}
 
@@ -377,6 +371,7 @@ reject(err);
 
 				var cond = {
 					where: this._where,
+					sort: this._sort,
 					limit: count,
 					skip: start
 				}
@@ -411,6 +406,7 @@ reject(err);
 		// else just load it all at once:
 		var cond = {};
 		if (this._where) cond.where = this._where;
+		if (this._sort) cond.sort = this._sort;
 		if (this._limit != null) cond.limit = this._limit;
 		if (this._skip != null) cond.skip = this._skip;
 
@@ -484,7 +480,7 @@ reject(err);
 			(resolve, reject) => {
 
 				OP.Comm.Service.put({
-					url: this.modelURLItem(id),
+					url: this.object.urlRestItem(id),
 					params: values
 				})
 					.then((data) => {
@@ -519,6 +515,17 @@ reject(err);
 		return this;
 	}
 
+	/**
+	 * @method where
+	 * set the sort condition for the data being loaded.
+	 * @param {json} cond  the json condition statement.
+	 * @return {ABModel} this object that is chainable.
+	 */
+	sort(cond) {
+		this._sort = cond;
+		return this;
+	}
+
 
 	/**
 	 * @method refresh
@@ -530,7 +537,7 @@ reject(err);
 			(resolve, reject) => {
 
 				OP.Comm.Service.put({
-					url: this.modelURLRefresh()
+					url: this.object.urlRestRefresh()
 				})
 					.then(() => {
 						resolve();
@@ -576,14 +583,14 @@ reject(err);
 				if (Array.isArray(d[relationName])) {
 					d[relationName].forEach((r) => {
 						// if translations are present and they are still a string
-						if ('translations' in r && typeof r.translations == "string") {
+						if (r.translations && typeof r.translations == "string") {
 							// parse the string into an object
 							r.translations = JSON.parse(r.translations);
 						}
 					});
 				} else {
 					// if the data is not an array it is a single item...check that has translations and it is a string
-					if ('translations' in d[relationName] && typeof d[relationName].translations == "string") {
+					if (d[relationName].translations  && typeof d[relationName].translations == "string") {
 						// if so parse the string into an object
 						d[relationName].translations = JSON.parse(d[relationName].translations);
 					}

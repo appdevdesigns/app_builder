@@ -179,7 +179,7 @@ class ABFieldConnect extends ABField {
 	// }
 
 
-	objectLink() {
+	get datasourceLink() {
 		var application = this.object.application,
 			linkObject = application.objects((obj) => { return obj.id == this.settings.linkObject; })[0];
 
@@ -187,7 +187,7 @@ class ABFieldConnect extends ABField {
 	}
 
 	fieldLink() {
-		var linkObject = this.objectLink();
+		var linkObject = this.datasourceLink;
 
 		if (!linkObject) return null;
 
@@ -195,6 +195,14 @@ class ABFieldConnect extends ABField {
 	}
 
 
+	linkType() {
+		return this.settings.linkType;
+	}
+
+
+	linkViaType() {
+		return this.settings.linkViaType;
+	}
 
 	///
 	/// DB Migrations
@@ -213,7 +221,7 @@ class ABFieldConnect extends ABField {
 				var tableName = this.object.dbTableName();
 
 				// find linked object
-				var linkObject = this.objectLink(),
+				var linkObject = this.datasourceLink,
 					linkTableName = linkObject.dbTableName(),
 					// TODO : should check duplicate column
 					linkColumnName = this.object.name;
@@ -326,7 +334,11 @@ class ABFieldConnect extends ABField {
 				else if (this.settings.linkType == 'many' && this.settings.linkViaType == 'many') {
 
 					var joinTableName = this.joinTableName(),
-						getFkName = (objectName, columnName) => {
+						getFkName = AppBuilder.rules.toJunctionTableFK;  
+						// [add] replaced this with a global rule, so we can reuse it in other 
+						// 		 places.
+						/* 
+						(objectName, columnName) => {
 
 							var fkName = objectName + '_' + columnName;
 
@@ -335,6 +347,7 @@ class ABFieldConnect extends ABField {
 
 							return fkName;
 						};
+						*/
 
 					knex.schema.hasTable(joinTableName).then((exists) => {
 
@@ -532,14 +545,17 @@ class ABFieldConnect extends ABField {
 
 
 	relationName() {
-		return AppBuilder.rules.toFieldRelationFormat(this.columnName);
+
+		var relationName = AppBuilder.rules.toFieldRelationFormat(this.columnName);
+
+		return relationName;
 	}
 
 	joinTableName() {
 
 		if (this.object.isExternal) {
 
-			var juntionModel = getJuntionInfo(this.object.tableName, this.objectLink().tableName);
+			var juntionModel = getJuntionInfo(this.object.tableName, this.datasourceLink.tableName);
 
 			return juntionModel.tableName;
 
@@ -587,7 +603,7 @@ class ABFieldConnect extends ABField {
 
 		if (this.object.isExternal) {
 
-			var juntionModel = getJuntionInfo(this.object.tableName, this.objectLink().tableName);
+			var juntionModel = getJuntionInfo(this.object.tableName, this.datasourceLink.tableName);
 
 			sourceColumnName = juntionModel.sourceColumnName;
 			targetColumnName = juntionModel.targetColumnName;
@@ -596,10 +612,10 @@ class ABFieldConnect extends ABField {
 
 			if (this.settings.isSource == true) {
 				sourceColumnName = this.object.name;
-				targetColumnName = this.objectLink().name;
+				targetColumnName = this.datasourceLink.name;
 			}
 			else {
-				sourceColumnName = this.objectLink().name;
+				sourceColumnName = this.datasourceLink.name;
 				targetColumnName = this.object.name;
 			}
 		}
