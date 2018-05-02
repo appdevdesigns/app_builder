@@ -18,12 +18,27 @@ import ABPopupSortField from "./ab_work_object_workspace_popupSortFields"
 
 
 export default class ABWorkObjectWorkspace extends OP.Component {
-    
+
     /**
-     * @param {object} ??
+     * @param {object} App
+	 * @param {string} idBase
+	 * @param {object} settings - {
+	 * 								allowDelete: bool,
+	 * 								detailsView: string,
+	 * 								editView: string,
+	 * 								isInsertable: bool,
+	 * 								isEditable: bool,
+	 * 								massUpdate: bool,
+	 * 								configureHeaders: bool,
+	 * 
+	 * 								isFieldAddable: bool
+	 * 							}
      */
-    constructor(App) {
-        super(App, 'ab_work_object_workspace');
+    constructor(App, idBase, settings) {
+
+		idBase = idBase || 'ab_work_object_workspace';
+
+        super(App, idBase);
         var L = this.Label;
         
         var labels = {
@@ -45,53 +60,73 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                 confirmDeleteTitle : L('ab.object.delete.title', "*Delete data field"),
                 confirmDeleteMessage : L('ab.object.delete.message', "*Do you want to delete <b>{0}</b>?")
             }
-        };
+		};
+
+		// default settings
+		settings = settings || {};
+		if (settings.allowDelete == null)
+			settings.allowDelete = true;
+
+		if (settings.isInsertable == null)
+			settings.isInsertable = true;
+
+		if (settings.isEditable == null)
+			settings.isEditable = true;
+
+		if (settings.massUpdate == null)
+			settings.massUpdate = true;
+
+		if (settings.configureHeaders == null)
+			settings.configureHeaders = true;
+
+		if (settings.isFieldAddable == null)
+			settings.isFieldAddable = true;
 
 
 
     	// internal list of Webix IDs to reference our UI components.
     	var ids = {
-    		component: this.unique('component'),
+    		component: this.unique(idBase + '_component'),
 
-    		buttonAddField: this.unique('buttonAddField'),
-            buttonDeleteSelected: this.unique('deleteSelected'),
-    		buttonExport: this.unique('buttonExport'),
-    		buttonFieldsVisible: this.unique('buttonFieldsVisible'),
-    		buttonFilter: this.unique('buttonFilter'),
-    		buttonFrozen: this.unique('buttonFrozen'),
-    		buttonLabel: this.unique('buttonLabel'),
-            buttonMassUpdate: this.unique('buttonMassUpdate'),
-    		buttonRowNew: this.unique('buttonRowNew'),
-    		buttonSort: this.unique('buttonSort'),
+    		buttonAddField: this.unique(idBase + '_buttonAddField'),
+            buttonDeleteSelected: this.unique(idBase + '_deleteSelected'),
+    		buttonExport: this.unique(idBase + '_buttonExport'),
+    		buttonFieldsVisible: this.unique(idBase + '_buttonFieldsVisible'),
+    		buttonFilter: this.unique(idBase + '_buttonFilter'),
+    		buttonFrozen: this.unique(idBase + '_buttonFrozen'),
+    		buttonLabel: this.unique(idBase + '_buttonLabel'),
+            buttonMassUpdate: this.unique(idBase + '_buttonMassUpdate'),
+    		buttonRowNew: this.unique(idBase + '_buttonRowNew'),
+    		buttonSort: this.unique(idBase + '_buttonSort'),
 
-    		datatable: this.unique('datatable'),
+    		datatable: this.unique(idBase + '_datatable'),
 
     		// Toolbar:
-    		toolbar: this.unique('toolbar'),
+    		toolbar: this.unique(idBase + '_toolbar'),
 
-    		noSelection: this.unique('noSelection'),
-    		selectedObject: this.unique('selectedObject'),
+    		noSelection: this.unique(idBase + '_noSelection'),
+    		selectedObject: this.unique(idBase + '_selectedObject'),
 
     	}
 
 
         // The DataTable that displays our object:
-        var DataTable = new ABWorkspaceDatatable(App);
+        var DataTable = new ABWorkspaceDatatable(App, idBase, settings);
 
         // Various Popups on our page:
-        var PopupDefineLabelComponent = new ABPopupDefineLabel(App);
+        var PopupDefineLabelComponent = new ABPopupDefineLabel(App, idBase);
 
-        var PopupFilterDataTableComponent = new ABPopupFilterDataTable(App);
+        var PopupFilterDataTableComponent = new ABPopupFilterDataTable(App, idBase);
 
-        var PopupFrozenColumnsComponent = new ABPopupFrozenColumns(App);
+        var PopupFrozenColumnsComponent = new ABPopupFrozenColumns(App, idBase);
 
-        var PopupHideFieldComponent = new ABPopupHideFields(App);
+        var PopupHideFieldComponent = new ABPopupHideFields(App, idBase);
 
-        var PopupMassUpdateComponent = new ABPopupMassUpdate(App);
+        var PopupMassUpdateComponent = new ABPopupMassUpdate(App, idBase);
 
-        var PopupNewDataFieldComponent = new ABPopupNewDataField(App);
+        var PopupNewDataFieldComponent = new ABPopupNewDataField(App, idBase);
 
-        var PopupSortFieldComponent = new ABPopupSortField(App);
+        var PopupSortFieldComponent = new ABPopupSortField(App, idBase);
         
         var view = "button";
 
@@ -133,11 +168,12 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     								label: labels.component.addFields,
     								icon: "plus",
     								type: "icon",
-    								// autowidth: true,
+									disabled: !settings.isFieldAddable,
+									// autowidth: true,
     								click:function() {
     									_logic.toolbarAddFields(this.$view);
     								}
-    							},
+								},
                                 {
     								view: view,
     								id: ids.buttonMassUpdate,
@@ -247,7 +283,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     							}
     						]
     					},
-    					DataTable.ui,
+						DataTable.ui,
+						(settings.isInsertable ? 
     					{
     						cols: [
     							{
@@ -259,7 +296,12 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     								}
     							}
     						]
-    					}
+						} : 
+						{ 
+							view: 'layout',
+							rows: [],
+							hidden: true
+						})
     				]
 
     			}
@@ -299,9 +341,11 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     			// onSave:_logic.callbackAddFields			// be notified of something...who knows...
     		});
 
-    		PopupNewDataFieldComponent.init({
-    			onSave:_logic.callbackAddFields			// be notified when a new Field is created & saved
-    		});
+			if (settings.isFieldAddable) {
+				PopupNewDataFieldComponent.init({
+					onSave:_logic.callbackAddFields			// be notified when a new Field is created & saved
+				});
+			}
 
 // ?? what is this for ??
     		var fieldList = DataTable.getFieldList();
@@ -448,10 +492,10 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                         })
                         break;
     				case 'filter':
-                        _logic.toolbarFilter($$(ids.buttonFilter).$view, field.columnName);
+                        _logic.toolbarFilter($$(ids.buttonFilter).$view, field.id);
                         break;
     				case 'sort':
-                        _logic.toolbarSort($$(ids.buttonSort).$view, field.columnName);
+                        _logic.toolbarSort($$(ids.buttonSort).$view, field.id);
     					break;
                     case 'freeze':
                         CurrentObject.workspaceFrozenColumnID = field.columnName;
@@ -568,10 +612,16 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		 * we need to set the badge count for filters on load and after filters are added or removed
     		 */            
             getBadgeFilters: function() {
-                var filterConditions = CurrentObject.workspaceFilterConditions;
+				var filterConditions = CurrentObject.workspaceFilterConditions;
+				var numberOfFilter = 0;
 
-                if (typeof(filterConditions) != "undefined") {
-                    $$(ids.buttonFilter).define('badge', filterConditions.length);
+				if (filterConditions &&
+					filterConditions.rules && 
+					filterConditions.rules.length)
+					numberOfFilter = filterConditions.rules.length;
+
+				if (typeof(filterConditions) != "undefined") {
+                    $$(ids.buttonFilter).define('badge', numberOfFilter);
                     $$(ids.buttonFilter).refresh();
                 }
             },
@@ -727,8 +777,8 @@ console.error('TODO: Button Export()');
     		 *
     		 * show the popup to add a filter to the datatable
     		 */
-    		toolbarFilter: function($view, columnName) {
-                PopupFilterDataTableComponent.show($view, columnName);
+    		toolbarFilter: function($view, fieldId) {
+                PopupFilterDataTableComponent.show($view, fieldId);
     		},
 
 
@@ -755,34 +805,13 @@ console.error('TODO: toolbarPermission()');
     		 *
     		 * show the popup to sort the datatable
     		 */
-    		toolbarSort:function($view, columnName) {
-    			PopupSortFieldComponent.show($view, columnName);
+    		toolbarSort:function($view, fieldId) {
+    			PopupSortFieldComponent.show($view, fieldId);
                     // self.refreshPopupData();
                     // $$(self.webixUiId.sortFieldsPopup).show($view);
                     //console.error('TODO: toolbarSort()');
-    		}
-    	}
-        this._logic = _logic;
-
-
-
-    	// Expose any globally accessible Actions:
-    	this.actions({
-
-
-
-    		/**
-    		 * @function clearObjectWorkspace()
-    		 *
-    		 * Clear the object workspace.
-    		 */
-    		clearObjectWorkspace:function(){
-
-    			// NOTE: to clear a visual glitch when multiple views are updating
-    			// at one time ... stop the animation on this one:
-    			$$(ids.noSelection).show(false, false);
-    		},
-
+			},
+			
 
     		/**
     		 * @function populateObjectWorkspace()
@@ -792,38 +821,62 @@ console.error('TODO: toolbarPermission()');
     		 * @param {ABObject} object  	current ABObject instance we are working with.
     		 */
     		populateObjectWorkspace: function(object) {
+				
+				$$(ids.toolbar).show();
+				$$(ids.selectedObject).show();
 
-    			$$(ids.toolbar).show();
-    			$$(ids.selectedObject).show();
+				CurrentObject = object;			
 
-    			CurrentObject = object;
+				DataTable.objectLoad(CurrentObject);
 
-    			App.actions.populateObjectPopupAddDataField(CurrentObject);
+				PopupNewDataFieldComponent.objectLoad(CurrentObject);
+				PopupDefineLabelComponent.objectLoad(CurrentObject);
+				PopupFilterDataTableComponent.objectLoad(CurrentObject);
+				PopupFrozenColumnsComponent.objectLoad(CurrentObject);
+				PopupHideFieldComponent.objectLoad(CurrentObject);
+				PopupMassUpdateComponent.objectLoad(CurrentObject, DataTable);
+				PopupSortFieldComponent.objectLoad(CurrentObject);
 
-    			DataTable.objectLoad(CurrentObject);
+				// We can hide fields now that data is loaded
+				_logic.callbackFieldsVisible();
+				
+				// get badge counts for server side components
+				_logic.getBadgeSortFields();
+				_logic.getBadgeFilters();
 
-    			PopupDefineLabelComponent.objectLoad(CurrentObject);
-                PopupFilterDataTableComponent.objectLoad(CurrentObject);
-    			PopupFrozenColumnsComponent.objectLoad(CurrentObject);
-    			PopupHideFieldComponent.objectLoad(CurrentObject);
-                PopupMassUpdateComponent.objectLoad(CurrentObject, DataTable);
-    			PopupSortFieldComponent.objectLoad(CurrentObject);
-
-    			// We can hide fields now that data is loaded
-                _logic.callbackFieldsVisible();
-                
-                // get badge counts for server side components
-                _logic.getBadgeSortFields();
-                _logic.getBadgeFilters();
-    		}
+				// $$(ids.component).setValue(ids.selectedObject);
+				$$(ids.selectedObject).show(true, false);
+			},
 
 
+			/**
+    		 * @function clearObjectWorkspace()
+    		 *
+    		 * Clear the object workspace.
+    		 */
+    		clearObjectWorkspace:function(){
+				
+				// NOTE: to clear a visual glitch when multiple views are updating
+				// at one time ... stop the animation on this one:
+				$$(ids.noSelection).show(false, false);
+			}
+
+
+		}
+        this._logic = _logic;
+
+
+
+    	// Expose any globally accessible Actions:
+    	this.actions({
     	});
 
 		// 
 		// Define our external interface methods:
 		// 
 		this.applicationLoad = this._logic.applicationLoad;
+		this.populateObjectWorkspace = this._logic.populateObjectWorkspace;
+		this.clearObjectWorkspace = this._logic.clearObjectWorkspace;
 
     }
 

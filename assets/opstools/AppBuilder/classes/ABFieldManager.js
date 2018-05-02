@@ -55,7 +55,7 @@ export default  {
 
 	/*
 	 * @function newField
-	 * return an instance of an ABField based upon the values.type value.
+	 * return an instance of an ABField based upon the values.key value.
 	 * @return {ABField}
 	 */
 	newField: function (values, object) {

@@ -56,7 +56,10 @@ var ABViewPropertyDefaults = {
 	object: '', // id of ABObject
 	objectUrl: '', // url of ABObject
 	objectWorkspace: {
-		filterConditions: {}, // array of filters to apply to the data table
+		filterConditions: { // array of filters to apply to the data table
+			glue: 'and',
+			rules: []
+		},
 		sortFields: [] // array of columns with their sort configurations
 	},
 	loadAll: false
@@ -243,12 +246,14 @@ export default class ABViewDataCollection extends ABView {
 		var shouldSave = false;
 
 		// check filter conditions for any settings
-		if (this.settings.objectWorkspace.filterConditions && this.settings.objectWorkspace.filterConditions.filters && this.settings.objectWorkspace.filterConditions.filters.length) {
+		if (this.settings.objectWorkspace.filterConditions && 
+			this.settings.objectWorkspace.filterConditions.rules &&
+			this.settings.objectWorkspace.filterConditions.rules.length) {
 			// if settings are present look for deleted field id in each one
-			this.settings.objectWorkspace.filterConditions.filters.find((o, i) => {
-				if (o.fieldId === field.id) {
+			this.settings.objectWorkspace.filterConditions.rules.find((o, i) => {
+				if (o.key === field.id) {
 					// if found splice from array
-					this.settings.objectWorkspace.filterConditions.filters.splice(i, 1);
+					this.settings.objectWorkspace.filterConditions.rules.splice(i, 1);
 					// flag the object to be saved later
 					shouldSave = true;
 				}
@@ -316,12 +321,12 @@ export default class ABViewDataCollection extends ABView {
 
 
 			var allComplete = true;
-			filterValues.filters.forEach((f)=>{
+			filterValues.rules.forEach((f)=>{
 
 				// if all 3 fields are present, we are good.
-				if ((f.fieldId) 
-					&& (f.operator)
-					&& (f.inputValue)) {
+				if ((f.key) 
+					&& (f.rule)
+					&& (f.value)) {
 
 					allComplete = allComplete && true;
 				} else {
@@ -598,8 +603,8 @@ export default class ABViewDataCollection extends ABView {
 
 		if (view.settings.objectWorkspace &&
 			view.settings.objectWorkspace.filterConditions && 
-			view.settings.objectWorkspace.filterConditions.filters) {
-			$$(ids.buttonFilter).define('badge', view.settings.objectWorkspace.filterConditions.filters.length);
+			view.settings.objectWorkspace.filterConditions.rules) {
+			$$(ids.buttonFilter).define('badge', view.settings.objectWorkspace.filterConditions.rules.length);
 			$$(ids.buttonFilter).refresh();
 		}
 		else {
@@ -941,7 +946,7 @@ export default class ABViewDataCollection extends ABView {
 
 				if (this.__dataCollection.exists(values.id)) {
 					// this data collection has the record so we need to query the server to find out what it's latest data is so we can update all instances
-					this.model.findAll({ id:values.id }).then((res)=>{
+					this.model.findAll({ where: { id:values.id } }).then((res)=>{
 						
 						// check to make sure there is data to work with
 						if (Array.isArray(res.data) && res.data.length) {
@@ -1131,26 +1136,32 @@ export default class ABViewDataCollection extends ABView {
 		var sorts = this.settings.objectWorkspace.sortFields || [];
 
 		// pull filter conditions
-		var wheres = [];
-		var filterConditions = this.settings.objectWorkspace.filterConditions || ABViewPropertyDefaults.objectWorkspace.filterConditions;
-		(filterConditions.filters || []).forEach((f) => {
+		var wheres = this.settings.objectWorkspace.filterConditions;
+		// var wheres = [];
+		// var filterConditions = this.settings.objectWorkspace.filterConditions || ABViewPropertyDefaults.objectWorkspace.filterConditions;
+		// (filterConditions.rules || []).forEach((f) => {
 
-			// Get field name
-			var fieldName = "";
-			var object = this.datasource;
-			if (object) {
-				var selectField = object.fields(field => field.id == f.fieldId)[0];
-				fieldName = selectField ? selectField.columnName : "";
-			}
+		// 	// Get field name
+		// 	var fieldName = "";
+		// 	if (f.fieldId == 'this_object') {
+		// 		fieldName = f.fieldId;
+		// 	} else {
+		// 		var object = this.datasource;
+		// 		if (object) {
+		// 			var selectField = object.fields(field => field.id == f.fieldId)[0];
+		// 			fieldName = selectField ? selectField.columnName : "";
+		// 		}
+		// 	}
 
-			wheres.push({
-				combineCondition: filterConditions.combineCondition,
-				fieldName: fieldName,
-				operator: f.operator,
-				inputValue: f.inputValue
-			});
 
-		});
+		// 	wheres.push({
+		// 		combineCondition: filterConditions.combineCondition,
+		// 		fieldName: fieldName,
+		// 		operator: f.operator,
+		// 		inputValue: f.inputValue
+		// 	});
+
+		// });
 
 
 		// calculate default value of $height of rows

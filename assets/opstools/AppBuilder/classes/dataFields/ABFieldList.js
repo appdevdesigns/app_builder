@@ -435,10 +435,11 @@ class ABFieldList extends ABFieldSelectivity {
 	* return a UI Component that contains the property definitions for this Field.
 	*
 	* @param {App} App the UI App instance passed around the Components.
+	* @param {stirng} idBase
 	* @return {Component}
 	*/
-	static propertiesComponent(App) {
-		return ABFieldListComponent.component(App);
+	static propertiesComponent(App, idBase) {
+		return ABFieldListComponent.component(App, idBase);
 	}
 
 	///
@@ -654,6 +655,10 @@ class ABFieldList extends ABFieldSelectivity {
 				var selectedData = [];
 				if (row[field.columnName] != null) {
 					selectedData = row[field.columnName];
+
+					if (typeof selectedData == 'string')
+						selectedData = JSON.parse(selectedData);
+	
 				}
 
 				// Render selectivity
@@ -742,6 +747,10 @@ class ABFieldList extends ABFieldSelectivity {
 			var selectedData = [];
 			if (row[this.columnName] != null) {
 				selectedData = row[this.columnName];
+
+				if (typeof selectedData == 'string')
+					selectedData = JSON.parse(selectedData);
+
 			}
 
 			// Render selectivity

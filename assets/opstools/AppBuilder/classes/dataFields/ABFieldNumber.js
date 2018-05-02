@@ -417,10 +417,11 @@ class ABFieldNumber extends ABField {
 	 * return a UI Component that contains the property definitions for this Field.
 	 *
 	 * @param {App} App the UI App instance passed around the Components.
+	 * @param {stirng} idBase
 	 * @return {Component}
 	 */
-	static propertiesComponent(App) {
-		return ABFieldNumberComponent.component(App);
+	static propertiesComponent(App, idBase) {
+		return ABFieldNumberComponent.component(App, idBase);
 	}
 
 
@@ -468,7 +469,7 @@ class ABFieldNumber extends ABField {
 	///
 
 	// return the grid column header definition for this instance of ABFieldNumber
-	columnHeader(isObjectWorkspace) {
+	columnHeader(isObjectWorkspace, includeSumFooter) {
 		var config = super.columnHeader(isObjectWorkspace);
 
 		config.editor = 'number';		// [edit_type] simple inline editing.

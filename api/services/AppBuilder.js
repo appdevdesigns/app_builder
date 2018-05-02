@@ -200,13 +200,22 @@ module.exports = {
 
                                 } else {
 
-                                    // error: object not found!
-                                    var err = ADCore.error.fromKey('E_NOTFOUND');
-                                    err.message = "Object not found.";
-                                    err.objid = objID;
-                                    sails.log.error(err);
-                                    res.AD.error(err, 404);
-                                    reject();
+                                    // check to see if provided objID is actually a query:
+                                    var query = Application.queries((q) => { return q.id == objID; })[0];
+                                    if (query) {
+                                        resolve(query);
+                                    } else {
+
+                                        // error: object not found!
+                                        var err = ADCore.error.fromKey('E_NOTFOUND');
+                                        err.message = "Object not found.";
+                                        err.objid = objID;
+                                        sails.log.error(err);
+                                        res.AD.error(err, 404);
+                                        reject();
+
+                                    }
+
                                 }
 
                             } else {
@@ -348,6 +357,26 @@ module.exports = {
                 .replace('{sourceName}', sourceTableName)
                 .replace('{targetName}', targetTableName)
                 .replace('{colName}', colName);
+        }, 
+
+
+        /**
+         * AppBuilder.rules.toJunctionTableFK
+         * 
+         * return foriegnkey (FK) column name for a junction table name
+         * 
+         * @param {string} objectName  The name of the Object with a connection
+         * @param {string} columnName  The name of the connection columnName.
+         * @return {string}
+         */
+        toJunctionTableFK: function(objectName, columnName) {
+            
+            var fkName = objectName + '_' + columnName;
+
+            if (fkName.length > 64)
+                fkName = fkName.substring(0, 64);
+
+            return fkName;
         }
     },
 
