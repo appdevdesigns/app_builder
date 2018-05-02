@@ -907,7 +907,9 @@ export default class ABViewDataCollection extends ABView {
 
 			// updated values
 			var values = data.data;
+			if (!values) return;
 
+			
 			if (this.__dataCollection.exists(values.id)) {
 				// normalize data before update data collection
 				var model = this.datasource.model();
@@ -944,7 +946,7 @@ export default class ABViewDataCollection extends ABView {
 
 				if (this.__dataCollection.exists(values.id)) {
 					// this data collection has the record so we need to query the server to find out what it's latest data is so we can update all instances
-					this.model.findAll({ id:values.id }).then((res)=>{
+					this.model.findAll({ where: { id:values.id } }).then((res)=>{
 						
 						// check to make sure there is data to work with
 						if (Array.isArray(res.data) && res.data.length) {

@@ -814,8 +814,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 			// if ! val in proper selectivity format ->  strange case
 			var testVal = Array.isArray(val) ? val[0] : val;
 			if( !(testVal.id && testVal.text) ){
-				var relationName = this.relationName();
-				val = this.pullRelationValues(rowData[relationName]);
+				val = this.pullRelationValues(rowData);
 			}
 			
 		} else {
@@ -828,13 +827,15 @@ class ABFieldConnect extends ABFieldSelectivity {
 		// get selectivity dom
 		var domSelectivity = item.$view.querySelector('.connect-data-values');
 
-		// set value to selectivity
-		this.selectivitySet(domSelectivity, val);
-		
-		if (domSelectivity && domSelectivity.clientHeight > 32) {
-			item.define("height", domSelectivity.clientHeight + 6);
-			item.resizeChildren();
-			item.resize();
+		if (domSelectivity) {
+			// set value to selectivity
+			this.selectivitySet(domSelectivity, val);
+			
+			if (domSelectivity.clientHeight > 32) {
+				item.define("height", domSelectivity.clientHeight + 6);
+				item.resizeChildren();
+				item.resize();
+			}
 		}
 		
 	}

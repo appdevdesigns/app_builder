@@ -91,7 +91,16 @@ export default class ABModel {
 		
 		// if this object has some multilingual fields, translate the data:
 		var mlFields = this.object.multilingualFields();
+		// if mlFields are inside of the values saved we want to translate otherwise do not because it will reset the translation field and you may loose unchanged translations
+		var shouldTranslate = false;
 		if (mlFields.length) {
+			mlFields.forEach(function(field) {
+				if (typeof values[field] != "undefined") {
+					shouldTranslate = true;
+				}
+			});
+		}
+		if (shouldTranslate) {
 			if (values.translations == null || typeof values.translations == "undefined" || values.translations == "") {
 				values.translations = [];
 			}

@@ -181,16 +181,16 @@ function updateConnectedFields(object, newData, oldData) {
         }
         
         // filter array to only show unique items
-        items = _.uniqBy(items, object.PK());
+        items = _.uniqBy(items, field.object.PK());
         // parse through all items and broadcast a "stale" action so we can tell the client side the data may have updated
         items.forEach((i) => {
             // Make sure you put the payload together just like before
             var payload = {
-                objectId: field.object.id, // get the fields object id
+                objectId: field.object[field.object.PK()], // get the fields object id
                 data: i // pass the whole item 
             }
             // Broadcast the payload and let the clientside figure out what to do next
-            sails.sockets.broadcast(field.object.id, "ab.datacollection.stale", payload);
+            sails.sockets.broadcast(field.object[field.object.PK()], "ab.datacollection.stale", payload);
         });
     });
 }
@@ -346,12 +346,12 @@ module.exports = {
                                             // We want to broadcast the change from the server to the client so all datacollections can properly update
                                             // Build a payload that tells us what was updated
                                             var payload = {
-                                                objectId: object.id,
+                                                objectId: object[object.PK()],
                                                 data: newItem[0]
                                             }
                                             
                                             // Broadcast the create
-                                            sails.sockets.broadcast(object.id, "ab.datacollection.create", payload);
+                                            sails.sockets.broadcast(object[object.PK()], "ab.datacollection.create", payload);
                                             
                                             updateConnectedFields(object, newItem[0]);
                                             
@@ -595,6 +595,7 @@ module.exports = {
                     var relationName = f.relationName();
                     
                     // If we have any related item data we need to build a query to report the delete...otherwise just move on
+                    if (!Array.isArray(oldItem[0][relationName])) oldItem[0][relationName] = [oldItem[0][relationName]];
                     if (oldItem[0] &&
                         oldItem[0][relationName] &&
                         oldItem[0][relationName].length) {
@@ -650,12 +651,12 @@ module.exports = {
                         // We want to broadcast the change from the server to the client so all datacollections can properly update
                         // Build a payload that tells us what was updated
                         var payload = {
-                            objectId: object.id,
+                            objectId: object[object.PK()],
                             id: id
                         }
 
                         // Broadcast the delete
-                        sails.sockets.broadcast(object.id, "ab.datacollection.delete", payload);
+                        sails.sockets.broadcast(object[object.PK()], "ab.datacollection.delete", payload);
 
                         // Using the data from the oldItem and relateditems we can update all instances of it and tell the client side it is stale and needs to be refreshed
                         updateConnectedFields(object, oldItem[0]);
@@ -965,12 +966,12 @@ module.exports = {
                                                     // We want to broadcast the change from the server to the client so all datacollections can properly update
                                                     // Build a payload that tells us what was updated
                                                     var payload = {
-                                                        objectId: object.id,
+                                                        objectId: object[object.PK()],
                                                         data: newItem[0]
                                                     }
                                                     
                                                     // Broadcast the update
-                                                    sails.sockets.broadcast(object.id, "ab.datacollection.update", payload);
+                                                    sails.sockets.broadcast(object[object.PK()], "ab.datacollection.update", payload);
                                                     
                                                     updateConnectedFields(object, newItem[0], oldItem[0]);
                                                     

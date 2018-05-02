@@ -45,7 +45,9 @@ var ABViewGridPropertyComponentDefaults = {
 		hiddenFields:[], // array of [ids] to add hidden:true to
 	},
 	summaryFields: [], // array of [field ids] to add the summary column in footer
-	height: 0
+	height: 0,
+	hideHeader:0,
+	labelAsField:0
 }
 
 
@@ -120,6 +122,8 @@ export default class ABViewGrid extends ABViewWidget  {
 		this.settings.allowDelete = JSON.parse(this.settings.allowDelete || ABViewGridPropertyComponentDefaults.allowDelete);
 		this.settings.isFilterable = JSON.parse(this.settings.isFilterable || ABViewGridPropertyComponentDefaults.isFilterable);
 		this.settings.isSortable = JSON.parse(this.settings.isSortable || ABViewGridPropertyComponentDefaults.isSortable);
+		this.settings.hideHeader = JSON.parse(this.settings.hideHeader || ABViewGridPropertyComponentDefaults.hideHeader);
+		this.settings.labelAsField = JSON.parse(this.settings.labelAsField || ABViewGridPropertyComponentDefaults.labelAsField);
 
 		// this.settings.linkedObject = this.settings.linkedObject || ABViewGridPropertyComponentDefaults.linkedObject;
 		// this.settings.linkedField = this.settings.linkedField || ABViewGridPropertyComponentDefaults.linkedField;
@@ -570,7 +574,21 @@ export default class ABViewGrid extends ABViewWidget  {
 							name: "height",
 							label: L("ab.component.grid.height", "*Height:"),
 							labelWidth: App.config.labelWidthXLarge,
-						}
+						},
+						
+						{
+							view:"checkbox",
+							name:"hideHeader",
+							labelRight: L('ab.component.label.hideHeader', '*Hide table header'),
+							labelWidth: App.config.labelWidthCheckbox
+						},
+
+						{
+							view:"checkbox",
+							name:"labelAsField",
+							labelRight: L('ab.component.label.labelAsField', '*Show a field using label template'),
+							labelWidth: App.config.labelWidthCheckbox
+						},
 
 					]
 				}
@@ -602,6 +620,8 @@ export default class ABViewGrid extends ABViewWidget  {
 		$$(ids.detailsPage).setValue(view.settings.detailsPage);
 		$$(ids.editPage).setValue(view.settings.editPage);
 		$$(ids.height).setValue(view.settings.height);
+		$$(ids.hideHeader).setValue(view.settings.hideHeader);
+		$$(ids.labelAsField).setValue(view.settings.labelAsField);
 
 		// initial populate of properties and popups
 		view.populateEditor(ids, view);
@@ -642,6 +662,8 @@ export default class ABViewGrid extends ABViewWidget  {
 		view.settings.detailsPage = $$(ids.detailsPage).getValue();
 		view.settings.editPage = $$(ids.editPage).getValue();
 		view.settings.height = $$(ids.height).getValue();
+		view.settings.hideHeader = $$(ids.hideHeader).getValue();
+		view.settings.labelAsField = $$(ids.labelAsField).getValue();
 
 	}
 
@@ -705,7 +727,9 @@ export default class ABViewGrid extends ABViewWidget  {
 			isEditable: this.settings.isEditable,
 			massUpdate: this.settings.massUpdate,
 			configureHeaders: false,
-			summaryColumns: this.settings.objectWorkspace.summaryColumns
+			summaryColumns: this.settings.objectWorkspace.summaryColumns,
+			hideHeader: this.settings.hideHeader,
+			labelAsField: this.settings.labelAsField
 		}
 		
 		var isFiltered = false,
@@ -763,6 +787,10 @@ export default class ABViewGrid extends ABViewWidget  {
 				if (this.settings.isSortable == false) {
 					$$(ids.buttonSort).hide();
 				}
+				
+				if (this.settings.hideHeader == true) {
+					DataTable.hideHeader();
+				}
 
 				// var dataSource = this.application.objects((o)=>{
 				// 	return o.id == this.settings.dataSource;
@@ -785,16 +813,22 @@ export default class ABViewGrid extends ABViewWidget  {
 
 					var editPage = this.settings.editPage;
 					var detailsPage = this.settings.detailsPage;
+					var isEditable = this.settings.isEditable;
 					$$(DataTable.ui.id).attachEvent("onItemClick", function (id, e, node) {
+						var item = id;
 
 						if (e.target.className.indexOf('eye') > -1) {
-							var item = id;
 							_logic.changePage(dc, item, detailsPage);
-						}
-						else if (e.target.className.indexOf('pencil') > -1) {
-							var item = id;
+						} else if (e.target.className.indexOf('pencil') > -1) {
+							_logic.changePage(dc, item, editPage);
+						} else if (e.target.className.indexOf('trash') > -1) {
+							// don't do anything for delete it is handled elsewhere
+						} else if ( !isEditable && detailsPage.length ) {
+							_logic.changePage(dc, item, detailsPage);
+						} else if ( !isEditable && !detailsPage.length && editPage.length) {
 							_logic.changePage(dc, item, editPage);
 						}
+						
 					});
 
 					// $$(DataTable.ui.id).attachEvent('onBeforeRender', function (data) {
@@ -827,7 +861,8 @@ export default class ABViewGrid extends ABViewWidget  {
 		};
 		if (this.settings.dataSource != "") {
 			tableUI = {
-				type: "layout",
+				type: "space",
+				padding: 17,
 				rows: [
 					{
 						view: 'toolbar',
