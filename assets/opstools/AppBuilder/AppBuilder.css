@@ -771,8 +771,8 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 .ab-component-description {
 	font-size: 14px;
 }
-.ab-component-label {
-	margin-top: -10px !important;
+.ab-text .ab-detail-component-holder {
+	line-height: 32px;
 }
 .ab-menu-link.webix_menu-x .webix_list_item {
 	background: transparent;
