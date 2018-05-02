@@ -225,8 +225,10 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 
 			init: () => {
 
-				$$(ids.list).parse(this.queryObject.fields(f => f.fieldUseAsLabel()));
-				$$(ids.list).refresh();
+				if (this.queryObject) {
+					$$(ids.list).parse(this.queryObject.fields(f => f.fieldUseAsLabel()));
+					$$(ids.list).refresh();
+				}
 
 				_logic.refreshUI();
 
@@ -612,6 +614,11 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 
 				// send out
 				return new Promise((resolve, reject) => {
+
+					recipients = _.uniq(recipients).filter(r => r);
+
+					if (!recipients || recipients.length < 1)
+						return resolve();
 
 					// replace form value to template
 					var fromName = this.valueRules.fromName,
