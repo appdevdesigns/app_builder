@@ -565,7 +565,15 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 								if (field) {
 
 									var model = field.object.model();
-									model.findAll()
+									model.findAll({
+										where: {
+											glue: 'and',
+											rules: [{
+												key: field.id,
+												rule: "is_not_null"
+											}]
+										}
+									})
 										.catch(err)
 										.then(result => {
 
