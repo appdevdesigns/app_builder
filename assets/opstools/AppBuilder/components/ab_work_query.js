@@ -1,21 +1,21 @@
 
 /*
- * ab_work_object
+ * ab_work_query
  *
- * Display the Object Tab UI:
+ * Display the Query Tab UI:
  *
  */
 
 
-import AB_Work_Object_List from "./ab_work_object_list"
-import AB_Work_Object_Workspace from "./ab_work_object_workspace"
+import AB_Work_Query_List from "./ab_work_query_list"
+import AB_Work_Query_Workspace from "./ab_work_query_workspace"
 
 
 
-export default class AB_Work_Object extends OP.Component {   //.extend(idBase, function(App) {
+export default class AB_Work_Query extends OP.Component {   //.extend(idBase, function(App) {
 
 	constructor(App) {
-		super(App, 'ab_work_object');
+		super(App, 'ab_work_query');
 		var L = this.Label;
 
 		var labels = {
@@ -32,8 +32,8 @@ export default class AB_Work_Object extends OP.Component {   //.extend(idBase, f
 		}
 
 
-		var ObjectList = new AB_Work_Object_List(App);
-		var ObjectWorkspace = new AB_Work_Object_Workspace(App);
+		var QueryList = new AB_Work_Query_List(App);
+		var QueryWorkspace = new AB_Work_Query_Workspace(App);
 
 
 		// Our webix UI definition:
@@ -41,9 +41,9 @@ export default class AB_Work_Object extends OP.Component {   //.extend(idBase, f
 			id: ids.component,
 			margin: 10,
 			cols: [
-				ObjectList.ui,
+				QueryList.ui,
 				{ view: "resizer"},
-				ObjectWorkspace.ui
+				QueryWorkspace.ui
 			]
 		};
 
@@ -54,9 +54,9 @@ export default class AB_Work_Object extends OP.Component {   //.extend(idBase, f
 		// Our init() function for setting up our UI
 		this.init = function() {
 
-			ObjectWorkspace.init();
-			ObjectList.init({
-				onChange: _logic.callbackSelectObject
+			QueryWorkspace.init();
+			QueryList.init({
+				onItemSelected:_logic.querySelected
 			});
 
 		}
@@ -69,16 +69,21 @@ export default class AB_Work_Object extends OP.Component {   //.extend(idBase, f
 			/**
 			 * @function applicationLoad
 			 *
-			 * Initialize the Object Workspace with the given ABApplication.
+			 * Initialize the Query Workspace with the given ABApplication.
 			 *
 			 * @param {ABApplication} application
 			 */
 			applicationLoad: function(application) {
-				ObjectWorkspace.clearObjectWorkspace();
-				ObjectList.applicationLoad(application);
-				ObjectWorkspace.applicationLoad(application);
+				QueryWorkspace.clearWorkspace();
+
+				QueryList.applicationLoad(application);
+				QueryWorkspace.applicationLoad(application);
 			},
 
+
+			querySelected: function(query) {
+				QueryWorkspace.populateQueryWorkspace(query);
+			},
 
 			/**
 			 * @function show()
@@ -88,16 +93,7 @@ export default class AB_Work_Object extends OP.Component {   //.extend(idBase, f
 			show:function() {
 
 				$$(ids.component).show();
-			},
-
-			callbackSelectObject: function(object) {
-
-				if (object == null)
-					ObjectWorkspace.clearObjectWorkspace();
-				else
-					ObjectWorkspace.populateObjectWorkspace(object);
 			}
-
 		}
 		this._logic = _logic;
 

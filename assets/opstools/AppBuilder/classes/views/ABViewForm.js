@@ -21,9 +21,6 @@ import ABDisplayRule from "./ABViewFormPropertyDisplayRule"
 import ABRecordRule from "../rules/ABViewRuleListFormRecordRules"
 import ABSubmitRule from "../rules/ABViewRuleListFormSubmitRules"
 
-
-import RowFilter from '../RowFilter'
-
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }

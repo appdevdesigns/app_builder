@@ -10,7 +10,8 @@
 export default class AB_Work_Object_Workspace_PopupFrozenColumns extends OP.Component {   //.extend(idBase, function(App) {
 
 	constructor(App, idBase) {
-        super(App, idBase || 'ab_work_object_workspace_popupFrozenColumns');
+		idBase = idBase || 'ab_work_object_workspace_popupFrozenColumns';
+        super(App, idBase);
 		var L = this.Label;
 
 
@@ -26,8 +27,8 @@ export default class AB_Work_Object_Workspace_PopupFrozenColumns extends OP.Comp
 
 		// internal list of Webix IDs to reference our UI components
 		var ids = {
-			component: this.unique('component'),
-			list: this.unique('list'),
+			component: this.unique(idBase + '_popupFrozen'),
+			list: this.unique(idBase + '_popupFrozen_list'),
 		}
 
 

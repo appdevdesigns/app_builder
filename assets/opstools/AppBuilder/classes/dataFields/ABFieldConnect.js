@@ -8,6 +8,7 @@
 // import ABField from "./ABField"
 import ABFieldComponent from "./ABFieldComponent"
 import ABFieldSelectivity from "./ABFieldSelectivity"
+import ABObjectQuery from "../ABObjectQuery"
 
 
 
@@ -27,7 +28,7 @@ var ABFieldConnectDefaults = {
 	description: L('ab.dataField.connectObject.description', '*Connect two data objects together'),
 
 	isSortable: false,
-	isFilterable: false,
+	isFilterable: true,  // now we can filter using Queries
 	useAsLabel: false,
 
 	// supportImport: flag to support import object across applications
@@ -36,11 +37,27 @@ var ABFieldConnectDefaults = {
 };
 
 var defaultValues = {
-	linkObject: '', // ABObject.id
-	linkType: 'one', // one, many
-	linkViaType: 'many', // one, many
-	linkColumn: '', // ABField.id
-	isSource: null // bit
+	linkObject: '', 	// ABObject.id
+						// the .id of the ABObject we are connected to
+
+	linkType: 'one', 	// [one, many]
+						// 'one' : this object can have only 1 of our linkObject
+						// 'many': this object can have MANY of our linkObject
+
+	linkViaType: 'many', // [one, many]
+						// 'one' : the linkedObject can only have 1 of me
+						// 'many' : the linkedObject can have many of me
+
+	linkColumn: '', 	// ABField.id
+						// the .id of the field in the linkedObject that is our 
+						// connected field.
+
+	isSource: null 		// bit : 1,0
+						// isSource indicates that this object is the source of the connection:
+						// if linkType==one, and isSource=1, then the value in this object's field
+						// 		is the connected object's id
+						// if linkType == one, and isSource = 0, then the linkObject has this obj.id
+						//  	in it's connected field (linkColumn)
 };
 
 var ids = {
@@ -112,6 +129,7 @@ var ABFieldConnectComponent = new ABFieldComponent({
 				name: 'linkObject',
 				labelWidth: App.config.labelWidthLarge,
 				placeholder: L('ab.dataField.connectObject.connectToObjectPlaceholder', "*select object"),
+				options: [],
 				// select: true,
 				// height: 140,
 				// template: "<div class='ab-new-connectObject-list-item'>#label#</div>",
@@ -338,10 +356,11 @@ class ABFieldConnect extends ABFieldSelectivity {
 	* return a UI Component that contains the property definitions for this Field.
 	*
 	* @param {App} App the UI App instance passed around the Components.
+	* @param {stirng} idBase
 	* @return {Component}
 	*/
-	static propertiesComponent(App) {
-		return ABFieldConnectComponent.component(App);
+	static propertiesComponent(App, idBase) {
+		return ABFieldConnectComponent.component(App, idBase);
 	}
 
 	///
@@ -414,7 +433,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 			// get selected values
 			var selectedData = field.pullRelationValues(row);
-			
+
 			var multiselect = (field.settings.linkType == 'many');
 
 			// Render selectivity
@@ -624,8 +643,12 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 
 	relationName() {
-		return String(this.columnName).replace(/[^a-z0-9]/gi, '') + '__relation';
+
+		var relationName = String(this.columnName).replace(/[^a-z0-9\.]/gi, '') + '__relation';
+
+		return relationName;
 	}
+
 
 
 	/**
@@ -661,7 +684,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 				// M:1 - get data that's only empty relation value
 				if (this.settings.linkType == 'many' && this.settings.linkViaType == 'one') {
-					where[linkedCol.columnName] = 'null';
+					where[linkedCol.id] = 'null';
 					// where[linkedCol.columnName] = null;
 				}
 				// 1:1
@@ -671,12 +694,12 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 						// NOTE: make sure "haveNoRelation" shows up as an operator
 						// the value ":0" doesn't matter, we just need 'haveNoRelation' as an operator.
-						where[linkedCol.columnName] = {'haveNoRelation':0};
+						where[linkedCol.id] = {'haveNoRelation':0};
 					}
 					// 1:1 - get data that's only empty relation value by query null value from link table
 					else {
-						where[linkedCol.columnName] = 'null';
-						// where[linkedCol.columnName] = null;
+						where[linkedCol.id] = 'null';
+						// where[linkedCol.id] = null;
 					}
 				}
 
@@ -704,11 +727,22 @@ class ABFieldConnect extends ABFieldSelectivity {
 	}
 
 
+	/**
+	 * @method datasourceLink
+	 * return the ABObject that this field connection links to
+	 * @return {ABObject}
+	 */
 	get datasourceLink() {
 		return this.object.application.objects((obj) => obj.id == this.settings.linkObject)[0];
 	}
 
 
+
+	/**
+	 * @method fieldLink
+	 * return the ABField that we are linked to.
+	 * @return {ABDataField}  or undefined if not found.
+	 */
 	get fieldLink() {
 		var objectLink = this.datasourceLink;
 		if (!objectLink) return null
@@ -734,6 +768,10 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 		var relationName = this.relationName();
 		if (row[relationName] && linkedObject) {
+
+			// convert to JSON
+			if (typeof row[relationName] == "string")
+				row[relationName] = JSON.parse(row[relationName]);
 
 			// if this select value is array
 			if (row[relationName].map) {
@@ -776,8 +814,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 			// if ! val in proper selectivity format ->  strange case
 			var testVal = Array.isArray(val) ? val[0] : val;
 			if( !(testVal.id && testVal.text) ){
-				var relationName = this.relationName();
-				val = this.pullRelationValues(rowData[relationName]);
+				val = this.pullRelationValues(rowData);
 			}
 			
 		} else {
@@ -790,13 +827,15 @@ class ABFieldConnect extends ABFieldSelectivity {
 		// get selectivity dom
 		var domSelectivity = item.$view.querySelector('.connect-data-values');
 
-		// set value to selectivity
-		this.selectivitySet(domSelectivity, val);
-		
-		if (domSelectivity.clientHeight > 32) {
-			item.define("height", domSelectivity.clientHeight + 6);
-			item.resizeChildren();
-			item.resize();
+		if (domSelectivity) {
+			// set value to selectivity
+			this.selectivitySet(domSelectivity, val);
+			
+			if (domSelectivity.clientHeight > 32) {
+				item.define("height", domSelectivity.clientHeight + 6);
+				item.resizeChildren();
+				item.resize();
+			}
 		}
 		
 	}
@@ -820,6 +859,37 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 	}
 
+
+
+	/**
+	 * @method linkType
+	 * return the type of connection we have to our connected object
+	 * @return {string}
+	 */
+	linkType() {
+		return this.settings.linkType;
+	}
+
+
+
+	/**
+	 * @method linkType
+	 * return the type of connection we have to our connected object
+	 * @return {string}
+	 */
+	linkViaType() {
+		return this.settings.linkViaType;
+	}
+
+
+	/**
+	 * @method isSource
+	 * does this object contain the .id of the remote object (in case of linkType : one )
+	 * @return {bool}
+	 */
+	isSource() {
+		return this.settings.isSource;
+	}
 
 
 };

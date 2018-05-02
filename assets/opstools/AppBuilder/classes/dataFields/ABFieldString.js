@@ -157,10 +157,11 @@ class ABFieldString extends ABField {
 	 * return a UI Component that contains the property definitions for this Field.
 	 *
 	 * @param {App} App the UI App instance passed around the Components.
+	 * @param {stirng} idBase
 	 * @return {Component}
 	 */
-  	static propertiesComponent(App) {
-  		return ABFieldStringComponent.component(App);
+  	static propertiesComponent(App, idBase) {
+  		return ABFieldStringComponent.component(App, idBase);
   	}
 
 
@@ -263,11 +264,11 @@ class ABFieldString extends ABField {
 
 
 	/*
-	 * @function isMultilingual
+	 * @property isMultilingual
 	 * does this field represent multilingual data?
 	 * @return {bool}
 	 */
-	isMultilingual() {
+	get isMultilingual() {
 		return this.settings.supportMultilingual == 1;
 	}
 

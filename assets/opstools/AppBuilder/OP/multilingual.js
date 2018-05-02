@@ -34,6 +34,10 @@ export default {
 			json.translations = [];
 		}
 
+		if (typeof json.translations == 'string') {
+			json.translations = JSON.parse(json.translations);
+		}
+
 		var currLanguage = AD.lang.currentLanguage || 'en';
 
 		if (fields && fields.length > 0) {
