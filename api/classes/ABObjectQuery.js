@@ -726,12 +726,12 @@ module.exports = class ABObjectQuery extends ABObject {
 
 				var obj = f.object;
 				var columnFormat = "{tableName}.{columnName}" +
-									" as {objectName}.{displayName}"; // add object's name to alias
+					" as {objectName}.{displayName}"; // add object's name to alias
 
 				// Connect fields
 				if (f.key == 'connectObject') {
 
-					var connectColFormat = 
+					var connectColFormat =
 						"IF(`{tableName}`.`{columnName}` IS NOT NULL, " +
 						"JSON_OBJECT('id', `{tableName}`.`{columnName}`)," +
 						"NULL)" +
@@ -740,7 +740,7 @@ module.exports = class ABObjectQuery extends ABObject {
 					var field = '';
 					var objLink = f.datasourceLink;
 					var fieldLink = f.fieldLink();
-					
+
 					// 1:M
 					if (f.settings.linkType == 'one' && f.settings.linkViaType == 'many') {
 
@@ -789,26 +789,26 @@ module.exports = class ABObjectQuery extends ABObject {
 
 							// check need join table ??
 							if (this.canFilterObject(objLink) == false) {
-	
+
 								let baseClause = obj.dbTableName() + '.' + obj.PK();
 								let linkTable = objLink.dbTableName();
 								let connectedClause = linkTable + '.' + fieldLink.columnName;
 								makeLink({ type: 'left' }, linkTable, baseClause, '=', connectedClause);
 							}
-	
+
 						}
 					}
 
 					// M:N
-					else if (f.settings.linkType == 'many' && f.settings.linkViaType == 'many') { 
+					else if (f.settings.linkType == 'many' && f.settings.linkViaType == 'many') {
 
 						let joinTableName = f.joinTableName();
 
 						field = connectColFormat
-								.replace(/{tableName}/g, joinTableName)
-								.replace(/{columnName}/g, objLink.name)
-								.replace(/{objectName}/g, obj.name)
-								.replace(/{displayName}/g, f.relationName());
+							.replace(/{tableName}/g, joinTableName)
+							.replace(/{columnName}/g, objLink.name)
+							.replace(/{objectName}/g, obj.name)
+							.replace(/{displayName}/g, f.relationName());
 
 						// check need join table ??
 						if (this.canFilterObject(objLink) == false) {
@@ -889,67 +889,62 @@ module.exports = class ABObjectQuery extends ABObject {
 		// {objectName}.{columnName}
 		if (!options.ignoreEditTranslations) {
 
-			query = query.then((rows) => {
+			query.on('query-response', function (rows, obj, builder) {
 
-				return new Promise((resolve, reject) => {
+				(rows || []).forEach((r) => {
 
-					(rows || []).forEach((r) => {
+					// each rows
+					Object.keys(r).forEach((rKey) => {
 
-						// each rows
-						Object.keys(r).forEach((rKey) => {
+						// objectName.translations
+						if (rKey.endsWith('.translations')) {
 
-							// objectName.translations
-							if (rKey.endsWith('.translations')) {
+							r.translations = r.translations || [];
 
-								r.translations = r.translations || [];
+							var objectName = rKey.replace('.translations', '');
 
-								var objectName = rKey.replace('.translations', '');
+							var translations = [];
+							if (typeof r[rKey] == 'string')
+								translations = JSON.parse(r[rKey]);
 
-								var translations = [];
-								if (typeof r[rKey] == 'string')
-									translations = JSON.parse(r[rKey]);
+							// each elements of trans
+							(translations || []).forEach((tran) => {
 
-								// each elements of trans
-								(translations || []).forEach((tran) => {
+								var newTran = {
+									language_code: tran.language_code
+								};
 
-									var newTran = {
-										language_code: tran.language_code
-									};
+								// include objectName into property - objectName.propertyName
+								Object.keys(tran).forEach(tranKey => {
 
-									// include objectName into property - objectName.propertyName
-									Object.keys(tran).forEach(tranKey => {
+									if (tranKey == 'language_code') return;
 
-										if (tranKey == 'language_code') return;
+									var newTranKey = "{objectName}.{propertyName}"
+										.replace("{objectName}", objectName)
+										.replace("{propertyName}", tranKey);
 
-										var newTranKey = "{objectName}.{propertyName}"
-											.replace("{objectName}", objectName)
-											.replace("{propertyName}", tranKey);
-
-										// add new property name
-										newTran[newTranKey] = tran[tranKey]
-
-									});
-
-
-									r.translations.push(newTran);
+									// add new property name
+									newTran[newTranKey] = tran[tranKey]
 
 								});
 
 
-								// remove old translations
-								delete rows[rKey];
+								r.translations.push(newTran);
 
-							}
+							});
 
-						});
+
+							// remove old translations
+							delete rows[rKey];
+
+						}
 
 					});
-
-					resolve(rows);
 
 				});
 
 			});
+
 		}
 
 		return query;
