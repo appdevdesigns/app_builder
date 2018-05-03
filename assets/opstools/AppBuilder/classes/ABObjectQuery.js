@@ -76,7 +76,7 @@ export default class ABObjectQuery extends ABObject {
 		// import all our ABObjects 
 		this.importJoins(attributes.joins || []);
 		this.importFields(attributes.fields || []); // import after joins are imported
-	  	this.where = attributes.where || {};
+		// this.where = attributes.where || {}; // .workspaceFilterConditions
 
   	}
 
@@ -156,7 +156,7 @@ export default class ABObjectQuery extends ABObject {
 		/// include our additional objects and where settings:
 
 		settings.joins = this.exportJoins();  //objects;
-		settings.where  = this.where;
+		// settings.where  = this.where; // .workspaceFilterConditions
 
 
 		return settings;

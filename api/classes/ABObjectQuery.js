@@ -34,7 +34,7 @@ module.exports = class ABObjectQuery extends ABObject {
 		// import all our Joins 
 		this.importJoins(attributes.joins || []);
 		this.importFields(attributes.fields || []); // import after joins are imported
-		this.where = attributes.where || {};
+		// this.where = attributes.where || {}; // .workspaceFilterConditions
 
 	}
 
@@ -73,7 +73,7 @@ module.exports = class ABObjectQuery extends ABObject {
 		/// include our additional objects and where settings:
 
 		result.joins = this.exportJoins();  //objects;
-		result.where = this.where;
+		// result.where = this.where; // .workspaceFilterConditions
 
 		return result;
 
@@ -853,29 +853,35 @@ module.exports = class ABObjectQuery extends ABObject {
 
 		// update our condition to include the one we are defined with:
 		// 
-		if (this.where && this.where.glue) {
+		if (this.workspaceFilterConditions && this.workspaceFilterConditions.glue) {
 			if (options.where && options.where.glue) {
 
 				// in the case where we have a condition and a condition was passed in
 				// combine our conditions
 				// queryCondition AND givenConditions:
-				var oWhere = _.clone(options.where);
+				// var oWhere = _.clone(options.where);
 
-				var newWhere = {
-					glue: 'and',
-					rules: [
-						this.where,
-						oWhere
-					]
-				}
+				// var newWhere = {
+				// 	glue: 'and',
+				// 	rules: [
+				// 		this.where,
+				// 		oWhere
+				// 	]
+				// }
 
-				options.where = newWhere;
+				// options.where = newWhere;
+
+				options.where.rules = options.where.rules || [];
+
+				(this.workspaceFilterConditions.rules || []).forEach(r => {
+					options.where.rules.push(r);
+				});
 
 			} else {
 
 				// if we had a condition and no condition was passed in, 
 				// just use ours:
-				options.where = this.where;
+				options.where = this.workspaceFilterConditions;
 			}
 		}
 
