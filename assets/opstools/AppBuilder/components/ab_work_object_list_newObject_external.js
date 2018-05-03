@@ -127,8 +127,8 @@ export default class AB_Work_Object_List_NewObject_External extends OP.Component
 
             filter: function () {
                 // `this` should be from the Webix event
-                var filterText = this.getValue().name.toLowerCase();
-                $$(ids.externalList).filter(externalModel => externalModel.value.name.toLowerCase().indexOf(filterText) > -1);
+                var filterText = this.getValue().toLowerCase();
+                $$(ids.externalList).filter(externalModel => externalModel.name.toLowerCase().indexOf(filterText) > -1);
             },
 
 
