@@ -155,19 +155,23 @@ function parseCondition(_where, object, req, res, cb) {
 
                 processLookup(lookups, (err, data)=>{
 
+                    if (err) {
+
+// TODO: report error here:                        
+                        return;
+                    }
 
                     if (!data) {
 
+// TODO:
 // looks like we did not return any data from the lookups:
+// - if 'same' then return a false condition?
+// - if no same, then return a true condition?
+
 
                     } else {
 //// QUESTION:  if data == [], what does this mean?  
 // we want entries that either match / or don't match 
-
-
-                        // data should represent an [{object}] elements that match valid [user] versions
-                        // we need to pull out of data the proper values for this condition
-                        // and build a new condition: 
 
 
                         // current cond should be in format:
@@ -379,14 +383,134 @@ function ProcessField( list, req, cb) {
 
 
 
+/**
+ * @function processLookup
+ * perform the lookups on the provided list and return the final data
+ * @param {array} list  [{lookup}]
+ * @param {fn}    cb    call back for when the processing is finished.
+ * @param {array} data  array of rows of data returned from previous lookup.
+ */
+function processLookup( list, cb, data) {
 
-/////
-///// LEFT OFF HERE:
-/////
+    if (!list) {
+        // this is teh case where there were no objects found.
+        cb(null, null);
+        return;
+    }
 
-// implement   processLookup(lookups, (err, data)=>{
+    
+    if (list.length == 0) {
+        // we have processed all our lookups, return the data:
+        cb(null, data);
+        return;
+    }
 
 
+    // peform a lookup on the next available one
+    var lookup = list.shift();
+
+    // there are 3 types of lookups:
+    // A) initial [user] lookup
+    // B) lookup based on previous data
+    // C) lookup from an intermediate lookup table
+
+
+    // A) initial [user] lookup
+    // lookup in format:
+    // {
+    //     object:obj,
+    //     cond:{
+    //         glue:'and',
+    //         rules:[{
+    //             key:'columnName',
+    //             rule:'equals',
+    //             value:'username'
+    //         }]
+    //     }
+    // }
+    if (lookup.cond) {
+        
+        lookup.object.queryFind({where:lookup.cond})
+        .then((rows) => {
+
+            // now pass these back to the next lookup:
+            processLookup(list, cb, rows);
+        })
+        .catch((err)=>{
+            cb(err);
+        })
+        return;
+    }
+
+
+    // B) lookup based on previous data
+    // lookup in format:
+    // {
+    //     obj:obj,
+    //     field: 'fieldName for condition',  
+    //     dataColumn: 'columnName for data'
+    // }
+    if (lookup.obj) {
+        
+        var values = data.map((d){ return d[lookup.dataColumn]; });
+        var cond = {
+            glue:'and',
+            rules:[{
+                key:lookup.field,
+                rule:'in',
+                value:values
+            }]
+        }
+
+        lookup.obj.queryFind({where:cond})
+        .then((items) => {
+
+            // now pass these back to the next lookup:
+            processLookup(list, cb, items);
+        })
+        .catch((err)=>{
+            cb(err);
+        })
+        return;
+    }
+
+
+    // C) lookup from an intermediate lookup table
+    // lookup in format:
+    // {
+    //     joinTable: currField.joinTableName(),
+    //     field: connectedObj.name,
+    //     dataColumn: connectedObj.PK()
+    // }
+    if (lookup.joinTable) {
+
+        var values = data.map((d){ return d[lookup.dataColumn]; });
+
+        var linkTableQuery = ABMigration.connection().queryBuilder();
+        linkTableQuery.select(parseName)
+            .from(lookup.joinTable)
+            .where(lookup.field, 'IN', values)
+            .then((items)=>{
+
+                // now pass these back to the next lookup:
+                processLookup(list, cb, items);
+
+            })
+            .catch((err) => {
+                cb(err);
+            })
+        return;
+    }
+
+
+
+    //// Error:
+    // if we get here, then lookup was not formed properly:
+    var error = new Error('improperly formed lookup');
+    error.data = { lookup: lookup }
+    cb(error);
+
+}
 
 
 
