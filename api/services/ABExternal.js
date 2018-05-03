@@ -36,7 +36,7 @@ function getTransTableName(tableName) {
  * 
  * @return {Promise}
  */
-function getPrimaryKey(knex, tableName) {
+function getPrimaryKey(knex, tableName, connName='appBuilder') {
 
 	return new Promise((resolve, reject) => {
 
@@ -48,7 +48,7 @@ function getPrimaryKey(knex, tableName) {
 		knex.select('column_name')
 		.from('information_schema.key_column_usage')
 		.where('CONSTRAINT_NAME', '=', 'PRIMARY')
-		.andWhere('TABLE_SCHEMA', '=', sails.config.connections.appBuilder.database)
+		.andWhere('TABLE_SCHEMA', '=', sails.config.connections[connName].database)
 		.andWhere('TABLE_NAME', '=', tableName)
 			.catch(reject)
 			.then(function (result) {
@@ -117,7 +117,7 @@ module.exports = {
 
 		return Promise.resolve()
 			.then(function () {
-
+				// Get tables in AppBuilder DB
 				return new Promise((resolve, reject) => {
 
 					var knex = ABMigration.connection();
@@ -137,10 +137,40 @@ module.exports = {
 						.catch(reject)
 						.then(function (result) {
 
-							allTableNames = result.map(r => r.TABLE_NAME);
+							allTableNames = result.map((r) => { 
+								return { name: r.TABLE_NAME, connection: null };
+							});
 
 							resolve();
 
+						});
+				});
+			})
+			.then(function () {
+				// Get tables in HRIS DB
+				return new Promise((resolve, reject) => {
+
+					var knex = ABMigration.connection('legacy_hris');
+
+					// SELECT `TABLE_NAME` 
+					// FROM information_schema.tables 
+					// WHERE `TABLE_TYPE` = 'BASE TABLE' 
+					// AND `TABLE_SCHEMA` = [CURRENT DB]
+					// AND `TABLE_NAME`   NOT LIKE 'AB_%'
+					// AND `TABLE_NAME`   NOT LIKE '%_trans';
+					knex.select('TABLE_NAME')
+						.from('information_schema.tables')
+						.where('TABLE_TYPE', '=', 'BASE TABLE')
+						.andWhere('TABLE_SCHEMA', '=', sails.config.connections.legacy_hris.database)
+						.andWhere('TABLE_NAME', 'NOT LIKE', 'AB_%')
+						.andWhere('TABLE_NAME', 'NOT LIKE', '%_trans')
+						.catch(reject)
+						.then(function (result) {
+							result.forEach((r) => {
+								allTableNames.push({ name: r.TABLE_NAME, connection: 'legacy_hris'});
+							});
+
+							resolve();
 						});
 				});
 			})
@@ -174,8 +204,8 @@ module.exports = {
 
 				return new Promise((resolve, reject) => {
 
-					resolve(allTableNames.filter(name => {
-						return existsTableNames.indexOf(name) < 0;
+					resolve(allTableNames.filter(t => {
+						return existsTableNames.indexOf(t.name) < 0;
 					}));
 
 				});
@@ -186,8 +216,8 @@ module.exports = {
 
 				return new Promise((resolve, reject) => {
 					
-					resolve(tableNames.filter(name => {
-						return _.filter(sails.models, m => m.tableName == name && (!m.meta || !m.meta.junctionTable)).length;
+					resolve(tableNames.filter(t => {
+						return _.filter(sails.models, m => m.tableName == t.name && (!m.meta || !m.meta.junctionTable)).length;
 					}));
 
 				});
@@ -201,6 +231,12 @@ module.exports = {
 	 * @method getColumns
 	 * Get the column info list of a table
 	 * 
+	 * @param {string} tableName
+	 * @param {string} [connName]
+	 *		Optional name of the connection where the table is from.
+	 *		By default the table is assumed to be from the 'appBuilder' 
+	 *		connection.
+	 *
 	 * @return Promise -
 	 * 			return {
 	 * 				columnName: {
@@ -216,9 +252,9 @@ module.exports = {
 	 * 							}
 	 * 			}
 	 */
-	getColumns: (tableName) => {
+	getColumns: (tableName, connName) => {
 
-		var knex = ABMigration.connection();
+		var knex = ABMigration.connection(connName);
 		var transTableName = getTransTableName(tableName);
 		var columns = [];
 
@@ -227,7 +263,7 @@ module.exports = {
 			// Get the primary key info
 			.then(function () {
 
-				return getPrimaryKey(knex, tableName);
+				return getPrimaryKey(knex, tableName, connName);
 
 			})
 
@@ -395,17 +431,18 @@ module.exports = {
 	 * @param integer	appID
 	 * @param string	tableName
 	 * @param [{
-	 *      name: string,
-	 *      label: string,
+	 *		 name: string,
+	 *		 label: string,
 	 * 		fieldKey: string,
 	 * 		isHidden: bool
 	 * }] columnList
+	 * @param string	[connName]
 	 * @return Promise
-	 *     Resolves with the data of the new imported object
+	 *		Resolves with the data of the new imported object
 	 **/
-	tableToObject: function (appID, tableName, columnList) {
+	tableToObject: function (appID, tableName, columnList, connName) {
 
-		let knex = ABMigration.connection(),
+		let knex = ABMigration.connection(connName),
 			application,
 			languages = [],
 			transColumnName = '',
@@ -529,7 +566,7 @@ module.exports = {
 				
 				return new Promise((resolve, reject) => {
 
-					getPrimaryKey(knex, tableName)
+					getPrimaryKey(knex, tableName, connName)
 						.catch(reject)
 						.then(colName => {
 
@@ -550,6 +587,7 @@ module.exports = {
 
 					objectData = {
 						id: uuid(),
+						connName: connName,
 						name: tableName,
 						tableName: tableName,
 						transColumnName: transColumnName,

@@ -20,6 +20,7 @@ module.exports = class ABObject extends ABObjectBase {
 /*
 {
 	id: uuid(),
+	connName: 'string', // Sails DB connection name: 'appdev_default', 'legacy_hris', etc. Default is 'appBuilder'.
 	name: 'name',
 	labelFormat: 'xxxxx',
 	isImported: 1/0,
@@ -255,8 +256,7 @@ module.exports = class ABObject extends ABObjectBase {
 		var tableName = this.dbTableName();
 
 		if (!__ModelPool[tableName]) {
-
-			var knex = ABMigration.connection();
+			var knex = ABMigration.connection(this.connName || undefined);
 
 			// Compile our jsonSchema from our DataFields
 			// jsonSchema is only used by Objection.js to validate data before

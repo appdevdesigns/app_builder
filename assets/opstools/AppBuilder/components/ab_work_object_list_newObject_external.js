@@ -127,8 +127,8 @@ export default class AB_Work_Object_List_NewObject_External extends OP.Component
 
             filter: function () {
                 // `this` should be from the Webix event
-                var filterText = this.getValue().toLowerCase();
-                $$(ids.externalList).filter(externalModel => externalModel.value.toLowerCase().indexOf(filterText) > -1);
+                var filterText = this.getValue().name.toLowerCase();
+                $$(ids.externalList).filter(externalModel => externalModel.value.name.toLowerCase().indexOf(filterText) > -1);
             },
 
 
@@ -139,13 +139,15 @@ export default class AB_Work_Object_List_NewObject_External extends OP.Component
                 if (selectedExternal) {
 
                     _logic.busyStart();
-
+                    
+                    var tableName = selectedExternal.name || selectedExternal.id;
+                    var connName = selectedExternal.connection || null;
                     var colNames = [];
 
                     // Parse results and update column list
-                    this.abExternal.tableColumns(selectedExternal.id)
+                    this.abExternal.tableColumns(tableName, connName)
                         .then((attrs) => {
-
+                            
                             Object.keys(attrs).forEach(attrName => {
 
                                 // filter reserve columns
@@ -229,8 +231,11 @@ export default class AB_Work_Object_List_NewObject_External extends OP.Component
                             isHidden: !col.isvisible
                         };
                     });
-
-                this.abExternal.tableImport(selectedExternal.id, columns)
+                
+                var tableName = selectedExternal.name || selectedExternal.id;
+                var connName = selectedExternal.connection || null;
+                
+                this.abExternal.tableImport(tableName, columns, connName)
                     .then((objectList) => {
                         saveButton.enable();
                         _logic.busyEnd();
@@ -315,6 +320,7 @@ export default class AB_Work_Object_List_NewObject_External extends OP.Component
                         minHeight: 250,
                         maxHeight: 250,
                         data: [],
+                        template: '#name#',
                         on: {
                             onSelectChange: _logic.externalSelect
                         },

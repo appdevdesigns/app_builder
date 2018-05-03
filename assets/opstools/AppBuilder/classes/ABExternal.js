@@ -22,13 +22,18 @@ export default class ABExternal {
 
 	}
 
-	tableColumns(tableName) {
+	tableColumns(tableName, connName) {
 
 		return new Promise((resolve, reject) => {
-
+			
+			var params = '';
+			if (connName) {
+				params = '?connection=' + connName;
+			}
+			
 			// OP.Comm.Socket.get({
 			OP.Comm.Service.get({
-				url: '/app_builder/external/model/' + tableName + '/columns'
+				url: '/app_builder/external/model/' + tableName + '/columns' + params
 			})
 				.then((columnInfos) => {
 
@@ -41,12 +46,17 @@ export default class ABExternal {
 
 	}
 
-	tableImport(tableName, columnNames) {
+	tableImport(tableName, columnNames, connName) {
 
 		return new Promise((resolve, reject) => {
 
+			var params = '';
+			if (connName) {
+				params = '?connection=' + connName;
+			}
+			
 			OP.Comm.Service.post({
-				url: '/app_builder/external/application/' + this.application.id + '/model/' + tableName,
+				url: '/app_builder/external/application/' + this.application.id + '/model/' + tableName + params,
 				params: {
 					columns: columnNames
 				}
