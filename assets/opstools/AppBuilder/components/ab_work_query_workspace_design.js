@@ -534,9 +534,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 
 				// set data:
-				CurrentQuery.model().findAll({
-					where: CurrentQuery.workspaceFilterConditions // filter
-				})
+				CurrentQuery.model().findAll()
 					.then((response) => {
 
 						DataTable.clearAll();

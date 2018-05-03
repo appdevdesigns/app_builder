@@ -1,10 +1,3 @@
-
-
-function isUuid(key) {
-	var checker = RegExp('^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$', 'i');
-	return checker.test(key);
-}
-
 module.exports = function (req, res, next) {
 
 	var where = req.options._where;
@@ -12,14 +5,14 @@ module.exports = function (req, res, next) {
 	if (where == null ||
 		where.rules == null ||
 		!where.rules.length ||
-		where.rules.filter(r => isUuid(r.key)).length < 1) // no field ids
+		where.rules.filter(r => AppBuilder.rules.isUuid(r.key)).length < 1) // no field ids
 		return next();
 
 	AppBuilder.routes.verifyAndReturnObject(req, res)
 		.catch(next)
 		.then(function (object) {
 
-			where.rules.filter(r => isUuid(r.key)).forEach(r => {
+			where.rules.filter(r => AppBuilder.rules.isUuid(r.key)).forEach(r => {
 
 				var field = object.fields(f => f.id == r.key)[0];
 				if (field) {
