@@ -570,9 +570,10 @@ module.exports = class ABObject extends ABObjectBase {
         delete options.limit;
 
 		// added tableName to id because of non unique field error
-		return this.queryFind(options, userData).count('{tableName}.{pkName} as count'
-															.replace("{tableName}", tableName)
-															.replace("{pkName}", this.PK()));
+		return this.queryFind(options, userData).count();
+		// '{tableName}.{pkName} as count'
+		// 													.replace("{tableName}", tableName)
+		// 													.replace("{pkName}", this.PK()));
 	}
 
 
