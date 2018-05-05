@@ -718,6 +718,7 @@ module.exports = class ABObjectQuery extends ABObject {
 
 		//// Add in our fields:
 		if (!options.ignoreIncludeColumns) { // get count of rows does not need to include columns
+			var selects = [];
 			var columns = [];
 			this.fields().forEach((f) => {
 
@@ -725,17 +726,19 @@ module.exports = class ABObjectQuery extends ABObject {
 					return;
 
 				var obj = f.object;
-				var columnFormat = "{tableName}.{columnName}" +
-					" as {objectName}.{displayName}"; // add object's name to alias
 
 				// Connect fields
 				if (f.key == 'connectObject') {
 
-					var connectColFormat =
-						"IF(`{tableName}`.`{columnName}` IS NOT NULL, " +
-						"JSON_OBJECT('id', `{tableName}`.`{columnName}`)," +
-						"NULL)" +
-						" as '{objectName}.{displayName}'"; // add object's name to alias
+					var connectColFormat = ("(SELECT CONCAT(" +
+						"'[',GROUP_CONCAT(JSON_OBJECT('id', `{linkTableName}`.`{columnName}`)),']')" +
+						" FROM `{linkTableName}` WHERE `{linkTableName}`.`{linkColumnName}` = `{baseTableName}`.`{baseColumnName}`)" +
+						" as `{objectName}.{displayName}`") // add object's name to alias
+						.replace(/{baseTableName}/g, obj.dbTableName())
+						.replace(/{baseColumnName}/g, obj.PK())
+						.replace(/{objectName}/g, obj.name)
+						.replace(/{displayName}/g, f.relationName());
+
 
 					var field = '';
 					var objLink = f.datasourceLink;
@@ -744,28 +747,32 @@ module.exports = class ABObjectQuery extends ABObject {
 					// 1:M
 					if (f.settings.linkType == 'one' && f.settings.linkViaType == 'many') {
 
-						field = connectColFormat
+						field = ("IF(`{tableName}`.`{columnName}` IS NOT NULL, " +
+							"JSON_OBJECT('id', `{tableName}`.`{columnName}`)," +
+							"NULL)" +
+							" as '{objectName}.{displayName}'")
 							.replace(/{tableName}/g, obj.dbTableName())
 							.replace(/{columnName}/g, f.columnName)
 							.replace(/{objectName}/g, obj.name)
 							.replace(/{displayName}/g, f.relationName());
+
 					}
 
 					// M:1
 					else if (f.settings.linkType == 'many' && f.settings.linkViaType == 'one') {
 
 						field = connectColFormat
-							.replace(/{tableName}/g, objLink.dbTableName())
-							.replace(/{columnName}/g, fieldLink.columnName)
-							.replace(/{objectName}/g, obj.name)
-							.replace(/{displayName}/g, f.relationName());
+							.replace(/{linkTableName}/g, objLink.dbTableName())
+							.replace(/{linkColumnName}/g, fieldLink.columnName)
+							.replace(/{columnName}/g, objLink.PK());
+
 
 						// check need join table ??
 						if (this.canFilterObject(objLink) == false) {
 
 							let baseClause = obj.dbTableName() + '.' + obj.PK();
 							let linkTable = objLink.dbTableName();
-							let connectedClause = linkTable + '.' + obj.name;
+							let connectedClause = linkTable + '.' + fieldLink.columnName;
 							makeLink({ type: 'left' }, linkTable, baseClause, '=', connectedClause);
 						}
 					}
@@ -774,7 +781,10 @@ module.exports = class ABObjectQuery extends ABObject {
 					else if (f.settings.linkType == 'one' && f.settings.linkViaType == 'one') {
 
 						if (f.settings.isSource) {
-							field = connectColFormat
+							field = ("IF(`{tableName}`.`{columnName}` IS NOT NULL, " +
+								"JSON_OBJECT('id', `{tableName}`.`{columnName}`)," +
+								"NULL)" +
+								" as '{objectName}.{displayName}'")
 								.replace(/{tableName}/g, obj.dbTableName())
 								.replace(/{columnName}/g, f.columnName)
 								.replace(/{objectName}/g, obj.name)
@@ -782,10 +792,10 @@ module.exports = class ABObjectQuery extends ABObject {
 						}
 						else {
 							field = connectColFormat
-								.replace(/{tableName}/g, objLink.dbTableName())
-								.replace(/{columnName}/g, fieldLink.columnName)
-								.replace(/{objectName}/g, obj.name)
-								.replace(/{displayName}/g, f.relationName());
+								.replace(/{linkTableName}/g, objLink.dbTableName())
+								.replace(/{linkColumnName}/g, fieldLink.columnName)
+								.replace(/{columnName}/g, objLink.PK());
+
 
 							// check need join table ??
 							if (this.canFilterObject(objLink) == false) {
@@ -795,7 +805,6 @@ module.exports = class ABObjectQuery extends ABObject {
 								let connectedClause = linkTable + '.' + fieldLink.columnName;
 								makeLink({ type: 'left' }, linkTable, baseClause, '=', connectedClause);
 							}
-
 						}
 					}
 
@@ -805,10 +814,10 @@ module.exports = class ABObjectQuery extends ABObject {
 						let joinTableName = f.joinTableName();
 
 						field = connectColFormat
-							.replace(/{tableName}/g, joinTableName)
-							.replace(/{columnName}/g, objLink.name)
-							.replace(/{objectName}/g, obj.name)
-							.replace(/{displayName}/g, f.relationName());
+							.replace(/{linkTableName}/g, joinTableName)
+							.replace(/{linkColumnName}/g, obj.name)
+							.replace(/{columnName}/g, objLink.name);
+
 
 						// check need join table ??
 						if (this.canFilterObject(objLink) == false) {
@@ -822,7 +831,7 @@ module.exports = class ABObjectQuery extends ABObject {
 
 
 					if (field)
-						columns.push(ABMigration.connection().raw(field));
+						selects.push(ABMigration.connection().raw(field));
 
 				}
 				// Normal fields
@@ -833,7 +842,8 @@ module.exports = class ABObjectQuery extends ABObject {
 					if (f.isMultilingual)
 						columnName = 'translations';
 
-					var field = columnFormat
+					var field = ("{tableName}.{columnName}" +
+						" as {objectName}.{displayName}") // add object's name to alias
 						.replace(/{tableName}/g, obj.dbTableName())
 						.replace(/{columnName}/g, columnName)
 						.replace(/{objectName}/g, obj.name)
@@ -846,6 +856,8 @@ module.exports = class ABObjectQuery extends ABObject {
 			});
 
 			query.columns(columns);
+			query.select(selects);
+			query.distinct();
 
 		}
 
