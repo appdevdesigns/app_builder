@@ -20,6 +20,7 @@ module.exports = class ABObject extends ABObjectBase {
 /*
 {
 	id: uuid(),
+	connName: 'string', // Sails DB connection name: 'appdev_default', 'legacy_hris', etc. Default is 'appBuilder'.
 	name: 'name',
 	labelFormat: 'xxxxx',
 	isImported: 1/0,
@@ -255,8 +256,7 @@ module.exports = class ABObject extends ABObjectBase {
 		var tableName = this.dbTableName();
 
 		if (!__ModelPool[tableName]) {
-
-			var knex = ABMigration.connection();
+			var knex = ABMigration.connection(this.connName || undefined);
 
 			// Compile our jsonSchema from our DataFields
 			// jsonSchema is only used by Objection.js to validate data before
@@ -570,9 +570,10 @@ module.exports = class ABObject extends ABObjectBase {
         delete options.limit;
 
 		// added tableName to id because of non unique field error
-		return this.queryFind(options, userData).count('{tableName}.{pkName} as count'
-															.replace("{tableName}", tableName)
-															.replace("{pkName}", this.PK()));
+		return this.queryFind(options, userData).count();
+		// '{tableName}.{pkName} as count'
+		// 													.replace("{tableName}", tableName)
+		// 													.replace("{pkName}", this.PK()));
 	}
 
 
@@ -698,7 +699,6 @@ module.exports = class ABObject extends ABObjectBase {
 	    // Apply filters
 	    if (!_.isEmpty(where)) {
 
-
 	        sails.log.debug('ABObject.populateFindConditions(): .where condition:', JSON.stringify(where, null, 4));
 
 
@@ -742,6 +742,53 @@ module.exports = class ABObject extends ABObjectBase {
 	                
 	                return;
 				}
+
+
+				// Convert field id to column name
+				if (AppBuilder.rules.isUuid(condition.key)) {
+
+					var field = this.fields(f => f.id == condition.key)[0];
+					if (field) {
+
+						// convert field's id to column name
+						condition.key = '`{tableName}`.`{columnName}`'
+							.replace('{tableName}', field.object.dbTableName())
+							.replace('{columnName}', field.columnName);
+
+
+							// 1:1 - Get rows that no relation with 
+						if (condition.rule == 'have_no_relation') {
+							var relation_name = AppBuilder.rules.toFieldRelationFormat(field.columnName);
+
+							var objectLink = field.datasourceLink;
+							if (!objectLink) return;
+
+							condition.key = field.columnName;
+							condition.value = objectLink.PK();
+
+						}
+
+						// if we are searching a multilingual field it is stored in translations so we need to search JSON
+						else if (field.isMultilingual) {
+
+							condition.key = ('JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({tableName}.translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({tableName}.translations, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))')
+											.replace(/{tableName}/g, field.object.dbTableName())
+											.replace(/{languageCode}/g, userData.languageCode)
+											.replace(/{columnName}/g, field.columnName);
+						}
+
+						// if this is from a LIST, then make sure our value is the .ID
+						else if (field.key == "list" && field.settings && field.settings.options && field.settings.options.filter) {
+
+							// NOTE: Should get 'id' or 'text' from client ??
+							var inputID = field.settings.options.filter(option => (option.id == condition.value || option.text == condition.value))[0];
+							if (inputID)
+								condition.value = inputID.id;
+						}
+
+					}
+				}
+
 
 
 				//// Special Case:  'have_no_relation'
@@ -895,6 +942,9 @@ module.exports = class ABObject extends ABObjectBase {
 	            // normal field name:
 				var columnName =  condition.key;
 
+				// validate input
+				if (columnName == null || operator == null) return;
+
 	            // // if we are searching a multilingual field it is stored in translations so we need to search JSON
 	            // if (field && field.settings.supportMultilingual == 1) {
 				// 	fieldName = ('JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({tableName}.translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({tableName}.translations, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))')
@@ -913,15 +963,18 @@ module.exports = class ABObject extends ABObjectBase {
 
 
 	            // update our where statement:
-				whereRaw = whereRaw
-	                .replace('{fieldName}', columnName)
-	                .replace('{operator}', operator)
-	                .replace('{input}', ((value != null) ?  value  : ''));
+				if (columnName && operator) {
+
+					whereRaw = whereRaw
+						.replace('{fieldName}', columnName)
+						.replace('{operator}', operator)
+						.replace('{input}', ((value != null) ?  value  : ''));
 
 
-	            // Now we add in our where
-	            Query.whereRaw(whereRaw);
-	        }
+					// Now we add in our where
+					Query.whereRaw(whereRaw);
+				}
+			}
 
 	        parseCondition(where, query);
 
@@ -976,7 +1029,7 @@ module.exports = class ABObject extends ABObjectBase {
 
 	    }
 
-	    sails.log.debug('SQL:', query.toString() );
+		sails.log.debug('SQL:', query.toString() );
 	}
 
 }

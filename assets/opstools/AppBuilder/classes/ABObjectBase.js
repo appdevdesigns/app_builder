@@ -8,10 +8,11 @@
 
 module.exports =  class ABObjectBase {
 
-    constructor(attributes, application) {
+	constructor(attributes, application) {
 /*
 {
 	id: uuid(),
+	connName: 'string', // Sails DB connection name: 'appdev_default', 'legacy_hris', etc. Default is 'appBuilder'.
 	name: 'name',
 	labelFormat: 'xxxxx',
 	isImported: 1/0,
@@ -21,7 +22,7 @@ module.exports =  class ABObjectBase {
 	transColumnName: 'string', // NOTE: store column name of translations table
 	urlPath:'string',
 	importFromObject: 'string', // JSON Schema style reference:  '#[ABApplication.id]/objects/[ABObject.id]'
-								// to get other object:  ABApplication.objectFromRef(obj.importFromObject);
+								// to get other object:	 ABApplication.objectFromRef(obj.importFromObject);
 	translations:[
 		{}
 	],
@@ -33,32 +34,33 @@ module.exports =  class ABObjectBase {
 	  	// link me to my parent ABApplication
 	  	this.application = application;
 
-    	// ABApplication Attributes
-    	this.id    = attributes.id;
-    	this.name  = attributes.name || "";
-    	this.labelFormat = attributes.labelFormat || "";
+		// ABApplication Attributes (or is it ABObject attributes?)
+		this.id	= attributes.id;
+		this.connName = attributes.connName || undefined; // undefined == 'appBuilder'
+		this.name	= attributes.name || "";
+		this.labelFormat = attributes.labelFormat || "";
 		this.isImported  = parseInt(attributes.isImported || 0);
 		this.isExternal  = parseInt(attributes.isExternal || 0);
 		this.tableName	 = attributes.tableName || ""; // NOTE: store table name of import object to ignore async
 		this.primaryColumnName = attributes.primaryColumnName || ""; // NOTE: store column name of PK
 		this.transColumnName = attributes.transColumnName || ""; // NOTE: store column name of translations table
-    	this.urlPath	 = attributes.urlPath     || "";
-    	this.importFromObject = attributes.importFromObject || "";
-    	this.translations = attributes.translations;
+		this.urlPath	 = attributes.urlPath		|| "";
+		this.importFromObject = attributes.importFromObject || "";
+		this.translations = attributes.translations;
 
 		if (typeof(attributes.objectWorkspace) != "undefined") {
 			if (typeof(attributes.objectWorkspace.sortFields) == "undefined") attributes.objectWorkspace.sortFields = [];
-            if (typeof(attributes.objectWorkspace.filterConditions) == "undefined") attributes.objectWorkspace.filterConditions = [];
+			if (typeof(attributes.objectWorkspace.filterConditions) == "undefined") attributes.objectWorkspace.filterConditions = [];
 			if (typeof(attributes.objectWorkspace.frozenColumnID) == "undefined") attributes.objectWorkspace.frozenColumnID = "";
 			if (typeof(attributes.objectWorkspace.hiddenFields) == "undefined") attributes.objectWorkspace.hiddenFields = [];
 		}
 
-    	this.objectWorkspace = attributes.objectWorkspace || {
+		this.objectWorkspace = attributes.objectWorkspace || {
 			sortFields:[], // array of columns with their sort configurations
-            filterConditions:[], // array of filters to apply to the data table
+			filterConditions:[], // array of filters to apply to the data table
 			frozenColumnID:"", // id of column you want to stop freezing
-    		hiddenFields:[], // array of [ids] to add hidden:true to
-    	};
+			hiddenFields:[], // array of [ids] to add hidden:true to
+		};
 
 
 	  	// import all our ABField 
@@ -77,7 +79,7 @@ module.exports =  class ABObjectBase {
   	///
   	/// Static Methods
   	///
-  	/// Available to the Class level object.  These methods are not dependent
+  	/// Available to the Class level object. These methods are not dependent
   	/// on the instance values of the Application.
   	///
 
@@ -138,39 +140,40 @@ module.exports =  class ABObjectBase {
 
 		return {
 			id: 			this.id,
+			connName:		this.connName,
 			name: 			this.name,
-    		labelFormat: 	this.labelFormat,
-			isImported:  	this.isImported,
-			isExternal:  	this.isExternal,
+			labelFormat: 	this.labelFormat,
+			isImported:		this.isImported,
+			isExternal:		this.isExternal,
 			tableName:		this.tableName, // NOTE: store table name of import object to ignore async
 			primaryColumnName: this.primaryColumnName, // NOTE: store column name of PK
 			transColumnName:this.transColumnName, // NOTE: store column name of translations table
 			urlPath: 		this.urlPath,
-    		importFromObject: this.importFromObject,
-    		objectWorkspace:  this.objectWorkspace,
-    		translations: 	this.translations,
-    		fields: 	 	currFields
+			importFromObject: this.importFromObject,
+			objectWorkspace: this.objectWorkspace,
+			translations: 	this.translations,
+			fields: 	 	currFields
 		}
 	}
 
 
-    /**
+	/**
 	 * @method columnResize()
 	 *
 	 * save the new width of a column
 	 *
 	 * @param {} id The instance of the field to save.
-     * @param {int} newWidth the new width of the field
-     * @param {int} oldWidth the old width of the field
+	 * @param {int} newWidth the new width of the field
+	 * @param {int} oldWidth the old width of the field
 	 * @return {Promise}
 	 */
 	columnResize( columnName, newWidth, oldWidth ) {
-        for(var i=0; i<this._fields.length; i++) {
-            if (this._fields[i].columnName == columnName) {
-                this._fields[i].settings.width = newWidth;
-            }
-        }
-        return this.save();
+		for(var i=0; i<this._fields.length; i++) {
+			if (this._fields[i].columnName == columnName) {
+				this._fields[i].settings.width = newWidth;
+			}
+		}
+		return this.save();
 	}
 
 
@@ -268,7 +271,7 @@ module.exports =  class ABObjectBase {
 	}
 
 
-    /**
+	/**
 	 * @method fieldReorder()
 	 *
 	 * reorder the fields in our object
@@ -277,32 +280,34 @@ module.exports =  class ABObjectBase {
 	 * @return {Promise}
 	 */
 	fieldReorder( sourceId, targetId ) {
-        // We know what was moved and what item it has replaced/pushed forward
-        // so first we want to splice the item moved out of the array of fields
-        // and store it so we can put it somewhere else
-        let itemMoved = null;
-        let oPos = 0; // original position
-        for(var i=0; i<this._fields.length; i++) {
-            if (this._fields[i].columnName == sourceId) {
-                itemMoved = this._fields[i];
-                this._fields.splice(i, 1);
-                oPos = i;
-                break;
-            }
-        }
-        // once we have removed/stored it we can find where its new position
-        // will be by looping back through the array and finding the item it
-        // is going to push forward
-        for(var j=0; j<this._fields.length; j++) {
-            if (this._fields[j].columnName == targetId) {
-                // if the original position was before the new position we will follow webix's logic that the drop should go after the item it was placed on 
-                if (oPos <= j) {
-                    j++;
-                }
-                this._fields.splice(j, 0, itemMoved);
-                break;
-            }
-        }
+		// We know what was moved and what item it has replaced/pushed forward
+		// so first we want to splice the item moved out of the array of fields
+		// and store it so we can put it somewhere else
+		let itemMoved = null;
+		let oPos = 0; // original position
+		for(var i=0; i<this._fields.length; i++) {
+			if (this._fields[i].columnName == sourceId) {
+				itemMoved = this._fields[i];
+				this._fields.splice(i, 1);
+				oPos = i;
+				break;
+			}
+		}
+		// once we have removed/stored it we can find where its new position
+		// will be by looping back through the array and finding the item it
+		// is going to push forward
+		for(var j=0; j<this._fields.length; j++) {
+			if (this._fields[j].columnName == targetId) {
+				// if the original position was before the new position we will 
+				// follow webix's logic that the drop should go after the item 
+				// it was placed on 
+				if (oPos <= j) {
+					j++;
+				}
+				this._fields.splice(j, 0, itemMoved);
+				break;
+			}
+		}
 
 		return this.save();
 	}
@@ -400,13 +405,13 @@ module.exports =  class ABObjectBase {
 		this.objectWorkspace.sortFields = fields;
 	}
 
-    get workspaceFilterConditions() {
-        return this.objectWorkspace.filterConditions;
-    }
+	get workspaceFilterConditions() {
+		return this.objectWorkspace.filterConditions;
+	}
 
-    set workspaceFilterConditions( filterConditions ) {
-        this.objectWorkspace.filterConditions = filterConditions;
-    }
+	set workspaceFilterConditions( filterConditions ) {
+		this.objectWorkspace.filterConditions = filterConditions;
+	}
 
 	get workspaceFrozenColumnID() {
 		return this.objectWorkspace.frozenColumnID;
@@ -465,7 +470,7 @@ module.exports =  class ABObjectBase {
 
 	/**
 	 * @method urlPointer()
-	 * return the url pointer that references this object.  This url pointer
+	 * return the url pointer that references this object. This url pointer
 	 * should be able to be used by this.application.urlResolve() to return 
 	 * this object.
 	 * 

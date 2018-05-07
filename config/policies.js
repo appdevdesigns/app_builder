@@ -19,7 +19,7 @@ var findStack = ADCore.policy.serviceStack([
 	// after this point:  our where conditions should be in QB format
 	'ABModelConvertSameAsUserConditions', 
 	'ABModelConvertQueryConditions', 
-	'ABModelConvertFieldKey'
+	// 'ABModelConvertFieldKey'
 	]);
 
 module.exports = {
