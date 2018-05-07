@@ -965,6 +965,11 @@ module.exports = class ABObject extends ABObjectBase {
 	            // update our where statement:
 				if (columnName && operator) {
 
+					// make sure to ` ` columnName:
+					if (columnName.indexOf("`") == -1) {
+						columnName = "`"+columnName+"`";
+					}
+
 					whereRaw = whereRaw
 						.replace('{fieldName}', columnName)
 						.replace('{operator}', operator)

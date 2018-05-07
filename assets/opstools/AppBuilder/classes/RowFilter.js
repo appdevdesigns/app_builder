@@ -200,6 +200,10 @@ export default class RowFilter extends OP.Component {
 									value: 'in_query',
 									options: [
 										{
+											value: labels.component.sameAsUser,
+											id:'same_as_user'
+										},
+										{
 											value: labels.component.inQuery,
 											id: 'in_query'
 										},
@@ -209,7 +213,9 @@ export default class RowFilter extends OP.Component {
 										}
 									],
 									on: {
-										onChange: _logic.onChange
+										onChange:function( newValue, oldValue) {
+											_logic.onChangeSameAsUser(this, newValue, oldValue);
+										}
 									}
 
 								},
@@ -297,22 +303,7 @@ export default class RowFilter extends OP.Component {
 									],
 									on: {
 										onChange: function( newValue, oldValue) {
-
-											var $viewComparer = this.getParentView();
-											var $viewCond = $viewComparer.getParentView();
-
-											if (newValue == 'same_as_user') {
-												// clear and disable the value field
-												$viewCond.$$(ids.inputValue).showBatch("empty");
-											} else {
-
-												if (oldValue == 'same_as_user') {
-													$viewCond.$$(ids.inputValue).showBatch("list");
-												}
-
-											}
-
-											_logic.onChange();
+											_logic.onChangeSameAsUser(this, newValue, oldValue);
 										}
 									}
 								},
@@ -675,6 +666,23 @@ export default class RowFilter extends OP.Component {
 				if (!ignoreNotify)
 					_logic.onChange();
 
+			},
+
+			onChangeSameAsUser: function($view, newValue, oldValue) {
+
+				var $viewComparer = $view.getParentView();
+				var $viewCond = $viewComparer.getParentView();
+
+				if (newValue == 'same_as_user') {
+					// clear and disable the value field
+					$viewCond.$$(ids.inputValue).showBatch("empty");
+				} else {
+					if (oldValue == 'same_as_user') {
+						$viewCond.$$(ids.inputValue).showBatch("list");
+					}
+				}
+
+				_logic.onChange();
 			},
 
 			onChangeUser: function (rule, $viewCond) {

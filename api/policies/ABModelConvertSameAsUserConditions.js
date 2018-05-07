@@ -67,6 +67,9 @@ module.exports = function(req, res, next) {
 
 
     parseCondition(req.options._where, null, req, res, (err) => {
+        if (err) {
+            ADCore.error.log('AppBuilder:Policy:ABModelConvertSameAsUserConditions:Error processing condition', {error:err});
+        }
         next(err);
     })
  
@@ -151,13 +154,12 @@ function parseCondition(_where, object, req, res, cb) {
 // that result will return to the next lookup, where it will find all obj->fieldCond IN previous results
 // etc... 
 
-            processObjectWithUser(object, req,  (err, lookups)=>{
+            processObjectWithUser(object, [], req,  (err, lookups)=>{
 
                 processLookup(lookups, (err, data)=>{
 
                     if (err) {
-
-// TODO: report error here:                        
+                        cb(err);
                         return;
                     }
 
@@ -180,7 +182,12 @@ function parseCondition(_where, object, req, res, cb) {
                             //  cond.value :  (empty)
 
                         
-                        // cond.key = cond.key;     // this should already be the proper field value
+                        // cond.key = cond.key;     // cond.key should be the field.id 
+                        // convert cond.key into the columnName for the query
+                        var field = object.fields().filter((f)=>{ return f.id == cond.key; })[0];
+                        if (field) {
+                            cond.key = field.columnName;
+                        }
 
                         // cond.rule  : should be either ["in", "not_in"]
                         var convert = {
@@ -222,10 +229,15 @@ function parseCondition(_where, object, req, res, cb) {
 // processObjectWithUser
 // attempt to find the closest object to the provided obj, that has a [user] field.
 // @param {ABObj} obj The current obj to evaluate
+// @param {array} listAlreadyChecked  an array of obj.id's that have already been checked.  
+//                                    To prevent circular searches
 // @param {fn}    cb  A node style callback (err, data)  that is called when we have finished
 // @return  null if no object with a [user] field is found.
 //          {array} of lookup definitions from found obj  
-function processObjectWithUser( obj, req,  cb ) {
+function processObjectWithUser( obj, listAlreadyChecked, req,  cb ) {
+
+    // add the current obj into our list of objects being checked:
+    listAlreadyChecked.push(obj.id);
 
     var userField = obj.fields((f)=> { return f.key == 'user';})[0];
     if (userField) {
@@ -264,7 +276,7 @@ function processObjectWithUser( obj, req,  cb ) {
         }
 
         
-        ProcessField(connectionFields, req,  cb);
+        ProcessField(connectionFields, obj, listAlreadyChecked, req,  cb);
 
     } // if !user
 
@@ -273,7 +285,7 @@ function processObjectWithUser( obj, req,  cb ) {
 
 
 
-function ProcessField( list, req, cb) {
+function ProcessField( list, obj, listAlreadyChecked, req, cb) {
 
     // if we got to the end, then there were no successful fields:
     if (list.length == 0) {
@@ -284,21 +296,28 @@ function ProcessField( list, req, cb) {
         var currField = list.shift();
 
         // check to see if currField's obj has a solution:
-        var connectedObj = obj.application.objects((o)=>{ return o.id == currField.linkObject; })[0];
+        var connectedObj = currField.datasourceLink;  // obj.application.objects((o)=>{ return o.id == currField.linkObject; })[0];
         if (!connectedObj) {
 
             // if no connectedObj, then on to next field:
-            ProcessField(list, req, cb);
+            ProcessField(list, obj, listAlreadyChecked, req, cb);
+            return;
+        }
+
+
+        // if this object has already been checked, then continue to next Field:
+        if (listAlreadyChecked.indexOf(connectedObj.id) != -1) {
+            ProcessField(list, obj, listAlreadyChecked, req, cb);
             return;
         }
 
 
         // does this object give us a solution?
-        processObjectWithUser(connectedObj, req, (err, result)=>{
+        processObjectWithUser(connectedObj, listAlreadyChecked, req, (err, result)=>{
 
             // if no results with this object, move on to next Field:
             if (!result) {  
-                ProcessField(list, req, cb);
+                ProcessField(list, obj, listAlreadyChecked, req, cb);
             } else {
 
                 // we now have a solution.  So figure out how to decode the data returned 
@@ -393,7 +412,7 @@ function ProcessField( list, req, cb) {
 function processLookup( list, cb, data) {
 
     if (!list) {
-        // this is teh case where there were no objects found.
+        // this is the case where there were no objects found.
         cb(null, null);
         return;
     }
@@ -435,6 +454,10 @@ function processLookup( list, cb, data) {
 
             // now pass these back to the next lookup:
             processLookup(list, cb, rows);
+
+            // TODO: refactor to not use cb, but instead chain promises???
+            return null;
+
         })
         .catch((err)=>{
             cb(err);
@@ -452,7 +475,7 @@ function processLookup( list, cb, data) {
     // }
     if (lookup.obj) {
         
-        var values = data.map((d){ return d[lookup.dataColumn]; });
+        var values = data.map((d)=>{ return d[lookup.dataColumn]; });
         var cond = {
             glue:'and',
             rules:[{
@@ -467,6 +490,7 @@ function processLookup( list, cb, data) {
 
             // now pass these back to the next lookup:
             processLookup(list, cb, items);
+            return null;
         })
         .catch((err)=>{
             cb(err);
@@ -484,7 +508,7 @@ function processLookup( list, cb, data) {
     // }
     if (lookup.joinTable) {
 
-        var values = data.map((d){ return d[lookup.dataColumn]; });
+        var values = data.map((d)=>{ return d[lookup.dataColumn]; });
 
         var linkTableQuery = ABMigration.connection().queryBuilder();
         linkTableQuery.select(parseName)
@@ -494,7 +518,7 @@ function processLookup( list, cb, data) {
 
                 // now pass these back to the next lookup:
                 processLookup(list, cb, items);
-
+                return null;
             })
             .catch((err) => {
                 cb(err);
