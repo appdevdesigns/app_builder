@@ -405,6 +405,18 @@ module.exports = class ABApplicationBase {
 		return this.urlPointer(acrossApp) + '_pages/'
 	}
 
+	/**
+	 * @method urlQuery()
+	 * return the url pointer for queries in this application.
+	 * 
+	 * @param {boolean} acrossApp - flag to include application id to url
+	 *
+	 * @return {string} 
+	 */
+	urlQuery(acrossApp) {
+		return this.urlPointer(acrossApp) + '_queries/'
+	}
+
 
 	///
 	///	Object List Settings

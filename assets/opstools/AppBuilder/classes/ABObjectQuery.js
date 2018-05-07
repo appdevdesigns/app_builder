@@ -479,6 +479,21 @@ export default class ABObjectQuery extends ABObject {
 	}
 
 
+	/**
+	 * @method urlPointer()
+	 * return the url pointer that references this object. This url pointer
+	 * should be able to be used by this.application.urlResolve() to return 
+	 * this object.
+	 * 
+	 * @param {boolean} acrossApp - flag to include application id to url
+	 * 
+	 * @return {string} 
+	 */
+	urlPointer(acrossApp) {
+		return this.application.urlQuery(acrossApp) + this.id;
+	}
+
+
 
 	// // after a component has rendered, tell each of our fields to perform
 	// // any custom display operations
