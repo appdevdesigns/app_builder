@@ -34,7 +34,7 @@ module.exports = class ABObjectQuery extends ABObject {
 		// import all our Joins 
 		this.importJoins(attributes.joins || []);
 		this.importFields(attributes.fields || []); // import after joins are imported
-		this.where = attributes.where || {};
+		// this.where = attributes.where || {}; // .workspaceFilterConditions
 
 	}
 
@@ -73,7 +73,7 @@ module.exports = class ABObjectQuery extends ABObject {
 		/// include our additional objects and where settings:
 
 		result.joins = this.exportJoins();  //objects;
-		result.where = this.where;
+		// result.where = this.where; // .workspaceFilterConditions
 
 		return result;
 
@@ -718,6 +718,7 @@ module.exports = class ABObjectQuery extends ABObject {
 
 		//// Add in our fields:
 		if (!options.ignoreIncludeColumns) { // get count of rows does not need to include columns
+			var selects = [];
 			var columns = [];
 			this.fields().forEach((f) => {
 
@@ -725,47 +726,53 @@ module.exports = class ABObjectQuery extends ABObject {
 					return;
 
 				var obj = f.object;
-				var columnFormat = "{tableName}.{columnName}" +
-									" as {objectName}.{displayName}"; // add object's name to alias
 
 				// Connect fields
 				if (f.key == 'connectObject') {
 
-					var connectColFormat = 
-						"IF(`{tableName}`.`{columnName}` IS NOT NULL, " +
-						"JSON_OBJECT('id', `{tableName}`.`{columnName}`)," +
-						"NULL)" +
-						" as '{objectName}.{displayName}'"; // add object's name to alias
+					var connectColFormat = ("(SELECT CONCAT(" +
+						"'[',GROUP_CONCAT(JSON_OBJECT('id', `{linkTableName}`.`{columnName}`)),']')" +
+						" FROM `{linkTableName}` WHERE `{linkTableName}`.`{linkColumnName}` = `{baseTableName}`.`{baseColumnName}`)" +
+						" as `{objectName}.{displayName}`") // add object's name to alias
+						.replace(/{baseTableName}/g, obj.dbTableName())
+						.replace(/{baseColumnName}/g, obj.PK())
+						.replace(/{objectName}/g, obj.name)
+						.replace(/{displayName}/g, f.relationName());
+
 
 					var field = '';
 					var objLink = f.datasourceLink;
 					var fieldLink = f.fieldLink();
-					
+
 					// 1:M
 					if (f.settings.linkType == 'one' && f.settings.linkViaType == 'many') {
 
-						field = connectColFormat
+						field = ("IF(`{tableName}`.`{columnName}` IS NOT NULL, " +
+							"JSON_OBJECT('id', `{tableName}`.`{columnName}`)," +
+							"NULL)" +
+							" as '{objectName}.{displayName}'")
 							.replace(/{tableName}/g, obj.dbTableName())
 							.replace(/{columnName}/g, f.columnName)
 							.replace(/{objectName}/g, obj.name)
 							.replace(/{displayName}/g, f.relationName());
+
 					}
 
 					// M:1
 					else if (f.settings.linkType == 'many' && f.settings.linkViaType == 'one') {
 
 						field = connectColFormat
-							.replace(/{tableName}/g, objLink.dbTableName())
-							.replace(/{columnName}/g, fieldLink.columnName)
-							.replace(/{objectName}/g, obj.name)
-							.replace(/{displayName}/g, f.relationName());
+							.replace(/{linkTableName}/g, objLink.dbTableName())
+							.replace(/{linkColumnName}/g, fieldLink.columnName)
+							.replace(/{columnName}/g, objLink.PK());
+
 
 						// check need join table ??
 						if (this.canFilterObject(objLink) == false) {
 
 							let baseClause = obj.dbTableName() + '.' + obj.PK();
 							let linkTable = objLink.dbTableName();
-							let connectedClause = linkTable + '.' + obj.name;
+							let connectedClause = linkTable + '.' + fieldLink.columnName;
 							makeLink({ type: 'left' }, linkTable, baseClause, '=', connectedClause);
 						}
 					}
@@ -774,7 +781,10 @@ module.exports = class ABObjectQuery extends ABObject {
 					else if (f.settings.linkType == 'one' && f.settings.linkViaType == 'one') {
 
 						if (f.settings.isSource) {
-							field = connectColFormat
+							field = ("IF(`{tableName}`.`{columnName}` IS NOT NULL, " +
+								"JSON_OBJECT('id', `{tableName}`.`{columnName}`)," +
+								"NULL)" +
+								" as '{objectName}.{displayName}'")
 								.replace(/{tableName}/g, obj.dbTableName())
 								.replace(/{columnName}/g, f.columnName)
 								.replace(/{objectName}/g, obj.name)
@@ -782,33 +792,32 @@ module.exports = class ABObjectQuery extends ABObject {
 						}
 						else {
 							field = connectColFormat
-								.replace(/{tableName}/g, objLink.dbTableName())
-								.replace(/{columnName}/g, fieldLink.columnName)
-								.replace(/{objectName}/g, obj.name)
-								.replace(/{displayName}/g, f.relationName());
+								.replace(/{linkTableName}/g, objLink.dbTableName())
+								.replace(/{linkColumnName}/g, fieldLink.columnName)
+								.replace(/{columnName}/g, objLink.PK());
+
 
 							// check need join table ??
 							if (this.canFilterObject(objLink) == false) {
-	
+
 								let baseClause = obj.dbTableName() + '.' + obj.PK();
 								let linkTable = objLink.dbTableName();
 								let connectedClause = linkTable + '.' + fieldLink.columnName;
 								makeLink({ type: 'left' }, linkTable, baseClause, '=', connectedClause);
 							}
-	
 						}
 					}
 
 					// M:N
-					else if (f.settings.linkType == 'many' && f.settings.linkViaType == 'many') { 
+					else if (f.settings.linkType == 'many' && f.settings.linkViaType == 'many') {
 
 						let joinTableName = f.joinTableName();
 
 						field = connectColFormat
-								.replace(/{tableName}/g, joinTableName)
-								.replace(/{columnName}/g, objLink.name)
-								.replace(/{objectName}/g, obj.name)
-								.replace(/{displayName}/g, f.relationName());
+							.replace(/{linkTableName}/g, joinTableName)
+							.replace(/{linkColumnName}/g, obj.name)
+							.replace(/{columnName}/g, objLink.name);
+
 
 						// check need join table ??
 						if (this.canFilterObject(objLink) == false) {
@@ -822,7 +831,7 @@ module.exports = class ABObjectQuery extends ABObject {
 
 
 					if (field)
-						columns.push(ABMigration.connection().raw(field));
+						selects.push(ABMigration.connection().raw(field));
 
 				}
 				// Normal fields
@@ -833,7 +842,8 @@ module.exports = class ABObjectQuery extends ABObject {
 					if (f.isMultilingual)
 						columnName = 'translations';
 
-					var field = columnFormat
+					var field = ("{tableName}.{columnName}" +
+						" as {objectName}.{displayName}") // add object's name to alias
 						.replace(/{tableName}/g, obj.dbTableName())
 						.replace(/{columnName}/g, columnName)
 						.replace(/{objectName}/g, obj.name)
@@ -846,6 +856,8 @@ module.exports = class ABObjectQuery extends ABObject {
 			});
 
 			query.columns(columns);
+			query.select(selects);
+			query.distinct();
 
 		}
 
@@ -853,29 +865,35 @@ module.exports = class ABObjectQuery extends ABObject {
 
 		// update our condition to include the one we are defined with:
 		// 
-		if (this.where && this.where.glue) {
+		if (this.workspaceFilterConditions && this.workspaceFilterConditions.glue) {
 			if (options.where && options.where.glue) {
 
 				// in the case where we have a condition and a condition was passed in
 				// combine our conditions
 				// queryCondition AND givenConditions:
-				var oWhere = _.clone(options.where);
+				// var oWhere = _.clone(options.where);
 
-				var newWhere = {
-					glue: 'and',
-					rules: [
-						this.where,
-						oWhere
-					]
-				}
+				// var newWhere = {
+				// 	glue: 'and',
+				// 	rules: [
+				// 		this.where,
+				// 		oWhere
+				// 	]
+				// }
 
-				options.where = newWhere;
+				// options.where = newWhere;
+
+				options.where.rules = options.where.rules || [];
+
+				(this.workspaceFilterConditions.rules || []).forEach(r => {
+					options.where.rules.push(r);
+				});
 
 			} else {
 
 				// if we had a condition and no condition was passed in, 
 				// just use ours:
-				options.where = this.where;
+				options.where = this.workspaceFilterConditions;
 			}
 		}
 
@@ -889,67 +907,62 @@ module.exports = class ABObjectQuery extends ABObject {
 		// {objectName}.{columnName}
 		if (!options.ignoreEditTranslations) {
 
-			query = query.then((rows) => {
+			query.on('query-response', function (rows, obj, builder) {
 
-				return new Promise((resolve, reject) => {
+				(rows || []).forEach((r) => {
 
-					(rows || []).forEach((r) => {
+					// each rows
+					Object.keys(r).forEach((rKey) => {
 
-						// each rows
-						Object.keys(r).forEach((rKey) => {
+						// objectName.translations
+						if (rKey.endsWith('.translations')) {
 
-							// objectName.translations
-							if (rKey.endsWith('.translations')) {
+							r.translations = r.translations || [];
 
-								r.translations = r.translations || [];
+							var objectName = rKey.replace('.translations', '');
 
-								var objectName = rKey.replace('.translations', '');
+							var translations = [];
+							if (typeof r[rKey] == 'string')
+								translations = JSON.parse(r[rKey]);
 
-								var translations = [];
-								if (typeof r[rKey] == 'string')
-									translations = JSON.parse(r[rKey]);
+							// each elements of trans
+							(translations || []).forEach((tran) => {
 
-								// each elements of trans
-								(translations || []).forEach((tran) => {
+								var newTran = {
+									language_code: tran.language_code
+								};
 
-									var newTran = {
-										language_code: tran.language_code
-									};
+								// include objectName into property - objectName.propertyName
+								Object.keys(tran).forEach(tranKey => {
 
-									// include objectName into property - objectName.propertyName
-									Object.keys(tran).forEach(tranKey => {
+									if (tranKey == 'language_code') return;
 
-										if (tranKey == 'language_code') return;
+									var newTranKey = "{objectName}.{propertyName}"
+										.replace("{objectName}", objectName)
+										.replace("{propertyName}", tranKey);
 
-										var newTranKey = "{objectName}.{propertyName}"
-											.replace("{objectName}", objectName)
-											.replace("{propertyName}", tranKey);
-
-										// add new property name
-										newTran[newTranKey] = tran[tranKey]
-
-									});
-
-
-									r.translations.push(newTran);
+									// add new property name
+									newTran[newTranKey] = tran[tranKey]
 
 								});
 
 
-								// remove old translations
-								delete rows[rKey];
+								r.translations.push(newTran);
 
-							}
+							});
 
-						});
+
+							// remove old translations
+							delete rows[rKey];
+
+						}
 
 					});
-
-					resolve(rows);
 
 				});
 
 			});
+
 		}
 
 		return query;

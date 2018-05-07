@@ -422,6 +422,8 @@ class ABFieldList extends ABFieldSelectivity {
 			this.settings[dv] = values.settings[dv] || defaultValues[dv];
 		}
 
+		this.pendingDeletions = [];
+
 	}
 
 	// return the default values for this DataField

@@ -161,6 +161,9 @@ function parseQueryCondition(_where, object, req, res, cb) {
                     queryColumn = object.dbTableName()+'.id';
                     newKey = 'id';  // the final filter needs to be 'id IN []', so 'id'
                     parseColumn = 'id';  // make sure we pull our 'id' values from the query
+
+                    continueSingle(newKey, parseColumn, queryColumn);
+
                 } else {
                     // this is a linkField IN QUERY filter:
 
