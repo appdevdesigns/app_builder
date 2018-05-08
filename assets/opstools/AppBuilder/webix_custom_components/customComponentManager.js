@@ -14,6 +14,7 @@ import EditTree from '../webix_custom_components/edittree'
 import EditUnitList from '../webix_custom_components/editunitlist'
 import FocusableTemplate from '../webix_custom_components/focusableTemplate'
 import NumberText from '../webix_custom_components/numbertext'
+import TreeSuggest from '../webix_custom_components/treesuggest'
 // import SavableLayout from '../webix_custom_components/savablelayout'
 
 var componentList = [
@@ -23,7 +24,8 @@ var componentList = [
 	EditTree, 
 	EditUnitList,
 	FocusableTemplate,
-	NumberText
+	NumberText,
+	TreeSuggest
 	// SavableLayout
 ]
 
