@@ -370,6 +370,24 @@ export default class ABViewGrid extends ABViewWidget  {
 										// $$(ids.linkedEditPageForm).setValue("");
 										$$(ids.detailsPage).setValue("");
 										$$(ids.editPage).setValue("");
+
+										var currDc = _logic.currentEditObject().pageRoot().dataCollections(dc => dc.id == newv)[0];
+										// disallow edit data of query
+										if (currDc && currDc.sourceType == "query") {
+
+											$$(ids.isEditable).setValue(false);
+											$$(ids.massUpdate).setValue(false);
+											$$(ids.allowDelete).setValue(false);
+											$$(ids.isEditable).disable();
+											$$(ids.massUpdate).disable();
+											$$(ids.allowDelete).disable();
+										}
+										else {
+											$$(ids.isEditable).enable();
+											$$(ids.massUpdate).enable();
+											$$(ids.allowDelete).enable();
+										}
+
 									}
 								}
 							}
@@ -604,7 +622,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		super.propertyEditorPopulate(App, ids, view);
 		
 		this.view = view;
-		
+
 		$$(ids.dataSource).setValue(view.settings.dataSource);
 		$$(ids.isEditable).setValue(view.settings.isEditable);
 		$$(ids.massUpdate).setValue(view.settings.massUpdate);
@@ -622,6 +640,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		$$(ids.height).setValue(view.settings.height);
 		$$(ids.hideHeader).setValue(view.settings.hideHeader);
 		$$(ids.labelAsField).setValue(view.settings.labelAsField);
+
 
 		// initial populate of properties and popups
 		view.populateEditor(ids, view);
