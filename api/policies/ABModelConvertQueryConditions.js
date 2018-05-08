@@ -171,12 +171,17 @@ function parseQueryCondition(_where, object, req, res, cb) {
                     // find field by it's name
                     var field = object.fields((f)=>{return f.columnName == cond.key;})[0];
                     if (!field) {
+
+                        // ok, maybe we passed in a field.id:
+                        field = object.fields((f)=>{return f.id == cond.key;})[0];
+                        if (!field) {
 console.error('!! field not found:', cond.key );
 /// THIS IS AN ERROR!
+                        }
                     }
 
                     // if get the field's linked object and see if it can be filtered:
-                    var linkedObject = field.objectLink;
+                    var linkedObject = field.datasourceLink;
                     if (!QueryObj.canFilterObject(linkedObject)) {
 console.error('!! linkedObject not filterable by Query:', cond.key );
 //// THIS IS AN ERROR!!
