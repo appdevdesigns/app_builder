@@ -19,6 +19,9 @@ export default class RowFilter extends OP.Component {
 				thisObject: L('ab.filter_fields.thisObject', "*This Object"),
 				inQuery: L('ab.filter_fields.inQuery', "*In Query"),
 
+				sameAsUser: L('ab.filter_fields.sameAsUser', "*Same As User"),
+				notSameAsUser: L('ab.filter_fields.notSameAsUser', "*Not Same As User"),
+
 				containsCondition: L('ab.filter_fields.containsCondition', "*contains"),
 				notContainCondition: L('ab.filter_fields.notContainCondition', "*doesn't contain"),
 				isCondition: L('ab.filter_fields.isCondition', "*is"),
@@ -198,6 +201,14 @@ export default class RowFilter extends OP.Component {
 									value: 'in_query',
 									options: [
 										{
+											value: labels.component.sameAsUser,
+											id:'same_as_user'
+										},
+										{
+											value: labels.component.notSameAsUser,
+											id:'not_same_as_user'
+										},
+										{
 											value: labels.component.inQuery,
 											id: 'in_query'
 										},
@@ -207,7 +218,9 @@ export default class RowFilter extends OP.Component {
 										}
 									],
 									on: {
-										onChange: _logic.onChange
+										onChange:function( newValue, oldValue) {
+											_logic.onChangeSameAsUser(this, newValue, oldValue);
+										}
 									}
 
 								},
@@ -281,6 +294,14 @@ export default class RowFilter extends OP.Component {
 									value: "equals",
 									options: [
 										{
+											value: labels.component.sameAsUser,
+											id:'same_as_user'
+										},
+										{
+											value: labels.component.notSameAsUser,
+											id:'not_same_as_user'
+										},
+										{
 											value: labels.component.equalListCondition,
 											id: "equals"
 										},
@@ -290,7 +311,9 @@ export default class RowFilter extends OP.Component {
 										}
 									],
 									on: {
-										onChange: _logic.onChange
+										onChange: function( newValue, oldValue) {
+											_logic.onChangeSameAsUser(this, newValue, oldValue);
+										}
 									}
 								},
 								// Boolean
@@ -652,6 +675,23 @@ export default class RowFilter extends OP.Component {
 				if (!ignoreNotify)
 					_logic.onChange();
 
+			},
+
+			onChangeSameAsUser: function($view, newValue, oldValue) {
+
+				var $viewComparer = $view.getParentView();
+				var $viewCond = $viewComparer.getParentView();
+
+				if (newValue == 'same_as_user') {
+					// clear and disable the value field
+					$viewCond.$$(ids.inputValue).showBatch("empty");
+				} else {
+					if (oldValue == 'same_as_user') {
+						$viewCond.$$(ids.inputValue).showBatch("list");
+					}
+				}
+
+				_logic.onChange();
 			},
 
 			onChangeUser: function (rule, $viewCond) {

@@ -158,9 +158,10 @@ function parseQueryCondition(_where, object, req, res, cb) {
                 // if this is our special 'this_object' 'in_query'  queryID  filter:
                 if (cond.key == 'this_object') {
 
-                    queryColumn = object.dbTableName()+'.id';
-                    newKey = 'id';  // the final filter needs to be 'id IN []', so 'id'
-                    parseColumn = 'id';  // make sure we pull our 'id' values from the query
+// TODO: evaluate these settings in light of new object.PK() feature
+queryColumn = object.dbTableName()+'.id';
+newKey = 'id';  // the final filter needs to be 'id IN []', so 'id'
+parseColumn = 'id';  // make sure we pull our 'id' values from the query
 
                     continueSingle(newKey, parseColumn, queryColumn);
 
@@ -196,9 +197,6 @@ console.error('!! linkedObject not filterable by Query:', cond.key );
                         var linkCase = field.linkType()+':'+field.linkViaType();
 
                          switch(linkCase.toLowerCase()) {
-//// LEFT OFF HERE:
-// think through the different cases for compiling the link
-
     
                             case 'one:one':
                             case 'one:many':
@@ -207,7 +205,7 @@ console.error('!! linkedObject not filterable by Query:', cond.key );
                                 newKey = field.columnName;
 
                                 // I need to pull out the PK from the filter Query:
-                                parseColumn = 'id';
+parseColumn = 'id';
 
                                 // make this the queryColumn:
                                 queryColumn = linkedObject.dbTableName()+'.'+parseColumn;   
@@ -219,7 +217,8 @@ console.error('!! linkedObject not filterable by Query:', cond.key );
                                 // they contain my .PK
 
                                 // my .PK is what is used on our filter
-                                newKey = 'id';
+// TODO: evaluate this in light of new object.PK() feature
+newKey = 'id';
 
                                 // I need to pull out the linkedField's columnName
                                 parseColumn = linkedField.columnName;
@@ -233,7 +232,7 @@ console.error('!! linkedObject not filterable by Query:', cond.key );
                             case 'many:many':
 
                                 // we need the .PK of our linked column out of the given query
-                                parseColumn = 'id';  // linkedObject.PK()
+parseColumn = 'id';  // linkedObject.PK()
                                 queryColumn = linkedObject.dbTableName()+'.'+parseColumn;
 
                                 processQueryValues(parseColumn,  queryColumn,  (err, ids) => {
@@ -255,7 +254,7 @@ console.error('!! linkedObject not filterable by Query:', cond.key );
 
                                             var myIds = data.map((d)=>{ return d[parseName] });
 
-                                            var myPK = 'id';  // object.PK();
+var myPK = 'id';  // object.PK();
                                             buildCondition( myPK, myIds);
 
                                         })
@@ -305,12 +304,12 @@ console.log('.... new Condition:', cond);
 
                     var query = QueryObj.queryFind({}, req.user.data);
                     query.clearSelect().columns(queryColumn);
-    console.log();
-    console.log('converted query sql:', query.toSQL());
+console.log();
+console.log('converted query sql:', query.toSQL());
 
                     query
                         .then((data)=>{
-    console.log('.... query data : ', data);
+console.log('.... query data : ', data);
                             var ids = data.map((d)=>{ return d[parseColumn] });
 
 
