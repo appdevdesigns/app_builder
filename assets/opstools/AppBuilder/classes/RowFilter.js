@@ -20,6 +20,7 @@ export default class RowFilter extends OP.Component {
 				inQuery: L('ab.filter_fields.inQuery', "*In Query"),
 
 				sameAsUser: L('ab.filter_fields.sameAsUser', "*Same As User"),
+				notSameAsUser: L('ab.filter_fields.notSameAsUser', "*Not Same As User"),
 
 				containsCondition: L('ab.filter_fields.containsCondition', "*contains"),
 				notContainCondition: L('ab.filter_fields.notContainCondition', "*doesn't contain"),
@@ -204,6 +205,10 @@ export default class RowFilter extends OP.Component {
 											id:'same_as_user'
 										},
 										{
+											value: labels.component.notSameAsUser,
+											id:'not_same_as_user'
+										},
+										{
 											value: labels.component.inQuery,
 											id: 'in_query'
 										},
@@ -291,6 +296,10 @@ export default class RowFilter extends OP.Component {
 										{
 											value: labels.component.sameAsUser,
 											id:'same_as_user'
+										},
+										{
+											value: labels.component.notSameAsUser,
+											id:'not_same_as_user'
 										},
 										{
 											value: labels.component.equalListCondition,
