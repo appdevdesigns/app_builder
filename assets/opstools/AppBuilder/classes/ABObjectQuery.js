@@ -470,7 +470,7 @@ export default class ABObjectQuery extends ABObject {
 							.replace('{fieldLabel}', field.label);
 
 				h.adjust = true;
-				h.minWidth = 120;
+				h.minWidth = 140;
 			}
 
 		});
