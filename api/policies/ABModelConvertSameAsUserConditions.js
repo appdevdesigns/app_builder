@@ -383,7 +383,7 @@ function ProcessField( list, obj, listAlreadyChecked, req, cb) {
                             field: obj.PK(),
                             dataColumn: obj.name
                         }
-                        result.push(lookupJoin);
+                        result.push(lookup);
 
                         cb(null, result);
                         break;
@@ -511,7 +511,7 @@ function processLookup( list, cb, data) {
         var values = data.map((d)=>{ return d[lookup.dataColumn]; });
 
         var linkTableQuery = ABMigration.connection().queryBuilder();
-        linkTableQuery.select(parseName)
+        linkTableQuery.select()
             .from(lookup.joinTable)
             .where(lookup.field, 'IN', values)
             .then((items)=>{
