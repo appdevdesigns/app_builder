@@ -552,7 +552,7 @@ class ABFieldUser extends ABFieldSelectivity {
 		if (!Array.isArray(val) || val)
 			val = [val];
 
-		return val.map(v => v.text).join(', ');
+		return val.map(v => (v.text || v)).join(', ');
 
 	}
 	

@@ -466,7 +466,7 @@ module.exports = {
 
                 // promise for the total count. this was moved below the filters because webix will get caught in an infinte loop of queries if you don't pass the right count
                 var pCount = object.queryCount({ where: where, includeRelativeData: false }, req.user.data).first();
-                    
+
                 Promise.all([
                     pCount,
                     query
