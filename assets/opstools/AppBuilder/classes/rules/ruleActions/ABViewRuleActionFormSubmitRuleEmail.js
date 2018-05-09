@@ -4,6 +4,7 @@
 //
 //
 import ABViewRuleAction from "../ABViewRuleAction"
+import ABFieldEmail from "../../dataFields/ABFieldEmail"
 
 
 export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleAction {
@@ -224,8 +225,10 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 
 			init: () => {
 
-				$$(ids.list).parse(this.queryObject.fields(f => f.fieldUseAsLabel()));
-				$$(ids.list).refresh();
+				if (this.queryObject) {
+					$$(ids.list).parse(this.queryObject.fields(f => f.fieldUseAsLabel()));
+					$$(ids.list).refresh();
+				}
 
 				_logic.refreshUI();
 
@@ -249,7 +252,11 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 				// Populate recipients
 				var recipients = valueRules.toEmails || [];
 				recipients.forEach((r) => {
-					_logic.toEmailAdd(r.type, r.email);
+					_logic.toEmailAdd({
+						type: r.type, // 'to', 'cc' or 'bcc'
+						emailType: r.emailType,  // 'email' or 'field'
+						value: r.value
+					});
 				});
 
 				_logic.refreshUI();
@@ -264,12 +271,15 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 				var recipients = [];
 				$$(ids.toEmails).getChildViews().forEach(e => {
 
-					var type = e.queryView({ name: 'type' }).getValue();
-					var email = e.queryView({ name: 'email' }).getValue();
+					// var type = e.queryView({ name: 'type' }).getValue();
+					var type = "to"; // TODO
+					var emailType = e.queryView({ name: 'emailType' }).getValue();
+					var value = e.queryView({ name: emailType }).getValue();
 
 					recipients.push({
 						type: type,
-						email: email
+						emailType: emailType,
+						value: value
 					});
 
 				});
@@ -284,36 +294,79 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 				};
 			},
 
-			toEmailTemplate: (type, email) => {
+			/**
+			 * @method toEmailTemplate
+			 * 
+			 * @param settings - {
+			 * 			type: string, // 'to', 'cc' or 'bcc'
+			 * 			emailType: string, // 'email' or 'field'
+			 * 			value: string
+			 * }
+			 */
+			toEmailTemplate: (settings) => {
+
+				settings = settings || {};
 
 				return {
 					width: 320,
 					cols: [
+						// {
+						// 	view: 'richselect',
+						// 	name: 'type',
+						// 	value: settings.type || 'to',
+						// 	width: 80,
+						// 	options: [
+						// 		{ id: 'to', value: "To:" },
+						// 		// EmailNotification does not support cc, bcc and reply.
+						// 		// { id: 'cc', value: "Cc:" },
+						// 		// { id: 'bcc', value: "Bcc:" },
+						// 		// { id: 'reply', value: "Reply-To:" }
+						// 	]
+						// },
 						{
 							view: 'richselect',
-							name: 'type',
-							value: type || 'to',
-							width: 80,
+							name: 'emailType',
+							value: settings.emailType || 'email',
+							width: 150,
 							options: [
-								{ id: 'to', value: "To:" },
-								// EmailNotification does not support cc, bcc and reply.
-								// { id: 'cc', value: "Cc:" },
-								// { id: 'bcc', value: "Bcc:" },
-								// { id: 'reply', value: "Reply-To:" }
-							]
-						},
-						{
-							view: 'text',
-							name: 'email',
-							value: email || '',
-							validate: webix.rules.isEmail,
-							width: 200,
+								{ id: 'email', value: "a custom email address" },
+								{ id: 'field', value: "an email field" },
+							],
 							on: {
 								onChange: function (newVal, oldVal) {
 
-									_logic.toEmailValidate();
+									_logic.emailTypeChange(newVal, this);
 								}
 							}
+						},
+						{
+							width: 150,
+							name: 'emailValue',
+							visibleBatch: settings.emailType || 'email',
+							cols: [
+								{
+									view: 'text',
+									name: 'email',
+									batch: 'email',
+									value: (settings.emailType == 'email' ? settings.value : ''),
+									validate: webix.rules.isEmail,
+									width: 150,
+									on: {
+										onChange: function (newVal, oldVal) {
+
+											_logic.toEmailValidate();
+										}
+									}
+								},
+								{
+									view: 'richselect',
+									name: 'field',
+									batch: 'field',
+									value: (settings.emailType == 'field' ? settings.value : ''),
+									options: _logic.emailFieldOptions(),
+									width: 150
+								},
+							]
 						},
 						{
 							view: "button",
@@ -332,13 +385,34 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 
 			},
 
-			toEmailAdd: (type, email) => {
+			toEmailAdd: (settings) => {
 
 				var count = $$(ids.toEmails).getChildViews().length;
 
-				$$(ids.toEmails).addView(_logic.toEmailTemplate(type, email), count);
+				$$(ids.toEmails).addView(_logic.toEmailTemplate(settings), count);
 
 				_logic.refreshUI();
+
+			},
+
+			emailTypeChange: (type, $select) => {
+
+				var $recipient = $select.getParentView();
+				var $emailValue = $recipient.queryView({ name: 'emailValue' });
+
+				if (type == 'field') {
+
+					$emailValue.showBatch('field');
+
+				}
+				// type == 'email'
+				else {
+
+					$emailValue.showBatch('email');
+
+				}
+
+				$$(ids.toEmailsContainer).adjust();
 
 			},
 
@@ -377,6 +451,52 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 					.replace("#label#", field.label);
 			},
 
+			emailFieldOptions: () => {
+
+				var existsObjIds = [this.queryObject.id];
+				var options = [];
+
+				var fnAddOptions = (currObj) => {
+
+					var emailFields = currObj.fields(f => f instanceof ABFieldEmail).map(f => {
+						return {
+							id: f.urlPointer(), // field's url
+							value: "{objLabel}.{fieldLabel}"
+								.replace("{objLabel}", currObj.label)
+								.replace("{fieldLabel}", f.label)
+						};
+					});
+
+					// TODO: prevent duplicate
+
+					options = options.concat(emailFields);
+
+
+					currObj.connectFields().forEach(f => {
+
+						// prevent looping
+						if (// - prevent include connect objects of the base object
+							this.queryObject.connectFields().filter(fConnect => fConnect.id != f.id && fConnect.datasourceLink.id == f.datasourceLink.id).length > 0 ||
+							// - check duplicate include objects
+							existsObjIds.indexOf(f.datasourceLink.id) > -1)
+							return;
+
+						// store
+						existsObjIds.push(f.datasourceLink.id);
+
+						// add email fields of link object
+						fnAddOptions(f.datasourceLink);
+
+					});
+
+				};
+
+				fnAddOptions(this.queryObject);
+
+				return options;
+
+			},
+
 			enterField: (field) => {
 
 				var focusElem = webix.UIManager.getFocus();
@@ -387,10 +507,10 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 
 					if (focusElem.getValue)
 						val = focusElem.getValue();
-	
+
 					if (focusElem.setValue)
 						focusElem.setValue(val + '{#label#}'.replace('#label#', field.label));
-	
+
 					webix.UIManager.setFocus(focusElem);
 
 				}
@@ -418,54 +538,126 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 	//						}
 	process(options) {
 
-		return new Promise((resolve, reject) => {
+		// validate sender's email is invalid
+		if (!webix.rules.isEmail(this.valueRules.fromEmail)) {
+			return Promise.resolve();
+		}
 
-			// If sender email is invalid
-			if (!webix.rules.isEmail(this.valueRules.fromEmail)) {
-				resolve();
-				return;
-			}
+		var recipients = [];
 
-			var recipients = (this.valueRules.toEmails || [])
-				// TODO: Cc, Bcc
-				.map(r => r.email);
+		return Promise.resolve()
+			.then(() => {
 
-			// replace form value to template
-			var fromName = this.valueRules.fromName,
-				subject = this.valueRules.subject,
-				message = this.valueRules.message;
+				// Pull recipients data
+				return new Promise((resolve, reject) => {
 
-			this.queryObject.fields(f => f.fieldUseAsLabel())
-				.forEach(f => {
+					var tasks = [];
 
-					var template = new RegExp('{' + f.columnName + '}', 'g'),
-						data = f.format(options.data);
+					this.valueRules.toEmails.forEach(rec => {
 
-					fromName = fromName.replace(template, data);
-					subject = subject.replace(template, data);
-					message = message.replace(template, data);
+						tasks.push(new Promise((next, err) => {
+
+							// TODO: Cc, Bcc
+
+							// field
+							if (rec.emailType == 'field') {
+
+								var fieldUrl = rec.value;
+								var field = this.queryObject.application.urlResolve(fieldUrl);
+								if (field) {
+
+									var model = field.object.model();
+									model.findAll({
+										where: {
+											glue: 'and',
+											rules: [{
+												key: field.id,
+												rule: "is_not_null"
+											}]
+										}
+									})
+										.catch(err)
+										.then(result => {
+
+											var emails = result.data
+												.filter(d => d[field.columnName])
+												.map(d => d[field.columnName]);
+
+											recipients = recipients.concat(emails);
+
+											next();
+										});
+
+								}
+								else {
+									next();
+								}
+							}
+							// email
+							else {
+								recipients.push(rec.value);
+								next();
+							}
+
+						}));
+
+					});
+
+
+					Promise.all(tasks)
+						.catch(reject)
+						.then(resolve);
 
 				});
-
-			// send a email
-			OP.Comm.Service.post({
-				url: "/app_builder/email",
-				params: {
-					fromName: fromName,
-					fromEmail: this.valueRules.fromEmail,
-					subject: subject,
-					message: message,
-					recipients: recipients
-				}
 			})
-				.then(() => {
+			.then(() => {
 
-					resolve();
+				// send out
+				return new Promise((resolve, reject) => {
 
-				})
-				.catch(reject);
+					recipients = _.uniq(recipients).filter(r => r);
 
-		});
+					if (!recipients || recipients.length < 1)
+						return resolve();
+
+					// replace form value to template
+					var fromName = this.valueRules.fromName,
+						subject = this.valueRules.subject,
+						message = this.valueRules.message;
+
+					this.queryObject.fields(f => f.fieldUseAsLabel())
+						.forEach(f => {
+
+							var template = new RegExp('{' + f.columnName + '}', 'g'),
+								data = f.format(options.data);
+
+							fromName = fromName.replace(template, data);
+							subject = subject.replace(template, data);
+							message = message.replace(template, data);
+
+						});
+
+
+					// send a email
+					OP.Comm.Service.post({
+						url: "/app_builder/email",
+						params: {
+							fromName: fromName,
+							fromEmail: this.valueRules.fromEmail,
+							subject: subject,
+							message: message,
+							recipients: _.uniq(recipients)
+						}
+					})
+						.then(() => {
+
+							resolve();
+
+						})
+						.catch(reject);
+				});
+
+			});
 
 	}
 

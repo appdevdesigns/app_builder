@@ -577,7 +577,7 @@ PopupRecordRule.qbFixAfterShow();
 		var SourceSelector = $$(ids.datacollection);
 
 		// Pull data collections to options
-		var dcOptions = this.pageRoot().dataCollections().map((dc) => {
+		var dcOptions = this.pageRoot().dataCollections(dc => dc.sourceType == "object").map((dc) => {
 
 			return {
 				id: dc.id,

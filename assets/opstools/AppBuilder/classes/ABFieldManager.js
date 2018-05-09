@@ -13,6 +13,7 @@ import ABFieldDate from "./dataFields/ABFieldDate"
 import ABFieldBoolean from "./dataFields/ABFieldBoolean"
 import ABFieldList from "./dataFields/ABFieldList"
 import ABFieldTree from "./dataFields/ABFieldTree"
+import ABFieldEmail from "./dataFields/ABFieldEmail"
 import ABFieldImage from "./dataFields/ABFieldImage"
 import ABFieldFile from "./dataFields/ABFieldFile"
 import ABFieldUser from "./dataFields/ABFieldUser"
@@ -30,6 +31,7 @@ Fields[ABFieldDate.defaults().key] = ABFieldDate;
 Fields[ABFieldBoolean.defaults().key] = ABFieldBoolean;
 Fields[ABFieldList.defaults().key] = ABFieldList;
 Fields[ABFieldTree.defaults().key] = ABFieldTree;
+Fields[ABFieldEmail.defaults().key] = ABFieldEmail;
 Fields[ABFieldImage.defaults().key] = ABFieldImage;
 Fields[ABFieldFile.defaults().key] = ABFieldFile;
 Fields[ABFieldUser.defaults().key] = ABFieldUser;

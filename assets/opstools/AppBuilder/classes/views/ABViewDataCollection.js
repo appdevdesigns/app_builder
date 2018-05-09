@@ -240,13 +240,13 @@ export default class ABViewDataCollection extends ABView {
 			logic: _logic
 		}
 	}
-	
+
 	removeField(field, cb) {
-		
+
 		var shouldSave = false;
 
 		// check filter conditions for any settings
-		if (this.settings.objectWorkspace.filterConditions && 
+		if (this.settings.objectWorkspace.filterConditions &&
 			this.settings.objectWorkspace.filterConditions.rules &&
 			this.settings.objectWorkspace.filterConditions.rules.length) {
 			// if settings are present look for deleted field id in each one
@@ -259,7 +259,7 @@ export default class ABViewDataCollection extends ABView {
 				}
 			});
 		}
-		
+
 		// check to see if sort fields settings are present
 		if (this.settings.objectWorkspace.sortFields && this.settings.objectWorkspace.sortFields.length) {
 			// if so look for deleted field in settings
@@ -272,10 +272,10 @@ export default class ABViewDataCollection extends ABView {
 				}
 			});
 		}
-		
+
 		// if settings were changed call the callback
 		cb(null, shouldSave);
-		
+
 	}
 
 
@@ -300,6 +300,11 @@ export default class ABViewDataCollection extends ABView {
 	propertyEditorFields(App, ids, _logic) { 
 		var components = super.propertyEditorFields(App, ids, _logic); 
 
+
+		// create filter & sort popups
+		this.initPopupEditors(App, ids, _logic);
+
+
 		components = components.concat([
 			{
 				view: "fieldset",
@@ -312,16 +317,18 @@ export default class ABViewDataCollection extends ABView {
 					rows: [
 						{
 							// id: ids.dataSource,
-							view: "select",
+							view: "richselect",
 							name: "dataSource",
-							label: L('ab.component.datacollection.object', '*Object:'),
+							label: L('ab.component.datacollection.source', '*Source:'),
 							labelWidth: App.config.labelWidthLarge,
-							options: [],
+							options: {
+								data: []
+							},
 							on: {
 								onChange: function (newv, oldv) {
 									if (newv == oldv) return;
 
-									_logic.selectObject(newv);
+									_logic.selectSource(newv);
 								}
 							}
 						},
@@ -349,6 +356,7 @@ export default class ABViewDataCollection extends ABView {
 			},
 			{
 				view: "fieldset",
+				name: "advancedOption",
 				label: L('ab.component.datacollection.advancedOptions', '*Advanced Options:'),
 				labelWidth: App.config.labelWidthLarge,
 				body: {
@@ -430,6 +438,32 @@ export default class ABViewDataCollection extends ABView {
 
 		// Add the logic functions defined in our field values:
 
+
+		_logic.selectSource = (sourceId) => {
+
+			var object = this.application.objects(obj => obj.id == sourceId)[0];
+			var query = this.application.queries(q => q.id == sourceId)[0];
+
+			if (object) {
+				// populate fix selector
+				this.populateFixSelector(ids, object);
+
+				// re-create filter & sort popups
+				this.initPopupEditors(App, ids, _logic);
+
+				// show options
+				$$(ids.linkDataSource).show();
+				$$(ids.advancedOption).show();
+			}
+			else if (query) {
+
+				// hide options
+				$$(ids.linkDataSource).hide();
+				$$(ids.advancedOption).hide();
+			}
+		};
+
+
 		_logic.selectObject = (objectId) => {
 
 			var object = this.application.objects(obj => obj.id == objectId)[0];
@@ -442,9 +476,11 @@ export default class ABViewDataCollection extends ABView {
 
 		};
 
+
 		_logic.showFilterPopup = ($view) => {
 			this.filter_popup.show($view, null, { pos: "top" });
 		};
+
 
 		_logic.showSortPopup = ($view) => {
 			PopupSortFieldComponent.show($view, null, { pos: "top" });
@@ -455,16 +491,16 @@ export default class ABViewDataCollection extends ABView {
 
 			var filterValues = FilterComponent.getValue();
 
-			this.settings.objectWorkspace.filterConditions = filterValues; 
+			this.settings.objectWorkspace.filterConditions = filterValues;
 
 
 			// check to make sure all our filter entries are complete before 
 			// trying to save the interface (and update the filter values)
 			var allComplete = true;
-			filterValues.rules.forEach((f)=>{
+			filterValues.rules.forEach((f) => {
 
 				// if all 3 fields are present, we are good.
-				if ((f.key) 
+				if ((f.key)
 					&& (f.rule)
 					&& (f.value)) {
 
@@ -481,10 +517,10 @@ export default class ABViewDataCollection extends ABView {
 
 				// we want to call .save() but give webix a chance to properly update it's 
 				// select boxes before this call causes them to be removed:
-				setTimeout(()=>{
+				setTimeout(() => {
 					this.propertyEditorSave(ids);
 				}, 10);
-				
+
 			}
 
 		};
@@ -537,16 +573,32 @@ export default class ABViewDataCollection extends ABView {
 			this.initPopupEditors(App, ids, _logic);
 		}
 
+		var sources = [];
+
 		// Objects
 		var objects = this.application.objects().map((obj) => {
 			return {
 				id: obj.id,
-				value: obj.label
+				value: obj.label,
+				icon: 'database'
 			}
 		});
-		objects.unshift({ id: '', value: L('ab.component.datacollection.selectObject', '*Select an object') });
+		sources = sources.concat(objects);
 
-		$$(ids.dataSource).define("options", objects);
+		// Queries
+		var queries = this.application.queries().map((q) => {
+			return {
+				id: q.id,
+				value: q.label,
+				icon: 'cubes'
+			}
+		});
+		sources = sources.concat(queries);
+
+		sources.unshift({ id: '', value: L('ab.component.datacollection.selectSource', '*Select an source') });
+
+		$$(ids.dataSource).define("options", { data: sources });
+		$$(ids.dataSource).define("value", this.settings.object || '');
 		$$(ids.dataSource).refresh();
 
 		// populate link data collection options
@@ -594,13 +646,23 @@ export default class ABViewDataCollection extends ABView {
      * set the initial values of the fields you are displaying.
      * @param {App} App the common App object shared among our UI components.
      * @param {obj} ids the id.[name] references to our fields 
-     * @param {data} data the initial settings data for this object
+     * @param {data} data the initial settings data for this object (this.settings)
      */
 	propertyEditorPopulate(App, ids, data) {
 		super.propertyEditorPopulate(App, ids, data);
 
+
 		$$(ids.dataSource).setValue( data.object || '' );
 		$$(ids.loadAll).setValue(data.loadAll != null ? data.loadAll : ABViewPropertyDefaults.loadAll);
+
+		// if selected source is a query, then hide advanced options UI
+		if (this.application.queries(q => q.id == this.settings.object)[0]) {
+			$$(ids.advancedOption).hide();
+		}
+		else {
+			$$(ids.advancedOption).show();
+		}
+
 	}
 
 
@@ -625,19 +687,28 @@ export default class ABViewDataCollection extends ABView {
 
 		this.settings.object = $$(ids.dataSource).getValue();
 
-		// get object url
+		// get object or query url
 		if (this.settings.object) {
 			var obj = this.application.objects(obj => obj.id == this.settings.object)[0];
+			var query = this.application.queries(q => q.id == this.settings.object)[0];
 
-			this.settings.objectUrl = obj.urlPointer();
+			var source;
+			if (obj) {
+				source = obj;
+			}
+			else if (query) {
+				source = query;
+			}
+
+			this.settings.objectUrl = source.urlPointer();
 
 
 			var defaultLabel = this.parent.label + '.' + this.defaults.key;
 
 			// update label
 			if (this.label == '?label?' || this.label == defaultLabel) {
-				this.label = obj.label;
-				$$(ids.label).define('value', obj.label);
+				this.label = source.label;
+				$$(ids.label).define('value', source.label);
 				$$(ids.label).refresh();
 			}
 		}
@@ -713,11 +784,11 @@ export default class ABViewDataCollection extends ABView {
 
 	populateBadgeNumber(ids) {
 
-		if (view.settings.objectWorkspace &&
-			view.settings.objectWorkspace.filterConditions && 
-			view.settings.objectWorkspace.filterConditions.rules) {
+		if (this.settings.objectWorkspace &&
+			this.settings.objectWorkspace.filterConditions &&
+			this.settings.objectWorkspace.filterConditions.rules) {
 
-			$$(ids.buttonFilter).define('badge', view.settings.objectWorkspace.filterConditions.rules.length);
+			$$(ids.buttonFilter).define('badge', this.settings.objectWorkspace.filterConditions.rules.length);
 			$$(ids.buttonFilter).refresh();
 		}
 		else {
@@ -779,23 +850,34 @@ export default class ABViewDataCollection extends ABView {
 
 			});
 
-			// set data collections to options
-			linkDcs.forEach((dc) => {
-				linkDcOptions.push({
-					id: dc.id,
-					value: dc.label
+			if (linkDcs && linkDcs.length > 0) {
+
+				// set data collections to options
+				linkDcs.forEach((dc) => {
+					linkDcOptions.push({
+						id: dc.id,
+						value: dc.label
+					});
 				});
-			});
 
-			linkDcOptions.unshift({ id: '', value: L('ab.component.datacollection.selectLinkSource', '*Select a link source') });
+				linkDcOptions.unshift({ id: '', value: L('ab.component.datacollection.selectLinkSource', '*Select a link source') });
 
-			$$(ids.linkDataSource).show();
-			$$(ids.linkDataSource).define("options", linkDcOptions);
-			$$(ids.linkDataSource).refresh();
-			$$(ids.linkDataSource).setValue(this.settings.linkDataCollection || '');
+				$$(ids.linkDataSource).show();
+				$$(ids.linkDataSource).define("options", linkDcOptions);
+				$$(ids.linkDataSource).refresh();
+				$$(ids.linkDataSource).setValue(this.settings.linkDataCollection || '');
+			}
+			else {
+
+				// hide options
+				$$(ids.linkDataSource).hide();
+				$$(ids.linkField).hide();
+			}
 
 		}
 		else {
+
+			// hide options
 			$$(ids.linkDataSource).hide();
 			$$(ids.linkField).hide();
 		}
@@ -949,6 +1031,31 @@ export default class ABViewDataCollection extends ABView {
 
 
 	/**
+	* @property sourceType
+	* return type of source.
+	*
+	* @return {string} - 'object' or 'query'
+	*/
+	get sourceType() {
+
+		if (this.datasource) {
+
+			if (this.application.objects(obj => obj.id == this.datasource.id)[0])
+				return 'object';
+			else if (this.application.queries(q => q.id == this.datasource.id)[0])
+				return 'query';
+			else
+				return "";
+
+		}
+		else {
+			return "";
+		}
+
+	}
+
+
+	/**
 	 * @property model
 	 * return a source model
 	 * 
@@ -1028,7 +1135,7 @@ export default class ABViewDataCollection extends ABView {
 			var values = data.data;
 			if (!values) return;
 
-			
+
 			if (this.__dataCollection.exists(values.id)) {
 				// normalize data before update data collection
 				var model = this.datasource.model();
@@ -1065,8 +1172,8 @@ export default class ABViewDataCollection extends ABView {
 
 				if (this.__dataCollection.exists(values.id)) {
 					// this data collection has the record so we need to query the server to find out what it's latest data is so we can update all instances
-					this.model.findAll({ where: { id:values.id } }).then((res)=>{
-						
+					this.model.findAll({ where: { id: values.id } }).then((res) => {
+
 						// check to make sure there is data to work with
 						if (Array.isArray(res.data) && res.data.length) {
 							// tell the webix data collection to update using their API with the row id (values.id) and content (res.data[0]) 
@@ -1221,7 +1328,7 @@ export default class ABViewDataCollection extends ABView {
 			if (dc.getCursor() != rowId)
 				dc.setCursor(rowId);
 			// If set rowId equal current cursor, it will not trigger .onAfterCursorChange event
-			else 
+			else
 				this.emit("changeCursor", rowId);
 		}
 
