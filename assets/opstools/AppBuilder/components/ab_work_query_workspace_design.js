@@ -149,41 +149,76 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 				// *** List ***
 
-				var existsObjIds = [objBase.id];
-				var fnAddTreeItem = (currObj, parentField) => {
+				var fnGetParentObjIds = (itemId) => {
+
+					var objectIds = [objBase.id];
+
+					// not exists
+					if (!$$(ids.tree).exists(itemId))
+						return objectIds;
+
+					while (itemId) {
+
+						// store object id
+						var item = $$(ids.tree).getItem(itemId);
+						objectIds.push(item.objectId);
+
+						// get next parent
+						itemId = $$(ids.tree).getParentId(itemId);
+					}
+
+					return objectIds;
+
+				};
+
+				var fnAddTreeItem = (currObj, parentItemId) => {
 
 					currObj.connectFields().forEach(f => {
 
+						let fieldUrl = f.urlPointer(),
+							existsObjIds = fnGetParentObjIds(parentItemId),
+							$parentItem = $$(ids.tree).getItem(parentItemId);
+
 						// prevent looping
-						if (f.datasourceLink.id == (parentField ? parentField.object.id : null) ||
-							// - prevent include connect objects of the base object
-							objBase.connectFields().filter(fConnect => fConnect.id != f.id && fConnect.datasourceLink.id == f.datasourceLink.id).length > 0 ||
-							// - check duplicate include objects
+						if (// - check duplicate include object in branch
 							existsObjIds.indexOf(f.datasourceLink.id) > -1)
 							return;
 
-						// store
-						existsObjIds.push(f.datasourceLink.id);
+						// set check flag of tree item
+						var isCheck = CurrentQuery.joins(join => {
+
+							return join.fieldID == f.id &&
+								(join.objectURL == objBase.urlPointer() || // parent is base object
+									($parentItem && $parentItem.checked)); // if parent is checked
+
+						}).length > 0;
+
+						// set disable
+						var disabled = ($parentItem ? $parentItem.disabled : false) || // disable same its parent
+							(!isCheck && CurrentQuery.canFilterObject(f.datasourceLink)) // disable its duplicate
 
 						// add items to tree
-						$$(ids.tree).add(
+						var itemId = $$(ids.tree).add(
 
 							{
-								id: f.urlPointer(), // field's url
 								value: f.datasourceLink.label, // a label of link object
-								checked: CurrentQuery.joins(j => j.fieldID == f.id).length > 0,
-								open: true
+								fieldUrl: fieldUrl,
+								objectId: f.datasourceLink.id,
+								checked: isCheck,
+								disabled: disabled,
+								open: !disabled
+
 							},
 
 							// order index
 							null,
 
-							// parent - field's url
-							(parentField ? parentField.urlPointer() : null)
+							// parent item's id
+							parentItemId
 						);
 
 						// add child items to tree
-						fnAddTreeItem(f.datasourceLink, f);
+						fnAddTreeItem(f.datasourceLink, itemId);
 
 					});
 
@@ -194,6 +229,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 				fnAddTreeItem(objBase);
 
+				// refresh UI
 				$$(ids.tree).refresh();
 
 
@@ -275,11 +311,12 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 					/** joins **/
 					var joins = [],
-						selectFieldUrls = tree.getChecked();
+						checkItemIds = tree.getChecked();
 
-					selectFieldUrls.forEach(fieldUrl => {
+					checkItemIds.forEach(itemId => {
 
-						var field = CurrentQuery.application.urlResolve(fieldUrl);
+						var $treeItem = tree.getItem(itemId);
+						var field = CurrentQuery.application.urlResolve($treeItem.fieldUrl);
 						if (!field) return;
 
 						// pull the join type of UI
@@ -287,7 +324,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 						var $tabObject = $$(ids.tabObjects).getMultiview().getChildViews().filter(v => v.config.id == field.datasourceLink.id)[0];
 						if ($tabObject) {
 							var $joinType = $tabObject.queryView({ name: "joinType" });
-							
+
 							joinType = $joinType.getValue() || 'innerjoin';
 						}
 						else {
@@ -609,9 +646,13 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 											data: [],
 											on: {
 												onItemClick: function (id, event, item) {
+													if (this.getItem(id).disabled)
+														return;
+
 													if (this.isChecked(id)) {
 														this.uncheckItem(id);
-													} else {
+													}
+													else {
 														this.checkItem(id);
 													}
 												},
