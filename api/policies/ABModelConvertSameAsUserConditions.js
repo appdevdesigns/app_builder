@@ -139,23 +139,16 @@ function parseCondition(_where, object, req, res, cb) {
 
         } else {
 
-            // get list of object->field lookups with the last one being the closest obj that has a [user] field type
-            // foreach entry (LIFO)
-                // lookup matching entries, use PKs to lookup next round
 
-            // when done, we should have object.field = [of matching values from user]
-            // rebuild current condition using results:
-
-// we want to recursively do a DepthFirstSearch DFS to find the first object that has a [user] field.
-// along the way, build an array of lookups {obj, fieldOut, fieldCond, }
-// each step along the way, we should be able to do a lookup on obj where fieldCond in results of previous lokup
-// the first lookup, have fieldCond = [user], 
-// the look up will get all objs where fieldCond=[user], and will return an [] of values from the fieldOut column
-// that result will return to the next lookup, where it will find all obj->fieldCond IN previous results
-// etc... 
-
+            // start with the current object, and search for a [user] field. 
+            // if current object doesn't have one, then search the connections on that object
+            // for one.  continue DepthFirstSearch until you do find one.
+            // return @lookups which is an array of object lookup operations to translate the 
+            // data from the found object to our current object.
             processObjectWithUser(object, [], req,  (err, lookups)=>{
 
+                // process each of the lookups and return the final set of data values
+                // that represent the current users version of the data.
                 processLookup(lookups, (err, data)=>{
 
                     if (err) {
@@ -165,13 +158,33 @@ function parseCondition(_where, object, req, res, cb) {
 
                     if (!data) {
 
-// TODO:
-// looks like we did not return any data from the lookups:
-// - if 'same' then return a false condition?
-// - if no same, then return a true condition?
+                        // looks like we did not return any data form the lookups.
+                        // this means the connected user didn't have any relevant data.
 
+                        // so if 'same_as_user' was the rule:
+                        // we return a false statement:
+                        // 1 == 0
+
+                        // otherwise we return a true statement:
+                        // 1 == 1
+
+
+                        cond.key = '1';
+
+                        if (cond.rule == 'same_as_user') {
+                            cond.value = '0';
+                        } else {
+                            cond.value = '1';
+                        }
+
+                        cond.rule = 'equals';
+
+
+                        // we've updated this condition, now try to process another one:
+                        parseCondition(_where, object, req, res, cb);
 
                     } else {
+
 //// QUESTION:  if data == [], what does this mean?  
 // we want entries that either match / or don't match 
 
@@ -182,8 +195,8 @@ function parseCondition(_where, object, req, res, cb) {
                             //  cond.value :  (empty)
 
                         
-                        // cond.key = cond.key;     // cond.key should be the field.id 
-                        // convert cond.key into the columnName for the query
+                        // cond.key = cond.key;     // cond.key can either be field.columnName or field.id 
+                        // convert cond.key into the columnName for the query (if it is an .id )
                         var field = object.fields().filter((f)=>{ return f.id == cond.key; })[0];
                         if (field) {
                             cond.key = field.columnName;
@@ -200,9 +213,8 @@ function parseCondition(_where, object, req, res, cb) {
                         // cond.key is the field in data that we want to match on
                         var fieldValues = data.map((d)=>{ return d[cond.key]; });
 
-// TODO: simplify fieldValues to a unique list
-                        cond.value = fieldValues; 
-
+                        // return an array of unique values (no repeats)
+                        cond.value = _.uniq(fieldValues); 
 
                         // we've updated this condition, now try to process another one:
                         parseCondition(_where, object, req, res, cb);

@@ -4,6 +4,7 @@
 //
 //
 import ABViewRuleAction from "../ABViewRuleAction"
+import ABFieldConnect from "../../dataFields/ABFieldConnect"
 import ABFieldEmail from "../../dataFields/ABFieldEmail"
 
 
@@ -562,31 +563,53 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 							// field
 							if (rec.emailType == 'field') {
 
-								var fieldUrl = rec.value;
-								var field = this.queryObject.application.urlResolve(fieldUrl);
-								if (field) {
+								var emailFieldUrl = rec.value;
+								var emailField = this.queryObject.application.urlResolve(emailFieldUrl);
+								if (emailField) {
 
-									var model = field.object.model();
-									model.findAll({
-										where: {
-											glue: 'and',
-											rules: [{
-												key: field.id,
-												rule: "is_not_null"
-											}]
-										}
-									})
-										.catch(err)
-										.then(result => {
+									let linkedFields = this.queryObject.fields(f => f instanceof ABFieldConnect && f.settings.linkObject == emailField.object.id);
+									linkedFields.forEach(f => {
 
-											var emails = result.data
-												.filter(d => d[field.columnName])
-												.map(d => d[field.columnName]);
+										var linkedData = options.data[f.relationName()] || [];
 
-											recipients = recipients.concat(emails);
+										// convert to an array
+										if (linkedData && !Array.isArray(linkedData))
+											linkedData = [linkedData];
 
-											next();
+										// pull email address
+										linkedData.forEach(d => {
+
+											var email = d[emailField.columnName];
+											if (email)
+												recipients = recipients.concat(email);
+
 										});
+
+									});
+
+									next();
+
+									// var model = emailField.object.model();
+									// model.findAll({
+									// 	where: {
+									// 		glue: 'and',
+									// 		rules: [{
+									// 			key: emailField.id,
+									// 			rule: "is_not_null"
+									// 		}]
+									// 	}
+									// })
+									// 	.catch(err)
+									// 	.then(result => {
+
+									// 		var emails = result.data
+									// 			.filter(d => d[emailField.columnName])
+									// 			.map(d => d[emailField.columnName]);
+
+									// 		recipients = recipients.concat(emails);
+
+									// 		next();
+									// 	});
 
 								}
 								else {
@@ -628,7 +651,7 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 					this.queryObject.fields(f => f.fieldUseAsLabel())
 						.forEach(f => {
 
-							var template = new RegExp('{' + f.columnName + '}', 'g'),
+							var template = new RegExp('{' + f.label + '}', 'g'),
 								data = f.format(options.data);
 
 							fromName = fromName.replace(template, data);

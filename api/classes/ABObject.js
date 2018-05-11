@@ -570,7 +570,7 @@ module.exports = class ABObject extends ABObjectBase {
         delete options.limit;
 
 		// added tableName to id because of non unique field error
-		return this.queryFind(options, userData).count();
+		return this.queryFind(options, userData).count('* as count');
 		// '{tableName}.{pkName} as count'
 		// 													.replace("{tableName}", tableName)
 		// 													.replace("{pkName}", this.PK()));
@@ -965,8 +965,9 @@ module.exports = class ABObject extends ABObjectBase {
 	            // update our where statement:
 				if (columnName && operator) {
 
-					// make sure to ` ` columnName:
-					if (columnName.indexOf("`") == -1) {
+					// make sure to ` ` columnName (if it isn't our special '1' condition )
+					// see Policy:ABModelConvertSameAsUserConditions  for when that is applied
+					if (columnName != '1' && columnName.indexOf("`") == -1) {
 						columnName = "`"+columnName+"`";
 					}
 

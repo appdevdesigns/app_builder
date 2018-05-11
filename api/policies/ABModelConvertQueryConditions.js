@@ -158,10 +158,9 @@ function parseQueryCondition(_where, object, req, res, cb) {
                 // if this is our special 'this_object' 'in_query'  queryID  filter:
                 if (cond.key == 'this_object') {
 
-// TODO: evaluate these settings in light of new object.PK() feature
-queryColumn = object.dbTableName()+'.id';
-newKey = 'id';  // the final filter needs to be 'id IN []', so 'id'
-parseColumn = 'id';  // make sure we pull our 'id' values from the query
+                    queryColumn = object.dbTableName()+'.'+object.PK();
+                    newKey = object.PK(); // 'id';  // the final filter needs to be 'id IN []', so 'id'
+                    parseColumn = object.PK(); // 'id';  // make sure we pull our 'id' values from the query
 
                     continueSingle(newKey, parseColumn, queryColumn);
 
@@ -176,26 +175,31 @@ parseColumn = 'id';  // make sure we pull our 'id' values from the query
                         // ok, maybe we passed in a field.id:
                         field = object.fields((f)=>{return f.id == cond.key;})[0];
                         if (!field) {
-console.error('!! field not found:', cond.key );
-/// THIS IS AN ERROR!
+
+                            ADCore.error.log('AppBuilder:Policy:ABModelConvertQueryConditions:Unable to resolve condition field.:', { field:cond.key, condition:cond });                    
+                            var err = new Error('Unable to resolve condition field.');
+                            err.condition = cond;
+                            cb(err);
+                            return;
                         }
                     }
 
                     // if get the field's linked object and see if it can be filtered:
                     var linkedObject = field.datasourceLink;
                     if (!QueryObj.canFilterObject(linkedObject)) {
-console.error('!! linkedObject not filterable by Query:', cond.key );
-//// THIS IS AN ERROR!!
+
+                        ADCore.error.log('AppBuilder:Policy:ABModelConvertQueryConditions:Linked object not filterable by Query:', { field:field, linkedObj:linkedObject, queryObj:QueryObj });                    
+                        var err = new Error('Linked object not filterable by Query.');
+                        cb(err);
+                        return;
+
                     } else {
 
                         // get the linked field:
                         var linkedField = field.fieldLink();
 
-                        
-                        
-
+                        // based upon the type of link:
                         var linkCase = field.linkType()+':'+field.linkViaType();
-
                          switch(linkCase.toLowerCase()) {
     
                             case 'one:one':
@@ -205,7 +209,7 @@ console.error('!! linkedObject not filterable by Query:', cond.key );
                                 newKey = field.columnName;
 
                                 // I need to pull out the PK from the filter Query:
-parseColumn = 'id';
+                                parseColumn = linkedObject.PK(); // 'id';
 
                                 // make this the queryColumn:
                                 queryColumn = linkedObject.dbTableName()+'.'+parseColumn;   
@@ -217,8 +221,7 @@ parseColumn = 'id';
                                 // they contain my .PK
 
                                 // my .PK is what is used on our filter
-// TODO: evaluate this in light of new object.PK() feature
-newKey = 'id';
+                                newKey = object.PK(); // 'id';
 
                                 // I need to pull out the linkedField's columnName
                                 parseColumn = linkedField.columnName;
@@ -232,7 +235,7 @@ newKey = 'id';
                             case 'many:many':
 
                                 // we need the .PK of our linked column out of the given query
-parseColumn = 'id';  // linkedObject.PK()
+                                parseColumn = linkedObject.PK(); // 'id';
                                 queryColumn = linkedObject.dbTableName()+'.'+parseColumn;
 
                                 processQueryValues(parseColumn,  queryColumn,  (err, ids) => {
@@ -254,7 +257,7 @@ parseColumn = 'id';  // linkedObject.PK()
 
                                             var myIds = data.map((d)=>{ return d[parseName] });
 
-var myPK = 'id';  // object.PK();
+                                            var myPK = object.PK(); // 'id';
                                             buildCondition( myPK, myIds);
 
                                         })
@@ -276,7 +279,8 @@ var myPK = 'id';  // object.PK();
                 // final step of recreating the condition into the 
                 // proper Field IN []  format;
                 function buildCondition(newKey, ids) {
-// convert cond into an IN or NOT IN
+
+                    // convert cond into an IN or NOT IN
                     cond.key = newKey;
                     var convert = {
                         'in_query' : 'in',
@@ -285,8 +289,7 @@ var myPK = 'id';  // object.PK();
                     cond.rule = convert[cond.rule];
                     cond.value = ids;
 
-console.log('.... new Condition:', cond);
-
+                    sails.log.info('.... new Condition:', cond);
 
                     // final step, so parse another condition:
                     parseQueryCondition(_where, object, req, res, cb);
@@ -304,12 +307,14 @@ console.log('.... new Condition:', cond);
 
                     var query = QueryObj.queryFind({}, req.user.data);
                     query.clearSelect().columns(queryColumn);
-console.log();
-console.log('converted query sql:', query.toSQL());
+
+                    sails.log.info();
+                    sails.log.info('converted query sql:', query.toSQL());
 
                     query
                         .then((data)=>{
-console.log('.... query data : ', data);
+
+                            sails.log.info('.... query data : ', data);
                             var ids = data.map((d)=>{ return d[parseColumn] });
 
 

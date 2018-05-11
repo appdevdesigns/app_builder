@@ -6,6 +6,7 @@ var EventEmitter = require('events').EventEmitter;
 
 
 export default class UIComponent extends EventEmitter {
+
     
     /**
      * @param {object} App 
