@@ -129,6 +129,14 @@ module.exports = {
     'post /app_builder/email' : 
         'app_builder/ABEmailController.send',
 
+
+    /* Relay Settings */
+    'get /app_builder/relay/uninitializedusers':
+        'app_builder/ABRelayController.uninitializedUsers',
+
+    'post /app_builder/relay/initialize':
+        'app_builder/ABRelayController.initialize',
+
   /*
 
   '/': {

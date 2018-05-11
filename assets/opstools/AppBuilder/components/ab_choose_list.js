@@ -69,6 +69,15 @@ export default class ABChooseList extends OP.Component {
 							view: "toolbar",
 							id: ids.toolBar,
 							cols: [
+								{ 
+			                        view:"button", 
+			                        type:"icon", 
+			                        icon:"male",
+			                        width:25,
+			                        click:()=>{
+			                            this.emit('view.config');
+			                        }
+			                    },
 								{ view: "label", label:labels.component.title, fillspace: true },
 								{
 									id: ids.buttonCreateNewApplication,
@@ -531,11 +540,16 @@ export default class ABChooseList extends OP.Component {
 			 *
 			 * Trigger our List component to show
 			 */
-			transitionApplicationList:function() {
+			transitionApplicationList:() => {
 				_logic.refreshList();
-				$$(ids.component).show();
+				this.show();
 			}
 		})
+
+
+		this.show = function() {
+			$$(ids.component).show();
+		}
 
 	}
 
