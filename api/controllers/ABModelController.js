@@ -15,7 +15,6 @@ var cJSON = require('circular-json');
 const ValidationError = require('objection').ValidationError;
 const {ref, raw} = require('objection');
 
-
 var reloading = null;
 
 
@@ -139,296 +138,6 @@ function updateRelationValues(object, id, updateRelationParams) {
 
 
 /**
- * @function populateFindConditions
- * Add find conditions and include relation data to Knex.query
- * 
- * @param {Knex.query} query 
- * @param {ABObject} object 
- * @param {Object} options - {
- *                              where : {Array}
- *                              sort :  {Array}
- *                              offset: {Integer}
- *                              limit:  {Integer}
- *                              includeRelativeData: {Boolean}
- *                           }
- * @param {string} userData - {
- *                              username: {string},
- *                              guid: {string},
- *                              languageCode: {string}, - 'en', 'th'
- *                              ...
- *                             }
- */
-function populateFindConditions(query, object, options, userData) {
-
-    var where = options.where,
-        sort = options.sort,
-        offset = options.offset,
-        limit = options.limit;
-
-    // Apply filters
-    if (!_.isEmpty(where)) {
-
-
-        sails.log.debug('initial .where condition:', JSON.stringify(where, null, 4));
-
-
-        // @function parseCondition
-        // recursive fn() to step through each of our provided conditions and
-        // translate them into query.XXXX() operations.
-        // @param {obj} condition  a QueryBuilder compatible condition object
-        // @param {ObjectionJS Query} Query the query object to perform the operations.
-        function parseCondition(condition, Query) {
-
-            // FIX: some improper inputs:
-            // if they didn't provide a .glue, then default to 'and'
-            // current webix behavior, might not return this 
-            // so if there is a .rules property, then there should be a .glue:
-            if (condition.rules) {
-                condition.glue = condition.glue || 'and';
-            }
-
-            // if this is a grouping condition, then decide how to group and 
-            // process our sub rules:
-            if (condition.glue) {
-
-                var nextCombineKey = 'where';
-                if (condition.glue == 'or') {
-                    nextCombineKey = 'orWhere';
-                }
-                condition.rules.forEach((r)=>{
-
-                    Query[nextCombineKey]( function() { 
-
-                        // NOTE: pass 'this' as the Query object
-                        // so we can perform embedded queries:
-                        // parseCondition(r, this); 
-
-                        // 'this' is changed type QueryBuilder to QueryBuilderBase
-                        parseCondition(r, Query);
-                    });
-                    
-                })
-                
-                return;
-            }
-
-
-            //// Special Case:  'have_no_relation'
-            // 1:1 - Get rows that no relation with 
-            if (condition.rule == 'have_no_relation') {
-                var relation_name = AppBuilder.rules.toFieldRelationFormat(condition.key);
-
-                var field = object._fields.filter(field => field.columnName == condition.key)[0];
-                if (!field) return;
-
-                var objectLink = field.objectLink();
-                if (!objectLink) return;
-
-                var pkObjectLink = objectLink.PK();
-
-                Query
-                    .leftJoinRelation(relation_name)
-                    .whereRaw('{relation_name}.{primary_name} IS NULL'
-                        .replace('{relation_name}', relation_name)
-                        .replace('{primary_name}', pkObjectLink));
-
-                return;
-            }
-
-
-
-            //// Handle a basic rule:
-            // { 
-            //     key: fieldName,
-            //     rule: 'qb_rule',
-            //     value: ''
-            // }
-
-            sails.log.verbose('... basic condition:', JSON.stringify(condition, null, 4));
-
-            // We are going to use the 'raw' queries for knex becuase the '.' 
-            // for JSON searching is misinterpreted as a sql identifier
-            // our basic where statement will be:
-            var whereRaw = '{fieldName} {operator} {input}';
-
-
-            // make sure a value is properly Quoted:
-            function quoteMe(value) {
-                return "'"+value+"'"
-            }
-
-
-            // convert QB Rule to SQL operation:
-            var conversionHash = {
-                'equals'        : '=',
-                'not_equal'     : '<>',
-                'not_equals'    : '<>',   // catch existing wrong entries
-                'is_empty'      : '=',
-                'is_not_empty'  : '<>',
-                'greater'       : '>',
-                'greater_or_equal' : '>=',
-                'less'          : '<',
-                'less_or_equal' : '<='
-            }
-
-
-            // basic case:  simple conversion
-            var operator = conversionHash[condition.rule];
-            var value = quoteMe(condition.value);
-
-
-
-            // special operation cases:
-            switch (condition.rule) {
-                case "begins_with":
-                    operator = 'LIKE';
-                    value = quoteMe(condition.value + '%');
-                    break;
-
-                case "not_begins_with":
-                    operator = "NOT LIKE";
-                    value = quoteMe(condition.value + '%');
-                    break;
-
-                case "contains":
-                    operator = 'LIKE';
-                    value = quoteMe('%' + condition.value + '%');
-                    break;
-
-                case "not_contains":
-                    operator = "NOT LIKE";
-                    value = quoteMe('%' + condition.value + '%');
-                    break;
-
-                case "ends_with":
-                    operator = 'LIKE';
-                    value = quoteMe('%' + condition.value);
-                    break;
-
-                case "not_ends_with":
-                    operator = "NOT LIKE";
-                    value = quoteMe('%' + condition.value);
-                    break;
-
-                case "between": 
-                    operator = "BETWEEN";
-                    value = condition.value.map(function(v){ return quoteMe(v)}).join(' AND ');
-                    break;
-
-                case 'not_between':
-                    operator = "NOT BETWEEN";
-                    value = condition.value.map(function(v){ return quoteMe(v)}).join(' AND ');
-                    break;
-
-                case "is_current_user":
-                    operator = "=";
-                    value = quoteMe(userData.username);
-                    break;
-
-                case "is_not_current_user":
-                    operator = "<>";
-                    value = quoteMe(userData.username);
-                    break;
-
-                case 'is_null': 
-                    operator = "IS NULL";
-                    value = '';
-                    break;
-
-                case 'is_not_null': 
-                    operator = "IS NOT NULL";
-                    value = '';
-                    break;
-
-                case "in":
-                    operator = "IN";
-                    value = '(' + condition.value.map(function(v){ return quoteMe(v)}).join(', ') + ')';
-                    break;
-
-                case "not_in":
-                    operator = "NOT IN";
-                    value = '(' + condition.value.map(function(v){ return quoteMe(v)}).join(', ') + ')';
-                    break;
-
-            }
-
-
-            // normal field name:
-            var fieldName = '`' + condition.key + '`';
-
-            // if we are searching a multilingual field it is stored in translations so we need to search JSON
-            var field = object._fields.filter(field => field.columnName == condition.key)[0];
-            if (field && field.settings.supportMultilingual == 1) {
-                fieldName = 'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH(translations, "one", "' + userData.languageCode + '")), 1, 4)), \'$."' + condition.key + '"\'))';
-            } 
-
-            // if this is from a LIST, then make sure our value is the .ID
-            if (field && field.key == "list" && field.settings && field.settings.options && field.settings.options.filter) {
-                // NOTE: Should get 'id' or 'text' from client ??
-                var inputID = field.settings.options.filter(option => (option.id == value || option.text == value))[0];
-                if (inputID)
-                    value = inputID.id;
-            }
-
-
-            // update our where statement:
-            whereRaw = whereRaw
-                .replace('{fieldName}', fieldName)
-                .replace('{operator}', operator)
-                .replace('{input}', ((value != null) ?  value  : ''));
-
-
-            // Now we add in our where
-            Query.whereRaw(whereRaw);
-        }
-
-        parseCondition(where, query);
-
-    }
-
-    // Apply Sorts
-    if (!_.isEmpty(sort)) {
-        sort.forEach(function (o) {
-            // if we are ordering by a multilingual field it is stored in translations so we need to search JSON but this is different from filters
-            // because we are going to sort by the users language not the builder's so the view will be sorted differntly depending on which languageCode
-            // you are using but the intent of the sort is maintained
-            if (o.isMulti == 1) {
-                var by = 'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH(translations, "one", "' + userData.languageCode + '")), 1, 4)), \'$."' + o.by + '"\'))';
-            } else { // If we are just sorting a field it is much simpler
-                var by = "`" + o.by + "`";
-            }
-            query.orderByRaw(by + " " + o.dir);
-        })
-    }
-
-
-    // apply any offset/limit if provided.
-    if (offset) {
-        query.offset(offset);
-    }
-    if (limit) {
-        query.limit(limit);
-    }
-
-    // query relation data
-    if (options.includeRelativeData) {
-        var relationNames = object.connectFields()
-            .filter((f) => f.fieldLink() != null)
-            .map((f) => f.relationName());
-
-        // includes 'translations' of the external object
-        if (object.isExternal &&
-            object.model().relationMappings()['translations'])
-            relationNames.push('translations');
-
-        if (relationNames.length > 0)
-            query.eager('[#fieldNames#]'.replace('#fieldNames#', relationNames.join(', ')));
-    }
-
-    sails.log.debug('SQL:', query.toString() );
-}
-
-/**
  * @function updateConnectedFields
  * Look at a saved record's object to broadcast a "stale" action on its connected fields
  * 
@@ -472,16 +181,16 @@ function updateConnectedFields(object, newData, oldData) {
         }
         
         // filter array to only show unique items
-        items = _.uniqBy(items, object.PK());
+        items = _.uniqBy(items, field.object.PK());
         // parse through all items and broadcast a "stale" action so we can tell the client side the data may have updated
         items.forEach((i) => {
             // Make sure you put the payload together just like before
             var payload = {
-                objectId: field.object.id, // get the fields object id
+                objectId: field.object[field.object.PK()], // get the fields object id
                 data: i // pass the whole item 
             }
             // Broadcast the payload and let the clientside figure out what to do next
-            sails.sockets.broadcast(field.object.id, "ab.datacollection.stale", payload);
+            sails.sockets.broadcast(field.object[field.object.PK()], "ab.datacollection.stale", payload);
         });
     });
 }
@@ -560,7 +269,6 @@ function updateTranslationsValues(object, id, translations, isInsert) {
 
 
 
-
 module.exports = {
 
     create: function (req, res) {
@@ -598,36 +306,36 @@ module.exports = {
                             var updateTasks = updateRelationValues(object, newObj[object.PK()], updateRelationParams);
 
 
+                            // update translation of the external object
                             if (object.isExternal &&
                                 createParams.translations)
                                 updateTasks.push(updateTranslationsValues(object, newObj[object.PK()], createParams.translations, true));
 
 
-                                // update relation values sequentially
+                            // update relation values sequentially
                             return updateTasks.reduce((promiseChain, currTask) => {
                                 return promiseChain.then(currTask);
                             }, Promise.resolve([]))
                                 .catch((err) => { return Promise.reject(err); })
                                 .then((values) => {
 
-                                    // Query the new row to response to client
-                                    var query3 = object.model().query();
-                                    populateFindConditions(query3, object, {
-                                        where: {
-                                            glue:'and',
-                                            rules:[
-                                                {
-                                                    key: object.PK(),
-                                                    rule: "equals",
-                                                    value: newObj[object.PK()] || ''
-                                                }
-                                            ]
+                                    // // Query the new row to response to client
+                                    var query3 = object.queryFind({
+                                            where: {
+                                                glue:'and',
+                                                rules:[
+                                                    {
+                                                        key: object.PK(),
+                                                        rule: "equals",
+                                                        value: newObj[object.PK()] || ''
+                                                    }
+                                                ]
+                                            },
+                                            offset: 0,
+                                            limit: 1,
+                                            includeRelativeData: true
                                         },
-                                        offset: 0,
-                                        limit: 1,
-                                        includeRelativeData: true
-                                    },
-                                    req.user.data);
+                                        req.user.data);
 
                                     return query3
                                         .catch((err) => { return Promise.reject(err); })
@@ -638,12 +346,12 @@ module.exports = {
                                             // We want to broadcast the change from the server to the client so all datacollections can properly update
                                             // Build a payload that tells us what was updated
                                             var payload = {
-                                                objectId: object.id,
+                                                objectId: object[object.PK()],
                                                 data: newItem[0]
                                             }
                                             
                                             // Broadcast the create
-                                            sails.sockets.broadcast(object.id, "ab.datacollection.create", payload);
+                                            sails.sockets.broadcast(object[object.PK()], "ab.datacollection.create", payload);
                                             
                                             updateConnectedFields(object, newItem[0]);
                                             
@@ -742,36 +450,28 @@ module.exports = {
                     sails.sockets.join(req, object.id);
                 }
 
-                var query = object.model().query();
-
 
                 var where = req.options._where;
                 var sort = req.options._sort;
                 var offset = req.options._offset;
                 var limit = req.options._limit;
 
-                populateFindConditions(query, object, {
+                var query = object.queryFind({
                     where: where,
                     sort: sort,
                     offset: offset,
                     limit: limit,
                     includeRelativeData: true
-                },
-                req.user.data);
+                }, req.user.data);
 
                 // promise for the total count. this was moved below the filters because webix will get caught in an infinte loop of queries if you don't pass the right count
-                var queryCount = object.model().query();
-                populateFindConditions(queryCount, object, { where: where, includeRelativeData: false }, req.user.data);
-                // added tableName to id because of non unique field error
-                var pCount = queryCount.count('{tableName}.{pkName} as count'
-                                                .replace("{tableName}", object.model().tableName)
-                                                .replace("{pkName}", object.PK())
-                                            ).first();
-                    
+                var pCount = object.queryCount({ where: where, includeRelativeData: false }, req.user.data).first();
+
                 Promise.all([
                     pCount,
                     query
-                ]).then(function (values) {
+                ])
+                .then(function (values) {
                     var result = {};
                     var count = values[0].count;
                     var rows = values[1];
@@ -808,7 +508,7 @@ module.exports = {
 
                 })
                 .catch((err) => {
-console.log(err);
+
                     res.AD.error(err);
 
                 });
@@ -816,7 +516,8 @@ console.log(err);
 
             })
             .catch((err) => {
-console.log(err);
+                ADCore.error.log("AppBuilder:ABModelController:find(): find() did not complete", {error:err});
+                res.AD.error(err);
             });
 
     },
@@ -855,18 +556,17 @@ console.log(err);
             function (next) {
                 // We are deleting an item...but first fetch its current data  
                 // so we can clean up any relations on the client side after the delete
-                var queryPrevious = object.model().query();
-                populateFindConditions(queryPrevious, object, {
-                    where: {
-                        glue:'and',
-                        rules:[{
-                            key: object.PK(),
-                            rule: "equals",
-                            value: id
-                        }]
-                    },
-                    includeRelativeData: true
-                }, req.user.data);
+                var queryPrevious = object.queryFind({
+                        where: {
+                            glue:'and',
+                            rules:[{
+                                key: object.PK(),
+                                rule: "equals",
+                                value: id
+                            }]
+                        },
+                        includeRelativeData: true
+                    }, req.user.data);
                 
                 queryPrevious
                     .catch(next)
@@ -890,32 +590,32 @@ console.log(err);
                 // Parse through the connected fields
                 connectFields.forEach((f)=>{
                     // Get the field object that the field is linked to
-                    var relatedObject = f.objectLink();
+                    var relatedObject = f.datasourceLink;
                     // Get the relation name so we can separate the linked fields updates from the rest
                     var relationName = f.relationName();
                     
                     // If we have any related item data we need to build a query to report the delete...otherwise just move on
+                    if (!Array.isArray(oldItem[0][relationName])) oldItem[0][relationName] = [oldItem[0][relationName]];
                     if (oldItem[0] &&
                         oldItem[0][relationName] &&
                         oldItem[0][relationName].length) {
                         // Push the ids of the related data into an array so we can use them in a query
                         var relatedIds = [];
                         oldItem[0][relationName].forEach((old) => {
-                            relatedIds.push(old.id); // TODO: support various id
+                            relatedIds.push(old.id);  // TODO: support various id
                         });
                         // Get all related items info
-                        var queryRelated = relatedObject.model().query();
-                        populateFindConditions(queryRelated, relatedObject, {
-                            where: {
-                                glue:'and',
-                                rules:[{
-                                    key: relatedObject.PK(),
-                                    rule: "in",
-                                    value: relatedIds
-                                }]
-                            },
-                            includeRelativeData: true
-                        }, req.user.data);
+                        var queryRelated = relatedObject.queryFind({
+                                where: {
+                                    glue:'and',
+                                    rules:[{
+                                        key: relatedObject.PK(),
+                                        rule: "in",
+                                        value: relatedIds
+                                    }]
+                                },
+                                includeRelativeData: true
+                            }, req.user.data);
 
                         var p = queryRelated
                             .catch(next)
@@ -951,12 +651,12 @@ console.log(err);
                         // We want to broadcast the change from the server to the client so all datacollections can properly update
                         // Build a payload that tells us what was updated
                         var payload = {
-                            objectId: object.id,
+                            objectId: object[object.PK()],
                             id: id
                         }
 
                         // Broadcast the delete
-                        sails.sockets.broadcast(object.id, "ab.datacollection.delete", payload);
+                        sails.sockets.broadcast(object[object.PK()], "ab.datacollection.delete", payload);
 
                         // Using the data from the oldItem and relateditems we can update all instances of it and tell the client side it is stale and needs to be refreshed
                         updateConnectedFields(object, oldItem[0]);
@@ -1018,7 +718,7 @@ console.log(err);
         //                 // Parse through the connected fields
         //                 connectFields.forEach((f)=>{
         //                     // Get the field object that the field is linked to
-        //                     var relatedObject = f.objectLink();
+        //                     var relatedObject = f.objectLink;
         //                     // Get the relation name so we can separate the linked fields updates from the rest
         //                     var relationName = f.relationName();
         // 
@@ -1151,18 +851,17 @@ console.log(err);
                 // so we can clean up the client sides relations after the update 
                 // because some updates will involve deletes of relations 
                 // so assuming creates can be problematic
-                var queryPrevious = object.model().query();
-                populateFindConditions(queryPrevious, object, {
-                    where: {
-                        glue:'and',
-                        rules:[{
-                            key: object.PK(),
-                            rule: "equals",
-                            value: id
-                        }]
-                    },
-                    includeRelativeData: true
-                }, req.user.data);
+                var queryPrevious = object.queryFind({
+                        where: {
+                            glue:'and',
+                            rules:[{
+                                key: object.PK(),
+                                rule: "equals",
+                                value: id
+                            }]
+                        },
+                        includeRelativeData: true
+                    }, req.user.data);
                 
                 queryPrevious
                     .catch((err) => { 
@@ -1189,16 +888,18 @@ console.log(err);
                         // it will update to translations table after model values updated
                         var transParams = _.cloneDeep(updateParams.translations);
 
+
                         var validationErrors = object.isValidData(updateParams);
                         if (validationErrors.length == 0) {
 
                             if (object.isExternal) {
-                                // translations values does not in same table of the external object
-                                delete updateParams.translations;
+                                 // translations values does not in same table of the external object
+                                 delete updateParams.translations;
                             }
                             else {
                                 // this is an update operation, so ... 
                                 // updateParams.updated_at = (new Date()).toISOString();
+
                                 updateParams.updated_at = AppBuilder.rules.toSQLDateTime(new Date());
 
                                 // Check if there are any properties set otherwise let it be...let it be...let it be...yeah let it be
@@ -1224,9 +925,10 @@ console.log(err);
                             var query = object.model().query();
 
                             // Do Knex update data tasks
-                            query.patch(updateParams).where(object.PK(), id)
+                            query.patch(updateParams || { id: id }).where(object.PK(), id)
                                 .then((values) => {
 
+                                    // create a new query when use same query, then new data are created duplicate
                                     var updateTasks = updateRelationValues(object, id, updateRelationParams);
 
                                     // update translation of the external table
@@ -1241,21 +943,20 @@ console.log(err);
                                         .then((values) => {
 
                                             // Query the new row to response to client
-                                            var query3 = object.model().query();
-                                            populateFindConditions(query3, object, {
-                                                where: {
-                                                    glue:'and',
-                                                    rules:[{
-                                                        key: object.PK(),
-                                                        rule: "equals",
-                                                        value: id
-                                                    }]
+                                            var query3 = object.queryFind({
+                                                    where: {
+                                                        glue:'and',
+                                                        rules:[{
+                                                            key: object.PK(),
+                                                            rule: "equals",
+                                                            value: id
+                                                        }]
+                                                    },
+                                                    offset: 0,
+                                                    limit: 1,
+                                                    includeRelativeData: true
                                                 },
-                                                offset: 0,
-                                                limit: 1,
-                                                includeRelativeData: true
-                                            },
-                                            req.user.data);
+                                                req.user.data);
 
                                             return query3
                                                 .catch((err) => { return Promise.reject(err); })
@@ -1265,12 +966,12 @@ console.log(err);
                                                     // We want to broadcast the change from the server to the client so all datacollections can properly update
                                                     // Build a payload that tells us what was updated
                                                     var payload = {
-                                                        objectId: object.id,
+                                                        objectId: object[object.PK()],
                                                         data: newItem[0]
                                                     }
                                                     
                                                     // Broadcast the update
-                                                    sails.sockets.broadcast(object.id, "ab.datacollection.update", payload);
+                                                    sails.sockets.broadcast(object[object.PK()], "ab.datacollection.update", payload);
                                                     
                                                     updateConnectedFields(object, newItem[0], oldItem[0]);
                                                     
@@ -1365,4 +1066,3 @@ console.log(err);
 
 
 };
-

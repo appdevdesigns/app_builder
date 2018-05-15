@@ -21,9 +21,6 @@ import ABDisplayRule from "./ABViewFormPropertyDisplayRule"
 import ABRecordRule from "../rules/ABViewRuleListFormRecordRules"
 import ABSubmitRule from "../rules/ABViewRuleListFormSubmitRules"
 
-
-import RowFilter from '../RowFilter'
-
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
@@ -538,7 +535,7 @@ PopupRecordRule.qbFixAfterShow();
 		var SourceSelector = $$(ids.datacollection);
 
 		// Pull data collections to options
-		var dcOptions = view.pageRoot().dataCollections().map((dc) => {
+		var dcOptions = view.pageRoot().dataCollections(dc => dc.sourceType == "object").map((dc) => {
 
 			return {
 				id: dc.id,

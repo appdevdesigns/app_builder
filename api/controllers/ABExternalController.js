@@ -27,8 +27,9 @@ module.exports = {
 	findColumns: (req, res) => {
 
 		var tableName = req.param('tableName');
+		var connName = req.param('connection');
 
-		ABExternal.getColumns(tableName)
+		ABExternal.getColumns(tableName, connName)
 			.catch(res.AD.error)
 			.then(result => {
 				res.AD.success(result);
@@ -46,9 +47,10 @@ module.exports = {
 
 		var appID = req.param('appID'),
 			tableName = req.param('tableName'),
+			connName = req.param('connection'),
 			columnList = req.body.columns || [];
 
-		ABExternal.tableToObject(appID, tableName, columnList)
+		ABExternal.tableToObject(appID, tableName, columnList, connName)
 			.then(function (objectList) {
 
 				res.AD.success(objectList);

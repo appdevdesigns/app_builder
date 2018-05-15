@@ -1,4 +1,3 @@
-//
 // ABViewRuleActionObjectUpdater
 //
 // An action that allows you to update fields on an object. 
@@ -100,12 +99,22 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 			// @param {obj} data  (optional) initial values for this row.
 			addRow: (data) => {
 
-				// get a new Row Component
-				var row = this.valueDisplayRow(idBase);
-
 				// get our Form
 				var UpdateForm = _logic.formGet();
 				if (!UpdateForm) return;
+
+				// check row that's unselect a field
+				var rows = UpdateForm.getChildViews();
+				if (data == null &&
+					rows.filter(r => {
+						return r.queryView(function(view) {
+							return view.config.name == "field" && !view.getValue();
+						});
+					}).length > 0)
+					return;
+
+				// get a new Row Component
+				var row = this.valueDisplayRow(idBase);
 
 				// add row to Form
 				UpdateForm.addView(row.ui);
@@ -116,12 +125,35 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 					// add a new Row
 					_logic.addRow();
 
-				}, onDelete:()=>{
-					UpdateForm.removeView($$(row.ui.id));
+				}, onDelete:(rowId)=>{
+
+					// remove a row
+					_logic.delRow(rowId);
+
 				}, data:data});
 
 				// store this row
 				this.formRows.push(row);
+			},
+
+			delRow: (rowId) => {
+
+				// store this row
+				this.formRows.forEach((r, index) => {
+
+					if (r.ui.id == rowId)
+						this.formRows.splice(index, 0);
+
+				});
+
+
+				// get our Form
+				var UpdateForm = _logic.formGet();
+				if (!UpdateForm) return;
+
+				// remove UI
+				UpdateForm.removeView($$(rowId));
+
 			},
 
 
@@ -185,6 +217,7 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 						_logic.addRow(r);
 					})
 				} 
+
 
 				// display an empty row
 				_logic.addRow(); 
@@ -392,6 +425,16 @@ if (field.key == 'user') {
 				if (field.customDisplay)
 					field.customDisplay(field, this.App, $row.getChildViews()[3].$view, true, true);
 
+
+				// Show the remove button
+				var $buttonRemove = $row.getChildViews()[4];
+				$buttonRemove.show();
+
+
+				// Add a new row
+				if (columnID)
+					_logic.callbacks.onAdd();
+
 			
 			},
 
@@ -399,7 +442,8 @@ if (field.key == 'user') {
 				$$(ids.field).setValue(data.fieldID);
 					// note: this triggers our _logic.selectField() fn.
 				var field = this.getUpdateObjectField( data.fieldID );
-				field.setValue($$(ids.value), data.value);
+				if (field)
+					field.setValue($$(ids.value), data.value);
 			},
 
 			toSettings: () => {
@@ -441,6 +485,7 @@ if (field.key == 'user') {
 				{
 					// Field list
 					view: "combo",
+					name: "field",
 					placeholder: this.labels.component.setPlaceholder,
 					id: ids.field,
 					height: 32,
@@ -479,25 +524,25 @@ if (field.key == 'user') {
 				// 	}
 				// },
 
-				// by default, we show the add button
-				// if the row has data, we show the [remove] button.
-				{
-					// "Add" button 
-					view: "button",
-					id:   ids.buttonAdd,
-					icon: "plus",
-					type: "icon",
-					width: 30,
-					click: function () {
+				// // by default, we show the add button
+				// // if the row has data, we show the [remove] button.
+				// {
+				// 	// "Add" button 
+				// 	view: "button",
+				// 	id:   ids.buttonAdd,
+				// 	icon: "plus",
+				// 	type: "icon",
+				// 	width: 30,
+				// 	click: function () {
 
-						if (_logic.isValid()) {
+				// 		if (_logic.isValid()) {
 
-							_logic.buttonsToggle();
-							_logic.callbacks.onAdd();
-						}
+				// 			_logic.buttonsToggle();
+				// 			_logic.callbacks.onAdd();
+				// 		}
 						
-					}
-				},
+				// 	}
+				// },
 				{
 					// "Remove" button  
 					view: "button",
@@ -507,7 +552,7 @@ if (field.key == 'user') {
 					width: 30,
 					hidden:true,
 					click: function () {
-						_logic.callbacks.onDelete();
+						_logic.callbacks.onDelete(ids.row);
 					}
 				}
 			]
@@ -523,7 +568,7 @@ if (field.key == 'user') {
 				// options.data = { formID:xxx, value:yyy,  type:zzzz }
 				_logic.setValue(options.data);
 
-				_logic.buttonsToggle();
+				// _logic.buttonsToggle();
 			}
 		}
 

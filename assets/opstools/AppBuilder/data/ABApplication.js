@@ -26,7 +26,7 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 			return new Promise(
 				(resolve, reject) => {
 
-					AD.comm.service.put({
+					OP.Comm.Service.put({
 						url: '/app_builder/application/' + appId + '/object',
 						data: {
 							object: object
@@ -47,7 +47,7 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 			return new Promise(
 				(resolve, reject) => {
 
-					AD.comm.service.delete({
+					OP.Comm.Service.delete({
 						url: '/app_builder/application/' + appId + '/object/' + objectId
 					}, function (err, result) {
 						if (err)
@@ -81,7 +81,7 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 			return new Promise(
 				(resolve, reject) => {
 
-					AD.comm.service.put({
+					OP.Comm.Service.put({
 						url: '/app_builder/application/' + appId + '/page',
 						data: {
 							resolveUrl: resolveUrl,
@@ -110,11 +110,69 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 			return new Promise(
 				(resolve, reject) => {
 
-					AD.comm.service.delete({
+					OP.Comm.Service.delete({
 						url: '/app_builder/application/' + appId + '/page',
 						data: {
 							resolveUrl: resolveUrl
 						}
+					}, function (err, result) {
+						if (err)
+							reject(err);
+						else
+							resolve(result);
+					});
+
+				}
+
+			);
+
+		},
+
+
+		// ** Queries
+
+		/**
+		 * @method querySave
+		 * 
+		 * @param {guid} appId
+		 * @param {object} data
+		 * @return {Promise}
+		 */
+		querySave: function (appId, query) {
+
+			return new Promise(
+				(resolve, reject) => {
+
+					OP.Comm.Service.put({
+						url: '/app_builder/application/' + appId + '/query',
+						data: {
+							data: query
+						}
+					}, function (err, result) {
+						if (err)
+							reject(err);
+						else
+							resolve(result);
+					});
+				}
+
+			);
+		},
+
+		/**
+		 * @method queryDestroy
+		 * 
+		 * @param {guid} appId
+		 * @param {guid} queryId
+		 * @return {Promise}
+		 */
+		queryDestroy: function (appId, queryId) {
+
+			return new Promise(
+				(resolve, reject) => {
+
+					OP.Comm.Service.delete({
+						url: '/app_builder/application/' + appId + '/query/' + queryId
 					}, function (err, result) {
 						if (err)
 							reject(err);

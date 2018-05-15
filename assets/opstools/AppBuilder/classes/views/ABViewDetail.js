@@ -251,7 +251,7 @@ export default class ABViewDetail extends ABViewContainer {
 		var dataCollectionId = (view.settings.datacollection ? view.settings.datacollection : null);
 
 		// Pull data collections to options
-		var dcOptions = view.pageRoot().dataCollections().map((dc) => {
+		var dcOptions = view.pageRoot().dataCollections(dc => dc.sourceType == "object").map((dc) => {
 
 			return {
 				id: dc.id,

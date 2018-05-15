@@ -313,10 +313,10 @@ export default class ABViewFormPropertyRecordRule extends OP.Component {
 					// Select 'action'
 					$viewRule.queryView({ for: "action" }).setValue(r.action);
 
-					// Set 'when'
+					// Set 'when' to display in UI
 					$viewRule.config.when.setValue(r.when);
 
-					// Define 'value'
+					// Define 'value' to display in UI
 					$viewRule.config.set.setValue(r.values);
 
 					$viewRule.adjust();

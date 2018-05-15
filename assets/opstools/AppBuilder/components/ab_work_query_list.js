@@ -1,20 +1,20 @@
 
 /*
- * ab_work_object_list
+ * ab_work_query_list
  *
- * Manage the Object List
+ * Manage the Query List
  *
  */
 
-import ABListNewObject from "./ab_work_object_list_newObject"
+import ABListNewQuery from "./ab_work_query_list_newQuery"
 import ABListEditMenu from "./ab_common_popupEditMenu"   // "./ab_work_object_list_popupEditMenu"
 
 
 
-export default class AB_Work_Object_List extends OP.Component {   //.extend(idBase, function(App) {
+export default class AB_Work_Query_List extends OP.Component {   //.extend(idBase, function(App) {
 
 	constructor(App) {
-		super(App, 'ab_work_object_list');
+		super(App, 'ab_work_query_list');
 		var L = this.Label;
 
 		var labels = {
@@ -22,13 +22,16 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 			component: {
 
 				// formHeader: L('ab.application.form.header', "*Application Info"),
-				addNew: L('ab.object.addNew', '*Add new object'),
+				addNew: L('ab.query.addNew', '*Add new query'),
 
-				confirmDeleteTitle: L('ab.object.delete.title', "*Delete object"),
+// TODO: create the lables:
+confirmDeleteTitle: L('ab.query.delete.title', "*Delete query"),
+searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
+
+				// Reuse these object labels here:
 				confirmDeleteMessage: L('ab.object.delete.message', "*Do you want to delete <b>{0}</b>?"),
-				listSearch: L('ab.object.list.search', "*Search"),
-				searchPlaceholder: L('ab.object.list.search.placeholder', "*Object name"),
-				listSetting: L('ab.object.list.setting', "*Setting"),
+				listSearch: L('ab.object.list.search', "*Search"),	
+				listSetting: L('ab.object.list.setting', "*Setting"), 
 				listSort: L('ab.object.list.sort', "*Sort"),
 				listAsc: L('ab.object.list.sort.asc', "*A -> Z"),
 				listDesc: L('ab.object.list.sort.desc', "*Z -> A"),
@@ -50,8 +53,8 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 		}
 
 
-		// There is a Popup for adding a new Object:
-		var PopupNewObjectComponent = new ABListNewObject(App);
+// // There is a Popup for adding a new Object:
+		var PopupNewQueryComponent = new ABListNewQuery(App);
 
 		// the popup edit list for each entry in the list.
 		var PopupEditObjectComponent = new ABListEditMenu(App);
@@ -62,74 +65,79 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 		this.ui = {
 			id:ids.component,
 			rows: [
-				{
-					view: "accordion",
-					multi: true,
-					css: "ab-object-list-filter",
-					rows: [
-						{
-							id: ids.listSetting,
-							header: labels.component.listSetting,
-							headerHeight: 30,
-							headerAltHeight: 30,
-							body: {
-								padding: 5,
-								rows: [
-									{
-										id: ids.searchText,
-										view: "search",
-										icon: "search",
-										label: labels.component.listSearch,
-										labelWidth: 80,
-										placeholder: labels.component.searchPlaceholder,
-										height: 35,
-										keyPressTimeout: 100,
-										on: {
-											onTimedKeyPress: function() {
-												_logic.listSearch();
-											}
-										}
-									},
-									{
-										id: ids.sort,
-										view: "segmented",
-										label: labels.component.listSort,
-										labelWidth: 80,
-										height: 35,
-										options: [
-											{ id: "asc", value: labels.component.listAsc },
-											{ id: "desc", value: labels.component.listDesc }
-										],
-										on: {
-											onChange: (newVal, oldVal) => {
-												_logic.listSort(newVal);
-											}
-										}
-									},
-									{
-										id: ids.group,
-										view: "checkbox",
-										label: labels.component.listGroup,
-										labelWidth: 80,
-										on: {
-											onChange: (newVal, oldVal) => {
-												_logic.listGroup(newVal);
-											}
-										}
-									}
-								]
-							}
-						}
-					],
-					on: {
-						onAfterCollapse: (id) => {
-							_logic.listSettingCollapse();
-						},
-						onAfterExpand: (id) => {
-							_logic.listSettingExpand();
-						}
-					}
-				},
+
+//// NOTE: when you UI refactor guys get ahold of this, consider how to 
+////   pull out the Settings component into a reusable ui component and just 
+////   plop it into this spot:
+
+				// {
+				// 	view: "accordion",
+				// 	multi: true,
+				// 	css: "ab-object-list-filter",
+				// 	rows: [
+				// 		{
+				// 			id: ids.listSetting,
+				// 			header: labels.component.listSetting,
+				// 			headerHeight: 30,
+				// 			headerAltHeight: 30,
+				// 			body: {
+				// 				padding: 5,
+				// 				rows: [
+				// 					{
+				// 						id: ids.searchText,
+				// 						view: "search",
+				// 						icon: "search",
+				// 						label: labels.component.listSearch,
+				// 						labelWidth: 80,
+				// 						placeholder: labels.component.searchPlaceholder,
+				// 						height: 35,
+				// 						keyPressTimeout: 100,
+				// 						on: {
+				// 							onTimedKeyPress: function() {
+				// 								_logic.listSearch();
+				// 							}
+				// 						}
+				// 					},
+				// 					{
+				// 						id: ids.sort,
+				// 						view: "segmented",
+				// 						label: labels.component.listSort,
+				// 						labelWidth: 80,
+				// 						height: 35,
+				// 						options: [
+				// 							{ id: "asc", value: labels.component.listAsc },
+				// 							{ id: "desc", value: labels.component.listDesc }
+				// 						],
+				// 						on: {
+				// 							onChange: (newVal, oldVal) => {
+				// 								_logic.listSort(newVal);
+				// 							}
+				// 						}
+				// 					},
+				// 					{
+				// 						id: ids.group,
+				// 						view: "checkbox",
+				// 						label: labels.component.listGroup,
+				// 						labelWidth: 80,
+				// 						on: {
+				// 							onChange: (newVal, oldVal) => {
+				// 								_logic.listGroup(newVal);
+				// 							}
+				// 						}
+				// 					}
+				// 				]
+				// 			}
+				// 		}
+				// 	],
+				// 	on: {
+				// 		onAfterCollapse: (id) => {
+				// 			_logic.listSettingCollapse();
+				// 		},
+				// 		onAfterExpand: (id) => {
+				// 			_logic.listSettingExpand();
+				// 		}
+				// 	}
+				// },
 				{
 					view: App.custom.editunitlist.view, // "editunitlist"
 					id: ids.list,
@@ -183,16 +191,11 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 
 
 		var CurrentApplication = null;
-		var objectList = null;
+		var queryList = null;
 
 
 		// Our init() function for setting up our UI
 		this.init = (options) => {
-
-            // register our callbacks:
-            for (var c in _logic.callbacks) {
-                _logic.callbacks[c] = options[c] || _logic.callbacks[c];
-            }
 
 			if ($$(ids.component))
 				$$(ids.component).adjust();
@@ -202,13 +205,20 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 				$$(ids.list).adjust();
 			}
 
-			PopupNewObjectComponent.init({
+			PopupNewQueryComponent.init({
 				onDone: _logic.callbackNewObject
 			});
 
 			PopupEditObjectComponent.init({
 				onClick: _logic.callbackObjectEditorMenu
 			})
+
+			// attach any passed in callbacks.
+			for(var c in _logic.callbacks) {
+				if (options[c]) {
+					_logic.callbacks[c] = options[c];
+				}
+			}
 		}
 
 
@@ -216,14 +226,10 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 		// our internal business logic
 		var _logic = this._logic = {
 
-			callbacks: {
-				
-				/**
-				 * @function onChange
-				 */
-				onChange: function () { }
-			},
 
+			callbacks:{
+				onItemSelected:function(query){ /* do something with query */ }
+			},
 
 			/**
 			 * @function applicationLoad
@@ -241,23 +247,23 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 				CurrentApplication = application;
 
 				// get a DataCollection of all our objects
-				objectList = new webix.DataCollection({
-					data: application.objects(),
+				queryList = new webix.DataCollection({
+					data: application.queries(),
 				});
 
 				// setup object list settings
-				$$(ids.listSetting).define("collapsed", CurrentApplication.objectlistIsOpen != true);
-				$$(ids.listSetting).refresh();
-				$$(ids.searchText).setValue(CurrentApplication.objectlistSearchText);
-				$$(ids.sort).setValue(CurrentApplication.objectlistSortDirection);
-				$$(ids.group).setValue(CurrentApplication.objectlistIsGroup);
+// $$(ids.listSetting).define("collapsed", CurrentApplication.objectlistIsOpen != true);
+// $$(ids.listSetting).refresh();
+// $$(ids.searchText).setValue(CurrentApplication.objectlistSearchText);
+// $$(ids.sort).setValue(CurrentApplication.objectlistSortDirection);
+// $$(ids.group).setValue(CurrentApplication.objectlistIsGroup);
 
 
 				// clear our list and display our objects:
 				var List = $$(ids.list);
 				List.clearAll();
 				List.data.unsync();
-				List.data.sync(objectList);
+				List.data.sync(queryList);
 				List.refresh();
 				List.unselectAll();
 
@@ -274,8 +280,8 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 
 
 				// prepare our Popup with the current Application
-				PopupNewObjectComponent.applicationLoad(application);
-
+				PopupNewQueryComponent.applicationLoad(application);
+				
 			},
 
 
@@ -309,54 +315,54 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 			},
 
 			listSearch: function() {
-				var searchText = $$(ids.searchText).getValue().toLowerCase();
+// var searchText = $$(ids.searchText).getValue().toLowerCase();
 
-				$$(ids.list).filter(function (item) {
-					return !item.label || item.label.toLowerCase().indexOf(searchText) > -1;
-				});
+// $$(ids.list).filter(function (item) {
+// 	return !item.label || item.label.toLowerCase().indexOf(searchText) > -1;
+// });
 
-				// save to database
-				if (CurrentApplication && CurrentApplication.objectlistSearchText != searchText) {
-					CurrentApplication.objectlistSearchText = searchText;
-					CurrentApplication.save();
-				}
+// // save to database
+// if (CurrentApplication && CurrentApplication.objectlistSearchText != searchText) {
+// 	CurrentApplication.objectlistSearchText = searchText;
+// 	CurrentApplication.save();
+// }
 
 			},
 
 			listSort: function(sortType) {
-				if (objectList == null) return;
+// if (queryList == null) return;
 
-				objectList.sort("label", sortType);
+// queryList.sort("label", sortType);
 
-				_logic.listSearch();
+// _logic.listSearch();
 
-				// save to database
-				if (CurrentApplication && CurrentApplication.objectlistSortDirection != sortType) {
-					CurrentApplication.objectlistSortDirection = sortType;
-					CurrentApplication.save();
-				}
+// // save to database
+// if (CurrentApplication && CurrentApplication.objectlistSortDirection != sortType) {
+// 	CurrentApplication.objectlistSortDirection = sortType;
+// 	CurrentApplication.save();
+// }
 
 			},
 
 			listGroup: function(isGroup) {
-				if (isGroup == true) {
-					$$(ids.list).define("uniteBy", (item) => {
-						return item.label.toUpperCase().substr(0,1);
-					});
-				}
-				else {
-					$$(ids.list).define("uniteBy", (item) => {
-						return "   "; 
-					});
-				}
+// if (isGroup == true) {
+// 	$$(ids.list).define("uniteBy", (item) => {
+// 		return item.label.toUpperCase().substr(0,1);
+// 	});
+// }
+// else {
+// 	$$(ids.list).define("uniteBy", (item) => {
+// 		return "   "; 
+// 	});
+// }
 
-				$$(ids.list).refresh();
+// $$(ids.list).refresh();
 
-				// save to database
-				if (CurrentApplication && CurrentApplication.objectlistIsGroup != isGroup) {
-					CurrentApplication.objectlistIsGroup = isGroup;
-					CurrentApplication.save();
-				}
+// // save to database
+// if (CurrentApplication && CurrentApplication.objectlistIsGroup != isGroup) {
+// 	CurrentApplication.objectlistIsGroup = isGroup;
+// 	CurrentApplication.save();
+// }
 
 			},
 
@@ -415,9 +421,9 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 			 */
 			selectObject: function (id) {
 
-				var object = $$(ids.list).getItem(id);
+				var query = $$(ids.list).getItem(id);
 
-				_logic.callbacks.onChange(object);
+				_logic.callbacks.onItemSelected( query );
 
 				_logic.showGear(id);
 			},
@@ -461,23 +467,22 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 			 *
 			 * Once a New Object was created in the Popup, follow up with it here.
 			 */
-			callbackNewObject:function(err, object, selectNew, callback){
+			callbackNewObject:function(err, query, selectNew, callback) {
 
 				if (err) {
-					OP.Error.log('Error creating New Object', {error: err});
+					OP.Error.log('Error creating New Query', {error: err});
 					return;
 				}
 
-				if (objectList.exists(object.id))
-					objectList.updateItem(object.id, object);
-				else
-					objectList.add(object);
+				// add it to our list.
+				queryList.add(query);
 
 				if (selectNew != null && selectNew == true) {
-					$$(ids.list).select(object.id);
-				} else {
-					callback();
+					$$(ids.list).select(query.id);
 				}
+
+				if (callback)
+					callback();
 
 			},
 
@@ -488,8 +493,10 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 			 * Manages initiating the transition to the new Object Popup window
 			 */
 			clickNewObject:function(selectNew, callback) {
+
 				// show the new popup
-				PopupNewObjectComponent.show(selectNew, callback);
+				PopupNewQueryComponent.show(selectNew, callback);
+
 			},
 
 			rename: function () {
@@ -514,10 +521,10 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 								.then(() => {
 									_logic.listReady();
 
-									objectList.remove(selectedObject.id);
+									queryList.remove(selectedObject.id);
 
-									// clear object workspace
-									_logic.callbacks.onChange(null);
+									_logic.callbacks.onItemSelected( null );
+// App.actions.clearQueryWorkspace();
 								});
 
 						}
