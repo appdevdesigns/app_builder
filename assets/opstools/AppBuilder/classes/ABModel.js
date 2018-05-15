@@ -313,7 +313,12 @@ export default class ABModel {
 
 					// if only 1 field requested, then return that 
 					if (fields.length == 1) {
-						resolve( [ myObj[fields[0]+'__relation'] ])
+
+						let data = myObj[fields[0]+'__relation'];
+						if (!Array.isArray(data))
+							data = [data];
+
+						resolve( data )
 						return;
 					}
 
