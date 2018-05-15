@@ -217,13 +217,27 @@ class ABFieldEmail extends ABField {
 	* the component that will be stored with the ABViewForm.
 	*/
 	formComponent() {
+		
+		// NOTE: what is being returned here needs to mimic an ABView CLASS.
+		// primarily the .common() and .newInstance() methods.
+		var formComponentSetting = super.formComponent();
 
-		return super.formComponent("text");
+		// .common() is used to create the display in the list
+		formComponentSetting.common = () => {
+			return {
+				key: 'textbox',
+				settings: {
+					type: 'single'
+				}
+			}
+		};
+
+		return formComponentSetting; 
 	}
 
 
 	detailComponent() {
-
+		
 		var detailComponentSetting = super.detailComponent();
 
 		detailComponentSetting.common = () => {
