@@ -120,13 +120,15 @@ export default class ABViewQueryBuilderObjectFieldConditions {
 			component: myUnique('qbObjectFieldConditions'),
 			queryBuilder: myUnique('qBuilder'),
 			queryBuilderContainer: myUnique('qBuilderContainer'),
-			showQBButton: myUnique('showQBButton')
+			queryBuilderLayout: myUnique('qBuilderLayout'),
+			showQBButton: myUnique('showQBButton'),
 		};
 
 
 		// webix UI definition:
 		this.ui = {
 			view: "layout",
+			id: ids.queryBuilderLayout,
 			hidden: true,
 			type: "line",
 			rows: [
@@ -347,7 +349,11 @@ export default class ABViewQueryBuilderObjectFieldConditions {
 		});
 	}
 
-
+	showQueryBuilderContainer() {
+		$$(this.ids.queryBuilderLayout).show();
+		$$(this.ids.queryBuilderContainer).show();
+		$$(this.ids.showQBButton).hide();
+	}
 
 	// // fromSettings
 	// // Create an initial set of default values based upon our settings object.
