@@ -72,7 +72,7 @@ export default class ABViewChartLine extends ABViewWidget {
 		this.settings.isLegend = JSON.parse(this.settings.isLegend || ABViewChartLinePropertyComponentDefaults.isLegend);
 
 		// this.settings.chartWidth = parseInt(this.settings.chartWidth || ABViewChartLinePropertyComponentDefaults.chartWidth);
-		this.settings.height = parseInt(this.settings.height || ABViewChartLinePropertyComponentDefaults.height);
+		this.settings.chartHeight = parseInt(this.settings.chartHeight || ABViewChartLinePropertyComponentDefaults.chartHeight);
 
 		this.settings.labelFontSize = parseInt(this.settings.labelFontSize || ABViewChartLinePropertyComponentDefaults.labelFontSize);
 		this.settings.stepValue = parseInt(this.settings.stepValue || ABViewChartLinePropertyComponentDefaults.stepValue);
@@ -162,7 +162,7 @@ export default class ABViewChartLine extends ABViewWidget {
 			// 	label: L('ab.component.chart.line.chartWidth', '*Width')
 			// },
 			{
-				name: 'height',
+				name: 'chartHeight',
 				view: 'counter',
 				min: 1,
 				label: L('ab.component.chart.line.chartHeight', '*Height')
@@ -204,7 +204,7 @@ export default class ABViewChartLine extends ABViewWidget {
 
 		// Make sure you set the values for this property editor in Webix
 		// $$(ids.chartWidth).setValue(view.settings.chartWidth != null ? view.settings.chartWidth : ABViewChartLinePropertyComponentDefaults.chartWidth);
-		// $$(ids.chartHeight).setValue(view.settings.chartHeight != null ? view.settings.chartHeight : ABViewChartLinePropertyComponentDefaults.chartHeight);
+		$$(ids.chartHeight).setValue(view.settings.chartHeight != null ? view.settings.chartHeight : ABViewChartLinePropertyComponentDefaults.chartHeight);
 		$$(ids.labelFontSize).setValue(view.settings.labelFontSize != null ? view.settings.labelFontSize : ABViewChartLinePropertyComponentDefaults.labelFontSize);
 		$$(ids.stepValue).setValue(view.settings.stepValue != null ? view.settings.stepValue : ABViewChartLinePropertyComponentDefaults.stepValue);
 		$$(ids.maxValue).setValue(view.settings.maxValue != null ? view.settings.maxValue : ABViewChartLinePropertyComponentDefaults.maxValue);
@@ -223,7 +223,7 @@ export default class ABViewChartLine extends ABViewWidget {
 		view.settings.linePreset = $$(ids.linePreset).getValue();
 		view.settings.isLegend = $$(ids.isLegend).getValue();
 		// view.settings.chartWidth = $$(ids.chartWidth).getValue();
-		// view.settings.chartHeight = $$(ids.chartHeight).getValue();
+		view.settings.chartHeight = $$(ids.chartHeight).getValue();
 		view.settings.labelFontSize = $$(ids.labelFontSize).getValue();
 		view.settings.stepValue = $$(ids.stepValue).getValue();
 		view.settings.maxValue = $$(ids.maxValue).getValue();
@@ -269,7 +269,7 @@ export default class ABViewChartLine extends ABViewWidget {
 				template: "<div style='font-size:" + this.settings.labelFontSize + "px;'>#label#</div>",
 				values: [] // TODO : bug in webix 5.1.7
 			}: null,
-			height: this.settings.height != null ? this.settings.height : ABViewChartLinePropertyComponentDefaults.height,
+			height: this.settings.chartHeight != null ? this.settings.chartHeight : ABViewChartLinePropertyComponentDefaults.chartHeight,
 			// width: this.settings.chartWidth != null ? this.settings.chartWidth : ABViewChartLinePropertyComponentDefaults.chartWidth,
 			// data: reportData
 		};

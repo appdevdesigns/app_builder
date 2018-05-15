@@ -4,7 +4,7 @@ import ABApplication from "./ABApplication"
 import ABObjectBase from "./ABObjectBase"
 
 // import OP from "OP"
-import ABFieldManager from "./ABFieldManager"
+// import ABFieldManager from "./ABFieldManager"
 import ABModel from "./ABModel"
 
 
@@ -92,9 +92,9 @@ export default class ABObject extends ABObjectBase {
 	/**
 	 * @method destroy()
 	 *
-	 * destroy the current instance of ABApplication
+	 * destroy the current instance of ABObject
 	 *
-	 * also remove it from our _AllApplications
+	 * also remove it from our parent application
 	 *
 	 * @return {Promise}
 	 */
@@ -244,27 +244,6 @@ export default class ABObject extends ABObjectBase {
 	}
 
 
-	///
-	/// Fields
-	///
-
-
-	/**
-	 * @method fieldNew()
-	 *
-	 * return an instance of a new (unsaved) ABField that is tied to this
-	 * ABObject.
-	 *
-	 * NOTE: this new field is not included in our this.fields until a .save()
-	 * is performed on the field.
-	 *
-	 * @return {ABField}
-	 */
-	fieldNew ( values ) {
-		// NOTE: ABFieldManager returns the proper ABFieldXXXX instance.
-		return ABFieldManager.newField( values, this );
-	}
-
 
 
 	///
@@ -274,14 +253,19 @@ export default class ABObject extends ABObjectBase {
 
 	// return the column headers for this object
 	// @param {bool} isObjectWorkspace  return the settings saved for the object workspace
-	columnHeaders (isObjectWorkspace, isEditable) {
+	columnHeaders (isObjectWorkspace, isEditable, summaryColumns) {
+
+		summaryColumns = summaryColumns || [];
 
 		var headers = [];
 		var columnNameLookup = {};
 
 		// get the header for each of our fields:
-		this._fields.forEach(function(f){
+		this.fields().forEach(function(f){
 			var header = f.columnHeader(isObjectWorkspace, null, isEditable);
+
+			header.fieldURL = f.urlPointer();
+
 			if (f.settings.width != 0) {
 				// set column width to the customized width
 				header.width = f.settings.width;
@@ -289,6 +273,11 @@ export default class ABObject extends ABObjectBase {
 				// set column width to adjust:true by default;
 				header.adjust = true;
 			}
+
+			// add the summary footer
+			if (summaryColumns.indexOf(f.id) > -1)
+				header.footer = { content: 'summColumn' };
+
 			headers.push(header);
 			columnNameLookup[header.id] = f.columnName;	// name => id
 		})
@@ -363,7 +352,7 @@ export default class ABObject extends ABObjectBase {
 		var labelData = this.labelFormat || '';
 		
 		// default label
-		if (!labelData && this._fields.length > 0) {
+		if (!labelData && this.fields().length > 0) {
 
 			var defaultField = this.fields(f => f.fieldUseAsLabel())[0];
 			if (defaultField)
@@ -386,6 +375,11 @@ export default class ABObject extends ABObjectBase {
 				labelData = labelData.replace(colId, field.format(rowData) || '');
 			});
 		}
+
+		// if label is empty, then show .id
+		if (!labelData.trim())
+			labelData = 'ID: ' + rowData.id; // show id of row
+
 
 		return labelData;
 	}

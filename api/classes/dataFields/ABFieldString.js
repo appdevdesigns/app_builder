@@ -316,6 +316,16 @@ class ABFieldString extends ABField {
 	}
 
 
+	/*
+	 * @property isMultilingual
+	 * does this field represent multilingual data?
+	 * @return {bool}
+	 */
+	get isMultilingual() {
+		return this.settings.supportMultilingual == 1;
+	}
+
+
 	/**
 	 * @method postGet
 	 * Perform any final conditioning of data returned from our DB table before

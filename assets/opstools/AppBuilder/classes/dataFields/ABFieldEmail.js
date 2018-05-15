@@ -14,22 +14,21 @@ function L(key, altText) {
 }
 
 
-var ABFieldBooleanDefaults = {
-	key: 'boolean', // unique key to reference this specific DataField
+var ABFieldEmailDefaults = {
+	key: 'email', // unique key to reference this specific DataField
 
-	icon: 'check-square-o',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
+	icon: 'envelope',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
 
 	// menuName: what gets displayed in the Editor drop list
-	menuName: L('ab.dataField.boolean.menuName', '*Checkbox'),
+	menuName: L('ab.dataField.email.menuName', '*Email'),
 
 	// description: what gets displayed in the Editor description.
-	description: L('ab.dataField.boolean.description', '*A single checkbox that can be checked or unchecked.'),
+	description: L('ab.dataField.email.description', '*Email fields are used to store email addresses.'),
 
 }
 
 
 var defaultValues = {
-	default: 0
 }
 
 /**
@@ -39,29 +38,13 @@ var defaultValues = {
  * for displaying the properties editor, populating existing data, retrieving
  * property values, etc.
  */
-var ABFieldBooleanComponent = new ABFieldComponent({
-	fieldDefaults: ABFieldBooleanDefaults,
+var ABFieldEmailComponent = new ABFieldComponent({
+	fieldDefaults: ABFieldEmailDefaults,
 
 	elements: (App, field) => {
 		// ids = field.idsUnique(ids, App);
 
-		return [
-			{
-				name: "default",
-				view: "checkbox",
-				label: "Default",
-				labelPosition: "left",
-				labelWidth: 70,
-				labelRight: 'Uncheck',
-				css: "webix_table_checkbox",
-				on: {
-					onChange: function (newVal, oldVal) {
-						this.define('labelRight', newVal ? 'Check' : 'Uncheck');
-						this.refresh();
-					}
-				}
-			}
-		];
+		return [];
 	},
 
 	// defaultValues: the keys must match a .name of your elements to set it's default value.
@@ -103,22 +86,22 @@ var ABFieldBooleanComponent = new ABFieldComponent({
 });
 
 
-class ABFieldBoolean extends ABField {
+class ABFieldEmail extends ABField {
 	constructor(values, object) {
-		super(values, object, ABFieldBooleanDefaults);
+		super(values, object, ABFieldEmailDefaults);
 
 		// we're responsible for setting up our specific settings:
 		for (var dv in defaultValues) {
 			this.settings[dv] = values.settings[dv] || defaultValues[dv];
 		}
 
-		if (this.settings.default != null)
-			this.settings.default = parseInt(this.settings.default);
+		// if (this.settings.default != null)
+		// 	this.settings.default = parseInt(this.settings.default);
 	}
 
 	// return the default values for this DataField
 	static defaults() {
-		return ABFieldBooleanDefaults;
+		return ABFieldEmailDefaults;
 	}
 
 	/*
@@ -131,7 +114,7 @@ class ABFieldBoolean extends ABField {
 	* @return {Component}
 	*/
 	static propertiesComponent(App, idBase) {
-		return ABFieldBooleanComponent.component(App, idBase);
+		return ABFieldEmailComponent.component(App, idBase);
 	}
 
 	///
@@ -180,9 +163,9 @@ class ABFieldBoolean extends ABField {
 	columnHeader(isObjectWorkspace) {
 		var config = super.columnHeader(isObjectWorkspace);
 
-		config.editor = 'template';
-		config.template = '<div class="ab-boolean-display">{common.checkbox()}</div>';
-		config.css = 'center';
+		config.editor = 'text';
+		// config.template = '<div class="ab-boolean-display">{common.checkbox()}</div>';
+		// config.css = 'center';
 
 		return config;
 	}
@@ -195,12 +178,6 @@ class ABFieldBoolean extends ABField {
 	 * @param {obj} values a key=>value hash of the current values.
 	 */
 	defaultValue(values) {
-
-		if (values[this.columnName] == null) {
-
-			values[this.columnName] = this.settings.default;
-
-		}
 	}
 
 
@@ -213,6 +190,20 @@ class ABFieldBoolean extends ABField {
 	 * @return {array} 
 	 */
 	isValidData(data, validator) {
+
+		if (data[this.columnName]) {
+
+			var Reg = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+
+			var value = data[this.columnName];
+			value = String(value).toLowerCase();
+			if (!Reg.test(value)) {
+
+				validator.addError(this.columnName, 'Invalid email');
+
+			}
+		}
+
 	}
 
 
@@ -226,18 +217,32 @@ class ABFieldBoolean extends ABField {
 	* the component that will be stored with the ABViewForm.
 	*/
 	formComponent() {
+		
+		// NOTE: what is being returned here needs to mimic an ABView CLASS.
+		// primarily the .common() and .newInstance() methods.
+		var formComponentSetting = super.formComponent();
 
-		return super.formComponent('checkbox');
+		// .common() is used to create the display in the list
+		formComponentSetting.common = () => {
+			return {
+				key: 'textbox',
+				settings: {
+					type: 'single'
+				}
+			}
+		};
+
+		return formComponentSetting; 
 	}
 
 
 	detailComponent() {
-
+		
 		var detailComponentSetting = super.detailComponent();
 
 		detailComponentSetting.common = () => {
 			return {
-				key: 'detailcheckbox'
+				key: 'detailtext'
 			}
 		};
 
@@ -247,4 +252,4 @@ class ABFieldBoolean extends ABField {
 }
 
 
-export default ABFieldBoolean;
+export default ABFieldEmail;

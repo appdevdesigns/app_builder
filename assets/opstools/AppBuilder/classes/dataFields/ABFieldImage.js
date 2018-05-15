@@ -221,10 +221,11 @@ class ABFieldImage extends ABField {
 	 * return a UI Component that contains the property definitions for this Field.
 	 *
 	 * @param {App} App the UI App instance passed around the Components.
+	 * @param {stirng} idBase
 	 * @return {Component}
 	 */
-  	static propertiesComponent(App) {
-  		return ABFieldImageComponent.component(App);
+  	static propertiesComponent(App, idBase) {
+  		return ABFieldImageComponent.component(App, idBase);
   	}
 
 

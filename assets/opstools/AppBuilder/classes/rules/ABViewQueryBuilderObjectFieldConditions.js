@@ -284,7 +284,7 @@ export default class ABViewQueryBuilderObjectFieldConditions {
 	//					]
 	conditionFields() {
 		
-		var fieldTypes = ['string', 'number', 'date'];
+		var fieldTypes = ['string', 'LongText', 'number', 'date', 'email'];
 
 		var currFields = [];
 

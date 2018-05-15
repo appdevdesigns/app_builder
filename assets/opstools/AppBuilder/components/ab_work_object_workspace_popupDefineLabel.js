@@ -9,8 +9,11 @@
 
 export default class ABWorkObjectPopupDefineLabel extends OP.Component {
     
-    constructor(App) {
-        super(App, 'ab_work_object_workspace_popupDefineLabel');
+    constructor(App, idBase) {
+
+        idBase = idBase || 'ab_work_object_workspace_popupDefineLabel';
+
+        super(App, idBase);
         var L = this.Label;
         
         var labels = {
@@ -24,10 +27,10 @@ export default class ABWorkObjectPopupDefineLabel extends OP.Component {
         
         // internal list of Webix IDs to reference our UI components.
         var ids = {
-            component: this.unique('component'),
-            format: this.unique('format'),
-            list: this.unique('list'),
-            buttonSave: this.unique('buttonSave'),
+            component: this.unique(idBase + '_popupLabel'),
+            format: this.unique(idBase + '_popupLabel_format'),
+            list: this.unique(idBase + '_popupLabel_list'),
+            buttonSave: this.unique(idBase + '_popupLabel_buttonSave'),
         };
         
         
