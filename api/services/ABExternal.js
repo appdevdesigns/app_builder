@@ -166,7 +166,7 @@ module.exports = {
 				// Get tables in AppBuilder DB
 				return new Promise((resolve, reject) => {
 
-					var knex = ABMigration.connection();
+					var knex = ABMigration.connection(connName);
 
 					// SELECT `TABLE_NAME` 
 					// FROM information_schema.tables 
@@ -183,7 +183,7 @@ module.exports = {
 						.catch(reject)
 						.then(function (result) {
 
-							allTableNames = result.map((r) => { 
+							allTableNames = result.map(r => { 
 								return { name: r.TABLE_NAME, connection: connName };
 							});
 
@@ -263,7 +263,9 @@ module.exports = {
 				return new Promise((resolve, reject) => {
 					
 					resolve(tableNames.filter(t => {
+
 						return _.filter(sails.models, m => m.tableName == t.name && (!m.meta || !m.meta.junctionTable)).length;
+						
 					}));
 
 				});
@@ -851,4 +853,3 @@ module.exports = {
 	}
 
 };
-
