@@ -153,26 +153,25 @@ export default class ABViewGrid extends ABViewWidget  {
 			if (typeof(this.settings.objectWorkspace.summaryColumns) == "undefined") this.settings.objectWorkspace.summaryColumns = [];
 		}
 
-		if (typeof(this.settings.gridFilter) != "undefined") {
-			this.settings.gridFilter.filterOption = JSON.parse(this.settings.gridFilter.filterOption) || 0;
-			if (typeof(this.settings.gridFilter.queryRules) == "undefined")   {
-				this.settings.gridFilter.queryRules = [];
-			}
-			else {
-				//Convert some condition from string to integer
-				this.settings.gridFilter.queryRules.forEach(qr => {
-					if (qr.queryRules[0] != "") {
-						qr.queryRules[0].rules.forEach(rule => {
-							if (/^[+-]?\d+(\.\d+)?$/.exec(rule.value)) {
-								rule.value = JSON.parse(rule.value);
-							}
 
-						});
+		if (this.settings.gridFilter == null)
+			this.settings.gridFilter = {
+				queryRules: []
+			};
+
+		this.settings.gridFilter.filterOption = JSON.parse(this.settings.gridFilter.filterOption || 0);
+
+		//Convert some condition from string to integer
+		(this.settings.gridFilter.queryRules || []).forEach(qr => {
+			if (qr.queryRules[0] != "") {
+				qr.queryRules[0].rules.forEach(rule => {
+					if (/^[+-]?\d+(\.\d+)?$/.exec(rule.value)) {
+						rule.value = JSON.parse(rule.value);
 					}
+
 				});
-				
 			}
-		}
+		});
 
     	// we are not allowed to have sub views:
     	this._views = [];
