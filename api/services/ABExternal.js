@@ -112,16 +112,16 @@ module.exports = {
 
 		var connectionNames = [];
 
-		Object.keys(sails.config.connections).forEach(connKey => {
+		Object.keys(sails.config.connections).forEach(connName => {
 
-			var conn = sails.config.connections[connKey];
+			var conn = sails.config.connections[connName];
 
 			if (conn.host &&
 				conn.port && 
 				conn.user &&
 				conn.password &&
 				conn.database)
-				connectionNames.push(conn.database);
+				connectionNames.push(connName);
 
 		});
 
@@ -142,7 +142,7 @@ module.exports = {
 	 * 				tableName {string}, ..., tableNameN {string}
 	 * 			]
 	 */
-	getTableList: (appID, connectionName) => {
+	getTableList: (appID, connName) => {
 
 		var allTableNames = [],
 			existsTableNames = [];
@@ -153,7 +153,7 @@ module.exports = {
 				// Get database name
 				return new Promise((resolve, reject) => {
 
-					var connection = sails.config.connections[connectionName];
+					var connection = sails.config.connections[connName];
 					if (connection && connection.database)
 						resolve(connection.database);
 					else 
@@ -184,7 +184,7 @@ module.exports = {
 						.then(function (result) {
 
 							allTableNames = result.map((r) => { 
-								return { name: r.TABLE_NAME, connection: connectionName };
+								return { name: r.TABLE_NAME, connection: connName };
 							});
 
 							resolve();
