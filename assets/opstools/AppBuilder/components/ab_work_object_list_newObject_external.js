@@ -86,9 +86,14 @@ export default class AB_Work_Object_List_NewObject_External extends OP.Component
                         _logic.busyEnd();
 
 
+                        var oldConnName = $$(ids.connectionList).getValue();
+
+                        // clear old value
+                        $$(ids.connectionList).setValue(null);
+
                         // refresh list by select same value
-                        if ($$(ids.connectionList).getValue())
-                            $$(ids.connectionList).setValue($$(ids.connectionList).getValue());
+                        if (oldConnName)
+                            $$(ids.connectionList).setValue(oldConnName);
                         // select a first item by default 
                         else if (conns[0])
                             $$(ids.connectionList).setValue(conns[0]);
@@ -335,6 +340,7 @@ export default class AB_Work_Object_List_NewObject_External extends OP.Component
                        view: 'combo',
                        id: ids.connectionList,
                        label: labels.component.connections,
+                       labelWidth: 120,
                        options: [],
                        on: {
                            onChange: function(newVal, oldVal) {
