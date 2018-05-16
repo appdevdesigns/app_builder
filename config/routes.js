@@ -130,12 +130,24 @@ module.exports = {
         'app_builder/ABEmailController.send',
 
 
+
+
     /* Relay Settings */
+
+    'get /app_builder/relay/users':
+        'app_builder/ABRelayController.users',
+
     'get /app_builder/relay/uninitializedusers':
         'app_builder/ABRelayController.uninitializedUsers',
 
     'post /app_builder/relay/initialize':
         'app_builder/ABRelayController.initialize',
+
+    'post /app_builder/relay/publishusers':
+        'app_builder/ABRelayController.publishusers',
+
+    'post /app_builder/QR/sendEmail':
+        'app_builder/ABMobileQRController.sendEmail',
 
   /*
 

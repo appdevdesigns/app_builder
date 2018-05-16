@@ -1,8 +1,22 @@
 /**
- * ABRelayController
+ * ABMobileQRController
  *
- * @description :: Server-side logic for managing the ABRelay settings
- * @help        :: See http://sailsjs.org/#!/documentation/concepts/Controllers
+ * The AppBuilder uses QR information to coordinate the code and initialization of 
+ * a mobile App.  This can happen with or without the Relay service.
+ *
+ * A QR code contains the following info:
+ *		userAuthToken:  enables the Mobile Framework to communicate with 
+ *						AppBuilder services (including the Public Relay Server)
+ *						(found in ABRelayUser.publicAuthToken)
+ *		applicationID:  relates what Mobile App the AppBuilder is building that
+ *						should be running on the device.
+ *		codePushKeys:   The Microsoft CodePush keys used to update the version
+ *						of code being run on the device. Useful for switching to 
+ *						#develop or #testing versions of the Mobile Device
+ * 
+ * A QR Code is effective for a User + MobileApp
+ *
+ *
  */
 
 var async = require('async');
@@ -10,71 +24,61 @@ var _ = require('lodash');
 
 var RP = require('request-promise-native');
 
+
+var QRCode = require('qrcode');
+
+
 module.exports = {
 
-	// GET: /app_builder/relay/users
-	// return a list of user accounts that are currently 
-	// setup in ABRelayUser:
-	users: function (req, res) {
-		
+	// POST: /app_builder/QR/sendEmail
+	// send a QR code to a specified Site User
+	// @param {string} user 	  the SiteUser.guid 
+	// @param {string} mobileApp  id of the Mobile App
+	// @param {string} email      the email address to send to.
+	sendEmail: function (req, res) {
 
-		ABRelayUser.find()
-		.then((list)=>{
+		var user = req.param('user') || '--';
+		var mobileApp = req.param('mobileApp') || '--';
+		var email = req.param('email') || '--';
 
-			var users = [];
-			list.forEach((l)=>{
-				users.push(l.siteuser_guid);
-			})
-			res.AD.success(users);
+		var QRAppUser = null;
 
-		})
-		.catch((err)=>{
-			res.AD.error(err);
-		});
-
-	},
-
-
-	// GET: /app_builder/relay/uninitializedusers
-	// return a list of user accounts that are NOT currently 
-	// setup in ABRelayUser:
-	uninitializedUsers: function (req, res) {
-
-		var restUsers = [];
-		var users = [];
 		async.series([
 
-			// find all initialized users:
+			// find entry for ABQRAppUser
 			(next) => {
 
-				ABRelayUser.find()
+				ABRelayUser.find({
+					site_user:user,
+					mobile:mobileApp
+				})
 				.then((list)=>{
 
-					list.forEach((l)=>{
-						restUsers.push(l.siteuser_guid);
-					})
+					if (Array.isArray(list)) {
+						QRAppUser = list[0];
+					}
 					next();
 
 				})
 				.catch(next);
 			},
 
-			// get list of remaining users:
+			// Create ABQRAppUser if it didn't exist:
 			(next) => {
+				// skip if it is there
+				if (QRAppUser) {
+					next();
+					return;
+				} 
 
-				var cond = {};
-				if (restUsers.length > 0) {
-					cond = { guid:{'!':restUsers}};
-				}
-
-				SiteUser.find(cond)
-				.then((listUsers)=>{
-					listUsers.forEach((u)=>{
-						users.push(u.username)
-					})
+				ABRelayUser.initializeAppUser(user, mobileApp)
+				.then((abru)=>{
+					QRAppUser = abru;
 					next();
 				})
 				.catch(next);
+
+
 			}
 
 		], (err, data)=>{

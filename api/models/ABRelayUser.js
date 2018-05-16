@@ -2,12 +2,23 @@
  * ABRelayUser
  * @module      :: Model
  * Manage the encryption details for a user to send data via the Relay connections.
+ *
+ * The AppBuilder generates a RelayUser entry for a site user.
+ * this ABRelayUser{.user, .publickey, .authToken } gets sent to the public server
+ * A QRCode{ publicServerURL, applicationID, .user, .authToken } for an Application is sent to the site user's account
+ * The mobile device contacts the public server, gets an initialization packet
+ * The mobile device uses this setup info to generate an AES key (encrypted in RSA)
+ * The mobile device sends this response packet {.AES, .appid, user } back to the public server
+ * the AppBuilder queries the PublicServer and receives the ResponsePacket{.AES, .appID, .user}
+ * the AppBuilder creates a new ABRelayApplicationUser entry with {.AES, appID, .user }
+ * All further communications between the AppBuilder and that users' application are Encrypted/Decrypted using ABRelayApplicationUser
  * 
  */
 
 var async = require('async');
 var _ = require('lodash');
 var child_process = require('child_process');
+var uuid = require('uuid/v4');
 
 module.exports = {
     
@@ -47,6 +58,14 @@ migrate:'alter',
         // user: a uuid that is sent to the mobile client.
         // each data packet sent from the client will reference this uuid
         user: {
+            type: 'mediumtext'
+        },
+
+
+        // publicAuthToken: a uuid that is sent to the mobile client.
+        // to be allowed to connect to the public server, the client must use this auth token
+        // in it's communications.
+        publicAuthToken: {
             type: 'mediumtext'
         },
         
@@ -143,10 +162,12 @@ migrate:'alter',
                         REPLACE INTO appbuilder_relay_user
                         SET
                             siteuser_guid = ?,
+                            user = ?,
+                            publicAuthToken = SHA2(CONCAT(RAND(), UUID()), 224),
                             rsa_private_key = ?,
                             rsa_public_key = ?
                         
-                    `, [userGUID, privateKey, publicKey], (err) => {
+                    `, [userGUID, uuid(), privateKey, publicKey], (err) => {
                         if (err) next(err);
                         else next();
                     });

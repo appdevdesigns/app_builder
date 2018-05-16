@@ -23,7 +23,14 @@ export default class ABChooseConfig extends OP.Component {
 
 				selectUsers: L('ab.config.selectUsers', '*Select Users'),
 				buttonCreateRelayUser: L('ab.config.createRelayUser', '*Create Relay User'),
+				buttonUpdatePublicServer: L('ab.config.updatePublicServer', '*Update Public Server'),
 
+				selectQRUsers: L('ab.config.selectQRUsers', '*Select Relay User'),
+				selectQRApp: L('ab.config.selectQRApp', '*Select Relay Application'),
+				buttonSendQREmail: L('ab.config.sendQREmail', '*Send QR Email'),
+
+				confirmUsersCreated: L('ab.config.confirmUsersCreated', '*Users successfully created'),
+				confirmUsersPublished: L('ab.config.confirmUsersPublished', '*Users successfully published'),
 
 				createNew: L('ab.application.createNew', '*Add new application'),
 				noApplication: L('ab.application.noApplication', "*There is no application data"),
@@ -38,7 +45,9 @@ export default class ABChooseConfig extends OP.Component {
 			component: 	this.unique('component'),
 
 			rows: this.unique('rows'),
-			userList:   this.unique('userlist')
+			userList:   this.unique('userlist'),
+			qrUserList: this.unique('qruserlist'),
+			qrAppList:  this.unique('qrapplist')
 		}	
 
 
@@ -80,6 +89,7 @@ export default class ABChooseConfig extends OP.Component {
 							id:ids.rows,
 							rows:[
 
+								// Create Relay User:
 								{
 									cols:[
 										{
@@ -103,7 +113,54 @@ export default class ABChooseConfig extends OP.Component {
 										}
 					            
 									]
-								}
+								},
+
+								// Button: Update Public Server
+								{
+									cols:[
+										{
+
+										},
+										{
+					                    	view:"button",
+					                    	label: labels.component.buttonUpdatePublicServer,
+											autowidth: true,
+											click: () => {
+												_logic.buttonUpdatePublicServer();
+											}
+										}
+									]
+								},
+
+								// Send QR Email:
+								{
+									cols:[
+										{
+					                        id:ids.qrUserList,
+					                        name:'qrusers',
+					                        view:"multicombo",
+					                        label:labels.component.selectQRUsers,
+					                        value:'',
+					                        options:[]
+					                    },
+					                    {
+					                        id:ids.qrAppList,
+					                        name:'qrApps',
+					                        view:"multicombo",
+					                        label:labels.component.selectQRApp,
+					                        value:'',
+					                        options:[]
+					                    },
+										{
+					                    	view:"button",
+					                    	label: labels.component.buttonSendQREmail,
+											autowidth: true,
+											click: () => {
+												_logic.buttonUpdatePublicServer();
+											}
+										}
+									]
+								},
 							]
 						},
 						{
@@ -155,13 +212,40 @@ export default class ABChooseConfig extends OP.Component {
 					})
 					.then((response)=>{
 
+						OP.Dialog.Message({
+							text:labels.component.confirmUsersCreated
+						})
 						_logic.loadData();
 						_logic.ready();
 					})
 					.catch((err)=>{
+						_logic.ready();
 						OP.Error.log('Error initializing users.', err);
 					})
 				} 
+
+			},
+
+
+			buttonUpdatePublicServer: ()=>{
+
+				_logic.busy();
+
+				OP.Comm.Service.post({
+					url:'/app_builder/relay/publishusers',
+					data:{}
+				})
+				.then((response)=>{
+					OP.Dialog.Message({
+						text:labels.component.confirmUsersPublished
+					})
+					_logic.ready();
+				})
+				.catch((err)=>{
+					_logic.ready();
+					OP.Error.log('Error publishing users.', err);
+				})
+				
 
 			},
 
@@ -189,6 +273,31 @@ export default class ABChooseConfig extends OP.Component {
 				.catch((err)=>{
 console.error(err);
 				});
+
+
+				// "/app_builder/relay/users"
+				OP.Comm.Service.get({
+					url: "/app_builder/relay/users"
+				})
+				.then((data)=>{
+
+					if (data && data.length > 0) {
+
+						var options = [];
+						data.forEach((d)=>{
+							options.push({id:d, value:d});
+						})
+
+						$$(ids.qrUserList).define('options', options);
+						$$(ids.qrUserList).refresh();
+
+					}
+
+				})
+				.catch((err)=>{
+console.error(err);
+				});
+
 			},
 
 
