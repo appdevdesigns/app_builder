@@ -511,6 +511,8 @@ export default class ABViewTab extends ABViewWidget {
 		if (viewComponents.length > 0) {
 			_ui = {
 				type: "space",
+				paddingX: 17,
+				paddingY: 17,
 				rows: [
 					{
 						view: 'tabview',

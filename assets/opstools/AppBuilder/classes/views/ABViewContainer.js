@@ -15,6 +15,7 @@ function L(key, altText) {
 
 var ABPropertyComponentDefaults = {
 	columns: 1,
+	gravity: 1
 }
 
 
@@ -76,6 +77,12 @@ export default class ABViewContainer extends ABView {
 
 		// convert from "0" => 0
 		this.settings.columns = parseInt(this.settings.columns || ABPropertyComponentDefaults.columns);
+
+		if (typeof this.settings.gravity != "undefined") {
+			this.settings.gravity.map(function(gravity) {
+				return parseInt(gravity);
+			});
+		}
 
 	}
 
@@ -393,6 +400,27 @@ export default class ABViewContainer extends ABView {
 		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
 
 
+		_logic.addColumnGravity = (newVal, oldVal) => {
+			var pos = $$(ids.gravity).getParentView().index($$(ids.gravity));
+			$$(ids.gravity).getParentView().addView({
+				view:"counter", 
+				value:"1",
+				min: 1,
+				label:"Column "+newVal+" Gravity",
+				labelWidth: App.config.labelWidthXLarge,
+				css:"gravity_counter",
+				on: {
+					onChange: () => {
+						_logic.onChange();
+					}
+				}
+			}, pos);
+		}
+
+		_logic.removeColumnGravity = (newVal, oldVal) => {
+			$$(ids.gravity).getParentView().removeView($$(ids.gravity).getParentView().getChildViews()[$$(ids.gravity).getParentView().index($$(ids.gravity)) - 1 ]);
+		}
+
 		// in addition to the common .label  values, we 
 		// ask for:
 		return commonUI.concat([
@@ -401,26 +429,57 @@ export default class ABViewContainer extends ABView {
 				view: 'counter',
 				min: 1,
 				label: L('ab.components.container.columns', "*Columns"),
-				labelWidth: App.config.labelWidthLarge,
+				labelWidth: App.config.labelWidthXLarge,
 				on: {
 					onChange: function (newVal, oldVal) {
 
 						if (newVal > 8)
 							$$(ids.columns).setValue(8);
+						
+						if (newVal > oldVal) {
+							_logic.addColumnGravity(newVal, oldVal);
+						} else if (newVal < oldVal) {
+							_logic.removeColumnGravity(newVal, oldVal);
+						}
 
 					}
 				}
+			},
+			{
+				view:"text",
+				name:"gravity",
+				height: 1
 			}
 		]);
 
 	}
 
 
-	static propertyEditorPopulate(App, ids, view) {
+	static propertyEditorPopulate(App, ids, view, logic) {
 
-		super.propertyEditorPopulate(App, ids, view);
+		super.propertyEditorPopulate(App, ids, view, logic);
 
 		$$(ids.columns).setValue(view.settings.columns || ABPropertyComponentDefaults.columns);
+		
+		var gravityCounters = $$(ids.gravity).getParentView().queryView({ css:"gravity_counter" }, "all").map(counter => $$(ids.gravity).getParentView().removeView(counter)); 
+
+		for (var step = 1; step <= $$(ids.columns).getValue(); step++) {
+			var pos = $$(ids.gravity).getParentView().index($$(ids.gravity));
+			$$(ids.gravity).getParentView().addView({
+				view:"counter", 
+				value:"1",
+				min: 1,
+				label:"Column "+step+" Gravity",
+				labelWidth: App.config.labelWidthXLarge,
+				css:"gravity_counter",
+				value: (view.settings.gravity && view.settings.gravity[step-1]) ? view.settings.gravity[step-1] : ABPropertyComponentDefaults.gravity,
+				on: {
+					onChange: () => {
+						logic.onChange();
+					}
+				}
+			}, pos);
+		}
 
 		// when a change is made in the properties the popups need to reflect the change
 		this.updateEventIds = this.updateEventIds || {}; // { viewId: boolean, ..., viewIdn: boolean }
@@ -446,6 +505,10 @@ export default class ABViewContainer extends ABView {
 		super.propertyEditorValues(ids, view);
 
 		view.settings.columns = $$(ids.columns).getValue();
+		
+		var gravity = [];
+		var gravityCounters = $$(ids.gravity).getParentView().queryView({ css:"gravity_counter" }, "all").map(counter => gravity.push($$(counter).getValue()));
+		view.settings.gravity = gravity;
 
 	}
 
@@ -506,7 +569,10 @@ export default class ABViewContainer extends ABView {
 						// Create columns following setting value
 						var colNumber = this.settings.columns || ABPropertyComponentDefaults.columns;
 						for (var i = 0; i < colNumber; i++) {
-							rowNew.cols.push({});
+							var grav = (this.settings.gravity && this.settings.gravity[i]) ? parseInt(this.settings.gravity[i]) : ABPropertyComponentDefaults.gravity;
+							rowNew.cols.push({
+								gravity: grav
+							});
 						}
 
 						rows.push(rowNew);
@@ -514,6 +580,8 @@ export default class ABViewContainer extends ABView {
 
 					// Get the last row
 					var curRow = rows[rows.length - 1];
+					
+					component.ui.gravity = curRow.cols[v.position.x || 0].gravity;
 
 					// Add ui of sub-view to column
 					curRow.cols[v.position.x || 0] = component.ui;
