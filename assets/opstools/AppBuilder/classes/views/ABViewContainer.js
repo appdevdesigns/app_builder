@@ -78,6 +78,12 @@ export default class ABViewContainer extends ABView {
 		// convert from "0" => 0
 		this.settings.columns = parseInt(this.settings.columns || ABPropertyComponentDefaults.columns);
 
+		if (typeof this.settings.gravity != "undefined") {
+			this.settings.gravity.map(function(gravity) {
+				return parseInt(gravity);
+			});
+		}
+
 	}
 
 
@@ -405,7 +411,6 @@ export default class ABViewContainer extends ABView {
 				css:"gravity_counter",
 				on: {
 					onChange: () => {
-						console.log("changed");
 						_logic.onChange();
 					}
 				}
@@ -450,9 +455,9 @@ export default class ABViewContainer extends ABView {
 	}
 
 
-	static propertyEditorPopulate(App, ids, view) {
+	static propertyEditorPopulate(App, ids, view, logic) {
 
-		super.propertyEditorPopulate(App, ids, view);
+		super.propertyEditorPopulate(App, ids, view, logic);
 
 		$$(ids.columns).setValue(view.settings.columns || ABPropertyComponentDefaults.columns);
 		
@@ -470,7 +475,7 @@ export default class ABViewContainer extends ABView {
 				value: (view.settings.gravity && view.settings.gravity[step-1]) ? view.settings.gravity[step-1] : ABPropertyComponentDefaults.gravity,
 				on: {
 					onChange: () => {
-						console.log("changed");
+						logic.onChange();
 					}
 				}
 			}, pos);
@@ -564,7 +569,10 @@ export default class ABViewContainer extends ABView {
 						// Create columns following setting value
 						var colNumber = this.settings.columns || ABPropertyComponentDefaults.columns;
 						for (var i = 0; i < colNumber; i++) {
-							rowNew.cols.push({});
+							var grav = (this.settings.gravity && this.settings.gravity[i]) ? parseInt(this.settings.gravity[i]) : ABPropertyComponentDefaults.gravity;
+							rowNew.cols.push({
+								gravity: grav
+							});
 						}
 
 						rows.push(rowNew);
@@ -573,7 +581,7 @@ export default class ABViewContainer extends ABView {
 					// Get the last row
 					var curRow = rows[rows.length - 1];
 					
-					component.ui.gravity = (this.settings.gravity && this.settings.gravity[curColIndex]) ? this.settings.gravity[curColIndex] : ABPropertyComponentDefaults.gravity;
+					component.ui.gravity = curRow.cols[v.position.x || 0].gravity;
 
 					// Add ui of sub-view to column
 					curRow.cols[v.position.x || 0] = component.ui;

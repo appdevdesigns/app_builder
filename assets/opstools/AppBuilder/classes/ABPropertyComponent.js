@@ -244,7 +244,7 @@ export default class ABPropertyComponent {
 				this.currentObject = editedObject;
 
 				// populate the base ABField values:
-				this.EditObject.propertyEditorPopulate(App, ids, editedObject);
+				this.EditObject.propertyEditorPopulate(App, ids, editedObject, _logic);
 
 				// perform provided .populate()
 				if (this.logic.populate) {
