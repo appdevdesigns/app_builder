@@ -12,7 +12,9 @@ import ABPopupHideFields from "../../components/ab_work_object_workspace_popupHi
 import ABPopupSortField from "../../components/ab_work_object_workspace_popupSortFields"
 import ABPopupFrozenColumns from "../../components/ab_work_object_workspace_popupFrozenColumns"
 import ABPopupMassUpdate from "../../components/ab_work_object_workspace_popupMassUpdate"
+import ABViewGridFilterMenu from "../rules/ABViewGridFilterMenu"
 import ABPopupSummaryColumns from "../../components/ab_work_object_workspace_popupSummaryColumns"
+
 import RowFilter from '../RowFilter'
 
 
@@ -28,7 +30,7 @@ var ABViewGridPropertyComponentDefaults = {
 	isEditable:0,
 	massUpdate:0,
 	allowDelete:0,
-	isFilterable:0,
+	// isFilterable:0,
 	isSortable:0,
 	// linkedObject:'',
 	// linkedField:'',
@@ -43,6 +45,12 @@ var ABViewGridPropertyComponentDefaults = {
 		// filterConditions:[], // array of filters to apply to the data table
 		frozenColumnID:"", // id of column you want to stop freezing
 		hiddenFields:[], // array of [ids] to add hidden:true to
+	},
+	height: 0,
+	gridFilter: {
+		filterOption: 0,
+		queryRules: []
+
 	},
 	summaryFields: [], // array of [field ids] to add the summary column in footer
 	height: 0,
@@ -59,6 +67,7 @@ var ABViewDefaults = {
 
 var PopupHideFieldComponent = null;
 var PopupFrozenColumnsComponent = null;
+var PopupGridFilterMenu = null;
 var PopupSummaryColumnsComponent = null;
 
 export default class ABViewGrid extends ABViewWidget  {
@@ -120,7 +129,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		this.settings.isEditable = JSON.parse(this.settings.isEditable || ABViewGridPropertyComponentDefaults.isEditable);
 		this.settings.massUpdate = JSON.parse(this.settings.massUpdate || ABViewGridPropertyComponentDefaults.massUpdate);
 		this.settings.allowDelete = JSON.parse(this.settings.allowDelete || ABViewGridPropertyComponentDefaults.allowDelete);
-		this.settings.isFilterable = JSON.parse(this.settings.isFilterable || ABViewGridPropertyComponentDefaults.isFilterable);
+		// this.settings.isFilterable = JSON.parse(this.settings.isFilterable || ABViewGridPropertyComponentDefaults.isFilterable);
 		this.settings.isSortable = JSON.parse(this.settings.isSortable || ABViewGridPropertyComponentDefaults.isSortable);
 		this.settings.hideHeader = JSON.parse(this.settings.hideHeader || ABViewGridPropertyComponentDefaults.hideHeader);
 		this.settings.labelAsField = JSON.parse(this.settings.labelAsField || ABViewGridPropertyComponentDefaults.labelAsField);
@@ -142,6 +151,27 @@ export default class ABViewGrid extends ABViewWidget  {
 			if (typeof(this.settings.objectWorkspace.frozenColumnID) == "undefined") this.settings.objectWorkspace.frozenColumnID = "";
 			if (typeof(this.settings.objectWorkspace.hiddenFields) == "undefined") this.settings.objectWorkspace.hiddenFields = [];
 			if (typeof(this.settings.objectWorkspace.summaryColumns) == "undefined") this.settings.objectWorkspace.summaryColumns = [];
+		}
+
+		if (typeof(this.settings.gridFilter) != "undefined") {
+			this.settings.gridFilter.filterOption = JSON.parse(this.settings.gridFilter.filterOption) || 0;
+			if (typeof(this.settings.gridFilter.queryRules) == "undefined")   {
+				this.settings.gridFilter.queryRules = [];
+			}
+			else {
+				//Convert some condition from string to integer
+				this.settings.gridFilter.queryRules.forEach(qr => {
+					if (qr.queryRules[0] != "") {
+						qr.queryRules[0].rules.forEach(rule => {
+							if (/^[+-]?\d+(\.\d+)?$/.exec(rule.value)) {
+								rule.value = JSON.parse(rule.value);
+							}
+
+						});
+					}
+				});
+				
+			}
 		}
 
     	// we are not allowed to have sub views:
@@ -194,10 +224,13 @@ export default class ABViewGrid extends ABViewWidget  {
 		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
 		
 		var idBase = 'ABViewGridPropertyEditor';
-
+		
 		// initialize our popup editors with unique names so we don't overwrite the previous editor each time
 		PopupHideFieldComponent = new ABPopupHideFields(App, idBase+"_hide");
 		PopupFrozenColumnsComponent = new ABPopupFrozenColumns(App, idBase+"_freeze");
+
+		PopupGridFilterMenu = new ABViewGridFilterMenu();
+		PopupGridFilterMenu.component(App, idBase + "_gridfiltermenu");
 		PopupSummaryColumnsComponent = new ABPopupSummaryColumns(App, idBase+"_summary");
 		
 		_logic.newObject = () => {
@@ -210,6 +243,7 @@ export default class ABViewGrid extends ABViewWidget  {
 				summaryColumns:[]
 			};
 			currObj.populatePopupEditors(currObj);
+			
 		}
 		
 		// Open our popup editors when their settings button is clicked
@@ -229,6 +263,15 @@ export default class ABViewGrid extends ABViewWidget  {
 			PopupFrozenColumnsComponent.show($view, {pos:"top"});
 		}
 
+		_logic.gridFilterMenuShow = () => {
+
+			var currView = _logic.currentEditObject();
+
+			PopupGridFilterMenu.fromSettings(currView.settings.gridFilter);
+			PopupGridFilterMenu.show();
+	
+		}
+
 		_logic.summaryColumns = ($view) => {
 			PopupSummaryColumnsComponent.show($view, {pos:"top"});
 		}
@@ -236,6 +279,16 @@ export default class ABViewGrid extends ABViewWidget  {
 		_logic.callbackSaveWorkspace = (data) => {
 			// when we make a change in the popups we want to make sure we save the new workspace to the properties to do so just fire an onChange event
 			_logic.onChange();
+		}
+
+		_logic.gridFilterSave = (settings) => {
+
+			var currView = _logic.currentEditObject();
+			currView.settings.gridFilter = settings;
+			// currView.settings.isFilterable = settings.filterOption == 1 ? true : false;
+
+			// trigger a save()
+			this.propertyEditorSave(ids, currView);
 		}
 
 		_logic.callbackSaveSummaryColumns = (data) => {
@@ -292,6 +345,11 @@ export default class ABViewGrid extends ABViewWidget  {
 		PopupFrozenColumnsComponent.init({
 			onChange:_logic.callbackSaveWorkspace		// be notified when there is a change in the hidden fields
 		});
+
+
+		PopupGridFilterMenu.init({
+			onSave: _logic.gridFilterSave
+		});
 		
 		PopupSummaryColumnsComponent.init({
 			onChange: _logic.callbackSaveSummaryColumns	// be notified when there is a change in the summary columns
@@ -329,12 +387,12 @@ export default class ABViewGrid extends ABViewWidget  {
 							labelRight: L('ab.component.label.allowDelete', '*User can delete records.'),
 							labelWidth: App.config.labelWidthCheckbox
 						},
-						{
-							view:"checkbox",
-							name:"isFilterable",
-							labelRight: L('ab.component.label.isFilterable', '*User can filter records.'),
-							labelWidth: App.config.labelWidthCheckbox
-						},
+						// {
+						// 	view:"checkbox",
+						// 	name:"isFilterable",
+						// 	labelRight: L('ab.component.label.isFilterable', '*User can filter records.'),
+						// 	labelWidth: App.config.labelWidthCheckbox
+						// },
 						{
 							view:"checkbox",
 							name:"isSortable",
@@ -504,26 +562,27 @@ export default class ABViewGrid extends ABViewWidget  {
 								}
 							]
 						},
-						// {
-						// 	cols: [
-						// 		{ 
-						// 		    view:"label", 
-						// 		    label: L("ab.component.label.filterData", "*Filter Data:"),
-						// 			width: App.config.labelWidthLarge,
-						// 		},
-						// 		{
-						// 			view: view,
-						// 			// id: ids.buttonFilter,
-						// 			label: L("ab.component.label.settings", "*Settings"),
-						// 			icon: "gear",
-						// 			type: "icon",
-						// 			badge: 0,
-						// 			click: function () {
-						// 				_logic.toolbarFilter(this.$view);
-						// 			}
-						// 		}
-						// 	]
-						// },
+						{
+							cols: [
+								{ 
+								    view:"label", 
+								    label: L("ab.component.label.filterData", "*Filter Option:"),
+									css: 'ab-text-bold',
+									width: App.config.labelWidthXLarge,
+								},
+								{
+									view: view,
+									id: ids.gridFilterMenuButton,
+									label: L("ab.component.label.settings", "*Settings"),
+									icon: "gear",
+									type: "icon",
+									badge: 0,
+									click: function () {
+										_logic.gridFilterMenuShow(this.$view);
+									}
+								}
+							]
+						},
 						// {
 						// 	cols: [
 						// 		{ 
@@ -627,7 +686,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		$$(ids.isEditable).setValue(view.settings.isEditable);
 		$$(ids.massUpdate).setValue(view.settings.massUpdate);
 		$$(ids.allowDelete).setValue(view.settings.allowDelete);
-		$$(ids.isFilterable).setValue(view.settings.isFilterable);
+		// $$(ids.isFilterable).setValue(view.settings.isFilterable);
 		$$(ids.isSortable).setValue(view.settings.isSortable);
 		// $$(ids.linkedObject).setValue(view.settings.linkedObject);
 		// $$(ids.linkedField).setValue(view.settings.linkedField);
@@ -658,7 +717,10 @@ export default class ABViewGrid extends ABViewWidget  {
 				view.populateBadgeNumber(ids, view);
 			}, this);
 		}
-	
+		
+		//Load Datacollection to QueryBuilder
+		this.propertyUpdateGridFilterObject(ids, view);
+
 	}
 	
 	static propertyEditorValues(ids, view) {
@@ -670,7 +732,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		view.settings.isEditable = $$(ids.isEditable).getValue();
 		view.settings.massUpdate = $$(ids.massUpdate).getValue();
 		view.settings.allowDelete = $$(ids.allowDelete).getValue();
-		view.settings.isFilterable = $$(ids.isFilterable).getValue();
+		// view.settings.isFilterable = $$(ids.isFilterable).getValue();
 		view.settings.isSortable = $$(ids.isSortable).getValue();
 		// view.settings.linkedObject = $$(ids.linkedObject).getValue();
 		// view.settings.linkedField = $$(ids.linkedField).getValue();
@@ -686,7 +748,26 @@ export default class ABViewGrid extends ABViewWidget  {
 
 	}
 
+	static propertyUpdateGridFilterObject(ids, view) {
+		
+		if (!view) return;
 
+		// Populate values to QueryBuilder
+		var selectedDc = view.dataCollection();
+
+		if (selectedDc) {
+			// if (view.settings.gridFilter.filterOption == 2) {
+			// 	//Force to LoadAll
+			// 	selectedDc.settings.loadAll = true;
+			// }
+
+			var dataCopy = _.cloneDeep(selectedDc.datasource);
+			dataCopy.objectWorkspace = view.settings.objectWorkspace;
+			dataCopy.isLoadAll = selectedDc.settings.loadAll;
+
+			PopupGridFilterMenu.objectLoad(dataCopy);
+		}
+	}
 	/*
 	 * @component()
 	 * return a UI component based upon this view.
@@ -704,6 +785,9 @@ export default class ABViewGrid extends ABViewWidget  {
 			buttonFilter: App.unique(idBase+'_buttonFilter'),
 			buttonMassUpdate: App.unique(idBase+'_buttonMassUpdate'),
 			buttonSort: App.unique(idBase+'_buttonSort'),
+
+			filterMenutoolbar: App.unique(idBase+'_filterMenuToolbar'),
+			resetFilterButton: App.unique(idBase+'_resetFilterButton')
 
 		}
 		
@@ -786,7 +870,7 @@ export default class ABViewGrid extends ABViewWidget  {
 					onChange:_logic.callbackFilterData		// be notified when there is a change in the filter
 				});
 				
-				if (this.settings.massUpdate == false && this.settings.isFilterable == false && this.settings.isSortable == false) {
+				if (this.settings.massUpdate == false && this.settings.isSortable == false && this.settings.gridFilter.filterOption != 1 ) {
 					$$(ids.toolbar).hide();
 				}
 				
@@ -799,7 +883,7 @@ export default class ABViewGrid extends ABViewWidget  {
 					$$(ids.buttonDeleteSelected).hide();
 				}
 				
-				if (this.settings.isFilterable == false) {
+				if (this.settings.gridFilter.filterOption != 1) {
 					$$(ids.buttonFilter).hide();
 				}
 				
@@ -811,6 +895,9 @@ export default class ABViewGrid extends ABViewWidget  {
 					DataTable.hideHeader();
 				}
 
+				if (this.settings.gridFilter.filterOption == 2) {
+					$$(ids.filterMenutoolbar).show();
+				}
 				// var dataSource = this.application.objects((o)=>{
 				// 	return o.id == this.settings.dataSource;
 				// });
@@ -952,6 +1039,26 @@ export default class ABViewGrid extends ABViewWidget  {
 							*/
 						]
 					},
+					{
+						view: 'toolbar',
+						id: ids.filterMenutoolbar,
+						css: "ab-data-toolbar",
+						hidden: true,
+						cols: [
+							{
+								view: "button",
+								id: ids.resetFilterButton,
+								label: L("ab.component.label.resetFilter", "*Reset Filter"),
+								icon: "ban",
+								type: "icon",
+								badge: 0,
+								autowidth: true,
+								click: function() {
+									_logic.resetFilterMenu();
+								}
+							}
+						]
+					},
 					DataTable.ui
 				]
 			};
@@ -1064,6 +1171,30 @@ export default class ABViewGrid extends ABViewWidget  {
 				PopupMassUpdateComponent.show($view);
 			},
 		
+			resetFilterMenu: () => {
+				$$(DataTable.ui.id).filter();
+			},
+
+			applyFilterMenuToDataTable: (queryRules) => {
+
+				var id = "hiddenQB_"+webix.uid();
+
+				var ui = {
+					id:id,
+					hidden:true,
+					view:'querybuilder'
+				}
+				var hiddenQB = webix.ui(ui);
+		
+				hiddenQB.setValue(queryRules);
+		
+				var QBHelper = hiddenQB.getFilterHelper();
+		
+				hiddenQB.destructor();	// remove the QB 
+
+				$$(DataTable.ui.id).filter(QBHelper);
+			}
+
 		}
 
 
@@ -1071,6 +1202,25 @@ export default class ABViewGrid extends ABViewWidget  {
 
 			if ($$(DataTable.ui.id)) {
 				$$(DataTable.ui.id).adjust();
+			}
+
+			if (this.settings.gridFilter.filterOption == 2) {
+				if (this.settings.gridFilter.queryRules.length > 0) {
+					this.settings.gridFilter.queryRules.forEach(qr => {
+						var filterRuleButton = {
+							view: "button",
+							label: qr.ruleName,
+							icon: "filter",
+							type: "icon",
+							badge: 0,
+							autowidth: true,
+							click: function() {
+								_logic.applyFilterMenuToDataTable(qr.queryRules);
+							}
+						};
+						$$(ids.filterMenutoolbar).addView(filterRuleButton);
+					});
+				}
 			}
 		};
 
@@ -1186,9 +1336,14 @@ export default class ABViewGrid extends ABViewWidget  {
 		var dc = this.dataCollection();
 
 		if (!dc) return;
+		// if (view.settings.gridFilter.filterOption == 2) {
+		// 	//Force to LoadAll
+		// 	dc.settings.loadAll = true;
+		// }
 
 		var dataCopy = _.cloneDeep(dc.datasource);
 		dataCopy.objectWorkspace = view.settings.objectWorkspace;
+		dataCopy.isLoadAll = dc.settings.loadAll;
 
 		// if (view.settings.dataSource != "") {
 			// var dataSource = view.application.objects((o)=>{
@@ -1202,6 +1357,8 @@ export default class ABViewGrid extends ABViewWidget  {
 			// PopupFilterDataTableComponent.objectLoad(dataCopy, view);
 			// PopupSortFieldComponent.objectLoad(dataCopy, view);
 			PopupFrozenColumnsComponent.objectLoad(dataCopy, view);
+			PopupGridFilterMenu.objectLoad(dataCopy);
+
 			PopupSummaryColumnsComponent.objectLoad(dataCopy, view);
 			PopupSummaryColumnsComponent.setValue(view.settings.objectWorkspace.summaryColumns);
 		// }
