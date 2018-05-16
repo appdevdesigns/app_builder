@@ -116,7 +116,11 @@ module.exports = {
 
 			var conn = sails.config.connections[connKey];
 
-			if (conn.database)
+			if (conn.host &&
+				conn.port && 
+				conn.user &&
+				conn.password &&
+				conn.database)
 				connectionNames.push(conn.database);
 
 		});
@@ -847,3 +851,4 @@ module.exports = {
 	}
 
 };
+
