@@ -101,22 +101,64 @@ function getAssociations(tableName) {
 
 module.exports = {
 
+
+	/**
+	 * @method getConnectionList
+	 * Get the list of DB connection name from sails.config.connections
+	 * 
+	 * @return {Array} - [string, string2, ..., stringN]
+	 */
+	getConnectionList: () => {
+
+		var connectionNames = [];
+
+		Object.keys(sails.config.connections).forEach(connKey => {
+
+			var conn = sails.config.connections[connKey];
+
+			if (conn.database)
+				connectionNames.push(conn.database);
+
+		});
+
+		return connectionNames;
+
+	},
+
+
 	/**
 	 * @method getTableList
 	 * Get the list of table name
+	 * 
+	 * @param {guid} - The id of ABApplication
+	 * @param {string} - The name of database connection
 	 * 
 	 * @return Promise -
 	 * 			return {Array} [
 	 * 				tableName {string}, ..., tableNameN {string}
 	 * 			]
 	 */
-	getTableList: (appID) => {
+	getTableList: (appID, connectionName) => {
 
 		var allTableNames = [],
 			existsTableNames = [];
 
 		return Promise.resolve()
-			.then(function () {
+			.then(function() {
+
+				// Get database name
+				return new Promise((resolve, reject) => {
+
+					var connection = sails.config.connections[connectionName];
+					if (connection && connection.database)
+						resolve(connection.database);
+					else 
+						reject("Could not found this DB connection");
+
+				});
+
+			})
+			.then(function (databaseName) {
 				// Get tables in AppBuilder DB
 				return new Promise((resolve, reject) => {
 
@@ -131,14 +173,14 @@ module.exports = {
 					knex.select('TABLE_NAME')
 						.from('information_schema.tables')
 						.where('TABLE_TYPE', '=', 'BASE TABLE')
-						.andWhere('TABLE_SCHEMA', '=', sails.config.connections.appBuilder.database)
+						.andWhere('TABLE_SCHEMA', '=', databaseName)
 						.andWhere('TABLE_NAME', 'NOT LIKE', 'AB_%')
 						.andWhere('TABLE_NAME', 'NOT LIKE', '%_trans')
 						.catch(reject)
 						.then(function (result) {
 
 							allTableNames = result.map((r) => { 
-								return { name: r.TABLE_NAME, connection: null };
+								return { name: r.TABLE_NAME, connection: connectionName };
 							});
 
 							resolve();
@@ -146,34 +188,34 @@ module.exports = {
 						});
 				});
 			})
-			.then(function () {
-				// Get tables in HRIS DB
-				return new Promise((resolve, reject) => {
+			// .then(function () {
+			// 	// Get tables in HRIS DB
+			// 	return new Promise((resolve, reject) => {
 
-					var knex = ABMigration.connection('legacy_hris');
+			// 		var knex = ABMigration.connection('legacy_hris');
 
-					// SELECT `TABLE_NAME` 
-					// FROM information_schema.tables 
-					// WHERE `TABLE_TYPE` = 'BASE TABLE' 
-					// AND `TABLE_SCHEMA` = [CURRENT DB]
-					// AND `TABLE_NAME`   NOT LIKE 'AB_%'
-					// AND `TABLE_NAME`   NOT LIKE '%_trans';
-					knex.select('TABLE_NAME')
-						.from('information_schema.tables')
-						.where('TABLE_TYPE', '=', 'BASE TABLE')
-						.andWhere('TABLE_SCHEMA', '=', sails.config.connections.legacy_hris.database)
-						.andWhere('TABLE_NAME', 'NOT LIKE', 'AB_%')
-						.andWhere('TABLE_NAME', 'NOT LIKE', '%_trans')
-						.catch(reject)
-						.then(function (result) {
-							result.forEach((r) => {
-								allTableNames.push({ name: r.TABLE_NAME, connection: 'legacy_hris'});
-							});
+			// 		// SELECT `TABLE_NAME` 
+			// 		// FROM information_schema.tables 
+			// 		// WHERE `TABLE_TYPE` = 'BASE TABLE' 
+			// 		// AND `TABLE_SCHEMA` = [CURRENT DB]
+			// 		// AND `TABLE_NAME`   NOT LIKE 'AB_%'
+			// 		// AND `TABLE_NAME`   NOT LIKE '%_trans';
+			// 		knex.select('TABLE_NAME')
+			// 			.from('information_schema.tables')
+			// 			.where('TABLE_TYPE', '=', 'BASE TABLE')
+			// 			.andWhere('TABLE_SCHEMA', '=', sails.config.connections.legacy_hris.database)
+			// 			.andWhere('TABLE_NAME', 'NOT LIKE', 'AB_%')
+			// 			.andWhere('TABLE_NAME', 'NOT LIKE', '%_trans')
+			// 			.catch(reject)
+			// 			.then(function (result) {
+			// 				result.forEach((r) => {
+			// 					allTableNames.push({ name: r.TABLE_NAME, connection: 'legacy_hris'});
+			// 				});
 
-							resolve();
-						});
-				});
-			})
+			// 				resolve();
+			// 			});
+			// 	});
+			// })
 			.then(function () {
 
 				return new Promise((resolve, reject) => {
@@ -623,7 +665,7 @@ module.exports = {
 
 				return new Promise((resolve, reject) => {
 
-					ABExternal.getColumns(tableName)
+					ABExternal.getColumns(tableName, connName)
 						.catch(reject)
 						.then(data => {
 
@@ -747,7 +789,7 @@ module.exports = {
 								targetObj.fields.push(targetColData);
 
 								// Refresh the target model
-								let targetObjClass = new ABObject(targetObj, application);
+								let targetObjClass = new ABObject(targetObj, application.toABClass());
 								targetObjClass.modelRefresh();
 
 							}

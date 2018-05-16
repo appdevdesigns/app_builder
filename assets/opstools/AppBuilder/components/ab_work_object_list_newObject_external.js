@@ -20,6 +20,7 @@ export default class AB_Work_Object_List_NewObject_External extends OP.Component
         var labels = {
             common: App.labels,
             component: {
+                connections: L('ab.object.connections', "*Connections"),
                 columns: L('ab.object.columns', "*Columns"),
                 external: L('ab.object.external', "*External"),
             }
@@ -30,6 +31,7 @@ export default class AB_Work_Object_List_NewObject_External extends OP.Component
             component: this.unique('component'),
             form: this.unique('import'),
 
+            connectionList: this.unique('connectionList'),
             filter: this.unique('filter'),
             externalList: this.unique('externalList'),
             columnList: this.unique('columnList'),
@@ -71,17 +73,26 @@ export default class AB_Work_Object_List_NewObject_External extends OP.Component
             onShow: (app) => {
 
                 currentApp = app;
-                _logic.formClear();
-                _logic.busyStart();
 
                 this.abExternal = new ABExternal(currentApp);
 
-                this.abExternal.tableFind()
-                    .then((list) => {
+                this.abExternal.connectionFind()
+                    .then((conns) => {
 
-                        $$(ids.externalList).parse(list, 'json');
+                        var list = $$(ids.connectionList).getPopup().getList();
+                        list.clearAll();
+                        list.parse(conns);
 
                         _logic.busyEnd();
+
+
+                        // refresh list by select same value
+                        if ($$(ids.connectionList).getValue())
+                            $$(ids.connectionList).setValue($$(ids.connectionList).getValue());
+                        // select a first item by default 
+                        else if (conns[0])
+                            $$(ids.connectionList).setValue(conns[0]);
+
 
                     })
                     .catch((err) => {
@@ -122,6 +133,26 @@ export default class AB_Work_Object_List_NewObject_External extends OP.Component
                     };
 
                 });
+
+            },
+
+            connectionSelect: (connName) => {
+
+                _logic.formClear();
+                _logic.busyStart();
+
+                this.abExternal.tableFind(connName)
+                    .then((list) => {
+
+                        $$(ids.externalList).parse(list, 'json');
+
+                        _logic.busyEnd();
+
+                    })
+                    .catch((err) => {
+                        _logic.busyEnd();
+                    });
+
 
             },
 
@@ -259,7 +290,9 @@ export default class AB_Work_Object_List_NewObject_External extends OP.Component
                                 currentApp._objects.push(updateObj);
                             }
 
-                            _logic.callbacks.onDone(updateObj);
+
+                            if (tableName == updateObj.tableName)
+                                _logic.callbacks.onDone(updateObj);
 
                         });
 
@@ -296,6 +329,21 @@ export default class AB_Work_Object_List_NewObject_External extends OP.Component
                 id: ids.form,
                 width: 400,
                 elements: [
+
+                    // Connections
+                    {
+                       view: 'combo',
+                       id: ids.connectionList,
+                       label: labels.component.connections,
+                       options: [],
+                       on: {
+                           onChange: function(newVal, oldVal) {
+
+                                _logic.connectionSelect(newVal);
+    
+                            }
+                       }
+                    },
 
                     // Filter
                     {
