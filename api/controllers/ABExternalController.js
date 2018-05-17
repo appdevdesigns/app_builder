@@ -27,10 +27,10 @@ module.exports = {
 		var connName = req.param('connection');
 
 		ABExternal.getTableList(appID, connName)
-			.catch(res.AD.error)
 			.then(result => {
 				res.AD.success(result);
-			});
+			})
+			.catch(res.AD.error);
 
 	},
 
@@ -46,10 +46,10 @@ module.exports = {
 		var connName = req.param('connection');
 
 		ABExternal.getColumns(tableName, connName)
-			.catch(res.AD.error)
 			.then(result => {
 				res.AD.success(result);
-			});
+			})
+			.catch(res.AD.error);
 
 	},
 
