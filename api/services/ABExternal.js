@@ -142,7 +142,7 @@ module.exports = {
 	 * 				tableName {string}, ..., tableNameN {string}
 	 * 			]
 	 */
-	getTableList: (appID, connName) => {
+	getTableList: (appID, connName='appBuilder') => {
 
 		var allTableNames = [],
 			existsTableNames = [];
@@ -157,7 +157,7 @@ module.exports = {
 					if (connection && connection.database)
 						resolve(connection.database);
 					else 
-						reject("Could not found this DB connection");
+						reject(`Could not find DB connection: '${connName}'`);
 
 				});
 
@@ -300,7 +300,7 @@ module.exports = {
 	 * 							}
 	 * 			}
 	 */
-	getColumns: (tableName, connName) => {
+	getColumns: (tableName, connName='appBuilder') => {
 
 		var knex = ABMigration.connection(connName);
 		var transTableName = getTransTableName(tableName);
@@ -488,7 +488,7 @@ module.exports = {
 	 * @return Promise
 	 *		Resolves with the data of the new imported object
 	 **/
-	tableToObject: function (appID, tableName, columnList, connName) {
+	tableToObject: function (appID, tableName, columnList, connName='appBuilder') {
 
 		let knex = ABMigration.connection(connName),
 			application,
