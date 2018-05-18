@@ -9,6 +9,10 @@ var _ = require('lodash');
 var moment = require('moment');
 var uuid = require('node-uuid');
 
+
+
+
+
 // Build a reference of AB defaults for all supported Sails data field types
 var FieldManager = require(path.join('..', 'classes', 'ABFieldManager.js'));
 var sailsToAppBuilderReference = {};
@@ -2899,6 +2903,103 @@ module.exports = {
         dfd.resolve(columns);
 
         return dfd;
+    },
+
+
+    /**
+     * AppBuilder.mobileApps(appID)
+     * return all the mobileApps for a given Application.
+     * if appID is not provided, then ALL mobile apps will be returned.
+     * @param {int} appID  the ABApplication.id of the ABApplication
+     * @return {Promise} resolved with a [ {ABMobileApp}]
+     */
+    mobileApps: function(appID) {
+        return new Promise((resolve, reject) => {
+
+            var mobileApps = [];
+
+            var cond = {};
+            if (appID) {
+                cond = { id: appID }
+            }
+
+            ABApplication.find(cond) 
+            .then((list)=>{
+
+                list.forEach((l)=>{
+                    var listMA = l.toABClass().mobileApps();
+
+                    //// NOTE: at this point each listMA entry is an instance of ABMobileApp
+                    if (listMA.length > 0) {
+                        mobileApps = mobileApps.concat(listMA);
+                    }
+                })
+
+/// NOTE: we can remove this reference once we stop hardcoding the SDCApp:
+var ABMobileApp = require(path.join('..', 'classes', 'ABMobileApp'));
+
+
+/// Hard Code the SDC App here:
+var SDCApp = new ABMobileApp({
+    id:'SDC.id',
+    settings:{
+        deepLink:'',
+        codePushKeys:{
+            ios:'ios.key.here',
+            android:'android.key.here'
+        },
+        platforms:{
+            ios:{
+                // deeplink info:
+                deeplink:{
+                    "appID": "723276MJFQ.net.appdevdesigns.connexted",
+                    "paths": [
+                      "/ul"
+                    ]
+                }
+            },
+            android:{
+                apk:{
+                    // appbuilder/mobile/:mobileID/apk/current:
+                    // should return this file:
+                    current:'path/to/current_v5.apk',
+                    previous:[
+                        'path/to/previous_v4.apk',
+                        'path/to/previous_v3.apk'
+                    ]
+                },
+                deeplink:{
+                    "relation": ["delegate_permission/common.handle_all_urls"],
+                    "target" : {
+                        "namespace": "connexted",
+                        "package_name": "net.appdevdesigns.connexted",
+                        "sha256_cert_fingerprints": ["67:72:07:40:E0:CF:CA:9C:27:35:14:53:8E:A0:CA:E6:A1:EE:15:1C:A5:36:BB:47:E8:18:BF:CE:0D:47:D4:13"]
+                    }
+                }
+            }
+        }
+    },
+    translations:[
+        {   "language_code":"en",   "label":"SDC App", "description":"Keep things running" }
+    ],
+
+appID: 'App.id'   // not normally part of mobileApp data.  but can get from mobileApp.parent.id
+
+})
+
+mobileApps.unshift(SDCApp);
+
+
+                resolve(mobileApps);
+
+            })
+            .catch((err)=>{
+console.log(err);
+                ADCore.Error.log("AppBuilder:AppBuilderService:mobileApps:: Error searching for ABApplication:", {error:err, cond:cond });
+                reject(err);
+            })
+
+        })
     }
 
 
