@@ -149,12 +149,12 @@ class ABFieldList extends ABField {
 							if (this.settings.isMultiple == true) {
 								
 								// field is required (not null)
-								if (this.settings.required) {
-									currCol = t.json(this.columnName).notNullable();
-								}
-								else {
-									currCol = t.json(this.columnName).nullable();
-								}
+								// if (this.settings.required) {
+								// 	currCol = t.json(this.columnName).notNullable();
+								// }
+								// else {
+								currCol = t.json(this.columnName).nullable();
+								// }
 
 								// TODO: Set default to multiple select
 								// MySQL - BLOB and TEXT columns cannot have DEFAULT values.
@@ -179,6 +179,9 @@ class ABFieldList extends ABField {
 								if (this.settings.singleDefault && this.settings.singleDefault != 'none') {
 									currCol.defaultTo(this.settings.singleDefault);
 								}
+								else {
+									currCol.defaultTo(null);
+								}
 								
 							}
 
@@ -195,6 +198,19 @@ class ABFieldList extends ABField {
 			}
 		);
 	}
+
+
+	/**
+	 * @function migrateUpdate
+	 * perform the necessary sql actions to MODIFY this column to the DB table.
+	 * @param {knex} knex the Knex connection.
+	 */
+	migrateUpdate (knex) {
+
+		return this.migrateCreate(knex);
+
+	}
+
 
 
 	/**

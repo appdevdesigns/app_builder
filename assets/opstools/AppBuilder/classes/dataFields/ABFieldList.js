@@ -713,7 +713,8 @@ class ABFieldList extends ABFieldSelectivity {
 		    if (editable) {
 		        formClass = " form-entry";
 		        placeHolder = "<span style='color: #CCC; padding: 0 5px;'>"+L('ab.dataField.list.placeholder', '*Select item')+"</span>";
-		    }
+			}
+			var isRemovable = (editable && !this.settings.required);
 			
 			config.template = function(obj) {
 				var myHex = "#666666";
@@ -725,10 +726,10 @@ class ABFieldList extends ABFieldSelectivity {
 					}
 				});
 				if (field.settings.hasColors && obj[field.columnName]) {
-					return '<span class="selectivity-single-selected-item rendered'+formClass+'" style="background-color:'+myHex+' !important;">'+myText+ (editable ? ' <a class="selectivity-single-selected-item-remove"><i class="fa fa-remove"></i></a>' : '') + '</span>';
+					return '<span class="selectivity-single-selected-item rendered'+formClass+'" style="background-color:'+myHex+' !important;">'+myText+ (isRemovable ? ' <a class="selectivity-single-selected-item-remove"><i class="fa fa-remove"></i></a>' : '') + '</span>';
 				} else {
 					if (myText != placeHolder) {
-						return myText + (editable ? ' <a class="selectivity-single-selected-item-remove" style="color: #333;"><i class="fa fa-remove"></i></a>' : '');
+						return myText + (isRemovable ? ' <a class="selectivity-single-selected-item-remove" style="color: #333;"><i class="fa fa-remove"></i></a>' : '');
 					} else {
 						return myText;
 					}

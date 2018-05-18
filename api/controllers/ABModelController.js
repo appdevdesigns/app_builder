@@ -602,8 +602,14 @@ module.exports = {
                         // Push the ids of the related data into an array so we can use them in a query
                         var relatedIds = [];
                         oldItem[0][relationName].forEach((old) => {
-                            relatedIds.push(old.id);  // TODO: support various id
+                            if (old && old.id)
+                                relatedIds.push(old.id);  // TODO: support various id
                         });
+
+                        // If no relate ids, then skip
+                        if (relatedIds.length < 1) 
+                            return;
+
                         // Get all related items info
                         var queryRelated = relatedObject.queryFind({
                                 where: {

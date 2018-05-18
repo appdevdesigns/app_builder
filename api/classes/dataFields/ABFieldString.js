@@ -168,7 +168,7 @@ class ABFieldString extends ABField {
 					else next();
 				},
 				
-				// create/alter the actual column
+				// create the actual column
 				(next) => {
 
 					// [fix]: don't create a column for a multilingual field
@@ -177,12 +177,25 @@ class ABFieldString extends ABField {
 						knex.schema.hasColumn(tableName, this.columnName)
 						.then((exists) => {
 							knex.schema.table(tableName, (t) => {
-								var currCol = t.string(this.columnName)
-								.defaultTo(this.settings.textDefault);
+								var currCol = t.string(this.columnName);
 
-								// alter default value of column
+								// default value
+								if (this.settings.textDefault)
+									currCol.defaultTo(this.settings.textDefault);
+								else
+									currCol.defaultTo(null);
+
+								// not nullable/nullable
+								if (this.settings.required) 
+									currCol.notNullable();
+								else
+									currCol.nullable();
+
+
 								if (exists)
 									currCol.alter();
+
+
 							})
 							.then(() => {
 								next();
@@ -205,6 +218,19 @@ class ABFieldString extends ABField {
 			
 		});
 	}
+
+
+	/**
+	 * @function migrateUpdate
+	 * perform the necessary sql actions to MODIFY this column to the DB table.
+	 * @param {knex} knex the Knex connection.
+	 */
+	migrateUpdate (knex) {
+
+		return this.migrateCreate(knex);
+
+	}
+
 
 
 	/**

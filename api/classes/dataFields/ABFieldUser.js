@@ -111,13 +111,15 @@ class ABFieldUser extends ABField {
 
  							return knex.schema.table(tableName, (t) => {
 
-								// field is required (not null)
-								if (this.settings.required) {
-									var newCol = t.json(this.columnName).notNullable();
-								}
-								else {
-									var newCol = t.json(this.columnName).nullable();
-								}
+								var newCol = t.json(this.columnName).nullable();
+
+								// // field is required (not null)
+								// if (this.settings.required) {
+								// 	var newCol = t.json(this.columnName).notNullable();
+								// }
+								// else {
+								// 	var newCol = t.json(this.columnName).nullable();
+								// }
 
  							})
  								.then(() => {

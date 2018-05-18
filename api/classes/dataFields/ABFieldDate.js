@@ -206,6 +206,9 @@ class ABFieldDate extends ABField {
 
 								currCol.defaultTo(defaultDate);
 							}
+							else {
+								currCol.defaultTo(null);
+							}
 
 							if (exists) {
 								currCol.alter();
@@ -222,7 +225,20 @@ class ABFieldDate extends ABField {
 	}
 
 
+
 	/**
+	 * @function migrateUpdate
+	 * perform the necessary sql actions to MODIFY this column to the DB table.
+	 * @param {knex} knex the Knex connection.
+	 */
+	migrateUpdate (knex) {
+		
+		return migrateCreate(knex);
+
+	}
+
+
+			/**
 	 * @function migrateDrop
 	 * perform the necessary sql actions to drop this column from the DB table.
 	 * @param {knex} knex the Knex connection.

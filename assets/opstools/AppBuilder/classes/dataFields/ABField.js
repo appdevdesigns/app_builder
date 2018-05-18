@@ -30,12 +30,14 @@ export default class ABField extends ABFieldBase {
   	// 		label:'',					// pulled from translation
 	// 		columnName:'column_name',	// a valid mysql table.column name
 	//		settings: {					// unique settings for the type of field
-	//		showIcon:true/false,		// only useful in Object Workspace DataTable
-	//		isImported: 1/0,			// flag to mark is import from other object
+	// 			showIcon:true/false,	// only useful in Object Workspace DataTable
+	// 			isImported: 1/0,		// flag to mark is import from other object
+	// 			required: 1/0,			// field allows does not allow NULL or it does allow NULL 
+	// 			width: {int}			// width of display column
 
-	// 	// specific for dataField
-	// },
-	// translations:[]
+	// 		// specific for dataField
+	// 		},
+	// 		translations:[]
   	// 	}
   		
   	// 	this.fromValues(values);
@@ -64,7 +66,7 @@ export default class ABField extends ABFieldBase {
   			label: '',
   			columnName:'',
   			showIcon:1,
-			required:0,
+			required:0
   		}
 
   		for(var f in defaultValues) {
@@ -127,7 +129,7 @@ export default class ABField extends ABFieldBase {
 		}
 		
 		var requiredOnChange = function (newVal, oldVal, ids) {
-			console.error('Field has not implemented .requiredOnChange() is that okay?');
+			console.warn('Field has not implemented .requiredOnChange() is that okay?');
 		}
 		
 		// if the provided a requriedOnChange() override, use that:
@@ -185,7 +187,7 @@ export default class ABField extends ABFieldBase {
 					id: ids.required,
 					name: "required",
 					labelRight: App.labels.dataFieldRequired,
-					disallowEdit: true,
+					// disallowEdit: true,
 					labelWidth: App.config.labelWidthCheckbox,
 					on: {
 						onChange: (newVal, oldVal) => {
@@ -194,7 +196,8 @@ export default class ABField extends ABFieldBase {
 					}
 				}
 			]
-		}
+		};
+
 
   		return _ui;
   	}
@@ -327,19 +330,16 @@ export default class ABField extends ABFieldBase {
 				this.object.fieldSave(this)
 				.then(() => {
 
-					if (isAdd &&
-						this.key != "connectObject" // does not .migrateCreate, we have to wait until the link column will finish
-						) {
+					// not .migrateCreate, we have to wait until the link column will finish
+					if (this.key == "connectObject")
+						return resolve(this);;
 
-						this.migrateCreate()
-						.then(()=>{
-							resolve(this);
-						})
-						.catch(reject);
-
-					} else {
+					var fnMigrate = isAdd ? this.migrateCreate() : this.migrateUpdate();
+					fnMigrate
+					.then(()=>{
 						resolve(this);
-					}
+					})
+					.catch(reject);
 
 				})
 				.catch(function(err){
@@ -381,6 +381,18 @@ export default class ABField extends ABFieldBase {
 			.replace('#fieldID#', this.id)
 
 		return OP.Comm.Service.post({
+			url: url
+		})
+	}
+
+
+	migrateUpdate() {
+		var url = '/app_builder/migrate/application/#appID#/object/#objID#/field/#fieldID#'
+			.replace('#appID#', this.object.application.id)
+			.replace('#objID#', this.object.id)
+			.replace('#fieldID#', this.id)
+
+		return OP.Comm.Service.put({
 			url: url
 		})
 	}

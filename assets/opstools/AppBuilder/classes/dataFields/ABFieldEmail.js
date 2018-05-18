@@ -42,9 +42,23 @@ var ABFieldEmailComponent = new ABFieldComponent({
 	fieldDefaults: ABFieldEmailDefaults,
 
 	elements: (App, field) => {
-		// ids = field.idsUnique(ids, App);
 
-		return [];
+		var ids = {
+			default: ''
+		}
+		ids = field.idsUnique(ids, App);
+		
+		return [
+			{
+				view: "text",
+				id: ids.default,
+				name:'default',
+				labelWidth: App.config.labelWidthXLarge,
+				label: L('ab.dataField.email.defaultLabel', '*Default'),
+				placeholder: L('ab.dataField.email.default', '*Enter default email'),
+				validate: webix.rules.isEmail
+			}
+		]
 	},
 
 	// defaultValues: the keys must match a .name of your elements to set it's default value.
@@ -57,21 +71,27 @@ var ABFieldEmailComponent = new ABFieldComponent({
 	// include additional behavior on default component operations here:
 	// The base routines will be processed first, then these.  Any results
 	// from the base routine, will be passed on to these:
-	logic: {
+	logic:{
+		
+		/*
+		 * @function requiredOnChange
+		 *
+		 * The ABField.definitionEditor implements a default operation
+		 * to look for a default field and set it to a required field 
+		 * if the field is set to required
+		 * 
+		 * if you want to override that functionality, implement this fn()
+		 *
+		 * @param {string} newVal	The new value of label
+		 * @param {string} oldVal	The previous value
+		 */
+		requiredOnChange: (newVal, oldVal, ids) => {
 
-		// isValid: function (ids, isValid) {
+			// when require value, then default value needs to be reqired
+			$$(ids.default).define("required", newVal);
+			$$(ids.default).refresh();
 
-		// }
-
-		// populate: function (ids, values) {
-		// 	if (values.settings.validation) {
-		// 		$$(ids.validateMinimum).enable();
-		// 		$$(ids.validateMaximum).enable();
-		// 	} else {
-		// 		$$(ids.validateMinimum).disable();
-		// 		$$(ids.validateMaximum).disable();
-		// 	}
-		// }
+		},
 
 	},
 
@@ -95,8 +115,7 @@ class ABFieldEmail extends ABField {
 			this.settings[dv] = values.settings[dv] || defaultValues[dv];
 		}
 
-		// if (this.settings.default != null)
-		// 	this.settings.default = parseInt(this.settings.default);
+		this.settings.default = values.settings.default || '';
 	}
 
 	// return the default values for this DataField
@@ -178,6 +197,15 @@ class ABFieldEmail extends ABField {
 	 * @param {obj} values a key=>value hash of the current values.
 	 */
 	defaultValue(values) {
+		// if no default value is set, then don't insert a value.
+		if (!values[this.columnName]) {
+
+			// Set default string
+			if (this.settings.default) {
+				values[this.columnName] = this.settings.default;
+			}
+
+		}
 	}
 
 

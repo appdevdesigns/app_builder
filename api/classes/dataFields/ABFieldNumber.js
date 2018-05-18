@@ -164,6 +164,7 @@ class ABFieldNumber extends ABField {
 					.then((exists) => {
 
 						return knex.schema.table(tableName, (t) => {
+
 							var currCol;
 
 							// if this is an integer:
@@ -189,8 +190,11 @@ class ABFieldNumber extends ABField {
 							}
 
 							// set default value
-							if (defaultTo) {
+							if (defaultTo != null) {
 								currCol.defaultTo(defaultTo);
+							}
+							else {
+								currCol.defaultTo(null);
 							}
 
 							if (exists) {
@@ -207,6 +211,19 @@ class ABFieldNumber extends ABField {
 
 			}
 		)
+
+	}
+
+
+
+	/**
+	 * @function migrateUpdate
+	 * perform the necessary sql actions to MODIFY this column to the DB table.
+	 * @param {knex} knex the Knex connection.
+	 */
+	migrateUpdate (knex) {
+
+		return this.migrateCreate(knex);
 
 	}
 
