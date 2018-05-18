@@ -2,6 +2,21 @@ module.exports = {
 
 
 	/**
+	 * GET /app_builder/external/connections
+	 * 
+	 * Get the list of DB connection names
+	 */
+	findDatabaseNames: (req, res) => {
+
+		var connectionNames = ABExternal.getConnectionList();
+
+		res.AD.success(connectionNames);
+
+	},
+
+
+
+	/**
 	 * GET /app_builder/external/application/:appID
 	 * 
 	 * Get the list of MySql table names
@@ -9,8 +24,9 @@ module.exports = {
 	findTableNames: (req, res) => {
 
 		var appID = req.param('appID');
+		var connName = req.param('connection');
 
-		ABExternal.getTableList(appID)
+		ABExternal.getTableList(appID, connName)
 			.catch(res.AD.error)
 			.then(result => {
 				res.AD.success(result);

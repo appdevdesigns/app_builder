@@ -114,6 +114,9 @@ module.exports = {
         
 
     /* Import External models */
+    'get /app_builder/external/connections' : 
+        'app_builder/ABExternalController.findDatabaseNames',
+
     'get /app_builder/external/application/:appID' : 
         'app_builder/ABExternalController.findTableNames',
 

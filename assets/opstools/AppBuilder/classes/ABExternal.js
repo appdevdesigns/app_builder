@@ -4,12 +4,35 @@ export default class ABExternal {
 		this.application = application;
 	}
 
-	tableFind() {
+	connectionFind() {
 
 		return new Promise((resolve, reject) => {
 
 			OP.Comm.Socket.get({
-				url: '/app_builder/external/application/' + this.application.id
+				url: '/app_builder/external/connections'
+			})
+				.then((connectionNames) => {
+
+					resolve(connectionNames);
+
+				})
+				.catch(reject);
+
+		});
+
+	}
+
+	tableFind(connName) {
+
+		return new Promise((resolve, reject) => {
+
+			var params = '';
+			if (connName) {
+				params = '?connection=' + connName;
+			}
+
+			OP.Comm.Socket.get({
+				url: '/app_builder/external/application/' + this.application.id + params
 			})
 				.then((tableNames) => {
 
@@ -25,12 +48,12 @@ export default class ABExternal {
 	tableColumns(tableName, connName) {
 
 		return new Promise((resolve, reject) => {
-			
+
 			var params = '';
 			if (connName) {
 				params = '?connection=' + connName;
 			}
-			
+
 			// OP.Comm.Socket.get({
 			OP.Comm.Service.get({
 				url: '/app_builder/external/model/' + tableName + '/columns' + params
@@ -54,7 +77,7 @@ export default class ABExternal {
 			if (connName) {
 				params = '?connection=' + connName;
 			}
-			
+
 			OP.Comm.Service.post({
 				url: '/app_builder/external/application/' + this.application.id + '/model/' + tableName + params,
 				params: {

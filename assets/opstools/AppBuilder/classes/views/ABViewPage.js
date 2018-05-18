@@ -133,6 +133,7 @@ export default class ABViewPage extends ABViewContainer {
 
         // the default columns of ABView is 1
         this.settings.columns = this.settings.columns || 1;
+        this.settings.gravity = this.settings.gravity || [1];
 
         // convert from "0" => 0
 
@@ -303,9 +304,9 @@ export default class ABViewPage extends ABViewContainer {
     }
 
 
-    static propertyEditorPopulate(App, ids, view) {
+    static propertyEditorPopulate(App, ids, view, logic) {
 
-        super.propertyEditorPopulate(App, ids, view);
+        super.propertyEditorPopulate(App, ids, view, logic);
 
         $$(ids.type).setValue(view.settings.type || ABPropertyComponentDefaults.type);
 
