@@ -93,13 +93,12 @@ migrate:'alter',
                 return;
             }
 
-
             // Save to database
             ABQRAppUser.query(`
                 
                 REPLACE INTO appbuilder_qr_appuser
                 SET
-                    siteuser_guid = ?,
+                    siteuser = ?,
                     mobile = ?,
                     token = SHA2(CONCAT(RAND(), UUID()), 224)
                 
@@ -107,8 +106,6 @@ migrate:'alter',
                 if (err) reject(err);
                 else resolve();
             });
-
-
             
         });
     }

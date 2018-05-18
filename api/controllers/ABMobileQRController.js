@@ -38,19 +38,50 @@ module.exports = {
 	sendEmail: function (req, res) {
 
 		var user = req.param('user') || '--';
-		var mobileApp = req.param('mobileApp') || '--';
+		var appID = req.param('mobileApp') || '--';
 		var email = req.param('email') || '--';
 
 		var QRAppUser = null;
+		var MobileApp = null;
 
 		async.series([
+
+			// verify Email
+			// if no email is provided, then lookup SiteUser's email:
+			(next) => {
+				
+				// if they provided an email, move along
+				if (email != '--') {
+					next();
+					return;
+				} 
+
+				// lookup SiteUser
+				SiteUser.findOne({guid:user})
+				.then((lookupUser)=>{
+
+					if (!lookupUser) {
+						var error = new Error('Unknown user');
+						error.code = 403;
+						next(error);
+						return;
+					}
+
+					email = lookupUser.email;
+					next();
+				})
+				.catch(next)
+			},
+
+//// NOTE: in usage, we don't use the QRToken in ABQRAppUser
+//// we might remove these next 2 steps in the future:
 
 			// find entry for ABQRAppUser
 			(next) => {
 
-				ABRelayUser.find({
-					site_user:user,
-					mobile:mobileApp
+				ABQRAppUser.find({
+					siteuser:user,
+					mobile:appID
 				})
 				.then((list)=>{
 
@@ -58,160 +89,95 @@ module.exports = {
 						QRAppUser = list[0];
 					}
 					next();
-
 				})
 				.catch(next);
 			},
 
 			// Create ABQRAppUser if it didn't exist:
 			(next) => {
+
 				// skip if it is there
 				if (QRAppUser) {
 					next();
 					return;
 				} 
 
-				ABRelayUser.initializeAppUser(user, mobileApp)
+				ABQRAppUser.initializeAppUser(user, appID)
 				.then((abru)=>{
 					QRAppUser = abru;
 					next();
 				})
 				.catch(next);
 
+			},
+
+
+			// Get the MobileApp object
+			(next) => {
+
+				AppBuilder.mobileApps()
+				.then((listApps)=>{
+
+					var App = listApps.filter((a)=>{return a.id == appID; })[0];
+
+					if (!App) {
+						var error = new Error('Unknown Mobile App');
+						error.code = 403;
+						next(error);
+						return;
+					}
+
+					MobileApp = App;
+					next();
+
+				})
+				.catch(next);
+			},
+
+
+			// now build Email info and send to user
+			(next) => {
+
+//// LEFT OFF HERE:
+// - deeplink url:  make a sails.config.appbuilder.deeplink setting for this
+// - reduce current Email to a generic Base Email format.
+// - bootstrap an entry for EmailNotifications for this Email
+// - fill out missing params
+
+				var triggerID = MobileApp.emailInviteTrigger(); // 'appbuilder.mobileinvite.'+MobileApp.id;
+var protocol = req.connection.encrypted?'https':'http';
+var baseUrl = protocol + '://' + req.headers.host + '/';
+
+				var deepLink  = baseUrl;
+
+sails.log.error(":::: deepLink:", deepLink);
+next();
+				// EmailNotifications.trigger(triggerID, {
+	   //              to: [email],
+	   //              variables: {
+	   //                  image: urlQR, // data URL base64 encoded
+	   //                  userInfo,
+	   //                  relationships,
+	   //                  tokenQR,      // token to use in renQrCode() route
+	   //                  cidQR: cidQR,   // CID for the QR code attachment
+	   //                  deepLink,
+	   //              },
+	   //              attachments: attachments
+	   //          })
+	   //          .done((html) => {
+	   //              res.send(html || 'OK');
+	   //          })
+	   //          .fail((err) => {
+	   //              throw err;
+	   //          });
 
 			}
 
 		], (err, data)=>{
 			if (err) {
-				res.AD.error(err);
+				res.AD.error(err, err.code || 400);
 			} else {
 				res.AD.success(users);
-			}
-		})
-	},
-
-
-	// POST: /app_builder/relay/initialize
-	// initialize a set of user accounts to work with the relay system
-	initialize: function (req, res) {
-
-		var users = req.param('users');
-
-		if (!users) {
-			res.AD.error('missing param: users');
-			return;
-		}
-
-		var siteUsers = null;
-		async.series([
-
-			// find all requested users:
-			(next) => {
-
-				SiteUser.find({username:users })
-				.then((listUsers)=>{
-					siteUsers = listUsers;
-					next();
-				})
-				.catch(next);
-			},
-
-			// initialize each of them:
-			(next) => {
-				
-				var numDone = 0;
-				siteUsers.forEach((su)=>{
-
-					ABRelayUser.initializeUser(su.guid)
-					.then(()=>{
-						numDone++;
-						if (numDone>= siteUsers.length) {
-							next();
-						}
-					})
-					.catch(next);
-				})
-				
-				if (siteUsers.length == 0) {
-					next();
-				}
-				
-			}
-
-		], (err, data)=>{
-			if (err) {
-				res.AD.error(err);
-			} else {
-				res.AD.success();
-			}
-		})
-	},
-
-
-	// POST: /app_builder/relay/publishusers
-	// initialize the Public Server with the current list of ABRelayUsers:
-	publishusers: function (req, res) {
-
-		var restUsers = [];
-
-		async.series([
-
-
-			// get list of registered ABRelayUsers :
-			(next) => {
-				
-				ABRelayUser.find()
-				.then((list)=>{
-
-					list.forEach((l)=>{
-						var entry = { user:l.user, rsa:l.rsa_public_key, authToken:l.publicAuthToken }
-						restUsers.push(entry);
-					})
-					next();
-
-				})
-				.catch(next);
-				
-			},
-
-			(next) => {
-
-				var options = {
-				    method: 'POST',
-				    uri: sails.config.appbuilder.mcc.url+'/mcc/users',
-				    headers: {
-				        'authorization': sails.config.appbuilder.mcc.accessToken
-				    },
-				    body: {
-				        users: restUsers
-				    },
-				    json: true // Automatically stringifies the body to JSON
-				};
-				 
-				RP(options)
-				    .then(function (parsedBody) {
-
-						next();
-				        
-				    })
-				    .catch(next);
-			}
-
-		], (err, data)=>{
-			if (err) {
-				if(err.statusCode == 403) {
-					ADCore.error.log("ABRelayController:publishusers:Request was forbidden. Does our authToken match?", {error:err, authToken:sails.config.appbuilder.mcc.accessToken})
-					var error = new Error('Communications Error with Relay Server. Contact your Administrator.');
-					res.AD.error(error);
-					return;
-				}
-				// otherwise pass
-				ADCore.error.log("ABRelayController:publishusers:Error with publishusers:", {error:err, authToken:sails.config.appbuilder.mcc.accessToken});
-				var error = new Error('Unable to complete transaction. Contact your administrator.');
-				res.AD.error(error);
-
-			} else {
-				res.AD.success();
 			}
 		})
 	},

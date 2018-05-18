@@ -156,7 +156,7 @@ export default class ABChooseConfig extends OP.Component {
 					                    	label: labels.component.buttonSendQREmail,
 											autowidth: true,
 											click: () => {
-												_logic.buttonUpdatePublicServer();
+												_logic.buttonSendQREmail();
 											}
 										}
 									]
@@ -227,6 +227,38 @@ export default class ABChooseConfig extends OP.Component {
 			},
 
 
+			buttonSendQREmail: ()=>{
+
+				_logic.busy();
+
+				var user = $$(ids.qrUserList).getValue();
+				var mobileApp = $$(ids.qrAppList).getValue();
+
+				OP.Comm.Service.post({
+					url:'/app_builder/QR/sendEmail',
+					data:{
+						user:user,
+						mobileApp:mobileApp,
+						// email:
+					}
+				})
+				.then((response)=>{
+					OP.Dialog.Message({
+						text:labels.component.confirmQRSent
+					})
+					_logic.ready();
+				})
+				.catch((err)=>{
+					_logic.ready();
+					var message = 'Error sending QR email';
+					if (err.message) message += ': '+err.message;
+
+					OP.Error.log(message, err);
+				})
+				
+			},
+
+
 			buttonUpdatePublicServer: ()=>{
 
 				_logic.busy();
@@ -290,6 +322,31 @@ console.error(err);
 
 						$$(ids.qrUserList).define('options', options);
 						$$(ids.qrUserList).refresh();
+
+					}
+
+				})
+				.catch((err)=>{
+console.error(err);
+				});
+
+
+				// "/app_builder/application/allmobileapps"
+				OP.Comm.Service.get({
+					url: "/app_builder/application/allmobileapps"
+				})
+				.then((data)=>{
+
+					if (data && data.length > 0) {
+
+						var options = [];
+						data.forEach((d)=>{
+							OP.Multilingual.translate(d, d, ['label']);
+							options.push({id:d.id, value:d.label, appID:d.appID });
+						})
+
+						$$(ids.qrAppList).define('options', options);
+						$$(ids.qrAppList).refresh();
 
 					}
 
