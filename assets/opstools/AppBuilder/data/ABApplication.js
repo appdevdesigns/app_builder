@@ -184,7 +184,66 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 			);
 
+		},
+
+
+		// ** Mobile Apps
+
+		/**
+		 * @method mobileAppSave
+		 * 
+		 * @param {guid} appId
+		 * @param {object} app
+		 * @return {Promise}
+		 */
+		mobileAppSave: function (appId, app) {
+
+			return new Promise(
+				(resolve, reject) => {
+
+					OP.Comm.Service.put({
+						url: '/app_builder/application/' + appId + '/mobileApp',
+						data: {
+							data: app
+						}
+					}, function (err, result) {
+						if (err)
+							reject(err);
+						else
+							resolve(result);
+					});
+				}
+
+			);
+		},
+
+		/**
+		 * @method mobileAppDestroy
+		 * 
+		 * @param {guid} appId
+		 * @param {guid} mobileAppID
+		 * @return {Promise}
+		 */
+		mobileAppDestroy: function (appId, mobileAppID) {
+
+			return new Promise(
+				(resolve, reject) => {
+
+					OP.Comm.Service.delete({
+						url: '/app_builder/application/' + appId + '/mobileApp/' + mobileAppID
+					}, function (err, result) {
+						if (err)
+							reject(err);
+						else
+							resolve(result);
+					});
+
+				}
+
+			);
+
 		}
+
 
 	},
 	{

@@ -149,6 +149,9 @@ module.exports = {
     'post /app_builder/relay/publishusers':
         'app_builder/ABRelayController.publishusers',
 
+    'get /app_builder/application/allmobileapps':
+        'app_builder/ABApplicationController.listMobileApps',
+
     'post /app_builder/QR/sendEmail':
         'app_builder/ABMobileQRController.sendEmail',
 

@@ -67,6 +67,19 @@ module.exports = class ABApplicationBase {
 		this._queries = newQueries;
 
 
+		// Mobile Apps
+		// an Application can have one or more Mobile Apps registered.
+		var newMobileApps = [];
+		(attributes.json.mobileApps || []).forEach((ma) => {
+			// prevent processing of null values.  
+			if (ma) {
+		  		newMobileApps.push( this.mobileAppNew(ma) );  
+		  	}
+	  	})
+		this._mobileApps = newMobileApps;
+
+
+
 		// Object List Settings
 		attributes.json.objectListSettings 		= attributes.json.objectListSettings || {};
 		this.objectListSettings 				= this.objectListSettings || {};
@@ -143,6 +156,14 @@ module.exports = class ABApplicationBase {
 			currPages.push(page.toObj())
 		})
 		this.json.pages = currPages;
+
+
+		// for each MobileApp: compile to json
+		var currApps = [];
+		this._mobileApps.forEach((app) => {
+			currApps.push(app.toObj())
+		})
+		this.json.mobileApps = currApps;
 
 
 		return {
@@ -300,6 +321,34 @@ module.exports = class ABApplicationBase {
 		return this._queries.filter(filter);
 
 	}
+
+
+
+	///
+	/// Mobile Apps
+	///
+
+
+
+	/**
+	 * @method mobileApps()
+	 *
+	 * return an array of all the ABObjectQueries for this ABApplication.
+	 *
+	 * @param {fn} filter  	a filter fn to return a set of ABObjectQueries that 
+	 *						this fn returns true for.
+	 * @return {array} 	array of ABObjectQueries
+	 */
+	mobileApps (filter) {
+
+		filter = filter || function() {return true; };
+
+		return this._mobileApps.filter(filter);
+
+	}
+
+
+
 
 	/**
 	 * @method urlResolve()

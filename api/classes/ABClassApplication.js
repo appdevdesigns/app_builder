@@ -1,9 +1,10 @@
 var path = require('path');
 
 var ABApplicationBase = require(path.join(__dirname,  "..", "..", "assets", "opstools", "AppBuilder", "classes",  "ABApplicationBase.js"));
-var ABObject = require(path.join(__dirname, 'ABObject'));
-var ABViewPage = require(path.join(__dirname, 'ABViewPage'));
-var ABObjectQuery = require(path.join(__dirname, 'ABObjectQuery'));
+var ABObject       = require(path.join(__dirname, 'ABObject'));
+var ABViewPage     = require(path.join(__dirname, 'ABViewPage'));
+var ABObjectQuery  = require(path.join(__dirname, 'ABObjectQuery'));
+var ABMobileApp    = require(path.join(__dirname, 'ABMobileApp'));
 var ABFieldManager = require(path.join(__dirname, 'ABFieldManager'));
 
 
@@ -87,6 +88,19 @@ module.exports =  class ABClassApplication extends ABApplicationBase {
 	 */
 	queryNew( values ) {
 		return new ABObjectQuery(values, this);
+	}
+
+
+	/**
+	 * @method mobileAppNew()
+	 *
+	 * return an instance of a new (unsaved) ABMobileApp that is tied to this
+	 * ABApplication.
+	 *
+	 * @return {ABMobileApp}
+	 */
+	mobileAppNew( values ) {
+		return new ABMobileApp(values, this);
 	}
 
 
