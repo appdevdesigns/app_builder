@@ -1153,9 +1153,9 @@ a.ab-delete-photo:hover {
 .webix_layout_space {
 	background: #f5f5f5;
 }
-.webix_multiview .webix_layout_space .webix_layout_space {
+/* .webix_multiview .webix_layout_space .webix_layout_space {
 	background: #FFF;
-}
+} */
 .webix_cell .ab-image-data-field {
 	padding: 10px 0;
 }
