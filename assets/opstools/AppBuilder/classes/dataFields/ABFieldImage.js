@@ -27,7 +27,9 @@ var ABFieldImageDefaults = {
 
 	isSortable: false,
 	isFilterable: false,
-	useAsLabel: false
+	useAsLabel: false,
+
+	supportRequire: false
 
 }
 

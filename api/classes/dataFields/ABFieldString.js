@@ -45,7 +45,7 @@ class ABFieldString extends ABField {
     	/*
     	{
 			settings: {
-				textDefault: 'string',
+				default: 'string',
 				supportMultilingual: 1/0
 			}
     	}
@@ -54,7 +54,7 @@ class ABFieldString extends ABField {
     	this.settings = values.settings || {};
 
     	// we're responsible for setting up our specific settings:
-    	this.settings.textDefault = this.settings.textDefault || '';
+    	this.settings.default = this.settings.default || '';
     	this.settings.supportMultilingual = this.settings.supportMultilingual+"" || "1";
 
     	// text to Int:
@@ -180,8 +180,8 @@ class ABFieldString extends ABField {
 								var currCol = t.string(this.columnName);
 
 								// default value
-								if (this.settings.textDefault)
-									currCol.defaultTo(this.settings.textDefault);
+								if (this.settings.default)
+									currCol.defaultTo(this.settings.default);
 								else
 									currCol.defaultTo(null);
 

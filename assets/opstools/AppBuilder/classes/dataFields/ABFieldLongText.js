@@ -25,13 +25,15 @@ var ABFieldLongTextDefaults = {
 	// description: what gets displayed in the Editor description.
 	description: L('ab.dataField.LongText.description', '*Multiple lines of text'),
 
+	supportRequire: true
+
 }
 
 
 
 // defaultValues: the keys must match a .name of your elements to set it's default value.
 var defaultValues = {
-	'textDefault': '',
+	'default': '',
 	'supportMultilingual': 0
 }
 
@@ -55,15 +57,15 @@ var ABFieldLongTextComponent = new ABFieldComponent({
 
 		// NOTE: you might not need to define your own ids, but if you do, do it like this:
 		var ids = {
-			textDefault: ''
+			default: ''
 		}
 		ids = field.idsUnique(ids, App);
 
 		return [
 			{
 				view: "text",
-				id: ids.textDefault,
-				name: 'textDefault',
+				id: ids.default,
+				name: 'default',
 				label: L('ab.dataField.string.defaultLabel', '*Default'),
 				labelPosition:"top",
 				placeholder: L('ab.dataField.string.default', '*Default text')
@@ -85,7 +87,7 @@ var ABFieldLongTextComponent = new ABFieldComponent({
 	// rules: basic form validation rules for webix form entry.
 	// the keys must match a .name of your .elements for it to apply
 	rules: {
-		// 'textDefault':webix.rules.isNotEmpty,
+		// 'default':webix.rules.isNotEmpty,
 		// 'supportMultilingual':webix.rules.isNotEmpty
 	},
 
@@ -130,8 +132,8 @@ var ABFieldLongTextComponent = new ABFieldComponent({
 		requiredOnChange: (newVal, oldVal, ids) => {
 
 			// when require value, then default value needs to be reqired
-			$$(ids.textDefault).define("required", newVal);
-			$$(ids.textDefault).refresh();
+			$$(ids.default).define("required", newVal);
+			$$(ids.default).refresh();
 
 		},
 
@@ -160,7 +162,7 @@ class ABFieldLongText extends ABField {
     	/*
     	{
 			settings: {
-				textDefault: 'string',
+				default: 'string',
 				supportMultilingual: 1/0
 			}
     	}
@@ -270,8 +272,8 @@ class ABFieldLongText extends ABField {
 	 */
 	defaultValue(values) {
 		if (values[this.columnName] == null) {
-			if (typeof this.settings.textDefault == 'string') {
-				values[this.columnName] = this.settings.textDefault;
+			if (typeof this.settings.default == 'string') {
+				values[this.columnName] = this.settings.default;
 			}
 			else {
 				values[this.columnName] = '';

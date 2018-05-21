@@ -30,7 +30,7 @@ var ABFieldListDefaults = {
 var defaultValues = {
 	isMultiple: 0,
 	options: [],
-	singleDefault: 'none',
+	default: 'none',
 	multipleDefault: []
 
 }
@@ -176,8 +176,8 @@ class ABFieldList extends ABField {
 								}
 
 								
-								if (this.settings.singleDefault && this.settings.singleDefault != 'none') {
-									currCol.defaultTo(this.settings.singleDefault);
+								if (this.settings.default && this.settings.default != 'none') {
+									currCol.defaultTo(this.settings.default);
 								}
 								else {
 									currCol.defaultTo(null);

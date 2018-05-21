@@ -26,12 +26,14 @@ var ABFieldDateDefaults = {
 	// description: what gets displayed in the Editor description.
 	description: L('ab.dataField.date.description', '*Pick one from a calendar.'),
 
+	supportRequire: true,
+
 }
 
 var defaultValues = {
 	includeTime: 0,
 	defaultCurrentDate: 0,
-	defaultDate: "",
+	default: "",
 	dayFormat: "%d",
 	dayOrder: 1,
 	dayDelimiter: "slash",
@@ -55,7 +57,7 @@ var defaultValues = {
 }
 
 var ids = {
-	defaultDate: 'ab-date-default',
+	default: 'ab-date-default',
 	currentToDefault: 'ab-date-current-to-default',
 
 	dateDisplay: 'ab-date-display',
@@ -212,12 +214,12 @@ var ABFieldDateComponent = new ABFieldComponent({
 						webix.ui({
 							view: 'datepicker',
 							label: "Default",
-							name: 'defaultDate',
-							id: ids.defaultDate,
+							name: 'default',
+							id: ids.default,
 							timepicker: newVal ? true : false,
-							required: $$(ids.defaultDate).config.required == true,
+							required: $$(ids.default).config.required == true,
 							disabled: $$(ids.currentToDefault).getValue() == true
-						}, $$(ids.defaultDate));
+						}, $$(ids.default));
 
 						dateDisplayRefresh();
 
@@ -237,19 +239,19 @@ var ABFieldDateComponent = new ABFieldComponent({
 				on: {
 					onChange: (newVal, oldVal) => {
 						if (newVal) {
-							$$(ids.defaultDate).disable();
+							$$(ids.default).disable();
 						}
 						else {
-							$$(ids.defaultDate).enable();
+							$$(ids.default).enable();
 						}
 					}
 				}
 			},
 			{
 				view: 'datepicker',
-				id: ids.defaultDate,
+				id: ids.default,
 				label: "Default",
-				name: 'defaultDate',
+				name: 'default',
 				timepicker: false
 			},
 			{
@@ -737,8 +739,8 @@ var ABFieldDateComponent = new ABFieldComponent({
 		requiredOnChange: (newVal, oldVal, ids) => {
 
 			// when require value, then default value needs to be reqired
-			$$(ids.defaultDate).define("required", newVal);
-			$$(ids.defaultDate).refresh();
+			$$(ids.default).define("required", newVal);
+			$$(ids.default).refresh();
 
 		},
 
@@ -894,8 +896,8 @@ class ABFieldDate extends ABField {
 				values[this.columnName] = (new Date()).toISOString();
 			}
 			// Specfic default date
-			else if (this.settings.defaultDate) {
-				values[this.columnName] = (new Date(this.settings.defaultDate)).toISOString();
+			else if (this.settings.default) {
+				values[this.columnName] = (new Date(this.settings.default)).toISOString();
 			}
 
 		}

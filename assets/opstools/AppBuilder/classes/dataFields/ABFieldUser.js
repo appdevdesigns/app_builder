@@ -35,7 +35,9 @@ var ABFieldUserDefaults = {
 		} else {
 			return true;
 		}
-	}
+	},
+
+	supportRequire: false
 
 }
 

@@ -46,14 +46,14 @@ class ABFieldLongText extends ABField {
     	/*
     	{
 			settings: {
-				textDefault: 'string',
+				default: 'string',
 				supportMultilingual: 1/0
 			}
     	}
     	*/
 
     	// we're responsible for setting up our specific settings:
-    	this.settings.textDefault = values.settings.textDefault || '';
+    	this.settings.default = values.settings.default || '';
     	this.settings.supportMultilingual = values.settings.supportMultilingual+"" || "1";
 
     	// text to Int:
@@ -184,7 +184,7 @@ class ABFieldLongText extends ABField {
 					.then((exists) => {
 						knex.schema.table(tableName, (t) => {
 							var currCol = t.text(this.columnName, 'longtext')
-							.defaultTo(this.settings.textDefault);
+							.defaultTo(this.settings.default);
 
 							// alter default value of column
 							if (exists) currCol.alter();

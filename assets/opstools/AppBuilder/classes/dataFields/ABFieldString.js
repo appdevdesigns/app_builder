@@ -24,13 +24,15 @@ var ABFieldStringDefaults = {
 	menuName : L('ab.dataField.string.menuName', '*Single line text'),
 
 	// description: what gets displayed in the Editor description.
-	description: L('ab.dataField.string.description', '*short string value')
+	description: L('ab.dataField.string.description', '*short string value'),
+
+	supportRequire: true
 
 }
 
 
 var defaultValues = {
-	textDefault: '',
+	default: '',
 	supportMultilingual: 0
 };
 
@@ -50,15 +52,15 @@ var ABFieldStringComponent = new ABFieldComponent({
 	elements:function(App, field) {
 
 		var ids = {
-			textDefault: ''
+			default: ''
 		}
 		ids = field.idsUnique(ids, App);
 		
 		return [
 			{
 				view: "text",
-				id: ids.textDefault,
-				name:'textDefault',
+				id: ids.default,
+				name:'default',
 				labelWidth: App.config.labelWidthXLarge,
 				label: L('ab.dataField.string.defaultLabel', '*Default'),
 				placeholder: L('ab.dataField.string.default', '*Enter default value')
@@ -80,7 +82,7 @@ var ABFieldStringComponent = new ABFieldComponent({
 	// rules: basic form validation rules for webix form entry.
 	// the keys must match a .name of your .elements for it to apply
 	rules:{
-		// 'textDefault':webix.rules.isNotEmpty,
+		// 'default':webix.rules.isNotEmpty,
 		// 'supportMultilingual':webix.rules.isNotEmpty
 	},
 
@@ -125,8 +127,8 @@ var ABFieldStringComponent = new ABFieldComponent({
 		requiredOnChange: (newVal, oldVal, ids) => {
 
 			// when require value, then default value needs to be reqired
-			$$(ids.textDefault).define("required", newVal);
-			$$(ids.textDefault).refresh();
+			$$(ids.default).define("required", newVal);
+			$$(ids.default).refresh();
 
 		},
 
@@ -155,14 +157,14 @@ class ABFieldString extends ABField {
     	/*
     	{
 			settings: {
-				textDefault: 'string',
+				default: 'string',
 				supportMultilingual: 1/0
 			}
     	}
     	*/
 
     	// we're responsible for setting up our specific settings:
-    	this.settings.textDefault = values.settings.textDefault || '';
+    	this.settings.default = values.settings.default || '';
     	this.settings.supportMultilingual = values.settings.supportMultilingual+"" || "0";
 
     	// text to Int:
@@ -259,8 +261,8 @@ class ABFieldString extends ABField {
 		if (!values[this.columnName]) {
 
 			// Set default string
-			if (this.settings.textDefault) {
-				values[this.columnName] = this.settings.textDefault;
+			if (this.settings.default) {
+				values[this.columnName] = this.settings.default;
 			}
 
 		}

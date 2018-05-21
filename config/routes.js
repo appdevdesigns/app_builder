@@ -111,7 +111,10 @@ module.exports = {
 
     'put /app_builder/model/application/:appID/refreshobject/:objID' : 
         'app_builder/ABModelController.refresh',
-        
+
+    'get /app_builder/model/application/:appID/count/:objID' : 
+        'app_builder/ABModelController.count',
+
 
     /* Import External models */
     'get /app_builder/external/connections' : 

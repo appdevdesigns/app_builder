@@ -27,7 +27,9 @@ var ABFieldFileDefaults = {
 
 	isSortable: false,
 	isFilterable: false,
-	useAsLabel: false
+	useAsLabel: false,
+
+	supportRequire: false
 
 }
 

@@ -26,7 +26,9 @@ var ABFieldTreeDefaults = {
   description: L('ab.dataField.tree.description', '*Data tree allows you to build a hierarchical set of selectable data. (ex: Categories and sub-categories)'),
   isSortable: false,
   isFilterable: false,
-  useAsLabel: false
+  useAsLabel: false,
+
+  supportRequire: false
 };
 
 var defaultValues = {
@@ -113,7 +115,7 @@ var ABFieldTreeComponent = new ABFieldComponent({
         }
       },
       {
-        id: idTree,
+        // id: idTree,
         view: "tree",
         css: "ab-data-tree",
         template: function(obj, common) {

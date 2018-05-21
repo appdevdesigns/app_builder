@@ -32,7 +32,9 @@ var ABFieldConnectDefaults = {
 	useAsLabel: false,
 
 	// supportImport: flag to support import object across applications
-	supportImport: false
+	supportImport: false,
+
+	supportRequire: false
 
 };
 

@@ -154,6 +154,16 @@ module.exports = class ABFieldBase {
 		return 1;
 	}
 
+	fieldSupportRequire() {
+
+		if (this.defaults.supportRequire)
+			return this.defaults.supportRequire;
+		// default
+		else 
+			return true;
+
+	}
+
 
 
 	///

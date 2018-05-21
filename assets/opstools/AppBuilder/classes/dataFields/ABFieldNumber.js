@@ -23,7 +23,9 @@ var ABFieldNumberDefaults = {
 	menuName: L('ab.dataField.number.menuName', '*Number'),
 
 	// description: what gets displayed in the Editor description.
-	description: L('ab.dataField.number.description', '*A Float or Integer Value')
+	description: L('ab.dataField.number.description', '*A Float or Integer Value'),
+
+	supportRequire: true
 
 }
 
@@ -47,7 +49,7 @@ var delimiterList = [
 
 var defaultValues = {
 	// 'allowRequired': 0,
-	'numberDefault': '',
+	'default': '',
 	'typeFormat': 'none',
 	'typeDecimals': 'none',
 	'typeDecimalPlaces': 'none',
@@ -87,7 +89,7 @@ var ABFieldNumberComponent = new ABFieldComponent({
 
 		var ids = {
 			// allowRequired: '',
-			numberDefault: '',
+			default: '',
 			typeDecimalPlaces: '',
 			typeRounding: '',
 			validate: '',
@@ -113,8 +115,8 @@ var ABFieldNumberComponent = new ABFieldComponent({
 			// 	on: {
 			// 		onChange: (newVal, oldVal) => {
 			// 			// when require number, then should have default value
-			// 			if (newVal && !$$(ids.numberDefault).getValue()) {
-			// 				$$(ids.numberDefault).setValue('0');
+			// 			if (newVal && !$$(ids.default).getValue()) {
+			// 				$$(ids.default).setValue('0');
 			// 			}
 			// 		}
 			// 	}
@@ -123,14 +125,14 @@ var ABFieldNumberComponent = new ABFieldComponent({
 				view: "text",
 				label: L("ab.dataField.number.defaultValue", "*Default Value"),
 				labelWidth: App.config.labelWidthXLarge,
-				id: ids.numberDefault,
-				name: "numberDefault",
+				id: ids.default,
+				name: "default",
 				placeholder: L('ab.dataField.number.defaultNumber', '*Default number'),
 				on: {
 					onChange: function (newVal, oldVal) {
 						// Validate number
 						if (!new RegExp('^[0-9.]*$').test(newVal)) {
-							// $$(componentIds.numberDefault).setValue(oldVal);
+							// $$(componentIds.default).setValue(oldVal);
 							this.setValue(oldVal);
 						}
 						// when require number, then should have default value
@@ -358,8 +360,8 @@ var ABFieldNumberComponent = new ABFieldComponent({
 		requiredOnChange: (newVal, oldVal, ids) => {
 
 			// when require number, then default value needs to be reqired
-			$$(ids.numberDefault).define("required", newVal);
-			$$(ids.numberDefault).refresh();
+			$$(ids.default).define("required", newVal);
+			$$(ids.default).refresh();
 
 		},
 
@@ -398,7 +400,7 @@ class ABFieldNumber extends ABField {
     	{
 			settings: {
 				'allowRequired':0,
-				'numberDefault':null,
+				'default':null,
 				'typeFormat': 'none',
 				'typeDecimals': 'none',
 				'typeDecimalPlaces': 'none',
@@ -516,8 +518,8 @@ class ABFieldNumber extends ABField {
 	defaultValue(values) {
 
 		// if no default value is set, then don't insert a value.
-		if (this.settings.numberDefault != '') {
-			values[this.columnName] = this.settings.numberDefault;
+		if (this.settings.default != '') {
+			values[this.columnName] = this.settings.default;
 		}
 	}
 

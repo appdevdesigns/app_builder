@@ -62,6 +62,8 @@ export default class ABField extends ABFieldBase {
 
   	static clearEditor( ids) {
 
+		this._CurrentField = null;
+
   		var defaultValues = {
   			label: '',
   			columnName:'',
@@ -73,10 +75,23 @@ export default class ABField extends ABFieldBase {
 			var component = $$(ids[f]);
 			component.setValue(defaultValues[f]);
 		}
+
+		// hide warning message of null data
+		$$(ids.numberOfNull).hide();
+
   	}
 
-
+	/**
+	* @function editorPopulate
+	*
+	* populate the form with the given ABField instance provided.
+	*
+	* @param {object} ids
+	* @param {ABField} field
+	*/
   	static editorPopulate( ids, field ) {
+
+		this._CurrentField = field;
 
   		$$(ids.label).setValue(field.label);
   		$$(ids.columnName).setValue(field.columnName);
@@ -129,6 +144,7 @@ export default class ABField extends ABFieldBase {
 		}
 		
 		var requiredOnChange = function (newVal, oldVal, ids) {
+
 			console.warn('Field has not implemented .requiredOnChange() is that okay?');
 		}
 		
@@ -136,6 +152,57 @@ export default class ABField extends ABFieldBase {
 		if (_logic.requiredOnChange) {
 			requiredOnChange = _logic.requiredOnChange;
 		}
+
+
+		var getNumberOfNullValue = (isRequired) => {
+
+			if (isRequired &&
+				this._CurrentField && 
+				this._CurrentField.id &&
+				this._CurrentField.settings.required != isRequired) {
+
+				// TODO: disable save button
+
+				// get count number
+				this._CurrentField.object.model().count({
+					where: {
+						glue: 'and',
+						rules: [
+							{
+								key: this._CurrentField.id,
+								rule: 'is_null'
+							}
+						]
+					}
+				})
+				.then((data) => {
+
+					if (data.count > 0) {
+
+						var messageTemplate = "** There are #count# rows that will be updated to default value"; 
+
+						$$(ids.numberOfNull).setValue(messageTemplate.replace('#count#', data.count));
+						$$(ids.numberOfNull).show();
+					}
+					else {
+						$$(ids.numberOfNull).hide();
+					}
+
+					// TODO: enable save button
+
+				})
+				.catch(err => {
+
+					// TODO: enable save button
+
+				});
+
+			}
+			else {
+				$$(ids.numberOfNull).hide();
+			}
+
+		};
 
 
   		var _ui = {
@@ -186,14 +253,27 @@ export default class ABField extends ABFieldBase {
 					view: "checkbox",
 					id: ids.required,
 					name: "required",
+					hidden: !Field.supportRequire,
 					labelRight: App.labels.dataFieldRequired,
 					// disallowEdit: true,
 					labelWidth: App.config.labelWidthCheckbox,
 					on: {
 						onChange: (newVal, oldVal) => {
 							requiredOnChange(newVal, oldVal, ids);
+
+							// If check require on edit field, then show warning message
+							getNumberOfNullValue(newVal);
 						}
 					}
+				},
+
+				// warning message: number of null value rows 
+				{
+					view: "label",
+					id: ids.numberOfNull,
+					css: { color: '#f00' },
+					label: "",
+					hidden: true
 				}
 			]
 		};
@@ -326,25 +406,85 @@ export default class ABField extends ABFieldBase {
 					this.id = OP.Util.uuid();	// setup default .id
 				}
 
+				Promise.resolve()
+					.then(() => {
 
-				this.object.fieldSave(this)
-				.then(() => {
+						// update null data to default
+						return new Promise((next, error) => {
 
-					// not .migrateCreate, we have to wait until the link column will finish
-					if (this.key == "connectObject")
-						return resolve(this);;
+							if (isAdd || !this.settings.required || !this.settings.default)
+								return next();
 
-					var fnMigrate = isAdd ? this.migrateCreate() : this.migrateUpdate();
-					fnMigrate
-					.then(()=>{
+							var model = this.object.model();
+
+							// pull rows that has null value
+							model.findAll({
+								where: {
+									glue: 'and',
+									rules: [
+										{
+											key: this.id,
+											rule: 'is_null'
+										}
+									]
+								}
+							})
+							.then(result => {
+
+								var tasks = [];
+
+								// updating ...
+								result.data.forEach((d) => {
+
+									if (!d[this.columnName])
+										d[this.columnName] = this.settings.default;
+
+									tasks.push(model.update(d.id, d));
+
+								});
+
+								Promise.all(tasks)
+										.then(next)
+										.catch(error);
+
+							})
+							.catch(error);
+
+
+						});
+
+					})
+					.then(() => {
+
+						// save field
+						return new Promise((next, error) => {
+
+							this.object.fieldSave(this)
+							.then(() => {
+			
+								// not .migrateCreate, we have to wait until the link column will finish
+								if (this.key == "connectObject")
+									return next();
+			
+								var fnMigrate = isAdd ? this.migrateCreate() : this.migrateUpdate();
+								fnMigrate
+								.then(()=>{
+									next();
+								})
+								.catch(error);
+			
+							})
+							.catch(error);
+
+						});
+
+					})
+					.then(() => {
 						resolve(this);
 					})
 					.catch(reject);
 
-				})
-				.catch(function(err){
-					reject(err);
-				})
+
 			}
 		)
 	}

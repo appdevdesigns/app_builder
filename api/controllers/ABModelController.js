@@ -1068,6 +1068,30 @@ module.exports = {
 
             });
 
+    },
+
+
+    count: function (req, res) {
+
+        AppBuilder.routes.verifyAndReturnObject(req, res)
+            .then(function (object) {
+
+                var where = req.param('where');
+
+                // promise for the total count. this was moved below the filters because webix will get caught in an infinte loop of queries if you don't pass the right count
+                object
+                    .queryCount({ where: where, includeRelativeData: false }, req.user.data)
+                    .first()
+                    .catch(res.AD.error)
+                    .then(result => {
+
+                        res.AD.success(result);
+
+                    });
+
+
+            });
+
     }
 
 

@@ -43,7 +43,9 @@ var ABFieldListDefaults = {
 		} else {
 			return false;
 		}
-	}
+	},
+
+	supportRequire: true
 
 };
 
@@ -57,14 +59,14 @@ var defaultValues = {
 	isMultiple: 0,
 	hasColors: 0,
 	options: [],
-	singleDefault: 'none',
+	default: 'none',
 	multipleDefault: []
 };
 
 var ids = {
 	isMultiple: 'ab-list-multiple-option',
 	hasColors: 'ab-list-colors-option',
-	singleDefault: 'ab-list-single-default',
+	default: 'ab-list-single-default',
 	multipleDefault: 'ab-list-multiple-default',
 	options: 'ab-list-option',
 	colorboard: 'ab-colorboard'
@@ -149,12 +151,12 @@ function updateDefaultList(ids, settings = {}) {
 	})
 
 	// Single default selector
-	$$(ids.singleDefault).define('options', optList);
-	if (settings.singleDefault)
-		$$(ids.singleDefault).setValue(settings.singleDefault);
+	$$(ids.default).define('options', optList);
+	if (settings.default)
+		$$(ids.default).setValue(settings.default);
 
 
-	$$(ids.singleDefault).refresh();
+	$$(ids.default).refresh();
 }
 
 /**
@@ -182,11 +184,11 @@ var ABFieldListComponent = new ABFieldComponent({
 				on: {
 					onChange: (newV, oldV) => {
 						if (newV == true) {
-							$$(ids.singleDefault).hide();
+							$$(ids.default).hide();
 							$$(ids.multipleDefault).show();
 						}
 						else {
-							$$(ids.singleDefault).show();
+							$$(ids.default).show();
 							$$(ids.multipleDefault).hide();
 						}
 
@@ -296,9 +298,9 @@ var ABFieldListComponent = new ABFieldComponent({
 				}
 			},
 			{
-				id: ids.singleDefault,
+				id: ids.default,
 				placeholder: L('ab.dataField.list.selectDefault', "*Select Default"),
-				name: "singleDefault",
+				name: "default",
 				view: 'richselect',
 				label: 'Default'
 			},
@@ -343,8 +345,8 @@ var ABFieldListComponent = new ABFieldComponent({
 			$$(ids.hasColors).setValue(0);
 			$$(ids.options).clearAll();
 
-			$$(ids.singleDefault).define('options', []);
-			$$(ids.singleDefault).setValue(defaultValues.singleDefault);
+			$$(ids.default).define('options', []);
+			$$(ids.default).setValue(defaultValues.default);
 
 			var domNode = $$(ids.multipleDefault).$view.querySelector('.list-data-values');
 			if (domNode && domNode.selectivity) {
@@ -393,8 +395,8 @@ var ABFieldListComponent = new ABFieldComponent({
 		requiredOnChange: (newVal, oldVal, ids) => {
 			
 			// when require number, then default value needs to be reqired
-			$$(ids.singleDefault).define("required", newVal);
-			$$(ids.singleDefault).refresh();
+			$$(ids.default).define("required", newVal);
+			$$(ids.default).refresh();
 
 			if ($$(ids.multipleDefault).$view.querySelector(".webix_inp_label")) {
 				if (newVal) {
@@ -889,8 +891,8 @@ class ABFieldList extends ABFieldSelectivity {
 			values[this.columnName] = this.settings.multipleDefault || [];
 		}
 		// Single select list
-		else if (this.settings.singleDefault && this.settings.singleDefault != '') {
-			values[this.columnName] = this.settings.singleDefault;
+		else if (this.settings.default && this.settings.default != '') {
+			values[this.columnName] = this.settings.default;
 		}
 	}
 

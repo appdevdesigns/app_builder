@@ -48,7 +48,7 @@ var formatList = [
 
 var defaultValues = {
 	// 'allowRequired': 0,
-	'numberDefault': '',
+	'default': '',
 	'typeFormat': 'none',
 	'typeDecimals': 'none',
 	'typeDecimalPlaces': 'none',
@@ -69,7 +69,7 @@ class ABFieldNumber extends ABField {
     	{
 			settings: {
 				'allowRequired':0,
-				'numberDefault':null,
+				'default':null,
 				'typeFormat': 'none',
 				'typeDecimals': 'none',
 				'typeDecimalPlaces': 'none',
@@ -156,7 +156,7 @@ class ABFieldNumber extends ABField {
 			(resolve, reject) => {
 
 				var tableName = this.object.dbTableName();
-				var defaultTo = parseInt(this.settings.numberDefault);
+				var defaultTo = parseInt(this.settings.default);
 
 
 				// if this column doesn't already exist (you never know)
