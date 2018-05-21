@@ -142,7 +142,7 @@ module.exports = {
 	 * 				tableName {string}, ..., tableNameN {string}
 	 * 			]
 	 */
-	getTableList: (appID, connName) => {
+	getTableList: (appID, connName='appBuilder') => {
 
 		var allTableNames = [],
 			existsTableNames = [];
@@ -157,7 +157,7 @@ module.exports = {
 					if (connection && connection.database)
 						resolve(connection.database);
 					else 
-						reject("Could not found this DB connection");
+						reject(`Could not find DB connection: '${connName}'`);
 
 				});
 
@@ -192,34 +192,46 @@ module.exports = {
 						});
 				});
 			})
-			// .then(function () {
-			// 	// Get tables in HRIS DB
-			// 	return new Promise((resolve, reject) => {
-
-			// 		var knex = ABMigration.connection('legacy_hris');
-
-			// 		// SELECT `TABLE_NAME` 
-			// 		// FROM information_schema.tables 
-			// 		// WHERE `TABLE_TYPE` = 'BASE TABLE' 
-			// 		// AND `TABLE_SCHEMA` = [CURRENT DB]
-			// 		// AND `TABLE_NAME`   NOT LIKE 'AB_%'
-			// 		// AND `TABLE_NAME`   NOT LIKE '%_trans';
-			// 		knex.select('TABLE_NAME')
-			// 			.from('information_schema.tables')
-			// 			.where('TABLE_TYPE', '=', 'BASE TABLE')
-			// 			.andWhere('TABLE_SCHEMA', '=', sails.config.connections.legacy_hris.database)
-			// 			.andWhere('TABLE_NAME', 'NOT LIKE', 'AB_%')
-			// 			.andWhere('TABLE_NAME', 'NOT LIKE', '%_trans')
-			// 			.catch(reject)
-			// 			.then(function (result) {
-			// 				result.forEach((r) => {
-			// 					allTableNames.push({ name: r.TABLE_NAME, connection: 'legacy_hris'});
-			// 				});
-
-			// 				resolve();
-			// 			});
-			// 	});
-			// })
+			.then(function () {
+				// Get tables in HRIS DB
+			 	return new Promise((resolve, reject) => {
+				
+					var knex;
+					try {
+						knex = ABMigration.connection('legacy_hris');
+					} catch (err) {
+						knex = null;
+					}
+					
+					if (!knex) {
+						// No legacy_hris connection. Skip.
+						resolve();
+					}
+					else {
+	
+						// SELECT `TABLE_NAME` 
+						// FROM information_schema.tables 
+						// WHERE `TABLE_TYPE` = 'BASE TABLE' 
+						// AND `TABLE_SCHEMA` = [CURRENT DB]
+						// AND `TABLE_NAME`	 NOT LIKE 'AB_%'
+						// AND `TABLE_NAME`	 NOT LIKE '%_trans';
+						knex.select('TABLE_NAME')
+							.from('information_schema.tables')
+							.where('TABLE_TYPE', '=', 'BASE TABLE')
+							.andWhere('TABLE_SCHEMA', '=', sails.config.connections.legacy_hris.database)
+							.andWhere('TABLE_NAME', 'NOT LIKE', 'AB_%')
+							.andWhere('TABLE_NAME', 'NOT LIKE', '%_trans')
+							.catch(reject)
+							.then(function (result) {
+								result.forEach((r) => {
+									allTableNames.push({ name: r.TABLE_NAME, connection: 'legacy_hris'});
+								});
+		
+								resolve();
+							});
+					}
+				});
+			})
 			.then(function () {
 
 				return new Promise((resolve, reject) => {
@@ -300,7 +312,7 @@ module.exports = {
 	 * 							}
 	 * 			}
 	 */
-	getColumns: (tableName, connName) => {
+	getColumns: (tableName, connName='appBuilder') => {
 
 		var knex = ABMigration.connection(connName);
 		var transTableName = getTransTableName(tableName);
@@ -488,7 +500,7 @@ module.exports = {
 	 * @return Promise
 	 *		Resolves with the data of the new imported object
 	 **/
-	tableToObject: function (appID, tableName, columnList, connName) {
+	tableToObject: function (appID, tableName, columnList, connName='appBuilder') {
 
 		let knex = ABMigration.connection(connName),
 			application,
