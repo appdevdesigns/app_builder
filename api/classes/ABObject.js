@@ -111,13 +111,22 @@ module.exports = class ABObject extends ABObjectBase {
 	/// Migration Services
 	///
 
-	dbTableName() {
-		if (this.isImported || this.isExternal) {
+	dbSchemaName() {
+
+		return sails.config.connections[this.connName || "appBuilder"].database;
+
+	}
+
+	dbTableName(prefixSchema = false) {
+
+		var tableName = "";
+
+		if (this.isImported) {
 			// NOTE: store table name of import object to ignore async
-			return this.tableName;
+			tableName = this.tableName;
 		}
 		else {
-			return AppBuilder.rules.toObjectNameFormat(this.application.dbApplicationName(), this.name);
+			tableName =  AppBuilder.rules.toObjectNameFormat(this.application.dbApplicationName(), this.name);
 			// var modelName = this.name.toLowerCase();
 			// if (!sails.models[modelName]) {
 			// 	throw new Error(`Imported object model not found: ${modelName}`);
@@ -125,6 +134,19 @@ module.exports = class ABObject extends ABObjectBase {
 			// else {
 			// 	return sails.models[modelName].waterline.schema[modelName].tableName;
 			// }
+		}
+
+		if (prefixSchema) {
+
+			// pull database name
+			var schemaName = this.dbSchemaName();
+
+			return "#schema#.#table#"
+					.replace("#schema#", schemaName)
+					.replace("#table#", tableName);
+		}
+		else {
+			return tableName;
 		}
 	}
 
@@ -201,7 +223,7 @@ module.exports = class ABObject extends ABObjectBase {
 			(resolve, reject) => {
 				sails.log.silly('.... .migrateDropTable()  before knex:');
 				
-				if (this.isImported || this.isExternal) {
+				if (this.isImported) {
 					sails.log.silly('.... aborted drop of imported table');
 					resolve();
 					return;
@@ -253,7 +275,7 @@ module.exports = class ABObject extends ABObjectBase {
 	 */
 	model() {
 
-		var tableName = this.dbTableName();
+		var tableName = this.dbTableName(true);
 
 		if (!__ModelPool[tableName]) {
 			var knex = ABMigration.connection(this.connName || undefined);
@@ -309,50 +331,6 @@ module.exports = class ABObject extends ABObjectBase {
 				// Compile our relations from our DataFields
 				var relationMappings = {};
 
-				// Add a translation relation of the external table
-				if (currObject.isExternal && currObject.transColumnName) {
-
-					var transJsonSchema = {
-						language_code: { type: 'string' }
-					};
-
-					// Populate fields of the trans table
-					var multilingualFields = currObject.fields(f => f.settings.supportMultilingual == 1);
-					multilingualFields.forEach(f => {
-						f.jsonSchemaProperties(transJsonSchema);
-					});
-
-					class TransModel extends Model {
-
-						// Table name is the only required property.
-						static get tableName() {
-							return tableName + '_trans';
-						}
-
-						static get jsonSchema () {
-							return {
-								type: 'object',
-								properties: transJsonSchema
-							};
-						}
-
-					};
-
-					relationMappings['translations'] = {
-						relation: Model.HasManyRelation,
-						modelClass: TransModel,
-						join: {
-							from: '{targetTable}.{primaryField}'
-								.replace('{targetTable}', tableName)
-								.replace('{primaryField}', currObject.PK()),
-							to: '{sourceTable}.{field}'
-								.replace('{sourceTable}', TransModel.tableName)
-								.replace('{field}', currObject.transColumnName)
-						}
-					}
-				}
-
-
 				var connectFields = currObject.connectFields();
 
 				// linkObject: '', // ABObject.id
@@ -381,13 +359,13 @@ module.exports = class ABObject extends ABObjectBase {
 
 						if (f.settings.isSource == true) {
 							sourceTable = tableName;
-							targetTable = linkObject.dbTableName();
+							targetTable = linkObject.dbTableName(true);
 							targetPkName = linkObject.PK();
 							relation = Model.BelongsToOneRelation;
 							columnName = f.columnName;
 						}
 						else {
-							sourceTable = linkObject.dbTableName();
+							sourceTable = linkObject.dbTableName(true);
 							targetTable = tableName;
 							targetPkName = currObject.PK();
 							relation = Model.HasOneRelation;
@@ -419,15 +397,15 @@ module.exports = class ABObject extends ABObjectBase {
 							targetPkName;
 
 						if (f.settings.isSource == true) {
-							sourceTableName = f.object.dbTableName();
+							sourceTableName = f.object.dbTableName(true);
 							sourcePkName = f.object.PK();
-							targetTableName = linkObject.dbTableName();
+							targetTableName = linkObject.dbTableName(true);
 							targetPkName = linkObject.PK();
 						}
 						else {
-							sourceTableName = linkObject.dbTableName();
+							sourceTableName = linkObject.dbTableName(true);
 							sourcePkName = linkObject.PK();
-							targetTableName = f.object.dbTableName();
+							targetTableName = f.object.dbTableName(true);
 							targetPkName = f.object.PK();
 						}
 
@@ -468,7 +446,7 @@ module.exports = class ABObject extends ABObjectBase {
 									.replace('{field}', f.columnName),
 
 								to: '{targetTable}.{primaryField}'
-									.replace('{targetTable}', linkObject.dbTableName())
+									.replace('{targetTable}', linkObject.dbTableName(true))
 									.replace('{primaryField}', linkObject.PK())
 							}
 						};
@@ -484,7 +462,7 @@ module.exports = class ABObject extends ABObjectBase {
 									.replace('{primaryField}', currObject.PK()),
 
 								to: '{targetTable}.{field}'
-									.replace('{targetTable}', linkObject.dbTableName())
+									.replace('{targetTable}', linkObject.dbTableName(true))
 									.replace('{field}', linkField.columnName)
 							}
 						};

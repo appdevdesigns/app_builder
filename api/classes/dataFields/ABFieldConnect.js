@@ -222,7 +222,8 @@ class ABFieldConnect extends ABField {
 
 				// find linked object
 				var linkObject = this.datasourceLink,
-					linkTableName = linkObject.dbTableName(),
+					linkTableName = linkObject.dbTableName(true),
+					linkPK = linkObject.PK(),
 					// TODO : should check duplicate column
 					linkColumnName = this.object.name;
 
@@ -246,7 +247,9 @@ class ABFieldConnect extends ABField {
 							knex.schema.table(tableName, (t) => {
 
 								t.integer(this.columnName).unsigned().nullable()
-									.references(linkObject.PK()).inTable(linkTableName).onDelete('cascade');
+									.references(linkPK)
+									.inTable(linkTableName)
+									.onDelete('cascade');
 
 							})
 								.then(() => { next(); })
@@ -282,7 +285,9 @@ class ABFieldConnect extends ABField {
 								knex.schema.table(tableName, (t) => {
 	
 									t.integer(this.columnName).unsigned().nullable()
-										.references(linkObject.PK()).inTable(linkTableName).onDelete('cascade');
+										.references(linkPK)
+										.inTable(linkTableName)
+										.onDelete('cascade');
 
 									t.unique(this.columnName);
 	
@@ -317,9 +322,14 @@ class ABFieldConnect extends ABField {
 
 							knex.schema.table(linkTableName, (t) => {
 
-								t.integer(linkColumnName).unsigned().nullable()
-									.references(this.object.PK()).inTable(tableName).onDelete('cascade');
-							})
+								t.integer(linkColumnName)
+									.unsigned()
+									.nullable()
+									.references(this.object.PK())
+									.inTable(tableName)
+									.onDelete('cascade');
+
+								})
 								.then(() => { next(); })
 								.catch(next);
 						}
@@ -366,10 +376,29 @@ class ABFieldConnect extends ABField {
 
 								// create columns
 								t.integer(this.object.name).unsigned().nullable()
-									.references(this.object.PK()).inTable(tableName).withKeyName(sourceFkName).onDelete('cascade');
+									.references(this.object.PK())
+									.inTable(tableName)
+									.withKeyName(sourceFkName)
+									.onDelete('cascade');
 
 								t.integer(linkObject.name).unsigned().nullable()
-									.references(linkObject.PK()).inTable(linkTableName).withKeyName(targetFkName).onDelete('cascade');
+									.references(linkPK)
+									.inTable(linkTableName)
+									.withKeyName(targetFkName)
+									.onDelete('cascade');
+
+								// // create columns
+								// t.integer(this.object.name).unsigned().nullable()
+								// 	.references(this.object.PK())
+								// 	.inTable(tableName)
+								// 	.withKeyName(sourceFkName)
+								// 	.onDelete('cascade');
+
+								// t.integer(linkObject.name).unsigned().nullable()
+								// 	.references(linkObject.PK())
+								// 	.inTable(linkTableName)
+								// 	.withKeyName(targetFkName)
+								// 	.onDelete('cascade');
 							})
 								.then(() => { resolve(); })
 								.catch(reject);
