@@ -299,6 +299,30 @@ export default class ABApplication extends ABApplicationBase {
 	}
 
 
+	/// ABApplication info methods
+
+	/**
+	 * @method updateInfo()
+	 *
+	 * Update label/description of ABApplication
+	 *
+	 * @param {array} translations	an array of translations
+	 *
+	 * @return {Promise}
+	 */
+	updateInfo () {
+
+		var values = this.toObj();
+		values.json = values.json || {};
+		values.json.translations = values.json.translations || [];
+
+		return OP.Comm.Service.put({
+			url: '/app_builder/application/' + this.id + '/info',
+			data: {
+				translations: values.json.translations
+			}
+		});
+	}
 
 	/// ABApplication Permission methods
 

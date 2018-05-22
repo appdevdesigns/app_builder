@@ -8,6 +8,10 @@
 
 module.exports = {
 
+    /* Application Info */
+    'put /app_builder/application/:appID/info':
+        'app_builder/ABApplicationController.applicationSave',
+
     /* Application Objects */
     'put /app_builder/application/:appID/object':
         'app_builder/ABApplicationController.objectSave',

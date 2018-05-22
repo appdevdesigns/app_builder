@@ -298,11 +298,22 @@ export default class ABChoose extends OP.Component {  // .extend(idBase, functio
 						else
 							Application.role = null;
 
-						Application.save()
-							.then(function () {
-								next();
-							})
-							.catch(next)
+						// Update label / description
+						if (Application.id) {
+							Application.updateInfo()
+								.then(function () {
+									next();
+								})
+								.catch(next)
+						}
+						// Create new
+						else {
+							Application.save()
+								.then(function () {
+									next();
+								})
+								.catch(next)
+						}
 
 					}
 				], function (err) {

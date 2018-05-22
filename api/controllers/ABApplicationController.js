@@ -22,6 +22,41 @@ module.exports = {
         rest: true
     },
 
+    /* Application */
+
+    /**
+     * PUT /app_builder/application/:appID/info
+     * 
+     * Save info (name/description) of ABApplicaiton
+     * 
+     */
+    applicationSave: function(req, res) {
+        var appID = req.param('appID');
+        var appInfo = req.body.translations;
+
+        ABApplication.findOne({ id: appID })
+            .fail(res.AD.error)
+            .then(function (app) {
+
+                if (!app)
+                    return res.AD.error("Could not found this application");
+
+                app.json.translations = appInfo;
+
+                // save to database
+                app.save(function (err) {
+                    if (err)
+                        res.AD.error(true);
+                    else
+                        res.AD.success(true);
+                });
+                
+
+            });
+
+    },
+
+
     /* Objects */
 
     /**
