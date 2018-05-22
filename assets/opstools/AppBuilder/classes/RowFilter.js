@@ -320,7 +320,33 @@ export default class RowFilter extends OP.Component {
 										onChange: _logic.onChange
 									}
 								},
-
+								// Email
+								{
+									batch: "email",
+									view: "combo",
+									value: "contains",
+									options: [
+										{
+											value: labels.component.containsCondition,
+											id: "contains"
+										},
+										{
+											value: labels.component.notContainCondition,
+											id: "not_contains"
+										},
+										{
+											value: labels.component.isCondition,
+											id: "is"
+										},
+										{
+											value: labels.component.isNotCondition,
+											id: "not_equals"
+										}
+									],
+									on: {
+										onChange: _logic.onChange
+									}
+								},
 							]
 						},
 						// Value
@@ -388,6 +414,16 @@ export default class RowFilter extends OP.Component {
 								// String
 								{
 									batch: "string",
+									view: "text",
+									on: {
+										onTimedKeyPress: function () {
+											_logic.onChange();
+										}
+									}
+								},
+								// Email
+								{
+									batch: "email",
 									view: "text",
 									on: {
 										onTimedKeyPress: function () {
