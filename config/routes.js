@@ -155,6 +155,10 @@ module.exports = {
     'post /app_builder/QR/sendEmail':
         'app_builder/ABMobileQRController.sendEmail',
 
+
+    'get /app_builder/mobile/:mobileID/apk':
+        'app_builder/ABMobileQRController.sendAPK'
+
   /*
 
   '/': {

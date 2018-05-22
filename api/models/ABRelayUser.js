@@ -5,8 +5,9 @@
  *
  * The AppBuilder generates a RelayUser entry for a site user.
  * this ABRelayUser{.user, .publickey, .authToken } gets sent to the public server
- * A QRCode{ publicServerURL, applicationID, .user, .authToken } for an Application is sent to the site user's account
- * The mobile device contacts the public server, gets an initialization packet
+ * A QRCode{ codePushKeys, .authToken } for an Application is sent to the site user's account
+ * The mobile device updates it's code using the codePushKeys (new codebase defines publicServerURL, and AppID)
+ * The mobile device contacts the public server, gets an initialization packet (for a given AppID)
  * The mobile device uses this setup info to generate an AES key (encrypted in RSA)
  * The mobile device sends this response packet {.AES, .appid, user } back to the public server
  * the AppBuilder queries the PublicServer and receives the ResponsePacket{.AES, .appID, .user}

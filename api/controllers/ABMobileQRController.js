@@ -19,16 +19,115 @@
  *
  */
 
+var path = require('path');
+var fs   = require('fs');
+
 var async = require('async');
-var _ = require('lodash');
+var _     = require('lodash');
 
 var RP = require('request-promise-native');
-
 
 var QRCode = require('qrcode');
 
 
 module.exports = {
+
+
+	// GET: /app_builder/mobile/:mobileID/apk
+	// return the current APK for the specified Mobile App
+	// @param {string} version 	  which version of the App ('current' is default)
+	sendAPK: function (req, res) {
+
+		var mobileID = req.param('mobileID') || '--';
+		var version  = req.param('version')  || 'current';  // default
+
+		var missingParams = [];
+    	if (mobileID == '--') {
+			missingParams.push('mobileID');
+		}
+
+    	if (missingParams.length > 0) {
+    		var error = ADCore.error.fromKey('E_MISSINGPARAM');
+    		error.missingParams = missingParams;
+    		res.AD.error(error, 422);  // 422 for missing parameters ? (http://stackoverflow.com/questions/3050518/what-http-status-response-code-should-i-use-if-the-request-is-missing-a-required)
+    		return;
+    	}
+
+    	var MobileApp = null;	// which mobile app are we requesting an APK from
+    	var fileName  = null;   // the name of the file we are sending
+    	var destFile  = null; 	// the path to the file to send
+
+    	async.series([
+
+    		(next) => {
+
+	    		// get MobileApp
+				AppBuilder.mobileApps()
+				.then((listApps)=>{
+
+					var App = listApps.filter((a)=>{return a.id == mobileID; })[0];
+
+					if (!App) {
+						var error = new Error('Unknown Mobile App');
+						error.code = 403;
+						next(error);
+						return;
+					}
+
+					MobileApp = App;
+					next();
+
+				})
+				.catch(next);
+
+    		},
+
+
+    		(next) => {
+
+    			destFile = MobileApp.pathAPK(version);
+    			var parts = destFile.split(path.sep);
+    			fileName = parts.pop();
+
+    			fs.access(destFile, fs.constants.R_OK , function(err) {
+					if (err) {
+						var nError = new Error('cannot access file.');
+						nError.code = 500;
+						nError.error = err;
+						nError.destFile = destFile;
+sails.log.error(' cannot access file: '+destFile);
+						next(nError);
+					} else {
+						next();
+					}
+				});
+    		}
+
+
+
+    	],(err,data)=>{
+
+			if (err) {
+    			res.AD.error(err, err.code || 400);
+    		} else {
+
+				// Adding header so the client knows the file content type and the file name
+				res.setHeader('Content-disposition', 'attachment; filename=' + fileName);
+					
+				// stream file to response on success
+				fs.createReadStream(destFile)
+			    .on('error', function (err) {
+			      return res.AD.error(err, 500);
+			    })
+			    .pipe(res);
+    		}
+
+    	})
+
+
+	},
+
+
 
 	// POST: /app_builder/QR/sendEmail
 	// send a QR code to a specified Site User
@@ -43,6 +142,18 @@ module.exports = {
 
 		var QRAppUser = null;
 		var MobileApp = null;
+
+		var UserPublicToken = null;
+
+
+		// variables used in Email Sent:
+		var triggerID = null; 	// EmailNotifications trigger ID for the QR Code Email;
+		var deepLink  = null;	// base deeplink url
+		var apkURL = null;		// url to access the android version of the mobile app
+		var cidQR = 'qr-code-key';	// unique key to point to QR image in attachment
+		var attachments = [];
+    	
+
 
 		async.series([
 
@@ -76,40 +187,40 @@ module.exports = {
 //// NOTE: in usage, we don't use the QRToken in ABQRAppUser
 //// we might remove these next 2 steps in the future:
 
-			// find entry for ABQRAppUser
-			(next) => {
+// find entry for ABQRAppUser
+(next) => {
 
-				ABQRAppUser.find({
-					siteuser:user,
-					mobile:appID
-				})
-				.then((list)=>{
+	ABQRAppUser.find({
+		siteuser:user,
+		mobile:appID
+	})
+	.then((list)=>{
 
-					if (Array.isArray(list)) {
-						QRAppUser = list[0];
-					}
-					next();
-				})
-				.catch(next);
-			},
+		if (Array.isArray(list)) {
+			QRAppUser = list[0];
+		}
+		next();
+	})
+	.catch(next);
+},
 
-			// Create ABQRAppUser if it didn't exist:
-			(next) => {
+// Create ABQRAppUser if it didn't exist:
+(next) => {
 
-				// skip if it is there
-				if (QRAppUser) {
-					next();
-					return;
-				} 
+	// skip if it is there
+	if (QRAppUser) {
+		next();
+		return;
+	} 
 
-				ABQRAppUser.initializeAppUser(user, appID)
-				.then((abru)=>{
-					QRAppUser = abru;
-					next();
-				})
-				.catch(next);
+	ABQRAppUser.initializeAppUser(user, appID)
+	.then((abru)=>{
+		QRAppUser = abru;
+		next();
+	})
+	.catch(next);
 
-			},
+},
 
 
 			// Get the MobileApp object
@@ -135,41 +246,85 @@ module.exports = {
 			},
 
 
+			// Get the User's Public Auth Token:
+			(next) => {
+
+				ABRelayUser.findOne({siteuser_guid: user})
+				.then((ru)=>{
+					if (ru) {
+						UserPublicToken = ru.publicAuthToken;
+						next();
+						return;
+					}
+
+					// this is an error:
+					var error = new Error('Requested User not setup for Relay.');
+					next(error);
+				})
+				.catch(next);
+
+			},
+
+
+			// package together our Email Data
+			(next) => {
+
+
+				triggerID = MobileApp.emailInviteTrigger(); 	// EmailNotifications trigger ID for the QR Code Email;
+				deepLink  = sails.config.appbuilder.deeplink;	// base deeplink url
+				apkURL = MobileApp.urlAPK(); 					// url to access the android version of the mobile app
+				cidQR = 'qr-code-key';							// QR image attachment data
+				attachments = [];
+            	
+
+				var QRData = JSON.stringify({
+					userAuthToken: UserPublicToken,
+			        updateKeys: MobileApp.codePushKeys(),
+			    });
+
+
+			    // deepLink needs to include this data for the MobileApp 
+			    deepLink += "?settings=" + encodeURIComponent(QRData);
+
+
+				QRCode.toDataURL(QRData, (err, image) => {
+                    if (err) next(err);
+                    else {
+
+                        base64QR = image.substring(22);
+                        var qrcodeBuffer = Buffer.from(base64QR, 'base64');
+
+                        // add attachment
+                        attachments.push({
+			                filename: 'qrcode.png',
+			                content: qrcodeBuffer,
+			                contents: qrcodeBuffer, // old version syntax
+			                cid: cidQR
+			            });
+
+                        next();
+                    }
+                });
+
+			},
+
+
 			// now build Email info and send to user
 			(next) => {
 
-//// LEFT OFF HERE:
-// - deeplink url:  make a sails.config.appbuilder.deeplink setting for this
-// - reduce current Email to a generic Base Email format.
-// - bootstrap an entry for EmailNotifications for this Email
-// - fill out missing params
-
-				var triggerID = MobileApp.emailInviteTrigger(); // 'appbuilder.mobileinvite.'+MobileApp.id;
-var protocol = req.connection.encrypted?'https':'http';
-var baseUrl = protocol + '://' + req.headers.host + '/';
-
-				var deepLink  = baseUrl;
-
-sails.log.error(":::: deepLink:", deepLink);
-next();
-				// EmailNotifications.trigger(triggerID, {
-	   //              to: [email],
-	   //              variables: {
-	   //                  image: urlQR, // data URL base64 encoded
-	   //                  userInfo,
-	   //                  relationships,
-	   //                  tokenQR,      // token to use in renQrCode() route
-	   //                  cidQR: cidQR,   // CID for the QR code attachment
-	   //                  deepLink,
-	   //              },
-	   //              attachments: attachments
-	   //          })
-	   //          .done((html) => {
-	   //              res.send(html || 'OK');
-	   //          })
-	   //          .fail((err) => {
-	   //              throw err;
-	   //          });
+				EmailNotifications.trigger(triggerID, {
+	                to: [email],
+	                variables: {
+	   				   apkURL:apkUrl,		// url to android apk file
+	                    cidQR: cidQR,    	// CID for the QR code attachment
+	                    deepLink:deepLink,
+	                },
+	                attachments: attachments
+	            })
+	            .done((html) => {
+	                next(); // res.send(html || 'OK');
+	            })
+	            .fail(next);
 
 			}
 
@@ -177,12 +332,9 @@ next();
 			if (err) {
 				res.AD.error(err, err.code || 400);
 			} else {
-				res.AD.success(users);
+				res.AD.success({sent:true});
 			}
 		})
-	},
-
-
-
+	}
 
 };

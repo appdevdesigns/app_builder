@@ -8,13 +8,48 @@ var path = require('path');
 
 module.exports.appbuilder = {
 
+
+  // BaseURL
+  // the base url to get to this site.  Will be used for multiple references
+  // in how to communicate back to the server the AppBuilder is on.
+  //
+  // sails.config.appbuilder.baseURL
+  baseURL:'http://localhost:1337',
+
+
+  // Deeplink base url
+  // The url that will be used to initialize our mobile app.
+  // the URL is used in 2 ways:
+  // the base url will be used to access: 
+  //    /.well-known/assetlinks.json,           : android deeplink config
+  //    /.well-known/apple-app-site-association : ios deeplink config
+  // The encoded deeplink url sent to users will be the deeplinkbase url +
+  // ?settings={config:settings}.  Once the mobile app receives the above
+  // config file, it will know which local app to send the data to.  The
+  // included settings param will have the initial app setup data.
+  //
+  // NOTE: if the value is null, then the baseURL will be used.
+  // this is set in app_builder/config/bootstrap.js
+  //
+  // sails.config.appbuilder.deeplink
+  deeplink:null,
+
+
+  // 
   // Mobile Comm Center (mcc)
   // Specify the communications connection with our Public MCC
-  // sails.config.appbuilder.mobileCommCenter
+  //
+  // sails.config.appbuilder.mcc
   mcc: {
     url:'http://localhost:1337', 
     // port:'',
     accessToken:'There is no spoon.'
-  }
+  },
 
+
+  // pathFiles : directory any AppBuilder files are stored (think Android APK files)
+  // specified from the sails.config.appPath: [sails]/data/app_builder
+  //
+  // sails.config.appbuilder.pathFiles
+  pathFiles: path.join('data', 'app_builder'),
 };

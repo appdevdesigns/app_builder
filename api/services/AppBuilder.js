@@ -2960,13 +2960,20 @@ var SDCApp = new ABMobileApp({
             },
             android:{
                 apk:{
-                    // appbuilder/mobile/:mobileID/apk/current:
-                    // should return this file:
-                    current:'path/to/current_v5.apk',
-                    previous:[
-                        'path/to/previous_v4.apk',
-                        'path/to/previous_v3.apk'
-                    ]
+                    // appbuilder/mobile/:mobileID/apk:
+                    // should return one of these files:
+
+                    // current points to the version that should be considered the 
+                    // 'current' one to download
+                    current:'0',
+
+                    // version id :  fileName
+                    // '5':'mobileApp_v5.apk',
+                    // '4':'mobileApp_v4.apk',
+                    // '3':'mobileApp_v3.apk',
+                    // '2':'mobileApp_v2.apk',
+                    // '1':'mobileApp_v1.apk',
+                    '0':'sdc-android.apk'
                 },
                 deeplink:{
                     "relation": ["delegate_permission/common.handle_all_urls"],
@@ -2989,6 +2996,18 @@ appID: 'App.id'   // not normally part of mobileApp data.  but can get from mobi
 
 mobileApps.unshift(SDCApp);
 
+
+// perform a translation:
+mobileApps.forEach((app)=>{
+    var trans = app.translations.filter((t)=>{return t.language_code == 'en' })[0];
+    if (trans) {
+        for (var t in trans) {
+            if (t != 'language_code'){
+                app[t] = trans[t];
+            }
+        }
+    }
+})
 
                 resolve(mobileApps);
 

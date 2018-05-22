@@ -22,15 +22,26 @@ module.exports = function (cb) {
     		return;
     	}
 
+
+    	// verify that sails.config.appbuilder.deeplink is set:
+    	if (!sails.config.appbuilder.deeplink) {
+    		sails.config.appbuilder.deeplink = sails.config.appbuilder.baseURL;
+    	}
+
+
     	// let's verify some setup items are in place:
        	async.series([
 
     		// verify .well-known directory exists:
     		verifyWellKnownDir,
     		verifyWellKnownConfigs,
+    		verifyDataDir,
 
 // NOTE: remove this when we no longer manually add the SDC app info:
-addSDCAppInfo
+addSDCAppInfo,
+defaultEmailNotificationInvite,
+addSDCAppDataDirectory
+
 
     	], (err,data) => {
     		cb(err);
@@ -55,6 +66,20 @@ function verifyWellKnownDir(next) {
 
 }
 
+
+function verifyDataDir(next) {
+
+	var pathDir = path.join(sails.config.appPath, sails.config.appbuilder.pathFiles)
+    fs.lstat(pathDir, function(err, stat) {
+
+    	if (err) {
+sails.log.warn('... making default AppBuilder data directory:', pathDir);
+    		fs.mkdirSync(pathDir);
+    	}
+    	next();
+    });
+
+}
 
 
 function verifyWellKnownConfigs(next) {
@@ -111,7 +136,7 @@ function addSDCAppInfo(next) {
 		if (!SDC) next();
 
 
-		// update Android data
+		// update Android data:  .well-known/assetlinks.json
 		var filePath = path.join(CWD, 'assets', '.well-known', 'assetlinks.json' );
 		var contents = fs.readFileSync(filePath, 'utf8');
 		var jsonContents = JSON.parse(contents);
@@ -125,7 +150,7 @@ function addSDCAppInfo(next) {
 
 
 
-		// update ios data
+		// update ios data: .well-known/apple-app-site-association
 		filePath = path.join(CWD, 'assets', '.well-known', 'apple-app-site-association' );
 		contents = fs.readFileSync(filePath, 'utf8');
 		jsonContents = JSON.parse(contents);
@@ -137,6 +162,112 @@ function addSDCAppInfo(next) {
 			fs.writeFileSync(filePath, newContents, 'utf8');
 		}
 		next();
+	})
+	.catch(next);
+
+}
+
+
+function defaultEmailNotificationInvite(next) {
+
+	var filePath = path.join(__dirname, '..', 'setup', 'install', 'mobile_qr_invite.ejs' );
+	var contents = null;  // fs.readFileSync(filePath, 'utf8');
+
+	AppBuilder.mobileApps()
+	.then((list)=>{
+
+		function checkApp(list, cb) {
+			if (list.length == 0) {
+				cb();
+			} else {
+				var app = list.shift();
+sails.log('... checking default email for app:'+ app.label);
+
+				var Trigger = app.emailInviteTrigger();
+				EmailNotifications.emailForTrigger(Trigger)
+				.then((listEmails)=>{
+sails.log('    ... existing emails for app:', listEmails);
+
+					if ((!listEmails) || (listEmails.length == 0)) {
+
+						if (!contents) {
+							contents = fs.readFileSync(filePath, 'utf8');
+						}
+
+						// Add default Email template here:
+						ENTemplateDesign.create({
+							templateTitle:app.label+' mobile invitation ',
+							templateBody: contents,
+							templateType: 'One Column'
+						})
+						.then((template)=>{
+sails.log('     ... new template created:', template);
+
+							ENNotification.create({
+								notificationTitle: app.label+'install info', // can be anything
+								emailSubject: app.label+ ' app',
+								fromName: app.label,
+								fromEmail: 'ric@zteam.biz',
+								setupType: 'System',
+								eventTrigger: app.emailInviteTrigger(),
+								status: 'Active',
+								templateDesignId: template.id
+							})
+							.then((enNotification)=>{
+sails.log('     ... new enNotification:', enNotification);
+								checkApp(list, cb);								
+							})
+							.catch(cb);
+						})
+						.catch(cb);
+
+
+						return;
+					}
+					checkApp(list, cb);
+				})
+				.catch(cb)
+			}
+		}
+		checkApp(list, (err)=>{
+			if (err) {
+				next(err);
+				return;
+			}
+
+			next();
+		});
+	})
+	
+}
+
+
+
+
+function addSDCAppDataDirectory (next) {
+
+	// get all MobileApps
+	AppBuilder.mobileApps()
+	.then((list)=>{
+
+		// Find the SDC app
+		var SDC = list.filter((f)=>{ return f.id == 'SDC.id'; })[0];
+		if (!SDC) next();
+
+		var pathFile = SDC.pathAPK();
+		var parts = pathFile.split(path.sep);
+		parts.pop();
+		var pathMobileDir = parts.join(path.sep);
+
+	    fs.lstat(pathMobileDir, function(err, stat) {
+
+	    	if (err) {
+sails.log.warn('... making default SDC data directory:', pathMobileDir);
+	    		fs.mkdirSync(pathMobileDir);
+	    	}
+	    	next();
+	    });
+
 	})
 	.catch(next);
 
