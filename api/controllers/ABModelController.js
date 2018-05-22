@@ -929,126 +929,102 @@ module.exports = {
 
                             var query = object.model().query();
 
-
-                            query.upsertGraph({
-                            })
-                            .then(() => {
-
-                                res.AD.success(newItem[0]);
-
-                                // We want to broadcast the change from the server to the client so all datacollections can properly update
-                                // Build a payload that tells us what was updated
-                                var payload = {
-                                    objectId: object[object.PK()],
-                                    data: newItem[0]
-                                }
-
-                                // Broadcast the update
-                                sails.sockets.broadcast(object[object.PK()], "ab.datacollection.update", payload);
-
-                                // updateConnectedFields(object, newItem[0], oldItem[0]);
-
-                                Promise.resolve();
-
-                            });
-
-
                             // Do Knex update data tasks
-                            // query.patch(updateParams || { id: id }).where(object.PK(), id)
-                            //     .then((values) => {
+                            query.patch(updateParams || { id: id }).where(object.PK(), id)
+                                .then((values) => {
 
-                            //         // create a new query when use same query, then new data are created duplicate
-                            //         var updateTasks = updateRelationValues(object, id, updateRelationParams);
+                                    // create a new query when use same query, then new data are created duplicate
+                                    var updateTasks = updateRelationValues(object, id, updateRelationParams);
 
-                            //         // update translation of the external table
-                            //         if (object.isExternal)
-                            //             updateTasks.push(updateTranslationsValues(object, id, transParams));
+                                    // update translation of the external table
+                                    if (object.isExternal)
+                                        updateTasks.push(updateTranslationsValues(object, id, transParams));
 
-                            //         // update relation values sequentially
-                            //         return updateTasks.reduce((promiseChain, currTask) => {
-                            //             return promiseChain.then(currTask);
-                            //         }, Promise.resolve([]))
-                            //             .catch((err) => { return Promise.reject(err); })
-                            //             .then((values) => {
+                                    // update relation values sequentially
+                                    return updateTasks.reduce((promiseChain, currTask) => {
+                                        return promiseChain.then(currTask);
+                                    }, Promise.resolve([]))
+                                        .catch((err) => { return Promise.reject(err); })
+                                        .then((values) => {
 
-                            //                 // Query the new row to response to client
-                            //                 var query3 = object.queryFind({
-                            //                         where: {
-                            //                             glue:'and',
-                            //                             rules:[{
-                            //                                 key: object.PK(),
-                            //                                 rule: "equals",
-                            //                                 value: id
-                            //                             }]
-                            //                         },
-                            //                         offset: 0,
-                            //                         limit: 1,
-                            //                         includeRelativeData: true
-                            //                     },
-                            //                     req.user.data);
+                                            // Query the new row to response to client
+                                            var query3 = object.queryFind({
+                                                    where: {
+                                                        glue:'and',
+                                                        rules:[{
+                                                            key: object.PK(),
+                                                            rule: "equals",
+                                                            value: id
+                                                        }]
+                                                    },
+                                                    offset: 0,
+                                                    limit: 1,
+                                                    includeRelativeData: true
+                                                },
+                                                req.user.data);
 
-                            //                 return query3
-                            //                     .catch((err) => { return Promise.reject(err); })
-                            //                     .then((newItem) => {
-                            //                         res.AD.success(newItem[0]);
+                                            return query3
+                                                .catch((err) => { return Promise.reject(err); })
+                                                .then((newItem) => {
+                                                    res.AD.success(newItem[0]);
                                                     
-                            //                         // We want to broadcast the change from the server to the client so all datacollections can properly update
-                            //                         // Build a payload that tells us what was updated
-                            //                         var payload = {
-                            //                             objectId: object[object.PK()],
-                            //                             data: newItem[0]
-                            //                         }
+                                                    // We want to broadcast the change from the server to the client so all datacollections can properly update
+                                                    // Build a payload that tells us what was updated
+                                                    var payload = {
+                                                        objectId: object[object.PK()],
+                                                        data: newItem[0]
+                                                    }
                                                     
-                            //                         // Broadcast the update
-                            //                         sails.sockets.broadcast(object[object.PK()], "ab.datacollection.update", payload);
+                                                    // Broadcast the update
+                                                    sails.sockets.broadcast(object[object.PK()], "ab.datacollection.update", payload);
                                                     
-                            //                         updateConnectedFields(object, newItem[0], oldItem[0]);
+                                                    updateConnectedFields(object, newItem[0], oldItem[0]);
                                                     
-                            //                         Promise.resolve();
-                            //                     });
+                                                    Promise.resolve();
+                                                });
 
-                            //             });
+                                        });
 
-                            //     }, (err) => {
+                                }, (err) => {
 
-                            //         console.log('...  (err) handler!', err);
+                                    console.log('...  (err) handler!', err);
 
-                            //         // handle invalid values here:
-                            //         if (err instanceof ValidationError) {
+                                    // handle invalid values here:
+                                    if (err instanceof ValidationError) {
 
-                            //             //// TODO: refactor these invalid data handlers to a common OP.Validation.toErrorResponse(err)
+                                        //// TODO: refactor these invalid data handlers to a common OP.Validation.toErrorResponse(err)
 
-                            //             // return an invalid values response:
-                            //             var errorResponse = {
-                            //                 error: 'E_VALIDATION',
-                            //                 invalidAttributes: {
+                                        // return an invalid values response:
+                                        var errorResponse = {
+                                            error: 'E_VALIDATION',
+                                            invalidAttributes: {
 
-                            //                 }
-                            //             }
+                                            }
+                                        }
 
-                            //             var attr = errorResponse.invalidAttributes;
+                                        var attr = errorResponse.invalidAttributes;
 
-                            //             for (var e in err.data) {
-                            //                 attr[e] = attr[e] || [];
-                            //                 err.data[e].forEach((eObj) => {
-                            //                     eObj.name = e;
-                            //                     attr[e].push(eObj);
-                            //                 })
-                            //             }
+                                        for (var e in err.data) {
+                                            attr[e] = attr[e] || [];
+                                            err.data[e].forEach((eObj) => {
+                                                eObj.name = e;
+                                                attr[e].push(eObj);
+                                            })
+                                        }
 
-                            //             res.AD.error(errorResponse);
-                            //         }
+                                        res.AD.error(errorResponse);
+                                    }
 
-                            //     })
-                            //     .catch((err) => {
-                            //         console.log('... catch(err) !');
+                                })
+                                .catch((err) => {
+                                    console.log('... catch(err) !');
 
-                            //         if (!(err instanceof ValidationError)) {
-                            //             ADCore.error.log('Error performing update!', { error: err })
-                            //             res.AD.error(err);
-                            //             sails.log.error('!!!! error:', err);
-                            //         }
-                            //     })
+                                    if (!(err instanceof ValidationError)) {
+                                        ADCore.error.log('Error performing update!', { error: err })
+                                        res.AD.error(err);
+                                        sails.log.error('!!!! error:', err);
+                                    }
+                                })
 
 
 
