@@ -312,11 +312,13 @@ export default class ABApplication extends ABApplicationBase {
 	updateInfo () {
 
 		var values = this.toObj();
+		values.json = values.json || {};
+		values.json.translations = values.json.translations || [];
 
 		return OP.Comm.Service.put({
 			url: '/app_builder/application/' + this.id + '/info',
 			data: {
-				translations: values.translations
+				translations: values.json.translations
 			}
 		});
 	}
