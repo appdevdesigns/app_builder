@@ -343,7 +343,7 @@ class ABFieldConnect extends ABField {
 				// M:N - create a new table and references to id of target table and linked table
 				else if (this.settings.linkType == 'many' && this.settings.linkViaType == 'many') {
 
-					var joinTableName = this.joinTableName(true),
+					var joinTableName = this.joinTableName(),
 						getFkName = AppBuilder.rules.toJunctionTableFK;  
 						// [add] replaced this with a global rule, so we can reuse it in other 
 						// 		 places.
@@ -438,7 +438,7 @@ class ABFieldConnect extends ABField {
 				// M:N
 				if (this.settings.linkType == 'many' && this.settings.linkViaType == 'many') {
 					// drop join table
-					var joinTableName = this.joinTableName(true);
+					var joinTableName = this.joinTableName();
 
 					knex.schema.dropTableIfExists(joinTableName)
 						.then(() => {

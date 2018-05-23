@@ -5,8 +5,8 @@ var ABObject = require(path.join(__dirname, 'ABObject'));
 
 var Model = require('objection').Model;
 
-var __ModelPool = {};  // reuse any previously created Model connections
-						// to minimize .knex bindings (and connection pools!)
+var __ModelPool = __ModelPool || {};  // reuse any previously created Model connections
+										// to minimize .knex bindings (and connection pools!)
 
 module.exports = class ABObjectExternal extends ABObject {
 
@@ -80,7 +80,9 @@ module.exports = class ABObjectExternal extends ABObject {
 
 		var tableName = this.dbTableName(true);
 
+
 		if (!__ModelPool[tableName]) {
+
 			var knex = ABMigration.connection(this.connName || undefined);
 
 			// Compile our jsonSchema from our DataFields
@@ -133,7 +135,7 @@ module.exports = class ABObjectExternal extends ABObject {
 			MyModel.relationMappings = function () {
 				// Compile our relations from our DataFields
 				var relationMappings = {};
-
+// console.log('PONG relationMappings: ');
 				// Add a translation relation of the external table
 				if (currObject.transColumnName) {
 
@@ -176,12 +178,10 @@ module.exports = class ABObjectExternal extends ABObject {
 						}
 					};
 
-					return relationMappings;
-
 				}
 
 				var connectFields = currObject.connectFields();
-
+// console.log('PONG connectFields: ', connectFields);
 				// linkObject: '', // ABObject.id
 				// linkType: 'one', // one, many
 				// linkViaType: 'many' // one, many
@@ -328,6 +328,26 @@ module.exports = class ABObjectExternal extends ABObject {
 		}
 
 		return __ModelPool[tableName];
+	}
+
+
+
+	/**
+	 * @method modelRefresh
+	 * when the definition of a model changes, we need to clear our cached
+	 * model definitions.
+	 * NOTE: called from our ABField.migrateXXX methods.
+	 */
+	modelRefresh() {
+
+		// WORKAROUND: It can't use .modelRefresh of ABObject because __ModelPool stores separately. How to use global variable ?? 
+
+		var tableName = this.dbTableName(true);
+
+		delete __ModelPool[tableName];
+
+		ABMigration.refreshObject(tableName);
+
 	}
 
 

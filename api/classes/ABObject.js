@@ -7,8 +7,8 @@ var ABObjectBase = require(path.join(__dirname,  "..", "..", "assets", "opstools
 var Model = require('objection').Model;
 
 
-var __ModelPool = {};  // reuse any previously created Model connections
-					   // to minimize .knex bindings (and connection pools!)
+var __ModelPool = __ModelPool || {};  // reuse any previously created Model connections
+					   					// to minimize .knex bindings (and connection pools!)
 
 
 
@@ -490,7 +490,7 @@ module.exports = class ABObject extends ABObjectBase {
 	 */
 	modelRefresh() {
 
-		var tableName = this.dbTableName();
+		var tableName = this.dbTableName(true);
 		delete __ModelPool[tableName];
 
 		ABMigration.refreshObject(tableName);
