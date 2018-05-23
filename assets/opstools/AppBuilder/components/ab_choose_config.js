@@ -30,7 +30,13 @@ export default class ABChooseConfig extends OP.Component {
 				buttonSendQREmail: L('ab.config.sendQREmail', '*Send QR Email'),
 
 				confirmUsersCreated: L('ab.config.confirmUsersCreated', '*Users successfully created'),
+				errorUsersCreated:   L('ab.config.confirmUsersCreated', '*Error creating users.'),
+
 				confirmUsersPublished: L('ab.config.confirmUsersPublished', '*Users successfully published'),
+				errorUsersPublished: L('ab.config.errorUsersPublished', '*Error publishing users.'),
+
+				confirmQRSent:  L('ab.config.confirmQRSent', '*QR Email Sent'),
+				errorQRSent: L('ab.config.errorQRSent', '*Error sending QR email'),
 
 				createNew: L('ab.application.createNew', '*Add new application'),
 				noApplication: L('ab.application.noApplication', "*There is no application data"),
@@ -220,7 +226,7 @@ export default class ABChooseConfig extends OP.Component {
 					})
 					.catch((err)=>{
 						_logic.ready();
-						OP.Error.log('Error initializing users.', err);
+						OP.Error.log(labels.component.errorUsersCreated, err);
 					})
 				} 
 
@@ -250,7 +256,7 @@ export default class ABChooseConfig extends OP.Component {
 				})
 				.catch((err)=>{
 					_logic.ready();
-					var message = 'Error sending QR email';
+					var message = labels.component.errorQRSent; 
 					if (err.message) message += ': '+err.message;
 
 					OP.Error.log(message, err);
@@ -275,7 +281,7 @@ export default class ABChooseConfig extends OP.Component {
 				})
 				.catch((err)=>{
 					_logic.ready();
-					OP.Error.log('Error publishing users.', err);
+					OP.Error.log(labels.component.errorUsersPublished, err);
 				})
 				
 

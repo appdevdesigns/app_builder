@@ -41,9 +41,8 @@ module.exports.appbuilder = {
   //
   // sails.config.appbuilder.mcc
   mcc: {
-    url:'http://localhost:1337', 
-    // port:'',
-    accessToken:'There is no spoon.'
+    url:'http://localhost:1337',      // url connection to our MCC (include Port)
+    accessToken:'There is no spoon.'  // required accessToken
   },
 
 
