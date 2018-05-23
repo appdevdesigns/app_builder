@@ -2945,8 +2945,8 @@ var SDCApp = new ABMobileApp({
     settings:{
         deepLink:'',
         codePushKeys:{
-            ios:'ios.key.here',
-            android:'android.key.here'
+            ios:sails.config.codepush.ios || 'ios.codepush.key',
+            android:sails.config.codepush.android || 'android.codepush.key'
         },
         platforms:{
             ios:{

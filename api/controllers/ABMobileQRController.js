@@ -315,7 +315,7 @@ sails.log.error(' cannot access file: '+destFile);
 				EmailNotifications.trigger(triggerID, {
 	                to: [email],
 	                variables: {
-	   				   apkURL:apkUrl,		// url to android apk file
+	   				   apkURL:apkURL,		// url to android apk file
 	                    cidQR: cidQR,    	// CID for the QR code attachment
 	                    deepLink:deepLink,
 	                },
