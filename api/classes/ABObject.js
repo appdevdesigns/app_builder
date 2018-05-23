@@ -7,8 +7,8 @@ var ABObjectBase = require(path.join(__dirname,  "..", "..", "assets", "opstools
 var Model = require('objection').Model;
 
 
-var __ModelPool = __ModelPool || {};  // reuse any previously created Model connections
-					   					// to minimize .knex bindings (and connection pools!)
+var __ModelPool = {};	// reuse any previously created Model connections
+						// to minimize .knex bindings (and connection pools!)
 
 
 
@@ -278,6 +278,7 @@ module.exports = class ABObject extends ABObjectBase {
 		var tableName = this.dbTableName(true);
 
 		if (!__ModelPool[tableName]) {
+
 			var knex = ABMigration.connection(this.connName || undefined);
 
 			// Compile our jsonSchema from our DataFields
@@ -327,7 +328,7 @@ module.exports = class ABObject extends ABObjectBase {
 
 			// NOTE : there is relation setup here because prevent circular loop when get linked object.
 			// have to define object models to __ModelPool[tableName] first
-			MyModel.relationMappings = function () {
+			__ModelPool[tableName].relationMappings = function () {
 				// Compile our relations from our DataFields
 				var relationMappings = {};
 
@@ -493,7 +494,7 @@ module.exports = class ABObject extends ABObjectBase {
 		var tableName = this.dbTableName(true);
 		delete __ModelPool[tableName];
 
-		ABMigration.refreshObject(tableName);
+		ABMigration.refreshObject(this);
 
 	}
 
@@ -513,6 +514,7 @@ module.exports = class ABObject extends ABObjectBase {
 	queryFind(options, userData) {
 
 		var query = this.model().query();
+
 		if (options) {
 			this.populateFindConditions(query, options, userData)
 		}

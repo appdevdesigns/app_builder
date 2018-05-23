@@ -135,7 +135,7 @@ module.exports = class ABObjectExternal extends ABObject {
 			MyModel.relationMappings = function () {
 				// Compile our relations from our DataFields
 				var relationMappings = {};
-// console.log('PONG relationMappings: ');
+
 				// Add a translation relation of the external table
 				if (currObject.transColumnName) {
 
@@ -181,7 +181,7 @@ module.exports = class ABObjectExternal extends ABObject {
 				}
 
 				var connectFields = currObject.connectFields();
-// console.log('PONG connectFields: ', connectFields);
+
 				// linkObject: '', // ABObject.id
 				// linkType: 'one', // one, many
 				// linkViaType: 'many' // one, many
@@ -346,7 +346,7 @@ module.exports = class ABObjectExternal extends ABObject {
 
 		delete __ModelPool[tableName];
 
-		ABMigration.refreshObject(tableName);
+		ABMigration.refreshObject(this);
 
 	}
 
