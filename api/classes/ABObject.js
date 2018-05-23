@@ -389,7 +389,7 @@ module.exports = class ABObject extends ABObjectBase {
 					// M:N
 					else if (f.settings.linkType == 'many' && f.settings.linkViaType == 'many') {
 						// get join table name
-						var joinTablename = f.joinTableName(),
+						var joinTablename = f.joinTableName(true),
 							joinColumnNames = f.joinColumnNames(),
 							sourceTableName,
 							sourcePkName,

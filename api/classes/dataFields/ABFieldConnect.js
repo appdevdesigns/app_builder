@@ -343,7 +343,7 @@ class ABFieldConnect extends ABField {
 				// M:N - create a new table and references to id of target table and linked table
 				else if (this.settings.linkType == 'many' && this.settings.linkViaType == 'many') {
 
-					var joinTableName = this.joinTableName(),
+					var joinTableName = this.joinTableName(true),
 						getFkName = AppBuilder.rules.toJunctionTableFK;  
 						// [add] replaced this with a global rule, so we can reuse it in other 
 						// 		 places.
@@ -438,7 +438,7 @@ class ABFieldConnect extends ABField {
 				// M:N
 				if (this.settings.linkType == 'many' && this.settings.linkViaType == 'many') {
 					// drop join table
-					var joinTableName = this.joinTableName();
+					var joinTableName = this.joinTableName(true);
 
 					knex.schema.dropTableIfExists(joinTableName)
 						.then(() => {
@@ -580,13 +580,16 @@ class ABFieldConnect extends ABField {
 		return relationName;
 	}
 
-	joinTableName() {
+	joinTableName(prefixSchema = false) {
 
-		if (this.object.isExternal) {
+		var linkObject = this.object.application.objects((obj) => { return obj.id == this.settings.linkObject; })[0];
+		var tableName = "";
+
+		if (this.object.isExternal && linkObject.isExternal) {
 
 			var juntionModel = getJuntionInfo(this.object.tableName, this.datasourceLink.tableName);
 
-			return juntionModel.tableName;
+			tableName = juntionModel.tableName;
 
 		}
 		else {
@@ -594,8 +597,6 @@ class ABFieldConnect extends ABField {
 			var sourceObjectName,
 				targetObjectName,
 				columnName;
-
-			var linkObject = this.object.application.objects((obj) => { return obj.id == this.settings.linkObject; })[0];
 
 			if (this.settings.isSource == true) {
 				sourceObjectName = this.object.name;
@@ -609,12 +610,31 @@ class ABFieldConnect extends ABField {
 			}
 
 			// return join table name
-			return AppBuilder.rules.toJunctionTableNameFormat(
-				this.object.application.name, // application name
-				sourceObjectName, // table name
-				targetObjectName, // linked table name
-				columnName); // column name
+			tableName = AppBuilder.rules.toJunctionTableNameFormat(
+											this.object.application.name, // application name
+											sourceObjectName, // table name
+											targetObjectName, // linked table name
+											columnName); // column name
 		}
+
+		if (prefixSchema) {
+			
+			// pull database name
+			var schemaName = "";
+			if (this.settings.isSource == true)
+				schemaName = this.object.dbSchemaName();
+			else
+				schemaName = linkObject.dbSchemaName();
+
+
+			return "#schema#.#table#"
+					.replace("#schema#", schemaName)
+					.replace("#table#", tableName);
+		}
+		else {
+			return tableName;
+		}
+
 	}
 
 	/**
@@ -630,7 +650,9 @@ class ABFieldConnect extends ABField {
 		var sourceColumnName = "",
 			targetColumnName = "";
 
-		if (this.object.isExternal) {
+		var objectLink = this.datasourceLink;
+
+		if (this.object.isExternal && objectLink.isExternal) {
 
 			var juntionModel = getJuntionInfo(this.object.tableName, this.datasourceLink.tableName);
 
