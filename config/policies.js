@@ -26,6 +26,10 @@ module.exports = {
 
    'app_builder/ABModelController': {
        find: findStack
+   },
+
+   'app_builder/ABMobileQRController':{
+   		sendAPK:true		// no permission checking on APK download.
    }
 
 
