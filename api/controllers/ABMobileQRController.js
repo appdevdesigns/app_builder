@@ -69,7 +69,8 @@ module.exports = {
 
 					if (!App) {
 						var error = new Error('Unknown Mobile App');
-						error.code = 403;
+						error.code = 'E_UNKNOWNMOBILEAPP';
+						error.httpResponseCode = 403;
 						next(error);
 						return;
 					}
@@ -91,12 +92,16 @@ module.exports = {
 
     			fs.access(destFile, fs.constants.R_OK , function(err) {
 					if (err) {
+
 						var nError = new Error('cannot access file.');
-						nError.code = 500;
+						nError.code = 'EACCESS';
 						nError.error = err;
 						nError.destFile = destFile;
-sails.log.error(' cannot access file: '+destFile);
-						next(nError);
+						ADCore.error.log('AppBuilder:ABMobileQRController:sendAPK:Unable to access APK file:', {error:nError});
+
+						var clientError = new Error('Error processing your request');
+						clientError.httpResponseCode = 500;
+						next(clientError);
 					} else {
 						next();
 					}
@@ -108,7 +113,7 @@ sails.log.error(' cannot access file: '+destFile);
     	],(err,data)=>{
 
 			if (err) {
-    			res.AD.error(err, err.code || 400);
+    			res.AD.error(err, err.httpResponseCode || 400);
     		} else {
 
 				// Adding header so the client knows the file content type and the file name
@@ -117,7 +122,8 @@ sails.log.error(' cannot access file: '+destFile);
 				// stream file to response on success
 				fs.createReadStream(destFile)
 			    .on('error', function (err) {
-			      return res.AD.error(err, 500);
+			    	ADCore.error.log("ABMobileQRController:sendAPK:Unexpected Error streaming file to client", {error:err});
+			    	return res.AD.error(err, 500);
 			    })
 			    .pipe(res);
     		}
@@ -173,7 +179,7 @@ sails.log.error(' cannot access file: '+destFile);
 
 					if (!lookupUser) {
 						var error = new Error('Unknown user');
-						error.code = 403;
+						error.httpResponseCode = 403;
 						next(error);
 						return;
 					}
@@ -233,7 +239,7 @@ sails.log.error(' cannot access file: '+destFile);
 
 					if (!App) {
 						var error = new Error('Unknown Mobile App');
-						error.code = 403;
+						error.httpResponseCode = 403;
 						next(error);
 						return;
 					}
@@ -282,7 +288,6 @@ sails.log.error(' cannot access file: '+destFile);
 			        updateKeys: MobileApp.codePushKeys(),
 			    });
 
-
 			    // deepLink needs to include this data for the MobileApp 
 			    deepLink += "?settings=" + encodeURIComponent(QRData);
 
@@ -324,13 +329,19 @@ sails.log.error(' cannot access file: '+destFile);
 	            .done((html) => {
 	                next(); // res.send(html || 'OK');
 	            })
-	            .fail(next);
+	            .fail((err)=>{
 
+	            	// pass a generic error back to the Client:
+	            	var error = new Error('Error Sending Email.');
+	            	error.httpResponseCode = 500;
+	            	next(error);
+	            	
+	            });
 			}
 
 		], (err, data)=>{
 			if (err) {
-				res.AD.error(err, err.code || 400);
+				res.AD.error(err, err.httpResponseCode || 400);
 			} else {
 				res.AD.success({sent:true});
 			}
