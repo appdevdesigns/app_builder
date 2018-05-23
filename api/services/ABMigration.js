@@ -79,6 +79,10 @@ module.exports = {
 
     createField:function(field) {
 
+        // disallow to create a new column in the external table
+        if (field.object.isExternal)
+            return Promise.resolve();
+
         var knex = ABMigration.connection();
         return field.migrateCreate(knex);
 
@@ -86,6 +90,10 @@ module.exports = {
 
 
     dropField:function(field) {
+
+        // disallow to drop a column in the external table
+        if (field.object.isExternal)
+            return Promise.resolve();
 
         var knex = ABMigration.connection();
         return field.migrateDrop(knex);
