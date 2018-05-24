@@ -580,9 +580,11 @@ console.warn('!! ToDo: onAfterColumnHide()');
 
 //// Question: do we submit full item updates?  or just patches?
 var patch = {};
+patch.id = item.id;
 patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also condition the data for sending.state.value;
-    					CurrentObject.model()
-    					.update(item.id, item)
+                        CurrentObject.model()
+                        .upsert(item)
+// .update(item.id, item)
 // .update(item.id, patch)
     					.then(()=>{
 

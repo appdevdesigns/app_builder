@@ -107,6 +107,9 @@ module.exports = {
     'put /app_builder/model/application/:appID/object/:objID/:id' : 
         'app_builder/ABModelController.update',
 
+    'put /app_builder/model/application/:appID/object/:objID' :
+        'app_builder/ABModelController.upsert',
+
     'delete /app_builder/model/application/:appID/object/:objID/:id' : 
         'app_builder/ABModelController.delete',
 

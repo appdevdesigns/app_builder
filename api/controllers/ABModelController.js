@@ -836,7 +836,7 @@ module.exports = {
 
 
     update: function (req, res) {
-
+        
         var id = req.param('id', -1);
 
 
@@ -898,8 +898,8 @@ module.exports = {
                         if (validationErrors.length == 0) {
 
                             if (object.isExternal) {
-                                 // translations values does not in same table of the external object
-                                 delete updateParams.translations;
+                                    // translations values does not in same table of the external object
+                                    delete updateParams.translations;
                             }
                             else {
                                 // this is an update operation, so ... 
@@ -1052,6 +1052,189 @@ module.exports = {
 
             })
 
+    },
+
+
+
+    upsert: function(req, res) {
+ 
+        Promise.resolve()
+            .then(() => {
+
+                // Pull ABObject
+                return new Promise((resolve, reject) => {
+
+                    AppBuilder.routes.verifyAndReturnObject(req, res)
+                    .then(function (object) {
+
+                        resolve(object);
+
+                    });
+
+                });
+
+            })
+            .then((object) => {
+
+                return new Promise((resolve, reject) => {
+
+                    var allParams = req.body;
+sails.log.verbose('ABModelController.upsert(): allParams:', allParams);
+            
+                    // // return the parameters from the input params that relate to this object
+                    // // exclude connectObject data field values
+                    // var updateParams = object.requestParams(allParams);
+            
+                    // // return the parameters of connectObject data field values 
+                    // var updateRelationParams = object.requestRelationParams(allParams);
+
+                    // TODO
+                    // get translations values for the external object
+                    // it will update to translations table after model values updated
+                    // var transParams = _.cloneDeep(allParams.translations);
+            
+            
+                    // Validate
+                    var validationErrors = object.isValidData(allParams);
+                    if (validationErrors && validationErrors.length > 0) {
+            
+                        // return an invalid values response:
+                        var errorResponse = {
+                            error: 'E_VALIDATION',
+                            invalidAttributes: {
+            
+                            }
+                        }
+            
+                        var attr = errorResponse.invalidAttributes;
+            
+                        validationErrors.forEach((e) => {
+                            attr[e.name] = attr[e.name] || [];
+                            attr[e.name].push(e);
+                        })
+            
+                        res.AD.error(errorResponse);
+            
+                        return;
+                    }
+            
+                    delete allParams.created_at;
+
+                    if (object.isExternal) {
+            
+                        // translations values does not in same table of the external object
+                        delete allParams.translations;
+                    }
+                    else {
+                        // this is an update operation, so ... 
+                        // updateParams.updated_at = (new Date()).toISOString();
+            
+                        allParams.updated_at = AppBuilder.rules.toSQLDateTime(new Date());
+            
+                        // Check if there are any properties set otherwise let it be...let it be...let it be...yeah let it be
+                        if (allParams.properties) {
+                            allParams.properties = allParams.properties;
+                        } else {
+                            allParams.properties = null;
+                        }
+                    }
+
+sails.log.verbose('ABModelController.upsert(): allParams:', allParams);
+
+                    // Upsert data
+                    object
+                        .model()
+                        .query()
+                        .upsertGraph(allParams)
+                        .then((values) => {
+
+                            resolve(object, values.id);
+
+                        }, 
+                        // Knex's upsert options
+                        {
+                            unrelate: true,
+                            relate: true,
+                            noDelete: false
+                        })
+                        .catch(reject);
+
+                });
+
+            })
+
+            .then((object, updateId) => {
+
+                // Query the new row to response to client
+                return new Promise((resolve, reject) => {
+
+                    object.queryFind({
+                            where: {
+                                glue:'and',
+                                rules:[{
+                                    key: object.PK(),
+                                    rule: "equals",
+                                    value: updateId
+                                }]
+                            },
+                            offset: 0,
+                            limit: 1,
+                            includeRelativeData: true
+                        },
+                        req.user.data)
+                        .then((updateItem) => {
+
+                            res.AD.success(updateItem);
+
+                            // We want to broadcast the change from the server to the client so all datacollections can properly update
+                            // Build a payload that tells us what was updated
+                            var payload = {
+                                objectId: object[object.PK()],
+                                data: updateItem
+                            }
+
+                            // Broadcast the update
+                            sails.sockets.broadcast(object[object.PK()], "ab.datacollection.update", payload);
+
+                            resolve();
+
+                        })
+                        .catch(reject);
+
+
+                });
+            })
+            .catch((err) => {
+
+                console.log('...  (err) handler!', err);
+                
+                // handle invalid values here:
+                if (err instanceof ValidationError) {
+
+                    //// TODO: refactor these invalid data handlers to a common OP.Validation.toErrorResponse(err)
+
+                    // return an invalid values response:
+                    var errorResponse = {
+                        error: 'E_VALIDATION',
+                        invalidAttributes: {
+
+                        }
+                    }
+
+                    var attr = errorResponse.invalidAttributes;
+
+                    for (var e in err.data) {
+                        attr[e] = attr[e] || [];
+                        err.data[e].forEach((eObj) => {
+                            eObj.name = e;
+                            attr[e].push(eObj);
+                        })
+                    }
+
+                    res.AD.error(errorResponse);
+                }
+            });
+ 
     },
 
 
