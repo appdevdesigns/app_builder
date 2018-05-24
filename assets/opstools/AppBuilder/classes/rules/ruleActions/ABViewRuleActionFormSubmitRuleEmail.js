@@ -567,25 +567,37 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 								var emailField = this.queryObject.application.urlResolve(emailFieldUrl);
 								if (emailField) {
 
-									let linkedFields = this.queryObject.fields(f => f instanceof ABFieldConnect && f.settings.linkObject == emailField.object.id);
-									linkedFields.forEach(f => {
+									// Pull email source object
+									if (emailField.object.id == this.queryObject.id) {
 
-										var linkedData = options.data[f.relationName()] || [];
+										var emailData = options.data[emailField.columnName];
+										if (emailData)
+											recipients = recipients.concat(emailData);
 
-										// convert to an array
-										if (linkedData && !Array.isArray(linkedData))
-											linkedData = [linkedData];
+									}
+									// Pull emails from link object
+									else {
 
-										// pull email address
-										linkedData.forEach(d => {
-
-											var email = d[emailField.columnName];
-											if (email)
-												recipients = recipients.concat(email);
-
+										let linkedFields = this.queryObject.fields(f => f instanceof ABFieldConnect && f.settings.linkObject == emailField.object.id);
+										linkedFields.forEach(f => {
+	
+											var linkedData = options.data[f.relationName()] || [];
+	
+											// convert to an array
+											if (linkedData && !Array.isArray(linkedData))
+												linkedData = [linkedData];
+	
+											// pull email address
+											linkedData.forEach(d => {
+	
+												var email = d[emailField.columnName];
+												if (email)
+													recipients = recipients.concat(email);
+	
+											});
 										});
 
-									});
+									}
 
 									next();
 
