@@ -583,8 +583,8 @@ var patch = {};
 patch.id = item.id;
 patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also condition the data for sending.state.value;
                         CurrentObject.model()
-                        .upsert(item)
-// .update(item.id, item)
+                        // .upsert(item)
+.update(item.id, item)
 // .update(item.id, patch)
     					.then(()=>{
 
