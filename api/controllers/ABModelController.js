@@ -1057,6 +1057,8 @@ module.exports = {
 
 
     upsert: function(req, res) {
+
+        var object;
  
         Promise.resolve()
             .then(() => {
@@ -1065,39 +1067,82 @@ module.exports = {
                 return new Promise((resolve, reject) => {
 
                     AppBuilder.routes.verifyAndReturnObject(req, res)
-                    .then(function (object) {
+                    .then(function (result) {
 
-                        resolve(object);
+                        object = result;
+                        resolve();
 
                     });
 
                 });
 
             })
-            .then((object) => {
+            .then(() => {
+
+                // Get column names
+                return new Promise((resolve, reject) => {
+
+                    object.model().query().columnInfo()
+                    .then(function (columns) {
+
+                        var columnNames = Object.keys(columns);
+
+                        resolve(columnNames);
+
+                    })
+                    .catch(reject);
+
+                });
+
+            })
+            .then((columnNames) => {
 
                 return new Promise((resolve, reject) => {
 
-                    var allParams = req.body;
-sails.log.verbose('ABModelController.upsert(): allParams:', allParams);
-            
-                    // // return the parameters from the input params that relate to this object
-                    // // exclude connectObject data field values
-                    // var updateParams = object.requestParams(allParams);
-            
-                    // // return the parameters of connectObject data field values 
-                    // var updateRelationParams = object.requestRelationParams(allParams);
+                    var model = object.model();
 
-                    // TODO
+                    var allParams = req.body;
+
+                    delete allParams.created_at;
+
                     // get translations values for the external object
                     // it will update to translations table after model values updated
-                    // var transParams = _.cloneDeep(allParams.translations);
-            
-            
+                    var transParams = _.cloneDeep(allParams.translations);
+
+
+                    // filter invalid columns
+                    var relationNames = Object.keys(model.getRelations());
+                    Object.keys(allParams).forEach(prop => {
+
+                        // remove no column of this object
+                        if (prop != 'id' && 
+                            columnNames.indexOf(prop) < 0 &&
+                            relationNames.indexOf(prop) < 0) {
+                            delete allParams[prop];
+                        }
+                        // remove updated_at, created_at of relation data
+                        else if (relationNames.indexOf(prop) > -1) {
+                            if (allParams[prop]) {
+
+                                delete allParams[prop].text;
+
+                                delete allParams[prop].updated_at;
+                                delete allParams[prop].created_at;
+
+                                if (!allParams[prop].properties)
+                                    delete allParams[prop].properties;
+
+                            }
+                        }
+
+
+                    });
+
+
                     // Validate
                     var validationErrors = object.isValidData(allParams);
                     if (validationErrors && validationErrors.length > 0) {
-            
+
                         // return an invalid values response:
                         var errorResponse = {
                             error: 'E_VALIDATION',
@@ -1105,23 +1150,21 @@ sails.log.verbose('ABModelController.upsert(): allParams:', allParams);
             
                             }
                         }
-            
+
                         var attr = errorResponse.invalidAttributes;
-            
+
                         validationErrors.forEach((e) => {
                             attr[e.name] = attr[e.name] || [];
                             attr[e.name].push(e);
-                        })
-            
-                        res.AD.error(errorResponse);
-            
+                        });
+
+                        res.AD.error(errorResponse);    
+
                         return;
                     }
-            
-                    delete allParams.created_at;
 
                     if (object.isExternal) {
-            
+
                         // translations values does not in same table of the external object
                         delete allParams.translations;
                     }
@@ -1142,20 +1185,20 @@ sails.log.verbose('ABModelController.upsert(): allParams:', allParams);
 sails.log.verbose('ABModelController.upsert(): allParams:', allParams);
 
                     // Upsert data
-                    object
-                        .model()
+                    model
                         .query()
                         .upsertGraph(allParams)
                         .then((values) => {
 
-                            resolve(object, values.id);
+                            resolve(values.id);
 
                         }, 
                         // Knex's upsert options
                         {
                             unrelate: true,
                             relate: true,
-                            noDelete: false
+                            noDelete: false,
+                            // noUpdate: ['created_at']
                         })
                         .catch(reject);
 
@@ -1163,7 +1206,7 @@ sails.log.verbose('ABModelController.upsert(): allParams:', allParams);
 
             })
 
-            .then((object, updateId) => {
+            .then((updateId) => {
 
                 // Query the new row to response to client
                 return new Promise((resolve, reject) => {

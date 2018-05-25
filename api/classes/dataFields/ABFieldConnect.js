@@ -248,8 +248,8 @@ class ABFieldConnect extends ABField {
 
 								t.integer(this.columnName).unsigned().nullable()
 									.references(linkPK)
-									.inTable(linkTableName)
-									.onDelete('cascade');
+									.inTable(linkTableName);
+									// .onDelete('cascade');
 
 							})
 								.then(() => { next(); })
@@ -286,8 +286,8 @@ class ABFieldConnect extends ABField {
 	
 									t.integer(this.columnName).unsigned().nullable()
 										.references(linkPK)
-										.inTable(linkTableName)
-										.onDelete('cascade');
+										.inTable(linkTableName);
+										// .onDelete('cascade');
 
 									t.unique(this.columnName);
 	
@@ -326,8 +326,8 @@ class ABFieldConnect extends ABField {
 									.unsigned()
 									.nullable()
 									.references(this.object.PK())
-									.inTable(tableName)
-									.onDelete('cascade');
+									.inTable(tableName);
+									// .onDelete('cascade');
 
 								})
 								.then(() => { next(); })
@@ -378,14 +378,14 @@ class ABFieldConnect extends ABField {
 								t.integer(this.object.name).unsigned().nullable()
 									.references(this.object.PK())
 									.inTable(tableName)
-									.withKeyName(sourceFkName)
-									.onDelete('cascade');
+									.withKeyName(sourceFkName);
+									// .onDelete('cascade');
 
 								t.integer(linkObject.name).unsigned().nullable()
 									.references(linkPK)
 									.inTable(linkTableName)
-									.withKeyName(targetFkName)
-									.onDelete('cascade');
+									.withKeyName(targetFkName);
+									// .onDelete('cascade');
 
 								// // create columns
 								// t.integer(this.object.name).unsigned().nullable()
@@ -496,7 +496,7 @@ class ABFieldConnect extends ABField {
 					{
 						// allow empty string because it could not put empty array in REST api
 						"type": "string",
-						"maxLength": 0
+						// "maxLength": 0
 					}
 				]
 			};
