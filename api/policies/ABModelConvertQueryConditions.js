@@ -4,7 +4,7 @@
  * @module      :: Policy
  * @description :: Scan any provided conditions to see if we have a 'in_query' 
  *                 or 'not_in_query' clause.  If we do, convert it to an IN or NOT IN
- *                 clause.
+ *                 clause. The assumption is that the current object is in this query.
  * @docs        :: http://sailsjs.org/#!documentation/policies
  *
  */
