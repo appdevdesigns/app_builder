@@ -507,6 +507,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 					body: {
 						id: object.id,
 						type: "space",
+						css: "bg-white",
 						rows: [
 							{
 								view: "select",

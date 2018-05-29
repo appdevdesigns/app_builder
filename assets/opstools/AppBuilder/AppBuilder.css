@@ -1347,3 +1347,6 @@ a.ab-delete-photo:hover {
 	font-weight: bold;
 	font-size: 24px;
 }
+.bg-white {
+	background: white;
+}
