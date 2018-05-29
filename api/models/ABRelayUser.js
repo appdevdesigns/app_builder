@@ -14,6 +14,48 @@
  * the AppBuilder creates a new ABRelayApplicationUser entry with {.AES, appID, .user }
  * All further communications between the AppBuilder and that users' application are Encrypted/Decrypted using ABRelayApplicationUser
  * 
+ *
+ *
+
+So it sounds like a QR code needs to include the following info:
+    userAuthToken
+    applicationID
+    codepushkeys
+
+The AppBuilder MobileFramework (MF) should be able to decode the QR code and:
+    - receive a new set of code from Microsoft CodePush using the codePushKeys
+    - The new set of code contains the server url for the Public Server
+    - The new set of code contains the AppID of the mobile app 
+    - The MF then initiates a PublicServer.mobile/init {userAuthToken, AppID }
+    - PublicServer responds with { userID, rsaPublic, AppPolicyInfo for AppID }
+    - MF generates an AES key, encrypts it with rsaPublic: rsa_aes
+    - MF generates an AppUUID (a unique ID for an App on a specific user's device)
+            Note: if a user downloads this app on multiple devices, 
+                  each device will generate a unique AES key 
+    - MF contacts PublicServer.mobile/initresolve  { rsa_aes, userID, AppID, AppUUID }
+
+    - from now on MF makes requests with POST PublicServer.mobile/relay using data encrypted with AES key.
+            each request needs: userAuthToken,  and AppUUID
+
+
+    - AppBuilderRelayServer (ABRS) communicates with PublicServer.mcc/initresolve  and receives pending resoultions
+    - ABRS unencrypts rsa_aes using the user's rsa_private key.
+    - ABRS stores a ABRelayAppUser entry: { siteUserID, AppUUID, AES }
+
+
+    - from now on ABRS polls GET PublicServer.mcc/relay  looking for messages to receive and respond to.
+            each message is unencrypted based upon the AppUUID--> AES key from ABRelayAppUser
+
+    - ABRS responds to POST PublicServer.mcc/relay  with packets encrypted with AES key
+            each message contains AppUUID
+
+    - MF polls GET PublicServer.mobile/relay { AppUUID }  and receives packets for this AppUUID
+
+
+    
+
+
+ 
  */
 
 var async = require('async');
