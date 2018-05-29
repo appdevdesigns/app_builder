@@ -803,6 +803,19 @@ export default class RowFilter extends OP.Component {
 					$viewCond.$$(ids.inputValue).$$(ids.listOptions).define("options", options);
 					$viewCond.$$(ids.inputValue).$$(ids.listOptions).refresh();
 				}
+				
+				var rule = null,
+					ruleViewId = $viewCond.$$(ids.rule).getActiveId(),
+					$viewComparer = $viewCond.$$(ids.rule).queryView({ id: ruleViewId });
+				if ($viewComparer && $viewComparer.getValue) {
+					rule = $viewComparer.getValue();
+					if (rule == "in_query_field" || rule == "not_in_query_field") {
+						// Show the new value inputs
+						$viewCond.$$(ids.inputValue).showBatch("queryField");
+					}
+				}
+					
+				
 
 				if (!ignoreNotify)
 					_logic.onChange();
