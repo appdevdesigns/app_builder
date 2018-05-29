@@ -16,24 +16,8 @@ module.exports = class ABObjectExternal extends ABObject {
 	 * @param {Knex} knex the knex sql library manager for manipulating the DB.
 	 * @param {Object} options table connection info - 
 	 * 						{
-	 * 							user: "",
-	 * 							pass: "",
-	 * 							host: "",
-	 * 							database: "",
+	 * 							connection: "",
 	 * 							table: "",
-	 * 							columns: {
-	 * 								columnName: {
-	 * 												defaultValue: {null|string|integer},
-	 *												type: {string},
-	 * 												maxLength: {integer},
-	 * 												nullable: {boolean},
-	 * 
-	 * 												supported: {boolean}, // flag support to convert to ABField
-	 * 												fieldKey: {string}, - ABField's key name [Optional],
-	 * 
-	 * 												multilingual: {boolean}, [Optional]
-	 *											}
-	 * 							},
 	 * 							primary: "Primary column name"
 	 * 						}
 	 * 					
@@ -48,70 +32,92 @@ module.exports = class ABObjectExternal extends ABObject {
 		var tableName = this.dbTableName();
 		sails.log.verbose('.... dbTableName:' + tableName);
 
-		return new Promise(
-			(resolve, reject) => {
+		return Promise.resolve()
 
-				return new Promise(
-					(resolve, reject) => {
+			// Get column info
+			.then(() => {
 
-						knex.schema.hasTable(tableName).then((exists) => {
+				return new Promise((resolve, reject) => {
 
-							// if it doesn't exist, then create it and any known fields:
-							if (!exists) {
-								sails.log.verbose('... creating federated table !!!');
-								return knex.schema.createTable(tableName, (t) => {
+					var knexTarget = ABMigration.connection(options.connection);
 
-									t.charset('utf8');
-									t.collate('utf8_unicode_ci')
-									t.engine(
-										"FEDERATED CONNECTION='mysql://{user}:{pass}@{host}/{database}/{table}';"
-											.replace('{user}', options.user)
-											.replace('{pass}', options.pass)
-											.replace('{host}', options.host)
-											.replace('{database}', options.database)
-											.replace('{table}', options.table)
-									);
+					knexTarget(options.table).columnInfo()
+						.then(resolve)
+						.catch(reject);
 
-									// create columns
-									Object.keys(options.columns || {}).forEach(colName => {
+				});
 
-										var colInfo = options.columns[colName];
+			})
+			// Create federated table
+			.then((columns) => {
 
-										if (!colInfo.type) return;
+				return new Promise((resolve, reject) => {
 
-										var fnName = colInfo.type;
-										if (fnName == 'int')
-											fnName = 'integer';
+					knex.schema.hasTable(tableName).then((exists) => {
 
-										// create new column
-										var newCol = t[fnName](colName);
+						// if it doesn't exist, then create it and any known fields:
+						if (!exists) {
+							sails.log.verbose('... creating federated table !!!');
+							return knex.schema.createTable(tableName, (t) => {
 
+								var conn = sails.config.connections[options.connection];
+
+								t.charset('utf8');
+								t.collate('utf8_unicode_ci')
+								t.engine(
+									"FEDERATED CONNECTION='mysql://{user}:{pass}@{host}/{database}/{table}';"
+										.replace('{user}', conn.user)
+										.replace('{pass}', conn.password)
+										.replace('{host}', conn.host)
+										.replace('{database}', conn.database)
+										.replace('{table}', options.table)
+								);
+
+								// create columns
+								Object.keys(columns || {}).forEach(colName => {
+
+									var colInfo = columns[colName];
+
+									if (!colInfo.type) return;
+
+									var fnName = colInfo.type;
+									if (fnName == 'int')
+										fnName = 'integer';
+
+									// set PK to auto increment
+									if (options.primary == colName &&
+										fnName == 'integer')
+										fnName = 'increments';
+
+									// create new column
+									var newCol = t[fnName](colName);
+
+									if (colInfo.defaultValue)
 										newCol.defaultTo(colInfo.defaultValue);
 
-										if (colInfo.nullable)
-											newCol.nullable();
-										else
-											newCol.notNullable();
+									if (colInfo.nullable)
+										newCol.nullable();
+									else
+										newCol.notNullable();
 
-									});
+								});
 
-									// if (options.primary)
-									// 	t.primary(options.primary);
+								if (options.primary)
+									t.primary(options.primary);
 
-									resolve();
-
-								})
-
-							} else {
-								sails.log.verbose('... already there.');
 								resolve();
-							}
-						});
 
-					}
-				)
-			}
-		)
+							})
+
+						} else {
+							sails.log.verbose('... already there.');
+							resolve();
+						}
+					});
+				});
+
+			});
+
 	}
 
 

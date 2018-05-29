@@ -113,7 +113,8 @@ module.exports = class ABObject extends ABObjectBase {
 
 	dbSchemaName() {
 
-		return sails.config.connections[this.connName || "appBuilder"].database;
+		return sails.config.connections["appBuilder"].database;
+		// return sails.config.connections[this.connName || "appBuilder"].database;
 
 	}
 

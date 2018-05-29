@@ -76,8 +76,14 @@ module.exports = {
         var tableName = object.dbTableName(true);
 
         if (knex.$$objection &&
-            knex.$$objection.boundModels)
-            delete knex.$$objection.boundModels[tableName];
+            knex.$$objection.boundModels) {
+                
+                // delete knex.$$objection.boundModels[tableName];
+
+                // FIX : Knex Objection v.1.1.8
+                knex.$$objection.boundModels.delete(tableName + '_MyModel');
+                
+        }
 
     },
 

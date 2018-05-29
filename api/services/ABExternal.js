@@ -833,12 +833,8 @@ module.exports = {
 					let externalObject = new ABObjectExternal(objectData, application.toABClass());
 
 					externalObject.migrateCreate(knexAppBuilder, {
-						user: sails.config.connections[connName].user,
-						pass: sails.config.connections[connName].password,
-						host: sails.config.connections[connName].host,
-						database: sails.config.connections[connName].database,
+						connection: connName,
 						table: tableName,
-						columns: columns,
 						primary: pkColName
 					})
 					.then(resolve)
