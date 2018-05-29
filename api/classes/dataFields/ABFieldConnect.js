@@ -222,7 +222,8 @@ class ABFieldConnect extends ABField {
 
 				// find linked object
 				var linkObject = this.datasourceLink,
-					linkTableName = linkObject.dbTableName(),
+					linkTableName = linkObject.dbTableName(true),
+					linkPK = linkObject.PK(),
 					// TODO : should check duplicate column
 					linkColumnName = this.object.name;
 
@@ -246,7 +247,9 @@ class ABFieldConnect extends ABField {
 							knex.schema.table(tableName, (t) => {
 
 								t.integer(this.columnName).unsigned().nullable()
-									.references(linkObject.PK()).inTable(linkTableName).onDelete('cascade');
+									.references(linkPK)
+									.inTable(linkTableName)
+									.onDelete('cascade');
 
 							})
 								.then(() => { next(); })
@@ -282,7 +285,9 @@ class ABFieldConnect extends ABField {
 								knex.schema.table(tableName, (t) => {
 	
 									t.integer(this.columnName).unsigned().nullable()
-										.references(linkObject.PK()).inTable(linkTableName).onDelete('cascade');
+										.references(linkPK)
+										.inTable(linkTableName)
+										.onDelete('cascade');
 
 									t.unique(this.columnName);
 	
@@ -317,9 +322,14 @@ class ABFieldConnect extends ABField {
 
 							knex.schema.table(linkTableName, (t) => {
 
-								t.integer(linkColumnName).unsigned().nullable()
-									.references(this.object.PK()).inTable(tableName).onDelete('cascade');
-							})
+								t.integer(linkColumnName)
+									.unsigned()
+									.nullable()
+									.references(this.object.PK())
+									.inTable(tableName)
+									.onDelete('cascade');
+
+								})
 								.then(() => { next(); })
 								.catch(next);
 						}
@@ -366,10 +376,29 @@ class ABFieldConnect extends ABField {
 
 								// create columns
 								t.integer(this.object.name).unsigned().nullable()
-									.references(this.object.PK()).inTable(tableName).withKeyName(sourceFkName).onDelete('cascade');
+									.references(this.object.PK())
+									.inTable(tableName)
+									.withKeyName(sourceFkName)
+									.onDelete('cascade');
 
 								t.integer(linkObject.name).unsigned().nullable()
-									.references(linkObject.PK()).inTable(linkTableName).withKeyName(targetFkName).onDelete('cascade');
+									.references(linkPK)
+									.inTable(linkTableName)
+									.withKeyName(targetFkName)
+									.onDelete('cascade');
+
+								// // create columns
+								// t.integer(this.object.name).unsigned().nullable()
+								// 	.references(this.object.PK())
+								// 	.inTable(tableName)
+								// 	.withKeyName(sourceFkName)
+								// 	.onDelete('cascade');
+
+								// t.integer(linkObject.name).unsigned().nullable()
+								// 	.references(linkObject.PK())
+								// 	.inTable(linkTableName)
+								// 	.withKeyName(targetFkName)
+								// 	.onDelete('cascade');
 							})
 								.then(() => { resolve(); })
 								.catch(reject);
@@ -551,13 +580,16 @@ class ABFieldConnect extends ABField {
 		return relationName;
 	}
 
-	joinTableName() {
+	joinTableName(prefixSchema = false) {
 
-		if (this.object.isExternal) {
+		var linkObject = this.object.application.objects((obj) => { return obj.id == this.settings.linkObject; })[0];
+		var tableName = "";
+
+		if (this.object.isExternal && linkObject.isExternal) {
 
 			var juntionModel = getJuntionInfo(this.object.tableName, this.datasourceLink.tableName);
 
-			return juntionModel.tableName;
+			tableName = juntionModel.tableName;
 
 		}
 		else {
@@ -565,8 +597,6 @@ class ABFieldConnect extends ABField {
 			var sourceObjectName,
 				targetObjectName,
 				columnName;
-
-			var linkObject = this.object.application.objects((obj) => { return obj.id == this.settings.linkObject; })[0];
 
 			if (this.settings.isSource == true) {
 				sourceObjectName = this.object.name;
@@ -580,12 +610,31 @@ class ABFieldConnect extends ABField {
 			}
 
 			// return join table name
-			return AppBuilder.rules.toJunctionTableNameFormat(
-				this.object.application.name, // application name
-				sourceObjectName, // table name
-				targetObjectName, // linked table name
-				columnName); // column name
+			tableName = AppBuilder.rules.toJunctionTableNameFormat(
+											this.object.application.name, // application name
+											sourceObjectName, // table name
+											targetObjectName, // linked table name
+											columnName); // column name
 		}
+
+		if (prefixSchema) {
+			
+			// pull database name
+			var schemaName = "";
+			if (this.settings.isSource == true)
+				schemaName = this.object.dbSchemaName();
+			else
+				schemaName = linkObject.dbSchemaName();
+
+
+			return "#schema#.#table#"
+					.replace("#schema#", schemaName)
+					.replace("#table#", tableName);
+		}
+		else {
+			return tableName;
+		}
+
 	}
 
 	/**
@@ -601,7 +650,9 @@ class ABFieldConnect extends ABField {
 		var sourceColumnName = "",
 			targetColumnName = "";
 
-		if (this.object.isExternal) {
+		var objectLink = this.datasourceLink;
+
+		if (this.object.isExternal && objectLink.isExternal) {
 
 			var juntionModel = getJuntionInfo(this.object.tableName, this.datasourceLink.tableName);
 

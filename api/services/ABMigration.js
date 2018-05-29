@@ -66,10 +66,14 @@ module.exports = {
     /**
      * @method refreshObject
      * delete a model in knex, then it will be initialized
+     * 
+     * @param {ABObject} object
+     * 
      */
-    refreshObject: function(tableName) {
+    refreshObject: function(object) {
 
-        var knex = ABMigration.connection();
+        var knex = ABMigration.connection(object.connName || undefined);
+        var tableName = object.dbTableName(true);
 
         if (knex.$$objection &&
             knex.$$objection.boundModels)
@@ -79,6 +83,10 @@ module.exports = {
 
     createField:function(field) {
 
+        // disallow to create a new column in the external table
+        if (field.object.isExternal)
+            return Promise.resolve();
+
         var knex = ABMigration.connection();
         return field.migrateCreate(knex);
 
@@ -86,6 +94,10 @@ module.exports = {
 
 
     dropField:function(field) {
+
+        // disallow to drop a column in the external table
+        if (field.object.isExternal)
+            return Promise.resolve();
 
         var knex = ABMigration.connection();
         return field.migrateDrop(knex);

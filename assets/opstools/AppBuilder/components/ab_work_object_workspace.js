@@ -825,7 +825,7 @@ console.error('TODO: toolbarPermission()');
 				$$(ids.toolbar).show();
 				$$(ids.selectedObject).show();
 
-				CurrentObject = object;			
+				CurrentObject = object;
 
 				DataTable.objectLoad(CurrentObject);
 
@@ -846,6 +846,15 @@ console.error('TODO: toolbarPermission()');
 
 				// $$(ids.component).setValue(ids.selectedObject);
 				$$(ids.selectedObject).show(true, false);
+
+				// disable add fields into the object
+				if (object.isExternal) {
+					$$(ids.buttonAddField).disable();
+				}
+				else {
+					$$(ids.buttonAddField).enable();
+				}
+
 			},
 
 
