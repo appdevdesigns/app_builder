@@ -514,13 +514,17 @@ module.exports = class ABObject extends ABObjectBase {
 	 */
 	queryFind(options, userData) {
 
-		var query = this.model().query();
+        return new Promise((resolve, reject)=>{
+            
+            var query = this.model().query();
 
-		if (options) {
-			this.populateFindConditions(query, options, userData)
-		}
-
-		return query;
+            if (options) {
+                this.populateFindConditions(query, options, userData)
+            }
+            
+            resolve(query);
+        })
+        
 	}
 
 
@@ -551,7 +555,12 @@ module.exports = class ABObject extends ABObjectBase {
         delete options.limit;
 
 		// added tableName to id because of non unique field error
-		return this.queryFind(options, userData).count('* as count');
+		return this.queryFind(options, userData)
+        .then((query)=>{
+            // TODO:: we need to figure out how to return the count not the full data
+            return query.length;
+        });
+        
 		// '{tableName}.{pkName} as count'
 		// 													.replace("{tableName}", tableName)
 		// 													.replace("{pkName}", this.PK()));
