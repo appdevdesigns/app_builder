@@ -846,7 +846,7 @@ export default class RowFilter extends OP.Component {
 					// populate the list of Queries for this_object:
 					var options = [];
 					// Get all application's queries
-					_Object.application.queries().forEach((q) => {
+					_Object.application.queries((q) => { return q.id != _Object.id; }).forEach((q) => {
 						options.push({
 							id: q.id,
 							value: q.label
