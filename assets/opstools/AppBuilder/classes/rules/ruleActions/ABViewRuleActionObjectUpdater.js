@@ -707,14 +707,28 @@ if (field.key == 'user') {
 			var field = this.getUpdateObjectField(op.fieldID);
 			if (field) { 
 
+				var value = op.value;
+
+
 
 //// TODO: in the case of a connected Field, we use op.value to get the 
 // datacollection, and find it's currently selected value:
+				if (field.key == 'connectObject') {
+					// op.value is the DataCollection we need to find
+					var dataCollection = this.currentForm.pageRoot().dataCollections((dc)=>{ return dc.id == op.value;})[0];
+				
+					value = dataCollection.getCursor(); // dataCollection.getItem(dataCollection.getCursor());
+				
+					// NOTE: webix documentation issue: .getCursor() is supposed to return
+					// the .id of the item.  However it seems to be returning the {obj} 
+					if (value.id) value = value.id;
+				}
+
 
 				switch(op.op) {
 
 					case 'set': 
-						objectToUpdate[field.columnName] = op.value; 
+						objectToUpdate[field.columnName] = value; 
 						break;
 				}
 				
