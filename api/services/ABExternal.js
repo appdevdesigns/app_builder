@@ -3,6 +3,7 @@ var path = require('path');
 var _ = require('lodash');
 
 var ABObject = require(path.join(__dirname, "..", "classes", "ABObject.js"));
+var ABObjectExternal = require(path.join(__dirname, "..", "classes", "ABObjectExternal.js"));
 var ABFieldBase = require(path.join(__dirname, "..", "..", "assets", "opstools", "AppBuilder", "classes", "dataFields", "ABFieldBase.js"));
 
 // Build a reference of AB defaults for all supported Sails data field types
@@ -502,7 +503,8 @@ module.exports = {
 	 **/
 	tableToObject: function (appID, tableName, columnList, connName='appBuilder') {
 
-		let knex = ABMigration.connection(connName),
+		let knexAppBuilder = ABMigration.connection('appBuilder'),
+			knexTable = ABMigration.connection(connName),
 			application,
 			languages = [],
 			transColumnName = '',
@@ -584,7 +586,7 @@ module.exports = {
 
 							return new Promise((next, err) => {
 
-								knex.schema.hasTable(transTableName)
+								knexTable.schema.hasTable(transTableName)
 									.catch(err)
 									.then(function (exists) {
 										next(exists);
@@ -598,7 +600,7 @@ module.exports = {
 							return new Promise((next, err) => {
 								if (!exists) return next();
 
-								knex(transTableName).columnInfo()
+								knexTable(transTableName).columnInfo()
 									.catch(err)
 									.then(function (transCols) {
 
@@ -626,7 +628,7 @@ module.exports = {
 				
 				return new Promise((resolve, reject) => {
 
-					getPrimaryKey(knex, tableName, connName)
+					getPrimaryKey(knexTable, tableName, connName)
 						.catch(reject)
 						.then(colName => {
 
@@ -818,6 +820,29 @@ module.exports = {
 					});
 
 					resolve();
+
+				});
+
+			})
+
+			// Create federated table
+			.then(function() {
+
+				return new Promise((resolve, reject) => {
+
+					let externalObject = new ABObjectExternal(objectData, application.toABClass());
+
+					externalObject.migrateCreate(knexAppBuilder, {
+						user: sails.config.connections[connName].user,
+						pass: sails.config.connections[connName].password,
+						host: sails.config.connections[connName].host,
+						database: sails.config.connections[connName].database,
+						table: tableName,
+						columns: columns,
+						primary: pkColName
+					})
+					.then(resolve)
+					.catch(reject);
 
 				});
 

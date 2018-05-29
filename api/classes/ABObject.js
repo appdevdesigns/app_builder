@@ -279,7 +279,7 @@ module.exports = class ABObject extends ABObjectBase {
 
 		if (!__ModelPool[tableName]) {
 
-			var knex = ABMigration.connection(this.connName || undefined);
+			var knex = ABMigration.connection();
 
 			// Compile our jsonSchema from our DataFields
 			// jsonSchema is only used by Objection.js to validate data before
