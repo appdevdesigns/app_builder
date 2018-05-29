@@ -1179,6 +1179,12 @@ resolve();
 									reject(err);
 								})
 								.then((newFormVals) => {
+									
+									var data = null;
+									var dc = this.dataCollection();
+									if (dc) {
+										dc.setCursor(newFormVals.id);
+									}
 
 									this.doRecordRules(newFormVals)
 									.then(()=>{
