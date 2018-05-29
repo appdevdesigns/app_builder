@@ -944,6 +944,22 @@ PopupRecordRule.qbFixAfterShow();
 				_logic.displayData(null);
 			}
 
+			//Focus on first focusable component
+			var topPosition = this._views.length;
+			var topPositionId = "";
+			this._views.forEach((item) => {
+				if(item.key == "textbox" || item.key == "numberbox") {
+					if (item.position.y < topPosition) {
+						topPosition = item.position.y;
+						topPositionId = item.id;
+					}
+				}
+			});
+			var childComponent = this.viewComponents[topPositionId];
+			if(childComponent) {
+				$$(childComponent.ui.id).focus();
+			}
+
 			if (Form)
 				Form.adjust();
 
