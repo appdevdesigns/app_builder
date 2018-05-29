@@ -305,11 +305,13 @@ function parseQueryCondition(_where, object, req, res, cb) {
                 // @param {fn} done  a callback routine  done(err, data);
                 function processQueryValues(parseColumn,  queryColumn,  done) {
 
-                    var query = QueryObj.queryFind({}, req.user.data);
-                    query.clearSelect().column(queryColumn);
+                    var query = QueryObj.queryFind({
+                        columnNames: [queryColumn]
+                    }, req.user.data);
+                    // query.clearSelect().column(queryColumn);
 
-                    sails.log.info();
-                    sails.log.info('converted query sql:', query.toSQL());
+                    // sails.log.info();
+                    // sails.log.info('converted query sql:', query.toSQL());
 
                     query
                         .then((data)=>{
