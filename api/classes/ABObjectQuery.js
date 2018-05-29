@@ -864,7 +864,7 @@ module.exports = class ABObjectQuery extends ABObject {
 
 				});
 
-				query.columns(columns);
+				query.column(columns);
 				query.select(selects);
 				query.distinct();
 
@@ -907,7 +907,7 @@ module.exports = class ABObjectQuery extends ABObject {
 			}
 
 			if (options.columnNames && options.columnNames.length) {
-				query.clearSelect().columns(options.columnNames);
+				query.clearSelect().column(options.columnNames);
 			}
 			
 			if (options) {

@@ -234,7 +234,9 @@ function parseQueryCondition(_where, object, req, res, cb) {
                                 cond.key = field.columnName;
                                 var convert = {
                                     'in_query_field' : 'in',
-                                    'not_in_query_field' : 'not_in'
+                                    'not_in_query_field' : 'not_in',
+                                    'in' : 'in',
+                                    'not_in' : 'not_in'
                                 }
                                 cond.rule = convert[cond.rule];
                                 cond.value = values;

@@ -306,7 +306,7 @@ function parseQueryCondition(_where, object, req, res, cb) {
                 function processQueryValues(parseColumn,  queryColumn,  done) {
 
                     var query = QueryObj.queryFind({}, req.user.data);
-                    query.clearSelect().columns(queryColumn);
+                    query.clearSelect().column(queryColumn);
 
                     sails.log.info();
                     sails.log.info('converted query sql:', query.toSQL());
