@@ -332,7 +332,19 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 				var options = [];
 				if (this.updateObject) {
 
-					options = (this.updateObject.fields() || []).map(f => {
+					options = (this.updateObject.fields() || [])
+					.filter(f => {
+
+						if (f.key != 'connectObject') {
+							return true;
+						} else {
+							// if this is a connection field, only return
+							// fields that are 1:x  where this field is the
+							// source:
+							return ((f.linkType() == 'one') && (f.isSource()))
+						}
+					})
+					.map(f => {
 						return {
 							id: f.id,
 							value: f.label
@@ -710,11 +722,21 @@ if (field.key == 'user') {
 				var value = op.value;
 
 
-
-//// TODO: in the case of a connected Field, we use op.value to get the 
-// datacollection, and find it's currently selected value:
+				// in the case of a connected Field, we use op.value to get the 
+				// datacollection, and find it's currently selected value:
 				if (field.key == 'connectObject') {
-					// op.value is the DataCollection we need to find
+
+
+					// NOTE: 30 May 2018 :current decision from Ric is to limit this 
+					// to only handle 1:x connections where we update the current obj
+					// with the PK of the value from the DC.
+					//
+					// In the future, if we want to handle the other options,
+					// we need to modify this to handle the M:x connections where
+					// we insert our PK into the value from the DC.
+
+
+					// op.value is the DataCollection.id we need to find
 					var dataCollection = this.currentForm.pageRoot().dataCollections((dc)=>{ return dc.id == op.value;})[0];
 				
 					value = dataCollection.getCursor(); // dataCollection.getItem(dataCollection.getCursor());
