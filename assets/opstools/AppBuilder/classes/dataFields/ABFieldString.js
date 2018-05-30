@@ -24,13 +24,15 @@ var ABFieldStringDefaults = {
 	menuName : L('ab.dataField.string.menuName', '*Single line text'),
 
 	// description: what gets displayed in the Editor description.
-	description: L('ab.dataField.string.description', '*short string value')
+	description: L('ab.dataField.string.description', '*short string value'),
+
+	supportRequire: true
 
 }
 
 
 var defaultValues = {
-	textDefault: '',
+	default: '',
 	supportMultilingual: 0
 };
 
@@ -47,12 +49,19 @@ var ABFieldStringComponent = new ABFieldComponent({
 
 	fieldDefaults: ABFieldStringDefaults,
 
-	elements:function(App) {
+	elements:function(App, field) {
+
+		var ids = {
+			default: ''
+		}
+		ids = field.idsUnique(ids, App);
+		
 		return [
 			{
 				view: "text",
-				name:'textDefault',
-				labelWidth: App.config.labelWidthMedium,
+				id: ids.default,
+				name:'default',
+				labelWidth: App.config.labelWidthXLarge,
 				label: L('ab.dataField.string.defaultLabel', '*Default'),
 				placeholder: L('ab.dataField.string.default', '*Enter default value')
 			},
@@ -73,7 +82,7 @@ var ABFieldStringComponent = new ABFieldComponent({
 	// rules: basic form validation rules for webix form entry.
 	// the keys must match a .name of your .elements for it to apply
 	rules:{
-		// 'textDefault':webix.rules.isNotEmpty,
+		// 'default':webix.rules.isNotEmpty,
 		// 'supportMultilingual':webix.rules.isNotEmpty
 	},
 
@@ -102,6 +111,26 @@ var ABFieldStringComponent = new ABFieldComponent({
 	// 		.show(ids)   : display the form in the editor
 	// 		.values(ids, values) : return the current values from the form
 	logic:{
+		
+		/*
+		 * @function requiredOnChange
+		 *
+		 * The ABField.definitionEditor implements a default operation
+		 * to look for a default field and set it to a required field 
+		 * if the field is set to required
+		 * 
+		 * if you want to override that functionality, implement this fn()
+		 *
+		 * @param {string} newVal	The new value of label
+		 * @param {string} oldVal	The previous value
+		 */
+		requiredOnChange: (newVal, oldVal, ids) => {
+
+			// when require value, then default value needs to be reqired
+			$$(ids.default).define("required", newVal);
+			$$(ids.default).refresh();
+
+		},
 
 	},
 
@@ -128,14 +157,14 @@ class ABFieldString extends ABField {
     	/*
     	{
 			settings: {
-				textDefault: 'string',
+				default: 'string',
 				supportMultilingual: 1/0
 			}
     	}
     	*/
 
     	// we're responsible for setting up our specific settings:
-    	this.settings.textDefault = values.settings.textDefault || '';
+    	this.settings.default = values.settings.default || '';
     	this.settings.supportMultilingual = values.settings.supportMultilingual+"" || "0";
 
     	// text to Int:
@@ -232,8 +261,8 @@ class ABFieldString extends ABField {
 		if (!values[this.columnName]) {
 
 			// Set default string
-			if (this.settings.textDefault) {
-				values[this.columnName] = this.settings.textDefault;
+			if (this.settings.default) {
+				values[this.columnName] = this.settings.default;
 			}
 
 		}
@@ -250,7 +279,9 @@ class ABFieldString extends ABField {
 	 * @return {array} 
 	 */
 	isValidData(data, validator) {
-
+		
+		super.isValidData(data, validator);
+		
 		if (data && data[this.columnName]) {
 			var max_length = 255;
 			

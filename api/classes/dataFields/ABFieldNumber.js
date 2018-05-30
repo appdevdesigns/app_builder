@@ -47,8 +47,8 @@ var formatList = [
 ];
 
 var defaultValues = {
-	'allowRequired': 0,
-	'numberDefault': '',
+	// 'allowRequired': 0,
+	'default': '',
 	'typeFormat': 'none',
 	'typeDecimals': 'none',
 	'typeDecimalPlaces': 'none',
@@ -69,7 +69,7 @@ class ABFieldNumber extends ABField {
     	{
 			settings: {
 				'allowRequired':0,
-				'numberDefault':null,
+				'default':null,
 				'typeFormat': 'none',
 				'typeDecimals': 'none',
 				'typeDecimalPlaces': 'none',
@@ -89,7 +89,7 @@ class ABFieldNumber extends ABField {
 
 
 		// text to Int:
-		this.settings.allowRequired = parseInt(this.settings.allowRequired);
+		// this.settings.allowRequired = parseInt(this.settings.allowRequired);
 		this.settings.validation = parseInt(this.settings.validation);
 
 	}
@@ -156,7 +156,7 @@ class ABFieldNumber extends ABField {
 			(resolve, reject) => {
 
 				var tableName = this.object.dbTableName();
-				var defaultTo = parseInt(this.settings.numberDefault);
+				var defaultTo = parseInt(this.settings.default);
 
 
 				// if this column doesn't already exist (you never know)
@@ -164,6 +164,7 @@ class ABFieldNumber extends ABField {
 					.then((exists) => {
 
 						return knex.schema.table(tableName, (t) => {
+
 							var currCol;
 
 							// if this is an integer:
@@ -180,8 +181,8 @@ class ABFieldNumber extends ABField {
 
 							}
 
-							// not null
-							if (this.settings.allowRequired) {
+							// field is required (not null)
+							if (this.settings.required) {
 								currCol.notNullable();
 							}
 							else {
@@ -189,8 +190,11 @@ class ABFieldNumber extends ABField {
 							}
 
 							// set default value
-							if (defaultTo) {
+							if (defaultTo != null) {
 								currCol.defaultTo(defaultTo);
+							}
+							else {
+								currCol.defaultTo(null);
 							}
 
 							if (exists) {
@@ -207,6 +211,19 @@ class ABFieldNumber extends ABField {
 
 			}
 		)
+
+	}
+
+
+
+	/**
+	 * @function migrateUpdate
+	 * perform the necessary sql actions to MODIFY this column to the DB table.
+	 * @param {knex} knex the Knex connection.
+	 */
+	migrateUpdate (knex) {
+
+		return this.migrateCreate(knex);
 
 	}
 

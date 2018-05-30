@@ -43,7 +43,9 @@ var ABFieldListDefaults = {
 		} else {
 			return false;
 		}
-	}
+	},
+
+	supportRequire: true
 
 };
 
@@ -57,14 +59,14 @@ var defaultValues = {
 	isMultiple: 0,
 	hasColors: 0,
 	options: [],
-	singleDefault: 'none',
+	default: 'none',
 	multipleDefault: []
 };
 
 var ids = {
 	isMultiple: 'ab-list-multiple-option',
 	hasColors: 'ab-list-colors-option',
-	singleDefault: 'ab-list-single-default',
+	default: 'ab-list-single-default',
 	multipleDefault: 'ab-list-multiple-default',
 	options: 'ab-list-option',
 	colorboard: 'ab-colorboard'
@@ -131,7 +133,7 @@ function updateDefaultList(ids, settings = {}) {
 	selectivityRender.selectivityRender(domNode, {
 		multiple: true,
 		data: settings.multipleDefault,
-		placeholder: '[Select]',
+		placeholder: L('ab.dataField.list.placeholder_multiple', '*Select items'),
 		items: optList.map(function (opt) {
 			return {
 				id: opt.id,
@@ -140,20 +142,21 @@ function updateDefaultList(ids, settings = {}) {
 			}
 		})
 	});
+	domNode.addEventListener("change", function(e) {
+		if (e.value.length) {
+			$$(ids.multipleDefault).define("required", false);
+		} else if ($$(ids.multipleDefault).$view.querySelector(".webix_inp_label").classList.contains("webix_required")) {
+			$$(ids.multipleDefault).define("required", true);
+		}
+	})
 
 	// Single default selector
-	optList.unshift({
-		id: 'none',
-		value: '[No Default]'
-	});
-	$$(ids.singleDefault).define('options', optList);
+	$$(ids.default).define('options', optList);
+	if (settings.default)
+		$$(ids.default).setValue(settings.default);
 
-	if (settings.singleDefault)
-		$$(ids.singleDefault).setValue(settings.singleDefault);
-	else
-		$$(ids.singleDefault).setValue('none');
 
-	$$(ids.singleDefault).refresh();
+	$$(ids.default).refresh();
 }
 
 /**
@@ -181,11 +184,11 @@ var ABFieldListComponent = new ABFieldComponent({
 				on: {
 					onChange: (newV, oldV) => {
 						if (newV == true) {
-							$$(ids.singleDefault).hide();
+							$$(ids.default).hide();
 							$$(ids.multipleDefault).show();
 						}
 						else {
-							$$(ids.singleDefault).show();
+							$$(ids.default).show();
 							$$(ids.multipleDefault).hide();
 						}
 
@@ -295,27 +298,28 @@ var ABFieldListComponent = new ABFieldComponent({
 				}
 			},
 			{
-				id: ids.singleDefault,
-				name: "singleDefault",
+				id: ids.default,
+				placeholder: L('ab.dataField.list.selectDefault', "*Select Default"),
+				name: "default",
 				view: 'richselect',
-				label: 'Default',
-				options: [{
-					id: 'none',
-					value: '[No Default]'
-				}],
-				value: 'none'
+				label: 'Default'
 			},
 			{
 				id: ids.multipleDefault,
 				name: 'multipleDefault',
-				view: 'template',
-				label: 'Default',
-				height: 50,
+				view: 'forminput',
+				labelWidth: 0,
+				height: 36,
 				borderless: true,
 				hidden: true,
-				template:
-				'<label style="width: 80px;text-align: left;line-height:32px;" class="webix_inp_label">Default</label>' +
-				'<div class="list-data-values"></div>'
+				body:{
+					view: App.custom.focusabletemplate.view,
+					css:  "customFieldCls", 
+					borderless: true,
+					template:
+		 				'<label style="width: 80px;text-align: left;line-height:32px;" class="webix_inp_label">Default</label>' +
+						'<div style="margin-left: 80px; height: 36px;" class="list-data-values form-entry"></div>',
+				}
 			}
 		];
 	},
@@ -341,13 +345,8 @@ var ABFieldListComponent = new ABFieldComponent({
 			$$(ids.hasColors).setValue(0);
 			$$(ids.options).clearAll();
 
-			$$(ids.singleDefault).define('options', [
-				{
-					id: 'none',
-					value: '[No Default]'
-				}
-			]);
-			$$(ids.singleDefault).setValue(defaultValues.singleDefault);
+			$$(ids.default).define('options', []);
+			$$(ids.default).setValue(defaultValues.default);
 
 			var domNode = $$(ids.multipleDefault).$view.querySelector('.list-data-values');
 			if (domNode && domNode.selectivity) {
@@ -379,6 +378,36 @@ var ABFieldListComponent = new ABFieldComponent({
 			setTimeout(() => {
 				updateDefaultList(ids, field.settings);
 			}, 10);
+		},
+		
+		/*
+		 * @function requiredOnChange
+		 *
+		 * The ABField.definitionEditor implements a default operation
+		 * to look for a default field and set it to a required field 
+		 * if the field is set to required
+		 * 
+		 * if you want to override that functionality, implement this fn()
+		 *
+		 * @param {string} newVal	The new value of label
+		 * @param {string} oldVal	The previous value
+		 */
+		requiredOnChange: (newVal, oldVal, ids) => {
+			
+			// when require number, then default value needs to be reqired
+			$$(ids.default).define("required", newVal);
+			$$(ids.default).refresh();
+
+			if ($$(ids.multipleDefault).$view.querySelector(".webix_inp_label")) {
+				if (newVal) {
+					$$(ids.multipleDefault).define("required", true);
+					$$(ids.multipleDefault).$view.querySelector(".webix_inp_label").classList.add("webix_required");
+				} else {
+					$$(ids.multipleDefault).define("required", false);
+					$$(ids.multipleDefault).$view.querySelector(".webix_inp_label").classList.remove("webix_required");
+				}
+			}
+			
 		},
 
 		values: (ids, values) => {
@@ -686,7 +715,8 @@ class ABFieldList extends ABFieldSelectivity {
 		    if (editable) {
 		        formClass = " form-entry";
 		        placeHolder = "<span style='color: #CCC; padding: 0 5px;'>"+L('ab.dataField.list.placeholder', '*Select item')+"</span>";
-		    }
+			}
+			var isRemovable = (editable && !this.settings.required);
 			
 			config.template = function(obj) {
 				var myHex = "#666666";
@@ -698,10 +728,10 @@ class ABFieldList extends ABFieldSelectivity {
 					}
 				});
 				if (field.settings.hasColors && obj[field.columnName]) {
-					return '<span class="selectivity-single-selected-item rendered'+formClass+'" style="background-color:'+myHex+' !important;">'+myText+ (editable ? ' <a class="selectivity-single-selected-item-remove"><i class="fa fa-remove"></i></a>' : '') + '</span>';
+					return '<span class="selectivity-single-selected-item rendered'+formClass+'" style="background-color:'+myHex+' !important;">'+myText+ (isRemovable ? ' <a class="selectivity-single-selected-item-remove"><i class="fa fa-remove"></i></a>' : '') + '</span>';
 				} else {
 					if (myText != placeHolder) {
-						return myText + (editable ? ' <a class="selectivity-single-selected-item-remove" style="color: #333;"><i class="fa fa-remove"></i></a>' : '');
+						return myText + (isRemovable ? ' <a class="selectivity-single-selected-item-remove" style="color: #333;"><i class="fa fa-remove"></i></a>' : '');
 					} else {
 						return myText;
 					}
@@ -861,8 +891,8 @@ class ABFieldList extends ABFieldSelectivity {
 			values[this.columnName] = this.settings.multipleDefault || [];
 		}
 		// Single select list
-		else if (this.settings.singleDefault && this.settings.singleDefault != 'none') {
-			values[this.columnName] = this.settings.singleDefault;
+		else if (this.settings.default && this.settings.default != '') {
+			values[this.columnName] = this.settings.default;
 		}
 	}
 
@@ -878,8 +908,9 @@ class ABFieldList extends ABFieldSelectivity {
 	 * @return {array} 
 	 */
 	isValidData(data, validator) {
-
-
+		
+		super.isValidData(data, validator);
+		
 	}
 
 
