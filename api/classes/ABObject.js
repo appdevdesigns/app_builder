@@ -113,7 +113,8 @@ module.exports = class ABObject extends ABObjectBase {
 
 	dbSchemaName() {
 
-		return sails.config.connections[this.connName || "appBuilder"].database;
+		return sails.config.connections["appBuilder"].database;
+		// return sails.config.connections[this.connName || "appBuilder"].database;
 
 	}
 
@@ -279,7 +280,7 @@ module.exports = class ABObject extends ABObjectBase {
 
 		if (!__ModelPool[tableName]) {
 
-			var knex = ABMigration.connection(this.connName || undefined);
+			var knex = ABMigration.connection();
 
 			// Compile our jsonSchema from our DataFields
 			// jsonSchema is only used by Objection.js to validate data before
@@ -513,13 +514,17 @@ module.exports = class ABObject extends ABObjectBase {
 	 */
 	queryFind(options, userData) {
 
-		var query = this.model().query();
+        return new Promise((resolve, reject)=>{
+            
+            var query = this.model().query();
 
-		if (options) {
-			this.populateFindConditions(query, options, userData)
-		}
-
-		return query;
+            if (options) {
+                this.populateFindConditions(query, options, userData)
+            }
+            
+            resolve(query);
+        })
+        
 	}
 
 
@@ -550,7 +555,12 @@ module.exports = class ABObject extends ABObjectBase {
         delete options.limit;
 
 		// added tableName to id because of non unique field error
-		return this.queryFind(options, userData).count('* as count');
+		return this.queryFind(options, userData)
+        .then((query)=>{
+            // TODO:: we need to figure out how to return the count not the full data
+            return query.length;
+        });
+        
 		// '{tableName}.{pkName} as count'
 		// 													.replace("{tableName}", tableName)
 		// 													.replace("{pkName}", this.PK()));

@@ -37,7 +37,7 @@ var ABFieldDateDefaults = {
 var defaultValues = {
 	includeTime: 0,
 	defaultCurrentDate: 0,
-	defaultDate: "",
+	default: "",
 	dayFormat: "%d",
 	dayOrder: 1,
 	dayDelimiter: "slash",
@@ -192,13 +192,22 @@ class ABFieldDate extends ABField {
 							// 	currCol = t.date(this.columnName);
 							// }
 
-							currCol.nullable();
+							// field is required (not null)
+							if (this.settings.required) {
+								currCol.notNullable();
+							}
+							else {
+								currCol.nullable();
+							}
 
 							// set default value
-							if (this.settings.defaultDate && moment(this.settings.defaultDate).isValid()) {
-								var defaultDate = AppBuilder.rules.toSQLDateTime(this.settings.defaultDate);
+							if (this.settings.default && moment(this.settings.default).isValid()) {
+								var defaultDate = AppBuilder.rules.toSQLDateTime(this.settings.default);
 
 								currCol.defaultTo(defaultDate);
+							}
+							else {
+								currCol.defaultTo(null);
 							}
 
 							if (exists) {
@@ -216,7 +225,20 @@ class ABFieldDate extends ABField {
 	}
 
 
+
 	/**
+	 * @function migrateUpdate
+	 * perform the necessary sql actions to MODIFY this column to the DB table.
+	 * @param {knex} knex the Knex connection.
+	 */
+	migrateUpdate (knex) {
+		
+		return migrateCreate(knex);
+
+	}
+
+
+			/**
 	 * @function migrateDrop
 	 * perform the necessary sql actions to drop this column from the DB table.
 	 * @param {knex} knex the Knex connection.

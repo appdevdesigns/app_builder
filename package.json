@@ -33,7 +33,7 @@
     "moment": "^2.18.1",
     "mysql": "^2.13.0",
     "node-uuid": "^1.4.8",
-    "objection": "^0.7.12",
+    "objection": "1.1.8",
     "qrcode": "^1.2.0",
     "request": "^2.85.0",
     "request-promise-native": "^1.0.5",

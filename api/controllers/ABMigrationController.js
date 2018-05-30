@@ -56,6 +56,20 @@ module.exports = {
 
 
     /**
+     * updateField
+     *
+     * put app_builder/migrate/application/:appID/object/:objID/field/:fieldID
+     */
+    updateField: function(req, res) {
+        
+        simpleFieldOperation(req, res, 'updateField');
+        
+    },
+
+
+
+
+    /**
      * dropField
      *
      * delete app_builder/migrate/application/:appID/object/:objID/field/:fieldID

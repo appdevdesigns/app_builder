@@ -6,6 +6,13 @@ var ABObject = require(path.join(__dirname, 'ABObject'));
 
 var Model = require('objection').Model;
 
+// list of all the condition filtering policies we want our defined 
+// filters to pass through:
+var PolicyList = [
+	require(path.join(__dirname, '..', 'policies', 'ABModelConvertSameAsUserConditions')),
+	require(path.join(__dirname, '..', 'policies', 'ABModelConvertQueryConditions')),
+	require(path.join(__dirname, '..', 'policies', 'ABModelConvertQueryFieldConditions'))
+]
 
 module.exports = class ABObjectQuery extends ABObject {
 
@@ -565,222 +572,190 @@ module.exports = class ABObjectQuery extends ABObject {
 	 */
 	queryFind(options, userData) {
 
-		var query = ABMigration.connection().queryBuilder();
+		return new Promise((resolve, reject) => {
 
-		var registeredBase = false;  // have we marked the base object/table?
+			var query = ABMigration.connection().queryBuilder();
 
-
-		//// Now compile our joins:
-
-		function makeLink(link, joinTable, A, op, B) {
-			console.log('link.type:' + link.type);
-
-			// try to correct some type mistakes:
-			var type = link.type.toLowerCase();
-			var convertHash = {
-				'left': 'leftJoin',
-				'leftjoin': 'leftJoin',
-				'leftouterjoin': 'leftOuterJoin',
-				'right': 'rightJoin',
-				'rightjoin': 'rightJoin',
-				'rightouterjoin': 'rightOuterJoin',
-				'innerjoin': 'innerJoin',
-				'fullouterjoin': 'fullOuterJoin'
-			}
-			if (convertHash[type]) {
-				type = convertHash[type];
-			}
-			query[type](joinTable, function () {
-				this.on(A, op, B);
-			});
-		}
+			var registeredBase = false;  // have we marked the base object/table?
 
 
-		this.joins().forEach((link) => {
+			//// Now compile our joins:
 
-			var baseObject = this.application.urlResolve(link.objectURL);
+			function makeLink(link, joinTable, A, op, B) {
+				console.log('link.type:' + link.type);
 
-
-			// mark the 1st object as our initial .from() 
-			if (!registeredBase) {
-				query.from(baseObject.dbTableName());
-				registeredBase = true;
-			}
-
-			// no link column
-			if (!link.fieldID) return;
-
-			var connectionField = baseObject.fields((f) => { return f.id == link.fieldID; })[0];
-			if (!connectionField) return; // no link so skip this turn.
-
-
-			var connectedObject = connectionField.datasourceLink;
-			var joinTable = connectedObject.dbTableName();
-
-			var fieldLinkType = connectionField.linkType();
-			switch (fieldLinkType) {
-
-				case 'one':
-
-					if (connectionField.settings.isSource || // 1:1 - this column is source
-						connectionField.linkViaType() == 'many') { // 1:M 
-						// the base object can have 1 connected object
-						// the base object has the remote obj's .id in our field
-						// baseObject JOIN  connectedObject ON baseObject.columnName = connectedObject.id
-
-
-						// columnName comes from the baseObject
-						var columnName = connectionField.columnName;
-						var baseClause = baseObject.dbTableName() + '.' + columnName;
-						var connectedClause = joinTable + '.' + connectedObject.PK();
-						makeLink(link, joinTable, baseClause, '=', connectedClause);
-
-					} else {
-						// the base object can have 1 connected object
-						// the base object's .id is in the connected Objects' colum 
-						// baseObject JOIN  connectedObject ON baseObject.id = connectedObject.columnName
-
-						// columnName comes from the baseObject
-						var connectedField = connectionField.fieldLink();
-						if (!connectedField) return;  // this is a problem!
-
-
-						var columnName = connectedField.columnName;
-						var baseClause = baseObject.dbTableName() + '.' + baseObject.PK();
-						var connectedClause = joinTable + '.' + columnName;
-						makeLink(link, joinTable, baseClause, '=', connectedClause);
-
-					}
-					break;
-
-				case 'many':
-
-					if (connectionField.linkViaType() == 'one') {
-						// the base object can have many connectedObjects
-						// the connected object can only have one base object
-						// the base object's .id is stored in connected objects column
-						// baseObject JOIN connectedObject ON baseObject.id == connectedObject.columnName
-
-						// columnName comes from the baseObject
-						var connectedField = connectionField.fieldLink();
-						if (!connectedField) return;  // this is a problem!
-
-
-						var columnName = connectedField.columnName;
-						var baseClause = baseObject.dbTableName() + '.' + baseObject.PK();
-						var connectedClause = joinTable + '.' + columnName;
-						makeLink(link, joinTable, baseClause, '=', connectedClause);
-
-					} else {
-
-						// M:N connection
-						// the base object can have Many connectedObjects
-						// the connected object can have Many baseObjects
-						// There is going to be a join table connecting the two:
-						// the base object's .id is stored in connected objects column
-						// baseObject JOIN joinTable ON baseObject.id == joinTable.[baseColumnName]
-						// 		JOIN connectedObject ON joinTable.[connectedObjectName] == connectedObject.id
-
-						//// Make Base Connection
-						// get joinTable
-						joinTable = connectionField.joinTableName();
-
-						// get baseObjectColumn in joinTable
-						var baseObjectColumn = baseObject.name; // AppBuilder.rules.toJunctionTableFK(baseObject.name, connectionField.columnName);
-
-						var baseClause = baseObject.dbTableName() + '.' + baseObject.PK();
-						var joinClause = joinTable + '.' + baseObjectColumn;
-
-						// make JOIN
-						makeLink(link, joinTable, baseClause, '=', joinClause);
-
-
-						//// Now connect connectedObject
-						// get connectedObjectColumn in joinTable
-						var connectedField = connectionField.fieldLink();
-						var connectedObjectColumn = connectedObject.name; // AppBuilder.rules.toJunctionTableFK(connectedObject.name, connectedField.columnName);
-
-						var connectedClause = connectedObject.dbTableName() + '.' + connectedObject.PK();
-						joinClause = joinTable + '.' + connectedObjectColumn;
-
-						// make JOIN
-						makeLink(link, connectedObject.dbTableName(), connectedClause, '=', joinClause);
-
-					}
-					break;
-
+				// try to correct some type mistakes:
+				var type = link.type.toLowerCase();
+				var convertHash = {
+					'left': 'leftJoin',
+					'leftjoin': 'leftJoin',
+					'leftouterjoin': 'leftOuterJoin',
+					'right': 'rightJoin',
+					'rightjoin': 'rightJoin',
+					'rightouterjoin': 'rightOuterJoin',
+					'innerjoin': 'innerJoin',
+					'fullouterjoin': 'fullOuterJoin'
+				}
+				if (convertHash[type]) {
+					type = convertHash[type];
+				}
+				query[type](joinTable, function () {
+					this.on(A, op, B);
+				});
 			}
 
 
-		})
+			this.joins().forEach((link) => {
+
+				var baseObject = this.application.urlResolve(link.objectURL);
+
+
+				// mark the 1st object as our initial .from() 
+				if (!registeredBase) {
+					query.from(baseObject.dbTableName());
+					registeredBase = true;
+				}
+
+				// no link column
+				if (!link.fieldID) return;
+
+				var connectionField = baseObject.fields((f) => { return f.id == link.fieldID; })[0];
+				if (!connectionField) return; // no link so skip this turn.
+
+
+				var connectedObject = connectionField.datasourceLink;
+				var joinTable = connectedObject.dbTableName();
+
+				var fieldLinkType = connectionField.linkType();
+				switch (fieldLinkType) {
+
+					case 'one':
+
+						if (connectionField.settings.isSource || // 1:1 - this column is source
+							connectionField.linkViaType() == 'many') { // 1:M 
+							// the base object can have 1 connected object
+							// the base object has the remote obj's .id in our field
+							// baseObject JOIN  connectedObject ON baseObject.columnName = connectedObject.id
+
+
+							// columnName comes from the baseObject
+							var columnName = connectionField.columnName;
+							var baseClause = baseObject.dbTableName() + '.' + columnName;
+							var connectedClause = joinTable + '.' + connectedObject.PK();
+							makeLink(link, joinTable, baseClause, '=', connectedClause);
+
+						} else {
+							// the base object can have 1 connected object
+							// the base object's .id is in the connected Objects' colum 
+							// baseObject JOIN  connectedObject ON baseObject.id = connectedObject.columnName
+
+							// columnName comes from the baseObject
+							var connectedField = connectionField.fieldLink();
+							if (!connectedField) return;  // this is a problem!
+
+
+							var columnName = connectedField.columnName;
+							var baseClause = baseObject.dbTableName() + '.' + baseObject.PK();
+							var connectedClause = joinTable + '.' + columnName;
+							makeLink(link, joinTable, baseClause, '=', connectedClause);
+
+						}
+						break;
+
+					case 'many':
+
+						if (connectionField.linkViaType() == 'one') {
+							// the base object can have many connectedObjects
+							// the connected object can only have one base object
+							// the base object's .id is stored in connected objects column
+							// baseObject JOIN connectedObject ON baseObject.id == connectedObject.columnName
+
+							// columnName comes from the baseObject
+							var connectedField = connectionField.fieldLink();
+							if (!connectedField) return;  // this is a problem!
+
+
+							var columnName = connectedField.columnName;
+							var baseClause = baseObject.dbTableName() + '.' + baseObject.PK();
+							var connectedClause = joinTable + '.' + columnName;
+							makeLink(link, joinTable, baseClause, '=', connectedClause);
+
+						} else {
+
+							// M:N connection
+							// the base object can have Many connectedObjects
+							// the connected object can have Many baseObjects
+							// There is going to be a join table connecting the two:
+							// the base object's .id is stored in connected objects column
+							// baseObject JOIN joinTable ON baseObject.id == joinTable.[baseColumnName]
+							// 		JOIN connectedObject ON joinTable.[connectedObjectName] == connectedObject.id
+
+							//// Make Base Connection
+							// get joinTable
+							joinTable = connectionField.joinTableName();
+
+							// get baseObjectColumn in joinTable
+							var baseObjectColumn = baseObject.name; // AppBuilder.rules.toJunctionTableFK(baseObject.name, connectionField.columnName);
+
+							var baseClause = baseObject.dbTableName() + '.' + baseObject.PK();
+							var joinClause = joinTable + '.' + baseObjectColumn;
+
+							// make JOIN
+							makeLink(link, joinTable, baseClause, '=', joinClause);
+
+
+							//// Now connect connectedObject
+							// get connectedObjectColumn in joinTable
+							var connectedField = connectionField.fieldLink();
+							var connectedObjectColumn = connectedObject.name; // AppBuilder.rules.toJunctionTableFK(connectedObject.name, connectedField.columnName);
+
+							var connectedClause = connectedObject.dbTableName() + '.' + connectedObject.PK();
+							joinClause = joinTable + '.' + connectedObjectColumn;
+
+							// make JOIN
+							makeLink(link, connectedObject.dbTableName(), connectedClause, '=', joinClause);
+
+						}
+						break;
+
+				}
+
+
+			})
 
 
 
-		//// Add in our fields:
-		if (!options.ignoreIncludeColumns) { // get count of rows does not need to include columns
-			var selects = [];
-			var columns = [];
-			this.fields().forEach((f) => {
+			//// Add in our fields:
+			if (!options.ignoreIncludeColumns) { // get count of rows does not need to include columns
+				var selects = [];
+				var columns = [];
+				this.fields().forEach((f) => {
 
-				if (!f)
-					return;
+					if (!f)
+						return;
 
-				var obj = f.object;
+					var obj = f.object;
 
-				// Connect fields
-				if (f.key == 'connectObject') {
+					// Connect fields
+					if (f.key == 'connectObject') {
 
-					var connectColFormat = ("(SELECT CONCAT(" +
-						"'[',GROUP_CONCAT(JSON_OBJECT('id', `{linkTableName}`.`{columnName}`)),']')" +
-						" FROM `{linkTableName}` WHERE `{linkTableName}`.`{linkColumnName}` = `{baseTableName}`.`{baseColumnName}`)" +
-						" as `{objectName}.{displayName}`") // add object's name to alias
-						.replace(/{baseTableName}/g, obj.dbTableName())
-						.replace(/{baseColumnName}/g, obj.PK())
-						.replace(/{objectName}/g, obj.name)
-						.replace(/{displayName}/g, f.relationName());
-
-
-					var field = '';
-					var objLink = f.datasourceLink;
-					var fieldLink = f.fieldLink();
-
-					// 1:M
-					if (f.settings.linkType == 'one' && f.settings.linkViaType == 'many') {
-
-						field = ("IF(`{tableName}`.`{columnName}` IS NOT NULL, " +
-							"JSON_OBJECT('id', `{tableName}`.`{columnName}`)," +
-							"NULL)" +
-							" as '{objectName}.{displayName}'")
-							.replace(/{tableName}/g, obj.dbTableName())
-							.replace(/{columnName}/g, f.columnName)
+						var connectColFormat = ("(SELECT CONCAT(" +
+							"'[',GROUP_CONCAT(JSON_OBJECT('id', `{linkTableName}`.`{columnName}`)),']')" +
+							" FROM `{linkTableName}` WHERE `{linkTableName}`.`{linkColumnName}` = `{baseTableName}`.`{baseColumnName}`)" +
+							" as `{objectName}.{displayName}`") // add object's name to alias
+							.replace(/{baseTableName}/g, obj.dbTableName())
+							.replace(/{baseColumnName}/g, obj.PK())
 							.replace(/{objectName}/g, obj.name)
 							.replace(/{displayName}/g, f.relationName());
 
-					}
 
-					// M:1
-					else if (f.settings.linkType == 'many' && f.settings.linkViaType == 'one') {
+						var field = '';
+						var objLink = f.datasourceLink;
+						var fieldLink = f.fieldLink();
 
-						field = connectColFormat
-							.replace(/{linkTableName}/g, objLink.dbTableName())
-							.replace(/{linkColumnName}/g, fieldLink.columnName)
-							.replace(/{columnName}/g, objLink.PK());
+						// 1:M
+						if (f.settings.linkType == 'one' && f.settings.linkViaType == 'many') {
 
-
-						// check need join table ??
-						if (this.canFilterObject(objLink) == false) {
-
-							let baseClause = obj.dbTableName() + '.' + obj.PK();
-							let linkTable = objLink.dbTableName();
-							let connectedClause = linkTable + '.' + fieldLink.columnName;
-							makeLink({ type: 'left' }, linkTable, baseClause, '=', connectedClause);
-						}
-					}
-
-					// 1:1
-					else if (f.settings.linkType == 'one' && f.settings.linkViaType == 'one') {
-
-						if (f.settings.isSource) {
 							field = ("IF(`{tableName}`.`{columnName}` IS NOT NULL, " +
 								"JSON_OBJECT('id', `{tableName}`.`{columnName}`)," +
 								"NULL)" +
@@ -789,8 +764,12 @@ module.exports = class ABObjectQuery extends ABObject {
 								.replace(/{columnName}/g, f.columnName)
 								.replace(/{objectName}/g, obj.name)
 								.replace(/{displayName}/g, f.relationName());
+
 						}
-						else {
+
+						// M:1
+						else if (f.settings.linkType == 'many' && f.settings.linkViaType == 'one') {
+
 							field = connectColFormat
 								.replace(/{linkTableName}/g, objLink.dbTableName())
 								.replace(/{linkColumnName}/g, fieldLink.columnName)
@@ -806,166 +785,261 @@ module.exports = class ABObjectQuery extends ABObject {
 								makeLink({ type: 'left' }, linkTable, baseClause, '=', connectedClause);
 							}
 						}
-					}
 
-					// M:N
-					else if (f.settings.linkType == 'many' && f.settings.linkViaType == 'many') {
+						// 1:1
+						else if (f.settings.linkType == 'one' && f.settings.linkViaType == 'one') {
 
-						let joinTableName = f.joinTableName();
+							if (f.settings.isSource) {
+								field = ("IF(`{tableName}`.`{columnName}` IS NOT NULL, " +
+									"JSON_OBJECT('id', `{tableName}`.`{columnName}`)," +
+									"NULL)" +
+									" as '{objectName}.{displayName}'")
+									.replace(/{tableName}/g, obj.dbTableName())
+									.replace(/{columnName}/g, f.columnName)
+									.replace(/{objectName}/g, obj.name)
+									.replace(/{displayName}/g, f.relationName());
+							}
+							else {
+								field = connectColFormat
+									.replace(/{linkTableName}/g, objLink.dbTableName())
+									.replace(/{linkColumnName}/g, fieldLink.columnName)
+									.replace(/{columnName}/g, objLink.PK());
 
-						field = connectColFormat
-							.replace(/{linkTableName}/g, joinTableName)
-							.replace(/{linkColumnName}/g, obj.name)
-							.replace(/{columnName}/g, objLink.name);
 
+								// check need join table ??
+								if (this.canFilterObject(objLink) == false) {
 
-						// check need join table ??
-						if (this.canFilterObject(objLink) == false) {
-
-							let baseClause = obj.dbTableName() + '.' + obj.PK();
-							let connectedClause = joinTableName + '.' + obj.name;
-							makeLink({ type: 'left' }, joinTableName, baseClause, '=', connectedClause);
+									let baseClause = obj.dbTableName() + '.' + obj.PK();
+									let linkTable = objLink.dbTableName();
+									let connectedClause = linkTable + '.' + fieldLink.columnName;
+									makeLink({ type: 'left' }, linkTable, baseClause, '=', connectedClause);
+								}
+							}
 						}
 
+						// M:N
+						else if (f.settings.linkType == 'many' && f.settings.linkViaType == 'many') {
+
+							let joinTableName = f.joinTableName();
+
+							field = connectColFormat
+								.replace(/{linkTableName}/g, joinTableName)
+								.replace(/{linkColumnName}/g, obj.name)
+								.replace(/{columnName}/g, objLink.name);
+
+
+							// check need join table ??
+							if (this.canFilterObject(objLink) == false) {
+
+								let baseClause = obj.dbTableName() + '.' + obj.PK();
+								let connectedClause = joinTableName + '.' + obj.name;
+								makeLink({ type: 'left' }, joinTableName, baseClause, '=', connectedClause);
+							}
+
+						}
+
+
+						if (field)
+							selects.push(ABMigration.connection().raw(field));
+
+					}
+					// Normal fields
+					else {
+
+						var columnName = f.columnName;
+
+						if (f.isMultilingual)
+							columnName = 'translations';
+
+						var field = ("{tableName}.{columnName}" +
+							" as {objectName}.{displayName}") // add object's name to alias
+							.replace(/{tableName}/g, obj.dbTableName())
+							.replace(/{columnName}/g, columnName)
+							.replace(/{objectName}/g, obj.name)
+							.replace(/{displayName}/g, columnName);
+
+						columns.push(field);
+
 					}
 
-
-					if (field)
-						selects.push(ABMigration.connection().raw(field));
-
-				}
-				// Normal fields
-				else {
-
-					var columnName = f.columnName;
-
-					if (f.isMultilingual)
-						columnName = 'translations';
-
-					var field = ("{tableName}.{columnName}" +
-						" as {objectName}.{displayName}") // add object's name to alias
-						.replace(/{tableName}/g, obj.dbTableName())
-						.replace(/{columnName}/g, columnName)
-						.replace(/{objectName}/g, obj.name)
-						.replace(/{displayName}/g, columnName);
-
-					columns.push(field);
-
-				}
-
-			});
-
-			query.columns(columns);
-			query.select(selects);
-			query.distinct();
-
-		}
-
-
-
-		// update our condition to include the one we are defined with:
-		// 
-		if (this.workspaceFilterConditions && this.workspaceFilterConditions.glue) {
-			if (options.where && options.where.glue) {
-
-				// in the case where we have a condition and a condition was passed in
-				// combine our conditions
-				// queryCondition AND givenConditions:
-				// var oWhere = _.clone(options.where);
-
-				// var newWhere = {
-				// 	glue: 'and',
-				// 	rules: [
-				// 		this.where,
-				// 		oWhere
-				// 	]
-				// }
-
-				// options.where = newWhere;
-
-				options.where.rules = options.where.rules || [];
-
-				(this.workspaceFilterConditions.rules || []).forEach(r => {
-					options.where.rules.push(r);
 				});
 
-			} else {
+				query.column(columns);
+				query.select(selects);
+				query.distinct();
 
-				// if we had a condition and no condition was passed in, 
-				// just use ours:
-				options.where = this.workspaceFilterConditions;
 			}
-		}
-
-		if (options) {
-			this.populateFindConditions(query, options, userData);
-		}
 
 
+			// update our condition to include the one we are defined with:
+			// 
+			if (this.workspaceFilterConditions && this.workspaceFilterConditions.glue) {
+				if (options.where && options.where.glue) {
 
-		// edit property names of .translation
-		// {objectName}.{columnName}
-		if (!options.ignoreEditTranslations) {
+					// in the case where we have a condition and a condition was passed in
+					// combine our conditions
+					// queryCondition AND givenConditions:
+					// var oWhere = _.clone(options.where);
 
-			query.on('query-response', function (rows, obj, builder) {
+					// var newWhere = {
+					// 	glue: 'and',
+					// 	rules: [
+					// 		this.where,
+					// 		oWhere
+					// 	]
+					// }
 
-				(rows || []).forEach((r) => {
+					// options.where = newWhere;
 
-					// each rows
-					Object.keys(r).forEach((rKey) => {
+					options.where.rules = options.where.rules || [];
 
-						// objectName.translations
-						if (rKey.endsWith('.translations')) {
+					(this.workspaceFilterConditions.rules || []).forEach(r => {
+						// START HERE MAY 29
+						options.where.rules.push(_.clone(r));
+					});
 
-							r.translations = r.translations || [];
+				} else {
 
-							var objectName = rKey.replace('.translations', '');
+					// if we had a condition and no condition was passed in, 
+					// just use ours:
+					options.where = this.workspaceFilterConditions;
+				}
+			}
 
-							var translations = [];
-							if (typeof r[rKey] == 'string')
-								translations = JSON.parse(r[rKey]);
+			if (options.columnNames && options.columnNames.length) {
+				query.clearSelect().column(options.columnNames);
+			}
+			
+			if (options) {
+				
+				// run the options.where through our existing policy filters
+				// get array of policies to run through
+				var processPolicy = (indx, cb) => {
+					
+					if (indx >= PolicyList.length) {
+						cb();
+					} else {
 
-							// each elements of trans
-							(translations || []).forEach((tran) => {
+						// load the policy
+						var policy = PolicyList[indx];
+					
+						// run the policy on my data
+						// policy(req, res, cb)
+						// 	req.options._where
+						//  req.user.data
+						var myReq = {
+							options:{
+								_where:options.where
+							},
+							user:{
+								data:userData
+							},
+							param: (id) => {
+								if (id == "appID") {
+									return this.application.id;
+								} else if (id == "objID") {
+									return this.id;
+								}
+							}
+						}
 
-								var newTran = {
-									language_code: tran.language_code
-								};
+						policy(myReq, {}, (err)=>{
+							
+							if (err) {
+								cb(err);
+							} else {
+								// try the next one
+								processPolicy(indx+1, cb);
+							}
+						})
+					}
+				}
+				
+				// run each One
+				processPolicy(0, (err)=>{
+					
+					// now that I'm through with updating our Conditions
+					
+					if (err) {
+						reject(err);
+					} else {
+						
+						// when finished populate our Find Conditions
+						this.populateFindConditions(query, options, userData);
+						
+						// after all that, resolve our promise with the query results
+						resolve(query); // query.then(resolve);
+					}
+				})
+				
+			}
+			
+			
+			// edit property names of .translation
+			// {objectName}.{columnName}
+			if (!options.ignoreEditTranslations) {
 
-								// include objectName into property - objectName.propertyName
-								Object.keys(tran).forEach(tranKey => {
+				query.on('query-response', function (rows, obj, builder) {
 
-									if (tranKey == 'language_code') return;
+					(rows || []).forEach((r) => {
 
-									var newTranKey = "{objectName}.{propertyName}"
-										.replace("{objectName}", objectName)
-										.replace("{propertyName}", tranKey);
+						// each rows
+						Object.keys(r).forEach((rKey) => {
 
-									// add new property name
-									newTran[newTranKey] = tran[tranKey]
+							// objectName.translations
+							if (rKey.endsWith('.translations')) {
+
+								r.translations = r.translations || [];
+
+								var objectName = rKey.replace('.translations', '');
+
+								var translations = [];
+								if (typeof r[rKey] == 'string')
+									translations = JSON.parse(r[rKey]);
+
+								// each elements of trans
+								(translations || []).forEach((tran) => {
+
+									var newTran = {
+										language_code: tran.language_code
+									};
+
+									// include objectName into property - objectName.propertyName
+									Object.keys(tran).forEach(tranKey => {
+
+										if (tranKey == 'language_code') return;
+
+										var newTranKey = "{objectName}.{propertyName}"
+											.replace("{objectName}", objectName)
+											.replace("{propertyName}", tranKey);
+
+										// add new property name
+										newTran[newTranKey] = tran[tranKey]
+
+									});
+
+
+									r.translations.push(newTran);
 
 								});
 
 
-								r.translations.push(newTran);
+								// remove old translations
+								delete rows[rKey];
 
-							});
+							}
 
-
-							// remove old translations
-							delete rows[rKey];
-
-						}
+						});
 
 					});
 
 				});
 
-			});
-
-		}
-
-		return query;
+			} // if ignoreEditTranslations
+			
+			// return query;
+		
+		})
 
 	}
 

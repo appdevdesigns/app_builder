@@ -25,10 +25,13 @@ module.exports =  class ABField extends ABFieldBase {
   			key:'fieldKey',				// unique key for this Field
   			icon:'font',				// fa-[icon] reference for an icon for this Field Type
   			label:'',					// pulled from translation
-			columnName:'column_name',	// a valid mysql table.column name 
-			isImported: 1/0,			// flag to mark is import from other object
+			columnName:'column_name',	// a valid mysql table.column name
+			isImported: 1/0,			// flag to mark is import from other object			
 			settings: {					// unique settings for the type of field
 				showIcon:true/false,	// only useful in Object Workspace DataTable
+				isImported: 1/0,		// flag to mark is import from other object
+				required: 1/0,			// field allows does not allow NULL or it does allow NULL 
+				width: {int}			// width of display column
 
 				// specific for dataField
 			},
@@ -52,6 +55,25 @@ module.exports =  class ABField extends ABFieldBase {
 	 */
 	migrateCreate (knex) {
 		sails.log.error('!!! Field ['+this.fieldKey()+'] has not implemented migrateCreate()!!! ');
+	}
+
+
+	/**
+	 * @function migrateUpdate
+	 * perform the necessary sql actions to MODIFY this column to the DB table.
+	 * @param {knex} knex the Knex connection.
+	 */
+	migrateUpdate (knex) {
+		sails.log.error('!!! Field ['+this.fieldKey()+'] has not implemented migrateUpdate()!!! ');
+		
+		return new Promise(
+			(resolve, reject) => {
+
+				// skip to MODIFY exists column
+				resolve();
+
+			}
+		);
 	}
 
 

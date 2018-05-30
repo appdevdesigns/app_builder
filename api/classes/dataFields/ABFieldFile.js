@@ -163,7 +163,13 @@ class ABFieldFile extends ABField {
 						if (!exists) {
 
 							return knex.schema.table(tableName, (t) => {
-								t.json(this.columnName).nullable();
+								// field is required (not null)
+								if (this.settings.required) {
+									t.json(this.columnName).notNullable();
+								}
+								else {
+									t.json(this.columnName).nullable();
+								}
 							})
 								.then(resolve, reject);
 

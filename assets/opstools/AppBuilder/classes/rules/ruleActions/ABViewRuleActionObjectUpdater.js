@@ -94,6 +94,26 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 
 		var _logic = {
 
+
+			removeAddRow: () => {
+				// get our Form
+				var UpdateForm = _logic.formGet();
+				if (!UpdateForm) return;
+
+				// check row that's unselect a field
+				var rows = UpdateForm.getChildViews();
+
+				var addRow = rows.filter(r => {
+						return r.queryView(function(view) {
+							return view.config.name == "field" && !view.getValue();
+						});
+					})[0];
+				if (!addRow) return;
+
+				UpdateForm.removeView(addRow);
+			},
+
+
 			// addRow
 			// add a new data entry to this form.
 			// @param {obj} data  (optional) initial values for this row.
@@ -219,6 +239,13 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 				} 
 
 
+				// our default operation will cause an empty row to 
+				// appear after our first value entry.
+				// let's remove that one, and then add a new one 
+				// at the end:
+				_logic.removeAddRow();
+
+
 				// display an empty row
 				_logic.addRow(); 
 
@@ -305,7 +332,19 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 				var options = [];
 				if (this.updateObject) {
 
-					options = (this.updateObject.fields() || []).map(f => {
+					options = (this.updateObject.fields() || [])
+					.filter(f => {
+
+						if (f.key != 'connectObject') {
+							return true;
+						} else {
+							// if this is a connection field, only return
+							// fields that are 1:x  where this field is the
+							// source:
+							return ((f.linkType() == 'one') && (f.isSource()))
+						}
+					})
+					.map(f => {
 						return {
 							id: f.id,
 							value: f.label
@@ -413,6 +452,46 @@ if (field.key == 'user') {
 	});
 }
 
+				// UPDATE: ok, in practice we have not had any use cases where
+				// we want individual values on connectedObject fields, but 
+				// instead we want to insert the current selected element from 
+				// a relevant datacollection.  So, replace the fieldComponet 
+				// from a connectedObject field with a list of dataCollections that
+				// are based upon the same object we are connected to:
+				if (field.key == 'connectObject') {
+
+					// find the ABObject this field connects to
+					var connectedObject = field.datasourceLink;
+
+
+					// find all the DataSources that are based upon this ABObject
+					// to do this, we find the root Page we are on, then ask that Page for datasources:
+					var dataCollections = this.currentForm.pageRoot().dataCollections((dc)=>{ return dc.datasource.id == connectedObject.id;});
+
+
+					// create a droplist with those dataSources
+					var options = [ { id:'select-one', value:'*Current Selection in' }];
+					dataCollections.forEach((dc)=>{
+						options.push({ id:dc.id, value:dc.label });
+					})
+
+					inputView = {
+						id:ids.value,
+						view:'select',
+						options:options
+					}
+
+					// and the upcoming formFieldComponent.init() 
+					// doesn't need to do anything:
+					formFieldComponent = {
+						init:function(){}
+					}
+
+					// and we reset field so it's customDisplay isn't called:
+					field = {};
+
+				}
+
 				// Change component to display this field's form input
 				var $row = $$(ids.row);
 				$row.removeView($row.getChildViews()[3]);
@@ -442,8 +521,20 @@ if (field.key == 'user') {
 				$$(ids.field).setValue(data.fieldID);
 					// note: this triggers our _logic.selectField() fn.
 				var field = this.getUpdateObjectField( data.fieldID );
-				if (field)
-					field.setValue($$(ids.value), data.value);
+				if (field) {
+
+					// now handle our special connectedObject case:
+					if (field.key == 'connectObject') {
+
+						$$(ids.value).setValue(data.value);
+
+					} else {
+
+						field.setValue($$(ids.value), data.value);
+					}
+
+					
+				}
 			},
 
 			toSettings: () => {
@@ -459,9 +550,20 @@ if (field.key == 'user') {
 					var valueField = $$(ids.value);
 					var field = this.getUpdateObjectField( data.fieldID );
 					
-					data.value = field.getValue(valueField, {});
-					data.op = 'set';  // possible to create other types of operations.
-					data.type = field.key;
+					// now handle our special connectedObject case:
+					if (field.key == 'connectObject') {
+
+						data.value = $$(ids.value).getValue(); 
+						data.op = 'set';  // possible to create other types of operations.
+						data.type = field.key;
+
+					} else {
+
+						data.value = field.getValue(valueField, {});
+						data.op = 'set';  // possible to create other types of operations.
+						data.type = field.key;
+					}
+
 
 					return data;
 				}
@@ -617,10 +719,38 @@ if (field.key == 'user') {
 			var field = this.getUpdateObjectField(op.fieldID);
 			if (field) { 
 
+				var value = op.value;
+
+
+				// in the case of a connected Field, we use op.value to get the 
+				// datacollection, and find it's currently selected value:
+				if (field.key == 'connectObject') {
+
+
+					// NOTE: 30 May 2018 :current decision from Ric is to limit this 
+					// to only handle 1:x connections where we update the current obj
+					// with the PK of the value from the DC.
+					//
+					// In the future, if we want to handle the other options,
+					// we need to modify this to handle the M:x connections where
+					// we insert our PK into the value from the DC.
+
+
+					// op.value is the DataCollection.id we need to find
+					var dataCollection = this.currentForm.pageRoot().dataCollections((dc)=>{ return dc.id == op.value;})[0];
+				
+					value = dataCollection.getCursor(); // dataCollection.getItem(dataCollection.getCursor());
+				
+					// NOTE: webix documentation issue: .getCursor() is supposed to return
+					// the .id of the item.  However it seems to be returning the {obj} 
+					if (value.id) value = value.id;
+				}
+
+
 				switch(op.op) {
 
 					case 'set': 
-						objectToUpdate[field.columnName] = op.value; 
+						objectToUpdate[field.columnName] = value; 
 						break;
 				}
 				

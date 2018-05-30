@@ -18,6 +18,12 @@ export default class RowFilter extends OP.Component {
 
 				thisObject: L('ab.filter_fields.thisObject', "*This Object"),
 				inQuery: L('ab.filter_fields.inQuery', "*In Query"),
+				notInQuery: L('ab.filter_fields.notInQuery', "*Not In Query"),
+				inQueryField: L('ab.filter_fields.inQueryField', "*By Query Field"),
+				notInQueryField: L('ab.filter_fields.notInQueryField', "*Not By Query Field"),
+				
+				inQueryFieldQueryPlaceholder: L('ab.filter_fields.inQueryFieldQueryPlaceholder', "*Choose a Query"),
+				inQueryFieldFieldPlaceholder: L('ab.filter_fields.inQueryFieldFieldPlaceholder', "*Choose a Field"),
 
 				sameAsUser: L('ab.filter_fields.sameAsUser', "*Same As User"),
 				notSameAsUser: L('ab.filter_fields.notSameAsUser', "*Not Same As User"),
@@ -62,6 +68,9 @@ export default class RowFilter extends OP.Component {
 			inputValue: this.unique(idBase + '_rowFilter_inputValue'),
 
 			queryCombo: this.unique(idBase + '_rowFilter_queryCombo'),
+			queryFieldCombo: this.unique(idBase + '_rowFilter_queryFieldCombo'),
+			queryFieldComboQuery: this.unique(idBase + '_rowFilter_queryFieldComboQuery'),
+			queryFieldComboField: this.unique(idBase + '_rowFilter_queryFieldComboField'),
 
 			listOptions: this.unique(idBase + '_rowFilter_listOptions')
 		};
@@ -71,6 +80,19 @@ export default class RowFilter extends OP.Component {
 		var _QueryFields = [];
 		var _settings = {};
 		var config_settings = {};
+		var batchName; // we need to revert to this default when switching away from a in/by query field
+		
+		// Default options list to push to all fields
+		var queryFieldOptions = [
+			{
+				value: labels.component.inQueryField,
+				id: 'in_query_field'
+			},
+			{
+				value: labels.component.notInQueryField,
+				id: 'not_in_query_field'
+			}
+		];
 
 		// setting up UI
 		this.init = (options) => {
@@ -191,7 +213,7 @@ export default class RowFilter extends OP.Component {
 						// Comparer
 						{
 							id: ids.rule,
-							width: 155,
+							width: 175,
 							cells: [
 								{},
 								// Query
@@ -247,9 +269,17 @@ export default class RowFilter extends OP.Component {
 											value: labels.component.onOrAfterCondition,
 											id: "greater_or_equal"
 										}
-									],
+									].concat(queryFieldOptions),
 									on: {
-										onChange: _logic.onChange
+										onChange: function(condition) {
+											
+											var $viewComparer = this.getParentView();
+											var $viewCond = $viewComparer.getParentView();
+											_logic.onChangeRule(condition, $viewCond);
+											
+											_logic.onChange();
+											
+										}
 									}
 								},
 								// Number
@@ -282,9 +312,17 @@ export default class RowFilter extends OP.Component {
 											value: labels.component.moreThanOrEqualCondition,
 											id: "greater_or_equal"
 										}
-									],
+									].concat(queryFieldOptions),
 									on: {
-										onChange: _logic.onChange
+										onChange: function(condition) {
+											
+											var $viewComparer = this.getParentView();
+											var $viewCond = $viewComparer.getParentView();
+											_logic.onChangeRule(condition, $viewCond);
+											
+											_logic.onChange();
+
+										}
 									}
 								},
 								// List
@@ -309,7 +347,7 @@ export default class RowFilter extends OP.Component {
 											value: labels.component.notEqualListCondition,
 											id: "not_equal"
 										}
-									],
+									].concat(queryFieldOptions),
 									on: {
 										onChange: function( newValue, oldValue) {
 											_logic.onChangeSameAsUser(this, newValue, oldValue);
@@ -326,7 +364,17 @@ export default class RowFilter extends OP.Component {
 											value: labels.component.equalListCondition,
 											id: "equals"
 										}
-									]
+									].concat(queryFieldOptions),
+									on: {
+										onChange: function(condition) {
+											
+											var $viewComparer = this.getParentView();
+											var $viewCond = $viewComparer.getParentView();
+											_logic.onChangeRule(condition, $viewCond);
+											
+											_logic.onChange();
+										}
+									}
 								},
 								// User
 								{
@@ -350,7 +398,7 @@ export default class RowFilter extends OP.Component {
 											value: labels.component.notEqualListCondition,
 											id: "not_equal"
 										}
-									],
+									].concat(queryFieldOptions),
 									on: {
 										onChange: function (userCondition) {
 
@@ -385,9 +433,16 @@ export default class RowFilter extends OP.Component {
 											value: labels.component.isNotCondition,
 											id: "not_equals"
 										}
-									],
+									].concat(queryFieldOptions),
 									on: {
-										onChange: _logic.onChange
+										onChange: function(condition) {
+
+											var $viewComparer = this.getParentView();
+											var $viewCond = $viewComparer.getParentView();
+											_logic.onChangeRule(condition, $viewCond);
+										
+											_logic.onChange();
+										}
 									}
 								},
 								// Email
@@ -412,9 +467,16 @@ export default class RowFilter extends OP.Component {
 											value: labels.component.isNotCondition,
 											id: "not_equals"
 										}
-									],
+									].concat(queryFieldOptions),
 									on: {
-										onChange: _logic.onChange
+										onChange: function(condition) {
+
+											var $viewComparer = this.getParentView();
+											var $viewCond = $viewComparer.getParentView();
+											_logic.onChangeRule(condition, $viewCond);
+										
+											_logic.onChange();
+										}
 									}
 								},
 							]
@@ -438,6 +500,40 @@ export default class RowFilter extends OP.Component {
 									on: {
 										onChange: _logic.onChange
 									}
+
+								},
+
+								// Query Field
+								{
+									id: ids.queryFieldCombo,
+									batch: "queryField",
+									rows: [
+										{
+											id: ids.queryFieldComboQuery,
+											view: "combo",
+											options: [],
+											placeholder: labels.component.inQueryFieldQueryPlaceholder,
+											on: {
+												onChange: function(value) {
+													
+													var $viewComparer = this.getParentView();
+													var $viewCond = $viewComparer.getParentView().getParentView();
+													_logic.onChangeQueryFieldCombo(value, $viewCond);
+
+													_logic.onChange();
+												}
+											}
+										},
+										{
+											id: ids.queryFieldComboField,
+											view: "combo",
+											options: [],
+											placeholder: labels.component.inQueryFieldFieldPlaceholder,
+											on: {
+												onChange: _logic.onChange
+											}
+										}
+									]
 
 								},
 
@@ -648,7 +744,7 @@ export default class RowFilter extends OP.Component {
 				if (!field) return;
 
 				// switch view
-				var batchName = field.key;
+				batchName = field.key;
 				if (batchName == 'LongText') batchName = 'string';
 				if (field.id == 'this_object') batchName = 'query';	// Special this object query
 				var isQueryField = (_QueryFields.filter((f) => { return f.id == field.id; }).length > 0);
@@ -707,6 +803,19 @@ export default class RowFilter extends OP.Component {
 					$viewCond.$$(ids.inputValue).$$(ids.listOptions).define("options", options);
 					$viewCond.$$(ids.inputValue).$$(ids.listOptions).refresh();
 				}
+				
+				var rule = null,
+					ruleViewId = $viewCond.$$(ids.rule).getActiveId(),
+					$viewComparer = $viewCond.$$(ids.rule).queryView({ id: ruleViewId });
+				if ($viewComparer && $viewComparer.getValue) {
+					rule = $viewComparer.getValue();
+					if (rule == "in_query_field" || rule == "not_in_query_field") {
+						// Show the new value inputs
+						$viewCond.$$(ids.inputValue).showBatch("queryField");
+					}
+				}
+					
+				
 
 				if (!ignoreNotify)
 					_logic.onChange();
@@ -718,16 +827,18 @@ export default class RowFilter extends OP.Component {
 				var $viewComparer = $view.getParentView();
 				var $viewCond = $viewComparer.getParentView();
 
-				if (newValue == 'same_as_user') {
+				if (newValue == 'same_as_user' || newValue == 'not_same_as_user') {
 					// clear and disable the value field
 					$viewCond.$$(ids.inputValue).showBatch("empty");
+					_logic.onChange();
+				} else if (newValue == "in_query_field" || newValue == "not_in_query_field") {
+					_logic.onChangeRule(newValue, $viewCond);
+					_logic.onChange();
 				} else {
-					if (oldValue == 'same_as_user') {
-						$viewCond.$$(ids.inputValue).showBatch("list");
-					}
+					$viewCond.$$(ids.inputValue).showBatch("list");
+					_logic.onChange();
 				}
-
-				_logic.onChange();
+				
 			},
 
 			onChangeUser: function (rule, $viewCond) {
@@ -735,10 +846,58 @@ export default class RowFilter extends OP.Component {
 				if (rule == "is_current_user" ||
 					rule == "is_not_current_user") {
 					$viewCond.$$(ids.inputValue).showBatch("empty");
+				} else if (rule == "in_query_field" || rule == "not_in_query_field") {
+					_logic.onChangeRule(rule, $viewCond);
 				}
 				else {
 					$viewCond.$$(ids.inputValue).showBatch("user");
 				}
+			},
+			
+			onChangeRule: function(rule, $viewCond) {
+				if (rule == "not_in_query_field" || rule == "in_query_field") {
+					// populate the list of Queries for this_object:
+					var options = [];
+					// Get all application's queries
+					_Object.application.queries((q) => { return q.id != _Object.id; }).forEach((q) => {
+						options.push({
+							id: q.id,
+							value: q.label
+						})
+					})
+
+					$viewCond.$$(ids.inputValue).$$(ids.queryFieldComboQuery).define("options", options);
+					$viewCond.$$(ids.inputValue).$$(ids.queryFieldComboQuery).refresh();
+					
+					// Show the new value inputs
+					$viewCond.$$(ids.inputValue).showBatch("queryField");
+				} else {
+					// Show the default value inputs
+					$viewCond.$$(ids.inputValue).showBatch(batchName);
+					_logic.onChange();
+				}
+				
+				// _logic.onChange();
+			},
+			
+			onChangeQueryFieldCombo: function(value, $viewCond) {
+				// populate the list of Queries for this_object:
+				var options = [];
+				// Get all queries fields
+				var Query = _Object.application.queries((q) => { return q.id == value; });
+				if (Query.length) {
+					Query[0].fields( (f) => { return f.key != "connectObject"; } ).forEach((q) => {
+						options.push({
+							id: q.id,
+							value: q.object.label + "." + q.label
+						})
+					})
+
+					$viewCond.$$(ids.inputValue).$$(ids.queryFieldComboField).define("options", options);
+					$viewCond.$$(ids.inputValue).$$(ids.queryFieldComboField).refresh();					
+				}
+
+				// _logic.onChange();
 			},
 
 			onChange: function () {
@@ -796,8 +955,15 @@ export default class RowFilter extends OP.Component {
 						var value = null,
 							valueViewId = $viewCond.$$(ids.inputValue).getActiveId(),
 							$viewConditionValue = $viewCond.$$(ids.inputValue).queryView({ id: valueViewId });
-						if ($viewConditionValue && $viewConditionValue.getValue)
+						if ($viewConditionValue && $viewConditionValue.getValue) {
 							value = $viewConditionValue.getValue();
+						} else if ($viewConditionValue && $viewConditionValue.getChildViews()) {
+							var vals = [];
+							$viewConditionValue.getChildViews().forEach( element => {
+								vals.push($$(element).getValue());
+							});
+							value = vals.join(":");
+						}
 
 
 						config_settings.rules.push({
@@ -854,6 +1020,12 @@ export default class RowFilter extends OP.Component {
 						$viewComparer.define('value', f.rule);
 						$viewComparer.refresh();
 					}
+					
+					if (f.rule == "in_query_field" || f.rule == "not_in_query_field") {
+						$viewCond.blockEvent();
+						_logic.onChangeRule(f.rule, $viewCond);
+						$viewCond.blockEvent();
+					}
 
 					// Input
 					var valueViewId = $viewCond.$$(ids.inputValue).getActiveId(),
@@ -861,6 +1033,19 @@ export default class RowFilter extends OP.Component {
 					if ($viewConditionValue && $viewConditionValue.setValue) {
 						$viewConditionValue.define('value', f.value);
 						$viewConditionValue.refresh();
+					} else if ($viewConditionValue && $viewConditionValue.getChildViews()) {
+						var vals = f.value.split(":");
+						var index = 0;
+						$viewConditionValue.getChildViews().forEach( element => {
+							$$(element).blockEvent();
+							$$(element).setValue(vals[index]);
+							if (index == 0) {
+								_logic.onChangeQueryFieldCombo(vals[index], $viewCond);
+							}
+							$$(element).unblockEvent();
+							// $$(element).refresh();
+							index++;
+						});
 					}
 
 					var field = _Fields.filter(col => col.id == f.key)[0];

@@ -87,7 +87,10 @@ module.exports = {
     'post /app_builder/migrate/application/:appID/object/:objID/field/:fieldID' : 
         'app_builder/ABMigrationController.createField',
 
-    'delete /app_builder/migrate/application/:appID/object/:objID/field/:fieldID' : 
+    'put /app_builder/migrate/application/:appID/object/:objID/field/:fieldID' :
+        'app_builder/ABMigrationController.updateField',
+
+    'delete /app_builder/migrate/application/:appID/object/:objID/field/:fieldID' :
         'app_builder/ABMigrationController.dropField',
 
 
@@ -112,7 +115,10 @@ module.exports = {
 
     'put /app_builder/model/application/:appID/refreshobject/:objID' : 
         'app_builder/ABModelController.refresh',
-        
+
+    'get /app_builder/model/application/:appID/count/:objID' : 
+        'app_builder/ABModelController.count',
+
 
     /* Import External models */
     'get /app_builder/external/connections' : 

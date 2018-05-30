@@ -145,6 +145,10 @@
 	background-color: #fff6f6;
 	border-color: #fea5a8;
 }
+.webix_invalid .form-entry {
+	border-color: #fea5a8;
+	background-color: #fff6f6;
+}
 
 /* Webix toolbar */
 .ab-toolbar-submenu, .ab-toolbar-submenu .webix_header>div {
@@ -378,6 +382,7 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 	padding: 0px !important;
 	overflow: hidden !important;
 	max-height: unset;
+	border-radius: 6px;
 }
 .selectivity-multiple-input, input[type=text].selectivity-multiple-input, .selectivity-multiple-input-container {
 	/*height: 35px !important;*/
@@ -1346,4 +1351,7 @@ a.ab-delete-photo:hover {
 .ab-query-label {
 	font-weight: bold;
 	font-size: 24px;
+}
+.bg-white {
+	background: white;
 }

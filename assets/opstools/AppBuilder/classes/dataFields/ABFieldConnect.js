@@ -32,7 +32,9 @@ var ABFieldConnectDefaults = {
 	useAsLabel: false,
 
 	// supportImport: flag to support import object across applications
-	supportImport: false
+	supportImport: false,
+
+	supportRequire: false
 
 };
 
@@ -611,6 +613,9 @@ class ABFieldConnect extends ABFieldSelectivity {
 	 * @return {array} 
 	 */
 	isValidData(data, validator) {
+		
+		super.isValidData(data, validator);
+		
 	}
 
 

@@ -72,12 +72,18 @@ module.exports = {
      */
     refreshObject: function(object) {
 
-        var knex = ABMigration.connection(object.connName || undefined);
+        var knex = ABMigration.connection();
         var tableName = object.dbTableName(true);
 
         if (knex.$$objection &&
-            knex.$$objection.boundModels)
-            delete knex.$$objection.boundModels[tableName];
+            knex.$$objection.boundModels) {
+                
+                // delete knex.$$objection.boundModels[tableName];
+
+                // FIX : Knex Objection v.1.1.8
+                knex.$$objection.boundModels.delete(tableName + '_MyModel');
+                
+        }
 
     },
 
@@ -92,6 +98,12 @@ module.exports = {
 
     },
 
+    updateField:function(field) {
+        
+        var knex = ABMigration.connection();
+        return field.migrateUpdate(knex);
+
+    },
 
     dropField:function(field) {
 

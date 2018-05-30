@@ -320,7 +320,7 @@ module.exports = {
                                 .then((values) => {
 
                                     // // Query the new row to response to client
-                                    var query3 = object.queryFind({
+                                    return object.queryFind({
                                             where: {
                                                 glue:'and',
                                                 rules:[
@@ -335,31 +335,29 @@ module.exports = {
                                             limit: 1,
                                             includeRelativeData: true
                                         },
-                                        req.user.data);
+                                        req.user.data)
+                                    .then((newItem)=>{
 
-                                    return query3
-                                        .catch((err) => { return Promise.reject(err); })
-                                        .then((newItem) => {
+                                        res.AD.success(newItem[0]);
+                                        
+                                        // We want to broadcast the change from the server to the client so all datacollections can properly update
+                                        // Build a payload that tells us what was updated
+                                        var payload = {
+                                            objectId: object[object.PK()],
+                                            data: newItem[0]
+                                        }
+                                        
+                                        // Broadcast the create
+                                        sails.sockets.broadcast(object[object.PK()], "ab.datacollection.create", payload);
+                                        
+                                        updateConnectedFields(object, newItem[0]);
+                                        
+                                        // TODO:: what is this doing?
+                                        Promise.resolve();
 
-                                            res.AD.success(newItem[0]);
-                                            
-                                            // We want to broadcast the change from the server to the client so all datacollections can properly update
-                                            // Build a payload that tells us what was updated
-                                            var payload = {
-                                                objectId: object[object.PK()],
-                                                data: newItem[0]
-                                            }
-                                            
-                                            // Broadcast the create
-                                            sails.sockets.broadcast(object[object.PK()], "ab.datacollection.create", payload);
-                                            
-                                            updateConnectedFields(object, newItem[0]);
-                                            
-                                            Promise.resolve();
+                                    });
 
-                                        });
-
-
+                                
                                 });
 
 
@@ -465,53 +463,64 @@ module.exports = {
                 }, req.user.data);
 
                 // promise for the total count. this was moved below the filters because webix will get caught in an infinte loop of queries if you don't pass the right count
-                var pCount = object.queryCount({ where: where, includeRelativeData: false }, req.user.data).first();
+                var pCount = object.queryCount({ where: where, includeRelativeData: false }, req.user.data);
 
+                // TODO:: we need to refactor to remove Promise.all so we no longer have Promise within Promises.
                 Promise.all([
                     pCount,
                     query
                 ])
-                .then(function (values) {
-                    var result = {};
-                    var count = values[0].count;
-                    var rows = values[1];
-                    result.data = rows;
+                .then(function(queries){
+                    
+                    Promise.all([
+                        queries[0],
+                        queries[1]
+                    ])
+                    .then(function (values) {
+                        var result = {};
+                        // var count = values[0].count;
+                        var count = values[0];
+                        var rows = values[1];
+                        result.data = rows;
 
-                    // webix pagination format:
-                    result.total_count = count;
-                    result.pos = offset;
+                        // webix pagination format:
+                        result.total_count = count;
+                        result.pos = offset;
 
-                    result.offset = offset;
-                    result.limit = limit;
+                        result.offset = offset;
+                        result.limit = limit;
 
-                    if ((offset + rows.length) < count) {
-                        result.offset_next = offset + limit;
-                    }
-
-
-
-                    //// TODO: evaluate if we really need to do this: 
-                    //// ?) do we have a data field that actually needs to post process it's data
-                    ////    before returning it to the client?
-
-                    // object.postGet(result.data)
-                    // .then(()=>{
+                        if ((offset + rows.length) < count) {
+                            result.offset_next = offset + limit;
+                        }
 
 
-                    if (res.header) res.header('Content-type', 'application/json');
 
-                    res.send(result, 200);
+                        //// TODO: evaluate if we really need to do this: 
+                        //// ?) do we have a data field that actually needs to post process it's data
+                        ////    before returning it to the client?
+
+                        // object.postGet(result.data)
+                        // .then(()=>{
 
 
-                    // })
+                        if (res.header) res.header('Content-type', 'application/json');
+
+                        res.send(result, 200);
 
 
+                        // })
+
+
+                    })
+                    .catch((err) => {
+
+                        res.AD.error(err);
+
+                    });
+                    
                 })
-                .catch((err) => {
-
-                    res.AD.error(err);
-
-                });
+                
 
 
             })
@@ -556,7 +565,7 @@ module.exports = {
             function (next) {
                 // We are deleting an item...but first fetch its current data  
                 // so we can clean up any relations on the client side after the delete
-                var queryPrevious = object.queryFind({
+                object.queryFind({
                         where: {
                             glue:'and',
                             rules:[{
@@ -566,14 +575,18 @@ module.exports = {
                             }]
                         },
                         includeRelativeData: true
-                    }, req.user.data);
+                    }, req.user.data)
+                .then((old_item) => {
+                    oldItem = old_item;
+                    next();
+                })
                 
-                queryPrevious
-                    .catch(next)
-                    .then((old_item) => {
-                        oldItem = old_item;
-                        next();
-                    });
+                // queryPrevious
+                //     .catch(next)
+                //     .then((old_item) => {
+                //         oldItem = old_item;
+                //         next();
+                //     });
                     
             },
             
@@ -606,11 +619,12 @@ module.exports = {
                                 relatedIds.push(old.id);  // TODO: support various id
                         });
 
-                        if (relatedIds.length < 1)
+                        // If no relate ids, then skip
+                        if (relatedIds.length < 1) 
                             return;
 
                         // Get all related items info
-                        var queryRelated = relatedObject.queryFind({
+                        var p = relatedObject.queryFind({
                                 where: {
                                     glue:'and',
                                     rules:[{
@@ -620,10 +634,7 @@ module.exports = {
                                     }]
                                 },
                                 includeRelativeData: true
-                            }, req.user.data);
-
-                        var p = queryRelated
-                            .catch(next)
+                            }, req.user.data)
                             .then((items) => {
                                 // push new realted items into the larger related items array
                                 relatedItems.push({
@@ -631,6 +642,16 @@ module.exports = {
                                     items: items
                                 });
                             });
+
+                        // var p = queryRelated
+                        //     .catch(next)
+                        //     .then((items) => {
+                        //         // push new realted items into the larger related items array
+                        //         relatedItems.push({
+                        //             object: relatedObject,
+                        //             items: items
+                        //         });
+                        //     });
                             
                         relationQueue.push(p);
                     }
@@ -1064,6 +1085,30 @@ module.exports = {
                 object.modelRefresh();
 
                 res.AD.success({});
+
+            });
+
+    },
+
+
+    count: function (req, res) {
+
+        AppBuilder.routes.verifyAndReturnObject(req, res)
+            .then(function (object) {
+
+                var where = req.param('where');
+
+                // promise for the total count. this was moved below the filters because webix will get caught in an infinte loop of queries if you don't pass the right count
+                object
+                    .queryCount({ where: where, includeRelativeData: false }, req.user.data)
+                    .first()
+                    .catch(res.AD.error)
+                    .then(result => {
+
+                        res.AD.success(result);
+
+                    });
+
 
             });
 
