@@ -584,6 +584,13 @@ reject(err);
 				var relationName = c.relationName();
 				// if there is no data we can exit now
 				if (d[relationName] == null) return;
+
+				// if relation data is still a string
+				if (typeof d[relationName] == "string") {
+					// parse the string into an object
+					d[relationName] = JSON.parse(d[relationName]);
+				}
+
 				// if the data is an array we need to loop through it
 				if (Array.isArray(d[relationName])) {
 					d[relationName].forEach((r) => {
