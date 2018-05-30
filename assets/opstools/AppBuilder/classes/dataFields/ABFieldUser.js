@@ -35,7 +35,9 @@ var ABFieldUserDefaults = {
 		} else {
 			return true;
 		}
-	}
+	},
+
+	supportRequire: false
 
 }
 
@@ -459,8 +461,9 @@ class ABFieldUser extends ABFieldSelectivity {
 	 * @return {array} 
 	 */
 	isValidData(data, validator) {
-
-
+		
+		super.isValidData(data, validator);
+		
 	}
 
 

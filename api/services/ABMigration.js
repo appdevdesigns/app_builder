@@ -92,6 +92,12 @@ module.exports = {
 
     },
 
+    updateField:function(field) {
+        
+        var knex = ABMigration.connection();
+        return field.migrateUpdate(knex);
+
+    },
 
     dropField:function(field) {
 

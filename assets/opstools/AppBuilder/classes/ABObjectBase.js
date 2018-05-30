@@ -394,6 +394,18 @@ module.exports =  class ABObjectBase {
 	}
 
 
+	/**
+	 * @method urlCount
+	 * return the url to count of data for this object.
+	 * @return {string} 
+	 */
+	urlRestCount() {
+		return '/app_builder/model/application/#appID#/count/#objID#'
+			.replace('#appID#', this.application.id)
+			.replace('#objID#', this.id);
+	}
+
+
 	///
 	///	Object Workspace Settings
 	///

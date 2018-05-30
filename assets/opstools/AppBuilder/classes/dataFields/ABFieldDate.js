@@ -26,12 +26,14 @@ var ABFieldDateDefaults = {
 	// description: what gets displayed in the Editor description.
 	description: L('ab.dataField.date.description', '*Pick one from a calendar.'),
 
+	supportRequire: true,
+
 }
 
 var defaultValues = {
 	includeTime: 0,
 	defaultCurrentDate: 0,
-	defaultDate: "",
+	default: "",
 	dayFormat: "%d",
 	dayOrder: 1,
 	dayDelimiter: "slash",
@@ -212,9 +214,10 @@ var ABFieldDateComponent = new ABFieldComponent({
 						webix.ui({
 							view: 'datepicker',
 							label: "Default",
-							name: 'defaultDate',
+							name: 'default',
 							id: ids.default,
 							timepicker: newVal ? true : false,
+							required: $$(ids.default).config.required == true,
 							disabled: $$(ids.currentToDefault).getValue() == true
 						}, $$(ids.default));
 
@@ -248,7 +251,7 @@ var ABFieldDateComponent = new ABFieldComponent({
 				view: 'datepicker',
 				id: ids.default,
 				label: "Default",
-				name: 'defaultDate',
+				name: 'default',
 				timepicker: false
 			},
 			{
@@ -719,8 +722,27 @@ var ABFieldDateComponent = new ABFieldComponent({
 			var dateFormat = getDateFormat(settings);
 
 			return webix.Date.dateToStr(dateFormat)(date);
-		}
+		},
 
+		/*
+		 * @function requiredOnChange
+		 *
+		 * The ABField.definitionEditor implements a default operation
+		 * to look for a default field and set it to a required field 
+		 * if the field is set to required
+		 * 
+		 * if you want to override that functionality, implement this fn()
+		 *
+		 * @param {string} newVal	The new value of label
+		 * @param {string} oldVal	The previous value
+		 */
+		requiredOnChange: (newVal, oldVal, ids) => {
+
+			// when require value, then default value needs to be reqired
+			$$(ids.default).define("required", newVal);
+			$$(ids.default).refresh();
+
+		},
 
 	},
 
@@ -874,8 +896,8 @@ class ABFieldDate extends ABField {
 				values[this.columnName] = (new Date()).toISOString();
 			}
 			// Specfic default date
-			else if (this.settings.defaultDate) {
-				values[this.columnName] = (new Date(this.settings.defaultDate)).toISOString();
+			else if (this.settings.default) {
+				values[this.columnName] = (new Date(this.settings.default)).toISOString();
 			}
 
 		}
@@ -893,7 +915,9 @@ class ABFieldDate extends ABField {
 	 * @return {array} 
 	 */
 	isValidData(data, validator) {
-
+		
+		super.isValidData(data, validator);
+		
 		if (data[this.columnName]) {
 			var value = data[this.columnName];
 

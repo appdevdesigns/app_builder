@@ -25,13 +25,15 @@ var ABFieldLongTextDefaults = {
 	// description: what gets displayed in the Editor description.
 	description: L('ab.dataField.LongText.description', '*Multiple lines of text'),
 
+	supportRequire: true
+
 }
 
 
 
 // defaultValues: the keys must match a .name of your elements to set it's default value.
 var defaultValues = {
-	'textDefault': '',
+	'default': '',
 	'supportMultilingual': 0
 }
 
@@ -54,17 +56,18 @@ var ABFieldLongTextComponent = new ABFieldComponent({
 	elements: (App, field) => {
 
 		// NOTE: you might not need to define your own ids, but if you do, do it like this:
-		// var ids = {
-		// 	imageWidth: '',
-		// 	imageHeight: ''
-		// }
-		// ids = field.idsUnique(ids, App);
+		var ids = {
+			default: ''
+		}
+		ids = field.idsUnique(ids, App);
 
 		return [
 			{
 				view: "text",
-				name: 'textDefault',
-				labelWidth: App.config.labelWidthLarge,
+				id: ids.default,
+				name: 'default',
+				label: L('ab.dataField.string.defaultLabel', '*Default'),
+				labelPosition:"top",
 				placeholder: L('ab.dataField.string.default', '*Default text')
 			},
 			{
@@ -84,7 +87,7 @@ var ABFieldLongTextComponent = new ABFieldComponent({
 	// rules: basic form validation rules for webix form entry.
 	// the keys must match a .name of your .elements for it to apply
 	rules: {
-		// 'textDefault':webix.rules.isNotEmpty,
+		// 'default':webix.rules.isNotEmpty,
 		// 'supportMultilingual':webix.rules.isNotEmpty
 	},
 
@@ -113,6 +116,26 @@ var ABFieldLongTextComponent = new ABFieldComponent({
 	// 		.show(ids)   : display the form in the editor
 	// 		.values(ids, values) : return the current values from the form
 	logic: {
+		
+		/*
+		 * @function requiredOnChange
+		 *
+		 * The ABField.definitionEditor implements a default operation
+		 * to look for a default field and set it to a required field 
+		 * if the field is set to required
+		 * 
+		 * if you want to override that functionality, implement this fn()
+		 *
+		 * @param {string} newVal	The new value of label
+		 * @param {string} oldVal	The previous value
+		 */
+		requiredOnChange: (newVal, oldVal, ids) => {
+
+			// when require value, then default value needs to be reqired
+			$$(ids.default).define("required", newVal);
+			$$(ids.default).refresh();
+
+		},
 
 	},
 
@@ -139,7 +162,7 @@ class ABFieldLongText extends ABField {
     	/*
     	{
 			settings: {
-				textDefault: 'string',
+				default: 'string',
 				supportMultilingual: 1/0
 			}
     	}
@@ -249,8 +272,8 @@ class ABFieldLongText extends ABField {
 	 */
 	defaultValue(values) {
 		if (values[this.columnName] == null) {
-			if (typeof this.settings.textDefault == 'string') {
-				values[this.columnName] = this.settings.textDefault;
+			if (typeof this.settings.default == 'string') {
+				values[this.columnName] = this.settings.default;
 			}
 			else {
 				values[this.columnName] = '';
@@ -268,7 +291,9 @@ class ABFieldLongText extends ABField {
 	 * @return {array} 
 	 */
 	isValidData(data, validator) {
-
+		
+		super.isValidData(data, validator);
+		
 		if (data && data[this.columnName]) {
 			var max_length = 5000;
 			
