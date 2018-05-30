@@ -81,8 +81,14 @@ module.exports = class ABObjectExternal extends ABObject {
 									if (!colInfo.type) return;
 
 									var fnName = colInfo.type;
-									if (fnName == 'int')
-										fnName = 'integer';
+									switch (fnName) {
+										case 'int':
+											fnName = 'integer';
+											break;
+										case 'blob':
+											fnName = 'binary';
+											break;
+									}
 
 									// set PK to auto increment
 									if (options.primary == colName &&

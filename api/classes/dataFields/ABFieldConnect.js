@@ -251,8 +251,8 @@ class ABFieldConnect extends ABField {
 								// NOTE: federated table does not support reference column
 								if (!linkObject.isExternal) {
 									linkCol.references(linkPK)
-										.inTable(linkTableName);
-										// .onDelete('cascade');
+										.inTable(linkTableName)
+										.onDelete('cascade');
 								}
 
 							})
@@ -293,8 +293,8 @@ class ABFieldConnect extends ABField {
 									// NOTE: federated table does not support reference column
 									if (!linkObject.isExternal) {
 										linkCol.references(linkPK)
-												.inTable(linkTableName);
-												// .onDelete('cascade');
+												.inTable(linkTableName)
+												.onDelete('cascade');
 									}
 
 									t.unique(this.columnName);
@@ -337,8 +337,8 @@ class ABFieldConnect extends ABField {
 								// NOTE: federated table does not support reference column
 								if (!this.object.isExternal) {
 									linkCol.references(this.object.PK())
-											.inTable(tableName);
-										// .onDelete('cascade');
+											.inTable(tableName)
+											.onDelete('cascade');
 								}
 
 							})
@@ -396,13 +396,13 @@ class ABFieldConnect extends ABField {
 
 									linkCol.references(this.object.PK())
 										.inTable(tableName)
-										.withKeyName(sourceFkName);
-										// .onDelete('cascade');
+										.withKeyName(sourceFkName)
+										.onDelete('cascade');
 
 									linkCol2.references(linkPK)
 										.inTable(linkTableName)
-										.withKeyName(targetFkName);
-										// .onDelete('cascade');
+										.withKeyName(targetFkName)
+										.onDelete('cascade');
 								}
 
 								// // create columns
