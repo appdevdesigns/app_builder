@@ -138,7 +138,7 @@ module.exports = class ABObjectExternal extends ABObject {
 	 */
 	model() {
 
-		var tableName = this.dbTableName(true);
+		var tableName = this.dbTableName();
 
 
 		if (!__ModelPool[tableName]) {
@@ -263,13 +263,13 @@ module.exports = class ABObjectExternal extends ABObject {
 
 						if (f.settings.isSource == true) {
 							sourceTable = tableName;
-							targetTable = linkObject.dbTableName(true);
+							targetTable = linkObject.dbTableName();
 							targetPkName = linkObject.PK();
 							relation = Model.BelongsToOneRelation;
 							columnName = f.columnName;
 						}
 						else {
-							sourceTable = linkObject.dbTableName(true);
+							sourceTable = linkObject.dbTableName();
 							targetTable = tableName;
 							targetPkName = currObject.PK();
 							relation = Model.HasOneRelation;
@@ -293,7 +293,7 @@ module.exports = class ABObjectExternal extends ABObject {
 					// M:N
 					else if (f.settings.linkType == 'many' && f.settings.linkViaType == 'many') {
 						// get join table name
-						var joinTablename = f.joinTableName(true),
+						var joinTablename = f.joinTableName(),
 							joinColumnNames = f.joinColumnNames(),
 							sourceTableName,
 							sourcePkName,
@@ -301,15 +301,15 @@ module.exports = class ABObjectExternal extends ABObject {
 							targetPkName;
 
 						if (f.settings.isSource == true) {
-							sourceTableName = f.object.dbTableName(true);
+							sourceTableName = f.object.dbTableName();
 							sourcePkName = f.object.PK();
-							targetTableName = linkObject.dbTableName(true);
+							targetTableName = linkObject.dbTableName();
 							targetPkName = linkObject.PK();
 						}
 						else {
-							sourceTableName = linkObject.dbTableName(true);
+							sourceTableName = linkObject.dbTableName();
 							sourcePkName = linkObject.PK();
-							targetTableName = f.object.dbTableName(true);
+							targetTableName = f.object.dbTableName();
 							targetPkName = f.object.PK();
 						}
 
@@ -350,7 +350,7 @@ module.exports = class ABObjectExternal extends ABObject {
 									.replace('{field}', f.columnName),
 
 								to: '{targetTable}.{primaryField}'
-									.replace('{targetTable}', linkObject.dbTableName(true))
+									.replace('{targetTable}', linkObject.dbTableName())
 									.replace('{primaryField}', linkObject.PK())
 							}
 						};
@@ -366,7 +366,7 @@ module.exports = class ABObjectExternal extends ABObject {
 									.replace('{primaryField}', currObject.PK()),
 
 								to: '{targetTable}.{field}'
-									.replace('{targetTable}', linkObject.dbTableName(true))
+									.replace('{targetTable}', linkObject.dbTableName())
 									.replace('{field}', linkField.columnName)
 							}
 						};
@@ -397,7 +397,7 @@ module.exports = class ABObjectExternal extends ABObject {
 
 		// WORKAROUND: It can't use .modelRefresh of ABObject because __ModelPool stores separately. How to use global variable ?? 
 
-		var tableName = this.dbTableName(true);
+		var tableName = this.dbTableName();
 
 		delete __ModelPool[tableName];
 

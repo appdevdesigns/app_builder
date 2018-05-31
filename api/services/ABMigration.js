@@ -73,7 +73,7 @@ module.exports = {
     refreshObject: function(object) {
 
         var knex = ABMigration.connection();
-        var tableName = object.dbTableName(true);
+        var tableName = object.dbTableName();
 
         if (knex.$$objection &&
             knex.$$objection.boundModels) {

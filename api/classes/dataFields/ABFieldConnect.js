@@ -222,7 +222,7 @@ class ABFieldConnect extends ABField {
 
 				// find linked object
 				var linkObject = this.datasourceLink,
-					linkTableName = linkObject.dbTableName(true),
+					linkTableName = linkObject.dbTableName(),
 					linkPK = linkObject.PK(),
 					// TODO : should check duplicate column
 					linkColumnName = this.object.name;
