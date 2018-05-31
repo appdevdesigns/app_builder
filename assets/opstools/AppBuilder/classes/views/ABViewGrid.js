@@ -39,7 +39,9 @@ var ABViewGridPropertyComponentDefaults = {
 	// linkedEditPage:'',
 	// linkedEditPageForm:'',
 	detailsPage:'',
+	detailsTab:'',
 	editPage:'',
+	editTab:'',
 	objectWorkspace: {
 		// sortFields:[], // array of columns with their sort configurations
 		// filterConditions:[], // array of filters to apply to the data table
@@ -142,6 +144,8 @@ export default class ABViewGrid extends ABViewWidget  {
 		// this.settings.linkedEditPageForm = this.settings.linkedEditPageForm || ABViewGridPropertyComponentDefaults.linkedEditPageForm;
 		this.settings.detailsPage = this.settings.detailsPage || ABViewGridPropertyComponentDefaults.detailsPage;
 		this.settings.editPage = this.settings.editPage || ABViewGridPropertyComponentDefaults.editPage;
+		this.settings.detailsTab = this.settings.detailsTab || ABViewGridPropertyComponentDefaults.detailsTab;
+		this.settings.editTab = this.settings.editTab || ABViewGridPropertyComponentDefaults.editTab;
 		
 		this.settings.objectWorkspace = this.settings.objectWorkspace || ABViewGridPropertyComponentDefaults.objectWorkspace;
 		
@@ -693,8 +697,16 @@ export default class ABViewGrid extends ABViewWidget  {
 		// $$(ids.linkedPageView).setValue(view.settings.linkedPageView);
 		// $$(ids.linkedEditPage).setValue(view.settings.linkedEditPage);
 		// $$(ids.linkedEditPageForm).setValue(view.settings.linkedEditPageForm);
-		$$(ids.detailsPage).setValue(view.settings.detailsPage);
-		$$(ids.editPage).setValue(view.settings.editPage);
+		var details = view.settings.detailsPage;
+		if (view.settings.detailsTab != "") {
+			details += ":"+view.settings.detailsTab;
+		}
+		$$(ids.detailsPage).setValue(details);
+		var edit = view.settings.editPage;
+		if (view.settings.editTab != "") {
+			edit += ":"+view.settings.editTab;
+		}
+		$$(ids.editPage).setValue(edit);
 		$$(ids.height).setValue(view.settings.height);
 		$$(ids.hideHeader).setValue(view.settings.hideHeader);
 		$$(ids.labelAsField).setValue(view.settings.labelAsField);
@@ -739,8 +751,27 @@ export default class ABViewGrid extends ABViewWidget  {
 		// view.settings.linkedPageView = $$(ids.linkedPageView).getValue();
 		// view.settings.linkedEditPage = $$(ids.linkedEditPage).getValue();
 		// view.settings.linkedEditPageForm = $$(ids.linkedEditPageForm).getValue();
-		view.settings.detailsPage = $$(ids.detailsPage).getValue();
-		view.settings.editPage = $$(ids.editPage).getValue();
+		
+		var detailsPage = $$(ids.detailsPage).getValue();
+		var detailsTab = "";
+		if (detailsPage.split(":").length > 1) {
+			var detailsVals = detailsPage.split(":");
+			detailsPage = detailsVals[0];
+			detailsTab = detailsVals[1];
+		} 
+		view.settings.detailsPage = detailsPage;
+		view.settings.detailsTab = detailsTab;
+		
+		var editPage = $$(ids.editPage).getValue();
+		var editTab = "";
+		if (editPage.split(":").length > 1) {
+			var editVals = editPage.split(":");
+			editPage = editVals[0];
+			editTab = editVals[1];
+		} 
+		view.settings.editPage = editPage;
+		view.settings.editTab = editTab;
+		
 		view.settings.height = $$(ids.height).getValue();
 		view.settings.hideHeader = $$(ids.hideHeader).getValue();
 		view.settings.labelAsField = $$(ids.labelAsField).getValue();
@@ -918,20 +949,54 @@ export default class ABViewGrid extends ABViewWidget  {
 
 					var editPage = this.settings.editPage;
 					var detailsPage = this.settings.detailsPage;
+					var editTab = this.settings.editTab;
+					var detailsTab = this.settings.detailsTab;
 					var isEditable = this.settings.isEditable;
+					
+					// we need to recursivly look backwards to toggle tabs into view when a user choosed to select a tab for edit or details views
+					function toggleTab(parentTab, wb) {
+						
+						// find the tab
+						var tab = wb.getTopParentView().queryView({id:parentTab});
+						// if we didn't pass and id we may have passed a domNode
+						if (tab == null) {
+							tab = $$(parentTab);
+						}
+						
+						// set the tabbar to to the tab
+						var tabbar = tab.getParentView().getParentView();
+						
+						if (tabbar == null) return;
+						
+						if (tabbar.setValue) { // if we have reached the top we won't have a tab
+							tabbar.setValue(parentTab);
+						}
+						
+						// find if it is in a multiview of a tab
+						var nextTab = tabbar.queryView({view:"scrollview"}, "parent");
+						// if so then do this again
+						if (nextTab) {
+							toggleTab(nextTab, wb);
+						}
+					}
+					
 					$$(DataTable.ui.id).attachEvent("onItemClick", function (id, e, node) {
 						var item = id;
 
 						if (e.target.className.indexOf('eye') > -1) {
 							_logic.changePage(dc, item, detailsPage);
+							toggleTab(detailsTab, this);
 						} else if (e.target.className.indexOf('pencil') > -1) {
 							_logic.changePage(dc, item, editPage);
+							toggleTab(editTab, this);
 						} else if (e.target.className.indexOf('trash') > -1) {
 							// don't do anything for delete it is handled elsewhere
 						} else if ( !isEditable && detailsPage.length ) {
 							_logic.changePage(dc, item, detailsPage);
+							toggleTab(detailsTab, this);
 						} else if ( !isEditable && !detailsPage.length && editPage.length) {
 							_logic.changePage(dc, item, editPage);
+							toggleTab(editTab, this);
 						}
 						
 					});
@@ -1319,8 +1384,16 @@ export default class ABViewGrid extends ABViewWidget  {
 		view.application._pages.forEach((o)=>{
 			o._views.forEach((j)=>{
 				if (j.key == "form" && j.settings.object == view.settings.dataSource) {
-					// editForms.push({id:j.parent.id+"|"+j.id, value:j.label});
 					editForms.push({id:j.parent.id, value:j.label});				
+				}
+				if (j.key == "tab") {
+					j._views.forEach((k)=>{
+						k._views.forEach((l)=>{	
+							if (l.key == "form" && l.settings.datacollection == view.settings.dataSource) {
+								editForms.push({id:l.parent.id, value:l.label});				
+							}
+						});
+					});
 				}
 			});
 		});
@@ -1424,10 +1497,24 @@ export default class ABViewGrid extends ABViewWidget  {
 				else if (v.key == "tab") {
 					var tabViews = v.views();
 					tabViews.forEach(tab => {
+						
+						var viewContainer = tab.views(subT => subT.key == "tab");
+						viewContainer.forEach(vc => {
+
+							vc.views().forEach((st)=>{
+								// detailViews = view.loopViews(view, st._views, detailViews, type);							
+								var subViews = st.views(subV => subV.key == type && subV.settings.datacollection == view.settings.dataSource);
+								subViews.forEach( (sub)=>{
+									detailViews.push({id:v.pageParent().id + ":" + st.id, value:st.label + ":" + sub.label});								
+								});
+							});
+
+						});
 
 						var subViews = tab.views(subV => subV.key == type && subV.settings.datacollection == view.settings.dataSource);
-						if (subViews.length > 0)
-							detailViews.push({id:v.pageParent().id, value:v.label});
+						subViews.forEach( (sub)=>{
+							detailViews.push({id:v.pageParent().id + ":" + tab.id, value:tab.label + ":" + sub.label});								
+						});
 
 					});
 
