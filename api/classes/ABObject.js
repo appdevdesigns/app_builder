@@ -1024,6 +1024,11 @@ module.exports = class ABObject extends ABObjectBase {
 			if (relationNames.length > 0)
 				query.eager('[#fieldNames#]'.replace('#fieldNames#', relationNames.join(', ')));
 
+			// TODO: Move to ABObjectExternal
+			if (this.isExternal && this.transColumnName) {
+				query.eager('translations');
+			}
+
 	    }
 
 		sails.log.debug('SQL:', query.toString() );
