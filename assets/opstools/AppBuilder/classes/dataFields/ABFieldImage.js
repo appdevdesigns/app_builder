@@ -27,7 +27,9 @@ var ABFieldImageDefaults = {
 
 	isSortable: false,
 	isFilterable: false,
-	useAsLabel: false
+	useAsLabel: false,
+
+	supportRequire: false
 
 }
 
@@ -728,6 +730,9 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 	 * @return {array} 
 	 */
 	isValidData(data, validator) {
+		
+		super.isValidData(data, validator);
+		
 	}
 
 }

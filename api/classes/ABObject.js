@@ -113,7 +113,8 @@ module.exports = class ABObject extends ABObjectBase {
 
 	dbSchemaName() {
 
-		return sails.config.connections[this.connName || "appBuilder"].database;
+		return sails.config.connections["appBuilder"].database;
+		// return sails.config.connections[this.connName || "appBuilder"].database;
 
 	}
 
@@ -275,11 +276,11 @@ module.exports = class ABObject extends ABObjectBase {
 	 */
 	model() {
 
-		var tableName = this.dbTableName(true);
+		var tableName = this.dbTableName();
 
 		if (!__ModelPool[tableName]) {
 
-			var knex = ABMigration.connection(this.connName || undefined);
+			var knex = ABMigration.connection();
 
 			// Compile our jsonSchema from our DataFields
 			// jsonSchema is only used by Objection.js to validate data before
@@ -360,13 +361,13 @@ module.exports = class ABObject extends ABObjectBase {
 
 						if (f.settings.isSource == true) {
 							sourceTable = tableName;
-							targetTable = linkObject.dbTableName(true);
+							targetTable = linkObject.dbTableName();
 							targetPkName = linkObject.PK();
 							relation = Model.BelongsToOneRelation;
 							columnName = f.columnName;
 						}
 						else {
-							sourceTable = linkObject.dbTableName(true);
+							sourceTable = linkObject.dbTableName();
 							targetTable = tableName;
 							targetPkName = currObject.PK();
 							relation = Model.HasOneRelation;
@@ -390,7 +391,7 @@ module.exports = class ABObject extends ABObjectBase {
 					// M:N
 					else if (f.settings.linkType == 'many' && f.settings.linkViaType == 'many') {
 						// get join table name
-						var joinTablename = f.joinTableName(true),
+						var joinTablename = f.joinTableName(),
 							joinColumnNames = f.joinColumnNames(),
 							sourceTableName,
 							sourcePkName,
@@ -398,15 +399,15 @@ module.exports = class ABObject extends ABObjectBase {
 							targetPkName;
 
 						if (f.settings.isSource == true) {
-							sourceTableName = f.object.dbTableName(true);
+							sourceTableName = f.object.dbTableName();
 							sourcePkName = f.object.PK();
-							targetTableName = linkObject.dbTableName(true);
+							targetTableName = linkObject.dbTableName();
 							targetPkName = linkObject.PK();
 						}
 						else {
-							sourceTableName = linkObject.dbTableName(true);
+							sourceTableName = linkObject.dbTableName();
 							sourcePkName = linkObject.PK();
-							targetTableName = f.object.dbTableName(true);
+							targetTableName = f.object.dbTableName();
 							targetPkName = f.object.PK();
 						}
 
@@ -430,8 +431,9 @@ module.exports = class ABObject extends ABObjectBase {
 								},
 
 								to: '{targetTable}.{primaryField}'
-									.replace('{targetTable}', targetTableName)
-									.replace('{primaryField}', targetPkName)
+										.replace('{targetTable}', targetTableName)
+										.replace('{primaryField}', targetPkName)
+
 							}
 
 						};
@@ -447,7 +449,7 @@ module.exports = class ABObject extends ABObjectBase {
 									.replace('{field}', f.columnName),
 
 								to: '{targetTable}.{primaryField}'
-									.replace('{targetTable}', linkObject.dbTableName(true))
+									.replace('{targetTable}', linkObject.dbTableName())
 									.replace('{primaryField}', linkObject.PK())
 							}
 						};
@@ -463,7 +465,7 @@ module.exports = class ABObject extends ABObjectBase {
 									.replace('{primaryField}', currObject.PK()),
 
 								to: '{targetTable}.{field}'
-									.replace('{targetTable}', linkObject.dbTableName(true))
+									.replace('{targetTable}', linkObject.dbTableName())
 									.replace('{field}', linkField.columnName)
 							}
 						};
@@ -491,7 +493,7 @@ module.exports = class ABObject extends ABObjectBase {
 	 */
 	modelRefresh() {
 
-		var tableName = this.dbTableName(true);
+		var tableName = this.dbTableName();
 		delete __ModelPool[tableName];
 
 		ABMigration.refreshObject(this);

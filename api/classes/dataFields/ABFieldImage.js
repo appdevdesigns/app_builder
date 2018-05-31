@@ -132,7 +132,15 @@ class ABFieldImage extends ABField {
 					if (!exists) {
 
 						return knex.schema.table(tableName, (t)=>{
-								t.string(this.columnName).nullable();
+
+								// field is required (not null)
+								if (this.settings.required) {
+									t.string(this.columnName).notNullable();
+								}
+								else {
+									t.string(this.columnName).nullable();
+								}
+
 							})
 							.then(resolve, reject);
 

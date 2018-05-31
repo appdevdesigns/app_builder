@@ -241,6 +241,41 @@ export default class ABModel {
 
 
 	/**
+	 * @method count
+	 * count a data find with the provided condition.
+	 */
+	count(cond) {
+
+		cond = cond || {};
+
+		return new Promise(
+			(resolve, reject) => {
+
+				OP.Comm.Socket.get({
+				// OP.Comm.Service.get({
+					url: this.object.urlRestCount(),
+					params: cond
+				})
+					.then((numberOfRows) => {
+
+						resolve(numberOfRows);
+
+					})
+					.catch((err) => {
+
+						OP.Error.log('AppBuilder:ABModel:count(): Parse Error with provided condition', { error: err, condition:cond })
+
+						reject(err);
+
+					})
+
+			}
+		)
+
+	}
+
+
+	/**
 	 * @method findConnected
 	 * return the connected data associated with an instance of this model.
 	 *
@@ -584,6 +619,13 @@ reject(err);
 				var relationName = c.relationName();
 				// if there is no data we can exit now
 				if (d[relationName] == null) return;
+
+				// if relation data is still a string
+				if (typeof d[relationName] == "string") {
+					// parse the string into an object
+					d[relationName] = JSON.parse(d[relationName]);
+				}
+
 				// if the data is an array we need to loop through it
 				if (Array.isArray(d[relationName])) {
 					d[relationName].forEach((r) => {

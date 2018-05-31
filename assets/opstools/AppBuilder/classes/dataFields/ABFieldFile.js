@@ -27,7 +27,9 @@ var ABFieldFileDefaults = {
 
 	isSortable: false,
 	isFilterable: false,
-	useAsLabel: false
+	useAsLabel: false,
+
+	supportRequire: false
 
 }
 
@@ -649,6 +651,9 @@ class ABFieldFile extends ABField {
 	 * @return {array} 
 	 */
 	isValidData(data, validator) {
+		
+		super.isValidData(data, validator);
+		
 	}
 
 }

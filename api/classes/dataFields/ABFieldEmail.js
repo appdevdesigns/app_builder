@@ -131,11 +131,26 @@ class ABFieldEmail extends ABField {
 
 						return knex.schema.table(tableName, (t) => {
 
-							var newCol = t.string(this.columnName);
+							var currCol = t.string(this.columnName);
+
+							// default value
+							if (this.settings.default)
+								currCol.defaultTo(this.settings.default);
+							else
+								currCol.defaultTo(null);
+
+								// field is required (not null)
+							if (this.settings.required) {
+								currCol.notNullable();
+							}
+							else {
+								currCol.nullable();
+							}
+
 
 							// alter column when exist:
 							if (exists) {
-								newCol.alter();
+								currCol.alter();
 							}
 						})
 							.then(() => { resolve(); })
@@ -145,6 +160,18 @@ class ABFieldEmail extends ABField {
 
 			}
 		);
+	}
+
+
+	/**
+	 * @function migrateUpdate
+	 * perform the necessary sql actions to MODIFY this column to the DB table.
+	 * @param {knex} knex the Knex connection.
+	 */
+	migrateUpdate (knex) {
+		
+		return migrateCreate(knex);
+
 	}
 
 

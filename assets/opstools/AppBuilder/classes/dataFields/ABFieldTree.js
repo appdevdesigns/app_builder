@@ -26,7 +26,9 @@ var ABFieldTreeDefaults = {
   description: L('ab.dataField.tree.description', '*Data tree allows you to build a hierarchical set of selectable data. (ex: Categories and sub-categories)'),
   isSortable: false,
   isFilterable: false,
-  useAsLabel: false
+  useAsLabel: false,
+
+  supportRequire: false
 };
 
 var defaultValues = {
@@ -110,6 +112,57 @@ var ABFieldTreeComponent = new ABFieldComponent({
           $$(ids.options).config.height = ($$(ids.options).count() * 28) + 18; // Number of pages plus 9px of padding top and bottom
           $$(ids.options).resize();
           $$(ids.options).edit(itemId);
+        }
+      },
+      {
+        // id: idTree,
+        view: "tree",
+        css: "ab-data-tree",
+        template: function(obj, common) {
+          return "<label>" + common.checkbox(obj, common) + "&nbsp;" + obj.text + "</label>";
+        },
+        on: {
+          onItemCheck: function(id, value, event) {
+            var dom = this.getItemNode(id);
+            var tree = this;
+            if (value == true) {
+              dom.classList.add("selected");
+            } else {
+              dom.classList.remove("selected");
+            }
+            // works for the same-level children only
+            // except root items
+            if (this.getParentId(id)) {
+              tree.blockEvent(); // prevents endless loop
+
+              var rootid = id;
+              while (this.getParentId(rootid)) {
+                rootid = this.getParentId(rootid);
+                if (rootid != id)
+                  tree.uncheckItem(rootid);
+              }
+
+              this.data.eachSubItem(rootid, function(item) {
+                if (item.id != id)
+                  tree.uncheckItem(item.id);
+              });
+
+              tree.unblockEvent();
+            } else {
+              tree.blockEvent(); // prevents endless loop
+              this.data.eachSubItem(id, function(obj) {
+                if (obj.id != id)
+                  tree.uncheckItem(obj.id);
+              }); 
+              tree.unblockEvent();
+            };
+
+            // var rowData = {};
+            // rowData[field.columnName] = $$(idTree).getChecked();
+            // 
+            // field.setValue($$(parentComponent.ui.id), rowData);
+
+          },
         }
       }
     ];
@@ -625,8 +678,9 @@ class ABFieldTree extends ABField {
    * @return {array} 
    */
   isValidData(data, validator) {
-
-
+      
+      super.isValidData(data, validator);
+      
   }
 
 

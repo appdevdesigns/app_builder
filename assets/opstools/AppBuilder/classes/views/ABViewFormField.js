@@ -12,6 +12,10 @@ function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
+var ABViewFormFieldPropertyComponentDefaults = {
+	required:0
+}
+
 export default class ABViewFormField extends ABView {
 
 	static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
@@ -24,6 +28,12 @@ export default class ABViewFormField extends ABView {
 				view: "text",
 				disabled: true,
 				label: L('ab.component.form.field.label', '*Field')
+			},
+			{
+				name: 'required',
+				view: 'checkbox',
+				labelWidth: App.config.labelWidthCheckbox,
+				labelRight: L('ab.component.form.field.required', '*Required')
 			}
 		]);
 
@@ -38,7 +48,21 @@ export default class ABViewFormField extends ABView {
 
 		if (field) {
 			$$(ids.fieldLabel).setValue(field.label);
+			if (field.settings.required == 1) {
+				$$(ids.required).setValue(field.settings.required);
+				$$(ids.required).disable();
+			} else {
+				$$(ids.required).setValue(view.settings.required  != null ? view.settings.required : ABViewFormFieldPropertyComponentDefaults.required);
+			}
 		}
+	}
+	
+	static propertyEditorValues(ids, view) {
+
+		super.propertyEditorValues(ids, view);
+
+		view.settings.required = $$(ids.required).getValue();
+
 	}
 
 	/*
@@ -77,6 +101,11 @@ export default class ABViewFormField extends ABView {
 			if (settings.showLabel == true) {
 				_ui.label = field.label;
 			}
+			
+			if (field.settings.required || this.settings.required) {
+				_ui.required = 1;
+			}
+
 		}
 
 		var _init = () => {}

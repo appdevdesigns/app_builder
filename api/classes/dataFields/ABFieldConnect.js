@@ -222,7 +222,7 @@ class ABFieldConnect extends ABField {
 
 				// find linked object
 				var linkObject = this.datasourceLink,
-					linkTableName = linkObject.dbTableName(true),
+					linkTableName = linkObject.dbTableName(),
 					linkPK = linkObject.PK(),
 					// TODO : should check duplicate column
 					linkColumnName = this.object.name;
@@ -246,10 +246,14 @@ class ABFieldConnect extends ABField {
 
 							knex.schema.table(tableName, (t) => {
 
-								t.integer(this.columnName).unsigned().nullable()
-									.references(linkPK)
-									.inTable(linkTableName)
-									.onDelete('cascade');
+								let linkCol = t.integer(this.columnName).unsigned().nullable();
+
+								// NOTE: federated table does not support reference column
+								if (!linkObject.isExternal) {
+									linkCol.references(linkPK)
+										.inTable(linkTableName)
+										.onDelete('cascade');
+								}
 
 							})
 								.then(() => { next(); })
@@ -284,10 +288,14 @@ class ABFieldConnect extends ABField {
 	
 								knex.schema.table(tableName, (t) => {
 	
-									t.integer(this.columnName).unsigned().nullable()
-										.references(linkPK)
-										.inTable(linkTableName)
-										.onDelete('cascade');
+									let linkCol = t.integer(this.columnName).unsigned().nullable();
+
+									// NOTE: federated table does not support reference column
+									if (!linkObject.isExternal) {
+										linkCol.references(linkPK)
+												.inTable(linkTableName)
+												.onDelete('cascade');
+									}
 
 									t.unique(this.columnName);
 	
@@ -322,16 +330,20 @@ class ABFieldConnect extends ABField {
 
 							knex.schema.table(linkTableName, (t) => {
 
-								t.integer(linkColumnName)
+								let linkCol = t.integer(linkColumnName)
 									.unsigned()
-									.nullable()
-									.references(this.object.PK())
-									.inTable(tableName)
-									.onDelete('cascade');
+									.nullable();
 
-								})
-								.then(() => { next(); })
-								.catch(next);
+								// NOTE: federated table does not support reference column
+								if (!this.object.isExternal) {
+									linkCol.references(this.object.PK())
+											.inTable(tableName)
+											.onDelete('cascade');
+								}
+
+							})
+							.then(() => { next(); })
+							.catch(next);
 						}
 					],
 						(err) => {
@@ -375,17 +387,23 @@ class ABFieldConnect extends ABField {
 								var targetFkName = getFkName(linkObject.name, linkColumnName);
 
 								// create columns
-								t.integer(this.object.name).unsigned().nullable()
-									.references(this.object.PK())
-									.inTable(tableName)
-									.withKeyName(sourceFkName)
-									.onDelete('cascade');
+								let linkCol = t.integer(this.object.name).unsigned().nullable();
+								let linkCol2 = t.integer(linkObject.name).unsigned().nullable();
 
-								t.integer(linkObject.name).unsigned().nullable()
-									.references(linkPK)
-									.inTable(linkTableName)
-									.withKeyName(targetFkName)
-									.onDelete('cascade');
+
+								// NOTE: federated table does not support reference column
+								if (!this.object.isExternal && !linkObject.isExternal) {
+
+									linkCol.references(this.object.PK())
+										.inTable(tableName)
+										.withKeyName(sourceFkName)
+										.onDelete('cascade');
+
+									linkCol2.references(linkPK)
+										.inTable(linkTableName)
+										.withKeyName(targetFkName)
+										.onDelete('cascade');
+								}
 
 								// // create columns
 								// t.integer(this.object.name).unsigned().nullable()
@@ -430,7 +448,6 @@ class ABFieldConnect extends ABField {
 
 				// if field is imported, then it will not remove column in table
 				if (this.object.isImported ||
-					this.object.isExternal ||
 					this.isImported) return resolve();
 
 				var tableName = this.object.dbTableName();
