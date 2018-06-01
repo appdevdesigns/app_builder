@@ -470,7 +470,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 	 *					unique id references.
 	 * @param {HtmlDOM} node  the HTML Dom object for this field's display.
 	 */
-	customDisplay(row, App, node, editable, formView) {
+	customDisplay(row, App, node, editable, formView, filters) {
 		var isFormView = (formView != null) ? formView : false;
 		// sanity check.
 		if (!node) { return }
@@ -492,6 +492,10 @@ class ABFieldConnect extends ABFieldSelectivity {
 			readOnly = true;
 			placeholder = "";
 		}
+		
+		if (filters == null) {
+			filters = {};
+		}
 
 		// Render selectivity
 		this.selectivityRender(domNode, {
@@ -504,7 +508,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 				minimumInputLength: 0,
 				quietMillis: 0,
 				fetch: (url, init, queryOptions) => {
-					return this.getOptions().then(function (data) {
+					return this.getOptions(filters).then(function (data) {
 						return {
 							results: data
 						};
@@ -671,7 +675,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 	 * 
 	 * @return {Promise}
 	 */
-	getOptions() {
+	getOptions(filters) {
 		return new Promise(
 			(resolve, reject) => {
 
@@ -694,7 +698,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 				// Get linked object model
 				var linkedModel = linkedObj.model();
 
-				var where = {};
+				var where = filters;
 
 				// M:1 - get data that's only empty relation value
 				if (this.settings.linkType == 'many' && this.settings.linkViaType == 'one') {
