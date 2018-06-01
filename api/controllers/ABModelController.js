@@ -422,7 +422,7 @@ module.exports = {
                                 res.AD.error(errorResponse);
                             }
                             else {
-                                Promise.reject(err);
+                                res.AD.error(err);
                             }
 
                         })
