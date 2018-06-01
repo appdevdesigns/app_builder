@@ -506,9 +506,9 @@ class ABFieldConnect extends ABFieldSelectivity {
 			ajax: {
 				url: 'It will call url in .getOptions function', // require
 				minimumInputLength: 0,
-				quietMillis: 0,
+				quietMillis: 250,
 				fetch: (url, init, queryOptions) => {
-					return this.getOptions(filters).then(function (data) {
+					return this.getOptions(filters, queryOptions.term).then(function (data) {
 						return {
 							results: data
 						};
@@ -675,7 +675,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 	 * 
 	 * @return {Promise}
 	 */
-	getOptions(filters) {
+	getOptions(filters, term) {
 		return new Promise(
 			(resolve, reject) => {
 
@@ -734,6 +734,12 @@ class ABFieldConnect extends ABFieldSelectivity {
 								text: linkedObj.displayData(d)
 							};
 						});
+
+					this._options = this._options.filter(function(item) {
+						if (item.text.toLowerCase().includes(term.toLowerCase())) {
+							return true;
+						}
+					});
 
 					resolve(this._options);
 
