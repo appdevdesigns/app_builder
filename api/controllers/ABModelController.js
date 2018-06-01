@@ -251,11 +251,44 @@ function updateTranslationsValues(object, id, translations, isInsert) {
             // update
             else {
 
-                transKnex.update(vals).where(where)
-                    .catch(err)
-                    .then(function() {
-                        next();
-                    });
+                Promise.resolve()
+                    .then(() => {
+
+                        // NOTE: There is a bug to update TEXT column of federated table
+                        // https://bugs.mysql.com/bug.php?id=63446
+                        // WORKAROUND: first update the cell to NULL and then update it again
+                        return new Promise((resolve, reject) => {
+
+                            var longTextFields = multilingualFields.filter(f => f.key == 'LongText');
+                            if (longTextFields.length < 1)
+                                return resolve();
+
+                            var clearVals = {};
+
+                            longTextFields.forEach(f => {
+                                clearVals[f.columnName] = null;
+                            });
+
+                            transKnex.update(clearVals).where(where)
+                                .catch(reject)
+                                .then(resolve);
+
+                        });
+
+                    })
+                    .then(() => {
+
+                        return new Promise((resolve, reject) => {
+
+                            transKnex.update(vals).where(where)
+                                .catch(reject)
+                                .then(resolve);
+
+                        });
+                    })
+                    .then(next)
+                    .catch(err);
+
             }
 
         }));

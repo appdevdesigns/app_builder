@@ -10,6 +10,12 @@ var __ModelPool = __ModelPool || {};  // reuse any previously created Model conn
 
 module.exports = class ABObjectExternal extends ABObject {
 
+
+	dbTransTableName() {
+		return "#table#_trans".replace("#table#", this.dbTableName());
+	}
+
+
 	/**
 	 * migrateCreateTable
 	 * verify that a table for this object exists.
@@ -32,14 +38,15 @@ module.exports = class ABObjectExternal extends ABObject {
 		var tableName = this.dbTableName();
 		sails.log.verbose('.... dbTableName:' + tableName);
 
+		var knexTarget = ABMigration.connection(options.connection);
+		var targetTransTableName = options.table.replace("_data", "") + '_trans';
+
 		return Promise.resolve()
 
 			// Get column info
 			.then(() => {
 
 				return new Promise((resolve, reject) => {
-
-					var knexTarget = ABMigration.connection(options.connection);
 
 					knexTarget(options.table).columnInfo()
 						.then(resolve)
@@ -122,8 +129,152 @@ module.exports = class ABObjectExternal extends ABObject {
 					});
 				});
 
+			})
+
+
+			// Check translation table exists
+			.then(() => {
+
+				return new Promise((resolve, reject) => {
+
+					knexTarget.schema.hasTable(targetTransTableName)
+						.then(resolve)
+						.catch(reject);
+
+				});
+
+			})
+
+			// Get column info of translation table
+			.then((transExists) => {
+
+				return new Promise((resolve, reject) => {
+
+					// if not exists
+					if (!transExists)
+						return resolve();
+
+					knexTarget(targetTransTableName).columnInfo()
+						.then(resolve)
+						.catch(reject);
+
+				});
+
+			})
+
+			// Create translation table
+			.then((columns) => {
+
+				return new Promise((resolve, reject) => {
+
+					// if not exists
+					if (!columns)
+						return resolve();
+
+					knex.schema.hasTable(this.dbTransTableName()).then((exists) => {
+
+						// if it doesn't exist, then create it and any known fields:
+						if (exists) {
+							sails.log.verbose('... this translation table already there.');
+							return resolve();
+						}
+
+						sails.log.verbose('... creating federated translation table !!!');
+						return knex.schema.createTable(this.dbTransTableName(), (t) => {
+
+							var conn = sails.config.connections[options.connection];
+
+							t.charset('utf8');
+							t.collate('utf8_unicode_ci')
+							t.engine(
+								"FEDERATED CONNECTION='mysql://{user}:{pass}@{host}/{database}/{table}';"
+									.replace('{user}', conn.user)
+									.replace('{pass}', conn.password)
+									.replace('{host}', conn.host)
+									.replace('{database}', conn.database)
+									.replace('{table}', targetTransTableName)
+							);
+
+							// create columns
+							Object.keys(columns || {}).forEach(colName => {
+
+								var colInfo = columns[colName];
+
+								if (!colInfo.type) return;
+
+								var fnName = colInfo.type;
+								switch (fnName) {
+									case 'int':
+										fnName = 'integer';
+										break;
+								}
+
+								// create new column
+								var newCol = t[fnName](colName);
+
+								if (colInfo.defaultValue)
+									newCol.defaultTo(colInfo.defaultValue);
+
+								if (colInfo.nullable)
+									newCol.nullable();
+								else
+									newCol.notNullable();
+
+							});
+
+							resolve();
+
+						})
+
+					});
+
+
+				});
+
 			});
 
+	}
+
+
+
+	/**
+	 * migrateDropTable
+	 * remove the table for this object if it exists.
+	 * @param {Knex} knex the knex sql library manager for manipulating the DB.
+	 * @return {Promise}
+	 */
+	migrateDrop(knex) {
+		sails.log.verbose('ABObject.migrateDrop()');
+
+		var tableName = this.dbTableName();
+		sails.log.verbose('.... dbTableName:' + tableName);
+
+		return new Promise(
+			(resolve, reject) => {
+				sails.log.silly('.... .migrateDropTable()  before knex:');
+
+				var fieldDrops = [];
+				this.fields().forEach((f) => {
+					fieldDrops.push(f.migrateDrop(knex));
+				})
+
+				Promise.all(fieldDrops)
+					.then(() => {
+
+						Promise.all([
+							knex.schema.dropTableIfExists(tableName),
+							knex.schema.dropTableIfExists(this.dbTransTableName())
+						])
+							.then(resolve)
+							.catch(reject);
+
+					})
+					.catch(reject);
+
+
+
+			}
+		)
 	}
 
 
@@ -139,6 +290,7 @@ module.exports = class ABObjectExternal extends ABObject {
 	model() {
 
 		var tableName = this.dbTableName();
+		var tableTransName = this.dbTransTableName();
 
 
 		if (!__ModelPool[tableName]) {
@@ -190,50 +342,49 @@ module.exports = class ABObjectExternal extends ABObject {
 				// Compile our relations from our DataFields
 				var relationMappings = {};
 
-				// TODO
-				// // Add a translation relation of the external table
-				// if (currObject.transColumnName) {
+				// Add a translation relation of the external table
+				if (currObject.transColumnName) {
 
-				// 	var transJsonSchema = {
-				// 		language_code: { type: 'string' }
-				// 	};
+					var transJsonSchema = {
+						language_code: { type: 'string' }
+					};
 
-				// 	// Populate fields of the trans table
-				// 	var multilingualFields = currObject.fields(f => f.settings.supportMultilingual == 1);
-				// 	multilingualFields.forEach(f => {
-				// 		f.jsonSchemaProperties(transJsonSchema);
-				// 	});
+					// Populate fields of the trans table
+					var multilingualFields = currObject.fields(f => f.settings.supportMultilingual == 1);
+					multilingualFields.forEach(f => {
+						f.jsonSchemaProperties(transJsonSchema);
+					});
 
-				// 	class TransModel extends Model {
+					class TransModel extends Model {
 
-				// 		// Table name is the only required property.
-				// 		static get tableName() {
-				// 			return "#table#_trans".replace("#table#", tableName);
-				// 		}
+						// Table name is the only required property.
+						static get tableName() {
+							return tableTransName;
+						}
 
-				// 		static get jsonSchema() {
-				// 			return {
-				// 				type: 'object',
-				// 				properties: transJsonSchema
-				// 			};
-				// 		}
+						static get jsonSchema() {
+							return {
+								type: 'object',
+								properties: transJsonSchema
+							};
+						}
 
-				// 	};
+					};
 
-				// 	relationMappings['translations'] = {
-				// 		relation: Model.HasManyRelation,
-				// 		modelClass: TransModel,
-				// 		join: {
-				// 			from: '{targetTable}.{primaryField}'
-				// 				.replace('{targetTable}', tableName)
-				// 				.replace('{primaryField}', currObject.PK()),
-				// 			to: '{sourceTable}.{field}'
-				// 				.replace('{sourceTable}', TransModel.tableName)
-				// 				.replace('{field}', currObject.transColumnName)
-				// 		}
-				// 	};
+					relationMappings['translations'] = {
+						relation: Model.HasManyRelation,
+						modelClass: TransModel,
+						join: {
+							from: '{targetTable}.{primaryField}'
+								.replace('{targetTable}', tableName)
+								.replace('{primaryField}', currObject.PK()),
+							to: '{sourceTable}.{field}'
+								.replace('{sourceTable}', TransModel.tableName)
+								.replace('{field}', currObject.transColumnName)
+						}
+					};
 
-				// }
+				}
 
 				var connectFields = currObject.connectFields();
 
