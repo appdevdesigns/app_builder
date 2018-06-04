@@ -364,8 +364,16 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 									name: 'field',
 									batch: 'field',
 									value: (settings.emailType == 'field' ? settings.value : ''),
-									options: _logic.emailFieldOptions(),
-									width: 150
+									width: 150,
+									suggest: {
+										on: {
+											onBeforeShow: function () {
+												this.define("width", 300);
+												this.resize();
+											}
+										},
+										data: _logic.emailFieldOptions()
+									},
 								},
 							]
 						},
@@ -580,20 +588,20 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 
 										let linkedFields = this.queryObject.fields(f => f instanceof ABFieldConnect && f.settings.linkObject == emailField.object.id);
 										linkedFields.forEach(f => {
-	
+
 											var linkedData = options.data[f.relationName()] || [];
-	
+
 											// convert to an array
 											if (linkedData && !Array.isArray(linkedData))
 												linkedData = [linkedData];
-	
+
 											// pull email address
 											linkedData.forEach(d => {
-	
+
 												var email = d[emailField.columnName];
 												if (email)
 													recipients = recipients.concat(email);
-	
+
 											});
 										});
 
