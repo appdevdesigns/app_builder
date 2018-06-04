@@ -544,6 +544,49 @@ reject(err);
 	}
 
 
+
+	/**
+	 * @method upsert
+	 * upsert model values on the server.
+	 */
+	upsert(values) {
+		
+		this.prepareMultilingualData(values);
+
+		// remove empty properties
+		for (var key in values) {
+			if (values[key] == null)
+				delete values[key];
+		}
+
+		return new Promise(
+			(resolve, reject) => {
+
+				OP.Comm.Service.put({
+					url: this.object.urlRest(),
+					params: values
+				})
+					.then((data) => {
+
+						// .data is an empty object ?? 
+
+						this.normalizeData(data);
+
+						resolve(data);
+
+						// FIX: now with sockets, the triggers are fired from socket updates.
+						// trigger a update event
+						// triggerEvent('update', this.object, data);
+
+					})
+					.catch(reject);
+
+			}
+		)
+
+	}
+
+
 	/**
 	 * @method where
 	 * set the where condition for the data being loaded.

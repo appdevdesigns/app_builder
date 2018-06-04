@@ -695,6 +695,13 @@ module.exports = {
 						if (col.multilingual)
 							colData.settings.supportMultilingual = 1;
 
+						if (!col.nullable)
+							colData.settings.required = 1;
+
+						// Define default value
+						if (col.defaultValue)
+							colData.settings.default = col.defaultValue;
+
 						// Add a hidden field
 						if (inputCol && JSON.parse(inputCol.isHidden || false)) {
 							objectData.objectWorkspace.hiddenFields.push(colData.columnName);

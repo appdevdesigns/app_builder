@@ -946,20 +946,7 @@ PopupRecordRule.qbFixAfterShow();
 			}
 
 			//Focus on first focusable component
-			var topPosition = this._views.length;
-			var topPositionId = "";
-			this._views.forEach((item) => {
-				if(item.key == "textbox" || item.key == "numberbox") {
-					if (item.position.y < topPosition) {
-						topPosition = item.position.y;
-						topPositionId = item.id;
-					}
-				}
-			});
-			var childComponent = this.viewComponents[topPositionId];
-			if(childComponent) {
-				$$(childComponent.ui.id).focus();
-			}
+			this.focusOnFirst();
 
 			if (Form)
 				Form.adjust();
@@ -1272,6 +1259,24 @@ resolve();
 
 
 
+	focusOnFirst() {
+
+		var topPosition = this.views().length;
+		var topPositionId = "";
+		this.views().forEach((item) => {
+			if(item.key == "textbox" || item.key == "numberbox") {
+				if (item.position.y < topPosition) {
+					topPosition = item.position.y;
+					topPositionId = item.id;
+				}
+			}
+		});
+		var childComponent = this.viewComponents[topPositionId];
+		if(childComponent) {
+			$$(childComponent.ui.id).focus();
+		}
+
+	}
 
 
 

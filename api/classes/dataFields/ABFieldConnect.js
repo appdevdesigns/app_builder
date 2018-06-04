@@ -513,7 +513,7 @@ class ABFieldConnect extends ABField {
 					{
 						// allow empty string because it could not put empty array in REST api
 						"type": "string",
-						"maxLength": 0
+						// "maxLength": 0
 					}
 				]
 			};
