@@ -396,20 +396,8 @@ export default class ABViewFormButton extends ABView {
 						saveButton.enable(); 
 
 						//Focus on first focusable component
-						var topPosition = form._views.length;
-						var topPositionId = "";
-						form._views.forEach((item) => {
-							if(item.key == "textbox" || item.key == "numberbox") {
-								if (item.position.y < topPosition) {
-									topPosition = item.position.y;
-									topPositionId = item.id;
-								}
-							}
-						});
-						var childComponent = form.viewComponents[topPositionId];
-						if(childComponent) {
-							$$(childComponent.ui.id).focus();
-						}
+						form.focusOnFirst();
+
 					});
 
 			},
