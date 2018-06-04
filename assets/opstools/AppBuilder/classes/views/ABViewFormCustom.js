@@ -177,9 +177,14 @@ export default class ABViewFormCustom extends ABViewFormField {
 				onClick: {
 					"customField": (id, e, trg) => {
 
-						var formView = this.parentFormComponent(),
-							dc = formView.dataCollection(),
-							rowData = dc.getCursor() || {};
+						var rowData = {}; 
+
+						var formView = this.parentFormComponent();
+						if (formView) {
+							var dc = formView.dataCollection();
+							if (dc)
+								rowData = dc.getCursor() || {};
+						}
 
 						if ($$(ids.component)) {
 							var node = $$(ids.component).$view;
