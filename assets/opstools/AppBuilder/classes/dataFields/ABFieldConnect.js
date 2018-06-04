@@ -829,7 +829,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 		if (!item) return;
 
-		if (_.isEmpty(rowData)) return;
+		// if (_.isEmpty(rowData)) return; removed because sometimes we will want to set this to empty
 
 		var val = rowData[this.columnName];
 		if (typeof val == "undefined") {

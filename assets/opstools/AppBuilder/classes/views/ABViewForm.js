@@ -924,6 +924,7 @@ PopupRecordRule.qbFixAfterShow();
 				// clear current cursor on load
 				if (this.settings.clearOnLoad || _logic.callbacks.clearOnLoad() ) {
 					dc.setCursor(null);
+					_logic.displayData(null);
 				}
 
 				data = dc.getCursor();
