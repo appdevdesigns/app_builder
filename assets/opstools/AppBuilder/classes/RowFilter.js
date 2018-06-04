@@ -1085,6 +1085,7 @@ export default class RowFilter extends OP.Component {
 					switch (fieldInfo.key) {
 						case "string":
 						case "LongText":
+						case "email":
 							condResult = _logic.textValid(value, filter.rule, filter.value);
 							break;
 						case "date":
