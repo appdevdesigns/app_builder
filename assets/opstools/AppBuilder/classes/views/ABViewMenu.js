@@ -158,8 +158,13 @@ export default class ABViewMenu extends ABViewWidget {
 		menu.rows[0].id = ids.component;
 		menu.rows[0].on = {
 			onAfterDrop: (context, native_event) => {
-				var newOrder = context.from.data.order.slice(0)
-				this.settings.pages = newOrder;
+				var orderedPageIds = context.from.data.order.slice(0);
+
+				// reorder
+				(this.settings.pages || []).sort(function(a, b) {
+					return orderedPageIds.indexOf(a.pageId) - orderedPageIds.indexOf(b.pageId);
+				});
+
 				this.save();
 			}
 		}
@@ -240,6 +245,7 @@ export default class ABViewMenu extends ABViewWidget {
 				view: "fieldset",
 				label: L('ab.component.menu.pageList', '*Page List:'),
 				labelWidth: App.config.labelWidthLarge,
+				height: 200,
 				body: {
 					type: "clean",
 					paddingY: 20,
