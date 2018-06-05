@@ -245,8 +245,8 @@ export default class ABViewMenu extends ABViewWidget {
 				view: "fieldset",
 				label: L('ab.component.menu.pageList', '*Page List:'),
 				labelWidth: App.config.labelWidthLarge,
-				height: 200,
 				body: {
+					view: "layout",
 					type: "clean",
 					paddingY: 20,
 					paddingX: 10,
@@ -358,7 +358,8 @@ export default class ABViewMenu extends ABViewWidget {
 			});
 		}
 		
-		$$(ids.pagesFieldset).config.height = ($$(ids.pages).count()*28)+18; // Number of pages plus 9px of padding top and bottom
+		// $$(ids.pagesFieldset).config.height = ($$(ids.pages).count()*28)+18; // Number of pages plus 9px of padding top and bottom
+		$$(ids.pagesFieldset).config.height = ($$(ids.pages).count()*28)+18+40; // Number of pages plus 9px of padding top and bottom
 		$$(ids.pagesFieldset).resize();
 	}
 
