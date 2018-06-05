@@ -726,7 +726,7 @@ module.exports = class ABObject extends ABObjectBase {
 							// parseCondition(r, this);
 							
 							// 'this' is changed type QueryBuilder to QueryBuilderBase
-							parseCondition(r, Query);
+							parseCondition(r, this);  // Query
 	                    });
 	                    
 	                })
