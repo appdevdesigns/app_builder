@@ -276,7 +276,7 @@ module.exports = class ABObject extends ABObjectBase {
 	 */
 	model() {
 
-		var tableName = this.dbTableName(true);
+		var tableName = this.dbTableName();
 
 		if (!__ModelPool[tableName]) {
 
@@ -361,13 +361,13 @@ module.exports = class ABObject extends ABObjectBase {
 
 						if (f.settings.isSource == true) {
 							sourceTable = tableName;
-							targetTable = linkObject.dbTableName(true);
+							targetTable = linkObject.dbTableName();
 							targetPkName = linkObject.PK();
 							relation = Model.BelongsToOneRelation;
 							columnName = f.columnName;
 						}
 						else {
-							sourceTable = linkObject.dbTableName(true);
+							sourceTable = linkObject.dbTableName();
 							targetTable = tableName;
 							targetPkName = currObject.PK();
 							relation = Model.HasOneRelation;
@@ -391,7 +391,7 @@ module.exports = class ABObject extends ABObjectBase {
 					// M:N
 					else if (f.settings.linkType == 'many' && f.settings.linkViaType == 'many') {
 						// get join table name
-						var joinTablename = f.joinTableName(true),
+						var joinTablename = f.joinTableName(),
 							joinColumnNames = f.joinColumnNames(),
 							sourceTableName,
 							sourcePkName,
@@ -399,15 +399,15 @@ module.exports = class ABObject extends ABObjectBase {
 							targetPkName;
 
 						if (f.settings.isSource == true) {
-							sourceTableName = f.object.dbTableName(true);
+							sourceTableName = f.object.dbTableName();
 							sourcePkName = f.object.PK();
-							targetTableName = linkObject.dbTableName(true);
+							targetTableName = linkObject.dbTableName();
 							targetPkName = linkObject.PK();
 						}
 						else {
-							sourceTableName = linkObject.dbTableName(true);
+							sourceTableName = linkObject.dbTableName();
 							sourcePkName = linkObject.PK();
-							targetTableName = f.object.dbTableName(true);
+							targetTableName = f.object.dbTableName();
 							targetPkName = f.object.PK();
 						}
 
@@ -431,8 +431,9 @@ module.exports = class ABObject extends ABObjectBase {
 								},
 
 								to: '{targetTable}.{primaryField}'
-									.replace('{targetTable}', targetTableName)
-									.replace('{primaryField}', targetPkName)
+										.replace('{targetTable}', targetTableName)
+										.replace('{primaryField}', targetPkName)
+
 							}
 
 						};
@@ -448,7 +449,7 @@ module.exports = class ABObject extends ABObjectBase {
 									.replace('{field}', f.columnName),
 
 								to: '{targetTable}.{primaryField}'
-									.replace('{targetTable}', linkObject.dbTableName(true))
+									.replace('{targetTable}', linkObject.dbTableName())
 									.replace('{primaryField}', linkObject.PK())
 							}
 						};
@@ -464,7 +465,7 @@ module.exports = class ABObject extends ABObjectBase {
 									.replace('{primaryField}', currObject.PK()),
 
 								to: '{targetTable}.{field}'
-									.replace('{targetTable}', linkObject.dbTableName(true))
+									.replace('{targetTable}', linkObject.dbTableName())
 									.replace('{field}', linkField.columnName)
 							}
 						};
@@ -492,7 +493,7 @@ module.exports = class ABObject extends ABObjectBase {
 	 */
 	modelRefresh() {
 
-		var tableName = this.dbTableName(true);
+		var tableName = this.dbTableName();
 		delete __ModelPool[tableName];
 
 		ABMigration.refreshObject(this);
@@ -692,6 +693,7 @@ module.exports = class ABObject extends ABObjectBase {
 	        sails.log.debug('ABObject.populateFindConditions(): .where condition:', JSON.stringify(where, null, 4));
 
 
+
 	        // @function parseCondition
 	        // recursive fn() to step through each of our provided conditions and
 	        // translate them into query.XXXX() operations.
@@ -699,6 +701,10 @@ module.exports = class ABObject extends ABObjectBase {
 	        // @param {ObjectionJS Query} Query the query object to perform the operations.
 	        var parseCondition = (condition, Query) => {
 
+
+				// 'have_no_relation' condition will be applied later
+				if (condition.rule == 'have_no_relation')
+					return;
 
 				// FIX: some improper inputs:
 	            // if they didn't provide a .glue, then default to 'and'
@@ -725,7 +731,7 @@ module.exports = class ABObject extends ABObjectBase {
 							// parseCondition(r, this);
 							
 							// 'this' is changed type QueryBuilder to QueryBuilderBase
-							parseCondition(r, Query);
+							parseCondition(r, this);  // Query
 	                    });
 	                    
 	                })
@@ -746,20 +752,8 @@ module.exports = class ABObject extends ABObjectBase {
 							.replace('{columnName}', field.columnName);
 
 
-							// 1:1 - Get rows that no relation with 
-						if (condition.rule == 'have_no_relation') {
-							var relation_name = AppBuilder.rules.toFieldRelationFormat(field.columnName);
-
-							var objectLink = field.datasourceLink;
-							if (!objectLink) return;
-
-							condition.key = field.columnName;
-							condition.value = objectLink.PK();
-
-						}
-
 						// if we are searching a multilingual field it is stored in translations so we need to search JSON
-						else if (field.isMultilingual) {
+						if (field.isMultilingual) {
 
 							condition.key = ('JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({tableName}.translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({tableName}.translations, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))')
 											.replace(/{tableName}/g, field.object.dbTableName())
@@ -778,40 +772,6 @@ module.exports = class ABObject extends ABObjectBase {
 
 					}
 				}
-
-
-
-				//// Special Case:  'have_no_relation'
-				// 1:1 - Get rows that no relation with 
-				if (condition.rule == 'have_no_relation') {
-					// var relation_name = AppBuilder.rules.toFieldRelationFormat(field.columnName);
-
-					// var objectLink = field.objectLink();
-					// if (!objectLink) return;
-
-					// Query
-					// 	.leftJoinRelation(relation_name)
-					// 	.whereRaw('{relation_name}.{primary_name} IS NULL'
-					// 		.replace('{relation_name}', relation_name)
-					// 		.replace('{primary_name}', objectLink.PK()));
-
-					// {
-					//	key: "COLUMN_NAME", // no need to include object name
-					//	rule: "have_no_relation",
-					//	value: "LINK_OBJECT_PK_NAME"
-					// }
-
-					var relation_name = AppBuilder.rules.toFieldRelationFormat(condition.key);
-
-					Query
-						.leftJoinRelation(relation_name)
-						.whereRaw('{relation_name}.{primary_name} IS NULL'
-							.replace('{relation_name}', relation_name)
-							.replace('{primary_name}', condition.value));
-
-					return;
-				}
-
 
 
 	            //// Handle a basic rule:
@@ -972,7 +932,47 @@ module.exports = class ABObject extends ABObjectBase {
 				}
 			}
 
-	        parseCondition(where, query);
+			parseCondition(where, query);
+
+
+			// Special Case:  'have_no_relation'
+			// 1:1 - Get rows that no relation with 
+			var noRelationRules = (where.rules || []).filter(r => r.rule == 'have_no_relation');
+			noRelationRules.forEach(r => {
+				// var relation_name = AppBuilder.rules.toFieldRelationFormat(field.columnName);
+
+				// var objectLink = field.objectLink();
+				// if (!objectLink) return;
+
+				// Query
+				// 	.leftJoinRelation(relation_name)
+				// 	.whereRaw('{relation_name}.{primary_name} IS NULL'
+				// 		.replace('{relation_name}', relation_name)
+				// 		.replace('{primary_name}', objectLink.PK()));
+
+				// {
+				//	key: "COLUMN_NAME", // no need to include object name
+				//	rule: "have_no_relation",
+				//	value: "LINK_OBJECT_PK_NAME"
+				// }
+
+				var field = this.fields(f => f.id == r.key)[0];
+
+				var relation_name = AppBuilder.rules.toFieldRelationFormat(field.columnName);
+
+				var objectLink = field.datasourceLink;
+				if (!objectLink) return;
+
+				r.value = objectLink.PK();
+
+				query
+					.leftJoinRelation(relation_name)
+					.whereRaw('{relation_name}.{primary_name} IS NULL'
+						.replace('{relation_name}', relation_name)
+						.replace('{primary_name}', r.value));
+				
+			});
+
 
 	    }
 
@@ -1022,6 +1022,11 @@ module.exports = class ABObject extends ABObjectBase {
 
 			if (relationNames.length > 0)
 				query.eager('[#fieldNames#]'.replace('#fieldNames#', relationNames.join(', ')));
+
+			// TODO: Move to ABObjectExternal
+			if (this.isExternal && this.transColumnName) {
+				query.eager('translations');
+			}
 
 	    }
 

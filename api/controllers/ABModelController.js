@@ -186,11 +186,11 @@ function updateConnectedFields(object, newData, oldData) {
         items.forEach((i) => {
             // Make sure you put the payload together just like before
             var payload = {
-                objectId: field.object[field.object.PK()], // get the fields object id
+                objectId: field.object.id, // get the fields object id
                 data: i // pass the whole item 
             }
             // Broadcast the payload and let the clientside figure out what to do next
-            sails.sockets.broadcast(field.object[field.object.PK()], "ab.datacollection.stale", payload);
+            sails.sockets.broadcast(field.object.id, "ab.datacollection.stale", payload);
         });
     });
 }
@@ -251,11 +251,44 @@ function updateTranslationsValues(object, id, translations, isInsert) {
             // update
             else {
 
-                transKnex.update(vals).where(where)
-                    .catch(err)
-                    .then(function() {
-                        next();
-                    });
+                Promise.resolve()
+                    .then(() => {
+
+                        // NOTE: There is a bug to update TEXT column of federated table
+                        // https://bugs.mysql.com/bug.php?id=63446
+                        // WORKAROUND: first update the cell to NULL and then update it again
+                        return new Promise((resolve, reject) => {
+
+                            var longTextFields = multilingualFields.filter(f => f.key == 'LongText');
+                            if (longTextFields.length < 1)
+                                return resolve();
+
+                            var clearVals = {};
+
+                            longTextFields.forEach(f => {
+                                clearVals[f.columnName] = null;
+                            });
+
+                            transKnex.update(clearVals).where(where)
+                                .catch(reject)
+                                .then(resolve);
+
+                        });
+
+                    })
+                    .then(() => {
+
+                        return new Promise((resolve, reject) => {
+
+                            transKnex.update(vals).where(where)
+                                .catch(reject)
+                                .then(resolve);
+
+                        });
+                    })
+                    .then(next)
+                    .catch(err);
+
             }
 
         }));
@@ -343,12 +376,12 @@ module.exports = {
                                         // We want to broadcast the change from the server to the client so all datacollections can properly update
                                         // Build a payload that tells us what was updated
                                         var payload = {
-                                            objectId: object[object.PK()],
+                                            objectId: object.id,
                                             data: newItem[0]
                                         }
                                         
                                         // Broadcast the create
-                                        sails.sockets.broadcast(object[object.PK()], "ab.datacollection.create", payload);
+                                        sails.sockets.broadcast(object.id, "ab.datacollection.create", payload);
                                         
                                         updateConnectedFields(object, newItem[0]);
                                         
@@ -389,7 +422,7 @@ module.exports = {
                                 res.AD.error(errorResponse);
                             }
                             else {
-                                Promise.reject(err);
+                                res.AD.error(err);
                             }
 
                         })
@@ -677,12 +710,12 @@ module.exports = {
                         // We want to broadcast the change from the server to the client so all datacollections can properly update
                         // Build a payload that tells us what was updated
                         var payload = {
-                            objectId: object[object.PK()],
+                            objectId: object.id,
                             id: id
                         }
 
                         // Broadcast the delete
-                        sails.sockets.broadcast(object[object.PK()], "ab.datacollection.delete", payload);
+                        sails.sockets.broadcast(object.id, "ab.datacollection.delete", payload);
 
                         // Using the data from the oldItem and relateditems we can update all instances of it and tell the client side it is stale and needs to be refreshed
                         updateConnectedFields(object, oldItem[0]);
@@ -857,7 +890,7 @@ module.exports = {
 
 
     update: function (req, res) {
-
+        
         var id = req.param('id', -1);
 
 
@@ -919,8 +952,8 @@ module.exports = {
                         if (validationErrors.length == 0) {
 
                             if (object.isExternal) {
-                                 // translations values does not in same table of the external object
-                                 delete updateParams.translations;
+                                    // translations values does not in same table of the external object
+                                    delete updateParams.translations;
                             }
                             else {
                                 // this is an update operation, so ... 
@@ -992,12 +1025,12 @@ module.exports = {
                                                     // We want to broadcast the change from the server to the client so all datacollections can properly update
                                                     // Build a payload that tells us what was updated
                                                     var payload = {
-                                                        objectId: object[object.PK()],
+                                                        objectId: object.id,
                                                         data: newItem[0]
                                                     }
                                                     
                                                     // Broadcast the update
-                                                    sails.sockets.broadcast(object[object.PK()], "ab.datacollection.update", payload);
+                                                    sails.sockets.broadcast(object.id, "ab.datacollection.update", payload);
                                                     
                                                     updateConnectedFields(object, newItem[0], oldItem[0]);
                                                     
@@ -1073,6 +1106,235 @@ module.exports = {
 
             })
 
+    },
+
+
+
+    upsert: function(req, res) {
+
+        var object;
+ 
+        Promise.resolve()
+            .then(() => {
+
+                // Pull ABObject
+                return new Promise((resolve, reject) => {
+
+                    AppBuilder.routes.verifyAndReturnObject(req, res)
+                    .then(function (result) {
+
+                        object = result;
+                        resolve();
+
+                    });
+
+                });
+
+            })
+            .then(() => {
+
+                // Get column names
+                return new Promise((resolve, reject) => {
+
+                    object.model().query().columnInfo()
+                    .then(function (columns) {
+
+                        var columnNames = Object.keys(columns);
+
+                        resolve(columnNames);
+
+                    })
+                    .catch(reject);
+
+                });
+
+            })
+            .then((columnNames) => {
+
+                return new Promise((resolve, reject) => {
+
+                    var model = object.model();
+
+                    var allParams = req.body;
+
+                    delete allParams.created_at;
+
+                    // get translations values for the external object
+                    // it will update to translations table after model values updated
+                    var transParams = _.cloneDeep(allParams.translations);
+
+
+                    // filter invalid columns
+                    var relationNames = Object.keys(model.getRelations());
+                    Object.keys(allParams).forEach(prop => {
+
+                        // remove no column of this object
+                        if (prop != 'id' && 
+                            columnNames.indexOf(prop) < 0 &&
+                            relationNames.indexOf(prop) < 0) {
+                            delete allParams[prop];
+                        }
+                        // remove updated_at, created_at of relation data
+                        else if (relationNames.indexOf(prop) > -1) {
+                            if (allParams[prop]) {
+
+                                delete allParams[prop].text;
+
+                                delete allParams[prop].updated_at;
+                                delete allParams[prop].created_at;
+
+                                if (!allParams[prop].properties)
+                                    delete allParams[prop].properties;
+
+                            }
+                        }
+
+
+                    });
+
+
+                    // Validate
+                    var validationErrors = object.isValidData(allParams);
+                    if (validationErrors && validationErrors.length > 0) {
+
+                        // return an invalid values response:
+                        var errorResponse = {
+                            error: 'E_VALIDATION',
+                            invalidAttributes: {
+            
+                            }
+                        }
+
+                        var attr = errorResponse.invalidAttributes;
+
+                        validationErrors.forEach((e) => {
+                            attr[e.name] = attr[e.name] || [];
+                            attr[e.name].push(e);
+                        });
+
+                        res.AD.error(errorResponse);    
+
+                        return;
+                    }
+
+                    if (object.isExternal) {
+
+                        // translations values does not in same table of the external object
+                        delete allParams.translations;
+                    }
+                    else {
+                        // this is an update operation, so ... 
+                        // updateParams.updated_at = (new Date()).toISOString();
+            
+                        allParams.updated_at = AppBuilder.rules.toSQLDateTime(new Date());
+            
+                        // Check if there are any properties set otherwise let it be...let it be...let it be...yeah let it be
+                        if (allParams.properties) {
+                            allParams.properties = allParams.properties;
+                        } else {
+                            allParams.properties = null;
+                        }
+                    }
+
+sails.log.verbose('ABModelController.upsert(): allParams:', allParams);
+
+                    // Upsert data
+                    model
+                        .query()
+                        .upsertGraph(
+                            allParams,
+                            // Knex's upsert options
+                            {
+                                relate: true,
+                                unrelate: true,
+                                noDelete: true,
+                                noUpdate: ['created_at']
+                            })
+                        .then((values) => {
+
+                            var valId = values[object.PK()];
+
+                            resolve(valId);
+
+                        })
+                        .catch(reject);
+
+                });
+
+            })
+
+            .then((updateId) => {
+
+                // Query the new row to response to client
+                return new Promise((resolve, reject) => {
+
+                    object.queryFind({
+                            where: {
+                                glue:'and',
+                                rules:[{
+                                    key: object.PK(),
+                                    rule: "equals",
+                                    value: updateId
+                                }]
+                            },
+                            offset: 0,
+                            limit: 1,
+                            includeRelativeData: true
+                        },
+                        req.user.data)
+                        .then((updateItem) => {
+
+                            res.AD.success(updateItem);
+
+                            // We want to broadcast the change from the server to the client so all datacollections can properly update
+                            // Build a payload that tells us what was updated
+                            var payload = {
+                                objectId: object.id,
+                                data: updateItem
+                            }
+
+                            // Broadcast the update
+                            sails.sockets.broadcast(object.id, "ab.datacollection.upsert", payload);
+
+                            resolve();
+
+                        })
+                        .catch(reject);
+
+
+                });
+            })
+            .catch((err) => {
+
+                console.log('...  (err) handler!', err);
+                
+                // handle invalid values here:
+                if (err instanceof ValidationError) {
+
+                    //// TODO: refactor these invalid data handlers to a common OP.Validation.toErrorResponse(err)
+
+                    // return an invalid values response:
+                    var errorResponse = {
+                        error: 'E_VALIDATION',
+                        invalidAttributes: {
+
+                        }
+                    }
+
+                    var attr = errorResponse.invalidAttributes;
+
+                    for (var e in err.data) {
+                        attr[e] = attr[e] || [];
+                        err.data[e].forEach((eObj) => {
+                            eObj.name = e;
+                            attr[e].push(eObj);
+                        })
+                    }
+
+                    res.AD.error(errorResponse);
+                }
+            });
+ 
     },
 
 

@@ -924,6 +924,7 @@ PopupRecordRule.qbFixAfterShow();
 				// clear current cursor on load
 				if (this.settings.clearOnLoad || _logic.callbacks.clearOnLoad() ) {
 					dc.setCursor(null);
+					_logic.displayData(null);
 				}
 
 				data = dc.getCursor();
@@ -943,6 +944,9 @@ PopupRecordRule.qbFixAfterShow();
 				// show blank data in the form
 				_logic.displayData(null);
 			}
+
+			//Focus on first focusable component
+			this.focusOnFirst();
 
 			if (Form)
 				Form.adjust();
@@ -1255,6 +1259,24 @@ resolve();
 
 
 
+	focusOnFirst() {
+
+		var topPosition = this.views().length;
+		var topPositionId = "";
+		this.views().forEach((item) => {
+			if(item.key == "textbox" || item.key == "numberbox") {
+				if (item.position.y < topPosition) {
+					topPosition = item.position.y;
+					topPositionId = item.id;
+				}
+			}
+		});
+		var childComponent = this.viewComponents[topPositionId];
+		if(childComponent) {
+			$$(childComponent.ui.id).focus();
+		}
+
+	}
 
 
 

@@ -470,7 +470,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 	 *					unique id references.
 	 * @param {HtmlDOM} node  the HTML Dom object for this field's display.
 	 */
-	customDisplay(row, App, node, editable, formView) {
+	customDisplay(row, App, node, editable, formView, filters) {
 		var isFormView = (formView != null) ? formView : false;
 		// sanity check.
 		if (!node) { return }
@@ -492,6 +492,10 @@ class ABFieldConnect extends ABFieldSelectivity {
 			readOnly = true;
 			placeholder = "";
 		}
+		
+		if (filters == null) {
+			filters = {};
+		}
 
 		// Render selectivity
 		this.selectivityRender(domNode, {
@@ -502,9 +506,9 @@ class ABFieldConnect extends ABFieldSelectivity {
 			ajax: {
 				url: 'It will call url in .getOptions function', // require
 				minimumInputLength: 0,
-				quietMillis: 0,
+				quietMillis: 250,
 				fetch: (url, init, queryOptions) => {
-					return this.getOptions().then(function (data) {
+					return this.getOptions(filters, queryOptions.term).then(function (data) {
 						return {
 							results: data
 						};
@@ -671,7 +675,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 	 * 
 	 * @return {Promise}
 	 */
-	getOptions() {
+	getOptions(filters, term) {
 		return new Promise(
 			(resolve, reject) => {
 
@@ -694,7 +698,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 				// Get linked object model
 				var linkedModel = linkedObj.model();
 
-				var where = {};
+				var where = filters;
 
 				// M:1 - get data that's only empty relation value
 				if (this.settings.linkType == 'many' && this.settings.linkViaType == 'one') {
@@ -730,6 +734,12 @@ class ABFieldConnect extends ABFieldSelectivity {
 								text: linkedObj.displayData(d)
 							};
 						});
+
+					this._options = this._options.filter(function(item) {
+						if (item.text.toLowerCase().includes(term.toLowerCase())) {
+							return true;
+						}
+					});
 
 					resolve(this._options);
 
@@ -819,7 +829,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 		if (!item) return;
 
-		if (_.isEmpty(rowData)) return;
+		// if (_.isEmpty(rowData)) return; removed because sometimes we will want to set this to empty
 
 		var val = rowData[this.columnName];
 		if (typeof val == "undefined") {

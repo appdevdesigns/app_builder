@@ -158,8 +158,13 @@ export default class ABViewMenu extends ABViewWidget {
 		menu.rows[0].id = ids.component;
 		menu.rows[0].on = {
 			onAfterDrop: (context, native_event) => {
-				var newOrder = context.from.data.order.slice(0)
-				this.settings.pages = newOrder;
+				var orderedPageIds = context.from.data.order.slice(0);
+
+				// reorder
+				(this.settings.pages || []).sort(function(a, b) {
+					return orderedPageIds.indexOf(a.pageId) - orderedPageIds.indexOf(b.pageId);
+				});
+
 				this.save();
 			}
 		}
@@ -241,6 +246,7 @@ export default class ABViewMenu extends ABViewWidget {
 				label: L('ab.component.menu.pageList', '*Page List:'),
 				labelWidth: App.config.labelWidthLarge,
 				body: {
+					view: "layout",
 					type: "clean",
 					paddingY: 20,
 					paddingX: 10,
@@ -352,7 +358,8 @@ export default class ABViewMenu extends ABViewWidget {
 			});
 		}
 		
-		$$(ids.pagesFieldset).config.height = ($$(ids.pages).count()*28)+18; // Number of pages plus 9px of padding top and bottom
+		// $$(ids.pagesFieldset).config.height = ($$(ids.pages).count()*28)+18; // Number of pages plus 9px of padding top and bottom
+		$$(ids.pagesFieldset).config.height = ($$(ids.pages).count()*28)+18+40; // Number of pages plus 9px of padding top and bottom
 		$$(ids.pagesFieldset).resize();
 	}
 

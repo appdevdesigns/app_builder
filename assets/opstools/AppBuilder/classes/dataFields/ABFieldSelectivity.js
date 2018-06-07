@@ -12,7 +12,6 @@ var defaultSettings = {
 	removeOnly: false,
 	readOnly: false,
 	showDropdown: true,
-	showSearchInputInDropdown: false,
 	placeholder: "",
 	multiple:false
 }

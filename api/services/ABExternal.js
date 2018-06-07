@@ -26,6 +26,11 @@ function isSupportType(type) {
 }
 
 function getTransTableName(tableName) {
+
+	// NOTE: legacy_hris - there are table names {table}_data, {table}_trans
+	// ex. hris_ren_data, hris_ren_trans
+	tableName = tableName.replace("_data", "");
+
 	return tableName + '_trans';
 }
 
@@ -193,46 +198,6 @@ module.exports = {
 						});
 				});
 			})
-			// .then(function () {
-			// 	// Get tables in HRIS DB
-			//  	return new Promise((resolve, reject) => {
-				
-			// 		var knex;
-			// 		try {
-			// 			knex = ABMigration.connection('legacy_hris');
-			// 		} catch (err) {
-			// 			knex = null;
-			// 		}
-					
-			// 		if (!knex) {
-			// 			// No legacy_hris connection. Skip.
-			// 			resolve();
-			// 		}
-			// 		else {
-	
-			// 			// SELECT `TABLE_NAME` 
-			// 			// FROM information_schema.tables 
-			// 			// WHERE `TABLE_TYPE` = 'BASE TABLE' 
-			// 			// AND `TABLE_SCHEMA` = [CURRENT DB]
-			// 			// AND `TABLE_NAME`	 NOT LIKE 'AB_%'
-			// 			// AND `TABLE_NAME`	 NOT LIKE '%_trans';
-			// 			knex.select('TABLE_NAME')
-			// 				.from('information_schema.tables')
-			// 				.where('TABLE_TYPE', '=', 'BASE TABLE')
-			// 				.andWhere('TABLE_SCHEMA', '=', sails.config.connections.legacy_hris.database)
-			// 				.andWhere('TABLE_NAME', 'NOT LIKE', 'AB_%')
-			// 				.andWhere('TABLE_NAME', 'NOT LIKE', '%_trans')
-			// 				.catch(reject)
-			// 				.then(function (result) {
-			// 					result.forEach((r) => {
-			// 						allTableNames.push({ name: r.TABLE_NAME, connection: 'legacy_hris'});
-			// 					});
-		
-			// 					resolve();
-			// 				});
-			// 		}
-			// 	});
-			// })
 			.then(function () {
 
 				return new Promise((resolve, reject) => {
@@ -729,6 +694,13 @@ module.exports = {
 						// Flag support multilingual 
 						if (col.multilingual)
 							colData.settings.supportMultilingual = 1;
+
+						if (!col.nullable)
+							colData.settings.required = 1;
+
+						// Define default value
+						if (col.defaultValue)
+							colData.settings.default = col.defaultValue;
 
 						// Add a hidden field
 						if (inputCol && JSON.parse(inputCol.isHidden || false)) {

@@ -580,9 +580,11 @@ console.warn('!! ToDo: onAfterColumnHide()');
 
 //// Question: do we submit full item updates?  or just patches?
 var patch = {};
+patch.id = item.id;
 patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also condition the data for sending.state.value;
-    					CurrentObject.model()
-    					.update(item.id, item)
+                        CurrentObject.model()
+                        // .upsert(item)
+.update(item.id, item)
 // .update(item.id, patch)
     					.then(()=>{
 
@@ -997,7 +999,12 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                             tip += o.text + "<br/>";
                     });
                 } else if (typeof obj[common.column.id] == "undefined" && typeof obj[common.column.id+"__relation"] != "undefined") {
-                    obj[common.column.id+"__relation"].forEach(function (o) {
+
+                    var relationData = obj[common.column.id+"__relation"];
+                    if (!Array.isArray(relationData))
+                        relationData = [relationData];
+
+                    (relationData || []).forEach(function (o) {
                         tip += o.text + "<br/>";
                     });
                 } else if (typeof obj[common.column.id+"__relation"] != "undefined" && typeof obj[common.column.id] == "number") {
