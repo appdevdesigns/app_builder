@@ -457,6 +457,7 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 			 */
 			templateListItem: function(obj, common) {
 				return _templateListItem
+					.replace("{iconWarning}", (obj.isDisabled() ? '<i class="fa fa-exclamation-triangle"></i> ' : ""))
 					.replace('#label#', obj.label || '??label??')
 					.replace('{common.iconGear}', common.iconGear);
 			},
@@ -552,6 +553,7 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 		 */
 		var _templateListItem = [
 			"<div class='ab-object-list-item'>",
+				"{iconWarning}",
 				"#label#",
 				"{common.iconGear}",
 			"</div>",

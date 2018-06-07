@@ -346,7 +346,7 @@ module.exports = class ABApplicationBase {
 			}
 
 			// otherwise obj should be an {} and key a property:
-			if (obj[key]) {
+			if (obj && obj[key]) {
 				return parseStep(obj[key], steps);
 			}
 
