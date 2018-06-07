@@ -83,9 +83,22 @@ module.exports = {
     resolve:function(entry) {
 
         return Promise.resolve()
-        // find the ABRelayUser
+        // make sure we don't already have an entry with the same .appUUID
+        // there should be only one, so don't add a duplicate:
         .then(()=>{
 
+            return ABRelayAppUser.findOne({appUUID:entry.appUUID})
+        })
+
+        // find the ABRelayUser
+        .then((existingAppUser)=>{
+
+            // if we had an existing AppUser, PASS
+            if (existingAppUser) {
+                return null;
+            }
+
+            // otherwise continue on
             if (entry.user) {
                 return ABRelayUser.findOne({user:entry.user});
             } else {
