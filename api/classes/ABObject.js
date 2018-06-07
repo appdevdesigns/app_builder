@@ -693,6 +693,7 @@ module.exports = class ABObject extends ABObjectBase {
 	        sails.log.debug('ABObject.populateFindConditions(): .where condition:', JSON.stringify(where, null, 4));
 
 
+
 	        // @function parseCondition
 	        // recursive fn() to step through each of our provided conditions and
 	        // translate them into query.XXXX() operations.
@@ -700,6 +701,10 @@ module.exports = class ABObject extends ABObjectBase {
 	        // @param {ObjectionJS Query} Query the query object to perform the operations.
 	        var parseCondition = (condition, Query) => {
 
+
+				// 'have_no_relation' condition will be applied later
+				if (condition.rule == 'have_no_relation')
+					return;
 
 				// FIX: some improper inputs:
 	            // if they didn't provide a .glue, then default to 'and'
@@ -747,20 +752,8 @@ module.exports = class ABObject extends ABObjectBase {
 							.replace('{columnName}', field.columnName);
 
 
-							// 1:1 - Get rows that no relation with 
-						if (condition.rule == 'have_no_relation') {
-							var relation_name = AppBuilder.rules.toFieldRelationFormat(field.columnName);
-
-							var objectLink = field.datasourceLink;
-							if (!objectLink) return;
-
-							condition.key = field.columnName;
-							condition.value = objectLink.PK();
-
-						}
-
 						// if we are searching a multilingual field it is stored in translations so we need to search JSON
-						else if (field.isMultilingual) {
+						if (field.isMultilingual) {
 
 							condition.key = ('JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({tableName}.translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({tableName}.translations, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))')
 											.replace(/{tableName}/g, field.object.dbTableName())
@@ -779,40 +772,6 @@ module.exports = class ABObject extends ABObjectBase {
 
 					}
 				}
-
-
-
-				//// Special Case:  'have_no_relation'
-				// 1:1 - Get rows that no relation with 
-				if (condition.rule == 'have_no_relation') {
-					// var relation_name = AppBuilder.rules.toFieldRelationFormat(field.columnName);
-
-					// var objectLink = field.objectLink();
-					// if (!objectLink) return;
-
-					// Query
-					// 	.leftJoinRelation(relation_name)
-					// 	.whereRaw('{relation_name}.{primary_name} IS NULL'
-					// 		.replace('{relation_name}', relation_name)
-					// 		.replace('{primary_name}', objectLink.PK()));
-
-					// {
-					//	key: "COLUMN_NAME", // no need to include object name
-					//	rule: "have_no_relation",
-					//	value: "LINK_OBJECT_PK_NAME"
-					// }
-
-					var relation_name = AppBuilder.rules.toFieldRelationFormat(condition.key);
-
-					Query
-						.leftJoinRelation(relation_name)
-						.whereRaw('{relation_name}.{primary_name} IS NULL'
-							.replace('{relation_name}', relation_name)
-							.replace('{primary_name}', condition.value));
-
-					return;
-				}
-
 
 
 	            //// Handle a basic rule:
@@ -973,7 +932,47 @@ module.exports = class ABObject extends ABObjectBase {
 				}
 			}
 
-	        parseCondition(where, query);
+			parseCondition(where, query);
+
+
+			// Special Case:  'have_no_relation'
+			// 1:1 - Get rows that no relation with 
+			var noRelationRules = (where.rules || []).filter(r => r.rule == 'have_no_relation');
+			noRelationRules.forEach(r => {
+				// var relation_name = AppBuilder.rules.toFieldRelationFormat(field.columnName);
+
+				// var objectLink = field.objectLink();
+				// if (!objectLink) return;
+
+				// Query
+				// 	.leftJoinRelation(relation_name)
+				// 	.whereRaw('{relation_name}.{primary_name} IS NULL'
+				// 		.replace('{relation_name}', relation_name)
+				// 		.replace('{primary_name}', objectLink.PK()));
+
+				// {
+				//	key: "COLUMN_NAME", // no need to include object name
+				//	rule: "have_no_relation",
+				//	value: "LINK_OBJECT_PK_NAME"
+				// }
+
+				var field = this.fields(f => f.id == r.key)[0];
+
+				var relation_name = AppBuilder.rules.toFieldRelationFormat(field.columnName);
+
+				var objectLink = field.datasourceLink;
+				if (!objectLink) return;
+
+				r.value = objectLink.PK();
+
+				query
+					.leftJoinRelation(relation_name)
+					.whereRaw('{relation_name}.{primary_name} IS NULL'
+						.replace('{relation_name}', relation_name)
+						.replace('{primary_name}', r.value));
+				
+			});
+
 
 	    }
 
