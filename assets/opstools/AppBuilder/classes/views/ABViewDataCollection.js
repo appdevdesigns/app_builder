@@ -957,8 +957,10 @@ export default class ABViewDataCollection extends ABView {
 		// events
 		AD.comm.hub.subscribe('ab.datacollection.create', (msg, data) => {
 
-			if (this.datasource &&
-				this.datasource.id != data.objectId)
+			if (!this.datasource)
+			 	return;
+			
+			if (this.datasource.id != data.objectId)
 				return;
 
 			var rowData = data.data;
