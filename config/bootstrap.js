@@ -37,6 +37,8 @@ module.exports = function (cb) {
     		verifyWellKnownConfigs,
     		verifyDataDir,
 
+    		setupPollingMCC,
+
 // NOTE: remove this when we no longer manually add the SDC app info:
 addSDCAppInfo,
 defaultEmailNotificationInvite,
@@ -121,6 +123,37 @@ function verifyWellKnownConfigs(next) {
 	processConfig(defaultConfigContents, next);
     
 }
+
+
+function setupPollingMCC(next) {
+
+	var delay = sails.config.appbuilder.mcc.pollFrequency || (1000 * 5); // every 5 sec
+
+	var timerId = setTimeout(function request() {
+
+		sails.log.debug(':: ABRelay.pollMCC()');
+		ABRelay.pollMCC()
+		.then(()=>{
+			// do it again:
+			timerId = setTimeout(request, delay);
+		})
+		.catch((err)=>{
+			if (err.code == 'E_SERVER_TIMEOUT') {
+				delay *= 2;
+			}
+
+			// catch other errors
+
+			// if still ok to continue then:
+			timerId = setTimeout(request, delay);
+		})
+
+	}, delay);
+
+	next();
+
+}
+
 
 
 function addSDCAppInfo(next) {

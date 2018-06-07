@@ -19,7 +19,6 @@
 
 So it sounds like a QR code needs to include the following info:
     userAuthToken
-    applicationID
     codepushkeys
 
 The AppBuilder MobileFramework (MF) should be able to decode the QR code and:
@@ -27,12 +26,12 @@ The AppBuilder MobileFramework (MF) should be able to decode the QR code and:
     - The new set of code contains the server url for the Public Server
     - The new set of code contains the AppID of the mobile app 
     - The MF then initiates a PublicServer.mobile/init {userAuthToken, AppID }
-    - PublicServer responds with { userID, rsaPublic, AppPolicyInfo for AppID }
+    - PublicServer responds with { userUUID, rsaPublic, appPolicy for AppID }
     - MF generates an AES key, encrypts it with rsaPublic: rsa_aes
     - MF generates an AppUUID (a unique ID for an App on a specific user's device)
             Note: if a user downloads this app on multiple devices, 
                   each device will generate a unique AES key 
-    - MF contacts PublicServer.mobile/initresolve  { rsa_aes, userID, AppID, AppUUID }
+    - MF contacts PublicServer.mobile/initresolve  { rsa_aes, userUUID, AppID, AppUUID }
 
     - from now on MF makes requests with POST PublicServer.mobile/relay using data encrypted with AES key.
             each request needs: userAuthToken,  and AppUUID
@@ -122,6 +121,14 @@ migrate:'alter',
         
         rsa_private_key: {
             type: 'mediumtext'
+        },
+
+
+        // appUser
+        // any instances of our mobile app's encryption keys:
+        appUser:{
+            collection: 'abrelayappuser',
+            via:'relayUser'
         },
 
     

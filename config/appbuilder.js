@@ -41,8 +41,9 @@ module.exports.appbuilder = {
   //
   // sails.config.appbuilder.mcc
   mcc: {
-    url:'http://localhost:1337',      // url connection to our MCC (include Port)
-    accessToken:'There is no spoon.'  // required accessToken
+    url:'http://localhost:1337',       // url connection to our MCC (include Port)
+    accessToken:'There is no spoon.',  // required accessToken
+    pollFrequency: 1000 * 5            // frequency in ms that we should poll the MCC 
   },
 
 

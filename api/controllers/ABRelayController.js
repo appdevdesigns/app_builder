@@ -8,7 +8,7 @@
 var async = require('async');
 var _ = require('lodash');
 
-var RP = require('request-promise-native');
+
 
 module.exports = {
 
@@ -172,25 +172,19 @@ module.exports = {
 
 			(next) => {
 
-				var options = {
-				    method: 'POST',
-				    uri: sails.config.appbuilder.mcc.url+'/mcc/users',
-				    headers: {
-				        'authorization': sails.config.appbuilder.mcc.accessToken
-				    },
-				    body: {
+				ABRelay.post({
+					url:'/mcc/users', 
+					data:{
 				        users: restUsers
-				    },
-				    json: true // Automatically stringifies the body to JSON
-				};
-				 
-				RP(options)
-				    .then(function (parsedBody) {
+				    }
+				})
+			    .then(function (parsedBody) {
 
-						next();
-				        
-				    })
-				    .catch(next);
+					next();
+			        
+			    })
+			    .catch(next);
+			    
 			}
 
 		], (err, data)=>{
