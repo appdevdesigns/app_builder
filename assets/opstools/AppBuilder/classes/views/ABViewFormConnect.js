@@ -513,7 +513,11 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 				// isolate the connected field data that was saved
 				// var savedItem = linkedObj.displayData(saveData);
 				// repopulate the selectivity options now that there is a new one added
-				field.getOptions().then(function (data) {
+				var filters = {};
+				if (this.settings.objectWorkspace && this.settings.objectWorkspace.filterConditions) {
+					filters = this.settings.objectWorkspace.filterConditions;
+				}
+				field.getOptions(this.settings.objectWorkspace.filterConditions, "").then(function (data) {
 					// find option with the matching id to the savedData
 					var myOption = data.filter(d => d.id == saveData.id);
 					var values = {};
