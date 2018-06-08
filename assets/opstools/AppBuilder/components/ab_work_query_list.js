@@ -191,6 +191,7 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 
 
 		var CurrentApplication = null;
+		var CurrentQuery = null;
 		var queryList = null;
 
 
@@ -244,40 +245,10 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 			applicationLoad : function(application){
 				_logic.listBusy();
 
+				CurrentQuery = null;
 				CurrentApplication = application;
 
-				// get a DataCollection of all our objects
-				queryList = new webix.DataCollection({
-					data: application.queries(),
-				});
-
-				// setup object list settings
-// $$(ids.listSetting).define("collapsed", CurrentApplication.objectlistIsOpen != true);
-// $$(ids.listSetting).refresh();
-// $$(ids.searchText).setValue(CurrentApplication.objectlistSearchText);
-// $$(ids.sort).setValue(CurrentApplication.objectlistSortDirection);
-// $$(ids.group).setValue(CurrentApplication.objectlistIsGroup);
-
-
-				// clear our list and display our objects:
-				var List = $$(ids.list);
-				List.clearAll();
-				List.data.unsync();
-				List.data.sync(queryList);
-				List.refresh();
-				List.unselectAll();
-
-
-				// sort objects
-				_logic.listSort(CurrentApplication.objectlistSortDirection);
-
-				// filter object list
-				_logic.listSearch();
-
-
-				// hide progress loading cursor
-				_logic.listReady();
-
+				_logic.refresh();
 
 				// prepare our Popup with the current Application
 				PopupNewQueryComponent.applicationLoad(application);
@@ -421,9 +392,9 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 			 */
 			selectObject: function (id) {
 
-				var query = $$(ids.list).getItem(id);
+				CurrentQuery = $$(ids.list).getItem(id);
 
-				_logic.callbacks.onItemSelected( query );
+				_logic.callbacks.onItemSelected( CurrentQuery );
 
 				_logic.showGear(id);
 			},
@@ -533,6 +504,50 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 				})
 			},
 
+			refresh: function() {
+
+				// setup object list settings
+// $$(ids.listSetting).define("collapsed", CurrentApplication.objectlistIsOpen != true);
+// $$(ids.listSetting).refresh();
+// $$(ids.searchText).setValue(CurrentApplication.objectlistSearchText);
+// $$(ids.sort).setValue(CurrentApplication.objectlistSortDirection);
+// $$(ids.group).setValue(CurrentApplication.objectlistIsGroup);
+
+				// get a DataCollection of all our queries
+				if (queryList == null)
+					queryList = new webix.DataCollection();
+
+				queryList.clearAll();
+
+				if (CurrentApplication)
+					queryList.parse(CurrentApplication.queries());
+
+
+				// clear our list and display our objects:
+				var List = $$(ids.list);
+				List.clearAll();
+				List.data.unsync();
+				List.data.sync(queryList);
+				List.refresh();
+				List.unselectAll();
+
+				if (CurrentQuery)
+					List.select(CurrentQuery.id);
+
+
+				// sort objects
+				_logic.listSort(CurrentApplication.objectlistSortDirection);
+
+				// filter object list
+				_logic.listSearch();
+
+
+				// hide progress loading cursor
+				_logic.listReady();
+
+
+			},
+
 			callbackObjectEditorMenu: function (action) {
 				switch (action) {
 					case 'rename':
@@ -586,6 +601,7 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 		// Define our external interface methods:
 		// 
 		this.applicationLoad = _logic.applicationLoad;
+		this.refresh = _logic.refresh;
 
 	}
 
