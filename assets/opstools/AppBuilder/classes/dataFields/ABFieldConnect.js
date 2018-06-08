@@ -380,6 +380,62 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 
 	/**
+	 * @method destroy()
+	 *
+	 * destroy the current instance of ABApplication
+	 *
+	 * also remove it from our _AllApplications
+	 *
+	 * @return {Promise}
+	 */
+	destroy() {
+		return new Promise(
+			(resolve, reject) => {
+
+				// verify we have been .save()d before:
+				if (this.id) {
+
+					// NOTE: our .migrateXXX() routines expect the object to currently exist
+					// in the DB before we perform the DB operations.  So we need to
+					// .migrateDrop()  before we actually .objectDestroy() this.
+					super.destroy()
+						.then(() => {
+
+							return this.object.fieldRemove(this);
+
+						})
+						.then(() => {
+
+							var application = this.object.application;
+
+							var linkObject = application.objects((obj) => obj.id == this.settings.linkObject)[0];
+							if (!linkObject)
+								return Promise.resolve();
+
+							var linkField = linkObject.fields((f) => f.id == this.settings.linkColumn)[0];
+							if (!linkField)
+								return Promise.resolve();
+
+
+							// destroy linked field
+							return linkField.destroy();
+
+						})
+						.then(resolve)
+						.catch(reject);
+
+				} else {
+
+					resolve();  // nothing to do really
+				}
+
+			}
+		)
+
+	}
+
+
+	/**
 	 * @method toObj()
 	 *
 	 * properly compile the current state of this ABApplication instance
@@ -492,7 +548,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 			readOnly = true;
 			placeholder = "";
 		}
-		
+
 		if (filters == null) {
 			filters = {};
 		}
@@ -617,9 +673,9 @@ class ABFieldConnect extends ABFieldSelectivity {
 	 * @return {array} 
 	 */
 	isValidData(data, validator) {
-		
+
 		super.isValidData(data, validator);
-		
+
 	}
 
 
@@ -735,7 +791,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 							};
 						});
 
-					this._options = this._options.filter(function(item) {
+					this._options = this._options.filter(function (item) {
 						if (item.text.toLowerCase().includes(term.toLowerCase())) {
 							return true;
 						}

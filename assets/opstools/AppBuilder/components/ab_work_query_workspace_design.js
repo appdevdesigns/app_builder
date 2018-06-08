@@ -227,7 +227,8 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 				// set connected objects:
 				$$(ids.tree).clearAll();
 
-				fnAddTreeItem(objBase);
+				if (objBase)
+					fnAddTreeItem(objBase);
 
 				// refresh UI
 				$$(ids.tree).refresh();
@@ -257,6 +258,8 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 					if ($view && $view.config.id != 'temp')
 						$viewMultiview.removeView($view);
 				});
+
+				if (!objBase) return;
 
 				// add the main object tab
 				let tabUI = _logic.templateField(objBase, null, true);
@@ -342,9 +345,12 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 					// if no join, then should add the default
 					if (joins.length == 0) {
-						joins.push({
-							objectURL: CurrentQuery.objectBase().urlPointer()
-						})
+						var objectBase = CurrentQuery.objectBase();
+						if (objectBase) {
+							joins.push({
+								objectURL: objectBase.urlPointer()
+							});
+						}
 					}
 
 					CurrentQuery.importJoins(joins);

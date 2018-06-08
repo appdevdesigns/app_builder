@@ -244,7 +244,7 @@ export default class ABObjectQuery extends ABObject {
 			var field = this.application.urlResolve(fieldInfo.fieldURL);
 
 			// should be a field of base/join objects
-			if (this.canFilterField(field) &&
+			if (field && this.canFilterField(field) &&
 				// check duplicate
 				newFields.filter(f => f.urlPointer() == fieldInfo.fieldURL).length < 1) { 
 
@@ -372,8 +372,15 @@ export default class ABObjectQuery extends ABObject {
 			// 		}
 
 			// track our base object
-	  		var object = this.application.urlResolve(join.objectURL);
-	  		storeSingle(object);
+			var object = this.application.urlResolve(join.objectURL);
+			if (!object) {
+
+				// flag this query is disabled
+				this.disabled = true;
+				return;
+			}
+
+			storeSingle(object);
 
 	  		// track our linked object
 			var linkField = object.fields((f)=>{ return f.id == join.fieldID; })[0];
@@ -491,6 +498,20 @@ export default class ABObjectQuery extends ABObject {
 	 */
 	urlPointer(acrossApp) {
 		return this.application.urlQuery(acrossApp) + this.id;
+	}
+
+
+
+	/**
+	 * @method isDisabled()
+	 * check this contains removed objects or fields
+	 * 
+	 * @return {boolean}
+	 */
+	isDisabled() {
+
+		return this.disabled || false;
+
 	}
 
 
