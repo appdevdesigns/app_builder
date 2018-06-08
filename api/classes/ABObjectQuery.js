@@ -203,6 +203,8 @@ module.exports = class ABObjectQuery extends ABObject {
 
 			// track our base object
 			var object = this.application.urlResolve(join.objectURL);
+			if (!object) return;
+
 			storeSingle(object);
 
 			// track our linked object

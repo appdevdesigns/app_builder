@@ -401,7 +401,9 @@ class ABFieldConnect extends ABFieldSelectivity {
 					super.destroy()
 						.then(() => {
 
-							return this.object.fieldRemove(this);
+							// NOTE : prevent recursive remove connected fields
+							// - remove this field from JSON 
+							this.object._fields = this.object.fields(f => { return f.id != this.id });
 
 						})
 						.then(() => {
