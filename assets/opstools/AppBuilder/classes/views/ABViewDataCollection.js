@@ -686,6 +686,12 @@ export default class ABViewDataCollection extends ABView {
 			var userFields = object.fields((f) => f.key == 'user');
 			if (userFields.length > 0)
 				dataItems.unshift({ id: '_CurrentUser', value: L('ab.component.datacollection.currentUser', '[Current User]') });
+
+			// Add a first record option to allow select first row
+			dataItems.unshift(
+				{ id: '_FirstRecord', value: L('ab.component.datacollection.firstRecord', '[First Record]') }
+			);
+
 		}
 
 		dataItems.unshift({ id: '', value: L('ab.component.datacollection.fixSelect', '*Select fix cursor') });
@@ -1328,8 +1334,22 @@ export default class ABViewDataCollection extends ABView {
 						// set a first row of current user to cursor
 						if (row)
 							this.__dataCollection.setCursor(row.id);
-					}
-					else {
+					} else if (this.settings.fixSelect == "_FirstRecord") {
+						// find a row that contains the current user
+						var row = this.__dataCollection.find((r) => {
+							
+							var found = false;
+							if (!found) {
+								found = true;
+								return true; // just give us the first record
+							}
+
+						}, true);
+
+						// set a first row of current user to cursor
+						if (row)
+							this.__dataCollection.setCursor(row.id);
+					} else {
 						this.setCursor(this.settings.fixSelect);
 					}
 
