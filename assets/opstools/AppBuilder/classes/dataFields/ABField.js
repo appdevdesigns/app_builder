@@ -352,26 +352,6 @@ export default class ABField extends ABFieldBase {
 					// in the DB before we perform the DB operations.  So we need to
 					// .migrateDrop()  before we actually .objectDestroy() this.
 					this.migrateDrop()
-					.then(()=>{
-
-						// TODO workaround : where should I destroy a link object
-						if (this.key == "connectObject") {
-							var application = this.object.application;
-							var linkObject = application.objects((obj) => obj.id == this.settings.linkObject)[0];
-
-							if (linkObject) {
-
-								var linkField = linkObject.fields((f) => f.id == this.settings.linkColumn)[0];
-								if (linkField) {
-									linkField.destroy().then(() => {});
-								}
-
-							}
-						}
-
-
-						return this.object.fieldRemove(this);
-					})
 					.then(resolve)
 					.catch(reject)
 
