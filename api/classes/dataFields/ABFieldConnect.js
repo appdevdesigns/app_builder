@@ -256,6 +256,9 @@ class ABFieldConnect extends ABField {
 										.onDelete('cascade');
 								}
 
+								if (exists)
+									linkCol.alter();
+
 							})
 								.then(() => { next(); })
 								.catch(next);
@@ -299,6 +302,9 @@ class ABFieldConnect extends ABField {
 									}
 
 									t.unique(this.columnName);
+
+									if (exists)
+										linkCol.alter();
 	
 								})
 									.then(() => { next(); })
@@ -341,6 +347,9 @@ class ABFieldConnect extends ABField {
 											.inTable(tableName)
 											.onDelete('cascade');
 								}
+
+								if (exists)
+									linkCol.alter();
 
 							})
 							.then(() => { next(); })

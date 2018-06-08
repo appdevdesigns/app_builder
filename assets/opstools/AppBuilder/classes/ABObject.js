@@ -125,21 +125,48 @@ export default class ABObject extends ABObjectBase {
 				Promise.all(fieldDrops)
 				.then(()=>{
 
-					// now drop our table
-					// NOTE: our .migrateXXX() routines expect the object to currently exist
-					// in the DB before we perform the DB operations.  So we need to
-					// .migrateDrop()  before we actually .objectDestroy() this.
-					this.migrateDrop()
-					.then(()=>{
+					return new Promise((next, err) => {
 
-						// finally remove us from the application storage
-						return this.application.objectDestroy(this);
+						// now drop our table
+						// NOTE: our .migrateXXX() routines expect the object to currently exist
+						// in the DB before we perform the DB operations.  So we need to
+						// .migrateDrop()  before we actually .objectDestroy() this.
+						this.migrateDrop()
+						.then(()=>{
 
-					})
-					.then(resolve)
-					.catch(reject);
+							// finally remove us from the application storage
+							return this.application.objectDestroy(this);
+
+						})
+						.then(next)
+						.catch(err);
+
+					});
 
 				})
+
+				// flag .disable to queries who contains this removed object
+				.then(() => {
+
+					return new Promise((next, err) => {
+
+						this.application
+							.queries(q => q.objects(o => o.id == this.id).length > 0)
+							.forEach(q => {
+
+								q._objects = q.objects(o => o.id != this.id );
+
+								q.disabled = true;
+
+							});
+
+						next();
+
+					});
+
+
+				})
+				.then(resolve)
 				.catch(reject);
 
 			}

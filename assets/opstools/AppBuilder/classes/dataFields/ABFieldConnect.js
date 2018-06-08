@@ -423,6 +423,12 @@ class ABFieldConnect extends ABFieldSelectivity {
 							return linkField.destroy();
 
 						})
+						.then(() => {
+
+							// Save JSON of the object
+							return this.object.fieldRemove(this);
+
+						})
 						.then(resolve)
 						.catch(reject);
 
