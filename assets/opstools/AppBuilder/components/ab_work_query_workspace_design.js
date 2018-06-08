@@ -275,9 +275,11 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 					var objFrom = CurrentApplication.urlResolve(join.objectURL);
 					var fieldLink = objFrom.fields(f => f.id == join.fieldID)[0];
-					var objLink = fieldLink.datasourceLink;
+					if (!fieldLink) return;
 
-					if (objLink.id == objBase.id) return;
+					var objLink = fieldLink.datasourceLink;
+					if (!objLink || 
+						objLink.id == objBase.id) return;
 
 					// add tab
 					let tabUI = _logic.templateField(objLink, join.type);

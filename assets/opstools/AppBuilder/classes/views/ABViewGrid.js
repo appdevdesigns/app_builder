@@ -962,6 +962,8 @@ export default class ABViewGrid extends ABViewWidget  {
 						if (tab == null) {
 							tab = $$(parentTab);
 						}
+
+						if (tab == null) return;
 						
 						// set the tabbar to to the tab
 						var tabbar = tab.getParentView().getParentView();

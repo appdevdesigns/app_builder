@@ -289,7 +289,14 @@ export default class ABViewDataCollection extends ABView {
 
 		// == Logic ==
 
-		_logic.selectSource = (sourceId) => {
+		_logic.selectSource = (sourceId, oldId) => {
+
+			if ($$(ids.dataSource).getList().getItem(sourceId).disabled) {
+				// prevents re-calling onChange from itself
+				$$(ids.dataSource).blockEvent();	
+				$$(ids.dataSource).setValue(oldId || "")
+				$$(ids.dataSource).unblockEvent();
+			}
 
 			var view = _logic.currentEditObject();
 
@@ -389,7 +396,7 @@ export default class ABViewDataCollection extends ABView {
 								onChange: function (newv, oldv) {
 									if (newv == oldv) return;
 
-									_logic.selectSource(newv);
+									_logic.selectSource(newv, oldv);
 								}
 							}
 						},
@@ -513,14 +520,25 @@ export default class ABViewDataCollection extends ABView {
 			return {
 				id: q.id,
 				value: q.label,
-				icon: 'cubes'
+				icon: 'cubes',
+				disabled: q.isDisabled()
 			}
 		});
 		sources = sources.concat(queries);
 
 		sources.unshift({ id: '', value: L('ab.component.datacollection.selectSource', '*Select an source') });
 
-		$$(ids.dataSource).define("options", { data: sources });
+		$$(ids.dataSource).define("options", { 
+			body:{
+				scheme: {
+					$init:function(obj) {
+						if (obj.disabled)
+							obj.$css = "disabled";
+					}
+				},
+				data: sources
+			}
+		});
 		$$(ids.dataSource).define("value", view.settings.object || '');
 		$$(ids.dataSource).refresh();
 
@@ -602,7 +620,10 @@ export default class ABViewDataCollection extends ABView {
 				source = query;
 			}
 
-			view.settings.objectUrl = source.urlPointer();
+			if (source)
+				view.settings.objectUrl = source.urlPointer();
+			else 
+				delete view.settings.objectUrl;
 
 
 			var defaultLabel = view.parent.label + '.' + view.defaults.key;
