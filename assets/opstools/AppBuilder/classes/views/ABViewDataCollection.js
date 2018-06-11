@@ -1337,7 +1337,7 @@ export default class ABViewDataCollection extends ABView {
 
 							userFields.forEach((f) => {
 
-								if (found) return;
+								if (found || r[f.columnName] == null) return;
 
 								if (r[f.columnName].filter) { // Array - isMultiple
 									found = r[f.colName].filter((data) => data.id == username).length > 0;
