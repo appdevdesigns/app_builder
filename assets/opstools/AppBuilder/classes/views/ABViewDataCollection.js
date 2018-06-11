@@ -62,7 +62,8 @@ var ABViewPropertyDefaults = {
 		},
 		sortFields: [] // array of columns with their sort configurations
 	},
-	loadAll: false
+	loadAll: false,
+	isQuery: false // if true it is a query, otherwise it is a object.
 }
 
 
@@ -175,6 +176,7 @@ export default class ABViewDataCollection extends ABView {
 
 		// Convert to boolean
 		this.settings.loadAll = JSON.parse(this.settings.loadAll || ABViewPropertyDefaults.loadAll);
+		this.settings.isQuery = JSON.parse(this.settings.isQuery || ABViewPropertyDefaults.isQuery);
 
 	}
 
@@ -615,9 +617,11 @@ export default class ABViewDataCollection extends ABView {
 			var source;
 			if (obj) {
 				source = obj;
+				view.settings.isQuery = false;
 			}
 			else if (query) {
 				source = query;
+				view.settings.isQuery = true;
 			}
 
 			if (source)
@@ -637,6 +641,7 @@ export default class ABViewDataCollection extends ABView {
 		}
 		else {
 			delete view.settings.objectUrl;
+			delete view.settings.isQuery;
 		}
 
 		// set id of link data collection

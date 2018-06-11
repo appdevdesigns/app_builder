@@ -330,8 +330,9 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 							value: settings.emailType || 'email',
 							width: 150,
 							options: [
-								{ id: 'email', value: "a custom email address" },
-								{ id: 'field', value: "an email field" },
+								{ id: 'email', value: "A custom email address" },
+								{ id: 'field', value: "An email field" },
+								{ id: 'query', value: "From query" },
 							],
 							on: {
 								onChange: function (newVal, oldVal) {
@@ -375,6 +376,22 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 										data: _logic.emailFieldOptions()
 									},
 								},
+								{
+									view: 'richselect',
+									name: 'query',
+									batch: 'query',
+									value: (settings.emailType == 'query' ? settings.value : ''),
+									width: 150,
+									suggest: {
+										on: {
+											onBeforeShow: function () {
+												this.define("width", 300);
+												this.resize();
+											}
+										},
+										data: _logic.queryOptions()
+									},
+								}
 							]
 						},
 						{
@@ -409,16 +426,16 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 				var $recipient = $select.getParentView();
 				var $emailValue = $recipient.queryView({ name: 'emailValue' });
 
-				if (type == 'field') {
-
-					$emailValue.showBatch('field');
-
-				}
-				// type == 'email'
-				else {
-
-					$emailValue.showBatch('email');
-
+				switch (type) {
+					case 'field':
+						$emailValue.showBatch('field');
+						break;
+					case 'query':
+						$emailValue.showBatch('query');
+						break;
+					default:
+						$emailValue.showBatch('email');
+						break;
 				}
 
 				$$(ids.toEmailsContainer).adjust();
@@ -501,6 +518,36 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 				};
 
 				fnAddOptions(this.queryObject);
+
+				return options;
+
+			},
+
+			queryOptions: () => {
+
+				var options = [];
+
+				var pageRoot = this.currentForm.pageRoot(),
+					// get data collections who is query and contains email field
+					dcQueries = pageRoot.dataCollections(dc => {
+						return dc.settings.isQuery && 
+								dc.datasource.fields(f => f.key == 'email').length > 0;
+					});
+
+				dcQueries.forEach(dc => {
+
+					dc.datasource.fields(f => f.key == 'email').forEach(f => {
+
+						options.push({
+							id: dc.id + '|' + f.id, // dataCollectionID|fieldID
+							value: "{dcLabel}.{fieldLabel}"
+								.replace("{dcLabel}", dc.label)
+								.replace("{fieldLabel}", f.label)
+						});
+
+					});
+
+				});
 
 				return options;
 
@@ -608,34 +655,39 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 									}
 
 									next();
-
-									// var model = emailField.object.model();
-									// model.findAll({
-									// 	where: {
-									// 		glue: 'and',
-									// 		rules: [{
-									// 			key: emailField.id,
-									// 			rule: "is_not_null"
-									// 		}]
-									// 	}
-									// })
-									// 	.catch(err)
-									// 	.then(result => {
-
-									// 		var emails = result.data
-									// 			.filter(d => d[emailField.columnName])
-									// 			.map(d => d[emailField.columnName]);
-
-									// 		recipients = recipients.concat(emails);
-
-									// 		next();
-									// 	});
-
 								}
 								else {
 									next();
 								}
 							}
+
+
+							// query
+							if (rec.emailType == 'query') {
+
+								var dcIdAndFieldId = rec.value; // dataCollectionId|fieldId
+								if (!dcIdAndFieldId) return next();
+
+								var dcId = dcIdAndFieldId.split('|')[0];
+								var fieldId = dcIdAndFieldId.split('|')[1];
+
+								var dcQuery = this.currentForm.pageRoot().dataCollections(dc => dc.id == dcId)[0];
+								if (!dcQuery) return next();
+
+								var field = dcQuery.datasource.fields(f => f.id == fieldId)[0];
+								if (!field) return next();
+
+								// get data of data collection
+								dcQuery.getData().forEach(data => {
+									var emailAddr = data[field.columnName];
+									if (emailAddr)
+										recipients.push(emailAddr);
+								});
+
+								next();
+							}
+
+
 							// email
 							else {
 								recipients.push(rec.value);
