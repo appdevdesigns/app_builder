@@ -398,7 +398,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 					// NOTE: our .migrateXXX() routines expect the object to currently exist
 					// in the DB before we perform the DB operations.  So we need to
 					// .migrateDrop()  before we actually .objectDestroy() this.
-					super.destroy()
+					this.migrateDrop()
 						.then(() => {
 
 							// NOTE : prevent recursive remove connected fields
