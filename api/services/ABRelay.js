@@ -51,9 +51,135 @@ module.exports = {
 
 
 
+    /**
+     * _formatServerRequest
+     * create the parameters necessary for us to pass the request on
+     * to the CoreServer:
+     * @param {obj} opt  the passed in request options
+     * @param {ABRelayUser} relayUser the relayUser making this request.
+     * @return {obj}
+     */
+    _formatServerRequest:function(opt, relayUser) {
+
+        var method = opt.type || opt.method || 'GET';
+        var dataField = 'body';
+
+        switch(method) {
+            case 'GET':
+                dataField = 'qs';
+                break;
+            case 'POST':
+                dataField = 'body';
+                break;
+        }
+
+        var url = opt.url || '/';
+        if (url[0] == '/') {
+            url = sails.config.appbuilder.baseURL + url;
+        }
+
+        var options = {
+            method: method,
+            uri: url,
+            headers: {
+                'authorization': relayUser.publicAuthToken
+            },
+            json: true // Automatically stringifies the body to JSON
+        };
+
+        var data = opt.data || {};
+        options[dataField] = data;
+
+        return options;
+    },
+
+
+    /**
+     * encrypt
+     * return an AES encrypted blob of the stringified representation of the given
+     * data.
+     * @param {obj} data
+     * @param {string} key  the AES key to use to encrypt this data
+     * @return {string}
+     */
+    encrypt: function(data, key) {
+
+        var encoded = "";
+
+        if (data && key) {
+
+            // Encrypt data
+            var plaintext = JSON.stringify(data);
+            var iv = crypto.randomBytes(16).toString('hex');
+
+            var cipher = crypto.createCipheriv(
+                'aes-256-cbc',
+                Buffer.from(key, 'hex'),
+                Buffer.from(iv, 'hex')
+            );
+            var ciphertext = cipher.update(plaintext, 'utf8', 'base64');
+            ciphertext += cipher.final('base64');
+
+            // <base64 encoded cipher text>:::<hex encoded IV>
+            encoded = ciphertext.toString() + ':::' + iv;
+
+        }
+
+        return encoded;
+    },
+
+
+    /**
+     * decrypt
+     * return a javascript obj that represents the data that was encrypted
+     * using our AES key.
+     * @param {string} data
+     * @return {obj}
+     */
+    decrypt: function(data, key) {
+
+        var finalData = null;
+
+        // Expected format of encrypted data:
+        // <base64 encoded ciphertext>:::<hex encoded IV>
+        var dataParts = data.split(':::');
+        var ciphertext = dataParts[0];
+        var iv = dataParts[1];
+
+        try {
+            
+            var decipher = crypto.createDecipheriv(
+                'aes-256-cbc', 
+                Buffer.from(key, 'hex'), 
+                Buffer.from(iv, 'hex')
+            );
+            var plaintext = decipher.update(ciphertext, 'base64', 'utf8');
+            plaintext += decipher.final('utf8');
+            
+            // Parse JSON
+            try {
+                finalData = JSON.parse(plaintext);
+            } catch (err) {
+                finalData = plaintext;
+            }
+
+
+        } catch (err) {
+            // could not decrypt
+            sails.log.error('Unable to decrypt AES', err);
+        }
+
+
+        return finalData;
+
+    },
+
+
+
     pollMCC:function() {
         return new Promise((resolve, reject)=>{
 
+            // 1) get any key resolutions and process them
             ABRelay.get({url:'/mcc/initresolve'})
             .then((response)=>{
 
@@ -63,6 +189,21 @@ module.exports = {
                 })
 
                 return Promise.all(all)
+            })
+
+            // 2) get any message requests and process them
+            .then(()=>{
+
+                return ABRelay.get({url:'/mcc/relayrequest'})
+                .then((response)=>{
+
+                    var all = [];
+                    response.data.forEach((request)=>{
+                        all.push(ABRelay.request(request));
+                    })
+                    return Promise.all(all)
+                })
+
             })
             .then(resolve)
             .catch((err)=>{
@@ -165,6 +306,73 @@ module.exports = {
                 });
             }
         })
+    },
+
+
+
+    request: function(request) {
+
+        var appUser = null;
+        var relayUser = null;
+
+        return Promise.resolve()
+
+        // 1) get the RelayAppUser from the given appUUID
+        .then(()=>{
+
+            return ABRelayAppUser.findOne({appUUID:request.appUUID})
+            .populate('relayUser')
+            .then((entry)=>{
+                appUser = entry;
+                relayUser = entry.relayUser;
+// return entry;
+            })
+        })
+
+        // 2) Decode the data:
+        .then(()=>{
+
+            return this.decrypt(request.data, appUser.aes);
+
+        })
+
+        // 3) use data to make server call:
+        .then((params) => {
+
+            // params should look like:
+            // {
+            //     type:'GET',
+            //     url:'/path/to/url',
+            //     data:{ some:data }
+            // }
+
+// Question:  should we also include :
+//  .headers: { authorization:accessToken }  ??
+    
+            var options = this._formatServerRequest(params, relayUser);
+            return RP(options);
+
+        })
+
+        // 4) encrypt the response:
+        .then((response)=>{
+
+            return this.encrypt(response, appUser.aes);
+        })
+
+        // 5) update MCC with the response for this request:
+        .then((encryptedData)=>{
+
+            var returnPacket = {
+                appUUID:request.appUUID,
+                data:encryptedData,
+                jobToken:request.jobToken
+            }
+            return ABRelay.post({ url:'/mcc/relayrequest', data:returnPacket })
+        })
+
+        // that's it?
+        
     }
    
 
