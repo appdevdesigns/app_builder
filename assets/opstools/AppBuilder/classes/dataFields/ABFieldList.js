@@ -761,14 +761,16 @@ class ABFieldList extends ABFieldSelectivity {
 	 *					unique id references.
 	 * @param {HtmlDOM} node  the HTML Dom object for this field's display.
 	 */
-	customDisplay(row, App, node, editable) {
+	customDisplay(row, App, node, options) {
 		// sanity check.
 		if (!node) { return }
+
+		options = options || {};
 
 		if (this.settings.isMultiple == true) {
 			var placeholder = L('ab.dataField.list.placeholder_multiple', '*Select items');
 			var readOnly = false;
-			if (editable != null && editable == false) {
+			if (options.editable != null && options.editable == false) {
 				readOnly = true;
 				placeholder = "";
 			}

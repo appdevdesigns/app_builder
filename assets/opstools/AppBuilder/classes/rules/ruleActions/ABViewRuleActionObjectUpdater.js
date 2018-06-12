@@ -502,7 +502,12 @@ if (field.key == 'user') {
 
 				// Show custom display of data field
 				if (field.customDisplay)
-					field.customDisplay(field, this.App, $row.getChildViews()[3].$view, true, true);
+					field.customDisplay(field, this.App, $row.getChildViews()[3].$view, {
+						editable: true, 
+
+						// tree
+						isForm: true
+					});
 
 
 				// Show the remove button

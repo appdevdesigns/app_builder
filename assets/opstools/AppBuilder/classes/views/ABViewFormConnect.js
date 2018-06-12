@@ -16,7 +16,7 @@ function L(key, altText) {
 
 
 var ABViewFormConnectPropertyComponentDefaults = {
-	formView: '', // 'richselect' or 'radio'
+	formView: '', // id of form to add new data
 	objectWorkspace: {
 		filterConditions: { // array of filters to apply to the data table
 			glue: 'and',
@@ -487,7 +487,11 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 			var rowData = {},
 				node = elem.$view;
 
-			field.customDisplay(rowData, App, node, true, this.settings.formView, this.settings.objectWorkspace.filterConditions);
+			field.customDisplay(rowData, App, node, {
+				editable: true,
+				formView: this.settings.formView,
+				filters: this.settings.objectWorkspace.filterConditions
+			});
 
 		};
 

@@ -346,7 +346,9 @@ export default class ABObject extends ABObjectBase {
 				fields.forEach((f)=>{
 					if (this.objectWorkspace.hiddenFields.indexOf(f.columnName) == -1) {
 						var node = DataTable.getItemNode({ row: row.id, column: f.columnName });
-						f.customDisplay(row, App, node, isEditable);
+						f.customDisplay(row, App, node, {
+							editable: isEditable
+						});
 					}
 				});
 			});
@@ -357,7 +359,9 @@ export default class ABObject extends ABObjectBase {
 				fields.forEach((f)=>{
 					if (this.objectWorkspace.hiddenFields.indexOf(f.columnName) == -1) {
 						var node = DataTable.getItemNode({ row: row.id, column: f.columnName });
-						f.customDisplay(row, App, node, isEditable);
+						f.customDisplay(row, App, node, {
+							editable: isEditable
+						});
 					}
 				})
 				id = data.getNextId(id);

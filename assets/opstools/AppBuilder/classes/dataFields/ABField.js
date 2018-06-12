@@ -572,8 +572,9 @@ export default class ABField extends ABFieldBase {
 	 * @param {App} App the shared ui App object useful more making globally
 	 *					unique id references.
 	 * @param {HtmlDOM} node  the HTML Dom object for this field's display.
+	 * @param {object} options - option of additional settings
 	 */
-	customDisplay(row, App, node) {
+	customDisplay(row, App, node, options) {
 		
 	}
 

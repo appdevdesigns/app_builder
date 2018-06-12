@@ -226,10 +226,12 @@ export default class ABViewFormCustom extends ABViewFormField {
 			if (!elem) return;
 
 			var rowData = {},
-				node = elem.$view,
-				editable = true;
+				node = elem.$view;
 
-			field.customDisplay(rowData, App, node, editable, ids.component);
+			field.customDisplay(rowData, App, node, {
+				editable: true,
+				formId: ids.component
+			});
 
 		};
 

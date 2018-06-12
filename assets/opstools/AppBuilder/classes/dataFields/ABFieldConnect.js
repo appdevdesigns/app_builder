@@ -534,8 +534,11 @@ class ABFieldConnect extends ABFieldSelectivity {
 	 *					unique id references.
 	 * @param {HtmlDOM} node  the HTML Dom object for this field's display.
 	 */
-	customDisplay(row, App, node, editable, formView, filters) {
-		var isFormView = (formView != null) ? formView : false;
+	customDisplay(row, App, node, options) {
+
+		options = options || {};
+
+		var isFormView = (options.formView != null) ? options.formView : false;
 		// sanity check.
 		if (!node) { return }
 
@@ -552,13 +555,13 @@ class ABFieldConnect extends ABFieldSelectivity {
 			placeholder = L('ab.dataField.connect.placeholder_multiple', '*Select items');
 		}
 		var readOnly = false;
-		if (editable != null && editable == false) {
+		if (options.editable != null && options.editable == false) {
 			readOnly = true;
 			placeholder = "";
 		}
 
-		if (filters == null) {
-			filters = {};
+		if (options.filters == null) {
+			options.filters = {};
 		}
 
 		// Render selectivity
@@ -572,7 +575,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 				minimumInputLength: 0,
 				quietMillis: 250,
 				fetch: (url, init, queryOptions) => {
-					return this.getOptions(filters, queryOptions.term).then(function (data) {
+					return this.getOptions(options.filters, queryOptions.term).then(function (data) {
 						return {
 							results: data
 						};
