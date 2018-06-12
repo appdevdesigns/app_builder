@@ -1070,7 +1070,9 @@ export default class ABViewDataCollection extends ABView {
 						// check to make sure there is data to work with
 						if (Array.isArray(res.data) && res.data.length) {
 							// tell the webix data collection to update using their API with the row id (values.id) and content (res.data[0]) 
-							this.__dataCollection.updateItem(values.id, res.data[0]);
+							if (this.__dataCollection.exists(values.id)) {
+								this.__dataCollection.updateItem(values.id, res.data[0]);
+							}
 
 							// If the update item is current cursor, then should tell components to update.
 							var currData = this.getCursor();
@@ -1244,7 +1246,7 @@ export default class ABViewDataCollection extends ABView {
 
 	}
 
-	loadData(start, limit) {
+	loadData(start, limit, callback) {
 
 		var obj = this.datasource;
 		if (obj == null) return Promise.resolve([]);
@@ -1313,94 +1315,115 @@ export default class ABViewDataCollection extends ABView {
 		return model.findAll(cond)
 			.then((data) => {
 
-				data.data.forEach((d) => {
+				return new Promise((resolve, reject)=>{
 
-					// define $height of rows to render in webix elements
-					if (d.properties != null && d.properties.height != "undefined" && parseInt(d.properties.height) > 0) {
-						d.$height = parseInt(d.properties.height);
-					} else if (defaultHeight > 0) {
-						d.$height = defaultHeight;
-					}
+					data.data.forEach((d) => {
 
-				});
-
-				this.__dataCollection.parse(data);
-
-				// set static cursor
-				if (this.settings.fixSelect) {
-
-					// set cursor to the current user
-					if (this.settings.fixSelect == "_CurrentUser") {
-
-						var username = OP.User.username();
-						var userFields = this.datasource.fields((f) => f.key == "user");
-
-						// find a row that contains the current user
-						var row = this.__dataCollection.find((r) => {
-
-							var found = false;
-
-							userFields.forEach((f) => {
-
-								if (found || r[f.columnName] == null) return;
-
-								if (r[f.columnName].filter) { // Array - isMultiple
-									found = r[f.colName].filter((data) => data.id == username).length > 0;
-								}
-								else if (r[f.columnName] == username) {
-									found = true;
-								}
-
-							});
-
-							return found;
-
-						}, true);
-
-						// set a first row of current user to cursor
-						if (row)
-							this.__dataCollection.setCursor(row.id);
-					} else if (this.settings.fixSelect == "_FirstRecord") {
-						// find a row that contains the current user
-						var row = this.__dataCollection.find((r) => {
-							
-							var found = false;
-							if (!found) {
-								found = true;
-								return true; // just give us the first record
-							}
-
-						}, true);
-
-						// set a first row of current user to cursor
-						if (row)
-							this.__dataCollection.setCursor(row.id);
-					} else {
-						this.setCursor(this.settings.fixSelect);
-					}
-
-				}
-
-
-				var linkDc = this.dataCollectionLink;
-				if (linkDc) {
-
-					// filter data by match link data collection
-					var linkData = linkDc.getCursor();
-					this.filterLinkCursor(linkData);
-
-					// add listeners when cursor of link data collection is changed
-					this.eventAdd({
-						emitter: linkDc,
-						eventName: "changeCursor",
-						listener: (currData) => {
-							this.filterLinkCursor(currData);
+						// define $height of rows to render in webix elements
+						if (d.properties != null && d.properties.height != "undefined" && parseInt(d.properties.height) > 0) {
+							d.$height = parseInt(d.properties.height);
+						} else if (defaultHeight > 0) {
+							d.$height = defaultHeight;
 						}
+
 					});
 
-				}
+					this.__dataCollection.parse(data);
 
+					// set static cursor
+					if (this.settings.fixSelect) {
+
+						// set cursor to the current user
+						if (this.settings.fixSelect == "_CurrentUser") {
+
+							var username = OP.User.username();
+							var userFields = this.datasource.fields((f) => f.key == "user");
+
+							// find a row that contains the current user
+							var row = this.__dataCollection.find((r) => {
+
+								var found = false;
+
+								userFields.forEach((f) => {
+
+									if (found || r[f.columnName] == null) return;
+
+									if (r[f.columnName].filter) { // Array - isMultiple
+										found = r[f.colName].filter((data) => data.id == username).length > 0;
+									}
+									else if (r[f.columnName] == username) {
+										found = true;
+									}
+
+								});
+
+								return found;
+
+							}, true);
+
+							// set a first row of current user to cursor
+							if (row)
+								this.__dataCollection.setCursor(row.id);
+						} else if (this.settings.fixSelect == "_FirstRecord") {
+							// find a row that contains the current user
+							var row = this.__dataCollection.find((r) => {
+								
+								var found = false;
+								if (!found) {
+									found = true;
+									return true; // just give us the first record
+								}
+
+							}, true);
+
+							// set a first row of current user to cursor
+							if (row)
+								this.__dataCollection.setCursor(row.id);
+						} else {
+							this.setCursor(this.settings.fixSelect);
+						}
+
+					}
+
+
+					var linkDc = this.dataCollectionLink;
+					if (linkDc) {
+
+						// filter data by match link data collection
+						var linkData = linkDc.getCursor();
+						this.filterLinkCursor(linkData);
+
+						// add listeners when cursor of link data collection is changed
+						this.eventAdd({
+							emitter: linkDc,
+							eventName: "changeCursor",
+							listener: (currData) => {
+								this.filterLinkCursor(currData);
+							}
+						});
+
+					}
+					
+					resolve();
+					
+				});
+
+			}).then(() => {
+				return new Promise((resolve, reject)=>{
+					if (callback)
+						callback();
+
+					resolve();
+				});
 			});
+			
+		// if (callback) {
+		// 	Promise.all([dataFetch]).then(function(values) {
+		// 		callback();
+		// 	});
+		// } else {
+		// 	return dataFetch;
+		// }
 
 	}
 
