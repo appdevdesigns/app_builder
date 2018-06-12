@@ -698,68 +698,80 @@ if (field.key == 'user') {
 	 * Perform the specified update actions on the provided objectToUpdate
 	 * @param {obj} options  Additional information required to make updates.
 	 * @param {obj} objectToUpdate  The object to make the updates on.
-	 * @return {bool}   true if an update took place, false if no updates.
+	 * @return {Promise}   true if an update took place, false if no updates.
 	 */
 	processUpdateObject(options, objectToUpdate) {
 
-		var isUpdated = false;
+		return new Promise((resolve, reject) => {
 
-		this.valueRules = this.valueRules || {};
-		this.valueRules.fieldOperations = this.valueRules.fieldOperations || [];
+			var isUpdated = false;
 
-		// for each of our operations
-		this.valueRules.fieldOperations.forEach((op) => {
-			// op = {
-			// 	fieldID:'zzzzz', 
-			//	value: 'xxx',
-			//	op: 'set',
-			//  type:''
-			// }
+			this.valueRules = this.valueRules || {};
+			this.valueRules.fieldOperations = this.valueRules.fieldOperations || [];
 
-			var field = this.getUpdateObjectField(op.fieldID);
-			if (field) { 
+			// for each of our operations
+			this.valueRules.fieldOperations.forEach((op) => {
+				// op = {
+				// 	fieldID:'zzzzz', 
+				//	value: 'xxx',
+				//	op: 'set',
+				//  type:''
+				// }
 
-				var value = op.value;
+				var field = this.getUpdateObjectField(op.fieldID);
+				if (field) { 
 
-
-				// in the case of a connected Field, we use op.value to get the 
-				// datacollection, and find it's currently selected value:
-				if (field.key == 'connectObject') {
+					var value = op.value;
 
 
-					// NOTE: 30 May 2018 :current decision from Ric is to limit this 
-					// to only handle 1:x connections where we update the current obj
-					// with the PK of the value from the DC.
-					//
-					// In the future, if we want to handle the other options,
-					// we need to modify this to handle the M:x connections where
-					// we insert our PK into the value from the DC.
+					// in the case of a connected Field, we use op.value to get the 
+					// datacollection, and find it's currently selected value:
+					if (field.key == 'connectObject') {
 
 
-					// op.value is the DataCollection.id we need to find
-					var dataCollection = this.currentForm.pageRoot().dataCollections((dc)=>{ return dc.id == op.value;})[0];
-				
-					value = dataCollection.getCursor(); // dataCollection.getItem(dataCollection.getCursor());
-				
-					// NOTE: webix documentation issue: .getCursor() is supposed to return
-					// the .id of the item.  However it seems to be returning the {obj} 
-					if (value.id) value = value.id;
+						// NOTE: 30 May 2018 :current decision from Ric is to limit this 
+						// to only handle 1:x connections where we update the current obj
+						// with the PK of the value from the DC.
+						//
+						// In the future, if we want to handle the other options,
+						// we need to modify this to handle the M:x connections where
+						// we insert our PK into the value from the DC.
+
+
+						// op.value is the DataCollection.id we need to find
+						var dataCollection = this.currentForm.pageRoot().dataCollections((dc)=>{ return dc.id == op.value;})[0];
+					
+						dataCollection.__dataCollection.clearAll();
+						dataCollection.loadData(null, null, function() {
+							value = dataCollection.getCursor(); // dataCollection.getItem(dataCollection.getCursor());
+						
+							// NOTE: webix documentation issue: .getCursor() is supposed to return
+							// the .id of the item.  However it seems to be returning the {obj} 
+							if (value.id) value = value.id;
+
+							switch(op.op) {
+
+								case 'set': 
+									objectToUpdate[field.columnName] = value; 
+									break;
+							}
+							
+							isUpdated = true;
+							
+							resolve(isUpdated);
+
+						});
+
+					}
+
+
 				}
+			})
 
+			console.log("finished");
 
-				switch(op.op) {
-
-					case 'set': 
-						objectToUpdate[field.columnName] = value; 
-						break;
-				}
-				
-				isUpdated = true;
-			}
-		})
-
-
-		return isUpdated;
+		});
+		
 	}
 
 
@@ -772,25 +784,29 @@ if (field.key == 'user') {
 
 		return new Promise( (resolve, reject) => {
 
-			var isUpdated = this.processUpdateObject({}, options.data);
+			this.processUpdateObject({}, options.data)
+				.then(isUpdated => {
 
-			if (!isUpdated) {
-				resolve();
-			} else {
+					if (!isUpdated) {
+						resolve();
+					} else {
 
-				// get the model from the provided Form Obj:
-				var dc = options.form.dataCollection();
-				if (!dc) return resolve();
+						// get the model from the provided Form Obj:
+						var dc = options.form.dataCollection();
+						if (!dc) return resolve();
 
-				var model = dc.model;
-				model.update(options.data.id, options.data)
-				.catch((err)=>{
-					OP.Error.log('!!! ABViewRuleActionFormRecordRuleUpdate.process(): update error:', {error:err, data:options.data });
-					reject(err);
-				})
-				.then(resolve);
+						var model = dc.model;
+						model.update(options.data.id, options.data)
+						.catch((err)=>{
+							OP.Error.log('!!! ABViewRuleActionFormRecordRuleUpdate.process(): update error:', {error:err, data:options.data });
+							reject(err);
+						})
+						.then(resolve);
 
-			}
+					}
+					
+				});
+
 		})
 	}
 
