@@ -225,7 +225,8 @@ class ABFieldConnect extends ABField {
 					linkTableName = linkObject.dbTableName(),
 					linkPK = linkObject.PK(),
 					// TODO : should check duplicate column
-					linkColumnName = this.object.name;
+					linkColumnName = this.fieldLink().columnName;
+					// linkColumnName = this.object.name;
 
 				// 1:M - create a column in the table and references to id of the link table
 				if (this.settings.linkType == 'one' && this.settings.linkViaType == 'many') {
@@ -254,6 +255,9 @@ class ABFieldConnect extends ABField {
 										.inTable(linkTableName)
 										.onDelete('cascade');
 								}
+
+								if (exists)
+									linkCol.alter();
 
 							})
 								.then(() => { next(); })
@@ -298,6 +302,9 @@ class ABFieldConnect extends ABField {
 									}
 
 									t.unique(this.columnName);
+
+									if (exists)
+										linkCol.alter();
 	
 								})
 									.then(() => { next(); })
@@ -340,6 +347,9 @@ class ABFieldConnect extends ABField {
 											.inTable(tableName)
 											.onDelete('cascade');
 								}
+
+								if (exists)
+									linkCol.alter();
 
 							})
 							.then(() => { next(); })
@@ -454,6 +464,12 @@ class ABFieldConnect extends ABField {
 
 				// M:N
 				if (this.settings.linkType == 'many' && this.settings.linkViaType == 'many') {
+
+					// If the linked object is removed, it can not find join table name.
+					// The join table should be removed already.
+					if (!this.datasourceLink)
+						return resolve();
+
 					// drop join table
 					var joinTableName = this.joinTableName();
 
@@ -599,7 +615,7 @@ class ABFieldConnect extends ABField {
 
 	joinTableName(prefixSchema = false) {
 
-		var linkObject = this.object.application.objects((obj) => { return obj.id == this.settings.linkObject; })[0];
+		var linkObject = this.datasourceLink;
 		var tableName = "";
 
 		if (this.object.isExternal && linkObject.isExternal) {

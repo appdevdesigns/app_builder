@@ -861,6 +861,8 @@ PopupRecordRule.qbFixAfterShow();
 				var Form = $$(ids.component),
 					relationField = dc.fieldLink;
 
+				if (relationField == null) return;
+
 				// Pull a component of relation field
 				var relationFieldCom = this.fieldComponents((comp) => {
 					if (!(comp instanceof ABViewFormField)) return false;

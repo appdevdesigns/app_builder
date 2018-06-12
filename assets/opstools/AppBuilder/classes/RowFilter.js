@@ -1069,6 +1069,9 @@ export default class RowFilter extends OP.Component {
 				if (config_settings == null || config_settings.rules == null || config_settings.rules.length == 0)
 					return true;
 
+				if (rowData == null)
+					return false;
+
 				var result = (config_settings.glue === "glue" ? true : false);
 
 				config_settings.rules.forEach(filter => {
@@ -1130,6 +1133,9 @@ export default class RowFilter extends OP.Component {
 
 				var result = false;
 
+				if (value == null)
+					value = "";
+
 				value = value.trim().toLowerCase();
 				compareValue = compareValue.trim().toLowerCase();
 
@@ -1148,6 +1154,9 @@ export default class RowFilter extends OP.Component {
 						break;
 					case "not_equals":
 						result = value != compareValue;
+						break;
+					default:
+						result = _logic.queryValid(value, rule, compareValue);
 						break;
 				}
 
@@ -1178,6 +1187,10 @@ export default class RowFilter extends OP.Component {
 					case "greater_or_equal":
 						result = value >= compareValue;
 						break;
+					default:
+						result = _logic.queryValid(value, rule, compareValue);
+						break;
+
 				}
 
 				return result;
@@ -1210,6 +1223,10 @@ export default class RowFilter extends OP.Component {
 					case "greater_or_equal":
 						result = value >= compareValue;
 						break;
+					default:
+						result = _logic.queryValid(value, rule, compareValue);
+						break;
+
 				}
 
 				return result;
@@ -1236,6 +1253,10 @@ export default class RowFilter extends OP.Component {
 						else
 							result = true;
 						break;
+					default:
+						result = _logic.queryValid(value, rule, compareValue);
+						break;
+
 				}
 
 				return result;
@@ -1244,7 +1265,18 @@ export default class RowFilter extends OP.Component {
 
 			booleanValid: function (value, rule, compareValue) {
 
-				return (value == compareValue);
+				var result = false;
+
+				switch (rule) {
+					case "equals":
+						result = value == compareValue;
+						break;
+					default:
+						result = _logic.queryValid(value, rule, compareValue);
+						break;
+				}
+
+				return result;
 
 			},
 
@@ -1268,9 +1300,47 @@ export default class RowFilter extends OP.Component {
 					case "not_equal":
 						result = value.indexOf(compareValue) < 0;
 						break;
+					default:
+						result = _logic.queryValid(value, rule, compareValue);
+						break;
+
 				}
 
 				return result;
+			},
+
+			queryValid: function(value, rule, compareValue) {
+
+				var result = false;
+
+				if (!compareValue)
+					return result;
+
+				// queryId:fieldId
+				var queryId = compareValue.split(":")[0],
+					fieldId = compareValue.split(":")[1];
+
+				// if no query
+				var query = _Object.application.queries(q => q.id == queryId)[0];
+				if (!query)
+					return result;
+
+				// if no field
+				var field = query.fields(f => f.id == fieldId)[0];
+				if (!field)
+					return result;
+
+				switch (rule) {
+					case 'in_query_field':
+						// TODO
+						break;
+					case 'not_in_query_field':
+						// TODO
+						break;
+				}
+
+				return result;
+
 			}
 
 		};

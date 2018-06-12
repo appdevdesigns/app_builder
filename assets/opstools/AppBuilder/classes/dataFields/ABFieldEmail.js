@@ -50,7 +50,7 @@ var ABFieldEmailComponent = new ABFieldComponent({
 			default: ''
 		}
 		ids = field.idsUnique(ids, App);
-		
+
 		return [
 			{
 				view: "text",
@@ -58,8 +58,7 @@ var ABFieldEmailComponent = new ABFieldComponent({
 				name:'default',
 				labelWidth: App.config.labelWidthXLarge,
 				label: L('ab.dataField.email.defaultLabel', '*Default'),
-				placeholder: L('ab.dataField.email.default', '*Enter default email'),
-				validate: webix.rules.isEmail
+				placeholder: L('ab.dataField.email.default', '*Enter default email')
 			}
 		]
 	},
@@ -95,6 +94,27 @@ var ABFieldEmailComponent = new ABFieldComponent({
 			$$(ids.default).refresh();
 
 		},
+
+		isValid: (ids, isValid) => {
+
+			$$(ids.component).clearValidation();
+
+			var isRequired = $$(ids.required).getValue(),
+				emailDefault = $$(ids.default).getValue();
+
+			if (isRequired || emailDefault) {
+
+				if (!webix.rules.isEmail(emailDefault)) {
+					$$(ids.component).markInvalid('default', '*This email is invalid');
+					return false;
+				}
+				else 
+					return true;
+			}
+			else
+				return true;
+
+		}
 
 	},
 

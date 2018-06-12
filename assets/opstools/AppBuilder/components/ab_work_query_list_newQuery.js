@@ -194,6 +194,9 @@ export default class AB_Work_Query_List_NewQuery extends OP.Component {   //.ext
 			 */
 			save: function () {
 
+				// validate
+				if (!$$(ids.form).validate()) return;
+
 				// show loading cursor
 				_logic.showBusy();
 

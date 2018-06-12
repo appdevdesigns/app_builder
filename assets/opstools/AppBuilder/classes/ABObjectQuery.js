@@ -476,8 +476,14 @@ export default class ABObjectQuery extends ABObject {
 							.replace('{objectLabel}', field.object.label)
 							.replace('{fieldLabel}', field.label);
 
+				// icon
+				if (field.settings &&
+					field.settings.showIcon) {
+					h.header = '<span class="webix_icon fa-{icon}"></span>'.replace('{icon}', field.fieldIcon() ) + h.header;
+				}
+
 				h.adjust = true;
-				h.minWidth = 140;
+				h.minWidth = 220;
 			}
 
 		});

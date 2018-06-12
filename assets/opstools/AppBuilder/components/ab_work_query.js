@@ -93,6 +93,9 @@ export default class AB_Work_Query extends OP.Component {   //.extend(idBase, fu
 			show:function() {
 
 				$$(ids.component).show();
+
+				QueryList.refresh();
+
 			}
 		}
 		this._logic = _logic;

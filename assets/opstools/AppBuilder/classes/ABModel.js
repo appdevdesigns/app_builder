@@ -219,7 +219,7 @@ export default class ABModel {
 					})
 					.catch((err) => {
 
-						if (err.code) {
+						if (err && err.code) {
 							switch(err.code) {
 								case "ER_PARSE_ERROR":
 									OP.Error.log('AppBuilder:ABModel:findAll(): Parse Error with provided condition', { error: err, condition:cond })

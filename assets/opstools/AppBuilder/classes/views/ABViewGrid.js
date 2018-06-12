@@ -962,6 +962,8 @@ export default class ABViewGrid extends ABViewWidget  {
 						if (tab == null) {
 							tab = $$(parentTab);
 						}
+
+						if (tab == null) return;
 						
 						// set the tabbar to to the tab
 						var tabbar = tab.getParentView().getParentView();
@@ -1141,6 +1143,11 @@ export default class ABViewGrid extends ABViewWidget  {
 			
 			callbackSortData: () => {
 
+				var sortRules = (this.settings.objectWorkspace.sortFields || []);
+
+				$$(ids.buttonSort).define('badge', sortRules.length);
+				$$(ids.buttonSort).refresh();
+
 				// client sort data
 				$$(DataTable.ui.id).sort(PopupSortDataTableComponent.sort);
 
@@ -1148,6 +1155,12 @@ export default class ABViewGrid extends ABViewWidget  {
 
 			callbackFilterData: () => {
 
+				var filterRules = (rowFilter.getValue().rules || []);
+
+				$$(ids.buttonFilter).define('badge', filterRules.length);
+				$$(ids.buttonFilter).refresh();
+
+				// client filter data
 				$$(DataTable.ui.id).filter(function(rowData) {
 
 					return rowFilter.isValid(rowData);

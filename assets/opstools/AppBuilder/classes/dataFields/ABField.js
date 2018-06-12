@@ -345,13 +345,16 @@ export default class ABField extends ABFieldBase {
 		return new Promise(
 			(resolve, reject) => {
 
-				// verify we have been .save()d before:
+				// verify we have been .save() before:
 				if (this.id) {
 
 					// NOTE: our .migrateXXX() routines expect the object to currently exist
 					// in the DB before we perform the DB operations.  So we need to
 					// .migrateDrop()  before we actually .objectDestroy() this.
 					this.migrateDrop()
+					.then(() => {
+						return this.object.fieldRemove(this);
+					})
 					.then(resolve)
 					.catch(reject)
 

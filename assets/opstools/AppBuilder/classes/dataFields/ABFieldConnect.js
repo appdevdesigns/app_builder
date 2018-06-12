@@ -398,10 +398,12 @@ class ABFieldConnect extends ABFieldSelectivity {
 					// NOTE: our .migrateXXX() routines expect the object to currently exist
 					// in the DB before we perform the DB operations.  So we need to
 					// .migrateDrop()  before we actually .objectDestroy() this.
-					super.destroy()
+					this.migrateDrop()
 						.then(() => {
 
-							return this.object.fieldRemove(this);
+							// NOTE : prevent recursive remove connected fields
+							// - remove this field from JSON 
+							this.object._fields = this.object.fields(f => { return f.id != this.id });
 
 						})
 						.then(() => {
@@ -419,6 +421,12 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 							// destroy linked field
 							return linkField.destroy();
+
+						})
+						.then(() => {
+
+							// Save JSON of the object
+							return this.object.fieldRemove(this);
 
 						})
 						.then(resolve)

@@ -62,7 +62,8 @@ var ABViewPropertyDefaults = {
 		},
 		sortFields: [] // array of columns with their sort configurations
 	},
-	loadAll: false
+	loadAll: false,
+	isQuery: false // if true it is a query, otherwise it is a object.
 }
 
 
@@ -175,6 +176,7 @@ export default class ABViewDataCollection extends ABView {
 
 		// Convert to boolean
 		this.settings.loadAll = JSON.parse(this.settings.loadAll || ABViewPropertyDefaults.loadAll);
+		this.settings.isQuery = JSON.parse(this.settings.isQuery || ABViewPropertyDefaults.isQuery);
 
 	}
 
@@ -289,7 +291,14 @@ export default class ABViewDataCollection extends ABView {
 
 		// == Logic ==
 
-		_logic.selectSource = (sourceId) => {
+		_logic.selectSource = (sourceId, oldId) => {
+
+			if ($$(ids.dataSource).getList().getItem(sourceId).disabled) {
+				// prevents re-calling onChange from itself
+				$$(ids.dataSource).blockEvent();	
+				$$(ids.dataSource).setValue(oldId || "")
+				$$(ids.dataSource).unblockEvent();
+			}
 
 			var view = _logic.currentEditObject();
 
@@ -389,7 +398,7 @@ export default class ABViewDataCollection extends ABView {
 								onChange: function (newv, oldv) {
 									if (newv == oldv) return;
 
-									_logic.selectSource(newv);
+									_logic.selectSource(newv, oldv);
 								}
 							}
 						},
@@ -513,14 +522,25 @@ export default class ABViewDataCollection extends ABView {
 			return {
 				id: q.id,
 				value: q.label,
-				icon: 'cubes'
+				icon: 'cubes',
+				disabled: q.isDisabled()
 			}
 		});
 		sources = sources.concat(queries);
 
 		sources.unshift({ id: '', value: L('ab.component.datacollection.selectSource', '*Select an source') });
 
-		$$(ids.dataSource).define("options", { data: sources });
+		$$(ids.dataSource).define("options", { 
+			body:{
+				scheme: {
+					$init:function(obj) {
+						if (obj.disabled)
+							obj.$css = "disabled";
+					}
+				},
+				data: sources
+			}
+		});
 		$$(ids.dataSource).define("value", view.settings.object || '');
 		$$(ids.dataSource).refresh();
 
@@ -597,12 +617,17 @@ export default class ABViewDataCollection extends ABView {
 			var source;
 			if (obj) {
 				source = obj;
+				view.settings.isQuery = false;
 			}
 			else if (query) {
 				source = query;
+				view.settings.isQuery = true;
 			}
 
-			view.settings.objectUrl = source.urlPointer();
+			if (source)
+				view.settings.objectUrl = source.urlPointer();
+			else 
+				delete view.settings.objectUrl;
 
 
 			var defaultLabel = view.parent.label + '.' + view.defaults.key;
@@ -616,6 +641,7 @@ export default class ABViewDataCollection extends ABView {
 		}
 		else {
 			delete view.settings.objectUrl;
+			delete view.settings.isQuery;
 		}
 
 		// set id of link data collection
@@ -686,6 +712,12 @@ export default class ABViewDataCollection extends ABView {
 			var userFields = object.fields((f) => f.key == 'user');
 			if (userFields.length > 0)
 				dataItems.unshift({ id: '_CurrentUser', value: L('ab.component.datacollection.currentUser', '[Current User]') });
+
+			// Add a first record option to allow select first row
+			dataItems.unshift(
+				{ id: '_FirstRecord', value: L('ab.component.datacollection.firstRecord', '[First Record]') }
+			);
+
 		}
 
 		dataItems.unshift({ id: '', value: L('ab.component.datacollection.fixSelect', '*Select fix cursor') });
@@ -1038,7 +1070,9 @@ export default class ABViewDataCollection extends ABView {
 						// check to make sure there is data to work with
 						if (Array.isArray(res.data) && res.data.length) {
 							// tell the webix data collection to update using their API with the row id (values.id) and content (res.data[0]) 
-							this.__dataCollection.updateItem(values.id, res.data[0]);
+							if (this.__dataCollection.exists(values.id)) {
+								this.__dataCollection.updateItem(values.id, res.data[0]);
+							}
 
 							// If the update item is current cursor, then should tell components to update.
 							var currData = this.getCursor();
@@ -1212,7 +1246,7 @@ export default class ABViewDataCollection extends ABView {
 
 	}
 
-	loadData(start, limit) {
+	loadData(start, limit, callback) {
 
 		var obj = this.datasource;
 		if (obj == null) return Promise.resolve([]);
@@ -1281,80 +1315,115 @@ export default class ABViewDataCollection extends ABView {
 		return model.findAll(cond)
 			.then((data) => {
 
-				data.data.forEach((d) => {
+				return new Promise((resolve, reject)=>{
 
-					// define $height of rows to render in webix elements
-					if (d.properties != null && d.properties.height != "undefined" && parseInt(d.properties.height) > 0) {
-						d.$height = parseInt(d.properties.height);
-					} else if (defaultHeight > 0) {
-						d.$height = defaultHeight;
-					}
+					data.data.forEach((d) => {
 
-				});
-
-				this.__dataCollection.parse(data);
-
-				// set static cursor
-				if (this.settings.fixSelect) {
-
-					// set cursor to the current user
-					if (this.settings.fixSelect == "_CurrentUser") {
-
-						var username = OP.User.username();
-						var userFields = this.datasource.fields((f) => f.key == "user");
-
-						// find a row that contains the current user
-						var row = this.__dataCollection.find((r) => {
-
-							var found = false;
-
-							userFields.forEach((f) => {
-
-								if (found) return;
-
-								if (r[f.columnName].filter) { // Array - isMultiple
-									found = r[f.colName].filter((data) => data.id == username).length > 0;
-								}
-								else if (r[f.columnName] == username) {
-									found = true;
-								}
-
-							});
-
-							return found;
-
-						}, true);
-
-						// set a first row of current user to cursor
-						if (row)
-							this.__dataCollection.setCursor(row.id);
-					}
-					else {
-						this.setCursor(this.settings.fixSelect);
-					}
-
-				}
-
-
-				var linkDc = this.dataCollectionLink;
-				if (linkDc) {
-
-					// filter data by match link data collection
-					var linkData = linkDc.getCursor();
-					this.filterLinkCursor(linkData);
-
-					// add listeners when cursor of link data collection is changed
-					this.eventAdd({
-						emitter: linkDc,
-						eventName: "changeCursor",
-						listener: (currData) => {
-							this.filterLinkCursor(currData);
+						// define $height of rows to render in webix elements
+						if (d.properties != null && d.properties.height != "undefined" && parseInt(d.properties.height) > 0) {
+							d.$height = parseInt(d.properties.height);
+						} else if (defaultHeight > 0) {
+							d.$height = defaultHeight;
 						}
+
 					});
 
-				}
+					this.__dataCollection.parse(data);
 
+					// set static cursor
+					if (this.settings.fixSelect) {
+
+						// set cursor to the current user
+						if (this.settings.fixSelect == "_CurrentUser") {
+
+							var username = OP.User.username();
+							var userFields = this.datasource.fields((f) => f.key == "user");
+
+							// find a row that contains the current user
+							var row = this.__dataCollection.find((r) => {
+
+								var found = false;
+
+								userFields.forEach((f) => {
+
+									if (found || r[f.columnName] == null) return;
+
+									if (r[f.columnName].filter) { // Array - isMultiple
+										found = r[f.colName].filter((data) => data.id == username).length > 0;
+									}
+									else if (r[f.columnName] == username) {
+										found = true;
+									}
+
+								});
+
+								return found;
+
+							}, true);
+
+							// set a first row of current user to cursor
+							if (row)
+								this.__dataCollection.setCursor(row.id);
+						} else if (this.settings.fixSelect == "_FirstRecord") {
+							// find a row that contains the current user
+							var row = this.__dataCollection.find((r) => {
+								
+								var found = false;
+								if (!found) {
+									found = true;
+									return true; // just give us the first record
+								}
+
+							}, true);
+
+							// set a first row of current user to cursor
+							if (row)
+								this.__dataCollection.setCursor(row.id);
+						} else {
+							this.setCursor(this.settings.fixSelect);
+						}
+
+					}
+
+
+					var linkDc = this.dataCollectionLink;
+					if (linkDc) {
+
+						// filter data by match link data collection
+						var linkData = linkDc.getCursor();
+						this.filterLinkCursor(linkData);
+
+						// add listeners when cursor of link data collection is changed
+						this.eventAdd({
+							emitter: linkDc,
+							eventName: "changeCursor",
+							listener: (currData) => {
+								this.filterLinkCursor(currData);
+							}
+						});
+
+					}
+					
+					resolve();
+					
+				});
+
+			}).then(() => {
+				return new Promise((resolve, reject)=>{
+					if (callback)
+						callback();
+
+					resolve();
+				});
 			});
+			
+		// if (callback) {
+		// 	Promise.all([dataFetch]).then(function(values) {
+		// 		callback();
+		// 	});
+		// } else {
+		// 	return dataFetch;
+		// }
 
 	}
 
