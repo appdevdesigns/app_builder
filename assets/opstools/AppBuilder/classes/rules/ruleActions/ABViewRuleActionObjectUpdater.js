@@ -762,6 +762,19 @@ if (field.key == 'user') {
 
 						});
 
+					} else {
+						
+						switch(op.op) {
+
+							case 'set': 
+								objectToUpdate[field.columnName] = value; 
+								break;
+						}
+						
+						isUpdated = true;
+						
+						resolve(isUpdated);
+						
 					}
 
 
