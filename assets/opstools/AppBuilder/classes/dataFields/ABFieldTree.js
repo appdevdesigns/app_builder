@@ -402,15 +402,17 @@ class ABFieldTree extends ABField {
    *					unique id references.
    * @param {HtmlDOM} node  the HTML Dom object for this field's display.
    */
-  customDisplay(row, App, node, editable, isForm) {
+  customDisplay(row, App, node, options) {
     // sanity check.
     if (!node) {
       return
     }
-    
+
+    options = options || {};
+
     var field = this;
 
-    if (isForm) {
+    if (options.isForm) {
         if (!row || row.length == 0) {
           node.innerHTML = "<div class='list-data-values form-entry'><span style='color: #CCC; padding: 0 5px;'>"+L('ab.dataField.tree.placeholder', '*Select items')+"</span></div>";
           return
@@ -732,7 +734,10 @@ class ABFieldTree extends ABField {
     if (!dom) return false;
 
     // set value to selectivity
-    this.customDisplay(val, this.App, dom, true, true);
+    this.customDisplay(val, this.App, dom, {
+      editable: true,
+      isForm: true
+    });
 
     setTimeout(function() {
         var height = 33;

@@ -310,10 +310,11 @@ class ABFieldFile extends ABField {
 	 *					unique id references.
 	 * @param {HtmlDOM} node  the HTML Dom object for this field's display.
 	 */
-	customDisplay(row, App, node, editable) {
+	customDisplay(row, App, node, options) {
 // 		// sanity check.
 		if (!node) { return }
 
+		options = options || {};
 
 		var typesList = [];
 		var maximumSize = 0;
@@ -344,7 +345,7 @@ class ABFieldFile extends ABField {
 				view:'template',
 				container: parentContainer,
 				
-				template:this.fileTemplate(row, editable),
+				template:this.fileTemplate(row, options.editable),
 
 				borderless:true,
 				width: 160,
@@ -356,7 +357,7 @@ class ABFieldFile extends ABField {
 // 			//// Prepare the Uploader
 // 			////
 
-			if (!editable) {
+			if (!options.editable) {
 				var domNode = parentContainer.querySelector(".delete-image");
 				if (domNode)
 					domNode.style.display = "none";
@@ -439,10 +440,9 @@ class ABFieldFile extends ABField {
 								console.error(err);
 							})
 						}
+
 						// update value in the form component
-						else {
-							this.setValue($$(node), values);
-						}
+						this.setValue($$(node), values);
 
 					},
 
@@ -520,14 +520,14 @@ class ABFieldFile extends ABField {
 			})
 			
 		}
-		else if (!row[this.columnName]) {
+		else if (!row[this.columnName] || !row[this.columnName].uuid) {
 
 			var uploaderId = node.dataset['uploaderId'],
 				uploader = $$(uploaderId);
 
 			if (uploader && uploader.fileDialog)
 				uploader.fileDialog({ rowid: row.id });
-		};
+		}
 
 		return false;
 	}
@@ -610,29 +610,38 @@ class ABFieldFile extends ABField {
 	}
 	
 	setValue(item, rowData) {
+
+		if (!item) return;
+
 		var domNode = item.$view;
-		
 		if (!domNode) return;
-		
-		var val = rowData[this.columnName];
-		if (typeof val == 'undefined') {
-			// assume they just sent us a single value
-			val = rowData;
-		}		
+
+		var val = null;
+		if (rowData) {
+			val = rowData[this.columnName];
+
+			// if (val == null) {
+			// 	// assume they just sent us a single value
+			// 	val = rowData;
+			// }
+		}
 
 		var fileicon = domNode.querySelector('.file-data-field-icon');
 		if (fileicon)
-			fileicon.style.display = val ? 'none' : 'block';
+			fileicon.style.display = ((val && val.uuid) ? 'none' : 'block');
 
 		var file = domNode.querySelector('.file-data-field-name');
 		if (file) {
 
 			var fileDeleteIcon = file.querySelector('.ab-delete-photo');
 			if (fileDeleteIcon)
-				fileDeleteIcon.style.display = val ? 'block' : 'none';
+				fileDeleteIcon.style.display = ((val && val.uuid) ? 'block' : 'none');
 
-			file.style.display = val ? 'block' : 'none';
-			file.setAttribute('file-uuid', val ? val.uuid : "");
+			file.style.display = ((val && val.uuid) ? 'block' : 'none');
+			if (val && val.uuid)
+				file.setAttribute('file-uuid', val.uuid);
+			else
+				file.removeAttribute('file-uuid');
 			
 			var fileLink = file.querySelector('a');
 			var fileURL =  '/opsportal/file/' + this.object.application.name + '/' + (val ? val.uuid : "");
