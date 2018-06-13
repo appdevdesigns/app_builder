@@ -503,10 +503,11 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 
 // TODO: delete previous image from our OPsPortal service?
 						
+						var values = {};
+						values[this.columnName] = response.data.uuid
+						
 						// update just this value on our current object.model
 						if (row.id) {
-							var values = {};
-							values[this.columnName] = response.data.uuid
 							this.object.model().update(row.id, values)
 							.then(()=>{
 								// update the client side data object as well so other data changes won't cause this save to be reverted
@@ -527,6 +528,9 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 								console.error(err);
 							})
 						}
+
+						// update value in the form component
+						this.setValue($$(node), values);
 
 					},
 

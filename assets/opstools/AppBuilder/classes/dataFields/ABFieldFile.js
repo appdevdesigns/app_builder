@@ -520,7 +520,7 @@ class ABFieldFile extends ABField {
 			})
 			
 		}
-		else if (!row[this.columnName]) {
+		else if (!row[this.columnName] || !row[this.columnName].uuid) {
 
 			var uploaderId = node.dataset['uploaderId'],
 				uploader = $$(uploaderId);
@@ -628,7 +628,7 @@ class ABFieldFile extends ABField {
 
 		var fileicon = domNode.querySelector('.file-data-field-icon');
 		if (fileicon)
-			fileicon.style.display = val ? 'none' : 'block';
+			fileicon.style.display = ((val && val.uuid) ? 'none' : 'block');
 
 		var file = domNode.querySelector('.file-data-field-name');
 		if (file) {
