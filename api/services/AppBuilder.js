@@ -3014,7 +3014,7 @@ mobileApps.forEach((app)=>{
             })
             .catch((err)=>{
 console.log(err);
-                ADCore.Error.log("AppBuilder:AppBuilderService:mobileApps:: Error searching for ABApplication:", {error:err, cond:cond });
+                ADCore.error.log("AppBuilder:AppBuilderService:mobileApps:: Error searching for ABApplication:", {error:err, cond:cond });
                 reject(err);
             })
 
