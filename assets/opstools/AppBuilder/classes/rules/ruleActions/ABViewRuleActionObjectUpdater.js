@@ -466,7 +466,7 @@ if (field.key == 'user') {
 
 					// find all the DataSources that are based upon this ABObject
 					// to do this, we find the root Page we are on, then ask that Page for datasources:
-					var dataCollections = this.currentForm.pageRoot().dataCollections((dc)=>{ return dc.datasource.id == connectedObject.id;});
+					var dataCollections = this.currentForm.pageRoot().dataCollections((dc)=>{ return dc.datasource && dc.datasource.id == connectedObject.id;});
 
 
 					// create a droplist with those dataSources
@@ -535,7 +535,9 @@ if (field.key == 'user') {
 
 					} else {
 
-						field.setValue($$(ids.value), data.value);
+						var rowData = {};
+						rowData[field.columnName] = data.value;
+						field.setValue($$(ids.value), rowData);
 					}
 
 					
