@@ -114,11 +114,12 @@ steal(
 
 									// Wait until the tool's area has been shown
 									var areaKey = 'ab-' + self.data.application.name.trim();
-									areaKey = areaKey.toLowerCase().replace(/'/g, '').replace(/_/g, '-');
+									areaKey = areaKey.toLowerCase().replace(/[^a-z0-9]/gi, '');
 
 									var callback = function (message, data) {
 
-										if (data.area.toLowerCase() == areaKey) {
+										var areaData = data.area.toLowerCase().replace(/[^a-z0-9]/gi, '');
+										if (areaData == areaKey) {
 
 											if (!self.activated) {
 												self.activated = true;

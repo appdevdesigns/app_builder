@@ -186,10 +186,10 @@ export default class ABViewFormCustom extends ABViewFormField {
 								rowData = dc.getCursor() || {};
 						}
 
-						if ($$(ids.component)) {
-							var node = $$(ids.component).$view;
-							field.customEdit(rowData, App, node, ids.component);
-						}
+						// var node = $$(ids.component).$view;
+						var node = $$(trg).getParentView().$view;
+						field.customEdit(rowData, App, node, ids.component);
+
 					}
 				}
 			}
