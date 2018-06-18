@@ -92,15 +92,35 @@ export default class ABViewRuleActionFormRecordRuleInsertConnected extends Updat
 		var newObjectValues = {};
 
 		// update them according to our rules
-		this.processUpdateObject({}, newObjectValues);
+		return this.processUpdateObject({}, newObjectValues)
+		.then(()=>{
+			
+			if (newObjectValues.newRecords) {
 
-		// now add our .id to the proper field in newObjectValues
-		var connectedObjectField = connObj.fields((f)=>{ return f.id == connectionField.settings.linkColumn; })[0];
-		newObjectValues[connectedObjectField.columnName] = options.data.id; 
+				// now add our .id to the proper field in newObjectValues
+				var connectedObjectField = connObj.fields((f)=>{ return f.id == connectionField.settings.linkColumn; })[0];
+							
+				var newRecords = {};
+				newObjectValues.newRecords.forEach( r => {
+					r[connectedObjectField.columnName] = options.data.id;
+					// perform the update/insert
+					return model.create(r);
+				})
 
+			} else {
+				// now add our .id to the proper field in newObjectValues
+				var connectedObjectField = connObj.fields((f)=>{ return f.id == connectionField.settings.linkColumn; })[0];
+							
+				newObjectValues[connectedObjectField.columnName] = options.data.id; 
 
-		// perform the update/insert
-		return model.create(newObjectValues);
+				// perform the update/insert
+				return model.create(newObjectValues);				
+			}
+			
+			
+		})
+
+		
 	}
 
 
