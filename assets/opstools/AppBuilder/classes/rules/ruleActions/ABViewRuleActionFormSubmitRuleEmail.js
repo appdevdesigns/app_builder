@@ -479,7 +479,7 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 
 			emailFieldOptions: () => {
 
-				var existsObjIds = [this.queryObject.id];
+				var existsFieldIds = [];
 				var options = [];
 
 				var fnAddOptions = (currObj) => {
@@ -502,13 +502,13 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 
 						// prevent looping
 						if (// - prevent include connect objects of the base object
-							this.queryObject.connectFields().filter(fConnect => fConnect.id != f.id && fConnect.datasourceLink.id == f.datasourceLink.id).length > 0 ||
+							// this.queryObject.connectFields().filter(fConnect => fConnect.id != f.id && fConnect.datasourceLink.id == f.datasourceLink.id).length > 0 ||
 							// - check duplicate include objects
-							existsObjIds.indexOf(f.datasourceLink.id) > -1)
+							existsFieldIds.indexOf(f.id) > -1)
 							return;
 
 						// store
-						existsObjIds.push(f.datasourceLink.id);
+						existsFieldIds.push(f.id);
 
 						// add email fields of link object
 						fnAddOptions(f.datasourceLink);
@@ -530,8 +530,8 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 				var pageRoot = this.currentForm.pageRoot(),
 					// get data collections who is query and contains email field
 					dcQueries = pageRoot.dataCollections(dc => {
-						return dc.settings.isQuery && 
-								dc.datasource.fields(f => f.key == 'email').length > 0;
+						return dc.settings.isQuery &&
+							dc.datasource.fields(f => f.key == 'email').length > 0;
 					});
 
 				dcQueries.forEach(dc => {
@@ -663,7 +663,7 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 
 
 							// query
-							if (rec.emailType == 'query') {
+							else if (rec.emailType == 'query') {
 
 								var dcIdAndFieldId = rec.value; // dataCollectionId|fieldId
 								if (!dcIdAndFieldId) return next();
