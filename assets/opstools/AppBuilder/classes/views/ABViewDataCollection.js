@@ -1208,6 +1208,45 @@ export default class ABViewDataCollection extends ABView {
 		component.refresh();
 
 	}
+	
+	clone(settings) {
+		settings = settings || this.toObj();
+		var clonedDataCollection = new ABViewDataCollection(settings, this.application, this.parent);
+		
+		return new Promise((resolve, reject)=>{
+			
+			// load the data
+			clonedDataCollection.loadData()
+			.then(()=>{
+				
+				// set the cursor
+				var cursorID = this.getCursor();
+				
+				if (cursorID) {
+					// NOTE: webix documentation issue: .getCursor() is supposed to return
+					// the .id of the item.  However it seems to be returning the {obj} 
+					if (cursorID.id) cursorID = cursorID.id;
+					
+					clonedDataCollection.setCursor(cursorID);
+				}
+				
+				resolve( clonedDataCollection );
+			})
+			.catch(reject);
+		})
+	}
+	
+	filteredClone(filters) {
+		var obj = this.toObj();
+		
+		// check to see that filters are set (this is sometimes helpful to select the first record without doing so at the data collection level)
+		if (typeof filters != "undefined") {
+			obj.settings.objectWorkspace.filterConditions = { glue:'and', rules:[ obj.settings.objectWorkspace.filterConditions, filters ]}
+		}
+			
+		return this.clone(obj); // new ABViewDataCollection(settings, this.application, this.parent);
+		
+	}
 
 
 	setCursor(rowId) {
@@ -1236,6 +1275,38 @@ export default class ABViewDataCollection extends ABView {
 		if (dc) {
 
 			var currId = dc.getCursor();
+			var currItem = dc.getItem(currId);
+
+			return currItem;
+		}
+		else {
+			return null;
+		}
+
+	}
+
+	getFirstRecord() {
+
+		var dc = this.__dataCollection;
+		if (dc) {
+
+			var currId = dc.getFirstId();
+			var currItem = dc.getItem(currId);
+
+			return currItem;
+		}
+		else {
+			return null;
+		}
+
+	}
+
+	getNextRecord(record) {
+
+		var dc = this.__dataCollection;
+		if (dc) {
+
+			var currId = dc.getNextId(record.id);
 			var currItem = dc.getItem(currId);
 
 			return currItem;
@@ -1427,6 +1498,12 @@ export default class ABViewDataCollection extends ABView {
 
 	}
 
+	reloadData() {
+		this.__dataCollection.clearAll();
+		return this.loadData(null, null, null);
+	}
+	
+	
 	getData(filter) {
 
 		var dc = this.__dataCollection;
