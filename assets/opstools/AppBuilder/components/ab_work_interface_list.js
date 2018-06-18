@@ -430,7 +430,8 @@ console.error('!! todo: onBeforeEditStop() editing');
 
 
 				template = template.replace("#iconGear#", "<div class='ab-page-list-edit'>{common.iconGear}</div>");
-				template = template.replace('#typeIcon#', item.settings.type == 'popup' ? 'fa-clone fa-flip-horizontal' : 'fa-file-o');
+				template = template.replace("#typeIcon#", item.icon || item.viewIcon());
+				// template = template.replace('#typeIcon#', item.settings.type == 'popup' ? 'fa-clone fa-flip-horizontal' : 'fa-file-o');
 
 
 							// // Disallow rename/delete on Tabs
@@ -533,7 +534,7 @@ console.error('!! todo: onBeforeEditStop() editing');
 		 */
 		var _templateListItem = [
 			"<div class='ab-page-list-item'>",
-				"{common.icon()} <span class='webix_icon #typeIcon#'></span> #label# #iconGear#",
+				"{common.icon()} <span class='webix_icon fa-#typeIcon#'></span> #label# #iconGear#",
 			"</div>"
 		].join('');
 

@@ -1,20 +1,19 @@
 
 /*
- * ab_work_interface_list_newPage_blankPage
+ * ab_work_interface_list_newPage_reportPage
  *
- * Display the form for creating a new blank page 
+ * Display the form for creating a new report page 
  *
  */
 
-import ABPage from '../classes/views/ABViewPage'
-import ABViewPage from '../classes/views/ABViewPage';
-import ABViewReportPage from '../classes/views/ABViewReportPage';
+import ABViewReport from '../classes/views/ABViewReport'
+import ABViewReportPage from '../classes/views/ABViewReportPage'
 
 
-export default class AB_Work_Interface_List_NewPage_BlankPage extends OP.Component {
+export default class AB_Work_Interface_List_NewPage_ReportPage extends OP.Component {
 
 	constructor(App) {
-		super(App, 'ab_work_interface_list_newPage_blankPage');
+		super(App, 'ab_work_interface_list_newPage_reportPage');
 
 		var L = this.Label;
 
@@ -46,10 +45,7 @@ export default class AB_Work_Interface_List_NewPage_BlankPage extends OP.Compone
 		this.ui = {
 			view: "form",
 			id: ids.component,
-
-			//// TODO: @James
 			width: 400,
-
 			elements: [
 				{
 					view: "select",
@@ -101,11 +97,11 @@ export default class AB_Work_Interface_List_NewPage_BlankPage extends OP.Compone
 				var addPage = function (page, indent) {
 					indent = indent || '';
 					options.push({ id: page.urlPointer(), value: indent + page.label });
-					page.pages(p => !(p instanceof ABViewReportPage)).forEach(function (p) {
+					page.pages(p => p instanceof ABViewReportPage).forEach(function (p) {
 						addPage(p, indent + '-');
 					})
 				}
-				application.pages(p => !(p instanceof ABViewReportPage)).forEach(function (page) {
+				application.pages(p => p instanceof ABViewReportPage).forEach(function (page) {
 					addPage(page, '');
 				});
 
@@ -202,9 +198,15 @@ export default class AB_Work_Interface_List_NewPage_BlankPage extends OP.Compone
 				var parent = $$(ids.parentList).getValue().trim();
 				if (parent == '-') parent = null;
 
+				var keyOfInstance;
+
 				// convert a parent .id value to the actual object (or undefined if not found)
 				if (parent) {
 					parent = CurrentApplication.urlResolve(parent);
+					keyOfInstance = ABViewReport.common().key;
+				}
+				else {
+					keyOfInstance = ABViewReportPage.common().key;
 				}
 
 				// TODO : validate unique page's name 
@@ -212,8 +214,8 @@ export default class AB_Work_Interface_List_NewPage_BlankPage extends OP.Compone
 				return {
 					parent: parent, // should be either null or an {}
 					name: $$(ids.formName).getValue().trim(),
-					key: ABPage.common().key
-				}
+					key: keyOfInstance
+				};
 
 			},
 
