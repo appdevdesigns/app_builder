@@ -27,6 +27,9 @@ export default class RowFilter extends OP.Component {
 
 				sameAsUser: L('ab.filter_fields.sameAsUser', "*Same As User"),
 				notSameAsUser: L('ab.filter_fields.notSameAsUser', "*Not Same As User"),
+				
+				sameAsField: L('ab.filter_fields.sameAsFild', "*Same As Field"),
+				notSameAsField: L('ab.filter_fields.notSameAsFild', "*Not Field"),
 
 				containsCondition: L('ab.filter_fields.containsCondition', "*contains"),
 				notContainCondition: L('ab.filter_fields.notContainCondition', "*doesn't contain"),
@@ -71,6 +74,8 @@ export default class RowFilter extends OP.Component {
 			queryFieldCombo: this.unique(idBase + '_rowFilter_queryFieldCombo'),
 			queryFieldComboQuery: this.unique(idBase + '_rowFilter_queryFieldComboQuery'),
 			queryFieldComboField: this.unique(idBase + '_rowFilter_queryFieldComboField'),
+			
+			fieldMatch: this.unique(idBase + '_rowFilter_fieldMatchCombo'),
 
 			listOptions: this.unique(idBase + '_rowFilter_listOptions')
 		};
@@ -93,6 +98,9 @@ export default class RowFilter extends OP.Component {
 				id: 'not_in_query_field'
 			}
 		];
+		
+		var recordRuleOptions = [];
+		var recordRuleFieldOptions = [];
 
 		// setting up UI
 		this.init = (options) => {
@@ -104,6 +112,21 @@ export default class RowFilter extends OP.Component {
 
 			if (options.showObjectName)
 				_settings.showObjectName = options.showObjectName;
+				
+			
+			if (options.isRecordRule) {
+				recordRuleOptions = [
+					{
+						value: labels.component.sameAsField,
+						id: "same_as_field"
+					},
+					{
+						value: labels.component.notSameAsField,
+						id: "not_same_as_field"
+					}
+				];
+				recordRuleFieldOptions = options.fieldOptions;
+			}
 
 		};
 
@@ -238,7 +261,7 @@ export default class RowFilter extends OP.Component {
 											value: labels.component.notInQuery,
 											id: 'not_in_query'
 										}
-									],
+									].concat(recordRuleOptions),
 									on: {
 										onChange:function( newValue, oldValue) {
 											_logic.onChangeSameAsUser(this, newValue, oldValue);
@@ -269,7 +292,7 @@ export default class RowFilter extends OP.Component {
 											value: labels.component.onOrAfterCondition,
 											id: "greater_or_equal"
 										}
-									].concat(queryFieldOptions),
+									].concat(queryFieldOptions).concat(recordRuleOptions),
 									on: {
 										onChange: function(condition) {
 											
@@ -312,7 +335,7 @@ export default class RowFilter extends OP.Component {
 											value: labels.component.moreThanOrEqualCondition,
 											id: "greater_or_equal"
 										}
-									].concat(queryFieldOptions),
+									].concat(queryFieldOptions).concat(recordRuleOptions),
 									on: {
 										onChange: function(condition) {
 											
@@ -347,7 +370,7 @@ export default class RowFilter extends OP.Component {
 											value: labels.component.notEqualListCondition,
 											id: "not_equal"
 										}
-									].concat(queryFieldOptions),
+									].concat(queryFieldOptions).concat(recordRuleOptions),
 									on: {
 										onChange: function( newValue, oldValue) {
 											_logic.onChangeSameAsUser(this, newValue, oldValue);
@@ -364,7 +387,7 @@ export default class RowFilter extends OP.Component {
 											value: labels.component.equalListCondition,
 											id: "equals"
 										}
-									].concat(queryFieldOptions),
+									].concat(queryFieldOptions).concat(recordRuleOptions),
 									on: {
 										onChange: function(condition) {
 											
@@ -398,7 +421,7 @@ export default class RowFilter extends OP.Component {
 											value: labels.component.notEqualListCondition,
 											id: "not_equal"
 										}
-									].concat(queryFieldOptions),
+									].concat(queryFieldOptions).concat(recordRuleOptions),
 									on: {
 										onChange: function (userCondition) {
 
@@ -433,7 +456,7 @@ export default class RowFilter extends OP.Component {
 											value: labels.component.isNotCondition,
 											id: "not_equals"
 										}
-									].concat(queryFieldOptions),
+									].concat(queryFieldOptions).concat(recordRuleOptions),
 									on: {
 										onChange: function(condition) {
 
@@ -467,7 +490,7 @@ export default class RowFilter extends OP.Component {
 											value: labels.component.isNotCondition,
 											id: "not_equals"
 										}
-									].concat(queryFieldOptions),
+									].concat(queryFieldOptions).concat(recordRuleOptions),
 									on: {
 										onChange: function(condition) {
 
@@ -536,6 +559,19 @@ export default class RowFilter extends OP.Component {
 									]
 
 								},
+								
+								// Field match
+								{
+									id: ids.fieldMatch,
+									batch: "fieldMatch",
+									view: "combo",
+									options: [],
+									on: {
+										onChange: _logic.onChange
+									}
+
+								},
+
 
 								// Date
 								{
@@ -812,6 +848,9 @@ export default class RowFilter extends OP.Component {
 					if (rule == "in_query_field" || rule == "not_in_query_field") {
 						// Show the new value inputs
 						$viewCond.$$(ids.inputValue).showBatch("queryField");
+					} else if (rule == "same_as_field" || rule == "not_same_as_field") {
+						// Show the new value inputs
+						$viewCond.$$(ids.inputValue).showBatch("fieldMatch");
 					}
 				}
 					
@@ -831,7 +870,7 @@ export default class RowFilter extends OP.Component {
 					// clear and disable the value field
 					$viewCond.$$(ids.inputValue).showBatch("empty");
 					_logic.onChange();
-				} else if (newValue == "in_query_field" || newValue == "not_in_query_field") {
+				} else if (newValue == "in_query_field" || newValue == "not_in_query_field" || newValue == "same_as_field" || newValue == "not_same_as_field") {
 					_logic.onChangeRule(newValue, $viewCond);
 					_logic.onChange();
 				} else {
@@ -846,7 +885,7 @@ export default class RowFilter extends OP.Component {
 				if (rule == "is_current_user" ||
 					rule == "is_not_current_user") {
 					$viewCond.$$(ids.inputValue).showBatch("empty");
-				} else if (rule == "in_query_field" || rule == "not_in_query_field") {
+				} else if (rule == "in_query_field" || rule == "not_in_query_field" || rule == "same_as_field" || rule == "not_same_as_field") {
 					_logic.onChangeRule(rule, $viewCond);
 				}
 				else {
@@ -871,6 +910,14 @@ export default class RowFilter extends OP.Component {
 					
 					// Show the new value inputs
 					$viewCond.$$(ids.inputValue).showBatch("queryField");
+				} else if (rule == "same_as_field" || rule == "not_same_as_field") {
+
+					$viewCond.$$(ids.inputValue).$$(ids.fieldMatch).define("options", recordRuleFieldOptions);
+					$viewCond.$$(ids.inputValue).$$(ids.fieldMatch).refresh();
+					
+					// Show the new value inputs
+					$viewCond.$$(ids.inputValue).showBatch("fieldMatch");
+					_logic.onChange();
 				} else {
 					// Show the default value inputs
 					$viewCond.$$(ids.inputValue).showBatch(batchName);
@@ -1021,7 +1068,7 @@ export default class RowFilter extends OP.Component {
 						$viewComparer.refresh();
 					}
 					
-					if (f.rule == "in_query_field" || f.rule == "not_in_query_field") {
+					if (f.rule == "in_query_field" || f.rule == "not_in_query_field" || f.rule == "same_as_field" || f.rule == "not_same_as_field") {
 						$viewCond.blockEvent();
 						_logic.onChangeRule(f.rule, $viewCond);
 						$viewCond.blockEvent();
