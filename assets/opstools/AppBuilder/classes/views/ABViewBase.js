@@ -14,6 +14,7 @@ var ABViewBaseDefaults = {
 	icon: 'window-maximize',
 }
 
+// var _ = require("lodash");
 
 module.exports = class ABViewBase extends EventEmitter {
 
@@ -59,7 +60,7 @@ module.exports = class ABViewBase extends EventEmitter {
 			name: this.name,
 			// parent: this.parent,
 
-			settings: this.settings || {},
+			settings: _.cloneDeep(this.settings || {}),
 			translations: this.translations || []
 
 		}
