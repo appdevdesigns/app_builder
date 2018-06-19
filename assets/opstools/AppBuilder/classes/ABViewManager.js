@@ -41,6 +41,7 @@ import ABViewFormTree from "./views/ABViewFormTree"
 
 import ABViewReport from "./views/ABViewReport"
 import ABViewReportPage from "./views/ABViewReportPage"
+import ABViewReportPanel from "./views/ABViewReportPanel"
 
 // import ABViewFormText from "./views/ABViewFormText"
 
@@ -89,6 +90,7 @@ Views[ABViewFormTree.common().key] = ABViewFormTree;
 
 Views[ABViewReport.common().key] = ABViewReport;
 Views[ABViewReportPage.common().key] = ABViewReportPage;
+Views[ABViewReportPanel.common().key] = ABViewReportPanel;
 
 
 

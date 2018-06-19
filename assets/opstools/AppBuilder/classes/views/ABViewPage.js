@@ -75,7 +75,7 @@ export default class ABViewPage extends ABViewContainer {
 
         // icon of popup page
         if (this.settings.type == 'popup')
-            obj.icon = "window-maximize";
+            obj.icon = "clone";
 
         // set label of the page
         if (!this.label || this.label == '?label?')
@@ -116,7 +116,7 @@ export default class ABViewPage extends ABViewContainer {
 
         // icon of popup page
         if (values.settings.type == 'popup')
-            this.icon = "window-maximize";
+            this.icon = "clone";
 
         // set label of the page
         if (!this.label || this.label == '?label?')

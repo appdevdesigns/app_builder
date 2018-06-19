@@ -36,6 +36,10 @@ export default class ABViewReportPage extends ABViewPage {
 		return ABViewDefaults;
 	}
 
+	///
+	/// Instance Methods
+	///
+
 	//
 	//	Editor Related
 	//
@@ -109,6 +113,11 @@ export default class ABViewReportPage extends ABViewPage {
 
 		var comp = super.component(App);
 
+		var idBase = 'ABViewReportPage_' + this.id;
+		var ids = {
+			component: App.unique(idBase + '_component'),
+		};
+
 		// left report menu
 		var menu = this.uiReportMenu();
 		menu.on = {
@@ -123,7 +132,11 @@ export default class ABViewReportPage extends ABViewPage {
 			view: 'layout',
 			cols: [
 				menu,
-				comp.ui
+				{
+					id: ids.component,
+					view: 'layout',
+					cols: [comp.ui]
+				}
 			]
 		};
 
@@ -139,14 +152,25 @@ export default class ABViewReportPage extends ABViewPage {
 		// logic
 		comp.logic.selectReport = (reportId) => {
 
-			webix.ui({
+			// clear container UI
+			var childViews = $$(ids.component).getChildViews();
+			childViews.forEach(v => {
+				$$(ids.component).removeView(v);
+			});
 
-				id : comp.ui.id,
-				view: 'label',
-				label: 'Label ' + reportId
+			var selectedPage = this.pages(p => p.id == reportId)[0];
+			if (selectedPage) {
 
-			}, $$(comp.ui.id));
-			
+				var reportComponent = selectedPage.component(App);
+
+				// create selected report UI
+				$$(ids.component).addView(reportComponent.ui);
+
+				reportComponent.init();
+				reportComponent.onShow();
+
+			}
+
 		};
 
 
