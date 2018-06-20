@@ -31,9 +31,6 @@ export default class ABViewReport extends ABViewPage {
 	constructor(values, application, parent, defaultValues) {
 		super(values, application, parent, (defaultValues || ABViewDefaults));
 
-		// WORKAROUND : Where should we define this ??
-		webix.cdn = "/js/webix";
-
 		// the report always have 'header', 'detail' and 'footer' panels
 		if (this.views(v => v instanceof ABViewReportPanel).length < 3) {
 
@@ -121,6 +118,10 @@ export default class ABViewReport extends ABViewPage {
 		var _init = (options) => {
 
 			comp.init(options);
+
+			// WORKAROUND : Where should we define this ??
+			webix.codebase = "";
+			webix.cdn = "/js/webix";
 
 			webix.ui({
 				view: "popup",
