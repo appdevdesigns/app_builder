@@ -29,7 +29,6 @@ export default class ABViewReportPage extends ABViewPage {
 
 	constructor(values, application, parent, defaultValues) {
 		super(values, application, parent, (defaultValues || ABViewDefaults));
-
 	}
 
 	static common() {

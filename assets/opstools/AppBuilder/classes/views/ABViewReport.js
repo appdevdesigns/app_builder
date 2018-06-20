@@ -31,6 +31,9 @@ export default class ABViewReport extends ABViewPage {
 	constructor(values, application, parent, defaultValues) {
 		super(values, application, parent, (defaultValues || ABViewDefaults));
 
+		// WORKAROUND : Where should we define this ??
+		webix.cdn = "/js/webix";
+
 		// the report always have 'header', 'detail' and 'footer' panels
 		if (this.views(v => v instanceof ABViewReportPanel).length < 3) {
 
@@ -103,7 +106,7 @@ export default class ABViewReport extends ABViewPage {
 							autowidth: true,
 							on: {
 								onItemClick: function (id, e) {
-									comp.logic.showPrintPopup(this.$view);
+									comp.logic.popupShow(this.$view);
 								}
 							}
 						}
@@ -119,9 +122,63 @@ export default class ABViewReport extends ABViewPage {
 
 			comp.init(options);
 
+			webix.ui({
+				view: "popup",
+				id: ids.printPopup,
+				width: 160,
+				height: 120,
+				select: false,
+				body: {
+					id: ids.list,
+					view: 'list',
+					data: [
+						{ name: "PDF", icon: "file-pdf-o" }
+					],
+					template: function (obj, common) {
+						return comp.logic.popupItemTemplate(obj, common);
+					},
+					on: {
+						onItemClick: function (id, e, node) {
+							var component = this.getItem(id);
+
+							comp.logic.print(component.name);
+						}
+					}
+				}
+			});
+
 		}
 
-		comp.logic.showPrintPopup = ($button) => {
+		comp.logic.popupShow = ($button) => {
+
+			$$(ids.printPopup).show($button);
+
+		};
+
+		comp.logic.popupItemTemplate = (obj, common) => {
+
+			return "<div><i class='fa fa-#icon# webix_icon_btn' aria-hidden='true'></i> #name#</div>"
+				.replace(/#icon#/g, obj.icon)
+				.replace(/#name#/g, obj.name);
+
+		};
+
+		comp.logic.print = (name) => {
+
+			switch (name) {
+				case "PDF":
+					webix.toPDF($$(comp.ui.id))
+						.catch(err => {
+							alert('catch: ' + err);
+						})
+						.fail((err) => {
+							alert('fail: ' + err);
+						})
+						.then(() => {
+							alert('ok');
+						});
+					break;
+			}
 
 		};
 
