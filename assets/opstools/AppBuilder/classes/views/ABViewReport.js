@@ -119,6 +119,11 @@ export default class ABViewReport extends ABViewPage {
 
 			comp.init(options);
 
+			// WORKAROUND : Where should we define this ??
+			// For include html2canvas.js
+			webix.codebase = "";
+			webix.cdn = "/js/webix";
+
 			webix.ui({
 				view: "popup",
 				id: ids.printPopup,
