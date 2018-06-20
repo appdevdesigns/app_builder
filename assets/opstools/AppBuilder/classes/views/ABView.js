@@ -371,7 +371,7 @@ export default class ABView extends ABViewBase {
 			return this;
 		}
 
-		while (parentPage && (parentPage.key != 'page' || !filterFn(parentPage))) {
+		while (parentPage && ((parentPage.key != 'page' && parentPage.key != 'reportPage') || !filterFn(parentPage))) {
 			parentPage = parentPage.parent;
 		}
 

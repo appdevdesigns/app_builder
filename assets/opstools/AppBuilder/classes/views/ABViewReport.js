@@ -196,24 +196,6 @@ export default class ABViewReport extends ABViewPage {
 		return [];
 	}
 
-	pageParent(filterFn) {
-
-		if (filterFn == null) filterFn = () => true;
-
-		var parentPage = this.parent;
-
-		// if current page is the root page, then return itself.
-		if (this.isRoot()) {
-			return this;
-		}
-
-		while (parentPage && (!(parentPage instanceof ABViewReportPage) || !filterFn(parentPage))) {
-			parentPage = parentPage.parent;
-		}
-
-		return parentPage;
-	}
-
 
 	static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
 
