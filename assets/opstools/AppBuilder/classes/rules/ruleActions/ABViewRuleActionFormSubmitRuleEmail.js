@@ -479,45 +479,62 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 
 			emailFieldOptions: () => {
 
-				var existsObjIds = [this.queryObject.id];
+				var existsFieldIds = [];
 				var options = [];
 
-				var fnAddOptions = (currObj) => {
+				var fnAddOptions = (currObj, fLink) => {
 
 					var emailFields = currObj.fields(f => f instanceof ABFieldEmail).map(f => {
+
+						var optId = "",
+							optLabel = "";
+
+						if (fLink) {
+							optId = fLink.id + '|' + f.urlPointer();
+							optLabel = "{objLabel}.{fieldLabel} ({fieldLink})"
+										.replace("{objLabel}", currObj.label)
+										.replace("{fieldLabel}", f.label)
+										.replace("{fieldLink}", fLink.label);
+						}
+						else {
+							optId = '|' + f.urlPointer();
+							optLabel = "{objLabel}.{fieldLabel}"
+										.replace("{objLabel}", currObj.label)
+										.replace("{fieldLabel}", f.label);
+						}
+
 						return {
-							id: f.urlPointer(), // field's url
-							value: "{objLabel}.{fieldLabel}"
-								.replace("{objLabel}", currObj.label)
-								.replace("{fieldLabel}", f.label)
+							id: optId, // linkFieldId|fieldUrl
+							value: optLabel
 						};
+
 					});
 
 					// TODO: prevent duplicate
 
 					options = options.concat(emailFields);
 
-
-					currObj.connectFields().forEach(f => {
-
-						// prevent looping
-						if (// - prevent include connect objects of the base object
-							this.queryObject.connectFields().filter(fConnect => fConnect.id != f.id && fConnect.datasourceLink.id == f.datasourceLink.id).length > 0 ||
-							// - check duplicate include objects
-							existsObjIds.indexOf(f.datasourceLink.id) > -1)
-							return;
-
-						// store
-						existsObjIds.push(f.datasourceLink.id);
-
-						// add email fields of link object
-						fnAddOptions(f.datasourceLink);
-
-					});
-
 				};
 
 				fnAddOptions(this.queryObject);
+
+				this.queryObject.connectFields().forEach(f => {
+
+					// prevent looping
+					if (// - prevent include connect objects of the base object
+						// f.datasourceLink.id == this.queryObject.id ||
+						// - check duplicate include objects
+						existsFieldIds.indexOf(f.id) > -1)
+						return;
+
+					// store
+					existsFieldIds.push(f.id);
+
+					// add email fields of link object
+					fnAddOptions(f.datasourceLink, f);
+
+				});
+
 
 				return options;
 
@@ -530,8 +547,8 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 				var pageRoot = this.currentForm.pageRoot(),
 					// get data collections who is query and contains email field
 					dcQueries = pageRoot.dataCollections(dc => {
-						return dc.settings.isQuery && 
-								dc.datasource.fields(f => f.key == 'email').length > 0;
+						return dc.settings.isQuery &&
+							dc.datasource.fields(f => f.key == 'email').length > 0;
 					});
 
 				dcQueries.forEach(dc => {
@@ -618,7 +635,7 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 							// field
 							if (rec.emailType == 'field') {
 
-								var emailFieldUrl = rec.value;
+								var emailFieldUrl = rec.value.split('|')[1]; // linkFieldId|emailFieldUrl
 								var emailField = this.queryObject.application.urlResolve(emailFieldUrl);
 								if (emailField) {
 
@@ -633,8 +650,9 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 									// Pull emails from link object
 									else {
 
-										let linkedFields = this.queryObject.fields(f => f instanceof ABFieldConnect && f.settings.linkObject == emailField.object.id);
-										linkedFields.forEach(f => {
+										let linkFieldId = rec.value.split('|')[0];
+										let linkFields = this.queryObject.fields(f => f instanceof ABFieldConnect && f.id == linkFieldId);
+										linkFields.forEach(f => {
 
 											var linkedData = options.data[f.relationName()] || [];
 
@@ -663,7 +681,7 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 
 
 							// query
-							if (rec.emailType == 'query') {
+							else if (rec.emailType == 'query') {
 
 								var dcIdAndFieldId = rec.value; // dataCollectionId|fieldId
 								if (!dcIdAndFieldId) return next();
