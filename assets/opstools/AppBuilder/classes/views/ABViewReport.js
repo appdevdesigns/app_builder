@@ -119,6 +119,11 @@ export default class ABViewReport extends ABViewPage {
 
 			comp.init(options);
 
+			// WORKAROUND : Where should we define this ??
+			// For include html2canvas.js
+			webix.codebase = "";
+			webix.cdn = "/js/webix";
+
 			webix.ui({
 				view: "popup",
 				id: ids.printPopup,
@@ -129,8 +134,8 @@ export default class ABViewReport extends ABViewPage {
 					id: ids.list,
 					view: 'list',
 					data: [
-						// { name: "PDF", icon: "file-pdf-o" },
-						{ name: "PNG", icon: "file-image-o" }
+						{ name: "PNG", icon: "file-image-o" },
+						{ name: "Print", icon: "print" }
 					],
 					template: function (obj, common) {
 						return comp.logic.popupItemTemplate(obj, common);
@@ -170,21 +175,6 @@ export default class ABViewReport extends ABViewPage {
 		comp.logic.print = (name) => {
 
 			switch (name) {
-				// case "PDF":
-				// 	webix.toPDF($$(comp.ui.id),
-				// 		{
-				// 			filename: this.label
-				// 		})
-				// 		.catch(err => {
-				// 			OP.Error.log("System could not export PDF", { error: err });
-				// 		})
-				// 		.fail((err) => {
-				// 			OP.Error.log("System could not export PDF", { error: err });
-				// 		})
-				// 		.then(() => {
-				// 			comp.logic.popupHide();
-				// 		});
-				// 	break;
 				case "PNG":
 					webix.toPNG($$(comp.ui.id),
 						{
@@ -200,6 +190,13 @@ export default class ABViewReport extends ABViewPage {
 							comp.logic.popupHide();
 						})
 					break;
+
+				case "Print":
+					// https://docs.webix.com/desktop__printing.html
+					webix.print($$(comp.ui.id));
+					comp.logic.popupHide();
+					break;
+
 			}
 
 		};
