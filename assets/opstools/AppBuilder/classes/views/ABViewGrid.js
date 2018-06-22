@@ -1705,21 +1705,40 @@ export default class ABViewGrid extends ABViewWidget  {
 		var object = dc.datasource;
 		if (!object) return reportDef;
 
-		// reportDef = {
-		// 	table: {
-		// 		headerRows: 1,
-		// 		widths: [],
-		// 		body: []
-		// 	}
-		// };
+		reportDef = {
+			table: {
+				headerRows: 1,
+				widths: [],
+				body: [
+					[] // header
+				]
+			}
+		};
 
-		// widths: [ '*', 'auto', 100, '*' ],
+		// TODO: Hidden fields
+		// TODO: Sort fields
 
-		// body: [
-		//   [ 'First', 'Second', 'Third', 'The last one' ],
-		//   [ 'Value 1', 'Value 2', 'Value 3', 'Value 4' ],
-		//   [ { text: 'Bold value', bold: true }, 'Val 2', 'Val 3', 'Val 4' ]
-		// ]
+		var rowData = dc.getData();
+
+		object.fields().forEach((f, colIndex) => {
+
+			// Headers
+			reportDef.table.widths[colIndex] = 'auto'; // TODO ; width
+			reportDef.table.body[0][colIndex] = f.label;
+
+			// Data
+			rowData.forEach((d, rowIndex) => {
+
+				rowIndex = rowIndex + 1;
+
+				if (reportDef.table.body[rowIndex] == null) 
+					reportDef.table.body[rowIndex] = [];
+
+				reportDef.table.body[rowIndex][colIndex] = d[f.columnName] || "";
+
+			});
+
+		});
 
 		return reportDef;
 
