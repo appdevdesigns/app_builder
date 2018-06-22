@@ -15,8 +15,8 @@ module.exports = {
 				"async",
 				"webix",
 				"js/webix/extras/tinymce",
-				"js/webix/extras/pdfjs",
 				"js/selectivity/selectivity.min",
+				"js/vfs_fonts",
 				"OpsPortal/classes/OpsWebixDataCollection",
 				"opstools/BuildApp/OP_Bundle"
 			],
@@ -29,11 +29,18 @@ module.exports = {
 			],
 			"sideBundle": true
 		},
-		"js/webix/extras/pdfjs": {
-			"format": "global",
-			"deps": [
-			],
-			"sideBundle": true
-		}
+        "js/vfs_fonts": {
+            "format": "global",
+            "deps": [
+                "js/pdfmake.min"
+            ],
+            "sideBundle": true
+        },
+        "js/pdfmake.min": {
+            "format": "global",
+            "deps": [
+            ],
+            "sideBundle": true
+        }
 	}
 };

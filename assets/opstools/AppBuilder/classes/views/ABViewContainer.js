@@ -674,4 +674,33 @@ export default class ABViewContainer extends ABView {
 
 
 
+	//// Report ////
+
+	print() {
+
+		var reportDef = {
+			columns: []
+		};
+
+		// create columns
+		for (var i = 0; i < this.settings.columns; i++) {
+			reportDef.columns[i] = [];
+		}
+
+		// add each definition of component to position
+		this.views().forEach(v => {
+
+			let x = v.position.x || 0,
+				y = v.position.y || 0;
+
+			reportDef.columns[y][x] = v.print();
+
+		});
+
+		return reportDef;
+
+	}
+
+
+
 }
