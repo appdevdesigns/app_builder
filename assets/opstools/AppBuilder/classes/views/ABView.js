@@ -371,7 +371,7 @@ export default class ABView extends ABViewBase {
 			return this;
 		}
 
-		while (parentPage && (parentPage.key != 'page' || !filterFn(parentPage))) {
+		while (parentPage && ((parentPage.key != 'page' && parentPage.key != 'reportPage') || !filterFn(parentPage))) {
 			parentPage = parentPage.parent;
 		}
 
@@ -1010,7 +1010,9 @@ export default class ABView extends ABViewBase {
 			// not allowed Form's widgets
 			'button', 'checkbox', 'datepicker', 'fieldcustom', 'textbox', 'numberbox', 'selectsingle', 'tree',
 			// not allowed Chart's Widgets
-			'pie', 'bar', 'line', 'area'
+			'pie', 'bar', 'line', 'area',
+			// not allowed Report page
+			'report', 'reportPage'
 		];
 
 		var allComponents = this.application.viewAll();  // ABViewManager.allViews();

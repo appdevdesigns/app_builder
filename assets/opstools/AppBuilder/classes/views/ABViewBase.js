@@ -78,6 +78,7 @@ module.exports = class ABViewBase extends EventEmitter {
 	fromValues(values) {
 
 		this.id = values.id;			// NOTE: only exists after .save()
+		this.key = values.key;
 		this.icon = values.icon || ABViewBaseDefaults.icon;
 
 		// this.parent = values.parent || null;

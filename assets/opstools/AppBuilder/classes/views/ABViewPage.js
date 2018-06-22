@@ -19,20 +19,20 @@ function L(key, altText) {
 }
 
 var ABPropertyComponentDefaults = {
-    type: 'page', // 'page' or 'popup'
+    type: 'page', // 'page', 'popup' or 'reportPage'
 }
 
 var ABViewDefaults = {
     key: 'page',		// unique key identifier for this ABView
-    icon: 'file',		// icon reference: (without 'fa-' )
+    icon: 'file-o',		// icon reference: (without 'fa-' )
 
 }
 
 export default class ABViewPage extends ABViewContainer {
 
-    constructor(values, application, parent) {
+    constructor(values, application, parent, defaultValues) {
 
-        super(values, application, parent, ABViewDefaults);
+        super(values, application, parent, (defaultValues || ABViewDefaults));
 
 
         // 	{
@@ -73,6 +73,10 @@ export default class ABViewPage extends ABViewContainer {
 
         obj.name = this.name;
 
+        // icon of popup page
+        if (this.settings.type == 'popup')
+            obj.icon = "clone";
+
         // set label of the page
         if (!this.label || this.label == '?label?')
             obj.label = obj.name;
@@ -109,6 +113,10 @@ export default class ABViewPage extends ABViewContainer {
     fromValues(values) {
 
         super.fromValues(values);
+
+        // icon of popup page
+        if (values.settings.type == 'popup')
+            this.icon = "clone";
 
         // set label of the page
         if (!this.label || this.label == '?label?')

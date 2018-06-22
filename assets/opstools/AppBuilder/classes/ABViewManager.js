@@ -39,6 +39,10 @@ import ABViewFormSelectSingle from "./views/ABViewFormSelectSingle"
 import ABViewFormTextbox from "./views/ABViewFormTextbox"
 import ABViewFormTree from "./views/ABViewFormTree"
 
+import ABViewReport from "./views/ABViewReport"
+import ABViewReportPage from "./views/ABViewReportPage"
+import ABViewReportPanel from "./views/ABViewReportPanel"
+
 // import ABViewFormText from "./views/ABViewFormText"
 
 /* 
@@ -83,6 +87,11 @@ Views[ABViewFormTextbox.common().key] = ABViewFormTextbox;
 Views[ABViewFormTree.common().key] = ABViewFormTree;
 // Views[ABViewForm.common().key] = ABViewForm;
 // Views[ABViewFormText.common().key] = ABViewFormText;
+
+Views[ABViewReport.common().key] = ABViewReport;
+Views[ABViewReportPage.common().key] = ABViewReportPage;
+Views[ABViewReportPanel.common().key] = ABViewReportPanel;
+
 
 
 export default  {

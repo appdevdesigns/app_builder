@@ -8,6 +8,7 @@
 
 import AB_Work_Interface_List_NewPage_BlankPage from "./ab_work_interface_list_newPage_blankPage"
 import AB_Work_Interface_List_NewPage_QuickPage from "./ab_work_interface_list_newPage_quickPage"
+import AB_Work_Interface_List_NewPage_ReportPage from "./ab_work_interface_list_newPage_reportPage"
 import ABPage from '../classes/views/ABViewPage'
 
 var uuid = require('uuid');
@@ -32,6 +33,7 @@ export default class AB_Work_Interface_List_NewPage extends OP.Component {
 				// formHeader: L('ab.application.form.header', "*Application Info"),
 				blankPage : L('ab.interface.blankPage', '*Blank Page'),
 				quickPage : L('ab.interface.quickPage', '*Quick Page'),
+				reportPage : L('ab.interface.reportPage', '*Report Page'),
 				
 			}
 		}
@@ -44,6 +46,7 @@ export default class AB_Work_Interface_List_NewPage extends OP.Component {
 
 			tabBlank: this.unique('tabBlank'),
 			tabQuick: this.unique('tabQuick'),
+			tabReport: this.unique('tabReport'),
 
 			buttonSave: this.unique('buttonSave')
 
@@ -52,6 +55,7 @@ export default class AB_Work_Interface_List_NewPage extends OP.Component {
 
 		var BlankPage = new AB_Work_Interface_List_NewPage_BlankPage(App);
 		var QuickPage = new AB_Work_Interface_List_NewPage_QuickPage(App);
+		var ReportPage = new AB_Work_Interface_List_NewPage_ReportPage(App);
 
 
 		// Our webix UI definition:
@@ -74,7 +78,8 @@ width: 650,
 						multiview: true,
 						options: [
 							{ id: ids.tabBlank, value: labels.component.blankPage },
-							{ id: ids.tabQuick, value: labels.component.quickPage }
+							{ id: ids.tabQuick, value: labels.component.quickPage },
+							{ id: ids.tabReport, value: labels.component.reportPage }
 						],
 						on: {
 							onChange: function(newTab, oldTab){
@@ -85,7 +90,8 @@ width: 650,
 					{
 						cells: [
 							BlankPage.ui,
-							QuickPage.ui
+							QuickPage.ui,
+							ReportPage.ui
 						]
 					},
 					{
@@ -129,6 +135,7 @@ width: 650,
 
 			BlankPage.init();
 			QuickPage.init();
+			ReportPage.init();
 
 			// register our callbacks:
 			for(var c in _logic.callbacks) {
@@ -157,6 +164,7 @@ width: 650,
 
 				BlankPage.applicationLoad(application);
 				QuickPage.applicationLoad(application);
+				ReportPage.applicationLoad(application);
 			},
 
 
@@ -218,6 +226,7 @@ width: 650,
 
 						BlankPage.clear();
 						QuickPage.clear();
+						ReportPage.clear();
 
 						_logic.hide();
 
@@ -303,6 +312,10 @@ width: 650,
 						case ids.tabQuick:
 							CurrentEditor = QuickPage;
 							QuickPage.show();
+							break;
+						case ids.tabReport:
+							CurrentEditor = ReportPage;
+							ReportPage.show();
 							break;
 					}
 				}

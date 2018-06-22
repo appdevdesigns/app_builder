@@ -7,6 +7,7 @@ import ABObjectQuery from "./ABObjectQuery"
 import ABMobileApp from "./ABMobileApp"
 import ABViewManager from "./ABViewManager"
 import ABViewPage from "./views/ABViewPage"
+import ABViewReportPage from "./views/ABViewReportPage"
 import ABFieldManager from "./ABFieldManager"
 
 
@@ -549,7 +550,9 @@ export default class ABApplication extends ABApplicationBase {
 	pageNew(values) {
 
 		// make sure this is an ABViewPage description
-		values.key = ABViewPage.common().key;
+		if (values.key != ABViewPage.common().key &&
+			values.key != ABViewReportPage.common().key)
+			values.key = ABViewPage.common().key;
 
 		return new ABViewManager.newView(values, this, null);
 	}
