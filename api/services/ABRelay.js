@@ -87,8 +87,26 @@ module.exports = {
             json: true // Automatically stringifies the body to JSON
         };
 
-        var data = opt.data || {};
+        var data = opt.data || opt.params || {};
         options[dataField] = data;
+
+
+
+// default for all https requests
+// (whether using https directly, request, or another module)
+// require('https').globalAgent.options.ca = rootCas;
+// options.globalAgent = {
+//     options:{
+//         ca : rootCas
+//     }
+// }
+//// LEFT OFF HERE:
+// debugging RelayServer to make request to AppBuilder
+// 1) having problems with SSL certs: currently doing this:
+options.rejectUnauthorized = false;
+
+// but that isn't very safe...
+
 
         return options;
     },
@@ -369,6 +387,9 @@ module.exports = {
                 jobToken:request.jobToken
             }
             return ABRelay.post({ url:'/mcc/relayrequest', data:returnPacket })
+        })
+        .catch((err)=>{
+sails.log.error('caught error:', err);
         })
 
         // that's it?
