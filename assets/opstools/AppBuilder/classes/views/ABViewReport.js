@@ -31,9 +31,6 @@ export default class ABViewReport extends ABViewPage {
 	constructor(values, application, parent, defaultValues) {
 		super(values, application, parent, (defaultValues || ABViewDefaults));
 
-		// WORKAROUND : Where should we define this ??
-		webix.cdn = "/js/webix";
-
 		// the report always have 'header', 'detail' and 'footer' panels
 		if (this.views(v => v instanceof ABViewReportPanel).length < 3) {
 
@@ -122,6 +119,11 @@ export default class ABViewReport extends ABViewPage {
 
 			comp.init(options);
 
+			// WORKAROUND : Where should we define this ??
+			// For include html2canvas.js
+			webix.codebase = "";
+			webix.cdn = "/js/webix";
+
 			webix.ui({
 				view: "popup",
 				id: ids.printPopup,
@@ -132,7 +134,8 @@ export default class ABViewReport extends ABViewPage {
 					id: ids.list,
 					view: 'list',
 					data: [
-						{ name: "PDF", icon: "file-pdf-o" }
+						// { name: "PDF", icon: "file-pdf-o" },
+						{ name: "PNG", icon: "file-image-o" }
 					],
 					template: function (obj, common) {
 						return comp.logic.popupItemTemplate(obj, common);
@@ -155,6 +158,12 @@ export default class ABViewReport extends ABViewPage {
 
 		};
 
+		comp.logic.popupHide = () => {
+
+			$$(ids.printPopup).hide();
+
+		};
+
 		comp.logic.popupItemTemplate = (obj, common) => {
 
 			return "<div><i class='fa fa-#icon# webix_icon_btn' aria-hidden='true'></i> #name#</div>"
@@ -166,17 +175,35 @@ export default class ABViewReport extends ABViewPage {
 		comp.logic.print = (name) => {
 
 			switch (name) {
-				case "PDF":
-					webix.toPDF($$(comp.ui.id))
+				// case "PDF":
+				// 	webix.toPDF($$(comp.ui.id),
+				// 		{
+				// 			filename: this.label
+				// 		})
+				// 		.catch(err => {
+				// 			OP.Error.log("System could not export PDF", { error: err });
+				// 		})
+				// 		.fail((err) => {
+				// 			OP.Error.log("System could not export PDF", { error: err });
+				// 		})
+				// 		.then(() => {
+				// 			comp.logic.popupHide();
+				// 		});
+				// 	break;
+				case "PNG":
+					webix.toPNG($$(comp.ui.id),
+						{
+							filename: this.label
+						})
 						.catch(err => {
-							alert('catch: ' + err);
+							OP.Error.log("System could not export PNG", { error: err });
 						})
 						.fail((err) => {
-							alert('fail: ' + err);
+							OP.Error.log("System could not export PNG", { error: err });
 						})
 						.then(() => {
-							alert('ok');
-						});
+							comp.logic.popupHide();
+						})
 					break;
 			}
 
