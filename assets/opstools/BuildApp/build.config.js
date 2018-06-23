@@ -32,11 +32,11 @@ module.exports = {
         "js/vfs_fonts": {
             "format": "global",
             "deps": [
-                "js/pdfmake.min"
+                "js/pdfmake"
             ],
             "sideBundle": true
         },
-        "js/pdfmake.min": {
+        "js/pdfmake": {
             "format": "global",
             "deps": [
             ],
