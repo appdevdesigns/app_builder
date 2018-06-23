@@ -688,12 +688,19 @@ export default class ABViewContainer extends ABView {
 		}
 
 		// add each definition of component to position
-		this.views().forEach(v => {
+		this.views().forEach((v , vIndex) => {
 
 			let x = v.position.x || 0,
-				y = v.position.y || 0;
+				y = v.position.y;
 
-			reportDef.columns[y][x] = v.print();
+			if (y == null)
+				y = vIndex;
+
+			// create a column
+			if (reportDef.columns[x] == null)
+				reportDef.columns[x] = [];
+
+			reportDef.columns[x][y] = v.print();
 
 		});
 

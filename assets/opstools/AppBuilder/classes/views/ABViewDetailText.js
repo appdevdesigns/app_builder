@@ -159,7 +159,7 @@ export default class ABViewDetailText extends ABViewDetailComponent {
 		}
 
 		component.ui.id = ids.component;
-		
+
 		component.ui.css = "ab-text";
 
 		return {
@@ -185,6 +185,50 @@ export default class ABViewDetailText extends ABViewDetailComponent {
 	 */
 	componentList() {
 		return [];
+	}
+
+
+	//// Report ////
+
+	/**
+	 * @method print
+	 * 
+	 * 
+	 * @return {Object} - PDF object definition
+	 */
+	print() {
+
+		var reportDef = {};
+
+		var detailCom = this.detailComponent();
+		if (!detailCom) return reportDef;
+
+		var dc = detailCom.dataCollection();
+		if (!dc) return reportDef;
+
+		var field = this.field();
+		if (!field) return reportDef;
+
+		var text = "";
+		var currData = dc.getCursor();
+		if (currData)
+			text = currData[field.columnName] || "";
+
+		reportDef = {
+			columns: [
+				{
+					bold: true,
+					text: field.label,
+					width: detailCom.settings.labelWidth
+				},
+				{
+					text: text
+				}
+			]
+		};
+
+		return reportDef;
+
 	}
 
 
