@@ -810,6 +810,16 @@ export default class ABViewPage extends ABViewContainer {
             }
         });
         
-	}        
+	}  
+    
+    updateIcon(obj) {
+        // icon of page
+        if (obj.settings.type == 'popup') {
+            obj.icon = "clone";
+        } else {
+            obj.icon = ABViewDefaults.icon;
+        }
+        return obj;
+    }      
 
 }
