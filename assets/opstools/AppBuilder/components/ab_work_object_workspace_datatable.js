@@ -276,8 +276,10 @@ console.warn('!! ToDo: onAfterColumnHide()');
     		var DataTable = $$(ids.component);
     		var throttleCustomDisplay = null;
             var items = [];
-
+            
 			webix.extend(DataTable, webix.ProgressBar);
+
+            DataTable.showProgress();
 
     		DataTable.attachEvent("onAfterRender", function(data){
                 DataTable.resize();
@@ -292,6 +294,7 @@ console.warn('!! ToDo: onAfterColumnHide()');
     					CurrentObject.customDisplays(this.data, App, DataTable, items, settings.isEditable);
     				}
     			}, 350);
+                DataTable.hideProgress();
 
     		});
 
