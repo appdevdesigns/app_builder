@@ -279,8 +279,6 @@ console.warn('!! ToDo: onAfterColumnHide()');
             
 			webix.extend(DataTable, webix.ProgressBar);
 
-            DataTable.showProgress();
-
     		DataTable.attachEvent("onAfterRender", function(data){
                 DataTable.resize();
                 items = [];
