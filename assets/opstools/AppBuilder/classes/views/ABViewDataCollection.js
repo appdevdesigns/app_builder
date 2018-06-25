@@ -1206,6 +1206,15 @@ export default class ABViewDataCollection extends ABView {
 						return false;	// <-- prevent the default "onDataRequest"
 					});
 
+
+					if (component.___AD.onBindUpdateEvent) component.detachEvent(component.___AD.onBindUpdateEvent);
+					component.___AD.onBindUpdateEvent = component.attachEvent("onBindUpdate", (start, count) => {
+
+						if (component.hideProgress)
+							component.hideProgress();
+
+					});
+
 				}
 
 			} else {
