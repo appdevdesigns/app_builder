@@ -1180,6 +1180,15 @@ export default class ABViewDataCollection extends ABView {
 
 
 		if (component.config.view == 'datatable') {
+			
+			if (component.showProgress)
+				component.showProgress({ type: "icon" });
+				
+			dc.attachEvent("onAfterLoad", function() {
+				if (component.hideProgress)
+					component.hideProgress();
+			})
+			
 			if (dc) {
 				component.define("datafetch", 20);
 				component.define("datathrottle", 500);
@@ -1193,11 +1202,15 @@ export default class ABViewDataCollection extends ABView {
 					if (component.___AD.onDataRequestEvent) component.detachEvent(component.___AD.onDataRequestEvent);
 					component.___AD.onDataRequestEvent = component.attachEvent("onDataRequest", (start, count) => {
 
+						if (component.showProgress)
+							component.showProgress({ type: "icon" });
+
 						// load more data to the data collection
 						dc.loadNext(count, start);
 
 						return false;	// <-- prevent the default "onDataRequest"
 					});
+
 
 				}
 

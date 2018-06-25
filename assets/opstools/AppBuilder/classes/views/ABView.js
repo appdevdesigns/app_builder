@@ -1096,6 +1096,21 @@ export default class ABView extends ABViewBase {
 
 	}
 
+
+	//// Report ////
+
+	/**
+	 * @method print
+	 * 
+	 * 
+	 * @return {Object} - PDF object definition
+	 */
+	print() {
+
+		return [];
+
+	}
+
 }
 
 

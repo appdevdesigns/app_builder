@@ -128,35 +128,37 @@ function updateDefaultList(ids, settings = {}) {
 		}
 	});
 
-	// Multiple default selector
-	var domNode = $$(ids.multipleDefault).$view.querySelector('.list-data-values');
-	selectivityRender.selectivityRender(domNode, {
-		multiple: true,
-		data: settings.multipleDefault,
-		placeholder: L('ab.dataField.list.placeholder_multiple', '*Select items'),
-		items: optList.map(function (opt) {
-			return {
-				id: opt.id,
-				text: opt.value,
-				hex: opt.hex
+	if ($$(ids.isMultiple).getValue()) {
+		// Multiple default selector
+		var domNode = $$(ids.multipleDefault).$view.querySelector('.list-data-values');
+		selectivityRender.selectivityRender(domNode, {
+			multiple: true,
+			data: settings.multipleDefault,
+			placeholder: L('ab.dataField.list.placeholder_multiple', '*Select items'),
+			items: optList.map(function (opt) {
+				return {
+					id: opt.id,
+					text: opt.value,
+					hex: opt.hex
+				}
+			})
+		});
+		domNode.addEventListener("change", function(e) {
+			if (e.value.length) {
+				$$(ids.multipleDefault).define("required", false);
+			} else if ($$(ids.multipleDefault).$view.querySelector(".webix_inp_label").classList.contains("webix_required")) {
+				$$(ids.multipleDefault).define("required", true);
 			}
 		})
-	});
-	domNode.addEventListener("change", function(e) {
-		if (e.value.length) {
-			$$(ids.multipleDefault).define("required", false);
-		} else if ($$(ids.multipleDefault).$view.querySelector(".webix_inp_label").classList.contains("webix_required")) {
-			$$(ids.multipleDefault).define("required", true);
-		}
-	})
+	} else {
+		// Single default selector
+		$$(ids.default).define('options', optList);
+		if (settings.default)
+			$$(ids.default).setValue(settings.default);
 
-	// Single default selector
-	$$(ids.default).define('options', optList);
-	if (settings.default)
-		$$(ids.default).setValue(settings.default);
+		$$(ids.default).refresh();
+	}
 
-
-	$$(ids.default).refresh();
 }
 
 /**
