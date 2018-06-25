@@ -1686,6 +1686,64 @@ export default class ABViewGrid extends ABViewWidget  {
 		
 	}
 
+
+	//// Report ////
+
+	/**
+	 * @method print
+	 * 
+	 * 
+	 * @return {Object} - PDF object definition
+	 */
+	print() {
+
+		var reportDef = {};
+
+		var dc = this.dataCollection();
+		if (!dc) return reportDef;
+
+		var object = dc.datasource;
+		if (!object) return reportDef;
+
+		reportDef = {
+			table: {
+				headerRows: 1,
+				widths: [],
+				body: [
+					[] // header
+				]
+			}
+		};
+
+		// TODO: Hidden fields
+		// TODO: Sort fields
+
+		var rowData = dc.getData();
+
+		object.fields().forEach((f, colIndex) => {
+
+			// Headers
+			reportDef.table.widths[colIndex] = 'auto'; // TODO ; width
+			reportDef.table.body[0][colIndex] = f.label;
+
+			// Data
+			rowData.forEach((d, rowIndex) => {
+
+				rowIndex = rowIndex + 1;
+
+				if (reportDef.table.body[rowIndex] == null) 
+					reportDef.table.body[rowIndex] = [];
+
+				reportDef.table.body[rowIndex][colIndex] = d[f.columnName] || "";
+
+			});
+
+		});
+
+		return reportDef;
+
+	}
+
 	// Custom functions needed for UI
 
 	/*
