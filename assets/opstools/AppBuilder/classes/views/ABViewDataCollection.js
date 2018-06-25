@@ -1183,12 +1183,10 @@ export default class ABViewDataCollection extends ABView {
 			
 			if (dc) {
 
-				dc.attachEvent("onBeforeLoad", function() {
-					if (component.showProgress)
-						component.showProgress({ type: "icon" });
-				});
+				if (component.showProgress)
+					component.showProgress({ type: "icon" });
 				
-				dc.attachEvent("onAfterLoad", function() {
+				dc.waitData.then( function() {
 					if (component.hideProgress)
 						component.hideProgress();
 				});
