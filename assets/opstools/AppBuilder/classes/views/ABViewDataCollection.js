@@ -1183,6 +1183,11 @@ export default class ABViewDataCollection extends ABView {
 			
 			if (component.showProgress)
 				component.showProgress({ type: "icon" });
+				
+			dc.attachEvent("onAfterLoad", function() {
+				if (component.hideProgress)
+					component.hideProgress();
+			})
 			
 			if (dc) {
 				component.define("datafetch", 20);
@@ -1206,14 +1211,6 @@ export default class ABViewDataCollection extends ABView {
 						return false;	// <-- prevent the default "onDataRequest"
 					});
 
-
-					if (component.___AD.onBindUpdateEvent) component.detachEvent(component.___AD.onBindUpdateEvent);
-					component.___AD.onBindUpdateEvent = component.attachEvent("onBindUpdate", (start, count) => {
-
-						if (component.hideProgress)
-							component.hideProgress();
-
-					});
 
 				}
 

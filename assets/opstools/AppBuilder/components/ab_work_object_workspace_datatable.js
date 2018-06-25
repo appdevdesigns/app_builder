@@ -292,7 +292,6 @@ console.warn('!! ToDo: onAfterColumnHide()');
     					CurrentObject.customDisplays(this.data, App, DataTable, items, settings.isEditable);
     				}
     			}, 350);
-                DataTable.hideProgress();
 
     		});
 
