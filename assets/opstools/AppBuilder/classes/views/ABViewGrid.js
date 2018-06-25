@@ -1715,16 +1715,26 @@ export default class ABViewGrid extends ABViewWidget  {
 			}
 		};
 
-		// TODO: Hidden fields
-		// TODO: Sort fields
+		// Hidden fields
+		var hiddenFieldNames = [];
+		if (this.settings && 
+			this.settings.objectWorkspace &&
+			this.settings.objectWorkspace.hiddenFields)
+			hiddenFieldNames = this.settings.objectWorkspace.hiddenFields || [];
+
 
 		var rowData = dc.getData();
 
-		object.fields().forEach((f, colIndex) => {
+		var indexField = 0;
+		object.fields().forEach((f) => {
+
+			// Hidden field
+			if (hiddenFieldNames.indexOf(f.columnName) > -1)
+				return;
 
 			// Headers
-			reportDef.table.widths[colIndex] = 'auto'; // TODO ; width
-			reportDef.table.body[0][colIndex] = f.label;
+			reportDef.table.widths[indexField] = 'auto'; // TODO ; width
+			reportDef.table.body[0][indexField] = f.label;
 
 			// Data
 			rowData.forEach((d, rowIndex) => {
@@ -1734,9 +1744,11 @@ export default class ABViewGrid extends ABViewWidget  {
 				if (reportDef.table.body[rowIndex] == null) 
 					reportDef.table.body[rowIndex] = [];
 
-				reportDef.table.body[rowIndex][colIndex] = d[f.columnName] || "";
+				reportDef.table.body[rowIndex][indexField] = d[f.columnName] || "";
 
 			});
+
+			indexField++;
 
 		});
 

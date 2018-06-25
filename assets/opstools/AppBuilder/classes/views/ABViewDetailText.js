@@ -200,19 +200,10 @@ export default class ABViewDetailText extends ABViewDetailComponent {
 
 		var reportDef = {};
 
-		var detailCom = this.detailComponent();
-		if (!detailCom) return reportDef;
-
-		var dc = detailCom.dataCollection();
-		if (!dc) return reportDef;
-
 		var field = this.field();
 		if (!field) return reportDef;
 
-		var text = "";
-		var currData = dc.getCursor();
-		if (currData)
-			text = currData[field.columnName] || "";
+		var text = this.getCurrentData() || "";
 
 		reportDef = {
 			columns: [

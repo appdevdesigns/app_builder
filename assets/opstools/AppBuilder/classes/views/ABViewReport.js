@@ -261,6 +261,10 @@ export default class ABViewReport extends ABViewPage {
 				this.settings.pageMarginsBottom
 			],
 
+			defaultStyle: {
+				columnGap: 20
+			},
+
 			header: [],
 			content: [],
 			footer: []

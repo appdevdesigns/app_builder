@@ -137,4 +137,24 @@ export default class ABViewDetailComponent extends ABViewWidget {
 	}
 
 
+	getCurrentData() {
+
+		var detailCom = this.detailComponent();
+		if (!detailCom) return null;
+
+		var dc = detailCom.dataCollection();
+		if (!dc) return null;
+
+		var field = this.field();
+		if (!field) return null;
+
+		var currData = dc.getCursor();
+		if (currData)
+			return currData[field.columnName];
+		else
+			return null;
+
+	}
+
+
 }
