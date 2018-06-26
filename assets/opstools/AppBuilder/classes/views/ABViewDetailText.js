@@ -188,39 +188,4 @@ export default class ABViewDetailText extends ABViewDetailComponent {
 	}
 
 
-	//// Report ////
-
-	/**
-	 * @method print
-	 * 
-	 * 
-	 * @return {Object} - PDF object definition
-	 */
-	print() {
-
-		var reportDef = {};
-
-		var field = this.field();
-		if (!field) return reportDef;
-
-		var text = this.getCurrentData() || "";
-
-		reportDef = {
-			columns: [
-				{
-					bold: true,
-					text: field.label,
-					width: detailCom.settings.labelWidth
-				},
-				{
-					text: text
-				}
-			]
-		};
-
-		return reportDef;
-
-	}
-
-
 }

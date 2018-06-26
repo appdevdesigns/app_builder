@@ -181,4 +181,65 @@ export default class ABViewDetailImage extends ABViewDetailComponent {
 	}
 
 
+	//// Report ////
+
+	/**
+	 * @method print
+	 * 
+	 * 
+	 * @return {Object} - PDF object definition
+	 */
+	print() {
+
+		var reportDef = {};
+
+		var detailCom = this.detailComponent();
+		if (!detailCom) return reportDef;
+
+		var field = this.field();
+		if (!field) return reportDef;
+
+		var imageData = null,
+			imageUrl = "/opsportal/image/{application}/{image}",
+			image = this.getCurrentData() || "";
+
+		// pull image data
+		if (image) {
+			image = imageUrl
+				.replace("{application}", this.application.name)
+				.replace("{image}", image);
+
+			var img = document.createElement('img');
+			img.setAttribute('src', image);
+
+			var c = document.createElement('canvas');
+			c.height = img.naturalHeight;
+			c.width = img.naturalWidth;
+			var ctx = c.getContext('2d');
+			ctx.drawImage(img, 0, 0, c.width, c.height, 0, 0, c.width, c.height);
+
+			imageData = c.toDataURL();
+		}
+
+
+		reportDef = {
+			columns: [
+				{
+					bold: true,
+					text: field.label,
+					width: detailCom.settings.labelWidth
+				},
+				{
+					image: imageData || '',
+					width: parseInt(field.settings.imageWidth || 20),
+					height: parseInt(field.settings.imageHeight || 20),
+				}
+			]
+		};
+
+		return reportDef;
+
+	}
+
+
 }
