@@ -170,13 +170,13 @@ export default class ABViewDetailComponent extends ABViewWidget {
 		var reportDef = {};
 
 		var detailCom = this.detailComponent();
-		if (!detailCom) return null;
+		if (!detailCom) return reportDef;
 
 		var dc = detailCom.dataCollection();
-		if (!dc) return null;
+		if (!dc) return reportDef;
 
 		var field = this.field();
-		if (!field) return null;
+		if (!field) return reportDef;
 
 		var currData = dc.getCursor();
 
