@@ -1183,8 +1183,11 @@ export default class ABViewDataCollection extends ABView {
 			
 			if (dc) {
 
-				if (component.showProgress)
-					component.showProgress({ type: "icon" });
+				var items = dc.count();
+				if (items == 0) {
+					if (component.showProgress)
+						component.showProgress({ type: "icon" });
+				}
 				
 				dc.attachEvent("onAfterLoad", function() {
 					if (component.hideProgress)
@@ -1195,11 +1198,6 @@ export default class ABViewDataCollection extends ABView {
 				component.define("datathrottle", 500);
 
 				component.data.sync(dc);
-
-				dc.waitData.then(function() {
-					if (component.hideProgress)
-						component.hideProgress();
-				});
 
 				// Implement .onDataRequest for paging loading
 				if (!this.settings.loadAll) {
