@@ -5,15 +5,16 @@
  *
  */
 
-import ABViewWidget from "./ABViewWidget"
 import ABPropertyComponent from "../ABPropertyComponent"
 import ABWorkspaceDatatable from "../../components/ab_work_object_workspace_datatable"
 import ABPopupHideFields from "../../components/ab_work_object_workspace_popupHideFields"
 import ABPopupSortField from "../../components/ab_work_object_workspace_popupSortFields"
 import ABPopupFrozenColumns from "../../components/ab_work_object_workspace_popupFrozenColumns"
 import ABPopupMassUpdate from "../../components/ab_work_object_workspace_popupMassUpdate"
-import ABViewGridFilterMenu from "../rules/ABViewGridFilterMenu"
 import ABPopupSummaryColumns from "../../components/ab_work_object_workspace_popupSummaryColumns"
+import ABViewGridFilterMenu from "../rules/ABViewGridFilterMenu"
+import ABViewWidget from "./ABViewWidget"
+import ABFieldImage from "../dataFields/ABFieldImage"
 
 import RowFilter from '../RowFilter'
 
@@ -1715,16 +1716,26 @@ export default class ABViewGrid extends ABViewWidget  {
 			}
 		};
 
-		// TODO: Hidden fields
-		// TODO: Sort fields
+		// Hidden fields
+		var hiddenFieldNames = [];
+		if (this.settings && 
+			this.settings.objectWorkspace &&
+			this.settings.objectWorkspace.hiddenFields)
+			hiddenFieldNames = this.settings.objectWorkspace.hiddenFields || [];
+
 
 		var rowData = dc.getData();
 
-		object.fields().forEach((f, colIndex) => {
+		var indexField = 0;
+		object.fields().forEach((f) => {
+
+			// Hidden field
+			if (hiddenFieldNames.indexOf(f.columnName) > -1)
+				return;
 
 			// Headers
-			reportDef.table.widths[colIndex] = 'auto'; // TODO ; width
-			reportDef.table.body[0][colIndex] = f.label;
+			reportDef.table.widths[indexField] = 'auto'; // TODO ; width
+			reportDef.table.body[0][indexField] = f.label;
 
 			// Data
 			rowData.forEach((d, rowIndex) => {
@@ -1734,9 +1745,53 @@ export default class ABViewGrid extends ABViewWidget  {
 				if (reportDef.table.body[rowIndex] == null) 
 					reportDef.table.body[rowIndex] = [];
 
-				reportDef.table.body[rowIndex][colIndex] = d[f.columnName] || "";
+
+				// pull image data
+				if (f instanceof ABFieldImage) {
+
+					var imageData = null,
+						imageUrl = "/opsportal/image/{application}/{image}",
+						image = d[f.columnName] || "";
+		
+					if (image) {
+						image = imageUrl
+							.replace("{application}", this.application.name)
+							.replace("{image}", image);
+			
+						var img = document.createElement('img');
+						img.setAttribute('src', image);
+			
+						var c = document.createElement('canvas');
+						c.height = img.naturalHeight;
+						c.width = img.naturalWidth;
+						var ctx = c.getContext('2d');
+						ctx.drawImage(img, 0, 0, c.width, c.height, 0, 0, c.width, c.height);
+			
+						imageData = c.toDataURL();
+
+						if (imageData) {
+							reportDef.table.body[rowIndex][indexField] = {
+								image: imageData,
+								width: parseInt(f.settings.imageWidth || 20),
+								height: parseInt(f.settings.imageHeight || 20)
+							};
+						}
+						else {
+							reportDef.table.body[rowIndex][indexField] = "";
+						}
+					}
+					else {
+						reportDef.table.body[rowIndex][indexField] = "";
+					}
+		
+				}
+				// pull normal data
+				else
+					reportDef.table.body[rowIndex][indexField] = f.format(d);
 
 			});
+
+			indexField++;
 
 		});
 

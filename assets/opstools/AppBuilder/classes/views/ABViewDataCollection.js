@@ -1183,24 +1183,17 @@ export default class ABViewDataCollection extends ABView {
 			
 			if (dc) {
 
-				if (dc.count() == 0) {
+				var items = dc.count();
+				if (items == 0) {
 					if (component.showProgress)
 						component.showProgress({ type: "icon" });
 				}
-				
-				dc.waitData.then( function() {
-					if (dc.count() == 0) {
-						if (component.hideProgress)
-							component.hideProgress();
-					}
-				});
 				
 				dc.attachEvent("onAfterLoad", function() {
 					if (component.hideProgress)
 						component.hideProgress();
 				});
-
-
+				
 				component.define("datafetch", 20);
 				component.define("datathrottle", 500);
 

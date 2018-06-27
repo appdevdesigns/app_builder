@@ -261,6 +261,17 @@ export default class ABViewReport extends ABViewPage {
 				this.settings.pageMarginsBottom
 			],
 
+			defaultStyle: {
+				columnGap: 10
+			},
+
+			// TODO: row gap
+			// styles: {
+			// 	lineSpacing: {
+			// 		margin: [0, 0, 0, 20] // row gap
+			// 	}
+			// },
+
 			header: [],
 			content: [],
 			footer: []
@@ -271,6 +282,7 @@ export default class ABViewReport extends ABViewPage {
 		// pull Header PDF json definition
 		if (views[0]) {
 			docDefinition.header = views[0].print();
+			docDefinition.header.margin = [20, 10];
 		}
 
 		// pull Detail PDF json definition
@@ -281,6 +293,7 @@ export default class ABViewReport extends ABViewPage {
 		// pull Footer PDF json definition
 		if (views[2]) {
 			docDefinition.footer = views[2].print();
+			docDefinition.footer.margin = [20, 0];
 		}
 
 		return docDefinition;
