@@ -380,16 +380,16 @@ export default class ABViewLabel extends ABViewWidget  {
 		// 0 - normal, 1 - title, 2 - description
 		switch (this.settings.format) {
 
-			case this.formatNormal():
+			case 0:
 				reportDef.fontSize = 16;
 				break;
 
-			case this.formatTitle():
+			case 1:
 				reportDef.fontSize = 25;
 				reportDef.bold = true;
 				break;
 
-			case this.formatDescription():
+			case 2:
 				reportDef.fontSize = 14;
 				break;
 
