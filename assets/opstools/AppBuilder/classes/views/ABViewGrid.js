@@ -5,15 +5,16 @@
  *
  */
 
-import ABViewWidget from "./ABViewWidget"
 import ABPropertyComponent from "../ABPropertyComponent"
 import ABWorkspaceDatatable from "../../components/ab_work_object_workspace_datatable"
 import ABPopupHideFields from "../../components/ab_work_object_workspace_popupHideFields"
 import ABPopupSortField from "../../components/ab_work_object_workspace_popupSortFields"
 import ABPopupFrozenColumns from "../../components/ab_work_object_workspace_popupFrozenColumns"
 import ABPopupMassUpdate from "../../components/ab_work_object_workspace_popupMassUpdate"
-import ABViewGridFilterMenu from "../rules/ABViewGridFilterMenu"
 import ABPopupSummaryColumns from "../../components/ab_work_object_workspace_popupSummaryColumns"
+import ABViewGridFilterMenu from "../rules/ABViewGridFilterMenu"
+import ABViewWidget from "./ABViewWidget"
+import ABFieldImage from "../dataFields/ABFieldImage"
 
 import RowFilter from '../RowFilter'
 
@@ -32,6 +33,7 @@ var ABViewGridPropertyComponentDefaults = {
 	allowDelete:0,
 	// isFilterable:0,
 	isSortable:0,
+	isExportable:0,
 	// linkedObject:'',
 	// linkedField:'',
 	// linkedPage:'',
@@ -133,6 +135,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		this.settings.allowDelete = JSON.parse(this.settings.allowDelete || ABViewGridPropertyComponentDefaults.allowDelete);
 		// this.settings.isFilterable = JSON.parse(this.settings.isFilterable || ABViewGridPropertyComponentDefaults.isFilterable);
 		this.settings.isSortable = JSON.parse(this.settings.isSortable || ABViewGridPropertyComponentDefaults.isSortable);
+		this.settings.isExportable = JSON.parse(this.settings.isExportable || ABViewGridPropertyComponentDefaults.isExportable);
 		this.settings.hideHeader = JSON.parse(this.settings.hideHeader || ABViewGridPropertyComponentDefaults.hideHeader);
 		this.settings.labelAsField = JSON.parse(this.settings.labelAsField || ABViewGridPropertyComponentDefaults.labelAsField);
 
@@ -400,6 +403,12 @@ export default class ABViewGrid extends ABViewWidget  {
 							view:"checkbox",
 							name:"isSortable",
 							labelRight: L('ab.component.label.isSortable', '*User can sort records.'),
+							labelWidth: App.config.labelWidthCheckbox
+						},
+						{
+							view:"checkbox",
+							name:"isExportable",
+							labelRight: L('ab.component.label.isExportable', '*User can export.'),
 							labelWidth: App.config.labelWidthCheckbox
 						},
 					]
@@ -691,6 +700,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		$$(ids.allowDelete).setValue(view.settings.allowDelete);
 		// $$(ids.isFilterable).setValue(view.settings.isFilterable);
 		$$(ids.isSortable).setValue(view.settings.isSortable);
+		$$(ids.isExportable).setValue(view.settings.isExportable);
 		// $$(ids.linkedObject).setValue(view.settings.linkedObject);
 		// $$(ids.linkedField).setValue(view.settings.linkedField);
 		// $$(ids.linkedPage).setValue(view.settings.linkedPage);
@@ -745,6 +755,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		view.settings.allowDelete = $$(ids.allowDelete).getValue();
 		// view.settings.isFilterable = $$(ids.isFilterable).getValue();
 		view.settings.isSortable = $$(ids.isSortable).getValue();
+		view.settings.isExportable = $$(ids.isExportable).getValue();
 		// view.settings.linkedObject = $$(ids.linkedObject).getValue();
 		// view.settings.linkedField = $$(ids.linkedField).getValue();
 		// view.settings.linkedPage = $$(ids.linkedPage).getValue();
@@ -815,9 +826,11 @@ export default class ABViewGrid extends ABViewWidget  {
 			buttonFilter: App.unique(idBase+'_buttonFilter'),
 			buttonMassUpdate: App.unique(idBase+'_buttonMassUpdate'),
 			buttonSort: App.unique(idBase+'_buttonSort'),
+			buttonExport: App.unique(idBase+'_buttonExport'),
 
 			filterMenutoolbar: App.unique(idBase+'_filterMenuToolbar'),
-			resetFilterButton: App.unique(idBase+'_resetFilterButton')
+			resetFilterButton: App.unique(idBase+'_resetFilterButton'),
+			popupExport: App.unique(idBase+'_popupExport')
 
 		}
 		
@@ -879,9 +892,41 @@ export default class ABViewGrid extends ABViewWidget  {
 			hidden: true,
 			body: rowFilter.ui
 		});
+		var export_popup = webix.ui({
+			view: "popup",
+			id: ids.popupExport,
+			width: 160,
+			height: 180,
+			select: false,
+			hidden: true,
+			body: {
+				id: ids.list,
+				view: 'list',
+				data: [
+					{ name: "CSV", icon: "file-excel-o" },
+					{ name: "Excel", icon: "file-excel-o" },
+					{ name: "PDF", icon: "file-pdf-o" },
+					{ name: "PNG", icon: "file-image-o" }
+				],
+				template: "<div><i class='fa fa-#icon# webix_icon_btn' aria-hidden='true'></i> #name#</div>",
+				on: {
+					onItemClick: function (id, e, node) {
+						var component = this.getItem(id);
+
+						_logic.export(component.name);
+					}
+				}
+			}
+		});
 
 
 		var _init = () => {
+
+			// WORKAROUND : Where should we define this ??
+			// For include PDF.js
+			webix.codebase = "";
+			webix.cdn = "/js/webix";
+			
 
 			if (this.settings.dataSource != "") {
 				DataTable.init({
@@ -900,7 +945,10 @@ export default class ABViewGrid extends ABViewWidget  {
 					onChange:_logic.callbackFilterData		// be notified when there is a change in the filter
 				});
 				
-				if (this.settings.massUpdate == false && this.settings.isSortable == false && this.settings.gridFilter.filterOption != 1 ) {
+				if (this.settings.massUpdate == false &&
+					this.settings.isSortable == false &&
+					this.settings.isExportable == false &&
+					this.settings.gridFilter.filterOption != 1 ) {
 					$$(ids.toolbar).hide();
 				}
 				
@@ -919,6 +967,10 @@ export default class ABViewGrid extends ABViewWidget  {
 				
 				if (this.settings.isSortable == false) {
 					$$(ids.buttonSort).hide();
+				}
+
+				if (this.settings.isExportable == false) {
+					$$(ids.buttonExport).hide();
 				}
 				
 				if (this.settings.hideHeader == true) {
@@ -1091,6 +1143,18 @@ export default class ABViewGrid extends ABViewWidget  {
 									_logic.toolbarSort(this.$view);
 								}
 							},
+							{
+								view: "button",
+								id: ids.buttonExport,
+								label: L("ab.component.label.export", "*Export"),
+								icon: "print",
+								type: "icon",
+								badge: 0,
+								autowidth: true,
+								click: function () {
+									_logic.toolbarExport(this.$view);
+								}
+							},
 							/*
 							{
 								view: view,
@@ -1244,6 +1308,10 @@ export default class ABViewGrid extends ABViewWidget  {
 				PopupSortDataTableComponent.show($view);
 			},
 
+			toolbarExport: ($view) => {
+				export_popup.show($view);
+			},
+
 			toolbarMassUpdate: function ($view) {
 				PopupMassUpdateComponent.show($view);
 			},
@@ -1270,6 +1338,46 @@ export default class ABViewGrid extends ABViewWidget  {
 				hiddenQB.destructor();	// remove the QB 
 
 				$$(DataTable.ui.id).filter(QBHelper);
+			},
+
+			export: (name) => {
+
+				var fnExport;
+
+				switch(name) {
+					case "CSV":
+						fnExport = webix.toCSV($$(DataTable.ui.id), {
+							filename: this.label
+						});
+						break;
+					case "Excel":
+						fnExport = webix.toExcel($$(DataTable.ui.id), {
+							filename: this.label,
+							filterHTML: true
+						});
+						break;
+					case "PDF":
+						fnExport = webix.toPDF($$(DataTable.ui.id), {
+							filename: this.label,
+							filterHTML: true
+						});
+						break;
+					case "PNG":
+						fnExport = webix.toPNG($$(DataTable.ui.id), {
+							filename: this.label
+						});
+						break;
+				}
+
+				fnExport
+					.catch(err => {
+						OP.Error.log("System could not export " + name, { error: err });
+					})
+					.fail((err) => {
+						OP.Error.log("System could not export " + name, { error: err });
+					})
+					.then(() => { export_popup.hide() });
+
 			}
 
 		}
@@ -1577,6 +1685,118 @@ export default class ABViewGrid extends ABViewWidget  {
 		cb(null, shouldSave);
 		
 		
+	}
+
+
+	//// Report ////
+
+	/**
+	 * @method print
+	 * 
+	 * 
+	 * @return {Object} - PDF object definition
+	 */
+	print() {
+
+		var reportDef = {};
+
+		var dc = this.dataCollection();
+		if (!dc) return reportDef;
+
+		var object = dc.datasource;
+		if (!object) return reportDef;
+
+		reportDef = {
+			table: {
+				headerRows: 1,
+				widths: [],
+				body: [
+					[] // header
+				]
+			}
+		};
+
+		// Hidden fields
+		var hiddenFieldNames = [];
+		if (this.settings && 
+			this.settings.objectWorkspace &&
+			this.settings.objectWorkspace.hiddenFields)
+			hiddenFieldNames = this.settings.objectWorkspace.hiddenFields || [];
+
+
+		var rowData = dc.getData();
+
+		var indexField = 0;
+		object.fields().forEach((f) => {
+
+			// Hidden field
+			if (hiddenFieldNames.indexOf(f.columnName) > -1)
+				return;
+
+			// Headers
+			reportDef.table.widths[indexField] = 'auto'; // TODO ; width
+			reportDef.table.body[0][indexField] = f.label;
+
+			// Data
+			rowData.forEach((d, rowIndex) => {
+
+				rowIndex = rowIndex + 1;
+
+				if (reportDef.table.body[rowIndex] == null) 
+					reportDef.table.body[rowIndex] = [];
+
+
+				// pull image data
+				if (f instanceof ABFieldImage) {
+
+					var imageData = null,
+						imageUrl = "/opsportal/image/{application}/{image}",
+						image = d[f.columnName] || "";
+		
+					if (image) {
+						image = imageUrl
+							.replace("{application}", this.application.name)
+							.replace("{image}", image);
+			
+						var img = document.createElement('img');
+						img.setAttribute('src', image);
+			
+						var c = document.createElement('canvas');
+						c.height = img.naturalHeight;
+						c.width = img.naturalWidth;
+						var ctx = c.getContext('2d');
+						ctx.drawImage(img, 0, 0, c.width, c.height, 0, 0, c.width, c.height);
+			
+						imageData = c.toDataURL();
+
+						if (imageData) {
+							reportDef.table.body[rowIndex][indexField] = {
+								image: imageData,
+								width: parseInt(f.settings.imageWidth || 20),
+								height: parseInt(f.settings.imageHeight || 20)
+							};
+						}
+						else {
+							reportDef.table.body[rowIndex][indexField] = "";
+						}
+					}
+					else {
+						reportDef.table.body[rowIndex][indexField] = "";
+					}
+		
+				}
+				// pull normal data
+				else
+					reportDef.table.body[rowIndex][indexField] = f.format(d);
+
+			});
+
+			indexField++;
+
+		});
+
+		return reportDef;
+
 	}
 
 	// Custom functions needed for UI

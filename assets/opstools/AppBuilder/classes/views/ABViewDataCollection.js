@@ -1020,14 +1020,19 @@ export default class ABViewDataCollection extends ABView {
 
 		AD.comm.hub.subscribe('ab.datacollection.update', (msg, data) => {
 
-			if (this.datasource &&
-				this.datasource.id != data.objectId)
+			if (!this.datasource)
+			 	return;
+			
+			if (this.datasource.id != data.objectId)
 				return;
 
 			// updated values
 			var values = data.data;
 			if (!values) return;
-
+			
+			// filter condition before update 
+			if (!this.__filterComponent.isValid(values))
+				return;
 
 			if (this.__dataCollection.exists(values.id)) {
 				// normalize data before update data collection
@@ -1040,6 +1045,10 @@ export default class ABViewDataCollection extends ABView {
 				if (currData && currData.id == values.id) {
 					this.emit("changeCursor", currData);
 				}
+			} else {
+				// this means the updated record was not loaded yet so we are adding it to the top of the grid
+				// the placemet will probably change on the next load of the data
+				this.__dataCollection.add(values, 0);
 			}
 
 			// filter link data collection's cursor
@@ -1171,7 +1180,20 @@ export default class ABViewDataCollection extends ABView {
 
 
 		if (component.config.view == 'datatable') {
+			
 			if (dc) {
+
+				var items = dc.count();
+				if (items == 0) {
+					if (component.showProgress)
+						component.showProgress({ type: "icon" });
+				}
+				
+				dc.attachEvent("onAfterLoad", function() {
+					if (component.hideProgress)
+						component.hideProgress();
+				});
+				
 				component.define("datafetch", 20);
 				component.define("datathrottle", 500);
 
@@ -1184,11 +1206,15 @@ export default class ABViewDataCollection extends ABView {
 					if (component.___AD.onDataRequestEvent) component.detachEvent(component.___AD.onDataRequestEvent);
 					component.___AD.onDataRequestEvent = component.attachEvent("onDataRequest", (start, count) => {
 
+						if (component.showProgress)
+							component.showProgress({ type: "icon" });
+
 						// load more data to the data collection
 						dc.loadNext(count, start);
 
 						return false;	// <-- prevent the default "onDataRequest"
 					});
+
 
 				}
 

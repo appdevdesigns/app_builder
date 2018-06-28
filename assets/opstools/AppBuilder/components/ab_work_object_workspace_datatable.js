@@ -276,7 +276,7 @@ console.warn('!! ToDo: onAfterColumnHide()');
     		var DataTable = $$(ids.component);
     		var throttleCustomDisplay = null;
             var items = [];
-
+            
 			webix.extend(DataTable, webix.ProgressBar);
 
     		DataTable.attachEvent("onAfterRender", function(data){

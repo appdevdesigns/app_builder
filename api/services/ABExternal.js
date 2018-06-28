@@ -72,6 +72,31 @@ function getPrimaryKey(knex, tableName, connName='appBuilder') {
 
 }
 
+
+/**
+ * @method getModelName
+ * 
+ * @param {string} tableName 
+ * 
+ * @return {string} Model name
+ */
+function getModelName(tableName) {
+
+	var result = "";
+
+	Object.keys(sails.models).forEach(modelName => {
+
+		var m = sails.models[modelName];
+
+		if (m.tableName == tableName)
+			result = modelName;
+
+	});
+
+	return result;
+
+}
+
 /**
  * @method getAssociations
  * Get associations of sails.model from table name
@@ -667,6 +692,7 @@ module.exports = {
 
 				return new Promise((resolve, reject) => {
 
+					var modelName = getModelName(tableName);
 					let associations = getAssociations(tableName);
 
 					Object.keys(columns).forEach(colName => {
@@ -727,8 +753,9 @@ module.exports = {
 
 								if (associateInfo.type == 'model') {
 									targetModel = sails.models[associateInfo.model];
-
-									targetAssociate = targetModel.associations.filter(asso => asso.via == colName)[0];
+									targetAssociate = targetModel.associations.filter(asso => {
+										return asso.collection == modelName && asso.via == colName;
+									})[0];
 									if (targetAssociate) {
 										targetColName = targetAssociate.alias;
 										targetType = targetAssociate.type;
@@ -749,6 +776,10 @@ module.exports = {
 								// Get id of ABObject and ABColumn
 								let targetObj = (application.json.objects || []).filter(o => o.tableName == targetModel.tableName)[0];
 								if (!targetObj)
+									return;
+
+								// prevent duplicate
+								if ((targetObj.fields || []).filter(f => f.columnName == targetColName)[0])
 									return;
 
 								colData.settings.linkObject = targetObj.id; // ABObject.id
@@ -781,7 +812,7 @@ module.exports = {
 								targetObj.fields.push(targetColData);
 
 								// Refresh the target model
-								let targetObjClass = new ABObject(targetObj, application.toABClass());
+								let targetObjClass = new ABObjectExternal(targetObj, application.toABClass());
 								targetObjClass.modelRefresh();
 
 							}

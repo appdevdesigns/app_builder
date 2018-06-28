@@ -6,16 +6,17 @@ module.exports = {
 		"opstools/BuildApp"
 	],
 	"meta": {
-		"opstools/BuildApp/OP_Bundle" : {
-            "format": "global",
-            "sideBundle": true
-        },
+		"opstools/BuildApp/OP_Bundle": {
+			"format": "global",
+			"sideBundle": true
+		},
 		"opstools/BuildApp": {
 			"deps": [
 				"async",
 				"webix",
 				"js/webix/extras/tinymce",
 				"js/selectivity/selectivity.min",
+				"js/vfs_fonts",
 				"OpsPortal/classes/OpsWebixDataCollection",
 				"opstools/BuildApp/OP_Bundle"
 			],
@@ -27,6 +28,19 @@ module.exports = {
 				"js/selectivity/selectivity.min.css"
 			],
 			"sideBundle": true
-		}
+		},
+        "js/vfs_fonts": {
+            "format": "global",
+            "deps": [
+                "js/pdfmake"
+            ],
+            "sideBundle": true
+        },
+        "js/pdfmake": {
+            "format": "global",
+            "deps": [
+            ],
+            "sideBundle": true
+        }
 	}
 };

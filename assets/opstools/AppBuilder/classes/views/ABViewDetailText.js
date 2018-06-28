@@ -159,7 +159,7 @@ export default class ABViewDetailText extends ABViewDetailComponent {
 		}
 
 		component.ui.id = ids.component;
-		
+
 		component.ui.css = "ab-text";
 
 		return {

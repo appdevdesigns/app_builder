@@ -137,4 +137,67 @@ export default class ABViewDetailComponent extends ABViewWidget {
 	}
 
 
+	getCurrentData() {
+
+		var detailCom = this.detailComponent();
+		if (!detailCom) return null;
+
+		var dc = detailCom.dataCollection();
+		if (!dc) return null;
+
+		var field = this.field();
+		if (!field) return null;
+
+		var currData = dc.getCursor();
+		if (currData)
+			return currData[field.columnName];
+		else
+			return null;
+
+	}
+
+
+	//// Report ////
+
+	/**
+	 * @method print
+	 * 
+	 * 
+	 * @return {Object} - PDF object definition
+	 */
+	print() {
+
+		var reportDef = {};
+
+		var detailCom = this.detailComponent();
+		if (!detailCom) return null;
+
+		var dc = detailCom.dataCollection();
+		if (!dc) return null;
+
+		var field = this.field();
+		if (!field) return null;
+
+		var currData = dc.getCursor();
+
+		var text = (field.format(currData) || "");
+
+		reportDef = {
+			columns: [
+				{
+					bold: true,
+					text: field.label,
+					width: detailCom.settings.labelWidth
+				},
+				{
+					text: text
+				}
+			]
+		};
+
+		return reportDef;
+
+	}
+
+
 }

@@ -405,6 +405,7 @@ export default class ABViewMenu extends ABViewWidget {
 
 		var _ui = {
 			type: "form",
+			borderless:true,
 			rows: [
 				{
 					id: ids.component,
