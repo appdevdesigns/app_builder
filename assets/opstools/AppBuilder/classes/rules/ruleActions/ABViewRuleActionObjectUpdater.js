@@ -520,7 +520,7 @@ fieldField.refresh();
 										on: {
 											'onChange': (newv, oldv) => {
 												var selectedDataCollections = this.currentForm.pageRoot().dataCollections((dc)=>{ return dc.id == newv;})[0];
-												if (selectedDataCollections.sourceType == "query") {
+												if (selectedDataCollections && selectedDataCollections.sourceType == "query") {
 													var queryFieldOptions = [];
 													selectedDataCollections.datasource.fields().forEach((f)=>{
 														queryFieldOptions.push({ id: f.id, value: f.label })
