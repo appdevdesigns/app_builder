@@ -156,7 +156,7 @@ class ABFieldNumber extends ABField {
 			(resolve, reject) => {
 
 				var tableName = this.object.dbTableName();
-				var defaultTo = parseInt(this.settings.default);
+				var defaultTo = parseInt(this.settings.default) || 0;
 
 
 				// if this column doesn't already exist (you never know)
@@ -190,12 +190,13 @@ class ABFieldNumber extends ABField {
 							}
 
 							// set default value
-							if (defaultTo != null) {
-								currCol.defaultTo(defaultTo);
-							}
-							else {
-								currCol.defaultTo(null);
-							}
+							currCol.defaultTo(defaultTo);
+							// if (defaultTo != null) {
+							// 	currCol.defaultTo(defaultTo);
+							// }
+							// else {
+							// 	currCol.defaultTo(null);
+							// }
 
 							if (exists) {
 								currCol.alter();

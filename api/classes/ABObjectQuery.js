@@ -729,8 +729,18 @@ module.exports = class ABObjectQuery extends ABObject {
 
 			//// Add in our fields:
 			if (!options.ignoreIncludeColumns) { // get count of rows does not need to include columns
+
 				var selects = [];
 				var columns = [];
+
+				// { 
+				//	objectName: {
+				//		object: {ABObject},
+				// 		transColumns: ['string']
+				//	}
+				//}
+				var externalTrans = {}; 
+
 				this.fields().forEach((f) => {
 
 					if (!f)
@@ -850,8 +860,26 @@ module.exports = class ABObjectQuery extends ABObject {
 
 						var columnName = f.columnName;
 
-						if (f.isMultilingual)
-							columnName = 'translations';
+						if (f.isMultilingual) {
+							if (obj.isExternal) {
+
+								if (externalTrans[obj.name] == null) {
+									externalTrans[obj.name] = {
+										object: obj,
+										transColumns: []
+									};
+								}
+
+								// store trans column of external object
+								// create query command below..
+								externalTrans[obj.name].transColumns.push(columnName);
+
+								return;
+							}
+							else {
+								columnName = 'translations';
+							}
+						}
 
 						var field = ("{tableName}.{columnName}" +
 							" as {objectName}.{displayName}") // add object's name to alias
@@ -865,6 +893,44 @@ module.exports = class ABObjectQuery extends ABObject {
 					}
 
 				});
+
+				// SPECIAL CASE: Query translation of the external object
+				Object.keys(externalTrans).forEach(objName => {
+
+					var transInfo = externalTrans[objName],
+						obj = transInfo.object;
+
+					// JSON_OBJECT('language_code', `language_code`, ..., )
+					var queryCommand = "";
+
+					// pull `language_code` column too
+					transInfo.transColumns.push('language_code');
+
+					transInfo.transColumns.forEach((transCol, index) => {
+
+						if (index > 0)
+							queryCommand += ',';
+
+						queryCommand += ("'{colName}', `{colName}`".replace(/{colName}/g, transCol));
+
+					});
+
+					var transField = ("(SELECT CONCAT(" +
+									"'[',JSON_OBJECT(" + queryCommand + "),']')" +
+									" FROM `{linkTableName}`" +
+									" WHERE `{linkTableName}`.`{linkColumnName}` = `{baseTableName}`.`{baseColumnName}`)" +
+									" as `{objectName}.{displayName}`") // add object's name to alias
+									.replace(/{linkTableName}/g, obj.dbTransTableName())
+									.replace(/{linkColumnName}/g, obj.transColumnName)
+									.replace(/{baseTableName}/g, obj.dbTableName())
+									.replace(/{baseColumnName}/g, obj.PK())
+									.replace(/{objectName}/g, obj.name)
+									.replace(/{displayName}/g, "translations");
+
+					selects.push(ABMigration.connection().raw(transField));
+
+				});
+
 
 				query.column(columns);
 				query.select(selects);
