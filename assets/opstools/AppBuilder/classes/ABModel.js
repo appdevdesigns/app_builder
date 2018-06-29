@@ -690,7 +690,8 @@ reject(err);
 				// set .id to relation columns
 				let objectLink = c.datasourceLink;
 				if (objectLink.PK() != 'id' &&
-					d[relationName]) {
+					d[relationName] &&
+					!d[relationName].id) {
 
 						// is array
 						if (d[relationName].forEach) {
