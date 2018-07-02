@@ -652,7 +652,7 @@ reject(err);
 			if (d == null) return;
 
 			// various PK name
-			if (this.object.PK() != 'id')
+			if (!d.id && this.object.PK() != 'id')
 				d.id = d[this.object.PK()];
 
 			// loop through data's connected fields
