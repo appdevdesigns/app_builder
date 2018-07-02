@@ -678,12 +678,11 @@ reject(err);
 							r.translations = JSON.parse(r.translations);
 						}
 					});
-				} else {
-					// if the data is not an array it is a single item...check that has translations and it is a string
-					if (d[relationName].translations  && typeof d[relationName].translations == "string") {
-						// if so parse the string into an object
-						d[relationName].translations = JSON.parse(d[relationName].translations);
-					}
+				// if the data is not an array it is a single item...check that has translations and it is a string
+				} 
+				else if (d[relationName].translations  && typeof d[relationName].translations == "string") {
+					// if so parse the string into an object
+					d[relationName].translations = JSON.parse(d[relationName].translations);
 				}
 
 
@@ -696,11 +695,16 @@ reject(err);
 						// is array
 						if (d[relationName].forEach) {
 							d[relationName].forEach(subData => {
-								subData.id = subData[objectLink.PK()];
+
+								if (subData[objectLink.PK()])
+									subData.id = subData[objectLink.PK()];
+
 							})
 						}
-						else {
+						else if (d[relationName][objectLink.PK()]) {
+
 							d[relationName].id = d[relationName][objectLink.PK()];
+
 						}
 
 					}
