@@ -915,8 +915,9 @@ module.exports = class ABObjectQuery extends ABObject {
 
 					});
 
-					var transField = ("(SELECT CONCAT(" +
-									"'[',JSON_OBJECT(" + queryCommand + "),']')" +
+					var transField = ("(SELECT CONCAT('[', " +
+									"	GROUP_CONCAT(JSON_OBJECT(" + queryCommand + "))" +
+									", ']')" +
 									" FROM `{linkTableName}`" +
 									" WHERE `{linkTableName}`.`{linkColumnName}` = `{baseTableName}`.`{baseColumnName}`)" +
 									" as `{objectName}.{displayName}`") // add object's name to alias
