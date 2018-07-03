@@ -345,30 +345,37 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 
 				var options = [];
 				if (this.updateObject) {
-
-					options = (this.updateObject.fields() || [])
-					.filter(f => {
-
-						if (f.key != 'connectObject') {
-							return true;
-						} else {
-							// if this is a connection field, only return
-							// fields that are 1:x  where this field is the
-							// source:
-							// return ((f.linkType() == 'one') && (f.isSource()))
-							
-							// 6-14-2018 Changing from only 1:x to support many
-							// if this is a connected field, only return
-							// fields that this is the source
-							return (f.isSource())
-						}
-					})
-					.map(f => {
+					
+					options = (this.updateObject.fields() || []).map(f => {
 						return {
 							id: f.id,
 							value: f.label
 						};
 					});
+
+					// options = (this.updateObject.fields() || [])
+					// .filter(f => {
+					// 
+					// 	if (f.key != 'connectObject') {
+					// 		return true;
+					// 	} else {
+					// 		// if this is a connection field, only return
+					// 		// fields that are 1:x  where this field is the
+					// 		// source:
+					// 		// return ((f.linkType() == 'one') && (f.isSource()))
+					// 
+					// 		// 6-14-2018 Changing from only 1:x to support many
+					// 		// if this is a connected field, only return
+					// 		// fields that this is the source
+					// 		return (f.isSource())
+					// 	}
+					// })
+					// .map(f => {
+					// 	return {
+					// 		id: f.id,
+					// 		value: f.label
+					// 	};
+					// });
 
 					// Remove fields who are selected
 					if (shouldFilter) {
@@ -520,7 +527,7 @@ fieldField.refresh();
 										on: {
 											'onChange': (newv, oldv) => {
 												var selectedDataCollections = this.currentForm.pageRoot().dataCollections((dc)=>{ return dc.id == newv;})[0];
-												if (selectedDataCollections.sourceType == "query") {
+												if (selectedDataCollections && selectedDataCollections.sourceType == "query") {
 													var queryFieldOptions = [];
 													selectedDataCollections.datasource.fields().forEach((f)=>{
 														queryFieldOptions.push({ id: f.id, value: f.label })
@@ -577,8 +584,9 @@ fieldField.refresh();
 											
 											var collectionId = $$(ids.value).getValue();
 											var dataCollection = this.currentForm.pageRoot().dataCollections((dc)=>{ return dc.id == collectionId;})[0];
-											
-											_logic.populateFilters(dataCollection);
+											if (dataCollection) {
+												_logic.populateFilters(dataCollection);
+											}
 										}
 									}
 								}
@@ -646,7 +654,9 @@ fieldField.refresh();
 						if (selectBy != "select-one") {
 							var collectionId = data.value;
 							var dataCollection = this.currentForm.pageRoot().dataCollections((dc)=>{ return dc.id == collectionId;})[0];
-							_logic.populateFilters(dataCollection, data.filterConditions);
+							if (dataCollection && data.filterConditions) {
+								_logic.populateFilters(dataCollection, data.filterConditions);
+							}
 						}
 
 					} else {

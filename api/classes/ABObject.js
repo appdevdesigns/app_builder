@@ -1020,13 +1020,14 @@ module.exports = class ABObject extends ABObjectBase {
 				.filter((f) => f.fieldLink() != null)
 				.map((f) => f.relationName());
 
+			// TODO: Move to ABObjectExternal
+			if (this.isExternal && this.transColumnName) {
+				relationNames.push('translations');
+			}
+
 			if (relationNames.length > 0)
 				query.eager('[#fieldNames#]'.replace('#fieldNames#', relationNames.join(', ')));
 
-			// TODO: Move to ABObjectExternal
-			if (this.isExternal && this.transColumnName) {
-				query.eager('translations');
-			}
 
 	    }
 
