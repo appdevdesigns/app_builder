@@ -13,6 +13,7 @@ import ABViewChartLine from "./views/ABViewChartLine"
 import ABViewChartArea from "./views/ABViewChartArea"
 import ABViewContainer from "./views/ABViewContainer"
 import ABViewDataCollection from "./views/ABViewDataCollection"
+import ABViewDataview from "./views/ABViewDataview"
 import ABViewPage from "./views/ABViewPage"
 import ABViewLabel from "./views/ABViewLabel"
 import ABViewLayout from "./views/ABViewLayout"
@@ -60,6 +61,7 @@ Views[ABViewChartArea.common().key] = ABViewChartArea;
 
 Views[ABViewContainer.common().key] = ABViewContainer;
 Views[ABViewDataCollection.common().key] = ABViewDataCollection;
+Views[ABViewDataview.common().key] = ABViewDataview;
 Views[ABViewPage.common().key] = ABViewPage;
 Views[ABViewLabel.common().key] = ABViewLabel;
 Views[ABViewLayout.common().key] = ABViewLayout;
