@@ -95,6 +95,9 @@ module.exports = class ABObjectExternal extends ABObject {
 										case 'blob':
 											fnName = 'binary';
 											break;
+										case 'char':
+											fnName = 'string';
+											break;
 									}
 
 									// set PK to auto increment
@@ -103,7 +106,12 @@ module.exports = class ABObjectExternal extends ABObject {
 										fnName = 'increments';
 
 									// create new column
-									var newCol = t[fnName](colName);
+									var newCol;
+									if (fnName == 'string' && colInfo.maxLength)
+										newCol = t[fnName](colName, colInfo.maxLength);
+									else 
+										newCol = t[fnName](colName);
+
 
 									if (colInfo.defaultValue)
 										newCol.defaultTo(colInfo.defaultValue);

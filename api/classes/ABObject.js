@@ -1016,9 +1016,21 @@ module.exports = class ABObject extends ABObjectBase {
 		if (options.includeRelativeData &&
 			query.eager) {
 
-			var relationNames = this.connectFields()
-				.filter((f) => f.fieldLink() != null)
-				.map((f) => f.relationName());
+			var relationNames = [];
+			
+			this.connectFields()
+				.filter(f => f.fieldLink() != null)
+				.forEach(f => {
+
+					relationNames.push(f.relationName());
+
+					// Get translation data of External object
+					if (f.datasourceLink &&
+						f.datasourceLink.isExternal &&
+						f.datasourceLink.transColumnName)
+						relationNames.push(f.relationName()+ '.[translations]');
+
+				});
 
 			// TODO: Move to ABObjectExternal
 			if (this.isExternal && this.transColumnName) {
