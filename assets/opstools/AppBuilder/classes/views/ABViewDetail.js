@@ -35,9 +35,9 @@ export default class ABViewDetail extends ABViewContainer {
 	 * @param {ABApplication} application the application object this view is under
 	 * @param {ABView} parent the ABView this view is a child of. (can be null)
 	 */
-	constructor(values, application, parent) {
+	constructor(values, application, parent, defaultValues) {
 
-		super(values, application, parent, ABViewDetailDefaults);
+		super(values, application, parent, (defaultValues || ABViewDetailDefaults));
 
 	}
 
@@ -320,11 +320,6 @@ export default class ABViewDetail extends ABViewContainer {
 	* @return {obj } UI component
 	*/
 	component(App) {
-
-		var idBase = 'ABViewDetail_' + this.id;
-		var ids = {
-			component: App.unique(idBase + '_component'),
-		}
 
 		// get webix.dashboard
 		var container = super.component(App);

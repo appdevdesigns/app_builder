@@ -180,7 +180,8 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 							$parentItem = $$(ids.tree).getItem(parentItemId);
 
 						// prevent looping
-						if (// - check duplicate include object in branch
+						if (f.datasourceLink == null ||
+							// - check duplicate include object in branch
 							existsObjIds.indexOf(f.datasourceLink.id) > -1)
 							return;
 

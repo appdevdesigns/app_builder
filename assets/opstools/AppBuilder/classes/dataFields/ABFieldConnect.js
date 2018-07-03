@@ -876,7 +876,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 				});
 
 			}
-			else {
+			else if (row[relationName].id) {
 				selectedData = row[relationName];
 				selectedData.text = (selectedData.text || linkedObject.displayData(selectedData));
 			}

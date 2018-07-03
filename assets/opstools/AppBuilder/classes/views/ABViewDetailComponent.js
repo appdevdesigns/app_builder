@@ -114,18 +114,22 @@ export default class ABViewDetailComponent extends ABViewWidget {
 	}
 
 	detailComponent() {
-		var form = null;
+		var detailView = null;
 
 		var curr = this;
-		while (curr.key != 'detail' && !curr.isRoot() && curr.parent) {
+		while (!curr.isRoot() && 
+				curr.parent && 
+				curr.key != 'detail' && 
+				curr.key != 'dataview') {
+
 			curr = curr.parent;
 		}
 
-		if (curr.key == 'detail') {
-			form = curr;
+		if (curr.key == 'detail' || curr.key == 'dataview') {
+			detailView = curr;
 		}
 
-		return form;
+		return detailView;
 	}
 
 	field() {
@@ -170,13 +174,13 @@ export default class ABViewDetailComponent extends ABViewWidget {
 		var reportDef = {};
 
 		var detailCom = this.detailComponent();
-		if (!detailCom) return null;
+		if (!detailCom) return reportDef;
 
 		var dc = detailCom.dataCollection();
-		if (!dc) return null;
+		if (!dc) return reportDef;
 
 		var field = this.field();
-		if (!field) return null;
+		if (!field) return reportDef;
 
 		var currData = dc.getCursor();
 
