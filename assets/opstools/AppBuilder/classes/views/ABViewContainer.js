@@ -676,7 +676,7 @@ export default class ABViewContainer extends ABView {
 
 	//// Report ////
 
-	print() {
+	print(rowData) {
 
 		var reportDef = {
 			columns: []
@@ -695,7 +695,7 @@ export default class ABViewContainer extends ABView {
 			if (reportDef.columns[x] == null)
 				reportDef.columns[x] = [];
 
-			reportDef.columns[x][y] = v.print();
+			reportDef.columns[x][y] = v.print(rowData);
 
 		});
 

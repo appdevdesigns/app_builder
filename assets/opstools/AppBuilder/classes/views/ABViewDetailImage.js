@@ -189,7 +189,7 @@ export default class ABViewDetailImage extends ABViewDetailComponent {
 	 * 
 	 * @return {Object} - PDF object definition
 	 */
-	print() {
+	print(dataRow) {
 
 		var reportDef = {};
 
@@ -201,6 +201,11 @@ export default class ABViewDetailImage extends ABViewDetailComponent {
 
 		var imageData = null,
 			imageUrl = "/opsportal/image/{application}/{image}",
+			image = "";
+
+		if (dataRow && dataRow[field.columnName])
+			image = dataRow[field.columnName];
+		else
 			image = this.getCurrentData() || "";
 
 		// pull image data

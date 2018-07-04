@@ -93,12 +93,13 @@ export default class ABViewDataview extends ABViewDetail {
 
 		com.onShow = () => {
 
-			var dc = this.dataCollection();
-			var rows = dc.getData();
-
 			// clear UI
 			// $$(ids.component)
 
+			var dc = this.dataCollection();
+			if (!dc) return;
+
+			var rows = dc.getData();
 
 			rows.forEach(row => {
 
@@ -114,6 +115,32 @@ export default class ABViewDataview extends ABViewDetail {
 		};
 
 		return com;
+
+	}
+
+
+	//// Report ////
+
+	print() {
+
+		var reportDef = [];
+
+		var dc = this.dataCollection();
+		if (!dc) return reportDef;
+
+		var rows = dc.getData();
+
+		rows.forEach(row => {
+
+			// pull container definition
+			var containerDef = super.print(row);
+
+			// add to rows
+			reportDef.push(containerDef);
+
+		});
+
+		return reportDef;
 
 	}
 

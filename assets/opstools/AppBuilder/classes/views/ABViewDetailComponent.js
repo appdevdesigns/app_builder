@@ -169,7 +169,7 @@ export default class ABViewDetailComponent extends ABViewWidget {
 	 * 
 	 * @return {Object} - PDF object definition
 	 */
-	print() {
+	print(rowData) {
 
 		var reportDef = {};
 
@@ -182,9 +182,9 @@ export default class ABViewDetailComponent extends ABViewWidget {
 		var field = this.field();
 		if (!field) return reportDef;
 
-		var currData = dc.getCursor();
+		rowData = rowData || dc.getCursor();
 
-		var text = (field.format(currData) || "");
+		var text = (field.format(rowData) || "");
 
 		reportDef = {
 			columns: [
