@@ -1255,6 +1255,12 @@ msgstr "Detail"
 
 #. path: app_builder
 #. code: en
+#. key: ab.components.dataview
+msgid "Data view"
+msgstr "Data view"
+
+#. path: app_builder
+#. code: en
 #. key: ab.components.datepicker
 msgid "Date Picker"
 msgstr "Date Picker"

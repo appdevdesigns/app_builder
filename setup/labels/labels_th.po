@@ -1243,6 +1243,12 @@ msgstr "[th] Detail"
 
 #. path: app_builder
 #. code: th
+#. key: ab.components.dataview
+msgid "Data view"
+msgstr "[th] Data view"
+
+#. path: app_builder
+#. code: th
 #. key: ab.components.datepicker
 msgid "Date Picker"
 msgstr "[th] Date Picker"
