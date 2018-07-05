@@ -1255,6 +1255,12 @@ msgstr "Detail"
 
 #. path: app_builder
 #. code: en
+#. key: ab.components.dataview
+msgid "Data view"
+msgstr "Data view"
+
+#. path: app_builder
+#. code: en
 #. key: ab.components.datepicker
 msgid "Date Picker"
 msgstr "Date Picker"
@@ -1264,6 +1270,12 @@ msgstr "Date Picker"
 #. key: ab.components.grid
 msgid "Grid"
 msgstr "Grid"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.image
+msgid "Image"
+msgstr "Image"
 
 #. path: app_builder
 #. code: en
@@ -1300,6 +1312,12 @@ msgstr "Tab"
 #. key: ab.components.textbox
 msgid "Textbox"
 msgstr "Textbox"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.tree
+msgid "Tree"
+msgstr "Tree"
 
 #. path: app_builder
 #. code: en

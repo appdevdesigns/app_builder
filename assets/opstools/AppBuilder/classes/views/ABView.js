@@ -1008,11 +1008,11 @@ export default class ABView extends ABViewBase {
 			// not allowed Detail's widgets
 			'detailcheckbox', 'detailcustom', 'detailimage', 'detailselectivity', 'detailtext', 'detailtree', 
 			// not allowed Form's widgets
-			'button', 'checkbox', 'datepicker', 'fieldcustom', 'textbox', 'numberbox', 'selectsingle', 'tree',
+			'button', 'checkbox', 'connect', 'datepicker', 'fieldcustom', 'textbox', 'numberbox', 'selectsingle', 'formtree',
 			// not allowed Chart's Widgets
 			'pie', 'bar', 'line', 'area',
 			// not allowed Report page
-			'report', 'reportPage'
+			'report', 'reportPage', 'reportPanel'
 		];
 
 		var allComponents = this.application.viewAll();  // ABViewManager.allViews();

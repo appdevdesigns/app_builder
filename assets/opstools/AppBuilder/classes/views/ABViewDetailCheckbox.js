@@ -177,4 +177,48 @@ export default class ABViewDetailCheckbox extends ABViewDetailComponent {
 	}
 
 
+	//// Report ////
+
+	/**
+	 * @method print
+	 * 
+	 * 
+	 * @return {Object} - PDF object definition
+	 */
+	print() {
+
+		var reportDef = {};
+
+		var detailCom = this.detailComponent();
+		if (!detailCom) return reportDef;
+
+		var field = this.field();
+		if (!field) return reportDef;
+
+		var text = "";
+
+		var currData = this.getCurrentData();
+		if (currData) {
+			// TODO : Support multilingual
+			text = currData ? "Yes" : "No";
+		}
+
+		reportDef = {
+			columns: [
+				{
+					bold: true,
+					text: field.label,
+					width: detailCom.settings.labelWidth
+				},
+				{
+					text: text
+				}
+			]
+		};
+
+		return reportDef;
+
+	}
+
+
 }
