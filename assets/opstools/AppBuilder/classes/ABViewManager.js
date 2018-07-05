@@ -19,6 +19,7 @@ import ABViewLabel from "./views/ABViewLabel"
 import ABViewLayout from "./views/ABViewLayout"
 import ABViewMenu from "./views/ABViewMenu"
 import ABViewGrid from "./views/ABViewGrid"
+import ABViewImage from "./views/ABViewImage"
 import ABViewTab from "./views/ABViewTab"
 
 import ABViewDetail from "./views/ABViewDetail"
@@ -67,6 +68,7 @@ Views[ABViewLabel.common().key] = ABViewLabel;
 Views[ABViewLayout.common().key] = ABViewLayout;
 Views[ABViewMenu.common().key] = ABViewMenu;
 Views[ABViewGrid.common().key] = ABViewGrid;
+Views[ABViewImage.common().key] = ABViewImage;
 Views[ABViewTab.common().key] = ABViewTab;
 
 Views[ABViewDetail.common().key] = ABViewDetail;

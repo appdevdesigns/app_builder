@@ -1261,6 +1261,12 @@ msgstr "[th] Grid"
 
 #. path: app_builder
 #. code: th
+#. key: ab.components.image
+msgid "Image"
+msgstr "[th] Image"
+
+#. path: app_builder
+#. code: th
 #. key: ab.components.layout
 msgid "Layout"
 msgstr "[th] Layout"
@@ -1294,6 +1300,12 @@ msgstr "[th] Tab"
 #. key: ab.components.textbox
 msgid "Textbox"
 msgstr "[th] Textbox"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.tree
+msgid "Tree"
+msgstr "[th] Tree"
 
 #. path: app_builder
 #. code: th

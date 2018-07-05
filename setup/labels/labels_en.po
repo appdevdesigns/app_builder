@@ -1273,6 +1273,12 @@ msgstr "Grid"
 
 #. path: app_builder
 #. code: en
+#. key: ab.components.image
+msgid "Image"
+msgstr "Image"
+
+#. path: app_builder
+#. code: en
 #. key: ab.components.layout
 msgid "Layout"
 msgstr "Layout"
@@ -1306,6 +1312,12 @@ msgstr "Tab"
 #. key: ab.components.textbox
 msgid "Textbox"
 msgstr "Textbox"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.tree
+msgid "Tree"
+msgstr "Tree"
 
 #. path: app_builder
 #. code: en
