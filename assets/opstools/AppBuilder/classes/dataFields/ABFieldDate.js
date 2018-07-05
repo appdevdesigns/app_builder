@@ -980,7 +980,7 @@ class ABFieldDate extends ABField {
 							}
 							break;
 						case '=':
-							isValid = (value.getTime() == startDate.getTime());
+							isValid = (value.getTime && startDate.getTime && value.getTime() == startDate.getTime());
 							if (!isValid)
 								validator.addError(this.columnName,
 									L('ab.dataField.date.error.equal', '*Should equal {startdate}')
@@ -988,7 +988,7 @@ class ABFieldDate extends ABField {
 								);
 							break;
 						case '<>':
-							isValid = (value.getTime() != startDate.getTime());
+							isValid = (value.getTime && startDate.getTime && value.getTime() != startDate.getTime());
 							if (!isValid)
 								validator.addError(this.columnName,
 									L('ab.dataField.date.error.notEqual', '*Should not equal {startdate}')
@@ -996,7 +996,7 @@ class ABFieldDate extends ABField {
 								);
 							break;
 						case '>':
-							isValid = (value.getTime() > startDate.getTime());
+							isValid = (value.getTime && startDate.getTime && value.getTime() > startDate.getTime());
 							if (!isValid)
 								validator.addError(this.columnName,
 									L('ab.dataField.date.error.after', '*Should after {startdate}')
@@ -1004,7 +1004,7 @@ class ABFieldDate extends ABField {
 								);
 							break;
 						case '<':
-							isValid = (value.getTime() < startDate.getTime());
+							isValid = (value.getTime && startDate.getTime && value.getTime() < startDate.getTime());
 							if (!isValid)
 								validator.addError(this.columnName,
 									L('ab.dataField.date.error.before', '*Should before {startdate}')
@@ -1012,7 +1012,7 @@ class ABFieldDate extends ABField {
 								);
 							break;
 						case '>=':
-							isValid = (value.getTime() >= startDate.getTime());
+							isValid = (value.getTime && startDate.getTime && value.getTime() >= startDate.getTime());
 							if (!isValid)
 								validator.addError(this.columnName,
 									L('ab.dataField.date.error.afterOrEqual', '*Should after or equal {startdate}')
@@ -1020,7 +1020,7 @@ class ABFieldDate extends ABField {
 								);
 							break;
 						case '<=':
-							isValid = (value.getTime() <= startDate.getTime());
+							isValid = (value.getTime && startDate.getTime && value.getTime() <= startDate.getTime());
 							if (!isValid)
 								validator.addError(this.columnName,
 									L('ab.dataField.date.error.beforeOrEqual', '*Should before or equal {startdate}')
