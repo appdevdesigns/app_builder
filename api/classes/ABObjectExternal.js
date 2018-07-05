@@ -89,13 +89,29 @@ module.exports = class ABObjectExternal extends ABObject {
 
 									var fnName = colInfo.type;
 									switch (fnName) {
+										case 'bit':
 										case 'int':
+										case 'integer':
+										case 'tinyint':
 											fnName = 'integer';
 											break;
+										case 'bigint':
+										case 'decimal':
+										case 'dec':
+										case 'float':
+										case 'double':
+										case 'double_precision':
+											fnName = 'bigInteger';
+											break;
 										case 'blob':
+										case 'tinyblob':
+										case 'mediumblob':
+										case 'longblob':
 											fnName = 'binary';
 											break;
 										case 'char':
+										case 'tinytext':
+										case 'mediumtext':
 											fnName = 'string';
 											break;
 									}
@@ -109,12 +125,16 @@ module.exports = class ABObjectExternal extends ABObject {
 									var newCol;
 									if (fnName == 'string' && colInfo.maxLength)
 										newCol = t[fnName](colName, colInfo.maxLength);
-									else 
+									else
 										newCol = t[fnName](colName);
 
 
-									if (colInfo.defaultValue)
-										newCol.defaultTo(colInfo.defaultValue);
+									if (colInfo.defaultValue) {
+										if (colInfo.defaultValue == "CURRENT_TIMESTAMP")
+											newCol.defaultTo(knex.fn.now());
+										else 
+											newCol.defaultTo(colInfo.defaultValue);
+									}
 
 									if (colInfo.nullable)
 										newCol.nullable();
