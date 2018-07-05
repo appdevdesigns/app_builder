@@ -246,6 +246,7 @@ class ABFieldBoolean extends ABField {
 		return detailComponentSetting;
 	}
 
+
 }
 
 

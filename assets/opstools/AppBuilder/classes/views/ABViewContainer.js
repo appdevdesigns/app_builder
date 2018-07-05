@@ -676,16 +676,11 @@ export default class ABViewContainer extends ABView {
 
 	//// Report ////
 
-	print() {
+	print(rowData) {
 
 		var reportDef = {
 			columns: []
 		};
-
-		// create columns
-		for (var i = 0; i < this.settings.columns; i++) {
-			reportDef.columns[i] = [];
-		}
 
 		// add each definition of component to position
 		this.views().forEach((v , vIndex) => {
@@ -700,9 +695,35 @@ export default class ABViewContainer extends ABView {
 			if (reportDef.columns[x] == null)
 				reportDef.columns[x] = [];
 
-			reportDef.columns[x][y] = v.print();
+			reportDef.columns[x][y] = v.print(rowData);
 
 		});
+
+		// NOTE: fill undefined to prevent render PDF errors
+		var fillUndefined = (columns, numberOfCol) => {
+
+			for (var x = 0; x < numberOfCol; x++) {
+
+				if (columns[x] == null)
+					columns[x] = [];
+	
+				var rows = columns[x];
+				if (!Array.isArray(columns[x]))
+					rows = [columns[x]];
+
+				rows.forEach((row, y) => {
+
+					if (row == null)
+						columns[x][y] = {};
+					else if (row.columns)
+						fillUndefined(row.columns, row.columns.length);
+
+				});
+			}
+
+		};
+		fillUndefined(reportDef.columns, this.settings.columns);
+
 
 		return reportDef;
 

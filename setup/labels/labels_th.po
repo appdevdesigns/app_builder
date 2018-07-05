@@ -1243,6 +1243,12 @@ msgstr "[th] Detail"
 
 #. path: app_builder
 #. code: th
+#. key: ab.components.dataview
+msgid "Data view"
+msgstr "[th] Data view"
+
+#. path: app_builder
+#. code: th
 #. key: ab.components.datepicker
 msgid "Date Picker"
 msgstr "[th] Date Picker"
@@ -1252,6 +1258,12 @@ msgstr "[th] Date Picker"
 #. key: ab.components.grid
 msgid "Grid"
 msgstr "[th] Grid"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.image
+msgid "Image"
+msgstr "[th] Image"
 
 #. path: app_builder
 #. code: th
@@ -1288,6 +1300,12 @@ msgstr "[th] Tab"
 #. key: ab.components.textbox
 msgid "Textbox"
 msgstr "[th] Textbox"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.tree
+msgid "Tree"
+msgstr "[th] Tree"
 
 #. path: app_builder
 #. code: th
