@@ -148,8 +148,11 @@ function getDateFormat(setting) {
 	// 		.replace('{period}', setting.periodFormat != 'none' ? ' '+setting.periodFormat : '')
 	// 	);
 	// }
+	
+	var dateFormat = (setting && setting.dateFormat) ? setting.dateFormat : "";
+	var timeFormat = (setting && setting.timeFormat) ? setting.timeFormat : "";
 
-	switch (setting.dateFormat) {
+	switch (dateFormat) {
 		//Ignore Date
 		case 1, 2: {
 			dateFormatString = "%d/%m/%Y";
@@ -176,7 +179,7 @@ function getDateFormat(setting) {
 			break;
 	}
 
-	switch (setting.timeFormat) {
+	switch (timeFormat) {
 		case 1, 2: {
 			dateFormatString += " %h:%i %A";
 		}	
@@ -1373,6 +1376,10 @@ class ABFieldDate extends ABField {
 
 		// pull format from settings.
 		return getDateDisplay(new Date(d), this.settings);
+	}
+	
+	getFormat(settings) {
+		return getDateFormat(settings);
 	}
 	
 	// getDateFormat() {
