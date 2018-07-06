@@ -1180,7 +1180,8 @@ export default class ABViewDataCollection extends ABView {
 		var obj = this.datasource;
 
 
-		if (component.config.view == 'datatable') {
+		if (component.config.view == 'datatable' ||
+			component.config.view == 'dataview') {
 			
 			if (dc) {
 
@@ -1232,7 +1233,8 @@ export default class ABViewDataCollection extends ABView {
 			}
 		}
 
-		component.refresh();
+		if (component.refresh)
+			component.refresh();
 
 	}
 	
