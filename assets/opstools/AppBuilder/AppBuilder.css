@@ -105,6 +105,9 @@
 .webix_column>div.webix_row_select {
 	background-color: #3498db !important;
 }
+.webix_column.textCell>div.webix_cell.webix_row_select {
+	padding-top: 7px;
+}
 .webix_list_item.disabled {
 	background-color: #eee;
 	color: #aaa;

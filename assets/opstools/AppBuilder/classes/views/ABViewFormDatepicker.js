@@ -156,7 +156,7 @@ export default class ABViewFormDatepicker extends ABViewFormField {
 				component.ui.value = new Date(component.ui.value);
 			}
 
-			component.ui.format = field.getDateFormat();
+			component.ui.format = field.getFormat();
 		}
 
 		// make sure each of our child views get .init() called

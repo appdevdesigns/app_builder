@@ -148,8 +148,11 @@ function getDateFormat(setting) {
 	// 		.replace('{period}', setting.periodFormat != 'none' ? ' '+setting.periodFormat : '')
 	// 	);
 	// }
+	
+	var dateFormat = (setting && setting.dateFormat) ? setting.dateFormat : "";
+	var timeFormat = (setting && setting.timeFormat) ? setting.timeFormat : "";
 
-	switch (setting.dateFormat) {
+	switch (dateFormat) {
 		//Ignore Date
 		case 1, 2: {
 			dateFormatString = "%d/%m/%Y";
@@ -176,7 +179,7 @@ function getDateFormat(setting) {
 			break;
 	}
 
-	switch (setting.timeFormat) {
+	switch (timeFormat) {
 		case 1, 2: {
 			dateFormatString += " %h:%i %A";
 		}	
@@ -239,8 +242,8 @@ function getDateDisplay(dateData, settings) {
 // }
 
 function defaultDateChange() {
-	console.log("defaultDateChange");
-	var defaultDate = JSON.parse($$(ids.defaultDate).getValue());
+	var defaultDateValue = $$(ids.defaultDate).getValue();
+	var defaultDate = parseInt(defaultDateValue);
 	switch (defaultDate) {
 		case 1: {
 			$$(ids.defaultDateValue).disable();
@@ -267,9 +270,8 @@ function defaultDateChange() {
 }
 
 function refreshDateValue() {
-	console.log("refreshDateValue");
-
-	var dateFormat = JSON.parse($$(ids.dateFormat).getValue());
+	var defaultFormatValue = $$(ids.dateFormat).getValue();
+	var dateFormat = parseInt(defaultFormatValue);
 
 	var formatString = "";
 	switch (dateFormat) {
@@ -305,7 +307,7 @@ function refreshDateValue() {
 
 function defaultTimeChange() {
 	console.log("defaultTimeChange");
-	var dateFormat = JSON.parse($$(ids.defaultTime).getValue());
+	var dateFormat = parseInt($$(ids.defaultTime).getValue());
 	switch (dateFormat) {
 		case 1: {
 			$$(ids.defaultTimeValue).disable();
@@ -334,7 +336,7 @@ function defaultTimeChange() {
 
 function refreshTimevalue() {
 	console.log("refreshTimevalue");
-	var timeFormat = JSON.parse($$(ids.timeFormat).getValue());
+	var timeFormat = parseInt($$(ids.timeFormat).getValue());
 
 	var formatString = "";
 	switch (timeFormat) {
@@ -1373,6 +1375,10 @@ class ABFieldDate extends ABField {
 
 		// pull format from settings.
 		return getDateDisplay(new Date(d), this.settings);
+	}
+	
+	getFormat(settings) {
+		return getDateFormat(settings);
 	}
 	
 	// getDateFormat() {
