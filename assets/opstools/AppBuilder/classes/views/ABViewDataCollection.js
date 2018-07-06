@@ -715,7 +715,8 @@ export default class ABViewDataCollection extends ABView {
 
 			// Add a first record option to allow select first row
 			dataItems.unshift(
-				{ id: '_FirstRecord', value: L('ab.component.datacollection.firstRecord', '[First Record]') }
+				{ id: '_FirstRecord', value: L('ab.component.datacollection.firstRecord', '[First Record]') },
+				{ id: '_FirstRecordDefault', value: L('ab.component.datacollection.firstRecordDefault', '[Default to First Record]') }
 			);
 
 		}
@@ -1278,8 +1279,7 @@ export default class ABViewDataCollection extends ABView {
 	setCursor(rowId) {
 
 		// If the static cursor is set, then this DC could not set cursor to other rows
-		if (this.settings.fixSelect &&
-			this.settings.fixSelect != rowId)
+		if (this.settings.fixSelect && this.settings.fixSelect != "_FirstRecordDefault" && this.settings.fixSelect != rowId )
 			return;
 
 		var dc = this.__dataCollection;
@@ -1461,7 +1461,7 @@ export default class ABViewDataCollection extends ABView {
 							// set a first row of current user to cursor
 							if (row)
 								this.__dataCollection.setCursor(row.id);
-						} else if (this.settings.fixSelect == "_FirstRecord") {
+						} else if (this.settings.fixSelect == "_FirstRecord" || this.settings.fixSelect == "_FirstRecordDefault") {
 							// find a row that contains the current user
 							var row = this.__dataCollection.find((r) => {
 								

@@ -79,6 +79,11 @@ export default class ABWorkObjectDatatable extends OP.Component {
         var columnSplitLeft = 0;
 
         var PopupHeaderEditComponent = new AB_Work_HeaderEditMenu(App, idBase);
+        
+        var selectType = "cell";
+        if (!settings.isEditable && (settings.detailsView || settings.editView)) {
+            selectType = "row";
+        }
 
     	// Our webix UI definition:
     	this.ui = {
@@ -90,7 +95,7 @@ export default class ABWorkObjectDatatable extends OP.Component {
     		editable: settings.isEditable,
     		fixedRowHeight: false,
     		editaction: "custom",
-            select: "cell",
+            select: selectType,
             footer: settings.summaryColumns.length > 0, // show footer when there are summary columns
             tooltip: {
                 id: ids.tooltip,
@@ -122,7 +127,7 @@ export default class ABWorkObjectDatatable extends OP.Component {
     						rowData = this.getItem(data.row);
 
     					return selectField.customEdit(rowData, App, cellNode);
-                    } else {
+                    } else if (!settings.detailsView && !settings.editView) {
                         return false;
                     }
 
