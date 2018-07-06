@@ -285,6 +285,7 @@ export default {
 					}
 
 					Grid.refresh(row);
+					Grid.clearSelection();
 
 					if (wasGrid) {
 						return true;

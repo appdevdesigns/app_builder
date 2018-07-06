@@ -59,7 +59,8 @@ var ABViewGridPropertyComponentDefaults = {
 	summaryFields: [], // array of [field ids] to add the summary column in footer
 	height: 0,
 	hideHeader:0,
-	labelAsField:0
+	labelAsField:0,
+	hideButtons:0
 }
 
 
@@ -138,6 +139,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		this.settings.isExportable = JSON.parse(this.settings.isExportable || ABViewGridPropertyComponentDefaults.isExportable);
 		this.settings.hideHeader = JSON.parse(this.settings.hideHeader || ABViewGridPropertyComponentDefaults.hideHeader);
 		this.settings.labelAsField = JSON.parse(this.settings.labelAsField || ABViewGridPropertyComponentDefaults.labelAsField);
+		this.settings.hideButtons = JSON.parse(this.settings.hideButtons || ABViewGridPropertyComponentDefaults.hideButtons);
 
 		// this.settings.linkedObject = this.settings.linkedObject || ABViewGridPropertyComponentDefaults.linkedObject;
 		// this.settings.linkedField = this.settings.linkedField || ABViewGridPropertyComponentDefaults.linkedField;
@@ -679,6 +681,13 @@ export default class ABViewGrid extends ABViewWidget  {
 							labelWidth: App.config.labelWidthCheckbox
 						},
 
+						{
+							view:"checkbox",
+							name:"hideButtons",
+							labelRight: L('ab.component.label.hideButtons', '*Hide edit and view buttons'),
+							labelWidth: App.config.labelWidthCheckbox
+						},
+
 					]
 				}
 			},
@@ -720,6 +729,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		$$(ids.height).setValue(view.settings.height);
 		$$(ids.hideHeader).setValue(view.settings.hideHeader);
 		$$(ids.labelAsField).setValue(view.settings.labelAsField);
+		$$(ids.hideButtons).setValue(view.settings.hideButtons);
 
 
 		// initial populate of properties and popups
@@ -786,6 +796,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		view.settings.height = $$(ids.height).getValue();
 		view.settings.hideHeader = $$(ids.hideHeader).getValue();
 		view.settings.labelAsField = $$(ids.labelAsField).getValue();
+		view.settings.hideButtons = $$(ids.hideButtons).getValue();
 
 	}
 
@@ -875,7 +886,8 @@ export default class ABViewGrid extends ABViewWidget  {
 			configureHeaders: false,
 			summaryColumns: this.settings.objectWorkspace.summaryColumns,
 			hideHeader: this.settings.hideHeader,
-			labelAsField: this.settings.labelAsField
+			labelAsField: this.settings.labelAsField,
+			hideButtons: this.settings.hideButtons
 		}
 		
 		var isFiltered = false,
@@ -1237,6 +1249,10 @@ export default class ABViewGrid extends ABViewWidget  {
 				dc.setCursor(id);
 				super.changePage(page);
 			},
+			
+			selectRow: (data) => {
+				$$(DataTable.ui.id).select(data.id, false);
+			},
 
 			/**
 			 * @function enableUpdateDelete
@@ -1407,6 +1423,14 @@ export default class ABViewGrid extends ABViewWidget  {
 					});
 				}
 			}
+			
+			var dc = this.dataCollection();
+			
+			this.eventAdd({
+				emitter: dc,
+				eventName: 'changeCursor',
+				listener: _logic.selectRow
+			})
 		};
 
 

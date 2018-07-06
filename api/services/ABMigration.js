@@ -100,6 +100,9 @@ module.exports = {
 
     updateField:function(field) {
         
+        if (field.object.isExternal)
+            return Promise.resolve();
+
         var knex = ABMigration.connection();
         return field.migrateUpdate(knex);
 

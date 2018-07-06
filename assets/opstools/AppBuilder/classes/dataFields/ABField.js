@@ -649,7 +649,7 @@ export default class ABField extends ABFieldBase {
 		if (!item) return;
 	
 		var val;
-		if (rowData[this.columnName]) {
+		if (typeof rowData[this.columnName] != "undefined") {
 			val = rowData[this.columnName];
 		} else {
 			val = rowData;

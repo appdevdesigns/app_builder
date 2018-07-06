@@ -31,6 +31,7 @@ var ABFieldDateDefaults = {
 }
 
 var defaultValues = {
+/*
 	includeTime: 0,
 	defaultCurrentDate: 0,
 	default: "",
@@ -47,7 +48,7 @@ var defaultValues = {
 	hourFormat: '%h',
 	periodFormat: 'none',
 	timeDelimiter: 'colon',
-
+*/
 	validateCondition: "none",
 	validateRangeUnit: "days",
 	validateRangeBefore: 0,
@@ -62,6 +63,14 @@ var ids = {
 
 	dateDisplay: 'ab-date-display',
 
+	dateFormat: 'date-format',
+	defaultDate: 'default-date',
+	defaultDateValue: '',
+	timeFormat: 'time-format',
+	defaultTime: 'default-time',
+	defaultTimeValue: 'default-time-value',
+
+	/*
 	// Date
 	dayOrder: 'ab-date-day-order',
 	monthOrder: 'ab-date-month-order',
@@ -79,6 +88,7 @@ var ids = {
 	hourFormat: 'ab-date-hour-format',
 	periodFormat: 'ab-date-period-format',
 	timeDelimiter: 'ab-date-time-delimiter',
+	*/
 
 	// validation
 	validateCondition: 'ab-date-validate-condition',
@@ -111,35 +121,80 @@ function getDelimiterSign(text) {
 }
 
 function getDateFormat(setting) {
-	var dateFormat = "";
+	var dateFormatString = "";
 
 	// Date format
-	for (var i = 1; i <= 3; i++) {
-		if (setting.dayOrder == i) {
-			dateFormat += setting.dayFormat;
-			dateFormat += (i != 3) ? getDelimiterSign(setting.dayDelimiter) : '';
+	// for (var i = 1; i <= 3; i++) {
+	// 	if (setting.dayOrder == i) {
+	// 		dateFormat += setting.dayFormat;
+	// 		dateFormat += (i != 3) ? getDelimiterSign(setting.dayDelimiter) : '';
+	// 	}
+	// 	if (setting.monthOrder == i) {
+	// 		dateFormat += setting.monthFormat;
+	// 		dateFormat += (i != 3) ? getDelimiterSign(setting.monthDelimiter) : '';
+	// 	}
+	// 	if (setting.yearOrder == i) {
+	// 		dateFormat += setting.yearFormat;
+	// 		dateFormat += (i != 3) ? getDelimiterSign(setting.yearDelimiter) : '';
+	// 	}
+	// }
+
+	// // Time format
+	// if (setting.includeTime == true) {
+	// 	dateFormat += (' {hour}{delimiter}{minute}{period}'
+	// 		.replace('{hour}', setting.hourFormat)
+	// 		.replace('{delimiter}', getDelimiterSign(setting.timeDelimiter))
+	// 		.replace('{minute}', '%i')
+	// 		.replace('{period}', setting.periodFormat != 'none' ? ' '+setting.periodFormat : '')
+	// 	);
+	// }
+	
+	var dateFormat = (setting && setting.dateFormat) ? setting.dateFormat : "";
+	var timeFormat = (setting && setting.timeFormat) ? setting.timeFormat : "";
+
+	switch (dateFormat) {
+		//Ignore Date
+		case 1, 2: {
+			dateFormatString = "%d/%m/%Y";
 		}
-		if (setting.monthOrder == i) {
-			dateFormat += setting.monthFormat;
-			dateFormat += (i != 3) ? getDelimiterSign(setting.monthDelimiter) : '';
+			break;
+		//mm/dd/yyyy
+		case 3: {
+			dateFormatString = "%m/%d/%Y";
 		}
-		if (setting.yearOrder == i) {
-			dateFormat += setting.yearFormat;
-			dateFormat += (i != 3) ? getDelimiterSign(setting.yearDelimiter) : '';
+			break;
+		//M D, yyyy
+		case 4: {
+			dateFormatString = "%M %d, %Y";
 		}
+			break;
+		//D M, yyyy
+		case 5: {
+			dateFormatString = "%d %M, %Y";
+		}
+			break;
+		default: {
+			dateFormatString = "%d/%m/%Y";
+		}
+			break;
 	}
 
-	// Time format
-	if (setting.includeTime == true) {
-		dateFormat += (' {hour}{delimiter}{minute}{period}'
-			.replace('{hour}', setting.hourFormat)
-			.replace('{delimiter}', getDelimiterSign(setting.timeDelimiter))
-			.replace('{minute}', '%i')
-			.replace('{period}', setting.periodFormat != 'none' ? ' '+setting.periodFormat : '')
-		);
+	switch (timeFormat) {
+		case 1, 2: {
+			dateFormatString += " %h:%i %A";
+		}	
+			break;
+		case 3: {
+			dateFormatString += " %H:%i";
+		}
+			break;
+		default: {
+			//Do not show time in format
+		}
+			break;
 	}
 
-	return dateFormat;
+	return dateFormatString;
 }
 
 function getDateDisplay(dateData, settings) {
@@ -148,45 +203,163 @@ function getDateDisplay(dateData, settings) {
 	return webix.Date.dateToStr(dateFormat)(dateData);
 }
 
-function dateDisplayRefresh() {
+// function dateDisplayRefresh() {
 
-	if ($$(ids.includeTime).getValue()) {
-		//if user chooses an hour format for time that is 1-12 we need to force a "Period" format
-		//a lowercase letter signifies that it will be lowercase so we just need to look for lowercase letters
-		if ( /[a-z]/.test($$(ids.hourFormat).getValue()) ) {
-			//only set if one hasn't been set already
-			if ($$(ids.periodFormat).getValue() == "none") {
-				$$(ids.periodFormat).setValue("%a"); // set to the first one
-			}
-		} else {
-			//if user chooses an hour format for time that is 0-23 we need to remove the "Period" format
-			$$(ids.periodFormat).setValue("none"); 
-		}
-	}
+// 	if ($$(ids.includeTime).getValue()) {
+// 		//if user chooses an hour format for time that is 1-12 we need to force a "Period" format
+// 		//a lowercase letter signifies that it will be lowercase so we just need to look for lowercase letters
+// 		if ( /[a-z]/.test($$(ids.hourFormat).getValue()) ) {
+// 			//only set if one hasn't been set already
+// 			if ($$(ids.periodFormat).getValue() == "none") {
+// 				$$(ids.periodFormat).setValue("%a"); // set to the first one
+// 			}
+// 		} else {
+// 			//if user chooses an hour format for time that is 0-23 we need to remove the "Period" format
+// 			$$(ids.periodFormat).setValue("none"); 
+// 		}
+// 	}
 	
-	var dateFormat = getDateFormat({
-		dayOrder: $$(ids.dayOrder).getValue(),
-		monthOrder: $$(ids.monthOrder).getValue(),
-		yearOrder: $$(ids.yearOrder).getValue(),
-		dayFormat: $$(ids.dayFormat).getValue(),
-		monthFormat: $$(ids.monthFormat).getValue(),
-		yearFormat: $$(ids.yearFormat).getValue(),
-		dayDelimiter: $$(ids.dayDelimiter).getValue(),
-		monthDelimiter: $$(ids.monthDelimiter).getValue(),
-		yearDelimiter: $$(ids.yearDelimiter).getValue(),
+// 	var dateFormat = getDateFormat({
+// 		dayOrder: $$(ids.dayOrder).getValue(),
+// 		monthOrder: $$(ids.monthOrder).getValue(),
+// 		yearOrder: $$(ids.yearOrder).getValue(),
+// 		dayFormat: $$(ids.dayFormat).getValue(),
+// 		monthFormat: $$(ids.monthFormat).getValue(),
+// 		yearFormat: $$(ids.yearFormat).getValue(),
+// 		dayDelimiter: $$(ids.dayDelimiter).getValue(),
+// 		monthDelimiter: $$(ids.monthDelimiter).getValue(),
+// 		yearDelimiter: $$(ids.yearDelimiter).getValue(),
 
-		includeTime: $$(ids.includeTime).getValue(),
-		hourFormat: $$(ids.hourFormat).getValue(),
-		timeDelimiter: $$(ids.timeDelimiter).getValue(),
-		periodFormat: $$(ids.periodFormat).getValue(),
-	});
+// 		includeTime: $$(ids.includeTime).getValue(),
+// 		hourFormat: $$(ids.hourFormat).getValue(),
+// 		timeDelimiter: $$(ids.timeDelimiter).getValue(),
+// 		periodFormat: $$(ids.periodFormat).getValue(),
+// 	});
 
-	var dateDisplay = webix.Date.dateToStr(dateFormat)(new Date());
+// 	var dateDisplay = webix.Date.dateToStr(dateFormat)(new Date());
 
-	$$(ids.dateDisplay).setValue(dateDisplay);
+// 	$$(ids.dateDisplay).setValue(dateDisplay);
+// }
+
+function defaultDateChange() {
+	var defaultDateValue = $$(ids.defaultDate).getValue();
+	var defaultDate = parseInt(defaultDateValue);
+	switch (defaultDate) {
+		case 1: {
+			$$(ids.defaultDateValue).disable();
+			$$(ids.defaultDateValue).setValue();
+		}
+			break;
+		case 2: {
+			$$(ids.defaultDateValue).enable();
+			$$(ids.defaultDateValue).setValue(new Date());
+			refreshDateValue();
+		}
+			break;
+		case 3: {
+			$$(ids.defaultDateValue).enable();
+			$$(ids.defaultDateValue).setValue();
+		}
+			break;
+		default: {
+			$$(ids.defaultDateValue).disable();
+			$$(ids.defaultDateValue).setValue(new Date());
+		}
+			break;
+	}
 }
 
+function refreshDateValue() {
+	var defaultFormatValue = $$(ids.dateFormat).getValue();
+	var dateFormat = parseInt(defaultFormatValue);
 
+	var formatString = "";
+	switch (dateFormat) {
+		//Ignore Date
+		case 1, 2: {
+			formatString = "%d/%m/%Y";
+		}
+			break;
+		//mm/dd/yyyy
+		case 3: {
+			formatString = "%m/%d/%Y";
+		}
+			break;
+		//M D, yyyy
+		case 4: {
+			formatString = "%M %d, %Y";
+		}
+			break;
+		//D M, yyyy
+		case 5: {
+			formatString = "%d %M, %Y";
+		}
+			break;
+		default: {
+			formatString = "%d/%m/%Y";
+		}
+			break;
+	}
+
+	$$(ids.defaultDateValue).define("format", formatString);
+	$$(ids.defaultDateValue).refresh();
+}
+
+function defaultTimeChange() {
+	console.log("defaultTimeChange");
+	var dateFormat = parseInt($$(ids.defaultTime).getValue());
+	switch (dateFormat) {
+		case 1: {
+			$$(ids.defaultTimeValue).disable();
+			$$(ids.defaultTimeValue).setValue();
+		}
+			break;
+		case 2: {
+			$$(ids.defaultTimeValue).enable();
+			$$(ids.defaultTimeValue).setValue(new Date());
+
+		}
+			break;
+		case 3: {
+			$$(ids.defaultTimeValue).enable();
+			$$(ids.defaultTimeValue).setValue();
+		}
+			break;
+		default: {
+			$$(ids.defaultTimeValue).disable();
+			$$(ids.defaultTimeValue).setValue();
+		}
+			break;
+	}
+	refreshTimevalue();
+}
+
+function refreshTimevalue() {
+	console.log("refreshTimevalue");
+	var timeFormat = parseInt($$(ids.timeFormat).getValue());
+
+	var formatString = "";
+	switch (timeFormat) {
+		//HH:MM AM/PM
+		case 1, 2: {
+			formatString = "%h:%i %A";
+		}
+			break;
+		//HH:MM (military)
+		case 3: {
+			formatString = "%H:%i";
+		}
+			break;
+		default: {
+			formatString = "%h:%i %A";
+		}
+			break;
+	}
+
+	$$(ids.defaultTimeValue).define("format", formatString);
+	$$(ids.defaultTimeValue).refresh();
+
+}
 /**
  * ABFieldDateComponent
  *
@@ -201,6 +374,55 @@ var ABFieldDateComponent = new ABFieldComponent({
 		ids = field.idsUnique(ids, App);
 
 		return [
+			{
+				view: "richselect", 
+				name: "dateFormat",
+				id: ids.dateFormat,
+				label: "Date Format",
+				labelWidth: 110,
+				value: 1, options: [
+					{ id: 1, value: "Ignore Date" },
+					{ id: 2, value: "dd/mm/yyyy" },
+					{ id: 3, value: "mm/dd/yyyy" },
+					{ id: 4, value: "M D, yyyy" },
+					{ id: 5, value: "D M, yyyy" }
+				],
+				on: {
+					onChange: (newVal, oldVal) => {
+						refreshDateValue();
+					}
+				}
+			},
+			{
+				cols :[
+					{
+						view: "richselect", 
+						name: "defaultDate",
+						id: ids.defaultDate,
+						label: "Default Date",
+						labelWidth: 110,
+						value: 1, options: [
+							{ id: 1, value: "None" },
+							{ id: 2, value: "Current Date" },
+							{ id: 3, value: "Specific Date" }
+						],
+						on: {
+							onChange: (newVal, oldVal) => {
+								defaultDateChange();
+							}
+						}
+					},
+					{
+						view: 'datepicker',
+						name: "defaultDateValue",
+						id: ids.defaultDateValue,
+						gravity: 0.5,
+						disabled: true,
+					}
+				]
+			},
+			
+/*			
 			{
 				view: "checkbox",
 				name: "includeTime",
@@ -269,7 +491,7 @@ var ABFieldDateComponent = new ABFieldComponent({
 					}
 				]
 			},
-
+/*
 			// Display date format
 			{
 				view: "accordion",
@@ -526,7 +748,7 @@ var ABFieldDateComponent = new ABFieldComponent({
 
 				]
 			},
-
+*/
 			// Validator
 			{
 				view: 'label',
@@ -689,9 +911,53 @@ var ABFieldDateComponent = new ABFieldComponent({
 				label: 'End Date',
 				labelWidth: 100,
 				hidden: true
-			}
-
-
+			},
+			{
+				view: "richselect", 
+				name: "timeFormat",
+				id: ids.timeFormat,
+				label: "Time Format",
+				labelWidth: 110,
+				value: 1, options: [
+					{ id: 1, value: "Ignore Time" },
+					{ id: 2, value: "HH:MM AM/PM" },
+					{ id: 3, value: "HH:MM (military)" }
+				],
+				on: {
+					onChange: (newVal, oldVal) => {
+						refreshTimevalue();
+					}
+				}
+			},
+			{
+				cols :[
+					{
+						view: "richselect", 
+						name: "defaultTime",
+						id: ids.defaultTime,
+						label: "Default Time",
+						labelWidth: 110,
+						value: 1, options: [
+							{ id: 1, value: "None" },
+							{ id: 2, value: "Current Time" },
+							{ id: 3, value: "Specific Time" }
+						],
+						on: {
+							onChange: (newVal, oldVal) => {
+								defaultTimeChange();
+							}
+						}
+					},
+					{
+						view: 'datepicker',
+						name: "defaultTimeValue",
+						type: "time",
+						id: ids.defaultTimeValue,
+						gravity: 0.5,
+						disabled: true
+					}
+				]
+			},
 		]
 	},
 
@@ -715,7 +981,9 @@ var ABFieldDateComponent = new ABFieldComponent({
 		// }
 
 		show: function (ids) {
-			dateDisplayRefresh();
+			// dateDisplayRefresh();
+			refreshDateValue();
+			refreshTimevalue();
 		},
 
 		dateDisplay: (date, settings) => {
@@ -739,8 +1007,8 @@ var ABFieldDateComponent = new ABFieldComponent({
 		requiredOnChange: (newVal, oldVal, ids) => {
 
 			// when require value, then default value needs to be reqired
-			$$(ids.default).define("required", newVal);
-			$$(ids.default).refresh();
+			$$(ids.defaultDateValue).define("required", newVal);
+			$$(ids.defaultDateValue).refresh();
 
 		},
 
@@ -767,12 +1035,17 @@ class ABFieldDate extends ABField {
 		}
 
 		// text to Int:
+		/*
 		this.settings.includeTime = parseInt(this.settings.includeTime);
 		this.settings.defaultCurrentDate = parseInt(this.settings.defaultCurrentDate);
 		this.settings.dayOrder = parseInt(this.settings.dayOrder);
 		this.settings.monthOrder = parseInt(this.settings.monthOrder);
 		this.settings.yearOrder = parseInt(this.settings.yearOrder);
-
+		*/
+		this.settings.dateFormat = parseInt(this.settings.dateFormat);
+		this.settings.defaultDate = parseInt(this.settings.defaultDate);
+		this.settings.timeFormatValue = parseInt(this.settings.timeFormat);
+		this.settings.defaultTime = parseInt(this.settings.defaultTime);
 
 	}
 
@@ -840,10 +1113,10 @@ class ABFieldDate extends ABField {
 	columnHeader(isObjectWorkspace) {
 		var config = super.columnHeader(isObjectWorkspace);
 
-		if (this.settings.includeTime)
+		// if (this.settings.includeTime)
 			config.editor = 'datetime';
-		else
-			config.editor = 'date';
+		// else
+		// 	config.editor = 'date';
 
 
 		// allows entering characters in datepicker input, false by default
@@ -891,15 +1164,17 @@ class ABFieldDate extends ABField {
 		// if no default value is set, then don't insert a value.
 		if (values[this.columnName] == null) {
 
-			// Set current date as default
-			if (this.settings.defaultCurrentDate) {
+			// // Set current date as default
+			// if (this.settings.defaultCurrentDate) {
+			// 	values[this.columnName] = (new Date()).toISOString();
+			// }
+			// // Specfic default date
+			// else if (this.settings.default) {
+			// 	values[this.columnName] = (new Date(this.settings.default)).toISOString();
+			// }
+			if (this.settings.defaultDate != 1) {
 				values[this.columnName] = (new Date()).toISOString();
 			}
-			// Specfic default date
-			else if (this.settings.default) {
-				values[this.columnName] = (new Date(this.settings.default)).toISOString();
-			}
-
 		}
 	}
 
@@ -980,7 +1255,7 @@ class ABFieldDate extends ABField {
 							}
 							break;
 						case '=':
-							isValid = (value.getTime() == startDate.getTime());
+							isValid = (value.getTime && startDate.getTime && value.getTime() == startDate.getTime());
 							if (!isValid)
 								validator.addError(this.columnName,
 									L('ab.dataField.date.error.equal', '*Should equal {startdate}')
@@ -988,7 +1263,7 @@ class ABFieldDate extends ABField {
 								);
 							break;
 						case '<>':
-							isValid = (value.getTime() != startDate.getTime());
+							isValid = (value.getTime && startDate.getTime && value.getTime() != startDate.getTime());
 							if (!isValid)
 								validator.addError(this.columnName,
 									L('ab.dataField.date.error.notEqual', '*Should not equal {startdate}')
@@ -996,7 +1271,7 @@ class ABFieldDate extends ABField {
 								);
 							break;
 						case '>':
-							isValid = (value.getTime() > startDate.getTime());
+							isValid = (value.getTime && startDate.getTime && value.getTime() > startDate.getTime());
 							if (!isValid)
 								validator.addError(this.columnName,
 									L('ab.dataField.date.error.after', '*Should after {startdate}')
@@ -1004,7 +1279,7 @@ class ABFieldDate extends ABField {
 								);
 							break;
 						case '<':
-							isValid = (value.getTime() < startDate.getTime());
+							isValid = (value.getTime && startDate.getTime && value.getTime() < startDate.getTime());
 							if (!isValid)
 								validator.addError(this.columnName,
 									L('ab.dataField.date.error.before', '*Should before {startdate}')
@@ -1012,7 +1287,7 @@ class ABFieldDate extends ABField {
 								);
 							break;
 						case '>=':
-							isValid = (value.getTime() >= startDate.getTime());
+							isValid = (value.getTime && startDate.getTime && value.getTime() >= startDate.getTime());
 							if (!isValid)
 								validator.addError(this.columnName,
 									L('ab.dataField.date.error.afterOrEqual', '*Should after or equal {startdate}')
@@ -1020,7 +1295,7 @@ class ABFieldDate extends ABField {
 								);
 							break;
 						case '<=':
-							isValid = (value.getTime() <= startDate.getTime());
+							isValid = (value.getTime && startDate.getTime && value.getTime() <= startDate.getTime());
 							if (!isValid)
 								validator.addError(this.columnName,
 									L('ab.dataField.date.error.beforeOrEqual', '*Should before or equal {startdate}')
@@ -1066,7 +1341,7 @@ class ABFieldDate extends ABField {
 			return {
 				key: 'datepicker',
 				settings: {
-					timepicker: this.settings.includeTime
+					// timepicker: this.settings.includeTime
 				}
 			}
 		};
@@ -1102,39 +1377,43 @@ class ABFieldDate extends ABField {
 		return getDateDisplay(new Date(d), this.settings);
 	}
 	
-	getDateFormat() {
-		var setting = this.settings;
-		var dateFormat = "";
-
-		// Date format
-		for (var i = 1; i <= 3; i++) {
-			if (setting.dayOrder == i) {
-				dateFormat += setting.dayFormat;
-				dateFormat += (i != 3) ? getDelimiterSign(setting.dayDelimiter) : '';
-			}
-			if (setting.monthOrder == i) {
-				dateFormat += setting.monthFormat;
-				dateFormat += (i != 3) ? getDelimiterSign(setting.monthDelimiter) : '';
-			}
-			if (setting.yearOrder == i) {
-				dateFormat += setting.yearFormat;
-				dateFormat += (i != 3) ? getDelimiterSign(setting.yearDelimiter) : '';
-			}
-		}
-
-		// Time format
-		if (setting.includeTime == true) {
-			dateFormat += (' {hour}{delimiter}{minute}{period}'
-				.replace('{hour}', setting.hourFormat)
-				.replace('{delimiter}', getDelimiterSign(setting.timeDelimiter))
-				.replace('{minute}', '%i')
-				.replace('{period}', setting.periodFormat != 'none' ? ' '+setting.periodFormat : '')
-			);
-		}
-
-		return dateFormat;
-
+	getFormat(settings) {
+		return getDateFormat(settings);
 	}
+	
+	// getDateFormat() {
+	// 	var setting = this.settings;
+	// 	var dateFormat = "";
+
+	// 	// Date format
+	// 	for (var i = 1; i <= 3; i++) {
+	// 		if (setting.dayOrder == i) {
+	// 			dateFormat += setting.dayFormat;
+	// 			dateFormat += (i != 3) ? getDelimiterSign(setting.dayDelimiter) : '';
+	// 		}
+	// 		if (setting.monthOrder == i) {
+	// 			dateFormat += setting.monthFormat;
+	// 			dateFormat += (i != 3) ? getDelimiterSign(setting.monthDelimiter) : '';
+	// 		}
+	// 		if (setting.yearOrder == i) {
+	// 			dateFormat += setting.yearFormat;
+	// 			dateFormat += (i != 3) ? getDelimiterSign(setting.yearDelimiter) : '';
+	// 		}
+	// 	}
+
+	// 	// Time format
+	// 	if (setting.includeTime == true) {
+	// 		dateFormat += (' {hour}{delimiter}{minute}{period}'
+	// 			.replace('{hour}', setting.hourFormat)
+	// 			.replace('{delimiter}', getDelimiterSign(setting.timeDelimiter))
+	// 			.replace('{minute}', '%i')
+	// 			.replace('{period}', setting.periodFormat != 'none' ? ' '+setting.periodFormat : '')
+	// 		);
+	// 	}
+
+	// 	return dateFormat;
+
+	// }
 
 }
 
