@@ -1237,6 +1237,10 @@ export default class ABViewGrid extends ABViewWidget  {
 				dc.setCursor(id);
 				super.changePage(page);
 			},
+			
+			selectRow: (data) => {
+				$$(DataTable.ui.id).select(data.id, false);
+			},
 
 			/**
 			 * @function enableUpdateDelete
@@ -1407,6 +1411,14 @@ export default class ABViewGrid extends ABViewWidget  {
 					});
 				}
 			}
+			
+			var dc = this.dataCollection();
+			
+			this.eventAdd({
+				emitter: dc,
+				eventName: 'changeCursor',
+				listener: _logic.selectRow
+			})
 		};
 
 
