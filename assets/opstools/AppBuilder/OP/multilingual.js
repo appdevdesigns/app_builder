@@ -58,7 +58,11 @@ export default {
 
 					// copy each field to the root object
 					fields.forEach(function(f){
-						obj[f] = t[f] || '';  // default to '' if not found. 
+
+						if (t[f])
+							obj[f] = t[f];
+
+						obj[f] = obj[f] || '';  // default to '' if not found. 
 					})
 				}
 			})
