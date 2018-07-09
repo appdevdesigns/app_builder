@@ -488,6 +488,11 @@ export default class ABView extends ABViewBase {
 	 */
 	eventAdd(evt) {
 
+		if (!evt || 
+			!evt.emitter ||
+			!evt.listener)
+			return;
+
 		var exists = this.__events.find(e => {
 			return e.emitter == evt.emitter &&
 					e.eventName == evt.eventName;
