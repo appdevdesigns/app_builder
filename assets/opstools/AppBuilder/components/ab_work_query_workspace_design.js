@@ -275,6 +275,8 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 					if (!join.fieldID) return;
 
 					var objFrom = CurrentApplication.urlResolve(join.objectURL);
+					if (!objFrom) return;
+
 					var fieldLink = objFrom.fields(f => f.id == join.fieldID)[0];
 					if (!fieldLink) return;
 
