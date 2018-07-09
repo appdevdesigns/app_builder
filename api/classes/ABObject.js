@@ -565,13 +565,27 @@ module.exports = class ABObject extends ABObjectBase {
         delete options.offset;
         delete options.limit;
 
-		// added tableName to id because of non unique field error
-		return this.queryFind(options, userData)
-        .then((query)=>{
-            // TODO:: we need to figure out how to return the count not the full data
-            return query.length;
-        });
-        
+		// // added tableName to id because of non unique field error
+		// return this.queryFind(options, userData)
+        // .then((query)=>{
+        //     // TODO:: we need to figure out how to return the count not the full data
+        //     return query.length;
+        // });
+		
+		var query = this.model().query();
+
+		if (options) {
+			this.populateFindConditions(query, options, userData)
+		}
+
+		var pkField = '{tableName}.{pkName}'
+					.replace("{tableName}", tableName)
+					.replace("{pkName}", this.PK());
+
+		return query
+				.countDistinct('{field} as count'.replace("{field}", pkField))
+				.whereNotNull(pkField);
+
 		// '{tableName}.{pkName} as count'
 		// 													.replace("{tableName}", tableName)
 		// 													.replace("{pkName}", this.PK()));
@@ -995,26 +1009,6 @@ module.exports = class ABObject extends ABObjectBase {
 				
 			});
 
-			// TODO : move to ABObjectExternal.js
-			// Special case
-			var multilingualFields = this.fields(f => f.isMultilingual && f.object.isExternal);
-			multilingualFields.forEach(f => {
-
-				let transTable = f.object.dbTransTableName(),
-					baseClause = '{tableName}.{columnName}'
-								.replace('{tableName}', f.object.dbTableName())
-								.replace('{columnName}', f.object.PK()),
-					connectedClause = '{tableName}.{columnName}'
-								.replace('{tableName}', transTable)
-								.replace('{columnName}', f.object.transColumnName);
-	
-				if (!(query._statements || []).filter(s => s.table == transTable).length) // prevent join duplicate
-					query.innerJoin(transTable, baseClause, '=', connectedClause);
-	
-			});
-
-
-
 	    }
 
 	    // Apply Sorts
@@ -1051,7 +1045,33 @@ module.exports = class ABObject extends ABObjectBase {
 	            }
 	            query.orderByRaw(sortClause + " " + o.dir);
 	        })
-	    }
+		}
+		
+
+		// TODO : move to ABObjectExternal.js
+		// Special case
+		var multilingualFields = this.fields(f => f.isMultilingual && f.object.isExternal);
+		multilingualFields.forEach(f => {
+
+			let whereRules = where.rules || [];
+			let sortRules = sort || [];
+
+			if (whereRules.filter(r => r.key == f.id)[0] || 
+				sortRules.filter(o => o.key == f.id)[0]) {
+
+				let transTable = f.object.dbTransTableName(),
+				baseClause = '{tableName}.{columnName}'
+							.replace('{tableName}', f.object.dbTableName())
+							.replace('{columnName}', f.object.PK()),
+				connectedClause = '{tableName}.{columnName}'
+							.replace('{tableName}', transTable)
+							.replace('{columnName}', f.object.transColumnName);
+	
+				if (!(query._statements || []).filter(s => s.table == transTable).length) // prevent join duplicate
+					query.innerJoin(transTable, baseClause, '=', connectedClause);
+			}
+
+		});
 
 
 	    // apply any offset/limit if provided.
