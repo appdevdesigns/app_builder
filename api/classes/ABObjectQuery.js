@@ -543,23 +543,6 @@ module.exports = class ABObjectQuery extends ABObject {
 	}
 
 
-	/**
-	 * @method modelRefresh
-	 * when the definition of a model changes, we need to clear our cached
-	 * model definitions.
-	 * NOTE: called from our ABField.migrateXXX methods.
-	 */
-	// modelRefresh() {
-
-	// 	var tableName = this.dbTableName();
-	// 	delete __ModelPool[tableName];
-
-	// 	ABMigration.refreshObject(tableName);
-
-	// }
-
-
-
 
 	/**
 	 * @method queryFind
@@ -971,7 +954,7 @@ module.exports = class ABObjectQuery extends ABObject {
 
 					// if we had a condition and no condition was passed in, 
 					// just use ours:
-					options.where = this.workspaceFilterConditions;
+					options.where = _.cloneDeep(this.workspaceFilterConditions);
 				}
 			}
 
@@ -1127,21 +1110,35 @@ module.exports = class ABObjectQuery extends ABObject {
 	 */
 	queryCount(options, userData, tableName) {
 
-		if (_.isUndefined(tableName)) {
-			var firstLink = this.joins()[0];
-			var baseObject = this.application.urlResolve(firstLink.objectURL);
-			tableName = baseObject.dbTableName();
-		}
+		// if (_.isUndefined(tableName)) {
+		// 	var firstLink = this.joins()[0];
+		// 	var baseObject = this.application.urlResolve(firstLink.objectURL);
+		// 	tableName = baseObject.dbTableName();
+		// }
+
+		// options = options || {};
+
+		// we don't include relative data on counts:
+		// and get rid of any .sort, .offset, .limit
+		// options.includeRelativeData = false;
+		delete options.sort;
+		delete options.offset;
+		delete options.limit;
 
 		// not include columns
 		// to prevent 'ER_MIX_OF_GROUP_FUNC_AND_FIELDS' error
-		options.ignoreIncludeColumns = true;
+		// options.ignoreIncludeColumns = true;
 
 		// not update translations key names
 		options.ignoreEditTranslations = true;
 
-		// call our parent queryCount() with correct tableName
-		return super.queryCount(options, userData, tableName);
+		// added tableName to id because of non unique field error
+		return this.queryFind(options, userData)
+				.then((query)=>{
+					// TODO:: we need to figure out how to return the count not the full data
+					return query.length;
+				});
+
 	}
 
 
