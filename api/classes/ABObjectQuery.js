@@ -954,7 +954,7 @@ module.exports = class ABObjectQuery extends ABObject {
 
 					// if we had a condition and no condition was passed in, 
 					// just use ours:
-					options.where = this.workspaceFilterConditions;
+					options.where = _.cloneDeep(this.workspaceFilterConditions);
 				}
 			}
 
@@ -1110,24 +1110,24 @@ module.exports = class ABObjectQuery extends ABObject {
 	 */
 	queryCount(options, userData, tableName) {
 
-		if (_.isUndefined(tableName)) {
-			var firstLink = this.joins()[0];
-			var baseObject = this.application.urlResolve(firstLink.objectURL);
-			tableName = baseObject.dbTableName();
-		}
+		// if (_.isUndefined(tableName)) {
+		// 	var firstLink = this.joins()[0];
+		// 	var baseObject = this.application.urlResolve(firstLink.objectURL);
+		// 	tableName = baseObject.dbTableName();
+		// }
 
-		options = options || {};
+		// options = options || {};
 
 		// we don't include relative data on counts:
 		// and get rid of any .sort, .offset, .limit
-		options.includeRelativeData = false;
+		// options.includeRelativeData = false;
 		delete options.sort;
 		delete options.offset;
 		delete options.limit;
 
 		// not include columns
 		// to prevent 'ER_MIX_OF_GROUP_FUNC_AND_FIELDS' error
-		options.ignoreIncludeColumns = true;
+		// options.ignoreIncludeColumns = true;
 
 		// not update translations key names
 		options.ignoreEditTranslations = true;
