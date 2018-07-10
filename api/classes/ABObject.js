@@ -1053,7 +1053,7 @@ module.exports = class ABObject extends ABObjectBase {
 			let sortRules = (sort || []);
 
 			if (whereRules.filter(r => r.key == f.id)[0] || 
-				sortRules.filter(o => o.key == f.id)[0]) {
+				(sortRules.filter && sortRules.filter(o => o.key == f.id)[0])) {
 
 				let transTable = f.object.dbTransTableName(),
 				baseClause = '{tableName}.{columnName}'
