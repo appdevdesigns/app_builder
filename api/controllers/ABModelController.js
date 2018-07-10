@@ -73,11 +73,17 @@ function updateRelationValues(object, id, updateRelationParams) {
                             var objectLink = fieldLink.object;
                             if (objectLink == null) return resolve();
 
-                            record
-                                .$relatedQuery(clearRelationName)
-                                .unrelate()
-                                .catch(err => reject(err))
-                                .then(() => { resolve(); });
+                            // WORKAROUND : HRIS tables have non null columns
+                            if (object.isExternal) {
+                                resolve();
+                            }
+                            else {
+                                record
+                                    .$relatedQuery(clearRelationName)
+                                    .unrelate()
+                                    .catch(err => reject(err))
+                                    .then(() => { resolve(); });
+                            }
 
                         });
 
@@ -219,7 +225,7 @@ function updateTranslationsValues(object, id, translations, isInsert) {
         transTableName = transModel.modelClass.tableName;
         multilingualFields = object.fields(f => f.settings.supportMultilingual);
 
-    translations.forEach(trans => {
+    (translations || []).forEach(trans => {
 
         tasks.push(new Promise((next, err) => {
 
@@ -483,6 +489,7 @@ module.exports = {
 
 
                 var where = req.options._where;
+                var whereCount = _.cloneDeep(req.options._where); // ABObject.populateFindConditions changes values of this object
                 var sort = req.options._sort;
                 var offset = req.options._offset;
                 var limit = req.options._limit;
@@ -496,7 +503,7 @@ module.exports = {
                 }, req.user.data);
 
                 // promise for the total count. this was moved below the filters because webix will get caught in an infinte loop of queries if you don't pass the right count
-                var pCount = object.queryCount({ where: where, includeRelativeData: false }, req.user.data);
+                var pCount = object.queryCount({ where: whereCount, includeRelativeData: false }, req.user.data);
 
                 // TODO:: we need to refactor to remove Promise.all so we no longer have Promise within Promises.
                 Promise.all([

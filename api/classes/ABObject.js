@@ -565,16 +565,26 @@ module.exports = class ABObject extends ABObjectBase {
         delete options.offset;
         delete options.limit;
 
-		// added tableName to id because of non unique field error
-		return this.queryFind(options, userData)
-        .then((query)=>{
-            // TODO:: we need to figure out how to return the count not the full data
-            return query.length;
-        });
-        
-		// '{tableName}.{pkName} as count'
-		// 													.replace("{tableName}", tableName)
-		// 													.replace("{pkName}", this.PK()));
+		// // added tableName to id because of non unique field error
+		// return this.queryFind(options, userData)
+        // .then((query)=>{
+        //     // TODO:: we need to figure out how to return the count not the full data
+        //     return query.length;
+        // });
+		
+		var query = this.model().query();
+
+		if (options) {
+			this.populateFindConditions(query, options, userData)
+		}
+
+		var pkField = '{tableName}.{pkName}'
+					.replace("{tableName}", tableName)
+					.replace("{pkName}", this.PK());
+
+		return query
+				.countDistinct('{field} as count'.replace("{field}", pkField))
+				.whereNotNull(pkField);
 	}
 
 
@@ -765,10 +775,22 @@ module.exports = class ABObject extends ABObjectBase {
 						// if we are searching a multilingual field it is stored in translations so we need to search JSON
 						if (field.isMultilingual) {
 
-							condition.key = ('JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({tableName}.translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({tableName}.translations, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))')
-											.replace(/{tableName}/g, field.object.dbTableName())
-											.replace(/{languageCode}/g, userData.languageCode)
-											.replace(/{columnName}/g, field.columnName);
+							// TODO: move to ABOBjectExternal.js
+							if (field.object.isExternal) {
+
+								let transTable = field.object.dbTransTableName();
+
+								condition.key = '`{tableName}`.`{columnName}`'
+												.replace(/{tableName}/g, transTable)
+												.replace(/{columnName}/g, field.columnName);
+
+							}
+							else {
+								condition.key = ('JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({tableName}.translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({tableName}.translations, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))')
+												.replace(/{tableName}/g, field.object.dbTableName())
+												.replace(/{languageCode}/g, userData.languageCode)
+												.replace(/{columnName}/g, field.columnName);
+							}
 						}
 
 						// if this is from a LIST, then make sure our value is the .ID
@@ -983,7 +1005,6 @@ module.exports = class ABObject extends ABObjectBase {
 				
 			});
 
-
 	    }
 
 	    // Apply Sorts
@@ -998,10 +1019,19 @@ module.exports = class ABObject extends ABObjectBase {
 				// you are using but the intent of the sort is maintained
 				var sortClause = '';
 	            if (orderField.settings.supportMultilingual == 1) {
-					sortClause = ('JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({tableName}.translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({tableName}.translations, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))')
-									.replace(/{tableName}/g, orderField.object.dbTableName())
-									.replace('{languageCode}', userData.languageCode)
+
+					// TODO: move to ABOBjectExternal.js
+					if (orderField.object.isExternal) {
+						sortClause = "`{tableName}`.`{columnName}`"
+									.replace('{tableName}', orderField.object.dbTransTableName())
 									.replace('{columnName}', orderField.columnName);
+					}
+					else {
+						sortClause = ('JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({tableName}.translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({tableName}.translations, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))')
+										.replace(/{tableName}/g, orderField.object.dbTableName())
+										.replace('{languageCode}', userData.languageCode)
+										.replace('{columnName}', orderField.columnName);
+					}
 				} 
 				// If we are just sorting a field it is much simpler
 				else { 
@@ -1011,7 +1041,33 @@ module.exports = class ABObject extends ABObjectBase {
 	            }
 	            query.orderByRaw(sortClause + " " + o.dir);
 	        })
-	    }
+		}
+		
+
+		// TODO : move to ABObjectExternal.js
+		// Special case
+		var multilingualFields = this.fields(f => f.isMultilingual && f.object.isExternal);
+		multilingualFields.forEach(f => {
+
+			let whereRules = where.rules || [];
+			let sortRules = sort || [];
+
+			if (whereRules.filter(r => r.key == f.id)[0] || 
+				sortRules.filter(o => o.key == f.id)[0]) {
+
+				let transTable = f.object.dbTransTableName(),
+				baseClause = '{tableName}.{columnName}'
+							.replace('{tableName}', f.object.dbTableName())
+							.replace('{columnName}', f.object.PK()),
+				connectedClause = '{tableName}.{columnName}'
+							.replace('{tableName}', transTable)
+							.replace('{columnName}', f.object.transColumnName);
+	
+				if (!(query._statements || []).filter(s => s.table == transTable).length) // prevent join duplicate
+					query.innerJoin(transTable, baseClause, '=', connectedClause);
+			}
+
+		});
 
 
 	    // apply any offset/limit if provided.
