@@ -1049,8 +1049,8 @@ module.exports = class ABObject extends ABObjectBase {
 		var multilingualFields = this.fields(f => f.isMultilingual && f.object.isExternal);
 		multilingualFields.forEach(f => {
 
-			let whereRules = where.rules || [];
-			let sortRules = sort || [];
+			let whereRules = (where.rules || []);
+			let sortRules = (sort || []);
 
 			if (whereRules.filter(r => r.key == f.id)[0] || 
 				sortRules.filter(o => o.key == f.id)[0]) {
