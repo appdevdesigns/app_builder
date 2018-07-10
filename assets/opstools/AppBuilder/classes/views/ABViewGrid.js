@@ -1251,7 +1251,10 @@ export default class ABViewGrid extends ABViewWidget  {
 			},
 			
 			selectRow: (data) => {
-				$$(DataTable.ui.id).select(data.id, false);
+				if (data && data.id)
+					$$(DataTable.ui.id).select(data.id, false);
+				else
+					$$(DataTable.ui.id).select(null, false);
 			},
 
 			/**

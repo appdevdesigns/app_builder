@@ -1119,9 +1119,31 @@ PopupRecordRule.qbFixAfterShow();
 
 			}
 
-			// validate
-			var validator = obj.isValidData(formVals);
-			if (validator.pass()) {
+			var isValid = true;
+
+			// validate required fields
+			var requiredFields = this.fieldComponents(fComp => fComp.settings.required).map(fComp => fComp.field());
+			requiredFields.forEach(f => {
+
+				if (!formVals[f.columnName] && 
+					formVals[f.columnName] != '0') {
+
+					formView.markInvalid(f.columnName, '*This is a required field.');
+					isValid = false;
+				}
+
+			});
+
+			// validate data
+			var validator;
+			if (isValid) {
+				validator = obj.isValidData(formVals);
+				isValid = validator.pass();
+			}
+
+
+
+			if (isValid) {
 
 				// show progress icon
 				if (formView.showProgress)
@@ -1217,9 +1239,11 @@ resolve();
 			else {
 
 				// error message
-				validator.errors.forEach(err => {
-					formView.markInvalid(err.name, err.message);
-				});
+				if (validator && validator.errors) {
+					validator.errors.forEach(err => {
+						formView.markInvalid(err.name, err.message);
+					});
+				}
 
 				return Promise.resolve();
 			}
