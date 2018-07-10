@@ -887,7 +887,11 @@ fieldField.refresh();
 							}).forEach((item) => {
 								
 								var valueField = this.currentForm.dataCollection().datasource.fields((f)=>{ return f.id == item.value;})[0];
-								item.value = this._formData[valueField.columnName];
+								if (valueField.key == "connectObject") {
+									item.value = valueField.format(this._formData);
+								} else {
+									item.value = this._formData[valueField.columnName];
+								}
 								
 								if (item.rule == "not_same_as_field") {
 									item.rule = "not equals";
@@ -1027,6 +1031,9 @@ fieldField.refresh();
 											
 											if (typeof newValue == "undefined") {
 												newValue = value[fieldWithValue.relationName()];
+												if (Array.isArray(newValue)) {
+													newValue = newValue[0];
+												}
 												if (newValue.id) newValue = newValue.id;
 											}
 											
