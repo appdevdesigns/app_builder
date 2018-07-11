@@ -382,7 +382,7 @@ export default class ABViewLabel extends ABViewWidget  {
 			reportDef.fontSize = 16;
 		}
 		else if (this.settings.format == 1) {
-			reportDef.fontSize = 25;
+			reportDef.fontSize = 18;
 			reportDef.bold = true;
 		}
 		else if (this.settings.format == 2) {
