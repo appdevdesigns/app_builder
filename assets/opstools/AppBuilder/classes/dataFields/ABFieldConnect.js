@@ -858,7 +858,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 		var linkedObject = this.datasourceLink;
 
 		var relationName = this.relationName();
-		if (row[relationName] && linkedObject) {
+		if (row && row[relationName] && linkedObject) {
 
 			// convert to JSON
 			if (typeof row[relationName] == "string")

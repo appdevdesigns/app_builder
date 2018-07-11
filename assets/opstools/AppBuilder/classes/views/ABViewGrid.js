@@ -1778,24 +1778,24 @@ export default class ABViewGrid extends ABViewWidget  {
 
 					var imageData = null,
 						imageUrl = "/opsportal/image/{application}/{image}",
-						image = d[f.columnName] || "";
+						imageFilename = d[f.columnName] || "";
 		
-					if (image) {
-						image = imageUrl
-							.replace("{application}", this.application.name)
-							.replace("{image}", image);
+					if (imageFilename) {
+						let imagePath = imageUrl
+								.replace("{application}", this.application.name)
+								.replace("{image}", imageFilename);
+		
+						let img = document.createElement('img');
+						img.setAttribute('src', imagePath);
 			
-						var img = document.createElement('img');
-						img.setAttribute('src', image);
-			
-						var c = document.createElement('canvas');
+						let c = document.createElement('canvas');
 						c.height = img.naturalHeight;
 						c.width = img.naturalWidth;
-						var ctx = c.getContext('2d');
+						let ctx = c.getContext('2d');
 						ctx.drawImage(img, 0, 0, c.width, c.height, 0, 0, c.width, c.height);
 			
 						imageData = c.toDataURL();
-
+		
 						if (imageData) {
 							reportDef.table.body[rowIndex][indexField] = {
 								image: imageData,

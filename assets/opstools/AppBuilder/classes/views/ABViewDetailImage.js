@@ -233,14 +233,20 @@ export default class ABViewDetailImage extends ABViewDetailComponent {
 					bold: true,
 					text: field.label,
 					width: detailCom.settings.labelWidth
-				},
-				{
-					image: imageData || '',
-					width: parseInt(field.settings.imageWidth || 20),
-					height: parseInt(field.settings.imageHeight || 20),
 				}
 			]
 		};
+
+		if (imageData) {
+			reportDef.columns.push({
+				image: imageData || '',
+				width: parseInt(field.settings.imageWidth || 20),
+				height: parseInt(field.settings.imageHeight || 20),
+			});
+		}
+		else {
+			reportDef.columns.push({});
+		}
 
 		return reportDef;
 

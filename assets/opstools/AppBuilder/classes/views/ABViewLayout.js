@@ -365,5 +365,24 @@ export default class ABViewLayout extends ABViewWidget {
 	}
 
 
+	//// Report ////
+
+	print() {
+
+		var reportDef = {
+			columns: []
+		};
+
+		this.views().forEach(v => {
+
+			reportDef.columns.push(v.print());
+
+		});
+
+		return reportDef;
+
+	}
+
+
 }
 
