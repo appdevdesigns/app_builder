@@ -1386,7 +1386,8 @@ export default class RowFilter extends OP.Component {
 						break;
 				}
 
-				return result;
+				// return result;
+				return true;
 
 			}
 
