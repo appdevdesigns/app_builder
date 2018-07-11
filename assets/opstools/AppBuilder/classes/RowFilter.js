@@ -318,7 +318,7 @@ export default class RowFilter extends OP.Component {
 										},
 										{
 											value: labels.component.notEqualCondition,
-											id: "not_equals"
+											id: "not_equal"
 										},
 										{
 											value: labels.component.lessThanCondition,
@@ -451,11 +451,11 @@ export default class RowFilter extends OP.Component {
 										},
 										{
 											value: labels.component.isCondition,
-											id: "is"
+											id: "equals"
 										},
 										{
 											value: labels.component.isNotCondition,
-											id: "not_equals"
+											id: "not_equal"
 										}
 									].concat(queryFieldOptions).concat(recordRuleOptions),
 									on: {
@@ -485,11 +485,11 @@ export default class RowFilter extends OP.Component {
 										},
 										{
 											value: labels.component.isCondition,
-											id: "is"
+											id: "equals"
 										},
 										{
 											value: labels.component.isNotCondition,
-											id: "not_equals"
+											id: "not_equal"
 										}
 									].concat(queryFieldOptions).concat(recordRuleOptions),
 									on: {
@@ -1197,10 +1197,10 @@ export default class RowFilter extends OP.Component {
 					case "not_contains":
 						result = value.indexOf(compareValue) < 0;
 						break;
-					case "is":
+					case "equals":
 						result = value == compareValue;
 						break;
-					case "not_equals":
+					case "not_equal":
 						result = value != compareValue;
 						break;
 					default:
@@ -1256,7 +1256,7 @@ export default class RowFilter extends OP.Component {
 					case "equals":
 						result = value == compareValue;
 						break;
-					case "not_equals":
+					case "not_equal":
 						result = value != compareValue;
 						break;
 					case "less":
