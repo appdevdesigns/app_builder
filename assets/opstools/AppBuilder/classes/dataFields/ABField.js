@@ -604,7 +604,7 @@ export default class ABField extends ABFieldBase {
 
 		// console.error('!!! Field ['+this.fieldKey()+'] has not implemented .isValidData()!!!');
 		if (this.settings.required && (data[this.columnName] == null || data[this.columnName] == '')) {
-			validator.addError(this.columnName, 'This is a required field.');
+			validator.addError(this.columnName, '*This is a required field.');
 		}
 
 	}

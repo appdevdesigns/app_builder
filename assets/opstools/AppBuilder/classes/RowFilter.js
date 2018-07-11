@@ -264,6 +264,7 @@ export default class RowFilter extends OP.Component {
 									].concat(recordRuleOptions),
 									on: {
 										onChange:function( newValue, oldValue) {
+											_logic.onChangeRule(condition, $viewCond);
 											_logic.onChangeSameAsUser(this, newValue, oldValue);
 										}
 									}
@@ -1386,7 +1387,8 @@ export default class RowFilter extends OP.Component {
 						break;
 				}
 
-				return result;
+				// return result;
+				return true;
 
 			}
 
