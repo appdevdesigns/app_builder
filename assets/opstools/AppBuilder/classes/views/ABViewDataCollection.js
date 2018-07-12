@@ -1011,11 +1011,7 @@ export default class ABViewDataCollection extends ABView {
 			}
 
 			// filter link data collection's cursor
-			var linkDc = this.dataCollectionLink;
-			if (linkDc) {
-				var linkCursor = linkDc.getCursor();
-				this.filterLinkCursor(linkCursor);
-			}
+			this.refreshLinkCursor();
 
 		});
 
@@ -1053,11 +1049,7 @@ export default class ABViewDataCollection extends ABView {
 			}
 
 			// filter link data collection's cursor
-			var linkDc = this.dataCollectionLink;
-			if (linkDc) {
-				var linkCursor = linkDc.getCursor();
-				this.filterLinkCursor(linkCursor);
-			}
+			this.refreshLinkCursor();
 
 		});
 
@@ -1104,11 +1096,7 @@ export default class ABViewDataCollection extends ABView {
 			}
 
 			// filter link data collection's cursor
-			var linkDc = this.dataCollectionLink;
-			if (linkDc) {
-				var linkCursor = linkDc.getCursor();
-				this.filterLinkCursor(linkCursor);
-			}
+			this.refreshLinkCursor();
 
 		});
 
@@ -1489,15 +1477,15 @@ export default class ABViewDataCollection extends ABView {
 					if (linkDc) {
 
 						// filter data by match link data collection
-						var linkData = linkDc.getCursor();
-						this.filterLinkCursor(linkData);
+						this.refreshLinkCursor();
 
 						// add listeners when cursor of link data collection is changed
 						this.eventAdd({
 							emitter: linkDc,
 							eventName: "changeCursor",
 							listener: (currData) => {
-								this.filterLinkCursor(currData);
+
+								this.refreshLinkCursor();
 							}
 						});
 
@@ -1542,6 +1530,12 @@ export default class ABViewDataCollection extends ABView {
 				// data collection filter
 				var isValid = this.__filterComponent.isValid(row);
 
+				// parent dc filter
+				var linkDc = this.dataCollectionLink;
+				if (isValid && linkDc) {
+					isValid = this.isParentFilterValid(row);
+				}
+	
 				// addition filter
 				if (isValid && filter) {
 					isValid = filter(row);
@@ -1558,37 +1552,49 @@ export default class ABViewDataCollection extends ABView {
 
 
 	/**
-	 * @method filterLinkCursor
+	 * @method refreshLinkCursor
 	 * filter data in data collection by match id of link data collection
 	 * 
 	 * @param {Object} - current data of link data collection
 	 */
-	filterLinkCursor(linkCursor) {
+	refreshLinkCursor() {
 
-		var fieldLink = this.fieldLink;
+		if (this.__dataCollection) {
+			this.__dataCollection.filter((rowData) => {
 
-		if (this.__dataCollection && fieldLink) {
-			this.__dataCollection.filter((item) => {
-
-				// data is empty
-				if (item == null) return null;
-
-				// the parent's cursor is not set.
-				if (linkCursor == null) return false;
-
-				var linkVal = item[fieldLink.relationName()];
-				if (linkVal == null) return false;
-
-				// array - 1:M , M:N
-				if (linkVal.filter) {
-					return linkVal.filter((obj) => obj.id == linkCursor.id).length > 0;
-				}
-				else {
-					return (linkVal.id || linkVal) == linkCursor.id;
-				}
+				return this.isParentFilterValid(rowData);
 
 			});
 		}
+
+	}
+
+	isParentFilterValid(rowData) {
+
+		// data is empty
+		if (rowData == null) return null;
+
+		var linkDc = this.dataCollectionLink;
+		if (linkDc == null) return true;
+
+		var fieldLink = this.fieldLink;
+		if (fieldLink == null) return true;
+
+		// the parent's cursor is not set.
+		var linkCursor = linkDc.getCursor();
+		if (linkCursor == null) return false;
+
+		var linkVal = rowData[fieldLink.relationName()];
+		if (linkVal == null) return false;
+
+		// array - 1:M , M:N
+		if (linkVal.filter) {
+			return linkVal.filter((obj) => obj.id == linkCursor.id).length > 0;
+		}
+		else {
+			return (linkVal.id || linkVal) == linkCursor.id;
+		}
+
 
 	}
 
