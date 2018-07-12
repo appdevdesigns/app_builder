@@ -217,20 +217,16 @@ export default class ABViewLabel extends ABViewWidget {
 			type: {
 				width: 1000,
 				height: 30
-			}
-		}
-
-
-		var field = this.field();
-		if (field)
-			_ui.template = (item) => {
+			},
+			template: (item) => {
 
 				var field = this.field();
 				if (!field)
 					return "";
-
+	
 				return field.format(item);
-			};
+			}
+		};
 
 
 		var _init = (options) => {

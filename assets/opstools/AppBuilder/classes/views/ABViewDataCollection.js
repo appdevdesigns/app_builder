@@ -1537,7 +1537,18 @@ export default class ABViewDataCollection extends ABView {
 		var dc = this.__dataCollection;
 		if (dc) {
 
-			return dc.find(filter || {});
+			return dc.find(row => {
+
+				// data collection filter
+				var isValid = this.__filterComponent.isValid(row);
+
+				// addition filter
+				if (isValid && filter) {
+					isValid = filter(row);
+				}
+
+				return isValid;
+			});
 		}
 		else {
 			return [];
