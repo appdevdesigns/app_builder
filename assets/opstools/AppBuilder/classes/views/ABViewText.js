@@ -41,6 +41,7 @@ export default class ABViewText extends ABViewWidget {
 
 		OP.Multilingual.translate(this, this, ['text']);
 
+
 		// 	{
 		// 		id:'uuid',					// uuid value for this obj
 		// 		key:'viewKey',				// unique key for this View Type
@@ -124,6 +125,13 @@ export default class ABViewText extends ABViewWidget {
 	editorComponent(App, mode) {
 
 		webix.codebase = "/js/webix/extras/";
+		webix.require("tinymce/tinymce.min.js", function() {
+
+			webix.require("tinymce/plugins/textcolor/plugin.min.js");
+			webix.require("tinymce/plugins/table/plugin.min.js");
+
+		});
+
 
 		var idBase = 'ABViewTextEditorComponent';
 		var ids = {
@@ -134,13 +142,14 @@ export default class ABViewText extends ABViewWidget {
 		var _ui = {
 			id: ids.component,
 			view: 'tinymce-editor',
+			plugins: "textcolor",
 			value: this.text || ABViewTextPropertyComponentDefaults.text,
 			config: {
-				toolbar: 'bold italic underline | alignleft aligncenter alignright alignjustify',
+				toolbar: 'bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist | forecolor backcolor',
 				menu: {
 					file: { title: 'File', items: 'newdocument' },
 					edit: { title: 'Edit', items: 'undo redo | cut copy paste pastetext | selectall' },
-					format: { title: 'Format', items: 'formats | removeformat' },
+					format: { title: 'Format', items: 'formats | removeformat' }
 				},
 				init_instance_callback: (editor) => {
 
