@@ -8,6 +8,8 @@
 import ABViewWidget from "./ABViewWidget"
 import ABPropertyComponent from "../ABPropertyComponent"
 
+import PdfConverter from "../PdfMakeConverter/PdfConverter"
+
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
@@ -403,9 +405,12 @@ export default class ABViewText extends ABViewWidget {
 	 */
 	print() {
 
-		var reportDef = {
-			text: this.displayText()
-		};
+		var pdfConverter = new PdfConverter(),
+			reportDef = pdfConverter.convertHTML(this.displayText());
+
+		// var reportDef = {
+		// 	text: pdfText
+		// };
 
 		return reportDef;
 
