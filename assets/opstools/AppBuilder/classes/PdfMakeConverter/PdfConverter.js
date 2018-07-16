@@ -1,3 +1,8 @@
+/**
+ * Convert from Angular's factory to ES6
+ * https://raw.githubusercontent.com/OpenSlides/OpenSlides/master/openslides/core/static/js/core/pdf.js
+ */
+
 import HTMLValidizer from './HTMLValidizer'
 
 const DIFF_MODE_NORMAL = 0,

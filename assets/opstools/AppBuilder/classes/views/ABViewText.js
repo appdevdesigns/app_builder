@@ -174,7 +174,7 @@ export default class ABViewText extends ABViewWidget {
 					this.text = $$(ids.component).getValue();
 					this.save();
 
-				}, 900);
+				}, 400);
 
 			}
 
