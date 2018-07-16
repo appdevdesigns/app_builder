@@ -150,6 +150,12 @@ export default class ABViewText extends ABViewWidget {
 
 					});
 
+					editor.on('Change', function (event) {
+
+						_logic.onChange();
+
+					});
+
 				}
 			}
 		};
