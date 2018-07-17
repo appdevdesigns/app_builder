@@ -13,7 +13,7 @@ var cJSON = require('circular-json');
 
 
 const ValidationError = require('objection').ValidationError;
-const {ref, raw} = require('objection');
+const { ref, raw } = require('objection');
 
 var reloading = null;
 
@@ -29,7 +29,7 @@ var reloading = null;
  * @param {obj} updateRelationParams  "key"=>"value" hash of the related 
  *                      fields and current state of values.
  * @return {array}  array of update operations to perform the relations.
- */ 
+ */
 function updateRelationValues(object, id, updateRelationParams) {
 
     var updateTasks = [];
@@ -52,53 +52,99 @@ function updateRelationValues(object, id, updateRelationParams) {
     // - (insert, update, patch, delete, relate, unrelate, increment, decrement) and only once per query builder
     if (updateRelationParams != null && Object.keys(updateRelationParams).length > 0) {
 
-        // clear relative values
-        Object.keys(updateRelationParams).forEach((colName) => {
+        // // clear relative values
+        // Object.keys(updateRelationParams).forEach((colName) => {
 
-            updateTasks.push(() => {
+        //     updateTasks.push(() => {
 
-                var clearRelationName = AppBuilder.rules.toFieldRelationFormat(colName);
+        //         var clearRelationName = AppBuilder.rules.toFieldRelationFormat(colName);
 
-                return new Promise((resolve, reject) => {
+        //         return new Promise((resolve, reject) => {
 
-                    query.where(object.PK(), id).first()
-                        .catch(err => reject(err))
-                        .then(record => {
+        //             query.where(object.PK(), id).first()
+        //                 .catch(err => reject(err))
+        //                 .then(record => {
 
-                            if (record == null) return resolve();
+        //                     if (record == null) return resolve();
 
-                            var fieldLink = object.fields(f => f.columnName == colName)[0];
-                            if (fieldLink == null) return resolve();
+        //                     var fieldLink = object.fields(f => f.columnName == colName)[0];
+        //                     if (fieldLink == null) return resolve();
 
-                            var objectLink = fieldLink.object;
-                            if (objectLink == null) return resolve();
+        //                     var objectLink = fieldLink.object;
+        //                     if (objectLink == null) return resolve();
 
-                            // WORKAROUND : HRIS tables have non null columns
-                            if (object.isExternal) {
-                                resolve();
-                            }
-                            else {
-                                // record
-                                //     .$relatedQuery(clearRelationName)
-                                //     .unrelate()
-                                //     .catch(err => reject(err))
-                                //     .then(() => { resolve(); });
-                                resolve();
-                            }
+        //                     // WORKAROUND : HRIS tables have non null columns
+        //                     if (object.isExternal) {
+        //                         resolve();
+        //                     }
+        //                     else {
+        //                         // record
+        //                         //     .$relatedQuery(clearRelationName)
+        //                         //     .unrelate()
+        //                         //     .catch(err => reject(err))
+        //                         //     .then(() => { resolve(); });
+        //                         resolve();
+        //                     }
 
-                        });
+        //                 });
 
-                });
-
-
-            });
+        //         });
 
 
-        });
+        //     });
+
+
+        // });
 
 
         // update relative values
         Object.keys(updateRelationParams).forEach((colName) => {
+
+            // clear relative values
+            if (updateRelationParams[colName] == null ||
+                updateRelationParams[colName] == '' ||
+                (
+                    Array.isArray(updateRelationParams[colName]) &&
+                    !updateRelationParams[colName].length    
+                )) {
+
+                updateTasks.push(() => {
+
+                    var clearRelationName = AppBuilder.rules.toFieldRelationFormat(colName);
+
+                    return new Promise((resolve, reject) => {
+
+                        query.where(object.PK(), id).first()
+                            .catch(err => reject(err))
+                            .then(record => {
+
+                                if (record == null) return resolve();
+
+                                var fieldLink = object.fields(f => f.columnName == colName)[0];
+                                if (fieldLink == null) return resolve();
+
+                                var objectLink = fieldLink.object;
+                                if (objectLink == null) return resolve();
+
+                                // WORKAROUND : HRIS tables have non null columns
+                                if (object.isExternal) {
+                                    resolve();
+                                }
+                                else {
+                                    record
+                                        .$relatedQuery(clearRelationName)
+                                        .unrelate()
+                                        .catch(err => reject(err))
+                                        .then(() => { resolve(); });
+                                }
+
+                            });
+
+                    });
+                });
+
+                return;
+            }
 
             // convert relation data to array
             if (!Array.isArray(updateRelationParams[colName])) {
@@ -156,7 +202,7 @@ function updateConnectedFields(object, newData, oldData) {
     // Check to see if the object has any connected fields that need to be updated
     var connectFields = object.connectFields();
     // Parse through the connected fields
-    connectFields.forEach((f)=>{
+    connectFields.forEach((f) => {
         // Get the field object that the field is linked to
         var field = f.fieldLink();
         // Get the relation name so we can separate the linked fields updates from the rest
@@ -173,7 +219,7 @@ function updateConnectedFields(object, newData, oldData) {
         if (!Array.isArray(newItems)) {
             newItems = [newItems];
         }
-        
+
         var items = newItems;
         // check to see if we passed in the previous version of the saved data
         if (oldData !== undefined) {
@@ -186,7 +232,7 @@ function updateConnectedFields(object, newData, oldData) {
             // combine the new and the old items and remove duplicates
             items = items.concat(oldItems);
         }
-        
+
         // filter array to only show unique items
         items = _.uniqBy(items, field.object.PK());
         // parse through all items and broadcast a "stale" action so we can tell the client side the data may have updated
@@ -217,14 +263,14 @@ function updateTranslationsValues(object, id, translations, isInsert) {
 
     if (!object.isExternal)
         return Promise.resolve();
-        
+
     let transModel = object.model().relationMappings()['translations'];
     if (!transModel)
         return Promise.resolve();
 
     let tasks = [],
         transTableName = transModel.modelClass.tableName;
-        multilingualFields = object.fields(f => f.settings.supportMultilingual);
+    multilingualFields = object.fields(f => f.settings.supportMultilingual);
 
     (translations || []).forEach(trans => {
 
@@ -251,7 +297,7 @@ function updateTranslationsValues(object, id, translations, isInsert) {
 
                 transKnex.insert(vals)
                     .catch(err)
-                    .then(function() {
+                    .then(function () {
                         next();
                     });
             }
@@ -361,43 +407,43 @@ module.exports = {
 
                                     // // Query the new row to response to client
                                     return object.queryFind({
-                                            where: {
-                                                glue:'and',
-                                                rules:[
-                                                    {
-                                                        key: object.PK(),
-                                                        rule: "equals",
-                                                        value: newObj[object.PK()] || ''
-                                                    }
-                                                ]
-                                            },
-                                            offset: 0,
-                                            limit: 1,
-                                            includeRelativeData: true
+                                        where: {
+                                            glue: 'and',
+                                            rules: [
+                                                {
+                                                    key: object.PK(),
+                                                    rule: "equals",
+                                                    value: newObj[object.PK()] || ''
+                                                }
+                                            ]
                                         },
+                                        offset: 0,
+                                        limit: 1,
+                                        includeRelativeData: true
+                                    },
                                         req.user.data)
-                                    .then((newItem)=>{
+                                        .then((newItem) => {
 
-                                        res.AD.success(newItem[0]);
-                                        
-                                        // We want to broadcast the change from the server to the client so all datacollections can properly update
-                                        // Build a payload that tells us what was updated
-                                        var payload = {
-                                            objectId: object.id,
-                                            data: newItem[0]
-                                        }
-                                        
-                                        // Broadcast the create
-                                        sails.sockets.broadcast(object.id, "ab.datacollection.create", payload);
-                                        
-                                        updateConnectedFields(object, newItem[0]);
-                                        
-                                        // TODO:: what is this doing?
-                                        Promise.resolve();
+                                            res.AD.success(newItem[0]);
 
-                                    });
+                                            // We want to broadcast the change from the server to the client so all datacollections can properly update
+                                            // Build a payload that tells us what was updated
+                                            var payload = {
+                                                objectId: object.id,
+                                                data: newItem[0]
+                                            }
 
-                                
+                                            // Broadcast the create
+                                            sails.sockets.broadcast(object.id, "ab.datacollection.create", payload);
+
+                                            updateConnectedFields(object, newItem[0]);
+
+                                            // TODO:: what is this doing?
+                                            Promise.resolve();
+
+                                        });
+
+
                                 });
 
 
@@ -481,7 +527,7 @@ module.exports = {
 
         AppBuilder.routes.verifyAndReturnObject(req, res)
             .then(function (object) {
-            
+
                 // verify that the request is from a socket not a normal HTTP
                 if (req.isSocket) {
                     // Subscribe socket to a room with the name of the object's ID
@@ -537,36 +583,36 @@ module.exports = {
 
 
 
-                        //// TODO: evaluate if we really need to do this: 
-                        //// ?) do we have a data field that actually needs to post process it's data
-                        ////    before returning it to the client?
+                                //// TODO: evaluate if we really need to do this: 
+                                //// ?) do we have a data field that actually needs to post process it's data
+                                ////    before returning it to the client?
 
-                        // object.postGet(result.data)
-                        // .then(()=>{
-
-
-                        if (res.header) res.header('Content-type', 'application/json');
-
-                        res.send(result, 200);
+                                // object.postGet(result.data)
+                                // .then(()=>{
 
 
-                        // })
+                                if (res.header) res.header('Content-type', 'application/json');
 
+                                res.send(result, 200);
+
+
+                                // })
+
+
+                            })
+                            .catch((err) => {
+
+                                res.AD.error(err);
+
+                            });
 
                     })
-                    .catch((err) => {
 
-                        res.AD.error(err);
-
-                    });
-                    
-                })
-                
 
 
             })
             .catch((err) => {
-                ADCore.error.log("AppBuilder:ABModelController:find(): find() did not complete", {error:err});
+                ADCore.error.log("AppBuilder:ABModelController:find(): find() did not complete", { error: err });
                 res.AD.error(err);
             });
 
@@ -607,47 +653,47 @@ module.exports = {
                 // We are deleting an item...but first fetch its current data  
                 // so we can clean up any relations on the client side after the delete
                 object.queryFind({
-                        where: {
-                            glue:'and',
-                            rules:[{
-                                key: object.PK(),
-                                rule: "equals",
-                                value: id
-                            }]
-                        },
-                        includeRelativeData: true
-                    }, req.user.data)
-                .then((old_item) => {
-                    oldItem = old_item;
-                    next();
-                })
-                
+                    where: {
+                        glue: 'and',
+                        rules: [{
+                            key: object.PK(),
+                            rule: "equals",
+                            value: id
+                        }]
+                    },
+                    includeRelativeData: true
+                }, req.user.data)
+                    .then((old_item) => {
+                        oldItem = old_item;
+                        next();
+                    })
+
                 // queryPrevious
                 //     .catch(next)
                 //     .then((old_item) => {
                 //         oldItem = old_item;
                 //         next();
                 //     });
-                    
+
             },
-            
+
             // step #3
             function (next) {
                 // Check to see if the object has any connected fields that need to be updated
                 var connectFields = object.connectFields();
-                
+
                 // If there are no connected fields continue on
                 if (connectFields.length == 0) next();
-                
+
                 var relationQueue = [];
-                
+
                 // Parse through the connected fields
-                connectFields.forEach((f)=>{
+                connectFields.forEach((f) => {
                     // Get the field object that the field is linked to
                     var relatedObject = f.datasourceLink;
                     // Get the relation name so we can separate the linked fields updates from the rest
                     var relationName = f.relationName();
-                    
+
                     // If we have any related item data we need to build a query to report the delete...otherwise just move on
                     if (!Array.isArray(oldItem[0][relationName])) oldItem[0][relationName] = [oldItem[0][relationName]];
                     if (oldItem[0] &&
@@ -661,21 +707,21 @@ module.exports = {
                         });
 
                         // If no relate ids, then skip
-                        if (relatedIds.length < 1) 
+                        if (relatedIds.length < 1)
                             return;
 
                         // Get all related items info
                         var p = relatedObject.queryFind({
-                                where: {
-                                    glue:'and',
-                                    rules:[{
-                                        key: relatedObject.PK(),
-                                        rule: "in",
-                                        value: relatedIds
-                                    }]
-                                },
-                                includeRelativeData: true
-                            }, req.user.data)
+                            where: {
+                                glue: 'and',
+                                rules: [{
+                                    key: relatedObject.PK(),
+                                    rule: "in",
+                                    value: relatedIds
+                                }]
+                            },
+                            includeRelativeData: true
+                        }, req.user.data)
                             .then((items) => {
                                 // push new realted items into the larger related items array
                                 relatedItems.push({
@@ -693,19 +739,19 @@ module.exports = {
                         //             items: items
                         //         });
                         //     });
-                            
+
                         relationQueue.push(p);
                     }
                 });
-                
-                Promise.all(relationQueue).then(function(values) {
+
+                Promise.all(relationQueue).then(function (values) {
                     console.log("relatedItems: ", relatedItems)
                     next();
                 })
-                .catch(next);
+                    .catch(next);
 
             },
-            
+
             // step #4
             function (next) {
                 // Now we can delete because we have the current record saved as oldItem and our related records saved as relatedItems
@@ -733,10 +779,10 @@ module.exports = {
                             });
                         }
                         next();
-                
+
                     })
                     .catch(next);
-    
+
             },
 
         ], function (err) {
@@ -745,7 +791,7 @@ module.exports = {
                     ADCore.error.log('Error performing delete!', { error: err })
                     res.AD.error(err);
                     sails.log.error('!!!! error:', err);
-                }                
+                }
             }
         });
 
@@ -898,7 +944,7 @@ module.exports = {
 
 
     update: function (req, res) {
-        
+
         var id = req.param('id', -1);
 
 
@@ -919,19 +965,19 @@ module.exports = {
                 // because some updates will involve deletes of relations 
                 // so assuming creates can be problematic
                 var queryPrevious = object.queryFind({
-                        where: {
-                            glue:'and',
-                            rules:[{
-                                key: object.PK(),
-                                rule: "equals",
-                                value: id
-                            }]
-                        },
-                        includeRelativeData: true
-                    }, req.user.data);
-                
+                    where: {
+                        glue: 'and',
+                        rules: [{
+                            key: object.PK(),
+                            rule: "equals",
+                            value: id
+                        }]
+                    },
+                    includeRelativeData: true
+                }, req.user.data);
+
                 queryPrevious
-                    .catch((err) => { 
+                    .catch((err) => {
                         if (!(err instanceof ValidationError)) {
                             ADCore.error.log('Error performing find!', { error: err })
                             res.AD.error(err);
@@ -960,8 +1006,8 @@ module.exports = {
                         if (validationErrors.length == 0) {
 
                             if (object.isExternal) {
-                                    // translations values does not in same table of the external object
-                                    delete updateParams.translations;
+                                // translations values does not in same table of the external object
+                                delete updateParams.translations;
                             }
                             else {
                                 // this is an update operation, so ... 
@@ -1011,37 +1057,37 @@ module.exports = {
 
                                             // Query the new row to response to client
                                             var query3 = object.queryFind({
-                                                    where: {
-                                                        glue:'and',
-                                                        rules:[{
-                                                            key: object.PK(),
-                                                            rule: "equals",
-                                                            value: id
-                                                        }]
-                                                    },
-                                                    offset: 0,
-                                                    limit: 1,
-                                                    includeRelativeData: true
+                                                where: {
+                                                    glue: 'and',
+                                                    rules: [{
+                                                        key: object.PK(),
+                                                        rule: "equals",
+                                                        value: id
+                                                    }]
                                                 },
+                                                offset: 0,
+                                                limit: 1,
+                                                includeRelativeData: true
+                                            },
                                                 req.user.data);
 
                                             return query3
                                                 .catch((err) => { return Promise.reject(err); })
                                                 .then((newItem) => {
                                                     res.AD.success(newItem[0]);
-                                                    
+
                                                     // We want to broadcast the change from the server to the client so all datacollections can properly update
                                                     // Build a payload that tells us what was updated
                                                     var payload = {
                                                         objectId: object.id,
                                                         data: newItem[0]
                                                     }
-                                                    
+
                                                     // Broadcast the update
                                                     sails.sockets.broadcast(object.id, "ab.datacollection.update", payload);
-                                                    
+
                                                     updateConnectedFields(object, newItem[0], oldItem[0]);
-                                                    
+
                                                     Promise.resolve();
                                                 });
 
@@ -1109,7 +1155,7 @@ module.exports = {
 
                             res.AD.error(errorResponse);
                         }
-                        
+
                     });
 
             })
@@ -1118,10 +1164,10 @@ module.exports = {
 
 
 
-    upsert: function(req, res) {
+    upsert: function (req, res) {
 
         var object;
- 
+
         Promise.resolve()
             .then(() => {
 
@@ -1129,12 +1175,12 @@ module.exports = {
                 return new Promise((resolve, reject) => {
 
                     AppBuilder.routes.verifyAndReturnObject(req, res)
-                    .then(function (result) {
+                        .then(function (result) {
 
-                        object = result;
-                        resolve();
+                            object = result;
+                            resolve();
 
-                    });
+                        });
 
                 });
 
@@ -1145,14 +1191,14 @@ module.exports = {
                 return new Promise((resolve, reject) => {
 
                     object.model().query().columnInfo()
-                    .then(function (columns) {
+                        .then(function (columns) {
 
-                        var columnNames = Object.keys(columns);
+                            var columnNames = Object.keys(columns);
 
-                        resolve(columnNames);
+                            resolve(columnNames);
 
-                    })
-                    .catch(reject);
+                        })
+                        .catch(reject);
 
                 });
 
@@ -1177,7 +1223,7 @@ module.exports = {
                     Object.keys(allParams).forEach(prop => {
 
                         // remove no column of this object
-                        if (prop != 'id' && 
+                        if (prop != 'id' &&
                             columnNames.indexOf(prop) < 0 &&
                             relationNames.indexOf(prop) < 0) {
                             delete allParams[prop];
@@ -1209,7 +1255,7 @@ module.exports = {
                         var errorResponse = {
                             error: 'E_VALIDATION',
                             invalidAttributes: {
-            
+
                             }
                         }
 
@@ -1220,7 +1266,7 @@ module.exports = {
                             attr[e.name].push(e);
                         });
 
-                        res.AD.error(errorResponse);    
+                        res.AD.error(errorResponse);
 
                         return;
                     }
@@ -1233,9 +1279,9 @@ module.exports = {
                     else {
                         // this is an update operation, so ... 
                         // updateParams.updated_at = (new Date()).toISOString();
-            
+
                         allParams.updated_at = AppBuilder.rules.toSQLDateTime(new Date());
-            
+
                         // Check if there are any properties set otherwise let it be...let it be...let it be...yeah let it be
                         if (allParams.properties) {
                             allParams.properties = allParams.properties;
@@ -1244,7 +1290,7 @@ module.exports = {
                         }
                     }
 
-sails.log.verbose('ABModelController.upsert(): allParams:', allParams);
+                    sails.log.verbose('ABModelController.upsert(): allParams:', allParams);
 
                     // Upsert data
                     model
@@ -1277,18 +1323,18 @@ sails.log.verbose('ABModelController.upsert(): allParams:', allParams);
                 return new Promise((resolve, reject) => {
 
                     object.queryFind({
-                            where: {
-                                glue:'and',
-                                rules:[{
-                                    key: object.PK(),
-                                    rule: "equals",
-                                    value: updateId
-                                }]
-                            },
-                            offset: 0,
-                            limit: 1,
-                            includeRelativeData: true
+                        where: {
+                            glue: 'and',
+                            rules: [{
+                                key: object.PK(),
+                                rule: "equals",
+                                value: updateId
+                            }]
                         },
+                        offset: 0,
+                        limit: 1,
+                        includeRelativeData: true
+                    },
                         req.user.data)
                         .then((updateItem) => {
 
@@ -1315,7 +1361,7 @@ sails.log.verbose('ABModelController.upsert(): allParams:', allParams);
             .catch((err) => {
 
                 console.log('...  (err) handler!', err);
-                
+
                 // handle invalid values here:
                 if (err instanceof ValidationError) {
 
@@ -1342,7 +1388,7 @@ sails.log.verbose('ABModelController.upsert(): allParams:', allParams);
                     res.AD.error(errorResponse);
                 }
             });
- 
+
     },
 
 
