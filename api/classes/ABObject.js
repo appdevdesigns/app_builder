@@ -584,7 +584,7 @@ module.exports = class ABObject extends ABObjectBase {
 
 		return query
 				.countDistinct('{field} as count'.replace("{field}", pkField))
-				.whereNotNull(pkField);
+				.whereNotNull(pkField).first();
 	}
 
 

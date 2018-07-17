@@ -565,8 +565,7 @@ module.exports = {
                     ])
                     .then(function (values) {
                         var result = {};
-                        // var count = values[0].count;
-                        var count = values[0][0].count;
+                        var count = values[0].count;
                         var rows = values[1];
                         result.data = rows;
 
