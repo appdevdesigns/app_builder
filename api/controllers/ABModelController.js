@@ -78,11 +78,12 @@ function updateRelationValues(object, id, updateRelationParams) {
                                 resolve();
                             }
                             else {
-                                record
-                                    .$relatedQuery(clearRelationName)
-                                    .unrelate()
-                                    .catch(err => reject(err))
-                                    .then(() => { resolve(); });
+                                // record
+                                //     .$relatedQuery(clearRelationName)
+                                //     .unrelate()
+                                //     .catch(err => reject(err))
+                                //     .then(() => { resolve(); });
+                                resolve();
                             }
 
                         });
