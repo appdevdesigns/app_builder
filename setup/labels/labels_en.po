@@ -1309,6 +1309,12 @@ msgstr "Tab"
 
 #. path: app_builder
 #. code: en
+#. key: ab.components.text
+msgid "Text"
+msgstr "Text"
+
+#. path: app_builder
+#. code: en
 #. key: ab.components.textbox
 msgid "Textbox"
 msgstr "Textbox"

@@ -182,7 +182,7 @@ export default class ABViewDetailComponent extends ABViewWidget {
 		var field = this.field();
 		if (!field) return reportDef;
 
-		rowData = rowData || dc.getCursor();
+		rowData = rowData || dc.getCursor() || {};
 
 		var text = (field.format(rowData) || "");
 

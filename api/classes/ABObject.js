@@ -784,6 +784,12 @@ module.exports = class ABObject extends ABObjectBase {
 												.replace(/{tableName}/g, transTable)
 												.replace(/{columnName}/g, field.columnName);
 
+								let languageWhere = '`{tableName}`.`language_code` = "{languageCode}"'
+												.replace(/{tableName}/g, transTable)
+												.replace(/{languageCode}/g, userData.languageCode);
+
+								Query.whereRaw(languageWhere);
+
 							}
 							else {
 								condition.key = ('JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({tableName}.translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({tableName}.translations, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))')
