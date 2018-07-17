@@ -557,29 +557,29 @@ module.exports = {
                     pCount,
                     query
                 ])
-                    .then(function (queries) {
+                .then(function(queries){
+                    
+                    Promise.all([
+                        queries[0],
+                        queries[1]
+                    ])
+                    .then(function (values) {
+                        var result = {};
+                        // var count = values[0].count;
+                        var count = values[0][0].count;
+                        var rows = values[1];
+                        result.data = rows;
 
-                        Promise.all([
-                            queries[0],
-                            queries[1]
-                        ])
-                            .then(function (values) {
-                                var result = {};
-                                // var count = values[0].count;
-                                var count = values[0];
-                                var rows = values[1];
-                                result.data = rows;
+                        // webix pagination format:
+                        result.total_count = count;
+                        result.pos = offset;
 
-                                // webix pagination format:
-                                result.total_count = count;
-                                result.pos = offset;
+                        result.offset = offset;
+                        result.limit = limit;
 
-                                result.offset = offset;
-                                result.limit = limit;
-
-                                if ((offset + rows.length) < count) {
-                                    result.offset_next = offset + limit;
-                                }
+                        if ((offset + rows.length) < count) {
+                            result.offset_next = offset + limit;
+                        }
 
 
 
