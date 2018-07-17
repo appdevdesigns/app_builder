@@ -353,7 +353,7 @@ module.exports = class ABApplicationBase {
 
 			// if we got here, there is an error!
 			// console.error('!!! failed to lookup url:'+pointer);
-			console.warn('!!! failed to lookup url:'+pointer);
+			// console.warn('!!! failed to lookup url:'+pointer);
 			return null;
 
 		}
