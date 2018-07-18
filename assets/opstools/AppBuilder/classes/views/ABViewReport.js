@@ -11,6 +11,7 @@ import ABViewPage from "./ABViewPage"
 import ABViewReportPage from "./ABViewReportPage"
 import ABViewReportPanel from "./ABViewReportPanel"
 import ABViewManager from "../ABViewManager"
+import { resolve } from "path";
 
 
 function L(key, altText) {
@@ -246,73 +247,122 @@ export default class ABViewReport extends ABViewPage {
 
 	print() {
 
-		var docDefinition = {
-			// a string or { width: number, height: number }
-			pageSize: this.settings.pageSize,
+		return new Promise((resolve, reject) => {
 
-			// by default we use portrait, you can change it to landscape if you wish
-			pageOrientation: this.settings.pageOrientation,
+			var docDefinition = {
+				// a string or { width: number, height: number }
+				pageSize: this.settings.pageSize,
 
-			// [left, top, right, bottom] or [horizontal, vertical] or just a number for equal margins
-			pageMargins: [
-				this.settings.pageMarginsLeft,
-				this.settings.pageMarginsTop,
-				this.settings.pageMarginsRight,
-				this.settings.pageMarginsBottom
-			],
+				// by default we use portrait, you can change it to landscape if you wish
+				pageOrientation: this.settings.pageOrientation,
 
-			defaultStyle: {
-				columnGap: 10
-			},
+				// [left, top, right, bottom] or [horizontal, vertical] or just a number for equal margins
+				pageMargins: [
+					this.settings.pageMarginsLeft,
+					this.settings.pageMarginsTop,
+					this.settings.pageMarginsRight,
+					this.settings.pageMarginsBottom
+				],
 
-			// TODO: row gap
-			// styles: {
-			// 	lineSpacing: {
-			// 		margin: [0, 0, 0, 20] // row gap
-			// 	}
-			// },
+				defaultStyle: {
+					columnGap: 10
+				},
 
-			header: [],
-			content: [],
-			footer: []
-		};
+				// TODO: row gap
+				// styles: {
+				// 	lineSpacing: {
+				// 		margin: [0, 0, 0, 20] // row gap
+				// 	}
+				// },
 
-		var views = this.views();
+				header: [],
+				content: [],
+				footer: []
+			};
 
-		// pull Header PDF json definition
-		if (views[0]) {
-			docDefinition.header = views[0].print();
-			docDefinition.header.margin = [20, 10];
-		}
+			var views = this.views();
 
-		// pull Detail PDF json definition
-		if (views[1]) {
-			docDefinition.content = views[1].print();
-		}
+			var tasks = [];
 
-		// pull Footer PDF json definition
-		if (views[2]) {
-			docDefinition.footer = views[2].print();
-			docDefinition.footer.margin = [20, 0];
-		}
+			// pull Header PDF json definition
+			if (views[0]) {
+				tasks.push(new Promise((next, err) => {
 
-		return docDefinition;
+					views[0].print().then(headerDef => {
+
+						docDefinition.header = headerDef;
+						docDefinition.header.margin = [20, 10];
+
+						next();
+
+					}).catch(err);
+
+				}));
+			}
+
+			// pull Detail PDF json definition
+			if (views[1]) {
+
+				tasks.push(new Promise((next, err) => {
+
+					views[1].print().then(detailDef => {
+
+						docDefinition.content = detailDef;
+
+						next();
+
+					}).catch(err);
+
+				}));
+			}
+
+			// pull Footer PDF json definition
+			if (views[2]) {
+
+				tasks.push(new Promise((next, err) => {
+
+					views[2].print().then(footerDef => {
+
+						docDefinition.footer = footerDef;
+						docDefinition.footer.margin = [20, 0];
+
+						next();
+
+					}).catch(err);
+
+				}));
+			}
+
+			Promise.all(tasks)
+				.then(() => {
+
+					resolve(docDefinition);
+
+				});
+
+		});
 
 	}
 
 	previewPdf() {
 
-		var docDefinition = this.print();
+		this.print().then(docDefinition => {
 
-		pdfMake.createPdf(docDefinition).open();
+			pdfMake.createPdf(docDefinition).open();
+
+		});
+
 	}
 
 	downloadPdf() {
 
-		var docDefinition = this.print(),
-			filename = (this.label + '.pdf');
+		this.print().then(docDefinition => {
 
-		pdfMake.createPdf(docDefinition).download(filename);
+			let filename = (this.label + '.pdf');
+
+			pdfMake.createPdf(docDefinition).download(filename);
+
+		});
 	}
 
 

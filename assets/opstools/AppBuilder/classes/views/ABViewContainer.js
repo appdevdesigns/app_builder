@@ -7,6 +7,8 @@
 
 import ABView from "./ABView"
 import ABPropertyComponent from "../ABPropertyComponent"
+import { resolve } from "path";
+import { runInNewContext } from "vm";
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -678,54 +680,75 @@ export default class ABViewContainer extends ABView {
 
 	print(rowData) {
 
-		var reportDef = {
-			columns: []
-		};
+		return new Promise((resolve, reject) => {
 
-		// add each definition of component to position
-		this.views().forEach((v , vIndex) => {
+			var reportDef = {
+				columns: []
+			};
 
-			let x = v.position.x || 0,
-				y = v.position.y;
+			var tasks = [];
 
-			if (y == null)
-				y = vIndex;
+			// add each definition of component to position
+			this.views().forEach((v , vIndex) => {
 
-			// create a column
-			if (reportDef.columns[x] == null)
-				reportDef.columns[x] = [];
+				tasks.push(new Promise((next, err) => {
 
-			reportDef.columns[x][y] = v.print(rowData);
+					let x = v.position.x || 0,
+						y = v.position.y;
+
+					if (y == null)
+						y = vIndex;
+
+					// create a column
+					if (reportDef.columns[x] == null)
+						reportDef.columns[x] = [];
+
+					v.print(rowData).then(vDef => {
+
+						reportDef.columns[x][y] = vDef;
+						next();
+
+					}).catch(err);
+
+				}));
+
+			});
+
+			Promise.all(tasks)
+				.then(() => {
+
+					// NOTE: fill undefined to prevent render PDF errors
+					var fillUndefined = (columns, numberOfCol) => {
+			
+						for (var x = 0; x < numberOfCol; x++) {
+			
+							if (columns[x] == null)
+								columns[x] = [];
+				
+							var rows = columns[x];
+							if (!Array.isArray(columns[x]))
+								rows = [columns[x]];
+			
+							rows.forEach((row, y) => {
+			
+								if (row == null)
+									columns[x][y] = {};
+								else if (row.columns)
+									fillUndefined(row.columns, row.columns.length);
+			
+							});
+						}
+			
+					};
+
+					fillUndefined(reportDef.columns, this.settings.columns);
+
+					resolve(reportDef);
+
+				}).catch(reject);
 
 		});
 
-		// NOTE: fill undefined to prevent render PDF errors
-		var fillUndefined = (columns, numberOfCol) => {
-
-			for (var x = 0; x < numberOfCol; x++) {
-
-				if (columns[x] == null)
-					columns[x] = [];
-	
-				var rows = columns[x];
-				if (!Array.isArray(columns[x]))
-					rows = [columns[x]];
-
-				rows.forEach((row, y) => {
-
-					if (row == null)
-						columns[x][y] = {};
-					else if (row.columns)
-						fillUndefined(row.columns, row.columns.length);
-
-				});
-			}
-
-		};
-		fillUndefined(reportDef.columns, this.settings.columns);
-
-
-		return reportDef;
 
 	}
 

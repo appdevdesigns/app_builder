@@ -223,7 +223,7 @@ export default class ABViewLabel extends ABViewWidget {
 				var field = this.field();
 				if (!field)
 					return "";
-	
+
 				return field.format(item);
 			}
 		};
@@ -283,25 +283,30 @@ export default class ABViewLabel extends ABViewWidget {
 	 */
 	print() {
 
-		var reportDef = {
-			ul: []
-		};
+		return new Promise((resolve, reject) => {
 
-		var dc = this.dataCollection();
-		if (!dc) return reportDef;
+			var reportDef = {
+				ul: []
+			};
 
-		var field = this.field();
-		if (!field) return reportDef;
+			var dc = this.dataCollection();
+			if (!dc) return resolve(reportDef);
 
-		dc.getData().forEach(item => {
+			var field = this.field();
+			if (!field) return resolve(reportDef);
 
-			var display = field.format(item);
+			dc.getData().forEach(item => {
 
-			reportDef.ul.push(display);
+				var display = field.format(item);
+
+				reportDef.ul.push(display);
+
+			});
+
+			resolve(reportDef);
+
 
 		});
-
-		return reportDef;
 
 	}
 

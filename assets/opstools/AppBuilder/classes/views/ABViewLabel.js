@@ -372,24 +372,27 @@ export default class ABViewLabel extends ABViewWidget  {
 	 */
 	print() {
 
-		var reportDef = {
-			text: this.text
-		};
+		return new Promise((resolve, reject) => {
 
-
-		// 0 - normal, 1 - title, 2 - description
-		if (this.settings.format == 0) {
-			reportDef.fontSize = 16;
-		}
-		else if (this.settings.format == 1) {
-			reportDef.fontSize = 18;
-			reportDef.bold = true;
-		}
-		else if (this.settings.format == 2) {
-			reportDef.fontSize = 14;
-		}
-
-		return reportDef;
+			var reportDef = {
+				text: this.text
+			};
+	
+			// 0 - normal, 1 - title, 2 - description
+			if (this.settings.format == 0) {
+				reportDef.fontSize = 16;
+			}
+			else if (this.settings.format == 1) {
+				reportDef.fontSize = 18;
+				reportDef.bold = true;
+			}
+			else if (this.settings.format == 2) {
+				reportDef.fontSize = 14;
+			}
+	
+			resolve(reportDef);
+	
+		});
 
 	}
 

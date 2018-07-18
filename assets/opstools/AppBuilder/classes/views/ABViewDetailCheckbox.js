@@ -7,6 +7,7 @@
 
 import ABViewDetailComponent from "./ABViewDetailComponent"
 import ABPropertyComponent from "../ABPropertyComponent"
+import { resolve } from "app_builder/node_modules/url";
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -187,36 +188,40 @@ export default class ABViewDetailCheckbox extends ABViewDetailComponent {
 	 */
 	print() {
 
-		var reportDef = {};
+		return new Promise((resolve, reject) => {
 
-		var detailCom = this.detailComponent();
-		if (!detailCom) return reportDef;
+			var reportDef = {};
 
-		var field = this.field();
-		if (!field) return reportDef;
+			var detailCom = this.detailComponent();
+			if (!detailCom) return resolve(reportDef);
 
-		var text = "";
+			var field = this.field();
+			if (!field) return resolve(reportDef);
 
-		var currData = this.getCurrentData();
-		if (currData) {
-			// TODO : Support multilingual
-			text = currData ? "Yes" : "No";
-		}
+			var text = "";
 
-		reportDef = {
-			columns: [
-				{
-					bold: true,
-					text: field.label,
-					width: detailCom.settings.labelWidth
-				},
-				{
-					text: text
-				}
-			]
-		};
+			var currData = this.getCurrentData();
+			if (currData) {
+				// TODO : Support multilingual
+				text = currData ? "Yes" : "No";
+			}
 
-		return reportDef;
+			reportDef = {
+				columns: [
+					{
+						bold: true,
+						text: field.label,
+						width: detailCom.settings.labelWidth
+					},
+					{
+						text: text
+					}
+				]
+			};
+
+			resolve(reportDef);
+
+		});
 
 	}
 

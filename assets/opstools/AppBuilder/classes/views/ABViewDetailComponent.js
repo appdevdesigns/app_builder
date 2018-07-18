@@ -7,6 +7,7 @@
  */
 
 import ABViewWidget from "./ABViewWidget"
+import { resolve } from "path";
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -72,7 +73,7 @@ export default class ABViewDetailComponent extends ABViewWidget {
 		var template = (templateLabel)
 			.replace(/#width#/g, settings.labelWidth)
 			.replace(/#label#/g, field.label);
-			
+
 		var height = 38;
 		if (settings.labelPosition == 'top')
 			height = height * 2;
@@ -117,10 +118,10 @@ export default class ABViewDetailComponent extends ABViewWidget {
 		var detailView = null;
 
 		var curr = this;
-		while (!curr.isRoot() && 
-				curr.parent && 
-				curr.key != 'detail' && 
-				curr.key != 'dataview') {
+		while (!curr.isRoot() &&
+			curr.parent &&
+			curr.key != 'detail' &&
+			curr.key != 'dataview') {
 
 			curr = curr.parent;
 		}
@@ -171,35 +172,40 @@ export default class ABViewDetailComponent extends ABViewWidget {
 	 */
 	print(rowData) {
 
-		var reportDef = {};
+		return new Promise((resolve, reject) => {
 
-		var detailCom = this.detailComponent();
-		if (!detailCom) return reportDef;
+			var reportDef = {};
 
-		var dc = detailCom.dataCollection();
-		if (!dc) return reportDef;
+			var detailCom = this.detailComponent();
+			if (!detailCom) return resolve(reportDef);
 
-		var field = this.field();
-		if (!field) return reportDef;
+			var dc = detailCom.dataCollection();
+			if (!dc) return resolve(reportDef);
 
-		rowData = rowData || dc.getCursor() || {};
+			var field = this.field();
+			if (!field) return resolve(reportDef);
 
-		var text = (field.format(rowData) || "");
+			rowData = rowData || dc.getCursor() || {};
 
-		reportDef = {
-			columns: [
-				{
-					bold: true,
-					text: field.label,
-					width: detailCom.settings.labelWidth
-				},
-				{
-					text: text
-				}
-			]
-		};
+			var text = (field.format(rowData) || "");
 
-		return reportDef;
+			reportDef = {
+				columns: [
+					{
+						bold: true,
+						text: field.label,
+						width: detailCom.settings.labelWidth
+					},
+					{
+						text: text
+					}
+				]
+			};
+
+			resolve(reportDef);
+
+		});
+
 
 	}
 

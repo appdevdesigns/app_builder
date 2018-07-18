@@ -1725,104 +1725,104 @@ export default class ABViewGrid extends ABViewWidget  {
 	 */
 	print() {
 
-		var reportDef = {};
+		return new Promise((resolve, reject) => {
 
-		var dc = this.dataCollection();
-		if (!dc) return reportDef;
+			var reportDef = {};
 
-		var object = dc.datasource;
-		if (!object) return reportDef;
-
-		reportDef = {
-			table: {
-				headerRows: 1,
-				widths: [],
-				body: [
-					[] // header
-				]
-			}
-		};
-
-		// Hidden fields
-		var hiddenFieldNames = [];
-		if (this.settings && 
-			this.settings.objectWorkspace &&
-			this.settings.objectWorkspace.hiddenFields)
-			hiddenFieldNames = this.settings.objectWorkspace.hiddenFields || [];
-
-
-		var rowData = dc.getData();
-
-		var indexField = 0;
-		object.fields().forEach((f) => {
-
-			// Hidden field
-			if (hiddenFieldNames.indexOf(f.columnName) > -1)
-				return;
-
-			// Headers
-			reportDef.table.widths[indexField] = 'auto'; // TODO ; width
-			reportDef.table.body[0][indexField] = f.label;
-
-			// Data
-			rowData.forEach((d, rowIndex) => {
-
-				rowIndex = rowIndex + 1;
-
-				if (reportDef.table.body[rowIndex] == null) 
-					reportDef.table.body[rowIndex] = [];
-
-
-				// pull image data
-				if (f instanceof ABFieldImage) {
-
-					var imageData = null,
-						imageUrl = "/opsportal/image/{application}/{image}",
-						imageFilename = d[f.columnName] || "";
-		
-					if (imageFilename) {
-						let imagePath = imageUrl
-								.replace("{application}", this.application.name)
-								.replace("{image}", imageFilename);
-		
-						let img = document.createElement('img');
-						img.setAttribute('src', imagePath);
-			
-						let c = document.createElement('canvas');
-						c.height = img.naturalHeight;
-						c.width = img.naturalWidth;
-						let ctx = c.getContext('2d');
-						ctx.drawImage(img, 0, 0, c.width, c.height, 0, 0, c.width, c.height);
-			
-						imageData = c.toDataURL();
-		
-						if (imageData) {
-							reportDef.table.body[rowIndex][indexField] = {
-								image: imageData,
-								width: parseInt(f.settings.imageWidth || 20),
-								height: parseInt(f.settings.imageHeight || 20)
-							};
-						}
-						else {
-							reportDef.table.body[rowIndex][indexField] = "";
-						}
-					}
-					else {
-						reportDef.table.body[rowIndex][indexField] = "";
-					}
-		
+			var dc = this.dataCollection();
+			if (!dc) return resolve(reportDef);
+	
+			var object = dc.datasource;
+			if (!object) return resolve(reportDef);
+	
+			reportDef = {
+				table: {
+					headerRows: 1,
+					widths: [],
+					body: [
+						[] // header
+					]
 				}
-				// pull normal data
-				else
-					reportDef.table.body[rowIndex][indexField] = f.format(d);
+			};
+	
+			// Hidden fields
+			var hiddenFieldNames = [];
+			if (this.settings && 
+				this.settings.objectWorkspace &&
+				this.settings.objectWorkspace.hiddenFields)
+				hiddenFieldNames = this.settings.objectWorkspace.hiddenFields || [];
+	
+	
+			var rowData = dc.getData();
+			var tasks = [];
 
+
+			var indexField = 0;
+			object.fields().forEach((f) => {
+	
+				// Hidden field
+				if (hiddenFieldNames.indexOf(f.columnName) > -1)
+					return;
+	
+				// Headers
+				reportDef.table.widths[indexField] = 'auto'; // TODO ; width
+				reportDef.table.body[0][indexField] = f.label;
+	
+				// Data
+				rowData.forEach((d, rowIndex) => {
+	
+					rowIndex = rowIndex + 1;
+	
+					if (reportDef.table.body[rowIndex] == null) 
+						reportDef.table.body[rowIndex] = [];
+	
+	
+					// pull image data
+					if (f instanceof ABFieldImage) {
+
+						// add load image async
+						tasks.push(new Promise((next, err) => {
+
+							f.toBase64(d).then(imageData => {
+
+								if (imageData && imageData.data) {
+									reportDef.table.body[rowIndex][indexField] = {
+										image: imageData.data,
+										width: parseInt(f.settings.imageWidth || imageData.width),
+										height: parseInt(f.settings.imageHeight || imageData.height)
+									};
+								}
+								else {
+									reportDef.table.body[rowIndex][indexField] = "";
+								}
+
+								next();
+	
+							}).catch(err);
+
+						}));
+					}
+					// pull normal data
+					else
+						reportDef.table.body[rowIndex][indexField] = f.format(d);
+	
+				});
+	
+				indexField++;
+	
 			});
 
-			indexField++;
+			// wait until load all images
+			Promise.all(tasks)
+				.then(() => {
+
+					resolve(reportDef);
+
+				})
+				.catch(reject);
+	
 
 		});
-
-		return reportDef;
 
 	}
 

@@ -369,17 +369,44 @@ export default class ABViewLayout extends ABViewWidget {
 
 	print() {
 
-		var reportDef = {
-			columns: []
-		};
+		return new Promise((resolve, reject) => {
 
-		this.views().forEach(v => {
+			var reportDef = {
+				columns: []
+			};
 
-			reportDef.columns.push(v.print());
+			var tasks = [];
+
+			this.views().forEach(v => {
+	
+				task.push(new Promise((next, err) => {
+
+					v.print().then(vDef => {
+
+						reportDef.columns.push(vDef);
+						next();
+
+					}).catch(err);
+
+				}));
+	
+			});
+
+			tasks.push(new Promise((next, err) => {
+
+				resolve(reportDef);
+				next();
+
+			}));
+
+			tasks.reduce((promiseChain, currTask) => {
+
+				return promiseChain.then(currTask);
+
+			}, Promise.resolve([]));
 
 		});
 
-		return reportDef;
 
 	}
 

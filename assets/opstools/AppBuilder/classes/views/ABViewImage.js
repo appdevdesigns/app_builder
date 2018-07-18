@@ -297,39 +297,48 @@ export default class ABViewImage extends ABViewWidget {
 	 */
 	print() {
 
-		var reportDef = {};
+		return new Promise((resolve, reject) => {
 
-		var imageData = null,
-			imageUrl = "/opsportal/image/{application}/{image}",
-			image = "";
+			var reportDef = {};
 
-		// pull image data
-		if (this.settings.filename) {
-			image = imageUrl
+			if (!this.settings.filename)
+				return resolve(reportDef);
+
+			// pull image data
+			var img = new Image();
+			img.crossOrigin = 'Anonymous';
+			img.onerror = function (err) {
+				reject(err);
+			};
+			img.onload = () => {
+				var canvas = document.createElement('canvas');
+				canvas.width = img.width;
+				canvas.height = img.height;
+				var ctx = canvas.getContext('2d');
+				ctx.drawImage(img, 0, 0);
+				var dataURL = canvas.toDataURL();
+				var imageData = {
+					data: dataURL,
+					width: img.width,
+					height: img.height
+				};
+
+				reportDef = {
+					image: imageData.data,
+					width: this.settings.width || imageData.width,
+					height: this.settings.height || imageData.height,
+				};
+
+				resolve(reportDef);
+
+			};
+
+			img.src = "/opsportal/image/{application}/{image}"
 				.replace("{application}", this.application.name)
 				.replace("{image}", this.settings.filename);
 
-			var img = document.createElement('img');
-			img.setAttribute('src', image);
 
-			var c = document.createElement('canvas');
-			c.height = img.naturalHeight;
-			c.width = img.naturalWidth;
-			var ctx = c.getContext('2d');
-			ctx.drawImage(img, 0, 0, c.width, c.height, 0, 0, c.width, c.height);
-
-			imageData = c.toDataURL();
-		}
-
-		if (imageData) {
-			reportDef = {
-				image: imageData || '',
-				width: this.settings.width || ABViewImagePropertyComponentDefaults.width,
-				height: this.settings.height || ABViewImagePropertyComponentDefaults.height,
-			};
-		}
-
-		return reportDef;
+		});
 
 	}
 

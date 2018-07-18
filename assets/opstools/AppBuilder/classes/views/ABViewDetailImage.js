@@ -191,64 +191,44 @@ export default class ABViewDetailImage extends ABViewDetailComponent {
 	 */
 	print(dataRow) {
 
-		var reportDef = {};
+		return new Promise((resolve, reject) => {
 
-		var detailCom = this.detailComponent();
-		if (!detailCom) return reportDef;
+			var reportDef = {};
 
-		var field = this.field();
-		if (!field) return reportDef;
+			var detailCom = this.detailComponent();
+			if (!detailCom) return resolve(reportDef);
 
-		var imageData = null,
-			imageUrl = "/opsportal/image/{application}/{image}",
-			image = "";
+			var field = this.field();
+			if (!field) return resolve(reportDef);
 
-		if (dataRow && dataRow[field.columnName])
-			image = dataRow[field.columnName];
-		else
-			image = this.getCurrentData() || "";
+			field.toBase64(dataRow || this.getCurrentData()).then(imageData => {
 
-		// pull image data
-		if (image) {
-			image = imageUrl
-				.replace("{application}", this.application.name)
-				.replace("{image}", image);
+				reportDef = {
+					columns: [
+						{
+							bold: true,
+							text: field.label,
+							width: detailCom.settings.labelWidth
+						}
+					]
+				};
 
-			var img = document.createElement('img');
-			img.setAttribute('src', image);
-
-			var c = document.createElement('canvas');
-			c.height = img.naturalHeight;
-			c.width = img.naturalWidth;
-			var ctx = c.getContext('2d');
-			ctx.drawImage(img, 0, 0, c.width, c.height, 0, 0, c.width, c.height);
-
-			imageData = c.toDataURL();
-		}
-
-
-		reportDef = {
-			columns: [
-				{
-					bold: true,
-					text: field.label,
-					width: detailCom.settings.labelWidth
+				if (imageData && imageData.data) {
+					reportDef.columns.push({
+						image: imageData.data,
+						width: parseInt(field.settings.imageWidth || 20),
+						height: parseInt(field.settings.imageHeight || 20),
+					});
 				}
-			]
-		};
+				else {
+					reportDef.columns.push({});
+				}
 
-		if (imageData) {
-			reportDef.columns.push({
-				image: imageData || '',
-				width: parseInt(field.settings.imageWidth || 20),
-				height: parseInt(field.settings.imageHeight || 20),
-			});
-		}
-		else {
-			reportDef.columns.push({});
-		}
+				resolve(reportDef);
 
-		return reportDef;
+			}).catch(reject);
+
+		});
 
 	}
 

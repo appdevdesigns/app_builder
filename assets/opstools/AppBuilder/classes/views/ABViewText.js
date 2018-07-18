@@ -411,14 +411,14 @@ export default class ABViewText extends ABViewWidget {
 	 */
 	print() {
 
-		var pdfConverter = new PdfConverter(),
-			reportDef = pdfConverter.convertHTML(this.displayText());
+		return new Promise((resolve, reject) => {
 
-		// var reportDef = {
-		// 	text: pdfText
-		// };
+			var pdfConverter = new PdfConverter(),
+				reportDef = pdfConverter.convertHTML(this.displayText());
 
-		return reportDef;
+			resolve(reportDef);
+
+		});
 
 	}
 

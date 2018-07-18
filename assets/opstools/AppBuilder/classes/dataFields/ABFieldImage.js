@@ -752,6 +752,52 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 		
 	}
 
+	/**
+	 * @method toBase64
+	 * 
+	 * @param {Object} rowData 
+	 * 
+	 * @return {Promise} - {
+	 * 		data: string,
+	 * 		width: number,
+	 * 		height: number
+	 * }
+	 */
+	toBase64(rowData) {
+
+		var promise = new Promise((resolve, reject) => {
+
+			if (!rowData[this.columnName])
+				return resolve(null);
+
+			var img = new Image();
+			img.crossOrigin = 'Anonymous';
+			img.onerror = function (err) {
+				reject(err);
+			};
+			img.onload = function () {
+				var canvas = document.createElement('canvas');
+				canvas.width = img.width;
+				canvas.height = img.height;
+				var ctx = canvas.getContext('2d');
+				ctx.drawImage(img, 0, 0);
+				var dataURL = canvas.toDataURL();
+				var imageData = {
+					data: dataURL,
+					width: img.width,
+					height: img.height
+				};
+				resolve(imageData);
+			};
+			
+			img.src = "/opsportal/image/{application}/{image}"
+						.replace("{application}", this.object.application.name)
+						.replace("{image}", rowData[this.columnName]);
+		});
+		return promise;
+
+	}
+
 }
 
 

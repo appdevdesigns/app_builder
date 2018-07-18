@@ -1108,11 +1108,15 @@ export default class ABView extends ABViewBase {
 	 * @method print
 	 * 
 	 * 
-	 * @return {Object} - PDF object definition
+	 * @return {Promise} - PDF object definition
 	 */
 	print() {
 
-		return [];
+		return new Promise((resolve, reject) => {
+
+			resolve([]);
+
+		});
 
 	}
 

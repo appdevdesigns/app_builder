@@ -9,6 +9,8 @@ import ABViewDetail from "./ABViewDetail"
 import ABPropertyComponent from "../ABPropertyComponent"
 import ABViewDetailComponent from "./ABViewDetailComponent"
 import ABViewManager from "../ABViewManager"
+import { resolve } from "url";
+import { runInNewContext } from "vm";
 
 
 function L(key, altText) {
@@ -123,24 +125,49 @@ export default class ABViewDataview extends ABViewDetail {
 
 	print() {
 
-		var reportDef = [];
+		return new Promise((resolve, reject) => {
 
-		var dc = this.dataCollection();
-		if (!dc) return reportDef;
+			var reportDef = [];
 
-		var rows = dc.getData();
+			var dc = this.dataCollection();
+			if (!dc) return reportDef;
 
-		rows.forEach(row => {
+			var rows = dc.getData();
 
-			// pull container definition
-			var containerDef = super.print(row);
+			var tasks = [];
 
-			// add to rows
-			reportDef.push(containerDef);
+			rows.forEach(row => {
+
+				// add tasks
+				tasks.push(new Promise((next,err) => {
+
+					// pull container definition
+					super.print(row).then(containerDef => {
+
+						// add to rows
+						reportDef.push(containerDef);
+						next();
+
+					}).catch(err);
+
+
+				}));
+
+			});
+
+
+			// final fn - return report definition
+			tasks.push(new Promise((next, err) => {
+				resolve(reportDef);
+				next();
+			}));
+
+			// action sequentially
+			tasks.reduce((promiseChain, currTask) => {
+				return promiseChain.then(currTask);
+			}, Promise.resolve([]));
 
 		});
-
-		return reportDef;
 
 	}
 
