@@ -29,7 +29,7 @@ var ABFieldImageDefaults = {
 	isFilterable: false,
 	useAsLabel: false,
 
-	supportRequire: false
+	supportRequire: false,
 
 }
 
@@ -40,7 +40,9 @@ var defaultValues = {
 	'imageWidth':'',
 	'useHeight': 0,
 	'imageHeight': '',
-	'removeExistingData': 0
+	'removeExistingData': 0,
+	'useDefaultImage': false,
+	'defaultImageUrl': '',
 }
 
 
@@ -63,10 +65,11 @@ var ABFieldImageComponent = new ABFieldComponent({
 
 		var ids = {
 			imageWidth: '',
-			imageHeight: ''
+			imageHeight: '',
+			defaultImageUrl: ''
 		}
 		ids = field.idsUnique(ids, App);
-
+		
 		return [
 			{
 				cols: [
@@ -115,6 +118,65 @@ var ABFieldImageComponent = new ABFieldComponent({
 			          	id: ids.imageHeight
 					}
 				]
+			},
+			{	
+				cols:[
+					{
+						view: "checkbox",
+						name: "useDefaultImage",
+						labelRight:L('ab.dataField.image.defaultImage', "*default image"), 
+						width: 200,
+						labelWidth: 0,
+						value:0,
+						click: function() {
+							if (this.getValue())
+								$$(ids.defaultImageUrl).enable()
+							else
+								$$(ids.defaultImageUrl).disable();
+						}
+					},
+					
+					{
+						view: "uploader",
+						id: ids.defaultImageUrl,
+						template: 
+							'<div class="default-image-holder" style="height:66; width:100; position:relative;">'+
+								'<div class="image-data-field-icon" style="text-align: center; height: inherit; display: table-cell; vertical-align: middle; border: 2px dotted #CCC; background: #FFF; border-radius: 10px; font-size: 11px; line-height: 13px; padding: 0 8px;">'+
+									'<i class="fa fa-picture-o fa-2x" style="opacity: 0.6; font-size: 32px; margin-bottom: 5px;"></i>'+
+									'<br/>Drag and drop or click here'+
+								'</div>'+
+								'<div class="image-data-field-image" style="display:none; width:100%; height:100%; background-repeat: no-repeat; background-position: center center; background-size: cover; position: relative;">'+
+									'<a style="" class="ab-delete-photo" href="javascript:void(0);"><i class="fa fa-times delete-image" style="display:none;"></i></a>'+
+								'</div>'+
+							'</div>',
+						apiOnly: true, 
+						inputName:'image',
+						multiple: false,
+						disabled: true,
+						name: "defaultImageUrl",
+						height: 66,
+						width:  100,
+						on: {
+							// when a file is added to the uploader
+							onBeforeFileAdd:function(item){
+								// verify file type
+								var acceptableTypes = ['jpg', 'jpeg', 'bmp', 'png', 'gif'];
+								var type = item.type.toLowerCase();
+								if (acceptableTypes.indexOf(type) == -1){
+									//// TODO: multilingual
+									webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
+									return false;
+								}
+							},
+		
+							// if an error was returned
+							onFileUploadError:function(item, response){
+								OP.Error.log('Error loading image', response);
+							}
+						}
+
+					}
+				]
 			}
 		]
 	},
@@ -158,11 +220,91 @@ var ABFieldImageComponent = new ABFieldComponent({
 		clear: (ids) => {
 			$$(ids.useWidth).setValue(0);
 			$$(ids.useHeight).setValue(0);
+			$$(ids.useDefaultImage).setValue(0);
 
 			$$(ids.imageWidth).setValue('');
 			$$(ids.imageHeight).setValue('');
-		}
+			$$(ids.defaultImageUrl).setValue('');
+		},
+		objectLoad: (object) => {
+			ABFieldImageComponent.currentObject = object;
+		},
+		populate: (ids, field) => {
+			var uploader = $$(ids.defaultImageUrl);
+			var value = field.settings.defaultImageUrl;
+			var isUseDefaultImage = field.settings.useDefaultImage;
+			
+			if(field.settings.useDefaultImage) {
+				uploader.enable();
+			}
 
+			if(value && isUseDefaultImage ) {
+				//Show default image
+				uploader.attachEvent("onAfterRender", function(file, response){
+					var parentContainer = uploader.$view.querySelector(".default-image-holder");
+					parentContainer.querySelector('.image-data-field-icon').style.display = 'none';
+
+					var image = parentContainer.querySelector('.image-data-field-image');
+					image.style.display = '';
+					image.style.backgroundImage = "url('/opsportal/image/" + ABFieldImageComponent.currentObject.application.name+"/"+value+"')";
+					image.setAttribute('image-uuid', value );
+
+					parentContainer.querySelector('.delete-image').style.display = "table-cell";
+					
+				});
+
+				uploader.$view.addEventListener("click", (e) => {
+					if (e.target.className.indexOf('delete-image') > -1) {
+						var parentContainer = uploader.$view.querySelector(".default-image-holder");
+						parentContainer.querySelector('.image-data-field-icon').style.display = '';
+
+						var image = parentContainer.querySelector('.image-data-field-image');
+						image.style.display = 'none';
+						image.style.backgroundImage = "";
+						image.setAttribute('image-uuid', "");
+
+						parentContainer.querySelector('.delete-image').style.display = "none";
+					}
+				});
+				
+			}
+		},
+		show: (ids) => {
+			var actionKey = 'opstool.AB_'+ABFieldImageComponent.currentObject.application.name.replace('_','')+'.view';
+			var url = '/'+[ 'opsportal', 'image', ABFieldImageComponent.currentObject.application.name, actionKey, '1'].join('/');
+			
+			var uploader = $$(ids.defaultImageUrl);
+			uploader.config.upload = url;
+			uploader.attachEvent("onFileUpload", function(file, response){
+				$$(ids.defaultImageUrl).setValue(response.data.uuid);
+
+				var parentContainer = uploader.$view.querySelector(".default-image-holder");
+				parentContainer.querySelector('.image-data-field-icon').style.display = 'none';
+				
+				var image = parentContainer.querySelector('.image-data-field-image');
+				image.style.display = '';
+				image.style.backgroundImage = "url('/opsportal/image/" + ABFieldImageComponent.currentObject.application.name+"/"+response.data.uuid+"')";
+				image.setAttribute('image-uuid', response.data.uuid);
+				
+				parentContainer.querySelector('.delete-image').style.display = "table-cell";
+			});
+			uploader.attachEvent("onAfterRender", function(file, response){
+				var parentContainer = uploader.$view.querySelector(".default-image-holder");
+				parentContainer.querySelector('.image-data-field-icon').style.display = '';
+
+				var image = parentContainer.querySelector('.image-data-field-image');
+				image.style.display = 'none';
+				image.style.backgroundImage = "";
+				image.setAttribute('image-uuid', "");
+
+				parentContainer.querySelector('.delete-image').style.display = "none";
+				
+			});
+			uploader.addDropZone(uploader.$view);
+			uploader.render();
+
+			
+		}
 	},
 
 	// perform any additional setup actions here.
@@ -205,7 +347,8 @@ class ABFieldImage extends ABField {
 
     	// text to Int:
     	this.settings.useWidth = parseInt(this.settings.useWidth);
-    	this.settings.useHeight = parseInt(this.settings.useHeight);
+		this.settings.useHeight = parseInt(this.settings.useHeight);
+		this.settings.useDefaultImage = parseInt(this.settings.useDefaultImage);
     	this.settings.removeExistingData = parseInt(this.settings.removeExistingData);
   	}
 
@@ -571,6 +714,10 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 		if (this.deleteImage == true) {
 			// remove the property because it is only needed to prevent the file dialog from showing
 			delete this.deleteImage;
+			if (!row.removeDefaultImage) {
+				row.removeDefaultImage = [];
+			}
+			row.removeDefaultImage[this.columnName] = true;
 			
 			// Ask the user if they really want to delete the photo
 			OP.Dialog.Confirm({
@@ -655,15 +802,27 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 		var imageURL = '';
 
 		var value = '';
-
+		var isRemoveDefaultImage = false;
 		if (obj[this.columnName]) {
 			value = obj[this.columnName];
 		};
+		if(obj.removeDefaultImage) {
+			if (obj.removeDefaultImage[this.columnName]) {
+				isRemoveDefaultImage = obj.removeDefaultImage[this.columnName];
+			}
+		}
 
 		if (value) {
 			iconDisplay =  'display:none';
 			imageDisplay = '';
 			imageURL    = "background-image:url('/opsportal/image/" + this.object.application.name+"/"+value+"');"
+		}
+		else {
+			if (this.settings.useDefaultImage && !isRemoveDefaultImage) {
+				iconDisplay =  'display:none';
+				imageDisplay = '';
+				imageURL    = "background-image:url('/opsportal/image/" + this.object.application.name+"/"+this.settings.defaultImageUrl+"');"
+			}
 		}
 
 		var html = [
