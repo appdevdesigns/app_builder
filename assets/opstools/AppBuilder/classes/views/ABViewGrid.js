@@ -1757,13 +1757,8 @@ export default class ABViewGrid extends ABViewWidget  {
 			var tasks = [];
 
 
-			var indexField = 0;
-			object.fields().forEach((f) => {
-	
-				// Hidden field
-				if (hiddenFieldNames.indexOf(f.columnName) > -1)
-					return;
-	
+			object.fields(f => hiddenFieldNames.indexOf(f.columnName) < 0).forEach((f, indexField) => {
+		
 				// Headers
 				reportDef.table.widths[indexField] = 'auto'; // TODO ; width
 				reportDef.table.body[0][indexField] = f.label;
@@ -1793,7 +1788,7 @@ export default class ABViewGrid extends ABViewWidget  {
 									};
 								}
 								else {
-									reportDef.table.body[rowIndex][indexField] = "";
+									reportDef.table.body[rowIndex][indexField] = {};
 								}
 
 								next();
@@ -1807,8 +1802,6 @@ export default class ABViewGrid extends ABViewWidget  {
 						reportDef.table.body[rowIndex][indexField] = f.format(d);
 	
 				});
-	
-				indexField++;
 	
 			});
 
