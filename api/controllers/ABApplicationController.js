@@ -687,6 +687,38 @@ console.log('allParams:', req.allParams());
 
     },
 
+
+
+    /* Mobile Apps */
+    /* An Application may have one or more Mobile Apps. */
+
+    /**
+     * GET /app_builder/application/allmobileapps
+     * 
+     * return a list of all Mobile Apps across all Applications.
+     * (administrative)
+     * 
+     * the returned list is a list of { .id  .label .appID }
+     *
+     */
+    listMobileApps: function (req, res) {
+
+        AppBuilder.mobileApps()
+        .then((list)=>{
+            var objList = [];
+            list.forEach((l)=>{
+                objList.push(l.toObj());
+            })
+            
+            res.AD.success(objList);
+        })
+        .catch((err)=>{
+            ADCore.Error.log('ABApplicationController:listMobileApps:Error getting mobile apps:', {error:err});
+            res.AD.error(err);
+        })
+
+    }
+
 };
 
 
