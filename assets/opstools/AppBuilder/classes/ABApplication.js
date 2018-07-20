@@ -4,6 +4,7 @@ import ABApplicationBase from "./ABApplicationBase"
 import "../data/ABApplication"
 import ABObject from "./ABObject"
 import ABObjectQuery from "./ABObjectQuery"
+import ABMobileApp from "./ABMobileApp"
 import ABViewManager from "./ABViewManager"
 import ABViewPage from "./views/ABViewPage"
 import ABViewReportPage from "./views/ABViewReportPage"
@@ -721,6 +722,74 @@ export default class ABApplication extends ABApplicationBase {
 			})
 			.catch(()=>{
 				console.error('!!! error with .ABApplication.querySave()');
+			});
+	}
+
+
+
+
+	///
+	/// Mobile App
+	///
+
+
+
+	/**
+	 * @method mobileAppNew()
+	 *
+	 * return an instance of a new (unsaved) ABMobileApp that is tied to this
+	 * ABApplication.
+	 *
+	 * NOTE: this new app is not included in our this.mobileApp until a .save()
+	 * is performed on the App.
+	 *
+	 * @return {ABMobileApp}
+	 */
+	mobileAppNew(values) {
+		return new ABMobileApp(values, this);
+	}
+
+
+	/**
+	 * @method mobileAppDestroy()
+	 *
+	 * remove the current ABMobileApp from our list of ._mobileApps.
+	 *
+	 * @param {ABMobileApp} app
+	 * @return {Promise}
+	 */
+	mobileAppDestroy(app) {
+
+		var remaininApps = this.mobileApps(function (a) { return a.id != app.id; })
+		this._mobileApps = remaininApps;
+
+		return this.Model.staticData.mobileAppDestroy(this.id, app.id)
+			.then(() => {
+				// TODO : Should update _AllApplications in 
+			});
+	}
+
+
+	/**
+	 * @method mobileAppSave()
+	 *
+	 * persist the current ABOMobileApp in our list of ._mobileApps.
+	 *
+	 * @param {ABOMobileApp} app
+	 * @return {Promise}
+	 */
+	mobileAppSave(app) {
+		var isIncluded = (this.mobileApps(function (a) { return a.id == app.id }).length > 0);
+		if (!isIncluded) {
+			this._mobileApps.push(app);
+		}
+
+		return this.Model.staticData.mobileAppSave(this.id, app.toObj())
+			.then(() => {
+				// TODO : Should update _AllApplications in 
+			})
+			.catch(()=>{
+				console.error('!!! error with .ABApplication.mobileAppSave()');
 			});
 	}
 
