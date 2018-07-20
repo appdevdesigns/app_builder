@@ -583,7 +583,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 
 				// set data:
-				CurrentQuery.model().findAll()
+				CurrentQuery.model().findAll({limit:20})
 					.then((response) => {
 
 						DataTable.clearAll();
