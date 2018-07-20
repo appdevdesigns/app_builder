@@ -1173,39 +1173,30 @@ PopupRecordRule.qbFixAfterShow();
 					(resolve, reject) => {
 
 
-						function processNewFormValues(newFormVals) {
-
-							this.doRecordRules(newFormVals)
-							.then(()=>{
-// make sure any updates from RecordRules get passed along here.
-								this.doSubmitRules(newFormVals);
-								formReady(newFormVals);
-								resolve(newFormVals);
-							})
-							.catch((err)=>{
-								OP.Error.log('Error processing Record Rules.', {error:err, newFormVals:newFormVals });
-// Question:  how do we respond to an error?
-// ?? just keep going ??
-this.doSubmitRules(newFormVals);
-formReady(newFormVals);
-resolve(); 	
-							})
-
-						}
-
-
 						// If this object already exists, just .update()
-						var PK = model.object.PK();
-						if (formVals[PK]) {
-							model.update(formVals[PK], formVals)
+						if (formVals.id) {
+							model.update(formVals.id, formVals)
 								.catch((err) => {
 									formReady();
 									reject(err);
 								})
 								.then((newFormVals) => {
 
-									processNewFormValues(newFormVals);
-
+									this.doRecordRules(newFormVals)
+									.then(()=>{
+// make sure any updates from RecordRules get passed along here.
+										this.doSubmitRules(newFormVals);
+										formReady(newFormVals);
+										resolve(newFormVals);
+									})
+									.catch((err)=>{
+										OP.Error.log('Error processing Record Rules.', {error:err, newFormVals:newFormVals });
+// Question:  how do we respond to an error?
+// ?? just keep going ??
+this.doSubmitRules(newFormVals);
+formReady(newFormVals);
+resolve(); 	
+									})
 								});
 						}
 						// else add new row
@@ -1217,12 +1208,27 @@ resolve();
 								})
 								.then((newFormVals) => {
 									
+									var data = null;
 									var dc = this.dataCollection();
 									if (dc) {
-										dc.setCursor(newFormVals[PK]);
+										dc.setCursor(newFormVals.id);
 									}
 
-									processNewFormValues(newFormVals);
+									this.doRecordRules(newFormVals)
+									.then(()=>{
+
+										this.doSubmitRules(newFormVals);
+										formReady(newFormVals);
+										resolve(newFormVals);
+									})
+									.catch((err)=>{
+										OP.Error.log('Error processing Record Rules.', {error:err, newFormVals:newFormVals });
+// Question:  how do we respond to an error?
+// ?? just keep going ??
+this.doSubmitRules(newFormVals);
+formReady(newFormVals);
+resolve(); 	
+									})
 									
 								});
 						}
