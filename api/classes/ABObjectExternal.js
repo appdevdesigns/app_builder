@@ -5,6 +5,46 @@ var ABObject = require(path.join(__dirname, 'ABObject'));
 
 var Model = require('objection').Model;
 
+
+function getColumnFn(colType) {
+
+	var result = colType;
+
+	switch (colType) {
+		case 'bit':
+		case 'int':
+		case 'integer':
+		case 'tinyint':
+			result = 'integer';
+			break;
+		case 'bigint':
+		case 'decimal':
+		case 'dec':
+		case 'float':
+		case 'double':
+		case 'double_precision':
+			result = 'bigInteger';
+			break;
+		case 'blob':
+		case 'tinyblob':
+		case 'mediumblob':
+		case 'longblob':
+			result = 'binary';
+			break;
+		case 'char':
+		case 'tinytext':
+		case 'varchar':
+			result = 'string';
+			break;
+		case 'mediumtext':
+		case 'longtext':
+			result = 'text';
+			break;
+	}
+
+	return result;
+}
+
 // to minimize .knex bindings (and connection pools!)
 
 module.exports = class ABObjectExternal extends ABObject {
@@ -89,34 +129,8 @@ module.exports = class ABObjectExternal extends ABObject {
 
 									if (!colInfo.type) return;
 
-									var fnName = colInfo.type;
-									switch (fnName) {
-										case 'bit':
-										case 'int':
-										case 'integer':
-										case 'tinyint':
-											fnName = 'integer';
-											break;
-										case 'bigint':
-										case 'decimal':
-										case 'dec':
-										case 'float':
-										case 'double':
-										case 'double_precision':
-											fnName = 'bigInteger';
-											break;
-										case 'blob':
-										case 'tinyblob':
-										case 'mediumblob':
-										case 'longblob':
-											fnName = 'binary';
-											break;
-										case 'char':
-										case 'tinytext':
-										case 'mediumtext':
-											fnName = 'string';
-											break;
-									}
+
+									var fnName = getColumnFn(colInfo.type);
 
 									// set PK to auto increment
 									if (options.primary == colName &&
@@ -131,22 +145,24 @@ module.exports = class ABObjectExternal extends ABObject {
 										newCol = t[fnName](colName);
 
 
-									if (colInfo.defaultValue) {
-										if (colInfo.defaultValue == "CURRENT_TIMESTAMP")
-											newCol.defaultTo(knex.fn.now());
-										else
-											newCol.defaultTo(colInfo.defaultValue);
-									}
+									// TODO : Why it does not support test_legacy_hris ??
+									// if (colInfo.defaultValue != null) {
+									// 	if (colInfo.defaultValue == "CURRENT_TIMESTAMP")
+									// 		newCol = newCol.defaultTo(knex.fn.now());
+									// 	else
+									// 		newCol = newCol.defaultTo(colInfo.defaultValue.toString());
+									// }
 
 									if (colInfo.nullable)
-										newCol.nullable();
+										newCol = newCol.nullable();
 									else
-										newCol.notNullable();
+										newCol = newCol.notNullable();
 
 								});
 
 								if (options.primary)
 									t.primary(options.primary);
+
 
 								resolve();
 
@@ -232,23 +248,19 @@ module.exports = class ABObjectExternal extends ABObject {
 
 								if (!colInfo.type) return;
 
-								var fnName = colInfo.type;
-								switch (fnName) {
-									case 'int':
-										fnName = 'integer';
-										break;
-								}
+								var fnName = getColumnFn(colInfo.type);
 
 								// create new column
 								var newCol = t[fnName](colName);
 
-								if (colInfo.defaultValue)
-									newCol.defaultTo(colInfo.defaultValue);
+								// TODO : Why it does not support test_legacy_hris ??
+								// if (colInfo.defaultValue != null)
+								// 	newCol = newCol.defaultTo(colInfo.defaultValue.toString());
 
 								if (colInfo.nullable)
-									newCol.nullable();
+									newCol = newCol.nullable();
 								else
-									newCol.notNullable();
+									newCol = newCol.notNullable();
 
 							});
 
