@@ -172,6 +172,13 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 				};
 
 				var fnAddTreeItem = (currObj, parentItemId) => {
+					
+					if (parentItemId) {
+						var item = $$(ids.tree).getItem(parentItemId);
+						console.log(item.$level);
+						// if (item.$level > 3)
+						// 	return;
+					}
 
 					currObj.connectFields().forEach(f => {
 
