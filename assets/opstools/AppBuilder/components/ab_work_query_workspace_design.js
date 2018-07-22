@@ -48,6 +48,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 			component: this.unique('component'),
 			tree: this.unique('tree'),
 			tabObjects: this.unique('tabObjects'),
+			depth: this.unique('depth'),
 
 			// buttonAddField: this.unique('buttonAddField'),
 			// buttonDeleteSelected: this.unique('deleteSelected'),
@@ -145,6 +146,17 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 				var objBase = CurrentQuery.objectBase();
 
 				$$(ids.selectedObject).show();
+				
+				
+				$$(ids.depth).blockEvent(); // prevents endless loop
+				
+				if (CurrentQuery.objectWorkspace.depth) {
+					$$(ids.depth).setValue(CurrentQuery.objectWorkspace.depth);
+				} else {
+					$$(ids.depth).setValue(5);
+				}
+				
+				$$(ids.depth).unblockEvent();
 
 
 				// *** List ***
@@ -175,9 +187,8 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 					
 					if (parentItemId) {
 						var item = $$(ids.tree).getItem(parentItemId);
-						console.log(item.$level);
-						// if (item.$level > 3)
-						// 	return;
+						if (item.$level > $$(ids.depth).getValue())
+							return;
 					}
 
 					currObj.connectFields().forEach(f => {
@@ -380,6 +391,9 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 					/** where **/
 					CurrentQuery.workspaceFilterConditions = DataFilter.getValue();
+					
+					/** depth **/
+					CurrentQuery.objectWorkspace.depth = $$(ids.depth).getValue();
 
 					// Save to db
 					CurrentQuery.save()
@@ -437,6 +451,17 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 				tree.unblockEvent();
 
+			},
+			
+			depthChange: function(newv, oldv) {
+
+				// call save to db
+				_logic.save()
+					.then(() => {
+
+						this.populateQueryWorkspace(CurrentQuery);
+						
+					});
 			},
 
 
@@ -678,6 +703,21 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 												onItemCheck: function (id, isChecked, event) {
 
 													_logic.checkObjectLink(id, isChecked);
+												}
+											}
+										},
+										{
+											id: ids.depth,
+											view:"counter", 
+											label:"Relationship depth:",
+											labelWidth: App.config.labelWidthXXLarge,
+											step:1, 
+											value:5, 
+											min:1, 
+											max:10,
+											on: {
+												onChange: function(newv, oldv) {
+													_logic.depthChange(newv, oldv);
 												}
 											}
 										}
