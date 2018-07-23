@@ -15,6 +15,7 @@ import ABViewContainer from "./views/ABViewContainer"
 import ABViewDataCollection from "./views/ABViewDataCollection"
 import ABViewDataview from "./views/ABViewDataview"
 import ABViewPage from "./views/ABViewPage"
+import ABViewPivot from "./views/ABViewPivot"
 import ABViewLabel from "./views/ABViewLabel"
 import ABViewLayout from "./views/ABViewLayout"
 import ABViewList from "./views/ABViewList"
@@ -66,6 +67,7 @@ Views[ABViewContainer.common().key] = ABViewContainer;
 Views[ABViewDataCollection.common().key] = ABViewDataCollection;
 Views[ABViewDataview.common().key] = ABViewDataview;
 Views[ABViewPage.common().key] = ABViewPage;
+Views[ABViewPivot.common().key] = ABViewPivot;
 Views[ABViewLabel.common().key] = ABViewLabel;
 Views[ABViewLayout.common().key] = ABViewLayout;
 Views[ABViewList.common().key] = ABViewList;

@@ -1315,6 +1315,12 @@ msgstr "[th] Tree"
 
 #. path: app_builder
 #. code: th
+#. key: ab.components.pivot
+msgid "Pivot"
+msgstr "[th] Pivot"
+
+#. path: app_builder
+#. code: th
 #. key: ab.object.list.setting
 msgid "Settings"
 msgstr "ตั้งค่า"

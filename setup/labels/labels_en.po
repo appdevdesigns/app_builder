@@ -1327,6 +1327,12 @@ msgstr "Tree"
 
 #. path: app_builder
 #. code: en
+#. key: ab.components.pivot
+msgid "Pivot"
+msgstr "Pivot"
+
+#. path: app_builder
+#. code: en
 #. key: ab.object.list.setting
 msgid "Settings"
 msgstr "Settings"
