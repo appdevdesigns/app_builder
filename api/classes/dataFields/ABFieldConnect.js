@@ -253,7 +253,7 @@ class ABFieldConnect extends ABField {
 								if (!linkObject.isExternal) {
 									linkCol.references(linkPK)
 										.inTable(linkTableName)
-										.onDelete('cascade');
+										.onDelete('SET NULL');
 								}
 
 								if (exists)
@@ -298,7 +298,7 @@ class ABFieldConnect extends ABField {
 									if (!linkObject.isExternal) {
 										linkCol.references(linkPK)
 												.inTable(linkTableName)
-												.onDelete('cascade');
+												.onDelete('SET NULL');
 									}
 
 									t.unique(this.columnName);
@@ -345,7 +345,7 @@ class ABFieldConnect extends ABField {
 								if (!this.object.isExternal) {
 									linkCol.references(this.object.PK())
 											.inTable(tableName)
-											.onDelete('cascade');
+											.onDelete('SET NULL');
 								}
 
 								if (exists)
@@ -407,12 +407,12 @@ class ABFieldConnect extends ABField {
 									linkCol.references(this.object.PK())
 										.inTable(tableName)
 										.withKeyName(sourceFkName)
-										.onDelete('cascade');
+										.onDelete('SET NULL');
 
 									linkCol2.references(linkPK)
 										.inTable(linkTableName)
 										.withKeyName(targetFkName)
-										.onDelete('cascade');
+										.onDelete('SET NULL');
 								}
 
 								// // create columns
@@ -420,13 +420,13 @@ class ABFieldConnect extends ABField {
 								// 	.references(this.object.PK())
 								// 	.inTable(tableName)
 								// 	.withKeyName(sourceFkName)
-								// 	.onDelete('cascade');
+								// 	.onDelete('SET NULL');
 
 								// t.integer(linkObject.name).unsigned().nullable()
 								// 	.references(linkObject.PK())
 								// 	.inTable(linkTableName)
 								// 	.withKeyName(targetFkName)
-								// 	.onDelete('cascade');
+								// 	.onDelete('SET NULL');
 							})
 								.then(() => { resolve(); })
 								.catch(reject);
