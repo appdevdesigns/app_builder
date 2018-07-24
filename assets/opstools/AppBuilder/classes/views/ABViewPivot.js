@@ -8,7 +8,8 @@
 import ABViewWidget from "./ABViewWidget"
 import ABPropertyComponent from "../ABPropertyComponent"
 
-import ABFieldBase from "../dataFields/ABFieldBase"
+import ABFieldNumber from "../dataFields/ABFieldNumber"
+import { runInNewContext } from "vm";
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -59,7 +60,13 @@ export default class ABViewPivot extends ABViewWidget {
 	toObj() {
 
 		var obj = super.toObj();
+
 		obj.views = [];
+		obj.settings = obj.settings || {};
+
+		if (this.settings.structure)
+			obj.settings.structure = JSON.stringify(this.settings.structure);
+
 		return obj;
 
 	}
@@ -81,6 +88,8 @@ export default class ABViewPivot extends ABViewWidget {
 		this.settings.min = JSON.parse(this.settings.allowDelete || ABViewPivotPropertyComponentDefaults.min);
 		this.settings.max = JSON.parse(this.settings.max || ABViewPivotPropertyComponentDefaults.max);
 
+		if (this.settings.structure && typeof this.settings.structure == 'string')
+			this.settings.structure = JSON.parse(this.settings.structure);
 
 	}
 
@@ -105,13 +114,14 @@ export default class ABViewPivot extends ABViewWidget {
 			component: App.unique(idBase + '_component')
 		};
 
-		var component = _.cloneDeep(this.component(App));
+		var componentBase = this.component(App);
+		var component = _.cloneDeep(componentBase);
 
 		component.ui.id = ids.component;
 		component.ui.readonly = false;
 		component.ui.on = {
 
-			onApply: (structure) => {
+			onBeforeApply: (structure) => {
 
 				this.settings.structure = structure;
 				this.save();
@@ -122,35 +132,12 @@ export default class ABViewPivot extends ABViewWidget {
 
 		component.init = (options) => {
 
-			var dataSource = this.dataCollection();
-			if (dataSource) {
+			componentBase.init({
+				componentId: ids.component
+			});
 
-				var object = dataSource.datasource;
+		};
 
-				var data = dataSource.getData().map(d => {
-
-					var result = {};
-
-					object.fields().forEach(f => {
-
-						result[f.label] = f.format(d);
-
-					});
-
-					return result;
-
-				});
-
-
-
-				$$(ids.component).parse(data);
-
-			}
-
-			if (this.settings.structure)
-				$$(ids.component).setStructure(this.settings.structure);
-
-		}
 
 		return component;
 
@@ -282,42 +269,86 @@ export default class ABViewPivot extends ABViewWidget {
 			totalColumn: this.settings.totalColumn,
 			separateLabel: this.settings.separateLabel,
 			min: this.settings.min,
-			max: this.settings.max,
-			columns: ["email"]
+			max: this.settings.max
 		};
 
 
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
 
-			var dataSource = this.dataCollection();
-			if (dataSource) {
+			options = options || {};
+			options.componentId = options.componentId || ids.component;
 
-				var object = dataSource.datasource;
+			Promise.resolve()
 
-				var data = dataSource.getData().map(d => {
+				// get data
+				.then(() => {
 
-					var result = {};
+					return new Promise((next, err) => {
 
-					object.fields().forEach(f => {
+						var dc = this.dataCollection();
+						if (!dc) return next();
 
-						result[f.label] = f.format(d);
+						var data = dc.getData();
+						if (data.length > 0) return next(data);
+
+						// load data at first
+
+						dc.loadData()
+							.catch(err)
+							.then(() => {
+
+								next(dc.getData());
+
+							});
+					});
+
+				})
+
+				// populate data into pivot
+				.then((data) => {
+
+					return new Promise((next, err) => {
+
+						var object = this.dataCollection().datasource;
+
+						var dataMapped = data.map(d => {
+
+							var result = {};
+
+							object.fields().forEach(f => {
+
+								if (f instanceof ABFieldNumber)
+									result[f.columnName] = d[f.columnName];
+								else
+									result[f.columnName] = f.format(d);
+
+							});
+
+							return result;
+
+						});
+
+						$$(options.componentId).parse(dataMapped);
+
+						next();
+					});
+
+				})
+
+				// set pivot configuration
+				.then(() => {
+
+					return new Promise((next, err) => {
+
+						if (this.settings.structure)
+							$$(options.componentId).setStructure(this.settings.structure);
+
+						next();
 
 					});
 
-					return result;
-
 				});
-
-
-
-				$$(ids.component).parse(data);
-
-			}
-
-			if (this.settings.structure)
-				$$(ids.component).setStructure(this.settings.structure);
-
 
 		}
 
