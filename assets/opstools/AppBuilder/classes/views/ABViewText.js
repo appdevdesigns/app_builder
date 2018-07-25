@@ -339,6 +339,7 @@ export default class ABViewText extends ABViewWidget {
 			view: 'template',
 			autoheight:true,
 			minHeight: 10,
+			borderless: true,
 			template: this.displayText()
 		};
 
