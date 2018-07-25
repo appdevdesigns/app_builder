@@ -378,17 +378,36 @@ options.rejectUnauthorized = false;
             return this.encrypt(response, appUser.aes);
         })
 
-        // 5) update MCC with the response for this request:
+        // 4b) break the encrypted data in smaller packets
         .then((encryptedData)=>{
+            var packets=[];
+            packIt(encryptedData, packets);
+            return packets;
+        })
 
-            var returnPacket = {
-                appUUID:request.appUUID,
-                data:encryptedData,
-                jobToken:request.jobToken
+        // 5) update MCC with the response for this request:
+        .then((encryptedDataPackets)=>{
+
+            var allPosts = [];
+            for (var i=0; i< encryptedDataPackets.length; i++) {
+
+                var returnPacket = {
+                    appUUID:request.appUUID,
+                    data:encryptedDataPackets[i],
+                    jobToken:request.jobToken,
+                    packet:i,
+                    totalPackets:encryptedDataPackets.length
+                }
+                allPosts.push( ABRelay.post({ url:'/mcc/relayrequest', data:returnPacket }) );
             }
-            return ABRelay.post({ url:'/mcc/relayrequest', data:returnPacket })
+
+            return Promise.all(allPosts);
         })
         .catch((err)=>{
+            if (err.statusCode && err.statusCode == 413) {
+                sails.log.error('!! caught error: 413 Request Entity Too Large :'+ err.message);
+                return;
+            }
 sails.log.error('caught error:', err);
         })
 
@@ -398,3 +417,29 @@ sails.log.error('caught error:', err);
    
 
 };
+
+
+/** 
+ * packIt
+ * a recursive routine to break our data down into approved packet sizes to prevent
+ * 413 Request Entity Too Large - errors.
+ * @param {string} data  the encrypted data chunk we are evaluating
+ * @param {array}  list  the list of data chunks we are sending back 
+ */
+function packIt(data,list) {
+
+    if (data.length <= sails.config.appbuilder.mcc.maxPacketSize ) {
+        list.push(data);
+    } else {
+
+        // split the data into 1/2
+        let n = Math.floor(data.length / 2)
+
+        let arrayFirstHalf = data.slice(0, n); // data[0:n]; 
+        let arraySecondHalf = data.slice(n, data.length); // data[n:];
+
+        // now send each half (in order) to packIt
+        packIt(arrayFirstHalf, list);
+        packIt(arraySecondHalf, list);
+    }
+}
