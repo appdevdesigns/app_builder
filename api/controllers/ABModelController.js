@@ -419,7 +419,7 @@ module.exports = {
                                         },
                                         offset: 0,
                                         limit: 1,
-                                        includeRelativeData: true
+                                        populate: true
                                     },
                                         req.user.data)
                                         .then((newItem) => {
@@ -541,16 +541,19 @@ module.exports = {
                 var offset = req.options._offset;
                 var limit = req.options._limit;
 
+                var populate = req.options._populate;
+                if (populate == null) populate = true;
+
                 var query = object.queryFind({
                     where: where,
                     sort: sort,
                     offset: offset,
                     limit: limit,
-                    includeRelativeData: true
+                    populate: populate
                 }, req.user.data);
 
                 // promise for the total count. this was moved below the filters because webix will get caught in an infinte loop of queries if you don't pass the right count
-                var pCount = object.queryCount({ where: whereCount, includeRelativeData: false }, req.user.data);
+                var pCount = object.queryCount({ where: whereCount, populate: false }, req.user.data);
 
                 // TODO:: we need to refactor to remove Promise.all so we no longer have Promise within Promises.
                 Promise.all([
@@ -660,7 +663,7 @@ module.exports = {
                             value: id
                         }]
                     },
-                    includeRelativeData: true
+                    populate: true
                 }, req.user.data)
                     .then((old_item) => {
                         oldItem = old_item;
@@ -719,7 +722,7 @@ module.exports = {
                                     value: relatedIds
                                 }]
                             },
-                            includeRelativeData: true
+                            populate: true
                         }, req.user.data)
                             .then((items) => {
                                 // push new realted items into the larger related items array
@@ -972,7 +975,7 @@ module.exports = {
                             value: id
                         }]
                     },
-                    includeRelativeData: true
+                    populate: true
                 }, req.user.data);
 
                 queryPrevious
@@ -1066,7 +1069,7 @@ module.exports = {
                                                 },
                                                 offset: 0,
                                                 limit: 1,
-                                                includeRelativeData: true
+                                                populate: true
                                             },
                                                 req.user.data);
 
@@ -1332,7 +1335,7 @@ module.exports = {
                         },
                         offset: 0,
                         limit: 1,
-                        includeRelativeData: true
+                        populate: true
                     },
                         req.user.data)
                         .then((updateItem) => {
@@ -1415,7 +1418,7 @@ module.exports = {
 
                 // promise for the total count. this was moved below the filters because webix will get caught in an infinte loop of queries if you don't pass the right count
                 object
-                    .queryCount({ where: where, includeRelativeData: false }, req.user.data)
+                    .queryCount({ where: where, populate: false }, req.user.data)
                     .first()
                     .catch(res.AD.error)
                     .then(result => {
