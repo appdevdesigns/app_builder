@@ -560,7 +560,7 @@ module.exports = class ABObject extends ABObjectBase {
 
 		// we don't include relative data on counts:
 		// and get rid of any .sort, .offset, .limit
-		options.includeRelativeData = false;
+		options.populate = false;
 		delete options.sort;
         delete options.offset;
         delete options.limit;
@@ -691,7 +691,7 @@ module.exports = class ABObject extends ABObjectBase {
 	 *                              sort :  {Array}
 	 *                              offset: {Integer}
 	 *                              limit:  {Integer}
-	 *                              includeRelativeData: {Boolean}
+	 *                              populate: {Boolean}
 	 *                           }
 	 * @param {string} userData - {
 	 *                              username: {string},
@@ -1085,24 +1085,28 @@ module.exports = class ABObject extends ABObjectBase {
 	    }
 
 	    // query relation data
-		if (options.includeRelativeData &&
-			query.eager) {
+		if (query.eager) {
 
 			var relationNames = [];
 			
-			this.connectFields()
-				.filter(f => f.fieldLink() != null)
-				.forEach(f => {
+			if (options.populate) {
 
-					relationNames.push(f.relationName());
+				this.connectFields()
+					.filter((f)=>{ return ((options.populate === true) || (options.populate.indexOf(f.columnName) > -1)); })
+					.filter(f => f.fieldLink() != null)
+					.forEach(f => {
 
-					// Get translation data of External object
-					if (f.datasourceLink &&
-						f.datasourceLink.isExternal &&
-						f.datasourceLink.transColumnName)
-						relationNames.push(f.relationName()+ '.[translations]');
+						relationNames.push(f.relationName());
 
-				});
+						// Get translation data of External object
+						if (f.datasourceLink &&
+							f.datasourceLink.isExternal &&
+							f.datasourceLink.transColumnName)
+							relationNames.push(f.relationName()+ '.[translations]');
+
+					});
+			}
+
 
 			// TODO: Move to ABObjectExternal
 			if (this.isExternal && this.transColumnName) {
@@ -1111,7 +1115,6 @@ module.exports = class ABObject extends ABObjectBase {
 
 			if (relationNames.length > 0)
 				query.eager('[#fieldNames#]'.replace('#fieldNames#', relationNames.join(', ')));
-
 
 	    }
 
