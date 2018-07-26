@@ -1159,6 +1159,7 @@ export default class RowFilter extends OP.Component {
 							condResult = _logic.userValid(value, filter.rule, filter.value);
 							break;
 						case "connectField":
+						case "connectObject":
 							condResult = _logic.connectFieldValid(value, filter.rule, filter.value);
 							break;
 					}
