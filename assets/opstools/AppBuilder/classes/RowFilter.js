@@ -1132,6 +1132,9 @@ export default class RowFilter extends OP.Component {
 					var condResult;
 
 					var value = rowData[fieldInfo.columnName];
+					
+					if (typeof fieldInfo.key == "undefined")
+						fieldInfo.key = "connectField"; // if you are looking at the parent object it won't have a key to analyze
 
 					switch (fieldInfo.key) {
 						case "string":
@@ -1154,6 +1157,9 @@ export default class RowFilter extends OP.Component {
 							break;
 						case "user":
 							condResult = _logic.userValid(value, filter.rule, filter.value);
+							break;
+						case "connectField":
+							condResult = _logic.connectFieldValid(value, filter.rule, filter.value);
 							break;
 					}
 
@@ -1390,6 +1396,47 @@ export default class RowFilter extends OP.Component {
 				// return result;
 				return true;
 
+			},
+			
+			inQueryValid: function(value, rule, compareValue) {
+
+				var result = false;
+
+				if (!compareValue)
+					return result;
+
+				// if no query
+				var query = _Object.application.queries(q => q.id == compareValue)[0];
+				if (!query)
+					return result;
+
+				switch (rule) {
+					case 'in_query':
+						// TODO
+						break;
+					case 'not_in_query':
+						// TODO
+						break;
+				}
+
+				// return result;
+				return true;
+
+			},
+			
+			connectFieldValid: function(value, rule, compareValue) {
+
+				switch (rule) {
+					case 'in_query':
+					case 'not_in_query':
+						return _logic.inQueryValid(value, rule, compareValue);
+						break;
+					case "is_current_user":
+					case "is_not_current_user":
+						return _logic.userValid(value, rule, compareValue);
+						break;
+				}
+				
 			}
 
 		};
