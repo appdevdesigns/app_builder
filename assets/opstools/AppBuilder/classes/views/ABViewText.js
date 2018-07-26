@@ -337,10 +337,10 @@ export default class ABViewText extends ABViewWidget {
 		var _ui = {
 			id: ids.component,
 			view: 'template',
-			template: this.displayText(),
-			type: {
-				height: "auto"
-			}
+			autoheight:true,
+			minHeight: 10,
+			borderless: true,
+			template: this.displayText()
 		};
 
 
