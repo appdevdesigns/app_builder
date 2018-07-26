@@ -402,13 +402,42 @@ export default class ABView extends ABViewBase {
 	 *
 	 * @param {fn} filter  	a filter fn to return a set of ABViews that this fn
 	 *						returns true for.
+	 * @param {boolean} deep
+	 *
 	 * @return {array} 	array of ABViews
 	 */
-	views(filter) {
+	views(filter, deep) {
 
-		filter = filter || function () { return true; };
+		var result = [];
 
-		return this._views.filter(filter);
+		if (!this._views || this._views.length < 1)
+			return result;
+
+		// find into recursively
+		if (filter && deep) {
+
+			result = this._views.filter(filter);
+
+			if (result.length < 1) {
+				this._views.forEach(v => {
+					var subViews = v.views(filter, deep);
+					if (subViews && subViews.length > 0) {
+						result = subViews;
+					}
+				});
+			}
+
+		}
+
+		else {
+
+			filter = filter || function () { return true; };
+
+			result = this._views.filter(filter);
+
+		}
+
+		return result;
 
 	}
 

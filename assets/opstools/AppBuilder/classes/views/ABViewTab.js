@@ -504,7 +504,6 @@ export default class ABViewTab extends ABViewWidget {
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		}
-		var changePageEventIds = {}; // { pageId: eventId, ..., pageIdn: eventIdn }
 
 		var _ui = {};
 
@@ -554,6 +553,13 @@ export default class ABViewTab extends ABViewWidget {
 
 			changePage: (pageId) => {
 				this.changePage(pageId);
+			},
+
+			changeTab: (tabViewId) => {
+
+				// switch tab view
+				$$(ids.component).setValue(tabViewId);
+
 			}
 
 		};
@@ -572,8 +578,15 @@ export default class ABViewTab extends ABViewWidget {
 					listener: _logic.changePage
 				});
 
-
 			});
+
+			// Trigger 'changeTab' event to parent
+			this.eventAdd({
+				emitter: this,
+				eventName: 'changeTab',
+				listener: _logic.changeTab
+			});
+			
 
 		}
 
