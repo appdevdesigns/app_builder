@@ -25,7 +25,7 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 	constructor(App, idBase, currentForm) {
 
 		super(App, idBase, currentForm);
-		var L = function(key, altText) {
+		var L = function (key, altText) {
 			return AD.lang.label.getLabel(key) || altText;
 		}
 
@@ -37,9 +37,9 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 		this.updateObject = null;  // the object this Action will Update.
 
 		this.formRows = [];	// keep track of the Value Components being set
-							// [
-							//		{ fieldId: xxx, value:yyy, type:key['string', 'number', 'date',...]} 
-							// ]
+		// [
+		//		{ fieldId: xxx, value:yyy, type:key['string', 'number', 'date',...]} 
+		// ]
 
 		this.stashRules = {}; // keep track of rule settings among our selected objects.
 
@@ -85,10 +85,10 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 		var uniqueInstanceID = webix.uid();
 		var myUnique = (key) => {
 			// return idBase + '_' + key  + '_' + uniqueInstanceID;
-			return idBase + '_' + key  + '_' + uniqueInstanceID;
+			return idBase + '_' + key + '_' + uniqueInstanceID;
 		}
 		var ids = {
-			updateForm: myUnique('updateForm'),	
+			updateForm: myUnique('updateForm'),
 		};
 
 		var _ui = {
@@ -115,10 +115,10 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 				var rows = UpdateForm.getChildViews();
 
 				var addRow = rows.filter(r => {
-						return r.queryView(function(view) {
-							return view.config.name == "field" && !view.getValue();
-						});
-					})[0];
+					return r.queryView(function (view) {
+						return view.config.name == "field" && !view.getValue();
+					});
+				})[0];
 				if (!addRow) return;
 
 				UpdateForm.removeView(addRow);
@@ -138,7 +138,7 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 				var rows = UpdateForm.getChildViews();
 				if (data == null &&
 					rows.filter(r => {
-						return r.queryView(function(view) {
+						return r.queryView(function (view) {
 							return view.config.name == "field" && !view.getValue();
 						});
 					}).length > 0)
@@ -151,17 +151,19 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 				UpdateForm.addView(row.ui);
 
 				// initialize row with any provided data:
-				row.init({ onAdd:()=>{
+				row.init({
+					onAdd: () => {
 
-					// add a new Row
-					_logic.addRow();
+						// add a new Row
+						_logic.addRow();
 
-				}, onDelete:(rowId)=>{
+					}, onDelete: (rowId) => {
 
-					// remove a row
-					_logic.delRow(rowId);
+						// remove a row
+						_logic.delRow(rowId);
 
-				}, data:data});
+					}, data: data
+				});
 
 				// store this row
 				this.formRows.push(row);
@@ -201,8 +203,8 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 				// being sent to the .forEach().
 				// So Clone it and use that for .forEach()
 				var cloneChildren = [];
-				children.forEach((c)=>{ cloneChildren.push(c);})
-				cloneChildren.forEach((c)=>{
+				children.forEach((c) => { cloneChildren.push(c); })
+				cloneChildren.forEach((c) => {
 					UpdateForm.removeView(c);
 				})
 
@@ -214,16 +216,16 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 			formGet: () => {
 				var UpdateForm = $$(ids.updateForm);
 				if (!UpdateForm) {
-					 // this is a problem!
-					OP.Error.log('ABViewRuleActionFormRecordRuleUpdate.init() could not find webix form.', {id:ids.updateForm });
-					return null; 
+					// this is a problem!
+					OP.Error.log('ABViewRuleActionFormRecordRuleUpdate.init() could not find webix form.', { id: ids.updateForm });
+					return null;
 				}
 
 				return UpdateForm;
 			},
 
 
-			setValues: (valueRules ) => {
+			setValues: (valueRules) => {
 
 				// valueRules = {
 				//	fieldOperations:[
@@ -236,8 +238,8 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 
 				// find the form
 				var UpdateForm = _logic.formGet();
-				if (!UpdateForm) return; 
-			
+				if (!UpdateForm) return;
+
 				// clear form:
 				_logic.formClear();
 
@@ -247,7 +249,7 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 					valueRules.fieldOperations.forEach((r) => {
 						_logic.addRow(r);
 					})
-				} 
+				}
 
 
 				// our default operation will cause an empty row to 
@@ -258,12 +260,12 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 
 
 				// display an empty row
-				_logic.addRow(); 
+				_logic.addRow();
 
-			}, 
+			},
 
 			fromSettings: (settings) => {
-				
+
 				// Note: we just want the { valueRules:[] } here:
 				var mySettings = settings.valueRules || settings;
 
@@ -271,14 +273,14 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 
 			},
 
-			toSettings:() => {
+			toSettings: () => {
 
 				// valueRules = {
 				//	fieldOperations:[
 				//		{ fieldID:xxx, value:yyyy, type:zzz, op:aaa }
 				//	]
 				// }
-				var settings = {fieldOperations:[]};
+				var settings = { fieldOperations: [] };
 
 				// for each of our formRows, decode the propery {} 
 				this.formRows.forEach((fr) => {
@@ -290,15 +292,15 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 
 				return settings;
 			}
-			
+
 		};
 
 		return {
 			ui: _ui,
-			init:init,
+			init: init,
 			fromSettings: (settings) => { _logic.fromSettings(settings); },
-			toSettings: ()=> { return _logic.toSettings() },
-			_logic:_logic
+			toSettings: () => { return _logic.toSettings() },
+			_logic: _logic
 		};
 	}
 
@@ -308,20 +310,22 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 		var uniqueInstanceID = webix.uid();
 		var myUnique = (key) => {
 			// return idBase + '_' + key  + '_' + uniqueInstanceID;
-			return key  + '_' + uniqueInstanceID;
+			return key + '_' + uniqueInstanceID;
 		}
 
 		var ids = {
-			row:      		myUnique('row'),
-			updateForm: 	myUnique('updateFormRow'),	
-			field: 			myUnique('field'),
-			value:  		myUnique('value'),
-			selectBy:  		myUnique('selectBy'),
-			queryField:		myUnique('queryField'),
-			buttonAdd: 		myUnique('add'),
-			buttonDelete: 	myUnique('delete')
+			row: myUnique('row'),
+			updateForm: myUnique('updateFormRow'),
+			field: myUnique('field'),
+			value: myUnique('value'),
+			selectDc: myUnique('selectDc'),
+			selectBy: myUnique('selectBy'),
+			queryField: myUnique('queryField'),
+			multiview: myUnique('multiview'),
+			buttonAdd: myUnique('add'),
+			buttonDelete: myUnique('delete')
 		};
-		
+
 		var FilterComponent;
 
 		var _logic = {
@@ -345,7 +349,7 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 
 				var options = [];
 				if (this.updateObject) {
-					
+
 					options = (this.updateObject.fields() || []).map(f => {
 						return {
 							id: f.id,
@@ -389,8 +393,8 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 								usedHash[field.getValue()] = true;
 							}
 						});
-						options = options.filter((o)=>{ return (! usedHash[o.id]); });
-						
+						options = options.filter((o) => { return (!usedHash[o.id]); });
+
 					}
 
 				}
@@ -406,9 +410,9 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 				var FormView = valueField.getParentView().getParentView();
 
 
-				var field = this.getUpdateObjectField( $$(ids.field).getValue() );
+				var field = this.getUpdateObjectField($$(ids.field).getValue());
 				if (field) {
-					
+
 					var value = field.getValue(valueField, {});
 
 					// // if a standard component that supports .getValue()
@@ -426,7 +430,7 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 					field.isValidData(obj, validator);
 
 					// if value is empty, this is also an error:
-					if ((value == '' || value == null) 
+					if ((value == '' || value == null)
 						|| ((Array.isArray(value)) && (value.length == 0))) {
 
 						validator.addError(field.columnName, this.labels.component.errorRequired);
@@ -445,12 +449,12 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 					// data.
 
 
-//// TODO: display error for our field picker.  Note, it doesn't have a unique .name 
-// field.
-var fieldField = $$(ids.row).getChildViews()[0].getChildViews()[1];
-fieldField.define('invalidMessage', this.labels.component.errorRequired);
-fieldField.define('invalid', true);
-fieldField.refresh();
+					//// TODO: display error for our field picker.  Note, it doesn't have a unique .name 
+					// field.
+					var fieldField = $$(ids.row).getChildViews()[0].getChildViews()[1];
+					fieldField.define('invalidMessage', this.labels.component.errorRequired);
+					fieldField.define('invalid', true);
+					fieldField.refresh();
 					// fieldField.markInvalid(this.labels.component.errorRequired);
 					return false;
 				}
@@ -459,20 +463,120 @@ fieldField.refresh();
 
 			selectField: (columnID) => {
 
-				var field = this.getUpdateObjectField(columnID );
+				var field = this.getUpdateObjectField(columnID);
 				if (!field) return;
 
 				var fieldComponent = field.formComponent(),
 					abView = fieldComponent.newInstance(field.object.application),
 					formFieldComponent = abView.component(this.App),
-					inputView = formFieldComponent.ui;
+					$componentView = formFieldComponent.ui,
+					$inputView;
 
-					inputView.id = ids.value;  // set our expected id 
+				$componentView.id = ids.value;  // set our expected id 
+
+				// find all the DataSources
+				var dataCollections = this.currentForm.pageRoot().dataCollections((dc) => { return dc.datasource });
+
+				// create a droplist with those dataSources
+				var optionsDataSources = [];
+				dataCollections.forEach((dc) => {
+					optionsDataSources.push({ id: dc.id, value: dc.label });
+				});
+
+				// create a droplist with select options
+				var optionsSelectBy = [
+					{ id: 'select-one', value: '*Current selection' },
+					{ id: 'filter-select-one', value: '*Select first after filter by...' }
+				];
+
+				var $optionUpdateExsits = {
+					rows: [
+						{
+							cols: [
+								{
+									id: ids.selectDc,
+									view: 'combo',
+									options: optionsDataSources,
+									placeholder: this.labels.component.chooseSource,
+									on: {
+										'onChange': (newv, oldv) => {
+											var selectedDataCollections = this.currentForm.pageRoot().dataCollections((dc) => { return dc.id == newv; })[0];
+											if (selectedDataCollections && 
+												(selectedDataCollections.sourceType == "query" || field.key != 'connectObject')) {
+
+												var queryFieldOptions = [];
+												selectedDataCollections.datasource.fields().forEach((f) => {
+													queryFieldOptions.push({ id: f.id, value: f.label })
+												});
+												$$(ids.queryField).define("options", queryFieldOptions);
+												$$(ids.queryField).refresh();
+												$$(ids.queryField).show();
+
+											} 
+											else {
+												$$(ids.queryField).hide();
+											}
+										}
+									}
+								},
+								// we will place a list of query fields if you choose a datasource that has a query source type
+								{
+									id: ids.queryField,
+									view: 'combo',
+									hidden: true,
+									placeholder: this.labels.component.chooseField,
+									options: [
+										{ id: 1, value: "figure this out" }
+									]
+								}
+							]
+						},
+						{
+							id: ids.selectBy,
+							view: 'combo',
+							options: optionsSelectBy,
+							placeholder: this.labels.component.selectBy,
+							on: {
+								'onChange': (newv, oldv) => {
+									var $row = $$(ids.row);
+									$row.removeView($row.getChildViews()[1]);
+									if (newv == "select-one") {
+										$row.addView({}, 1);
+									} else {
+
+										var options = this.currentForm.dataCollection().datasource.fields().map(function (f) {
+											return {
+												id: f.id,
+												value: f.label
+											}
+										});
+
+										FilterComponent = new RowFilter(this.App, idBase + "_filter");
+										FilterComponent.init({
+											isRecordRule: true,
+											onChange: _logic.onFilterChange,
+											fieldOptions: options
+										});
+
+										$row.addView(FilterComponent.ui, 1);
+
+										var collectionId = $$(ids.selectDc).getValue();
+										var dataCollection = this.currentForm.pageRoot().dataCollections((dc) => { return dc.id == collectionId; })[0];
+										if (dataCollection) {
+											_logic.populateFilters(dataCollection);
+										}
+									}
+								}
+							}
+						}
+					]
+				};
+
 
 				// WORKAROUND: add '[Current User]' option to the user data field
 				if (field.key == 'user') {
-					inputView.options = inputView.options || [];
-					inputView.options.unshift({
+					$componentView.options = $componentView.options || [];
+					$componentView.options.unshift({
 						id: 'ab-current-user',
 						value: '*[Current User]'
 					});
@@ -492,135 +596,113 @@ fieldField.refresh();
 
 					// find all the DataSources that are based upon this ABObject
 					// to do this, we find the root Page we are on, then ask that Page for datasources:
-					var dataCollections = this.currentForm.pageRoot().dataCollections((dc)=>{ return dc.datasource && dc.datasource.id == connectedObject.id;});
-					
-					var dataCollectionQueries = this.currentForm.pageRoot().dataCollections((dc)=>{
+					dataCollections = dataCollections.filter((dc) => { return dc.datasource.id == connectedObject.id; });
+
+					var dataCollectionQueries = this.currentForm.pageRoot().dataCollections((dc) => {
 						return dc.sourceType == "query" && dc.datasource.canFilterObject(connectedObject)
 						// return dc.datasource.id == connectedObject.id;
 					});
-					
+
 					dataCollections = dataCollections.concat(dataCollectionQueries);
 
-					// create a droplist with those dataSources
-					var optionsDataSources = [];
-					dataCollections.forEach((dc)=>{
-						optionsDataSources.push({ id:dc.id, value:dc.label });
+					// refresh a droplist with those dataSources
+					optionsDataSources = [];
+					dataCollections.forEach((dc) => {
+						optionsDataSources.push({ id: dc.id, value: dc.label });
 					})
 
-					
-					// create a droplist with select options
-					var optionsSelectBy = [
-						{ id:'select-one', value:'*Current selection' },
-						{ id:'filter-select-one', value:'*Select first after filter by...' },
-						{ id:'filter-select-all', value:'*Select all after filter by...' }
-					];
 
-					inputView = {
-						rows: [
-							{
-								cols: [
-									{
-										id:ids.value,
-										view:'combo',
-										options:optionsDataSources,
-										placeholder: this.labels.component.chooseSource,
-										on: {
-											'onChange': (newv, oldv) => {
-												var selectedDataCollections = this.currentForm.pageRoot().dataCollections((dc)=>{ return dc.id == newv;})[0];
-												if (selectedDataCollections && selectedDataCollections.sourceType == "query") {
-													var queryFieldOptions = [];
-													selectedDataCollections.datasource.fields().forEach((f)=>{
-														queryFieldOptions.push({ id: f.id, value: f.label })
-													});
-													$$(ids.queryField).define("options", queryFieldOptions);
-													$$(ids.queryField).refresh();
-													$$(ids.queryField).show();
-												} else {
-													$$(ids.queryField).hide();
-												}
-											}
-										}
-									},
-									// we will place a list of query fields if you choose a datasource that has a query source type
-									{
-										id:ids.queryField,
-										view:'combo',
-										hidden: true,
-										placeholder: this.labels.component.chooseField,
-										options:[
-											{ id: 1, value: "figure this out" }
-										]
-									} 
-								]
-							},
-							{
-								id:ids.selectBy,
-								view:'combo',
-								options:optionsSelectBy,
-								placeholder: this.labels.component.selectBy,
-								on: {
-									'onChange': (newv, oldv) => {
-										var $row = $$(ids.row);
-										$row.removeView($row.getChildViews()[1]);
-										if (newv == "select-one") {
-											$row.addView({}, 1);
-										} else {
-											
-											var options = this.currentForm.dataCollection().datasource.fields().map(function(f) {
-												return {
-													id: f.id,
-													value: f.label
-												}
-											});
-											
-											FilterComponent = new RowFilter(this.App, idBase + "_filter");
-											FilterComponent.init({
-												isRecordRule: true,
-												onChange: _logic.onFilterChange,
-												fieldOptions: options
-											});
-											
-											$row.addView(FilterComponent.ui, 1);
-											
-											var collectionId = $$(ids.value).getValue();
-											var dataCollection = this.currentForm.pageRoot().dataCollections((dc)=>{ return dc.id == collectionId;})[0];
-											if (dataCollection) {
-												_logic.populateFilters(dataCollection);
-											}
-										}
-									}
-								}
-							}
-						]
-					}
+					// add select an array value option
+					optionsSelectBy.push({ id: 'filter-select-all', value: '*Select all after filter by...' });
+
+					$inputView = $optionUpdateExsits;
 
 					// and the upcoming formFieldComponent.init() 
 					// doesn't need to do anything:
 					formFieldComponent = {
-						init:function(){}
+						init: function () { }
 					}
 
 					// and we reset field so it's customDisplay isn't called:
-					field = {};
+					// field = {};
 
 				}
+
+				else {
+
+					$inputView = {
+						id: ids.multiview,
+						view: 'multiview',
+						cells: [
+							{
+								batch: "custom",
+								rows: [
+									$componentView,
+									{
+										view: 'label',
+										label: '<a>Or exists value</a>',
+										on: {
+											onItemClick: function () {
+
+												var $container = this.getParentView(),
+													$multiview = $container.getParentView();
+
+												$multiview.showBatch("exist");
+
+											}
+										}
+									}
+								]
+							},
+							{
+								// Update value from exists object
+								batch: "exist",
+								rows: [
+									$optionUpdateExsits,
+									{
+										view: 'label',
+										label: '<a>Or custom value</a>',
+										on: {
+											onItemClick: function () {
+
+												var $container = this.getParentView(),
+													$multiview = $container.getParentView();
+
+												// clear filter view
+												$$(ids.selectBy).setValue('select-one');
+
+												$multiview.showBatch("custom");
+
+											}
+										}
+									}
+								]
+							}
+						]
+					};
+
+				}
+
 
 				// Change component to display this field's form input
 				var $row = $$(ids.row).getChildViews()[0];
 				$row.removeView($row.getChildViews()[3]);
-				$row.addView(inputView, 3);
+				$row.addView($inputView, 3);
 
 				formFieldComponent.init();
 
 
 				// Show custom display of data field
-				if (field.customDisplay)
-					field.customDisplay(field, this.App, $row.getChildViews()[3].$view, {
-						editable: true, 
+				if (field.key != 'connectObject' &&
+					field.customDisplay) {
+					// field.customDisplay(field, this.App, $row.getChildViews()[3].$view, {
+					field.customDisplay(field, this.App, $componentView, {
+						editable: true,
 
 						// tree
 						isForm: true
 					});
+				}
 
 
 				// Show the remove button
@@ -632,45 +714,63 @@ fieldField.refresh();
 				if (columnID)
 					_logic.callbacks.onAdd();
 
-			
+
 			},
 
 			setValue: (data) => {
 				$$(ids.field).setValue(data.fieldID);
-					// note: this triggers our _logic.selectField() fn.
-				var field = this.getUpdateObjectField( data.fieldID );
+				// note: this triggers our _logic.selectField() fn.
+				var field = this.getUpdateObjectField(data.fieldID);
 				if (field) {
 
-					// now handle our special connectedObject case:
-					if (field.key == 'connectObject') {
+					var setValueFn = () => {
 
-						$$(ids.value).setValue(data.value);
+						$$(ids.selectDc).setValue(data.value);
 						if (data.queryField) {
 							$$(ids.queryField).setValue(data.queryField);
 						}
 						var selectBy = data.selectBy || 'select-one';
 						$$(ids.selectBy).setValue(selectBy);
-						
+
 						if (selectBy != "select-one") {
 							var collectionId = data.value;
-							var dataCollection = this.currentForm.pageRoot().dataCollections((dc)=>{ return dc.id == collectionId;})[0];
+							var dataCollection = this.currentForm.pageRoot().dataCollections((dc) => { return dc.id == collectionId; })[0];
 							if (dataCollection && data.filterConditions) {
 								_logic.populateFilters(dataCollection, data.filterConditions);
 							}
 						}
-
-					} else {
-						
-						var rowData = {};
-						rowData[field.columnName] = data.value;
-						field.setValue($$(ids.value), rowData);
-						
 					}
 
-					
+					// now handle our special connectedObject case:
+					if (field.key == 'connectObject') {
+
+						setValueFn();
+
+					} else {
+
+						if (data.valueType == 'exist') {
+
+							$$(ids.multiview).showBatch("exist");
+
+							setValueFn();
+	
+						}
+						else {
+
+							$$(ids.multiview).showBatch("custom");
+
+							var rowData = {};
+							rowData[field.columnName] = data.value;
+							field.setValue($$(ids.value), rowData);
+
+						}
+
+					}
+
+
 				}
 			},
-			
+
 			populateFilters: (dataCollection, filterConditions) => {
 				var filterConditions = filterConditions || ABViewRuleActionObjectUpdaterDefaults.filterConditions;
 				// Clone ABObject
@@ -678,7 +778,7 @@ fieldField.refresh();
 				if (objectCopy) {
 					objectCopy.objectWorkspace.filterConditions = filterConditions;
 				}
-				
+
 				// Populate data to popups
 				FilterComponent.objectLoad(objectCopy);
 				FilterComponent.setValue(filterConditions);
@@ -694,26 +794,42 @@ fieldField.refresh();
 					var data = {};
 					data.fieldID = $$(ids.field).getValue();
 
-					var valueField = $$(ids.value);
-					var field = this.getUpdateObjectField( data.fieldID );
-					
-					// now handle our special connectedObject case:
-					if (field.key == 'connectObject') {
+					var $valueField = $$(ids.value);
+					var field = this.getUpdateObjectField(data.fieldID);
 
-						data.value = $$(ids.value).getValue(); 
-						data.queryField = $$(ids.queryField).getValue(); 
+					var getValueFn = () => {
+						data.value = $$(ids.selectDc).getValue();
+						data.queryField = $$(ids.queryField).getValue();
 						data.op = 'set';  // possible to create other types of operations.
 						data.type = field.key;
 						data.selectBy = $$(ids.selectBy).getValue();
+						data.valueType = "exist";
 						if (FilterComponent) {
-							data.filterConditions = FilterComponent.getValue();							
+							data.filterConditions = FilterComponent.getValue();
 						}
+					}
+
+					// now handle our special connectedObject case:
+					if (field.key == 'connectObject') {
+
+						getValueFn();
 
 					} else {
 
-						data.value = field.getValue(valueField, {});
-						data.op = 'set';  // possible to create other types of operations.
-						data.type = field.key;
+						if ($$(ids.multiview).config.visibleBatch == 'exist') {
+
+							getValueFn();
+
+						}
+						else {
+
+							data.value = field.getValue($valueField, {});
+							data.op = 'set';  // possible to create other types of operations.
+							data.type = field.key;
+							data.valueType = "custom";
+
+						}
+
 					}
 
 
@@ -767,16 +883,16 @@ fieldField.refresh();
 						{
 							// "Remove" button  
 							view: "button",
-							id:   ids.buttonDelete,
+							id: ids.buttonDelete,
 							icon: "trash",
 							type: "icon",
 							width: 30,
-							hidden:true,
+							hidden: true,
 							click: function () {
 								_logic.callbacks.onDelete(ids.row);
 							}
 						}
-					]	
+					]
 				},
 				{} // we will add filters here if we need them
 			]
@@ -784,7 +900,7 @@ fieldField.refresh();
 
 
 		var init = (options) => {
-			for( var c in _logic.callbacks){
+			for (var c in _logic.callbacks) {
 				_logic.callbacks[c] = options[c] || _logic.callbacks[c];
 			}
 
@@ -796,13 +912,13 @@ fieldField.refresh();
 			}
 		}
 
-		
+
 
 		return {
 			ui: _ui,
-			init:init,
+			init: init,
 			toSettings: () => { return _logic.toSettings() },
-			_logic:_logic
+			_logic: _logic
 		};
 
 	}
@@ -810,7 +926,7 @@ fieldField.refresh();
 
 
 	getUpdateObjectField(fieldID) {
-		return this.updateObject.fields((f)=>{ return f.id == fieldID })[0];
+		return this.updateObject.fields((f) => { return f.id == fieldID })[0];
 	}
 
 
@@ -832,7 +948,7 @@ fieldField.refresh();
 			this.valueRules.fieldOperations = this.valueRules.fieldOperations || [];
 
 			var allPromises = [];
-			
+
 			// for each of our operations
 			this.valueRules.fieldOperations.forEach((op) => {
 				// op = {
@@ -840,8 +956,9 @@ fieldField.refresh();
 				//	value: 'xxx',
 				//	op: 'set',
 				//  type:'',
-				//  queryField: '',
+				//  queryField: '', // id of ABField
 				//  selectBy:'',   ['select-one', 'filter-select-one', 'filter-select-all']
+				//  valueType: "", ['custom', 'exist']
 				// 	filterConditions: { // array of filters to apply to the data table
 				//		glue: 'and',
 				// 		rules: []
@@ -849,16 +966,17 @@ fieldField.refresh();
 				// }
 
 				var field = this.getUpdateObjectField(op.fieldID);
-				if (field) { 
+				if (field) {
 
 					var value = op.value;
 
-					if (value == 'ab-current-user') 
+					if (value == 'ab-current-user')
 						value = OP.User.username();
 
 					// in the case of a connected Field, we use op.value to get the 
 					// datacollection, and find it's currently selected value:
-					if (field.key == 'connectObject') {
+					if (field.key == 'connectObject' || 
+						op.valueType == 'exist') {
 
 
 						// NOTE: 30 May 2018 :current decision from Ric is to limit this 
@@ -871,28 +989,28 @@ fieldField.refresh();
 
 
 						// op.value is the DataCollection.id we need to find
-						var dataCollection = this.currentForm.pageRoot().dataCollections((dc)=>{ return dc.id == op.value;})[0];
-					
+						var dataCollection = this.currentForm.pageRoot().dataCollections((dc) => { return dc.id == op.value; })[0];
+
 						// we don't want to mess with the dataCollection directly since it might 
 						// be used by other parts of the system and this refresh might reset
 						// it's cursor.
 						// var clonedDataCollection = dataCollection.filteredClone(op.filterConditions);
-						
+
 						// loop through rules to find "same-as-field" or "not-same-as-field"
 						// adjust operator and switch key value to actual value when found
 						var filterConditions = _.cloneDeep(op.filterConditions);
 						if (filterConditions && filterConditions.rules) {
-							filterConditions.rules.filter( r => {
+							filterConditions.rules.filter(r => {
 								return (r.rule == "same_as_field" || r.rule == "not_same_as_field");
 							}).forEach((item) => {
-								
-								var valueField = this.currentForm.dataCollection().datasource.fields((f)=>{ return f.id == item.value;})[0];
+
+								var valueField = this.currentForm.dataCollection().datasource.fields((f) => { return f.id == item.value; })[0];
 								if (valueField.key == "connectObject") {
 									item.value = valueField.format(this._formData);
 								} else {
 									item.value = this._formData[valueField.columnName];
 								}
-								
+
 								if (item.rule == "not_same_as_field") {
 									item.rule = "not equals";
 								} else {
@@ -900,135 +1018,140 @@ fieldField.refresh();
 								}
 							});
 						}
-						
+
 						var connectedPromise = dataCollection.filteredClone(filterConditions)
-						.then(function(clonedDataCollection) {
-							
-							
-							switch (op.selectBy) {
-								
-								// the 'select-one' is getting the currently set cursor on this data collection
-								// and using that value.
-// TODO: rename to 'select-cursor'
-								case 'select-one':
-								default: 
-									value = clonedDataCollection.getCursor(); // dataCollection.getItem(dataCollection.getCursor());
+							.then(function (clonedDataCollection) {
 
-									if (value) {
-										// NOTE: webix documentation issue: .getCursor() is supposed to return
-										// the .id of the item.  However it seems to be returning the {obj} 
-										if (value.id) value = value.id;
-									}
 
-									// QUESTION: if value returns undefined should we do something else?
-									switch(op.op) {
+								switch (op.selectBy) {
 
-										case 'set': 
-											objectToUpdate[field.columnName] = value; 
-											break;
-									}
-									break;
-									
-								// attempt to filter this data collection by the given filterConditions
-								case 'filter-select-all':
-								
-									var newValues = [];
-									
-									var currRow = clonedDataCollection.getFirstRecord();
-									while(currRow) {
-										
-										// do something there
-										
-										switch (clonedDataCollection.sourceType) {
-											// case: datacollection is an object 
-											// we want to set our field to this values
-											case 'object':
-													
-												newValues.push(currRow.id);
-												break;
-											
-											// case: datacollection is a query 
-											// our field is a pointer to an object. we want to pull out that object 
-											// from the query data.
-											case 'query':
-											
-												var fieldWithValue = clonedDataCollection.datasource.fields((f)=>{
+									// the 'select-one' is getting the currently set cursor on this data collection
+									// and using that value.
+									// TODO: rename to 'select-cursor'
+									case 'select-one':
+									default:
+										value = clonedDataCollection.getCursor(); // dataCollection.getItem(dataCollection.getCursor());
+
+										if (value) {
+											// NOTE: webix documentation issue: .getCursor() is supposed to return
+											// the .id of the item.  However it seems to be returning the {obj} 
+
+											if (op.valueType == 'exist') {
+
+												var fieldWithValue = clonedDataCollection.datasource.fields((f) => {
 													return f.id == op.queryField;
 												})[0];
-												
-												var newValue = currRow[fieldWithValue.columnName];
-												
-												if (typeof newValue == "undefined") {
-													newValue = currRow[fieldWithValue.relationName()];
-													
-													if (Array.isArray(newValue)) {
-														newValue = newValue.map((v)=>{
-															return v.id ? v.id : v;
-														})
-													} else {
-														if (newValue.id) newValue = newValue.id;
-													}
-													
-												}
-												
-												newValues = _.uniq(newValues.concat(newValue));
-												
+
+												if (fieldWithValue)
+													value = value[fieldWithValue.columnName];
+
+											}
+											else if (value.id) {
+
+												value = value.id;
+
+											}
+										}
+
+										// QUESTION: if value returns undefined should we do something else?
+										switch (op.op) {
+
+											case 'set':
+												objectToUpdate[field.columnName] = value;
 												break;
 										}
-										
-										currRow = clonedDataCollection.getNextRecord(currRow);
-									}
-									
-									
-								
-									// QUESTION: if value returns undefined should we do something else?
-									switch(op.op) {
+										break;
 
-										case 'set': 
-										
-											if (field.linkType() == "one") {
-												var updates = [];
-												newValues.forEach((v) => {
-													var objectToUpdateClone = _.cloneDeep(objectToUpdate);
-													objectToUpdateClone[field.columnName] = v;
-													updates.push(objectToUpdateClone);
-												});
-												objectToUpdate.newRecords = updates;
-											} else {
-												objectToUpdate[field.columnName] = newValues; 
+									// attempt to filter this data collection by the given filterConditions
+									case 'filter-select-all':
+
+										var newValues = [];
+
+										var currRow = clonedDataCollection.getFirstRecord();
+										while (currRow) {
+
+											// do something there
+
+											switch (clonedDataCollection.sourceType) {
+												// case: datacollection is an object 
+												// we want to set our field to this values
+												case 'object':
+
+													newValues.push(currRow.id);
+													break;
+
+												// case: datacollection is a query 
+												// our field is a pointer to an object. we want to pull out that object 
+												// from the query data.
+												case 'query':
+
+													var fieldWithValue = clonedDataCollection.datasource.fields((f) => {
+														return f.id == op.queryField;
+													})[0];
+
+													var newValue = currRow[fieldWithValue.columnName];
+
+													if (typeof newValue == "undefined") {
+														newValue = currRow[fieldWithValue.relationName()];
+
+														if (Array.isArray(newValue)) {
+															newValue = newValue.map((v) => {
+																return v.id ? v.id : v;
+															})
+														} else {
+															if (newValue.id) newValue = newValue.id;
+														}
+
+													}
+
+													newValues = _.uniq(newValues.concat(newValue));
+
+													break;
 											}
-											break;
-									}
-									break;
-									
-								
-								case 'filter-select-one':
-									newValues = [];
-								
-									value = clonedDataCollection.getFirstRecord();
-									
-									switch (clonedDataCollection.sourceType) {
-										// case: datacollection is an object 
-										// we want to set our field to this values
-										case 'object':
-											if (value) {
-												// NOTE: webix documentation issue: .getCursor() is supposed to return
-												// the .id of the item.  However it seems to be returning the {obj} 
-												if (value.id) value = value.id;
-											}	
-											break;
-										
+
+											currRow = clonedDataCollection.getNextRecord(currRow);
+										}
+
+
+
+										// QUESTION: if value returns undefined should we do something else?
+										switch (op.op) {
+
+											case 'set':
+
+												if (field.linkType() == "one") {
+													var updates = [];
+													newValues.forEach((v) => {
+														var objectToUpdateClone = _.cloneDeep(objectToUpdate);
+														objectToUpdateClone[field.columnName] = v;
+														updates.push(objectToUpdateClone);
+													});
+													objectToUpdate.newRecords = updates;
+												} else {
+													objectToUpdate[field.columnName] = newValues;
+												}
+												break;
+										}
+										break;
+
+
+									case 'filter-select-one':
+										newValues = [];
+
+										value = clonedDataCollection.getFirstRecord();
+
 										// case: datacollection is a query 
 										// our field is a pointer to an object. we want to pull out that object 
 										// from the query data.
-										case 'query':
-										
-											var fieldWithValue = clonedDataCollection.datasource.fields((f)=>{
+										if (clonedDataCollection.sourceType == 'query' || 
+											op.valueType == 'exist') {
+
+											var fieldWithValue = clonedDataCollection.datasource.fields((f) => {
 												return f.id == op.queryField;
 											})[0];
-											
+
 											var newValue = value[fieldWithValue.columnName];
-											
+
 											if (typeof newValue == "undefined") {
 												newValue = value[fieldWithValue.relationName()];
 												if (Array.isArray(newValue)) {
@@ -1036,64 +1159,72 @@ fieldField.refresh();
 												}
 												if (newValue.id) newValue = newValue.id;
 											}
-											
+
 											value = newValue;
-											
-											break;
-									}
-								
-									// QUESTION: if value returns undefined should we do something else?
-									switch(op.op) {
 
-										case 'set': 
-											objectToUpdate[field.columnName] = value; 
-											break;
-									}
-									break;
+										}
+										// case: datacollection is an object 
+										// we want to set our field to this values
+										else if (clonedDataCollection.sourceType == 'object' && value) {
 
-							}
-							
-							isUpdated = true;
+											// NOTE: webix documentation issue: .getCursor() is supposed to return
+											// the .id of the item.  However it seems to be returning the {obj} 
+											if (value.id) value = value.id;
 
-						})
-						
-						
+										}
+
+										// QUESTION: if value returns undefined should we do something else?
+										switch (op.op) {
+
+											case 'set':
+												objectToUpdate[field.columnName] = value;
+												break;
+										}
+										break;
+
+								}
+
+								isUpdated = true;
+
+							})
+
+
 						allPromises.push(connectedPromise);
-						
+
 
 					} else {
-						var setPromise = new Promise((resolve, reject)=>{
-							
-							switch(op.op) {
+						var setPromise = new Promise((resolve, reject) => {
 
-								case 'set': 
-									objectToUpdate[field.columnName] = value; 
+							switch (op.op) {
+
+								case 'set':
+									objectToUpdate[field.columnName] = value;
 									break;
 							}
-							
+
 							isUpdated = true;
-							
+
 							resolve(isUpdated);
-							
+
 						})
 
 						allPromises.push(setPromise);
-						
-// console.log("finished");
-						
+
+						// console.log("finished");
+
 					}
 
 
 				}
 			})
-			
+
 			Promise.all(allPromises)
-			.then(()=>{
-				resolve(isUpdated);
-			})
+				.then(() => {
+					resolve(isUpdated);
+				})
 
 		});
-		
+
 	}
 
 
@@ -1104,9 +1235,9 @@ fieldField.refresh();
 	// @return {Promise}
 	process(options) {
 
-this._formData = options.data;
+		this._formData = options.data;
 
-		return new Promise( (resolve, reject) => {
+		return new Promise((resolve, reject) => {
 
 			this.processUpdateObject({}, options.data)
 				.then(isUpdated => {
@@ -1121,14 +1252,14 @@ this._formData = options.data;
 
 						var model = dc.model;
 						model.update(options.data.id, options.data)
-						.catch((err)=>{
-							OP.Error.log('!!! ABViewRuleActionFormRecordRuleUpdate.process(): update error:', {error:err, data:options.data });
-							reject(err);
-						})
-						.then(resolve);
+							.catch((err) => {
+								OP.Error.log('!!! ABViewRuleActionFormRecordRuleUpdate.process(): update error:', { error: err, data: options.data });
+								reject(err);
+							})
+							.then(resolve);
 
 					}
-					
+
 				});
 
 		})
@@ -1154,7 +1285,7 @@ this._formData = options.data;
 		this.updateObject = object;
 
 		// with a new updateObject, then reset our UI
-		this._uiUpdater = null; 
+		this._uiUpdater = null;
 
 		// reload any stashed rules, or set to {}
 		this.valueRules = this.stashRules[this.updateObject.id] || {};
