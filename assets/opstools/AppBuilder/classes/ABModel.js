@@ -719,8 +719,17 @@ reject(err);
 
 			// convert the data to date object
 			dateFields.forEach((date) => {
-				if (d && d[date.columnName] != null)
-					d[date.columnName] = new Date(d[date.columnName]);
+				if (d && d[date.columnName] != null) {
+					if (date.settings.timeFormatValue == 1) {
+						// if we are ignoring the time it means we ignore timezone as well 
+						// so lets trim that off when creating the date so it can be a simple date
+						var tmpDate = d[date.columnName].replace(/\T.*/,'');
+						d[date.columnName] = new Date(tmpDate + " 00:00:00");
+					} else {
+						var tmpDate = d[date.columnName].replace(/\Z.*/,'');
+						d[date.columnName] = new Date(tmpDate);
+					}
+				} 
 			});
 
 

@@ -296,6 +296,19 @@ module.exports = {
 
 
         /**
+         * AppBuilder.rules.toSQLDate
+         *
+         * return a properly formatted DateTime string for MYSQL 5.7 but ignore the time information
+         *
+         * @param {string} date  String of a date you want converted
+         * @return {string}
+         */
+        toSQLDate: function (date) {
+            return moment.utc(date).format('YYYY-MM-DD 00:00:00');
+        },
+
+
+        /**
          * AppBuilder.rules.toSQLDateTime
          *
          * return a properly formatted DateTime string for MYSQL 5.7
@@ -304,7 +317,7 @@ module.exports = {
          * @return {string}
          */
         toSQLDateTime: function (date) {
-            return moment(date).format('YYYY-MM-DD HH:mm:ss');
+            return moment.utc(date).format('YYYY-MM-DD HH:mm:ss');
         },
 
 

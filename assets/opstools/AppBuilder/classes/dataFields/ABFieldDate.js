@@ -150,7 +150,7 @@ function getDateFormat(setting) {
 	// }
 	
 	var dateFormat = (setting && setting.dateFormat) ? setting.dateFormat : "";
-	var timeFormat = (setting && setting.timeFormat) ? setting.timeFormat : "";
+	var timeFormat = (setting && setting.timeFormatValue) ? setting.timeFormatValue : "";
 
 	switch (dateFormat) {
 		//Ignore Date
@@ -180,7 +180,7 @@ function getDateFormat(setting) {
 	}
 
 	switch (timeFormat) {
-		case 1, 2: {
+		case 2: {
 			dateFormatString += " %h:%i %A";
 		}	
 			break;
@@ -341,7 +341,7 @@ function refreshTimevalue() {
 	var formatString = "";
 	switch (timeFormat) {
 		//HH:MM AM/PM
-		case 1, 2: {
+		case 2: {
 			formatString = "%h:%i %A";
 		}
 			break;
@@ -1307,7 +1307,12 @@ class ABFieldDate extends ABField {
 
 				if (isValid) {
 					// all good, so store as ISO format string.
-					data[this.columnName] = value.toISOString();
+					if (this.settings.timeFormatValue == 1) {
+						data[this.columnName] = moment(value).format('YYYY-MM-DD 00:00:00');
+					} else {
+						data[this.columnName] = moment(value).format('YYYY-MM-DD HH:mm:ss');
+					}
+					console.log(data);
 				}
 
 

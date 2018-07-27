@@ -321,7 +321,11 @@ class ABFieldDate extends ABField {
 				}
 				// convert to SQL date format
 				else if (moment(myParameter[this.columnName]).isValid()) {
-					myParameter[this.columnName] = AppBuilder.rules.toSQLDateTime(myParameter[this.columnName]);
+					if (parseInt(this.settings.timeFormat) == 1) {
+						myParameter[this.columnName] = AppBuilder.rules.toSQLDate(myParameter[this.columnName]);
+					} else {
+						myParameter[this.columnName] = AppBuilder.rules.toSQLDateTime(myParameter[this.columnName]);
+					}
 				}
 
 			}
