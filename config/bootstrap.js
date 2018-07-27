@@ -131,7 +131,7 @@ function setupPollingMCC(next) {
 
 	var timerId = setTimeout(function request() {
 
-		sails.log.debug(':: ABRelay.pollMCC()');
+		// sails.log.debug(':: ABRelay.pollMCC()');
 		ABRelay.pollMCC()
 		.then(()=>{
 			// do it again:
