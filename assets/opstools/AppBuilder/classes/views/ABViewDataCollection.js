@@ -1032,8 +1032,8 @@ export default class ABViewDataCollection extends ABView {
 				return;
 				
 			// various PK name
-			if (!values.id && this.object.PK() != 'id')
-				values.id = values[this.object.PK()];
+			if (!values.id && this.datasource.PK() != 'id')
+				values.id = values[this.datasource.PK()];
 
 			if (this.__dataCollection.exists(values.id)) {
 				// normalize data before update data collection
