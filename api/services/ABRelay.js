@@ -9,6 +9,44 @@ var RP = require('request-promise-native');
 var _ = require('lodash');
 var crypto = require('crypto');
 
+
+var cookieJar = RP.jar();
+
+var CSRF = {
+    token: null,
+    /**
+     * Fetch the user's CSRF token from sails.js
+     * @return Deferred
+     *    Resolves with the CSRF token string when it has been fetched
+     */
+    fetch: function () {
+        return new Promise((resolve, reject)=>{
+
+            var options = {
+                method: 'GET',
+                uri: sails.config.appbuilder.baseURL + '/csrfToken',
+                json: true,
+                jar:cookieJar
+            }
+
+options.rejectUnauthorized = false;
+
+            RP(options)
+            .then((data)=>{
+
+                CSRF.token = data._csrf;
+                resolve(CSRF.token);
+            })
+            .catch((err)=>{
+                var csrfError = new Error('ABRelay:: unable to get CSRF token: '+err.message);
+                sails.log.error(csrfError)
+                reject(csrfError);
+            })
+        })
+    }
+}
+
+
 // setup a timed request to poll for MCC data to process:
 
 module.exports = {
@@ -91,6 +129,11 @@ module.exports = {
         options[dataField] = data;
 
 
+        // CSRF Token
+        if (method != 'GET') {
+            options.headers['X-CSRF-Token'] = CSRF.token;
+            options.jar = cookieJar;
+        }
 
 // default for all https requests
 // (whether using https directly, request, or another module)
@@ -354,6 +397,20 @@ options.rejectUnauthorized = false;
 
         })
 
+        // 2b) Make sure we have a CSRF token if we need one:
+        .then((params)=>{
+            var method = params.type || params.method || 'GET';
+            if ((method == 'GET') || (CSRF.token)) {
+                return params;
+            } else {
+
+                return CSRF.fetch()
+                .then((token)=>{
+                    return params;
+                })
+            }
+        })
+
         // 3) use data to make server call:
         .then((params) => {
 
@@ -363,9 +420,6 @@ options.rejectUnauthorized = false;
             //     url:'/path/to/url',
             //     data:{ some:data }
             // }
-
-// Question:  should we also include :
-//  .headers: { authorization:accessToken }  ??
     
             var options = this._formatServerRequest(params, relayUser);
             return RP(options);
@@ -374,7 +428,6 @@ options.rejectUnauthorized = false;
 
         // 4) encrypt the response:
         .then((response)=>{
-
             return this.encrypt(response, appUser.aes);
         })
 
@@ -387,7 +440,6 @@ options.rejectUnauthorized = false;
 
         // 5) update MCC with the response for this request:
         .then((encryptedDataPackets)=>{
-
             var allPosts = [];
             for (var i=0; i< encryptedDataPackets.length; i++) {
 
