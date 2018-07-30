@@ -262,7 +262,11 @@ class ABFieldString extends ABField {
 
 			// Set default string
 			if (this.settings.default) {
-				values[this.columnName] = this.settings.default;
+				if (this.settings.default.indexOf("{uuid}") >= 0) {
+					values[this.columnName] = OP.Util.uuid();
+				} else {
+					values[this.columnName] = this.settings.default;
+				}
 			}
 
 		}
