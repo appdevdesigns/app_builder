@@ -10,6 +10,7 @@ var _ = require('lodash');
 var path = require('path');
 var async = require('async');
 var cJSON = require('circular-json');
+var uuid = require('uuid/v4');
 
 
 const ValidationError = require('objection').ValidationError;
@@ -373,6 +374,10 @@ module.exports = {
                 // return the parameters of connectObject data field values 
                 var updateRelationParams = object.requestRelationParams(allParams);
 
+                object.fields().forEach((e) => {
+                    if (e.key == "string" && e.settings.default.indexOf("{uuid}") >= 0 && typeof createParams[e.columnName] == "undefined")
+                        createParams[e.columnName] = uuid();
+                });
 
                 var validationErrors = object.isValidData(createParams);
                 if (validationErrors.length == 0) {
