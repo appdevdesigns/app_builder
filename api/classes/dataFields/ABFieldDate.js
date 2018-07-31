@@ -233,7 +233,7 @@ class ABFieldDate extends ABField {
 	 */
 	migrateUpdate (knex) {
 		
-		return migrateCreate(knex);
+		return this.migrateCreate(knex);
 
 	}
 
