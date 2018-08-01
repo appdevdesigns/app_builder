@@ -47,6 +47,12 @@ function dataCollectionNew(instance, data) {
 	dc.removeCss = function () { };
 	dc.render = function () { };
 
+	dc.attachEvent("onAfterLoad", () => {
+
+		instance.hideProgressOfComponents();
+
+	});
+
 	return dc;
 }
 
@@ -95,6 +101,8 @@ export default class ABViewDataCollection extends ABView {
 		this.__filterComponent = new RowFilter();
 		this.__filterComponent.objectLoad(this.datasource);
 		this.__filterComponent.setValue(this.settings.objectWorkspace.filterConditions || ABViewPropertyDefaults.objectWorkspace.filterConditions);
+
+		this.__bindComponentIds = [];
 
 		// refresh a data collection
 		// this.init();
@@ -1169,8 +1177,10 @@ export default class ABViewDataCollection extends ABView {
 	bind(component) {
 
 		var dc = this.__dataCollection;
-		var obj = this.datasource;
 
+		// keep component id to an array
+		if (this.__bindComponentIds.indexOf(component.config.id) < 0)
+			this.__bindComponentIds.push(component.config.id);
 
 		if (component.config.view == 'datatable' ||
 			component.config.view == 'dataview') {
@@ -1182,12 +1192,7 @@ export default class ABViewDataCollection extends ABView {
 					if (component.showProgress)
 						component.showProgress({ type: "icon" });
 				}
-				
-				dc.attachEvent("onAfterLoad", function() {
-					if (component.hideProgress)
-						component.hideProgress();
-				});
-				
+
 				component.define("datafetch", 20);
 				component.define("datathrottle", 500);
 
@@ -1197,17 +1202,19 @@ export default class ABViewDataCollection extends ABView {
 				if (!this.settings.loadAll) {
 
 					component.___AD = component.___AD || {};
-					if (component.___AD.onDataRequestEvent) component.detachEvent(component.___AD.onDataRequestEvent);
-					component.___AD.onDataRequestEvent = component.attachEvent("onDataRequest", (start, count) => {
+					// if (component.___AD.onDataRequestEvent) component.detachEvent(component.___AD.onDataRequestEvent);
+					if (!component.___AD.onDataRequestEvent) {
+						component.___AD.onDataRequestEvent = component.attachEvent("onDataRequest", (start, count) => {
 
-						if (component.showProgress)
-							component.showProgress({ type: "icon" });
+							if (component.showProgress)
+								component.showProgress({ type: "icon" });
 
-						// load more data to the data collection
-						dc.loadNext(count, start);
+							// load more data to the data collection
+							dc.loadNext(count, start);
 
-						return false;	// <-- prevent the default "onDataRequest"
-					});
+							return false;	// <-- prevent the default "onDataRequest"
+						});
+					}
 
 
 				}
@@ -1494,18 +1501,22 @@ export default class ABViewDataCollection extends ABView {
 						});
 
 					}
-					
-					resolve();
-					
-				});
 
-			}).then(() => {
-				return new Promise((resolve, reject)=>{
 					if (callback)
 						callback();
 
 					resolve();
+					
 				});
+
+			})
+			.catch(err => {
+
+				this.hideProgressOfComponents();
+
+				if (callback)
+					callback(err);
+
 			});
 			
 		// if (callback) {
@@ -1599,6 +1610,18 @@ export default class ABViewDataCollection extends ABView {
 			return (linkVal.id || linkVal) == linkCursor.id;
 		}
 
+
+	}
+
+	hideProgressOfComponents() {
+
+		this.__bindComponentIds.forEach(comId => {
+
+			if ($$(comId) && 
+				$$(comId).hideProgress)
+				$$(comId).hideProgress();
+
+		});
 
 	}
 
