@@ -180,7 +180,7 @@ class ABFieldString extends ABField {
 								var currCol = t.string(this.columnName);
 
 								// default value
-								if (this.settings.default)
+								if (this.settings.default && this.settings.default.indexOf("{uuid}") == -1)
 									currCol.defaultTo(this.settings.default);
 								else
 									currCol.defaultTo(null);
