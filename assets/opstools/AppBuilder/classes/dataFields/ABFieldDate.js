@@ -65,7 +65,7 @@ var ids = {
 
 	dateFormat: 'date-format',
 	defaultDate: 'default-date',
-	defaultDateValue: '',
+	defaultDateValue: 'default-date-value',
 	timeFormat: 'time-format',
 	defaultTime: 'default-time',
 	defaultTimeValue: 'default-time-value',
@@ -150,7 +150,7 @@ function getDateFormat(setting) {
 	// }
 	
 	var dateFormat = (setting && setting.dateFormat) ? setting.dateFormat : "";
-	var timeFormat = (setting && setting.timeFormatValue) ? setting.timeFormatValue : "";
+	var timeFormat = (setting && setting.timeFormat) ? setting.timeFormat : "";
 
 	switch (dateFormat) {
 		//Ignore Date
@@ -977,8 +977,11 @@ var ABFieldDateComponent = new ABFieldComponent({
 
 		// }
 
-		// populate: (ids, values) => {
-		// }
+		populate: (ids, values) => {
+
+			$$(ids.defaultDateValue).setValue(new Date(values.settings.defaultDateValue));
+			$$(ids.defaultTimeValue).setValue(new Date(values.settings.defaultTimeValue));
+		},
 
 		show: function (ids) {
 			// dateDisplayRefresh();
@@ -1044,7 +1047,7 @@ class ABFieldDate extends ABField {
 		*/
 		this.settings.dateFormat = parseInt(this.settings.dateFormat);
 		this.settings.defaultDate = parseInt(this.settings.defaultDate);
-		this.settings.timeFormatValue = parseInt(this.settings.timeFormat);
+		this.settings.timeFormat = parseInt(this.settings.timeFormat);
 		this.settings.defaultTime = parseInt(this.settings.defaultTime);
 
 	}
@@ -1173,7 +1176,13 @@ class ABFieldDate extends ABField {
 			// 	values[this.columnName] = (new Date(this.settings.default)).toISOString();
 			// }
 			if (this.settings.defaultDate != 1) {
-				values[this.columnName] = (new Date()).toISOString();
+				values[this.columnName] = (new Date(this.settings.defaultDateValue)).toISOString();
+			}
+			
+			if (this.settings.defaultTime != 1) {
+				var defaultDate = new Date(this.settings.defaultDateValue);
+				var defaultTime =  new Date(this.settings.defaultTimeValue);
+				values[this.columnName] = new Date(defaultDate.getFullYear(), defaultDate.getMonth(), defaultDate.getDate(), defaultTime.getHours(), defaultTime.getMinutes(), defaultTime.getSeconds()).toISOString();
 			}
 		}
 	}
@@ -1307,7 +1316,7 @@ class ABFieldDate extends ABField {
 
 				if (isValid) {
 					// all good, so store as ISO format string.
-					if (this.settings.timeFormatValue == 1) {
+					if (this.settings.timeFormat == 1) {
 						data[this.columnName] = moment(value).format('YYYY-MM-DD 00:00:00');
 					} else {
 						data[this.columnName] = moment(value).format('YYYY-MM-DD HH:mm:ss');
