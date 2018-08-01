@@ -1145,7 +1145,7 @@ class ABFieldDate extends ABField {
 			}
 
 			// else retun the actual ISO string => Date() value
-			return new Date(d);
+			return new Date(moment(d));
 		}
 
 
@@ -1197,7 +1197,7 @@ class ABFieldDate extends ABField {
 			var value = data[this.columnName];
 
 			if (!(value instanceof Date)) {
-				value = new Date(value);
+				value = new Date(moment(value));
 			}
 
 			// verify we didn't end up with an InValid Date result.
@@ -1379,7 +1379,7 @@ class ABFieldDate extends ABField {
 		// convert ISO string -> Date() -> our formatted string
 
 		// pull format from settings.
-		return getDateDisplay(new Date(d), this.settings);
+		return getDateDisplay(new Date(moment(d)), this.settings);
 	}
 	
 	getFormat(settings) {
