@@ -979,8 +979,12 @@ var ABFieldDateComponent = new ABFieldComponent({
 
 		populate: (ids, values) => {
 
-			$$(ids.defaultDateValue).setValue(new Date(values.settings.defaultDateValue));
-			$$(ids.defaultTimeValue).setValue(new Date(values.settings.defaultTimeValue));
+			if(values.settings.defaultDateValue) {
+				$$(ids.defaultDateValue).setValue(new Date(values.settings.defaultDateValue));
+			}
+			if(values.settings.defaultTimeValue) {
+				$$(ids.defaultTimeValue).setValue(new Date(values.settings.defaultTimeValue));
+			}
 		},
 
 		show: function (ids) {
@@ -1176,12 +1180,23 @@ class ABFieldDate extends ABField {
 			// 	values[this.columnName] = (new Date(this.settings.default)).toISOString();
 			// }
 			if (this.settings.defaultDate != 1) {
-				values[this.columnName] = (new Date(this.settings.defaultDateValue)).toISOString();
+				if (this.settings.defaultDateValue) {
+					values[this.columnName] = (new Date(this.settings.defaultDateValue)).toISOString();
+				} 
+				else {
+					values[this.columnName] = (new Date()).toISOString();
+				}
 			}
 			
 			if (this.settings.defaultTime != 1) {
-				var defaultDate = new Date(this.settings.defaultDateValue);
-				var defaultTime =  new Date(this.settings.defaultTimeValue);
+				var defaultDate = new Date();
+				if (this.settings.defaultDateValue) {
+					defaultDate = new Date(this.settings.defaultDateValue);
+				}
+				var defaultTime = new Date();
+				if (this.settings.defaultTimeValue) {
+					defaultTime =  new Date(this.settings.defaultTimeValue);
+				}
 				values[this.columnName] = new Date(defaultDate.getFullYear(), defaultDate.getMonth(), defaultDate.getDate(), defaultTime.getHours(), defaultTime.getMinutes(), defaultTime.getSeconds()).toISOString();
 			}
 		}
