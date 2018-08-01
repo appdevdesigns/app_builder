@@ -551,10 +551,20 @@ class ABFieldConnect extends ABField {
 
 		myParameter = super.requestParam(allParameters);
 
-		// remove relation column value
-		// We need to update it in .requestRelationParam
-		if (myParameter != null)
-			delete myParameter[this.columnName];
+		if (myParameter != null) {
+
+			// pull id of relation value when 1:M and 1:1
+			// to prevent REQUIRED column on insert data
+			if ((this.settings.linkType == 'one' && this.settings.linkViaType == 'many') || // 1:M
+				(this.settings.linkType == 'one' && this.settings.linkViaType == 'one' && this.settings.isSource)) { // 1:1 own table has the connected column
+				myParameter[this.columnName] = this.requestRelationParam(allParameters);
+			}
+			// remove relation column value
+			// We need to update it in .requestRelationParam
+			else (myParameter != null)
+				delete myParameter[this.columnName];
+
+		}
 
 		return myParameter;
 	}
