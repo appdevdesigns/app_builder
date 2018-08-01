@@ -263,9 +263,12 @@ export default class RowFilter extends OP.Component {
 										}
 									].concat(recordRuleOptions),
 									on: {
-										onChange:function( newValue, oldValue) {
+										onChange:function( condition, oldValue) {
+
+											var $viewComparer = this.getParentView();
+											var $viewCond = $viewComparer.getParentView();
 											_logic.onChangeRule(condition, $viewCond);
-											_logic.onChangeSameAsUser(this, newValue, oldValue);
+
 										}
 									}
 
@@ -374,7 +377,7 @@ export default class RowFilter extends OP.Component {
 									].concat(queryFieldOptions).concat(recordRuleOptions),
 									on: {
 										onChange: function( newValue, oldValue) {
-											_logic.onChangeSameAsUser(this, newValue, oldValue);
+											_logic.onChangeList(this, newValue);
 										}
 									}
 								},
@@ -862,19 +865,15 @@ export default class RowFilter extends OP.Component {
 
 			},
 
-			onChangeSameAsUser: function($view, newValue, oldValue) {
+			onChangeList: function($view, newValue) {
 
 				var $viewComparer = $view.getParentView();
 				var $viewCond = $viewComparer.getParentView();
 
 				if (newValue == 'same_as_user' || newValue == 'not_same_as_user') {
-					// clear and disable the value field
-					$viewCond.$$(ids.inputValue).showBatch("empty");
-					_logic.onChange();
-				} else if (newValue == "in_query_field" || newValue == "not_in_query_field" || newValue == "same_as_field" || newValue == "not_same_as_field") {
 					_logic.onChangeRule(newValue, $viewCond);
-					_logic.onChange();
-				} else {
+				} 
+				else {
 					$viewCond.$$(ids.inputValue).showBatch("list");
 					_logic.onChange();
 				}
@@ -895,37 +894,51 @@ export default class RowFilter extends OP.Component {
 			},
 			
 			onChangeRule: function(rule, $viewCond) {
-				if (rule == "not_in_query_field" || rule == "in_query_field") {
-					// populate the list of Queries for this_object:
-					var options = [];
-					// Get all application's queries
-					_Object.application.queries((q) => { return q.id != _Object.id; }).forEach((q) => {
-						options.push({
-							id: q.id,
-							value: q.label
+
+				switch(rule) {
+					case 'same_as_user':
+					case 'not_same_as_user':
+						// clear and disable the value field
+						$viewCond.$$(ids.inputValue).showBatch("empty");
+						_logic.onChange();
+						break;
+
+					case 'in_query_field':
+					case 'not_in_query_field':
+						// populate the list of Queries for this_object:
+						var options = [];
+						// Get all application's queries
+						_Object.application.queries((q) => { return q.id != _Object.id; }).forEach((q) => {
+							options.push({
+								id: q.id,
+								value: q.label
+							})
 						})
-					})
 
-					$viewCond.$$(ids.inputValue).$$(ids.queryFieldComboQuery).define("options", options);
-					$viewCond.$$(ids.inputValue).$$(ids.queryFieldComboQuery).refresh();
-					
-					// Show the new value inputs
-					$viewCond.$$(ids.inputValue).showBatch("queryField");
-				} else if (rule == "same_as_field" || rule == "not_same_as_field") {
+						$viewCond.$$(ids.inputValue).$$(ids.queryFieldComboQuery).define("options", options);
+						$viewCond.$$(ids.inputValue).$$(ids.queryFieldComboQuery).refresh();
+						
+						// Show the new value inputs
+						$viewCond.$$(ids.inputValue).showBatch("queryField");
+						break;
 
-					$viewCond.$$(ids.inputValue).$$(ids.fieldMatch).define("options", recordRuleFieldOptions);
-					$viewCond.$$(ids.inputValue).$$(ids.fieldMatch).refresh();
-					
-					// Show the new value inputs
-					$viewCond.$$(ids.inputValue).showBatch("fieldMatch");
-					_logic.onChange();
-				} else {
-					// Show the default value inputs
-					$viewCond.$$(ids.inputValue).showBatch(batchName);
-					_logic.onChange();
+					case 'same_as_field':
+					case 'not_same_as_field':
+						$viewCond.$$(ids.inputValue).$$(ids.fieldMatch).define("options", recordRuleFieldOptions);
+						$viewCond.$$(ids.inputValue).$$(ids.fieldMatch).refresh();
+						
+						// Show the new value inputs
+						$viewCond.$$(ids.inputValue).showBatch("fieldMatch");
+						_logic.onChange();
+						break;
+
+					default:
+						// Show the default value inputs
+						$viewCond.$$(ids.inputValue).showBatch(batchName);
+						_logic.onChange();
+						break;
 				}
-				
-				// _logic.onChange();
+
 			},
 			
 			onChangeQueryFieldCombo: function(value, $viewCond) {
