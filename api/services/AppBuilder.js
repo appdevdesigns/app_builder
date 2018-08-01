@@ -304,7 +304,7 @@ module.exports = {
          * @return {string}
          */
         toSQLDate: function (date) {
-            return moment.utc(date).format('YYYY-MM-DD 00:00:00');
+            return moment(date).format('YYYY-MM-DD 00:00:00');
         },
 
 
@@ -317,7 +317,7 @@ module.exports = {
          * @return {string}
          */
         toSQLDateTime: function (date) {
-            return moment.utc(date).format('YYYY-MM-DD HH:mm:ss');
+            return moment(date).format('YYYY-MM-DD HH:mm:ss');
         },
 
 
