@@ -158,7 +158,7 @@ export default class RowFilter extends OP.Component {
 			 * @method objectLoad
 			 * set object
 			 * 
-			 * @param object {Object}
+			 * @param object {ABObject}
 			 */
 			objectLoad: function (object) {
 
@@ -178,7 +178,7 @@ export default class RowFilter extends OP.Component {
 			 * @method viewLoad
 			 * set view
 			 * 
-			 * @param object {ABView}
+			 * @param view {ABView}
 			 */
 			viewLoad: function(view) {
 
@@ -936,7 +936,7 @@ export default class RowFilter extends OP.Component {
 			// 	}
 			// },
 			
-			onChangeRule: function(rule, $viewCond) {
+			onChangeRule: (rule, $viewCond) => {
 
 				switch(rule) {
 

@@ -781,6 +781,7 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 
 				// Populate data to popups
 				FilterComponent.objectLoad(objectCopy);
+				FilterComponent.viewLoad(this.currentForm);
 				FilterComponent.setValue(filterConditions);
 			},
 

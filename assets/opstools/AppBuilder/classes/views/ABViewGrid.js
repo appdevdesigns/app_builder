@@ -1006,6 +1006,7 @@ export default class ABViewGrid extends ABViewWidget  {
 					DataTable.objectLoad(CurrentObject);
 					PopupMassUpdateComponent.objectLoad(CurrentObject, DataTable);
 					PopupSortDataTableComponent.objectLoad(CurrentObject, this);
+					rowFilter.viewLoad(this);
 					rowFilter.objectLoad(CurrentObject);
 					DataTable.refreshHeader();
 

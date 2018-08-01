@@ -100,6 +100,7 @@ export default class ABViewDataCollection extends ABView {
 		// Set filter value
 		this.__filterComponent = new RowFilter();
 		this.__filterComponent.objectLoad(this.datasource);
+		this.__filterComponent.viewLoad(this);
 		this.__filterComponent.setValue(this.settings.objectWorkspace.filterConditions || ABViewPropertyDefaults.objectWorkspace.filterConditions);
 
 		this.__bindComponentIds = [];
@@ -865,6 +866,7 @@ export default class ABViewDataCollection extends ABView {
 		// Populate data to popups
 		FilterComponent.objectLoad(objectCopy);
 		FilterComponent.setValue(filterConditions);
+		FilterComponent.viewLoad(view);
 		view.__filterComponent.objectLoad(objectCopy);
 		view.__filterComponent.setValue(filterConditions);
 

@@ -1110,9 +1110,8 @@ PopupRecordRule.qbFixAfterShow();
 					if (objectLink.id == f.settings.linkObject &&
 						formFieldCom.length < 1 && // check field does not show
 						formVals[f.columnName] === undefined) { 
-						formVals[f.columnName] = {
-							id: dcLink.getCursor().id
-						}
+						formVals[f.columnName] = {};
+						formVals[f.columnName][objectLink.PK()] = dcLink.getCursor().id;
 					}
 
 				});
