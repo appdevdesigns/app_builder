@@ -31,6 +31,9 @@ export default class RowFilter extends OP.Component {
 				sameAsField: L('ab.filter_fields.sameAsFild', "*Same As Field"),
 				notSameAsField: L('ab.filter_fields.notSameAsFild', "*Not Field"),
 
+				inDataCollection: L('ab.filter_fields.inDataCollection', "*In Data Collection"),
+				notInDataCollection: L('ab.filter_fields.notInDataCollection', "*Not In Data Collection"),
+
 				containsCondition: L('ab.filter_fields.containsCondition', "*contains"),
 				notContainCondition: L('ab.filter_fields.notContainCondition', "*doesn't contain"),
 				isCondition: L('ab.filter_fields.isCondition', "*is"),
@@ -77,12 +80,15 @@ export default class RowFilter extends OP.Component {
 			
 			fieldMatch: this.unique(idBase + '_rowFilter_fieldMatchCombo'),
 
+			dataCollection: this.unique(idBase + '_rowFilter_dataCollection'),
+
 			listOptions: this.unique(idBase + '_rowFilter_listOptions')
 		};
 
 		var _Object;
 		var _Fields;
 		var _QueryFields = [];
+		var _View;
 		var _settings = {};
 		var config_settings = {};
 		var batchName; // we need to revert to this default when switching away from a in/by query field
@@ -147,6 +153,7 @@ export default class RowFilter extends OP.Component {
 			},
 
 
+
 			/**
 			 * @method objectLoad
 			 * set object
@@ -165,6 +172,20 @@ export default class RowFilter extends OP.Component {
 				}
 
 			},
+
+
+			/**
+			 * @method viewLoad
+			 * set view
+			 * 
+			 * @param object {ABView}
+			 */
+			viewLoad: function(view) {
+
+				_View = view;
+
+			},
+
 
 			/**
 			 * @method getFieldList 
@@ -260,7 +281,15 @@ export default class RowFilter extends OP.Component {
 										{
 											value: labels.component.notInQuery,
 											id: 'not_in_query'
-										}
+										},
+										{
+											value: labels.component.inDataCollection,
+											id: 'in_data_collection'
+										},
+										{
+											value: labels.component.notInDataCollection,
+											id: 'not_in_data_collection'
+										},
 									].concat(recordRuleOptions),
 									on: {
 										onChange:function( condition, oldValue) {
@@ -268,6 +297,7 @@ export default class RowFilter extends OP.Component {
 											var $viewComparer = this.getParentView();
 											var $viewCond = $viewComparer.getParentView();
 											_logic.onChangeRule(condition, $viewCond);
+											_logic.onChange();
 
 										}
 									}
@@ -303,9 +333,8 @@ export default class RowFilter extends OP.Component {
 											var $viewComparer = this.getParentView();
 											var $viewCond = $viewComparer.getParentView();
 											_logic.onChangeRule(condition, $viewCond);
-											
 											_logic.onChange();
-											
+
 										}
 									}
 								},
@@ -342,11 +371,10 @@ export default class RowFilter extends OP.Component {
 									].concat(queryFieldOptions).concat(recordRuleOptions),
 									on: {
 										onChange: function(condition) {
-											
+
 											var $viewComparer = this.getParentView();
 											var $viewCond = $viewComparer.getParentView();
 											_logic.onChangeRule(condition, $viewCond);
-											
 											_logic.onChange();
 
 										}
@@ -376,8 +404,12 @@ export default class RowFilter extends OP.Component {
 										}
 									].concat(queryFieldOptions).concat(recordRuleOptions),
 									on: {
-										onChange: function( newValue, oldValue) {
-											_logic.onChangeList(this, newValue);
+										onChange: function( condition, oldValue) {
+
+											var $viewComparer = this.getParentView();
+											var $viewCond = $viewComparer.getParentView();
+											_logic.onChangeRule(condition, $viewCond);
+											_logic.onChange();
 										}
 									}
 								},
@@ -398,8 +430,8 @@ export default class RowFilter extends OP.Component {
 											var $viewComparer = this.getParentView();
 											var $viewCond = $viewComparer.getParentView();
 											_logic.onChangeRule(condition, $viewCond);
-											
 											_logic.onChange();
+
 										}
 									}
 								},
@@ -427,12 +459,11 @@ export default class RowFilter extends OP.Component {
 										}
 									].concat(queryFieldOptions).concat(recordRuleOptions),
 									on: {
-										onChange: function (userCondition) {
+										onChange: function (condition) {
 
 											var $viewComparer = this.getParentView();
 											var $viewCond = $viewComparer.getParentView();
-											_logic.onChangeUser(userCondition, $viewCond);
-
+											_logic.onChangeRule(condition, $viewCond);
 											_logic.onChange();
 
 										}
@@ -467,7 +498,6 @@ export default class RowFilter extends OP.Component {
 											var $viewComparer = this.getParentView();
 											var $viewCond = $viewComparer.getParentView();
 											_logic.onChangeRule(condition, $viewCond);
-										
 											_logic.onChange();
 										}
 									}
@@ -501,8 +531,8 @@ export default class RowFilter extends OP.Component {
 											var $viewComparer = this.getParentView();
 											var $viewCond = $viewComparer.getParentView();
 											_logic.onChangeRule(condition, $viewCond);
-										
 											_logic.onChange();
+
 										}
 									}
 								},
@@ -569,6 +599,18 @@ export default class RowFilter extends OP.Component {
 									id: ids.fieldMatch,
 									batch: "fieldMatch",
 									view: "combo",
+									options: [],
+									on: {
+										onChange: _logic.onChange
+									}
+
+								},
+
+								// Data collection
+								{
+									id: ids.dataCollection,
+									batch: "dataCollection",
+									view: "richselect",
 									options: [],
 									on: {
 										onChange: _logic.onChange
@@ -865,42 +907,49 @@ export default class RowFilter extends OP.Component {
 
 			},
 
-			onChangeList: function($view, newValue) {
+			// onChangeList: function(newValue, $viewCond) {
 
-				var $viewComparer = $view.getParentView();
-				var $viewCond = $viewComparer.getParentView();
-
-				if (newValue == 'same_as_user' || newValue == 'not_same_as_user') {
-					_logic.onChangeRule(newValue, $viewCond);
-				} 
-				else {
-					$viewCond.$$(ids.inputValue).showBatch("list");
-					_logic.onChange();
-				}
+			// 	if (newValue == 'same_as_user' || newValue == 'not_same_as_user') {
+			// 		_logic.onChangeRule(newValue, $viewCond);
+			// 	} 
+			// 	else {
+			// 		$viewCond.$$(ids.inputValue).showBatch("list");
+			// 		_logic.onChange();
+			// 	}
 				
-			},
+			// },
 
-			onChangeUser: function (rule, $viewCond) {
+			// onChangeUser: function (rule, $viewCond) {
 
-				if (rule == "is_current_user" ||
-					rule == "is_not_current_user") {
-					$viewCond.$$(ids.inputValue).showBatch("empty");
-				} else if (rule == "in_query_field" || rule == "not_in_query_field" || rule == "same_as_field" || rule == "not_same_as_field") {
-					_logic.onChangeRule(rule, $viewCond);
-				}
-				else {
-					$viewCond.$$(ids.inputValue).showBatch("user");
-				}
-			},
+			// 	if (rule == "is_current_user" ||
+			// 		rule == "is_not_current_user") {
+			// 		$viewCond.$$(ids.inputValue).showBatch("empty");
+			// 	} 
+			// 	else if (rule == "in_query_field" ||
+			// 				rule == "not_in_query_field" ||
+			// 				rule == "same_as_field" ||
+			// 				rule == "not_same_as_field") {
+			// 		_logic.onChangeRule(rule, $viewCond);
+			// 	}
+			// 	else {
+			// 		$viewCond.$$(ids.inputValue).showBatch("user");
+			// 	}
+			// },
 			
 			onChangeRule: function(rule, $viewCond) {
 
 				switch(rule) {
+
+					case 'is_current_user':
+					case 'is_not_current_user':
+						// clear and disable the value field
+						$viewCond.$$(ids.inputValue).showBatch("empty");
+						break;
+
 					case 'same_as_user':
 					case 'not_same_as_user':
 						// clear and disable the value field
 						$viewCond.$$(ids.inputValue).showBatch("empty");
-						_logic.onChange();
 						break;
 
 					case 'in_query_field':
@@ -929,13 +978,35 @@ export default class RowFilter extends OP.Component {
 						
 						// Show the new value inputs
 						$viewCond.$$(ids.inputValue).showBatch("fieldMatch");
-						_logic.onChange();
+						break;
+
+					case 'in_data_collection':
+					case 'not_in_data_collection':
+
+						var dcOptions = [];
+
+						// pull data collection list
+						if (_View) {
+							_View.pageRoot().dataCollections().forEach(dc => {
+
+								dcOptions.push({
+									id: dc.id,
+									value: dc.label
+								});	
+
+							});
+						}
+
+						$viewCond.$$(ids.inputValue).$$(ids.dataCollection).define("options", dcOptions);
+						$viewCond.$$(ids.inputValue).$$(ids.dataCollection).refresh();
+
+						// Show the new value inputs
+						$viewCond.$$(ids.inputValue).showBatch("dataCollection");
 						break;
 
 					default:
 						// Show the default value inputs
 						$viewCond.$$(ids.inputValue).showBatch(batchName);
-						_logic.onChange();
 						break;
 				}
 
@@ -1082,11 +1153,11 @@ export default class RowFilter extends OP.Component {
 						$viewComparer.refresh();
 					}
 					
-					if (f.rule == "in_query_field" || f.rule == "not_in_query_field" || f.rule == "same_as_field" || f.rule == "not_same_as_field") {
-						$viewCond.blockEvent();
-						_logic.onChangeRule(f.rule, $viewCond);
-						$viewCond.blockEvent();
-					}
+					// if (f.rule == "in_query_field" || f.rule == "not_in_query_field" || f.rule == "same_as_field" || f.rule == "not_same_as_field") {
+					$viewCond.blockEvent();
+					_logic.onChangeRule(f.rule, $viewCond);
+					$viewCond.blockEvent();
+					// }
 
 					// Input
 					var valueViewId = $viewCond.$$(ids.inputValue).getActiveId(),
@@ -1110,8 +1181,11 @@ export default class RowFilter extends OP.Component {
 					}
 
 					var field = _Fields.filter(col => col.id == f.key)[0];
-					if (field && field.key == 'user')
-						_logic.onChangeUser(f.rule, $viewCond);
+					if (field && field.key == 'user') {
+						$viewCond.blockEvent();
+						_logic.onChangeRule(f.rule, $viewCond);
+						$viewCond.blockEvent();
+					}
 
 				});
 
@@ -1473,6 +1547,7 @@ export default class RowFilter extends OP.Component {
 
 		// Interface methods for parent component:
 		this.objectLoad = _logic.objectLoad;
+		this.viewLoad = _logic.viewLoad;
 		this.addNewFilter = _logic.addNewFilter;
 		this.getValue = _logic.getValue;
 		this.setValue = _logic.setValue;
