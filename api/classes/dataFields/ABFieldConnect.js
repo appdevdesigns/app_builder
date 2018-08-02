@@ -547,9 +547,7 @@ class ABFieldConnect extends ABField {
 	 */
 	requestParam(allParameters) {
 
-		var myParameter;
-
-		myParameter = super.requestParam(allParameters);
+		var myParameter = super.requestParam(allParameters);
 
 		// pull id of relation value when 1:M and 1:1
 		// to prevent REQUIRED column on insert data
@@ -560,18 +558,17 @@ class ABFieldConnect extends ABField {
 		}
 		// remove relation column value
 		// We need to update it in .requestRelationParam
-		else (myParameter != null)
+		else if (myParameter) {
 			delete myParameter[this.columnName];
+		}
 
 		return myParameter;
 	}
 
 
 	requestRelationParam(allParameters) {
-		var myParameter;
 
-		myParameter = super.requestRelationParam(allParameters);
-
+		var myParameter = super.requestRelationParam(allParameters);
 		if (myParameter) {
 
 			if (myParameter[this.columnName]) {

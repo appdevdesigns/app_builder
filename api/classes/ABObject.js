@@ -583,6 +583,8 @@ module.exports = class ABObject extends ABObjectBase {
 					.replace("{pkName}", this.PK());
 
 		return query
+				.eager('')
+				.clearSelect()
 				.countDistinct('{field} as count'.replace("{field}", pkField))
 				.whereNotNull(pkField).first();
 	}
