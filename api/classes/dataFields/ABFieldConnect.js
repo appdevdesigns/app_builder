@@ -556,10 +556,7 @@ class ABFieldConnect extends ABField {
 		if ((this.settings.linkType == 'one' && this.settings.linkViaType == 'many') || // 1:M
 			(this.settings.linkType == 'one' && this.settings.linkViaType == 'one' && this.settings.isSource)) { // 1:1 own table has the connected column
 
-			if (myParameter == null)
-				myParameter = {};
-
-			myParameter[this.columnName] = this.requestRelationParam(allParameters);
+			myParameter = this.requestRelationParam(allParameters);
 		}
 		// remove relation column value
 		// We need to update it in .requestRelationParam
