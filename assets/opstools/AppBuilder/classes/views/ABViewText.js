@@ -394,6 +394,9 @@ export default class ABViewText extends ABViewWidget {
 					listener: _logic.displayText
 				})
 
+			} else {
+				$$(ids.component).define("template", this.text);
+				$$(ids.component).refresh();
 			}
 
 		}
