@@ -1175,11 +1175,11 @@ class ABFieldDate extends ABField {
 			// else if (this.settings.default) {
 			// 	values[this.columnName] = (new Date(this.settings.default)).toISOString();
 			// }
-			if (this.settings.defaultDate != 1) {
+			if (this.settings.defaultDate != 1 && this.settings.defaultDateValue) {
 				values[this.columnName] = (new Date(this.settings.defaultDateValue)).toISOString();
 			}
 			
-			if (this.settings.defaultTime != 1) {
+			if (this.settings.defaultTime != 1 && this.settings.defaultTimeValue && this.settings.defaultDateValue) {
 				var defaultDate = new Date(this.settings.defaultDateValue);
 				var defaultTime =  new Date(this.settings.defaultTimeValue);
 				values[this.columnName] = new Date(defaultDate.getFullYear(), defaultDate.getMonth(), defaultDate.getDate(), defaultTime.getHours(), defaultTime.getMinutes(), defaultTime.getSeconds()).toISOString();
