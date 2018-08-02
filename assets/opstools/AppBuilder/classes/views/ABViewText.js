@@ -331,7 +331,37 @@ export default class ABViewText extends ABViewWidget {
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		}
+		
+		
+		var _logic = {
+			
+			displayText: () => {
 
+				var result = this.text;
+
+				var dc = this.dataCollection();
+				if (!dc) return result;
+
+				var object = dc ? dc.datasource : null;
+				if (!object) return result;
+
+				object.fields().forEach(f => {
+
+					var template = new RegExp('{' + f.label + '}', 'g'),
+						rowData = dc.getCursor() || {},
+						data = f.format(rowData);
+
+					result = result.replace(template, data);
+
+				});
+
+				$$(ids.component).define("template", result);
+				$$(ids.component).refresh();
+
+			}
+
+		
+		}
 
 		// an ABViewLabel is a simple Label
 		var _ui = {
@@ -339,19 +369,41 @@ export default class ABViewText extends ABViewWidget {
 			view: 'template',
 			autoheight:true,
 			minHeight: 10,
-			borderless: true,
-			template: this.displayText()
+			borderless: true
 		};
 
 
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
 		}
+		
+		var _onShow = (viewId) => {
+
+			// listen DC events
+			var dc = this.dataCollection();
+			if (dc) {
+
+				var currData = dc.getCursor();
+				if (currData) {
+					_logic.displayText(currData);
+				}
+
+				this.eventAdd({
+					emitter: dc,
+					eventName: 'changeCursor',
+					listener: _logic.displayText
+				})
+
+			}
+
+		}
 
 
 		return {
 			ui: _ui,
-			init: _init
+			init: _init,
+			logic: _logic,
+			onShow: _onShow
 		}
 	}
 
@@ -376,29 +428,6 @@ export default class ABViewText extends ABViewWidget {
 	}
 
 
-	displayText() {
-
-		var result = this.text;
-
-		var dc = this.dataCollection();
-		if (!dc) return result;
-
-		var object = dc ? dc.datasource : null;
-		if (!object) return result;
-
-		object.fields().forEach(f => {
-
-			var template = new RegExp('{' + f.label + '}', 'g'),
-				rowData = dc.getCursor() || {},
-				data = f.format(rowData);
-
-			result = result.replace(template, data);
-
-		});
-
-		return result;
-
-	}
 
 
 	//// Report ////
