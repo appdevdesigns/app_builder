@@ -551,20 +551,20 @@ class ABFieldConnect extends ABField {
 
 		myParameter = super.requestParam(allParameters);
 
-		if (myParameter != null) {
+		// pull id of relation value when 1:M and 1:1
+		// to prevent REQUIRED column on insert data
+		if ((this.settings.linkType == 'one' && this.settings.linkViaType == 'many') || // 1:M
+			(this.settings.linkType == 'one' && this.settings.linkViaType == 'one' && this.settings.isSource)) { // 1:1 own table has the connected column
 
-			// pull id of relation value when 1:M and 1:1
-			// to prevent REQUIRED column on insert data
-			if ((this.settings.linkType == 'one' && this.settings.linkViaType == 'many') || // 1:M
-				(this.settings.linkType == 'one' && this.settings.linkViaType == 'one' && this.settings.isSource)) { // 1:1 own table has the connected column
-				myParameter[this.columnName] = this.requestRelationParam(allParameters);
-			}
-			// remove relation column value
-			// We need to update it in .requestRelationParam
-			else (myParameter != null)
-				delete myParameter[this.columnName];
+			if (myParameter == null)
+				myParameter = {};
 
+			myParameter[this.columnName] = this.requestRelationParam(allParameters);
 		}
+		// remove relation column value
+		// We need to update it in .requestRelationParam
+		else (myParameter != null)
+			delete myParameter[this.columnName];
 
 		return myParameter;
 	}
@@ -579,15 +579,21 @@ class ABFieldConnect extends ABField {
 
 			if (myParameter[this.columnName]) {
 
+				let pk = "id";
+				let datasourceLink = this.datasourceLink;
+				if (datasourceLink) {
+					pk = datasourceLink.PK();
+				}
+
 				// if value is array, then get id of array
 				if (myParameter[this.columnName].map) {
 					myParameter[this.columnName] = myParameter[this.columnName].map(function (d) {
-						return parseInt(d.id || d);
+						return parseInt(d[pk] || d.id || d);
 					});
 				}
 				// if value is a object
 				else {
-					myParameter[this.columnName] = parseInt(myParameter[this.columnName].id || myParameter[this.columnName]);
+					myParameter[this.columnName] = parseInt(myParameter[this.columnName][pk] || myParameter[this.columnName].id || myParameter[this.columnName]);
 				}
 
 
