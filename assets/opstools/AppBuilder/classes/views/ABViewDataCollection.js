@@ -865,9 +865,10 @@ export default class ABViewDataCollection extends ABView {
 
 		// Populate data to popups
 		FilterComponent.objectLoad(objectCopy);
-		FilterComponent.setValue(filterConditions);
 		FilterComponent.viewLoad(view);
+		FilterComponent.setValue(filterConditions);
 		view.__filterComponent.objectLoad(objectCopy);
+		view.__filterComponent.viewLoad(view);
 		view.__filterComponent.setValue(filterConditions);
 
 		PopupSortFieldComponent.objectLoad(objectCopy, view);

@@ -983,18 +983,37 @@ export default class RowFilter extends OP.Component {
 					case 'in_data_collection':
 					case 'not_in_data_collection':
 
-						var dcOptions = [];
+						let dcOptions = [];
 
 						// pull data collection list
 						if (_View) {
-							_View.pageRoot().dataCollections().forEach(dc => {
 
-								dcOptions.push({
-									id: dc.id,
-									value: dc.label
-								});	
+							// get id of the link object
+							let linkObjectId,
+								columnId = $viewCond.$$(ids.field).getValue();
+							if (columnId == 'this_object') {
+								linkObjectId = _Object.id;
+							}
+							else {
+								let field = _Object.fields(f => f.id == columnId)[0];
+								if (field)
+									linkObjectId = field.settings.linkObject;
+							}
+								
+							if (linkObjectId) {
 
-							});
+								_View.pageRoot()
+								.dataCollections(dc => dc.datasource && dc.datasource.id == linkObjectId)
+								.forEach(dc => {
+
+									dcOptions.push({
+										id: dc.id,
+										value: dc.label
+									});	
+
+								});
+
+							}
 						}
 
 						$viewCond.$$(ids.inputValue).$$(ids.dataCollection).define("options", dcOptions);
