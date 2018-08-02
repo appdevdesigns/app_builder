@@ -374,9 +374,13 @@ module.exports = {
                 // return the parameters of connectObject data field values 
                 var updateRelationParams = object.requestRelationParams(allParams);
 
+                // TODO:: this logic should be in the ABField...js 
                 object.fields().forEach((e) => {
-                    if (e.key == "string" && e.settings.default.indexOf("{uuid}") >= 0 && typeof createParams[e.columnName] == "undefined")
+                    if (e.key == "string" && e.settings.default.indexOf("{uuid}") >= 0 && typeof createParams[e.columnName] == "undefined") {
                         createParams[e.columnName] = uuid();
+                    } else if (e.key == "user" && e.settings.isCurrentUser == 1 && typeof createParams[e.columnName] == "undefined") {
+                        createParams[e.columnName] = req.user.data.username;
+                    }
                 });
 
                 var validationErrors = object.isValidData(createParams);

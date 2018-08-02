@@ -30,7 +30,7 @@ var CSRF = {
             }
 
 options.rejectUnauthorized = false;
-
+// console.log('::: csrf.fetch()');
             RP(options)
             .then((data)=>{
 
@@ -413,7 +413,7 @@ options.rejectUnauthorized = false;
 
         // 3) use data to make server call:
         .then((params) => {
-
+// console.log('::: csrf.token:', CSRF.token);
             // params should look like:
             // {
             //     type:'GET',
@@ -456,11 +456,27 @@ options.rejectUnauthorized = false;
             return Promise.all(allPosts);
         })
         .catch((err)=>{
+
             if (err.statusCode && err.statusCode == 413) {
-                sails.log.error('!! caught error: 413 Request Entity Too Large :'+ err.message);
+                sails.log.error('::: ABRelay.request(): caught error: 413 Request Entity Too Large :'+ err.message);
                 return;
             }
-sails.log.error('caught error:', err);
+
+            // on a forbidden, just attempt to re-request the CSRF token and try again?
+            if (err.statusCode && err.statusCode == 403) {
+
+                // if we haven't just tried a new token
+                if (!request.csrfRetry) {
+
+                    sails.log.error('::: ABRelay.request(): attempt to reset CSRF token ');
+                    request.csrfRetry = true;
+                    CSRF.token = null;
+                    return ABRelay.request(request);
+                }
+            }
+
+sails.log.error('caught error:', err.statusCode);
+
         })
 
         // that's it?
