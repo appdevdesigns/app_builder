@@ -17,6 +17,7 @@ function L(key, altText) {
 var ABViewMenuPropertyComponentDefaults = {
 	orientation: 'x',
 	buttonStyle: 'ab-menu-default',
+	menuAlignment: 'ab-menu-left',
 	// [
 	// 		{
 	//			pageId: uuid,
@@ -243,11 +244,22 @@ export default class ABViewMenu extends ABViewWidget {
 				name: 'buttonStyle',
 				view: "richselect",
 				label: L('ab.component.menu.buttonStyle', '*Button Style'),
-				value: ABViewMenuPropertyComponentDefaults.buttonstyle,
+				value: ABViewMenuPropertyComponentDefaults.buttonStyle,
 				labelWidth: App.config.labelWidthLarge,
 				options: [
 					{ id: 'ab-menu-default', value: L('ab.component.menu.defaulButton', '*Default') },
 					{ id: 'ab-menu-link', value: L('ab.component.menu.linkeButton', '*Link') }
+				]
+			},
+			{
+				name: 'menuAlignment',
+				view: "richselect",
+				label: L('ab.component.menu.menuAlignment', '*Menu Alignment'),
+				value: ABViewMenuPropertyComponentDefaults.menuAlignment,
+				labelWidth: App.config.labelWidthXLarge,
+				options: [
+					{ id: 'ab-menu-left', value: L('ab.component.menu.alignLeft', '*Left') },
+					{ id: 'ab-menu-right', value: L('ab.component.menu.alignRight', '*Right') }
 				]
 			},
 			{
@@ -324,6 +336,7 @@ export default class ABViewMenu extends ABViewWidget {
 
 		$$(ids.orientation).setValue(view.settings.orientation || ABViewMenuPropertyComponentDefaults.orientation);
 		$$(ids.buttonStyle).setValue(view.settings.buttonStyle || ABViewMenuPropertyComponentDefaults.buttonStyle);
+		$$(ids.menuAlignment).setValue(view.settings.menuAlignment || ABViewMenuPropertyComponentDefaults.menuAlignment);
 
 		var pageTree = new webix.TreeCollection();
 		var application = view.application;
@@ -402,6 +415,7 @@ export default class ABViewMenu extends ABViewWidget {
 
 		view.settings.orientation = $$(ids.orientation).getValue();
 		view.settings.buttonStyle = $$(ids.buttonStyle).getValue();
+		view.settings.menuAlignment = $$(ids.menuAlignment).getValue();
 
 		var pagesIdList = []
 		var temp = $$(ids.pages).data.count();
@@ -446,6 +460,20 @@ export default class ABViewMenu extends ABViewWidget {
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		}
+		
+		var css = "";
+		
+		if (this.settings.buttonStyle) {
+			css += this.settings.buttonStyle + " ";
+		} else {
+			css += ABViewMenuPropertyComponentDefaults.buttonStyle + " "
+		}
+		
+		if (this.settings.menuAlignment) {
+			css += this.settings.menuAlignment + " ";
+		} else {
+			css += ABViewMenuPropertyComponentDefaults.menuAlignment + " "
+		}		
 
 
 		var _ui = {
@@ -457,7 +485,7 @@ export default class ABViewMenu extends ABViewWidget {
 					view: "menu",
 					autoheight: true,
 					datatype: "json",
-					css: this.settings.buttonStyle || ABViewMenuPropertyComponentDefaults.buttonStyle,
+					css: css,
 					layout: this.settings.orientation || ABViewMenuPropertyComponentDefaults.orientation,
 					on: {
 						onItemClick: (id, e, node) => {
