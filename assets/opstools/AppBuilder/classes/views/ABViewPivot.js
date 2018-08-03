@@ -310,7 +310,11 @@ export default class ABViewPivot extends ABViewWidget {
 
 					return new Promise((next, err) => {
 
-						var object = this.dataCollection().datasource;
+						var dc = this.dataCollection();
+						if (!dc) return next();
+
+						var object = dc.datasource;
+						if (!object) return next();
 
 						var dataMapped = data.map(d => {
 
