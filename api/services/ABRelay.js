@@ -475,7 +475,7 @@ options.rejectUnauthorized = false;
                 }
             }
 
-sails.log.error('caught error:', err.statusCode);
+sails.log.error('::: ABRelay.request(): caught error:', err.statusCode || err);
 
         })
 
