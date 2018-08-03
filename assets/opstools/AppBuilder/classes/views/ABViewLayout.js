@@ -319,6 +319,9 @@ export default class ABViewLayout extends ABViewWidget {
 			viewComponents.forEach((view) => {
 				if (view.init)
 					view.init();
+					
+				if (view.onShow)
+					view.onShow();
 			})
 
 			if ($$(ids.component) && $$(ids.component).adjust)
