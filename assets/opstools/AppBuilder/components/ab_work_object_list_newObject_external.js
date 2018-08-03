@@ -98,7 +98,6 @@ export default class AB_Work_Object_List_NewObject_External extends OP.Component
                         else if (conns[0])
                             $$(ids.connectionList).setValue(conns[0]);
 
-
                     })
                     .catch((err) => {
                         _logic.busyEnd();
@@ -151,6 +150,8 @@ export default class AB_Work_Object_List_NewObject_External extends OP.Component
 
                         $$(ids.externalList).parse(list, 'json');
 
+                        _logic.filter();
+
                         _logic.busyEnd();
 
                     })
@@ -163,7 +164,7 @@ export default class AB_Work_Object_List_NewObject_External extends OP.Component
 
             filter: function () {
                 // `this` should be from the Webix event
-                var filterText = this.getValue().toLowerCase();
+                var filterText = $$(ids.filter).getValue().toLowerCase();
                 $$(ids.externalList).filter(externalModel => externalModel.name.toLowerCase().indexOf(filterText) > -1);
             },
 
