@@ -42,21 +42,33 @@ export default class ABViewReport extends ABViewPage {
 			// header
 			var header = ABViewManager.newView({
 				key: ABViewReportPanel.common().key,
-				label: 'Header'
+				label: 'Header',
+				settings: {
+					removable: false,
+					movable: false
+				}
 			}, application, this);
 			this._views.push(header);
 
 			// detail
 			var detail = ABViewManager.newView({
 				key: ABViewReportPanel.common().key,
-				label: 'Detail'
+				label: 'Detail',
+				settings: {
+					removable: false,
+					movable: false
+				}
 			}, application, this);
 			this._views.push(detail);
 
 			// footer
 			var footer = ABViewManager.newView({
 				key: ABViewReportPanel.common().key,
-				label: 'Footer'
+				label: 'Footer',
+				settings: {
+					removable: false,
+					movable: false
+				}
 			}, application, this);
 			this._views.push(footer);
 

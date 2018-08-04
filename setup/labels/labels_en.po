@@ -1513,6 +1513,12 @@ msgstr "Label"
 
 #. path: app_builder
 #. code: en
+#. key: ab.components.conditionalcontainer
+msgid "Conditional Container"
+msgstr "Conditional Container"
+
+#. path: app_builder
+#. code: en
 #. key: ab.components.container.columns
 msgid "Columns"
 msgstr "Columns"

@@ -1489,6 +1489,12 @@ msgstr "[th] Label"
 
 #. path: app_builder
 #. code: th
+#. key: ab.components.conditionalcontainer
+msgid "Conditional Container"
+msgstr "[th] Conditional Container"
+
+#. path: app_builder
+#. code: th
 #. key: ab.components.container.columns
 msgid "Columns"
 msgstr "[th] Columns"
