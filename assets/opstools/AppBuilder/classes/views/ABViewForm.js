@@ -526,9 +526,9 @@ PopupRecordRule.qbFixAfterShow();
 
 	}
 
-	static propertyEditorPopulate(App, ids, view) {
+	static propertyEditorPopulate(App, ids, view, logic) {
 
-		super.propertyEditorPopulate(App, ids, view);
+		super.propertyEditorPopulate(App, ids, view, logic);
 
 		var formCom = view.parentFormComponent();
 		var dataCollectionId = (formCom.settings.datacollection ? formCom.settings.datacollection : null);

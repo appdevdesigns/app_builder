@@ -383,6 +383,9 @@ class ABFieldUser extends ABFieldSelectivity {
 				}, false);				
 			}
 		} else {
+			if (!node.querySelector)
+				return;
+				
 			var clearButton = node.querySelector('.selectivity-multiple-selected-item-remove');
 			if (clearButton) {
 				clearButton.addEventListener("click", (e) => {

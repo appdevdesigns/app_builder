@@ -832,6 +832,9 @@ class ABFieldList extends ABFieldSelectivity {
 			}
 
 		} else {
+			if (!node.querySelector)
+				return;
+			
 			var clearButton = node.querySelector('.selectivity-single-selected-item-remove');
 			if (clearButton) {
 				clearButton.addEventListener("click", (e) => {

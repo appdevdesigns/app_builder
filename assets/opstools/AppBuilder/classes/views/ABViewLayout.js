@@ -277,7 +277,10 @@ export default class ABViewLayout extends ABViewWidget {
 		// get a UI component for each of our child views
 		var viewComponents = [];
 		this.views().forEach((v) => {
-			viewComponents.push(v.component(App));
+			viewComponents.push({
+				view: v,
+				component: v.component(App)
+			});
 		})
 
 		function L(key, altText) {
@@ -302,7 +305,7 @@ export default class ABViewLayout extends ABViewWidget {
 			viewComponents.forEach((view) => {
 
 				//// TODO: track column widths?
-				_ui.cols.push(view.ui);
+				_ui.cols.push(view.component.ui);
 			});
 		} else {
 			_ui.cols.push({
@@ -311,14 +314,32 @@ export default class ABViewLayout extends ABViewWidget {
 			});
 		}
 
+		var _logic = {
 
+			changePage: (pageId) => {
+				this.changePage(pageId);
+			}
+
+		};
 
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
 
+
 			viewComponents.forEach((view) => {
-				if (view.init)
-					view.init();
+
+				if (view.component.init)
+					view.component.init(options);
+
+				if (view.component.onShow)
+					view.component.onShow();
+					
+				// Trigger 'changePage' event to parent
+				this.eventAdd({
+					emitter: view.view,
+					eventName: 'changePage',
+					listener: _logic.changePage
+				});
 			})
 
 			if ($$(ids.component) && $$(ids.component).adjust)
@@ -328,7 +349,8 @@ export default class ABViewLayout extends ABViewWidget {
 
 		return {
 			ui: _ui,
-			init: _init
+			init: _init,
+			logic: _logic
 		}
 	}
 

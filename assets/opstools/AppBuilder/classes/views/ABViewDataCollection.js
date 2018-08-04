@@ -1283,7 +1283,7 @@ export default class ABViewDataCollection extends ABView {
 	setCursor(rowId) {
 
 		// If the static cursor is set, then this DC could not set cursor to other rows
-		if (this.settings.fixSelect && this.settings.fixSelect != "_FirstRecordDefault" && this.settings.fixSelect != rowId )
+		if ( (this.settings.fixSelect && this.settings.fixSelect != "_FirstRecordDefault") || (this.settings.fixSelect && this.settings.fixSelect == rowId))
 			return;
 
 		var dc = this.__dataCollection;
