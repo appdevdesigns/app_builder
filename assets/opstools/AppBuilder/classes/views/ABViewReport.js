@@ -344,6 +344,7 @@ export default class ABViewReport extends ABViewPage {
 			}
 
 			Promise.all(tasks)
+				.catch(reject)
 				.then(() => {
 
 					resolve(docDefinition);
@@ -356,23 +357,31 @@ export default class ABViewReport extends ABViewPage {
 
 	previewPdf() {
 
-		this.print().then(docDefinition => {
+		this.print()
+			.catch(err => {
+				// TODO:
+			})
+			.then(docDefinition => {
 
-			pdfMake.createPdf(docDefinition).open();
+				pdfMake.createPdf(docDefinition).open();
 
-		});
+			});
 
 	}
 
 	downloadPdf() {
 
-		this.print().then(docDefinition => {
+		this.print()
+			.catch(err => {
+				// TODO:
+			})
+			.then(docDefinition => {
 
-			let filename = (this.label + '.pdf');
+				let filename = (this.label + '.pdf');
 
-			pdfMake.createPdf(docDefinition).download(filename);
+				pdfMake.createPdf(docDefinition).download(filename);
 
-		});
+			});
 	}
 
 

@@ -401,7 +401,7 @@ export default class ABViewLayout extends ABViewWidget {
 
 			this.views().forEach(v => {
 	
-				task.push(new Promise((next, err) => {
+				tasks.push(new Promise((next, err) => {
 
 					v.print().then(vDef => {
 

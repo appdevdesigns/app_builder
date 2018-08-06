@@ -311,25 +311,23 @@ export default class ABViewImage extends ABViewWidget {
 				reject(err);
 			};
 			img.onload = () => {
-				var canvas = document.createElement('canvas');
+				let canvas = document.createElement('canvas');
 				canvas.width = img.width;
 				canvas.height = img.height;
-				var ctx = canvas.getContext('2d');
+				let ctx = canvas.getContext('2d');
 				ctx.drawImage(img, 0, 0);
-				var dataURL = canvas.toDataURL();
-				var imageData = {
+				let dataURL = canvas.toDataURL();
+				let imageData = {
 					data: dataURL,
 					width: img.width,
 					height: img.height
 				};
 
-				reportDef = {
+				resolve({
 					image: imageData.data,
 					width: this.settings.width || imageData.width,
 					height: this.settings.height || imageData.height,
-				};
-
-				resolve(reportDef);
+				});
 
 			};
 
