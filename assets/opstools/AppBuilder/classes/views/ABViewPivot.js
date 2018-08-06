@@ -279,7 +279,7 @@ export default class ABViewPivot extends ABViewWidget {
 			options = options || {};
 			options.componentId = options.componentId || ids.component;
 
-			Promise.resolve()
+			return Promise.resolve()
 
 				// get data
 				.then(() => {
@@ -396,9 +396,79 @@ export default class ABViewPivot extends ABViewWidget {
 
 		return new Promise((resolve, reject) => {
 
-			var reportDef = {};
+			var reportDef = {
+				table: {
+					body: []
+				}
+			};
 
-			resolve(reportDef);
+			var colIds = [];
+
+
+			// Create pivot widget
+			var mockApp = {
+				unique: (id) => {
+					return "ABViewPivotPDF_MockApp_" + id
+				}
+			}
+			var comp = this.component(mockApp);
+			var $pivot = webix.ui(comp.ui);
+
+
+			// Set data to pivot widget
+			comp.init()
+				.catch(reject)
+				.then(() => {
+
+					var $treetable = $pivot.getChildViews()[1];
+
+
+					// Headers
+					var headers = [];
+					$treetable.config.columns.forEach(col => {
+
+						// store id of the column
+						colIds.push(col.id);
+
+						var headerText = col.header[0].text;
+
+						// remove html tags
+						headerText = headerText.replace(/<(?:.|\n)*?>/gm, '');
+
+						headers.push(headerText);
+					});
+					reportDef.table.body.push(headers);
+
+
+					// Data
+					$treetable.data.find({}).forEach(d => {
+
+						var rowData = [];
+
+						colIds.forEach(colId => {
+
+							var data = d[colId];
+
+							// add - to prefix
+							if (colId == 'name') {
+								for (var i = 1; i < d.$level; i++) {
+									data = '-' + data;
+								}
+							}
+
+							// add a row
+							rowData.push(data);
+						});
+
+						reportDef.table.body.push(rowData);
+
+					});
+
+
+					resolve(reportDef);
+
+				});
+
 
 		});
 
