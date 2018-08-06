@@ -333,7 +333,7 @@ export default class ABViewLayout extends ABViewWidget {
 
 				if (view.component.onShow)
 					view.component.onShow();
-					
+
 				// Trigger 'changePage' event to parent
 				this.eventAdd({
 					emitter: view.view,
@@ -399,33 +399,28 @@ export default class ABViewLayout extends ABViewWidget {
 
 			var tasks = [];
 
-			this.views().forEach(v => {
-	
+			this.views().forEach((v, vIndex) => {
+
 				tasks.push(new Promise((next, err) => {
 
 					v.print().then(vDef => {
 
-						reportDef.columns.push(vDef);
+						reportDef.columns[vIndex] = vDef;
 						next();
 
 					}).catch(err);
 
 				}));
-	
+
 			});
 
-			tasks.push(new Promise((next, err) => {
+			Promise.all(tasks)
+				.catch(reject)
+				.then(() => {
 
-				resolve(reportDef);
-				next();
+					resolve(reportDef);
 
-			}));
-
-			tasks.reduce((promiseChain, currTask) => {
-
-				return promiseChain.then(currTask);
-
-			}, Promise.resolve([]));
+				});
 
 		});
 
