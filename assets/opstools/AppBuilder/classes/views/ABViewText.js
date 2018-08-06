@@ -337,23 +337,7 @@ export default class ABViewText extends ABViewWidget {
 			
 			displayText: () => {
 
-				var result = this.text;
-
-				var dc = this.dataCollection();
-				if (!dc) return result;
-
-				var object = dc ? dc.datasource : null;
-				if (!object) return result;
-
-				object.fields().forEach(f => {
-
-					var template = new RegExp('{' + f.label + '}', 'g'),
-						rowData = dc.getCursor() || {},
-						data = f.format(rowData);
-
-					result = result.replace(template, data);
-
-				});
+				var result = this.displayText();
 
 				$$(ids.component).define("template", result);
 				$$(ids.component).refresh();
@@ -430,6 +414,29 @@ export default class ABViewText extends ABViewWidget {
 		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.datacollection)[0];
 	}
 
+
+	displayText() {
+
+		var result = this.text;
+
+		var dc = this.dataCollection();
+		if (!dc) return result;
+
+		var object = dc ? dc.datasource : null;
+		if (!object) return result;
+
+		object.fields().forEach(f => {
+
+			var template = new RegExp('{' + f.label + '}', 'g'),
+				rowData = dc.getCursor() || {},
+				data = f.format(rowData);
+
+			result = result.replace(template, data);
+
+		});
+
+		return result;
+	}
 
 
 
