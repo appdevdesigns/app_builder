@@ -339,8 +339,10 @@ export default class ABViewText extends ABViewWidget {
 
 				var result = this.displayText();
 
-				$$(ids.component).define("template", result);
-				$$(ids.component).refresh();
+				if ($$(ids.component)) {
+					$$(ids.component).define("template", result);
+					$$(ids.component).refresh();
+				}
 
 			}
 
