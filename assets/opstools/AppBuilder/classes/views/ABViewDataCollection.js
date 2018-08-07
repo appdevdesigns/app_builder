@@ -29,6 +29,7 @@ function dataCollectionNew(instance, data) {
 	if (!instance.settings.loadAll) {
 
 		dc.___AD = dc.___AD || {};
+
 		if (dc.___AD.onDataRequestEvent) dc.detachEvent(dc.___AD.onDataRequestEvent);
 		dc.___AD.onDataRequestEvent = dc.attachEvent("onDataRequest", (start, count) => {
 
@@ -38,6 +39,14 @@ function dataCollectionNew(instance, data) {
 			instance.loadData(start, count);
 
 			return false;	// <-- prevent the default "onDataRequest"
+		});
+
+
+		if (dc.___AD.onAfterLoadEvent) dc.detachEvent(dc.___AD.onAfterLoadEvent);
+		dc.___AD.onAfterLoadEvent = dc.attachEvent("onAfterLoad", () => {
+
+			instance.emit("loadData", {});
+
 		});
 
 	}
@@ -1137,10 +1146,11 @@ export default class ABViewDataCollection extends ABView {
 
 
 		// load data to initial the data collection
-		if (this.settings.loadAll)
-			this.loadData();
-		else
-			this.__dataCollection.loadNext(20, 0);
+		this.loadData();
+		// if (this.settings.loadAll)
+		// 	this.loadData();
+		// else
+		// 	this.__dataCollection.loadNext(20, 0);
 
 	}
 

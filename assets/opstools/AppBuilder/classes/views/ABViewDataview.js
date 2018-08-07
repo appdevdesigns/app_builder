@@ -87,7 +87,19 @@ export default class ABViewDataview extends ABViewDetail {
 		};
 
 		com.init = (options) => {
-			// we will initial in .onShow
+
+			var dc = this.dataCollection();
+			if (!dc) return;
+
+			this.eventAdd({
+				emitter: dc,
+				eventName: "loadData",
+				listener: () => {
+
+					com.onShow();
+				}
+			});
+
 		};
 
 		com.logic = {
@@ -96,7 +108,7 @@ export default class ABViewDataview extends ABViewDetail {
 		com.onShow = () => {
 
 			// clear UI
-			// $$(ids.component)
+			webix.ui(com.ui, $$(ids.component));
 
 			var dc = this.dataCollection();
 			if (!dc) return;
