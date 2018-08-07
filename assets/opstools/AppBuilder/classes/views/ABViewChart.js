@@ -303,7 +303,7 @@ export default class ABViewChart extends ABViewContainer  {
 		if (dc == null) return;
 
 		var obj = dc.datasource;
-		var allFields = obj.fields();
+		var normalFields = obj.fields((f) => f.key != 'connectObject');
 		var numFields = obj.fields((f) => f.key == 'number');
 
 
@@ -315,7 +315,7 @@ export default class ABViewChart extends ABViewContainer  {
 			}
 		};
 
-		var columnLabelOptions = allFields.map(convertOption);
+		var columnLabelOptions = normalFields.map(convertOption);
 		var columnValueOptions = numFields.map(convertOption);
 
 
@@ -346,7 +346,6 @@ export default class ABViewChart extends ABViewContainer  {
 		if (dc == null) return;
 
 		var obj = dc.datasource;
-		var allFields = obj.fields();
 		var numFields = obj.fields((f) => f.key == 'number');
 
 
