@@ -1285,6 +1285,12 @@ msgstr "Layout"
 
 #. path: app_builder
 #. code: en
+#. key: ab.components.list
+msgid "List"
+msgstr "List"
+
+#. path: app_builder
+#. code: en
 #. key: ab.components.menu
 msgid "Menu"
 msgstr "Menu"

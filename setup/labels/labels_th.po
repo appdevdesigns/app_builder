@@ -1273,6 +1273,12 @@ msgstr "[th] Layout"
 
 #. path: app_builder
 #. code: th
+#. key: ab.components.list
+msgid "List"
+msgstr "[th] List"
+
+#. path: app_builder
+#. code: th
 #. key: ab.components.menu
 msgid "Menu"
 msgstr "[th] Menu"
