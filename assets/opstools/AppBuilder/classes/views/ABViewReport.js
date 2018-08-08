@@ -394,6 +394,12 @@ export default class ABViewReport extends ABViewPage {
 
 		var commonUI = ABView.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
 
+		var labelUnit = {
+			view: 'label',
+			label: 'pixels',
+			width: 40
+		};
+
 		// in addition to the common .label  values, we 
 		// ask for:
 		return commonUI.concat([
@@ -437,28 +443,48 @@ export default class ABViewReport extends ABViewPage {
 					paddingX: 10,
 					rows: [
 						{
-							name: 'pageMarginsLeft',
-							label: L('ab.component.report.margin.left', '*Left'),
-							view: App.custom.numbertext.view,
-							type: "number"
+							cols: [
+								{
+									name: 'pageMarginsLeft',
+									label: L('ab.component.report.margin.left', '*Left'),
+									view: App.custom.numbertext.view,
+									type: "number"
+								},
+								labelUnit
+							]
 						},
 						{
-							name: 'pageMarginsTop',
-							label: L('ab.component.report.margin.top', '*Top'),
-							view: App.custom.numbertext.view,
-							type: "number"
+							cols: [
+								{
+									name: 'pageMarginsTop',
+									label: L('ab.component.report.margin.top', '*Top'),
+									view: App.custom.numbertext.view,
+									type: "number"
+								},
+								labelUnit
+							]
 						},
 						{
-							name: 'pageMarginsRight',
-							label: L('ab.component.report.margin.right', '*Right'),
-							view: App.custom.numbertext.view,
-							type: "number"
+							cols: [
+								{
+									name: 'pageMarginsRight',
+									label: L('ab.component.report.margin.right', '*Right'),
+									view: App.custom.numbertext.view,
+									type: "number"
+								},
+								labelUnit
+							]
 						},
 						{
-							name: 'pageMarginsBottom',
-							label: L('ab.component.report.margin.botton', '*Bottom'),
-							view: App.custom.numbertext.view,
-							type: "number"
+							cols: [
+								{
+									name: 'pageMarginsBottom',
+									label: L('ab.component.report.margin.botton', '*Bottom'),
+									view: App.custom.numbertext.view,
+									type: "number"
+								},
+								labelUnit
+							]
 						}
 					]
 				}
