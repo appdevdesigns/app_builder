@@ -367,15 +367,20 @@ export default class ABViewReport extends ABViewPage {
 
 	previewPdf() {
 
-		this.print()
-			.catch(err => {
-				// TODO:
-			})
-			.then(docDefinition => {
+		return new Promise((resolve, reject) => {
 
-				pdfMake.createPdf(docDefinition).open();
+			this.print()
+				.catch(reject)
+				.then(docDefinition => {
 
-			});
+					pdfMake.createPdf(docDefinition).open();
+
+					resolve();
+
+				});
+
+		});
+
 
 	}
 
@@ -503,10 +508,20 @@ export default class ABViewReport extends ABViewPage {
 				view: 'button',
 				value: "Preview PDF",
 				on: {
-					onItemClick: (id, e) => {
+					onItemClick: function(id, e) {
+
+						var $previewButton = this;
+
+						$previewButton.disable();
 
 						// preview PDF
-						_logic.currentEditObject().previewPdf();
+						_logic.currentEditObject().previewPdf()
+							.catch(() => {
+								$previewButton.enable();
+							})
+							.then(() => {
+								$previewButton.enable();
+							});
 
 					}
 				}
