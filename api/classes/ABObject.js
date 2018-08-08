@@ -603,7 +603,8 @@ module.exports = class ABObject extends ABObjectBase {
 			var p = f.requestParam(allParameters);
 			if (p) {
 				for (var a in p) {
-					usefulParameters[a] = p[a];
+                    if ( (Array.isArray(p[a]) && p[a].length) || !Array.isArray(p[a])) 
+                        usefulParameters[a] = p[a];
 				}
 			}
 		})
@@ -620,7 +621,8 @@ module.exports = class ABObject extends ABObjectBase {
 				var p = f.requestRelationParam(allParameters);
 				if (p) {
 					for (var a in p) {
-						usefulParameters[a] = p[a];
+                        if ( (Array.isArray(p[a]) && p[a].length) || !Array.isArray(p[a])) 
+						    usefulParameters[a] = p[a];
 					}
 				}
 			}
