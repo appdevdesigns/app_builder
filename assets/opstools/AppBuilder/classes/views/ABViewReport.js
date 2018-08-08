@@ -123,6 +123,16 @@ export default class ABViewReport extends ABViewPage {
 			printPopup: App.unique(idBase + '_printPopup'),
 		};
 
+		// Set margin values to display
+		// Header
+		if (comp.ui.body.rows[0])
+			comp.ui.body.rows[0].height = (this.settings.pageMarginsTop - 30); // minus 30px to display same PDF file
+
+		// Footer
+		if (comp.ui.body.rows[2])
+			comp.ui.body.rows[2].height = (this.settings.pageMarginsBottom - 20); // minus 30px to display same PDF file
+
+
 		var _ui = {
 			view: 'layout',
 			rows: [
