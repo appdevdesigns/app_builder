@@ -1145,7 +1145,7 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 										// our field is a pointer to an object. we want to pull out that object 
 										// from the query data.
 										if (clonedDataCollection.sourceType == 'query' || 
-											op.valueType == 'exist') {
+											(op.valueType == 'exist' && op.queryField) ) {
 
 											var fieldWithValue = clonedDataCollection.datasource.fields((f) => {
 												return f.id == op.queryField;
