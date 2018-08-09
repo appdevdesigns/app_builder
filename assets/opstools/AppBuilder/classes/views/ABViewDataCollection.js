@@ -1026,12 +1026,13 @@ export default class ABViewDataCollection extends ABView {
 			if (!this.__filterComponent.isValid(rowData))
 				return;
 
-			if (!this.__dataCollection.exists(rowData.id)) {
-				this.__dataCollection.add(rowData, 0);
-			}
-
 			// filter link data collection's cursor
 			this.refreshLinkCursor();
+
+			if (!this.__dataCollection.exists(rowData.id)) {
+				this.__dataCollection.add(rowData, 0);
+				this.__dataCollection.setCursor(rowData.id);
+			}
 
 		});
 
