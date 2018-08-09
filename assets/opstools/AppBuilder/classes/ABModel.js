@@ -721,7 +721,7 @@ reject(err);
 			dateFields.forEach((date) => {
 				if (d && d[date.columnName] != null) {
 					// check to see if data has already been converted to a date object
-					if ( typeof (d[date.columnName] == "string") ) {
+					if ( typeof d[date.columnName] == "string" ) {
 						if (date.settings.timeFormatValue == 1) {
 							// if we are ignoring the time it means we ignore timezone as well 
 							// so lets trim that off when creating the date so it can be a simple date
