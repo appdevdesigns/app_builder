@@ -1026,13 +1026,13 @@ export default class ABViewDataCollection extends ABView {
 			if (!this.__filterComponent.isValid(rowData))
 				return;
 
-			// filter link data collection's cursor
-			this.refreshLinkCursor();
-
 			if (!this.__dataCollection.exists(rowData.id)) {
 				this.__dataCollection.add(rowData, 0);
 				this.__dataCollection.setCursor(rowData.id);
 			}
+
+			// filter link data collection's cursor
+			this.refreshLinkCursor();
 
 		});
 
@@ -1587,11 +1587,19 @@ export default class ABViewDataCollection extends ABView {
 	 * @param {Object} - current data of link data collection
 	 */
 	refreshLinkCursor() {
+		
+		var linkDc = this.dataCollectionLink;
+		if (linkDc) {
+			var linkCursor = linkDc.getCursor();
+		}
+		
+		// data is empty
+		if (linkCursor == null) return null;
 
 		if (this.__dataCollection) {
-			this.__dataCollection.filter((rowData) => {
+			this.__dataCollection.filter((linkCursor) => {
 
-				return this.isParentFilterValid(rowData);
+				return this.isParentFilterValid(linkCursor);
 
 			});
 		}
