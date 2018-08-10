@@ -215,7 +215,7 @@ function updateConnectedFields(object, newData, oldData) {
             });
         }
         // Get all the values of the linked field from the save
-        var newItems = newData[relationName];
+        var newItems = newData ? newData[relationName] : [];
         // If there was only one it is not returned as an array so lets put it in an array to normalize
         if (!Array.isArray(newItems)) {
             newItems = [newItems];

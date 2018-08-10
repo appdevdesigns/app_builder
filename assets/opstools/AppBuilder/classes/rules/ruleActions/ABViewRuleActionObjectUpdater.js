@@ -696,7 +696,10 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 				if (field.key != 'connectObject' &&
 					field.customDisplay) {
 					// field.customDisplay(field, this.App, $row.getChildViews()[3].$view, {
-					field.customDisplay(field, this.App, $componentView, {
+
+					var compNodeView =  $$($componentView.id).$view;
+
+					field.customDisplay(field, this.App, compNodeView, {
 						editable: true,
 
 						// tree
