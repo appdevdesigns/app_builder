@@ -716,6 +716,13 @@ module.exports = class ABObjectQuery extends ABObject {
 				var selects = [];
 				var columns = [];
 
+				// SELECT id of the base object
+				var objectBase = this.objects()[0];
+				if (objectBase)
+					selects.push("{tableName}.{columnName} as id"
+						.replace(/{tableName}/g, objectBase.dbTableName())
+						.replace(/{columnName}/g, objectBase.PK()));
+
 				// { 
 				//	objectName: {
 				//		object: {ABObject},

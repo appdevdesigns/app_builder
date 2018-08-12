@@ -121,7 +121,9 @@ export default class ABViewDataCollection extends ABView {
 
 
 	static common() {
+
 		return ABViewDefaults;
+
 	}
 
 
@@ -332,13 +334,19 @@ export default class ABViewDataCollection extends ABView {
 
 				// show options
 				$$(ids.linkDataSource).show();
-				$$(ids.advancedOption).show();
+				$$(ids.filterPanel).show();
+				$$(ids.sortPanel).show();
+				// $$(ids.advancedOption).show();
+
+
 			}
 			else if (query) {
 
 				// hide options
 				$$(ids.linkDataSource).hide();
-				$$(ids.advancedOption).hide();
+				$$(ids.filterPanel).hide();
+				$$(ids.sortPanel).hide();
+				// $$(ids.advancedOption).hide();
 			}
 
 
@@ -451,6 +459,7 @@ export default class ABViewDataCollection extends ABView {
 					paddingX: 10,
 					rows: [
 						{
+							name: "filterPanel",
 							cols: [
 								{
 									view: "label",
@@ -471,6 +480,7 @@ export default class ABViewDataCollection extends ABView {
 							]
 						},
 						{
+							name: "sortPanel",
 							cols: [
 								{
 									view: "label",
@@ -601,10 +611,14 @@ export default class ABViewDataCollection extends ABView {
 
 		// if selected soruce is a query, then hide advanced options UI
 		if (view.application.queries(q => q.id == view.settings.object)[0]) {
-			$$(ids.advancedOption).hide();
+			$$(ids.filterPanel).hide();
+			$$(ids.sortPanel).hide();
+			// $$(ids.advancedOption).hide();
 		}
 		else {
-			$$(ids.advancedOption).show();
+			$$(ids.filterPanel).show();
+			$$(ids.sortPanel).show();
+			// $$(ids.advancedOption).show();
 		}
 
 	}
@@ -1476,23 +1490,30 @@ export default class ABViewDataCollection extends ABView {
 							// set a first row of current user to cursor
 							if (row)
 								this.__dataCollection.setCursor(row.id);
-						} else if (this.settings.fixSelect == "_FirstRecord" || this.settings.fixSelect == "_FirstRecordDefault") {
-							// find a row that contains the current user
-							var row = this.__dataCollection.find((r) => {
+						}
+						else if (this.settings.fixSelect == "_FirstRecord" || this.settings.fixSelect == "_FirstRecordDefault") {
+							// // find a row that contains the current user
+							// var row = this.__dataCollection.find((r) => {
 								
-								var found = false;
-								if (!found) {
-									found = true;
-									return true; // just give us the first record
-								}
+							// 	var found = false;
+							// 	if (!found) {
+							// 		found = true;
+							// 		return true; // just give us the first record
+							// 	}
 
-							}, true);
+							// }, true);
 
-							// set a first row of current user to cursor
-							if (row)
-								this.__dataCollection.setCursor(row.id);
-						} else {
-							this.setCursor(this.settings.fixSelect);
+							// // set a first row of current user to cursor
+							// if (row)
+							// 	this.__dataCollection.setCursor(row.id);
+
+							// set a first row to cursor
+							var rowId = this.__dataCollection.getFirstId();
+							if (rowId)
+								this.__dataCollection.setCursor(rowId);
+						}
+						else {
+							this.__dataCollection.setCursor(this.settings.fixSelect);
 						}
 
 					}

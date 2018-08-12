@@ -177,9 +177,14 @@ export default class AB_Work_Interface_Workspace_Editor_Data extends OP.Componen
 			 */
 			listTemplate: function (dataCollection) {
 
+				let icon = dataCollection.icon;
+
+				if (dataCollection.settings.isQuery)
+					icon = "cubes";
+
 				return _template
 					.replace('#objID#', dataCollection.id)
-					.replace('#icon#', dataCollection.icon)
+					.replace('#icon#', icon)
 					.replace('#label#', dataCollection.label);
 
 			}
