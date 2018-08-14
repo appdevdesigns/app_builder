@@ -534,15 +534,17 @@ export default class ABViewContainer extends ABView {
 	}
 
 
-	/*
-	 * @component()
+	/**
+	 * @method component()
 	 * return a UI component based upon this view.
 	 * @param {obj} App 
+	 * @param {string} idPrefix
+	 * 
 	 * @return {obj} UI component
 	 */
-	component(App) {
+	component(App, idPrefix) {
 
-		var idBase = 'ABViewContainer_' + this.id;
+		var idBase = 'ABViewContainer_' + (idPrefix || '') +this.id;
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		};
@@ -566,7 +568,7 @@ export default class ABViewContainer extends ABView {
 
 				views.forEach((v) => {
 
-					var component = v.component(App);
+					var component = v.component(App, idPrefix);
 					
 					this.viewComponents[v.id] = component;
 					

@@ -91,6 +91,8 @@ export default class ABViewDataview extends ABViewDetail {
 			var dc = this.dataCollection();
 			if (!dc) return;
 
+			com.onShow();
+
 			this.eventAdd({
 				emitter: dc,
 				eventName: "loadData",
@@ -117,7 +119,7 @@ export default class ABViewDataview extends ABViewDetail {
 
 			rows.forEach(row => {
 
-				let detailCom = _.cloneDeep(super.component(App));
+				let detailCom = _.cloneDeep(super.component(App, row.id));
 
 				$$(ids.component).addView(detailCom.ui);
 
