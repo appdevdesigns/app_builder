@@ -614,7 +614,7 @@ class ABFieldNumber extends ABField {
 
 	format(rowData) {
 
-		var data = rowData[this.columnName] || 0;
+		var data = this.dataValue(rowData) || 0;
 
 		// Validate number
 		if (isNaN(parseFloat(data))) data = 0;

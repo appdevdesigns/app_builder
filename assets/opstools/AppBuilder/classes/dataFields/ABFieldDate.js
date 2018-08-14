@@ -1380,7 +1380,7 @@ class ABFieldDate extends ABField {
 
 	format(rowData) {
 
-		var d = rowData[this.columnName];
+		var d = this.dataValue(rowData);
 
 		if ((d == '') || (d == null)) {
 			return '';

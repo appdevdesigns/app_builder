@@ -555,7 +555,7 @@ class ABFieldUser extends ABFieldSelectivity {
 
 	format(rowData) {
 
-		var val = rowData[this.columnName] || [];
+		var val = this.dataValue(rowData) || [];
 
 		if (!Array.isArray(val) || val)
 			val = [val];

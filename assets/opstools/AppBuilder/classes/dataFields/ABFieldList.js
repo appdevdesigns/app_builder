@@ -1002,7 +1002,7 @@ class ABFieldList extends ABFieldSelectivity {
 
 	format(rowData) {
 
-		var val = rowData[this.columnName] || [];
+		var val = this.dataValue(rowData) || [];
 
 		// Convert to array
 		if (!Array.isArray(val))
