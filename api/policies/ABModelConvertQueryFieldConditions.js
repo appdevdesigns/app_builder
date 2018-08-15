@@ -231,7 +231,9 @@ function parseQueryCondition(_where, object, req, res, cb) {
 
                                 // modify the condition to be the IN condition
                                 // convert cond into an IN or NOT IN
-                                cond.key = field.columnName;
+                                cond.key = "`{tableName}`.`{columnName}`"
+                                            .replace("{tableName}", field.object.dbTableName())
+                                            .replace("{columnName}", field.columnName);
                                 var convert = {
                                     'in_query_field' : 'in',
                                     'not_in_query_field' : 'not_in',
