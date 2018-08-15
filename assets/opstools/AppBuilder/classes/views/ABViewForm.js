@@ -1162,9 +1162,14 @@ PopupRecordRule.qbFixAfterShow();
 				var formReady = (newFormVals) => {
 
 					// clear cursor after saving.
-					if (dc && this.settings.clearOnSave) {
-						dc.setCursor(null);
-						formView.clear();
+					if (dc) {
+						if (this.settings.clearOnSave) {
+							dc.setCursor(null);
+							formView.clear();
+						}
+						else {
+							dc.setCursor(newFormVals.id);
+						}
 					}
 					
 					// if there was saved data pass it up to the onSaveData callback
@@ -1213,12 +1218,6 @@ resolve();
 									reject(err);
 								})
 								.then((newFormVals) => {
-									
-									var data = null;
-									var dc = this.dataCollection();
-									if (dc) {
-										dc.setCursor(newFormVals.id);
-									}
 
 									this.doRecordRules(newFormVals)
 									.then(()=>{
