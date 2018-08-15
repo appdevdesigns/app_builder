@@ -869,7 +869,7 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 
 		var val = null;
 		if (rowData) {
-			val = rowData[this.columnName];
+			val = this.dataValue(rowData);
 
 			// if (val == null) {
 			// 	// assume they just sent us a single value

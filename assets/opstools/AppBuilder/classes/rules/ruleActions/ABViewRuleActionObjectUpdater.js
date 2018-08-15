@@ -699,12 +699,17 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 
 					var compNodeView =  $$($componentView.id).$view;
 
-					field.customDisplay(field, this.App, compNodeView, {
-						editable: true,
+					// wait until render UI complete
+					setTimeout(() => {
 
-						// tree
-						isForm: true
-					});
+						field.customDisplay(field, this.App, compNodeView, {
+							editable: true,
+	
+							// tree
+							isForm: true
+						});
+
+					}, 50);
 				}
 
 
@@ -762,9 +767,15 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 
 							$$(ids.multiview).showBatch("custom");
 
-							var rowData = {};
-							rowData[field.columnName] = data.value;
-							field.setValue($$(ids.value), rowData);
+							// wait until render UI complete
+							setTimeout(function() {
+
+								// set value to custom field
+								var rowData = {};
+								rowData[field.columnName] = data.value;
+								field.setValue($$(ids.value), rowData);
+
+							}, 50);
 
 						}
 
