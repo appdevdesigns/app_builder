@@ -696,12 +696,20 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 				if (field.key != 'connectObject' &&
 					field.customDisplay) {
 					// field.customDisplay(field, this.App, $row.getChildViews()[3].$view, {
-					field.customDisplay(field, this.App, $componentView, {
-						editable: true,
 
-						// tree
-						isForm: true
-					});
+					var compNodeView =  $$($componentView.id).$view;
+
+					// wait until render UI complete
+					setTimeout(() => {
+
+						field.customDisplay(field, this.App, compNodeView, {
+							editable: true,
+	
+							// tree
+							isForm: true
+						});
+
+					}, 50);
 				}
 
 
@@ -759,9 +767,15 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 
 							$$(ids.multiview).showBatch("custom");
 
-							var rowData = {};
-							rowData[field.columnName] = data.value;
-							field.setValue($$(ids.value), rowData);
+							// wait until render UI complete
+							setTimeout(function() {
+
+								// set value to custom field
+								var rowData = {};
+								rowData[field.columnName] = data.value;
+								field.setValue($$(ids.value), rowData);
+
+							}, 50);
 
 						}
 
@@ -781,6 +795,7 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 
 				// Populate data to popups
 				FilterComponent.objectLoad(objectCopy);
+				FilterComponent.viewLoad(this.currentForm);
 				FilterComponent.setValue(filterConditions);
 			},
 
@@ -1144,7 +1159,7 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 										// our field is a pointer to an object. we want to pull out that object 
 										// from the query data.
 										if (clonedDataCollection.sourceType == 'query' || 
-											op.valueType == 'exist') {
+											(op.valueType == 'exist' && op.queryField) ) {
 
 											var fieldWithValue = clonedDataCollection.datasource.fields((f) => {
 												return f.id == op.queryField;

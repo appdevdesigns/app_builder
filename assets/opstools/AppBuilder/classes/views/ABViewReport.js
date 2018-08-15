@@ -8,10 +8,8 @@
 
 import ABView from "./ABView"
 import ABViewPage from "./ABViewPage"
-import ABViewReportPage from "./ABViewReportPage"
 import ABViewReportPanel from "./ABViewReportPanel"
 import ABViewManager from "../ABViewManager"
-import { resolve } from "path";
 
 
 function L(key, altText) {
@@ -44,21 +42,33 @@ export default class ABViewReport extends ABViewPage {
 			// header
 			var header = ABViewManager.newView({
 				key: ABViewReportPanel.common().key,
-				label: 'Header'
+				label: 'Header',
+				settings: {
+					removable: false,
+					movable: false
+				}
 			}, application, this);
 			this._views.push(header);
 
 			// detail
 			var detail = ABViewManager.newView({
 				key: ABViewReportPanel.common().key,
-				label: 'Detail'
+				label: 'Detail',
+				settings: {
+					removable: false,
+					movable: false
+				}
 			}, application, this);
 			this._views.push(detail);
 
 			// footer
 			var footer = ABViewManager.newView({
 				key: ABViewReportPanel.common().key,
-				label: 'Footer'
+				label: 'Footer',
+				settings: {
+					removable: false,
+					movable: false
+				}
 			}, application, this);
 			this._views.push(footer);
 
@@ -112,6 +122,16 @@ export default class ABViewReport extends ABViewPage {
 		var ids = {
 			printPopup: App.unique(idBase + '_printPopup'),
 		};
+
+		// Set margin values to display
+		// Header
+		if (comp.ui.body.rows[0])
+			comp.ui.body.rows[0].height = (this.settings.pageMarginsTop - 30); // minus 30px to display same PDF file
+
+		// Footer
+		if (comp.ui.body.rows[2])
+			comp.ui.body.rows[2].height = (this.settings.pageMarginsBottom - 20); // minus 30px to display same PDF file
+
 
 		var _ui = {
 			view: 'layout',
@@ -334,6 +354,7 @@ export default class ABViewReport extends ABViewPage {
 			}
 
 			Promise.all(tasks)
+				.catch(reject)
 				.then(() => {
 
 					resolve(docDefinition);
@@ -346,23 +367,36 @@ export default class ABViewReport extends ABViewPage {
 
 	previewPdf() {
 
-		this.print().then(docDefinition => {
+		return new Promise((resolve, reject) => {
 
-			pdfMake.createPdf(docDefinition).open();
+			this.print()
+				.catch(reject)
+				.then(docDefinition => {
+
+					pdfMake.createPdf(docDefinition).open();
+
+					resolve();
+
+				});
 
 		});
+
 
 	}
 
 	downloadPdf() {
 
-		this.print().then(docDefinition => {
+		this.print()
+			.catch(err => {
+				// TODO:
+			})
+			.then(docDefinition => {
 
-			let filename = (this.label + '.pdf');
+				let filename = (this.label + '.pdf');
 
-			pdfMake.createPdf(docDefinition).download(filename);
+				pdfMake.createPdf(docDefinition).download(filename);
 
-		});
+			});
 	}
 
 
@@ -374,6 +408,12 @@ export default class ABViewReport extends ABViewPage {
 	static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
 
 		var commonUI = ABView.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
+
+		var labelUnit = {
+			view: 'label',
+			label: 'pixels',
+			width: 40
+		};
 
 		// in addition to the common .label  values, we 
 		// ask for:
@@ -418,28 +458,48 @@ export default class ABViewReport extends ABViewPage {
 					paddingX: 10,
 					rows: [
 						{
-							name: 'pageMarginsLeft',
-							label: L('ab.component.report.margin.left', '*Left'),
-							view: App.custom.numbertext.view,
-							type: "number"
+							cols: [
+								{
+									name: 'pageMarginsLeft',
+									label: L('ab.component.report.margin.left', '*Left'),
+									view: App.custom.numbertext.view,
+									type: "number"
+								},
+								labelUnit
+							]
 						},
 						{
-							name: 'pageMarginsTop',
-							label: L('ab.component.report.margin.top', '*Top'),
-							view: App.custom.numbertext.view,
-							type: "number"
+							cols: [
+								{
+									name: 'pageMarginsTop',
+									label: L('ab.component.report.margin.top', '*Top'),
+									view: App.custom.numbertext.view,
+									type: "number"
+								},
+								labelUnit
+							]
 						},
 						{
-							name: 'pageMarginsRight',
-							label: L('ab.component.report.margin.right', '*Right'),
-							view: App.custom.numbertext.view,
-							type: "number"
+							cols: [
+								{
+									name: 'pageMarginsRight',
+									label: L('ab.component.report.margin.right', '*Right'),
+									view: App.custom.numbertext.view,
+									type: "number"
+								},
+								labelUnit
+							]
 						},
 						{
-							name: 'pageMarginsBottom',
-							label: L('ab.component.report.margin.botton', '*Bottom'),
-							view: App.custom.numbertext.view,
-							type: "number"
+							cols: [
+								{
+									name: 'pageMarginsBottom',
+									label: L('ab.component.report.margin.botton', '*Bottom'),
+									view: App.custom.numbertext.view,
+									type: "number"
+								},
+								labelUnit
+							]
 						}
 					]
 				}
@@ -448,10 +508,20 @@ export default class ABViewReport extends ABViewPage {
 				view: 'button',
 				value: "Preview PDF",
 				on: {
-					onItemClick: (id, e) => {
+					onItemClick: function(id, e) {
+
+						var $previewButton = this;
+
+						$previewButton.disable();
 
 						// preview PDF
-						_logic.currentEditObject().previewPdf();
+						_logic.currentEditObject().previewPdf()
+							.catch(() => {
+								$previewButton.enable();
+							})
+							.then(() => {
+								$previewButton.enable();
+							});
 
 					}
 				}

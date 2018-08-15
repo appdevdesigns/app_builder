@@ -720,14 +720,15 @@ reject(err);
 			// convert the data to date object
 			dateFields.forEach((date) => {
 				if (d && d[date.columnName] != null) {
-					if (date.settings.timeFormatValue == 1) {
-						// if we are ignoring the time it means we ignore timezone as well 
-						// so lets trim that off when creating the date so it can be a simple date
-						var tmpDate = d[date.columnName].replace(/\T.*/,'');
-						d[date.columnName] = new Date(tmpDate + " 00:00:00");
-					} else {
-						var tmpDate = d[date.columnName].replace(/\Z.*/,'');
-						d[date.columnName] = new Date(tmpDate);
+					// check to see if data has already been converted to a date object
+					if ( typeof d[date.columnName] == "string" ) {
+						if (date.settings.timeFormatValue == 1) {
+							// if we are ignoring the time it means we ignore timezone as well 
+							// so lets trim that off when creating the date so it can be a simple date
+							d[date.columnName] = new Date(moment(d[date.columnName].replace(/\T.*/,'')).format('MM/DD/YYYY 00:00:00'));
+						} else {
+							d[date.columnName] = new Date(moment(d[date.columnName].replace(/\Z.*/,'')).format('MM/DD/YYYY HH:mm:ss'));
+						}
 					}
 				} 
 			});

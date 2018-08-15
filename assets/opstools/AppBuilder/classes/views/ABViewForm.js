@@ -526,9 +526,9 @@ PopupRecordRule.qbFixAfterShow();
 
 	}
 
-	static propertyEditorPopulate(App, ids, view) {
+	static propertyEditorPopulate(App, ids, view, logic) {
 
-		super.propertyEditorPopulate(App, ids, view);
+		super.propertyEditorPopulate(App, ids, view, logic);
 
 		var formCom = view.parentFormComponent();
 		var dataCollectionId = (formCom.settings.datacollection ? formCom.settings.datacollection : null);
@@ -1110,9 +1110,8 @@ PopupRecordRule.qbFixAfterShow();
 					if (objectLink.id == f.settings.linkObject &&
 						formFieldCom.length < 1 && // check field does not show
 						formVals[f.columnName] === undefined) { 
-						formVals[f.columnName] = {
-							id: dcLink.getCursor().id
-						}
+						formVals[f.columnName] = {};
+						formVals[f.columnName][objectLink.PK()] = dcLink.getCursor().id;
 					}
 
 				});

@@ -547,37 +547,47 @@ class ABFieldConnect extends ABField {
 	 */
 	requestParam(allParameters) {
 
-		var myParameter;
+		var myParameter = super.requestParam(allParameters);
 
-		myParameter = super.requestParam(allParameters);
+		// pull id of relation value when 1:M and 1:1
+		// to prevent REQUIRED column on insert data
+		if ((this.settings.linkType == 'one' && this.settings.linkViaType == 'many') || // 1:M
+			(this.settings.linkType == 'one' && this.settings.linkViaType == 'one' && this.settings.isSource)) { // 1:1 own table has the connected column
 
+			myParameter = this.requestRelationParam(allParameters);
+		}
 		// remove relation column value
 		// We need to update it in .requestRelationParam
-		if (myParameter != null)
+		else if (myParameter) {
 			delete myParameter[this.columnName];
+		}
 
 		return myParameter;
 	}
 
 
 	requestRelationParam(allParameters) {
-		var myParameter;
 
-		myParameter = super.requestRelationParam(allParameters);
-
+		var myParameter = super.requestRelationParam(allParameters);
 		if (myParameter) {
 
 			if (myParameter[this.columnName]) {
 
+				let pk = "id";
+				let datasourceLink = this.datasourceLink;
+				if (datasourceLink) {
+					pk = datasourceLink.PK();
+				}
+
 				// if value is array, then get id of array
 				if (myParameter[this.columnName].map) {
 					myParameter[this.columnName] = myParameter[this.columnName].map(function (d) {
-						return parseInt(d.id || d);
+						return parseInt(d[pk] || d.id || d);
 					});
 				}
 				// if value is a object
 				else {
-					myParameter[this.columnName] = parseInt(myParameter[this.columnName].id || myParameter[this.columnName]);
+					myParameter[this.columnName] = parseInt(myParameter[this.columnName][pk] || myParameter[this.columnName].id || myParameter[this.columnName]);
 				}
 
 

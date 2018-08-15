@@ -48,6 +48,7 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 		// Set filter value
 		this.__filterComponent = new RowFilter();
 		this.__filterComponent.objectLoad(this.datasource);
+		this.__filterComponent.viewLoad(this);
 
 		this.__filterComponent.setValue(this.settings.objectWorkspace.filterConditions || ABViewFormConnectPropertyComponentDefaults.objectWorkspace.filterConditions);
 
@@ -344,6 +345,7 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 		// Populate data to popups
 		FilterComponent.objectLoad(objectCopy);
 		FilterComponent.setValue(filterConditions);
+		FilterComponent.viewLoad(view);
 
 	}
 

@@ -555,7 +555,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 							{
 								view: "select",
 								name: "joinType",
-								label: "Join records by:",
+								label: L('ab.object.querybuilder.joinRecordsBy', "*Join records by"),
 								labelWidth: 200,
 								placeholder: "Choose a type of table join",
 								hidden: isMain,
@@ -678,9 +678,33 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 									rows: [
 										{
 											view: "label",
-											label: "Manage Objects",
+											label: L('ab.object.querybuilder.manageObjects', "*Manage Objects"),
 											css: "ab-query-label",
 											height: 50
+										},
+										{
+											autowidth:true,
+											css:"bg-gray",
+											cols: [
+												{},
+												{
+													id: ids.depth,
+													view:"counter", 
+													label: L('ab.object.querybuilder.relationshipDepth', "*Relationship Depth"),
+													width: 270,
+													labelWidth: 165,
+													step:1, 
+													value:5, 
+													min:1, 
+													max:10,
+													on: {
+														onChange: function(newv, oldv) {
+															_logic.depthChange(newv, oldv);
+														}
+													}
+												},
+												{}
+											]
 										},
 										{
 											view: "tree",
@@ -705,21 +729,6 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 													_logic.checkObjectLink(id, isChecked);
 												}
 											}
-										},
-										{
-											id: ids.depth,
-											view:"counter", 
-											label:"Relationship depth:",
-											labelWidth: App.config.labelWidthXXLarge,
-											step:1, 
-											value:5, 
-											min:1, 
-											max:10,
-											on: {
-												onChange: function(newv, oldv) {
-													_logic.depthChange(newv, oldv);
-												}
-											}
 										}
 									]
 								},
@@ -731,7 +740,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 									rows: [
 										{
 											view: "label",
-											label: "Manage Fields",
+											label: L('ab.object.querybuilder.manageFields', "*Manage Fields"),
 											css: "ab-query-label",
 											height: 50
 										},
@@ -757,7 +766,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 						// filter
 						{
 							view: "label",
-							label: "Manage Filter",
+							label: L('ab.object.querybuilder.manageFilters', "*Manage Filters"),
 							css: "ab-query-label",
 							height: 50
 						},

@@ -317,12 +317,14 @@ export default class ABViewDetail extends ABViewContainer {
 	* @method component()
 	* return a UI component based upon this view.
 	* @param {obj } App 
+	* @param {string} idPrefix - define to support in 'Dataview' widget
+	*
 	* @return {obj } UI component
 	*/
-	component(App) {
+	component(App, idPrefix) {
 
 		// get webix.dashboard
-		var container = super.component(App);
+		var container = super.component(App, idPrefix);
 
 		var _ui = {
 			type: "form",
@@ -366,7 +368,8 @@ export default class ABViewDetail extends ABViewContainer {
 
 						if (field.settings.isMultiple == 0) {
 							let myVal = "";
-							let selected = field.settings.options.forEach(function (options) {
+
+							field.settings.options.forEach(function (options) {
 								if (options.id == val)
 									myVal = options.text;
 							});
@@ -395,7 +398,7 @@ export default class ABViewDetail extends ABViewContainer {
 					}
 
 					// set value to each components
-					var vComponent = f.component(App);
+					var vComponent = f.component(App, idPrefix);
 
 					if (vComponent.onShow)
 						vComponent.onShow();

@@ -323,6 +323,57 @@ module.exports = class ABApplicationBase {
 	}
 
 
+	///
+	/// Pages
+	///
+
+	/**
+	 * @method pages()
+	 *
+	 * return an array of all the ABViewPages for this ABApplication.
+	 *
+	 * @param {fn} filter		a filter fn to return a set of ABViewPages that this fn
+	 *							returns true for.
+	 * @param {boolean} deep	flag to find in sub pages
+	 * 
+	 * @return {array}			array of ABViewPages
+	 */
+	pages(filter, deep) {
+
+		var result = [];
+
+		if (!this._pages || this._pages.length < 1)
+			return result;
+
+		// find into sub-pages recursively
+		if (filter && deep) {
+
+			result = this._pages.filter(filter);
+
+			if (result.length < 1) {
+				this._pages.forEach((p) => {
+					var subPages = p.pages(filter, deep);
+					if (subPages && subPages.length > 0) {
+						result = subPages;
+					}
+				});
+			}
+
+		}
+		// find root pages
+		else {
+
+			filter = filter || function () { return true; };
+
+			result = this._pages.filter(filter);
+
+		}
+
+		return result;
+
+	}
+
+
 
 	///
 	/// Mobile Apps

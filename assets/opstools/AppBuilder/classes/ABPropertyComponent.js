@@ -405,13 +405,13 @@ export default class ABPropertyComponent {
 			// process sub columns
 			if (e.cols) {
 				this.eachDeep(e.cols, fn);
-				return;
+				// return;
 			}
 
 			// or rows
 			if (e.rows) {
 				this.eachDeep(e.rows, fn);
-				return;
+				// return;
 			}
 
 			// or a fieldset (with a body)

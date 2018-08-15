@@ -792,7 +792,12 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 .ab-menu-link.webix_menu-x .webix_list_item:hover {
 	text-decoration: underline;
 }
-
+.ab-menu-left .webix_scroll_cont {
+	text-align: left;
+}
+.ab-menu-right .webix_scroll_cont {
+	text-align: right;
+}
 /* Menu component */
 .ab-page-list-item .webix_tree_checkbox {
 	margin: 0px !important;
@@ -1357,4 +1362,7 @@ a.ab-delete-photo:hover {
 }
 .bg-white {
 	background: white;
+}
+.bg-gray {
+	background: #DDD;
 }

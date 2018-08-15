@@ -86,6 +86,21 @@ export default class ABViewContainer extends ABView {
 			});
 		}
 
+		if (this.settings.removable != null) {
+			this.settings.removable = JSON.parse(this.settings.removable); // convert to boolean
+		}
+		else {
+			this.settings.removable = true;
+		}
+
+
+		if (this.settings.movable != null) {
+			this.settings.movable = JSON.parse(this.settings.movable); // convert to boolean
+		}
+		else {
+			this.settings.movable = true;
+		}
+
 	}
 
 
@@ -146,9 +161,13 @@ export default class ABViewContainer extends ABView {
 				// store
 				subComponents[child.id] = component;
 
+				let view = 'panel'
+				if (child.settings.movable == false)
+					view = "scrollview";
+
 				Dashboard.addView({
 
-					view: 'panel',
+					view: view,
 
 					// specific viewId to .name, it will be used to save view position
 					name: child.id,
@@ -220,13 +239,13 @@ export default class ABViewContainer extends ABView {
 			 * @param {obj} obj the current View instance
 			 * @param {obj} common  Webix provided object with common UI tools
 			 */
-			template: function (child) {
+			template: (child) => {
 
 				return ('<div>' +
 					'<i class="fa fa-#icon# webix_icon_btn"></i> ' +
 					' #label#' +
 					'<div class="ab-component-tools">' +
-					'<i class="fa fa-trash ab-component-remove"></i>' +
+					(child.settings.removable == false ? '' : '<i class="fa fa-trash ab-component-remove"></i>') +
 					'<i class="fa fa-edit ab-component-edit"></i>' +
 					'</div>' +
 					'</div>')
@@ -515,15 +534,17 @@ export default class ABViewContainer extends ABView {
 	}
 
 
-	/*
-	 * @component()
+	/**
+	 * @method component()
 	 * return a UI component based upon this view.
 	 * @param {obj} App 
+	 * @param {string} idPrefix
+	 * 
 	 * @return {obj} UI component
 	 */
-	component(App) {
+	component(App, idPrefix) {
 
-		var idBase = 'ABViewContainer_' + this.id;
+		var idBase = 'ABViewContainer_' + (idPrefix || '') +this.id;
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		};
@@ -547,7 +568,7 @@ export default class ABViewContainer extends ABView {
 
 				views.forEach((v) => {
 
-					var component = v.component(App);
+					var component = v.component(App, idPrefix);
 					
 					this.viewComponents[v.id] = component;
 					

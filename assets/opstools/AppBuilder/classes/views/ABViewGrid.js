@@ -1006,6 +1006,7 @@ export default class ABViewGrid extends ABViewWidget  {
 					DataTable.objectLoad(CurrentObject);
 					PopupMassUpdateComponent.objectLoad(CurrentObject, DataTable);
 					PopupSortDataTableComponent.objectLoad(CurrentObject, this);
+					rowFilter.viewLoad(this);
 					rowFilter.objectLoad(CurrentObject);
 					DataTable.refreshHeader();
 
@@ -1640,6 +1641,10 @@ export default class ABViewGrid extends ABViewWidget  {
 			views.forEach((v)=>{
 				if (v.key == type && v.settings.datacollection == view.settings.dataSource) {
 					detailViews.push({id:v.pageParent().id, value:v.label});
+				}
+				// find views inside layouts
+				else if (v.key == "layout" || v.key == "viewcontainer") {
+					detailViews = view.loopViews(view, v._views, detailViews, type);
 				}
 				// find views inside Tab component
 				else if (v.key == "tab") {

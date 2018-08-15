@@ -20,6 +20,7 @@ var findStack = ADCore.policy.serviceStack([
 	'ABModelConvertSameAsUserConditions', 
 	'ABModelConvertQueryConditions', 
 	'ABModelConvertQueryFieldConditions',
+	'ABModelConvertDataCollectionCondition',
 	// 'ABModelConvertFieldKey'
 	]);
 

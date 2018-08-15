@@ -832,6 +832,9 @@ class ABFieldList extends ABFieldSelectivity {
 			}
 
 		} else {
+			if (!node.querySelector)
+				return;
+			
 			var clearButton = node.querySelector('.selectivity-single-selected-item-remove');
 			if (clearButton) {
 				clearButton.addEventListener("click", (e) => {
@@ -999,7 +1002,7 @@ class ABFieldList extends ABFieldSelectivity {
 
 	format(rowData) {
 
-		var val = rowData[this.columnName] || [];
+		var val = this.dataValue(rowData) || [];
 
 		// Convert to array
 		if (!Array.isArray(val))

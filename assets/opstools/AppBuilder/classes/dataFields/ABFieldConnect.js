@@ -857,17 +857,17 @@ class ABFieldConnect extends ABFieldSelectivity {
 		// Get linked object
 		var linkedObject = this.datasourceLink;
 
-		var relationName = this.relationName();
-		if (row && row[relationName] && linkedObject) {
+		var data = this.dataValue(row);
+		if (data && linkedObject) {
 
 			// convert to JSON
-			if (typeof row[relationName] == "string")
-				row[relationName] = JSON.parse(row[relationName]);
+			if (typeof data == "string")
+				data = JSON.parse(data);
 
 			// if this select value is array
-			if (row[relationName].map) {
+			if (data.map) {
 
-				selectedData = row[relationName].map(function (d) {
+				selectedData = data.map(function (d) {
 					// display label in format
 					if (d)
 						d.text = d.text || linkedObject.displayData(d);
@@ -876,8 +876,8 @@ class ABFieldConnect extends ABFieldSelectivity {
 				});
 
 			}
-			else if (row[relationName].id) {
-				selectedData = row[relationName];
+			else if (data.id) {
+				selectedData = data;
 				selectedData.text = (selectedData.text || linkedObject.displayData(selectedData));
 			}
 		}
@@ -928,6 +928,16 @@ class ABFieldConnect extends ABFieldSelectivity {
 				item.resize();
 			}
 		}
+
+	}
+
+	dataValue(rowData) {
+
+		let propName = "{objectName}.{relationName}"
+			.replace('{objectName}', this.object.name)
+			.replace('{relationName}', this.relationName());
+
+		return rowData[this.relationName()] || rowData[propName] || "";
 
 	}
 

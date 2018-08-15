@@ -663,6 +663,16 @@ export default class ABField extends ABFieldBase {
 
 
 
+	dataValue(rowData) {
+
+		let propName = "{objectName}.{columnName}"
+			.replace('{objectName}', this.object.name)
+			.replace('{columnName}', this.columnName);
+
+		return rowData[this.columnName] || rowData[propName] || "";
+
+	}
+
 
 	/**
 	 * @method format
@@ -672,8 +682,9 @@ export default class ABField extends ABFieldBase {
 	 */
 	format(rowData) {
 
-		if (rowData && rowData[this.columnName] != null)
-			return rowData[this.columnName];
+		if (rowData) {
+			return this.dataValue(rowData);
+		}
 		else
 			return "";
 

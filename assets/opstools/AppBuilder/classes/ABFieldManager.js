@@ -18,6 +18,7 @@ import ABFieldImage from "./dataFields/ABFieldImage"
 import ABFieldFile from "./dataFields/ABFieldFile"
 import ABFieldUser from "./dataFields/ABFieldUser"
 import ABFieldConnect from "./dataFields/ABFieldConnect"
+import ABFieldTextFormula from "./dataFields/ABFieldTextFormula"
 
 /*
  * Fields
@@ -36,6 +37,7 @@ Fields[ABFieldImage.defaults().key] = ABFieldImage;
 Fields[ABFieldFile.defaults().key] = ABFieldFile;
 Fields[ABFieldUser.defaults().key] = ABFieldUser;
 Fields[ABFieldConnect.defaults().key] = ABFieldConnect;
+Fields[ABFieldTextFormula.defaults().key] = ABFieldTextFormula;
 
 
 export default  {

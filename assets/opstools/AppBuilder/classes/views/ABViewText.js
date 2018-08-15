@@ -16,7 +16,8 @@ function L(key, altText) {
 
 
 var ABViewTextPropertyComponentDefaults = {
-	text: ''
+	text: '',
+	height: 0
 }
 
 
@@ -100,6 +101,11 @@ export default class ABViewText extends ABViewWidget {
 	fromValues(values) {
 
 		super.fromValues(values);
+
+		this.settings = this.settings || {};
+
+		// convert from "0" => 0
+		this.settings.height = parseInt(this.settings.height || ABViewTextPropertyComponentDefaults.height);
 
 		// if this is being instantiated on a read from the Property UI,
 		this.text = values.text || ABViewTextPropertyComponentDefaults.text;
@@ -233,6 +239,12 @@ export default class ABViewText extends ABViewWidget {
 		// ask for:
 		return commonUI.concat([
 			{
+				view: 'counter',
+				name: "height",
+				label: L("ab.component.list.height", "*Height:"),
+				labelWidth: App.config.labelWidthLarge,
+			},
+			{
 				name: 'datacollection',
 				view: 'richselect',
 				label: L('ab.components.list.dataSource', "*Data Source"),
@@ -285,6 +297,8 @@ export default class ABViewText extends ABViewWidget {
 
 		super.propertyEditorPopulate(App, ids, view);
 
+		$$(ids.height).setValue(view.settings.height);
+
 		var dataCollectionId = (view.settings.datacollection ? view.settings.datacollection : null);
 		var SourceSelector = $$(ids.datacollection);
 
@@ -314,6 +328,7 @@ export default class ABViewText extends ABViewWidget {
 
 		super.propertyEditorValues(ids, view);
 
+		view.settings.height = $$(ids.height).getValue();
 		view.settings.datacollection = $$(ids.datacollection).getValue();
 
 	}
@@ -331,27 +346,73 @@ export default class ABViewText extends ABViewWidget {
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		}
+		
+		
+		var _logic = {
+			
+			displayText: () => {
 
+				var result = this.displayText();
+
+				if ($$(ids.component)) {
+					$$(ids.component).define("template", result);
+					$$(ids.component).refresh();
+				}
+
+			}
+
+		
+		}
 
 		// an ABViewLabel is a simple Label
 		var _ui = {
 			id: ids.component,
 			view: 'template',
-			autoheight:true,
 			minHeight: 10,
-			borderless: true,
-			template: this.displayText()
+			borderless: true
 		};
+
+		// define height
+		if (this.settings.height)
+			_ui.height = this.settings.height;
+		else
+			_ui.autoheight = true;
 
 
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
 		}
+		
+		var _onShow = (viewId) => {
+
+			// listen DC events
+			var dc = this.dataCollection();
+			if (dc) {
+
+				var currData = dc.getCursor();
+				if (currData) {
+					_logic.displayText(currData);
+				}
+
+				this.eventAdd({
+					emitter: dc,
+					eventName: 'changeCursor',
+					listener: _logic.displayText
+				})
+
+			} else {
+				$$(ids.component).define("template", this.text);
+				$$(ids.component).refresh();
+			}
+
+		}
 
 
 		return {
 			ui: _ui,
-			init: _init
+			init: _init,
+			logic: _logic,
+			onShow: _onShow
 		}
 	}
 
@@ -397,8 +458,8 @@ export default class ABViewText extends ABViewWidget {
 		});
 
 		return result;
-
 	}
+
 
 
 	//// Report ////

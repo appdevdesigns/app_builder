@@ -30,7 +30,7 @@ var CSRF = {
             }
 
 options.rejectUnauthorized = false;
-
+// console.log('::: csrf.fetch()');
             RP(options)
             .then((data)=>{
 
@@ -376,6 +376,8 @@ options.rejectUnauthorized = false;
         var appUser = null;
         var relayUser = null;
 
+var errorOptions = null;
+
         return Promise.resolve()
 
         // 1) get the RelayAppUser from the given appUUID
@@ -413,7 +415,7 @@ options.rejectUnauthorized = false;
 
         // 3) use data to make server call:
         .then((params) => {
-
+// console.log('::: csrf.token:', CSRF.token);
             // params should look like:
             // {
             //     type:'GET',
@@ -422,7 +424,41 @@ options.rejectUnauthorized = false;
             // }
     
             var options = this._formatServerRequest(params, relayUser);
-            return RP(options);
+errorOptions = options;
+            return new Promise((resolve, reject)=>{
+                
+                // make the call
+                RP(options)
+                .then((response)=>{
+
+                    // pass back the default responses
+                    resolve(response);
+                })
+                .catch((err)=>{
+
+                    // if we received an error, check to see if it looks like a standard error
+                    // response from our API.  If so, just return that:
+                    if (err.error) {
+                        if (err.error.status == 'error' && err.error.data) {
+                            
+                            sails.log.error('::: ABRelay.request(): response was an error: ', { request:options, code: err.error.data.code, message:err.error.data.sqlMessage || 'no sql msg', sql:err.error.data.sql || ' - no sql -' } );
+                            ADCore.error.log('ABRelay:request(): response was an error: ', { request:options, code: err.error.data.code, message:err.error.data.sqlMessage || 'no sql msg', sql:err.error.data.sql || ' - no sql -', error:err } )
+                            err.error._request = {
+                                data: errorOptions.body || errorOptions.qs,
+                                method: errorOptions.method,
+                                uri: errorOptions.uri
+                            };
+
+                            resolve(err.error);
+                            return ;
+                        }
+                    }
+
+
+                    // if a different error, then pass this along our chain() and process in our .catch() below
+                    reject(err);
+                });
+            });
 
         })
 
@@ -456,11 +492,28 @@ options.rejectUnauthorized = false;
             return Promise.all(allPosts);
         })
         .catch((err)=>{
+
             if (err.statusCode && err.statusCode == 413) {
-                sails.log.error('!! caught error: 413 Request Entity Too Large :'+ err.message);
+                sails.log.error('::: ABRelay.request(): caught error: 413 Request Entity Too Large :'+ err.message);
                 return;
             }
-sails.log.error('caught error:', err);
+
+            // on a forbidden, just attempt to re-request the CSRF token and try again?
+            if (err.statusCode && err.statusCode == 403) {
+
+                // if we haven't just tried a new token
+                if (!request.csrfRetry) {
+
+                    sails.log.error('::: ABRelay.request(): attempt to reset CSRF token ');
+                    request.csrfRetry = true;
+                    CSRF.token = null;
+                    return ABRelay.request(request);
+                }
+            }
+
+
+sails.log.error('::: ABRelay.request(): caught error:', err.statusCode || err, { request:errorOptions }, err.error, err);
+
         })
 
         // that's it?

@@ -1285,6 +1285,12 @@ msgstr "Layout"
 
 #. path: app_builder
 #. code: en
+#. key: ab.components.list
+msgid "List"
+msgstr "List"
+
+#. path: app_builder
+#. code: en
 #. key: ab.components.menu
 msgid "Menu"
 msgstr "Menu"
@@ -1510,6 +1516,12 @@ msgstr "Label"
 #. key: ab.dataField.common.fieldLabel
 msgid "Label"
 msgstr "Label"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.conditionalcontainer
+msgid "Conditional Container"
+msgstr "Conditional Container"
 
 #. path: app_builder
 #. code: en

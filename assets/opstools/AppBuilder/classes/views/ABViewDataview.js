@@ -87,7 +87,21 @@ export default class ABViewDataview extends ABViewDetail {
 		};
 
 		com.init = (options) => {
-			// we will initial in .onShow
+
+			var dc = this.dataCollection();
+			if (!dc) return;
+
+			com.onShow();
+
+			this.eventAdd({
+				emitter: dc,
+				eventName: "loadData",
+				listener: () => {
+
+					com.onShow();
+				}
+			});
+
 		};
 
 		com.logic = {
@@ -96,7 +110,7 @@ export default class ABViewDataview extends ABViewDetail {
 		com.onShow = () => {
 
 			// clear UI
-			// $$(ids.component)
+			webix.ui(com.ui, $$(ids.component));
 
 			var dc = this.dataCollection();
 			if (!dc) return;
@@ -105,7 +119,7 @@ export default class ABViewDataview extends ABViewDetail {
 
 			rows.forEach(row => {
 
-				let detailCom = _.cloneDeep(super.component(App));
+				let detailCom = _.cloneDeep(super.component(App, row.id));
 
 				$$(ids.component).addView(detailCom.ui);
 

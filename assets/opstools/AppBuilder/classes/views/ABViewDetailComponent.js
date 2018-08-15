@@ -7,7 +7,6 @@
  */
 
 import ABViewWidget from "./ABViewWidget"
-import { resolve } from "path";
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -41,13 +40,15 @@ export default class ABViewDetailComponent extends ABViewWidget {
 		}
 	}
 
-	/*
+	/**
 	 * @component()
 	 * return a UI component based upon this view.
 	 * @param {obj} App 
+	 * @param {string} idPrefix
+	 * 
 	 * @return {obj} UI component
 	 */
-	component(App) {
+	component(App, idPrefix) {
 
 		// setup 'label' of the element
 		var detailView = this.detailComponent(),

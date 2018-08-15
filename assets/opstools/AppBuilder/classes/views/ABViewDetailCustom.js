@@ -143,19 +143,21 @@ export default class ABViewDetailCustom extends ABViewDetailComponent {
 
 
 
-	/*
+	/**
 	 * @component()
 	 * return a UI component based upon this view.
 	 * @param {obj} App 
+	 * @param {string} idPrefix
+	 * 
 	 * @return {obj} UI component
 	 */
-	component(App) {
+	component(App, idPrefix) {
 
 		var component = super.component(App);
 		var field = this.field();
 		var detailView = this.detailComponent();
 
-		var idBase = 'ABViewDetailCustom_' + this.id;
+		var idBase = 'ABViewDetailCustom_' + (idPrefix || '') + this.id;
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		}

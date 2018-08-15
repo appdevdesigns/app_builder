@@ -1273,6 +1273,12 @@ msgstr "[th] Layout"
 
 #. path: app_builder
 #. code: th
+#. key: ab.components.list
+msgid "List"
+msgstr "[th] List"
+
+#. path: app_builder
+#. code: th
 #. key: ab.components.menu
 msgid "Menu"
 msgstr "[th] Menu"
@@ -1486,6 +1492,12 @@ msgstr "[th] Label"
 #. key: ab.dataField.common.fieldLabel
 msgid "Label"
 msgstr "[th] Label"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.conditionalcontainer
+msgid "Conditional Container"
+msgstr "[th] Conditional Container"
 
 #. path: app_builder
 #. code: th

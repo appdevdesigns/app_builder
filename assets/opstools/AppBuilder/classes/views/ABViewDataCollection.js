@@ -29,6 +29,7 @@ function dataCollectionNew(instance, data) {
 	if (!instance.settings.loadAll) {
 
 		dc.___AD = dc.___AD || {};
+
 		if (dc.___AD.onDataRequestEvent) dc.detachEvent(dc.___AD.onDataRequestEvent);
 		dc.___AD.onDataRequestEvent = dc.attachEvent("onDataRequest", (start, count) => {
 
@@ -40,12 +41,26 @@ function dataCollectionNew(instance, data) {
 			return false;	// <-- prevent the default "onDataRequest"
 		});
 
+
+		if (dc.___AD.onAfterLoadEvent) dc.detachEvent(dc.___AD.onAfterLoadEvent);
+		dc.___AD.onAfterLoadEvent = dc.attachEvent("onAfterLoad", () => {
+
+			instance.emit("loadData", {});
+
+		});
+
 	}
 
 	// override unused functions of selection model
 	dc.addCss = function () { };
 	dc.removeCss = function () { };
 	dc.render = function () { };
+
+	dc.attachEvent("onAfterLoad", () => {
+
+		instance.hideProgressOfComponents();
+
+	});
 
 	return dc;
 }
@@ -94,7 +109,10 @@ export default class ABViewDataCollection extends ABView {
 		// Set filter value
 		this.__filterComponent = new RowFilter();
 		this.__filterComponent.objectLoad(this.datasource);
+		this.__filterComponent.viewLoad(this);
 		this.__filterComponent.setValue(this.settings.objectWorkspace.filterConditions || ABViewPropertyDefaults.objectWorkspace.filterConditions);
+
+		this.__bindComponentIds = [];
 
 		// refresh a data collection
 		// this.init();
@@ -103,7 +121,9 @@ export default class ABViewDataCollection extends ABView {
 
 
 	static common() {
+
 		return ABViewDefaults;
+
 	}
 
 
@@ -314,13 +334,19 @@ export default class ABViewDataCollection extends ABView {
 
 				// show options
 				$$(ids.linkDataSource).show();
-				$$(ids.advancedOption).show();
+				$$(ids.filterPanel).show();
+				$$(ids.sortPanel).show();
+				// $$(ids.advancedOption).show();
+
+
 			}
 			else if (query) {
 
 				// hide options
 				$$(ids.linkDataSource).hide();
-				$$(ids.advancedOption).hide();
+				$$(ids.filterPanel).hide();
+				$$(ids.sortPanel).hide();
+				// $$(ids.advancedOption).hide();
 			}
 
 
@@ -433,6 +459,7 @@ export default class ABViewDataCollection extends ABView {
 					paddingX: 10,
 					rows: [
 						{
+							name: "filterPanel",
 							cols: [
 								{
 									view: "label",
@@ -453,6 +480,7 @@ export default class ABViewDataCollection extends ABView {
 							]
 						},
 						{
+							name: "sortPanel",
 							cols: [
 								{
 									view: "label",
@@ -583,10 +611,14 @@ export default class ABViewDataCollection extends ABView {
 
 		// if selected soruce is a query, then hide advanced options UI
 		if (view.application.queries(q => q.id == view.settings.object)[0]) {
-			$$(ids.advancedOption).hide();
+			$$(ids.filterPanel).hide();
+			$$(ids.sortPanel).hide();
+			// $$(ids.advancedOption).hide();
 		}
 		else {
-			$$(ids.advancedOption).show();
+			$$(ids.filterPanel).show();
+			$$(ids.sortPanel).show();
+			// $$(ids.advancedOption).show();
 		}
 
 	}
@@ -856,8 +888,10 @@ export default class ABViewDataCollection extends ABView {
 
 		// Populate data to popups
 		FilterComponent.objectLoad(objectCopy);
+		FilterComponent.viewLoad(view);
 		FilterComponent.setValue(filterConditions);
 		view.__filterComponent.objectLoad(objectCopy);
+		view.__filterComponent.viewLoad(view);
 		view.__filterComponent.setValue(filterConditions);
 
 		PopupSortFieldComponent.objectLoad(objectCopy, view);
@@ -1008,6 +1042,7 @@ export default class ABViewDataCollection extends ABView {
 
 			if (!this.__dataCollection.exists(rowData.id)) {
 				this.__dataCollection.add(rowData, 0);
+				this.__dataCollection.setCursor(rowData.id);
 			}
 
 			// filter link data collection's cursor
@@ -1126,10 +1161,11 @@ export default class ABViewDataCollection extends ABView {
 
 
 		// load data to initial the data collection
-		if (this.settings.loadAll)
-			this.loadData();
-		else
-			this.__dataCollection.loadNext(20, 0);
+		this.loadData();
+		// if (this.settings.loadAll)
+		// 	this.loadData();
+		// else
+		// 	this.__dataCollection.loadNext(20, 0);
 
 	}
 
@@ -1169,8 +1205,10 @@ export default class ABViewDataCollection extends ABView {
 	bind(component) {
 
 		var dc = this.__dataCollection;
-		var obj = this.datasource;
 
+		// keep component id to an array
+		if (this.__bindComponentIds.indexOf(component.config.id) < 0)
+			this.__bindComponentIds.push(component.config.id);
 
 		if (component.config.view == 'datatable' ||
 			component.config.view == 'dataview') {
@@ -1182,12 +1220,7 @@ export default class ABViewDataCollection extends ABView {
 					if (component.showProgress)
 						component.showProgress({ type: "icon" });
 				}
-				
-				dc.attachEvent("onAfterLoad", function() {
-					if (component.hideProgress)
-						component.hideProgress();
-				});
-				
+
 				component.define("datafetch", 20);
 				component.define("datathrottle", 500);
 
@@ -1197,17 +1230,19 @@ export default class ABViewDataCollection extends ABView {
 				if (!this.settings.loadAll) {
 
 					component.___AD = component.___AD || {};
-					if (component.___AD.onDataRequestEvent) component.detachEvent(component.___AD.onDataRequestEvent);
-					component.___AD.onDataRequestEvent = component.attachEvent("onDataRequest", (start, count) => {
+					// if (component.___AD.onDataRequestEvent) component.detachEvent(component.___AD.onDataRequestEvent);
+					if (!component.___AD.onDataRequestEvent) {
+						component.___AD.onDataRequestEvent = component.attachEvent("onDataRequest", (start, count) => {
 
-						if (component.showProgress)
-							component.showProgress({ type: "icon" });
+							if (component.showProgress)
+								component.showProgress({ type: "icon" });
 
-						// load more data to the data collection
-						dc.loadNext(count, start);
+							// load more data to the data collection
+							dc.loadNext(count, start);
 
-						return false;	// <-- prevent the default "onDataRequest"
-					});
+							return false;	// <-- prevent the default "onDataRequest"
+						});
+					}
 
 
 				}
@@ -1273,7 +1308,7 @@ export default class ABViewDataCollection extends ABView {
 	setCursor(rowId) {
 
 		// If the static cursor is set, then this DC could not set cursor to other rows
-		if (this.settings.fixSelect && this.settings.fixSelect != "_FirstRecordDefault" && this.settings.fixSelect != rowId )
+		if ( (this.settings.fixSelect && this.settings.fixSelect != "_FirstRecordDefault") || (this.settings.fixSelect && this.settings.fixSelect == rowId))
 			return;
 
 		var dc = this.__dataCollection;
@@ -1455,23 +1490,30 @@ export default class ABViewDataCollection extends ABView {
 							// set a first row of current user to cursor
 							if (row)
 								this.__dataCollection.setCursor(row.id);
-						} else if (this.settings.fixSelect == "_FirstRecord" || this.settings.fixSelect == "_FirstRecordDefault") {
-							// find a row that contains the current user
-							var row = this.__dataCollection.find((r) => {
+						}
+						else if (this.settings.fixSelect == "_FirstRecord" || this.settings.fixSelect == "_FirstRecordDefault") {
+							// // find a row that contains the current user
+							// var row = this.__dataCollection.find((r) => {
 								
-								var found = false;
-								if (!found) {
-									found = true;
-									return true; // just give us the first record
-								}
+							// 	var found = false;
+							// 	if (!found) {
+							// 		found = true;
+							// 		return true; // just give us the first record
+							// 	}
 
-							}, true);
+							// }, true);
 
-							// set a first row of current user to cursor
-							if (row)
-								this.__dataCollection.setCursor(row.id);
-						} else {
-							this.setCursor(this.settings.fixSelect);
+							// // set a first row of current user to cursor
+							// if (row)
+							// 	this.__dataCollection.setCursor(row.id);
+
+							// set a first row to cursor
+							var rowId = this.__dataCollection.getFirstId();
+							if (rowId)
+								this.__dataCollection.setCursor(rowId);
+						}
+						else {
+							this.__dataCollection.setCursor(this.settings.fixSelect);
 						}
 
 					}
@@ -1494,18 +1536,22 @@ export default class ABViewDataCollection extends ABView {
 						});
 
 					}
-					
-					resolve();
-					
-				});
 
-			}).then(() => {
-				return new Promise((resolve, reject)=>{
 					if (callback)
 						callback();
 
 					resolve();
+					
 				});
+
+			})
+			.catch(err => {
+
+				this.hideProgressOfComponents();
+
+				if (callback)
+					callback(err);
+
 			});
 			
 		// if (callback) {
@@ -1562,11 +1608,19 @@ export default class ABViewDataCollection extends ABView {
 	 * @param {Object} - current data of link data collection
 	 */
 	refreshLinkCursor() {
+		
+		var linkDc = this.dataCollectionLink;
+		if (linkDc) {
+			var linkCursor = linkDc.getCursor();
+		}
+		
+		// data is empty
+		if (linkCursor == null) return null;
 
 		if (this.__dataCollection) {
-			this.__dataCollection.filter((rowData) => {
+			this.__dataCollection.filter((linkCursor) => {
 
-				return this.isParentFilterValid(rowData);
+				return this.isParentFilterValid(linkCursor);
 
 			});
 		}
@@ -1599,6 +1653,18 @@ export default class ABViewDataCollection extends ABView {
 			return (linkVal.id || linkVal) == linkCursor.id;
 		}
 
+
+	}
+
+	hideProgressOfComponents() {
+
+		this.__bindComponentIds.forEach(comId => {
+
+			if ($$(comId) && 
+				$$(comId).hideProgress)
+				$$(comId).hideProgress();
+
+		});
 
 	}
 

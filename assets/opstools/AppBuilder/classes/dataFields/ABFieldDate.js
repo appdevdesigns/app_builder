@@ -1152,7 +1152,7 @@ class ABFieldDate extends ABField {
 			}
 
 			// else retun the actual ISO string => Date() value
-			return new Date(d);
+			return new Date(moment(d));
 		}
 
 
@@ -1179,24 +1179,13 @@ class ABFieldDate extends ABField {
 			// else if (this.settings.default) {
 			// 	values[this.columnName] = (new Date(this.settings.default)).toISOString();
 			// }
-			if (this.settings.defaultDate != 1) {
-				if (this.settings.defaultDateValue) {
-					values[this.columnName] = (new Date(this.settings.defaultDateValue)).toISOString();
-				} 
-				else {
-					values[this.columnName] = (new Date()).toISOString();
-				}
+			if (this.settings.defaultDate != 1 && this.settings.defaultDateValue) {
+				values[this.columnName] = (new Date(this.settings.defaultDateValue)).toISOString();
 			}
 			
-			if (this.settings.defaultTime != 1) {
-				var defaultDate = new Date();
-				if (this.settings.defaultDateValue) {
-					defaultDate = new Date(this.settings.defaultDateValue);
-				}
-				var defaultTime = new Date();
-				if (this.settings.defaultTimeValue) {
-					defaultTime =  new Date(this.settings.defaultTimeValue);
-				}
+			if (this.settings.defaultTime != 1 && this.settings.defaultTimeValue && this.settings.defaultDateValue) {
+				var defaultDate = new Date(this.settings.defaultDateValue);
+				var defaultTime =  new Date(this.settings.defaultTimeValue);
 				values[this.columnName] = new Date(defaultDate.getFullYear(), defaultDate.getMonth(), defaultDate.getDate(), defaultTime.getHours(), defaultTime.getMinutes(), defaultTime.getSeconds()).toISOString();
 			}
 		}
@@ -1221,7 +1210,7 @@ class ABFieldDate extends ABField {
 			var value = data[this.columnName];
 
 			if (!(value instanceof Date)) {
-				value = new Date(value);
+				value = new Date(moment(value));
 			}
 
 			// verify we didn't end up with an InValid Date result.
@@ -1395,7 +1384,7 @@ class ABFieldDate extends ABField {
 
 	format(rowData) {
 
-		var d = rowData[this.columnName];
+		var d = this.dataValue(rowData);
 
 		if ((d == '') || (d == null)) {
 			return '';
@@ -1403,7 +1392,7 @@ class ABFieldDate extends ABField {
 		// convert ISO string -> Date() -> our formatted string
 
 		// pull format from settings.
-		return getDateDisplay(new Date(d), this.settings);
+		return getDateDisplay(new Date(moment(d)), this.settings);
 	}
 	
 	getFormat(settings) {
