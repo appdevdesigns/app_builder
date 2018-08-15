@@ -39,6 +39,7 @@ var ABViewFormPropertyComponentDefaults = {
 	labelWidth: 120,
 	height: 200,
 	clearOnLoad: false,
+	clearOnSave: false,
 	displayRules: [],
 
 	//	[{
@@ -142,6 +143,7 @@ export default class ABViewForm extends ABViewContainer {
 		// convert from "0" => true/false
 		this.settings.showLabel = JSON.parse(this.settings.showLabel != null ? this.settings.showLabel : ABViewFormPropertyComponentDefaults.showLabel);
 		this.settings.clearOnLoad = JSON.parse(this.settings.clearOnLoad != null ? this.settings.clearOnLoad : ABViewFormPropertyComponentDefaults.clearOnLoad);
+		this.settings.clearOnSave = JSON.parse(this.settings.clearOnSave != null ? this.settings.clearOnSave : ABViewFormPropertyComponentDefaults.clearOnSave);
 
 		// convert from "0" => 0
 		this.settings.labelWidth = parseInt(this.settings.labelWidth || ABViewFormPropertyComponentDefaults.labelWidth);
@@ -450,6 +452,12 @@ PopupRecordRule.qbFixAfterShow();
 				labelWidth: App.config.labelWidthLarge
 			},
 			{
+				name: 'clearOnSave',
+				view: 'checkbox',
+				label: L('ab.components.form.clearOnSave', "*Clear on save"),
+				labelWidth: App.config.labelWidthLarge
+			},
+			{
 				view: "fieldset",
 				label: L('ab.components.form.rules', '*Rules:'),
 				labelWidth: App.config.labelWidthLarge,
@@ -566,6 +574,7 @@ PopupRecordRule.qbFixAfterShow();
 		$$(ids.labelWidth).setValue(view.settings.labelWidth || ABViewFormPropertyComponentDefaults.labelWidth);
 		$$(ids.height).setValue(view.settings.height || ABViewFormPropertyComponentDefaults.height);
 		$$(ids.clearOnLoad).setValue(view.settings.clearOnLoad || ABViewFormPropertyComponentDefaults.clearOnLoad);
+		$$(ids.clearOnSave).setValue(view.settings.clearOnSave || ABViewFormPropertyComponentDefaults.clearOnSave);
 
 		this.propertyUpdateRules(ids, view, dataCollectionId);
 		this.populateBadgeNumber(ids, view);
@@ -593,6 +602,7 @@ PopupRecordRule.qbFixAfterShow();
 		view.settings.labelWidth = $$(ids.labelWidth).getValue() || ABViewFormPropertyComponentDefaults.labelWidth;
 		view.settings.height = $$(ids.height).getValue();
 		view.settings.clearOnLoad = $$(ids.clearOnLoad).getValue();
+		view.settings.clearOnSave = $$(ids.clearOnSave).getValue();
 
 	}
 
@@ -1151,13 +1161,10 @@ PopupRecordRule.qbFixAfterShow();
 				// form ready function
 				var formReady = (newFormVals) => {
 
-					// when add a new data, then clear form inputs
-					if (dc) {
-						var currCursor = dc.getCursor();
-						if (currCursor == null) {
-							dc.setCursor(null);
-							formView.clear();
-						}
+					// clear cursor after saving.
+					if (dc && this.settings.clearOnSave) {
+						dc.setCursor(null);
+						formView.clear();
 					}
 					
 					// if there was saved data pass it up to the onSaveData callback
