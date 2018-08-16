@@ -920,12 +920,31 @@ module.exports = class ABObject extends ABObjectBase {
 
 	                case "in":
 	                    operator = "IN";
-	                    value = '(' + condition.value.map(function(v){ return quoteMe(v)}).join(', ') + ')';
+
+	                    // if we wanted an IN clause, but there were no values sent, then we 
+	                    // want to make sure this condition doesn't return anything
+	                    if (Array.isArray(condition.value) && condition.value.length > 0) {
+	                    	value = '(' + condition.value.map(function(v){ return quoteMe(v)}).join(', ') + ')';
+	                    } else {
+
+	                    	// send a false by resetting the whereRaw to a fixed value.
+	                    	// any future attempts to replace this will be ignored.
+	                    	whereRaw = ' 1=0 ';
+	                    }
 	                    break;
 
 	                case "not_in":
 	                    operator = "NOT IN";
-	                    value = '(' + condition.value.map(function(v){ return quoteMe(v)}).join(', ') + ')';
+
+	                    // if we wanted a NOT IN clause, but there were no values sent, then we
+	                    // want to make sure this condition returns everything (not filtered)
+	                    if (Array.isArray(condition.value) && condition.value.length > 0) {
+	                    	value = '(' + condition.value.map(function(v){ return quoteMe(v)}).join(', ') + ')';
+	                    } else {
+
+	                    	// send a TRUE value so nothing gets filtered
+	                    	whereRaw = ' 1=1 '
+	                    }
 	                    break;
 
 	            }
