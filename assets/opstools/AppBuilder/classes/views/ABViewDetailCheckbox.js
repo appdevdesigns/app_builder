@@ -154,7 +154,7 @@ export default class ABViewDetailCheckbox extends ABViewDetailComponent {
 					var checkbox = '';
 
 					// Check
-					if (JSON.parse(val))
+					if (val && JSON.parse(val))
 						checkbox = '<span class="check webix_icon fa-check-square-o"></span>';
 					// Uncheck
 					else
