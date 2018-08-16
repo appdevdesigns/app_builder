@@ -113,7 +113,9 @@ module.exports = {
     	],(err,data)=>{
 
 			if (err) {
-    			res.AD.error(err, err.httpResponseCode || 400);
+				
+				ADCore.Comm.error(res, err, err.httpResponseCode || 400);
+    
     		} else {
 
 				// Adding header so the client knows the file content type and the file name
@@ -123,7 +125,7 @@ module.exports = {
 				fs.createReadStream(destFile)
 			    .on('error', function (err) {
 			    	ADCore.error.log("ABMobileQRController:sendAPK:Unexpected Error streaming file to client", {error:err});
-			    	return res.AD.error(err, 500);
+			    	return ADCore.Comm.error(res, err, 500);
 			    })
 			    .pipe(res);
     		}
