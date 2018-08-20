@@ -26,14 +26,19 @@ function convertToJs(object, formula, rowData) {
 	// replace with current date
 	formula = formula.replace(/\(CURRENT\)/g, "(new Date())");
 
-	// number fields
-	object.fields(f => f.key == 'number').forEach(f => {
-		formula = formula.replace(new RegExp('{' + f.columnName + '}', 'g'), (rowData[f.columnName] || 0));
-	});
+	object.fields().forEach(f => {
 
-	// date fields
-	object.fields(f => f.key == 'date').forEach(f => {
-		formula = formula.replace(new RegExp('{' + f.columnName + '}', 'g'), (rowData[f.columnName] ? '"' + rowData[f.columnName] + '"' : ""));
+		var colName = f.columnName;
+		if (colName.indexOf('.') > -1) // QUERY: get only column name
+			colName = colName.split('.')[1];
+
+		// number fields
+		if (f.key == 'number')
+			formula = formula.replace(new RegExp('{' + colName + '}', 'g'), (rowData[f.columnName] || 0));
+		// date fields
+		else if (f.key == 'date')
+			formula = formula.replace(new RegExp('{' + colName + '}', 'g'), (rowData[f.columnName] ? '"' + rowData[f.columnName] + '"' : ""));
+
 	});
 
 	return eval(formula);
