@@ -604,10 +604,17 @@ export default class ABViewContainer extends ABView {
 					// Get the last row
 					var curRow = rows[rows.length - 1];
 					
-					component.ui.gravity = curRow.cols[v.position.x || 0].gravity;
+					var newPos = v.position.x || 0;
+					var getGrav = 1;
+					
+					if (curRow.cols[newPos] && curRow.cols[newPos].gravity) {
+						var getGrav = curRow.cols[newPos].gravity
+					}
+					
+					component.ui.gravity = getGrav;
 
 					// Add ui of sub-view to column
-					curRow.cols[v.position.x || 0] = component.ui;
+					curRow.cols[newPos] = component.ui;
 
 					curColIndex += 1;
 
