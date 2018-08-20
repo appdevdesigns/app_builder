@@ -26,13 +26,13 @@ function convertToJs(object, formula, rowData) {
 	// replace with current date
 	formula = formula.replace(/\(CURRENT\)/g, "(new Date())");
 
+	// number fields
 	object.fields(f => f.key == 'number').forEach(f => {
-		// replace value 
 		formula = formula.replace(new RegExp('{' + f.columnName + '}', 'g'), (rowData[f.columnName] || 0));
 	});
 
+	// date fields
 	object.fields(f => f.key == 'date').forEach(f => {
-		// replace value 
 		formula = formula.replace(new RegExp('{' + f.columnName + '}', 'g'), (rowData[f.columnName] ? '"' + rowData[f.columnName] + '"' : ""));
 	});
 
@@ -514,8 +514,8 @@ class ABFieldCalculate extends ABField {
 	*/
 	formComponent() {
 
-		// TODO : not support in the form widget
-		return super.formComponent('checkbox');
+		// not support in the form widget
+		return null;
 	}
 
 
@@ -525,7 +525,6 @@ class ABFieldCalculate extends ABField {
 
 		detailComponentSetting.common = () => {
 			return {
-				// TODO
 				key: 'detailtext'
 			}
 		};

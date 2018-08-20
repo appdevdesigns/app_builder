@@ -220,7 +220,8 @@ export default class ABViewForm extends ABViewContainer {
 
 						// Add new form field
 						var newFieldView = currView.addFieldToForm(f, yPosition);
-						newFieldView.once('destroyed', () => this.propertyEditorPopulate(App, ids, currView));
+						if (newFieldView)
+							newFieldView.once('destroyed', () => this.propertyEditorPopulate(App, ids, currView));
 
 						// update item to UI list
 						f.selected = 1;
@@ -243,7 +244,12 @@ export default class ABViewForm extends ABViewContainer {
 
 		_logic.listTemplate = (field, common) => {
 
-			var componentKey = field.formComponent().common().key;
+			// disable in form
+			var fieldComponent = field.formComponent();
+			if (fieldComponent == null) 
+				return "<i class='fa fa-times'></i>  #label# <div class='ab-component-form-fields-component-info'> Disable </div>".replace("#label#", field.label);
+
+			var componentKey = fieldComponent.common().key;
 			var formComponent = ABViewManager.allViews((v) => v.common().key == componentKey)[0];
 
 			return common.markCheckbox(field) + " #label# <div class='ab-component-form-fields-component-info'> <i class='fa fa-#icon#'></i> #component# </div>"
@@ -265,7 +271,8 @@ export default class ABViewForm extends ABViewContainer {
 			// add a field to the form
 			if (item.selected) {
 				var fieldView = currView.addFieldToForm(item);
-				fieldView.once('destroyed', () => this.propertyEditorPopulate(App, ids, currView));
+				if (fieldView)
+					fieldView.once('destroyed', () => this.propertyEditorPopulate(App, ids, currView));
 			}
 			// remove field in the form
 			else {
@@ -1030,6 +1037,8 @@ PopupRecordRule.qbFixAfterShow();
 			return;
 
 		var fieldComponent = field.formComponent();
+		if (fieldComponent == null)
+			return;
 
 		var newView = fieldComponent.newInstance(this.application, this);
 		if (newView == null)
