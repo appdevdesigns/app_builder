@@ -52,12 +52,26 @@ function AGE(dateString) {
 	if (!dataDate) return 0
 
 	var today = new Date();
-	var age = today.getFullYear() - dataDate.getFullYear();
-	var m = today.getMonth() - dataDate.getMonth();
-	if (m < 0 || (m === 0 && today.getDate() < dataDate.getDate())) {
-		age--;
-	}
-	return age;
+	var oneYear = 31536000000; // (24 * 60 * 60 * 1000) * 365;
+	var diffYears = (today - dataDate) / oneYear;
+
+	if (diffYears < 1)
+		return Math.round(diffYears * 10) / 10; // float 2 digits
+	else
+		return Math.floor(diffYears);
+
+	// var today = new Date();
+	// var age = today.getFullYear() - dataDate.getFullYear();
+	// if (age < 1) {
+	// 	var m = today.getMonth() - dataDate.getMonth();
+
+	// 	age = parseFloat("0." + m);
+
+	// 	// if (m < 0 || (m === 0 && today.getDate() < dataDate.getDate())) {
+	// 	// 	age--;
+	// 	// }
+	// }
+	// return age;
 }
 
 function YEAR(dateString) {
