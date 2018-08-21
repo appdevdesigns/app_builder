@@ -1266,7 +1266,7 @@ export default class RowFilter extends OP.Component {
 							break;
 						case "connectField":
 						case "connectObject":
-							condResult = _logic.connectFieldValid(value, filter.rule, filter.value);
+							condResult = _logic.connectFieldValid(rowData, fieldInfo.columnName, filter.rule, filter.value);
 							break;
 					}
 
@@ -1504,7 +1504,7 @@ export default class RowFilter extends OP.Component {
 				return true;
 
 			},
-			
+
 			inQueryValid: function(value, rule, compareValue) {
 
 				var result = false;
@@ -1530,17 +1530,45 @@ export default class RowFilter extends OP.Component {
 				return true;
 
 			},
+
+			dataCollectionValid: function (rowData, rule, compareValue) {
+
+				var result = false;
+
+				if (!compareValue)
+					return result;
+
+				var dc = _View.pageRoot().dataCollections(dc => dc.id == compareValue)[0];
+				if (!dc)
+					return result;
+
+				switch (rule) {
+					case 'in_data_collection':
+						result = (dc.getData(d => d.id == rowData.id).length > 0);
+						break;
+					case 'not_in_data_collection':
+						result = (dc.getData(d => d.id == rowData.id).length < 1);
+						break;
+				}
+
+				return result;
+
+			},
 			
-			connectFieldValid: function(value, rule, compareValue) {
+			connectFieldValid: function(rowData, columnName, rule, compareValue) {
 
 				switch (rule) {
 					case 'in_query':
 					case 'not_in_query':
-						return _logic.inQueryValid(value, rule, compareValue);
+						return _logic.inQueryValid(rowData[columnName], rule, compareValue);
 						break;
 					case "is_current_user":
 					case "is_not_current_user":
-						return _logic.userValid(value, rule, compareValue);
+						return _logic.userValid(rowData[columnName], rule, compareValue);
+						break;
+					case 'in_data_collection':
+					case 'not_in_data_collection':
+						return _logic.dataCollectionValid(rowData, rule, compareValue);
 						break;
 				}
 				

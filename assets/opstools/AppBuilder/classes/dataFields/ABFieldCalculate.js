@@ -58,7 +58,7 @@ function AGE(dateString) {
 	if (diffYears < 1)
 		return Math.round(diffYears * 10) / 10; // float 2 digits
 	else
-		return Math.floor(diffYears);
+		return Math.floor(diffYears); // no float digit
 
 	// var today = new Date();
 	// var age = today.getFullYear() - dataDate.getFullYear();

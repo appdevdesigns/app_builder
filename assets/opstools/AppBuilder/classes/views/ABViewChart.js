@@ -447,7 +447,8 @@ export default class ABViewChart extends ABViewContainer  {
 		if (!dc) return null;
 
 		var obj = dc.datasource;
-		
+		if (!obj) return null;
+
 		return obj.fields((f) => f.id == this.settings.columnLabel)[0]
 	}
 
@@ -456,6 +457,7 @@ export default class ABViewChart extends ABViewContainer  {
 		if (!dc) return null;
 
 		var obj = dc.datasource;
+		if (!obj) return null;
 		
 		return obj.fields((f) => f.id == this.settings.columnValue)[0]
 	}
@@ -465,6 +467,7 @@ export default class ABViewChart extends ABViewContainer  {
 		if (!dc) return null;
 
 		var obj = dc.datasource;
+		if (!obj) return null;
 		
 		return obj.fields((f) => f.id == this.settings.columnValue2)[0]
 	}
