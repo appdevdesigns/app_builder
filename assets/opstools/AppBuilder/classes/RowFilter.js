@@ -1538,6 +1538,9 @@ export default class RowFilter extends OP.Component {
 				if (!compareValue)
 					return result;
 
+				if (!_View)
+					return result;
+
 				var dc = _View.pageRoot().dataCollections(dc => dc.id == compareValue)[0];
 				if (!dc)
 					return result;
