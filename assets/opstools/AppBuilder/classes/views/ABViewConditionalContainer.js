@@ -333,7 +333,8 @@ export default class ABViewConditionalContainer extends ABViewContainer {
 			displayView: (currData) => {
 
 				var isValid = this.__filterComponent.isValid(currData);
-				if (isValid && currData) {
+				if (isValid) {
+				// if (isValid && currData) {
 					$$(ids.component).showBatch('if');
 				}
 				else {
