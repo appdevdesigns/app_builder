@@ -386,8 +386,18 @@ var errorOptions = null;
             return ABRelayAppUser.findOne({appUUID:request.appUUID})
             .populate('relayUser')
             .then((entry)=>{
-                appUser = entry;
-                relayUser = entry.relayUser;
+                if (entry) {
+
+                    appUser = entry;
+                    relayUser = entry.relayUser;
+
+                } else {
+
+                    var error = new Error('ABRelay:request:1) can not find ABRelayAppUser for appUUID:'+request.appUUID);
+                    ADCore.error.log('ABRelay:request:(1) can not find ABRelayAppUser for appUUID:'+request.appUUID, { error:error, request: request });
+                    throw error;
+                }
+
 // return entry;
             })
         })
