@@ -19,6 +19,7 @@ var ABFieldImage  = require( path.join(__dirname, "dataFields", "ABFieldImage"  
 var ABFieldUser = require( path.join(__dirname, "dataFields", "ABFieldUser" ));
 var ABFieldConnect = require( path.join(__dirname, "dataFields", "ABFieldConnect" ));
 var ABFieldCalculate = require( path.join(__dirname, "dataFields", "ABFieldCalculate" ));
+var ABFieldFormula = require( path.join(__dirname, "dataFields", "ABFieldFormula" ));
 
 /*
  * Fields
@@ -38,6 +39,7 @@ Fields[ABFieldImage.defaults().key] = ABFieldImage;
 Fields[ABFieldUser.defaults().key] = ABFieldUser;
 Fields[ABFieldConnect.defaults().key] = ABFieldConnect;
 Fields[ABFieldCalculate.defaults().key] = ABFieldCalculate;
+Fields[ABFieldFormula.defaults().key] = ABFieldFormula;
 
 
 module.exports = {
