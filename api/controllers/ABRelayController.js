@@ -172,29 +172,55 @@ module.exports = {
 
 			(next) => {
 
-				ABRelay.post({
-					url:'/mcc/users', 
-					data:{
-				        users: restUsers
-				    }
-				})
-			    .then(function (parsedBody) {
+				var postLimit = 500;
+				function postEm(cb) {
 
-					next();
-			        
-			    })
-			    .catch(next);
+					if (restUsers.length == 0) {
+						cb();
+					} else {
+
+						var postThese = [];
+						while(restUsers.length >0 && postThese.length < postLimit) {
+							postThese.push(restUsers.shift());
+						}
+						sails.log('::: ABRelay.publishUsers(): publishing:'+postThese.length+'  remaining:'+restUsers.length);
+						ABRelay.post({
+							url:'/mcc/users', 
+							data:{
+						        users: postThese
+						    }
+						})
+					    .then(function (parsedBody) {
+
+							postEm(cb);
+					        
+					    })
+					    .catch(cb);
+					}
+				}
+				postEm((err)=>{
+					next(err);
+				});
 			    
 			}
 
 		], (err, data)=>{
 			if (err) {
-				if(err.statusCode == 403) {
+
+				if (err.statusCode == 403) {
 					ADCore.error.log("ABRelayController:publishusers:Request was forbidden. Does our authToken match?", {error:err, authToken:sails.config.appbuilder.mcc.accessToken})
 					var error = new Error('Communications Error with Relay Server. Contact your Administrator.');
 					res.AD.error(error);
 					return;
 				}
+
+				if (err.statusCode == 413) {
+					ADCore.error.log("ABRelayController:publishusers:Request Entity Too Large.", {error:err })
+					var error = new Error('Communications Error with Relay Server. Contact your Administrator.');
+					res.AD.error(error);
+					return;
+				}
+
 				// otherwise pass
 				ADCore.error.log("ABRelayController:publishusers:Error with publishusers:", {error:err, authToken:sails.config.appbuilder.mcc.accessToken});
 				var error = new Error('Unable to complete transaction. Contact your administrator.');
