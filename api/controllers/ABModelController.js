@@ -102,50 +102,48 @@ function updateRelationValues(object, id, updateRelationParams) {
         Object.keys(updateRelationParams).forEach((colName) => {
 
             // clear relative values
-            if (updateRelationParams[colName] == null ||
-                updateRelationParams[colName] == '' ||
-                (
-                    Array.isArray(updateRelationParams[colName]) &&
-                    !updateRelationParams[colName].length    
-                )) {
+            // if (updateRelationParams[colName] == null ||
+            //     updateRelationParams[colName] == '' ||
+            //     (
+            //         Array.isArray(updateRelationParams[colName]) &&
+            //         !updateRelationParams[colName].length    
+            //     )) {
 
-                updateTasks.push(() => {
+            updateTasks.push(() => {
 
-                    var clearRelationName = AppBuilder.rules.toFieldRelationFormat(colName);
+                var clearRelationName = AppBuilder.rules.toFieldRelationFormat(colName);
 
-                    return new Promise((resolve, reject) => {
+                return new Promise((resolve, reject) => {
 
-                        query.where(object.PK(), id).first()
-                            .catch(err => reject(err))
-                            .then(record => {
+                    // WORKAROUND : HRIS tables have non null columns
+                    if (object.isExternal)
+                        return resolve();
 
-                                if (record == null) return resolve();
+                    query.where(object.PK(), id).first()
+                        .catch(err => reject(err))
+                        .then(record => {
 
-                                var fieldLink = object.fields(f => f.columnName == colName)[0];
-                                if (fieldLink == null) return resolve();
+                            if (record == null) return resolve();
 
-                                var objectLink = fieldLink.object;
-                                if (objectLink == null) return resolve();
+                            var fieldLink = object.fields(f => f.columnName == colName)[0];
+                            if (fieldLink == null) return resolve();
 
-                                // WORKAROUND : HRIS tables have non null columns
-                                if (object.isExternal) {
-                                    resolve();
-                                }
-                                else {
-                                    record
-                                        .$relatedQuery(clearRelationName)
-                                        .unrelate()
-                                        .catch(err => reject(err))
-                                        .then(() => { resolve(); });
-                                }
+                            var objectLink = fieldLink.object;
+                            if (objectLink == null) return resolve();
 
-                            });
+                            record
+                                .$relatedQuery(clearRelationName)
+                                .unrelate()
+                                .catch(err => reject(err))
+                                .then(() => { resolve(); });
 
-                    });
+                        });
+
                 });
+            });
 
-                return;
-            }
+            //     return;
+            // }
 
             // convert relation data to array
             if (!Array.isArray(updateRelationParams[colName])) {
