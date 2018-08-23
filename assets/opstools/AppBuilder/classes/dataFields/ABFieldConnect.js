@@ -584,54 +584,59 @@ class ABFieldConnect extends ABFieldSelectivity {
 			}
 		}, App, row);
 
-		// Listen event when selectivity value updates
-		if (domNode && row.id && node && !isFormView) {
-			domNode.addEventListener('change', (e) => {
+		if (!domNode.dataset.isListened) { // prevent listen duplicate
+			domNode.dataset.isListened = true; 
 
-				// update just this value on our current object.model
-				var values = {};
-				values[this.columnName] = this.selectivityGet(domNode);
+			// Listen event when selectivity value updates
+			if (domNode && row.id && !isFormView) {
+				domNode.addEventListener('change', (e) => {
 
-				// check data does not be changed
-				if (Object.is(values[this.columnName], row[this.columnName])) return;
+					// update just this value on our current object.model
+					var values = {};
+					values[this.columnName] = this.selectivityGet(domNode);
 
-				// pass empty string because it could not put empty array in REST api
-				// added check for null because default value of field is null
-				if (values[this.columnName] == null || values[this.columnName].length == 0)
-					values[this.columnName] = '';
+					// check data does not be changed
+					if (Object.is(values[this.columnName], row[this.columnName])) return;
 
-				this.object.model().update(row.id, values)
-					.then(() => {
-						// update values of relation to display in grid
-						values[this.relationName()] = values[this.columnName];
+					// pass empty string because it could not put empty array in REST api
+					// added check for null because default value of field is null
+					if (values[this.columnName] == null || values[this.columnName].length == 0)
+						values[this.columnName] = '';
 
-						// update new value to item of DataTable .updateItem
-						if (values[this.columnName] == "")
-							values[this.columnName] = [];
-						if ($$(node) && $$(node).updateItem)
-							$$(node).updateItem(row.id, values);
-					})
-					.catch((err) => {
+					this.object.model().update(row.id, values)
+						.then(() => {
+							// update values of relation to display in grid
+							values[this.relationName()] = values[this.columnName];
 
-						node.classList.add('webix_invalid');
-						node.classList.add('webix_invalid_cell');
+							// update new value to item of DataTable .updateItem
+							if (values[this.columnName] == "")
+								values[this.columnName] = [];
+							if ($$(node) && $$(node).updateItem)
+								$$(node).updateItem(row.id, values);
+						})
+						.catch((err) => {
 
-						OP.Error.log('Error updating our entry.', { error: err, row: row, values: values });
-						console.error(err);
-					});
+							node.classList.add('webix_invalid');
+							node.classList.add('webix_invalid_cell');
 
-			}, false);
-		} else {
-			domNode.addEventListener('change', (e) => {
+							OP.Error.log('Error updating our entry.', { error: err, row: row, values: values });
+							console.error(err);
+						});
 
-				if (domNode.clientHeight > 32) {
-					var item = $$(node);
-					item.define("height", domNode.clientHeight + 6);
-					item.resizeChildren();
-					item.resize();
-				}
+				}, false);
+			} else {
+				domNode.addEventListener('change', (e) => {
 
-			}, false);
+					if (domNode.clientHeight > 32) {
+						var item = $$(node);
+						item.define("height", domNode.clientHeight + 6);
+						item.resizeChildren();
+						item.resize();
+					}
+
+				}, false);
+			}
+
 		}
 
 	}
@@ -794,14 +799,14 @@ class ABFieldConnect extends ABFieldSelectivity {
 				}).then((result) => {
 
 					// cache linked object data
-					this._options = result.data
-						.map((d) => {
-							return {
-								id: d.id,
-								text: linkedObj.displayData(d)
-							};
-						});
+					this._options = result.data;
 
+					// populate display text
+					this._options.forEach(opt => {
+						opt.text = linkedObj.displayData(opt);
+					});
+
+					// filter
 					this._options = this._options.filter(function (item) {
 						if (item.text.toLowerCase().includes(term.toLowerCase())) {
 							return true;
