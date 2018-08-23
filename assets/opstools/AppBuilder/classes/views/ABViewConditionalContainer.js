@@ -298,7 +298,17 @@ export default class ABViewConditionalContainer extends ABViewContainer {
 			view: "multiview",
 			cells: [
 				ifComp.ui,
-				elseComp.ui
+				elseComp.ui,
+				{
+					batch: "wait",
+					view: 'layout',
+					rows: [
+						{
+							view: 'label',
+							label: "Please wait..."
+						}
+					]
+				}
 			]
 		};
 
@@ -308,12 +318,15 @@ export default class ABViewConditionalContainer extends ABViewContainer {
 
 			this.populateFilterComponent();
 
-			// listen DC events
 			var dc = this.dataCollection;
 			if (dc) {
 
-				var currData = dc.getCursor();
-				_logic.displayView(currData);
+				// listen DC events
+				this.eventAdd({
+					emitter: dc,
+					eventName: 'loadData',
+					listener: _logic.displayView
+				});
 
 				this.eventAdd({
 					emitter: dc,
@@ -322,15 +335,29 @@ export default class ABViewConditionalContainer extends ABViewContainer {
 				});
 
 			}
-			else {
-				_logic.displayView();
-			}
+
+			_logic.displayView();
 
 		};
 
 		var _logic = {
 
 			displayView: (currData) => {
+
+				var dc = this.dataCollection;
+				if (dc) {
+
+					if (currData == null) {
+						currData = dc.getCursor();
+					}
+
+					// show 'waiting' panel
+					if (!dc.isInitial) {
+						$$(ids.component).showBatch('wait');
+						return;
+					}
+
+				}
 
 				var isValid = this.__filterComponent.isValid(currData);
 				if (isValid) {
