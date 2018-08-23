@@ -733,7 +733,7 @@ module.exports = class ABObjectQuery extends ABObject {
 
 				this.fields().forEach((f) => {
 
-					if (!f || f.key == 'calculate')
+					if (!f || f.key == 'calculate' || f.key == 'formula')
 						return;
 
 					var obj = f.object;

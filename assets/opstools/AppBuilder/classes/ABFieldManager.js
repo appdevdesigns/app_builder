@@ -20,6 +20,7 @@ import ABFieldUser from "./dataFields/ABFieldUser"
 import ABFieldConnect from "./dataFields/ABFieldConnect"
 import ABFieldCalculate from "./dataFields/ABFieldCalculate"
 import ABFieldTextFormula from "./dataFields/ABFieldTextFormula"
+import ABFieldFormula from "./dataFields/ABFieldFormula"
 
 /*
  * Fields
@@ -40,6 +41,7 @@ Fields[ABFieldUser.defaults().key] = ABFieldUser;
 Fields[ABFieldConnect.defaults().key] = ABFieldConnect;
 Fields[ABFieldCalculate.defaults().key] = ABFieldCalculate;
 Fields[ABFieldTextFormula.defaults().key] = ABFieldTextFormula;
+Fields[ABFieldFormula.defaults().key] = ABFieldFormula;
 
 
 export default  {

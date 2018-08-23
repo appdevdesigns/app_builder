@@ -45,6 +45,8 @@ function dataCollectionNew(instance, data) {
 		if (dc.___AD.onAfterLoadEvent) dc.detachEvent(dc.___AD.onAfterLoadEvent);
 		dc.___AD.onAfterLoadEvent = dc.attachEvent("onAfterLoad", () => {
 
+			instance.initial = true;
+
 			instance.emit("loadData", {});
 
 		});
@@ -315,7 +317,7 @@ export default class ABViewDataCollection extends ABView {
 
 			if ($$(ids.dataSource).getList().getItem(sourceId).disabled) {
 				// prevents re-calling onChange from itself
-				$$(ids.dataSource).blockEvent();	
+				$$(ids.dataSource).blockEvent();
 				$$(ids.dataSource).setValue(oldId || "")
 				$$(ids.dataSource).unblockEvent();
 			}
@@ -558,10 +560,10 @@ export default class ABViewDataCollection extends ABView {
 
 		sources.unshift({ id: '', value: L('ab.component.datacollection.selectSource', '*Select an source') });
 
-		$$(ids.dataSource).define("options", { 
-			body:{
+		$$(ids.dataSource).define("options", {
+			body: {
 				scheme: {
-					$init:function(obj) {
+					$init: function (obj) {
 						if (obj.disabled)
 							obj.$css = "disabled";
 					}
@@ -658,7 +660,7 @@ export default class ABViewDataCollection extends ABView {
 
 			if (source)
 				view.settings.objectUrl = source.urlPointer();
-			else 
+			else
 				delete view.settings.objectUrl;
 
 
@@ -1025,8 +1027,8 @@ export default class ABViewDataCollection extends ABView {
 		AD.comm.hub.subscribe('ab.datacollection.create', (msg, data) => {
 
 			if (!this.datasource)
-			 	return;
-			
+				return;
+
 			if (this.datasource.id != data.objectId)
 				return;
 
@@ -1053,19 +1055,19 @@ export default class ABViewDataCollection extends ABView {
 		AD.comm.hub.subscribe('ab.datacollection.update', (msg, data) => {
 
 			if (!this.datasource)
-			 	return;
-			
+				return;
+
 			if (this.datasource.id != data.objectId)
 				return;
 
 			// updated values
 			var values = data.data;
 			if (!values) return;
-			
+
 			// filter condition before update 
 			if (!this.__filterComponent.isValid(values))
 				return;
-				
+
 			// various PK name
 			if (!values.id && this.datasource.PK() != 'id')
 				values.id = values[this.datasource.PK()];
@@ -1212,7 +1214,7 @@ export default class ABViewDataCollection extends ABView {
 
 		if (component.config.view == 'datatable' ||
 			component.config.view == 'dataview') {
-			
+
 			if (dc) {
 
 				var items = dc.count();
@@ -1264,51 +1266,51 @@ export default class ABViewDataCollection extends ABView {
 			component.refresh();
 
 	}
-	
+
 	clone(settings) {
 		settings = settings || this.toObj();
 		var clonedDataCollection = new ABViewDataCollection(settings, this.application, this.parent);
-		
-		return new Promise((resolve, reject)=>{
-			
+
+		return new Promise((resolve, reject) => {
+
 			// load the data
 			clonedDataCollection.loadData()
-			.then(()=>{
-				
-				// set the cursor
-				var cursorID = this.getCursor();
-				
-				if (cursorID) {
-					// NOTE: webix documentation issue: .getCursor() is supposed to return
-					// the .id of the item.  However it seems to be returning the {obj} 
-					if (cursorID.id) cursorID = cursorID.id;
-					
-					clonedDataCollection.setCursor(cursorID);
-				}
-				
-				resolve( clonedDataCollection );
-			})
-			.catch(reject);
+				.then(() => {
+
+					// set the cursor
+					var cursorID = this.getCursor();
+
+					if (cursorID) {
+						// NOTE: webix documentation issue: .getCursor() is supposed to return
+						// the .id of the item.  However it seems to be returning the {obj} 
+						if (cursorID.id) cursorID = cursorID.id;
+
+						clonedDataCollection.setCursor(cursorID);
+					}
+
+					resolve(clonedDataCollection);
+				})
+				.catch(reject);
 		})
 	}
-	
+
 	filteredClone(filters) {
 		var obj = this.toObj();
-		
+
 		// check to see that filters are set (this is sometimes helpful to select the first record without doing so at the data collection level)
 		if (typeof filters != "undefined") {
-			obj.settings.objectWorkspace.filterConditions = { glue:'and', rules:[ obj.settings.objectWorkspace.filterConditions, filters ]}
+			obj.settings.objectWorkspace.filterConditions = { glue: 'and', rules: [obj.settings.objectWorkspace.filterConditions, filters] }
 		}
-			
+
 		return this.clone(obj); // new ABViewDataCollection(settings, this.application, this.parent);
-		
+
 	}
 
 
 	setCursor(rowId) {
 
 		// If the static cursor is set, then this DC could not set cursor to other rows
-		if ( (this.settings.fixSelect && this.settings.fixSelect != "_FirstRecordDefault") || (this.settings.fixSelect && this.settings.fixSelect == rowId))
+		if ((this.settings.fixSelect && this.settings.fixSelect != "_FirstRecordDefault") || (this.settings.fixSelect && this.settings.fixSelect == rowId))
 			return;
 
 		var dc = this.__dataCollection;
@@ -1441,7 +1443,7 @@ export default class ABViewDataCollection extends ABView {
 		return model.findAll(cond)
 			.then((data) => {
 
-				return new Promise((resolve, reject)=>{
+				return new Promise((resolve, reject) => {
 
 					data.data.forEach((d) => {
 
@@ -1494,7 +1496,7 @@ export default class ABViewDataCollection extends ABView {
 						else if (this.settings.fixSelect == "_FirstRecord" || this.settings.fixSelect == "_FirstRecordDefault") {
 							// // find a row that contains the current user
 							// var row = this.__dataCollection.find((r) => {
-								
+
 							// 	var found = false;
 							// 	if (!found) {
 							// 		found = true;
@@ -1541,7 +1543,7 @@ export default class ABViewDataCollection extends ABView {
 						callback();
 
 					resolve();
-					
+
 				});
 
 			})
@@ -1553,7 +1555,7 @@ export default class ABViewDataCollection extends ABView {
 					callback(err);
 
 			});
-			
+
 		// if (callback) {
 		// 	Promise.all([dataFetch]).then(function(values) {
 		// 		callback();
@@ -1568,8 +1570,8 @@ export default class ABViewDataCollection extends ABView {
 		this.__dataCollection.clearAll();
 		return this.loadData(null, null, null);
 	}
-	
-	
+
+
 	getData(filter) {
 
 		var dc = this.__dataCollection;
@@ -1585,7 +1587,7 @@ export default class ABViewDataCollection extends ABView {
 				if (isValid && linkDc) {
 					isValid = this.isParentFilterValid(row);
 				}
-	
+
 				// addition filter
 				if (isValid && filter) {
 					isValid = filter(row);
@@ -1608,12 +1610,12 @@ export default class ABViewDataCollection extends ABView {
 	 * @param {Object} - current data of link data collection
 	 */
 	refreshLinkCursor() {
-		
+
 		var linkDc = this.dataCollectionLink;
 		if (linkDc) {
 			var linkCursor = linkDc.getCursor();
 		}
-		
+
 		// data is empty
 		if (linkCursor == null) return null;
 
@@ -1660,12 +1662,16 @@ export default class ABViewDataCollection extends ABView {
 
 		this.__bindComponentIds.forEach(comId => {
 
-			if ($$(comId) && 
+			if ($$(comId) &&
 				$$(comId).hideProgress)
 				$$(comId).hideProgress();
 
 		});
 
+	}
+
+	get isInitial() {
+		return this.initial == true;
 	}
 
 

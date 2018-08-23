@@ -1155,37 +1155,40 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 
 										value = clonedDataCollection.getFirstRecord();
 
-										// case: datacollection is a query 
-										// our field is a pointer to an object. we want to pull out that object 
-										// from the query data.
-										if (clonedDataCollection.sourceType == 'query' || 
-											(op.valueType == 'exist' && op.queryField) ) {
+										if (value) {
 
-											var fieldWithValue = clonedDataCollection.datasource.fields((f) => {
-												return f.id == op.queryField;
-											})[0];
+											// case: datacollection is a query 
+											// our field is a pointer to an object. we want to pull out that object 
+											// from the query data.
+											if (clonedDataCollection.sourceType == 'query' || 
+												(op.valueType == 'exist' && op.queryField) ) {
 
-											var newValue = value[fieldWithValue.columnName];
+												var fieldWithValue = clonedDataCollection.datasource.fields((f) => {
+													return f.id == op.queryField;
+												})[0];
 
-											if (typeof newValue == "undefined") {
-												newValue = value[fieldWithValue.relationName()];
-												if (Array.isArray(newValue)) {
-													newValue = newValue[0];
+												var newValue = value[fieldWithValue.columnName];
+
+												if (typeof newValue == "undefined") {
+													newValue = value[fieldWithValue.relationName()];
+													if (Array.isArray(newValue)) {
+														newValue = newValue[0];
+													}
+													if (newValue.id) newValue = newValue.id;
 												}
-												if (newValue.id) newValue = newValue.id;
+
+												value = newValue;
+
 											}
+											// case: datacollection is an object 
+											// we want to set our field to this values
+											else if (clonedDataCollection.sourceType == 'object') {
 
-											value = newValue;
+												// NOTE: webix documentation issue: .getCursor() is supposed to return
+												// the .id of the item.  However it seems to be returning the {obj} 
+												if (value.id) value = value.id;
 
-										}
-										// case: datacollection is an object 
-										// we want to set our field to this values
-										else if (clonedDataCollection.sourceType == 'object' && value) {
-
-											// NOTE: webix documentation issue: .getCursor() is supposed to return
-											// the .id of the item.  However it seems to be returning the {obj} 
-											if (value.id) value = value.id;
-
+											}
 										}
 
 										// QUESTION: if value returns undefined should we do something else?

@@ -1,7 +1,7 @@
 /*
- * ABFieldCalculate
+ * ABFieldBoolean
  *
- * An ABFieldCalculate defines a Date field type.
+ * An ABFieldBoolean defines a Date field type.
  *
  */
 var path = require('path');
@@ -11,16 +11,16 @@ function L(key, altText) {
 	return altText;  // AD.lang.label.getLabel(key) || altText;
 }
 
-var ABFieldCalculateDefaults = {
-	key: 'calculate',	// unique key to reference this specific DataField
+var ABFieldFormulaDefaults = {
+	key: 'formula',	// unique key to reference this specific DataField
 
-	icon: 'calculator',	// font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
+	icon: 'circle-o-notch',	// font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
 
 	// menuName: what gets displayed in the Editor drop list
-	menuName: L('ab.dataField.calculate.menuName', '*Calculate'),
+	menuName: L('ab.dataField.formula.menuName', '*Formula'),
 
 	// description: what gets displayed in the Editor description.
-	description: L('ab.dataField.calculate.description', '*'),
+	description: L('ab.dataField.formula.description', '*'),
 
 	// what types of Sails ORM attributes can be imported into this data type?
 	// http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
@@ -33,13 +33,15 @@ var ABFieldCalculateDefaults = {
 };
 
 var defaultValues = {
-	formula: ""
+	objectId: "",
+	fieldId: "",
+	type: ""		// "sum", "average", "max", "min", "count"
 };
 
-class ABFieldCalculate extends ABField {
+class ABFieldFormula extends ABField {
 
 	constructor(values, object) {
-		super(values, object, ABFieldCalculateDefaults);
+		super(values, object, ABFieldFormulaDefaults);
 
 		// we're responsible for setting up our specific settings:
 		for (var dv in defaultValues) {
@@ -51,22 +53,8 @@ class ABFieldCalculate extends ABField {
 
 	// return the default values for this DataField
 	static defaults() {
-		return ABFieldCalculateDefaults;
+		return ABFieldFormulaDefaults;
 	}
-
-
-	/*
-	 * @function propertiesComponent
-	 *
-	 * return a UI Component that contains the property definitions for this Field.
-	 *
-	 * @param {App} App the UI App instance passed around the Components.
-	 * @return {Component}
-	 */
-	// static propertiesComponent(App) {
-	// 	return ABFieldCalculateComponent.component(App);
-	// }
-
 
 
 	///
@@ -200,4 +188,4 @@ class ABFieldCalculate extends ABField {
 
 
 
-module.exports = ABFieldCalculate;
+module.exports = ABFieldFormula;

@@ -488,7 +488,7 @@ class ABFieldCalculate extends ABField {
 	/// Working with Actual Object Values:
 	///
 
-	// return the grid column header definition for this instance of ABFieldBoolean
+	// return the grid column header definition for this instance of ABFieldCalculate
 	columnHeader(isObjectWorkspace) {
 		var config = super.columnHeader(isObjectWorkspace);
 

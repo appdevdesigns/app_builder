@@ -377,4 +377,46 @@ module.exports = class ABObjectExternal extends ABObject {
 
 	}
 
+	/**
+	 * @method requestParams
+	 * Parse through the given parameters and return a subset of data that
+	 * relates to the fields in this object.
+	 * @param {obj} allParameters  a key=>value hash of the inputs to parse.
+	 * @return {obj} 
+	 */
+	requestParams(allParameters) {
+
+		var usefulParameters = super.requestParams(allParameters);
+
+		// WORKAROUND : HRIS tables does not support non null columns
+		Object.keys(usefulParameters).forEach(columnName => {
+
+			if (usefulParameters[columnName] == null || 
+				(Array.isArray(usefulParameters[columnName]) && !usefulParameters[columnName].length)) {
+					delete usefulParameters[columnName];
+				}
+
+		});
+
+		return usefulParameters;
+	}
+
+
+	requestRelationParams(allParameters) {
+
+		var usefulParameters = super.requestRelationParams(allParameters);
+
+		// WORKAROUND : HRIS tables does not support non null columns
+		Object.keys(usefulParameters).forEach(columnName => {
+
+			if (usefulParameters[columnName] == null || 
+				(Array.isArray(usefulParameters[columnName]) && !usefulParameters[columnName].length)) {
+					delete usefulParameters[columnName];
+				}
+
+		});
+
+		return usefulParameters;
+	}
+
 }
