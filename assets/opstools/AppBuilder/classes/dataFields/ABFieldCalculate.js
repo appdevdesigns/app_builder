@@ -33,11 +33,15 @@ function convertToJs(object, formula, rowData) {
 			colName = colName.split('.')[1];
 
 		// number fields
-		if (f.key == 'number')
-			formula = formula.replace(new RegExp('{' + colName + '}', 'g'), (rowData[f.columnName] || 0));
+		if (f.key == 'number') {
+			let numberVal = "(" + (rowData[f.columnName] || 0) + ")"; // (number) - NOTE : (-5) to support negative number
+			formula = formula.replace(new RegExp('{' + colName + '}', 'g'), numberVal);
+		}
 		// date fields
-		else if (f.key == 'date')
-			formula = formula.replace(new RegExp('{' + colName + '}', 'g'), (rowData[f.columnName] ? '"' + rowData[f.columnName] + '"' : ""));
+		else if (f.key == 'date') {
+			let dateVal = (rowData[f.columnName] ? '"' + rowData[f.columnName] + '"' : ""); // "date"
+			formula = formula.replace(new RegExp('{' + colName + '}', 'g'), dateVal);
+		}
 
 	});
 
@@ -520,7 +524,12 @@ class ABFieldCalculate extends ABField {
 
 	format(rowData) {
 
-		return convertToJs(this.object, this.settings.formula, rowData);
+		try {
+			return convertToJs(this.object, this.settings.formula, rowData);
+		}
+		catch (err) {
+			return "";
+		}
 
 	}
 

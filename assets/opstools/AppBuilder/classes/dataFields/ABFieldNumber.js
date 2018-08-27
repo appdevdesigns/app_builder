@@ -540,6 +540,12 @@ class ABFieldNumber extends ABField {
 		if (data[this.columnName] != null && data[this.columnName] != '') {
 			var value = data[this.columnName];
 
+			// if this is not valid number format
+			if (isNaN(value)) {
+				validator.addError(this.columnName, 'invalid number');
+				return;
+			}
+
 			// if this is an integer:
 			if (this.settings.typeDecimals == 'none') {
 
