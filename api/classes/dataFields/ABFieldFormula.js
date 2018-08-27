@@ -33,9 +33,10 @@ var ABFieldFormulaDefaults = {
 };
 
 var defaultValues = {
-	objectId: "",
-	fieldId: "",
-	type: ""		// "sum", "average", "max", "min", "count"
+	field: "",			// id of ABField : NOTE - store our connect field to support when there are multi - linked columns
+	objectLink: "",		// id of ABObject
+	fieldLink: "",		// id of ABField
+	type: "sum"		// "sum", "average", "max", "min", "count"
 };
 
 class ABFieldFormula extends ABField {

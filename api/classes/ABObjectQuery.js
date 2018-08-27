@@ -733,7 +733,7 @@ module.exports = class ABObjectQuery extends ABObject {
 
 				this.fields().forEach((f) => {
 
-					if (!f || f.key == 'calculate' || f.key == 'formula')
+					if (!f || f.key == 'calculate')
 						return;
 
 					var obj = f.object;
@@ -751,14 +751,14 @@ module.exports = class ABObjectQuery extends ABObject {
 							.replace(/{displayName}/g, f.relationName());
 
 
-						var field = '';
+						var selectField = '';
 						var objLink = f.datasourceLink;
 						var fieldLink = f.fieldLink();
 
 						// 1:M
 						if (f.settings.linkType == 'one' && f.settings.linkViaType == 'many') {
 
-							field = ("IF(`{tableName}`.`{columnName}` IS NOT NULL, " +
+							selectField = ("IF(`{tableName}`.`{columnName}` IS NOT NULL, " +
 								"JSON_OBJECT('id', `{tableName}`.`{columnName}`)," +
 								"NULL)" +
 								" as '{objectName}.{displayName}'")
@@ -772,7 +772,7 @@ module.exports = class ABObjectQuery extends ABObject {
 						// M:1
 						else if (f.settings.linkType == 'many' && f.settings.linkViaType == 'one') {
 
-							field = connectColFormat
+							selectField = connectColFormat
 								.replace(/{linkTableName}/g, objLink.dbTableName())
 								.replace(/{linkColumnName}/g, fieldLink.columnName)
 								.replace(/{columnName}/g, objLink.PK());
@@ -792,7 +792,7 @@ module.exports = class ABObjectQuery extends ABObject {
 						else if (f.settings.linkType == 'one' && f.settings.linkViaType == 'one') {
 
 							if (f.settings.isSource) {
-								field = ("IF(`{tableName}`.`{columnName}` IS NOT NULL, " +
+								selectField = ("IF(`{tableName}`.`{columnName}` IS NOT NULL, " +
 									"JSON_OBJECT('id', `{tableName}`.`{columnName}`)," +
 									"NULL)" +
 									" as '{objectName}.{displayName}'")
@@ -802,7 +802,7 @@ module.exports = class ABObjectQuery extends ABObject {
 									.replace(/{displayName}/g, f.relationName());
 							}
 							else {
-								field = connectColFormat
+								selectField = connectColFormat
 									.replace(/{linkTableName}/g, objLink.dbTableName())
 									.replace(/{linkColumnName}/g, fieldLink.columnName)
 									.replace(/{columnName}/g, objLink.PK());
@@ -824,7 +824,7 @@ module.exports = class ABObjectQuery extends ABObject {
 
 							let joinTableName = f.joinTableName();
 
-							field = connectColFormat
+							selectField = connectColFormat
 								.replace(/{linkTableName}/g, joinTableName)
 								.replace(/{linkColumnName}/g, obj.name)
 								.replace(/{columnName}/g, objLink.name);
@@ -841,8 +841,105 @@ module.exports = class ABObjectQuery extends ABObject {
 						}
 
 
-						if (field)
-							selects.push(ABMigration.connection().raw(field));
+						if (selectField)
+							selects.push(ABMigration.connection().raw(selectField));
+
+					}
+					// Aggregate fields
+					else if (f.key == 'formula') {
+
+						let fieldConnect = f.object.fields(fld => fld.id == f.settings.field)[0];
+						if (!fieldConnect) return;``
+
+						let objectNumber = f.object.application.objects(obj => obj.id == f.settings.object)[0];
+						if (!objectNumber) return;
+
+						let fieldNumber = objectNumber.fields(fld => fld.id == f.settings.fieldLink)[0];
+						if (!fieldNumber) return;
+
+						let functionName = "";
+						switch (f.settings.type) {
+							case "sum":
+								functionName = "SUM";
+								break;
+							case "average":
+								functionName = "AVG";
+								break;
+							case "max":
+								functionName = "MAX";
+								break;
+							case "min":
+								functionName = "MIN";
+								break;
+							case "count":
+								functionName = "COUNT";
+								break;
+						}
+
+						let whereClause = "";
+						let joinClause = "";
+
+						// 1:M , 1:1 isSource
+						if ((fieldConnect.settings.linkType == 'one' && fieldConnect.settings.linkViaType == 'many') ||
+							(fieldConnect.settings.linkType == 'one' && fieldConnect.settings.linkViaType == 'one' && fieldConnect.settings.isSource)) {
+
+							whereClause = ("{table}.{column} = {linkTable}.{linkId}"
+											.replace('{table}', f.object.dbTableName())
+											.replace('{column}', f.columnName)
+											.replace('{linkTable}', objectNumber.dbTableName())
+											.replace('{linkId}', objectNumber.PK()));
+
+						}
+
+						// M:1 , 1:1 not Source
+						else if ((fieldConnect.settings.linkType == 'many' && fieldConnect.settings.linkViaType == 'one') ||
+								(fieldConnect.settings.linkType == 'one' && fieldConnect.settings.linkViaType == 'one' && !fieldConnect.settings.isSource)) {
+
+							var connectedField = objectNumber.fields(fld => fld.id == fieldConnect.settings.linkColumn)[0];
+							if (!connectedField) return;
+
+							whereClause = ("{linkTable}.{linkColumn} = {table}.{id}"
+											.replace('{linkTable}', objectNumber.dbTableName())
+											.replace('{linkColumn}', connectedField.columnName)
+											.replace('{table}', f.object.dbTableName())
+											.replace('{id}', f.object.PK()));
+
+						}
+
+						// M:N
+						else if (fieldConnect.settings.linkType == 'many' && fieldConnect.settings.linkViaType == 'many') {
+
+							let fieldLink = fieldConnect.fieldLink();
+							if (!fieldLink) return;
+
+							joinClause = (" INNER JOIN {joinTable} ON {joinTable}.{objectName} = {linkTable}.{linkColumn} "
+											.replace(/{joinTable}/g, fieldConnect.joinTableName())
+											.replace("{objectName}", objectNumber.name)
+											.replace("{linkTable}", objectNumber.dbTableName())
+											.replace("{linkColumn}", objectNumber.PK()));
+
+							whereClause = ("{joinTable}.{joinColumn} = {table}.{id}"
+											.replace('{joinTable}', fieldConnect.joinTableName())
+											.replace('{joinColumn}', fieldConnect.object.name)
+											.replace('{table}', fieldConnect.object.dbTableName())
+											.replace('{id}', fieldConnect.object.PK()));
+
+						}
+
+
+						let colFormat = ("(SELECT {FN}({linkTable}.{linkColumn}) " + 
+							"FROM {linkTable} " +
+							joinClause +
+							"WHERE " + whereClause +
+							" ) as `{objectName}.{displayName}`") // add object's name to alias
+							.replace(/{FN}/g, functionName)
+							.replace(/{linkTable}/g, objectNumber.dbTableName())
+							.replace(/{linkColumn}/g, fieldNumber.columnName)
+							.replace(/{objectName}/g, f.object.name)
+							.replace(/{displayName}/g, f.columnName);
+
+
+						selects.push(ABMigration.connection().raw(colFormat));
 
 					}
 					// Normal fields
@@ -871,14 +968,14 @@ module.exports = class ABObjectQuery extends ABObject {
 							}
 						}
 
-						var field = ("{tableName}.{columnName}" +
+						var selectField = ("{tableName}.{columnName}" +
 							" as {objectName}.{displayName}") // add object's name to alias
 							.replace(/{tableName}/g, obj.dbTableName())
 							.replace(/{columnName}/g, columnName)
 							.replace(/{objectName}/g, obj.name)
 							.replace(/{displayName}/g, columnName);
 
-						columns.push(field);
+						columns.push(selectField);
 
 					}
 

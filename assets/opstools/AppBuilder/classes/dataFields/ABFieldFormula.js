@@ -24,6 +24,9 @@ var ABFieldFormulaDefaults = {
 	// description: what gets displayed in the Editor description.
 	description: L('ab.dataField.formula.description', '*'),
 
+	isSortable: false,
+	isFilterable: false,
+
 };
 
 var defaultValues = {
@@ -291,6 +294,10 @@ class ABFieldFormula extends ABField {
 	}
 
 	format(rowData) {
+
+		// if data exists, then will not calculate on client side
+		if (rowData[this.columnName] != null)
+			return rowData[this.columnName];
 
 		var fieldBase = this.fieldBase();
 		if (!fieldBase) return 0;

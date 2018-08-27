@@ -115,6 +115,9 @@ var ABFieldCalculateDefaults = {
 	// description: what gets displayed in the Editor description.
 	description: L('ab.dataField.calculate.description', '*'),
 
+	isSortable: false,
+	isFilterable: false,  // this field does not support filter on server side
+
 };
 
 var defaultValues = {
