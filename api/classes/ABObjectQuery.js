@@ -716,12 +716,14 @@ module.exports = class ABObjectQuery extends ABObject {
 				var selects = [];
 				var columns = [];
 
-				// SELECT id of the base object
+				// SELECT Running Number to be .id of queries
 				var objectBase = this.objects()[0];
-				if (objectBase)
-					selects.push("{tableName}.{columnName} as id"
-						.replace(/{tableName}/g, objectBase.dbTableName())
-						.replace(/{columnName}/g, objectBase.PK()));
+				if (objectBase) {
+					let raw = ABMigration.connection().raw;
+					selects.push(raw("@rownum := @rownum + 1 AS id"));
+					query.join(raw("(SELECT @rownum := 0) rownum"));
+				}
+
 
 				// { 
 				//	objectName: {
