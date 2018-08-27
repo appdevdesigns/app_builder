@@ -704,14 +704,17 @@ class ABFieldConnect extends ABField {
 		}
 		else {
 
-			if (this.settings.isSource == true) {
-				sourceColumnName = this.object.name;
-				targetColumnName = this.datasourceLink.name;
-			}
-			else {
-				sourceColumnName = this.datasourceLink.name;
-				targetColumnName = this.object.name;
-			}
+			sourceColumnName = this.object.name;
+			targetColumnName = this.datasourceLink.name;
+
+			// if (this.settings.isSource == true) {
+			// 	sourceColumnName = this.object.name;
+			// 	targetColumnName = this.datasourceLink.name;
+			// }
+			// else {
+			// 	sourceColumnName = this.datasourceLink.name;
+			// 	targetColumnName = this.object.name;
+			// }
 		}
 
 		return {

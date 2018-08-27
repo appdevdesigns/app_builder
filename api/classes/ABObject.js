@@ -417,18 +417,23 @@ module.exports = class ABObject extends ABObjectBase {
 					targetTableName,
 					targetPkName;
 
-				if (f.settings.isSource == true) {
-					sourceTableName = f.object.dbTableName();
-					sourcePkName = f.object.PK();
-					targetTableName = linkObject.dbTableName();
-					targetPkName = linkObject.PK();
-				}
-				else {
-					sourceTableName = linkObject.dbTableName();
-					sourcePkName = linkObject.PK();
-					targetTableName = f.object.dbTableName();
-					targetPkName = f.object.PK();
-				}
+				sourceTableName = f.object.dbTableName();
+				sourcePkName = f.object.PK();
+				targetTableName = linkObject.dbTableName();
+				targetPkName = linkObject.PK();
+
+				// if (f.settings.isSource == true) {
+				// 	sourceTableName = f.object.dbTableName();
+				// 	sourcePkName = f.object.PK();
+				// 	targetTableName = linkObject.dbTableName();
+				// 	targetPkName = linkObject.PK();
+				// }
+				// else {
+				// 	sourceTableName = linkObject.dbTableName();
+				// 	sourcePkName = linkObject.PK();
+				// 	targetTableName = f.object.dbTableName();
+				// 	targetPkName = f.object.PK();
+				// }
 
 				relationMappings[relationName] = {
 					relation: Model.ManyToManyRelation,
