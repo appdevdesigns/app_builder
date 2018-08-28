@@ -1044,7 +1044,7 @@ export default class ABViewDataCollection extends ABView {
 
 			if (!this.__dataCollection.exists(rowData.id)) {
 				this.__dataCollection.add(rowData, 0);
-				this.__dataCollection.setCursor(rowData.id);
+				// this.__dataCollection.setCursor(rowData.id);
 			}
 
 			// filter link data collection's cursor
@@ -1218,9 +1218,10 @@ export default class ABViewDataCollection extends ABView {
 			if (dc) {
 
 				var items = dc.count();
-				if (items == 0) {
-					if (component.showProgress)
-						component.showProgress({ type: "icon" });
+				if (items == 0 &&
+					!this.isInitial &&
+					component.showProgress) {
+					component.showProgress({ type: "icon" });
 				}
 
 				component.define("datafetch", 20);
@@ -1456,6 +1457,7 @@ export default class ABViewDataCollection extends ABView {
 
 					});
 
+					// populate data to webix's data collection and the loading cursor is hidden here
 					this.__dataCollection.parse(data);
 
 					// set static cursor
