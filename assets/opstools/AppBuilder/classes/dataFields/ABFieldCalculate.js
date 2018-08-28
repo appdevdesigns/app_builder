@@ -32,14 +32,23 @@ function convertToJs(object, formula, rowData) {
 		if (colName.indexOf('.') > -1) // QUERY: get only column name
 			colName = colName.split('.')[1];
 
+		// if template does not contain, then should skip
+		if (formula.indexOf('{' + colName + '}') < 0)
+			return;
+
 		// number fields
 		if (f.key == 'number') {
-			let numberVal = "(" + (rowData[f.columnName] || 0) + ")"; // (number) - NOTE : (-5) to support negative number
+			let numberVal = "(#numberVal#)".replace("#numberVal#", rowData[f.columnName] || 0); // (number) - NOTE : (-5) to support negative number
 			formula = formula.replace(new RegExp('{' + colName + '}', 'g'), numberVal);
+		}
+		// calculate fields
+		else if (f.key == 'calculate') {
+			let calVal = "(#calVal#)".replace("#calVal#", f.format(rowData) || 0);
+			formula = formula.replace(new RegExp('{' + colName + '}', 'g'), calVal);
 		}
 		// date fields
 		else if (f.key == 'date') {
-			let dateVal = (rowData[f.columnName] ? '"' + rowData[f.columnName] + '"' : ""); // "date"
+			let dateVal = '"#dataVal#"'.replace("#dataVal#", rowData[f.columnName] ? rowData[f.columnName] : ""); // "date"
 			formula = formula.replace(new RegExp('{' + colName + '}', 'g'), dateVal);
 		}
 
@@ -329,7 +338,7 @@ var ABFieldCalculateComponent = new ABFieldComponent({
 
 		getNumberFields: () => {
 			if (ABFieldCalculateComponent.CurrentObject)
-				return ABFieldCalculateComponent.CurrentObject.fields(f => f.key == "number");
+				return ABFieldCalculateComponent.CurrentObject.fields(f => f.key == "number" || f.key == "calculate");
 			else
 				return [];
 		},
