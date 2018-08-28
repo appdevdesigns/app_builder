@@ -593,7 +593,8 @@ class ABFieldConnect extends ABField {
 
 			}
 			else {
-				myParameter[this.columnName] = [];
+				// myParameter[this.columnName] = [];
+				myParameter[this.columnName] = null;
 			}
 
 		}

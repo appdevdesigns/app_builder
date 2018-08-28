@@ -1403,7 +1403,6 @@ export default class ABViewDataCollection extends ABView {
 		// 		}
 		// 	}
 
-
 		// 	wheres.push({
 		// 		combineCondition: filterConditions.combineCondition,
 		// 		fieldName: fieldName,
@@ -1613,18 +1612,19 @@ export default class ABViewDataCollection extends ABView {
 	 */
 	refreshLinkCursor() {
 
+		var linkCursor;
 		var linkDc = this.dataCollectionLink;
 		if (linkDc) {
-			var linkCursor = linkDc.getCursor();
+			linkCursor = linkDc.getCursor();
 		}
 
 		// data is empty
 		if (linkCursor == null) return null;
 
 		if (this.__dataCollection) {
-			this.__dataCollection.filter((linkCursor) => {
+			this.__dataCollection.filter(rowData => {
 
-				return this.isParentFilterValid(linkCursor);
+				return this.isParentFilterValid(rowData);
 
 			});
 		}
