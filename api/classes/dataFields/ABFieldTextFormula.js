@@ -129,23 +129,24 @@ class ABFieldTextFormula extends ABField {
 	migrateCreate(knex) {
 		return new Promise((resolve, reject) => {
 
-			var tableName = this.object.dbTableName();
+			resolve();
+			// var tableName = this.object.dbTableName();
 
-			// if this column doesn't already exist (you never know)
-			knex.schema.hasColumn(tableName, this.columnName)
-				.then((exists) => {
+			// // if this column doesn't already exist (you never know)
+			// knex.schema.hasColumn(tableName, this.columnName)
+			// 	.then((exists) => {
 
-					return knex.schema.table(tableName, (t) => {
+			// 		return knex.schema.table(tableName, (t) => {
 
-						// Create a new column here.
-						// t.string(this.columnName);
+			// 			// Create a new column here.
+			// 			// t.string(this.columnName);
 
-					})
-						.then(() => {
-							resolve();
-						})
-						.catch(reject);
-				})
+			// 		})
+			// 			.then(() => {
+			// 				resolve();
+			// 			})
+			// 			.catch(reject);
+			// 	})
 
 		});
 	}
@@ -167,15 +168,17 @@ class ABFieldTextFormula extends ABField {
 	 * perform the necessary sql actions to drop this column from the DB table.
 	 * @param {knex} knex the Knex connection.
 	 */
-	// NOTE: ABField.migrateDrop() is pretty good for most cases.
-	// migrateDrop (knex) {
-	// 	return new Promise(
-	// 		(resolve, reject) => {
-	// 			// do your special drop operations here.
-	// 		}
-	// 	)
-	// }
+	migrateDrop(knex) {
 
+		return new Promise(
+			(resolve, reject) => {
+
+				resolve();
+
+			}
+		);
+
+	}
 
 
 	///
@@ -192,11 +195,9 @@ class ABFieldTextFormula extends ABField {
 		// if our field is not already defined:
 		if (!obj[this.columnName]) {
 
-			// Set json schema type to validate
-			// obj[this.columnName] = { type:'string' }
+			obj[this.columnName] = { "type": "null" };
 
 		}
-		
 	}
 
 

@@ -278,9 +278,7 @@ class ABFieldTextFormula extends ABField {
 	columnHeader(isObjectWorkspace) {
 		var config = super.columnHeader(isObjectWorkspace);
 
-		config.editor = 'text';  // '[edit_type]'   for editor of a column in grid component.
-		// We can use editor type following the site below
-		// https://docs.webix.com/desktop__editing.html
+		config.editor = null; // read only
 
 		return config;
 	}

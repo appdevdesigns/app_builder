@@ -735,7 +735,7 @@ module.exports = class ABObjectQuery extends ABObject {
 
 				this.fields().forEach((f) => {
 
-					if (!f || f.key == 'calculate')
+					if (!f || f.key == 'calculate' || f.key == 'TextFormula') // TODO: ignore calculated fields
 						return;
 
 					var obj = f.object;
