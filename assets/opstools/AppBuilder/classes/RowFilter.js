@@ -1,3 +1,20 @@
+/**
+ *  support get data from objects and queries
+ */
+function getFieldVal(rowData, columnName) {
+
+	if (!columnName) 
+		return null;
+
+	if (columnName.indexOf('.') > -1) {
+		let colName = columnName.split('.')[1];
+		return rowData[columnName] || rowData[colName];
+	}
+	else {
+		return rowData[columnName];
+	}
+}
+
 
 export default class RowFilter extends OP.Component {
 
@@ -1237,7 +1254,7 @@ export default class RowFilter extends OP.Component {
 
 					var condResult;
 
-					var value = rowData[fieldInfo.columnName];
+					var value = getFieldVal(rowData, fieldInfo.columnName);
 					
 					if (typeof fieldInfo.key == "undefined")
 						fieldInfo.key = "connectField"; // if you are looking at the parent object it won't have a key to analyze
@@ -1500,34 +1517,38 @@ export default class RowFilter extends OP.Component {
 						break;
 				}
 
-				// return result;
 				return true;
+				// return result;
 
 			},
 
-			inQueryValid: function(value, rule, compareValue) {
+			inQueryValid: function(rowData, rule, compareValue) {
 
-				var result = false;
+				let result = false;
 
 				if (!compareValue)
 					return result;
 
 				// if no query
-				var query = _Object.application.queries(q => q.id == compareValue)[0];
+				let query = _Object.application.queries(q => q.id == compareValue)[0];
 				if (!query)
 					return result;
 
+				let qIdBase = "{idBase}-query-{id}".replace("{idBase}", idBase).replace("{id}", query.id),
+					inQueryFilter = new RowFilter(App, qIdBase);
+				inQueryFilter.objectLoad(query);
+				inQueryFilter.setValue(query.workspaceFilterConditions);
+
 				switch (rule) {
 					case 'in_query':
-						// TODO
+						result = inQueryFilter.isValid(rowData);
 						break;
 					case 'not_in_query':
-						// TODO
+						result = !inQueryFilter.isValid(rowData);
 						break;
 				}
 
-				// return result;
-				return true;
+				return result;
 
 			},
 
@@ -1563,11 +1584,12 @@ export default class RowFilter extends OP.Component {
 				switch (rule) {
 					case 'in_query':
 					case 'not_in_query':
-						return _logic.inQueryValid(rowData[columnName], rule, compareValue);
+						return _logic.inQueryValid(rowData, rule, compareValue);
 						break;
 					case "is_current_user":
 					case "is_not_current_user":
-						return _logic.userValid(rowData[columnName], rule, compareValue);
+						let val = getFieldVal(rowData, columnName);
+						return _logic.userValid(val, rule, compareValue);
 						break;
 					case 'in_data_collection':
 					case 'not_in_data_collection':
