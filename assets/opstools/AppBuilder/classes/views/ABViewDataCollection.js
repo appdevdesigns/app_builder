@@ -45,8 +45,6 @@ function dataCollectionNew(instance, data) {
 		if (dc.___AD.onAfterLoadEvent) dc.detachEvent(dc.___AD.onAfterLoadEvent);
 		dc.___AD.onAfterLoadEvent = dc.attachEvent("onAfterLoad", () => {
 
-			instance.initial = true;
-
 			instance.emit("loadData", {});
 
 		});
@@ -1376,6 +1374,10 @@ export default class ABViewDataCollection extends ABView {
 	}
 
 	loadData(start, limit, callback) {
+
+		// mark initial data already
+		if (!this.initial)
+			this.initial = true;
 
 		var obj = this.datasource;
 		if (obj == null) return Promise.resolve([]);
