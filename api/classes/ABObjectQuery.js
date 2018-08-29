@@ -1124,7 +1124,9 @@ module.exports = class ABObjectQuery extends ABObject {
 						
 						// when finished populate our Find Conditions
 						this.populateFindConditions(query, options, userData);
-						
+
+sails.log.debug('ABObjectQuery.queryFind - SQL:', query.toString() );
+
 						// after all that, resolve our promise with the query results
 						resolve(query); // query.then(resolve);
 					}
@@ -1238,12 +1240,16 @@ module.exports = class ABObjectQuery extends ABObject {
 		// not update translations key names
 		options.ignoreEditTranslations = true;
 
+		// return the count not the full data
+		options.columnNames = [ABMigration.connection().raw("COUNT(*) as count")];
+
 		// added tableName to id because of non unique field error
 		return this.queryFind(options, userData)
-				.then((query)=>{
-					// TODO:: we need to figure out how to return the count not the full data
-					return query.length;
-				});
+					.then(result => {
+
+						return result[0]['count'];
+
+					});
 
 	}
 

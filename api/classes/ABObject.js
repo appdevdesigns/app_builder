@@ -536,7 +536,9 @@ module.exports = class ABObject extends ABObjectBase {
 
             if (options) {
                 this.populateFindConditions(query, options, userData)
-            }
+			}
+
+sails.log.debug('ABObject.queryFind - SQL:', query.toString() );
             
             resolve(query);
         })
@@ -587,11 +589,15 @@ module.exports = class ABObject extends ABObjectBase {
 					.replace("{tableName}", tableName)
 					.replace("{pkName}", this.PK());
 
-		return query
+		query = query
 				.eager('')
 				.clearSelect()
 				.countDistinct('{field} as count'.replace("{field}", pkField))
 				.whereNotNull(pkField).first();
+
+sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
+
+		return query;
 	}
 
 
@@ -1146,7 +1152,7 @@ module.exports = class ABObject extends ABObjectBase {
 
 	    }
 
-		sails.log.debug('SQL:', query.toString() );
+		// sails.log.debug('SQL:', query.toString() );
 	}
 
 }
