@@ -99,7 +99,9 @@ export default class RowFilter extends OP.Component {
 
 			dataCollection: this.unique(idBase + '_rowFilter_dataCollection'),
 
-			listOptions: this.unique(idBase + '_rowFilter_listOptions')
+			listOptions: this.unique(idBase + '_rowFilter_listOptions'),
+
+			datePicker: this.unique(idBase + '_rowFilter_datePicker')
 		};
 
 		var _Object;
@@ -640,6 +642,7 @@ export default class RowFilter extends OP.Component {
 								{
 									// inputView.format = field.getDateFormat();
 									batch: "date",
+									id: ids.datePicker,
 									view: "datepicker",
 									on: {
 										onChange: function () {
@@ -902,7 +905,12 @@ export default class RowFilter extends OP.Component {
 					$viewCond.$$(ids.inputValue).$$(ids.listOptions).define("options", options);
 					$viewCond.$$(ids.inputValue).$$(ids.listOptions).refresh();
 				}
-				
+				// set format of datepicker
+				else if (field.key == 'date') {
+					$viewCond.$$(ids.inputValue).$$(ids.datePicker).define("format", field.getFormat());
+					$viewCond.$$(ids.inputValue).$$(ids.datePicker).refresh();
+				}
+
 				var rule = null,
 					ruleViewId = $viewCond.$$(ids.rule).getActiveId(),
 					$viewComparer = $viewCond.$$(ids.rule).queryView({ id: ruleViewId });
@@ -1508,17 +1516,21 @@ export default class RowFilter extends OP.Component {
 				if (!field)
 					return result;
 
+				let qIdBase = "{idBase}-query-field-{id}".replace("{idBase}", idBase).replace("{id}", query.id),
+					inQueryFieldFilter = new RowFilter(App, qIdBase);
+				inQueryFieldFilter.objectLoad(query);
+				inQueryFieldFilter.setValue(query.workspaceFilterConditions);
+
 				switch (rule) {
 					case 'in_query_field':
-						// TODO
+						result = inQueryFieldFilter.isValid(rowData);
 						break;
 					case 'not_in_query_field':
-						// TODO
+						result = inQueryFieldFilter.isValid(rowData);
 						break;
 				}
 
-				return true;
-				// return result;
+				return result;
 
 			},
 

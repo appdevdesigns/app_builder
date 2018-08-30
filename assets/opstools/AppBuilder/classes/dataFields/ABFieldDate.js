@@ -1390,9 +1390,9 @@ class ABFieldDate extends ABField {
 		// pull format from settings.
 		return getDateDisplay(new Date(moment(d)), this.settings);
 	}
-	
-	getFormat(settings) {
-		return getDateFormat(settings);
+
+	getFormat() {
+		return getDateFormat(this.settings);
 	}
 	
 	// getDateFormat() {
