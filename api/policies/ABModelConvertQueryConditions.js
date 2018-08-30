@@ -208,6 +208,13 @@ function parseQueryCondition(_where, object, req, res, cb) {
                                 // this field is used in final filter condition
                                 newKey = field.columnName;
 
+                                // Johnny
+                                // there are Query cases where we need to make sure the field is identified by
+                                // it's dbTableName as well, to prevent 'Unknown Column' Errors.
+                                // adding in the dbTableName since I think it will be safe in all situations ... maybe ..
+                                var dbTableName = field.object.dbTableName();
+                                if (dbTableName) { newKey = dbTableName + '.' + newKey } 
+
                                 // I need to pull out the PK from the filter Query:
                                 parseColumn = linkedObject.PK(); // 'id';
 

@@ -990,7 +990,11 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 					// make sure to ` ` columnName (if it isn't our special '1' condition )
 					// see Policy:ABModelConvertSameAsUserConditions  for when that is applied
 					if (columnName != '1' && columnName.indexOf("`") == -1) {
-						columnName = "`"+columnName+"`";
+						var parts = columnName.split('.');
+						for (var p=0; p < parts.length; p++) {
+							parts[p] = "`"+parts[p]+"`";
+						}
+						columnName = parts.join('.');
 					}
 
 					whereRaw = whereRaw
