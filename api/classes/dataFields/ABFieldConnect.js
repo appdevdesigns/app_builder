@@ -580,14 +580,26 @@ class ABFieldConnect extends ABField {
 				}
 
 				// if value is array, then get id of array
-				if (myParameter[this.columnName].map) {
-					myParameter[this.columnName] = myParameter[this.columnName].map(function (d) {
-						return parseInt(d[pk] || d.id || d);
+				if (myParameter[this.columnName].forEach) {
+					let result = [];
+
+					myParameter[this.columnName].forEach(function (d) {
+						let val = parseInt(d[pk] || d.id || d);
+
+						// validate INT value
+						if (val && !isNaN(val))
+							result.push(val);
 					});
+
+					myParameter[this.columnName] = result;
 				}
 				// if value is a object
 				else {
 					myParameter[this.columnName] = parseInt(myParameter[this.columnName][pk] || myParameter[this.columnName].id || myParameter[this.columnName]);
+
+					// validate INT value
+					if (isNaN(myParameter[this.columnName]))
+						myParameter[this.columnName] = null;
 				}
 
 
