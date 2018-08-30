@@ -147,6 +147,7 @@ module.exports = {
         var user = req.param('user') || '--';
         var appID = req.param('mobileApp') || '--';
         var email = req.param('email') || '--';
+        var username = req.param('username') || '--';
 
         var QRAppUser = null;
         var MobileApp = null;
@@ -187,6 +188,7 @@ module.exports = {
                     }
 
                     email = lookupUser.email;
+                    username = lookupUser.username;
                     next();
                 })
                 .catch(next)
@@ -329,9 +331,10 @@ module.exports = {
                 EmailNotifications.trigger(triggerID, {
                     to: [email],
                     variables: {
-                       apkURL:apkURL,       // url to android apk file
+                        apkURL: apkURL,       // url to android apk file
                         cidQR: cidQR,       // CID for the QR code attachment
-                        deepLink:deepLink,
+                        deepLink: deepLink,
+                        username: username
                     },
                     attachments: attachments
                 })
