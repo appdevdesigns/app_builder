@@ -444,7 +444,7 @@ export default class ABViewText extends ABViewWidget {
 		var dc = this.dataCollection();
 		if (!dc) return result;
 
-		var object = dc ? dc.datasource : null;
+		var object = dc.datasource;
 		if (!object) return result;
 
 		object.fields().forEach(f => {

@@ -1559,7 +1559,7 @@ export default class ABViewGrid extends ABViewWidget  {
 	populatePopupEditors(view, dataSource) {
 		var dc = this.dataCollection();
 
-		if (!dc) return;
+		if (!dc || !dc.datasource) return;
 		// if (view.settings.gridFilter.filterOption == 2) {
 		// 	//Force to LoadAll
 		// 	dc.settings.loadAll = true;

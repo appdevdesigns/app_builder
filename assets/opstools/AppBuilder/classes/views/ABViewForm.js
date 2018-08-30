@@ -1081,9 +1081,11 @@ PopupRecordRule.qbFixAfterShow();
 
 			// get ABObject
 			var obj = dc.datasource;
+			if (obj == null) return Promise.resolve();
 
 			// get ABModel
 			var model = dc.model;
+			if (model == null) return Promise.resolve();
 
 			// get update data
 			var formVals = formView.getValues();

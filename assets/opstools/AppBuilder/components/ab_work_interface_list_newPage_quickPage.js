@@ -335,9 +335,11 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 
 				// populate fields to a form
 				var object = dc.datasource;
-				object.fields().forEach((f, index) => {
-					newDetail.addFieldToView(f, index);
-				});
+				if (object) {
+					object.fields().forEach((f, index) => {
+						newDetail.addFieldToView(f, index);
+					});
+				}
 
 				return newDetail;
 			},
