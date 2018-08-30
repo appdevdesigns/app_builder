@@ -348,9 +348,9 @@ export default class ABViewDetail extends ABViewContainer {
 
 		var _logic = {
 
-			displayData: (data) => {
+			displayData: (rowData) => {
 
-				data = data || {};
+				rowData = rowData || {};
 
 				this.views().forEach((f) => {
 
@@ -361,10 +361,10 @@ export default class ABViewDetail extends ABViewContainer {
 
 					// get value of relation when field is a connect field
 					if (field.key == "connectObject") {
-						val = field.pullRelationValues(data);
+						val = field.pullRelationValues(rowData);
 					}
 					else if (field.key == "list") {
-						val = data[field.columnName];
+						val = rowData[field.columnName];
 
 						if (field.settings.isMultiple == 0) {
 							let myVal = "";
@@ -387,14 +387,14 @@ export default class ABViewDetail extends ABViewContainer {
 						}
 					}
 					else if (field.key == "user") {
-						val = data[field.columnName];
+						val = rowData[field.columnName];
 
 						if (field.settings.isMultiple == 0)
 							val = val ? '<span class="selectivity-multiple-selected-item rendered" style="background-color:#eee !important; color: #666 !important; box-shadow: inset 0px 1px 1px #333;"><i style="opacity: 0.6;" class="fa fa-user"></i> ' + val + '</span>' : "";
 
 					}
-					else if (data) {
-						val = field.format(data);
+					else if (rowData) {
+						val = field.format(rowData);
 					}
 
 					// set value to each components

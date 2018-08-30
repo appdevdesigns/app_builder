@@ -1151,8 +1151,8 @@ export default class ABViewDataCollection extends ABView {
 			if (this.__dataCollection.exists(deleteId)) {
 
 				// If the deleted item is current cursor, then the current cursor should be cleared.
-				var currId = this.getCursor();
-				if (currId == deleteId)
+				var currData = this.getCursor();
+				if (currData && currData.id == deleteId)
 					this.emit("changeCursor", null);
 
 				this.__dataCollection.remove(deleteId);
@@ -1318,8 +1318,9 @@ export default class ABViewDataCollection extends ABView {
 			if (dc.getCursor() != rowId)
 				dc.setCursor(rowId);
 			// If set rowId equal current cursor, it will not trigger .onAfterCursorChange event
-			else
-				this.emit("changeCursor", rowId);
+			else {
+				this.emit("changeCursor", this.getCursor());
+			}
 		}
 
 	}

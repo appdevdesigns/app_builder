@@ -1251,12 +1251,12 @@ export default class ABViewGrid extends ABViewWidget  {
 				super.changePage(page);
 			},
 			
-			selectRow: (data) => {
+			selectRow: (rowData) => {
 
 				if (!$$(DataTable.ui.id)) return;
 
-				if (data && data.id)
-					$$(DataTable.ui.id).select(data.id, false);
+				if (rowData && rowData.id)
+					$$(DataTable.ui.id).select(rowData.id, false);
 				else
 					$$(DataTable.ui.id).select(null, false);
 			},

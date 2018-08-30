@@ -800,10 +800,10 @@ PopupRecordRule.qbFixAfterShow();
 			
 			},			
 
-			displayData: (data) => {
+			displayData: (rowData) => {
 
 				// Set default values
-				if (data == null) {
+				if (rowData == null) {
 					var customFields = this.fieldComponents((comp) => {
 						return (comp instanceof ABViewFormCustom) ||
 							// rich text
@@ -820,9 +820,9 @@ PopupRecordRule.qbFixAfterShow();
 						var colName = field.columnName;
 
 						// set value to each components
-						var rowData = {};
-						field.defaultValue(rowData);
-						field.setValue($$(comp.ui.id), rowData);
+						var defaultRowData = {};
+						field.defaultValue(defaultRowData);
+						field.setValue($$(comp.ui.id), defaultRowData);
 
 					});
 					var normalFields = this.fieldComponents((comp) => ((comp instanceof ABViewFormField) && !(comp instanceof ABViewFormCustom)));
@@ -862,12 +862,12 @@ PopupRecordRule.qbFixAfterShow();
 
 						// set value to each components
 						if (f.field())
-							f.field().setValue($$(comp.ui.id), data);
+							f.field().setValue($$(comp.ui.id), rowData);
 					});
 				}
 			},
 
-			displayParentData: (data) => {
+			displayParentData: (rowData) => {
 
 				var dc = this.dataCollection();
 				var currCursor = dc.getCursor();
@@ -897,7 +897,7 @@ PopupRecordRule.qbFixAfterShow();
 
 				// pull data of parent's dc
 				var formData = {};
-				formData[relationName] = data;
+				formData[relationName] = rowData;
 
 				// set data of parent to default value
 				relationField.setValue(relationElem, formData);
