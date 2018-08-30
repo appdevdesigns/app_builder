@@ -996,8 +996,8 @@ export default class ABViewGrid extends ABViewWidget  {
 				// 	return o.id == this.settings.dataSource;
 				// });
 				var dc = this.dataCollection();
-				
-				if (dc) {
+
+				if (dc && dc.datasource) {
 
 					var dataCopy = _.cloneDeep(dc.datasource);
 					dataCopy.objectWorkspace = this.settings.objectWorkspace;

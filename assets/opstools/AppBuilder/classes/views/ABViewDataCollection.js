@@ -879,22 +879,26 @@ export default class ABViewDataCollection extends ABView {
 		var filterConditions = ABViewPropertyDefaults.objectWorkspace.filterConditions;
 
 		// Clone ABObject
-		var objectCopy = _.cloneDeep(view.datasource);
-		if (objectCopy) {
-			objectCopy.objectWorkspace = view.settings.objectWorkspace;
+		if (view.datasource) {
 
-			filterConditions = objectCopy.objectWorkspace.filterConditions || ABViewPropertyDefaults.objectWorkspace.filterConditions;
+			var objectCopy = _.cloneDeep(view.datasource);
+			if (objectCopy) {
+				objectCopy.objectWorkspace = view.settings.objectWorkspace;
+	
+				filterConditions = objectCopy.objectWorkspace.filterConditions || ABViewPropertyDefaults.objectWorkspace.filterConditions;
+			}
+	
+			// Populate data to popups
+			FilterComponent.objectLoad(objectCopy);
+			FilterComponent.viewLoad(view);
+			FilterComponent.setValue(filterConditions);
+			view.__filterComponent.objectLoad(objectCopy);
+			view.__filterComponent.viewLoad(view);
+			view.__filterComponent.setValue(filterConditions);
+	
+			PopupSortFieldComponent.objectLoad(objectCopy, view);
+	
 		}
-
-		// Populate data to popups
-		FilterComponent.objectLoad(objectCopy);
-		FilterComponent.viewLoad(view);
-		FilterComponent.setValue(filterConditions);
-		view.__filterComponent.objectLoad(objectCopy);
-		view.__filterComponent.viewLoad(view);
-		view.__filterComponent.setValue(filterConditions);
-
-		PopupSortFieldComponent.objectLoad(objectCopy, view);
 
 	}
 
