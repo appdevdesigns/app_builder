@@ -1141,6 +1141,10 @@ export default class RowFilter extends OP.Component {
 							value = vals.join(":");
 						}
 
+						// Convert date format
+						if (value instanceof Date) {
+							value = value.toISOString();
+						}
 
 						config_settings.rules.push({
 							key: fieldId,
@@ -1180,6 +1184,8 @@ export default class RowFilter extends OP.Component {
 
 					if ($viewCond == null) return;
 
+					var field = _Fields.filter(col => col.id == f.key)[0];
+
 					// "and" "or"
 					$viewCond.$$(ids.glue).define('value', config_settings.glue);
 					$viewCond.$$(ids.glue).refresh();
@@ -1207,9 +1213,18 @@ export default class RowFilter extends OP.Component {
 					var valueViewId = $viewCond.$$(ids.inputValue).getActiveId(),
 						$viewConditionValue = $viewCond.$$(ids.inputValue).queryView({ id: valueViewId });
 					if ($viewConditionValue && $viewConditionValue.setValue) {
-						$viewConditionValue.define('value', f.value);
+
+						// convert to Date object
+						if (field && field.key == 'date' && f.value) {
+							$viewConditionValue.define('value', new Date(f.value));
+						}
+						else {
+							$viewConditionValue.define('value', f.value);
+						}
+
 						$viewConditionValue.refresh();
-					} else if ($viewConditionValue && $viewConditionValue.getChildViews()) {
+					}
+					else if ($viewConditionValue && $viewConditionValue.getChildViews()) {
 						var vals = f.value.split(":");
 						var index = 0;
 						$viewConditionValue.getChildViews().forEach( element => {
@@ -1224,7 +1239,6 @@ export default class RowFilter extends OP.Component {
 						});
 					}
 
-					var field = _Fields.filter(col => col.id == f.key)[0];
 					if (field && field.key == 'user') {
 						$viewCond.blockEvent();
 						_logic.onChangeRule(f.rule, $viewCond);
