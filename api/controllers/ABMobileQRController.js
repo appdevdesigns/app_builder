@@ -327,28 +327,36 @@ module.exports = {
 
             // now build Email info and send to user
             (next) => {
+                
+                if (email) {
+                    EmailNotifications.trigger(triggerID, {
+                        to: [email],
+                        variables: {
+                            apkURL: apkURL,       // url to android apk file
+                            cidQR: cidQR,       // CID for the QR code attachment
+                            deepLink: deepLink,
+                            username: username
+                        },
+                        attachments: attachments
+                    })
+                    .done((html) => {
+                        next(); // res.send(html || 'OK');
+                    })
+                    .fail((err)=>{
 
-                EmailNotifications.trigger(triggerID, {
-                    to: [email],
-                    variables: {
-                        apkURL: apkURL,       // url to android apk file
-                        cidQR: cidQR,       // CID for the QR code attachment
-                        deepLink: deepLink,
-                        username: username
-                    },
-                    attachments: attachments
-                })
-                .done((html) => {
-                    next(); // res.send(html || 'OK');
-                })
-                .fail((err)=>{
-
+                        // pass a generic error back to the Client:
+                        var error = new Error('Error Sending Email.');
+                        error.httpResponseCode = 500;
+                        next(error);
+                        
+                    });
+                } else {
                     // pass a generic error back to the Client:
-                    var error = new Error('Error Sending Email.');
+                    var error = new Error('User does not have an email address.');
                     error.httpResponseCode = 500;
                     next(error);
-                    
-                });
+                }
+
             }
 
         ], (err, data)=>{
