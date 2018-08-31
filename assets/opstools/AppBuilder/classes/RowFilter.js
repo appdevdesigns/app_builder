@@ -1275,8 +1275,6 @@ export default class RowFilter extends OP.Component {
 					if (!fieldInfo) return;
 
 					var condResult;
-
-					var value = getFieldVal(rowData, fieldInfo.columnName);
 					
 					if (typeof fieldInfo.key == "undefined")
 						fieldInfo.key = "connectField"; // if you are looking at the parent object it won't have a key to analyze
@@ -1285,23 +1283,23 @@ export default class RowFilter extends OP.Component {
 						case "string":
 						case "LongText":
 						case "email":
-							condResult = _logic.textValid(value, filter.rule, filter.value);
+							condResult = _logic.textValid(rowData, fieldInfo.columnName, filter.rule, filter.value);
 							break;
 						case "date":
 						case "datetime":
-							condResult = _logic.dateValid(value, filter.rule, filter.value);
+							condResult = _logic.dateValid(rowData, fieldInfo.columnName, filter.rule, filter.value);
 							break;
 						case "number":
-							condResult = _logic.numberValid(value, filter.rule, filter.value);
+							condResult = _logic.numberValid(rowData, fieldInfo.columnName, filter.rule, filter.value);
 							break;
 						case "list":
-							condResult = _logic.listValid(value, filter.rule, filter.value);
+							condResult = _logic.listValid(rowData, fieldInfo.columnName, filter.rule, filter.value);
 							break;
 						case "boolean":
-							condResult = _logic.booleanValid(value, filter.rule, filter.value);
+							condResult = _logic.booleanValid(rowData, fieldInfo.columnName, filter.rule, filter.value);
 							break;
 						case "user":
-							condResult = _logic.userValid(value, filter.rule, filter.value);
+							condResult = _logic.userValid(rowData, fieldInfo.columnName, filter.rule, filter.value);
 							break;
 						case "connectField":
 						case "connectObject":
@@ -1329,10 +1327,11 @@ export default class RowFilter extends OP.Component {
 
 			},
 
-			textValid: function (value, rule, compareValue) {
+			textValid: function (rowData, columnName, rule, compareValue) {
 
 				var result = false;
 
+				var value = getFieldVal(rowData, columnName);
 				if (value == null)
 					value = "";
 
@@ -1356,7 +1355,7 @@ export default class RowFilter extends OP.Component {
 						result = value != compareValue;
 						break;
 					default:
-						result = _logic.queryValid(value, rule, compareValue);
+						result = _logic.queryValid(rowData, rule, compareValue);
 						break;
 				}
 
@@ -1364,10 +1363,11 @@ export default class RowFilter extends OP.Component {
 
 			},
 
-			dateValid: function (value, rule, compareValue) {
+			dateValid: function (rowData, columnName, rule, compareValue) {
 
 				var result = false;
 
+				var value = getFieldVal(rowData, columnName);
 				if (!(value instanceof Date))
 					value = new Date(value);
 
@@ -1388,7 +1388,7 @@ export default class RowFilter extends OP.Component {
 						result = value >= compareValue;
 						break;
 					default:
-						result = _logic.queryValid(value, rule, compareValue);
+						result = _logic.queryValid(rowData, rule, compareValue);
 						break;
 
 				}
@@ -1397,10 +1397,11 @@ export default class RowFilter extends OP.Component {
 
 			},
 
-			numberValid: function (value, rule, compareValue) {
+			numberValid: function (rowData, columnName, rule, compareValue) {
 
 				var result = false;
 
+				var value = getFieldVal(rowData, columnName);
 				value = Number(value);
 				compareValue = Number(compareValue);
 
@@ -1424,7 +1425,7 @@ export default class RowFilter extends OP.Component {
 						result = value >= compareValue;
 						break;
 					default:
-						result = _logic.queryValid(value, rule, compareValue);
+						result = _logic.queryValid(rowData, rule, compareValue);
 						break;
 
 				}
@@ -1433,9 +1434,11 @@ export default class RowFilter extends OP.Component {
 
 			},
 
-			listValid: function (value, rule, compareValue) {
+			listValid: function (rowData, columnName, rule, compareValue) {
 
 				var result = false;
+
+				var value = getFieldVal(rowData, columnName);
 
 				compareValue = compareValue.toLowerCase();
 
@@ -1454,7 +1457,7 @@ export default class RowFilter extends OP.Component {
 							result = true;
 						break;
 					default:
-						result = _logic.queryValid(value, rule, compareValue);
+						result = _logic.queryValid(rowData, rule, compareValue);
 						break;
 
 				}
@@ -1463,16 +1466,18 @@ export default class RowFilter extends OP.Component {
 
 			},
 
-			booleanValid: function (value, rule, compareValue) {
+			booleanValid: function (rowData, columnName, rule, compareValue) {
 
 				var result = false;
+
+				var value = getFieldVal(rowData, columnName);
 
 				switch (rule) {
 					case "equals":
 						result = value == compareValue;
 						break;
 					default:
-						result = _logic.queryValid(value, rule, compareValue);
+						result = _logic.queryValid(rowData, rule, compareValue);
 						break;
 				}
 
@@ -1480,9 +1485,11 @@ export default class RowFilter extends OP.Component {
 
 			},
 
-			userValid: function (value, rule, compareValue) {
+			userValid: function (rowData, columnName, rule, compareValue) {
 
 				var result = false;
+
+				var value = getFieldVal(rowData, columnName);
 
 				if (Array.isArray(value))
 					value = [value];
@@ -1501,7 +1508,7 @@ export default class RowFilter extends OP.Component {
 						result = value.indexOf(compareValue) < 0;
 						break;
 					default:
-						result = _logic.queryValid(value, rule, compareValue);
+						result = _logic.queryValid(rowData, rule, compareValue);
 						break;
 
 				}
@@ -1509,7 +1516,7 @@ export default class RowFilter extends OP.Component {
 				return result;
 			},
 
-			queryValid: function(value, rule, compareValue) {
+			queryValid: function(rowData, rule, compareValue) {
 
 				var result = false;
 
@@ -1614,8 +1621,7 @@ export default class RowFilter extends OP.Component {
 						break;
 					case "is_current_user":
 					case "is_not_current_user":
-						let val = getFieldVal(rowData, columnName);
-						return _logic.userValid(val, rule, compareValue);
+						return _logic.userValid(rowData, columnName, rule, compareValue);
 						break;
 					case 'in_data_collection':
 					case 'not_in_data_collection':
