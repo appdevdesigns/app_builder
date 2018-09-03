@@ -131,18 +131,25 @@ function setupPollingMCC(next) {
 
 	var timerId = setTimeout(function request() {
 
-		// sails.log.debug(':: ABRelay.pollMCC()');
+// sails.log.debug(':: ABRelay.pollMCC():', delay);
 		ABRelay.pollMCC()
 		.then(()=>{
+
 			// do it again:
 			timerId = setTimeout(request, delay);
 		})
 		.catch((err)=>{
-			if (err.code == 'E_SERVER_TIMEOUT') {
-				delay *= 2;
-			}
+			// if (err.code == 'E_SERVER_TIMEOUT') {
+			// 	delay += sails.config.appbuilder.mcc.pollFrequency;
+			// }
 
-			// catch other errors
+			if (err.error && err.error.code == 'ETIMEDOUT') {
+				sails.log.debug('!!! ABRelay.pollMCC().catch() : Timeout detected!')
+			} else {
+
+				// catch other errors
+				ADCore.error.log('!!! ABRelay.pollMCC().catch(): unexpected error:', { error:err });
+			}
 
 			// if still ok to continue then:
 			timerId = setTimeout(request, delay);

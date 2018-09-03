@@ -64,6 +64,9 @@ module.exports = {
             headers: {
                 'authorization': sails.config.appbuilder.mcc.accessToken
             },
+            timeout:2000,   // 2s timeout to wait for a connection to the MCC
+time:true,  // capture timing information during communications process
+resolveWithFullResponse: true,
             json: true // Automatically stringifies the body to JSON
         };
 
@@ -77,14 +80,22 @@ module.exports = {
     get:function(opt) {
 
         var options = this._formatRequest('GET', 'qs', opt);
-        return RP(options);
+        return RP(options)
+            .then((fullResponse)=>{
+                // sails.log('    response:', fullResponse.timings, fullResponse.timingPhases);
+                return fullResponse.body;   // just send back the body as a simple response 
+            })
     },
 
 
     post:function(opt) {
          
         var options = this._formatRequest('POST', 'body', opt);
-        return RP(options);
+        return RP(options)
+            .then((fullResponse)=>{
+                // sails.log('    response:', fullResponse.timings, fullResponse.timingPhases);
+                return fullResponse.body;   // just send back the body as a simple response 
+            })
     },
 
 
@@ -262,7 +273,10 @@ options.rejectUnauthorized = false;
                     response.data.forEach((request)=>{
                         all.push(ABRelay.request(request));
                     })
-                    return Promise.all(all)
+                    // Johnny: in debugging a problem with our polling taking too long,
+                    // I decided to NOT wait until all the responses were completed before
+                    // contining on with the polling.  Seems to work fine.
+                    // return Promise.all(all)
                 })
 
             })
@@ -425,7 +439,7 @@ var errorOptions = null;
 
         // 3) use data to make server call:
         .then((params) => {
-// console.log('::: csrf.token:', CSRF.token);
+// console.log('::: ABRelay.request(): params:', params);
             // params should look like:
             // {
             //     type:'GET',
@@ -436,7 +450,7 @@ var errorOptions = null;
             var options = this._formatServerRequest(params, relayUser);
 errorOptions = options;
             return new Promise((resolve, reject)=>{
-                
+// console.log('::: ABRelay.request(): options:', options);
                 // make the call
                 RP(options)
                 .then((response)=>{
@@ -451,7 +465,7 @@ errorOptions = options;
                     if (err.error) {
                         if (err.error.status == 'error' && err.error.data) {
                             
-                            sails.log.error('::: ABRelay.request(): response was an error: ', { request:options, code: err.error.data.code, message:err.error.data.sqlMessage || 'no sql msg', sql:err.error.data.sql || ' - no sql -' } );
+                            // sails.log.error('::: ABRelay.request(): response was an error: ', { request:options, code: err.error.data.code, message:err.error.data.sqlMessage || 'no sql msg', sql:err.error.data.sql || ' - no sql -' } );
                             ADCore.error.log('ABRelay:request(): response was an error: ', { request:options, code: err.error.data.code, message:err.error.data.sqlMessage || 'no sql msg', sql:err.error.data.sql || ' - no sql -', error:err } )
                             err.error._request = {
                                 data: errorOptions.body || errorOptions.qs,
@@ -486,20 +500,56 @@ errorOptions = options;
 
         // 5) update MCC with the response for this request:
         .then((encryptedDataPackets)=>{
-            var allPosts = [];
-            for (var i=0; i< encryptedDataPackets.length; i++) {
 
-                var returnPacket = {
-                    appUUID:request.appUUID,
-                    data:encryptedDataPackets[i],
-                    jobToken:request.jobToken,
-                    packet:i,
-                    totalPackets:encryptedDataPackets.length
+            // sendOne()
+            // recursive fn() to send off the responses to the MCC.
+            // this should handle timeout errors and resend the missed attempts.
+            var sendOne = (i, cb) => {
+
+                // if we have sent all the packets -> cb()
+                if (i >= encryptedDataPackets.length) {
+                    cb();
+
+                } else {
+
+                    var returnPacket = {
+                        appUUID:request.appUUID,
+                        data:encryptedDataPackets[i],
+                        jobToken:request.jobToken,
+                        packet:i,
+                        totalPackets:encryptedDataPackets.length
+                    }
+
+                    ABRelay.post({ url:'/mcc/relayrequest', data:returnPacket }) 
+                        .then((resRP)=>{
+
+                            // send the next one
+                            sendOne( i+1, cb);
+                        })
+                        .catch((err)=>{
+
+                            if (err.error && err.error.code == 'ETIMEDOUT') {
+                                sails.log.error('!!! time out error with MCC!');
+                            } else {
+
+                                // if this wasn't a ETIMEDOUT error, log it here:
+                                ADCore.error.log('::: ABRelay:request(): caught error in response to MCC', { error:err, request: errorOptions });
+                            }
+
+                            // retry this one:
+                            sendOne(i, cb);
+                        })
+
                 }
-                allPosts.push( ABRelay.post({ url:'/mcc/relayrequest', data:returnPacket }) );
             }
 
-            return Promise.all(allPosts);
+            return new Promise((resolve, reject)=>{
+
+                sendOne(0, (err)=>{
+                    resolve();
+                })
+            })
+            
         })
         .catch((err)=>{
 
