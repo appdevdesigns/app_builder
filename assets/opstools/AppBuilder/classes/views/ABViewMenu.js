@@ -342,7 +342,7 @@ export default class ABViewMenu extends ABViewWidget {
 		var application = view.application;
 		var currentPage = view.pageParent();
 		var parentPage = currentPage.pageParent();
-		
+
 		var addPage = function (page, index, parentId) {
 
 			// update label of the page
@@ -380,11 +380,11 @@ export default class ABViewMenu extends ABViewWidget {
 
 		}
 
-		application.pages().forEach((p, index)=>{
- 			if ( (parentPage && p == parentPage) || p == currentPage ) {
+		application
+			.pages(p => ( (parentPage && parentPage.id == p.id ) || (currentPage && currentPage.id == p.id) ), true)
+			.forEach((p, index)=>{
  				addPage(p, index);
- 			}
- 		})
+ 			});
 
 		$$(ids.pages).clearAll();
 		// $$(ids.pages).data.unsync();
