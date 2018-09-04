@@ -386,13 +386,8 @@ export default class ABViewText extends ABViewWidget {
 		var _onShow = (viewId) => {
 
 			// listen DC events
-			var dc = this.dataCollection();
+			let dc = this.dataCollection();
 			if (dc) {
-
-				var currData = dc.getCursor();
-				if (currData) {
-					_logic.displayText(currData);
-				}
 
 				this.eventAdd({
 					emitter: dc,
@@ -400,10 +395,9 @@ export default class ABViewText extends ABViewWidget {
 					listener: _logic.displayText
 				})
 
-			} else {
-				$$(ids.component).define("template", this.text);
-				$$(ids.component).refresh();
 			}
+
+			_logic.displayText();
 
 		}
 
@@ -441,11 +435,15 @@ export default class ABViewText extends ABViewWidget {
 
 		var result = this.text;
 
+		let clearTemplateValue = (result) => {
+			return result.replace(/{(.*?)}/g, "");
+		};
+
 		var dc = this.dataCollection();
-		if (!dc) return result;
+		if (!dc) return clearTemplateValue(result);
 
 		var object = dc.datasource;
-		if (!object) return result;
+		if (!object) return clearTemplateValue(result);
 
 		object.fields().forEach(f => {
 
@@ -457,7 +455,7 @@ export default class ABViewText extends ABViewWidget {
 
 		});
 
-		return result;
+		return clearTemplateValue(result);
 	}
 
 
