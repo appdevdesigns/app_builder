@@ -18,8 +18,9 @@ function L(key, altText) {
  * @param {ABOBject} object 
  * @param {string} formula 
  * @param {object} rowData 
+ * @param {integer} place
  */
-function convertToJs(object, formula, rowData) {
+function convertToJs(object, formula, rowData, place) {
 
 	if (!formula) return "";
 
@@ -54,7 +55,10 @@ function convertToJs(object, formula, rowData) {
 
 	});
 
-	return eval(formula);
+	// decimal places - toFixed()
+	// FIX: floating number calculation 
+	// https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/
+	return eval(formula).toFixed(place || 0);
 }
 
 function AGE(dateString) {
@@ -133,8 +137,17 @@ var ABFieldCalculateDefaults = {
 
 };
 
+var delimiterList = [
+	{ id: 'none', value: L('ab.dataField.number.none', "*None") },
+	{ id: 'comma', value: L('ab.dataField.number.comma', "*Comma"), sign: ',' },
+	{ id: 'period', value: L('ab.dataField.number.period', "*Period"), sign: '.' },
+	{ id: 'space', value: L('ab.dataField.number.space', "*Space"), sign: ' ' }
+];
+
 var defaultValues = {
-	formula: ""
+	formula: "",
+	decimalSign: "none", // "none", "comma", "period", "space"
+	decimalPlaces: "none", // "none", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
 };
 
 var ids = {
@@ -147,7 +160,9 @@ var ids = {
 	numberOperatorPopup: 'ab-field-calculate-number-popup',
 
 	dateOperatorPopup: 'ab-field-calculate-date-popup',
-	dateFieldList: 'ab-field-calculate-date-list'
+	dateFieldList: 'ab-field-calculate-date-list',
+
+	decimalPlaces: 'ab-field-calculate-decimal-places'
 
 };
 
@@ -314,7 +329,45 @@ var ABFieldCalculateComponent = new ABFieldComponent({
 							},
 							{}
 						]
-					}
+					},
+
+					{
+						view: "richselect",
+						name: 'decimalSign',
+						label: L('ab.dataField.calculate.decimalSign', "*Decimals"),
+						value: "none",
+						labelWidth: App.config.labelWidthXLarge,
+						options: delimiterList,
+						on: {
+							'onChange': function (newValue, oldValue) {
+								if (newValue == 'none') {
+									$$(ids.decimalPlaces).disable();
+								}
+								else {
+									$$(ids.decimalPlaces).enable();
+								}
+							}
+						}
+					},
+
+					{
+						view: "richselect",
+						id: ids.decimalPlaces,
+						name: 'decimalPlaces',
+						label: L('ab.dataField.calculate.decimalPlaces', "*Places"),
+						value: 'none',
+						labelWidth: App.config.labelWidthXLarge,
+						disabled: true,
+						options: [
+							{ id: 'none', value: "0" },
+							{ id: 1, value: "1" },
+							{ id: 2, value: "2" },
+							{ id: 3, value: "3" },
+							{ id: 4, value: "4" },
+							{ id: 5, value: "5" },
+							{ id: 10, value: "10" }
+						]
+					},
 				]
 			}
 		];
@@ -533,8 +586,13 @@ class ABFieldCalculate extends ABField {
 
 	format(rowData) {
 
+		let place = 0;
+		if (this.settings.decimalSign != "none") {
+			place = this.settings.decimalPlaces;
+		}
+
 		try {
-			return convertToJs(this.object, this.settings.formula, rowData);
+			return convertToJs(this.object, this.settings.formula, rowData, place);
 		}
 		catch (err) {
 			return "";
