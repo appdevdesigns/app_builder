@@ -409,6 +409,10 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                     this.viewLoad(CurrentView);  
                 }
 
+                $$(ids.editArea).adjust();
+
+                this.onViewResize();
+
             },
 
             viewUpdate: function () {
