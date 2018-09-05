@@ -13,7 +13,8 @@ function L(key, altText) {
 }
 
 
-var ABViewLabelPropertyComponentDefaults = {
+var ABViewListPropertyComponentDefaults = {
+	height: 0
 }
 
 
@@ -57,6 +58,20 @@ export default class ABViewLabel extends ABViewWidget {
 
 	static common() {
 		return ABViewDefaults;
+	}
+
+	/**
+	 * @method fromValues()
+	 *
+	 * initialze this object with the given set of values.
+	 * @param {obj} values
+	 */
+	fromValues (values) {
+
+		super.fromValues(values);
+		// convert from "0" => 0
+		this.settings.height = parseInt(this.settings.height || 0);
+
 	}
 
 
@@ -118,6 +133,12 @@ export default class ABViewLabel extends ABViewWidget {
 				view: 'richselect',
 				label: L('ab.components.list.field', "*Field"),
 				labelWidth: App.config.labelWidthLarge
+			},
+			{
+				view: 'counter',
+				name: "height",
+				label: L("ab.component.list.height", "*Height:"),
+				labelWidth: App.config.labelWidthLarge,
 			}
 		]);
 
@@ -183,6 +204,7 @@ export default class ABViewLabel extends ABViewWidget {
 		this.propertyUpdateFieldOptions(ids, view, dataCollectionId);
 
 		$$(ids.field).setValue(view.settings.field);
+		$$(ids.height).setValue(view.settings.height);
 
 	}
 
@@ -193,6 +215,7 @@ export default class ABViewLabel extends ABViewWidget {
 
 		view.settings.datacollection = $$(ids.datacollection).getValue();
 		view.settings.field = $$(ids.field).getValue();
+		view.settings.height = $$(ids.height).getValue();
 
 	}
 
@@ -214,6 +237,7 @@ export default class ABViewLabel extends ABViewWidget {
 		var _ui = {
 			id: ids.component,
 			view: "dataview",
+			height: this.settings.height,
 			type: {
 				width: 1000,
 				height: 30
