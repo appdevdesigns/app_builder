@@ -78,7 +78,9 @@ var ABViewPropertyDefaults = {
 		sortFields: [] // array of columns with their sort configurations
 	},
 	loadAll: false,
-	isQuery: false // if true it is a query, otherwise it is a object.
+	isQuery: false, // if true it is a query, otherwise it is a object.
+
+	fixSelect: "" // _CurrentUser, _FirstRecord, _FirstRecordDefault or row id
 }
 
 
@@ -1313,7 +1315,8 @@ export default class ABViewDataCollection extends ABView {
 	setCursor(rowId) {
 
 		// If the static cursor is set, then this DC could not set cursor to other rows
-		if ((this.settings.fixSelect && this.settings.fixSelect != "_FirstRecordDefault") || (this.settings.fixSelect && this.settings.fixSelect == rowId))
+		if (this.settings.fixSelect && 
+			(this.settings.fixSelect != "_FirstRecordDefault" || this.settings.fixSelect == rowId))
 			return;
 
 		var dc = this.__dataCollection;
@@ -1466,8 +1469,28 @@ export default class ABViewDataCollection extends ABView {
 					// populate data to webix's data collection and the loading cursor is hidden here
 					this.__dataCollection.parse(data);
 
+
+					var linkDc = this.dataCollectionLink;
+					if (linkDc) {
+
+						// filter data by match link data collection
+						this.refreshLinkCursor();
+
+						// add listeners when cursor of link data collection is changed
+						this.eventAdd({
+							emitter: linkDc,
+							eventName: "changeCursor",
+							listener: (currData) => {
+
+								this.refreshLinkCursor();
+							}
+						});
+
+					}
+
+
 					// set static cursor
-					if (this.settings.fixSelect) {
+					if (this.settings.fixSelect && !this.__dataCollection.getCursor()) {
 
 						// set cursor to the current user
 						if (this.settings.fixSelect == "_CurrentUser") {
@@ -1525,25 +1548,6 @@ export default class ABViewDataCollection extends ABView {
 						else {
 							this.__dataCollection.setCursor(this.settings.fixSelect);
 						}
-
-					}
-
-
-					var linkDc = this.dataCollectionLink;
-					if (linkDc) {
-
-						// filter data by match link data collection
-						this.refreshLinkCursor();
-
-						// add listeners when cursor of link data collection is changed
-						this.eventAdd({
-							emitter: linkDc,
-							eventName: "changeCursor",
-							listener: (currData) => {
-
-								this.refreshLinkCursor();
-							}
-						});
 
 					}
 
