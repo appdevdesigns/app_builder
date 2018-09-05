@@ -745,7 +745,7 @@ module.exports = class ABObjectQuery extends ABObject {
 
 						var connectColFormat = ("(SELECT CONCAT(" +
 							"'[',GROUP_CONCAT(JSON_OBJECT('id', `{linkTableName}`.`{columnName}`)),']')" +
-							" FROM `{linkTableName}` WHERE `{linkTableName}`.`{linkColumnName}` = `{baseTableName}`.`{baseColumnName}`)" +
+							" FROM `{linkTableName}` WHERE `{linkTableName}`.`{linkColumnName}` = `{baseTableName}`.`{baseColumnName}` AND `{linkTableName}`.`{columnName}` IS NOT NULL)" +
 							" as `{objectName}.{displayName}`") // add object's name to alias
 							.replace(/{baseTableName}/g, obj.dbTableName())
 							.replace(/{baseColumnName}/g, obj.PK())
@@ -920,11 +920,12 @@ module.exports = class ABObjectQuery extends ABObject {
 											.replace("{linkTable}", objectNumber.dbTableName())
 											.replace("{linkColumn}", objectNumber.PK()));
 
-							whereClause = ("{joinTable}.{joinColumn} = {table}.{id}"
-											.replace('{joinTable}', fieldConnect.joinTableName())
+							whereClause = ("{joinTable}.{joinColumn} = {table}.{id} AND {joinTable}.{column} IS NOT NULL"
+											.replace(/{joinTable}/g, fieldConnect.joinTableName())
 											.replace('{joinColumn}', fieldConnect.object.name)
 											.replace('{table}', fieldConnect.object.dbTableName())
-											.replace('{id}', fieldConnect.object.PK()));
+											.replace('{id}', fieldConnect.object.PK()))
+											.replace('{column}', f.columnName);
 
 						}
 
