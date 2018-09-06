@@ -1487,69 +1487,14 @@ export default class ABViewDataCollection extends ABView {
 						});
 
 					}
+					else {
 
-
-					// set static cursor
-					if (this.settings.fixSelect && !this.__dataCollection.getCursor()) {
-
-						// set cursor to the current user
-						if (this.settings.fixSelect == "_CurrentUser") {
-
-							var username = OP.User.username();
-							var userFields = this.datasource.fields((f) => f.key == "user");
-
-							// find a row that contains the current user
-							var row = this.__dataCollection.find((r) => {
-
-								var found = false;
-
-								userFields.forEach((f) => {
-
-									if (found || r[f.columnName] == null) return;
-
-									if (r[f.columnName].filter) { // Array - isMultiple
-										found = r[f.colName].filter((data) => data.id == username).length > 0;
-									}
-									else if (r[f.columnName] == username) {
-										found = true;
-									}
-
-								});
-
-								return found;
-
-							}, true);
-
-							// set a first row of current user to cursor
-							if (row)
-								this.__dataCollection.setCursor(row.id);
-						}
-						else if (this.settings.fixSelect == "_FirstRecord" || this.settings.fixSelect == "_FirstRecordDefault") {
-							// // find a row that contains the current user
-							// var row = this.__dataCollection.find((r) => {
-
-							// 	var found = false;
-							// 	if (!found) {
-							// 		found = true;
-							// 		return true; // just give us the first record
-							// 	}
-
-							// }, true);
-
-							// // set a first row of current user to cursor
-							// if (row)
-							// 	this.__dataCollection.setCursor(row.id);
-
-							// set a first row to cursor
-							var rowId = this.__dataCollection.getFirstId();
-							if (rowId)
-								this.__dataCollection.setCursor(rowId);
-						}
-						else {
-							this.__dataCollection.setCursor(this.settings.fixSelect);
-						}
+						// set static cursor
+						this.setStaticCursor();
 
 					}
+
+
 
 					if (callback)
 						callback();
@@ -1638,6 +1583,9 @@ export default class ABViewDataCollection extends ABView {
 				return this.isParentFilterValid(rowData);
 
 			});
+
+			this.setStaticCursor();
+
 		}
 
 	}
@@ -1668,6 +1616,71 @@ export default class ABViewDataCollection extends ABView {
 			return (linkVal.id || linkVal) == linkCursor.id;
 		}
 
+
+	}
+
+	setStaticCursor() {
+
+		if (this.settings.fixSelect) {
+
+			// set cursor to the current user
+			if (this.settings.fixSelect == "_CurrentUser") {
+
+				var username = OP.User.username();
+				var userFields = this.datasource.fields((f) => f.key == "user");
+
+				// find a row that contains the current user
+				var row = this.__dataCollection.find((r) => {
+
+					var found = false;
+
+					userFields.forEach((f) => {
+
+						if (found || r[f.columnName] == null) return;
+
+						if (r[f.columnName].filter) { // Array - isMultiple
+							found = r[f.colName].filter((data) => data.id == username).length > 0;
+						}
+						else if (r[f.columnName] == username) {
+							found = true;
+						}
+
+					});
+
+					return found;
+
+				}, true);
+
+				// set a first row of current user to cursor
+				if (row)
+					this.__dataCollection.setCursor(row.id);
+			}
+			else if (this.settings.fixSelect == "_FirstRecord" || this.settings.fixSelect == "_FirstRecordDefault") {
+				// // find a row that contains the current user
+				// var row = this.__dataCollection.find((r) => {
+
+				// 	var found = false;
+				// 	if (!found) {
+				// 		found = true;
+				// 		return true; // just give us the first record
+				// 	}
+
+				// }, true);
+
+				// // set a first row of current user to cursor
+				// if (row)
+				// 	this.__dataCollection.setCursor(row.id);
+
+				// set a first row to cursor
+				var rowId = this.__dataCollection.getFirstId();
+				if (rowId)
+					this.__dataCollection.setCursor(rowId);
+			}
+			else {
+				this.__dataCollection.setCursor(this.settings.fixSelect);
+			}
+
+		}
 
 	}
 
