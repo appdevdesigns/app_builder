@@ -214,9 +214,12 @@ module.exports = {
 						.catch(reject)
 						.then(function (result) {
 
-							allTableNames = result.map(r => { 
-								return { name: r.TABLE_NAME, connection: connName };
-							});
+							// Johnny: make sure result actually is returning something:
+							if (result && result.map) {
+								allTableNames = result.map(r => { 
+									return { name: r.TABLE_NAME, connection: connName };
+								});
+							}
 
 							resolve();
 
