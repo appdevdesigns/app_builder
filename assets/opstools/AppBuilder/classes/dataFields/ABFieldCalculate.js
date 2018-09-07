@@ -42,8 +42,8 @@ function convertToJs(object, formula, rowData, place) {
 			let numberVal = "(#numberVal#)".replace("#numberVal#", rowData[f.columnName] || 0); // (number) - NOTE : (-5) to support negative number
 			formula = formula.replace(new RegExp('{' + colName + '}', 'g'), numberVal);
 		}
-		// calculate fields
-		else if (f.key == 'calculate') {
+		// calculate and formula fields
+		else if (f.key == 'calculate' || f.key == "formula") {
 			let calVal = "(#calVal#)".replace("#calVal#", f.format(rowData) || 0);
 			formula = formula.replace(new RegExp('{' + colName + '}', 'g'), calVal);
 		}
@@ -391,7 +391,7 @@ var ABFieldCalculateComponent = new ABFieldComponent({
 
 		getNumberFields: () => {
 			if (ABFieldCalculateComponent.CurrentObject)
-				return ABFieldCalculateComponent.CurrentObject.fields(f => f.key == "number" || f.key == "calculate");
+				return ABFieldCalculateComponent.CurrentObject.fields(f => f.key == "number" || f.key == "calculate" || f.key == "formula");
 			else
 				return [];
 		},
@@ -417,7 +417,7 @@ var ABFieldCalculateComponent = new ABFieldComponent({
 					function: "DATE(CURRENT)"
 				});
 
-				/** FIELD DATE */
+				/** DATE FIELDS */
 				ABFieldCalculateComponent.CurrentObject.fields(f => f.key == "date").forEach(f => {
 
 					options.push({
