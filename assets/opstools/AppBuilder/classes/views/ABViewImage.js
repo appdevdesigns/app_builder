@@ -147,6 +147,18 @@ export default class ABViewImage extends ABViewWidget {
 			var currView = _logic.currentEditObject();
 			currView.settings.filename = fileInfo.data.uuid;
 
+			// get width & height of images
+			if (fileInfo.file) {
+				let img = new Image;
+				img.onload = function() {
+
+					$$(ids.width).setValue(img.width);
+					$$(ids.height).setValue(img.height)
+
+				}
+				img.src = URL.createObjectURL(fileInfo.file);
+			}
+
 			// trigger a save()
 			this.propertyEditorSave(ids, currView);
 
