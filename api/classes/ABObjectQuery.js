@@ -887,7 +887,7 @@ module.exports = class ABObjectQuery extends ABObject {
 
 							whereClause = ("{table}.{column} = {linkTable}.{linkId}"
 											.replace('{table}', f.object.dbTableName())
-											.replace('{column}', f.columnName)
+											.replace('{column}', fieldConnect.columnName)
 											.replace('{linkTable}', objectNumber.dbTableName())
 											.replace('{linkId}', objectNumber.PK()));
 
