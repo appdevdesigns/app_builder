@@ -64,7 +64,7 @@ module.exports = {
             headers: {
                 'authorization': sails.config.appbuilder.mcc.accessToken
             },
-            timeout:2000,   // 2s timeout to wait for a connection to the MCC
+            timeout:4000,   // 4s timeout to wait for a connection to the MCC
 time:true,  // capture timing information during communications process
 resolveWithFullResponse: true,
             json: true // Automatically stringifies the body to JSON
@@ -528,12 +528,15 @@ errorOptions = options;
                         })
                         .catch((err)=>{
 
-                            if (err.error && err.error.code == 'ETIMEDOUT') {
-                                sails.log.error('!!! time out error with MCC!');
+                            if ( (err.error && err.error.code == 'ETIMEDOUT')
+                                 || (err.message && err.message.indexOf('ESOCKETTIMEDOUT') > -1)) {
+
+                                sails.log.error('!!! time out error with MCC! ['+i+' / '+ encryptedDataPackets.length+']  jt['+request.jobToken+']');
+                            
                             } else {
 
                                 // if this wasn't a ETIMEDOUT error, log it here:
-                                ADCore.error.log('::: ABRelay:request(): caught error in response to MCC', { error:err, request: errorOptions });
+                                ADCore.error.log('::: ABRelay:request(): caught unexpected error in response to MCC', { error:err, request: errorOptions });
                             }
 
                             // retry this one:
