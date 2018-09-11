@@ -70,6 +70,10 @@ export default class ABViewDetailComponent extends ABViewWidget {
 			else
 				templateLabel = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label><div class='ab-detail-component-holder' style='margin-left: #width#px;'>#display#</div>";
 		}
+		// no label
+		else {
+			templateLabel = "#display#";
+		}
 
 		var template = (templateLabel)
 			.replace(/#width#/g, settings.labelWidth)

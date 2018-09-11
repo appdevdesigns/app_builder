@@ -266,7 +266,7 @@ export default class ABViewDetail extends ABViewContainer {
 
 		this.propertyUpdateFieldOptions(ids, view, dataCollectionId);
 
-		$$(ids.showLabel).setValue(view.settings.showLabel || ABViewDetailPropertyComponentDefaults.showLabel);
+		$$(ids.showLabel).setValue(view.settings.showLabel != null ? view.settings.showLabel : ABViewDetailPropertyComponentDefaults.showLabel);
 		$$(ids.labelPosition).setValue(view.settings.labelPosition || ABViewDetailPropertyComponentDefaults.labelPosition);
 		$$(ids.labelWidth).setValue(view.settings.labelWidth || ABViewDetailPropertyComponentDefaults.labelWidth);
 		$$(ids.height).setValue(view.settings.height || ABViewDetailPropertyComponentDefaults.height);
