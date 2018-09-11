@@ -21,7 +21,8 @@ var ABViewPivotPropertyComponentDefaults = {
 	totalColumn: 0,
 	separateLabel: 0,
 	min: 0,
-	max: 0
+	max: 0,
+	height: 0
 }
 
 
@@ -90,6 +91,9 @@ export default class ABViewPivot extends ABViewWidget {
 
 		if (this.settings.structure && typeof this.settings.structure == 'string')
 			this.settings.structure = JSON.parse(this.settings.structure);
+
+		// "0" -> 0
+		this.settings.height = parseInt(this.settings.height || ABViewPivotPropertyComponentDefaults.height);
 
 	}
 
@@ -164,6 +168,12 @@ export default class ABViewPivot extends ABViewWidget {
 				labelWidth: App.config.labelWidthLarge
 			},
 			{
+				view: 'counter',
+				name: "height",
+				label: L("ab.component.pivot.height", "*Height:"),
+				labelWidth: App.config.labelWidthLarge,
+			},
+			{
 				view: "checkbox",
 				name: "removeMissed",
 				labelRight: L('ab.component.pivot.removeMissed', '*Remove empty data.'),
@@ -226,6 +236,7 @@ export default class ABViewPivot extends ABViewWidget {
 		$$(ids.separateLabel).setValue(view.settings.separateLabel);
 		$$(ids.min).setValue(view.settings.min);
 		$$(ids.max).setValue(view.settings.max);
+		$$(ids.height).setValue(view.settings.height);
 
 
 	}
@@ -242,6 +253,7 @@ export default class ABViewPivot extends ABViewWidget {
 		view.settings.separateLabel = $$(ids.separateLabel).getValue();
 		view.settings.min = $$(ids.min).getValue();
 		view.settings.max = $$(ids.max).getValue();
+		view.settings.height = $$(ids.height).getValue();
 
 	}
 
@@ -269,7 +281,8 @@ export default class ABViewPivot extends ABViewWidget {
 			totalColumn: this.settings.totalColumn,
 			separateLabel: this.settings.separateLabel,
 			min: this.settings.min,
-			max: this.settings.max
+			max: this.settings.max,
+			height: this.settings.height
 		};
 
 
