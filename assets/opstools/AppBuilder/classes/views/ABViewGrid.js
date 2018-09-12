@@ -60,7 +60,8 @@ var ABViewGridPropertyComponentDefaults = {
 	height: 0,
 	hideHeader:0,
 	labelAsField:0,
-	hideButtons:0
+	hideButtons:0,
+	groupBy: '' // id of field
 }
 
 
@@ -487,7 +488,26 @@ export default class ABViewGrid extends ABViewWidget  {
 						// }
 			        ]
 		    	}
-		    },
+			},
+			{				
+				view: "fieldset", 
+				label: L('ab.component.grid.group', '*Group:'),
+				labelWidth: App.config.labelWidthLarge,
+				body: {
+					type: "clean",
+					paddingY: 20,
+					paddingX: 10,
+					rows:[
+						{
+							view:"select",
+							name:"groupBy",
+							label: L('ab.component.grid.groupBy', '*Group by:'),
+							labelWidth: App.config.labelWidthLarge,
+							options: []
+						}
+					]
+				}
+			},
 			{ 
 				view: "fieldset", 
 				label: L('ab.component.label.linkedPages', '*Linked Pages:'),
@@ -730,7 +750,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		$$(ids.hideHeader).setValue(view.settings.hideHeader);
 		$$(ids.labelAsField).setValue(view.settings.labelAsField);
 		$$(ids.hideButtons).setValue(view.settings.hideButtons);
-
+		$$(ids.groupBy).setValue(view.settings.groupBy);
 
 		// initial populate of properties and popups
 		view.populateEditor(ids, view);
@@ -797,6 +817,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		view.settings.hideHeader = $$(ids.hideHeader).getValue();
 		view.settings.labelAsField = $$(ids.labelAsField).getValue();
 		view.settings.hideButtons = $$(ids.hideButtons).getValue();
+		view.settings.groupBy = $$(ids.groupBy).getValue();
 
 	}
 
@@ -887,7 +908,8 @@ export default class ABViewGrid extends ABViewWidget  {
 			summaryColumns: this.settings.objectWorkspace.summaryColumns,
 			hideHeader: this.settings.hideHeader,
 			labelAsField: this.settings.labelAsField,
-			hideButtons: this.settings.hideButtons
+			hideButtons: this.settings.hideButtons,
+			groupBy: this.settings.groupBy
 		}
 		
 		var isFiltered = false,
@@ -1485,6 +1507,22 @@ export default class ABViewGrid extends ABViewWidget  {
 			$$(ids.dataSource).setValue('');
 			// $$(ids.linkedObject).hide();
 		}
+
+		// Grouping options
+		let groupFields = [
+			{ id: '', value: L('ab.component.grid.noGroupBy', '*No group field') }
+		];
+		var dc = this.dataCollection();
+		if (dc && dc.datasource) {
+			dc.datasource.fields().forEach(f => {
+				groupFields.push({
+					id: f.columnName,
+					value: f.label
+				});
+			});
+		}
+		$$(ids.groupBy).define("options", groupFields);
+		$$(ids.groupBy).refresh();
 
 		// Set the connected objects you can choose from in the list
 		// var linkedObjects = [];

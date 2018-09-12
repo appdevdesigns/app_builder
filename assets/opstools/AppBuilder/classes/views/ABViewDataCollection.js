@@ -1217,7 +1217,8 @@ export default class ABViewDataCollection extends ABView {
 			this.__bindComponentIds.push(component.config.id);
 
 		if (component.config.view == 'datatable' ||
-			component.config.view == 'dataview') {
+			component.config.view == 'dataview' ||
+			component.config.view == 'treetable') {
 
 			if (dc) {
 
@@ -1231,7 +1232,17 @@ export default class ABViewDataCollection extends ABView {
 				component.define("datafetch", 20);
 				component.define("datathrottle", 500);
 
-				component.data.sync(dc);
+				// initial data of treetable
+				if (component.config.view == 'treetable') {
+
+					// NOTE: tree data does not support dynamic loading when scrolling
+					// https://forum.webix.com/discussion/3078/dynamic-loading-in-treetable
+					component.parse(dc.find({}));
+
+				}
+				else {
+					component.data.sync(dc);
+				}
 
 				// Implement .onDataRequest for paging loading
 				if (!this.settings.loadAll) {
@@ -1251,10 +1262,26 @@ export default class ABViewDataCollection extends ABView {
 						});
 					}
 
+					// NOTE : treetable should use .parse or TreeCollection
+					// https://forum.webix.com/discussion/1694/tree-and-treetable-using-data-from-datacollection
+					if (component.config.view == 'treetable') {
+
+						component.___AD = component.___AD || {};
+						if (!component.___AD.onDcLoadData) {
+							component.___AD.onDcLoadData = this.on("loadData", () => {
+
+								component.parse(dc.find({}));
+
+							});
+						}
+
+					}
 
 				}
 
-			} else {
+
+			}
+			else {
 				component.data.unsync();
 			}
 		}

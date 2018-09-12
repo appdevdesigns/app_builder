@@ -550,8 +550,8 @@ export default class ABField extends ABFieldBase {
 
 		var config = {
 			id: this.columnName, // this.id,
-			header: this.label,
-		}
+			header: this.label
+		};
 
 		if (isObjectWorkspace) {
 			if (this.settings.showIcon) {

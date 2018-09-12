@@ -28,36 +28,25 @@ export default class ABWorkObjectDatatable extends OP.Component {
 
     constructor(App, idBase, params) {
 
-        if (params) {
-            var settings = {
-    			allowDelete: params.allowDelete,
-    			detailsView: params.detailsView || null,
-    			editView: params.editView || null,
-    			isEditable: params.isEditable,
-    			massUpdate: params.massUpdate,
-				configureHeaders: params.configureHeaders,
-				summaryColumns: params.summaryColumns || [],
-                labelAsField: params.labelAsField,
-                hideButtons: params.hideButtons
-    		}
-        } else {
-            var settings = {
-    			allowDelete: true,
-    			detailsView: null,
-    			editView: null,
-    			isEditable: true,
-    			massUpdate: true,
-				configureHeaders: true,
-				summaryColumns: [],
-                labelAsField: false,
-                hideButtons: false
-    		}
-        }
-
         idBase = idBase || 'ab_work_object_workspace_datatable';
         super(App, idBase);
+
+        params = params || {};
+
+        var settings = {
+            allowDelete: (params.allowDelete != null ? params.allowDelete : true ),
+            detailsView: params.detailsView || null,
+            editView: params.editView || null,
+            isEditable: (params.isEditable != null ? params.isEditable : true ),
+            massUpdate: (params.massUpdate != null ? params.massUpdate : true ),
+            configureHeaders: (params.configureHeaders != null ? params.configureHeaders : true ),
+            summaryColumns: params.summaryColumns || [],
+            labelAsField: params.labelAsField || false,
+            hideButtons: params.hideButtons || false,
+            groupBy: params.groupBy || ""
+        };
+
         var L = this.Label;
-        
         var labels = {
             common: App.labels,
             component: {
@@ -259,7 +248,20 @@ console.warn('!! ToDo: onAfterColumnHide()');
     	               _logic.onHeaderClick(id, e, node);
     			}
     		}
-    	}
+        };
+
+        // Grouping
+        if (settings.groupBy) {
+
+            // switch datatable to support tree
+            this.ui.view = "treetable";
+            // this.ui.scheme = {
+            //     $group: {
+            //         by: settings.groupBy
+            //     }
+            // };
+
+        }
 
 
 
@@ -384,7 +386,8 @@ console.warn('!! ToDo: onAfterColumnHide()');
     				});
     			}	
     			
-    		});
+            });
+
 
     	}
 
@@ -807,7 +810,64 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                     defaultHeight = minHeight;
                 }
 
-    			PopupHeaderEditComponent.objectLoad(object);
+                PopupHeaderEditComponent.objectLoad(object);
+                
+                // grouping
+                if (settings.groupBy) {
+
+                    // map: {
+                    //     votes:["votes", "sum"],
+                    //     title:["year"]
+                    // }
+                    let groupMap = {};
+                    CurrentObject.fields().forEach(f => {
+                        if (f.columnName == settings.groupBy) return;
+
+                        switch (f.key)  {
+                            case "number":
+                            case "calculate":
+                            case "formula":
+                                groupMap[f.columnName] = [f.columnName, "sum"];
+                                break;
+                            case "connectObject":
+                                groupMap[f.columnName] = [f.columnName, function(prop, listData) {
+
+                                    if (!listData || !listData.length)
+                                        return 0;
+
+                                    let sum = 0;
+
+                                    listData.forEach(r => {
+                                        var valRelation = r[f.relationName()];
+
+                                        // array
+                                        if (valRelation && 
+                                            valRelation.length != null)
+                                            sum += valRelation.length;
+                                        // object
+                                        else if (valRelation)
+                                            sum += 1;
+
+                                    });
+
+                                    return sum;
+                                }];
+                                break;
+                            default:
+                                groupMap[f.columnName] = [f.columnName, "count"];
+                                break;
+                        }
+                    });
+
+                    // set group definition
+                    DataTable.define("scheme", {
+                        $group: {
+                            by: settings.groupBy,
+                            map: groupMap
+                        }
+                    });
+
+                }
 
                 // supressed this because it seems to be making an extra call?
     			// _logic.refresh();
@@ -864,12 +924,38 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                     var isEditable = false;
                     if (settings.isEditable)
                         isEditable = settings.isEditable;
-    				//// update DataTable structure:
+
+                    //// update DataTable structure:
     				// get column list from our CurrentObject
     				var columnHeaders = CurrentObject.columnHeaders(true, settings.isEditable, settings.summaryColumns);
                     
                     columnHeaders.forEach(function(col) {
                         col.fillspace = false;
+
+                        // group header
+                        if (settings.groupBy &&
+                            settings.groupBy == col.id) {
+
+                            var groupField = CurrentObject.fields(f => f.columnName == col.id)[0];
+                            if (groupField) {
+
+                                col.template = function(obj, common) {
+
+                                    if (obj.$group) {
+
+                                        let rowData = {};
+                                        rowData[groupField.columnName] = obj.value;
+
+                                        return common.treetable(obj, common) + groupField.format(rowData);
+                                    }
+                                    else
+                                        return groupField.format(obj);
+    
+                                }
+                            }
+
+                        }
+
                     });
                     
                     if (settings.labelAsField) {
@@ -881,7 +967,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                             template: function(obj){
                                 return CurrentObject.displayData(obj);
                             },
-                            // css: { 'text-align': 'center' }                            
+                            // css: { 'text-align': 'center' }
                         });
                     }
                     
@@ -962,7 +1048,8 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                     }
                     _logic.freezeDeleteColumn();
                     DataTable.refreshColumns();
-    			}
+
+                }
                 
             },
 
