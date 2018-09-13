@@ -1514,7 +1514,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		];
 		var dc = this.dataCollection();
 		if (dc && dc.datasource) {
-			dc.datasource.fields().forEach(f => {
+			dc.datasource.fields(f => f.key != 'connectObject').forEach(f => {
 				groupFields.push({
 					id: f.columnName,
 					value: f.label
