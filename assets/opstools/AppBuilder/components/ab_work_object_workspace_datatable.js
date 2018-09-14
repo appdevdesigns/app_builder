@@ -864,8 +864,19 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                                     listData.forEach(r => {
                                         var val = prop(r);
 
+                                        // "false" to boolean
+                                        if (f.key == "boolean") {
+
+                                            try {
+                                                val = JSON.parse(val || 0);
+                                            }
+                                            catch (err) {
+                                                val = false;
+                                            }
+                                        }
+
                                         // count only exists data
-                                        if (val && JSON.parse(val || false)) {
+                                        if (val) {
                                             count += 1;
                                         }
 
