@@ -854,7 +854,25 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                                 }];
                                 break;
                             default:
-                                groupMap[f.columnName] = [f.columnName, "count"];
+                                groupMap[f.columnName] = [f.columnName, function(prop, listData) {
+
+                                    if (!listData || !listData.length)
+                                        return 0;
+
+                                    let count = 0;
+
+                                    listData.forEach(r => {
+                                        var val = prop(r);
+
+                                        // count only exists data
+                                        if (val && JSON.parse(val || false)) {
+                                            count += 1;
+                                        }
+
+                                    });
+
+                                    return count;
+                                }];
                                 break;
                         }
                     });
