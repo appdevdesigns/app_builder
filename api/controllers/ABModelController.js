@@ -1131,6 +1131,29 @@ module.exports = {
 
                                         res.AD.error(errorResponse);
                                     }
+                                    else {
+
+                                        var errorResponse = {
+                                            error: 'E_VALIDATION',
+                                            invalidAttributes: {}
+                                        };
+
+                                        // WORKAROUND : Get invalid field
+                                        var invalidFields = object.fields(f => updateParams[f.columnName] != null);
+                                        invalidFields.forEach(f => {
+
+                                            errorResponse.invalidAttributes[f.columnName] = [
+                                                {
+                                                    message: err.sqlMessage
+                                                }
+                                            ];
+    
+                                        });
+
+
+                                        res.AD.error(errorResponse);
+
+                                    }
 
                                 })
                                 .catch((err) => {
