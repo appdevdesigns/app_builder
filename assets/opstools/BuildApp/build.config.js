@@ -17,6 +17,7 @@ module.exports = {
 				"js/webix/extras/tinymce",
 				"js/selectivity/selectivity.min",
 				"js/vfs_fonts",
+				"js/moment-locales.min",
 				"OpsPortal/classes/OpsWebixDataCollection",
 				"opstools/BuildApp/OP_Bundle"
 			],
