@@ -1179,7 +1179,11 @@ PopupRecordRule.qbFixAfterShow();
 							formView.clear();
 						}
 						else {
-							dc.setCursor(newFormVals.id);
+
+							if (newFormVals &&
+								newFormVals.id)
+								dc.setCursor(newFormVals.id);
+
 						}
 					}
 					
@@ -1254,11 +1258,22 @@ resolve();
 			}
 			else {
 
+				let saveButton = formView.queryView({ view: 'button', type: "form" });
+
 				// error message
-				if (validator && validator.errors) {
+				if (validator && validator.errors && validator.errors.length) {
 					validator.errors.forEach(err => {
 						formView.markInvalid(err.name, err.message);
 					});
+
+					if (saveButton)
+						saveButton.disable();
+				}
+				else {
+
+					if (saveButton)
+						saveButton.enable();
+
 				}
 
 				return Promise.resolve();
