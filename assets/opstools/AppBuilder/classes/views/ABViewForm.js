@@ -1193,7 +1193,28 @@ PopupRecordRule.qbFixAfterShow();
 
 					if (formView.hideProgress)
 						formView.hideProgress();
-				}
+				};
+
+				let formError = (err) => {
+
+					let saveButton = formView.queryView({ view: 'button', type: "form" });
+
+					if (err && err.invalidAttributes) {
+
+						// mark error
+						for (let attr in err.invalidAttributes) {
+							formView.markInvalid(attr, err.invalidAttributes[attr].message);
+						}
+
+					}
+
+					if (saveButton)
+						saveButton.enable();
+
+					if (formView.hideProgress)
+						formView.hideProgress();
+
+				};
 
 				return new Promise(
 					(resolve, reject) => {
@@ -1203,7 +1224,7 @@ PopupRecordRule.qbFixAfterShow();
 						if (formVals.id) {
 							model.update(formVals.id, formVals)
 								.catch((err) => {
-									formReady();
+									formError(err.data);
 									reject(err);
 								})
 								.then((newFormVals) => {
@@ -1229,7 +1250,7 @@ resolve();
 						else {
 							model.create(formVals)
 								.catch((err) => {
-									formReady();
+									formError(err.data);
 									reject(err);
 								})
 								.then((newFormVals) => {

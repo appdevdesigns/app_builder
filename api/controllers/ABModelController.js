@@ -482,7 +482,25 @@ module.exports = {
                                 res.AD.error(errorResponse);
                             }
                             else {
-                                res.AD.error(err);
+
+                                 var errorResponse = {
+                                    error: 'E_VALIDATION',
+                                    invalidAttributes: {}
+                                };
+
+                                // WORKAROUND : Get invalid field
+                                var invalidFields = object.fields(f => err.sqlMessage.indexOf(f.columnName) > -1);
+                                invalidFields.forEach(f => {
+
+                                    errorResponse.invalidAttributes[f.columnName] = [
+                                        {
+                                            message: err.sqlMessage
+                                        }
+                                    ];
+
+                                });
+
+                                res.AD.error(errorResponse);
                             }
 
                         })
