@@ -297,8 +297,6 @@ export default class ABViewConditionalContainer extends ABViewContainer {
 			id: ids.component,
 			view: "multiview",
 			cells: [
-				ifComp.ui,
-				elseComp.ui,
 				{
 					batch: "wait",
 					view: 'layout',
@@ -308,7 +306,9 @@ export default class ABViewConditionalContainer extends ABViewContainer {
 							label: "Please wait..."
 						}
 					]
-				}
+				},
+				ifComp.ui,
+				elseComp.ui
 			]
 		};
 

@@ -449,7 +449,7 @@ export default class ABViewText extends ABViewWidget {
 
 			var template = new RegExp('{' + f.label + '}', 'g'),
 				rowData = dc.getCursor() || {},
-				data = f.format(rowData);
+				data = f.format(rowData) || "???"; // "???" default value 
 
 			result = result.replace(template, data);
 
