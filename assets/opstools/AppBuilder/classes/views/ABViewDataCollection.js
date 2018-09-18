@@ -1490,6 +1490,12 @@ export default class ABViewDataCollection extends ABView {
 
 					});
 
+
+					// mark initial data already
+					if (!this.initializedData)
+						this.initializedData = true;
+
+
 					// populate data to webix's data collection and the loading cursor is hidden here
 					this.__dataCollection.parse(data);
 
@@ -1522,10 +1528,6 @@ export default class ABViewDataCollection extends ABView {
 
 					if (callback)
 						callback();
-
-					// mark initial data already
-					if (!this.initializedData)
-						this.initializedData = true;
 
 					resolve();
 
