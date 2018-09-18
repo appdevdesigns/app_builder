@@ -93,6 +93,7 @@ export default class ABViewTab extends ABViewWidget {
 		var component = this.component(App);
 
 		var tabElem = component.ui;
+
 		if (tabElem.rows) {
 			tabElem.rows[0].id = ids.component;
 			tabElem.rows[0].tabbar = {
@@ -185,6 +186,8 @@ export default class ABViewTab extends ABViewWidget {
 					}
 				});
 			}
+
+			component.onShow();
 
 		}
 
@@ -529,7 +532,6 @@ export default class ABViewTab extends ABViewWidget {
 							var tabUi = {
 								id: v.view.id,
 								// ui will be loaded when its tab is opened
-								height: 200,
 								view: 'layout',
 								rows: []
 							};
