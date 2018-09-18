@@ -529,6 +529,7 @@ export default class ABViewTab extends ABViewWidget {
 							var tabUi = {
 								id: v.view.id,
 								// ui will be loaded when its tab is opened
+								height: 200,
 								view: 'layout',
 								rows: []
 							};
@@ -568,7 +569,8 @@ export default class ABViewTab extends ABViewWidget {
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
 
-			webix.extend($$(ids.component), webix.ProgressBar)
+			if ($$(ids.component))
+				webix.extend($$(ids.component), webix.ProgressBar)
 
 			this._viewComponents.forEach((v) => {
 
@@ -605,7 +607,8 @@ export default class ABViewTab extends ABViewWidget {
 				if (v.component == null && v.view.id == viewId) {
 
 					// show loading cursor
-					if ($$(ids.component).showProgress)
+					if ($$(ids.component) &&
+						$$(ids.component).showProgress)
 						$$(ids.component).showProgress({ type: "icon" });
 
 					v.component = v.view.component(App);
@@ -628,7 +631,8 @@ export default class ABViewTab extends ABViewWidget {
 
 						$$(v.view.id).adjust();
 
-						if ($$(ids.component).hideProgress)
+						if ($$(ids.component) &&
+							$$(ids.component).hideProgress)
 							$$(ids.component).hideProgress();
 
 					}, 10);
