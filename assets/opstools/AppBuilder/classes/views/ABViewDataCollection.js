@@ -1225,7 +1225,7 @@ export default class ABViewDataCollection extends ABView {
 
 				var items = dc.count();
 				if (items == 0 &&
-					!this.isInitial &&
+					!this.isInitializedData &&
 					component.showProgress) {
 					component.showProgress({ type: "icon" });
 				}
@@ -1411,10 +1411,6 @@ export default class ABViewDataCollection extends ABView {
 
 	loadData(start, limit, callback) {
 
-		// mark initial data already
-		if (!this.initial)
-			this.initial = true;
-
 		var obj = this.datasource;
 		if (obj == null) return Promise.resolve([]);
 
@@ -1526,6 +1522,10 @@ export default class ABViewDataCollection extends ABView {
 
 					if (callback)
 						callback();
+
+					// mark initial data already
+					if (!this.initializedData)
+						this.initializedData = true;
 
 					resolve();
 
@@ -1724,8 +1724,8 @@ export default class ABViewDataCollection extends ABView {
 
 	}
 
-	get isInitial() {
-		return this.initial == true;
+	get isInitializedData() {
+		return this.initializedData == true;
 	}
 
 

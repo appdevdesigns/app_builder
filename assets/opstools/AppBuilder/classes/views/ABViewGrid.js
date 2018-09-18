@@ -1454,12 +1454,16 @@ export default class ABViewGrid extends ABViewWidget  {
 			}
 			
 			var dc = this.dataCollection();
+			if (dc) {
+
+				this.eventAdd({
+					emitter: dc,
+					eventName: 'changeCursor',
+					listener: _logic.selectRow
+				});
+
+			}
 			
-			this.eventAdd({
-				emitter: dc,
-				eventName: 'changeCursor',
-				listener: _logic.selectRow
-			})
 		};
 
 
