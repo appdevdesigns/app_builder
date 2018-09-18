@@ -1030,16 +1030,17 @@ export default class ABViewDataCollection extends ABView {
 		// events
 		AD.comm.hub.subscribe('ab.datacollection.create', (msg, data) => {
 
-			if (!this.datasource)
+			let obj = this.datasource;
+			if (!obj)
 				return;
 
-			if (this.datasource.id != data.objectId)
+			if (obj.id != data.objectId)
 				return;
 
 			var rowData = data.data;
 
 			// normalize data before add to data collection
-			var model = this.datasource.model();
+			var model = obj.model();
 			model.normalizeData(rowData);
 
 			// filter condition before add 
@@ -1058,27 +1059,24 @@ export default class ABViewDataCollection extends ABView {
 
 		AD.comm.hub.subscribe('ab.datacollection.update', (msg, data) => {
 
-			if (!this.datasource)
+			let obj = this.datasource;
+			if (!obj)
 				return;
 
-			if (this.datasource.id != data.objectId)
+			if (obj.id != data.objectId)
 				return;
 
 			// updated values
 			var values = data.data;
 			if (!values) return;
 
-			// filter condition before update 
-			if (!this.__filterComponent.isValid(values))
-				return;
-
 			// various PK name
-			if (!values.id && this.datasource.PK() != 'id')
-				values.id = values[this.datasource.PK()];
+			if (!values.id && obj.PK() != 'id')
+				values.id = values[obj.PK()];
 
 			if (this.__dataCollection.exists(values.id)) {
 				// normalize data before update data collection
-				var model = this.datasource.model();
+				var model = obj.model();
 				model.normalizeData(values);
 				this.__dataCollection.updateItem(values.id, values);
 
@@ -1087,7 +1085,10 @@ export default class ABViewDataCollection extends ABView {
 				if (currData && currData.id == values.id) {
 					this.emit("changeCursor", currData);
 				}
-			} else {
+			}
+			// filter before add new record
+			else if (this.__filterComponent.isValid(values)) {
+
 				// this means the updated record was not loaded yet so we are adding it to the top of the grid
 				// the placemet will probably change on the next load of the data
 				this.__dataCollection.add(values, 0);
