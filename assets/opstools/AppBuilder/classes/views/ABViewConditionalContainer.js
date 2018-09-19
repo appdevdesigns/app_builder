@@ -352,7 +352,7 @@ export default class ABViewConditionalContainer extends ABViewContainer {
 					}
 
 					// show 'waiting' panel
-					if (!dc.isInitializedData) {
+					if (!currData && !dc.isInitializedData) {
 						$$(ids.component).showBatch('wait');
 						return;
 					}
