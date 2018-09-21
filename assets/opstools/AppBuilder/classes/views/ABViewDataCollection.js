@@ -1636,11 +1636,20 @@ export default class ABViewDataCollection extends ABView {
 		if (linkCursor == null) return false;
 
 		var linkVal = rowData[fieldLink.relationName()];
-		if (linkVal == null) return false;
+		if (linkVal == null) {
+
+			// try to get relation value(id) again
+			if (rowData[fieldLink.columnName]) {
+				linkVal = rowData[fieldLink.columnName];
+			}
+			else {
+				return false;
+			}
+		}
 
 		// array - 1:M , M:N
 		if (linkVal.filter) {
-			return linkVal.filter((obj) => obj.id == linkCursor.id).length > 0;
+			return linkVal.filter(val => (val.id || val) == linkCursor.id).length > 0;
 		}
 		else {
 			return (linkVal.id || linkVal) == linkCursor.id;
