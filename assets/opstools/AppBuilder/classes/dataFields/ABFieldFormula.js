@@ -26,6 +26,7 @@ var ABFieldFormulaDefaults = {
 
 	isSortable: false,
 	isFilterable: false,
+	useAsLabel: false,
 
 };
 
