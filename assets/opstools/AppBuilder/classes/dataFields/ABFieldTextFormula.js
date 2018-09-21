@@ -351,7 +351,7 @@ class ABFieldTextFormula extends ABField {
 			var fieldRegExp = /{\w+}/gm;
 			var resultFormula = this.settings.textFormula;
 			var matches_field_array = resultFormula.match(fieldRegExp);
-			matches_field_array.forEach(element => {
+			(matches_field_array || []).forEach(element => {
 				var columnName = element.replace(/{|}|\"/g, '');
 				if (row.hasOwnProperty(columnName)) {
 					resultFormula = resultFormula.replace(element, row[columnName] ? row[columnName] : "");
