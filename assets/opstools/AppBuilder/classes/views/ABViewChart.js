@@ -5,11 +5,7 @@
  *
  */
 
-// import ABViewWidget from "./ABViewWidget"
 import ABViewContainer from "./ABViewContainer"
-// import ABViewManager from "../ABViewManager"
-import ABViewChartComponent from "./ABViewChartComponent"
-import ABPropertyComponent from "../ABPropertyComponent"
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -299,7 +295,7 @@ export default class ABViewChart extends ABViewContainer  {
 		$$(ids.columnValue).define("options", []);
 		$$(ids.columnValue).refresh();
 
-		var dc = view.dataCollection();
+		var dc = view.dataCollection;
 		if (dc == null) return;
 
 		var obj = dc.datasource;
@@ -344,7 +340,7 @@ export default class ABViewChart extends ABViewContainer  {
 		$$(ids.columnValue2).refresh();
 		$$(ids.columnValue2).enable();
 
-		var dc = view.dataCollection();
+		var dc = view.dataCollection;
 		if (dc == null) return;
 
 		var obj = dc.datasource;
@@ -429,25 +425,28 @@ export default class ABViewChart extends ABViewContainer  {
 
 		};
 
+
 		return {
 			ui: _ui,
 			init: _init,
 			logic: _logic,
+
+			onShow: container.onShow
 		}
 	}
 
 	/**
-	 * @method dataCollection
+	 * @property dataCollection
 	 * return ABViewDataCollection of this form
 	 * 
 	 * @return {ABViewDataCollection}
 	 */
-	dataCollection() {
+	get dataCollection() {
 		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.dataSource)[0];
 	}
 
 	labelField() {
-		var dc = this.dataCollection();
+		var dc = this.dataCollection;
 		if (!dc) return null;
 
 		var obj = dc.datasource;
@@ -457,7 +456,7 @@ export default class ABViewChart extends ABViewContainer  {
 	}
 
 	valueField() {
-		var dc = this.dataCollection();
+		var dc = this.dataCollection;
 		if (!dc) return null;
 
 		var obj = dc.datasource;
@@ -467,7 +466,7 @@ export default class ABViewChart extends ABViewContainer  {
 	}
 
 	valueField2() {
-		var dc = this.dataCollection();
+		var dc = this.dataCollection;
 		if (!dc) return null;
 
 		var obj = dc.datasource;
@@ -481,7 +480,7 @@ export default class ABViewChart extends ABViewContainer  {
 			this.dcChart = new webix.DataCollection();
 		}
 
-		var dc = this.dataCollection();
+		var dc = this.dataCollection;
 		if (dc == null) return this.dcChart;
 
 

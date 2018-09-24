@@ -119,6 +119,9 @@ export default class ABViewDataCollection extends ABView {
 		// refresh a data collection
 		// this.init();
 
+		// mark data status does not be initialized
+		this._dataStatus = this.dataStatusFlag.notInitial;
+
 	}
 
 
@@ -1168,7 +1171,8 @@ export default class ABViewDataCollection extends ABView {
 
 
 		// load data to initial the data collection
-		this.loadData();
+		// this.loadData();
+
 		// if (this.settings.loadAll)
 		// 	this.loadData();
 		// else
@@ -1225,7 +1229,7 @@ export default class ABViewDataCollection extends ABView {
 
 				var items = dc.count();
 				if (items == 0 &&
-					!this.isInitializedData &&
+					this._dataStatus == this.dataStatusFlag.initializing &&
 					component.showProgress) {
 					component.showProgress({ type: "icon" });
 				}
@@ -1411,41 +1415,26 @@ export default class ABViewDataCollection extends ABView {
 
 	loadData(start, limit, callback) {
 
+		// mark data status is initializing
+		if (this._dataStatus == this.dataStatusFlag.notInitial)
+			this._dataStatus = this.dataStatusFlag.initializing;
+
 		var obj = this.datasource;
-		if (obj == null) return Promise.resolve([]);
+		if (obj == null) {
+			this._dataStatus = this.dataStatusFlag.initialized;
+			return Promise.resolve([]);
+		}
 
 		var model = obj.model();
-		if (model == null) return Promise.resolve([]);
+		if (model == null) {
+			this._dataStatus = this.dataStatusFlag.initialized;
+			return Promise.resolve([]);
+		}
 
 		var sorts = this.settings.objectWorkspace.sortFields || [];
 
 		// pull filter conditions
 		var wheres = this.settings.objectWorkspace.filterConditions;
-		// var wheres = [];
-		// var filterConditions = this.settings.objectWorkspace.filterConditions || ABViewPropertyDefaults.objectWorkspace.filterConditions;
-		// (filterConditions.rules || []).forEach((f) => {
-
-		// 	// Get field name
-		// 	var fieldName = "";
-		// 	if (f.fieldId == 'this_object') {
-		// 		fieldName = f.fieldId;
-		// 	} else {
-		// 		var object = this.datasource;
-		// 		if (object) {
-		// 			var selectField = object.fields(field => field.id == f.fieldId)[0];
-		// 			fieldName = selectField ? selectField.columnName : "";
-		// 		}
-		// 	}
-
-		// 	wheres.push({
-		// 		combineCondition: filterConditions.combineCondition,
-		// 		fieldName: fieldName,
-		// 		operator: f.operator,
-		// 		inputValue: f.inputValue
-		// 	});
-
-		// });
-
 
 		// calculate default value of $height of rows
 		var defaultHeight = 0;
@@ -1473,83 +1462,119 @@ export default class ABViewDataCollection extends ABView {
 			delete cond.limit;
 		}
 
-		// get data to data collection
-		return model.findAll(cond)
-			.then((data) => {
+		return Promise.resolve()
+			.then(() => {
 
+				// check data status of link data collection and listen change cursor event
 				return new Promise((resolve, reject) => {
 
-					data.data.forEach((d) => {
+					let linkDc = this.dataCollectionLink;
+					if (!linkDc) return resolve();
 
-						// define $height of rows to render in webix elements
-						if (d.properties != null && d.properties.height != "undefined" && parseInt(d.properties.height) > 0) {
-							d.$height = parseInt(d.properties.height);
-						} else if (defaultHeight > 0) {
-							d.$height = defaultHeight;
-						}
-
+					// add listeners when cursor of link data collection is changed
+					this.eventAdd({
+						emitter: linkDc,
+						eventName: "changeCursor",
+						listener: this.refreshLinkCursor
 					});
 
+					switch (linkDc.dataStatus) {
 
-					// mark initial data already
-					if (!this.initializedData)
-						this.initializedData = true;
+						case linkDc.dataStatusFlag.notInitial:
+							linkDc.loadData().catch(reject);
 
+						case linkDc.dataStatusFlag.initializing:
 
-					// populate data to webix's data collection and the loading cursor is hidden here
-					this.__dataCollection.parse(data);
+							// wait until the link dc initialized data
+							// NOTE: if linked data collections are recursive, then it is infinity looping.
+							this.eventAdd({
+								emitter: linkDc,
+								eventName: "initializedData",
+								listener: () => {
 
+									// go next
+									resolve();
 
-					var linkDc = this.dataCollectionLink;
-					if (linkDc) {
+								}
+							});
 
-						// filter data by match link data collection
-						this.refreshLinkCursor();
+							break;
 
-						// add listeners when cursor of link data collection is changed
-						this.eventAdd({
-							emitter: linkDc,
-							eventName: "changeCursor",
-							listener: (currData) => {
-
-								this.refreshLinkCursor();
-							}
-						});
-
-					}
-					else {
-
-						// set static cursor
-						this.setStaticCursor();
+						case linkDc.dataStatusFlag.initialized:
+							resolve();
+							break;
 
 					}
-
-
-
-					if (callback)
-						callback();
-
-					resolve();
 
 				});
 
 			})
-			.catch(err => {
 
-				this.hideProgressOfComponents();
+			// pull data to data collection
+			.then(() => {
 
-				if (callback)
-					callback(err);
+				return new Promise((resolve, reject) => {
+
+					model.findAll(cond)
+					.then((data) => {
+
+						data.data.forEach((d) => {
+	
+							// define $height of rows to render in webix elements
+							if (d.properties != null && d.properties.height != "undefined" && parseInt(d.properties.height) > 0) {
+								d.$height = parseInt(d.properties.height);
+							} else if (defaultHeight > 0) {
+								d.$height = defaultHeight;
+							}
+	
+						});
+
+
+						// mark initialized data
+						if (this._dataStatus != this.dataStatusFlag.initialized) {
+							this._dataStatus = this.dataStatusFlag.initialized;
+							this.emit("initializedData", {});
+						}
+
+
+						// populate data to webix's data collection and the loading cursor is hidden here
+						this.__dataCollection.parse(data);
+	
+	
+						var linkDc = this.dataCollectionLink;
+						if (linkDc) {
+	
+							// filter data by match link data collection
+							this.refreshLinkCursor();
+	
+						}
+						else {
+	
+							// set static cursor
+							this.setStaticCursor();
+	
+						}
+
+						if (callback)
+							callback();
+	
+						resolve();
+		
+					})
+					.catch(err => {
+		
+						this.hideProgressOfComponents();
+		
+						if (callback)
+							callback(err);
+
+						reject(err);
+		
+					});
+
+				});
 
 			});
-
-		// if (callback) {
-		// 	Promise.all([dataFetch]).then(function(values) {
-		// 		callback();
-		// 	});
-		// } else {
-		// 	return dataFetch;
-		// }
 
 	}
 
@@ -1735,8 +1760,18 @@ export default class ABViewDataCollection extends ABView {
 
 	}
 
-	get isInitializedData() {
-		return this.initializedData == true;
+	get dataStatusFlag() {
+		return {
+			notInitial: 0,
+			initializing: 1,
+			initialized: 2
+		};
+	}
+
+	get dataStatus() {
+
+		return this._dataStatus;
+
 	}
 
 

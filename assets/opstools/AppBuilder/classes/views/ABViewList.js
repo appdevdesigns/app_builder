@@ -228,6 +228,8 @@ export default class ABViewLabel extends ABViewWidget {
 	 */
 	component(App) {
 
+		let baseCom = super.component(App);
+
 		var idBase = 'ABViewListEditorComponent';
 		var ids = {
 			component: App.unique(idBase + '_component')
@@ -255,7 +257,7 @@ export default class ABViewLabel extends ABViewWidget {
 
 		var _init = (options) => {
 
-			var dc = this.dataCollection();
+			var dc = this.dataCollection;
 			if (!dc) return;
 
 			// bind dc to component
@@ -268,18 +270,20 @@ export default class ABViewLabel extends ABViewWidget {
 
 		return {
 			ui: _ui,
-			init: _init
+			init: _init,
+
+			onShow: baseCom.onShow
 		}
 	}
 
 
 	/**
-	 * @method dataCollection
+	 * @property dataCollection
 	 * return ABViewDataCollection of this form
 	 * 
 	 * @return {ABViewDataCollection}
 	 */
-	dataCollection() {
+	get dataCollection() {
 		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.datacollection)[0];
 	}
 
@@ -287,7 +291,7 @@ export default class ABViewLabel extends ABViewWidget {
 
 	field() {
 
-		var dc = this.dataCollection();
+		var dc = this.dataCollection;
 		if (!dc) return null;
 
 		var object = dc.datasource;
@@ -313,7 +317,7 @@ export default class ABViewLabel extends ABViewWidget {
 				ul: []
 			};
 
-			var dc = this.dataCollection();
+			var dc = this.dataCollection;
 			if (!dc) return resolve(reportDef);
 
 			var field = this.field();

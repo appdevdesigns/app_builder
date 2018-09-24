@@ -152,7 +152,7 @@ export default class ABViewDetailComponent extends ABViewWidget {
 		var detailCom = this.detailComponent();
 		if (!detailCom) return null;
 
-		var dc = detailCom.dataCollection();
+		var dc = detailCom.dataCollection;
 		if (!dc) return null;
 
 		var field = this.field();
@@ -184,7 +184,7 @@ export default class ABViewDetailComponent extends ABViewWidget {
 			var detailCom = this.detailComponent();
 			if (!detailCom) return resolve(reportDef);
 
-			var dc = detailCom.dataCollection();
+			var dc = detailCom.dataCollection;
 			if (!dc) return resolve(reportDef);
 
 			var field = this.field();

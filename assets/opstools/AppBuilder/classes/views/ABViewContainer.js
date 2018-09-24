@@ -666,6 +666,16 @@ export default class ABViewContainer extends ABView {
 
 		var _onShow = () => {
 
+			let dc = this.dataCollection; // get from a function or a (get) property
+			if (dc &&
+				dc.dataStatus == dc.dataStatusFlag.notInitial) {
+
+				// load data when a widget is showing
+				dc.loadData();
+
+			}
+
+			// calll .onShow in child components
 			this.views().forEach((v) => {
 
 				var component = this.viewComponents[v.id];

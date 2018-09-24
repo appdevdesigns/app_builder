@@ -88,7 +88,7 @@ export default class ABViewDataview extends ABViewDetail {
 
 		com.init = (options) => {
 
-			var dc = this.dataCollection();
+			var dc = this.dataCollection;
 			if (!dc) return;
 
 			com.onShow();
@@ -109,10 +109,13 @@ export default class ABViewDataview extends ABViewDetail {
 
 		com.onShow = () => {
 
+			let baseCom = super.component(App);
+			baseCom.onShow();
+
 			// clear UI
 			webix.ui(com.ui, $$(ids.component));
 
-			var dc = this.dataCollection();
+			var dc = this.dataCollection;
 			if (!dc) return;
 
 			var rows = dc.getData();
@@ -143,7 +146,7 @@ export default class ABViewDataview extends ABViewDetail {
 
 			var reportDef = [];
 
-			var dc = this.dataCollection();
+			var dc = this.dataCollection;
 			if (!dc) return reportDef;
 
 			var rows = dc.getData();

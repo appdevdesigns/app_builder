@@ -652,7 +652,7 @@ PopupRecordRule.qbFixAfterShow();
 		if (!view) return;
 
 		// Populate values to rules
-		var selectedDc = view.dataCollection();
+		var selectedDc = view.dataCollection;
 		if (selectedDc) {
 			PopupDisplayRule.objectLoad(selectedDc.datasource);
 			PopupRecordRule.objectLoad(selectedDc.datasource);
@@ -764,7 +764,7 @@ PopupRecordRule.qbFixAfterShow();
 			}
 
 			// bind a data collection to form component
-			var dc = this.dataCollection();
+			var dc = this.dataCollection;
 			if (dc) {
 
 				// listen DC events
@@ -869,7 +869,7 @@ PopupRecordRule.qbFixAfterShow();
 
 			displayParentData: (rowData) => {
 
-				var dc = this.dataCollection();
+				var dc = this.dataCollection;
 				var currCursor = dc.getCursor();
 
 				// If the cursor is selected, then it will not update value of the parent field
@@ -934,7 +934,7 @@ PopupRecordRule.qbFixAfterShow();
 			});
 
 			var data = null;
-			var dc = this.dataCollection();
+			var dc = this.dataCollection;
 			if (dc) {
 
 				if (Form)
@@ -985,12 +985,12 @@ PopupRecordRule.qbFixAfterShow();
 
 
 	/**
-	 * @method dataCollection
+	 * @property dataCollection
 	 * return ABViewDataCollection of this form
 	 * 
 	 * @return {ABViewDataCollection}
 	 */
-	dataCollection() {
+	get dataCollection() {
 		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.datacollection)[0];
 	}
 
@@ -1076,7 +1076,7 @@ PopupRecordRule.qbFixAfterShow();
 			formView.clearValidation();
 
 			// get ABViewDataCollection
-			var dc = this.dataCollection();
+			var dc = this.dataCollection;
 			if (dc == null) return Promise.resolve();
 
 			// get ABObject
@@ -1311,7 +1311,7 @@ resolve();
 
 	doRecordRules(rowData) {
 
-		var object = this.dataCollection().datasource;
+		var object = this.dataCollection.datasource;
 
 		var RecordRules = new ABRecordRule();
 		RecordRules.formLoad(this);
@@ -1324,7 +1324,7 @@ resolve();
 
 	doSubmitRules(rowData) {
 
-		var object = this.dataCollection().datasource;
+		var object = this.dataCollection.datasource;
 		
 		var SubmitRules = new ABSubmitRule();
 		SubmitRules.formLoad(this);

@@ -342,6 +342,8 @@ export default class ABViewText extends ABViewWidget {
 	 */
 	component(App) {
 
+		let baseCom = super.component(App);
+
 		var idBase = 'ABViewText_' + this.id;
 		var ids = {
 			component: App.unique(idBase + '_component'),
@@ -385,15 +387,17 @@ export default class ABViewText extends ABViewWidget {
 		
 		var _onShow = (viewId) => {
 
+			baseCom.onShow(viewId);
+
 			// listen DC events
-			let dc = this.dataCollection();
+			let dc = this.dataCollection;
 			if (dc) {
 
 				this.eventAdd({
 					emitter: dc,
 					eventName: 'changeCursor',
 					listener: _logic.displayText
-				})
+				});
 
 			}
 
@@ -421,12 +425,12 @@ export default class ABViewText extends ABViewWidget {
 
 
 	/**
-	 * @method dataCollection
+	 * @property dataCollection
 	 * return ABViewDataCollection of this form
 	 * 
 	 * @return {ABViewDataCollection}
 	 */
-	dataCollection() {
+	get dataCollection() {
 		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.datacollection)[0];
 	}
 
@@ -439,7 +443,7 @@ export default class ABViewText extends ABViewWidget {
 			return result.replace(/{(.*?)}/g, "");
 		};
 
-		var dc = this.dataCollection();
+		var dc = this.dataCollection;
 		if (!dc) return clearTemplateValue(result);
 
 		var object = dc.datasource;

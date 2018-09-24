@@ -181,7 +181,7 @@ export default class ABViewFormCustom extends ABViewFormField {
 
 						var formView = this.parentFormComponent();
 						if (formView) {
-							var dc = formView.dataCollection();
+							var dc = formView.dataCollection;
 							if (dc)
 								rowData = dc.getCursor() || {};
 						}

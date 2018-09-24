@@ -826,7 +826,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		if (!view) return;
 
 		// Populate values to QueryBuilder
-		var selectedDc = view.dataCollection();
+		var selectedDc = view();
 
 		if (selectedDc) {
 			// if (view.settings.gridFilter.filterOption == 2) {
@@ -848,6 +848,8 @@ export default class ABViewGrid extends ABViewWidget  {
 	 * @return {obj} UI component
 	 */
 	component(App, objId) {
+
+		let baseCom = super.component(App);
 
 		var idBase = objId || 'ABViewGrid_'+this.id;
 		var ids = {
@@ -1017,7 +1019,7 @@ export default class ABViewGrid extends ABViewWidget  {
 				// var dataSource = this.application.objects((o)=>{
 				// 	return o.id == this.settings.dataSource;
 				// });
-				var dc = this.dataCollection();
+				var dc = this.dataCollection;
 
 				if (dc && dc.datasource) {
 
@@ -1430,6 +1432,8 @@ export default class ABViewGrid extends ABViewWidget  {
 
 		var _onShow = () => {
 
+			baseCom.onShow();
+
 			if ($$(DataTable.ui.id)) {
 				$$(DataTable.ui.id).adjust();
 			}
@@ -1453,7 +1457,7 @@ export default class ABViewGrid extends ABViewWidget  {
 				}
 			}
 			
-			var dc = this.dataCollection();
+			var dc = this.dataCollection;
 			if (dc) {
 
 				this.eventAdd({
@@ -1516,7 +1520,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		let groupFields = [
 			{ id: '', value: L('ab.component.grid.noGroupBy', '*No group field') }
 		];
-		var dc = this.dataCollection();
+		var dc = this.dataCollection;
 		if (dc && dc.datasource) {
 			dc.datasource.fields(f => {
 				return f.key != 'connectObject' && view.settings.objectWorkspace.hiddenFields.indexOf(f.columnName) < 0;
@@ -1601,7 +1605,7 @@ export default class ABViewGrid extends ABViewWidget  {
 	}
 	
 	populatePopupEditors(view, dataSource) {
-		var dc = this.dataCollection();
+		var dc = this.dataCollection;
 
 		if (!dc || !dc.datasource) return;
 		// if (view.settings.gridFilter.filterOption == 2) {
@@ -1617,7 +1621,7 @@ export default class ABViewGrid extends ABViewWidget  {
 			// var dataSource = view.application.objects((o)=>{
 			// 	return o.id == view.settings.dataSource;
 			// });
-			// var dataSource = this.dataCollection();
+			// var dataSource = this.dataCollection;
 			// var dataCopy = _.cloneDeep(dataSource.datasource);
 			// console.log(view);
 			// dataCopy.objectWorkspace = view.settings.objectWorkspace;
@@ -1726,12 +1730,12 @@ export default class ABViewGrid extends ABViewWidget  {
 	}
 	
 	/**
-	 * @method dataCollection
+	 * @property dataCollection
 	 * return ABViewDataCollection of this form
 	 * 
 	 * @return {ABViewDataCollection}
 	 */
-	dataCollection() {
+	get dataCollection() {
 		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.dataSource)[0];
 	}
 	
@@ -1781,7 +1785,7 @@ export default class ABViewGrid extends ABViewWidget  {
 
 			var reportDef = {};
 
-			var dc = this.dataCollection();
+			var dc = this.dataCollection;
 			if (!dc) return resolve(reportDef);
 	
 			var object = dc.datasource;

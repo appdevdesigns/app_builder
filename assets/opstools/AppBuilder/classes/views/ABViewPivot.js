@@ -266,6 +266,8 @@ export default class ABViewPivot extends ABViewWidget {
 	 */
 	component(App) {
 
+		let baseCom = super.component(App);
+
 		var idBase = 'ABViewPivot_' + this.id;
 		var ids = {
 			component: App.unique(idBase + '_component'),
@@ -299,7 +301,7 @@ export default class ABViewPivot extends ABViewWidget {
 
 					return new Promise((next, err) => {
 
-						var dc = this.dataCollection();
+						var dc = this.dataCollection;
 						if (!dc) return next();
 
 						var data = dc.getData();
@@ -323,7 +325,7 @@ export default class ABViewPivot extends ABViewWidget {
 
 					return new Promise((next, err) => {
 
-						var dc = this.dataCollection();
+						var dc = this.dataCollection;
 						if (!dc) return next();
 
 						var object = dc.datasource;
@@ -372,7 +374,9 @@ export default class ABViewPivot extends ABViewWidget {
 
 		return {
 			ui: _ui,
-			init: _init
+			init: _init,
+
+			onShow: baseCom.onShow
 		};
 
 	}
@@ -387,12 +391,12 @@ export default class ABViewPivot extends ABViewWidget {
 
 
 	/**
-	 * @method dataCollection
+	 * @property dataCollection
 	 * return ABViewDataCollection of this form
 	 * 
 	 * @return {ABViewDataCollection}
 	 */
-	dataCollection() {
+	get dataCollection() {
 		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.datacollection)[0];
 	}
 

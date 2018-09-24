@@ -193,7 +193,7 @@ export default class ABViewDetailCustom extends ABViewDetailComponent {
 			if (!elem) return;
 
 			var detailCom = this.detailComponent(),
-				rowData = detailCom.dataCollection().getCursor() || {},
+				rowData = detailCom.dataCollection.getCursor() || {},
 				node = elem.$view;
 
 			field.customDisplay(rowData, App, node, {

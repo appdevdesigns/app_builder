@@ -419,7 +419,7 @@ export default class ABViewDetail extends ABViewContainer {
 			container.onShow();
 
 			// listen DC events
-			var dc = this.dataCollection();
+			var dc = this.dataCollection;
 			if (dc) {
 
 				var currData = dc.getCursor();
@@ -464,12 +464,12 @@ export default class ABViewDetail extends ABViewContainer {
 
 
 	/**
-	 * @method dataCollection
+	 * @property dataCollection
 	 * return ABViewDataCollection of this detail
 	 * 
 	 * @return {ABViewDataCollection}
 	 */
-	dataCollection() {
+	get dataCollection() {
 		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.datacollection)[0];
 	}
 

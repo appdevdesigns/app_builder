@@ -544,7 +544,7 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 										$row.addView({}, 1);
 									} else {
 
-										var options = this.currentForm.dataCollection().datasource.fields().map(function (f) {
+										var options = this.currentForm.dataCollection.datasource.fields().map(function (f) {
 											return {
 												id: f.id,
 												value: f.label
@@ -1019,7 +1019,7 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 								return (r.rule == "same_as_field" || r.rule == "not_same_as_field");
 							}).forEach((item) => {
 
-								var valueField = this.currentForm.dataCollection().datasource.fields((f) => { return f.id == item.value; })[0];
+								var valueField = this.currentForm.dataCollection.datasource.fields((f) => { return f.id == item.value; })[0];
 								if (valueField.key == "connectObject") {
 									item.value = valueField.format(this._formData);
 								} else {
@@ -1265,7 +1265,7 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 					} else {
 
 						// get the model from the provided Form Obj:
-						var dc = options.form.dataCollection();
+						var dc = options.form.dataCollection;
 						if (!dc) return resolve();
 
 						var model = dc.model;
