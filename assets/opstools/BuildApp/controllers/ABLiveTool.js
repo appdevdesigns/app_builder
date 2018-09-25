@@ -164,9 +164,11 @@ steal(
 									else {
 										// TODO: How to get current area ?
 										var currPanel = document.body.querySelector('#op-masthead-sublinks > ul:not([style*="display:none"]):not([style*="display: none"])');
-										var currArea = currPanel.getAttribute('area');
-										if (currArea == areaKey) {
-											callback(null, { area: areaKey });
+										if (currPanel) {
+											var currArea = currPanel.getAttribute('area');
+											if (currArea == areaKey) {
+												callback(null, { area: areaKey });
+											}
 										}
 									}
 									
