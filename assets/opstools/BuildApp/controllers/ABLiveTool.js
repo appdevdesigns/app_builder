@@ -106,30 +106,66 @@ steal(
 										.then(function (result) {
 											self.data.application = result;
 
+											// Store the root page
+											if (self.rootPage == null)
+												self.rootPage = self.data.application.urlResolve(self.options.page);
+
 											next();
 										}, next);
 								},
 
+								// Find opsportal tool id
 								function (next) {
 
-									// Wait until the tool's area has been shown
+									let appKey = 'AB_' + String(self.data.application.name).replace(/[^a-z0-9]/gi, ''),
+										pageKey = ['opstools', appKey, self.rootPage.name.replace(/[^a-z0-9]/gi, '').toLowerCase()].join('.'),
+										toolKey = _.kebabCase(pageKey);
+
+									var Tools = AD.Model.get('opsportal.navigation.OPConfigTool');
+									Tools.findAll({ key: toolKey })
+									.fail(function(err){
+										next(err);
+									})
+									.then(function(list){
+
+										var currTool = list[0];
+										if (!currTool) return next("Could not found opsportal tool");
+
+										self.toolId = currTool.id;
+
+										next();
+
+									});
+
+								},
+
+								function (next) {
+
 									var areaKey = 'ab-' + self.data.application.name.trim();
 									areaKey = areaKey.toLowerCase().replace(/[^a-z0-9]/gi, '');
 
 									var callback = function (message, data) {
 
-										var areaData = data.area.toLowerCase().replace(/[^a-z0-9]/gi, '');
-										if (areaData == areaKey) {
+										// var areaData = data.area.toLowerCase().replace(/[^a-z0-9]/gi, '');
+										// if (areaData == areaKey) {
 
-											if (!self.activated) {
-												self.activated = true;
+										// get active tool element
+										let currToolElem = document.querySelector('#op-masthead-sublinks [area="{area}"] .active'.replace("{area}", data.area));
+										if (!currToolElem) return;
+										
+										let toolId = currToolElem.getAttribute("op-tool-id");
+										if (toolId != self.toolId) return;
 
-												self.startPage();
-											}
-											else {
-												self.showPage();
-											}
+										if (!self.activated) {
+											self.activated = true;
+
+											self.startPage();
 										}
+										else {
+											self.showPage();
+										}
+
+										// }
 									};
 
 									if (self.subID1 == null)
@@ -182,15 +218,12 @@ steal(
 							// Wait until the tool's area has been shown
 							if (!self.activated) return;
 
-							// Store the root page
-							if (self.rootPage == null)
-								self.rootPage = self.data.application.urlResolve(self.options.page);
-
 							self.initPage();
 
 							webix.ready(function () {
 
 								self.showPage();
+
 								self.resize(self.height || 600);
 							});
 
