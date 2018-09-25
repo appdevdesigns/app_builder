@@ -114,35 +114,15 @@ steal(
 										}, next);
 								},
 
-								// Find opsportal tool id
 								function (next) {
 
-									let appKey = 'AB_' + String(self.data.application.name).replace(/[^a-z0-9]/gi, ''),
+									let areaKey = 'ab-' + self.data.application.name.trim();
+									areaKey = areaKey.toLowerCase().replace(/[^a-z0-9]/gi, '');
+
+									var appKey = 'AB_' + String(self.data.application.name).replace(/[^a-z0-9]/gi, ''),
 										pageKey = ['opstools', appKey, self.rootPage.name.replace(/[^a-z0-9]/gi, '').toLowerCase()].join('.'),
 										toolKey = _.kebabCase(pageKey);
 
-									var Tools = AD.Model.get('opsportal.navigation.OPConfigTool');
-									Tools.findAll({ key: toolKey })
-									.fail(function(err){
-										next(err);
-									})
-									.then(function(list){
-
-										var currTool = list[0];
-										if (!currTool) return next("Could not found opsportal tool");
-
-										self.toolId = currTool.id;
-
-										next();
-
-									});
-
-								},
-
-								function (next) {
-
-									var areaKey = 'ab-' + self.data.application.name.trim();
-									areaKey = areaKey.toLowerCase().replace(/[^a-z0-9]/gi, '');
 
 									var callback = function (message, data) {
 
@@ -153,8 +133,8 @@ steal(
 										let currToolElem = document.querySelector('#op-masthead-sublinks [area="{area}"] .active'.replace("{area}", data.area));
 										if (!currToolElem) return;
 										
-										let toolId = currToolElem.getAttribute("op-tool-id");
-										if (toolId != self.toolId) return;
+										let currToolKey = currToolElem.getAttribute("op-tool-key");
+										if (currToolKey != toolKey) return;
 
 										if (!self.activated) {
 											self.activated = true;
