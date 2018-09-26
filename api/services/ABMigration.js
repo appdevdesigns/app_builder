@@ -50,7 +50,7 @@ module.exports = {
 
     createObject:function(object) {
 
-        var knex = ABMigration.connection();
+        var knex = ABMigration.connection(object.connName);
         return object.migrateCreate(knex);
 
     },
@@ -58,7 +58,7 @@ module.exports = {
 
     dropObject:function(object) {
 
-        var knex = ABMigration.connection();
+        var knex = ABMigration.connection(object.connName);
         return object.migrateDrop(knex);
 
     },
@@ -72,8 +72,8 @@ module.exports = {
      */
     refreshObject: function(object) {
 
-        var knex = ABMigration.connection();
-        var tableName = object.dbTableName();
+        var knex = ABMigration.connection(object.connName);
+        var tableName = object.dbTableName(true);
 
         if (knex.$$objection &&
             knex.$$objection.boundModels) {
@@ -93,7 +93,7 @@ module.exports = {
         if (field.object.isExternal)
             return Promise.resolve();
 
-        var knex = ABMigration.connection();
+        var knex = ABMigration.connection(field.object.connName);
         return field.migrateCreate(knex);
 
     },
@@ -103,7 +103,7 @@ module.exports = {
         if (field.object.isExternal)
             return Promise.resolve();
 
-        var knex = ABMigration.connection();
+        var knex = ABMigration.connection(field.object.connName);
         return field.migrateUpdate(knex);
 
     },
@@ -114,7 +114,7 @@ module.exports = {
         if (field.object.isExternal)
             return Promise.resolve();
 
-        var knex = ABMigration.connection();
+        var knex = ABMigration.connection(field.object.connName);
         return field.migrateDrop(knex);
 
     }

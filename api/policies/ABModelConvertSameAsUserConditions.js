@@ -379,7 +379,7 @@ function ProcessField( list, obj, listAlreadyChecked, req, cb) {
                         // be used to lookup the joinTable
 
                         var lookupJoin = {
-                            joinTable: currField.joinTableName(),
+                            joinTable: currField.joinTableName(true),
                             field: connectedObj.name,
                             dataColumn: connectedObj.PK()
 
@@ -514,7 +514,7 @@ function processLookup( list, cb, data) {
     // C) lookup from an intermediate lookup table
     // lookup in format:
     // {
-    //     joinTable: currField.joinTableName(),
+    //     joinTable: currField.joinTableName(true),
     //     field: connectedObj.name,
     //     dataColumn: connectedObj.PK()
     // }

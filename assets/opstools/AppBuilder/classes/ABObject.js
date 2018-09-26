@@ -431,13 +431,15 @@ export default class ABObject extends ABObjectBase {
 
 		if (!this._model) {
 
-			if (this.isImported) {
-				var obj = ABApplication.objectFromRef(this.importFromObject);
-				this._model = new ABModel(obj);
-			}
-			else {
-				this._model = new ABModel(this);
-			}
+			this._model = new ABModel(this);
+
+			// if (this.isImported) {
+			// 	var obj = ABApplication.objectFromRef(this.importFromObject);
+			// 	this._model = new ABModel(obj);
+			// }
+			// else {
+			// 	this._model = new ABModel(this);
+			// }
 		}
 
 		return this._model;

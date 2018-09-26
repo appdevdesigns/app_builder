@@ -18,7 +18,8 @@ module.exports = function (req, res, next) {
 				if (field) {
 
 					// convert field's id to column name
-					r.key = '`{tableName}`.`{columnName}`'
+					r.key = '`{dbName}`.`{tableName}`.`{columnName}`'
+						.replace('{dbName}', field.object.dbSchemaName())
 						.replace('{tableName}', field.object.dbTableName())
 						.replace('{columnName}', field.columnName);
 
@@ -41,7 +42,7 @@ module.exports = function (req, res, next) {
 						var userData = req.user.data;
 
 						r.key = ('JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({tableName}.translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({tableName}.translations, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))')
-							.replace(/{tableName}/g, field.object.dbTableName())
+							.replace(/{tableName}/g, field.object.dbTableName(true))
 							.replace(/{languageCode}/g, userData.languageCode)
 							.replace(/{columnName}/g, field.columnName);
 					}

@@ -122,20 +122,14 @@ module.exports = class ABObject extends ABObjectBase {
 
 		var tableName = "";
 
-		if (this.isImported) {
-			// NOTE: store table name of import object to ignore async
-			tableName = this.tableName;
-		}
-		else {
-			tableName =  AppBuilder.rules.toObjectNameFormat(this.application.dbApplicationName(), this.name);
-			// var modelName = this.name.toLowerCase();
-			// if (!sails.models[modelName]) {
-			// 	throw new Error(`Imported object model not found: ${modelName}`);
-			// }
-			// else {
-			// 	return sails.models[modelName].waterline.schema[modelName].tableName;
-			// }
-		}
+		tableName =  AppBuilder.rules.toObjectNameFormat(this.application.dbApplicationName(), this.name);
+		// var modelName = this.name.toLowerCase();
+		// if (!sails.models[modelName]) {
+		// 	throw new Error(`Imported object model not found: ${modelName}`);
+		// }
+		// else {
+		// 	return sails.models[modelName].waterline.schema[modelName].tableName;
+		// }
 
 		if (prefixSchema) {
 
@@ -223,12 +217,6 @@ module.exports = class ABObject extends ABObjectBase {
 		return new Promise(
 			(resolve, reject) => {
 				sails.log.silly('.... .migrateDropTable()  before knex:');
-				
-				if (this.isImported) {
-					sails.log.silly('.... aborted drop of imported table');
-					resolve();
-					return;
-				}
 
 				//BEFORE we just go drop the table, let's give each of our
 				// fields the chance to perform any clean up actions related
@@ -276,11 +264,11 @@ module.exports = class ABObject extends ABObjectBase {
 	 */
 	model() {
 
-		var tableName = this.dbTableName();
+		var tableName = this.dbTableName(true);
 
 		if (!__ModelPool[tableName]) {
 
-			var knex = ABMigration.connection();
+			var knex = ABMigration.connection(this.connName);
 
 			// Compile our jsonSchema from our DataFields
 			// jsonSchema is only used by Objection.js to validate data before
@@ -347,7 +335,7 @@ module.exports = class ABObject extends ABObjectBase {
 
 	modelRelation() {
 
-		var tableName = this.dbTableName();
+		var tableName = this.dbTableName(true);
 
 		// Compile our relations from our DataFields
 		var relationMappings = {};
@@ -380,13 +368,13 @@ module.exports = class ABObject extends ABObjectBase {
 
 				if (f.settings.isSource == true) {
 					sourceTable = tableName;
-					targetTable = linkObject.dbTableName();
+					targetTable = linkObject.dbTableName(true);
 					targetPkName = linkObject.PK();
 					relation = Model.BelongsToOneRelation;
 					columnName = f.columnName;
 				}
 				else {
-					sourceTable = linkObject.dbTableName();
+					sourceTable = linkObject.dbTableName(true);
 					targetTable = tableName;
 					targetPkName = this.PK();
 					relation = Model.HasOneRelation;
@@ -410,28 +398,28 @@ module.exports = class ABObject extends ABObjectBase {
 			// M:N
 			else if (f.settings.linkType == 'many' && f.settings.linkViaType == 'many') {
 				// get join table name
-				var joinTablename = f.joinTableName(),
+				var joinTablename = f.joinTableName(true),
 					joinColumnNames = f.joinColumnNames(),
 					sourceTableName,
 					sourcePkName,
 					targetTableName,
 					targetPkName;
 
-				sourceTableName = f.object.dbTableName();
+				sourceTableName = f.object.dbTableName(true);
 				sourcePkName = f.object.PK();
-				targetTableName = linkObject.dbTableName();
+				targetTableName = linkObject.dbTableName(true);
 				targetPkName = linkObject.PK();
 
 				// if (f.settings.isSource == true) {
-				// 	sourceTableName = f.object.dbTableName();
+				// 	sourceTableName = f.object.dbTableName(true);
 				// 	sourcePkName = f.object.PK();
-				// 	targetTableName = linkObject.dbTableName();
+				// 	targetTableName = linkObject.dbTableName(true);
 				// 	targetPkName = linkObject.PK();
 				// }
 				// else {
-				// 	sourceTableName = linkObject.dbTableName();
+				// 	sourceTableName = linkObject.dbTableName(true);
 				// 	sourcePkName = linkObject.PK();
-				// 	targetTableName = f.object.dbTableName();
+				// 	targetTableName = f.object.dbTableName(true);
 				// 	targetPkName = f.object.PK();
 				// }
 
@@ -473,7 +461,7 @@ module.exports = class ABObject extends ABObjectBase {
 							.replace('{field}', f.columnName),
 
 						to: '{targetTable}.{primaryField}'
-							.replace('{targetTable}', linkObject.dbTableName())
+							.replace('{targetTable}', linkObject.dbTableName(true))
 							.replace('{primaryField}', linkObject.PK())
 					}
 				};
@@ -489,7 +477,7 @@ module.exports = class ABObject extends ABObjectBase {
 							.replace('{primaryField}', this.PK()),
 
 						to: '{targetTable}.{field}'
-							.replace('{targetTable}', linkObject.dbTableName())
+							.replace('{targetTable}', linkObject.dbTableName(true))
 							.replace('{field}', linkField.columnName)
 					}
 				};
@@ -508,7 +496,7 @@ module.exports = class ABObject extends ABObjectBase {
 	 */
 	modelRefresh() {
 
-		var tableName = this.dbTableName();
+		var tableName = this.dbTableName(true);
 		delete __ModelPool[tableName];
 
 		ABMigration.refreshObject(this);
@@ -782,7 +770,8 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 					if (field) {
 
 						// convert field's id to column name
-						condition.key = '`{tableName}`.`{columnName}`'
+						condition.key = '`{databaseName}`.`{tableName}`.`{columnName}`'
+							.replace('{databaseName}', field.object.dbSchemaName())
 							.replace('{tableName}', field.object.dbTableName())
 							.replace('{columnName}', field.columnName);
 
@@ -795,11 +784,13 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 
 								let transTable = field.object.dbTransTableName();
 
-								condition.key = '`{tableName}`.`{columnName}`'
+								condition.key = '`{databaseName}`.`{tableName}`.`{columnName}`'
+												.replace('{databaseName}', field.object.dbSchemaName())
 												.replace(/{tableName}/g, transTable)
 												.replace(/{columnName}/g, field.columnName);
 
-								let languageWhere = '`{tableName}`.`language_code` = "{languageCode}"'
+								let languageWhere = '`{databaseName}`.`{tableName}`.`language_code` = "{languageCode}"'
+												.replace('{databaseName}', field.object.dbSchemaName())
 												.replace(/{tableName}/g, transTable)
 												.replace(/{languageCode}/g, userData.languageCode);
 
@@ -808,7 +799,7 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 							}
 							else {
 								condition.key = ('JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({tableName}.translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({tableName}.translations, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))')
-												.replace(/{tableName}/g, field.object.dbTableName())
+												.replace(/{tableName}/g, field.object.dbTableName(true))
 												.replace(/{languageCode}/g, userData.languageCode)
 												.replace(/{columnName}/g, field.columnName);
 							}
@@ -970,7 +961,7 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 	            // // if we are searching a multilingual field it is stored in translations so we need to search JSON
 	            // if (field && field.settings.supportMultilingual == 1) {
 				// 	fieldName = ('JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({tableName}.translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({tableName}.translations, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))')
-				// 					.replace(/{tableName}/g, field.object.dbTableName())
+				// 					.replace(/{tableName}/g, field.object.dbTableName(true))
 				// 					.replace(/{languageCode}/g, userData.languageCode)
 				// 					.replace(/{columnName}/g, field.columnName);
 	            // } 
@@ -1074,14 +1065,15 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 					}
 					else {
 						sortClause = ('JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({tableName}.translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({tableName}.translations, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))')
-										.replace(/{tableName}/g, orderField.object.dbTableName())
+										.replace(/{tableName}/g, orderField.object.dbTableName(true))
 										.replace('{languageCode}', userData.languageCode)
 										.replace('{columnName}', orderField.columnName);
 					}
 				} 
 				// If we are just sorting a field it is much simpler
 				else { 
-					sortClause = "`{tableName}`.`{columnName}`"
+					sortClause = "`{databaseName}`.`{tableName}`.`{columnName}`"
+									.replace('{databaseName}', orderField.object.dbSchemaName())
 									.replace('{tableName}', orderField.object.dbTableName())
 									.replace('{columnName}', orderField.columnName);
 	            }
@@ -1102,10 +1094,12 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 				(sortRules.filter && sortRules.filter(o => o.key == f.id)[0])) {
 
 				let transTable = f.object.dbTransTableName(),
-				baseClause = '{tableName}.{columnName}'
+				baseClause = '{databaseName}.{tableName}.{columnName}'
+							.replace('{databaseName}', f.object.dbSchemaName())
 							.replace('{tableName}', f.object.dbTableName())
 							.replace('{columnName}', f.object.PK()),
-				connectedClause = '{tableName}.{columnName}'
+				connectedClause = '{databaseName}.{tableName}.{columnName}'
+							.replace('{databaseName}', f.object.dbSchemaName())
 							.replace('{tableName}', transTable)
 							.replace('{columnName}', f.object.transColumnName);
 	

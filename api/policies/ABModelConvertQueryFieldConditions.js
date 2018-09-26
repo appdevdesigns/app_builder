@@ -171,7 +171,7 @@ function parseQueryCondition(_where, object, req, res, cb) {
                 // if this is our special 'this_object' 'in_query'  queryID  filter:
                 if (cond.key == 'this_object') {
 
-                    queryColumn = object.dbTableName()+'.'+object.PK();
+                    queryColumn = object.dbTableName(true)+'.'+object.PK();
                     newKey = object.PK(); // 'id';  // the final filter needs to be 'id IN []', so 'id'
                     parseColumn = object.PK(); // 'id';  // make sure we pull our 'id' values from the query
 
@@ -208,7 +208,7 @@ function parseQueryCondition(_where, object, req, res, cb) {
                     }
                     
                     // get the query field's object and column name
-                    var columnName = queryField.object.dbTableName() + "." + queryField.columnName;
+                    var columnName = queryField.object.dbTableName(true) + "." + queryField.columnName;
                     
                     // run the Query, and parse out that data
                     var query = null;
@@ -231,7 +231,8 @@ function parseQueryCondition(_where, object, req, res, cb) {
 
                                 // modify the condition to be the IN condition
                                 // convert cond into an IN or NOT IN
-                                cond.key = "`{tableName}`.`{columnName}`"
+                                cond.key = "`{dbName}`.`{tableName}`.`{columnName}`"
+                                            .replace("{dbName}", field.object.dbSchemaName())
                                             .replace("{tableName}", field.object.dbTableName())
                                             .replace("{columnName}", field.columnName);
                                 var convert = {

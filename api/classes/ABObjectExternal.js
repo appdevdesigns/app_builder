@@ -53,8 +53,8 @@ module.exports = class ABObjectExternal extends ABObject {
 		super(attributes, application);
 	}
 
-	dbTransTableName() {
-		return "#table#_trans".replace("#table#", this.dbTableName());
+	dbTransTableName(prefixSchema = false) {
+		return "#table#_trans".replace("#table#", this.dbTableName(prefixSchema));
 	}
 
 
@@ -327,7 +327,7 @@ module.exports = class ABObjectExternal extends ABObject {
 	modelRelation() {
 
 		var relationMappings = super.modelRelation();
-		var tableTransName = this.dbTransTableName();
+		var tableTransName = this.dbTransTableName(true);
 
 		// Add a translation relation of the external table
 		if (this.transColumnName) {
@@ -363,7 +363,7 @@ module.exports = class ABObjectExternal extends ABObject {
 				modelClass: TransModel,
 				join: {
 					from: '{targetTable}.{primaryField}'
-						.replace('{targetTable}', this.dbTableName())
+						.replace('{targetTable}', this.dbTableName(true))
 						.replace('{primaryField}', this.PK()),
 					to: '{sourceTable}.{field}'
 						.replace('{sourceTable}', TransModel.tableName)

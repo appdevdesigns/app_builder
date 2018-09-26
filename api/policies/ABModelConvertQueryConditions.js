@@ -158,7 +158,7 @@ function parseQueryCondition(_where, object, req, res, cb) {
                 // if this is our special 'this_object' 'in_query'  queryID  filter:
                 if (cond.key == 'this_object') {
 
-                    queryColumn = object.dbTableName()+'.'+object.PK();
+                    queryColumn = object.dbTableName(true)+'.'+object.PK();
                     newKey = object.PK(); // 'id';  // the final filter needs to be 'id IN []', so 'id'
                     parseColumn = object.PK(); // 'id';  // make sure we pull our 'id' values from the query
 
@@ -212,14 +212,14 @@ function parseQueryCondition(_where, object, req, res, cb) {
                                 // there are Query cases where we need to make sure the field is identified by
                                 // it's dbTableName as well, to prevent 'Unknown Column' Errors.
                                 // adding in the dbTableName since I think it will be safe in all situations ... maybe ..
-                                var dbTableName = field.object.dbTableName();
+                                var dbTableName = field.object.dbTableName(true);
                                 if (dbTableName) { newKey = dbTableName + '.' + newKey } 
 
                                 // I need to pull out the PK from the filter Query:
                                 parseColumn = linkedObject.PK(); // 'id';
 
                                 // make this the queryColumn:
-                                queryColumn = linkedObject.dbTableName()+'.'+parseColumn;   
+                                queryColumn = linkedObject.dbTableName(true)+'.'+parseColumn;   
                                 continueSingle(newKey, parseColumn, queryColumn);                             
                                 break;
 
@@ -234,7 +234,7 @@ function parseQueryCondition(_where, object, req, res, cb) {
                                 parseColumn = linkedField.columnName;
 
                                 // make this the queryColumn:
-                                queryColumn = linkedObject.dbTableName()+'.'+parseColumn;  
+                                queryColumn = linkedObject.dbTableName(true)+'.'+parseColumn;  
                                 continueSingle(newKey, parseColumn, queryColumn);                              
                                 break;
 
@@ -243,7 +243,7 @@ function parseQueryCondition(_where, object, req, res, cb) {
 
                                 // we need the .PK of our linked column out of the given query
                                 parseColumn = linkedObject.PK(); // 'id';
-                                queryColumn = linkedObject.dbTableName()+'.'+parseColumn;
+                                queryColumn = linkedObject.dbTableName(true)+'.'+parseColumn;
 
                                 processQueryValues(parseColumn,  queryColumn,  (err, ids) => {
 
@@ -254,7 +254,7 @@ function parseQueryCondition(_where, object, req, res, cb) {
 
                                     // then we need to get which of our PK is stored in the linkTable for those linked entries
                                     var linkTableQuery = ABMigration.connection().queryBuilder();
-                                    var joinTableName = field.joinTableName();
+                                    var joinTableName = field.joinTableName(true);
 
                                     var parseName = object.name;
                                     linkTableQuery.select(parseName)

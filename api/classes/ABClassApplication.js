@@ -5,6 +5,7 @@ var ABApplicationBase = require(path.join(__dirname,  "..", "..", "assets", "ops
 var ABObject       = require(path.join(__dirname, 'ABObject'));
 var ABViewPage     = require(path.join(__dirname, 'ABViewPage'));
 var ABObjectExternal = require(path.join(__dirname, 'ABObjectExternal'));
+var ABObjectImport = require(path.join(__dirname, 'ABObjectImport'));
 var ABObjectQuery  = require(path.join(__dirname, 'ABObjectQuery'));
 var ABMobileApp    = require(path.join(__dirname, 'ABMobileApp'));
 var ABFieldManager = require(path.join(__dirname, 'ABFieldManager'));
@@ -68,6 +69,8 @@ module.exports =  class ABClassApplication extends ABApplicationBase {
 
 		if (values.isExternal == true)
 			return new ABObjectExternal(values, this);
+		if (values.isImport == true)
+			return new ABObjectImport(values, this);
 		else
 			return new ABObject(values, this);
 	}
