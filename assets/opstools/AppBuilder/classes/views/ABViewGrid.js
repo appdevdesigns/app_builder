@@ -981,11 +981,11 @@ export default class ABViewGrid extends ABViewWidget  {
 					onChange:_logic.callbackFilterData		// be notified when there is a change in the filter
 				});
 				
-				if (this.settings.massUpdate == false &&
-					this.settings.isSortable == false &&
-					this.settings.isExportable == false &&
-					this.settings.gridFilter.filterOption != 1 ) {
-					$$(ids.toolbar).hide();
+				if (this.settings.massUpdate ||
+					this.settings.isSortable ||
+					this.settings.isExportable ||
+					this.settings.gridFilter.filterOption) {
+					$$(ids.toolbar).show();
 				}
 				
 				if (this.settings.massUpdate == false) {
@@ -1128,6 +1128,7 @@ export default class ABViewGrid extends ABViewWidget  {
 					{
 						view: 'toolbar',
 						id: ids.toolbar,
+						hidden: true,
 						css: "ab-data-toolbar",
 						cols: [
 							{
