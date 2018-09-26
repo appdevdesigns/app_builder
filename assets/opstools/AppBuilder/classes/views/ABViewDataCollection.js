@@ -1229,7 +1229,8 @@ export default class ABViewDataCollection extends ABView {
 
 				var items = dc.count();
 				if (items == 0 &&
-					this._dataStatus == this.dataStatusFlag.initializing &&
+					(this._dataStatus == this.dataStatusFlag.notInitial ||
+					this._dataStatus == this.dataStatusFlag.initializing) &&
 					component.showProgress) {
 					component.showProgress({ type: "icon" });
 				}
