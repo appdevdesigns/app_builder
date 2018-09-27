@@ -826,7 +826,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		if (!view) return;
 
 		// Populate values to QueryBuilder
-		var selectedDc = view();
+		var selectedDc = view.dataCollection;
 
 		if (selectedDc) {
 			// if (view.settings.gridFilter.filterOption == 2) {
