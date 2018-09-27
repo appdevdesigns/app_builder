@@ -12,11 +12,9 @@ function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
-
-
 var ABFieldTextFormulaDefaults = {
 	key: 'TextFormula', // unique key to reference this specific DataField
-	icon: 'font',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
+	icon: 'question',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
 
 	// menuName: what gets displayed in the Editor drop list
 	menuName: L('ab.dataField.TextFormula.menuName', '*Text Formula'),
@@ -152,24 +150,40 @@ var ABFieldTextFormulaComponent = new ABFieldComponent({
 	// 		.show(ids)   : display the form in the editor
 	// 		.values(ids, values) : return the current values from the form
 	logic: {
+		clear: (ids) => {
+			$$(ids.textFormula).setValue('');
+		},
 		objectLoad: (object) => {
 			ABFieldTextFormulaComponent.currentObject = object;
 		},
-		populate: (ids, values) => {
+		show: (ids) => {
 			var currentObject = ABFieldTextFormulaComponent.currentObject;
-			var textAreaFormula = $$(ids.textFormula);
-			var formulaSuggest = $$(ids.formulaSuggest);
-			var formulaData = [];
 
-			currentObject._fields.forEach(field => {
-				if (field.columnName != currentObject.name) {
-					formulaData.push({ id: field.id, value: field.columnName, type: "field" });
+			var formulaSuggest = $$(ids.formulaSuggest);
+			var formulaData = getBuildInFunction();
+
+			currentObject.fields().forEach(field => {
+				if (field.key != "formula" && field.key != "TextFormula" && field.key != "connectObject") {
+					formulaData.unshift({ id: field.id, value: field.columnName, type: "field" });
 				}
 			});
 
 			formulaSuggest.clearAll();
 			formulaSuggest.parse(formulaData);
+		},
+		populate: (ids, values) => {
+			var currentObject = ABFieldTextFormulaComponent.currentObject;
+			var formulaSuggest = $$(ids.formulaSuggest);
+			var formulaData = getBuildInFunction();
 
+			currentObject.fields().forEach(field => {
+				if (field.key != "formula" && field.key != "TextFormula" && field.key != "connectObject") {
+					formulaData.unshift({ id: field.id, value: field.columnName, type: "field" });
+				}
+			});
+
+			formulaSuggest.clearAll();
+			formulaSuggest.parse(formulaData);
 		}
 
 	},
@@ -184,6 +198,332 @@ var ABFieldTextFormulaComponent = new ABFieldComponent({
 	}
 
 })
+
+/**
+ * @method setValueToFormula
+ * 
+ * @param {ABOBject} object 
+ * @param {string} formulaString
+ * @param {object} rowData
+ */
+
+function setValueToFormula(object, formulaString, rowData) {
+	if (!formulaString) return;
+
+	var fieldRegExp = /{[^{}]+}/gm;
+	var matches_field_array = formulaString.match(fieldRegExp);
+	matches_field_array.forEach(element => {
+		var columnName = element.replace(/{|}|\"/g, '');
+		if (rowData.hasOwnProperty(columnName)) {
+			formulaString = formulaString.replace(element, rowData[columnName] ? rowData[columnName] : "");
+		}
+		else {
+			object.fields().forEach(field => {
+				//Calculate Field
+				if(field.columnName == columnName && field.key == "calculate") {
+					let calVal = "(#calVal#)".replace("#calVal#", field.format(rowData) || 0);
+					formulaString = formulaString.replace(element, eval(calVal));
+				}
+			});
+		}
+	});
+
+	return formulaString;
+}
+
+/**
+ * @method setBuildinValueToFormula
+ * 
+ * @param {string} formulaString
+ */
+
+function setBuildinValueToFormula(formulaString) {
+	var buildInRegExp = /\w+\(.*?\)/gm;
+	var matches_buildin_array = formulaString.match(buildInRegExp);
+	if (matches_buildin_array) {
+		var buildinList = getBuildInFunction();
+		matches_buildin_array.forEach(element => {
+			var formula_array =  element.split(/\(|\)/);
+			var isBracketInBracket = formula_array.length > 2 && formula_array[2] != "";
+			var functionName = formula_array[0];
+			var parameters_array = formula_array[1].split(',');
+			var isMatch = false;
+			for ( var i = 0; i < buildinList.length; i++) {
+				var resultParameters = element;
+				if (functionName == buildinList[i].id)  {
+					if (parameters_array.length == buildinList[i].parameter_size) {
+						switch (functionName) {
+							case "left":
+								resultParameters = getLeft(parameters_array[0], parameters_array[1]);
+								break; 
+							case "right":
+								resultParameters = getRight(parameters_array[0], parameters_array[1]);
+								break;
+							case "mid":
+								resultParameters = getMid(parameters_array[0], parameters_array[1], parameters_array[2]);
+								break;
+							case "trim":
+								resultParameters = getTrim(parameters_array[0]);
+								break;
+							case "trimLeft":
+								resultParameters = getTrimLeft(parameters_array[0]);
+								break;
+							case "trimRight":
+								resultParameters = getTrimRight(parameters_array[0]);
+								break;
+							case "length":
+								resultParameters = getLength(parameters_array[0]);
+								break;
+							case "regexReplace":
+								resultParameters = getRegExpReplace(parameters_array[0], parameters_array[1].trimLeft(), parameters_array[2].trimLeft());
+								break;
+							case "extractRegex":
+								resultParameters = getExtractRegex(parameters_array[0], parameters_array[1].trimLeft());
+								break;
+							case "replace":
+								resultParameters = getReplace(parameters_array[0], parameters_array[1].trimLeft(), parameters_array[2].trimLeft());
+								break;
+							case "lower":
+								resultParameters = getLower(parameters_array[0]);
+								break;
+							case "upper":
+								resultParameters = getUpper(parameters_array[0]);
+								break;
+							case "capitalize":
+								resultParameters = getCapitalize(parameters_array[0]);
+								break;
+							case "random":
+								resultParameters = getRandom(parameters_array[0]);
+								break;
+							case "numberToWords":
+								resultParameters = getNumberToWords(parameters_array[0]);
+								break;
+							case "getDateDayOfWeekName":
+								if(isBracketInBracket) {
+									element = element + ")";
+								}
+								resultParameters = getDateDayOfWeekName(parameters_array[0]);
+								break;
+							case "getDateMonthOfYearName":
+								if(isBracketInBracket) {
+									element = element + ")";
+								}
+								resultParameters = getDateMonthOfYearName(parameters_array[0]);
+								break;
+							case "formatDate":
+								resultParameters = getFormatDate(parameters_array[0], parameters_array[1].trimLeft());
+								break;
+							default :
+								break;
+						}
+						isMatch = true;
+						formulaString = formulaString.replace(element, resultParameters);
+						return;
+					}
+					else {
+						resultParameters = functionName+"(Bad Parameter)";
+						formulaString = formulaString.replace(element, resultParameters);
+					}
+				}
+			}
+		});
+	}
+	return formulaString;
+}
+
+function getBuildInFunction() {
+	var functionList = [
+		{ id: "left", value: "left({COLUMN_NAME}, 1)", type: "build-in", parameter_size: 2 }, 
+		{ id: "right", value: "right({COLUMN_NAME}, 1)", type: "build-in", parameter_size: 2 }, 
+		{ id: "mid", value: "mid({COLUMN_NAME}, 1, 1)", type: "build-in", parameter_size: 3 }, 
+		{ id: "trim", value: "trim({COLUMN_NAME})", type: "build-in", parameter_size: 1 }, 
+		{ id: "trimLeft", value: "trimLeft({COLUMN_NAME})", type: "build-in", parameter_size: 1}, 
+		{ id: "trimRight", value: "trimRight({COLUMN_NAME})",  type: "build-in", parameter_size: 1},
+		{ id: "length", value: "length({COLUMN_NAME})", type: "build-in", parameter_size: 1},
+		{ id: "regexReplace", value: "regexReplace({COLUMN_NAME}, [*], REPLACE_VALUE)", type: "build-in", parameter_size: 3},
+		{ id: "extractRegex", value: "extractRegex({COLUMN_NAME}, [*])", type: "build-in", parameter_size: 2},
+		{ id: "replace", value: "replace({COLUMN_NAME}, SEARCH_VALUE, REPLACE_VALUE)", type: "build-in", parameter_size: 3},
+		{ id: "lower", value: "lower({COLUMN_NAME})", type: "build-in", parameter_size: 1},
+		{ id: "upper", value: "upper({COLUMN_NAME})", type: "build-in", parameter_size: 1},
+		{ id: "capitalize", value: "capitalize({COLUMN_NAME})", type: "build-in", parameter_size: 1},
+		{ id: "random", value: "random(1)", type: "build-in", parameter_size: 1},
+		{ id: "numberToWords", value: "numberToWords({NUMBER_COLUMN} or 012...)", type: "build-in", parameter_size: 1},
+		{ id: "getDateDayOfWeekName", value: "getDateDayOfWeekName({DATE_COLUMN})", type: "build-in", parameter_size: 1},
+		{ id: "getDateMonthOfYearName", value: "getDateMonthOfYearName({DATE_COLUMN})", type: "build-in", parameter_size: 1},
+		{ id: "formatDate", value: "formatDate({DATE_COLUMN}, OUTPUT_FORMAT)", type: "build-in", parameter_size: 1},
+	];
+	return functionList;
+}
+
+function getLeft(string, endPosition) {
+	return string.substring(0, parseInt(endPosition));
+}
+
+function getRight(string, endposition) {
+	var reverseStr = reverseString(string).substring(0, parseInt(endposition));
+	return reverseString(reverseStr);
+}
+
+function reverseString(string) {
+	return string.split(' ').reverse().join(' ');
+}
+
+function getMid(string, startPosition, length) {
+	if (string.length < startPosition) return "mid(Bad Parameter)";
+	return string.substring(parseInt(startPosition), parseInt(startPosition) + parseInt(length));
+}
+
+function getTrim(string) {
+	return string.trim();
+}
+
+function getTrimLeft(string) {
+	return string.trimLeft();
+}
+
+function getTrimRight(string) {
+	return string.trimRight();
+}
+
+function getLength(string) {
+	return string.length;
+}
+
+function getRegExpReplace(string, regexp, replaceString) {
+	return string.replace(regexp, replaceString);
+}
+
+function getExtractRegex(string, regexp) {
+	var extractResult = string.match(regexp);
+	if (Array.isArray(extractResult)) {
+		return extractResult[0];
+	}
+	return extractResult;
+}
+
+function getReplace(string, searchValue, replaceValue) {
+	return string.replace(searchValue, replaceValue);
+}
+
+function getLower(string) {
+	return string.toLowerCase();
+}
+
+function getUpper(string) {
+	return string.toUpperCase();
+}
+
+function getCapitalize(string) {
+	return string.toLowerCase().split(' ').map((s) => s.charAt(0).toUpperCase() + s.substring(1)).join(' ');
+}
+
+function getRandom(max) {
+	return Math.floor((Math.random() * (max+1)));
+}
+
+function getNumberToWords(number) {
+	var string = number.trim(",").toString(), 
+	units, tens, scales, start, end, chunks, chunksLen, chunk, ints, i, word, words;
+
+	var and = '';
+
+	/* Is number zero? */
+	if (parseInt(string) === 0) {
+		return 'zero';
+	}
+
+	/* Array of units as words */
+	units = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+
+	/* Array of tens as words */
+	tens = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+
+	/* Array of scales as words */
+	scales = ['', 'thousand', 'million', 'billion', 'trillion', 'quadrillion', 'quintillion', 'sextillion', 'septillion', 'octillion', 'nonillion', 'decillion', 'undecillion', 'duodecillion', 'tredecillion', 'quatttuor-decillion', 'quindecillion', 'sexdecillion', 'septen-decillion', 'octodecillion', 'novemdecillion', 'vigintillion', 'centillion'];
+
+	/* Split user arguemnt into 3 digit chunks from right to left */
+	start = string.length;
+	chunks = [];
+	while (start > 0) {
+		end = start;
+		chunks.push(string.slice((start = Math.max(0, start - 3)), end));
+	}
+
+	/* Check if function has enough scale words to be able to stringify the user argument */
+	chunksLen = chunks.length;
+	if (chunksLen > scales.length) {
+		return '';
+	}
+
+	/* Stringify each integer in each chunk */
+	words = [];
+	for (i = 0; i < chunksLen; i++) {
+
+		chunk = parseInt(chunks[i]);
+
+		if (chunk) {
+
+			/* Split chunk into array of individual integers */
+			ints = chunks[i].split('').reverse().map(parseFloat);
+
+			/* If tens integer is 1, i.e. 10, then add 10 to units integer */
+			if (ints[1] === 1) {
+				ints[0] += 10;
+			}
+
+			/* Add scale word if chunk is not zero and array item exists */
+			if ((word = scales[i])) {
+				words.push(word);
+			}
+
+			/* Add unit word if array item exists */
+			if ((word = units[ints[0]])) {
+				words.push(word);
+			}
+
+			/* Add tens word if array item exists */
+			if ((word = tens[ints[1]])) {
+				words.push(word);
+			}
+
+			/* Add 'and' string after units or tens integer if: */
+			if (ints[0] || ints[1]) {
+
+				/* Chunk has a hundreds integer or chunk is the first of multiple chunks */
+				if (ints[2] || !i && chunksLen) {
+					words.push(and);
+				}
+
+			}
+
+			/* Add hundreds word if array item exists */
+			if ((word = units[ints[2]])) {
+				words.push(word + ' hundred');
+			}
+
+		}
+
+	}
+
+	return words.reverse().join(' ');
+}
+
+function getDateDayOfWeekName(date) {
+	var localizeDT = moment(date);
+	localizeDT.locale(AD.lang.currentLanguage);
+	return localizeDT.format('dddd');
+}
+
+function getDateMonthOfYearName(date) {
+	var localizeDT = moment(date);
+	localizeDT.locale(AD.lang.currentLanguage);
+	return localizeDT.format('MMMM');
+}
+
+function getFormatDate(date, format) {
+	var dt = new Date(date);
+	return dt.toString(format);
+}
 
 class ABFieldTextFormula extends ABField {
 
@@ -279,6 +619,10 @@ class ABFieldTextFormula extends ABField {
 		var config = super.columnHeader(isObjectWorkspace);
 
 		config.editor = null; // read only
+		config.css = 'textCell';
+		config.template = (rowData) => {
+			return this.format(rowData);
+		};
 
 		return config;
 	}
@@ -299,6 +643,27 @@ class ABFieldTextFormula extends ABField {
 			// values[this.columnName] = this.settings.DEFAULT_VALUE;
 
 		}
+	}
+
+	format(rowData) {
+
+		try {
+			if (!this.settings.textFormula) return "";
+
+			var resultFormula = this.settings.textFormula;
+
+			//Set Field value first
+			resultFormula = setValueToFormula(this.object, resultFormula, rowData);
+
+			//then Check Build-in Function
+			resultFormula = setBuildinValueToFormula(resultFormula);
+
+			return resultFormula;	
+		}
+		catch (err) {
+			return "";
+		}
+
 	}
 
 
@@ -340,26 +705,7 @@ class ABFieldTextFormula extends ABField {
 	* @param {HtmlDOM} node  the HTML Dom object for this field's display.
 	*/
 	customDisplay(row, App, node, options) {
-		// sanity check.
-		if (!node) { return }
 		
-		options = options || {};
-
-		if (this.settings.textFormula) {
-
-			//Check Field value first
-			var fieldRegExp = /{\w+}/gm;
-			var resultFormula = this.settings.textFormula;
-			var matches_field_array = resultFormula.match(fieldRegExp);
-			(matches_field_array || []).forEach(element => {
-				var columnName = element.replace(/{|}|\"/g, '');
-				if (row.hasOwnProperty(columnName)) {
-					resultFormula = resultFormula.replace(element, row[columnName] ? row[columnName] : "");
-				}
-			});
-
-			node.innerText = resultFormula;
-		}
 	}
 
 
@@ -373,18 +719,19 @@ class ABFieldTextFormula extends ABField {
 	* the component that will be stored with the ABViewForm.
 	*/
 	formComponent() {
-		
-		return super.formComponent('[form_component_key]');
+
+		// not support in the form widget
+		return null;
 	}
 
 
 	detailComponent() {
-		
+
 		var detailComponentSetting = super.detailComponent();
 
 		detailComponentSetting.common = () => {
 			return {
-				key: '[detail_component_key]'
+				key: 'detailtext'
 			}
 		};
 
