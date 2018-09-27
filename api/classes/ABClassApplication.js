@@ -69,7 +69,7 @@ module.exports =  class ABClassApplication extends ABApplicationBase {
 
 		if (values.isExternal == true)
 			return new ABObjectExternal(values, this);
-		if (values.isImport == true)
+		else if (values.isImported == true)
 			return new ABObjectImport(values, this);
 		else
 			return new ABObject(values, this);
