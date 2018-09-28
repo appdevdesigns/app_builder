@@ -1,9 +1,12 @@
 var path = require('path');
 
-var ABObject = require(path.join(__dirname, 'ABObject'));
+var ABObjectExternal = require(path.join(__dirname, 'ABObjectExternal'));
 
-module.exports = class ABObjectImport extends ABObject {
+module.exports = class ABObjectImport extends ABObjectExternal {
 
+	constructor(attributes, application) {
+		super(attributes, application);
+	}
 
 	///
 	/// Migration Services
@@ -56,6 +59,32 @@ module.exports = class ABObjectImport extends ABObject {
 
 		sails.log.silly('.... aborted drop of imported table');
 		return Promise.resolve();
+	}
+
+	modelDefaultFields() {
+
+		return {};
+
+	}
+
+	// Same as ABObject.js
+	requestRelationParams(allParameters) {
+		var usefulParameters = {};
+		this.connectFields().forEach((f) => {
+
+			if (f.requestRelationParam) {
+				var p = f.requestRelationParam(allParameters);
+				if (p) {
+					for (var a in p) {
+						// if ( (Array.isArray(p[a]) && p[a].length) || !Array.isArray(p[a])) 
+						usefulParameters[a] = p[a];
+					}
+				}
+			}
+
+		});
+
+		return usefulParameters;
 	}
 
 }

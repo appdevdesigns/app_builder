@@ -218,11 +218,13 @@ class ABFieldConnect extends ABField {
 		return new Promise(
 			(resolve, reject) => {
 
-				var tableName = this.object.dbTableName();
+				var tableName = this.object.dbTableName(true);
 
 				// find linked object
-				var linkObject = this.datasourceLink,
-					linkTableName = linkObject.dbTableName(),
+				var linkObject = this.datasourceLink;
+				var linkKnex = ABMigration.connection(linkObject.connName);
+
+				var linkTableName = linkObject.dbTableName(true),
 					linkPK = linkObject.PK(),
 					// TODO : should check duplicate column
 					linkColumnName = this.fieldLink().columnName;
@@ -250,7 +252,7 @@ class ABFieldConnect extends ABField {
 								let linkCol = t.integer(this.columnName).unsigned().nullable();
 
 								// NOTE: federated table does not support reference column
-								if (!linkObject.isExternal) {
+								if (!linkObject.isExternal && this.connName == linkObject.connName) {
 									linkCol.references(linkPK)
 										.inTable(linkTableName)
 										.onDelete('SET NULL');
@@ -295,7 +297,7 @@ class ABFieldConnect extends ABField {
 									let linkCol = t.integer(this.columnName).unsigned().nullable();
 
 									// NOTE: federated table does not support reference column
-									if (!linkObject.isExternal) {
+									if (!linkObject.isExternal && this.connName == linkObject.connName) {
 										linkCol.references(linkPK)
 												.inTable(linkTableName)
 												.onDelete('SET NULL');
@@ -325,7 +327,7 @@ class ABFieldConnect extends ABField {
 					async.waterfall([
 						// check column already exist
 						(next) => {
-							knex.schema.hasColumn(linkTableName, linkColumnName)
+							linkKnex.schema.hasColumn(linkTableName, linkColumnName)
 								.then((exists) => {
 									next(null, exists);
 								})
@@ -335,14 +337,14 @@ class ABFieldConnect extends ABField {
 						(exists, next) => {
 							if (exists) return next();
 
-							knex.schema.table(linkTableName, (t) => {
+							linkKnex.schema.table(linkTableName, (t) => {
 
 								let linkCol = t.integer(linkColumnName)
 									.unsigned()
 									.nullable();
 
 								// NOTE: federated table does not support reference column
-								if (!this.object.isExternal) {
+								if (!this.object.isExternal && this.connName == linkObject.connName) {
 									linkCol.references(this.object.PK())
 											.inTable(tableName)
 											.onDelete('SET NULL');
@@ -381,12 +383,14 @@ class ABFieldConnect extends ABField {
 						};
 						*/
 
-					knex.schema.hasTable(joinTableName).then((exists) => {
+					var sourceKnex =  (this.settings.isSource ? knex : linkKnex);
+
+					sourceKnex.schema.hasTable(joinTableName).then((exists) => {
 
 						// if it doesn't exist, then create it and any known fields:
 						if (!exists) {
 
-							return knex.schema.createTable(joinTableName, (t) => {
+							return sourceKnex.schema.createTable(joinTableName, (t) => {
 								t.increments('id').primary();
 								t.timestamps();
 								t.engine('InnoDB');
@@ -402,7 +406,8 @@ class ABFieldConnect extends ABField {
 
 
 								// NOTE: federated table does not support reference column
-								if (!this.object.isExternal && !linkObject.isExternal) {
+								if ((!this.object.isExternal && !linkObject.isExternal) &&
+									(this.connName == linkObject.connName)) {
 
 									linkCol.references(this.object.PK())
 										.inTable(tableName)
@@ -473,7 +478,13 @@ class ABFieldConnect extends ABField {
 					// drop join table
 					var joinTableName = this.joinTableName();
 
-					knex.schema.dropTableIfExists(joinTableName)
+					// get source knex of the join table
+					var sourceKnex = knex;
+					if (!this.settings.isSource) {
+						sourceKnex =  ABMigration.connection(this.datasourceLink.connName);
+					}
+
+					sourceKnex.schema.dropTableIfExists(joinTableName)
 						.then(() => {
 
 							super.migrateDrop(knex)

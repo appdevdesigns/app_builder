@@ -753,7 +753,7 @@ module.exports = class ABObjectQuery extends ABObject {
 						var columnName = f.columnName;
 
 						if (f.isMultilingual) {
-							if (obj.isExternal) {
+							if (obj.isExternal || obj.isImported) {
 
 								if (externalTrans[obj.name] == null) {
 									externalTrans[obj.name] = {

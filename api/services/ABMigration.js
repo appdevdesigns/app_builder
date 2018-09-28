@@ -10,6 +10,8 @@ var path = require('path');
 var AD = require('ad-utils');
 var _ = require('lodash');
 
+var ABObjectExternal = require(path.join(__dirname, '..', 'classes', 'ABObjectExternal'));
+
 var knexConns = {};
 
 module.exports = {
@@ -90,7 +92,7 @@ module.exports = {
     createField:function(field) {
 
         // disallow to create a new column in the external table
-        if (field.object.isExternal)
+        if (field.object instanceof ABObjectExternal)
             return Promise.resolve();
 
         var knex = ABMigration.connection(field.object.connName);
@@ -100,7 +102,7 @@ module.exports = {
 
     updateField:function(field) {
         
-        if (field.object.isExternal)
+        if (field.object instanceof ABObjectExternal)
             return Promise.resolve();
 
         var knex = ABMigration.connection(field.object.connName);
@@ -111,7 +113,7 @@ module.exports = {
     dropField:function(field) {
 
         // disallow to drop a column in the external table
-        if (field.object.isExternal)
+        if (field.object instanceof ABObjectExternal)
             return Promise.resolve();
 
         var knex = ABMigration.connection(field.object.connName);

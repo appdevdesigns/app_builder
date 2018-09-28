@@ -277,13 +277,7 @@ module.exports = class ABObject extends ABObjectBase {
 			var jsonSchema = {
 				type: 'object',
 				required: [],
-				properties: {
-
-					created_at:{ type:['null', 'string'], pattern: AppBuilder.rules.SQLDateTimeRegExp },
-					updated_at:{ type:['null', 'string'], pattern: AppBuilder.rules.SQLDateTimeRegExp },
-					properties:{ type:['null', 'object'] }
-
-				}
+				properties: this.modelDefaultFields()
 			}
 			var currObject = this;
 			var allFields = this.fields();
@@ -485,6 +479,19 @@ module.exports = class ABObject extends ABObjectBase {
 		});
 
 		return relationMappings
+	}
+
+
+	modelDefaultFields() {
+
+		return {
+
+			created_at:{ type:['null', 'string'], pattern: AppBuilder.rules.SQLDateTimeRegExp },
+			updated_at:{ type:['null', 'string'], pattern: AppBuilder.rules.SQLDateTimeRegExp },
+			properties:{ type:['null', 'object'] }
+
+		};
+
 	}
 
 
@@ -780,7 +787,7 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 						if (field.isMultilingual) {
 
 							// TODO: move to ABOBjectExternal.js
-							if (field.object.isExternal) {
+							if (field.object.isExternal || field.object.isImported) {
 
 								let transTable = field.object.dbTransTableName();
 
@@ -1058,7 +1065,7 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 	            if (orderField.settings.supportMultilingual == 1) {
 
 					// TODO: move to ABOBjectExternal.js
-					if (orderField.object.isExternal) {
+					if (orderField.object.isExternal || field.object.isImported) {
 						sortClause = "`{tableName}`.`{columnName}`"
 									.replace('{tableName}', orderField.object.dbTransTableName())
 									.replace('{columnName}', orderField.columnName);
@@ -1084,7 +1091,7 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 
 		// TODO : move to ABObjectExternal.js
 		// Special case
-		var multilingualFields = this.fields(f => f.isMultilingual && f.object.isExternal);
+		var multilingualFields = this.fields(f => f.isMultilingual && (f.object.isExternal || f.object.isImported));
 		multilingualFields.forEach(f => {
 
 			let whereRules = (where.rules || []);
@@ -1134,8 +1141,8 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 
 						// Get translation data of External object
 						if (f.datasourceLink &&
-							f.datasourceLink.isExternal &&
-							f.datasourceLink.transColumnName)
+							f.datasourceLink.transColumnName &&
+							(f.datasourceLink.isExternal || f.datasourceLink.isImported))
 							relationNames.push(f.relationName()+ '.[translations]');
 
 					});
@@ -1143,7 +1150,7 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 
 
 			// TODO: Move to ABObjectExternal
-			if (this.isExternal && this.transColumnName) {
+			if ((this.isExternal || this.isImported) && this.transColumnName) {
 				relationNames.push('translations');
 			}
 

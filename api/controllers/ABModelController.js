@@ -53,61 +53,8 @@ function updateRelationValues(object, id, updateRelationParams) {
     // - (insert, update, patch, delete, relate, unrelate, increment, decrement) and only once per query builder
     if (updateRelationParams != null && Object.keys(updateRelationParams).length > 0) {
 
-        // // clear relative values
-        // Object.keys(updateRelationParams).forEach((colName) => {
-
-        //     updateTasks.push(() => {
-
-        //         var clearRelationName = AppBuilder.rules.toFieldRelationFormat(colName);
-
-        //         return new Promise((resolve, reject) => {
-
-        //             query.where(object.PK(), id).first()
-        //                 .catch(err => reject(err))
-        //                 .then(record => {
-
-        //                     if (record == null) return resolve();
-
-        //                     var fieldLink = object.fields(f => f.columnName == colName)[0];
-        //                     if (fieldLink == null) return resolve();
-
-        //                     var objectLink = fieldLink.object;
-        //                     if (objectLink == null) return resolve();
-
-        //                     // WORKAROUND : HRIS tables have non null columns
-        //                     if (object.isExternal) {
-        //                         resolve();
-        //                     }
-        //                     else {
-        //                         // record
-        //                         //     .$relatedQuery(clearRelationName)
-        //                         //     .unrelate()
-        //                         //     .catch(err => reject(err))
-        //                         //     .then(() => { resolve(); });
-        //                         resolve();
-        //                     }
-
-        //                 });
-
-        //         });
-
-
-        //     });
-
-
-        // });
-
-
         // update relative values
         Object.keys(updateRelationParams).forEach((colName) => {
-
-            // clear relative values
-            // if (updateRelationParams[colName] == null ||
-            //     updateRelationParams[colName] == '' ||
-            //     (
-            //         Array.isArray(updateRelationParams[colName]) &&
-            //         !updateRelationParams[colName].length    
-            //     )) {
 
             updateTasks.push(() => {
 
@@ -133,6 +80,7 @@ function updateRelationValues(object, id, updateRelationParams) {
 
                             record
                                 .$relatedQuery(clearRelationName)
+                                .alias("#column#_#relation#".replace('#column#', colName).replace('#relation#', clearRelationName)) // FIX: SQL syntax error because alias name includes special characters
                                 .unrelate()
                                 .catch(err => reject(err))
                                 .then(() => { resolve(); });
@@ -168,6 +116,7 @@ function updateRelationValues(object, id, updateRelationParams) {
                                 if (record == null) return resolve();
 
                                 record.$relatedQuery(relationName)
+                                .alias("#column#_#relation#".replace('#column#', colName).replace('#relation#', relationName)) // FIX: SQL syntax error because alias name includes special characters
                                     .relate(val)
                                     .catch(err => reject(err))
                                     .then(() => { resolve(); });
@@ -260,7 +209,7 @@ function updateConnectedFields(object, newData, oldData) {
  */
 function updateTranslationsValues(object, id, translations, isInsert) {
 
-    if (!object.isExternal)
+    if (!object.isExternal || !object.isImported)
         return Promise.resolve();
 
     let transModel = object.model().relationMappings()['translations'];
@@ -386,7 +335,7 @@ module.exports = {
 
                     // this is a create operation, so ... 
                     // createParams.created_at = (new Date()).toISOString();
-                    if (!object.isExternal)
+                    if (!object.isExternal && !object.isImported)
                         createParams.created_at = AppBuilder.rules.toSQLDateTime(new Date());
 
                     sails.log.verbose('ABModelController.create(): createParams:', createParams);
@@ -400,7 +349,7 @@ module.exports = {
 
 
                             // update translation of the external object
-                            if (object.isExternal &&
+                            if ((object.isExternal || object.isImported) &&
                                 createParams.translations)
                                 updateTasks.push(updateTranslationsValues(object, newObj[object.PK()], createParams.translations, true));
 
@@ -1032,7 +981,7 @@ module.exports = {
                         var validationErrors = object.isValidData(updateParams);
                         if (validationErrors.length == 0) {
 
-                            if (object.isExternal) {
+                            if (object.isExternal || object.isImported) {
                                 // translations values does not in same table of the external object
                                 delete updateParams.translations;
                             }
@@ -1072,7 +1021,7 @@ module.exports = {
                                     var updateTasks = updateRelationValues(object, id, updateRelationParams);
 
                                     // update translation of the external table
-                                    if (object.isExternal)
+                                    if (object.isExternal || object.isImported)
                                         updateTasks.push(updateTranslationsValues(object, id, transParams));
 
                                     // update relation values sequentially
@@ -1321,7 +1270,7 @@ module.exports = {
                         return;
                     }
 
-                    if (object.isExternal) {
+                    if (object.isExternal || object.isImported) {
 
                         // translations values does not in same table of the external object
                         delete allParams.translations;

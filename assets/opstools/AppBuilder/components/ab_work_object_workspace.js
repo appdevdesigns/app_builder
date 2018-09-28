@@ -848,7 +848,7 @@ console.error('TODO: toolbarPermission()');
 				$$(ids.selectedObject).show(true, false);
 
 				// disable add fields into the object
-				if (object.isExternal || !settings.isFieldAddable) {
+				if (object.isExternal || object.isImported || !settings.isFieldAddable) {
 					$$(ids.buttonAddField).disable();
 				}
 				else {
