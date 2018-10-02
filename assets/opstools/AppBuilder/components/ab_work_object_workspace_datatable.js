@@ -793,8 +793,8 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
     		objectLoad:function(object) {
 
-    			CurrentObject = object;
-                
+                CurrentObject = object;
+
                 var DataTable = $$(ids.component);
                 var minHeight = 0;
                 defaultHeight = 0;
@@ -950,10 +950,6 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                     DataTable.define('rightSplit', 0);
     				DataTable.clearAll();
 
-                    var isEditable = false;
-                    if (settings.isEditable)
-                        isEditable = settings.isEditable;
-
                     //// update DataTable structure:
     				// get column list from our CurrentObject
     				var columnHeaders = CurrentObject.columnHeaders(true, settings.isEditable, settings.summaryColumns);
@@ -1025,6 +1021,9 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                         });
                         columnSplitLeft = 1;
                     }
+                    else {
+                        columnSplitLeft = 0;
+                    }
                     if (settings.detailsView != null && !settings.hideButtons) {
                         columnHeaders.push({
                             id: "appbuilder_view_detail",
@@ -1088,6 +1087,10 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
     		 * add a new row to the data table
     		 */
     		rowAdd:function() {
+
+                if (!settings.isEditable)
+                    return;
+
     			var emptyObj = CurrentObject.defaultValues();
     			CurrentObject.model()
     			.create(emptyObj)
@@ -1199,9 +1202,36 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                 } else {
                     node.style.visibility = "visible";                            
                 }
+            },
+
+
+            editable: function() {
+
+                var DataTable = $$(ids.component);
+
+                DataTable.define('editable', true);
+                DataTable.refresh();
+
+                settings.isEditable = true;
+                settings.allowDelete = true;
+                settings.massUpdate = true;
+            },
+
+
+            readonly: function() {
+
+                var DataTable = $$(ids.component);
+
+                DataTable.define('editable', false);
+                DataTable.refresh();
+
+                settings.isEditable = false;
+                settings.allowDelete = false;
+                settings.massUpdate = false;
             }
+
     	}
-        
+
 
 
 
@@ -1253,6 +1283,10 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
         this.getFieldList = _logic.getFieldList;
         
         this.hideHeader = _logic.hideHeader;
+
+        this.editable = _logic.editable;
+        this.readonly = _logic.readonly;
+
     }
 
 }

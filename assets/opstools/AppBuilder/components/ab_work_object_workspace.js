@@ -827,6 +827,16 @@ console.error('TODO: toolbarPermission()');
 
 				CurrentObject = object;
 
+				// the replicated tables are read only
+				if (object.isImported) {
+					DataTable.readonly();
+					$$(ids.buttonRowNew).disable();
+				}
+				else {
+					DataTable.editable();
+					$$(ids.buttonRowNew).enable();
+				}
+
 				DataTable.objectLoad(CurrentObject);
 
 				PopupNewDataFieldComponent.objectLoad(CurrentObject);
@@ -854,6 +864,7 @@ console.error('TODO: toolbarPermission()');
 				else {
 					$$(ids.buttonAddField).enable();
 				}
+
 
 			},
 

@@ -626,6 +626,12 @@ export default class ABViewDataCollection extends ABView {
 			// $$(ids.advancedOption).show();
 		}
 
+		// initial data
+		if (view._dataStatus == view.dataStatusFlag.notInitial) {
+			view.loadData();
+		}
+
+
 	}
 
 	static propertyEditorValues(ids, view) {

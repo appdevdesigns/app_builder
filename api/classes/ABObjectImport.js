@@ -36,9 +36,9 @@ module.exports = class ABObjectImport extends ABObjectExternal {
 	dbTransTableName(prefixSchema = false) {
 
 		let tableName = this.dbTableName(prefixSchema)
-						// WORKAROUND: hris tables 
-						// FORMAT: hris_ren_data -> trans table: hris_ren_trans
-						.replace("_data", ""); 
+			// WORKAROUND: hris tables 
+			// FORMAT: hris_ren_data -> trans table: hris_ren_trans
+			.replace("_data", "");
 
 		return "#table#_trans".replace("#table#", tableName);
 	}
@@ -77,24 +77,29 @@ module.exports = class ABObjectImport extends ABObjectExternal {
 
 	}
 
-	// Same as ABObject.js
-	requestRelationParams(allParameters) {
+
+	/**
+	 * @method requestParams
+	 * Parse through the given parameters and return a subset of data that
+	 * relates to the fields in this object.
+	 * @param {obj} allParameters  a key=>value hash of the inputs to parse.
+	 * @return {obj} 
+	 */
+	requestParams(allParameters) {
+
+		// REPLICATED TABLE is read-only
 		var usefulParameters = {};
-		this.connectFields().forEach((f) => {
-
-			if (f.requestRelationParam) {
-				var p = f.requestRelationParam(allParameters);
-				if (p) {
-					for (var a in p) {
-						// if ( (Array.isArray(p[a]) && p[a].length) || !Array.isArray(p[a])) 
-						usefulParameters[a] = p[a];
-					}
-				}
-			}
-
-		});
-
 		return usefulParameters;
+
+	}
+
+
+	requestRelationParams(allParameters) {
+
+		// REPLICATED TABLE is read-only
+		var usefulParameters = {};
+		return usefulParameters;
+
 	}
 
 }

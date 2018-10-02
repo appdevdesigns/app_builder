@@ -550,7 +550,13 @@ PopupRecordRule.qbFixAfterShow();
 		var SourceSelector = $$(ids.datacollection);
 
 		// Pull data collections to options
-		var dcOptions = view.pageRoot().dataCollections(dc => dc.sourceType == "object").map((dc) => {
+		var dcOptions = view.pageRoot().dataCollections(dc => {
+
+			var obj = dc.datasource;
+
+			return dc.sourceType == "object" && obj && !obj.isImported;
+
+		}).map((dc) => {
 
 			return {
 				id: dc.id,
