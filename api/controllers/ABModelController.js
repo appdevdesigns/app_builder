@@ -575,14 +575,20 @@ module.exports = {
                                 // })
 
 
-                            })
-                            .catch((err) => {
+                        })
+                        .catch((err) => {
 
-                                res.AD.error(err);
+                            res.AD.error(err);
 
-                            });
+                        });
 
                     })
+                    .catch((err) => {
+
+                        res.AD.error(err);
+
+                    });
+
 
 
 

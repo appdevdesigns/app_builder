@@ -33,6 +33,16 @@ module.exports = class ABObjectImport extends ABObjectExternal {
 
 	}
 
+	dbTransTableName(prefixSchema = false) {
+
+		let tableName = this.dbTableName(prefixSchema)
+						// WORKAROUND: hris tables 
+						// FORMAT: hris_ren_data -> trans table: hris_ren_trans
+						.replace("_data", ""); 
+
+		return "#table#_trans".replace("#table#", tableName);
+	}
+
 	/**
 	 * @method migrateCreateTable
 	 * verify that a table for this object exists.

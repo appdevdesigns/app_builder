@@ -526,11 +526,11 @@ module.exports = class ABObject extends ABObjectBase {
 	queryFind(options, userData) {
 
         return new Promise((resolve, reject)=>{
-            
-            var query = this.model().query();
 
-            if (options) {
-                this.populateFindConditions(query, options, userData)
+			var query = this.model().query();
+
+			if (options) {
+				this.populateFindConditions(query, options, userData)
 			}
 
 sails.log.debug('ABObject.queryFind - SQL:', query.toString() );
@@ -1133,8 +1133,10 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 			if (options.populate) {
 
 				this.connectFields()
-					.filter((f)=>{ return ((options.populate === true) || (options.populate.indexOf(f.columnName) > -1)); })
-					.filter(f => f.fieldLink() != null)
+					.filter((f) => {
+						return ((options.populate === true) || (options.populate.indexOf(f.columnName) > -1)) &&
+								f.fieldLink() != null;
+					})
 					.forEach(f => {
 
 						relationNames.push(f.relationName());
