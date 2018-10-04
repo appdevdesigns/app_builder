@@ -1176,6 +1176,16 @@ export default class ABViewDataCollection extends ABView {
 		});
 
 
+		// add listeners when cursor of link data collection is changed
+		let linkDc = this.dataCollectionLink;
+		if (linkDc) {
+			this.eventAdd({
+				emitter: linkDc,
+				eventName: "changeCursor",
+				listener: () => { this.refreshLinkCursor(); }
+			});
+		}
+
 		// load data to initial the data collection
 		// this.loadData();
 
@@ -1477,13 +1487,6 @@ export default class ABViewDataCollection extends ABView {
 
 					let linkDc = this.dataCollectionLink;
 					if (!linkDc) return resolve();
-
-					// add listeners when cursor of link data collection is changed
-					this.eventAdd({
-						emitter: linkDc,
-						eventName: "changeCursor",
-						listener: this.refreshLinkCursor
-					});
 
 					switch (linkDc.dataStatus) {
 
