@@ -251,6 +251,11 @@ options.rejectUnauthorized = false;
     pollMCC:function() {
         return new Promise((resolve, reject)=>{
 
+            if (!sails.config.appbuilder.mcc.enabled) {
+                resolve();
+                return;
+            }
+
             // 1) get any key resolutions and process them
             ABRelay.get({url:'/mcc/initresolve'})
             .then((response)=>{

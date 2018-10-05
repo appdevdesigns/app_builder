@@ -143,12 +143,29 @@ function setupPollingMCC(next) {
 			// 	delay += sails.config.appbuilder.mcc.pollFrequency;
 			// }
 
+			var errString = err.toString();
+
 			if (err.error && (err.error.code == 'ETIMEDOUT' || (err.message && err.message.indexOf('ESOCKETTIMEDOUT') > -1) )) {
 				sails.log.debug('!!! ABRelay.pollMCC().catch() : Timeout detected!')
 			} else {
 
-				// catch other errors
-				ADCore.error.log('!!! ABRelay.pollMCC().catch(): unexpected error:', { errStr: err.toString(), error:err });
+				if (errString.indexOf('ECONNREFUSED') > -1) {
+
+					// Problems communicating with MCC:
+					// we only want to ADCore.error.log()  once.
+					if (!sails.config.appbuilder._reportedConnRefused) {
+						sails.config.appbuilder._reportedConnRefused = 1;
+						ADCore.error.log('!!! ABRelay.pollMCC().catch(): MCC Communication: Connection Refused. ', { errStr: errString, error:err });
+					} else {
+						sails.log.debug('!!! ABRelay.pollMCC().catch(): MCC Communication: Connection Refused. ')
+					}
+					
+				} else {
+
+					// catch other errors
+					ADCore.error.log('!!! ABRelay.pollMCC().catch(): unexpected error:', { errStr: err.toString(), error:err });
+				}
+				
 			}
 
 			// if still ok to continue then:
