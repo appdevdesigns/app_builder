@@ -331,6 +331,7 @@ export default class ABViewDataCollection extends ABView {
 			var query = view.application.queries(q => q.id == sourceId)[0];
 
 			if (object) {
+
 				// populate fix selector
 				this.populateFixSelector(ids, view, object);
 
@@ -338,20 +339,16 @@ export default class ABViewDataCollection extends ABView {
 				this.initPopupEditors(App, ids, _logic);
 
 				// show options
-				$$(ids.linkDataSource).show();
 				$$(ids.filterPanel).show();
 				$$(ids.sortPanel).show();
-				// $$(ids.advancedOption).show();
 
 
 			}
 			else if (query) {
 
 				// hide options
-				$$(ids.linkDataSource).hide();
 				$$(ids.filterPanel).hide();
 				$$(ids.sortPanel).hide();
-				// $$(ids.advancedOption).hide();
 			}
 
 
