@@ -168,6 +168,9 @@ module.exports = {
     'post /app_builder/QR/sendEmail':
         'app_builder/ABMobileQRController.sendEmail',
 
+    'post /app_builder/QR/adminQRCode':
+        'app_builder/ABMobileQRController.adminQRCode',
+
 
     'get /app_builder/mobile/:mobileID/apk':
         'app_builder/ABMobileQRController.sendAPK'

@@ -2958,8 +2958,18 @@ var SDCApp = new ABMobileApp({
     settings:{
         deepLink:'',
         codePushKeys:{
-            ios:sails.config.codepush.ios || 'ios.codepush.key',
-            android:sails.config.codepush.android || 'android.codepush.key'
+            'production': {
+                ios:sails.config.codepush.production.ios || 'ios.codepush.production.key',
+                android:sails.config.codepush.production.android || 'android.codepush.production.key'
+            },
+            'staging':{
+                ios:sails.config.codepush.staging.ios || 'ios.codepush.staging.key',
+                android:sails.config.codepush.staging.android || 'android.codepush.staging.key'
+            },
+            'develop':{
+                ios:sails.config.codepush.develop.ios || 'ios.codepush.develop.key',
+                android:sails.config.codepush.develop.android || 'android.codepush.develop.key'
+            }
         },
         platforms:{
             ios:{

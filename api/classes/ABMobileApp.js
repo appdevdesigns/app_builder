@@ -90,10 +90,24 @@ module.exports = class ABMobileApp {
      *    ios:'ios.key.here',
      *    android:'android.key.here'
      * }
+     * @param {string} version  [optional] which version of the codePushKeys do we want.
+     *							Valid options:
+     *							'P' : Production [default] 
+     *							'S' : Staging
+     *							'D' : Development
 	 * @return {string}
 	 */
-	codePushKeys() {
-		return this.settings.codePushKeys;
+	codePushKeys(version) {
+		if (!version) {
+			version = 'P';  // production
+		}
+		switch(version) {
+			case 'D': version = 'develop'; break;
+			case 'S': version = 'staging'; break;
+			case 'P': 
+			default:  version = 'production'; break;
+		}
+		return this.settings.codePushKeys[version];
 	}
 
 

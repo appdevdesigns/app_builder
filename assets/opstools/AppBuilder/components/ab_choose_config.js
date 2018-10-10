@@ -21,6 +21,8 @@ export default class ABChooseConfig extends OP.Component {
 			component: {
 				title: L('ab.config.title', '*Configure App Builder'),
 
+				buttonBackToList: L('ab.config.buttonBackToList', '*Back'),
+
 				selectUsers: L('ab.config.selectUsers', '*Select Users'),
 				buttonCreateRelayUser: L('ab.config.createRelayUser', '*Create Relay User'),
 				buttonUpdatePublicServer: L('ab.config.updatePublicServer', '*Update Public Server'),
@@ -28,6 +30,11 @@ export default class ABChooseConfig extends OP.Component {
 				selectQRUsers: L('ab.config.selectQRUsers', '*Select Relay User'),
 				selectQRApp: L('ab.config.selectQRApp', '*Select Relay Application'),
 				buttonSendQREmail: L('ab.config.sendQREmail', '*Send QR Email'),
+
+				selectQRVersion: L('ab.config.selectQRVersion', '*Select App Version'),
+				versionDevelop: L('ab.config.versionDevelop', '*Develop'),
+				versionStaging: L('ab.config.versionStaging', '*Staging'),
+				versionProduction: L('ab.config.versionProduction', '*Production'),
 
 				confirmUsersCreated: L('ab.config.confirmUsersCreated', '*Users successfully created'),
 				errorUsersCreated:   L('ab.config.confirmUsersCreated', '*Error creating users.'),
@@ -37,6 +44,8 @@ export default class ABChooseConfig extends OP.Component {
 
 				confirmQRSent:  L('ab.config.confirmQRSent', '*QR Email Sent'),
 				errorQRSent: L('ab.config.errorQRSent', '*Error sending QR email'),
+
+				errorQRCode: L('ab.config.errorQRCode', '*Error retrieving user\'s QR code.'),
 
 				createNew: L('ab.application.createNew', '*Add new application'),
 				noApplication: L('ab.application.noApplication', "*There is no application data"),
@@ -53,7 +62,15 @@ export default class ABChooseConfig extends OP.Component {
 			rows: this.unique('rows'),
 			userList:   this.unique('userlist'),
 			qrUserList: this.unique('qruserlist'),
-			qrAppList:  this.unique('qrapplist')
+			qrAppList:  this.unique('qrapplist'),
+
+			qrUserList2: this.unique('qruserlist2'),
+			qrAppList2:  this.unique('qrapplist2'),
+			qrVersion:  this.unique('qrversion'),
+			qrVersion2:  this.unique('qrversion2'),
+
+			qrCode: this.unique('qrcode'),
+			qrCodeImage: this.unique('qrcodeimage'),
 		}	
 
 
@@ -81,6 +98,17 @@ export default class ABChooseConfig extends OP.Component {
 						{
 							view: "toolbar",
 							cols: [
+								{
+			                    	view:"button",
+			                    	label: labels.component.buttonBackToList,
+									autowidth: true,
+									// type: "icon",
+									// icon: "plus",
+									click: () => {
+										
+										this.emit('view.list');
+									}
+								},
 							
 								{ view: "label", label:labels.component.title, fillspace: true },
 								
@@ -89,7 +117,7 @@ export default class ABChooseConfig extends OP.Component {
 
 
 						//
-						// The List of Applications
+						// The List of Actions
 						//
 						{
 							id:ids.rows,
@@ -167,6 +195,67 @@ export default class ABChooseConfig extends OP.Component {
 										}
 									]
 								},
+
+
+								// choose user & App and see a QR Code:
+								{
+									cols:[
+										{
+											rows:[
+												{
+							                        id:ids.qrUserList2,
+							                        name:'qrusers2',
+							                        view:"combo",
+							                        label:labels.component.selectQRUsers,
+							                        value:'',
+							                        options:[],
+							                        on:{
+							                        	onChange:function(newVal, oldVal) {
+							                        		_logic.updateQRCode();
+							                        	}
+							                        }
+							                    },
+							                    {
+							                        id:ids.qrAppList2,
+							                        name:'qrApps2',
+							                        view:"multicombo",
+							                        label:labels.component.selectQRApp,
+							                        value:'',
+							                        options:[],
+							                        on:{
+							                        	onChange:function(newVal, oldVal) {
+							                        		_logic.updateQRCode();
+							                        	}
+							                        }
+							                    },
+							                    {
+							                        id:ids.qrVersion2,
+							                        name:'qrVersion2',
+							                        view:"combo",
+							                        label:labels.component.selectQRVersion,
+							                        value:'P',
+							                        options:[
+							                        	{id:'D', value:labels.component.versionDevelop },
+							                        	{id:'S', value:labels.component.versionStaging },
+							                        	{id:'P', value:labels.component.versionProduction }
+							                        	],
+							                        on:{
+							                        	onChange:function(newVal, oldVal) {
+							                        		_logic.updateQRCode();
+							                        	}
+							                        }
+							                    },
+											]
+										},
+										{
+											id: ids.qrCode,
+											view: "template",
+											template:"QR Image Here",
+					                        width:280,
+							                height:280,
+										}
+									]
+								}
 							]
 						},
 						{
@@ -329,6 +418,9 @@ console.error(err);
 						$$(ids.qrUserList).define('options', options);
 						$$(ids.qrUserList).refresh();
 
+						$$(ids.qrUserList2).define('options', options);
+						$$(ids.qrUserList2).refresh();
+
 					}
 
 				})
@@ -354,6 +446,9 @@ console.error(err);
 						$$(ids.qrAppList).define('options', options);
 						$$(ids.qrAppList).refresh();
 
+						$$(ids.qrAppList2).define('options', options);
+						$$(ids.qrAppList2).refresh();
+
 					}
 
 				})
@@ -374,6 +469,58 @@ console.error(err);
 					$$(ids.rows).hideProgress();
 			},
 
+
+			updateQRCode:function() {
+				var user = $$(ids.qrUserList2).getValue();
+				var mobileApp =  $$(ids.qrAppList2).getValue();
+				var version = $$(ids.qrVersion2).getValue();
+
+				if (user != '' && mobileApp != '') {
+
+
+
+					_logic.busy();
+
+					$$(ids.qrCode).showProgress({ icon: 'cursor' });
+					var img = document.getElementById(ids.qrCodeImage);
+					if (!img) {
+						OP.Error.log('Error locating QR Cursor Image tag.')
+						return;
+					}
+					
+					// clear current image:
+					img.src="";
+
+					OP.Comm.Service.post({
+						url:'/app_builder/QR/adminQRCode',
+						data:{
+							user:user,
+							mobileApp:mobileApp,
+							version:version
+							// email:
+						}
+					})
+					.then((response)=>{
+
+						// find the <image> and load up the image data
+						// var img = document.getElementById(ids.qrCodeImage);
+						img.src=response.image;
+
+						// $$(ids.rows).hideProgress();
+						_logic.ready();
+					})
+					.catch((err)=>{
+
+						$$(ids.rows).hideProgress();
+						_logic.ready();
+						var message = labels.component.errorQRSent; 
+						if (err.message) message += ': '+err.message;
+
+						OP.Error.log(message, err);
+					})
+				}
+			}
+
 		}
 		this._logic = _logic;
 
@@ -387,8 +534,10 @@ console.error(err);
 		 */
 		this.init = function() {
 			webix.extend($$(ids.rows), webix.ProgressBar);
+			webix.extend($$(ids.qrCode), webix.ProgressBar);
 
-			
+			$$(ids.qrCode).setHTML('<img id="'+ids.qrCodeImage+'">');
+
 			// start things off by loading the current list of Applications
 			_logic.loadData();
 		}

@@ -51,6 +51,7 @@ module.exports = {
 */
 
     'post /app_builder/QR/sendEmail': abMobileAdmin,
+    'post /app_builder/QR/adminQRCode': abMobileAdmin,
     'get /app_builder/relay/users': abMobileAdmin,
     'get /app_builder/relay/uninitializedusers': abMobileAdmin,
     'post /app_builder/relay/initialize': abMobileAdmin,
