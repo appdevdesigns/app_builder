@@ -357,7 +357,10 @@ class ABFieldFormula extends ABField {
 				break;
 		}
 
-		return result;
+		var rowDataFormat = {};
+		rowDataFormat[fieldLink.columnName] = result;
+
+		return fieldLink.format(rowDataFormat);
 
 	}
 

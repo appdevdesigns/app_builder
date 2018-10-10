@@ -1489,6 +1489,7 @@ export default class ABViewDataCollection extends ABView {
 
 						case linkDc.dataStatusFlag.notInitial:
 							linkDc.loadData().catch(reject);
+							// no break;
 
 						case linkDc.dataStatusFlag.initializing:
 
