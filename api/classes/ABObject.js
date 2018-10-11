@@ -11,7 +11,6 @@ var __ModelPool = {};	// reuse any previously created Model connections
 						// to minimize .knex bindings (and connection pools!)
 
 
-
 module.exports = class ABObject extends ABObjectBase {
 
     constructor(attributes, application) {
@@ -257,6 +256,17 @@ module.exports = class ABObject extends ABObjectBase {
 	/// DB Model Services
 	///
 
+	modelName() {
+
+		let appName = this.application.name,
+			tableName = this.dbTableName(true);
+
+		return '#appName#.#tableName#'
+				.replace('#appName#', appName)
+				.replace('#tableName#', tableName);
+
+	}
+
 	/**
 	 * @method model
 	 * return an objection.js model for working with the data in this Object.
@@ -264,9 +274,10 @@ module.exports = class ABObject extends ABObjectBase {
 	 */
 	model() {
 
-		var tableName = this.dbTableName(true);
+		var modelName = this.modelName(),
+			tableName = this.dbTableName(true);
 
-		if (!__ModelPool[tableName]) {
+		if (!__ModelPool[modelName]) {
 
 			var knex = ABMigration.connection(this.isImported ? this.connName : undefined);
 
@@ -307,11 +318,11 @@ module.exports = class ABObject extends ABObjectBase {
 
 			}
 
-			__ModelPool[tableName] = MyModel;
+			__ModelPool[modelName] = MyModel;
 
 			// NOTE : there is relation setup here because prevent circular loop when get linked object.
 			// have to define object models to __ModelPool[tableName] first
-			__ModelPool[tableName].relationMappings = () => {
+			__ModelPool[modelName].relationMappings = () => {
 
 				return this.modelRelation();
 
@@ -319,11 +330,11 @@ module.exports = class ABObject extends ABObjectBase {
 
 			// bind knex connection to object model
 			// NOTE : when model is bound, then relation setup will be executed
-			__ModelPool[tableName] = __ModelPool[tableName].bindKnex(knex);
+			__ModelPool[modelName] = __ModelPool[modelName].bindKnex(knex);
 
 		}
 
-		return __ModelPool[tableName];
+		return __ModelPool[modelName];
 	}
 
 
@@ -503,8 +514,8 @@ module.exports = class ABObject extends ABObjectBase {
 	 */
 	modelRefresh() {
 
-		var tableName = this.dbTableName(true);
-		delete __ModelPool[tableName];
+		var modelName = this.modelName();
+		delete __ModelPool[modelName];
 
 		ABMigration.refreshObject(this);
 
@@ -534,7 +545,7 @@ module.exports = class ABObject extends ABObjectBase {
 			}
 
 sails.log.debug('ABObject.queryFind - SQL:', query.toString() );
-            
+
             resolve(query);
         })
         
