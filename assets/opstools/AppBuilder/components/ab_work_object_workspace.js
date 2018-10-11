@@ -830,11 +830,15 @@ console.error('TODO: toolbarPermission()');
 				// the replicated tables are read only
 				if (object.isImported) {
 					DataTable.readonly();
-					$$(ids.buttonRowNew).disable();
+
+					if ($$(ids.buttonRowNew))
+						$$(ids.buttonRowNew).disable();
 				}
 				else {
 					DataTable.editable();
-					$$(ids.buttonRowNew).enable();
+
+					if ($$(ids.buttonRowNew))
+						$$(ids.buttonRowNew).enable();
 				}
 
 				DataTable.objectLoad(CurrentObject);
