@@ -261,9 +261,10 @@ module.exports = class ABObject extends ABObjectBase {
 		let appName = this.application.name,
 			tableName = this.dbTableName(true);
 
-		return '#appName#.#tableName#'
+		return '#appName##tableName#'
 				.replace('#appName#', appName)
-				.replace('#tableName#', tableName);
+				.replace('#tableName#', tableName)
+				.replace(/[^a-zA-Z]/g, ""); // remove special characters to allow model name to be class name
 
 	}
 
@@ -317,6 +318,10 @@ module.exports = class ABObject extends ABObjectBase {
 				// }
 
 			}
+
+			// rename class name
+			// NOTE: prevent cache same table in difference apps
+			Object.defineProperty(MyModel, 'name', {value: modelName });
 
 			__ModelPool[modelName] = MyModel;
 

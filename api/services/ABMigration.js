@@ -83,7 +83,7 @@ module.exports = {
                 // delete knex.$$objection.boundModels[tableName];
 
                 // FIX : Knex Objection v.1.1.8
-                knex.$$objection.boundModels.delete(tableName + '_MyModel');
+                knex.$$objection.boundModels.delete(tableName + '_' + object.modelName());
                 
         }
 
