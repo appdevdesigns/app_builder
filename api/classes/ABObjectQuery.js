@@ -510,15 +510,6 @@ module.exports = class ABObjectQuery extends ABObject {
 				var selects = [];
 				var columns = [];
 
-				// SELECT Running Number to be .id of queries
-				var objectBase = this.objects()[0];
-				if (objectBase) {
-					let raw = ABMigration.connection().raw;
-					selects.push(raw("@rownum := @rownum + 1 AS id"));
-					query.join(raw("(SELECT @rownum := 0) rownum"));
-				}
-
-
 				// { 
 				//	objectName: {
 				//		object: {ABObject},
@@ -929,6 +920,33 @@ module.exports = class ABObjectQuery extends ABObject {
 						// when finished populate our Find Conditions
 						this.populateFindConditions(query, options, userData);
 
+
+
+						if (!options.ignoreIncludeId) {
+							// SELECT Running Number to be .id as a subquery
+							// SQL: select @rownum:=@rownum+1 as `id`, result.*
+							//		from (
+							//			select distinct ...
+							// 		) result , (SELECT @rownum:=0) r;
+							let raw = ABMigration.connection().raw,
+								queryRoot = ABMigration.connection().queryBuilder(),
+								queryString = query.toString();
+
+							query = queryRoot
+									.select(raw("@rownum := @rownum + 1 AS id, result.*"))
+									.from(function() {
+
+										let sqlCommand = raw(queryString.replace('select ', ''));
+
+										// sub query
+										this.select(sqlCommand).as('result');
+
+									})
+									.join(raw("(SELECT @rownum := 0) rownum")).as('rId');
+						}
+
+
+
 sails.log.debug('ABObjectQuery.queryFind - SQL:', query.toString() );
 
 						// after all that, resolve our promise with the query results
@@ -1043,6 +1061,9 @@ sails.log.debug('ABObjectQuery.queryFind - SQL:', query.toString() );
 
 		// not update translations key names
 		options.ignoreEditTranslations = true;
+
+		// not include .id column
+		options.ignoreIncludeId = true;
 
 		// return the count not the full data
 		options.columnNames = [ABMigration.connection().raw("COUNT(*) as count")];
