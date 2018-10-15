@@ -1390,17 +1390,46 @@ export default class ABViewGrid extends ABViewWidget  {
 
 			export: (name) => {
 
-				var fnExport;
+				let fnExport;
+
+				let columns = {};
+
+				// template
+				let dc = this.dataCollection;
+				if (dc) {
+					let object = dc.datasource;
+					if (object) {
+						object.fields().forEach(f => {
+
+							// hidden fields
+							if (this.settings.objectWorkspace.hiddenFields.indexOf(f.columnName) > -1)
+								return;
+
+							columns[f.columnName] = {
+								template: (rowData) => {
+									return f.format(rowData);
+								}
+							};
+
+						});
+					}
+				}
 
 				switch(name) {
 					case "CSV":
+
+						webix.csv.delimiter.cols = ",";
+
 						fnExport = webix.toCSV($$(DataTable.ui.id), {
-							filename: this.label
+							filename: this.label,
+							columns: columns
 						});
 						break;
 					case "Excel":
 						fnExport = webix.toExcel($$(DataTable.ui.id), {
 							filename: this.label,
+							name: this.label,
+							columns: columns,
 							filterHTML: true
 						});
 						break;
