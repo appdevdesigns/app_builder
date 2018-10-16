@@ -771,7 +771,8 @@ module.exports = class ABObjectQuery extends ABObject {
 							.replace(/{objectName}/g, obj.name)
 							.replace(/{displayName}/g, columnName);
 
-						columns.push(selectField);
+						if (columns.indexOf(selectField) < 0)
+							columns.push(selectField);
 
 					}
 
