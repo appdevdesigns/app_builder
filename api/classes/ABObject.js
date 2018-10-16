@@ -785,7 +785,6 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 	                return;
 				}
 
-
 				// Convert field id to column name
 				if (AppBuilder.rules.isUuid(condition.key)) {
 
@@ -821,8 +820,9 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 
 							}
 							else {
-								condition.key = ('JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({tableName}.translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({tableName}.translations, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))')
-												.replace(/{tableName}/g, field.object.dbTableName(true))
+								condition.key = ('JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(`{databaseName}`.`{tableName}`.`translations`, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH(`{databaseName}`.`{tableName}`.`translations`, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))')
+												.replace(/{databaseName}/g, field.object.dbSchemaName())
+												.replace(/{tableName}/g, field.object.dbTableName())
 												.replace(/{languageCode}/g, userData.languageCode)
 												.replace(/{columnName}/g, field.columnName);
 							}
@@ -1022,7 +1022,7 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 					// Now we add in our where
 					Query.whereRaw(whereRaw);
 				}
-			}
+			};
 
 			parseCondition(where, query);
 
