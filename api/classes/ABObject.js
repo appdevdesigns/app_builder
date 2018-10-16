@@ -1082,7 +1082,8 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 
 					// TODO: move to ABOBjectExternal.js
 					if (orderField.object.isExternal || field.object.isImported) {
-						sortClause = "`{tableName}`.`{columnName}`"
+						sortClause = "`{databaseName}`.`{tableName}`.`{columnName}`"
+									.replace('{databaseName}', orderField.object.dbSchemaName())
 									.replace('{tableName}', orderField.object.dbTransTableName())
 									.replace('{columnName}', orderField.columnName);
 					}
@@ -1117,17 +1118,17 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 				(sortRules.filter && sortRules.filter(o => o.key == f.id)[0])) {
 
 				let transTable = f.object.dbTransTableName(),
-				baseClause = '{databaseName}.{tableName}.{columnName}'
-							.replace('{databaseName}', f.object.dbSchemaName())
-							.replace('{tableName}', f.object.dbTableName())
-							.replace('{columnName}', f.object.PK()),
-				connectedClause = '{databaseName}.{tableName}.{columnName}'
-							.replace('{databaseName}', f.object.dbSchemaName())
-							.replace('{tableName}', transTable)
-							.replace('{columnName}', f.object.transColumnName);
+					baseClause = '{databaseName}.{tableName}.{columnName}'
+								.replace('{databaseName}', f.object.dbSchemaName())
+								.replace('{tableName}', f.object.dbTableName())
+								.replace('{columnName}', f.object.PK()),
+					connectedClause = '{databaseName}.{tableName}.{columnName}'
+								.replace('{databaseName}', f.object.dbSchemaName())
+								.replace('{tableName}', transTable)
+								.replace('{columnName}', f.object.transColumnName);
 	
 				if (!(query._statements || []).filter(s => s.table == transTable).length) // prevent join duplicate
-					query.innerJoin(transTable, baseClause, '=', connectedClause);
+					query.innerJoin(f.object.dbTransTableName(true), baseClause, '=', connectedClause);
 			}
 
 		});
