@@ -244,25 +244,31 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 				};
 
-				// set connected objects:
-				$$(ids.tree).clearAll();
+				// NOTE: render the tree component in Promise to prevent freeze UI.
+				new Promise((next, err) => {
 
-				// show loading cursor
-				$$(ids.tree).showProgress({ type:"icon" });
+					// set connected objects:
+					$$(ids.tree).clearAll();
 
-				var treeStore = new webix.TreeCollection();
-				if (objBase)
-					fnAddTreeItem(treeStore, objBase);
+					// show loading cursor
+					$$(ids.tree).showProgress({ type:"icon" });
 
-				// // refresh UI
-				// $$(ids.tree).refresh();
+					let treeStore = new webix.TreeCollection();
+					if (objBase)
+						fnAddTreeItem(treeStore, objBase);
+	
+					// // refresh UI
+					// $$(ids.tree).refresh();
+	
+					// populate tree store
+					$$(ids.tree).parse(treeStore.serialize());
+	
+					// show loading cursor
+					$$(ids.tree).hideProgress({ type:"icon" });
 
-				// populate tree store
-				$$(ids.tree).parse(treeStore.serialize());
+					next();
 
-				// show loading cursor
-				$$(ids.tree).hideProgress({ type:"icon" });
-
+				});
 
 				// *** Tabs ***
 
