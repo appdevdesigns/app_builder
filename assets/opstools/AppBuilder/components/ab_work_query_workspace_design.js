@@ -79,6 +79,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 		// Our init() function for setting up our UI
 		this.init = function () {
 			// webix.extend($$(ids.form), webix.ProgressBar);
+			webix.extend($$(ids.tree), webix.ProgressBar);
 
 			$$(ids.noSelection).show();
 
@@ -161,32 +162,32 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 				// *** List ***
 
-				var fnGetParentObjIds = (itemId) => {
+				var fnGetParentObjIds = (store, itemId) => {
 
 					var objectIds = [objBase.id];
 
 					// not exists
-					if (!$$(ids.tree).exists(itemId))
+					if (!store.exists(itemId))
 						return objectIds;
 
 					while (itemId) {
 
 						// store object id
-						var item = $$(ids.tree).getItem(itemId);
+						var item = store.getItem(itemId);
 						objectIds.push(item.objectId);
 
 						// get next parent
-						itemId = $$(ids.tree).getParentId(itemId);
+						itemId = store.getParentId(itemId);
 					}
 
 					return objectIds;
 
 				};
 
-				var fnAddTreeItem = (currObj, parentItemId) => {
+				var fnAddTreeItem = (store, currObj, parentItemId) => {
 					
 					if (parentItemId) {
-						var item = $$(ids.tree).getItem(parentItemId);
+						var item = store.getItem(parentItemId);
 						if (item.$level > $$(ids.depth).getValue())
 							return;
 					}
@@ -194,8 +195,8 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 					currObj.connectFields().forEach(f => {
 
 						let fieldUrl = f.urlPointer(),
-							existsObjIds = fnGetParentObjIds(parentItemId),
-							$parentItem = $$(ids.tree).getItem(parentItemId);
+							existsObjIds = fnGetParentObjIds(store, parentItemId),
+							$parentItem = store.getItem(parentItemId);
 
 						// prevent looping
 						if (f.datasourceLink == null ||
@@ -217,7 +218,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 							(!isCheck && CurrentQuery.canFilterObject(f.datasourceLink)) // disable its duplicate
 
 						// add items to tree
-						var itemId = $$(ids.tree).add(
+						var itemId = store.add(
 
 							{
 								value: f.datasourceLink.label, // a label of link object
@@ -237,7 +238,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 						);
 
 						// add child items to tree
-						fnAddTreeItem(f.datasourceLink, itemId);
+						fnAddTreeItem(store, f.datasourceLink, itemId);
 
 					});
 
@@ -246,12 +247,21 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 				// set connected objects:
 				$$(ids.tree).clearAll();
 
+				// show loading cursor
+				$$(ids.tree).showProgress({ type:"icon" });
+
+				var treeStore = new webix.TreeCollection();
 				if (objBase)
-					fnAddTreeItem(objBase);
+					fnAddTreeItem(treeStore, objBase);
 
-				// refresh UI
-				$$(ids.tree).refresh();
+				// // refresh UI
+				// $$(ids.tree).refresh();
 
+				// populate tree store
+				$$(ids.tree).parse(treeStore.serialize());
+
+				// show loading cursor
+				$$(ids.tree).hideProgress({ type:"icon" });
 
 
 				// *** Tabs ***
