@@ -280,9 +280,10 @@ export default class ABObject extends ABObjectBase {
 
 	// return the column headers for this object
 	// @param {bool} isObjectWorkspace  return the settings saved for the object workspace
-	columnHeaders (isObjectWorkspace, isEditable, summaryColumns) {
+	columnHeaders (isObjectWorkspace, isEditable, summaryColumns, countColumns) {
 
 		summaryColumns = summaryColumns || [];
+		countColumns = countColumns || [];
 
 		var headers = [];
 		var columnNameLookup = {};
@@ -304,6 +305,9 @@ export default class ABObject extends ABObjectBase {
 			// add the summary footer
 			if (summaryColumns.indexOf(f.id) > -1)
 				header.footer = { content: 'summColumn' };
+			// add the count footer
+			else if (countColumns.indexOf(f.id) > -1)
+				header.footer = { content: 'countColumn' };
 
 			headers.push(header);
 			columnNameLookup[header.id] = f.columnName;	// name => id

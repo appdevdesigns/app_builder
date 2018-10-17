@@ -22,7 +22,8 @@ export default class ABWorkObjectDatatable extends OP.Component {
     			isEditable:  bool,
     			massUpdate:  bool,
 				configureHeaders: bool,
-				summaryColumns:	 {array} - an array of field id
+                summaryColumns:	 {array} - an array of field id
+                countColumns:	 {array} - an array of field id
 			}
      */
 
@@ -41,6 +42,7 @@ export default class ABWorkObjectDatatable extends OP.Component {
             massUpdate: (params.massUpdate != null ? params.massUpdate : true ),
             configureHeaders: (params.configureHeaders != null ? params.configureHeaders : true ),
             summaryColumns: params.summaryColumns || [],
+            countColumns: params.countColumns || [],
             labelAsField: params.labelAsField || false,
             hideButtons: params.hideButtons || false,
             groupBy: params.groupBy || ""
@@ -87,7 +89,7 @@ export default class ABWorkObjectDatatable extends OP.Component {
     		fixedRowHeight: false,
     		editaction: "custom",
             select: selectType,
-            footer: settings.summaryColumns.length > 0, // show footer when there are summary columns
+            footer: (settings.summaryColumns.length > 0 || settings.countColumns.length > 0), // show footer when there are summary columns
             tooltip: {
                 id: ids.tooltip,
                 template: function(obj, common){
@@ -952,7 +954,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
                     //// update DataTable structure:
     				// get column list from our CurrentObject
-    				var columnHeaders = CurrentObject.columnHeaders(true, settings.isEditable, settings.summaryColumns);
+    				var columnHeaders = CurrentObject.columnHeaders(true, settings.isEditable, settings.summaryColumns, settings.countColumns);
                     
                     columnHeaders.forEach(function(col) {
                         col.fillspace = false;

@@ -12,6 +12,7 @@ import ABPopupSortField from "../../components/ab_work_object_workspace_popupSor
 import ABPopupFrozenColumns from "../../components/ab_work_object_workspace_popupFrozenColumns"
 import ABPopupMassUpdate from "../../components/ab_work_object_workspace_popupMassUpdate"
 import ABPopupSummaryColumns from "../../components/ab_work_object_workspace_popupSummaryColumns"
+import ABPopupCountColumns from "../../components/ab_work_object_workspace_popupCountColumns"
 import ABViewGridFilterMenu from "../rules/ABViewGridFilterMenu"
 import ABViewWidget from "./ABViewWidget"
 import ABFieldImage from "../dataFields/ABFieldImage"
@@ -57,6 +58,7 @@ var ABViewGridPropertyComponentDefaults = {
 
 	},
 	summaryFields: [], // array of [field ids] to add the summary column in footer
+	countFields: [], // array of [field ids] to add the summary column in footer
 	height: 0,
 	hideHeader:0,
 	labelAsField:0,
@@ -75,6 +77,7 @@ var PopupHideFieldComponent = null;
 var PopupFrozenColumnsComponent = null;
 var PopupGridFilterMenu = null;
 var PopupSummaryColumnsComponent = null;
+var PopupCountColumnsComponent = null;
 
 export default class ABViewGrid extends ABViewWidget  {
 	
@@ -161,6 +164,7 @@ export default class ABViewGrid extends ABViewWidget  {
 			if (typeof(this.settings.objectWorkspace.frozenColumnID) == "undefined") this.settings.objectWorkspace.frozenColumnID = "";
 			if (typeof(this.settings.objectWorkspace.hiddenFields) == "undefined") this.settings.objectWorkspace.hiddenFields = [];
 			if (typeof(this.settings.objectWorkspace.summaryColumns) == "undefined") this.settings.objectWorkspace.summaryColumns = [];
+			if (typeof(this.settings.objectWorkspace.countColumns) == "undefined") this.settings.objectWorkspace.countColumns = [];
 		}
 
 
@@ -241,6 +245,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		PopupGridFilterMenu = new ABViewGridFilterMenu();
 		PopupGridFilterMenu.component(App, idBase + "_gridfiltermenu");
 		PopupSummaryColumnsComponent = new ABPopupSummaryColumns(App, idBase+"_summary");
+		PopupCountColumnsComponent = new ABPopupCountColumns(App, idBase+"_count");
 		
 		_logic.newObject = () => {
 			var currObj = _logic.currentEditObject();
@@ -249,7 +254,8 @@ export default class ABViewGrid extends ABViewWidget  {
 				filterConditions:[],
 				frozenColumnID:"",
 				hiddenFields:[],
-				summaryColumns:[]
+				summaryColumns:[],
+				countColumns:[]
 			};
 			currObj.populatePopupEditors(currObj);
 			
@@ -284,6 +290,10 @@ export default class ABViewGrid extends ABViewWidget  {
 		_logic.summaryColumns = ($view) => {
 			PopupSummaryColumnsComponent.show($view, {pos:"top"});
 		}
+
+		_logic.countColumns = ($view) => {
+			PopupCountColumnsComponent.show($view, {pos:"top"});
+		}
 		
 		_logic.callbackSaveWorkspace = (data) => {
 			// when we make a change in the popups we want to make sure we save the new workspace to the properties to do so just fire an onChange event
@@ -304,6 +314,15 @@ export default class ABViewGrid extends ABViewWidget  {
 
 			var currObj = _logic.currentEditObject();
 			currObj.settings.objectWorkspace.summaryColumns = data;
+
+			// when we make a change in the popups we want to make sure we save the new workspace to the properties to do so just fire an onChange event
+			_logic.onChange();
+		}
+
+		_logic.callbackSaveCountColumns = (data) => {
+
+			var currObj = _logic.currentEditObject();
+			currObj.settings.objectWorkspace.countColumns = data;
 
 			// when we make a change in the popups we want to make sure we save the new workspace to the properties to do so just fire an onChange event
 			_logic.onChange();
@@ -362,6 +381,10 @@ export default class ABViewGrid extends ABViewWidget  {
 		
 		PopupSummaryColumnsComponent.init({
 			onChange: _logic.callbackSaveSummaryColumns	// be notified when there is a change in the summary columns
+		});
+
+		PopupCountColumnsComponent.init({
+			onChange: _logic.callbackSaveCountColumns	// be notified when there is a change in the count columns
 		});
 
 		var view = "button";
@@ -681,6 +704,28 @@ export default class ABViewGrid extends ABViewWidget  {
 						},
 
 						{
+							cols: [
+								{ 
+								    view:"label", 
+								    label: L("ab.component.label.summaryFields", "*Count Fields:"),
+									css: 'ab-text-bold',
+									width: App.config.labelWidthXLarge,
+								},
+								{
+									view: view,
+									name: "buttonCountFields",
+									label: L("ab.component.label.settings", "*Settings"),
+									icon: "gear",
+									type: "icon",
+									badge: 0,
+									click: function(){
+										_logic.countColumns(this.$view);
+									}
+								}
+							]
+						},
+
+						{
 							view: 'counter',
 							name: "height",
 							label: L("ab.component.grid.height", "*Height:"),
@@ -908,6 +953,7 @@ export default class ABViewGrid extends ABViewWidget  {
 			massUpdate: this.settings.massUpdate,
 			configureHeaders: false,
 			summaryColumns: this.settings.objectWorkspace.summaryColumns,
+			countColumns: this.settings.objectWorkspace.countColumns,
 			hideHeader: this.settings.hideHeader,
 			labelAsField: this.settings.labelAsField,
 			hideButtons: this.settings.hideButtons,
@@ -1663,6 +1709,9 @@ export default class ABViewGrid extends ABViewWidget  {
 
 			PopupSummaryColumnsComponent.objectLoad(dataCopy, view);
 			PopupSummaryColumnsComponent.setValue(view.settings.objectWorkspace.summaryColumns);
+
+			PopupCountColumnsComponent.objectLoad(dataCopy, view);
+			PopupCountColumnsComponent.setValue(view.settings.objectWorkspace.countColumns);
 		// }
 	}
 
@@ -1701,6 +1750,16 @@ export default class ABViewGrid extends ABViewWidget  {
 			$$(ids.buttonSummaryFields).refresh();
 		}
 
+
+		if (view.settings.objectWorkspace &&
+			view.settings.objectWorkspace.countColumns) {
+			$$(ids.buttonCountFields).define('badge', view.settings.objectWorkspace.countColumns.length);
+			$$(ids.buttonCountFields).refresh();
+		}
+		else {
+			$$(ids.buttonCountFields).define('badge', 0);
+			$$(ids.buttonCountFields).refresh();
+		}
 
 	}
 	
