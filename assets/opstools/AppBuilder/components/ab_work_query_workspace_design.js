@@ -80,6 +80,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 		this.init = function () {
 			// webix.extend($$(ids.form), webix.ProgressBar);
 			webix.extend($$(ids.tree), webix.ProgressBar);
+			webix.extend($$(ids.tabObjects), webix.ProgressBar);
 
 			$$(ids.noSelection).show();
 
@@ -272,6 +273,8 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 				// *** Tabs ***
 
+				$$(ids.tabObjects).showProgress({ type:"icon" });
+
 				// NOTE : Tabview have to contain at least one cell
 				$$(ids.tabObjects).addView({
 					body: {
@@ -321,11 +324,17 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 					// add tab
 					let tabUI = _logic.templateField(objLink, join.type);
 					$$(ids.tabObjects).addView(tabUI);
+
+					// populate selected fields
+					_logic.setSelectedFields(objLink.id);
+
 				});
 
 				// remove a temporary tab
 				$$(ids.tabObjects).removeView('temp');
 				$$(ids.tabObjects).adjust();
+
+				$$(ids.tabObjects).hideProgress({ type:"icon" });
 
 
 				/** Filter **/
@@ -481,12 +490,11 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 			},
 
 
-			tabChange: function () {
+			setSelectedFields: function (objectId) {
 
 				// *** Field double list ***
-				let tabId = $$(ids.tabObjects).getValue(), // object id
-					fieldURLs = CurrentQuery.fields(f => f.object.id == tabId).map(f => f.urlPointer()),
-					$viewDbl = $$(tabId).queryView({ name: 'fields' });
+				let fieldURLs = CurrentQuery.fields(f => f.object.id == objectId).map(f => f.urlPointer()),
+					$viewDbl = $$(objectId).queryView({ name: 'fields' });
 				if ($viewDbl)
 					$viewDbl.setValue(fieldURLs);
 
@@ -770,7 +778,10 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 											multiview: {
 												on: {
 													onViewChange: function (prevId, nextId) {
-														_logic.tabChange();
+
+														let objectId = nextId; // tab id
+
+														_logic.setSelectedFields(objectId);
 													}
 												}
 											}
