@@ -979,7 +979,7 @@ module.exports = {
     },
 
 
-    updateNavView: function (application, page) {
+    updateNavView: function (application, page, langCode) {
 
         if (!page) return Promise.reject(new Error('invalid page'));
 
@@ -987,7 +987,7 @@ module.exports = {
          var pageLabel;
          page.translations.forEach((trans) => {
              if (trans.language_code == 'en') {
-                pageLabel = AppBuilder.rules.nameFilter(trans.label);
+                pageLabel = trans.label.replace(/[^a-z0-9 ]/gi, '');
              }
          });
 
@@ -1028,7 +1028,7 @@ module.exports = {
                     Permissions.action.create({
                         key: pagePermsAction,
                         description: 'Allow the user to view the ' + appName + "'s " + pageName + ' page',
-                        language_code: 'en'
+                        language_code: langCode || 'en'
                     })
                         .always(function () {
                             // If permission action already exists, that's fine.
@@ -1116,10 +1116,27 @@ module.exports = {
                         version: '0'
                     }
 
-                    OPSPortal.NavBar.ToolDefinition.create(def, function (err, toolDef) {
-                        if (err) reject(err);
-                        else resolve();
-                    })
+                    OPSPortal.NavBar.ToolDefinition.exists(toolKey, function(error, exists) {
+
+                        if (error) return reject(error);
+
+                        // update
+                        if (exists) {
+                            OPSPortal.NavBar.ToolDefinition.update(def, function (err, toolDef) {
+                                if (err) reject(err);
+                                else resolve();
+                            });
+                        }
+                        // create new
+                        else {
+                            OPSPortal.NavBar.ToolDefinition.create(def, function (err, toolDef) {
+                                if (err) reject(err);
+                                else resolve();
+                            });
+                        }
+
+                    });
+
 
                 });
             })
@@ -1155,6 +1172,26 @@ module.exports = {
                         }
 
                         resolve();
+                    });
+
+                });
+
+            })
+
+            // change label of tool to display UI
+            .then(() => {
+
+                return new Promise((resolve, reject) => {
+
+                    let options = {
+                        toolkey: toolKey,
+                        language_code: langCode || 'en',
+                        label: toolLabel
+                    };
+
+                    OPSPortal.NavBar.Tool.updateLabel(options, function (err) {
+                        if (err) reject(err);
+                        else resolve();
                     });
 
                 });
