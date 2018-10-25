@@ -48,6 +48,8 @@ export default {
 	labelWidthSmall: 50,
 	labelWidthMedium: 80,
 	labelWidthLarge: 120,
+	labelWidthXLarge: 120,
+	labelWidthXXLarge: 120,
 	labelWidthCheckbox: 0,
 
 	// hide elements for mobile

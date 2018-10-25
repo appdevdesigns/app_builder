@@ -51,7 +51,8 @@ export default class ABChooseConfig extends OP.Component {
 				noApplication: L('ab.application.noApplication', "*There is no application data"),
 
 				confirmDeleteTitle : L('ab.application.delete.title', "*Delete application"),
-				confirmDeleteMessage : L('ab.application.delete.message', "*Do you want to delete <b>{0}</b>?")					
+				confirmDeleteMessage : L('ab.application.delete.message', "*Do you want to delete <b>{0}</b>?"),
+				qrPreview: L('ab.config.qrPreview', '*Generate QR Code')				
 			}
 		}
 
@@ -77,8 +78,6 @@ export default class ABChooseConfig extends OP.Component {
 		this.ui = {
 
 			id: ids.component,
-			responsive:"hide",
-
 			cols: [
 				{
 					maxWidth: App.config.appListSpacerColMaxWidth,
@@ -86,11 +85,9 @@ export default class ABChooseConfig extends OP.Component {
 					width: App.config.appListSpacerColMaxWidth
 				},
 				{
-					responsiveCell:false,
 					rows: [
 						{
-							maxHeight: App.config.appListSpacerRowHeight,
-							hidden: App.config.hideMobile
+							minHeight: 25,
 						},
 						//
 						// ToolBar
@@ -122,144 +119,196 @@ export default class ABChooseConfig extends OP.Component {
 						{
 							id:ids.rows,
 							rows:[
-
 								// Create Relay User:
 								{
-									cols:[
+									view:"template",
+									template:labels.component.buttonCreateRelayUser,
+									type:"header",
+									css:"bg-gray webix_header"
+								},
+								{
+									type: "form",
+									rows: [
 										{
 					                        id:ids.userList,
 					                        name:'users',
 					                        view:"multicombo",
 					                        label:labels.component.selectUsers,
 					                        value:'',
+											labelWidth:App.config.labelWidthXXLarge,
+											minWidth: 800,
 					                        options:[]
 					                    },
-					                    {
-					                    	view:"button",
-					                    	label: labels.component.buttonCreateRelayUser,
-											autowidth: true,
-											// type: "icon",
-											// icon: "plus",
-											click: () => {
-												
-												_logic.buttonCreateRelayUser();
-											}
+										{
+											cols:[
+												{},
+												{
+													view:"button",
+													label: labels.component.buttonCreateRelayUser,
+													autowidth: true,
+													// type: "icon",
+													// icon: "plus",
+													click: () => {
+														
+														_logic.buttonCreateRelayUser();
+													}
+												}
+											]
 										}
-					            
 									]
 								},
-
+								
 								// Button: Update Public Server
 								{
-									cols:[
+									view:"template",
+									template:labels.component.buttonUpdatePublicServer,
+									type:"header",
+									css:"bg-gray webix_header"
+								},
+								{
+									type: "form",
+									rows: [
 										{
-
-										},
-										{
-					                    	view:"button",
-					                    	label: labels.component.buttonUpdatePublicServer,
-											autowidth: true,
-											click: () => {
-												_logic.buttonUpdatePublicServer();
-											}
+											cols: [
+												{},
+												{
+													view:"button",
+							                    	label: labels.component.buttonUpdatePublicServer,
+													autowidth: true,
+													click: () => {
+														_logic.buttonUpdatePublicServer();
+													}
+												},
+												{}
+											]
 										}
 									]
 								},
 
 								// Send QR Email:
 								{
-									cols:[
+									view:"template",
+									template:labels.component.buttonSendQREmail,
+									type:"header",
+									css:"bg-gray webix_header"
+								},
+								{
+									type: "form",
+									rows: [
 										{
 					                        id:ids.qrUserList,
 					                        name:'qrusers',
 					                        view:"multicombo",
 					                        label:labels.component.selectQRUsers,
+											labelWidth:App.config.labelWidthXXLarge,
+											minWidth: 800,
 					                        value:'',
 					                        options:[]
 					                    },
-					                    {
+										{
 					                        id:ids.qrAppList,
 					                        name:'qrApps',
 					                        view:"multicombo",
 					                        label:labels.component.selectQRApp,
+											labelWidth:App.config.labelWidthXXLarge,
+											minWidth: 800,
 					                        value:'',
 					                        options:[]
 					                    },
 										{
-					                    	view:"button",
-					                    	label: labels.component.buttonSendQREmail,
-											autowidth: true,
-											click: () => {
-												_logic.buttonSendQREmail();
-											}
+											cols:[
+												{},
+												{
+							                    	view:"button",
+							                    	label: labels.component.buttonSendQREmail,
+													autowidth: true,
+													click: () => {
+														_logic.buttonSendQREmail();
+													}
+												}
+											]
 										}
 									]
 								},
 
-
 								// choose user & App and see a QR Code:
 								{
-									cols:[
+									view:"template",
+									template:labels.component.qrPreview,
+									type:"header",
+									css:"bg-gray webix_header"
+								},
+								{
+									type: "form",
+									rows:[
 										{
-											rows:[
-												{
-							                        id:ids.qrUserList2,
-							                        name:'qrusers2',
-							                        view:"combo",
-							                        label:labels.component.selectQRUsers,
-							                        value:'',
-							                        options:[],
-							                        on:{
-							                        	onChange:function(newVal, oldVal) {
-							                        		_logic.updateQRCode();
-							                        	}
-							                        }
-							                    },
-							                    {
-							                        id:ids.qrAppList2,
-							                        name:'qrApps2',
-							                        view:"multicombo",
-							                        label:labels.component.selectQRApp,
-							                        value:'',
-							                        options:[],
-							                        on:{
-							                        	onChange:function(newVal, oldVal) {
-							                        		_logic.updateQRCode();
-							                        	}
-							                        }
-							                    },
-							                    {
-							                        id:ids.qrVersion2,
-							                        name:'qrVersion2',
-							                        view:"combo",
-							                        label:labels.component.selectQRVersion,
-							                        value:'P',
-							                        options:[
-							                        	{id:'D', value:labels.component.versionDevelop },
-							                        	{id:'S', value:labels.component.versionStaging },
-							                        	{id:'P', value:labels.component.versionProduction }
-							                        	],
-							                        on:{
-							                        	onChange:function(newVal, oldVal) {
-							                        		_logic.updateQRCode();
-							                        	}
-							                        }
-							                    },
-											]
+					                        id:ids.qrUserList2,
+					                        name:'qrusers2',
+					                        view:"combo",
+					                        label:labels.component.selectQRUsers,
+					                        value:'',
+											labelWidth:App.config.labelWidthXXLarge,
+											minWidth: 800,
+					                        options:[],
+					                        on:{
+					                        	onChange:function(newVal, oldVal) {
+					                        		_logic.updateQRCode();
+					                        	}
+					                        }
+					                    },
+										{
+											id:ids.qrAppList2,
+											name:'qrApps2',
+											view:"multicombo",
+											label:labels.component.selectQRApp,
+											labelWidth:App.config.labelWidthXXLarge,
+											minWidth: 800,
+											value:'',
+											options:[],
+											on:{
+												onChange:function(newVal, oldVal) {
+													_logic.updateQRCode();
+												}
+											}
 										},
 										{
-											id: ids.qrCode,
-											view: "template",
-											template:"QR Image Here",
-					                        width:280,
-							                height:280,
+											id:ids.qrVersion2,
+											name:'qrVersion2',
+											view:"combo",
+											label:labels.component.selectQRVersion,
+											labelWidth:App.config.labelWidthXXLarge,
+											minWidth: 800,
+											value:'P',
+											options:[
+												{id:'D', value:labels.component.versionDevelop },
+												{id:'S', value:labels.component.versionStaging },
+												{id:'P', value:labels.component.versionProduction }
+												],
+											on:{
+												onChange:function(newVal, oldVal) {
+													_logic.updateQRCode();
+												}
+											}
+										},
+										{
+											cols:[
+												{},
+												{
+													id: ids.qrCode,
+													view: "template",
+													template:"QR Image Here",
+							                        width:280,
+									                height:280,
+												},
+												{}
+											]
 										}
 									]
 								}
 							]
 						},
 						{
-							maxHeight: App.config.appListSpacerRowHeight,
+							minHeight: 25,
 							hidden: App.config.hideMobile
 						}
 					]
