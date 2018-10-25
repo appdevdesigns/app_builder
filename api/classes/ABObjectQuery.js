@@ -357,10 +357,9 @@ module.exports = class ABObjectQuery extends ABObject {
 
 			var registeredBase = false;  // have we marked the base object/table?
 
-
 			//// Now compile our joins:
 
-			function makeLink(link, joinTable, A, op, B) {
+			var makeLink = (link, joinTable, A, op, B) => {
 				console.log('link.type:' + link.type);
 
 				// try to correct some type mistakes:
@@ -378,9 +377,51 @@ module.exports = class ABObjectQuery extends ABObject {
 				if (convertHash[type]) {
 					type = convertHash[type];
 				}
-				query[type](joinTable, function () {
-					this.on(A, op, B);
-				});
+
+				// There is not FULL JOINS on MySQL
+				// https://stackoverflow.com/questions/4796872/how-to-do-a-full-outer-join-in-mysql
+				if (type == 'fullOuterJoin') {
+
+					let baseObj = this.application.urlResolve(link.objectURL);
+					if (baseObj == null) return;
+
+					let linkField = baseObj.fields(f => f.id == link.fieldID)[0];
+					if (linkField == null) return;
+
+					let joinObj = linkField.datasourceLink;
+					if (joinObj == null) return;
+
+					query['innerJoin'](joinTable, function () {
+						this.on(1, '=', 1);
+					});
+
+					let joinAliasName = joinObj.id.replace(/[^a-zA-Z0-9]+/g, "");
+
+					let fullJoinCommand = ("inner join ( " +
+						"SELECT {joinTable}.{joinPk} FROM {joinTable} " +
+						"LEFT OUTER JOIN {baseTable} ON {A} {op} {B} " +
+						"UNION " +
+						"SELECT {joinTable}.{joinPk} FROM {joinTable} " +
+						"RIGHT OUTER JOIN {baseTable} ON {A} {op} {B} " +
+						") as {joinTableName} " +
+						"on {joinTable}.{joinPk} {op} {joinTableName}.{joinPk}")
+						.replace(/{baseTable}/g, baseObj.dbTableName(true))
+						.replace(/{joinTable}/g, joinTable)
+						.replace(/{joinTableName}/g, joinAliasName)
+						.replace(/{joinPk}/g, joinObj.PK())
+						.replace(/{A}/g, A)
+						.replace(/{op}/g, op)
+						.replace(/{B}/g, B);
+
+					query.joinRaw(fullJoinCommand);
+
+				}
+				else {
+					query[type](joinTable, function () {
+						this.on(A, op, B);
+					});
+				}
+
 			}
 
 
