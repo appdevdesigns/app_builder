@@ -392,16 +392,16 @@ module.exports = class ABObjectQuery extends ABObject {
 					if (joinObj == null) return;
 
 					query['innerJoin'](joinTable, function () {
-						this.on(A, op, B);
+						this.on(1, '=', 1);
 					});
 
 					let joinAliasName = joinObj.id.replace(/[^a-zA-Z0-9]+/g, "");
 
 					let fullJoinCommand = ("inner join ( " +
-						"SELECT {joinTable}.* FROM {joinTable} " +
+						"SELECT {joinTable}.{joinPk} FROM {joinTable} " +
 						"LEFT OUTER JOIN {baseTable} ON {A} {op} {B} " +
 						"UNION " +
-						"SELECT {joinTable}.* FROM {joinTable} " +
+						"SELECT {joinTable}.{joinPk} FROM {joinTable} " +
 						"RIGHT OUTER JOIN {baseTable} ON {A} {op} {B} " +
 						") as {joinTableName} " +
 						"on {joinTable}.{joinPk} {op} {joinTableName}.{joinPk}")
