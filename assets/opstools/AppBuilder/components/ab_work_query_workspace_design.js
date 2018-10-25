@@ -148,16 +148,16 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 				var objBase = CurrentQuery.objectBase();
 
 				$$(ids.selectedObject).show();
-				
-				
+
+
 				$$(ids.depth).blockEvent(); // prevents endless loop
-				
+
 				if (CurrentQuery.objectWorkspace.depth) {
 					$$(ids.depth).setValue(CurrentQuery.objectWorkspace.depth);
 				} else {
 					$$(ids.depth).setValue(5);
 				}
-				
+
 				$$(ids.depth).unblockEvent();
 
 
@@ -186,7 +186,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 				};
 
 				var fnAddTreeItem = (store, currObj, parentItemId) => {
-					
+
 					if (parentItemId) {
 						var item = store.getItem(parentItemId);
 						if (item.$level > $$(ids.depth).getValue())
@@ -215,14 +215,20 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 						}).length > 0;
 
 						// set disable
-						var disabled = ($parentItem ? $parentItem.disabled : false) || // disable same its parent
-							(!isCheck && CurrentQuery.canFilterObject(f.datasourceLink)) // disable its duplicate
+						var disabled = !isCheck && CurrentQuery.canFilterObject(f.datasourceLink); // disable its duplicate
+
+						// set disable
+						// var disabled = ($parentItem ? $parentItem.disabled : false) || // disable same its parent
+						// 	(!isCheck && CurrentQuery.canFilterObject(f.datasourceLink)) // disable its duplicate
 
 						// add items to tree
-						var itemId = store.add(
+						var label = "#object# (#field#)"
+							.replace("#object#", f.datasourceLink.label)
+							.replace("#field#", f.label);
 
+						var itemId = store.add(
 							{
-								value: f.datasourceLink.label, // a label of link object
+								value: label, // a label of link object
 								fieldUrl: fieldUrl,
 								objectId: f.datasourceLink.id,
 								checked: isCheck,
@@ -252,20 +258,20 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 					$$(ids.tree).clearAll();
 
 					// show loading cursor
-					$$(ids.tree).showProgress({ type:"icon" });
+					$$(ids.tree).showProgress({ type: "icon" });
 
 					let treeStore = new webix.TreeCollection();
 					if (objBase)
 						fnAddTreeItem(treeStore, objBase);
-	
-					// // refresh UI
+
+					// refresh UI
 					// $$(ids.tree).refresh();
-	
+
 					// populate tree store
 					$$(ids.tree).parse(treeStore.serialize());
-	
+
 					// show loading cursor
-					$$(ids.tree).hideProgress({ type:"icon" });
+					$$(ids.tree).hideProgress({ type: "icon" });
 
 					next();
 
@@ -273,7 +279,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 				// *** Tabs ***
 
-				$$(ids.tabObjects).showProgress({ type:"icon" });
+				$$(ids.tabObjects).showProgress({ type: "icon" });
 
 				// NOTE : Tabview have to contain at least one cell
 				$$(ids.tabObjects).addView({
@@ -300,7 +306,10 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 				if (!objBase) return;
 
 				// add the main object tab
-				let tabUI = _logic.templateField(objBase, null, true);
+				let tabUI = _logic.templateField({
+					object: objBase,
+					isTypeHidden: true
+				});
 				$$(ids.tabObjects).addView(tabUI);
 
 				// select default tab to the main object
@@ -318,15 +327,18 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 					if (!fieldLink) return;
 
 					var objLink = fieldLink.datasourceLink;
-					if (!objLink || 
+					if (!objLink ||
 						objLink.id == objBase.id) return;
 
 					// add tab
-					let tabUI = _logic.templateField(objLink, join.type);
+					let tabUI = _logic.templateField({
+						field: fieldLink,
+						joinType: join.type
+					});
 					$$(ids.tabObjects).addView(tabUI);
 
 					// populate selected fields
-					_logic.setSelectedFields(objLink.id);
+					_logic.setSelectedFields(join.fieldID);
 
 				});
 
@@ -334,7 +346,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 				$$(ids.tabObjects).removeView('temp');
 				$$(ids.tabObjects).adjust();
 
-				$$(ids.tabObjects).hideProgress({ type:"icon" });
+				$$(ids.tabObjects).hideProgress({ type: "icon" });
 
 
 				/** Filter **/
@@ -416,7 +428,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 					/** where **/
 					CurrentQuery.workspaceFilterConditions = DataFilter.getValue();
-					
+
 					/** depth **/
 					CurrentQuery.objectWorkspace.depth = $$(ids.depth).getValue();
 
@@ -477,24 +489,24 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 				tree.unblockEvent();
 
 			},
-			
-			depthChange: function(newv, oldv) {
+
+			depthChange: function (newv, oldv) {
 
 				// call save to db
 				_logic.save()
 					.then(() => {
 
 						this.populateQueryWorkspace(CurrentQuery);
-						
+
 					});
 			},
 
 
-			setSelectedFields: function (objectId) {
+			setSelectedFields: function (fieldId) {
 
 				// *** Field double list ***
-				let fieldURLs = CurrentQuery.fields(f => f.object.id == objectId).map(f => f.urlPointer()),
-					$viewDbl = $$(objectId).queryView({ name: 'fields' });
+				let fieldURLs = CurrentQuery.fields(f => f.id == fieldId).map(f => f.urlPointer()),
+					$viewDbl = $$(fieldId).queryView({ name: 'fields' });
 				if ($viewDbl)
 					$viewDbl.setValue(fieldURLs);
 
@@ -557,10 +569,24 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 			/**
 			 * @function templateField()
 			 *	return UI of the object tab
-			 * 
+			 *
+			 * @param {JSON} option - {
+			 * 							object: ABObject [option],
+			 * 							field:  ABField [option],
+			 * 							joinType: 'string',
+			 * 							isTypeHidden: boolean
+			 * 						}
+			 *
 			 * @return {JSON}
 			 */
-			templateField: function (object, joinType, isMain) {
+			templateField: function (option) {
+
+				if (option.object == null && option.field == null)
+					throw new Error("Invalid params");
+
+				var tabId = (option.field ? option.field.id : option.object.id);
+
+				var object = (option.field ? option.field.datasourceLink : option.object);
 
 				var fields = object.fields().map(f => {
 					return {
@@ -569,10 +595,15 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 					};
 				});
 
+				var label = "#object#".replace('#object#', object.label);
+				if (option.field) {
+					label += ' (#field#)'.replace('#field#', option.field.label);
+				}
+
 				return {
-					header: object.label,
+					header: label,
 					body: {
-						id: object.id,
+						id: tabId,
 						type: "space",
 						css: "bg-white",
 						rows: [
@@ -582,8 +613,8 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 								label: L('ab.object.querybuilder.joinRecordsBy', "*Join records by"),
 								labelWidth: 200,
 								placeholder: "Choose a type of table join",
-								hidden: isMain,
-								value: joinType || 'innerjoin',
+								hidden: option.isTypeHidden == true,
+								value: option.joinType || 'innerjoin',
 								options: [
 									{ id: 'innerjoin', value: 'Returns records that have matching values in both tables (INNER JOIN).' },
 									{ id: 'left', value: 'Return all records from the left table, and the matched records from the right table (LEFT JOIN).' },
@@ -639,7 +670,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 
 				// set data:
-				CurrentQuery.model().findAll({limit:20})
+				CurrentQuery.model().findAll({ limit: 20 })
 					.then((response) => {
 
 						DataTable.clearAll();
@@ -707,22 +738,22 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 											height: 50
 										},
 										{
-											autowidth:true,
-											css:"bg-gray",
+											autowidth: true,
+											css: "bg-gray",
 											cols: [
 												{},
 												{
 													id: ids.depth,
-													view:"counter", 
+													view: "counter",
 													label: L('ab.object.querybuilder.relationshipDepth', "*Relationship Depth"),
 													width: 270,
 													labelWidth: 165,
-													step:1, 
-													value:5, 
-													min:1, 
-													max:10,
+													step: 1,
+													value: 5,
+													min: 1,
+													max: 10,
 													on: {
-														onChange: function(newv, oldv) {
+														onChange: function (newv, oldv) {
 															_logic.depthChange(newv, oldv);
 														}
 													}
@@ -779,9 +810,9 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 												on: {
 													onViewChange: function (prevId, nextId) {
 
-														let objectId = nextId; // tab id
+														let fieldId = nextId; // tab id
 
-														_logic.setSelectedFields(objectId);
+														_logic.setSelectedFields(fieldId);
 													}
 												}
 											}
