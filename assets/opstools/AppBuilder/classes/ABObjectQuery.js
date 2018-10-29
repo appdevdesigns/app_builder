@@ -41,31 +41,32 @@ export default class ABObjectQuery extends ABObject {
 
 
 	// ABOBjectQuery Specific Changes
-
 	// we store a list of fields by their urls:
 	fields:[
-		{ 
+		{
+			objectAlias: "",
 			fieldURL:'#/url/to/field',
 		}
 	],
 
 
 	// we store a list of joins:
-	joins: [
-		{
-			objectURL:"#/...",					// the base object of the join
-			fieldID:'adf3we666r77ewsfe',		// the connection field of the object we are joining with.
-			type:[left, right, inner, outer]    // join type: these should match the names of the knex methods
-					=> innerJoin, leftJoin, leftOuterJoin, rightJoin, rightOuterJoin, fullOuterJoin
+	joins:{
+		alias: "",							// the alias name of table - use in SQL command
+		objectURL:"#/...",					// the base object of the join
+		links: [
+			{
+				alias: "",							// the alias name of table - use in SQL command
+				fieldID: "uuid",					// the connection field of the object we are joining with.
+				type:[left, right, inner, outer]	// join type: these should match the names of the knex methods
+						=> innerJoin, leftJoin, leftOuterJoin, rightJoin, rightOuterJoin, fullOuterJoin
+				links: [
+					...
+				]
+			}
+		]
 
-
-// maybe we'll implement this in the future:
-// this can allow us to specify complex join conditions:
-// on: { }
-			on: { fieldAID: '', op:'=', fieldBID:''} //fieldBID: the field in the connected 
-
-		}
-	],
+	},
 
 
 	where: { QBWhere }
@@ -74,7 +75,7 @@ export default class ABObjectQuery extends ABObject {
 
 
 		// import all our ABObjects 
-		this.importJoins(attributes.joins || []);
+		this.importJoins(attributes.joins || {});
 		this.importFields(attributes.fields || []); // import after joins are imported
 		// this.where = attributes.where || {}; // .workspaceFilterConditions
 
@@ -264,7 +265,10 @@ export default class ABObjectQuery extends ABObject {
 	exportFields() {
 		var currFields = [];
 		this._fields.forEach((field) => {
-			currFields.push( { fieldURL: field.urlPointer() })
+			currFields.push( {
+				objectAlias: this.aliasName(field),
+				fieldURL: field.urlPointer() 
+			})
 		})
 		return currFields;
 	}
@@ -305,15 +309,13 @@ export default class ABObjectQuery extends ABObject {
 	/**
 	 * @method joins()
 	 *
-	 * return an array of all the ABObjects for this Query.
+	 * return an object of joins for this Query.
 	 *
-	 * @return {array}
+	 * @return {Object}
 	 */
-	joins (filter) {
+	joins() {
 
-		filter = filter || function(){ return true; };
-
-		return (this._joins || []).filter(filter);
+		return this._joins || {};
 	}
 
 
@@ -340,7 +342,26 @@ export default class ABObjectQuery extends ABObject {
 	 */
 	objectBase () {
 
-		return this.objects()[0];
+		if (!this._joins.objectURL)
+			return null;
+
+		return this.application.urlResolve(this._joins.objectURL) || null;
+
+	}
+
+
+	/**
+	 * @method links()
+	 *
+	 * return an array of links for this Query.
+	 *
+	 * @return {array}
+	 */
+	links(filter) {
+
+		filter = filter || function(){ return true; };
+
+		return (this._links || []).filter(filter);
 
 	}
 
@@ -349,51 +370,98 @@ export default class ABObjectQuery extends ABObject {
 	 * @method importJoins
 	 * instantiate a set of joins from the given attributes.
 	 * Our joins contain a set of ABObject URLs that should already be created in our Application.
-	 * @param {array} settings The different field urls for each field
+	 * @param {Object} settings The different field urls for each field
 	 *					{ }
 	 */
 	importJoins(settings) {
-		var newJoins = [];
+
+		// copy join settings
+		this._joins = _.cloneDeep(settings);
+
 		var newObjects = [];
-		function storeSingle(object) {
-			var inThere = newObjects.filter((o)=>{ return o.id == object.id}).length > 0;
+		var newLinks = [];
+
+		function storeObject(object) {
+			if (!object) return;
+
+			var inThere = newObjects.filter((o) => { return o.id == object.id }).length > 0;
 			if (!inThere) {
 				newObjects.push(object);
 			}
 		}
-	  	settings.forEach((join) => {
 
-	  		// Convert our saved settings:
-	  		// 		{
-			// 			objectURL:"#/...",
-			// 			fieldID:'adf3we666r77ewsfe',
-			// 			type:[left, right, inner, outer]  // these should match the names of the knex methods
-			// 					=> innerJoin, leftJoin, leftOuterJoin, rightJoin, rightOuterJoin, fullOuterJoin
-			// 		}
+		function storeLinks(links) {
 
-			// track our base object
-			var object = this.application.urlResolve(join.objectURL);
-			if (!object) {
+			(links || []).forEach(link => {
 
-				// flag this query is disabled
-				this.disabled = true;
-				return;
-			}
+				var inThere = newLinks.filter(l => l.fieldID == link.fieldID).length > 0;
+				if (!inThere) {
+					newLinks.push(link);
+				}
+	
+			});
 
-			storeSingle(object);
+		}
 
-	  		// track our linked object
-			var linkField = object.fields((f)=>{ return f.id == join.fieldID; })[0];
-			if (linkField) {
+		function processJoin(baseObject, joins) {
+
+			if (!baseObject) return;
+
+			(joins || []).forEach((link) => {
+
+				// Convert our saved settings:
+				//	{
+				//		alias: "",							// the alias name of table - use in SQL command
+				//		objectURL:"#/...",					// the base object of the join
+				//		links: [
+				//			{
+				//				alias: "",							// the alias name of table - use in SQL command
+				//				fieldID: "uuid",					// the connection field of the object we are joining with.
+				//				type:[left, right, inner, outer]	// join type: these should match the names of the knex methods
+				//						=> innerJoin, leftJoin, leftOuterJoin, rightJoin, rightOuterJoin, fullOuterJoin
+				//				links: [
+				//					...
+				//				]
+				//			}
+				//		]
+				//	},
+
+				var linkField = baseObject.fields((f) => { return f.id == link.fieldID; })[0];
+				if (!linkField) return;
+
+				// track our linked object
 				var linkObject = linkField.datasourceLink;
-				storeSingle(linkObject);
-			}
+				if (!linkObject) return;
+				
+				storeObject(linkObject);
 
+				storeLinks(link.links);
 
-	  		newJoins.push( join );
-	  	})
-	  	this._joins = newJoins;
-	  	this._objects = newObjects;
+				processJoin(linkObject, link.links);
+
+			});
+
+		}
+
+		if (!this._joins.objectURL)
+			// TODO: this is old query version
+			return;
+
+		// store the root object
+		var rootObject = this.objectBase();
+		if (!rootObject) {
+			this._objects = newObjects;
+			return;
+		}
+
+		storeObject(rootObject);
+
+		storeLinks(settings.links);
+
+		processJoin(rootObject, settings.links);
+
+		this._objects = newObjects;
+		this._links = newLinks;
 	}
 
 
@@ -404,11 +472,8 @@ export default class ABObjectQuery extends ABObject {
 	 */
 	exportJoins() {
 
-		var joins = [];
-		this._joins.forEach((join)=>{
-			joins.push(join);
-		})
-		return joins;
+		return _.cloneDeep(this._joins || {});
+
 	}
 
 
@@ -518,6 +583,18 @@ export default class ABObjectQuery extends ABObject {
 
 		return this.disabled || false;
 
+	}
+
+
+	/**
+	 * @method aliasName
+	 * 
+	 * @param field {ABField}
+	 * 
+	 * @return {string}
+	 */
+	aliasName(field) {
+		return field.id.replace(/[^a-zA-Z0-9]+/g, "").substring(0, 8);
 	}
 
 

@@ -206,20 +206,17 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 							return;
 
 						// set check flag of tree item
-						var isCheck = CurrentQuery.joins(join => {
-
-							return join.fieldID == f.id &&
-								(join.objectURL == objBase.urlPointer() || // parent is base object
-									($parentItem && $parentItem.checked)); // if parent is checked
-
-						}).length > 0;
+						var isCheck = CurrentQuery.links(link => link.fieldID == f.id).length > 0;
 
 						// set disable
-						var disabled = !isCheck && CurrentQuery.canFilterObject(f.datasourceLink); // disable its duplicate
+						// var disabled = !isCheck && CurrentQuery.canFilterObject(f.datasourceLink); // disable its duplicate
 
 						// set disable
 						// var disabled = ($parentItem ? $parentItem.disabled : false) || // disable same its parent
 						// 	(!isCheck && CurrentQuery.canFilterObject(f.datasourceLink)) // disable its duplicate
+
+						// always enabled
+						var disabled = false;
 
 						// add items to tree
 						var label = "#object# (#field#)"
@@ -316,31 +313,43 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 				$$(ids.tabObjects).setValue(objBase.id);
 
 				// Other object tabs will be added in a check tree item event
-				CurrentQuery.joins().forEach(join => {
+				var fnAddTab = (objFrom, links) => {
 
-					if (!join.fieldID) return;
-
-					var objFrom = CurrentApplication.urlResolve(join.objectURL);
 					if (!objFrom) return;
+	
+					(links || []).forEach(join => {
 
-					var fieldLink = objFrom.fields(f => f.id == join.fieldID)[0];
-					if (!fieldLink) return;
+						if (!join.fieldID) return;
+	
+						var fieldLink = objFrom.fields(f => f.id == join.fieldID)[0];
+						if (!fieldLink) return;
+	
+						var objLink = fieldLink.datasourceLink;
+						if (!objLink ||
+							// prevent join recursive base object
+							objLink.id == objBase.id) return;
+	
+						// add tab
+						let tabUI = _logic.templateField({
+							field: fieldLink,
+							joinType: join.type
+						});
+						$$(ids.tabObjects).addView(tabUI);
+	
+						// populate selected fields
+						_logic.setSelectedFields(join.fieldID);
 
-					var objLink = fieldLink.datasourceLink;
-					if (!objLink ||
-						objLink.id == objBase.id) return;
 
-					// add tab
-					let tabUI = _logic.templateField({
-						field: fieldLink,
-						joinType: join.type
+						fnAddTab(objLink, join.links);
+	
 					});
-					$$(ids.tabObjects).addView(tabUI);
 
-					// populate selected fields
-					_logic.setSelectedFields(join.fieldID);
+				};
 
-				});
+				var joinSetting = CurrentQuery.joins();
+
+				fnAddTab(objBase, joinSetting.links);
+
 
 				// remove a temporary tab
 				$$(ids.tabObjects).removeView('temp');
@@ -373,45 +382,58 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 					var objectBase = CurrentQuery.objectBase();
 
 					/** joins **/
-					var joins = [],
-						checkItemIds = tree.getChecked();
+					let joins = {
+						alias: "BASE_OBJECT",
+						objectURL: objectBase.urlPointer(), // the base object of the join
+						links: []
+					};
 
-					checkItemIds.forEach(itemId => {
+					let lookupFields = {};
 
-						var $treeItem = tree.getItem(itemId);
-						var field = CurrentQuery.application.urlResolve($treeItem.fieldUrl);
+					let $checkedItem = tree.getChecked()
+											.map(id => tree.getItem(id))
+											.sort((a, b) => a.$level - b.$level);
+					($checkedItem || []).forEach($treeItem => {
+
+						let field = CurrentQuery.application.urlResolve($treeItem.fieldUrl);
 						if (!field) return;
 
-						// pull the join type of UI
-						var joinType;
-						var $tabObject = $$(ids.tabObjects).getMultiview().getChildViews().filter(v => v.config.id == field.datasourceLink.id)[0];
+						// pull the join type
+						let joinType = 'innerjoin';
+						let $tabObject = $$(ids.tabObjects).getMultiview().getChildViews().filter(v => v.config.id == field.datasourceLink.id)[0];
 						if ($tabObject) {
-							var $joinType = $tabObject.queryView({ name: "joinType" });
+							let $joinType = $tabObject.queryView({ name: "joinType" });
 
 							joinType = $joinType.getValue() || 'innerjoin';
 						}
-						else {
-							joinType = 'innerjoin';
+
+						let links = joins.links, // default is links of base
+							newJoin = {
+								alias: CurrentQuery.aliasName(field),
+								fieldID: field.id,
+								type: joinType,
+								links: []
+							};
+
+						if ($treeItem.$level > 1) {
+
+							// pull parent join
+							let parentId = tree.getParentId($treeItem.id),
+								parentItem = tree.getItem(parentId);
+
+							let fieldParent = CurrentQuery.application.urlResolve(parentItem.fieldUrl);
+							if (!fieldParent) return;
+
+							links = lookupFields[fieldParent.id].links;
 						}
 
-						// add new join into query
-						joins.push({
-							objectURL: field.object.urlPointer(),
-							fieldID: field.id,
-							type: joinType
-						});
+						// add new join into parent links
+						links.push(newJoin);
+
+						// cache
+						lookupFields[field.id] = newJoin;
 
 					});
-
-					// if no join, then should add the default
-					if (joins.length == 0) {
-						var objectBase = CurrentQuery.objectBase();
-						if (objectBase) {
-							joins.push({
-								objectURL: objectBase.urlPointer()
-							});
-						}
-					}
 
 					CurrentQuery.importJoins(joins);
 
@@ -419,7 +441,11 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 					/** fields **/
 					var fields = $$(ids.datatable).config.columns.map(col => { // an array of field's url
 
+						var field = CurrentQuery.application.urlResolve(col.fieldURL);
+						if (!field) return;
+
 						return {
+							objectAlias: CurrentQuery.aliasName(field),
 							fieldURL: col.fieldURL
 						};
 					});
