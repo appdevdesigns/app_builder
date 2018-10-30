@@ -792,9 +792,8 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 					if (field) {
 
 						// convert field's id to column name
-						condition.key = '`{databaseName}`.`{tableName}`.`{columnName}`'
-							.replace('{databaseName}', field.object.dbSchemaName())
-							.replace('{tableName}', field.object.dbTableName())
+						condition.key = '{prefix}.`{columnName}`'
+							.replace('{prefix}', field.dbPrefix())
 							.replace('{columnName}', field.columnName);
 
 
@@ -820,9 +819,8 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 
 							}
 							else {
-								condition.key = ('JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(`{databaseName}`.`{tableName}`.`translations`, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH(`{databaseName}`.`{tableName}`.`translations`, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))')
-												.replace(/{databaseName}/g, field.object.dbSchemaName())
-												.replace(/{tableName}/g, field.object.dbTableName())
+								condition.key = ('JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({prefix}.`translations`, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({prefix}.`translations`, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))')
+												.replace(/{prefix}/g, field.dbPrefix())
 												.replace(/{languageCode}/g, userData.languageCode)
 												.replace(/{columnName}/g, field.columnName);
 							}
@@ -1088,17 +1086,16 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 									.replace('{columnName}', orderField.columnName);
 					}
 					else {
-						sortClause = ('JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({tableName}.translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({tableName}.translations, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))')
-										.replace(/{tableName}/g, orderField.object.dbTableName(true))
+						sortClause = ('JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({prefix}.`translations`, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({prefix}.`translations`, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))')
+										.replace(/{prefix}/g, orderField.dbPrefix())
 										.replace('{languageCode}', userData.languageCode)
 										.replace('{columnName}', orderField.columnName);
 					}
 				} 
 				// If we are just sorting a field it is much simpler
 				else { 
-					sortClause = "`{databaseName}`.`{tableName}`.`{columnName}`"
-									.replace('{databaseName}', orderField.object.dbSchemaName())
-									.replace('{tableName}', orderField.object.dbTableName())
+					sortClause = "{prefix}.`{columnName}`"
+									.replace('{prefix}', orderField.dbPrefix())
 									.replace('{columnName}', orderField.columnName);
 	            }
 	            query.orderByRaw(sortClause + " " + o.dir);

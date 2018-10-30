@@ -224,7 +224,8 @@ export default class RowFilter extends OP.Component {
 
 					return {
 						id: f.id,
-						value: label
+						value: label,
+						alias: f.alias || undefined // ABObjectQuery
 					};
 				});
 
@@ -1119,15 +1120,24 @@ export default class RowFilter extends OP.Component {
 						var $fieldElem = $viewCond.$$(ids.field);
 						if (!$fieldElem) return;
 
+						/* field id */
 						var fieldId = $fieldElem.getValue();
 						if (!fieldId) return;
 
+						/* alias */
+						var alias;
+						var selectedOpt = $viewCond.$$(ids.field).getPopup().config.body.data.filter(opt => opt.id == fieldId)[0];
+						if (selectedOpt)
+							alias = selectedOpt.alias || undefined;
+
+						/* rule */
 						var rule = null,
 							ruleViewId = $viewCond.$$(ids.rule).getActiveId(),
 							$viewComparer = $viewCond.$$(ids.rule).queryView({ id: ruleViewId });
 						if ($viewComparer && $viewComparer.getValue)
 							rule = $viewComparer.getValue();
 
+						/* value */
 						var value = null,
 							valueViewId = $viewCond.$$(ids.inputValue).getActiveId(),
 							$viewConditionValue = $viewCond.$$(ids.inputValue).queryView({ id: valueViewId });
@@ -1147,6 +1157,7 @@ export default class RowFilter extends OP.Component {
 						}
 
 						config_settings.rules.push({
+							alias: alias || undefined,
 							key: fieldId,
 							rule: rule,
 							value: value

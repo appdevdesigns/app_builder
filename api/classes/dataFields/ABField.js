@@ -48,6 +48,25 @@ module.exports =  class ABField extends ABFieldBase {
 	///
 
 
+	dbPrefix() {
+
+		var result;
+
+		// add alias to be prefix
+		if (this.alias) {
+			result = "`{alias}`".replace('{alias}', this.alias);
+		}
+		// add database and table names to be prefix
+		else {
+			result = "`{databaseName}`.`{tableName}`"
+						.replace('{databaseName}', this.object.dbSchemaName())
+						.replace('{tableName}', this.object.dbTableName());
+		}
+
+		return result;
+
+	}
+
 	/**
 	 * @function migrateCreate
 	 * perform the necessary sql actions to ADD this column to the DB table.

@@ -306,6 +306,28 @@ module.exports = class ABObjectQuery extends ABObject {
 
 	}
 
+	/**
+	 * @method fields()
+	 *
+	 * return an array of all the ABFields for this ABObject.
+	 *
+	 * @return {array}
+	 */
+	fields (filter) {
+
+		filter = filter || function() { return true; };
+
+		return this._fields.map(fInfo => {
+
+			let result = _.cloneDeep(fInfo.field);
+
+			result.alias = fInfo.alias;
+
+			return result;
+		}).filter(result => filter(result));
+
+	}
+
 
 
 
@@ -645,9 +667,7 @@ module.exports = class ABObjectQuery extends ABObject {
 				//}
 				var externalTrans = {};
 
-				this.fields().forEach(fInfo => {
-
-					let f = fInfo.field; // ABField
+				this.fields().forEach(f => {
 
 					if (!f || f.key == 'calculate' || f.key == 'TextFormula') // TODO: ignore calculated fields
 						return;
@@ -661,7 +681,7 @@ module.exports = class ABObjectQuery extends ABObject {
 							"'[',GROUP_CONCAT(JSON_OBJECT('id', `{linkDbName}`.`{linkTableName}`.`{columnName}`)),']')" +
 							" FROM `{linkDbName}`.`{linkTableName}` WHERE `{linkDbName}`.`{linkTableName}`.`{linkColumnName}` = `{baseAlias}`.`{baseColumnName}` AND `{linkDbName}`.`{linkTableName}`.`{columnName}` IS NOT NULL)" +
 							" as `{baseAlias}.{displayName}`") // add object's name to display name
-							.replace(/{baseAlias}/g, fInfo.alias)
+							.replace(/{baseAlias}/g, f.alias)
 							.replace(/{baseColumnName}/g, obj.PK())
 							.replace(/{displayName}/g, f.relationName());
 
@@ -677,7 +697,7 @@ module.exports = class ABObjectQuery extends ABObject {
 								"JSON_OBJECT('id', `{aliasName}`.`{columnName}`)," +
 								"NULL)" +
 								" as '{aliasName}.{displayName}'")
-								.replace(/{aliasName}/g, fInfo.alias)
+								.replace(/{aliasName}/g, f.alias)
 								.replace(/{columnName}/g, f.columnName)
 								.replace(/{displayName}/g, f.relationName());
 
@@ -702,7 +722,7 @@ module.exports = class ABObjectQuery extends ABObject {
 									"JSON_OBJECT('id', `{aliasName}`.`{columnName}`)," +
 									"NULL)" +
 									" as '{aliasName}.{displayName}'")
-									.replace(/{aliasName}/g, fInfo.alias)
+									.replace(/{aliasName}/g, f.alias)
 									.replace(/{columnName}/g, f.columnName)
 									.replace(/{displayName}/g, f.relationName());
 							}
@@ -773,7 +793,7 @@ module.exports = class ABObjectQuery extends ABObject {
 							(fieldConnect.settings.linkType == 'one' && fieldConnect.settings.linkViaType == 'one' && fieldConnect.settings.isSource)) {
 
 							whereClause = ("{table}.{column} = {linkTable}.{linkId}"
-								.replace('{table}', fInfo.alias)
+								.replace('{table}', f.alias)
 								.replace('{column}', fieldConnect.columnName)
 								.replace('{linkTable}', objectNumber.dbTableName(true))
 								.replace('{linkId}', objectNumber.PK()));
@@ -790,7 +810,7 @@ module.exports = class ABObjectQuery extends ABObject {
 							whereClause = ("{linkTable}.{linkColumn} = {table}.{id}"
 								.replace('{linkTable}', objectNumber.dbTableName(true))
 								.replace('{linkColumn}', connectedField.columnName)
-								.replace('{table}', fInfo.alias)
+								.replace('{table}', f.alias)
 								.replace('{id}', f.object.PK()));
 
 						}
@@ -810,7 +830,7 @@ module.exports = class ABObjectQuery extends ABObject {
 							whereClause = ("{joinTable}.{joinColumn} = {table}.{id} AND {linkTable}.{column} IS NOT NULL"
 								.replace(/{joinTable}/g, fieldConnect.joinTableName(true))
 								.replace('{joinColumn}', fieldConnect.object.name)
-								.replace('{table}', fInfo.alias)
+								.replace('{table}', f.alias)
 								.replace('{id}', fieldConnect.object.PK()))
 								.replace(/{linkTable}/g, objectNumber.dbTableName(true))
 								.replace('{column}', fieldNumber.columnName);
@@ -826,7 +846,7 @@ module.exports = class ABObjectQuery extends ABObject {
 							.replace(/{FN}/g, functionName)
 							.replace(/{linkTable}/g, objectNumber.dbTableName(true))
 							.replace(/{linkColumn}/g, fieldNumber.columnName)
-							.replace(/{aliasName}/g, fInfo.alias)
+							.replace(/{aliasName}/g, f.alias)
 							.replace(/{displayName}/g, f.columnName);
 
 
@@ -843,7 +863,7 @@ module.exports = class ABObjectQuery extends ABObject {
 
 								if (externalTrans[obj.name] == null) {
 									externalTrans[obj.name] = {
-										alias: fInfo.alias,
+										alias: f.alias,
 										object: obj,
 										transColumns: []
 									};
@@ -861,7 +881,7 @@ module.exports = class ABObjectQuery extends ABObject {
 
 						var selectField = ("{aliasName}.{columnName}" +
 							" as {aliasName}.{displayName}") // add object's name to display name
-							.replace(/{aliasName}/g, fInfo.alias)
+							.replace(/{aliasName}/g, f.alias)
 							.replace(/{columnName}/g, columnName)
 							.replace(/{displayName}/g, columnName);
 
@@ -1193,7 +1213,7 @@ module.exports = class ABObjectQuery extends ABObject {
 	isValidData(allParameters) {
 		var errors = [];
 		this.fields().forEach((f) => {
-			var p = f.field.isValidData(allParameters);
+			var p = f.isValidData(allParameters);
 			if (p.length > 0) {
 				errors = errors.concat(p);
 			}
