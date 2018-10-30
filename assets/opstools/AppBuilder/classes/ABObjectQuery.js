@@ -44,7 +44,7 @@ export default class ABObjectQuery extends ABObject {
 	// we store a list of fields by their urls:
 	fields:[
 		{
-			objectAlias: "",
+			alias: "",
 			fieldURL:'#/url/to/field',
 		}
 	],
@@ -242,18 +242,23 @@ export default class ABObjectQuery extends ABObject {
 		var newFields = [];
 	  	(fieldSettings || []).forEach((fieldInfo) => {
 
+			if (fieldInfo == null) return;
+
 			var field = this.application.urlResolve(fieldInfo.fieldURL);
 
 			// should be a field of base/join objects
 			if (field && this.canFilterField(field) &&
 				// check duplicate
-				newFields.filter(f => f.urlPointer() == fieldInfo.fieldURL).length < 1) { 
+				newFields.filter(f => f.alias == fieldInfo.alias && f.field.urlPointer() == fieldInfo.fieldURL).length < 1) { 
 
-				newFields.push( field );
+				newFields.push({
+					alias: fieldInfo.alias,
+					field: field
+				});
 			}
 
 		})
-	  	this._fields = newFields;
+		this._fields = newFields;
 	}
 
 
@@ -264,10 +269,10 @@ export default class ABObjectQuery extends ABObject {
 	 */
 	exportFields() {
 		var currFields = [];
-		this._fields.forEach((field) => {
+		this._fields.forEach((fieldInfo) => {
 			currFields.push( {
-				objectAlias: this.aliasName(field),
-				fieldURL: field.urlPointer() 
+				alias: fieldInfo.alias,
+				fieldURL: fieldInfo.field.urlPointer()
 			})
 		})
 		return currFields;
@@ -283,18 +288,22 @@ export default class ABObjectQuery extends ABObject {
 	 */
 	fields (filter) {
 
-		var fields = _.cloneDeep(super.fields(filter));
+		filter = filter || function() { return true; };
 
-		return fields.map(f => {
+		return this._fields.map(fInfo => {
 
-			// include object name {objectName}.{columnName}
+			let result = _.cloneDeep(fInfo.field);
+
+			result.alias = fInfo.alias;
+
+			// include object name {aliasName}.{columnName}
 			// to use it in grid headers & hidden fields
-			f.columnName = '{objectName}.{columnName}'
-							.replace('{objectName}', f.object.name)
-							.replace('{columnName}', f.columnName);
+			result.columnName = '{aliasName}.{columnName}'
+							.replace('{aliasName}', fInfo.alias)
+							.replace('{columnName}', fInfo.field.columnName);
 
-			return f;
-		});
+			return result;
+		}).filter(result => filter(result));
 
 	}
 
@@ -530,10 +539,10 @@ export default class ABObjectQuery extends ABObject {
 			var field = this.application.urlResolve(h.fieldURL);
 			if (field) {
 
-				// include object name {objectName}.{columnName}
+				// include object name {aliasName}.{columnName}
 				// to use it in grid headers & hidden fields
-				h.id = '{objectName}.{columnName}'
-						.replace('{objectName}', field.object.name)
+				h.id = '{aliasName}.{columnName}'
+						.replace('{aliasName}', h.alias)
 						.replace('{columnName}', field.columnName);
 
 				// label
@@ -584,19 +593,6 @@ export default class ABObjectQuery extends ABObject {
 		return this.disabled || false;
 
 	}
-
-
-	/**
-	 * @method aliasName
-	 * 
-	 * @param field {ABField}
-	 * 
-	 * @return {string}
-	 */
-	aliasName(field) {
-		return field.id.replace(/[^a-zA-Z0-9]+/g, "").substring(0, 8);
-	}
-
 
 
 	// // after a component has rendered, tell each of our fields to perform
