@@ -581,6 +581,15 @@ export default class ABObjectQuery extends ABObject {
 	}
 
 
+	/**
+	 * @method isReadOnly
+	 * 
+	 * @return {boolean}
+	 */
+	get isReadOnly() {
+		return true;
+	}
+
 
 	/**
 	 * @method isDisabled()

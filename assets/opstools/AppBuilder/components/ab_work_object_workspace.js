@@ -828,7 +828,7 @@ console.error('TODO: toolbarPermission()');
 				CurrentObject = object;
 
 				// the replicated tables are read only
-				if (object.isImported) {
+				if (CurrentObject.isReadOnly) {
 					DataTable.readonly();
 
 					if ($$(ids.buttonRowNew))

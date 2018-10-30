@@ -420,6 +420,18 @@ export default class ABObject extends ABObjectBase {
 		return labelData;
 	}
 
+	/**
+	 * @method isReadOnly
+	 * 
+	 * @return {boolean}
+	 */
+	get isReadOnly() {
+
+		return this.isImported || this.isExternal;
+
+	}
+
+
 
 
 
