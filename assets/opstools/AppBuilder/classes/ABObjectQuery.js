@@ -15,12 +15,6 @@
 
 import ABObject from "./ABObject"
 
-
-
-function L(key, altText) {
-	return AD.lang.label.getLabel(key) || altText;
-}
-
 export default class ABObjectQuery extends ABObject {
 
     constructor(attributes, application) {
@@ -162,31 +156,6 @@ export default class ABObjectQuery extends ABObject {
 
 		return settings;
 	}
-
-
-	// /**
-	//  * @method multilingualFields()
-	//  *
-	//  * return an array of columnnames that are multilingual.
-	//  *
-	//  * @return {array}
-	//  */
-	// multilingualFields() {
-	// 	var fields = [];
-
-	// 	var found = this.fields(function(f){ return f.isMultilingual; });
-	// 	found.forEach((f)=>{
-
-	// 		var format = "{objectName}.{columnName}"
-	// 						.replace('{objectName}', f.object.name)
-	// 						.replace('{columnName}', f.columnName);
-
-	// 		fields.push(format);
-	// 	})
-
-	// 	return fields;
-	// }
-
 
 
 
@@ -425,7 +394,7 @@ export default class ABObjectQuery extends ABObject {
 				//		links: [
 				//			{
 				//				alias: "",							// the alias name of table - use in SQL command
-				//				fieldID: "uuid",					// the connection field of the object we are joining with.
+				//				fieldID: "uuid",					// uhe connection field of the object we are joining with.
 				//				type:[left, right, inner, outer]	// join type: these should match the names of the knex methods
 				//						=> innerJoin, leftJoin, leftOuterJoin, rightJoin, rightOuterJoin, fullOuterJoin
 				//				links: [
@@ -602,111 +571,5 @@ export default class ABObjectQuery extends ABObject {
 		return this.disabled || false;
 
 	}
-
-
-	// // after a component has rendered, tell each of our fields to perform
-	// // any custom display operations
-	// // @param {Webix.DataStore} data a webix datastore of all the rows effected
-	// //        by the render.
-	// customDisplays(data, App, DataTable, ids, isEditable) {
-	// 	var fields = this.fields();
-
-	// 	if (!data || !data.getFirstId) return;
-
-	// 	if (ids != null) {
-	// 		var ids = ids;
-	// 		ids.forEach((id)=>{
-	// 			var row = data.getItem(id);
-	// 			fields.forEach((f)=>{
-	// 				if (this.objectWorkspace.hiddenFields.indexOf(f.columnName) == -1) {
-	// 					var node = DataTable.getItemNode({ row: row.id, column: f.columnName });
-	// 					f.customDisplay(row, App, node, isEditable);
-	// 				}
-	// 			});
-	// 		});
-	// 	} else {
-	// 		var id = data.getFirstId();
-	// 		while(id) {
-	// 			var row = data.getItem(id);
-	// 			fields.forEach((f)=>{
-	// 				if (this.objectWorkspace.hiddenFields.indexOf(f.columnName) == -1) {
-	// 					var node = DataTable.getItemNode({ row: row.id, column: f.columnName });
-	// 					f.customDisplay(row, App, node, isEditable);
-	// 				}
-	// 			})
-	// 			id = data.getNextId(id);
-	// 		}
-	// 	}
-
-	// }
-
-
-	// // Display data with label format of object
-	// displayData(rowData) {
-
-	// 	if (rowData == null) return '';
-
-	// 	// translate multilingual
-	// 	var mlFields = this.multilingualFields();
-	// 	OP.Multilingual.translate(rowData, rowData, mlFields);
-
-	// 	var labelData = this.labelFormat || '';
-		
-	// 	// default label
-	// 	if (!labelData && this._fields.length > 0) {
-
-	// 		var defaultField = this.fields(f => f.fieldUseAsLabel())[0];
-	// 		if (defaultField)
-	// 			labelData = '{' + defaultField.id + '}';
-	// 		else
-	// 			labelData = 'ID: ' + rowData.id; // show id of row
-	// 	}
-
-	// 	// get column ids in {colId} template
-	// 	// ['{colId1}', ..., '{colIdN}']
-	// 	var colIds = labelData.match(/\{[^}]+\}/g);
-
-	// 	if (colIds && colIds.forEach) {
-	// 		colIds.forEach((colId) => {
-	// 			var colIdNoBracket = colId.replace('{', '').replace('}', '');
-
-	// 			var field = this.fields((f) => f.id == colIdNoBracket)[0]
-	// 			if (field == null) return;
-
-	// 			labelData = labelData.replace(colId, field.format(rowData) || '');
-	// 		});
-	// 	}
-
-	// 	return labelData;
-	// }
-
-
-
-
-	///
-	/// Working with data from server
-	///
-
-	// /**
-	//  * @method model
-	//  * return a Model object that will allow you to interact with the data for
-	//  * this ABObject.
-	//  */
-	// model() {
-
-	// 	if (!this._model) {
-
-	// 		if (this.isImported) {
-	// 			var obj = ABApplication.objectFromRef(this.importFromObject);
-	// 			this._model = new ABModel(obj);
-	// 		}
-	// 		else {
-	// 			this._model = new ABModel(this);
-	// 		}
-	// 	}
-
-	// 	return this._model;
-	// }
-
 
 }

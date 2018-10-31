@@ -451,10 +451,19 @@ module.exports = class ABObjectQuery extends ABObject {
 
 			var processJoin = (baseObject, baseAlias, joins) => {
 
-				(joins || []).forEach((link) => {
+				(joins || []).forEach(link => {
 
 					// no link column
 					if (!link.fieldID) return;
+
+					// NOTE: query v1
+					if (link.objectURL)
+						baseObject = this.application.urlResolve(link.objectURL);
+
+					// NOTE: query v1
+					if (!baseAlias)
+						baseAlias = baseObject.dbTableName(true);
+	
 
 					var connectionField = baseObject.fields((f) => { return f.id == link.fieldID; })[0];
 					if (!connectionField) return; // no link so skip this turn.
@@ -463,6 +472,14 @@ module.exports = class ABObjectQuery extends ABObject {
 					var joinTable = connectedObject.dbTableName(true);
 
 					var fieldLinkType = connectionField.linkType();
+
+					var joinAlias = link.alias;
+
+					// NOTE: query v1
+					var yeah = link.alias;
+					if (!yeah)
+						yeah = joinTable;
+
 					switch (fieldLinkType) {
 
 						case 'one':
@@ -477,8 +494,8 @@ module.exports = class ABObjectQuery extends ABObject {
 								// columnName comes from the baseObject
 								var columnName = connectionField.columnName;
 								var baseClause = baseAlias + '.' + columnName;
-								var connectedClause = link.alias + '.' + connectedObject.PK();
-								makeLink(baseObject, link, joinTable, link.alias, baseClause, '=', connectedClause);
+								var connectedClause = yeah + '.' + connectedObject.PK();
+								makeLink(baseObject, link, joinTable, joinAlias, baseClause, '=', connectedClause);
 
 							}
 							else {
@@ -493,8 +510,8 @@ module.exports = class ABObjectQuery extends ABObject {
 
 								var columnName = connectedField.columnName;
 								var baseClause = baseAlias + '.' + baseObject.PK();
-								var connectedClause = link.alias + '.' + columnName;
-								makeLink(baseObject, link, joinTable, link.alias, baseClause, '=', connectedClause);
+								var connectedClause = yeah + '.' + columnName;
+								makeLink(baseObject, link, joinTable, joinAlias, baseClause, '=', connectedClause);
 
 							}
 							break;
@@ -514,8 +531,8 @@ module.exports = class ABObjectQuery extends ABObject {
 
 								var columnName = connectedField.columnName;
 								var baseClause = baseAlias + '.' + baseObject.PK();
-								var connectedClause = link.alias + '.' + columnName;
-								makeLink(baseObject, link, joinTable, link.alias, baseClause, '=', connectedClause);
+								var connectedClause = yeah + '.' + columnName;
+								makeLink(baseObject, link, joinTable, joinAlias, baseClause, '=', connectedClause);
 
 							}
 							else {
@@ -537,10 +554,12 @@ module.exports = class ABObjectQuery extends ABObject {
 								// get baseObjectColumn in joinTable
 								var baseObjectColumn = baseObject.name; // AppBuilder.rules.toJunctionTableFK(baseObject.name, connectionField.columnName);
 
-								var connectedAlias = link.alias + "_MN"; // alias name of M:N connection
+								var connectedAlias = null;
+								if (joinAlias)
+									connectedAlias = joinAlias + "_MN"; // alias name of M:N connection
 
 								var baseClause = baseAlias + '.' + baseObject.PK();
-								var joinClause = connectedAlias + '.' + baseObjectColumn;
+								var joinClause = yeah + '.' + baseObjectColumn;
 
 								// make JOIN
 								makeLink(baseObject, link, joinTable, connectedAlias, baseClause, '=', joinClause);
@@ -551,11 +570,11 @@ module.exports = class ABObjectQuery extends ABObject {
 								var connectedField = connectionField.fieldLink();
 								var connectedObjectColumn = connectedObject.name; // AppBuilder.rules.toJunctionTableFK(connectedObject.name, connectedField.columnName);
 
-								var connectedClause = link.alias + '.' + connectedObject.PK();
-								joinClause = connectedAlias + '.' + connectedObjectColumn;
+								var connectedClause = joinAlias + '.' + connectedObject.PK();
+								joinClause = yeah + '.' + connectedObjectColumn;
 
 								// make JOIN
-								makeLink(baseObject, link, connectedObject.dbTableName(true), link.alias, connectedClause, '=', joinClause);
+								makeLink(baseObject, link, connectedObject.dbTableName(true), joinAlias, connectedClause, '=', joinClause);
 
 							}
 							break;
@@ -608,6 +627,19 @@ module.exports = class ABObjectQuery extends ABObject {
 
 					let joinAliasName = joinObj.id.replace(/[^a-zA-Z0-9]+/g, "");
 
+					let Aclause;
+					let Bclause;
+
+					if (A.indexOf('.') > -1) {
+						let parses = A.split('.');
+						Aclause = parses[parses.length - 1];
+					}
+
+					if (B.indexOf('.') > -1) {
+						let parses = B.split('.');
+						Bclause = parses[parses.length - 1];
+					}
+
 					let fullJoinCommand = ("inner join ( " +
 						"SELECT {joinTable}.{joinPk} FROM {joinTable} " +
 						"LEFT OUTER JOIN {baseTable} ON {baseTable}.{A} {op} {joinTable}.{B} " +
@@ -618,12 +650,12 @@ module.exports = class ABObjectQuery extends ABObject {
 						"on {joinTableAlias}.{joinPk} {op} {joinTableName}.{joinPk}")
 						.replace(/{baseTable}/g, object.dbTableName(true))
 						.replace(/{joinTable}/g, joinTable)
-						.replace(/{joinTableAlias}/g, alias)
+						.replace(/{joinTableAlias}/g, (alias ? alias : joinTable))
 						.replace(/{joinTableName}/g, joinAliasName)
 						.replace(/{joinPk}/g, joinObj.PK())
-						.replace(/{A}/g, (A.indexOf('.') > -1 ? A.split('.')[1] : A))
+						.replace(/{A}/g, Aclause)
 						.replace(/{op}/g, op)
-						.replace(/{B}/g, (B.indexOf('.') > -1 ? B.split('.')[1] : B));
+						.replace(/{B}/g, Bclause);
 
 					query.joinRaw(fullJoinCommand);
 
@@ -644,13 +676,26 @@ module.exports = class ABObjectQuery extends ABObject {
 			var joinSetting = this.joins();
 
 			// register the root object
-			var rootObject = this.application.urlResolve(joinSetting.objectURL);
-			query.from("#table# as #alias#"
-				.replace("#table#", rootObject.dbTableName(true))
-				.replace("#alias#", joinSetting.alias));
+			var rootObject = this.objectBase(),
+				fromBaseTable = "#table#".replace("#table#", rootObject.dbTableName(true));
 
+			if (joinSetting.alias)
+				fromBaseTable = fromBaseTable + " as " + joinSetting.alias;
 
-			processJoin(rootObject, joinSetting.alias, joinSetting.links);
+			query.from(fromBaseTable);
+
+			var links = joinSetting.links 
+
+			// NOTE: query v1
+			if (links == null && Array.isArray(joinSetting)) {
+				links = joinSetting.shift(); // remove first item
+
+				// convert to array
+				if (links && !Array.isArray(links))
+					links = [links];
+			}
+
+			processJoin(rootObject, joinSetting.alias, links);
 
 
 			//// Add in our fields:
@@ -679,11 +724,12 @@ module.exports = class ABObjectQuery extends ABObject {
 
 						var connectColFormat = ("(SELECT CONCAT(" +
 							"'[',GROUP_CONCAT(JSON_OBJECT('id', `{linkDbName}`.`{linkTableName}`.`{columnName}`)),']')" +
-							" FROM `{linkDbName}`.`{linkTableName}` WHERE `{linkDbName}`.`{linkTableName}`.`{linkColumnName}` = `{baseAlias}`.`{baseColumnName}` AND `{linkDbName}`.`{linkTableName}`.`{columnName}` IS NOT NULL)" +
-							" as `{baseAlias}.{displayName}`") // add object's name to display name
-							.replace(/{baseAlias}/g, f.alias)
+							" FROM `{linkDbName}`.`{linkTableName}` WHERE `{linkDbName}`.`{linkTableName}`.`{linkColumnName}` = {prefix}.`{baseColumnName}` AND `{linkDbName}`.`{linkTableName}`.`{columnName}` IS NOT NULL)" +
+							" as `{displayPrefix}.{displayName}`") // add object's name to display name
+							.replace(/{prefix}/g, f.dbPrefix())
 							.replace(/{baseColumnName}/g, obj.PK())
-							.replace(/{displayName}/g, f.relationName());
+							.replace('{displayPrefix}', (f.alias ? f.alias : obj.name))
+							.replace('{displayName}', f.relationName());
 
 
 						var selectField = '';
@@ -693,13 +739,14 @@ module.exports = class ABObjectQuery extends ABObject {
 						// 1:M
 						if (f.settings.linkType == 'one' && f.settings.linkViaType == 'many') {
 
-							selectField = ("IF(`{aliasName}`.`{columnName}` IS NOT NULL, " +
-								"JSON_OBJECT('id', `{aliasName}`.`{columnName}`)," +
+							selectField = ("IF({prefix}.`{columnName}` IS NOT NULL, " +
+								"JSON_OBJECT('id', {prefix}.`{columnName}`)," +
 								"NULL)" +
-								" as '{aliasName}.{displayName}'")
-								.replace(/{aliasName}/g, f.alias)
+								" as '{displayPrefix}.{displayName}'")
+								.replace(/{prefix}/g, f.dbPrefix())
 								.replace(/{columnName}/g, f.columnName)
-								.replace(/{displayName}/g, f.relationName());
+								.replace('{displayPrefix}', (f.alias ? f.alias : obj.name))
+								.replace('{displayName}', f.relationName());
 
 						}
 
@@ -718,13 +765,14 @@ module.exports = class ABObjectQuery extends ABObject {
 						else if (f.settings.linkType == 'one' && f.settings.linkViaType == 'one') {
 
 							if (f.settings.isSource) {
-								selectField = ("IF(`{aliasName}`.`{columnName}` IS NOT NULL, " +
-									"JSON_OBJECT('id', `{aliasName}`.`{columnName}`)," +
+								selectField = ("IF({prefix}.`{columnName}` IS NOT NULL, " +
+									"JSON_OBJECT('id', {prefix}.`{columnName}`)," +
 									"NULL)" +
-									" as '{aliasName}.{displayName}'")
-									.replace(/{aliasName}/g, f.alias)
+									" as '{displayPrefix}.{displayName}'")
+									.replace(/{prefix}/g, f.dbPrefix())
 									.replace(/{columnName}/g, f.columnName)
-									.replace(/{displayName}/g, f.relationName());
+									.replace('{displayPrefix}', (f.alias ? f.alias : obj.name))
+									.replace('{displayName}', f.relationName());
 							}
 							else {
 								selectField = connectColFormat
@@ -758,7 +806,7 @@ module.exports = class ABObjectQuery extends ABObject {
 					else if (f.key == 'formula') {
 
 						let fieldConnect = f.object.fields(fld => fld.id == f.settings.field)[0];
-						if (!fieldConnect) return; ``
+						if (!fieldConnect) return;
 
 						let objectNumber = f.object.application.objects(obj => obj.id == f.settings.object)[0];
 						if (!objectNumber) return;
@@ -793,7 +841,7 @@ module.exports = class ABObjectQuery extends ABObject {
 							(fieldConnect.settings.linkType == 'one' && fieldConnect.settings.linkViaType == 'one' && fieldConnect.settings.isSource)) {
 
 							whereClause = ("{table}.{column} = {linkTable}.{linkId}"
-								.replace('{table}', f.alias)
+								.replace('{table}', f.dbPrefix())
 								.replace('{column}', fieldConnect.columnName)
 								.replace('{linkTable}', objectNumber.dbTableName(true))
 								.replace('{linkId}', objectNumber.PK()));
@@ -810,7 +858,7 @@ module.exports = class ABObjectQuery extends ABObject {
 							whereClause = ("{linkTable}.{linkColumn} = {table}.{id}"
 								.replace('{linkTable}', objectNumber.dbTableName(true))
 								.replace('{linkColumn}', connectedField.columnName)
-								.replace('{table}', f.alias)
+								.replace('{table}', f.dbPrefix())
 								.replace('{id}', f.object.PK()));
 
 						}
@@ -830,7 +878,7 @@ module.exports = class ABObjectQuery extends ABObject {
 							whereClause = ("{joinTable}.{joinColumn} = {table}.{id} AND {linkTable}.{column} IS NOT NULL"
 								.replace(/{joinTable}/g, fieldConnect.joinTableName(true))
 								.replace('{joinColumn}', fieldConnect.object.name)
-								.replace('{table}', f.alias)
+								.replace('{table}', f.dbPrefix())
 								.replace('{id}', fieldConnect.object.PK()))
 								.replace(/{linkTable}/g, objectNumber.dbTableName(true))
 								.replace('{column}', fieldNumber.columnName);
@@ -841,12 +889,12 @@ module.exports = class ABObjectQuery extends ABObject {
 						let colFormat = ("(SELECT {FN}({linkTable}.{linkColumn}) " +
 							"FROM {linkTable} " +
 							joinClause +
-							"WHERE " + whereClause +
-							" ) as `{aliasName}.{displayName}`") // add object's name to alias
+							" WHERE " + whereClause +
+							" ) as `{displayPrefix}.{displayName}`") // add object's name to alias
 							.replace(/{FN}/g, functionName)
 							.replace(/{linkTable}/g, objectNumber.dbTableName(true))
 							.replace(/{linkColumn}/g, fieldNumber.columnName)
-							.replace(/{aliasName}/g, f.alias)
+							.replace('{displayPrefix}', (f.alias ? f.alias : obj.name))
 							.replace(/{displayName}/g, f.columnName);
 
 
@@ -880,10 +928,11 @@ module.exports = class ABObjectQuery extends ABObject {
 						}
 
 						var selectField = ("{aliasName}.{columnName}" +
-							" as {aliasName}.{displayName}") // add object's name to display name
-							.replace(/{aliasName}/g, f.alias)
-							.replace(/{columnName}/g, columnName)
-							.replace(/{displayName}/g, columnName);
+							" as {displayPrefix}.{displayName}") // add object's name to display name
+							.replace('{aliasName}', f.dbPrefix().replace(/`/g, ''))
+							.replace('{columnName}', columnName)
+							.replace('{displayPrefix}', (f.alias ? f.alias : obj.name))
+							.replace('{displayName}', columnName);
 
 						if (columns.indexOf(selectField) < 0)
 							columns.push(selectField);
@@ -913,18 +962,27 @@ module.exports = class ABObjectQuery extends ABObject {
 
 					});
 
+					var prefix = "";
+					if (transInfo.alias)
+						prefix = "`{alias}`".replace("{alias}", transInfo.alias);
+					else
+						prefix = "`{dbName}`.`{baseTableName}`"
+									.replace(/{dbName}/g, obj.dbSchemaName())
+									.replace(/{baseTableName}/g, obj.dbTableName());
+
 					var transField = ("(SELECT CONCAT('[', " +
 						"	GROUP_CONCAT(JSON_OBJECT(" + queryCommand + "))" +
 						", ']')" +
 						" FROM `{dbName}`.`{linkTableName}`" +
-						" WHERE `{dbName}`.`{linkTableName}`.`{linkColumnName}` = `{aliasName}`.`{baseColumnName}`)" +
-						" as `{aliasName}.{displayName}`") // add object's name to alias
+						" WHERE `{dbName}`.`{linkTableName}`.`{linkColumnName}` = {prefix}.`{baseColumnName}`)" +
+						" as `{displayPrefix}.{displayName}`") // add object's name to alias
 						.replace(/{dbName}/g, obj.dbSchemaName())
 						.replace(/{linkTableName}/g, obj.dbTransTableName())
 						.replace(/{linkColumnName}/g, obj.transColumnName)
-						.replace(/{aliasName}/g, transInfo.alias)
+						.replace(/{prefix}/g, prefix)
 						.replace(/{baseColumnName}/g, obj.PK())
-						.replace(/{displayName}/g, "translations");
+						.replace('{displayPrefix}', prefix.replace(/`/g, ''))
+						.replace('{displayName}', "translations");
 
 					selects.push(ABMigration.connection().raw(transField));
 
