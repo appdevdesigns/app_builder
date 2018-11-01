@@ -265,10 +265,19 @@ export default class ABObjectQuery extends ABObject {
 
 			result.alias = fInfo.alias;
 
+			// NOTE: query v1
+			let alias = "";
+			if (Array.isArray(this.joins())) {
+				alias = fInfo.field.object.name;
+			}
+			else {
+				alias = fInfo.alias;
+			}
+
 			// include object name {aliasName}.{columnName}
 			// to use it in grid headers & hidden fields
 			result.columnName = '{aliasName}.{columnName}'
-							.replace('{aliasName}', fInfo.alias)
+							.replace('{aliasName}', alias)
 							.replace('{columnName}', fInfo.field.columnName);
 
 			return result;
@@ -508,10 +517,19 @@ export default class ABObjectQuery extends ABObject {
 			var field = this.application.urlResolve(h.fieldURL);
 			if (field) {
 
+				// NOTE: query v1
+				let alias = "";
+				if (Array.isArray(this.joins())) {
+					alias = field.object.name;
+				}
+				else {
+					alias = h.alias;
+				}
+
 				// include object name {aliasName}.{columnName}
 				// to use it in grid headers & hidden fields
 				h.id = '{aliasName}.{columnName}'
-						.replace('{aliasName}', h.alias)
+						.replace('{aliasName}', alias)
 						.replace('{columnName}', field.columnName);
 
 				// label

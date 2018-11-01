@@ -476,9 +476,9 @@ module.exports = class ABObjectQuery extends ABObject {
 					var joinAlias = link.alias;
 
 					// NOTE: query v1
-					var yeah = link.alias;
-					if (!yeah)
-						yeah = joinTable;
+					var aliasName = link.alias;
+					if (!aliasName)
+						aliasName = joinTable;
 
 					switch (fieldLinkType) {
 
@@ -494,7 +494,7 @@ module.exports = class ABObjectQuery extends ABObject {
 								// columnName comes from the baseObject
 								var columnName = connectionField.columnName;
 								var baseClause = baseAlias + '.' + columnName;
-								var connectedClause = yeah + '.' + connectedObject.PK();
+								var connectedClause = aliasName + '.' + connectedObject.PK();
 								makeLink(baseObject, link, joinTable, joinAlias, baseClause, '=', connectedClause);
 
 							}
@@ -510,7 +510,7 @@ module.exports = class ABObjectQuery extends ABObject {
 
 								var columnName = connectedField.columnName;
 								var baseClause = baseAlias + '.' + baseObject.PK();
-								var connectedClause = yeah + '.' + columnName;
+								var connectedClause = aliasName + '.' + columnName;
 								makeLink(baseObject, link, joinTable, joinAlias, baseClause, '=', connectedClause);
 
 							}
@@ -531,7 +531,7 @@ module.exports = class ABObjectQuery extends ABObject {
 
 								var columnName = connectedField.columnName;
 								var baseClause = baseAlias + '.' + baseObject.PK();
-								var connectedClause = yeah + '.' + columnName;
+								var connectedClause = aliasName + '.' + columnName;
 								makeLink(baseObject, link, joinTable, joinAlias, baseClause, '=', connectedClause);
 
 							}
@@ -559,7 +559,7 @@ module.exports = class ABObjectQuery extends ABObject {
 									connectedAlias = joinAlias + "_MN"; // alias name of M:N connection
 
 								var baseClause = baseAlias + '.' + baseObject.PK();
-								var joinClause = yeah + '.' + baseObjectColumn;
+								var joinClause = (connectedAlias || joinTable) + '.' + baseObjectColumn;
 
 								// make JOIN
 								makeLink(baseObject, link, joinTable, connectedAlias, baseClause, '=', joinClause);
@@ -570,8 +570,8 @@ module.exports = class ABObjectQuery extends ABObject {
 								var connectedField = connectionField.fieldLink();
 								var connectedObjectColumn = connectedObject.name; // AppBuilder.rules.toJunctionTableFK(connectedObject.name, connectedField.columnName);
 
-								var connectedClause = joinAlias + '.' + connectedObject.PK();
-								joinClause = yeah + '.' + connectedObjectColumn;
+								var connectedClause = aliasName + '.' + connectedObject.PK();
+								joinClause = (connectedAlias || joinTable) + '.' + connectedObjectColumn;
 
 								// make JOIN
 								makeLink(baseObject, link, connectedObject.dbTableName(true), joinAlias, connectedClause, '=', joinClause);
@@ -688,7 +688,7 @@ module.exports = class ABObjectQuery extends ABObject {
 
 			// NOTE: query v1
 			if (links == null && Array.isArray(joinSetting)) {
-				links = joinSetting.shift(); // remove first item
+				links = _.cloneDeep(joinSetting).shift(); // remove first item
 
 				// convert to array
 				if (links && !Array.isArray(links))
@@ -1243,6 +1243,8 @@ module.exports = class ABObjectQuery extends ABObject {
 
 		// not include .id column
 		options.ignoreIncludeId = true;
+
+		options.ignoreIncludeColumns = true;
 
 		// return the count not the full data
 		options.columnNames = [ABMigration.connection().raw("COUNT(*) as count")];
