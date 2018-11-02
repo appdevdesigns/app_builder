@@ -990,10 +990,9 @@ module.exports = class ABObjectQuery extends ABObject {
 
 				// when empty columns, then add default id
 				if (selects.length == 0 && columns.length == 0) {
-
-					let objBase = this.objectBase();
-
-					selects.push("BASE_OBJECT.#pk# AS PK".replace("#pk#", objBase.PK()));
+					selects.push("#alias#.#pk# AS PK"
+						.replace("#alias#", joinSetting.alias || fromBaseTable)
+						.replace("#pk#", objBase.PK()));
 				}
 
 				query.column(columns);
