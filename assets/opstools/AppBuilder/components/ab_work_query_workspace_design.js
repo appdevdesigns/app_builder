@@ -511,7 +511,13 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 						if (!field) return;
 
 						// alias name
-						let aliasName = $treeItem.alias || _logic.aliasName();
+						let aliasName = $treeItem.alias;
+						if (!aliasName) {
+							aliasName = _logic.aliasName();
+							tree.updateItem($treeItem.id, {
+								alias: aliasName
+							});
+						}
 
 						// pull the join type && 
 						let joinType = 'innerjoin';

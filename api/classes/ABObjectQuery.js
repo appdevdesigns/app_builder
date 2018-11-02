@@ -581,6 +581,8 @@ module.exports = class ABObjectQuery extends ABObject {
 
 					}
 
+					processJoin(connectedObject, link.alias, link.links);
+
 				});
 
 			};
