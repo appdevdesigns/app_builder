@@ -992,7 +992,7 @@ module.exports = class ABObjectQuery extends ABObject {
 				if (selects.length == 0 && columns.length == 0) {
 					selects.push("#alias#.#pk# AS PK"
 						.replace("#alias#", joinSetting.alias || fromBaseTable)
-						.replace("#pk#", objBase.PK()));
+						.replace("#pk#", this.objectBase().PK()));
 				}
 
 				query.column(columns);
