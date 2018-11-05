@@ -726,7 +726,9 @@ module.exports = class ABObjectQuery extends ABObject {
 
 						var connectColFormat = ("(SELECT CONCAT(" +
 							"'[',GROUP_CONCAT(JSON_OBJECT('id', `{linkDbName}`.`{linkTableName}`.`{columnName}`)),']')" +
-							" FROM `{linkDbName}`.`{linkTableName}` WHERE `{linkDbName}`.`{linkTableName}`.`{linkColumnName}` = {prefix}.`{baseColumnName}` AND `{linkDbName}`.`{linkTableName}`.`{columnName}` IS NOT NULL)" +
+							" FROM `{linkDbName}`.`{linkTableName}`" +
+							" WHERE `{linkDbName}`.`{linkTableName}`.`{linkColumnName}` = {prefix}.`{baseColumnName}`" + 
+							" AND `{linkDbName}`.`{linkTableName}`.`{columnName}` IS NOT NULL)" +
 							" as `{displayPrefix}.{displayName}`") // add object's name to display name
 							.replace(/{prefix}/g, f.dbPrefix())
 							.replace(/{baseColumnName}/g, obj.PK())

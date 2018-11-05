@@ -123,5 +123,9 @@ module.exports = class ABObjectQueryV1 extends ABObjectQuery {
         this._objects = newObjects;
     }
 
+    get version() {
+        return 1;
+    }
+
 
 }
