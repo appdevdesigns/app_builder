@@ -263,15 +263,30 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 							findCond.$parent = parentId;
 						}
 
-						let $item = treeStore.find(findCond)[0];
+						let $item = null;
+						(treeStore.find(findCond) || []).forEach(item => {
 
-						// update check status
-						treeStore.updateItem($item.id, {
-							alias: link.alias,
-							checked: true
+							if (item.$parent) {
+								// select item who has parent is checked
+								let parentItem = treeStore.getItem(item.$parent);
+								if (parentItem && parentItem.checked)
+									$item = item;
+							}
+							else {
+								$item = item;
+							}
 						});
 
-						fnCheckItem(treeStore, field.datasourceLink, link.links, $item.id);
+						// update check status
+						if ($item) {
+
+							treeStore.updateItem($item.id, {
+								alias: link.alias,
+								checked: true
+							});
+	
+							fnCheckItem(treeStore, field.datasourceLink, link.links, $item.id);
+						}
 
 					});
 				};
