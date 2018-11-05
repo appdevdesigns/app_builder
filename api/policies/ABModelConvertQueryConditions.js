@@ -159,7 +159,7 @@ function parseQueryCondition(_where, object, req, res, cb) {
                 if (cond.key == 'this_object') {
 
                     queryColumn = (cond.alias ? cond.alias : object.dbTableName(true))+'.'+object.PK();
-                    newKey = object.PK(); // 'id';  // the final filter needs to be 'id IN []', so 'id'
+                    newKey = (cond.alias ? cond.alias : object.dbTableName(true))+'.'+object.PK(); // 'id';  // the final filter needs to be 'id IN []', so 'id'
                     parseColumn = object.PK(); // 'id';  // make sure we pull our 'id' values from the query
 
                     continueSingle(newKey, parseColumn, queryColumn);
@@ -213,13 +213,13 @@ function parseQueryCondition(_where, object, req, res, cb) {
                                 // it's dbTableName as well, to prevent 'Unknown Column' Errors.
                                 // adding in the dbTableName since I think it will be safe in all situations ... maybe ..
                                 var dbTableName = field.object.dbTableName(true);
-                                if (dbTableName) { newKey = dbTableName + '.' + newKey } 
+                                if (dbTableName) { newKey = (cond.alias ? cond.alias : dbTableName) + '.' + newKey } 
 
                                 // I need to pull out the PK from the filter Query:
                                 parseColumn = linkedObject.PK(); // 'id';
 
                                 // make this the queryColumn:
-                                queryColumn = linkedObject.dbTableName(true)+'.'+parseColumn;   
+                                queryColumn = (cond.alias ? cond.alias : linkedObject.dbTableName(true))+'.'+parseColumn;   
                                 continueSingle(newKey, parseColumn, queryColumn);                             
                                 break;
 
@@ -228,13 +228,13 @@ function parseQueryCondition(_where, object, req, res, cb) {
                                 // they contain my .PK
 
                                 // my .PK is what is used on our filter
-                                newKey = object.PK(); // 'id';
+                                newKey = (cond.alias ? cond.alias : linkedObject.dbTableName(true))+'.'+object.PK(); // 'id';
 
                                 // I need to pull out the linkedField's columnName
                                 parseColumn = linkedField.columnName;
 
                                 // make this the queryColumn:
-                                queryColumn = linkedObject.dbTableName(true)+'.'+parseColumn;  
+                                queryColumn = (cond.alias ? cond.alias : linkedObject.dbTableName(true))+'.'+parseColumn;  
                                 continueSingle(newKey, parseColumn, queryColumn);                              
                                 break;
 
