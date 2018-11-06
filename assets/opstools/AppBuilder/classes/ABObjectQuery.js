@@ -315,9 +315,14 @@ export default class ABObjectQuery extends ABObject {
 	 */
 	objects (filter) {
 
+		if (!this._objects) return [];
+
 		filter = filter || function(){ return true; };
 
-		return (this._objects || []).filter(filter);
+		// get all objects (values of a object)
+		let objects = Object.keys(this._objects).map(key => { return this._objects[key]; });
+
+		return (objects || []).filter(filter);
 	}
 
 
@@ -365,26 +370,30 @@ export default class ABObjectQuery extends ABObject {
 		// copy join settings
 		this._joins = _.cloneDeep(settings);
 
-		var newObjects = [];
+		var newObjects = {};
 		var newLinks = [];
 
-		function storeObject(object) {
+		function storeObject(object, alias) {
 			if (!object) return;
 
-			var inThere = newObjects.filter((o) => { return o.id == object.id }).length > 0;
-			if (!inThere) {
-				newObjects.push(object);
-			}
+			// var inThere = newObjects.filter(obj => obj.id == object.id && obj.alias == alias ).length > 0;
+			// if (!inThere) {
+			newObjects[alias] = object;
+			// newObjects.push({
+			// 	alias: alias,
+			// 	object: object
+			// });
+			// }
 		}
 
 		function storeLinks(links) {
 
 			(links || []).forEach(link => {
 
-				var inThere = newLinks.filter(l => l.fieldID == link.fieldID).length > 0;
-				if (!inThere) {
-					newLinks.push(link);
-				}
+				// var inThere = newLinks.filter(l => l.fieldID == link.fieldID).length > 0;
+				// if (!inThere) {
+				newLinks.push(link);
+				// }
 	
 			});
 
@@ -419,8 +428,8 @@ export default class ABObjectQuery extends ABObject {
 				// track our linked object
 				var linkObject = linkField.datasourceLink;
 				if (!linkObject) return;
-				
-				storeObject(linkObject);
+
+				storeObject(linkObject, link.alias);
 
 				storeLinks(link.links);
 
@@ -441,7 +450,7 @@ export default class ABObjectQuery extends ABObject {
 			return;
 		}
 
-		storeObject(rootObject);
+		storeObject(rootObject, "BASE_OBJECT");
 
 		storeLinks(settings.links);
 
@@ -482,7 +491,7 @@ export default class ABObjectQuery extends ABObject {
 		if (!object) return false;
 
 		// I can filter this object if it is one of the objects in my joins
-		return this.objects((o)=>{ return o.id == object.id; }).length > 0;
+		return this.objects((obj)=>{ return obj.id == object.id; }).length > 0;
 
 	}
 

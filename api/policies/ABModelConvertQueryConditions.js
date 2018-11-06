@@ -158,8 +158,10 @@ function parseQueryCondition(_where, object, req, res, cb) {
                 // if this is our special 'this_object' 'in_query'  queryID  filter:
                 if (cond.key == 'this_object') {
 
-                    queryColumn = 'BASE_OBJECT.'+object.PK();
-                    newKey = (cond.alias ? cond.alias : object.dbTableName(true))+'.'+object.PK(); // 'id';  // the final filter needs to be 'id IN []', so 'id'
+                    let alias = QueryObj.objectAlias(object.id);
+
+                    queryColumn = alias+'.'+object.PK();
+                    newKey = object.PK(); // 'id';  // the final filter needs to be 'id IN []', so 'id'
                     parseColumn = object.PK(); // 'id';  // make sure we pull our 'id' values from the query
 
                     continueSingle(newKey, parseColumn, queryColumn);
@@ -212,14 +214,20 @@ function parseQueryCondition(_where, object, req, res, cb) {
                                 // there are Query cases where we need to make sure the field is identified by
                                 // it's dbTableName as well, to prevent 'Unknown Column' Errors.
                                 // adding in the dbTableName since I think it will be safe in all situations ... maybe ..
-                                var dbTableName = field.object.dbTableName(true);
-                                if (dbTableName) { newKey = (cond.alias ? cond.alias : dbTableName) + '.' + newKey } 
+                                if (object.objectAlias) {
+                                    newKey = 'BASE_OBJECT.' + newKey;
+                                }
+                                else {
+                                    var dbTableName = field.object.dbTableName(true);
+                                    if (dbTableName) { newKey = dbTableName + '.' + newKey } 
+                                }
+
 
                                 // I need to pull out the PK from the filter Query:
                                 parseColumn = linkedObject.PK(); // 'id';
 
                                 // make this the queryColumn:
-                                queryColumn = (cond.alias ? cond.alias : linkedObject.dbTableName(true))+'.'+parseColumn;   
+                                queryColumn = QueryObj.objectAlias(linkedObject.id)+'.'+parseColumn;   
                                 continueSingle(newKey, parseColumn, queryColumn);                             
                                 break;
 
@@ -228,14 +236,18 @@ function parseQueryCondition(_where, object, req, res, cb) {
                                 // they contain my .PK
 
                                 // my .PK is what is used on our filter
-                                newKey = (cond.alias ? cond.alias : linkedObject.dbTableName(true))+'.'+object.PK(); // 'id';
+                                newKey = object.PK(); // 'id';
+
+                                if (object.objectAlias)
+                                    newKey = object.objectAlias(linkedObject.id) + '.' + newKey;
 
                                 // I need to pull out the linkedField's columnName
                                 parseColumn = linkedField.columnName;
 
                                 // make this the queryColumn:
-                                queryColumn = (cond.alias ? cond.alias : linkedObject.dbTableName(true))+'.'+parseColumn;  
-                                continueSingle(newKey, parseColumn, queryColumn);                              
+                                queryColumn = QueryObj.objectAlias(linkedObject.id)+'.'+linkedField.columnName;
+
+                                continueSingle(newKey, parseColumn, queryColumn);
                                 break;
 
 
@@ -243,7 +255,7 @@ function parseQueryCondition(_where, object, req, res, cb) {
 
                                 // we need the .PK of our linked column out of the given query
                                 parseColumn = linkedObject.PK(); // 'id';
-                                queryColumn = (cond.alias ? cond.alias : linkedObject.dbTableName(true))+'.'+parseColumn;
+                                queryColumn = QueryObj.objectAlias(linkedObject.id)+'.'+parseColumn;
 
                                 processQueryValues(parseColumn,  queryColumn,  (err, ids) => {
 
@@ -265,8 +277,12 @@ function parseQueryCondition(_where, object, req, res, cb) {
 
                                             var myIds = data.map((d)=>{ return d[parseName] });
 
-                                            // var myPK = object.PK(); // 'id';
-                                            var myPK = field.dbPrefix() + '.' + field.object.PK(); // 'alias'.'id';
+                                            var myPK = object.PK(); // 'id';
+
+                                            // if it is a query, then add alias
+                                            if (object.objectAlias)
+                                                myPK = object.objectAlias(field.object.id) + '.' + field.object.PK(); // 'alias'.'id';
+
                                             buildCondition( myPK, myIds);
 
                                         })

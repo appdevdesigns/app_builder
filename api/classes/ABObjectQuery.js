@@ -194,9 +194,38 @@ module.exports = class ABObjectQuery extends ABObject {
 	 */
 	objects(filter) {
 
+		if (!this._objects) return [];
+
 		filter = filter || function () { return true; };
 
-		return (this._objects || []).filter(filter);
+		// get all objects (values of a object)
+		let objects = Object.keys(this._objects).map(key => { return this._objects[key]; });
+
+		return (objects || []).filter(filter);
+	}
+
+	/**
+	 * @method objectAlias()
+	 *
+	 * return alias of of ABObjects.
+	 *
+	 * @return {string}
+	 */
+	objectAlias (objectId) {
+
+		let result = null;
+
+		Object.keys(this._objects || {}).forEach(alias => {
+
+			let obj = this._objects[alias];
+			if (obj.id == objectId && !result) {
+				result = alias;
+			}
+
+		});
+
+		return result;
+
 	}
 
 	/**
@@ -227,15 +256,19 @@ module.exports = class ABObjectQuery extends ABObject {
 		// copy join settings
 		this._joins = _.cloneDeep(settings);
 
-		var newObjects = [];
+		var newObjects = {};
 
-		function storeObject(object) {
+		function storeObject(object, alias) {
 			if (!object) return;
 
-			var inThere = newObjects.filter((o) => { return o.id == object.id }).length > 0;
-			if (!inThere) {
-				newObjects.push(object);
-			}
+			// var inThere = newObjects.filter(obj => obj.id == object.id && obj.alias == alias ).length > 0;
+			// if (!inThere) {
+			newObjects[alias] = object;
+			// newObjects.push({
+			// 	alias: alias,
+			// 	object: object
+			// });
+			// }
 		}
 
 		function processJoin(baseObject, joins) {
@@ -268,7 +301,7 @@ module.exports = class ABObjectQuery extends ABObject {
 				var linkObject = linkField.datasourceLink;
 				if (!linkObject) return;
 
-				storeObject(linkObject);
+				storeObject(linkObject, link.alias);
 
 				processJoin(linkObject, link.links);
 
@@ -287,7 +320,7 @@ module.exports = class ABObjectQuery extends ABObject {
 			return;
 		}
 
-		storeObject(rootObject);
+		storeObject(rootObject, "BASE_OBJECT");
 
 		processJoin(rootObject, settings.links);
 
