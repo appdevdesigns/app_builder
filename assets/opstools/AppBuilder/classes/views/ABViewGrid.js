@@ -13,6 +13,7 @@ import ABPopupFrozenColumns from "../../components/ab_work_object_workspace_popu
 import ABPopupMassUpdate from "../../components/ab_work_object_workspace_popupMassUpdate"
 import ABPopupSummaryColumns from "../../components/ab_work_object_workspace_popupSummaryColumns"
 import ABPopupCountColumns from "../../components/ab_work_object_workspace_popupCountColumns"
+import ABPopupExport from "../../components/ab_work_object_workspace_popupExport"
 import ABViewGridFilterMenu from "../rules/ABViewGridFilterMenu"
 import ABViewWidget from "./ABViewWidget"
 import ABFieldImage from "../dataFields/ABFieldImage"
@@ -78,6 +79,7 @@ var PopupFrozenColumnsComponent = null;
 var PopupGridFilterMenu = null;
 var PopupSummaryColumnsComponent = null;
 var PopupCountColumnsComponent = null;
+var PopupExportComponent = null;
 
 export default class ABViewGrid extends ABViewWidget  {
 	
@@ -246,6 +248,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		PopupGridFilterMenu.component(App, idBase + "_gridfiltermenu");
 		PopupSummaryColumnsComponent = new ABPopupSummaryColumns(App, idBase+"_summary");
 		PopupCountColumnsComponent = new ABPopupCountColumns(App, idBase+"_count");
+		PopupExportComponent = new ABPopupExport(App, idBase+"_export");
 		
 		_logic.newObject = () => {
 			var currObj = _logic.currentEditObject();
@@ -386,6 +389,8 @@ export default class ABViewGrid extends ABViewWidget  {
 		PopupCountColumnsComponent.init({
 			onChange: _logic.callbackSaveCountColumns	// be notified when there is a change in the count columns
 		});
+
+		PopupExportComponent.init({});
 
 		var view = "button";
 		// in addition to the common .label  values, we 
@@ -908,8 +913,7 @@ export default class ABViewGrid extends ABViewWidget  {
 			buttonExport: App.unique(idBase+'_buttonExport'),
 
 			filterMenutoolbar: App.unique(idBase+'_filterMenuToolbar'),
-			resetFilterButton: App.unique(idBase+'_resetFilterButton'),
-			popupExport: App.unique(idBase+'_popupExport')
+			resetFilterButton: App.unique(idBase+'_resetFilterButton')
 
 		}
 		
@@ -974,41 +978,9 @@ export default class ABViewGrid extends ABViewWidget  {
 			hidden: true,
 			body: rowFilter.ui
 		});
-		var export_popup = webix.ui({
-			view: "popup",
-			id: ids.popupExport,
-			width: 160,
-			height: 180,
-			select: false,
-			hidden: true,
-			body: {
-				id: ids.list,
-				view: 'list',
-				data: [
-					{ name: "CSV", icon: "file-excel-o" },
-					{ name: "Excel", icon: "file-excel-o" },
-					{ name: "PDF", icon: "file-pdf-o" },
-					{ name: "PNG", icon: "file-image-o" }
-				],
-				template: "<div><i class='fa fa-#icon# webix_icon_btn' aria-hidden='true'></i> #name#</div>",
-				on: {
-					onItemClick: function (id, e, node) {
-						var component = this.getItem(id);
-
-						_logic.export(component.name);
-					}
-				}
-			}
-		});
 
 
 		var _init = () => {
-
-			// WORKAROUND : Where should we define this ??
-			// For include PDF.js
-			webix.codebase = "";
-			webix.cdn = "/js/webix";
-			
 
 			if (this.settings.dataSource != "") {
 				DataTable.init({
@@ -1078,6 +1050,9 @@ export default class ABViewGrid extends ABViewWidget  {
 					PopupSortDataTableComponent.objectLoad(CurrentObject, this);
 					rowFilter.viewLoad(this);
 					rowFilter.objectLoad(CurrentObject);
+					PopupExportComponent.objectLoad(CurrentObject);
+					PopupExportComponent.setGridComponent($$(DataTable.ui.id));
+					PopupExportComponent.setHiddenFields(dataCopy.objectWorkspace.hiddenFields);
 					DataTable.refreshHeader();
 
 					dc.bind($$(DataTable.ui.id));
@@ -1403,7 +1378,7 @@ export default class ABViewGrid extends ABViewWidget  {
 			},
 
 			toolbarExport: ($view) => {
-				export_popup.show($view);
+				PopupExportComponent.show($view);
 			},
 
 			toolbarMassUpdate: function ($view) {
@@ -1432,75 +1407,6 @@ export default class ABViewGrid extends ABViewWidget  {
 				hiddenQB.destructor();	// remove the QB 
 
 				$$(DataTable.ui.id).filter(QBHelper);
-			},
-
-			export: (name) => {
-
-				let fnExport;
-
-				let columns = {};
-
-				// template
-				let dc = this.dataCollection;
-				if (dc) {
-					let object = dc.datasource;
-					if (object) {
-						object.fields().forEach(f => {
-
-							// hidden fields
-							if (this.settings.objectWorkspace.hiddenFields.indexOf(f.columnName) > -1)
-								return;
-
-							columns[f.columnName] = {
-								template: (rowData) => {
-									return f.format(rowData);
-								}
-							};
-
-						});
-					}
-				}
-
-				switch(name) {
-					case "CSV":
-
-						webix.csv.delimiter.cols = ",";
-
-						fnExport = webix.toCSV($$(DataTable.ui.id), {
-							filename: this.label,
-							columns: columns
-						});
-						break;
-					case "Excel":
-						fnExport = webix.toExcel($$(DataTable.ui.id), {
-							filename: this.label,
-							name: this.label,
-							columns: columns,
-							filterHTML: true
-						});
-						break;
-					case "PDF":
-						fnExport = webix.toPDF($$(DataTable.ui.id), {
-							filename: this.label,
-							filterHTML: true
-						});
-						break;
-					case "PNG":
-						fnExport = webix.toPNG($$(DataTable.ui.id), {
-							filename: this.label
-						});
-						break;
-				}
-
-				fnExport
-					.catch(err => {
-						OP.Error.log("System could not export " + name, { error: err });
-					})
-					.fail((err) => {
-						OP.Error.log("System could not export " + name, { error: err });
-					})
-					.then(() => { export_popup.hide() });
-
 			}
 
 		}
