@@ -271,6 +271,7 @@ function parseQueryCondition(_where, object, req, res, cb) {
                                     // var parseName = object.name;
                                     var parseName = field.object.name;
                                     linkTableQuery.select(parseName)
+                                        .distinct()
                                         .from(joinTableName)
                                         .where(linkedObject.name, 'IN', ids)
                                         .then((data)=>{
