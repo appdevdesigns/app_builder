@@ -213,7 +213,8 @@ function parseQueryCondition(_where, object, req, res, cb) {
                     // run the Query, and parse out that data
                     var query = null;
                     QueryObj.queryFind({
-                        columnNames: [columnName]
+                        columnNames: [columnName],
+                        ignoreIncludeId: true // we want real id
                     }, req.user.data)
                     .then((data)=>{
                         

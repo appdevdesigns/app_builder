@@ -158,7 +158,7 @@ function parseQueryCondition(_where, object, req, res, cb) {
                 // if this is our special 'this_object' 'in_query'  queryID  filter:
                 if (cond.key == 'this_object') {
 
-                    queryColumn = (cond.alias ? cond.alias : object.dbTableName(true))+'.'+object.PK();
+                    queryColumn = 'BASE_OBJECT.'+object.PK();
                     newKey = (cond.alias ? cond.alias : object.dbTableName(true))+'.'+object.PK(); // 'id';  // the final filter needs to be 'id IN []', so 'id'
                     parseColumn = object.PK(); // 'id';  // make sure we pull our 'id' values from the query
 
@@ -315,7 +315,8 @@ function parseQueryCondition(_where, object, req, res, cb) {
                 function processQueryValues(parseColumn,  queryColumn,  done) {
 
                     var query = QueryObj.queryFind({
-                        columnNames: [queryColumn]
+                        columnNames: [queryColumn],
+                        ignoreIncludeId: true // we want real id
                     }, req.user.data);
                     // query.clearSelect().column(queryColumn);
 
