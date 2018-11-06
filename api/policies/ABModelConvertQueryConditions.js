@@ -243,7 +243,7 @@ function parseQueryCondition(_where, object, req, res, cb) {
 
                                 // we need the .PK of our linked column out of the given query
                                 parseColumn = linkedObject.PK(); // 'id';
-                                queryColumn = linkedObject.dbTableName(true)+'.'+parseColumn;
+                                queryColumn = (cond.alias ? cond.alias : linkedObject.dbTableName(true))+'.'+parseColumn;
 
                                 processQueryValues(parseColumn,  queryColumn,  (err, ids) => {
 
@@ -256,7 +256,8 @@ function parseQueryCondition(_where, object, req, res, cb) {
                                     var linkTableQuery = ABMigration.connection().queryBuilder();
                                     var joinTableName = field.joinTableName(true);
 
-                                    var parseName = object.name;
+                                    // var parseName = object.name;
+                                    var parseName = field.object.name;
                                     linkTableQuery.select(parseName)
                                         .from(joinTableName)
                                         .where(linkedObject.name, 'IN', ids)
@@ -264,7 +265,8 @@ function parseQueryCondition(_where, object, req, res, cb) {
 
                                             var myIds = data.map((d)=>{ return d[parseName] });
 
-                                            var myPK = object.PK(); // 'id';
+                                            // var myPK = object.PK(); // 'id';
+                                            var myPK = field.dbPrefix() + '.' + field.object.PK(); // 'alias'.'id';
                                             buildCondition( myPK, myIds);
 
                                         })
