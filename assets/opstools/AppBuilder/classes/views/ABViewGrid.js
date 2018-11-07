@@ -55,8 +55,8 @@ var ABViewGridPropertyComponentDefaults = {
 	height: 0,
 	gridFilter: {
 		filterOption: 0,
-		queryRules: []
-
+		queryRules: [],
+		userFilterPosition: 'toolbar'
 	},
 	summaryFields: [], // array of [field ids] to add the summary column in footer
 	countFields: [], // array of [field ids] to add the summary column in footer
@@ -972,6 +972,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		var PopupMassUpdateComponent = new ABPopupMassUpdate(App, idBase+"_mass");
 		var PopupSortDataTableComponent = new ABPopupSortField(App, idBase+"_sort");
 		var rowFilter = new RowFilter(App, idBase+"_filter");
+		var rowFilterForm = new RowFilter(App, idBase+"_filter_form");
 		var filter_popup = webix.ui({
 			view: "popup",
 			width: 800,
@@ -996,13 +997,22 @@ export default class ABViewGrid extends ABViewWidget  {
 				});
 
 				rowFilter.init({
-					onChange:_logic.callbackFilterData		// be notified when there is a change in the filter
+					onChange: () => {
+						_logic.callbackFilterData(rowFilter);	// be notified when there is a change in the filter
+					}
+				});
+
+				rowFilterForm.init({
+					onChange: () => {
+						_logic.callbackFilterData(rowFilterForm);	// be notified when there is a change in the filter
+					}
 				});
 				
 				if (this.settings.massUpdate ||
 					this.settings.isSortable ||
 					this.settings.isExportable ||
-					this.settings.gridFilter.filterOption) {
+					(this.settings.gridFilter.filterOption && 
+					this.settings.gridFilter.userFilterPosition == "toolbar")) {
 					$$(ids.toolbar).show();
 				}
 				
@@ -1015,8 +1025,17 @@ export default class ABViewGrid extends ABViewWidget  {
 					$$(ids.buttonDeleteSelected).hide();
 				}
 				
-				if (this.settings.gridFilter.filterOption != 1) {
+				if (this.settings.gridFilter.filterOption != 1 || 
+					this.settings.gridFilter.userFilterPosition != "toolbar") {
 					$$(ids.buttonFilter).hide();
+				}
+				
+				if (this.settings.gridFilter.filterOption == 1 && 
+					this.settings.gridFilter.userFilterPosition == "form") {
+					$$(rowFilterForm.ui.id).show();
+				}
+				else {
+					$$(rowFilterForm.ui.id).hide();
 				}
 				
 				if (this.settings.isSortable == false) {
@@ -1050,6 +1069,8 @@ export default class ABViewGrid extends ABViewWidget  {
 					PopupSortDataTableComponent.objectLoad(CurrentObject, this);
 					rowFilter.viewLoad(this);
 					rowFilter.objectLoad(CurrentObject);
+					rowFilterForm.viewLoad(this);
+					rowFilterForm.objectLoad(CurrentObject);
 					PopupExportComponent.objectLoad(CurrentObject);
 					PopupExportComponent.setGridComponent($$(DataTable.ui.id));
 					PopupExportComponent.setHiddenFields(dataCopy.objectWorkspace.hiddenFields);
@@ -1146,6 +1167,7 @@ export default class ABViewGrid extends ABViewWidget  {
 				type: "space",
 				padding: 17,
 				rows: [
+					rowFilterForm.ui,
 					{
 						view: 'toolbar',
 						id: ids.toolbar,
@@ -1276,17 +1298,19 @@ export default class ABViewGrid extends ABViewWidget  {
 
 			},
 
-			callbackFilterData: () => {
+			callbackFilterData: (row_filter) => {
 
-				var filterRules = (rowFilter.getValue().rules || []);
+				var filterRules = (row_filter.getValue().rules || []);
 
-				$$(ids.buttonFilter).define('badge', filterRules.length);
-				$$(ids.buttonFilter).refresh();
+				if ($$(ids.buttonFilter)) {
+					$$(ids.buttonFilter).define('badge', filterRules.length);
+					$$(ids.buttonFilter).refresh();
+				}
 
 				// client filter data
 				$$(DataTable.ui.id).filter(function(rowData) {
 
-					return rowFilter.isValid(rowData);
+					return row_filter.isValid(rowData);
 
 				});
 
@@ -1419,6 +1443,7 @@ export default class ABViewGrid extends ABViewWidget  {
 			if ($$(DataTable.ui.id)) {
 				$$(DataTable.ui.id).adjust();
 			}
+
 
 			if (this.settings.gridFilter.filterOption == 2) {
 				if (this.settings.gridFilter.queryRules.length > 0) {
