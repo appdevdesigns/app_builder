@@ -1347,23 +1347,39 @@ export default class RowFilter extends OP.Component {
 					value = "";
 
 				value = value.trim().toLowerCase();
-				compareValue = compareValue.trim().toLowerCase();
+				value = _logic.removeHtmlTags(value); // remove html tags - rich text editor
 
-				// remove html tags - rich text editor
-				value = _logic.removeHtmlTags(value);
+				compareValue = compareValue.trim().toLowerCase().replace(/  +/g, ' ');
+
+				// support "john smith" => "john" OR/AND "smith"
+				var compareArray = compareValue.split(' ');
 
 				switch (rule) {
 					case "contains":
-						result = value.indexOf(compareValue) > -1;
+						compareArray.forEach(val => {
+							if (result == false) // OR
+								result = value.indexOf(val) > -1;
+						});
 						break;
 					case "not_contains":
-						result = value.indexOf(compareValue) < 0;
+						result = true; 
+						compareArray.forEach(val => {
+							if (result == true) // AND
+								result = value.indexOf(val) < 0;
+						});
 						break;
 					case "equals":
-						result = value == compareValue;
+						compareArray.forEach(val => {
+							if (result == false) // OR
+								result = value == val;
+						});
 						break;
 					case "not_equal":
-						result = value != compareValue;
+						result = true; 
+						compareArray.forEach(val => {
+							if (result == true) // AND
+								result = value != val;
+						});
 						break;
 					default:
 						result = _logic.queryValid(rowData, rule, compareValue);
