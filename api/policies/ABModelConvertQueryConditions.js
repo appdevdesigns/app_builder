@@ -215,7 +215,7 @@ function parseQueryCondition(_where, object, req, res, cb) {
                                 // it's dbTableName as well, to prevent 'Unknown Column' Errors.
                                 // adding in the dbTableName since I think it will be safe in all situations ... maybe ..
                                 if (object.objectAlias) {
-                                    newKey = 'BASE_OBJECT.' + newKey;
+                                    newKey =  object.objectAlias(field.object.id) + '.' + newKey;
                                 }
                                 else {
                                     var dbTableName = field.object.dbTableName(true);
