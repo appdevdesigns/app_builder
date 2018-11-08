@@ -185,8 +185,10 @@ module.exports = {
                     }
                     if (invalidError) {
                         sails.log.error(invalidError);
-                        res.AD.error(invalidError, 400);
-                        reject();
+                        invalidError.HTTPCode = 400;
+                        // res.AD.error(invalidError, 400);
+                        reject(invalidError);
+                        return;
                     }
 
 
@@ -216,7 +218,7 @@ module.exports = {
                                         err.objid = objID;
                                         sails.log.error(err);
                                         res.AD.error(err, 404);
-                                        reject();
+                                        reject(err);
 
                                     }
 
@@ -230,14 +232,27 @@ module.exports = {
                                 err.appID = appID;
                                 sails.log.error(err);
                                 res.AD.error(err, 404);
-                                reject();
+                                reject(err);
                             }
 
                         })
                         .catch(function (err) {
+
+                            // on MySQL connection problems, retry
+                            if (err.message && err.message.indexOf('Could not connect to MySQL') > -1) {
+
+                                // let's try it again:
+                                sails.log.error('AppBuilder:verifyAndReturnObject():MySQL connection error --> retrying.');
+                                AppBuilder.routes.verifyAndReturnObject(req, res)
+                                .then(resolve)
+                                .catch(reject)
+                                return;
+                            }
+
+                            // otherwise, just send back the error:
                             ADCore.error.log('ABApplication.findOne() failed:', { error: err, message: err.message, id: appID });
                             res.AD.error(err);
-                            reject();
+                            reject(err);
                         });
 
                 }

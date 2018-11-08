@@ -329,16 +329,16 @@ function parseQueryCondition(_where, object, req, res, cb) {
                 // @param {string} parseColumn  the name of the column of data to pull from the Query
                 // @param {string} queryColumn  [table].[column] format of the data to pull from Query
                 // @param {fn} done  a callback routine  done(err, data);
-                function processQueryValues(parseColumn,  queryColumn,  done) {
+                function processQueryValues(parseColumn,  queryColumn,  done, numRetries) {
 
                     var query = QueryObj.queryFind({
                         columnNames: [queryColumn],
                         ignoreIncludeId: true // we want real id
                     }, req.user.data);
                     // query.clearSelect().column(queryColumn);
-
-                    // sails.log.info();
-                    // sails.log.info('converted query sql:', query.toSQL());
+var querySQL = query.toString();
+// sails.log.info();
+// sails.log.info('converted query sql:', query.toSQL());
 
                     query
                         .then((data)=>{
@@ -352,7 +352,18 @@ function parseQueryCondition(_where, object, req, res, cb) {
 
                         })
                         .catch((err)=>{
-                            ADCore.error.log('AppBuilder:Policy:ABModelConvertQueryConditions:Error running query:', { error:err });
+
+                            var errString = err.toString();
+                            if (errString.indexOf('ETIMEDOUT') >-1) {
+                                numRetries = numRetries || 1;
+                                if (numRetries <= 5) {
+                                    processQueryValues(parseColumn, queryColumn, done, numRetries+1);
+                                    return;
+                                }
+                            }
+
+                            var sqlString = JSON.stringify(querySQL);
+                            ADCore.error.log('AppBuilder:Policy:ABModelConvertQueryConditions:Error running query:', { sql:sqlString, numRetries:numRetries,  error:err });
                             done(err);
                         })
                 }
