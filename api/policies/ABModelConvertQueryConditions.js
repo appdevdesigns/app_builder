@@ -362,7 +362,12 @@ var querySQL = query.toString();
                                 }
                             }
 
-                            var sqlString = JSON.stringify(querySQL);
+                            var sqlString = querySQL;
+                            try {
+                                sqlString = JSON.stringify(querySQL);
+                            } catch(e) {
+                                // move along.
+                            }
                             ADCore.error.log('AppBuilder:Policy:ABModelConvertQueryConditions:Error running query:', { sql:sqlString, numRetries:numRetries,  error:err });
                             done(err);
                         })
