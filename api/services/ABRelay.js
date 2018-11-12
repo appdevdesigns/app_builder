@@ -527,6 +527,15 @@ errorOptions = options;
                                 }
                             }
 
+                            // [Fix] Johnny
+                            // it seems a web client disconnecting a socket can get caught in our 
+                            // process.  just try again:
+                            var errorString = err.toString();
+                            if (errorString.indexOf('Error: socket hang up')>-1) {
+                                lastError = err;
+                                tryIt(attempt+1, cb);
+                                return;
+                            }
 
                             // if a different error, then pass this along our chain() and process in our .catch() below
                             cb(err);
