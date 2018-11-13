@@ -1074,6 +1074,7 @@ export default class ABViewGrid extends ABViewWidget  {
 					PopupExportComponent.objectLoad(CurrentObject);
 					PopupExportComponent.setGridComponent($$(DataTable.ui.id));
 					PopupExportComponent.setHiddenFields(dataCopy.objectWorkspace.hiddenFields);
+					PopupExportComponent.setFilename(this.label);
 					DataTable.refreshHeader();
 
 					dc.bind($$(DataTable.ui.id));

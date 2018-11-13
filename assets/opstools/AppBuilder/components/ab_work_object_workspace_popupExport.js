@@ -58,6 +58,7 @@ export default class ABWorkObjectPopupExport extends OP.Component {
 
 		var _currentObject = null,
 			_grid = null,
+			_filename,
 			_hiddenFields = [];
 
 		// for setting up UI
@@ -83,6 +84,10 @@ export default class ABWorkObjectPopupExport extends OP.Component {
 			 */
 			setHiddenFields: function (fields) {
 				_hiddenFields = fields || [];
+			},
+
+			setFilename: function(filename) {
+				_filename = filename;
 			},
 
 			setGridComponent: function($grid) {
@@ -128,27 +133,27 @@ export default class ABWorkObjectPopupExport extends OP.Component {
 						webix.csv.delimiter.cols = ",";
 
 						fnExport = webix.toCSV(_grid, {
-							filename: this.label,
+							filename: _filename || _currentObject.label,
 							columns: columns
 						});
 						break;
 					case "Excel":
 						fnExport = webix.toExcel(_grid, {
-							filename: this.label,
-							name: this.label,
+							filename: _filename || _currentObject.label,
+							name: _filename || _currentObject.label,
 							columns: columns,
 							filterHTML: true
 						});
 						break;
 					case "PDF":
 						fnExport = webix.toPDF(_grid, {
-							filename: this.label,
+							filename: _filename || _currentObject.label,
 							filterHTML: true
 						});
 						break;
 					case "PNG":
 						fnExport = webix.toPNG(_grid, {
-							filename: this.label
+							filename: _filename || _currentObject.label
 						});
 						break;
 				}
@@ -172,6 +177,7 @@ export default class ABWorkObjectPopupExport extends OP.Component {
 
 		this.objectLoad = _logic.objectLoad;
 		this.setGridComponent = _logic.setGridComponent;
+		this.setFilename = _logic.setFilename;
 		this.setHiddenFields = _logic.setHiddenFields;
 		this.show = _logic.show;
 

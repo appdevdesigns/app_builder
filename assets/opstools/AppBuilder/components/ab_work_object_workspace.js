@@ -858,6 +858,7 @@ console.error('TODO: toolbarPermission()');
 				PopupExportObjectComponent.objectLoad(CurrentObject);
 				PopupExportObjectComponent.setGridComponent($$(DataTable.ui.id));
 				PopupExportObjectComponent.setHiddenFields(CurrentObject.objectWorkspace.hiddenFields);
+				PopupExportObjectComponent.setFilename(CurrentObject.label);
 
 				// We can hide fields now that data is loaded
 				_logic.callbackFieldsVisible();
