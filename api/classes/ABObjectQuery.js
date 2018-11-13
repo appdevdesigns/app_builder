@@ -154,9 +154,13 @@ module.exports = class ABObjectQuery extends ABObject {
 				// check duplicate
 				newFields.filter(f => f.alias == fieldInfo.alias && f.field.urlPointer() == fieldInfo.fieldURL).length < 1) { 
 
+				// add alias to field
+				let cloneField = _.clone(field, false);
+				cloneField.alias = fieldInfo.alias;
+
 				newFields.push({
 					alias: fieldInfo.alias,
-					field: field
+					field: cloneField
 				});
 			}
 
@@ -350,14 +354,7 @@ module.exports = class ABObjectQuery extends ABObject {
 
 		filter = filter || function() { return true; };
 
-		return this._fields.map(fInfo => {
-
-			let result = _.cloneDeep(fInfo.field);
-
-			result.alias = fInfo.alias;
-
-			return result;
-		}).filter(result => filter(result));
+		return this._fields.map(fInfo => fInfo.field).filter(result => filter(result));
 
 	}
 

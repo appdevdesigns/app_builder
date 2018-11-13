@@ -220,9 +220,29 @@ export default class ABObjectQuery extends ABObject {
 				// check duplicate
 				newFields.filter(f => f.alias == fieldInfo.alias && f.field.urlPointer() == fieldInfo.fieldURL).length < 1) { 
 
+				let clonedField = _.clone(field, false);
+		
+				clonedField.alias = fieldInfo.alias;
+	
+				// NOTE: query v1
+				let alias = "";
+				if (Array.isArray(this.joins())) {
+					alias = field.object.name;
+				}
+				else {
+					alias = fieldInfo.alias;
+				}
+	
+				// include object name {aliasName}.{columnName}
+				// to use it in grid headers & hidden fields
+				clonedField.columnName = '{aliasName}.{columnName}'
+								.replace('{aliasName}', alias)
+								.replace('{columnName}', clonedField.columnName);
+
+
 				newFields.push({
 					alias: fieldInfo.alias,
-					field: field
+					field: clonedField
 				});
 			}
 
@@ -259,29 +279,7 @@ export default class ABObjectQuery extends ABObject {
 
 		filter = filter || function() { return true; };
 
-		return this._fields.map(fInfo => {
-
-			let result = _.cloneDeep(fInfo.field);
-
-			result.alias = fInfo.alias;
-
-			// NOTE: query v1
-			let alias = "";
-			if (Array.isArray(this.joins())) {
-				alias = fInfo.field.object.name;
-			}
-			else {
-				alias = fInfo.alias;
-			}
-
-			// include object name {aliasName}.{columnName}
-			// to use it in grid headers & hidden fields
-			result.columnName = '{aliasName}.{columnName}'
-							.replace('{aliasName}', alias)
-							.replace('{columnName}', fInfo.field.columnName);
-
-			return result;
-		}).filter(result => filter(result));
+		return this._fields.map(f => f.field).filter(result => filter(result));
 
 	}
 
