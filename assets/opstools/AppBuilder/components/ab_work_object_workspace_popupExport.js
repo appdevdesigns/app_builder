@@ -133,27 +133,27 @@ export default class ABWorkObjectPopupExport extends OP.Component {
 						webix.csv.delimiter.cols = ",";
 
 						fnExport = webix.toCSV(_grid, {
-							filename: _filename || _currentObject.label,
+							filename: _filename || (_currentObject ? _currentObject.label : null),
 							columns: columns
 						});
 						break;
 					case "Excel":
 						fnExport = webix.toExcel(_grid, {
-							filename: _filename || _currentObject.label,
-							name: _filename || _currentObject.label,
+							filename: _filename || (_currentObject ? _currentObject.label : null),
+							name: _filename || (_currentObject ? _currentObject.label : null),
 							columns: columns,
 							filterHTML: true
 						});
 						break;
 					case "PDF":
 						fnExport = webix.toPDF(_grid, {
-							filename: _filename || _currentObject.label,
+							filename: _filename || (_currentObject ? _currentObject.label : null),
 							filterHTML: true
 						});
 						break;
 					case "PNG":
 						fnExport = webix.toPNG(_grid, {
-							filename: _filename || _currentObject.label
+							filename: _filename || (_currentObject ? _currentObject.label : null)
 						});
 						break;
 				}

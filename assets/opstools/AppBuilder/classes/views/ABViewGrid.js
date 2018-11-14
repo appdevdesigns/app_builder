@@ -79,7 +79,6 @@ var PopupFrozenColumnsComponent = null;
 var PopupGridFilterMenu = null;
 var PopupSummaryColumnsComponent = null;
 var PopupCountColumnsComponent = null;
-var PopupExportComponent = null;
 
 export default class ABViewGrid extends ABViewWidget  {
 	
@@ -248,7 +247,6 @@ export default class ABViewGrid extends ABViewWidget  {
 		PopupGridFilterMenu.component(App, idBase + "_gridfiltermenu");
 		PopupSummaryColumnsComponent = new ABPopupSummaryColumns(App, idBase+"_summary");
 		PopupCountColumnsComponent = new ABPopupCountColumns(App, idBase+"_count");
-		PopupExportComponent = new ABPopupExport(App, idBase+"_export");
 		
 		_logic.newObject = () => {
 			var currObj = _logic.currentEditObject();
@@ -389,8 +387,6 @@ export default class ABViewGrid extends ABViewWidget  {
 		PopupCountColumnsComponent.init({
 			onChange: _logic.callbackSaveCountColumns	// be notified when there is a change in the count columns
 		});
-
-		PopupExportComponent.init({});
 
 		var view = "button";
 		// in addition to the common .label  values, we 
@@ -968,12 +964,13 @@ export default class ABViewGrid extends ABViewWidget  {
 			waitMilliseconds = 50,
 			filterTimeoutId;
 
-		var DataTable = new ABWorkspaceDatatable(App, idBase, settings);
-		var PopupMassUpdateComponent = new ABPopupMassUpdate(App, idBase+"_mass");
-		var PopupSortDataTableComponent = new ABPopupSortField(App, idBase+"_sort");
-		var rowFilter = new RowFilter(App, idBase+"_filter");
-		var rowFilterForm = new RowFilter(App, idBase+"_filter_form");
-		var filter_popup = webix.ui({
+		let DataTable = new ABWorkspaceDatatable(App, idBase, settings);
+		let PopupMassUpdateComponent = new ABPopupMassUpdate(App, idBase+"_mass");
+		let PopupSortDataTableComponent = new ABPopupSortField(App, idBase+"_sort");
+		let rowFilter = new RowFilter(App, idBase+"_filter");
+		let rowFilterForm = new RowFilter(App, idBase+"_filter_form");
+		let exportPopup = new ABPopupExport(App, idBase+"_export");
+		let filter_popup = webix.ui({
 			view: "popup",
 			width: 800,
 			hidden: true,
@@ -981,7 +978,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		});
 
 
-		var _init = () => {
+		let _init = () => {
 
 			if (this.settings.dataSource != "") {
 				DataTable.init({
@@ -1007,6 +1004,8 @@ export default class ABViewGrid extends ABViewWidget  {
 						_logic.callbackFilterData(rowFilterForm);	// be notified when there is a change in the filter
 					}
 				});
+
+				exportPopup.init({});
 				
 				if (this.settings.massUpdate ||
 					this.settings.isSortable ||
@@ -1071,10 +1070,10 @@ export default class ABViewGrid extends ABViewWidget  {
 					rowFilter.objectLoad(CurrentObject);
 					rowFilterForm.viewLoad(this);
 					rowFilterForm.objectLoad(CurrentObject);
-					PopupExportComponent.objectLoad(CurrentObject);
-					PopupExportComponent.setGridComponent($$(DataTable.ui.id));
-					PopupExportComponent.setHiddenFields(dataCopy.objectWorkspace.hiddenFields);
-					PopupExportComponent.setFilename(this.label);
+					exportPopup.objectLoad(CurrentObject);
+					exportPopup.setGridComponent($$(DataTable.ui.id));
+					exportPopup.setHiddenFields(dataCopy.objectWorkspace.hiddenFields);
+					exportPopup.setFilename(this.label);
 					DataTable.refreshHeader();
 
 					dc.bind($$(DataTable.ui.id));
@@ -1403,7 +1402,7 @@ export default class ABViewGrid extends ABViewWidget  {
 			},
 
 			toolbarExport: ($view) => {
-				PopupExportComponent.show($view);
+				exportPopup.show($view);
 			},
 
 			toolbarMassUpdate: function ($view) {
