@@ -880,7 +880,7 @@ export default class ABViewGrid extends ABViewWidget  {
 			// 	selectedDc.settings.loadAll = true;
 			// }
 
-			var dataCopy = _.cloneDeep(selectedDc.datasource);
+			var dataCopy = selectedDc.datasource.clone();
 			dataCopy.objectWorkspace = view.settings.objectWorkspace;
 			dataCopy.isLoadAll = selectedDc.settings.loadAll;
 
@@ -1059,7 +1059,7 @@ export default class ABViewGrid extends ABViewWidget  {
 
 				if (dc && dc.datasource) {
 
-					var dataCopy = _.cloneDeep(dc.datasource);
+					var dataCopy = dc.datasource.clone();
 					dataCopy.objectWorkspace = this.settings.objectWorkspace;
 					CurrentObject = dataCopy;
 
@@ -1620,7 +1620,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		// 	dc.settings.loadAll = true;
 		// }
 
-		var dataCopy = _.cloneDeep(dc.datasource);
+		var dataCopy = dc.datasource.clone();
 		dataCopy.objectWorkspace = view.settings.objectWorkspace;
 		dataCopy.isLoadAll = dc.settings.loadAll;
 
@@ -1629,7 +1629,7 @@ export default class ABViewGrid extends ABViewWidget  {
 			// 	return o.id == view.settings.dataSource;
 			// });
 			// var dataSource = this.dataCollection;
-			// var dataCopy = _.cloneDeep(dataSource.datasource);
+			// var dataCopy = dataSource.datasource.clone();
 			// console.log(view);
 			// dataCopy.objectWorkspace = view.settings.objectWorkspace;
 			PopupHideFieldComponent.objectLoad(dataCopy, view);

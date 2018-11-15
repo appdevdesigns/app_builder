@@ -889,7 +889,7 @@ export default class ABViewDataCollection extends ABView {
 		// Clone ABObject
 		if (view.datasource) {
 
-			var objectCopy = _.cloneDeep(view.datasource);
+			var objectCopy = view.datasource.clone();
 			if (objectCopy) {
 				objectCopy.objectWorkspace = view.settings.objectWorkspace;
 	

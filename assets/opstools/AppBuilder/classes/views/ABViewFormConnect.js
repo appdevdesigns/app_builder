@@ -336,7 +336,7 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 		// Clone ABObject
 		var field = view.field();
 		var linkedObj = field.datasourceLink;
-		var objectCopy = _.cloneDeep(linkedObj);
+		var objectCopy = linkedObj.clone();
 		if (objectCopy) {
 			objectCopy.objectWorkspace = view.settings.objectWorkspace;
 			filterConditions = objectCopy.objectWorkspace.filterConditions || ABViewFormConnectPropertyComponentDefaults.objectWorkspace.filterConditions;

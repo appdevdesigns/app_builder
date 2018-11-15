@@ -528,5 +528,31 @@ module.exports =  class ABObjectBase {
 	}
 
 
+	/**
+	 * @method clone
+	 * return a clone of ABObject
+	 * 
+	 * @return {ABObjectBase}
+	 */
+	clone() {
+
+		// ignore properties who're spend much performance
+		// NOTE: do not clone them. Just copy reference
+		let ignoreProps = ['application', '_fields'];
+
+		let cloneOne = _.cloneDeepWith(this, function customizer(val, key, obj) {
+
+			// copy references
+			if (ignoreProps.indexOf(key) > -1)
+				return val;
+			// clone
+			else
+				return _.cloneDeep(val);
+		});
+
+		return cloneOne;
+	}
+
+
 }
 
