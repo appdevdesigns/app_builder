@@ -52,6 +52,7 @@ export default class ABViewGridFilterMenu {
 			filterRulesScrollview: idBase + '_filterRulesScrollview',
 			
 			filterOptionRadio: idBase + '_filterOptionRadio',
+			filterUser: idBase + '_filterUser',
 			filterMenuLayout: idBase + '_filterMenuLayout',
 
 			needLoadAllLabel: idBase + '_needLoadAll',
@@ -80,7 +81,8 @@ export default class ABViewGridFilterMenu {
 					{
 						view: "radio",
 						id: ids.filterOptionRadio, 
-						value: 0, options:[
+						value: 0, 
+						options:[
 							{"id": 0, "value": "Do not Allow User filters"},
 							{"id": 1, "value": "Enable User filters"},
 							{"id": 2, "value": "Use a filter menu"}
@@ -94,6 +96,20 @@ export default class ABViewGridFilterMenu {
 							}
 						}
 					},
+
+					{
+						view: "segmented",
+						id: ids.filterUser,
+						hidden: true,
+						value: "toolbar",
+						label: "Display",
+						labelWidth: App.config.labelWidthLarge,
+						options: [
+							{ id: "toolbar", value: "Toolbar" },
+							{ id: "form", value: "Form"}
+						]
+					},
+
 					{
 						view: "layout",
 						id: ids.filterMenuLayout,
@@ -216,11 +232,20 @@ export default class ABViewGridFilterMenu {
 			},
 
 			setFilterOption: function (value) {
-				if (JSON.parse(value)  == 2) {				
-					$$(ids.filterMenuLayout).show();
-				}
-				else {
-					$$(ids.filterMenuLayout).hide();
+
+				switch(JSON.parse(value)) {
+					case 1: // Enable User filters
+						$$(ids.filterMenuLayout).hide();
+						$$(ids.filterUser).show();
+						break;
+					case 2: // Use a filter menu
+						$$(ids.filterUser).hide();
+						$$(ids.filterMenuLayout).show();
+						break;
+					default:
+						$$(ids.filterUser).hide();
+						$$(ids.filterMenuLayout).hide();
+						break;
 				}
 			},
 
@@ -293,6 +318,8 @@ export default class ABViewGridFilterMenu {
 			this.filterOption = JSON.parse(settings.filterOption);
 			$$(this.ids.filterOptionRadio).setValue(this.filterOption);
 
+			$$(this.ids.filterUser).setValue(settings.userFilterPosition || "toolbar");
+
 			if (settings.queryRules) {
 				settings.queryRules.forEach((ruleSettings)=> {
 					this.addFilterRule(ruleSettings);
@@ -329,10 +356,16 @@ export default class ABViewGridFilterMenu {
 		var settings = {};
 		settings.filterOption = this.filterOption;
 		settings.queryRules = [];
-		if (this.filterOption == 2) {
-			this.filterRulesList.forEach((r)=>{
-				settings.queryRules.push(r.toSettings());
-			})
+
+		switch (this.filterOption) {
+			case 1: 
+				settings.userFilterPosition = $$(this.ids.filterUser).getValue();
+				break;
+			case 2:
+				this.filterRulesList.forEach((r)=>{
+					settings.queryRules.push(r.toSettings());
+				});
+				break;
 		}
 
 		return settings;

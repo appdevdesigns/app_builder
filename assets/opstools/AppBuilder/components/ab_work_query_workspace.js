@@ -159,9 +159,6 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 					$$(ids.modeButton).define('label', labels.design);
 
 					DataTable.populateObjectWorkspace(CurrentQuery);
-					// DataTable.objectLoad(query);
-					// DataTable.refreshHeader();
-					// DataTable.refresh();
 				}
 				// Design
 				else {

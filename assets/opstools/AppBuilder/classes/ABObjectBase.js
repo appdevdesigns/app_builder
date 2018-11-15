@@ -442,6 +442,14 @@ module.exports =  class ABObjectBase {
 	}
 
 
+	/**
+	 * @method isReadOnly
+	 * 
+	 * @return {boolean}
+	 */
+	get isReadOnly() {
+		return false;
+	}
 
 
 	/**

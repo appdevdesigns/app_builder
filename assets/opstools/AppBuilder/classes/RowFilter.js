@@ -224,7 +224,8 @@ export default class RowFilter extends OP.Component {
 
 					return {
 						id: f.id,
-						value: label
+						value: label,
+						alias: f.alias || undefined // ABObjectQuery
 					};
 				});
 
@@ -1119,15 +1120,24 @@ export default class RowFilter extends OP.Component {
 						var $fieldElem = $viewCond.$$(ids.field);
 						if (!$fieldElem) return;
 
+						/* field id */
 						var fieldId = $fieldElem.getValue();
 						if (!fieldId) return;
 
+						/* alias */
+						var alias;
+						var selectedOpt = $viewCond.$$(ids.field).getPopup().config.body.data.filter(opt => opt.id == fieldId)[0];
+						if (selectedOpt)
+							alias = selectedOpt.alias || undefined;
+
+						/* rule */
 						var rule = null,
 							ruleViewId = $viewCond.$$(ids.rule).getActiveId(),
 							$viewComparer = $viewCond.$$(ids.rule).queryView({ id: ruleViewId });
 						if ($viewComparer && $viewComparer.getValue)
 							rule = $viewComparer.getValue();
 
+						/* value */
 						var value = null,
 							valueViewId = $viewCond.$$(ids.inputValue).getActiveId(),
 							$viewConditionValue = $viewCond.$$(ids.inputValue).queryView({ id: valueViewId });
@@ -1147,6 +1157,7 @@ export default class RowFilter extends OP.Component {
 						}
 
 						config_settings.rules.push({
+							alias: alias || undefined,
 							key: fieldId,
 							rule: rule,
 							value: value
@@ -1336,23 +1347,39 @@ export default class RowFilter extends OP.Component {
 					value = "";
 
 				value = value.trim().toLowerCase();
-				compareValue = compareValue.trim().toLowerCase();
+				value = _logic.removeHtmlTags(value); // remove html tags - rich text editor
 
-				// remove html tags - rich text editor
-				value = _logic.removeHtmlTags(value);
+				compareValue = compareValue.trim().toLowerCase().replace(/  +/g, ' ');
+
+				// support "john smith" => "john" OR/AND "smith"
+				var compareArray = compareValue.split(' ');
 
 				switch (rule) {
 					case "contains":
-						result = value.indexOf(compareValue) > -1;
+						compareArray.forEach(val => {
+							if (result == false) // OR
+								result = value.indexOf(val) > -1;
+						});
 						break;
 					case "not_contains":
-						result = value.indexOf(compareValue) < 0;
+						result = true; 
+						compareArray.forEach(val => {
+							if (result == true) // AND
+								result = value.indexOf(val) < 0;
+						});
 						break;
 					case "equals":
-						result = value == compareValue;
+						compareArray.forEach(val => {
+							if (result == false) // OR
+								result = value == val;
+						});
 						break;
 					case "not_equal":
-						result = value != compareValue;
+						result = true; 
+						compareArray.forEach(val => {
+							if (result == true) // AND
+								result = value != val;
+						});
 						break;
 					default:
 						result = _logic.queryValid(rowData, rule, compareValue);

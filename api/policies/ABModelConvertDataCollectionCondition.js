@@ -173,7 +173,7 @@ function parseQueryCondition(_where, object, req, res, cb) {
             // if this is our special 'this_object' 'in_data_collection'  queryID  filter:
             if (cond.key == 'this_object') {
 
-                objectColumn = object.dbTableName(true)+'.'+object.PK();
+                objectColumn = (cond.alias ? cond.alias : object.dbTableName(true))+'.'+object.PK();
                 newKey = object.PK(); // 'id';  // the final filter needs to be 'id IN []', so 'id'
                 parseColumn = object.PK(); // 'id';  // make sure we pull our 'id' values from the query
 

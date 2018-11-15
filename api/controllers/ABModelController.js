@@ -595,7 +595,7 @@ module.exports = {
             })
             .catch((err) => {
                 ADCore.error.log("AppBuilder:ABModelController:find(): find() did not complete", { error: err });
-                res.AD.error(err);
+                res.AD.error(err, err.HTTPCode || 400);
             });
 
     },

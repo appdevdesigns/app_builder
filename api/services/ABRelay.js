@@ -456,37 +456,102 @@ var errorOptions = null;
 errorOptions = options;
             return new Promise((resolve, reject)=>{
 // console.log('::: ABRelay.request(): options:', options);
-                // make the call
-                RP(options)
-                .then((response)=>{
+                var lastError = null;
 
-                    // pass back the default responses
-                    resolve(response);
-                })
-                .catch((err)=>{
+                var tryIt = (attempt, cb)=>{
 
-                    // if we received an error, check to see if it looks like a standard error
-                    // response from our API.  If so, just return that:
-                    if (err.error) {
-                        if (err.error.status == 'error' && err.error.data) {
-                            
-                            // sails.log.error('::: ABRelay.request(): response was an error: ', { request:options, code: err.error.data.code, message:err.error.data.sqlMessage || 'no sql msg', sql:err.error.data.sql || ' - no sql -' } );
-                            ADCore.error.log('ABRelay:request(): response was an error: ', { request:options, code: err.error.data.code, message:err.error.data.sqlMessage || 'no sql msg', sql:err.error.data.sql || ' - no sql -', error:err } )
-                            err.error._request = {
-                                data: errorOptions.body || errorOptions.qs,
-                                method: errorOptions.method,
-                                uri: errorOptions.uri
-                            };
+                    if (attempt >= 5) {
+                        cb(lastError);
+                    } else {
 
-                            resolve(err.error);
-                            return ;
-                        }
+                        // make the call
+                        RP(options)
+                        .then((response)=>{
+
+                            // pass back the default responses
+                            cb(null, response);
+                        })
+                        .catch((err)=>{
+
+                            // if we received an error, check to see if it looks like a standard error
+                            // response from our API.  If so, just return that:
+                            if (err.error) {
+                                if (err.error.status == 'error' && err.error.data) {
+
+
+                                    // PROTOCOL_CONNECTION_LOST
+                                    // If we received a connection lost, then let's try to retry the attempt
+                                    if (err.error.data == 'PROTOCOL_CONNECTION_LOST') {
+
+                                        lastError = err;
+
+                                        // let's try the command again:
+                                        tryIt(attempt+1, cb)
+                                        return;
+                                    }
+
+                                    // if the error response was due to a connection fault with MySQL: try again
+                                    var messages = [ 
+                                        'Handshake inactivity timeout', 
+                                        'Could not connect to MySQL', 
+                                        'Connection lost:'
+                                    ];
+                                    if (err.message ) {
+
+                                        var foundMessage = false;
+                                        messages.forEach((m)=>{
+                                            if (err.message.indexOf(m) >-1) {
+                                                foundMessage = true;
+                                            }
+                                        })
+                                        if (foundMessage) {
+
+                                            lastError = err;
+
+                                            tryIt(attempt+1, cb);
+                                            return;
+                                        }
+                                    }
+
+
+                                    // sails.log.error('::: ABRelay.request(): response was an error: ', { request:options, code: err.error.data.code, message:err.error.data.sqlMessage || 'no sql msg', sql:err.error.data.sql || ' - no sql -' } );
+                                    ADCore.error.log('ABRelay:request(): response was an error: ', { request:options, code: err.error.data.code, message:err.error.data.sqlMessage || 'no sql msg', sql:err.error.data.sql || ' - no sql -', error:err } )
+                                    err.error._request = {
+                                        data: errorOptions.body || errorOptions.qs,
+                                        method: errorOptions.method,
+                                        uri: errorOptions.uri
+                                    };
+
+                                    cb(null, err.error);
+                                    return ;
+                                }
+                            }
+
+                            // [Fix] Johnny
+                            // it seems a web client disconnecting a socket can get caught in our 
+                            // process.  just try again:
+                            var errorString = err.toString();
+                            if (errorString.indexOf('Error: socket hang up')>-1) {
+                                lastError = err;
+                                tryIt(attempt+1, cb);
+                                return;
+                            }
+
+                            // if a different error, then pass this along our chain() and process in our .catch() below
+                            cb(err);
+                        });
+
                     }
+                    
+                }
+                tryIt(0, (err, data)=>{
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(data);
+                    }
+                })
 
-
-                    // if a different error, then pass this along our chain() and process in our .catch() below
-                    reject(err);
-                });
             });
 
         })

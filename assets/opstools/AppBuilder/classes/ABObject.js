@@ -292,6 +292,7 @@ export default class ABObject extends ABObjectBase {
 		this.fields().forEach(function(f){
 			var header = f.columnHeader(isObjectWorkspace, null, isEditable);
 
+			header.alias = f.alias || undefined; // query type
 			header.fieldURL = f.urlPointer();
 
 			if (f.settings.width != 0) {
@@ -418,6 +419,18 @@ export default class ABObject extends ABObjectBase {
 
 		return labelData;
 	}
+
+	/**
+	 * @method isReadOnly
+	 * 
+	 * @return {boolean}
+	 */
+	get isReadOnly() {
+
+		return this.isImported || this.isExternal;
+
+	}
+
 
 
 

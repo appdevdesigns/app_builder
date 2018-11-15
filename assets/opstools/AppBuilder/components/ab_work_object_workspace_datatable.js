@@ -270,6 +270,12 @@ console.warn('!! ToDo: onAfterColumnHide()');
     	// Our init() function for setting up our UI
     	this.init = (options) => {
 
+			// WORKAROUND : Where should we define this ??
+			// For include PDF.js
+			webix.codebase = "";
+			webix.cdn = "/js/webix";
+
+
     		// register our callbacks:
     		for(var c in _logic.callbacks) {
     			_logic.callbacks[c] = options[c] || _logic.callbacks[c];

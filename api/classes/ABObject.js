@@ -792,9 +792,8 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 					if (field) {
 
 						// convert field's id to column name
-						condition.key = '`{databaseName}`.`{tableName}`.`{columnName}`'
-							.replace('{databaseName}', field.object.dbSchemaName())
-							.replace('{tableName}', field.object.dbTableName())
+						condition.key = '{prefix}.`{columnName}`'
+							.replace('{prefix}', field.dbPrefix())
 							.replace('{columnName}', field.columnName);
 
 
@@ -806,23 +805,30 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 
 								let transTable = field.object.dbTransTableName();
 
-								condition.key = '`{databaseName}`.`{tableName}`.`{columnName}`'
+								let prefix = "";
+								if (field.alias) {
+									prefix = '{alias}_Trans'.replace('{alias}', field.alias);
+								}
+								else {
+									prefix = '{databaseName}.{tableName}'
 												.replace('{databaseName}', field.object.dbSchemaName())
-												.replace(/{tableName}/g, transTable)
-												.replace(/{columnName}/g, field.columnName);
+												.replace('{tableName}', transTable);
+								}
 
-								let languageWhere = '`{databaseName}`.`{tableName}`.`language_code` = "{languageCode}"'
-												.replace('{databaseName}', field.object.dbSchemaName())
-												.replace(/{tableName}/g, transTable)
-												.replace(/{languageCode}/g, userData.languageCode);
+								condition.key = '{prefix}.{columnName}'
+												.replace('{prefix}', prefix)
+												.replace('{columnName}', field.columnName);
+
+								let languageWhere = '`{prefix}`.`language_code` = "{languageCode}"'
+												.replace('{prefix}', prefix)
+												.replace('{languageCode}', userData.languageCode);
 
 								Query.whereRaw(languageWhere);
 
 							}
 							else {
-								condition.key = ('JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(`{databaseName}`.`{tableName}`.`translations`, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH(`{databaseName}`.`{tableName}`.`translations`, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))')
-												.replace(/{databaseName}/g, field.object.dbSchemaName())
-												.replace(/{tableName}/g, field.object.dbTableName())
+								condition.key = ('JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({prefix}.`translations`, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({prefix}.`translations`, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))')
+												.replace(/{prefix}/g, field.dbPrefix())
 												.replace(/{languageCode}/g, userData.languageCode)
 												.replace(/{columnName}/g, field.columnName);
 							}
@@ -1082,23 +1088,31 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 
 					// TODO: move to ABOBjectExternal.js
 					if (orderField.object.isExternal || field.object.isImported) {
-						sortClause = "`{databaseName}`.`{tableName}`.`{columnName}`"
-									.replace('{databaseName}', orderField.object.dbSchemaName())
-									.replace('{tableName}', orderField.object.dbTransTableName())
-									.replace('{columnName}', orderField.columnName);
+
+						let prefix = "";
+						if (orderField.alias) {
+							prefix = '{alias}'.replace('{alias}', orderField.alias);
+						}
+						else {
+							prefix = '{databaseName}.{tableName}'
+										.replace('{databaseName}', orderField.object.dbSchemaName())
+										.replace('{tableName}', orderField.object.dbTransTableName());
+						}
+
+						sortClause = "`{prefix}.translations`"
+									.replace('{prefix}', prefix);
 					}
 					else {
-						sortClause = ('JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({tableName}.translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({tableName}.translations, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))')
-										.replace(/{tableName}/g, orderField.object.dbTableName(true))
+						sortClause = ('JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({prefix}.`translations`, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({prefix}.`translations`, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))')
+										.replace(/{prefix}/g, orderField.dbPrefix())
 										.replace('{languageCode}', userData.languageCode)
 										.replace('{columnName}', orderField.columnName);
 					}
 				} 
 				// If we are just sorting a field it is much simpler
 				else { 
-					sortClause = "`{databaseName}`.`{tableName}`.`{columnName}`"
-									.replace('{databaseName}', orderField.object.dbSchemaName())
-									.replace('{tableName}', orderField.object.dbTableName())
+					sortClause = "{prefix}.{columnName}"
+									.replace('{prefix}', orderField.dbPrefix())
 									.replace('{columnName}', orderField.columnName);
 	            }
 	            query.orderByRaw(sortClause + " " + o.dir);
@@ -1117,18 +1131,38 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 			if (whereRules.filter(r => r.key == f.id)[0] || 
 				(sortRules.filter && sortRules.filter(o => o.key == f.id)[0])) {
 
-				let transTable = f.object.dbTransTableName(),
-					baseClause = '{databaseName}.{tableName}.{columnName}'
+				let transTable = f.object.dbTransTableName();
+
+				let prefix = "";
+				let prefixTran = "";
+				let tableTran = "";
+				if (f.alias) {
+					prefix = "{alias}".replace("{alias}", f.alias);
+					prefixTran = "{alias}_Trans".replace("{alias}", f.alias);
+					tableTran = "{tableName} AS {alias}"
+									.replace("{tableName}", f.object.dbTransTableName(true))
+									.replace("{alias}", prefixTran);
+				}
+				else {
+					prefix = "{databaseName}.{tableName}"
 								.replace('{databaseName}', f.object.dbSchemaName())
-								.replace('{tableName}', f.object.dbTableName())
+								.replace('{tableName}', f.object.dbTableName());
+					prefixTran = "{databaseName}.{tableName}"
+								.replace('{databaseName}', f.object.dbSchemaName())
+								.replace('{tableName}', transTable);
+					tableTran = f.object.dbTransTableName(true);
+				}
+
+
+				let	baseClause = '{prefix}.{columnName}'
+								.replace('{prefix}', prefix)
 								.replace('{columnName}', f.object.PK()),
-					connectedClause = '{databaseName}.{tableName}.{columnName}'
-								.replace('{databaseName}', f.object.dbSchemaName())
-								.replace('{tableName}', transTable)
+					connectedClause = '{prefix}.{columnName}'
+								.replace('{prefix}', prefixTran)
 								.replace('{columnName}', f.object.transColumnName);
 	
 				if (!(query._statements || []).filter(s => s.table == transTable).length) // prevent join duplicate
-					query.innerJoin(f.object.dbTransTableName(true), baseClause, '=', connectedClause);
+					query.innerJoin(tableTran, baseClause, '=', connectedClause);
 			}
 
 		});

@@ -210,11 +210,11 @@ export default class AB_Work_Query_List_NewQuery extends OP.Component {   //.ext
 				var query = currentApplication.queryNew({
 					name: queryName,
 					label: queryName,
-					joins: [
-						{
-							objectURL: selectedObj.urlPointer()
-						}
-					]
+					joins: {
+						alias: "BASE_OBJECT", // TODO
+						objectURL: selectedObj.urlPointer(),
+						links: []
+					}
 				});
 
 				// save to db

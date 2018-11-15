@@ -13,6 +13,7 @@ import ABPopupFrozenColumns from "../../components/ab_work_object_workspace_popu
 import ABPopupMassUpdate from "../../components/ab_work_object_workspace_popupMassUpdate"
 import ABPopupSummaryColumns from "../../components/ab_work_object_workspace_popupSummaryColumns"
 import ABPopupCountColumns from "../../components/ab_work_object_workspace_popupCountColumns"
+import ABPopupExport from "../../components/ab_work_object_workspace_popupExport"
 import ABViewGridFilterMenu from "../rules/ABViewGridFilterMenu"
 import ABViewWidget from "./ABViewWidget"
 import ABFieldImage from "../dataFields/ABFieldImage"
@@ -54,8 +55,8 @@ var ABViewGridPropertyComponentDefaults = {
 	height: 0,
 	gridFilter: {
 		filterOption: 0,
-		queryRules: []
-
+		queryRules: [],
+		userFilterPosition: 'toolbar'
 	},
 	summaryFields: [], // array of [field ids] to add the summary column in footer
 	countFields: [], // array of [field ids] to add the summary column in footer
@@ -908,8 +909,7 @@ export default class ABViewGrid extends ABViewWidget  {
 			buttonExport: App.unique(idBase+'_buttonExport'),
 
 			filterMenutoolbar: App.unique(idBase+'_filterMenuToolbar'),
-			resetFilterButton: App.unique(idBase+'_resetFilterButton'),
-			popupExport: App.unique(idBase+'_popupExport')
+			resetFilterButton: App.unique(idBase+'_resetFilterButton')
 
 		}
 		
@@ -964,51 +964,21 @@ export default class ABViewGrid extends ABViewWidget  {
 			waitMilliseconds = 50,
 			filterTimeoutId;
 
-		var DataTable = new ABWorkspaceDatatable(App, idBase, settings);
-		var PopupMassUpdateComponent = new ABPopupMassUpdate(App, idBase+"_mass");
-		var PopupSortDataTableComponent = new ABPopupSortField(App, idBase+"_sort");
-		var rowFilter = new RowFilter(App, idBase+"_filter");
-		var filter_popup = webix.ui({
+		let DataTable = new ABWorkspaceDatatable(App, idBase, settings);
+		let PopupMassUpdateComponent = new ABPopupMassUpdate(App, idBase+"_mass");
+		let PopupSortDataTableComponent = new ABPopupSortField(App, idBase+"_sort");
+		let rowFilter = new RowFilter(App, idBase+"_filter");
+		let rowFilterForm = new RowFilter(App, idBase+"_filter_form");
+		let exportPopup = new ABPopupExport(App, idBase+"_export");
+		let filter_popup = webix.ui({
 			view: "popup",
 			width: 800,
 			hidden: true,
 			body: rowFilter.ui
 		});
-		var export_popup = webix.ui({
-			view: "popup",
-			id: ids.popupExport,
-			width: 160,
-			height: 180,
-			select: false,
-			hidden: true,
-			body: {
-				id: ids.list,
-				view: 'list',
-				data: [
-					{ name: "CSV", icon: "file-excel-o" },
-					{ name: "Excel", icon: "file-excel-o" },
-					{ name: "PDF", icon: "file-pdf-o" },
-					{ name: "PNG", icon: "file-image-o" }
-				],
-				template: "<div><i class='fa fa-#icon# webix_icon_btn' aria-hidden='true'></i> #name#</div>",
-				on: {
-					onItemClick: function (id, e, node) {
-						var component = this.getItem(id);
-
-						_logic.export(component.name);
-					}
-				}
-			}
-		});
 
 
-		var _init = () => {
-
-			// WORKAROUND : Where should we define this ??
-			// For include PDF.js
-			webix.codebase = "";
-			webix.cdn = "/js/webix";
-			
+		let _init = () => {
 
 			if (this.settings.dataSource != "") {
 				DataTable.init({
@@ -1024,13 +994,24 @@ export default class ABViewGrid extends ABViewWidget  {
 				});
 
 				rowFilter.init({
-					onChange:_logic.callbackFilterData		// be notified when there is a change in the filter
+					onChange: () => {
+						_logic.callbackFilterData(rowFilter);	// be notified when there is a change in the filter
+					}
 				});
+
+				rowFilterForm.init({
+					onChange: () => {
+						_logic.callbackFilterData(rowFilterForm);	// be notified when there is a change in the filter
+					}
+				});
+
+				exportPopup.init({});
 				
 				if (this.settings.massUpdate ||
 					this.settings.isSortable ||
 					this.settings.isExportable ||
-					this.settings.gridFilter.filterOption) {
+					(this.settings.gridFilter.filterOption && 
+					this.settings.gridFilter.userFilterPosition == "toolbar")) {
 					$$(ids.toolbar).show();
 				}
 				
@@ -1043,8 +1024,17 @@ export default class ABViewGrid extends ABViewWidget  {
 					$$(ids.buttonDeleteSelected).hide();
 				}
 				
-				if (this.settings.gridFilter.filterOption != 1) {
+				if (this.settings.gridFilter.filterOption != 1 || 
+					this.settings.gridFilter.userFilterPosition != "toolbar") {
 					$$(ids.buttonFilter).hide();
+				}
+				
+				if (this.settings.gridFilter.filterOption == 1 && 
+					this.settings.gridFilter.userFilterPosition == "form") {
+					$$(rowFilterForm.ui.id).show();
+				}
+				else {
+					$$(rowFilterForm.ui.id).hide();
 				}
 				
 				if (this.settings.isSortable == false) {
@@ -1078,6 +1068,12 @@ export default class ABViewGrid extends ABViewWidget  {
 					PopupSortDataTableComponent.objectLoad(CurrentObject, this);
 					rowFilter.viewLoad(this);
 					rowFilter.objectLoad(CurrentObject);
+					rowFilterForm.viewLoad(this);
+					rowFilterForm.objectLoad(CurrentObject);
+					exportPopup.objectLoad(CurrentObject);
+					exportPopup.setGridComponent($$(DataTable.ui.id));
+					exportPopup.setHiddenFields(dataCopy.objectWorkspace.hiddenFields);
+					exportPopup.setFilename(this.label);
 					DataTable.refreshHeader();
 
 					dc.bind($$(DataTable.ui.id));
@@ -1171,6 +1167,7 @@ export default class ABViewGrid extends ABViewWidget  {
 				type: "space",
 				padding: 17,
 				rows: [
+					rowFilterForm.ui,
 					{
 						view: 'toolbar',
 						id: ids.toolbar,
@@ -1301,17 +1298,19 @@ export default class ABViewGrid extends ABViewWidget  {
 
 			},
 
-			callbackFilterData: () => {
+			callbackFilterData: (row_filter) => {
 
-				var filterRules = (rowFilter.getValue().rules || []);
+				var filterRules = (row_filter.getValue().rules || []);
 
-				$$(ids.buttonFilter).define('badge', filterRules.length);
-				$$(ids.buttonFilter).refresh();
+				if ($$(ids.buttonFilter)) {
+					$$(ids.buttonFilter).define('badge', filterRules.length);
+					$$(ids.buttonFilter).refresh();
+				}
 
 				// client filter data
 				$$(DataTable.ui.id).filter(function(rowData) {
 
-					return rowFilter.isValid(rowData);
+					return row_filter.isValid(rowData);
 
 				});
 
@@ -1403,7 +1402,7 @@ export default class ABViewGrid extends ABViewWidget  {
 			},
 
 			toolbarExport: ($view) => {
-				export_popup.show($view);
+				exportPopup.show($view);
 			},
 
 			toolbarMassUpdate: function ($view) {
@@ -1432,75 +1431,6 @@ export default class ABViewGrid extends ABViewWidget  {
 				hiddenQB.destructor();	// remove the QB 
 
 				$$(DataTable.ui.id).filter(QBHelper);
-			},
-
-			export: (name) => {
-
-				let fnExport;
-
-				let columns = {};
-
-				// template
-				let dc = this.dataCollection;
-				if (dc) {
-					let object = dc.datasource;
-					if (object) {
-						object.fields().forEach(f => {
-
-							// hidden fields
-							if (this.settings.objectWorkspace.hiddenFields.indexOf(f.columnName) > -1)
-								return;
-
-							columns[f.columnName] = {
-								template: (rowData) => {
-									return f.format(rowData);
-								}
-							};
-
-						});
-					}
-				}
-
-				switch(name) {
-					case "CSV":
-
-						webix.csv.delimiter.cols = ",";
-
-						fnExport = webix.toCSV($$(DataTable.ui.id), {
-							filename: this.label,
-							columns: columns
-						});
-						break;
-					case "Excel":
-						fnExport = webix.toExcel($$(DataTable.ui.id), {
-							filename: this.label,
-							name: this.label,
-							columns: columns,
-							filterHTML: true
-						});
-						break;
-					case "PDF":
-						fnExport = webix.toPDF($$(DataTable.ui.id), {
-							filename: this.label,
-							filterHTML: true
-						});
-						break;
-					case "PNG":
-						fnExport = webix.toPNG($$(DataTable.ui.id), {
-							filename: this.label
-						});
-						break;
-				}
-
-				fnExport
-					.catch(err => {
-						OP.Error.log("System could not export " + name, { error: err });
-					})
-					.fail((err) => {
-						OP.Error.log("System could not export " + name, { error: err });
-					})
-					.then(() => { export_popup.hide() });
-
 			}
 
 		}
@@ -1513,6 +1443,7 @@ export default class ABViewGrid extends ABViewWidget  {
 			if ($$(DataTable.ui.id)) {
 				$$(DataTable.ui.id).adjust();
 			}
+
 
 			if (this.settings.gridFilter.filterOption == 2) {
 				if (this.settings.gridFilter.queryRules.length > 0) {
