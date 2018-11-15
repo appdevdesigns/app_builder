@@ -392,12 +392,30 @@ options.rejectUnauthorized = false;
 
     request: function(request) {
 
+        // request = {
+        //     appUUID:'uuid',
+        //     data: '<encryptedData>',
+        //     jobToken: 'uuid'
+        // }
+
         var appUser = null;
         var relayUser = null;
 
 var errorOptions = null;
 
         return Promise.resolve()
+
+        // 0) store this request in our Queue
+        .then(()=>{
+            return new Promise((resolve, reject)=>{
+                // attempt to create this entry.
+                // if this is a retry, then this will error because the jt already exists,
+                // so just continue on anyway:
+                ABRelayRequestQueue.create({jt:request.jobToken, request:request })
+                .then(resolve)
+                .catch(resolve);
+            });
+        })
 
         // 1) get the RelayAppUser from the given appUUID
         .then(()=>{
@@ -624,6 +642,12 @@ errorOptions = options;
             })
             
         })
+
+        // now remove the request from our Queue:
+        .then(()=>{
+            return ABRelayRequestQueue.destroy({jt:request.jobToken});
+        })
+
         .catch((err)=>{
 
             if (err.statusCode && err.statusCode == 413) {
