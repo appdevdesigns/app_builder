@@ -2990,6 +2990,12 @@ var ABMobileApp = require(path.join('..', 'classes', 'ABMobileApp'));
 
 
 /// Hard Code the SDC App here:
+/// 1st verify sails.config.codepush.* settings are defined:
+sails.config.codepush = sails.config.codepush || {};
+sails.config.codepush.production = sails.config.codepush.production || {};
+sails.config.codepush.staging = sails.config.codepush.staging || {};
+sails.config.codepush.develop = sails.config.codepush.develop || {};
+
 var SDCApp = new ABMobileApp({
     id:'SDC.id',
     settings:{
