@@ -25,7 +25,8 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 
 		var labels = {
 			design: L('ab.query.designMode', "*Design mode"),
-			run: L('ab.query.runMode', "*Run mode")
+			run: L('ab.query.runMode', "*Run mode"),
+			loadAll: L('ab.query.loadAll', "*Load all")
 		};
 
 
@@ -33,7 +34,8 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 		var ids = {
 			component: this.unique('component'),
 			toolbar: this.unique('toolbar'),
-			modeButton: this.unique('modeButton')
+			modeButton: this.unique('modeButton'),
+			loadAllButton: this.unique('loadAllButton')
 		};
 
 		var settingsDataTable = {
@@ -62,7 +64,7 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 							view: 'button',
 							id: ids.modeButton,
 							label: labels.design,
-							icon: "certificate",
+							icon: "tasks",
 							type: "icon",
 							width: 140,
 							click: function () {
@@ -73,6 +75,18 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 									CurrentMode = 'run';
 
 								_logic.changeMode(CurrentMode);
+							}
+						},
+						{
+							view: 'button',
+							id: ids.loadAllButton,
+							label: labels.loadAll,
+							icon: "download",
+							type: "icon",
+							width: 140,
+							hidden: true,
+							click: function () {
+								_logic.loadAll();
 							}
 						}
 					]
@@ -157,19 +171,31 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 				// Run
 				if (mode == 'run') {
 					$$(ids.modeButton).define('label', labels.design);
+					$$(ids.modeButton).define('icon', "tasks");
 
 					DataTable.populateObjectWorkspace(CurrentQuery);
+
+					$$(ids.loadAllButton).show();
 				}
 				// Design
 				else {
 					$$(ids.modeButton).define('label', labels.run);
+					$$(ids.modeButton).define('icon', "cubes");
 
 					QueryDesignComponent.populateQueryWorkspace(CurrentQuery);
 
 					$$(QueryDesignComponent.ui.id).show(true);
+
+					$$(ids.loadAllButton).hide();
 				}
 
 				$$(ids.modeButton).refresh();
+
+			},
+
+			loadAll: function() {
+
+				DataTable.loadAll();
 
 			}
 
