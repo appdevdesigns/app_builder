@@ -229,6 +229,9 @@ export default class AB_Work_Interface_List extends OP.Component {
 					case 'rename':
 						_logic.rename();
 						break;
+					case 'copy':
+						_logic.copy();
+						break;
 					case 'delete':
 						_logic.remove();
 						break;
@@ -357,6 +360,49 @@ console.error('!! todo: onBeforeEditStop() editing');
 			rename: function() {
 				var pageID = $$(ids.list).getSelectedId(false);
 				$$(ids.list).edit(pageID);
+			},
+
+			copy: function() {
+
+				let selectedPage = $$(ids.list).getSelectedItem(false);
+
+				// show loading cursor
+				_logic.listBusy();
+
+				// get a copy of the page
+				let copiedPage = selectedPage.copy();
+
+				// saving
+				let savePageFn = (p) => {
+
+					return new Promise((resolve, reject) => {
+
+						p.save().catch(reject)
+							.then(() => {
+
+								// save sub-pages sequentially
+								var subTasks = Promise.resolve();
+								p.pages().forEach(subPage => {
+									subTasks = subTasks.then(x => savePageFn(subPage));
+								});
+
+								// final
+								subTasks.then(() => resolve());
+
+							});
+
+					});
+
+				};
+
+				savePageFn(copiedPage)
+					.catch(err => _logic.listReady())
+					.then(() => {
+
+						_logic.callbackNewPage(copiedPage);
+						_logic.listReady();
+					});
+
 			},
 
 			remove: function() {

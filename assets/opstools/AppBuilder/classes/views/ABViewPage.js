@@ -820,6 +820,47 @@ export default class ABViewPage extends ABViewContainer {
             obj.icon = ABViewDefaults.icon;
         }
         return obj;
-    }      
+    }
+    
+    
+    copy(lookUpIds) {
+
+        // initial new ids of pages and components
+        if (lookUpIds == null) {
+            lookUpIds = {};
+
+            let mapNewIdFn = (currView) => {
+
+                if (!lookUpIds[currView.id])
+                    lookUpIds[currView.id] = OP.Util.uuid();
+
+                if (currView.pages) {
+                    currView.pages().forEach(p => mapNewIdFn(p));
+                }
+
+                if (currView.views) {
+                    currView.views().forEach(v =>  mapNewIdFn(v));
+                }
+
+                if (currView.dataCollections) {
+                    currView.dataCollections().forEach(dc =>  mapNewIdFn(dc));
+                }
+
+            };
+
+            // start map new ids
+            mapNewIdFn(this);
+
+        }
+
+        // copy
+        let result = super.copy(lookUpIds);
+
+        // page's name should not be duplicate
+        result.name = result.label;
+
+        return result;
+
+    }
 
 }

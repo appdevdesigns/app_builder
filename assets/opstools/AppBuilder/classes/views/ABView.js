@@ -1130,6 +1130,49 @@ export default class ABView extends ABViewBase {
 
 	}
 
+	copy(lookUpIds) {
+
+		lookUpIds = lookUpIds || {};
+
+		let ignoreProps = ['application', '_pages', '_views', '_dataCollections', '__events'];
+        let result = _.cloneDeepWith(this, function customizer(val, key, obj) {
+
+			if (ignoreProps.indexOf(key) < 0)
+				return _.cloneDeep(val);
+
+        });
+
+        // change id
+        result.id = lookUpIds[result.id] || OP.Util.uuid();
+
+		// copy sub pages
+		if (this.pages) {
+			result._pages = [];
+			this.pages().forEach(p => {
+				result._pages.push(p.copy());
+			});	
+		}
+
+		// copy sub views
+		if (this.views) {
+			result._views = [];
+			this.views().forEach(v => {
+				result._views.push(v.copy());
+			});
+		}
+
+		// copy data collections
+		if (this.dataCollections) {
+			result._dataCollections = [];
+			this.dataCollections().forEach(dc => {
+				result._dataCollections.push(dc.copy());
+			});
+		}
+		
+		return result;
+
+	}
+
 
 	//// Report ////
 

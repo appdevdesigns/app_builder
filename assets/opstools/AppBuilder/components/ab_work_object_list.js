@@ -207,7 +207,8 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 			});
 
 			PopupEditObjectComponent.init({
-				onClick: _logic.callbackObjectEditorMenu
+				onClick: _logic.callbackObjectEditorMenu,
+				hideCopy: true
 			})
 		}
 
