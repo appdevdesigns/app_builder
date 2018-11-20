@@ -12,8 +12,9 @@ function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
-
 var ABViewListPropertyComponentDefaults = {
+	datacollection: null,
+	field: null,
 	height: 0
 }
 
@@ -337,6 +338,13 @@ export default class ABViewLabel extends ABViewWidget {
 		});
 
 	}
+
+	copyUpdateProperyList() {
+
+		return ['datacollection'];
+
+	}
+
 
 
 }

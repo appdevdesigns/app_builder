@@ -524,6 +524,11 @@ export default class ABViewPage extends ABViewContainer {
                     this.name = this.name + "_" + this.id.split("-")[1]; // add a unique string to the name so it doesnt collide with a previous page name
                 }
 
+                // if name is empty
+                if (!this.name) {
+                    this.name = this.label + "_" + this.id.split("-")[1];
+                }
+
                 this.application.pageSave(this)
                     .then(() => {
 
@@ -823,7 +828,7 @@ export default class ABViewPage extends ABViewContainer {
     }
     
     
-    copy(lookUpIds) {
+    copy(lookUpIds, parent) {
 
         // initial new ids of pages and components
         if (lookUpIds == null) {
@@ -854,10 +859,10 @@ export default class ABViewPage extends ABViewContainer {
         }
 
         // copy
-        let result = super.copy(lookUpIds);
+        let result = super.copy(lookUpIds, parent);
 
         // page's name should not be duplicate
-        result.name = result.label;
+        result.name = null;
 
         return result;
 

@@ -22,6 +22,7 @@ var ABViewDetailDefaults = {
 }
 
 var ABViewDetailPropertyComponentDefaults = {
+	datacollection: null,
 	showLabel: true,
 	labelPosition: 'left',
 	labelWidth: 120,
@@ -502,6 +503,12 @@ export default class ABViewDetail extends ABViewContainer {
 
 		// update properties when a sub-view is destroyed
 		newView.once('destroyed', () => { ABViewDetail.propertyEditorPopulate(App, ids, this); });
+
+	}
+
+	copyUpdateProperyList() {
+
+		return ['datacollection'];
 
 	}
 

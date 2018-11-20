@@ -1130,26 +1130,41 @@ export default class ABView extends ABViewBase {
 
 	}
 
-	copy(lookUpIds) {
+	copy(lookUpIds, parent) {
 
 		lookUpIds = lookUpIds || {};
 
-		let ignoreProps = ['application', '_pages', '_views', '_dataCollections', '__events'];
-        let result = _.cloneDeepWith(this, function customizer(val, key, obj) {
+		// get settings of the target
+		let config = this.toObj();
 
-			if (ignoreProps.indexOf(key) < 0)
-				return _.cloneDeep(val);
+		// remove sub-elements property
+		['pages', 'views', 'dataCollections'].forEach(prop => {
+			delete config[prop];
+		});
 
-        });
+		// update id of linked components
+		if (this.copyUpdateProperyList) {
+			(this.copyUpdateProperyList() || []).forEach(prop => {
+				if (config && config.settings)
+					config.settings[prop] = lookUpIds[config.settings[prop]];
+			});
+		}
 
-        // change id
-        result.id = lookUpIds[result.id] || OP.Util.uuid();
+		// copy from settings
+		let result = this.application.viewNew(config, this.application, parent);
+
+		// change id
+		result.id = lookUpIds[result.id] || OP.Util.uuid();
 
 		// copy sub pages
 		if (this.pages) {
 			result._pages = [];
 			this.pages().forEach(p => {
-				result._pages.push(p.copy());
+
+				let copiedSubPage = p.copy(lookUpIds, result);
+				copiedSubPage.parent = result;
+
+				result._pages.push(copiedSubPage);
 			});	
 		}
 
@@ -1157,7 +1172,10 @@ export default class ABView extends ABViewBase {
 		if (this.views) {
 			result._views = [];
 			this.views().forEach(v => {
-				result._views.push(v.copy());
+
+				let copiedView = v.copy(lookUpIds, result);
+
+				result._views.push(copiedView);
 			});
 		}
 
@@ -1165,10 +1183,13 @@ export default class ABView extends ABViewBase {
 		if (this.dataCollections) {
 			result._dataCollections = [];
 			this.dataCollections().forEach(dc => {
-				result._dataCollections.push(dc.copy());
+
+				let copiedDc = dc.copy(lookUpIds, result);
+
+				result._dataCollections.push(copiedDc);
 			});
 		}
-		
+
 		return result;
 
 	}

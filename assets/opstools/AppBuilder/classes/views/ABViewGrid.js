@@ -1895,6 +1895,12 @@ export default class ABViewGrid extends ABViewWidget  {
 
 	}
 
+	copyUpdateProperyList() {
+
+		return ['dataSource', 'detailsPage', 'detailsTab', 'editPage', 'editTab'];
+
+	}
+
 	// Custom functions needed for UI
 
 	/*
