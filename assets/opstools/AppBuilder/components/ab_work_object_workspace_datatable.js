@@ -912,7 +912,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
 
     		// rebuild the data table view:
-    		refresh: function() {
+    		refresh: function(loadAll) {
                 
     			// wait until we have an Object defined:
     			if (CurrentObject) {
@@ -938,7 +938,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                     .where(wheres)
                     .sort(sorts)
     				.skip(0)
-    				.limit(30)
+    				.limit(loadAll ? null : 30)
     				.loadInto(DataTable);
     			}
     		},
@@ -1236,6 +1236,13 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                 settings.isEditable = false;
                 settings.allowDelete = false;
                 settings.massUpdate = false;
+            },
+
+            loadAll: function() {
+
+                let isLoadAll = true;
+                _logic.refresh(isLoadAll);
+
             }
 
     	}
@@ -1294,6 +1301,9 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
         this.editable = _logic.editable;
         this.readonly = _logic.readonly;
+
+        // expose load all records
+        this.loadAll = _logic.loadAll;
 
     }
 

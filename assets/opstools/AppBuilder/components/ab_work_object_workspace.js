@@ -892,6 +892,15 @@ console.error('TODO: toolbarPermission()');
 				// NOTE: to clear a visual glitch when multiple views are updating
 				// at one time ... stop the animation on this one:
 				$$(ids.noSelection).show(false, false);
+			},
+
+			/**
+			 * @function loadAll
+			 * Load all records
+			 * 
+			 */
+			loadAll: function() {
+				DataTable.loadAll();
 			}
 
 
@@ -910,6 +919,7 @@ console.error('TODO: toolbarPermission()');
 		this.applicationLoad = this._logic.applicationLoad;
 		this.populateObjectWorkspace = this._logic.populateObjectWorkspace;
 		this.clearObjectWorkspace = this._logic.clearObjectWorkspace;
+		this.loadAll = this._logic.loadAll;
 
     }
 
