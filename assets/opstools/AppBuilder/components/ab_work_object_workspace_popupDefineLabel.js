@@ -198,9 +198,15 @@ export default class ABWorkObjectPopupDefineLabel extends OP.Component {
                 
                 // refresh list with new set of fields
                 var listFields = _currentObject
-                    .fields((f) => {
+                    .fields(f => {
                         // TODO: should have flag in ABField ?
                         return f.fieldUseAsLabel();
+                    })
+                    .map(f => {
+                        return {
+                            id: f.id,
+                            label: f.label
+                        };
                     });
 
                 List.parse(listFields);
