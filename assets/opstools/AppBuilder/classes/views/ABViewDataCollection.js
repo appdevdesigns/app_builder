@@ -1320,10 +1320,11 @@ export default class ABViewDataCollection extends ABView {
 				component.unbind();
 			}
 
+			if (component.refresh)
+				component.refresh();
+
 		}
 
-		// if (component.refresh)
-		// 	component.refresh();
 
 	}
 
