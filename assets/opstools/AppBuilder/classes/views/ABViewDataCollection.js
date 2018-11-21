@@ -377,8 +377,12 @@ export default class ABViewDataCollection extends ABView {
 				// if all 3 fields are present, we are good.
 				if ((f.key)
 					&& (f.rule)
-					&& (f.value)) {
-
+					&& (f.value || 
+						// these rules do not have input value
+						(f.rule == 'is_current_user' ||
+						f.rule == 'is_not_current_user' ||
+						f.rule == 'same_as_user' ||
+						f.rule == 'not_same_as_user'))) {
 					allComplete = allComplete && true;
 				} else {
 

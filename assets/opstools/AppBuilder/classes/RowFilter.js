@@ -970,12 +970,14 @@ export default class RowFilter extends OP.Component {
 					case 'is_not_current_user':
 						// clear and disable the value field
 						$viewCond.$$(ids.inputValue).showBatch("empty");
+						_logic.onChange();
 						break;
 
 					case 'same_as_user':
 					case 'not_same_as_user':
 						// clear and disable the value field
 						$viewCond.$$(ids.inputValue).showBatch("empty");
+						_logic.onChange();
 						break;
 
 					case 'in_query_field':
@@ -1077,15 +1079,28 @@ export default class RowFilter extends OP.Component {
 				// _logic.onChange();
 			},
 
-			onChange: function () {
+			onChange: () => {
 
-				// refresh config settings before notify
-				_logic.getValue();
+				if (!this.__blockOnChange) {
 
-				_logic.callbacks.onChange();
+					// refresh config settings before notify
+					_logic.getValue();
+
+					_logic.callbacks.onChange();
+
+				}
 
 				return false;
 			},
+
+			blockOnChange: () => {
+				this.__blockOnChange = true;
+			},
+
+			unblockOnChange: () => {
+				this.__blockOnChange = false;
+			},
+
 
 			/**
 			 * @method getValue
@@ -1174,6 +1189,9 @@ export default class RowFilter extends OP.Component {
 
 			setValue: (settings) => {
 
+				// block .onChange event
+				_logic.blockOnChange();
+
 				config_settings = settings || {};
 
 				// Redraw form with no elements
@@ -1217,7 +1235,7 @@ export default class RowFilter extends OP.Component {
 					// if (f.rule == "in_query_field" || f.rule == "not_in_query_field" || f.rule == "same_as_field" || f.rule == "not_same_as_field") {
 					$viewCond.blockEvent();
 					_logic.onChangeRule(f.rule, $viewCond);
-					$viewCond.blockEvent();
+					$viewCond.unblockEvent();
 					// }
 
 					// Input
@@ -1257,6 +1275,9 @@ export default class RowFilter extends OP.Component {
 					}
 
 				});
+
+				// unblock .onChange event
+				_logic.unblockOnChange();
 
 			},
 
