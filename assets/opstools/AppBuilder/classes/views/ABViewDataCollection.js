@@ -1234,9 +1234,13 @@ export default class ABViewDataCollection extends ABView {
 
 		var dc = this.__dataCollection;
 
+		// prevent bind many times
+		if (this.__bindComponentIds.indexOf(component.config.id) > 0)
+			return;
 		// keep component id to an array
-		if (this.__bindComponentIds.indexOf(component.config.id) < 0)
+		else 
 			this.__bindComponentIds.push(component.config.id);
+
 
 		if (component.config.view == 'datatable' ||
 			component.config.view == 'dataview' ||
@@ -1315,10 +1319,11 @@ export default class ABViewDataCollection extends ABView {
 			} else {
 				component.unbind();
 			}
+
 		}
 
-		if (component.refresh)
-			component.refresh();
+		// if (component.refresh)
+		// 	component.refresh();
 
 	}
 
