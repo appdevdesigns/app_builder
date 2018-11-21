@@ -200,9 +200,10 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 							existsObjIds = fnGetParentObjIds(store, parentItemId);
 
 						// prevent looping
-						if (f.datasourceLink == null ||
-							// - check duplicate include object in branch
-							existsObjIds.indexOf(f.datasourceLink.id) > -1)
+						if (f.datasourceLink == null)
+							// ||
+							// // - check duplicate include object in branch
+							// existsObjIds.indexOf(f.datasourceLink.id) > -1)
 							return;
 
 						// always enabled
@@ -414,9 +415,10 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 						if (!fieldLink) return;
 
 						var objLink = fieldLink.datasourceLink;
-						if (!objLink ||
-							// prevent join recursive base object
-							objLink.id == objBase.id) return;
+						if (!objLink) return;
+						// if (!objLink ||
+						// 	// prevent join recursive base object
+						// 	objLink.id == objBase.id) return;
 
 						// add tab
 						let tabUI = _logic.templateField({
