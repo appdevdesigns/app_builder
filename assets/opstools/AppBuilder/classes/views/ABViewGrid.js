@@ -218,7 +218,20 @@ export default class ABViewGrid extends ABViewWidget  {
 
 		var DataTable = this.component(App, idBase);
 
-		return DataTable;
+		return {
+			ui: DataTable.ui,
+			logic: DataTable.logic,
+			onShow: DataTable.onShow,
+
+			init: () => {
+
+				// remove id of the component in caching for refresh .bind of the data collection
+				let dc = this.dataCollection;
+				dc.removeComponent(DataTable.ui.id);
+
+				DataTable.init();
+			}
+		};
 
 	}
 

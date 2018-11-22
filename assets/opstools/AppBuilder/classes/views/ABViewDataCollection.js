@@ -1235,12 +1235,13 @@ export default class ABViewDataCollection extends ABView {
 		var dc = this.__dataCollection;
 
 		// prevent bind many times
-		if (this.__bindComponentIds.indexOf(component.config.id) > 0)
+		if (this.__bindComponentIds.indexOf(component.config.id) > -1 && 
+				$$(component.config.id).data &&
+				$$(component.config.id).data.find({}).length > 0)
 			return;
 		// keep component id to an array
 		else 
 			this.__bindComponentIds.push(component.config.id);
-
 
 		if (component.config.view == 'datatable' ||
 			component.config.view == 'dataview' ||
@@ -1789,6 +1790,16 @@ export default class ABViewDataCollection extends ABView {
 	get dataStatus() {
 
 		return this._dataStatus;
+
+	}
+
+	removeComponent(comId) {
+
+		// get index
+		let index = this.__bindComponentIds.indexOf(comId);
+
+		// delete
+		this.__bindComponentIds.splice(index, 1);
 
 	}
 
