@@ -105,7 +105,8 @@ export default class ABViewLabel extends ABViewWidget {
 
 				// remove id of the component in caching for refresh .bind of the data collection
 				let dc = this.dataCollection;
-				dc.removeComponent(ListView.ui.id);
+				if (dc)
+					dc.removeComponent(ListView.ui.id);
 
 				ListView.init();
 			}
