@@ -292,47 +292,79 @@ console.warn('!! ToDo: onAfterColumnHide()');
     		// one.
     		var DataTable = $$(ids.component);
     		var throttleCustomDisplay = null;
-            var items = [];
+            // var items = [];
             
 			webix.extend(DataTable, webix.ProgressBar);
 
+            let customDisplays = (data) => {
+
+                if (!CurrentObject) return;
+
+                var displayRecords = [];
+
+                // WORKAROUND: .Sj() => ._get_y_range function of webix's datatable.
+                // It is a private function. It returns what record index are showing
+                let scrollState = DataTable.Sj(),
+                    startRecIndex = scrollState[0],
+                    endRecIndex = scrollState[1];
+                
+                DataTable.data.order.each(function (id, index) {
+
+                    if (id != null && 
+                        startRecIndex <= index && index <= endRecIndex) 
+                        displayRecords.push(id);
+
+                });
+
+                CurrentObject.customDisplays(data, App, DataTable, displayRecords, settings.isEditable);
+
+            };
+
     		DataTable.attachEvent("onAfterRender", function(data){
                 DataTable.resize();
-                items = [];
-                data.order.each(function (i) {
-                    if (typeof i != "undefined") items.push(i);
-                });
-    			if (throttleCustomDisplay) clearTimeout(throttleCustomDisplay);
-    			throttleCustomDisplay = setTimeout(()=>{
-    				if (CurrentObject) {
-                        if (scrollStarted) clearTimeout(scrollStarted);
-    					CurrentObject.customDisplays(this.data, App, DataTable, items, settings.isEditable);
-    				}
-    			}, 350);
 
-    		});
+                // items = [];
+                // data.order.each(function (i) {
+                //     if (typeof i != "undefined") items.push(i);
+                // });
+
+                if (throttleCustomDisplay) clearTimeout(throttleCustomDisplay);
+                throttleCustomDisplay = setTimeout(()=>{
+                    if (CurrentObject) {
+                        if (scrollStarted) clearTimeout(scrollStarted);
+                        customDisplays(this.data);
+                    }
+
+                }, 350);
+
+			});
 
             // we have some data types that have custom displays that don't look right after scrolling large data sets we need to call customDisplays again
             var scrollStarted = null;
             DataTable.attachEvent("onScroll", function(){
                 if (scrollStarted) clearTimeout(scrollStarted);
                 if (throttleCustomDisplay) clearTimeout(throttleCustomDisplay);
-    			scrollStarted = setTimeout(()=>{
-                    if (CurrentObject) {
-    					CurrentObject.customDisplays(this.data, App, DataTable, items, settings.isEditable);
-    				}
-    			}, 1500);
+
+                scrollStarted = setTimeout(()=>{
+
+                    customDisplays(this.data);
+
+                }, 1500);
+
             });
 
             
             // we have some data types that have custom displays that don't look right after scrolling large data sets we need to call customDisplays again
             DataTable.attachEvent("onAfterScroll", function(){
                 if (throttleCustomDisplay) clearTimeout(throttleCustomDisplay);
+
                 throttleCustomDisplay = setTimeout(()=>{
+
                     if (CurrentObject) {
                         if (scrollStarted) clearTimeout(scrollStarted);
-                        CurrentObject.customDisplays(this.data, App, DataTable, items, settings.isEditable);
+                        customDisplays(this.data);
                     }
+
                 }, 350);
 
             });
@@ -1308,4 +1340,5 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
     }
 
 }
+
 

@@ -340,7 +340,7 @@ export default class ABObject extends ABObjectBase {
 	// @param {Webix.DataStore} data a webix datastore of all the rows effected
 	//        by the render.
 	customDisplays(data, App, DataTable, ids, isEditable) {
-		var fields = this.fields();
+		var fields = this.fields(f => this.objectWorkspace.hiddenFields.indexOf(f.columnName) < 0);
 
 		if (!data || !data.getFirstId) return;
 
@@ -349,12 +349,10 @@ export default class ABObject extends ABObjectBase {
 			ids.forEach((id)=>{
 				var row = data.getItem(id);
 				fields.forEach((f)=>{
-					if (this.objectWorkspace.hiddenFields.indexOf(f.columnName) == -1) {
-						var node = DataTable.getItemNode({ row: row.id, column: f.columnName });
-						f.customDisplay(row, App, node, {
-							editable: isEditable
-						});
-					}
+					var node = DataTable.getItemNode({ row: row.id, column: f.columnName });
+					f.customDisplay(row, App, node, {
+						editable: isEditable
+					});
 				});
 			});
 		} else {
@@ -362,13 +360,11 @@ export default class ABObject extends ABObjectBase {
 			while(id) {
 				var row = data.getItem(id);
 				fields.forEach((f)=>{
-					if (this.objectWorkspace.hiddenFields.indexOf(f.columnName) == -1) {
-						var node = DataTable.getItemNode({ row: row.id, column: f.columnName });
-						f.customDisplay(row, App, node, {
-							editable: isEditable
-						});
-					}
-				})
+					var node = DataTable.getItemNode({ row: row.id, column: f.columnName });
+					f.customDisplay(row, App, node, {
+						editable: isEditable
+					});
+				});
 				id = data.getNextId(id);
 			}
 		}
@@ -464,3 +460,4 @@ export default class ABObject extends ABObjectBase {
 
 
 }
+
