@@ -524,6 +524,11 @@ export default class ABViewPage extends ABViewContainer {
                     this.name = this.name + "_" + this.id.split("-")[1]; // add a unique string to the name so it doesnt collide with a previous page name
                 }
 
+                // if name is empty
+                if (!this.name) {
+                    this.name = this.label + "_" + this.id.split("-")[1];
+                }
+
                 this.application.pageSave(this)
                     .then(() => {
 
@@ -820,6 +825,47 @@ export default class ABViewPage extends ABViewContainer {
             obj.icon = ABViewDefaults.icon;
         }
         return obj;
-    }      
+    }
+    
+    
+    copy(lookUpIds, parent) {
+
+        // initial new ids of pages and components
+        if (lookUpIds == null) {
+            lookUpIds = {};
+
+            let mapNewIdFn = (currView) => {
+
+                if (!lookUpIds[currView.id])
+                    lookUpIds[currView.id] = OP.Util.uuid();
+
+                if (currView.pages) {
+                    currView.pages().forEach(p => mapNewIdFn(p));
+                }
+
+                if (currView.views) {
+                    currView.views().forEach(v =>  mapNewIdFn(v));
+                }
+
+                if (currView.dataCollections) {
+                    currView.dataCollections().forEach(dc =>  mapNewIdFn(dc));
+                }
+
+            };
+
+            // start map new ids
+            mapNewIdFn(this);
+
+        }
+
+        // copy
+        let result = super.copy(lookUpIds, parent);
+
+        // page's name should not be duplicate
+        result.name = null;
+
+        return result;
+
+    }
 
 }

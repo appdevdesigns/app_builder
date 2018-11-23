@@ -354,6 +354,15 @@ export default class ABViewLabel extends ABViewWidget {
 	}
 
 	copyUpdateProperyList() {
+<<<<<<< HEAD
+=======
+
+		return ['datacollection'];
+
+	}
+
+
+>>>>>>> 3b1a7570b1a11503c72bea2581b72c5ca9225f3d
 
 		return ['datacollection'];
 

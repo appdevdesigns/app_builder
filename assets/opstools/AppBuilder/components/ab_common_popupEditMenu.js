@@ -11,8 +11,11 @@
 
 export default class ABCommonPopupEditMenu extends OP.Component { 
 
-	constructor(App) {
-		super(App, 'ab_common_popupEditMenu');
+	constructor(App, idBase) {
+
+		idBase = idBase || 'ab_common_popupEditMenu';
+
+		super(App, idBase);
 
 		var L = this.Label;
 
@@ -21,6 +24,9 @@ export default class ABCommonPopupEditMenu extends OP.Component {
 			common: App.labels,
 
 			component: {
+
+				copy: L('ab.page.copy', "*Copy"),
+
 				menu: L('ab.application.menu', "*Application Menu"),
 				confirmDeleteTitle: L('ab.application.delete.title', "*Delete application"),
 				confirmDeleteMessage: L('ab.application.delete.message', "*Do you want to delete <b>{0}</b>?")				
@@ -47,10 +53,7 @@ export default class ABCommonPopupEditMenu extends OP.Component {
 				view: "list",
 				id: ids.list,
 				borderless: true,
-				data: [
-					{ label: labels.common.rename, icon: "fa-pencil-square-o" },
-					{ label: labels.common.delete, icon: "fa-trash" }
-				],
+				data: [],
 				datatype: "json",
 				template: "<i class='fa #icon#' aria-hidden='true'></i> #label#",
 				autoheight: true,
@@ -68,6 +71,7 @@ export default class ABCommonPopupEditMenu extends OP.Component {
 		var Popup = null;
 		var _menuOptions = [
 			{ label: labels.common.rename, icon: "fa-pencil-square-o", command:'rename' },
+			{ label: labels.component.copy, icon: "fa-files-o", command:'copy' },
 			{ label: labels.common.delete, icon: "fa-trash", command:'delete' }
 		];
 
@@ -83,6 +87,15 @@ export default class ABCommonPopupEditMenu extends OP.Component {
 			for (var c in _logic.callbacks) {
 				if (options && options[c]) {
 					_logic.callbacks[c] = options[c] || _logic.callbacks[c];
+				}
+			}
+
+			// hide "copy" item
+			if (options.hideCopy) {
+				let itemCopy = $$(ids.list).data.find(item => item.label == labels.component.copy)[0];
+				if (itemCopy) {
+					$$(ids.list).remove(itemCopy.id);
+					$$(ids.list).refresh();
 				}
 			}
 
