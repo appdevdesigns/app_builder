@@ -8,6 +8,29 @@
 export default {
 
 	/**
+	 * @function defaultTranslations()
+	 * return an initial .translations entry to initialize the 
+	 * translations values of a given translateable object.
+	 * @param {array} fields  the multilingual fields this obj manages.
+	 * @param {json}  values  a default set of values for this object.
+	 * @return {array}  of translation entries.
+	 */
+	defaultTranslations:function(fields, values) {
+		values = values || {};
+
+		var entry = {
+			language_code:AD.lang.currentLanguage || 'en'
+		}
+
+		fields.forEach((f)=>{
+			entry[f] = values[f] || f;
+		})
+
+		return [ entry ];
+	},
+
+
+	/**
 	 * @function OP.Multilingual.translate
 	 *
 	 * Given a set of json data, pull out any multilingual translations
