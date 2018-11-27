@@ -191,7 +191,9 @@ export default class ABWorkObjectWorkspace extends OP.Component {
             on: {
                 "onMenuItemClick": function(id) {
                     if (id === "newView") {
-                        PopupAddviewComponent.show();
+                        setTimeout(() => {
+                            PopupAddviewComponent.show();
+        				}, 100);
                     }
                 }
             },
