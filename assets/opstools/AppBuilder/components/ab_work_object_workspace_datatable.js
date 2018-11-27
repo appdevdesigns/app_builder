@@ -1337,6 +1337,8 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
         // expose load all records
         this.loadAll = _logic.loadAll;
 
+        this.show = _logic.show;
+
     }
 
 }

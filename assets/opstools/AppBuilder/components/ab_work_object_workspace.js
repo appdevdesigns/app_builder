@@ -8,6 +8,7 @@
 
 import ABApplication from "../classes/ABApplication"
 import ABWorkspaceDatatable from "./ab_work_object_workspace_datatable"
+import ABWorkspaceKanBan from "./ab_work_object_workspace_kanban"
 import ABPopupDefineLabel from "./ab_work_object_workspace_popupDefineLabel"
 import ABPopupFilterDataTable from "./ab_work_object_workspace_popupFilterDataTable"
 import ABPopupFrozenColumns from "./ab_work_object_workspace_popupFrozenColumns"
@@ -16,6 +17,10 @@ import ABPopupMassUpdate from "./ab_work_object_workspace_popupMassUpdate"
 import ABPopupNewDataField from "./ab_work_object_workspace_popupNewDataField"
 import ABPopupSortField from "./ab_work_object_workspace_popupSortFields"
 import ABPopupExport from "./ab_work_object_workspace_popupExport"
+import ABPopupAddView from "./ab_work_object_workspace_popupAddView"
+
+
+var hashViews = {}; // a hash of the available workspace view components
 
 
 export default class ABWorkObjectWorkspace extends OP.Component {
@@ -113,6 +118,11 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 
         // The DataTable that displays our object:
         var DataTable = new ABWorkspaceDatatable(App, idBase, settings);
+        hashViews['grid'] = DataTable;
+
+        var KanBan = new ABWorkspaceKanBan(App, idBase);
+        hashViews['kanban'] = KanBan;
+
 
         // Various Popups on our page:
         var PopupDefineLabelComponent = new ABPopupDefineLabel(App, idBase);
@@ -131,7 +141,187 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 
 		var PopupExportObjectComponent = new ABPopupExport(App, idBase);
         
+        var PopupAddviewComponent = new ABPopupAddView(App, idBase);
+
+
+
         var view = "button";
+
+
+        var menu = {
+            view: "menu",
+            css: "blue",
+            autowidth: true,
+            data: [{
+                value: "View: <b>Default Grid</b>",
+                submenu: [{
+                        value: "Default Grid",
+                        submenu: [{
+                                value: "Edit",
+                                icon: "cog"
+                            },
+                            {
+                                value: "Delete",
+                                icon: "trash"
+                            }
+                        ]
+                    },
+                    {
+                        value: "Kanban View",
+                        submenu: [{
+                                value: "Edit",
+                                icon: "cog"
+                            },
+                            {
+                                value: "Delete",
+                                icon: "trash"
+                            }
+                        ]
+                    },
+                    {
+                        $template: "Separator"
+                    },
+                    {
+                        value: "New View",
+                        icon: "plus",
+                    }
+                ]
+            }],
+            type: {
+                subsign: true
+            }
+        };
+
+
+        var toolbar = {
+            view: 'toolbar',
+            id: ids.toolbar,
+            hidden: true,
+            css: "ab-data-toolbar",
+            cols: [
+                {
+                    view: view,
+                    id: ids.buttonAddField,
+                    label: labels.component.addFields,
+                    icon: "plus",
+                    type: "icon",
+                    disabled: !settings.isFieldAddable,
+                    // autowidth: true,
+                    click:function() {
+                        _logic.toolbarAddFields(this.$view);
+                    }
+                },
+                {
+                    view: view,
+                    id: ids.buttonMassUpdate,
+                    label: labels.component.massUpdate,
+                    icon: "pencil-square-o",
+                    type: "icon",
+                    // autowidth: true,
+                    badge: 0,
+                    disabled:true,
+                    click: function () {
+                        _logic.toolbarMassUpdate(this.$view);
+                    }
+                },
+                {
+                    view: view,
+                    id: ids.buttonDeleteSelected,
+                    label: labels.component.deleteSelected,
+                    icon: "trash",
+                    type: "icon",
+                    // autowidth: true,
+                    badge: 0,
+                    disabled:true,
+                    click: function () {
+                        _logic.toolbarDeleteSelected(this.$view);
+                    }
+                },
+                {
+                    view: view,
+                    id: ids.buttonFieldsVisible,
+                    label: labels.component.hideFields,
+                    icon: "eye-slash",
+                    type: "icon",
+                    // autowidth: true,
+                    badge: 0,
+                    click: function () {
+                        _logic.toolbarFieldsVisible(this.$view);
+                    }
+                },
+                {
+                    view: view,
+                    id: ids.buttonFilter,
+                    label: labels.component.filterFields,
+                    icon: "filter",
+                    type: "icon",
+                    // autowidth: true,
+                    badge: 0,
+                    click: function () {
+                        _logic.toolbarFilter(this.$view);
+                    }
+                },
+                {
+                    view: view,
+                    id: ids.buttonSort,
+                    label: labels.component.sortFields,
+                    icon: "sort",
+                    type: "icon",
+                    // autowidth: true,
+                    badge: 0,
+                    click: function () {
+                        _logic.toolbarSort(this.$view);
+                    }
+                },
+                {
+                    view: view,
+                    id: ids.buttonFrozen,
+                    label: labels.component.frozenColumns,
+                    icon: "thumb-tack",
+                    type: "icon",
+                    // autowidth: true,
+                    badge: 0,
+                    click: function(){
+                        _logic.toolbarFrozen(this.$view);
+                    }
+                },
+                {
+                    view: view,
+                    id: ids.buttonLabel,
+                    label: labels.component.defineLabel,
+                    icon: "crosshairs",
+                    type: "icon",
+                    // autowidth: true,
+                    click: function () {
+                        _logic.toolbarDefineLabel(this.$view);
+                    }
+                },
+                // {
+                //  view: view,
+                //  label: labels.component.permission,
+                //  icon: "lock",
+                //  type: "icon",
+                //  // autowidth: true,
+                //  click: function() {
+                //      _logic.toolbarPermission(this.$view);
+                //  }
+                // 
+                // },
+                {
+                    view: view,
+                    id: ids.buttonExport,
+                    label: labels.component.export,
+                    icon: "download",
+                    type: "icon",
+                    // autowidth: true,
+                    click: function() {
+                        _logic.toolbarButtonExport(this.$view);
+                    }
+                }
+            ]
+        }
+
+
 
     	// Our webix UI definition:
     	this.ui = {
@@ -159,134 +349,23 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     			{
     				id: ids.selectedObject,
     				rows: [
-    					{
-    						view: 'toolbar',
-    						id: ids.toolbar,
-    						hidden: true,
-    						css: "ab-data-toolbar",
-    						cols: [
-                                {
-    								view: view,
-    								id: ids.buttonAddField,
-    								label: labels.component.addFields,
-    								icon: "plus",
-    								type: "icon",
-									disabled: !settings.isFieldAddable,
-									// autowidth: true,
-    								click:function() {
-    									_logic.toolbarAddFields(this.$view);
-    								}
-								},
-                                {
-    								view: view,
-    								id: ids.buttonMassUpdate,
-    								label: labels.component.massUpdate,
-    								icon: "pencil-square-o",
-    								type: "icon",
-    								// autowidth: true,
-    								badge: 0,
-                                    disabled:true,
-    								click: function () {
-    									_logic.toolbarMassUpdate(this.$view);
-    								}
-    							},
-                                {
-    								view: view,
-    								id: ids.buttonDeleteSelected,
-    								label: labels.component.deleteSelected,
-    								icon: "trash",
-    								type: "icon",
-    								// autowidth: true,
-    								badge: 0,
-                                    disabled:true,
-    								click: function () {
-    									_logic.toolbarDeleteSelected(this.$view);
-    								}
-    							},
-    							{
-    								view: view,
-    								id: ids.buttonFieldsVisible,
-    								label: labels.component.hideFields,
-    								icon: "eye-slash",
-    								type: "icon",
-    								// autowidth: true,
-    								badge: 0,
-    								click: function () {
-    									_logic.toolbarFieldsVisible(this.$view);
-    								}
-    							},
-    							{
-    								view: view,
-    								id: ids.buttonFilter,
-    								label: labels.component.filterFields,
-    								icon: "filter",
-    								type: "icon",
-    								// autowidth: true,
-    								badge: 0,
-    								click: function () {
-    									_logic.toolbarFilter(this.$view);
-    								}
-    							},
-    							{
-    								view: view,
-    								id: ids.buttonSort,
-    								label: labels.component.sortFields,
-    								icon: "sort",
-    								type: "icon",
-    								// autowidth: true,
-    								badge: 0,
-    								click: function () {
-    									_logic.toolbarSort(this.$view);
-    								}
-    							},
-    							{
-    								view: view,
-    								id: ids.buttonFrozen,
-    								label: labels.component.frozenColumns,
-    								icon: "thumb-tack",
-    								type: "icon",
-    								// autowidth: true,
-    								badge: 0,
-    								click: function(){
-    									_logic.toolbarFrozen(this.$view);
-    								}
-    							},
-    							{
-    								view: view,
-    								id: ids.buttonLabel,
-    								label: labels.component.defineLabel,
-    								icon: "crosshairs",
-    								type: "icon",
-    								// autowidth: true,
-    								click: function () {
-    									_logic.toolbarDefineLabel(this.$view);
-    								}
-    							},
-    							// {
-    							// 	view: view,
-    							// 	label: labels.component.permission,
-    							// 	icon: "lock",
-    							// 	type: "icon",
-    							// 	// autowidth: true,
-    							// 	click: function() {
-    							// 		_logic.toolbarPermission(this.$view);
-    							// 	}
-                                // 
-    							// },
-    							{
-    								view: view,
-    								id: ids.buttonExport,
-    								label: labels.component.export,
-    								icon: "download",
-    								type: "icon",
-    								// autowidth: true,
-    								click: function() {
-    									_logic.toolbarButtonExport(this.$view);
-    								}
-    							}
-    						]
-    					},
-						DataTable.ui,
+
+                        {
+                            type: "clean",
+                            cols: [
+                                menu,
+                                { width: 1 }, // separator
+                                toolbar
+                            ]
+                        },
+						// DataTable.ui,
+                        {
+                            view:"multiview",
+                            rows:[
+                                DataTable.ui,
+                                KanBan.ui
+                            ]
+                        },
 						(settings.isInsertable ? 
     					{
     						cols: [
@@ -324,6 +403,10 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                 onCheckboxChecked:_logic.callbackCheckboxChecked
             });
 
+
+            KanBan.init();
+
+
     		PopupDefineLabelComponent.init({
     			onChange:_logic.callbackDefineLabel		// be notified when there is a change in the label
     		});
@@ -359,6 +442,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 
 			PopupExportObjectComponent.init({});
 
+            PopupAddviewComponent.init({});
 
     		$$(ids.noSelection).show();
     	}
@@ -831,6 +915,25 @@ console.error('TODO: toolbarPermission()');
 				$$(ids.selectedObject).show();
 
 				CurrentObject = object;
+
+                // get current view from object
+                var currentView = CurrentObject.getCurrentView()
+
+
+                // get defined views 
+                // update the view picker in the toolbar
+
+
+                // display the proper ViewComponent
+                var currDisplay = hashViews[currentView.type];
+                currDisplay.show();
+                // viewPicker needs to show this is the current view.
+
+
+                // get toolbar config
+                // update toolbar with approved tools
+
+/// still working with DataTable
 
 				// the replicated tables are read only
 				if (CurrentObject.isReadOnly) {
