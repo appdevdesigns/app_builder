@@ -59,15 +59,7 @@ module.exports =  class ABObjectBase {
 
 
 
-		// import our Workspace View Objects
-		attributes.objectWorkspaceViews = attributes.objectWorkspaceViews || [];
-
-		if (attributes.objectWorkspaceViews.length == 0) {
-			var newView = this.objectWorkspace;
-			newView.type = ABObjectWorkspaceViewGrid.type();
-			attributes.objectWorkspaceViews.push(newView);
-//// TODO make sure we have a default Grid View if none present
-		}
+		
 
 		this.objectWorkspaceViews = attributes.objectWorkspaceViews;
 		this.currentViewID = attributes.currentViewID;

@@ -41,10 +41,20 @@ export default class ABObject extends ABObjectBase {
 }
 */
 
+		// import our Workspace View Objects
+		attributes.objectWorkspaceViews = attributes.objectWorkspaceViews || [];
+
+		if (attributes.objectWorkspaceViews.length == 0) {
+			var newView = this.objectWorkspace;
+			newView.type = ABObjectWorkspaceViewGrid.type();
+			attributes.objectWorkspaceViews.push(newView);
+		//// TODO make sure we have a default Grid View if none present
+		}
+
     	// multilingual fields: label, description
 		OP.Multilingual.translate(this, this, ['label']);
 
-		this.importViews(this.objectWorkspaceViews);
+		this.importViews(attributes.objectWorkspaceViews);
 		if (!this.currentViewID) {
 			this.currentViewID = this.views()[0].id;
 		}
