@@ -7,6 +7,12 @@ import ABObjectBase from "./ABObjectBase"
 // import ABFieldManager from "./ABFieldManager"
 import ABModel from "./ABModel"
 
+import ABObjectWorkspaceViewGrid from "./ABObjectWorkspaceViewGrid"
+import ABObjectWorkspaceViewKanban from "./ABObjectWorkspaceViewKanban"
+
+var hashViews = {}
+hashViews[ABObjectWorkspaceViewGrid.type()] = ABObjectWorkspaceViewGrid;
+hashViews[ABObjectWorkspaceViewKanban.type()] = ABObjectWorkspaceViewKanban;
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -36,7 +42,13 @@ export default class ABObject extends ABObjectBase {
 */
 
     	// multilingual fields: label, description
-    	OP.Multilingual.translate(this, this, ['label']);
+		OP.Multilingual.translate(this, this, ['label']);
+
+		this.importViews(this.objectWorkspaceViews);
+		if (!this.currentViewID) {
+			this.currentViewID = this.views()[0].id;
+		}
+
 
   	}
 
@@ -239,7 +251,14 @@ export default class ABObject extends ABObjectBase {
 
 		OP.Multilingual.unTranslate(this, this, ["label"]);
 
-		return super.toObj();
+		var currViews = this.exportViews();
+
+		var result = super.toObj();
+
+		result.objectWorkspaceViews = currViews;
+
+		return result;
+
 	}
 
 
@@ -457,6 +476,35 @@ export default class ABObject extends ABObjectBase {
 
 		return this._model;
 	}
+
+	views(fn) {
+		fn = fn || function(){ return true };
+		return this._views.filter(fn);
+	}
+
+	importViews(viewSettings) {
+
+		this._views = [];
+		viewSettings.forEach((view)=>{
+			this._views.push( new hashViews[view.type](view, this) );
+		});
+
+	}
+
+	exportViews() {
+		var views = [];
+		this._views.forEach((view)=>{
+			views.push( view.toObj() );
+		})
+
+		return views;
+	}
+
+	getCurrentView() {
+		return this.views((v)=>{ return v.id == this.currentViewID; })[0];
+	}
+
+
 
 
 }
