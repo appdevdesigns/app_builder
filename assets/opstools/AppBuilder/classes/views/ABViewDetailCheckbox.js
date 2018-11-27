@@ -7,7 +7,7 @@
 
 import ABViewDetailComponent from "./ABViewDetailComponent"
 import ABPropertyComponent from "../ABPropertyComponent"
-import { resolve } from "app_builder/node_modules/url";
+// import { resolve } from "app_builder/node_modules/url";
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
