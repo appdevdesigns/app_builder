@@ -122,7 +122,7 @@ export default class AB_Work_Object_Workspace_PopupAddView extends OP.Component 
 			body: formUI,
 			on: {
 				onShow: function () {
-					_logic.onShow();
+					// _logic.onShow();
 				}
 			}
 		};

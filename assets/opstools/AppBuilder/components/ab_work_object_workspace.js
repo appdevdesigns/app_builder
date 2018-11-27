@@ -184,9 +184,17 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     {
                         value: "New View",
                         icon: "plus",
-                    }
-                ]
+                        id: "newView", 
+                    },
+                ],
             }],
+            on: {
+                "onMenuItemClick": function(id) {
+                    if (id === "newView") {
+                        PopupAddviewComponent.show();
+                    }
+                }
+            },
             type: {
                 subsign: true
             }
