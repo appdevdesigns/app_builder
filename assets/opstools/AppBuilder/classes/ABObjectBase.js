@@ -4,7 +4,12 @@
 
 // import ABModel from "./ABModel"
 
+import ABObjectWorkspaceViewGrid from "./ABObjectWorkspaceViewGrid"
+import ABObjectWorkspaceViewKanban from "./ABObjectWorkspaceViewKanban"
 
+var hashViews = {}
+hashViews[ABObjectWorkspaceViewGrid.type()] = ABObjectWorkspaceViewGrid;
+hashViews[ABObjectWorkspaceViewKanban.type()] = ABObjectWorkspaceViewKanban;
 
 module.exports =  class ABObjectBase {
 
@@ -48,6 +53,7 @@ module.exports =  class ABObjectBase {
 		this.importFromObject = attributes.importFromObject || "";
 		this.translations = attributes.translations;
 
+/// Old Method
 		if (typeof(attributes.objectWorkspace) != "undefined") {
 			if (typeof(attributes.objectWorkspace.sortFields) == "undefined") attributes.objectWorkspace.sortFields = [];
 			if (typeof(attributes.objectWorkspace.filterConditions) == "undefined") attributes.objectWorkspace.filterConditions = [];
@@ -62,6 +68,26 @@ module.exports =  class ABObjectBase {
 			hiddenFields:[], // array of [ids] to add hidden:true to
 		};
 
+
+
+
+
+		// import our Workspace View Objects
+		attributes.objectWorkspaceViews = attributes.objectWorkspaceViews || [];
+
+		if (attributes.objectWorkspaceViews.length == 0) {
+			var newView = this.objectWorkspace;
+			newView.type = ABObjectWorkspaceViewGrid.type();
+			attributes.objectWorkspaceViews.push(newView);
+//// TODO make sure we have a default Grid View if none present
+		}
+
+		this.importViews(attributes.objectWorkspaceViews);
+
+		this.currentViewID = attributes.currentViewID;
+		if (!this.currentViewID) {
+			this.currentViewID = this.views()[0].id;
+		}
 
 	  	// import all our ABField 
 	  	this.importFields(attributes.fields || []);
@@ -89,6 +115,32 @@ module.exports =  class ABObjectBase {
 	/// Instance Methods
 	///
 
+	views(fn) {
+		fn = fn || function(){ return true };
+		return this._views.filter(fn);
+	}
+
+	importViews(viewSettings) {
+
+		this._views = [];
+		viewSettings.forEach((view)=>{
+			this._views.push( new hashViews[view.type](view, this) );
+		});
+
+	}
+
+	exportViews() {
+		var views = [];
+		this._views.forEach((view)=>{
+			views.push( view.toObj() );
+		})
+
+		return views;
+	}
+
+	getCurrentView() {
+		return this.views((v)=>{ return v.id == this.currentViewID; })[0];
+	}
 
 	/**
 	 * @method importFields
@@ -138,6 +190,8 @@ module.exports =  class ABObjectBase {
 		// // for each Field: compile to json
 		var currFields = this.exportFields();
 
+		var currViews = this.exportViews();
+
 		return {
 			id: 			this.id,
 			connName:		this.connName,
@@ -150,7 +204,9 @@ module.exports =  class ABObjectBase {
 			transColumnName:this.transColumnName, // NOTE: store column name of translations table
 			urlPath: 		this.urlPath,
 			importFromObject: this.importFromObject,
-			objectWorkspace: this.objectWorkspace,
+objectWorkspace: this.objectWorkspace,
+			objectWorkspaceViews : currViews,
+			currentViewID:  this.currentViewID,
 			translations: 	this.translations,
 			fields: 	 	currFields
 		}
