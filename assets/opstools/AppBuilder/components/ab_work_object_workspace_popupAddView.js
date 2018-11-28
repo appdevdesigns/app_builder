@@ -29,13 +29,14 @@ export default class AB_Work_Object_Workspace_PopupAddView extends OP.Component 
 		// internal list of Webix IDs to reference our UI components
 		var ids = {
 			component: this.unique(idBase + '_popupAddView'),
+			form: this.unique(idBase + '_popupAddViewForm')
 		}
 
 
 		// Our webix UI definition:
 		var formUI = {
 		    view: "form",
-		    id: "myform",
+		    id: ids.form,
 		    visibleBatch: "global",
 		    elements: [
 		        {
@@ -58,9 +59,11 @@ export default class AB_Work_Object_Workspace_PopupAddView extends OP.Component 
 		            on: {
 		            	'onChange': function(id) {
 		                    if (id == 2) {
-		                  		$$("myform").showBatch("kanban");
+		                  		$$(ids.form).showBatch("kanban");
+								$$(ids.component).resize();
 		                    } else {
-		                  		$$("myform").showBatch("global");
+		                  		$$(ids.form).showBatch("global");
+								$$(ids.component).resize();
 		                    }
 		              	}
 		            }
@@ -113,16 +116,17 @@ export default class AB_Work_Object_Workspace_PopupAddView extends OP.Component 
 		};
 
 		this.ui = {
-			view:"popup",
+			view:"window",
 			id: ids.component,
 			height: 400,
 		    width: 350,
 		    head: "View Settings",
 		    position: "center",
 			body: formUI,
+			modal: true,
 			on: {
 				onShow: function () {
-					_logic.onShow();
+					// _logic.onShow();
 				}
 			}
 		};
