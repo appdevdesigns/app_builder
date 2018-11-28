@@ -192,19 +192,15 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                 "onMenuItemClick": function(id) {
                     if (id === "newView") {
                         PopupAddviewComponent.show();
+                    } else {
+                        var item = this.getMenuItem(id);
+                        _logic.switchWorkspace(item.hash);
                     }
                 }
             },
             type: {
                 subsign: true
             },
-            on: {
-                onMenuItemClick: function(id, e, node){
-                    var item = this.getMenuItem(id);
-
-                    _logic.switchWorkspace(item.hash);
-                }
-            }
         };
 
 
