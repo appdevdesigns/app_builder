@@ -26,7 +26,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
             common: App.labels,
             component: {
 
-                confirmDeleteRowTitle : L('ab.object.deleteRow.title', "*Delete data"),
+                // confirmDeleteRowTitle : L('ab.object.deleteRow.title', "*Delete data"),
 
             }
         };

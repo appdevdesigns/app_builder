@@ -55,12 +55,6 @@ module.exports =  class ABObjectBase {
 			hiddenFields:[], // array of [ids] to add hidden:true to
 		};
 
-
-
-
-
-		
-
 		this.objectWorkspaceViews = attributes.objectWorkspaceViews;
 		this.currentViewID = attributes.currentViewID;
 

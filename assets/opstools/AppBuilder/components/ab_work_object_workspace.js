@@ -155,6 +155,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
             data: [{
                 value: "View: <b>Default Grid</b>",
                 submenu: [{
+                        hash: 'grid',
                         value: "Default Grid",
                         submenu: [{
                                 value: "Edit",
@@ -167,6 +168,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                         ]
                     },
                     {
+                        hash: 'kanban',
                         value: "Kanban View",
                         submenu: [{
                                 value: "Edit",
@@ -189,6 +191,13 @@ export default class ABWorkObjectWorkspace extends OP.Component {
             }],
             type: {
                 subsign: true
+            },
+            on: {
+                onMenuItemClick: function(id, e, node){
+                    var item = this.getMenuItem(id);
+
+                    _logic.switchWorkspace(item.hash);
+                }
             }
         };
 
@@ -360,10 +369,10 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                         },
 						// DataTable.ui,
                         {
-                            view:"multiview",
-                            rows:[
+                            view: "multiview",
+                            cells:[
+                                KanBan.ui,
                                 DataTable.ui,
-                                KanBan.ui
                             ]
                         },
 						(settings.isInsertable ? 
@@ -1004,7 +1013,15 @@ console.error('TODO: toolbarPermission()');
 			 */
 			loadAll: function() {
 				DataTable.loadAll();
-			}
+            },
+            
+            switchWorkspace: function(hash) {
+
+                // 
+                if (hashViews[hash])
+                    hashViews[hash].show();
+
+            }
 
 
 		}
