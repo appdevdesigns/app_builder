@@ -19,10 +19,6 @@ import ABPopupSortField from "./ab_work_object_workspace_popupSortFields"
 import ABPopupExport from "./ab_work_object_workspace_popupExport"
 import ABPopupAddView from "./ab_work_object_workspace_popupAddView"
 
-
-var hashViews = {}; // a hash of the available workspace view components
-
-
 export default class ABWorkObjectWorkspace extends OP.Component {
 
     /**
@@ -115,6 +111,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 
     	}
 
+
+        var hashViews = {}; // a hash of the available workspace view components
 
         // The DataTable that displays our object:
         var DataTable = new ABWorkspaceDatatable(App, idBase, settings);
