@@ -73,7 +73,7 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 							label: labels.component.backToApplication,
 							width: 200,
 							type: "icon",
-							icon: "arrow-left",
+							icon: "fa fa-arrow-left",
 							align: "left",
 
 							click: function () {

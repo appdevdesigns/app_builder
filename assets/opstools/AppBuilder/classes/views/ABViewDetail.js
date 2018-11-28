@@ -197,7 +197,7 @@ export default class ABViewDetail extends ABViewContainer {
 				template: _logic.listTemplate,
 				type: {
 					markCheckbox: function (item) {
-						return "<span class='check webix_icon fa-" + (item.selected ? "check-" : "") + "square-o'></span>";
+						return "<span class='check webix_icon fa fa-" + (item.selected ? "check-" : "") + "square-o'></span>";
 					}
 				},
 				onClick: {
