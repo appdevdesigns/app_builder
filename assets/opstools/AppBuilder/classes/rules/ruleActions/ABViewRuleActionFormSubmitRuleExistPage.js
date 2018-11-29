@@ -109,9 +109,9 @@ export default class ABViewRuleActionFormSubmitRuleExistPage extends ABViewRuleA
 				var addPage = (pageOrTab, indent, type, pageId) => {
 					indent = indent || '';
 
-					let icon = 'file-o';
+					let icon = 'fa fa-file-o';
 					if (type == 'tab')
-						icon = 'window-maximize';
+						icon = 'fa fa-window-maximize';
 
 					_pageOptions.push({
 						id: pageOrTab.id,

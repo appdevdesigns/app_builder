@@ -157,11 +157,11 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                         value: "Default Grid",
                         submenu: [{
                                 value: "Edit",
-                                icon: "cog"
+                                icon: "fa fa-cog"
                             },
                             {
                                 value: "Delete",
-                                icon: "trash"
+                                icon: "fa fa-trash"
                             }
                         ]
                     },
@@ -170,11 +170,11 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                         value: "Kanban View",
                         submenu: [{
                                 value: "Edit",
-                                icon: "cog"
+                                icon: "fa fa-cog"
                             },
                             {
                                 value: "Delete",
-                                icon: "trash"
+                                icon: "fa fa-trash"
                             }
                         ]
                     },
@@ -183,7 +183,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     },
                     {
                         value: "New View",
-                        icon: "plus",
+                        icon: "fa fa-plus",
                         id: "newView", 
                     },
                 ],
@@ -214,7 +214,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     view: view,
                     id: ids.buttonAddField,
                     label: labels.component.addFields,
-                    icon: "plus",
+                    icon: "fa fa-plus",
                     type: "icon",
                     disabled: !settings.isFieldAddable,
                     // autowidth: true,
@@ -226,7 +226,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     view: view,
                     id: ids.buttonMassUpdate,
                     label: labels.component.massUpdate,
-                    icon: "pencil-square-o",
+                    icon: "fa fa-pencil-square-o",
                     type: "icon",
                     // autowidth: true,
                     badge: 0,
@@ -239,7 +239,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     view: view,
                     id: ids.buttonDeleteSelected,
                     label: labels.component.deleteSelected,
-                    icon: "trash",
+                    icon: "fa fa-trash",
                     type: "icon",
                     // autowidth: true,
                     badge: 0,
@@ -252,7 +252,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     view: view,
                     id: ids.buttonFieldsVisible,
                     label: labels.component.hideFields,
-                    icon: "eye-slash",
+                    icon: "fa fa-eye-slash",
                     type: "icon",
                     // autowidth: true,
                     badge: 0,
@@ -264,7 +264,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     view: view,
                     id: ids.buttonFilter,
                     label: labels.component.filterFields,
-                    icon: "filter",
+                    icon: "fa fa-filter",
                     type: "icon",
                     // autowidth: true,
                     badge: 0,
@@ -276,7 +276,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     view: view,
                     id: ids.buttonSort,
                     label: labels.component.sortFields,
-                    icon: "sort",
+                    icon: "fa fa-sort",
                     type: "icon",
                     // autowidth: true,
                     badge: 0,
@@ -288,7 +288,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     view: view,
                     id: ids.buttonFrozen,
                     label: labels.component.frozenColumns,
-                    icon: "thumb-tack",
+                    icon: "fa fa-thumb-tack",
                     type: "icon",
                     // autowidth: true,
                     badge: 0,
@@ -300,7 +300,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     view: view,
                     id: ids.buttonLabel,
                     label: labels.component.defineLabel,
-                    icon: "crosshairs",
+                    icon: "fa fa-crosshairs",
                     type: "icon",
                     // autowidth: true,
                     click: function () {
@@ -322,7 +322,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     view: view,
                     id: ids.buttonExport,
                     label: labels.component.export,
-                    icon: "download",
+                    icon: "fa fa-download",
                     type: "icon",
                     // autowidth: true,
                     click: function() {

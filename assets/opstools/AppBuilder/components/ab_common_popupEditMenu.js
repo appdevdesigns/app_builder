@@ -48,8 +48,8 @@ export default class ABCommonPopupEditMenu extends OP.Component {
 				id: ids.list,
 				borderless: true,
 				data: [
-					{ label: labels.common.rename, icon: "fa-pencil-square-o" },
-					{ label: labels.common.delete, icon: "fa-trash" }
+					{ label: labels.common.rename, icon: "fa fa-pencil-square-o" },
+					{ label: labels.common.delete, icon: "fa fa-trash" }
 				],
 				datatype: "json",
 				template: "<i class='fa #icon#' aria-hidden='true'></i> #label#",
@@ -67,8 +67,8 @@ export default class ABCommonPopupEditMenu extends OP.Component {
 
 		var Popup = null;
 		var _menuOptions = [
-			{ label: labels.common.rename, icon: "fa-pencil-square-o", command:'rename' },
-			{ label: labels.common.delete, icon: "fa-trash", command:'delete' }
+			{ label: labels.common.rename, icon: "fa fa-pencil-square-o", command:'rename' },
+			{ label: labels.common.delete, icon: "fa fa-trash", command:'delete' }
 		];
 
 		this.init =  (options) => {
