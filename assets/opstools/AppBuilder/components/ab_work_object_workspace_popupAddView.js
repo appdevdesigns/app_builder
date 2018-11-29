@@ -6,30 +6,45 @@
  *
  */
 
+ import ABFieldList from '../classes/dataFields/ABFieldList';
+ import ABFieldUser from '../classes/dataFields/ABFieldUser';
 
 export default class AB_Work_Object_Workspace_PopupAddView extends OP.Component {   //.extend(idBase, function(App) {
 
 	constructor(App, idBase) {
-
 		idBase = idBase || 'ab_work_object_workspace_popupAddView';
 
         super(App, idBase);
 		var L = this.Label;
 
+		var _object;
+
 		var labels = {
 			common : App.labels,
 			component: {
-
-				addNewSort: 	L('ab.sort_fields.addNewSort', 	"*Add new sort"),
-
+				name: L('ab.add_view.name', '*Name'),
+				type: L('ab.add_view.type', '*Type'),
+				vGroup: L('ab.add_view.vGroup', '*Vertical Grouping'),
+				hGroup: L('ab.add_view.hGroup', '*Horizontal Grouping'),
+				owner: L('ab.add_view.owner', '*Card Owner'),
+				namePlaceholder: L('ab.add_view.name_placeholder', '* Create a name for the view'),
+				groupingPlaceholder: L('ab.add_view.grouping_placeholder', '*Select a field'),
+				ownerPlaceholder: L('ab.add_view.owner_placeholder', '*Select user field'),
 			}
 		}
 
 
 		// internal list of Webix IDs to reference our UI components
 		var ids = {
-			component: this.unique(idBase + '_popupAddView'),
-			form: this.unique(idBase + '_popupAddViewForm')
+			component: this.unique('_popupAddView'),
+			form: this.unique('_popupAddViewForm'),
+			nameInput: this.unique('_popupAddViewName'),
+			typeInput: this.unique('_popupAddViewType'),
+			vGroupInput: this.unique('_popupAddViewVGroup'),
+			hGroupInput: this.unique('_popupAddViewHGroup'),
+			ownerInput: this.unique('_popupAddViewOwner'),
+			cancelButton: this.unique('_popupAddViewCancelButton'),
+			saveButton: this.unique('_popupAddViewSaveButton'),
 		}
 
 
@@ -37,19 +52,26 @@ export default class AB_Work_Object_Workspace_PopupAddView extends OP.Component 
 		var formUI = {
 		    view: "form",
 		    id: ids.form,
-		    visibleBatch: "global",
+			visibleBatch: "global",
+			rules:{
+				"name":webix.rules.isNotEmpty
+			},
 		    elements: [
 		        {
 		            view: "text",
-		            label: "Name",
-		            name: "name",
-		            placeholder: "Create a name for the view",
-		            required: true
+					label: labels.component.name,
+					id: ids.nameInput,
+					name: "name",
+					labelWidth: App.config.labelWidthXXLarge,
+		            placeholder: labels.component.namePlaceholder,
+					required: true
 		        },
 		        {
 		            view: "richselect",
-		            label: "Type",
+					label: labels.component.type,
+					id: ids.typeInput,
 		            name: "type",
+					labelWidth: App.config.labelWidthXXLarge,
 		            options:[
 				        {"id":1, "value":"Grid"},
 		    		    {"id":2, "value":"Kanban"},
@@ -70,45 +92,57 @@ export default class AB_Work_Object_Workspace_PopupAddView extends OP.Component 
 		        },
 		        {
 		            view: "richselect",
-		            label: "Columns",
-		            placeholder: "Select a field",
-		            name: "columns",
+					label: labels.component.vGroup,
+					id: ids.vGroupInput,
+		            placeholder: labels.component.groupingPlaceholder,
+					labelWidth: App.config.labelWidthXXLarge,
+		            name: "vGroup",
 		            required: true,
-		          	options:[
-				        {"id":1, "value":"Field #1"},
-		    		    {"id":2, "value":"Field #2"},
-		 			],
+		          	options:[],
 		            batch: "kanban"
 		        },
 		        {
 		            view: "richselect",
-		            label: "Users",
-		            placeholder: "Select user field",
-		            name: "users",
-		         	options:[
-				        {"id":1, "value":"Field #1"},
-		    		    {"id":2, "value":"Field #2"},
-		 			],
+					label: labels.component.hGroup,
+					id: ids.hGroupInput,
+		            placeholder: labels.component.groupingPlaceholder,
+					labelWidth: App.config.labelWidthXXLarge,
+		            name: "hGroup",
+		            required: false,
+		          	options:[],
 		            batch: "kanban"
 		        },
 		        {
-			        min: 0,
-			        max: 100,
-			        view: "slider",
-			        label: "Size",
-					name: "size",
+		            view: "richselect",
+		            label: labels.component.owner,
+					placeholder: labels.component.ownerPlaceholder,
+					id: ids.ownerInput,
+					labelWidth: App.config.labelWidthXXLarge,
+		            name: "owner",
+		         	options:[],
 		            batch: "kanban"
 		        },
 		        {
 		            margin: 5,
-		            cols: [{
+		            cols: [
+						{ fillspace: true },
+						{
 		                    view: "button",
-		                    value: "Cancel",
-		                    type: "danger"
+		                    value: labels.common.cancel,
+							css: "ab-cancel-button",
+							autowidth: true,
+							click: function () {
+								_logic.buttonCancel();
+							}
 		                },
 		                {
 		                    view: "button",
-		                    value: "Save"
+							value: labels.common.save,
+							autowidth: true,
+							type: "form",
+							click: function () {
+								_logic.buttonSave();
+							}
 		                }
 		            ]
 		        }
@@ -126,7 +160,7 @@ export default class AB_Work_Object_Workspace_PopupAddView extends OP.Component 
 			modal: true,
 			on: {
 				onShow: function () {
-					// _logic.onShow();
+					_logic.onShow();
 				}
 			}
 		};
@@ -140,9 +174,6 @@ export default class AB_Work_Object_Workspace_PopupAddView extends OP.Component 
 			webix.ui(this.ui);
 		}
 
-
-		var CurrentObject = null;
-		var CurrentView = null;
 
 		// our internal business logic
 		var _logic = this._logic = {
@@ -160,51 +191,33 @@ export default class AB_Work_Object_Workspace_PopupAddView extends OP.Component 
 				onChange:function(){}
 			},
 
-
 			
-
-
-			/**
-			 * @function objectLoad
-			 * Ready the Popup according to the current object
-			 * @param {ABObject} object  the currently selected object.
-			 * @param {ABObject} currView  the custom settings for a view if editing in interface builder
-             */
-            objectLoad: function(object, currView) {
-                CurrentObject = object;
-                if (currView != null) CurrentView = currView;
-			},
-
-
-			
-			/**
-			 * @function objectLoad
-			 * Ready the Popup according to the current object
-			 * @param {ABObject} object  the currently selected object.
-			 */
+            objectLoad: (object) => {
+				_object = object;
+            },
+	
 			onShow: function() {
-				var sort_popup = $$(ids.component),
-					sort_form = $$(ids.form);
-
 				// clear field options in the form
-				webix.ui(formUI, sort_form);
-				// var childViews = sort_form.getChildViews();
-				// childViews.forEach(function(i, idx, array){
-				// 	if (idx !== array.length - 1){ 
-				// 		sort_form.removeView(i);
-				// 	}
-				// });
+				$$(ids.form).clear();
+				$$(ids.typeInput).define('value', 1);
 
-				// var sorts = CurrentObject.workspaceSortFields;
-				// if (sorts && sorts.forEach) {
-				// 	sorts.forEach((s) => {
-				// 		_logic.clickAddNewSort(s.key, s.dir);
-				// 	});
-				// }
+				const initSelect = (id, filter = f => f.key === ABFieldList.defaults().key) => {
+					var options = _object.fields().filter(filter).map(({id, label}) => ({id, value: label}));
+					$$(id).define('options', options);
+					if (options.length === 1) {
+						$$(id).define('value', options[0].id);
+					}
+					$$(id).refresh();
+				};
 
-				// if (sorts == null || sorts.length == 0) {
-				// 	_logic.clickAddNewSort();
-				// }
+				const groupingFieldFilter = (field) => [
+					ABFieldList.defaults().key, 
+					ABFieldUser.defaults().key,
+				].includes(field.key);
+
+				initSelect(ids.vGroupInput, groupingFieldFilter);
+				initSelect(ids.hGroupInput, groupingFieldFilter);
+				initSelect(ids.ownerInput, f => f.key === ABFieldUser.defaults().key);
 			},
 
             /**
@@ -220,15 +233,28 @@ export default class AB_Work_Object_Workspace_PopupAddView extends OP.Component 
                 } else {
                     $$(ids.component).show($view);
                 }
-				if (fieldId) {
-					_logic.clickAddNewSort(fieldId);
-				}
 			},
 
+			/**
+             * @function hide()
+             *
+             * hide this component.
+             */
+            hide:function() {
+                $$(ids.component).hide();
+			},
+			
+			buttonCancel: function() {
+				this.hide();
+			},
 
+			buttonSave: function() {
+				if ($$(ids.form).validate()) {
+					// save the new view
+					this.hide();
+				}
+			},
 		}
-
-
 
 		// Expose any globally accessible Actions:
 		this.actions({
