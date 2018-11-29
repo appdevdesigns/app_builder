@@ -211,6 +211,12 @@ export default class ABWorkObjectKanBan extends OP.Component {
 				$$(ids.component).show();
 			},
 
+			objectLoad:function(object) {
+
+				CurrentObject = object;
+
+			}
+
 
 		}
 
@@ -222,6 +228,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 		this.hide = _logic.hide;
 		this.show = _logic.show;
+		this.objectLoad = _logic.objectLoad;
 
 	}
 
