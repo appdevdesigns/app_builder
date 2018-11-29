@@ -5,6 +5,7 @@
 import ABObjectWorkspaceView from './ABObjectWorkspaceView'
 
 var defaultValues = {
+		name: 'Default Grid',
 		sortFields:[], // array of columns with their sort configurations
 		filterConditions:[], // array of filters to apply to the data table
 		frozenColumnID:"", // id of column you want to stop freezing

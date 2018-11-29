@@ -17,7 +17,7 @@ import ABPopupMassUpdate from "./ab_work_object_workspace_popupMassUpdate"
 import ABPopupNewDataField from "./ab_work_object_workspace_popupNewDataField"
 import ABPopupSortField from "./ab_work_object_workspace_popupSortFields"
 import ABPopupExport from "./ab_work_object_workspace_popupExport"
-import ABPopupAddView from "./ab_work_object_workspace_popupAddView"
+import ABPopupViewSettings from "./ab_work_object_workspace_popupViewSettings"
 
 export default class ABWorkObjectWorkspace extends OP.Component {
 
@@ -101,7 +101,11 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		buttonRowNew: this.unique(idBase + '_buttonRowNew'),
     		buttonSort: this.unique(idBase + '_buttonSort'),
 
-    		datatable: this.unique(idBase + '_datatable'),
+            datatable: this.unique(idBase + '_datatable'),
+            
+            viewMenu: this.unique(idBase + '_viewMenu'),
+            viewMenuButton: this.unique(idBase + '_viewMenuButton'),
+            viewMenuNewView: this.unique(idBase + '_viewMenuNewView'),
 
     		// Toolbar:
     		toolbar: this.unique(idBase + '_toolbar'),
@@ -139,62 +143,47 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 
 		var PopupExportObjectComponent = new ABPopupExport(App, idBase);
         
-        var PopupAddviewComponent = new ABPopupAddView(App, idBase);
+        var PopupViewSettingsComponent = new ABPopupViewSettings(App, idBase);
 
 
 
         var view = "button";
 
-
+        var submenuFixedItems = [
+            {
+                $template: "Separator"
+            },
+            {
+                value: "New View",
+                icon: "fa fa-plus",
+                id: ids.viewMenuNewView, 
+            },
+        ];
+        
         var menu = {
             view: "menu",
             css: "blue",
             autowidth: true,
-            data: [{
-                value: "View: <b>Default Grid</b>",
-                submenu: [{
-                        hash: 'grid',
-                        value: "Default Grid",
-                        submenu: [{
-                                value: "Edit",
-                                icon: "fa fa-cog"
-                            },
-                            {
-                                value: "Delete",
-                                icon: "fa fa-trash"
-                            }
-                        ]
-                    },
-                    {
-                        hash: 'kanban',
-                        value: "Kanban View",
-                        submenu: [{
-                                value: "Edit",
-                                icon: "fa fa-cog"
-                            },
-                            {
-                                value: "Delete",
-                                icon: "fa fa-trash"
-                            }
-                        ]
-                    },
-                    {
-                        $template: "Separator"
-                    },
-                    {
-                        value: "New View",
-                        icon: "fa fa-plus",
-                        id: "newView", 
-                    },
-                ],
-            }],
+            id: ids.viewMenu,
+            data: [],
             on: {
                 "onMenuItemClick": function(id) {
-                    if (id === "newView") {
-                        PopupAddviewComponent.show();
-                    } else {
-                        var item = this.getMenuItem(id);
-                        _logic.switchWorkspace(item.hash);
+                    var item = this.getMenuItem(id);
+                    if (id === ids.viewMenuButton) {
+                        return;
+                    }
+                    if (id === ids.viewMenuNewView) {
+                        PopupViewSettingsComponent.show();
+                    } else if (item.isView) {
+                        var view = CurrentObject.views(v => v.id === id)[0];
+                        _logic.switchWorkspaceView(view);
+                    } else if (item.action === 'edit') {
+                        var view = CurrentObject.views(v => v.id === item.viewId)[0];
+                        PopupViewSettingsComponent.show(view);
+                    } else if (item.action === 'delete') {
+                        var view = CurrentObject.views(v => v.id === item.viewId)[0];
+                        CurrentObject.removeView(view);
+                        _logic.switchWorkspaceView(CurrentObject.getCurrentView());
                     }
                 }
             },
@@ -453,7 +442,10 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 
 			PopupExportObjectComponent.init({});
 
-            PopupAddviewComponent.init({});
+            PopupViewSettingsComponent.init({
+                onViewAdded: _logic.callbackViewAdded,
+                onViewUpdated: _logic.callbackViewUpdated,
+            });
 
     		$$(ids.noSelection).show();
     	}
@@ -682,7 +674,26 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                 _logic.getBadgeSortFields();
                 DataTable.refreshHeader();
                 DataTable.refresh();
+            },
+            
+            /**
+    		 * @function callbackViewAdded
+    		 *
+    		 * call back for when a new workspace view is added
+    		 */
+    		callbackViewAdded: function(view) {
+                _logic.switchWorkspaceView(view);
     		},
+            
+            
+            /**
+    		 * @function callbackViewUpdated
+    		 *
+    		 * call back for when a workspace view is updated
+    		 */
+    		callbackViewUpdated: function(view) {
+                _logic.refreshViewMenu();
+            },
             
             /**
              * @function enableUpdateDelete
@@ -969,7 +980,7 @@ console.error('TODO: toolbarPermission()');
 				PopupHideFieldComponent.objectLoad(CurrentObject);
 				PopupMassUpdateComponent.objectLoad(CurrentObject, DataTable);
 				PopupSortFieldComponent.objectLoad(CurrentObject);
-                PopupAddviewComponent.objectLoad(CurrentObject);
+                PopupViewSettingsComponent.objectLoad(CurrentObject);
                 PopupExportObjectComponent.objectLoad(CurrentObject);
 				PopupExportObjectComponent.setGridComponent($$(DataTable.ui.id));
 				PopupExportObjectComponent.setHiddenFields(CurrentObject.objectWorkspace.hiddenFields);
@@ -993,7 +1004,7 @@ console.error('TODO: toolbarPermission()');
 					$$(ids.buttonAddField).enable();
 				}
 
-
+                _logic.refreshViewMenu();
 			},
 
 
@@ -1018,15 +1029,45 @@ console.error('TODO: toolbarPermission()');
 				DataTable.loadAll();
             },
             
-            switchWorkspace: function(hash) {
+            switchWorkspaceView: function(view) {
+                if (hashViews[view.type]) {
+                    hashViews[view.type].show();
+                    CurrentObject.setCurrentView(view.id);
+                    _logic.refreshViewMenu();
+                }
+            },
 
-                // 
-                if (hashViews[hash])
-                    hashViews[hash].show();
-
-            }
-
-
+            refreshViewMenu: function() {
+                var currentViewId = CurrentObject.getCurrentView().id;
+                var submenu = CurrentObject.views().map(view => ({
+                    hash: view.type,
+                    value: view.name,
+                    id: view.id,
+                    isView: true,
+                    icon: view.id === currentViewId ? "fa fa-check" : undefined,
+                    submenu: [{
+                            value: "Edit",
+                            icon: "fa fa-cog",
+                            viewId: view.id,
+                            action: 'edit',
+                            disabled: view.isReadOnly,
+                        },
+                        {
+                            value: "Delete",
+                            icon: "fa fa-trash",
+                            viewId: view.id,
+                            action: 'delete',
+                            disabled: view.isReadOnly,
+                        }
+                    ]
+                })).concat(submenuFixedItems);
+                $$(ids.viewMenu).define('data', [{
+                    value: `View: ${CurrentObject.getCurrentView().name}`,
+                    id: ids.viewMenuButton,
+                    submenu,
+                }]);
+                $$(ids.viewMenu).refresh();
+            },
 		}
         this._logic = _logic;
 

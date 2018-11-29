@@ -45,10 +45,8 @@ export default class ABObject extends ABObjectBase {
 		attributes.objectWorkspaceViews = attributes.objectWorkspaceViews || [];
 
 		if (attributes.objectWorkspaceViews.length == 0) {
-			var newView = this.objectWorkspace;
-			newView.type = ABObjectWorkspaceViewGrid.type();
-			attributes.objectWorkspaceViews.push(newView);
-		//// TODO make sure we have a default Grid View if none present
+			var defaultGrid = new ABObjectWorkspaceViewGrid({isReadOnly: true}, this);
+			attributes.objectWorkspaceViews.push(defaultGrid);
 		}
 
     	// multilingual fields: label, description
@@ -496,7 +494,7 @@ export default class ABObject extends ABObjectBase {
 
 		this._views = [];
 		viewSettings.forEach((view)=>{
-			this._views.push( new hashViews[view.type](view, this) );
+			this.addView(view, false);
 		});
 
 	}
@@ -510,12 +508,38 @@ export default class ABObject extends ABObjectBase {
 		return views;
 	}
 
+	setCurrentView(viewID) {
+		this.currentViewID = viewID; 
+	}
+
 	getCurrentView() {
 		return this.views((v)=>{ return v.id == this.currentViewID; })[0];
 	}
 
+	addView(view, save=true) {
+		var newView = new hashViews[view.type](view, this);
+		this._views.push(newView);
+		if (save) {
+			this.save();
+		}
+		return newView;
+	}
 
+	removeView(view) {
+		var indexToRemove = this._views.indexOf(view);
+		this._views.splice(indexToRemove, 1);
+		if (view.id === this.currentViewID) {
+			this.currentViewID = this._views[0].id;
+		}
+		this.save();
+	}
 
+	updateView(id, view) {
+		var viewToUpdate = this._views.find(v => v.id === id);
+		viewToUpdate.fromObj(view);
+		this.save();
+		return viewToUpdate;
+	}
 
 }
 

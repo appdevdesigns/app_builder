@@ -5,8 +5,11 @@
 import ABObjectWorkspaceView from './ABObjectWorkspaceView'
 
 var defaultValues = {
+		name: 'Default Kanban',
 		filterConditions:[], // array of filters to apply to the data table
-		
+		verticalGroupingField: null,
+		horizontalGroupingField: null,
+		ownerField: null,
 	};
 
 export default class ABObjectWorkspaceViewKanban extends ABObjectWorkspaceView {
