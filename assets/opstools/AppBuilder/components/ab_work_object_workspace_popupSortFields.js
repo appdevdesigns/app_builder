@@ -146,7 +146,7 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 						},
 						{
 							view: "button", 
-							icon: "trash", 
+							icon: "fa fa-trash", 
 							type: "icon", 
 							width: 30,
 							on: {

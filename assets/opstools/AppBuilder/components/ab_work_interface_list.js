@@ -72,7 +72,7 @@ export default class AB_Work_Interface_List extends OP.Component {
 					},
 					type: {
 						height: "auto",
-						iconGear: "<span class='webix_icon fa-cog'></span>"
+						iconGear: "<span class='webix_icon fa fa-cog'></span>"
 					},
 					on: {
 						onAfterRender: function () {
@@ -535,7 +535,7 @@ console.error('!! todo: onBeforeEditStop() editing');
 		 */
 		var _templateListItem = [
 			"<div class='ab-page-list-item'>",
-				"{common.icon()} <span class='webix_icon fa-#typeIcon#'></span> #label# #iconGear#",
+				"{common.icon()} <span class='webix_icon fa fa-#typeIcon#'></span> #label# #iconGear#",
 			"</div>"
 		].join('');
 

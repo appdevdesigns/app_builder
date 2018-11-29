@@ -120,7 +120,7 @@ export default class ABViewGridFilterMenu {
 								cols: [
 									{
 										view: "button",
-										icon: "plus",
+										icon: "fa fa-plus",
 										type: "iconButton",
 										label: labels.component.addNewFilter,
 										width: 150,
