@@ -744,7 +744,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		 * we need to set the badge count for filters on load and after filters are added or removed
     		 */            
             getBadgeFilters: function() {
-				var filterConditions = CurrentObject.workspaceFilterConditions;
+				var filterConditions = CurrentObject.currentView().filterConditions;
 				var numberOfFilter = 0;
 
 				if (filterConditions &&
@@ -1008,23 +1008,7 @@ console.error('TODO: toolbarPermission()');
 				PopupExportObjectComponent.setHiddenFields(CurrentObject.objectWorkspace.hiddenFields);
 				PopupExportObjectComponent.setFilename(CurrentObject.label);
 
-				// We can hide fields now that data is loaded
-				_logic.callbackFieldsVisible();
-				
-				// get badge counts for server side components
-				_logic.getBadgeSortFields();
-				_logic.getBadgeFilters();
-
-				// $$(ids.component).setValue(ids.selectedObject);
-				$$(ids.selectedObject).show(true, false);
-
-				// disable add fields into the object
-				if (object.isExternal || object.isImported || !settings.isFieldAddable) {
-					$$(ids.buttonAddField).disable();
-				}
-				else {
-					$$(ids.buttonAddField).enable();
-				}
+                _logic.refreshToolBarView();
 
                 _logic.refreshViewMenu();
 			},
@@ -1056,7 +1040,37 @@ console.error('TODO: toolbarPermission()');
                     hashViews[view.type].show();
                     CurrentObject.workspaceViews.setCurrentView(view.id);
                     _logic.refreshViewMenu();
+
+                    // now update the rest of the toolbar for this view:
+                    _logic.refreshToolBarView();
                 }
+            },
+
+            /**
+             * @function refreshToolBarView
+             * update the display of the toolbar buttons based upon
+             * the current view being displayed.
+             */
+            refreshToolBarView: function() {
+
+				// We can hide fields now that data is loaded
+				_logic.callbackFieldsVisible();
+				
+				// get badge counts for server side components
+				_logic.getBadgeSortFields();
+				_logic.getBadgeFilters();
+
+				// $$(ids.component).setValue(ids.selectedObject);
+				$$(ids.selectedObject).show(true, false);
+
+				// disable add fields into the object
+				if (CurrentObject.isExternal || CurrentObject.isImported || !settings.isFieldAddable) {
+					$$(ids.buttonAddField).disable();
+				}
+				else {
+					$$(ids.buttonAddField).enable();
+                }
+                
             },
 
             refreshViewMenu: function() {
