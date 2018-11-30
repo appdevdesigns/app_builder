@@ -227,7 +227,8 @@ export default class ABViewGrid extends ABViewWidget  {
 
 				// remove id of the component in caching for refresh .bind of the data collection
 				let dc = this.dataCollection;
-				dc.removeComponent(DataTable.ui.id);
+				if (dc)
+					dc.removeComponent(DataTable.ui.id);
 
 				DataTable.init();
 			}

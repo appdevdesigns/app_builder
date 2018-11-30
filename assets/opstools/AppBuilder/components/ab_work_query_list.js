@@ -86,7 +86,7 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 				// 					{
 				// 						id: ids.searchText,
 				// 						view: "search",
-				// 						icon: "search",
+				// 						icon: "fa fa-search",
 				// 						label: labels.component.listSearch,
 				// 						labelWidth: 80,
 				// 						placeholder: labels.component.searchPlaceholder,
@@ -158,7 +158,7 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 					},
 					type: {
 						height: 35,
-						iconGear: "<div class='ab-object-list-edit'><span class='webix_icon fa-cog'></span></div>"
+						iconGear: "<div class='ab-object-list-edit'><span class='webix_icon fa fa-cog'></span></div>"
 					},
 					on: {
 						onAfterSelect: function (id) {

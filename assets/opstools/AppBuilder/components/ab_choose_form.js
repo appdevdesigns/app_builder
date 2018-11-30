@@ -83,7 +83,7 @@ export default class ABChoose extends OP.Component {  // .extend(idBase, functio
 								}
 							},
 							elements: [
-								//{ type: "section", template: '<span class="webix_icon fa-edit" style="max-width:32px;"></span>Information', margin: 0 },
+								//{ type: "section", template: '<span class="webix_icon fa fa-edit" style="max-width:32px;"></span>Information', margin: 0 },
 								{
 									name: "label",
 									view: "text",
@@ -147,7 +147,7 @@ export default class ABChoose extends OP.Component {  // .extend(idBase, functio
 									template: "{common.markCheckbox()} #name#",
 									type:{
 										markCheckbox:function(obj ){
-											return "<span class='check webix_icon fa-"+(obj.markCheckbox?"check-":"")+"square-o'></span>";
+											return "<span class='check webix_icon fa fa-"+(obj.markCheckbox?"check-":"")+"square-o'></span>";
 										}
 									},
 									on: {

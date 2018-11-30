@@ -7,8 +7,6 @@
 
 import ABView from "./ABView"
 import ABPropertyComponent from "../ABPropertyComponent"
-import { resolve } from "path";
-import { runInNewContext } from "vm";
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -171,7 +169,7 @@ export default class ABViewContainer extends ABView {
 
 					// specific viewId to .name, it will be used to save view position
 					name: child.id,
-					icon: 'arrows',
+					icon: 'fa fa-arrows',
 					css: 'ab-widget-container',
 					body: {
 						rows: [

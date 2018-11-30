@@ -94,9 +94,23 @@ export default class ABViewLabel extends ABViewWidget {
 
 		var idBase = 'ABViewListEditorComponent';
 
-		var ListViewComponent = this.component(App, idBase);
+		var ListView = this.component(App, idBase);
 
-		return ListViewComponent;
+		return {
+			ui: ListView.ui,
+			logic: ListView.logic,
+			onShow: ListView.onShow,
+
+			init: () => {
+
+				// remove id of the component in caching for refresh .bind of the data collection
+				let dc = this.dataCollection;
+				if (dc)
+					dc.removeComponent(ListView.ui.id);
+
+				ListView.init();
+			}
+		};
 	}
 
 
@@ -340,6 +354,12 @@ export default class ABViewLabel extends ABViewWidget {
 	}
 
 	copyUpdateProperyList() {
+
+		return ['datacollection'];
+
+	}
+
+
 
 		return ['datacollection'];
 

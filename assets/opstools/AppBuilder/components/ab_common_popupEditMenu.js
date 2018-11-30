@@ -70,9 +70,9 @@ export default class ABCommonPopupEditMenu extends OP.Component {
 
 		var Popup = null;
 		var _menuOptions = [
-			{ label: labels.common.rename, icon: "fa-pencil-square-o", command:'rename' },
-			{ label: labels.component.copy, icon: "fa-files-o", command:'copy' },
-			{ label: labels.common.delete, icon: "fa-trash", command:'delete' }
+			{ label: labels.common.rename, icon: "fa fa-pencil-square-o", command:'rename' },
+			{ label: labels.component.copy, icon: "fa fa-files-o", command:'copy' },
+			{ label: labels.common.delete, icon: "fa fa-trash", command:'delete' }
 		];
 
 		this.init =  (options) => {

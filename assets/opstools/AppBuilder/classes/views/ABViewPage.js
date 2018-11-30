@@ -294,7 +294,7 @@ export default class ABViewPage extends ABViewContainer {
             				template: "{common.markCheckbox()} #name#",
                             type:{
                                 markCheckbox:function(obj ){
-                                    return "<span class='check webix_icon fa-"+(obj.markCheckbox?"check-":"")+"square-o'></span>";
+                                    return "<span class='check webix_icon fa fa-"+(obj.markCheckbox?"check-":"")+"square-o'></span>";
                                 }
                             },
                             on: {

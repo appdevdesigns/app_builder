@@ -285,6 +285,24 @@ options.rejectUnauthorized = false;
                 })
 
             })
+            // 3) check for any old requests in our ABRelayRequestQueue and process them
+            .then(()=>{
+                
+                var now = new Date();
+                var seconds = (sails.config.appbuilder.mcc.pollFrequency || 5000) * 2;
+                var timeout = new Date(now.getTime() - seconds);
+                return ABRelayRequestQueue.find({createdAt:{ '<=': timeout }})
+                .then((listOfRequests)=>{
+                    if (listOfRequests && listOfRequests.length>0) {
+
+                        console.log("ABRelay.Poll():Found Old Requests : "+listOfRequests.length);
+                        listOfRequests.forEach((req)=>{
+                            ABRelay.request(req.request);
+                        })
+                    }
+                })
+
+            })
             .then(resolve)
             .catch((err)=>{
 
@@ -555,8 +573,17 @@ errorOptions = options;
                                 return;
                             }
 
-                            // if a different error, then pass this along our chain() and process in our .catch() below
-                            cb(err);
+                            // // if a different error, then pass this along our chain() and process in our .catch() below
+                            // cb(err);
+                            //// ACTUALLY no.  it there was an error that didn't follow our error format, then it was 
+                            // probably due to a problem with the request itself.  Just package an error and send it back:
+                            var data = {
+                                status:'error',
+                                data:err,
+                                message:errorString
+                            }
+                            ADCore.error.log('ABRelay:request(): response was an unexpected error: ', { request:options, error: data} )
+                            cb(null, data);
                         });
 
                     }
