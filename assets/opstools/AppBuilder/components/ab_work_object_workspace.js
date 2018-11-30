@@ -46,16 +46,16 @@ export default class ABWorkObjectWorkspace extends OP.Component {
         var labels = {
             common: App.labels,
             component: {
-                addNewRow: L('ab.object.addNewRow', "*Add new row"),
+                addNewRow: L('ab.object.addNewRow', "*New new row"),
                 selectObject: L('ab.object.selectObject', "*Select an object to work with."),
                 // formHeader: L('ab.application.form.header', "*Application Info"),
                 deleteSelected: L('ab.object.toolbar.deleteRecords', "*Delete"),
                 hideFields: L('ab.object.toolbar.hideFields', "*Hide fields"),
                 massUpdate: L('ab.object.toolbar.massUpdate', "*Edit"),
-                filterFields: L('ab.object.toolbar.filterFields', "*Add filters"),
-                sortFields: L('ab.object.toolbar.sortFields', "*Apply sort"),
-                frozenColumns: L('ab.object.toolbar.frozenColumns', "*Frozen fields"),
-                defineLabel: L('ab.object.toolbar.defineLabel', "*Define label"),
+                filterFields: L('ab.object.toolbar.filterFields', "*Filters"),
+                sortFields: L('ab.object.toolbar.sortFields', "*Sort"),
+                frozenColumns: L('ab.object.toolbar.frozenColumns', "*Freeze"),
+                defineLabel: L('ab.object.toolbar.defineLabel', "*Label"),
                 permission: L('ab.object.toolbar.permission', "*Permission"),
                 addFields: L('ab.object.toolbar.addFields', "*Add field"),
                 "export": L('ab.object.toolbar.export', "*Export"),
@@ -164,7 +164,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
             view: "menu",
             css: "darkgray",
             borderless: true,
-            minWidth: 200,
+            minWidth: 150,
             autowidth: true,
             id: ids.viewMenu,
             data: [],
@@ -212,7 +212,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     icon: "fa fa-plus",
                     type: "icon",
                     hidden: !settings.isFieldAddable,
-                    autowidth: true,
+                    minWidth: 115,
+                    // autowidth: true,
                     click:function() {
                         _logic.toolbarAddFields(this.$view);
                     }
@@ -223,7 +224,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     label: labels.component.hideFields,
                     icon: "fa fa-eye-slash",
                     type: "icon",
-                    autowidth: true,
+                    minWidth: 105,
+                    // autowidth: true,
                     badge: 0,
                     click: function () {
                         _logic.toolbarFieldsVisible(this.$view);
@@ -235,7 +237,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     label: labels.component.filterFields,
                     icon: "fa fa-filter",
                     type: "icon",
-                    autowidth: true,
+                    minWidth: 70,
+                    // autowidth: true,
                     badge: 0,
                     click: function () {
                         _logic.toolbarFilter(this.$view);
@@ -247,7 +250,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     label: labels.component.sortFields,
                     icon: "fa fa-sort",
                     type: "icon",
-                    autowidth: true,
+                    minWidth: 60,
+                    // autowidth: true,
                     badge: 0,
                     click: function () {
                         _logic.toolbarSort(this.$view);
@@ -259,7 +263,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     label: labels.component.frozenColumns,
                     icon: "fa fa-thumb-tack",
                     type: "icon",
-                    autowidth: true,
+                    minWidth: 75,
+                    // autowidth: true,
                     badge: 0,
                     click: function(){
                         _logic.toolbarFrozen(this.$view);
@@ -271,7 +276,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     label: labels.component.defineLabel,
                     icon: "fa fa-crosshairs",
                     type: "icon",
-                    autowidth: true,
+                    minWidth: 75,
+                    // autowidth: true,
                     click: function () {
                         _logic.toolbarDefineLabel(this.$view);
                     }
@@ -293,7 +299,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     label: labels.component.export,
                     icon: "fa fa-download",
                     type: "icon",
-                    autowidth: true,
+                    minWidth: 80,
+                    // autowidth: true,
                     click: function() {
                         _logic.toolbarButtonExport(this.$view);
                     }
@@ -304,7 +311,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     label: labels.component.massUpdate,
                     icon: "fa fa-pencil-square-o",
                     type: "icon",
-                    autowidth: true,
+                    minWidth: 65,
+                    // autowidth: true,
                     badge: 0,
                     hidden:true,
                     click: function () {
@@ -317,7 +325,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     label: labels.component.deleteSelected,
                     icon: "fa fa-trash",
                     type: "icon",
-                    autowidth: true,
+                    minWidth: 85,
+                    // autowidth: true,
                     badge: 0,
                     hidden:true,
                     click: function () {
@@ -357,7 +366,6 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     // css: "ab-data-toolbar",
                     // borderless: true,
     				rows: [
-
                         {
                             type: "clean",
                             css: "ab-data-toolbar",
@@ -736,7 +744,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		 * we need to set the badge count for filters on load and after filters are added or removed
     		 */            
             getBadgeFilters: function() {
-				var filterConditions = CurrentObject.workspaceFilterConditions;
+				var filterConditions = CurrentObject.currentView().filterConditions;
 				var numberOfFilter = 0;
 
 				if (filterConditions &&
@@ -1000,23 +1008,7 @@ console.error('TODO: toolbarPermission()');
 				PopupExportObjectComponent.setHiddenFields(CurrentObject.objectWorkspace.hiddenFields);
 				PopupExportObjectComponent.setFilename(CurrentObject.label);
 
-				// We can hide fields now that data is loaded
-				_logic.callbackFieldsVisible();
-				
-				// get badge counts for server side components
-				_logic.getBadgeSortFields();
-				_logic.getBadgeFilters();
-
-				// $$(ids.component).setValue(ids.selectedObject);
-				$$(ids.selectedObject).show(true, false);
-
-				// disable add fields into the object
-				if (object.isExternal || object.isImported || !settings.isFieldAddable) {
-					$$(ids.buttonAddField).disable();
-				}
-				else {
-					$$(ids.buttonAddField).enable();
-				}
+                _logic.refreshToolBarView();
 
                 _logic.refreshViewMenu();
 			},
@@ -1048,7 +1040,37 @@ console.error('TODO: toolbarPermission()');
                     CurrentObject.workspaceViews.setCurrentView(view.id);
                     hashViews[view.type].show();
                     _logic.refreshViewMenu();
+
+                    // now update the rest of the toolbar for this view:
+                    _logic.refreshToolBarView();
                 }
+            },
+
+            /**
+             * @function refreshToolBarView
+             * update the display of the toolbar buttons based upon
+             * the current view being displayed.
+             */
+            refreshToolBarView: function() {
+
+				// We can hide fields now that data is loaded
+				_logic.callbackFieldsVisible();
+				
+				// get badge counts for server side components
+				_logic.getBadgeSortFields();
+				_logic.getBadgeFilters();
+
+				// $$(ids.component).setValue(ids.selectedObject);
+				$$(ids.selectedObject).show(true, false);
+
+				// disable add fields into the object
+				if (CurrentObject.isExternal || CurrentObject.isImported || !settings.isFieldAddable) {
+					$$(ids.buttonAddField).disable();
+				}
+				else {
+					$$(ids.buttonAddField).enable();
+                }
+                
             },
 
             refreshViewMenu: function() {
@@ -1058,7 +1080,8 @@ console.error('TODO: toolbarPermission()');
                     value: view.name,
                     id: view.id,
                     isView: true,
-                    icon: view.id === currentViewId ? "fa fa-check" : undefined,
+                    $css: view.id === currentViewId ? "selected" : "",
+                    icon: view.type === "kanban" ? "fa fa-columns" : "fa fa-table",
                     submenu: view.isDefaultView ? null : [{
                             value: "Edit",
                             icon: "fa fa-cog",
@@ -1073,8 +1096,12 @@ console.error('TODO: toolbarPermission()');
                         }
                     ]
                 })).concat(submenuFixedItems);
+                var icon = "fa-table";
+                if (CurrentObject.workspaceViews.getCurrentView().type == "kanban") {
+                    icon = "fa-columns";
+                }
                 $$(ids.viewMenu).define('data', [{
-                    value: `View: <b>${CurrentObject.workspaceViews.getCurrentView().name}<b/>`,
+                    value: `View: <span class="fa ${icon}"></span> <b>${CurrentObject.workspaceViews.getCurrentView().name}<b/>`,
                     id: ids.viewMenuButton,
                     submenu,
                 }]);

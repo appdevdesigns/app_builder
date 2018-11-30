@@ -467,5 +467,9 @@ export default class ABObject extends ABObjectBase {
 
 		return this._model;
 	}
+
+	currentView() {
+		return this.workspaceViews.getCurrentView();
+	}
 }
 

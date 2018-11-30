@@ -153,9 +153,7 @@ export default class ABObjectWorkspaceViewCollection {
     updateView(viewToUpdate, view) {
         var newView;
         if (view.type === viewToUpdate.type) {
-            for (var key in view ) {
-                viewToUpdate[key] = view[key];
-            }
+            viewToUpdate.update(view);
             newView = viewToUpdate;
         } else {
             newView = new hashViews[view.type](view, this);
