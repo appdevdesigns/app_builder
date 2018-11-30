@@ -306,13 +306,16 @@ console.warn('!! ToDo: onAfterColumnHide()');
                 // It is a private function. It returns what record index are showing
                 let scrollState = DataTable.Ug(),
                     startRecIndex = scrollState[0],
-                    endRecIndex = scrollState[1];
+                    endRecIndex = scrollState[1],
+                    index = 0;
                 
-                DataTable.data.order.each(function (id, index) {
+                DataTable.data.order.each(function (id) {
 
                     if (id != null && 
                         startRecIndex <= index && index <= endRecIndex) 
                         displayRecords.push(id);
+
+                    index++
 
                 });
 
