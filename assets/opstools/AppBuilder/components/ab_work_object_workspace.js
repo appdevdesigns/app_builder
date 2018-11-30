@@ -164,7 +164,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
             view: "menu",
             css: "darkgray",
             borderless: true,
-            minWidth: 200,
+            minWidth: 150,
             autowidth: true,
             id: ids.viewMenu,
             data: [],
@@ -212,7 +212,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     icon: "fa fa-plus",
                     type: "icon",
                     hidden: !settings.isFieldAddable,
-                    autowidth: true,
+                    minWidth: 140,
+                    // autowidth: true,
                     click:function() {
                         _logic.toolbarAddFields(this.$view);
                     }
@@ -223,7 +224,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     label: labels.component.hideFields,
                     icon: "fa fa-eye-slash",
                     type: "icon",
-                    autowidth: true,
+                    minWidth: 100,
+                    // autowidth: true,
                     badge: 0,
                     click: function () {
                         _logic.toolbarFieldsVisible(this.$view);
@@ -235,7 +237,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     label: labels.component.filterFields,
                     icon: "fa fa-filter",
                     type: "icon",
-                    autowidth: true,
+                    minWidth: 100,
+                    // autowidth: true,
                     badge: 0,
                     click: function () {
                         _logic.toolbarFilter(this.$view);
@@ -247,7 +250,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     label: labels.component.sortFields,
                     icon: "fa fa-sort",
                     type: "icon",
-                    autowidth: true,
+                    minWidth: 100,
+                    // autowidth: true,
                     badge: 0,
                     click: function () {
                         _logic.toolbarSort(this.$view);
@@ -259,7 +263,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     label: labels.component.frozenColumns,
                     icon: "fa fa-thumb-tack",
                     type: "icon",
-                    autowidth: true,
+                    minWidth: 130,
+                    // autowidth: true,
                     badge: 0,
                     click: function(){
                         _logic.toolbarFrozen(this.$view);
@@ -271,7 +276,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     label: labels.component.defineLabel,
                     icon: "fa fa-crosshairs",
                     type: "icon",
-                    autowidth: true,
+                    minWidth: 105,
+                    // autowidth: true,
                     click: function () {
                         _logic.toolbarDefineLabel(this.$view);
                     }
@@ -293,7 +299,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     label: labels.component.export,
                     icon: "fa fa-download",
                     type: "icon",
-                    autowidth: true,
+                    minWidth: 100,
+                    // autowidth: true,
                     click: function() {
                         _logic.toolbarButtonExport(this.$view);
                     }
@@ -304,7 +311,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     label: labels.component.massUpdate,
                     icon: "fa fa-pencil-square-o",
                     type: "icon",
-                    autowidth: true,
+                    minWidth: 60,
+                    // autowidth: true,
                     badge: 0,
                     hidden:true,
                     click: function () {
@@ -317,7 +325,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     label: labels.component.deleteSelected,
                     icon: "fa fa-trash",
                     type: "icon",
-                    autowidth: true,
+                    minWidth: 80,
+                    // autowidth: true,
                     badge: 0,
                     hidden:true,
                     click: function () {
@@ -357,7 +366,6 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     // css: "ab-data-toolbar",
                     // borderless: true,
     				rows: [
-
                         {
                             type: "clean",
                             css: "ab-data-toolbar",
@@ -1058,7 +1066,8 @@ console.error('TODO: toolbarPermission()');
                     value: view.name,
                     id: view.id,
                     isView: true,
-                    icon: view.id === currentViewId ? "fa fa-check" : undefined,
+                    $css: view.id === currentViewId ? "selected" : "",
+                    icon: view.type === "kanban" ? "fa fa-columns" : "fa fa-table",
                     submenu: view.isDefaultView ? null : [{
                             value: "Edit",
                             icon: "fa fa-cog",
@@ -1073,8 +1082,12 @@ console.error('TODO: toolbarPermission()');
                         }
                     ]
                 })).concat(submenuFixedItems);
+                var icon = "fa-table";
+                if (CurrentObject.workspaceViews.getCurrentView().type == "kanban") {
+                    icon = "fa-columns";
+                }
                 $$(ids.viewMenu).define('data', [{
-                    value: `View: <b>${CurrentObject.workspaceViews.getCurrentView().name}<b/>`,
+                    value: `View: <span class="fa ${icon}"></span> <b>${CurrentObject.workspaceViews.getCurrentView().name}<b/>`,
                     id: ids.viewMenuButton,
                     submenu,
                 }]);

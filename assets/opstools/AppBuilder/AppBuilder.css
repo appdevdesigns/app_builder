@@ -1391,3 +1391,14 @@ a.ab-delete-photo:hover {
 .white {
 	background: white;
 }
+a.webix_list_item.selected, a.webix_list_item.selected:hover  {
+    background: #3498db !important;
+    color: white !important;
+	opacity: 1;
+}
+.webix_menu-x .webix_submenu_icon, .webix_view.webix_menu .webix_submenu_icon {
+	margin-top: 6px;
+}
+.webix_list_item .webix_list_icon {
+	opacity: 0.6;
+}
