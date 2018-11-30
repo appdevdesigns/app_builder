@@ -71,5 +71,22 @@ export default class ABObjectWorkspaceViewKanban extends ABObjectWorkspaceView {
 		obj.type = 'kanban';
 		return obj;
 	}
-}
 
+
+	getHorizontalGroupingField() {
+
+		let viewCollection = this.object, // Should use another name property ?
+			object = viewCollection.object;
+
+		return object.fields(f => f.id == this.horizontalGroupingField)[0];
+	}
+
+	getVerticalGroupingField() {
+
+		let viewCollection = this.object, // Should use another name property ?
+			object = viewCollection.object;
+
+		return object.fields(f => f.id == this.verticalGroupingField)[0];
+	}
+
+}

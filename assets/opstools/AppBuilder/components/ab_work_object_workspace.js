@@ -1045,8 +1045,8 @@ console.error('TODO: toolbarPermission()');
             
             switchWorkspaceView: function(view) {
                 if (hashViews[view.type]) {
-                    hashViews[view.type].show();
                     CurrentObject.workspaceViews.setCurrentView(view.id);
+                    hashViews[view.type].show();
                     _logic.refreshViewMenu();
                 }
             },

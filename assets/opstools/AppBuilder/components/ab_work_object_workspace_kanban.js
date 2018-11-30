@@ -43,8 +43,6 @@ export default class ABWorkObjectKanBan extends OP.Component {
 			};
 		});
 
-
-
 		// Our webix UI definition:
 		this.ui = {
 			id: ids.component,
@@ -52,54 +50,12 @@ export default class ABWorkObjectKanBan extends OP.Component {
 				{
 					id: ids.kanban,
 					view: "kanban",
-					cols: [{
-						header: "Backlog",
-						body: {
-							view: "kanbanlist",
-							status: "new"
-						}
-					},
-					{
-						header: "In Progress",
-						body: {
-							view: "kanbanlist",
-							status: "work"
-						}
-					},
-					{
-						header: "Testing",
-						body: {
-							view: "kanbanlist",
-							status: "test"
-						}
-					},
-					{
-						header: "Done",
-						body: {
-							view: "kanbanlist",
-							status: "done"
-						}
-					}
-					],
+					cols: [],
 					userList: true,
 					editor: true,
 					user: users,
 					tags: [],
-					data: [
-						{ id: 1, status: "new", text: "Task 1", tags: "webix,docs", comments: [{ text: "Comment 1" }, { text: "Comment 2" }] },
-						{ id: 2, status: "work", text: "Task 2", color: "#FE0E0E", tags: "webix", votes: 1, personId: 4 },
-						{ id: 3, status: "work", text: "Task 3", tags: "webix,docs", comments: [{ text: "Comment 1" }], personId: 6 },
-						{ id: 4, status: "test", text: "Task 4 pending", tags: "webix 2.5", votes: 1, personId: 5 },
-						{ id: 5, status: "new", text: "Task 5", tags: "webix,docs", votes: 3 },
-						{ id: 6, status: "new", text: "Task 6", tags: "webix,kanban", comments: [{ text: "Comment 1" }, { text: "Comment 2" }], personId: 2 },
-						{ id: 7, status: "work", text: "Task 7", tags: "webix", votes: 2, personId: 7, image: "image001.jpg" },
-						{ id: 8, status: "work", text: "Task 8", tags: "webix", comments: [{ text: "Comment 1" }, { text: "Comment 2" }], votes: 5, personId: 4 },
-						{ id: 9, status: "work", text: "Task 9", tags: "webix", votes: 1, personId: 2 },
-						{ id: 10, status: "work", text: "Task 10", tags: "webix", comments: [{ text: "Comment 1" }, { text: "Comment 2" }, { text: "Comment 3" }], votes: 10, personId: 1 },
-						{ id: 11, status: "work", text: "Task 11", tags: "webix 2.5", votes: 3, personId: 8 },
-						{ id: 12, status: "done", text: "Task 12", votes: 2, personId: 8, image: "image002.jpg" },
-						{ id: 13, status: "ready", text: "Task 14", personId: 8 }
-					]
+					data: []
 				},
 				{
 					id: ids.resizer,
@@ -179,6 +135,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 		// Our init() function for setting up our UI
 		this.init = (options) => {
 
+			webix.extend($$(ids.kanban), webix.ProgressBar);
 
 		}
 
@@ -209,11 +166,70 @@ export default class ABWorkObjectKanBan extends OP.Component {
 			show: function () {
 
 				$$(ids.component).show();
+
+				// Get object's kanban view
+				let kanbanView = CurrentObject.workspaceViews.getCurrentView();
+				if (!kanbanView) return;
+
+				// Get vertical grouping field and populate to kanban list
+				// NOTE: this field should be the select list type
+				let verticalField = kanbanView.getVerticalGroupingField();
+				if (!verticalField) return;
+
+				// Option format -  { id: "1543563751920", text: "Normal", hex: "#4CAF50" }
+				let verticalOptions = (verticalField.settings.options || []).map(opt => {
+
+					return {
+						header: opt.text,
+						body: {
+							view: "kanbanlist",
+							status: opt.id
+						}
+					};
+				});
+
+				// Rebuild kanban that contains options
+				// NOTE: webix kanban does not support dynamic vertical list
+				webix.ui(verticalOptions, $$(ids.kanban));
+				$$(ids.kanban).reconstruct();
+
+				let horizontalField = kanbanView.getHorizontalGroupingField();
+
+
+				_logic.loadData(verticalField);
+
 			},
 
-			objectLoad:function(object) {
+			objectLoad: function (object) {
 
 				CurrentObject = object;
+
+			},
+
+			loadData: function (verticalField) {
+
+				if (!CurrentObject)
+					return;
+
+				// Show loading cursor
+				if ($$(ids.kanban).showProgress)
+					$$(ids.kanban).showProgress({ type: "icon" });
+
+				// WORKAROUND: load all data for now
+				CurrentObject.model().findAll({})
+					.then((data) => {
+
+						$$(ids.kanban).parse(data.data.map(d => {
+							return {
+								id: d.id,
+								text: CurrentObject.displayData(d),
+								status: d[verticalField.columnName]
+							};
+						}));
+
+						if ($$(ids.kanban).hideProgress)
+							$$(ids.kanban).hideProgress();
+					});
 
 			}
 
@@ -233,5 +249,3 @@ export default class ABWorkObjectKanBan extends OP.Component {
 	}
 
 }
-
-
