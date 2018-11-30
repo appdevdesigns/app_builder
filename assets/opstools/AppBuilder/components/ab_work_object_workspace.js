@@ -46,16 +46,16 @@ export default class ABWorkObjectWorkspace extends OP.Component {
         var labels = {
             common: App.labels,
             component: {
-                addNewRow: L('ab.object.addNewRow', "*Add new row"),
+                addNewRow: L('ab.object.addNewRow', "*New new row"),
                 selectObject: L('ab.object.selectObject', "*Select an object to work with."),
                 // formHeader: L('ab.application.form.header', "*Application Info"),
                 deleteSelected: L('ab.object.toolbar.deleteRecords', "*Delete"),
                 hideFields: L('ab.object.toolbar.hideFields', "*Hide fields"),
                 massUpdate: L('ab.object.toolbar.massUpdate', "*Edit"),
-                filterFields: L('ab.object.toolbar.filterFields', "*Add filters"),
-                sortFields: L('ab.object.toolbar.sortFields', "*Apply sort"),
-                frozenColumns: L('ab.object.toolbar.frozenColumns', "*Frozen fields"),
-                defineLabel: L('ab.object.toolbar.defineLabel', "*Define label"),
+                filterFields: L('ab.object.toolbar.filterFields', "*Filters"),
+                sortFields: L('ab.object.toolbar.sortFields', "*Sort"),
+                frozenColumns: L('ab.object.toolbar.frozenColumns', "*Freeze"),
+                defineLabel: L('ab.object.toolbar.defineLabel', "*Label"),
                 permission: L('ab.object.toolbar.permission', "*Permission"),
                 addFields: L('ab.object.toolbar.addFields', "*Add field"),
                 "export": L('ab.object.toolbar.export', "*Export"),
@@ -212,7 +212,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     icon: "fa fa-plus",
                     type: "icon",
                     hidden: !settings.isFieldAddable,
-                    minWidth: 140,
+                    minWidth: 115,
                     // autowidth: true,
                     click:function() {
                         _logic.toolbarAddFields(this.$view);
@@ -224,7 +224,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     label: labels.component.hideFields,
                     icon: "fa fa-eye-slash",
                     type: "icon",
-                    minWidth: 100,
+                    minWidth: 105,
                     // autowidth: true,
                     badge: 0,
                     click: function () {
@@ -237,7 +237,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     label: labels.component.filterFields,
                     icon: "fa fa-filter",
                     type: "icon",
-                    minWidth: 100,
+                    minWidth: 70,
                     // autowidth: true,
                     badge: 0,
                     click: function () {
@@ -250,7 +250,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     label: labels.component.sortFields,
                     icon: "fa fa-sort",
                     type: "icon",
-                    minWidth: 100,
+                    minWidth: 60,
                     // autowidth: true,
                     badge: 0,
                     click: function () {
@@ -263,7 +263,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     label: labels.component.frozenColumns,
                     icon: "fa fa-thumb-tack",
                     type: "icon",
-                    minWidth: 130,
+                    minWidth: 75,
                     // autowidth: true,
                     badge: 0,
                     click: function(){
@@ -276,7 +276,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     label: labels.component.defineLabel,
                     icon: "fa fa-crosshairs",
                     type: "icon",
-                    minWidth: 105,
+                    minWidth: 75,
                     // autowidth: true,
                     click: function () {
                         _logic.toolbarDefineLabel(this.$view);
@@ -299,7 +299,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     label: labels.component.export,
                     icon: "fa fa-download",
                     type: "icon",
-                    minWidth: 100,
+                    minWidth: 80,
                     // autowidth: true,
                     click: function() {
                         _logic.toolbarButtonExport(this.$view);
@@ -311,7 +311,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     label: labels.component.massUpdate,
                     icon: "fa fa-pencil-square-o",
                     type: "icon",
-                    minWidth: 60,
+                    minWidth: 65,
                     // autowidth: true,
                     badge: 0,
                     hidden:true,
@@ -325,7 +325,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     label: labels.component.deleteSelected,
                     icon: "fa fa-trash",
                     type: "icon",
-                    minWidth: 80,
+                    minWidth: 85,
                     // autowidth: true,
                     badge: 0,
                     hidden:true,
