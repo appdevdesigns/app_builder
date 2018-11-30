@@ -360,11 +360,4 @@ export default class ABViewLabel extends ABViewWidget {
 	}
 
 
-
-		return ['datacollection'];
-
-	}
-
-
-
 }
