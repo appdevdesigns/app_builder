@@ -49,9 +49,9 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                 addNewRow: L('ab.object.addNewRow', "*Add new row"),
                 selectObject: L('ab.object.selectObject', "*Select an object to work with."),
                 // formHeader: L('ab.application.form.header', "*Application Info"),
-                deleteSelected: L('ab.object.toolbar.deleteRecords', "*Delete records"),
+                deleteSelected: L('ab.object.toolbar.deleteRecords', "*Delete"),
                 hideFields: L('ab.object.toolbar.hideFields', "*Hide fields"),
-                massUpdate: L('ab.object.toolbar.massUpdate', "*Edit records"),
+                massUpdate: L('ab.object.toolbar.massUpdate', "*Edit"),
                 filterFields: L('ab.object.toolbar.filterFields', "*Add filters"),
                 sortFields: L('ab.object.toolbar.sortFields', "*Apply sort"),
                 frozenColumns: L('ab.object.toolbar.frozenColumns', "*Frozen fields"),
@@ -162,7 +162,9 @@ export default class ABWorkObjectWorkspace extends OP.Component {
         
         var menu = {
             view: "menu",
-            css: "blue",
+            css: "darkgray",
+            borderless: true,
+            minWidth: 200,
             autowidth: true,
             id: ids.viewMenu,
             data: [],
@@ -197,7 +199,11 @@ export default class ABWorkObjectWorkspace extends OP.Component {
             view: 'toolbar',
             id: ids.toolbar,
             hidden: true,
-            css: "ab-data-toolbar",
+            css: "transparent",
+            borderless: true,
+            paddingY: 2,
+            paddingX: 0,
+            margin: 0,
             cols: [
                 {
                     view: view,
@@ -205,36 +211,10 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     label: labels.component.addFields,
                     icon: "fa fa-plus",
                     type: "icon",
-                    disabled: !settings.isFieldAddable,
-                    // autowidth: true,
+                    hidden: !settings.isFieldAddable,
+                    autowidth: true,
                     click:function() {
                         _logic.toolbarAddFields(this.$view);
-                    }
-                },
-                {
-                    view: view,
-                    id: ids.buttonMassUpdate,
-                    label: labels.component.massUpdate,
-                    icon: "fa fa-pencil-square-o",
-                    type: "icon",
-                    // autowidth: true,
-                    badge: 0,
-                    disabled:true,
-                    click: function () {
-                        _logic.toolbarMassUpdate(this.$view);
-                    }
-                },
-                {
-                    view: view,
-                    id: ids.buttonDeleteSelected,
-                    label: labels.component.deleteSelected,
-                    icon: "fa fa-trash",
-                    type: "icon",
-                    // autowidth: true,
-                    badge: 0,
-                    disabled:true,
-                    click: function () {
-                        _logic.toolbarDeleteSelected(this.$view);
                     }
                 },
                 {
@@ -243,7 +223,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     label: labels.component.hideFields,
                     icon: "fa fa-eye-slash",
                     type: "icon",
-                    // autowidth: true,
+                    autowidth: true,
                     badge: 0,
                     click: function () {
                         _logic.toolbarFieldsVisible(this.$view);
@@ -255,7 +235,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     label: labels.component.filterFields,
                     icon: "fa fa-filter",
                     type: "icon",
-                    // autowidth: true,
+                    autowidth: true,
                     badge: 0,
                     click: function () {
                         _logic.toolbarFilter(this.$view);
@@ -267,7 +247,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     label: labels.component.sortFields,
                     icon: "fa fa-sort",
                     type: "icon",
-                    // autowidth: true,
+                    autowidth: true,
                     badge: 0,
                     click: function () {
                         _logic.toolbarSort(this.$view);
@@ -279,7 +259,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     label: labels.component.frozenColumns,
                     icon: "fa fa-thumb-tack",
                     type: "icon",
-                    // autowidth: true,
+                    autowidth: true,
                     badge: 0,
                     click: function(){
                         _logic.toolbarFrozen(this.$view);
@@ -291,7 +271,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     label: labels.component.defineLabel,
                     icon: "fa fa-crosshairs",
                     type: "icon",
-                    // autowidth: true,
+                    autowidth: true,
                     click: function () {
                         _logic.toolbarDefineLabel(this.$view);
                     }
@@ -313,9 +293,35 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     label: labels.component.export,
                     icon: "fa fa-download",
                     type: "icon",
-                    // autowidth: true,
+                    autowidth: true,
                     click: function() {
                         _logic.toolbarButtonExport(this.$view);
+                    }
+                },
+                {
+                    view: view,
+                    id: ids.buttonMassUpdate,
+                    label: labels.component.massUpdate,
+                    icon: "fa fa-pencil-square-o",
+                    type: "icon",
+                    autowidth: true,
+                    badge: 0,
+                    hidden:true,
+                    click: function () {
+                        _logic.toolbarMassUpdate(this.$view);
+                    }
+                },
+                {
+                    view: view,
+                    id: ids.buttonDeleteSelected,
+                    label: labels.component.deleteSelected,
+                    icon: "fa fa-trash",
+                    type: "icon",
+                    autowidth: true,
+                    badge: 0,
+                    hidden:true,
+                    click: function () {
+                        _logic.toolbarDeleteSelected(this.$view);
                     }
                 }
             ]
@@ -348,13 +354,16 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     			},
     			{
     				id: ids.selectedObject,
+                    // css: "ab-data-toolbar",
+                    // borderless: true,
     				rows: [
 
                         {
                             type: "clean",
+                            css: "ab-data-toolbar",
                             cols: [
                                 menu,
-                                { width: 1 }, // separator
+                                { width: 1, css: "white" }, // separator
                                 toolbar
                             ]
                         },
@@ -706,8 +715,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
              * we will make this externally accessible so we can call it from within the datatable component
              */
             enableUpdateDelete: function() {
-                $$(ids.buttonMassUpdate).enable();
-                $$(ids.buttonDeleteSelected).enable();
+                $$(ids.buttonMassUpdate).show();
+                $$(ids.buttonDeleteSelected).show();
             },
 
             /**
@@ -717,8 +726,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
              * we will make this externally accessible so we can call it from within the datatable component
              */
             disableUpdateDelete: function() {
-                $$(ids.buttonMassUpdate).disable();
-                $$(ids.buttonDeleteSelected).disable();
+                $$(ids.buttonMassUpdate).hide();
+                $$(ids.buttonDeleteSelected).hide();
             },
             
             /**
@@ -1065,7 +1074,7 @@ console.error('TODO: toolbarPermission()');
                     ]
                 })).concat(submenuFixedItems);
                 $$(ids.viewMenu).define('data', [{
-                    value: `View: ${CurrentObject.workspaceViews.getCurrentView().name}`,
+                    value: `View: <b>${CurrentObject.workspaceViews.getCurrentView().name}<b/>`,
                     id: ids.viewMenuButton,
                     submenu,
                 }]);
