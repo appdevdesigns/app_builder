@@ -6,13 +6,7 @@ import ABObjectBase from "./ABObjectBase"
 // import OP from "OP"
 // import ABFieldManager from "./ABFieldManager"
 import ABModel from "./ABModel"
-
-import ABObjectWorkspaceViewGrid from "./ABObjectWorkspaceViewGrid"
-import ABObjectWorkspaceViewKanban from "./ABObjectWorkspaceViewKanban"
-
-var hashViews = {}
-hashViews[ABObjectWorkspaceViewGrid.type()] = ABObjectWorkspaceViewGrid;
-hashViews[ABObjectWorkspaceViewKanban.type()] = ABObjectWorkspaceViewKanban;
+import ABObjectWorkspaceViewCollection from "./ABObjectWorkspaceViewCollection";
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -41,23 +35,14 @@ export default class ABObject extends ABObjectBase {
 }
 */
 
-		// import our Workspace View Objects
-		attributes.objectWorkspaceViews = attributes.objectWorkspaceViews || [];
-
-		if (attributes.objectWorkspaceViews.length == 0) {
-			var defaultGrid = new ABObjectWorkspaceViewGrid({isReadOnly: true}, this);
-			attributes.objectWorkspaceViews.push(defaultGrid);
-		}
+        this.workspaceViews = new ABObjectWorkspaceViewCollection(
+            attributes,
+            this,
+            application
+        );
 
     	// multilingual fields: label, description
 		OP.Multilingual.translate(this, this, ['label']);
-
-		this.importViews(attributes.objectWorkspaceViews);
-		if (!this.currentViewID) {
-			this.currentViewID = this.views()[0].id;
-		}
-
-
   	}
 
 
@@ -259,11 +244,9 @@ export default class ABObject extends ABObjectBase {
 
 		OP.Multilingual.unTranslate(this, this, ["label"]);
 
-		var currViews = this.exportViews();
-
 		var result = super.toObj();
 
-		result.objectWorkspaceViews = currViews;
+		result.objectWorkspaceViews = this.workspaceViews.toObj();
 
 		return result;
 
@@ -484,62 +467,5 @@ export default class ABObject extends ABObjectBase {
 
 		return this._model;
 	}
-
-	views(fn) {
-		fn = fn || function(){ return true };
-		return this._views.filter(fn);
-	}
-
-	importViews(viewSettings) {
-
-		this._views = [];
-		viewSettings.forEach((view)=>{
-			this.addView(view, false);
-		});
-
-	}
-
-	exportViews() {
-		var views = [];
-		this._views.forEach((view)=>{
-			views.push( view.toObj() );
-		})
-
-		return views;
-	}
-
-	setCurrentView(viewID) {
-		this.currentViewID = viewID; 
-	}
-
-	getCurrentView() {
-		return this.views((v)=>{ return v.id == this.currentViewID; })[0];
-	}
-
-	addView(view, save=true) {
-		var newView = new hashViews[view.type](view, this);
-		this._views.push(newView);
-		if (save) {
-			this.save();
-		}
-		return newView;
-	}
-
-	removeView(view) {
-		var indexToRemove = this._views.indexOf(view);
-		this._views.splice(indexToRemove, 1);
-		if (view.id === this.currentViewID) {
-			this.currentViewID = this._views[0].id;
-		}
-		this.save();
-	}
-
-	updateView(id, view) {
-		var viewToUpdate = this._views.find(v => v.id === id);
-		viewToUpdate.fromObj(view);
-		this.save();
-		return viewToUpdate;
-	}
-
 }
 

@@ -55,9 +55,6 @@ module.exports =  class ABObjectBase {
 			hiddenFields:[], // array of [ids] to add hidden:true to
 		};
 
-		this.objectWorkspaceViews = attributes.objectWorkspaceViews;
-		this.currentViewID = attributes.currentViewID;
-
 	  	// import all our ABField 
 	  	this.importFields(attributes.fields || []);
 
@@ -142,7 +139,6 @@ module.exports =  class ABObjectBase {
 			urlPath: 		this.urlPath,
 			importFromObject: this.importFromObject,
 			objectWorkspace: this.objectWorkspace,
-			currentViewID:  this.currentViewID,
 			translations: 	this.translations,
 			fields: 	 	currFields
 		}

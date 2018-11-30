@@ -175,15 +175,15 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     if (id === ids.viewMenuNewView) {
                         PopupViewSettingsComponent.show();
                     } else if (item.isView) {
-                        var view = CurrentObject.views(v => v.id === id)[0];
+                        var view = CurrentObject.workspaceViews.list(v => v.id === id)[0];
                         _logic.switchWorkspaceView(view);
                     } else if (item.action === 'edit') {
-                        var view = CurrentObject.views(v => v.id === item.viewId)[0];
+                        var view = CurrentObject.workspaceViews.list(v => v.id === item.viewId)[0];
                         PopupViewSettingsComponent.show(view);
                     } else if (item.action === 'delete') {
-                        var view = CurrentObject.views(v => v.id === item.viewId)[0];
-                        CurrentObject.removeView(view);
-                        _logic.switchWorkspaceView(CurrentObject.getCurrentView());
+                        var view = CurrentObject.workspaceViews.list(v => v.id === item.viewId)[0];
+                        CurrentObject.workspaceViews.removeView(view);
+                        _logic.switchWorkspaceView(CurrentObject.workspaceViews.getCurrentView());
                     }
                 }
             },
@@ -692,7 +692,11 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		 * call back for when a workspace view is updated
     		 */
     		callbackViewUpdated: function(view) {
-                _logic.refreshViewMenu();
+                if (view.id === CurrentObject.workspaceViews.getCurrentView().id) {
+                    _logic.switchWorkspaceView(view);
+                } else {
+                    _logic.refreshViewMenu();
+                }
             },
             
             /**
@@ -939,7 +943,7 @@ console.error('TODO: toolbarPermission()');
 				CurrentObject = object;
 
                 // get current view from object
-                var currentView = CurrentObject.getCurrentView()
+                var currentView = CurrentObject.workspaceViews.getCurrentView()
 
 
                 // get defined views 
@@ -1033,37 +1037,35 @@ console.error('TODO: toolbarPermission()');
             switchWorkspaceView: function(view) {
                 if (hashViews[view.type]) {
                     hashViews[view.type].show();
-                    CurrentObject.setCurrentView(view.id);
+                    CurrentObject.workspaceViews.setCurrentView(view.id);
                     _logic.refreshViewMenu();
                 }
             },
 
             refreshViewMenu: function() {
-                var currentViewId = CurrentObject.getCurrentView().id;
-                var submenu = CurrentObject.views().map(view => ({
+                var currentViewId = CurrentObject.workspaceViews.getCurrentView().id;
+                var submenu = CurrentObject.workspaceViews.list().map(view => ({
                     hash: view.type,
                     value: view.name,
                     id: view.id,
                     isView: true,
                     icon: view.id === currentViewId ? "fa fa-check" : undefined,
-                    submenu: [{
+                    submenu: view.isDefaultView ? null : [{
                             value: "Edit",
                             icon: "fa fa-cog",
                             viewId: view.id,
                             action: 'edit',
-                            disabled: view.isReadOnly,
                         },
                         {
                             value: "Delete",
                             icon: "fa fa-trash",
                             viewId: view.id,
                             action: 'delete',
-                            disabled: view.isReadOnly,
                         }
                     ]
                 })).concat(submenuFixedItems);
                 $$(ids.viewMenu).define('data', [{
-                    value: `View: ${CurrentObject.getCurrentView().name}`,
+                    value: `View: ${CurrentObject.workspaceViews.getCurrentView().name}`,
                     id: ids.viewMenuButton,
                     submenu,
                 }]);
