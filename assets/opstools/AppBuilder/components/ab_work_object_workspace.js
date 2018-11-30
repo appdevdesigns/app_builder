@@ -971,7 +971,8 @@ console.error('TODO: toolbarPermission()');
 						$$(ids.buttonRowNew).enable();
 				}
 
-				DataTable.objectLoad(CurrentObject);
+                DataTable.objectLoad(CurrentObject);
+                KanBan.objectLoad(CurrentObject);
 
 				PopupNewDataFieldComponent.objectLoad(CurrentObject);
 				PopupDefineLabelComponent.objectLoad(CurrentObject);
