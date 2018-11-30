@@ -124,8 +124,8 @@ export default class ABChoose extends OP.Component {  // .extend(idBase, functio
 											align: "right",
 											autowidth: true,
 											css: "ab-standard-button",
-											offIcon: "square-o",
-											onIcon: "check-square-o",
+											offIcon: "fa fa-square-o",
+											onIcon: "fa fa-check-square-o",
 											label: labels.component.createNewRole,
 											on: {
 												onItemClick: function (id, e) {
