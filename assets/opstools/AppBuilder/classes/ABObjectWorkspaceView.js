@@ -64,5 +64,11 @@ export default class ABObjectWorkspaceView {
 			isDefaultView: this.isDefaultView,
 		}
 	}
+
+	update (view) {
+		for (var key in view ) {
+			this[key] = view[key];
+		}
+	}
 }
 
