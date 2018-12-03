@@ -794,7 +794,7 @@ function processRequests(allRequests, done) {
 
     // decide how many in parallel we will allow:
     // NOTE : we can run out of memory if we allow too many.
-    var numParallel = 10;
+    var numParallel = sails.config.appbuilder.mcc.numParallelRequests || 15;
     var numDone = 0;
     function onDone(err) {
 
