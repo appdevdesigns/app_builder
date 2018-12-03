@@ -967,12 +967,6 @@ console.error('TODO: toolbarPermission()');
                 // update the view picker in the toolbar
 
 
-                // display the proper ViewComponent
-                var currDisplay = hashViews[currentView.type];
-                currDisplay.show();
-                // viewPicker needs to show this is the current view.
-
-
                 // get toolbar config
                 // update toolbar with approved tools
 
@@ -1006,12 +1000,18 @@ console.error('TODO: toolbarPermission()');
                 PopupExportObjectComponent.objectLoad(CurrentObject);
 				PopupExportObjectComponent.setGridComponent($$(DataTable.ui.id));
 				PopupExportObjectComponent.setHiddenFields(CurrentObject.objectWorkspace.hiddenFields);
-				PopupExportObjectComponent.setFilename(CurrentObject.label);
+                PopupExportObjectComponent.setFilename(CurrentObject.label);
 
                 _logic.refreshToolBarView();
 
                 _logic.refreshViewMenu();
-			},
+
+                // display the proper ViewComponent
+                var currDisplay = hashViews[currentView.type];
+                currDisplay.show();
+                // viewPicker needs to show this is the current view.
+
+            },
 
 
 			/**

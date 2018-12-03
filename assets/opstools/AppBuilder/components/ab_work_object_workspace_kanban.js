@@ -167,9 +167,11 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 				$$(ids.component).show();
 
+				if (!CurrentObject) return;
+
 				// Get object's kanban view
 				let kanbanView = CurrentObject.workspaceViews.getCurrentView();
-				if (!kanbanView) return;
+				if (!kanbanView || kanbanView.type != "kanban") return;
 
 				// Get vertical grouping field and populate to kanban list
 				// NOTE: this field should be the select list type
