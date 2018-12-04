@@ -12,6 +12,9 @@ var crypto = require('crypto');
 
 var cookieJar = RP.jar();
 
+var _RequestsInProcess = false;
+var _RetryInProcess = false;
+
 var CSRF = {
     token: null,
     /**
@@ -271,23 +274,33 @@ options.rejectUnauthorized = false;
             // 2) get any message requests and process them
             .then(()=>{
 
+                // if we are still processing a previous batch of requests
+                // skip this round.
+                if (_RequestsInProcess) {
+                    return;
+                }
+
                 return ABRelay.get({url:'/mcc/relayrequest'})
                 .then((response)=>{
 
-                    var all = [];
-                    response.data.forEach((request)=>{
-                        all.push(ABRelay.request(request));
+                    _RequestsInProcess = true;
+                    processRequests(response.data, function(err){
+
+                        _RequestsInProcess = false;
+
                     })
-                    // Johnny: in debugging a problem with our polling taking too long,
-                    // I decided to NOT wait until all the responses were completed before
-                    // contining on with the polling.  Seems to work fine.
-                    // return Promise.all(all)
+
                 })
 
             })
             // 3) check for any old requests in our ABRelayRequestQueue and process them
             .then(()=>{
                 
+                // if we are already processing our retries, then skip
+                if (_RetryInProcess) {
+                    return;
+                }
+
                 var now = new Date();
                 var seconds = (sails.config.appbuilder.mcc.pollFrequency || 5000) * 2;
                 var timeout = new Date(now.getTime() - seconds);
@@ -296,9 +309,24 @@ options.rejectUnauthorized = false;
                     if (listOfRequests && listOfRequests.length>0) {
 
                         console.log("ABRelay.Poll():Found Old Requests : "+listOfRequests.length);
+                        
+                        // convert requests to array of just request data.
+                        var allRequests = [];
                         listOfRequests.forEach((req)=>{
-                            ABRelay.request(req.request);
+                            allRequests.push(req.request);
                         })
+
+
+                        _RetryInProcess = true;
+                        processRequests(allRequests, function(err){
+
+                            _RetryInProcess = false;
+
+                        })
+
+                        // listOfRequests.forEach((req)=>{
+                        //     ABRelay.request(req.request);
+                        // })
                     }
                 })
 
@@ -563,6 +591,7 @@ errorOptions = options;
                                 }
                             }
 
+
                             // [Fix] Johnny
                             // it seems a web client disconnecting a socket can get caught in our 
                             // process.  just try again:
@@ -573,8 +602,24 @@ errorOptions = options;
                                 return;
                             }
 
-                            // // if a different error, then pass this along our chain() and process in our .catch() below
-                            // cb(err);
+
+                            // [Fix] Johnny
+                            // if we get here and we have a 403: it is likely it is a CSRF mismatch error
+                            // but in production, sails won't return 'CSRF mismatch', so lets attempt to 
+                            // retrieve a new CSRF token and try again:
+                            if ((errorString.indexOf('CSRF mismatch') > -1) || (err.statusCode && err.statusCode == 403)) {
+                                
+                                sails.log.error('::: ABRelay.request(): attempt to reset CSRF token ');
+                                lastError = err;
+                                CSRF.token = null;
+                                CSRF.fetch()
+                                .then((token)=>{
+                                    tryIt(attempt+1, cb);
+                                })
+                                return;
+                            }
+
+
                             //// ACTUALLY no.  it there was an error that didn't follow our error format, then it was 
                             // probably due to a problem with the request itself.  Just package an error and send it back:
                             var data = {
@@ -682,20 +727,6 @@ errorOptions = options;
                 return;
             }
 
-            // on a forbidden, just attempt to re-request the CSRF token and try again?
-            if (err.statusCode && err.statusCode == 403) {
-
-                // if we haven't just tried a new token
-                if (!request.csrfRetry) {
-
-                    sails.log.error('::: ABRelay.request(): attempt to reset CSRF token ');
-                    request.csrfRetry = true;
-                    CSRF.token = null;
-                    return ABRelay.request(request);
-                }
-            }
-
-
 sails.log.error('::: ABRelay.request(): caught error:', err.statusCode || err, { request:errorOptions }, err.error, err);
 
         })
@@ -731,4 +762,62 @@ function packIt(data,list) {
         packIt(arrayFirstHalf, list);
         packIt(arraySecondHalf, list);
     }
+}
+
+
+/**
+ * processRequests()
+ * is an attempt to throttle the number of ABRelay requests we process at a time.
+ * if we attempt too many, the server runs out of memory, so this fn() limits 
+ * the number of requests to [numParallel] requests at a time.  But each of those
+ * "threads" will sequentially continue to process requests until the given list 
+ * is complete.
+ * @param {array} allRequests  an array of the request objects
+ * @param {function} done  the callback fn for when all the requests have been processed.
+ */
+function processRequests(allRequests, done) {
+
+    //// 
+    //// Attempt to throttle the number of requests we process at a time
+    ////
+
+    // processRequest()  
+    // processes 1 request, when it is finished, process another
+    function processRequestSequential(list, cb) {
+        if (list.length == 0) {
+            cb();
+        } else {
+            var request = list.shift();
+            ABRelay.request(request)
+            .then(()=>{
+                processRequestSequential(list, cb);
+            });
+        }
+    }
+
+    // decide how many in parallel we will allow:
+    // NOTE : we can run out of memory if we allow too many.
+    var numParallel = sails.config.appbuilder.mcc.numParallelRequests || 15;
+    var numDone = 0;
+    function onDone(err) {
+
+        if (err) {
+            done(err);
+            return;
+        }
+
+        // once all our parallel tasks report done, we are done.
+        numDone ++;
+        if (numDone >= numParallel) {
+
+            // we are all done now.
+            done();
+        }
+    }
+
+    // fire off our requests in parallel.
+    for (var i=0; i<numParallel; i++) {
+        processRequestSequential(allRequests, onDone);
+    }
+
 }
