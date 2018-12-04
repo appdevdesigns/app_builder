@@ -172,21 +172,22 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 				if (mode == 'run') {
 					$$(ids.modeButton).define('label', labels.design);
 					$$(ids.modeButton).define('icon', "fa fa-tasks");
+					$$(ids.loadAllButton).show();
 
 					DataTable.populateObjectWorkspace(CurrentQuery);
 
-					$$(ids.loadAllButton).show();
+					$$(ids.component).setValue(DataTable.ui.id);
 				}
 				// Design
 				else {
 					$$(ids.modeButton).define('label', labels.run);
 					$$(ids.modeButton).define('icon', "fa fa-cubes");
-
-					QueryDesignComponent.populateQueryWorkspace(CurrentQuery);
+					$$(ids.loadAllButton).hide();
 
 					$$(QueryDesignComponent.ui.id).show(true);
 
-					$$(ids.loadAllButton).hide();
+					QueryDesignComponent.populateQueryWorkspace(CurrentQuery);
+
 				}
 
 				$$(ids.modeButton).refresh();
