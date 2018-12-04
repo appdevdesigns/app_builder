@@ -29,6 +29,9 @@ var RP = require('request-promise-native');
 
 var QRCode = require('qrcode');
 
+var mysql = require('mysql');
+
+
 
 module.exports = {
 
@@ -184,7 +187,7 @@ module.exports = {
 
                     if (!lookupUser) {
                         var error = new Error('Unknown user');
-                        error.httpResponseCode = 403;
+                        error.httpResponseCode = 404;
                         next(error);
                         return;
                     }
@@ -512,5 +515,493 @@ console.log('!!! adminQRCode:');
             }
         })
     },
+
+
+    // POST: /app_builder/Event/sendConfirmationEmail
+    // send a confirmation email out to registered users
+    // @param {string} user  (optional) the speific user to send to
+    // @param {integer} event (optional) the specific Event to process (default: all Events)
+    sendRegistrationConfirmation: function(req, res) {
+
+        var connAB = mysql.createConnection({
+            host: sails.config.connections.appBuilder.host,
+            user: sails.config.connections.appBuilder.user,
+            password: sails.config.connections.appBuilder.password,
+            database: sails.config.connections.appBuilder.database
+        });
+
+
+
+        var hashEvents = {};
+        var hashPhotos = {};
+        var hashHousingRoomFees = {};
+        var hashHousingFees = {};   // Crib, Bed, etc... 
+
+
+        var hashRegistrationPackets = {
+
+            /*
+            reg.id : {  
+                event:{event},
+                registration: {registration},
+                registrants: { registrant.id:{registrant}, ... },
+
+                email: '',
+                preferredName:''
+            }
+            */
+        }
+
+        async.series([
+
+            // get events
+            (next) => {
+
+                connAB.query(`
+
+                    SELECT * FROM AB_Events_Event
+
+                    `, (err, results, fields) => {
+                    if (err) next(err);
+                    else {
+                        results.forEach((r)=>{
+                            hashEvents[r.id] = r;
+                        })
+                        next();
+                    }
+                });
+            },
+
+            // get housing room fees:
+            (next) => {
+
+                connAB.query(`
+
+                    SELECT * FROM AB_Events_Fees
+                    WHERE Post_Name IN ( "HTwin", "HDouble", "HStandard Room" )
+
+                    `, (err, results, fields) => {
+                    if (err) next(err);
+                    else {
+                        results.forEach((r)=>{
+                            var translations = JSON.parse(r.translations);
+                            hashHousingRoomFees[r.id] = translations[0].Fee;
+                        })
+                        next();
+                    }
+                });
+            },
+
+            // get housing fees:
+            (next) => {
+
+                connAB.query(`
+
+                    SELECT * FROM AB_Events_Fees
+                    WHERE Post_Name IN ( "HCrib", "HExtra Bed" )
+
+                    `, (err, results, fields) => {
+                    if (err) next(err);
+                    else {
+                        results.forEach((r)=>{
+                            hashHousingFees[r.id] = r.Post_Name.replace(' ', '');
+                        })
+                        next();
+                    }
+                });
+            },
+
+
+
+            // get Registrations
+            (next)=>{
+                connAB.query(`
+
+                    SELECT * FROM AB_Events_Registration
+                    WHERE event IS Not Null
+
+                    `, (err, results, fields) => {
+                    if (err) next(err);
+                    else {
+                        results.forEach((r)=>{
+                            var event = hashEvents[r.Event];
+
+                            hashRegistrationPackets[r.id] = {
+                                error:false,
+                                errorText:[],
+                                event: event,
+                                registration: r,
+                                registrants:{},
+                                HCrib:false,
+                                HExtraBed:false
+                            };
+                        })
+                        next();
+                    }
+                });
+
+            },
+
+
+            // get Registrants for each Registration:
+            (next)=>{
+
+                var allRegistrationIDs = Object.keys(hashRegistrationPackets);
+
+                function getRegistrants(list, cb) {
+                    if (list.length == 0) {
+                        cb();
+                    } else {
+                        var registrationID = list.shift();
+
+                        connAB.query(`
+
+                            SELECT * FROM AB_Events_registrants
+                            WHERE Registration434 = ${registrationID}
+
+                            `, (err, results, fields) => {
+                            if (err) cb(err);
+                            else {
+                                results.forEach((r)=>{
+                                    hashRegistrationPackets[registrationID].registrants[r.id]=r;
+                                })
+                                getRegistrants(list, cb);
+                            }
+                        });
+
+
+                    }
+                }
+                getRegistrants(allRegistrationIDs, (err)=>{
+                    next(err);
+                })
+            },
+
+
+            // fill out Registrant Ren Data in registrant.rendata
+            (next)=>{
+                var allRegistrationIDs = Object.keys(hashRegistrationPackets);
+
+                function populateRen(list, hashRegistrants, cb) {
+                    if (list.length == 0) {
+                        cb();
+                    } else {
+                        var registrantID = list.shift();
+                        var registrant = hashRegistrants[registrantID];
+
+                        connAB.query(`
+
+                            SELECT * FROM AB_Events_hrisrendata
+                            WHERE ren_id = ${registrant['Ren Name']}
+
+                            `, (err, results, fields) => {
+                            if (err) cb(err);
+                            else {
+                                results.forEach((r)=>{
+                                    registrant.rendata = r;
+                                })
+                                populateRen(list, hashRegistrants, cb);
+                            }
+                        });
+                    }
+                }
+                function populateRegistrantRen(list,  cb) {
+                    if (list.length==0) {
+                        cb();
+                    } else {
+
+                        var registrationID = list.shift();
+
+                        var allRegistrantIDs = Object.keys(hashRegistrationPackets[registrationID].registrants);
+                        populateRen(allRegistrantIDs, hashRegistrationPackets[registrationID].registrants, (err)=>{
+                            if (err) {
+                                cb(err);
+                            } else {
+                                populateRegistrantRen(list, cb);
+                            }
+                        })
+
+                    }
+                }
+                populateRegistrantRen(allRegistrationIDs, (err)=>{
+                    next(err);
+                })
+            },
+
+
+            // find AccountHolder Details:
+            (next) => {
+                var allRegistrationIDs = Object.keys(hashRegistrationPackets);
+
+                function eachRegistration(list,  cb) {
+                    if (list.length==0) {
+                        cb();
+                    } else {
+
+                        var registrationID = list.shift();
+                        var packet = hashRegistrationPackets[registrationID];
+                        var registration = packet.registration;
+
+                        connAB.query(`
+
+                            SELECT * FROM AB_Events_AccountHolder
+                            WHERE id = ${registration['AccountOwner']}
+
+                            `, (err, results, fields) => {
+                            if (err) cb(err);
+                            else {
+                                results.forEach((r)=>{
+                                    packet.email = r.email;
+                                    packet.userName = r.User;
+                                    var foundRen = Object.keys(packet.registrants).map((rKey)=>{ return packet.registrants[rKey]}).find((reg)=>{ return reg['Ren Name'] == r.Ren; })
+                                    if (foundRen) {
+                                        packet.preferredName = foundRen.rendata.ren_preferredname;
+                                    } else {
+                                        var firstID = Object.keys(packet.registrants)[0];
+                                        if (firstID) {
+                                            if (packet.registrants[firstID].rendata) {
+                                                packet.preferredName = packet.registrants[firstID].rendata.ren_preferredname;
+                                            } else {
+                                                packet.preferredName = 'Citizen';
+                                                packet.error = true;
+                                                packet.errorText.push("No rendata for registrant:"+firstID );
+                                            }
+                                            
+                                        } else {
+                                            packet.preferredName = 'Citizen';
+                                            packet.error = true;
+                                            packet.errorText.push("No Registrants for this Registration");
+                                        }
+                                        
+                                    }
+                                    
+                                })
+                                eachRegistration(list, cb);
+                            }
+                        });
+
+                    }
+                }
+                eachRegistration(allRegistrationIDs, (err)=>{
+                    next(err);
+                })
+
+            },
+
+
+            // find UserAccount Info:
+            (next) => {
+                var allRegistrationIDs = Object.keys(hashRegistrationPackets);
+
+                function eachRegistration(list,  cb) {
+                    if (list.length==0) {
+                        cb();
+                    } else {
+
+                        var registrationID = list.shift();
+                        var packet = hashRegistrationPackets[registrationID];
+                        var registration = packet.registration;
+
+                        SiteUser.find({ username: packet.userName })
+                        .then((list)=>{
+                            if (list && list.length > 0) {
+                                packet.languageCode = list[0].languageCode;
+                                packet.email = list[0].email;
+                                packet.siteUser = list[0];
+                            } else {
+                                packet.languageCode = 'en';
+                                packet.error = true;
+                                packet.errorText.push('No user account for userName:'+packet.userName);
+                            }
+                            eachRegistration(list, cb);
+                        })
+                        .catch(cb);
+
+                    }
+                }
+                eachRegistration(allRegistrationIDs, (err)=>{
+                    next(err);
+                })
+
+            },
+
+
+
+            // convert conference name to languageCode:
+            (next) => {
+                var allRegistrationIDs = Object.keys(hashRegistrationPackets);
+
+                function eachRegistration(list,  cb) {
+                    if (list.length==0) {
+                        cb();
+                    } else {
+
+                        var registrationID = list.shift();
+                        var packet = hashRegistrationPackets[registrationID];
+                        var registration = packet.registration;
+
+                        var json = []
+                        try {
+                            json = JSON.parse(packet.event.translations)
+                        }catch(e) {
+
+                        }
+
+                        var langTrans = json.find((t)=>{ return t.language_code == packet.languageCode; });
+                        if (langTrans) {
+                            packet.conferenceName = langTrans.Title;
+                        } else {
+                            if (packet.event) {
+                                packet.conferenceName = packet.event.name;
+                            } else {
+                                packet.error = true;
+                                packet.errorText.push('No event for this registration:'+packet.registration.id);
+                            }
+                            
+                        }
+
+                        eachRegistration(list, cb);
+                    }
+                }
+                eachRegistration(allRegistrationIDs, (err)=>{
+                    next(err);
+                })
+
+            },
+
+            // get all photos in a hash:
+            (next)=>{
+
+                connAB.query(`
+
+                    SELECT * FROM AB_Events_regsPhotos
+
+                    `, (err, results, fields) => {
+                    if (err) next(err);
+                    else {
+                        results.forEach((r)=>{
+                            hashPhotos[r.Ren] = r.Photo;
+                        })
+                        next();
+                    }
+                });
+
+            },
+
+            // compile Attendees  data:
+            // attendees:[ { firstname:'name', lastname:'name', photo:true/false }]
+            (next) => {
+                var allRegistrationIDs = Object.keys(hashRegistrationPackets);
+
+                function eachRegistration(list,  cb) {
+                    if (list.length==0) {
+                        cb();
+                    } else {
+
+                        var registrationID = list.shift();
+                        var packet = hashRegistrationPackets[registrationID];
+                        var registration = packet.registration;
+
+                        if (!packet.error) {
+                            var attendees = [];
+                            Object.keys(packet.registrants).map((r)=>{ return packet.registrants[r]; }).forEach((person)=>{
+                                if (person.Attending == 1) {
+
+                                    attendees.push({
+                                        firstname: person.rendata.ren_givenname,
+                                        lastname: person.rendata.ren_surname,
+                                        photo: (hashPhotos[person.rendata.ren_id] && hashPhotos[person.rendata.ren_id] != '')
+                                    })
+                                    
+                                }
+                            })
+                            packet.attendees = attendees;
+                        }
+                        eachRegistration(list, cb);
+                    }
+                }
+                eachRegistration(allRegistrationIDs, (err)=>{
+                    next(err);
+                })
+
+            },
+
+
+
+            // compile Housing  data:
+            // housing:[ { type:'Description', dates:'from - to' }]
+            // 
+            (next) => {
+                var allRegistrationIDs = Object.keys(hashRegistrationPackets);
+
+                function eachRegistration(list,  cb) {
+                    if (list.length==0) {
+                        cb();
+                    } else {
+
+                        var registrationID = list.shift();
+                        var packet = hashRegistrationPackets[registrationID];
+                        var registration = packet.registration;
+
+                        
+                        connAB.query(`
+
+                            SELECT * FROM AB_Events_Charges
+                            WHERE Reg = ${registrationID}
+
+                            `, (err, results, fields) => {
+                            if (err) cb(err);
+                            else {
+                                var housing = [];
+                                results.forEach((r)=>{
+
+                                    // if a housingRoomFee add it to the housing entries
+                                    if (hashHousingRoomFees[r.Fees177]) {
+                                        var from = r.Start;
+                                        var to = r.End;
+
+                                        var entry = {
+                                            type: hashHousingRoomFees[r.Fees177],
+                                            dates: `${from} - ${to}`
+                                        }
+                                        
+                                        housing.push(entry);
+                                    }
+
+                                    // if one of the other housing fees, mark the Fee
+                                    if (hashHousingFees[r.Fees177]) {
+                                        packet[hashHousingFees[r.Fees177]] = true;
+                                    }
+                                    
+                                })
+                                packet.housing = housing;
+                                eachRegistration(list, cb);
+                            }
+                        });
+                    }
+                }
+                eachRegistration(allRegistrationIDs, (err)=>{
+                    next(err);
+                })
+
+            },
+
+// Debugging output:
+(next)=>{
+var registrationID = Object.keys(hashRegistrationPackets)[1];
+console.log(hashRegistrationPackets[registrationID]);
+next();
+}
+
+
+        ], (err, data)=>{
+            if (err) {
+                res.AD.error(err, err.httpResponseCode || 400);
+            } else {
+                res.AD.success({sent:true});    
+            }
+        })
+
+    }
 
 };

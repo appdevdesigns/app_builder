@@ -173,7 +173,10 @@ module.exports = {
 
 
     'get /app_builder/mobile/:mobileID/apk':
-        'app_builder/ABMobileQRController.sendAPK'
+        'app_builder/ABMobileQRController.sendAPK',
+
+    'post /app_builder/Event/sendConfirmationEmail':
+        'app_builder/ABMobileQRController.sendRegistrationConfirmation',
 
   /*
 
