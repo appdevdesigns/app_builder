@@ -5,11 +5,11 @@
  * Manage the Object Workspace KanBan area.
  *
  */
-
+import AB_Work_KanbanSide from "./ab_work_object_workspace_kanban_sidePanel"
 
 
 export default class ABWorkObjectKanBan extends OP.Component {
-	
+
 	/**
 	 * 
 	 * @param {*} App 
@@ -20,81 +20,88 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 		idBase = idBase || 'ab_work_object_workspace_kanban';
 		super(App, idBase);
-				
+
 		var L = this.Label;
 		var labels = {
 			common: App.labels,
 			component: {
-
-				// confirmDeleteRowTitle : L('ab.object.deleteRow.title', "*Delete data"),
-
 			}
 		};
 
 		// internal list of Webix IDs to reference our UI components.
 		var ids = {
-			component: this.unique(idBase + '_kanban'),
+			component: this.unique(idBase + '_workspace_kanban'),
+			kanban: this.unique(idBase + '_kanban'),
+			resizer: this.unique(idBase + '_resizer'),
 		}
 
 		var users = OP.User.userlist().map(u => {
 			return {
 				id: u.username,
-				value: u.username
+				value: u.username,
+				image: ''
 			};
 		});
 
+		let KanbanSide = new AB_Work_KanbanSide(App, idBase);
 
 		// Our webix UI definition:
 		this.ui = {
 			id: ids.component,
-			view: "kanban",
-			users: users,
 			cols: [
 				{
-					header:"Backlog",
-					body:{ view:"kanbanlist", status:"new", type: "avatars" }
+					id: ids.kanban,
+					view: "kanban",
+					cols: [],
+					userList: true,
+					editor: false, // we use side bar
+					user: users,
+					tags: [],
+					data: [],
+					on: {
+						onListAfterSelect: (itemId, list) => {
+							if (itemId)
+								KanbanSide.show();
+							else
+								KanbanSide.hide();
+						},
+						onListAfterDrop: (context, ev, list) => {
+
+							let rowId = context.source[0];
+							if (rowId == null) return;
+
+							let newStatus = context.to.config.status;
+
+							_logic.updateStatus(rowId, newStatus);
+
+						}
+					}
 				},
 				{
-					header:"In Progress",
-					body:{ view:"kanbanlist", status:"work", type: "avatars"}
+					id: ids.resizer,
+					view: "resizer",
+					borderless: true,
 				},
-				{
-					header:"Testing",
-					body:{ view:"kanbanlist", status:"test", type: "avatars" }
-				},
-				{
-					header:"Done",
-					body:{ view:"kanbanlist", status:"done", type: "avatars" }
-				}
-			],
-			data: [
-				{ id:1, status:"new", text:"Task 1", tags:"webix,docs", comments:[{text:"Comment 1"}, {text:"Comment 2"}] },
-				{ id:2, status:"work", text:"Task 2", color:"#FE0E0E", tags:"webix", votes:1, personId: 4  },
-				{ id:3, status:"work", text:"Task 3", tags:"webix,docs", comments:[{text:"Comment 1"}], personId: 6 },
-				{ id:4, status:"test", text:"Task 4 pending", tags:"webix 2.5", votes:1, personId: 5  },
-				{ id:5, status:"new", text:"Task 5", tags:"webix,docs", votes:3  },
-				{ id:6, status:"new", text:"Task 6", tags:"webix,kanban", comments:[{text:"Comment 1"}, {text:"Comment 2"}], personId: 2 },
-				{ id:7, status:"work", text:"Task 7", tags:"webix", votes:2, personId: 7, image: "image001.jpg"  },
-				{ id:8, status:"work", text:"Task 8", tags:"webix", comments:[{text:"Comment 1"}, {text:"Comment 2"}], votes:5, personId: 4  },
-				{ id:9, status:"work", text:"Task 9", tags:"webix", votes:1, personId: 2},
-				{ id:10, status:"work", text:"Task 10", tags:"webix", comments:[{text:"Comment 1"}, {text:"Comment 2"}, {text:"Comment 3"}], votes:10, personId:1 },
-				{ id:11, status:"work", text:"Task 11", tags:"webix 2.5", votes:3, personId: 8 },
-				{ id:12, status:"done", text:"Task 12", votes:2 , personId: 8, image: "image002.jpg"},
-				{ id:13, status:"ready", text:"Task 14",  personId: 8}
+				KanbanSide.ui
 			]
 		};
-
 
 
 		// Our init() function for setting up our UI
 		this.init = (options) => {
 
-			
+			webix.extend($$(ids.kanban), webix.ProgressBar);
+
+			KanbanSide.init({
+				onClose: _logic.unselect
+			})
+
 		}
 
 
 
 		var CurrentObject = null;		// current ABObject being displayed
+		var CurrentVerticalField = null;
 
 
 		// our internal business logic
@@ -106,7 +113,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 			 *
 			 * hide this component.
 			 */
-			hide:function() {
+			hide: function () {
 				$$(ids.component).hide();
 			},
 
@@ -116,12 +123,112 @@ export default class ABWorkObjectKanBan extends OP.Component {
 			 *
 			 * Show this component.
 			 */
-			show:function() {
+			show: function () {
 
 				$$(ids.component).show();
+
+				if (!CurrentObject) return;
+
+				// Get object's kanban view
+				let kanbanView = CurrentObject.workspaceViews.getCurrentView();
+				if (!kanbanView || kanbanView.type != "kanban") return;
+
+				// Get vertical grouping field and populate to kanban list
+				// NOTE: this field should be the select list type
+				CurrentVerticalField = kanbanView.getVerticalGroupingField();
+				if (!CurrentVerticalField) return;
+
+				// Option format -  { id: "1543563751920", text: "Normal", hex: "#4CAF50" }
+				let verticalOptions = (CurrentVerticalField.settings.options || []).map(opt => {
+
+					return {
+						header: opt.text,
+						body: {
+							view: "kanbanlist",
+							status: opt.id
+						}
+					};
+				});
+
+				// Rebuild kanban that contains options
+				// NOTE: webix kanban does not support dynamic vertical list
+				webix.ui(verticalOptions, $$(ids.kanban));
+				$$(ids.kanban).reconstruct();
+
+				let horizontalField = kanbanView.getHorizontalGroupingField();
+
+
+				_logic.loadData();
+
 			},
-			
-		  
+
+			objectLoad: function (object) {
+
+				CurrentObject = object;
+
+			},
+
+			loadData: function () {
+
+				if (!CurrentObject || !CurrentVerticalField)
+					return;
+
+				// Show loading cursor
+				if ($$(ids.kanban).showProgress)
+					$$(ids.kanban).showProgress({ type: "icon" });
+
+				// WORKAROUND: load all data for now
+				CurrentObject.model().findAll({})
+					.then((data) => {
+
+						$$(ids.kanban).parse(data.data.map(d => {
+							return {
+								id: d.id,
+								text: CurrentObject.displayData(d),
+								status: d[CurrentVerticalField.columnName]
+							};
+						}));
+
+						if ($$(ids.kanban).hideProgress)
+							$$(ids.kanban).hideProgress();
+					});
+
+			},
+
+			updateStatus: function (rowId, status) {
+
+				// Show loading cursor
+				if ($$(ids.kanban).showProgress)
+					$$(ids.kanban).showProgress({ type: "icon" });
+
+				let patch = {};
+				patch[CurrentVerticalField.columnName] = status;
+
+				CurrentObject.model()
+					.update(rowId, patch)
+					.then(() => {
+
+						if ($$(ids.kanban).hideProgress)
+							$$(ids.kanban).hideProgress();
+
+					})
+					.catch((err) => {
+
+						OP.Error.log('Error saving item:', { error: err });
+
+						if ($$(ids.kanban).hideProgress)
+							$$(ids.kanban).hideProgress();
+
+					});
+
+			},
+
+			unselect: function () {
+
+				// TODO: how to unselect task in kanban
+			}
+
+
 		}
 
 
@@ -132,9 +239,8 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 		this.hide = _logic.hide;
 		this.show = _logic.show;
+		this.objectLoad = _logic.objectLoad;
 
 	}
 
 }
-
-

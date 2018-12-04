@@ -315,7 +315,7 @@ console.warn('!! ToDo: onAfterColumnHide()');
                         startRecIndex <= index && index <= endRecIndex) 
                         displayRecords.push(id);
 
-                    index++
+                    index++;
 
                 });
 
@@ -323,7 +323,7 @@ console.warn('!! ToDo: onAfterColumnHide()');
 
             };
 
-    		DataTable.attachEvent("onAfterRender", function(data){
+            DataTable.attachEvent("onAfterRender", function(data){
                 DataTable.resize();
 
                 // items = [];

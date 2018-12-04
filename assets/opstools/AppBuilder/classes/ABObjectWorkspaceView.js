@@ -45,8 +45,8 @@ export default class ABObjectWorkspaceView {
 	fromObj(data) {
 
 		this.id = data.id || OP.Util.uuid();
+		this.isDefaultView = JSON.parse(data.isDefaultView || false);
 		this.translations = data.translations || OP.Multilingual.defaultTranslations(['label'], {label:this.defaultLabel});
-
 	}
 
 
@@ -60,7 +60,14 @@ export default class ABObjectWorkspaceView {
 		OP.Multilingual.unTranslate(this, this, ['label']);
 		return {
 			id: this.id,
-			translations:this.translations
+			translations:this.translations,
+			isDefaultView: this.isDefaultView,
+		}
+	}
+
+	update (view) {
+		for (var key in view ) {
+			this[key] = view[key];
 		}
 	}
 }

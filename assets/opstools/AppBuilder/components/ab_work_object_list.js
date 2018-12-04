@@ -149,7 +149,7 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 						return _logic.templateListItem(obj, common);
 					},
 					type: {
-						height: 35,
+						// height: 35,
 						iconGear: "<div class='ab-object-list-edit'><span class='webix_icon fa fa-cog'></span></div>"
 					},
 					on: {

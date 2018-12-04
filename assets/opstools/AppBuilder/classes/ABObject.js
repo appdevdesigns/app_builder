@@ -6,13 +6,7 @@ import ABObjectBase from "./ABObjectBase"
 // import OP from "OP"
 // import ABFieldManager from "./ABFieldManager"
 import ABModel from "./ABModel"
-
-import ABObjectWorkspaceViewGrid from "./ABObjectWorkspaceViewGrid"
-import ABObjectWorkspaceViewKanban from "./ABObjectWorkspaceViewKanban"
-
-var hashViews = {}
-hashViews[ABObjectWorkspaceViewGrid.type()] = ABObjectWorkspaceViewGrid;
-hashViews[ABObjectWorkspaceViewKanban.type()] = ABObjectWorkspaceViewKanban;
+import ABObjectWorkspaceViewCollection from "./ABObjectWorkspaceViewCollection";
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -41,25 +35,14 @@ export default class ABObject extends ABObjectBase {
 }
 */
 
-		// import our Workspace View Objects
-		attributes.objectWorkspaceViews = attributes.objectWorkspaceViews || [];
-
-		if (attributes.objectWorkspaceViews.length == 0) {
-			var newView = this.objectWorkspace;
-			newView.type = ABObjectWorkspaceViewGrid.type();
-			attributes.objectWorkspaceViews.push(newView);
-		//// TODO make sure we have a default Grid View if none present
-		}
+        this.workspaceViews = new ABObjectWorkspaceViewCollection(
+            attributes,
+            this,
+            application
+        );
 
     	// multilingual fields: label, description
 		OP.Multilingual.translate(this, this, ['label']);
-
-		this.importViews(attributes.objectWorkspaceViews);
-		if (!this.currentViewID) {
-			this.currentViewID = this.views()[0].id;
-		}
-
-
   	}
 
 
@@ -261,11 +244,9 @@ export default class ABObject extends ABObjectBase {
 
 		OP.Multilingual.unTranslate(this, this, ["label"]);
 
-		var currViews = this.exportViews();
-
 		var result = super.toObj();
 
-		result.objectWorkspaceViews = currViews;
+		result.objectWorkspaceViews = this.workspaceViews.toObj();
 
 		return result;
 
@@ -487,35 +468,8 @@ export default class ABObject extends ABObjectBase {
 		return this._model;
 	}
 
-	views(fn) {
-		fn = fn || function(){ return true };
-		return this._views.filter(fn);
+	currentView() {
+		return this.workspaceViews.getCurrentView();
 	}
-
-	importViews(viewSettings) {
-
-		this._views = [];
-		viewSettings.forEach((view)=>{
-			this._views.push( new hashViews[view.type](view, this) );
-		});
-
-	}
-
-	exportViews() {
-		var views = [];
-		this._views.forEach((view)=>{
-			views.push( view.toObj() );
-		})
-
-		return views;
-	}
-
-	getCurrentView() {
-		return this.views((v)=>{ return v.id == this.currentViewID; })[0];
-	}
-
-
-
-
 }
 

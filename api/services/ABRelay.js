@@ -12,9 +12,6 @@ var crypto = require('crypto');
 
 var cookieJar = RP.jar();
 
-var _RequestsInProcess = false;
-var _RetryInProcess = false;
-
 var CSRF = {
     token: null,
     /**
@@ -274,33 +271,23 @@ options.rejectUnauthorized = false;
             // 2) get any message requests and process them
             .then(()=>{
 
-                // if we are still processing a previous batch of requests
-                // skip this round.
-                if (_RequestsInProcess) {
-                    return;
-                }
-
                 return ABRelay.get({url:'/mcc/relayrequest'})
                 .then((response)=>{
 
-                    _RequestsInProcess = true;
-                    processRequests(response.data, function(err){
-
-                        _RequestsInProcess = false;
-
+                    var all = [];
+                    response.data.forEach((request)=>{
+                        all.push(ABRelay.request(request));
                     })
-
+                    // Johnny: in debugging a problem with our polling taking too long,
+                    // I decided to NOT wait until all the responses were completed before
+                    // contining on with the polling.  Seems to work fine.
+                    // return Promise.all(all)
                 })
 
             })
             // 3) check for any old requests in our ABRelayRequestQueue and process them
             .then(()=>{
                 
-                // if we are already processing our retries, then skip
-                if (_RetryInProcess) {
-                    return;
-                }
-
                 var now = new Date();
                 var seconds = (sails.config.appbuilder.mcc.pollFrequency || 5000) * 2;
                 var timeout = new Date(now.getTime() - seconds);
@@ -309,24 +296,9 @@ options.rejectUnauthorized = false;
                     if (listOfRequests && listOfRequests.length>0) {
 
                         console.log("ABRelay.Poll():Found Old Requests : "+listOfRequests.length);
-                        
-                        // convert requests to array of just request data.
-                        var allRequests = [];
                         listOfRequests.forEach((req)=>{
-                            allRequests.push(req.request);
+                            ABRelay.request(req.request);
                         })
-
-
-                        _RetryInProcess = true;
-                        processRequests(allRequests, function(err){
-
-                            _RetryInProcess = false;
-
-                        })
-
-                        // listOfRequests.forEach((req)=>{
-                        //     ABRelay.request(req.request);
-                        // })
                     }
                 })
 
@@ -762,62 +734,4 @@ function packIt(data,list) {
         packIt(arrayFirstHalf, list);
         packIt(arraySecondHalf, list);
     }
-}
-
-
-/**
- * processRequests()
- * is an attempt to throttle the number of ABRelay requests we process at a time.
- * if we attempt too many, the server runs out of memory, so this fn() limits 
- * the number of requests to [numParallel] requests at a time.  But each of those
- * "threads" will sequentially continue to process requests until the given list 
- * is complete.
- * @param {array} allRequests  an array of the request objects
- * @param {function} done  the callback fn for when all the requests have been processed.
- */
-function processRequests(allRequests, done) {
-
-    //// 
-    //// Attempt to throttle the number of requests we process at a time
-    ////
-
-    // processRequest()  
-    // processes 1 request, when it is finished, process another
-    function processRequestSequential(list, cb) {
-        if (list.length == 0) {
-            cb();
-        } else {
-            var request = list.shift();
-            ABRelay.request(request)
-            .then(()=>{
-                processRequestSequential(list, cb);
-            });
-        }
-    }
-
-    // decide how many in parallel we will allow:
-    // NOTE : we can run out of memory if we allow too many.
-    var numParallel = sails.config.appbuilder.mcc.numParallelRequests || 15;
-    var numDone = 0;
-    function onDone(err) {
-
-        if (err) {
-            done(err);
-            return;
-        }
-
-        // once all our parallel tasks report done, we are done.
-        numDone ++;
-        if (numDone >= numParallel) {
-
-            // we are all done now.
-            done();
-        }
-    }
-
-    // fire off our requests in parallel.
-    for (var i=0; i<numParallel; i++) {
-        processRequestSequential(allRequests, onDone);
-    }
-
 }
