@@ -150,7 +150,9 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 				$$(ids.selectedObject).show();
 
+				// *** List ***
 
+				// Relationship Depth
 				$$(ids.depth).blockEvent(); // prevents endless loop
 
 				if (CurrentQuery.objectWorkspace.depth) {
@@ -161,8 +163,6 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 				$$(ids.depth).unblockEvent();
 
-
-				// *** List ***
 
 				let fnGetParentObjIds = (store, itemId) => {
 
@@ -285,11 +285,12 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 								alias: link.alias,
 								checked: true
 							});
-	
+
 							fnCheckItem(treeStore, field.datasourceLink, link.links, $item.id);
 						}
 
 					});
+
 				};
 
 				let links = [];
@@ -329,31 +330,31 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 					links = CurrentQuery.joins().links;
 				}
 
+				// set connected objects:
+				$$(ids.tree).clearAll();
+
+				// show loading cursor
+				$$(ids.tree).showProgress({ type: "icon" });
+
 				// NOTE: render the tree component in Promise to prevent freeze UI.
-				new Promise((next, err) => {
+				// populate tree store
+				if (objBase) {
 
-					// set connected objects:
-					$$(ids.tree).clearAll();
+					setTimeout(() => {
 
-					// show loading cursor
-					$$(ids.tree).showProgress({ type: "icon" });
+						$$(ids.tree).blockEvent();
 
-					let treeStore = new webix.TreeCollection();
-					if (objBase) {
-						fnAddTreeItem(treeStore, objBase);
-						fnCheckItem(treeStore, objBase, links);
-					}
+						fnAddTreeItem($$(ids.tree), objBase);
+						fnCheckItem($$(ids.tree), objBase, links);
 
-					// populate tree store
-					$$(ids.tree).parse(treeStore.serialize());
+						$$(ids.tree).unblockEvent();
 
+						// show loading cursor
+						$$(ids.tree).hideProgress({ type: "icon" });
 
-					// show loading cursor
-					$$(ids.tree).hideProgress({ type: "icon" });
+					}, 1000);
+				}
 
-					next();
-
-				});
 
 				// *** Tabs ***
 
