@@ -5,7 +5,7 @@
  * Manage the Object Workspace KanBan area.
  *
  */
-
+import AB_Work_KanbanSide from "./ab_work_object_workspace_kanban_sidePanel"
 
 
 export default class ABWorkObjectKanBan extends OP.Component {
@@ -33,15 +33,17 @@ export default class ABWorkObjectKanBan extends OP.Component {
 			component: this.unique(idBase + '_workspace_kanban'),
 			kanban: this.unique(idBase + '_kanban'),
 			resizer: this.unique(idBase + '_resizer'),
-			slideOutEditor: this.unique(idBase + '_slideOutEditor'),
 		}
 
 		var users = OP.User.userlist().map(u => {
 			return {
 				id: u.username,
-				value: u.username
+				value: u.username,
+				image: ''
 			};
 		});
+
+		let KanbanSide = new AB_Work_KanbanSide(App, idBase);
 
 		// Our webix UI definition:
 		this.ui = {
@@ -52,82 +54,35 @@ export default class ABWorkObjectKanBan extends OP.Component {
 					view: "kanban",
 					cols: [],
 					userList: true,
-					editor: true,
+					editor: false, // we use side bar
 					user: users,
 					tags: [],
-					data: []
+					data: [],
+					on: {
+						onListAfterSelect: (itemId, list) => {
+							if (itemId)
+								KanbanSide.show();
+							else
+								KanbanSide.hide();
+						},
+						onListAfterDrop: (context, ev, list) => {
+
+							let rowId = context.source[0];
+							if (rowId == null) return;
+
+							let newStatus = context.to.config.status;
+
+							_logic.updateStatus(rowId, newStatus);
+
+						}
+					}
 				},
 				{
 					id: ids.resizer,
 					view: "resizer",
 					borderless: true,
 				},
-				{
-					id: ids.slideOutEditor,
-					width: 300,
-					rows: [{
-						cols: [{},
-						{
-							view: "icon",
-							icon: "wxi-close",
-							align: "right",
-							click: function (id) {
-								$$(ids.resizer).hide();
-								$$(ids.slideOutEditor).hide();
-							}
-						}
-						]
-					},
-					{
-						view: "form",
-						borderless: true,
-						scroll: true,
-						elements: [{
-							view: "text",
-							value: 'Field value',
-							label: "Field Name1",
-							labelPosition: "top"
-						},
-						{
-							view: "textarea",
-							height: 200,
-							label: "Field Name",
-							labelPosition: "top",
-							value: "Field value"
-						},
-						{
-							view: "textarea",
-							height: 200,
-							label: "Field Name",
-							labelPosition: "top",
-							value: "Field value"
-						},
-						{
-							view: "textarea",
-							height: 200,
-							label: "Field Name",
-							labelPosition: "top",
-							value: "Field value"
-						},
-						]
-					},
-					{
-						padding: 5,
-						margin: 5,
-						borderless: true,
-						cols: [{
-							view: "button",
-							value: "Cancel"
-						},
-						{
-							view: "button",
-							value: "Save",
-							type: "form"
-						},
-						]
-					}
-					]
-				}
+				KanbanSide.ui
 			]
 		};
 
@@ -137,11 +92,16 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 			webix.extend($$(ids.kanban), webix.ProgressBar);
 
+			KanbanSide.init({
+				onClose: _logic.unselect
+			})
+
 		}
 
 
 
 		var CurrentObject = null;		// current ABObject being displayed
+		var CurrentVerticalField = null;
 
 
 		// our internal business logic
@@ -175,11 +135,11 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 				// Get vertical grouping field and populate to kanban list
 				// NOTE: this field should be the select list type
-				let verticalField = kanbanView.getVerticalGroupingField();
-				if (!verticalField) return;
+				CurrentVerticalField = kanbanView.getVerticalGroupingField();
+				if (!CurrentVerticalField) return;
 
 				// Option format -  { id: "1543563751920", text: "Normal", hex: "#4CAF50" }
-				let verticalOptions = (verticalField.settings.options || []).map(opt => {
+				let verticalOptions = (CurrentVerticalField.settings.options || []).map(opt => {
 
 					return {
 						header: opt.text,
@@ -198,7 +158,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 				let horizontalField = kanbanView.getHorizontalGroupingField();
 
 
-				_logic.loadData(verticalField);
+				_logic.loadData();
 
 			},
 
@@ -208,9 +168,9 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 			},
 
-			loadData: function (verticalField) {
+			loadData: function () {
 
-				if (!CurrentObject)
+				if (!CurrentObject || !CurrentVerticalField)
 					return;
 
 				// Show loading cursor
@@ -225,7 +185,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 							return {
 								id: d.id,
 								text: CurrentObject.displayData(d),
-								status: d[verticalField.columnName]
+								status: d[CurrentVerticalField.columnName]
 							};
 						}));
 
@@ -233,6 +193,39 @@ export default class ABWorkObjectKanBan extends OP.Component {
 							$$(ids.kanban).hideProgress();
 					});
 
+			},
+
+			updateStatus: function (rowId, status) {
+
+				// Show loading cursor
+				if ($$(ids.kanban).showProgress)
+					$$(ids.kanban).showProgress({ type: "icon" });
+
+				let patch = {};
+				patch[CurrentVerticalField.columnName] = status;
+
+				CurrentObject.model()
+					.update(rowId, patch)
+					.then(() => {
+
+						if ($$(ids.kanban).hideProgress)
+							$$(ids.kanban).hideProgress();
+
+					})
+					.catch((err) => {
+
+						OP.Error.log('Error saving item:', { error: err });
+
+						if ($$(ids.kanban).hideProgress)
+							$$(ids.kanban).hideProgress();
+
+					});
+
+			},
+
+			unselect: function () {
+
+				// TODO: how to unselect task in kanban
 			}
 
 
