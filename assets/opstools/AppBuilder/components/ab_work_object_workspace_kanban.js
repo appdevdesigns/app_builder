@@ -38,12 +38,13 @@ export default class ABWorkObjectKanBan extends OP.Component {
 		var users = OP.User.userlist().map(u => {
 			return {
 				id: u.username,
-				value: u.username,
-				image: ''
+				value: u.username
 			};
 		});
 
 		let KanbanSide = new AB_Work_KanbanSide(App, idBase);
+		
+		let _updatingOwnerRowId;
 
 		// Our webix UI definition:
 		this.ui = {
@@ -53,9 +54,26 @@ export default class ABWorkObjectKanBan extends OP.Component {
 					id: ids.kanban,
 					view: "kanban",
 					cols: [],
-					userList: true,
+					userList: {
+						view: 'menu',
+						yCount: 8,
+						// scroll: false,
+						template: '<i class="fa fa-user"></i> #value#',
+						width: 150,
+						on: {
+							onSelectChange: function () {
+
+								if (_updatingOwnerRowId == null) // get this row id from onAvatarClick event
+									return;
+
+								let userId = this.getSelectedId(false);
+
+								_logic.updateOwner(_updatingOwnerRowId, userId);
+							}
+						}
+					},
 					editor: false, // we use side bar
-					user: users,
+					users: users,
 					tags: [],
 					data: [],
 					on: {
@@ -65,14 +83,15 @@ export default class ABWorkObjectKanBan extends OP.Component {
 							else
 								KanbanSide.hide();
 						},
-						onListAfterDrop: (context, ev, list) => {
+						onAfterStatusChange: (rowId, status, list) => {
 
-							let rowId = context.source[0];
-							if (rowId == null) return;
+							_logic.updateStatus(rowId, status);
 
-							let newStatus = context.to.config.status;
+						},
+						onAvatarClick: function (rowId, ev, node, list) {
 
-							_logic.updateStatus(rowId, newStatus);
+							// keep this row id for update owner data in .userList
+							_updatingOwnerRowId = rowId;
 
 						}
 					}
@@ -102,6 +121,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 		var CurrentObject = null;		// current ABObject being displayed
 		var CurrentVerticalField = null;
+		var CurrentOwnerField = null;
 
 
 		// our internal business logic
@@ -157,6 +177,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 				let horizontalField = kanbanView.getHorizontalGroupingField();
 
+				CurrentOwnerField = kanbanView.getOwnerField();
 
 				_logic.loadData();
 
@@ -182,11 +203,20 @@ export default class ABWorkObjectKanBan extends OP.Component {
 					.then((data) => {
 
 						$$(ids.kanban).parse(data.data.map(d => {
-							return {
+
+							// Convert data to kanban data format
+							let result = {
 								id: d.id,
-								text: CurrentObject.displayData(d),
-								status: d[CurrentVerticalField.columnName]
+								text: CurrentObject.displayData(d)
 							};
+
+							if (CurrentVerticalField)
+								result.status = d[CurrentVerticalField.columnName];
+
+							if (CurrentOwnerField)
+								result.personId = d[CurrentOwnerField.columnName];
+
+							return result;
 						}));
 
 						if ($$(ids.kanban).hideProgress)
@@ -197,12 +227,44 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 			updateStatus: function (rowId, status) {
 
+				if (!CurrentVerticalField) return;
+
 				// Show loading cursor
 				if ($$(ids.kanban).showProgress)
 					$$(ids.kanban).showProgress({ type: "icon" });
 
 				let patch = {};
 				patch[CurrentVerticalField.columnName] = status;
+
+				CurrentObject.model()
+					.update(rowId, patch)
+					.then(() => {
+
+						if ($$(ids.kanban).hideProgress)
+							$$(ids.kanban).hideProgress();
+
+					})
+					.catch((err) => {
+
+						OP.Error.log('Error saving item:', { error: err });
+
+						if ($$(ids.kanban).hideProgress)
+							$$(ids.kanban).hideProgress();
+
+					});
+
+			},
+
+			updateOwner: function (rowId, userId) {
+
+				if (!CurrentOwnerField) return;
+
+				// Show loading cursor
+				if ($$(ids.kanban).showProgress)
+					$$(ids.kanban).showProgress({ type: "icon" });
+
+				let patch = {};
+				patch[CurrentOwnerField.columnName] = userId;
 
 				CurrentObject.model()
 					.update(rowId, patch)

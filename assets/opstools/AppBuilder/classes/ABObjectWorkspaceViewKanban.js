@@ -89,4 +89,12 @@ export default class ABObjectWorkspaceViewKanban extends ABObjectWorkspaceView {
 		return object.fields(f => f.id == this.verticalGroupingField)[0];
 	}
 
+	getOwnerField() {
+
+		let viewCollection = this.object, // Should use another name property ?
+			object = viewCollection.object;
+
+		return object.fields(f => f.id == this.ownerField)[0];
+	}
+
 }
