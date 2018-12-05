@@ -283,6 +283,12 @@ export default class ABWorkObjectKanBan extends OP.Component {
 					.update(rowId, patch)
 					.then(() => {
 
+						// update card
+						var card = $$(ids.kanban).getItem(rowId);
+						card[CurrentVerticalField.columnName] = status;
+						card.status = status;
+						$$(ids.kanban).updateItem(rowId, card);
+
 						_logic.ready();
 
 					})
@@ -309,6 +315,12 @@ export default class ABWorkObjectKanBan extends OP.Component {
 				CurrentObject.model()
 					.update(rowId, patch)
 					.then(() => {
+
+						// update card
+						var card = $$(ids.kanban).getItem(rowId);
+						card[CurrentOwnerField.columnName] = userId;
+						card.personId = userId;
+						$$(ids.kanban).updateItem(rowId, card);
 
 						_logic.ready();
 
