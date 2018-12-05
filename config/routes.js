@@ -178,6 +178,9 @@ module.exports = {
     'post /app_builder/Event/sendConfirmationEmail':
         'app_builder/ABMobileQRController.sendRegistrationConfirmation',
 
+    'get /events/confirm/:regID/:isConfirmed': 
+        'app_builder/ABMobileQRController.receiveRegistrationConfirmationResponse',
+
   /*
 
   '/': {

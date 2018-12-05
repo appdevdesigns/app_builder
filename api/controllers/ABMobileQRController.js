@@ -1280,12 +1280,62 @@ console.log('!!! adminQRCode:');
 
 
         ], (err, data)=>{
+
+
+            connAB.end();
+
             if (err) {
                 res.AD.error(err, err.httpResponseCode || 400);
             } else {
                 res.AD.success({sent:true});    
             }
         })
+
+    },
+
+
+
+
+
+    // get: /event/confirm/:regID/:isConfirmed
+    // receive the incoming response to the email confirmation we sent out.
+    receiveRegistrationConfirmationResponse: function(req, res) {
+        var regID = req.param('regID') || '--';
+        var isConfirmed = req.param('isConfirmed') || '--';
+        
+        console.log('::: Event Registration Confirmed: '+regID+' '+isConfirmed);
+
+        var connAB = mysql.createConnection({
+            host: sails.config.connections.appBuilder.host,
+            user: sails.config.connections.appBuilder.user,
+            password: sails.config.connections.appBuilder.password,
+            database: sails.config.connections.appBuilder.database
+        });
+
+
+        connAB.query(`
+
+            UPDATE AB_Events_Registration
+            SET SumConfirm=1, isAccurate=${isConfirmed}
+            WHERE id = ${regID}
+
+            `, (err, results, fields) => {
+            if (err) {
+
+            }
+            else {
+
+                var responsePath = 'app_builder/registration_confirmed';
+                if (isConfirmed == "0") {
+                    responsePath = 'app_builder/needs_adjustments'
+                }
+
+                res.view(responsePath, {});
+
+                connAB.end();
+                
+            }
+        });
 
     }
 
