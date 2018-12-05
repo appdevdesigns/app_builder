@@ -1252,32 +1252,60 @@ console.log('!!! adminQRCode:');
 
             },
 
-// Debugging output:
-(next)=>{
 
-    var registrationID = Object.keys(hashRegistrationPackets)[0];
-    var packet = hashRegistrationPackets[registrationID];
-    console.log(packet);
+            // 
+            // Send the emails!
+            //
+            (next) =>{
 
-    var triggerID = 'event.registration.summary.en';
-    var emailTo = [ 'jhausman@zteam.biz' ];
 
-    EmailNotifications.trigger(triggerID, {
-        to: emailTo,
-        variables: packet,
-        attachments: []
-    })
-    .done((html) => {
-        next();
-    })
-    .fail((err)=>{
+                var allRegistrationIDs = Object.keys(hashRegistrationPackets);
 
-        next();
-        
-    });
+// testing:
+allRegistrationIDs = [ 554, 555 ];
 
-}
+                function eachRegistration(list,  cb) {
+                    if (list.length==0) {
+                        cb();
+                    } else {
 
+                        var registrationID = list.shift();
+                        var packet = hashRegistrationPackets[registrationID];
+                        var registration = packet.registration;
+
+                        var triggerBase = 'event.registration.summary.';
+
+                        var lang = packet.languageCode || 'en';
+                        if (lang == 'ko') {
+                            lang = 'en';
+                        }
+// testing:  haven't impelmented zh-hans yet
+lang = 'en';
+                        var triggerID = triggerBase + lang;
+                        var emailTo = [ packet.email ];
+
+// still testing:
+// emailTo = [ 'jhausman@zteam.biz', 'jduncandesign@gmail.com', 'rpoolman@zteam.biz' ];
+emailTo = [ 'jhausman@zteam.biz' ];
+
+                        EmailNotifications.trigger(triggerID, {
+                            to: emailTo,
+                            variables: packet,
+                            attachments: []
+                        })
+                        .done((html) => {
+                            eachRegistration(list, cb);
+                        })
+                        .fail((err)=>{
+                            cb(err);
+                        });
+
+                    }
+                }
+                eachRegistration(allRegistrationIDs, (err)=>{
+                    next(err);
+                })
+            }
 
         ], (err, data)=>{
 
