@@ -619,7 +619,7 @@ console.log('!!! adminQRCode:');
                 var sql = `
 
                     SELECT * FROM AB_Events_Registration
-                    WHERE event IS Not Null
+                    WHERE event IS Not Null AND SumConfirm = 0
 
                 `;
 // Testing Locally: 443, 444, 510, 519
