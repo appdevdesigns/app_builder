@@ -25,6 +25,8 @@ export default class ABWorkObjectKanBan extends OP.Component {
 		var labels = {
 			common: App.labels,
 			component: {
+				confirmDeleteCardTitle: L('ab.object.deleteCard.title', "*Remove card"),
+				confirmDeleteCardMessage: L('ab.object.deleteCard.message', "*Do you want to delete this card?")
 			}
 		};
 
@@ -49,39 +51,6 @@ export default class ABWorkObjectKanBan extends OP.Component {
 		var CurrentOwnerField = null;
 
 		let _updatingOwnerRowId;
-
-		webix.type(webix.ui.kanbanlist, {
-			name: "ab-card", // our name
-			icons: [
-				// { icon: "mdi mdi-comment", show: function (obj) { return !!obj.comments }, template: "#comments.length#" },
-				{
-					icon: "fa fa-trash-o", click: (rowId, e) => {
-
-						_logic.removeCard(rowId);
-
-					}
-				}
-			],
-			// avatar template
-			templateAvatar: function (obj) {
-				if (obj.personId) {
-					return obj.personId; // username
-				}
-				else {
-					return "<span class='webix_icon fa fa-user'></span>";
-				}
-			},
-			// // template for item body
-			// // show item image and text
-			// templateBody: function (obj) {
-			// 	var html = "";
-			// 	if (obj.image)
-			// 		html += "<img class='image' src='../common/imgs/attachments/" + obj.image + "'/>";
-			// 	html += "<div>" + obj.text + "</div>";
-			// 	return html;
-			// }
-		});
-
 
 		// Our webix UI definition:
 		this.ui = {
@@ -130,7 +99,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 							// keep this row id for update owner data in .userList
 							_updatingOwnerRowId = rowId;
 
-						}
+						},
 					}
 				},
 				{
@@ -158,6 +127,39 @@ export default class ABWorkObjectKanBan extends OP.Component {
 		// our internal business logic
 		var _logic = this._logic = {
 
+			kanbanListTemplate: function () {
+
+				return {
+					icons: [
+						// { icon: "mdi mdi-comment", show: function (obj) { return !!obj.comments }, template: "#comments.length#" },
+						{
+							icon: "fa fa-trash-o", click: function (rowId, e) {
+
+								_logic.removeCard(rowId);
+
+							}
+						}
+					],
+					// avatar template
+					templateAvatar: function (obj) {
+						if (obj.personId) {
+							return obj.personId; // username
+						}
+						else {
+							return "<span class='webix_icon fa fa-user'></span>";
+						}
+					},
+					// // template for item body
+					// // show item image and text
+					// templateBody: function (obj) {
+					// 	var html = "";
+					// 	if (obj.image)
+					// 		html += "<img class='image' src='../common/imgs/attachments/" + obj.image + "'/>";
+					// 	html += "<div>" + obj.text + "</div>";
+					// 	return html;
+					// }
+				};
+			},
 
 			/**
 			 * @function hide()
@@ -197,7 +199,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 						body: {
 							view: "kanbanlist",
 							status: opt.id,
-							type: "ab-card" // our template name
+							type: _logic.kanbanListTemplate()
 						}
 					};
 				});
@@ -343,8 +345,8 @@ export default class ABWorkObjectKanBan extends OP.Component {
 			removeCard: (rowId) => {
 
 				OP.Dialog.Confirm({
-					title: labels.component.confirmDeleteRowTitle,
-					text: labels.component.confirmDeleteRowMessage,
+					title: labels.component.confirmDeleteCardTitle,
+					text: labels.component.confirmDeleteCardMessage,
 					callback: (result) => {
 						if (!result) return;
 
