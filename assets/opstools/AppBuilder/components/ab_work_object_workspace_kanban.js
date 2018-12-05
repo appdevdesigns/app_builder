@@ -43,8 +43,45 @@ export default class ABWorkObjectKanBan extends OP.Component {
 		});
 
 		let KanbanSide = new AB_Work_KanbanSide(App, idBase);
-		
+
+		var CurrentObject = null;	// current ABObject being displayed
+		var CurrentVerticalField = null;
+		var CurrentOwnerField = null;
+
 		let _updatingOwnerRowId;
+
+		webix.type(webix.ui.kanbanlist, {
+			name: "ab-card", // our name
+			icons: [
+				// { icon: "mdi mdi-comment", show: function (obj) { return !!obj.comments }, template: "#comments.length#" },
+				{
+					icon: "fa fa-trash-o", click: (rowId, e) => {
+
+						_logic.removeCard(rowId);
+
+					}
+				}
+			],
+			// avatar template
+			templateAvatar: function (obj) {
+				if (obj.personId) {
+					return obj.personId; // username
+				}
+				else {
+					return "<span class='webix_icon fa fa-user'></span>";
+				}
+			},
+			// // template for item body
+			// // show item image and text
+			// templateBody: function (obj) {
+			// 	var html = "";
+			// 	if (obj.image)
+			// 		html += "<img class='image' src='../common/imgs/attachments/" + obj.image + "'/>";
+			// 	html += "<div>" + obj.text + "</div>";
+			// 	return html;
+			// }
+		});
+
 
 		// Our webix UI definition:
 		this.ui = {
@@ -118,12 +155,6 @@ export default class ABWorkObjectKanBan extends OP.Component {
 		}
 
 
-
-		var CurrentObject = null;		// current ABObject being displayed
-		var CurrentVerticalField = null;
-		var CurrentOwnerField = null;
-
-
 		// our internal business logic
 		var _logic = this._logic = {
 
@@ -165,7 +196,8 @@ export default class ABWorkObjectKanBan extends OP.Component {
 						header: opt.text,
 						body: {
 							view: "kanbanlist",
-							status: opt.id
+							status: opt.id,
+							type: "ab-card" // our template name
 						}
 					};
 				});
@@ -183,7 +215,21 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 			},
 
-			objectLoad: function (object) {
+			busy: function () {
+
+				if ($$(ids.kanban).showProgress)
+					$$(ids.kanban).showProgress({ type: "icon" });
+
+			},
+
+			ready: function () {
+
+				if ($$(ids.kanban).hideProgress)
+					$$(ids.kanban).hideProgress();
+
+			},
+
+			objectLoad: (object) => {
 
 				CurrentObject = object;
 
@@ -195,8 +241,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 					return;
 
 				// Show loading cursor
-				if ($$(ids.kanban).showProgress)
-					$$(ids.kanban).showProgress({ type: "icon" });
+				_logic.busy();
 
 				// WORKAROUND: load all data for now
 				CurrentObject.model().findAll({})
@@ -219,8 +264,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 							return result;
 						}));
 
-						if ($$(ids.kanban).hideProgress)
-							$$(ids.kanban).hideProgress();
+						_logic.ready();
 					});
 
 			},
@@ -230,8 +274,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 				if (!CurrentVerticalField) return;
 
 				// Show loading cursor
-				if ($$(ids.kanban).showProgress)
-					$$(ids.kanban).showProgress({ type: "icon" });
+				_logic.busy();
 
 				let patch = {};
 				patch[CurrentVerticalField.columnName] = status;
@@ -240,16 +283,14 @@ export default class ABWorkObjectKanBan extends OP.Component {
 					.update(rowId, patch)
 					.then(() => {
 
-						if ($$(ids.kanban).hideProgress)
-							$$(ids.kanban).hideProgress();
+						_logic.ready();
 
 					})
 					.catch((err) => {
 
 						OP.Error.log('Error saving item:', { error: err });
 
-						if ($$(ids.kanban).hideProgress)
-							$$(ids.kanban).hideProgress();
+						_logic.ready();
 
 					});
 
@@ -260,8 +301,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 				if (!CurrentOwnerField) return;
 
 				// Show loading cursor
-				if ($$(ids.kanban).showProgress)
-					$$(ids.kanban).showProgress({ type: "icon" });
+				_logic.busy();
 
 				let patch = {};
 				patch[CurrentOwnerField.columnName] = userId;
@@ -270,16 +310,14 @@ export default class ABWorkObjectKanBan extends OP.Component {
 					.update(rowId, patch)
 					.then(() => {
 
-						if ($$(ids.kanban).hideProgress)
-							$$(ids.kanban).hideProgress();
+						_logic.ready();
 
 					})
 					.catch((err) => {
 
 						OP.Error.log('Error saving item:', { error: err });
 
-						if ($$(ids.kanban).hideProgress)
-							$$(ids.kanban).hideProgress();
+						_logic.ready();
 
 					});
 
@@ -288,6 +326,47 @@ export default class ABWorkObjectKanBan extends OP.Component {
 			unselect: function () {
 
 				// TODO: how to unselect task in kanban
+			},
+
+			removeCard: (rowId) => {
+
+				OP.Dialog.Confirm({
+					title: labels.component.confirmDeleteRowTitle,
+					text: labels.component.confirmDeleteRowMessage,
+					callback: (result) => {
+						if (!result) return;
+
+						_logic.busy();
+
+						CurrentObject.model()
+							.delete(rowId)
+							.then(response => {
+
+								if (response.numRows > 0) {
+									$$(ids.kanban).remove(rowId);
+								}
+								else {
+
+									OP.Dialog.Alert({
+										text: 'No rows were effected.  This does not seem right.'
+									})
+
+								}
+
+								_logic.ready();
+							})
+							.catch((err) => {
+
+								OP.Error.log('Error deleting item:', { error: err });
+
+								_logic.ready();
+
+								//// TODO: what do we do here?	
+							});
+
+					}
+				});
+
 			}
 
 
