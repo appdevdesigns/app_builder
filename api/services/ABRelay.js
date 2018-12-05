@@ -727,7 +727,22 @@ errorOptions = options;
                 return;
             }
 
-sails.log.error('::: ABRelay.request(): caught error:', err.statusCode || err, { request:errorOptions }, err.error, err);
+
+            // on a forbidden, just attempt to re-request the CSRF token and try again?
+            if ((err.statusCode && err.statusCode == 403) || (err.toString().indexOf('CSRF') > -1)) {
+
+                // if we haven't just tried a new token
+                if (!request.csrfRetry) {
+
+                    sails.log.error('::: ABRelay.request(): attempt to reset CSRF token ');
+                    request.csrfRetry = true;
+                    CSRF.token = null;
+                    return ABRelay.request(request);
+                }
+            }
+
+ADCore.error.log('::: ABRelay.request(): caught error: ', { request:errorOptions, error: err} )
+// sails.log.error('::: ABRelay.request(): caught error:', err.statusCode || err, { request:errorOptions }, err.error, err);
 
         })
 
