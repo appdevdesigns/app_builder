@@ -31,6 +31,7 @@ var QRCode = require('qrcode');
 
 var mysql = require('mysql');
 
+var moment = require('moment');
 
 
 module.exports = {
@@ -615,12 +616,18 @@ console.log('!!! adminQRCode:');
 
             // get Registrations
             (next)=>{
-                connAB.query(`
+                var sql = `
 
                     SELECT * FROM AB_Events_Registration
                     WHERE event IS Not Null
 
-                    `, (err, results, fields) => {
+                `;
+// Testing Locally: 443, 444, 510, 519
+// sql = `
+// SELECT * FROM AB_Events_Registration
+// WHERE event IS Not Null AND id IN ( 575 )
+// `
+                connAB.query(sql, (err, results, fields) => {
                     if (err) next(err);
                     else {
                         results.forEach((r)=>{
@@ -653,6 +660,7 @@ console.log('!!! adminQRCode:');
                         cb();
                     } else {
                         var registrationID = list.shift();
+                        var packet = hashRegistrationPackets[registrationID];
 
                         connAB.query(`
 
@@ -662,9 +670,14 @@ console.log('!!! adminQRCode:');
                             `, (err, results, fields) => {
                             if (err) cb(err);
                             else {
+                                var isOneAttending = false;
                                 results.forEach((r)=>{
-                                    hashRegistrationPackets[registrationID].registrants[r.id]=r;
+                                    packet.registrants[r.id]=r;
+                                    if (r.Attending) {
+                                        isOneAttending = true;
+                                    }
                                 })
+                                packet.isOneAttending = isOneAttending;
                                 getRegistrants(list, cb);
                             }
                         });
@@ -673,6 +686,34 @@ console.log('!!! adminQRCode:');
                     }
                 }
                 getRegistrants(allRegistrationIDs, (err)=>{
+                    next(err);
+                })
+            },
+
+
+            // clear out registrations with No one attending
+            (next)=>{
+                var allRegistrationIDs = Object.keys(hashRegistrationPackets);
+                var removeCount = 0;
+
+                function eachRegistration(list, cb) {
+                    if (list.length == 0) {
+                        cb();
+                    } else {
+                        var registrationID = list.shift();
+                        var packet = hashRegistrationPackets[registrationID];
+
+                        
+                        if (!packet.isOneAttending) {
+                            removeCount ++;
+                            delete hashRegistrationPackets[registrationID];
+                        }
+
+                        eachRegistration(list, cb);
+                    }
+                }
+                eachRegistration(allRegistrationIDs, (err)=>{
+                    console.log('... removed '+removeCount+' registrations where no one was attending.');
                     next(err);
                 })
             },
@@ -742,6 +783,8 @@ console.log('!!! adminQRCode:');
                         var packet = hashRegistrationPackets[registrationID];
                         var registration = packet.registration;
 
+                        packet.userUUID = '-';
+                        
                         connAB.query(`
 
                             SELECT * FROM AB_Events_AccountHolder
@@ -751,16 +794,17 @@ console.log('!!! adminQRCode:');
                             if (err) cb(err);
                             else {
                                 results.forEach((r)=>{
+                                    packet.userUUID = r.id;
                                     packet.email = r.email;
                                     packet.userName = r.User;
                                     var foundRen = Object.keys(packet.registrants).map((rKey)=>{ return packet.registrants[rKey]}).find((reg)=>{ return reg['Ren Name'] == r.Ren; })
                                     if (foundRen) {
-                                        packet.preferredName = foundRen.rendata.ren_preferredname;
+                                        packet.preferredName = getFirstName(foundRen.rendata);
                                     } else {
                                         var firstID = Object.keys(packet.registrants)[0];
                                         if (firstID) {
                                             if (packet.registrants[firstID].rendata) {
-                                                packet.preferredName = packet.registrants[firstID].rendata.ren_preferredname;
+                                                packet.preferredName = getFirstName(packet.registrants[firstID].rendata);
                                             } else {
                                                 packet.preferredName = 'Citizen';
                                                 packet.error = true;
@@ -803,11 +847,11 @@ console.log('!!! adminQRCode:');
                         var registration = packet.registration;
 
                         SiteUser.find({ username: packet.userName })
-                        .then((list)=>{
-                            if (list && list.length > 0) {
-                                packet.languageCode = list[0].languageCode;
-                                packet.email = list[0].email;
-                                packet.siteUser = list[0];
+                        .then((userList)=>{
+                            if (userList && userList.length > 0) {
+                                packet.languageCode = userList[0].languageCode;
+                                packet.email = userList[0].email;
+                                packet.siteUser = userList[0];
                             } else {
                                 packet.languageCode = 'en';
                                 packet.error = true;
@@ -902,8 +946,8 @@ console.log('!!! adminQRCode:');
                         var packet = hashRegistrationPackets[registrationID];
                         var registration = packet.registration;
 
+                        var attendees = [];
                         if (!packet.error) {
-                            var attendees = [];
                             Object.keys(packet.registrants).map((r)=>{ return packet.registrants[r]; }).forEach((person)=>{
                                 if (person.Attending == 1) {
 
@@ -915,8 +959,8 @@ console.log('!!! adminQRCode:');
                                     
                                 }
                             })
-                            packet.attendees = attendees;
                         }
+                        packet.attendees = attendees;
                         eachRegistration(list, cb);
                     }
                 }
@@ -957,8 +1001,8 @@ console.log('!!! adminQRCode:');
 
                                     // if a housingRoomFee add it to the housing entries
                                     if (hashHousingRoomFees[r.Fees177]) {
-                                        var from = r.Start;
-                                        var to = r.End;
+                                        var from = moment(r.Start).format("ddd MMM D");
+                                        var to = moment(r.End).format("ddd MMM D");;
 
                                         var entry = {
                                             type: hashHousingRoomFees[r.Fees177],
@@ -986,11 +1030,252 @@ console.log('!!! adminQRCode:');
 
             },
 
+
+            // 
+            // Compile Schedules
+            // 
+            (next)=>{
+                var allRegistrationIDs = Object.keys(hashRegistrationPackets);
+
+                function eachRegistrant(list, packet, cb) {
+                    if (list.length==0) {
+                        cb();
+                    } else {
+                        var registrantID = list.shift();
+                        var registrant = packet.registrants[registrantID];
+
+                        var childRenType = 4;
+                        var ren = registrant.rendata;
+
+                        // skip children
+                        if (ren.rentype_id == childRenType) {
+                            eachRegistrant(list, packet, cb);
+                            return;
+                        }
+
+                        var schedule = {
+                            name:getFirstName(ren),
+                            first:'?',
+                            second:'?',
+                            third:'?'
+                        }
+
+                        var hashPriority = {
+                            '1535347981478' : 'first',
+                            '1535347981516' : 'second',
+                            '1535347981589' : 'third'
+                        }
+
+                        connAB.query(`
+
+                            SELECT Rank, translations
+                            FROM AB_Events_Schedule as s
+                            INNER JOIN AB_Events_SubEvent as se ON s.\`Sub Event\` = se.id
+                            WHERE s.Attendee = ${registrantID}
+
+                            `, (err, results, fields) => {
+                            if (err) cb(err);
+                            else {
+
+                                results.forEach((r)=>{
+
+                                    var json = JSON.parse(r.translations);
+                                    schedule[hashPriority[r.Rank]] = json[0]['Title']
+                                    
+                                })
+                                
+                                packet.schedules.push(schedule);
+
+                                eachRegistrant(list, packet, cb);
+                            }
+                        });
+
+                    }
+                }
+
+                function eachRegistration(list,  cb) {
+                    if (list.length==0) {
+                        cb();
+                    } else {
+                        var registrationID = list.shift();
+                        var packet = hashRegistrationPackets[registrationID];
+                        packet.schedules = [];
+
+                        if (packet.event.hasCourses) {
+
+                            var allRegistrantIDs = Object.keys(packet.registrants);
+                            eachRegistrant(allRegistrantIDs, packet, (err)=>{
+                                if (err) { cb(err); return; }
+                                eachRegistration(list, cb);
+                            })
+      
+                        } else {
+                            eachRegistration(list, cb);
+                        }
+                    }
+                }
+                eachRegistration(allRegistrationIDs, (err)=>{
+                    next(err);
+                })
+            },
+
+
+            //
+            // Compile Childcare services + Translations + Travel
+            //
+            (next) => {
+                var allRegistrationIDs = Object.keys(hashRegistrationPackets);
+
+                function eachRegistration(list,  cb) {
+                    if (list.length==0) {
+                        cb();
+                    } else {
+
+                        var registrationID = list.shift();
+                        var packet = hashRegistrationPackets[registrationID];
+                        
+
+                        
+                        var allRegistrants = Object.keys(packet.registrants).map((k)=>{ return packet.registrants[k]; });
+                        var childRenType = 4;
+                        var lang = packet.languageCode || 'en';
+                        if (lang == 'ko') lang = 'en';
+
+
+                        // childcare:
+                        var hashChildCare = {
+                            "1527238278649" : {
+                                    'en' : 'None',
+                                    'zh-hans': '没有'
+                                },
+                            "1527238278344" : {
+                                    'en' : 'Chinese',
+                                    'zh-hans': '中文'
+                                },
+                            "1527238278417" : {
+                                    'en' : 'English',
+                                    'zh-hans': '英文'
+                                },
+                            "1527238278503" : {
+                                    'en' : 'Korean',
+                                    'zh-hans': '韩文'
+                                },
+                        }
+                        var childCare = [];
+                        allRegistrants.forEach((registrant)=>{
+                            if (registrant.Attending) {
+
+                                var ren = registrant.rendata;
+                                if (ren.rentype_id == childRenType) {
+
+                                    childCare.push({
+                                        name: getFirstName(ren),
+                                        option: hashChildCare[registrant.Childcare][lang]
+                                    })
+
+                                }
+                            }
+                        })
+                        packet.childCare = childCare;
+
+                        
+                        var hashTranslation = {
+                            "1533895123776" : {
+                                    'en' : 'None',
+                                    'zh-hans': '没有'
+                                },
+                            "1533895123922" : {
+                                    'en' : 'Chinese',
+                                    'zh-hans': '中文'
+                                },
+                            "1533895123849" : {
+                                    'en' : 'English',
+                                    'zh-hans': '英文'
+                                },
+                            "1533895123960" : {
+                                    'en' : 'Korean',
+                                    'zh-hans': '韩文'
+                                },
+                        }
+                        var translations = [];
+                        allRegistrants.forEach((registrant)=>{
+
+                            if (registrant.Attending) {
+
+                                var ren = registrant.rendata;
+                                if (ren.rentype_id != childRenType) {
+
+                                    translations.push({
+                                        name: getFirstName(ren),
+                                        option: hashTranslation[registrant.translation][lang]
+                                    })
+
+                                }
+                            }
+                        })
+                        packet.translations = translations;
+
+
+
+                        var travelArrival = [];
+                        var travelDeparture = [];
+                        allRegistrants.forEach((registrant)=>{
+
+                            if (registrant.Attending) {
+
+                                var ren = registrant.rendata;
+
+                                travelArrival.push({
+                                    name: getFullName(ren),
+                                    info: registrant['Arrival Ticket']
+                                })
+
+                                travelDeparture.push({
+                                    name: getFullName(ren),
+                                    info: registrant['Departure Ticket']
+                                })
+                            }
+                        })
+                        packet.travelArrival = travelArrival;
+                        packet.travelDeparture = travelDeparture;
+
+
+                        eachRegistration(list, cb);
+                    }
+
+                    var translations = [];
+
+                }
+                eachRegistration(allRegistrationIDs, (err)=>{
+                    next(err);
+                })
+
+            },
+
 // Debugging output:
 (next)=>{
-var registrationID = Object.keys(hashRegistrationPackets)[1];
-console.log(hashRegistrationPackets[registrationID]);
-next();
+
+    var registrationID = Object.keys(hashRegistrationPackets)[0];
+    var packet = hashRegistrationPackets[registrationID];
+    console.log(packet);
+
+    var triggerID = 'event.registration.summary.en';
+    var emailTo = [ 'jhausman@zteam.biz' ];
+
+    EmailNotifications.trigger(triggerID, {
+        to: emailTo,
+        variables: packet,
+        attachments: []
+    })
+    .done((html) => {
+        next();
+    })
+    .fail((err)=>{
+
+        next();
+        
+    });
+
 }
 
 
@@ -1005,3 +1290,15 @@ next();
     }
 
 };
+
+
+
+function getFirstName(ren) {
+    return ren.ren_preferredname || ren.ren_givenname
+}
+
+function getFullName(ren) {
+    var first = getFirstName(ren);
+    var last  = ren.ren_surname;
+    return `${first} ${last}`;
+}
