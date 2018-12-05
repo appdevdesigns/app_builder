@@ -553,6 +553,10 @@ console.log('!!! adminQRCode:');
             */
         }
 
+        var resultErrorPackets = [];
+
+
+        sails.log(' ... preparing to send confirmation emails');
         async.series([
 
             // get events
@@ -951,11 +955,25 @@ console.log('!!! adminQRCode:');
                             Object.keys(packet.registrants).map((r)=>{ return packet.registrants[r]; }).forEach((person)=>{
                                 if (person.Attending == 1) {
 
-                                    attendees.push({
-                                        firstname: person.rendata.ren_givenname,
-                                        lastname: person.rendata.ren_surname,
-                                        photo: (hashPhotos[person.rendata.ren_id] && hashPhotos[person.rendata.ren_id] != '')
-                                    })
+                                    if (person.rendata) {
+
+                                        attendees.push({
+                                            firstname: person.rendata.ren_givenname,
+                                            lastname: person.rendata.ren_surname,
+                                            photo: (hashPhotos[person.rendata.ren_id] && hashPhotos[person.rendata.ren_id] != '')
+                                        })
+                                    } else {
+
+                                        packet.error = true;
+                                        packet.errorText.push('registrant.'+person.id+' did not have a ren entry. !!! ');
+                                        attendees.push({
+                                            firstname: 'registrant.'+person.id+' did not have a ren entry. !!! ',
+                                            lastname: '',
+                                            photo: false
+                                        })
+
+                                    }
+                                    
                                     
                                 }
                             })
@@ -1046,6 +1064,12 @@ console.log('!!! adminQRCode:');
 
                         var childRenType = 4;
                         var ren = registrant.rendata;
+
+                        // skip entries without a rendata 
+                        if (!ren) {
+                            eachRegistrant(list, packet, cb);
+                            return;
+                        }
 
                         // skip children
                         if (ren.rentype_id == childRenType) {
@@ -1166,7 +1190,7 @@ console.log('!!! adminQRCode:');
                             if (registrant.Attending) {
 
                                 var ren = registrant.rendata;
-                                if (ren.rentype_id == childRenType) {
+                                if (ren && ren.rentype_id == childRenType) {
 
                                     childCare.push({
                                         name: getFirstName(ren),
@@ -1203,7 +1227,7 @@ console.log('!!! adminQRCode:');
                             if (registrant.Attending) {
 
                                 var ren = registrant.rendata;
-                                if (ren.rentype_id != childRenType) {
+                                if (ren && ren.rentype_id != childRenType) {
 
                                     translations.push({
                                         name: getFirstName(ren),
@@ -1225,15 +1249,18 @@ console.log('!!! adminQRCode:');
 
                                 var ren = registrant.rendata;
 
-                                travelArrival.push({
-                                    name: getFullName(ren),
-                                    info: registrant['Arrival Ticket']
-                                })
+                                if (ren) {
+                                    travelArrival.push({
+                                        name: getFullName(ren),
+                                        info: registrant['Arrival Ticket']
+                                    })
 
-                                travelDeparture.push({
-                                    name: getFullName(ren),
-                                    info: registrant['Departure Ticket']
-                                })
+                                    travelDeparture.push({
+                                        name: getFullName(ren),
+                                        info: registrant['Departure Ticket']
+                                    })
+                                }
+                                
                             }
                         })
                         packet.travelArrival = travelArrival;
@@ -1272,6 +1299,18 @@ allRegistrationIDs = [ 554, 555 ];
                         var registrationID = list.shift();
                         var packet = hashRegistrationPackets[registrationID];
                         var registration = packet.registration;
+                        if (packet.error) {
+                            resultErrorPackets.push(packet);
+                            console.log();
+                            console.log('-------------------');
+                            console.log(packet.errorText.join('\n'));
+                            console.log();
+                            console.log(packet);
+                            console.log('-------------------');
+                            console.log();
+                            eachRegistration(list, cb);
+                            return;
+                        }
 
                         var triggerBase = 'event.registration.summary.';
 
@@ -1305,6 +1344,17 @@ emailTo = [ 'jhausman@zteam.biz' ];
                 eachRegistration(allRegistrationIDs, (err)=>{
                     next(err);
                 })
+            },
+
+
+            // Save Error Packets
+            (next) => {
+                var logContents = "";
+                console.log('... there were '+resultErrorPackets.length+' registrations with errors compiling there data.');
+                // resultErrorPackets.forEach((packet)=>{
+
+                // })
+next();
             }
 
         ], (err, data)=>{
