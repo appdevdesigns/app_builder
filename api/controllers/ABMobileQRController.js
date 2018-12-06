@@ -26,13 +26,11 @@ var async = require('async');
 var _     = require('lodash');
 
 var RP = require('request-promise-native');
-
 var QRCode = require('qrcode');
-
 var mysql = require('mysql');
-
 var moment = require('moment');
 
+var Base64Images = require('../classes/Base64Images.js');
 
 module.exports = {
 
@@ -1346,7 +1344,7 @@ module.exports = {
 // lang = 'en';
                         var triggerID = triggerBase + lang;
                         var emailTo = [ packet.email ];
-
+                        
 // still testing:
 // emailTo = [ 'jhausman@zteam.biz', 'jduncandesign@gmail.com', 'rpoolman@zteam.biz' ];
 // emailTo = [ 'jhausman@zteam.biz' ];
@@ -1354,7 +1352,18 @@ module.exports = {
                         EmailNotifications.trigger(triggerID, {
                             to: emailTo,
                             variables: packet,
-                            attachments: []
+                            attachments: [
+                                {
+                                    filename: 'header.png',
+                                    content: Buffer.from(Base64Images.headerPNG, 'base64'),
+                                    cid: 'header',
+                                },
+                                {
+                                    filename: 'bg.jpg',
+                                    content: Buffer.from(Base64Images.backgroundJPG, 'base64'),
+                                    cid: 'bg',
+                                }
+                            ]
                         })
                         .done((html) => {
                             eachRegistration(list, cb);
