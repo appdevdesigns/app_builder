@@ -73,6 +73,8 @@ export default class ABWorkObjectKanBan extends OP.Component {
 									return;
 
 								let userId = this.getSelectedId(false);
+								if (userId == null)
+									return;
 
 								_logic.updateOwner(_updatingOwnerRowId, userId);
 							}
@@ -84,8 +86,10 @@ export default class ABWorkObjectKanBan extends OP.Component {
 					data: [],
 					on: {
 						onListAfterSelect: (itemId, list) => {
-							if (itemId)
-								KanbanSide.show();
+							if (itemId) {
+								let data = $$(ids.kanban).getItem(itemId);
+								KanbanSide.show(data);
+							}
 							else
 								KanbanSide.hide();
 						},
@@ -235,6 +239,8 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 				CurrentObject = object;
 
+				KanbanSide.objectLoad(object);
+
 			},
 
 			loadData: function () {
@@ -251,19 +257,20 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 						$$(ids.kanban).parse(data.data.map(d => {
 
-							// Convert data to kanban data format
-							let result = {
-								id: d.id,
-								text: CurrentObject.displayData(d)
-							};
+							// // Convert data to kanban data format
+							// let result = {
+							// 	id: d.id,
+							// 	text: CurrentObject.displayData(d)
+							// };
+							d.text = CurrentObject.displayData(d);
 
 							if (CurrentVerticalField)
-								result.status = d[CurrentVerticalField.columnName];
+								d.status = d[CurrentVerticalField.columnName];
 
 							if (CurrentOwnerField)
-								result.personId = d[CurrentOwnerField.columnName];
+								d.personId = d[CurrentOwnerField.columnName];
 
-							return result;
+							return d;
 						}));
 
 						_logic.ready();
@@ -284,12 +291,6 @@ export default class ABWorkObjectKanBan extends OP.Component {
 				CurrentObject.model()
 					.update(rowId, patch)
 					.then(() => {
-
-						// update card
-						var card = $$(ids.kanban).getItem(rowId);
-						card[CurrentVerticalField.columnName] = status;
-						card.status = status;
-						$$(ids.kanban).updateItem(rowId, card);
 
 						_logic.ready();
 
@@ -320,7 +321,6 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 						// update card
 						var card = $$(ids.kanban).getItem(rowId);
-						card[CurrentOwnerField.columnName] = userId;
 						card.personId = userId;
 						$$(ids.kanban).updateItem(rowId, card);
 

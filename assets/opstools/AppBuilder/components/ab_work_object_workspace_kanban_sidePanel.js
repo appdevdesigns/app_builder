@@ -5,6 +5,8 @@
  *
  */
 
+import ABViewForm from '../classes/views/ABViewForm'
+
 export default class ABWorkObjectKanBan extends OP.Component {
 
 	/**
@@ -27,76 +29,39 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 		// internal list of Webix IDs to reference our UI components.
 		var ids = {
-			component: this.unique(idBase + '_workspace_kanban_side')
+			component: this.unique(idBase + '_workspace_kanban_side'),
+			form: this.unique(idBase + '_workspace_kanban_side_form')
 		};
+
+		var CurrentObject = null;	// current ABObject being displayed
 
 		// Our webix UI definition:
 		this.ui = {
 			id: ids.component,
 			width: 300,
 			hidden: true,
-			rows: [{
-				cols: [{},
+			rows: [
 				{
-					view: "icon",
-					icon: "wxi-close",
-					align: "right",
-					click: function (id) {
+					cols: [{},
+					{
+						view: "icon",
+						icon: "wxi-close",
+						align: "right",
+						click: function (id) {
 
-						_logic.hide();
+							_logic.hide();
 
+						}
 					}
-				}
-				]
-			},
-			{
-				view: "form",
-				borderless: true,
-				scroll: true,
-				elements: [{
-					view: "text",
-					value: 'Field value',
-					label: "Field Name1",
-					labelPosition: "top"
+					]
 				},
 				{
-					view: "textarea",
-					height: 200,
-					label: "Field Name",
-					labelPosition: "top",
-					value: "Field value"
+					id: ids.form,
+					view: 'form',
+					borderless: true,
+					rows: []
 				},
-				{
-					view: "textarea",
-					height: 200,
-					label: "Field Name",
-					labelPosition: "top",
-					value: "Field value"
-				},
-				{
-					view: "textarea",
-					height: 200,
-					label: "Field Name",
-					labelPosition: "top",
-					value: "Field value"
-				},
-				]
-			},
-			{
-				padding: 5,
-				margin: 5,
-				borderless: true,
-				cols: [{
-					view: "button",
-					value: "Cancel"
-				},
-				{
-					view: "button",
-					value: "Save",
-					type: "form"
-				},
-				]
-			}
+				{}
 			]
 		};
 
@@ -123,6 +88,11 @@ export default class ABWorkObjectKanBan extends OP.Component {
 				onClose: function () { },
 			},
 
+			objectLoad: (object) => {
+
+				CurrentObject = object;
+
+			},
 
 			hide: function () {
 
@@ -132,9 +102,55 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 			},
 
-			show: function () {
+			show: function (data) {
 
 				$$(ids.component).show();
+
+				_logic.refreshForm(data);
+
+			},
+
+			refreshForm: function (data) {
+
+				data = data || {};
+
+				let formAttrs = {
+					settings: {
+						columns: 1,
+						labelPosition: 'top',
+						showLabel: 1,
+						clearOnLoad: 0,
+						clearOnSave: 0,
+						labelWidth: 120,
+						height: 0
+					}
+				};
+				let form = new ABViewForm(formAttrs, CurrentObject.application);
+
+				// Populate child elements
+				CurrentObject.fields().forEach((f, index) => {
+					form.addFieldToForm(f, index);
+				});
+
+				// add default button (Save/Cancel)
+				form.addDefaultButton(CurrentObject.fields().length);
+
+				// add temp id to views
+				form._views.forEach(v => v.id = OP.Util.uuid());
+
+				let formCom = form.component(App);
+
+				// Rebuild form
+				webix.ui(formCom.ui.rows, $$(ids.form));
+
+				formCom.init();
+				formCom.onShow();
+
+				// display data
+				$$(ids.form).parse(data);
+
+				// display data of custom fields
+				formCom.logic.displayData(data);
 
 			}
 
@@ -146,7 +162,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 		this.hide = _logic.hide;
 		this.show = _logic.show;
-
+		this.objectLoad = _logic.objectLoad;
 
 	}
 

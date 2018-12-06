@@ -230,10 +230,7 @@ export default class ABViewForm extends ABViewContainer {
 
 				});
 
-				// Add a default button
-				var newButton = ABViewFormButton.newInstance(formView.application, formView);
-				newButton.position.y = fields.length;
-				formView._views.push(newButton);
+				formView.addDefaultButton(fields.length);
 
 			}
 
@@ -997,6 +994,10 @@ PopupRecordRule.qbFixAfterShow();
 	 * @return {ABViewDataCollection}
 	 */
 	get dataCollection() {
+
+		if (this.settings.datacollection == null)
+			return null;
+
 		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.datacollection)[0];
 	}
 
@@ -1063,6 +1064,16 @@ PopupRecordRule.qbFixAfterShow();
 
 
 		return newView;
+
+	}
+
+
+	addDefaultButton(yPosition) {
+
+		// Add a default button
+		var newButton = ABViewFormButton.newInstance(this.application, this);
+		newButton.position.y = yPosition;
+		this._views.push(newButton);
 
 	}
 
