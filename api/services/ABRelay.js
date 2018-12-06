@@ -591,6 +591,7 @@ errorOptions = options;
                                 }
                             }
 
+
                             // [Fix] Johnny
                             // it seems a web client disconnecting a socket can get caught in our 
                             // process.  just try again:
@@ -601,8 +602,24 @@ errorOptions = options;
                                 return;
                             }
 
-                            // // if a different error, then pass this along our chain() and process in our .catch() below
-                            // cb(err);
+
+                            // [Fix] Johnny
+                            // if we get here and we have a 403: it is likely it is a CSRF mismatch error
+                            // but in production, sails won't return 'CSRF mismatch', so lets attempt to 
+                            // retrieve a new CSRF token and try again:
+                            if ((errorString.indexOf('CSRF mismatch') > -1) || (err.statusCode && err.statusCode == 403)) {
+                                
+                                sails.log.error('::: ABRelay.request(): attempt to reset CSRF token ');
+                                lastError = err;
+                                CSRF.token = null;
+                                CSRF.fetch()
+                                .then((token)=>{
+                                    tryIt(attempt+1, cb);
+                                })
+                                return;
+                            }
+
+
                             //// ACTUALLY no.  it there was an error that didn't follow our error format, then it was 
                             // probably due to a problem with the request itself.  Just package an error and send it back:
                             var data = {
@@ -710,8 +727,9 @@ errorOptions = options;
                 return;
             }
 
+
             // on a forbidden, just attempt to re-request the CSRF token and try again?
-            if (err.statusCode && err.statusCode == 403) {
+            if ((err.statusCode && err.statusCode == 403) || (err.toString().indexOf('CSRF') > -1)) {
 
                 // if we haven't just tried a new token
                 if (!request.csrfRetry) {
@@ -723,8 +741,8 @@ errorOptions = options;
                 }
             }
 
-
-sails.log.error('::: ABRelay.request(): caught error:', err.statusCode || err, { request:errorOptions }, err.error, err);
+ADCore.error.log('::: ABRelay.request(): caught error: ', { request:errorOptions, error: err} )
+// sails.log.error('::: ABRelay.request(): caught error:', err.statusCode || err, { request:errorOptions }, err.error, err);
 
         })
 
