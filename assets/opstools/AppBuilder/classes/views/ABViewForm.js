@@ -484,7 +484,7 @@ PopupRecordRule.qbFixAfterShow();
 									view: "button",
 									name: "buttonSubmitRules",
 									label: L("ab.components.form.settings", "*Settings"),
-									icon: "gear",
+									icon: "fa fa-gear",
 									type: "icon",
 									badge: 0,
 									click: function () {
@@ -504,7 +504,7 @@ PopupRecordRule.qbFixAfterShow();
 									view: "button",
 									name: "buttonDisplayRules",
 									label: L("ab.components.form.settings", "*Settings"),
-									icon: "gear",
+									icon: "fa fa-gear",
 									type: "icon",
 									badge: 0,
 									click: function () {
@@ -524,7 +524,7 @@ PopupRecordRule.qbFixAfterShow();
 									view: "button",
 									name: "buttonRecordRules",
 									label: L("ab.components.form.settings", "*Settings"),
-									icon: "gear",
+									icon: "fa fa-gear",
 									type: "icon",
 									badge: 0,
 									click: function () {

@@ -263,7 +263,7 @@ export default class ABViewPage extends ABViewContainer {
                                     view: "button",
                                     name: "datacollection",
                                     label: L("ab.component.page.settings", "*Settings"),
-                                    icon: "gear",
+                                    icon: "fa fa-gear",
                                     type: "icon",
                                     badge: 0,
                                     click: function () {
