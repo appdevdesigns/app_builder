@@ -947,9 +947,12 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 												},
 												onBeforeOpen: function (id) {
 
-													let field = CurrentApplication.urlResolve(this.getItem(id).fieldUrl);
-													let childItems = _logic.getChildItems(field.datasourceLink, id);
-													$$(ids.tree).parse(childItems);
+													let item = this.getItem(id);
+													if (item.$count===-1){
+														let field = CurrentApplication.urlResolve(item.fieldUrl);
+														let childItems = _logic.getChildItems(field.datasourceLink, id);
+														$$(ids.tree).parse(childItems);
+													}
 
 												}
 											}
