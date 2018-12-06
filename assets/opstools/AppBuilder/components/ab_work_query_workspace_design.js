@@ -153,15 +153,15 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 				// *** List ***
 
 				// Relationship Depth
-				$$(ids.depth).blockEvent(); // prevents endless loop
+				// $$(ids.depth).blockEvent(); // prevents endless loop
 
-				if (CurrentQuery.objectWorkspace.depth) {
-					$$(ids.depth).setValue(CurrentQuery.objectWorkspace.depth);
-				} else {
-					$$(ids.depth).setValue(5);
-				}
+				// if (CurrentQuery.objectWorkspace.depth) {
+				// 	$$(ids.depth).setValue(CurrentQuery.objectWorkspace.depth);
+				// } else {
+				// 	$$(ids.depth).setValue(5);
+				// }
 
-				$$(ids.depth).unblockEvent();
+				// $$(ids.depth).unblockEvent();
 
 
 				let fnGetParentObjIds = (store, itemId) => {
@@ -183,58 +183,6 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 					}
 
 					return objectIds;
-
-				};
-
-				let fnAddTreeItem = (store, currObj, parentItemId) => {
-
-					if (parentItemId) {
-						var item = store.getItem(parentItemId);
-						if (item.$level > $$(ids.depth).getValue())
-							return;
-					}
-
-					currObj.connectFields().forEach(f => {
-
-						let fieldUrl = f.urlPointer(),
-							existsObjIds = fnGetParentObjIds(store, parentItemId);
-
-						// prevent looping
-						if (f.datasourceLink == null)
-							// ||
-							// // - check duplicate include object in branch
-							// existsObjIds.indexOf(f.datasourceLink.id) > -1)
-							return;
-
-						// always enabled
-						var disabled = false;
-
-						// add items to tree
-						var label = "#object# (#field#)"
-							.replace("#object#", f.datasourceLink.label)
-							.replace("#field#", f.label);
-
-						var itemId = store.add(
-							{
-								value: label, // a label of link object
-								fieldUrl: fieldUrl,
-								objectId: f.datasourceLink.id,
-								checked: false,
-								disabled: disabled,
-								open: !disabled
-							},
-
-							// order index
-							null,
-
-							// parent item's id
-							parentItemId
-						);
-
-						// add child items to tree
-						fnAddTreeItem(store, f.datasourceLink, itemId);
-
-					});
 
 				};
 
@@ -283,8 +231,12 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 							treeStore.updateItem($item.id, {
 								alias: link.alias,
-								checked: true
+								checked: true,
+								open: true
 							});
+
+							let childItems = _logic.getChildItems(field.datasourceLink, $item.id);
+							$$(ids.tree).parse(childItems);
 
 							fnCheckItem(treeStore, field.datasourceLink, link.links, $item.id);
 						}
@@ -340,19 +292,13 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 				// populate tree store
 				if (objBase) {
 
-					setTimeout(() => {
+					let treeItems = _logic.getChildItems(objBase);
+					$$(ids.tree).parse(treeItems);
 
-						$$(ids.tree).blockEvent();
+					fnCheckItem($$(ids.tree), objBase, links);
 
-						fnAddTreeItem($$(ids.tree), objBase);
-						fnCheckItem($$(ids.tree), objBase, links);
-
-						$$(ids.tree).unblockEvent();
-
-						// show loading cursor
-						$$(ids.tree).hideProgress({ type: "icon" });
-
-					}, 1000);
+					// show loading cursor
+					$$(ids.tree).hideProgress({ type: "icon" });
 				}
 
 
@@ -455,6 +401,50 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 				/** DataTable **/
 				_logic.refreshDataTable();
+			},
+
+			getChildItems(object, parentItemId) {
+
+				// if (parentItemId) {
+				// 	var item = store.getItem(parentItemId);
+				// 	if (item.$level > $$(ids.depth).getValue())
+				// 		return;
+				// }
+
+				let result = {
+					data: []
+				};
+
+				if (parentItemId)
+					result.parent = parentItemId;
+
+				object.connectFields().forEach(f => {
+
+					if (f.datasourceLink == null)
+						return;
+
+					let fieldUrl = f.urlPointer();
+
+					// add items to tree
+					var label = "#object# (#field#)"
+						.replace("#object#", f.datasourceLink.label)
+						.replace("#field#", f.label);
+
+					result.data.push({
+						value: label, // a label of link object
+						fieldUrl: fieldUrl,
+						objectId: f.datasourceLink.id,
+						checked: false,
+						disabled: false, // always enable
+						open: false,
+
+						webix_kids: true
+					});
+
+				});
+
+				return result;
+
 			},
 
 
@@ -598,7 +588,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 					CurrentQuery.workspaceFilterConditions = DataFilter.getValue();
 
 					/** depth **/
-					CurrentQuery.objectWorkspace.depth = $$(ids.depth).getValue();
+					// CurrentQuery.objectWorkspace.depth = $$(ids.depth).getValue();
 
 					// Save to db
 					CurrentQuery.save()
@@ -909,30 +899,30 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 											css: "ab-query-label",
 											height: 50
 										},
-										{
-											autowidth: true,
-											css: "bg-gray",
-											cols: [
-												{},
-												{
-													id: ids.depth,
-													view: "counter",
-													label: L('ab.object.querybuilder.relationshipDepth', "*Relationship Depth"),
-													width: 270,
-													labelWidth: 165,
-													step: 1,
-													value: 5,
-													min: 1,
-													max: 10,
-													on: {
-														onChange: function (newv, oldv) {
-															_logic.depthChange(newv, oldv);
-														}
-													}
-												},
-												{}
-											]
-										},
+										// {
+										// 	autowidth: true,
+										// 	css: "bg-gray",
+										// 	cols: [
+										// 		{},
+										// 		{
+										// 			id: ids.depth,
+										// 			view: "counter",
+										// 			label: L('ab.object.querybuilder.relationshipDepth', "*Relationship Depth"),
+										// 			width: 270,
+										// 			labelWidth: 165,
+										// 			step: 1,
+										// 			value: 5,
+										// 			min: 1,
+										// 			max: 10,
+										// 			on: {
+										// 				onChange: function (newv, oldv) {
+										// 					_logic.depthChange(newv, oldv);
+										// 				}
+										// 			}
+										// 		},
+										// 		{}
+										// 	]
+										// },
 										{
 											view: "tree",
 											id: ids.tree,
@@ -954,6 +944,16 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 												onItemCheck: function (id, isChecked, event) {
 
 													_logic.checkObjectLink(id, isChecked);
+												},
+												onBeforeOpen: function (id) {
+
+													let item = this.getItem(id);
+													if (item.$count===-1){
+														let field = CurrentApplication.urlResolve(item.fieldUrl);
+														let childItems = _logic.getChildItems(field.datasourceLink, id);
+														$$(ids.tree).parse(childItems);
+													}
+
 												}
 											}
 										}

@@ -1237,6 +1237,7 @@ export default class ABViewDataCollection extends ABView {
 		// prevent bind many times
 		if (this.__bindComponentIds.indexOf(component.config.id) > -1 && 
 				$$(component.config.id).data &&
+				$$(component.config.id).data.find &&
 				$$(component.config.id).data.find({}).length > 0)
 			return;
 		// keep component id to an array
@@ -1648,13 +1649,14 @@ export default class ABViewDataCollection extends ABView {
 			linkCursor = linkDc.getCursor();
 		}
 
-		// data is empty
-		if (linkCursor == null) return null;
-
 		if (this.__dataCollection) {
 			this.__dataCollection.filter(rowData => {
 
-				return this.isParentFilterValid(rowData);
+				// if link dc cursor is null, then show all data
+				if (linkCursor == null)
+					return true;
+				else
+					return this.isParentFilterValid(rowData);
 
 			});
 
