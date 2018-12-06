@@ -554,6 +554,7 @@ module.exports = {
         }
 
         var resultErrorPackets = [];
+        var resultErrorSending = [];
 
 
         sails.log(' ... preparing to send confirmation emails');
@@ -637,6 +638,16 @@ module.exports = {
                         results.forEach((r)=>{
                             var event = hashEvents[r.Event];
 
+                            // some people have null translations so here is a default set:
+                            var translations = {
+                                "Non-attend reason":"",
+                                "Special Requests":""
+                            }
+                            if (r.translations) {
+                                translations  = JSON.parse(r.translations)[0];
+                            }
+                            
+
                             hashRegistrationPackets[r.id] = {
                                 error:false,
                                 errorText:[],
@@ -644,7 +655,9 @@ module.exports = {
                                 registration: r,
                                 registrants:{},
                                 HCrib:false,
-                                HExtraBed:false
+                                HExtraBed:false,
+                                nonAttend:translations['Non-attend reason'],
+                                specialRequests:translations['Special Requests']
                             };
                         })
                         next();
@@ -695,32 +708,32 @@ module.exports = {
             },
 
 
-            // clear out registrations with No one attending
-            (next)=>{
-                var allRegistrationIDs = Object.keys(hashRegistrationPackets);
-                var removeCount = 0;
+            // // clear out registrations with No one attending
+            // (next)=>{
+            //     var allRegistrationIDs = Object.keys(hashRegistrationPackets);
+            //     var removeCount = 0;
 
-                function eachRegistration(list, cb) {
-                    if (list.length == 0) {
-                        cb();
-                    } else {
-                        var registrationID = list.shift();
-                        var packet = hashRegistrationPackets[registrationID];
+            //     function eachRegistration(list, cb) {
+            //         if (list.length == 0) {
+            //             cb();
+            //         } else {
+            //             var registrationID = list.shift();
+            //             var packet = hashRegistrationPackets[registrationID];
 
                         
-                        if (!packet.isOneAttending) {
-                            removeCount ++;
-                            delete hashRegistrationPackets[registrationID];
-                        }
+            //             if (!packet.isOneAttending) {
+            //                 removeCount ++;
+            //                 delete hashRegistrationPackets[registrationID];
+            //             }
 
-                        eachRegistration(list, cb);
-                    }
-                }
-                eachRegistration(allRegistrationIDs, (err)=>{
-                    console.log('... removed '+removeCount+' registrations where no one was attending.');
-                    next(err);
-                })
-            },
+            //             eachRegistration(list, cb);
+            //         }
+            //     }
+            //     eachRegistration(allRegistrationIDs, (err)=>{
+            //         console.log('... removed '+removeCount+' registrations where no one was attending.');
+            //         next(err);
+            //     })
+            // },
 
 
             // fill out Registrant Ren Data in registrant.rendata
@@ -1289,7 +1302,11 @@ module.exports = {
                 var allRegistrationIDs = Object.keys(hashRegistrationPackets);
 
 // testing:
-allRegistrationIDs = [ 554, 555 ];
+// var justThese = [ 554, 555 ];
+// mccgowans 554, 555
+// rpoolman  442, 443, 470
+// allRegistrationIDs = [ 442, 443, 470 ];
+
 
                 function eachRegistration(list,  cb) {
                     if (list.length==0) {
@@ -1298,7 +1315,13 @@ allRegistrationIDs = [ 554, 555 ];
 
                         var registrationID = list.shift();
                         var packet = hashRegistrationPackets[registrationID];
-                        var registration = packet.registration;
+
+// testing: maybe i've already confirmed one of my testing ones.
+// if (!packet) {
+// console.log('!!! desired registration not processed ['+registrationID+']  perhaps you already confirmed it?');
+// eachRegistration(list, cb);
+// return;
+// }
                         if (packet.error) {
                             resultErrorPackets.push(packet);
                             console.log();
@@ -1312,20 +1335,21 @@ allRegistrationIDs = [ 554, 555 ];
                             return;
                         }
 
+
                         var triggerBase = 'event.registration.summary.';
 
                         var lang = packet.languageCode || 'en';
                         if (lang == 'ko') {
                             lang = 'en';
                         }
-// testing:  haven't impelmented zh-hans yet
-lang = 'en';
+
+// lang = 'en';
                         var triggerID = triggerBase + lang;
                         var emailTo = [ packet.email ];
 
 // still testing:
 // emailTo = [ 'jhausman@zteam.biz', 'jduncandesign@gmail.com', 'rpoolman@zteam.biz' ];
-emailTo = [ 'jhausman@zteam.biz' ];
+// emailTo = [ 'jhausman@zteam.biz' ];
 
                         EmailNotifications.trigger(triggerID, {
                             to: emailTo,
@@ -1336,7 +1360,8 @@ emailTo = [ 'jhausman@zteam.biz' ];
                             eachRegistration(list, cb);
                         })
                         .fail((err)=>{
-                            cb(err);
+                            resultErrorSending.push({ error:err, packet:packet })
+                            eachRegistration(list, cb);
                         });
 
                     }
@@ -1350,12 +1375,51 @@ emailTo = [ 'jhausman@zteam.biz' ];
             // Save Error Packets
             (next) => {
                 var logContents = "";
-                console.log('... there were '+resultErrorPackets.length+' registrations with errors compiling there data.');
-                // resultErrorPackets.forEach((packet)=>{
+                console.log('... there were '+resultErrorPackets.length+' registrations with errors compiling their data.');
+                resultErrorPackets.forEach((packet)=>{
 
-                // })
-next();
+                    var stringifiedPacket = JSON.stringify(packet, null, 4);
+
+                    logContents += `
+
+---------------------------------------------------
+${stringifiedPacket}
+---------------------------------------------------
+
+`
+
+                });
+
+
+                console.log('... there were '+resultErrorSending.length+' registrations with errors sending their emails.');
+                resultErrorSending.forEach((error)=>{
+
+                    var stringError = error.error.toString();
+                    var stringifiedPacket = JSON.stringify(error.packet, null, 4);
+
+                    logContents += `
+
+---------------------------------------------------
+${stringError}
+
+${stringifiedPacket}
+---------------------------------------------------
+
+`
+
+                });
+
+
+
+                fs.writeFile('events_log_confirmationEmailErrors.log', logContents, (err)=>{
+                    if (err) {
+                        ADCore.error.log('::: ABMobileQRController.sendRegistrationConfirmation(): error writing log file: ', { error: err } )
+                    }
+                    next();
+                })
+
             }
+
 
         ], (err, data)=>{
 
@@ -1395,11 +1459,12 @@ next();
 
             UPDATE AB_Events_Registration
             SET SumConfirm=1, isAccurate=${isConfirmed}
-            WHERE id = ${regID}
+            WHERE uuid = "${regID}"
 
             `, (err, results, fields) => {
             if (err) {
-
+console.error(err);
+res.error(err);
             }
             else {
 
