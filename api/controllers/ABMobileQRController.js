@@ -430,7 +430,7 @@ module.exports = {
     // @param {string} mobileApp  id of the Mobile App
     adminQRCode:function(req, res) {
 
-console.log('!!! adminQRCode:');
+// console.log('!!! adminQRCode:');
 
         var user = req.param('user') || '--';
         var appID = req.param('mobileApp') || '--';
