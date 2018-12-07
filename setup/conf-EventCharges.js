@@ -878,6 +878,24 @@ WHERE
                         'Insert Breakfast Charges for Registration ['+regID+']', 
                         `
 
+                            SET @roomsCovered = 0;
+                            SET @roomsCovered = (
+                                SELECT
+                                    COUNT(*)*2 as count
+                                FROM 
+                                    ${ChargesTable} as ch
+                                WHERE
+                                    ch.Reg = ${regID} and
+                                    ch.Fees177 IN (
+                                        SELECT 
+                                            id
+                                        FROM
+                                            AB_Events_Fees fee
+                                        WHERE
+                                            fee.\`Post_Name\` IN ('HDouble','Hsuite','HTwin','HStandard Room')
+                                    )
+                            );
+                            SET @rownum = 0;
                             INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Start\`, \`End\`, \`Apply Charge\`)
                             SELECT
                                 regID, 42, CONCAT('auto_import_42_FBrkfst4-11_', regID, '_', pepID), '2019-01-15 00:00:00', '2019-01-20 00:00:00', 1
@@ -898,7 +916,7 @@ WHERE
                                     FLOOR(datediff('2019-01-28', ren.ren_birthdate)/365) > 3
                                 ORDER BY 
                                     age DESC
-                            ) d WHERE entry > 6 and 
+                            ) d WHERE entry > @roomsCovered and 
                             not exists (
                                 SELECT 1
                                 FROM \`${ChargesTable}\`
@@ -912,6 +930,8 @@ WHERE
                                 ) and
                                 uuid = CONCAT('auto_import_42_FBrkfst4-11_', regID, '_', pepID)
                             );
+
+                            
                         `,
                         ()=>{
                             processOne(list, cb);
