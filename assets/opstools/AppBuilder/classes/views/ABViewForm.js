@@ -798,10 +798,11 @@ PopupRecordRule.qbFixAfterShow();
 			
 			callbacks:{
 			
+				onBeforeSaveData:function(){ return true },
 				onSaveData:function(saveData){},
 				clearOnLoad:function(){ return false }
 			
-			},			
+			},
 
 			displayData: (rowData) => {
 
@@ -1077,7 +1078,128 @@ PopupRecordRule.qbFixAfterShow();
 
 	}
 
+	/**
+	 * @method getFormValues
+	 * 
+	 * @param {webix form} formView 
+	 * @param {ABObject} obj
+	 * @param {ABViewDataCollection} dcLink [optional]
+	 */
+	getFormValues(formView, obj, dcLink) {
 
+		// get update data
+		var formVals = formView.getValues();
+
+		// get custom values
+		var customFields = this.fieldComponents((comp) => comp instanceof ABViewFormCustom);
+		customFields.forEach((f) => {
+
+			var vComponent = this.viewComponents[f.id];
+			if (vComponent == null) return;
+
+			if (f.field())
+				formVals[f.field().columnName] = vComponent.logic.getValue();
+
+		});
+
+		// clear undefined values or empty arrays
+		for (var prop in formVals) {
+			if (formVals[prop] == null || formVals[prop].length == 0)
+				formVals[prop] = '';
+		}
+
+		// add default values to hidden fields
+		obj.fields().forEach(f => {
+			if (formVals[f.columnName] === undefined) {
+				f.defaultValue(formVals);
+			}
+		});
+
+		// Add parent's data collection cursor when a connect field does not show
+		if (dcLink && dcLink.getCursor()) {
+
+			var objectLink = dcLink.datasource;
+
+			var connectFields = obj.fields(f => f.key == 'connectObject');
+			connectFields.forEach((f) => {
+
+				var formFieldCom = this.fieldComponents((fComp) => {
+					return fComp.field && fComp.field().id == f.id; 
+				});
+
+				if (objectLink.id == f.settings.linkObject &&
+					formFieldCom.length < 1 && // check field does not show
+					formVals[f.columnName] === undefined) { 
+					formVals[f.columnName] = {};
+					formVals[f.columnName][objectLink.PK()] = dcLink.getCursor().id;
+				}
+
+			});
+
+		}
+
+		return formVals;
+
+	}
+
+
+	/**
+	 * @method validateData
+	 * 
+	 * @param {webix form} formView 
+	 * @param {ABObject} object
+	 * @param {object} formVals
+	 * 
+	 * @return {boolean} isValid
+	 */
+	validateData(formView, object, formVals) {
+
+		var isValid = true;
+
+		// validate required fields
+		var requiredFields = this.fieldComponents(fComp => fComp.settings.required).map(fComp => fComp.field());
+		requiredFields.forEach(f => {
+
+			if (!formVals[f.columnName] && 
+				formVals[f.columnName] != '0') {
+
+				formView.markInvalid(f.columnName, '*This is a required field.');
+				isValid = false;
+			}
+
+		});
+
+		// validate data
+		var validator;
+		if (isValid) {
+			validator = object.isValidData(formVals);
+			isValid = validator.pass();
+		}
+
+		// if data is invalid
+		if (!isValid) {
+
+			let saveButton = formView.queryView({ view: 'button', type: "form" });
+
+			// error message
+			if (validator && validator.errors && validator.errors.length) {
+				validator.errors.forEach(err => {
+					formView.markInvalid(err.name, err.message);
+				});
+
+				if (saveButton)
+					saveButton.disable();
+			}
+			else {
+
+				if (saveButton)
+					saveButton.enable();
+
+			}
+		}
+
+		return isValid;
+	}
 
 	/**
 	 * @method saveData
@@ -1088,241 +1210,151 @@ PopupRecordRule.qbFixAfterShow();
 	 */
 	saveData(formView) {
 
+		// call .onBeforeSaveData event
+		// if this function returns false, then it will not go on.
+		if (!this._logic.callbacks.onBeforeSaveData())
+			return Promise.resolve();
+
 		// form validate
-		if (formView && formView.validate()) {
-			formView.clearValidation();
-
-			// get ABViewDataCollection
-			var dc = this.dataCollection;
-			if (dc == null) return Promise.resolve();
-
-			// get ABObject
-			var obj = dc.datasource;
-			if (obj == null) return Promise.resolve();
-
-			// get ABModel
-			var model = dc.model;
-			if (model == null) return Promise.resolve();
-
-			// get update data
-			var formVals = formView.getValues();
-
-			// get custom values
-			var customFields = this.fieldComponents((comp) => comp instanceof ABViewFormCustom);
-			customFields.forEach((f) => {
-
-				var vComponent = this.viewComponents[f.id];
-				if (vComponent == null) return;
-
-				if (f.field())
-					formVals[f.field().columnName] = vComponent.logic.getValue();
-
-			});
-
-			// clear undefined values or empty arrays
-			for (var prop in formVals) {
-				if (formVals[prop] == null || formVals[prop].length == 0)
-					formVals[prop] = '';
-			}
-
-			// add default values to hidden fields
-			obj.fields().forEach(f => {
-				if (formVals[f.columnName] === undefined) {
-					f.defaultValue(formVals);
-				}
-			});
-
-			// Add parent's data collection cursor when a connect field does not show
-			var dcLink  = dc.dataCollectionLink;
-			if (dcLink && dcLink.getCursor()) {
-
-				var objectLink = dcLink.datasource;
-
-				var connectFields = obj.fields(f => f.key == 'connectObject');
-				connectFields.forEach((f) => {
-
-					var formFieldCom = this.fieldComponents((fComp) => {
-						return fComp.field && fComp.field().id == f.id; 
-					});
-
-					if (objectLink.id == f.settings.linkObject &&
-						formFieldCom.length < 1 && // check field does not show
-						formVals[f.columnName] === undefined) { 
-						formVals[f.columnName] = {};
-						formVals[f.columnName][objectLink.PK()] = dcLink.getCursor().id;
-					}
-
-				});
-
-			}
-
-			var isValid = true;
-
-			// validate required fields
-			var requiredFields = this.fieldComponents(fComp => fComp.settings.required).map(fComp => fComp.field());
-			requiredFields.forEach(f => {
-
-				if (!formVals[f.columnName] && 
-					formVals[f.columnName] != '0') {
-
-					formView.markInvalid(f.columnName, '*This is a required field.');
-					isValid = false;
-				}
-
-			});
-
-			// validate data
-			var validator;
-			if (isValid) {
-				validator = obj.isValidData(formVals);
-				isValid = validator.pass();
-			}
-
-
-
-			if (isValid) {
-
-				// show progress icon
-				if (formView.showProgress)
-					formView.showProgress({ type: "icon" });
-
-				// form ready function
-				var formReady = (newFormVals) => {
-
-					// clear cursor after saving.
-					if (dc) {
-						if (this.settings.clearOnSave) {
-							dc.setCursor(null);
-							formView.clear();
-						}
-						else {
-
-							if (newFormVals &&
-								newFormVals.id)
-								dc.setCursor(newFormVals.id);
-
-						}
-					}
-					
-					// if there was saved data pass it up to the onSaveData callback
-					if (newFormVals) 
-						this._logic.callbacks.onSaveData(newFormVals);
-
-					if (formView.hideProgress)
-						formView.hideProgress();
-				};
-
-				let formError = (err) => {
-
-					let saveButton = formView.queryView({ view: 'button', type: "form" });
-
-					if (err && err.invalidAttributes) {
-
-						// mark error
-						for (let attr in err.invalidAttributes) {
-							formView.markInvalid(attr, err.invalidAttributes[attr].message);
-						}
-
-					}
-
-					if (saveButton)
-						saveButton.enable();
-
-					if (formView.hideProgress)
-						formView.hideProgress();
-
-				};
-
-				return new Promise(
-					(resolve, reject) => {
-
-
-						// If this object already exists, just .update()
-						if (formVals.id) {
-							model.update(formVals.id, formVals)
-								.catch((err) => {
-									formError(err.data);
-									reject(err);
-								})
-								.then((newFormVals) => {
-
-									this.doRecordRules(newFormVals)
-									.then(()=>{
-// make sure any updates from RecordRules get passed along here.
-										this.doSubmitRules(newFormVals);
-										formReady(newFormVals);
-										resolve(newFormVals);
-									})
-									.catch((err)=>{
-										OP.Error.log('Error processing Record Rules.', {error:err, newFormVals:newFormVals });
-// Question:  how do we respond to an error?
-// ?? just keep going ??
-this.doSubmitRules(newFormVals);
-formReady(newFormVals);
-resolve(); 	
-									})
-								});
-						}
-						// else add new row
-						else {
-							model.create(formVals)
-								.catch((err) => {
-									formError(err.data);
-									reject(err);
-								})
-								.then((newFormVals) => {
-
-									this.doRecordRules(newFormVals)
-									.then(()=>{
-
-										this.doSubmitRules(newFormVals);
-										formReady(newFormVals);
-										resolve(newFormVals);
-									})
-									.catch((err)=>{
-										OP.Error.log('Error processing Record Rules.', {error:err, newFormVals:newFormVals });
-// Question:  how do we respond to an error?
-// ?? just keep going ??
-this.doSubmitRules(newFormVals);
-formReady(newFormVals);
-resolve(); 	
-									})
-									
-								});
-						}
-					}
-				);
-
-			}
-			else {
-
-				let saveButton = formView.queryView({ view: 'button', type: "form" });
-
-				// error message
-				if (validator && validator.errors && validator.errors.length) {
-					validator.errors.forEach(err => {
-						formView.markInvalid(err.name, err.message);
-					});
-
-					if (saveButton)
-						saveButton.disable();
-				}
-				else {
-
-					if (saveButton)
-						saveButton.enable();
-
-				}
-
-				return Promise.resolve();
-			}
-
-		}
-		else {
+		if (!formView || !formView.validate()) {
 			// TODO : error message
 
 			return Promise.resolve();
 		}
+
+		formView.clearValidation();
+
+		// get ABViewDataCollection
+		var dc = this.dataCollection;
+		if (dc == null) return Promise.resolve();
+
+		// get ABObject
+		var obj = dc.datasource;
+		if (obj == null) return Promise.resolve();
+
+		// get ABModel
+		var model = dc.model;
+		if (model == null) return Promise.resolve();
+
+		// get update data
+		var formVals = this.getFormValues(formView, obj, dc.dataCollectionLink);
+
+		// validate data
+		if (!this.validateData(formView, obj, formVals)) {
+			return Promise.resolve();
+		}
+
+		// show progress icon
+		if (formView.showProgress)
+			formView.showProgress({ type: "icon" });
+
+		// form ready function
+		var formReady = (newFormVals) => {
+
+			// clear cursor after saving.
+			if (dc) {
+				if (this.settings.clearOnSave) {
+					dc.setCursor(null);
+					formView.clear();
+				}
+				else {
+
+					if (newFormVals &&
+						newFormVals.id)
+						dc.setCursor(newFormVals.id);
+
+				}
+			}
+			
+			// if there was saved data pass it up to the onSaveData callback
+			if (newFormVals) 
+				this._logic.callbacks.onSaveData(newFormVals);
+
+			if (formView.hideProgress)
+				formView.hideProgress();
+		};
+
+		let formError = (err) => {
+
+			let saveButton = formView.queryView({ view: 'button', type: "form" });
+
+			if (err && err.invalidAttributes) {
+
+				// mark error
+				for (let attr in err.invalidAttributes) {
+					formView.markInvalid(attr, err.invalidAttributes[attr].message);
+				}
+
+			}
+
+			if (saveButton)
+				saveButton.enable();
+
+			if (formView.hideProgress)
+				formView.hideProgress();
+
+		};
+
+		return new Promise(
+			(resolve, reject) => {
+
+
+				// If this object already exists, just .update()
+				if (formVals.id) {
+					model.update(formVals.id, formVals)
+						.catch((err) => {
+							formError(err.data);
+							reject(err);
+						})
+						.then((newFormVals) => {
+
+							this.doRecordRules(newFormVals)
+							.then(()=>{
+// make sure any updates from RecordRules get passed along here.
+								this.doSubmitRules(newFormVals);
+								formReady(newFormVals);
+								resolve(newFormVals);
+							})
+							.catch((err)=>{
+								OP.Error.log('Error processing Record Rules.', {error:err, newFormVals:newFormVals });
+// Question:  how do we respond to an error?
+// ?? just keep going ??
+this.doSubmitRules(newFormVals);
+formReady(newFormVals);
+resolve(); 	
+							})
+						});
+				}
+				// else add new row
+				else {
+					model.create(formVals)
+						.catch((err) => {
+							formError(err.data);
+							reject(err);
+						})
+						.then((newFormVals) => {
+
+							this.doRecordRules(newFormVals)
+							.then(()=>{
+
+								this.doSubmitRules(newFormVals);
+								formReady(newFormVals);
+								resolve(newFormVals);
+							})
+							.catch((err)=>{
+								OP.Error.log('Error processing Record Rules.', {error:err, newFormVals:newFormVals });
+// Question:  how do we respond to an error?
+// ?? just keep going ??
+this.doSubmitRules(newFormVals);
+formReady(newFormVals);
+resolve(); 	
+							})
+							
+						});
+				}
+			}
+		);
+
 	}
 
 

@@ -122,6 +122,8 @@ export default class ABWorkObjectKanBan extends OP.Component {
 			webix.extend($$(ids.kanban), webix.ProgressBar);
 
 			KanbanSide.init({
+				onAddData: _logic.saveData,
+				onUpdateData: _logic.saveData,
 				onClose: _logic.unselect
 			})
 
@@ -248,6 +250,8 @@ export default class ABWorkObjectKanBan extends OP.Component {
 				if (!CurrentObject || !CurrentVerticalField)
 					return;
 
+				$$(ids.kanban).clearAll();
+
 				// Show loading cursor
 				_logic.busy();
 
@@ -255,26 +259,24 @@ export default class ABWorkObjectKanBan extends OP.Component {
 				CurrentObject.model().findAll({})
 					.then((data) => {
 
-						$$(ids.kanban).parse(data.data.map(d => {
-
-							// // Convert data to kanban data format
-							// let result = {
-							// 	id: d.id,
-							// 	text: CurrentObject.displayData(d)
-							// };
-							d.text = CurrentObject.displayData(d);
-
-							if (CurrentVerticalField)
-								d.status = d[CurrentVerticalField.columnName];
-
-							if (CurrentOwnerField)
-								d.personId = d[CurrentOwnerField.columnName];
-
-							return d;
-						}));
+						$$(ids.kanban).parse(data.data.map(d => _logic.convertData(d)));
 
 						_logic.ready();
 					});
+
+			},
+
+			convertData(data) {
+
+				data.text = CurrentObject.displayData(data);
+
+				if (CurrentVerticalField)
+					data.status = data[CurrentVerticalField.columnName];
+
+				if (CurrentOwnerField)
+					data.personId = data[CurrentOwnerField.columnName];
+
+				return data;
 
 			},
 
@@ -334,6 +336,19 @@ export default class ABWorkObjectKanBan extends OP.Component {
 						_logic.ready();
 
 					});
+
+			},
+
+			saveData(data) {
+
+				// update
+				if (data.id && $$(ids.kanban).exists(data.id)) {
+					$$(ids.kanban).updateItem(data.id, _logic.convertData(data));
+				}
+				// insert
+				else {
+					$$(ids.kanban).add(_logic.convertData(data));
+				}
 
 			},
 

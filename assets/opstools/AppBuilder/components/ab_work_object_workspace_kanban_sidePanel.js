@@ -81,10 +81,8 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 			callbacks: {
 
-				/**
-				* @function onClose
-				*
-				*/
+				onAddData: function(data) {},
+				onUpdateData: function(data) {},
 				onClose: function () { },
 			},
 
@@ -142,8 +140,68 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 				// Rebuild form
 				webix.ui(formCom.ui.rows, $$(ids.form));
+				webix.extend($$(ids.form), webix.ProgressBar);
 
-				formCom.init();
+				formCom.init({
+					onBeforeSaveData: () => {
+
+						// show progress icon
+						if ($$(ids.form).showProgress)
+							$$(ids.form).showProgress({ type: "icon" });
+
+						// get update data
+						var formVals = form.getFormValues($$(ids.form), CurrentObject);
+
+						// validate data
+						if (!form.validateData($$(ids.form), CurrentObject, formVals))
+							return false;
+
+						if (formVals.id) {
+							CurrentObject.model().update(formVals.id, formVals)
+								.catch((err) => {
+
+									// TODO : error message
+									console.error(err);
+
+									if ($$(ids.form).hideProgress)
+										$$(ids.form).hideProgress({ type: "icon" });
+
+								})
+								.then((updateVals) => {
+
+									_logic.callbacks.onUpdateData(updateVals);
+
+									if ($$(ids.form).hideProgress)
+										$$(ids.form).hideProgress({ type: "icon" });
+
+								});
+						}
+						// else add new row
+						else {
+							CurrentObject.model().create(formVals)
+								.catch((err) => {
+
+									// TODO : error message
+									console.error(err);
+
+									if ($$(ids.form).hideProgress)
+										$$(ids.form).hideProgress({ type: "icon" });
+
+								})
+								.then((newVals) => {
+
+									_logic.callbacks.onAddData(newVals);
+
+									if ($$(ids.form).hideProgress)
+										$$(ids.form).hideProgress({ type: "icon" });
+
+								});
+						}
+
+						return false;
+					}
+				});
+
 				formCom.onShow();
 
 				// display data
