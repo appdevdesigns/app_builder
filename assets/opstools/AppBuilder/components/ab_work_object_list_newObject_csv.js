@@ -6,6 +6,7 @@
  *
  */
 import ABField from "../classes/dataFields/ABField"
+import CSVImporter from "../classes/CSVImporter"
 
 export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 
@@ -45,6 +46,8 @@ export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 
 		var dataRows = [];
 
+		var csvImporter = new CSVImporter();
+
 		// Our webix UI definition:
 		this.ui = {
 			id: ids.component,
@@ -54,8 +57,6 @@ export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 				id: ids.form,
 				width: 400,
 				rules: {
-					// TODO:
-					// name: inputValidator.rules.validateObjectName
 				},
 				elements: [
 					{
@@ -99,12 +100,7 @@ export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 						name: "separatedBy",
 						label: labels.component.separatedBy,
 						labelWidth: 140,
-						options: [
-							{ id: ",", value: "Comma (,)" },
-							{ id: "\t", value: "Tab (&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)" },
-							{ id: ";", value: "Semicolon (;)" },
-							{ id: "\s", value: "Space ( )" }
-						],
+						options: csvImporter.getSeparateItems(),
 						value: ',',
 						on: {
 							onChange: () => {
@@ -217,30 +213,8 @@ export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 			},
 
 			loadCsvFile: (fileInfo) => {
-				
-				// validate file type
-				let extensionType = fileInfo.file.type.toLowerCase();
-				if (extensionType == "text/csv" ||
-					extensionType == "application/vnd.ms-excel") {
 
-					// read CSV file
-					var reader = new FileReader();
-					reader.onload = (e) => {
-						dataRows = reader.result.split('\n');
-
-						$$(ids.headerOnFirstLine).enable();
-						$$(ids.columnList).enable();
-						$$(ids.importButton).enable();
-
-						_logic.populateColumnList();
-					}
-					reader.readAsText(fileInfo.file);
-
-					return true;
-				}
-				// invalid file type
-				else {
-
+				if (!csvImporter.validateFile(fileInfo)) {
 					webix.alert({
 						title: labels.component.fileTypeErrorTitle,
 						text: labels.component.fileTypeError,
@@ -248,8 +222,23 @@ export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 					});
 
 					return false;
-
 				}
+
+				// read CSV file
+				csvImporter.getDataRows(fileInfo, getSeparatedBy())
+					.then(data => {
+
+						dataRows = data;
+
+						$$(ids.headerOnFirstLine).enable();
+						$$(ids.columnList).enable();
+						$$(ids.importButton).enable();
+		
+						_logic.populateColumnList();
+
+					});
+
+				return true;
 
 			},
 
@@ -268,20 +257,20 @@ export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 				var columnList = [];
 
 				if ($$(ids.headerOnFirstLine).getValue()) {
-					columnList = firstLine.split(getSeparatedBy()).map(function (colName, index) {
+					columnList = firstLine.map(function (colName, index) {
 						return {
 							include: true,
-							columnName: reformat(colName),
-							dataType: getGuessDataType(index)
+							columnName: colName,
+							dataType: csvImporter.getGuessDataType(dataRows, index)
 						};
 					});
 				}
 				else {
-					for (var i = 0; i < firstLine.split(getSeparatedBy()).length; i++) {
+					for (var i = 0; i < firstLine.length; i++) {
 						columnList.push({
 							include: true,
 							columnName: 'Field ' + (i + 1),
-							dataType: getGuessDataType(i)
+							dataType: csvImporter.getGuessDataType(dataRows, i)
 						});
 					}
 				}
@@ -377,8 +366,6 @@ export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 					// add rows to Server
 					var objModel = newObj.model();
 
-					dataRows = dataRows.filter((row) => row && row.length > 0);
-
 					// Add each records sequentially
 					var subTasks = Promise.resolve();
 					dataRows.forEach((data, index) => {
@@ -388,11 +375,11 @@ export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 								return Promise.resolve();
 
 							var rowData = {};
-							var colValues = data.split(getSeparatedBy());
+							var colValues = data;
 
 							newObj.fields().forEach((col) => {
 								if (colValues[col.settings.weight] != null)
-									rowData[col.columnName] = reformat(colValues[col.settings.weight]);
+									rowData[col.columnName] = colValues[col.settings.weight];
 							})
 
 							// Add row data
@@ -439,52 +426,8 @@ export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 
 		// private functions
 
-		var getGuessDataType = (colIndex) => {
-			var data,
-				repeatNum = 10;
-
-			// Loop to find a value
-			for (var i = 1; i <= repeatNum; i++) {
-				var line = dataRows[i];
-				if (!line) break;
-
-				var dataCols = line.split(getSeparatedBy()),
-					data = reformat(dataCols[colIndex]);
-
-				if (data != null && data.replace(/"/g, '').replace(/'/g, '').length > 0)
-					break;
-			}
-
-			if (data == null || data == "") {
-				return 'string'
-			}
-			else if (data == 0 || data == 1 || data == true || data == false || data == 'checked' || data == 'unchecked') {
-				return 'boolean';
-			}
-			else if (!isNaN(data)) {
-				return 'number';
-			}
-			else if (Date.parse(data)) {
-				return 'date';
-			}
-			else {
-				if (data.length > 100)
-					return 'LongText';
-				else
-					return 'string';
-			}
-		};
-
-
 		var getSeparatedBy = () => {
 			return $$(ids.separatedBy).getValue();
-		}
-
-		var reformat = (str) => {
-			if (!str) return '';
-
-			// return str.trim().replace(/^"(.+)"$/, '$1');
-			return str.trim().replace(/"/g, '');
 		}
 
 
