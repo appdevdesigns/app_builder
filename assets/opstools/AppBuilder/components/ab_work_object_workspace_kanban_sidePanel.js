@@ -6,6 +6,7 @@
  */
 
 import ABViewForm from '../classes/views/ABViewForm'
+import ABViewFormButton from '../classes/views/ABViewFormButton'
 
 export default class ABWorkObjectKanBan extends OP.Component {
 
@@ -130,8 +131,17 @@ export default class ABWorkObjectKanBan extends OP.Component {
 					form.addFieldToForm(f, index);
 				});
 
-				// add default button (Save/Cancel)
-				form.addDefaultButton(CurrentObject.fields().length);
+				// add default button (Save button)
+				form._views.push(new ABViewFormButton({
+					settings: {
+						includeSave: true,
+						includeCancel: false,
+						includeReset: false
+					},
+					position: {
+						y: CurrentObject.fields().length // yPosition
+					}
+				}, CurrentObject.application, form));
 
 				// add temp id to views
 				form._views.forEach(v => v.id = OP.Util.uuid());

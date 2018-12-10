@@ -186,6 +186,8 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 				$$(ids.component).show();
 
+				KanbanSide.hide();
+
 				if (!CurrentObject) return;
 
 				// Get object's kanban view
@@ -354,7 +356,11 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 			unselect: function () {
 
-				// TODO: how to unselect task in kanban
+				$$(ids.kanban).eachList(function (list, status) {
+					if (list && list.unselect)
+						list.unselect();
+				});
+
 			},
 
 			removeCard: (rowId) => {
