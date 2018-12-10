@@ -956,7 +956,7 @@ WHERE
                 else {
                     var allIDs = results.map((r)=>{ return r.id });
 // testing:
-allIDs = [ 816 ];
+// allIDs = [ 816 ];
                     processOne(allIDs, (err)=>{
                         next(err);
                     })
@@ -1035,17 +1035,36 @@ ${padded} : ${resultSummary[r]}`;
 
 
 function runQuery ( resultKey, sql, cb ) {
-    connAB.query(sql, (err, results, fields) => {
-        if (err) {
-            resultSummary[resultKey] = err.toString();
-            cb();
-        }
-        else {
-            resultSummary[resultKey] = `${results.affectedRows} rows INSERTED `
-            cb()
-        }
-                
+
+    var sqlParts = sql.split(";");
+
+    async.eachSeries(sqlParts, (sqlCmd, done)=>{
+
+// how to detect an empty query and skip?
+
+        connAB.query(sqlCmd, (err, results, fields) => {
+            if (err) {
+
+                // if our .split(';') resulted in a final empty query, just ignore:
+                if (err.code == 'ER_EMPTY_QUERY') {
+                    done();
+                    return;
+                }
+
+                // log the error
+                resultSummary[resultKey] = err.toString();
+                done(err);
+            }
+            else {
+                resultSummary[resultKey] = `${results.affectedRows} rows INSERTED `
+                done()
+            }
+                    
+        })
+    }, (err, results)=>{
+        cb();
     })
+
 }
 
 
