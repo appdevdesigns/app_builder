@@ -558,6 +558,10 @@ module.exports = {
 
 
         sails.log(' ... preparing to send confirmation emails');
+
+        // respond with a success message so browser doesn't resend request!
+        res.AD.success({sent:true}); 
+
         async.series([
 
             // get events
@@ -1539,10 +1543,12 @@ ${stringErrorSending}
 
             connAB.end();
 
+console.log(':::: Event Confirmation Emails finished.');
+
             if (err) {
-                res.AD.error(err, err.httpResponseCode || 400);
+                // res.AD.error(err, err.httpResponseCode || 400);
             } else {
-                res.AD.success({sent:true});    
+                // res.AD.success({sent:true});    
             }
         })
 
