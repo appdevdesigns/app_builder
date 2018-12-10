@@ -551,6 +551,8 @@ module.exports = {
             */
         }
 
+        var resultSentEmails  = {};  // { emailAddr : [ packets, ]}
+        var resultMismatchedFamilies = [];
         var resultErrorPackets = [];
         var resultErrorSending = [];
 
@@ -649,6 +651,7 @@ module.exports = {
                             hashRegistrationPackets[r.id] = {
                                 error:false,
                                 errorText:[],
+                                regFamilyID: r.RenFamily,
                                 event: event,
                                 registration: r,
                                 registrants:{},
@@ -812,6 +815,7 @@ module.exports = {
                                     packet.userUUID = r.id;
                                     packet.email = r.email;
                                     packet.userName = r.User;
+                                    packet.accountHolderRen = r.Ren;
                                     var foundRen = Object.keys(packet.registrants).map((rKey)=>{ return packet.registrants[rKey]}).find((reg)=>{ return reg['Ren Name'] == r.Ren; })
                                     if (foundRen) {
                                         packet.preferredName = getFirstName(foundRen.rendata);
@@ -836,6 +840,53 @@ module.exports = {
                                     
                                 })
                                 eachRegistration(list, cb);
+                            }
+                        });
+
+                    }
+                }
+                eachRegistration(allRegistrationIDs, (err)=>{
+                    next(err);
+                })
+
+            },
+
+
+            // map Account Holder -> Family IDs to packet:
+            (next) => {
+
+                var allRegistrationIDs = Object.keys(hashRegistrationPackets);
+
+                function eachRegistration(list,  cb) {
+                    if (list.length==0) {
+                        cb();
+                    } else {
+
+                        var registrationID = list.shift();
+                        var packet = hashRegistrationPackets[registrationID];
+
+                        packet.accountHolderFamilyID = '??';
+
+                        if (!packet.accountHolderRen) {
+                            eachRegistration(list,  cb);
+                            return;
+                        }
+
+
+                        connAB.query(`
+
+                            SELECT * FROM AB_Events_hrisrendata
+                            WHERE ren_id = ${packet.accountHolderRen}
+
+                            `, (err, results, fields) => {
+                            if (err) {
+                                cb(err);
+                            }
+                            else {
+                                results.forEach((r)=>{
+                                    packet.accountHolderFamilyID = r.family_id;
+                                })
+                                eachRegistration(list,  cb);
                             }
                         });
 
@@ -1322,17 +1373,25 @@ module.exports = {
 // }
                         if (packet.error) {
                             resultErrorPackets.push(packet);
-                            console.log();
-                            console.log('-------------------');
-                            console.log(packet.errorText.join('\n'));
-                            console.log();
-                            console.log(packet);
-                            console.log('-------------------');
-                            console.log();
+                            // console.log();
+                            // console.log('-------------------');
+                            // console.log(packet.errorText.join('\n'));
+                            // console.log();
+                            // console.log(packet);
+                            // console.log('-------------------');
+                            // console.log();
                             eachRegistration(list, cb);
                             return;
                         }
 
+                        if (packet.accountHolderFamilyID != packet.regFamilyID) {
+                            resultMismatchedFamilies.push(packet);
+                        }
+
+                        if (!resultSentEmails[packet.email]) {
+                            resultSentEmails[packet.email] = [];
+                        }
+                        resultSentEmails[packet.email].push(packet);
 
                         var triggerBase = 'event.registration.summary.';
 
@@ -1384,43 +1443,88 @@ module.exports = {
             // Save Error Packets
             (next) => {
                 var logContents = "";
+
+                var countSentEmails = 0;
+                for(var p in resultSentEmails) {
+                    countSentEmails += resultSentEmails[p].length;
+                }
+
+                logContents = `
+Num Sent Emails : ${countSentEmails}
+Num Emails with mismatched Account Holder / Family : ${resultMismatchedFamilies.length}
+Num Packets with compiling errors:  ${resultErrorPackets.length}
+Num Packets with errors sending emails: ${resultErrorSending.length}
+
+
+
+===============
+
+
+`;
+
+                
+                logContents += "\nEmails Sent breakdown:\n";
+                var formatResultSentEmails = {};
+
+                for(var p in resultSentEmails) {
+                    formatResultSentEmails[p] = formatResultSentEmails[p] || [];
+                    resultSentEmails[p].forEach((packet)=>{
+                        formatResultSentEmails[p].push(packet.registration.id)
+                    })
+                }
+
+                var stringResultSentEmails = JSON.stringify(formatResultSentEmails, null, 4);
+                logContents += `
+
+--------------------------------------------------
+${stringResultSentEmails}
+--------------------------------------------------
+
+`;
+
+
                 console.log('... there were '+resultErrorPackets.length+' registrations with errors compiling their data.');
+
+                logContents += "\nDetails for packets with compile errors:\n";
+                logContents += "\nReg.id  :  error text \n";
+                var formatCompileErrors = {};
+
                 resultErrorPackets.forEach((packet)=>{
+                    formatCompileErrors[packet.registration.id] = packet.errorText.join('; ');
+                })
+                var stringCompileErrors = JSON.stringify(formatCompileErrors, null, 4)
 
-                    var stringifiedPacket = JSON.stringify(packet, null, 4);
+                logContents += `
 
-                    logContents += `
+--------------------------------------------------
+${stringCompileErrors}
+--------------------------------------------------
 
----------------------------------------------------
-${stringifiedPacket}
----------------------------------------------------
-
-`
-
-                });
+`;
 
 
+
+                logContents += "\nDetails for packets with sending errors:\n";
                 console.log('... there were '+resultErrorSending.length+' registrations with errors sending their emails.');
+                var formatErrorSending = {};
                 resultErrorSending.forEach((error)=>{
-
                     var stringError = error.error.toString();
-                    var stringifiedPacket = JSON.stringify(error.packet, null, 4);
-
-                    logContents += `
-
----------------------------------------------------
-${stringError}
-
-${stringifiedPacket}
----------------------------------------------------
-
-`
-
+                    formatErrorSending[error.packet.email] = stringError;
                 });
+                var stringErrorSending  = JSON.stringify(formatErrorSending, null, 4)
+
+                logContents += `
+
+--------------------------------------------------
+${stringErrorSending}
+--------------------------------------------------
+
+`;
 
 
+                var tsFlag = moment().format("YYMMDD-HHmmss");
 
-                fs.writeFile('events_log_confirmationEmailErrors.log', logContents, (err)=>{
+                fs.writeFile('events_log_confirmationEmailErrors_'+tsFlag+'.log', logContents, (err)=>{
                     if (err) {
                         ADCore.error.log('::: ABMobileQRController.sendRegistrationConfirmation(): error writing log file: ', { error: err } )
                     }
