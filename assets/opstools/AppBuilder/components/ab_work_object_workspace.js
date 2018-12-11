@@ -16,6 +16,7 @@ import ABPopupMassUpdate from "./ab_work_object_workspace_popupMassUpdate"
 import ABPopupNewDataField from "./ab_work_object_workspace_popupNewDataField"
 import ABPopupSortField from "./ab_work_object_workspace_popupSortFields"
 import ABPopupExport from "./ab_work_object_workspace_popupExport"
+import ABPopupImport from "./ab_work_object_workspace_popupImport"
 
 
 export default class ABWorkObjectWorkspace extends OP.Component {
@@ -56,7 +57,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                 frozenColumns: L('ab.object.toolbar.frozenColumns', "*Frozen fields"),
                 defineLabel: L('ab.object.toolbar.defineLabel', "*Define label"),
                 permission: L('ab.object.toolbar.permission', "*Permission"),
-                addFields: L('ab.object.toolbar.addFields', "*Add field"),
+				addFields: L('ab.object.toolbar.addFields', "*Add field"),
+				import: L('ab.object.toolbar.import', "*Import"),
                 "export": L('ab.object.toolbar.export', "*Export"),
                 confirmDeleteTitle : L('ab.object.delete.title', "*Delete data field"),
                 confirmDeleteMessage : L('ab.object.delete.message', "*Do you want to delete <b>{0}</b>?")
@@ -91,7 +93,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 
     		buttonAddField: this.unique(idBase + '_buttonAddField'),
             buttonDeleteSelected: this.unique(idBase + '_deleteSelected'),
-    		buttonExport: this.unique(idBase + '_buttonExport'),
+			buttonExport: this.unique(idBase + '_buttonExport'),
+			buttonImport: this.unique(idBase + '_buttonImport'),
     		buttonFieldsVisible: this.unique(idBase + '_buttonFieldsVisible'),
     		buttonFilter: this.unique(idBase + '_buttonFilter'),
     		buttonFrozen: this.unique(idBase + '_buttonFrozen'),
@@ -130,8 +133,10 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 		var PopupSortFieldComponent = new ABPopupSortField(App, idBase);
 
 		var PopupExportObjectComponent = new ABPopupExport(App, idBase);
-        
-        var view = "button";
+
+		var PopupImportObjectComponent = new ABPopupImport(App, idBase);
+
+		var view = "button";
 
     	// Our webix UI definition:
     	this.ui = {
@@ -272,7 +277,17 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     							// 		_logic.toolbarPermission(this.$view);
     							// 	}
                                 // 
-    							// },
+								// },
+								{
+    								view: view,
+    								id: ids.buttonImport,
+    								label: labels.component.import,
+    								icon: "upload",
+    								type: "icon",
+    								click: function() {
+    									_logic.toolbarButtonImport();
+    								}
+    							},
     							{
     								view: view,
     								id: ids.buttonExport,
@@ -355,6 +370,14 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 
     		PopupSortFieldComponent.init({
     			onChange:_logic.callbackSortFields		// be notified when there is a change in the sort fields
+			});
+
+			PopupImportObjectComponent.init({
+				onDone: () => {
+
+					// refresh data in object
+					_logic.populateObjectWorkspace(CurrentObject);
+				}
 			});
 
 			PopupExportObjectComponent.init({});
@@ -709,6 +732,9 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     			PopupNewDataFieldComponent.show($view);
     		},
 
+			toolbarButtonImport: function() {
+				PopupImportObjectComponent.show();
+			},
 
     		toolbarButtonExport: function($view) {
 				PopupExportObjectComponent.show($view);
@@ -855,6 +881,7 @@ console.error('TODO: toolbarPermission()');
 				PopupHideFieldComponent.objectLoad(CurrentObject);
 				PopupMassUpdateComponent.objectLoad(CurrentObject, DataTable);
 				PopupSortFieldComponent.objectLoad(CurrentObject);
+				PopupImportObjectComponent.objectLoad(CurrentObject);
 				PopupExportObjectComponent.objectLoad(CurrentObject);
 				PopupExportObjectComponent.setGridComponent($$(DataTable.ui.id));
 				PopupExportObjectComponent.setHiddenFields(CurrentObject.objectWorkspace.hiddenFields);
