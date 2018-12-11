@@ -196,7 +196,9 @@ export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 
 		// Our init() function for setting up our UI
 		this.init = (options) => {
-			// webix.extend($$(ids.form), webix.ProgressBar);
+
+			if ($$(ids.form))
+				webix.extend($$(ids.form), webix.ProgressBar);
 
 			// load up our callbacks.
 			for (var c in _logic.callbacks) {
@@ -224,6 +226,10 @@ export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 					return false;
 				}
 
+				// show loading cursor
+				if ($$(ids.form).showProgress)
+					$$(ids.form).showProgress({ type: "icon" });
+
 				// read CSV file
 				csvImporter.getDataRows(fileInfo, getSeparatedBy())
 					.then(data => {
@@ -235,6 +241,9 @@ export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 						$$(ids.importButton).enable();
 		
 						_logic.populateColumnList();
+
+						if ($$(ids.form).hideProgress)
+							$$(ids.form).hideProgress();
 
 					});
 

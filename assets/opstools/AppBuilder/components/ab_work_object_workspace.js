@@ -372,7 +372,13 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     			onChange:_logic.callbackSortFields		// be notified when there is a change in the sort fields
 			});
 
-			PopupImportObjectComponent.init({});
+			PopupImportObjectComponent.init({
+				onDone: () => {
+
+					// refresh data in object
+					_logic.populateObjectWorkspace(CurrentObject);
+				}
+			});
 
 			PopupExportObjectComponent.init({});
 
