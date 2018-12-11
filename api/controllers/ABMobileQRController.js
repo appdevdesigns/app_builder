@@ -530,6 +530,7 @@ module.exports = {
         });
 
 
+var ANALYSIS_TEST = false;
 
         var hashEvents = {};
         var hashPhotos = {};
@@ -631,10 +632,24 @@ module.exports = {
                     WHERE event IS Not Null AND SumConfirm = 0
 
                 `;
+
+// Analysis Test:
+if (ANALYSIS_TEST) {
+
+    // get all registrations we sent out to last time.
+    sql = `
+
+        SELECT * FROM AB_Events_Registration
+        WHERE event IS Not Null
+
+    `;
+}
+
+
 // Testing Locally: 443, 444, 510, 519
 // sql = `
 // SELECT * FROM AB_Events_Registration
-// WHERE event IS Not Null AND id IN ( 575 )
+// WHERE event IS Not Null AND id IN ( 442, 443, 470 )
 // `
                 connAB.query(sql, (err, results, fields) => {
                     if (err) next(err);
@@ -1397,6 +1412,13 @@ module.exports = {
                         }
                         resultSentEmails[packet.email].push(packet);
 
+if (ANALYSIS_TEST) {
+
+    // skip the sending of the emails:
+    eachRegistration(list, cb);
+    return;
+
+}
                         var triggerBase = 'event.registration.summary.';
 
                         var lang = packet.languageCode || 'en';
@@ -1411,6 +1433,10 @@ module.exports = {
 // still testing:
 // emailTo = [ 'jhausman@zteam.biz', 'jduncandesign@gmail.com', 'rpoolman@zteam.biz' ];
 // emailTo = [ 'jhausman@zteam.biz' ];
+// emailTo = [ 'rpoolman@zteam.biz' ];
+
+
+
 
                         EmailNotifications.trigger(triggerID, {
                             to: emailTo,
