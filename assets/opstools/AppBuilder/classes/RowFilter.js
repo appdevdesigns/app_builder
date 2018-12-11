@@ -287,6 +287,22 @@ export default class RowFilter extends OP.Component {
 									value: 'in_query',
 									options: [
 										{
+											value: labels.component.containsCondition,
+											id: "contains"
+										},
+										{
+											value: labels.component.notContainCondition,
+											id: "not_contains"
+										},
+										{
+											value: labels.component.isCondition,
+											id: "equals"
+										},
+										{
+											value: labels.component.isNotCondition,
+											id: "not_equal"
+										},
+										{
 											value: labels.component.sameAsUser,
 											id:'same_as_user'
 										},
@@ -965,6 +981,15 @@ export default class RowFilter extends OP.Component {
 			onChangeRule: (rule, $viewCond) => {
 
 				switch(rule) {
+					case 'contains':
+					case 'not_contains':
+					case 'equals':
+					case 'not_equal':
+						// clear and disable the value field
+						$viewCond.$$(ids.inputValue).showBatch("string");
+						_logic.onChange();
+						break;
+
 
 					case 'is_current_user':
 					case 'is_not_current_user':
@@ -1663,6 +1688,14 @@ export default class RowFilter extends OP.Component {
 			connectFieldValid: function(rowData, columnName, rule, compareValue) {
 
 				switch (rule) {
+					case 'contains':
+						return rowData[columnName].toString().indexOf(compareValue) > -1;
+					case 'not_contains':
+						return rowData[columnName].toString().indexOf(compareValue) == -1;
+					case 'equals':
+						return rowData[columnName] == compareValue;
+					case 'not_equal':
+						return rowData[columnName] != compareValue;
 					case 'in_query':
 					case 'not_in_query':
 						return _logic.inQueryValid(rowData, rule, compareValue);
