@@ -282,7 +282,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     								view: view,
     								id: ids.buttonImport,
     								label: labels.component.import,
-    								icon: "upload",
+    								icon: "fa fa-upload",
     								type: "icon",
     								click: function() {
     									_logic.toolbarButtonImport();
