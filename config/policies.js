@@ -31,7 +31,8 @@ module.exports = {
    },
 
    'app_builder/ABMobileQRController':{
-   		sendAPK:true		// no permission checking on APK download.
+   		sendAPK:true,		// no permission checking on APK download.
+   		receiveRegistrationConfirmationResponse:true // event confirmation response
    }
 
 
