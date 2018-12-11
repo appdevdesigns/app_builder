@@ -130,6 +130,16 @@ if (wantHelp) {
 }
 
 
+if (TEST_RUN) {
+    console.log(`
+
+////
+//// Test Run : no actualy updates will be made.
+////
+
+
+`)
+}
 
 var resultSummary = {};
 
