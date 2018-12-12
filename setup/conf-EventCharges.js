@@ -248,7 +248,7 @@ WHERE
                 `
 INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Start\`, \`End\`, \`Apply Charge\`)
 SELECT
-	reg.id, 23, CONCAT('auto_import_23_CCEN_', reg.id, '_', pep.id), '2019-01-15 00:00:00', '2018-07-19 00:00:00', 1
+	reg.id, 23, CONCAT('auto_import_23_CCEN_', reg.id, '_', pep.id), '2019-01-15 00:00:00', '2019-07-19 00:00:00', 1
 FROM
 	AB_Events_registrants pep
 INNER JOIN
@@ -292,7 +292,7 @@ WHERE
                 `
 INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Start\`, \`End\`, \`Apply Charge\`)
 SELECT
-	reg.id, 22, CONCAT('auto_import_22_CCKO_', reg.id, '_', pep.id), '2019-01-15 00:00:00', '2018-07-19 00:00:00', 1 
+	reg.id, 22, CONCAT('auto_import_22_CCKO_', reg.id, '_', pep.id), '2019-01-15 00:00:00', '2019-07-19 00:00:00', 1 
 FROM
 	AB_Events_registrants pep
 INNER JOIN
@@ -336,7 +336,7 @@ WHERE
                 `
 INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Start\`, \`End\`, \`Apply Charge\`)
 SELECT
-	reg.id, 24, CONCAT('auto_import_24_CCCN_', reg.id, '_', pep.id), '2019-01-15 00:00:00', '2018-07-19 00:00:00', 1
+	reg.id, 24, CONCAT('auto_import_24_CCCN_', reg.id, '_', pep.id), '2019-01-15 00:00:00', '2019-07-19 00:00:00', 1
 FROM
 	AB_Events_registrants pep
 INNER JOIN
@@ -380,7 +380,7 @@ WHERE
                 `
 INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Start\`, \`End\`, \`Apply Charge\`)
 SELECT
-	reg.id, 25, CONCAT('auto_import_25_CCMK2MK_', reg.id, '_', pep.id), '2019-01-15 00:00:00', '2018-07-19 00:00:00', 1 
+	reg.id, 25, CONCAT('auto_import_25_CCMK2MK_', reg.id, '_', pep.id), '2019-01-15 00:00:00', '2019-07-19 00:00:00', 1 
 FROM
 	AB_Events_registrants pep
 INNER JOIN
@@ -424,7 +424,7 @@ WHERE
                 `
 INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Apply Charge\`, \`Start\`, \`End\`)
 SELECT
-	reg.id, 38, CONCAT('auto_import_38_FConfPkg_', reg.id, '_', pep.id), 1, '2019-01-15 00:00:00', '2018-07-19 00:00:00'
+	reg.id, 38, CONCAT('auto_import_38_FConfPkg_', reg.id, '_', pep.id), 1, '2019-01-15 00:00:00', '2019-01-19 00:00:00'
 FROM
 	AB_Events_registrants pep
 INNER JOIN
@@ -468,7 +468,7 @@ WHERE
                 `
 INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Apply Charge\`, \`Start\`, \`End\`)
 SELECT
-	reg.id, 39, CONCAT('auto_import_39_FLunch_', reg.id, '_', pep.id), 1, '2019-01-15 00:00:00', '2018-07-19 00:00:00'
+	reg.id, 39, CONCAT('auto_import_39_FLunch_', reg.id, '_', pep.id), 1, '2019-01-15 00:00:00', '2019-01-19 00:00:00'
 FROM
 	AB_Events_registrants pep
 INNER JOIN
@@ -512,7 +512,7 @@ WHERE
                 `
 INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Apply Charge\`, \`Start\`, \`End\`)
 SELECT
-	reg.id, 40, CONCAT('auto_import_40_FLunch4-11_', reg.id, '_', pep.id), 1, '2019-01-15 00:00:00', '2018-07-19 00:00:00'
+	reg.id, 40, CONCAT('auto_import_40_FLunch4-11_', reg.id, '_', pep.id), 1, '2019-01-15 00:00:00', '2019-01-19 00:00:00'
 FROM
 	AB_Events_registrants pep
 INNER JOIN
@@ -556,7 +556,7 @@ WHERE
                 `
 INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Apply Charge\`, \`Start\`, \`End\`)
 SELECT
-	reg.id, 44, CONCAT('auto_import_44_FLunch0-3_', reg.id, '_', pep.id), 1, '2019-01-15 00:00:00', '2018-07-19 00:00:00'
+	reg.id, 44, CONCAT('auto_import_44_FLunch0-3_', reg.id, '_', pep.id), 1, '2019-01-15 00:00:00', '2019-01-19 00:00:00'
 FROM
 	AB_Events_registrants pep
 INNER JOIN
@@ -600,7 +600,7 @@ WHERE
                 `
 INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Apply Charge\`, \`Start\`, \`End\`)
 SELECT
-	reg.id, 43, CONCAT('auto_import_43_FBrkfst0-3_', reg.id, '_', pep.id), 1, '2019-01-15 00:00:00', '2018-07-20 00:00:00'
+	reg.id, 43, CONCAT('auto_import_43_FBrkfst0-3_', reg.id, '_', pep.id), 1, '2019-01-15 00:00:00', '2019-01-20 00:00:00'
 FROM
 	AB_Events_registrants pep
 INNER JOIN
@@ -1163,7 +1163,7 @@ WHERE
                 `
 INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Apply Charge\`, \`Start\`, \`End\`)
 SELECT
-	reg.id, 87, CONCAT('auto_import_87_FConfPkg_', reg.id, '_', pep.id), 1, '2019-01-21 00:00:00', '2018-07-26 00:00:00'
+	reg.id, 87, CONCAT('auto_import_87_FConfPkg_', reg.id, '_', pep.id), 1, '2019-01-21 00:00:00', '2019-01-26 00:00:00'
 FROM
 	AB_Events_registrants pep
 INNER JOIN
@@ -1207,7 +1207,7 @@ WHERE
                 `
 INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Apply Charge\`, \`Start\`, \`End\`)
 SELECT
-    reg.id, 91, CONCAT('auto_import_91_FLunch_', reg.id, '_', pep.id), 1, '2019-01-21 00:00:00', '2018-07-26 00:00:00'
+    reg.id, 91, CONCAT('auto_import_91_FLunch_', reg.id, '_', pep.id), 1, '2019-01-21 00:00:00', '2019-01-26 00:00:00'
 FROM
     AB_Events_registrants pep
 INNER JOIN
@@ -1251,7 +1251,7 @@ WHERE
                 `
 INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Apply Charge\`, \`Start\`, \`End\`)
 SELECT
-	reg.id, 91, CONCAT('auto_import_91_FLunch4-11_', reg.id, '_', pep.id), 1, '2019-01-21 00:00:00', '2018-07-26 00:00:00'
+	reg.id, 91, CONCAT('auto_import_91_FLunch4-11_', reg.id, '_', pep.id), 1, '2019-01-21 00:00:00', '2019-01-26 00:00:00'
 FROM
 	AB_Events_registrants pep
 INNER JOIN
@@ -1295,7 +1295,7 @@ WHERE
                 `
 INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Apply Charge\`, \`Start\`, \`End\`)
 SELECT
-	reg.id, 92, CONCAT('auto_import_92_FLunch0-3_', reg.id, '_', pep.id), 1, '2019-01-20 00:00:00', '2018-07-27 00:00:00'
+	reg.id, 92, CONCAT('auto_import_92_FLunch0-3_', reg.id, '_', pep.id), 1, '2019-01-20 00:00:00', '2019-01-27 00:00:00'
 FROM
 	AB_Events_registrants pep
 INNER JOIN
@@ -1339,7 +1339,7 @@ WHERE
                 `
 INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Apply Charge\`, \`Start\`, \`End\`)
 SELECT
-	reg.id, 84, CONCAT('auto_import_84_FBrkfst0-3_', reg.id, '_', pep.id), 1, '2019-01-21 00:00:00', '2018-07-27 00:00:00'
+	reg.id, 84, CONCAT('auto_import_84_FBrkfst0-3_', reg.id, '_', pep.id), 1, '2019-01-21 00:00:00', '2019-01-27 00:00:00'
 FROM
 	AB_Events_registrants pep
 INNER JOIN
