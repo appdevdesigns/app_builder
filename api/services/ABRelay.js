@@ -12,6 +12,9 @@ var crypto = require('crypto');
 
 var cookieJar = RP.jar();
 
+var _RequestsInProcess = false;
+var _RetryInProcess = false;
+
 var CSRF = {
     token: null,
     /**
@@ -64,7 +67,7 @@ module.exports = {
             headers: {
                 'authorization': sails.config.appbuilder.mcc.accessToken
             },
-            timeout:4000,   // 4s timeout to wait for a connection to the MCC
+            timeout:opt.timeout || 4000,   // 4s timeout to wait for a connection to the MCC
 time:true,  // capture timing information during communications process
 resolveWithFullResponse: true,
             json: true // Automatically stringifies the body to JSON
@@ -251,6 +254,11 @@ options.rejectUnauthorized = false;
     pollMCC:function() {
         return new Promise((resolve, reject)=>{
 
+            if (!sails.config.appbuilder.mcc.enabled) {
+                resolve();
+                return;
+            }
+
             // 1) get any key resolutions and process them
             ABRelay.get({url:'/mcc/initresolve'})
             .then((response)=>{
@@ -266,17 +274,60 @@ options.rejectUnauthorized = false;
             // 2) get any message requests and process them
             .then(()=>{
 
+                // if we are still processing a previous batch of requests
+                // skip this round.
+                if (_RequestsInProcess) {
+                    return;
+                }
+
                 return ABRelay.get({url:'/mcc/relayrequest'})
                 .then((response)=>{
 
-                    var all = [];
-                    response.data.forEach((request)=>{
-                        all.push(ABRelay.request(request));
+                    _RequestsInProcess = true;
+                    processRequests(response.data, function(err){
+
+                        _RequestsInProcess = false;
+
                     })
-                    // Johnny: in debugging a problem with our polling taking too long,
-                    // I decided to NOT wait until all the responses were completed before
-                    // contining on with the polling.  Seems to work fine.
-                    // return Promise.all(all)
+
+                })
+
+            })
+            // 3) check for any old requests in our ABRelayRequestQueue and process them
+            .then(()=>{
+                
+                // if we are already processing our retries, then skip
+                if (_RetryInProcess) {
+                    return;
+                }
+
+                var now = new Date();
+                var seconds = (sails.config.appbuilder.mcc.pollFrequency || 5000) * 2;
+                var timeout = new Date(now.getTime() - seconds);
+                return ABRelayRequestQueue.find({createdAt:{ '<=': timeout }})
+                .then((listOfRequests)=>{
+                    if (listOfRequests && listOfRequests.length>0) {
+
+                        console.log("ABRelay.Poll():Found Old Requests : "+listOfRequests.length);
+                        
+                        // convert requests to array of just request data.
+                        var allRequests = [];
+                        listOfRequests.forEach((req)=>{
+                            allRequests.push(req.request);
+                        })
+
+
+                        _RetryInProcess = true;
+                        processRequests(allRequests, function(err){
+
+                            _RetryInProcess = false;
+
+                        })
+
+                        // listOfRequests.forEach((req)=>{
+                        //     ABRelay.request(req.request);
+                        // })
+                    }
                 })
 
             })
@@ -387,12 +438,30 @@ options.rejectUnauthorized = false;
 
     request: function(request) {
 
+        // request = {
+        //     appUUID:'uuid',
+        //     data: '<encryptedData>',
+        //     jobToken: 'uuid'
+        // }
+
         var appUser = null;
         var relayUser = null;
 
 var errorOptions = null;
 
         return Promise.resolve()
+
+        // 0) store this request in our Queue
+        .then(()=>{
+            return new Promise((resolve, reject)=>{
+                // attempt to create this entry.
+                // if this is a retry, then this will error because the jt already exists,
+                // so just continue on anyway:
+                ABRelayRequestQueue.create({jt:request.jobToken, request:request })
+                .then(resolve)
+                .catch(resolve);
+            });
+        })
 
         // 1) get the RelayAppUser from the given appUUID
         .then(()=>{
@@ -451,37 +520,128 @@ var errorOptions = null;
 errorOptions = options;
             return new Promise((resolve, reject)=>{
 // console.log('::: ABRelay.request(): options:', options);
-                // make the call
-                RP(options)
-                .then((response)=>{
+                var lastError = null;
 
-                    // pass back the default responses
-                    resolve(response);
-                })
-                .catch((err)=>{
+                var tryIt = (attempt, cb)=>{
 
-                    // if we received an error, check to see if it looks like a standard error
-                    // response from our API.  If so, just return that:
-                    if (err.error) {
-                        if (err.error.status == 'error' && err.error.data) {
-                            
-                            // sails.log.error('::: ABRelay.request(): response was an error: ', { request:options, code: err.error.data.code, message:err.error.data.sqlMessage || 'no sql msg', sql:err.error.data.sql || ' - no sql -' } );
-                            ADCore.error.log('ABRelay:request(): response was an error: ', { request:options, code: err.error.data.code, message:err.error.data.sqlMessage || 'no sql msg', sql:err.error.data.sql || ' - no sql -', error:err } )
-                            err.error._request = {
-                                data: errorOptions.body || errorOptions.qs,
-                                method: errorOptions.method,
-                                uri: errorOptions.uri
-                            };
+                    if (attempt >= 5) {
+                        cb(lastError);
+                    } else {
 
-                            resolve(err.error);
-                            return ;
-                        }
+                        // make the call
+                        RP(options)
+                        .then((response)=>{
+
+                            // pass back the default responses
+                            cb(null, response);
+                        })
+                        .catch((err)=>{
+
+                            // if we received an error, check to see if it looks like a standard error
+                            // response from our API.  If so, just return that:
+                            if (err.error) {
+                                if (err.error.status == 'error' && err.error.data) {
+
+
+                                    // PROTOCOL_CONNECTION_LOST
+                                    // If we received a connection lost, then let's try to retry the attempt
+                                    if (err.error.data == 'PROTOCOL_CONNECTION_LOST') {
+
+                                        lastError = err;
+
+                                        // let's try the command again:
+                                        tryIt(attempt+1, cb)
+                                        return;
+                                    }
+
+                                    // if the error response was due to a connection fault with MySQL: try again
+                                    var messages = [ 
+                                        'Handshake inactivity timeout', 
+                                        'Could not connect to MySQL', 
+                                        'Connection lost:'
+                                    ];
+                                    if (err.message ) {
+
+                                        var foundMessage = false;
+                                        messages.forEach((m)=>{
+                                            if (err.message.indexOf(m) >-1) {
+                                                foundMessage = true;
+                                            }
+                                        })
+                                        if (foundMessage) {
+
+                                            lastError = err;
+
+                                            tryIt(attempt+1, cb);
+                                            return;
+                                        }
+                                    }
+
+
+                                    // sails.log.error('::: ABRelay.request(): response was an error: ', { request:options, code: err.error.data.code, message:err.error.data.sqlMessage || 'no sql msg', sql:err.error.data.sql || ' - no sql -' } );
+                                    ADCore.error.log('ABRelay:request(): response was an error: ', { request:options, code: err.error.data.code, message:err.error.data.sqlMessage || 'no sql msg', sql:err.error.data.sql || ' - no sql -', error:err } )
+                                    err.error._request = {
+                                        data: errorOptions.body || errorOptions.qs,
+                                        method: errorOptions.method,
+                                        uri: errorOptions.uri
+                                    };
+
+                                    cb(null, err.error);
+                                    return ;
+                                }
+                            }
+
+
+                            // [Fix] Johnny
+                            // it seems a web client disconnecting a socket can get caught in our 
+                            // process.  just try again:
+                            var errorString = err.toString();
+                            if (errorString.indexOf('Error: socket hang up')>-1) {
+                                lastError = err;
+                                tryIt(attempt+1, cb);
+                                return;
+                            }
+
+
+                            // [Fix] Johnny
+                            // if we get here and we have a 403: it is likely it is a CSRF mismatch error
+                            // but in production, sails won't return 'CSRF mismatch', so lets attempt to 
+                            // retrieve a new CSRF token and try again:
+                            if ((errorString.indexOf('CSRF mismatch') > -1) || (err.statusCode && err.statusCode == 403)) {
+                                
+                                sails.log.error('::: ABRelay.request(): attempt to reset CSRF token ');
+                                lastError = err;
+                                CSRF.token = null;
+                                CSRF.fetch()
+                                .then((token)=>{
+                                    tryIt(attempt+1, cb);
+                                })
+                                return;
+                            }
+
+
+                            //// ACTUALLY no.  it there was an error that didn't follow our error format, then it was 
+                            // probably due to a problem with the request itself.  Just package an error and send it back:
+                            var data = {
+                                status:'error',
+                                data:err,
+                                message:errorString
+                            }
+                            ADCore.error.log('ABRelay:request(): response was an unexpected error: ', { request:options, error: data} )
+                            cb(null, data);
+                        });
+
                     }
+                    
+                }
+                tryIt(0, (err, data)=>{
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(data);
+                    }
+                })
 
-
-                    // if a different error, then pass this along our chain() and process in our .catch() below
-                    reject(err);
-                });
             });
 
         })
@@ -554,6 +714,12 @@ errorOptions = options;
             })
             
         })
+
+        // now remove the request from our Queue:
+        .then(()=>{
+            return ABRelayRequestQueue.destroy({jt:request.jobToken});
+        })
+
         .catch((err)=>{
 
             if (err.statusCode && err.statusCode == 413) {
@@ -561,8 +727,9 @@ errorOptions = options;
                 return;
             }
 
+
             // on a forbidden, just attempt to re-request the CSRF token and try again?
-            if (err.statusCode && err.statusCode == 403) {
+            if ((err.statusCode && err.statusCode == 403) || (err.toString().indexOf('CSRF') > -1)) {
 
                 // if we haven't just tried a new token
                 if (!request.csrfRetry) {
@@ -574,8 +741,8 @@ errorOptions = options;
                 }
             }
 
-
-sails.log.error('::: ABRelay.request(): caught error:', err.statusCode || err, { request:errorOptions }, err.error, err);
+ADCore.error.log('::: ABRelay.request(): caught error: ', { request:errorOptions, error: err} )
+// sails.log.error('::: ABRelay.request(): caught error:', err.statusCode || err, { request:errorOptions }, err.error, err);
 
         })
 
@@ -610,4 +777,62 @@ function packIt(data,list) {
         packIt(arrayFirstHalf, list);
         packIt(arraySecondHalf, list);
     }
+}
+
+
+/**
+ * processRequests()
+ * is an attempt to throttle the number of ABRelay requests we process at a time.
+ * if we attempt too many, the server runs out of memory, so this fn() limits 
+ * the number of requests to [numParallel] requests at a time.  But each of those
+ * "threads" will sequentially continue to process requests until the given list 
+ * is complete.
+ * @param {array} allRequests  an array of the request objects
+ * @param {function} done  the callback fn for when all the requests have been processed.
+ */
+function processRequests(allRequests, done) {
+
+    //// 
+    //// Attempt to throttle the number of requests we process at a time
+    ////
+
+    // processRequest()  
+    // processes 1 request, when it is finished, process another
+    function processRequestSequential(list, cb) {
+        if (list.length == 0) {
+            cb();
+        } else {
+            var request = list.shift();
+            ABRelay.request(request)
+            .then(()=>{
+                processRequestSequential(list, cb);
+            });
+        }
+    }
+
+    // decide how many in parallel we will allow:
+    // NOTE : we can run out of memory if we allow too many.
+    var numParallel = sails.config.appbuilder.mcc.numParallelRequests || 15;
+    var numDone = 0;
+    function onDone(err) {
+
+        if (err) {
+            done(err);
+            return;
+        }
+
+        // once all our parallel tasks report done, we are done.
+        numDone ++;
+        if (numDone >= numParallel) {
+
+            // we are all done now.
+            done();
+        }
+    }
+
+    // fire off our requests in parallel.
+    for (var i=0; i<numParallel; i++) {
+        processRequestSequential(allRequests, onDone);
+    }
+
 }

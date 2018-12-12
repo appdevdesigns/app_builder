@@ -208,12 +208,13 @@ function parseQueryCondition(_where, object, req, res, cb) {
                     }
                     
                     // get the query field's object and column name
-                    var columnName = queryField.object.dbTableName(true) + "." + queryField.columnName;
+                    var columnName = queryField.dbPrefix().replace(/`/g, "") + "." + queryField.columnName;
                     
                     // run the Query, and parse out that data
                     var query = null;
                     QueryObj.queryFind({
-                        columnNames: [columnName]
+                        columnNames: [columnName],
+                        ignoreIncludeId: true // we want real id
                     }, req.user.data)
                     .then((data)=>{
                         
@@ -231,9 +232,8 @@ function parseQueryCondition(_where, object, req, res, cb) {
 
                                 // modify the condition to be the IN condition
                                 // convert cond into an IN or NOT IN
-                                cond.key = "`{dbName}`.`{tableName}`.`{columnName}`"
-                                            .replace("{dbName}", field.object.dbSchemaName())
-                                            .replace("{tableName}", field.object.dbTableName())
+                                cond.key = "{prefix}.`{columnName}`"
+                                            .replace("{prefix}", field.dbPrefix())
                                             .replace("{columnName}", field.columnName);
                                 var convert = {
                                     'in_query_field' : 'in',

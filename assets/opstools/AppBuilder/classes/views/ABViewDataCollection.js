@@ -331,6 +331,7 @@ export default class ABViewDataCollection extends ABView {
 			var query = view.application.queries(q => q.id == sourceId)[0];
 
 			if (object) {
+
 				// populate fix selector
 				this.populateFixSelector(ids, view, object);
 
@@ -338,20 +339,16 @@ export default class ABViewDataCollection extends ABView {
 				this.initPopupEditors(App, ids, _logic);
 
 				// show options
-				$$(ids.linkDataSource).show();
 				$$(ids.filterPanel).show();
 				$$(ids.sortPanel).show();
-				// $$(ids.advancedOption).show();
 
 
 			}
 			else if (query) {
 
 				// hide options
-				$$(ids.linkDataSource).hide();
 				$$(ids.filterPanel).hide();
 				$$(ids.sortPanel).hide();
-				// $$(ids.advancedOption).hide();
 			}
 
 
@@ -380,8 +377,12 @@ export default class ABViewDataCollection extends ABView {
 				// if all 3 fields are present, we are good.
 				if ((f.key)
 					&& (f.rule)
-					&& (f.value)) {
-
+					&& (f.value || 
+						// these rules do not have input value
+						(f.rule == 'is_current_user' ||
+						f.rule == 'is_not_current_user' ||
+						f.rule == 'same_as_user' ||
+						f.rule == 'not_same_as_user'))) {
 					allComplete = allComplete && true;
 				} else {
 
@@ -625,6 +626,12 @@ export default class ABViewDataCollection extends ABView {
 			$$(ids.sortPanel).show();
 			// $$(ids.advancedOption).show();
 		}
+
+		// initial data
+		if (view._dataStatus == view.dataStatusFlag.notInitial) {
+			view.loadData();
+		}
+
 
 	}
 
@@ -886,7 +893,7 @@ export default class ABViewDataCollection extends ABView {
 		// Clone ABObject
 		if (view.datasource) {
 
-			var objectCopy = _.cloneDeep(view.datasource);
+			var objectCopy = view.datasource.clone();
 			if (objectCopy) {
 				objectCopy.objectWorkspace = view.settings.objectWorkspace;
 	
@@ -1170,6 +1177,16 @@ export default class ABViewDataCollection extends ABView {
 		});
 
 
+		// add listeners when cursor of link data collection is changed
+		let linkDc = this.dataCollectionLink;
+		if (linkDc) {
+			this.eventAdd({
+				emitter: linkDc,
+				eventName: "changeCursor",
+				listener: () => { this.refreshLinkCursor(); }
+			});
+		}
+
 		// load data to initial the data collection
 		// this.loadData();
 
@@ -1217,8 +1234,14 @@ export default class ABViewDataCollection extends ABView {
 
 		var dc = this.__dataCollection;
 
+		// prevent bind many times
+		if (this.__bindComponentIds.indexOf(component.config.id) > -1 && 
+				$$(component.config.id).data &&
+				$$(component.config.id).data.find &&
+				$$(component.config.id).data.find({}).length > 0)
+			return;
 		// keep component id to an array
-		if (this.__bindComponentIds.indexOf(component.config.id) < 0)
+		else 
 			this.__bindComponentIds.push(component.config.id);
 
 		if (component.config.view == 'datatable' ||
@@ -1298,10 +1321,12 @@ export default class ABViewDataCollection extends ABView {
 			} else {
 				component.unbind();
 			}
+
+			if (component.refresh)
+				component.refresh();
+
 		}
 
-		if (component.refresh)
-			component.refresh();
 
 	}
 
@@ -1472,17 +1497,11 @@ export default class ABViewDataCollection extends ABView {
 					let linkDc = this.dataCollectionLink;
 					if (!linkDc) return resolve();
 
-					// add listeners when cursor of link data collection is changed
-					this.eventAdd({
-						emitter: linkDc,
-						eventName: "changeCursor",
-						listener: this.refreshLinkCursor
-					});
-
 					switch (linkDc.dataStatus) {
 
 						case linkDc.dataStatusFlag.notInitial:
 							linkDc.loadData().catch(reject);
+							// no break;
 
 						case linkDc.dataStatusFlag.initializing:
 
@@ -1630,13 +1649,14 @@ export default class ABViewDataCollection extends ABView {
 			linkCursor = linkDc.getCursor();
 		}
 
-		// data is empty
-		if (linkCursor == null) return null;
-
 		if (this.__dataCollection) {
 			this.__dataCollection.filter(rowData => {
 
-				return this.isParentFilterValid(rowData);
+				// if link dc cursor is null, then show all data
+				if (linkCursor == null)
+					return true;
+				else
+					return this.isParentFilterValid(rowData);
 
 			});
 
@@ -1772,6 +1792,16 @@ export default class ABViewDataCollection extends ABView {
 	get dataStatus() {
 
 		return this._dataStatus;
+
+	}
+
+	removeComponent(comId) {
+
+		// get index
+		let index = this.__bindComponentIds.indexOf(comId);
+
+		// delete
+		this.__bindComponentIds.splice(index, 1);
 
 	}
 

@@ -277,10 +277,11 @@ module.exports = {
 
                     if (data == null) return resolve();
 
-                    var pageClass = data.appClass._pages.filter(p => p.id == vals.id)[0];
+                    var langCode = ADCore.user.current(req).getLanguageCode(); // 'en';
 
+                    var pageClass = data.appClass._pages.filter(p => p.id == vals.id)[0];
                     if (pageClass)
-                        return AppBuilder.updateNavView(data.app, pageClass)
+                        return AppBuilder.updateNavView(data.app, pageClass, langCode)
                             .catch(reject)
                             .then(resolve);
                     else

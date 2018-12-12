@@ -575,21 +575,27 @@ module.exports = {
                                 // })
 
 
-                            })
-                            .catch((err) => {
+                        })
+                        .catch((err) => {
 
-                                res.AD.error(err);
+                            res.AD.error(err);
 
-                            });
+                        });
 
                     })
+                    .catch((err) => {
+
+                        res.AD.error(err);
+
+                    });
+
 
 
 
             })
             .catch((err) => {
                 ADCore.error.log("AppBuilder:ABModelController:find(): find() did not complete", { error: err });
-                res.AD.error(err);
+                res.AD.error(err, err.HTTPCode || 400);
             });
 
     },

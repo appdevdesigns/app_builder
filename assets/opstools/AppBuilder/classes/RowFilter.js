@@ -224,7 +224,8 @@ export default class RowFilter extends OP.Component {
 
 					return {
 						id: f.id,
-						value: label
+						value: label,
+						alias: f.alias || undefined // ABObjectQuery
 					};
 				});
 
@@ -285,6 +286,22 @@ export default class RowFilter extends OP.Component {
 									view: "combo",
 									value: 'in_query',
 									options: [
+										{
+											value: labels.component.containsCondition,
+											id: "contains"
+										},
+										{
+											value: labels.component.notContainCondition,
+											id: "not_contains"
+										},
+										{
+											value: labels.component.isCondition,
+											id: "equals"
+										},
+										{
+											value: labels.component.isNotCondition,
+											id: "not_equal"
+										},
 										{
 											value: labels.component.sameAsUser,
 											id:'same_as_user'
@@ -964,17 +981,28 @@ export default class RowFilter extends OP.Component {
 			onChangeRule: (rule, $viewCond) => {
 
 				switch(rule) {
+					case 'contains':
+					case 'not_contains':
+					case 'equals':
+					case 'not_equal':
+						// clear and disable the value field
+						$viewCond.$$(ids.inputValue).showBatch("string");
+						_logic.onChange();
+						break;
+
 
 					case 'is_current_user':
 					case 'is_not_current_user':
 						// clear and disable the value field
 						$viewCond.$$(ids.inputValue).showBatch("empty");
+						_logic.onChange();
 						break;
 
 					case 'same_as_user':
 					case 'not_same_as_user':
 						// clear and disable the value field
 						$viewCond.$$(ids.inputValue).showBatch("empty");
+						_logic.onChange();
 						break;
 
 					case 'in_query_field':
@@ -1076,15 +1104,28 @@ export default class RowFilter extends OP.Component {
 				// _logic.onChange();
 			},
 
-			onChange: function () {
+			onChange: () => {
 
-				// refresh config settings before notify
-				_logic.getValue();
+				if (!this.__blockOnChange) {
 
-				_logic.callbacks.onChange();
+					// refresh config settings before notify
+					_logic.getValue();
+
+					_logic.callbacks.onChange();
+
+				}
 
 				return false;
 			},
+
+			blockOnChange: () => {
+				this.__blockOnChange = true;
+			},
+
+			unblockOnChange: () => {
+				this.__blockOnChange = false;
+			},
+
 
 			/**
 			 * @method getValue
@@ -1119,15 +1160,24 @@ export default class RowFilter extends OP.Component {
 						var $fieldElem = $viewCond.$$(ids.field);
 						if (!$fieldElem) return;
 
+						/* field id */
 						var fieldId = $fieldElem.getValue();
 						if (!fieldId) return;
 
+						/* alias */
+						var alias;
+						var selectedOpt = $viewCond.$$(ids.field).getPopup().config.body.data.filter(opt => opt.id == fieldId)[0];
+						if (selectedOpt)
+							alias = selectedOpt.alias || undefined;
+
+						/* rule */
 						var rule = null,
 							ruleViewId = $viewCond.$$(ids.rule).getActiveId(),
 							$viewComparer = $viewCond.$$(ids.rule).queryView({ id: ruleViewId });
 						if ($viewComparer && $viewComparer.getValue)
 							rule = $viewComparer.getValue();
 
+						/* value */
 						var value = null,
 							valueViewId = $viewCond.$$(ids.inputValue).getActiveId(),
 							$viewConditionValue = $viewCond.$$(ids.inputValue).queryView({ id: valueViewId });
@@ -1147,6 +1197,7 @@ export default class RowFilter extends OP.Component {
 						}
 
 						config_settings.rules.push({
+							alias: alias || undefined,
 							key: fieldId,
 							rule: rule,
 							value: value
@@ -1162,6 +1213,9 @@ export default class RowFilter extends OP.Component {
 
 
 			setValue: (settings) => {
+
+				// block .onChange event
+				_logic.blockOnChange();
 
 				config_settings = settings || {};
 
@@ -1206,7 +1260,7 @@ export default class RowFilter extends OP.Component {
 					// if (f.rule == "in_query_field" || f.rule == "not_in_query_field" || f.rule == "same_as_field" || f.rule == "not_same_as_field") {
 					$viewCond.blockEvent();
 					_logic.onChangeRule(f.rule, $viewCond);
-					$viewCond.blockEvent();
+					$viewCond.unblockEvent();
 					// }
 
 					// Input
@@ -1246,6 +1300,9 @@ export default class RowFilter extends OP.Component {
 					}
 
 				});
+
+				// unblock .onChange event
+				_logic.unblockOnChange();
 
 			},
 
@@ -1336,23 +1393,39 @@ export default class RowFilter extends OP.Component {
 					value = "";
 
 				value = value.trim().toLowerCase();
-				compareValue = compareValue.trim().toLowerCase();
+				value = _logic.removeHtmlTags(value); // remove html tags - rich text editor
 
-				// remove html tags - rich text editor
-				value = _logic.removeHtmlTags(value);
+				compareValue = compareValue.trim().toLowerCase().replace(/  +/g, ' ');
+
+				// support "john smith" => "john" OR/AND "smith"
+				var compareArray = compareValue.split(' ');
 
 				switch (rule) {
 					case "contains":
-						result = value.indexOf(compareValue) > -1;
+						compareArray.forEach(val => {
+							if (result == false) // OR
+								result = value.indexOf(val) > -1;
+						});
 						break;
 					case "not_contains":
-						result = value.indexOf(compareValue) < 0;
+						result = true; 
+						compareArray.forEach(val => {
+							if (result == true) // AND
+								result = value.indexOf(val) < 0;
+						});
 						break;
 					case "equals":
-						result = value == compareValue;
+						compareArray.forEach(val => {
+							if (result == false) // OR
+								result = value == val;
+						});
 						break;
 					case "not_equal":
-						result = value != compareValue;
+						result = true; 
+						compareArray.forEach(val => {
+							if (result == true) // AND
+								result = value != val;
+						});
 						break;
 					default:
 						result = _logic.queryValid(rowData, rule, compareValue);
@@ -1615,6 +1688,14 @@ export default class RowFilter extends OP.Component {
 			connectFieldValid: function(rowData, columnName, rule, compareValue) {
 
 				switch (rule) {
+					case 'contains':
+						return rowData[columnName].toString().indexOf(compareValue) > -1;
+					case 'not_contains':
+						return rowData[columnName].toString().indexOf(compareValue) == -1;
+					case 'equals':
+						return rowData[columnName] == compareValue;
+					case 'not_equal':
+						return rowData[columnName] != compareValue;
 					case 'in_query':
 					case 'not_in_query':
 						return _logic.inQueryValid(rowData, rule, compareValue);

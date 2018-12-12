@@ -1366,3 +1366,6 @@ a.ab-delete-photo:hover {
 .bg-gray {
 	background: #DDD;
 }
+.bg-gray.webix_header>div {
+	background: #777;
+}

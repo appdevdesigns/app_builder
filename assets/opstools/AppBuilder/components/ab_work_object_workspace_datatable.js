@@ -22,7 +22,8 @@ export default class ABWorkObjectDatatable extends OP.Component {
     			isEditable:  bool,
     			massUpdate:  bool,
 				configureHeaders: bool,
-				summaryColumns:	 {array} - an array of field id
+                summaryColumns:	 {array} - an array of field id
+                countColumns:	 {array} - an array of field id
 			}
      */
 
@@ -41,6 +42,7 @@ export default class ABWorkObjectDatatable extends OP.Component {
             massUpdate: (params.massUpdate != null ? params.massUpdate : true ),
             configureHeaders: (params.configureHeaders != null ? params.configureHeaders : true ),
             summaryColumns: params.summaryColumns || [],
+            countColumns: params.countColumns || [],
             labelAsField: params.labelAsField || false,
             hideButtons: params.hideButtons || false,
             groupBy: params.groupBy || ""
@@ -87,7 +89,7 @@ export default class ABWorkObjectDatatable extends OP.Component {
     		fixedRowHeight: false,
     		editaction: "custom",
             select: selectType,
-            footer: settings.summaryColumns.length > 0, // show footer when there are summary columns
+            footer: (settings.summaryColumns.length > 0 || settings.countColumns.length > 0), // show footer when there are summary columns
             tooltip: {
                 id: ids.tooltip,
                 template: function(obj, common){
@@ -268,6 +270,12 @@ console.warn('!! ToDo: onAfterColumnHide()');
     	// Our init() function for setting up our UI
     	this.init = (options) => {
 
+			// WORKAROUND : Where should we define this ??
+			// For include PDF.js
+			webix.codebase = "";
+			webix.cdn = "/js/webix";
+
+
     		// register our callbacks:
     		for(var c in _logic.callbacks) {
     			_logic.callbacks[c] = options[c] || _logic.callbacks[c];
@@ -284,47 +292,82 @@ console.warn('!! ToDo: onAfterColumnHide()');
     		// one.
     		var DataTable = $$(ids.component);
     		var throttleCustomDisplay = null;
-            var items = [];
+            // var items = [];
             
 			webix.extend(DataTable, webix.ProgressBar);
 
+            let customDisplays = (data) => {
+
+                if (!CurrentObject) return;
+
+                var displayRecords = [];
+
+                // WORKAROUND: .Sj() => ._get_y_range function of webix's datatable.
+                // It is a private function. It returns what record index are showing
+                let scrollState = DataTable.Sj(),
+                    startRecIndex = scrollState[0],
+                    endRecIndex = scrollState[1],
+                    index = 0;
+                
+                DataTable.data.order.each(function (id) {
+
+                    if (id != null && 
+                        startRecIndex <= index && index <= endRecIndex) 
+                        displayRecords.push(id);
+
+                    index++
+
+                });
+
+                CurrentObject.customDisplays(data, App, DataTable, displayRecords, settings.isEditable);
+
+            };
+
     		DataTable.attachEvent("onAfterRender", function(data){
                 DataTable.resize();
-                items = [];
-                data.order.each(function (i) {
-                    if (typeof i != "undefined") items.push(i);
-                });
-    			if (throttleCustomDisplay) clearTimeout(throttleCustomDisplay);
-    			throttleCustomDisplay = setTimeout(()=>{
-    				if (CurrentObject) {
-                        if (scrollStarted) clearTimeout(scrollStarted);
-    					CurrentObject.customDisplays(this.data, App, DataTable, items, settings.isEditable);
-    				}
-    			}, 350);
 
-    		});
+                // items = [];
+                // data.order.each(function (i) {
+                //     if (typeof i != "undefined") items.push(i);
+                // });
+
+                if (throttleCustomDisplay) clearTimeout(throttleCustomDisplay);
+                throttleCustomDisplay = setTimeout(()=>{
+                    if (CurrentObject) {
+                        if (scrollStarted) clearTimeout(scrollStarted);
+                        customDisplays(this.data);
+                    }
+
+                }, 350);
+
+			});
 
             // we have some data types that have custom displays that don't look right after scrolling large data sets we need to call customDisplays again
             var scrollStarted = null;
             DataTable.attachEvent("onScroll", function(){
                 if (scrollStarted) clearTimeout(scrollStarted);
                 if (throttleCustomDisplay) clearTimeout(throttleCustomDisplay);
-    			scrollStarted = setTimeout(()=>{
-                    if (CurrentObject) {
-    					CurrentObject.customDisplays(this.data, App, DataTable, items, settings.isEditable);
-    				}
-    			}, 1500);
+
+                scrollStarted = setTimeout(()=>{
+
+                    customDisplays(this.data);
+
+                }, 1500);
+
             });
 
             
             // we have some data types that have custom displays that don't look right after scrolling large data sets we need to call customDisplays again
             DataTable.attachEvent("onAfterScroll", function(){
                 if (throttleCustomDisplay) clearTimeout(throttleCustomDisplay);
+
                 throttleCustomDisplay = setTimeout(()=>{
+
                     if (CurrentObject) {
                         if (scrollStarted) clearTimeout(scrollStarted);
-                        CurrentObject.customDisplays(this.data, App, DataTable, items, settings.isEditable);
+                        customDisplays(this.data);
                     }
+
                 }, 350);
 
             });
@@ -793,8 +836,8 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
     		objectLoad:function(object) {
 
-    			CurrentObject = object;
-                
+                CurrentObject = object;
+
                 var DataTable = $$(ids.component);
                 var minHeight = 0;
                 defaultHeight = 0;
@@ -904,7 +947,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
 
     		// rebuild the data table view:
-    		refresh: function() {
+    		refresh: function(loadAll) {
                 
     			// wait until we have an Object defined:
     			if (CurrentObject) {
@@ -930,7 +973,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                     .where(wheres)
                     .sort(sorts)
     				.skip(0)
-    				.limit(30)
+    				.limit(loadAll ? null : 30)
     				.loadInto(DataTable);
     			}
     		},
@@ -950,13 +993,9 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                     DataTable.define('rightSplit', 0);
     				DataTable.clearAll();
 
-                    var isEditable = false;
-                    if (settings.isEditable)
-                        isEditable = settings.isEditable;
-
                     //// update DataTable structure:
     				// get column list from our CurrentObject
-    				var columnHeaders = CurrentObject.columnHeaders(true, settings.isEditable, settings.summaryColumns);
+    				var columnHeaders = CurrentObject.columnHeaders(true, settings.isEditable, settings.summaryColumns, settings.countColumns);
                     
                     columnHeaders.forEach(function(col) {
                         col.fillspace = false;
@@ -1025,6 +1064,9 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                         });
                         columnSplitLeft = 1;
                     }
+                    else {
+                        columnSplitLeft = 0;
+                    }
                     if (settings.detailsView != null && !settings.hideButtons) {
                         columnHeaders.push({
                             id: "appbuilder_view_detail",
@@ -1088,6 +1130,10 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
     		 * add a new row to the data table
     		 */
     		rowAdd:function() {
+
+                if (!settings.isEditable)
+                    return;
+
     			var emptyObj = CurrentObject.defaultValues();
     			CurrentObject.model()
     			.create(emptyObj)
@@ -1199,9 +1245,43 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                 } else {
                     node.style.visibility = "visible";                            
                 }
+            },
+
+
+            editable: function() {
+
+                var DataTable = $$(ids.component);
+
+                DataTable.define('editable', true);
+                DataTable.refresh();
+
+                settings.isEditable = true;
+                settings.allowDelete = true;
+                settings.massUpdate = true;
+            },
+
+
+            readonly: function() {
+
+                var DataTable = $$(ids.component);
+
+                DataTable.define('editable', false);
+                DataTable.refresh();
+
+                settings.isEditable = false;
+                settings.allowDelete = false;
+                settings.massUpdate = false;
+            },
+
+            loadAll: function() {
+
+                let isLoadAll = true;
+                _logic.refresh(isLoadAll);
+
             }
+
     	}
-        
+
 
 
 
@@ -1253,7 +1333,15 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
         this.getFieldList = _logic.getFieldList;
         
         this.hideHeader = _logic.hideHeader;
+
+        this.editable = _logic.editable;
+        this.readonly = _logic.readonly;
+
+        // expose load all records
+        this.loadAll = _logic.loadAll;
+
     }
 
 }
+
 

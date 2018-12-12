@@ -185,8 +185,10 @@ module.exports = {
                     }
                     if (invalidError) {
                         sails.log.error(invalidError);
-                        res.AD.error(invalidError, 400);
-                        reject();
+                        invalidError.HTTPCode = 400;
+                        // res.AD.error(invalidError, 400);
+                        reject(invalidError);
+                        return;
                     }
 
 
@@ -216,7 +218,7 @@ module.exports = {
                                         err.objid = objID;
                                         sails.log.error(err);
                                         res.AD.error(err, 404);
-                                        reject();
+                                        reject(err);
 
                                     }
 
@@ -230,14 +232,27 @@ module.exports = {
                                 err.appID = appID;
                                 sails.log.error(err);
                                 res.AD.error(err, 404);
-                                reject();
+                                reject(err);
                             }
 
                         })
                         .catch(function (err) {
+
+                            // on MySQL connection problems, retry
+                            if (err.message && err.message.indexOf('Could not connect to MySQL') > -1) {
+
+                                // let's try it again:
+                                sails.log.error('AppBuilder:verifyAndReturnObject():MySQL connection error --> retrying.');
+                                AppBuilder.routes.verifyAndReturnObject(req, res)
+                                .then(resolve)
+                                .catch(reject)
+                                return;
+                            }
+
+                            // otherwise, just send back the error:
                             ADCore.error.log('ABApplication.findOne() failed:', { error: err, message: err.message, id: appID });
                             res.AD.error(err);
-                            reject();
+                            reject(err);
                         });
 
                 }
@@ -979,7 +994,7 @@ module.exports = {
     },
 
 
-    updateNavView: function (application, page) {
+    updateNavView: function (application, page, langCode) {
 
         if (!page) return Promise.reject(new Error('invalid page'));
 
@@ -987,7 +1002,7 @@ module.exports = {
          var pageLabel;
          page.translations.forEach((trans) => {
              if (trans.language_code == 'en') {
-                pageLabel = AppBuilder.rules.nameFilter(trans.label);
+                pageLabel = trans.label.replace(/[^a-z0-9 ]/gi, '');
              }
          });
 
@@ -1028,7 +1043,7 @@ module.exports = {
                     Permissions.action.create({
                         key: pagePermsAction,
                         description: 'Allow the user to view the ' + appName + "'s " + pageName + ' page',
-                        language_code: 'en'
+                        language_code: langCode || 'en'
                     })
                         .always(function () {
                             // If permission action already exists, that's fine.
@@ -1116,10 +1131,27 @@ module.exports = {
                         version: '0'
                     }
 
-                    OPSPortal.NavBar.ToolDefinition.create(def, function (err, toolDef) {
-                        if (err) reject(err);
-                        else resolve();
-                    })
+                    OPSPortal.NavBar.ToolDefinition.exists(toolKey, function(error, exists) {
+
+                        if (error) return reject(error);
+
+                        // update
+                        if (exists) {
+                            OPSPortal.NavBar.ToolDefinition.update(def, function (err, toolDef) {
+                                if (err) reject(err);
+                                else resolve();
+                            });
+                        }
+                        // create new
+                        else {
+                            OPSPortal.NavBar.ToolDefinition.create(def, function (err, toolDef) {
+                                if (err) reject(err);
+                                else resolve();
+                            });
+                        }
+
+                    });
+
 
                 });
             })
@@ -1155,6 +1187,26 @@ module.exports = {
                         }
 
                         resolve();
+                    });
+
+                });
+
+            })
+
+            // change label of tool to display UI
+            .then(() => {
+
+                return new Promise((resolve, reject) => {
+
+                    let options = {
+                        toolkey: toolKey,
+                        language_code: langCode || 'en',
+                        label: toolLabel
+                    };
+
+                    OPSPortal.NavBar.Tool.updateLabel(options, function (err) {
+                        if (err) reject(err);
+                        else resolve();
                     });
 
                 });
@@ -2953,13 +3005,29 @@ var ABMobileApp = require(path.join('..', 'classes', 'ABMobileApp'));
 
 
 /// Hard Code the SDC App here:
+/// 1st verify sails.config.codepush.* settings are defined:
+sails.config.codepush = sails.config.codepush || {};
+sails.config.codepush.production = sails.config.codepush.production || {};
+sails.config.codepush.staging = sails.config.codepush.staging || {};
+sails.config.codepush.develop = sails.config.codepush.develop || {};
+
 var SDCApp = new ABMobileApp({
     id:'SDC.id',
     settings:{
         deepLink:'',
         codePushKeys:{
-            ios:sails.config.codepush.ios || 'ios.codepush.key',
-            android:sails.config.codepush.android || 'android.codepush.key'
+            'production': {
+                ios:sails.config.codepush.production.ios || 'ios.codepush.production.key',
+                android:sails.config.codepush.production.android || 'android.codepush.production.key'
+            },
+            'staging':{
+                ios:sails.config.codepush.staging.ios || 'ios.codepush.staging.key',
+                android:sails.config.codepush.staging.android || 'android.codepush.staging.key'
+            },
+            'develop':{
+                ios:sails.config.codepush.develop.ios || 'ios.codepush.develop.key',
+                android:sails.config.codepush.develop.android || 'android.codepush.develop.key'
+            }
         },
         platforms:{
             ios:{

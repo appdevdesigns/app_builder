@@ -8,6 +8,7 @@
 
 // Import our Custom Components here:
 import ActiveList from '../webix_custom_components/activelist'
+import CountFooter from '../webix_custom_components/countfooter'
 import DateTimePicker from '../webix_custom_components/datetimepicker'
 import EditList from '../webix_custom_components/editlist'
 import EditTree from '../webix_custom_components/edittree'
@@ -18,10 +19,11 @@ import TreeSuggest from '../webix_custom_components/treesuggest'
 // import SavableLayout from '../webix_custom_components/savablelayout'
 
 var componentList = [
-	ActiveList, 
-	DateTimePicker, 
-	EditList, 
-	EditTree, 
+	ActiveList,
+	CountFooter,
+	DateTimePicker,
+	EditList,
+	EditTree,
 	EditUnitList,
 	FocusableTemplate,
 	NumberText,

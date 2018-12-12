@@ -188,7 +188,8 @@ module.exports = {
 							url:'/mcc/users', 
 							data:{
 						        users: postThese
-						    }
+						    },
+						    timeout:8000
 						})
 					    .then(function (parsedBody) {
 

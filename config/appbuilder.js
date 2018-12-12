@@ -41,10 +41,12 @@ module.exports.appbuilder = {
   //
   // sails.config.appbuilder.mcc
   mcc: {
+    enabled:true,                      // is communicating with our MCC enabled?
     url:'http://localhost:1337',       // url connection to our MCC (include Port)
     accessToken:'There is no spoon.',  // required accessToken
     pollFrequency: 1000 * 5,           // frequency in ms that we should poll the MCC 
-    maxPacketSize: 1024 * 1024         // the max size of an encrypted packet we want to send to the MCC
+    maxPacketSize: 1024 * 1024,        // the max size of an encrypted packet we want to send to the MCC
+    numParallelRequests: 15            // the number of ABRelay Requests to process at a time (limited to prevent server crashes)
   },
 
 

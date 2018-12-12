@@ -12,6 +12,8 @@ import ABPopupSortField from "../../components/ab_work_object_workspace_popupSor
 import ABPopupFrozenColumns from "../../components/ab_work_object_workspace_popupFrozenColumns"
 import ABPopupMassUpdate from "../../components/ab_work_object_workspace_popupMassUpdate"
 import ABPopupSummaryColumns from "../../components/ab_work_object_workspace_popupSummaryColumns"
+import ABPopupCountColumns from "../../components/ab_work_object_workspace_popupCountColumns"
+import ABPopupExport from "../../components/ab_work_object_workspace_popupExport"
 import ABViewGridFilterMenu from "../rules/ABViewGridFilterMenu"
 import ABViewWidget from "./ABViewWidget"
 import ABFieldImage from "../dataFields/ABFieldImage"
@@ -53,10 +55,11 @@ var ABViewGridPropertyComponentDefaults = {
 	height: 0,
 	gridFilter: {
 		filterOption: 0,
-		queryRules: []
-
+		queryRules: [],
+		userFilterPosition: 'toolbar'
 	},
 	summaryFields: [], // array of [field ids] to add the summary column in footer
+	countFields: [], // array of [field ids] to add the summary column in footer
 	height: 0,
 	hideHeader:0,
 	labelAsField:0,
@@ -75,6 +78,7 @@ var PopupHideFieldComponent = null;
 var PopupFrozenColumnsComponent = null;
 var PopupGridFilterMenu = null;
 var PopupSummaryColumnsComponent = null;
+var PopupCountColumnsComponent = null;
 
 export default class ABViewGrid extends ABViewWidget  {
 	
@@ -161,6 +165,7 @@ export default class ABViewGrid extends ABViewWidget  {
 			if (typeof(this.settings.objectWorkspace.frozenColumnID) == "undefined") this.settings.objectWorkspace.frozenColumnID = "";
 			if (typeof(this.settings.objectWorkspace.hiddenFields) == "undefined") this.settings.objectWorkspace.hiddenFields = [];
 			if (typeof(this.settings.objectWorkspace.summaryColumns) == "undefined") this.settings.objectWorkspace.summaryColumns = [];
+			if (typeof(this.settings.objectWorkspace.countColumns) == "undefined") this.settings.objectWorkspace.countColumns = [];
 		}
 
 
@@ -213,7 +218,21 @@ export default class ABViewGrid extends ABViewWidget  {
 
 		var DataTable = this.component(App, idBase);
 
-		return DataTable;
+		return {
+			ui: DataTable.ui,
+			logic: DataTable.logic,
+			onShow: DataTable.onShow,
+
+			init: () => {
+
+				// remove id of the component in caching for refresh .bind of the data collection
+				let dc = this.dataCollection;
+				if (dc)
+					dc.removeComponent(DataTable.ui.id);
+
+				DataTable.init();
+			}
+		};
 
 	}
 
@@ -241,6 +260,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		PopupGridFilterMenu = new ABViewGridFilterMenu();
 		PopupGridFilterMenu.component(App, idBase + "_gridfiltermenu");
 		PopupSummaryColumnsComponent = new ABPopupSummaryColumns(App, idBase+"_summary");
+		PopupCountColumnsComponent = new ABPopupCountColumns(App, idBase+"_count");
 		
 		_logic.newObject = () => {
 			var currObj = _logic.currentEditObject();
@@ -249,7 +269,8 @@ export default class ABViewGrid extends ABViewWidget  {
 				filterConditions:[],
 				frozenColumnID:"",
 				hiddenFields:[],
-				summaryColumns:[]
+				summaryColumns:[],
+				countColumns:[]
 			};
 			currObj.populatePopupEditors(currObj);
 			
@@ -284,6 +305,10 @@ export default class ABViewGrid extends ABViewWidget  {
 		_logic.summaryColumns = ($view) => {
 			PopupSummaryColumnsComponent.show($view, {pos:"top"});
 		}
+
+		_logic.countColumns = ($view) => {
+			PopupCountColumnsComponent.show($view, {pos:"top"});
+		}
 		
 		_logic.callbackSaveWorkspace = (data) => {
 			// when we make a change in the popups we want to make sure we save the new workspace to the properties to do so just fire an onChange event
@@ -304,6 +329,15 @@ export default class ABViewGrid extends ABViewWidget  {
 
 			var currObj = _logic.currentEditObject();
 			currObj.settings.objectWorkspace.summaryColumns = data;
+
+			// when we make a change in the popups we want to make sure we save the new workspace to the properties to do so just fire an onChange event
+			_logic.onChange();
+		}
+
+		_logic.callbackSaveCountColumns = (data) => {
+
+			var currObj = _logic.currentEditObject();
+			currObj.settings.objectWorkspace.countColumns = data;
 
 			// when we make a change in the popups we want to make sure we save the new workspace to the properties to do so just fire an onChange event
 			_logic.onChange();
@@ -362,6 +396,10 @@ export default class ABViewGrid extends ABViewWidget  {
 		
 		PopupSummaryColumnsComponent.init({
 			onChange: _logic.callbackSaveSummaryColumns	// be notified when there is a change in the summary columns
+		});
+
+		PopupCountColumnsComponent.init({
+			onChange: _logic.callbackSaveCountColumns	// be notified when there is a change in the count columns
 		});
 
 		var view = "button";
@@ -681,6 +719,28 @@ export default class ABViewGrid extends ABViewWidget  {
 						},
 
 						{
+							cols: [
+								{ 
+								    view:"label", 
+								    label: L("ab.component.label.summaryFields", "*Count Fields:"),
+									css: 'ab-text-bold',
+									width: App.config.labelWidthXLarge,
+								},
+								{
+									view: view,
+									name: "buttonCountFields",
+									label: L("ab.component.label.settings", "*Settings"),
+									icon: "gear",
+									type: "icon",
+									badge: 0,
+									click: function(){
+										_logic.countColumns(this.$view);
+									}
+								}
+							]
+						},
+
+						{
 							view: 'counter',
 							name: "height",
 							label: L("ab.component.grid.height", "*Height:"),
@@ -834,7 +894,7 @@ export default class ABViewGrid extends ABViewWidget  {
 			// 	selectedDc.settings.loadAll = true;
 			// }
 
-			var dataCopy = _.cloneDeep(selectedDc.datasource);
+			var dataCopy = selectedDc.datasource.clone();
 			dataCopy.objectWorkspace = view.settings.objectWorkspace;
 			dataCopy.isLoadAll = selectedDc.settings.loadAll;
 
@@ -863,8 +923,7 @@ export default class ABViewGrid extends ABViewWidget  {
 			buttonExport: App.unique(idBase+'_buttonExport'),
 
 			filterMenutoolbar: App.unique(idBase+'_filterMenuToolbar'),
-			resetFilterButton: App.unique(idBase+'_resetFilterButton'),
-			popupExport: App.unique(idBase+'_popupExport')
+			resetFilterButton: App.unique(idBase+'_resetFilterButton')
 
 		}
 		
@@ -908,6 +967,7 @@ export default class ABViewGrid extends ABViewWidget  {
 			massUpdate: this.settings.massUpdate,
 			configureHeaders: false,
 			summaryColumns: this.settings.objectWorkspace.summaryColumns,
+			countColumns: this.settings.objectWorkspace.countColumns,
 			hideHeader: this.settings.hideHeader,
 			labelAsField: this.settings.labelAsField,
 			hideButtons: this.settings.hideButtons,
@@ -918,51 +978,21 @@ export default class ABViewGrid extends ABViewWidget  {
 			waitMilliseconds = 50,
 			filterTimeoutId;
 
-		var DataTable = new ABWorkspaceDatatable(App, idBase, settings);
-		var PopupMassUpdateComponent = new ABPopupMassUpdate(App, idBase+"_mass");
-		var PopupSortDataTableComponent = new ABPopupSortField(App, idBase+"_sort");
-		var rowFilter = new RowFilter(App, idBase+"_filter");
-		var filter_popup = webix.ui({
+		let DataTable = new ABWorkspaceDatatable(App, idBase, settings);
+		let PopupMassUpdateComponent = new ABPopupMassUpdate(App, idBase+"_mass");
+		let PopupSortDataTableComponent = new ABPopupSortField(App, idBase+"_sort");
+		let rowFilter = new RowFilter(App, idBase+"_filter");
+		let rowFilterForm = new RowFilter(App, idBase+"_filter_form");
+		let exportPopup = new ABPopupExport(App, idBase+"_export");
+		let filter_popup = webix.ui({
 			view: "popup",
 			width: 800,
 			hidden: true,
 			body: rowFilter.ui
 		});
-		var export_popup = webix.ui({
-			view: "popup",
-			id: ids.popupExport,
-			width: 160,
-			height: 180,
-			select: false,
-			hidden: true,
-			body: {
-				id: ids.list,
-				view: 'list',
-				data: [
-					{ name: "CSV", icon: "file-excel-o" },
-					{ name: "Excel", icon: "file-excel-o" },
-					{ name: "PDF", icon: "file-pdf-o" },
-					{ name: "PNG", icon: "file-image-o" }
-				],
-				template: "<div><i class='fa fa-#icon# webix_icon_btn' aria-hidden='true'></i> #name#</div>",
-				on: {
-					onItemClick: function (id, e, node) {
-						var component = this.getItem(id);
-
-						_logic.export(component.name);
-					}
-				}
-			}
-		});
 
 
-		var _init = () => {
-
-			// WORKAROUND : Where should we define this ??
-			// For include PDF.js
-			webix.codebase = "";
-			webix.cdn = "/js/webix";
-			
+		let _init = () => {
 
 			if (this.settings.dataSource != "") {
 				DataTable.init({
@@ -978,13 +1008,24 @@ export default class ABViewGrid extends ABViewWidget  {
 				});
 
 				rowFilter.init({
-					onChange:_logic.callbackFilterData		// be notified when there is a change in the filter
+					onChange: () => {
+						_logic.callbackFilterData(rowFilter);	// be notified when there is a change in the filter
+					}
 				});
+
+				rowFilterForm.init({
+					onChange: () => {
+						_logic.callbackFilterData(rowFilterForm);	// be notified when there is a change in the filter
+					}
+				});
+
+				exportPopup.init({});
 				
 				if (this.settings.massUpdate ||
 					this.settings.isSortable ||
 					this.settings.isExportable ||
-					this.settings.gridFilter.filterOption) {
+					(this.settings.gridFilter.filterOption && 
+					this.settings.gridFilter.userFilterPosition == "toolbar")) {
 					$$(ids.toolbar).show();
 				}
 				
@@ -997,8 +1038,17 @@ export default class ABViewGrid extends ABViewWidget  {
 					$$(ids.buttonDeleteSelected).hide();
 				}
 				
-				if (this.settings.gridFilter.filterOption != 1) {
+				if (this.settings.gridFilter.filterOption != 1 || 
+					this.settings.gridFilter.userFilterPosition != "toolbar") {
 					$$(ids.buttonFilter).hide();
+				}
+				
+				if (this.settings.gridFilter.filterOption == 1 && 
+					this.settings.gridFilter.userFilterPosition == "form") {
+					$$(rowFilterForm.ui.id).show();
+				}
+				else {
+					$$(rowFilterForm.ui.id).hide();
 				}
 				
 				if (this.settings.isSortable == false) {
@@ -1023,7 +1073,7 @@ export default class ABViewGrid extends ABViewWidget  {
 
 				if (dc && dc.datasource) {
 
-					var dataCopy = _.cloneDeep(dc.datasource);
+					var dataCopy = dc.datasource.clone();
 					dataCopy.objectWorkspace = this.settings.objectWorkspace;
 					CurrentObject = dataCopy;
 
@@ -1032,6 +1082,12 @@ export default class ABViewGrid extends ABViewWidget  {
 					PopupSortDataTableComponent.objectLoad(CurrentObject, this);
 					rowFilter.viewLoad(this);
 					rowFilter.objectLoad(CurrentObject);
+					rowFilterForm.viewLoad(this);
+					rowFilterForm.objectLoad(CurrentObject);
+					exportPopup.objectLoad(CurrentObject);
+					exportPopup.setGridComponent($$(DataTable.ui.id));
+					exportPopup.setHiddenFields(dataCopy.objectWorkspace.hiddenFields);
+					exportPopup.setFilename(this.label);
 					DataTable.refreshHeader();
 
 					dc.bind($$(DataTable.ui.id));
@@ -1125,6 +1181,7 @@ export default class ABViewGrid extends ABViewWidget  {
 				type: "space",
 				padding: 17,
 				rows: [
+					rowFilterForm.ui,
 					{
 						view: 'toolbar',
 						id: ids.toolbar,
@@ -1255,17 +1312,19 @@ export default class ABViewGrid extends ABViewWidget  {
 
 			},
 
-			callbackFilterData: () => {
+			callbackFilterData: (row_filter) => {
 
-				var filterRules = (rowFilter.getValue().rules || []);
+				var filterRules = (row_filter.getValue().rules || []);
 
-				$$(ids.buttonFilter).define('badge', filterRules.length);
-				$$(ids.buttonFilter).refresh();
+				if ($$(ids.buttonFilter)) {
+					$$(ids.buttonFilter).define('badge', filterRules.length);
+					$$(ids.buttonFilter).refresh();
+				}
 
 				// client filter data
 				$$(DataTable.ui.id).filter(function(rowData) {
 
-					return rowFilter.isValid(rowData);
+					return row_filter.isValid(rowData);
 
 				});
 
@@ -1357,7 +1416,7 @@ export default class ABViewGrid extends ABViewWidget  {
 			},
 
 			toolbarExport: ($view) => {
-				export_popup.show($view);
+				exportPopup.show($view);
 			},
 
 			toolbarMassUpdate: function ($view) {
@@ -1386,46 +1445,6 @@ export default class ABViewGrid extends ABViewWidget  {
 				hiddenQB.destructor();	// remove the QB 
 
 				$$(DataTable.ui.id).filter(QBHelper);
-			},
-
-			export: (name) => {
-
-				var fnExport;
-
-				switch(name) {
-					case "CSV":
-						fnExport = webix.toCSV($$(DataTable.ui.id), {
-							filename: this.label
-						});
-						break;
-					case "Excel":
-						fnExport = webix.toExcel($$(DataTable.ui.id), {
-							filename: this.label,
-							filterHTML: true
-						});
-						break;
-					case "PDF":
-						fnExport = webix.toPDF($$(DataTable.ui.id), {
-							filename: this.label,
-							filterHTML: true
-						});
-						break;
-					case "PNG":
-						fnExport = webix.toPNG($$(DataTable.ui.id), {
-							filename: this.label
-						});
-						break;
-				}
-
-				fnExport
-					.catch(err => {
-						OP.Error.log("System could not export " + name, { error: err });
-					})
-					.fail((err) => {
-						OP.Error.log("System could not export " + name, { error: err });
-					})
-					.then(() => { export_popup.hide() });
-
 			}
 
 		}
@@ -1438,6 +1457,7 @@ export default class ABViewGrid extends ABViewWidget  {
 			if ($$(DataTable.ui.id)) {
 				$$(DataTable.ui.id).adjust();
 			}
+
 
 			if (this.settings.gridFilter.filterOption == 2) {
 				if (this.settings.gridFilter.queryRules.length > 0) {
@@ -1614,7 +1634,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		// 	dc.settings.loadAll = true;
 		// }
 
-		var dataCopy = _.cloneDeep(dc.datasource);
+		var dataCopy = dc.datasource.clone();
 		dataCopy.objectWorkspace = view.settings.objectWorkspace;
 		dataCopy.isLoadAll = dc.settings.loadAll;
 
@@ -1623,7 +1643,7 @@ export default class ABViewGrid extends ABViewWidget  {
 			// 	return o.id == view.settings.dataSource;
 			// });
 			// var dataSource = this.dataCollection;
-			// var dataCopy = _.cloneDeep(dataSource.datasource);
+			// var dataCopy = dataSource.datasource.clone();
 			// console.log(view);
 			// dataCopy.objectWorkspace = view.settings.objectWorkspace;
 			PopupHideFieldComponent.objectLoad(dataCopy, view);
@@ -1634,6 +1654,9 @@ export default class ABViewGrid extends ABViewWidget  {
 
 			PopupSummaryColumnsComponent.objectLoad(dataCopy, view);
 			PopupSummaryColumnsComponent.setValue(view.settings.objectWorkspace.summaryColumns);
+
+			PopupCountColumnsComponent.objectLoad(dataCopy, view);
+			PopupCountColumnsComponent.setValue(view.settings.objectWorkspace.countColumns);
 		// }
 	}
 
@@ -1672,6 +1695,16 @@ export default class ABViewGrid extends ABViewWidget  {
 			$$(ids.buttonSummaryFields).refresh();
 		}
 
+
+		if (view.settings.objectWorkspace &&
+			view.settings.objectWorkspace.countColumns) {
+			$$(ids.buttonCountFields).define('badge', view.settings.objectWorkspace.countColumns.length);
+			$$(ids.buttonCountFields).refresh();
+		}
+		else {
+			$$(ids.buttonCountFields).define('badge', 0);
+			$$(ids.buttonCountFields).refresh();
+		}
 
 	}
 	

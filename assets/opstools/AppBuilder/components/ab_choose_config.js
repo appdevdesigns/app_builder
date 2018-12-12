@@ -21,6 +21,8 @@ export default class ABChooseConfig extends OP.Component {
 			component: {
 				title: L('ab.config.title', '*Configure App Builder'),
 
+				buttonBackToList: L('ab.config.buttonBackToList', '*Back'),
+
 				selectUsers: L('ab.config.selectUsers', '*Select Users'),
 				buttonCreateRelayUser: L('ab.config.createRelayUser', '*Create Relay User'),
 				buttonUpdatePublicServer: L('ab.config.updatePublicServer', '*Update Public Server'),
@@ -28,6 +30,11 @@ export default class ABChooseConfig extends OP.Component {
 				selectQRUsers: L('ab.config.selectQRUsers', '*Select Relay User'),
 				selectQRApp: L('ab.config.selectQRApp', '*Select Relay Application'),
 				buttonSendQREmail: L('ab.config.sendQREmail', '*Send QR Email'),
+
+				selectQRVersion: L('ab.config.selectQRVersion', '*Select App Version'),
+				versionDevelop: L('ab.config.versionDevelop', '*Develop'),
+				versionStaging: L('ab.config.versionStaging', '*Staging'),
+				versionProduction: L('ab.config.versionProduction', '*Production'),
 
 				confirmUsersCreated: L('ab.config.confirmUsersCreated', '*Users successfully created'),
 				errorUsersCreated:   L('ab.config.confirmUsersCreated', '*Error creating users.'),
@@ -38,11 +45,18 @@ export default class ABChooseConfig extends OP.Component {
 				confirmQRSent:  L('ab.config.confirmQRSent', '*QR Email Sent'),
 				errorQRSent: L('ab.config.errorQRSent', '*Error sending QR email'),
 
+				errorQRCode: L('ab.config.errorQRCode', '*Error retrieving user\'s QR code.'),
+
 				createNew: L('ab.application.createNew', '*Add new application'),
 				noApplication: L('ab.application.noApplication', "*There is no application data"),
 
 				confirmDeleteTitle : L('ab.application.delete.title', "*Delete application"),
-				confirmDeleteMessage : L('ab.application.delete.message', "*Do you want to delete <b>{0}</b>?")					
+				confirmDeleteMessage : L('ab.application.delete.message', "*Do you want to delete <b>{0}</b>?"),
+				qrPreview: L('ab.config.qrPreview', '*Generate QR Code'),
+
+				buttonSendConfirmationEmails: L('ab.config.sendConfirmationEmails', '*Send Confirmation Emails'),
+				confirmEmailsSent: L('ab.config.confirmEmailsSent', '*Confirmation Emails Sent'),
+				errorEmailsSent: L('ab.config.errorEmailsSent', '*Error Sending Confirmation Emails'),
 			}
 		}
 
@@ -53,15 +67,21 @@ export default class ABChooseConfig extends OP.Component {
 			rows: this.unique('rows'),
 			userList:   this.unique('userlist'),
 			qrUserList: this.unique('qruserlist'),
-			qrAppList:  this.unique('qrapplist')
+			qrAppList:  this.unique('qrapplist'),
+
+			qrUserList2: this.unique('qruserlist2'),
+			qrAppList2:  this.unique('qrapplist2'),
+			qrVersion:  this.unique('qrversion'),
+			qrVersion2:  this.unique('qrversion2'),
+
+			qrCode: this.unique('qrcode'),
+			qrCodeImage: this.unique('qrcodeimage'),
 		}	
 
 
 		this.ui = {
 
 			id: ids.component,
-			responsive:"hide",
-
 			cols: [
 				{
 					maxWidth: App.config.appListSpacerColMaxWidth,
@@ -69,11 +89,9 @@ export default class ABChooseConfig extends OP.Component {
 					width: App.config.appListSpacerColMaxWidth
 				},
 				{
-					responsiveCell:false,
 					rows: [
 						{
-							maxHeight: App.config.appListSpacerRowHeight,
-							hidden: App.config.hideMobile
+							minHeight: 25,
 						},
 						//
 						// ToolBar
@@ -81,6 +99,17 @@ export default class ABChooseConfig extends OP.Component {
 						{
 							view: "toolbar",
 							cols: [
+								{
+			                    	view:"button",
+			                    	label: labels.component.buttonBackToList,
+									autowidth: true,
+									// type: "icon",
+									// icon: "plus",
+									click: () => {
+										
+										this.emit('view.list');
+									}
+								},
 							
 								{ view: "label", label:labels.component.title, fillspace: true },
 								
@@ -89,88 +118,227 @@ export default class ABChooseConfig extends OP.Component {
 
 
 						//
-						// The List of Applications
+						// The List of Actions
 						//
 						{
 							id:ids.rows,
 							rows:[
-
 								// Create Relay User:
 								{
-									cols:[
+									view:"template",
+									template:labels.component.buttonCreateRelayUser,
+									type:"header",
+									css:"bg-gray webix_header"
+								},
+								{
+									type: "form",
+									rows: [
 										{
 					                        id:ids.userList,
 					                        name:'users',
 					                        view:"multicombo",
 					                        label:labels.component.selectUsers,
 					                        value:'',
+											labelWidth:App.config.labelWidthXXLarge,
+											minWidth: 800,
 					                        options:[]
 					                    },
-					                    {
-					                    	view:"button",
-					                    	label: labels.component.buttonCreateRelayUser,
-											autowidth: true,
-											// type: "icon",
-											// icon: "plus",
-											click: () => {
-												
-												_logic.buttonCreateRelayUser();
-											}
+										{
+											cols:[
+												{},
+												{
+													view:"button",
+													label: labels.component.buttonCreateRelayUser,
+													autowidth: true,
+													// type: "icon",
+													// icon: "plus",
+													click: () => {
+														
+														_logic.buttonCreateRelayUser();
+													}
+												}
+											]
 										}
-					            
 									]
 								},
-
+								
 								// Button: Update Public Server
 								{
-									cols:[
+									view:"template",
+									template:labels.component.buttonUpdatePublicServer,
+									type:"header",
+									css:"bg-gray webix_header"
+								},
+								{
+									type: "form",
+									rows: [
 										{
-
-										},
-										{
-					                    	view:"button",
-					                    	label: labels.component.buttonUpdatePublicServer,
-											autowidth: true,
-											click: () => {
-												_logic.buttonUpdatePublicServer();
-											}
+											cols: [
+												{},
+												{
+													view:"button",
+							                    	label: labels.component.buttonUpdatePublicServer,
+													autowidth: true,
+													click: () => {
+														_logic.buttonUpdatePublicServer();
+													}
+												},
+												{}
+											]
 										}
 									]
 								},
 
 								// Send QR Email:
 								{
-									cols:[
+									view:"template",
+									template:labels.component.buttonSendQREmail,
+									type:"header",
+									css:"bg-gray webix_header"
+								},
+								{
+									type: "form",
+									rows: [
 										{
 					                        id:ids.qrUserList,
 					                        name:'qrusers',
 					                        view:"multicombo",
 					                        label:labels.component.selectQRUsers,
-					                        value:'',
-					                        options:[]
-					                    },
-					                    {
-					                        id:ids.qrAppList,
-					                        name:'qrApps',
-					                        view:"multicombo",
-					                        label:labels.component.selectQRApp,
+											labelWidth:App.config.labelWidthXXLarge,
+											minWidth: 800,
 					                        value:'',
 					                        options:[]
 					                    },
 										{
-					                    	view:"button",
-					                    	label: labels.component.buttonSendQREmail,
-											autowidth: true,
-											click: () => {
-												_logic.buttonSendQREmail();
+					                        id:ids.qrAppList,
+					                        name:'qrApps',
+					                        view:"multicombo",
+					                        label:labels.component.selectQRApp,
+											labelWidth:App.config.labelWidthXXLarge,
+											minWidth: 800,
+					                        value:'',
+					                        options:[]
+					                    },
+										{
+											cols:[
+												{},
+												{
+							                    	view:"button",
+							                    	label: labels.component.buttonSendQREmail,
+													autowidth: true,
+													click: () => {
+														_logic.buttonSendQREmail();
+													}
+												}
+											]
+										}
+									]
+								},
+
+								// choose user & App and see a QR Code:
+								{
+									view:"template",
+									template:labels.component.qrPreview,
+									type:"header",
+									css:"bg-gray webix_header"
+								},
+								{
+									type: "form",
+									rows:[
+										{
+					                        id:ids.qrUserList2,
+					                        name:'qrusers2',
+					                        view:"combo",
+					                        label:labels.component.selectQRUsers,
+					                        value:'',
+											labelWidth:App.config.labelWidthXXLarge,
+											minWidth: 800,
+					                        options:[],
+					                        on:{
+					                        	onChange:function(newVal, oldVal) {
+					                        		_logic.updateQRCode();
+					                        	}
+					                        }
+					                    },
+										{
+											id:ids.qrAppList2,
+											name:'qrApps2',
+											view:"multicombo",
+											label:labels.component.selectQRApp,
+											labelWidth:App.config.labelWidthXXLarge,
+											minWidth: 800,
+											value:'',
+											options:[],
+											on:{
+												onChange:function(newVal, oldVal) {
+													_logic.updateQRCode();
+												}
 											}
+										},
+										{
+											id:ids.qrVersion2,
+											name:'qrVersion2',
+											view:"combo",
+											label:labels.component.selectQRVersion,
+											labelWidth:App.config.labelWidthXXLarge,
+											minWidth: 800,
+											value:'P',
+											options:[
+												{id:'D', value:labels.component.versionDevelop },
+												{id:'S', value:labels.component.versionStaging },
+												{id:'P', value:labels.component.versionProduction }
+												],
+											on:{
+												onChange:function(newVal, oldVal) {
+													_logic.updateQRCode();
+												}
+											}
+										},
+										{
+											cols:[
+												{},
+												{
+													id: ids.qrCode,
+													view: "template",
+													template:"QR Image Here",
+							                        width:280,
+									                height:280,
+												},
+												{}
+											]
+										}
+									]
+								},
+								// Button: Send Confirmation Emails
+								{
+									view:"template",
+									template:labels.component.buttonSendConfirmationEmails,
+									type:"header",
+									css:"bg-gray webix_header"
+								},
+								{
+									type: "form",
+									rows: [
+										{
+											cols: [
+												{},
+												{
+													view:"button",
+							                    	label: labels.component.buttonSendConfirmationEmails,
+													autowidth: true,
+													click: () => {
+														_logic.buttonSendConfirmationEmails();
+													}
+												},
+												{}
+											]
 										}
 									]
 								},
 							]
 						},
 						{
-							maxHeight: App.config.appListSpacerRowHeight,
+							minHeight: 25,
 							hidden: App.config.hideMobile
 						}
 					]
@@ -229,6 +397,33 @@ export default class ABChooseConfig extends OP.Component {
 						OP.Error.log(labels.component.errorUsersCreated, err);
 					})
 				} 
+
+			},
+
+			buttonSendConfirmationEmails: ()=>{
+				_logic.busy();
+
+				OP.Comm.Service.post({
+					url:'/app_builder/Event/sendConfirmationEmail',
+					data:{
+						// user:user,
+						// mobileApp:mobileApp,
+						// // email:
+					}
+				})
+				.then((response)=>{
+					OP.Dialog.Message({
+						text:labels.component.confirmEmailsSent
+					})
+					_logic.ready();
+				})
+				.catch((err)=>{
+					_logic.ready();
+					var message = labels.component.errorEmailsSent; 
+					if (err.message) message += ': '+err.message;
+
+					OP.Error.log(message, err);
+				})
 
 			},
 
@@ -329,6 +524,9 @@ console.error(err);
 						$$(ids.qrUserList).define('options', options);
 						$$(ids.qrUserList).refresh();
 
+						$$(ids.qrUserList2).define('options', options);
+						$$(ids.qrUserList2).refresh();
+
 					}
 
 				})
@@ -354,6 +552,9 @@ console.error(err);
 						$$(ids.qrAppList).define('options', options);
 						$$(ids.qrAppList).refresh();
 
+						$$(ids.qrAppList2).define('options', options);
+						$$(ids.qrAppList2).refresh();
+
 					}
 
 				})
@@ -374,6 +575,58 @@ console.error(err);
 					$$(ids.rows).hideProgress();
 			},
 
+
+			updateQRCode:function() {
+				var user = $$(ids.qrUserList2).getValue();
+				var mobileApp =  $$(ids.qrAppList2).getValue();
+				var version = $$(ids.qrVersion2).getValue();
+
+				if (user != '' && mobileApp != '') {
+
+
+
+					_logic.busy();
+
+					$$(ids.qrCode).showProgress({ icon: 'cursor' });
+					var img = document.getElementById(ids.qrCodeImage);
+					if (!img) {
+						OP.Error.log('Error locating QR Cursor Image tag.')
+						return;
+					}
+					
+					// clear current image:
+					img.src="";
+
+					OP.Comm.Service.post({
+						url:'/app_builder/QR/adminQRCode',
+						data:{
+							user:user,
+							mobileApp:mobileApp,
+							version:version
+							// email:
+						}
+					})
+					.then((response)=>{
+
+						// find the <image> and load up the image data
+						// var img = document.getElementById(ids.qrCodeImage);
+						img.src=response.image;
+
+						// $$(ids.rows).hideProgress();
+						_logic.ready();
+					})
+					.catch((err)=>{
+
+						$$(ids.rows).hideProgress();
+						_logic.ready();
+						var message = labels.component.errorQRSent; 
+						if (err.message) message += ': '+err.message;
+
+						OP.Error.log(message, err);
+					})
+				}
+			}
+
 		}
 		this._logic = _logic;
 
@@ -387,8 +640,10 @@ console.error(err);
 		 */
 		this.init = function() {
 			webix.extend($$(ids.rows), webix.ProgressBar);
+			webix.extend($$(ids.qrCode), webix.ProgressBar);
 
-			
+			$$(ids.qrCode).setHTML('<img id="'+ids.qrCodeImage+'">');
+
 			// start things off by loading the current list of Applications
 			_logic.loadData();
 		}

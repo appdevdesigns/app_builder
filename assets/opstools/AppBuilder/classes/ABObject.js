@@ -280,9 +280,10 @@ export default class ABObject extends ABObjectBase {
 
 	// return the column headers for this object
 	// @param {bool} isObjectWorkspace  return the settings saved for the object workspace
-	columnHeaders (isObjectWorkspace, isEditable, summaryColumns) {
+	columnHeaders (isObjectWorkspace, isEditable, summaryColumns, countColumns) {
 
 		summaryColumns = summaryColumns || [];
+		countColumns = countColumns || [];
 
 		var headers = [];
 		var columnNameLookup = {};
@@ -291,6 +292,7 @@ export default class ABObject extends ABObjectBase {
 		this.fields().forEach(function(f){
 			var header = f.columnHeader(isObjectWorkspace, null, isEditable);
 
+			header.alias = f.alias || undefined; // query type
 			header.fieldURL = f.urlPointer();
 
 			if (f.settings.width != 0) {
@@ -304,6 +306,9 @@ export default class ABObject extends ABObjectBase {
 			// add the summary footer
 			if (summaryColumns.indexOf(f.id) > -1)
 				header.footer = { content: 'summColumn' };
+			// add the count footer
+			else if (countColumns.indexOf(f.id) > -1)
+				header.footer = { content: 'countColumn' };
 
 			headers.push(header);
 			columnNameLookup[header.id] = f.columnName;	// name => id
@@ -335,7 +340,7 @@ export default class ABObject extends ABObjectBase {
 	// @param {Webix.DataStore} data a webix datastore of all the rows effected
 	//        by the render.
 	customDisplays(data, App, DataTable, ids, isEditable) {
-		var fields = this.fields();
+		var fields = this.fields(f => this.objectWorkspace.hiddenFields.indexOf(f.columnName) < 0);
 
 		if (!data || !data.getFirstId) return;
 
@@ -344,12 +349,10 @@ export default class ABObject extends ABObjectBase {
 			ids.forEach((id)=>{
 				var row = data.getItem(id);
 				fields.forEach((f)=>{
-					if (this.objectWorkspace.hiddenFields.indexOf(f.columnName) == -1) {
-						var node = DataTable.getItemNode({ row: row.id, column: f.columnName });
-						f.customDisplay(row, App, node, {
-							editable: isEditable
-						});
-					}
+					var node = DataTable.getItemNode({ row: row.id, column: f.columnName });
+					f.customDisplay(row, App, node, {
+						editable: isEditable
+					});
 				});
 			});
 		} else {
@@ -357,13 +360,11 @@ export default class ABObject extends ABObjectBase {
 			while(id) {
 				var row = data.getItem(id);
 				fields.forEach((f)=>{
-					if (this.objectWorkspace.hiddenFields.indexOf(f.columnName) == -1) {
-						var node = DataTable.getItemNode({ row: row.id, column: f.columnName });
-						f.customDisplay(row, App, node, {
-							editable: isEditable
-						});
-					}
-				})
+					var node = DataTable.getItemNode({ row: row.id, column: f.columnName });
+					f.customDisplay(row, App, node, {
+						editable: isEditable
+					});
+				});
 				id = data.getNextId(id);
 			}
 		}
@@ -415,6 +416,18 @@ export default class ABObject extends ABObjectBase {
 		return labelData;
 	}
 
+	/**
+	 * @method isReadOnly
+	 * 
+	 * @return {boolean}
+	 */
+	get isReadOnly() {
+
+		return this.isImported || this.isExternal;
+
+	}
+
+
 
 
 
@@ -447,3 +460,4 @@ export default class ABObject extends ABObjectBase {
 
 
 }
+

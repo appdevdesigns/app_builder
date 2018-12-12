@@ -1,9 +1,7 @@
 steal(
 	// List your Controller's dependencies here:
-	'opstools/BuildApp/controllers/utils/DataHelper.js',
-	'opstools/BuildApp/controllers/utils/ModelCreator.js',
 
-	function (dataHelper, modelCreator) {
+	function () {
 		System.import('appdev').then(function () {
 			System.import('opstools/BuildApp').then(function () {
 				steal.import('appdev/ad',

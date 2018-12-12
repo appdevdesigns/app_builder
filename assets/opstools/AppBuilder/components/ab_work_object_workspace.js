@@ -15,6 +15,7 @@ import ABPopupHideFields from "./ab_work_object_workspace_popupHideFields"
 import ABPopupMassUpdate from "./ab_work_object_workspace_popupMassUpdate"
 import ABPopupNewDataField from "./ab_work_object_workspace_popupNewDataField"
 import ABPopupSortField from "./ab_work_object_workspace_popupSortFields"
+import ABPopupExport from "./ab_work_object_workspace_popupExport"
 
 
 export default class ABWorkObjectWorkspace extends OP.Component {
@@ -124,9 +125,11 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 
         var PopupMassUpdateComponent = new ABPopupMassUpdate(App, idBase);
 
-        var PopupNewDataFieldComponent = new ABPopupNewDataField(App, idBase);
+		var PopupNewDataFieldComponent = new ABPopupNewDataField(App, idBase);
 
-        var PopupSortFieldComponent = new ABPopupSortField(App, idBase);
+		var PopupSortFieldComponent = new ABPopupSortField(App, idBase);
+
+		var PopupExportObjectComponent = new ABPopupExport(App, idBase);
         
         var view = "button";
 
@@ -352,7 +355,9 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 
     		PopupSortFieldComponent.init({
     			onChange:_logic.callbackSortFields		// be notified when there is a change in the sort fields
-    		});
+			});
+
+			PopupExportObjectComponent.init({});
 
 
     		$$(ids.noSelection).show();
@@ -706,7 +711,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 
 
     		toolbarButtonExport: function($view) {
-console.error('TODO: Button Export()');
+				PopupExportObjectComponent.show($view);
     		},
 
             toolbarDeleteSelected: function($view) {
@@ -827,6 +832,20 @@ console.error('TODO: toolbarPermission()');
 
 				CurrentObject = object;
 
+				// the replicated tables are read only
+				if (CurrentObject.isReadOnly) {
+					DataTable.readonly();
+
+					if ($$(ids.buttonRowNew))
+						$$(ids.buttonRowNew).disable();
+				}
+				else {
+					DataTable.editable();
+
+					if ($$(ids.buttonRowNew))
+						$$(ids.buttonRowNew).enable();
+				}
+
 				DataTable.objectLoad(CurrentObject);
 
 				PopupNewDataFieldComponent.objectLoad(CurrentObject);
@@ -836,6 +855,10 @@ console.error('TODO: toolbarPermission()');
 				PopupHideFieldComponent.objectLoad(CurrentObject);
 				PopupMassUpdateComponent.objectLoad(CurrentObject, DataTable);
 				PopupSortFieldComponent.objectLoad(CurrentObject);
+				PopupExportObjectComponent.objectLoad(CurrentObject);
+				PopupExportObjectComponent.setGridComponent($$(DataTable.ui.id));
+				PopupExportObjectComponent.setHiddenFields(CurrentObject.objectWorkspace.hiddenFields);
+				PopupExportObjectComponent.setFilename(CurrentObject.label);
 
 				// We can hide fields now that data is loaded
 				_logic.callbackFieldsVisible();
@@ -855,6 +878,7 @@ console.error('TODO: toolbarPermission()');
 					$$(ids.buttonAddField).enable();
 				}
 
+
 			},
 
 
@@ -868,6 +892,15 @@ console.error('TODO: toolbarPermission()');
 				// NOTE: to clear a visual glitch when multiple views are updating
 				// at one time ... stop the animation on this one:
 				$$(ids.noSelection).show(false, false);
+			},
+
+			/**
+			 * @function loadAll
+			 * Load all records
+			 * 
+			 */
+			loadAll: function() {
+				DataTable.loadAll();
 			}
 
 
@@ -886,6 +919,7 @@ console.error('TODO: toolbarPermission()');
 		this.applicationLoad = this._logic.applicationLoad;
 		this.populateObjectWorkspace = this._logic.populateObjectWorkspace;
 		this.clearObjectWorkspace = this._logic.clearObjectWorkspace;
+		this.loadAll = this._logic.loadAll;
 
     }
 

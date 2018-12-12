@@ -788,7 +788,7 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 			populateFilters: (dataCollection, filterConditions) => {
 				var filterConditions = filterConditions || ABViewRuleActionObjectUpdaterDefaults.filterConditions;
 				// Clone ABObject
-				var objectCopy = _.cloneDeep(dataCollection.datasource);
+				var objectCopy = dataCollection.datasource.clone();
 				if (objectCopy) {
 					objectCopy.objectWorkspace.filterConditions = filterConditions;
 				}

@@ -158,7 +158,9 @@ function parseQueryCondition(_where, object, req, res, cb) {
                 // if this is our special 'this_object' 'in_query'  queryID  filter:
                 if (cond.key == 'this_object') {
 
-                    queryColumn = object.dbTableName(true)+'.'+object.PK();
+                    let alias = QueryObj.objectAlias(object.id);
+
+                    queryColumn = alias+'.'+object.PK();
                     newKey = object.PK(); // 'id';  // the final filter needs to be 'id IN []', so 'id'
                     parseColumn = object.PK(); // 'id';  // make sure we pull our 'id' values from the query
 
@@ -212,14 +214,20 @@ function parseQueryCondition(_where, object, req, res, cb) {
                                 // there are Query cases where we need to make sure the field is identified by
                                 // it's dbTableName as well, to prevent 'Unknown Column' Errors.
                                 // adding in the dbTableName since I think it will be safe in all situations ... maybe ..
-                                var dbTableName = field.object.dbTableName(true);
-                                if (dbTableName) { newKey = dbTableName + '.' + newKey } 
+                                if (object.objectAlias) {
+                                    newKey =  object.objectAlias(field.object.id) + '.' + newKey;
+                                }
+                                else {
+                                    var dbTableName = field.object.dbTableName(true);
+                                    if (dbTableName) { newKey = dbTableName + '.' + newKey } 
+                                }
+
 
                                 // I need to pull out the PK from the filter Query:
                                 parseColumn = linkedObject.PK(); // 'id';
 
                                 // make this the queryColumn:
-                                queryColumn = linkedObject.dbTableName(true)+'.'+parseColumn;   
+                                queryColumn = QueryObj.objectAlias(linkedObject.id)+'.'+parseColumn;   
                                 continueSingle(newKey, parseColumn, queryColumn);                             
                                 break;
 
@@ -230,12 +238,16 @@ function parseQueryCondition(_where, object, req, res, cb) {
                                 // my .PK is what is used on our filter
                                 newKey = object.PK(); // 'id';
 
+                                if (object.objectAlias)
+                                    newKey = object.objectAlias(linkedObject.id) + '.' + newKey;
+
                                 // I need to pull out the linkedField's columnName
                                 parseColumn = linkedField.columnName;
 
                                 // make this the queryColumn:
-                                queryColumn = linkedObject.dbTableName(true)+'.'+parseColumn;  
-                                continueSingle(newKey, parseColumn, queryColumn);                              
+                                queryColumn = QueryObj.objectAlias(linkedObject.id)+'.'+linkedField.columnName;
+
+                                continueSingle(newKey, parseColumn, queryColumn);
                                 break;
 
 
@@ -243,7 +255,7 @@ function parseQueryCondition(_where, object, req, res, cb) {
 
                                 // we need the .PK of our linked column out of the given query
                                 parseColumn = linkedObject.PK(); // 'id';
-                                queryColumn = linkedObject.dbTableName(true)+'.'+parseColumn;
+                                queryColumn = QueryObj.objectAlias(linkedObject.id)+'.'+parseColumn;
 
                                 processQueryValues(parseColumn,  queryColumn,  (err, ids) => {
 
@@ -256,8 +268,10 @@ function parseQueryCondition(_where, object, req, res, cb) {
                                     var linkTableQuery = ABMigration.connection().queryBuilder();
                                     var joinTableName = field.joinTableName(true);
 
-                                    var parseName = object.name;
+                                    // var parseName = object.name;
+                                    var parseName = field.object.name;
                                     linkTableQuery.select(parseName)
+                                        .distinct()
                                         .from(joinTableName)
                                         .where(linkedObject.name, 'IN', ids)
                                         .then((data)=>{
@@ -265,6 +279,11 @@ function parseQueryCondition(_where, object, req, res, cb) {
                                             var myIds = data.map((d)=>{ return d[parseName] });
 
                                             var myPK = object.PK(); // 'id';
+
+                                            // if it is a query, then add alias
+                                            if (object.objectAlias)
+                                                myPK = object.objectAlias(field.object.id) + '.' + field.object.PK(); // 'alias'.'id';
+
                                             buildCondition( myPK, myIds);
 
                                         })
@@ -310,15 +329,16 @@ function parseQueryCondition(_where, object, req, res, cb) {
                 // @param {string} parseColumn  the name of the column of data to pull from the Query
                 // @param {string} queryColumn  [table].[column] format of the data to pull from Query
                 // @param {fn} done  a callback routine  done(err, data);
-                function processQueryValues(parseColumn,  queryColumn,  done) {
+                function processQueryValues(parseColumn,  queryColumn,  done, numRetries) {
 
                     var query = QueryObj.queryFind({
-                        columnNames: [queryColumn]
+                        columnNames: [queryColumn],
+                        ignoreIncludeId: true // we want real id
                     }, req.user.data);
                     // query.clearSelect().column(queryColumn);
-
-                    // sails.log.info();
-                    // sails.log.info('converted query sql:', query.toSQL());
+var querySQL = query.toString();
+// sails.log.info();
+// sails.log.info('converted query sql:', query.toSQL());
 
                     query
                         .then((data)=>{
@@ -332,7 +352,23 @@ function parseQueryCondition(_where, object, req, res, cb) {
 
                         })
                         .catch((err)=>{
-                            ADCore.error.log('AppBuilder:Policy:ABModelConvertQueryConditions:Error running query:', { error:err });
+
+                            var errString = err.toString();
+                            if (errString.indexOf('ETIMEDOUT') >-1) {
+                                numRetries = numRetries || 1;
+                                if (numRetries <= 5) {
+                                    processQueryValues(parseColumn, queryColumn, done, numRetries+1);
+                                    return;
+                                }
+                            }
+
+                            var sqlString = querySQL;
+                            try {
+                                sqlString = JSON.stringify(querySQL);
+                            } catch(e) {
+                                // move along.
+                            }
+                            ADCore.error.log('AppBuilder:Policy:ABModelConvertQueryConditions:Error running query:', { sql:sqlString, numRetries:numRetries,  error:err });
                             done(err);
                         })
                 }
