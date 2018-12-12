@@ -248,7 +248,7 @@ WHERE
                 `
 INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Start\`, \`End\`, \`Apply Charge\`)
 SELECT
-	reg.id, 23, CONCAT('auto_import_23_CCEN_', reg.id, '_', pep.id), '2019-01-15 00:00:00', '2019-07-19 00:00:00', 1
+	reg.id, 23, CONCAT('auto_import_23_CCEN_', reg.id, '_', pep.id), '2019-01-15 00:00:00', '2019-01-19 00:00:00', 1
 FROM
 	AB_Events_registrants pep
 INNER JOIN
@@ -292,7 +292,7 @@ WHERE
                 `
 INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Start\`, \`End\`, \`Apply Charge\`)
 SELECT
-	reg.id, 22, CONCAT('auto_import_22_CCKO_', reg.id, '_', pep.id), '2019-01-15 00:00:00', '2019-07-19 00:00:00', 1 
+	reg.id, 22, CONCAT('auto_import_22_CCKO_', reg.id, '_', pep.id), '2019-01-15 00:00:00', '2019-01-19 00:00:00', 1 
 FROM
 	AB_Events_registrants pep
 INNER JOIN
@@ -336,7 +336,7 @@ WHERE
                 `
 INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Start\`, \`End\`, \`Apply Charge\`)
 SELECT
-	reg.id, 24, CONCAT('auto_import_24_CCCN_', reg.id, '_', pep.id), '2019-01-15 00:00:00', '2019-07-19 00:00:00', 1
+	reg.id, 24, CONCAT('auto_import_24_CCCN_', reg.id, '_', pep.id), '2019-01-15 00:00:00', '2019-01-19 00:00:00', 1
 FROM
 	AB_Events_registrants pep
 INNER JOIN
@@ -380,7 +380,7 @@ WHERE
                 `
 INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Start\`, \`End\`, \`Apply Charge\`)
 SELECT
-	reg.id, 25, CONCAT('auto_import_25_CCMK2MK_', reg.id, '_', pep.id), '2019-01-15 00:00:00', '2019-07-19 00:00:00', 1 
+	reg.id, 25, CONCAT('auto_import_25_CCMK2MK_', reg.id, '_', pep.id), '2019-01-15 00:00:00', '2019-01-19 00:00:00', 1 
 FROM
 	AB_Events_registrants pep
 INNER JOIN
