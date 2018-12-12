@@ -1158,14 +1158,15 @@ export default class ABViewDataCollection extends ABView {
 
 		AD.comm.hub.subscribe('ab.datacollection.delete', (msg, data) => {
 
-			if (this.datasource &&
-				this.datasource.id != data.objectId)
-				return;
+			if (!this.datasource)
+			return;
 
 			// id of a deleted item
 			var deleteId = data.data;
 
-			if (this.__dataCollection.exists(deleteId)) {
+			// if it is the source object
+			if (this.datasource.id == data.objectId &&
+				this.__dataCollection.exists(deleteId)) {
 
 				// If the deleted item is current cursor, then the current cursor should be cleared.
 				var currData = this.getCursor();
@@ -1174,6 +1175,49 @@ export default class ABViewDataCollection extends ABView {
 
 				this.__dataCollection.remove(deleteId);
 			}
+			// if it is a linked object
+			else {
+
+				let connectedFields = this.datasource.fields(f =>
+					f.key == 'connectObject' &&
+					f.datasourceLink &&
+					f.datasourceLink.id == data.objectId
+				);
+
+				// update relation data
+				if (connectedFields && connectedFields.length > 0) {
+
+					this.__dataCollection.find({}).forEach(d => {
+
+						let updateRelateVals = {};
+
+						connectedFields.forEach(f => {
+
+							let relateVal = d[f.relationName()];
+
+							if (Array.isArray(relateVal) &&
+								relateVal.filter(v => v == deleteId || v.id == deleteId).length > 0) {
+
+								updateRelateVals[f.relationName()] = relateVal.filter(v => (v.id || v) != deleteId);
+								updateRelateVals[f.columnName] = updateRelateVals[f.relationName()].map(v => v.id || v);
+							}
+							else if (relateVal == deleteId || relateVal.id == deleteId) {
+								updateRelateVals[f.relationName()] = null;
+								updateRelateVals[f.columnName] = null;
+							}
+
+						});
+
+						// If this item needs to update
+						if (Object.keys(updateRelateVals).length > 0)
+							this.__dataCollection.updateItem(d.id, updateRelateVals);
+
+					});
+
+				}
+
+			}
+
 		});
 
 
