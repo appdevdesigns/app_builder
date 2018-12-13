@@ -194,27 +194,29 @@ export default class ABModel {
 	staleRefresh(cond) {
 
 		// cond should be { where:{ id: X } } format.
-		var currID = cond.id;  // but just in case we get a { id: X }
+		var PK = this.object.PK();
+
+		var currID = cond[PK];  // but just in case we get a { id: X }
 		if (cond.where) {
-			currID = cond.where.id;
+			currID = cond.where[PK];
 		}
 
 		return new Promise((resolve, reject)=>{
 
 			if (!currID) {
-				var Err = new Error('Model.staleRefresh(): could not resolve .id ');
+				var Err = new Error('Model.staleRefresh(): could not resolve .'+PK );
 				Err.cond = cond;
 				reject(Err);
 				return;
 			}
 
 
-			// convert to ID : Promise object:
+			// convert to PK : Promise object:
 			var entry = {
-				id: currID,
 				resolve: resolve,
 				reject: reject
 			}
+			entry[PK] = currID;
 
 			// queue up refresh condition
 			this.staleRefreshPending.push(entry);
@@ -245,17 +247,19 @@ export default class ABModel {
 		this.staleRefreshInProcess = true;
 		var currentEntries = this.staleRefreshPending;
 		this.staleRefreshPending = [];
+		var PK = this.object.PK();
 
 		var responseHash = { /* id : {entry} */ };
-		var cond = { where:{ id:[] } };
+		var cond = { where:{ } };
+		cond.where[PK] = [];
 
 		console.log('Model.staleRefreshProcess(): buffered '+currentEntries.length+' requests');
 		currentEntries.forEach((e)=>{
-			responseHash[e.id] = responseHash[e.id] || [];
-			responseHash[e.id].push(e);
+			responseHash[e[PK]] = responseHash[e[PK]] || [];
+			responseHash[e[PK]].push(e);
 		})
 
-		cond.where.id = Object.keys(responseHash);
+		cond.where[PK] = Object.keys(responseHash);
 
 		this.findAll(cond)
 		.then((res)=>{
@@ -265,17 +269,17 @@ export default class ABModel {
 				res.data.forEach((data)=>{
 
 					// find it's matching request:
-					if (responseHash[data.id]) {
+					if (responseHash[data[PK]]) {
 
 						// respond to the pending promise
 						// and remove these entries from responseHash
-						var entries = responseHash[data.id];
+						var entries = responseHash[data[PK]];
 						entries.forEach((entry)=>{
 							var resolve = entry.resolve;
 							resolve({ data:[data]});
 						})
 						
-						delete responseHash[data.id];
+						delete responseHash[data[PK]];
 
 					} else {
 						console.error('Model.staleRefreshProcess(): returned entry was not in our responseHash:', data, responseHash);
@@ -292,7 +296,7 @@ export default class ABModel {
 			allKeys.forEach((key)=>{
 				var resolve = responseHash[key].resolve;
 				resolve({ data:[]});
-				delete responseHash[data.id];
+				delete responseHash[key];
 			})
 
 

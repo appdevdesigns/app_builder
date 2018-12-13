@@ -1119,32 +1119,41 @@ export default class ABViewDataCollection extends ABView {
 
 			// updated values
 			var values = data.data;
+
+			// use the Object's defined Primary Key:
+			var PK = this.model.object.PK();
+			if (!values[PK]) {
+				PK = 'id';
+			}
+
 			if (values) {
 
-				if (this.__dataCollection.exists(values.id)) {
+				if (this.__dataCollection.exists(values[PK])) {
+					var cond = { where:{} };
+					cond.where[PK] = values[PK];
 					// this data collection has the record so we need to query the server to find out what it's latest data is so we can update all instances
-					this.model.staleRefresh({ where: { id: values.id } }).then((res) => {
+					this.model.staleRefresh(cond).then((res) => {
 
 						// check to make sure there is data to work with
 						if (Array.isArray(res.data) && res.data.length) {
 							// tell the webix data collection to update using their API with the row id (values.id) and content (res.data[0]) 
-							if (this.__dataCollection.exists(values.id)) {
-								this.__dataCollection.updateItem(values.id, res.data[0]);
+							if (this.__dataCollection.exists(values[PK])) {
+								this.__dataCollection.updateItem(values[PK], res.data[0]);
 							}
 
 							// If the update item is current cursor, then should tell components to update.
 							var currData = this.getCursor();
-							if (currData && currData.id == values.id) {
+							if (currData && currData[PK] == values[PK]) {
 								this.emit("changeCursor", currData);
 							}
 						} else {
 							// If there is no data in the object then it was deleted...lets clean things up
 							// If the deleted item is current cursor, then the current cursor should be cleared.
 							var currId = this.getCursor();
-							if (currId == values.id)
+							if (currId == values[PK])
 								this.emit("changeCursor", null);
 
-							this.__dataCollection.remove(values.id);
+							this.__dataCollection.remove(values[PK]);
 						}
 					});
 
