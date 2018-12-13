@@ -632,6 +632,10 @@ module.exports = {
 
             // step #2
             function (next) {
+                
+                // NOTE: We will update relation data of deleted items on client side
+                return next();
+
                 // We are deleting an item...but first fetch its current data  
                 // so we can clean up any relations on the client side after the delete
                 object.queryFind({
@@ -661,6 +665,10 @@ module.exports = {
 
             // step #3
             function (next) {
+
+                // NOTE: We will update relation data of deleted items on client side
+                return next();
+
                 // Check to see if the object has any connected fields that need to be updated
                 var connectFields = object.connectFields();
 
@@ -753,13 +761,13 @@ module.exports = {
                         // Broadcast the delete
                         sails.sockets.broadcast(object.id, "ab.datacollection.delete", payload);
 
-                        // Using the data from the oldItem and relateditems we can update all instances of it and tell the client side it is stale and needs to be refreshed
-                        updateConnectedFields(object, oldItem[0]);
-                        if (relatedItems.length) {
-                            relatedItems.forEach((r) => {
-                                updateConnectedFields(r.object, r.items);
-                            });
-                        }
+                        // // Using the data from the oldItem and relateditems we can update all instances of it and tell the client side it is stale and needs to be refreshed
+                        // updateConnectedFields(object, oldItem[0]);
+                        // if (relatedItems.length) {
+                        //     relatedItems.forEach((r) => {
+                        //         updateConnectedFields(r.object, r.items);
+                        //     });
+                        // }
                         next();
 
                     })
