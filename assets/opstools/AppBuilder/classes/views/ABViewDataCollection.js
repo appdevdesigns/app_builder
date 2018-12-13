@@ -1123,7 +1123,7 @@ export default class ABViewDataCollection extends ABView {
 
 				if (this.__dataCollection.exists(values.id)) {
 					// this data collection has the record so we need to query the server to find out what it's latest data is so we can update all instances
-					this.model.findAll({ where: { id: values.id } }).then((res) => {
+					this.model.staleRefresh({ where: { id: values.id } }).then((res) => {
 
 						// check to make sure there is data to work with
 						if (Array.isArray(res.data) && res.data.length) {
