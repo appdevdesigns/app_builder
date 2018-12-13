@@ -24,12 +24,176 @@ module.exports = {
     // send a confirmation email out to registered users about their Charges
     sendFeeConfirmation: function(req, res) {
 
+
+        var registrationID = req.param('regID') || '??';
+
+
         var connAB = mysql.createConnection({
             host: sails.config.connections.appBuilder.host,
             user: sails.config.connections.appBuilder.user,
             password: sails.config.connections.appBuilder.password,
             database: sails.config.connections.appBuilder.database
         });
+
+
+        var hashEvents = {  /* event.id : {event} */ };
+
+        var hashPackets = {
+            /* 
+            registrationID :  { 
+                registration:{ABEventRegistration}, 
+                charges:[{charge},...]},
+                registrants:[{ABEventRegistrant},...],
+                ren:{rendata} 
+            }
+            */
+        }
+
+
+        async.series([
+
+
+            // get events
+            (next) => {
+
+                connAB.query(`
+
+                    SELECT * FROM AB_Events_Event
+
+                    `, (err, results, fields) => {
+                    if (err) next(err);
+                    else {
+                        results.forEach((r)=>{
+                            hashEvents[r.id] = r;
+                        })
+                        next();
+                    }
+                });
+            },
+
+
+
+            // get Registrations
+            (next)=>{
+
+                var sql = `
+
+                    SELECT * FROM AB_Events_Registration
+                    WHERE event IS Not Null 
+
+                `;
+
+
+                // if a registration id is provided, limit it to that.
+                if (registrationID != '??') {
+                    sql += ` AND id = ${registrationID}`;
+                }
+
+
+// Testing Locally: 443, 444, 510, 519
+// sql = `
+// SELECT * FROM AB_Events_Registration
+// WHERE event IS Not Null AND id IN ( 442, 443, 470 )
+// `
+                connAB.query(sql, (err, results, fields) => {
+                    if (err) next(err);
+                    else {
+                        results.forEach((r)=>{
+                            var event = hashEvents[r.Event];
+                            
+                            hashPackets[r.id] = {
+                                error:false,
+                                errorText:[],
+                                regFamilyID: r.RenFamily,
+                                event: event,
+                                registration: r,
+                                registrants:{},
+                               
+                            };
+                        })
+                        next();
+                    }
+                });
+
+            },
+
+
+
+            // get Registrants for each Registration:
+            (next)=>{
+
+                var allRegistrationIDs = Object.keys(hashPackets);
+
+                async.each(
+                    allRegistrationIDs, 
+                    (regID,cb)=>{
+
+                        var packet = hashPackets[regID];
+
+                        connAB.query(`
+
+                            SELECT * FROM AB_Events_registrants
+                            WHERE Registration434 = ${regID}
+
+                            `, (err, results, fields) => {
+                            if (err) cb(err);
+                            else {
+
+                                results.forEach((r)=>{
+                                    packet.registrants[r.id]=r;
+                                    
+                                })
+                                cb();
+                            }
+                        });
+
+
+                    },(err)=>{
+                        next(err);
+                    })
+            },
+
+
+
+            // 
+            // Write Analysis log
+            //
+            (next)=>{
+next();
+return;
+                var logContents = "";
+
+                var countSentEmails = 0;
+                for(var p in resultSentEmails) {
+                    countSentEmails += resultSentEmails[p].length;
+                }
+
+                logContents = `
+Num Sent Emails : ${countSentEmails}
+
+===============
+
+
+`;
+
+                var tsFlag = moment().format("YYMMDD-HHmmss");
+
+                fs.writeFile('events_log_feeEmails_'+tsFlag+'.log', logContents, (err)=>{
+                    if (err) {
+                        ADCore.error.log('::: ABMobileQRController.sendFeeConfirmation(): error writing log file: ', { error: err, logContents:logContents } )
+                    }
+                    next();
+                })
+
+            }
+
+        ], (err, results)=>{
+
+            connAB.end();
+
+            console.log(':::: Event Confirmation Emails finished.');
+
+        })
 
 
     },

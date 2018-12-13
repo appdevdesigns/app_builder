@@ -57,6 +57,10 @@ export default class ABChooseConfig extends OP.Component {
 				buttonSendConfirmationEmails: L('ab.config.sendConfirmationEmails', '*Send Confirmation Emails'),
 				confirmEmailsSent: L('ab.config.confirmEmailsSent', '*Confirmation Emails Sent'),
 				errorEmailsSent: L('ab.config.errorEmailsSent', '*Error Sending Confirmation Emails'),
+
+				buttonSendFeeConfirmationEmails: L('ab.config.sendConfirmationEmails', '*Send Fee Confirmation Emails'),
+				confirmFeeEmailsSent: L('ab.config.confirmEmailsSent', '*Fee Confirmation Emails Sent'),
+				errorFeeEmailsSent: L('ab.config.errorEmailsSent', '*Error Sending Fee Confirmation Emails'),
 			}
 		}
 
@@ -335,6 +339,33 @@ export default class ABChooseConfig extends OP.Component {
 										}
 									]
 								},
+
+								// Button: Send Fee Confirmation Emails
+								{
+									view:"template",
+									template:labels.component.buttonSendFeeConfirmationEmails,
+									type:"header",
+									css:"bg-gray webix_header"
+								},
+								{
+									type: "form",
+									rows: [
+										{
+											cols: [
+												{},
+												{
+													view:"button",
+							                    	label: labels.component.buttonSendFeeConfirmationEmails,
+													autowidth: true,
+													click: () => {
+														_logic.buttonSendFeeConfirmationEmails();
+													}
+												},
+												{}
+											]
+										}
+									]
+								},
 							]
 						},
 						{
@@ -420,6 +451,33 @@ export default class ABChooseConfig extends OP.Component {
 				.catch((err)=>{
 					_logic.ready();
 					var message = labels.component.errorEmailsSent; 
+					if (err.message) message += ': '+err.message;
+
+					OP.Error.log(message, err);
+				})
+
+			},
+
+			buttonSendFeeConfirmationEmails: ()=>{
+				_logic.busy();
+
+				OP.Comm.Service.post({
+					url:'/app_builder/Event/sendFeeConfirmationEmail',
+					data:{
+						regID:443,
+						// mobileApp:mobileApp,
+						// // email:
+					}
+				})
+				.then((response)=>{
+					OP.Dialog.Message({
+						text:labels.component.confirmFeeEmailsSent
+					})
+					_logic.ready();
+				})
+				.catch((err)=>{
+					_logic.ready();
+					var message = labels.component.errorFeeEmailsSent; 
 					if (err.message) message += ': '+err.message;
 
 					OP.Error.log(message, err);
