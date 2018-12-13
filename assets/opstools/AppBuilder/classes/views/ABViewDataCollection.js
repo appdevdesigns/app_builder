@@ -1073,35 +1073,111 @@ export default class ABViewDataCollection extends ABView {
 			if (!obj)
 				return;
 
-			if (obj.id != data.objectId)
-				return;
-
 			// updated values
 			var values = data.data;
 			if (!values) return;
 
-			// various PK name
-			if (!values.id && obj.PK() != 'id')
-				values.id = values[obj.PK()];
+			// if it is the source object
+			if (obj.id == data.objectId) {
 
-			if (this.__dataCollection.exists(values.id)) {
-				// normalize data before update data collection
-				var model = obj.model();
-				model.normalizeData(values);
-				this.__dataCollection.updateItem(values.id, values);
+				// various PK name
+				if (!values.id && obj.PK() != 'id')
+					values.id = values[obj.PK()];
 
-				// If the update item is current cursor, then should tell components to update.
-				var currData = this.getCursor();
-				if (currData && currData.id == values.id) {
-					this.emit("changeCursor", currData);
+				if (this.__dataCollection.exists(values.id)) {
+					// normalize data before update data collection
+					var model = obj.model();
+					model.normalizeData(values);
+					this.__dataCollection.updateItem(values.id, values);
+
+					// If the update item is current cursor, then should tell components to update.
+					var currData = this.getCursor();
+					if (currData && currData.id == values.id) {
+						this.emit("changeCursor", currData);
+					}
+				}
+				// filter before add new record
+				else if (this.__filterComponent.isValid(values)) {
+
+					// this means the updated record was not loaded yet so we are adding it to the top of the grid
+					// the placemet will probably change on the next load of the data
+					this.__dataCollection.add(values, 0);
 				}
 			}
-			// filter before add new record
-			else if (this.__filterComponent.isValid(values)) {
+			// if it is a linked object
+			else {
 
-				// this means the updated record was not loaded yet so we are adding it to the top of the grid
-				// the placemet will probably change on the next load of the data
-				this.__dataCollection.add(values, 0);
+				let connectedFields = this.datasource.fields(f =>
+					f.key == 'connectObject' &&
+					f.datasourceLink &&
+					f.datasourceLink.id == data.objectId
+				);
+
+				// update relation data
+				if (connectedFields && connectedFields.length > 0) {
+
+					// various PK name
+					if (!values.id && connectedFields[0].object.PK() != 'id')
+						values.id = values[connectedFields[0].object.PK()];
+
+					let isRelated = (relateData, rowId) => {
+
+						if (Array.isArray(relateData)) {
+							return relateData.filter(v => (v.id || v) == rowId).length > 0;
+						}
+						else {
+							return relateData && (relateData.id == rowId || relateData == rowId);
+						}
+
+					};
+
+					this.__dataCollection.find({}).forEach(d => {
+
+						let updateRelateVals = {};
+
+						connectedFields.forEach(f => {
+
+							var newRelateVal = values[f.fieldLink.relationName()] || {};
+							let dcRelateVal = d[f.relationName()] || {};
+
+							// Unrelate data
+							if (Array.isArray(dcRelateVal) &&
+								dcRelateVal.filter(v => v == values.id || v.id == values.id).length > 0 &&
+								!isRelated(newRelateVal, d.id)) {
+
+								updateRelateVals[f.relationName()] = dcRelateVal.filter(v => (v.id || v) != values.id);
+								updateRelateVals[f.columnName] = updateRelateVals[f.relationName()].map(v => v.id || v);
+							}
+							else if ((dcRelateVal == values.id || dcRelateVal.id == values.id) && !isRelated(newRelateVal, d.id)) {
+								updateRelateVals[f.relationName()] = null;
+								updateRelateVals[f.columnName] = null;
+							}
+
+							// Relate data
+							if (Array.isArray(dcRelateVal) &&
+								dcRelateVal.filter(v => v == values.id || v.id == values.id).length < 1 &&
+								isRelated(newRelateVal, d.id)) {
+
+								dcRelateVal.push(values);
+
+								updateRelateVals[f.relationName()] = dcRelateVal;
+								updateRelateVals[f.columnName] = updateRelateVals[f.relationName()].map(v => v.id || v);
+							}
+							else if ((dcRelateVal != values.id || dcRelateVal.id != values.id) && isRelated(newRelateVal, d.id)) {
+								updateRelateVals[f.relationName()] = values;
+								updateRelateVals[f.columnName] = values.id || values;
+							}
+
+						});
+
+						// If this item needs to update
+						if (Object.keys(updateRelateVals).length > 0)
+							this.__dataCollection.updateItem(d.id, updateRelateVals);
+
+					});
+
+				}
+
 			}
 
 			// filter link data collection's cursor
