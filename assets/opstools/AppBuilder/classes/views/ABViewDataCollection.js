@@ -1112,10 +1112,14 @@ export default class ABViewDataCollection extends ABView {
 		// We are subscribing to notifications from the server that an item may be stale and needs updating
 		// We will improve this later and verify that it needs updating before attempting the update on the client side
 		AD.comm.hub.subscribe('ab.datacollection.stale', (msg, data) => {
+			
+			// if we don't have a datasource or model, there is nothing we can do here:
 			// Verify the datasource has the object we are listening for if not just stop here
-			if (this.datasource &&
-				this.datasource.id != data.objectId)
-				return;
+			if (!this.datasource || !this.model || this.datasource.id != data.objectId) { 
+				return; 
+			}
+
+				
 
 			// updated values
 			var values = data.data;
