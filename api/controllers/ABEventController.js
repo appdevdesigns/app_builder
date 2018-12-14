@@ -27,6 +27,8 @@ module.exports = {
 
         var registrationID = req.param('regID') || '??';
 
+        var ANALYSIS_TEST = req.param('analysis') || false;
+        // if (ANALYSIS_TEST == '??') ANALYSIS_TEST = false;
 
         var connAB = mysql.createConnection({
             host: sails.config.connections.appBuilder.host,
@@ -37,6 +39,11 @@ module.exports = {
 
 
         var hashEvents = {  /* event.id : {event} */ };
+        var hashFeesConference = { /* fee.id : {fee} */ };
+        var hashFeesHousing = { /* fee.id : {fee} */ };
+        var hashFeesMeals = { /* fee.id : {fee} */ };
+        var hashFeesChildcare = { /* fee.id : {fee} */ };
+        var hashFeesSchedule = { /* fee.id : {fee} */ };
 
         var hashPackets = {
             /* 
@@ -50,25 +57,147 @@ module.exports = {
         }
 
 
+        var resultSentEmails = [];      /* [ {packet}, {packet}, ... ] */
+        var resultErrorPackets = [];    /* [ {packet}, {packet}, ....] */
+        var resultErrorMissingRen = []; /* [ { packet:{}, registrantIDs:[ id1, id2, ... ]}, ... ] */
+        var resultErrorSending = [];    /* [ { error:err, packet:packet } ] */
+
+
+        // respond with a success message so browser doesn't resend request!
+        res.AD.success({sent:true}); 
+
+
         async.series([
 
 
-            // get events
+            // get hash values:
             (next) => {
 
-                connAB.query(`
+                async.parallel([
 
-                    SELECT * FROM AB_Events_Event
+                    // Get Events:
+                    (cb)=>{
 
-                    `, (err, results, fields) => {
-                    if (err) next(err);
-                    else {
-                        results.forEach((r)=>{
-                            hashEvents[r.id] = r;
-                        })
-                        next();
-                    }
-                });
+                        connAB.query(`
+
+                            SELECT * FROM AB_Events_Event
+
+                            `, (err, results, fields) => {
+                            if (err) cb(err);
+                            else {
+                                results.forEach((r)=>{
+                                    hashEvents[r.id] = r;
+                                })
+                                cb();
+                            }
+                        });
+                    },
+
+
+                    // Get hashFeesConference:
+                    (cb)=>{
+
+                        connAB.query(`
+
+                            SELECT * FROM AB_Events_Fees
+                            WHERE Category = 1528273589977 AND Post_Name != "DevClass"
+
+                            `, (err, results, fields) => {
+                            if (err) cb(err);
+                            else {
+                                results.forEach((r)=>{
+                                    hashFeesConference[r.id] = r;
+                                })
+                                cb();
+                            }
+                        });
+                    },
+
+
+                    // Get hashFeesHousing:
+                    (cb)=>{
+
+                        connAB.query(`
+
+                            SELECT * FROM AB_Events_Fees
+                            WHERE Category = 1528273589723
+
+                            `, (err, results, fields) => {
+                            if (err) cb(err);
+                            else {
+                                results.forEach((r)=>{
+                                    hashFeesHousing[r.id] = r;
+                                })
+                                cb();
+                            }
+                        });
+                    },
+
+
+                    // Get hashFeesMeals:
+                    (cb)=>{
+
+                        connAB.query(`
+
+                            SELECT * FROM AB_Events_Fees
+                            WHERE Category = 1528273589730
+
+                            `, (err, results, fields) => {
+                            if (err) cb(err);
+                            else {
+                                results.forEach((r)=>{
+                                    hashFeesMeals[r.id] = r;
+                                })
+                                cb();
+                            }
+                        });
+                    },
+
+
+                    // Get hashFeesChildcare:
+                    (cb)=>{
+
+                        connAB.query(`
+
+                            SELECT * FROM AB_Events_Fees
+                            WHERE Category = 1528273589718
+
+                            `, (err, results, fields) => {
+                            if (err) cb(err);
+                            else {
+                                results.forEach((r)=>{
+                                    hashFeesChildcare[r.id] = r;
+                                })
+                                cb();
+                            }
+                        });
+                    },
+
+
+                    // Get hashFeesSchedule:
+                    (cb)=>{
+
+                        connAB.query(`
+
+                            SELECT * FROM AB_Events_Fees
+                            WHERE Post_Name = "DevClass"
+
+                            `, (err, results, fields) => {
+                            if (err) cb(err);
+                            else {
+                                results.forEach((r)=>{
+                                    hashFeesSchedule[r.id] = r;
+                                })
+                                cb();
+                            }
+                        });
+                    },
+
+                    ], 
+                (err)=>{
+                    next(err);
+                })
+                
             },
 
 
@@ -83,10 +212,14 @@ module.exports = {
 
                 `;
 
+registrationID = [ 784, 816 ];
 
                 // if a registration id is provided, limit it to that.
                 if (registrationID != '??') {
-                    sql += ` AND id = ${registrationID}`;
+                    if (!Array.isArray(registrationID)) {
+                        registrationID = [registrationID];
+                    }
+                    sql += ` AND id IN ( ${registrationID.join(', ')} )`;
                 }
 
 
@@ -155,12 +288,404 @@ module.exports = {
 
 
 
+            // fill out Registrant Ren Data in registrant.rendata
+            (next)=>{
+                var allRegistrationIDs = Object.keys(hashPackets);
+
+                // each Registration:
+                async.each(
+                    allRegistrationIDs,
+                    (regID, cb)=>{
+
+                        // each registrant in the registration:
+                        var allRegistrantIDs = Object.keys(hashPackets[regID].registrants);
+                        async.each(
+                            allRegistrantIDs, 
+                            (registrantID, done)=>{
+
+                                var registrant = hashPackets[regID].registrants[registrantID];
+
+                                connAB.query(`
+
+                                    SELECT * FROM AB_Events_hrisrendata
+                                    WHERE ren_id = ${registrant['Ren Name']}
+
+                                    `, (err, results, fields) => {
+                                    if (err) done(err);
+                                    else {
+                                        results.forEach((r)=>{
+                                            registrant.rendata = r;
+                                        })
+                                        done();
+                                    }
+                                });
+
+                            },
+                            (err)=>{
+                                // now compile this into an .attendees  array for template:
+                                var packet = hashPackets[regID];
+                                packet.attendees = [];
+                                var registrantIDs = Object.keys(packet.registrants);
+                                var errors = [];
+                                registrantIDs.forEach((rID)=>{
+
+                                    if (packet.registrants[rID].rendata) {
+                                        var name = getFullName(packet.registrants[rID].rendata);
+                                        packet.attendees.push(name);
+                                    } else {
+                                        packet.error = true;
+                                        packet.errorText.push("No Ren for Registrant:"+rID);
+                                        errors.push(rID);
+                                    }
+                                    
+                                })
+
+                                if (errors.length) {
+                                    resultErrorMissingRen.push({packet:packet, registrantIDs:errors });
+                                }
+
+                                cb(err);
+                            })
+                    }, 
+                    (err)=>{
+                        next(err);
+                    })
+            },
+
+
+            // find AccountHolder Details:
+            (next) => {
+                var allRegistrationIDs = Object.keys(hashPackets);
+
+                async.each(
+                    allRegistrationIDs,
+                    (registrationID, cb)=>{
+
+                        var packet = hashPackets[registrationID];
+                        var registration = packet.registration;
+
+                        packet.userUUID = '-';
+                        
+                        connAB.query(`
+
+                            SELECT * FROM AB_Events_AccountHolder
+                            WHERE id = ${registration['AccountOwner']}
+
+                            `, (err, results, fields) => {
+                            if (err) cb(err);
+                            else {
+                                results.forEach((r)=>{
+                                    packet.userUUID = r.id;
+                                    packet.email = r.email;
+                                    packet.userName = r.User;
+
+                                    var foundRen = Object.keys(packet.registrants).map((rKey)=>{ return packet.registrants[rKey]}).find((reg)=>{ return reg['Ren Name'] == r.Ren; })
+                                    if (foundRen) {
+                                        packet.preferredName = getFirstName(foundRen.rendata);
+                                    } else {
+                                        var firstID = Object.keys(packet.registrants)[0];
+                                        if (firstID) {
+                                            if (packet.registrants[firstID].rendata) {
+                                                packet.preferredName = getFirstName(packet.registrants[firstID].rendata);
+                                            } else {
+                                                packet.preferredName = 'Citizen';
+                                                packet.error = true;
+                                                packet.errorText.push("No rendata for registrant:"+firstID );
+                                            }
+                                            
+                                        } else {
+                                            packet.preferredName = 'Citizen';
+                                            packet.error = true;
+                                            packet.errorText.push("No Registrants for this Registration");
+                                        }
+                                        
+                                    }
+                                    
+                                })
+                                cb();
+                            }
+                        });
+
+
+                    },
+                    (err)=>{
+                        next(err);
+                    })
+
+            },
+
+
+            // find UserAccount Info:
+            (next) => {
+                var allRegistrationIDs = Object.keys(hashPackets);
+
+                async.each(
+                    allRegistrationIDs,
+                    (registrationID, cb)=>{
+
+                        var packet = hashPackets[registrationID];
+
+                        SiteUser.find({ username: packet.userName })
+                        .then((userList)=>{
+                            if (userList && userList.length > 0) {
+                                packet.languageCode = userList[0].languageCode;
+                                packet.email = userList[0].email;
+                                packet.siteUser = userList[0];
+                            } else {
+                                packet.languageCode = 'en';
+                                packet.error = true;
+                                packet.errorText.push('No user account for userName:'+packet.userName);
+                            }
+                            cb();
+                        })
+                        .catch(cb);
+
+                    }, 
+                    (err)=>{
+                        next(err);
+                    })
+
+            },
+
+
+            // Gather all charges for a registration:
+            (next) => {
+                var allRegistrationIDs = Object.keys(hashPackets);
+
+                async.each(
+                    allRegistrationIDs,
+                    (registrationID, cb)=>{
+
+                        var packet = hashPackets[registrationID];
+
+                        connAB.query(`
+
+                            SELECT * FROM AB_Events_Charges
+                            WHERE Reg = ${registrationID}
+
+                            `, (err, results, fields) => {
+                            if (err) cb(err);
+                            else {
+                                packet.allCharges = results;
+                                cb();
+                            }
+                        });
+
+                    }, 
+                    (err)=>{
+                        next(err);
+                    })
+
+            },
+
+
+
+            // convert conference name to languageCode:
+            (next) => {
+                var allRegistrationIDs = Object.keys(hashPackets);
+
+                allRegistrationIDs.forEach((registrationID)=>{
+
+                    var packet = hashPackets[registrationID];
+                    var registration = packet.registration;
+
+                    var json = []
+                    try {
+                        json = JSON.parse(packet.event.translations)
+                    }catch(e) {
+
+                    }
+
+                    var langTrans = json.find((t)=>{ return t.language_code == packet.languageCode; });
+                    if (langTrans) {
+                        packet.conferenceName = langTrans.Title;
+                    } else {
+                        if (packet.event) {
+                            packet.conferenceName = packet.event.name;
+                        } else {
+                            packet.error = true;
+                            packet.errorText.push('No event for this registration:'+packet.registration.id);
+                        }
+                        
+                    }
+                })
+
+                next();
+            },
+
+
+
+            // Split out charges:
+            (next)=>{
+
+                var allRegistrationIDs = Object.keys(hashPackets);
+
+                allRegistrationIDs.forEach((registrationID)=>{
+
+                    var packet = hashPackets[registrationID];
+                    
+                    packet.conferenceFees = [];
+                    packet.housingFees = [];
+                    packet.mealFees = [];
+
+                    packet.childCareFees = [];
+                    packet.scheduleFees = [];
+
+                    packet.allCharges.forEach((charge)=>{
+
+                        var Fee = hashFeesConference[charge.Fees177];
+                        if (Fee) {
+                            var trans = translate(Fee, packet.languageCode || 'en', 'Fee');
+                            var amount = amountCharge(Fee, charge);
+                            packet.conferenceFees.push({label:trans, amount:amount});
+                        }
+
+                        Fee = hashFeesHousing[charge.Fees177];
+                        if (Fee) {
+                            var trans = translate(Fee, packet.languageCode || 'en', 'Fee');
+                            var start = moment(charge.Start).format("ddd MMM D");
+                            var end   = moment(charge.End).format("ddd MMM D");
+                            var label = `${trans} : ${start} - ${end}`
+                            var amount = amountCharge(Fee, charge);
+                            packet.housingFees.push({label:label, amount:amount});
+                        }
+
+                        Fee = hashFeesMeals[charge.Fees177];
+                        if (Fee) {
+                            var trans = translate(Fee, packet.languageCode || 'en', 'Fee');
+                            // var start = moment(charge.Start).format("ddd/MMM");
+                            // var end   = moment(charge.End).format("ddd/MMM");
+                            // var numDays = moment(charge.End).diff(moment(charge.Start), 'days') +1;
+                            // var label = `${trans} : ${start}-${end}  ${numDays} days`
+                            var label = trans;
+                            var amount = amountCharge(Fee, charge);
+                            packet.mealFees.push({label:label, amount:amount});
+                        }
+
+                        Fee = hashFeesChildcare[charge.Fees177];
+                        if (Fee) {
+                            var trans = translate(Fee, packet.languageCode || 'en', 'Fee');
+                            var amount = amountCharge(Fee, charge);
+                            packet.childCareFees.push({label:trans, amount:amount});
+                        }
+
+                        Fee = hashFeesSchedule[charge.Fees177];
+                        if (Fee) {
+                            var trans = translate(Fee, packet.languageCode || 'en', 'Fee');
+                            var amount = amountCharge(Fee, charge);
+                            packet.scheduleFees.push({label:trans, amount:amount});
+                        }
+
+                    })
+
+                })
+
+                next();
+            },
+
+
+
+
+            // 
+            // Send the emails!
+            //
+            (next) =>{
+
+
+                var allRegistrationIDs = Object.keys(hashPackets);
+
+// testing:
+// var justThese = [ 554, 555 ];
+// mccgowans 554, 555
+// rpoolman  442, 443, 470
+// allRegistrationIDs = [ 442, 443, 470 ];
+
+                async.each(
+                    allRegistrationIDs,
+                    (registrationID, cb)=>{
+
+
+                        var packet = hashPackets[registrationID];
+
+
+                        if (packet.error) {
+                            resultErrorPackets.push(packet);
+                            cb();
+                            return;
+                        }
+
+
+                        if (!resultSentEmails[packet.email]) {
+                            resultSentEmails[packet.email] = [];
+                        }
+                        resultSentEmails[packet.email].push(packet);
+
+if (ANALYSIS_TEST) {
+
+    // skip the sending of the emails:
+    cb();
+    return;
+
+}
+                        var triggerBase = 'event.fee.summary.';
+
+                        var lang = packet.languageCode || 'en';
+                        if (lang == 'ko') {
+                            lang = 'en';
+                        }
+
+lang = 'en';
+                        var triggerID = triggerBase + lang;
+                        var emailTo = [ packet.email ];
+                        
+// still testing:
+emailTo = [ 'jhausman@zteam.biz', 'jduncandesign@gmail.com', 'rpoolman@zteam.biz' ];
+// emailTo = [ 'jhausman@zteam.biz' ];
+// emailTo = [ 'rpoolman@zteam.biz' ];
+
+
+
+
+                        EmailNotifications.trigger(triggerID, {
+                            to: emailTo,
+                            variables: packet,
+                            attachments: [
+                                {
+                                    filename: 'header.png',
+                                    content: Buffer.from(Base64Images.headerPNG, 'base64'),
+                                    contents: Buffer.from(Base64Images.headerPNG, 'base64'),
+                                    cid: 'header',
+                                },
+                                {
+                                    filename: 'bg.jpg',
+                                    content: Buffer.from(Base64Images.backgroundJPG, 'base64'),
+                                    contents: Buffer.from(Base64Images.backgroundJPG, 'base64'),
+                                    cid: 'bg',
+                                }
+                            ]
+                        })
+                        .done((html) => {
+                            cb();
+                        })
+                        .fail((err)=>{
+                            resultErrorSending.push({ error:err, packet:packet })
+                            cb();
+                        });
+
+
+                    },
+                    (err)=>{
+                        next(err);
+                    })
+
+            },
+
+
             // 
             // Write Analysis log
             //
             (next)=>{
-next();
-return;
+
                 var logContents = "";
 
                 var countSentEmails = 0;
@@ -170,11 +695,76 @@ return;
 
                 logContents = `
 Num Sent Emails : ${countSentEmails}
+Num Error Emails : ${resultErrorPackets.length}
+Num Packets with Missing Ren:  ${resultErrorMissingRen.length}
 
 ===============
 
 
 `;
+
+
+
+                logContents += "\nEmails Sent breakdown:\n";
+                var formatResultSentEmails = {};
+
+                for(var p in resultSentEmails) {
+                    formatResultSentEmails[p] = formatResultSentEmails[p] || [];
+                    resultSentEmails[p].forEach((packet)=>{
+                        formatResultSentEmails[p].push(packet.registration.id)
+                    })
+                }
+
+                var stringResultSentEmails = JSON.stringify(formatResultSentEmails, null, 4);
+                logContents += `
+--------------------------------------------------
+${stringResultSentEmails}
+--------------------------------------------------
+
+
+`;
+
+
+                console.log('... there were '+resultErrorPackets.length+' registrations with errors compiling their data.');
+
+                logContents += "\nDetails for packets with compile errors:\n";
+                logContents += "\nReg.id  :  error text \n";
+                var formatCompileErrors = {};
+
+                resultErrorPackets.forEach((packet)=>{
+                    formatCompileErrors[packet.registration.id] = packet.errorText.join('; ');
+                })
+                var stringCompileErrors = JSON.stringify(formatCompileErrors, null, 4)
+
+                logContents += `
+--------------------------------------------------
+${stringCompileErrors}
+--------------------------------------------------
+
+
+`;
+
+
+                console.log('... there were '+resultErrorMissingRen.length+' registrations with errors compiling their data.');
+
+                logContents += "\nDetails for packets with missing ren:\n";
+                logContents += "\nReg.id  :  [ registrant.id, registrant.id, ... ] \n";
+                var formatErrorMissingRen = {};
+
+                resultErrorMissingRen.forEach((entry)=>{
+                    formatErrorMissingRen[entry.packet.registration.id] = entry.registrantIDs;
+                })
+                var stringErrorMissingRen = JSON.stringify(formatErrorMissingRen, null, 4)
+
+                logContents += `
+--------------------------------------------------
+${stringErrorMissingRen}
+--------------------------------------------------
+
+
+`;
+
+
 
                 var tsFlag = moment().format("YYMMDD-HHmmss");
 
@@ -190,8 +780,8 @@ Num Sent Emails : ${countSentEmails}
         ], (err, results)=>{
 
             connAB.end();
-
-            console.log(':::: Event Confirmation Emails finished.');
+console.error(err);
+            console.log(':::: Event Fee Emails finished.');
 
         })
 
@@ -1268,6 +1858,49 @@ console.log(':::: Event Confirmation Emails finished.');
 
 
 
+    // get: /event/feeconfirm/:regID/:isConfirmed
+    // receive the incoming response to the fee email confirmation we sent out.
+    receiveFeeConfirmationResponse: function(req, res) {
+        var regID = req.param('regID') || '--';
+        var isConfirmed = req.param('isConfirmed') || '--';
+        
+        console.log('::: Event Fee Confirmed: '+regID+' '+isConfirmed);
+
+        var connAB = mysql.createConnection({
+            host: sails.config.connections.appBuilder.host,
+            user: sails.config.connections.appBuilder.user,
+            password: sails.config.connections.appBuilder.password,
+            database: sails.config.connections.appBuilder.database
+        });
+
+
+        connAB.query(`
+
+            UPDATE AB_Events_Registration
+            SET \`Finances Confirmed\`=1, \`Finances Accurate\`=${isConfirmed}
+            WHERE uuid = "${regID}"
+
+            `, (err, results, fields) => {
+            if (err) {
+console.error(err);
+res.error(err);
+            }
+            else {
+
+                var responsePath = 'app_builder/registration_confirmed';
+                if (isConfirmed == "0") {
+                    responsePath = 'app_builder/needs_adjustments'
+                }
+
+                res.view(responsePath, {});
+
+                connAB.end();
+                
+            }
+        });
+
+    },
+
 
 
     // get: /event/confirm/:regID/:isConfirmed
@@ -1315,6 +1948,38 @@ res.error(err);
 
 };
 
+
+function translate(Obj, langCode, field ) {
+    var trans = "??";
+
+    var json = []
+    try {
+        json = JSON.parse(Obj.translations)
+    }catch(e) {
+
+    }
+
+    var langTrans = json.find((t)=>{ return t.language_code == langCode; });
+    if (langTrans) {
+        trans = langTrans[field];
+    } 
+
+    return trans;
+}
+
+
+function amountCharge(Fee, Charge) {
+
+    // if a daily amount:
+    if (Fee.Frequency == 1) {
+        var endDate = moment(Charge.End);
+        var startDate = moment(Charge.Start);
+        var numDays = endDate.diff(startDate, 'days') + 1;  // include the start date
+        return parseInt(Fee.Cost) * numDays;
+    } else {
+        return parseInt(Fee.Cost);
+    }
+}
 
 
 function getFirstName(ren) {

@@ -464,7 +464,7 @@ export default class ABChooseConfig extends OP.Component {
 				OP.Comm.Service.post({
 					url:'/app_builder/Event/sendFeeConfirmationEmail',
 					data:{
-						regID:443,
+						regID:816,
 						// mobileApp:mobileApp,
 						// // email:
 					}

@@ -187,6 +187,9 @@ module.exports = {
     'post /app_builder/Event/sendFeeConfirmationEmail':
         'app_builder/ABEventController.sendFeeConfirmation',
 
+    'get /events/feeconfirm/:regID/:isConfirmed': 
+        'app_builder/ABEventController.receiveFeeConfirmationResponse',
+
   /*
 
   '/': {
