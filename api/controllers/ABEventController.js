@@ -705,7 +705,6 @@ Num Packets with Missing Ren:  ${resultErrorMissingRen.length}
 
 
 
-                logContents += "\nEmails Sent breakdown:\n";
                 var formatResultSentEmails = {};
 
                 for(var p in resultSentEmails) {
@@ -714,9 +713,9 @@ Num Packets with Missing Ren:  ${resultErrorMissingRen.length}
                         formatResultSentEmails[p].push(packet.registration.id)
                     })
                 }
-
                 var stringResultSentEmails = JSON.stringify(formatResultSentEmails, null, 4);
                 logContents += `
+Emails Sent Breakdown:
 --------------------------------------------------
 ${stringResultSentEmails}
 --------------------------------------------------
@@ -726,9 +725,6 @@ ${stringResultSentEmails}
 
 
                 console.log('... there were '+resultErrorPackets.length+' registrations with errors compiling their data.');
-
-                logContents += "\nDetails for packets with compile errors:\n";
-                logContents += "\nReg.id  :  error text \n";
                 var formatCompileErrors = {};
 
                 resultErrorPackets.forEach((packet)=>{
@@ -737,6 +733,8 @@ ${stringResultSentEmails}
                 var stringCompileErrors = JSON.stringify(formatCompileErrors, null, 4)
 
                 logContents += `
+Details for packets with compile errors:
+Reg.id  :  error text
 --------------------------------------------------
 ${stringCompileErrors}
 --------------------------------------------------
@@ -747,8 +745,6 @@ ${stringCompileErrors}
 
                 console.log('... there were '+resultErrorMissingRen.length+' registrations with errors compiling their data.');
 
-                logContents += "\nDetails for packets with missing ren:\n";
-                logContents += "\nReg.id  :  [ registrant.id, registrant.id, ... ] \n";
                 var formatErrorMissingRen = {};
 
                 resultErrorMissingRen.forEach((entry)=>{
@@ -757,6 +753,8 @@ ${stringCompileErrors}
                 var stringErrorMissingRen = JSON.stringify(formatErrorMissingRen, null, 4)
 
                 logContents += `
+Details for packets with missing ren:
+Reg.id  :  [ registrant.id, registrant.id, ... ] 
 --------------------------------------------------
 ${stringErrorMissingRen}
 --------------------------------------------------
