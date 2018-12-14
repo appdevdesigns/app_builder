@@ -923,7 +923,8 @@ export default class ABViewGrid extends ABViewWidget  {
 			buttonExport: App.unique(idBase+'_buttonExport'),
 
 			filterMenutoolbar: App.unique(idBase+'_filterMenuToolbar'),
-			resetFilterButton: App.unique(idBase+'_resetFilterButton')
+			resetFilterButton: App.unique(idBase+'_resetFilterButton'),
+			globalFilterForm: App.unique(idBase+'_globalFilterForm')
 
 		}
 		
@@ -977,6 +978,11 @@ export default class ABViewGrid extends ABViewWidget  {
 		var isFiltered = false,
 			waitMilliseconds = 50,
 			filterTimeoutId;
+			
+		var globalFilterPosition = "default";
+		if (this.settings.gridFilter && this.settings.gridFilter.globalFilterPosition) {
+			globalFilterPosition = this.settings.gridFilter.globalFilterPosition;
+		}
 
 		let DataTable = new ABWorkspaceDatatable(App, idBase, settings);
 		let PopupMassUpdateComponent = new ABPopupMassUpdate(App, idBase+"_mass");
@@ -1049,6 +1055,16 @@ export default class ABViewGrid extends ABViewWidget  {
 				}
 				else {
 					$$(rowFilterForm.ui.id).hide();
+				}
+
+				if (this.settings.gridFilter.filterOption == 3) {
+					$$(ids.globalFilterForm).show();
+					if (this.settings.gridFilter.globalFilterPosition == "single") {
+						$$(DataTable.ui.id).hide();
+					}
+				}
+				else {
+					$$(ids.globalFilterForm).hide();
 				}
 				
 				if (this.settings.isSortable == false) {
@@ -1181,6 +1197,36 @@ export default class ABViewGrid extends ABViewWidget  {
 				type: "space",
 				padding: 17,
 				rows: [
+					{
+						id: ids.globalFilterForm,
+						view:"text",
+						hidden: true,
+						placeholder:"Search or scan a barcode to see results",
+						on:{
+							onTimedKeyPress:function(){
+								var text = this.getValue().toLowerCase();
+								var table = $$(DataTable.ui.id);
+								var columns = table.config.columns;
+								var count = 0;
+								table.filter(function(obj){
+									for (var i=0; i<columns.length; i++) {
+										if (obj[columns[i].id] && obj[columns[i].id].toString().toLowerCase().indexOf(text) !== -1) {
+											count += 1;
+											return true
+										};
+									}
+									return false;
+								});
+								if (globalFilterPosition == "single") {
+									if (count == 1) {
+										table.show();
+									} else {
+										table.hide();
+									}
+								}
+							}
+						}
+					},
 					rowFilterForm.ui,
 					{
 						view: 'toolbar',
