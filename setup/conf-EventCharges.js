@@ -774,6 +774,7 @@ WHERE
                             	ORDER BY 
                             		age DESC
                             ) d WHERE entry <= @roomsCovered and 
+                            @roomsCovered > 0 and
                             not exists (
                             	SELECT 1
                             	FROM \`${ChargesTable}\`
@@ -809,6 +810,7 @@ WHERE
                                 ORDER BY 
                                     age DESC
                             ) d WHERE entry > @roomsCovered and 
+                            @roomsCovered > 0 and
                             not exists (
                                 SELECT 1
                                 FROM \`${ChargesTable}\`
@@ -1560,6 +1562,7 @@ ORDER BY
                                 ORDER BY 
                                     age DESC
                             ) d WHERE entry <= @roomsCovered and 
+                            @roomsCovered > 0 and
                             not exists (
                                 SELECT 1
                                 FROM \`${ChargesTable}\`
@@ -1595,6 +1598,7 @@ ORDER BY
                                 ORDER BY 
                                     age DESC
                             ) d WHERE entry > @roomsCovered and 
+                            @roomsCovered > 0 and
                             not exists (
                                 SELECT 1
                                 FROM \`${ChargesTable}\`
