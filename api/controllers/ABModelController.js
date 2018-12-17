@@ -18,6 +18,32 @@ const { ref, raw } = require('objection');
 
 var reloading = null;
 
+var countPendingTransactions = 0;
+var countResolvedTransactions = 0;
+
+
+setInterval(()=>{
+
+    if (countResolvedTransactions > 0) {
+        var countRemaining = countPendingTransactions - countResolvedTransactions;
+        sails.log(`::: ${countResolvedTransactions} processed in last second. ${countRemaining} Transactions still in Process. `);
+    }
+    countPendingTransactions = countPendingTransactions - countResolvedTransactions;
+    if (countPendingTransactions < 0) countPendingTransactions = 0;
+    countResolvedTransactions = 0;
+
+}, 1000);
+
+function newPendingTransaction() {
+    countPendingTransactions += 1;
+}
+
+function resolvePendingTransaction() {
+    countResolvedTransactions += 1;
+    if (countResolvedTransactions > countPendingTransactions) {
+        countPendingTransactions = countPendingTransactions;
+    }
+}
 
 /** 
  * @function updateRelationValues
@@ -307,7 +333,7 @@ module.exports = {
 
     create: function (req, res) {
 
-
+        newPendingTransaction();
         AppBuilder.routes.verifyAndReturnObject(req, res)
             .then(function (object) {
 
@@ -380,6 +406,7 @@ module.exports = {
                                         req.user.data)
                                         .then((newItem) => {
 
+                                            resolvePendingTransaction();
                                             res.AD.success(newItem[0]);
 
                                             // We want to broadcast the change from the server to the client so all datacollections can properly update
@@ -428,6 +455,7 @@ module.exports = {
                                     })
                                 }
 
+                                resolvePendingTransaction();
                                 res.AD.error(errorResponse);
                             }
                             else {
@@ -449,6 +477,7 @@ module.exports = {
 
                                 });
 
+                                resolvePendingTransaction();
                                 res.AD.error(errorResponse);
                             }
 
@@ -458,6 +487,7 @@ module.exports = {
 
                             if (!(err instanceof ValidationError)) {
                                 ADCore.error.log('Error performing update!', { error: err })
+                                resolvePendingTransaction();
                                 res.AD.error(err);
                                 sails.log.error('!!!! error:', err);
                             }
@@ -482,6 +512,7 @@ module.exports = {
                         attr[e.name].push(e);
                     })
 
+                    resolvePendingTransaction();
                     res.AD.error(errorResponse);
                 }
 
@@ -498,7 +529,7 @@ module.exports = {
      */
     find: function (req, res) {
 
-
+        newPendingTransaction();
         AppBuilder.routes.verifyAndReturnObject(req, res)
             .then(function (object) {
 
@@ -566,7 +597,7 @@ module.exports = {
                                 // object.postGet(result.data)
                                 // .then(()=>{
 
-
+                                resolvePendingTransaction();
                                 if (res.header) res.header('Content-type', 'application/json');
 
                                 res.send(result, 200);
@@ -577,7 +608,7 @@ module.exports = {
 
                         })
                         .catch((err) => {
-
+                            resolvePendingTransaction();
                             res.AD.error(err);
 
                         });
@@ -585,6 +616,7 @@ module.exports = {
                     })
                     .catch((err) => {
 
+                        resolvePendingTransaction();
                         res.AD.error(err);
 
                     });
@@ -594,6 +626,7 @@ module.exports = {
 
             })
             .catch((err) => {
+                resolvePendingTransaction();
                 ADCore.error.log("AppBuilder:ABModelController:find(): find() did not complete", { error: err });
                 res.AD.error(err, err.HTTPCode || 400);
             });
@@ -617,6 +650,7 @@ module.exports = {
             return;
         }
 
+        newPendingTransaction();
         async.series([
             // step #1
             function (next) {
@@ -749,6 +783,7 @@ module.exports = {
                     .deleteById(id)
                     .then((numRows) => {
 
+                        resolvePendingTransaction();
                         res.AD.success({ numRows: numRows });
 
                         // We want to broadcast the change from the server to the client so all datacollections can properly update
@@ -778,6 +813,7 @@ module.exports = {
         ], function (err) {
             if (err) {
                 if (!(err instanceof ValidationError)) {
+                    resolvePendingTransaction();
                     ADCore.error.log('Error performing delete!', { error: err })
                     res.AD.error(err);
                     sails.log.error('!!!! error:', err);
@@ -946,6 +982,7 @@ module.exports = {
             return;
         }
 
+        newPendingTransaction();
         AppBuilder.routes.verifyAndReturnObject(req, res)
             .then(function (object) {
 
@@ -1066,6 +1103,7 @@ module.exports = {
                                             return query3
                                                 .catch((err) => { return Promise.reject(err); })
                                                 .then((newItem) => {
+                                                    resolvePendingTransaction();
                                                     res.AD.success(newItem[0]);
 
                                                     // We want to broadcast the change from the server to the client so all datacollections can properly update
@@ -1088,6 +1126,8 @@ module.exports = {
                                 }, (err) => {
 
                                     console.log('...  (err) handler!', err);
+
+                                    resolvePendingTransaction();
 
                                     // handle invalid values here:
                                     if (err instanceof ValidationError) {
@@ -1143,7 +1183,8 @@ module.exports = {
                                     console.log('... catch(err) !');
 
                                     if (!(err instanceof ValidationError)) {
-                                        ADCore.error.log('Error performing update!', { error: err })
+                                        ADCore.error.log('Error performing update!', { error: err });
+                                        resolvePendingTransaction();
                                         res.AD.error(err);
                                         sails.log.error('!!!! error:', err);
                                     }
@@ -1168,6 +1209,7 @@ module.exports = {
                                 attr[e.name].push(e);
                             })
 
+                            resolvePendingTransaction();
                             res.AD.error(errorResponse);
                         }
 
@@ -1182,6 +1224,8 @@ module.exports = {
     upsert: function (req, res) {
 
         var object;
+
+        newPendingTransaction();
 
         Promise.resolve()
             .then(() => {
@@ -1281,6 +1325,7 @@ module.exports = {
                             attr[e.name].push(e);
                         });
 
+                        resolvePendingTransaction();
                         res.AD.error(errorResponse);
 
                         return;
@@ -1353,6 +1398,7 @@ module.exports = {
                         req.user.data)
                         .then((updateItem) => {
 
+                            resolvePendingTransaction();
                             res.AD.success(updateItem);
 
                             // We want to broadcast the change from the server to the client so all datacollections can properly update
@@ -1376,6 +1422,8 @@ module.exports = {
             .catch((err) => {
 
                 console.log('...  (err) handler!', err);
+
+                resolvePendingTransaction();
 
                 // handle invalid values here:
                 if (err instanceof ValidationError) {
@@ -1410,11 +1458,13 @@ module.exports = {
 
     refresh: function (req, res) {
 
+        newPendingTransaction();
         AppBuilder.routes.verifyAndReturnObject(req, res)
             .then(function (object) {
 
                 object.modelRefresh();
 
+                resolvePendingTransaction();
                 res.AD.success({});
 
             });
@@ -1424,6 +1474,7 @@ module.exports = {
 
     count: function (req, res) {
 
+        newPendingTransaction();
         AppBuilder.routes.verifyAndReturnObject(req, res)
             .then(function (object) {
 
@@ -1433,9 +1484,13 @@ module.exports = {
                 object
                     .queryCount({ where: where, populate: false }, req.user.data)
                     .first()
-                    .catch(res.AD.error)
+                    .catch(err => {
+                        resolvePendingTransaction();
+                        res.AD.error(err);
+                    })
                     .then(result => {
 
+                        resolvePendingTransaction();
                         res.AD.success(result);
 
                     });
