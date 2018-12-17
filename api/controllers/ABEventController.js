@@ -44,6 +44,7 @@ module.exports = {
         var hashFeesMeals = { /* fee.id : {fee} */ };
         var hashFeesChildcare = { /* fee.id : {fee} */ };
         var hashFeesSchedule = { /* fee.id : {fee} */ };
+        var hashFeesMisc = { /* fee.id : {fee} */ };
 
         var hashPackets = {
             /* 
@@ -192,6 +193,26 @@ module.exports = {
                             }
                         });
                     },
+
+
+                    // Get hashFeesMisc:
+                    (cb)=>{
+
+                        connAB.query(`
+
+                            SELECT * FROM AB_Events_Fees
+                            WHERE Category = 1531103036705
+
+                            `, (err, results, fields) => {
+                            if (err) cb(err);
+                            else {
+                                results.forEach((r)=>{
+                                    hashFeesMisc[r.id] = r;
+                                })
+                                cb();
+                            }
+                        });
+                    }
 
                     ], 
                 (err)=>{
@@ -530,6 +551,7 @@ registrationID = [ 784, 816 ];
 
                     packet.childCareFees = [];
                     packet.scheduleFees = [];
+                    packet.miscFees = [];
 
                     packet.allCharges.forEach((charge)=>{
 
@@ -576,13 +598,19 @@ registrationID = [ 784, 816 ];
                             packet.scheduleFees.push({label:trans, amount:amount});
                         }
 
+                        Fee = hashFeesMisc[charge.Fees177];
+                        if (Fee) {
+                            var trans = translate(Fee, packet.languageCode || 'en', 'Fee');
+                            var amount = amountCharge(Fee, charge);
+                            packet.miscFees.push({label:trans, amount:amount});
+                        }
+
                     })
 
                 })
 
                 next();
             },
-
 
 
 
