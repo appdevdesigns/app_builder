@@ -1204,24 +1204,39 @@ export default class ABViewGrid extends ABViewWidget  {
 						placeholder:"Search or scan a barcode to see results",
 						on:{
 							onTimedKeyPress:function(){
-								var text = this.getValue().toLowerCase();
+								var text = this.getValue().trim().toLowerCase().split(" ");
 								var table = $$(DataTable.ui.id);
 								var columns = table.config.columns;
 								var count = 0;
+								var matchArray = [];
 								table.filter(function(obj){
+									matchArray = [];
+									// console.log("filter", obj);
 									for (var i=0; i<columns.length; i++) {
-										if (obj[columns[i].id] && obj[columns[i].id].toString().toLowerCase().indexOf(text) !== -1) {
-											count += 1;
-											return true
-										};
+										for (var x=0; x<text.length; x++) {
+											var searchFor = text[x];
+											if (obj[columns[i].id] && obj[columns[i].id].toString().toLowerCase().indexOf(searchFor) !== -1) {
+												// console.log("matched on:", searchFor);
+												if (matchArray.indexOf(searchFor) == -1) {
+													matchArray.push(searchFor);
+												}
+											}
+										}
 									}
-									return false;
+									// console.log("Filter By:", text.length, text);
+									// console.log("Matches:", matchArray);
+									if (matchArray.length == text.length) {
+										count++;
+										return true;
+									} else {
+										return false;
+									}
 								});
 								if (globalFilterPosition == "single") {
 									if (count == 1) {
 										table.show();
 									} else {
-										table.hide();
+										table.hide(); 
 									}
 								}
 							}
