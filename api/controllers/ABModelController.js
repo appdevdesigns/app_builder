@@ -1474,7 +1474,10 @@ module.exports = {
                 object
                     .queryCount({ where: where, populate: false }, req.user.data)
                     .first()
-                    .catch(res.AD.error)
+                    .catch(err => {
+                        resolvePendingTransaction();
+                        res.AD.error(err);
+                    })
                     .then(result => {
 
                         resolvePendingTransaction();
