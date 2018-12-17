@@ -121,7 +121,7 @@ module.exports = {
                         connAB.query(`
 
                             SELECT * FROM AB_Events_Fees
-                            WHERE Category = 1528273589723
+                            WHERE Category IN ( 1528273589723, 1530585400162 )
 
                             `, (err, results, fields) => {
                             if (err) cb(err);
