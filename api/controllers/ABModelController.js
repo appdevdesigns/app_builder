@@ -419,7 +419,7 @@ module.exports = {
                                             // Broadcast the create
                                             sails.sockets.broadcast(object.id, "ab.datacollection.create", payload);
 
-                                            updateConnectedFields(object, newItem[0]);
+                                            // updateConnectedFields(object, newItem[0]);
 
                                             // TODO:: what is this doing?
                                             Promise.resolve();
