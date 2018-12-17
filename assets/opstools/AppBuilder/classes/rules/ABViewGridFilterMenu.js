@@ -53,6 +53,7 @@ export default class ABViewGridFilterMenu {
 			
 			filterOptionRadio: idBase + '_filterOptionRadio',
 			filterUser: idBase + '_filterUser',
+			filterGlobal: idBase + "_filterGlobal",
 			filterMenuLayout: idBase + '_filterMenuLayout',
 
 			needLoadAllLabel: idBase + '_needLoadAll',
@@ -85,7 +86,8 @@ export default class ABViewGridFilterMenu {
 						options:[
 							{"id": 0, "value": "Do not Allow User filters"},
 							{"id": 1, "value": "Enable User filters"},
-							{"id": 2, "value": "Use a filter menu"}
+							{"id": 2, "value": "Use a filter menu"},
+							{"id": 3, "value": "Use a global filter input"}
 						],
 						vertical: true,
 						label: "Filter Option",
@@ -98,7 +100,21 @@ export default class ABViewGridFilterMenu {
 					},
 
 					{
-						view: "segmented",
+						view: "radio",
+						id: ids.filterGlobal,
+						hidden: true,
+						vertical: true,
+						label: "Show",
+						labelWidth: App.config.labelWidthLarge,
+						options: [
+							{ id: "default", value: "All matching records" },
+							{ id: "single", value: "Single records only"}
+						]
+					},
+
+					{
+						view: "radio",
+						vertical: true,
 						id: ids.filterUser,
 						hidden: true,
 						value: "toolbar",
@@ -236,15 +252,23 @@ export default class ABViewGridFilterMenu {
 				switch(JSON.parse(value)) {
 					case 1: // Enable User filters
 						$$(ids.filterMenuLayout).hide();
+						$$(ids.filterGlobal).hide();
 						$$(ids.filterUser).show();
 						break;
 					case 2: // Use a filter menu
 						$$(ids.filterUser).hide();
+						$$(ids.filterGlobal).hide();
 						$$(ids.filterMenuLayout).show();
+						break;
+					case 3: // Use a filter menu
+						$$(ids.filterUser).hide();
+						$$(ids.filterMenuLayout).hide();
+						$$(ids.filterGlobal).show();
 						break;
 					default:
 						$$(ids.filterUser).hide();
 						$$(ids.filterMenuLayout).hide();
+						$$(ids.filterGlobal).hide();
 						break;
 				}
 			},
@@ -319,6 +343,8 @@ export default class ABViewGridFilterMenu {
 			$$(this.ids.filterOptionRadio).setValue(this.filterOption);
 
 			$$(this.ids.filterUser).setValue(settings.userFilterPosition || "toolbar");
+			
+			$$(this.ids.filterGlobal).setValue(settings.globalFilterPosition || "default");
 
 			if (settings.queryRules) {
 				settings.queryRules.forEach((ruleSettings)=> {
@@ -365,6 +391,9 @@ export default class ABViewGridFilterMenu {
 				this.filterRulesList.forEach((r)=>{
 					settings.queryRules.push(r.toSettings());
 				});
+				break;
+			case 3:
+				settings.globalFilterPosition = $$(this.ids.filterGlobal).getValue();
 				break;
 		}
 

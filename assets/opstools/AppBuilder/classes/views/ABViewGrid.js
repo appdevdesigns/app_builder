@@ -923,7 +923,8 @@ export default class ABViewGrid extends ABViewWidget  {
 			buttonExport: App.unique(idBase+'_buttonExport'),
 
 			filterMenutoolbar: App.unique(idBase+'_filterMenuToolbar'),
-			resetFilterButton: App.unique(idBase+'_resetFilterButton')
+			resetFilterButton: App.unique(idBase+'_resetFilterButton'),
+			globalFilterForm: App.unique(idBase+'_globalFilterForm')
 
 		}
 		
@@ -977,6 +978,11 @@ export default class ABViewGrid extends ABViewWidget  {
 		var isFiltered = false,
 			waitMilliseconds = 50,
 			filterTimeoutId;
+			
+		var globalFilterPosition = "default";
+		if (this.settings.gridFilter && this.settings.gridFilter.globalFilterPosition) {
+			globalFilterPosition = this.settings.gridFilter.globalFilterPosition;
+		}
 
 		let DataTable = new ABWorkspaceDatatable(App, idBase, settings);
 		let PopupMassUpdateComponent = new ABPopupMassUpdate(App, idBase+"_mass");
@@ -1049,6 +1055,16 @@ export default class ABViewGrid extends ABViewWidget  {
 				}
 				else {
 					$$(rowFilterForm.ui.id).hide();
+				}
+
+				if (this.settings.gridFilter.filterOption == 3) {
+					$$(ids.globalFilterForm).show();
+					if (this.settings.gridFilter.globalFilterPosition == "single") {
+						$$(DataTable.ui.id).hide();
+					}
+				}
+				else {
+					$$(ids.globalFilterForm).hide();
 				}
 				
 				if (this.settings.isSortable == false) {
@@ -1181,6 +1197,51 @@ export default class ABViewGrid extends ABViewWidget  {
 				type: "space",
 				padding: 17,
 				rows: [
+					{
+						id: ids.globalFilterForm,
+						view:"text",
+						hidden: true,
+						placeholder:"Search or scan a barcode to see results",
+						on:{
+							onTimedKeyPress:function(){
+								var text = this.getValue().trim().toLowerCase().split(" ");
+								var table = $$(DataTable.ui.id);
+								var columns = table.config.columns;
+								var count = 0;
+								var matchArray = [];
+								table.filter(function(obj){
+									matchArray = [];
+									// console.log("filter", obj);
+									for (var i=0; i<columns.length; i++) {
+										for (var x=0; x<text.length; x++) {
+											var searchFor = text[x];
+											if (obj[columns[i].id] && obj[columns[i].id].toString().toLowerCase().indexOf(searchFor) !== -1) {
+												// console.log("matched on:", searchFor);
+												if (matchArray.indexOf(searchFor) == -1) {
+													matchArray.push(searchFor);
+												}
+											}
+										}
+									}
+									// console.log("Filter By:", text.length, text);
+									// console.log("Matches:", matchArray);
+									if (matchArray.length == text.length) {
+										count++;
+										return true;
+									} else {
+										return false;
+									}
+								});
+								if (globalFilterPosition == "single") {
+									if (count == 1) {
+										table.show();
+									} else {
+										table.hide(); 
+									}
+								}
+							}
+						}
+					},
 					rowFilterForm.ui,
 					{
 						view: 'toolbar',

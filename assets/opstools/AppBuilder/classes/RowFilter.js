@@ -1690,12 +1690,16 @@ export default class RowFilter extends OP.Component {
 				switch (rule) {
 					case 'contains':
 						return rowData[columnName].toString().indexOf(compareValue) > -1;
+						break;
 					case 'not_contains':
 						return rowData[columnName].toString().indexOf(compareValue) == -1;
+						break;
 					case 'equals':
 						return rowData[columnName] == compareValue;
+						break;
 					case 'not_equal':
 						return rowData[columnName] != compareValue;
+						break;
 					case 'in_query':
 					case 'not_in_query':
 						return _logic.inQueryValid(rowData, rule, compareValue);
