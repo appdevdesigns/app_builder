@@ -350,14 +350,18 @@ registrationID = [ 784, 816 ];
                                 var errors = [];
                                 registrantIDs.forEach((rID)=>{
 
-                                    if (packet.registrants[rID].rendata) {
-                                        var name = getFullName(packet.registrants[rID].rendata);
-                                        packet.attendees.push(name);
-                                    } else {
-                                        packet.error = true;
-                                        packet.errorText.push("No Ren for Registrant:"+rID);
-                                        errors.push(rID);
+                                    if (packet.registrants[rID].Attending == 1) {
+
+                                        if (packet.registrants[rID].rendata) {
+                                            var name = getFullName(packet.registrants[rID].rendata);
+                                            packet.attendees.push(name);
+                                        } else {
+                                            packet.error = true;
+                                            packet.errorText.push("No Ren for Registrant:"+rID);
+                                            errors.push(rID);
+                                        }
                                     }
+                                    
                                     
                                 })
 
@@ -482,7 +486,8 @@ registrationID = [ 784, 816 ];
                         connAB.query(`
 
                             SELECT * FROM AB_Events_Charges
-                            WHERE Reg = ${registrationID}
+                            WHERE Reg = ${registrationID} 
+                            AND \`Apply Charge\` = 1
 
                             `, (err, results, fields) => {
                             if (err) cb(err);
