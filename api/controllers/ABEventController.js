@@ -550,6 +550,8 @@ registrationID = [ 784, 816 ];
 
                     var packet = hashPackets[registrationID];
                     
+                    packet.totalCharges = 0;
+
                     packet.conferenceFees = [];
                     packet.housingFees = [];
                     packet.mealFees = [];
@@ -564,6 +566,7 @@ registrationID = [ 784, 816 ];
                         if (Fee) {
                             var trans = translate(Fee, packet.languageCode || 'en', 'Fee');
                             var amount = amountCharge(Fee, charge);
+                            packet.totalCharges += amount;
                             packet.conferenceFees.push({label:trans, amount:amount});
                         }
 
@@ -574,6 +577,7 @@ registrationID = [ 784, 816 ];
                             var end   = moment(charge.End).format("ddd MMM D");
                             var label = `${trans} : ${start} - ${end}`
                             var amount = amountCharge(Fee, charge);
+                            packet.totalCharges += amount;
                             packet.housingFees.push({label:label, amount:amount});
                         }
 
@@ -586,6 +590,7 @@ registrationID = [ 784, 816 ];
                             // var label = `${trans} : ${start}-${end}  ${numDays} days`
                             var label = trans;
                             var amount = amountCharge(Fee, charge);
+                            packet.totalCharges += amount;
                             packet.mealFees.push({label:label, amount:amount});
                         }
 
@@ -593,6 +598,7 @@ registrationID = [ 784, 816 ];
                         if (Fee) {
                             var trans = translate(Fee, packet.languageCode || 'en', 'Fee');
                             var amount = amountCharge(Fee, charge);
+                            packet.totalCharges += amount;
                             packet.childCareFees.push({label:trans, amount:amount});
                         }
 
@@ -600,6 +606,7 @@ registrationID = [ 784, 816 ];
                         if (Fee) {
                             var trans = translate(Fee, packet.languageCode || 'en', 'Fee');
                             var amount = amountCharge(Fee, charge);
+                            packet.totalCharges += amount;
                             packet.scheduleFees.push({label:trans, amount:amount});
                         }
 
@@ -607,6 +614,7 @@ registrationID = [ 784, 816 ];
                         if (Fee) {
                             var trans = translate(Fee, packet.languageCode || 'en', 'Fee');
                             var amount = amountCharge(Fee, charge);
+                            packet.totalCharges += amount;
                             packet.miscFees.push({label:trans, amount:amount});
                         }
 
