@@ -259,7 +259,8 @@ export default class ABViewMenu extends ABViewWidget {
 				labelWidth: App.config.labelWidthXLarge,
 				options: [
 					{ id: 'ab-menu-left', value: L('ab.component.menu.alignLeft', '*Left') },
-					{ id: 'ab-menu-right', value: L('ab.component.menu.alignRight', '*Right') }
+					{ id: 'ab-menu-right', value: L('ab.component.menu.alignRight', '*Right')},
+					{ id: 'ab-menu-center', value: L('ab.component.menu.alignCenter', '*Center')}
 				]
 			},
 			{
