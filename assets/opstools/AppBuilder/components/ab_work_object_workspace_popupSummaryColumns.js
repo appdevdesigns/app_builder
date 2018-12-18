@@ -5,6 +5,7 @@
  *
  */
 import ABFieldNumber from '../classes/dataFields/ABFieldNumber'
+import ABFieldCalculate from '../classes/dataFields/ABFieldCalculate'
 
 
 export default class AB_Work_Object_Workspace_PopupSummaryColumns extends OP.Component {  
@@ -246,9 +247,18 @@ export default class AB_Work_Object_Workspace_PopupSummaryColumns extends OP.Com
 							label: f.label
 						};
 					});
+					
+					var calculateFields = CurrentObject.fields(f => f instanceof ABFieldCalculate).map(f => {
+						return {
+							id: f.id,
+							label: f.label
+						};
+					});
+					
+					var fieldOptions = numberFields.concat(calculateFields);
 
 					$$(ids.list).clearAll();
-					$$(ids.list).parse(numberFields);
+					$$(ids.list).parse(fieldOptions);
 
 					// update icons
 					SummaryFieldIds.forEach(fieldId => {
