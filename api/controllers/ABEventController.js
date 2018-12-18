@@ -230,10 +230,13 @@ module.exports = {
 
                     SELECT * FROM AB_Events_Registration
                     WHERE event IS Not Null 
+                    AND \`User Submitted\` = 1
+                    AND \`Finances Accurate\` = 0
 
                 `;
 
-registrationID = [ 784, 816 ];
+registrationID = [ 784, 816 ];       // Duncan Family
+// registrationID = [ 442, 443, 470 ];     // Poolman Family
 
                 // if a registration id is provided, limit it to that.
                 if (registrationID != '??') {
