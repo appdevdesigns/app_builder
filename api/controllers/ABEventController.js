@@ -34,7 +34,8 @@ module.exports = {
             host: sails.config.connections.appBuilder.host,
             user: sails.config.connections.appBuilder.user,
             password: sails.config.connections.appBuilder.password,
-            database: sails.config.connections.appBuilder.database
+            database: sails.config.connections.appBuilder.database,
+            port: sails.config.connections.appBuilder.port
         });
 
 
@@ -235,7 +236,7 @@ module.exports = {
 
                 `;
 
-registrationID = [ 784, 816 ];       // Duncan Family
+registrationID = [ 784, 816, 1228, 1230, 1483, 1485, 1489, 442, 443, 470 ];       // Test Group James D, James W, JB F, Ric P
 // registrationID = [ 442, 443, 470 ];     // Poolman Family
 
                 // if a registration id is provided, limit it to that.
@@ -579,6 +580,9 @@ registrationID = [ 784, 816 ];       // Duncan Family
                             var start = moment(charge.Start).format("ddd MMM D");
                             var end   = moment(charge.End).format("ddd MMM D");
                             var label = `${trans} : ${start} - ${end}`
+                            if (start == "Invalid date") {
+                                label = `${trans}`;
+                            }
                             var amount = amountCharge(Fee, charge);
                             packet.totalCharges += amount;
                             packet.housingFees.push({label:label, amount:amount});
@@ -683,13 +687,15 @@ lang = 'en';
                         var emailTo = [ packet.email ];
                         
 // still testing:
-emailTo = [ 'jhausman@zteam.biz', 'jduncandesign@gmail.com', 'rpoolman@zteam.biz' ];
+// emailTo = [ 'jhausman@zteam.biz', 'jduncandesign@gmail.com', 'rpoolman@zteam.biz' ];
 // emailTo = [ 'jhausman@zteam.biz' ];
 // emailTo = [ 'rpoolman@zteam.biz' ];
+emailTo = ['rpoolman@zteam.biz'];
 
 
-
-
+                        //add commas to total charge
+                        packet.totalCharges = packet.totalCharges.toLocaleString();
+                        
                         EmailNotifications.trigger(triggerID, {
                             to: emailTo,
                             variables: packet,
@@ -768,7 +774,7 @@ ${stringResultSentEmails}
 `;
 
 
-                console.log('... there were '+resultErrorPackets.length+' registrations with errors compiling their data.');
+                console.log('... there were '+resultErrorPackets.length+' registrations with errors compiling their data...', resultErrorPackets);
                 var formatCompileErrors = {};
 
                 resultErrorPackets.forEach((packet)=>{
@@ -1751,7 +1757,7 @@ if (ANALYSIS_TEST) {
 // emailTo = [ 'jhausman@zteam.biz' ];
 // emailTo = [ 'rpoolman@zteam.biz' ];
 
-
+emailTo = ['jduncandesign@gmail.com'];
 
 
                         EmailNotifications.trigger(triggerID, {
