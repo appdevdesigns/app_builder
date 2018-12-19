@@ -1422,7 +1422,7 @@ WHERE
                 `
 INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Apply Charge\`)
 SELECT
-    reg.id, 105, CONCAT('auto_import_105_Discount_', reg.id, '_', pep.id), 1
+    reg.id, 105, CONCAT('auto_import_105_DevWkDiscount_', reg.id, '_', pep.id), 1
 FROM
     AB_Events_registrants pep
 INNER JOIN
@@ -1430,7 +1430,7 @@ INNER JOIN
 INNER JOIN
     AB_Events_Registration reg on reg.id = pep.Registration434 
 WHERE 
-    reg.Event = 2 AND 
+    reg.Event = 6 AND 
     reg.\`User Submitted\` = 1 and
     pep.Attending = 1 and 
     wk.sendingregion_id IN (3,4,5,6,7,8,9,10,22,37,40) AND 
