@@ -6,6 +6,7 @@
  */
 import ABFieldNumber from '../classes/dataFields/ABFieldNumber'
 import ABFieldCalculate from '../classes/dataFields/ABFieldCalculate'
+import ABFieldFormula from '../classes/dataFields/ABFieldFormula'
 
 
 export default class AB_Work_Object_Workspace_PopupSummaryColumns extends OP.Component {  
@@ -254,8 +255,16 @@ export default class AB_Work_Object_Workspace_PopupSummaryColumns extends OP.Com
 							label: f.label
 						};
 					});
+
+					var formulaFields = CurrentObject.fields(f => f instanceof ABFieldFormula).map(f => {
+						return {
+							id: f.id,
+							label: f.label
+						};
+					});
 					
 					var fieldOptions = numberFields.concat(calculateFields);
+					fieldOptions = fieldOptions.concat(formulaFields);
 
 					$$(ids.list).clearAll();
 					$$(ids.list).parse(fieldOptions);
