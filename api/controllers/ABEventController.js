@@ -236,7 +236,7 @@ module.exports = {
 
                 `;
 
-registrationID = [ 784, 816, 1228, 1230, 1483, 1485, 1489, 442, 443, 470 ];       // Test Group James D, James W, JB F, Ric P
+registrationID = [ 784, 816, 1228, 1230, 1483, 1485, 1489, 442, 443, 470, 554, 555 ];       // Test Group James D, James W, JB F, Ric P, MySan M
 // registrationID = [ 442, 443, 470 ];     // Poolman Family
 
                 // if a registration id is provided, limit it to that.
@@ -569,7 +569,7 @@ registrationID = [ 784, 816, 1228, 1230, 1483, 1485, 1489, 442, 443, 470 ];     
                         var Fee = hashFeesConference[charge.Fees177];
                         if (Fee) {
                             var trans = translate(Fee, packet.languageCode || 'en', 'Fee');
-                            var amount = amountCharge(Fee, charge);
+                            var amount = amountCharge(Fee, charge, true);
                             packet.totalCharges += amount;
                             packet.conferenceFees.push({label:trans, amount:amount});
                         }
@@ -583,7 +583,7 @@ registrationID = [ 784, 816, 1228, 1230, 1483, 1485, 1489, 442, 443, 470 ];     
                             if (start == "Invalid date") {
                                 label = `${trans}`;
                             }
-                            var amount = amountCharge(Fee, charge);
+                            var amount = amountCharge(Fee, charge, false);
                             packet.totalCharges += amount;
                             packet.housingFees.push({label:label, amount:amount});
                         }
@@ -596,7 +596,7 @@ registrationID = [ 784, 816, 1228, 1230, 1483, 1485, 1489, 442, 443, 470 ];     
                             // var numDays = moment(charge.End).diff(moment(charge.Start), 'days') +1;
                             // var label = `${trans} : ${start}-${end}  ${numDays} days`
                             var label = trans;
-                            var amount = amountCharge(Fee, charge);
+                            var amount = amountCharge(Fee, charge, true);
                             packet.totalCharges += amount;
                             packet.mealFees.push({label:label, amount:amount});
                         }
@@ -604,7 +604,7 @@ registrationID = [ 784, 816, 1228, 1230, 1483, 1485, 1489, 442, 443, 470 ];     
                         Fee = hashFeesChildcare[charge.Fees177];
                         if (Fee) {
                             var trans = translate(Fee, packet.languageCode || 'en', 'Fee');
-                            var amount = amountCharge(Fee, charge);
+                            var amount = amountCharge(Fee, charge, true);
                             packet.totalCharges += amount;
                             packet.childCareFees.push({label:trans, amount:amount});
                         }
@@ -612,7 +612,7 @@ registrationID = [ 784, 816, 1228, 1230, 1483, 1485, 1489, 442, 443, 470 ];     
                         Fee = hashFeesSchedule[charge.Fees177];
                         if (Fee) {
                             var trans = translate(Fee, packet.languageCode || 'en', 'Fee');
-                            var amount = amountCharge(Fee, charge);
+                            var amount = amountCharge(Fee, charge, true);
                             packet.totalCharges += amount;
                             packet.scheduleFees.push({label:trans, amount:amount});
                         }
@@ -620,7 +620,7 @@ registrationID = [ 784, 816, 1228, 1230, 1483, 1485, 1489, 442, 443, 470 ];     
                         Fee = hashFeesMisc[charge.Fees177];
                         if (Fee) {
                             var trans = translate(Fee, packet.languageCode || 'en', 'Fee');
-                            var amount = amountCharge(Fee, charge);
+                            var amount = amountCharge(Fee, charge, true);
                             packet.totalCharges += amount;
                             packet.miscFees.push({label:trans, amount:amount});
                         }
@@ -682,7 +682,7 @@ if (ANALYSIS_TEST) {
                             lang = 'en';
                         }
 
-lang = 'en';
+lang = 'zh';
                         var triggerID = triggerBase + lang;
                         var emailTo = [ packet.email ];
                         
@@ -690,7 +690,7 @@ lang = 'en';
 // emailTo = [ 'jhausman@zteam.biz', 'jduncandesign@gmail.com', 'rpoolman@zteam.biz' ];
 // emailTo = [ 'jhausman@zteam.biz' ];
 // emailTo = [ 'rpoolman@zteam.biz' ];
-emailTo = ['rpoolman@zteam.biz'];
+emailTo = ['james.wen@zteam.biz', 'rpoolman@zteam.biz', 'mmcgowan@dodomail.net', 'james.duncan@zteam.biz', 'jjung@dodomail.net'];
 
 
                         //add commas to total charge
@@ -2016,13 +2016,17 @@ function translate(Obj, langCode, field ) {
 }
 
 
-function amountCharge(Fee, Charge) {
+function amountCharge(Fee, Charge, IncludeStartDate) {
 
     // if a daily amount:
     if (Fee.Frequency == 1) {
         var endDate = moment(Charge.End);
         var startDate = moment(Charge.Start);
-        var numDays = endDate.diff(startDate, 'days') + 1;  // include the start date
+        var numDays = endDate.diff(startDate, 'days');  
+        // include the start date
+        if (IncludeStartDate) {
+            numDays = numDays + 1;
+        }
         return parseInt(Fee.Cost) * numDays;
     } else {
         return parseInt(Fee.Cost);
