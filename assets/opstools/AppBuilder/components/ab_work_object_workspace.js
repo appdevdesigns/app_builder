@@ -544,7 +544,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                 // Since we are making server side requests lets offload the badge count to another function so it can be called independently
                 _logic.getBadgeFilters();
                 // this will be handled by the server side request now
-                DataTable.refresh();
+				DataTable.refresh();
+				KanBan.refresh();
     		},
 
     		/**

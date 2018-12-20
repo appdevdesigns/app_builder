@@ -430,6 +430,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 		this.hide = _logic.hide;
 		this.show = _logic.show;
 		this.objectLoad = _logic.objectLoad;
+		this.refresh = _logic.loadData;
 
 	}
 
