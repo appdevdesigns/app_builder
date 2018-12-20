@@ -52,7 +52,11 @@ export default class ABChooseConfig extends OP.Component {
 
 				confirmDeleteTitle : L('ab.application.delete.title', "*Delete application"),
 				confirmDeleteMessage : L('ab.application.delete.message', "*Do you want to delete <b>{0}</b>?"),
-				qrPreview: L('ab.config.qrPreview', '*Generate QR Code')				
+				qrPreview: L('ab.config.qrPreview', '*Generate QR Code'),
+
+				buttonSendConfirmationEmails: L('ab.config.sendConfirmationEmails', '*Send Confirmation Emails'),
+				confirmEmailsSent: L('ab.config.confirmEmailsSent', '*Confirmation Emails Sent'),
+				errorEmailsSent: L('ab.config.errorEmailsSent', '*Error Sending Confirmation Emails'),
 			}
 		}
 
@@ -304,7 +308,33 @@ export default class ABChooseConfig extends OP.Component {
 											]
 										}
 									]
-								}
+								},
+								// Button: Send Confirmation Emails
+								{
+									view:"template",
+									template:labels.component.buttonSendConfirmationEmails,
+									type:"header",
+									css:"bg-gray webix_header"
+								},
+								{
+									type: "form",
+									rows: [
+										{
+											cols: [
+												{},
+												{
+													view:"button",
+							                    	label: labels.component.buttonSendConfirmationEmails,
+													autowidth: true,
+													click: () => {
+														_logic.buttonSendConfirmationEmails();
+													}
+												},
+												{}
+											]
+										}
+									]
+								},
 							]
 						},
 						{
@@ -367,6 +397,33 @@ export default class ABChooseConfig extends OP.Component {
 						OP.Error.log(labels.component.errorUsersCreated, err);
 					})
 				} 
+
+			},
+
+			buttonSendConfirmationEmails: ()=>{
+				_logic.busy();
+
+				OP.Comm.Service.post({
+					url:'/app_builder/Event/sendConfirmationEmail',
+					data:{
+						// user:user,
+						// mobileApp:mobileApp,
+						// // email:
+					}
+				})
+				.then((response)=>{
+					OP.Dialog.Message({
+						text:labels.component.confirmEmailsSent
+					})
+					_logic.ready();
+				})
+				.catch((err)=>{
+					_logic.ready();
+					var message = labels.component.errorEmailsSent; 
+					if (err.message) message += ': '+err.message;
+
+					OP.Error.log(message, err);
+				})
 
 			},
 

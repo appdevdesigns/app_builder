@@ -1037,6 +1037,19 @@ export default class ABViewDataCollection extends ABView {
 
 		});
 
+
+		// relate data functions
+		let isRelated = (relateData, rowId) => {
+
+			if (Array.isArray(relateData)) {
+				return relateData.filter(v => (v.id || v) == rowId).length > 0;
+			}
+			else {
+				return relateData && (relateData.id == rowId || relateData == rowId);
+			}
+
+		};
+
 		// events
 		AD.comm.hub.subscribe('ab.datacollection.create', (msg, data) => {
 
@@ -1044,23 +1057,78 @@ export default class ABViewDataCollection extends ABView {
 			if (!obj)
 				return;
 
-			if (obj.id != data.objectId)
-				return;
+			var values = data.data;
 
-			var rowData = data.data;
+			if (obj.id == data.objectId) {
 
-			// normalize data before add to data collection
-			var model = obj.model();
-			model.normalizeData(rowData);
+				// normalize data before add to data collection
+				var model = obj.model();
+				model.normalizeData(values);
+	
+				// filter condition before add 
+				if (!this.__filterComponent.isValid(values))
+					return;
+	
+				if (!this.__dataCollection.exists(values.id)) {
+					this.__dataCollection.add(values, 0);
+					// this.__dataCollection.setCursor(rowData.id);
+				}
 
-			// filter condition before add 
-			if (!this.__filterComponent.isValid(rowData))
-				return;
-
-			if (!this.__dataCollection.exists(rowData.id)) {
-				this.__dataCollection.add(rowData, 0);
-				// this.__dataCollection.setCursor(rowData.id);
 			}
+			// if it is a linked object
+			else {
+
+				let connectedFields = this.datasource.fields(f =>
+					f.key == 'connectObject' &&
+					f.datasourceLink &&
+					f.datasourceLink.id == data.objectId
+				);
+
+				// update relation data
+				if (connectedFields && connectedFields.length > 0) {
+
+					// various PK name
+					if (!values.id && connectedFields[0].object.PK() != 'id')
+						values.id = values[connectedFields[0].object.PK()];
+
+					this.__dataCollection.find({}).forEach(d => {
+
+						let updateItemData = {};
+
+						connectedFields.forEach(f => {
+
+							var updateRelateVal = values[f.fieldLink.relationName()] || {};
+							let rowRelateVal = d[f.relationName()] || {};
+
+							// Relate data
+							if (Array.isArray(rowRelateVal) &&
+								rowRelateVal.filter(v => v == values.id || v.id == values.id).length < 1 &&
+								isRelated(updateRelateVal, d.id)) {
+
+								rowRelateVal.push(values);
+
+								updateItemData[f.relationName()] = rowRelateVal;
+								updateItemData[f.columnName] = updateItemData[f.relationName()].map(v => v.id || v);
+							}
+							else if (!Array.isArray(rowRelateVal) &&
+								(rowRelateVal != values.id || rowRelateVal.id != values.id) &&
+								isRelated(updateRelateVal, d.id)) {
+
+								updateItemData[f.relationName()] = values;
+								updateItemData[f.columnName] = values.id || values;
+							}
+
+						});
+
+						// If this item needs to update
+						if (Object.keys(updateItemData).length > 0)
+							this.__dataCollection.updateItem(d.id, updateItemData);
+
+					});
+
+				}
+			}
+
 
 			// filter link data collection's cursor
 			this.refreshLinkCursor();
@@ -1073,35 +1141,117 @@ export default class ABViewDataCollection extends ABView {
 			if (!obj)
 				return;
 
-			if (obj.id != data.objectId)
-				return;
-
 			// updated values
 			var values = data.data;
 			if (!values) return;
 
-			// various PK name
-			if (!values.id && obj.PK() != 'id')
-				values.id = values[obj.PK()];
+			// if it is the source object
+			if (obj.id == data.objectId) {
 
-			if (this.__dataCollection.exists(values.id)) {
-				// normalize data before update data collection
-				var model = obj.model();
-				model.normalizeData(values);
-				this.__dataCollection.updateItem(values.id, values);
+				// various PK name
+				if (!values.id && obj.PK() != 'id')
+					values.id = values[obj.PK()];
 
-				// If the update item is current cursor, then should tell components to update.
-				var currData = this.getCursor();
-				if (currData && currData.id == values.id) {
-					this.emit("changeCursor", currData);
+				if (this.__dataCollection.exists(values.id)) {
+					// normalize data before update data collection
+					var model = obj.model();
+					model.normalizeData(values);
+					this.__dataCollection.updateItem(values.id, values);
+
+					// If the update item is current cursor, then should tell components to update.
+					var currData = this.getCursor();
+					if (currData && currData.id == values.id) {
+						this.emit("changeCursor", currData);
+					}
+				}
+				// filter before add new record
+				else if (this.__filterComponent.isValid(values)) {
+
+					// this means the updated record was not loaded yet so we are adding it to the top of the grid
+					// the placemet will probably change on the next load of the data
+					this.__dataCollection.add(values, 0);
 				}
 			}
-			// filter before add new record
-			else if (this.__filterComponent.isValid(values)) {
+			// if it is a linked object
+			else {
 
-				// this means the updated record was not loaded yet so we are adding it to the top of the grid
-				// the placemet will probably change on the next load of the data
-				this.__dataCollection.add(values, 0);
+				let connectedFields = this.datasource.fields(f =>
+					f.key == 'connectObject' &&
+					f.datasourceLink &&
+					f.datasourceLink.id == data.objectId
+				);
+
+				// update relation data
+				if (connectedFields && connectedFields.length > 0) {
+
+					// various PK name
+					if (!values.id && connectedFields[0].object.PK() != 'id')
+						values.id = values[connectedFields[0].object.PK()];
+
+					this.__dataCollection.find({}).forEach(d => {
+
+						let updateItemData = {};
+
+						connectedFields.forEach(f => {
+
+							var updateRelateVal = values[f.fieldLink.relationName()] || {};
+							let rowRelateVal = d[f.relationName()] || {};
+
+							// Unrelate data
+							if (Array.isArray(rowRelateVal) &&
+								rowRelateVal.filter(v => v == values.id || v.id == values.id).length > 0 &&
+								!isRelated(updateRelateVal, d.id)) {
+
+								updateItemData[f.relationName()] = rowRelateVal.filter(v => (v.id || v) != values.id);
+								updateItemData[f.columnName] = updateItemData[f.relationName()].map(v => v.id || v);
+							}
+							else if (!Array.isArray(rowRelateVal) &&
+								(rowRelateVal == values.id || rowRelateVal.id == values.id) &&
+								!isRelated(updateRelateVal, d.id)) {
+
+								updateItemData[f.relationName()] = null;
+								updateItemData[f.columnName] = null;
+							}
+
+							// Relate data or Update
+							if (Array.isArray(rowRelateVal) && isRelated(updateRelateVal, d.id)) {
+
+								// update relate data
+								if (rowRelateVal.filter(v => v == values.id || v.id == values.id).length > 0) {
+									rowRelateVal.forEach((v, index) => {
+
+										if (v == values.id || v.id == values.id)
+											rowRelateVal[index] = values;
+
+									});
+								}
+								// add new relate
+								else {
+									rowRelateVal.push(values);
+								}
+
+								updateItemData[f.relationName()] = rowRelateVal;
+								updateItemData[f.columnName] = updateItemData[f.relationName()].map(v => v.id || v);
+							}
+							else if (!Array.isArray(rowRelateVal) &&
+								(rowRelateVal != values.id || rowRelateVal.id != values.id) && 
+								isRelated(updateRelateVal, d.id)) {
+
+								updateItemData[f.relationName()] = values;
+								updateItemData[f.columnName] = values.id || values;
+							}
+
+
+						});
+
+						// If this item needs to update
+						if (Object.keys(updateItemData).length > 0)
+							this.__dataCollection.updateItem(d.id, updateItemData);
+
+					});
+
+				}
+
 			}
 
 			// filter link data collection's cursor
@@ -1112,39 +1262,52 @@ export default class ABViewDataCollection extends ABView {
 		// We are subscribing to notifications from the server that an item may be stale and needs updating
 		// We will improve this later and verify that it needs updating before attempting the update on the client side
 		AD.comm.hub.subscribe('ab.datacollection.stale', (msg, data) => {
+			
+			// if we don't have a datasource or model, there is nothing we can do here:
 			// Verify the datasource has the object we are listening for if not just stop here
-			if (this.datasource &&
-				this.datasource.id != data.objectId)
-				return;
+			if (!this.datasource || !this.model || this.datasource.id != data.objectId) { 
+				return; 
+			}
+
+				
 
 			// updated values
 			var values = data.data;
+
+			// use the Object's defined Primary Key:
+			var PK = this.model.object.PK();
+			if (!values[PK]) {
+				PK = 'id';
+			}
+
 			if (values) {
 
-				if (this.__dataCollection.exists(values.id)) {
+				if (this.__dataCollection.exists(values[PK])) {
+					var cond = { where:{} };
+					cond.where[PK] = values[PK];
 					// this data collection has the record so we need to query the server to find out what it's latest data is so we can update all instances
-					this.model.findAll({ where: { id: values.id } }).then((res) => {
+					this.model.staleRefresh(cond).then((res) => {
 
 						// check to make sure there is data to work with
 						if (Array.isArray(res.data) && res.data.length) {
 							// tell the webix data collection to update using their API with the row id (values.id) and content (res.data[0]) 
-							if (this.__dataCollection.exists(values.id)) {
-								this.__dataCollection.updateItem(values.id, res.data[0]);
+							if (this.__dataCollection.exists(values[PK])) {
+								this.__dataCollection.updateItem(values[PK], res.data[0]);
 							}
 
 							// If the update item is current cursor, then should tell components to update.
 							var currData = this.getCursor();
-							if (currData && currData.id == values.id) {
+							if (currData && currData[PK] == values[PK]) {
 								this.emit("changeCursor", currData);
 							}
 						} else {
 							// If there is no data in the object then it was deleted...lets clean things up
 							// If the deleted item is current cursor, then the current cursor should be cleared.
 							var currId = this.getCursor();
-							if (currId == values.id)
+							if (currId == values[PK])
 								this.emit("changeCursor", null);
 
-							this.__dataCollection.remove(values.id);
+							this.__dataCollection.remove(values[PK]);
 						}
 					});
 
@@ -1158,14 +1321,15 @@ export default class ABViewDataCollection extends ABView {
 
 		AD.comm.hub.subscribe('ab.datacollection.delete', (msg, data) => {
 
-			if (this.datasource &&
-				this.datasource.id != data.objectId)
-				return;
+			if (!this.datasource)
+			return;
 
 			// id of a deleted item
 			var deleteId = data.data;
 
-			if (this.__dataCollection.exists(deleteId)) {
+			// if it is the source object
+			if (this.datasource.id == data.objectId &&
+				this.__dataCollection.exists(deleteId)) {
 
 				// If the deleted item is current cursor, then the current cursor should be cleared.
 				var currData = this.getCursor();
@@ -1174,6 +1338,49 @@ export default class ABViewDataCollection extends ABView {
 
 				this.__dataCollection.remove(deleteId);
 			}
+			// if it is a linked object
+			else {
+
+				let connectedFields = this.datasource.fields(f =>
+					f.key == 'connectObject' &&
+					f.datasourceLink &&
+					f.datasourceLink.id == data.objectId
+				);
+
+				// update relation data
+				if (connectedFields && connectedFields.length > 0) {
+
+					this.__dataCollection.find({}).forEach(d => {
+
+						let updateRelateVals = {};
+
+						connectedFields.forEach(f => {
+
+							let relateVal = d[f.relationName()];
+
+							if (Array.isArray(relateVal) &&
+								relateVal.filter(v => v == deleteId || v.id == deleteId).length > 0) {
+
+								updateRelateVals[f.relationName()] = relateVal.filter(v => (v.id || v) != deleteId);
+								updateRelateVals[f.columnName] = updateRelateVals[f.relationName()].map(v => v.id || v);
+							}
+							else if (relateVal == deleteId || relateVal.id == deleteId) {
+								updateRelateVals[f.relationName()] = null;
+								updateRelateVals[f.columnName] = null;
+							}
+
+						});
+
+						// If this item needs to update
+						if (Object.keys(updateRelateVals).length > 0)
+							this.__dataCollection.updateItem(d.id, updateRelateVals);
+
+					});
+
+				}
+
+			}
+
 		});
 
 

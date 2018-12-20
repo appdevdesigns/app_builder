@@ -314,8 +314,13 @@ export default class ABObject extends ABObjectBase {
 			}
 
 			// add the summary footer
-			if (summaryColumns.indexOf(f.id) > -1)
-				header.footer = { content: 'summColumn' };
+			if (summaryColumns.indexOf(f.id) > -1) {
+				if (f.key == "calculate" || f.key == "formula") {
+					header.footer = { content: 'totalColumn', field: f };
+				} else {
+					header.footer = { content: 'summColumn' };
+				}
+			}
 			// add the count footer
 			else if (countColumns.indexOf(f.id) > -1)
 				header.footer = { content: 'countColumn' };

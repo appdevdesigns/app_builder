@@ -736,7 +736,7 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 	    // Apply filters
 	    if (!_.isEmpty(where)) {
 
-	        sails.log.debug('ABObject.populateFindConditions(): .where condition:', JSON.stringify(where, null, 4));
+	        sails.log.info('ABObject.populateFindConditions(): .where condition:', JSON.stringify(where, null, 4));
 
 
 

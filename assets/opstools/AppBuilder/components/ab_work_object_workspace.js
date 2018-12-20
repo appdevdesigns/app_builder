@@ -17,7 +17,9 @@ import ABPopupMassUpdate from "./ab_work_object_workspace_popupMassUpdate"
 import ABPopupNewDataField from "./ab_work_object_workspace_popupNewDataField"
 import ABPopupSortField from "./ab_work_object_workspace_popupSortFields"
 import ABPopupExport from "./ab_work_object_workspace_popupExport"
+import ABPopupImport from "./ab_work_object_workspace_popupImport"
 import ABPopupViewSettings from "./ab_work_object_workspace_popupViewSettings"
+
 
 export default class ABWorkObjectWorkspace extends OP.Component {
 
@@ -57,7 +59,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                 frozenColumns: L('ab.object.toolbar.frozenColumns', "*Freeze"),
                 defineLabel: L('ab.object.toolbar.defineLabel', "*Label"),
                 permission: L('ab.object.toolbar.permission', "*Permission"),
-                addFields: L('ab.object.toolbar.addFields', "*Add field"),
+				addFields: L('ab.object.toolbar.addFields', "*Add field"),
+				import: L('ab.object.toolbar.import', "*Import"),
                 "export": L('ab.object.toolbar.export', "*Export"),
                 confirmDeleteTitle : L('ab.object.delete.title', "*Delete data field"),
                 confirmDeleteMessage : L('ab.object.delete.message', "*Do you want to delete <b>{0}</b>?")
@@ -92,7 +95,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 
     		buttonAddField: this.unique(idBase + '_buttonAddField'),
             buttonDeleteSelected: this.unique(idBase + '_deleteSelected'),
-    		buttonExport: this.unique(idBase + '_buttonExport'),
+			buttonExport: this.unique(idBase + '_buttonExport'),
+			buttonImport: this.unique(idBase + '_buttonImport'),
     		buttonFieldsVisible: this.unique(idBase + '_buttonFieldsVisible'),
     		buttonFilter: this.unique(idBase + '_buttonFilter'),
     		buttonFrozen: this.unique(idBase + '_buttonFrozen'),
@@ -143,11 +147,13 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 
 		var PopupExportObjectComponent = new ABPopupExport(App, idBase);
         
-        var PopupViewSettingsComponent = new ABPopupViewSettings(App, idBase);
+		var PopupImportObjectComponent = new ABPopupImport(App, idBase);
 
-
+		var PopupViewSettingsComponent = new ABPopupViewSettings(App, idBase);
 
         var view = "button";
+
+
 
         var submenuFixedItems = [
             {
@@ -292,7 +298,18 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                 //      _logic.toolbarPermission(this.$view);
                 //  }
                 // 
-                // },
+				// },
+				{
+					view: view,
+					id: ids.buttonImport,
+					label: labels.component.import,
+					icon: "fa fa-upload",
+					type: "icon",
+					minWidth: 80,
+					click: function() {
+						_logic.toolbarButtonImport();
+					}
+				},
                 {
                     view: view,
                     id: ids.buttonExport,
@@ -455,6 +472,14 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 
     		PopupSortFieldComponent.init({
     			onChange:_logic.callbackSortFields		// be notified when there is a change in the sort fields
+			});
+
+			PopupImportObjectComponent.init({
+				onDone: () => {
+
+					// refresh data in object
+					_logic.populateObjectWorkspace(CurrentObject);
+				}
 			});
 
 			PopupExportObjectComponent.init({});
@@ -836,6 +861,9 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     			PopupNewDataFieldComponent.show($view);
     		},
 
+			toolbarButtonImport: function() {
+				PopupImportObjectComponent.show();
+			},
 
     		toolbarButtonExport: function($view) {
 				PopupExportObjectComponent.show($view);
@@ -996,17 +1024,32 @@ console.error('TODO: toolbarPermission()');
 				PopupHideFieldComponent.objectLoad(CurrentObject);
 				PopupMassUpdateComponent.objectLoad(CurrentObject, DataTable);
 				PopupSortFieldComponent.objectLoad(CurrentObject);
-                PopupViewSettingsComponent.objectLoad(CurrentObject);
+				PopupImportObjectComponent.objectLoad(CurrentObject);
                 PopupExportObjectComponent.objectLoad(CurrentObject);
+				PopupExportObjectComponent.objectLoad(CurrentObject);
 				PopupExportObjectComponent.setGridComponent($$(DataTable.ui.id));
 				PopupExportObjectComponent.setHiddenFields(CurrentObject.objectWorkspace.hiddenFields);
                 PopupExportObjectComponent.setFilename(CurrentObject.label);
+                PopupViewSettingsComponent.objectLoad(CurrentObject);
 
                 _logic.refreshToolBarView();
 
-                _logic.refreshViewMenu();
+				// $$(ids.component).setValue(ids.selectedObject);
+				$$(ids.selectedObject).show(true, false);
 
-                // display the proper ViewComponent
+				// disable add fields into the object
+				if (object.isExternal || object.isImported || !settings.isFieldAddable) {
+					$$(ids.buttonAddField).disable();
+					$$(ids.buttonImport).disable();
+				}
+				else {
+					$$(ids.buttonAddField).enable();
+					$$(ids.buttonImport).enable();
+				}
+
+				_logic.refreshViewMenu();
+
+				// display the proper ViewComponent
                 var currDisplay = hashViews[currentView.type];
                 currDisplay.show();
                 // viewPicker needs to show this is the current view.
