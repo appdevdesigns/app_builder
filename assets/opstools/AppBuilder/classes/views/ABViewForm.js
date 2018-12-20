@@ -34,6 +34,7 @@ var ABViewFormDefaults = {
 }
 
 var ABViewFormPropertyComponentDefaults = {
+	datacollection: null,
 	showLabel: true,
 	labelPosition: 'left',
 	labelWidth: 120,
@@ -1403,6 +1404,10 @@ resolve();
 			$$(childComponent.ui.id).focus();
 		}
 
+	}
+
+	copyUpdateProperyList() {
+		return ['datacollection'];
 	}
 
 

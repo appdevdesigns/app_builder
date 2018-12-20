@@ -211,7 +211,8 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 			});
 
 			PopupEditObjectComponent.init({
-				onClick: _logic.callbackObjectEditorMenu
+				onClick: _logic.callbackObjectEditorMenu,
+				hideCopy: true
 			})
 
 			// attach any passed in callbacks.
