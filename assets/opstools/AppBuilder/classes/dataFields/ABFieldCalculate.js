@@ -52,7 +52,11 @@ function convertToJs(object, formula, rowData, place) {
 			let dateVal = '"#dataVal#"'.replace("#dataVal#", rowData[f.columnName] ? rowData[f.columnName] : ""); // "date"
 			formula = formula.replace(new RegExp('{' + colName + '}', 'g'), dateVal);
 		}
-
+		// boolean fields
+		else if (f.key == 'boolean') {
+			let booleanVal = "(#booleanVal#)".replace("#booleanVal#", rowData[f.columnName] || 0); // show 1 or 0 for boolean
+			formula = formula.replace(new RegExp('{' + colName + '}', 'g'), booleanVal);
+		}
 	});
 
 	// decimal places - toFixed()
