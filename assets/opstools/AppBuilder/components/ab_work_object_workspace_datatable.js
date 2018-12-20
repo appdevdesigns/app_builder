@@ -966,7 +966,8 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                         wheres = CurrentObject.workspaceFilterConditions;
                     }
                     var sorts = {};
-                    if (CurrentObject.workspaceSortFields.length > 0) {
+                    if (CurrentObject.workspaceSortFields &&
+                        CurrentObject.workspaceSortFields.length > 0) {
                         sorts = CurrentObject.workspaceSortFields;
                     }
                     CurrentObject.model()

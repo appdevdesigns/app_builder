@@ -716,7 +716,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		callbackSortFields: function() {
                 _logic.getBadgeSortFields();
                 DataTable.refreshHeader();
-                DataTable.refresh();
+				DataTable.refresh();
+				KanBan.refresh();
             },
             
             /**

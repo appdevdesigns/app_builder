@@ -398,11 +398,35 @@ module.exports =  class ABObjectBase {
 	///	Object Workspace Settings
 	///
 	get workspaceSortFields() {
-		return this.objectWorkspace.sortFields;
+
+		// new version
+		if (this.workspaceViews) {
+			let currView = this.workspaceViews.getCurrentView();
+			if (currView)
+				return currView.sortFields;
+			else
+				return null;
+		}
+		// old version
+		else {
+			return this.objectWorkspace.sortFields;
+		}
+
 	}
 
 	set workspaceSortFields( fields ) {
-		this.objectWorkspace.sortFields = fields;
+
+		// new version
+		if (this.workspaceViews) {
+			let currView = this.workspaceViews.getCurrentView();
+			if (currView)
+				currView.sortFields = fields;
+		}
+		// old version
+		else {
+			this.objectWorkspace.sortFields = fields;
+		}
+
 	}
 
 	get workspaceFilterConditions() {

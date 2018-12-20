@@ -268,10 +268,17 @@ export default class ABWorkObjectKanBan extends OP.Component {
 					wheres = CurrentObject.workspaceFilterConditions;
 				}
 
+				var sorts = {};
+				if (CurrentObject.workspaceSortFields &&
+					CurrentObject.workspaceSortFields.length > 0) {
+					sorts = CurrentObject.workspaceSortFields;
+				}
+
 				// WORKAROUND: load all data for now
 				CurrentObject.model()
 					.findAll({
-						where: wheres
+						where: wheres,
+						sort: sorts,
 					})
 					.then((data) => {
 
