@@ -257,8 +257,22 @@ export default class ABWorkObjectKanBan extends OP.Component {
 				// Show loading cursor
 				_logic.busy();
 
+				// Set the Model object with a condition / skip / limit, then
+				// use it to load the DataTable:
+				//// NOTE: this should take advantage of Webix dynamic data loading on
+				//// larger data sets.
+				var wheres = {};
+				if (CurrentObject.workspaceFilterConditions &&
+					CurrentObject.workspaceFilterConditions.rules &&
+					CurrentObject.workspaceFilterConditions.rules.length > 0) {
+					wheres = CurrentObject.workspaceFilterConditions;
+				}
+
 				// WORKAROUND: load all data for now
-				CurrentObject.model().findAll({})
+				CurrentObject.model()
+					.findAll({
+						where: wheres
+					})
 					.then((data) => {
 
 						$$(ids.kanban).parse(data.data.map(d => _logic.convertData(d)));

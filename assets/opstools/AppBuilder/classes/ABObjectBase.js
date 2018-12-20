@@ -406,11 +406,35 @@ module.exports =  class ABObjectBase {
 	}
 
 	get workspaceFilterConditions() {
-		return this.objectWorkspace.filterConditions;
+
+		// new version
+		if (this.workspaceViews) {
+			let currView = this.workspaceViews.getCurrentView();
+			if (currView)
+				return currView.filterConditions;
+			else
+				return null;
+		}
+		// old version
+		else {
+			return this.objectWorkspace.filterConditions;
+		}
+
 	}
 
 	set workspaceFilterConditions( filterConditions ) {
-		this.objectWorkspace.filterConditions = filterConditions;
+
+		// new version
+		if (this.workspaceViews) {
+			let currView = this.workspaceViews.getCurrentView();
+			if (currView)
+				currView.filterConditions = filterConditions;
+		}
+		// old version
+		else {
+			this.objectWorkspace.filterConditions = filterConditions;
+		}
+
 	}
 
 	get workspaceFrozenColumnID() {
