@@ -42,12 +42,11 @@ export default class ABTotalFooter {
 			refresh: function (datatable, node, info) {
 				var result = 0;
 
-				var rowData = (datatable.find({}) || []);
-				rowData.forEach(row => {
+				datatable.eachRow(function(row){ 
 
-					if (row == null) return;
+					var record = datatable.getItem(row);
 
-					var data = info.field.format(row);
+					var data = info.field.format(record);
 
 					// array
 					if (data) {
