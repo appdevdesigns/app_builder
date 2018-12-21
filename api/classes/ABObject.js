@@ -264,7 +264,7 @@ module.exports = class ABObject extends ABObjectBase {
 		return '#appName##tableName#'
 				.replace('#appName#', appName)
 				.replace('#tableName#', tableName)
-				.replace(/[^a-zA-Z]/g, ""); // remove special characters to allow model name to be class name
+				.replace(/[^a-zA-Z0-9]/g, ""); // remove special characters to allow model name to be class name
 
 	}
 
