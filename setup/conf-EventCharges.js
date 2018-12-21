@@ -172,7 +172,7 @@ AD.test.sails.lift({
             "host": "localhost",
             "user": "root",
             "password": "root",
-            "database": "Events_Test",
+            "database": "develop",
             "port": 8889
         });
 
@@ -1440,14 +1440,14 @@ WHERE
         WHERE uuid IN ( 
 
             SELECT
-                CONCAT('auto_import_105_Discount_', reg.id, '_', pep.id)
+                CONCAT('auto_import_105_DevWkDiscount_', reg.id, '_', pep.id)
             FROM
                 AB_Events_registrants pep
             INNER JOIN
                 AB_Events_Registration reg on pep.Registration434 = reg.id
 
         ) and
-        uuid = CONCAT('auto_import_105_Discount_', reg.id, '_', pep.id)
+        uuid = CONCAT('auto_import_105_DevWkDiscount_', reg.id, '_', pep.id)
     );
 
                 `,
