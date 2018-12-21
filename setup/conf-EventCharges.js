@@ -1652,39 +1652,39 @@ ORDER BY
         
         //
         // Insert Discount for early registration (DEV)
-        //
-        (next)=>{
-            
-            runQuery(
-                'Insert Discount for early registration (DEV)',
-                `
-INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Apply Charge\`)
-SELECT
-    reg.id, 65, CONCAT('auto_import_65_CFEarlyDiscount_', reg.id), 1
-FROM
-    AB_Events_Registration reg
-WHERE
-    reg.\`User Submitted\` = 1 and
-    reg.Event = 6 and 
-    ( reg.\`Submit Date\` < "2018-10-27 00:00:00" or
-    reg.created_at < "2018-10-27 00:00:00" ) and
-    not exists (
-        SELECT 1
-        FROM \`${ChargesTable}\`
-        WHERE uuid IN ( 
-        
-        SELECT
-            CONCAT('auto_import_65_CFEarlyDiscount_', reg.id)
-        FROM
-            AB_Events_Registration reg
-        
-        ) and
-        uuid = CONCAT('auto_import_65_CFEarlyDiscount_', reg.id)
-    );
-                `,
-                next);
-            
-        },
+        // Removed this charge because it is only applied to ASC
+//         (next)=>{
+// 
+//             runQuery(
+//                 'Insert Discount for early registration (DEV)',
+//                 `
+// INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Apply Charge\`)
+// SELECT
+//     reg.id, 65, CONCAT('auto_import_65_CFEarlyDiscount_', reg.id), 1
+// FROM
+//     AB_Events_Registration reg
+// WHERE
+//     reg.\`User Submitted\` = 1 and
+//     reg.Event = 6 and 
+//     ( reg.\`Submit Date\` < "2018-10-27 00:00:00" or
+//     reg.created_at < "2018-10-27 00:00:00" ) and
+//     not exists (
+//         SELECT 1
+//         FROM \`${ChargesTable}\`
+//         WHERE uuid IN ( 
+// 
+//         SELECT
+//             CONCAT('auto_import_65_CFEarlyDiscount_', reg.id)
+//         FROM
+//             AB_Events_Registration reg
+// 
+//         ) and
+//         uuid = CONCAT('auto_import_65_CFEarlyDiscount_', reg.id)
+//     );
+//                 `,
+//                 next);
+// 
+//         },
         
         //
         // Insert Fee for late registration (DEV)
