@@ -1150,7 +1150,7 @@ export default class ABViewGrid extends ABViewWidget  {
 						if (e == "auto") {
 							// automatically choose the details page if a record matches
 							// later on we can decide if we want to have the choice to select the edit page intead.
-							_logic.changePage(dc, item.id, detailsPage);
+							_logic.changePage(dc, item, detailsPage);
 							toggleTab(detailsTab, this);
 						} else if (e.target.className.indexOf('eye') > -1) {
 							_logic.changePage(dc, item, detailsPage);
@@ -1244,10 +1244,8 @@ export default class ABViewGrid extends ABViewWidget  {
 										if (globalFilterPosition == "single") {
 											if (count == 1) {
 												table.show();
-												$$(table).select($$(table).getFirstId(), false);
-												var table = $$(table);
-												console.log(table);
-												$$(table).callEvent("onItemClick", [ $$(table).getItem($$(table).getFirstId()), "auto", null ]);
+												table.select(table.getFirstId(), false);
+												table.callEvent("onItemClick", [ table.getFirstId(), "auto", null ]);
 											} else {
 												table.hide(); 
 											}
