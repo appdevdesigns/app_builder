@@ -924,7 +924,8 @@ export default class ABViewGrid extends ABViewWidget  {
 
 			filterMenutoolbar: App.unique(idBase+'_filterMenuToolbar'),
 			resetFilterButton: App.unique(idBase+'_resetFilterButton'),
-			globalFilterForm: App.unique(idBase+'_globalFilterForm')
+			globalFilterForm: App.unique(idBase+'_globalFilterForm'),
+			globalFilterFormContainer: App.unique(idBase+'_globalFilterFormContainer')
 
 		}
 		
@@ -1058,13 +1059,13 @@ export default class ABViewGrid extends ABViewWidget  {
 				}
 
 				if (this.settings.gridFilter.filterOption == 3) {
-					$$(ids.globalFilterForm).show();
+					$$(ids.globalFilterFormContainer).show();
 					if (this.settings.gridFilter.globalFilterPosition == "single") {
 						$$(DataTable.ui.id).hide();
 					}
 				}
 				else {
-					$$(ids.globalFilterForm).hide();
+					$$(ids.globalFilterFormContainer).hide();
 				}
 				
 				if (this.settings.isSortable == false) {
@@ -1203,11 +1204,12 @@ export default class ABViewGrid extends ABViewWidget  {
 				padding: 17,
 				rows: [
 					{
+						id: ids.globalFilterFormContainer,
+						hidden: true,
 						cols: [
 							{						
 								id: ids.globalFilterForm,
 								view:"text",
-								hidden: true,
 								placeholder:"Search or scan a barcode to see results",
 								on:{
 									onTimedKeyPress:function(){
