@@ -172,8 +172,8 @@ AD.test.sails.lift({
             "host": "localhost",
             "user": "root",
             "password": "root",
-            "database": "develop",
-            "port": 8889
+            "database": "live_appbuilder",
+            "port": 3306
         });
 
     } else {
