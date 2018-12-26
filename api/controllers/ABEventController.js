@@ -236,7 +236,7 @@ module.exports = {
 
                 `;
 
-registrationID = [ 784, 816, 1228, 1230, 1483, 1485, 1489, 442, 443, 470, 554, 555 ];       // Test Group James D, James W, JB F, Ric P, MySan M
+// registrationID = [ 784, 816, 1228, 1230, 1483, 1485, 1489, 442, 443, 470, 554, 555 ];       // Test Group James D, James W, JB F, Ric P, MySan M
 // registrationID = [ 442, 443, 470 ];     // Poolman Family
 
                 // if a registration id is provided, limit it to that.
@@ -682,7 +682,7 @@ if (ANALYSIS_TEST) {
                             lang = 'en';
                         }
 
-lang = 'zh';
+// lang = 'zh';
                         var triggerID = triggerBase + lang;
                         var emailTo = [ packet.email ];
                         
@@ -690,7 +690,7 @@ lang = 'zh';
 // emailTo = [ 'jhausman@zteam.biz', 'jduncandesign@gmail.com', 'rpoolman@zteam.biz' ];
 // emailTo = [ 'jhausman@zteam.biz' ];
 // emailTo = [ 'rpoolman@zteam.biz' ];
-emailTo = ['james.wen@zteam.biz', 'rpoolman@zteam.biz', 'mmcgowan@dodomail.net', 'james.duncan@zteam.biz', 'jjung@dodomail.net'];
+// emailTo = ['james.wen@zteam.biz', 'rpoolman@zteam.biz', 'mmcgowan@dodomail.net', 'james.duncan@zteam.biz', 'jjung@dodomail.net'];
 
 
                         //add commas to total charge
