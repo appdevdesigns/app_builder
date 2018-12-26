@@ -175,11 +175,20 @@ module.exports = {
     'get /app_builder/mobile/:mobileID/apk':
         'app_builder/ABMobileQRController.sendAPK',
 
+
+    /* Event Specific URLs */
+
     'post /app_builder/Event/sendConfirmationEmail':
-        'app_builder/ABMobileQRController.sendRegistrationConfirmation',
+        'app_builder/ABEventController.sendRegistrationConfirmation',
 
     'get /events/confirm/:regID/:isConfirmed': 
-        'app_builder/ABMobileQRController.receiveRegistrationConfirmationResponse',
+        'app_builder/ABEventController.receiveRegistrationConfirmationResponse',
+
+    'post /app_builder/Event/sendFeeConfirmationEmail':
+        'app_builder/ABEventController.sendFeeConfirmation',
+
+    'get /events/feeconfirm/:regID/:isConfirmed': 
+        'app_builder/ABEventController.receiveFeeConfirmationResponse',
 
   /*
 

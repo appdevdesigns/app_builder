@@ -32,7 +32,13 @@ module.exports = {
 
    'app_builder/ABMobileQRController':{
    		sendAPK:true,		// no permission checking on APK download.
-   		receiveRegistrationConfirmationResponse:true // event confirmation response
+   		
+   },
+   
+   'app_builder/ABEventController':{
+
+   		receiveRegistrationConfirmationResponse:true, // event confirmation response
+   		receiveFeeConfirmationResponse:true 		  // event fee confirmation response
    }
 
 
