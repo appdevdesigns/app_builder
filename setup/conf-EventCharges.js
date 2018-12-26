@@ -25,497 +25,6 @@
     
 
 // 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// /* Insert Adult Registrants (DekWk) Full Week */
-// INSERT INTO `AB_Events_Charges_testing` (`Reg`, `Fees177`, `uuid`, `Apply Charge`)
-// SELECT
-// 	reg.id, 75, CONCAT('auto_import_75_CFAdult_', reg.id, '_', pep.id), 1 
-// FROM
-// 	AB_Events_registrants pep
-// INNER JOIN
-// 	AB_Events_Registration reg on pep.Registration434 = reg.id
-// INNER JOIN 
-// 	AB_Events_hrisrendata ren on pep.`Ren Name` = ren.ren_id
-// WHERE
-// 	reg.`User Submitted` = 1 and
-// 	pep.Attending = 1 and 
-// 	reg.Event = 6 and 
-// 	pep.Childcare = 1527238278649 and 
-// 	FLOOR(datediff('2019-01-28', ren.ren_birthdate)/365) >= 18 and
-// 	not exists (
-// 		SELECT 1
-// 		FROM `AB_Events_Charges_testing`
-// 		WHERE uuid IN ( 
-// 
-// 		SELECT
-// 			CONCAT('auto_import_75_CFAdult_', reg.id, '_', pep.id)
-// 		FROM
-// 			AB_Events_registrants pep
-// 		INNER JOIN
-// 			AB_Events_Registration reg on pep.Registration434 = reg.id
-// 
-// 		) and
-// 		uuid = CONCAT('auto_import_75_CFAdult_', reg.id, '_', pep.id)
-// 	);
-// 
-// /* Insert Adult Food Package (DEV) Full Week */
-// INSERT INTO `AB_Events_Charges_testing` (`Reg`, `Fees177`, `uuid`, `Apply Charge`, `Start`, `End`)
-// SELECT
-// 	reg.id, 87, CONCAT('auto_import_87_FConfPkg_', reg.id, '_', pep.id), 1, '2019-01-21 00:00:00', '2018-07-26 00:00:00'
-// FROM
-// 	AB_Events_registrants pep
-// INNER JOIN
-// 	AB_Events_Registration reg on pep.Registration434 = reg.id
-// INNER JOIN 
-// 	AB_Events_hrisrendata ren on pep.`Ren Name` = ren.ren_id
-// WHERE
-// 	reg.`User Submitted` = 1 and
-// 	pep.Attending = 1 and 
-// 	reg.Event = 6 and 
-// 	pep.Childcare = 1527238278649 and 
-// 	FLOOR(datediff('2019-01-28', ren.ren_birthdate)/365) >= 18 and
-// 	not exists (
-// 		SELECT 1
-// 		FROM `AB_Events_Charges_testing`
-// 		WHERE uuid IN ( 
-// 
-// 		SELECT
-// 			CONCAT('auto_import_87_FConfPkg_', reg.id, '_', pep.id)
-// 		FROM
-// 			AB_Events_registrants pep
-// 		INNER JOIN
-// 			AB_Events_Registration reg on pep.Registration434 = reg.id
-// 
-// 		) and
-// 		uuid = CONCAT('auto_import_87_FConfPkg_', reg.id, '_', pep.id)
-// 	);
-// 
-// 
-// /* Insert Children 4-12 (DekWk) Full Week */
-// INSERT INTO `AB_Events_Charges_testing` (`Reg`, `Fees177`, `uuid`, `Apply Charge`)
-// SELECT
-// 	reg.id, 74, CONCAT('auto_import_74_CF4-11_', reg.id, '_', pep.id), 1 
-// FROM
-// 	AB_Events_registrants pep
-// INNER JOIN
-// 	AB_Events_Registration reg on pep.Registration434 = reg.id
-// INNER JOIN 
-// 	AB_Events_hrisrendata ren on pep.`Ren Name` = ren.ren_id
-// WHERE
-// 	reg.`User Submitted` = 1 and
-// 	pep.Attending = 1 and 
-// 	reg.Event = 6 and 
-// 	FLOOR(datediff('2019-01-28', ren.ren_birthdate)/365) > 3 and 
-// 	FLOOR(datediff('2019-01-28', ren.ren_birthdate)/365) <= 12 and
-// 	not exists (
-// 		SELECT 1
-// 		FROM `AB_Events_Charges_testing`
-// 		WHERE uuid IN ( 
-// 
-// 			SELECT
-// 				CONCAT('auto_import_74_CF4-11_', reg.id, '_', pep.id)
-// 			FROM
-// 				AB_Events_registrants pep
-// 			INNER JOIN
-// 				AB_Events_Registration reg on pep.Registration434 = reg.id
-// 
-// 		) and
-// 		uuid = CONCAT('auto_import_74_CF4-11_', reg.id, '_', pep.id)
-// 	);
-// 
-// /* Insert Children 4-12 Lunches (DEV) Full Week */
-// INSERT INTO `AB_Events_Charges_testing` (`Reg`, `Fees177`, `uuid`, `Apply Charge`, `Start`, `End`)
-// SELECT
-// 	reg.id, 91, CONCAT('auto_import_91_FLunch4-11_', reg.id, '_', pep.id), 1, '2019-01-21 00:00:00', '2018-07-26 00:00:00'
-// FROM
-// 	AB_Events_registrants pep
-// INNER JOIN
-// 	AB_Events_Registration reg on pep.Registration434 = reg.id
-// INNER JOIN 
-// 	AB_Events_hrisrendata ren on pep.`Ren Name` = ren.ren_id
-// WHERE
-// 	reg.`User Submitted` = 1 and
-// 	pep.Attending = 1 and 
-// 	reg.Event = 6 and 
-// 	FLOOR(datediff('2019-01-28', ren.ren_birthdate)/365) > 3 and 
-// 	FLOOR(datediff('2019-01-28', ren.ren_birthdate)/365) <= 12 and
-// 	not exists (
-// 		SELECT 1
-// 		FROM `AB_Events_Charges_testing`
-// 		WHERE uuid IN ( 
-// 
-// 		SELECT
-// 			CONCAT('auto_import_91_FLunch4-11_', reg.id, '_', pep.id)
-// 		FROM
-// 			AB_Events_registrants pep
-// 		INNER JOIN
-// 			AB_Events_Registration reg on pep.Registration434 = reg.id
-// 
-// 		) and
-// 		uuid = CONCAT('auto_import_91_FLunch4-11_', reg.id, '_', pep.id)
-// 	);
-// 
-// 
-// 
-// /* Insert Children 13+ (DekWk) Full Week */
-// INSERT INTO `AB_Events_Charges_testing` (`Reg`, `Fees177`, `uuid`, `Apply Charge`)
-// SELECT
-// 	reg.id, 73, CONCAT('auto_import_73_CF13+_', reg.id, '_', pep.id), 1 
-// FROM
-// 	AB_Events_registrants pep
-// INNER JOIN
-// 	AB_Events_Registration reg on pep.Registration434 = reg.id
-// INNER JOIN 
-// 	AB_Events_hrisrendata ren on pep.`Ren Name` = ren.ren_id
-// WHERE
-// 	reg.`User Submitted` = 1 and
-// 	pep.Attending = 1 and 
-// 	reg.Event = 6 and 
-// 	FLOOR(datediff('2019-01-28', ren.ren_birthdate)/365) > 12 and 
-// 	FLOOR(datediff('2019-01-28', ren.ren_birthdate)/365) <= 18 and
-// 	not exists (
-// 		SELECT 1
-// 		FROM `AB_Events_Charges_testing`
-// 		WHERE uuid IN ( 
-// 
-// 		SELECT
-// 			CONCAT('auto_import_73_CF13+_', reg.id, '_', pep.id)
-// 		FROM
-// 			AB_Events_registrants pep
-// 		INNER JOIN
-// 			AB_Events_Registration reg on pep.Registration434 = reg.id
-// 
-// 		) and
-// 		uuid = CONCAT('auto_import_73_CF13+_', reg.id, '_', pep.id)
-// 	);
-// 
-// /* Insert Childcare English (DekWk) Full Week */
-// INSERT INTO `AB_Events_Charges_testing` (`Reg`, `Fees177`, `uuid`, `Start`, `End`, `Apply Charge`)
-// SELECT
-// 	reg.id, 67, CONCAT('auto_import_67_CCEN_', reg.id, '_', pep.id), '2019-01-21 00:00:00', '2019-01-26 00:00:00', 1 
-// FROM
-// 	AB_Events_registrants pep
-// INNER JOIN
-// 	AB_Events_Registration reg on pep.Registration434 = reg.id
-// INNER JOIN 
-// 	AB_Events_hrisrendata ren on pep.`Ren Name` = ren.ren_id
-// WHERE
-// 	reg.`User Submitted` = 1 and
-// 	pep.Attending = 1 and 
-// 	reg.Event = 6 and 
-// 	pep.Childcare = 1527238278417 and
-// 	FLOOR(datediff('2019-01-28', ren.ren_birthdate)/365) < 13 and
-// 	not exists (
-// 		SELECT 1
-// 		FROM `AB_Events_Charges_testing`
-// 		WHERE uuid IN ( 
-// 
-// 		SELECT
-// 			CONCAT('auto_import_67_CCEN_', reg.id, '_', pep.id)
-// 		FROM
-// 			AB_Events_registrants pep
-// 		INNER JOIN
-// 			AB_Events_Registration reg on pep.Registration434 = reg.id
-// 
-// 		) and
-// 		uuid = CONCAT('auto_import_67_CCEN_', reg.id, '_', pep.id)
-// 	);
-// 
-// 
-// /* Insert Childcare Korean (DekWk) Full Week */
-// INSERT INTO `AB_Events_Charges_testing` (`Reg`, `Fees177`, `uuid`, `Start`, `End`, `Apply Charge`)
-// SELECT
-// 	reg.id, 64, CONCAT('auto_import_64_CCKO_', reg.id, '_', pep.id), '2019-01-21 00:00:00', '2019-01-26 00:00:00', 1 
-// FROM
-// 	AB_Events_registrants pep
-// INNER JOIN
-// 	AB_Events_Registration reg on pep.Registration434 = reg.id
-// INNER JOIN 
-// 	AB_Events_hrisrendata ren on pep.`Ren Name` = ren.ren_id
-// WHERE
-// 	reg.`User Submitted` = 1 and
-// 	pep.Attending = 1 and 
-// 	reg.Event = 6 and 
-// 	pep.Childcare = 1527238278503 and
-// 	FLOOR(datediff('2019-01-28', ren.ren_birthdate)/365) < 13 and
-// 	not exists (
-// 		SELECT 1
-// 		FROM `AB_Events_Charges_testing`
-// 		WHERE uuid IN ( 
-// 
-// 		SELECT
-// 			CONCAT('auto_import_64_CCKO_', reg.id, '_', pep.id)
-// 		FROM
-// 			AB_Events_registrants pep
-// 		INNER JOIN
-// 			AB_Events_Registration reg on pep.Registration434 = reg.id
-// 
-// 		) and
-// 		uuid = CONCAT('auto_import_64_CCKO_', reg.id, '_', pep.id)
-// 	);
-// 
-// 
-// /* Insert Childcare Chinese (DekWk) Full Week */
-// INSERT INTO `AB_Events_Charges_testing` (`Reg`, `Fees177`, `uuid`, `Start`, `End`, `Apply Charge`)
-// SELECT
-// 	reg.id, 63, CONCAT('auto_import_63_CCCN_', reg.id, '_', pep.id), '2019-01-21 00:00:00', '2019-01-26 00:00:00', 1 
-// FROM
-// 	AB_Events_registrants pep
-// INNER JOIN
-// 	AB_Events_Registration reg on pep.Registration434 = reg.id
-// INNER JOIN 
-// 	AB_Events_hrisrendata ren on pep.`Ren Name` = ren.ren_id
-// WHERE
-// 	reg.`User Submitted` = 1 and
-// 	pep.Attending = 1 and 
-// 	reg.Event = 6 and 
-// 	pep.Childcare = 1527238278344 and
-// 	FLOOR(datediff('2019-01-28', ren.ren_birthdate)/365) < 13 and
-// 	not exists (
-// 		SELECT 1
-// 		FROM `AB_Events_Charges_testing`
-// 		WHERE uuid IN ( 
-// 
-// 		SELECT
-// 			CONCAT('auto_import_63_CCCN_', reg.id, '_', pep.id)
-// 		FROM
-// 			AB_Events_registrants pep
-// 		INNER JOIN
-// 			AB_Events_Registration reg on pep.Registration434 = reg.id
-// 
-// 		) and
-// 		uuid = CONCAT('auto_import_63_CCCN_', reg.id, '_', pep.id)
-// 	);
-// 
-// 
-// /* Insert Childcare MK2MK (DekWk) Full Week */
-// INSERT INTO `AB_Events_Charges_testing` (`Reg`, `Fees177`, `uuid`, `Start`, `End`, `Apply Charge`)
-// SELECT
-// 	reg.id, 68, CONCAT('auto_import_68_CCMK2MK_', reg.id, '_', pep.id), '2019-01-21 00:00:00', '2019-01-26 00:00:00', 1 
-// FROM
-// 	AB_Events_registrants pep
-// INNER JOIN
-// 	AB_Events_Registration reg on pep.Registration434 = reg.id
-// INNER JOIN 
-// 	AB_Events_hrisrendata ren on pep.`Ren Name` = ren.ren_id
-// WHERE
-// 	reg.`User Submitted` = 1 and
-// 	pep.Attending = 1 and 
-// 	reg.Event = 6 and 
-// 	pep.Childcare != 1527238278649 and
-// 	FLOOR(datediff('2019-01-28', ren.ren_birthdate)/365) > 12 and
-// 	not exists (
-// 		SELECT 1
-// 		FROM `AB_Events_Charges_testing`
-// 		WHERE uuid IN ( 
-// 
-// 			SELECT
-// 				CONCAT('auto_import_68_CCMK2MK_', reg.id, '_', pep.id)
-// 			FROM
-// 				AB_Events_registrants pep
-// 			INNER JOIN
-// 				AB_Events_Registration reg on pep.Registration434 = reg.id
-// 
-// 		) and
-// 		uuid = CONCAT('auto_import_68_CCMK2MK_', reg.id, '_', pep.id)
-// 	);
-// 
-// 
-// /* Insert National Staff Discount */
-// INSERT INTO `AB_Events_Charges_testing` (`Reg`, `Fees177`, `uuid`, `Apply Charge`)
-// SELECT
-// 	reg.id, 36, CONCAT('auto_import_XX_Discount_', reg.id, '_', pep.id), 1
-// FROM
-// 	AB_Events_registrants pep
-// INNER JOIN
-// 	AB_Events_hrisworker wk on pep.`Ren Name` = wk.ren_id
-// INNER JOIN
-// 	AB_Events_Registration reg on reg.id = pep.Registration434 
-// WHERE 
-// 	reg.Event != 9 AND 
-// 	reg.`User Submitted` = 1 and
-// 	pep.Attending = 1 and 
-// 	wk.sendingregion_id IN (3,4,5,6,7,8,9,10,22,37,40) AND 
-// 	not exists (
-// 		SELECT 1
-// 		FROM `AB_Events_Charges_testing`
-// 		WHERE uuid IN ( 
-// 
-// 			SELECT
-// 				CONCAT('auto_import_XX_Discount_', reg.id, '_', pep.id)
-// 			FROM
-// 				AB_Events_registrants pep
-// 			INNER JOIN
-// 				AB_Events_Registration reg on pep.Registration434 = reg.id
-// 
-// 		) and
-// 		uuid = CONCAT('auto_import_XX_Discount_', reg.id, '_', pep.id)
-// 	);
-// 
-// 
-// 
-// 
-// 
-// /* Insert Children 0-3 Lunch (DEV) Full Week */
-// INSERT INTO `AB_Events_Charges_testing` (`Reg`, `Fees177`, `uuid`, `Apply Charge`, `Start`, `End`)
-// SELECT
-// 	reg.id, 92, CONCAT('auto_import_92_FLunch0-3_', reg.id, '_', pep.id), 1, '2019-01-20 00:00:00', '2018-07-27 00:00:00'
-// FROM
-// 	AB_Events_registrants pep
-// INNER JOIN
-// 	AB_Events_Registration reg on pep.Registration434 = reg.id
-// INNER JOIN 
-// 	AB_Events_hrisrendata ren on pep.`Ren Name` = ren.ren_id
-// WHERE
-// 	reg.`User Submitted` = 1 and
-// 	pep.Attending = 1 and 
-// 	reg.Event = 6 and 
-// 	FLOOR(datediff('2019-01-28', ren.ren_birthdate)/365) < 4 and 
-// 	not exists (
-// 		SELECT 1
-// 		FROM `AB_Events_Charges_testing`
-// 		WHERE uuid IN ( 
-// 
-// 		SELECT
-// 			CONCAT('auto_import_92_FLunch0-3_', reg.id, '_', pep.id)
-// 		FROM
-// 			AB_Events_registrants pep
-// 		INNER JOIN
-// 			AB_Events_Registration reg on pep.Registration434 = reg.id
-// 
-// 		) and
-// 		uuid = CONCAT('auto_import_92_FLunch0-3_', reg.id, '_', pep.id)
-// 	);
-// 
-// 
-// /* Insert all extra bed breakfast discounts (ASC) */
-// INSERT INTO `AB_Events_Charges_testing` (`Reg`, `Fees177`, `uuid`, `Start`, `End`, `Apply Charge`)
-// SELECT
-// 	ch.Reg, 45, CONCAT('auto_import_45_FDiscFreeBrkfst4-11_', ch.Reg, '_', ch.id), '2019-01-15 00:00:00', '2019-01-20 00:00:00', 1
-// FROM 
-// 	AB_Events_Charges_testing ch
-// WHERE 
-// 	ch.Fees177 = 51 and
-// 	ch.Reg IS NOT NULL and
-// 	not exists (
-// 		SELECT 1
-// 		FROM `AB_Events_Charges_testing`
-// 		WHERE uuid IN ( 
-// 
-// 			SELECT
-// 				CONCAT('auto_import_45_FDiscFreeBrkfst4-11_', ch.Reg, '_', ch.id)
-// 			FROM
-// 				AB_Events_Charges_testing ch
-// 
-// 		) and
-// 		uuid = CONCAT('auto_import_45_FDiscFreeBrkfst4-11_', ch.Reg, '_', ch.id)
-// 	);
-// 
-// /* Insert all extra bed breakfast discounts (DEV) */
-// INSERT INTO `AB_Events_Charges_testing` (`Reg`, `Fees177`, `uuid`, `Start`, `End`, `Apply Charge`)
-// SELECT
-// 	ch.Reg, 88, CONCAT('auto_import_88_FDiscFreeBrkfst4-11_', ch.Reg, '_', ch.id), '2019-01-21 00:00:00', '2019-01-27 00:00:00', 1
-// FROM 
-// 	AB_Events_Charges_testing ch
-// WHERE 
-// 	ch.Fees177 = 69 and
-// 	ch.Reg IS NOT NULL and
-// 	not exists (
-// 		SELECT 1
-// 		FROM `AB_Events_Charges_testing`
-// 		WHERE uuid IN ( 
-// 
-// 			SELECT
-// 				CONCAT('auto_import_88_FDiscFreeBrkfst4-11_', ch.Reg, '_', ch.id)
-// 			FROM
-// 				AB_Events_Charges_testing ch
-// 
-// 		) and
-// 		uuid = CONCAT('auto_import_88_FDiscFreeBrkfst4-11_', ch.Reg, '_', ch.id)
-// 	);
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// /* Insert Children 0-3 Breakfasts (DEV) Full Week */
-// INSERT INTO `AB_Events_Charges_testing` (`Reg`, `Fees177`, `uuid`, `Apply Charge`, `Start`, `End`)
-// SELECT
-// 	reg.id, 84, CONCAT('auto_import_84_FBrkfst0-3_', reg.id, '_', pep.id), 1, '2019-01-21 00:00:00', '2018-07-27 00:00:00'
-// FROM
-// 	AB_Events_registrants pep
-// INNER JOIN
-// 	AB_Events_Registration reg on pep.Registration434 = reg.id
-// INNER JOIN 
-// 	AB_Events_hrisrendata ren on pep.`Ren Name` = ren.ren_id
-// WHERE
-// 	reg.`User Submitted` = 1 and
-// 	pep.Attending = 1 and 
-// 	reg.Event = 6 and 
-// 	FLOOR(datediff('2019-01-28', ren.ren_birthdate)/365) < 4 and 
-// 	not exists (
-// 		SELECT 1
-// 		FROM `AB_Events_Charges_testing`
-// 		WHERE uuid IN ( 
-// 
-// 			SELECT
-// 				CONCAT('auto_import_84_FBrkfst0-3_', reg.id, '_', pep.id)
-// 			FROM
-// 				AB_Events_registrants pep
-// 			INNER JOIN
-// 				AB_Events_Registration reg on pep.Registration434 = reg.id
-// 
-// 		) and
-// 		uuid = CONCAT('auto_import_84_FBrkfst0-3_', reg.id, '_', pep.id)
-// 	);
-// 
-// 
-// /* INSERT all Dev Week Fees */
-// INSERT INTO `AB_Events_Charges_testing` (`Reg`, `Fees177`, `uuid`, `Apply Charge`)
-// SELECT 
-// 	reg.id, 99, CONCAT('auto_import_99_DevClass1_', reg.id, '_', pep.id), 1
-// FROM 
-// 	AB_Events_registrants pep
-// INNER JOIN
-// 	AB_Events_Schedule cls on cls.Attendee = pep.id
-// INNER JOIN 
-// 	AB_Events_Registration reg on reg.id = pep.Registration434
-// WHERE
-// 	pep.Attending = 1 and
-// 	reg.`User Submitted` = 1 and
-// 	reg.Event = 6 and 
-// 	not exists (
-// 		SELECT 1
-// 		FROM `AB_Events_Charges_testing`
-// 		WHERE uuid IN ( 
-// 
-// 			SELECT
-// 				CONCAT('auto_import_99_DevClass1_', reg.id, '_', pep.id)
-// 			FROM
-// 				AB_Events_registrants pep
-// 			INNER JOIN
-// 				AB_Events_Registration reg on pep.Registration434 = reg.id
-// 
-// 		) and
-// 		uuid = CONCAT('auto_import_99_DevClass1_', reg.id, '_', pep.id)
-// 	)
-// GROUP BY
-// 	reg.id,
-// 	pep.id,
-// 	pep.Registration434	
-// ORDER BY
-// 	pep.`Ren Name`;
-// 
 
     
 
@@ -663,8 +172,8 @@ AD.test.sails.lift({
             "host": "localhost",
             "user": "root",
             "password": "root",
-            "database": "Events_Test",
-            "port": 8889
+            "database": "live_appbuilder",
+            "port": 3306
         });
 
     } else {
@@ -728,97 +237,6 @@ WHERE
 
         },
         
-        //
-        // Insert Children 13+ (ASC) Full Week
-        //
-        (next)=>{
-            
-            runQuery(
-                'Insert Children 13+ (ASC) Full Week',
-                `
-INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Apply Charge\`)
-SELECT
-	reg.id, 29, CONCAT('auto_import_29_CF13+_', reg.id, '_', pep.id), 1
-FROM
-	AB_Events_registrants pep
-INNER JOIN
-	AB_Events_Registration reg on pep.Registration434 = reg.id
-INNER JOIN 
-	AB_Events_hrisrendata ren on pep.\`Ren Name\` = ren.ren_id
-WHERE
-	reg.\`User Submitted\` = 1 and
-	pep.Attending = 1 and 
-	reg.Event = 2 and 
-	FLOOR(datediff('2019-01-28', ren.ren_birthdate)/365) > 12 and 
-	FLOOR(datediff('2019-01-28', ren.ren_birthdate)/365) <= 18 and
-	not exists (
-		SELECT 1
-		FROM \`${ChargesTable}\`
-		WHERE uuid IN ( 
-
-		SELECT
-			CONCAT('auto_import_29_CF13+_', reg.id, '_', pep.id)
-		FROM
-			AB_Events_registrants pep
-		INNER JOIN
-			AB_Events_Registration reg on pep.Registration434 = reg.id
-
-		) and
-		uuid = CONCAT('auto_import_29_CF13+_', reg.id, '_', pep.id)
-	);
-    
-            `,
-                next);
-
-
-        },
-
-
-
-        //
-        // Insert Children 4-12 (ASC) Full Week
-        //
-        (next)=>{
-            
-            runQuery(
-                'Insert Children 4-12 (ASC) Full Week', 
-                `
-INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Apply Charge\`)
-SELECT
-    reg.id, 28, CONCAT('auto_import_28_CF4-11_', reg.id, '_', pep.id), 1
-FROM
-    AB_Events_registrants pep
-INNER JOIN
-    AB_Events_Registration reg on pep.Registration434 = reg.id
-INNER JOIN 
-    AB_Events_hrisrendata ren on pep.\`Ren Name\` = ren.ren_id
-WHERE
-    reg.\`User Submitted\` = 1 and
-    pep.Attending = 1 and 
-    reg.Event = 2 and 
-    FLOOR(datediff('2019-01-28', ren.ren_birthdate)/365) > 3 and 
-    FLOOR(datediff('2019-01-28', ren.ren_birthdate)/365) <= 12 and
-    not exists (
-        SELECT 1
-        FROM \`${ChargesTable}\`
-        WHERE uuid IN ( 
-        
-        SELECT
-            CONCAT('auto_import_28_CF4-11_', reg.id, '_', pep.id)
-        FROM
-            AB_Events_registrants pep
-        INNER JOIN
-            AB_Events_Registration reg on pep.Registration434 = reg.id
-        
-        ) and
-        uuid = CONCAT('auto_import_28_CF4-11_', reg.id, '_', pep.id)
-    );
-
-                `,
-                next);
-
-
-        },
 
         //
         // Insert Childcare English (ASC) Full Week
@@ -830,7 +248,7 @@ WHERE
                 `
 INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Start\`, \`End\`, \`Apply Charge\`)
 SELECT
-	reg.id, 23, CONCAT('auto_import_23_CCEN_', reg.id, '_', pep.id), '2019-01-15 00:00:00', '2018-07-19 00:00:00', 1
+	reg.id, 23, CONCAT('auto_import_23_CCEN_', reg.id, '_', pep.id), '2019-01-15 00:00:00', '2019-01-19 00:00:00', 1
 FROM
 	AB_Events_registrants pep
 INNER JOIN
@@ -874,7 +292,7 @@ WHERE
                 `
 INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Start\`, \`End\`, \`Apply Charge\`)
 SELECT
-	reg.id, 22, CONCAT('auto_import_22_CCKO_', reg.id, '_', pep.id), '2019-01-15 00:00:00', '2018-07-19 00:00:00', 1 
+	reg.id, 22, CONCAT('auto_import_22_CCKO_', reg.id, '_', pep.id), '2019-01-15 00:00:00', '2019-01-19 00:00:00', 1 
 FROM
 	AB_Events_registrants pep
 INNER JOIN
@@ -918,7 +336,7 @@ WHERE
                 `
 INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Start\`, \`End\`, \`Apply Charge\`)
 SELECT
-	reg.id, 24, CONCAT('auto_import_24_CCCN_', reg.id, '_', pep.id), '2019-01-15 00:00:00', '2018-07-19 00:00:00', 1
+	reg.id, 24, CONCAT('auto_import_24_CCCN_', reg.id, '_', pep.id), '2019-01-15 00:00:00', '2019-01-19 00:00:00', 1
 FROM
 	AB_Events_registrants pep
 INNER JOIN
@@ -962,7 +380,7 @@ WHERE
                 `
 INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Start\`, \`End\`, \`Apply Charge\`)
 SELECT
-	reg.id, 25, CONCAT('auto_import_25_CCMK2MK_', reg.id, '_', pep.id), '2019-01-15 00:00:00', '2018-07-19 00:00:00', 1 
+	reg.id, 25, CONCAT('auto_import_25_CCMK2MK_', reg.id, '_', pep.id), '2019-01-15 00:00:00', '2019-01-19 00:00:00', 1 
 FROM
 	AB_Events_registrants pep
 INNER JOIN
@@ -1006,7 +424,7 @@ WHERE
                 `
 INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Apply Charge\`, \`Start\`, \`End\`)
 SELECT
-	reg.id, 38, CONCAT('auto_import_38_FConfPkg_', reg.id, '_', pep.id), 1, '2019-01-15 00:00:00', '2018-07-19 00:00:00'
+	reg.id, 38, CONCAT('auto_import_38_FConfPkg_', reg.id, '_', pep.id), 1, '2019-01-15 00:00:00', '2019-01-19 00:00:00'
 FROM
 	AB_Events_registrants pep
 INNER JOIN
@@ -1041,7 +459,7 @@ WHERE
         },
 
         //
-        // Insert Adult Food Package (ASC) Full Week
+        // Insert Children 13+ Lunch (ASC) Full Week
         //
         (next)=>{
             
@@ -1050,7 +468,7 @@ WHERE
                 `
 INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Apply Charge\`, \`Start\`, \`End\`)
 SELECT
-	reg.id, 40, CONCAT('auto_import_40_FLunch_', reg.id, '_', pep.id), 1, '2019-01-15 00:00:00', '2018-07-19 00:00:00'
+	reg.id, 39, CONCAT('auto_import_39_FLunch_', reg.id, '_', pep.id), 1, '2019-01-15 00:00:00', '2019-01-19 00:00:00'
 FROM
 	AB_Events_registrants pep
 INNER JOIN
@@ -1069,14 +487,14 @@ WHERE
 		WHERE uuid IN ( 
 
 		SELECT
-			CONCAT('auto_import_40_FLunch_', reg.id, '_', pep.id)
+			CONCAT('auto_import_39_FLunch_', reg.id, '_', pep.id)
 		FROM
 			AB_Events_registrants pep
 		INNER JOIN
 			AB_Events_Registration reg on pep.Registration434 = reg.id
 
 		) and
-		uuid = CONCAT('auto_import_40_FLunch_', reg.id, '_', pep.id)
+		uuid = CONCAT('auto_import_39_FLunch_', reg.id, '_', pep.id)
 	);
                 `,
                 next);
@@ -1094,7 +512,7 @@ WHERE
                 `
 INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Apply Charge\`, \`Start\`, \`End\`)
 SELECT
-	reg.id, 40, CONCAT('auto_import_40_FLunch4-11_', reg.id, '_', pep.id), 1, '2019-01-15 00:00:00', '2018-07-19 00:00:00'
+	reg.id, 40, CONCAT('auto_import_40_FLunch4-11_', reg.id, '_', pep.id), 1, '2019-01-15 00:00:00', '2019-01-19 00:00:00'
 FROM
 	AB_Events_registrants pep
 INNER JOIN
@@ -1138,7 +556,7 @@ WHERE
                 `
 INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Apply Charge\`, \`Start\`, \`End\`)
 SELECT
-	reg.id, 44, CONCAT('auto_import_44_FLunch0-3_', reg.id, '_', pep.id), 1, '2019-01-15 00:00:00', '2018-07-19 00:00:00'
+	reg.id, 44, CONCAT('auto_import_44_FLunch0-3_', reg.id, '_', pep.id), 1, '2019-01-15 00:00:00', '2019-01-19 00:00:00'
 FROM
 	AB_Events_registrants pep
 INNER JOIN
@@ -1173,7 +591,7 @@ WHERE
 
 
         //
-        // Insert Children 0-3 Lunch (ASC) Full Week
+        // Insert Children 0-3 Breakfasts (ASC) Full Week
         //
         (next)=>{
             
@@ -1182,7 +600,7 @@ WHERE
                 `
 INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Apply Charge\`, \`Start\`, \`End\`)
 SELECT
-	reg.id, 43, CONCAT('auto_import_43_FBrkfst0-3_', reg.id, '_', pep.id), 1, '2019-01-15 00:00:00', '2018-07-20 00:00:00'
+	reg.id, 43, CONCAT('auto_import_43_FBrkfst0-3_', reg.id, '_', pep.id), 1, '2019-01-15 00:00:00', '2019-01-20 00:00:00'
 FROM
 	AB_Events_registrants pep
 INNER JOIN
@@ -1216,9 +634,91 @@ WHERE
         },
 
 
+        //
+        // Insert all extra bed breakfast discounts (ASC)
+        //
+        (next)=>{
+            
+            runQuery(
+                'Insert all extra bed breakfast discounts (ASC)',
+                `
+INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Start\`, \`End\`, \`Apply Charge\`)
+SELECT
+	ch.Reg, 45, CONCAT('auto_import_45_FDiscFreeBrkfst4-11_', ch.Reg, '_', ch.id), '2019-01-15 00:00:00', '2019-01-20 00:00:00', 1
+FROM 
+	\`${ChargesTable}\` ch
+INNER JOIN 
+	AB_Events_Registration reg on reg.id = ch.Reg 
+WHERE 
+	ch.Fees177 = 51 and
+	ch.Reg IS NOT NULL and
+	not exists (
+		SELECT 1
+		FROM \`${ChargesTable}\`
+		WHERE uuid IN ( 
+
+			SELECT
+				CONCAT('auto_import_45_FDiscFreeBrkfst4-11_', ch.Reg, '_', ch.id)
+			FROM
+				\`${ChargesTable}\` ch
+
+		) and
+		uuid = CONCAT('auto_import_45_FDiscFreeBrkfst4-11_', ch.Reg, '_', ch.id)
+	);
+                `,
+                next);
+
+
+        },
+
+        //
+        // Insert National Staff Discount (ASC)
+        //
+        (next)=>{
+            
+            runQuery(
+                'Insert National Staff Discount (ASC)',
+                `
+INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Apply Charge\`)
+SELECT
+	reg.id, 104, CONCAT('auto_import_104_ASCDiscount_', reg.id, '_', pep.id), 1
+FROM
+	AB_Events_registrants pep
+INNER JOIN
+	AB_Events_hrisworker wk on pep.\`Ren Name\` = wk.ren_id
+INNER JOIN
+	AB_Events_Registration reg on reg.id = pep.Registration434 
+WHERE 
+	reg.Event = 2 AND 
+	reg.\`User Submitted\` = 1 and
+	pep.Attending = 1 and 
+	wk.sendingregion_id IN (3,4,5,6,7,8,9,10,22,37,40) AND 
+	not exists (
+		SELECT 1
+		FROM \`${ChargesTable}\`
+		WHERE uuid IN ( 
+
+			SELECT
+				CONCAT('auto_import_104_ASCDiscount_', reg.id, '_', pep.id)
+			FROM
+				AB_Events_registrants pep
+			INNER JOIN
+				AB_Events_Registration reg on pep.Registration434 = reg.id
+
+		) and
+		uuid = CONCAT('auto_import_104_ASCDiscount_', reg.id, '_', pep.id)
+	);
+
+                `,
+                next);
+
+
+        },
+
+
 
         ////
-        //// Insert Breakfast Charges for Each Registration:
+        //// Insert Breakfast Charges for Each Registration (ASC):
         ////
         (next)=>{
 
@@ -1256,7 +756,7 @@ WHERE
                             SET @rownum = 0;
                             INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Start\`, \`End\`, \`Apply Charge\`)
                             SELECT
-                            	regID, 99, CONCAT('auto_import_99_FBrkfst13+_', regID, '_', pepID), '2019-01-15 00:00:00', '2019-01-20 00:00:00', 1
+                            	regID, 103, CONCAT('auto_import_103_FBrkfst13+_', regID, '_', pepID), '2019-01-15 00:00:00', '2019-01-20 00:00:00', 1
                             FROM (
                             	SELECT
                             		reg.id as regID, pep.id as pepID, FLOOR(datediff('2019-01-28', ren.ren_birthdate)/365) as age, @rownum := @rownum + 1 AS entry
@@ -1274,18 +774,19 @@ WHERE
                             	ORDER BY 
                             		age DESC
                             ) d WHERE entry <= @roomsCovered and 
+                            @roomsCovered > 0 and
                             not exists (
                             	SELECT 1
                             	FROM \`${ChargesTable}\`
                             	WHERE uuid IN ( 
                             	
                             		SELECT
-                            			CONCAT('auto_import_99_FBrkfst13+_', regID, '_', pepID)
+                            			CONCAT('auto_import_103_FBrkfst13+_', regID, '_', pepID)
                             		FROM
                             			${ChargesTable} ch
                             	
                             	) and
-                            	uuid = CONCAT('auto_import_99_FBrkfst13+_', regID, '_', pepID)
+                            	uuid = CONCAT('auto_import_103_FBrkfst13+_', regID, '_', pepID)
                             );
                             SET @rownum = 0;
                             INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Start\`, \`End\`, \`Apply Charge\`)
@@ -1309,6 +810,7 @@ WHERE
                                 ORDER BY 
                                     age DESC
                             ) d WHERE entry > @roomsCovered and 
+                            @roomsCovered > 0 and
                             not exists (
                                 SELECT 1
                                 FROM \`${ChargesTable}\`
@@ -1358,9 +860,866 @@ WHERE
 
 
 
-        }
+        },
+        
+        //
+        // Insert Discount for early registration (ASC)
+        //
+        (next)=>{
+            
+            runQuery(
+                'Insert Discount for early registration (ASC)',
+                `
+INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Apply Charge\`)
+SELECT
+    reg.id, 36, CONCAT('auto_import_36_CFEarlyDiscount_', reg.id), 1
+FROM
+    AB_Events_Registration reg
+WHERE
+    reg.\`User Submitted\` = 1 and
+    reg.Event = 2 and 
+    ( reg.\`Submit Date\` < "2018-10-27 00:00:00" or
+    reg.created_at < "2018-10-27 00:00:00" ) and
+    not exists (
+        SELECT 1
+        FROM \`${ChargesTable}\`
+        WHERE uuid IN ( 
+        
+        SELECT
+            CONCAT('auto_import_36_CFEarlyDiscount_', reg.id)
+        FROM
+            AB_Events_Registration reg
+        
+        ) and
+        uuid = CONCAT('auto_import_36_CFEarlyDiscount_', reg.id)
+    );
+                `,
+                next);
+            
+        },
+        
+        //
+        // Insert Fee for late registration (ASC)
+        //
+        (next)=>{
+            
+            runQuery(
+                'Insert Fee for late registration (ASC)',
+                `
+INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Apply Charge\`)
+SELECT
+    reg.id, 32, CONCAT('auto_import_32_CFLateFee_', reg.id), 1
+FROM
+    AB_Events_Registration reg
+WHERE
+    reg.\`User Submitted\` = 1 and
+    reg.Event = 2 and 
+    reg.created_at > "2018-10-27 00:00:00" and
+    not exists (
+        SELECT 1
+        FROM \`${ChargesTable}\`
+        WHERE uuid IN ( 
+        
+        SELECT
+            CONCAT('auto_import_32_CFLateFee_', reg.id)
+        FROM
+            AB_Events_Registration reg
+        
+        ) and
+        uuid = CONCAT('auto_import_32_CFLateFee_', reg.id)
+    );
+                `,
+                next);
+            
+        },
+        
+        
+        //
+        // Insert Adult Registrants (DEV) Full Week 
+        //
+        (next)=>{
+            
+            runQuery(
+                'Insert Adult Registrants (DEV) Full Week', 
+                `
+INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Apply Charge\`)
+SELECT
+	reg.id, 75, CONCAT('auto_import_75_CFAdult_', reg.id, '_', pep.id), 1 
+FROM
+	AB_Events_registrants pep
+INNER JOIN
+	AB_Events_Registration reg on pep.Registration434 = reg.id
+INNER JOIN 
+	AB_Events_hrisrendata ren on pep.\`Ren Name\` = ren.ren_id
+WHERE
+	reg.\`User Submitted\` = 1 and
+	pep.Attending = 1 and 
+	reg.Event = 6 and 
+	pep.Childcare = 1527238278649 and 
+	FLOOR(datediff('2019-01-28', ren.ren_birthdate)/365) >= 18 and
+	not exists (
+		SELECT 1
+		FROM \`${ChargesTable}\`
+		WHERE uuid IN ( 
+
+		SELECT
+			CONCAT('auto_import_75_CFAdult_', reg.id, '_', pep.id)
+		FROM
+			AB_Events_registrants pep
+		INNER JOIN
+			AB_Events_Registration reg on pep.Registration434 = reg.id
+
+		) and
+		uuid = CONCAT('auto_import_75_CFAdult_', reg.id, '_', pep.id)
+	);
+                `,
+                next);
 
 
+        },
+        
+
+        //
+        // Insert Childcare English (DEV) Full Week
+        //
+        (next)=>{
+            
+            runQuery(
+                'Insert Childcare English (DEV) Full Week',
+                `
+INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Start\`, \`End\`, \`Apply Charge\`)
+SELECT
+	reg.id, 67, CONCAT('auto_import_67_CCEN_', reg.id, '_', pep.id), '2019-01-21 00:00:00', '2019-01-26 00:00:00', 1 
+FROM
+	AB_Events_registrants pep
+INNER JOIN
+	AB_Events_Registration reg on pep.Registration434 = reg.id
+INNER JOIN 
+	AB_Events_hrisrendata ren on pep.\`Ren Name\` = ren.ren_id
+WHERE
+	reg.\`User Submitted\` = 1 and
+	pep.Attending = 1 and 
+	reg.Event = 6 and 
+	pep.Childcare = 1527238278417 and
+	FLOOR(datediff('2019-01-28', ren.ren_birthdate)/365) < 13 and
+	not exists (
+		SELECT 1
+		FROM \`${ChargesTable}\`
+		WHERE uuid IN ( 
+
+		SELECT
+			CONCAT('auto_import_67_CCEN_', reg.id, '_', pep.id)
+		FROM
+			AB_Events_registrants pep
+		INNER JOIN
+			AB_Events_Registration reg on pep.Registration434 = reg.id
+
+		) and
+		uuid = CONCAT('auto_import_67_CCEN_', reg.id, '_', pep.id)
+	);
+                `,
+                next);
+
+
+        },
+
+        //
+        // Insert Childcare Korean (DEV) Full Week
+        //
+        (next)=>{
+            
+            runQuery(
+                'Insert Childcare Korean (DEV) Full Week',
+                `
+INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Start\`, \`End\`, \`Apply Charge\`)
+SELECT
+	reg.id, 64, CONCAT('auto_import_64_CCKO_', reg.id, '_', pep.id), '2019-01-21 00:00:00', '2019-01-26 00:00:00', 1 
+FROM
+	AB_Events_registrants pep
+INNER JOIN
+	AB_Events_Registration reg on pep.Registration434 = reg.id
+INNER JOIN 
+	AB_Events_hrisrendata ren on pep.\`Ren Name\` = ren.ren_id
+WHERE
+	reg.\`User Submitted\` = 1 and
+	pep.Attending = 1 and 
+	reg.Event = 6 and 
+	pep.Childcare = 1527238278503 and
+	FLOOR(datediff('2019-01-28', ren.ren_birthdate)/365) < 13 and
+	not exists (
+		SELECT 1
+		FROM \`${ChargesTable}\`
+		WHERE uuid IN ( 
+
+		SELECT
+			CONCAT('auto_import_64_CCKO_', reg.id, '_', pep.id)
+		FROM
+			AB_Events_registrants pep
+		INNER JOIN
+			AB_Events_Registration reg on pep.Registration434 = reg.id
+
+		) and
+		uuid = CONCAT('auto_import_64_CCKO_', reg.id, '_', pep.id)
+	);
+                `,
+                next);
+
+
+        },
+
+        //
+        // Insert Childcare Chinese (DEV) Full Week
+        //
+        (next)=>{
+            
+            runQuery(
+                'Insert Childcare Chinese (DEV) Full Week',
+                `
+INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Start\`, \`End\`, \`Apply Charge\`)
+SELECT
+	reg.id, 63, CONCAT('auto_import_63_CCCN_', reg.id, '_', pep.id), '2019-01-21 00:00:00', '2019-01-26 00:00:00', 1 
+FROM
+	AB_Events_registrants pep
+INNER JOIN
+	AB_Events_Registration reg on pep.Registration434 = reg.id
+INNER JOIN 
+	AB_Events_hrisrendata ren on pep.\`Ren Name\` = ren.ren_id
+WHERE
+	reg.\`User Submitted\` = 1 and
+	pep.Attending = 1 and 
+	reg.Event = 6 and 
+	pep.Childcare = 1527238278344 and
+	FLOOR(datediff('2019-01-28', ren.ren_birthdate)/365) < 13 and
+	not exists (
+		SELECT 1
+		FROM \`${ChargesTable}\`
+		WHERE uuid IN ( 
+
+		SELECT
+			CONCAT('auto_import_63_CCCN_', reg.id, '_', pep.id)
+		FROM
+			AB_Events_registrants pep
+		INNER JOIN
+			AB_Events_Registration reg on pep.Registration434 = reg.id
+
+		) and
+		uuid = CONCAT('auto_import_63_CCCN_', reg.id, '_', pep.id)
+	);
+                `,
+                next);
+
+
+        },
+
+        //
+        // Insert Childcare MK2MK (DEV) Full Week
+        //
+        (next)=>{
+            
+            runQuery(
+                'Insert Childcare MK2MK (DEV) Full Week',
+                `
+INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Start\`, \`End\`, \`Apply Charge\`)
+SELECT
+	reg.id, 68, CONCAT('auto_import_68_CCMK2MK_', reg.id, '_', pep.id), '2019-01-21 00:00:00', '2019-01-26 00:00:00', 1 
+FROM
+	AB_Events_registrants pep
+INNER JOIN
+	AB_Events_Registration reg on pep.Registration434 = reg.id
+INNER JOIN 
+	AB_Events_hrisrendata ren on pep.\`Ren Name\` = ren.ren_id
+WHERE
+	reg.\`User Submitted\` = 1 and
+	pep.Attending = 1 and 
+	reg.Event = 6 and 
+	pep.Childcare != 1527238278649 and
+	FLOOR(datediff('2019-01-28', ren.ren_birthdate)/365) > 12 and
+	not exists (
+		SELECT 1
+		FROM \`${ChargesTable}\`
+		WHERE uuid IN ( 
+
+			SELECT
+				CONCAT('auto_import_68_CCMK2MK_', reg.id, '_', pep.id)
+			FROM
+				AB_Events_registrants pep
+			INNER JOIN
+				AB_Events_Registration reg on pep.Registration434 = reg.id
+
+		) and
+		uuid = CONCAT('auto_import_68_CCMK2MK_', reg.id, '_', pep.id)
+	);
+                `,
+                next);
+
+
+        },
+
+        //
+        // Insert Adult Food Package (DEV) Full Week
+        //
+        (next)=>{
+            
+            runQuery(
+                'Insert Adult Food Package (DEV) Full Week',
+                `
+INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Apply Charge\`, \`Start\`, \`End\`)
+SELECT
+	reg.id, 87, CONCAT('auto_import_87_FConfPkg_', reg.id, '_', pep.id), 1, '2019-01-21 00:00:00', '2019-01-26 00:00:00'
+FROM
+	AB_Events_registrants pep
+INNER JOIN
+	AB_Events_Registration reg on pep.Registration434 = reg.id
+INNER JOIN 
+	AB_Events_hrisrendata ren on pep.\`Ren Name\` = ren.ren_id
+WHERE
+	reg.\`User Submitted\` = 1 and
+	pep.Attending = 1 and 
+	reg.Event = 6 and 
+	pep.Childcare = 1527238278649 and 
+	FLOOR(datediff('2019-01-28', ren.ren_birthdate)/365) >= 18 and
+	not exists (
+		SELECT 1
+		FROM \`${ChargesTable}\`
+		WHERE uuid IN ( 
+
+		SELECT
+			CONCAT('auto_import_87_FConfPkg_', reg.id, '_', pep.id)
+		FROM
+			AB_Events_registrants pep
+		INNER JOIN
+			AB_Events_Registration reg on pep.Registration434 = reg.id
+
+		) and
+		uuid = CONCAT('auto_import_87_FConfPkg_', reg.id, '_', pep.id)
+	);
+                `,
+                next);
+
+
+        },
+
+        //
+        // Insert Children 13+ Lunch (DEV) Full Week
+        //
+        (next)=>{
+            
+            runQuery(
+                'Insert Children 13+ Lunch (DEV) Full Week',
+                `
+INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Apply Charge\`, \`Start\`, \`End\`)
+SELECT
+    reg.id, 91, CONCAT('auto_import_91_FLunch_', reg.id, '_', pep.id), 1, '2019-01-21 00:00:00', '2019-01-26 00:00:00'
+FROM
+    AB_Events_registrants pep
+INNER JOIN
+    AB_Events_Registration reg on pep.Registration434 = reg.id
+INNER JOIN 
+    AB_Events_hrisrendata ren on pep.\`Ren Name\` = ren.ren_id
+WHERE
+    reg.\`User Submitted\` = 1 and
+    pep.Attending = 1 and 
+    reg.Event = 6 and 
+    FLOOR(datediff('2019-01-28', ren.ren_birthdate)/365) > 12 and 
+    FLOOR(datediff('2019-01-28', ren.ren_birthdate)/365) <= 18 and
+    not exists (
+        SELECT 1
+        FROM \`${ChargesTable}\`
+        WHERE uuid IN ( 
+
+        SELECT
+            CONCAT('auto_import_91_FLunch_', reg.id, '_', pep.id)
+        FROM
+            AB_Events_registrants pep
+        INNER JOIN
+            AB_Events_Registration reg on pep.Registration434 = reg.id
+
+        ) and
+        uuid = CONCAT('auto_import_91_FLunch_', reg.id, '_', pep.id)
+    );
+                `,
+                next);
+
+
+        },
+
+        //
+        // Insert Children 4-12 Lunches (DEV) Full Week
+        //
+        (next)=>{
+            
+            runQuery(
+                'Insert Children 4-12 Lunches (DEV) Full Week',
+                `
+INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Apply Charge\`, \`Start\`, \`End\`)
+SELECT
+	reg.id, 91, CONCAT('auto_import_91_FLunch4-11_', reg.id, '_', pep.id), 1, '2019-01-21 00:00:00', '2019-01-26 00:00:00'
+FROM
+	AB_Events_registrants pep
+INNER JOIN
+	AB_Events_Registration reg on pep.Registration434 = reg.id
+INNER JOIN 
+	AB_Events_hrisrendata ren on pep.\`Ren Name\` = ren.ren_id
+WHERE
+	reg.\`User Submitted\` = 1 and
+	pep.Attending = 1 and 
+	reg.Event = 6 and 
+	FLOOR(datediff('2019-01-28', ren.ren_birthdate)/365) > 3 and 
+	FLOOR(datediff('2019-01-28', ren.ren_birthdate)/365) <= 12 and
+	not exists (
+		SELECT 1
+		FROM \`${ChargesTable}\`
+		WHERE uuid IN ( 
+
+		SELECT
+			CONCAT('auto_import_91_FLunch4-11_', reg.id, '_', pep.id)
+		FROM
+			AB_Events_registrants pep
+		INNER JOIN
+			AB_Events_Registration reg on pep.Registration434 = reg.id
+
+		) and
+		uuid = CONCAT('auto_import_91_FLunch4-11_', reg.id, '_', pep.id)
+	);
+                `,
+                next);
+
+
+        },
+
+        //
+        // Insert Children 0-3 Lunch (DEV) Full Week
+        //
+        (next)=>{
+            
+            runQuery(
+                'Insert Children 0-3 Lunch (DEV) Full Week',
+                `
+INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Apply Charge\`, \`Start\`, \`End\`)
+SELECT
+	reg.id, 92, CONCAT('auto_import_92_FLunch0-3_', reg.id, '_', pep.id), 1, '2019-01-20 00:00:00', '2019-01-27 00:00:00'
+FROM
+	AB_Events_registrants pep
+INNER JOIN
+	AB_Events_Registration reg on pep.Registration434 = reg.id
+INNER JOIN 
+	AB_Events_hrisrendata ren on pep.\`Ren Name\` = ren.ren_id
+WHERE
+	reg.\`User Submitted\` = 1 and
+	pep.Attending = 1 and 
+	reg.Event = 6 and 
+	FLOOR(datediff('2019-01-28', ren.ren_birthdate)/365) < 4 and 
+	not exists (
+		SELECT 1
+		FROM \`${ChargesTable}\`
+		WHERE uuid IN ( 
+
+		SELECT
+			CONCAT('auto_import_92_FLunch0-3_', reg.id, '_', pep.id)
+		FROM
+			AB_Events_registrants pep
+		INNER JOIN
+			AB_Events_Registration reg on pep.Registration434 = reg.id
+
+		) and
+		uuid = CONCAT('auto_import_92_FLunch0-3_', reg.id, '_', pep.id)
+	);
+                `,
+                next);
+
+
+        },
+
+
+        //
+        // Insert Children 0-3 Breakfasts (DEV) Full Week
+        //
+        (next)=>{
+            
+            runQuery(
+                'Insert Children 0-3 Breakfasts (DEV) Full Week',
+                `
+INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Apply Charge\`, \`Start\`, \`End\`)
+SELECT
+	reg.id, 84, CONCAT('auto_import_84_FBrkfst0-3_', reg.id, '_', pep.id), 1, '2019-01-21 00:00:00', '2019-01-27 00:00:00'
+FROM
+	AB_Events_registrants pep
+INNER JOIN
+	AB_Events_Registration reg on pep.Registration434 = reg.id
+INNER JOIN 
+	AB_Events_hrisrendata ren on pep.\`Ren Name\` = ren.ren_id
+WHERE
+	reg.\`User Submitted\` = 1 and
+	pep.Attending = 1 and 
+	reg.Event = 6 and 
+	FLOOR(datediff('2019-01-28', ren.ren_birthdate)/365) < 4 and 
+	not exists (
+		SELECT 1
+		FROM \`${ChargesTable}\`
+		WHERE uuid IN ( 
+
+			SELECT
+				CONCAT('auto_import_84_FBrkfst0-3_', reg.id, '_', pep.id)
+			FROM
+				AB_Events_registrants pep
+			INNER JOIN
+				AB_Events_Registration reg on pep.Registration434 = reg.id
+
+		) and
+		uuid = CONCAT('auto_import_84_FBrkfst0-3_', reg.id, '_', pep.id)
+	);
+                `,
+                next);
+
+
+        },
+
+
+        //
+        // Insert all extra bed breakfast discounts (DEV)
+        //
+        (next)=>{
+            
+            runQuery(
+                'Insert all extra bed breakfast discounts (DEV)',
+                `
+INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Start\`, \`End\`, \`Apply Charge\`)
+SELECT
+	ch.Reg, 88, CONCAT('auto_import_88_FDiscFreeBrkfst4-11_', ch.Reg, '_', ch.id), '2019-01-21 00:00:00', '2019-01-27 00:00:00', 1
+FROM 
+	\`${ChargesTable}\` ch
+INNER JOIN 
+	AB_Events_Registration reg on reg.id = ch.Reg 
+WHERE 
+	ch.Fees177 = 69 and
+	ch.Reg IS NOT NULL and
+	not exists (
+		SELECT 1
+		FROM \`${ChargesTable}\`
+		WHERE uuid IN ( 
+
+			SELECT
+				CONCAT('auto_import_88_FDiscFreeBrkfst4-11_', ch.Reg, '_', ch.id)
+			FROM
+				\`${ChargesTable}\` ch
+
+		) and
+		uuid = CONCAT('auto_import_88_FDiscFreeBrkfst4-11_', ch.Reg, '_', ch.id)
+	);
+                `,
+                next);
+
+
+        },
+
+        //
+        // Insert National Staff Discount (DEV)
+        //
+        (next)=>{
+            
+            runQuery(
+                'Insert National Staff Discount (DEV)',
+                `
+INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Apply Charge\`)
+SELECT
+    reg.id, 105, CONCAT('auto_import_105_DevWkDiscount_', reg.id, '_', pep.id), 1
+FROM
+    AB_Events_registrants pep
+INNER JOIN
+    AB_Events_hrisworker wk on pep.\`Ren Name\` = wk.ren_id
+INNER JOIN
+    AB_Events_Registration reg on reg.id = pep.Registration434 
+WHERE 
+    reg.Event = 6 AND 
+    reg.\`User Submitted\` = 1 and
+    pep.Attending = 1 and 
+    wk.sendingregion_id IN (3,4,5,6,7,8,9,10,22,37,40) AND 
+    not exists (
+        SELECT 1
+        FROM \`${ChargesTable}\`
+        WHERE uuid IN ( 
+
+            SELECT
+                CONCAT('auto_import_105_DevWkDiscount_', reg.id, '_', pep.id)
+            FROM
+                AB_Events_registrants pep
+            INNER JOIN
+                AB_Events_Registration reg on pep.Registration434 = reg.id
+
+        ) and
+        uuid = CONCAT('auto_import_105_DevWkDiscount_', reg.id, '_', pep.id)
+    );
+
+                `,
+                next);
+
+
+        },
+
+        //
+        // Insert all Dev Week Fees (DEV)
+        //
+        (next)=>{
+            
+            runQuery(
+                'Insert all Dev Week Fees (DEV)',
+                `
+INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Apply Charge\`)
+SELECT 
+	reg.id, 106, CONCAT('auto_import_106_DevClass_', reg.id, '_', pep.id), 1
+FROM 
+	AB_Events_registrants pep
+INNER JOIN
+	AB_Events_Schedule cls on cls.Attendee = pep.id
+INNER JOIN 
+	AB_Events_Registration reg on reg.id = pep.Registration434
+WHERE
+	pep.Attending = 1 and
+	reg.\`User Submitted\` = 1 and
+	reg.Event = 6 and 
+	not exists (
+		SELECT 1
+		FROM \`${ChargesTable}\`
+		WHERE uuid IN ( 
+
+			SELECT
+				CONCAT('auto_import_106_DevClass_', reg.id, '_', pep.id)
+			FROM
+				AB_Events_registrants pep
+			INNER JOIN
+				AB_Events_Registration reg on pep.Registration434 = reg.id
+
+		) and
+		uuid = CONCAT('auto_import_106_DevClass_', reg.id, '_', pep.id)
+	)
+GROUP BY
+	reg.id,
+	pep.id,
+	pep.Registration434	
+ORDER BY
+	pep.\`Ren Name\`;
+                `,
+                next);
+
+
+        },
+        
+        
+        ////
+        //// Insert Breakfast Charges for Each Registration (DEV):
+        ////
+        (next)=>{
+
+
+            function processOne(list, cb) {
+                if (list.length == 0) {
+                    cb();
+                } else {
+
+
+                    var regID = list.shift();
+
+
+                    runQuery(
+                        'Insert Breakfast Charges for Registration ['+regID+']', 
+                        `
+
+                            SET @roomsCovered = 0;
+                            SET @roomsCovered = (
+                                SELECT
+                                    COUNT(*)*2 as count
+                                FROM 
+                                    ${ChargesTable} as ch
+                                WHERE
+                                    ch.Reg = ${regID} and
+                                    ch.Fees177 IN (
+                                        SELECT 
+                                            id
+                                        FROM
+                                            AB_Events_Fees fee
+                                        WHERE
+                                            fee.\`Post_Name\` IN ('HDouble','Hsuite','HTwin','HStandard Room')
+                                    )
+                            );
+                            SET @rownum = 0;
+                            INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Start\`, \`End\`, \`Apply Charge\`)
+                            SELECT
+                                regID, 85, CONCAT('auto_import_85_FBrkfst13+_', regID, '_', pepID), '2019-01-21 00:00:00', '2019-01-27 00:00:00', 1
+                            FROM (
+                                SELECT
+                                    reg.id as regID, pep.id as pepID, FLOOR(datediff('2019-01-28', ren.ren_birthdate)/365) as age, @rownum := @rownum + 1 AS entry
+                                FROM
+                                    AB_Events_registrants pep
+                                INNER JOIN
+                                    AB_Events_Registration reg on pep.Registration434 = reg.id
+                                INNER JOIN 
+                                    AB_Events_hrisrendata ren on pep.\`Ren Name\` = ren.ren_id
+                                WHERE
+                                    reg.\`User Submitted\` = 1 and
+                                    pep.Attending = 1 and 
+                                    reg.Event = 6 and 
+                                    reg.id = ${regID} 
+                                ORDER BY 
+                                    age DESC
+                            ) d WHERE entry <= @roomsCovered and 
+                            @roomsCovered > 0 and
+                            not exists (
+                                SELECT 1
+                                FROM \`${ChargesTable}\`
+                                WHERE uuid IN ( 
+                                
+                                    SELECT
+                                        CONCAT('auto_import_85_FBrkfst13+_', regID, '_', pepID)
+                                    FROM
+                                        ${ChargesTable} ch
+                                
+                                ) and
+                                uuid = CONCAT('auto_import_85_FBrkfst13+_', regID, '_', pepID)
+                            );
+                            SET @rownum = 0;
+                            INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Start\`, \`End\`, \`Apply Charge\`)
+                            SELECT
+                                regID, 86, CONCAT('auto_import_86_FBrkfst4-11_', regID, '_', pepID), '2019-01-21 00:00:00', '2019-01-27 00:00:00', 1
+                            FROM (
+                                SELECT
+                                    reg.id as regID, pep.id as pepID, FLOOR(datediff('2019-01-28', ren.ren_birthdate)/365) as age, @rownum := @rownum + 1 AS entry
+                                FROM
+                                    AB_Events_registrants pep
+                                INNER JOIN
+                                    AB_Events_Registration reg on pep.Registration434 = reg.id
+                                INNER JOIN 
+                                    AB_Events_hrisrendata ren on pep.\`Ren Name\` = ren.ren_id
+                                WHERE
+                                    reg.\`User Submitted\` = 1 and
+                                    pep.Attending = 1 and 
+                                    reg.Event = 6 and 
+                                    reg.id = ${regID} and 
+                                    FLOOR(datediff('2019-01-28', ren.ren_birthdate)/365) > 3
+                                ORDER BY 
+                                    age DESC
+                            ) d WHERE entry > @roomsCovered and 
+                            @roomsCovered > 0 and
+                            not exists (
+                                SELECT 1
+                                FROM \`${ChargesTable}\`
+                                WHERE uuid IN ( 
+                                
+                                    SELECT
+                                        CONCAT('auto_import_86_FBrkfst4-11_', regID, '_', pepID)
+                                    FROM
+                                        ${ChargesTable} ch
+                                
+                                ) and
+                                uuid = CONCAT('auto_import_86_FBrkfst4-11_', regID, '_', pepID)
+                            );
+
+                            
+                        `,
+                        ()=>{
+                            processOne(list, cb);
+                        }
+                    );
+
+                }
+            }
+
+
+            connAB.query(`
+
+                    SELECT id 
+                    FROM AB_Events_Registration
+                    WHERE  
+                        Event = 6 
+                        AND \`User Submitted\` = 1
+
+                `, (err, results, fields) => {
+                if (err) {
+                }
+                else {
+                    var allIDs = results.map((r)=>{ return r.id });
+// testing:
+// allIDs = [ 816 ];
+                    processOne(allIDs, (err)=>{
+                        next(err);
+                    })
+                }
+                        
+            })
+
+
+
+        },
+        
+        //
+        // Insert Discount for early registration (DEV)
+        // Removed this charge because it is only applied to ASC
+//         (next)=>{
+// 
+//             runQuery(
+//                 'Insert Discount for early registration (DEV)',
+//                 `
+// INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Apply Charge\`)
+// SELECT
+//     reg.id, 65, CONCAT('auto_import_65_CFEarlyDiscount_', reg.id), 1
+// FROM
+//     AB_Events_Registration reg
+// WHERE
+//     reg.\`User Submitted\` = 1 and
+//     reg.Event = 6 and 
+//     ( reg.\`Submit Date\` < "2018-10-27 00:00:00" or
+//     reg.created_at < "2018-10-27 00:00:00" ) and
+//     not exists (
+//         SELECT 1
+//         FROM \`${ChargesTable}\`
+//         WHERE uuid IN ( 
+// 
+//         SELECT
+//             CONCAT('auto_import_65_CFEarlyDiscount_', reg.id)
+//         FROM
+//             AB_Events_Registration reg
+// 
+//         ) and
+//         uuid = CONCAT('auto_import_65_CFEarlyDiscount_', reg.id)
+//     );
+//                 `,
+//                 next);
+// 
+//         },
+        
+        //
+        // Insert Fee for late registration (DEV)
+        //
+        (next)=>{
+            
+            runQuery(
+                'Insert Fee for late registration (DEV)',
+                `
+INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Apply Charge\`)
+SELECT
+    reg.id, 81, CONCAT('auto_import_81_CFLateFee_', reg.id), 1
+FROM
+    AB_Events_Registration reg
+WHERE
+    reg.\`User Submitted\` = 1 and
+    reg.Event = 6 and 
+    reg.created_at > "2018-10-27 00:00:00" and
+    not exists (
+        SELECT 1
+        FROM \`${ChargesTable}\`
+        WHERE uuid IN ( 
+        
+        SELECT
+            CONCAT('auto_import_81_CFLateFee_', reg.id)
+        FROM
+            AB_Events_Registration reg
+        
+        ) and
+        uuid = CONCAT('auto_import_81_CFLateFee_', reg.id)
+    );
+                `,
+                next);
+            
+        },
 
 
 
