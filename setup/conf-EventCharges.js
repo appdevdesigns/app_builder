@@ -172,8 +172,8 @@ AD.test.sails.lift({
             "host": "localhost",
             "user": "root",
             "password": "root",
-            "database": "live_appbuilder",
-            "port": 3306
+            "database": "Events_Test",
+            "port": 8889
         });
 
     } else {
@@ -714,7 +714,120 @@ WHERE
 
 
         },
+        
+        //
+        // Insert Share Room Discount (ASC)
+        //
+        (next)=>{
+            
+            runQuery(
+                'Insert Share Room Discount (ASC)',
+                `
+INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Apply Charge\`, \`Start\`, \`End\`)
+SELECT
+    reg.id, 108, CONCAT('auto_import_108_ASCShareRoom_', reg.id), 1, chg.Start, chg.End
+FROM
+    AB_Events_Registration reg
+INNER JOIN 
+	\`${ChargesTable}\` chg on chg.Reg = reg.id 
+WHERE 
+    reg.id IN (select peps.Registration434 from AB_Events_registrants peps where peps.Attending = 1 group by peps.Registration434 having count(peps.Registration434) = 1) AND
+    reg.Event = 2 AND
+    chg.Fees177 = 50 AND
+    not exists (
+        SELECT 1
+        FROM \`${ChargesTable}\`
+        WHERE uuid IN ( 
 
+            SELECT
+                CONCAT('auto_import_108_ASCShareRoom_', reg.id)
+            FROM
+                AB_Events_Registration reg
+
+        ) and
+        uuid = CONCAT('auto_import_108_ASCShareRoom_', reg.id)
+    );
+                `,
+                next);
+
+
+        },
+
+        //
+        // Insert Share Room Discount (DEV)
+        //
+        (next)=>{
+            
+            runQuery(
+                'Insert Share Room Discount (DEV)',
+                `
+INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Apply Charge\`, \`Start\`, \`End\`)
+SELECT
+    reg.id, 109, CONCAT('auto_import_109_DEVShareRoom_', reg.id), 1, chg.Start, chg.End
+FROM
+    AB_Events_Registration reg
+INNER JOIN 
+	\`${ChargesTable}\` chg on chg.Reg = reg.id 
+WHERE 
+    reg.id IN (select peps.Registration434 from AB_Events_registrants peps where peps.Attending = 1 group by peps.Registration434 having count(peps.Registration434) = 1) AND
+    reg.Event = 6 AND
+    chg.Fees177 = 70 AND
+    not exists (
+        SELECT 1
+        FROM \`${ChargesTable}\`
+        WHERE uuid IN ( 
+
+            SELECT
+                CONCAT('auto_import_109_DEVShareRoom_', reg.id)
+            FROM
+                AB_Events_Registration reg
+
+        ) and
+        uuid = CONCAT('auto_import_109_DEVShareRoom_', reg.id)
+    );
+                `,
+                next);
+
+
+        },
+
+        //
+        // Insert Share Room Discount (CNT)
+        //
+        (next)=>{
+            
+            runQuery(
+                'Insert Share Room Discount (CNT)',
+                `
+INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Apply Charge\`, \`Start\`, \`End\`)
+SELECT
+    reg.id, 110, CONCAT('auto_import_110_CNTShareRoom_', reg.id), 1, chg.Start, chg.End
+FROM
+    AB_Events_Registration reg
+INNER JOIN 
+	\`${ChargesTable}\` chg on chg.Reg = reg.id 
+WHERE 
+    reg.id IN (select peps.Registration434 from AB_Events_registrants peps where peps.Attending = 1 group by peps.Registration434 having count(peps.Registration434) = 1) AND
+    reg.Event = 9 AND
+    chg.Fees177 = 97 AND
+    not exists (
+        SELECT 1
+        FROM \`${ChargesTable}\`
+        WHERE uuid IN ( 
+
+            SELECT
+                CONCAT('auto_import_110_CNTShareRoom_', reg.id)
+            FROM
+                AB_Events_Registration reg
+
+        ) and
+        uuid = CONCAT('auto_import_110_CNTShareRoom_', reg.id)
+    );
+                `,
+                next);
+
+
+        },
 
 
         ////
