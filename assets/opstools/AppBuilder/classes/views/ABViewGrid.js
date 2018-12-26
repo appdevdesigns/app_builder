@@ -1146,7 +1146,12 @@ export default class ABViewGrid extends ABViewWidget  {
 					$$(DataTable.ui.id).attachEvent("onItemClick", function (id, e, node) {
 						var item = id;
 
-						if (e.target.className.indexOf('eye') > -1) {
+						if (e == "auto") {
+							// automatically choose the details page if a record matches
+							// later on we can decide if we want to have the choice to select the edit page intead.
+							_logic.changePage(dc, item.id, detailsPage);
+							toggleTab(detailsTab, this);
+						} else if (e.target.className.indexOf('eye') > -1) {
 							_logic.changePage(dc, item, detailsPage);
 							toggleTab(detailsTab, this);
 						} else if (e.target.className.indexOf('pencil') > -1) {
@@ -1198,49 +1203,68 @@ export default class ABViewGrid extends ABViewWidget  {
 				padding: 17,
 				rows: [
 					{
-						id: ids.globalFilterForm,
-						view:"text",
-						hidden: true,
-						placeholder:"Search or scan a barcode to see results",
-						on:{
-							onTimedKeyPress:function(){
-								var text = this.getValue().trim().toLowerCase().split(" ");
-								var table = $$(DataTable.ui.id);
-								var columns = table.config.columns;
-								var count = 0;
-								var matchArray = [];
-								table.filter(function(obj){
-									matchArray = [];
-									// console.log("filter", obj);
-									for (var i=0; i<columns.length; i++) {
-										for (var x=0; x<text.length; x++) {
-											var searchFor = text[x];
-											if (obj[columns[i].id] && obj[columns[i].id].toString().toLowerCase().indexOf(searchFor) !== -1) {
-												// console.log("matched on:", searchFor);
-												if (matchArray.indexOf(searchFor) == -1) {
-													matchArray.push(searchFor);
+						cols: [
+							{						
+								id: ids.globalFilterForm,
+								view:"text",
+								hidden: true,
+								placeholder:"Search or scan a barcode to see results",
+								on:{
+									onTimedKeyPress:function(){
+										var text = this.getValue().trim().toLowerCase().split(" ");
+										var table = $$(DataTable.ui.id);
+										var columns = table.config.columns;
+										var count = 0;
+										var matchArray = [];
+										table.filter(function(obj){
+											matchArray = [];
+											// console.log("filter", obj);
+											for (var i=0; i<columns.length; i++) {
+												for (var x=0; x<text.length; x++) {
+													var searchFor = text[x];
+													if (obj[columns[i].id] && obj[columns[i].id].toString().toLowerCase().indexOf(searchFor) !== -1) {
+														// console.log("matched on:", searchFor);
+														if (matchArray.indexOf(searchFor) == -1) {
+															matchArray.push(searchFor);
+														}
+													}
 												}
+											}
+											// console.log("Filter By:", text.length, text);
+											// console.log("Matches:", matchArray);
+											if (matchArray.length == text.length) {
+												count++;
+												return true;
+											} else {
+												return false;
+											}
+										});
+										if (globalFilterPosition == "single") {
+											if (count == 1) {
+												table.show();
+												$$(table).select($$(table).getFirstId(), false);
+												var table = $$(table);
+												console.log(table);
+												$$(table).callEvent("onItemClick", [ $$(table).getItem($$(table).getFirstId()), "auto", null ]);
+											} else {
+												table.hide(); 
 											}
 										}
 									}
-									// console.log("Filter By:", text.length, text);
-									// console.log("Matches:", matchArray);
-									if (matchArray.length == text.length) {
-										count++;
-										return true;
-									} else {
-										return false;
-									}
-								});
-								if (globalFilterPosition == "single") {
-									if (count == 1) {
-										table.show();
-									} else {
-										table.hide(); 
-									}
+								}
+							},
+							{
+								view:"button", 
+								width: 28, 
+								type:"icon", 
+								icon:"times",
+								click: function() {
+									$$(ids.globalFilterForm).setValue("");
+									$$(ids.globalFilterForm).focus();
+									$$(ids.globalFilterForm).callEvent("onTimedKeyPress");
 								}
 							}
-						}
+						]
 					},
 					rowFilterForm.ui,
 					{
