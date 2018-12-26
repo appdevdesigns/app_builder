@@ -5,6 +5,10 @@
  * Manage the Object Workspace KanBan area.
  *
  */
+
+import ABFieldList from "../classes/dataFields/ABFieldList";
+import ABFieldUser from "../classes/dataFields/ABFieldUser";
+
 import AB_Work_KanbanSide from "./ab_work_object_workspace_kanban_sidePanel"
 
 
@@ -48,6 +52,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 		var CurrentObject = null;	// current ABObject being displayed
 		var CurrentVerticalField = null;
+		var CurrentHorizontalField = null;
 		var CurrentOwnerField = null;
 
 		let _updatingOwnerRowId;
@@ -148,22 +153,25 @@ export default class ABWorkObjectKanBan extends OP.Component {
 					],
 					// avatar template
 					templateAvatar: function (obj) {
-						if (obj.personId) {
-							return obj.personId; // username
+						if (CurrentOwnerField && obj[CurrentOwnerField.columnName]) {
+							return obj[CurrentOwnerField.columnName]; // username
 						}
 						else {
 							return "<span class='webix_icon fa fa-user'></span>";
 						}
 					},
-					// // template for item body
-					// // show item image and text
-					// templateBody: function (obj) {
-					// 	var html = "";
-					// 	if (obj.image)
-					// 		html += "<img class='image' src='../common/imgs/attachments/" + obj.image + "'/>";
-					// 	html += "<div>" + obj.text + "</div>";
-					// 	return html;
-					// }
+					// template for item body
+					// show item image and text
+					templateBody: function (data) {
+
+						return CurrentObject.displayData(data);
+
+						// var html = "";
+						// if (obj.image)
+						// 	html += "<img class='image' src='../common/imgs/attachments/" + obj.image + "'/>";
+						// html += "<div>" + obj.text + "</div>";
+						// return html;
+					}
 				};
 			},
 
@@ -199,25 +207,93 @@ export default class ABWorkObjectKanBan extends OP.Component {
 				CurrentVerticalField = kanbanView.getVerticalGroupingField();
 				if (!CurrentVerticalField) return;
 
+				CurrentHorizontalField = kanbanView.getHorizontalGroupingField();
+
 				// Option format -  { id: "1543563751920", text: "Normal", hex: "#4CAF50" }
 				let verticalOptions = (CurrentVerticalField.settings.options || []).map(opt => {
 
-					return {
-						header: opt.text,
-						body: {
-							view: "kanbanlist",
-							status: opt.id,
-							type: _logic.kanbanListTemplate()
+					// Vertical & Horizontal fields
+					if (CurrentVerticalField && CurrentHorizontalField) {
+
+						let rows = [],
+							// [{
+							//		id: '',
+							//		text: ''
+							// }]
+							horizontalVals = [];
+
+						// pull options of the Horizontal field
+						if (CurrentHorizontalField instanceof ABFieldList) {
+							horizontalVals = CurrentHorizontalField.settings.options;
 						}
-					};
+						else if (CurrentHorizontalField instanceof ABFieldUser) {
+							horizontalVals = CurrentHorizontalField.getUsers().map(u => {
+								return {
+									id: u.id,
+									text: u.text || u.value
+								}
+							});
+						}
+
+						horizontalVals.push({
+							id: "",
+							text: "Other"
+						});
+
+						horizontalVals.forEach(val => {
+
+							let statusOps = {};
+							statusOps[CurrentVerticalField.columnName] = opt.id;
+							statusOps[CurrentHorizontalField.columnName] = val.id;
+
+							// Header
+							rows.push({
+								template: val.text,
+								height: 20,
+								css: "progress_header"
+							});
+
+							// Kanban list
+							rows.push({
+								view: "kanbanlist",
+								status: statusOps,
+								type: _logic.kanbanListTemplate()
+							});
+
+						});
+
+						return {
+							header: opt.text,
+							body: {
+								margin: 0,
+								rows: rows
+							}
+						};
+
+					}
+					// Vertical field only
+					else if (CurrentVerticalField) {
+
+						let statusOps = {};
+						statusOps[CurrentVerticalField.columnName] = opt.id;
+
+						return {
+							header: opt.text,
+							body: {
+								view: "kanbanlist",
+								status: statusOps,
+								type: _logic.kanbanListTemplate()
+							}
+						};
+
+					}
+
 				});
 
 				// Rebuild kanban that contains options
 				// NOTE: webix kanban does not support dynamic vertical list
 				webix.ui(verticalOptions, $$(ids.kanban));
 				$$(ids.kanban).reconstruct();
-
-				let horizontalField = kanbanView.getHorizontalGroupingField();
 
 				CurrentOwnerField = kanbanView.getOwnerField();
 
@@ -282,24 +358,10 @@ export default class ABWorkObjectKanBan extends OP.Component {
 					})
 					.then((data) => {
 
-						$$(ids.kanban).parse(data.data.map(d => _logic.convertData(d)));
+						$$(ids.kanban).parse(data.data);
 
 						_logic.ready();
 					});
-
-			},
-
-			convertData(data) {
-
-				data.text = CurrentObject.displayData(data);
-
-				if (CurrentVerticalField)
-					data.status = data[CurrentVerticalField.columnName];
-
-				if (CurrentOwnerField)
-					data.personId = data[CurrentOwnerField.columnName];
-
-				return data;
 
 			},
 
@@ -311,7 +373,16 @@ export default class ABWorkObjectKanBan extends OP.Component {
 				_logic.busy();
 
 				let patch = {};
-				patch[CurrentVerticalField.columnName] = status;
+
+				// update multi-values
+				if (status instanceof Object) {
+					patch = status;
+				}
+				// update single value
+				else {
+					patch[CurrentVerticalField.columnName] = status;
+				}
+
 
 				CurrentObject.model()
 					.update(rowId, patch)
@@ -346,7 +417,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 						// update card
 						var card = $$(ids.kanban).getItem(rowId);
-						card.personId = userId;
+						card[CurrentOwnerField.columnName] = userId;
 						$$(ids.kanban).updateItem(rowId, card);
 
 						_logic.ready();
