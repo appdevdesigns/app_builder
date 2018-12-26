@@ -232,7 +232,7 @@ module.exports = {
                     SELECT * FROM AB_Events_Registration
                     WHERE event IS Not Null 
                     AND \`User Submitted\` = 1
-                    AND \`Finances Accurate\` = 0
+                    AND \`Finances Confirmed\` = 0
 
                 `;
 
