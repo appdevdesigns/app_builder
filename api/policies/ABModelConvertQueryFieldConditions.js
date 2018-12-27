@@ -242,7 +242,7 @@ function parseQueryCondition(_where, object, req, res, cb) {
                                     'not_in' : 'not_in'
                                 }
                                 cond.rule = convert[cond.rule];
-                                cond.value = values;
+                                cond.value = _.uniq(values); // use _.uniq() to only return unique values (no duplicates)
 
                                 sails.log.info('.... new Condition:', cond);
 

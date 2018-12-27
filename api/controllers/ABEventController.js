@@ -102,7 +102,7 @@ module.exports = {
                         connAB.query(`
 
                             SELECT * FROM AB_Events_Fees
-                            WHERE Category = 1528273589977 AND Post_Name != "DevClass"
+                            WHERE Category = 1528273589977 AND Post_Name NOT IN ( "DevClass", "RTSCourseFee" )
 
                             `, (err, results, fields) => {
                             if (err) cb(err);
@@ -182,7 +182,7 @@ module.exports = {
                         connAB.query(`
 
                             SELECT * FROM AB_Events_Fees
-                            WHERE Post_Name = "DevClass"
+                            WHERE Post_Name IN ( "DevClass", "RTSCourseFee" )
 
                             `, (err, results, fields) => {
                             if (err) cb(err);
@@ -1937,7 +1937,7 @@ res.error(err);
 
                 var responsePath = 'app_builder/registration_confirmed';
                 if (isConfirmed == "0") {
-                    responsePath = 'app_builder/needs_adjustments'
+                    responsePath = 'app_builder/needs_fee_adjustments'
                 }
 
                 res.view(responsePath, {});
