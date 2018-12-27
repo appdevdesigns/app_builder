@@ -1937,7 +1937,7 @@ res.error(err);
 
                 var responsePath = 'app_builder/registration_confirmed';
                 if (isConfirmed == "0") {
-                    responsePath = 'app_builder/needs_adjustments'
+                    responsePath = 'app_builder/needs_fee_adjustments'
                 }
 
                 res.view(responsePath, {});
