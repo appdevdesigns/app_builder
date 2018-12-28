@@ -389,7 +389,9 @@ console.warn('!! ToDo: onAfterColumnHide()');
                 }
                 // if this was our edit icon:
                 // console.log(e.target.className);
-    			if (e.target.className.indexOf('pencil') > -1) {
+                if (e == "auto") {
+                    // just pass by if we are going to call change page in ABViewGrid later
+                } else if (e.target.className.indexOf('pencil') > -1) {
                     // alert("edit");
                 } else if (e.target.className.indexOf('eye') > -1) { // if this was our view icon:
                     // alert("view");
