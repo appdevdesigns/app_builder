@@ -1138,8 +1138,9 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
     			CurrentObject.model()
     			.create(emptyObj)
     			.then((obj)=>{
-    				var DataTable = $$(ids.component);
-    				DataTable.add(obj, 0);
+                    var DataTable = $$(ids.component);
+                    if (!DataTable.exists(obj.id))
+    				    DataTable.add(obj, 0);
     			})
     		},
 
