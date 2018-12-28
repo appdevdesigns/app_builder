@@ -1360,7 +1360,7 @@ export default class RowFilter extends OP.Component {
 							break;
 						case "connectField":
 						case "connectObject":
-							condResult = _logic.connectFieldValid(rowData, fieldInfo.columnName, filter.rule, filter.value);
+							condResult = _logic.connectFieldValid(rowData, fieldInfo.relationName(), filter.rule, filter.value);
 							break;
 					}
 
@@ -1628,9 +1628,13 @@ export default class RowFilter extends OP.Component {
 
 			},
 
-			inQueryValid: function(rowData, rule, compareValue) {
+			inQueryValid: function(rowData, columnName, rule, compareValue) {
 
 				let result = false;
+				
+				if (columnName) {
+					rowData = rowData[columnName] || [];
+				}
 
 				if (!compareValue)
 					return result;
@@ -1702,7 +1706,7 @@ export default class RowFilter extends OP.Component {
 						break;
 					case 'in_query':
 					case 'not_in_query':
-						return _logic.inQueryValid(rowData, rule, compareValue);
+						return _logic.inQueryValid(rowData, columnName, rule, compareValue);
 						break;
 					case "is_current_user":
 					case "is_not_current_user":
