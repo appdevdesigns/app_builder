@@ -1372,3 +1372,36 @@ a.ab-delete-photo:hover {
 .bg-gray.webix_header>div {
 	background: #777;
 }
+.darkgray.webix_menu-x a.webix_list_item, .webix_view a {
+	opacity: 1;
+}
+.darkgray.webix_menu-x {
+    background:gray;
+}
+.darkgray.webix_menu-x .webix_list_item {
+	background: transparent;
+	margin: 5px 0 0 0;
+}
+.webix_view.webix_window.webix_popup.webix_menu a {
+	color: #666;
+}
+.webix_list_item {
+	line-height: 29px !important;
+}
+.transparent {
+	background: transparent !important;
+}
+.white {
+	background: white;
+}
+a.webix_list_item.selected, a.webix_list_item.selected:hover  {
+    background: #3498db !important;
+    color: white !important;
+	opacity: 1;
+}
+.webix_menu-x .webix_submenu_icon, .webix_view.webix_menu .webix_submenu_icon {
+	margin-top: 6px;
+}
+.webix_list_item .webix_list_icon {
+	opacity: 0.6;
+}

@@ -81,7 +81,7 @@ export default class ABViewFormPropertySubmitRule extends OP.Component {
 						cols: [
 							{
 								view: "button",
-								icon: "plus",
+								icon: "fa fa-plus",
 								type: "iconButton",
 								label: labels.component.addNewRule,
 								width: 150,

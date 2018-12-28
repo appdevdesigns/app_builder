@@ -14,6 +14,7 @@ function L(key, altText) {
 }
 
 var ABViewPropertyDefaults = {
+	datacollection: null,
 	filterConditions: {}
 }
 
@@ -180,7 +181,7 @@ export default class ABViewConditionalContainer extends ABViewContainer {
 									view: "button",
 									name: "buttonFilter",
 									label: L("ab.component.conditionalcontainer.settings", "*Settings"),
-									icon: "gear",
+									icon: "fa fa-gear",
 									type: "icon",
 									badge: 0,
 									click: function () {
@@ -406,6 +407,10 @@ export default class ABViewConditionalContainer extends ABViewContainer {
 		this.__filterComponent.viewLoad(this);
 		this.__filterComponent.setValue(this.settings.filterConditions || ABViewPropertyDefaults.filterConditions);
 
+	}
+
+	copyUpdateProperyList() {
+		return ['datacollection']
 	}
 
 

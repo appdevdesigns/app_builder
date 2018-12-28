@@ -207,7 +207,7 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 									view: "button",
 									name: "buttonFilter",
 									label: L("ab.component.connect.settings", "*Settings"),
-									icon: "gear",
+									icon: "fa fa-gear",
 									type: "icon",
 									badge: 0,
 									click: function () {

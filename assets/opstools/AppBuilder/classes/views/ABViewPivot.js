@@ -17,6 +17,7 @@ function L(key, altText) {
 
 
 var ABViewPivotPropertyComponentDefaults = {
+	datacollection: null,
 	removeMissed: 0,
 	totalColumn: 0,
 	separateLabel: 0,
@@ -489,6 +490,10 @@ export default class ABViewPivot extends ABViewWidget {
 
 		});
 
+	}
+
+	copyUpdateProperyList() {
+		return ['datacollection'];
 	}
 
 

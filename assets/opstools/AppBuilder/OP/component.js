@@ -75,6 +75,10 @@ export default class UIComponent extends EventEmitter {
 					no: 	  L('ab.common.no', "*No"),
 
 					none: 	  L('ab.common.none', "*None"),
+					
+					invalidMessage: {
+						required: 	  L('ab.common.invalid_message.required', "*This field is required"),
+					},
 
 					createErrorMessage:   L('ab.common.create.error', "*System could not create <b>{0}</b>."),
 					createSuccessMessage: L('ab.common.create.success', "*<b>{0}</b> is created."),

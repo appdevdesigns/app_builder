@@ -304,7 +304,7 @@ console.warn('!! ToDo: onAfterColumnHide()');
 
                 // WORKAROUND: .Sj() => ._get_y_range function of webix's datatable.
                 // It is a private function. It returns what record index are showing
-                let scrollState = DataTable.Sj(),
+                let scrollState = DataTable.Ug(),
                     startRecIndex = scrollState[0],
                     endRecIndex = scrollState[1],
                     index = 0;
@@ -315,7 +315,7 @@ console.warn('!! ToDo: onAfterColumnHide()');
                         startRecIndex <= index && index <= endRecIndex) 
                         displayRecords.push(id);
 
-                    index++
+                    index++;
 
                 });
 
@@ -323,7 +323,7 @@ console.warn('!! ToDo: onAfterColumnHide()');
 
             };
 
-    		DataTable.attachEvent("onAfterRender", function(data){
+            DataTable.attachEvent("onAfterRender", function(data){
                 DataTable.resize();
 
                 // items = [];
@@ -968,7 +968,8 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                         wheres = CurrentObject.workspaceFilterConditions;
                     }
                     var sorts = {};
-                    if (CurrentObject.workspaceSortFields.length > 0) {
+                    if (CurrentObject.workspaceSortFields &&
+                        CurrentObject.workspaceSortFields.length > 0) {
                         sorts = CurrentObject.workspaceSortFields;
                     }
                     CurrentObject.model()
@@ -1047,9 +1048,9 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                             if (col.template == '<div class="ab-boolean-display">{common.checkbox()}</div>') {
                                 col.template = function(obj, common, value){
                                     if (value)
-                                        return "<div class='webix_icon fa-check-square-o'></div>";
+                                        return "<div class='webix_icon fa fa-check-square-o'></div>";
                                     else
-                                        return "<div class='webix_icon fa-square-o'></div>";
+                                        return "<div class='webix_icon fa fa-square-o'></div>";
                                 }
                             }
                                 
@@ -1075,7 +1076,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
         					header: "",
         					width: 40,
                             template: function(obj, common){
-                                return "<div class='detailsView'><span class='webix_icon fa-eye'></span></div>";
+                                return "<div class='detailsView'><span class='webix_icon fa fa-eye'></span></div>";
                             },
         					css: { 'text-align': 'center' }                            
                         });
@@ -1341,6 +1342,8 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
         // expose load all records
         this.loadAll = _logic.loadAll;
+
+        this.show = _logic.show;
 
     }
 

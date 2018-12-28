@@ -17,7 +17,8 @@ function L(key, altText) {
 
 var ABViewTextPropertyComponentDefaults = {
 	text: '',
-	height: 0
+	height: 0,
+	datacollection: null
 }
 
 
@@ -484,5 +485,12 @@ export default class ABViewText extends ABViewWidget {
 		});
 
 	}
+
+	copyUpdateProperyList() {
+
+		return ['datacollection'];
+
+	}
+
 
 }

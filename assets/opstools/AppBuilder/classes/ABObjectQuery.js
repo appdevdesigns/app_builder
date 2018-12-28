@@ -547,7 +547,7 @@ export default class ABObjectQuery extends ABObject {
 				// icon
 				if (field.settings &&
 					field.settings.showIcon) {
-					h.header = '<span class="webix_icon fa-{icon}"></span>'.replace('{icon}', field.fieldIcon() ) + h.header;
+					h.header = '<span class="webix_icon fa fa-{icon}"></span>'.replace('{icon}', field.fieldIcon() ) + h.header;
 				}
 
 				h.adjust = true;
