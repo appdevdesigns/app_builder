@@ -1633,7 +1633,7 @@ export default class RowFilter extends OP.Component {
 				let result = false;
 				
 				if (columnName) {
-					rowData = rowData[columnName] || [];
+					rowData = rowData[columnName] || {};
 				}
 
 				if (!compareValue)
@@ -1693,16 +1693,16 @@ export default class RowFilter extends OP.Component {
 
 				switch (rule) {
 					case 'contains':
-						return rowData[columnName].toString().indexOf(compareValue) > -1;
+						return (rowData[columnName].id || rowData[columnName]).toString().indexOf(compareValue) > -1
 						break;
 					case 'not_contains':
-						return rowData[columnName].toString().indexOf(compareValue) == -1;
+						return (rowData[columnName].id || rowData[columnName]).toString().indexOf(compareValue) == -1;
 						break;
 					case 'equals':
-						return rowData[columnName] == compareValue;
+						return (rowData[columnName].id || rowData[columnName]).toString() == compareValue;
 						break;
 					case 'not_equal':
-						return rowData[columnName] != compareValue;
+						return (rowData[columnName].id || rowData[columnName]).toString() != compareValue;
 						break;
 					case 'in_query':
 					case 'not_in_query':
