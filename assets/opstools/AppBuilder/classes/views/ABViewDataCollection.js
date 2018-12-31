@@ -1354,6 +1354,7 @@ export default class ABViewDataCollection extends ABView {
 					connectedFields.forEach(f => {
 
 						let relateVal = d[f.relationName()];
+						if (relateVal == null) return;
 
 						if (Array.isArray(relateVal) &&
 							relateVal.filter(v => v == deleteId || v.id == deleteId).length > 0) {
