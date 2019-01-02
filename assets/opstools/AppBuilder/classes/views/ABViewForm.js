@@ -911,7 +911,7 @@ PopupRecordRule.qbFixAfterShow();
 
 		};
 
-		var _onShow = () => {
+		var _onShow = (data) => {
 
 			// call .onShow in the base component
 			component.onShow();
@@ -938,7 +938,6 @@ PopupRecordRule.qbFixAfterShow();
 
 			});
 
-			var data = null;
 			var dc = this.dataCollection;
 			if (dc) {
 
@@ -951,6 +950,7 @@ PopupRecordRule.qbFixAfterShow();
 					_logic.displayData(null);
 				}
 
+				// pull data of current cursor
 				data = dc.getCursor();
 
 				// do this for the initial form display so we can see defaults
@@ -966,7 +966,7 @@ PopupRecordRule.qbFixAfterShow();
 			}
 			else {
 				// show blank data in the form
-				_logic.displayData(null);
+				_logic.displayData(data);
 			}
 
 			//Focus on first focusable component

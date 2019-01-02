@@ -111,7 +111,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 			refreshForm: function (data) {
 
-				data = data || {};
+				// data = data || {};
 
 				let formAttrs = {
 					settings: {
@@ -212,13 +212,11 @@ export default class ABWorkObjectKanBan extends OP.Component {
 					}
 				});
 
-				formCom.onShow();
-
 				// display data
 				$$(ids.form).parse(data);
 
-				// display data of custom fields
-				formCom.logic.displayData(data);
+				formCom.onShow(data);
+
 
 			}
 
