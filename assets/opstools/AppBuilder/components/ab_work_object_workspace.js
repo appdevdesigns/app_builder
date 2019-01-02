@@ -50,7 +50,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
         var labels = {
             common: App.labels,
             component: {
-                addNewRow: L('ab.object.addNewRow', "*New new row"),
+                addNewRow: L('ab.object.addNewRow', "*Add new row"),
                 selectObject: L('ab.object.selectObject', "*Select an object to work with."),
                 // formHeader: L('ab.application.form.header', "*Application Info"),
                 deleteSelected: L('ab.object.toolbar.deleteRecords', "*Delete"),
@@ -856,7 +856,17 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		 * component to add a row.
     		 */
     		rowAdd:function() {
-    			DataTable.addRow();
+                let currView = CurrentObject.currentView();
+
+                switch (currView.type) {
+                    case "kanban":
+                        KanBan.addCard();
+                        break;
+                    case "grid":
+                    default:
+                        DataTable.addRow();
+                        break;
+                }
     		},
 
 

@@ -437,11 +437,11 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 				// update
 				if (data.id && $$(ids.kanban).exists(data.id)) {
-					$$(ids.kanban).updateItem(data.id, _logic.convertData(data));
+					$$(ids.kanban).updateItem(data.id, data);
 				}
 				// insert
 				else {
-					$$(ids.kanban).add(_logic.convertData(data));
+					$$(ids.kanban).add(data);
 				}
 
 			},
@@ -452,6 +452,15 @@ export default class ABWorkObjectKanBan extends OP.Component {
 					if (list && list.unselect)
 						list.unselect();
 				});
+
+			},
+
+			addCard: () => {
+
+				_logic.unselect();
+
+				// show the side form
+				KanbanSide.show();
 
 			},
 
@@ -508,6 +517,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 		this.hide = _logic.hide;
 		this.show = _logic.show;
 		this.objectLoad = _logic.objectLoad;
+		this.addCard = _logic.addCard;
 		this.refresh = _logic.loadData;
 
 	}
