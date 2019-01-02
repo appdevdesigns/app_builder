@@ -985,19 +985,11 @@ export default class RowFilter extends OP.Component {
 					case 'not_contains':
 					case 'equals':
 					case 'not_equal':
-						// clear and disable the value field
-						$viewCond.$$(ids.inputValue).showBatch("string");
 						_logic.onChange();
 						break;
-
 
 					case 'is_current_user':
 					case 'is_not_current_user':
-						// clear and disable the value field
-						$viewCond.$$(ids.inputValue).showBatch("empty");
-						_logic.onChange();
-						break;
-
 					case 'same_as_user':
 					case 'not_same_as_user':
 						// clear and disable the value field
