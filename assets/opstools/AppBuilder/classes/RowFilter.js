@@ -1662,7 +1662,7 @@ export default class RowFilter extends OP.Component {
 
 			},
 
-			dataCollectionValid: function (rowData, rule, compareValue) {
+			dataCollectionValid: function (rowData, columnName, rule, compareValue) {
 
 				var result = false;
 
@@ -1671,21 +1671,53 @@ export default class RowFilter extends OP.Component {
 
 				if (!_View)
 					return result;
+					
+				if (columnName) {
+					rowData = rowData[columnName] || {};
+				}
 
 				var dc = _View.pageRoot().dataCollections(dc => dc.id == compareValue)[0];
 				if (!dc)
 					return result;
+					
+				
+				return Promise.resolve()
 
-				switch (rule) {
-					case 'in_data_collection':
-						result = (dc.getData(d => d.id == rowData.id).length > 0);
-						break;
-					case 'not_in_data_collection':
-						result = (dc.getData(d => d.id == rowData.id).length < 1);
-						break;
-				}
+					// get data
+					.then(() => {
 
-				return result;
+						return new Promise((next, err) => {
+
+							var data = dc.getData();
+							if (data.length > 0) return next();
+
+							// load data if not already loaded
+							dc.loadData()
+								.catch(err)
+								.then(() => {
+
+									next();
+
+								});
+						});
+
+					})
+
+					// populate data into pivot
+					.then(() => {
+
+						switch (rule) {
+							case 'in_data_collection':
+								result = (dc.getData(d => d.id == rowData.id).length > 0);
+								break;
+							case 'not_in_data_collection':
+								result = (dc.getData(d => d.id == rowData.id).length < 1);
+								break;
+						}
+						
+						return result;
+
+					});
 
 			},
 			
@@ -1714,7 +1746,7 @@ export default class RowFilter extends OP.Component {
 						break;
 					case 'in_data_collection':
 					case 'not_in_data_collection':
-						return _logic.dataCollectionValid(rowData, rule, compareValue);
+						return _logic.dataCollectionValid(rowData, columnName, rule, compareValue);
 						break;
 				}
 				
