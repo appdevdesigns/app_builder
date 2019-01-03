@@ -1114,24 +1114,25 @@ console.error('TODO: toolbarPermission()');
             loadData: function() {
 
 				// update ABViewDataCollection settings
-				let filterConditions = {};
-				if (CurrentObject &&
-					CurrentObject.objectWorkspace &&
-					CurrentObject.objectWorkspace.filterConditions)
-					filterConditions = CurrentObject.objectWorkspace.filterConditions;
+				var wheres = {};
+				if (CurrentObject.workspaceFilterConditions && 
+					CurrentObject.workspaceFilterConditions.rules &&
+					CurrentObject.workspaceFilterConditions.rules.length > 0) {
+					wheres = CurrentObject.workspaceFilterConditions;
+				}
 
-				let sortFields = [];
-				if (CurrentObject &&
-					CurrentObject.objectWorkspace &&
-					CurrentObject.objectWorkspace.sortFields)
-					sortFields = CurrentObject.objectWorkspace.sortFields;
+				var sorts = {};
+				if (CurrentObject.workspaceSortFields &&
+					CurrentObject.workspaceSortFields.length > 0) {
+					sorts = CurrentObject.workspaceSortFields;
+				}
 
 				CurrentDc.settings = {
 					object: CurrentObject.id,
 					objectUrl: CurrentObject.urlPointer(),
 					objectWorkspace: {
-						filterConditions: filterConditions,
-						sortFields: sortFields
+						filterConditions: wheres,
+						sortFields: sorts
 					}
 				};
 				CurrentDc.clearAll();
@@ -1147,6 +1148,9 @@ console.error('TODO: toolbarPermission()');
 
                     // now update the rest of the toolbar for this view:
                     _logic.refreshToolBarView();
+
+                    // save current view
+                    CurrentObject.save();
                 }
             },
 
@@ -1205,7 +1209,7 @@ console.error('TODO: toolbarPermission()');
                     icon = "fa-columns";
                 }
                 $$(ids.viewMenu).define('data', [{
-                    value: `View: <span class="fa ${icon}"></span> <b>${CurrentObject.workspaceViews.getCurrentView().name}<b/>`,
+                    value: `View: <span class="fa ${icon}"></span> <b>${CurrentObject.workspaceViews.getCurrentView().name}</b>`,
                     id: ids.viewMenuButton,
                     submenu,
                 }]);
