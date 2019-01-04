@@ -63,7 +63,7 @@ export default class RowFilter {
 
 				// split lines
 				let dataRows = reader.result
-					.split('\n')
+					.split(/\r\n|\n|\r/) // CRLF = \r\n; LF = \n; CR = \r;
 					.filter(row => row && row.length > 0);
 
 				// split columns

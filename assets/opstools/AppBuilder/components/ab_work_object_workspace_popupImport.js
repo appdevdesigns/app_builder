@@ -361,6 +361,8 @@ export default class ABWorkObjectPopupImport extends OP.Component {
 			 */
 			import: () => {
 
+				$$(ids.importButton).disable();
+
 				// Show loading cursor
 				$$(ids.form).showProgress({ type: "icon" });
 
