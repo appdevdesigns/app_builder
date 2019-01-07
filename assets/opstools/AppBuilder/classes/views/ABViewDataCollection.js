@@ -1694,8 +1694,10 @@ export default class ABViewDataCollection extends ABView {
 		if (this.settings.loadAll) {
 			delete cond.limit;
 		}
+		
+		var allOperations = [];
 
-		return Promise.resolve()
+		allOperations.push(Promise.resolve()
 			.then(() => {
 
 				// check data status of link data collection and listen change cursor event
@@ -1801,8 +1803,33 @@ export default class ABViewDataCollection extends ABView {
 
 				});
 
-			});
+			})
+		);
 
+		wheres.rules.forEach((rule) => {
+			// if this collection is filtered by data collections we need to load them in case we need to validate from them later
+			if (rule.rule == "in_data_collection" || rule.rule == "not_in_data_collection") {
+
+				var dc = this.pageRoot().dataCollections(dc => dc.id == rule.value)[0];
+				
+				if (dc) {
+					var data = dc.getData();
+					if (data.length == 0) {
+						
+						// load data if not already loaded
+						allOperations.push(dc.loadData()
+							.catch(err => {
+								console.error("Data Collection: ", dc.id , " did not load. ", err)
+							})
+						);
+						
+					}
+				}
+				
+			}
+		})
+
+		return Promise.all(allOperations);
 	}
 
 	reloadData() {

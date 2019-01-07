@@ -1677,47 +1677,23 @@ export default class RowFilter extends OP.Component {
 				}
 
 				var dc = _View.pageRoot().dataCollections(dc => dc.id == compareValue)[0];
-				if (!dc)
-					return result;
 					
+				switch (rule) {
+					case 'in_data_collection':
+						if (!dc)
+							return false;
+							
+						result = (dc.getData(d => d.id == rowData.id).length > 0);
+						break;
+					case 'not_in_data_collection':
+						if (!dc)
+							return true;
+							
+						result = (dc.getData(d => d.id == rowData.id).length < 1);
+						break;
+				}
 				
-				return Promise.resolve()
-
-					// get data
-					.then(() => {
-
-						return new Promise((next, err) => {
-
-							var data = dc.getData();
-							if (data.length > 0) return next();
-
-							// load data if not already loaded
-							dc.loadData()
-								.catch(err)
-								.then(() => {
-
-									next();
-
-								});
-						});
-
-					})
-
-					// populate data into pivot
-					.then(() => {
-
-						switch (rule) {
-							case 'in_data_collection':
-								result = (dc.getData(d => d.id == rowData.id).length > 0);
-								break;
-							case 'not_in_data_collection':
-								result = (dc.getData(d => d.id == rowData.id).length < 1);
-								break;
-						}
-						
-						return result;
-
-					});
+				return result;
 
 			},
 			
