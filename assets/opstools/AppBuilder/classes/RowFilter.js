@@ -1333,7 +1333,7 @@ export default class RowFilter extends OP.Component {
 
 					var condResult;
 					
-					if (typeof fieldInfo.key == "undefined")
+					if (typeof fieldInfo.key == "undefined" && fieldInfo.id != "this_object")
 						fieldInfo.key = "connectField"; // if you are looking at the parent object it won't have a key to analyze
 
 					switch (fieldInfo.key) {
