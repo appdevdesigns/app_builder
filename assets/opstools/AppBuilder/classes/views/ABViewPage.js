@@ -170,9 +170,12 @@ export default class ABViewPage extends ABViewContainer {
             comp.init(options);
 
             // initialize data sources
-            this.pageRoot().dataCollections().forEach((dc) => {
-                dc.init();
-            });
+            let pageRoot = this.pageRoot();
+            if (pageRoot) {
+                pageRoot.dataCollections().forEach((dc) => {
+                    dc.init();
+                });
+            }
 
 
         };
@@ -448,9 +451,12 @@ export default class ABViewPage extends ABViewContainer {
             comp.init(options);
 
             // initialize data sources
-            this.pageRoot().dataCollections().forEach((dc) => {
-                dc.init();
-            });
+            let pageRoot = this.pageRoot();
+            if (pageRoot) {
+                pageRoot.dataCollections().forEach((dc) => {
+                    dc.init();
+                });
+            }
 
         }
 
