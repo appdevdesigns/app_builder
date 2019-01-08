@@ -134,7 +134,7 @@ if (TEST_RUN) {
     console.log(`
 
 ////
-//// Test Run : no actualy updates will be made.
+//// Test Run : no actual updates will be made.
 ////
 
 
@@ -206,7 +206,7 @@ AD.test.sails.lift({
 
 
     console.log();
-    console.log('Event: Calculating Charges ... ');
+    console.log('Event: Fixing Account Holders ');
 
     var hashRegistrations = {};
     var hashPacketsNeedingChange = {};

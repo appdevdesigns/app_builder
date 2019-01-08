@@ -112,7 +112,8 @@ function MONTH(dateString) {
 	var dataDate = new Date(dateString);
 	if (!dataDate) return 0
 
-	return dataDate.getMonth();
+	// Start at 0
+	return dataDate.getMonth() + 1;
 }
 
 function DATE(dateString) {
