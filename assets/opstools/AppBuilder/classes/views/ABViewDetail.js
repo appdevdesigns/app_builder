@@ -492,6 +492,11 @@ export default class ABViewDetail extends ABViewContainer {
 		// set settings to component
 		newView.settings = newView.settings || {};
 		newView.settings.fieldId = field.id;
+
+		// keep alias to support Query that contains alias name
+		// [alias].[columnName]
+		newView.settings.alias = field.alias;
+
 		// TODO : Default settings
 
 		newView.position.y = yPosition;
