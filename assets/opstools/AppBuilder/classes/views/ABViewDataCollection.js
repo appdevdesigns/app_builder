@@ -476,7 +476,7 @@ export default class ABViewDataCollection extends ABView {
 									view: "button",
 									name: "buttonFilter",
 									label: L("ab.component.datacollection.settings", "*Settings"),
-									icon: "fa fa-gear",
+									icon: "gear",
 									type: "icon",
 									badge: 0,
 									click: function () {
@@ -497,7 +497,7 @@ export default class ABViewDataCollection extends ABView {
 									view: "button",
 									name: "buttonSort",
 									label: L("ab.component.datacollection.settings", "*Settings"),
-									icon: "fa fa-gear",
+									icon: "gear",
 									type: "icon",
 									badge: 0,
 									click: function () {
@@ -546,7 +546,7 @@ export default class ABViewDataCollection extends ABView {
 			return {
 				id: obj.id,
 				value: obj.label,
-				icon: 'fa fa-database'
+				icon: 'database'
 			}
 		});
 		sources = sources.concat(objects);
@@ -556,7 +556,7 @@ export default class ABViewDataCollection extends ABView {
 			return {
 				id: q.id,
 				value: q.label,
-				icon: 'fa fa-cubes',
+				icon: 'cubes',
 				disabled: q.isDisabled()
 			}
 		});

@@ -59,7 +59,7 @@ export default class ABViewFormPropertyDisplayRule extends OP.Component {
 						cols: [
 							{
 								view: "button",
-								icon: "fa fa-plus",
+								icon: "plus",
 								type: "iconButton",
 								label: labels.component.addNewRule,
 								width: 150,

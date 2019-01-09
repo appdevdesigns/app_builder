@@ -144,7 +144,7 @@ export default class ABViewReport extends ABViewPage {
 						{
 							view: "button",
 							type: "iconButton",
-							icon: "fa fa-print",
+							icon: "print",
 							label: 'Print',
 							align: "right",
 							autowidth: true,

@@ -358,7 +358,7 @@ export default class AB_Work_Object_Workspace_PopupMassUpdate extends OP.Compone
 						{ view: 'label', label: "<b>{0}</b>".replace("{0}", " To "), width: 30 },
 						{},
 						{
-							view: 'button', icon: "fa fa-trash", type: "icon", width: 30, click: function () {
+							view: 'button', icon: "trash", type: "icon", width: 30, click: function () {
 								var update_item = this.getParentView(),
 									update_panel = update_item.getParentView();
 

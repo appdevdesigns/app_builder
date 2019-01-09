@@ -130,7 +130,7 @@ export default class RowUpdater extends OP.Component {
 						{
 							// "Add" button
 							view: "button",
-							icon: "fa fa-plus",
+							icon: "plus",
 							type: "icon",
 							width: 30,
 							click: function () {
@@ -144,7 +144,7 @@ export default class RowUpdater extends OP.Component {
 						{
 							// "Remove" button
 							view: "button",
-							icon: "fa fa-trash",
+							icon: "trash",
 							type: "icon",
 							width: 30,
 							click: function () {
@@ -163,7 +163,7 @@ export default class RowUpdater extends OP.Component {
 				return {
 					view: "button",
 					id: ids.addNew,
-					icon: "fa fa-plus",
+					icon: "plus",
 					type: "iconButton",
 					label: labels.component.addNew,
 					click: function () {
