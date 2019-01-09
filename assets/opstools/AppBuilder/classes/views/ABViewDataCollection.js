@@ -1153,15 +1153,25 @@ export default class ABViewDataCollection extends ABView {
 					values.id = values[obj.PK()];
 
 				if (this.__dataCollection.exists(values.id)) {
-					// normalize data before update data collection
-					var model = obj.model();
-					model.normalizeData(values);
-					this.__dataCollection.updateItem(values.id, values);
+					
+					if (this.__filterComponent.isValid(values)) {
+						// normalize data before update data collection
+						var model = obj.model();
+						model.normalizeData(values);
+						this.__dataCollection.updateItem(values.id, values);
 
-					// If the update item is current cursor, then should tell components to update.
-					var currData = this.getCursor();
-					if (currData && currData.id == values.id) {
-						this.emit("changeCursor", currData);
+						// If the update item is current cursor, then should tell components to update.
+						var currData = this.getCursor();
+						if (currData && currData.id == values.id) {
+							this.emit("changeCursor", currData);
+						}
+					} else {
+						// If the item is current cursor, then the current cursor should be cleared.
+						var currData = this.getCursor();
+						if (currData && currData.id == values.id)
+							this.emit("changeCursor", null);
+
+						this.__dataCollection.remove(values.id);
 					}
 				}
 				// filter before add new record
@@ -1694,7 +1704,7 @@ export default class ABViewDataCollection extends ABView {
 		if (this.settings.loadAll) {
 			delete cond.limit;
 		}
-
+		
 		return Promise.resolve()
 			.then(() => {
 
@@ -1733,6 +1743,62 @@ export default class ABViewDataCollection extends ABView {
 
 					}
 
+				});
+
+			})
+			// load data collection when using "(not_)in_data_collection" as a filter
+			.then(() => {
+				return new Promise((resolve, reject) => {
+					
+					var dcFilters = [];
+					
+					wheres.rules.forEach((rule) => {
+						// if this collection is filtered by data collections we need to load them in case we need to validate from them later
+						if (rule.rule == "in_data_collection" || rule.rule == "not_in_data_collection") {
+
+							dcFilters.push(
+								new Promise((next, err) => {
+									var dc = this.pageRoot().dataCollections(dc => dc.id == rule.value)[0];
+									
+									if (!dc) return next();
+
+									switch (dc.dataStatus) {
+
+										case dc.dataStatusFlag.notInitial:
+											dc.loadData().catch(err);
+											// no break;
+
+										case dc.dataStatusFlag.initializing:
+
+											// wait until the link dc initialized data
+											// NOTE: if linked data collections are recursive, then it is infinity looping.
+											this.eventAdd({
+												emitter: dc,
+												eventName: "initializedData",
+												listener: () => {
+
+													// go next
+													next();
+
+												}
+											});
+
+											break;
+
+										case dc.dataStatusFlag.initialized:
+											next();
+											break;
+
+									}
+								})
+							)
+						}
+					})
+					
+					Promise.all(dcFilters).then(() => {
+						resolve();
+					}).catch(reject);
+					
 				});
 
 			})
