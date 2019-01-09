@@ -866,12 +866,12 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                     // }
                     let groupMap = {};
                     CurrentObject.fields().forEach(f => {
-                        if (f.columnName == settings.groupBy) return;
+                        // if (f.columnName == settings.groupBy) return;
 
                         switch (f.key)  {
                             case "number":
-                            case "calculate":
-                            case "formula":
+                            // case "calculate":
+                            // case "formula":
                                 groupMap[f.columnName] = [f.columnName, "sum"];
                                 break;
                             case "connectObject":
@@ -909,16 +909,16 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                                     listData.forEach(r => {
                                         var val = prop(r);
 
-                                        // "false" to boolean
-                                        if (f.key == "boolean") {
+                                        // // "false" to boolean
+                                        // if (f.key == "boolean") {
 
-                                            try {
-                                                val = JSON.parse(val || 0);
-                                            }
-                                            catch (err) {
-                                                val = false;
-                                            }
-                                        }
+                                        //     try {
+                                        //         val = JSON.parse(val || 0);
+                                        //     }
+                                        //     catch (err) {
+                                        //         val = false;
+                                        //     }
+                                        // }
 
                                         // count only exists data
                                         if (val) {
@@ -1040,21 +1040,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                             // css: { 'text-align': 'center' }
                         });
                     }
-                    
-                    if (settings.isEditable == 0) {
-                        columnHeaders.forEach(function(col) {
-                            
-                            if (col.template == '<div class="ab-boolean-display">{common.checkbox()}</div>') {
-                                col.template = function(obj, common, value){
-                                    if (value)
-                                        return "<div class='webix_icon fa-check-square-o'></div>";
-                                    else
-                                        return "<div class='webix_icon fa-square-o'></div>";
-                                }
-                            }
-                                
-                        })
-                    }
+
 
                     if (settings.massUpdate) {
                         columnHeaders.unshift({

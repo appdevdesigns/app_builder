@@ -475,6 +475,9 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 		config.template = function (row) {
 
+			if (row.$group)
+				return row[field.columnName];
+
 			var node = document.createElement("div");
 			node.classList.add("connect-data-values");
 			if (typeof width != "undefined") {
