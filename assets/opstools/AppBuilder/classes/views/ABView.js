@@ -368,8 +368,7 @@ export default class ABView extends ABViewBase {
 
 		// if current page is the root page, then return itself.
 		if (this.isRoot() &&
-			this.key == 'page' &&
-			this.key == 'reportPage') {
+			(this.key == 'page' || this.key == 'reportPage')) {
 			return this;
 		}
 
