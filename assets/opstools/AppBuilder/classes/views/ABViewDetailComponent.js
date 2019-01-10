@@ -143,6 +143,13 @@ export default class ABViewDetailComponent extends ABViewWidget {
 		if (object == null) return null;
 
 		var field = object.fields((v) => v.id == this.settings.fieldId)[0];
+
+		// set .alias to support queries that contains alias name
+		// [aliasName].[columnName]
+		if (field && this.settings.alias) {
+			field.alias = this.settings.alias;
+		}
+
 		return field;
 	}
 

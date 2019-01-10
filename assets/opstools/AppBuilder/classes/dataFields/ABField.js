@@ -666,7 +666,7 @@ export default class ABField extends ABFieldBase {
 	dataValue(rowData) {
 
 		let propName = "{objectName}.{columnName}"
-			.replace('{objectName}', this.object.name)
+			.replace('{objectName}', this.alias || this.object.name)
 			.replace('{columnName}', this.columnName);
 
 		return rowData[this.columnName] || rowData[propName] || "";
