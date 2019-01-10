@@ -47,7 +47,7 @@ export default class AB_Work_Interface_Workspace_Details_Properties extends OP.C
                         },
                         {
                             view: "icon", 
-                            icon: "fa fa-info-circle",
+                            icon: "info-circle",
                             tooltip: labels.component.propertiesTipText,
                             on: {
                                 onItemClick: function() {

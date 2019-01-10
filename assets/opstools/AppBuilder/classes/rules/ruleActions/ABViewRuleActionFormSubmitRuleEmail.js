@@ -153,7 +153,7 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 										{
 											view: "button",
 											type: "icon",
-											icon: "fa fa-plus",
+											icon: "plus",
 											label: "Add a recipient",
 											width: 150,
 											click: () => {
@@ -397,7 +397,7 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 						{
 							view: "button",
 							type: "icon",
-							icon: "fa fa-trash-o",
+							icon: "trash-o",
 							width: 32,
 							click: function () {
 

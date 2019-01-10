@@ -36,7 +36,7 @@ export default class AB_Work_Interface_Workspace_Editor_Components extends OP.Co
 			id: ids.component,
 			view: "button",
 			type: "iconButton",
-			icon: "fa fa-plus",
+			icon: "plus",
 			label: labels.component.addWidget,
 			align: "right",
 			autowidth: true,

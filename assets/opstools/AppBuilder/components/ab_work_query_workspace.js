@@ -64,7 +64,7 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 							view: 'button',
 							id: ids.modeButton,
 							label: labels.design,
-							icon: "fa fa-tasks",
+							icon: "tasks",
 							type: "icon",
 							width: 140,
 							click: function () {
@@ -81,7 +81,7 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 							view: 'button',
 							id: ids.loadAllButton,
 							label: labels.loadAll,
-							icon: "fa fa-download",
+							icon: "download",
 							type: "icon",
 							width: 140,
 							hidden: true,
@@ -171,7 +171,7 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 				// Run
 				if (mode == 'run') {
 					$$(ids.modeButton).define('label', labels.design);
-					$$(ids.modeButton).define('icon', "fa fa-tasks");
+					$$(ids.modeButton).define('icon', "tasks");
 					$$(ids.loadAllButton).show();
 
 					DataTable.populateObjectWorkspace(CurrentQuery);
@@ -181,7 +181,7 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 				// Design
 				else {
 					$$(ids.modeButton).define('label', labels.run);
-					$$(ids.modeButton).define('icon', "fa fa-cubes");
+					$$(ids.modeButton).define('icon', "cubes");
 					$$(ids.loadAllButton).hide();
 
 					$$(QueryDesignComponent.ui.id).show(true);

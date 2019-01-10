@@ -169,7 +169,7 @@ export default class ABViewContainer extends ABView {
 
 					// specific viewId to .name, it will be used to save view position
 					name: child.id,
-					icon: 'fa fa-arrows',
+					icon: 'arrows',
 					css: 'ab-widget-container',
 					body: {
 						rows: [

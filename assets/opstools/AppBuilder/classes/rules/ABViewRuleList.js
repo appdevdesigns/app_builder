@@ -110,7 +110,7 @@ export default class ABViewRuleList {
 					{ view: "label", label: labels.component.header },
 					{
 						view: "button",
-						icon: "fa fa-plus",
+						icon: "plus",
 						type: "iconButton",
 						label: labels.component.addNewRule,
 						width: 150,
