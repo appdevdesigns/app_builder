@@ -625,7 +625,7 @@ export default class ABViewGrid extends ABViewWidget  {
 									view: view,
 									name: "buttonFieldsVisible",
 									label: L("ab.component.label.settings", "*Settings"),
-									icon: "gear",
+									icon: "fa fa-gear",
 									type: "icon",
 									badge: 0,
 									click: function () {
@@ -646,7 +646,7 @@ export default class ABViewGrid extends ABViewWidget  {
 									view: view,
 									id: ids.gridFilterMenuButton,
 									label: L("ab.component.label.settings", "*Settings"),
-									icon: "gear",
+									icon: "fa fa-gear",
 									type: "icon",
 									badge: 0,
 									click: function () {
@@ -686,7 +686,7 @@ export default class ABViewGrid extends ABViewWidget  {
 									view: view,
 									name: "buttonFieldsFreeze",
 									label: L("ab.component.label.settings", "*Settings"),
-									icon: "gear",
+									icon: "fa fa-gear",
 									type: "icon",
 									badge: 0,
 									click: function(){
@@ -708,7 +708,7 @@ export default class ABViewGrid extends ABViewWidget  {
 									view: view,
 									name: "buttonSummaryFields",
 									label: L("ab.component.label.settings", "*Settings"),
-									icon: "gear",
+									icon: "fa fa-gear",
 									type: "icon",
 									badge: 0,
 									click: function(){
@@ -730,7 +730,7 @@ export default class ABViewGrid extends ABViewWidget  {
 									view: view,
 									name: "buttonCountFields",
 									label: L("ab.component.label.settings", "*Settings"),
-									icon: "gear",
+									icon: "fa fa-gear",
 									type: "icon",
 									badge: 0,
 									click: function(){
@@ -1277,7 +1277,7 @@ export default class ABViewGrid extends ABViewWidget  {
 								view: "button",
 								id: ids.buttonMassUpdate,
 								label: L("ab.component.label.massUpdate", "*Edit fields"),
-								icon: "pencil-square-o",
+								icon: "fa fa-pencil-square-o",
 								type: "icon",
 								badge: 0,
 								disabled:true,
@@ -1290,7 +1290,7 @@ export default class ABViewGrid extends ABViewWidget  {
 								view: "button",
 								id: ids.buttonDeleteSelected,
 								label: L("ab.component.label.deleteSelected", "*Delete Records"),
-								icon: "trash",
+								icon: "fa fa-trash",
 								type: "icon",
 								badge: 0,
 								disabled:true,
@@ -1303,7 +1303,7 @@ export default class ABViewGrid extends ABViewWidget  {
 								view: "button",
 								id: ids.buttonFilter,
 								label: L("ab.component.label.filterFields", "*Add filters"),
-								icon: "filter",
+								icon: "fa fa-filter",
 								type: "icon",
 								badge: 0,
 								autowidth: true,
@@ -1315,7 +1315,7 @@ export default class ABViewGrid extends ABViewWidget  {
 								view: "button",
 								id: ids.buttonSort,
 								label: L("ab.component.label.sortFields", "*Apply sort"),
-								icon: "sort",
+								icon: "fa fa-sort",
 								type: "icon",
 								badge: 0,
 								autowidth: true,
@@ -1327,7 +1327,7 @@ export default class ABViewGrid extends ABViewWidget  {
 								view: "button",
 								id: ids.buttonExport,
 								label: L("ab.component.label.export", "*Export"),
-								icon: "print",
+								icon: "fa fa-print",
 								type: "icon",
 								badge: 0,
 								autowidth: true,
@@ -1340,7 +1340,7 @@ export default class ABViewGrid extends ABViewWidget  {
 								view: view,
 								id: ids.buttonExport,
 								label: labels.component.export,
-								icon: "download",
+								icon: "fa fa-download",
 								type: "icon",
 								click: function() {
 									_logic.toolbarButtonExport(this.$view);
@@ -1359,7 +1359,7 @@ export default class ABViewGrid extends ABViewWidget  {
 								view: "button",
 								id: ids.resetFilterButton,
 								label: L("ab.component.label.resetFilter", "*Reset Filter"),
-								icon: "ban",
+								icon: "fa fa-ban",
 								type: "icon",
 								badge: 0,
 								autowidth: true,
@@ -1550,7 +1550,7 @@ export default class ABViewGrid extends ABViewWidget  {
 						var filterRuleButton = {
 							view: "button",
 							label: qr.ruleName,
-							icon: "filter",
+							icon: "fa fa-filter",
 							type: "icon",
 							badge: 0,
 							autowidth: true,
@@ -1991,6 +1991,12 @@ export default class ABViewGrid extends ABViewWidget  {
 	
 
 		});
+
+	}
+
+	copyUpdateProperyList() {
+
+		return ['dataSource', 'detailsPage', 'detailsTab', 'editPage', 'editTab'];
 
 	}
 

@@ -14,6 +14,7 @@ function L(key, altText) {
 }
 
 var ABViewPropertyDefaults = {
+	datacollection: null,
 	filterConditions: {}
 }
 
@@ -406,6 +407,10 @@ export default class ABViewConditionalContainer extends ABViewContainer {
 		this.__filterComponent.viewLoad(this);
 		this.__filterComponent.setValue(this.settings.filterConditions || ABViewPropertyDefaults.filterConditions);
 
+	}
+
+	copyUpdateProperyList() {
+		return ['datacollection']
 	}
 
 

@@ -22,6 +22,7 @@ var ABViewDetailDefaults = {
 }
 
 var ABViewDetailPropertyComponentDefaults = {
+	datacollection: null,
 	showLabel: true,
 	labelPosition: 'left',
 	labelWidth: 120,
@@ -197,7 +198,7 @@ export default class ABViewDetail extends ABViewContainer {
 				template: _logic.listTemplate,
 				type: {
 					markCheckbox: function (item) {
-						return "<span class='check webix_icon fa-" + (item.selected ? "check-" : "") + "square-o'></span>";
+						return "<span class='check webix_icon fa fa-" + (item.selected ? "check-" : "") + "square-o'></span>";
 					}
 				},
 				onClick: {
@@ -502,6 +503,12 @@ export default class ABViewDetail extends ABViewContainer {
 
 		// update properties when a sub-view is destroyed
 		newView.once('destroyed', () => { ABViewDetail.propertyEditorPopulate(App, ids, this); });
+
+	}
+
+	copyUpdateProperyList() {
+
+		return ['datacollection'];
 
 	}
 

@@ -108,7 +108,7 @@ export default class ABChooseConfig extends OP.Component {
 			                    	label: labels.component.buttonBackToList,
 									autowidth: true,
 									// type: "icon",
-									// icon: "plus",
+									// icon: "fa fa-plus",
 									click: () => {
 										
 										this.emit('view.list');
@@ -155,7 +155,7 @@ export default class ABChooseConfig extends OP.Component {
 													label: labels.component.buttonCreateRelayUser,
 													autowidth: true,
 													// type: "icon",
-													// icon: "plus",
+													// icon: "fa fa-plus",
 													click: () => {
 														
 														_logic.buttonCreateRelayUser();

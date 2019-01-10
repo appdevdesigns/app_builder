@@ -210,7 +210,7 @@ export default class ABField extends ABFieldBase {
 			rows: [
 				// {
 				// 	view: "label",
-				// 	label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', Field.icon).replace('{1}', Field.menuName)
+				// 	label: "<span class='webix_icon fa fa-{0}'></span>{1}".replace('{0}', Field.icon).replace('{1}', Field.menuName)
 				// },
 				{
 					view: "text",
@@ -555,7 +555,7 @@ export default class ABField extends ABFieldBase {
 
 		if (isObjectWorkspace) {
 			if (this.settings.showIcon) {
-				config.header = '<span class="webix_icon fa-{icon}"></span>'.replace('{icon}', this.fieldIcon() ) + config.header;
+				config.header = '<span class="webix_icon fa fa-{icon}"></span>'.replace('{icon}', this.fieldIcon() ) + config.header;
 			}
 		}
 
