@@ -78,7 +78,7 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 									{
 										id: ids.searchText,
 										view: "search",
-										icon: "search",
+										icon: "fa fa-search",
 										label: labels.component.listSearch,
 										labelWidth: 80,
 										placeholder: labels.component.searchPlaceholder,

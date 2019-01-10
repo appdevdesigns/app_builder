@@ -899,7 +899,7 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 							// "Remove" button  
 							view: "button",
 							id: ids.buttonDelete,
-							icon: "trash",
+							icon: "fa fa-trash",
 							type: "icon",
 							width: 30,
 							hidden: true,
