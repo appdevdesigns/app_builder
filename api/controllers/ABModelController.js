@@ -61,12 +61,6 @@ function updateRelationValues(object, id, updateRelationParams) {
 
     var updateTasks = [];
 
-
-    // create a new query to update relation data
-    // NOTE: when use same query, it will have a "created duplicate" error
-    var query = object.model().query();
-
-
     //// 
     //// We are given a current state of values that should be related to our object.
     //// It is not clear if these are new relations or existing ones, so we first
@@ -79,82 +73,177 @@ function updateRelationValues(object, id, updateRelationParams) {
     // - (insert, update, patch, delete, relate, unrelate, increment, decrement) and only once per query builder
     if (updateRelationParams != null && Object.keys(updateRelationParams).length > 0) {
 
+        let clearRelate = (obj, columnName, rowId) => {
+
+            return new Promise((resolve, reject) => {
+
+                // WORKAROUND : HRIS tables have non null columns
+                if (obj.isExternal)
+                    return resolve();
+
+                // create a new query to update relation data
+                // NOTE: when use same query, it will have a "created duplicate" error
+                let query = obj.model().query();
+
+                let clearRelationName = AppBuilder.rules.toFieldRelationFormat(columnName);
+
+                query.where(obj.PK(), rowId).first()
+                    .catch(err => reject(err))
+                    .then(record => {
+
+                        if (record == null) return resolve();
+
+                        let fieldLink = obj.fields(f => f.columnName == columnName)[0];
+                        if (fieldLink == null) return resolve();
+
+                        let objectLink = fieldLink.object;
+                        if (objectLink == null) return resolve();
+
+                        record
+                            .$relatedQuery(clearRelationName)
+                            .alias("#column#_#relation#".replace('#column#', columnName).replace('#relation#', clearRelationName)) // FIX: SQL syntax error because alias name includes special characters
+                            .unrelate()
+                            .catch(err => reject(err))
+                            .then(() => { resolve(); });
+
+                    });
+
+            });
+        };
+
+        let setRelate = (obj, columnName, rowId, value) => {
+
+            return new Promise((resolve, reject) => {
+
+                // create a new query to update relation data
+                // NOTE: when use same query, it will have a "created duplicate" error
+                let query = obj.model().query();
+
+                let relationName = AppBuilder.rules.toFieldRelationFormat(columnName);
+
+                query.where(obj.PK(), rowId).first()
+                    .catch(err => reject(err))
+                    .then(record => {
+
+                        if (record == null) return resolve();
+
+                        record.$relatedQuery(relationName)
+                        .alias("#column#_#relation#".replace('#column#', columnName).replace('#relation#', relationName)) // FIX: SQL syntax error because alias name includes special characters
+                            .relate(value)
+                            .catch(err => reject(err))
+                            .then(() => { resolve(); });
+
+                    });
+            });
+
+        };
+
         // update relative values
         Object.keys(updateRelationParams).forEach((colName) => {
 
-            updateTasks.push(() => {
+            // SPECIAL CASE: 1-to-1 relation self join,
+            // Need to update linked data
+            let field = object.fields(f => f.columnName == colName)[0];
+            if (field &&
+                field.settings.linkObject == object.id &&
+                field.settings.linkType == 'one' &&
+                field.settings.linkViaType == 'one' &&
+                !object.isExternal) {
 
-                var clearRelationName = AppBuilder.rules.toFieldRelationFormat(colName);
+                let sourceField = field.settings.isSource ? field : field.fieldLink();
+                if (sourceField == null)
+                    return resolve();
 
-                return new Promise((resolve, reject) => {
+                let relateRowId = null;
+                if (updateRelationParams[colName]) // convert to int
+                    relateRowId = parseInt(updateRelationParams[colName]);
 
-                    // WORKAROUND : HRIS tables have non null columns
-                    if (object.isExternal)
-                        return resolve();
+                // clear linked data
+                updateTasks.push(() => {
 
-                    query.where(object.PK(), id).first()
-                        .catch(err => reject(err))
-                        .then(record => {
+                    return new Promise((resolve, reject) => {
 
-                            if (record == null) return resolve();
+                        let update = {};
+                        update[sourceField.columnName] = null;
 
-                            var fieldLink = object.fields(f => f.columnName == colName)[0];
-                            if (fieldLink == null) return resolve();
+                        let query = object.model().query();
+                        query.update(update)
+                            .clearWhere()
+                            .where(object.PK(), id)
+                            .orWhere(object.PK(), relateRowId)
+                            .orWhere(sourceField.columnName, id)
+                            .orWhere(sourceField.columnName, relateRowId)
+                            .catch(err => reject(err))
+                            .then(() => { resolve(); });
 
-                            var objectLink = fieldLink.object;
-                            if (objectLink == null) return resolve();
+                    });
 
-                            record
-                                .$relatedQuery(clearRelationName)
-                                .alias("#column#_#relation#".replace('#column#', colName).replace('#relation#', clearRelationName)) // FIX: SQL syntax error because alias name includes special characters
-                                .unrelate()
+                });
+
+                // set linked data
+                if (updateRelationParams[colName]) {
+                    updateTasks.push(() => { 
+
+                        return new Promise((resolve, reject) => {
+
+                            let update = {};
+                            update[sourceField.columnName] = relateRowId;
+
+                            let query = object.model().query();
+                            query.update(update)
+                                .clearWhere()
+                                .where(object.PK(), id)
                                 .catch(err => reject(err))
                                 .then(() => { resolve(); });
 
                         });
 
-                });
-            });
-
-            //     return;
-            // }
-
-            // convert relation data to array
-            if (!Array.isArray(updateRelationParams[colName])) {
-                updateRelationParams[colName] = [updateRelationParams[colName]];
-            }
-
-            // We could not insert many relation values at same time
-            // NOTE : Error: batch insert only works with Postgresql
-            updateRelationParams[colName].forEach(val => {
-
-                // insert relation values of relation
-                updateTasks.push(() => {
-
-                    return new Promise((resolve, reject) => {
-
-                        var relationName = AppBuilder.rules.toFieldRelationFormat(colName);
-
-                        query.where(object.PK(), id).first()
-                            .catch(err => reject(err))
-                            .then(record => {
-
-                                if (record == null) return resolve();
-
-                                record.$relatedQuery(relationName)
-                                .alias("#column#_#relation#".replace('#column#', colName).replace('#relation#', relationName)) // FIX: SQL syntax error because alias name includes special characters
-                                    .relate(val)
-                                    .catch(err => reject(err))
-                                    .then(() => { resolve(); });
-
-                            });
                     });
 
+                    updateTasks.push(() => { 
+
+                        return new Promise((resolve, reject) => {
+
+                            let update = {};
+                            update[sourceField.columnName] = id;
+
+                            let query = object.model().query();
+                            query.update(update)
+                                .clearWhere()
+                                .where(object.PK(), relateRowId)
+                                .catch(err => reject(err))
+                                .then(() => { resolve(); });
+
+                        });
+
+                    });
+
+                }
+
+            }
+
+            // Normal relations
+            else {
+
+                // Clear relations
+                updateTasks.push(() => { return clearRelate(object, colName, id) });
+
+                // convert relation data to array
+                if (!Array.isArray(updateRelationParams[colName])) {
+                    updateRelationParams[colName] = [updateRelationParams[colName]];
+                }
+
+                // We could not insert many relation values at same time
+                // NOTE : Error: batch insert only works with Postgresql
+                updateRelationParams[colName].forEach(val => {
+
+                    // insert relation values of relation
+                    updateTasks.push(() => { return setRelate(object, colName, id, val) });
+
                 });
 
+            }
 
-
-            });
 
         });
 

@@ -75,7 +75,7 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                             view:'button',
                             type:'htmlbutton',
                             css:'marginLeft10',
-                            label:'<span class="webix_icon fa-arrow-left"></span>',
+                            label:'<span class="webix_icon fa fa-arrow-left"></span>',
                             autowidth: true,
                             click:function(){
                                 _logic.buttonBack();

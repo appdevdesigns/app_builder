@@ -9,9 +9,8 @@
  *
  */
 
-var url = require('url');
-var AD = require('ad-utils');
-var _ = require('lodash');
+var path = require('path');
+var ABFieldDate = require(path.join(__dirname, "..", "classes", "dataFields", "ABFieldDate.js"));
 
 
 module.exports = function(req, res, next) {
@@ -227,7 +226,19 @@ function parseQueryCondition(_where, object, req, res, cb) {
                             // .then((data)=>{
 
                                 sails.log.info('.... query data : ', data);
-                                var values = data.map((d)=>{ return d[queryField.columnName] });
+                                var values = data.map((d)=>{ 
+
+                                    let result = d[queryField.columnName];
+
+                                    // Convert SQL data time format
+                                    if (result && queryField instanceof ABFieldDate) {
+                                        return queryField.toSQLFormat(result);
+                                    }
+                                    else {
+                                        return result;
+                                    }
+
+                                });
 
 
                                 // modify the condition to be the IN condition

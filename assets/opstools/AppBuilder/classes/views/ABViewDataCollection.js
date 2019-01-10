@@ -966,6 +966,8 @@ export default class ABViewDataCollection extends ABView {
 	*/
 	get datasource() {
 
+		if (!this.application) return null;
+
 		var obj = this.application.urlResolve(this.settings.objectUrl || '');
 
 		return obj;
@@ -1075,58 +1077,56 @@ export default class ABViewDataCollection extends ABView {
 				}
 
 			}
+
 			// if it is a linked object
-			else {
+			let connectedFields = this.datasource.fields(f =>
+				f.key == 'connectObject' &&
+				f.datasourceLink &&
+				f.datasourceLink.id == data.objectId
+			);
 
-				let connectedFields = this.datasource.fields(f =>
-					f.key == 'connectObject' &&
-					f.datasourceLink &&
-					f.datasourceLink.id == data.objectId
-				);
+			// update relation data
+			if (connectedFields && connectedFields.length > 0) {
 
-				// update relation data
-				if (connectedFields && connectedFields.length > 0) {
+				// various PK name
+				if (!values.id && connectedFields[0].object.PK() != 'id')
+					values.id = values[connectedFields[0].object.PK()];
 
-					// various PK name
-					if (!values.id && connectedFields[0].object.PK() != 'id')
-						values.id = values[connectedFields[0].object.PK()];
+				this.__dataCollection.find({}).forEach(d => {
 
-					this.__dataCollection.find({}).forEach(d => {
+					let updateItemData = {};
 
-						let updateItemData = {};
+					connectedFields.forEach(f => {
 
-						connectedFields.forEach(f => {
+						var updateRelateVal = values[f.fieldLink.relationName()] || {};
+						let rowRelateVal = d[f.relationName()] || {};
 
-							var updateRelateVal = values[f.fieldLink.relationName()] || {};
-							let rowRelateVal = d[f.relationName()] || {};
+						// Relate data
+						if (Array.isArray(rowRelateVal) &&
+							rowRelateVal.filter(v => v == values.id || v.id == values.id).length < 1 &&
+							isRelated(updateRelateVal, d.id)) {
 
-							// Relate data
-							if (Array.isArray(rowRelateVal) &&
-								rowRelateVal.filter(v => v == values.id || v.id == values.id).length < 1 &&
-								isRelated(updateRelateVal, d.id)) {
+							rowRelateVal.push(values);
 
-								rowRelateVal.push(values);
+							updateItemData[f.relationName()] = rowRelateVal;
+							updateItemData[f.columnName] = updateItemData[f.relationName()].map(v => v.id || v);
+						}
+						else if (!Array.isArray(rowRelateVal) &&
+							(rowRelateVal != values.id || rowRelateVal.id != values.id) &&
+							isRelated(updateRelateVal, d.id)) {
 
-								updateItemData[f.relationName()] = rowRelateVal;
-								updateItemData[f.columnName] = updateItemData[f.relationName()].map(v => v.id || v);
-							}
-							else if (!Array.isArray(rowRelateVal) &&
-								(rowRelateVal != values.id || rowRelateVal.id != values.id) &&
-								isRelated(updateRelateVal, d.id)) {
-
-								updateItemData[f.relationName()] = values;
-								updateItemData[f.columnName] = values.id || values;
-							}
-
-						});
-
-						// If this item needs to update
-						if (Object.keys(updateItemData).length > 0)
-							this.__dataCollection.updateItem(d.id, updateItemData);
+							updateItemData[f.relationName()] = values;
+							updateItemData[f.columnName] = values.id || values;
+						}
 
 					});
 
-				}
+					// If this item needs to update
+					if (Object.keys(updateItemData).length > 0)
+						this.__dataCollection.updateItem(d.id, updateItemData);
+
+				});
+
 			}
 
 
@@ -1153,15 +1153,25 @@ export default class ABViewDataCollection extends ABView {
 					values.id = values[obj.PK()];
 
 				if (this.__dataCollection.exists(values.id)) {
-					// normalize data before update data collection
-					var model = obj.model();
-					model.normalizeData(values);
-					this.__dataCollection.updateItem(values.id, values);
+					
+					if (this.__filterComponent.isValid(values)) {
+						// normalize data before update data collection
+						var model = obj.model();
+						model.normalizeData(values);
+						this.__dataCollection.updateItem(values.id, values);
 
-					// If the update item is current cursor, then should tell components to update.
-					var currData = this.getCursor();
-					if (currData && currData.id == values.id) {
-						this.emit("changeCursor", currData);
+						// If the update item is current cursor, then should tell components to update.
+						var currData = this.getCursor();
+						if (currData && currData.id == values.id) {
+							this.emit("changeCursor", currData);
+						}
+					} else {
+						// If the item is current cursor, then the current cursor should be cleared.
+						var currData = this.getCursor();
+						if (currData && currData.id == values.id)
+							this.emit("changeCursor", null);
+
+						this.__dataCollection.remove(values.id);
 					}
 				}
 				// filter before add new record
@@ -1172,87 +1182,85 @@ export default class ABViewDataCollection extends ABView {
 					this.__dataCollection.add(values, 0);
 				}
 			}
+
 			// if it is a linked object
-			else {
+			let connectedFields = this.datasource.fields(f =>
+				f.key == 'connectObject' &&
+				f.datasourceLink &&
+				f.datasourceLink.id == data.objectId
+			);
 
-				let connectedFields = this.datasource.fields(f =>
-					f.key == 'connectObject' &&
-					f.datasourceLink &&
-					f.datasourceLink.id == data.objectId
-				);
+			// update relation data
+			if (connectedFields && connectedFields.length > 0) {
 
-				// update relation data
-				if (connectedFields && connectedFields.length > 0) {
+				// various PK name
+				if (!values.id && connectedFields[0].object.PK() != 'id')
+					values.id = values[connectedFields[0].object.PK()];
 
-					// various PK name
-					if (!values.id && connectedFields[0].object.PK() != 'id')
-						values.id = values[connectedFields[0].object.PK()];
+				this.__dataCollection.find({}).forEach(d => {
 
-					this.__dataCollection.find({}).forEach(d => {
+					let updateItemData = {};
 
-						let updateItemData = {};
+					connectedFields.forEach(f => {
 
-						connectedFields.forEach(f => {
+						var updateRelateVal = values[f.fieldLink.relationName()] || {};
+						let rowRelateVal = d[f.relationName()] || {};
 
-							var updateRelateVal = values[f.fieldLink.relationName()] || {};
-							let rowRelateVal = d[f.relationName()] || {};
+						// Unrelate data
+						if (Array.isArray(rowRelateVal) &&
+							rowRelateVal.filter(v => v == values.id || v.id == values.id).length > 0 &&
+							!isRelated(updateRelateVal, d.id)) {
 
-							// Unrelate data
-							if (Array.isArray(rowRelateVal) &&
-								rowRelateVal.filter(v => v == values.id || v.id == values.id).length > 0 &&
-								!isRelated(updateRelateVal, d.id)) {
+							updateItemData[f.relationName()] = rowRelateVal.filter(v => (v.id || v) != values.id);
+							updateItemData[f.columnName] = updateItemData[f.relationName()].map(v => v.id || v);
+						}
+						else if (!Array.isArray(rowRelateVal) &&
+							(rowRelateVal == values.id || rowRelateVal.id == values.id) &&
+							!isRelated(updateRelateVal, d.id)) {
 
-								updateItemData[f.relationName()] = rowRelateVal.filter(v => (v.id || v) != values.id);
-								updateItemData[f.columnName] = updateItemData[f.relationName()].map(v => v.id || v);
+							updateItemData[f.relationName()] = null;
+							updateItemData[f.columnName] = null;
+						}
+
+						// Relate data or Update
+						if (Array.isArray(rowRelateVal) && isRelated(updateRelateVal, d.id)) {
+
+							// update relate data
+							if (rowRelateVal.filter(v => v == values.id || v.id == values.id).length > 0) {
+								rowRelateVal.forEach((v, index) => {
+
+									if (v == values.id || v.id == values.id)
+										rowRelateVal[index] = values;
+
+								});
 							}
-							else if (!Array.isArray(rowRelateVal) &&
-								(rowRelateVal == values.id || rowRelateVal.id == values.id) &&
-								!isRelated(updateRelateVal, d.id)) {
-
-								updateItemData[f.relationName()] = null;
-								updateItemData[f.columnName] = null;
-							}
-
-							// Relate data or Update
-							if (Array.isArray(rowRelateVal) && isRelated(updateRelateVal, d.id)) {
-
-								// update relate data
-								if (rowRelateVal.filter(v => v == values.id || v.id == values.id).length > 0) {
-									rowRelateVal.forEach((v, index) => {
-
-										if (v == values.id || v.id == values.id)
-											rowRelateVal[index] = values;
-
-									});
-								}
-								// add new relate
-								else {
-									rowRelateVal.push(values);
-								}
-
-								updateItemData[f.relationName()] = rowRelateVal;
-								updateItemData[f.columnName] = updateItemData[f.relationName()].map(v => v.id || v);
-							}
-							else if (!Array.isArray(rowRelateVal) &&
-								(rowRelateVal != values.id || rowRelateVal.id != values.id) && 
-								isRelated(updateRelateVal, d.id)) {
-
-								updateItemData[f.relationName()] = values;
-								updateItemData[f.columnName] = values.id || values;
+							// add new relate
+							else {
+								rowRelateVal.push(values);
 							}
 
+							updateItemData[f.relationName()] = rowRelateVal;
+							updateItemData[f.columnName] = updateItemData[f.relationName()].map(v => v.id || v);
+						}
+						else if (!Array.isArray(rowRelateVal) &&
+							(rowRelateVal != values.id || rowRelateVal.id != values.id) && 
+							isRelated(updateRelateVal, d.id)) {
 
-						});
+							updateItemData[f.relationName()] = values;
+							updateItemData[f.columnName] = values.id || values;
+						}
 
-						// If this item needs to update
-						if (Object.keys(updateItemData).length > 0)
-							this.__dataCollection.updateItem(d.id, updateItemData);
 
 					});
 
-				}
+					// If this item needs to update
+					if (Object.keys(updateItemData).length > 0)
+						this.__dataCollection.updateItem(d.id, updateItemData);
+
+				});
 
 			}
+
 
 			// filter link data collection's cursor
 			this.refreshLinkCursor();
@@ -1338,46 +1346,44 @@ export default class ABViewDataCollection extends ABView {
 
 				this.__dataCollection.remove(deleteId);
 			}
+
 			// if it is a linked object
-			else {
+			let connectedFields = this.datasource.fields(f =>
+				f.key == 'connectObject' &&
+				f.datasourceLink &&
+				f.datasourceLink.id == data.objectId
+			);
 
-				let connectedFields = this.datasource.fields(f =>
-					f.key == 'connectObject' &&
-					f.datasourceLink &&
-					f.datasourceLink.id == data.objectId
-				);
+			// update relation data
+			if (connectedFields && connectedFields.length > 0) {
 
-				// update relation data
-				if (connectedFields && connectedFields.length > 0) {
+				this.__dataCollection.find({}).forEach(d => {
 
-					this.__dataCollection.find({}).forEach(d => {
+					let updateRelateVals = {};
 
-						let updateRelateVals = {};
+					connectedFields.forEach(f => {
 
-						connectedFields.forEach(f => {
+						let relateVal = d[f.relationName()];
+						if (relateVal == null) return;
 
-							let relateVal = d[f.relationName()];
+						if (Array.isArray(relateVal) &&
+							relateVal.filter(v => v == deleteId || v.id == deleteId).length > 0) {
 
-							if (Array.isArray(relateVal) &&
-								relateVal.filter(v => v == deleteId || v.id == deleteId).length > 0) {
-
-								updateRelateVals[f.relationName()] = relateVal.filter(v => (v.id || v) != deleteId);
-								updateRelateVals[f.columnName] = updateRelateVals[f.relationName()].map(v => v.id || v);
-							}
-							else if (relateVal == deleteId || relateVal.id == deleteId) {
-								updateRelateVals[f.relationName()] = null;
-								updateRelateVals[f.columnName] = null;
-							}
-
-						});
-
-						// If this item needs to update
-						if (Object.keys(updateRelateVals).length > 0)
-							this.__dataCollection.updateItem(d.id, updateRelateVals);
+							updateRelateVals[f.relationName()] = relateVal.filter(v => (v.id || v) != deleteId);
+							updateRelateVals[f.columnName] = updateRelateVals[f.relationName()].map(v => v.id || v);
+						}
+						else if (relateVal == deleteId || relateVal.id == deleteId) {
+							updateRelateVals[f.relationName()] = null;
+							updateRelateVals[f.columnName] = null;
+						}
 
 					});
 
-				}
+					// If this item needs to update
+					if (Object.keys(updateRelateVals).length > 0)
+						this.__dataCollection.updateItem(d.id, updateRelateVals);
+
+				});
 
 			}
 
@@ -1411,9 +1417,11 @@ export default class ABViewDataCollection extends ABView {
 	* @return {ABViewDataCollection}
 	*/
 	get dataCollectionLink() {
-		return this
-			.pageRoot()
-			.dataCollections((dc) => dc.id == this.settings.linkDataCollection)[0];
+
+		let pageRoot = this.pageRoot();
+		if (!pageRoot) return null;
+
+		return pageRoot.dataCollections((dc) => dc.id == this.settings.linkDataCollection)[0];
 	}
 
 	/**
@@ -1694,7 +1702,7 @@ export default class ABViewDataCollection extends ABView {
 		if (this.settings.loadAll) {
 			delete cond.limit;
 		}
-
+		
 		return Promise.resolve()
 			.then(() => {
 
@@ -1733,6 +1741,62 @@ export default class ABViewDataCollection extends ABView {
 
 					}
 
+				});
+
+			})
+			// load data collection when using "(not_)in_data_collection" as a filter
+			.then(() => {
+				return new Promise((resolve, reject) => {
+					
+					var dcFilters = [];
+					
+					wheres.rules.forEach((rule) => {
+						// if this collection is filtered by data collections we need to load them in case we need to validate from them later
+						if (rule.rule == "in_data_collection" || rule.rule == "not_in_data_collection") {
+
+							dcFilters.push(
+								new Promise((next, err) => {
+									var dc = this.pageRoot().dataCollections(dc => dc.id == rule.value)[0];
+									
+									if (!dc) return next();
+
+									switch (dc.dataStatus) {
+
+										case dc.dataStatusFlag.notInitial:
+											dc.loadData().catch(err);
+											// no break;
+
+										case dc.dataStatusFlag.initializing:
+
+											// wait until the link dc initialized data
+											// NOTE: if linked data collections are recursive, then it is infinity looping.
+											this.eventAdd({
+												emitter: dc,
+												eventName: "initializedData",
+												listener: () => {
+
+													// go next
+													next();
+
+												}
+											});
+
+											break;
+
+										case dc.dataStatusFlag.initialized:
+											next();
+											break;
+
+									}
+								})
+							)
+						}
+					})
+					
+					Promise.all(dcFilters).then(() => {
+						resolve();
+					}).catch(reject);
+					
 				});
 
 			})
@@ -2010,6 +2074,11 @@ export default class ABViewDataCollection extends ABView {
 		// delete
 		this.__bindComponentIds.splice(index, 1);
 
+	}
+
+	clearAll() {
+		if (this.__dataCollection)
+			this.__dataCollection.clearAll();
 	}
 
 

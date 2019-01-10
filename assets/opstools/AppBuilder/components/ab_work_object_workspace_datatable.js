@@ -304,7 +304,7 @@ console.warn('!! ToDo: onAfterColumnHide()');
 
                 // WORKAROUND: .Sj() => ._get_y_range function of webix's datatable.
                 // It is a private function. It returns what record index are showing
-                let scrollState = DataTable.Sj(),
+                let scrollState = DataTable.Ug(),
                     startRecIndex = scrollState[0],
                     endRecIndex = scrollState[1],
                     index = 0;
@@ -1041,7 +1041,6 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                         });
                     }
 
-
                     if (settings.massUpdate) {
                         columnHeaders.unshift({
                             id: "appbuilder_select_item",
@@ -1061,7 +1060,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
         					header: "",
         					width: 40,
                             template: function(obj, common){
-                                return "<div class='detailsView'><span class='webix_icon fa-eye'></span></div>";
+                                return "<div class='detailsView'><span class='webix_icon fa fa-eye'></span></div>";
                             },
         					css: { 'text-align': 'center' }                            
                         });
@@ -1126,8 +1125,9 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
     			CurrentObject.model()
     			.create(emptyObj)
     			.then((obj)=>{
-    				var DataTable = $$(ids.component);
-    				DataTable.add(obj, 0);
+                    var DataTable = $$(ids.component);
+                    if (!DataTable.exists(obj.id))
+    				    DataTable.add(obj, 0);
     			})
     		},
 

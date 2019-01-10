@@ -360,5 +360,4 @@ export default class ABViewLabel extends ABViewWidget {
 	}
 
 
-
 }

@@ -1325,7 +1325,7 @@ export default class RowFilter extends OP.Component {
 
 					var condResult;
 					
-					if (typeof fieldInfo.key == "undefined")
+					if (typeof fieldInfo.key == "undefined" && fieldInfo.id != "this_object")
 						fieldInfo.key = "connectField"; // if you are looking at the parent object it won't have a key to analyze
 
 					switch (fieldInfo.key) {
@@ -1352,7 +1352,7 @@ export default class RowFilter extends OP.Component {
 							break;
 						case "connectField":
 						case "connectObject":
-							condResult = _logic.connectFieldValid(rowData, fieldInfo.columnName, filter.rule, filter.value);
+							condResult = _logic.connectFieldValid(rowData, fieldInfo.relationName(), filter.rule, filter.value);
 							break;
 					}
 
@@ -1620,9 +1620,13 @@ export default class RowFilter extends OP.Component {
 
 			},
 
-			inQueryValid: function(rowData, rule, compareValue) {
+			inQueryValid: function(rowData, columnName, rule, compareValue) {
 
 				let result = false;
+				
+				if (columnName) {
+					rowData = rowData[columnName] || {};
+				}
 
 				if (!compareValue)
 					return result;
@@ -1650,7 +1654,7 @@ export default class RowFilter extends OP.Component {
 
 			},
 
-			dataCollectionValid: function (rowData, rule, compareValue) {
+			dataCollectionValid: function (rowData, columnName, rule, compareValue) {
 
 				var result = false;
 
@@ -1659,20 +1663,28 @@ export default class RowFilter extends OP.Component {
 
 				if (!_View)
 					return result;
+					
+				if (columnName) {
+					rowData = rowData[columnName] || {};
+				}
 
 				var dc = _View.pageRoot().dataCollections(dc => dc.id == compareValue)[0];
-				if (!dc)
-					return result;
-
+					
 				switch (rule) {
 					case 'in_data_collection':
+						if (!dc)
+							return false;
+							
 						result = (dc.getData(d => d.id == rowData.id).length > 0);
 						break;
 					case 'not_in_data_collection':
+						if (!dc)
+							return true;
+							
 						result = (dc.getData(d => d.id == rowData.id).length < 1);
 						break;
 				}
-
+				
 				return result;
 
 			},
@@ -1681,20 +1693,20 @@ export default class RowFilter extends OP.Component {
 
 				switch (rule) {
 					case 'contains':
-						return rowData[columnName].toString().indexOf(compareValue) > -1;
+						return (rowData[columnName].id || rowData[columnName]).toString().indexOf(compareValue) > -1
 						break;
 					case 'not_contains':
-						return rowData[columnName].toString().indexOf(compareValue) == -1;
+						return (rowData[columnName].id || rowData[columnName]).toString().indexOf(compareValue) == -1;
 						break;
 					case 'equals':
-						return rowData[columnName] == compareValue;
+						return (rowData[columnName].id || rowData[columnName]).toString() == compareValue;
 						break;
 					case 'not_equal':
-						return rowData[columnName] != compareValue;
+						return (rowData[columnName].id || rowData[columnName]).toString() != compareValue;
 						break;
 					case 'in_query':
 					case 'not_in_query':
-						return _logic.inQueryValid(rowData, rule, compareValue);
+						return _logic.inQueryValid(rowData, columnName, rule, compareValue);
 						break;
 					case "is_current_user":
 					case "is_not_current_user":
@@ -1702,7 +1714,7 @@ export default class RowFilter extends OP.Component {
 						break;
 					case 'in_data_collection':
 					case 'not_in_data_collection':
-						return _logic.dataCollectionValid(rowData, rule, compareValue);
+						return _logic.dataCollectionValid(rowData, columnName, rule, compareValue);
 						break;
 				}
 				

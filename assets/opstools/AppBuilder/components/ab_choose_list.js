@@ -129,7 +129,7 @@ export default class ABChooseList extends OP.Component {
 							},
 							type: {
 								height: App.config.appListRowHeight, // Defines item height
-								iconGear: "<span class='webix_icon fa-cog'></span>"
+								iconGear: "<span class='webix_icon fa fa-cog'></span>"
 							},
 							select: false,
 							onClick: {
@@ -263,9 +263,9 @@ export default class ABChooseList extends OP.Component {
 			onClickListEdit: function(ev, id, trg) {
 
 				var options = [
-					{ label: labels.common.edit, icon: "fa-pencil-square-o", command:'edit' },
-					{ label: labels.common.export, icon: "fa-download", command:'export' },
-					{ label: labels.common.delete, icon: "fa-trash", command:'delete' }
+					{ label: labels.common.edit, icon: "pencil-square-o", command:'edit' },
+					{ label: labels.common.export, icon: "download", command:'export' },
+					{ label: labels.common.delete, icon: "trash", command:'delete' }
 				];
 
 				MenuComponent.menuOptions(options);
