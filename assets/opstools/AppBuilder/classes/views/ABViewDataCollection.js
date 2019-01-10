@@ -1748,6 +1748,9 @@ export default class ABViewDataCollection extends ABView {
 			.then(() => {
 				return new Promise((resolve, reject) => {
 					
+					if (wheres == null || wheres.rules == null || !wheres.rules.length)
+						return resolve();
+
 					var dcFilters = [];
 					
 					wheres.rules.forEach((rule) => {
