@@ -367,7 +367,8 @@ export default class ABView extends ABViewBase {
 		var parentPage = this.parent;
 
 		// if current page is the root page, then return itself.
-		if (this.isRoot()) {
+		if (this.isRoot() &&
+			(this.key == 'page' || this.key == 'reportPage')) {
 			return this;
 		}
 
@@ -382,7 +383,7 @@ export default class ABView extends ABViewBase {
 	pageRoot() {
 		var rootPage = this.pageParent();
 
-		while (!rootPage.isRoot()) {
+		while (rootPage && !rootPage.isRoot()) {
 			rootPage = rootPage.pageParent();
 		}
 

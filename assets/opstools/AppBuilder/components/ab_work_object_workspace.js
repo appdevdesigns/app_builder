@@ -18,6 +18,8 @@ import ABPopupSortField from "./ab_work_object_workspace_popupSortFields"
 import ABPopupExport from "./ab_work_object_workspace_popupExport"
 import ABPopupImport from "./ab_work_object_workspace_popupImport"
 
+import ABViewDataCollection from "../classes/views/ABViewDataCollection"
+
 
 export default class ABWorkObjectWorkspace extends OP.Component {
 
@@ -137,6 +139,9 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 		var PopupImportObjectComponent = new ABPopupImport(App, idBase);
 
 		var view = "button";
+
+		// create ABViewDataCollection
+		var CurrentDc = new ABViewDataCollection({}, CurrentApplication);
 
     	// Our webix UI definition:
     	this.ui = {
@@ -324,7 +329,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 
     			}
     		]
-    	}
+    	};
 
 
 
@@ -337,7 +342,10 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     			onEditorMenu:_logic.callbackHeaderEditorMenu,
                 onColumnOrderChange:_logic.callbackColumnOrderChange,
                 onCheckboxChecked:_logic.callbackCheckboxChecked
-            });
+			});
+
+			CurrentDc.init();
+			CurrentDc.bind($$(DataTable.ui.id));
 
     		PopupDefineLabelComponent.init({
     			onChange:_logic.callbackDefineLabel		// be notified when there is a change in the label
@@ -366,7 +374,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 			}
 
 // ?? what is this for ??
-    		var fieldList = DataTable.getFieldList();
+    		// var fieldList = DataTable.getFieldList();
 
     		PopupSortFieldComponent.init({
     			onChange:_logic.callbackSortFields		// be notified when there is a change in the sort fields
@@ -389,7 +397,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
         
 
         var CurrentApplication = null;
-        var CurrentObject = null;
+		var CurrentObject = null;
 
 
     	// our internal business logic
@@ -407,6 +415,9 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 				CurrentApplication = application;
 
 				PopupNewDataFieldComponent.applicationLoad(application);
+
+				CurrentDc.application = CurrentApplication;
+
 			},
 
     		/**
@@ -415,8 +426,9 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		 * call back for when the Define Label popup is finished.
     		 */
     		callbackAddFields:function(field) {
-                DataTable.refreshHeader();
-    			DataTable.refresh();
+				DataTable.refreshHeader();
+				_logic.loadData();
+    			// DataTable.refresh();
     		},
 
 
@@ -437,8 +449,9 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		callbackFilterDataTable: function() {
                 // Since we are making server side requests lets offload the badge count to another function so it can be called independently
                 _logic.getBadgeFilters();
-                // this will be handled by the server side request now
-                DataTable.refresh();
+				// this will be handled by the server side request now
+				_logic.loadData();
+                // DataTable.refresh();
     		},
 
     		/**
@@ -448,8 +461,9 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		 */
     		callbackFrozenColumns: function() {
                 // We need to load data first because there isn't anything to look at if we don't
-                DataTable.refreshHeader();
-                DataTable.refresh();
+				DataTable.refreshHeader();
+				_logic.loadData();
+                // DataTable.refresh();
 
                 _logic.getBadgeFrozenColumn();
     		},
@@ -552,8 +566,9 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 
     								field.destroy()
     								.then(()=>{
-                                        DataTable.refreshHeader();
-    									DataTable.refresh();
+										DataTable.refreshHeader();
+										_logic.loadData();
+    									// DataTable.refresh();
                                         
                                         // recursive fn to remove any form/detail fields related to this field
                                         function checkPages(list, cb) {
@@ -597,8 +612,9 @@ export default class ABWorkObjectWorkspace extends OP.Component {
              * call back for when the mass update is fired
              */
             callbackMassUpdate: function() {
-                // _logic.getBadgeSortFields();
-                DataTable.refresh();
+				// _logic.getBadgeSortFields();
+				_logic.loadData();
+                // DataTable.refresh();
             },
 
     		/**
@@ -608,8 +624,9 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		 */
     		callbackSortFields: function() {
                 _logic.getBadgeSortFields();
-                DataTable.refreshHeader();
-                DataTable.refresh();
+				DataTable.refreshHeader();
+				_logic.loadData();
+                // DataTable.refresh();
     		},
             
             /**
@@ -858,6 +875,9 @@ console.error('TODO: toolbarPermission()');
 
 				CurrentObject = object;
 
+				// initial data
+				_logic.loadData();
+
 				// the replicated tables are read only
 				if (CurrentObject.isReadOnly) {
 					DataTable.readonly();
@@ -930,6 +950,34 @@ console.error('TODO: toolbarPermission()');
 			 */
 			loadAll: function() {
 				DataTable.loadAll();
+			},
+
+			loadData: function() {
+
+				// update ABViewDataCollection settings
+				let filterConditions = {};
+				if (CurrentObject &&
+					CurrentObject.objectWorkspace &&
+					CurrentObject.objectWorkspace.filterConditions)
+					filterConditions = CurrentObject.objectWorkspace.filterConditions;
+
+				let sortFields = [];
+				if (CurrentObject &&
+					CurrentObject.objectWorkspace &&
+					CurrentObject.objectWorkspace.sortFields)
+					sortFields = CurrentObject.objectWorkspace.sortFields;
+
+				CurrentDc.settings = {
+					object: CurrentObject.id,
+					objectUrl: CurrentObject.urlPointer(),
+					objectWorkspace: {
+						filterConditions: filterConditions,
+						sortFields: sortFields
+					}
+				};
+				CurrentDc.clearAll();
+				CurrentDc.loadData(0, 30);
+
 			}
 
 
