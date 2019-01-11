@@ -731,7 +731,7 @@ FROM
 INNER JOIN 
 	\`${ChargesTable}\` chg on chg.Reg = reg.id 
 WHERE 
-    reg.id IN (select peps.Registration434 from AB_Events_registrants peps where peps.Attending = 1 group by peps.Registration434 having count(peps.Registration434) = 1) AND
+    reg.id IN (select peps.Registration434 from AB_Events_registrants peps where peps.Attending = 1 and peps.Guest IS NULL group by peps.Registration434 having count(peps.Registration434) = 1) AND
     reg.Event = 2 AND
     chg.Fees177 = 50 AND
     not exists (
@@ -769,7 +769,7 @@ FROM
 INNER JOIN 
 	\`${ChargesTable}\` chg on chg.Reg = reg.id 
 WHERE 
-    reg.id IN (select peps.Registration434 from AB_Events_registrants peps where peps.Attending = 1 group by peps.Registration434 having count(peps.Registration434) = 1) AND
+    reg.id IN (select peps.Registration434 from AB_Events_registrants peps where peps.Attending = 1 and peps.Guest IS NULL group by peps.Registration434 having count(peps.Registration434) = 1) AND
     reg.Event = 6 AND
     chg.Fees177 = 70 AND
     not exists (
@@ -807,7 +807,7 @@ FROM
 INNER JOIN 
 	\`${ChargesTable}\` chg on chg.Reg = reg.id 
 WHERE 
-    reg.id IN (select peps.Registration434 from AB_Events_registrants peps where peps.Attending = 1 group by peps.Registration434 having count(peps.Registration434) = 1) AND
+    reg.id IN (select peps.Registration434 from AB_Events_registrants peps where peps.Attending = 1 and peps.Guest IS NULL group by peps.Registration434 having count(peps.Registration434) = 1) AND
     reg.Event = 9 AND
     chg.Fees177 = 97 AND
     not exists (
@@ -1591,6 +1591,7 @@ INNER JOIN
 	AB_Events_Registration reg on reg.id = pep.Registration434
 WHERE
 	pep.Attending = 1 and
+	pep.Guest IS NULL,
 	reg.\`User Submitted\` = 1 and
 	reg.Event = 6 and 
 	not exists (
