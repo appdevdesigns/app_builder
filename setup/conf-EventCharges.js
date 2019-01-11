@@ -1366,7 +1366,7 @@ WHERE
                 `
 INSERT INTO \`${ChargesTable}\` (\`Reg\`, \`Fees177\`, \`uuid\`, \`Apply Charge\`, \`Start\`, \`End\`)
 SELECT
-	reg.id, 91, CONCAT('auto_import_91_FLunch4-11_', reg.id, '_', pep.id), 1, '2019-01-21 00:00:00', '2019-01-26 00:00:00'
+	reg.id, 93, CONCAT('auto_import_93_FLunch4-11_', reg.id, '_', pep.id), 1, '2019-01-21 00:00:00', '2019-01-26 00:00:00'
 FROM
 	AB_Events_registrants pep
 INNER JOIN
@@ -1385,14 +1385,14 @@ WHERE
 		WHERE uuid IN ( 
 
 		SELECT
-			CONCAT('auto_import_91_FLunch4-11_', reg.id, '_', pep.id)
+			CONCAT('auto_import_93_FLunch4-11_', reg.id, '_', pep.id)
 		FROM
 			AB_Events_registrants pep
 		INNER JOIN
 			AB_Events_Registration reg on pep.Registration434 = reg.id
 
 		) and
-		uuid = CONCAT('auto_import_91_FLunch4-11_', reg.id, '_', pep.id)
+		uuid = CONCAT('auto_import_93_FLunch4-11_', reg.id, '_', pep.id)
 	);
                 `,
                 next);
