@@ -179,12 +179,31 @@ class ABFieldBoolean extends ABField {
 	///
 
 	// return the grid column header definition for this instance of ABFieldBoolean
-	columnHeader(isObjectWorkspace) {
+	columnHeader(isObjectWorkspace, width, isEditable) {
 		var config = super.columnHeader(isObjectWorkspace);
 
 		config.editor = 'template';
-		config.template = '<div class="ab-boolean-display">{common.checkbox()}</div>';
 		config.css = 'center';
+		config.template = (row, common, value, config) => {
+
+			// Group header
+			if (row.$group)
+				return row[this.columnName];
+
+			// editable
+			if (isEditable) {
+				return '<div class="ab-boolean-display">' + common.checkbox(row, common, value, config) + '</div>';
+			}
+
+			// readonly
+			else {
+				if (value)
+					return "<div class='webix_icon fa-check-square-o'></div>";
+				else
+					return "<div class='webix_icon fa-square-o'></div>";
+			}
+
+		};
 
 		return config;
 	}

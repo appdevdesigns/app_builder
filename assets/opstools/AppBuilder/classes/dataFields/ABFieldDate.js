@@ -1131,6 +1131,14 @@ class ABFieldDate extends ABField {
 		//// NOTE: webix seems unable to parse ISO string into => date here.
 		// config.map = '(date)#'+this.columnName+'#';   // so don't use this.
 
+		config.template = (row) => {
+
+			if (row.$group)
+				return row[this.columnName];
+
+			return this.format(row);
+		}
+
 		config.format = (d) => {
 
 			var rowData = {};
