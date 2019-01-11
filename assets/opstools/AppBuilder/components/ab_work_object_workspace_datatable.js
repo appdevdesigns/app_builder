@@ -870,9 +870,23 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
                         switch (f.key)  {
                             case "number":
-                            // case "calculate":
-                            // case "formula":
                                 groupMap[f.columnName] = [f.columnName, "sum"];
+                                break;
+                            case "calculate":
+                            case "formula":
+                                groupMap[f.columnName] = [f.columnName, function(prop, listData) {
+                                    if (!listData)
+                                        return 0;
+
+                                    let sum = 0;
+
+                                    listData.forEach(r => {
+                                        sum += f.format(r) * 1;
+                                    });
+
+                                    return sum;
+
+                                }];
                                 break;
                             case "connectObject":
                                 groupMap[f.columnName] = [f.columnName, function(prop, listData) {
@@ -880,7 +894,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                                     if (!listData || !listData.length)
                                         return 0;
 
-                                    let sum = 0;
+                                    let count = 0;
 
                                     listData.forEach(r => {
                                         var valRelation = r[f.relationName()];
@@ -888,14 +902,14 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                                         // array
                                         if (valRelation && 
                                             valRelation.length != null)
-                                            sum += valRelation.length;
+                                            count += valRelation.length;
                                         // object
                                         else if (valRelation)
-                                            sum += 1;
+                                            count += 1;
 
                                     });
 
-                                    return sum;
+                                    return count;
                                 }];
                                 break;
                             default:

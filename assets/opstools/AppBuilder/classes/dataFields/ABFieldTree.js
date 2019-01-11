@@ -338,6 +338,10 @@ class ABFieldTree extends ABField {
 
     
     config.template = function (obj) {
+
+        if (obj.$group)
+          return obj[field.columnName];
+
         var branches = [];
         var options = _.cloneDeep(field.settings.options);
         options = new webix.TreeCollection({

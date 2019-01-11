@@ -285,6 +285,9 @@ class ABFieldFile extends ABField {
 		// populate our default template:
 		config.template = (obj) => {
 
+			if (obj.$group)
+				return obj[this.columnName];
+
 			var fileDiv = [
 				'<div class="ab-file-data-field" style="float: left;">',
 				'<div class="webix_view ab-file-holder">',

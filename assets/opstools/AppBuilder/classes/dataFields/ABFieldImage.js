@@ -505,6 +505,9 @@ OP.Dialog.Alert({
 		// populate our default template:
 		config.template = (obj) => {
 
+			if (obj.$group)
+				return obj[this.columnName];
+
 			var widthStyle = 'width: #width#; height: #height#'
 								.replace('#width#', width)
 								.replace('#height#', height);
