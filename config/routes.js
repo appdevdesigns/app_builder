@@ -8,6 +8,10 @@
 
 module.exports = {
 
+    /* Application Info */
+    'put /app_builder/application/:appID/info':
+        'app_builder/ABApplicationController.applicationSave',
+
     /* Application Objects */
     'put /app_builder/application/:appID/object':
         'app_builder/ABApplicationController.objectSave',
@@ -21,6 +25,13 @@ module.exports = {
 
     'delete /app_builder/application/:appID/page':
         'app_builder/ABApplicationController.pageDestroy',
+
+    /* Application Queries */
+    'put /app_builder/application/:appID/query':
+        'app_builder/ABApplicationController.querySave',
+
+    'delete /app_builder/application/:appID/query/:id':
+        'app_builder/ABApplicationController.queryDestroy',
 
     /* Application permissions */
     'get /app_builder/user/roles':
@@ -76,7 +87,10 @@ module.exports = {
     'post /app_builder/migrate/application/:appID/object/:objID/field/:fieldID' : 
         'app_builder/ABMigrationController.createField',
 
-    'delete /app_builder/migrate/application/:appID/object/:objID/field/:fieldID' : 
+    'put /app_builder/migrate/application/:appID/object/:objID/field/:fieldID' :
+        'app_builder/ABMigrationController.updateField',
+
+    'delete /app_builder/migrate/application/:appID/object/:objID/field/:fieldID' :
         'app_builder/ABMigrationController.dropField',
 
 
@@ -96,16 +110,85 @@ module.exports = {
     'put /app_builder/model/application/:appID/object/:objID/:id' : 
         'app_builder/ABModelController.update',
 
+    'put /app_builder/model/application/:appID/object/:objID' :
+        'app_builder/ABModelController.upsert',
+
     'delete /app_builder/model/application/:appID/object/:objID/:id' : 
         'app_builder/ABModelController.delete',
 
     'put /app_builder/model/application/:appID/refreshobject/:objID' : 
         'app_builder/ABModelController.refresh',
-        
+
+    'get /app_builder/model/application/:appID/count/:objID' : 
+        'app_builder/ABModelController.count',
+
+
+    /* Import External models */
+    'get /app_builder/external/connections' : 
+        'app_builder/ABExternalController.findDatabaseNames',
+
+    'get /app_builder/external/application/:appID' : 
+        'app_builder/ABExternalController.findTableNames',
+
+    'get /app_builder/external/model/:tableName/columns' : 
+        'app_builder/ABExternalController.findColumns',
+
+    'post /app_builder/external/application/:appID/model/:tableName' : 
+        'app_builder/ABExternalController.importTable',
+
 
 // only for easy development/testing purposes:
 'get /app_builder/migrate/application/:appID/object/:objID' : 
     'app_builder/ABMigrationController.createObject',
+
+    // Email
+    'post /app_builder/email' : 
+        'app_builder/ABEmailController.send',
+
+
+
+
+    /* Relay Settings */
+
+    'get /app_builder/relay/users':
+        'app_builder/ABRelayController.users',
+
+    'get /app_builder/relay/uninitializedusers':
+        'app_builder/ABRelayController.uninitializedUsers',
+
+    'post /app_builder/relay/initialize':
+        'app_builder/ABRelayController.initialize',
+
+    'post /app_builder/relay/publishusers':
+        'app_builder/ABRelayController.publishusers',
+
+    'get /app_builder/application/allmobileapps':
+        'app_builder/ABApplicationController.listMobileApps',
+
+    'post /app_builder/QR/sendEmail':
+        'app_builder/ABMobileQRController.sendEmail',
+
+    'post /app_builder/QR/adminQRCode':
+        'app_builder/ABMobileQRController.adminQRCode',
+
+
+    'get /app_builder/mobile/:mobileID/apk':
+        'app_builder/ABMobileQRController.sendAPK',
+
+
+    /* Event Specific URLs */
+
+    'post /app_builder/Event/sendConfirmationEmail':
+        'app_builder/ABEventController.sendRegistrationConfirmation',
+
+    'get /events/confirm/:regID/:isConfirmed': 
+        'app_builder/ABEventController.receiveRegistrationConfirmationResponse',
+
+    'post /app_builder/Event/sendFeeConfirmationEmail':
+        'app_builder/ABEventController.sendFeeConfirmation',
+
+    'get /events/feeconfirm/:regID/:isConfirmed': 
+        'app_builder/ABEventController.receiveFeeConfirmationResponse',
 
   /*
 

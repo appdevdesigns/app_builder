@@ -1,9 +1,7 @@
 steal(
 	// List your Controller's dependencies here:
-	'opstools/BuildApp/controllers/utils/DataHelper.js',
-	'opstools/BuildApp/controllers/utils/ModelCreator.js',
 
-	function (dataHelper, modelCreator) {
+	function () {
 		System.import('appdev').then(function () {
 			System.import('opstools/BuildApp').then(function () {
 				steal.import('appdev/ad',
@@ -106,29 +104,49 @@ steal(
 										.then(function (result) {
 											self.data.application = result;
 
+											// Store the root page
+											if (self.rootPage == null)
+												self.rootPage = self.data.application.urlResolve(self.options.page);
+
 											next();
 										}, next);
 								},
 
 								function (next) {
 
-									// Wait until the tool's area has been shown
-									var areaKey = 'ab-' + self.data.application.name.trim();
-									areaKey = areaKey.toLowerCase().replace(/'/g, '').replace(/_/g, '-');
+									if (self.rootPage == null)
+										return next();
+
+									let areaKey = 'ab-' + self.data.application.name.trim();
+									areaKey = areaKey.toLowerCase().replace(/[^a-z0-9]/gi, '');
+
+									var appKey = 'AB_' + String(self.data.application.name).replace(/[^a-z0-9]/gi, ''),
+										pageKey = ['opstools', appKey, self.rootPage.name.replace(/[^a-z0-9]/gi, '').toLowerCase()].join('.'),
+										toolKey = _.kebabCase(pageKey);
+
 
 									var callback = function (message, data) {
 
-										if (data.area.toLowerCase() == areaKey) {
+										// var areaData = data.area.toLowerCase().replace(/[^a-z0-9]/gi, '');
+										// if (areaData == areaKey) {
 
-											if (!self.activated) {
-												self.activated = true;
+										// get active tool element
+										let currToolElem = document.querySelector('#op-masthead-sublinks [area="{area}"] .active'.replace("{area}", data.area));
+										if (!currToolElem) return;
+										
+										let currToolKey = currToolElem.getAttribute("op-tool-key");
+										if (currToolKey != toolKey) return;
 
-												self.startPage();
-											}
-											else {
-												self.showPage();
-											}
+										if (!self.activated) {
+											self.activated = true;
+
+											self.startPage();
 										}
+										else {
+											self.showPage();
+										}
+
+										// }
 									};
 
 									if (self.subID1 == null)
@@ -147,11 +165,22 @@ steal(
 									else {
 										// TODO: How to get current area ?
 										var currPanel = document.body.querySelector('#op-masthead-sublinks > ul:not([style*="display:none"]):not([style*="display: none"])');
-										var currArea = currPanel.getAttribute('area');
-										if (currArea == areaKey) {
-											callback(null, { area: areaKey });
+										if (currPanel) {
+											var currArea = currPanel.getAttribute('area');
+											if (currArea == areaKey) {
+												callback(null, { area: areaKey });
+											}
 										}
 									}
+									
+									// we will remove the loading spinners on the menu now
+									var opsMenuItem = document.body.querySelectorAll('#op-list-menu > .op-container .'+areaKey+'_appLoading');
+									if (opsMenuItem.length) {
+										opsMenuItem.forEach((x) => {
+											x.remove();
+										})
+									}
+									
 
 									next();
 
@@ -172,15 +201,12 @@ steal(
 							// Wait until the tool's area has been shown
 							if (!self.activated) return;
 
-							// Store the root page
-							if (self.rootPage == null)
-								self.rootPage = self.data.application.urlResolve(self.options.page);
-
 							self.initPage();
 
 							webix.ready(function () {
 
 								self.showPage();
+
 								self.resize(self.height || 600);
 							});
 

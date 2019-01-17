@@ -3,7 +3,10 @@
 import CustomComponentManager from '../webix_custom_components/customComponentManager'
 
 
-export default class UIComponent {
+var EventEmitter = require('events').EventEmitter;
+ 
+export default class UIComponent extends EventEmitter {
+
     
     /**
      * @param {object} App 
@@ -12,7 +15,8 @@ export default class UIComponent {
      *      Identifier for this component
      */
 	constructor(App, idBase) {
-
+		super();
+		
 		var L = this.Label;
 
 		if (!App) {
@@ -71,6 +75,10 @@ export default class UIComponent {
 					no: 	  L('ab.common.no', "*No"),
 
 					none: 	  L('ab.common.none', "*None"),
+					
+					invalidMessage: {
+						required: 	  L('ab.common.invalid_message.required', "*This field is required"),
+					},
 
 					createErrorMessage:   L('ab.common.create.error', "*System could not create <b>{0}</b>."),
 					createSuccessMessage: L('ab.common.create.success', "*<b>{0}</b> is created."),
@@ -96,6 +104,7 @@ export default class UIComponent {
 					dataFieldColumnNamePlaceholder: L('ab.dataField.common.columnNamePlaceholder', '*Database field name'),
 
 					dataFieldShowIcon: L('ab.dataField.common.showIcon', '*show icon?'),
+                    dataFieldRequired: L('ab.dataField.common.required', '*Required'),
 					
 					componentDropZone: L('ab.common.componentDropZone', '*add widgets here')
 				},

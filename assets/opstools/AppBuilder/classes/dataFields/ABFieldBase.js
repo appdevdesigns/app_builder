@@ -28,9 +28,12 @@ module.exports = class ABFieldBase {
   			icon:'font',				// fa-[icon] reference for an icon for this Field Type
   			label:'',					// pulled from translation
 			columnName:'column_name',	// a valid mysql table.column name
-			isImported: 1/0,			// flag to mark is import from other object
+			isImported: 1/0,			// flag to mark is import from other object			
 			settings: {					// unique settings for the type of field
 				showIcon:true/false,	// only useful in Object Workspace DataTable
+				isImported: 1/0,		// flag to mark is import from other object
+				required: 1/0,			// field allows does not allow NULL or it does allow NULL 
+				width: {int}			// width of display column
 
 				// specific for dataField
 			},
@@ -51,6 +54,9 @@ module.exports = class ABFieldBase {
   	/// Available to the Class level object.  These methods are not dependent
   	/// on the instance values of the Application.
   	///
+	static get reservedNames() {
+		return ['id', 'created_at', 'updated_at', 'properties', 'createdAt', 'updatedAt'];
+	}
 
 
 
@@ -64,16 +70,32 @@ module.exports = class ABFieldBase {
   	 * @return {Array}
   	 */
   	fieldOrmTypes() {
-  		if (this.defaults.compatibleOrmTypes) {
-  			if (Array.isArray(this.defaults.compatibleOrmTypes)) {
-  				return this.defaults.compatibleOrmTypes;
-  			} else {
-  				return [this.defaults.compatibleOrmTypes];
-  			}
-  		} else {
-  			return [];
-  		}
-  	}
+		if (this.defaults.compatibleOrmTypes) {
+			if (Array.isArray(this.defaults.compatibleOrmTypes)) {
+				return this.defaults.compatibleOrmTypes;
+			} else {
+				return [this.defaults.compatibleOrmTypes];
+			}
+		} else {
+			return [];
+		}
+	}
+
+	/**
+  	 * Mysql data types that can be imported to this DataField
+  	 * @return {Array}
+  	 */
+  	fieldMysqlTypes() {
+		if (this.defaults.compatibleMysqlTypes) {
+			if (Array.isArray(this.defaults.compatibleMysqlTypes)) {
+				return this.defaults.compatibleMysqlTypes;
+			} else {
+				return [this.defaults.compatibleMysqlTypes];
+			}
+		} else {
+			return [];
+		}
+	}
 
   	// font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
   	fieldIcon() {
@@ -132,6 +154,16 @@ module.exports = class ABFieldBase {
 		return 1;
 	}
 
+	fieldSupportRequire() {
+
+		if (this.defaults.supportRequire)
+			return this.defaults.supportRequire;
+		// default
+		else 
+			return true;
+
+	}
+
 
 
 	///
@@ -188,11 +220,13 @@ module.exports = class ABFieldBase {
 
     	this.settings = values.settings || {};
     	this.settings.showIcon = values.settings.showIcon+"" || "1";
+		this.settings.required = values.settings.required+"" || "1";
 		this.settings.width = values.settings.width+"" || "0";
 
 		// convert from "0" => 0
 		this.isImported = parseInt(this.isImported);
     	this.settings.showIcon = parseInt(this.settings.showIcon);
+		this.settings.required = parseInt(this.settings.required);
 		this.settings.width = parseInt(this.settings.width);
 	}
 

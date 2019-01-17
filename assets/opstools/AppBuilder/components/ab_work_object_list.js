@@ -78,7 +78,7 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 									{
 										id: ids.searchText,
 										view: "search",
-										icon: "search",
+										icon: "fa fa-search",
 										label: labels.component.listSearch,
 										labelWidth: 80,
 										placeholder: labels.component.searchPlaceholder,
@@ -149,8 +149,8 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 						return _logic.templateListItem(obj, common);
 					},
 					type: {
-						height: 35,
-						iconGear: "<div class='ab-object-list-edit'><span class='webix_icon fa-cog'></span></div>"
+						// height: 35,
+						iconGear: "<div class='ab-object-list-edit'><span class='webix_icon fa fa-cog'></span></div>"
 					},
 					on: {
 						onAfterSelect: function (id) {
@@ -187,7 +187,12 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 
 
 		// Our init() function for setting up our UI
-		this.init = () => {
+		this.init = (options) => {
+
+            // register our callbacks:
+            for (var c in _logic.callbacks) {
+                _logic.callbacks[c] = options[c] || _logic.callbacks[c];
+            }
 
 			if ($$(ids.component))
 				$$(ids.component).adjust();
@@ -202,7 +207,8 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 			});
 
 			PopupEditObjectComponent.init({
-				onClick: _logic.callbackObjectEditorMenu
+				onClick: _logic.callbackObjectEditorMenu,
+				hideCopy: true
 			})
 		}
 
@@ -210,6 +216,14 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 
 		// our internal business logic
 		var _logic = this._logic = {
+
+			callbacks: {
+				
+				/**
+				 * @function onChange
+				 */
+				onChange: function () { }
+			},
 
 
 			/**
@@ -403,7 +417,8 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 			selectObject: function (id) {
 
 				var object = $$(ids.list).getItem(id);
-				App.actions.populateObjectWorkspace(object);
+
+				_logic.callbacks.onChange(object);
 
 				_logic.showGear(id);
 			},
@@ -454,7 +469,10 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 					return;
 				}
 
-				objectList.add(object);
+				if (objectList.exists(object.id))
+					objectList.updateItem(object.id, object);
+				else
+					objectList.add(object);
 
 				if (selectNew != null && selectNew == true) {
 					$$(ids.list).select(object.id);
@@ -499,7 +517,8 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 
 									objectList.remove(selectedObject.id);
 
-									App.actions.clearObjectWorkspace();
+									// clear object workspace
+									_logic.callbacks.onChange(null);
 								});
 
 						}

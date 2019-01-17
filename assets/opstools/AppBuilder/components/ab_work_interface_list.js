@@ -72,7 +72,7 @@ export default class AB_Work_Interface_List extends OP.Component {
 					},
 					type: {
 						height: "auto",
-						iconGear: "<span class='webix_icon fa-cog'></span>"
+						iconGear: "<span class='webix_icon fa fa-cog'></span>"
 					},
 					on: {
 						onAfterRender: function () {
@@ -229,6 +229,9 @@ export default class AB_Work_Interface_List extends OP.Component {
 					case 'rename':
 						_logic.rename();
 						break;
+					case 'copy':
+						_logic.copy();
+						break;
 					case 'delete':
 						_logic.remove();
 						break;
@@ -359,6 +362,49 @@ console.error('!! todo: onBeforeEditStop() editing');
 				$$(ids.list).edit(pageID);
 			},
 
+			copy: function() {
+
+				let selectedPage = $$(ids.list).getSelectedItem(false);
+
+				// show loading cursor
+				_logic.listBusy();
+
+				// get a copy of the page
+				let copiedPage = selectedPage.copy();
+
+				// saving
+				let savePageFn = (p) => {
+
+					return new Promise((resolve, reject) => {
+
+						p.save().catch(reject)
+							.then(() => {
+
+								// save sub-pages sequentially
+								var subTasks = Promise.resolve();
+								p.pages().forEach(subPage => {
+									subTasks = subTasks.then(x => savePageFn(subPage));
+								});
+
+								// final
+								subTasks.then(() => resolve());
+
+							});
+
+					});
+
+				};
+
+				savePageFn(copiedPage)
+					.catch(err => _logic.listReady())
+					.then(() => {
+
+						_logic.callbackNewPage(copiedPage);
+						_logic.listReady();
+					});
+
+			},
+
 			remove: function() {
 
 				var selectedPage = $$(ids.list).getSelectedItem(false);
@@ -430,7 +476,8 @@ console.error('!! todo: onBeforeEditStop() editing');
 
 
 				template = template.replace("#iconGear#", "<div class='ab-page-list-edit'>{common.iconGear}</div>");
-				template = template.replace('#typeIcon#', item.settings.type == 'popup' ? 'fa-clone fa-flip-horizontal' : 'fa-file-o');
+				template = template.replace("#typeIcon#", item.icon || item.viewIcon());
+				// template = template.replace('#typeIcon#', item.settings.type == 'popup' ? 'fa-clone fa-flip-horizontal' : 'fa-file-o');
 
 
 							// // Disallow rename/delete on Tabs
@@ -478,6 +525,7 @@ console.error('!! todo: onBeforeEditStop() editing');
 
 			refreshTemplateItem: function(view) {
 				// make sure this item is updated in our list:
+				view = view.updateIcon(view);
 				viewList.updateItem(view.id, view);
 				// $$(ids.list).updateItem(view.id, view);
 			},
@@ -533,7 +581,7 @@ console.error('!! todo: onBeforeEditStop() editing');
 		 */
 		var _templateListItem = [
 			"<div class='ab-page-list-item'>",
-				"{common.icon()} <span class='webix_icon #typeIcon#'></span> #label# #iconGear#",
+				"{common.icon()} <span class='webix_icon fa fa-#typeIcon#'></span> #label# #iconGear#",
 			"</div>"
 		].join('');
 

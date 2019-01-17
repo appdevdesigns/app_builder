@@ -11,12 +11,34 @@
  * http://sailsjs.org/#documentation
  */
 
-var findStack = ADCore.policy.serviceStack([ 'ABModelNormalize', 'ABModelConvertSailsCondition', 'ABModelConvertFilterCondition' ]);
+var findStack = ADCore.policy.serviceStack([ 
+	'ABModelNormalize', 
+	'ABModelConvertSailsCondition', 
+	'ABModelConvertFilterCondition', 	
+
+	// after this point:  our where conditions should be in QB format
+	'ABModelConvertSameAsUserConditions', 
+	'ABModelConvertQueryConditions', 
+	'ABModelConvertQueryFieldConditions',
+	'ABModelConvertDataCollectionCondition',
+	// 'ABModelConvertFieldKey'
+	]);
 
 module.exports = {
 
    'app_builder/ABModelController': {
        find: findStack
+   },
+
+   'app_builder/ABMobileQRController':{
+   		sendAPK:true,		// no permission checking on APK download.
+   		
+   },
+   
+   'app_builder/ABEventController':{
+
+   		receiveRegistrationConfirmationResponse:true, // event confirmation response
+   		receiveFeeConfirmationResponse:true 		  // event fee confirmation response
    }
 
 

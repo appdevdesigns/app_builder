@@ -11,14 +11,20 @@ import ABViewChartPie from "./views/ABViewChartPie"
 import ABViewChartBar from "./views/ABViewChartBar"
 import ABViewChartLine from "./views/ABViewChartLine"
 import ABViewChartArea from "./views/ABViewChartArea"
+import ABViewConditionalContainer from "./views/ABViewConditionalContainer"
 import ABViewContainer from "./views/ABViewContainer"
 import ABViewDataCollection from "./views/ABViewDataCollection"
+import ABViewDataview from "./views/ABViewDataview"
 import ABViewPage from "./views/ABViewPage"
+import ABViewPivot from "./views/ABViewPivot"
 import ABViewLabel from "./views/ABViewLabel"
 import ABViewLayout from "./views/ABViewLayout"
+import ABViewList from "./views/ABViewList"
 import ABViewMenu from "./views/ABViewMenu"
 import ABViewGrid from "./views/ABViewGrid"
+import ABViewImage from "./views/ABViewImage"
 import ABViewTab from "./views/ABViewTab"
+import ABViewText from "./views/ABViewText"
 
 import ABViewDetail from "./views/ABViewDetail"
 import ABViewDetailCheckbox from "./views/ABViewDetailCheckbox"
@@ -39,6 +45,10 @@ import ABViewFormSelectSingle from "./views/ABViewFormSelectSingle"
 import ABViewFormTextbox from "./views/ABViewFormTextbox"
 import ABViewFormTree from "./views/ABViewFormTree"
 
+import ABViewReport from "./views/ABViewReport"
+import ABViewReportPage from "./views/ABViewReportPage"
+import ABViewReportPanel from "./views/ABViewReportPanel"
+
 // import ABViewFormText from "./views/ABViewFormText"
 
 /* 
@@ -54,14 +64,20 @@ Views[ABViewChartBar.common().key] = ABViewChartBar;
 Views[ABViewChartLine.common().key] = ABViewChartLine;
 Views[ABViewChartArea.common().key] = ABViewChartArea;
 
+Views[ABViewConditionalContainer.common().key] = ABViewConditionalContainer;
 Views[ABViewContainer.common().key] = ABViewContainer;
 Views[ABViewDataCollection.common().key] = ABViewDataCollection;
+Views[ABViewDataview.common().key] = ABViewDataview;
 Views[ABViewPage.common().key] = ABViewPage;
+Views[ABViewPivot.common().key] = ABViewPivot;
 Views[ABViewLabel.common().key] = ABViewLabel;
 Views[ABViewLayout.common().key] = ABViewLayout;
+Views[ABViewList.common().key] = ABViewList;
 Views[ABViewMenu.common().key] = ABViewMenu;
 Views[ABViewGrid.common().key] = ABViewGrid;
+Views[ABViewImage.common().key] = ABViewImage;
 Views[ABViewTab.common().key] = ABViewTab;
+Views[ABViewText.common().key] = ABViewText;
 
 Views[ABViewDetail.common().key] = ABViewDetail;
 Views[ABViewDetailCheckbox.common().key] = ABViewDetailCheckbox;
@@ -83,6 +99,11 @@ Views[ABViewFormTextbox.common().key] = ABViewFormTextbox;
 Views[ABViewFormTree.common().key] = ABViewFormTree;
 // Views[ABViewForm.common().key] = ABViewForm;
 // Views[ABViewFormText.common().key] = ABViewFormText;
+
+Views[ABViewReport.common().key] = ABViewReport;
+Views[ABViewReportPage.common().key] = ABViewReportPage;
+Views[ABViewReportPanel.common().key] = ABViewReportPanel;
+
 
 
 export default  {

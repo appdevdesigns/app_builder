@@ -9,6 +9,10 @@ import ABPropertyComponent from "../ABPropertyComponent"
 // import ABViewManager from "../ABViewManager"
 
 
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
+
 var ABViewPropertyComponentDefaults = {
 	label: ''
 }
@@ -363,11 +367,12 @@ export default class ABView extends ABViewBase {
 		var parentPage = this.parent;
 
 		// if current page is the root page, then return itself.
-		if (this.isRoot()) {
+		if (this.isRoot() &&
+			(this.key == 'page' || this.key == 'reportPage')) {
 			return this;
 		}
 
-		while (parentPage && (parentPage.key != 'page' || !filterFn(parentPage))) {
+		while (parentPage && ((parentPage.key != 'page' && parentPage.key != 'reportPage') || !filterFn(parentPage))) {
 			parentPage = parentPage.parent;
 		}
 
@@ -378,7 +383,7 @@ export default class ABView extends ABViewBase {
 	pageRoot() {
 		var rootPage = this.pageParent();
 
-		while (!rootPage.isRoot()) {
+		while (rootPage && !rootPage.isRoot()) {
 			rootPage = rootPage.pageParent();
 		}
 
@@ -398,13 +403,42 @@ export default class ABView extends ABViewBase {
 	 *
 	 * @param {fn} filter  	a filter fn to return a set of ABViews that this fn
 	 *						returns true for.
+	 * @param {boolean} deep
+	 *
 	 * @return {array} 	array of ABViews
 	 */
-	views(filter) {
+	views(filter, deep) {
 
-		filter = filter || function () { return true; };
+		var result = [];
 
-		return this._views.filter(filter);
+		if (!this._views || this._views.length < 1)
+			return result;
+
+		// find into recursively
+		if (filter && deep) {
+
+			result = this._views.filter(filter);
+
+			if (result.length < 1) {
+				this._views.forEach(v => {
+					var subViews = v.views(filter, deep);
+					if (subViews && subViews.length > 0) {
+						result = subViews;
+					}
+				});
+			}
+
+		}
+
+		else {
+
+			filter = filter || function () { return true; };
+
+			result = this._views.filter(filter);
+
+		}
+
+		return result;
 
 	}
 
@@ -483,6 +517,11 @@ export default class ABView extends ABViewBase {
 	 * 						}
 	 */
 	eventAdd(evt) {
+
+		if (!evt || 
+			!evt.emitter ||
+			!evt.listener)
+			return;
 
 		var exists = this.__events.find(e => {
 			return e.emitter == evt.emitter &&
@@ -565,9 +604,7 @@ export default class ABView extends ABViewBase {
 	 */
 	editorComponent(App, mode) {
 
-		function L(key, altText) {
-			return AD.lang.label.getLabel(key) || altText;
-		}
+		var L = App.Label;
 
 		var idBase = 'ABViewEditorComponent';
 		var ids = {
@@ -1006,9 +1043,11 @@ export default class ABView extends ABViewBase {
 			// not allowed Detail's widgets
 			'detailcheckbox', 'detailcustom', 'detailimage', 'detailselectivity', 'detailtext', 'detailtree', 
 			// not allowed Form's widgets
-			'button', 'checkbox', 'datepicker', 'fieldcustom', 'textbox', 'numberbox', 'selectsingle', 'tree',
+			'button', 'checkbox', 'connect', 'datepicker', 'fieldcustom', 'textbox', 'numberbox', 'selectsingle', 'formtree',
 			// not allowed Chart's Widgets
-			'pie', 'bar', 'line', 'area'
+			'pie', 'bar', 'line', 'area',
+			// not allowed Report page
+			'report', 'reportPage', 'reportPanel'
 		];
 
 		var allComponents = this.application.viewAll();  // ABViewManager.allViews();
@@ -1089,6 +1128,89 @@ export default class ABView extends ABViewBase {
 			}
 			
 		}
+
+	}
+
+	copy(lookUpIds, parent) {
+
+		lookUpIds = lookUpIds || {};
+
+		// get settings of the target
+		let config = this.toObj();
+
+		// remove sub-elements property
+		['pages', 'views', 'dataCollections'].forEach(prop => {
+			delete config[prop];
+		});
+
+		// update id of linked components
+		if (this.copyUpdateProperyList) {
+			(this.copyUpdateProperyList() || []).forEach(prop => {
+				if (config && config.settings)
+					config.settings[prop] = lookUpIds[config.settings[prop]];
+			});
+		}
+
+		// copy from settings
+		let result = this.application.viewNew(config, this.application, parent);
+
+		// change id
+		result.id = lookUpIds[result.id] || OP.Util.uuid();
+
+		// copy sub pages
+		if (this.pages) {
+			result._pages = [];
+			this.pages().forEach(p => {
+
+				let copiedSubPage = p.copy(lookUpIds, result);
+				copiedSubPage.parent = result;
+
+				result._pages.push(copiedSubPage);
+			});	
+		}
+
+		// copy sub views
+		if (this.views) {
+			result._views = [];
+			this.views().forEach(v => {
+
+				let copiedView = v.copy(lookUpIds, result);
+
+				result._views.push(copiedView);
+			});
+		}
+
+		// copy data collections
+		if (this.dataCollections) {
+			result._dataCollections = [];
+			this.dataCollections().forEach(dc => {
+
+				let copiedDc = dc.copy(lookUpIds, result);
+
+				result._dataCollections.push(copiedDc);
+			});
+		}
+
+		return result;
+
+	}
+
+
+	//// Report ////
+
+	/**
+	 * @method print
+	 * 
+	 * 
+	 * @return {Promise} - PDF object definition
+	 */
+	print() {
+
+		return new Promise((resolve, reject) => {
+
+			resolve([]);
+
+		});
 
 	}
 

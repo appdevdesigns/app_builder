@@ -25,6 +25,8 @@ var ABFieldBooleanDefaults = {
 	// description: what gets displayed in the Editor description.
 	description: L('ab.dataField.boolean.description', '*A single checkbox that can be checked or unchecked.'),
 
+	supportRequire: true
+
 }
 
 
@@ -127,10 +129,11 @@ class ABFieldBoolean extends ABField {
 	* return a UI Component that contains the property definitions for this Field.
 	*
 	* @param {App} App the UI App instance passed around the Components.
+	* @param {stirng} idBase
 	* @return {Component}
 	*/
-	static propertiesComponent(App) {
-		return ABFieldBooleanComponent.component(App);
+	static propertiesComponent(App, idBase) {
+		return ABFieldBooleanComponent.component(App, idBase);
 	}
 
 	///
@@ -176,12 +179,31 @@ class ABFieldBoolean extends ABField {
 	///
 
 	// return the grid column header definition for this instance of ABFieldBoolean
-	columnHeader(isObjectWorkspace) {
+	columnHeader(isObjectWorkspace, width, isEditable) {
 		var config = super.columnHeader(isObjectWorkspace);
 
 		config.editor = 'template';
-		config.template = '<div class="ab-boolean-display">{common.checkbox()}</div>';
 		config.css = 'center';
+		config.template = (row, common, value, config) => {
+
+			// Group header
+			if (row.$group)
+				return row[this.columnName];
+
+			// editable
+			if (isEditable) {
+				return '<div class="ab-boolean-display">' + common.checkbox(row, common, value, config) + '</div>';
+			}
+
+			// readonly
+			else {
+				if (value)
+					return "<div class='webix_icon fa-check-square-o'></div>";
+				else
+					return "<div class='webix_icon fa-square-o'></div>";
+			}
+
+		};
 
 		return config;
 	}
@@ -242,6 +264,7 @@ class ABFieldBoolean extends ABField {
 
 		return detailComponentSetting;
 	}
+
 
 }
 

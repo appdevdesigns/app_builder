@@ -10,7 +10,9 @@
 export default class AB_Work_Object_Workspace_PopupHideFields extends OP.Component {  
 
     constructor(App, idBase) {
-        super(App, idBase || 'ab_work_object_workspace_popupHideFields');
+        idBase = idBase || 'ab_work_object_workspace_popupHideFields';
+
+        super(App, idBase);
         var L = this.Label;
 
         var labels = {
@@ -25,8 +27,8 @@ export default class AB_Work_Object_Workspace_PopupHideFields extends OP.Compone
 
         // internal list of Webix IDs to reference our UI components
         var ids = {
-            component: this.unique('component'),
-            list: this.unique('list')
+            component: this.unique(idBase + '_popupHide'),
+            list: this.unique(idBase + '_popupHide_list')
         }
 
 

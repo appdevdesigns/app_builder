@@ -129,4 +129,32 @@ export default class ABViewWidget extends ABView {
 	}
 
 
+	/**
+	 * @function component()
+	 * return a UI component based upon this view.
+	 * @param {obj} App 
+	 * @return {obj} UI component
+	 */
+	component(App) {
+
+		let base = super.component(App);
+
+		base.onShow = (viewId) => {
+
+			let dc = this.dataCollection; // get from a function or a (get) property
+			if (dc &&
+				dc.dataStatus == dc.dataStatusFlag.notInitial) {
+
+				// load data when a widget is showing
+				dc.loadData();
+
+			}
+
+		}
+
+		return base;
+	}
+
+
+
 }

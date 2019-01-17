@@ -40,13 +40,15 @@ export default class ABViewDetailComponent extends ABViewWidget {
 		}
 	}
 
-	/*
+	/**
 	 * @component()
 	 * return a UI component based upon this view.
 	 * @param {obj} App 
+	 * @param {string} idPrefix
+	 * 
 	 * @return {obj} UI component
 	 */
-	component(App) {
+	component(App, idPrefix) {
 
 		// setup 'label' of the element
 		var detailView = this.detailComponent(),
@@ -66,13 +68,17 @@ export default class ABViewDetailComponent extends ABViewWidget {
 			if (settings.labelPosition == 'top')
 				templateLabel = "<label style='display:block; text-align: left;' class='webix_inp_top_label'>#label#</label>#display#";
 			else
-				templateLabel = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label><div style='margin-left: #width#px;'>#display#</div>";
+				templateLabel = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label><div class='ab-detail-component-holder' style='margin-left: #width#px;'>#display#</div>";
+		}
+		// no label
+		else {
+			templateLabel = "#display#";
 		}
 
 		var template = (templateLabel)
 			.replace(/#width#/g, settings.labelWidth)
 			.replace(/#label#/g, field.label);
-			
+
 		var height = 38;
 		if (settings.labelPosition == 'top')
 			height = height * 2;
@@ -114,18 +120,22 @@ export default class ABViewDetailComponent extends ABViewWidget {
 	}
 
 	detailComponent() {
-		var form = null;
+		var detailView = null;
 
 		var curr = this;
-		while (curr.key != 'detail' && !curr.isRoot() && curr.parent) {
+		while (!curr.isRoot() &&
+			curr.parent &&
+			curr.key != 'detail' &&
+			curr.key != 'dataview') {
+
 			curr = curr.parent;
 		}
 
-		if (curr.key == 'detail') {
-			form = curr;
+		if (curr.key == 'detail' || curr.key == 'dataview') {
+			detailView = curr;
 		}
 
-		return form;
+		return detailView;
 	}
 
 	field() {
@@ -133,7 +143,82 @@ export default class ABViewDetailComponent extends ABViewWidget {
 		if (object == null) return null;
 
 		var field = object.fields((v) => v.id == this.settings.fieldId)[0];
+
+		// set .alias to support queries that contains alias name
+		// [aliasName].[columnName]
+		if (field && this.settings.alias) {
+			field.alias = this.settings.alias;
+		}
+
 		return field;
+	}
+
+
+	getCurrentData() {
+
+		var detailCom = this.detailComponent();
+		if (!detailCom) return null;
+
+		var dc = detailCom.dataCollection;
+		if (!dc) return null;
+
+		var field = this.field();
+		if (!field) return null;
+
+		var currData = dc.getCursor();
+		if (currData)
+			return currData[field.columnName];
+		else
+			return null;
+
+	}
+
+
+	//// Report ////
+
+	/**
+	 * @method print
+	 * 
+	 * 
+	 * @return {Object} - PDF object definition
+	 */
+	print(rowData) {
+
+		return new Promise((resolve, reject) => {
+
+			var reportDef = {};
+
+			var detailCom = this.detailComponent();
+			if (!detailCom) return resolve(reportDef);
+
+			var dc = detailCom.dataCollection;
+			if (!dc) return resolve(reportDef);
+
+			var field = this.field();
+			if (!field) return resolve(reportDef);
+
+			rowData = rowData || dc.getCursor() || {};
+
+			var text = (field.format(rowData) || "");
+
+			reportDef = {
+				columns: [
+					{
+						bold: true,
+						text: field.label,
+						width: detailCom.settings.labelWidth
+					},
+					{
+						text: text
+					}
+				]
+			};
+
+			resolve(reportDef);
+
+		});
+
+
 	}
 
 

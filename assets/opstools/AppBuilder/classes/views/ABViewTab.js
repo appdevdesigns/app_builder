@@ -93,6 +93,7 @@ export default class ABViewTab extends ABViewWidget {
 		var component = this.component(App);
 
 		var tabElem = component.ui;
+
 		if (tabElem.rows) {
 			tabElem.rows[0].id = ids.component;
 			tabElem.rows[0].tabbar = {
@@ -185,6 +186,8 @@ export default class ABViewTab extends ABViewWidget {
 					}
 				});
 			}
+
+			component.onShow();
 
 		}
 
@@ -492,11 +495,11 @@ export default class ABViewTab extends ABViewWidget {
 	component(App) {
 
 		// get a UI component for each of our child views
-		var viewComponents = [];
+		this._viewComponents = [];
 		this.views().forEach((v) => {
-			viewComponents.push({
+			this._viewComponents.push({
 				view: v,
-				component: v.component(App)
+				// component: v.component(App)
 			});
 		})
 
@@ -504,13 +507,14 @@ export default class ABViewTab extends ABViewWidget {
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		}
-		var changePageEventIds = {}; // { pageId: eventId, ..., pageIdn: eventIdn }
 
 		var _ui = {};
 
-		if (viewComponents.length > 0) {
+		if (this._viewComponents.length > 0) {
 			_ui = {
 				type: "space",
+				paddingX: 17,
+				paddingY: 17,
 				rows: [
 					{
 						view: 'tabview',
@@ -523,13 +527,13 @@ export default class ABViewTab extends ABViewWidget {
 								}
 							}
 						},
-						cells: viewComponents.map((v) => {
+						cells: this._viewComponents.map((v) => {
 
-							// able to 'scroll' in tab view
 							var tabUi = {
 								id: v.view.id,
-								view: 'scrollview',
-								body: v.component.ui
+								// ui will be loaded when its tab is opened
+								view: 'layout',
+								rows: []
 							};
 
 							return {
@@ -552,6 +556,13 @@ export default class ABViewTab extends ABViewWidget {
 
 			changePage: (pageId) => {
 				this.changePage(pageId);
+			},
+
+			changeTab: (tabViewId) => {
+
+				// switch tab view
+				$$(ids.component).setValue(tabViewId);
+
 			}
 
 		};
@@ -560,8 +571,12 @@ export default class ABViewTab extends ABViewWidget {
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
 
-			viewComponents.forEach((v) => {
-				v.component.init(options);
+			if ($$(ids.component))
+				webix.extend($$(ids.component), webix.ProgressBar)
+
+			this._viewComponents.forEach((v) => {
+
+				// v.component.init(options);
 
 				// Trigger 'changePage' event to parent
 				this.eventAdd({
@@ -570,19 +585,65 @@ export default class ABViewTab extends ABViewWidget {
 					listener: _logic.changePage
 				});
 
-
 			});
+
+			// Trigger 'changeTab' event to parent
+			this.eventAdd({
+				emitter: this,
+				eventName: 'changeTab',
+				listener: _logic.changeTab
+			});
+			
 
 		}
 
 		var _onShow = (viewId) => {
 
-			viewComponents.forEach((v) => {
+			this._viewComponents.forEach((v, index) => {
 
-				// ignore other views
-				if (viewId != null && v.view.id != viewId) return;
+				// set default view id
+				if (viewId == null && index == 0)
+					viewId = v.view.id;
 
-				if (v.component &&
+				// create view's component once
+				if (v.component == null && v.view.id == viewId) {
+
+					// show loading cursor
+					if ($$(ids.component) &&
+						$$(ids.component).showProgress)
+						$$(ids.component).showProgress({ type: "icon" });
+
+					v.component = v.view.component(App);
+
+					// update tab UI
+					webix.ui({
+
+						// able to 'scroll' in tab view
+						id: v.view.id,
+						view: 'scrollview',
+						body: v.component.ui
+
+					}, $$(v.view.id));
+
+					v.component.init();
+
+
+					// done
+					setTimeout(() => {
+
+						$$(v.view.id).adjust();
+
+						if ($$(ids.component) &&
+							$$(ids.component).hideProgress)
+							$$(ids.component).hideProgress();
+
+					}, 10);
+
+				}
+
+				// show UI
+				if (v.view.id == viewId && 
+					v.component &&
 					v.component.onShow)
 					v.component.onShow();
 

@@ -8,6 +8,7 @@
 var path = require('path');
 var ABField = require(path.join(__dirname, "ABField.js"));
 var async = require('async');
+var _ = require('lodash');
 
 function L(key, altText) {
 	return altText;  // AD.lang.label.getLabel(key) || altText;
@@ -22,11 +23,7 @@ var ABFieldConnectDefaults = {
 	menuName: L('ab.dataField.connectObject.menuName', '*Connect to another record'),
 
 	// description: what gets displayed in the Editor description.
-	description: '',
-	
-	// what types of Sails ORM attributes can be imported into this data type?
-	// http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
-	compatibleOrmTypes: ['connectObject'],
+	description: ''
 }
 
 var defaultValues = {
@@ -38,6 +35,63 @@ var defaultValues = {
 	linkColumn: '', // ABColumn.id
 	isSource: null // bit
 };
+
+
+/**
+ * @method getJunctionInfo
+ * @param {string} objectName 
+ * @param {string} linkObjectName 
+ * 
+ * @return {Object} {
+ * 		tableName {string},
+ * 		sourceColumnName {string},
+ * 		targetColumnName {string}
+ * }
+ */
+function getJuntionInfo(objectName, linkObjectName) {
+
+	var sourceModel = _.filter(sails.models, m => m.tableName == objectName)[0];
+	var targetModel = _.filter(sails.models, m => m.tableName == linkObjectName)[0];
+	var juntionModel = _.filter(sails.models, m => {
+			return m.meta.junctionTable && // true / false
+
+					// definition: { 
+					//	id: { 
+					//		primaryKey: true,
+					// 	 	unique: true,
+					// 	 	autoIncrement: true,
+					// 	 	type: 'integer'
+					//	},
+					//  permissionaction_roles: { 
+					//		type: 'integer',
+					// 	 	foreignKey: true,
+					// 	 	references: 'permissionaction',
+					// 	 	on: 'id',
+					// 	 	via: 'permissionrole_actions'
+					//	},
+					//  permissionrole_actions: { 
+					//		type: 'integer',
+					// 	 	foreignKey: true,
+					// 	 	references: 'permissionrole',
+					// 	 	on: 'id',
+					// 	 	via: 'permissionaction_roles'
+					//	} }
+					_.filter(m.definition, def => {
+						return def.foreignKey == true &&
+								(def.references == sourceModel.identity || def.references == targetModel.identity);
+					}).length >= 2;
+		})[0];
+
+	// Get columns info
+	var sourceColumnName = _.filter(juntionModel.definition, def => def.foreignKey == true && def.references == sourceModel.identity )[0].via,
+		targetColumnName = _.filter(juntionModel.definition, def => def.foreignKey == true && def.references == targetModel.identity )[0].via;
+
+	return {
+		tableName: juntionModel.tableName,
+		sourceColumnName: sourceColumnName,
+		targetColumnName: targetColumnName
+	};
+}
 
 class ABFieldConnect extends ABField {
 
@@ -125,7 +179,7 @@ class ABFieldConnect extends ABField {
 	// }
 
 
-	objectLink() {
+	get datasourceLink() {
 		var application = this.object.application,
 			linkObject = application.objects((obj) => { return obj.id == this.settings.linkObject; })[0];
 
@@ -133,7 +187,7 @@ class ABFieldConnect extends ABField {
 	}
 
 	fieldLink() {
-		var linkObject = this.objectLink();
+		var linkObject = this.datasourceLink;
 
 		if (!linkObject) return null;
 
@@ -141,6 +195,14 @@ class ABFieldConnect extends ABField {
 	}
 
 
+	linkType() {
+		return this.settings.linkType;
+	}
+
+
+	linkViaType() {
+		return this.settings.linkViaType;
+	}
 
 	///
 	/// DB Migrations
@@ -156,18 +218,20 @@ class ABFieldConnect extends ABField {
 		return new Promise(
 			(resolve, reject) => {
 
-				var tableName = this.object.dbTableName();
+				var tableName = this.object.dbTableName(true);
 
 				// find linked object
-				var linkObject = this.objectLink(),
-					linkTableName = linkObject.dbTableName(),
+				var linkObject = this.datasourceLink;
+				var linkKnex = ABMigration.connection(linkObject.connName);
+
+				var linkTableName = linkObject.dbTableName(true),
+					linkPK = linkObject.PK(),
 					// TODO : should check duplicate column
-					linkColumnName = this.object.name;
+					linkColumnName = this.fieldLink().columnName;
+					// linkColumnName = this.object.name;
 
 				// 1:M - create a column in the table and references to id of the link table
-				// 1:1 - create a column in the table, references to id of the link table and set to be unique
-				if ((this.settings.linkType == 'one') &&
-					(this.settings.linkViaType == 'many' || this.settings.linkViaType == 'one')) {
+				if (this.settings.linkType == 'one' && this.settings.linkViaType == 'many') {
 
 					async.waterfall([
 						// check column already exist
@@ -185,13 +249,17 @@ class ABFieldConnect extends ABField {
 
 							knex.schema.table(tableName, (t) => {
 
-								t.integer(this.columnName).unsigned().nullable()
-									.references('id').inTable(linkTableName).onDelete('cascade');
+								let linkCol = t.integer(this.columnName).unsigned().nullable();
 
-								// 1:1
-								if (this.settings.linkViaType == 'one') {
-									t.unique(this.columnName);
+								// NOTE: federated table does not support reference column
+								if (!linkObject.isExternal && this.connName == linkObject.connName) {
+									linkCol.references(linkPK)
+										.inTable(linkTableName)
+										.onDelete('SET NULL');
 								}
+
+								if (exists)
+									linkCol.alter();
 
 							})
 								.then(() => { next(); })
@@ -206,13 +274,60 @@ class ABFieldConnect extends ABField {
 
 				}
 
+				// 1:1 - create a column in the table, references to id of the link table and set to be unique
+				if (this.settings.linkType == 'one' && this.settings.linkViaType == 'one' &&
+					this.settings.isSource) {
+
+						async.waterfall([
+							// check column already exist
+							(next) => {
+	
+								knex.schema.hasColumn(tableName, this.columnName)
+									.then((exists) => {
+										next(null, exists);
+									})
+									.catch(next);
+							},
+							// create a column
+							(exists, next) => {
+								if (exists) return next();
+	
+								knex.schema.table(tableName, (t) => {
+	
+									let linkCol = t.integer(this.columnName).unsigned().nullable();
+
+									// NOTE: federated table does not support reference column
+									if (!linkObject.isExternal && this.connName == linkObject.connName) {
+										linkCol.references(linkPK)
+												.inTable(linkTableName)
+												.onDelete('SET NULL');
+									}
+
+									t.unique(this.columnName);
+
+									if (exists)
+										linkCol.alter();
+	
+								})
+									.then(() => { next(); })
+									.catch(next);
+							}
+						],
+							(err) => {
+	
+								if (err) reject(err);
+								else resolve();
+							});
+
+				}
+
 				// M:1 - create a column in the link table and references to id of the target table
 				else if (this.settings.linkType == 'many' && this.settings.linkViaType == 'one') {
 
 					async.waterfall([
 						// check column already exist
 						(next) => {
-							knex.schema.hasColumn(linkTableName, linkColumnName)
+							linkKnex.schema.hasColumn(linkTableName, linkColumnName)
 								.then((exists) => {
 									next(null, exists);
 								})
@@ -222,13 +337,25 @@ class ABFieldConnect extends ABField {
 						(exists, next) => {
 							if (exists) return next();
 
-							knex.schema.table(linkTableName, (t) => {
+							linkKnex.schema.table(linkTableName, (t) => {
 
-								t.integer(linkColumnName).unsigned().nullable()
-									.references('id').inTable(tableName).onDelete('cascade');
+								let linkCol = t.integer(linkColumnName)
+									.unsigned()
+									.nullable();
+
+								// NOTE: federated table does not support reference column
+								if (!this.object.isExternal && this.connName == linkObject.connName) {
+									linkCol.references(this.object.PK())
+											.inTable(tableName)
+											.onDelete('SET NULL');
+								}
+
+								if (exists)
+									linkCol.alter();
+
 							})
-								.then(() => { next(); })
-								.catch(next);
+							.then(() => { next(); })
+							.catch(next);
 						}
 					],
 						(err) => {
@@ -241,7 +368,11 @@ class ABFieldConnect extends ABField {
 				else if (this.settings.linkType == 'many' && this.settings.linkViaType == 'many') {
 
 					var joinTableName = this.joinTableName(),
-						getFkName = (objectName, columnName) => {
+						getFkName = AppBuilder.rules.toJunctionTableFK;  
+						// [add] replaced this with a global rule, so we can reuse it in other 
+						// 		 places.
+						/* 
+						(objectName, columnName) => {
 
 							var fkName = objectName + '_' + columnName;
 
@@ -250,13 +381,16 @@ class ABFieldConnect extends ABField {
 
 							return fkName;
 						};
+						*/
 
-					knex.schema.hasTable(joinTableName).then((exists) => {
+					var sourceKnex =  (this.settings.isSource ? knex : linkKnex);
+
+					sourceKnex.schema.hasTable(joinTableName).then((exists) => {
 
 						// if it doesn't exist, then create it and any known fields:
 						if (!exists) {
 
-							return knex.schema.createTable(joinTableName, (t) => {
+							return sourceKnex.schema.createTable(joinTableName, (t) => {
 								t.increments('id').primary();
 								t.timestamps();
 								t.engine('InnoDB');
@@ -267,11 +401,37 @@ class ABFieldConnect extends ABField {
 								var targetFkName = getFkName(linkObject.name, linkColumnName);
 
 								// create columns
-								t.integer(this.object.name).unsigned().nullable()
-									.references('id').inTable(tableName).withKeyName(sourceFkName).onDelete('cascade');
+								let linkCol = t.integer(this.object.name).unsigned().nullable();
+								let linkCol2 = t.integer(linkObject.name).unsigned().nullable();
 
-								t.integer(linkObject.name).unsigned().nullable()
-									.references('id').inTable(linkTableName).withKeyName(targetFkName).onDelete('cascade');
+
+								// NOTE: federated table does not support reference column
+								if ((!this.object.isExternal && !linkObject.isExternal) &&
+									(this.connName == linkObject.connName)) {
+
+									linkCol.references(this.object.PK())
+										.inTable(tableName)
+										.withKeyName(sourceFkName)
+										.onDelete('SET NULL');
+
+									linkCol2.references(linkPK)
+										.inTable(linkTableName)
+										.withKeyName(targetFkName)
+										.onDelete('SET NULL');
+								}
+
+								// // create columns
+								// t.integer(this.object.name).unsigned().nullable()
+								// 	.references(this.object.PK())
+								// 	.inTable(tableName)
+								// 	.withKeyName(sourceFkName)
+								// 	.onDelete('SET NULL');
+
+								// t.integer(linkObject.name).unsigned().nullable()
+								// 	.references(linkObject.PK())
+								// 	.inTable(linkTableName)
+								// 	.withKeyName(targetFkName)
+								// 	.onDelete('SET NULL');
 							})
 								.then(() => { resolve(); })
 								.catch(reject);
@@ -300,14 +460,31 @@ class ABFieldConnect extends ABField {
 	migrateDrop(knex) {
 		return new Promise(
 			(resolve, reject) => {
-				var tableName = this.object.dbTableName();
+
+				// if field is imported, then it will not remove column in table
+				if (this.object.isImported ||
+					this.isImported) return resolve();
+
+				var tableName = this.object.dbTableName(true);
 
 				// M:N
 				if (this.settings.linkType == 'many' && this.settings.linkViaType == 'many') {
+
+					// If the linked object is removed, it can not find join table name.
+					// The join table should be removed already.
+					if (!this.datasourceLink)
+						return resolve();
+
 					// drop join table
 					var joinTableName = this.joinTableName();
 
-					knex.schema.dropTableIfExists(joinTableName)
+					// get source knex of the join table
+					var sourceKnex = knex;
+					if (!this.settings.isSource) {
+						sourceKnex =  ABMigration.connection(this.datasourceLink.connName);
+					}
+
+					sourceKnex.schema.dropTableIfExists(joinTableName)
 						.then(() => {
 
 							super.migrateDrop(knex)
@@ -363,7 +540,7 @@ class ABFieldConnect extends ABField {
 					{
 						// allow empty string because it could not put empty array in REST api
 						"type": "string",
-						"maxLength": 0
+						// "maxLength": 0
 					}
 				]
 			};
@@ -381,43 +558,66 @@ class ABFieldConnect extends ABField {
 	 */
 	requestParam(allParameters) {
 
-		var myParameter;
+		var myParameter = super.requestParam(allParameters);
 
-		myParameter = super.requestParam(allParameters);
+		// pull id of relation value when 1:M and 1:1
+		// to prevent REQUIRED column on insert data
+		if ((this.settings.linkType == 'one' && this.settings.linkViaType == 'many') || // 1:M
+			(this.settings.linkType == 'one' && this.settings.linkViaType == 'one' && this.settings.isSource)) { // 1:1 own table has the connected column
 
+			myParameter = this.requestRelationParam(allParameters);
+		}
 		// remove relation column value
 		// We need to update it in .requestRelationParam
-		if (myParameter != null)
+		else if (myParameter) {
 			delete myParameter[this.columnName];
+		}
 
 		return myParameter;
 	}
 
 
 	requestRelationParam(allParameters) {
-		var myParameter;
 
-		myParameter = super.requestRelationParam(allParameters);
-
+		var myParameter = super.requestRelationParam(allParameters);
 		if (myParameter) {
 
 			if (myParameter[this.columnName]) {
 
+				let pk = "id";
+				let datasourceLink = this.datasourceLink;
+				if (datasourceLink) {
+					pk = datasourceLink.PK();
+				}
+
 				// if value is array, then get id of array
-				if (myParameter[this.columnName].map) {
-					myParameter[this.columnName] = myParameter[this.columnName].map(function (d) {
-						return parseInt(d.id || d);
+				if (myParameter[this.columnName].forEach) {
+					let result = [];
+
+					myParameter[this.columnName].forEach(function (d) {
+						let val = parseInt(d[pk] || d.id || d);
+
+						// validate INT value
+						if (val && !isNaN(val))
+							result.push(val);
 					});
+
+					myParameter[this.columnName] = result;
 				}
 				// if value is a object
 				else {
-					myParameter[this.columnName] = parseInt(myParameter[this.columnName].id || myParameter[this.columnName]);
+					myParameter[this.columnName] = parseInt(myParameter[this.columnName][pk] || myParameter[this.columnName].id || myParameter[this.columnName]);
+
+					// validate INT value
+					if (isNaN(myParameter[this.columnName]))
+						myParameter[this.columnName] = null;
 				}
 
 
 			}
 			else {
-				myParameter[this.columnName] = [];
+				// myParameter[this.columnName] = [];
+				myParameter[this.columnName] = null;
 			}
 
 		}
@@ -441,34 +641,113 @@ class ABFieldConnect extends ABField {
 
 
 	relationName() {
-		return AppBuilder.rules.toFieldRelationFormat(this.columnName);
+
+		var relationName = AppBuilder.rules.toFieldRelationFormat(this.columnName);
+
+		return relationName;
 	}
 
-	joinTableName() {
-		var sourceObjectName,
-			targetObjectName,
-			columnName;
+	joinTableName(prefixSchema = false) {
 
-		var linkObject = this.object.application.objects((obj) => { return obj.id == this.settings.linkObject; })[0];
+		var linkObject = this.datasourceLink;
+		var tableName = "";
 
-		if (this.settings.isSource == true) {
-			sourceObjectName = this.object.name;
-			targetObjectName = linkObject.name;
-			columnName = this.columnName;
+		if (this.object.isExternal && linkObject.isExternal) {
+
+			var juntionModel = getJuntionInfo(this.object.tableName, this.datasourceLink.tableName);
+
+			tableName = juntionModel.tableName;
+
 		}
 		else {
-			sourceObjectName = linkObject.name;
-			targetObjectName = this.object.name;
-			columnName = this.fieldLink().columnName;
+
+			var sourceObjectName,
+				targetObjectName,
+				columnName;
+
+			if (this.settings.isSource == true) {
+				sourceObjectName = this.object.name;
+				targetObjectName = linkObject.name;
+				columnName = this.columnName;
+			}
+			else {
+				sourceObjectName = linkObject.name;
+				targetObjectName = this.object.name;
+				columnName = this.fieldLink().columnName;
+			}
+
+			// return join table name
+			tableName = AppBuilder.rules.toJunctionTableNameFormat(
+											this.object.application.name, // application name
+											sourceObjectName, // table name
+											targetObjectName, // linked table name
+											columnName); // column name
 		}
 
-		// return join table name
-		return AppBuilder.rules.toJunctionTableNameFormat(
-			this.object.application.name, // application name
-			sourceObjectName, // table name
-			targetObjectName, // linked table name
-			columnName); // column name
+		if (prefixSchema) {
+			
+			// pull database name
+			var schemaName = "";
+			if (this.settings.isSource == true)
+				schemaName = this.object.dbSchemaName();
+			else
+				schemaName = linkObject.dbSchemaName();
+
+
+			return "#schema#.#table#"
+					.replace("#schema#", schemaName)
+					.replace("#table#", tableName);
+		}
+		else {
+			return tableName;
+		}
+
 	}
+
+	/**
+	 * @method joinColumnNames
+	 * 
+	 * @return {Object} - {
+	 * 		sourceColName {string},
+	 * 		targetColName {string}
+	 * }
+	 */
+	joinColumnNames() {
+
+		var sourceColumnName = "",
+			targetColumnName = "";
+
+		var objectLink = this.datasourceLink;
+
+		if (this.object.isExternal && objectLink.isExternal) {
+
+			var juntionModel = getJuntionInfo(this.object.tableName, this.datasourceLink.tableName);
+
+			sourceColumnName = juntionModel.sourceColumnName;
+			targetColumnName = juntionModel.targetColumnName;
+		}
+		else {
+
+			sourceColumnName = this.object.name;
+			targetColumnName = this.datasourceLink.name;
+
+			// if (this.settings.isSource == true) {
+			// 	sourceColumnName = this.object.name;
+			// 	targetColumnName = this.datasourceLink.name;
+			// }
+			// else {
+			// 	sourceColumnName = this.datasourceLink.name;
+			// 	targetColumnName = this.object.name;
+			// }
+		}
+
+		return {
+			sourceColumnName: sourceColumnName,
+			targetColumnName: targetColumnName
+		};
+
+	}
+
 
 }
 

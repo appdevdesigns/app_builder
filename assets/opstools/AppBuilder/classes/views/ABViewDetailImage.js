@@ -123,19 +123,20 @@ export default class ABViewDetailImage extends ABViewDetailComponent {
 
 
 
-	/*
+	/**
 	 * @component()
 	 * return a UI component based upon this view.
 	 * @param {obj} App 
+	 * @param {string} idPrefix
+	 * 
 	 * @return {obj} UI component
 	 */
-	component(App) {
+	component(App, idPrefix) {
 
 		var component = super.component(App);
 		var field = this.field();
-		var detailView = this.detailComponent();
 
-		var idBase = 'ABViewDetailImage_' + this.id;
+		var idBase = 'ABViewDetailImage_' + (idPrefix || '') + this.id;
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		}
@@ -178,6 +179,58 @@ export default class ABViewDetailImage extends ABViewDetailComponent {
 	 */
 	componentList() {
 		return [];
+	}
+
+
+	//// Report ////
+
+	/**
+	 * @method print
+	 * 
+	 * 
+	 * @return {Object} - PDF object definition
+	 */
+	print(dataRow) {
+
+		return new Promise((resolve, reject) => {
+
+			var reportDef = {};
+
+			var detailCom = this.detailComponent();
+			if (!detailCom) return resolve(reportDef);
+
+			var field = this.field();
+			if (!field) return resolve(reportDef);
+
+			field.toBase64(dataRow || this.getCurrentData()).then(imageData => {
+
+				reportDef = {
+					columns: [
+						{
+							bold: true,
+							text: field.label,
+							width: detailCom.settings.labelWidth
+						}
+					]
+				};
+
+				if (imageData && imageData.data) {
+					reportDef.columns.push({
+						image: imageData.data,
+						width: parseInt(field.settings.imageWidth || 20),
+						height: parseInt(field.settings.imageHeight || 20),
+					});
+				}
+				else {
+					reportDef.columns.push({});
+				}
+
+				resolve(reportDef);
+
+			}).catch(reject);
+
+		});
+
 	}
 
 

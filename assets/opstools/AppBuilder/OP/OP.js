@@ -28,7 +28,8 @@ import Util  from "./util"
 import Validation from "./validation"
 import User from "./user"
 
-
+if (!window.OP) {
+	var OP = {};
     window.OP = OP;
 
 
@@ -62,8 +63,7 @@ import User from "./user"
 	OP.User = User;
 	OP.User.init();
 
-	export default OP;
-// }
-
+}
+export default OP;
 
 // import "./model.js"

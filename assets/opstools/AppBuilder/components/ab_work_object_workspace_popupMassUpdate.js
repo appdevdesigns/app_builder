@@ -9,7 +9,9 @@
 export default class AB_Work_Object_Workspace_PopupMassUpdate extends OP.Component {   //.extend(idBase, function(App) {
 
 	constructor(App, idBase) {
-        super(App, idBase || 'ab_work_object_workspace_popupMassUpdate');
+		idBase = idBase || 'ab_work_object_workspace_popupMassUpdate';
+
+		super(App, idBase);
 		var L = this.Label;
 
 		var labels = {
@@ -33,9 +35,9 @@ export default class AB_Work_Object_Workspace_PopupMassUpdate extends OP.Compone
 
 		// internal list of Webix IDs to reference our UI components
 		var ids = {
-			component: this.unique('component'),
-			list: this.unique('list'),
-			form: this.unique("form"),
+			component: this.unique(idBase + '_popupMassUpdate'),
+			list: this.unique(idBase + '_popupMassUpdate_list'),
+			form: this.unique(idBase + "_popupMassUpdate_form"),
 		}
 
 
@@ -356,7 +358,7 @@ export default class AB_Work_Object_Workspace_PopupMassUpdate extends OP.Compone
 						{ view: 'label', label: "<b>{0}</b>".replace("{0}", " To "), width: 30 },
 						{},
 						{
-							view: 'button', icon: "trash", type: "icon", width: 30, click: function () {
+							view: 'button', icon: "fa fa-trash", type: "icon", width: 30, click: function () {
 								var update_item = this.getParentView(),
 									update_panel = update_item.getParentView();
 

@@ -35,7 +35,9 @@ var ABFieldUserDefaults = {
 		} else {
 			return true;
 		}
-	}
+	},
+
+	supportRequire: false
 
 }
 
@@ -185,10 +187,11 @@ class ABFieldUser extends ABFieldSelectivity {
 	 * return a UI Component that contains the property definitions for this Field.
 	 *
 	 * @param {App} App the UI App instance passed around the Components.
+	 * @param {stirng} idBase
 	 * @return {Component}
 	 */
-	static propertiesComponent(App) {
-		return ABFieldUserComponent.component(App);
+	static propertiesComponent(App, idBase) {
+		return ABFieldUserComponent.component(App, idBase);
 	}
 
 
@@ -221,7 +224,10 @@ class ABFieldUser extends ABFieldSelectivity {
 		// Multiple select list
 		if (field.settings.isMultiple) {
 			config.template = function(row) {
-				
+
+				if (row.$group)
+					return row[field.columnName];
+
 				var node = document.createElement("div");
 				node.classList.add("list-data-values");
 				if (typeof width != "undefined") {
@@ -268,6 +274,10 @@ class ABFieldUser extends ABFieldSelectivity {
 			}
 			
 			config.template = function(obj) {
+
+				if (obj.$group)
+					return obj[field.columnName];
+
 				var myHex = "#666666";
 				var myText = placeHolder;
 				var users = field.getUsers();
@@ -303,14 +313,16 @@ class ABFieldUser extends ABFieldSelectivity {
 	 *					unique id references.
 	 * @param {HtmlDOM} node  the HTML Dom object for this field's display.
 	 */
-	customDisplay(row, App, node, editable) {
+	customDisplay(row, App, node, options) {
 		// sanity check.
 		if (!node) { return }
+
+		options = options || {};
 
 		if (this.settings.isMultiple) {
 
 			var readOnly = false;
-			if (editable != null && editable == false) {
+			if (options.editable != null && options.editable == false) {
 				readOnly = true;
 			}
 
@@ -378,6 +390,9 @@ class ABFieldUser extends ABFieldSelectivity {
 				}, false);				
 			}
 		} else {
+			if (!node.querySelector)
+				return;
+				
 			var clearButton = node.querySelector('.selectivity-multiple-selected-item-remove');
 			if (clearButton) {
 				clearButton.addEventListener("click", (e) => {
@@ -458,8 +473,9 @@ class ABFieldUser extends ABFieldSelectivity {
 	 * @return {array} 
 	 */
 	isValidData(data, validator) {
-
-
+		
+		super.isValidData(data, validator);
+		
 	}
 
 
@@ -546,12 +562,12 @@ class ABFieldUser extends ABFieldSelectivity {
 
 	format(rowData) {
 
-		var val = rowData[this.columnName] || [];
+		var val = this.dataValue(rowData) || [];
 
 		if (!Array.isArray(val) || val)
 			val = [val];
 
-		return val.map(v => v.text).join(', ');
+		return val.map(v => (v.text || v)).join(', ');
 
 	}
 	

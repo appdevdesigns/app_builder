@@ -3,8 +3,13 @@
 import ABApplicationBase from "./ABApplicationBase"
 import "../data/ABApplication"
 import ABObject from "./ABObject"
+import ABObjectQuery from "./ABObjectQuery"
+import ABObjectQueryV1 from "./ABObjectQueryV1"
+import ABMobileApp from "./ABMobileApp"
 import ABViewManager from "./ABViewManager"
 import ABViewPage from "./views/ABViewPage"
+import ABViewReportPage from "./views/ABViewReportPage"
+import ABFieldManager from "./ABFieldManager"
 
 
 var _AllApplications = [];
@@ -296,6 +301,30 @@ export default class ABApplication extends ABApplicationBase {
 	}
 
 
+	/// ABApplication info methods
+
+	/**
+	 * @method updateInfo()
+	 *
+	 * Update label/description of ABApplication
+	 *
+	 * @param {array} translations	an array of translations
+	 *
+	 * @return {Promise}
+	 */
+	updateInfo () {
+
+		var values = this.toObj();
+		values.json = values.json || {};
+		values.json.translations = values.json.translations || [];
+
+		return OP.Comm.Service.put({
+			url: '/app_builder/application/' + this.id + '/info',
+			data: {
+				translations: values.json.translations
+			}
+		});
+	}
 
 	/// ABApplication Permission methods
 
@@ -430,58 +459,34 @@ export default class ABApplication extends ABApplicationBase {
 	}
 
 
+	///
+	/// Fields
+	/// 
+
+
+	/**
+	 * @method fieldNew()
+	 *
+	 * return an instance of a new (unsaved) ABField that is tied to this
+	 * ABObject.
+	 *
+	 * NOTE: this new field is not included in our this.fields until a .save()
+	 * is performed on the field.
+	 *
+	 * @param {obj} values  the initial values for this field.  
+	 *						{ key:'{string}'} is required 
+	 * @param {ABObject} parent  the parent object this field belongs to.
+	 * @return {ABField}
+	 */
+	fieldNew ( values, parent ) {
+		// NOTE: ABFieldManager returns the proper ABFieldXXXX instance.
+		return ABFieldManager.newField( values, parent );
+	}
 
 
 	///
 	/// Pages
 	///
-
-
-	/**
-	 * @method pages()
-	 *
-	 * return an array of all the ABViewPages for this ABApplication.
-	 *
-	 * @param {fn} filter		a filter fn to return a set of ABViewPages that this fn
-	 *							returns true for.
-	 * @param {boolean} deep	flag to find in sub pages
-	 * 
-	 * @return {array}			array of ABViewPages
-	 */
-	pages(filter, deep) {
-
-		var result = [];
-
-		if (!this._pages || this._pages.length < 1)
-			return result;
-
-		// find into sub-pages recursively
-		if (filter && deep) {
-
-			result = this._pages.filter(filter);
-
-			if (result.length < 1) {
-				this._pages.forEach((p) => {
-					var subPages = p.pages(filter, deep);
-					if (subPages && subPages.length > 0) {
-						result = subPages;
-					}
-				});
-			}
-
-		}
-		// find root pages
-		else {
-
-			filter = filter || function () { return true; };
-
-			result = this._pages.filter(filter);
-
-		}
-
-		return result;
-
-	}
 
 
 
@@ -499,7 +504,9 @@ export default class ABApplication extends ABApplicationBase {
 	pageNew(values) {
 
 		// make sure this is an ABViewPage description
-		values.key = ABViewPage.common().key;
+		if (values.key != ABViewPage.common().key &&
+			values.key != ABViewReportPage.common().key)
+			values.key = ABViewPage.common().key;
 
 		return new ABViewManager.newView(values, this, null);
 	}
@@ -605,6 +612,145 @@ export default class ABApplication extends ABApplicationBase {
 	urlPage() {
 		return this.urlPointer() + '_pages/'
 	}
+
+
+
+
+	///
+	/// Queries
+	///
+
+	/**
+	 * @method queryNew()
+	 *
+	 * return an instance of a new (unsaved) ABObjectQuery that is tied to this
+	 * ABApplication.
+	 *
+	 * NOTE: this new object is not included in our this.objects until a .save()
+	 * is performed on the object.
+	 *
+	 * @return {ABObjectQuery}
+	 */
+	queryNew(values) {
+
+		if (Array.isArray(values.joins))
+			return new ABObjectQueryV1(values, this);
+		else 
+			return new ABObjectQuery(values, this);
+	}
+
+
+	/**
+	 * @method queryDestroy()
+	 *
+	 * remove the current ABObjectQuery from our list of ._queries.
+	 *
+	 * @param {ABObject} query
+	 * @return {Promise}
+	 */
+	queryDestroy(query) {
+
+		var remaininQueries = this.queries(function (q) { return q.id != query.id; })
+		this._queries = remaininQueries;
+
+		return this.Model.staticData.queryDestroy(this.id, query.id)
+			.then(() => {
+				// TODO : Should update _AllApplications in 
+			});
+	}
+
+
+	/**
+	 * @method querySave()
+	 *
+	 * persist the current ABObjectQuery in our list of ._queries.
+	 *
+	 * @param {ABObjectQuery} query
+	 * @return {Promise}
+	 */
+	querySave(query) {
+		var isIncluded = (this.queries(function (q) { return q.id == query.id }).length > 0);
+		if (!isIncluded) {
+			this._queries.push(query);
+		}
+
+		return this.Model.staticData.querySave(this.id, query.toObj())
+			.then(() => {
+				// TODO : Should update _AllApplications in 
+			})
+			.catch(()=>{
+				console.error('!!! error with .ABApplication.querySave()');
+			});
+	}
+
+
+
+
+	///
+	/// Mobile App
+	///
+
+
+
+	/**
+	 * @method mobileAppNew()
+	 *
+	 * return an instance of a new (unsaved) ABMobileApp that is tied to this
+	 * ABApplication.
+	 *
+	 * NOTE: this new app is not included in our this.mobileApp until a .save()
+	 * is performed on the App.
+	 *
+	 * @return {ABMobileApp}
+	 */
+	mobileAppNew(values) {
+		return new ABMobileApp(values, this);
+	}
+
+
+	/**
+	 * @method mobileAppDestroy()
+	 *
+	 * remove the current ABMobileApp from our list of ._mobileApps.
+	 *
+	 * @param {ABMobileApp} app
+	 * @return {Promise}
+	 */
+	mobileAppDestroy(app) {
+
+		var remaininApps = this.mobileApps(function (a) { return a.id != app.id; })
+		this._mobileApps = remaininApps;
+
+		return this.Model.staticData.mobileAppDestroy(this.id, app.id)
+			.then(() => {
+				// TODO : Should update _AllApplications in 
+			});
+	}
+
+
+	/**
+	 * @method mobileAppSave()
+	 *
+	 * persist the current ABOMobileApp in our list of ._mobileApps.
+	 *
+	 * @param {ABOMobileApp} app
+	 * @return {Promise}
+	 */
+	mobileAppSave(app) {
+		var isIncluded = (this.mobileApps(function (a) { return a.id == app.id }).length > 0);
+		if (!isIncluded) {
+			this._mobileApps.push(app);
+		}
+
+		return this.Model.staticData.mobileAppSave(this.id, app.toObj())
+			.then(() => {
+				// TODO : Should update _AllApplications in 
+			})
+			.catch(()=>{
+				console.error('!!! error with .ABApplication.mobileAppSave()');
+			});
+	}
+
 
 }
 

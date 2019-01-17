@@ -4,9 +4,9 @@ import ABApplication from "./ABApplication"
 import ABObjectBase from "./ABObjectBase"
 
 // import OP from "OP"
-import ABFieldManager from "./ABFieldManager"
+// import ABFieldManager from "./ABFieldManager"
 import ABModel from "./ABModel"
-
+import ABObjectWorkspaceViewCollection from "./ABObjectWorkspaceViewCollection";
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -22,6 +22,7 @@ export default class ABObject extends ABObjectBase {
 	name: 'name',
 	labelFormat: 'xxxxx',
 	isImported: 1/0,
+	isExternal: 1/0,
 	urlPath:'string',
 	importFromObject: 'string', // JSON Schema style reference:  '#[ABApplication.id]/objects/[ABObject.id]'
 								// to get other object:  ABApplication.objectFromRef(obj.importFromObject);
@@ -34,9 +35,14 @@ export default class ABObject extends ABObjectBase {
 }
 */
 
-    	// multilingual fields: label, description
-    	OP.Multilingual.translate(this, this, ['label']);
+        this.workspaceViews = new ABObjectWorkspaceViewCollection(
+            attributes,
+            this,
+            application
+        );
 
+    	// multilingual fields: label, description
+		OP.Multilingual.translate(this, this, ['label']);
   	}
 
 
@@ -91,9 +97,9 @@ export default class ABObject extends ABObjectBase {
 	/**
 	 * @method destroy()
 	 *
-	 * destroy the current instance of ABApplication
+	 * destroy the current instance of ABObject
 	 *
-	 * also remove it from our _AllApplications
+	 * also remove it from our parent application
 	 *
 	 * @return {Promise}
 	 */
@@ -124,21 +130,48 @@ export default class ABObject extends ABObjectBase {
 				Promise.all(fieldDrops)
 				.then(()=>{
 
-					// now drop our table
-					// NOTE: our .migrateXXX() routines expect the object to currently exist
-					// in the DB before we perform the DB operations.  So we need to
-					// .migrateDrop()  before we actually .objectDestroy() this.
-					this.migrateDrop()
-					.then(()=>{
+					return new Promise((next, err) => {
 
-						// finally remove us from the application storage
-						return this.application.objectDestroy(this);
+						// now drop our table
+						// NOTE: our .migrateXXX() routines expect the object to currently exist
+						// in the DB before we perform the DB operations.  So we need to
+						// .migrateDrop()  before we actually .objectDestroy() this.
+						this.migrateDrop()
+						.then(()=>{
 
-					})
-					.then(resolve)
-					.catch(reject);
+							// finally remove us from the application storage
+							return this.application.objectDestroy(this);
+
+						})
+						.then(next)
+						.catch(err);
+
+					});
 
 				})
+
+				// flag .disable to queries who contains this removed object
+				.then(() => {
+
+					return new Promise((next, err) => {
+
+						this.application
+							.queries(q => q.objects(o => o.id == this.id).length > 0)
+							.forEach(q => {
+
+								q._objects = q.objects(o => o.id != this.id );
+
+								q.disabled = true;
+
+							});
+
+						next();
+
+					});
+
+
+				})
+				.then(resolve)
 				.catch(reject);
 
 			}
@@ -211,7 +244,12 @@ export default class ABObject extends ABObjectBase {
 
 		OP.Multilingual.unTranslate(this, this, ["label"]);
 
-		return super.toObj();
+		var result = super.toObj();
+
+		result.objectWorkspaceViews = this.workspaceViews.toObj();
+
+		return result;
+
 	}
 
 
@@ -243,27 +281,6 @@ export default class ABObject extends ABObjectBase {
 	}
 
 
-	///
-	/// Fields
-	///
-
-
-	/**
-	 * @method fieldNew()
-	 *
-	 * return an instance of a new (unsaved) ABField that is tied to this
-	 * ABObject.
-	 *
-	 * NOTE: this new field is not included in our this.fields until a .save()
-	 * is performed on the field.
-	 *
-	 * @return {ABField}
-	 */
-	fieldNew ( values ) {
-		// NOTE: ABFieldManager returns the proper ABFieldXXXX instance.
-		return ABFieldManager.newField( values, this );
-	}
-
 
 
 	///
@@ -273,14 +290,21 @@ export default class ABObject extends ABObjectBase {
 
 	// return the column headers for this object
 	// @param {bool} isObjectWorkspace  return the settings saved for the object workspace
-	columnHeaders (isObjectWorkspace, isEditable) {
+	columnHeaders (isObjectWorkspace, isEditable, summaryColumns, countColumns) {
+
+		summaryColumns = summaryColumns || [];
+		countColumns = countColumns || [];
 
 		var headers = [];
 		var columnNameLookup = {};
 
 		// get the header for each of our fields:
-		this._fields.forEach(function(f){
+		this.fields().forEach(function(f){
 			var header = f.columnHeader(isObjectWorkspace, null, isEditable);
+
+			header.alias = f.alias || undefined; // query type
+			header.fieldURL = f.urlPointer();
+
 			if (f.settings.width != 0) {
 				// set column width to the customized width
 				header.width = f.settings.width;
@@ -288,6 +312,19 @@ export default class ABObject extends ABObjectBase {
 				// set column width to adjust:true by default;
 				header.adjust = true;
 			}
+
+			// add the summary footer
+			if (summaryColumns.indexOf(f.id) > -1) {
+				if (f.key == "calculate" || f.key == "formula") {
+					header.footer = { content: 'totalColumn', field: f };
+				} else {
+					header.footer = { content: 'summColumn' };
+				}
+			}
+			// add the count footer
+			else if (countColumns.indexOf(f.id) > -1)
+				header.footer = { content: 'countColumn' };
+
 			headers.push(header);
 			columnNameLookup[header.id] = f.columnName;	// name => id
 		})
@@ -318,7 +355,7 @@ export default class ABObject extends ABObjectBase {
 	// @param {Webix.DataStore} data a webix datastore of all the rows effected
 	//        by the render.
 	customDisplays(data, App, DataTable, ids, isEditable) {
-		var fields = this.fields();
+		var fields = this.fields(f => this.objectWorkspace.hiddenFields.indexOf(f.columnName) < 0);
 
 		if (!data || !data.getFirstId) return;
 
@@ -327,10 +364,10 @@ export default class ABObject extends ABObjectBase {
 			ids.forEach((id)=>{
 				var row = data.getItem(id);
 				fields.forEach((f)=>{
-					if (this.objectWorkspace.hiddenFields.indexOf(f.columnName) == -1) {
-						var node = DataTable.getItemNode({ row: row.id, column: f.columnName });
-						f.customDisplay(row, App, node, isEditable);
-					}
+					var node = DataTable.getItemNode({ row: row.id, column: f.columnName });
+					f.customDisplay(row, App, node, {
+						editable: isEditable
+					});
 				});
 			});
 		} else {
@@ -338,11 +375,11 @@ export default class ABObject extends ABObjectBase {
 			while(id) {
 				var row = data.getItem(id);
 				fields.forEach((f)=>{
-					if (this.objectWorkspace.hiddenFields.indexOf(f.columnName) == -1) {
-						var node = DataTable.getItemNode({ row: row.id, column: f.columnName });
-						f.customDisplay(row, App, node, isEditable);
-					}
-				})
+					var node = DataTable.getItemNode({ row: row.id, column: f.columnName });
+					f.customDisplay(row, App, node, {
+						editable: isEditable
+					});
+				});
 				id = data.getNextId(id);
 			}
 		}
@@ -362,7 +399,7 @@ export default class ABObject extends ABObjectBase {
 		var labelData = this.labelFormat || '';
 		
 		// default label
-		if (!labelData && this._fields.length > 0) {
+		if (!labelData && this.fields().length > 0) {
 
 			var defaultField = this.fields(f => f.fieldUseAsLabel())[0];
 			if (defaultField)
@@ -386,8 +423,25 @@ export default class ABObject extends ABObjectBase {
 			});
 		}
 
+		// if label is empty, then show .id
+		if (!labelData.trim())
+			labelData = 'ID: ' + rowData.id; // show id of row
+
+
 		return labelData;
 	}
+
+	/**
+	 * @method isReadOnly
+	 * 
+	 * @return {boolean}
+	 */
+	get isReadOnly() {
+
+		return this.isImported || this.isExternal;
+
+	}
+
 
 
 
@@ -405,17 +459,22 @@ export default class ABObject extends ABObjectBase {
 
 		if (!this._model) {
 
-			if (this.isImported) {
-				var obj = ABApplication.objectFromRef(this.importFromObject);
-				this._model = new ABModel(obj);
-			}
-			else {
-				this._model = new ABModel(this);
-			}
+			this._model = new ABModel(this);
+
+			// if (this.isImported) {
+			// 	var obj = ABApplication.objectFromRef(this.importFromObject);
+			// 	this._model = new ABModel(obj);
+			// }
+			// else {
+			// 	this._model = new ABModel(this);
+			// }
 		}
 
 		return this._model;
 	}
 
-
+	currentView() {
+		return this.workspaceViews.getCurrentView();
+	}
 }
+

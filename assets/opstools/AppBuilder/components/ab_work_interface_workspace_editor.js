@@ -75,7 +75,7 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                             view:'button',
                             type:'htmlbutton',
                             css:'marginLeft10',
-                            label:'<span class="webix_icon fa-arrow-left"></span>',
+                            label:'<span class="webix_icon fa fa-arrow-left"></span>',
                             autowidth: true,
                             click:function(){
                                 _logic.buttonBack();
@@ -104,7 +104,7 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                         },
                         {
                             view: "icon", 
-                            icon: "info-circle",
+                            icon: "fa fa-info-circle",
                             tooltip: labels.component.editorTipText,
                             on: {
                                 onItemClick: function() {
@@ -176,7 +176,7 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                             id: ids.toolbarNewDataCollection,
                             view: "button",
                             type: "iconButton", 
-                            icon: "plus",
+                            icon: "fa fa-plus",
                             label: labels.component.newDataSource,
                             align: "right",
                             autowidth: true,
@@ -352,6 +352,8 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                     ComponentMenu.viewLoad(view);
                 }
 
+                _logic.onViewResize();
+
             },
 
             viewPartChange: function(newV, oldV) {
@@ -368,7 +370,7 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                     _logic.showLayoutPart();
                 }
 
-                App.actions.populateInterfaceWorkspace(CurrentView);                
+                App.actions.populateInterfaceWorkspace(CurrentView);
 
             },
 
@@ -406,7 +408,7 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                 EditorLayout.viewModeChange(CurrentViewMode);
 
                 if (CurrentView) {
-                    this.viewLoad(CurrentView);  
+                    this.viewLoad(CurrentView);
                 }
 
             },
@@ -420,6 +422,7 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
             },
 
             onViewResize: function() {
+                $$(ids.editArea).adjust();
                 $$(ids.editArea).resizeChildren();
             },
 

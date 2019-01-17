@@ -26,12 +26,18 @@ var ABFieldDateDefaults = {
 	// what types of Sails ORM attributes can be imported into this data type?
 	// http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
 	compatibleOrmTypes: ['date', 'datetime'],
+
+
+	// what types of MySql column types can be imported into this data type?
+	// https://www.techonthenet.com/mysql/datatypes.php
+	compatibleMysqlTypes: ['date', 'datetime']
+
 }
 
 var defaultValues = {
 	includeTime: 0,
 	defaultCurrentDate: 0,
-	defaultDate: "",
+	default: "",
 	dayFormat: "%d",
 	dayOrder: 1,
 	dayDelimiter: "slash",
@@ -186,13 +192,22 @@ class ABFieldDate extends ABField {
 							// 	currCol = t.date(this.columnName);
 							// }
 
-							currCol.nullable();
+							// field is required (not null)
+							if (this.settings.required) {
+								currCol.notNullable();
+							}
+							else {
+								currCol.nullable();
+							}
 
 							// set default value
-							if (this.settings.defaultDate && moment(this.settings.defaultDate).isValid()) {
-								var defaultDate = AppBuilder.rules.toSQLDateTime(this.settings.defaultDate);
+							if (this.settings.default && moment(this.settings.default).isValid()) {
+								var defaultDate = AppBuilder.rules.toSQLDateTime(this.settings.default);
 
 								currCol.defaultTo(defaultDate);
+							}
+							else {
+								currCol.defaultTo(null);
 							}
 
 							if (exists) {
@@ -210,7 +225,20 @@ class ABFieldDate extends ABField {
 	}
 
 
+
 	/**
+	 * @function migrateUpdate
+	 * perform the necessary sql actions to MODIFY this column to the DB table.
+	 * @param {knex} knex the Knex connection.
+	 */
+	migrateUpdate (knex) {
+		
+		return this.migrateCreate(knex);
+
+	}
+
+
+			/**
 	 * @function migrateDrop
 	 * perform the necessary sql actions to drop this column from the DB table.
 	 * @param {knex} knex the Knex connection.
@@ -293,7 +321,11 @@ class ABFieldDate extends ABField {
 				}
 				// convert to SQL date format
 				else if (moment(myParameter[this.columnName]).isValid()) {
-					myParameter[this.columnName] = AppBuilder.rules.toSQLDateTime(myParameter[this.columnName]);
+					if (parseInt(this.settings.timeFormat) == 1) {
+						myParameter[this.columnName] = AppBuilder.rules.toSQLDate(myParameter[this.columnName]);
+					} else {
+						myParameter[this.columnName] = AppBuilder.rules.toSQLDateTime(myParameter[this.columnName]);
+					}
 				}
 
 			}
@@ -315,6 +347,20 @@ class ABFieldDate extends ABField {
 
 		return errors;
 	}
+
+	toSQLFormat(data) {
+
+		// check null
+		if (!data)
+			return data;
+
+		if (this.settings.includeTime)
+			return AppBuilder.rules.toSQLDateTime(data);
+		else
+			return AppBuilder.rules.toSQLDate(data);
+
+	}
+
 
 
 }

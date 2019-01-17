@@ -11,32 +11,44 @@ import AB_Work_HeaderEditMenu from "./ab_work_object_workspace_popupHeaderEditMe
 
 export default class ABWorkObjectDatatable extends OP.Component {
     
-    constructor(App, idBase, params) {
+    /**
+     * 
+     * @param {*} App 
+     * @param {*} idBase 
+     * @param {Object} params - {
+     *			allowDelete: bool,
+    			detailsView: {string} - id of page,
+    			editView:	 {string} - id of page,
+    			isEditable:  bool,
+    			massUpdate:  bool,
+				configureHeaders: bool,
+                summaryColumns:	 {array} - an array of field id
+                countColumns:	 {array} - an array of field id
+			}
+     */
 
-        if (params) {
-            var settings = {
-    			allowDelete: params.allowDelete,
-    			detailsView: params.detailsView || null,
-    			editView: params.editView || null,
-    			isEditable: params.isEditable,
-    			massUpdate: params.massUpdate,
-                configureHeaders: params.configureHeaders
-    		}
-        } else {
-            var settings = {
-    			allowDelete: true,
-    			detailsView: null,
-    			editView: null,
-    			isEditable: true,
-    			massUpdate: true,
-                configureHeaders: true
-    		}
-        }
+    constructor(App, idBase, params) {
 
         idBase = idBase || 'ab_work_object_workspace_datatable';
         super(App, idBase);
+
+        params = params || {};
+
+        var settings = {
+            allowDelete: (params.allowDelete != null ? params.allowDelete : true ),
+            detailsView: params.detailsView || null,
+            editView: params.editView || null,
+            isEditable: (params.isEditable != null ? params.isEditable : true ),
+            massUpdate: (params.massUpdate != null ? params.massUpdate : true ),
+            configureHeaders: (params.configureHeaders != null ? params.configureHeaders : true ),
+            summaryColumns: params.summaryColumns || [],
+            countColumns: params.countColumns || [],
+            labelAsField: params.labelAsField || false,
+            hideButtons: params.hideButtons || false,
+            groupBy: params.groupBy || ""
+        };
+
         var L = this.Label;
-        
         var labels = {
             common: App.labels,
             component: {
@@ -49,8 +61,8 @@ export default class ABWorkObjectDatatable extends OP.Component {
 
     	// internal list of Webix IDs to reference our UI components.
     	var ids = {
-    		component: this.unique('component'),
-            tooltip: this.unique('tooltip')
+    		component: this.unique(idBase + '_datatable'),
+            tooltip: this.unique(idBase + '_datatable_tooltip')
     	}
 
         var defaultHeight = 0;
@@ -60,6 +72,11 @@ export default class ABWorkObjectDatatable extends OP.Component {
         var columnSplitLeft = 0;
 
         var PopupHeaderEditComponent = new AB_Work_HeaderEditMenu(App, idBase);
+        
+        var selectType = "cell";
+        if (!settings.isEditable && (settings.detailsView || settings.editView)) {
+            selectType = "row";
+        }
 
     	// Our webix UI definition:
     	this.ui = {
@@ -71,7 +88,8 @@ export default class ABWorkObjectDatatable extends OP.Component {
     		editable: settings.isEditable,
     		fixedRowHeight: false,
     		editaction: "custom",
-    		select: "cell",
+            select: selectType,
+            footer: (settings.summaryColumns.length > 0 || settings.countColumns.length > 0), // show footer when there are summary columns
             tooltip: {
                 id: ids.tooltip,
                 template: function(obj, common){
@@ -102,7 +120,7 @@ export default class ABWorkObjectDatatable extends OP.Component {
     						rowData = this.getItem(data.row);
 
     					return selectField.customEdit(rowData, App, cellNode);
-                    } else {
+                    } else if (!settings.detailsView && !settings.editView) {
                         return false;
                     }
 
@@ -232,12 +250,31 @@ console.warn('!! ToDo: onAfterColumnHide()');
     	               _logic.onHeaderClick(id, e, node);
     			}
     		}
-    	}
+        };
+
+        // Grouping
+        if (settings.groupBy) {
+
+            // switch datatable to support tree
+            this.ui.view = "treetable";
+            // this.ui.scheme = {
+            //     $group: {
+            //         by: settings.groupBy
+            //     }
+            // };
+
+        }
 
 
 
     	// Our init() function for setting up our UI
     	this.init = (options) => {
+
+			// WORKAROUND : Where should we define this ??
+			// For include PDF.js
+			webix.codebase = "";
+			webix.cdn = "/js/webix";
+
 
     		// register our callbacks:
     		for(var c in _logic.callbacks) {
@@ -255,46 +292,82 @@ console.warn('!! ToDo: onAfterColumnHide()');
     		// one.
     		var DataTable = $$(ids.component);
     		var throttleCustomDisplay = null;
-            var items = [];
-
+            // var items = [];
+            
 			webix.extend(DataTable, webix.ProgressBar);
 
-    		DataTable.attachEvent("onAfterRender", function(data){
-                items = [];
-                data.order.each(function (i) {
-                    if (typeof i != "undefined") items.push(i);
-                });
-    			if (throttleCustomDisplay) clearTimeout(throttleCustomDisplay);
-    			throttleCustomDisplay = setTimeout(()=>{
-    				if (CurrentObject) {
-                        if (scrollStarted) clearTimeout(scrollStarted);
-    					CurrentObject.customDisplays(this.data, App, DataTable, items, settings.isEditable);
-    				}
-    			}, 350);
+            let customDisplays = (data) => {
 
-    		});
+                if (!CurrentObject) return;
+
+                var displayRecords = [];
+
+                // WORKAROUND: .Sj() => ._get_y_range function of webix's datatable.
+                // It is a private function. It returns what record index are showing
+                let scrollState = DataTable.Ug(),
+                    startRecIndex = scrollState[0],
+                    endRecIndex = scrollState[1],
+                    index = 0;
+                
+                DataTable.data.order.each(function (id) {
+
+                    if (id != null && 
+                        startRecIndex <= index && index <= endRecIndex) 
+                        displayRecords.push(id);
+
+                    index++;
+
+                });
+
+                CurrentObject.customDisplays(data, App, DataTable, displayRecords, settings.isEditable);
+
+            };
+
+            DataTable.attachEvent("onAfterRender", function(data){
+                DataTable.resize();
+
+                // items = [];
+                // data.order.each(function (i) {
+                //     if (typeof i != "undefined") items.push(i);
+                // });
+
+                if (throttleCustomDisplay) clearTimeout(throttleCustomDisplay);
+                throttleCustomDisplay = setTimeout(()=>{
+                    if (CurrentObject) {
+                        if (scrollStarted) clearTimeout(scrollStarted);
+                        customDisplays(this.data);
+                    }
+
+                }, 350);
+
+			});
 
             // we have some data types that have custom displays that don't look right after scrolling large data sets we need to call customDisplays again
             var scrollStarted = null;
             DataTable.attachEvent("onScroll", function(){
                 if (scrollStarted) clearTimeout(scrollStarted);
                 if (throttleCustomDisplay) clearTimeout(throttleCustomDisplay);
-    			scrollStarted = setTimeout(()=>{
-                    if (CurrentObject) {
-    					CurrentObject.customDisplays(this.data, App, DataTable, items, settings.isEditable);
-    				}
-    			}, 1500);
+
+                scrollStarted = setTimeout(()=>{
+
+                    customDisplays(this.data);
+
+                }, 1500);
+
             });
 
             
             // we have some data types that have custom displays that don't look right after scrolling large data sets we need to call customDisplays again
             DataTable.attachEvent("onAfterScroll", function(){
                 if (throttleCustomDisplay) clearTimeout(throttleCustomDisplay);
+
                 throttleCustomDisplay = setTimeout(()=>{
+
                     if (CurrentObject) {
                         if (scrollStarted) clearTimeout(scrollStarted);
-                        CurrentObject.customDisplays(this.data, App, DataTable, items, settings.isEditable);
+                        customDisplays(this.data);
                     }
+
                 }, 350);
 
             });
@@ -316,15 +389,13 @@ console.warn('!! ToDo: onAfterColumnHide()');
                 }
                 // if this was our edit icon:
                 // console.log(e.target.className);
-    			if (e.target.className.indexOf('pencil') > -1) {
+                if (e == "auto") {
+                    // just pass by if we are going to call change page in ABViewGrid later
+                } else if (e.target.className.indexOf('pencil') > -1) {
                     // alert("edit");
-                }
-                // if this was our view icon:
-    			if (e.target.className.indexOf('eye') > -1) {
+                } else if (e.target.className.indexOf('eye') > -1) { // if this was our view icon:
                     // alert("view");
-                }
-    			// if this was our trash icon:
-    			if (e.target.className.indexOf('trash') > -1) {
+                } else if (e.target.className.indexOf('trash') > -1) { // if this was our trash icon:
 
     				OP.Dialog.Confirm({
     					title: labels.component.confirmDeleteRowTitle,
@@ -360,7 +431,8 @@ console.warn('!! ToDo: onAfterColumnHide()');
     				});
     			}	
     			
-    		});
+            });
+
 
     	}
 
@@ -481,6 +553,12 @@ console.warn('!! ToDo: onAfterColumnHide()');
                 return lastColumn;
             },
             
+            hideHeader: function() {
+                var DataTable = $$(ids.component);
+                DataTable.define("header", false);
+                DataTable.refresh();
+            },
+            
             freezeDeleteColumn: function() {
                 var DataTable = $$(ids.component);
                 // we are going to always freeze the delete column if the datatable is wider than the container so it is easy to get to
@@ -557,9 +635,11 @@ console.warn('!! ToDo: onAfterColumnHide()');
 
 //// Question: do we submit full item updates?  or just patches?
 var patch = {};
+patch.id = item.id;
 patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also condition the data for sending.state.value;
-    					CurrentObject.model()
-    					.update(item.id, item)
+                        CurrentObject.model()
+                        // .upsert(item)
+.update(item.id, item)
 // .update(item.id, patch)
     					.then(()=>{
 
@@ -758,8 +838,8 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
     		objectLoad:function(object) {
 
-    			CurrentObject = object;
-                
+                CurrentObject = object;
+
                 var DataTable = $$(ids.component);
                 var minHeight = 0;
                 defaultHeight = 0;
@@ -775,7 +855,107 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                     defaultHeight = minHeight;
                 }
 
-    			PopupHeaderEditComponent.objectLoad(object);
+                PopupHeaderEditComponent.objectLoad(object);
+                
+                // grouping
+                if (settings.groupBy) {
+
+                    // map: {
+                    //     votes:["votes", "sum"],
+                    //     title:["year"]
+                    // }
+                    let groupMap = {};
+                    CurrentObject.fields().forEach(f => {
+                        // if (f.columnName == settings.groupBy) return;
+
+                        switch (f.key)  {
+                            case "number":
+                                groupMap[f.columnName] = [f.columnName, "sum"];
+                                break;
+                            case "calculate":
+                            case "formula":
+                                groupMap[f.columnName] = [f.columnName, function(prop, listData) {
+                                    if (!listData)
+                                        return 0;
+
+                                    let sum = 0;
+
+                                    listData.forEach(r => {
+                                        sum += f.format(r) * 1;
+                                    });
+
+                                    return sum;
+
+                                }];
+                                break;
+                            case "connectObject":
+                                groupMap[f.columnName] = [f.columnName, function(prop, listData) {
+
+                                    if (!listData || !listData.length)
+                                        return 0;
+
+                                    let count = 0;
+
+                                    listData.forEach(r => {
+                                        var valRelation = r[f.relationName()];
+
+                                        // array
+                                        if (valRelation && 
+                                            valRelation.length != null)
+                                            count += valRelation.length;
+                                        // object
+                                        else if (valRelation)
+                                            count += 1;
+
+                                    });
+
+                                    return count;
+                                }];
+                                break;
+                            default:
+                                groupMap[f.columnName] = [f.columnName, function(prop, listData) {
+
+                                    if (!listData || !listData.length)
+                                        return 0;
+
+                                    let count = 0;
+
+                                    listData.forEach(r => {
+                                        var val = prop(r);
+
+                                        // // "false" to boolean
+                                        // if (f.key == "boolean") {
+
+                                        //     try {
+                                        //         val = JSON.parse(val || 0);
+                                        //     }
+                                        //     catch (err) {
+                                        //         val = false;
+                                        //     }
+                                        // }
+
+                                        // count only exists data
+                                        if (val) {
+                                            count += 1;
+                                        }
+
+                                    });
+
+                                    return count;
+                                }];
+                                break;
+                        }
+                    });
+
+                    // set group definition
+                    DataTable.define("scheme", {
+                        $group: {
+                            by: settings.groupBy,
+                            map: groupMap
+                        }
+                    });
+
+                }
 
                 // supressed this because it seems to be making an extra call?
     			// _logic.refresh();
@@ -783,7 +963,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
 
     		// rebuild the data table view:
-    		refresh: function() {
+    		refresh: function(loadAll) {
                 
     			// wait until we have an Object defined:
     			if (CurrentObject) {
@@ -796,21 +976,21 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
     				//// NOTE: this should take advantage of Webix dynamic data loading on
     				//// larger data sets.
                     var wheres = {};
-                    if (CurrentObject.workspaceFilterConditions.length > 0) {
+                    if (CurrentObject.workspaceFilterConditions &&
+                        CurrentObject.workspaceFilterConditions.rules &&
+                        CurrentObject.workspaceFilterConditions.rules.length > 0) {
                         wheres = CurrentObject.workspaceFilterConditions;
                     }
                     var sorts = {};
-                    if (CurrentObject.workspaceSortFields.length > 0) {
+                    if (CurrentObject.workspaceSortFields &&
+                        CurrentObject.workspaceSortFields.length > 0) {
                         sorts = CurrentObject.workspaceSortFields;
                     }
-    				CurrentObject.model()
-    				.where({
-                        where: wheres, 
-                        sort: sorts,
-                        height: defaultHeight
-                    })
+                    CurrentObject.model()
+                    .where(wheres)
+                    .sort(sorts)
     				.skip(0)
-    				.limit(30)
+    				.limit(loadAll ? null : 30)
     				.loadInto(DataTable);
     			}
     		},
@@ -830,30 +1010,50 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                     DataTable.define('rightSplit', 0);
     				DataTable.clearAll();
 
-                    var isEditable = false;
-                    if (settings.isEditable)
-                        isEditable = settings.isEditable;
-    				//// update DataTable structure:
+                    //// update DataTable structure:
     				// get column list from our CurrentObject
-    				var columnHeaders = CurrentObject.columnHeaders(true, settings.isEditable);
+    				var columnHeaders = CurrentObject.columnHeaders(true, settings.isEditable, settings.summaryColumns, settings.countColumns);
                     
                     columnHeaders.forEach(function(col) {
                         col.fillspace = false;
-                    });
-                    
-                    if (settings.isEditable == 0) {
-                        columnHeaders.forEach(function(col) {
-                            
-                            if (col.template == '<div class="ab-boolean-display">{common.checkbox()}</div>') {
-                                col.template = function(obj, common, value){
-                                    if (value)
-                                        return "<div class='webix_icon fa-check-square-o'></div>";
+
+                        // group header
+                        if (settings.groupBy &&
+                            settings.groupBy == col.id) {
+
+                            var groupField = CurrentObject.fields(f => f.columnName == col.id)[0];
+                            if (groupField) {
+
+                                col.template = function(obj, common) {
+
+                                    if (obj.$group) {
+
+                                        let rowData = {};
+                                        rowData[groupField.columnName] = obj.value;
+
+                                        return common.treetable(obj, common) + groupField.format(rowData);
+                                    }
                                     else
-                                        return "<div class='webix_icon fa-square-o'></div>";
+                                        return groupField.format(obj);
+    
                                 }
                             }
-                                
-                        })
+
+                        }
+
+                    });
+                    
+                    if (settings.labelAsField) {
+                        console.log(CurrentObject);
+                        columnHeaders.unshift({
+                            id: "appbuilder_label_field",
+                            header: "Label",
+                            fillspace: true,
+                            template: function(obj){
+                                return CurrentObject.displayData(obj);
+                            },
+                            // css: { 'text-align': 'center' }
+                        });
                     }
 
                     if (settings.massUpdate) {
@@ -866,19 +1066,22 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                         });
                         columnSplitLeft = 1;
                     }
-                    if (settings.detailsView != null) {
+                    else {
+                        columnSplitLeft = 0;
+                    }
+                    if (settings.detailsView != null && !settings.hideButtons) {
                         columnHeaders.push({
                             id: "appbuilder_view_detail",
         					header: "",
         					width: 40,
                             template: function(obj, common){
-                                return "<div class='detailsView'><span class='webix_icon fa-eye'></span></div>";
+                                return "<div class='detailsView'><span class='webix_icon fa fa-eye'></span></div>";
                             },
         					css: { 'text-align': 'center' }                            
                         });
                         columnSplitRight++;
                     }
-                    if (settings.editView != null) {
+                    if (settings.editView != null && !settings.hideButtons) {
                         columnHeaders.push({
                             id: "appbuilder_view_edit",
         					header: "",
@@ -918,7 +1121,8 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                     }
                     _logic.freezeDeleteColumn();
                     DataTable.refreshColumns();
-    			}
+
+                }
                 
             },
 
@@ -928,12 +1132,17 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
     		 * add a new row to the data table
     		 */
     		rowAdd:function() {
+
+                if (!settings.isEditable)
+                    return;
+
     			var emptyObj = CurrentObject.defaultValues();
     			CurrentObject.model()
     			.create(emptyObj)
     			.then((obj)=>{
-    				var DataTable = $$(ids.component);
-    				DataTable.add(obj, 0);
+                    var DataTable = $$(ids.component);
+                    if (!DataTable.exists(obj.id))
+    				    DataTable.add(obj, 0);
     			})
     		},
 
@@ -962,7 +1171,12 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                             tip += o.text + "<br/>";
                     });
                 } else if (typeof obj[common.column.id] == "undefined" && typeof obj[common.column.id+"__relation"] != "undefined") {
-                    obj[common.column.id+"__relation"].forEach(function (o) {
+
+                    var relationData = obj[common.column.id+"__relation"];
+                    if (!Array.isArray(relationData))
+                        relationData = [relationData];
+
+                    (relationData || []).forEach(function (o) {
                         tip += o.text + "<br/>";
                     });
                 } else if (typeof obj[common.column.id+"__relation"] != "undefined" && typeof obj[common.column.id] == "number") {
@@ -1034,9 +1248,43 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                 } else {
                     node.style.visibility = "visible";                            
                 }
+            },
+
+
+            editable: function() {
+
+                var DataTable = $$(ids.component);
+
+                DataTable.define('editable', true);
+                DataTable.refresh();
+
+                settings.isEditable = true;
+                settings.allowDelete = true;
+                settings.massUpdate = true;
+            },
+
+
+            readonly: function() {
+
+                var DataTable = $$(ids.component);
+
+                DataTable.define('editable', false);
+                DataTable.refresh();
+
+                settings.isEditable = false;
+                settings.allowDelete = false;
+                settings.massUpdate = false;
+            },
+
+            loadAll: function() {
+
+                let isLoadAll = true;
+                _logic.refresh(isLoadAll);
+
             }
+
     	}
-        
+
 
 
 
@@ -1086,7 +1334,19 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
         // expose data for column sort UI
         this.getFieldList = _logic.getFieldList;
+        
+        this.hideHeader = _logic.hideHeader;
+
+        this.editable = _logic.editable;
+        this.readonly = _logic.readonly;
+
+        // expose load all records
+        this.loadAll = _logic.loadAll;
+
+        this.show = _logic.show;
+
     }
 
 }
+
 

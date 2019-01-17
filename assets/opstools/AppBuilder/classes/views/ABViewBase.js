@@ -14,6 +14,7 @@ var ABViewBaseDefaults = {
 	icon: 'window-maximize',
 }
 
+// var _ = require("lodash");
 
 module.exports = class ABViewBase extends EventEmitter {
 
@@ -59,7 +60,7 @@ module.exports = class ABViewBase extends EventEmitter {
 			name: this.name,
 			// parent: this.parent,
 
-			settings: this.settings || {},
+			settings: _.cloneDeep(this.settings || {}),
 			translations: this.translations || []
 
 		}
@@ -77,6 +78,7 @@ module.exports = class ABViewBase extends EventEmitter {
 	fromValues(values) {
 
 		this.id = values.id;			// NOTE: only exists after .save()
+		this.key = values.key;
 		this.icon = values.icon || ABViewBaseDefaults.icon;
 
 		// this.parent = values.parent || null;

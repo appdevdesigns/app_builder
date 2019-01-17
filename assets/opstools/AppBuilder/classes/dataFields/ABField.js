@@ -30,12 +30,14 @@ export default class ABField extends ABFieldBase {
   	// 		label:'',					// pulled from translation
 	// 		columnName:'column_name',	// a valid mysql table.column name
 	//		settings: {					// unique settings for the type of field
-	//		showIcon:true/false,		// only useful in Object Workspace DataTable
-	//		isImported: 1/0,			// flag to mark is import from other object
+	// 			showIcon:true/false,	// only useful in Object Workspace DataTable
+	// 			isImported: 1/0,		// flag to mark is import from other object
+	// 			required: 1/0,			// field allows does not allow NULL or it does allow NULL 
+	// 			width: {int}			// width of display column
 
-	// 	// specific for dataField
-	// },
-	// translations:[]
+	// 		// specific for dataField
+	// 		},
+	// 		translations:[]
   	// 	}
   		
   	// 	this.fromValues(values);
@@ -60,24 +62,41 @@ export default class ABField extends ABFieldBase {
 
   	static clearEditor( ids) {
 
+		this._CurrentField = null;
+
   		var defaultValues = {
   			label: '',
   			columnName:'',
-  			showIcon:1
+  			showIcon:1,
+			required:0
   		}
 
   		for(var f in defaultValues) {
 			var component = $$(ids[f]);
 			component.setValue(defaultValues[f]);
 		}
+
+		// hide warning message of null data
+		$$(ids.numberOfNull).hide();
+
   	}
 
-
+	/**
+	* @function editorPopulate
+	*
+	* populate the form with the given ABField instance provided.
+	*
+	* @param {object} ids
+	* @param {ABField} field
+	*/
   	static editorPopulate( ids, field ) {
+
+		this._CurrentField = field;
 
   		$$(ids.label).setValue(field.label);
   		$$(ids.columnName).setValue(field.columnName);
   		$$(ids.showIcon).setValue(field.settings.showIcon);
+		$$(ids.required).setValue(field.settings.required);
 
   	}
 
@@ -108,7 +127,7 @@ export default class ABField extends ABFieldBase {
 /// if not onChange, then use our default:
 
   		// setup our default labelOnChange functionality:
-  		var onChange = function (newVal, oldVal) {
+  		var labelOnChange = function (newVal, oldVal) {
 
   			oldVal = oldVal || '';
 
@@ -121,8 +140,69 @@ export default class ABField extends ABFieldBase {
 
 		// if they provided a labelOnChange() override, use that:
 		if (_logic.labelOnChange) {
-			onChange = _logic.labelOnChange;
+			labelOnChange = _logic.labelOnChange;
 		}
+		
+		var requiredOnChange = function (newVal, oldVal, ids) {
+
+			console.warn('Field has not implemented .requiredOnChange() is that okay?');
+		}
+		
+		// if the provided a requriedOnChange() override, use that:
+		if (_logic.requiredOnChange) {
+			requiredOnChange = _logic.requiredOnChange;
+		}
+
+
+		var getNumberOfNullValue = (isRequired) => {
+
+			if (isRequired &&
+				this._CurrentField && 
+				this._CurrentField.id &&
+				this._CurrentField.settings.required != isRequired) {
+
+				// TODO: disable save button
+
+				// get count number
+				this._CurrentField.object.model().count({
+					where: {
+						glue: 'and',
+						rules: [
+							{
+								key: this._CurrentField.id,
+								rule: 'is_null'
+							}
+						]
+					}
+				})
+				.then((data) => {
+
+					if (data.count > 0) {
+
+						var messageTemplate = "** There are #count# rows that will be updated to default value"; 
+
+						$$(ids.numberOfNull).setValue(messageTemplate.replace('#count#', data.count));
+						$$(ids.numberOfNull).show();
+					}
+					else {
+						$$(ids.numberOfNull).hide();
+					}
+
+					// TODO: enable save button
+
+				})
+				.catch(err => {
+
+					// TODO: enable save button
+
+				});
+
+			}
+			else {
+				$$(ids.numberOfNull).hide();
+			}
+
+		};
 
 
   		var _ui = {
@@ -130,7 +210,7 @@ export default class ABField extends ABFieldBase {
 			rows: [
 				// {
 				// 	view: "label",
-				// 	label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', Field.icon).replace('{1}', Field.menuName)
+				// 	label: "<span class='webix_icon fa fa-{0}'></span>{1}".replace('{0}', Field.icon).replace('{1}', Field.menuName)
 				// },
 				{
 					view: "text",
@@ -142,7 +222,7 @@ export default class ABField extends ABFieldBase {
 					css: 'ab-new-label-name',
 					on: {
 						onChange: function (newVal, oldVal) {
-							onChange(newVal, oldVal);
+							labelOnChange(newVal, oldVal);
 						}
 					}
 				},
@@ -168,9 +248,36 @@ export default class ABField extends ABFieldBase {
 					labelRight: App.labels.dataFieldShowIcon, // 'Show icon',
 					labelWidth: App.config.labelWidthCheckbox,
 					value:true
+				},
+				{
+					view: "checkbox",
+					id: ids.required,
+					name: "required",
+					hidden: !Field.supportRequire,
+					labelRight: App.labels.dataFieldRequired,
+					// disallowEdit: true,
+					labelWidth: App.config.labelWidthCheckbox,
+					on: {
+						onChange: (newVal, oldVal) => {
+							requiredOnChange(newVal, oldVal, ids);
+
+							// If check require on edit field, then show warning message
+							getNumberOfNullValue(newVal);
+						}
+					}
+				},
+
+				// warning message: number of null value rows 
+				{
+					view: "label",
+					id: ids.numberOfNull,
+					css: { color: '#f00' },
+					label: "",
+					hidden: true
 				}
 			]
-		}
+		};
+
 
   		return _ui;
   	}
@@ -189,11 +296,6 @@ export default class ABField extends ABFieldBase {
 
   		return obj;
 	  }
-	  
-
-	static get reservedNames() {
-		return ['id', 'created_at', 'updated_at', 'properties'];
-	}
 
 
   	/*
@@ -243,31 +345,14 @@ export default class ABField extends ABFieldBase {
 		return new Promise(
 			(resolve, reject) => {
 
-				// verify we have been .save()d before:
+				// verify we have been .save() before:
 				if (this.id) {
 
 					// NOTE: our .migrateXXX() routines expect the object to currently exist
 					// in the DB before we perform the DB operations.  So we need to
 					// .migrateDrop()  before we actually .objectDestroy() this.
 					this.migrateDrop()
-					.then(()=>{
-
-						// TODO workaround : where should I destroy a link object
-						if (this.key == "connectObject") {
-							var application = this.object.application;
-							var linkObject = application.objects((obj) => obj.id == this.settings.linkObject)[0];
-
-							if (linkObject) {
-
-								var linkField = linkObject.fields((f) => f.id == this.settings.linkColumn)[0];
-								if (linkField) {
-									linkField.destroy().then(() => {});
-								}
-
-							}
-						}
-
-
+					.then(() => {
 						return this.object.fieldRemove(this);
 					})
 					.then(resolve)
@@ -304,28 +389,85 @@ export default class ABField extends ABFieldBase {
 					this.id = OP.Util.uuid();	// setup default .id
 				}
 
+				Promise.resolve()
+					.then(() => {
 
-				this.object.fieldSave(this)
-				.then(() => {
+						// update null data to default
+						return new Promise((next, error) => {
 
-					if (isAdd &&
-						this.key != "connectObject" // does not .migrateCreate, we have to wait until the link column will finish
-						) {
+							if (isAdd || !this.settings.required || !this.settings.default)
+								return next();
 
-						this.migrateCreate()
-						.then(()=>{
-							resolve(this);
-						})
-						.catch(reject);
+							var model = this.object.model();
 
-					} else {
+							// pull rows that has null value
+							model.findAll({
+								where: {
+									glue: 'and',
+									rules: [
+										{
+											key: this.id,
+											rule: 'is_null'
+										}
+									]
+								}
+							})
+							.then(result => {
+
+								var tasks = [];
+
+								// updating ...
+								result.data.forEach((d) => {
+
+									if (!d[this.columnName])
+										d[this.columnName] = this.settings.default;
+
+									tasks.push(model.update(d.id, d));
+
+								});
+
+								Promise.all(tasks)
+										.then(next)
+										.catch(error);
+
+							})
+							.catch(error);
+
+
+						});
+
+					})
+					.then(() => {
+
+						// save field
+						return new Promise((next, error) => {
+
+							this.object.fieldSave(this)
+							.then(() => {
+			
+								// not .migrateCreate, we have to wait until the link column will finish
+								if (this.key == "connectObject")
+									return next();
+			
+								var fnMigrate = isAdd ? this.migrateCreate() : this.migrateUpdate();
+								fnMigrate
+								.then(()=>{
+									next();
+								})
+								.catch(error);
+			
+							})
+							.catch(error);
+
+						});
+
+					})
+					.then(() => {
 						resolve(this);
-					}
+					})
+					.catch(reject);
 
-				})
-				.catch(function(err){
-					reject(err);
-				})
+
 			}
 		)
 	}
@@ -367,6 +509,18 @@ export default class ABField extends ABFieldBase {
 	}
 
 
+	migrateUpdate() {
+		var url = '/app_builder/migrate/application/#appID#/object/#objID#/field/#fieldID#'
+			.replace('#appID#', this.object.application.id)
+			.replace('#objID#', this.object.id)
+			.replace('#fieldID#', this.id)
+
+		return OP.Comm.Service.put({
+			url: url
+		})
+	}
+
+
 	migrateDrop() {
 		var url = '/app_builder/migrate/application/#appID#/object/#objID#/field/#fieldID#'
 			.replace('#appID#', this.object.application.id)
@@ -396,12 +550,12 @@ export default class ABField extends ABFieldBase {
 
 		var config = {
 			id: this.columnName, // this.id,
-			header: this.label,
-		}
+			header: this.label
+		};
 
 		if (isObjectWorkspace) {
 			if (this.settings.showIcon) {
-				config.header = '<span class="webix_icon fa-{icon}"></span>'.replace('{icon}', this.fieldIcon() ) + config.header;
+				config.header = '<span class="webix_icon fa fa-{icon}"></span>'.replace('{icon}', this.fieldIcon() ) + config.header;
 			}
 		}
 
@@ -418,8 +572,9 @@ export default class ABField extends ABFieldBase {
 	 * @param {App} App the shared ui App object useful more making globally
 	 *					unique id references.
 	 * @param {HtmlDOM} node  the HTML Dom object for this field's display.
+	 * @param {object} options - option of additional settings
 	 */
-	customDisplay(row, App, node) {
+	customDisplay(row, App, node, options) {
 		
 	}
 
@@ -447,18 +602,21 @@ export default class ABField extends ABFieldBase {
 	 */
 	isValidData(data, validator) {
 
-		console.error('!!! Field ['+this.fieldKey()+'] has not implemented .isValidData()!!!');
+		// console.error('!!! Field ['+this.fieldKey()+'] has not implemented .isValidData()!!!');
+		if (this.settings.required && (data[this.columnName] == null || data[this.columnName] == '')) {
+			validator.addError(this.columnName, '*This is a required field.');
+		}
 
 	}
 
 
 
 	/*
-	 * @function isMultilingual
+	 * @property isMultilingual
 	 * does this field represent multilingual data?
 	 * @return {bool}
 	 */
-	isMultilingual() {
+	get isMultilingual() {
 		return false;
 	}
 
@@ -491,7 +649,7 @@ export default class ABField extends ABFieldBase {
 		if (!item) return;
 	
 		var val;
-		if (rowData[this.columnName]) {
+		if (typeof rowData[this.columnName] != "undefined") {
 			val = rowData[this.columnName];
 		} else {
 			val = rowData;
@@ -505,6 +663,16 @@ export default class ABField extends ABFieldBase {
 
 
 
+	dataValue(rowData) {
+
+		let propName = "{objectName}.{columnName}"
+			.replace('{objectName}', this.alias || this.object.name)
+			.replace('{columnName}', this.columnName);
+
+		return rowData[this.columnName] || rowData[propName] || "";
+
+	}
+
 
 	/**
 	 * @method format
@@ -514,8 +682,9 @@ export default class ABField extends ABFieldBase {
 	 */
 	format(rowData) {
 
-		if (rowData && rowData[this.columnName] != null)
-			return rowData[this.columnName];
+		if (rowData) {
+			return this.dataValue(rowData);
+		}
 		else
 			return "";
 

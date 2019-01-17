@@ -10,7 +10,10 @@
 export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Component {   //.extend(idBase, function(App) {
 
 	constructor(App, idBase) {
-        super(App, idBase || 'ab_work_object_workspace_popupSortFields');
+
+		idBase = idBase || 'ab_work_object_workspace_popupSortFields';
+
+        super(App, idBase);
 		var L = this.Label;
 
 		var labels = {
@@ -34,9 +37,9 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 
 		// internal list of Webix IDs to reference our UI components
 		var ids = {
-			component: this.unique(idBase + '_component'),
-			list: this.unique(idBase + '_list'),
-			form: this.unique(idBase + "_form"),
+			component: this.unique(idBase + '_popupSort'),
+			list: this.unique(idBase + '_popupSort_list'),
+			form: this.unique(idBase + "_popupSort_form"),
 		}
 
 
@@ -109,7 +112,8 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 			 * @function clickAddNewSort
 			 * the user clicked the add new sort buttton. I don't know what it does...will update later
 			 */
-			clickAddNewSort: function(by, dir, isMulti, id) {
+			// clickAddNewSort: function(by, dir, isMulti, id) {
+			clickAddNewSort: function(fieldId, dir) {
 				// Prevent duplicate fields
 				var sort_popup = $$(ids.component),
 					sort_form = $$(ids.form);
@@ -141,14 +145,8 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 							}
 						},
 						{
-							view: "text", 
-							width: 20, 
-							hidden: true, 
-							value: ""
-						},
-						{
 							view: "button", 
-							icon: "trash", 
+							icon: "fa fa-trash", 
 							type: "icon", 
 							width: 30,
 							on: {
@@ -163,18 +161,18 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 				}, viewIndex);
 
 				// Select field
-				if (by) {
+				if (fieldId) {
 					var fieldsCombo = sort_form.getChildViews()[viewIndex].getChildViews()[0];
-					fieldsCombo.setValue(by);
+					fieldsCombo.setValue(fieldId);
 				}
 				if (dir) {
 					var segmentButton = sort_form.getChildViews()[viewIndex].getChildViews()[1];
 					segmentButton.setValue(dir);
 				}
-				if (isMulti) {
-					var isMultilingualField = sort_form.getChildViews()[viewIndex].getChildViews()[2];
-					isMultilingualField.setValue(isMulti);
-				}
+				// if (isMulti) {
+				// 	var isMultilingualField = sort_form.getChildViews()[viewIndex].getChildViews()[2];
+				// 	isMultilingualField.setValue(isMulti);
+				// }
 				_logic.callbacks.onChange();
 			},
 
@@ -195,7 +193,7 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 				allFields.forEach((f) => {
 					if (f.fieldIsSortable()) {
 						listFields.push({
-							id: f.columnName,
+							id: f.id,
 							value: f.label
 						});
 					}
@@ -254,12 +252,12 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 				var allFields = CurrentObject.fields();
 				var columnConfig = "",
 					sortDir = el.getParentView().getChildViews()[1],
-					isMultiLingual = el.getParentView().getChildViews()[2],
-					isMulti = 0,
+					// isMultiLingual = el.getParentView().getChildViews()[2],
+					// isMulti = 0,
 					options = null;
 
 				allFields.forEach((f) => {
-					if (f.columnName == columnId) {
+					if (f.id == columnId) {
 						columnConfig = f
 					}
 				});
@@ -293,10 +291,10 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 				sortDir.define('options', options);
 				sortDir.refresh();
 
-				if (columnConfig.settings.supportMultilingual)
-					isMulti = columnConfig.settings.supportMultilingual;
+				// if (columnConfig.settings.supportMultilingual)
+				// 	isMulti = columnConfig.settings.supportMultilingual;
 					
-				isMultiLingual.setValue(isMulti);
+				// isMultiLingual.setValue(isMulti);
 
 				_logic.refreshFieldList();
 
@@ -324,7 +322,7 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 				var sorts = CurrentObject.workspaceSortFields;
 				if (sorts && sorts.forEach) {
 					sorts.forEach((s) => {
-						_logic.clickAddNewSort(s.by, s.dir, s.isMulti);
+						_logic.clickAddNewSort(s.key, s.dir);
 					});
 				}
 
@@ -423,10 +421,14 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 						if (childViews.length - 1 <= index)
 							return false;
 
-						var by = cView.getChildViews()[0].getValue();
+						var fieldId = cView.getChildViews()[0].getValue();
 						var dir = cView.getChildViews()[1].getValue();
-						var isMultiLingual = cView.getChildViews()[2].getValue();
-						sortFields.push({"by":by, "dir":dir, "isMulti":isMultiLingual})
+						sortFields.push({
+							// "by":by, 
+							"key": fieldId,
+							"dir":dir, 
+							// "isMulti":isMultiLingual
+						})
 					});
 				}
 
@@ -453,16 +455,16 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
              *
              * Show this component.
              * @param {obj} $view  the webix.$view to hover the popup around.
-			 * @param {string} columnName the columnName we want to prefill the sort with
+			 * @param {uuid} fieldId the fieldId we want to prefill the sort with
              */
-            show:function($view, columnName, options) {
+            show:function($view, fieldId, options) {
                 if (options != null) {
                     $$(ids.component).show($view, options);
                 } else {
                     $$(ids.component).show($view);
                 }
-				if (columnName) {
-					_logic.clickAddNewSort(columnName);
+				if (fieldId) {
+					_logic.clickAddNewSort(fieldId);
 				}
 			},
 
@@ -484,8 +486,13 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 							result != 0)
 							return;
 
-						var by = cView.getChildViews()[0].getValue();
+						var fieldId = cView.getChildViews()[0].getValue();
 						var dir = cView.getChildViews()[1].getValue();
+
+						var field = CurrentObject.fields(f => f.id == fieldId)[0];
+						if (!field) return;
+
+						var by = field.columnName; // column name
 
 						var aValue = a[by],
 							bValue = b[by];

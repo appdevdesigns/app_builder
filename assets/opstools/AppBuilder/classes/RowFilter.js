@@ -1,7 +1,26 @@
+/**
+ *  support get data from objects and queries
+ */
+function getFieldVal(rowData, columnName) {
+
+	if (!columnName) 
+		return null;
+
+	if (columnName.indexOf('.') > -1) {
+		let colName = columnName.split('.')[1];
+		return rowData[columnName] || rowData[colName];
+	}
+	else {
+		return rowData[columnName];
+	}
+}
+
 
 export default class RowFilter extends OP.Component {
 
 	constructor(App, idBase) {
+
+		idBase = idBase || 'ab_row_filter';
 
 		super(App, idBase);
 
@@ -13,6 +32,24 @@ export default class RowFilter extends OP.Component {
 				and: L('ab.filter_fields.and', "*And"),
 				or: L('ab.filter_fields.or', "*Or"),
 				addNewFilter: L('ab.filter_fields.addNewFilter', "*Add a filter"),
+
+				thisObject: L('ab.filter_fields.thisObject', "*This Object"),
+				inQuery: L('ab.filter_fields.inQuery', "*In Query"),
+				notInQuery: L('ab.filter_fields.notInQuery', "*Not In Query"),
+				inQueryField: L('ab.filter_fields.inQueryField', "*By Query Field"),
+				notInQueryField: L('ab.filter_fields.notInQueryField', "*Not By Query Field"),
+				
+				inQueryFieldQueryPlaceholder: L('ab.filter_fields.inQueryFieldQueryPlaceholder', "*Choose a Query"),
+				inQueryFieldFieldPlaceholder: L('ab.filter_fields.inQueryFieldFieldPlaceholder', "*Choose a Field"),
+
+				sameAsUser: L('ab.filter_fields.sameAsUser', "*Same As User"),
+				notSameAsUser: L('ab.filter_fields.notSameAsUser', "*Not Same As User"),
+				
+				sameAsField: L('ab.filter_fields.sameAsFild', "*Same As Field"),
+				notSameAsField: L('ab.filter_fields.notSameAsFild', "*Not Field"),
+
+				inDataCollection: L('ab.filter_fields.inDataCollection', "*In Data Collection"),
+				notInDataCollection: L('ab.filter_fields.notInDataCollection', "*Not In Data Collection"),
 
 				containsCondition: L('ab.filter_fields.containsCondition', "*contains"),
 				notContainCondition: L('ab.filter_fields.notContainCondition', "*doesn't contain"),
@@ -45,20 +82,50 @@ export default class RowFilter extends OP.Component {
 
 		// internal list of Webix IDs to reference our UI components.
 		var ids = {
-			filterForm: this.unique(idBase + '_filterForm'),
-			addNewFilter: this.unique(idBase + '_addNewFilter'),
+			filterForm: this.unique(idBase + '_rowFilter_form'),
+			addNewFilter: this.unique(idBase + '_rowFilter_addNewFilter'),
 
-			combineCondition: this.unique('combineCondition'),
-			field: this.unique('field'),
-			operator: this.unique('operator'),
-			inputValue: this.unique('inputValue'),
+			glue: this.unique(idBase + '_rowFilter_glue'),
+			field: this.unique(idBase + '_rowFilter_field'),
+			rule: this.unique(idBase + '_rowFilter_rule'),
+			inputValue: this.unique(idBase + '_rowFilter_inputValue'),
 
-			listOptions: this.unique('listOptions')
+			queryCombo: this.unique(idBase + '_rowFilter_queryCombo'),
+			queryFieldCombo: this.unique(idBase + '_rowFilter_queryFieldCombo'),
+			queryFieldComboQuery: this.unique(idBase + '_rowFilter_queryFieldComboQuery'),
+			queryFieldComboField: this.unique(idBase + '_rowFilter_queryFieldComboField'),
+			
+			fieldMatch: this.unique(idBase + '_rowFilter_fieldMatchCombo'),
+
+			dataCollection: this.unique(idBase + '_rowFilter_dataCollection'),
+
+			listOptions: this.unique(idBase + '_rowFilter_listOptions'),
+
+			datePicker: this.unique(idBase + '_rowFilter_datePicker')
 		};
 
 		var _Object;
 		var _Fields;
+		var _QueryFields = [];
+		var _View;
+		var _settings = {};
 		var config_settings = {};
+		var batchName; // we need to revert to this default when switching away from a in/by query field
+		
+		// Default options list to push to all fields
+		var queryFieldOptions = [
+			{
+				value: labels.component.inQueryField,
+				id: 'in_query_field'
+			},
+			{
+				value: labels.component.notInQueryField,
+				id: 'not_in_query_field'
+			}
+		];
+		
+		var recordRuleOptions = [];
+		var recordRuleFieldOptions = [];
 
 		// setting up UI
 		this.init = (options) => {
@@ -66,6 +133,24 @@ export default class RowFilter extends OP.Component {
 			// register our callbacks:
 			for (var c in _logic.callbacks) {
 				_logic.callbacks[c] = options[c] || _logic.callbacks[c];
+			}
+
+			if (options.showObjectName)
+				_settings.showObjectName = options.showObjectName;
+				
+			
+			if (options.isRecordRule) {
+				recordRuleOptions = [
+					{
+						value: labels.component.sameAsField,
+						id: "same_as_field"
+					},
+					{
+						value: labels.component.notSameAsField,
+						id: "not_same_as_field"
+					}
+				];
+				recordRuleFieldOptions = options.fieldOptions;
 			}
 
 		};
@@ -87,18 +172,39 @@ export default class RowFilter extends OP.Component {
 			},
 
 
+
 			/**
 			 * @method objectLoad
 			 * set object
 			 * 
-			 * @param object {Object}
+			 * @param object {ABObject}
 			 */
 			objectLoad: function (object) {
 
 				_Object = object;
 				_Fields = _Object ? _Object.fields(f => f.fieldIsFilterable()) : [];
+				_QueryFields = _Object ? _Object.connectFields() : [];
+
+				// insert our 'this object' entry if an Object was given.
+				if (_Object) {
+					_Fields.unshift({ id: 'this_object', label: _Object.label });
+				}
 
 			},
+
+
+			/**
+			 * @method viewLoad
+			 * set view
+			 * 
+			 * @param view {ABView}
+			 */
+			viewLoad: function(view) {
+
+				_View = view;
+
+			},
+
 
 			/**
 			 * @method getFieldList 
@@ -107,9 +213,19 @@ export default class RowFilter extends OP.Component {
 			getFieldList: function () {
 
 				return (_Fields || []).map(f => {
+
+					let label = f.label;
+
+					// include object's name to options
+					if (_settings.showObjectName && 
+						f.object) {
+						label = f.object.label + '.' + f.label;
+					}
+
 					return {
 						id: f.id,
-						value: f.label
+						value: label,
+						alias: f.alias || undefined // ABObjectQuery
 					};
 				});
 
@@ -123,17 +239,17 @@ export default class RowFilter extends OP.Component {
 						{
 							// Add / Or
 							view: "combo",
-							id: ids.combineCondition,
+							id: ids.glue,
 							width: 80,
-							value: config_settings.combineCondition,
+							value: config_settings.glue,
 							options: [
 								{
 									value: labels.component.and,
-									id: "And"
+									id: "and"
 								},
 								{
 									value: labels.component.or,
-									id: "Or"
+									id: "or"
 								}
 							],
 							on: {
@@ -160,118 +276,214 @@ export default class RowFilter extends OP.Component {
 						},
 						// Comparer
 						{
-							id: ids.operator,
-							width: 155,
+							id: ids.rule,
+							width: 175,
 							cells: [
 								{},
+								// Query
+								{
+									batch: "query",
+									view: "combo",
+									value: 'in_query',
+									options: [
+										{
+											value: labels.component.containsCondition,
+											id: "contains"
+										},
+										{
+											value: labels.component.notContainCondition,
+											id: "not_contains"
+										},
+										{
+											value: labels.component.isCondition,
+											id: "equals"
+										},
+										{
+											value: labels.component.isNotCondition,
+											id: "not_equal"
+										},
+										{
+											value: labels.component.sameAsUser,
+											id:'same_as_user'
+										},
+										{
+											value: labels.component.notSameAsUser,
+											id:'not_same_as_user'
+										},
+										{
+											value: labels.component.inQuery,
+											id: 'in_query'
+										},
+										{
+											value: labels.component.notInQuery,
+											id: 'not_in_query'
+										},
+										{
+											value: labels.component.inDataCollection,
+											id: 'in_data_collection'
+										},
+										{
+											value: labels.component.notInDataCollection,
+											id: 'not_in_data_collection'
+										},
+									].concat(recordRuleOptions),
+									on: {
+										onChange:function( condition, oldValue) {
+
+											var $viewComparer = this.getParentView();
+											var $viewCond = $viewComparer.getParentView();
+											_logic.onChangeRule(condition, $viewCond);
+											_logic.onChange();
+
+										}
+									}
+
+								},
+
 								// Date
 								{
 									batch: "date",
 									view: "combo",
+									value: "less",
 									options: [
 										{
 											value: labels.component.beforeCondition,
-											id: "is before"
+											id: "less"
 										},
 										{
 											value: labels.component.afterCondition,
-											id: "is after"
+											id: "greater"
 										},
 										{
 											value: labels.component.onOrBeforeCondition,
-											id: "is on or before"
+											id: "less_or_equal"
 										},
 										{
 											value: labels.component.onOrAfterCondition,
-											id: "is on or after"
+											id: "greater_or_equal"
 										}
-									],
+									].concat(queryFieldOptions).concat(recordRuleOptions),
 									on: {
-										onChange: _logic.onChange
+										onChange: function(condition) {
+											
+											var $viewComparer = this.getParentView();
+											var $viewCond = $viewComparer.getParentView();
+											_logic.onChangeRule(condition, $viewCond);
+											_logic.onChange();
+
+										}
 									}
 								},
 								// Number
 								{
 									batch: "number",
 									view: "combo",
+									value: "equals",
 									options: [
 										{
 											value: labels.component.equalCondition,
-											id: ":"
+											id: "equals"
 										},
 										{
 											value: labels.component.notEqualCondition,
-											id: "≠"
+											id: "not_equal"
 										},
 										{
 											value: labels.component.lessThanCondition,
-											id: "<"
+											id: "less"
 										},
 										{
 											value: labels.component.moreThanCondition,
-											id: ">"
+											id: "greater"
 										},
 										{
 											value: labels.component.lessThanOrEqualCondition,
-											id: "≤"
+											id: "less_or_equal"
 										},
 										{
 											value: labels.component.moreThanOrEqualCondition,
-											id: "≥"
+											id: "greater_or_equal"
 										}
-									],
+									].concat(queryFieldOptions).concat(recordRuleOptions),
 									on: {
-										onChange: _logic.onChange
+										onChange: function(condition) {
+
+											var $viewComparer = this.getParentView();
+											var $viewCond = $viewComparer.getParentView();
+											_logic.onChangeRule(condition, $viewCond);
+											_logic.onChange();
+
+										}
 									}
 								},
 								// List
 								{
 									batch: "list",
 									view: "combo",
+									value: "equals",
 									options: [
+										{
+											value: labels.component.sameAsUser,
+											id:'same_as_user'
+										},
+										{
+											value: labels.component.notSameAsUser,
+											id:'not_same_as_user'
+										},
 										{
 											value: labels.component.equalListCondition,
 											id: "equals"
 										},
 										{
 											value: labels.component.notEqualListCondition,
-											id: "does not equal"
+											id: "not_equal"
 										}
-									],
+									].concat(queryFieldOptions).concat(recordRuleOptions),
 									on: {
-										onChange: _logic.onChange
+										onChange: function( condition, oldValue) {
+
+											var $viewComparer = this.getParentView();
+											var $viewCond = $viewComparer.getParentView();
+											_logic.onChangeRule(condition, $viewCond);
+											_logic.onChange();
+										}
 									}
 								},
 								// Boolean
 								{
 									batch: "boolean",
 									view: "combo",
+									value: "equals",
 									options: [
 										{
-											value: labels.component.checkedCondition,
-											id: "is checked"
-										},
-										{
-											value: labels.component.notCheckedCondition,
-											id: "is not checked"
+											value: labels.component.equalListCondition,
+											id: "equals"
 										}
-									],
+									].concat(queryFieldOptions).concat(recordRuleOptions),
 									on: {
-										onChange: _logic.onChange
+										onChange: function(condition) {
+											
+											var $viewComparer = this.getParentView();
+											var $viewCond = $viewComparer.getParentView();
+											_logic.onChangeRule(condition, $viewCond);
+											_logic.onChange();
+
+										}
 									}
 								},
 								// User
 								{
 									batch: "user",
 									view: "combo",
+									value: "is_current_user",
 									options: [
 										{
 											value: labels.component.isCurrentUserCondition,
-											id: "is current user"
+											id: "is_current_user"
 										},
 										{
 											value: labels.component.isNotCurrentUserCondition,
-											id: "is not current user"
+											id: "is_not_current_user"
 										},
 										{
 											value: labels.component.equalListCondition,
@@ -279,16 +491,15 @@ export default class RowFilter extends OP.Component {
 										},
 										{
 											value: labels.component.notEqualListCondition,
-											id: "does not equal"
+											id: "not_equal"
 										}
-									],
+									].concat(queryFieldOptions).concat(recordRuleOptions),
 									on: {
-										onChange: function (userCondition) {
+										onChange: function (condition) {
 
 											var $viewComparer = this.getParentView();
 											var $viewCond = $viewComparer.getParentView();
-											_logic.onChangeUser(userCondition, $viewCond);
-
+											_logic.onChangeRule(condition, $viewCond);
 											_logic.onChange();
 
 										}
@@ -298,6 +509,7 @@ export default class RowFilter extends OP.Component {
 								{
 									batch: "string",
 									view: "combo",
+									value: "contains",
 									options: [
 										{
 											value: labels.component.containsCondition,
@@ -305,19 +517,25 @@ export default class RowFilter extends OP.Component {
 										},
 										{
 											value: labels.component.notContainCondition,
-											id: "doesn't contain"
+											id: "not_contains"
 										},
 										{
 											value: labels.component.isCondition,
-											id: "is"
+											id: "equals"
 										},
 										{
 											value: labels.component.isNotCondition,
-											id: "is not"
+											id: "not_equal"
 										}
-									],
+									].concat(queryFieldOptions).concat(recordRuleOptions),
 									on: {
-										onChange: _logic.onChange
+										onChange: function(condition) {
+
+											var $viewComparer = this.getParentView();
+											var $viewCond = $viewComparer.getParentView();
+											_logic.onChangeRule(condition, $viewCond);
+											_logic.onChange();
+										}
 									}
 								},
 								// Email
@@ -336,15 +554,22 @@ export default class RowFilter extends OP.Component {
 										},
 										{
 											value: labels.component.isCondition,
-											id: "is"
+											id: "equals"
 										},
 										{
 											value: labels.component.isNotCondition,
-											id: "not_equals"
+											id: "not_equal"
 										}
-									],
+									].concat(queryFieldOptions).concat(recordRuleOptions),
 									on: {
-										onChange: _logic.onChange
+										onChange: function(condition) {
+
+											var $viewComparer = this.getParentView();
+											var $viewCond = $viewComparer.getParentView();
+											_logic.onChangeRule(condition, $viewCond);
+											_logic.onChange();
+
+										}
 									}
 								},
 							]
@@ -357,10 +582,84 @@ export default class RowFilter extends OP.Component {
 								{
 									batch: "empty"
 								},
+
+								// Query
+								{
+									id: ids.queryCombo,
+
+									batch: "query",
+									view: "combo",
+									options: [],
+									on: {
+										onChange: _logic.onChange
+									}
+
+								},
+
+								// Query Field
+								{
+									id: ids.queryFieldCombo,
+									batch: "queryField",
+									rows: [
+										{
+											id: ids.queryFieldComboQuery,
+											view: "combo",
+											options: [],
+											placeholder: labels.component.inQueryFieldQueryPlaceholder,
+											on: {
+												onChange: function(value) {
+													
+													var $viewComparer = this.getParentView();
+													var $viewCond = $viewComparer.getParentView().getParentView();
+													_logic.onChangeQueryFieldCombo(value, $viewCond);
+
+													_logic.onChange();
+												}
+											}
+										},
+										{
+											id: ids.queryFieldComboField,
+											view: "combo",
+											options: [],
+											placeholder: labels.component.inQueryFieldFieldPlaceholder,
+											on: {
+												onChange: _logic.onChange
+											}
+										}
+									]
+
+								},
+								
+								// Field match
+								{
+									id: ids.fieldMatch,
+									batch: "fieldMatch",
+									view: "combo",
+									options: [],
+									on: {
+										onChange: _logic.onChange
+									}
+
+								},
+
+								// Data collection
+								{
+									id: ids.dataCollection,
+									batch: "dataCollection",
+									view: "richselect",
+									options: [],
+									on: {
+										onChange: _logic.onChange
+									}
+
+								},
+
+
 								// Date
 								{
 									// inputView.format = field.getDateFormat();
 									batch: "date",
+									id: ids.datePicker,
 									view: "datepicker",
 									on: {
 										onChange: function () {
@@ -393,7 +692,13 @@ export default class RowFilter extends OP.Component {
 								},
 								// Boolean
 								{
-									batch: "boolean"
+									batch: "boolean",
+									view: 'checkbox',
+									on: {
+										onChange: function () {
+											_logic.onChange();
+										}
+									}
 								},
 								// User
 								{
@@ -435,7 +740,7 @@ export default class RowFilter extends OP.Component {
 						},
 						{
 							view: "button",
-							icon: "plus",
+							icon: "fa fa-plus",
 							type: "icon",
 							width: 30,
 							click: function () {
@@ -448,7 +753,7 @@ export default class RowFilter extends OP.Component {
 						},
 						{
 							view: "button",
-							icon: "trash",
+							icon: "fa fa-trash",
 							type: "icon",
 							width: 30,
 							click: function () {
@@ -466,7 +771,7 @@ export default class RowFilter extends OP.Component {
 				return {
 					view: "button",
 					id: ids.addNewFilter,
-					icon: "plus",
+					icon: "fa fa-plus",
 					type: "iconButton",
 					label: labels.component.addNewFilter,
 					click: function () {
@@ -477,7 +782,7 @@ export default class RowFilter extends OP.Component {
 				};
 			},
 
-			addNewFilter: function (index) {
+			addNewFilter: function (index, fieldId) {
 
 				var viewId;
 				var ui = _logic.getFilterUI();
@@ -488,6 +793,10 @@ export default class RowFilter extends OP.Component {
 					viewId = $viewForm.addView(ui, index);
 
 					_logic.toggleAddNewButton();
+
+					// select a option of field
+					if(fieldId)
+						_logic.selectField(fieldId, $$(viewId), true);
 				}
 
 				return viewId;
@@ -528,13 +837,13 @@ export default class RowFilter extends OP.Component {
 			selectCombineCondition: (val, ignoreNotify) => {
 
 				// define combine value to configuration
-				config_settings.combineCondition = val;
+				config_settings.glue = val;
 
 				// update value of every combine conditions
 				var $viewConds = $$(ids.filterForm).getChildViews();
 				$viewConds.forEach(v => {
-					if (v.$$ && v.$$(ids.combineCondition))
-						v.$$(ids.combineCondition).setValue(val);
+					if (v.$$ && v.$$(ids.glue))
+						v.$$(ids.glue).setValue(val);
 				});
 
 				if (!ignoreNotify)
@@ -554,10 +863,52 @@ export default class RowFilter extends OP.Component {
 				if (!field) return;
 
 				// switch view
-				var batchName = field.key;
+				batchName = field.key;
 				if (batchName == 'LongText') batchName = 'string';
-				$viewCond.$$(ids.operator).showBatch(batchName);
+				if (field.id == 'this_object') batchName = 'query';	// Special this object query
+				var isQueryField = (_QueryFields.filter((f) => { return f.id == field.id; }).length > 0);
+				if (isQueryField) {
+					// we chose a connectField which is now a Query type
+					batchName = 'query';
+				}
+				$viewCond.$$(ids.rule).showBatch(batchName);
 				$viewCond.$$(ids.inputValue).showBatch(batchName);
+
+
+				// populate the list of Queries for this_object:
+				if (field.id == 'this_object') {
+
+					var options = [];
+					var Queries = _Object.application.queries((q) => { return q.canFilterObject(_Object); });
+					Queries.forEach((q) => {
+						options.push({
+							id: q.id,
+							value: q.label
+						})
+					})
+
+					$viewCond.$$(ids.inputValue).$$(ids.queryCombo).define("options", options);
+					$viewCond.$$(ids.inputValue).$$(ids.queryCombo).refresh();
+
+				}
+
+
+				// populate the list of Queries for a query field
+				if (isQueryField) {
+
+					var options = [];
+					var Queries = _Object.application.queries((q) => { return q.canFilterField(field); });
+					Queries.forEach((q) => {
+						options.push({
+							id: q.id,
+							value: q.label
+						})
+					})
+
+					$viewCond.$$(ids.inputValue).$$(ids.queryCombo).define("options", options);
+					$viewCond.$$(ids.inputValue).$$(ids.queryCombo).refresh();
+				}
+
 
 				// populate options of list
 				if (field.key == 'list') {
@@ -571,77 +922,277 @@ export default class RowFilter extends OP.Component {
 					$viewCond.$$(ids.inputValue).$$(ids.listOptions).define("options", options);
 					$viewCond.$$(ids.inputValue).$$(ids.listOptions).refresh();
 				}
+				// set format of datepicker
+				else if (field.key == 'date') {
+					$viewCond.$$(ids.inputValue).$$(ids.datePicker).define("format", field.getFormat());
+					$viewCond.$$(ids.inputValue).$$(ids.datePicker).refresh();
+				}
+
+				var rule = null,
+					ruleViewId = $viewCond.$$(ids.rule).getActiveId(),
+					$viewComparer = $viewCond.$$(ids.rule).queryView({ id: ruleViewId });
+				if ($viewComparer && $viewComparer.getValue) {
+					rule = $viewComparer.getValue();
+					if (rule == "in_query_field" || rule == "not_in_query_field") {
+						// Show the new value inputs
+						$viewCond.$$(ids.inputValue).showBatch("queryField");
+					} else if (rule == "same_as_field" || rule == "not_same_as_field") {
+						// Show the new value inputs
+						$viewCond.$$(ids.inputValue).showBatch("fieldMatch");
+					}
+				}
+					
+				
 
 				if (!ignoreNotify)
 					_logic.onChange();
 
 			},
 
-			onChangeUser: function (operator, $viewCond) {
+			// onChangeList: function(newValue, $viewCond) {
 
-				if (operator == "is current user" ||
-					operator == "is not current user") {
-					$viewCond.$$(ids.inputValue).showBatch("empty");
+			// 	if (newValue == 'same_as_user' || newValue == 'not_same_as_user') {
+			// 		_logic.onChangeRule(newValue, $viewCond);
+			// 	} 
+			// 	else {
+			// 		$viewCond.$$(ids.inputValue).showBatch("list");
+			// 		_logic.onChange();
+			// 	}
+				
+			// },
+
+			// onChangeUser: function (rule, $viewCond) {
+
+			// 	if (rule == "is_current_user" ||
+			// 		rule == "is_not_current_user") {
+			// 		$viewCond.$$(ids.inputValue).showBatch("empty");
+			// 	} 
+			// 	else if (rule == "in_query_field" ||
+			// 				rule == "not_in_query_field" ||
+			// 				rule == "same_as_field" ||
+			// 				rule == "not_same_as_field") {
+			// 		_logic.onChangeRule(rule, $viewCond);
+			// 	}
+			// 	else {
+			// 		$viewCond.$$(ids.inputValue).showBatch("user");
+			// 	}
+			// },
+			
+			onChangeRule: (rule, $viewCond) => {
+
+				switch(rule) {
+					case 'contains':
+					case 'not_contains':
+					case 'equals':
+					case 'not_equal':
+						_logic.onChange();
+						break;
+
+					case 'is_current_user':
+					case 'is_not_current_user':
+					case 'same_as_user':
+					case 'not_same_as_user':
+						// clear and disable the value field
+						$viewCond.$$(ids.inputValue).showBatch("empty");
+						_logic.onChange();
+						break;
+
+					case 'in_query_field':
+					case 'not_in_query_field':
+						// populate the list of Queries for this_object:
+						var options = [];
+						// Get all application's queries
+						_Object.application.queries((q) => { return q.id != _Object.id; }).forEach((q) => {
+							options.push({
+								id: q.id,
+								value: q.label
+							})
+						})
+
+						$viewCond.$$(ids.inputValue).$$(ids.queryFieldComboQuery).define("options", options);
+						$viewCond.$$(ids.inputValue).$$(ids.queryFieldComboQuery).refresh();
+						
+						// Show the new value inputs
+						$viewCond.$$(ids.inputValue).showBatch("queryField");
+						break;
+
+					case 'same_as_field':
+					case 'not_same_as_field':
+						$viewCond.$$(ids.inputValue).$$(ids.fieldMatch).define("options", recordRuleFieldOptions);
+						$viewCond.$$(ids.inputValue).$$(ids.fieldMatch).refresh();
+						
+						// Show the new value inputs
+						$viewCond.$$(ids.inputValue).showBatch("fieldMatch");
+						break;
+
+					case 'in_data_collection':
+					case 'not_in_data_collection':
+
+						let dcOptions = [];
+
+						// pull data collection list
+						if (_View) {
+
+							// get id of the link object
+							let linkObjectId,
+								columnId = $viewCond.$$(ids.field).getValue();
+							if (columnId == 'this_object') {
+								linkObjectId = _Object.id;
+							}
+							else {
+								let field = _Object.fields(f => f.id == columnId)[0];
+								if (field)
+									linkObjectId = field.settings.linkObject;
+							}
+								
+							if (linkObjectId) {
+
+								_View.pageRoot()
+								.dataCollections(dc => dc.datasource && dc.datasource.id == linkObjectId)
+								.forEach(dc => {
+
+									dcOptions.push({
+										id: dc.id,
+										value: dc.label
+									});	
+
+								});
+
+							}
+						}
+
+						$viewCond.$$(ids.inputValue).$$(ids.dataCollection).define("options", dcOptions);
+						$viewCond.$$(ids.inputValue).$$(ids.dataCollection).refresh();
+
+						// Show the new value inputs
+						$viewCond.$$(ids.inputValue).showBatch("dataCollection");
+						break;
+
+					default:
+						// Show the default value inputs
+						$viewCond.$$(ids.inputValue).showBatch(batchName);
+						break;
 				}
-				else {
-					$viewCond.$$(ids.inputValue).showBatch("user");
+
+			},
+			
+			onChangeQueryFieldCombo: function(value, $viewCond) {
+				// populate the list of Queries for this_object:
+				var options = [];
+				// Get all queries fields
+				var Query = _Object.application.queries((q) => { return q.id == value; });
+				if (Query.length) {
+					Query[0].fields( (f) => { return f.key != "connectObject"; } ).forEach((q) => {
+						options.push({
+							id: q.id,
+							value: q.object.label + "." + q.label
+						})
+					})
+
+					$viewCond.$$(ids.inputValue).$$(ids.queryFieldComboField).define("options", options);
+					$viewCond.$$(ids.inputValue).$$(ids.queryFieldComboField).refresh();					
 				}
+
+				// _logic.onChange();
 			},
 
-			onChange: function () {
+			onChange: () => {
 
-				// refresh config settings before notify
-				_logic.getValue();
+				if (!this.__blockOnChange) {
 
-				_logic.callbacks.onChange();
+					// refresh config settings before notify
+					_logic.getValue();
 
+					_logic.callbacks.onChange();
+
+				}
+
+				return false;
 			},
+
+			blockOnChange: () => {
+				this.__blockOnChange = true;
+			},
+
+			unblockOnChange: () => {
+				this.__blockOnChange = false;
+			},
+
 
 			/**
 			 * @method getValue
 			 * 
-			 * @return {JSON} - {
-			 * 		combineCondition: 'And'/'Or',
-			 * 		filters: [
-			 * 			{
-			 * 				fieldId: {UUID},
-			 * 				operator: {string},
-			 * 				inputValue: {string}
-			 * 			}
-			 * 		]
+			 * @return {JSON} -
+			 * {
+			 * 		glue: '', // 'and', 'or'
+			 *		rules: [
+			 *			{
+			 *				key:	'column name',
+			 *				rule:	'rule',
+			 *				value:	'value'
+			 *			}
+			 *		]
 			 * }
 			 */
 			getValue: () => {
 
-				config_settings.filters = [];
+				config_settings = {
+					glue: 'and',
+					rules: []
+				};
 
 				var $viewForm = $$(ids.filterForm);
 				if ($viewForm) {
-					$viewForm.getChildViews().forEach($viewCond => {
+					$viewForm.getChildViews().forEach(($viewCond, index) => {
+
+						if (index == 0) {
+							config_settings.glue = $viewCond.$$(ids.glue).getValue();
+						}
 
 						var $fieldElem = $viewCond.$$(ids.field);
 						if (!$fieldElem) return;
 
+						/* field id */
 						var fieldId = $fieldElem.getValue();
 						if (!fieldId) return;
 
-						var operator = null,
-							operatorViewId = $viewCond.$$(ids.operator).getActiveId(),
-							$viewComparer = $viewCond.$$(ids.operator).queryView({ id: operatorViewId });
-						if ($viewComparer && $viewComparer.getValue)
-							operator = $viewComparer.getValue();
+						/* alias */
+						var alias;
+						var selectedOpt = $viewCond.$$(ids.field).getPopup().config.body.data.filter(opt => opt.id == fieldId)[0];
+						if (selectedOpt)
+							alias = selectedOpt.alias || undefined;
 
+						/* rule */
+						var rule = null,
+							ruleViewId = $viewCond.$$(ids.rule).getActiveId(),
+							$viewComparer = $viewCond.$$(ids.rule).queryView({ id: ruleViewId });
+						if ($viewComparer && $viewComparer.getValue)
+							rule = $viewComparer.getValue();
+
+						/* value */
 						var value = null,
 							valueViewId = $viewCond.$$(ids.inputValue).getActiveId(),
 							$viewConditionValue = $viewCond.$$(ids.inputValue).queryView({ id: valueViewId });
-						if ($viewConditionValue && $viewConditionValue.getValue)
+						if ($viewConditionValue && $viewConditionValue.getValue) {
 							value = $viewConditionValue.getValue();
+						} else if ($viewConditionValue && $viewConditionValue.getChildViews()) {
+							var vals = [];
+							$viewConditionValue.getChildViews().forEach( element => {
+								vals.push($$(element).getValue());
+							});
+							value = vals.join(":");
+						}
 
+						// Convert date format
+						if (value instanceof Date) {
+							value = value.toISOString();
+						}
 
-						config_settings.filters.push({
-							fieldId: fieldId,
-							operator: operator,
-							inputValue: value
+						config_settings.rules.push({
+							alias: alias || undefined,
+							key: fieldId,
+							rule: rule,
+							value: value
 						});
 
 					});
@@ -655,6 +1206,9 @@ export default class RowFilter extends OP.Component {
 
 			setValue: (settings) => {
 
+				// block .onChange event
+				_logic.blockOnChange();
+
 				config_settings = settings || {};
 
 				// Redraw form with no elements
@@ -662,50 +1216,85 @@ export default class RowFilter extends OP.Component {
 				if ($viewForm)
 					webix.ui([], $viewForm);
 
-				config_settings.filters = config_settings.filters || [];
+				config_settings.rules = config_settings.rules || [];
 
 				// Add "new filter" button
-				if (config_settings.filters.length == 0) {
+				if (config_settings.rules.length == 0) {
 					_logic.toggleAddNewButton();
 				}
 
-				config_settings.filters.forEach(f => {
+				config_settings.rules.forEach(f => {
 
 					var viewId = _logic.addNewFilter(),
 						$viewCond = $$(viewId);
 
 					if ($viewCond == null) return;
 
-					// "And" "Or"
-					$viewCond.$$(ids.combineCondition).define('value', config_settings.combineCondition);
-					$viewCond.$$(ids.combineCondition).refresh();
+					var field = _Fields.filter(col => col.id == f.key)[0];
+
+					// "and" "or"
+					$viewCond.$$(ids.glue).define('value', config_settings.glue);
+					$viewCond.$$(ids.glue).refresh();
 
 					// Select Field
-					$viewCond.$$(ids.field).define('value', f.fieldId);
+					$viewCond.$$(ids.field).define('value', f.key);
 					$viewCond.$$(ids.field).refresh();
-					_logic.selectField(f.fieldId, $viewCond, true);
+					_logic.selectField(f.key, $viewCond, true);
 
 					// Comparer
-					var operatorViewId = $viewCond.$$(ids.operator).getActiveId(),
-						$viewComparer = $viewCond.$$(ids.operator).queryView({ id: operatorViewId });
+					var ruleViewId = $viewCond.$$(ids.rule).getActiveId(),
+						$viewComparer = $viewCond.$$(ids.rule).queryView({ id: ruleViewId });
 					if ($viewComparer && $viewComparer.setValue) {
-						$viewComparer.define('value', f.operator);
+						$viewComparer.define('value', f.rule);
 						$viewComparer.refresh();
 					}
+					
+					// if (f.rule == "in_query_field" || f.rule == "not_in_query_field" || f.rule == "same_as_field" || f.rule == "not_same_as_field") {
+					$viewCond.blockEvent();
+					_logic.onChangeRule(f.rule, $viewCond);
+					$viewCond.unblockEvent();
+					// }
 
 					// Input
 					var valueViewId = $viewCond.$$(ids.inputValue).getActiveId(),
 						$viewConditionValue = $viewCond.$$(ids.inputValue).queryView({ id: valueViewId });
 					if ($viewConditionValue && $viewConditionValue.setValue) {
-						$viewConditionValue.define('value', f.inputValue);
+
+						// convert to Date object
+						if (field && field.key == 'date' && f.value) {
+							$viewConditionValue.define('value', new Date(f.value));
+						}
+						else {
+							$viewConditionValue.define('value', f.value);
+						}
+
 						$viewConditionValue.refresh();
 					}
+					else if ($viewConditionValue && $viewConditionValue.getChildViews()) {
+						var vals = f.value.split(":");
+						var index = 0;
+						$viewConditionValue.getChildViews().forEach( element => {
+							$$(element).blockEvent();
+							$$(element).setValue(vals[index]);
+							if (index == 0) {
+								_logic.onChangeQueryFieldCombo(vals[index], $viewCond);
+							}
+							$$(element).unblockEvent();
+							// $$(element).refresh();
+							index++;
+						});
+					}
 
-					var field = _Fields.filter(col => col.id == f.fieldId)[0];
-					if (field && field.key == 'user')
-						_logic.onChangeUser(f.operator, $viewCond);
+					if (field && field.key == 'user') {
+						$viewCond.blockEvent();
+						_logic.onChangeRule(f.rule, $viewCond);
+						$viewCond.blockEvent();
+					}
 
 				});
+
+				// unblock .onChange event
+				_logic.unblockOnChange();
 
 			},
 
@@ -719,45 +1308,55 @@ export default class RowFilter extends OP.Component {
 			isValid: (rowData) => {
 
 				// If no conditions, then return true
-				if (config_settings == null || config_settings.filters == null || config_settings.filters.length == 0) return true;
+				if (config_settings == null || config_settings.rules == null || config_settings.rules.length == 0)
+					return true;
 
-				var result = (config_settings.combineCondition === "And" ? true : false);
+				if (rowData == null)
+					return false;
 
-				config_settings.filters.forEach(filter => {
+				var result = (config_settings.glue === "glue" ? true : false);
 
-					if (!filter.fieldId || !filter.operator) return;
+				config_settings.rules.forEach(filter => {
 
-					var fieldInfo = _Fields.filter(f => f.id == filter.fieldId)[0];
+					if (!filter.key || !filter.rule) return;
+
+					var fieldInfo = _Fields.filter(f => f.id == filter.key)[0];
 					if (!fieldInfo) return;
 
 					var condResult;
-
-					var value = rowData[fieldInfo.columnName];
+					
+					if (typeof fieldInfo.key == "undefined" && fieldInfo.id != "this_object")
+						fieldInfo.key = "connectField"; // if you are looking at the parent object it won't have a key to analyze
 
 					switch (fieldInfo.key) {
 						case "string":
 						case "LongText":
-							condResult = _logic.textValid(value, filter.operator, filter.inputValue);
+						case "email":
+							condResult = _logic.textValid(rowData, fieldInfo.columnName, filter.rule, filter.value);
 							break;
 						case "date":
 						case "datetime":
-							condResult = _logic.dateValid(value, filter.operator, filter.inputValue);
+							condResult = _logic.dateValid(rowData, fieldInfo.columnName, filter.rule, filter.value);
 							break;
 						case "number":
-							condResult = _logic.numberValid(value, filter.operator, filter.inputValue);
+							condResult = _logic.numberValid(rowData, fieldInfo.columnName, filter.rule, filter.value);
 							break;
 						case "list":
-							condResult = _logic.listValid(value, filter.operator, filter.inputValue);
+							condResult = _logic.listValid(rowData, fieldInfo.columnName, filter.rule, filter.value);
 							break;
 						case "boolean":
-							condResult = _logic.booleanValid(value, filter.operator, filter.inputValue);
+							condResult = _logic.booleanValid(rowData, fieldInfo.columnName, filter.rule, filter.value);
 							break;
 						case "user":
-							condResult = _logic.userValid(value, filter.operator, filter.inputValue);
+							condResult = _logic.userValid(rowData, fieldInfo.columnName, filter.rule, filter.value);
+							break;
+						case "connectField":
+						case "connectObject":
+							condResult = _logic.connectFieldValid(rowData, fieldInfo.relationName(), filter.rule, filter.value);
 							break;
 					}
 
-					if (config_settings.combineCondition === "And") {
+					if (config_settings.glue === "glue") {
 						result = result && condResult;
 					} else {
 						result = result || condResult;
@@ -768,7 +1367,7 @@ export default class RowFilter extends OP.Component {
 
 			},
 
-			removeHtmlTags: function(text) {
+			removeHtmlTags: function (text) {
 
 				var div = document.createElement("div");
 				div.innerHTML = text;
@@ -777,28 +1376,51 @@ export default class RowFilter extends OP.Component {
 
 			},
 
-			textValid: function (value, operator, compareValue) {
+			textValid: function (rowData, columnName, rule, compareValue) {
 
 				var result = false;
 
+				var value = getFieldVal(rowData, columnName);
+				if (value == null)
+					value = "";
+
 				value = value.trim().toLowerCase();
-				compareValue = compareValue.trim().toLowerCase();
+				value = _logic.removeHtmlTags(value); // remove html tags - rich text editor
 
-				// remove html tags - rich text editor
-				value = _logic.removeHtmlTags(value);
+				compareValue = compareValue.trim().toLowerCase().replace(/  +/g, ' ');
 
-				switch (operator) {
+				// support "john smith" => "john" OR/AND "smith"
+				var compareArray = compareValue.split(' ');
+
+				switch (rule) {
 					case "contains":
-						result = value.indexOf(compareValue) > -1;
+						compareArray.forEach(val => {
+							if (result == false) // OR
+								result = value.indexOf(val) > -1;
+						});
 						break;
-					case "doesn't contain":
-						result = value.indexOf(compareValue) < 0;
+					case "not_contains":
+						result = true; 
+						compareArray.forEach(val => {
+							if (result == true) // AND
+								result = value.indexOf(val) < 0;
+						});
 						break;
-					case "is":
-						result = value == compareValue;
+					case "equals":
+						compareArray.forEach(val => {
+							if (result == false) // OR
+								result = value == val;
+						});
 						break;
-					case "is not":
-						result = value != compareValue;
+					case "not_equal":
+						result = true; 
+						compareArray.forEach(val => {
+							if (result == true) // AND
+								result = value != val;
+						});
+						break;
+					default:
+						result = _logic.queryValid(rowData, rule, compareValue);
 						break;
 				}
 
@@ -806,103 +1428,121 @@ export default class RowFilter extends OP.Component {
 
 			},
 
-			dateValid: function (value, operator, compareValue) {
+			dateValid: function (rowData, columnName, rule, compareValue) {
 
 				var result = false;
 
+				var value = getFieldVal(rowData, columnName);
 				if (!(value instanceof Date))
 					value = new Date(value);
 
 				if (!(compareValue instanceof Date))
 					compareValue = new Date(compareValue);
 
-				switch (operator) {
-					case "is before":
+				switch (rule) {
+					case "less":
 						result = value < compareValue;
 						break;
-					case "is after":
+					case "greater":
 						result = value > compareValue;
 						break;
-					case "is on or before":
+					case "less_or_equal":
 						result = value <= compareValue;
 						break;
-					case "is on or after":
+					case "greater_or_equal":
 						result = value >= compareValue;
 						break;
+					default:
+						result = _logic.queryValid(rowData, rule, compareValue);
+						break;
+
 				}
 
 				return result;
 
 			},
 
-			numberValid: function (value, operator, compareValue) {
+			numberValid: function (rowData, columnName, rule, compareValue) {
 
 				var result = false;
 
+				var value = getFieldVal(rowData, columnName);
 				value = Number(value);
 				compareValue = Number(compareValue);
 
-				switch (operator) {
-					case ":":
+				switch (rule) {
+					case "equals":
 						result = value == compareValue;
 						break;
-					case "≠":
+					case "not_equal":
 						result = value != compareValue;
 						break;
-					case "<":
+					case "less":
 						result = value < compareValue;
 						break;
-					case ">":
+					case "greater":
 						result = value > compareValue;
 						break;
-					case "≤":
+					case "less_or_equal":
 						result = value <= compareValue;
 						break;
-					case "≥":
+					case "greater_or_equal":
 						result = value >= compareValue;
 						break;
+					default:
+						result = _logic.queryValid(rowData, rule, compareValue);
+						break;
+
 				}
 
 				return result;
 
 			},
 
-			listValid: function (value, operator, compareValue) {
+			listValid: function (rowData, columnName, rule, compareValue) {
 
 				var result = false;
+
+				var value = getFieldVal(rowData, columnName);
 
 				compareValue = compareValue.toLowerCase();
 
 				if (!Array.isArray(compareValue))
 					compareValue = [compareValue];
 
-				switch (operator) {
+				switch (rule) {
 					case "equals":
 						if (value)
 							result = compareValue.indexOf(value) > -1;
 						break;
-					case "does not equal":
+					case "not_equal":
 						if (value)
 							result = compareValue.indexOf(value) < 0;
 						else
 							result = true;
 						break;
+					default:
+						result = _logic.queryValid(rowData, rule, compareValue);
+						break;
+
 				}
 
 				return result;
 
 			},
 
-			booleanValid: function (value, operator, compareValue) {
+			booleanValid: function (rowData, columnName, rule, compareValue) {
 
 				var result = false;
 
-				switch (operator) {
-					case "is checked":
-						result = (value === true || value === 1);
+				var value = getFieldVal(rowData, columnName);
+
+				switch (rule) {
+					case "equals":
+						result = value == compareValue;
 						break;
-					case "is not checked":
-						result = !value;
+					default:
+						result = _logic.queryValid(rowData, rule, compareValue);
 						break;
 				}
 
@@ -910,29 +1550,174 @@ export default class RowFilter extends OP.Component {
 
 			},
 
-			userValid: function (value, operator, compareValue) {
+			userValid: function (rowData, columnName, rule, compareValue) {
 
 				var result = false;
+
+				var value = getFieldVal(rowData, columnName);
 
 				if (Array.isArray(value))
 					value = [value];
 
-				switch (operator) {
-					case "is current user":
+				switch (rule) {
+					case "is_current_user":
 						result = value == OP.User.username();
 						break;
-					case "is not current user":
+					case "is_not_current_user":
 						result = value != OP.User.username();
 						break;
 					case "equals":
 						result = value.indexOf(compareValue) > -1;
 						break;
-					case "does not equal":
+					case "not_equal":
 						result = value.indexOf(compareValue) < 0;
+						break;
+					default:
+						result = _logic.queryValid(rowData, rule, compareValue);
+						break;
+
+				}
+
+				return result;
+			},
+
+			queryValid: function(rowData, rule, compareValue) {
+
+				var result = false;
+
+				if (!compareValue)
+					return result;
+
+				// queryId:fieldId
+				var queryId = compareValue.split(":")[0],
+					fieldId = compareValue.split(":")[1];
+
+				// if no query
+				var query = _Object.application.queries(q => q.id == queryId)[0];
+				if (!query)
+					return result;
+
+				// if no field
+				var field = query.fields(f => f.id == fieldId)[0];
+				if (!field)
+					return result;
+
+				let qIdBase = "{idBase}-query-field-{id}".replace("{idBase}", idBase).replace("{id}", query.id),
+					inQueryFieldFilter = new RowFilter(App, qIdBase);
+				inQueryFieldFilter.objectLoad(query);
+				inQueryFieldFilter.setValue(query.workspaceFilterConditions);
+
+				switch (rule) {
+					case 'in_query_field':
+						result = inQueryFieldFilter.isValid(rowData);
+						break;
+					case 'not_in_query_field':
+						result = inQueryFieldFilter.isValid(rowData);
 						break;
 				}
 
 				return result;
+
+			},
+
+			inQueryValid: function(rowData, columnName, rule, compareValue) {
+
+				let result = false;
+				
+				if (columnName) {
+					rowData = rowData[columnName] || {};
+				}
+
+				if (!compareValue)
+					return result;
+
+				// if no query
+				let query = _Object.application.queries(q => q.id == compareValue)[0];
+				if (!query)
+					return result;
+
+				let qIdBase = "{idBase}-query-{id}".replace("{idBase}", idBase).replace("{id}", query.id),
+					inQueryFilter = new RowFilter(App, qIdBase);
+				inQueryFilter.objectLoad(query);
+				inQueryFilter.setValue(query.workspaceFilterConditions);
+
+				switch (rule) {
+					case 'in_query':
+						result = inQueryFilter.isValid(rowData);
+						break;
+					case 'not_in_query':
+						result = !inQueryFilter.isValid(rowData);
+						break;
+				}
+
+				return result;
+
+			},
+
+			dataCollectionValid: function (rowData, columnName, rule, compareValue) {
+
+				var result = false;
+
+				if (!compareValue)
+					return result;
+
+				if (!_View)
+					return result;
+					
+				if (columnName) {
+					rowData = rowData[columnName] || {};
+				}
+
+				var dc = _View.pageRoot().dataCollections(dc => dc.id == compareValue)[0];
+					
+				switch (rule) {
+					case 'in_data_collection':
+						if (!dc)
+							return false;
+							
+						result = (dc.getData(d => d.id == rowData.id).length > 0);
+						break;
+					case 'not_in_data_collection':
+						if (!dc)
+							return true;
+							
+						result = (dc.getData(d => d.id == rowData.id).length < 1);
+						break;
+				}
+				
+				return result;
+
+			},
+			
+			connectFieldValid: function(rowData, columnName, rule, compareValue) {
+
+				switch (rule) {
+					case 'contains':
+						return (rowData[columnName].id || rowData[columnName]).toString().indexOf(compareValue) > -1
+						break;
+					case 'not_contains':
+						return (rowData[columnName].id || rowData[columnName]).toString().indexOf(compareValue) == -1;
+						break;
+					case 'equals':
+						return (rowData[columnName].id || rowData[columnName]).toString() == compareValue;
+						break;
+					case 'not_equal':
+						return (rowData[columnName].id || rowData[columnName]).toString() != compareValue;
+						break;
+					case 'in_query':
+					case 'not_in_query':
+						return _logic.inQueryValid(rowData, columnName, rule, compareValue);
+						break;
+					case "is_current_user":
+					case "is_not_current_user":
+						return _logic.userValid(rowData, columnName, rule, compareValue);
+						break;
+					case 'in_data_collection':
+					case 'not_in_data_collection':
+						return _logic.dataCollectionValid(rowData, columnName, rule, compareValue);
+						break;
+				}
+				
 			}
 
 		};
@@ -955,6 +1740,7 @@ export default class RowFilter extends OP.Component {
 
 		// Interface methods for parent component:
 		this.objectLoad = _logic.objectLoad;
+		this.viewLoad = _logic.viewLoad;
 		this.addNewFilter = _logic.addNewFilter;
 		this.getValue = _logic.getValue;
 		this.setValue = _logic.setValue;

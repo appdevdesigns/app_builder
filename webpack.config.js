@@ -29,6 +29,9 @@ module.exports = {
     ]
   },
   devtool: "source-map",
+  watchOptions: {
+    ignored: /node_modules/
+  },
   plugins: [
     // new webpack.optimize.UglifyJsPlugin({
     //     compress: {
@@ -43,9 +46,9 @@ module.exports = {
     // *************************************************************************** //
     // This builds the OP into same bundle but automatically handles the import    //
     // *************************************************************************** //
-    new webpack.ProvidePlugin({
-        OP: "OP"
-    })
+    // new webpack.ProvidePlugin({
+    //     OP: "OP"
+    // })
 
     // ***************************************** //
     // This builds the OP into a seperate bundle //

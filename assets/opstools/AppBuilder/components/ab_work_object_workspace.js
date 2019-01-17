@@ -8,6 +8,7 @@
 
 import ABApplication from "../classes/ABApplication"
 import ABWorkspaceDatatable from "./ab_work_object_workspace_datatable"
+import ABWorkspaceKanBan from "./ab_work_object_workspace_kanban"
 import ABPopupDefineLabel from "./ab_work_object_workspace_popupDefineLabel"
 import ABPopupFilterDataTable from "./ab_work_object_workspace_popupFilterDataTable"
 import ABPopupFrozenColumns from "./ab_work_object_workspace_popupFrozenColumns"
@@ -15,15 +16,35 @@ import ABPopupHideFields from "./ab_work_object_workspace_popupHideFields"
 import ABPopupMassUpdate from "./ab_work_object_workspace_popupMassUpdate"
 import ABPopupNewDataField from "./ab_work_object_workspace_popupNewDataField"
 import ABPopupSortField from "./ab_work_object_workspace_popupSortFields"
+import ABPopupExport from "./ab_work_object_workspace_popupExport"
+import ABPopupImport from "./ab_work_object_workspace_popupImport"
+import ABPopupViewSettings from "./ab_work_object_workspace_popupViewSettings"
+
+import ABViewDataCollection from "../classes/views/ABViewDataCollection"
 
 
 export default class ABWorkObjectWorkspace extends OP.Component {
-    
+
     /**
-     * @param {object} ??
+     * @param {object} App
+	 * @param {string} idBase
+	 * @param {object} settings - {
+	 * 								allowDelete: bool,
+	 * 								detailsView: string,
+	 * 								editView: string,
+	 * 								isInsertable: bool,
+	 * 								isEditable: bool,
+	 * 								massUpdate: bool,
+	 * 								configureHeaders: bool,
+	 * 
+	 * 								isFieldAddable: bool
+	 * 							}
      */
-    constructor(App) {
-        super(App, 'ab_work_object_workspace');
+    constructor(App, idBase, settings) {
+
+		idBase = idBase || 'ab_work_object_workspace';
+
+        super(App, idBase);
         var L = this.Label;
         
         var labels = {
@@ -32,68 +53,312 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                 addNewRow: L('ab.object.addNewRow', "*Add new row"),
                 selectObject: L('ab.object.selectObject', "*Select an object to work with."),
                 // formHeader: L('ab.application.form.header', "*Application Info"),
-                deleteSelected: L('ab.object.toolbar.deleteRecords', "*Delete records"),
+                deleteSelected: L('ab.object.toolbar.deleteRecords', "*Delete"),
                 hideFields: L('ab.object.toolbar.hideFields', "*Hide fields"),
-                massUpdate: L('ab.object.toolbar.massUpdate', "*Edit records"),
-                filterFields: L('ab.object.toolbar.filterFields', "*Add filters"),
-                sortFields: L('ab.object.toolbar.sortFields', "*Apply sort"),
-                frozenColumns: L('ab.object.toolbar.frozenColumns', "*Frozen fields"),
-                defineLabel: L('ab.object.toolbar.defineLabel', "*Define label"),
+                massUpdate: L('ab.object.toolbar.massUpdate', "*Edit"),
+                filterFields: L('ab.object.toolbar.filterFields', "*Filters"),
+                sortFields: L('ab.object.toolbar.sortFields', "*Sort"),
+                frozenColumns: L('ab.object.toolbar.frozenColumns', "*Freeze"),
+                defineLabel: L('ab.object.toolbar.defineLabel', "*Label"),
                 permission: L('ab.object.toolbar.permission', "*Permission"),
-                addFields: L('ab.object.toolbar.addFields', "*Add field"),
+				addFields: L('ab.object.toolbar.addFields', "*Add field"),
+				import: L('ab.object.toolbar.import', "*Import"),
                 "export": L('ab.object.toolbar.export', "*Export"),
                 confirmDeleteTitle : L('ab.object.delete.title', "*Delete data field"),
                 confirmDeleteMessage : L('ab.object.delete.message', "*Do you want to delete <b>{0}</b>?")
             }
-        };
+		};
+
+		// default settings
+		settings = settings || {};
+		if (settings.allowDelete == null)
+			settings.allowDelete = true;
+
+		if (settings.isInsertable == null)
+			settings.isInsertable = true;
+
+		if (settings.isEditable == null)
+			settings.isEditable = true;
+
+		if (settings.massUpdate == null)
+			settings.massUpdate = true;
+
+		if (settings.configureHeaders == null)
+			settings.configureHeaders = true;
+
+		if (settings.isFieldAddable == null)
+			settings.isFieldAddable = true;
 
 
 
     	// internal list of Webix IDs to reference our UI components.
     	var ids = {
-    		component: this.unique('component'),
+    		component: this.unique(idBase + '_component'),
 
-    		buttonAddField: this.unique('buttonAddField'),
-            buttonDeleteSelected: this.unique('deleteSelected'),
-    		buttonExport: this.unique('buttonExport'),
-    		buttonFieldsVisible: this.unique('buttonFieldsVisible'),
-    		buttonFilter: this.unique('buttonFilter'),
-    		buttonFrozen: this.unique('buttonFrozen'),
-    		buttonLabel: this.unique('buttonLabel'),
-            buttonMassUpdate: this.unique('buttonMassUpdate'),
-    		buttonRowNew: this.unique('buttonRowNew'),
-    		buttonSort: this.unique('buttonSort'),
+    		buttonAddField: this.unique(idBase + '_buttonAddField'),
+            buttonDeleteSelected: this.unique(idBase + '_deleteSelected'),
+			buttonExport: this.unique(idBase + '_buttonExport'),
+			buttonImport: this.unique(idBase + '_buttonImport'),
+    		buttonFieldsVisible: this.unique(idBase + '_buttonFieldsVisible'),
+    		buttonFilter: this.unique(idBase + '_buttonFilter'),
+    		buttonFrozen: this.unique(idBase + '_buttonFrozen'),
+    		buttonLabel: this.unique(idBase + '_buttonLabel'),
+            buttonMassUpdate: this.unique(idBase + '_buttonMassUpdate'),
+    		buttonRowNew: this.unique(idBase + '_buttonRowNew'),
+    		buttonSort: this.unique(idBase + '_buttonSort'),
 
-    		datatable: this.unique('datatable'),
+            datatable: this.unique(idBase + '_datatable'),
+            
+            viewMenu: this.unique(idBase + '_viewMenu'),
+            viewMenuButton: this.unique(idBase + '_viewMenuButton'),
+            viewMenuNewView: this.unique(idBase + '_viewMenuNewView'),
 
     		// Toolbar:
-    		toolbar: this.unique('toolbar'),
+    		toolbar: this.unique(idBase + '_toolbar'),
 
-    		noSelection: this.unique('noSelection'),
-    		selectedObject: this.unique('selectedObject'),
+    		noSelection: this.unique(idBase + '_noSelection'),
+    		selectedObject: this.unique(idBase + '_selectedObject'),
 
     	}
 
 
+        var hashViews = {}; // a hash of the available workspace view components
+
         // The DataTable that displays our object:
-        var DataTable = new ABWorkspaceDatatable(App);
+        var DataTable = new ABWorkspaceDatatable(App, idBase, settings);
+        hashViews['grid'] = DataTable;
+
+        var KanBan = new ABWorkspaceKanBan(App, idBase);
+        hashViews['kanban'] = KanBan;
+
 
         // Various Popups on our page:
-        var PopupDefineLabelComponent = new ABPopupDefineLabel(App);
+        var PopupDefineLabelComponent = new ABPopupDefineLabel(App, idBase);
 
-        var PopupFilterDataTableComponent = new ABPopupFilterDataTable(App);
+        var PopupFilterDataTableComponent = new ABPopupFilterDataTable(App, idBase);
 
-        var PopupFrozenColumnsComponent = new ABPopupFrozenColumns(App);
+        var PopupFrozenColumnsComponent = new ABPopupFrozenColumns(App, idBase);
 
-        var PopupHideFieldComponent = new ABPopupHideFields(App);
+        var PopupHideFieldComponent = new ABPopupHideFields(App, idBase);
 
-        var PopupMassUpdateComponent = new ABPopupMassUpdate(App);
+        var PopupMassUpdateComponent = new ABPopupMassUpdate(App, idBase);
 
-        var PopupNewDataFieldComponent = new ABPopupNewDataField(App);
+		var PopupNewDataFieldComponent = new ABPopupNewDataField(App, idBase);
 
-        var PopupSortFieldComponent = new ABPopupSortField(App);
+		var PopupSortFieldComponent = new ABPopupSortField(App, idBase);
+
+		var PopupExportObjectComponent = new ABPopupExport(App, idBase);
         
+		var PopupImportObjectComponent = new ABPopupImport(App, idBase);
+
+		var PopupViewSettingsComponent = new ABPopupViewSettings(App, idBase);
+
         var view = "button";
+
+
+
+        var submenuFixedItems = [
+            {
+                $template: "Separator"
+            },
+            {
+                value: "New View",
+                icon: "fa fa-plus",
+                id: ids.viewMenuNewView, 
+            },
+        ];
+        
+        var menu = {
+            view: "menu",
+            css: "darkgray",
+            borderless: true,
+            minWidth: 150,
+            autowidth: true,
+            id: ids.viewMenu,
+            data: [],
+            on: {
+                "onMenuItemClick": function(id) {
+                    var item = this.getMenuItem(id);
+                    if (id === ids.viewMenuButton) {
+                        return;
+                    }
+                    if (id === ids.viewMenuNewView) {
+                        PopupViewSettingsComponent.show();
+                    } else if (item.isView) {
+                        var view = CurrentObject.workspaceViews.list(v => v.id === id)[0];
+                        _logic.switchWorkspaceView(view);
+                    } else if (item.action === 'edit') {
+                        var view = CurrentObject.workspaceViews.list(v => v.id === item.viewId)[0];
+                        PopupViewSettingsComponent.show(view);
+                    } else if (item.action === 'delete') {
+                        var view = CurrentObject.workspaceViews.list(v => v.id === item.viewId)[0];
+                        CurrentObject.workspaceViews.removeView(view);
+                        _logic.switchWorkspaceView(CurrentObject.workspaceViews.getCurrentView());
+                    }
+                }
+            },
+            type: {
+                subsign: true
+            },
+        };
+
+
+        var toolbar = {
+            view: 'toolbar',
+            id: ids.toolbar,
+            hidden: true,
+            css: "transparent",
+            borderless: true,
+            paddingY: 2,
+            paddingX: 0,
+            margin: 0,
+            cols: [
+                {
+                    view: view,
+                    id: ids.buttonAddField,
+                    label: labels.component.addFields,
+                    icon: "fa fa-plus",
+                    type: "icon",
+                    hidden: !settings.isFieldAddable,
+                    minWidth: 115,
+                    // autowidth: true,
+                    click:function() {
+                        _logic.toolbarAddFields(this.$view);
+                    }
+                },
+                {
+                    view: view,
+                    id: ids.buttonFieldsVisible,
+                    label: labels.component.hideFields,
+                    icon: "fa fa-eye-slash",
+                    type: "icon",
+                    minWidth: 105,
+                    // autowidth: true,
+                    badge: 0,
+                    click: function () {
+                        _logic.toolbarFieldsVisible(this.$view);
+                    }
+                },
+                {
+                    view: view,
+                    id: ids.buttonFilter,
+                    label: labels.component.filterFields,
+                    icon: "fa fa-filter",
+                    type: "icon",
+                    minWidth: 70,
+                    // autowidth: true,
+                    badge: 0,
+                    click: function () {
+                        _logic.toolbarFilter(this.$view);
+                    }
+                },
+                {
+                    view: view,
+                    id: ids.buttonSort,
+                    label: labels.component.sortFields,
+                    icon: "fa fa-sort",
+                    type: "icon",
+                    minWidth: 60,
+                    // autowidth: true,
+                    badge: 0,
+                    click: function () {
+                        _logic.toolbarSort(this.$view);
+                    }
+                },
+                {
+                    view: view,
+                    id: ids.buttonFrozen,
+                    label: labels.component.frozenColumns,
+                    icon: "fa fa-thumb-tack",
+                    type: "icon",
+                    minWidth: 75,
+                    // autowidth: true,
+                    badge: 0,
+                    click: function(){
+                        _logic.toolbarFrozen(this.$view);
+                    }
+                },
+                {
+                    view: view,
+                    id: ids.buttonLabel,
+                    label: labels.component.defineLabel,
+                    icon: "fa fa-crosshairs",
+                    type: "icon",
+                    minWidth: 75,
+                    // autowidth: true,
+                    click: function () {
+                        _logic.toolbarDefineLabel(this.$view);
+                    }
+                },
+                // {
+                //  view: view,
+                //  label: labels.component.permission,
+                //  icon: "lock",
+                //  type: "icon",
+                //  // autowidth: true,
+                //  click: function() {
+                //      _logic.toolbarPermission(this.$view);
+                //  }
+                // 
+				// },
+				{
+					view: view,
+					id: ids.buttonImport,
+					label: labels.component.import,
+					icon: "fa fa-upload",
+					type: "icon",
+					minWidth: 80,
+					click: function() {
+						_logic.toolbarButtonImport();
+					}
+				},
+                {
+                    view: view,
+                    id: ids.buttonExport,
+                    label: labels.component.export,
+                    icon: "fa fa-download",
+                    type: "icon",
+                    minWidth: 80,
+                    // autowidth: true,
+                    click: function() {
+                        _logic.toolbarButtonExport(this.$view);
+                    }
+                },
+                {
+                    view: view,
+                    id: ids.buttonMassUpdate,
+                    label: labels.component.massUpdate,
+                    icon: "fa fa-pencil-square-o",
+                    type: "icon",
+                    minWidth: 65,
+                    // autowidth: true,
+                    badge: 0,
+                    hidden:true,
+                    click: function () {
+                        _logic.toolbarMassUpdate(this.$view);
+                    }
+                },
+                {
+                    view: view,
+                    id: ids.buttonDeleteSelected,
+                    label: labels.component.deleteSelected,
+                    icon: "fa fa-trash",
+                    type: "icon",
+                    minWidth: 85,
+                    // autowidth: true,
+                    badge: 0,
+                    hidden:true,
+                    click: function () {
+                        _logic.toolbarDeleteSelected(this.$view);
+                    }
+                }
+            ]
+        }
+
+
+
+		// create ABViewDataCollection
+		var CurrentDc = new ABViewDataCollection({}, CurrentApplication);
 
     	// Our webix UI definition:
     	this.ui = {
@@ -120,134 +385,27 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     			},
     			{
     				id: ids.selectedObject,
+                    // css: "ab-data-toolbar",
+                    // borderless: true,
     				rows: [
-    					{
-    						view: 'toolbar',
-    						id: ids.toolbar,
-    						hidden: true,
-    						css: "ab-data-toolbar",
-    						cols: [
-                                {
-    								view: view,
-    								id: ids.buttonAddField,
-    								label: labels.component.addFields,
-    								icon: "plus",
-    								type: "icon",
-    								// autowidth: true,
-    								click:function() {
-    									_logic.toolbarAddFields(this.$view);
-    								}
-    							},
-                                {
-    								view: view,
-    								id: ids.buttonMassUpdate,
-    								label: labels.component.massUpdate,
-    								icon: "pencil-square-o",
-    								type: "icon",
-    								// autowidth: true,
-    								badge: 0,
-                                    disabled:true,
-    								click: function () {
-    									_logic.toolbarMassUpdate(this.$view);
-    								}
-    							},
-                                {
-    								view: view,
-    								id: ids.buttonDeleteSelected,
-    								label: labels.component.deleteSelected,
-    								icon: "trash",
-    								type: "icon",
-    								// autowidth: true,
-    								badge: 0,
-                                    disabled:true,
-    								click: function () {
-    									_logic.toolbarDeleteSelected(this.$view);
-    								}
-    							},
-    							{
-    								view: view,
-    								id: ids.buttonFieldsVisible,
-    								label: labels.component.hideFields,
-    								icon: "eye-slash",
-    								type: "icon",
-    								// autowidth: true,
-    								badge: 0,
-    								click: function () {
-    									_logic.toolbarFieldsVisible(this.$view);
-    								}
-    							},
-    							{
-    								view: view,
-    								id: ids.buttonFilter,
-    								label: labels.component.filterFields,
-    								icon: "filter",
-    								type: "icon",
-    								// autowidth: true,
-    								badge: 0,
-    								click: function () {
-    									_logic.toolbarFilter(this.$view);
-    								}
-    							},
-    							{
-    								view: view,
-    								id: ids.buttonSort,
-    								label: labels.component.sortFields,
-    								icon: "sort",
-    								type: "icon",
-    								// autowidth: true,
-    								badge: 0,
-    								click: function () {
-    									_logic.toolbarSort(this.$view);
-    								}
-    							},
-    							{
-    								view: view,
-    								id: ids.buttonFrozen,
-    								label: labels.component.frozenColumns,
-    								icon: "thumb-tack",
-    								type: "icon",
-    								// autowidth: true,
-    								badge: 0,
-    								click: function(){
-    									_logic.toolbarFrozen(this.$view);
-    								}
-    							},
-    							{
-    								view: view,
-    								id: ids.buttonLabel,
-    								label: labels.component.defineLabel,
-    								icon: "crosshairs",
-    								type: "icon",
-    								// autowidth: true,
-    								click: function () {
-    									_logic.toolbarDefineLabel(this.$view);
-    								}
-    							},
-    							// {
-    							// 	view: view,
-    							// 	label: labels.component.permission,
-    							// 	icon: "lock",
-    							// 	type: "icon",
-    							// 	// autowidth: true,
-    							// 	click: function() {
-    							// 		_logic.toolbarPermission(this.$view);
-    							// 	}
-                                // 
-    							// },
-    							{
-    								view: view,
-    								id: ids.buttonExport,
-    								label: labels.component.export,
-    								icon: "download",
-    								type: "icon",
-    								// autowidth: true,
-    								click: function() {
-    									_logic.toolbarButtonExport(this.$view);
-    								}
-    							}
-    						]
-    					},
-    					DataTable.ui,
+                        {
+                            type: "clean",
+                            css: "ab-data-toolbar",
+                            cols: [
+                                menu,
+                                { width: 1, css: "white" }, // separator
+                                toolbar
+                            ]
+                        },
+						// DataTable.ui,
+                        {
+                            view: "multiview",
+                            cells:[
+                                KanBan.ui,
+                                DataTable.ui,
+                            ]
+                        },
+						(settings.isInsertable ? 
     					{
     						cols: [
     							{
@@ -259,12 +417,17 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     								}
     							}
     						]
-    					}
+						} : 
+						{ 
+							view: 'layout',
+							rows: [],
+							hidden: true
+						})
     				]
 
     			}
     		]
-    	}
+    	};
 
 
 
@@ -277,7 +440,14 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     			onEditorMenu:_logic.callbackHeaderEditorMenu,
                 onColumnOrderChange:_logic.callbackColumnOrderChange,
                 onCheckboxChecked:_logic.callbackCheckboxChecked
-            });
+			});
+
+			CurrentDc.init();
+			CurrentDc.bind($$(DataTable.ui.id));
+
+
+            KanBan.init();
+
 
     		PopupDefineLabelComponent.init({
     			onChange:_logic.callbackDefineLabel		// be notified when there is a change in the label
@@ -299,17 +469,33 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     			// onSave:_logic.callbackAddFields			// be notified of something...who knows...
     		});
 
-    		PopupNewDataFieldComponent.init({
-    			onSave:_logic.callbackAddFields			// be notified when a new Field is created & saved
-    		});
+			if (settings.isFieldAddable) {
+				PopupNewDataFieldComponent.init({
+					onSave:_logic.callbackAddFields			// be notified when a new Field is created & saved
+				});
+			}
 
 // ?? what is this for ??
-    		var fieldList = DataTable.getFieldList();
+    		// var fieldList = DataTable.getFieldList();
 
     		PopupSortFieldComponent.init({
     			onChange:_logic.callbackSortFields		// be notified when there is a change in the sort fields
-    		});
+			});
 
+			PopupImportObjectComponent.init({
+				onDone: () => {
+
+					// refresh data in object
+					_logic.populateObjectWorkspace(CurrentObject);
+				}
+			});
+
+			PopupExportObjectComponent.init({});
+
+            PopupViewSettingsComponent.init({
+                onViewAdded: _logic.callbackViewAdded,
+                onViewUpdated: _logic.callbackViewUpdated,
+            });
 
     		$$(ids.noSelection).show();
     	}
@@ -317,7 +503,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
         
 
         var CurrentApplication = null;
-        var CurrentObject = null;
+		var CurrentObject = null;
 
 
     	// our internal business logic
@@ -335,6 +521,9 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 				CurrentApplication = application;
 
 				PopupNewDataFieldComponent.applicationLoad(application);
+
+				CurrentDc.application = CurrentApplication;
+
 			},
 
     		/**
@@ -343,8 +532,9 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		 * call back for when the Define Label popup is finished.
     		 */
     		callbackAddFields:function(field) {
-                DataTable.refreshHeader();
-    			DataTable.refresh();
+				DataTable.refreshHeader();
+				_logic.loadData();
+    			// DataTable.refresh();
     		},
 
 
@@ -365,8 +555,10 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		callbackFilterDataTable: function() {
                 // Since we are making server side requests lets offload the badge count to another function so it can be called independently
                 _logic.getBadgeFilters();
-                // this will be handled by the server side request now
-                DataTable.refresh();
+				// this will be handled by the server side request now
+				_logic.loadData();
+				KanBan.refresh();
+                // DataTable.refresh();
     		},
 
     		/**
@@ -376,8 +568,9 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		 */
     		callbackFrozenColumns: function() {
                 // We need to load data first because there isn't anything to look at if we don't
-                DataTable.refreshHeader();
-                DataTable.refresh();
+				DataTable.refreshHeader();
+				_logic.loadData();
+                // DataTable.refresh();
 
                 _logic.getBadgeFrozenColumn();
     		},
@@ -448,10 +641,10 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                         })
                         break;
     				case 'filter':
-                        _logic.toolbarFilter($$(ids.buttonFilter).$view, field.columnName);
+                        _logic.toolbarFilter($$(ids.buttonFilter).$view, field.id);
                         break;
     				case 'sort':
-                        _logic.toolbarSort($$(ids.buttonSort).$view, field.columnName);
+                        _logic.toolbarSort($$(ids.buttonSort).$view, field.id);
     					break;
                     case 'freeze':
                         CurrentObject.workspaceFrozenColumnID = field.columnName;
@@ -480,8 +673,9 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 
     								field.destroy()
     								.then(()=>{
-                                        DataTable.refreshHeader();
-    									DataTable.refresh();
+										DataTable.refreshHeader();
+										_logic.loadData();
+    									// DataTable.refresh();
                                         
                                         // recursive fn to remove any form/detail fields related to this field
                                         function checkPages(list, cb) {
@@ -525,8 +719,9 @@ export default class ABWorkObjectWorkspace extends OP.Component {
              * call back for when the mass update is fired
              */
             callbackMassUpdate: function() {
-                // _logic.getBadgeSortFields();
-                DataTable.refresh();
+				// _logic.getBadgeSortFields();
+				_logic.loadData();
+                // DataTable.refresh();
             },
 
     		/**
@@ -537,8 +732,35 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		callbackSortFields: function() {
                 _logic.getBadgeSortFields();
                 DataTable.refreshHeader();
-                DataTable.refresh();
+				_logic.loadData();
+				KanBan.refresh();
+            },
+            
+            /**
+    		 * @function callbackViewAdded
+    		 *
+    		 * call back for when a new workspace view is added
+    		 */
+    		callbackViewAdded: function(view) {
+                _logic.switchWorkspaceView(view);
+				DataTable.refreshHeader();
+				_logic.loadData();
+                // DataTable.refresh();
     		},
+            
+            
+            /**
+    		 * @function callbackViewUpdated
+    		 *
+    		 * call back for when a workspace view is updated
+    		 */
+    		callbackViewUpdated: function(view) {
+                if (view.id === CurrentObject.workspaceViews.getCurrentView().id) {
+                    _logic.switchWorkspaceView(view);
+                } else {
+                    _logic.refreshViewMenu();
+                }
+            },
             
             /**
              * @function enableUpdateDelete
@@ -547,8 +769,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
              * we will make this externally accessible so we can call it from within the datatable component
              */
             enableUpdateDelete: function() {
-                $$(ids.buttonMassUpdate).enable();
-                $$(ids.buttonDeleteSelected).enable();
+                $$(ids.buttonMassUpdate).show();
+                $$(ids.buttonDeleteSelected).show();
             },
 
             /**
@@ -558,8 +780,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
              * we will make this externally accessible so we can call it from within the datatable component
              */
             disableUpdateDelete: function() {
-                $$(ids.buttonMassUpdate).disable();
-                $$(ids.buttonDeleteSelected).disable();
+                $$(ids.buttonMassUpdate).hide();
+                $$(ids.buttonDeleteSelected).hide();
             },
             
             /**
@@ -568,10 +790,16 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		 * we need to set the badge count for filters on load and after filters are added or removed
     		 */            
             getBadgeFilters: function() {
-                var filterConditions = CurrentObject.workspaceFilterConditions;
+				var filterConditions = CurrentObject.currentView().filterConditions;
+				var numberOfFilter = 0;
 
-                if (typeof(filterConditions) != "undefined") {
-                    $$(ids.buttonFilter).define('badge', filterConditions.length);
+				if (filterConditions &&
+					filterConditions.rules && 
+					filterConditions.rules.length)
+					numberOfFilter = filterConditions.rules.length;
+
+				if (typeof(filterConditions) != "undefined") {
+                    $$(ids.buttonFilter).define('badge', numberOfFilter);
                     $$(ids.buttonFilter).refresh();
                 }
             },
@@ -628,7 +856,17 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		 * component to add a row.
     		 */
     		rowAdd:function() {
-    			DataTable.addRow();
+                let currView = CurrentObject.currentView();
+
+                switch (currView.type) {
+                    case "kanban":
+                        KanBan.addCard();
+                        break;
+                    case "grid":
+                    default:
+                        DataTable.addRow();
+                        break;
+                }
     		},
 
 
@@ -654,9 +892,12 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     			PopupNewDataFieldComponent.show($view);
     		},
 
+			toolbarButtonImport: function() {
+				PopupImportObjectComponent.show();
+			},
 
     		toolbarButtonExport: function($view) {
-console.error('TODO: Button Export()');
+				PopupExportObjectComponent.show($view);
     		},
 
             toolbarDeleteSelected: function($view) {
@@ -727,8 +968,8 @@ console.error('TODO: Button Export()');
     		 *
     		 * show the popup to add a filter to the datatable
     		 */
-    		toolbarFilter: function($view, columnName) {
-                PopupFilterDataTableComponent.show($view, columnName);
+    		toolbarFilter: function($view, fieldId) {
+                PopupFilterDataTableComponent.show($view, fieldId);
     		},
 
 
@@ -755,34 +996,13 @@ console.error('TODO: toolbarPermission()');
     		 *
     		 * show the popup to sort the datatable
     		 */
-    		toolbarSort:function($view, columnName) {
-    			PopupSortFieldComponent.show($view, columnName);
+    		toolbarSort:function($view, fieldId) {
+    			PopupSortFieldComponent.show($view, fieldId);
                     // self.refreshPopupData();
                     // $$(self.webixUiId.sortFieldsPopup).show($view);
                     //console.error('TODO: toolbarSort()');
-    		}
-    	}
-        this._logic = _logic;
-
-
-
-    	// Expose any globally accessible Actions:
-    	this.actions({
-
-
-
-    		/**
-    		 * @function clearObjectWorkspace()
-    		 *
-    		 * Clear the object workspace.
-    		 */
-    		clearObjectWorkspace:function(){
-
-    			// NOTE: to clear a visual glitch when multiple views are updating
-    			// at one time ... stop the animation on this one:
-    			$$(ids.noSelection).show(false, false);
-    		},
-
+			},
+			
 
     		/**
     		 * @function populateObjectWorkspace()
@@ -792,38 +1012,225 @@ console.error('TODO: toolbarPermission()');
     		 * @param {ABObject} object  	current ABObject instance we are working with.
     		 */
     		populateObjectWorkspace: function(object) {
+				
+				$$(ids.toolbar).show();
+				$$(ids.selectedObject).show();
 
-    			$$(ids.toolbar).show();
-    			$$(ids.selectedObject).show();
+				CurrentObject = object;
 
-    			CurrentObject = object;
+                // get current view from object
+                var currentView = CurrentObject.workspaceViews.getCurrentView()
 
-    			App.actions.populateObjectPopupAddDataField(CurrentObject);
 
-    			DataTable.objectLoad(CurrentObject);
+                // get defined views 
+                // update the view picker in the toolbar
 
-    			PopupDefineLabelComponent.objectLoad(CurrentObject);
-                PopupFilterDataTableComponent.objectLoad(CurrentObject);
-    			PopupFrozenColumnsComponent.objectLoad(CurrentObject);
-    			PopupHideFieldComponent.objectLoad(CurrentObject);
-                PopupMassUpdateComponent.objectLoad(CurrentObject, DataTable);
-    			PopupSortFieldComponent.objectLoad(CurrentObject);
 
-    			// We can hide fields now that data is loaded
-                _logic.callbackFieldsVisible();
+                // get toolbar config
+                // update toolbar with approved tools
+
+/// still working with DataTable
+				// initial data
+				_logic.loadData();
+
+				// the replicated tables are read only
+				if (CurrentObject.isReadOnly) {
+					DataTable.readonly();
+
+					if ($$(ids.buttonRowNew))
+						$$(ids.buttonRowNew).disable();
+				}
+				else {
+					DataTable.editable();
+
+					if ($$(ids.buttonRowNew))
+						$$(ids.buttonRowNew).enable();
+				}
+
+                DataTable.objectLoad(CurrentObject);
+                KanBan.objectLoad(CurrentObject);
+
+				PopupNewDataFieldComponent.objectLoad(CurrentObject);
+				PopupDefineLabelComponent.objectLoad(CurrentObject);
+				PopupFilterDataTableComponent.objectLoad(CurrentObject);
+				PopupFrozenColumnsComponent.objectLoad(CurrentObject);
+				PopupHideFieldComponent.objectLoad(CurrentObject);
+				PopupMassUpdateComponent.objectLoad(CurrentObject, DataTable);
+				PopupSortFieldComponent.objectLoad(CurrentObject);
+				PopupImportObjectComponent.objectLoad(CurrentObject);
+                PopupExportObjectComponent.objectLoad(CurrentObject);
+				PopupExportObjectComponent.objectLoad(CurrentObject);
+				PopupExportObjectComponent.setGridComponent($$(DataTable.ui.id));
+				PopupExportObjectComponent.setHiddenFields(CurrentObject.objectWorkspace.hiddenFields);
+                PopupExportObjectComponent.setFilename(CurrentObject.label);
+                PopupViewSettingsComponent.objectLoad(CurrentObject);
+
+                _logic.refreshToolBarView();
+
+				// $$(ids.component).setValue(ids.selectedObject);
+				$$(ids.selectedObject).show(true, false);
+
+				// disable add fields into the object
+				if (object.isExternal || object.isImported || !settings.isFieldAddable) {
+					$$(ids.buttonAddField).disable();
+					$$(ids.buttonImport).disable();
+				}
+				else {
+					$$(ids.buttonAddField).enable();
+					$$(ids.buttonImport).enable();
+				}
+
+				_logic.refreshViewMenu();
+
+				// display the proper ViewComponent
+                var currDisplay = hashViews[currentView.type];
+                currDisplay.show();
+                // viewPicker needs to show this is the current view.
+
+            },
+
+
+			/**
+    		 * @function clearObjectWorkspace()
+    		 *
+    		 * Clear the object workspace.
+    		 */
+    		clearObjectWorkspace:function(){
+				
+				// NOTE: to clear a visual glitch when multiple views are updating
+				// at one time ... stop the animation on this one:
+				$$(ids.noSelection).show(false, false);
+			},
+
+			/**
+			 * @function loadAll
+			 * Load all records
+			 * 
+			 */
+			loadAll: function() {
+				DataTable.loadAll();
+            },
+
+            loadData: function() {
+
+				// update ABViewDataCollection settings
+				var wheres = {};
+				if (CurrentObject.workspaceFilterConditions && 
+					CurrentObject.workspaceFilterConditions.rules &&
+					CurrentObject.workspaceFilterConditions.rules.length > 0) {
+					wheres = CurrentObject.workspaceFilterConditions;
+				}
+
+				var sorts = {};
+				if (CurrentObject.workspaceSortFields &&
+					CurrentObject.workspaceSortFields.length > 0) {
+					sorts = CurrentObject.workspaceSortFields;
+				}
+
+				CurrentDc.settings = {
+					object: CurrentObject.id,
+					objectUrl: CurrentObject.urlPointer(),
+					objectWorkspace: {
+						filterConditions: wheres,
+						sortFields: sorts
+					}
+				};
+				CurrentDc.clearAll();
+				CurrentDc.loadData(0, 30);
+
+			},
+
+            switchWorkspaceView: function(view) {
+                if (hashViews[view.type]) {
+                    CurrentObject.workspaceViews.setCurrentView(view.id);
+                    hashViews[view.type].show();
+                    _logic.refreshViewMenu();
+
+                    // now update the rest of the toolbar for this view:
+                    _logic.refreshToolBarView();
+
+                    // save current view
+                    CurrentObject.save();
+                }
+            },
+
+            /**
+             * @function refreshToolBarView
+             * update the display of the toolbar buttons based upon
+             * the current view being displayed.
+             */
+            refreshToolBarView: function() {
+
+				// We can hide fields now that data is loaded
+				_logic.callbackFieldsVisible();
+				
+				// get badge counts for server side components
+				_logic.getBadgeSortFields();
+				_logic.getBadgeFilters();
+
+				// $$(ids.component).setValue(ids.selectedObject);
+				$$(ids.selectedObject).show(true, false);
+
+				// disable add fields into the object
+				if (CurrentObject.isExternal || CurrentObject.isImported || !settings.isFieldAddable) {
+					$$(ids.buttonAddField).disable();
+				}
+				else {
+					$$(ids.buttonAddField).enable();
+                }
                 
-                // get badge counts for server side components
-                _logic.getBadgeSortFields();
-                _logic.getBadgeFilters();
-    		}
+            },
+
+            refreshViewMenu: function() {
+                var currentViewId = CurrentObject.workspaceViews.getCurrentView().id;
+                var submenu = CurrentObject.workspaceViews.list().map(view => ({
+                    hash: view.type,
+                    value: view.name,
+                    id: view.id,
+                    isView: true,
+                    $css: view.id === currentViewId ? "selected" : "",
+                    icon: view.type === "kanban" ? "fa fa-columns" : "fa fa-table",
+                    submenu: view.isDefaultView ? null : [{
+                            value: "Edit",
+                            icon: "fa fa-cog",
+                            viewId: view.id,
+                            action: 'edit',
+                        },
+                        {
+                            value: "Delete",
+                            icon: "fa fa-trash",
+                            viewId: view.id,
+                            action: 'delete',
+                        }
+                    ]
+                })).concat(submenuFixedItems);
+                var icon = "fa-table";
+                if (CurrentObject.workspaceViews.getCurrentView().type == "kanban") {
+                    icon = "fa-columns";
+                }
+                $$(ids.viewMenu).define('data', [{
+                    value: `View: <span class="fa ${icon}"></span> <b>${CurrentObject.workspaceViews.getCurrentView().name}</b>`,
+                    id: ids.viewMenuButton,
+                    submenu,
+                }]);
+                $$(ids.viewMenu).refresh();
+            },
+		}
+        this._logic = _logic;
 
 
+
+    	// Expose any globally accessible Actions:
+    	this.actions({
     	});
 
 		// 
 		// Define our external interface methods:
 		// 
 		this.applicationLoad = this._logic.applicationLoad;
+		this.populateObjectWorkspace = this._logic.populateObjectWorkspace;
+		this.clearObjectWorkspace = this._logic.clearObjectWorkspace;
+		this.loadAll = this._logic.loadAll;
 
     }
 

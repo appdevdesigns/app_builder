@@ -22,6 +22,7 @@ var ABViewDetailDefaults = {
 }
 
 var ABViewDetailPropertyComponentDefaults = {
+	datacollection: null,
 	showLabel: true,
 	labelPosition: 'left',
 	labelWidth: 120,
@@ -35,9 +36,9 @@ export default class ABViewDetail extends ABViewContainer {
 	 * @param {ABApplication} application the application object this view is under
 	 * @param {ABView} parent the ABView this view is a child of. (can be null)
 	 */
-	constructor(values, application, parent) {
+	constructor(values, application, parent, defaultValues) {
 
-		super(values, application, parent, ABViewDetailDefaults);
+		super(values, application, parent, (defaultValues || ABViewDetailDefaults));
 
 	}
 
@@ -197,7 +198,7 @@ export default class ABViewDetail extends ABViewContainer {
 				template: _logic.listTemplate,
 				type: {
 					markCheckbox: function (item) {
-						return "<span class='check webix_icon fa-" + (item.selected ? "check-" : "") + "square-o'></span>";
+						return "<span class='check webix_icon fa fa-" + (item.selected ? "check-" : "") + "square-o'></span>";
 					}
 				},
 				onClick: {
@@ -266,7 +267,7 @@ export default class ABViewDetail extends ABViewContainer {
 
 		this.propertyUpdateFieldOptions(ids, view, dataCollectionId);
 
-		$$(ids.showLabel).setValue(view.settings.showLabel || ABViewDetailPropertyComponentDefaults.showLabel);
+		$$(ids.showLabel).setValue(view.settings.showLabel != null ? view.settings.showLabel : ABViewDetailPropertyComponentDefaults.showLabel);
 		$$(ids.labelPosition).setValue(view.settings.labelPosition || ABViewDetailPropertyComponentDefaults.labelPosition);
 		$$(ids.labelWidth).setValue(view.settings.labelWidth || ABViewDetailPropertyComponentDefaults.labelWidth);
 		$$(ids.height).setValue(view.settings.height || ABViewDetailPropertyComponentDefaults.height);
@@ -317,17 +318,14 @@ export default class ABViewDetail extends ABViewContainer {
 	* @method component()
 	* return a UI component based upon this view.
 	* @param {obj } App 
+	* @param {string} idPrefix - define to support in 'Dataview' widget
+	*
 	* @return {obj } UI component
 	*/
-	component(App) {
-
-		var idBase = 'ABViewDetail_' + this.id;
-		var ids = {
-			component: App.unique(idBase + '_component'),
-		}
+	component(App, idPrefix) {
 
 		// get webix.dashboard
-		var container = super.component(App);
+		var container = super.component(App, idPrefix);
 
 		var _ui = {
 			type: "form",
@@ -351,9 +349,9 @@ export default class ABViewDetail extends ABViewContainer {
 
 		var _logic = {
 
-			displayData: (data) => {
+			displayData: (rowData) => {
 
-				data = data || {};
+				rowData = rowData || {};
 
 				this.views().forEach((f) => {
 
@@ -364,14 +362,15 @@ export default class ABViewDetail extends ABViewContainer {
 
 					// get value of relation when field is a connect field
 					if (field.key == "connectObject") {
-						val = field.pullRelationValues(data);
+						val = field.pullRelationValues(rowData);
 					}
 					else if (field.key == "list") {
-						val = data[field.columnName];
+						val = rowData[field.columnName];
 
 						if (field.settings.isMultiple == 0) {
 							let myVal = "";
-							let selected = field.settings.options.forEach(function (options) {
+
+							field.settings.options.forEach(function (options) {
 								if (options.id == val)
 									myVal = options.text;
 							});
@@ -389,18 +388,18 @@ export default class ABViewDetail extends ABViewContainer {
 						}
 					}
 					else if (field.key == "user") {
-						val = data[field.columnName];
+						val = rowData[field.columnName];
 
 						if (field.settings.isMultiple == 0)
 							val = val ? '<span class="selectivity-multiple-selected-item rendered" style="background-color:#eee !important; color: #666 !important; box-shadow: inset 0px 1px 1px #333;"><i style="opacity: 0.6;" class="fa fa-user"></i> ' + val + '</span>' : "";
 
 					}
-					else if (data) {
-						val = field.format(data);
+					else if (rowData) {
+						val = field.format(rowData);
 					}
 
 					// set value to each components
-					var vComponent = f.component(App);
+					var vComponent = f.component(App, idPrefix);
 
 					if (vComponent.onShow)
 						vComponent.onShow();
@@ -421,7 +420,7 @@ export default class ABViewDetail extends ABViewContainer {
 			container.onShow();
 
 			// listen DC events
-			var dc = this.dataCollection();
+			var dc = this.dataCollection;
 			if (dc) {
 
 				var currData = dc.getCursor();
@@ -466,12 +465,12 @@ export default class ABViewDetail extends ABViewContainer {
 
 
 	/**
-	 * @method dataCollection
+	 * @property dataCollection
 	 * return ABViewDataCollection of this detail
 	 * 
 	 * @return {ABViewDataCollection}
 	 */
-	dataCollection() {
+	get dataCollection() {
 		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.datacollection)[0];
 	}
 
@@ -494,6 +493,11 @@ export default class ABViewDetail extends ABViewContainer {
 		// set settings to component
 		newView.settings = newView.settings || {};
 		newView.settings.fieldId = field.id;
+
+		// keep alias to support Query that contains alias name
+		// [alias].[columnName]
+		newView.settings.alias = field.alias;
+
 		// TODO : Default settings
 
 		newView.position.y = yPosition;
@@ -504,6 +508,12 @@ export default class ABViewDetail extends ABViewContainer {
 
 		// update properties when a sub-view is destroyed
 		newView.once('destroyed', () => { ABViewDetail.propertyEditorPopulate(App, ids, this); });
+
+	}
+
+	copyUpdateProperyList() {
+
+		return ['datacollection'];
 
 	}
 

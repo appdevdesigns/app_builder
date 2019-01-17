@@ -15,6 +15,7 @@ function L(key, altText) {
 
 var ABPropertyComponentDefaults = {
 	columns: 1,
+	gravity: 1
 }
 
 
@@ -77,6 +78,27 @@ export default class ABViewContainer extends ABView {
 		// convert from "0" => 0
 		this.settings.columns = parseInt(this.settings.columns || ABPropertyComponentDefaults.columns);
 
+		if (typeof this.settings.gravity != "undefined") {
+			this.settings.gravity.map(function(gravity) {
+				return parseInt(gravity);
+			});
+		}
+
+		if (this.settings.removable != null) {
+			this.settings.removable = JSON.parse(this.settings.removable); // convert to boolean
+		}
+		else {
+			this.settings.removable = true;
+		}
+
+
+		if (this.settings.movable != null) {
+			this.settings.movable = JSON.parse(this.settings.movable); // convert to boolean
+		}
+		else {
+			this.settings.movable = true;
+		}
+
 	}
 
 
@@ -137,13 +159,17 @@ export default class ABViewContainer extends ABView {
 				// store
 				subComponents[child.id] = component;
 
+				let view = 'panel'
+				if (child.settings.movable == false)
+					view = "scrollview";
+
 				Dashboard.addView({
 
-					view: 'panel',
+					view: view,
 
 					// specific viewId to .name, it will be used to save view position
 					name: child.id,
-					icon: 'arrows',
+					icon: 'fa fa-arrows',
 					css: 'ab-widget-container',
 					body: {
 						rows: [
@@ -211,13 +237,13 @@ export default class ABViewContainer extends ABView {
 			 * @param {obj} obj the current View instance
 			 * @param {obj} common  Webix provided object with common UI tools
 			 */
-			template: function (child) {
+			template: (child) => {
 
 				return ('<div>' +
 					'<i class="fa fa-#icon# webix_icon_btn"></i> ' +
 					' #label#' +
 					'<div class="ab-component-tools">' +
-					'<i class="fa fa-trash ab-component-remove"></i>' +
+					(child.settings.removable == false ? '' : '<i class="fa fa-trash ab-component-remove"></i>') +
 					'<i class="fa fa-edit ab-component-edit"></i>' +
 					'</div>' +
 					'</div>')
@@ -393,6 +419,27 @@ export default class ABViewContainer extends ABView {
 		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
 
 
+		_logic.addColumnGravity = (newVal, oldVal) => {
+			var pos = $$(ids.gravity).getParentView().index($$(ids.gravity));
+			$$(ids.gravity).getParentView().addView({
+				view:"counter", 
+				value:"1",
+				min: 1,
+				label:"Column "+newVal+" Gravity",
+				labelWidth: App.config.labelWidthXLarge,
+				css:"gravity_counter",
+				on: {
+					onChange: () => {
+						_logic.onChange();
+					}
+				}
+			}, pos);
+		}
+
+		_logic.removeColumnGravity = (newVal, oldVal) => {
+			$$(ids.gravity).getParentView().removeView($$(ids.gravity).getParentView().getChildViews()[$$(ids.gravity).getParentView().index($$(ids.gravity)) - 1 ]);
+		}
+
 		// in addition to the common .label  values, we 
 		// ask for:
 		return commonUI.concat([
@@ -401,26 +448,57 @@ export default class ABViewContainer extends ABView {
 				view: 'counter',
 				min: 1,
 				label: L('ab.components.container.columns', "*Columns"),
-				labelWidth: App.config.labelWidthLarge,
+				labelWidth: App.config.labelWidthXLarge,
 				on: {
 					onChange: function (newVal, oldVal) {
 
 						if (newVal > 8)
 							$$(ids.columns).setValue(8);
+						
+						if (newVal > oldVal) {
+							_logic.addColumnGravity(newVal, oldVal);
+						} else if (newVal < oldVal) {
+							_logic.removeColumnGravity(newVal, oldVal);
+						}
 
 					}
 				}
+			},
+			{
+				view:"text",
+				name:"gravity",
+				height: 1
 			}
 		]);
 
 	}
 
 
-	static propertyEditorPopulate(App, ids, view) {
+	static propertyEditorPopulate(App, ids, view, logic) {
 
-		super.propertyEditorPopulate(App, ids, view);
+		super.propertyEditorPopulate(App, ids, view, logic);
 
 		$$(ids.columns).setValue(view.settings.columns || ABPropertyComponentDefaults.columns);
+		
+		var gravityCounters = $$(ids.gravity).getParentView().queryView({ css:"gravity_counter" }, "all").map(counter => $$(ids.gravity).getParentView().removeView(counter)); 
+
+		for (var step = 1; step <= $$(ids.columns).getValue(); step++) {
+			var pos = $$(ids.gravity).getParentView().index($$(ids.gravity));
+			$$(ids.gravity).getParentView().addView({
+				view:"counter", 
+				value:"1",
+				min: 1,
+				label:"Column "+step+" Gravity",
+				labelWidth: App.config.labelWidthXLarge,
+				css:"gravity_counter",
+				value: (view.settings.gravity && view.settings.gravity[step-1]) ? view.settings.gravity[step-1] : ABPropertyComponentDefaults.gravity,
+				on: {
+					onChange: () => {
+						logic.onChange();
+					}
+				}
+			}, pos);
+		}
 
 		// when a change is made in the properties the popups need to reflect the change
 		this.updateEventIds = this.updateEventIds || {}; // { viewId: boolean, ..., viewIdn: boolean }
@@ -446,19 +524,25 @@ export default class ABViewContainer extends ABView {
 		super.propertyEditorValues(ids, view);
 
 		view.settings.columns = $$(ids.columns).getValue();
+		
+		var gravity = [];
+		var gravityCounters = $$(ids.gravity).getParentView().queryView({ css:"gravity_counter" }, "all").map(counter => gravity.push($$(counter).getValue()));
+		view.settings.gravity = gravity;
 
 	}
 
 
-	/*
-	 * @component()
+	/**
+	 * @method component()
 	 * return a UI component based upon this view.
 	 * @param {obj} App 
+	 * @param {string} idPrefix
+	 * 
 	 * @return {obj} UI component
 	 */
-	component(App) {
+	component(App, idPrefix) {
 
-		var idBase = 'ABViewContainer_' + this.id;
+		var idBase = 'ABViewContainer_' + (idPrefix || '') +this.id;
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		};
@@ -482,7 +566,7 @@ export default class ABViewContainer extends ABView {
 
 				views.forEach((v) => {
 
-					var component = v.component(App);
+					var component = v.component(App, idPrefix);
 					
 					this.viewComponents[v.id] = component;
 					
@@ -506,7 +590,10 @@ export default class ABViewContainer extends ABView {
 						// Create columns following setting value
 						var colNumber = this.settings.columns || ABPropertyComponentDefaults.columns;
 						for (var i = 0; i < colNumber; i++) {
-							rowNew.cols.push({});
+							var grav = (this.settings.gravity && this.settings.gravity[i]) ? parseInt(this.settings.gravity[i]) : ABPropertyComponentDefaults.gravity;
+							rowNew.cols.push({
+								gravity: grav
+							});
 						}
 
 						rows.push(rowNew);
@@ -514,9 +601,18 @@ export default class ABViewContainer extends ABView {
 
 					// Get the last row
 					var curRow = rows[rows.length - 1];
+					
+					var newPos = v.position.x || 0;
+					var getGrav = 1;
+					
+					if (curRow.cols[newPos] && curRow.cols[newPos].gravity) {
+						var getGrav = curRow.cols[newPos].gravity
+					}
+					
+					component.ui.gravity = getGrav;
 
 					// Add ui of sub-view to column
-					curRow.cols[v.position.x || 0] = component.ui;
+					curRow.cols[newPos] = component.ui;
 
 					curColIndex += 1;
 
@@ -568,6 +664,16 @@ export default class ABViewContainer extends ABView {
 
 		var _onShow = () => {
 
+			let dc = this.dataCollection; // get from a function or a (get) property
+			if (dc &&
+				dc.dataStatus == dc.dataStatusFlag.notInitial) {
+
+				// load data when a widget is showing
+				dc.loadData();
+
+			}
+
+			// calll .onShow in child components
 			this.views().forEach((v) => {
 
 				var component = this.viewComponents[v.id];
@@ -601,6 +707,84 @@ export default class ABViewContainer extends ABView {
 				return a.position.y - b.position.y;
 
 		});
+
+	}
+
+
+
+	//// Report ////
+
+	print(rowData) {
+
+		return new Promise((resolve, reject) => {
+
+			var reportDef = {
+				columns: []
+			};
+
+			var tasks = [];
+
+			// add each definition of component to position
+			this.views().forEach((v , vIndex) => {
+
+				tasks.push(new Promise((next, err) => {
+
+					let x = v.position.x || 0,
+						y = v.position.y;
+
+					if (y == null)
+						y = vIndex;
+
+					// create a column
+					if (reportDef.columns[x] == null)
+						reportDef.columns[x] = [];
+
+					v.print(rowData).then(vDef => {
+
+						reportDef.columns[x][y] = vDef;
+						next();
+
+					}).catch(err);
+
+				}));
+
+			});
+
+			Promise.all(tasks)
+				.then(() => {
+
+					// NOTE: fill undefined to prevent render PDF errors
+					var fillUndefined = (columns, numberOfCol) => {
+			
+						for (var x = 0; x < numberOfCol; x++) {
+			
+							if (columns[x] == null)
+								columns[x] = [];
+				
+							var rows = columns[x];
+							if (!Array.isArray(columns[x]))
+								rows = [columns[x]];
+			
+							rows.forEach((row, y) => {
+			
+								if (row == null)
+									columns[x][y] = {};
+								else if (row.columns)
+									fillUndefined(row.columns, row.columns.length);
+			
+							});
+						}
+			
+					};
+
+					fillUndefined(reportDef.columns, this.settings.columns);
+
+					resolve(reportDef);
+
+				}).catch(reject);
+
+		});
+
 
 	}
 

@@ -64,8 +64,15 @@ export default class ABModel {
 		this.object = object;
 
 		this._where = null;
+		this._sort = null;
 		this._skip = null;
 		this._limit = null;
+
+		this.staleRefreshInProcess = false;
+		this.staleRefreshMap = { /* id : Promise */ };
+		this.staleRefreshPending = [];
+		this.staleRefreshTimerID = null;
+
 	}
 
 
@@ -82,24 +89,7 @@ export default class ABModel {
 	///
 	/// Instance Methods
 	///
-	modelURL() {
-		return '/app_builder/model/application/#appID#/object/#objID#'
-			.replace('#appID#', this.object.application.id)
-			.replace('#objID#', this.object.id)
-	}
 
-	modelURLItem(id) {
-		return '/app_builder/model/application/#appID#/object/#objID#/#id#'
-			.replace('#appID#', this.object.application.id)
-			.replace('#objID#', this.object.id)
-			.replace('#id#', id);
-	}
-
-	modelURLRefresh() {
-		return '/app_builder/model/application/#appID#/refreshobject/#objID#'
-			.replace('#appID#', this.object.application.id)
-			.replace('#objID#', this.object.id);
-	}
 
 	// Prepare multilingual fields to be untranslated
 	// Before untranslating we need to ensure that values.translations is set.
@@ -107,7 +97,16 @@ export default class ABModel {
 		
 		// if this object has some multilingual fields, translate the data:
 		var mlFields = this.object.multilingualFields();
+		// if mlFields are inside of the values saved we want to translate otherwise do not because it will reset the translation field and you may loose unchanged translations
+		var shouldTranslate = false;
 		if (mlFields.length) {
+			mlFields.forEach(function(field) {
+				if (typeof values[field] != "undefined") {
+					shouldTranslate = true;
+				}
+			});
+		}
+		if (shouldTranslate) {
 			if (values.translations == null || typeof values.translations == "undefined" || values.translations == "") {
 				values.translations = [];
 			}
@@ -115,7 +114,6 @@ export default class ABModel {
 		}
 			
 	}
-
 
 
 	/**
@@ -130,7 +128,7 @@ export default class ABModel {
 			(resolve, reject) => {
 
 				OP.Comm.Service.post({
-					url: this.modelURL(),
+					url: this.object.urlRest(),
 					params: values
 				})
 					.then((data) => {
@@ -164,7 +162,7 @@ export default class ABModel {
 			(resolve, reject) => {
 
 				OP.Comm.Service['delete']({
-					url: this.modelURLItem(id)
+					url: this.object.urlRestItem(id)
 				})
 					.then((data) => {
 						resolve(data);
@@ -182,6 +180,140 @@ export default class ABModel {
 	}
 
 
+
+	/**
+	 * @method staleRefresh
+	 * Process a request to refresh the data for a given entry.
+	 * This method is called from a ABViewDataCollection when it receives 
+	 * a 'ab.datacollection.stale' message.
+	 * This method will try to queue similar reqeusts and then issue 1 large
+	 * request, rather than numerous individual ones.
+	 * @param {obj} cond  the condition of the entry we are requesting.
+	 * @return {Promise}
+	 */
+	staleRefresh(cond) {
+
+		// cond should be { where:{ id: X } } format.
+		var PK = this.object.PK();
+
+		var currID = cond[PK];  // but just in case we get a { id: X }
+		if (cond.where) {
+			currID = cond.where[PK];
+		}
+
+		return new Promise((resolve, reject)=>{
+
+			if (!currID) {
+				var Err = new Error('Model.staleRefresh(): could not resolve .'+PK );
+				Err.cond = cond;
+				reject(Err);
+				return;
+			}
+
+
+			// convert to PK : Promise object:
+			var entry = {
+				resolve: resolve,
+				reject: reject
+			}
+			entry[PK] = currID;
+
+			// queue up refresh condition
+			this.staleRefreshPending.push(entry);
+
+			// if ! staleRefreshInProcess
+			if (!this.staleRefreshInProcess) {
+				
+				// set timeout to another 200ms wait after LAST staleRefresh()
+				if (this.staleRefreshTimerID) {
+					clearTimeout(this.staleRefreshTimerID);
+				}
+				this.staleRefreshTimerID = setTimeout(()=>{
+					this.staleRefreshProcess();
+				}, 200);
+			}
+		})
+
+	}
+
+
+
+	/**
+	 * @method staleRefreshProcess
+	 * Actually process the current pending requests.
+	 */
+	staleRefreshProcess() {
+
+		this.staleRefreshInProcess = true;
+		var currentEntries = this.staleRefreshPending;
+		this.staleRefreshPending = [];
+		var PK = this.object.PK();
+
+		var responseHash = { /* id : {entry} */ };
+		var cond = { where:{ } };
+		cond.where[PK] = [];
+
+		console.log('Model.staleRefreshProcess(): buffered '+currentEntries.length+' requests');
+		currentEntries.forEach((e)=>{
+			responseHash[e[PK]] = responseHash[e[PK]] || [];
+			responseHash[e[PK]].push(e);
+		})
+
+		cond.where[PK] = Object.keys(responseHash);
+
+		this.findAll(cond)
+		.then((res)=>{
+
+			// for each entry we got back
+			if (Array.isArray(res.data) && res.data.length) {
+				res.data.forEach((data)=>{
+
+					// find it's matching request:
+					if (responseHash[data[PK]]) {
+
+						// respond to the pending promise
+						// and remove these entries from responseHash
+						var entries = responseHash[data[PK]];
+						entries.forEach((entry)=>{
+							var resolve = entry.resolve;
+							resolve({ data:[data]});
+						})
+						
+						delete responseHash[data[PK]];
+
+					} else {
+						console.error('Model.staleRefreshProcess(): returned entry was not in our responseHash:', data, responseHash);
+					}
+				})
+			}
+
+			// now if there are any entries left in responseHash,
+			// respond with an empty entry:
+			var allKeys = Object.keys(responseHash);
+			if (allKeys.length > 0) {
+				console.warn('Model.staleRefreshProcess(): '+allKeys.length+' entries with no responses. ');
+			}
+			allKeys.forEach((key)=>{
+				var resolve = responseHash[key].resolve;
+				resolve({ data:[]});
+				delete responseHash[key];
+			})
+
+
+			// now check to see if there are any more pending requests:
+			if (this.staleRefreshPending.length > 0) {
+				// process them:
+				this.staleRefreshProcess();
+			} else {
+				// mark we are no longer processing stale requests.
+				this.staleRefreshInProcess = false;
+			}
+
+		})
+
+	}
+
+
 	/**
 	 * @method findAll
 	 * performs a data find with the provided condition.
@@ -191,31 +323,33 @@ export default class ABModel {
 		cond = cond || {};
 
 
-		// prepare our condition:
-		var newCond = {};
+// 		// prepare our condition:
+// 		var newCond = {};
 
-		// if the provided cond looks like our { where:{}, skip:xx, limit:xx } format,
-		// just use this one.
-		if (cond.where) {
-			newCond = cond;
-		} else {
+// 		// if the provided cond looks like our { where:{}, skip:xx, limit:xx } format,
+// 		// just use this one.
+// 		if (cond.where) {
+// 			newCond = cond;
+// 		} else {
 
-			// else, assume the provided condition is the .where clause.
-			newCond.where = cond;
-		}
+// 			// else, assume the provided condition is the .where clause.
+// 			newCond.where = cond;
+// 		}
 
-/// if this is our depreciated format:
-if (newCond.where.where) {
-	OP.Error.log('Depreciated Embedded .where condition.');
-}
+// /// if this is our depreciated format:
+// if (newCond.where.where) {
+// 	OP.Error.log('Depreciated Embedded .where condition.');
+// }
 
 
 		return new Promise(
 			(resolve, reject) => {
 
 				OP.Comm.Socket.get({
-					url: this.modelURL(),
-					params: newCond
+				// OP.Comm.Service.get({
+					url: this.object.urlRest(),
+					params: cond
+					// params: newCond
 				})
 					.then((data) => {
 
@@ -225,19 +359,54 @@ if (newCond.where.where) {
 					})
 					.catch((err) => {
 
-						if (err.code) {
+						if (err && err.code) {
 							switch(err.code) {
 								case "ER_PARSE_ERROR":
-									OP.Error.log('AppBuilder:ABModel:findAll(): Parse Error with provided condition', { error: err, condition:newCond })
+									OP.Error.log('AppBuilder:ABModel:findAll(): Parse Error with provided condition', { error: err, condition:cond })
 									break;
 
 								default:
-									OP.Error.log('AppBuilder:ABModel:findAll(): Unknown Error with provided condition', { error: err, condition:newCond })
+									OP.Error.log('AppBuilder:ABModel:findAll(): Unknown Error with provided condition', { error: err, condition:cond })
 									break;
 							}
 
 						}
 						reject(err);
+					})
+
+			}
+		)
+
+	}
+
+
+	/**
+	 * @method count
+	 * count a data find with the provided condition.
+	 */
+	count(cond) {
+
+		cond = cond || {};
+
+		return new Promise(
+			(resolve, reject) => {
+
+				OP.Comm.Socket.get({
+				// OP.Comm.Service.get({
+					url: this.object.urlRestCount(),
+					params: cond
+				})
+					.then((numberOfRows) => {
+
+						resolve(numberOfRows);
+
+					})
+					.catch((err) => {
+
+						OP.Error.log('AppBuilder:ABModel:count(): Parse Error with provided condition', { error: err, condition:cond })
+
+						reject(err);
+
 					})
 
 			}
@@ -319,7 +488,12 @@ if (newCond.where.where) {
 
 					// if only 1 field requested, then return that 
 					if (fields.length == 1) {
-						resolve( [ myObj[fields[0]+'__relation'] ])
+
+						let data = myObj[fields[0]+'__relation'];
+						if (!Array.isArray(data))
+							data = [data];
+
+						resolve( data )
 						return;
 					}
 
@@ -377,6 +551,7 @@ reject(err);
 
 				var cond = {
 					where: this._where,
+					sort: this._sort,
 					limit: count,
 					skip: start
 				}
@@ -411,6 +586,7 @@ reject(err);
 		// else just load it all at once:
 		var cond = {};
 		if (this._where) cond.where = this._where;
+		if (this._sort) cond.sort = this._sort;
 		if (this._limit != null) cond.limit = this._limit;
 		if (this._skip != null) cond.skip = this._skip;
 
@@ -484,7 +660,50 @@ reject(err);
 			(resolve, reject) => {
 
 				OP.Comm.Service.put({
-					url: this.modelURLItem(id),
+					url: this.object.urlRestItem(id),
+					params: values
+				})
+					.then((data) => {
+
+						// .data is an empty object ?? 
+
+						this.normalizeData(data);
+
+						resolve(data);
+
+						// FIX: now with sockets, the triggers are fired from socket updates.
+						// trigger a update event
+						// triggerEvent('update', this.object, data);
+
+					})
+					.catch(reject);
+
+			}
+		)
+
+	}
+
+
+
+	/**
+	 * @method upsert
+	 * upsert model values on the server.
+	 */
+	upsert(values) {
+		
+		this.prepareMultilingualData(values);
+
+		// remove empty properties
+		for (var key in values) {
+			if (values[key] == null)
+				delete values[key];
+		}
+
+		return new Promise(
+			(resolve, reject) => {
+
+				OP.Comm.Service.put({
+					url: this.object.urlRest(),
 					params: values
 				})
 					.then((data) => {
@@ -519,6 +738,17 @@ reject(err);
 		return this;
 	}
 
+	/**
+	 * @method where
+	 * set the sort condition for the data being loaded.
+	 * @param {json} cond  the json condition statement.
+	 * @return {ABModel} this object that is chainable.
+	 */
+	sort(cond) {
+		this._sort = cond;
+		return this;
+	}
+
 
 	/**
 	 * @method refresh
@@ -530,7 +760,7 @@ reject(err);
 			(resolve, reject) => {
 
 				OP.Comm.Service.put({
-					url: this.modelURLRefresh()
+					url: this.object.urlRestRefresh()
 				})
 					.then(() => {
 						resolve();
@@ -551,60 +781,102 @@ reject(err);
 			
 		// find all connected fields
 		var connectedFields = this.object.connectFields();
-		
-		// loop through data to find connected fields
-		data.forEach((d) => {
-			// loop through data's connected fields
-			connectedFields.forEach((c) => {
-				// get the relation name so we can change the original object
-				var relationName = c.relationName();
-				// if there is no data we can exit now
-				if (d[relationName] == null) return;
-				// if the data is an array we need to loop through it
-				if (Array.isArray(d[relationName])) {
-					d[relationName].forEach((r) => {
-						// if translations are present and they are still a string
-						if ('translations' in r && typeof r.translations == "string") {
-							// parse the string into an object
-							r.translations = JSON.parse(r.translations);
-						}
-					});
-				} else {
-					// if the data is not an array it is a single item...check that has translations and it is a string
-					if ('translations' in d[relationName] && typeof d[relationName].translations == "string") {
-						// if so parse the string into an object
-						d[relationName].translations = JSON.parse(d[relationName].translations);
-					}
-				}
-			});
-		});
 
 		// if this object has some multilingual fields, translate the data:
 		var mlFields = this.object.multilingualFields();
 		
 		// if this object has some date fields, convert the data to date object:
 		var dateFields = this.object.fields(function(f) { return f.key == 'date'; }) || [];
-		
-		if (mlFields.length > 0 || dateFields.length > 0) {
+	
+		data.forEach((d) => {
+			if (d == null) return;
 
-			data.forEach((d) => {
+			// various PK name
+			if (!d.id && this.object.PK() != 'id')
+				d.id = d[this.object.PK()];
 
+			// loop through data's connected fields
+			connectedFields.forEach((c) => {
 
-				if (mlFields.length) {
-					OP.Multilingual.translate(d, d, mlFields);
+				// get the relation name so we can change the original object
+				var relationName = c.relationName();
+				// if there is no data we can exit now
+				if (d[relationName] == null) return;
+
+				// if relation data is still a string
+				if (typeof d[relationName] == "string") {
+					// parse the string into an object
+					d[relationName] = JSON.parse(d[relationName]);
+				}
+
+				// if the data is an array we need to loop through it
+				if (Array.isArray(d[relationName])) {
+					d[relationName].forEach((r) => {
+						// if translations are present and they are still a string
+						if (r.translations && typeof r.translations == "string") {
+							// parse the string into an object
+							r.translations = JSON.parse(r.translations);
+						}
+					});
+				// if the data is not an array it is a single item...check that has translations and it is a string
+				} 
+				else if (d[relationName].translations  && typeof d[relationName].translations == "string") {
+					// if so parse the string into an object
+					d[relationName].translations = JSON.parse(d[relationName].translations);
 				}
 
 
-				// convert the data to date object
-				dateFields.forEach((date) => {
-					if (d && d[date.columnName] != null)
-						d[date.columnName] = new Date(d[date.columnName]);
-				});
+				// set .id to relation columns
+				let objectLink = c.datasourceLink;
+				if (objectLink.PK() != 'id' &&
+					d[relationName] &&
+					!d[relationName].id) {
 
+						// is array
+						if (d[relationName].forEach) {
+							d[relationName].forEach(subData => {
+
+								if (subData[objectLink.PK()])
+									subData.id = subData[objectLink.PK()];
+
+							})
+						}
+						else if (d[relationName][objectLink.PK()]) {
+
+							d[relationName].id = d[relationName][objectLink.PK()];
+
+						}
+
+					}
 
 			});
 
-		}
+
+			if (mlFields.length) {
+				OP.Multilingual.translate(d, d, mlFields);
+			}
+
+
+			// convert the data to date object
+			dateFields.forEach((date) => {
+				if (d && d[date.columnName] != null) {
+					// check to see if data has already been converted to a date object
+					if ( typeof d[date.columnName] == "string" ) {
+						if (date.settings.timeFormatValue == 1) {
+							// if we are ignoring the time it means we ignore timezone as well 
+							// so lets trim that off when creating the date so it can be a simple date
+							d[date.columnName] = new Date(moment(d[date.columnName].replace(/\T.*/,'')).format('MM/DD/YYYY 00:00:00'));
+						} else {
+							d[date.columnName] = new Date(moment(d[date.columnName].replace(/\Z.*/,'')).format('MM/DD/YYYY HH:mm:ss'));
+						}
+					}
+				} 
+			});
+
+
+		});
+
 	}
 
 }
+

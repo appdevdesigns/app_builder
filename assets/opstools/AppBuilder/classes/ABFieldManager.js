@@ -13,10 +13,14 @@ import ABFieldDate from "./dataFields/ABFieldDate"
 import ABFieldBoolean from "./dataFields/ABFieldBoolean"
 import ABFieldList from "./dataFields/ABFieldList"
 import ABFieldTree from "./dataFields/ABFieldTree"
+import ABFieldEmail from "./dataFields/ABFieldEmail"
 import ABFieldImage from "./dataFields/ABFieldImage"
 import ABFieldFile from "./dataFields/ABFieldFile"
 import ABFieldUser from "./dataFields/ABFieldUser"
 import ABFieldConnect from "./dataFields/ABFieldConnect"
+import ABFieldCalculate from "./dataFields/ABFieldCalculate"
+import ABFieldTextFormula from "./dataFields/ABFieldTextFormula"
+import ABFieldFormula from "./dataFields/ABFieldFormula"
 
 /*
  * Fields
@@ -30,10 +34,14 @@ Fields[ABFieldDate.defaults().key] = ABFieldDate;
 Fields[ABFieldBoolean.defaults().key] = ABFieldBoolean;
 Fields[ABFieldList.defaults().key] = ABFieldList;
 Fields[ABFieldTree.defaults().key] = ABFieldTree;
+Fields[ABFieldEmail.defaults().key] = ABFieldEmail;
 Fields[ABFieldImage.defaults().key] = ABFieldImage;
 Fields[ABFieldFile.defaults().key] = ABFieldFile;
 Fields[ABFieldUser.defaults().key] = ABFieldUser;
 Fields[ABFieldConnect.defaults().key] = ABFieldConnect;
+Fields[ABFieldCalculate.defaults().key] = ABFieldCalculate;
+Fields[ABFieldTextFormula.defaults().key] = ABFieldTextFormula;
+Fields[ABFieldFormula.defaults().key] = ABFieldFormula;
 
 
 export default  {
@@ -55,7 +63,7 @@ export default  {
 
 	/*
 	 * @function newField
-	 * return an instance of an ABField based upon the values.type value.
+	 * return an instance of an ABField based upon the values.key value.
 	 * @return {ABField}
 	 */
 	newField: function (values, object) {

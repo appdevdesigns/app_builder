@@ -25,10 +25,13 @@ module.exports =  class ABField extends ABFieldBase {
   			key:'fieldKey',				// unique key for this Field
   			icon:'font',				// fa-[icon] reference for an icon for this Field Type
   			label:'',					// pulled from translation
-			columnName:'column_name',	// a valid mysql table.column name 
-			isImported: 1/0,			// flag to mark is import from other object
+			columnName:'column_name',	// a valid mysql table.column name
+			isImported: 1/0,			// flag to mark is import from other object			
 			settings: {					// unique settings for the type of field
 				showIcon:true/false,	// only useful in Object Workspace DataTable
+				isImported: 1/0,		// flag to mark is import from other object
+				required: 1/0,			// field allows does not allow NULL or it does allow NULL 
+				width: {int}			// width of display column
 
 				// specific for dataField
 			},
@@ -45,6 +48,25 @@ module.exports =  class ABField extends ABFieldBase {
 	///
 
 
+	dbPrefix() {
+
+		var result;
+
+		// add alias to be prefix
+		if (this.alias) {
+			result = "`{alias}`".replace('{alias}', this.alias);
+		}
+		// add database and table names to be prefix
+		else {
+			result = "`{databaseName}`.`{tableName}`"
+						.replace('{databaseName}', this.object.dbSchemaName())
+						.replace('{tableName}', this.object.dbTableName());
+		}
+
+		return result;
+
+	}
+
 	/**
 	 * @function migrateCreate
 	 * perform the necessary sql actions to ADD this column to the DB table.
@@ -52,6 +74,25 @@ module.exports =  class ABField extends ABFieldBase {
 	 */
 	migrateCreate (knex) {
 		sails.log.error('!!! Field ['+this.fieldKey()+'] has not implemented migrateCreate()!!! ');
+	}
+
+
+	/**
+	 * @function migrateUpdate
+	 * perform the necessary sql actions to MODIFY this column to the DB table.
+	 * @param {knex} knex the Knex connection.
+	 */
+	migrateUpdate (knex) {
+		sails.log.error('!!! Field ['+this.fieldKey()+'] has not implemented migrateUpdate()!!! ');
+		
+		return new Promise(
+			(resolve, reject) => {
+
+				// skip to MODIFY exists column
+				resolve();
+
+			}
+		);
 	}
 
 
@@ -70,7 +111,9 @@ module.exports =  class ABField extends ABFieldBase {
 				if (this.columnName == '') return resolve();
 
 				// if field is imported, then it will not remove column in table
-				if (this.isImported) return resolve();
+				if (this.object.isImported ||
+					this.object.isExternal ||
+					this.isImported) return resolve();
 
 				var tableName = this.object.dbTableName();
 
@@ -174,6 +217,17 @@ module.exports =  class ABField extends ABFieldBase {
 		var errors = [];
 		sails.log.error('!!! Field ['+this.fieldKey()+'] has not implemented .isValidData()!!!');
 		return errors;
+	}
+
+
+
+	/*
+	 * @property isMultilingual
+	 * does this field represent multilingual data?
+	 * @return {bool}
+	 */
+	get isMultilingual() {
+		return false;
 	}
 
 

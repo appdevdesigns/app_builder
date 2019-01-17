@@ -34,6 +34,10 @@ assets/appdev-mockups/*
 # see https://npmjs.org/doc/faq.html#Should-I-check-my-node_modules-folder-into-git
 node_modules
 
+# ignore any visual studio code files
+.vscode
+
+
 # Compiled JS
 assets/opstools/AppBuilder/test/bin/test_app_builder.js
 assets/opstools/AppBuilder/test/bin/test_app_builder.js.map

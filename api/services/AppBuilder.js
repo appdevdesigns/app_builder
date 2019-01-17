@@ -9,6 +9,10 @@ var _ = require('lodash');
 var moment = require('moment');
 var uuid = require('node-uuid');
 
+
+
+
+
 // Build a reference of AB defaults for all supported Sails data field types
 var FieldManager = require(path.join('..', 'classes', 'ABFieldManager.js'));
 var sailsToAppBuilderReference = {};
@@ -181,8 +185,10 @@ module.exports = {
                     }
                     if (invalidError) {
                         sails.log.error(invalidError);
-                        res.AD.error(invalidError, 400);
-                        reject();
+                        invalidError.HTTPCode = 400;
+                        // res.AD.error(invalidError, 400);
+                        reject(invalidError);
+                        return;
                     }
 
 
@@ -200,13 +206,22 @@ module.exports = {
 
                                 } else {
 
-                                    // error: object not found!
-                                    var err = ADCore.error.fromKey('E_NOTFOUND');
-                                    err.message = "Object not found.";
-                                    err.objid = objID;
-                                    sails.log.error(err);
-                                    res.AD.error(err, 404);
-                                    reject();
+                                    // check to see if provided objID is actually a query:
+                                    var query = Application.queries((q) => { return q.id == objID; })[0];
+                                    if (query) {
+                                        resolve(query);
+                                    } else {
+
+                                        // error: object not found!
+                                        var err = ADCore.error.fromKey('E_NOTFOUND');
+                                        err.message = "Object not found.";
+                                        err.objid = objID;
+                                        sails.log.error(err);
+                                        res.AD.error(err, 404);
+                                        reject(err);
+
+                                    }
+
                                 }
 
                             } else {
@@ -217,14 +232,27 @@ module.exports = {
                                 err.appID = appID;
                                 sails.log.error(err);
                                 res.AD.error(err, 404);
-                                reject();
+                                reject(err);
                             }
 
                         })
                         .catch(function (err) {
+
+                            // on MySQL connection problems, retry
+                            if (err.message && err.message.indexOf('Could not connect to MySQL') > -1) {
+
+                                // let's try it again:
+                                sails.log.error('AppBuilder:verifyAndReturnObject():MySQL connection error --> retrying.');
+                                AppBuilder.routes.verifyAndReturnObject(req, res)
+                                .then(resolve)
+                                .catch(reject)
+                                return;
+                            }
+
+                            // otherwise, just send back the error:
                             ADCore.error.log('ABApplication.findOne() failed:', { error: err, message: err.message, id: appID });
                             res.AD.error(err);
-                            reject();
+                            reject(err);
                         });
 
                 }
@@ -283,6 +311,19 @@ module.exports = {
 
 
         /**
+         * AppBuilder.rules.toSQLDate
+         *
+         * return a properly formatted DateTime string for MYSQL 5.7 but ignore the time information
+         *
+         * @param {string} date  String of a date you want converted
+         * @return {string}
+         */
+        toSQLDate: function (date) {
+            return moment(date).format('YYYY-MM-DD 00:00:00');
+        },
+
+
+        /**
          * AppBuilder.rules.toSQLDateTime
          *
          * return a properly formatted DateTime string for MYSQL 5.7
@@ -291,7 +332,7 @@ module.exports = {
          * @return {string}
          */
         toSQLDateTime: function (date) {
-            return moment.utc(date).format('YYYY-MM-DD HH:mm:ss');
+            return moment(date).format('YYYY-MM-DD HH:mm:ss');
         },
 
 
@@ -348,6 +389,37 @@ module.exports = {
                 .replace('{sourceName}', sourceTableName)
                 .replace('{targetName}', targetTableName)
                 .replace('{colName}', colName);
+        }, 
+
+
+        /**
+         * AppBuilder.rules.toJunctionTableFK
+         * 
+         * return foriegnkey (FK) column name for a junction table name
+         * 
+         * @param {string} objectName  The name of the Object with a connection
+         * @param {string} columnName  The name of the connection columnName.
+         * @return {string}
+         */
+        toJunctionTableFK: function(objectName, columnName) {
+            
+            var fkName = objectName + '_' + columnName;
+
+            if (fkName.length > 64)
+                fkName = fkName.substring(0, 64);
+
+            return fkName;
+        },
+
+        /**
+         * @method AppBuilder.rules.isUuid
+         * 
+         * @param {string} key
+         * @return {boolean}
+         */
+        isUuid: function(key) {
+            var checker = RegExp('^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$', 'i');
+            return checker.test(key);
         }
     },
 
@@ -922,7 +994,7 @@ module.exports = {
     },
 
 
-    updateNavView: function (application, page) {
+    updateNavView: function (application, page, langCode) {
 
         if (!page) return Promise.reject(new Error('invalid page'));
 
@@ -930,7 +1002,7 @@ module.exports = {
          var pageLabel;
          page.translations.forEach((trans) => {
              if (trans.language_code == 'en') {
-                pageLabel = AppBuilder.rules.nameFilter(trans.label);
+                pageLabel = trans.label.replace(/[^a-z0-9 ]/gi, '');
              }
          });
 
@@ -971,7 +1043,7 @@ module.exports = {
                     Permissions.action.create({
                         key: pagePermsAction,
                         description: 'Allow the user to view the ' + appName + "'s " + pageName + ' page',
-                        language_code: 'en'
+                        language_code: langCode || 'en'
                     })
                         .always(function () {
                             // If permission action already exists, that's fine.
@@ -1059,10 +1131,27 @@ module.exports = {
                         version: '0'
                     }
 
-                    OPSPortal.NavBar.ToolDefinition.create(def, function (err, toolDef) {
-                        if (err) reject(err);
-                        else resolve();
-                    })
+                    OPSPortal.NavBar.ToolDefinition.exists(toolKey, function(error, exists) {
+
+                        if (error) return reject(error);
+
+                        // update
+                        if (exists) {
+                            OPSPortal.NavBar.ToolDefinition.update(def, function (err, toolDef) {
+                                if (err) reject(err);
+                                else resolve();
+                            });
+                        }
+                        // create new
+                        else {
+                            OPSPortal.NavBar.ToolDefinition.create(def, function (err, toolDef) {
+                                if (err) reject(err);
+                                else resolve();
+                            });
+                        }
+
+                    });
+
 
                 });
             })
@@ -1098,6 +1187,26 @@ module.exports = {
                         }
 
                         resolve();
+                    });
+
+                });
+
+            })
+
+            // change label of tool to display UI
+            .then(() => {
+
+                return new Promise((resolve, reject) => {
+
+                    let options = {
+                        toolkey: toolKey,
+                        language_code: langCode || 'en',
+                        label: toolLabel
+                    };
+
+                    OPSPortal.NavBar.Tool.updateLabel(options, function (err) {
+                        if (err) reject(err);
+                        else resolve();
                     });
 
                 });
@@ -2859,6 +2968,138 @@ module.exports = {
         dfd.resolve(columns);
 
         return dfd;
+    },
+
+
+    /**
+     * AppBuilder.mobileApps(appID)
+     * return all the mobileApps for a given Application.
+     * if appID is not provided, then ALL mobile apps will be returned.
+     * @param {int} appID  the ABApplication.id of the ABApplication
+     * @return {Promise} resolved with a [ {ABMobileApp}]
+     */
+    mobileApps: function(appID) {
+        return new Promise((resolve, reject) => {
+
+            var mobileApps = [];
+
+            var cond = {};
+            if (appID) {
+                cond = { id: appID }
+            }
+
+            ABApplication.find(cond) 
+            .then((list)=>{
+
+                list.forEach((l)=>{
+                    var listMA = l.toABClass().mobileApps();
+
+                    //// NOTE: at this point each listMA entry is an instance of ABMobileApp
+                    if (listMA.length > 0) {
+                        mobileApps = mobileApps.concat(listMA);
+                    }
+                })
+
+/// NOTE: we can remove this reference once we stop hardcoding the SDCApp:
+var ABMobileApp = require(path.join('..', 'classes', 'ABMobileApp'));
+
+
+/// Hard Code the SDC App here:
+/// 1st verify sails.config.codepush.* settings are defined:
+sails.config.codepush = sails.config.codepush || {};
+sails.config.codepush.production = sails.config.codepush.production || {};
+sails.config.codepush.staging = sails.config.codepush.staging || {};
+sails.config.codepush.develop = sails.config.codepush.develop || {};
+
+var SDCApp = new ABMobileApp({
+    id:'SDC.id',
+    settings:{
+        deepLink:'',
+        codePushKeys:{
+            'production': {
+                ios:sails.config.codepush.production.ios || 'ios.codepush.production.key',
+                android:sails.config.codepush.production.android || 'android.codepush.production.key'
+            },
+            'staging':{
+                ios:sails.config.codepush.staging.ios || 'ios.codepush.staging.key',
+                android:sails.config.codepush.staging.android || 'android.codepush.staging.key'
+            },
+            'develop':{
+                ios:sails.config.codepush.develop.ios || 'ios.codepush.develop.key',
+                android:sails.config.codepush.develop.android || 'android.codepush.develop.key'
+            }
+        },
+        platforms:{
+            ios:{
+                // deeplink info:
+                deeplink:{
+                    "appID": "723276MJFQ.net.appdevdesigns.connexted",
+                    "paths": [
+                      "/ul"
+                    ]
+                }
+            },
+            android:{
+                apk:{
+                    // appbuilder/mobile/:mobileID/apk:
+                    // should return one of these files:
+
+                    // current points to the version that should be considered the 
+                    // 'current' one to download
+                    current:'0',
+
+                    // version id :  fileName
+                    // '5':'mobileApp_v5.apk',
+                    // '4':'mobileApp_v4.apk',
+                    // '3':'mobileApp_v3.apk',
+                    // '2':'mobileApp_v2.apk',
+                    // '1':'mobileApp_v1.apk',
+                    '0':'sdc-android.apk'
+                },
+                deeplink:{
+                    "relation": ["delegate_permission/common.handle_all_urls"],
+                    "target" : {
+                        "namespace": "connexted",
+                        "package_name": "net.appdevdesigns.connexted",
+                        "sha256_cert_fingerprints": ["67:72:07:40:E0:CF:CA:9C:27:35:14:53:8E:A0:CA:E6:A1:EE:15:1C:A5:36:BB:47:E8:18:BF:CE:0D:47:D4:13"]
+                    }
+                }
+            }
+        }
+    },
+    translations:[
+        {   "language_code":"en",   "label":"SDC App", "description":"Keep things running" }
+    ],
+
+appID: 'App.id'   // not normally part of mobileApp data.  but can get from mobileApp.parent.id
+
+})
+
+mobileApps.unshift(SDCApp);
+
+
+// perform a translation:
+mobileApps.forEach((app)=>{
+    var trans = app.translations.filter((t)=>{return t.language_code == 'en' })[0];
+    if (trans) {
+        for (var t in trans) {
+            if (t != 'language_code'){
+                app[t] = trans[t];
+            }
+        }
+    }
+})
+
+                resolve(mobileApps);
+
+            })
+            .catch((err)=>{
+console.log(err);
+                ADCore.error.log("AppBuilder:AppBuilderService:mobileApps:: Error searching for ABApplication:", {error:err, cond:cond });
+                reject(err);
+            })
+
+        })
     }
 
 

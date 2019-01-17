@@ -296,7 +296,7 @@ export default class ABViewFormButton extends ABView {
 				autowidth: true,
 				value: this.settings.saveLabel != null ? this.settings.saveLabel : ABViewFormButtonPropertyComponentDefaults.saveLabel,
 				click: function () {
-					_logic.onSave(this);
+					_logic.callbacks.onSaveClick(this);
 				}
 			});
 		}
@@ -320,11 +320,14 @@ export default class ABViewFormButton extends ABView {
 			
 			callbacks:{
 			
-				onCancelClick:function(){
+				onCancelClick:function() {
 					return true;
+				},
+				onSaveClick: function(saveButton) {
+					_logic.onSave(saveButton);
 				}
 			
-			},			
+			},
 
 
 			onCancel: (cancelButton) => {
@@ -341,7 +344,7 @@ export default class ABViewFormButton extends ABView {
 				var form = this.parentFormComponent();
 
 				// get ABViewDataCollection
-				var dc = form.dataCollection();
+				var dc = form.dataCollection;
 
 				// clear cursor of DC
 				if (dc) {
@@ -358,8 +361,12 @@ export default class ABViewFormButton extends ABView {
 					var noPopupFilter = p => p.settings && p.settings.type != 'popup';
 
 					var pageCurr = this.pageParent();
-					var pageParent = pageCurr.pageParent(noPopupFilter) || pageCurr;
-					super.changePage(pageParent.id);
+					if (pageCurr) {
+						var pageParent = pageCurr.pageParent(noPopupFilter) || pageCurr;
+
+						if (pageParent)
+							super.changePage(pageParent.id);
+					}
 				}
 			},
 
@@ -368,7 +375,7 @@ export default class ABViewFormButton extends ABView {
 				var form = this.parentFormComponent();
 
 				// get ABViewDataCollection
-				var dc = form.dataCollection();
+				var dc = form.dataCollection;
 
 				// clear cursor of DC
 				if (dc) {
@@ -392,7 +399,13 @@ export default class ABViewFormButton extends ABView {
 				// save data
 				form.saveData(formView)
 					.catch(() => { saveButton.enable(); })
-					.then(() => { saveButton.enable(); });
+					.then(() => { 
+						saveButton.enable(); 
+
+						//Focus on first focusable component
+						form.focusOnFirst();
+
+					});
 
 			},
 

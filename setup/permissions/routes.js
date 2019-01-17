@@ -27,6 +27,9 @@
  *		'get /route/twomore' : will match the 2nd rule
  *
  */
+
+var abMobileAdmin = ['appbuilder.mobile.admin'];
+
 module.exports = {
 
     // 'get /route/one' : [ 'action.key.1', ['action.key.2', 'action.key.3']],
@@ -46,4 +49,13 @@ module.exports = {
     POST /app_builder/prepareObject/:id
     PUT: app_builder/object/sortColumns/:id
 */
+
+    'post /app_builder/QR/sendEmail': abMobileAdmin,
+    'post /app_builder/QR/adminQRCode': abMobileAdmin,
+    'get /app_builder/relay/users': abMobileAdmin,
+    'get /app_builder/relay/uninitializedusers': abMobileAdmin,
+    'post /app_builder/relay/initialize': abMobileAdmin,
+    'post /app_builder/relay/publishusers': abMobileAdmin,
+    'get /app_builder/application/allmobileapps': abMobileAdmin,
+
 };

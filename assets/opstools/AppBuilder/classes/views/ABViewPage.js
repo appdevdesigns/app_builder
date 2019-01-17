@@ -19,20 +19,20 @@ function L(key, altText) {
 }
 
 var ABPropertyComponentDefaults = {
-    type: 'page', // 'page' or 'popup'
+    type: 'page', // 'page', 'popup' or 'reportPage'
 }
 
 var ABViewDefaults = {
     key: 'page',		// unique key identifier for this ABView
-    icon: 'file',		// icon reference: (without 'fa-' )
+    icon: 'file-o',		// icon reference: (without 'fa-' )
 
 }
 
 export default class ABViewPage extends ABViewContainer {
 
-    constructor(values, application, parent) {
+    constructor(values, application, parent, defaultValues) {
 
-        super(values, application, parent, ABViewDefaults);
+        super(values, application, parent, (defaultValues || ABViewDefaults));
 
 
         // 	{
@@ -73,6 +73,10 @@ export default class ABViewPage extends ABViewContainer {
 
         obj.name = this.name;
 
+        // icon of popup page
+        if (this.settings.type == 'popup')
+            obj.icon = "clone";
+
         // set label of the page
         if (!this.label || this.label == '?label?')
             obj.label = obj.name;
@@ -110,6 +114,10 @@ export default class ABViewPage extends ABViewContainer {
 
         super.fromValues(values);
 
+        // icon of popup page
+        if (values.settings.type == 'popup')
+            this.icon = "clone";
+
         // set label of the page
         if (!this.label || this.label == '?label?')
             this.label = this.name;
@@ -133,6 +141,7 @@ export default class ABViewPage extends ABViewContainer {
 
         // the default columns of ABView is 1
         this.settings.columns = this.settings.columns || 1;
+        this.settings.gravity = this.settings.gravity || [1];
 
         // convert from "0" => 0
 
@@ -161,9 +170,12 @@ export default class ABViewPage extends ABViewContainer {
             comp.init(options);
 
             // initialize data sources
-            this.pageRoot().dataCollections().forEach((dc) => {
-                dc.init();
-            });
+            let pageRoot = this.pageRoot();
+            if (pageRoot) {
+                pageRoot.dataCollections().forEach((dc) => {
+                    dc.init();
+                });
+            }
 
 
         };
@@ -254,7 +266,7 @@ export default class ABViewPage extends ABViewContainer {
                                     view: "button",
                                     name: "datacollection",
                                     label: L("ab.component.page.settings", "*Settings"),
-                                    icon: "gear",
+                                    icon: "fa fa-gear",
                                     type: "icon",
                                     badge: 0,
                                     click: function () {
@@ -285,7 +297,7 @@ export default class ABViewPage extends ABViewContainer {
             				template: "{common.markCheckbox()} #name#",
                             type:{
                                 markCheckbox:function(obj ){
-                                    return "<span class='check webix_icon fa-"+(obj.markCheckbox?"check-":"")+"square-o'></span>";
+                                    return "<span class='check webix_icon fa fa-"+(obj.markCheckbox?"check-":"")+"square-o'></span>";
                                 }
                             },
                             on: {
@@ -303,9 +315,9 @@ export default class ABViewPage extends ABViewContainer {
     }
 
 
-    static propertyEditorPopulate(App, ids, view) {
+    static propertyEditorPopulate(App, ids, view, logic) {
 
-        super.propertyEditorPopulate(App, ids, view);
+        super.propertyEditorPopulate(App, ids, view, logic);
 
         $$(ids.type).setValue(view.settings.type || ABPropertyComponentDefaults.type);
 
@@ -439,9 +451,12 @@ export default class ABViewPage extends ABViewContainer {
             comp.init(options);
 
             // initialize data sources
-            this.pageRoot().dataCollections().forEach((dc) => {
-                dc.init();
-            });
+            let pageRoot = this.pageRoot();
+            if (pageRoot) {
+                pageRoot.dataCollections().forEach((dc) => {
+                    dc.init();
+                });
+            }
 
         }
 
@@ -513,6 +528,11 @@ export default class ABViewPage extends ABViewContainer {
                 if (!this.id) {
                     this.id = OP.Util.uuid();   // setup default .id
                     this.name = this.name + "_" + this.id.split("-")[1]; // add a unique string to the name so it doesnt collide with a previous page name
+                }
+
+                // if name is empty
+                if (!this.name) {
+                    this.name = this.label + "_" + this.id.split("-")[1];
                 }
 
                 this.application.pageSave(this)
@@ -801,6 +821,57 @@ export default class ABViewPage extends ABViewContainer {
             }
         });
         
-	}        
+	}  
+    
+    updateIcon(obj) {
+        // icon of page
+        if (obj.settings.type == 'popup') {
+            obj.icon = "clone";
+        } else {
+            obj.icon = ABViewDefaults.icon;
+        }
+        return obj;
+    }
+    
+    
+    copy(lookUpIds, parent) {
+
+        // initial new ids of pages and components
+        if (lookUpIds == null) {
+            lookUpIds = {};
+
+            let mapNewIdFn = (currView) => {
+
+                if (!lookUpIds[currView.id])
+                    lookUpIds[currView.id] = OP.Util.uuid();
+
+                if (currView.pages) {
+                    currView.pages().forEach(p => mapNewIdFn(p));
+                }
+
+                if (currView.views) {
+                    currView.views().forEach(v =>  mapNewIdFn(v));
+                }
+
+                if (currView.dataCollections) {
+                    currView.dataCollections().forEach(dc =>  mapNewIdFn(dc));
+                }
+
+            };
+
+            // start map new ids
+            mapNewIdFn(this);
+
+        }
+
+        // copy
+        let result = super.copy(lookUpIds, parent);
+
+        // page's name should not be duplicate
+        result.name = null;
+
+        return result;
+
+    }
 
 }
