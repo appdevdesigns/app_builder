@@ -6,9 +6,6 @@
  *
  */
 
-import ABFieldList from "../classes/dataFields/ABFieldList";
-import ABFieldUser from "../classes/dataFields/ABFieldUser";
-
 import ABObjectWorkspaceViewGrid from "../classes/ABObjectWorkspaceViewGrid";
 import ABObjectWorkspaceViewKanban from "../classes/ABObjectWorkspaceViewKanban";
 
@@ -29,22 +26,10 @@ export default class AB_Work_Object_Workspace_PopupAddView extends OP.Component 
             component: {
                 name: L("ab.add_view.name", "*Name"),
                 type: L("ab.add_view.type", "*Type"),
-                vGroup: L("ab.add_view.vGroup", "*Vertical Grouping"),
-                hGroup: L("ab.add_view.hGroup", "*Horizontal Grouping"),
-                owner: L("ab.add_view.owner", "*Card Owner"),
                 namePlaceholder: L(
                     "ab.add_view.name_placeholder",
                     "* Create a name for the view"
-                ),
-                groupingPlaceholder: L(
-                    "ab.add_view.grouping_placeholder",
-                    "*Select a field"
-                ),
-                ownerPlaceholder: L(
-                    "ab.add_view.owner_placeholder",
-                    "*Select user field"
-				),
-				noneOption: L("ab.add_view.none_option", "*None"),
+                )
             }
         };
 
@@ -52,14 +37,14 @@ export default class AB_Work_Object_Workspace_PopupAddView extends OP.Component 
         var ids = {
             component: this.unique("_popupAddView"),
             form: this.unique("_popupAddViewForm"),
+            formAdditional: this.unique("_popupAddViewFormAdditional"),
             nameInput: this.unique("_popupAddViewName"),
             typeInput: this.unique("_popupAddViewType"),
-            vGroupInput: this.unique("_popupAddViewVGroup"),
-            hGroupInput: this.unique("_popupAddViewHGroup"),
-            ownerInput: this.unique("_popupAddViewOwner"),
             cancelButton: this.unique("_popupAddViewCancelButton"),
             saveButton: this.unique("_popupAddViewSaveButton")
         };
+
+        var comKanban = ABObjectWorkspaceViewKanban.component(App, idBase);
 
         // Our webix UI definition:
         var formUI = {
@@ -92,7 +77,10 @@ export default class AB_Work_Object_Workspace_PopupAddView extends OP.Component 
                     id: ids.typeInput,
                     name: "type",
                     options: [
-                        { id: ABObjectWorkspaceViewGrid.type(), value: "Grid" },
+                        {
+                            id: ABObjectWorkspaceViewGrid.type(),
+                            value: "Grid"
+                        },
                         {
                             id: ABObjectWorkspaceViewKanban.type(),
                             value: "Kanban"
@@ -101,72 +89,20 @@ export default class AB_Work_Object_Workspace_PopupAddView extends OP.Component 
                     value: ABObjectWorkspaceViewGrid.type(),
                     required: true,
                     on: {
-                        onChange: function(id) {
-                            if (id === ABObjectWorkspaceViewKanban.type()) {
-                                $$(ids.form).showBatch("kanban");
-                                $$(ids.component).resize();
-                            } else {
-                                $$(ids.form).showBatch("global");
-                                $$(ids.component).resize();
-                            }
+                        onChange: function(typeView) {
+
+                            $$(ids.formAdditional).showBatch(typeView);
+                            $$(ids.component).resize();
+
                         }
                     }
                 },
                 {
-                    view: "richselect",
-                    label: `<span class='webix_icon fa fa-columns'></span> ${
-                        labels.component.vGroup
-                    }`,
-                    id: ids.vGroupInput,
-                    placeholder: labels.component.groupingPlaceholder,
-                    labelWidth: 180,
-                    name: "vGroup",
-                    required: true,
-                    options: [],
-                    batch: "kanban",
-                    on: {
-                        onChange: function(id) {
-                            $$(ids.vGroupInput).validate();
-                            $$(ids.hGroupInput).validate();
-                        }
-                    },
-                    invalidMessage: labels.common.invalidMessage.required
-                },
-                {
-                    view: "richselect",
-                    label: `<span class='webix_icon fa fa-list'></span> ${
-                        labels.component.hGroup
-                    }`,
-                    id: ids.hGroupInput,
-                    placeholder: labels.component.groupingPlaceholder,
-                    labelWidth: 180,
-                    name: "hGroup",
-                    required: false,
-                    options: [],
-                    batch: "kanban",
-                    invalidMessage:
-                        "Cannot be the same as vertical grouping field",
-                    validate: value => {
-                        var vGroupValue = $$(ids.vGroupInput).getValue();
-                        return !vGroupValue || !value || vGroupValue !== value;
-                    },
-                    on: {
-                        onChange: function(id) {
-                            $$(ids.hGroupInput).validate();
-                        }
-                    }
-                },
-                {
-                    view: "richselect",
-                    label: `<span class='webix_icon fa fa-user-circle'></span> ${
-                        labels.component.owner
-                    }`,
-                    placeholder: labels.component.ownerPlaceholder,
-                    id: ids.ownerInput,
-                    labelWidth: 180,
-                    name: "owner",
-                    options: [],
-                    batch: "kanban"
+                    id: ids.formAdditional,
+                    view: 'layout',
+                    rows: [
+                        comKanban.elements()
+                    ]
                 },
                 {
                     margin: 5,
@@ -254,61 +190,22 @@ export default class AB_Work_Object_Workspace_PopupAddView extends OP.Component 
 				
 				if (_view) {
                     $$(ids.nameInput).setValue(_view.name);
-                }
-                $$(ids.typeInput).setValue(
-                    _view ? _view.type : ABObjectWorkspaceViewGrid.type()
-                );
+                    $$(ids.typeInput).setValue(_view.type);
 
-				// Utility function to initialize the options for a field select input
-                const initSelect = (
-                    id,
-                    attribute,
-					filter = f => f.key === ABFieldList.defaults().key,
-					isRequired,
-                ) => {
-                    var options = _object
-                        .fields()
-                        .filter(filter)
-						.map(({ id, label }) => ({ id, value: label }));
-					if (!isRequired && options.length) {
-						options.unshift({id: 0, value: labels.component.noneOption});
-					}
-                    $$(id).define("options", options);
-                    if (_view) {
-                        if (_view[attribute]) {
-                            $$(id).define("value", _view[attribute]);
-                        }
-                    } else if (options.filter(o => o.id).length === 1) {
-						// If there's just one (real) option, default to the first one
-                        $$(id).define("value", options[0].id);
+                    // initial
+                    switch (_view.type) {
+                        case 'kanban':
+                            comKanban.init(_object, _view);
+                            break;
                     }
-                    $$(id).refresh();
-                };
 
-                const groupingFieldFilter = field =>
-                    [
-                        ABFieldList.defaults().key,
-                        ABFieldUser.defaults().key
-                    ].includes(field.key);
+                }
+                // Default value
+                else {
+                    $$(ids.nameInput).setValue("");
+                    $$(ids.typeInput).setValue(ABObjectWorkspaceViewGrid.type());
+                }
 
-                initSelect(
-                    ids.vGroupInput,
-                    "verticalGroupingField",
-					groupingFieldFilter,
-					true,
-                );
-                initSelect(
-                    ids.hGroupInput,
-                    "horizontalGroupingField",
-					groupingFieldFilter,
-					false,
-                );
-                initSelect(
-                    ids.ownerInput,
-                    "ownerField",
-					f => f.key === ABFieldUser.defaults().key,
-					false,
-                );
             },
 
             /**
@@ -336,24 +233,24 @@ export default class AB_Work_Object_Workspace_PopupAddView extends OP.Component 
 
             buttonSave: function() {
                 if ($$(ids.form).validate()) {
-                    // save the new/updated view
-                    var view = {
-                        name: $$(ids.nameInput).getValue(),
-                        type: $$(ids.typeInput).getValue()
-					};
 
-					// Kanban-specific fields
-                    if (view.type === ABObjectWorkspaceViewKanban.type()) {
-                        view.verticalGroupingField =
-                            $$(ids.vGroupInput).getValue() || null;
-                        view.horizontalGroupingField =
-                            $$(ids.hGroupInput).getValue() || null;
-                        view.ownerField = $$(ids.ownerInput).getValue() || null;
+                    var view = {};
+
+                    switch($$(ids.typeInput).getValue()) {
+                        case ABObjectWorkspaceViewKanban.type():
+                            view = comKanban.values();
+                            break;
                     }
+
+                    // save the new/updated view
+                    view.name = $$(ids.nameInput).getValue();
+                    view.type = $$(ids.typeInput).getValue();
+
                     if (_view) {
 						var viewObj = _object.workspaceViews.updateView(_view, view);
                         this.callbacks.onViewUpdated(viewObj);
-                    } else {
+                    } 
+                    else {
 						var viewObj = _object.workspaceViews.addView(view);
                         this.callbacks.onViewAdded(viewObj);
                     }
