@@ -6,6 +6,7 @@ import ABObjectWorkspaceView from './ABObjectWorkspaceView'
 
 import ABObjectWorkspaceViewComponent from './ABObjectWorkspaceViewComponent'
 
+import ABFieldConnect from "../classes/dataFields/ABFieldConnect";
 import ABFieldList from "../classes/dataFields/ABFieldList";
 import ABFieldUser from "../classes/dataFields/ABFieldUser";
 
@@ -196,7 +197,14 @@ export default class ABObjectWorkspaceViewKanban extends ABObjectWorkspaceView {
 				initSelect(
 					ids.ownerInput,
 					"ownerField",
-					f => f.key === ABFieldUser.defaults().key,
+					f => {
+						// User field
+						return (f.key === ABFieldUser.defaults().key ||
+						// Connected field : type 1:M
+								(f.key === ABFieldConnect.defaults().key && 
+									f.settings.linkType == 'one' &&
+									f.settings.linkViaType == 'many'));
+					},
 					false,
 				);
 			},

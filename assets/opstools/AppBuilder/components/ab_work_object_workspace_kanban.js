@@ -10,6 +10,7 @@ import ABFieldList from "../classes/dataFields/ABFieldList";
 import ABFieldUser from "../classes/dataFields/ABFieldUser";
 
 import AB_Work_KanbanSide from "./ab_work_object_workspace_kanban_sidePanel"
+import ABFieldConnect from "app_builder/assets/opstools/AppBuilder/classes/dataFields/ABFieldConnect";
 
 
 export default class ABWorkObjectKanBan extends OP.Component {
@@ -40,13 +41,6 @@ export default class ABWorkObjectKanBan extends OP.Component {
 			kanban: this.unique(idBase + '_kanban'),
 			resizer: this.unique(idBase + '_resizer'),
 		}
-
-		var users = OP.User.userlist().map(u => {
-			return {
-				id: u.username,
-				value: u.username
-			};
-		});
 
 		let KanbanSide = new AB_Work_KanbanSide(App, idBase);
 
@@ -86,7 +80,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 						}
 					},
 					editor: false, // we use side bar
-					users: users,
+					users: [],
 					tags: [],
 					data: [],
 					on: {
@@ -154,7 +148,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 					// avatar template
 					templateAvatar: function (obj) {
 						if (CurrentOwnerField && obj[CurrentOwnerField.columnName]) {
-							return obj[CurrentOwnerField.columnName]; // username
+							return CurrentOwnerField.format(obj);
 						}
 						else {
 							return "<span class='webix_icon fa fa-user'></span>";
@@ -295,7 +289,40 @@ export default class ABWorkObjectKanBan extends OP.Component {
 				webix.ui(verticalOptions, $$(ids.kanban));
 				$$(ids.kanban).reconstruct();
 
+				// Owner field
 				CurrentOwnerField = kanbanView.getOwnerField();
+				if (CurrentOwnerField) {
+
+					let $menuUser = $$(ids.kanban).getUserList();
+					$menuUser.clearAll();
+
+					if (CurrentOwnerField instanceof ABFieldUser) {
+						let users = OP.User.userlist().map(u => {
+							return {
+								id: u.username,
+								value: u.username
+							};
+						});
+
+						$menuUser.parse(users);
+					}
+
+					else if (CurrentOwnerField instanceof ABFieldConnect) {
+						CurrentOwnerField.getOptions().then(options => {
+
+							$menuUser.parse(options.map(opt => {
+								return {
+									id: opt.id,
+									value: opt.text
+								};
+							}));
+
+						});
+
+					}
+
+
+				}
 
 				_logic.loadData();
 
@@ -401,7 +428,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 			},
 
-			updateOwner: function (rowId, userId) {
+			updateOwner: function (rowId, val) {
 
 				if (!CurrentOwnerField) return;
 
@@ -409,16 +436,14 @@ export default class ABWorkObjectKanBan extends OP.Component {
 				_logic.busy();
 
 				let patch = {};
-				patch[CurrentOwnerField.columnName] = userId;
+				patch[CurrentOwnerField.columnName] = val;
 
 				CurrentObject.model()
 					.update(rowId, patch)
-					.then(() => {
+					.then(updatedRow => {
 
 						// update card
-						var card = $$(ids.kanban).getItem(rowId);
-						card[CurrentOwnerField.columnName] = userId;
-						$$(ids.kanban).updateItem(rowId, card);
+						$$(ids.kanban).updateItem(rowId, updatedRow);
 
 						_logic.ready();
 
