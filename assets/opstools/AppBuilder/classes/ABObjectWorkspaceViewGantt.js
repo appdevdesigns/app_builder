@@ -128,12 +128,12 @@ export default class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView {
 
 
 				// Select view's values
-				if (view.startDate) {
+				if (view && view.startDate) {
 					$$(ids.startDate).define("value", view.startDate);
 					$$(ids.startDate).refresh();
 				}
 
-				if (view.duration) {
+				if (view && view.duration) {
 					$$(ids.duration).define("value", view.duration);
 					$$(ids.duration).refresh();
 				}
