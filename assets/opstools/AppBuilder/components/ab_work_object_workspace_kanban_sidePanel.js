@@ -213,7 +213,8 @@ export default class ABWorkObjectKanBan extends OP.Component {
 				});
 
 				// display data
-				$$(ids.form).parse(data);
+				$$(ids.form).clear();
+				$$(ids.form).parse(data || {});
 
 				formCom.onShow(data);
 
