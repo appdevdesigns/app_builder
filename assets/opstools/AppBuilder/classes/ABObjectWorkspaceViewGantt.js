@@ -12,8 +12,9 @@ import ABFieldNumber from "../classes/dataFields/ABFieldNumber";
 var defaultValues = {
 	name: 'Default Gantt',
 	filterConditions: [], // array of filters to apply to the data table
-	startDate: '',
-	duration: ''
+	startDate: '', // id of a field
+	duration: '', // id of a field
+	progress: '' // id of a field
 };
 
 export default class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView {
@@ -53,6 +54,7 @@ export default class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView {
 		let ids = {
 			startDate: App.unique(idBase + "_popupGanttStartDate"),
 			duration: App.unique(idBase + "_popupGanttDuration"),
+			progress: App.unique(idBase + "_popupGanttProgress"),
 		};
 
 		let L = (key, altText) => {
@@ -64,6 +66,7 @@ export default class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView {
 			component: {
 				startDate: L("ab.gantt.startDate", "*Start Date"),
 				duration: L("ab.gantt.duration", "*Duration"),
+				progress: L("ab.gantt.progress", "*Progress"),
 
 				startDatePlaceholder: L(
 					"ab.gantt.startDatePlaceholder",
@@ -71,6 +74,10 @@ export default class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView {
 				),
 				durationPlaceholder: L(
 					"ab.gantt.durationPlaceholder",
+					"*Select a number field"
+				),
+				progressPlaceholder:L(
+					"ab.gantt.progressPlaceholder",
 					"*Select a number field"
 				)
 
@@ -102,6 +109,16 @@ export default class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView {
 							name: "duration",
 							required: true,
 							options: []
+						},
+						{
+							id: ids.progress,
+							view: "richselect",
+							label: `<span class='webix_icon fa fa-hashtag'></span> ${labels.component.progress}`,
+							placeholder: labels.component.progressPlaceholder,
+							labelWidth: 180,
+							name: "progress",
+							required: false,
+							options: []
 						}
 					]
 				};
@@ -126,6 +143,9 @@ export default class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView {
 
 				$$(ids.duration).define('options', numberFields);
 
+				// Progress
+				$$(ids.progress).define('options', numberFields);
+
 
 				// Select view's values
 				if (view && view.startDate) {
@@ -138,6 +158,11 @@ export default class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView {
 					$$(ids.duration).refresh();
 				}
 
+				if (view && view.progress) {
+					$$(ids.progress).define("value", view.progress);
+					$$(ids.progress).refresh();
+				}
+
 			},
 
 			values: function () {
@@ -146,6 +171,7 @@ export default class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView {
 
 				result.startDate  = $$(ids.startDate).getValue() || null;
 				result.duration = $$(ids.duration).getValue() || null;
+				result.progress = $$(ids.progress).getValue() || null;
 
 				return result;
 
@@ -206,6 +232,14 @@ export default class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView {
 			object = viewCollection.object;
 
 		return object.fields(f => f.id == this.duration)[0];
+	}
+
+	getProgressField() {
+
+		let viewCollection = this.object, // Should use another name property ?
+			object = viewCollection.object;
+
+		return object.fields(f => f.id == this.progress)[0];
 	}
 
 
