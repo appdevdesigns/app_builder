@@ -7,8 +7,11 @@
  */
 
 import ABApplication from "../classes/ABApplication"
+
 import ABWorkspaceDatatable from "./ab_work_object_workspace_datatable"
 import ABWorkspaceKanBan from "./ab_work_object_workspace_kanban"
+import ABWorkspaceGantt from "./ab_work_object_workspace_gantt"
+
 import ABPopupDefineLabel from "./ab_work_object_workspace_popupDefineLabel"
 import ABPopupFilterDataTable from "./ab_work_object_workspace_popupFilterDataTable"
 import ABPopupFrozenColumns from "./ab_work_object_workspace_popupFrozenColumns"
@@ -130,6 +133,9 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 
         var KanBan = new ABWorkspaceKanBan(App, idBase);
         hashViews['kanban'] = KanBan;
+
+        var Gantt = new ABWorkspaceGantt(App, idBase);
+        hashViews['gantt'] = Gantt;
 
 
         // Various Popups on our page:
@@ -403,6 +409,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                             cells:[
                                 KanBan.ui,
                                 DataTable.ui,
+                                Gantt.ui,
                             ]
                         },
 						(settings.isInsertable ? 
@@ -447,6 +454,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 
 
             KanBan.init();
+            Gantt.init();
 
 
     		PopupDefineLabelComponent.init({
@@ -557,7 +565,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                 _logic.getBadgeFilters();
 				// this will be handled by the server side request now
 				_logic.loadData();
-				KanBan.refresh();
+                KanBan.refresh();
+                Gantt.refresh();
                 // DataTable.refresh();
     		},
 
@@ -733,7 +742,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                 _logic.getBadgeSortFields();
                 DataTable.refreshHeader();
 				_logic.loadData();
-				KanBan.refresh();
+                KanBan.refresh();
+                Gantt.refresh();
             },
             
             /**
@@ -861,6 +871,9 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                 switch (currView.type) {
                     case "kanban":
                         KanBan.addCard();
+                        break;
+                    case "gantt":
+                        // TODO
                         break;
                     case "grid":
                     default:
@@ -1049,6 +1062,7 @@ console.error('TODO: toolbarPermission()');
 
                 DataTable.objectLoad(CurrentObject);
                 KanBan.objectLoad(CurrentObject);
+                Gantt.objectLoad(CurrentObject);
 
 				PopupNewDataFieldComponent.objectLoad(CurrentObject);
 				PopupDefineLabelComponent.objectLoad(CurrentObject);
@@ -1189,7 +1203,7 @@ console.error('TODO: toolbarPermission()');
                     id: view.id,
                     isView: true,
                     $css: view.id === currentViewId ? "selected" : "",
-                    icon: view.type === "kanban" ? "fa fa-columns" : "fa fa-table",
+                    icon: view.constructor.icon(),
                     submenu: view.isDefaultView ? null : [{
                             value: "Edit",
                             icon: "fa fa-cog",
@@ -1204,12 +1218,12 @@ console.error('TODO: toolbarPermission()');
                         }
                     ]
                 })).concat(submenuFixedItems);
-                var icon = "fa-table";
-                if (CurrentObject.workspaceViews.getCurrentView().type == "kanban") {
-                    icon = "fa-columns";
-                }
+
+                var currView = CurrentObject.workspaceViews.getCurrentView();
+                var icon = currView.constructor.icon();
+
                 $$(ids.viewMenu).define('data', [{
-                    value: `View: <span class="fa ${icon}"></span> <b>${CurrentObject.workspaceViews.getCurrentView().name}</b>`,
+                    value: `View: <span class="fa ${icon}"></span> <b>${currView.name}</b>`,
                     id: ids.viewMenuButton,
                     submenu,
                 }]);

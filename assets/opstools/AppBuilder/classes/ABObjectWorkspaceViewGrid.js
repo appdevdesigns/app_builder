@@ -41,6 +41,13 @@ export default class ABObjectWorkspaceViewGrid extends ABObjectWorkspaceView {
 		return 'grid';
 	}
 
+	/**
+	 * @return {string}
+	 */
+	static icon() {
+		return "fa fa-table";
+	}
+
 
 	/**
 	 * @method fromObj

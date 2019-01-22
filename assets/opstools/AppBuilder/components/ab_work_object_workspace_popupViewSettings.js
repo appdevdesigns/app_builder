@@ -8,6 +8,7 @@
 
 import ABObjectWorkspaceViewGrid from "../classes/ABObjectWorkspaceViewGrid";
 import ABObjectWorkspaceViewKanban from "../classes/ABObjectWorkspaceViewKanban";
+import ABObjectWorkspaceViewGantt from "../classes/ABObjectWorkspaceViewGantt";
 
 export default class AB_Work_Object_Workspace_PopupAddView extends OP.Component {
     //.extend(idBase, function(App) {
@@ -45,6 +46,7 @@ export default class AB_Work_Object_Workspace_PopupAddView extends OP.Component 
         };
 
         var comKanban = ABObjectWorkspaceViewKanban.component(App, idBase);
+        var comGantt = ABObjectWorkspaceViewGantt.component(App, idBase);
 
         // Our webix UI definition:
         var formUI = {
@@ -84,6 +86,10 @@ export default class AB_Work_Object_Workspace_PopupAddView extends OP.Component 
                         {
                             id: ABObjectWorkspaceViewKanban.type(),
                             value: "Kanban"
+                        },
+                        {
+                            id: ABObjectWorkspaceViewGantt.type(),
+                            value: "Gantt"
                         }
                     ],
                     value: ABObjectWorkspaceViewGrid.type(),
@@ -91,8 +97,7 @@ export default class AB_Work_Object_Workspace_PopupAddView extends OP.Component 
                     on: {
                         onChange: function(typeView) {
 
-                            $$(ids.formAdditional).showBatch(typeView);
-                            $$(ids.component).resize();
+                            _logic.switchType(typeView);
 
                         }
                     }
@@ -101,7 +106,8 @@ export default class AB_Work_Object_Workspace_PopupAddView extends OP.Component 
                     id: ids.formAdditional,
                     view: 'layout',
                     rows: [
-                        comKanban.elements()
+                        comKanban.elements(),
+                        comGantt.elements()
                     ]
                 },
                 {
@@ -183,6 +189,24 @@ export default class AB_Work_Object_Workspace_PopupAddView extends OP.Component 
                 _object = object;
             },
 
+            switchType: typeView => {
+
+                $$(ids.formAdditional).showBatch(typeView);
+
+                // initial
+                switch (typeView) {
+                    case 'kanban':
+                        comKanban.init(_object, _view);
+                        break;
+                    case 'gantt':
+                        comGantt.init(_object, _view);
+                        break;
+                }
+
+                $$(ids.component).resize();
+
+            },
+
             onShow: function() {
                 // clear field options in the form
                 $$(ids.form).clear();
@@ -191,14 +215,6 @@ export default class AB_Work_Object_Workspace_PopupAddView extends OP.Component 
 				if (_view) {
                     $$(ids.nameInput).setValue(_view.name);
                     $$(ids.typeInput).setValue(_view.type);
-
-                    // initial
-                    switch (_view.type) {
-                        case 'kanban':
-                            comKanban.init(_object, _view);
-                            break;
-                    }
-
                 }
                 // Default value
                 else {
@@ -239,6 +255,9 @@ export default class AB_Work_Object_Workspace_PopupAddView extends OP.Component 
                     switch($$(ids.typeInput).getValue()) {
                         case ABObjectWorkspaceViewKanban.type():
                             view = comKanban.values();
+                            break;
+                        case ABObjectWorkspaceViewGantt.type():
+                            view = comGantt.values();
                             break;
                     }
 

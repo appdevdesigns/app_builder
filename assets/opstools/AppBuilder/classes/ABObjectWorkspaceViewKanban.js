@@ -44,6 +44,13 @@ export default class ABObjectWorkspaceViewKanban extends ABObjectWorkspaceView {
 		return 'kanban';
 	}
 
+	/**
+	 * @return {string}
+	 */
+	static icon() {
+		return "fa fa-columns";
+	}
+
 	static component(App, idBase) {
 
 		let ids = {

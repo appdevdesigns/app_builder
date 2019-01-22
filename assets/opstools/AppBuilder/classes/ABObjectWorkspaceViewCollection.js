@@ -4,10 +4,12 @@
 
 import ABObjectWorkspaceViewGrid from "./ABObjectWorkspaceViewGrid";
 import ABObjectWorkspaceViewKanban from "./ABObjectWorkspaceViewKanban";
+import ABObjectWorkspaceViewGantt from "./ABObjectWorkspaceViewGantt";
 
 var hashViews = {};
 hashViews[ABObjectWorkspaceViewGrid.type()] = ABObjectWorkspaceViewGrid;
 hashViews[ABObjectWorkspaceViewKanban.type()] = ABObjectWorkspaceViewKanban;
+hashViews[ABObjectWorkspaceViewGantt.type()] = ABObjectWorkspaceViewGantt;
 
 const defaultAttributes = {
     currentViewID: undefined,
