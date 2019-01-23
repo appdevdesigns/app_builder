@@ -18,7 +18,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 	constructor(App, idBase) {
 
-		idBase = idBase || 'ab_work_object_workspace_kanban_sidePanel';
+		idBase = idBase || 'ab_work_object_workspace_formSidePanel';
 		super(App, idBase);
 
 		var L = this.Label;
@@ -34,7 +34,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 			form: this.unique(idBase + '_workspace_kanban_side_form')
 		};
 
-		var CurrentObject = null;	// current ABObject being displayed
+		let CurrentObject = null;	// current ABObject being displayed
 
 		// Our webix UI definition:
 		this.ui = {
@@ -78,7 +78,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 
 		// our internal business logic
-		var _logic = this._logic = {
+		let _logic = this._logic = {
 
 			callbacks: {
 
@@ -217,7 +217,6 @@ export default class ABWorkObjectKanBan extends OP.Component {
 				$$(ids.form).parse(data || {});
 
 				formCom.onShow(data);
-
 
 			}
 

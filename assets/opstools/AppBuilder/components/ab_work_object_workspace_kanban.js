@@ -9,7 +9,7 @@
 import ABFieldList from "../classes/dataFields/ABFieldList";
 import ABFieldUser from "../classes/dataFields/ABFieldUser";
 
-import AB_Work_KanbanSide from "./ab_work_object_workspace_kanban_sidePanel"
+import AB_Work_Form from "app_builder/assets/opstools/AppBuilder/components/ab_work_object_workspace_formSidePanel"
 import ABFieldConnect from "app_builder/assets/opstools/AppBuilder/classes/dataFields/ABFieldConnect";
 
 
@@ -42,7 +42,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 			resizer: this.unique(idBase + '_resizer'),
 		}
 
-		let KanbanSide = new AB_Work_KanbanSide(App, idBase);
+		let FormSide = new AB_Work_Form(App, idBase + '_kanban_form');
 
 		var CurrentObject = null;	// current ABObject being displayed
 		var CurrentVerticalField = null;
@@ -87,10 +87,10 @@ export default class ABWorkObjectKanBan extends OP.Component {
 						onListAfterSelect: (itemId, list) => {
 							if (itemId) {
 								let data = $$(ids.kanban).getItem(itemId);
-								KanbanSide.show(data);
+								FormSide.show(data);
 							}
 							else
-								KanbanSide.hide();
+								FormSide.hide();
 						},
 						onAfterStatusChange: (rowId, status, list) => {
 
@@ -110,7 +110,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 					view: "resizer",
 					borderless: true,
 				},
-				KanbanSide.ui
+				FormSide.ui
 			]
 		};
 
@@ -120,7 +120,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 			webix.extend($$(ids.kanban), webix.ProgressBar);
 
-			KanbanSide.init({
+			FormSide.init({
 				onAddData: _logic.saveData,
 				onUpdateData: _logic.saveData,
 				onClose: _logic.unselect
@@ -188,7 +188,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 				$$(ids.component).show();
 
-				KanbanSide.hide();
+				FormSide.hide();
 
 				if (!CurrentObject) return;
 
@@ -346,7 +346,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 				CurrentObject = object;
 
-				KanbanSide.objectLoad(object);
+				FormSide.objectLoad(object);
 
 			},
 
@@ -485,7 +485,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 				_logic.unselect();
 
 				// show the side form
-				KanbanSide.show();
+				FormSide.show();
 
 			},
 
