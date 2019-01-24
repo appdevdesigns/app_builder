@@ -111,7 +111,10 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 			refreshForm: function (data) {
 
-				// data = data || {};
+				if (!CurrentObject)
+					return;
+
+				data = data || {};
 
 				let formAttrs = {
 					settings: {
@@ -214,7 +217,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 				// display data
 				$$(ids.form).clear();
-				$$(ids.form).parse(data || {});
+				$$(ids.form).parse(data);
 
 				formCom.onShow(data);
 

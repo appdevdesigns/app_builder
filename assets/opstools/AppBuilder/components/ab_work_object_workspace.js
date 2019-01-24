@@ -873,7 +873,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                         KanBan.addCard();
                         break;
                     case "gantt":
-                        // TODO
+                        Gantt.addTask();
                         break;
                     case "grid":
                     default:

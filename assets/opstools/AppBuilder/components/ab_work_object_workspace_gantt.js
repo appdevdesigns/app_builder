@@ -33,7 +33,11 @@ export default class ABWorkObjectGantt extends OP.Component {
 			gantt: this.unique(idBase + '_workspace_gantt'),
 		}
 
-		let CurrentObject = null;	// current ABObject being displayed
+		let CurrentObject = null,
+			CurrentGanttView = null,
+			CurrentStartDateField = null,
+			CurrentDurationField = null,
+			CurrentProgressField = null;
 
 		let FormSide = new AB_Work_Form(App, idBase + '_gantt_form');
 
@@ -146,16 +150,8 @@ export default class ABWorkObjectGantt extends OP.Component {
 
 				FormSide.hide();
 
-				if (!CurrentObject) return;
-
-				// Get object's kanban view
-				let ganttView = _logic.getCurrentView();
-				if (!ganttView) return;
-
-				// Fields
-				let startDateField = ganttView.getStartDateField();
-				let durationField = ganttView.getDurationField();
-				if (!startDateField || !durationField) return;
+				if (!CurrentObject || !CurrentGanttView || !CurrentStartDateField || !CurrentDurationField)
+					return;
 
 				// rebuild
 				webix.ui(this.ui.cols[0], $$(ids.gantt));
@@ -169,6 +165,16 @@ export default class ABWorkObjectGantt extends OP.Component {
 				CurrentObject = object;
 
 				FormSide.objectLoad(object);
+
+				// Get object's kanban view
+				CurrentGanttView = _logic.getCurrentView();
+				if (!CurrentGanttView) return;
+
+				// Fields
+				CurrentStartDateField = CurrentGanttView.getStartDateField();
+				CurrentDurationField = CurrentGanttView.getDurationField();
+				CurrentProgressField = CurrentGanttView.getProgressField();
+				
 			},
 
 			getCurrentView: () => {
@@ -201,14 +207,8 @@ export default class ABWorkObjectGantt extends OP.Component {
 
 				gantt.clearAll();
 
-				// Get object's kanban view
-				let ganttView = _logic.getCurrentView();
-				if (!ganttView) return;
-
-				// Fields
-				let startDateField = ganttView.getStartDateField();
-				let durationField = ganttView.getDurationField();
-				if (!startDateField || !durationField) return;
+				if (!CurrentGanttView || !CurrentStartDateField || !CurrentDurationField)
+					return;
 
 				_logic.busy();
 
@@ -231,14 +231,14 @@ export default class ABWorkObjectGantt extends OP.Component {
 
 				// Start date should have data
 				wheres.rules.push({
-					key: startDateField.id,
+					key: CurrentStartDateField.id,
 					rule: "greater",
 					value: new Date(-8640000000000000) // minimal date
 				});
 
 				// Duration should more than 0
 				wheres.rules.push({
-					key: durationField.id,
+					key: CurrentDurationField.id,
 					rule: "greater",
 					value: 0
 				});
@@ -270,36 +270,31 @@ export default class ABWorkObjectGantt extends OP.Component {
 
 			convertFormat: (data, index) => {
 
-				let result = {};
+				data = data || {};
 
-				// Get object's kanban view
-				let ganttView = _logic.getCurrentView();
-				if (!ganttView) return {};
+				if (!CurrentStartDateField || !CurrentDurationField)
+					return data;
 
-				// Fields
-				let startDateField = ganttView.getStartDateField();
-				let durationField = ganttView.getDurationField();
-				let progressField = ganttView.getProgressField();
-				if (!startDateField || !durationField) return {};
-
-				result['id'] = data.id;
+				data['id'] = data.id;
 				// define label
-				result['text'] = CurrentObject.displayData(data);
-				result['start_date'] = data[startDateField.columnName];
-				result['duration'] = data[durationField.columnName] || 0;
-				result['progress'] = progressField ? parseFloat(data[progressField.columnName] || 0) : 0;
+				data['text'] = CurrentObject.displayData(data);
+				data['start_date'] = data[CurrentStartDateField.columnName];
+				data['duration'] = data[CurrentDurationField.columnName] || 0;
+				data['progress'] = CurrentProgressField ? parseFloat(data[CurrentProgressField.columnName] || 0) : 0;
 
 				if (index != null)
-					result['order'] = index;
+					data['order'] = index;
 
-				return result;
+				return data;
 
 			},
 
 			selectTask: (rowId) => {
 
-				// TODO:
-				FormSide.show();
+				let gantt = $$(ids.gantt).getGantt();
+				let task = gantt.getTask(rowId);
+
+				FormSide.show(task || {});
 
 			},
 
@@ -342,20 +337,14 @@ export default class ABWorkObjectGantt extends OP.Component {
 
 			updateTaskDate: (rowId) => {
 
-				// Get object's kanban view
-				let ganttView = _logic.getCurrentView();
-				if (!ganttView) return;
-
-				// Fields
-				let startDateField = ganttView.getStartDateField();
-				let durationField = ganttView.getDurationField();
-				if (!startDateField || !durationField) return;
+				if (!CurrentGanttView || !CurrentStartDateField || !CurrentDurationField)
+					return;
 
 				let task = gantt.getTask(rowId);
 
 				let patch = {};
-				patch[startDateField.columnName] = task.start_date;
-				patch[durationField.columnName] = task.duration;
+				patch[CurrentStartDateField.columnName] = task.start_date;
+				patch[CurrentDurationField.columnName] = task.duration;
 
 				_logic.updateTask(rowId, patch);
 
@@ -384,10 +373,11 @@ export default class ABWorkObjectGantt extends OP.Component {
 			updateTaskItem(data) {
 
 				let gantt = $$(ids.gantt).getGantt();
-				let task = gantt.getTask(data.id);
 
 				// update
-				if (data.id && task) {
+				if (data.id && gantt.isTaskExists(data.id)) {
+
+					let task = gantt.getTask(data.id);
 
 					// Changes task's data
 					// https://docs.dhtmlx.com/gantt/api__gantt_updatetask.html
@@ -415,6 +405,7 @@ export default class ABWorkObjectGantt extends OP.Component {
 		this.hide = _logic.hide;
 		this.show = _logic.show;
 		this.objectLoad = _logic.objectLoad;
+		this.addTask = _logic.addTask;
 		this.refresh = _logic.loadData;
 
 	}
