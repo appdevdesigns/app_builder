@@ -1111,7 +1111,7 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 				} 
 				// If we are just sorting a field it is much simpler
 				else { 
-					sortClause = "{prefix}.{columnName}"
+					sortClause = "{prefix}.`{columnName}`"
 									.replace('{prefix}', orderField.dbPrefix())
 									.replace('{columnName}', orderField.columnName);
 	            }
