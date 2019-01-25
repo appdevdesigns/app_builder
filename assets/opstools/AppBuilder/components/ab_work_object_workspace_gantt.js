@@ -150,6 +150,15 @@ export default class ABWorkObjectGantt extends OP.Component {
 
 				FormSide.hide();
 
+				// Get object's kanban view
+				CurrentGanttView = _logic.getCurrentView();
+				if (!CurrentGanttView) return;
+
+				// Fields
+				CurrentStartDateField = CurrentGanttView.getStartDateField();
+				CurrentDurationField = CurrentGanttView.getDurationField();
+				CurrentProgressField = CurrentGanttView.getProgressField();
+
 				if (!CurrentObject || !CurrentGanttView || !CurrentStartDateField || !CurrentDurationField)
 					return;
 
@@ -166,15 +175,6 @@ export default class ABWorkObjectGantt extends OP.Component {
 
 				FormSide.objectLoad(object);
 
-				// Get object's kanban view
-				CurrentGanttView = _logic.getCurrentView();
-				if (!CurrentGanttView) return;
-
-				// Fields
-				CurrentStartDateField = CurrentGanttView.getStartDateField();
-				CurrentDurationField = CurrentGanttView.getDurationField();
-				CurrentProgressField = CurrentGanttView.getProgressField();
-				
 			},
 
 			getCurrentView: () => {
@@ -223,7 +223,7 @@ export default class ABWorkObjectGantt extends OP.Component {
 					wheres = _.cloneDeep(CurrentObject.workspaceFilterConditions);
 				}
 
-				var sorts = {};
+				var sorts = [];
 				if (CurrentObject.workspaceSortFields &&
 					CurrentObject.workspaceSortFields.length > 0) {
 					sorts = CurrentObject.workspaceSortFields;
@@ -243,6 +243,12 @@ export default class ABWorkObjectGantt extends OP.Component {
 					value: 0
 				});
 
+				if (sorts.length < 1) {
+					sorts.push({
+						key: CurrentStartDateField.id,
+						dir: 'asc'
+					});
+				}
 
 				// WORKAROUND: load all data for now
 				CurrentObject.model()
@@ -255,7 +261,7 @@ export default class ABWorkObjectGantt extends OP.Component {
 						let gantt_data = {
 							data: (data.data || []).map((d, index) => {
 
-								return _logic.convertFormat(d, index);
+								return _logic.convertFormat(gantt, d, index);
 
 							})
 						}
@@ -268,7 +274,7 @@ export default class ABWorkObjectGantt extends OP.Component {
 
 			},
 
-			convertFormat: (data, index) => {
+			convertFormat: (gantt, data, index) => {
 
 				data = data || {};
 
@@ -281,6 +287,7 @@ export default class ABWorkObjectGantt extends OP.Component {
 				data['start_date'] = data[CurrentStartDateField.columnName];
 				data['duration'] = data[CurrentDurationField.columnName] || 0;
 				data['progress'] = CurrentProgressField ? parseFloat(data[CurrentProgressField.columnName] || 0) : 0;
+				data['end_date'] = gantt.calculateEndDate(data['start_date'], data['duration']);
 
 				if (index != null)
 					data['order'] = index;
@@ -381,7 +388,7 @@ export default class ABWorkObjectGantt extends OP.Component {
 
 					// Changes task's data
 					// https://docs.dhtmlx.com/gantt/api__gantt_updatetask.html
-					let updatedTask = _logic.convertFormat(data);
+					let updatedTask = _logic.convertFormat(gantt, data);
 					for (let key in updatedTask) {
 						task[key] = updatedTask[key];
 					}
@@ -390,8 +397,11 @@ export default class ABWorkObjectGantt extends OP.Component {
 				}
 				// insert
 				else {
-					let newTask = _logic.convertFormat(data);
+					let newTask = _logic.convertFormat(gantt, data);
 					gantt.addTask(newTask);
+
+					gantt.selectTask(data.id);
+					_logic.selectTask(data.id);
 				}
 
 			},

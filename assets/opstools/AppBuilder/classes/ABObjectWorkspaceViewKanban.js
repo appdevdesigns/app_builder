@@ -13,6 +13,7 @@ import ABFieldUser from "../classes/dataFields/ABFieldUser";
 var defaultValues = {
 	name: 'Default Kanban',
 	filterConditions: [], // array of filters to apply to the data table
+	sortFields: [],
 	verticalGroupingField: null,
 	horizontalGroupingField: null,
 	ownerField: null,

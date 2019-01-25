@@ -12,6 +12,7 @@ import ABFieldNumber from "../classes/dataFields/ABFieldNumber";
 var defaultValues = {
 	name: 'Default Gantt',
 	filterConditions: [], // array of filters to apply to the data table
+	sortFields: [],
 	startDate: '', // id of a field
 	duration: '', // id of a field
 	progress: '' // id of a field
