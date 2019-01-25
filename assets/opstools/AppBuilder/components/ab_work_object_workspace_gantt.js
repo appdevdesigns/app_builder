@@ -65,6 +65,7 @@ export default class ABWorkObjectGantt extends OP.Component {
 					},
 					ready: function (gantt) {
 
+						_logic.attachEvents();
 						_logic.loadData();
 
 					}
@@ -81,41 +82,6 @@ export default class ABWorkObjectGantt extends OP.Component {
 
 		// Our init() function for setting up our UI
 		this.init = (options) => {
-
-			setTimeout(() => {
-
-				let gantt = $$(ids.gantt).getGantt();
-
-				if ($$(ids.gantt).__onAfterTaskDragEvent == null) {
-					$$(ids.gantt).__onAfterTaskDragEvent = gantt.attachEvent("onAfterTaskDrag", (id, mode, e) => {
-
-						switch (mode) {
-							case "resize":
-							case "move":
-								_logic.updateTaskDate(id);
-								break;
-							case "progress":
-								_logic.updateTaskProgress(id);
-								break;
-							case "ignore":
-								break;
-						}
-
-					});
-
-
-					$$(ids.gantt).__onTaskClickEvent = gantt.attachEvent("onTaskClick", (id, e) => {
-
-						_logic.selectTask(id);
-						return true;
-
-					});
-
-
-				}
-
-			}, 2500);
-
 
 			FormSide.init({
 				onAddData: _logic.updateTaskItem,
@@ -199,6 +165,41 @@ export default class ABWorkObjectGantt extends OP.Component {
 			ready: function () {
 				if ($$(ids.gantt).hideProgress)
 					$$(ids.gantt).hideProgress();
+			},
+
+			attachEvents: () => {
+
+				let gantt = $$(ids.gantt).getGantt();
+				if (!gantt) return;
+
+				if ($$(ids.gantt).__onAfterTaskDragEvent == null) {
+					$$(ids.gantt).__onAfterTaskDragEvent = gantt.attachEvent("onAfterTaskDrag", (id, mode, e) => {
+
+						switch (mode) {
+							case "resize":
+							case "move":
+								_logic.updateTaskDate(id);
+								break;
+							case "progress":
+								_logic.updateTaskProgress(id);
+								break;
+							case "ignore":
+								break;
+						}
+
+					});
+				}
+
+
+				if ($$(ids.gantt).__onTaskClickEvent == null) {
+					$$(ids.gantt).__onTaskClickEvent = gantt.attachEvent("onTaskClick", (id, e) => {
+
+						_logic.selectTask(id);
+						return true;
+
+					});
+				}
+
 			},
 
 			loadData: () => {
@@ -327,7 +328,9 @@ export default class ABWorkObjectGantt extends OP.Component {
 
 				CurrentObject.model()
 					.update(rowId, patch)
-					.then(() => {
+					.then(updatedTask => {
+
+						_logic.updateTaskItem(updatedTask);
 
 						_logic.ready();
 
