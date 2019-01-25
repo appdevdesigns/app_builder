@@ -304,7 +304,8 @@ console.warn('!! ToDo: onAfterColumnHide()');
 
                 // WORKAROUND: .Sj() => ._get_y_range function of webix's datatable.
                 // It is a private function. It returns what record index are showing
-                let scrollState = DataTable.Ug(),
+                let scrollState = DataTable.Sj(), // webix5
+                // let scrollState = DataTable.Ug(), // webix6
                     startRecIndex = scrollState[0],
                     endRecIndex = scrollState[1],
                     index = 0;
