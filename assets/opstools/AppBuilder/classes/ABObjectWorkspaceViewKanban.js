@@ -184,8 +184,15 @@ export default class ABObjectWorkspaceViewKanban extends ABObjectWorkspaceView {
 					$$(id).refresh();
 				};
 
-				const groupingFieldFilter = field =>
+				const verticalGroupingFieldFilter = field =>
 					[
+						ABFieldList.defaults().key,
+						ABFieldUser.defaults().key
+					].includes(field.key);
+
+				const horizontalGroupingFieldFilter = field =>
+					[
+						ABFieldConnect.defaults().key,
 						ABFieldList.defaults().key,
 						ABFieldUser.defaults().key
 					].includes(field.key);
@@ -193,13 +200,13 @@ export default class ABObjectWorkspaceViewKanban extends ABObjectWorkspaceView {
 				initSelect(
 					ids.vGroupInput,
 					"verticalGroupingField",
-					groupingFieldFilter,
+					verticalGroupingFieldFilter,
 					true,
 				);
 				initSelect(
 					ids.hGroupInput,
 					"horizontalGroupingField",
-					groupingFieldFilter,
+					horizontalGroupingFieldFilter,
 					false,
 				);
 				initSelect(
