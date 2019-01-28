@@ -145,7 +145,10 @@ export default class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView {
 				$$(ids.duration).define('options', numberFields);
 
 				// Progress
-				$$(ids.progress).define('options', numberFields);
+				let decimalFields = object
+					.fields(f => f instanceof ABFieldNumber && f.settings.typeDecimals && f.settings.typeDecimals != 'none')
+					.map(({ id, label }) => ({ id, value: label }));
+				$$(ids.progress).define('options', decimalFields);
 
 
 				// Select view's values
