@@ -3,12 +3,13 @@
 // Manages the settings for a Data Grid View in the AppBuilder Object Workspace
 
 import ABObjectWorkspaceView from './ABObjectWorkspaceView'
-
 import ABObjectWorkspaceViewComponent from './ABObjectWorkspaceViewComponent'
 
-import ABFieldConnect from "../classes/dataFields/ABFieldConnect";
-import ABFieldList from "../classes/dataFields/ABFieldList";
-import ABFieldUser from "../classes/dataFields/ABFieldUser";
+import ABPopupNewDataField from '../components/ab_work_object_workspace_popupNewDataField'
+
+import ABFieldConnect from "./dataFields/ABFieldConnect";
+import ABFieldList from "./dataFields/ABFieldList";
+import ABFieldUser from "./dataFields/ABFieldUser";
 
 var defaultValues = {
 	name: 'Default Kanban',
@@ -83,6 +84,87 @@ export default class ABObjectWorkspaceViewKanban extends ABObjectWorkspaceView {
 			}
 		};
 
+		let refreshOptions = (object, view) => {
+
+			// Utility function to initialize the options for a field select input
+			const initSelect = (
+				id,
+				attribute,
+				filter = f => f.key === ABFieldList.defaults().key,
+				isRequired,
+			) => {
+
+				// populate options
+				var options = object
+					.fields()
+					.filter(filter)
+					.map(({ id, label }) => ({ id, value: label }));
+				if (!isRequired && options.length) {
+					options.unshift({ id: 0, value: labels.component.noneOption });
+				}
+				$$(id).define("options", options);
+
+				// select a value
+				if (view) {
+					if (view[attribute]) {
+						$$(id).define("value", view[attribute]);
+					}
+					else if (!isRequired) {
+						$$(id).define("value", options[0].id);
+					}
+				}
+				else if (options.filter(o => o.id).length === 1) {
+					// If there's just one (real) option, default to the first one
+					$$(id).define("value", options[0].id);
+				}
+
+				$$(id).refresh();
+			};
+
+			const verticalGroupingFieldFilter = field =>
+				[
+					ABFieldList.defaults().key,
+					ABFieldUser.defaults().key
+				].includes(field.key);
+
+			const horizontalGroupingFieldFilter = field =>
+				[
+					ABFieldConnect.defaults().key,
+					ABFieldList.defaults().key,
+					ABFieldUser.defaults().key
+				].includes(field.key);
+
+			initSelect(
+				ids.vGroupInput,
+				"verticalGroupingField",
+				verticalGroupingFieldFilter,
+				true,
+			);
+			initSelect(
+				ids.hGroupInput,
+				"horizontalGroupingField",
+				horizontalGroupingFieldFilter,
+				false,
+			);
+			initSelect(
+				ids.ownerInput,
+				"ownerField",
+				f => {
+					// User field
+					return (f.key === ABFieldUser.defaults().key ||
+						// Connected field : type 1:M
+						(f.key === ABFieldConnect.defaults().key &&
+							f.settings.linkType == 'one' &&
+							f.settings.linkViaType == 'many'));
+				},
+				false,
+			);
+
+		};
+
+
+		var PopupNewDataFieldComponent = new ABPopupNewDataField(App, idBase);
+
 		return new ABObjectWorkspaceViewComponent({
 
 			elements: () => {
@@ -91,57 +173,99 @@ export default class ABObjectWorkspaceViewKanban extends ABObjectWorkspaceView {
 					batch: "kanban",
 					rows: [
 						{
-							view: "richselect",
-							label: `<span class='webix_icon fa fa-columns'></span> ${
-								labels.component.vGroup
-								}`,
-							id: ids.vGroupInput,
-							placeholder: labels.component.groupingPlaceholder,
-							labelWidth: 180,
-							name: "vGroup",
-							required: true,
-							options: [],
-							on: {
-								onChange: function (id) {
-									$$(ids.vGroupInput).validate();
-									$$(ids.hGroupInput).validate();
+							cols: [
+								{
+									view: "richselect",
+									label: `<span class='webix_icon fa fa-columns'></span> ${
+										labels.component.vGroup
+										}`,
+									id: ids.vGroupInput,
+									placeholder: labels.component.groupingPlaceholder,
+									labelWidth: 180,
+									name: "vGroup",
+									required: true,
+									options: [],
+									on: {
+										onChange: function (id) {
+											$$(ids.vGroupInput).validate();
+											$$(ids.hGroupInput).validate();
+										}
+									},
+									invalidMessage: labels.common.invalidMessage.required
+								},
+								{
+									view: "button",
+									type: "icon",
+									icon: "fa fa-plus",
+									label: "",
+									width: 20,
+									click: () => {
+										PopupNewDataFieldComponent.show(null, ABFieldList.defaults().key);
+									}
 								}
-							},
-							invalidMessage: labels.common.invalidMessage.required
+							]
 						},
 						{
-							view: "richselect",
-							label: `<span class='webix_icon fa fa-list'></span> ${
-								labels.component.hGroup
-								}`,
-							id: ids.hGroupInput,
-							placeholder: labels.component.groupingPlaceholder,
-							labelWidth: 180,
-							name: "hGroup",
-							required: false,
-							options: [],
-							invalidMessage:
-								"Cannot be the same as vertical grouping field",
-							validate: value => {
-								var vGroupValue = $$(ids.vGroupInput).getValue();
-								return !vGroupValue || !value || vGroupValue !== value;
-							},
-							on: {
-								onChange: function (id) {
-									$$(ids.hGroupInput).validate();
+							cols: [
+								{
+									view: "richselect",
+									label: `<span class='webix_icon fa fa-list'></span> ${
+										labels.component.hGroup
+										}`,
+									id: ids.hGroupInput,
+									placeholder: labels.component.groupingPlaceholder,
+									labelWidth: 180,
+									name: "hGroup",
+									required: false,
+									options: [],
+									invalidMessage:
+										"Cannot be the same as vertical grouping field",
+									validate: value => {
+										var vGroupValue = $$(ids.vGroupInput).getValue();
+										return !vGroupValue || !value || vGroupValue !== value;
+									},
+									on: {
+										onChange: function (id) {
+											$$(ids.hGroupInput).validate();
+										}
+									}
+								},
+								{
+									view: "button",
+									type: "icon",
+									icon: "fa fa-plus",
+									label: "",
+									width: 20,
+									click: () => {
+										PopupNewDataFieldComponent.show(null, ABFieldList.defaults().key);
+									}
 								}
-							}
+							]
 						},
 						{
-							view: "richselect",
-							label: `<span class='webix_icon fa fa-user-circle'></span> ${
-								labels.component.owner
-								}`,
-							placeholder: labels.component.ownerPlaceholder,
-							id: ids.ownerInput,
-							labelWidth: 180,
-							name: "owner",
-							options: []
+							cols: [
+								{
+									view: "richselect",
+									label: `<span class='webix_icon fa fa-user-circle'></span> ${
+										labels.component.owner
+										}`,
+									placeholder: labels.component.ownerPlaceholder,
+									id: ids.ownerInput,
+									labelWidth: 180,
+									name: "owner",
+									options: []
+								},
+								{
+									view: "button",
+									type: "icon",
+									icon: "fa fa-plus",
+									label: "",
+									width: 20,
+									click: () => {
+										PopupNewDataFieldComponent.show(null, ABFieldConnect.defaults().key);
+									}
+								}
+							]
 						}
 					]
 				};
@@ -149,86 +273,24 @@ export default class ABObjectWorkspaceViewKanban extends ABObjectWorkspaceView {
 
 			init: (object, view) => {
 
-				// Utility function to initialize the options for a field select input
-				const initSelect = (
-					id,
-					attribute,
-					filter = f => f.key === ABFieldList.defaults().key,
-					isRequired,
-				) => {
+				refreshOptions(object, view);
 
-					// populate options
-					var options = object
-						.fields()
-						.filter(filter)
-						.map(({ id, label }) => ({ id, value: label }));
-					if (!isRequired && options.length) {
-						options.unshift({ id: 0, value: labels.component.noneOption });
+				PopupNewDataFieldComponent.applicationLoad(object.application);
+				PopupNewDataFieldComponent.objectLoad(object);
+				PopupNewDataFieldComponent.init({
+					onSave: () => { // be notified when a new Field is created & saved
+
+						refreshOptions(object, view);
 					}
-					$$(id).define("options", options);
+				});
 
-					// select a value
-					if (view) {
-						if (view[attribute]) {
-							$$(id).define("value", view[attribute]);
-						}
-						else if (!isRequired) {
-							$$(id).define("value", options[0].id);
-						}
-					}
-					else if (options.filter(o => o.id).length === 1) {
-						// If there's just one (real) option, default to the first one
-						$$(id).define("value", options[0].id);
-					}
-
-					$$(id).refresh();
-				};
-
-				const verticalGroupingFieldFilter = field =>
-					[
-						ABFieldList.defaults().key,
-						ABFieldUser.defaults().key
-					].includes(field.key);
-
-				const horizontalGroupingFieldFilter = field =>
-					[
-						ABFieldConnect.defaults().key,
-						ABFieldList.defaults().key,
-						ABFieldUser.defaults().key
-					].includes(field.key);
-
-				initSelect(
-					ids.vGroupInput,
-					"verticalGroupingField",
-					verticalGroupingFieldFilter,
-					true,
-				);
-				initSelect(
-					ids.hGroupInput,
-					"horizontalGroupingField",
-					horizontalGroupingFieldFilter,
-					false,
-				);
-				initSelect(
-					ids.ownerInput,
-					"ownerField",
-					f => {
-						// User field
-						return (f.key === ABFieldUser.defaults().key ||
-						// Connected field : type 1:M
-								(f.key === ABFieldConnect.defaults().key && 
-									f.settings.linkType == 'one' &&
-									f.settings.linkViaType == 'many'));
-					},
-					false,
-				);
 			},
 
 			values: function () {
 
 				let result = {};
 
-				result.verticalGroupingField  = $$(ids.vGroupInput).getValue() || null;
+				result.verticalGroupingField = $$(ids.vGroupInput).getValue() || null;
 				result.horizontalGroupingField = $$(ids.hGroupInput).getValue() || null;
 				result.ownerField = $$(ids.ownerInput).getValue() || null;
 

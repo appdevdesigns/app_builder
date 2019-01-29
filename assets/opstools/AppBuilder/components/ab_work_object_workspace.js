@@ -667,7 +667,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     					break;
     				case 'edit':
     					// pass control on to our Popup:
-    					PopupNewDataFieldComponent.show(node, field);
+    					PopupNewDataFieldComponent.show(field);
     					break;
 
     				case 'delete':
@@ -902,7 +902,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		 * this object.
     		 */
     		toolbarAddFields: function($view) {
-    			PopupNewDataFieldComponent.show($view);
+    			PopupNewDataFieldComponent.show();
     		},
 
 			toolbarButtonImport: function() {

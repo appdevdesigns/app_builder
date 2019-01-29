@@ -3,11 +3,12 @@
 // Manages the settings for a Gantt Chart View in the AppBuilder Object Workspace
 
 import ABObjectWorkspaceView from './ABObjectWorkspaceView'
-
 import ABObjectWorkspaceViewComponent from './ABObjectWorkspaceViewComponent'
 
-import ABFieldDate from "../classes/dataFields/ABFieldDate";
-import ABFieldNumber from "../classes/dataFields/ABFieldNumber";
+import ABPopupNewDataField from '../components/ab_work_object_workspace_popupNewDataField'
+
+import ABFieldDate from "./dataFields/ABFieldDate";
+import ABFieldNumber from "./dataFields/ABFieldNumber";
 
 var defaultValues = {
 	name: 'Default Gantt',
@@ -77,13 +78,56 @@ export default class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView {
 					"ab.gantt.durationPlaceholder",
 					"*Select a number field"
 				),
-				progressPlaceholder:L(
+				progressPlaceholder: L(
 					"ab.gantt.progressPlaceholder",
 					"*Select a number field"
 				)
 
 			}
 		};
+
+		let refreshOptions = (object, view) => {
+
+			// Start date
+			let dateFields = object
+				.fields(f => f instanceof ABFieldDate)
+				.map(({ id, label }) => ({ id, value: label }));
+
+			$$(ids.startDate).define('options', dateFields);
+
+			// Duration
+			let numberFields = object
+				.fields(f => f instanceof ABFieldNumber)
+				.map(({ id, label }) => ({ id, value: label }));
+
+			$$(ids.duration).define('options', numberFields);
+
+			// Progress
+			let decimalFields = object
+				.fields(f => f instanceof ABFieldNumber && f.settings.typeDecimals && f.settings.typeDecimals != 'none')
+				.map(({ id, label }) => ({ id, value: label }));
+			$$(ids.progress).define('options', decimalFields);
+
+
+			// Select view's values
+			if (view && view.startDate) {
+				$$(ids.startDate).define("value", view.startDate);
+				$$(ids.startDate).refresh();
+			}
+
+			if (view && view.duration) {
+				$$(ids.duration).define("value", view.duration);
+				$$(ids.duration).refresh();
+			}
+
+			if (view && view.progress) {
+				$$(ids.progress).define("value", view.progress);
+				$$(ids.progress).refresh();
+			}
+
+		};
+
+		var PopupNewDataFieldComponent = new ABPopupNewDataField(App, idBase);
 
 		return new ABObjectWorkspaceViewComponent({
 
@@ -92,34 +136,76 @@ export default class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView {
 					batch: "gantt",
 					rows: [
 						{
-							id: ids.startDate,
-							view: "richselect",
-							label: `<span class='webix_icon fa fa-calendar'></span> ${labels.component.startDate}`,
-							placeholder: labels.component.startDatePlaceholder,
-							labelWidth: 180,
-							name: "startDate",
-							required: true,
-							options: []
+							cols: [
+								{
+									id: ids.startDate,
+									view: "richselect",
+									label: `<span class='webix_icon fa fa-calendar'></span> ${labels.component.startDate}`,
+									placeholder: labels.component.startDatePlaceholder,
+									labelWidth: 180,
+									name: "startDate",
+									required: true,
+									options: []
+								},
+								{
+									view: "button",
+									type: "icon",
+									icon: "fa fa-plus",
+									label: "",
+									width: 20,
+									click: () => {
+										PopupNewDataFieldComponent.show(null, ABFieldDate.defaults().key);
+									}
+								}
+							]
 						},
 						{
-							id: ids.duration,
-							view: "richselect",
-							label: `<span class='webix_icon fa fa-hashtag'></span> ${labels.component.duration}`,
-							placeholder: labels.component.durationPlaceholder,
-							labelWidth: 180,
-							name: "duration",
-							required: true,
-							options: []
+							cols: [
+								{
+									id: ids.duration,
+									view: "richselect",
+									label: `<span class='webix_icon fa fa-hashtag'></span> ${labels.component.duration}`,
+									placeholder: labels.component.durationPlaceholder,
+									labelWidth: 180,
+									name: "duration",
+									required: true,
+									options: []
+								},
+								{
+									view: "button",
+									type: "icon",
+									icon: "fa fa-plus",
+									label: "",
+									width: 20,
+									click: () => {
+										PopupNewDataFieldComponent.show(null, ABFieldNumber.defaults().key);
+									}
+								}
+							]
 						},
 						{
-							id: ids.progress,
-							view: "richselect",
-							label: `<span class='webix_icon fa fa-hashtag'></span> ${labels.component.progress}`,
-							placeholder: labels.component.progressPlaceholder,
-							labelWidth: 180,
-							name: "progress",
-							required: false,
-							options: []
+							cols: [
+								{
+									id: ids.progress,
+									view: "richselect",
+									label: `<span class='webix_icon fa fa-hashtag'></span> ${labels.component.progress}`,
+									placeholder: labels.component.progressPlaceholder,
+									labelWidth: 180,
+									name: "progress",
+									required: false,
+									options: []
+								},
+								{
+									view: "button",
+									type: "icon",
+									icon: "fa fa-plus",
+									label: "",
+									width: 20,
+									click: () => {
+										PopupNewDataFieldComponent.show(null, ABFieldNumber.defaults().key);
+									}
+								}
+							]
 						}
 					]
 				};
@@ -130,42 +216,16 @@ export default class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView {
 				if (!object)
 					return;
 
-				// Start date
-				let dateFields = object
-					.fields(f => f instanceof ABFieldDate)
-					.map(({ id, label }) => ({ id, value: label }));
+				refreshOptions(object, view);
 
-				$$(ids.startDate).define('options', dateFields);
+				PopupNewDataFieldComponent.applicationLoad(object.application);
+				PopupNewDataFieldComponent.objectLoad(object);
+				PopupNewDataFieldComponent.init({
+					onSave: () => { // be notified when a new Field is created & saved
 
-				// Duration
-				let numberFields = object
-					.fields(f => f instanceof ABFieldNumber)
-					.map(({ id, label }) => ({ id, value: label }));
-
-				$$(ids.duration).define('options', numberFields);
-
-				// Progress
-				let decimalFields = object
-					.fields(f => f instanceof ABFieldNumber && f.settings.typeDecimals && f.settings.typeDecimals != 'none')
-					.map(({ id, label }) => ({ id, value: label }));
-				$$(ids.progress).define('options', decimalFields);
-
-
-				// Select view's values
-				if (view && view.startDate) {
-					$$(ids.startDate).define("value", view.startDate);
-					$$(ids.startDate).refresh();
-				}
-
-				if (view && view.duration) {
-					$$(ids.duration).define("value", view.duration);
-					$$(ids.duration).refresh();
-				}
-
-				if (view && view.progress) {
-					$$(ids.progress).define("value", view.progress);
-					$$(ids.progress).refresh();
-				}
+						refreshOptions(object, view);
+					}
+				});
 
 			},
 
@@ -173,7 +233,7 @@ export default class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView {
 
 				let result = {};
 
-				result.startDate  = $$(ids.startDate).getValue() || null;
+				result.startDate = $$(ids.startDate).getValue() || null;
 				result.duration = $$(ids.duration).getValue() || null;
 				result.progress = $$(ids.progress).getValue() || null;
 
