@@ -1831,28 +1831,58 @@ export default class ABViewDataCollection extends ABView {
 						}
 
 
-						// populate data to webix's data collection and the loading cursor is hidden here
-						this.__dataCollection.parse(data);
+						// // populate data to webix's data collection and the loading cursor is hidden here
+						// this.__dataCollection.parse(data);
 	
-	
-						var linkDc = this.dataCollectionLink;
-						if (linkDc) {
-	
-							// filter data by match link data collection
-							this.refreshLinkCursor();
-	
-						}
-						else {
-	
-							// set static cursor
-							this.setStaticCursor();
-	
+						var postParse = () => {
+
+							var linkDc = this.dataCollectionLink;
+							if (linkDc) {
+		
+								// filter data by match link data collection
+								this.refreshLinkCursor();
+		
+							}
+							else {
+		
+								// set static cursor
+								this.setStaticCursor();
+		
+							}
+
+							if (callback)
+								callback();
+		
+							resolve();
 						}
 
-						if (callback)
-							callback();
-	
-						resolve();
+						var parseBatch = (list, cb) => {
+							if (list.length == 0) {
+								cb();
+							} else {
+
+								var toLoad=[];
+								if (list.length > 25) {
+									for(var i=0; i<25; i++) {
+										toLoad.push(list.shift());
+									}
+								} else {
+									toLoad = list;
+									list = [];
+								}
+
+								this.__dataCollection.parse({
+									pos:this.__dataCollection.count(),
+									data:data
+								})
+
+								setTimeout(()=>{
+									parseBatch(list, cb);
+								},2);
+
+							}
+						}
+						parseBatch(data, postParse);
 		
 					})
 					.catch(err => {
