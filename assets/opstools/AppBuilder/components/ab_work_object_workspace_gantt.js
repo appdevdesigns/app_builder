@@ -24,7 +24,10 @@ export default class ABWorkObjectGantt extends OP.Component {
 		let labels = {
 			common: App.labels,
 			component: {
+				confirmDeleteTaskTitle: L('ab.object.deleteTask.title', "*Remove task"),
+				confirmDeleteTaskMessage: L('ab.object.deleteTask.message', "*Do you want to delete this task?")
 			}
+
 		};
 
 		// internal list of Webix IDs to reference our UI components.
@@ -58,8 +61,7 @@ export default class ABWorkObjectGantt extends OP.Component {
 							{ name: "text", label: "Task name", tree: true, width: '*' },
 							{ name: "start_date", label: "Start time", align: "center" },
 							{ name: "duration", label: "Duration", align: "center" },
-							// { name: "__remove", label: "", template: () => '<span class="fa fa-trash"></span>', width: 20 },
-							// { name: "add", label: "" }
+							{ name: "__remove", label: "", width: 40, align: "center", template: () => '<span class="fa fa-trash ab-gantt-remove" style="line-height: 35px;"></span>' }
 						];
 
 					},
@@ -172,8 +174,8 @@ export default class ABWorkObjectGantt extends OP.Component {
 				let gantt = $$(ids.gantt).getGantt();
 				if (!gantt) return;
 
-				if ($$(ids.gantt).__onAfterTaskDragEvent == null) {
-					$$(ids.gantt).__onAfterTaskDragEvent = gantt.attachEvent("onAfterTaskDrag", (id, mode, e) => {
+				if (gantt.__onAfterTaskDragEvent == null) {
+					gantt.__onAfterTaskDragEvent = gantt.attachEvent("onAfterTaskDrag", (id, mode, e) => {
 
 						switch (mode) {
 							case "resize":
@@ -191,14 +193,26 @@ export default class ABWorkObjectGantt extends OP.Component {
 				}
 
 
-				if ($$(ids.gantt).__onTaskClickEvent == null) {
-					$$(ids.gantt).__onTaskClickEvent = gantt.attachEvent("onTaskClick", (id, e) => {
+				if (gantt.__onTaskClickEvent == null) {
+					gantt.__onTaskClickEvent = gantt.attachEvent("onTaskClick", (id, e) => {
 
 						_logic.selectTask(id);
 						return true;
 
 					});
 				}
+
+
+				if (gantt.__onTaskRowClick == null) {
+					gantt.__onTaskRowClick = gantt.attachEvent("onTaskRowClick", (id, dom) => {
+
+						if (dom.classList.contains('ab-gantt-remove')) {
+							_logic.removeTask(id);
+						}
+
+					});
+				}
+
 
 			},
 
@@ -408,6 +422,43 @@ export default class ABWorkObjectGantt extends OP.Component {
 				}
 
 			},
+
+
+			removeTask: (rowId) => {
+
+				OP.Dialog.Confirm({
+					title: labels.component.confirmDeleteTaskTitle,
+					text: labels.component.confirmDeleteTaskMessage,
+					callback: (result) => {
+						if (!result) return;
+
+						_logic.busy();
+
+						CurrentObject.model()
+							.delete(rowId)
+							.then(response => {
+
+								// remove this task in gantt
+								let gantt = $$(ids.gantt).getGantt();
+								if (gantt && gantt.isTaskExists(rowId))
+									gantt.deleteTask(rowId);
+
+								_logic.ready();
+							})
+							.catch((err) => {
+
+								OP.Error.log('Error deleting item:', { error: err });
+
+								_logic.ready();
+
+								//// TODO: what do we do here?	
+							});
+
+					}
+				});
+
+			}
+
 
 		}
 

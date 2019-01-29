@@ -127,7 +127,7 @@ export default class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView {
 
 		};
 
-		var PopupNewDataFieldComponent = new ABPopupNewDataField(App, idBase);
+		var PopupNewDataFieldComponent = new ABPopupNewDataField(App, idBase + '_gantt');
 
 		return new ABObjectWorkspaceViewComponent({
 
@@ -276,7 +276,7 @@ export default class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView {
 			obj[v] = this[v];
 		}
 
-		obj.type = 'gantt';
+		obj.type = ABObjectWorkspaceViewGantt.type();
 		return obj;
 	}
 

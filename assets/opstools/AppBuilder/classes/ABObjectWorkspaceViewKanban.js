@@ -163,7 +163,7 @@ export default class ABObjectWorkspaceViewKanban extends ABObjectWorkspaceView {
 		};
 
 
-		var PopupNewDataFieldComponent = new ABPopupNewDataField(App, idBase);
+		var PopupNewDataFieldComponent = new ABPopupNewDataField(App, idBase + "_kanban");
 
 		return new ABObjectWorkspaceViewComponent({
 
@@ -331,7 +331,7 @@ export default class ABObjectWorkspaceViewKanban extends ABObjectWorkspaceView {
 			obj[v] = this[v];
 		}
 
-		obj.type = 'kanban';
+		obj.type = ABObjectWorkspaceViewKanban.type();
 		return obj;
 	}
 

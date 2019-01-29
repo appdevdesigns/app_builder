@@ -1405,3 +1405,9 @@ a.webix_list_item.selected, a.webix_list_item.selected:hover  {
 .webix_list_item .webix_list_icon {
 	opacity: 0.6;
 }
+.ab-gantt-remove {
+	opacity: 0.4;
+}
+.ab-gantt-remove:hover {
+	opacity: 0.9;
+}
