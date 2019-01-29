@@ -440,8 +440,10 @@ export default class ABWorkObjectGantt extends OP.Component {
 
 								// remove this task in gantt
 								let gantt = $$(ids.gantt).getGantt();
-								if (gantt && gantt.isTaskExists(rowId))
+								if (gantt && gantt.isTaskExists(rowId)) {
 									gantt.deleteTask(rowId);
+									FormSide.hide();
+								}
 
 								_logic.ready();
 							})
