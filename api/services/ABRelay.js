@@ -313,6 +313,8 @@ options.rejectUnauthorized = false;
                         // convert requests to array of just request data.
                         var allRequests = [];
                         listOfRequests.forEach((req)=>{
+                            // Don't log the full error on repeat requests
+                            req.request.suppressErrors = true;
                             allRequests.push(req.request);
                         })
 
@@ -441,7 +443,8 @@ options.rejectUnauthorized = false;
         // request = {
         //     appUUID:'uuid',
         //     data: '<encryptedData>',
-        //     jobToken: 'uuid'
+        //     jobToken: 'uuid',
+        //     suppressErrors: boolean, // if true then don't log the full error
         // }
 
         var appUser = null;
@@ -477,7 +480,9 @@ var errorOptions = null;
                 } else {
 
                     var error = new Error('ABRelay:request:1) can not find ABRelayAppUser for appUUID:'+request.appUUID);
-                    ADCore.error.log('ABRelay:request:(1) can not find ABRelayAppUser for appUUID:'+request.appUUID, { error:error, request: request });
+                    if (!request.suppressErrors) {
+                        ADCore.error.log('ABRelay:request:(1) can not find ABRelayAppUser for appUUID:'+request.appUUID, { error:error, request: request });
+                    }
                     throw error;
                 }
 
@@ -740,10 +745,17 @@ errorOptions = options;
                     return ABRelay.request(request);
                 }
             }
-
-ADCore.error.log('::: ABRelay.request(): caught error: ', { request:errorOptions, error: err} )
-// sails.log.error('::: ABRelay.request(): caught error:', err.statusCode || err, { request:errorOptions }, err.error, err);
-
+            
+            // Requests that were previously queued will have errors simplified on the console log.
+            // Full error messages repeating every 5 seconds can spiral out of control over time.
+            if (request.suppressErrors) {
+                ADCore.error.log('::: ABRelay.request(): caught error: ', err.message || err)
+                return;
+            }
+            
+            ADCore.error.log('::: ABRelay.request(): caught error: ', { request:errorOptions, error: err} )
+            // sails.log.error('::: ABRelay.request(): caught error:', err.statusCode || err, { request:errorOptions }, err.error, err);
+            
         })
 
         // that's it?
