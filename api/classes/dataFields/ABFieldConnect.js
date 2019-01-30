@@ -465,7 +465,7 @@ class ABFieldConnect extends ABField {
 				if (this.object.isImported ||
 					this.isImported) return resolve();
 
-				var tableName = this.object.dbTableName();
+				var tableName = this.object.dbTableName(true);
 
 				// M:N
 				if (this.settings.linkType == 'many' && this.settings.linkViaType == 'many') {

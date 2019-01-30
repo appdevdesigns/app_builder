@@ -16,6 +16,9 @@ import ABPopupMassUpdate from "./ab_work_object_workspace_popupMassUpdate"
 import ABPopupNewDataField from "./ab_work_object_workspace_popupNewDataField"
 import ABPopupSortField from "./ab_work_object_workspace_popupSortFields"
 import ABPopupExport from "./ab_work_object_workspace_popupExport"
+import ABPopupImport from "./ab_work_object_workspace_popupImport"
+
+import ABViewDataCollection from "../classes/views/ABViewDataCollection"
 
 
 export default class ABWorkObjectWorkspace extends OP.Component {
@@ -56,7 +59,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                 frozenColumns: L('ab.object.toolbar.frozenColumns', "*Frozen fields"),
                 defineLabel: L('ab.object.toolbar.defineLabel', "*Define label"),
                 permission: L('ab.object.toolbar.permission', "*Permission"),
-                addFields: L('ab.object.toolbar.addFields', "*Add field"),
+				addFields: L('ab.object.toolbar.addFields', "*Add field"),
+				import: L('ab.object.toolbar.import', "*Import"),
                 "export": L('ab.object.toolbar.export', "*Export"),
                 confirmDeleteTitle : L('ab.object.delete.title', "*Delete data field"),
                 confirmDeleteMessage : L('ab.object.delete.message', "*Do you want to delete <b>{0}</b>?")
@@ -91,7 +95,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 
     		buttonAddField: this.unique(idBase + '_buttonAddField'),
             buttonDeleteSelected: this.unique(idBase + '_deleteSelected'),
-    		buttonExport: this.unique(idBase + '_buttonExport'),
+			buttonExport: this.unique(idBase + '_buttonExport'),
+			buttonImport: this.unique(idBase + '_buttonImport'),
     		buttonFieldsVisible: this.unique(idBase + '_buttonFieldsVisible'),
     		buttonFilter: this.unique(idBase + '_buttonFilter'),
     		buttonFrozen: this.unique(idBase + '_buttonFrozen'),
@@ -130,8 +135,13 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 		var PopupSortFieldComponent = new ABPopupSortField(App, idBase);
 
 		var PopupExportObjectComponent = new ABPopupExport(App, idBase);
-        
-        var view = "button";
+
+		var PopupImportObjectComponent = new ABPopupImport(App, idBase);
+
+		var view = "button";
+
+		// create ABViewDataCollection
+		var CurrentDc = new ABViewDataCollection({}, CurrentApplication);
 
     	// Our webix UI definition:
     	this.ui = {
@@ -169,7 +179,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     								view: view,
     								id: ids.buttonAddField,
     								label: labels.component.addFields,
-    								icon: "plus",
+    								icon: "fa fa-plus",
     								type: "icon",
 									disabled: !settings.isFieldAddable,
 									// autowidth: true,
@@ -181,7 +191,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     								view: view,
     								id: ids.buttonMassUpdate,
     								label: labels.component.massUpdate,
-    								icon: "pencil-square-o",
+    								icon: "fa fa-pencil-square-o",
     								type: "icon",
     								// autowidth: true,
     								badge: 0,
@@ -194,7 +204,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     								view: view,
     								id: ids.buttonDeleteSelected,
     								label: labels.component.deleteSelected,
-    								icon: "trash",
+    								icon: "fa fa-trash",
     								type: "icon",
     								// autowidth: true,
     								badge: 0,
@@ -207,7 +217,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     								view: view,
     								id: ids.buttonFieldsVisible,
     								label: labels.component.hideFields,
-    								icon: "eye-slash",
+    								icon: "fa fa-eye-slash",
     								type: "icon",
     								// autowidth: true,
     								badge: 0,
@@ -219,7 +229,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     								view: view,
     								id: ids.buttonFilter,
     								label: labels.component.filterFields,
-    								icon: "filter",
+    								icon: "fa fa-filter",
     								type: "icon",
     								// autowidth: true,
     								badge: 0,
@@ -231,7 +241,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     								view: view,
     								id: ids.buttonSort,
     								label: labels.component.sortFields,
-    								icon: "sort",
+    								icon: "fa fa-sort",
     								type: "icon",
     								// autowidth: true,
     								badge: 0,
@@ -243,7 +253,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     								view: view,
     								id: ids.buttonFrozen,
     								label: labels.component.frozenColumns,
-    								icon: "thumb-tack",
+    								icon: "fa fa-thumb-tack",
     								type: "icon",
     								// autowidth: true,
     								badge: 0,
@@ -255,7 +265,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     								view: view,
     								id: ids.buttonLabel,
     								label: labels.component.defineLabel,
-    								icon: "crosshairs",
+    								icon: "fa fa-crosshairs",
     								type: "icon",
     								// autowidth: true,
     								click: function () {
@@ -265,19 +275,29 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     							// {
     							// 	view: view,
     							// 	label: labels.component.permission,
-    							// 	icon: "lock",
+    							// 	icon: "fa fa-lock",
     							// 	type: "icon",
     							// 	// autowidth: true,
     							// 	click: function() {
     							// 		_logic.toolbarPermission(this.$view);
     							// 	}
                                 // 
-    							// },
+								// },
+								{
+    								view: view,
+    								id: ids.buttonImport,
+    								label: labels.component.import,
+    								icon: "fa fa-upload",
+    								type: "icon",
+    								click: function() {
+    									_logic.toolbarButtonImport();
+    								}
+    							},
     							{
     								view: view,
     								id: ids.buttonExport,
     								label: labels.component.export,
-    								icon: "download",
+    								icon: "fa fa-download",
     								type: "icon",
     								// autowidth: true,
     								click: function() {
@@ -309,7 +329,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 
     			}
     		]
-    	}
+    	};
 
 
 
@@ -322,7 +342,10 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     			onEditorMenu:_logic.callbackHeaderEditorMenu,
                 onColumnOrderChange:_logic.callbackColumnOrderChange,
                 onCheckboxChecked:_logic.callbackCheckboxChecked
-            });
+			});
+
+			CurrentDc.init();
+			CurrentDc.bind($$(DataTable.ui.id));
 
     		PopupDefineLabelComponent.init({
     			onChange:_logic.callbackDefineLabel		// be notified when there is a change in the label
@@ -351,10 +374,18 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 			}
 
 // ?? what is this for ??
-    		var fieldList = DataTable.getFieldList();
+    		// var fieldList = DataTable.getFieldList();
 
     		PopupSortFieldComponent.init({
     			onChange:_logic.callbackSortFields		// be notified when there is a change in the sort fields
+			});
+
+			PopupImportObjectComponent.init({
+				onDone: () => {
+
+					// refresh data in object
+					_logic.populateObjectWorkspace(CurrentObject);
+				}
 			});
 
 			PopupExportObjectComponent.init({});
@@ -366,7 +397,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
         
 
         var CurrentApplication = null;
-        var CurrentObject = null;
+		var CurrentObject = null;
 
 
     	// our internal business logic
@@ -384,6 +415,9 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 				CurrentApplication = application;
 
 				PopupNewDataFieldComponent.applicationLoad(application);
+
+				CurrentDc.application = CurrentApplication;
+
 			},
 
     		/**
@@ -392,8 +426,9 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		 * call back for when the Define Label popup is finished.
     		 */
     		callbackAddFields:function(field) {
-                DataTable.refreshHeader();
-    			DataTable.refresh();
+				DataTable.refreshHeader();
+				_logic.loadData();
+    			// DataTable.refresh();
     		},
 
 
@@ -414,8 +449,9 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		callbackFilterDataTable: function() {
                 // Since we are making server side requests lets offload the badge count to another function so it can be called independently
                 _logic.getBadgeFilters();
-                // this will be handled by the server side request now
-                DataTable.refresh();
+				// this will be handled by the server side request now
+				_logic.loadData();
+                // DataTable.refresh();
     		},
 
     		/**
@@ -425,8 +461,9 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		 */
     		callbackFrozenColumns: function() {
                 // We need to load data first because there isn't anything to look at if we don't
-                DataTable.refreshHeader();
-                DataTable.refresh();
+				DataTable.refreshHeader();
+				_logic.loadData();
+                // DataTable.refresh();
 
                 _logic.getBadgeFrozenColumn();
     		},
@@ -529,8 +566,9 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 
     								field.destroy()
     								.then(()=>{
-                                        DataTable.refreshHeader();
-    									DataTable.refresh();
+										DataTable.refreshHeader();
+										_logic.loadData();
+    									// DataTable.refresh();
                                         
                                         // recursive fn to remove any form/detail fields related to this field
                                         function checkPages(list, cb) {
@@ -574,8 +612,9 @@ export default class ABWorkObjectWorkspace extends OP.Component {
              * call back for when the mass update is fired
              */
             callbackMassUpdate: function() {
-                // _logic.getBadgeSortFields();
-                DataTable.refresh();
+				// _logic.getBadgeSortFields();
+				_logic.loadData();
+                // DataTable.refresh();
             },
 
     		/**
@@ -585,8 +624,9 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		 */
     		callbackSortFields: function() {
                 _logic.getBadgeSortFields();
-                DataTable.refreshHeader();
-                DataTable.refresh();
+				DataTable.refreshHeader();
+				_logic.loadData();
+                // DataTable.refresh();
     		},
             
             /**
@@ -709,6 +749,9 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     			PopupNewDataFieldComponent.show($view);
     		},
 
+			toolbarButtonImport: function() {
+				PopupImportObjectComponent.show();
+			},
 
     		toolbarButtonExport: function($view) {
 				PopupExportObjectComponent.show($view);
@@ -832,6 +875,9 @@ console.error('TODO: toolbarPermission()');
 
 				CurrentObject = object;
 
+				// initial data
+				_logic.loadData();
+
 				// the replicated tables are read only
 				if (CurrentObject.isReadOnly) {
 					DataTable.readonly();
@@ -855,6 +901,7 @@ console.error('TODO: toolbarPermission()');
 				PopupHideFieldComponent.objectLoad(CurrentObject);
 				PopupMassUpdateComponent.objectLoad(CurrentObject, DataTable);
 				PopupSortFieldComponent.objectLoad(CurrentObject);
+				PopupImportObjectComponent.objectLoad(CurrentObject);
 				PopupExportObjectComponent.objectLoad(CurrentObject);
 				PopupExportObjectComponent.setGridComponent($$(DataTable.ui.id));
 				PopupExportObjectComponent.setHiddenFields(CurrentObject.objectWorkspace.hiddenFields);
@@ -873,9 +920,11 @@ console.error('TODO: toolbarPermission()');
 				// disable add fields into the object
 				if (object.isExternal || object.isImported || !settings.isFieldAddable) {
 					$$(ids.buttonAddField).disable();
+					$$(ids.buttonImport).disable();
 				}
 				else {
 					$$(ids.buttonAddField).enable();
+					$$(ids.buttonImport).enable();
 				}
 
 
@@ -901,6 +950,34 @@ console.error('TODO: toolbarPermission()');
 			 */
 			loadAll: function() {
 				DataTable.loadAll();
+			},
+
+			loadData: function() {
+
+				// update ABViewDataCollection settings
+				let filterConditions = {};
+				if (CurrentObject &&
+					CurrentObject.objectWorkspace &&
+					CurrentObject.objectWorkspace.filterConditions)
+					filterConditions = CurrentObject.objectWorkspace.filterConditions;
+
+				let sortFields = [];
+				if (CurrentObject &&
+					CurrentObject.objectWorkspace &&
+					CurrentObject.objectWorkspace.sortFields)
+					sortFields = CurrentObject.objectWorkspace.sortFields;
+
+				CurrentDc.settings = {
+					object: CurrentObject.id,
+					objectUrl: CurrentObject.urlPointer(),
+					objectWorkspace: {
+						filterConditions: filterConditions,
+						sortFields: sortFields
+					}
+				};
+				CurrentDc.clearAll();
+				CurrentDc.loadData(0, 30);
+
 			}
 
 

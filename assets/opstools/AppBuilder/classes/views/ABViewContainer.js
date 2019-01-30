@@ -7,8 +7,6 @@
 
 import ABView from "./ABView"
 import ABPropertyComponent from "../ABPropertyComponent"
-import { resolve } from "path";
-import { runInNewContext } from "vm";
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;

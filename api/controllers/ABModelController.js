@@ -18,6 +18,32 @@ const { ref, raw } = require('objection');
 
 var reloading = null;
 
+var countPendingTransactions = 0;
+var countResolvedTransactions = 0;
+
+
+setInterval(()=>{
+
+    if (countResolvedTransactions > 0) {
+        var countRemaining = countPendingTransactions - countResolvedTransactions;
+        sails.log(`::: ${countResolvedTransactions} processed in last second. ${countRemaining} Transactions still in Process. `);
+    }
+    countPendingTransactions = countPendingTransactions - countResolvedTransactions;
+    if (countPendingTransactions < 0) countPendingTransactions = 0;
+    countResolvedTransactions = 0;
+
+}, 1000);
+
+function newPendingTransaction() {
+    countPendingTransactions += 1;
+}
+
+function resolvePendingTransaction() {
+    countResolvedTransactions += 1;
+    if (countResolvedTransactions > countPendingTransactions) {
+        countPendingTransactions = countPendingTransactions;
+    }
+}
 
 /** 
  * @function updateRelationValues
@@ -35,12 +61,6 @@ function updateRelationValues(object, id, updateRelationParams) {
 
     var updateTasks = [];
 
-
-    // create a new query to update relation data
-    // NOTE: when use same query, it will have a "created duplicate" error
-    var query = object.model().query();
-
-
     //// 
     //// We are given a current state of values that should be related to our object.
     //// It is not clear if these are new relations or existing ones, so we first
@@ -53,82 +73,177 @@ function updateRelationValues(object, id, updateRelationParams) {
     // - (insert, update, patch, delete, relate, unrelate, increment, decrement) and only once per query builder
     if (updateRelationParams != null && Object.keys(updateRelationParams).length > 0) {
 
+        let clearRelate = (obj, columnName, rowId) => {
+
+            return new Promise((resolve, reject) => {
+
+                // WORKAROUND : HRIS tables have non null columns
+                if (obj.isExternal)
+                    return resolve();
+
+                // create a new query to update relation data
+                // NOTE: when use same query, it will have a "created duplicate" error
+                let query = obj.model().query();
+
+                let clearRelationName = AppBuilder.rules.toFieldRelationFormat(columnName);
+
+                query.where(obj.PK(), rowId).first()
+                    .catch(err => reject(err))
+                    .then(record => {
+
+                        if (record == null) return resolve();
+
+                        let fieldLink = obj.fields(f => f.columnName == columnName)[0];
+                        if (fieldLink == null) return resolve();
+
+                        let objectLink = fieldLink.object;
+                        if (objectLink == null) return resolve();
+
+                        record
+                            .$relatedQuery(clearRelationName)
+                            .alias("#column#_#relation#".replace('#column#', columnName).replace('#relation#', clearRelationName)) // FIX: SQL syntax error because alias name includes special characters
+                            .unrelate()
+                            .catch(err => reject(err))
+                            .then(() => { resolve(); });
+
+                    });
+
+            });
+        };
+
+        let setRelate = (obj, columnName, rowId, value) => {
+
+            return new Promise((resolve, reject) => {
+
+                // create a new query to update relation data
+                // NOTE: when use same query, it will have a "created duplicate" error
+                let query = obj.model().query();
+
+                let relationName = AppBuilder.rules.toFieldRelationFormat(columnName);
+
+                query.where(obj.PK(), rowId).first()
+                    .catch(err => reject(err))
+                    .then(record => {
+
+                        if (record == null) return resolve();
+
+                        record.$relatedQuery(relationName)
+                        .alias("#column#_#relation#".replace('#column#', columnName).replace('#relation#', relationName)) // FIX: SQL syntax error because alias name includes special characters
+                            .relate(value)
+                            .catch(err => reject(err))
+                            .then(() => { resolve(); });
+
+                    });
+            });
+
+        };
+
         // update relative values
         Object.keys(updateRelationParams).forEach((colName) => {
 
-            updateTasks.push(() => {
+            // SPECIAL CASE: 1-to-1 relation self join,
+            // Need to update linked data
+            let field = object.fields(f => f.columnName == colName)[0];
+            if (field &&
+                field.settings.linkObject == object.id &&
+                field.settings.linkType == 'one' &&
+                field.settings.linkViaType == 'one' &&
+                !object.isExternal) {
 
-                var clearRelationName = AppBuilder.rules.toFieldRelationFormat(colName);
+                let sourceField = field.settings.isSource ? field : field.fieldLink();
+                if (sourceField == null)
+                    return resolve();
 
-                return new Promise((resolve, reject) => {
+                let relateRowId = null;
+                if (updateRelationParams[colName]) // convert to int
+                    relateRowId = parseInt(updateRelationParams[colName]);
 
-                    // WORKAROUND : HRIS tables have non null columns
-                    if (object.isExternal)
-                        return resolve();
+                // clear linked data
+                updateTasks.push(() => {
 
-                    query.where(object.PK(), id).first()
-                        .catch(err => reject(err))
-                        .then(record => {
+                    return new Promise((resolve, reject) => {
 
-                            if (record == null) return resolve();
+                        let update = {};
+                        update[sourceField.columnName] = null;
 
-                            var fieldLink = object.fields(f => f.columnName == colName)[0];
-                            if (fieldLink == null) return resolve();
+                        let query = object.model().query();
+                        query.update(update)
+                            .clearWhere()
+                            .where(object.PK(), id)
+                            .orWhere(object.PK(), relateRowId)
+                            .orWhere(sourceField.columnName, id)
+                            .orWhere(sourceField.columnName, relateRowId)
+                            .catch(err => reject(err))
+                            .then(() => { resolve(); });
 
-                            var objectLink = fieldLink.object;
-                            if (objectLink == null) return resolve();
+                    });
 
-                            record
-                                .$relatedQuery(clearRelationName)
-                                .alias("#column#_#relation#".replace('#column#', colName).replace('#relation#', clearRelationName)) // FIX: SQL syntax error because alias name includes special characters
-                                .unrelate()
+                });
+
+                // set linked data
+                if (updateRelationParams[colName]) {
+                    updateTasks.push(() => { 
+
+                        return new Promise((resolve, reject) => {
+
+                            let update = {};
+                            update[sourceField.columnName] = relateRowId;
+
+                            let query = object.model().query();
+                            query.update(update)
+                                .clearWhere()
+                                .where(object.PK(), id)
                                 .catch(err => reject(err))
                                 .then(() => { resolve(); });
 
                         });
 
-                });
-            });
-
-            //     return;
-            // }
-
-            // convert relation data to array
-            if (!Array.isArray(updateRelationParams[colName])) {
-                updateRelationParams[colName] = [updateRelationParams[colName]];
-            }
-
-            // We could not insert many relation values at same time
-            // NOTE : Error: batch insert only works with Postgresql
-            updateRelationParams[colName].forEach(val => {
-
-                // insert relation values of relation
-                updateTasks.push(() => {
-
-                    return new Promise((resolve, reject) => {
-
-                        var relationName = AppBuilder.rules.toFieldRelationFormat(colName);
-
-                        query.where(object.PK(), id).first()
-                            .catch(err => reject(err))
-                            .then(record => {
-
-                                if (record == null) return resolve();
-
-                                record.$relatedQuery(relationName)
-                                .alias("#column#_#relation#".replace('#column#', colName).replace('#relation#', relationName)) // FIX: SQL syntax error because alias name includes special characters
-                                    .relate(val)
-                                    .catch(err => reject(err))
-                                    .then(() => { resolve(); });
-
-                            });
                     });
 
+                    updateTasks.push(() => { 
+
+                        return new Promise((resolve, reject) => {
+
+                            let update = {};
+                            update[sourceField.columnName] = id;
+
+                            let query = object.model().query();
+                            query.update(update)
+                                .clearWhere()
+                                .where(object.PK(), relateRowId)
+                                .catch(err => reject(err))
+                                .then(() => { resolve(); });
+
+                        });
+
+                    });
+
+                }
+
+            }
+
+            // Normal relations
+            else {
+
+                // Clear relations
+                updateTasks.push(() => { return clearRelate(object, colName, id) });
+
+                // convert relation data to array
+                if (!Array.isArray(updateRelationParams[colName])) {
+                    updateRelationParams[colName] = [updateRelationParams[colName]];
+                }
+
+                // We could not insert many relation values at same time
+                // NOTE : Error: batch insert only works with Postgresql
+                updateRelationParams[colName].forEach(val => {
+
+                    // insert relation values of relation
+                    updateTasks.push(() => { return setRelate(object, colName, id, val) });
+
                 });
 
+            }
 
-
-            });
 
         });
 
@@ -307,7 +422,7 @@ module.exports = {
 
     create: function (req, res) {
 
-
+        newPendingTransaction();
         AppBuilder.routes.verifyAndReturnObject(req, res)
             .then(function (object) {
 
@@ -380,6 +495,7 @@ module.exports = {
                                         req.user.data)
                                         .then((newItem) => {
 
+                                            resolvePendingTransaction();
                                             res.AD.success(newItem[0]);
 
                                             // We want to broadcast the change from the server to the client so all datacollections can properly update
@@ -392,7 +508,7 @@ module.exports = {
                                             // Broadcast the create
                                             sails.sockets.broadcast(object.id, "ab.datacollection.create", payload);
 
-                                            updateConnectedFields(object, newItem[0]);
+                                            // updateConnectedFields(object, newItem[0]);
 
                                             // TODO:: what is this doing?
                                             Promise.resolve();
@@ -428,6 +544,7 @@ module.exports = {
                                     })
                                 }
 
+                                resolvePendingTransaction();
                                 res.AD.error(errorResponse);
                             }
                             else {
@@ -449,6 +566,7 @@ module.exports = {
 
                                 });
 
+                                resolvePendingTransaction();
                                 res.AD.error(errorResponse);
                             }
 
@@ -458,6 +576,7 @@ module.exports = {
 
                             if (!(err instanceof ValidationError)) {
                                 ADCore.error.log('Error performing update!', { error: err })
+                                resolvePendingTransaction();
                                 res.AD.error(err);
                                 sails.log.error('!!!! error:', err);
                             }
@@ -482,6 +601,7 @@ module.exports = {
                         attr[e.name].push(e);
                     })
 
+                    resolvePendingTransaction();
                     res.AD.error(errorResponse);
                 }
 
@@ -498,7 +618,7 @@ module.exports = {
      */
     find: function (req, res) {
 
-
+        newPendingTransaction();
         AppBuilder.routes.verifyAndReturnObject(req, res)
             .then(function (object) {
 
@@ -566,7 +686,7 @@ module.exports = {
                                 // object.postGet(result.data)
                                 // .then(()=>{
 
-
+                                resolvePendingTransaction();
                                 if (res.header) res.header('Content-type', 'application/json');
 
                                 res.send(result, 200);
@@ -577,7 +697,7 @@ module.exports = {
 
                         })
                         .catch((err) => {
-
+                            resolvePendingTransaction();
                             res.AD.error(err);
 
                         });
@@ -585,6 +705,7 @@ module.exports = {
                     })
                     .catch((err) => {
 
+                        resolvePendingTransaction();
                         res.AD.error(err);
 
                     });
@@ -594,6 +715,7 @@ module.exports = {
 
             })
             .catch((err) => {
+                resolvePendingTransaction();
                 ADCore.error.log("AppBuilder:ABModelController:find(): find() did not complete", { error: err });
                 res.AD.error(err, err.HTTPCode || 400);
             });
@@ -617,6 +739,7 @@ module.exports = {
             return;
         }
 
+        newPendingTransaction();
         async.series([
             // step #1
             function (next) {
@@ -632,6 +755,10 @@ module.exports = {
 
             // step #2
             function (next) {
+                
+                // NOTE: We will update relation data of deleted items on client side
+                return next();
+
                 // We are deleting an item...but first fetch its current data  
                 // so we can clean up any relations on the client side after the delete
                 object.queryFind({
@@ -661,6 +788,10 @@ module.exports = {
 
             // step #3
             function (next) {
+
+                // NOTE: We will update relation data of deleted items on client side
+                return next();
+
                 // Check to see if the object has any connected fields that need to be updated
                 var connectFields = object.connectFields();
 
@@ -741,6 +872,7 @@ module.exports = {
                     .deleteById(id)
                     .then((numRows) => {
 
+                        resolvePendingTransaction();
                         res.AD.success({ numRows: numRows });
 
                         // We want to broadcast the change from the server to the client so all datacollections can properly update
@@ -753,13 +885,13 @@ module.exports = {
                         // Broadcast the delete
                         sails.sockets.broadcast(object.id, "ab.datacollection.delete", payload);
 
-                        // Using the data from the oldItem and relateditems we can update all instances of it and tell the client side it is stale and needs to be refreshed
-                        updateConnectedFields(object, oldItem[0]);
-                        if (relatedItems.length) {
-                            relatedItems.forEach((r) => {
-                                updateConnectedFields(r.object, r.items);
-                            });
-                        }
+                        // // Using the data from the oldItem and relateditems we can update all instances of it and tell the client side it is stale and needs to be refreshed
+                        // updateConnectedFields(object, oldItem[0]);
+                        // if (relatedItems.length) {
+                        //     relatedItems.forEach((r) => {
+                        //         updateConnectedFields(r.object, r.items);
+                        //     });
+                        // }
                         next();
 
                     })
@@ -770,6 +902,7 @@ module.exports = {
         ], function (err) {
             if (err) {
                 if (!(err instanceof ValidationError)) {
+                    resolvePendingTransaction();
                     ADCore.error.log('Error performing delete!', { error: err })
                     res.AD.error(err);
                     sails.log.error('!!!! error:', err);
@@ -938,35 +1071,38 @@ module.exports = {
             return;
         }
 
+        newPendingTransaction();
         AppBuilder.routes.verifyAndReturnObject(req, res)
             .then(function (object) {
 
+
+                // NOTE: We will update relation data on client side
 
                 // We are updating an item...but first fetch it's current data  
                 // so we can clean up the client sides relations after the update 
                 // because some updates will involve deletes of relations 
                 // so assuming creates can be problematic
-                var queryPrevious = object.queryFind({
-                    where: {
-                        glue: 'and',
-                        rules: [{
-                            key: object.PK(),
-                            rule: "equals",
-                            value: id
-                        }]
-                    },
-                    populate: true
-                }, req.user.data);
+                // var queryPrevious = object.queryFind({
+                //     where: {
+                //         glue: 'and',
+                //         rules: [{
+                //             key: object.PK(),
+                //             rule: "equals",
+                //             value: id
+                //         }]
+                //     },
+                //     populate: true
+                // }, req.user.data);
 
-                queryPrevious
-                    .catch((err) => {
-                        if (!(err instanceof ValidationError)) {
-                            ADCore.error.log('Error performing find!', { error: err })
-                            res.AD.error(err);
-                            sails.log.error('!!!! error:', err);
-                        }
-                    })
-                    .then((oldItem) => {
+                // queryPrevious
+                //     .catch((err) => {
+                //         if (!(err instanceof ValidationError)) {
+                //             ADCore.error.log('Error performing find!', { error: err })
+                //             res.AD.error(err);
+                //             sails.log.error('!!!! error:', err);
+                //         }
+                //     })
+                //     .then((oldItem) => {
 
 
                         var allParams = req.allParams();
@@ -1056,6 +1192,7 @@ module.exports = {
                                             return query3
                                                 .catch((err) => { return Promise.reject(err); })
                                                 .then((newItem) => {
+                                                    resolvePendingTransaction();
                                                     res.AD.success(newItem[0]);
 
                                                     // We want to broadcast the change from the server to the client so all datacollections can properly update
@@ -1068,7 +1205,7 @@ module.exports = {
                                                     // Broadcast the update
                                                     sails.sockets.broadcast(object.id, "ab.datacollection.update", payload);
 
-                                                    updateConnectedFields(object, newItem[0], oldItem[0]);
+                                                    // updateConnectedFields(object, newItem[0], oldItem[0]);
 
                                                     Promise.resolve();
                                                 });
@@ -1078,6 +1215,8 @@ module.exports = {
                                 }, (err) => {
 
                                     console.log('...  (err) handler!', err);
+
+                                    resolvePendingTransaction();
 
                                     // handle invalid values here:
                                     if (err instanceof ValidationError) {
@@ -1133,7 +1272,8 @@ module.exports = {
                                     console.log('... catch(err) !');
 
                                     if (!(err instanceof ValidationError)) {
-                                        ADCore.error.log('Error performing update!', { error: err })
+                                        ADCore.error.log('Error performing update!', { error: err });
+                                        resolvePendingTransaction();
                                         res.AD.error(err);
                                         sails.log.error('!!!! error:', err);
                                     }
@@ -1158,10 +1298,11 @@ module.exports = {
                                 attr[e.name].push(e);
                             })
 
+                            resolvePendingTransaction();
                             res.AD.error(errorResponse);
                         }
 
-                    });
+                    // });
 
             })
 
@@ -1172,6 +1313,8 @@ module.exports = {
     upsert: function (req, res) {
 
         var object;
+
+        newPendingTransaction();
 
         Promise.resolve()
             .then(() => {
@@ -1271,6 +1414,7 @@ module.exports = {
                             attr[e.name].push(e);
                         });
 
+                        resolvePendingTransaction();
                         res.AD.error(errorResponse);
 
                         return;
@@ -1343,6 +1487,7 @@ module.exports = {
                         req.user.data)
                         .then((updateItem) => {
 
+                            resolvePendingTransaction();
                             res.AD.success(updateItem);
 
                             // We want to broadcast the change from the server to the client so all datacollections can properly update
@@ -1366,6 +1511,8 @@ module.exports = {
             .catch((err) => {
 
                 console.log('...  (err) handler!', err);
+
+                resolvePendingTransaction();
 
                 // handle invalid values here:
                 if (err instanceof ValidationError) {
@@ -1400,11 +1547,13 @@ module.exports = {
 
     refresh: function (req, res) {
 
+        newPendingTransaction();
         AppBuilder.routes.verifyAndReturnObject(req, res)
             .then(function (object) {
 
                 object.modelRefresh();
 
+                resolvePendingTransaction();
                 res.AD.success({});
 
             });
@@ -1414,6 +1563,7 @@ module.exports = {
 
     count: function (req, res) {
 
+        newPendingTransaction();
         AppBuilder.routes.verifyAndReturnObject(req, res)
             .then(function (object) {
 
@@ -1423,9 +1573,13 @@ module.exports = {
                 object
                     .queryCount({ where: where, populate: false }, req.user.data)
                     .first()
-                    .catch(res.AD.error)
+                    .catch(err => {
+                        resolvePendingTransaction();
+                        res.AD.error(err);
+                    })
                     .then(result => {
 
+                        resolvePendingTransaction();
                         res.AD.success(result);
 
                     });

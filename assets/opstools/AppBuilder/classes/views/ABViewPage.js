@@ -170,9 +170,12 @@ export default class ABViewPage extends ABViewContainer {
             comp.init(options);
 
             // initialize data sources
-            this.pageRoot().dataCollections().forEach((dc) => {
-                dc.init();
-            });
+            let pageRoot = this.pageRoot();
+            if (pageRoot) {
+                pageRoot.dataCollections().forEach((dc) => {
+                    dc.init();
+                });
+            }
 
 
         };
@@ -294,7 +297,7 @@ export default class ABViewPage extends ABViewContainer {
             				template: "{common.markCheckbox()} #name#",
                             type:{
                                 markCheckbox:function(obj ){
-                                    return "<span class='check webix_icon fa-"+(obj.markCheckbox?"check-":"")+"square-o'></span>";
+                                    return "<span class='check webix_icon fa fa-"+(obj.markCheckbox?"check-":"")+"square-o'></span>";
                                 }
                             },
                             on: {
@@ -448,9 +451,12 @@ export default class ABViewPage extends ABViewContainer {
             comp.init(options);
 
             // initialize data sources
-            this.pageRoot().dataCollections().forEach((dc) => {
-                dc.init();
-            });
+            let pageRoot = this.pageRoot();
+            if (pageRoot) {
+                pageRoot.dataCollections().forEach((dc) => {
+                    dc.init();
+                });
+            }
 
         }
 
@@ -522,6 +528,11 @@ export default class ABViewPage extends ABViewContainer {
                 if (!this.id) {
                     this.id = OP.Util.uuid();   // setup default .id
                     this.name = this.name + "_" + this.id.split("-")[1]; // add a unique string to the name so it doesnt collide with a previous page name
+                }
+
+                // if name is empty
+                if (!this.name) {
+                    this.name = this.label + "_" + this.id.split("-")[1];
                 }
 
                 this.application.pageSave(this)
@@ -820,6 +831,47 @@ export default class ABViewPage extends ABViewContainer {
             obj.icon = ABViewDefaults.icon;
         }
         return obj;
-    }      
+    }
+    
+    
+    copy(lookUpIds, parent) {
+
+        // initial new ids of pages and components
+        if (lookUpIds == null) {
+            lookUpIds = {};
+
+            let mapNewIdFn = (currView) => {
+
+                if (!lookUpIds[currView.id])
+                    lookUpIds[currView.id] = OP.Util.uuid();
+
+                if (currView.pages) {
+                    currView.pages().forEach(p => mapNewIdFn(p));
+                }
+
+                if (currView.views) {
+                    currView.views().forEach(v =>  mapNewIdFn(v));
+                }
+
+                if (currView.dataCollections) {
+                    currView.dataCollections().forEach(dc =>  mapNewIdFn(dc));
+                }
+
+            };
+
+            // start map new ids
+            mapNewIdFn(this);
+
+        }
+
+        // copy
+        let result = super.copy(lookUpIds, parent);
+
+        // page's name should not be duplicate
+        result.name = null;
+
+        return result;
+
+    }
 
 }

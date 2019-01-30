@@ -155,10 +155,10 @@ export default class ABViewDetailCheckbox extends ABViewDetailComponent {
 
 					// Check
 					if (val && JSON.parse(val))
-						checkbox = '<span class="check webix_icon fa-check-square-o"></span>';
+						checkbox = '<span class="check webix_icon fa fa-check-square-o"></span>';
 					// Uncheck
 					else
-						checkbox = '<span class="check webix_icon fa-square-o"></span>';
+						checkbox = '<span class="check webix_icon fa fa-square-o"></span>';
 
 					component.logic.setValue(ids.component, checkbox);
 

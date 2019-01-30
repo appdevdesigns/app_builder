@@ -216,7 +216,7 @@ export default class ABFieldComponent {
 				}
 
 				// perform provided .isValid()
-				if (this.logic.isValid) {
+				if (isValid && this.logic.isValid) {
 					isValid = this.logic.isValid(ids, isValid);
 				}
 

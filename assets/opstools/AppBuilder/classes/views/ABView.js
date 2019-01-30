@@ -367,7 +367,8 @@ export default class ABView extends ABViewBase {
 		var parentPage = this.parent;
 
 		// if current page is the root page, then return itself.
-		if (this.isRoot()) {
+		if (this.isRoot() &&
+			(this.key == 'page' || this.key == 'reportPage')) {
 			return this;
 		}
 
@@ -382,7 +383,7 @@ export default class ABView extends ABViewBase {
 	pageRoot() {
 		var rootPage = this.pageParent();
 
-		while (!rootPage.isRoot()) {
+		while (rootPage && !rootPage.isRoot()) {
 			rootPage = rootPage.pageParent();
 		}
 
@@ -1127,6 +1128,70 @@ export default class ABView extends ABViewBase {
 			}
 			
 		}
+
+	}
+
+	copy(lookUpIds, parent) {
+
+		lookUpIds = lookUpIds || {};
+
+		// get settings of the target
+		let config = this.toObj();
+
+		// remove sub-elements property
+		['pages', 'views', 'dataCollections'].forEach(prop => {
+			delete config[prop];
+		});
+
+		// update id of linked components
+		if (this.copyUpdateProperyList) {
+			(this.copyUpdateProperyList() || []).forEach(prop => {
+				if (config && config.settings)
+					config.settings[prop] = lookUpIds[config.settings[prop]];
+			});
+		}
+
+		// copy from settings
+		let result = this.application.viewNew(config, this.application, parent);
+
+		// change id
+		result.id = lookUpIds[result.id] || OP.Util.uuid();
+
+		// copy sub pages
+		if (this.pages) {
+			result._pages = [];
+			this.pages().forEach(p => {
+
+				let copiedSubPage = p.copy(lookUpIds, result);
+				copiedSubPage.parent = result;
+
+				result._pages.push(copiedSubPage);
+			});	
+		}
+
+		// copy sub views
+		if (this.views) {
+			result._views = [];
+			this.views().forEach(v => {
+
+				let copiedView = v.copy(lookUpIds, result);
+
+				result._views.push(copiedView);
+			});
+		}
+
+		// copy data collections
+		if (this.dataCollections) {
+			result._dataCollections = [];
+			this.dataCollections().forEach(dc => {
+
+				let copiedDc = dc.copy(lookUpIds, result);
+
+				result._dataCollections.push(copiedDc);
+			});
+		}
+
+		return result;
 
 	}
 

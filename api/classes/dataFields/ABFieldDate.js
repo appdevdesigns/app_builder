@@ -348,6 +348,20 @@ class ABFieldDate extends ABField {
 		return errors;
 	}
 
+	toSQLFormat(data) {
+
+		// check null
+		if (!data)
+			return data;
+
+		if (this.settings.includeTime)
+			return AppBuilder.rules.toSQLDateTime(data);
+		else
+			return AppBuilder.rules.toSQLDate(data);
+
+	}
+
+
 
 }
 

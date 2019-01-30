@@ -64,7 +64,7 @@ export default class ABViewMenu extends ABViewWidget {
 
 		// 		views:[],					// the child views contained by this view.
 
-		//		translations:[]				// text: the actual text being displayed by this label.
+		//		translations:[],			// text: the actual text being displayed by this label.
 
 		// 	}
 
@@ -259,7 +259,8 @@ export default class ABViewMenu extends ABViewWidget {
 				labelWidth: App.config.labelWidthXLarge,
 				options: [
 					{ id: 'ab-menu-left', value: L('ab.component.menu.alignLeft', '*Left') },
-					{ id: 'ab-menu-right', value: L('ab.component.menu.alignRight', '*Right') }
+					{ id: 'ab-menu-right', value: L('ab.component.menu.alignRight', '*Right')},
+					{ id: 'ab-menu-center', value: L('ab.component.menu.alignCenter', '*Center')}
 				]
 			},
 			{
@@ -623,6 +624,30 @@ export default class ABViewMenu extends ABViewWidget {
 		// });
 
 		// return insertPages;
+
+	}
+
+	copy(lookUpIds, parent) {
+
+		let result = super.copy(lookUpIds, parent);
+
+		// update ids of page's settings
+		(result.settings.pages || []).forEach((p, i) => {
+
+			let page = result.settings.pages[i];
+
+			// Compatible with old data
+			if (typeof page == 'string') {
+				result.settings.pages[i] = lookUpIds[page];
+			}
+			else {
+				page.pageId = lookUpIds[page.pageId];
+				page.tabId = lookUpIds[page.tabId];
+			}
+
+		});
+
+		return result;
 
 	}
 

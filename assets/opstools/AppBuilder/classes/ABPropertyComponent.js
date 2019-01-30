@@ -191,7 +191,7 @@ export default class ABPropertyComponent {
 				var isValid = $$(ids.component).validate();
 
 				// perform provided .isValid()
-				if (this.logic.isValid) {
+				if (isValid && this.logic.isValid) {
 					isValid = this.logic.isValid(ids, isValid);
 				}
 

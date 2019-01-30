@@ -114,6 +114,9 @@ steal(
 
 								function (next) {
 
+									if (self.rootPage == null)
+										return next();
+
 									let areaKey = 'ab-' + self.data.application.name.trim();
 									areaKey = areaKey.toLowerCase().replace(/[^a-z0-9]/gi, '');
 

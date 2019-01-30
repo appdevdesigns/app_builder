@@ -625,7 +625,7 @@ export default class ABViewGrid extends ABViewWidget  {
 									view: view,
 									name: "buttonFieldsVisible",
 									label: L("ab.component.label.settings", "*Settings"),
-									icon: "gear",
+									icon: "fa fa-gear",
 									type: "icon",
 									badge: 0,
 									click: function () {
@@ -646,7 +646,7 @@ export default class ABViewGrid extends ABViewWidget  {
 									view: view,
 									id: ids.gridFilterMenuButton,
 									label: L("ab.component.label.settings", "*Settings"),
-									icon: "gear",
+									icon: "fa fa-gear",
 									type: "icon",
 									badge: 0,
 									click: function () {
@@ -686,7 +686,7 @@ export default class ABViewGrid extends ABViewWidget  {
 									view: view,
 									name: "buttonFieldsFreeze",
 									label: L("ab.component.label.settings", "*Settings"),
-									icon: "gear",
+									icon: "fa fa-gear",
 									type: "icon",
 									badge: 0,
 									click: function(){
@@ -708,7 +708,7 @@ export default class ABViewGrid extends ABViewWidget  {
 									view: view,
 									name: "buttonSummaryFields",
 									label: L("ab.component.label.settings", "*Settings"),
-									icon: "gear",
+									icon: "fa fa-gear",
 									type: "icon",
 									badge: 0,
 									click: function(){
@@ -730,7 +730,7 @@ export default class ABViewGrid extends ABViewWidget  {
 									view: view,
 									name: "buttonCountFields",
 									label: L("ab.component.label.settings", "*Settings"),
-									icon: "gear",
+									icon: "fa fa-gear",
 									type: "icon",
 									badge: 0,
 									click: function(){
@@ -923,7 +923,9 @@ export default class ABViewGrid extends ABViewWidget  {
 			buttonExport: App.unique(idBase+'_buttonExport'),
 
 			filterMenutoolbar: App.unique(idBase+'_filterMenuToolbar'),
-			resetFilterButton: App.unique(idBase+'_resetFilterButton')
+			resetFilterButton: App.unique(idBase+'_resetFilterButton'),
+			globalFilterForm: App.unique(idBase+'_globalFilterForm'),
+			globalFilterFormContainer: App.unique(idBase+'_globalFilterFormContainer')
 
 		}
 		
@@ -977,6 +979,11 @@ export default class ABViewGrid extends ABViewWidget  {
 		var isFiltered = false,
 			waitMilliseconds = 50,
 			filterTimeoutId;
+			
+		var globalFilterPosition = "default";
+		if (this.settings.gridFilter && this.settings.gridFilter.globalFilterPosition) {
+			globalFilterPosition = this.settings.gridFilter.globalFilterPosition;
+		}
 
 		let DataTable = new ABWorkspaceDatatable(App, idBase, settings);
 		let PopupMassUpdateComponent = new ABPopupMassUpdate(App, idBase+"_mass");
@@ -1049,6 +1056,16 @@ export default class ABViewGrid extends ABViewWidget  {
 				}
 				else {
 					$$(rowFilterForm.ui.id).hide();
+				}
+
+				if (this.settings.gridFilter.filterOption == 3) {
+					$$(ids.globalFilterFormContainer).show();
+					if (this.settings.gridFilter.globalFilterPosition == "single") {
+						$$(DataTable.ui.id).hide();
+					}
+				}
+				else {
+					$$(ids.globalFilterFormContainer).hide();
 				}
 				
 				if (this.settings.isSortable == false) {
@@ -1130,7 +1147,12 @@ export default class ABViewGrid extends ABViewWidget  {
 					$$(DataTable.ui.id).attachEvent("onItemClick", function (id, e, node) {
 						var item = id;
 
-						if (e.target.className.indexOf('eye') > -1) {
+						if (e == "auto") {
+							// automatically choose the details page if a record matches
+							// later on we can decide if we want to have the choice to select the edit page intead.
+							_logic.changePage(dc, item, detailsPage);
+							toggleTab(detailsTab, this);
+						} else if (e.target.className.indexOf('eye') > -1) {
 							_logic.changePage(dc, item, detailsPage);
 							toggleTab(detailsTab, this);
 						} else if (e.target.className.indexOf('pencil') > -1) {
@@ -1181,6 +1203,69 @@ export default class ABViewGrid extends ABViewWidget  {
 				type: "space",
 				padding: 17,
 				rows: [
+					{
+						id: ids.globalFilterFormContainer,
+						hidden: true,
+						cols: [
+							{						
+								id: ids.globalFilterForm,
+								view:"text",
+								placeholder:"Search or scan a barcode to see results",
+								on:{
+									onTimedKeyPress:function(){
+										var text = this.getValue().trim().toLowerCase().split(" ");
+										var table = $$(DataTable.ui.id);
+										var columns = table.config.columns;
+										var count = 0;
+										var matchArray = [];
+										table.filter(function(obj){
+											matchArray = [];
+											// console.log("filter", obj);
+											for (var i=0; i<columns.length; i++) {
+												for (var x=0; x<text.length; x++) {
+													var searchFor = text[x];
+													if (obj[columns[i].id] && obj[columns[i].id].toString().toLowerCase().indexOf(searchFor) !== -1) {
+														// console.log("matched on:", searchFor);
+														if (matchArray.indexOf(searchFor) == -1) {
+															matchArray.push(searchFor);
+														}
+													}
+												}
+											}
+											// console.log("Filter By:", text.length, text);
+											// console.log("Matches:", matchArray);
+											if (matchArray.length == text.length) {
+												count++;
+												return true;
+											} else {
+												return false;
+											}
+										});
+										if (globalFilterPosition == "single") {
+											if (count == 1) {
+												table.show();
+												table.select(table.getFirstId(), false);
+												table.callEvent("onItemClick", [ table.getFirstId(), "auto", null ]);
+											} else {
+												table.hide(); 
+											}
+										}
+									}
+								}
+							},
+							{
+								view:"button", 
+								width: 28, 
+								type:"icon", 
+								icon:"times",
+								click: function() {
+									$$(ids.globalFilterForm).setValue("");
+									$$(ids.globalFilterForm).focus();
+									$$(ids.globalFilterForm).callEvent("onTimedKeyPress");
+								}
+							}
+						]
+					},
 					rowFilterForm.ui,
 					{
 						view: 'toolbar',
@@ -1192,7 +1277,7 @@ export default class ABViewGrid extends ABViewWidget  {
 								view: "button",
 								id: ids.buttonMassUpdate,
 								label: L("ab.component.label.massUpdate", "*Edit fields"),
-								icon: "pencil-square-o",
+								icon: "fa fa-pencil-square-o",
 								type: "icon",
 								badge: 0,
 								disabled:true,
@@ -1205,7 +1290,7 @@ export default class ABViewGrid extends ABViewWidget  {
 								view: "button",
 								id: ids.buttonDeleteSelected,
 								label: L("ab.component.label.deleteSelected", "*Delete Records"),
-								icon: "trash",
+								icon: "fa fa-trash",
 								type: "icon",
 								badge: 0,
 								disabled:true,
@@ -1218,7 +1303,7 @@ export default class ABViewGrid extends ABViewWidget  {
 								view: "button",
 								id: ids.buttonFilter,
 								label: L("ab.component.label.filterFields", "*Add filters"),
-								icon: "filter",
+								icon: "fa fa-filter",
 								type: "icon",
 								badge: 0,
 								autowidth: true,
@@ -1230,7 +1315,7 @@ export default class ABViewGrid extends ABViewWidget  {
 								view: "button",
 								id: ids.buttonSort,
 								label: L("ab.component.label.sortFields", "*Apply sort"),
-								icon: "sort",
+								icon: "fa fa-sort",
 								type: "icon",
 								badge: 0,
 								autowidth: true,
@@ -1242,7 +1327,7 @@ export default class ABViewGrid extends ABViewWidget  {
 								view: "button",
 								id: ids.buttonExport,
 								label: L("ab.component.label.export", "*Export"),
-								icon: "print",
+								icon: "fa fa-print",
 								type: "icon",
 								badge: 0,
 								autowidth: true,
@@ -1255,7 +1340,7 @@ export default class ABViewGrid extends ABViewWidget  {
 								view: view,
 								id: ids.buttonExport,
 								label: labels.component.export,
-								icon: "download",
+								icon: "fa fa-download",
 								type: "icon",
 								click: function() {
 									_logic.toolbarButtonExport(this.$view);
@@ -1274,7 +1359,7 @@ export default class ABViewGrid extends ABViewWidget  {
 								view: "button",
 								id: ids.resetFilterButton,
 								label: L("ab.component.label.resetFilter", "*Reset Filter"),
-								icon: "ban",
+								icon: "fa fa-ban",
 								type: "icon",
 								badge: 0,
 								autowidth: true,
@@ -1465,7 +1550,7 @@ export default class ABViewGrid extends ABViewWidget  {
 						var filterRuleButton = {
 							view: "button",
 							label: qr.ruleName,
-							icon: "filter",
+							icon: "fa fa-filter",
 							type: "icon",
 							badge: 0,
 							autowidth: true,
@@ -1906,6 +1991,12 @@ export default class ABViewGrid extends ABViewWidget  {
 	
 
 		});
+
+	}
+
+	copyUpdateProperyList() {
+
+		return ['dataSource', 'detailsPage', 'detailsTab', 'editPage', 'editTab'];
 
 	}
 

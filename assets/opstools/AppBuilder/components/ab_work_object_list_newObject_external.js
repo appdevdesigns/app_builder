@@ -410,7 +410,7 @@ export default class AB_Work_Object_List_NewObject_External extends OP.Component
                                 width: 120,
                                 options: {
                                     body: {
-                                        template: '<span class="float-left webix_icon fa-#icon#" style="line-height: 30px;"></span>' +
+                                        template: '<span class="float-left webix_icon fa fa-#icon#" style="line-height: 30px;"></span>' +
                                                     '<span class="float-left" style="width: 40px;">#name#</span>',
                                         data: _logic.getTypeOptions()
                                     }

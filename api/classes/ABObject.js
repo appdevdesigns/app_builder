@@ -264,7 +264,7 @@ module.exports = class ABObject extends ABObjectBase {
 		return '#appName##tableName#'
 				.replace('#appName#', appName)
 				.replace('#tableName#', tableName)
-				.replace(/[^a-zA-Z]/g, ""); // remove special characters to allow model name to be class name
+				.replace(/[^a-zA-Z0-9]/g, ""); // remove special characters to allow model name to be class name
 
 	}
 
@@ -1111,7 +1111,7 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 				} 
 				// If we are just sorting a field it is much simpler
 				else { 
-					sortClause = "{prefix}.{columnName}"
+					sortClause = "{prefix}.`{columnName}`"
 									.replace('{prefix}', orderField.dbPrefix())
 									.replace('{columnName}', orderField.columnName);
 	            }
