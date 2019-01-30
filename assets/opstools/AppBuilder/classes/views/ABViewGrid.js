@@ -1257,7 +1257,7 @@ export default class ABViewGrid extends ABViewWidget  {
 								view:"button", 
 								width: 28, 
 								type:"icon", 
-								icon:"times",
+								icon:"fa fa-times",
 								click: function() {
 									$$(ids.globalFilterForm).setValue("");
 									$$(ids.globalFilterForm).focus();
