@@ -2,14 +2,14 @@ import AB from '../../components/ab'
 import ABObject from "../../classes/ABObject"
 import AB_Work_Object_Workspace_PopupHideFields from "../../components/ab_work_object_workspace_popupHideFields"
 
-import sampleApp from "../fixtures/ABApplication"
+import mockApplication from "../fixtures/ABApplication"
 
 describe('ab_work_object_workspace_popupHideFields component', () => {
 
 	var sandbox;
 
 	var ab;
-	var mockApp;
+	var mockUIApp;
 
 	const componentName = 'ab_work_object_workspace_popupHideFields';
 	var target;
@@ -17,9 +17,9 @@ describe('ab_work_object_workspace_popupHideFields component', () => {
 	before(() => {
 		ab = new AB();
 
-		mockApp = ab._app;
+		mockUIApp = ab._app;
 
-		target = new AB_Work_Object_Workspace_PopupHideFields(mockApp);
+		target = new AB_Work_Object_Workspace_PopupHideFields(mockUIApp);
 	});
 
 	beforeEach(() => {
@@ -120,10 +120,10 @@ describe('ab_work_object_workspace_popupHideFields component', () => {
 
 		it('.clickHideAll: should hide all columns from application object workspace', () => {
 			
-			// Load first object from a sample ABApplication			
-			let mockObj = new ABObject(sampleApp.objects[0]);						
+			// Load first object from a sample ABApplication
+			let mockObj = mockApplication.objects()[0];
 			target.objectLoad(mockObj);
-			
+
 			// Set up simulated button click and spy for clickHideAll function
 			let buttonClickFn = target.ui.body.rows[0].cols[1].on.onItemClick,
 				spyLogicClickHideAll = sandbox.spy(target._logic, 'clickHideAll');
@@ -140,14 +140,14 @@ describe('ab_work_object_workspace_popupHideFields component', () => {
 			sandbox.assert.calledOnce(spyLogicClickHideAll);
 			
 			// Assert length of hidden column array should be the same as the length of the sample objects fields array
-			assert.equal(sampleApp.objects[0].fields.length, mockObj.workspaceHiddenFields.length);
+			assert.equal(mockObj.fields().length, mockObj.workspaceHiddenFields.length);
 
 		});
 
 		it('.clickShowAll: should show all columns from application object workspace', () => {
 			
-			// Load first object from a sample ABApplication			
-			let mockObj = new ABObject(sampleApp.objects[0]);						
+			// Load first object from a sample ABApplication
+			let mockObj = mockApplication.objects()[0];
 			target.objectLoad(mockObj);
 			
 			// Set up simulated button click and spy for clickShowAll function
@@ -172,8 +172,8 @@ describe('ab_work_object_workspace_popupHideFields component', () => {
 
 		it('.clickListItem: should assign that items key as an item in the hidden columns array and remove it if it is already there', () => {
 			
-			// Load first object from a sample ABApplication			
-			let mockObj = new ABObject(sampleApp.objects[0]);						
+			// Load first object from a sample ABApplication
+			let mockObj = mockApplication.objects()[0];
 			target.objectLoad(mockObj);
 
 			// Set up simulated list item click and spy for clickListItem function
@@ -194,28 +194,30 @@ describe('ab_work_object_workspace_popupHideFields component', () => {
 			// Set up the object list by calling onShow
 			onShowFn();
 		
+			let testField = mockObj.fields()[1];
+
 			// Assume second item in list is clicked
-			itemClickFn(sampleApp.objects[0].fields[1].id, null, null);
+			itemClickFn(testField.id, null, null);
 
 			// Assert _logic.clickClearAll should be called when item is clicked
 			sandbox.assert.calledOnce(spyLogicClickListItem);
 			
 			// Assert hidden columns array should contain the key of the item you clicked
-			var match = sandbox.match.array.contains([sampleApp.objects[0].fields[1].columnName]);
-			match.test(mockObj.workspaceHiddenFields);			
+			var match = sandbox.match.array.contains([testField.columnName]);
+			match.test(mockObj.workspaceHiddenFields);
 
 			// Assume second item in list is clicked again (to remove it)
-			itemClickFn(sampleApp.objects[0].fields[1].id, null, null);
+			itemClickFn(testField.id, null, null);
 
 			// Assert hidden columns array should contain the key of the item you clicked
-			assert.equal(-1, mockObj.workspaceHiddenFields.indexOf(sampleApp.objects[0].fields[1].columnName));	
+			assert.equal(-1, mockObj.workspaceHiddenFields.indexOf(testField.columnName));
 			
 		});
 
 		it('.clickListItem: should promt user if item is the frozen column key so they do not hide it', () => {
 			
-			// Load first object from a sample ABApplication			
-			let mockObj = new ABObject(sampleApp.objects[0]);						
+			// Load first object from a sample ABApplication
+			let mockObj = mockApplication.objects()[0];
 			target.objectLoad(mockObj);
 
 			// Set up simulated list item click and spy for clickListItem function
@@ -235,12 +237,12 @@ describe('ab_work_object_workspace_popupHideFields component', () => {
 			onShowFn();
 		
 			// Assume second item in list is clicked
-			itemClickFn(sampleApp.objects[0].fields[2].id, null, null);
+			itemClickFn(mockObj.fields()[2].id, null, null);
 
 			// Assert _logic.clickClearAll should be called when item is clicked
 			sandbox.assert.calledOnce(spyLogicClickListItem);
 			sandbox.assert.calledOnce(stubAlert);
-						
+
 		});
 
 	});

@@ -71,33 +71,33 @@ describe('ab_work_object_workspace_popupFilterDataTable component', () => {
 
 	// Logic test cases
 	describe('Logic testing', () => {
-		it('.callChangeEvent: should exist', () => {
-			assert.isDefined(target._logic.callChangeEvent);
+		it('.callbacks.onChange: should exist', () => {
+			assert.isDefined(target._logic.callbacks.onChange);
 		});
 
-		it('.clickAddNewFilter: should exist', () => {
-			assert.isDefined(target._logic.clickAddNewFilter);
-		});
-		
-		it('.columns_setter: should exist', () => {
-			assert.isDefined(target._logic.columns_setter);
-		});
+		// it('.clickAddNewFilter: should exist', () => {
+		// 	assert.isDefined(target._logic.clickAddNewFilter);
+		// });
 
-		it('.dataTable_setter: should exist', () => {
-			assert.isDefined(target._logic.dataTable_setter);
-		});
+		// it('.columns_setter: should exist', () => {
+		// 	assert.isDefined(target._logic.columns_setter);
+		// });
 
-		it('.filter: should exist', () => {
-			assert.isDefined(target._logic.filter);
-		});
+		// it('.dataTable_setter: should exist', () => {
+		// 	assert.isDefined(target._logic.dataTable_setter);
+		// });
 
-		it('.getFieldList: should exist', () => {
-			assert.isDefined(target._logic.getFieldList);
-		});
+		// it('.filter: should exist', () => {
+		// 	assert.isDefined(target._logic.filter);
+		// });
 
-		it('.refreshFieldList: should exist', () => {
-			assert.isDefined(target._logic.refreshFieldList);
-		});
+		// it('.getFieldList: should exist', () => {
+		// 	assert.isDefined(target._logic.getFieldList);
+		// });
+
+		// it('.refreshFieldList: should exist', () => {
+		// 	assert.isDefined(target._logic.refreshFieldList);
+		// });
 
 		it('.objectLoad: should exist', () => {
 			assert.isDefined(target._logic.objectLoad);
@@ -113,42 +113,42 @@ describe('ab_work_object_workspace_popupFilterDataTable component', () => {
 			assert.equal(target.show, target._logic.show);
 		});
 		
-		it('.addNewFilter: should add a new element to UI', () => {
-			// Load first object from a sample ABApplication			
-			let mockObj = new ABObject(sampleApp.objects[0]);						
-			target.objectLoad(mockObj);
+// 		it('.addNewFilter: should add a new element to UI', () => {
+// 			// Load first object from a sample ABApplication
+// 			let mockObj = sampleApp.objects()[0];
+// 			target.objectLoad(mockObj);
 	
-			// Set up simulated button click and spy for clickAddNewSort function
-			let addNewFilterButtonClickFn = target.ui.body.elements[target.ui.body.elements.length - 1].on.onItemClick,
-				onShowFn = target.ui.on.onShow,
-				spyLogicOnChange = sandbox.spy(target._logic.callbacks, 'onChange'),
-				spyLogicClickAddNewFilter = sandbox.spy(target._logic, 'clickAddNewFilter');
+// 			// Set up simulated button click and spy for clickAddNewSort function
+// 			let addNewFilterButtonClickFn = target.ui.body.elements[target.ui.body.elements.length - 1].on.onItemClick,
+// 				onShowFn = target.ui.on.onShow,
+// 				spyLogicOnChange = sandbox.spy(target._logic.callbacks, 'onChange'),
+// 				spyLogicClickAddNewFilter = sandbox.spy(target._logic, 'clickAddNewFilter');
 			
-			// Tell the app the save was successfull	
-			let stubSave = sandbox.stub(mockObj, 'save').callsFake(function () { 
-				return new Promise((resolve, reject) => { });
-			});
+// 			// Tell the app the save was successfull	
+// 			let stubSave = sandbox.stub(mockObj, 'save').callsFake(function () { 
+// 				return new Promise((resolve, reject) => { });
+// 			});
 			
-			// Set up the object list by calling onShow
-			onShowFn();
+// 			// Set up the object list by calling onShow
+// 			onShowFn();
 
-			// Even if there are no sorts previously we will call this at least once to set up the old sorts
-			sandbox.assert.called(spyLogicClickAddNewFilter);
+// 			// Even if there are no sorts previously we will call this at least once to set up the old sorts
+// 			sandbox.assert.called(spyLogicClickAddNewFilter);
 
-			// At the end of a new sort added we call the onChange to update the data table
-// NOTE: having difficulty with this one due to internal async call to CurrentObject.save().then({ _logic.callChangeEvent() });
-// sandbox.assert.called(spyLogicOnChange);
+// 			// At the end of a new sort added we call the onChange to update the data table
+// // NOTE: having difficulty with this one due to internal async call to CurrentObject.save().then({ _logic.callChangeEvent() });
+// // sandbox.assert.called(spyLogicOnChange);
 
-			// Make sure the functions are only called the number of times we expect
-			sandbox.assert.callCount(spyLogicClickAddNewFilter, mockObj.workspaceFilterConditions.length);
+// 			// Make sure the functions are only called the number of times we expect
+// 			sandbox.assert.callCount(spyLogicClickAddNewFilter, mockObj.workspaceFilterConditions.length);
 			
-			// Assume clear all button is clicked
-			addNewFilterButtonClickFn(null, null, null);
+// 			// Assume clear all button is clicked
+// 			addNewFilterButtonClickFn(null, null, null);
 			
-			// Assert the number of times the addNewFilter has been called should increase by 1
-			sandbox.assert.callCount(spyLogicClickAddNewFilter, mockObj.workspaceFilterConditions.length + 1);
+// 			// Assert the number of times the addNewFilter has been called should increase by 1
+// 			sandbox.assert.callCount(spyLogicClickAddNewFilter, mockObj.workspaceFilterConditions.length + 1);
 			
-		});
+// 		});
 
 
 	});

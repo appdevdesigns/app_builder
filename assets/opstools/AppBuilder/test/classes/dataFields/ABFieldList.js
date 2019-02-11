@@ -139,13 +139,13 @@ describe("ABFieldList unit tests", () => {
 			target.settings.isMultiple = false;
 
 			// set single default setting
-			target.settings.singleDefault = 1;
+			target.settings.default = 1;
 
 			// Set default value
 			target.defaultValue(rowData);
 
 			assert.isDefined(rowData[columnName]);
-			assert.equal(target.settings.singleDefault, rowData[columnName]);
+			assert.equal(target.settings.default, rowData[columnName]);
 		});
 
 		it('.defaultValue: should set default multiple value to data', () => {

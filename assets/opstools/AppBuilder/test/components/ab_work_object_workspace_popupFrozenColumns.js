@@ -107,8 +107,8 @@ describe('ab_work_object_workspace_popupFrozenColumns component', () => {
 
 		it('.clickClearAll: should remove all frozen columns from application object workspace', () => {
 			
-			// Load first object from a sample ABApplication			
-			let mockObj = new ABObject(sampleApp.objects[0]);						
+			// Load first object from a sample ABApplication
+			let mockObj = sampleApp.objects()[0];
 			target.objectLoad(mockObj);
 			
 			// Set up simulated button click and spy for clickClearAll function
@@ -133,8 +133,8 @@ describe('ab_work_object_workspace_popupFrozenColumns component', () => {
 
 		it('.clickListItem: should assign that items key as the frozen column index', () => {
 			
-			// Load first object from a sample ABApplication			
-			let mockObj = new ABObject(sampleApp.objects[0]);						
+			// Load first object from a sample ABApplication
+			let mockObj = sampleApp.objects()[0];
 			target.objectLoad(mockObj);
 			
 			// Set up simulated list item click and spy for clickListItem function
@@ -156,13 +156,13 @@ describe('ab_work_object_workspace_popupFrozenColumns component', () => {
 			onShowFn();
 
 			// Assume second item in list is clicked
-			itemClickFn(sampleApp.objects[0].fields[1].id, null, null);
+			itemClickFn(mockObj.fields()[1].id, null, null);
 			
 			// Assert _logic.clickClearAll should be called when claer all button is clicked
 			sandbox.assert.calledOnce(spyLogicClickListItem);
 			
 			// Assert frozen column should be the columanName of the item clicked
-			assert.equal(sampleApp.objects[0].fields[1].columnName, mockObj.workspaceFrozenColumnID);
+			assert.equal(mockObj.fields()[1].columnName, mockObj.workspaceFrozenColumnID);
 
 		});
 
