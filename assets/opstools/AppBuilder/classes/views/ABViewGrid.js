@@ -5,16 +5,21 @@
  *
  */
 
-import ABViewWidget from "./ABViewWidget"
 import ABPropertyComponent from "../ABPropertyComponent"
 import ABWorkspaceDatatable from "../../components/ab_work_object_workspace_datatable"
 import ABPopupHideFields from "../../components/ab_work_object_workspace_popupHideFields"
-// import ABPopupFilterDataTable from "../../components/ab_work_object_workspace_popupFilterDataTable"
 import ABPopupSortField from "../../components/ab_work_object_workspace_popupSortFields"
 import ABPopupFrozenColumns from "../../components/ab_work_object_workspace_popupFrozenColumns"
 import ABPopupMassUpdate from "../../components/ab_work_object_workspace_popupMassUpdate"
+import ABPopupSummaryColumns from "../../components/ab_work_object_workspace_popupSummaryColumns"
+import ABPopupCountColumns from "../../components/ab_work_object_workspace_popupCountColumns"
+import ABPopupExport from "../../components/ab_work_object_workspace_popupExport"
+import ABViewGridFilterMenu from "../rules/ABViewGridFilterMenu"
+import ABViewWidget from "./ABViewWidget"
+import ABFieldImage from "../dataFields/ABFieldImage"
 
 import RowFilter from '../RowFilter'
+
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -28,8 +33,9 @@ var ABViewGridPropertyComponentDefaults = {
 	isEditable:0,
 	massUpdate:0,
 	allowDelete:0,
-	isFilterable:0,
+	// isFilterable:0,
 	isSortable:0,
+	isExportable:0,
 	// linkedObject:'',
 	// linkedField:'',
 	// linkedPage:'',
@@ -37,14 +43,28 @@ var ABViewGridPropertyComponentDefaults = {
 	// linkedEditPage:'',
 	// linkedEditPageForm:'',
 	detailsPage:'',
+	detailsTab:'',
 	editPage:'',
+	editTab:'',
 	objectWorkspace: {
 		// sortFields:[], // array of columns with their sort configurations
 		// filterConditions:[], // array of filters to apply to the data table
 		frozenColumnID:"", // id of column you want to stop freezing
 		hiddenFields:[], // array of [ids] to add hidden:true to
 	},
-	height: 0
+	height: 0,
+	gridFilter: {
+		filterOption: 0,
+		queryRules: [],
+		userFilterPosition: 'toolbar'
+	},
+	summaryFields: [], // array of [field ids] to add the summary column in footer
+	countFields: [], // array of [field ids] to add the summary column in footer
+	height: 0,
+	hideHeader:0,
+	labelAsField:0,
+	hideButtons:0,
+	groupBy: '' // id of field
 }
 
 
@@ -56,6 +76,9 @@ var ABViewDefaults = {
 
 var PopupHideFieldComponent = null;
 var PopupFrozenColumnsComponent = null;
+var PopupGridFilterMenu = null;
+var PopupSummaryColumnsComponent = null;
+var PopupCountColumnsComponent = null;
 
 export default class ABViewGrid extends ABViewWidget  {
 	
@@ -116,8 +139,12 @@ export default class ABViewGrid extends ABViewWidget  {
 		this.settings.isEditable = JSON.parse(this.settings.isEditable || ABViewGridPropertyComponentDefaults.isEditable);
 		this.settings.massUpdate = JSON.parse(this.settings.massUpdate || ABViewGridPropertyComponentDefaults.massUpdate);
 		this.settings.allowDelete = JSON.parse(this.settings.allowDelete || ABViewGridPropertyComponentDefaults.allowDelete);
-		this.settings.isFilterable = JSON.parse(this.settings.isFilterable || ABViewGridPropertyComponentDefaults.isFilterable);
+		// this.settings.isFilterable = JSON.parse(this.settings.isFilterable || ABViewGridPropertyComponentDefaults.isFilterable);
 		this.settings.isSortable = JSON.parse(this.settings.isSortable || ABViewGridPropertyComponentDefaults.isSortable);
+		this.settings.isExportable = JSON.parse(this.settings.isExportable || ABViewGridPropertyComponentDefaults.isExportable);
+		this.settings.hideHeader = JSON.parse(this.settings.hideHeader || ABViewGridPropertyComponentDefaults.hideHeader);
+		this.settings.labelAsField = JSON.parse(this.settings.labelAsField || ABViewGridPropertyComponentDefaults.labelAsField);
+		this.settings.hideButtons = JSON.parse(this.settings.hideButtons || ABViewGridPropertyComponentDefaults.hideButtons);
 
 		// this.settings.linkedObject = this.settings.linkedObject || ABViewGridPropertyComponentDefaults.linkedObject;
 		// this.settings.linkedField = this.settings.linkedField || ABViewGridPropertyComponentDefaults.linkedField;
@@ -127,6 +154,8 @@ export default class ABViewGrid extends ABViewWidget  {
 		// this.settings.linkedEditPageForm = this.settings.linkedEditPageForm || ABViewGridPropertyComponentDefaults.linkedEditPageForm;
 		this.settings.detailsPage = this.settings.detailsPage || ABViewGridPropertyComponentDefaults.detailsPage;
 		this.settings.editPage = this.settings.editPage || ABViewGridPropertyComponentDefaults.editPage;
+		this.settings.detailsTab = this.settings.detailsTab || ABViewGridPropertyComponentDefaults.detailsTab;
+		this.settings.editTab = this.settings.editTab || ABViewGridPropertyComponentDefaults.editTab;
 		
 		this.settings.objectWorkspace = this.settings.objectWorkspace || ABViewGridPropertyComponentDefaults.objectWorkspace;
 		
@@ -135,7 +164,29 @@ export default class ABViewGrid extends ABViewWidget  {
 			if (typeof(this.settings.objectWorkspace.filterConditions) == "undefined") this.settings.objectWorkspace.filterConditions = [];
 			if (typeof(this.settings.objectWorkspace.frozenColumnID) == "undefined") this.settings.objectWorkspace.frozenColumnID = "";
 			if (typeof(this.settings.objectWorkspace.hiddenFields) == "undefined") this.settings.objectWorkspace.hiddenFields = [];
+			if (typeof(this.settings.objectWorkspace.summaryColumns) == "undefined") this.settings.objectWorkspace.summaryColumns = [];
+			if (typeof(this.settings.objectWorkspace.countColumns) == "undefined") this.settings.objectWorkspace.countColumns = [];
 		}
+
+
+		if (this.settings.gridFilter == null)
+			this.settings.gridFilter = {
+				queryRules: []
+			};
+
+		this.settings.gridFilter.filterOption = JSON.parse(this.settings.gridFilter.filterOption || 0);
+
+		//Convert some condition from string to integer
+		(this.settings.gridFilter.queryRules || []).forEach(qr => {
+			if (qr.queryRules[0] != "") {
+				qr.queryRules[0].rules.forEach(rule => {
+					if (/^[+-]?\d+(\.\d+)?$/.exec(rule.value)) {
+						rule.value = JSON.parse(rule.value);
+					}
+
+				});
+			}
+		});
 
     	// we are not allowed to have sub views:
     	this._views = [];
@@ -164,15 +215,25 @@ export default class ABViewGrid extends ABViewWidget  {
 	editorComponent(App, mode) {
 		
 		var idBase = 'ABViewGridEditorComponent';
-		var ids = {
-			component: App.unique(idBase+'_component')
-		}
 
 		var DataTable = this.component(App, idBase);
-		DataTable.ui.id = ids.component;
-		
-		return DataTable;
-		
+
+		return {
+			ui: DataTable.ui,
+			logic: DataTable.logic,
+			onShow: DataTable.onShow,
+
+			init: () => {
+
+				// remove id of the component in caching for refresh .bind of the data collection
+				let dc = this.dataCollection;
+				if (dc)
+					dc.removeComponent(DataTable.ui.id);
+
+				DataTable.init();
+			}
+		};
+
 	}
 
 
@@ -191,10 +252,15 @@ export default class ABViewGrid extends ABViewWidget  {
 		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
 		
 		var idBase = 'ABViewGridPropertyEditor';
-
+		
 		// initialize our popup editors with unique names so we don't overwrite the previous editor each time
 		PopupHideFieldComponent = new ABPopupHideFields(App, idBase+"_hide");
 		PopupFrozenColumnsComponent = new ABPopupFrozenColumns(App, idBase+"_freeze");
+
+		PopupGridFilterMenu = new ABViewGridFilterMenu();
+		PopupGridFilterMenu.component(App, idBase + "_gridfiltermenu");
+		PopupSummaryColumnsComponent = new ABPopupSummaryColumns(App, idBase+"_summary");
+		PopupCountColumnsComponent = new ABPopupCountColumns(App, idBase+"_count");
 		
 		_logic.newObject = () => {
 			var currObj = _logic.currentEditObject();
@@ -202,9 +268,12 @@ export default class ABViewGrid extends ABViewWidget  {
 				sortFields:[],
 				filterConditions:[],
 				frozenColumnID:"",
-				hiddenFields:[]
+				hiddenFields:[],
+				summaryColumns:[],
+				countColumns:[]
 			};
 			currObj.populatePopupEditors(currObj);
+			
 		}
 		
 		// Open our popup editors when their settings button is clicked
@@ -223,8 +292,53 @@ export default class ABViewGrid extends ABViewWidget  {
 		_logic.toolbarFrozen = ($view) => {
 			PopupFrozenColumnsComponent.show($view, {pos:"top"});
 		}
+
+		_logic.gridFilterMenuShow = () => {
+
+			var currView = _logic.currentEditObject();
+
+			PopupGridFilterMenu.fromSettings(currView.settings.gridFilter);
+			PopupGridFilterMenu.show();
+	
+		}
+
+		_logic.summaryColumns = ($view) => {
+			PopupSummaryColumnsComponent.show($view, {pos:"top"});
+		}
+
+		_logic.countColumns = ($view) => {
+			PopupCountColumnsComponent.show($view, {pos:"top"});
+		}
 		
 		_logic.callbackSaveWorkspace = (data) => {
+			// when we make a change in the popups we want to make sure we save the new workspace to the properties to do so just fire an onChange event
+			_logic.onChange();
+		}
+
+		_logic.gridFilterSave = (settings) => {
+
+			var currView = _logic.currentEditObject();
+			currView.settings.gridFilter = settings;
+			// currView.settings.isFilterable = settings.filterOption == 1 ? true : false;
+
+			// trigger a save()
+			this.propertyEditorSave(ids, currView);
+		}
+
+		_logic.callbackSaveSummaryColumns = (data) => {
+
+			var currObj = _logic.currentEditObject();
+			currObj.settings.objectWorkspace.summaryColumns = data;
+
+			// when we make a change in the popups we want to make sure we save the new workspace to the properties to do so just fire an onChange event
+			_logic.onChange();
+		}
+
+		_logic.callbackSaveCountColumns = (data) => {
+
+			var currObj = _logic.currentEditObject();
+			currObj.settings.objectWorkspace.countColumns = data;
+
 			// when we make a change in the popups we want to make sure we save the new workspace to the properties to do so just fire an onChange event
 			_logic.onChange();
 		}
@@ -274,7 +388,20 @@ export default class ABViewGrid extends ABViewWidget  {
 		PopupFrozenColumnsComponent.init({
 			onChange:_logic.callbackSaveWorkspace		// be notified when there is a change in the hidden fields
 		});
+
+
+		PopupGridFilterMenu.init({
+			onSave: _logic.gridFilterSave
+		});
 		
+		PopupSummaryColumnsComponent.init({
+			onChange: _logic.callbackSaveSummaryColumns	// be notified when there is a change in the summary columns
+		});
+
+		PopupCountColumnsComponent.init({
+			onChange: _logic.callbackSaveCountColumns	// be notified when there is a change in the count columns
+		});
+
 		var view = "button";
 		// in addition to the common .label  values, we 
 		// ask for:
@@ -307,16 +434,22 @@ export default class ABViewGrid extends ABViewWidget  {
 							labelRight: L('ab.component.label.allowDelete', '*User can delete records.'),
 							labelWidth: App.config.labelWidthCheckbox
 						},
-						{
-							view:"checkbox",
-							name:"isFilterable",
-							labelRight: L('ab.component.label.isFilterable', '*User can filter records.'),
-							labelWidth: App.config.labelWidthCheckbox
-						},
+						// {
+						// 	view:"checkbox",
+						// 	name:"isFilterable",
+						// 	labelRight: L('ab.component.label.isFilterable', '*User can filter records.'),
+						// 	labelWidth: App.config.labelWidthCheckbox
+						// },
 						{
 							view:"checkbox",
 							name:"isSortable",
 							labelRight: L('ab.component.label.isSortable', '*User can sort records.'),
+							labelWidth: App.config.labelWidthCheckbox
+						},
+						{
+							view:"checkbox",
+							name:"isExportable",
+							labelRight: L('ab.component.label.isExportable', '*User can export.'),
 							labelWidth: App.config.labelWidthCheckbox
 						},
 					]
@@ -348,6 +481,24 @@ export default class ABViewGrid extends ABViewWidget  {
 										// $$(ids.linkedEditPageForm).setValue("");
 										$$(ids.detailsPage).setValue("");
 										$$(ids.editPage).setValue("");
+
+										var currDc = _logic.currentEditObject().pageRoot().dataCollections(dc => dc.id == newv)[0];
+										// disallow edit data of query
+										if (currDc && currDc.sourceType == "query") {
+
+											$$(ids.isEditable).setValue(false);
+											$$(ids.massUpdate).setValue(false);
+											$$(ids.allowDelete).setValue(false);
+											$$(ids.isEditable).disable();
+											$$(ids.massUpdate).disable();
+											$$(ids.allowDelete).disable();
+										}
+										else {
+											$$(ids.isEditable).enable();
+											$$(ids.massUpdate).enable();
+											$$(ids.allowDelete).enable();
+										}
+
 									}
 								}
 							}
@@ -375,7 +526,26 @@ export default class ABViewGrid extends ABViewWidget  {
 						// }
 			        ]
 		    	}
-		    },
+			},
+			{				
+				view: "fieldset", 
+				label: L('ab.component.grid.group', '*Group:'),
+				labelWidth: App.config.labelWidthLarge,
+				body: {
+					type: "clean",
+					paddingY: 20,
+					paddingX: 10,
+					rows:[
+						{
+							view:"select",
+							name:"groupBy",
+							label: L('ab.component.grid.groupBy', '*Group by:'),
+							labelWidth: App.config.labelWidthLarge,
+							options: []
+						}
+					]
+				}
+			},
 			{ 
 				view: "fieldset", 
 				label: L('ab.component.label.linkedPages', '*Linked Pages:'),
@@ -455,7 +625,7 @@ export default class ABViewGrid extends ABViewWidget  {
 									view: view,
 									name: "buttonFieldsVisible",
 									label: L("ab.component.label.settings", "*Settings"),
-									icon: "gear",
+									icon: "fa fa-gear",
 									type: "icon",
 									badge: 0,
 									click: function () {
@@ -464,26 +634,27 @@ export default class ABViewGrid extends ABViewWidget  {
 								}
 							]
 						},
-						// {
-						// 	cols: [
-						// 		{ 
-						// 		    view:"label", 
-						// 		    label: L("ab.component.label.filterData", "*Filter Data:"),
-						// 			width: App.config.labelWidthLarge,
-						// 		},
-						// 		{
-						// 			view: view,
-						// 			// id: ids.buttonFilter,
-						// 			label: L("ab.component.label.settings", "*Settings"),
-						// 			icon: "gear",
-						// 			type: "icon",
-						// 			badge: 0,
-						// 			click: function () {
-						// 				_logic.toolbarFilter(this.$view);
-						// 			}
-						// 		}
-						// 	]
-						// },
+						{
+							cols: [
+								{ 
+								    view:"label", 
+								    label: L("ab.component.label.filterData", "*Filter Option:"),
+									css: 'ab-text-bold',
+									width: App.config.labelWidthXLarge,
+								},
+								{
+									view: view,
+									id: ids.gridFilterMenuButton,
+									label: L("ab.component.label.settings", "*Settings"),
+									icon: "fa fa-gear",
+									type: "icon",
+									badge: 0,
+									click: function () {
+										_logic.gridFilterMenuShow(this.$view);
+									}
+								}
+							]
+						},
 						// {
 						// 	cols: [
 						// 		{ 
@@ -515,7 +686,7 @@ export default class ABViewGrid extends ABViewWidget  {
 									view: view,
 									name: "buttonFieldsFreeze",
 									label: L("ab.component.label.settings", "*Settings"),
-									icon: "gear",
+									icon: "fa fa-gear",
 									type: "icon",
 									badge: 0,
 									click: function(){
@@ -526,11 +697,76 @@ export default class ABViewGrid extends ABViewWidget  {
 						},
 
 						{
+							cols: [
+								{ 
+								    view:"label", 
+								    label: L("ab.component.label.summaryFields", "*Summary Fields:"),
+									css: 'ab-text-bold',
+									width: App.config.labelWidthXLarge,
+								},
+								{
+									view: view,
+									name: "buttonSummaryFields",
+									label: L("ab.component.label.settings", "*Settings"),
+									icon: "fa fa-gear",
+									type: "icon",
+									badge: 0,
+									click: function(){
+										_logic.summaryColumns(this.$view);
+									}
+								}
+							]
+						},
+
+						{
+							cols: [
+								{ 
+								    view:"label", 
+								    label: L("ab.component.label.summaryFields", "*Count Fields:"),
+									css: 'ab-text-bold',
+									width: App.config.labelWidthXLarge,
+								},
+								{
+									view: view,
+									name: "buttonCountFields",
+									label: L("ab.component.label.settings", "*Settings"),
+									icon: "fa fa-gear",
+									type: "icon",
+									badge: 0,
+									click: function(){
+										_logic.countColumns(this.$view);
+									}
+								}
+							]
+						},
+
+						{
 							view: 'counter',
 							name: "height",
 							label: L("ab.component.grid.height", "*Height:"),
 							labelWidth: App.config.labelWidthXLarge,
-						}
+						},
+						
+						{
+							view:"checkbox",
+							name:"hideHeader",
+							labelRight: L('ab.component.label.hideHeader', '*Hide table header'),
+							labelWidth: App.config.labelWidthCheckbox
+						},
+
+						{
+							view:"checkbox",
+							name:"labelAsField",
+							labelRight: L('ab.component.label.labelAsField', '*Show a field using label template'),
+							labelWidth: App.config.labelWidthCheckbox
+						},
+
+						{
+							view:"checkbox",
+							name:"hideButtons",
+							labelRight: L('ab.component.label.hideButtons', '*Hide edit and view buttons'),
+							labelWidth: App.config.labelWidthCheckbox
+						},
 
 					]
 				}
@@ -546,22 +782,35 @@ export default class ABViewGrid extends ABViewWidget  {
 		super.propertyEditorPopulate(App, ids, view);
 		
 		this.view = view;
-		
+
 		$$(ids.dataSource).setValue(view.settings.dataSource);
 		$$(ids.isEditable).setValue(view.settings.isEditable);
 		$$(ids.massUpdate).setValue(view.settings.massUpdate);
 		$$(ids.allowDelete).setValue(view.settings.allowDelete);
-		$$(ids.isFilterable).setValue(view.settings.isFilterable);
+		// $$(ids.isFilterable).setValue(view.settings.isFilterable);
 		$$(ids.isSortable).setValue(view.settings.isSortable);
+		$$(ids.isExportable).setValue(view.settings.isExportable);
 		// $$(ids.linkedObject).setValue(view.settings.linkedObject);
 		// $$(ids.linkedField).setValue(view.settings.linkedField);
 		// $$(ids.linkedPage).setValue(view.settings.linkedPage);
 		// $$(ids.linkedPageView).setValue(view.settings.linkedPageView);
 		// $$(ids.linkedEditPage).setValue(view.settings.linkedEditPage);
 		// $$(ids.linkedEditPageForm).setValue(view.settings.linkedEditPageForm);
-		$$(ids.detailsPage).setValue(view.settings.detailsPage);
-		$$(ids.editPage).setValue(view.settings.editPage);
+		var details = view.settings.detailsPage;
+		if (view.settings.detailsTab != "") {
+			details += ":"+view.settings.detailsTab;
+		}
+		$$(ids.detailsPage).setValue(details);
+		var edit = view.settings.editPage;
+		if (view.settings.editTab != "") {
+			edit += ":"+view.settings.editTab;
+		}
+		$$(ids.editPage).setValue(edit);
 		$$(ids.height).setValue(view.settings.height);
+		$$(ids.hideHeader).setValue(view.settings.hideHeader);
+		$$(ids.labelAsField).setValue(view.settings.labelAsField);
+		$$(ids.hideButtons).setValue(view.settings.hideButtons);
+		$$(ids.groupBy).setValue(view.settings.groupBy);
 
 		// initial populate of properties and popups
 		view.populateEditor(ids, view);
@@ -579,7 +828,10 @@ export default class ABViewGrid extends ABViewWidget  {
 				view.populateBadgeNumber(ids, view);
 			}, this);
 		}
-	
+		
+		//Load Datacollection to QueryBuilder
+		this.propertyUpdateGridFilterObject(ids, view);
+
 	}
 	
 	static propertyEditorValues(ids, view) {
@@ -591,21 +843,64 @@ export default class ABViewGrid extends ABViewWidget  {
 		view.settings.isEditable = $$(ids.isEditable).getValue();
 		view.settings.massUpdate = $$(ids.massUpdate).getValue();
 		view.settings.allowDelete = $$(ids.allowDelete).getValue();
-		view.settings.isFilterable = $$(ids.isFilterable).getValue();
+		// view.settings.isFilterable = $$(ids.isFilterable).getValue();
 		view.settings.isSortable = $$(ids.isSortable).getValue();
+		view.settings.isExportable = $$(ids.isExportable).getValue();
 		// view.settings.linkedObject = $$(ids.linkedObject).getValue();
 		// view.settings.linkedField = $$(ids.linkedField).getValue();
 		// view.settings.linkedPage = $$(ids.linkedPage).getValue();
 		// view.settings.linkedPageView = $$(ids.linkedPageView).getValue();
 		// view.settings.linkedEditPage = $$(ids.linkedEditPage).getValue();
 		// view.settings.linkedEditPageForm = $$(ids.linkedEditPageForm).getValue();
-		view.settings.detailsPage = $$(ids.detailsPage).getValue();
-		view.settings.editPage = $$(ids.editPage).getValue();
+		
+		var detailsPage = $$(ids.detailsPage).getValue();
+		var detailsTab = "";
+		if (detailsPage.split(":").length > 1) {
+			var detailsVals = detailsPage.split(":");
+			detailsPage = detailsVals[0];
+			detailsTab = detailsVals[1];
+		} 
+		view.settings.detailsPage = detailsPage;
+		view.settings.detailsTab = detailsTab;
+		
+		var editPage = $$(ids.editPage).getValue();
+		var editTab = "";
+		if (editPage.split(":").length > 1) {
+			var editVals = editPage.split(":");
+			editPage = editVals[0];
+			editTab = editVals[1];
+		} 
+		view.settings.editPage = editPage;
+		view.settings.editTab = editTab;
+		
 		view.settings.height = $$(ids.height).getValue();
+		view.settings.hideHeader = $$(ids.hideHeader).getValue();
+		view.settings.labelAsField = $$(ids.labelAsField).getValue();
+		view.settings.hideButtons = $$(ids.hideButtons).getValue();
+		view.settings.groupBy = $$(ids.groupBy).getValue();
 
 	}
 
+	static propertyUpdateGridFilterObject(ids, view) {
+		
+		if (!view) return;
 
+		// Populate values to QueryBuilder
+		var selectedDc = view.dataCollection;
+
+		if (selectedDc) {
+			// if (view.settings.gridFilter.filterOption == 2) {
+			// 	//Force to LoadAll
+			// 	selectedDc.settings.loadAll = true;
+			// }
+
+			var dataCopy = selectedDc.datasource.clone();
+			dataCopy.objectWorkspace = view.settings.objectWorkspace;
+			dataCopy.isLoadAll = selectedDc.settings.loadAll;
+
+			PopupGridFilterMenu.objectLoad(dataCopy);
+		}
+	}
 	/*
 	 * @component()
 	 * return a UI component based upon this view.
@@ -613,6 +908,8 @@ export default class ABViewGrid extends ABViewWidget  {
 	 * @return {obj} UI component
 	 */
 	component(App, objId) {
+
+		let baseCom = super.component(App);
 
 		var idBase = objId || 'ABViewGrid_'+this.id;
 		var ids = {
@@ -623,39 +920,17 @@ export default class ABViewGrid extends ABViewWidget  {
 			buttonFilter: App.unique(idBase+'_buttonFilter'),
 			buttonMassUpdate: App.unique(idBase+'_buttonMassUpdate'),
 			buttonSort: App.unique(idBase+'_buttonSort'),
+			buttonExport: App.unique(idBase+'_buttonExport'),
+
+			filterMenutoolbar: App.unique(idBase+'_filterMenuToolbar'),
+			resetFilterButton: App.unique(idBase+'_resetFilterButton'),
+			globalFilterForm: App.unique(idBase+'_globalFilterForm'),
+			globalFilterFormContainer: App.unique(idBase+'_globalFilterFormContainer')
 
 		}
 		
 		var labels = {
-			common: App.labels,
-			component: {
-				and: L('ab.filter_fields.and', "And"),
-				or: L('ab.filter_fields.or', "Or"),
-				addNewFilter: L('ab.filter_fields.addNewFilter', "Add a filter"),
-
-				containsCondition: L('ab.filter_fields.containsCondition', "contains"),
-				notContainCondition: L('ab.filter_fields.notContainCondition', "doesn't contain"),
-				isCondition: L('ab.filter_fields.isCondition', "is"),
-				isNotCondition: L('ab.filter_fields.isNotCondition', "is not"),
-
-				beforeCondition: L('ab.filter_fields.beforeCondition', "is before"),
-				afterCondition: L('ab.filter_fields.afterCondition', "is after"),
-				onOrBeforeCondition: L('ab.filter_fields.onOrBeforeCondition', "is on or before"),
-				onOrAfterCondition: L('ab.filter_fields.onOrAfterCondition', "is on or after"),
-
-				equalCondition: L('ab.filter_fields.equalCondition', ":"),
-				notEqualCondition: L('ab.filter_fields.notEqualCondition', "≠"),
-				lessThanCondition: L('ab.filter_fields.lessThanCondition', "<"),
-				moreThanCondition: L('ab.filter_fields.moreThanCondition', ">"),
-				lessThanOrEqualCondition: L('ab.filter_fields.lessThanOrEqualCondition', "≤"),
-				moreThanOrEqualCondition: L('ab.filter_fields.moreThanOrEqualCondition', "≥"),
-
-				equalListCondition: L('ab.filter_fields.equalListCondition', "equals"),
-				notEqualListCondition: L('ab.filter_fields.notEqualListCondition', "does not equal"),
-
-				checkedCondition: L('ab.filter_fields.checkedCondition', "is checked"),
-				notCheckedCondition: L('ab.filter_fields.notCheckedCondition', "is not checked")
-			}
+			common: App.labels
 		};
 		
 		var CurrentObject = null;
@@ -692,18 +967,31 @@ export default class ABViewGrid extends ABViewWidget  {
 			editView: this.settings.editPage,
 			isEditable: this.settings.isEditable,
 			massUpdate: this.settings.massUpdate,
-			configureHeaders: false
+			configureHeaders: false,
+			summaryColumns: this.settings.objectWorkspace.summaryColumns,
+			countColumns: this.settings.objectWorkspace.countColumns,
+			hideHeader: this.settings.hideHeader,
+			labelAsField: this.settings.labelAsField,
+			hideButtons: this.settings.hideButtons,
+			groupBy: this.settings.groupBy
 		}
 		
 		var isFiltered = false,
 			waitMilliseconds = 50,
 			filterTimeoutId;
+			
+		var globalFilterPosition = "default";
+		if (this.settings.gridFilter && this.settings.gridFilter.globalFilterPosition) {
+			globalFilterPosition = this.settings.gridFilter.globalFilterPosition;
+		}
 
-		var DataTable = new ABWorkspaceDatatable(App, idBase, settings);
-		var PopupMassUpdateComponent = new ABPopupMassUpdate(App, idBase+"_mass");
-		var PopupSortDataTableComponent = new ABPopupSortField(App, idBase+"_sort");
-		var rowFilter = new RowFilter(App, idBase+"_filter");
-		var filter_popup = webix.ui({
+		let DataTable = new ABWorkspaceDatatable(App, idBase, settings);
+		let PopupMassUpdateComponent = new ABPopupMassUpdate(App, idBase+"_mass");
+		let PopupSortDataTableComponent = new ABPopupSortField(App, idBase+"_sort");
+		let rowFilter = new RowFilter(App, idBase+"_filter");
+		let rowFilterForm = new RowFilter(App, idBase+"_filter_form");
+		let exportPopup = new ABPopupExport(App, idBase+"_export");
+		let filter_popup = webix.ui({
 			view: "popup",
 			width: 800,
 			hidden: true,
@@ -711,8 +999,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		});
 
 
-
-		var _init = () => {
+		let _init = () => {
 
 			if (this.settings.dataSource != "") {
 				DataTable.init({
@@ -728,11 +1015,25 @@ export default class ABViewGrid extends ABViewWidget  {
 				});
 
 				rowFilter.init({
-					onChange:_logic.callbackFilterData		// be notified when there is a change in the filter
+					onChange: () => {
+						_logic.callbackFilterData(rowFilter);	// be notified when there is a change in the filter
+					}
 				});
+
+				rowFilterForm.init({
+					onChange: () => {
+						_logic.callbackFilterData(rowFilterForm);	// be notified when there is a change in the filter
+					}
+				});
+
+				exportPopup.init({});
 				
-				if (this.settings.massUpdate == false && this.settings.isFilterable == false && this.settings.isSortable == false) {
-					$$(ids.toolbar).hide();
+				if (this.settings.massUpdate ||
+					this.settings.isSortable ||
+					this.settings.isExportable ||
+					(this.settings.gridFilter.filterOption && 
+					this.settings.gridFilter.userFilterPosition == "toolbar")) {
+					$$(ids.toolbar).show();
 				}
 				
 				if (this.settings.massUpdate == false) {
@@ -744,52 +1045,136 @@ export default class ABViewGrid extends ABViewWidget  {
 					$$(ids.buttonDeleteSelected).hide();
 				}
 				
-				if (this.settings.isFilterable == false) {
+				if (this.settings.gridFilter.filterOption != 1 || 
+					this.settings.gridFilter.userFilterPosition != "toolbar") {
 					$$(ids.buttonFilter).hide();
+				}
+				
+				if (this.settings.gridFilter.filterOption == 1 && 
+					this.settings.gridFilter.userFilterPosition == "form") {
+					$$(rowFilterForm.ui.id).show();
+				}
+				else {
+					$$(rowFilterForm.ui.id).hide();
+				}
+
+				if (this.settings.gridFilter.filterOption == 3) {
+					$$(ids.globalFilterFormContainer).show();
+					if (this.settings.gridFilter.globalFilterPosition == "single") {
+						$$(DataTable.ui.id).hide();
+					}
+				}
+				else {
+					$$(ids.globalFilterFormContainer).hide();
 				}
 				
 				if (this.settings.isSortable == false) {
 					$$(ids.buttonSort).hide();
 				}
 
+				if (this.settings.isExportable == false) {
+					$$(ids.buttonExport).hide();
+				}
+				
+				if (this.settings.hideHeader == true) {
+					DataTable.hideHeader();
+				}
+
+				if (this.settings.gridFilter.filterOption == 2) {
+					$$(ids.filterMenutoolbar).show();
+				}
 				// var dataSource = this.application.objects((o)=>{
 				// 	return o.id == this.settings.dataSource;
 				// });
-				var dc = this.dataCollection();
-				
-				if (dc) {
+				var dc = this.dataCollection;
 
-					var dataCopy = _.cloneDeep(dc.datasource);
+				if (dc && dc.datasource) {
+
+					var dataCopy = dc.datasource.clone();
 					dataCopy.objectWorkspace = this.settings.objectWorkspace;
 					CurrentObject = dataCopy;
 
 					DataTable.objectLoad(CurrentObject);
 					PopupMassUpdateComponent.objectLoad(CurrentObject, DataTable);
 					PopupSortDataTableComponent.objectLoad(CurrentObject, this);
+					rowFilter.viewLoad(this);
 					rowFilter.objectLoad(CurrentObject);
+					rowFilterForm.viewLoad(this);
+					rowFilterForm.objectLoad(CurrentObject);
+					exportPopup.objectLoad(CurrentObject);
+					exportPopup.setGridComponent($$(DataTable.ui.id));
+					exportPopup.setHiddenFields(dataCopy.objectWorkspace.hiddenFields);
+					exportPopup.setFilename(this.label);
 					DataTable.refreshHeader();
 
-					dc.bind($$(ids.component));
+					dc.bind($$(DataTable.ui.id));
 
 					var editPage = this.settings.editPage;
 					var detailsPage = this.settings.detailsPage;
-					$$(ids.component).attachEvent("onItemClick", function (id, e, node) {
+					var editTab = this.settings.editTab;
+					var detailsTab = this.settings.detailsTab;
+					var isEditable = this.settings.isEditable;
+					
+					// we need to recursivly look backwards to toggle tabs into view when a user choosed to select a tab for edit or details views
+					function toggleTab(parentTab, wb) {
+						
+						// find the tab
+						var tab = wb.getTopParentView().queryView({id:parentTab});
+						// if we didn't pass and id we may have passed a domNode
+						if (tab == null) {
+							tab = $$(parentTab);
+						}
 
-						if (e.target.className.indexOf('eye') > -1) {
-							var item = id;
+						if (tab == null) return;
+						
+						// set the tabbar to to the tab
+						var tabbar = tab.getParentView().getParentView();
+						
+						if (tabbar == null) return;
+						
+						if (tabbar.setValue) { // if we have reached the top we won't have a tab
+							tabbar.setValue(parentTab);
+						}
+						
+						// find if it is in a multiview of a tab
+						var nextTab = tabbar.queryView({view:"scrollview"}, "parent");
+						// if so then do this again
+						if (nextTab) {
+							toggleTab(nextTab, wb);
+						}
+					}
+					
+					$$(DataTable.ui.id).attachEvent("onItemClick", function (id, e, node) {
+						var item = id;
+
+						if (e == "auto") {
+							// automatically choose the details page if a record matches
+							// later on we can decide if we want to have the choice to select the edit page intead.
 							_logic.changePage(dc, item, detailsPage);
-						}
-						else if (e.target.className.indexOf('pencil') > -1) {
-							var item = id;
+							toggleTab(detailsTab, this);
+						} else if (e.target.className.indexOf('eye') > -1) {
+							_logic.changePage(dc, item, detailsPage);
+							toggleTab(detailsTab, this);
+						} else if (e.target.className.indexOf('pencil') > -1) {
 							_logic.changePage(dc, item, editPage);
+							toggleTab(editTab, this);
+						} else if (e.target.className.indexOf('trash') > -1) {
+							// don't do anything for delete it is handled elsewhere
+						} else if ( !isEditable && detailsPage.length ) {
+							_logic.changePage(dc, item, detailsPage);
+							toggleTab(detailsTab, this);
+						} else if ( !isEditable && !detailsPage.length && editPage.length) {
+							_logic.changePage(dc, item, editPage);
+							toggleTab(editTab, this);
 						}
+						
 					});
 
 					// $$(DataTable.ui.id).attachEvent('onBeforeRender', function (data) {
 					// 	_logic.clientSideDataFilter();
 					// });
 
-					$$(ids.component).adjust();
+					$$(DataTable.ui.id).adjust();
 				}
 				
 				
@@ -815,18 +1200,84 @@ export default class ABViewGrid extends ABViewWidget  {
 		};
 		if (this.settings.dataSource != "") {
 			tableUI = {
-				type: "layout",
+				type: "space",
+				padding: 17,
 				rows: [
+					{
+						id: ids.globalFilterFormContainer,
+						hidden: true,
+						cols: [
+							{						
+								id: ids.globalFilterForm,
+								view:"text",
+								placeholder:"Search or scan a barcode to see results",
+								on:{
+									onTimedKeyPress:function(){
+										var text = this.getValue().trim().toLowerCase().split(" ");
+										var table = $$(DataTable.ui.id);
+										var columns = table.config.columns;
+										var count = 0;
+										var matchArray = [];
+										table.filter(function(obj){
+											matchArray = [];
+											// console.log("filter", obj);
+											for (var i=0; i<columns.length; i++) {
+												for (var x=0; x<text.length; x++) {
+													var searchFor = text[x];
+													if (obj[columns[i].id] && obj[columns[i].id].toString().toLowerCase().indexOf(searchFor) !== -1) {
+														// console.log("matched on:", searchFor);
+														if (matchArray.indexOf(searchFor) == -1) {
+															matchArray.push(searchFor);
+														}
+													}
+												}
+											}
+											// console.log("Filter By:", text.length, text);
+											// console.log("Matches:", matchArray);
+											if (matchArray.length == text.length) {
+												count++;
+												return true;
+											} else {
+												return false;
+											}
+										});
+										if (globalFilterPosition == "single") {
+											if (count == 1) {
+												table.show();
+												table.select(table.getFirstId(), false);
+												table.callEvent("onItemClick", [ table.getFirstId(), "auto", null ]);
+											} else {
+												table.hide(); 
+											}
+										}
+									}
+								}
+							},
+							{
+								view:"button", 
+								width: 28, 
+								type:"icon", 
+								icon:"times",
+								click: function() {
+									$$(ids.globalFilterForm).setValue("");
+									$$(ids.globalFilterForm).focus();
+									$$(ids.globalFilterForm).callEvent("onTimedKeyPress");
+								}
+							}
+						]
+					},
+					rowFilterForm.ui,
 					{
 						view: 'toolbar',
 						id: ids.toolbar,
+						hidden: true,
 						css: "ab-data-toolbar",
 						cols: [
 							{
 								view: "button",
 								id: ids.buttonMassUpdate,
 								label: L("ab.component.label.massUpdate", "*Edit fields"),
-								icon: "pencil-square-o",
+								icon: "fa fa-pencil-square-o",
 								type: "icon",
 								badge: 0,
 								disabled:true,
@@ -839,7 +1290,7 @@ export default class ABViewGrid extends ABViewWidget  {
 								view: "button",
 								id: ids.buttonDeleteSelected,
 								label: L("ab.component.label.deleteSelected", "*Delete Records"),
-								icon: "trash",
+								icon: "fa fa-trash",
 								type: "icon",
 								badge: 0,
 								disabled:true,
@@ -852,7 +1303,7 @@ export default class ABViewGrid extends ABViewWidget  {
 								view: "button",
 								id: ids.buttonFilter,
 								label: L("ab.component.label.filterFields", "*Add filters"),
-								icon: "filter",
+								icon: "fa fa-filter",
 								type: "icon",
 								badge: 0,
 								autowidth: true,
@@ -864,7 +1315,7 @@ export default class ABViewGrid extends ABViewWidget  {
 								view: "button",
 								id: ids.buttonSort,
 								label: L("ab.component.label.sortFields", "*Apply sort"),
-								icon: "sort",
+								icon: "fa fa-sort",
 								type: "icon",
 								badge: 0,
 								autowidth: true,
@@ -872,18 +1323,50 @@ export default class ABViewGrid extends ABViewWidget  {
 									_logic.toolbarSort(this.$view);
 								}
 							},
+							{
+								view: "button",
+								id: ids.buttonExport,
+								label: L("ab.component.label.export", "*Export"),
+								icon: "fa fa-print",
+								type: "icon",
+								badge: 0,
+								autowidth: true,
+								click: function () {
+									_logic.toolbarExport(this.$view);
+								}
+							},
 							/*
 							{
 								view: view,
 								id: ids.buttonExport,
 								label: labels.component.export,
-								icon: "download",
+								icon: "fa fa-download",
 								type: "icon",
 								click: function() {
 									_logic.toolbarButtonExport(this.$view);
 								}
 							}
 							*/
+						]
+					},
+					{
+						view: 'toolbar',
+						id: ids.filterMenutoolbar,
+						css: "ab-data-toolbar",
+						hidden: true,
+						cols: [
+							{
+								view: "button",
+								id: ids.resetFilterButton,
+								label: L("ab.component.label.resetFilter", "*Reset Filter"),
+								icon: "fa fa-ban",
+								type: "icon",
+								badge: 0,
+								autowidth: true,
+								click: function() {
+									_logic.resetFilterMenu();
+								}
+							}
 						]
 					},
 					DataTable.ui
@@ -904,169 +1387,47 @@ export default class ABViewGrid extends ABViewWidget  {
 			
 			callbackSortData: () => {
 
+				var sortRules = (this.settings.objectWorkspace.sortFields || []);
+
+				$$(ids.buttonSort).define('badge', sortRules.length);
+				$$(ids.buttonSort).refresh();
+
 				// client sort data
 				$$(DataTable.ui.id).sort(PopupSortDataTableComponent.sort);
 
 			},
 
-			callbackFilterData: () => {
+			callbackFilterData: (row_filter) => {
 
+				var filterRules = (row_filter.getValue().rules || []);
+
+				if ($$(ids.buttonFilter)) {
+					$$(ids.buttonFilter).define('badge', filterRules.length);
+					$$(ids.buttonFilter).refresh();
+				}
+
+				// client filter data
 				$$(DataTable.ui.id).filter(function(rowData) {
 
-					return rowFilter.isValid(rowData);
+					return row_filter.isValid(rowData);
 
 				});
 
-				// $$(DataTable.ui.id).custom_filters = $$(DataTable.ui.id).custom_filters || {};
-				// $$(DataTable.ui.id).custom_filters['filter_popup'] = function (obj) {
-
-				// 		if (typeof obj == "undefined") return;
-
-				// 		// var combineCond = (data.filterConditions && data.filterConditions.length > 0 ? data.filterConditions[0].combineCondtion : labels.component.and);
-				// 		var combineCond = data.filterConditions[0] ? data.filterConditions[0].combineCondition : labels.component.and;
-				// 		var isValid = (combineCond === labels.component.and ? true : false);
-						
-				// 		if (data.filterConditions.length) {
-				// 			_.forEach(data.filterConditions, function(cond) {
-
-				//                 var condResult;
-				//                 var objValue = $$(DataTable.ui.id).getColumnConfig(cond.fieldName).filter_value ? $$(DataTable.ui.id).getColumnConfig(cond.fieldName).filter_value(obj) : obj[cond.fieldName];
-
-				//                 // Empty value
-				//                 if (!objValue) {
-				//                     if (cond.inputValue) {
-				//                         isValid = (combineCond === labels.component.and ? false : true);
-				//                     }
-
-				//                     return;
-				//                 }
-
-				//                 if ($.isArray(objValue))
-				//                     objValue = $.map(objValue, function (o) { return o.text; }).join(' ');
-
-				//                 if (objValue.trim)
-				//                     objValue = objValue.trim().toLowerCase();
-
-				//                 switch (cond.operator) {
-				//                     // Text filter
-				//                     case labels.component.containsCondition:
-				//                         condResult = objValue.indexOf(cond.inputValue.trim().toLowerCase()) > -1;
-				//                         break;
-				//                     case labels.component.notContainCondition:
-				//                         condResult = objValue.indexOf(cond.inputValue.trim().toLowerCase()) < 0;
-				//                         break;
-				//                     case labels.component.isCondition:
-				//                         condResult = objValue == cond.inputValue.trim().toLowerCase();
-				//                         break;
-				//                     case labels.component.isNotCondition:
-				//                         condResult = objValue != cond.inputValue.trim().toLowerCase();
-				//                         break;
-				//                     // Date filter
-				//                     case labels.component.beforeCondition:
-				//                         if (!(objValue instanceof Date)) objValue = new Date(objValue);
-				//                         condResult = objValue < cond.inputValue;
-				//                         break;
-				//                     case labels.component.afterCondition:
-				//                         if (!(objValue instanceof Date)) objValue = new Date(objValue);
-				//                         condResult = objValue > cond.inputValue;
-				//                         break;
-				//                     case labels.component.onOrBeforeCondition:
-				//                         if (!(objValue instanceof Date)) objValue = new Date(objValue);
-				//                         condResult = objValue <= cond.inputValue;
-				//                         break;
-				//                     case labels.component.onOrAfterCondition:
-				//                         if (!(objValue instanceof Date)) objValue = new Date(objValue);
-				//                         condResult = objValue >= cond.inputValue;
-				//                         break;
-				//                     // Number filter
-				//                     case labels.component.equalCondition:
-				//                         condResult = Number(objValue) == Number(cond.inputValue);
-				//                         break;
-				//                     case labels.component.notEqualCondition:
-				//                         condResult = Number(objValue) != Number(cond.inputValue);
-				//                         break;
-				//                     case labels.component.lessThanCondition:
-				//                         condResult = Number(objValue) < Number(cond.inputValue);
-				//                         break;
-				//                     case labels.component.moreThanCondition:
-				//                         condResult = Number(objValue) > Number(cond.inputValue);
-				//                         break;
-				//                     case labels.component.lessThanOrEqualCondition:
-				//                         condResult = Number(objValue) <= Number(cond.inputValue);
-				//                         break;
-				//                     case labels.component.moreThanOrEqualCondition:
-				//                         condResult = Number(objValue) >= Number(cond.inputValue);
-				//                         break;
-				//                     // List filter
-				//                     case labels.component.equalListCondition:
-				//                         if (objValue)
-				//                             condResult = cond.inputValue.toLowerCase().indexOf(objValue) > -1;
-				//                         break;
-				//                     case labels.component.notEqualListCondition:
-				//                         if (objValue)
-				//                             condResult = cond.inputValue.toLowerCase().indexOf(objValue) < 0;
-				//                         else
-				//                             condResult = true;
-				//                         break;
-				//                     // Boolean/Checkbox filter
-				//                     case labels.component.checkedCondition:
-				//                         condResult = (objValue === true || objValue === 1);
-				//                         break;
-				//                     case labels.component.notCheckedCondition:
-				//                         condResult = !objValue;
-				//                         break;
-				//                 }
-				//                 if (combineCond === labels.component.and) {
-				//                     isValid = isValid && condResult;
-				//                 } else {
-				//                     isValid = isValid || condResult;
-				//                 }
-				//             });
-
-				//             return isValid;
-				// 		} else {
-				// 			return isValid;
-				// 		}
-				// }
-				// _logic.clientSideDataFilter();
 			},
-
-			// clientSideDataFilter: () => {
-				
-			// 	if (filterTimeoutId) clearTimeout(filterTimeoutId);
-
-			// 	filterTimeoutId = setTimeout(function () {
-			// 		// Prevent repeat filter
-			// 		if (isFiltered == false) {
-			// 			isFiltered = true;
-
-			// 			if ($$(DataTable.ui.id).custom_filters && Object.keys($$(DataTable.ui.id).custom_filters).length > 0) {
-			// 				$$(DataTable.ui.id).filter(function (item) {
-			// 					var isVisible = true;
-			// 					Object.keys($$(DataTable.ui.id).custom_filters).forEach(function (filter_key) {
-			// 						if (isVisible == false) return;
-
-			// 						isVisible = isVisible && $$(DataTable.ui.id).custom_filters[filter_key](item);
-			// 					});
-
-			// 					return isVisible;
-			// 				});
-			// 			}
-			// 			else {
-			// 				$$(DataTable.ui.id).filter(function (item) { return true });
-			// 			}
-
-			// 			setTimeout(function () {
-			// 				isFiltered = false
-			// 			}, waitMilliseconds + 100);
-			// 		}
-			// 	}, waitMilliseconds);
-
-			// },
 
 			changePage: (dc, id, page) => {
 				dc.setCursor(id);
 				super.changePage(page);
+			},
+			
+			selectRow: (rowData) => {
+
+				if (!$$(DataTable.ui.id)) return;
+
+				if (rowData && rowData.id)
+					$$(DataTable.ui.id).select(rowData.id, false);
+				else
+					$$(DataTable.ui.id).select(null, false);
 			},
 
 			/**
@@ -1139,18 +1500,80 @@ export default class ABViewGrid extends ABViewWidget  {
 				PopupSortDataTableComponent.show($view);
 			},
 
+			toolbarExport: ($view) => {
+				exportPopup.show($view);
+			},
+
 			toolbarMassUpdate: function ($view) {
 				PopupMassUpdateComponent.show($view);
 			},
 		
+			resetFilterMenu: () => {
+				$$(DataTable.ui.id).filter();
+			},
+
+			applyFilterMenuToDataTable: (queryRules) => {
+
+				var id = "hiddenQB_"+webix.uid();
+
+				var ui = {
+					id:id,
+					hidden:true,
+					view:'querybuilder'
+				}
+				var hiddenQB = webix.ui(ui);
+		
+				hiddenQB.setValue(queryRules);
+		
+				var QBHelper = hiddenQB.getFilterHelper();
+		
+				hiddenQB.destructor();	// remove the QB 
+
+				$$(DataTable.ui.id).filter(QBHelper);
+			}
+
 		}
 
 
 		var _onShow = () => {
 
+			baseCom.onShow();
+
 			if ($$(DataTable.ui.id)) {
 				$$(DataTable.ui.id).adjust();
 			}
+
+
+			if (this.settings.gridFilter.filterOption == 2) {
+				if (this.settings.gridFilter.queryRules.length > 0) {
+					this.settings.gridFilter.queryRules.forEach(qr => {
+						var filterRuleButton = {
+							view: "button",
+							label: qr.ruleName,
+							icon: "fa fa-filter",
+							type: "icon",
+							badge: 0,
+							autowidth: true,
+							click: function() {
+								_logic.applyFilterMenuToDataTable(qr.queryRules);
+							}
+						};
+						$$(ids.filterMenutoolbar).addView(filterRuleButton);
+					});
+				}
+			}
+			
+			var dc = this.dataCollection;
+			if (dc) {
+
+				this.eventAdd({
+					emitter: dc,
+					eventName: 'changeCursor',
+					listener: _logic.selectRow
+				});
+
+			}
+			
 		};
 
 
@@ -1198,6 +1621,24 @@ export default class ABViewGrid extends ABViewWidget  {
 			$$(ids.dataSource).setValue('');
 			// $$(ids.linkedObject).hide();
 		}
+
+		// Grouping options
+		let groupFields = [
+			{ id: '', value: L('ab.component.grid.noGroupBy', '*No group field') }
+		];
+		var dc = this.dataCollection;
+		if (dc && dc.datasource) {
+			dc.datasource.fields(f => {
+				return f.key != 'connectObject' && view.settings.objectWorkspace.hiddenFields.indexOf(f.columnName) < 0;
+			}).forEach(f => {
+				groupFields.push({
+					id: f.columnName,
+					value: f.label
+				});
+			});
+		}
+		$$(ids.groupBy).define("options", groupFields);
+		$$(ids.groupBy).refresh();
 
 		// Set the connected objects you can choose from in the list
 		// var linkedObjects = [];
@@ -1249,8 +1690,16 @@ export default class ABViewGrid extends ABViewWidget  {
 		view.application._pages.forEach((o)=>{
 			o._views.forEach((j)=>{
 				if (j.key == "form" && j.settings.object == view.settings.dataSource) {
-					// editForms.push({id:j.parent.id+"|"+j.id, value:j.label});
 					editForms.push({id:j.parent.id, value:j.label});				
+				}
+				if (j.key == "tab") {
+					j._views.forEach((k)=>{
+						k._views.forEach((l)=>{	
+							if (l.key == "form" && l.settings.datacollection == view.settings.dataSource) {
+								editForms.push({id:l.parent.id, value:l.label});				
+							}
+						});
+					});
 				}
 			});
 		});
@@ -1262,25 +1711,37 @@ export default class ABViewGrid extends ABViewWidget  {
 	}
 	
 	populatePopupEditors(view, dataSource) {
-		var dc = this.dataCollection();
+		var dc = this.dataCollection;
 
-		if (!dc) return;
+		if (!dc || !dc.datasource) return;
+		// if (view.settings.gridFilter.filterOption == 2) {
+		// 	//Force to LoadAll
+		// 	dc.settings.loadAll = true;
+		// }
 
-		var dataCopy = _.cloneDeep(dc.datasource);
+		var dataCopy = dc.datasource.clone();
 		dataCopy.objectWorkspace = view.settings.objectWorkspace;
+		dataCopy.isLoadAll = dc.settings.loadAll;
 
 		// if (view.settings.dataSource != "") {
 			// var dataSource = view.application.objects((o)=>{
 			// 	return o.id == view.settings.dataSource;
 			// });
-			// var dataSource = this.dataCollection();
-			// var dataCopy = _.cloneDeep(dataSource.datasource);
+			// var dataSource = this.dataCollection;
+			// var dataCopy = dataSource.datasource.clone();
 			// console.log(view);
 			// dataCopy.objectWorkspace = view.settings.objectWorkspace;
 			PopupHideFieldComponent.objectLoad(dataCopy, view);
 			// PopupFilterDataTableComponent.objectLoad(dataCopy, view);
 			// PopupSortFieldComponent.objectLoad(dataCopy, view);
 			PopupFrozenColumnsComponent.objectLoad(dataCopy, view);
+			PopupGridFilterMenu.objectLoad(dataCopy);
+
+			PopupSummaryColumnsComponent.objectLoad(dataCopy, view);
+			PopupSummaryColumnsComponent.setValue(view.settings.objectWorkspace.summaryColumns);
+
+			PopupCountColumnsComponent.objectLoad(dataCopy, view);
+			PopupCountColumnsComponent.setValue(view.settings.objectWorkspace.countColumns);
 		// }
 	}
 
@@ -1308,6 +1769,28 @@ export default class ABViewGrid extends ABViewWidget  {
 			$$(ids.buttonFieldsFreeze).refresh();
 		}
 
+
+		if (view.settings.objectWorkspace &&
+			view.settings.objectWorkspace.summaryColumns) {
+			$$(ids.buttonSummaryFields).define('badge', view.settings.objectWorkspace.summaryColumns.length);
+			$$(ids.buttonSummaryFields).refresh();
+		}
+		else {
+			$$(ids.buttonSummaryFields).define('badge', 0);
+			$$(ids.buttonSummaryFields).refresh();
+		}
+
+
+		if (view.settings.objectWorkspace &&
+			view.settings.objectWorkspace.countColumns) {
+			$$(ids.buttonCountFields).define('badge', view.settings.objectWorkspace.countColumns.length);
+			$$(ids.buttonCountFields).refresh();
+		}
+		else {
+			$$(ids.buttonCountFields).define('badge', 0);
+			$$(ids.buttonCountFields).refresh();
+		}
+
 	}
 	
 	loopPages(view, pages, detailViews, type) {
@@ -1329,14 +1812,32 @@ export default class ABViewGrid extends ABViewWidget  {
 				if (v.key == type && v.settings.datacollection == view.settings.dataSource) {
 					detailViews.push({id:v.pageParent().id, value:v.label});
 				}
+				// find views inside layouts
+				else if (v.key == "layout" || v.key == "viewcontainer") {
+					detailViews = view.loopViews(view, v._views, detailViews, type);
+				}
 				// find views inside Tab component
 				else if (v.key == "tab") {
 					var tabViews = v.views();
 					tabViews.forEach(tab => {
+						
+						var viewContainer = tab.views(subT => subT.key == "tab");
+						viewContainer.forEach(vc => {
+
+							vc.views().forEach((st)=>{
+								// detailViews = view.loopViews(view, st._views, detailViews, type);							
+								var subViews = st.views(subV => subV.key == type && subV.settings.datacollection == view.settings.dataSource);
+								subViews.forEach( (sub)=>{
+									detailViews.push({id:v.pageParent().id + ":" + st.id, value:st.label + ":" + sub.label});								
+								});
+							});
+
+						});
 
 						var subViews = tab.views(subV => subV.key == type && subV.settings.datacollection == view.settings.dataSource);
-						if (subViews.length > 0)
-							detailViews.push({id:v.pageParent().id, value:v.label});
+						subViews.forEach( (sub)=>{
+							detailViews.push({id:v.pageParent().id + ":" + tab.id, value:tab.label + ":" + sub.label});								
+						});
 
 					});
 
@@ -1348,12 +1849,12 @@ export default class ABViewGrid extends ABViewWidget  {
 	}
 	
 	/**
-	 * @method dataCollection
+	 * @property dataCollection
 	 * return ABViewDataCollection of this form
 	 * 
 	 * @return {ABViewDataCollection}
 	 */
-	dataCollection() {
+	get dataCollection() {
 		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.dataSource)[0];
 	}
 	
@@ -1386,6 +1887,117 @@ export default class ABViewGrid extends ABViewWidget  {
 		cb(null, shouldSave);
 		
 		
+	}
+
+
+	//// Report ////
+
+	/**
+	 * @method print
+	 * 
+	 * 
+	 * @return {Object} - PDF object definition
+	 */
+	print() {
+
+		return new Promise((resolve, reject) => {
+
+			var reportDef = {};
+
+			var dc = this.dataCollection;
+			if (!dc) return resolve(reportDef);
+	
+			var object = dc.datasource;
+			if (!object) return resolve(reportDef);
+	
+			reportDef = {
+				table: {
+					headerRows: 1,
+					widths: [],
+					body: [
+						[] // header
+					]
+				}
+			};
+	
+			// Hidden fields
+			var hiddenFieldNames = [];
+			if (this.settings && 
+				this.settings.objectWorkspace &&
+				this.settings.objectWorkspace.hiddenFields)
+				hiddenFieldNames = this.settings.objectWorkspace.hiddenFields || [];
+	
+	
+			var rowData = dc.getData();
+			var tasks = [];
+
+
+			object.fields(f => hiddenFieldNames.indexOf(f.columnName) < 0).forEach((f, indexField) => {
+		
+				// Headers
+				reportDef.table.widths[indexField] = 'auto'; // TODO ; width
+				reportDef.table.body[0][indexField] = f.label;
+	
+				// Data
+				rowData.forEach((d, rowIndex) => {
+	
+					rowIndex = rowIndex + 1;
+	
+					if (reportDef.table.body[rowIndex] == null) 
+						reportDef.table.body[rowIndex] = [];
+	
+	
+					// pull image data
+					if (f instanceof ABFieldImage) {
+
+						// add load image async
+						tasks.push(new Promise((next, err) => {
+
+							f.toBase64(d).then(imageData => {
+
+								if (imageData && imageData.data) {
+									reportDef.table.body[rowIndex][indexField] = {
+										image: imageData.data,
+										width: parseInt(f.settings.imageWidth || imageData.width),
+										height: parseInt(f.settings.imageHeight || imageData.height)
+									};
+								}
+								else {
+									reportDef.table.body[rowIndex][indexField] = {};
+								}
+
+								next();
+	
+							}).catch(err);
+
+						}));
+					}
+					// pull normal data
+					else
+						reportDef.table.body[rowIndex][indexField] = f.format(d);
+	
+				});
+	
+			});
+
+			// wait until load all images
+			Promise.all(tasks)
+				.then(() => {
+
+					resolve(reportDef);
+
+				})
+				.catch(reject);
+	
+
+		});
+
+	}
+
+	copyUpdateProperyList() {
+
+		return ['dataSource', 'detailsPage', 'detailsTab', 'editPage', 'editTab'];
+
 	}
 
 	// Custom functions needed for UI

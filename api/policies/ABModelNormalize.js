@@ -43,13 +43,15 @@ module.exports = function(req, res, next) {
       req.options._offset = null;
       req.options._limit = null;
       req.options._sort = null;
+      req.options._populate = true;  // our expected default operation.
+
 
       var allParams = req.allParams();
       delete allParams.appID    // don't want these
       delete allParams.objID
 
       sails.log.verbose('ABModelNormalize(): allParams:', allParams);
-      if (allParams.where || allParams.limit || allParams.offset || allParams.sort) {
+      if (allParams.where || allParams.limit || allParams.offset || allParams.sort || allParams.populate ) {
       
         req.options._where = allParams.where || {};
 
@@ -74,6 +76,25 @@ module.exports = function(req, res, next) {
 
         if (allParams.sort) {
           req.options._sort = allParams.sort;
+        }
+
+
+        // populate:[]
+        // the populate param allows the API to specify which connections to 
+        // populate when loading.
+        //
+        // our default option will be to populate all connections: populate:true
+        // 
+        // it is also possible to specify individual connections (by columnName) 
+        // to populate: populate:['email', 'address'] and in this case ONLY these
+        // connections will be populated.
+        //
+        // we can also prevent any populations by:  populate:false
+        //
+        if (allParams.populate || allParams.populate === false) {
+          req.options._populate = allParams.populate;
+          if (req.options._populate === "true") req.options._populate = true;
+          if (req.options._populate === "false") req.options._populate = false;
         }
 
       }

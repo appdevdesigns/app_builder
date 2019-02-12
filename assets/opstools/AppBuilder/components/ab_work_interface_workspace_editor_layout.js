@@ -93,6 +93,8 @@ export default class AB_Work_Interface_Workspace_Editor_Layout extends OP.Compon
 				if (editorComponent.onShow)
 					editorComponent.onShow();
 
+				$$(ids.component).adjust();
+
 			},
 
 

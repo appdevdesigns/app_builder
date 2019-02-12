@@ -29,6 +29,7 @@ function dataCollectionNew(instance, data) {
 	if (!instance.settings.loadAll) {
 
 		dc.___AD = dc.___AD || {};
+
 		if (dc.___AD.onDataRequestEvent) dc.detachEvent(dc.___AD.onDataRequestEvent);
 		dc.___AD.onDataRequestEvent = dc.attachEvent("onDataRequest", (start, count) => {
 
@@ -40,12 +41,26 @@ function dataCollectionNew(instance, data) {
 			return false;	// <-- prevent the default "onDataRequest"
 		});
 
+
+		if (dc.___AD.onAfterLoadEvent) dc.detachEvent(dc.___AD.onAfterLoadEvent);
+		dc.___AD.onAfterLoadEvent = dc.attachEvent("onAfterLoad", () => {
+
+			instance.emit("loadData", {});
+
+		});
+
 	}
 
 	// override unused functions of selection model
 	dc.addCss = function () { };
 	dc.removeCss = function () { };
 	dc.render = function () { };
+
+	dc.attachEvent("onAfterLoad", () => {
+
+		instance.hideProgressOfComponents();
+
+	});
 
 	return dc;
 }
@@ -56,10 +71,16 @@ var ABViewPropertyDefaults = {
 	object: '', // id of ABObject
 	objectUrl: '', // url of ABObject
 	objectWorkspace: {
-		filterConditions: {}, // array of filters to apply to the data table
+		filterConditions: { // array of filters to apply to the data table
+			glue: 'and',
+			rules: []
+		},
 		sortFields: [] // array of columns with their sort configurations
 	},
-	loadAll: false
+	loadAll: false,
+	isQuery: false, // if true it is a query, otherwise it is a object.
+
+	fixSelect: "" // _CurrentUser, _FirstRecord, _FirstRecordDefault or row id
 }
 
 
@@ -90,16 +111,24 @@ export default class ABViewDataCollection extends ABView {
 		// Set filter value
 		this.__filterComponent = new RowFilter();
 		this.__filterComponent.objectLoad(this.datasource);
+		this.__filterComponent.viewLoad(this);
 		this.__filterComponent.setValue(this.settings.objectWorkspace.filterConditions || ABViewPropertyDefaults.objectWorkspace.filterConditions);
+
+		this.__bindComponentIds = [];
 
 		// refresh a data collection
 		// this.init();
+
+		// mark data status does not be initialized
+		this._dataStatus = this.dataStatusFlag.notInitial;
 
 	}
 
 
 	static common() {
+
 		return ABViewDefaults;
+
 	}
 
 
@@ -172,6 +201,7 @@ export default class ABViewDataCollection extends ABView {
 
 		// Convert to boolean
 		this.settings.loadAll = JSON.parse(this.settings.loadAll || ABViewPropertyDefaults.loadAll);
+		this.settings.isQuery = JSON.parse(this.settings.isQuery || ABViewPropertyDefaults.isQuery);
 
 	}
 
@@ -237,24 +267,26 @@ export default class ABViewDataCollection extends ABView {
 			logic: _logic
 		}
 	}
-	
+
 	removeField(field, cb) {
-		
+
 		var shouldSave = false;
 
 		// check filter conditions for any settings
-		if (this.settings.objectWorkspace.filterConditions && this.settings.objectWorkspace.filterConditions.filters && this.settings.objectWorkspace.filterConditions.filters.length) {
+		if (this.settings.objectWorkspace.filterConditions &&
+			this.settings.objectWorkspace.filterConditions.rules &&
+			this.settings.objectWorkspace.filterConditions.rules.length) {
 			// if settings are present look for deleted field id in each one
-			this.settings.objectWorkspace.filterConditions.filters.find((o, i) => {
-				if (o.fieldId === field.id) {
+			this.settings.objectWorkspace.filterConditions.rules.find((o, i) => {
+				if (o.key === field.id) {
 					// if found splice from array
-					this.settings.objectWorkspace.filterConditions.filters.splice(i, 1);
+					this.settings.objectWorkspace.filterConditions.rules.splice(i, 1);
 					// flag the object to be saved later
 					shouldSave = true;
 				}
 			});
 		}
-		
+
 		// check to see if sort fields settings are present
 		if (this.settings.objectWorkspace.sortFields && this.settings.objectWorkspace.sortFields.length) {
 			// if so look for deleted field in settings
@@ -267,10 +299,10 @@ export default class ABViewDataCollection extends ABView {
 				}
 			});
 		}
-		
+
 		// if settings were changed call the callback
 		cb(null, shouldSave);
-		
+
 	}
 
 
@@ -284,17 +316,41 @@ export default class ABViewDataCollection extends ABView {
 
 		// == Logic ==
 
-		_logic.selectObject = (objectId) => {
+		_logic.selectSource = (sourceId, oldId) => {
+
+			if ($$(ids.dataSource).getList().getItem(sourceId).disabled) {
+				// prevents re-calling onChange from itself
+				$$(ids.dataSource).blockEvent();
+				$$(ids.dataSource).setValue(oldId || "")
+				$$(ids.dataSource).unblockEvent();
+			}
 
 			var view = _logic.currentEditObject();
 
-			var object = view.application.objects(obj => obj.id == objectId)[0];
+			var object = view.application.objects(obj => obj.id == sourceId)[0];
+			var query = view.application.queries(q => q.id == sourceId)[0];
 
-			// populate fix selector
-			this.populateFixSelector(ids, view, object);
+			if (object) {
 
-			// re-create filter & sort popups
-			this.initPopupEditors(App, ids, _logic);
+				// populate fix selector
+				this.populateFixSelector(ids, view, object);
+
+				// re-create filter & sort popups
+				this.initPopupEditors(App, ids, _logic);
+
+				// show options
+				$$(ids.filterPanel).show();
+				$$(ids.sortPanel).show();
+
+
+			}
+			else if (query) {
+
+				// hide options
+				$$(ids.filterPanel).hide();
+				$$(ids.sortPanel).hide();
+			}
+
 
 		};
 
@@ -310,9 +366,42 @@ export default class ABViewDataCollection extends ABView {
 
 			var view = _logic.currentEditObject();
 
-			view.settings.objectWorkspace.filterConditions = FilterComponent.getValue();
+			var filterValues = FilterComponent.getValue();
 
-			this.propertyEditorSave(ids, view);
+			view.settings.objectWorkspace.filterConditions = filterValues;
+
+
+			var allComplete = true;
+			filterValues.rules.forEach((f) => {
+
+				// if all 3 fields are present, we are good.
+				if ((f.key)
+					&& (f.rule)
+					&& (f.value || 
+						// these rules do not have input value
+						(f.rule == 'is_current_user' ||
+						f.rule == 'is_not_current_user' ||
+						f.rule == 'same_as_user' ||
+						f.rule == 'not_same_as_user'))) {
+					allComplete = allComplete && true;
+				} else {
+
+					// else, we found an entry that wasn't complete:
+					allComplete = false;
+				}
+			})
+
+			// only perform the update if a complete row is specified:
+			if (allComplete) {
+
+				// we want to call .save() but give webix a chance to properly update it's 
+				// select boxes before this call causes them to be removed:
+				setTimeout(() => {
+					this.propertyEditorSave(ids, view);
+				}, 10);
+
+			}
+
 
 		};
 
@@ -330,16 +419,18 @@ export default class ABViewDataCollection extends ABView {
 					paddingX: 10,
 					rows: [
 						{
-							view: "select",
+							view: "richselect",
 							name: "dataSource",
-							label: L('ab.component.datacollection.object', '*Object:'),
+							label: L('ab.component.datacollection.source', '*Source:'),
 							labelWidth: App.config.labelWidthLarge,
-							options: [],
+							options: {
+								data: []
+							},
 							on: {
 								onChange: function (newv, oldv) {
 									if (newv == oldv) return;
 
-									_logic.selectObject(newv);
+									_logic.selectSource(newv, oldv);
 								}
 							}
 						},
@@ -365,6 +456,7 @@ export default class ABViewDataCollection extends ABView {
 			},
 			{
 				view: "fieldset",
+				name: "advancedOption",
 				label: L('ab.component.datacollection.advancedOptions', '*Advanced Options:'),
 				labelWidth: App.config.labelWidthLarge,
 				body: {
@@ -373,6 +465,7 @@ export default class ABViewDataCollection extends ABView {
 					paddingX: 10,
 					rows: [
 						{
+							name: "filterPanel",
 							cols: [
 								{
 									view: "label",
@@ -393,6 +486,7 @@ export default class ABViewDataCollection extends ABView {
 							]
 						},
 						{
+							name: "sortPanel",
 							cols: [
 								{
 									view: "label",
@@ -445,16 +539,42 @@ export default class ABViewDataCollection extends ABView {
 
 		super.propertyEditorPopulate(App, ids, view);
 
+		var sources = [];
+
 		// Objects
 		var objects = view.application.objects().map((obj) => {
 			return {
 				id: obj.id,
-				value: obj.label
+				value: obj.label,
+				icon: 'database'
 			}
 		});
-		objects.unshift({ id: '', value: L('ab.component.datacollection.selectObject', '*Select an object') });
+		sources = sources.concat(objects);
 
-		$$(ids.dataSource).define("options", objects);
+		// Queries
+		var queries = view.application.queries().map((q) => {
+			return {
+				id: q.id,
+				value: q.label,
+				icon: 'cubes',
+				disabled: q.isDisabled()
+			}
+		});
+		sources = sources.concat(queries);
+
+		sources.unshift({ id: '', value: L('ab.component.datacollection.selectSource', '*Select an source') });
+
+		$$(ids.dataSource).define("options", {
+			body: {
+				scheme: {
+					$init: function (obj) {
+						if (obj.disabled)
+							obj.$css = "disabled";
+					}
+				},
+				data: sources
+			}
+		});
 		$$(ids.dataSource).define("value", view.settings.object || '');
 		$$(ids.dataSource).refresh();
 
@@ -495,6 +615,24 @@ export default class ABViewDataCollection extends ABView {
 		// Set UI of the filter popup
 		// $$(ids.filter_popup).define('body', FilterComponent.ui);
 
+		// if selected soruce is a query, then hide advanced options UI
+		if (view.application.queries(q => q.id == view.settings.object)[0]) {
+			$$(ids.filterPanel).hide();
+			$$(ids.sortPanel).hide();
+			// $$(ids.advancedOption).hide();
+		}
+		else {
+			$$(ids.filterPanel).show();
+			$$(ids.sortPanel).show();
+			// $$(ids.advancedOption).show();
+		}
+
+		// initial data
+		if (view._dataStatus == view.dataStatusFlag.notInitial) {
+			view.loadData();
+		}
+
+
 	}
 
 	static propertyEditorValues(ids, view) {
@@ -515,24 +653,39 @@ export default class ABViewDataCollection extends ABView {
 
 		view.settings.object = $$(ids.dataSource).getValue();
 
-		// get object url
+		// get object or query url
 		if (view.settings.object) {
 			var obj = view.application.objects(obj => obj.id == view.settings.object)[0];
+			var query = view.application.queries(q => q.id == view.settings.object)[0];
 
-			view.settings.objectUrl = obj.urlPointer();
+			var source;
+			if (obj) {
+				source = obj;
+				view.settings.isQuery = false;
+			}
+			else if (query) {
+				source = query;
+				view.settings.isQuery = true;
+			}
+
+			if (source)
+				view.settings.objectUrl = source.urlPointer();
+			else
+				delete view.settings.objectUrl;
 
 
 			var defaultLabel = view.parent.label + '.' + view.defaults.key;
 
 			// update label
 			if (view.label == '?label?' || view.label == defaultLabel) {
-				view.label = obj.label;
-				$$(ids.label).define('value', obj.label);
+				view.label = source.label;
+				$$(ids.label).define('value', source.label);
 				$$(ids.label).refresh();
 			}
 		}
 		else {
 			delete view.settings.objectUrl;
+			delete view.settings.isQuery;
 		}
 
 		// set id of link data collection
@@ -568,9 +721,9 @@ export default class ABViewDataCollection extends ABView {
 	static populateBadgeNumber(ids, view) {
 
 		if (view.settings.objectWorkspace &&
-			view.settings.objectWorkspace.filterConditions && 
-			view.settings.objectWorkspace.filterConditions.filters) {
-			$$(ids.buttonFilter).define('badge', view.settings.objectWorkspace.filterConditions.filters.length);
+			view.settings.objectWorkspace.filterConditions &&
+			view.settings.objectWorkspace.filterConditions.rules) {
+			$$(ids.buttonFilter).define('badge', view.settings.objectWorkspace.filterConditions.rules.length);
 			$$(ids.buttonFilter).refresh();
 		}
 		else {
@@ -603,6 +756,13 @@ export default class ABViewDataCollection extends ABView {
 			var userFields = object.fields((f) => f.key == 'user');
 			if (userFields.length > 0)
 				dataItems.unshift({ id: '_CurrentUser', value: L('ab.component.datacollection.currentUser', '[Current User]') });
+
+			// Add a first record option to allow select first row
+			dataItems.unshift(
+				{ id: '_FirstRecord', value: L('ab.component.datacollection.firstRecord', '[First Record]') },
+				{ id: '_FirstRecordDefault', value: L('ab.component.datacollection.firstRecordDefault', '[Default to First Record]') }
+			);
+
 		}
 
 		dataItems.unshift({ id: '', value: L('ab.component.datacollection.fixSelect', '*Select fix cursor') });
@@ -632,23 +792,34 @@ export default class ABViewDataCollection extends ABView {
 
 			});
 
-			// set data collections to options
-			linkDcs.forEach((dc) => {
-				linkDcOptions.push({
-					id: dc.id,
-					value: dc.label
+			if (linkDcs && linkDcs.length > 0) {
+
+				// set data collections to options
+				linkDcs.forEach((dc) => {
+					linkDcOptions.push({
+						id: dc.id,
+						value: dc.label
+					});
 				});
-			});
 
-			linkDcOptions.unshift({ id: '', value: L('ab.component.datacollection.selectLinkSource', '*Select a link source') });
+				linkDcOptions.unshift({ id: '', value: L('ab.component.datacollection.selectLinkSource', '*Select a link source') });
 
-			$$(ids.linkDataSource).show();
-			$$(ids.linkDataSource).define("options", linkDcOptions);
-			$$(ids.linkDataSource).refresh();
-			$$(ids.linkDataSource).setValue(view.settings.linkDataCollection || '');
+				$$(ids.linkDataSource).show();
+				$$(ids.linkDataSource).define("options", linkDcOptions);
+				$$(ids.linkDataSource).refresh();
+				$$(ids.linkDataSource).setValue(view.settings.linkDataCollection || '');
+			}
+			else {
+
+				// hide options
+				$$(ids.linkDataSource).hide();
+				$$(ids.linkField).hide();
+			}
 
 		}
 		else {
+
+			// hide options
 			$$(ids.linkDataSource).hide();
 			$$(ids.linkField).hide();
 		}
@@ -720,20 +891,26 @@ export default class ABViewDataCollection extends ABView {
 		var filterConditions = ABViewPropertyDefaults.objectWorkspace.filterConditions;
 
 		// Clone ABObject
-		var objectCopy = _.cloneDeep(view.datasource);
-		if (objectCopy) {
-			objectCopy.objectWorkspace = view.settings.objectWorkspace;
+		if (view.datasource) {
 
-			filterConditions = objectCopy.objectWorkspace.filterConditions || ABViewPropertyDefaults.objectWorkspace.filterConditions;
+			var objectCopy = view.datasource.clone();
+			if (objectCopy) {
+				objectCopy.objectWorkspace = view.settings.objectWorkspace;
+	
+				filterConditions = objectCopy.objectWorkspace.filterConditions || ABViewPropertyDefaults.objectWorkspace.filterConditions;
+			}
+	
+			// Populate data to popups
+			FilterComponent.objectLoad(objectCopy);
+			FilterComponent.viewLoad(view);
+			FilterComponent.setValue(filterConditions);
+			view.__filterComponent.objectLoad(objectCopy);
+			view.__filterComponent.viewLoad(view);
+			view.__filterComponent.setValue(filterConditions);
+	
+			PopupSortFieldComponent.objectLoad(objectCopy, view);
+	
 		}
-
-		// Populate data to popups
-		FilterComponent.objectLoad(objectCopy);
-		FilterComponent.setValue(filterConditions);
-		view.__filterComponent.objectLoad(objectCopy);
-		view.__filterComponent.setValue(filterConditions);
-
-		PopupSortFieldComponent.objectLoad(objectCopy, view);
 
 	}
 
@@ -789,9 +966,36 @@ export default class ABViewDataCollection extends ABView {
 	*/
 	get datasource() {
 
+		if (!this.application) return null;
+
 		var obj = this.application.urlResolve(this.settings.objectUrl || '');
 
 		return obj;
+	}
+
+
+	/**
+	* @property sourceType
+	* return type of source.
+	*
+	* @return {string} - 'object' or 'query'
+	*/
+	get sourceType() {
+
+		if (this.datasource) {
+
+			if (this.application.objects(obj => obj.id == this.datasource.id)[0])
+				return 'object';
+			else if (this.application.queries(q => q.id == this.datasource.id)[0])
+				return 'query';
+			else
+				return "";
+
+		}
+		else {
+			return "";
+		}
+
 	}
 
 
@@ -835,101 +1039,283 @@ export default class ABViewDataCollection extends ABView {
 
 		});
 
+
+		// relate data functions
+		let isRelated = (relateData, rowId) => {
+
+			if (Array.isArray(relateData)) {
+				return relateData.filter(v => (v.id || v) == rowId).length > 0;
+			}
+			else {
+				return relateData && (relateData.id == rowId || relateData == rowId);
+			}
+
+		};
+
 		// events
 		AD.comm.hub.subscribe('ab.datacollection.create', (msg, data) => {
 
-			if (this.datasource &&
-				this.datasource.id != data.objectId)
+			let obj = this.datasource;
+			if (!obj)
 				return;
 
-			var rowData = data.data;
+			var values = data.data;
 
-			// normalize data before add to data collection
-			var model = this.datasource.model();
-			model.normalizeData(rowData);
+			if (obj.id == data.objectId) {
 
-			// filter condition before add 
-			if (!this.__filterComponent.isValid(rowData))
-				return;
+				// normalize data before add to data collection
+				var model = obj.model();
+				model.normalizeData(values);
+	
+				// filter condition before add 
+				if (!this.__filterComponent.isValid(values))
+					return;
+	
+				if (!this.__dataCollection.exists(values.id)) {
+					this.__dataCollection.add(values, 0);
+					// this.__dataCollection.setCursor(rowData.id);
+				}
 
-			if (!this.__dataCollection.exists(rowData.id)) {
-				this.__dataCollection.add(rowData, 0);
 			}
+
+			// if it is a linked object
+			let connectedFields = this.datasource.fields(f =>
+				f.key == 'connectObject' &&
+				f.datasourceLink &&
+				f.datasourceLink.id == data.objectId
+			);
+
+			// update relation data
+			if (connectedFields && connectedFields.length > 0) {
+
+				// various PK name
+				if (!values.id && connectedFields[0].object.PK() != 'id')
+					values.id = values[connectedFields[0].object.PK()];
+
+				this.__dataCollection.find({}).forEach(d => {
+
+					let updateItemData = {};
+
+					connectedFields.forEach(f => {
+
+						var updateRelateVal = values[f.fieldLink.relationName()] || {};
+						let rowRelateVal = d[f.relationName()] || {};
+
+						// Relate data
+						if (Array.isArray(rowRelateVal) &&
+							rowRelateVal.filter(v => v == values.id || v.id == values.id).length < 1 &&
+							isRelated(updateRelateVal, d.id)) {
+
+							rowRelateVal.push(values);
+
+							updateItemData[f.relationName()] = rowRelateVal;
+							updateItemData[f.columnName] = updateItemData[f.relationName()].map(v => v.id || v);
+						}
+						else if (!Array.isArray(rowRelateVal) &&
+							(rowRelateVal != values.id || rowRelateVal.id != values.id) &&
+							isRelated(updateRelateVal, d.id)) {
+
+							updateItemData[f.relationName()] = values;
+							updateItemData[f.columnName] = values.id || values;
+						}
+
+					});
+
+					// If this item needs to update
+					if (Object.keys(updateItemData).length > 0)
+						this.__dataCollection.updateItem(d.id, updateItemData);
+
+				});
+
+			}
+
 
 			// filter link data collection's cursor
-			var linkDc = this.dataCollectionLink;
-			if (linkDc) {
-				var linkCursor = linkDc.getCursor();
-				this.filterLinkCursor(linkCursor);
-			}
+			this.refreshLinkCursor();
 
 		});
 
 		AD.comm.hub.subscribe('ab.datacollection.update', (msg, data) => {
 
-			if (this.datasource &&
-				this.datasource.id != data.objectId)
+			let obj = this.datasource;
+			if (!obj)
 				return;
 
 			// updated values
 			var values = data.data;
+			if (!values) return;
 
-			if (this.__dataCollection.exists(values.id)) {
-				// normalize data before update data collection
-				var model = this.datasource.model();
-				model.normalizeData(values);
-				this.__dataCollection.updateItem(values.id, values);
+			// if it is the source object
+			if (obj.id == data.objectId) {
 
-				// If the update item is current cursor, then should tell components to update.
-				var currData = this.getCursor();
-				if (currData && currData.id == values.id) {
-					this.emit("changeCursor", currData);
+				// various PK name
+				if (!values.id && obj.PK() != 'id')
+					values.id = values[obj.PK()];
+
+				if (this.__dataCollection.exists(values.id)) {
+					
+					if (this.__filterComponent.isValid(values)) {
+						// normalize data before update data collection
+						var model = obj.model();
+						model.normalizeData(values);
+						this.__dataCollection.updateItem(values.id, values);
+
+						// If the update item is current cursor, then should tell components to update.
+						var currData = this.getCursor();
+						if (currData && currData.id == values.id) {
+							this.emit("changeCursor", currData);
+						}
+					} else {
+						// If the item is current cursor, then the current cursor should be cleared.
+						var currData = this.getCursor();
+						if (currData && currData.id == values.id)
+							this.emit("changeCursor", null);
+
+						this.__dataCollection.remove(values.id);
+					}
+				}
+				// filter before add new record
+				else if (this.__filterComponent.isValid(values)) {
+
+					// this means the updated record was not loaded yet so we are adding it to the top of the grid
+					// the placemet will probably change on the next load of the data
+					this.__dataCollection.add(values, 0);
 				}
 			}
 
-			// filter link data collection's cursor
-			var linkDc = this.dataCollectionLink;
-			if (linkDc) {
-				var linkCursor = linkDc.getCursor();
-				this.filterLinkCursor(linkCursor);
+			// if it is a linked object
+			let connectedFields = this.datasource.fields(f =>
+				f.key == 'connectObject' &&
+				f.datasourceLink &&
+				f.datasourceLink.id == data.objectId
+			);
+
+			// update relation data
+			if (connectedFields && connectedFields.length > 0) {
+
+				// various PK name
+				if (!values.id && connectedFields[0].object.PK() != 'id')
+					values.id = values[connectedFields[0].object.PK()];
+
+				this.__dataCollection.find({}).forEach(d => {
+
+					let updateItemData = {};
+
+					connectedFields.forEach(f => {
+
+						var updateRelateVal = values[f.fieldLink.relationName()] || {};
+						let rowRelateVal = d[f.relationName()] || {};
+
+						// Unrelate data
+						if (Array.isArray(rowRelateVal) &&
+							rowRelateVal.filter(v => v == values.id || v.id == values.id).length > 0 &&
+							!isRelated(updateRelateVal, d.id)) {
+
+							updateItemData[f.relationName()] = rowRelateVal.filter(v => (v.id || v) != values.id);
+							updateItemData[f.columnName] = updateItemData[f.relationName()].map(v => v.id || v);
+						}
+						else if (!Array.isArray(rowRelateVal) &&
+							(rowRelateVal == values.id || rowRelateVal.id == values.id) &&
+							!isRelated(updateRelateVal, d.id)) {
+
+							updateItemData[f.relationName()] = null;
+							updateItemData[f.columnName] = null;
+						}
+
+						// Relate data or Update
+						if (Array.isArray(rowRelateVal) && isRelated(updateRelateVal, d.id)) {
+
+							// update relate data
+							if (rowRelateVal.filter(v => v == values.id || v.id == values.id).length > 0) {
+								rowRelateVal.forEach((v, index) => {
+
+									if (v == values.id || v.id == values.id)
+										rowRelateVal[index] = values;
+
+								});
+							}
+							// add new relate
+							else {
+								rowRelateVal.push(values);
+							}
+
+							updateItemData[f.relationName()] = rowRelateVal;
+							updateItemData[f.columnName] = updateItemData[f.relationName()].map(v => v.id || v);
+						}
+						else if (!Array.isArray(rowRelateVal) &&
+							(rowRelateVal != values.id || rowRelateVal.id != values.id) && 
+							isRelated(updateRelateVal, d.id)) {
+
+							updateItemData[f.relationName()] = values;
+							updateItemData[f.columnName] = values.id || values;
+						}
+
+
+					});
+
+					// If this item needs to update
+					if (Object.keys(updateItemData).length > 0)
+						this.__dataCollection.updateItem(d.id, updateItemData);
+
+				});
+
 			}
+
+
+			// filter link data collection's cursor
+			this.refreshLinkCursor();
 
 		});
 
 		// We are subscribing to notifications from the server that an item may be stale and needs updating
 		// We will improve this later and verify that it needs updating before attempting the update on the client side
 		AD.comm.hub.subscribe('ab.datacollection.stale', (msg, data) => {
+			
+			// if we don't have a datasource or model, there is nothing we can do here:
 			// Verify the datasource has the object we are listening for if not just stop here
-			if (this.datasource &&
-				this.datasource.id != data.objectId)
-				return;
+			if (!this.datasource || !this.model || this.datasource.id != data.objectId) { 
+				return; 
+			}
+
+				
 
 			// updated values
 			var values = data.data;
+
+			// use the Object's defined Primary Key:
+			var PK = this.model.object.PK();
+			if (!values[PK]) {
+				PK = 'id';
+			}
+
 			if (values) {
 
-				if (this.__dataCollection.exists(values.id)) {
+				if (this.__dataCollection.exists(values[PK])) {
+					var cond = { where:{} };
+					cond.where[PK] = values[PK];
 					// this data collection has the record so we need to query the server to find out what it's latest data is so we can update all instances
-					this.model.findAll({ id:values.id }).then((res)=>{
-						
+					this.model.staleRefresh(cond).then((res) => {
+
 						// check to make sure there is data to work with
 						if (Array.isArray(res.data) && res.data.length) {
 							// tell the webix data collection to update using their API with the row id (values.id) and content (res.data[0]) 
-							this.__dataCollection.updateItem(values.id, res.data[0]);
+							if (this.__dataCollection.exists(values[PK])) {
+								this.__dataCollection.updateItem(values[PK], res.data[0]);
+							}
 
 							// If the update item is current cursor, then should tell components to update.
 							var currData = this.getCursor();
-							if (currData && currData.id == values.id) {
+							if (currData && currData[PK] == values[PK]) {
 								this.emit("changeCursor", currData);
 							}
 						} else {
 							// If there is no data in the object then it was deleted...lets clean things up
 							// If the deleted item is current cursor, then the current cursor should be cleared.
 							var currId = this.getCursor();
-							if (currId == values.id)
+							if (currId == values[PK])
 								this.emit("changeCursor", null);
 
-							this.__dataCollection.remove(values.id);
+							this.__dataCollection.remove(values[PK]);
 						}
 					});
 
@@ -937,40 +1323,90 @@ export default class ABViewDataCollection extends ABView {
 			}
 
 			// filter link data collection's cursor
-			var linkDc = this.dataCollectionLink;
-			if (linkDc) {
-				var linkCursor = linkDc.getCursor();
-				this.filterLinkCursor(linkCursor);
-			}
+			this.refreshLinkCursor();
 
 		});
 
 		AD.comm.hub.subscribe('ab.datacollection.delete', (msg, data) => {
 
-			if (this.datasource &&
-				this.datasource.id != data.objectId)
-				return;
+			if (!this.datasource)
+			return;
 
 			// id of a deleted item
 			var deleteId = data.data;
 
-			if (this.__dataCollection.exists(deleteId)) {
+			// if it is the source object
+			if (this.datasource.id == data.objectId &&
+				this.__dataCollection.exists(deleteId)) {
 
 				// If the deleted item is current cursor, then the current cursor should be cleared.
-				var currId = this.getCursor();
-				if (currId == deleteId)
+				var currData = this.getCursor();
+				if (currData && currData.id == deleteId)
 					this.emit("changeCursor", null);
 
 				this.__dataCollection.remove(deleteId);
 			}
+
+			// if it is a linked object
+			let connectedFields = this.datasource.fields(f =>
+				f.key == 'connectObject' &&
+				f.datasourceLink &&
+				f.datasourceLink.id == data.objectId
+			);
+
+			// update relation data
+			if (connectedFields && connectedFields.length > 0) {
+
+				this.__dataCollection.find({}).forEach(d => {
+
+					let updateRelateVals = {};
+
+					connectedFields.forEach(f => {
+
+						let relateVal = d[f.relationName()];
+						if (relateVal == null) return;
+
+						if (Array.isArray(relateVal) &&
+							relateVal.filter(v => v == deleteId || v.id == deleteId).length > 0) {
+
+							updateRelateVals[f.relationName()] = relateVal.filter(v => (v.id || v) != deleteId);
+							updateRelateVals[f.columnName] = updateRelateVals[f.relationName()].map(v => v.id || v);
+						}
+						else if (relateVal == deleteId || relateVal.id == deleteId) {
+							updateRelateVals[f.relationName()] = null;
+							updateRelateVals[f.columnName] = null;
+						}
+
+					});
+
+					// If this item needs to update
+					if (Object.keys(updateRelateVals).length > 0)
+						this.__dataCollection.updateItem(d.id, updateRelateVals);
+
+				});
+
+			}
+
 		});
 
 
+		// add listeners when cursor of link data collection is changed
+		let linkDc = this.dataCollectionLink;
+		if (linkDc) {
+			this.eventAdd({
+				emitter: linkDc,
+				eventName: "changeCursor",
+				listener: () => { this.refreshLinkCursor(); }
+			});
+		}
+
 		// load data to initial the data collection
-		if (this.settings.loadAll)
-			this.loadData();
-		else
-			this.__dataCollection.loadNext(20, 0);
+		// this.loadData();
+
+		// if (this.settings.loadAll)
+		// 	this.loadData();
+		// else
+		// 	this.__dataCollection.loadNext(20, 0);
 
 	}
 
@@ -981,9 +1417,11 @@ export default class ABViewDataCollection extends ABView {
 	* @return {ABViewDataCollection}
 	*/
 	get dataCollectionLink() {
-		return this
-			.pageRoot()
-			.dataCollections((dc) => dc.id == this.settings.linkDataCollection)[0];
+
+		let pageRoot = this.pageRoot();
+		if (!pageRoot) return null;
+
+		return pageRoot.dataCollections((dc) => dc.id == this.settings.linkDataCollection)[0];
 	}
 
 	/**
@@ -1010,32 +1448,84 @@ export default class ABViewDataCollection extends ABView {
 	bind(component) {
 
 		var dc = this.__dataCollection;
-		var obj = this.datasource;
 
+		// prevent bind many times
+		if (this.__bindComponentIds.indexOf(component.config.id) > -1 && 
+				$$(component.config.id).data &&
+				$$(component.config.id).data.find &&
+				$$(component.config.id).data.find({}).length > 0)
+			return;
+		// keep component id to an array
+		else 
+			this.__bindComponentIds.push(component.config.id);
 
-		if (component.config.view == 'datatable') {
+		if (component.config.view == 'datatable' ||
+			component.config.view == 'dataview' ||
+			component.config.view == 'treetable') {
+
 			if (dc) {
+
+				var items = dc.count();
+				if (items == 0 &&
+					(this._dataStatus == this.dataStatusFlag.notInitial ||
+					this._dataStatus == this.dataStatusFlag.initializing) &&
+					component.showProgress) {
+					component.showProgress({ type: "icon" });
+				}
+
 				component.define("datafetch", 20);
 				component.define("datathrottle", 500);
 
-				component.data.sync(dc);
+				// initial data of treetable
+				if (component.config.view == 'treetable') {
+
+					// NOTE: tree data does not support dynamic loading when scrolling
+					// https://forum.webix.com/discussion/3078/dynamic-loading-in-treetable
+					component.parse(dc.find({}));
+
+				}
+				else {
+					component.data.sync(dc);
+				}
 
 				// Implement .onDataRequest for paging loading
 				if (!this.settings.loadAll) {
 
 					component.___AD = component.___AD || {};
-					if (component.___AD.onDataRequestEvent) component.detachEvent(component.___AD.onDataRequestEvent);
-					component.___AD.onDataRequestEvent = component.attachEvent("onDataRequest", (start, count) => {
+					// if (component.___AD.onDataRequestEvent) component.detachEvent(component.___AD.onDataRequestEvent);
+					if (!component.___AD.onDataRequestEvent) {
+						component.___AD.onDataRequestEvent = component.attachEvent("onDataRequest", (start, count) => {
 
-						// load more data to the data collection
-						dc.loadNext(count, start);
+							if (component.showProgress)
+								component.showProgress({ type: "icon" });
 
-						return false;	// <-- prevent the default "onDataRequest"
-					});
+							// load more data to the data collection
+							dc.loadNext(count, start);
+
+							return false;	// <-- prevent the default "onDataRequest"
+						});
+					}
+
+					// NOTE : treetable should use .parse or TreeCollection
+					// https://forum.webix.com/discussion/1694/tree-and-treetable-using-data-from-datacollection
+					if (component.config.view == 'treetable') {
+
+						component.___AD = component.___AD || {};
+						if (!component.___AD.onDcLoadData) {
+							component.___AD.onDcLoadData = this.on("loadData", () => {
+
+								component.parse(dc.find({}));
+
+							});
+						}
+
+					}
 
 				}
 
-			} else {
+
+			}
+			else {
 				component.data.unsync();
 			}
 		}
@@ -1046,9 +1536,51 @@ export default class ABViewDataCollection extends ABView {
 			} else {
 				component.unbind();
 			}
+
+			if (component.refresh)
+				component.refresh();
+
 		}
 
-		component.refresh();
+
+	}
+
+	clone(settings) {
+		settings = settings || this.toObj();
+		var clonedDataCollection = new ABViewDataCollection(settings, this.application, this.parent);
+
+		return new Promise((resolve, reject) => {
+
+			// load the data
+			clonedDataCollection.loadData()
+				.then(() => {
+
+					// set the cursor
+					var cursorID = this.getCursor();
+
+					if (cursorID) {
+						// NOTE: webix documentation issue: .getCursor() is supposed to return
+						// the .id of the item.  However it seems to be returning the {obj} 
+						if (cursorID.id) cursorID = cursorID.id;
+
+						clonedDataCollection.setCursor(cursorID);
+					}
+
+					resolve(clonedDataCollection);
+				})
+				.catch(reject);
+		})
+	}
+
+	filteredClone(filters) {
+		var obj = this.toObj();
+
+		// check to see that filters are set (this is sometimes helpful to select the first record without doing so at the data collection level)
+		if (typeof filters != "undefined") {
+			obj.settings.objectWorkspace.filterConditions = { glue: 'and', rules: [obj.settings.objectWorkspace.filterConditions, filters] }
+		}
+
+		return this.clone(obj); // new ABViewDataCollection(settings, this.application, this.parent);
 
 	}
 
@@ -1056,8 +1588,8 @@ export default class ABViewDataCollection extends ABView {
 	setCursor(rowId) {
 
 		// If the static cursor is set, then this DC could not set cursor to other rows
-		if (this.settings.fixSelect &&
-			this.settings.fixSelect != rowId)
+		if (this.settings.fixSelect && 
+			(this.settings.fixSelect != "_FirstRecordDefault" || this.settings.fixSelect == rowId))
 			return;
 
 		var dc = this.__dataCollection;
@@ -1066,8 +1598,9 @@ export default class ABViewDataCollection extends ABView {
 			if (dc.getCursor() != rowId)
 				dc.setCursor(rowId);
 			// If set rowId equal current cursor, it will not trigger .onAfterCursorChange event
-			else 
-				this.emit("changeCursor", rowId);
+			else {
+				this.emit("changeCursor", this.getCursor());
+			}
 		}
 
 	}
@@ -1089,38 +1622,60 @@ export default class ABViewDataCollection extends ABView {
 
 	}
 
-	loadData(start, limit) {
+	getFirstRecord() {
+
+		var dc = this.__dataCollection;
+		if (dc) {
+
+			var currId = dc.getFirstId();
+			var currItem = dc.getItem(currId);
+
+			return currItem;
+		}
+		else {
+			return null;
+		}
+
+	}
+
+	getNextRecord(record) {
+
+		var dc = this.__dataCollection;
+		if (dc) {
+
+			var currId = dc.getNextId(record.id);
+			var currItem = dc.getItem(currId);
+
+			return currItem;
+		}
+		else {
+			return null;
+		}
+
+	}
+
+	loadData(start, limit, callback) {
+
+		// mark data status is initializing
+		if (this._dataStatus == this.dataStatusFlag.notInitial)
+			this._dataStatus = this.dataStatusFlag.initializing;
 
 		var obj = this.datasource;
-		if (obj == null) return Promise.resolve([]);
+		if (obj == null) {
+			this._dataStatus = this.dataStatusFlag.initialized;
+			return Promise.resolve([]);
+		}
 
 		var model = obj.model();
-		if (model == null) return Promise.resolve([]);
+		if (model == null) {
+			this._dataStatus = this.dataStatusFlag.initialized;
+			return Promise.resolve([]);
+		}
 
 		var sorts = this.settings.objectWorkspace.sortFields || [];
 
 		// pull filter conditions
-		var wheres = [];
-		var filterConditions = this.settings.objectWorkspace.filterConditions || ABViewPropertyDefaults.objectWorkspace.filterConditions;
-		(filterConditions.filters || []).forEach((f) => {
-
-			// Get field name
-			var fieldName = "";
-			var object = this.datasource;
-			if (object) {
-				var selectField = object.fields(field => field.id == f.fieldId)[0];
-				fieldName = selectField ? selectField.columnName : "";
-			}
-
-			wheres.push({
-				combineCondition: filterConditions.combineCondition,
-				fieldName: fieldName,
-				operator: f.operator,
-				inputValue: f.inputValue
-			});
-
-		});
-
+		var wheres = this.settings.objectWorkspace.filterConditions;
 
 		// calculate default value of $height of rows
 		var defaultHeight = 0;
@@ -1147,94 +1702,205 @@ export default class ABViewDataCollection extends ABView {
 		if (this.settings.loadAll) {
 			delete cond.limit;
 		}
+		
+		return Promise.resolve()
+			.then(() => {
 
-		// get data to data collection
-		return model.findAll(cond)
-			.then((data) => {
+				// check data status of link data collection and listen change cursor event
+				return new Promise((resolve, reject) => {
 
-				data.data.forEach((d) => {
+					let linkDc = this.dataCollectionLink;
+					if (!linkDc) return resolve();
 
-					// define $height of rows to render in webix elements
-					if (d.properties != null && d.properties.height != "undefined" && parseInt(d.properties.height) > 0) {
-						d.$height = parseInt(d.properties.height);
-					} else if (defaultHeight > 0) {
-						d.$height = defaultHeight;
+					switch (linkDc.dataStatus) {
+
+						case linkDc.dataStatusFlag.notInitial:
+							linkDc.loadData().catch(reject);
+							// no break;
+
+						case linkDc.dataStatusFlag.initializing:
+
+							// wait until the link dc initialized data
+							// NOTE: if linked data collections are recursive, then it is infinity looping.
+							this.eventAdd({
+								emitter: linkDc,
+								eventName: "initializedData",
+								listener: () => {
+
+									// go next
+									resolve();
+
+								}
+							});
+
+							break;
+
+						case linkDc.dataStatusFlag.initialized:
+							resolve();
+							break;
+
 					}
 
 				});
 
-				this.__dataCollection.parse(data);
+			})
+			// load data collection when using "(not_)in_data_collection" as a filter
+			.then(() => {
+				return new Promise((resolve, reject) => {
+					
+					if (wheres == null || wheres.rules == null || !wheres.rules.length)
+						return resolve();
 
-				// set static cursor
-				if (this.settings.fixSelect) {
+					var dcFilters = [];
+					
+					wheres.rules.forEach((rule) => {
+						// if this collection is filtered by data collections we need to load them in case we need to validate from them later
+						if (rule.rule == "in_data_collection" || rule.rule == "not_in_data_collection") {
 
-					// set cursor to the current user
-					if (this.settings.fixSelect == "_CurrentUser") {
+							dcFilters.push(
+								new Promise((next, err) => {
+									var dc = this.pageRoot().dataCollections(dc => dc.id == rule.value)[0];
+									
+									if (!dc) return next();
 
-						var username = OP.User.username();
-						var userFields = this.datasource.fields((f) => f.key == "user");
+									switch (dc.dataStatus) {
 
-						// find a row that contains the current user
-						var row = this.__dataCollection.find((r) => {
+										case dc.dataStatusFlag.notInitial:
+											dc.loadData().catch(err);
+											// no break;
 
-							var found = false;
+										case dc.dataStatusFlag.initializing:
 
-							userFields.forEach((f) => {
+											// wait until the link dc initialized data
+											// NOTE: if linked data collections are recursive, then it is infinity looping.
+											this.eventAdd({
+												emitter: dc,
+												eventName: "initializedData",
+												listener: () => {
 
-								if (found) return;
+													// go next
+													next();
 
-								if (r[f.columnName].filter) { // Array - isMultiple
-									found = r[f.colName].filter((data) => data.id == username).length > 0;
-								}
-								else if (r[f.columnName] == username) {
-									found = true;
-								}
+												}
+											});
 
-							});
+											break;
 
-							return found;
+										case dc.dataStatusFlag.initialized:
+											next();
+											break;
 
-						}, true);
-
-						// set a first row of current user to cursor
-						if (row)
-							this.__dataCollection.setCursor(row.id);
-					}
-					else {
-						this.setCursor(this.settings.fixSelect);
-					}
-
-				}
-
-
-				var linkDc = this.dataCollectionLink;
-				if (linkDc) {
-
-					// filter data by match link data collection
-					var linkData = linkDc.getCursor();
-					this.filterLinkCursor(linkData);
-
-					// add listeners when cursor of link data collection is changed
-					this.eventAdd({
-						emitter: linkDc,
-						eventName: "changeCursor",
-						listener: (currData) => {
-							this.filterLinkCursor(currData);
+									}
+								})
+							)
 						}
+					})
+					
+					Promise.all(dcFilters).then(() => {
+						resolve();
+					}).catch(reject);
+					
+				});
+
+			})
+
+			// pull data to data collection
+			.then(() => {
+
+				return new Promise((resolve, reject) => {
+
+					model.findAll(cond)
+					.then((data) => {
+
+						data.data.forEach((d) => {
+	
+							// define $height of rows to render in webix elements
+							if (d.properties != null && d.properties.height != "undefined" && parseInt(d.properties.height) > 0) {
+								d.$height = parseInt(d.properties.height);
+							} else if (defaultHeight > 0) {
+								d.$height = defaultHeight;
+							}
+	
+						});
+
+
+						// mark initialized data
+						if (this._dataStatus != this.dataStatusFlag.initialized) {
+							this._dataStatus = this.dataStatusFlag.initialized;
+							this.emit("initializedData", {});
+						}
+
+
+						// populate data to webix's data collection and the loading cursor is hidden here
+						this.__dataCollection.parse(data);
+	
+	
+						var linkDc = this.dataCollectionLink;
+						if (linkDc) {
+	
+							// filter data by match link data collection
+							this.refreshLinkCursor();
+	
+						}
+						else {
+	
+							// set static cursor
+							this.setStaticCursor();
+	
+						}
+
+						if (callback)
+							callback();
+	
+						resolve();
+		
+					})
+					.catch(err => {
+		
+						this.hideProgressOfComponents();
+		
+						if (callback)
+							callback(err);
+
+						reject(err);
+		
 					});
 
-				}
+				});
 
 			});
 
 	}
+
+	reloadData() {
+		this.__dataCollection.clearAll();
+		return this.loadData(null, null, null);
+	}
+
 
 	getData(filter) {
 
 		var dc = this.__dataCollection;
 		if (dc) {
 
-			return dc.find(filter || {});
+			return dc.find(row => {
+
+				// data collection filter
+				var isValid = this.__filterComponent.isValid(row);
+
+				// parent dc filter
+				var linkDc = this.dataCollectionLink;
+				if (isValid && linkDc) {
+					isValid = this.isParentFilterValid(row);
+				}
+
+				// addition filter
+				if (isValid && filter) {
+					isValid = filter(row);
+				}
+
+				return isValid;
+			});
 		}
 		else {
 			return [];
@@ -1244,35 +1910,178 @@ export default class ABViewDataCollection extends ABView {
 
 
 	/**
-	 * @method filterLinkCursor
+	 * @method refreshLinkCursor
 	 * filter data in data collection by match id of link data collection
 	 * 
 	 * @param {Object} - current data of link data collection
 	 */
-	filterLinkCursor(linkCursor) {
+	refreshLinkCursor() {
 
-		var fieldLink = this.fieldLink;
-
-		if (this.__dataCollection && fieldLink) {
-			this.__dataCollection.filter((item) => {
-
-				// the parent's cursor is not set.
-				if (linkCursor == null) return false;
-
-				var linkVal = item[fieldLink.relationName()];
-				if (linkVal == null) return false;
-
-				// array - 1:M , M:N
-				if (linkVal.filter) {
-					return linkVal.filter((obj) => obj.id == linkCursor.id).length > 0;
-				}
-				else {
-					return (linkVal.id || linkVal) == linkCursor.id;
-				}
-
-			});
+		var linkCursor;
+		var linkDc = this.dataCollectionLink;
+		if (linkDc) {
+			linkCursor = linkDc.getCursor();
 		}
 
+		if (this.__dataCollection) {
+			this.__dataCollection.filter(rowData => {
+
+				// if link dc cursor is null, then show all data
+				if (linkCursor == null)
+					return true;
+				else
+					return this.isParentFilterValid(rowData);
+
+			});
+
+			this.setStaticCursor();
+
+		}
+
+	}
+
+	isParentFilterValid(rowData) {
+
+		// data is empty
+		if (rowData == null) return null;
+
+		var linkDc = this.dataCollectionLink;
+		if (linkDc == null) return true;
+
+		var fieldLink = this.fieldLink;
+		if (fieldLink == null) return true;
+
+		// the parent's cursor is not set.
+		var linkCursor = linkDc.getCursor();
+		if (linkCursor == null) return false;
+
+		var linkVal = rowData[fieldLink.relationName()];
+		if (linkVal == null) {
+
+			// try to get relation value(id) again
+			if (rowData[fieldLink.columnName]) {
+				linkVal = rowData[fieldLink.columnName];
+			}
+			else {
+				return false;
+			}
+		}
+
+		// array - 1:M , M:N
+		if (linkVal.filter) {
+			return linkVal.filter(val => (val.id || val) == linkCursor.id).length > 0;
+		}
+		else {
+			return (linkVal.id || linkVal) == linkCursor.id;
+		}
+
+
+	}
+
+	setStaticCursor() {
+
+		if (this.settings.fixSelect) {
+
+			// set cursor to the current user
+			if (this.settings.fixSelect == "_CurrentUser") {
+
+				var username = OP.User.username();
+				var userFields = this.datasource.fields((f) => f.key == "user");
+
+				// find a row that contains the current user
+				var row = this.__dataCollection.find((r) => {
+
+					var found = false;
+
+					userFields.forEach((f) => {
+
+						if (found || r[f.columnName] == null) return;
+
+						if (r[f.columnName].filter) { // Array - isMultiple
+							found = r[f.colName].filter((data) => data.id == username).length > 0;
+						}
+						else if (r[f.columnName] == username) {
+							found = true;
+						}
+
+					});
+
+					return found;
+
+				}, true);
+
+				// set a first row of current user to cursor
+				if (row)
+					this.__dataCollection.setCursor(row.id);
+			}
+			else if (this.settings.fixSelect == "_FirstRecord" || this.settings.fixSelect == "_FirstRecordDefault") {
+				// // find a row that contains the current user
+				// var row = this.__dataCollection.find((r) => {
+
+				// 	var found = false;
+				// 	if (!found) {
+				// 		found = true;
+				// 		return true; // just give us the first record
+				// 	}
+
+				// }, true);
+
+				// // set a first row of current user to cursor
+				// if (row)
+				// 	this.__dataCollection.setCursor(row.id);
+
+				// set a first row to cursor
+				var rowId = this.__dataCollection.getFirstId();
+				if (rowId)
+					this.__dataCollection.setCursor(rowId);
+			}
+			else {
+				this.__dataCollection.setCursor(this.settings.fixSelect);
+			}
+
+		}
+
+	}
+
+	hideProgressOfComponents() {
+
+		this.__bindComponentIds.forEach(comId => {
+
+			if ($$(comId) &&
+				$$(comId).hideProgress)
+				$$(comId).hideProgress();
+
+		});
+
+	}
+
+	get dataStatusFlag() {
+		return {
+			notInitial: 0,
+			initializing: 1,
+			initialized: 2
+		};
+	}
+
+	get dataStatus() {
+
+		return this._dataStatus;
+
+	}
+
+	removeComponent(comId) {
+
+		// get index
+		let index = this.__bindComponentIds.indexOf(comId);
+
+		// delete
+		this.__bindComponentIds.splice(index, 1);
+
+	}
+
+	clearAll() {
+		if (this.__dataCollection)
+			this.__dataCollection.clearAll();
 	}
 
 

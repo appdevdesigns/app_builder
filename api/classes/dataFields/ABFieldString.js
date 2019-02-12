@@ -29,6 +29,10 @@ var ABFieldStringDefaults = {
 	// what types of Sails ORM attributes can be imported into this data type?
 	// http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
 	compatibleOrmTypes: ['string'],
+
+	// what types of MySql column types can be imported into this data type?
+	// https://www.techonthenet.com/mysql/datatypes.php
+	compatibleMysqlTypes: ['char', 'varchar', 'tinytext']
 }
 
 
@@ -41,8 +45,8 @@ class ABFieldString extends ABField {
     	/*
     	{
 			settings: {
-				textDefault: 'string',
-				supportMultilingual: true/false
+				default: 'string',
+				supportMultilingual: 1/0
 			}
     	}
     	*/
@@ -50,7 +54,7 @@ class ABFieldString extends ABField {
     	this.settings = values.settings || {};
 
     	// we're responsible for setting up our specific settings:
-    	this.settings.textDefault = this.settings.textDefault || '';
+    	this.settings.default = this.settings.default || '';
     	this.settings.supportMultilingual = this.settings.supportMultilingual+"" || "1";
 
     	// text to Int:
@@ -164,7 +168,7 @@ class ABFieldString extends ABField {
 					else next();
 				},
 				
-				// create/alter the actual column
+				// create the actual column
 				(next) => {
 
 					// [fix]: don't create a column for a multilingual field
@@ -173,12 +177,25 @@ class ABFieldString extends ABField {
 						knex.schema.hasColumn(tableName, this.columnName)
 						.then((exists) => {
 							knex.schema.table(tableName, (t) => {
-								var currCol = t.string(this.columnName)
-								.defaultTo(this.settings.textDefault);
+								var currCol = t.string(this.columnName);
 
-								// alter default value of column
+								// default value
+								if (this.settings.default && this.settings.default.indexOf("{uuid}") == -1)
+									currCol.defaultTo(this.settings.default);
+								else
+									currCol.defaultTo(null);
+
+								// not nullable/nullable
+								if (this.settings.required) 
+									currCol.notNullable();
+								else
+									currCol.nullable();
+
+
 								if (exists)
 									currCol.alter();
+
+
 							})
 							.then(() => {
 								next();
@@ -201,6 +218,19 @@ class ABFieldString extends ABField {
 			
 		});
 	}
+
+
+	/**
+	 * @function migrateUpdate
+	 * perform the necessary sql actions to MODIFY this column to the DB table.
+	 * @param {knex} knex the Knex connection.
+	 */
+	migrateUpdate (knex) {
+
+		return this.migrateCreate(knex);
+
+	}
+
 
 
 	/**
@@ -309,6 +339,16 @@ class ABFieldString extends ABField {
 		var errors = [];
 
 		return errors;
+	}
+
+
+	/*
+	 * @property isMultilingual
+	 * does this field represent multilingual data?
+	 * @return {bool}
+	 */
+	get isMultilingual() {
+		return this.settings.supportMultilingual == 1;
 	}
 
 

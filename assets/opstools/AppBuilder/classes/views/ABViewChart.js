@@ -5,11 +5,7 @@
  *
  */
 
-// import ABViewWidget from "./ABViewWidget"
 import ABViewContainer from "./ABViewContainer"
-// import ABViewManager from "../ABViewManager"
-import ABViewChartComponent from "./ABViewChartComponent"
-import ABPropertyComponent from "../ABPropertyComponent"
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -185,12 +181,14 @@ export default class ABViewChart extends ABViewContainer  {
 			{
 				name: 'showLabel',
 				view: 'checkbox',
-				label: L('ab.components.common.showlabel', "*Display Label")
+				label: L('ab.components.common.showlabel', "*Display Label"),
+				labelWidth: App.config.labelWidthLarge
 			},
 			{
 				name: 'labelPosition',
 				view: 'richselect',
 				label: L('ab.components.common.labelPosition', "*Label Position"),
+				labelWidth: App.config.labelWidthLarge,
 				options: [
 					{
 						id: 'left',
@@ -206,6 +204,7 @@ export default class ABViewChart extends ABViewContainer  {
 				name: 'labelWidth',
 				view: 'counter',
 				label: L('ab.components.common.labelWidth', "*Label Width"),
+				labelWidth: App.config.labelWidthLarge
 			},
 			{
 				view: 'counter',
@@ -296,11 +295,13 @@ export default class ABViewChart extends ABViewContainer  {
 		$$(ids.columnValue).define("options", []);
 		$$(ids.columnValue).refresh();
 
-		var dc = view.dataCollection();
+		var dc = view.dataCollection;
 		if (dc == null) return;
 
 		var obj = dc.datasource;
-		var allFields = obj.fields();
+		if (obj == null) return;
+
+		var normalFields = obj.fields((f) => f.key != 'connectObject');
 		var numFields = obj.fields((f) => f.key == 'number');
 
 
@@ -312,7 +313,7 @@ export default class ABViewChart extends ABViewContainer  {
 			}
 		};
 
-		var columnLabelOptions = allFields.map(convertOption);
+		var columnLabelOptions = normalFields.map(convertOption);
 		var columnValueOptions = numFields.map(convertOption);
 
 
@@ -339,11 +340,12 @@ export default class ABViewChart extends ABViewContainer  {
 		$$(ids.columnValue2).refresh();
 		$$(ids.columnValue2).enable();
 
-		var dc = view.dataCollection();
+		var dc = view.dataCollection;
 		if (dc == null) return;
 
 		var obj = dc.datasource;
-		var allFields = obj.fields();
+		if (obj == null) return;
+
 		var numFields = obj.fields((f) => f.key == 'number');
 
 
@@ -423,46 +425,52 @@ export default class ABViewChart extends ABViewContainer  {
 
 		};
 
+
 		return {
 			ui: _ui,
 			init: _init,
 			logic: _logic,
+
+			onShow: container.onShow
 		}
 	}
 
 	/**
-	 * @method dataCollection
+	 * @property dataCollection
 	 * return ABViewDataCollection of this form
 	 * 
 	 * @return {ABViewDataCollection}
 	 */
-	dataCollection() {
+	get dataCollection() {
 		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.dataSource)[0];
 	}
 
 	labelField() {
-		var dc = this.dataCollection();
+		var dc = this.dataCollection;
 		if (!dc) return null;
 
 		var obj = dc.datasource;
-		
+		if (!obj) return null;
+
 		return obj.fields((f) => f.id == this.settings.columnLabel)[0]
 	}
 
 	valueField() {
-		var dc = this.dataCollection();
+		var dc = this.dataCollection;
 		if (!dc) return null;
 
 		var obj = dc.datasource;
+		if (!obj) return null;
 		
 		return obj.fields((f) => f.id == this.settings.columnValue)[0]
 	}
 
 	valueField2() {
-		var dc = this.dataCollection();
+		var dc = this.dataCollection;
 		if (!dc) return null;
 
 		var obj = dc.datasource;
+		if (!obj) return null;
 		
 		return obj.fields((f) => f.id == this.settings.columnValue2)[0]
 	}
@@ -472,7 +480,7 @@ export default class ABViewChart extends ABViewContainer  {
 			this.dcChart = new webix.DataCollection();
 		}
 
-		var dc = this.dataCollection();
+		var dc = this.dataCollection;
 		if (dc == null) return this.dcChart;
 
 
@@ -618,6 +626,12 @@ export default class ABViewChart extends ABViewContainer  {
 			refreshData();
 		});
 		return this.dcChart;
+	}
+
+	copyUpdateProperyList() {
+
+		return ['dataSource'];
+
 	}
 
 }

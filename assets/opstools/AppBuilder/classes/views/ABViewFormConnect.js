@@ -8,13 +8,21 @@
 import ABViewFormCustom from "./ABViewFormCustom"
 import ABPropertyComponent from "../ABPropertyComponent"
 
+import RowFilter from "../RowFilter"
+
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
 
 var ABViewFormConnectPropertyComponentDefaults = {
-	formView: '' // 'richselect' or 'radio'
+	formView: '', // id of form to add new data
+	objectWorkspace: {
+		filterConditions: { // array of filters to apply to the data table
+			glue: 'and',
+			rules: []
+		},
+	},
 }
 
 
@@ -23,6 +31,8 @@ var ABViewFormConnectDefaults = {
 	icon: 'list-ul',		// {string} fa-[icon] reference for this view
 	labelKey: 'ab.components.connect' // {string} the multilingual label key for the class label
 }
+
+var FilterComponent = null;
 
 export default class ABViewFormConnect extends ABViewFormCustom {
 
@@ -34,6 +44,13 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 	constructor(values, application, parent) {
 
 		super(values, application, parent, ABViewFormConnectDefaults);
+		
+		// Set filter value
+		this.__filterComponent = new RowFilter();
+		this.__filterComponent.objectLoad(this.datasource);
+		this.__filterComponent.viewLoad(this);
+
+		this.__filterComponent.setValue(this.settings.objectWorkspace.filterConditions || ABViewFormConnectPropertyComponentDefaults.objectWorkspace.filterConditions);
 
 		// OP.Multilingual.translate(this, this, ['text']);
 
@@ -79,6 +96,22 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 	 */
 	// editorComponent(App, mode) {
 	// }
+	
+	/**
+	 * @method fromValues()
+	 *
+	 * initialze this object with the given set of values.
+	 * @param {obj} values
+	 */
+	fromValues(values) {
+
+		super.fromValues(values);
+
+		this.settings.formView = this.settings.formView || ABViewFormConnectPropertyComponentDefaults.formView;
+		this.settings.objectWorkspace = this.settings.objectWorkspace || ABViewFormConnectPropertyComponentDefaults.objectWorkspace;
+
+	}
+
 
 
 
@@ -89,6 +122,53 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 	static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
 
 		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
+
+		_logic.showFilterPopup = ($view) => {
+			this.filter_popup.show($view, null, { pos: "top" });
+		};
+		
+		_logic.onFilterChange = () => {
+
+			var view = _logic.currentEditObject();
+
+			var filterValues = FilterComponent.getValue();
+
+			view.settings.objectWorkspace.filterConditions = filterValues;
+
+
+			var allComplete = true;
+			filterValues.rules.forEach((f) => {
+
+				// if all 3 fields are present, we are good.
+				if ((f.key)
+					&& (f.rule)
+					&& (f.value)) {
+
+					allComplete = allComplete && true;
+				} else {
+
+					// else, we found an entry that wasn't complete:
+					allComplete = false;
+				}
+			})
+
+			// only perform the update if a complete row is specified:
+			if (allComplete) {
+
+				// we want to call .save() but give webix a chance to properly update it's 
+				// select boxes before this call causes them to be removed:
+				setTimeout(() => {
+					this.propertyEditorSave(ids, view);
+				}, 10);
+
+			}
+
+
+		};
+
+
+		// create filter & sort popups
+		this.initPopupEditors(App, ids, _logic);
 
 		// in addition to the common .label  values, we 
 		// ask for:
@@ -104,6 +184,39 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 							$$(ids.formView).setValue("");
 						}
 					}
+				}
+			},
+			{
+				view: "fieldset",
+				name: "advancedOption",
+				label: L('ab.component.connect.advancedOptions', '*Advanced Options:'),
+				labelWidth: App.config.labelWidthLarge,
+				body: {
+					type: "clean",
+					paddingY: 20,
+					paddingX: 10,
+					rows: [
+						{
+							cols: [
+								{
+									view: "label",
+									label: L("ab.component.connect.filterData", "*Filter Options:"),
+									width: App.config.labelWidthLarge,
+								},
+								{
+									view: "button",
+									name: "buttonFilter",
+									label: L("ab.component.connect.settings", "*Settings"),
+									icon: "gear",
+									type: "icon",
+									badge: 0,
+									click: function () {
+										_logic.showFilterPopup(this.$view);
+									}
+								}
+							]
+						},
+					]
 				}
 			}
 
@@ -131,7 +244,11 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 
 		var pagesHasForm = view.pageRoot()
 			.pages(p => {
-				return p.views(v => v.key == "form" && v.dataCollection().datasource.id == view.field().settings.linkObject).length;
+				return p.views(v => {
+					return v.key == "form" && 
+						v.dataCollection &&
+						v.dataCollection.datasource.id == view.field().settings.linkObject;
+				}).length;
 			}, true)
 			.map(p => {
 				return {
@@ -147,6 +264,24 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 
 		$$(ids.formView).setValue(view.settings.formView || ABViewFormConnectPropertyComponentDefaults.formView);
 		
+		// initial populate of popups
+		this.populatePopupEditors(view);
+		
+		// inform the user that some advanced settings have been set
+		this.populateBadgeNumber(ids, view);
+		
+		// when a change is made in the properties the popups need to reflect the change
+		this.updateEventIds = this.updateEventIds || {}; // { viewId: boolean, ..., viewIdn: boolean }
+		if (!this.updateEventIds[view.id]) {
+			this.updateEventIds[view.id] = true;
+
+			view.addListener('properties.updated', () => {
+				this.populatePopupEditors(view);
+				this.populateBadgeNumber(ids, view);
+			});
+		}
+
+		
 	}
 
 	static propertyEditorValues(ids, view) {
@@ -154,9 +289,65 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 		super.propertyEditorValues(ids, view);
 
 		view.settings.formView = $$(ids.formView).getValue();
+		
+	}
+	
+	static populateBadgeNumber(ids, view) {
+
+		if (view.settings.objectWorkspace &&
+			view.settings.objectWorkspace.filterConditions &&
+			view.settings.objectWorkspace.filterConditions.rules) {
+			$$(ids.buttonFilter).define('badge', view.settings.objectWorkspace.filterConditions.rules.length);
+			$$(ids.buttonFilter).refresh();
+		}
+		else {
+			$$(ids.buttonFilter).define('badge', 0);
+			$$(ids.buttonFilter).refresh();
+		}
 
 	}
 
+
+	static initPopupEditors(App, ids, _logic) {
+
+		var idBase = 'ABViewFormConnectPropertyEditor';
+
+
+		FilterComponent = new RowFilter(App, idBase + "_filter");
+		FilterComponent.init({
+			// when we make a change in the popups we want to make sure we save the new workspace to the properties to do so just fire an onChange event
+			onChange: _logic.onFilterChange
+		});
+
+		this.filter_popup = webix.ui({
+			view: "popup",
+			width: 800,
+			hidden: true,
+			body: FilterComponent.ui
+		});
+
+	}
+
+
+	static populatePopupEditors(view) {
+
+		var filterConditions = ABViewFormConnectPropertyComponentDefaults.objectWorkspace.filterConditions;
+
+		// Clone ABObject
+		var field = view.field();
+		var linkedObj = field.datasourceLink;
+		var objectCopy = linkedObj.clone();
+		if (objectCopy) {
+			objectCopy.objectWorkspace = view.settings.objectWorkspace;
+			filterConditions = objectCopy.objectWorkspace.filterConditions || ABViewFormConnectPropertyComponentDefaults.objectWorkspace.filterConditions;
+		}
+
+		// Populate data to popups
+		FilterComponent.objectLoad(objectCopy);
+		FilterComponent.setValue(filterConditions);
+		FilterComponent.viewLoad(view);
+
+	}
 
 
 	/*
@@ -183,12 +374,16 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 		if (form)
 			settings = form.settings;
 
+		var requiredClass = "";
+		if (field.settings.required == 1) {
+			requiredClass = "webix_required";
+		}
 		var templateLabel = '';
 		if (settings.showLabel == true) {
 			if (settings.labelPosition == 'top')
-				templateLabel = '<label style="display:block; text-align: left; margin: 0; padding:1px 7.5px 0 3px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" class="webix_inp_top_label">#label#</label>';
+				templateLabel = '<label style="display:block; text-align: left; margin: 0; padding:1px 7.5px 0 3px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" class="webix_inp_top_label '+requiredClass+'">#label#</label>';
 			else
-				templateLabel = '<label style="width: #width#px; display: inline-block; line-height: 32px; float: left; margin: 0; padding:1px 7.5px 0 3px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">#label#</label>';
+				templateLabel = '<label style="width: #width#px; display: inline-block; line-height: 32px; float: left; margin: 0; padding:1px 7.5px 0 3px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" class="'+requiredClass+'">#label#</label>';
 		}
 
 		var newWidth = settings.labelWidth;
@@ -294,7 +489,11 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 			var rowData = {},
 				node = elem.$view;
 
-			field.customDisplay(rowData, App, node, true, this.settings.formView);
+			field.customDisplay(rowData, App, node, {
+				editable: true,
+				formView: this.settings.formView,
+				filters: this.settings.objectWorkspace.filterConditions
+			});
 
 		};
 
@@ -320,7 +519,11 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 				// isolate the connected field data that was saved
 				// var savedItem = linkedObj.displayData(saveData);
 				// repopulate the selectivity options now that there is a new one added
-				field.getOptions().then(function (data) {
+				var filters = {};
+				if (this.settings.objectWorkspace && this.settings.objectWorkspace.filterConditions) {
+					filters = this.settings.objectWorkspace.filterConditions;
+				}
+				field.getOptions(this.settings.objectWorkspace.filterConditions, "").then(function (data) {
 					// find option with the matching id to the savedData
 					var myOption = data.filter(d => d.id == saveData.id);
 					var values = {};

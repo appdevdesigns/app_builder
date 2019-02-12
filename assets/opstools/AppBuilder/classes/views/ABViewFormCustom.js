@@ -132,12 +132,17 @@ export default class ABViewFormCustom extends ABViewFormField {
 		if (form)
 			settings = form.settings;
 
+		var requiredClass = "";
+		if (field.settings.required == 1) {
+			requiredClass = "webix_required";
+		}
+
 		var templateLabel = '';
 		if (settings.showLabel == true) {
 			if (settings.labelPosition == 'top')
-				templateLabel = '<label style="display:block; text-align: left; margin: 0; padding:1px 7.5px 0 3px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" class="webix_inp_top_label">#label#</label>';
+				templateLabel = '<label style="display:block; text-align: left; margin: 0; padding:1px 7.5px 0 3px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" class="webix_inp_top_label '+requiredClass+'">#label#</label>';
 			else
-				templateLabel = '<label style="width: #width#px; display: inline-block; line-height: 32px; float: left; margin: 0; padding:1px 7.5px 0 3px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">#label#</label>';
+				templateLabel = '<label style="width: #width#px; display: inline-block; line-height: 32px; float: left; margin: 0; padding:1px 7.5px 0 3px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" class="'+requiredClass+'">#label#</label>';
 		}
 
 		var newWidth = settings.labelWidth;
@@ -172,14 +177,19 @@ export default class ABViewFormCustom extends ABViewFormField {
 				onClick: {
 					"customField": (id, e, trg) => {
 
-						var formView = this.parentFormComponent(),
-							dc = formView.dataCollection(),
-							rowData = dc.getCursor() || {};
+						var rowData = {}; 
 
-						if ($$(ids.component)) {
-							var node = $$(ids.component).$view;
-							field.customEdit(rowData, App, node, ids.component);
+						var formView = this.parentFormComponent();
+						if (formView) {
+							var dc = formView.dataCollection;
+							if (dc)
+								rowData = dc.getCursor() || {};
 						}
+
+						// var node = $$(ids.component).$view;
+						var node = $$(trg).getParentView().$view;
+						field.customEdit(rowData, App, node, ids.component);
+
 					}
 				}
 			}
@@ -216,10 +226,12 @@ export default class ABViewFormCustom extends ABViewFormField {
 			if (!elem) return;
 
 			var rowData = {},
-				node = elem.$view,
-				editable = true;
+				node = elem.$view;
 
-			field.customDisplay(rowData, App, node, editable, ids.component);
+			field.customDisplay(rowData, App, node, {
+				editable: true,
+				formId: ids.component
+			});
 
 		};
 

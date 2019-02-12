@@ -69,6 +69,15 @@ export default class ABChooseList extends OP.Component {
 							view: "toolbar",
 							id: ids.toolBar,
 							cols: [
+								{ 
+			                        view:"button", 
+			                        type:"icon", 
+			                        icon:"male",
+			                        width:25,
+			                        click:()=>{
+			                            this.emit('view.config');
+			                        }
+			                    },
 								{ view: "label", label:labels.component.title, fillspace: true },
 								{
 									id: ids.buttonCreateNewApplication,
@@ -120,7 +129,7 @@ export default class ABChooseList extends OP.Component {
 							},
 							type: {
 								height: App.config.appListRowHeight, // Defines item height
-								iconGear: "<span class='webix_icon fa-cog'></span>"
+								iconGear: "<span class='webix_icon fa fa-cog'></span>"
 							},
 							select: false,
 							onClick: {
@@ -254,9 +263,9 @@ export default class ABChooseList extends OP.Component {
 			onClickListEdit: function(ev, id, trg) {
 
 				var options = [
-					{ label: labels.common.edit, icon: "fa-pencil-square-o", command:'edit' },
-					{ label: labels.common.export, icon: "fa-download", command:'export' },
-					{ label: labels.common.delete, icon: "fa-trash", command:'delete' }
+					{ label: labels.common.edit, icon: "pencil-square-o", command:'edit' },
+					{ label: labels.common.export, icon: "download", command:'export' },
+					{ label: labels.common.delete, icon: "trash", command:'delete' }
 				];
 
 				MenuComponent.menuOptions(options);
@@ -285,6 +294,8 @@ export default class ABChooseList extends OP.Component {
 
 				if (selectedApp) {
 
+					// set the common App so it is accessible for all the Applications views
+					selectedApp.App = App;		
 					_logic.ready();
 
 					// We've selected an Application to work with
@@ -529,11 +540,16 @@ export default class ABChooseList extends OP.Component {
 			 *
 			 * Trigger our List component to show
 			 */
-			transitionApplicationList:function() {
+			transitionApplicationList:() => {
 				_logic.refreshList();
-				$$(ids.component).show();
+				this.show();
 			}
 		})
+
+
+		this.show = function() {
+			$$(ids.component).show();
+		}
 
 	}
 

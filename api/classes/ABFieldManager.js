@@ -13,10 +13,14 @@ var ABFieldDate = require( path.join(__dirname, "dataFields", "ABFieldDate" ));
 var ABFieldBoolean = require( path.join(__dirname, "dataFields", "ABFieldBoolean" ));
 var ABFieldList = require( path.join(__dirname, "dataFields", "ABFieldList" ));
 var ABFieldTree = require( path.join(__dirname, "dataFields", "ABFieldTree" ));
+var ABFieldEmail = require( path.join(__dirname, "dataFields", "ABFieldEmail"));
 var ABFieldFile = require( path.join(__dirname, "dataFields", "ABFieldFile"));
 var ABFieldImage  = require( path.join(__dirname, "dataFields", "ABFieldImage"  ));
 var ABFieldUser = require( path.join(__dirname, "dataFields", "ABFieldUser" ));
 var ABFieldConnect = require( path.join(__dirname, "dataFields", "ABFieldConnect" ));
+var ABFieldCalculate = require( path.join(__dirname, "dataFields", "ABFieldCalculate" ));
+var ABFieldTextFormula = require( path.join(__dirname, "dataFields", "ABFieldTextFormula"));
+var ABFieldFormula = require( path.join(__dirname, "dataFields", "ABFieldFormula" ));
 
 /*
  * Fields
@@ -30,10 +34,14 @@ Fields[ABFieldDate.defaults().key] = ABFieldDate;
 Fields[ABFieldBoolean.defaults().key] = ABFieldBoolean;
 Fields[ABFieldList.defaults().key] = ABFieldList;
 Fields[ABFieldTree.defaults().key] = ABFieldTree;
+Fields[ABFieldEmail.defaults().key] = ABFieldEmail;
 Fields[ABFieldFile.defaults().key] = ABFieldFile;
 Fields[ABFieldImage.defaults().key] = ABFieldImage;
 Fields[ABFieldUser.defaults().key] = ABFieldUser;
 Fields[ABFieldConnect.defaults().key] = ABFieldConnect;
+Fields[ABFieldCalculate.defaults().key] = ABFieldCalculate;
+Fields[ABFieldTextFormula.defaults().key] = ABFieldTextFormula;
+Fields[ABFieldFormula.defaults().key] = ABFieldFormula;
 
 
 module.exports = {

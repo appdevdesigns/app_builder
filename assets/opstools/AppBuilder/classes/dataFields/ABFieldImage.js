@@ -27,7 +27,9 @@ var ABFieldImageDefaults = {
 
 	isSortable: false,
 	isFilterable: false,
-	useAsLabel: false
+	useAsLabel: false,
+
+	supportRequire: false,
 
 }
 
@@ -38,7 +40,9 @@ var defaultValues = {
 	'imageWidth':'',
 	'useHeight': 0,
 	'imageHeight': '',
-	'removeExistingData': 0
+	'removeExistingData': 0,
+	'useDefaultImage': false,
+	'defaultImageUrl': '',
 }
 
 
@@ -61,10 +65,11 @@ var ABFieldImageComponent = new ABFieldComponent({
 
 		var ids = {
 			imageWidth: '',
-			imageHeight: ''
+			imageHeight: '',
+			defaultImageUrl: ''
 		}
 		ids = field.idsUnique(ids, App);
-
+		
 		return [
 			{
 				cols: [
@@ -113,6 +118,65 @@ var ABFieldImageComponent = new ABFieldComponent({
 			          	id: ids.imageHeight
 					}
 				]
+			},
+			{	
+				cols:[
+					{
+						view: "checkbox",
+						name: "useDefaultImage",
+						labelRight:L('ab.dataField.image.defaultImage', "*default image"), 
+						width: 200,
+						labelWidth: 0,
+						value:0,
+						click: function() {
+							if (this.getValue())
+								$$(ids.defaultImageUrl).enable()
+							else
+								$$(ids.defaultImageUrl).disable();
+						}
+					},
+					
+					{
+						view: "uploader",
+						id: ids.defaultImageUrl,
+						template: 
+							'<div class="default-image-holder" style="height:66; width:100; position:relative;">'+
+								'<div class="image-data-field-icon" style="text-align: center; height: inherit; display: table-cell; vertical-align: middle; border: 2px dotted #CCC; background: #FFF; border-radius: 10px; font-size: 11px; line-height: 13px; padding: 0 8px;">'+
+									'<i class="fa fa-picture-o fa-2x" style="opacity: 0.6; font-size: 32px; margin-bottom: 5px;"></i>'+
+									'<br/>Drag and drop or click here'+
+								'</div>'+
+								'<div class="image-data-field-image" style="display:none; width:100%; height:100%; background-repeat: no-repeat; background-position: center center; background-size: cover; position: relative;">'+
+									'<a style="" class="ab-delete-photo" href="javascript:void(0);"><i class="fa fa-times delete-image" style="display:none;"></i></a>'+
+								'</div>'+
+							'</div>',
+						apiOnly: true, 
+						inputName:'image',
+						multiple: false,
+						disabled: true,
+						name: "defaultImageUrl",
+						height: 66,
+						width:  100,
+						on: {
+							// when a file is added to the uploader
+							onBeforeFileAdd:function(item){
+								// verify file type
+								var acceptableTypes = ['jpg', 'jpeg', 'bmp', 'png', 'gif'];
+								var type = item.type.toLowerCase();
+								if (acceptableTypes.indexOf(type) == -1){
+									//// TODO: multilingual
+									webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
+									return false;
+								}
+							},
+		
+							// if an error was returned
+							onFileUploadError:function(item, response){
+								OP.Error.log('Error loading image', response);
+							}
+						}
+
+					}
+				]
 			}
 		]
 	},
@@ -156,11 +220,91 @@ var ABFieldImageComponent = new ABFieldComponent({
 		clear: (ids) => {
 			$$(ids.useWidth).setValue(0);
 			$$(ids.useHeight).setValue(0);
+			$$(ids.useDefaultImage).setValue(0);
 
 			$$(ids.imageWidth).setValue('');
 			$$(ids.imageHeight).setValue('');
-		}
+			$$(ids.defaultImageUrl).setValue('');
+		},
+		objectLoad: (object) => {
+			ABFieldImageComponent.currentObject = object;
+		},
+		populate: (ids, field) => {
+			var uploader = $$(ids.defaultImageUrl);
+			var value = field.settings.defaultImageUrl;
+			var isUseDefaultImage = field.settings.useDefaultImage;
+			
+			if(field.settings.useDefaultImage) {
+				uploader.enable();
+			}
 
+			if(value && isUseDefaultImage ) {
+				//Show default image
+				uploader.attachEvent("onAfterRender", function(file, response){
+					var parentContainer = uploader.$view.querySelector(".default-image-holder");
+					parentContainer.querySelector('.image-data-field-icon').style.display = 'none';
+
+					var image = parentContainer.querySelector('.image-data-field-image');
+					image.style.display = '';
+					image.style.backgroundImage = "url('/opsportal/image/" + ABFieldImageComponent.currentObject.application.name+"/"+value+"')";
+					image.setAttribute('image-uuid', value );
+
+					parentContainer.querySelector('.delete-image').style.display = "table-cell";
+					
+				});
+
+				uploader.$view.addEventListener("click", (e) => {
+					if (e.target.className.indexOf('delete-image') > -1) {
+						var parentContainer = uploader.$view.querySelector(".default-image-holder");
+						parentContainer.querySelector('.image-data-field-icon').style.display = '';
+
+						var image = parentContainer.querySelector('.image-data-field-image');
+						image.style.display = 'none';
+						image.style.backgroundImage = "";
+						image.setAttribute('image-uuid', "");
+
+						parentContainer.querySelector('.delete-image').style.display = "none";
+					}
+				});
+				
+			}
+		},
+		show: (ids) => {
+			var actionKey = 'opstool.AB_'+ABFieldImageComponent.currentObject.application.name.replace('_','')+'.view';
+			var url = '/'+[ 'opsportal', 'image', ABFieldImageComponent.currentObject.application.name, actionKey, '1'].join('/');
+			
+			var uploader = $$(ids.defaultImageUrl);
+			uploader.config.upload = url;
+			uploader.attachEvent("onFileUpload", function(file, response){
+				$$(ids.defaultImageUrl).setValue(response.data.uuid);
+
+				var parentContainer = uploader.$view.querySelector(".default-image-holder");
+				parentContainer.querySelector('.image-data-field-icon').style.display = 'none';
+				
+				var image = parentContainer.querySelector('.image-data-field-image');
+				image.style.display = '';
+				image.style.backgroundImage = "url('/opsportal/image/" + ABFieldImageComponent.currentObject.application.name+"/"+response.data.uuid+"')";
+				image.setAttribute('image-uuid', response.data.uuid);
+				
+				parentContainer.querySelector('.delete-image').style.display = "table-cell";
+			});
+			uploader.attachEvent("onAfterRender", function(file, response){
+				var parentContainer = uploader.$view.querySelector(".default-image-holder");
+				parentContainer.querySelector('.image-data-field-icon').style.display = '';
+
+				var image = parentContainer.querySelector('.image-data-field-image');
+				image.style.display = 'none';
+				image.style.backgroundImage = "";
+				image.setAttribute('image-uuid', "");
+
+				parentContainer.querySelector('.delete-image').style.display = "none";
+				
+			});
+			uploader.addDropZone(uploader.$view);
+			uploader.render();
+
+			
+		}
 	},
 
 	// perform any additional setup actions here.
@@ -203,7 +347,8 @@ class ABFieldImage extends ABField {
 
     	// text to Int:
     	this.settings.useWidth = parseInt(this.settings.useWidth);
-    	this.settings.useHeight = parseInt(this.settings.useHeight);
+		this.settings.useHeight = parseInt(this.settings.useHeight);
+		this.settings.useDefaultImage = parseInt(this.settings.useDefaultImage);
     	this.settings.removeExistingData = parseInt(this.settings.removeExistingData);
   	}
 
@@ -221,10 +366,11 @@ class ABFieldImage extends ABField {
 	 * return a UI Component that contains the property definitions for this Field.
 	 *
 	 * @param {App} App the UI App instance passed around the Components.
+	 * @param {stirng} idBase
 	 * @return {Component}
 	 */
-  	static propertiesComponent(App) {
-  		return ABFieldImageComponent.component(App);
+  	static propertiesComponent(App, idBase) {
+  		return ABFieldImageComponent.component(App, idBase);
   	}
 
 
@@ -359,12 +505,15 @@ OP.Dialog.Alert({
 		// populate our default template:
 		config.template = (obj) => {
 
+			if (obj.$group)
+				return obj[this.columnName];
+
 			var widthStyle = 'width: #width#; height: #height#'
 								.replace('#width#', width)
 								.replace('#height#', height);
 
 			var imgDiv = [
-				'<div id="#id#" class="ab-image-data-field" style="float: left; #useWidth#">'.replace('#useWidth#', widthStyle),
+				'<div class="ab-image-data-field" style="float: left; #useWidth#">'.replace('#useWidth#', widthStyle),
 				'<div class="webix_view ab-image-holder" style="#useWidth#">'.replace('#useWidth#', widthStyle),
 				'<div class="webix_template">',
 				this.imageTemplate(obj, editable),
@@ -373,8 +522,7 @@ OP.Dialog.Alert({
 				'</div>'
 			].join('');
 
-			return imgDiv
-				.replace('#id#', this.idCustomContainer(obj) )
+			return imgDiv;
 		}
 
 		return config;
@@ -388,35 +536,29 @@ OP.Dialog.Alert({
 	 * @param {App} App the shared ui App object useful more making globally
 	 *					unique id references.
 	 * @param {HtmlDOM} node  the HTML Dom object for this field's display.
-	 * @param {Bool} editable  where or not this field is currently editable
-	 * @param {string} formId  the id of the presenting form if any
+	 * @param {object} options - {
+	 * 		editable {Bool}   where or not this field is currently editable
+	 * 		formId {string}   the id of the presenting form if any
+	 * }
 	 */
-	customDisplay(row, App, node, editable, formId) {
+	customDisplay(row, App, node, options) {
 		// sanity check.
 		if (!node) { return }
 
+		options = options || {};
 
-		var idBase = App.unique(this.idCustomContainer(row, formId));
-		var ids = {
-			container:idBase+'-container',
-			uploader: idBase+'-uploader',
-			icon: idBase+'-icon',
-			image: idBase+'-image'
-		}
+
+		var idBase = App.unique(this.idCustomContainer(row, options.formId));
 
 
 		// safety check:
 		// webix seems to crash if you specify a .container that doesn't exists:
 		// Note: when the template is first created, we don't have App.unique() 
-		var parentContainer = node.querySelector('#'+this.idCustomContainer(row)); // $$(this.idCustomContainer(obj));
-		// When we are not in a grid the custom field has already assigned a unique value as the ID
-		if (parentContainer == null) {
-			var parentContainer = node.querySelector('#'+idBase); 
-		}
+		var parentContainer = node.querySelector('.ab-image-holder');
 		if(parentContainer) {
 
 			parentContainer.innerHTML = '';
-			parentContainer.id = idBase;	// change it to the unique one.
+			// parentContainer.id = idBase;	// change it to the unique one.
 
 			var imgHeight = 33;
 			if (this.settings.useHeight){
@@ -435,10 +577,10 @@ OP.Dialog.Alert({
 			var webixContainer = webix.ui({
 				view:'template',
 				css:'ab-image-holder',
-				id: ids.container,
+				// id: ids.container,
 				container: parentContainer,
 
-				template:this.imageTemplate(row, editable),
+				template:this.imageTemplate(row, options.editable),
 
 				borderless:true,
 				height: imgHeight,
@@ -450,13 +592,21 @@ OP.Dialog.Alert({
 			//// Prepare the Uploader
 			////
 
+			if (!options.editable) {
+				var domNode = parentContainer.querySelector(".delete-image");
+				if (domNode)
+					domNode.style.display = "none";
+	
+				return;
+			}
+
 			// The Server Side action key format for this Application:
 			var actionKey = 'opstool.AB_'+this.object.application.name.replace('_','')+'.view';
 			var url = '/'+[ 'opsportal', 'image', this.object.application.name, actionKey, '1'].join('/');
 
 			var uploader = webix.ui({ 
 			    view:"uploader",  
-			    id:ids.uploader, 
+			    // id:ids.uploader, 
 			    apiOnly: true, 
 			    upload:url,
 			    inputName:'image',
@@ -495,23 +645,28 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 			    	onFileUpload:(item, response)=>{
 						
 						webixContainer.hideProgress();
-						this.showImage(idBase, response.data.uuid, node);
+						this.showImage(response.data.uuid, node);
 
 // TODO: delete previous image from our OPsPortal service?
 						
+						var values = {};
+						values[this.columnName] = response.data.uuid
+						
 						// update just this value on our current object.model
 						if (row.id) {
-							var values = {};
-							values[this.columnName] = response.data.uuid
 							this.object.model().update(row.id, values)
 							.then(()=>{
 								// update the client side data object as well so other data changes won't cause this save to be reverted
-								if ($$(node) && $$(node).getItem(row.id)) {
+								if ($$(node) && 
+									$$(node).getItem &&
+									$$(node).getItem(row.id)) {
 									$$(node).updateItem(row.id, values);
 								} else {
 									// if you scroll the table the connection to the datatable is lost so we need to find it again
 									var dataTable = document.querySelector(".webix_dtable");
-									$$(dataTable).updateItem(row.id, values);
+									if ($$(dataTable) &&
+										$$(dataTable).getItem(row.id))
+										$$(dataTable).updateItem(row.id, values);
 								}
 							})
 							.catch((err)=>{
@@ -524,6 +679,9 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 							})
 						}
 
+						// update value in the form component
+						this.setValue($$(node), values);
+
 					},
 
 					// if an error was returned
@@ -535,19 +693,17 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 			});
 			uploader.addDropZone(webixContainer.$view);
 
-			if (editable) {
-				var domNode = parentContainer.querySelector(".ab-delete-photo");
-				domNode.style.visibility = "visible";
-			}
+			// store upload id into html element (it will be used in .customEdit)
+			node.dataset['uploaderId'] = uploader.config.id;
 
 			// open file upload dialog when's click
-			parentContainer.addEventListener("click", (e) => {
+			node.addEventListener("click", (e) => {
 				if (e.target.className.indexOf('delete-image') > -1) {
-					this.deleteImage(e);
+					this.deleteImage = true;
 				}
 			});
 
-		}	
+		}
 	}
 
 
@@ -559,12 +715,16 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 	*					unique id references.
 	* @param {HtmlDOM} node  the HTML Dom object for this field's display.
 	*/
-	customEdit(row, App, node, formId) {
+	customEdit(row, App, node) {
 
 		
 		if (this.deleteImage == true) {
 			// remove the property because it is only needed to prevent the file dialog from showing
 			delete this.deleteImage;
+			if (!row.removeDefaultImage) {
+				row.removeDefaultImage = [];
+			}
+			row.removeDefaultImage[this.columnName] = true;
 			
 			// Ask the user if they really want to delete the photo
 			OP.Dialog.Confirm({
@@ -576,10 +736,12 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 						// update just this value on our current object.model
 						var values = {};
 						values[this.columnName] = ""; // removing the reference to the image here
+
 						this.object.model().update(row.id, values)
 						.then(()=>{
 							// update the client side data object as well so other data changes won't cause this save to be reverted
-							$$(node).updateItem(row.id, values);
+							if ($$(node) && $$(node).updateItem)
+								$$(node).updateItem(row.id, values);
 						})
 						.catch((err)=>{
 
@@ -588,25 +750,23 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 						
 							OP.Error.log('Error updating our entry.', {error:err, row:row, values:values });
 							console.error(err);
-						})
+						});
+
+						// update value in the form component
+						this.setValue($$(node), values);
+
 					}
 				}
 			})
 			
-		} else {
-			// if the field is in a form we need to select the proper uploader so we don't use one set up for a grid already
-			if (formId && formId.length) {
-				var idBase = App.unique(this.idCustomContainer({}, formId)),
-					idUploader = idBase + '-uploader';
-
-				$$(idUploader).fileDialog({});
-			} else {
-				var idBase = App.unique(this.idCustomContainer(row)),
-					idUploader = idBase + '-uploader';
-
-				$$(idUploader).fileDialog({ rowid: row.id });
-			}
+		} 
+		else if (!row[this.columnName]) {
 			
+			var uploaderId = node.dataset['uploaderId'],
+				uploader = $$(uploaderId);
+
+			if (uploader && uploader.fileDialog)
+				uploader.fileDialog({ rowid: row.id });
 		}
 
 		return false;
@@ -645,31 +805,48 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 
 		// deault view is icon:
 		var iconDisplay = '';
-		if (editable == false) {
-			iconDisplay = "display: none;";
-		}
-		var imageDisplay = 'display:none;';
-		var imageURL = ''
-		
-		// if we have a value for this field, then switch to image:
-		var value = obj[this.columnName];
-		if ((value) && (value != '')) {
-			iconDisplay = 'display:none;';
-			imageDisplay = '';
-			imageURL    = "background-image:url('/opsportal/image/" + this.object.application.name+"/"+obj[this.columnName]+"');"
+		var imageDisplay = 'display:none';
+		var imageURL = '';
+
+		var value = '';
+		var isRemoveDefaultImage = false;
+		if (obj[this.columnName]) {
+			value = obj[this.columnName];
+		};
+		if(obj.removeDefaultImage) {
+			if (obj.removeDefaultImage[this.columnName]) {
+				isRemoveDefaultImage = obj.removeDefaultImage[this.columnName];
+			}
 		}
 
-		return [
-			'<div class="image-data-field-icon" style="text-align: center; height: inherit; display: table-cell; vertical-align: middle; border: 2px dotted #CCC; background: #FFF; border-radius: 10px; font-size: 11px; line-height: 13px; padding: 0 8px; '+iconDisplay+'"><i class="fa fa-picture-o fa-2x" style="opacity: 0.6; font-size: 32px; margin-bottom: 5px;"></i><br/>Drag and drop or click here</div>',
-			'<div class="image-data-field-image" style="'+imageDisplay+' width:100%; height:100%; background-repeat: no-repeat; background-position: center center; background-size: cover; '+imageURL+'"></div>',
-			'<a style="'+imageDisplay+' visibility:hidden;" class="ab-delete-photo" href="javascript:void(0);"><i class="fa fa-times delete-image"></i></a>'
+		if (value) {
+			iconDisplay =  'display:none';
+			imageDisplay = '';
+			imageURL    = "background-image:url('/opsportal/image/" + this.object.application.name+"/"+value+"');"
+		}
+		else {
+			if (this.settings.useDefaultImage && !isRemoveDefaultImage) {
+				iconDisplay =  'display:none';
+				imageDisplay = '';
+				imageURL    = "background-image:url('/opsportal/image/" + this.object.application.name+"/"+this.settings.defaultImageUrl+"');"
+			}
+		}
+
+		var html = [
+			'<div class="image-data-field-icon" style="text-align: center; height: inherit; display: table-cell; vertical-align: middle; border: 2px dotted #CCC; background: #FFF; border-radius: 10px; font-size: 11px; line-height: 13px; padding: 0 8px; '+iconDisplay+'"><i class="fa fa-picture-o fa-2x" style="opacity: 0.6; font-size: 32px; margin-bottom: 5px;"></i>#drag#</div>',
+			'<div class="image-data-field-image" style="'+imageDisplay+' width:100%; height:100%; background-repeat: no-repeat; background-position: center center; background-size: cover; '+imageURL+'">#remove#</div>',
 		].join('');
+
+		html = html.replace('#drag#', editable ? '<br/>Drag and drop or click here' : '');
+		html = html.replace('#remove#', editable ? '<a style="' + imageDisplay + '" class="ab-delete-photo" href="javascript:void(0);"><i class="fa fa-times delete-image"></i></a>' : '');
+
+		return html;
 
 	}
 
 
-	showImage(id, uuid, node) {
-		var parentContainer = node.querySelector("#"+id); // $$(this.idCustomContainer(obj));
+	showImage(uuid, node) {
+		var parentContainer = node.querySelector('.ab-image-holder');
 		if(parentContainer) {
 
 			parentContainer.querySelector('.image-data-field-icon').style.display = 'none';
@@ -681,10 +858,6 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 		}
 	}
 	
-	deleteImage(e) {
-		this.deleteImage = true;
-	}
-	
 	getValue(item, rowData) {
 		var image = item.$view.querySelector('.image-data-field-image');
 		return image.getAttribute('image-uuid');
@@ -692,30 +865,43 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 	
 	setValue(item, rowData) {
 
+		if (!item) return;
+
 		var domNode = item.$view;
-		if (domNode) {
-			
-			var val = rowData[this.columnName];
-			if (typeof val == 'undefined') {
-				// assume they just sent us a single value
-				val = rowData;
+		if (!domNode) return;
+
+		var val = null;
+		if (rowData) {
+			val = this.dataValue(rowData);
+
+			// if (val == null) {
+			// 	// assume they just sent us a single value
+			// 	val = rowData;
+			// }
+		}
+
+		var imageIcon = domNode.querySelector('.image-data-field-icon');
+		if (imageIcon)
+			imageIcon.style.display = val ? 'none' : 'block';
+
+		var image = domNode.querySelector('.image-data-field-image');
+		if (image) {
+
+			var imageDeleteIcon = image.querySelector('.ab-delete-photo');
+			if (imageDeleteIcon)
+				imageDeleteIcon.style.display = val ? 'block' : 'none';
+
+			image.style.display = val ? 'block' : 'none';
+
+			if (val) {
+				image.style.backgroundImage = "url('/opsportal/image/" + this.object.application.name+"/"+val+"')";
+				image.setAttribute('image-uuid', val );
 			}
-
-			var imageIcon = domNode.querySelector('.image-data-field-icon');
-			if (imageIcon)
-				imageIcon.style.display = val ? 'none' : 'block';
-
-			var image = domNode.querySelector('.image-data-field-image');
-			if (image) {
-				image.style.display = val ? 'block' : 'none';
-
-				if (val) {
-					image.style.backgroundImage = "url('/opsportal/image/" + this.object.application.name+"/"+val+"')";
-					image.setAttribute('image-uuid', val );
-				}
-
+			else {
+				image.removeAttribute('image-uuid');
 			}
 		}
+
 	}
 	
 	/**
@@ -727,6 +913,55 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 	 * @return {array} 
 	 */
 	isValidData(data, validator) {
+		
+		super.isValidData(data, validator);
+		
+	}
+
+	/**
+	 * @method toBase64
+	 * 
+	 * @param {Object} rowData 
+	 * 
+	 * @return {Promise} - {
+	 * 		data: string,
+	 * 		width: number,
+	 * 		height: number
+	 * }
+	 */
+	toBase64(rowData) {
+
+		var promise = new Promise((resolve, reject) => {
+
+			if (!rowData[this.columnName])
+				return resolve(null);
+
+			var img = new Image();
+			img.crossOrigin = 'Anonymous';
+			img.onerror = function (err) {
+				reject(err);
+			};
+			img.onload = function () {
+				var canvas = document.createElement('canvas');
+				canvas.width = img.width;
+				canvas.height = img.height;
+				var ctx = canvas.getContext('2d');
+				ctx.drawImage(img, 0, 0);
+				var dataURL = canvas.toDataURL();
+				var imageData = {
+					data: dataURL,
+					width: img.width,
+					height: img.height
+				};
+				resolve(imageData);
+			};
+			
+			img.src = "/opsportal/image/{application}/{image}"
+						.replace("{application}", this.object.application.name)
+						.replace("{image}", rowData[this.columnName]);
+		});
+		return promise;
+
 	}
 
 }

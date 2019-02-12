@@ -16,7 +16,7 @@ function L(key, altText) {
 
 var ABFieldNumberDefaults = {
 	key: 'number', // unique key to reference this specific DataField
-	icon: 'slack',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
+	icon: 'hashtag',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
 
 	// menuName: what gets displayed in the Editor drop list
 	menuName: L('ab.dataField.number.menuName', '*Number'),
@@ -27,6 +27,12 @@ var ABFieldNumberDefaults = {
 	// what types of Sails ORM attributes can be imported into this data type?
 	// http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
 	compatibleOrmTypes: ['integer', 'float'],
+
+
+	// what types of MySql column types can be imported into this data type?
+	// https://www.techonthenet.com/mysql/datatypes.php
+	compatibleMysqlTypes: ['tinyint', 'smallint', 'mediumint', 'int', 'integer', 'bigint', 'decimal', 'dec', 'numeric', 'fixed', 'float', 'real']
+
 }
 
 
@@ -41,8 +47,8 @@ var formatList = [
 ];
 
 var defaultValues = {
-	'allowRequired': 0,
-	'numberDefault': '',
+	// 'allowRequired': 0,
+	'default': '',
 	'typeFormat': 'none',
 	'typeDecimals': 'none',
 	'typeDecimalPlaces': 'none',
@@ -63,7 +69,7 @@ class ABFieldNumber extends ABField {
     	{
 			settings: {
 				'allowRequired':0,
-				'numberDefault':null,
+				'default':null,
 				'typeFormat': 'none',
 				'typeDecimals': 'none',
 				'typeDecimalPlaces': 'none',
@@ -83,7 +89,7 @@ class ABFieldNumber extends ABField {
 
 
 		// text to Int:
-		this.settings.allowRequired = parseInt(this.settings.allowRequired);
+		// this.settings.allowRequired = parseInt(this.settings.allowRequired);
 		this.settings.validation = parseInt(this.settings.validation);
 
 	}
@@ -150,7 +156,7 @@ class ABFieldNumber extends ABField {
 			(resolve, reject) => {
 
 				var tableName = this.object.dbTableName();
-				var defaultTo = parseInt(this.settings.numberDefault);
+				var defaultTo = parseInt(this.settings.default) || 0;
 
 
 				// if this column doesn't already exist (you never know)
@@ -158,6 +164,7 @@ class ABFieldNumber extends ABField {
 					.then((exists) => {
 
 						return knex.schema.table(tableName, (t) => {
+
 							var currCol;
 
 							// if this is an integer:
@@ -174,8 +181,8 @@ class ABFieldNumber extends ABField {
 
 							}
 
-							// not null
-							if (this.settings.allowRequired) {
+							// field is required (not null)
+							if (this.settings.required) {
 								currCol.notNullable();
 							}
 							else {
@@ -183,9 +190,13 @@ class ABFieldNumber extends ABField {
 							}
 
 							// set default value
-							if (defaultTo) {
-								currCol.defaultTo(defaultTo);
-							}
+							currCol.defaultTo(defaultTo);
+							// if (defaultTo != null) {
+							// 	currCol.defaultTo(defaultTo);
+							// }
+							// else {
+							// 	currCol.defaultTo(null);
+							// }
 
 							if (exists) {
 								currCol.alter();
@@ -201,6 +212,19 @@ class ABFieldNumber extends ABField {
 
 			}
 		)
+
+	}
+
+
+
+	/**
+	 * @function migrateUpdate
+	 * perform the necessary sql actions to MODIFY this column to the DB table.
+	 * @param {knex} knex the Knex connection.
+	 */
+	migrateUpdate (knex) {
+
+		return this.migrateCreate(knex);
 
 	}
 

@@ -908,8 +908,8 @@ msgstr "Add a new page"
 #. path: app_builder
 #. code: en
 #. key: ab.interface.placeholderPageName
-msgid "Parent Name"
-msgstr "Parent Name"
+msgid "Page Name"
+msgstr "Page Name"
 
 #. path: app_builder
 #. code: en
@@ -1255,6 +1255,12 @@ msgstr "Detail"
 
 #. path: app_builder
 #. code: en
+#. key: ab.components.dataview
+msgid "Data view"
+msgstr "Data view"
+
+#. path: app_builder
+#. code: en
 #. key: ab.components.datepicker
 msgid "Date Picker"
 msgstr "Date Picker"
@@ -1267,9 +1273,21 @@ msgstr "Grid"
 
 #. path: app_builder
 #. code: en
+#. key: ab.components.image
+msgid "Image"
+msgstr "Image"
+
+#. path: app_builder
+#. code: en
 #. key: ab.components.layout
 msgid "Layout"
 msgstr "Layout"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.list
+msgid "List"
+msgstr "List"
 
 #. path: app_builder
 #. code: en
@@ -1297,9 +1315,27 @@ msgstr "Tab"
 
 #. path: app_builder
 #. code: en
+#. key: ab.components.text
+msgid "Text"
+msgstr "Text"
+
+#. path: app_builder
+#. code: en
 #. key: ab.components.textbox
 msgid "Textbox"
 msgstr "Textbox"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.tree
+msgid "Tree"
+msgstr "Tree"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.pivot
+msgid "Pivot"
+msgstr "Pivot"
 
 #. path: app_builder
 #. code: en
@@ -1480,6 +1516,12 @@ msgstr "Label"
 #. key: ab.dataField.common.fieldLabel
 msgid "Label"
 msgstr "Label"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.conditionalcontainer
+msgid "Conditional Container"
+msgstr "Conditional Container"
 
 #. path: app_builder
 #. code: en

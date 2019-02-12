@@ -35,8 +35,6 @@ export default class ABViewFormTextbox extends ABViewFormField {
 
 		super(values, application, parent, ABViewFormTextboxDefaults);
 
-		webix.codebase = "/js/webix/extras/";
-
 		// OP.Multilingual.translate(this, this, ['text']);
 
 		// 	{
@@ -175,6 +173,8 @@ export default class ABViewFormTextbox extends ABViewFormField {
 		var component = super.component(App);
 		var field = this.field();
 
+		webix.codebase = "/js/webix/extras/";
+
 
 		var idBase = this.parentFormUniqueID( 'ABViewFormTextbox_' + this.id + "_f_" );
 		var ids = {
@@ -215,9 +215,8 @@ export default class ABViewFormTextbox extends ABViewFormField {
 					// recreate rich editor
 					webix.ui(component.ui, $$(component.ui.id));
 
-				}
 			}
-
+		}
 
 		return webix.copy(component);
 	}

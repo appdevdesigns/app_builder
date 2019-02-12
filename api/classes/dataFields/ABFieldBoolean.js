@@ -25,6 +25,11 @@ var ABFieldBooleanDefaults = {
 	// what types of Sails ORM attributes can be imported into this data type?
 	// http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
 	compatibleOrmTypes: ['boolean'],
+
+	// what types of MySql column types can be imported into this data type?
+	// https://www.techonthenet.com/mysql/datatypes.php
+	compatibleMysqlTypes: ['bool', 'boolean']
+
 };
 
 var defaultValues = {
@@ -129,17 +134,27 @@ class ABFieldBoolean extends ABField {
 
 						return knex.schema.table(tableName, (t) => {
 
-							var newCol = t.boolean(this.columnName);
+							var currCol = t.boolean(this.columnName);
 
 							// Set default value to column
 							if (this.settings['default'] != null) {
-								newCol.defaultTo(this.settings['default']);
+								currCol.defaultTo(this.settings['default']);
 							}
+							else {
+								currCol.defaultTo(null);
+							}
+		
 
-							// alter column when exist:
-							if (exists) {
-								newCol.alter();
-							}
+							// not nullable/nullable
+							if (this.settings.required)
+								currCol.notNullable();
+							else
+								currCol.nullable();
+
+							if (exists)
+								currCol.alter();
+
+
 						})
 							.then(() => { resolve(); })
 							.catch(reject);
@@ -148,6 +163,18 @@ class ABFieldBoolean extends ABField {
 
 			}
 		);
+	}
+
+
+	/**
+	 * @function migrateUpdate
+	 * perform the necessary sql actions to MODIFY this column to the DB table.
+	 * @param {knex} knex the Knex connection.
+	 */
+	migrateUpdate (knex) {
+		
+		return this.migrateCreate(knex);
+
 	}
 
 

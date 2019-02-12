@@ -191,7 +191,7 @@ export default class ABPropertyComponent {
 				var isValid = $$(ids.component).validate();
 
 				// perform provided .isValid()
-				if (this.logic.isValid) {
+				if (isValid && this.logic.isValid) {
 					isValid = this.logic.isValid(ids, isValid);
 				}
 
@@ -244,7 +244,7 @@ export default class ABPropertyComponent {
 				this.currentObject = editedObject;
 
 				// populate the base ABField values:
-				this.EditObject.propertyEditorPopulate(App, ids, editedObject);
+				this.EditObject.propertyEditorPopulate(App, ids, editedObject, _logic);
 
 				// perform provided .populate()
 				if (this.logic.populate) {
@@ -405,13 +405,13 @@ export default class ABPropertyComponent {
 			// process sub columns
 			if (e.cols) {
 				this.eachDeep(e.cols, fn);
-				return;
+				// return;
 			}
 
 			// or rows
 			if (e.rows) {
 				this.eachDeep(e.rows, fn);
-				return;
+				// return;
 			}
 
 			// or a fieldset (with a body)

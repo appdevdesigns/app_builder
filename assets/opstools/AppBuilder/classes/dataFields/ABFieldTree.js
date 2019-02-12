@@ -26,7 +26,9 @@ var ABFieldTreeDefaults = {
   description: L('ab.dataField.tree.description', '*Data tree allows you to build a hierarchical set of selectable data. (ex: Categories and sub-categories)'),
   isSortable: false,
   isFilterable: false,
-  useAsLabel: false
+  useAsLabel: false,
+
+  supportRequire: false
 };
 
 var defaultValues = {
@@ -111,6 +113,57 @@ var ABFieldTreeComponent = new ABFieldComponent({
           $$(ids.options).resize();
           $$(ids.options).edit(itemId);
         }
+      },
+      {
+        // id: idTree,
+        view: "tree",
+        css: "ab-data-tree",
+        template: function(obj, common) {
+          return "<label>" + common.checkbox(obj, common) + "&nbsp;" + obj.text + "</label>";
+        },
+        on: {
+          onItemCheck: function(id, value, event) {
+            var dom = this.getItemNode(id);
+            var tree = this;
+            if (value == true) {
+              dom.classList.add("selected");
+            } else {
+              dom.classList.remove("selected");
+            }
+            // works for the same-level children only
+            // except root items
+            if (this.getParentId(id)) {
+              tree.blockEvent(); // prevents endless loop
+
+              var rootid = id;
+              while (this.getParentId(rootid)) {
+                rootid = this.getParentId(rootid);
+                if (rootid != id)
+                  tree.uncheckItem(rootid);
+              }
+
+              this.data.eachSubItem(rootid, function(item) {
+                if (item.id != id)
+                  tree.uncheckItem(item.id);
+              });
+
+              tree.unblockEvent();
+            } else {
+              tree.blockEvent(); // prevents endless loop
+              this.data.eachSubItem(id, function(obj) {
+                if (obj.id != id)
+                  tree.uncheckItem(obj.id);
+              }); 
+              tree.unblockEvent();
+            };
+
+            // var rowData = {};
+            // rowData[field.columnName] = $$(idTree).getChecked();
+            // 
+            // field.setValue($$(parentComponent.ui.id), rowData);
+
+          },
+        }
       }
     ];
   },
@@ -190,10 +243,11 @@ class ABFieldTree extends ABField {
    * return a UI Component that contains the property definitions for this Field.
    *
    * @param {App} App the UI App instance passed around the Components.
+   * @param {stirng} idBase
    * @return {Component}
    */
-  static propertiesComponent(App) {
-    return ABFieldTreeComponent.component(App);
+  static propertiesComponent(App, idBase) {
+    return ABFieldTreeComponent.component(App, idBase);
   }
 
   ///
@@ -284,6 +338,10 @@ class ABFieldTree extends ABField {
 
     
     config.template = function (obj) {
+
+        if (obj.$group)
+          return obj[field.columnName];
+
         var branches = [];
         var options = _.cloneDeep(field.settings.options);
         options = new webix.TreeCollection({
@@ -348,15 +406,17 @@ class ABFieldTree extends ABField {
    *					unique id references.
    * @param {HtmlDOM} node  the HTML Dom object for this field's display.
    */
-  customDisplay(row, App, node, editable, isForm) {
+  customDisplay(row, App, node, options) {
     // sanity check.
     if (!node) {
       return
     }
-    
+
+    options = options || {};
+
     var field = this;
 
-    if (isForm) {
+    if (options.isForm) {
         if (!row || row.length == 0) {
           node.innerHTML = "<div class='list-data-values form-entry'><span style='color: #CCC; padding: 0 5px;'>"+L('ab.dataField.tree.placeholder', '*Select items')+"</span></div>";
           return
@@ -624,8 +684,9 @@ class ABFieldTree extends ABField {
    * @return {array} 
    */
   isValidData(data, validator) {
-
-
+      
+      super.isValidData(data, validator);
+      
   }
 
 
@@ -677,7 +738,10 @@ class ABFieldTree extends ABField {
     if (!dom) return false;
 
     // set value to selectivity
-    this.customDisplay(val, this.App, dom, true, true);
+    this.customDisplay(val, this.App, dom, {
+      editable: true,
+      isForm: true
+    });
 
     setTimeout(function() {
         var height = 33;

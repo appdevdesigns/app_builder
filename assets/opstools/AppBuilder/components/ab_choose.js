@@ -9,6 +9,7 @@
  */
 
 
+import AB_Choose_Config from './ab_choose_config'
 import AB_Choose_List from './ab_choose_list'
 import AB_Choose_Form from './ab_choose_form'
 
@@ -26,8 +27,9 @@ export default class ABChoose extends OP.Component {   // (idBase, function(App)
 
 
 		// Define the external components used in this Component:
-		var AppList = new AB_Choose_List(App);  // OP.Component['ab_choose_list'](App);
-		var AppForm = new AB_Choose_Form(App);  // OP.Component['ab_choose_form'](App);
+		var AppConfig = new AB_Choose_Config(App);
+		var AppList = new AB_Choose_List(App); 
+		var AppForm = new AB_Choose_Form(App);  
 
 
 		// This component's UI definition:
@@ -37,6 +39,7 @@ export default class ABChoose extends OP.Component {   // (idBase, function(App)
 			animate:false,
 			id: ids.component,
 			cells: [
+				AppConfig.ui,
 				AppList.ui,
 				AppForm.ui
 			]
@@ -46,9 +49,19 @@ export default class ABChoose extends OP.Component {   // (idBase, function(App)
 		// This component's Init definition:
 		this.init = function() {
 
+			AppConfig.init();
 			AppList.init();
 			AppForm.init();
 
+			AppList.on('view.config', ()=>{
+				AppConfig.show();
+			})
+
+			AppConfig.on('view.list', ()=>{
+				AppList.show();
+			})
+
+			AppList.show();
 		}
 
 

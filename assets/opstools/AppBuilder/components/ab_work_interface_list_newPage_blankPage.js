@@ -7,6 +7,8 @@
  */
 
 import ABPage from '../classes/views/ABViewPage'
+import ABViewPage from '../classes/views/ABViewPage';
+import ABViewReportPage from '../classes/views/ABViewReportPage';
 
 
 export default class AB_Work_Interface_List_NewPage_BlankPage extends OP.Component {
@@ -99,11 +101,11 @@ export default class AB_Work_Interface_List_NewPage_BlankPage extends OP.Compone
 				var addPage = function (page, indent) {
 					indent = indent || '';
 					options.push({ id: page.urlPointer(), value: indent + page.label });
-					page.pages().forEach(function (p) {
+					page.pages(p => !(p instanceof ABViewReportPage)).forEach(function (p) {
 						addPage(p, indent + '-');
 					})
 				}
-				application.pages().forEach(function (page) {
+				application.pages(p => !(p instanceof ABViewReportPage)).forEach(function (page) {
 					addPage(page, '');
 				});
 

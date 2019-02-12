@@ -341,7 +341,7 @@ export default class ABViewFormButton extends ABView {
 				var form = this.parentFormComponent();
 
 				// get ABViewDataCollection
-				var dc = form.dataCollection();
+				var dc = form.dataCollection;
 
 				// clear cursor of DC
 				if (dc) {
@@ -368,7 +368,7 @@ export default class ABViewFormButton extends ABView {
 				var form = this.parentFormComponent();
 
 				// get ABViewDataCollection
-				var dc = form.dataCollection();
+				var dc = form.dataCollection;
 
 				// clear cursor of DC
 				if (dc) {
@@ -392,7 +392,13 @@ export default class ABViewFormButton extends ABView {
 				// save data
 				form.saveData(formView)
 					.catch(() => { saveButton.enable(); })
-					.then(() => { saveButton.enable(); });
+					.then(() => { 
+						saveButton.enable(); 
+
+						//Focus on first focusable component
+						form.focusOnFirst();
+
+					});
 
 			},
 

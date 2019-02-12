@@ -1,0 +1,95 @@
+<body>
+
+<p>You are invited to download and install a new app!</p>
+
+<hr style="margin-top:3em;" />
+
+<h2>Installation 安装</h2>
+<p>The app does not require the use of the vpn but to authenticate you, we require you to setup your device to connect the app with your vpn user profile. This is easily done by either scanning a QR code, or following a data import link using your phone, as described below.</p>
+
+<% if (apkURL) {  %>
+<h3>Android 安卓系统</h3>
+<ol>
+	<li>
+	Download the <a href="<%- apkURL %>">apk file</a>. If the email is not on your mobile device, you need to transfer the apk file there and execute the file on your device to install the app. If this email is on your device, agree to download the file and it should ask you to open/install it on your device directly (if not, look for it in your downloads or apk folder and launch from there).  
+	</li>
+	
+	<li>
+	Launch the app and allow any permissions you are asked about (ex. notifications).
+	</li>
+	
+	<li>
+	Now you will be asked to setup your passphrase. Please use at least 8 characters. Multiple words is okay.  
+	</li>
+	
+	<li>
+		<b>If you are reading this email on your computer:</b>
+		<ul>
+			<li>
+				Go to Settings (bottom right tab) and tap the Scan button. (Don't press restart yet if there is an option for that) Say OK to the Camera permission. Scan the QR code at the bottom of this email.
+			</li>
+		</ul>
+		<b>If you are reading this email on your device:</b>
+		<ul>
+			<li>
+				Click on this <a href="<%- deepLink %>">Data Import</a> link. It should link you to the app and set your info. It may ask you which app to open. Choose <b>conneXted</b>.
+			</li>
+		</ul>
+	</li>
+	
+	<li>
+	If this email is on your mobile device, please delete it after you finish the setup since it carries sensitive information. 
+	</li>
+</ol>
+<% } %>
+
+<h3>iOS</h3>
+<ol>
+	<li>
+	Download the app from the App store (beta testers need to download the <a href="https://itunes.apple.com/us/app/testflight/id899247664">TestFlight app</a> first). 
+	</li>
+	
+	<li>
+	Launch the app and allow notifications. The initial app you see is a basic contact management app that you can ignore for now. Continue below to unlock its full ability. 
+	</li>
+	
+	<li>
+		<b>If you are reading this email on your computer:</b>
+		<ul>
+			<li>
+				Go to Settings (bottom right tab) in the app, and tap the Scan button. (Don't press restart yet if there is an option for that) Say OK to the Camera permission. Scan the QR code at the bottom of this email.
+			</li>
+		</ul>
+
+		<b>If you are reading this email on your device:</b>
+		<ul>
+			<li>
+				Click on this <a href="<%- deepLink %>">Data Import</a> link. It should link you to the app and set your info.
+			</li>
+		</ul>
+	</li>
+	
+	<li>
+		The app will take a moment to update and restart. Now you will be asked to setup your passphrase. Please use at least 8 characters. Multiple words is okay.
+	</li>
+
+	<li>
+		If this email is on your mobile device, please delete it after you finish the setup since it carries sensitive information.
+	</li>
+</ol>
+
+
+<hr style="margin-top:2em;" />
+
+
+<div>
+    <h3>QR Code</h3>
+    <img src="cid:<%= cidQR %>" alt="QR code">
+</div>
+
+<div>
+    <h3>For phone only</h3>
+    <a href="<%- deepLink %>">Data import</a>
+</div>
+
+</body>

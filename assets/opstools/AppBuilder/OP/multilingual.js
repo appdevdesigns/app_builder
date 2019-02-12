@@ -8,6 +8,29 @@
 export default {
 
 	/**
+	 * @function defaultTranslations()
+	 * return an initial .translations entry to initialize the 
+	 * translations values of a given translateable object.
+	 * @param {array} fields  the multilingual fields this obj manages.
+	 * @param {json}  values  a default set of values for this object.
+	 * @return {array}  of translation entries.
+	 */
+	defaultTranslations:function(fields, values) {
+		values = values || {};
+
+		var entry = {
+			language_code:AD.lang.currentLanguage || 'en'
+		}
+
+		fields.forEach((f)=>{
+			entry[f] = values[f] || f;
+		})
+
+		return [ entry ];
+	},
+
+
+	/**
 	 * @function OP.Multilingual.translate
 	 *
 	 * Given a set of json data, pull out any multilingual translations
@@ -34,6 +57,10 @@ export default {
 			json.translations = [];
 		}
 
+		if (typeof json.translations == 'string') {
+			json.translations = JSON.parse(json.translations);
+		}
+
 		var currLanguage = AD.lang.currentLanguage || 'en';
 
 		if (fields && fields.length > 0) {
@@ -54,7 +81,11 @@ export default {
 
 					// copy each field to the root object
 					fields.forEach(function(f){
-						obj[f] = t[f] || '';  // default to '' if not found. 
+
+						if (t[f])
+							obj[f] = t[f];
+
+						obj[f] = obj[f] || '';  // default to '' if not found. 
 					})
 				}
 			})

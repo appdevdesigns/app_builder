@@ -1,0 +1,1319 @@
+
+var path = require('path');
+var _ = require('lodash');
+
+var ABObject = require(path.join(__dirname, 'ABObject'));
+
+var Model = require('objection').Model;
+
+// list of all the condition filtering policies we want our defined 
+// filters to pass through:
+var PolicyList = [
+	require(path.join(__dirname, '..', 'policies', 'ABModelConvertSameAsUserConditions')),
+	require(path.join(__dirname, '..', 'policies', 'ABModelConvertQueryConditions')),
+	require(path.join(__dirname, '..', 'policies', 'ABModelConvertQueryFieldConditions'))
+]
+
+module.exports = class ABObjectQuery extends ABObject {
+
+	constructor(attributes, application) {
+		super(attributes, application);
+
+		/*
+		{
+			id: uuid(),
+			name: 'name',
+			labelFormat: 'xxxxx',
+			isImported: 1/0,
+			tableName:'string',  // NOTE: store table name of import object to ignore async
+			urlPath:'string',
+			importFromObject: 'string', // JSON Schema style reference:  '#[ABApplication.id]/objects/[ABObject.id]'
+										// to get other object:  ABApplication.objectFromRef(obj.importFromObject);
+			translations:[
+				{}
+			],
+			fields:[
+				{
+					alias: "",
+					field: {ABField},
+				}
+			],
+
+			// we store a list of joins:
+			joins: {
+				alias: "",							// the alias name of table - use in SQL command
+				objectURL:"#/...",					// the base object of the join
+				links: [
+					{
+						alias: "",							// the alias name of table - use in SQL command
+						fieldID: "uuid",					// the connection field of the object we are joining with.
+						type:[left, right, inner, outer]	// join type: these should match the names of the knex methods
+								=> innerJoin, leftJoin, leftOuterJoin, rightJoin, rightOuterJoin, fullOuterJoin
+						links: [
+							...
+						]
+					}
+				]
+			},
+
+
+			where: { QBWhere }
+		}
+		*/
+
+		// import all our Joins 
+		this.importJoins(attributes.joins || {});
+		this.importFields(attributes.fields || []); // import after joins are imported
+		// this.where = attributes.where || {}; // .workspaceFilterConditions
+
+	}
+
+
+
+	///
+	/// Static Methods
+	///
+	/// Available to the Class level object.  These methods are not dependent
+	/// on the instance values of the Application.
+	///
+
+
+
+
+
+	///
+	/// Instance Methods
+	///
+
+	/**
+	 * @method toObj()
+	 *
+	 * properly compile the current state of this ABApplication instance
+	 * into the values needed for saving to the DB.
+	 *
+	 * Most of the instance data is stored in .json field, so be sure to
+	 * update that from all the current values of our child fields.
+	 *
+	 * @return {json}
+	 */
+	toObj() {
+
+		var result = super.toObj();
+
+		/// include our additional objects and where settings:
+
+		result.joins = this.exportJoins();  //object;
+		// result.where = this.where; // .workspaceFilterConditions
+
+		return result;
+
+	}
+
+
+	///
+	/// Fields
+	///
+
+
+	/**
+	 * @method fieldNew()
+	 *
+	 * return an instance of a new (unsaved) ABField that is tied to this
+	 * ABObject.
+	 *
+	 * NOTE: this new field is not included in our this.fields until a .save()
+	 * is performed on the field.
+	 *
+	 * @return {ABField}
+	 */
+	// fieldNew ( values ) {
+	// 	// NOTE: ABFieldManager.newField() returns the proper ABFieldXXXX instance.
+	// 	return ABFieldManager.newField( values, this );
+	// }
+
+
+
+	/**
+	 * @method importFields
+	 * instantiate a set of fields from the given attributes.
+	 * Our attributes are a set of field URLs That should already be created in their respective
+	 * ABObjects.
+	 * @param {array} fieldSettings The different field urls for each field
+	 *					{ }
+	 */
+	importFields(fieldSettings) {
+		var newFields = [];
+	  	(fieldSettings || []).forEach((fieldInfo) => {
+
+			if (fieldInfo == null) return;
+
+			var field = this.application.urlResolve(fieldInfo.fieldURL);
+
+			// should be a field of base/join objects
+			if (field && this.canFilterField(field) &&
+				// check duplicate
+				newFields.filter(f => f.alias == fieldInfo.alias && f.field.urlPointer() == fieldInfo.fieldURL).length < 1) { 
+
+				// add alias to field
+				let cloneField = _.clone(field, false);
+				cloneField.alias = fieldInfo.alias;
+
+				newFields.push({
+					alias: fieldInfo.alias,
+					field: cloneField
+				});
+			}
+
+		})
+		this._fields = newFields;
+	}
+
+
+
+	///
+	/// Joins & Objects
+	///
+
+
+
+	/**
+	 * @method joins()
+	 *
+	 * return an object of joins for this Query.
+	 *
+	 * @return {Object}
+	 */
+	joins() {
+
+		return this._joins || {};
+	}
+
+
+	/**
+	 * @method objects()
+	 *
+	 * return an array of all the ABObjects for this Query.
+	 *
+	 * @return {array}
+	 */
+	objects(filter) {
+
+		if (!this._objects) return [];
+
+		filter = filter || function () { return true; };
+
+		// get all objects (values of a object)
+		let objects = Object.keys(this._objects).map(key => { return this._objects[key]; });
+
+		return (objects || []).filter(filter);
+	}
+
+	/**
+	 * @method objectAlias()
+	 *
+	 * return alias of of ABObjects.
+	 *
+	 * @return {string}
+	 */
+	objectAlias (objectId) {
+
+		let result = null;
+
+		Object.keys(this._objects || {}).forEach(alias => {
+
+			let obj = this._objects[alias];
+			if (obj.id == objectId && !result) {
+				result = alias;
+			}
+
+		});
+
+		return result;
+
+	}
+
+	/**
+	 * @method objectBase
+	 * return the origin object
+	 * 
+	 * @return {ABObject}
+	 */
+	objectBase () {
+
+		if (!this._joins.objectURL)
+			return null;
+
+		return this.application.urlResolve(this._joins.objectURL) || null;
+
+	}
+
+
+	/**
+	 * @method importJoins
+	 * instantiate a set of joins from the given attributes.
+	 * Our joins contain a set of ABObject URLs that should already be created in our Application.
+	 * @param {Object} settings The different field urls for each field
+	 *					{ }
+	 */
+	importJoins(settings) {
+
+		// copy join settings
+		this._joins = _.cloneDeep(settings);
+
+		var newObjects = {};
+
+		function storeObject(object, alias) {
+			if (!object) return;
+
+			// var inThere = newObjects.filter(obj => obj.id == object.id && obj.alias == alias ).length > 0;
+			// if (!inThere) {
+			newObjects[alias] = object;
+			// newObjects.push({
+			// 	alias: alias,
+			// 	object: object
+			// });
+			// }
+		}
+
+		function processJoin(baseObject, joins) {
+
+			if (!baseObject) return;
+
+			(joins || []).forEach((link) => {
+
+				// Convert our saved settings:
+				//	{
+				//		alias: "",							// the alias name of table - use in SQL command
+				//		objectURL:"#/...",					// the base object of the join
+				//		links: [
+				//			{
+				//				alias: "",							// the alias name of table - use in SQL command
+				//				fieldID: "uuid",					// the connection field of the object we are joining with.
+				//				type:[left, right, inner, outer]	// join type: these should match the names of the knex methods
+				//						=> innerJoin, leftJoin, leftOuterJoin, rightJoin, rightOuterJoin, fullOuterJoin
+				//				links: [
+				//					...
+				//				]
+				//			}
+				//		]
+				//	},
+
+				var linkField = baseObject.fields((f) => { return f.id == link.fieldID; })[0];
+				if (!linkField) return;
+
+				// track our linked object
+				var linkObject = linkField.datasourceLink;
+				if (!linkObject) return;
+
+				storeObject(linkObject, link.alias);
+
+				processJoin(linkObject, link.links);
+
+			});
+
+		}
+
+		if (!this._joins.objectURL)
+			// TODO: this is old query version
+			return;
+
+		// store the root object
+		var rootObject = this.application.urlResolve(this._joins.objectURL);
+		if (!rootObject) {
+			this._objects = newObjects;
+			return;
+		}
+
+		storeObject(rootObject, "BASE_OBJECT");
+
+		processJoin(rootObject, settings.links);
+
+		this._objects = newObjects;
+	}
+
+
+	/**
+	 * @method exportObjects
+	 * save our list of objects into our format for persisting on the server
+	 * @return {object} settings 
+	 */
+	exportJoins() {
+
+		return _.cloneDeep(this._joins);
+
+	}
+
+	/**
+	 * @method fields()
+	 *
+	 * return an array of all the ABFields for this ABObject.
+	 *
+	 * @return {array}
+	 */
+	fields (filter) {
+
+		filter = filter || function() { return true; };
+
+		return this._fields.map(fInfo => fInfo.field).filter(result => filter(result));
+
+	}
+
+
+
+
+
+	/**
+	 * @method canFilterObject
+	 * evaluate the provided object to see if it can directly be filtered by this
+	 * query.
+	 * @param {ABObject} object
+	 * @return {bool} 
+	 */
+	canFilterObject(object) {
+
+		if (!object) return false;
+
+		// I can filter this object if it is one of the objects in my joins
+		return this.objects((o) => { return o.id == object.id; }).length > 0;
+
+	}
+
+	/**
+	 * @method canFilterField
+	 * evaluate the provided field to see if it can be filtered by this
+	 * query.
+	 * @param {ABObject} object
+	 * @return {bool} 
+	 */
+	canFilterField(field) {
+
+		if (!field) return false;
+
+		// I can filter a field if it's object OR the object it links to can be filtered:
+		var object = field.object;
+		var linkedObject = field.datasourceLink;
+
+		return this.canFilterObject(object) || this.canFilterObject(linkedObject);
+	}
+
+
+
+
+	///
+	/// Migration Services
+	///
+
+	/**
+	 * migrateCreateTable
+	 * verify that a table for this object exists.
+	 * @param {Knex} knex the knex sql library manager for manipulating the DB.
+	 * @return {Promise}
+	 */
+	migrateCreate(knex) {
+		sails.log.verbose('ABObjectQuery.migrateCreate()');
+		sails.log.debug('ABObjectQuery.migrateCreate() called, but no migrations allowed.')
+
+		// just continue gracefully:
+		return new Promise(
+			(resolve, reject) => {
+				resolve();
+			}
+		);
+	}
+
+
+
+
+
+	/**
+	 * migrateDropTable
+	 * remove the table for this object if it exists.
+	 * @param {Knex} knex the knex sql library manager for manipulating the DB.
+	 * @return {Promise}
+	 */
+	migrateDrop(knex) {
+		sails.log.verbose('ABObject.migrateDrop()');
+		sails.log.debug('ABObjectQuery.migrateDrop() called, but no migrations allowed.')
+
+		// just continue gracefully:
+		return new Promise(
+			(resolve, reject) => {
+				resolve();
+			}
+		);
+	}
+
+
+	///
+	/// DB Model Services
+	///
+
+	/**
+	 * @method model
+	 * return an objection.js model for working with the data in this Object.
+	 * @return {Objection.Model} 
+	 */
+	model() {
+
+		return Model;
+	}
+
+
+
+	/**
+	 * @method queryFind
+	 * return a a knex QueryBuilder ready to perform a select() statment.
+	 * NOTE: ObjectQuery overrides this to return queries already joined with 
+	 * multiple tables.
+	 * @param {obj} options  
+	 *		A set of optional conditions to add to the find():
+	 * @param {obj} userData 
+	 * 		The current user's data (which can be used in our conditions.)
+	 * @return {QueryBuilder}
+	 */
+	queryFind(options, userData) {
+
+		return new Promise((resolve, reject) => {
+
+			var query = ABMigration.connection().queryBuilder();
+
+			//// Now compile our joins:
+
+			var processJoin = (baseObject, baseAlias, joins) => {
+
+				(joins || []).forEach(link => {
+
+					// no link column
+					if (!link.fieldID) return;
+
+					// NOTE: query v1
+					if (link.objectURL)
+						baseObject = this.application.urlResolve(link.objectURL);
+
+					// NOTE: query v1
+					if (!baseAlias)
+						baseAlias = baseObject.dbTableName(true);
+	
+
+					var connectionField = baseObject.fields((f) => { return f.id == link.fieldID; })[0];
+					if (!connectionField) return; // no link so skip this turn.
+
+					var connectedObject = connectionField.datasourceLink;
+					var joinTable = connectedObject.dbTableName(true);
+
+					var fieldLinkType = connectionField.linkType();
+
+					var joinAlias = link.alias;
+
+					// NOTE: query v1
+					var aliasName = link.alias;
+					if (!aliasName)
+						aliasName = joinTable;
+
+					switch (fieldLinkType) {
+
+						case 'one':
+
+							if (connectionField.settings.isSource || // 1:1 - this column is source
+								connectionField.linkViaType() == 'many') { // 1:M 
+								// the base object can have 1 connected object
+								// the base object has the remote obj's .id in our field
+								// baseObject JOIN  connectedObject ON baseObject.columnName = connectedObject.id
+
+
+								// columnName comes from the baseObject
+								var columnName = connectionField.columnName;
+								var baseClause = baseAlias + '.' + columnName;
+								var connectedClause = aliasName + '.' + connectedObject.PK();
+								makeLink(baseObject, link, joinTable, joinAlias, baseClause, '=', connectedClause);
+
+							}
+							else {
+								// the base object can have 1 connected object
+								// the base object's .id is in the connected Objects' colum 
+								// baseObject JOIN  connectedObject ON baseObject.id = connectedObject.columnName
+
+								// columnName comes from the baseObject
+								var connectedField = connectionField.fieldLink();
+								if (!connectedField) return;  // this is a problem!
+
+
+								var columnName = connectedField.columnName;
+								var baseClause = baseAlias + '.' + baseObject.PK();
+								var connectedClause = aliasName + '.' + columnName;
+								makeLink(baseObject, link, joinTable, joinAlias, baseClause, '=', connectedClause);
+
+							}
+							break;
+
+						case 'many':
+
+							if (connectionField.linkViaType() == 'one') {
+								// the base object can have many connectedObjects
+								// the connected object can only have one base object
+								// the base object's .id is stored in connected objects column
+								// baseObject JOIN connectedObject ON baseObject.id == connectedObject.columnName
+
+								// columnName comes from the baseObject
+								var connectedField = connectionField.fieldLink();
+								if (!connectedField) return;  // this is a problem!
+
+
+								var columnName = connectedField.columnName;
+								var baseClause = baseAlias + '.' + baseObject.PK();
+								var connectedClause = aliasName + '.' + columnName;
+								makeLink(baseObject, link, joinTable, joinAlias, baseClause, '=', connectedClause);
+
+							}
+							else {
+
+								// TODO: alias name M:N
+
+								// M:N connection
+								// the base object can have Many connectedObjects
+								// the connected object can have Many baseObjects
+								// There is going to be a join table connecting the two:
+								// the base object's .id is stored in connected objects column
+								// baseObject JOIN joinTable ON baseObject.id == joinTable.[baseColumnName]
+								// 		JOIN connectedObject ON joinTable.[connectedObjectName] == connectedObject.id
+
+								//// Make Base Connection
+								// get joinTable
+								joinTable = connectionField.joinTableName(true);
+
+								// get baseObjectColumn in joinTable
+								var baseObjectColumn = baseObject.name; // AppBuilder.rules.toJunctionTableFK(baseObject.name, connectionField.columnName);
+
+								var connectedAlias = null;
+								if (joinAlias)
+									connectedAlias = joinAlias + "_MN"; // alias name of M:N connection
+
+								var baseClause = baseAlias + '.' + baseObject.PK();
+								var joinClause = (connectedAlias || joinTable) + '.' + baseObjectColumn;
+
+								// make JOIN
+								makeLink(baseObject, link, joinTable, connectedAlias, baseClause, '=', joinClause);
+
+
+								//// Now connect connectedObject
+								// get connectedObjectColumn in joinTable
+								var connectedField = connectionField.fieldLink();
+								var connectedObjectColumn = connectedObject.name; // AppBuilder.rules.toJunctionTableFK(connectedObject.name, connectedField.columnName);
+
+								var connectedClause = aliasName + '.' + connectedObject.PK();
+								joinClause = (connectedAlias || joinTable) + '.' + connectedObjectColumn;
+
+								// make JOIN
+								makeLink(baseObject, link, connectedObject.dbTableName(true), joinAlias, connectedClause, '=', joinClause);
+
+							}
+							break;
+
+					}
+
+					processJoin(connectedObject, link.alias, link.links);
+
+				});
+
+			};
+
+			var makeLink = (object, link, joinTable, alias, A, op, B) => {
+				console.log('link.type:' + link.type);
+
+				// try to correct some type mistakes:
+				var type = link.type.toLowerCase();
+				var convertHash = {
+					'left': 'leftJoin',
+					'leftjoin': 'leftJoin',
+					'leftouterjoin': 'leftOuterJoin',
+					'right': 'rightJoin',
+					'rightjoin': 'rightJoin',
+					'rightouterjoin': 'rightOuterJoin',
+					'innerjoin': 'innerJoin',
+					'fullouterjoin': 'fullOuterJoin'
+				}
+				if (convertHash[type]) {
+					type = convertHash[type];
+				}
+
+				// There is not FULL JOINS on MySQL
+				// https://stackoverflow.com/questions/4796872/how-to-do-a-full-outer-join-in-mysql
+
+				// TODO: Support alias name
+				if (type == 'fullOuterJoin') {
+
+					let linkField = object.fields(f => f.id == link.fieldID)[0];
+					if (linkField == null) return;
+
+					let joinObj = linkField.datasourceLink;
+					if (joinObj == null) return;
+
+					// include alias name
+					let joinTableAlias = joinTable;
+					if (alias)
+						joinTableAlias += (" AS " + alias);
+
+					query['innerJoin'](joinTableAlias, function () {
+						this.on(1, '=', 1);
+					});
+
+					let joinAliasName = joinObj.id.replace(/[^a-zA-Z0-9]+/g, "");
+
+					let Aclause;
+					let Bclause;
+
+					if (A.indexOf('.') > -1) {
+						let parses = A.split('.');
+						Aclause = parses[parses.length - 1];
+					}
+
+					if (B.indexOf('.') > -1) {
+						let parses = B.split('.');
+						Bclause = parses[parses.length - 1];
+					}
+
+					let fullJoinCommand = ("inner join ( " +
+						"SELECT {joinTable}.{joinPk} FROM {joinTable} " +
+						"LEFT OUTER JOIN {baseTable} ON {baseTable}.{A} {op} {joinTable}.{B} " +
+						"UNION " +
+						"SELECT {joinTable}.{joinPk} FROM {joinTable} " +
+						"RIGHT OUTER JOIN {baseTable} ON {baseTable}.{A} {op} {joinTable}.{B} " +
+						") as {joinTableName} " +
+						"on {joinTableAlias}.{joinPk} {op} {joinTableName}.{joinPk}")
+						.replace(/{baseTable}/g, object.dbTableName(true))
+						.replace(/{joinTable}/g, joinTable)
+						.replace(/{joinTableAlias}/g, (alias ? alias : joinTable))
+						.replace(/{joinTableName}/g, joinAliasName)
+						.replace(/{joinPk}/g, joinObj.PK())
+						.replace(/{A}/g, Aclause)
+						.replace(/{op}/g, op)
+						.replace(/{B}/g, Bclause);
+
+					query.joinRaw(fullJoinCommand);
+
+				}
+				else {
+
+					// include alias name
+					if (alias)
+						joinTable += (" AS " + alias);
+
+					query[type](joinTable, function () {
+						this.on(A, op, B);
+					});
+				}
+
+			}
+
+			var joinSetting = this.joins();
+
+			// register the root object
+			var rootObject = this.objectBase(),
+				fromBaseTable = "#table#".replace("#table#", rootObject.dbTableName(true));
+
+			if (joinSetting.alias)
+				fromBaseTable = fromBaseTable + " as " + joinSetting.alias;
+
+			query.from(fromBaseTable);
+
+			var links = joinSetting.links 
+
+			// NOTE: query v1
+			if (links == null && Array.isArray(joinSetting)) {
+				links = _.cloneDeep(joinSetting).shift(); // remove first item
+
+				// convert to array
+				if (links && !Array.isArray(links))
+					links = [links];
+			}
+
+			processJoin(rootObject, joinSetting.alias, links);
+
+
+			//// Add in our fields:
+			if (!options.ignoreIncludeColumns) { // get count of rows does not need to include columns
+
+				var selects = [];
+				var columns = [];
+
+				// { 
+				//	objectName: {
+				//		object: {ABObject},
+				// 		transColumns: ['string']
+				//	}
+				//}
+				var externalTrans = {};
+
+				this.fields().forEach(f => {
+
+					if (!f || f.key == 'calculate' || f.key == 'TextFormula') // TODO: ignore calculated fields
+						return;
+
+					var obj = f.object;
+
+					// Connect fields
+					if (f.key == 'connectObject') {
+
+						var connectColFormat = ("(SELECT CONCAT(" +
+							"'[',GROUP_CONCAT(JSON_OBJECT('id', `{linkDbName}`.`{linkTableName}`.`{columnName}`)),']')" +
+							" FROM `{linkDbName}`.`{linkTableName}`" +
+							" WHERE `{linkDbName}`.`{linkTableName}`.`{linkColumnName}` = {prefix}.`{baseColumnName}`" + 
+							" AND `{linkDbName}`.`{linkTableName}`.`{columnName}` IS NOT NULL)" +
+							" as `{displayPrefix}.{displayName}`") // add object's name to display name
+							.replace(/{prefix}/g, f.dbPrefix())
+							.replace(/{baseColumnName}/g, obj.PK())
+							.replace('{displayPrefix}', (f.alias ? f.alias : obj.name))
+							.replace('{displayName}', f.relationName());
+
+
+						var selectField = '';
+						var objLink = f.datasourceLink;
+						var fieldLink = f.fieldLink();
+
+						// 1:M
+						if (f.settings.linkType == 'one' && f.settings.linkViaType == 'many') {
+
+							selectField = ("IF({prefix}.`{columnName}` IS NOT NULL, " +
+								"JSON_OBJECT('id', {prefix}.`{columnName}`)," +
+								"NULL)" +
+								" as '{displayPrefix}.{displayName}'")
+								.replace(/{prefix}/g, f.dbPrefix())
+								.replace(/{columnName}/g, f.columnName)
+								.replace('{displayPrefix}', (f.alias ? f.alias : obj.name))
+								.replace('{displayName}', f.relationName());
+
+						}
+
+						// M:1
+						else if (f.settings.linkType == 'many' && f.settings.linkViaType == 'one') {
+
+							selectField = connectColFormat
+								.replace(/{linkDbName}/g, objLink.dbSchemaName())
+								.replace(/{linkTableName}/g, objLink.dbTableName())
+								.replace(/{linkColumnName}/g, fieldLink.columnName)
+								.replace(/{columnName}/g, objLink.PK());
+
+						}
+
+						// 1:1
+						else if (f.settings.linkType == 'one' && f.settings.linkViaType == 'one') {
+
+							if (f.settings.isSource) {
+								selectField = ("IF({prefix}.`{columnName}` IS NOT NULL, " +
+									"JSON_OBJECT('id', {prefix}.`{columnName}`)," +
+									"NULL)" +
+									" as '{displayPrefix}.{displayName}'")
+									.replace(/{prefix}/g, f.dbPrefix())
+									.replace(/{columnName}/g, f.columnName)
+									.replace('{displayPrefix}', (f.alias ? f.alias : obj.name))
+									.replace('{displayName}', f.relationName());
+							}
+							else {
+								selectField = connectColFormat
+									.replace(/{linkDbName}/g, objLink.dbSchemaName())
+									.replace(/{linkTableName}/g, objLink.dbTableName())
+									.replace(/{linkColumnName}/g, fieldLink.columnName)
+									.replace(/{columnName}/g, objLink.PK());
+
+							}
+						}
+
+						// M:N
+						else if (f.settings.linkType == 'many' && f.settings.linkViaType == 'many') {
+
+							let joinSchemaName = (f.settings.isSource == true ? f.object.dbSchemaName() : fieldLink.object.dbSchemaName());
+							let joinTableName = f.joinTableName();
+
+							selectField = connectColFormat
+								.replace(/{linkDbName}/g, joinSchemaName)
+								.replace(/{linkTableName}/g, joinTableName)
+								.replace(/{linkColumnName}/g, obj.name)
+								.replace(/{columnName}/g, objLink.name);
+
+						}
+
+						if (selectField)
+							selects.push(ABMigration.connection().raw(selectField));
+
+					}
+					// Aggregate fields
+					else if (f.key == 'formula') {
+
+						let fieldConnect = f.object.fields(fld => fld.id == f.settings.field)[0];
+						if (!fieldConnect) return;
+
+						let objectNumber = f.object.application.objects(obj => obj.id == f.settings.object)[0];
+						if (!objectNumber) return;
+
+						let fieldNumber = objectNumber.fields(fld => fld.id == f.settings.fieldLink)[0];
+						if (!fieldNumber) return;
+
+						let functionName = "";
+						switch (f.settings.type) {
+							case "sum":
+								functionName = "SUM";
+								break;
+							case "average":
+								functionName = "AVG";
+								break;
+							case "max":
+								functionName = "MAX";
+								break;
+							case "min":
+								functionName = "MIN";
+								break;
+							case "count":
+								functionName = "COUNT";
+								break;
+						}
+
+						let whereClause = "";
+						let joinClause = "";
+
+						// 1:M , 1:1 isSource
+						if ((fieldConnect.settings.linkType == 'one' && fieldConnect.settings.linkViaType == 'many') ||
+							(fieldConnect.settings.linkType == 'one' && fieldConnect.settings.linkViaType == 'one' && fieldConnect.settings.isSource)) {
+
+							whereClause = ("{table}.{column} = {linkTable}.{linkId}"
+								.replace('{table}', f.dbPrefix())
+								.replace('{column}', fieldConnect.columnName)
+								.replace('{linkTable}', objectNumber.dbTableName(true))
+								.replace('{linkId}', objectNumber.PK()));
+
+						}
+
+						// M:1 , 1:1 not Source
+						else if ((fieldConnect.settings.linkType == 'many' && fieldConnect.settings.linkViaType == 'one') ||
+							(fieldConnect.settings.linkType == 'one' && fieldConnect.settings.linkViaType == 'one' && !fieldConnect.settings.isSource)) {
+
+							var connectedField = objectNumber.fields(fld => fld.id == fieldConnect.settings.linkColumn)[0];
+							if (!connectedField) return;
+
+							whereClause = ("{linkTable}.{linkColumn} = {table}.{id}"
+								.replace('{linkTable}', objectNumber.dbTableName(true))
+								.replace('{linkColumn}', connectedField.columnName)
+								.replace('{table}', f.dbPrefix())
+								.replace('{id}', f.object.PK()));
+
+						}
+
+						// M:N
+						else if (fieldConnect.settings.linkType == 'many' && fieldConnect.settings.linkViaType == 'many') {
+
+							let fieldLink = fieldConnect.fieldLink();
+							if (!fieldLink) return;
+
+							joinClause = (" INNER JOIN {joinTable} ON {joinTable}.{linkObjectName} = {linkTable}.{linkColumn} "
+								.replace(/{joinTable}/g, fieldConnect.joinTableName(true))
+								.replace("{linkObjectName}", objectNumber.name)
+								.replace("{linkTable}", objectNumber.dbTableName(true))
+								.replace("{linkColumn}", objectNumber.PK()));
+
+							whereClause = ("{joinTable}.{joinColumn} = {table}.{id} AND {linkTable}.{column} IS NOT NULL"
+								.replace(/{joinTable}/g, fieldConnect.joinTableName(true))
+								.replace('{joinColumn}', fieldConnect.object.name)
+								.replace('{table}', f.dbPrefix())
+								.replace('{id}', fieldConnect.object.PK()))
+								.replace(/{linkTable}/g, objectNumber.dbTableName(true))
+								.replace('{column}', fieldNumber.columnName);
+
+						}
+
+
+						let colFormat = ("(SELECT {FN}({linkTable}.{linkColumn}) " +
+							"FROM {linkTable} " +
+							joinClause +
+							" WHERE " + whereClause +
+							" ) as `{displayPrefix}.{displayName}`") // add object's name to alias
+							.replace(/{FN}/g, functionName)
+							.replace(/{linkTable}/g, objectNumber.dbTableName(true))
+							.replace(/{linkColumn}/g, fieldNumber.columnName)
+							.replace('{displayPrefix}', (f.alias ? f.alias : obj.name))
+							.replace(/{displayName}/g, f.columnName);
+
+
+						selects.push(ABMigration.connection().raw(colFormat));
+
+					}
+					// Normal fields
+					else {
+
+						var columnName = f.columnName;
+
+						if (f.isMultilingual) {
+							if (obj.isExternal || obj.isImported) {
+
+								if (externalTrans[obj.name] == null) {
+									externalTrans[obj.name] = {
+										alias: f.alias,
+										object: obj,
+										transColumns: []
+									};
+								}
+
+								// store trans column of external object
+								// create query command later
+								externalTrans[obj.name].transColumns.push(columnName);
+								return;
+							}
+							else {
+								columnName = 'translations';
+							}
+						}
+
+						var selectField = ("{aliasName}.{columnName}" +
+							" as {displayPrefix}.{displayName}") // add object's name to display name
+							.replace('{aliasName}', f.dbPrefix().replace(/`/g, ''))
+							.replace('{columnName}', columnName)
+							.replace('{displayPrefix}', (f.alias ? f.alias : obj.name))
+							.replace('{displayName}', columnName);
+
+						if (columns.indexOf(selectField) < 0)
+							columns.push(selectField);
+
+					}
+
+				});
+
+				// SPECIAL CASE: Query translation of the external object
+				Object.keys(externalTrans).forEach(objName => {
+
+					var transInfo = externalTrans[objName],
+						obj = transInfo.object;
+
+					// JSON_OBJECT('language_code', `language_code`, ..., )
+					var queryCommand = "";
+
+					// pull `language_code` column too
+					transInfo.transColumns.push('language_code');
+
+					transInfo.transColumns.forEach((transCol, index) => {
+
+						if (index > 0)
+							queryCommand += ',';
+
+						queryCommand += ("'{colName}', `{colName}`".replace(/{colName}/g, transCol));
+
+					});
+
+					var prefix = "";
+					if (transInfo.alias)
+						prefix = "`{alias}`".replace("{alias}", transInfo.alias);
+					else
+						prefix = "`{dbName}`.`{baseTableName}`"
+									.replace(/{dbName}/g, obj.dbSchemaName())
+									.replace(/{baseTableName}/g, obj.dbTableName());
+
+					var transField = ("(SELECT CONCAT('[', " +
+						"	GROUP_CONCAT(JSON_OBJECT(" + queryCommand + "))" +
+						", ']')" +
+						" FROM `{dbName}`.`{linkTableName}`" +
+						" WHERE `{dbName}`.`{linkTableName}`.`{linkColumnName}` = {prefix}.`{baseColumnName}`)" +
+						" as `{displayPrefix}.{displayName}`") // add object's name to alias
+						.replace(/{dbName}/g, obj.dbSchemaName())
+						.replace(/{linkTableName}/g, obj.dbTransTableName())
+						.replace(/{linkColumnName}/g, obj.transColumnName)
+						.replace(/{prefix}/g, prefix)
+						.replace(/{baseColumnName}/g, obj.PK())
+						.replace('{displayPrefix}', prefix.replace(/`/g, ''))
+						.replace('{displayName}', "translations");
+
+					selects.push(ABMigration.connection().raw(transField));
+
+				});
+
+				// when empty columns, then add default id
+				if (selects.length == 0 && columns.length == 0) {
+					selects.push("#alias#.#pk# AS PK"
+						.replace("#alias#", joinSetting.alias || fromBaseTable)
+						.replace("#pk#", this.objectBase().PK()));
+				}
+
+				query.column(columns);
+				query.select(selects);
+				query.distinct();
+
+			}
+
+
+			// update our condition to include the one we are defined with:
+			// 
+			if (this.workspaceFilterConditions && this.workspaceFilterConditions.glue) {
+				if (options.where && options.where.glue) {
+
+					// in the case where we have a condition and a condition was passed in
+					// combine our conditions
+					// queryCondition AND givenConditions:
+					// var oWhere = _.clone(options.where);
+
+					// var newWhere = {
+					// 	glue: 'and',
+					// 	rules: [
+					// 		this.where,
+					// 		oWhere
+					// 	]
+					// }
+
+					// options.where = newWhere;
+
+					options.where.rules = options.where.rules || [];
+
+					(this.workspaceFilterConditions.rules || []).forEach(r => {
+						// START HERE MAY 29
+						options.where.rules.push(_.clone(r));
+					});
+
+				} else {
+
+					// if we had a condition and no condition was passed in, 
+					// just use ours:
+					options.where = _.cloneDeep(this.workspaceFilterConditions);
+				}
+			}
+
+			if (options.columnNames && options.columnNames.length) {
+				query.clearSelect().column(options.columnNames);
+			}
+
+			if (options) {
+
+				// run the options.where through our existing policy filters
+				// get array of policies to run through
+				var processPolicy = (indx, cb) => {
+
+					if (indx >= PolicyList.length) {
+						cb();
+					} else {
+
+						// load the policy
+						var policy = PolicyList[indx];
+
+						// run the policy on my data
+						// policy(req, res, cb)
+						// 	req.options._where
+						//  req.user.data
+						var myReq = {
+							options: {
+								_where: options.where
+							},
+							user: {
+								data: userData
+							},
+							param: (id) => {
+								if (id == "appID") {
+									return this.application.id;
+								} else if (id == "objID") {
+									return this.id;
+								}
+							}
+						}
+
+						policy(myReq, {}, (err) => {
+
+							if (err) {
+								cb(err);
+							} else {
+								// try the next one
+								processPolicy(indx + 1, cb);
+							}
+						})
+					}
+				}
+
+				// run each One
+				processPolicy(0, (err) => {
+
+					// now that I'm through with updating our Conditions
+
+					if (err) {
+						reject(err);
+					} else {
+
+						// when finished populate our Find Conditions
+						this.populateFindConditions(query, options, userData);
+
+
+
+						if (!options.ignoreIncludeId) {
+							// SELECT Running Number to be .id as a subquery
+							// SQL: select @rownum:=@rownum+1 as `id`, result.*
+							//		from (
+							//			select distinct ...
+							// 		) result , (SELECT @rownum:=0) r;
+							let raw = ABMigration.connection().raw,
+								queryRoot = ABMigration.connection().queryBuilder(),
+								queryString = query.toString();
+
+							query = queryRoot
+								.select(raw("@rownum := @rownum + 1 AS id, result.*"))
+								.from(function () {
+
+									let sqlCommand = raw(queryString.replace('select ', ''));
+
+									// sub query
+									this.select(sqlCommand).as('result');
+
+								})
+								.join(raw("(SELECT @rownum := 0) rownum")).as('rId');
+						}
+
+
+
+						sails.log.debug('ABObjectQuery.queryFind - SQL:', query.toString());
+
+						// after all that, resolve our promise with the query results
+						resolve(query); // query.then(resolve);
+					}
+				})
+
+			}
+
+
+			// edit property names of .translation
+			// {objectName}.{columnName}
+			if (!options.ignoreEditTranslations) {
+
+				query.on('query-response', function (rows, obj, builder) {
+
+					(rows || []).forEach((r) => {
+
+						// each rows
+						Object.keys(r).forEach((rKey) => {
+
+							// objectName.translations
+							if (rKey.endsWith('.translations')) {
+
+								r.translations = r.translations || [];
+
+								var objectName = rKey.replace('.translations', '');
+
+								var translations = [];
+								if (typeof r[rKey] == 'string')
+									translations = JSON.parse(r[rKey]);
+
+								// each elements of trans
+								(translations || []).forEach((tran) => {
+
+									var newTran = {
+										language_code: tran.language_code
+									};
+
+									// include objectName into property - objectName.propertyName
+									Object.keys(tran).forEach(tranKey => {
+
+										if (tranKey == 'language_code') return;
+
+										var newTranKey = "{objectName}.{propertyName}"
+											.replace("{objectName}", objectName)
+											.replace("{propertyName}", tranKey);
+
+										// add new property name
+										newTran[newTranKey] = tran[tranKey]
+
+									});
+
+
+									r.translations.push(newTran);
+
+								});
+
+
+								// remove old translations
+								delete rows[rKey];
+
+							}
+
+						});
+
+					});
+
+				});
+
+			} // if ignoreEditTranslations
+
+			// return query;
+
+		})
+
+	}
+
+
+	/**
+	 * @method queryCount
+	 * return an Objection.js QueryBuilder that is already setup for this object.
+	 * This query is setup to add our count parameter to our returns.
+	 * @param {obj} options  
+	 *		A set of optional conditions to add to the find():
+	 * @param {obj} userData 
+	 * 		The current user's data (which can be used in our conditions.)
+	 * @param {string} tableName 
+	 * 		[optional] the table name to use for the count
+	 * @return {QueryBuilder}
+	 */
+	queryCount(options, userData, tableName) {
+
+		// if (_.isUndefined(tableName)) {
+		// 	var firstLink = this.joins()[0];
+		// 	var baseObject = this.application.urlResolve(firstLink.objectURL);
+		// 	tableName = baseObject.dbTableName();
+		// }
+
+		// options = options || {};
+
+		// we don't include relative data on counts:
+		// and get rid of any .sort, .offset, .limit
+		// options.includeRelativeData = false;
+		delete options.sort;
+		delete options.offset;
+		delete options.limit;
+
+		// not include columns
+		// to prevent 'ER_MIX_OF_GROUP_FUNC_AND_FIELDS' error
+		// options.ignoreIncludeColumns = true;
+
+		// not update translations key names
+		options.ignoreEditTranslations = true;
+
+		// not include .id column
+		options.ignoreIncludeId = true;
+
+		options.ignoreIncludeColumns = true;
+
+		// return the count not the full data
+		options.columnNames = [ABMigration.connection().raw("COUNT(*) as count")];
+
+		// added tableName to id because of non unique field error
+		return this.queryFind(options, userData)
+			.then(result => {
+
+				return result[0]['count'];
+
+			});
+
+	}
+
+
+
+
+	/**
+	 * @method isValidData
+	 * Parse through the given data and return an array of any invalid
+	 * value errors.
+	 * @param {obj} allParameters  a key=>value hash of the inputs to parse.
+	 * @return {array} 
+	 */
+	//// TODO: create OP.Validation.validator() and use super.isValidData() instead.
+	isValidData(allParameters) {
+		var errors = [];
+		this.fields().forEach((f) => {
+			var p = f.isValidData(allParameters);
+			if (p.length > 0) {
+				errors = errors.concat(p);
+			}
+		})
+
+		return errors;
+	}
+
+
+}

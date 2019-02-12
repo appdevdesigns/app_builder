@@ -22,6 +22,41 @@ module.exports = {
         rest: true
     },
 
+    /* Application */
+
+    /**
+     * PUT /app_builder/application/:appID/info
+     * 
+     * Save info (name/description) of ABApplicaiton
+     * 
+     */
+    applicationSave: function(req, res) {
+        var appID = req.param('appID');
+        var appInfo = req.body.translations;
+
+        ABApplication.findOne({ id: appID })
+            .fail(res.AD.error)
+            .then(function (app) {
+
+                if (!app)
+                    return res.AD.error("Could not found this application");
+
+                app.json.translations = appInfo;
+
+                // save to database
+                app.save(function (err) {
+                    if (err)
+                        res.AD.error(true);
+                    else
+                        res.AD.success(true);
+                });
+                
+
+            });
+
+    },
+
+
     /* Objects */
 
     /**
@@ -33,46 +68,50 @@ module.exports = {
         var appID = req.param('appID');
         var object = req.body.object;
 
-        ABApplication.findOne({ id: appID })
-            .fail(res.AD.error)
-            .then(function (app) {
 
-                if (app) {
-
-                    app.json.objects = app.json.objects || [];
-
-                    var indexObj = -1;
-                    var updateObj = app.json.objects.filter(function (obj, index) {
-
-                        var isExists = obj.id == object.id;
-                        if (isExists) indexObj = index;
-
-                        return isExists;
-                    })[0];
-
-                    // update
-                    if (updateObj) {
-                        app.json.objects[indexObj] = object;
-                    }
-                    // add new
-                    else {
-                        app.json.objects.push(object);
-                    }
-
-                    // save to database
-                    app.save(function (err) {
-                        if (err)
-                            res.AD.error(true);
-                        else
-                            res.AD.success(true);
-                    });
-                }
-                else {
-                    res.AD.success(true);
-                }
+        jsonDataSave( appID, 'objects', object, req, res );
 
 
-            });
+        // ABApplication.findOne({ id: appID })
+        //     .fail(res.AD.error)
+        //     .then(function (app) {
+
+        //         if (app) {
+
+        //             app.json.objects = app.json.objects || [];
+
+        //             var indexObj = -1;
+        //             var updateObj = app.json.objects.filter(function (obj, index) {
+
+        //                 var isExists = obj.id == object.id;
+        //                 if (isExists) indexObj = index;
+
+        //                 return isExists;
+        //             })[0];
+
+        //             // update
+        //             if (updateObj) {
+        //                 app.json.objects[indexObj] = object;
+        //             }
+        //             // add new
+        //             else {
+        //                 app.json.objects.push(object);
+        //             }
+
+        //             // save to database
+        //             app.save(function (err) {
+        //                 if (err)
+        //                     res.AD.error(true);
+        //                 else
+        //                     res.AD.success(true);
+        //             });
+        //         }
+        //         else {
+        //             res.AD.success(true);
+        //         }
+
+
+        //     });
 
     },
 
@@ -85,42 +124,44 @@ module.exports = {
         var appID = req.param('appID');
         var objectID = req.param('id');
 
-        ABApplication.findOne({ id: appID })
-            .fail(res.AD.error)
-            .then(function (app) {
+        jsonDataDestroy( appID, 'objects', objectID, req, res);
 
-                if (app) {
+        // ABApplication.findOne({ id: appID })
+        //     .fail(res.AD.error)
+        //     .then(function (app) {
 
-                    app.json.objects = app.json.objects || [];
+        //         if (app) {
 
-                    var indexObj = -1;
-                    var updateObj = app.json.objects.filter(function (obj, index) {
+        //             app.json.objects = app.json.objects || [];
 
-                        var isExists = obj.id == objectID;
-                        if (isExists) indexObj = index;
+        //             var indexObj = -1;
+        //             var updateObj = app.json.objects.filter(function (obj, index) {
 
-                        return isExists;
-                    })[0];
+        //                 var isExists = obj.id == objectID;
+        //                 if (isExists) indexObj = index;
 
-                    // remove
-                    if (indexObj > -1) {
-                        app.json.objects.splice(indexObj, 1);
-                    }
+        //                 return isExists;
+        //             })[0];
 
-                    // save to database
-                    app.save(function (err) {
-                        if (err)
-                            res.AD.error(true);
-                        else
-                            res.AD.success(true);
-                    });
-                }
-                else {
-                    res.AD.success(true);
-                }
+        //             // remove
+        //             if (indexObj > -1) {
+        //                 app.json.objects.splice(indexObj, 1);
+        //             }
+
+        //             // save to database
+        //             app.save(function (err) {
+        //                 if (err)
+        //                     res.AD.error(true);
+        //                 else
+        //                     res.AD.success(true);
+        //             });
+        //         }
+        //         else {
+        //             res.AD.success(true);
+        //         }
 
 
-            });
+        //     });
 
     },
 
@@ -236,10 +277,11 @@ module.exports = {
 
                     if (data == null) return resolve();
 
-                    var pageClass = data.appClass._pages.filter(p => p.id == vals.id)[0];
+                    var langCode = ADCore.user.current(req).getLanguageCode(); // 'en';
 
+                    var pageClass = data.appClass._pages.filter(p => p.id == vals.id)[0];
                     if (pageClass)
-                        return AppBuilder.updateNavView(data.app, pageClass)
+                        return AppBuilder.updateNavView(data.app, pageClass, langCode)
                             .catch(reject)
                             .then(resolve);
                     else
@@ -610,9 +652,164 @@ module.exports = {
                 });
             });
 
+    },
+
+
+
+
+    /* Queries */
+
+    /**
+     * PUT /app_builder/application/:appID/query
+     * 
+     * Add/Update a object into ABApplication
+     */
+    querySave: function (req, res) {
+        var appID = req.param('appID');
+        var query = req.param('data');
+
+console.log('querySave():');
+console.log('allParams:', req.allParams());
+
+        jsonDataSave( appID, 'queries', query, req, res );
+
+    },
+
+    /**
+     * DELETE /app_builder/application/:appID/query/:id
+     * 
+     * Delete a query in ABApplication
+     */
+    queryDestroy: function (req, res) {
+        var appID = req.param('appID');
+        var queryID = req.param('id');
+
+        jsonDataDestroy( appID, 'queries', queryID, req, res )
+
+    },
+
+
+
+    /* Mobile Apps */
+    /* An Application may have one or more Mobile Apps. */
+
+    /**
+     * GET /app_builder/application/allmobileapps
+     * 
+     * return a list of all Mobile Apps across all Applications.
+     * (administrative)
+     * 
+     * the returned list is a list of { .id  .label .appID }
+     *
+     */
+    listMobileApps: function (req, res) {
+
+        AppBuilder.mobileApps()
+        .then((list)=>{
+            var objList = [];
+            list.forEach((l)=>{
+                objList.push(l.toObj());
+            })
+            
+            res.AD.success(objList);
+        })
+        .catch((err)=>{
+            ADCore.Error.log('ABApplicationController:listMobileApps:Error getting mobile apps:', {error:err});
+            res.AD.error(err);
+        })
+
     }
 
 };
 
 
+
+function jsonDataSave( appID, keyData, jsonEntry, req, res ) {
+console.log();
+console.log('jsonDataSave(): keyData['+ keyData + ']  jsonEntry:', jsonEntry);
+console.log();
+    ABApplication.findOne({ id: appID })
+        .fail(res.AD.error)
+        .then(function (app) {
+
+            if (app) {
+
+                app.json[keyData] = app.json[keyData] || [];
+
+                var indexObj = -1;
+                var updateObj = app.json[keyData].filter(function (obj, index) {
+
+                    var isExists = obj && obj.id == jsonEntry.id;
+                    if (isExists) indexObj = index;
+
+                    return isExists;
+                })[0];
+
+                // update
+                if (updateObj) {
+                    app.json[keyData][indexObj] = jsonEntry;
+                }
+                // add new
+                else {
+                    app.json[keyData].push(jsonEntry);
+                }
+console.log('app.json['+keyData+'] : ', app.json[keyData]);
+console.log();
+                // save to database
+                app.save(function (err) {
+                    if (err)
+                        res.AD.error(true);
+                    else
+                        res.AD.success(true);
+                });
+            }
+            else {
+                res.AD.success(true);
+            }
+
+        });
+
+}
+
+
+function jsonDataDestroy( appID, keyData, itemID, req, res ) {
+
+    ABApplication.findOne({ id: appID })
+        .fail(res.AD.error)
+        .then(function (app) {
+
+            if (app) {
+
+                app.json[keyData] = app.json[keyData] || [];
+
+                var indexObj = -1;
+                var updateObj = app.json[keyData].filter(function (obj, index) {
+
+                    var isExists = obj.id == itemID;
+                    if (isExists) indexObj = index;
+
+                    return isExists;
+                })[0];
+
+                // remove
+                if (indexObj > -1) {
+                    app.json[keyData].splice(indexObj, 1);
+                }
+
+                // save to database
+                app.save(function (err) {
+                    if (err)
+                        res.AD.error(true);
+                    else
+                        res.AD.success(true);
+                });
+            }
+            else {
+                res.AD.success(true);
+            }
+
+
+        });
+
+}
 

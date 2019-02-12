@@ -30,6 +30,10 @@ var ABFieldLongTextDefaults = {
 	// what types of Sails ORM attributes can be imported into this data type?
 	// http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
 	compatibleOrmTypes: ['longtext', 'mediumtext', 'text'],
+
+	// what types of MySql column types can be imported into this data type?
+	// https://www.techonthenet.com/mysql/datatypes.php
+	compatibleMysqlTypes: ['text', 'mediumtext', 'longtext']
 }
 
 
@@ -42,14 +46,14 @@ class ABFieldLongText extends ABField {
     	/*
     	{
 			settings: {
-				textDefault: 'string',
-				supportMultilingual: true/false
+				default: 'string',
+				supportMultilingual: 1/0
 			}
     	}
     	*/
 
     	// we're responsible for setting up our specific settings:
-    	this.settings.textDefault = values.settings.textDefault || '';
+    	this.settings.default = values.settings.default || '';
     	this.settings.supportMultilingual = values.settings.supportMultilingual+"" || "1";
 
     	// text to Int:
@@ -94,6 +98,16 @@ class ABFieldLongText extends ABField {
 		// }, errors);
 
 		return errors;
+	}
+
+
+	/*
+	 * @property isMultilingual
+	 * does this field represent multilingual data?
+	 * @return {bool}
+	 */
+	get isMultilingual() {
+		return this.settings.supportMultilingual == 1;
 	}
 
 
@@ -170,7 +184,7 @@ class ABFieldLongText extends ABField {
 					.then((exists) => {
 						knex.schema.table(tableName, (t) => {
 							var currCol = t.text(this.columnName, 'longtext')
-							.defaultTo(this.settings.textDefault);
+							.defaultTo(this.settings.default);
 
 							// alter default value of column
 							if (exists) currCol.alter();
@@ -189,6 +203,18 @@ class ABFieldLongText extends ABField {
 			});
 
 		});
+	}
+
+
+	/**
+	 * @function migrateUpdate
+	 * perform the necessary sql actions to MODIFY this column to the DB table.
+	 * @param {knex} knex the Knex connection.
+	 */
+	migrateUpdate (knex) {
+
+		return this.migrateCreate(knex);
+
 	}
 
 

@@ -57,13 +57,14 @@ export default class ABFieldComponent {
 	/// Instance Methods
 	///
 
-	component (App) {
+	component (App, idBase) {
 
 		// for each provided element: create an this.ids for it:
     	var elements = this.elements(App, this);
 
+		this.idBase = (idBase ? idBase + '_' +this.fieldDefaults.key : this.idBase);
 
-    	////
+		////
     	//// prepare our ids
     	////
 
@@ -76,6 +77,8 @@ export default class ABFieldComponent {
 			columnName: App.unique(this.idBase+'_columnName'),
 			fieldDescription: App.unique(this.idBase+'_fieldDescription'),
 			showIcon: App.unique(this.idBase+'_showIcon'),
+			required: App.unique(this.idBase+'_required'),
+			numberOfNull: App.unique(this.idBase+'_numberOfNull'),
 		}
 
     	this.eachDeep(elements, (e) => {
@@ -213,7 +216,7 @@ export default class ABFieldComponent {
 				}
 
 				// perform provided .isValid()
-				if (this.logic.isValid) {
+				if (isValid && this.logic.isValid) {
 					isValid = this.logic.isValid(ids, isValid);
 				}
 

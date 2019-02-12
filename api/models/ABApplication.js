@@ -26,7 +26,7 @@ module.exports = {
         
         // objects: { collection: 'ABObject', via: 'application' },
 
-        pages: { collection: 'ABPage', via: 'application' },
+        // pages: { collection: 'ABPage', via: 'application' },
 
 
         name: {

@@ -21,9 +21,6 @@ import ABDisplayRule from "./ABViewFormPropertyDisplayRule"
 import ABRecordRule from "../rules/ABViewRuleListFormRecordRules"
 import ABSubmitRule from "../rules/ABViewRuleListFormSubmitRules"
 
-
-import RowFilter from '../RowFilter'
-
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
@@ -37,11 +34,13 @@ var ABViewFormDefaults = {
 }
 
 var ABViewFormPropertyComponentDefaults = {
+	datacollection: null,
 	showLabel: true,
 	labelPosition: 'left',
 	labelWidth: 120,
 	height: 200,
 	clearOnLoad: false,
+	clearOnSave: false,
 	displayRules: [],
 
 	//	[{
@@ -145,6 +144,7 @@ export default class ABViewForm extends ABViewContainer {
 		// convert from "0" => true/false
 		this.settings.showLabel = JSON.parse(this.settings.showLabel != null ? this.settings.showLabel : ABViewFormPropertyComponentDefaults.showLabel);
 		this.settings.clearOnLoad = JSON.parse(this.settings.clearOnLoad != null ? this.settings.clearOnLoad : ABViewFormPropertyComponentDefaults.clearOnLoad);
+		this.settings.clearOnSave = JSON.parse(this.settings.clearOnSave != null ? this.settings.clearOnSave : ABViewFormPropertyComponentDefaults.clearOnSave);
 
 		// convert from "0" => 0
 		this.settings.labelWidth = parseInt(this.settings.labelWidth || ABViewFormPropertyComponentDefaults.labelWidth);
@@ -221,7 +221,8 @@ export default class ABViewForm extends ABViewContainer {
 
 						// Add new form field
 						var newFieldView = currView.addFieldToForm(f, yPosition);
-						newFieldView.once('destroyed', () => this.propertyEditorPopulate(App, ids, currView));
+						if (newFieldView)
+							newFieldView.once('destroyed', () => this.propertyEditorPopulate(App, ids, currView));
 
 						// update item to UI list
 						f.selected = 1;
@@ -244,7 +245,12 @@ export default class ABViewForm extends ABViewContainer {
 
 		_logic.listTemplate = (field, common) => {
 
-			var componentKey = field.formComponent().common().key;
+			// disable in form
+			var fieldComponent = field.formComponent();
+			if (fieldComponent == null) 
+				return "<i class='fa fa-times'></i>  #label# <div class='ab-component-form-fields-component-info'> Disable </div>".replace("#label#", field.label);
+
+			var componentKey = fieldComponent.common().key;
 			var formComponent = ABViewManager.allViews((v) => v.common().key == componentKey)[0];
 
 			return common.markCheckbox(field) + " #label# <div class='ab-component-form-fields-component-info'> <i class='fa fa-#icon#'></i> #component# </div>"
@@ -266,7 +272,8 @@ export default class ABViewForm extends ABViewContainer {
 			// add a field to the form
 			if (item.selected) {
 				var fieldView = currView.addFieldToForm(item);
-				fieldView.once('destroyed', () => this.propertyEditorPopulate(App, ids, currView));
+				if (fieldView)
+					fieldView.once('destroyed', () => this.propertyEditorPopulate(App, ids, currView));
 			}
 			// remove field in the form
 			else {
@@ -402,7 +409,7 @@ PopupRecordRule.qbFixAfterShow();
 							template: _logic.listTemplate,
 							type: {
 								markCheckbox: function (item) {
-									return "<span class='check webix_icon fa-" + (item.selected ? "check-" : "") + "square-o'></span>";
+									return "<span class='check webix_icon fa fa-" + (item.selected ? "check-" : "") + "square-o'></span>";
 								}
 							},
 							onClick: {
@@ -450,6 +457,12 @@ PopupRecordRule.qbFixAfterShow();
 				name: 'clearOnLoad',
 				view: 'checkbox',
 				label: L('ab.components.form.clearOnLoad', "*Clear on load"),
+				labelWidth: App.config.labelWidthLarge
+			},
+			{
+				name: 'clearOnSave',
+				view: 'checkbox',
+				label: L('ab.components.form.clearOnSave', "*Clear on save"),
 				labelWidth: App.config.labelWidthLarge
 			},
 			{
@@ -529,16 +542,22 @@ PopupRecordRule.qbFixAfterShow();
 
 	}
 
-	static propertyEditorPopulate(App, ids, view) {
+	static propertyEditorPopulate(App, ids, view, logic) {
 
-		super.propertyEditorPopulate(App, ids, view);
+		super.propertyEditorPopulate(App, ids, view, logic);
 
 		var formCom = view.parentFormComponent();
 		var dataCollectionId = (formCom.settings.datacollection ? formCom.settings.datacollection : null);
 		var SourceSelector = $$(ids.datacollection);
 
 		// Pull data collections to options
-		var dcOptions = view.pageRoot().dataCollections().map((dc) => {
+		var dcOptions = view.pageRoot().dataCollections(dc => {
+
+			var obj = dc.datasource;
+
+			return dc.sourceType == "object" && obj && !obj.isImported;
+
+		}).map((dc) => {
 
 			return {
 				id: dc.id,
@@ -569,6 +588,7 @@ PopupRecordRule.qbFixAfterShow();
 		$$(ids.labelWidth).setValue(view.settings.labelWidth || ABViewFormPropertyComponentDefaults.labelWidth);
 		$$(ids.height).setValue(view.settings.height || ABViewFormPropertyComponentDefaults.height);
 		$$(ids.clearOnLoad).setValue(view.settings.clearOnLoad || ABViewFormPropertyComponentDefaults.clearOnLoad);
+		$$(ids.clearOnSave).setValue(view.settings.clearOnSave || ABViewFormPropertyComponentDefaults.clearOnSave);
 
 		this.propertyUpdateRules(ids, view, dataCollectionId);
 		this.populateBadgeNumber(ids, view);
@@ -596,6 +616,7 @@ PopupRecordRule.qbFixAfterShow();
 		view.settings.labelWidth = $$(ids.labelWidth).getValue() || ABViewFormPropertyComponentDefaults.labelWidth;
 		view.settings.height = $$(ids.height).getValue();
 		view.settings.clearOnLoad = $$(ids.clearOnLoad).getValue();
+		view.settings.clearOnSave = $$(ids.clearOnSave).getValue();
 
 	}
 
@@ -638,7 +659,7 @@ PopupRecordRule.qbFixAfterShow();
 		if (!view) return;
 
 		// Populate values to rules
-		var selectedDc = view.dataCollection();
+		var selectedDc = view.dataCollection;
 		if (selectedDc) {
 			PopupDisplayRule.objectLoad(selectedDc.datasource);
 			PopupRecordRule.objectLoad(selectedDc.datasource);
@@ -750,7 +771,7 @@ PopupRecordRule.qbFixAfterShow();
 			}
 
 			// bind a data collection to form component
-			var dc = this.dataCollection();
+			var dc = this.dataCollection;
 			if (dc) {
 
 				// listen DC events
@@ -786,10 +807,10 @@ PopupRecordRule.qbFixAfterShow();
 			
 			},			
 
-			displayData: (data) => {
+			displayData: (rowData) => {
 
 				// Set default values
-				if (data == null) {
+				if (rowData == null) {
 					var customFields = this.fieldComponents((comp) => {
 						return (comp instanceof ABViewFormCustom) ||
 							// rich text
@@ -806,9 +827,9 @@ PopupRecordRule.qbFixAfterShow();
 						var colName = field.columnName;
 
 						// set value to each components
-						var rowData = {};
-						field.defaultValue(rowData);
-						field.setValue($$(comp.ui.id), rowData);
+						var defaultRowData = {};
+						field.defaultValue(defaultRowData);
+						field.setValue($$(comp.ui.id), defaultRowData);
 
 					});
 					var normalFields = this.fieldComponents((comp) => ((comp instanceof ABViewFormField) && !(comp instanceof ABViewFormCustom)));
@@ -848,14 +869,14 @@ PopupRecordRule.qbFixAfterShow();
 
 						// set value to each components
 						if (f.field())
-							f.field().setValue($$(comp.ui.id), data);
+							f.field().setValue($$(comp.ui.id), rowData);
 					});
 				}
 			},
 
-			displayParentData: (data) => {
+			displayParentData: (rowData) => {
 
-				var dc = this.dataCollection();
+				var dc = this.dataCollection;
 				var currCursor = dc.getCursor();
 
 				// If the cursor is selected, then it will not update value of the parent field
@@ -863,6 +884,8 @@ PopupRecordRule.qbFixAfterShow();
 
 				var Form = $$(ids.component),
 					relationField = dc.fieldLink;
+
+				if (relationField == null) return;
 
 				// Pull a component of relation field
 				var relationFieldCom = this.fieldComponents((comp) => {
@@ -881,7 +904,7 @@ PopupRecordRule.qbFixAfterShow();
 
 				// pull data of parent's dc
 				var formData = {};
-				formData[relationName] = data;
+				formData[relationName] = rowData;
 
 				// set data of parent to default value
 				relationField.setValue(relationElem, formData);
@@ -918,7 +941,7 @@ PopupRecordRule.qbFixAfterShow();
 			});
 
 			var data = null;
-			var dc = this.dataCollection();
+			var dc = this.dataCollection;
 			if (dc) {
 
 				if (Form)
@@ -927,6 +950,7 @@ PopupRecordRule.qbFixAfterShow();
 				// clear current cursor on load
 				if (this.settings.clearOnLoad || _logic.callbacks.clearOnLoad() ) {
 					dc.setCursor(null);
+					_logic.displayData(null);
 				}
 
 				data = dc.getCursor();
@@ -947,6 +971,9 @@ PopupRecordRule.qbFixAfterShow();
 				_logic.displayData(null);
 			}
 
+			//Focus on first focusable component
+			this.focusOnFirst();
+
 			if (Form)
 				Form.adjust();
 
@@ -965,12 +992,12 @@ PopupRecordRule.qbFixAfterShow();
 
 
 	/**
-	 * @method dataCollection
+	 * @property dataCollection
 	 * return ABViewDataCollection of this form
 	 * 
 	 * @return {ABViewDataCollection}
 	 */
-	dataCollection() {
+	get dataCollection() {
 		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.datacollection)[0];
 	}
 
@@ -1017,6 +1044,8 @@ PopupRecordRule.qbFixAfterShow();
 			return;
 
 		var fieldComponent = field.formComponent();
+		if (fieldComponent == null)
+			return;
 
 		var newView = fieldComponent.newInstance(this.application, this);
 		if (newView == null)
@@ -1054,14 +1083,16 @@ PopupRecordRule.qbFixAfterShow();
 			formView.clearValidation();
 
 			// get ABViewDataCollection
-			var dc = this.dataCollection();
+			var dc = this.dataCollection;
 			if (dc == null) return Promise.resolve();
 
 			// get ABObject
 			var obj = dc.datasource;
+			if (obj == null) return Promise.resolve();
 
 			// get ABModel
 			var model = dc.model;
+			if (model == null) return Promise.resolve();
 
 			// get update data
 			var formVals = formView.getValues();
@@ -1107,18 +1138,39 @@ PopupRecordRule.qbFixAfterShow();
 					if (objectLink.id == f.settings.linkObject &&
 						formFieldCom.length < 1 && // check field does not show
 						formVals[f.columnName] === undefined) { 
-						formVals[f.columnName] = {
-							id: dcLink.getCursor().id
-						}
+						formVals[f.columnName] = {};
+						formVals[f.columnName][objectLink.PK()] = dcLink.getCursor().id;
 					}
 
 				});
 
 			}
 
-			// validate
-			var validator = obj.isValidData(formVals);
-			if (validator.pass()) {
+			var isValid = true;
+
+			// validate required fields
+			var requiredFields = this.fieldComponents(fComp => fComp.settings.required).map(fComp => fComp.field());
+			requiredFields.forEach(f => {
+
+				if (!formVals[f.columnName] && 
+					formVals[f.columnName] != '0') {
+
+					formView.markInvalid(f.columnName, '*This is a required field.');
+					isValid = false;
+				}
+
+			});
+
+			// validate data
+			var validator;
+			if (isValid) {
+				validator = obj.isValidData(formVals);
+				isValid = validator.pass();
+			}
+
+
+
+			if (isValid) {
 
 				// show progress icon
 				if (formView.showProgress)
@@ -1127,12 +1179,18 @@ PopupRecordRule.qbFixAfterShow();
 				// form ready function
 				var formReady = (newFormVals) => {
 
-					// when add a new data, then clear form inputs
+					// clear cursor after saving.
 					if (dc) {
-						var currCursor = dc.getCursor();
-						if (currCursor == null) {
+						if (this.settings.clearOnSave) {
 							dc.setCursor(null);
 							formView.clear();
+						}
+						else {
+
+							if (newFormVals &&
+								newFormVals.id)
+								dc.setCursor(newFormVals.id);
+
 						}
 					}
 					
@@ -1142,7 +1200,28 @@ PopupRecordRule.qbFixAfterShow();
 
 					if (formView.hideProgress)
 						formView.hideProgress();
-				}
+				};
+
+				let formError = (err) => {
+
+					let saveButton = formView.queryView({ view: 'button', type: "form" });
+
+					if (err && err.invalidAttributes) {
+
+						// mark error
+						for (let attr in err.invalidAttributes) {
+							formView.markInvalid(attr, err.invalidAttributes[attr].message);
+						}
+
+					}
+
+					if (saveButton)
+						saveButton.enable();
+
+					if (formView.hideProgress)
+						formView.hideProgress();
+
+				};
 
 				return new Promise(
 					(resolve, reject) => {
@@ -1152,7 +1231,7 @@ PopupRecordRule.qbFixAfterShow();
 						if (formVals.id) {
 							model.update(formVals.id, formVals)
 								.catch((err) => {
-									formReady();
+									formError(err.data);
 									reject(err);
 								})
 								.then((newFormVals) => {
@@ -1178,7 +1257,7 @@ resolve();
 						else {
 							model.create(formVals)
 								.catch((err) => {
-									formReady();
+									formError(err.data);
 									reject(err);
 								})
 								.then((newFormVals) => {
@@ -1207,10 +1286,23 @@ resolve();
 			}
 			else {
 
+				let saveButton = formView.queryView({ view: 'button', type: "form" });
+
 				// error message
-				validator.errors.forEach(err => {
-					formView.markInvalid(err.name, err.message);
-				});
+				if (validator && validator.errors && validator.errors.length) {
+					validator.errors.forEach(err => {
+						formView.markInvalid(err.name, err.message);
+					});
+
+					if (saveButton)
+						saveButton.disable();
+				}
+				else {
+
+					if (saveButton)
+						saveButton.enable();
+
+				}
 
 				return Promise.resolve();
 			}
@@ -1226,7 +1318,7 @@ resolve();
 
 	doRecordRules(rowData) {
 
-		var object = this.dataCollection().datasource;
+		var object = this.dataCollection.datasource;
 
 		var RecordRules = new ABRecordRule();
 		RecordRules.formLoad(this);
@@ -1239,7 +1331,7 @@ resolve();
 
 	doSubmitRules(rowData) {
 
-		var object = this.dataCollection().datasource;
+		var object = this.dataCollection.datasource;
 		
 		var SubmitRules = new ABSubmitRule();
 		SubmitRules.formLoad(this);
@@ -1252,6 +1344,28 @@ resolve();
 
 
 
+	focusOnFirst() {
+
+		var topPosition = this.views().length;
+		var topPositionId = "";
+		this.views().forEach((item) => {
+			if(item.key == "textbox" || item.key == "numberbox") {
+				if (item.position.y < topPosition) {
+					topPosition = item.position.y;
+					topPositionId = item.id;
+				}
+			}
+		});
+		var childComponent = this.viewComponents[topPositionId];
+		if(childComponent) {
+			$$(childComponent.ui.id).focus();
+		}
+
+	}
+
+	copyUpdateProperyList() {
+		return ['datacollection'];
+	}
 
 
 

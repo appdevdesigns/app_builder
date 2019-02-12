@@ -33,7 +33,9 @@ var defaultValues = {
 	'imageWidth':'',
 	'useHeight': 0,
 	'imageHeight': '',
-	'removeExistingData': 0
+	'removeExistingData': 0,
+	'useDefaultImage': false,
+	'defaultImageUrl': '',
 }
 
 
@@ -62,7 +64,8 @@ class ABFieldImage extends ABField {
     	// text to Int:
     	this.settings.useWidth = parseInt(this.settings.useWidth);
     	this.settings.useHeight = parseInt(this.settings.useHeight);
-    	this.settings.removeExistingData = parseInt(this.settings.removeExistingData);
+		this.settings.removeExistingData = parseInt(this.settings.removeExistingData);
+		this.settings.useDefaultImage = parseInt(this.settings.useDefaultImage);
   	}
 
 
@@ -132,7 +135,15 @@ class ABFieldImage extends ABField {
 					if (!exists) {
 
 						return knex.schema.table(tableName, (t)=>{
-								t.string(this.columnName).nullable();
+
+								// field is required (not null)
+								if (this.settings.required) {
+									t.string(this.columnName).notNullable();
+								}
+								else {
+									t.string(this.columnName).nullable();
+								}
+
 							})
 							.then(resolve, reject);
 

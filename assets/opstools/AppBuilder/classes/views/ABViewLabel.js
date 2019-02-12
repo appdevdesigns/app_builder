@@ -361,6 +361,41 @@ export default class ABViewLabel extends ABViewWidget  {
 		this.settings.format = 2;
 	}
 
+
+	//// Report ////
+
+	/**
+	 * @method print
+	 * 
+	 * 
+	 * @return {Object} - PDF object definition
+	 */
+	print() {
+
+		return new Promise((resolve, reject) => {
+
+			var reportDef = {
+				text: this.text
+			};
+	
+			// 0 - normal, 1 - title, 2 - description
+			if (this.settings.format == 0) {
+				reportDef.fontSize = 16;
+			}
+			else if (this.settings.format == 1) {
+				reportDef.fontSize = 18;
+				reportDef.bold = true;
+			}
+			else if (this.settings.format == 2) {
+				reportDef.fontSize = 14;
+			}
+	
+			resolve(reportDef);
+	
+		});
+
+	}
+
 }
 
 

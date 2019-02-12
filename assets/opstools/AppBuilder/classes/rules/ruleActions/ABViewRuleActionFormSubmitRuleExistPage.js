@@ -1,7 +1,6 @@
 //
-// ABViewRuleActionFormRecordRuleUpdate
+// ABViewRuleActionFormSubmitRuleExistPage
 //
-// An action that allows you to update fields on an object. 
 //
 //
 import ABViewRuleAction from "../ABViewRuleAction"
@@ -85,13 +84,13 @@ export default class ABViewRuleActionFormSubmitRuleExistPage extends ABViewRuleA
 	valueDisplayComponent(idBase) {
 
 		var ids = {
-			existsPages: idBase + '_existsPages',
+			pagesAndTabs: idBase + '_PagesAndTabs',
 		};
 
 
 		this._ui = {
 			ui: {
-				id: ids.existsPages,
+				id: ids.pagesAndTabs,
 				view: 'richselect',
 				options: []
 			},
@@ -101,20 +100,50 @@ export default class ABViewRuleActionFormSubmitRuleExistPage extends ABViewRuleA
 				// Pull page list to "Redirect to an existing page"
 				var _pageOptions = [];
 
-				var addPage = (page, indent) => {
+				/**
+				 * @param pageOrTab	{Object}	- ABViewPage or ABViewTab
+				 * @param indent	{integer}
+				 * @param type		{string}	- 'page' or 'tab'
+				 * @param pageId	{uuid}		- the id of page (only tab)
+				 */
+				var addPage = (pageOrTab, indent, type, pageId) => {
 					indent = indent || '';
 
-					_pageOptions.push({ id: page.id, value: indent + page.label });
+					let icon = 'file-o';
+					if (type == 'tab')
+						icon = 'window-maximize';
 
-					page.pages().forEach(function (p) {
-						addPage(p, indent + '-');
-					})
+					_pageOptions.push({
+						id: pageOrTab.id,
+						value: indent + pageOrTab.label,
+						type: type,
+						pageId: pageId,
+
+						icon: icon
+					});
+
+					if (type == 'page') {
+						pageOrTab.pages().forEach(function (p) {
+							addPage(p, indent + '-', 'page');
+						});
+
+						// add 'tab' options
+						pageOrTab.views(v => v.key == 'tab').forEach(tab => {
+
+							// add 'tab view' to options
+							tab.views().forEach(tabView => {
+								addPage(tabView, indent + '-', 'tab', pageOrTab.id);
+							});
+
+						});
+					}
+
 				};
 
-				addPage(this.currentForm.pageRoot(), '');
+				addPage(this.currentForm.pageRoot(), '', 'page');
 
-				$$(ids.existsPages).define('options', _pageOptions);
-				$$(ids.existsPages).refresh();
+				$$(ids.pagesAndTabs).define('options', _pageOptions);
+				$$(ids.pagesAndTabs).refresh();
 			},
 
 			_logic: _logic,
@@ -129,16 +158,38 @@ export default class ABViewRuleActionFormSubmitRuleExistPage extends ABViewRuleA
 
 				valueRules = valueRules || {};
 
-				$$(ids.existsPages).setValue(valueRules.pageId || '');
+				$$(ids.pagesAndTabs).setValue(valueRules.tabId || valueRules.pageId || '');
 
 			},
 
 			toSettings: () => {
 
-				// return the confirm message
-				return {
-					pageId: $$(ids.existsPages).getValue() || ''
+				var result = {};
+
+				var selectedId = $$(ids.pagesAndTabs).getValue();
+				var selectedItem = $$(ids.pagesAndTabs).getPopup().getList().config.data.filter(opt => opt.id == selectedId)[0];
+				if (selectedItem) {
+
+					if (selectedItem.type == 'tab') {
+
+						// store page id and tab id
+						result = {
+							pageId: selectedItem.pageId,
+							tabId: selectedId
+						};
+					}
+					else {
+
+						// store only page id
+						result = {
+							pageId: selectedId
+						};
+					}
+
 				}
+
+				// return the confirm message
+				return result;
 
 			}
 		};
@@ -157,8 +208,26 @@ export default class ABViewRuleActionFormSubmitRuleExistPage extends ABViewRuleA
 		return new Promise((resolve, reject) => {
 
 			// redirect page
-			if (this.valueRules.pageId)
+			if (this.valueRules.pageId) {
 				options.form.changePage(this.valueRules.pageId);
+
+				if (this.valueRules.tabId) {
+
+					var curPage = options.form.application.pages(p => p.id == this.valueRules.pageId, true)[0];
+					if (!curPage) return resolve();
+
+					// switch tab
+					var tabView = curPage.views(v => v.id == this.valueRules.tabId, true)[0];
+					if (!tabView) return resolve();
+		
+					var tab = tabView.parent;
+					if (!tab) return resolve();
+		
+					tab.emit('changeTab', tabView.id);
+
+				}
+
+			}
 
 			resolve();
 

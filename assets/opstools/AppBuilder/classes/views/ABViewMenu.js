@@ -6,6 +6,7 @@
  */
 
 import ABViewWidget from "./ABViewWidget"
+import ABViewTab from "./ABViewTab"
 import ABPropertyComponent from "../ABPropertyComponent"
 
 function L(key, altText) {
@@ -16,9 +17,12 @@ function L(key, altText) {
 var ABViewMenuPropertyComponentDefaults = {
 	orientation: 'x',
 	buttonStyle: 'ab-menu-default',
+	menuAlignment: 'ab-menu-left',
 	// [
 	// 		{
 	//			pageId: uuid,
+	//			tabId: uuid, 
+	//			type: string, // "page", "tab"
 	//			isChecked: bool,
 	//			aliasname: string,
 	//			translations: []
@@ -46,7 +50,7 @@ export default class ABViewMenu extends ABViewWidget {
 
 		super(values, application, parent, ABMenuDefaults);
 
-		// OP.Multilingual.translate(this, this, ['text']);
+		OP.Multilingual.translate(this, this, ['menulabel']);
 
 		// 	{
 		// 		id:'uuid',					// uuid value for this obj
@@ -60,7 +64,7 @@ export default class ABViewMenu extends ABViewWidget {
 
 		// 		views:[],					// the child views contained by this view.
 
-		//		translations:[]				// text: the actual text being displayed by this label.
+		//		translations:[],			// text: the actual text being displayed by this label.
 
 		// 	}
 
@@ -71,6 +75,32 @@ export default class ABViewMenu extends ABViewWidget {
 		return ABMenuDefaults;
 	}
 
+	///
+	/// Instance Methods
+	///
+
+	/**
+	 * @method toObj()
+	 *
+	 * properly compile the current state of this ABViewLabel instance
+	 * into the values needed for saving.
+	 *
+	 * @return {json}
+	 */
+	toObj () {
+		
+		if (this.settings.pages) {
+			this.settings.pages.forEach(page => {
+				OP.Multilingual.unTranslate(page, page, ["aliasname"]);
+			});
+		}
+		
+		var obj = super.toObj();
+		obj.views = [];
+		return obj;
+	}
+
+
 	/**
 	 * @method fromValues()
 	 *
@@ -80,7 +110,7 @@ export default class ABViewMenu extends ABViewWidget {
 	fromValues (values) {
 
 		super.fromValues(values);
-		
+
 		this.settings.pages = this.settings.pages || ABViewMenuPropertyComponentDefaults.pages;
 
 		for (var i = 0; i < this.settings.pages.length; i++) {
@@ -88,6 +118,7 @@ export default class ABViewMenu extends ABViewWidget {
 			var page = this.settings.pages[i];
 			if (page instanceof Object) {
 				page.isChecked = JSON.parse(page.isChecked || false);
+				page.translations = OP.Multilingual.translate(page, page, ["aliasname"]);
 			}
 			// Compatible with old data
 			else if (typeof page == 'string') {
@@ -96,15 +127,12 @@ export default class ABViewMenu extends ABViewWidget {
 					isChecked: true
 				};
 			}
-
+			
 		}
 
 	}
 
-	///
-	/// Instance Methods
-	///
-
+	
 	//
 	//	Editor Related
 	//
@@ -134,8 +162,17 @@ export default class ABViewMenu extends ABViewWidget {
 		menu.rows[0].id = ids.component;
 		menu.rows[0].on = {
 			onAfterDrop: (context, native_event) => {
-				var newOrder = context.from.data.order.slice(0)
-				this.settings.pages = newOrder;
+				var orderedPageIds = context.from.data.order.slice(0);
+
+				// reorder
+				(this.settings.pages || []).sort(function(a, b) {
+
+					var itemIdA = a.tabId || a.pageId;
+					var itemIdB = b.tabId || b.pageId;
+
+					return orderedPageIds.indexOf(itemIdA) - orderedPageIds.indexOf(itemIdB);
+				});
+
 				this.save();
 			}
 		}
@@ -159,9 +196,12 @@ export default class ABViewMenu extends ABViewWidget {
 
 			this.ClearPagesInView(Menu);
 			if (this.settings.pages && this.settings.pages.length > -1) {
-				var orderMenu = [];
-				var orderMenu = this.AddPagesToView(this.application, Menu, this.settings.pages, orderMenu);
-				this.AddOrderedPagesToView(this.application, Menu, this.settings.pages, orderMenu);
+				// var orderMenu = [];
+				// var orderMenu = this.AddPagesToView(this.application, Menu, this.settings.pages, orderMenu);
+				// this.AddOrderedPagesToView(this.application, Menu, this.settings.pages, orderMenu);
+
+				this.AddPagesToView(Menu, this.settings.pages);
+
 			}
 
 		}
@@ -204,11 +244,23 @@ export default class ABViewMenu extends ABViewWidget {
 				name: 'buttonStyle',
 				view: "richselect",
 				label: L('ab.component.menu.buttonStyle', '*Button Style'),
-				value: ABViewMenuPropertyComponentDefaults.buttonstyle,
+				value: ABViewMenuPropertyComponentDefaults.buttonStyle,
 				labelWidth: App.config.labelWidthLarge,
 				options: [
 					{ id: 'ab-menu-default', value: L('ab.component.menu.defaulButton', '*Default') },
 					{ id: 'ab-menu-link', value: L('ab.component.menu.linkeButton', '*Link') }
+				]
+			},
+			{
+				name: 'menuAlignment',
+				view: "richselect",
+				label: L('ab.component.menu.menuAlignment', '*Menu Alignment'),
+				value: ABViewMenuPropertyComponentDefaults.menuAlignment,
+				labelWidth: App.config.labelWidthXLarge,
+				options: [
+					{ id: 'ab-menu-left', value: L('ab.component.menu.alignLeft', '*Left') },
+					{ id: 'ab-menu-right', value: L('ab.component.menu.alignRight', '*Right')},
+					{ id: 'ab-menu-center', value: L('ab.component.menu.alignCenter', '*Center')}
 				]
 			},
 			{
@@ -217,6 +269,7 @@ export default class ABViewMenu extends ABViewWidget {
 				label: L('ab.component.menu.pageList', '*Page List:'),
 				labelWidth: App.config.labelWidthLarge,
 				body: {
+					view: "layout",
 					type: "clean",
 					paddingY: 20,
 					paddingX: 10,
@@ -240,17 +293,25 @@ export default class ABViewMenu extends ABViewWidget {
 										'<input type="checkbox" class="webix_tree_checkbox" disabled="disabled">' :
 										"{common.checkbox()} ") +
 
-									"{common.folder()} #label#" +
+									' <div class="fa fa-{common.fieldIcon()}"></div>' +
+									" #label#" +
 									"</div>")
 									.replace('{common.icon()}', common.icon(item))
 									.replace('{common.checkbox()}', common.checkbox(item, false))
-									.replace('{common.folder()}', common.folder(item))
+									.replace('{common.fieldIcon()}', (item.key == "viewcontainer" ? "window-maximize" : "file"))
 									.replace('#label#', item.aliasname ? item.aliasname : item.label);
 							},
 							on: {
 								onItemCheck: function () {
 									// trigger to save settings
 									_logic.onChange();
+								},
+								onBeforeEditStart: function(id) {
+									var item = this.getItem(id);
+									if(!item.aliasname) {
+										item.aliasname = item.label;
+										this.updateItem(item);
+									}
 								},
 								onBeforeEditStop: function(state, editor) {
 									var item = this.getItem(editor.id);
@@ -276,13 +337,16 @@ export default class ABViewMenu extends ABViewWidget {
 
 		$$(ids.orientation).setValue(view.settings.orientation || ABViewMenuPropertyComponentDefaults.orientation);
 		$$(ids.buttonStyle).setValue(view.settings.buttonStyle || ABViewMenuPropertyComponentDefaults.buttonStyle);
+		$$(ids.menuAlignment).setValue(view.settings.menuAlignment || ABViewMenuPropertyComponentDefaults.menuAlignment);
 
 		var pageTree = new webix.TreeCollection();
 		var application = view.application;
 		var currentPage = view.pageParent();
 		var parentPage = currentPage.pageParent();
-		
+
 		var addPage = function (page, index, parentId) {
+
+			// update label of the page
 			if(view.settings.pages) {
 				view.settings.pages.forEach((localpage)=> {
 					if(localpage.pageId == page.id) {
@@ -290,18 +354,38 @@ export default class ABViewMenu extends ABViewWidget {
 					}
 				});
 			}
+
+			// add to tree collection
 			pageTree.add(page, index, parentId);
 
-			page.pages().forEach((childPage, childIndex)=>{
+			// add sub-pages
+			var subPages = (page.pages ? page.pages() : []);
+			subPages.forEach((childPage, childIndex)=>{
 				addPage(childPage, childIndex, page.id);
 			});
+
+			// add tabs
+			page.views(v => v instanceof ABViewTab).forEach((tab, tabIndex) => {
+
+				// tab views
+				tab.views().forEach((tabView, tabViewIndex) => {
+
+					// tab items will be below sub-page items
+					var tIndex = (subPages.length + tabIndex + tabViewIndex);
+
+					addPage(tabView, tIndex, page.id);
+
+				});
+
+			});
+
 		}
 
-		application.pages().forEach((p, index)=>{
- 			if ( (parentPage && p == parentPage) || p == currentPage ) {
- 				addPage(p, index);				
- 			}
- 		})
+		application
+			.pages(p => ( (parentPage && parentPage.id == p.id ) || (currentPage && currentPage.id == p.id) ), true)
+			.forEach((p, index)=>{
+ 				addPage(p, index);
+ 			});
 
 		$$(ids.pages).clearAll();
 		// $$(ids.pages).data.unsync();
@@ -315,13 +399,14 @@ export default class ABViewMenu extends ABViewWidget {
 			view.settings.pages.forEach((page) => {
 
 				if(page.isChecked) {
-					$$(ids.pages).checkItem(page.pageId);
+					$$(ids.pages).checkItem(page.tabId || page.pageId);
 				}
 
 			});
 		}
 		
-		$$(ids.pagesFieldset).config.height = ($$(ids.pages).count()*28)+18; // Number of pages plus 9px of padding top and bottom
+		// $$(ids.pagesFieldset).config.height = ($$(ids.pages).count()*28)+18; // Number of pages plus 9px of padding top and bottom
+		$$(ids.pagesFieldset).config.height = ($$(ids.pages).count()*28)+18+40; // Number of pages plus 9px of padding top and bottom
 		$$(ids.pagesFieldset).resize();
 	}
 
@@ -331,6 +416,7 @@ export default class ABViewMenu extends ABViewWidget {
 
 		view.settings.orientation = $$(ids.orientation).getValue();
 		view.settings.buttonStyle = $$(ids.buttonStyle).getValue();
+		view.settings.menuAlignment = $$(ids.menuAlignment).getValue();
 
 		var pagesIdList = []
 		var temp = $$(ids.pages).data.count();
@@ -338,11 +424,23 @@ export default class ABViewMenu extends ABViewWidget {
 			for (var i=0; i < $$(ids.pages).data.count(); i++) {
 				var currentPageId = $$(ids.pages).getIdByIndex(i);
 				var currentItem = $$(ids.pages).getItem(currentPageId);
-				pagesIdList.push({ pageId: currentPageId,
-								   isChecked: currentItem.checked,
-								   aliasname: currentItem.aliasname,
-								   translations: []
-								 });
+
+				var type = "page",
+					tabId;
+				if (currentItem.key == 'viewcontainer') {
+					type = "tab";
+					tabId = currentPageId;
+					currentPageId = currentItem.pageParent().id;
+				}
+
+				pagesIdList.push({ 
+					pageId: currentPageId,
+					tabId: tabId,
+					type: type,
+					isChecked: currentItem.checked,
+					aliasname: currentItem.aliasname,
+					translations: []
+				});
 			}
 		}
 		view.settings.pages = pagesIdList;
@@ -363,21 +461,59 @@ export default class ABViewMenu extends ABViewWidget {
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		}
+		
+		var css = "";
+		
+		if (this.settings.buttonStyle) {
+			css += this.settings.buttonStyle + " ";
+		} else {
+			css += ABViewMenuPropertyComponentDefaults.buttonStyle + " "
+		}
+		
+		if (this.settings.menuAlignment) {
+			css += this.settings.menuAlignment + " ";
+		} else {
+			css += ABViewMenuPropertyComponentDefaults.menuAlignment + " "
+		}		
 
 
 		var _ui = {
 			type: "form",
+			borderless:true,
 			rows: [
 				{
 					id: ids.component,
 					view: "menu",
 					autoheight: true,
 					datatype: "json",
-					css: this.settings.buttonStyle || ABViewMenuPropertyComponentDefaults.buttonStyle,
+					css: css,
 					layout: this.settings.orientation || ABViewMenuPropertyComponentDefaults.orientation,
 					on: {
 						onItemClick: (id, e, node) => {
-							this.changePage(id);
+
+							// switch tab view
+							var item = $$(ids.component).getItem(id);
+							if (item.type == "tab") {
+
+								this.changePage(item.pageId);
+
+								var redirectPage = this.application.pages(p => p.id == item.pageId, true)[0];
+								if (!redirectPage) return;
+
+								var tabView = redirectPage.views(v => v.id == item.id, true)[0];
+								if (!tabView) return;
+
+								var tab = tabView.parent;
+								if (!tab) return;
+
+								tab.emit('changeTab', tabView.id);
+
+							}
+							// switch page
+							else {
+								this.changePage(id);
+							}
+
 						}
 					}
 				}
@@ -391,9 +527,11 @@ export default class ABViewMenu extends ABViewWidget {
 			if (Menu) {
 				this.ClearPagesInView(Menu);
 				if (this.settings.pages && this.settings.pages.length > -1) {
-					var orderMenu = [];
-					var orderMenu = this.AddPagesToView(this.application, Menu, this.settings.pages, orderMenu);
-					this.AddOrderedPagesToView(this.application, Menu, this.settings.pages, orderMenu);
+					// var orderMenu = [];
+					// var orderMenu = this.AddPagesToView(this.application, Menu, this.settings.pages, orderMenu);
+					// this.AddOrderedPagesToView(this.application, Menu, this.settings.pages, orderMenu);
+
+					this.AddPagesToView(Menu, this.settings.pages);
 				}
 			}
 
@@ -426,39 +564,99 @@ export default class ABViewMenu extends ABViewWidget {
 		}
 	}
 
-	AddPagesToView(parent, menu, pages, insertPages) {
+	AddPagesToView(menu, pages) {
 
-		if (!parent || !parent.pages || !menu || !pages) return;
+		if (!menu || !pages) return;
 
-		var parentPages = parent.pages() || [];
+		(pages || []).forEach(displayPage => {
 
-		var insertPages = insertPages;
+			if (displayPage.isChecked) {
 
-		parentPages.forEach((parentPage) => {
+				var label =  displayPage.aliasname;
+				if (!label) {
 
-			pages.forEach((localPage) => {
-				if(localPage.pageId == parentPage.id && localPage.isChecked) {
-					insertPages[parentPage.id] = {
-						id: parentPage.id,
-						value: localPage.aliasname ? localPage.aliasname : parentPage.label
-					};
+					var page = this.application.pages(p => p.id == displayPage.pageId, true)[0];
+					if (page) {
+
+						if (displayPage.type == "tab") {
+							var tabView = page.views(v => v.id == displayPage.tabId, true)[0];
+							if (tabView) {
+								label = tabView.label;
+							}
+						}
+						else {
+							label = page.label;
+						}
+
+					}
 				}
-			});
 
-			this.AddPagesToView(parentPage, menu, pages, insertPages);
+				menu.add({
+					id: displayPage.tabId || displayPage.pageId,
+					value: label,
+
+					type: displayPage.type,
+					pageId: displayPage.pageId
+				});
+			}
 
 		});
 
-		return insertPages;
+		// if (!parent || !parent.pages || !menu || !pages) return;
+
+		// var parentPages = parent.pages() || [];
+
+		// var insertPages = insertPages;
+
+		// parentPages.forEach((parentPage) => {
+
+		// 	pages.forEach((localPage) => {
+		// 		if(localPage.pageId == parentPage.id && localPage.isChecked) {
+		// 			insertPages[parentPage.id] = {
+		// 				id: parentPage.id,
+		// 				value: localPage.aliasname ? localPage.aliasname : parentPage.label
+		// 			};
+		// 		}
+		// 	});
+
+		// 	this.AddPagesToView(parentPage, menu, pages, insertPages);
+
+		// });
+
+		// return insertPages;
 
 	}
 
-	AddOrderedPagesToView(parent, menu, pageIds, orderMenu) {
-		var orderMenu = orderMenu;
-		pageIds.forEach((page) => {
-			if (orderMenu[page.pageId])
-				menu.add(orderMenu[page.pageId]);
+	copy(lookUpIds, parent) {
+
+		let result = super.copy(lookUpIds, parent);
+
+		// update ids of page's settings
+		(result.settings.pages || []).forEach((p, i) => {
+
+			let page = result.settings.pages[i];
+
+			// Compatible with old data
+			if (typeof page == 'string') {
+				result.settings.pages[i] = lookUpIds[page];
+			}
+			else {
+				page.pageId = lookUpIds[page.pageId];
+				page.tabId = lookUpIds[page.tabId];
+			}
+
 		});
+
+		return result;
+
 	}
+
+	// AddOrderedPagesToView(parent, menu, pageIds, orderMenu) {
+	// 	var orderMenu = orderMenu;
+	// 	pageIds.forEach((page) => {
+	// 		if (orderMenu[page.pageId])
+	// 			menu.add(orderMenu[page.pageId]);
+	// 	});
+	// }
 
 };

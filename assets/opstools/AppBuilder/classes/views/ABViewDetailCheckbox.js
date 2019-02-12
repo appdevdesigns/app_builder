@@ -7,6 +7,7 @@
 
 import ABViewDetailComponent from "./ABViewDetailComponent"
 import ABPropertyComponent from "../ABPropertyComponent"
+import { resolve } from "app_builder/node_modules/url";
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -123,19 +124,19 @@ export default class ABViewDetailCheckbox extends ABViewDetailComponent {
 
 
 
-	/*
+	/**
 	 * @component()
 	 * return a UI component based upon this view.
 	 * @param {obj} App 
+	 * @param {string} idPrefix
+	 * 
 	 * @return {obj} UI component
 	 */
-	component(App) {
+	component(App, idPrefix) {
 
 		var component = super.component(App);
-		var field = this.field();
-		var detailView = this.detailComponent();
 
-		var idBase = 'ABViewDetailCheckbox_' + this.id;
+		var idBase = 'ABViewDetailCheckbox_' + (idPrefix || '') + this.id;
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		}
@@ -153,11 +154,11 @@ export default class ABViewDetailCheckbox extends ABViewDetailComponent {
 					var checkbox = '';
 
 					// Check
-					if (JSON.parse(val))
-						checkbox = '<span class="check webix_icon fa-check-square-o"></span>';
+					if (val && JSON.parse(val))
+						checkbox = '<span class="check webix_icon fa fa-check-square-o"></span>';
 					// Uncheck
 					else
-						checkbox = '<span class="check webix_icon fa-square-o"></span>';
+						checkbox = '<span class="check webix_icon fa fa-square-o"></span>';
 
 					component.logic.setValue(ids.component, checkbox);
 
@@ -174,6 +175,54 @@ export default class ABViewDetailCheckbox extends ABViewDetailComponent {
 	 */
 	componentList() {
 		return [];
+	}
+
+
+	//// Report ////
+
+	/**
+	 * @method print
+	 * 
+	 * 
+	 * @return {Object} - PDF object definition
+	 */
+	print() {
+
+		return new Promise((resolve, reject) => {
+
+			var reportDef = {};
+
+			var detailCom = this.detailComponent();
+			if (!detailCom) return resolve(reportDef);
+
+			var field = this.field();
+			if (!field) return resolve(reportDef);
+
+			var text = "";
+
+			var currData = this.getCurrentData();
+			if (currData) {
+				// TODO : Support multilingual
+				text = currData ? "Yes" : "No";
+			}
+
+			reportDef = {
+				columns: [
+					{
+						bold: true,
+						text: field.label,
+						width: detailCom.settings.labelWidth
+					},
+					{
+						text: text
+					}
+				]
+			};
+
+			resolve(reportDef);
+
+		});
+
 	}
 
 

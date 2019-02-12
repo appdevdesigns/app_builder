@@ -23,7 +23,9 @@ var ABFieldNumberDefaults = {
 	menuName: L('ab.dataField.number.menuName', '*Number'),
 
 	// description: what gets displayed in the Editor description.
-	description: L('ab.dataField.number.description', '*A Float or Integer Value')
+	description: L('ab.dataField.number.description', '*A Float or Integer Value'),
+
+	supportRequire: true
 
 }
 
@@ -46,8 +48,8 @@ var delimiterList = [
 ];
 
 var defaultValues = {
-	'allowRequired': 0,
-	'numberDefault': '',
+	// 'allowRequired': 0,
+	'default': '',
 	'typeFormat': 'none',
 	'typeDecimals': 'none',
 	'typeDecimalPlaces': 'none',
@@ -86,8 +88,8 @@ var ABFieldNumberComponent = new ABFieldComponent({
 		// }
 
 		var ids = {
-			allowRequired: '',
-			numberDefault: '',
+			// allowRequired: '',
+			default: '',
 			typeDecimalPlaces: '',
 			typeRounding: '',
 			validate: '',
@@ -100,43 +102,43 @@ var ABFieldNumberComponent = new ABFieldComponent({
 			// {
 			// 	view: "text",
 			// 	name:'textDefault',
-			// 	labelWidth: App.config.labelWidthLarge,
+			// 	labelWidth: App.config.labelWidthXLarge,
 			// 	placeholder: L('ab.dataField.string.default', '*Default text')
 			// },
-			{
-				view: "checkbox",
-				id: ids.allowRequired,
-				name: "allowRequired",
-				labelRight: L("ab.dataField.number.required", "*Required"),
-				// inputWidth: 130,
-				labelWidth: 0,
-				on: {
-					onChange: (newVal, oldVal) => {
-						// when require number, then should have default value
-						if (newVal && !$$(ids.numberDefault).getValue()) {
-							$$(ids.numberDefault).setValue('0');
-						}
-					}
-				}
-			},
+			// {
+			// 	view: "checkbox",
+			// 	id: ids.allowRequired,
+			// 	name: "allowRequired",
+			// 	labelRight: L("ab.dataField.number.required", "*Required"),
+			// 	disallowEdit: true,
+			// 	labelWidth: 0,
+			// 	on: {
+			// 		onChange: (newVal, oldVal) => {
+			// 			// when require number, then should have default value
+			// 			if (newVal && !$$(ids.default).getValue()) {
+			// 				$$(ids.default).setValue('0');
+			// 			}
+			// 		}
+			// 	}
+			// },
 			{
 				view: "text",
 				label: L("ab.dataField.number.defaultValue", "*Default Value"),
-				labelWidth: App.config.labelWidthLarge,
-				id: ids.numberDefault,
-				name: "numberDefault",
+				labelWidth: App.config.labelWidthXLarge,
+				id: ids.default,
+				name: "default",
 				placeholder: L('ab.dataField.number.defaultNumber', '*Default number'),
 				on: {
 					onChange: function (newVal, oldVal) {
 						// Validate number
 						if (!new RegExp('^[0-9.]*$').test(newVal)) {
-							// $$(componentIds.numberDefault).setValue(oldVal);
+							// $$(componentIds.default).setValue(oldVal);
 							this.setValue(oldVal);
 						}
 						// when require number, then should have default value
-						else if ($$(ids.allowRequired).getValue() && !newVal) {
-							this.setValue('0');
-						}
+						// else if ($$(ids.allowRequired).getValue() && !newVal) {
+						// 	this.setValue('0');
+						// }
 
 					}
 				}
@@ -147,7 +149,7 @@ var ABFieldNumberComponent = new ABFieldComponent({
 				name: 'typeFormat',
 				label: L('ab.dataField.number.format', "*Format"),
 				value: 'none',
-				labelWidth: App.config.labelWidthLarge,
+				labelWidth: App.config.labelWidthXLarge,
 				options: formatList
 			},
 			{
@@ -157,7 +159,7 @@ var ABFieldNumberComponent = new ABFieldComponent({
 				disallowEdit: true,
 				label: L('ab.dataField.number.decimals', "*Decimals"),
 				value: 'none',
-				labelWidth: App.config.labelWidthLarge,
+				labelWidth: App.config.labelWidthXLarge,
 				options: delimiterList,
 				on: {
 					'onChange': function (newValue, oldValue) {
@@ -183,7 +185,7 @@ var ABFieldNumberComponent = new ABFieldComponent({
 				disallowEdit: true,
 				label: "Places",
 				value: 'none',
-				labelWidth: App.config.labelWidthLarge,
+				labelWidth: App.config.labelWidthXLarge,
 				disabled: true,
 				hidden: true,
 				options: [
@@ -202,7 +204,7 @@ var ABFieldNumberComponent = new ABFieldComponent({
 				name: 'typeRounding',
 				label: L('ab.dataField.number.rounding', "*Rounding"),
 				value: 'none',
-				labelWidth: App.config.labelWidthLarge,
+				labelWidth: App.config.labelWidthXLarge,
 				vertical: true,
 				disabled: true,
 				hidden: true,
@@ -218,7 +220,7 @@ var ABFieldNumberComponent = new ABFieldComponent({
 				name: 'typeThousands',
 				label: L('ab.dataField.number.thousands', "*Thousands"),
 				value: 'none',
-				labelWidth: App.config.labelWidthLarge,
+				labelWidth: App.config.labelWidthXLarge,
 				vertical: true,
 				options: delimiterList
 			},
@@ -253,7 +255,7 @@ var ABFieldNumberComponent = new ABFieldComponent({
 				id: ids.validateMinimum,
 				name: 'validateMinimum',
 				label: L('ab.dataField.number.minimum', "*Minimum"),
-				labelWidth: App.config.labelWidthLarge,
+				labelWidth: App.config.labelWidthXLarge,
 				disabled: true,
 				hidden: true,
 				on: {
@@ -270,7 +272,7 @@ var ABFieldNumberComponent = new ABFieldComponent({
 				id: ids.validateMaximum,
 				name: 'validateMaximum',
 				label: L('ab.dataField.number.maximum', "*Maximum"),
-				labelWidth: App.config.labelWidthLarge,
+				labelWidth: App.config.labelWidthXLarge,
 				disabled: true,
 				hidden: true,
 				on: {
@@ -342,6 +344,26 @@ var ABFieldNumberComponent = new ABFieldComponent({
 
 			return isValid;
 		},
+		
+		/*
+		 * @function requiredOnChange
+		 *
+		 * The ABField.definitionEditor implements a default operation
+		 * to look for a default field and set it to a required field 
+		 * if the field is set to required
+		 * 
+		 * if you want to override that functionality, implement this fn()
+		 *
+		 * @param {string} newVal	The new value of label
+		 * @param {string} oldVal	The previous value
+		 */
+		requiredOnChange: (newVal, oldVal, ids) => {
+
+			// when require number, then default value needs to be reqired
+			$$(ids.default).define("required", newVal);
+			$$(ids.default).refresh();
+
+		},
 
 		populate: (ids, values) => {
 			if (values.settings.validation) {
@@ -378,7 +400,7 @@ class ABFieldNumber extends ABField {
     	{
 			settings: {
 				'allowRequired':0,
-				'numberDefault':null,
+				'default':null,
 				'typeFormat': 'none',
 				'typeDecimals': 'none',
 				'typeDecimalPlaces': 'none',
@@ -398,7 +420,7 @@ class ABFieldNumber extends ABField {
 
 
 		// text to Int:
-		this.settings.allowRequired = parseInt(this.settings.allowRequired);
+		// this.settings.allowRequired = parseInt(this.settings.allowRequired);
 		this.settings.validation = parseInt(this.settings.validation);
 
 	}
@@ -417,10 +439,11 @@ class ABFieldNumber extends ABField {
 	 * return a UI Component that contains the property definitions for this Field.
 	 *
 	 * @param {App} App the UI App instance passed around the Components.
+	 * @param {stirng} idBase
 	 * @return {Component}
 	 */
-	static propertiesComponent(App) {
-		return ABFieldNumberComponent.component(App);
+	static propertiesComponent(App, idBase) {
+		return ABFieldNumberComponent.component(App, idBase);
 	}
 
 
@@ -468,7 +491,7 @@ class ABFieldNumber extends ABField {
 	///
 
 	// return the grid column header definition for this instance of ABFieldNumber
-	columnHeader(isObjectWorkspace) {
+	columnHeader(isObjectWorkspace, includeSumFooter) {
 		var config = super.columnHeader(isObjectWorkspace);
 
 		config.editor = 'number';		// [edit_type] simple inline editing.
@@ -495,8 +518,8 @@ class ABFieldNumber extends ABField {
 	defaultValue(values) {
 
 		// if no default value is set, then don't insert a value.
-		if (this.settings.numberDefault != '') {
-			values[this.columnName] = this.settings.numberDefault;
+		if (this.settings.default != '') {
+			values[this.columnName] = this.settings.default;
 		}
 	}
 
@@ -511,9 +534,17 @@ class ABFieldNumber extends ABField {
 	 * @return {array} 
 	 */
 	isValidData(data, validator) {
-
+		
+		super.isValidData(data, validator);
+		
 		if (data[this.columnName] != null && data[this.columnName] != '') {
 			var value = data[this.columnName];
+
+			// if this is not valid number format
+			if (isNaN(value)) {
+				validator.addError(this.columnName, 'invalid number');
+				return;
+			}
 
 			// if this is an integer:
 			if (this.settings.typeDecimals == 'none') {
@@ -589,7 +620,7 @@ class ABFieldNumber extends ABField {
 
 	format(rowData) {
 
-		var data = rowData[this.columnName] || 0;
+		var data = this.dataValue(rowData) || 0;
 
 		// Validate number
 		if (isNaN(parseFloat(data))) data = 0;
