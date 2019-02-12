@@ -227,6 +227,10 @@ function addSDCAppInfo(next) {
 
 function defaultEmailNotificationInvite(next) {
 
+	// Unit test: if no EmailNotifications package, skip this step
+	if (EmailNotifications == null)
+		return next();
+
 	var filePath = path.join(__dirname, '..', 'setup', 'install', 'mobile_qr_invite.ejs' );
 	var contents = null;  // fs.readFileSync(filePath, 'utf8');
 
