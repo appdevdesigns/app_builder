@@ -4,7 +4,6 @@ import ABApplicationBase from "./ABApplicationBase"
 import "../data/ABApplication"
 import ABObject from "./ABObject"
 import ABObjectQuery from "./ABObjectQuery"
-import ABObjectQueryV1 from "./ABObjectQueryV1"
 import ABMobileApp from "./ABMobileApp"
 import ABViewManager from "./ABViewManager"
 import ABViewPage from "./views/ABViewPage"
@@ -633,10 +632,7 @@ export default class ABApplication extends ABApplicationBase {
 	 */
 	queryNew(values) {
 
-		if (Array.isArray(values.joins))
-			return new ABObjectQueryV1(values, this);
-		else 
-			return new ABObjectQuery(values, this);
+		return new ABObjectQuery(values, this);
 	}
 
 
