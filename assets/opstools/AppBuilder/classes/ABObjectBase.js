@@ -1,11 +1,3 @@
-
-// import OP from "OP"
-// var ABFieldManager = require( "./ABFieldManager.js")
-
-// import ABModel from "./ABModel"
-
-
-
 module.exports =  class ABObjectBase {
 
 	constructor(attributes, application) {
@@ -48,6 +40,7 @@ module.exports =  class ABObjectBase {
 		this.importFromObject = attributes.importFromObject || "";
 		this.translations = attributes.translations;
 
+/// Old Method
 		if (typeof(attributes.objectWorkspace) != "undefined") {
 			if (typeof(attributes.objectWorkspace.sortFields) == "undefined") attributes.objectWorkspace.sortFields = [];
 			if (typeof(attributes.objectWorkspace.filterConditions) == "undefined") attributes.objectWorkspace.filterConditions = [];
@@ -62,16 +55,12 @@ module.exports =  class ABObjectBase {
 			hiddenFields:[], // array of [ids] to add hidden:true to
 		};
 
-
 	  	// import all our ABField 
 	  	this.importFields(attributes.fields || []);
 
 
 	  	// convert '0' to 0
 	  	this.isImported = parseInt(this.isImported || 0);
-
-	  	// link me to my parent ABApplication
-	  	this.application = application;
   	}
 
 
@@ -88,7 +77,6 @@ module.exports =  class ABObjectBase {
 	///
 	/// Instance Methods
 	///
-
 
 	/**
 	 * @method importFields
@@ -410,19 +398,67 @@ module.exports =  class ABObjectBase {
 	///	Object Workspace Settings
 	///
 	get workspaceSortFields() {
-		return this.objectWorkspace.sortFields;
+
+		// new version
+		if (this.workspaceViews) {
+			let currView = this.workspaceViews.getCurrentView();
+			if (currView)
+				return currView.sortFields;
+			else
+				return null;
+		}
+		// old version
+		else {
+			return this.objectWorkspace.sortFields;
+		}
+
 	}
 
 	set workspaceSortFields( fields ) {
-		this.objectWorkspace.sortFields = fields;
+
+		// new version
+		if (this.workspaceViews) {
+			let currView = this.workspaceViews.getCurrentView();
+			if (currView)
+				currView.sortFields = fields;
+		}
+		// old version
+		else {
+			this.objectWorkspace.sortFields = fields;
+		}
+
 	}
 
 	get workspaceFilterConditions() {
-		return this.objectWorkspace.filterConditions;
+
+		// new version
+		if (this.workspaceViews) {
+			let currView = this.workspaceViews.getCurrentView();
+			if (currView)
+				return currView.filterConditions;
+			else
+				return null;
+		}
+		// old version
+		else {
+			return this.objectWorkspace.filterConditions;
+		}
+
 	}
 
 	set workspaceFilterConditions( filterConditions ) {
-		this.objectWorkspace.filterConditions = filterConditions;
+
+		// new version
+		if (this.workspaceViews) {
+			let currView = this.workspaceViews.getCurrentView();
+			if (currView)
+				currView.filterConditions = filterConditions;
+		}
+		// old version
+		else {
+			this.objectWorkspace.filterConditions = filterConditions;
+		}
+
 	}
 
 	get workspaceFrozenColumnID() {
@@ -551,6 +587,12 @@ module.exports =  class ABObjectBase {
 		});
 
 		return cloneOne;
+	}
+
+	toObjGrid() {}
+	
+	toObjKanban() {
+
 	}
 
 

@@ -304,8 +304,8 @@ console.warn('!! ToDo: onAfterColumnHide()');
 
                 // WORKAROUND: .Sj() => ._get_y_range function of webix's datatable.
                 // It is a private function. It returns what record index are showing
-                let scrollState = DataTable.Sj(), // webix5
-                // let scrollState = DataTable.Ug(), // webix6
+                // let scrollState = DataTable.Sj(), // webix5
+                let scrollState = DataTable.Ug(), // webix6
                     startRecIndex = scrollState[0],
                     endRecIndex = scrollState[1],
                     index = 0;
@@ -316,7 +316,7 @@ console.warn('!! ToDo: onAfterColumnHide()');
                         startRecIndex <= index && index <= endRecIndex) 
                         displayRecords.push(id);
 
-                    index++
+                    index++;
 
                 });
 
@@ -324,7 +324,7 @@ console.warn('!! ToDo: onAfterColumnHide()');
 
             };
 
-    		DataTable.attachEvent("onAfterRender", function(data){
+            DataTable.attachEvent("onAfterRender", function(data){
                 DataTable.resize();
 
                 // items = [];
@@ -983,7 +983,8 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                         wheres = CurrentObject.workspaceFilterConditions;
                     }
                     var sorts = {};
-                    if (CurrentObject.workspaceSortFields.length > 0) {
+                    if (CurrentObject.workspaceSortFields &&
+                        CurrentObject.workspaceSortFields.length > 0) {
                         sorts = CurrentObject.workspaceSortFields;
                     }
                     CurrentObject.model()
@@ -1342,6 +1343,8 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
         // expose load all records
         this.loadAll = _logic.loadAll;
+
+        this.show = _logic.show;
 
     }
 

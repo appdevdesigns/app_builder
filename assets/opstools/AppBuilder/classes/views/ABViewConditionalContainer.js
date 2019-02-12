@@ -181,7 +181,7 @@ export default class ABViewConditionalContainer extends ABViewContainer {
 									view: "button",
 									name: "buttonFilter",
 									label: L("ab.component.conditionalcontainer.settings", "*Settings"),
-									icon: "gear",
+									icon: "fa fa-gear",
 									type: "icon",
 									badge: 0,
 									click: function () {

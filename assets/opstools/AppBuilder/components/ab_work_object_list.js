@@ -78,7 +78,7 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 									{
 										id: ids.searchText,
 										view: "search",
-										icon: "search",
+										icon: "fa fa-search",
 										label: labels.component.listSearch,
 										labelWidth: 80,
 										placeholder: labels.component.searchPlaceholder,
@@ -149,7 +149,7 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 						return _logic.templateListItem(obj, common);
 					},
 					type: {
-						height: 35,
+						// height: 35,
 						iconGear: "<div class='ab-object-list-edit'><span class='webix_icon fa fa-cog'></span></div>"
 					},
 					on: {

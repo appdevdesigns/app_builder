@@ -403,12 +403,23 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
                                             // when add new link fields, then run create migrate fields here
                                             if (!_editField) {
                                                 Promise.resolve()
-                                                    .then(() => field.migrateCreate())
-                                                    .then(() => linkCol.migrateCreate())
+                                                    .then(() => {
+                                                        return field.migrateCreate();
+                                                    })
+                                                    .then(() => {
+                                                        return linkCol.migrateCreate();
+                                                    })
                                                     .then(() => {
 
-                                                        refreshModels();
-                                                        finishUpdateField();
+                                                        return new Promise((next, err) => {
+
+                                                            refreshModels();
+                                                            finishUpdateField();
+
+                                                            next();
+
+                                                        });
+
                                                     });
                                             }
                                             else {
@@ -495,20 +506,22 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
 
 
 
-            modeAdd: function () {
+            modeAdd: function (allowFieldKey) {
 
                 // show default editor:
                 defaultEditorComponent.show(false, false);
                 _currentEditor = defaultEditorComponent;
 
                 // allow add the connect field only to import object
-                if (_currentObject.isImported) {
+                if (_currentObject.isImported)
+                    allowFieldKey = 'connectObject';
 
-                    var connectField = ABFieldManager.allFields().filter(f => f.defaults().key == 'connectObject')[0];
+                if (allowFieldKey) {
+                    var connectField = ABFieldManager.allFields().filter(f => f.defaults().key == allowFieldKey)[0];
+                    if (!connectField) return;
                     var connectMenuName = connectField.defaults().menuName;
                     $$(ids.types).setValue(connectMenuName);
                     $$(ids.types).disable();
-
                 }
                 // show the ability to switch data types
                 else {
@@ -647,11 +660,11 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
              * @function show()
              *
              * Show this component.
-             * @param {obj} $view  the webix.$view to hover the popup around.
-             * @param {ABField} field the ABField to edit.  If not provided, then
-             *                        this is an ADD operation.
+             * @param {ABField} field    the ABField to edit.  If not provided, then
+             *                           this is an ADD operation.
+             * @param {string} fieldKey  allow only this field type
              */
-            show: function ($view, field) {
+            show: function (field, fieldKey) {
 
                 _editField = field;
 
@@ -661,11 +674,10 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
 
                 } else {
 
-                    _logic.modeAdd();
+                    _logic.modeAdd(fieldKey);
 
                 }
 
-                // $$(ids.component).show($view);
                 $$(ids.component).show();
             },
 

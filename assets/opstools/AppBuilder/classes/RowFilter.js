@@ -740,7 +740,7 @@ export default class RowFilter extends OP.Component {
 						},
 						{
 							view: "button",
-							icon: "plus",
+							icon: "fa fa-plus",
 							type: "icon",
 							width: 30,
 							click: function () {
@@ -753,7 +753,7 @@ export default class RowFilter extends OP.Component {
 						},
 						{
 							view: "button",
-							icon: "trash",
+							icon: "fa fa-trash",
 							type: "icon",
 							width: 30,
 							click: function () {
@@ -771,7 +771,7 @@ export default class RowFilter extends OP.Component {
 				return {
 					view: "button",
 					id: ids.addNewFilter,
-					icon: "plus",
+					icon: "fa fa-plus",
 					type: "iconButton",
 					label: labels.component.addNewFilter,
 					click: function () {
