@@ -2,9 +2,9 @@ REPORTER = dot
 
 test:
 	@NODE_ENV=test PORT=9999 sails_log__level="error" ./node_modules/.bin/mocha \
-    --reporter $(REPORTER) \
-    test/bootstrap.test.js \
-    test/**/*.js
+	--reporter $(REPORTER) \
+	test/bootstrap.test.js \
+	test/**/*.js
 
 	@./node_modules/.bin/webpack \
 	--config ./assets/opstools/AppBuilder/test/webpack.config.js \
