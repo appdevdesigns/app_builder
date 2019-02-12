@@ -82,7 +82,7 @@ describe("ABFieldLongText unit tests", () => {
 		it('.defaultValue: should follow non-empty textDefault setting', () => {
 			var rowData = {};
 
-			longTextField.settings.textDefault = 'hello world';
+			longTextField.settings.default = 'hello world';
 			longTextField.defaultValue(rowData);
 			assert.isDefined(rowData[columnName]);
 			assert.equal('hello world', rowData[columnName]);
