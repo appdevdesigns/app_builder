@@ -74,9 +74,71 @@ describe("ABFieldBoolean unit tests", () => {
 			var columnConfig = target.columnHeader();
 
 			assert.equal('template', columnConfig.editor, 'should be "template" editor');
-			assert.equal('<div class="ab-boolean-display">{common.checkbox()}</div>', columnConfig.template);
+			assert.isFunction(columnConfig.template);
 			assert.equal('center', columnConfig.css);
 			assert.isUndefined(columnConfig.sort, 'should not define sort in webix datatable');
+		});
+
+		it('.columnHeader: template() should return value of field when display in grouping feature', () => {
+			var columnConfig = target.columnHeader();
+
+			let row = {
+				$group: true
+			};
+			row[columnName] = "SHOULD RETURN THIS VALUE";
+
+			let result = columnConfig.template(row);
+
+			assert.equal(row[columnName], result);
+
+		});
+
+		it('.columnHeader: template() should return editable checkbox', () => {
+			let isEditable = true;
+			var columnConfig = target.columnHeader(null, null, isEditable);
+
+			let row = {},
+				common = {
+					checkbox: function() {
+						return "EDITABLE CHECKBOX"
+					}
+				},
+				value = {},
+				config = {};
+
+			let result = columnConfig.template(row, common, value, config);
+
+			assert.equal(`<div class="ab-boolean-display">${common.checkbox()}</div>`, result);
+		});
+
+		it('.columnHeader: template() should return read-only checkbox when value is false', () => {
+			let isEditable = false;
+			var columnConfig = target.columnHeader(null, null, isEditable);
+
+			let value = false;
+
+			let row = {},
+				common = {},
+				config = {};
+
+			let result = columnConfig.template(row, common, value, config);
+
+			assert.equal("<div class='webix_icon fa-square-o'></div>", result);
+		});
+
+		it('.columnHeader: template() should return read-only checkbox when value is true', () => {
+			let isEditable = false;
+			var columnConfig = target.columnHeader(null, null, isEditable);
+
+			let value = true;
+
+			let row = {},
+				common = {},
+				config = {};
+
+			let result = columnConfig.template(row, common, value, config);
+
+			assert.equal("<div class='webix_icon fa-check-square-o'></div>", result);
 		});
 
 		it('.defaultValue: should set 1', () => {

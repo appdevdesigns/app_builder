@@ -98,13 +98,13 @@ describe("ABFieldNumber unit tests", () => {
 			let rowData = {};
 
 			// define default value
-			target.settings.numberDefault = 777;
+			target.settings.default = 777;
 
 			// Set default value to row data
 			target.defaultValue(rowData);
 
 			assert.isDefined(rowData[columnName]);
-			assert.equal(target.settings.numberDefault, rowData[columnName]);
+			assert.equal(target.settings.default, rowData[columnName]);
 		});
 
 		it('.isValidData - should pass when value is null', () => {

@@ -58,7 +58,9 @@ describe("OP.multilingual unit tests", () => {
 		it('should not alter the object if no translations are present', () =>{
 			var currObj = _.clone(objNoTranslations);
 			OP.Multilingual.translate(currObj, currObj, fields);
-			assert.ok( _.isEqual(currObj, objNoTranslations), ' --> object not altered');
+			// assert.ok( _.isEqual(currObj, objNoTranslations), ' --> object not altered');
+			assert.isUndefined( objNoTranslations.translations, ' --> object not altered');
+			assert.isDefined( currObj.translations, ' --> object should have translations property');
 		})
 
 		// it should pull the proper data translations into top level of obj

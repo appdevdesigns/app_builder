@@ -90,8 +90,8 @@ describe('ab_work_object_workspace_popupSortFields component', () => {
 		});
 
 		it('.clickAddNewSort: should add a new element to UI', () => {
-			// Load first object from a sample ABApplication			
-			let mockObj = new ABObject(sampleApp.objects[0]);						
+			// Load first object from a sample ABApplication
+			let mockObj = sampleApp.objects()[0];
 			target.objectLoad(mockObj);
 			
 			// Set up simulated button click and spy for clickAddNewSort function
