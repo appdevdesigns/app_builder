@@ -8,6 +8,7 @@ test:
 
 	@./node_modules/.bin/webpack \
 	--config ./assets/opstools/AppBuilder/test/webpack.config.js \
+	--progress \
 	> /dev/null
 
 	@./node_modules/mocha-phantomjs/bin/mocha-phantomjs assets/opstools/AppBuilder/test/test-all.html \
