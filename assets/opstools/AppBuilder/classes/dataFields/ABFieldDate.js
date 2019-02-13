@@ -1131,6 +1131,14 @@ class ABFieldDate extends ABField {
 		//// NOTE: webix seems unable to parse ISO string into => date here.
 		// config.map = '(date)#'+this.columnName+'#';   // so don't use this.
 
+		config.template = (row) => {
+
+			if (row.$group)
+				return row[this.columnName];
+
+			return this.format(row);
+		}
+
 		config.format = (d) => {
 
 			var rowData = {};
@@ -1168,22 +1176,21 @@ class ABFieldDate extends ABField {
 		if (values[this.columnName] == null) {
 
 			// // Set current date as default
-			// if (this.settings.defaultCurrentDate) {
-			// 	values[this.columnName] = (new Date()).toISOString();
-			// }
-			// // Specfic default date
-			// else if (this.settings.default) {
-			// 	values[this.columnName] = (new Date(this.settings.default)).toISOString();
-			// }
-			if (this.settings.defaultDate != 1 && this.settings.defaultDateValue) {
-				values[this.columnName] = (new Date(this.settings.defaultDateValue)).toISOString();
+			if (this.settings.defaultDate == 2) {
+				values[this.columnName] = (new Date()).toISOString();
 			}
-			
-			if (this.settings.defaultTime != 1 && this.settings.defaultTimeValue && this.settings.defaultDateValue) {
-				var defaultDate = new Date(this.settings.defaultDateValue);
-				var defaultTime =  new Date(this.settings.defaultTimeValue);
-				values[this.columnName] = new Date(defaultDate.getFullYear(), defaultDate.getMonth(), defaultDate.getDate(), defaultTime.getHours(), defaultTime.getMinutes(), defaultTime.getSeconds()).toISOString();
+			else if (this.settings.defaultDate == 3) {
+
+				if (this.settings.defaultTimeValue && this.settings.defaultDateValue) {
+					var defaultDate = new Date(this.settings.defaultDateValue);
+					var defaultTime =  new Date(this.settings.defaultTimeValue);
+					values[this.columnName] = new Date(defaultDate.getFullYear(), defaultDate.getMonth(), defaultDate.getDate(), defaultTime.getHours(), defaultTime.getMinutes(), defaultTime.getSeconds()).toISOString();
+				}
+				else if (this.settings.defaultDateValue) {
+					values[this.columnName] = (new Date(this.settings.defaultDateValue)).toISOString();
+				}
 			}
+
 		}
 	}
 
@@ -1321,7 +1328,7 @@ class ABFieldDate extends ABField {
 					} else {
 						data[this.columnName] = moment(value).format('YYYY-MM-DD HH:mm:ss');
 					}
-					console.log(data);
+					// console.log(data);
 				}
 
 

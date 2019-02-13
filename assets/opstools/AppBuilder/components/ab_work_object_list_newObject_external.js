@@ -355,7 +355,7 @@ export default class AB_Work_Object_List_NewObject_External extends OP.Component
                     // Filter
                     {
                         cols: [
-                            { view: 'icon', icon: 'filter', align: 'left' },
+                            { view: 'icon', icon: 'fa fa-filter', align: 'left' },
                             {
                                 view: 'text',
                                 id: ids.filter,

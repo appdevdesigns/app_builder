@@ -1,6 +1,10 @@
 import AB from '../../../components/ab'
 import ABFieldDate from "../../../classes/dataFields/ABFieldDate"
 
+let validFormat = (date) => {
+	return moment(date).format('YYYY-MM-DD HH:mm:ss');
+}
+
 describe("ABFieldDate unit tests", () => {
 
 	function L(key, altText) {
@@ -73,7 +77,7 @@ describe("ABFieldDate unit tests", () => {
 		it('.columnHeader: should return date column config', () => {
 			var columnConfig = target.columnHeader();
 
-			assert.equal('date', columnConfig.editor, 'should be "date" editor');
+			assert.equal('datetime', columnConfig.editor, 'should be "date" editor');
 			assert.isUndefined(columnConfig.sort, 'should not define sort in webix datatable');
 			assert.isDefined(columnConfig.format);
 			assert.isDefined(columnConfig.editFormat);
@@ -93,7 +97,7 @@ describe("ABFieldDate unit tests", () => {
 			var rowData = {};
 
 			// set setting to current date as default
-			target.settings.defaultCurrentDate = 1;
+			target.settings.defaultDate = 2; // Current Date
 
 			// Set default value
 			target.defaultValue(rowData);
@@ -106,14 +110,14 @@ describe("ABFieldDate unit tests", () => {
 			var rowData = {};
 
 			// set specific date as default
-			target.settings.defaultCurrentDate = 0;
-			target.settings.defaultDate = new Date('1986-02-28');
+			target.settings.defaultDate = 3
+			target.settings.defaultDateValue = new Date('1986-02-28');
 
 			// Set default value
 			target.defaultValue(rowData);
 
 			assert.isDefined(rowData[columnName]);
-			assert.equal(target.settings.defaultDate.toISOString(), rowData[columnName]);
+			assert.equal(target.settings.defaultDateValue.toISOString(), rowData[columnName]);
 		});
 
 		it('.isValidData - dateRange: should pass when enter date is in range', () => {
@@ -134,8 +138,11 @@ describe("ABFieldDate unit tests", () => {
 
 			sandbox.assert.notCalled(stubAddError);
 
-			// .isValidDate should convert Date to ISO when valid
-			assert.equal(currentDate.toISOString(), rowData[columnName]);
+			// // .isValidDate should convert Date to ISO when valid
+			// assert.equal(currentDate.toISOString(), rowData[columnName]);
+
+			assert.equal(validFormat(currentDate), rowData[columnName]);
+
 		});
 
 		it('.isValidData - dateRange: should not pass when enter date is not in range', () => {
@@ -172,8 +179,11 @@ describe("ABFieldDate unit tests", () => {
 
 			sandbox.assert.notCalled(stubAddError);
 
-			// .isValidDate should convert Date to ISO when valid
-			assert.equal(enterDate.toISOString(), rowData[columnName]);
+			// // .isValidDate should convert Date to ISO when valid
+			// assert.equal(enterDate.toISOString(), rowData[columnName]);
+
+			assert.equal(validFormat(enterDate), rowData[columnName]);
+
 		});
 
 		it('.isValidData - notBetween: should not pass when enter date is not in range', () => {
@@ -208,8 +218,10 @@ describe("ABFieldDate unit tests", () => {
 
 			sandbox.assert.notCalled(stubAddError);
 
-			// .isValidDate should convert Date to ISO when valid
-			assert.equal(enterDate.toISOString(), rowData[columnName]);
+			// // .isValidDate should convert Date to ISO when valid
+			// assert.equal(enterDate.toISOString(), rowData[columnName]);
+
+			assert.equal(validFormat(enterDate), rowData[columnName]);
 		});
 
 		it('.isValidData - equal: should not pass when enter date does not equal validate date', () => {
@@ -244,7 +256,7 @@ describe("ABFieldDate unit tests", () => {
 			sandbox.assert.notCalled(stubAddError);
 
 			// .isValidDate should convert Date to ISO when valid
-			assert.equal(enterDate.toISOString(), rowData[columnName]);
+			assert.equal(validFormat(enterDate), rowData[columnName]);
 		});
 
 		it('.isValidData - not equal: should not pass when enter date equals validate date', () => {
@@ -279,7 +291,7 @@ describe("ABFieldDate unit tests", () => {
 			sandbox.assert.notCalled(stubAddError);
 
 			// .isValidDate should convert Date to ISO when valid
-			assert.equal(enterDate.toISOString(), rowData[columnName]);
+			assert.equal(validFormat(enterDate), rowData[columnName]);
 		});
 
 		it('.isValidData - greater than: should not pass when enter date does not greater than validate date', () => {
@@ -314,7 +326,7 @@ describe("ABFieldDate unit tests", () => {
 			sandbox.assert.notCalled(stubAddError);
 
 			// .isValidDate should convert Date to ISO when valid
-			assert.equal(enterDate.toISOString(), rowData[columnName]);
+			assert.equal(validFormat(enterDate), rowData[columnName]);
 		});
 
 		it('.isValidData - lower than: should not pass when enter date does not lower than validate date', () => {
@@ -353,7 +365,7 @@ describe("ABFieldDate unit tests", () => {
 				// clone default settings
 				formatSettings = JSON.parse(JSON.stringify(target.settings));
 
-			formatSettings.includeTime = 1;
+			formatSettings.timeFormat = 3; // %H:%i
 
 			var expectedDate = '28/02/1986 02:12';
 
@@ -368,12 +380,10 @@ describe("ABFieldDate unit tests", () => {
 				// clone default settings
 				formatSettings = JSON.parse(JSON.stringify(target.settings));
 
-			var expectedDate = '28, 02, 1986 02:12';
+			var expectedDate = 'Feb 28, 1986 02:12';
 
-			formatSettings.includeTime = 1;
-			formatSettings.dayDelimiter = 'comma';
-			formatSettings.monthDelimiter = 'comma';
-			formatSettings.yearDelimiter = 'comma';
+			formatSettings.timeFormat = 3;
+			formatSettings.dateFormat = 4;
 
 			var result = targetComponent._logic.dateDisplay(date, formatSettings);
 
@@ -386,12 +396,10 @@ describe("ABFieldDate unit tests", () => {
 				// clone default settings
 				formatSettings = JSON.parse(JSON.stringify(target.settings));
 
-			var expectedDate = '28 02 1986';
+			var expectedDate = '02/28/1986';
 
-			formatSettings.includeTime = 0;
-			formatSettings.dayDelimiter = 'space';
-			formatSettings.monthDelimiter = 'space';
-			formatSettings.yearDelimiter = 'space';
+			formatSettings.timeFormat = 1;
+			formatSettings.dateFormat = 3;
 
 			var result = targetComponent._logic.dateDisplay(date, formatSettings);
 
@@ -404,12 +412,10 @@ describe("ABFieldDate unit tests", () => {
 				// clone default settings
 				formatSettings = JSON.parse(JSON.stringify(target.settings));
 
-			var expectedDate = '28/02/1986 02/08';
+			var expectedDate = '28/02/1986 02:08 AM';
 
-			formatSettings.includeTime = 1;
-			formatSettings.hourFormat = '%h'; // "00 01 ... 10 11"
-			formatSettings.periodFormat = 'none';
-			formatSettings.timeDelimiter = 'slash';
+			formatSettings.timeFormat = 2;
+			formatSettings.dateFormat = 2;
 
 			var result = targetComponent._logic.dateDisplay(date, formatSettings);
 
@@ -422,12 +428,10 @@ describe("ABFieldDate unit tests", () => {
 				// clone default settings
 				formatSettings = JSON.parse(JSON.stringify(target.settings));
 
-			var expectedDate = '28/02/1986 10-08 pm';
+			var expectedDate = '02/28/1986 22:08';
 
-			formatSettings.includeTime = 1;
-			formatSettings.hourFormat = '%g'; // "0 1 ... 10 11"
-			formatSettings.periodFormat = '%a';
-			formatSettings.timeDelimiter = 'dash';
+			formatSettings.timeFormat = 3;
+			formatSettings.dateFormat = 3;
 
 			var result = targetComponent._logic.dateDisplay(date, formatSettings);
 

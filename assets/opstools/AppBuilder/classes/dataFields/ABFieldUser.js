@@ -224,7 +224,10 @@ class ABFieldUser extends ABFieldSelectivity {
 		// Multiple select list
 		if (field.settings.isMultiple) {
 			config.template = function(row) {
-				
+
+				if (row.$group)
+					return row[field.columnName];
+
 				var node = document.createElement("div");
 				node.classList.add("list-data-values");
 				if (typeof width != "undefined") {
@@ -271,6 +274,10 @@ class ABFieldUser extends ABFieldSelectivity {
 			}
 			
 			config.template = function(obj) {
+
+				if (obj.$group)
+					return obj[field.columnName];
+
 				var myHex = "#666666";
 				var myText = placeHolder;
 				var users = field.getUsers();

@@ -72,7 +72,7 @@ export default class ABChooseList extends OP.Component {
 								{ 
 			                        view:"button", 
 			                        type:"icon", 
-			                        icon:"male",
+			                        icon:"fa fa-male",
 			                        width:25,
 			                        click:()=>{
 			                            this.emit('view.config');
@@ -85,7 +85,7 @@ export default class ABChooseList extends OP.Component {
 									label: labels.component.createNew,
 									autowidth: true,
 									type: "icon",
-									icon: "plus",
+									icon: "fa fa-plus",
 									click: function() {
 										// Inform our Chooser we have a request to create an Application:
 										App.actions.transitionApplicationForm( /* leave empty for a create */ );
@@ -99,7 +99,7 @@ export default class ABChooseList extends OP.Component {
 									upload: '/app_builder/appJSON',
 									multiple: false,
 									type: "icon",
-									icon: "upload",
+									icon: "fa fa-upload",
 									autosend: true,
 									on: {
 										onAfterFileAdd: function () {
@@ -263,9 +263,9 @@ export default class ABChooseList extends OP.Component {
 			onClickListEdit: function(ev, id, trg) {
 
 				var options = [
-					{ label: labels.common.edit, icon: "pencil-square-o", command:'edit' },
-					{ label: labels.common.export, icon: "download", command:'export' },
-					{ label: labels.common.delete, icon: "trash", command:'delete' }
+					{ label: labels.common.edit, icon: "fa fa-pencil-square-o", command:'edit' },
+					{ label: labels.common.export, icon: "fa fa-download", command:'export' },
+					{ label: labels.common.delete, icon: "fa fa-trash", command:'delete' }
 				];
 
 				MenuComponent.menuOptions(options);

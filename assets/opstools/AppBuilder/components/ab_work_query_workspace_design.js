@@ -6,8 +6,6 @@
  */
 
 import RowFilter from "../classes/RowFilter"
-import ABObjectQuery from "../classes/ABObjectQuery"
-import ABObjectQueryV1 from "../classes/ABObjectQueryV1"
 
 export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
@@ -472,34 +470,6 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 					var tree = $$(ids.tree);
 
 					var objectBase = CurrentQuery.objectBase();
-
-					// NOTE: query v1 
-					// upgrade to new version
-					if (CurrentQuery instanceof ABObjectQueryV1) {
-
-						// clone attributes
-						let attrs = {};
-						Object.keys(CurrentQuery).forEach(key => {
-
-							// ignore
-							if (key == '_fields' || key == '_joins')
-								return;
-							// blank where & sorting
-							else if (key == 'objectWorkspace') {
-								attrs[key] = {
-									sortFields: [], // array of columns with their sort configurations
-									filterConditions: [], // array of filters to apply to the data table
-									frozenColumnID: "", // id of column you want to stop freezing
-									hiddenFields: [], // array of [ids] to add hidden:true to
-								};
-							}
-							else {
-								attrs[key] = CurrentQuery[key];
-							}
-						});
-
-						CurrentQuery = new ABObjectQuery(attrs, CurrentApplication);
-					}
 
 					/** joins **/
 					let joins = {

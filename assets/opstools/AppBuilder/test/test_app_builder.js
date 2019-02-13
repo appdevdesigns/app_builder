@@ -11,6 +11,8 @@ import './components/ab_work_object_workspace_popupFilterDataTable'
 import './components/ab_work_object_workspace_popupFrozenColumns'
 import './components/ab_work_object_workspace_popupSortFields'
 
+import './classes/RowFilter'
+
 // Import data field test cases
 import './classes/dataFields/ABFieldBoolean'
 import './classes/dataFields/ABFieldConnect'

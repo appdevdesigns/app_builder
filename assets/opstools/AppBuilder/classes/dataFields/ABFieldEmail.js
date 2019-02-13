@@ -206,8 +206,6 @@ class ABFieldEmail extends ABField {
 		var config = super.columnHeader(isObjectWorkspace);
 
 		config.editor = 'text';
-		// config.template = '<div class="ab-boolean-display">{common.checkbox()}</div>';
-		// config.css = 'center';
 
 		return config;
 	}

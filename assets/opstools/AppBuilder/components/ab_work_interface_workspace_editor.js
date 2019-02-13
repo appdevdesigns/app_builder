@@ -104,7 +104,7 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                         },
                         {
                             view: "icon", 
-                            icon: "info-circle",
+                            icon: "fa fa-info-circle",
                             tooltip: labels.component.editorTipText,
                             on: {
                                 onItemClick: function() {
@@ -176,7 +176,7 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                             id: ids.toolbarNewDataCollection,
                             view: "button",
                             type: "iconButton", 
-                            icon: "plus",
+                            icon: "fa fa-plus",
                             label: labels.component.newDataSource,
                             align: "right",
                             autowidth: true,

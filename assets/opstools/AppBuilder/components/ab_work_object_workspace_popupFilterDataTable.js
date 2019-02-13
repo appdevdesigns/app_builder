@@ -114,7 +114,7 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
             onShow: function () {
 
                 // populate settings to RowFilter
-                DataFilter.setValue(CurrentObject.workspaceFilterConditions);
+                DataFilter.setValue(CurrentObject.currentView().filterConditions);
             },
 
 
@@ -123,14 +123,19 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
              * save .where settings to current object
              */
             save: function () {
+                const filterConditions = DataFilter.getValue();
+                
+                CurrentObject.currentView().update({ filterConditions });
+                
+                // old method:
 
-                CurrentObject.workspaceFilterConditions = DataFilter.getValue();
+                // CurrentObject.workspaceFilterConditions = DataFilter.getValue();
                 CurrentObject.save()
                     .then(function () {
                         _logic.callbacks.onChange();
                     })
                     .catch(function (err) {
-                        OP.Error.log('Error trying to save filterConditions', { error: err, filters: CurrentObject.workspaceFilterConditions });
+                        OP.Error.log('Error trying to save filterConditions', { error: err, filters: filterConditions });
                     });
 
             }

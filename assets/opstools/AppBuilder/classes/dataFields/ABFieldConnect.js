@@ -8,7 +8,6 @@
 // import ABField from "./ABField"
 import ABFieldComponent from "./ABFieldComponent"
 import ABFieldSelectivity from "./ABFieldSelectivity"
-import ABObjectQuery from "../ABObjectQuery"
 
 
 
@@ -475,6 +474,9 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 		config.template = function (row) {
 
+			if (row.$group)
+				return row[field.columnName];
+
 			var node = document.createElement("div");
 			node.classList.add("connect-data-values");
 			if (typeof width != "undefined") {
@@ -750,6 +752,9 @@ class ABFieldConnect extends ABFieldSelectivity {
 	getOptions(filters, term) {
 		return new Promise(
 			(resolve, reject) => {
+
+				filters = filters || {};
+				term = term || '';
 
 				// check if linked object value is not define, should return a empty array
 				if (!this.settings.linkObject) return resolve([]);

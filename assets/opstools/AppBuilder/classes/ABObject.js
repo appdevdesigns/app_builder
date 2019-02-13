@@ -6,7 +6,7 @@ import ABObjectBase from "./ABObjectBase"
 // import OP from "OP"
 // import ABFieldManager from "./ABFieldManager"
 import ABModel from "./ABModel"
-
+import ABObjectWorkspaceViewCollection from "./ABObjectWorkspaceViewCollection";
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -35,9 +35,14 @@ export default class ABObject extends ABObjectBase {
 }
 */
 
-    	// multilingual fields: label, description
-    	OP.Multilingual.translate(this, this, ['label']);
+        this.workspaceViews = new ABObjectWorkspaceViewCollection(
+            attributes,
+            this,
+            application
+        );
 
+    	// multilingual fields: label, description
+		OP.Multilingual.translate(this, this, ['label']);
   	}
 
 
@@ -239,7 +244,12 @@ export default class ABObject extends ABObjectBase {
 
 		OP.Multilingual.unTranslate(this, this, ["label"]);
 
-		return super.toObj();
+		var result = super.toObj();
+
+		result.objectWorkspaceViews = this.workspaceViews.toObj();
+
+		return result;
+
 	}
 
 
@@ -463,6 +473,8 @@ export default class ABObject extends ABObjectBase {
 		return this._model;
 	}
 
-
+	currentView() {
+		return this.workspaceViews.getCurrentView();
+	}
 }
 

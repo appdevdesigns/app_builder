@@ -72,7 +72,7 @@ describe("ABFieldConnect unit tests", () => {
 			assert.equal(menuName, defaultValues.menuName);
 			assert.equal(description, defaultValues.description);
 			assert.isFalse(defaultValues.isSortable);
-			assert.isFalse(defaultValues.isFilterable);
+			assert.isTrue(defaultValues.isFilterable);
 			assert.isFalse(defaultValues.useAsLabel);
 		});
 

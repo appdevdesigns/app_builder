@@ -297,7 +297,7 @@ var ABFieldCalculateComponent = new ABFieldComponent({
 							{
 								view: 'button',
 								type: "icon",
-								icon: "hashtag",
+								icon: "fa fa-hashtag",
 								label: L("ab.dataField.calculate.numberFields", "*Number Fields"),
 								width: 185,
 								click: function () {
@@ -308,7 +308,7 @@ var ABFieldCalculateComponent = new ABFieldComponent({
 							{
 								view: 'button',
 								type: "icon",
-								icon: "calendar",
+								icon: "fa fa-calendar",
 								label: L("ab.dataField.calculate.dateFields", "*Date Fields"),
 								click: function () {
 									// show popup
@@ -324,7 +324,7 @@ var ABFieldCalculateComponent = new ABFieldComponent({
 							{
 								view: 'button',
 								type: "icon",
-								icon: "hashtag",
+								icon: "fa fa-hashtag",
 								label: L("ab.dataField.calculate.numberFn", "*Number Operators"),
 								width: 185,
 								click: function () {
@@ -569,6 +569,10 @@ class ABFieldCalculate extends ABField {
 		config.editor = null; // read only
 		config.css = 'textCell';
 		config.template = (rowData) => {
+
+			if (rowData.$group)
+				return rowData[this.columnName];
+
 			return this.format(rowData);
 		};
 

@@ -275,6 +275,10 @@ class ABFieldFormula extends ABField {
 		config.editor = null; // read only
 		config.css = 'textCell';
 		config.template = (rowData) => {
+
+			if (rowData.$group)
+				return rowData[this.columnName];
+
 			return this.format(rowData);
 		};
 

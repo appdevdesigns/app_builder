@@ -304,8 +304,8 @@ console.warn('!! ToDo: onAfterColumnHide()');
 
                 // WORKAROUND: .Sj() => ._get_y_range function of webix's datatable.
                 // It is a private function. It returns what record index are showing
-                let scrollState = DataTable.Sj(), // webix5
-                // let scrollState = DataTable.Ug(), // webix6
+                // let scrollState = DataTable.Sj(), // webix5
+                let scrollState = DataTable.Ug(), // webix6
                     startRecIndex = scrollState[0],
                     endRecIndex = scrollState[1],
                     index = 0;
@@ -316,7 +316,7 @@ console.warn('!! ToDo: onAfterColumnHide()');
                         startRecIndex <= index && index <= endRecIndex) 
                         displayRecords.push(id);
 
-                    index++
+                    index++;
 
                 });
 
@@ -324,7 +324,7 @@ console.warn('!! ToDo: onAfterColumnHide()');
 
             };
 
-    		DataTable.attachEvent("onAfterRender", function(data){
+            DataTable.attachEvent("onAfterRender", function(data){
                 DataTable.resize();
 
                 // items = [];
@@ -867,13 +867,27 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                     // }
                     let groupMap = {};
                     CurrentObject.fields().forEach(f => {
-                        if (f.columnName == settings.groupBy) return;
+                        // if (f.columnName == settings.groupBy) return;
 
                         switch (f.key)  {
                             case "number":
+                                groupMap[f.columnName] = [f.columnName, "sum"];
+                                break;
                             case "calculate":
                             case "formula":
-                                groupMap[f.columnName] = [f.columnName, "sum"];
+                                groupMap[f.columnName] = [f.columnName, function(prop, listData) {
+                                    if (!listData)
+                                        return 0;
+
+                                    let sum = 0;
+
+                                    listData.forEach(r => {
+                                        sum += f.format(r) * 1;
+                                    });
+
+                                    return sum;
+
+                                }];
                                 break;
                             case "connectObject":
                                 groupMap[f.columnName] = [f.columnName, function(prop, listData) {
@@ -881,7 +895,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                                     if (!listData || !listData.length)
                                         return 0;
 
-                                    let sum = 0;
+                                    let count = 0;
 
                                     listData.forEach(r => {
                                         var valRelation = r[f.relationName()];
@@ -889,14 +903,14 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                                         // array
                                         if (valRelation && 
                                             valRelation.length != null)
-                                            sum += valRelation.length;
+                                            count += valRelation.length;
                                         // object
                                         else if (valRelation)
-                                            sum += 1;
+                                            count += 1;
 
                                     });
 
-                                    return sum;
+                                    return count;
                                 }];
                                 break;
                             default:
@@ -910,16 +924,16 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                                     listData.forEach(r => {
                                         var val = prop(r);
 
-                                        // "false" to boolean
-                                        if (f.key == "boolean") {
+                                        // // "false" to boolean
+                                        // if (f.key == "boolean") {
 
-                                            try {
-                                                val = JSON.parse(val || 0);
-                                            }
-                                            catch (err) {
-                                                val = false;
-                                            }
-                                        }
+                                        //     try {
+                                        //         val = JSON.parse(val || 0);
+                                        //     }
+                                        //     catch (err) {
+                                        //         val = false;
+                                        //     }
+                                        // }
 
                                         // count only exists data
                                         if (val) {
@@ -969,7 +983,8 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                         wheres = CurrentObject.workspaceFilterConditions;
                     }
                     var sorts = {};
-                    if (CurrentObject.workspaceSortFields.length > 0) {
+                    if (CurrentObject.workspaceSortFields &&
+                        CurrentObject.workspaceSortFields.length > 0) {
                         sorts = CurrentObject.workspaceSortFields;
                     }
                     CurrentObject.model()
@@ -1040,21 +1055,6 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                             },
                             // css: { 'text-align': 'center' }
                         });
-                    }
-                    
-                    if (settings.isEditable == 0) {
-                        columnHeaders.forEach(function(col) {
-                            
-                            if (col.template == '<div class="ab-boolean-display">{common.checkbox()}</div>') {
-                                col.template = function(obj, common, value){
-                                    if (value)
-                                        return "<div class='webix_icon fa fa-check-square-o'></div>";
-                                    else
-                                        return "<div class='webix_icon fa fa-square-o'></div>";
-                                }
-                            }
-                                
-                        })
                     }
 
                     if (settings.massUpdate) {
@@ -1343,6 +1343,8 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
         // expose load all records
         this.loadAll = _logic.loadAll;
+
+        this.show = _logic.show;
 
     }
 

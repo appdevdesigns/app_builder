@@ -82,6 +82,7 @@ describe('ab_common_popupEditMenu component', () => {
 		// });
 
 		it('should create webix ui', () => {
+
 			let spyLogicHide = sandbox.spy(target._logic, 'hide');
 
 			// Call init

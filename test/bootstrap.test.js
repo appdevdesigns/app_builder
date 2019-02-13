@@ -26,6 +26,14 @@ before(function(done) {
     models:{
       connection:'test',
       migrate:'drop'
+    },
+    appbuilder: {
+      mcc: {
+          enabled: false
+      },
+      email: {
+          enabled: false
+      }
     }
   })
   .fail(function(err){

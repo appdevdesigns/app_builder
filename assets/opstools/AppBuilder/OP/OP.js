@@ -64,6 +64,9 @@ if (!window.OP) {
 	OP.User.init();
 
 }
+else {
+	var OP = window.OP;
+}
 export default OP;
 
 // import "./model.js"
