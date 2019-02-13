@@ -29,9 +29,6 @@ module.exports = {
     ]
   },
   devtool: "source-map",
-  watchOptions: {
-    ignored: /node_modules/
-  },
   plugins: [
     // new webpack.optimize.UglifyJsPlugin({
     //     compress: {
