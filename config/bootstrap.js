@@ -227,8 +227,10 @@ function addSDCAppInfo(next) {
 
 function defaultEmailNotificationInvite(next) {
 
-	// Unit test: if no EmailNotifications package, skip this step
-	if (EmailNotifications == null)
+	// Unit test: skip this step
+	if (sails.config.appbuilder && 
+		sails.config.appbuilder.email &&
+		sails.config.appbuilder.email.enabled === false)
 		return next();
 
 	var filePath = path.join(__dirname, '..', 'setup', 'install', 'mobile_qr_invite.ejs' );

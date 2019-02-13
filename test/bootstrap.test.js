@@ -30,6 +30,9 @@ before(function(done) {
     appbuilder: {
       mcc: {
           enabled: false
+      },
+      email: {
+          enabled: false
       }
     }
   })
