@@ -37,6 +37,7 @@ export default class ABWorkObjectGantt extends OP.Component {
 		}
 
 		let CurrentObject = null,
+			CurrentDC = null,
 			CurrentGanttView = null,
 			CurrentStartDateField = null,
 			CurrentDurationField = null,
@@ -142,6 +143,21 @@ export default class ABWorkObjectGantt extends OP.Component {
 				CurrentObject = object;
 
 				FormSide.objectLoad(object);
+
+			},
+
+			/**
+			 * @method dataCollectionLoad
+			 * 
+			 * @param dataCollection {ABViewDataCollection}
+			 */
+			dataCollectionLoad: (dataCollection) => {
+
+				// CurrentDC = dataCollection;
+				// if (CurrentDC)
+				// 	CurrentDC.bind($$(ids.gantt));
+				// else
+				// 	$$(ids.gantt).unbind();
 
 			},
 
@@ -471,6 +487,7 @@ export default class ABWorkObjectGantt extends OP.Component {
 		this.hide = _logic.hide;
 		this.show = _logic.show;
 		this.objectLoad = _logic.objectLoad;
+		this.dataCollectionLoad = _logic.dataCollectionLoad;
 		this.addTask = _logic.addTask;
 		this.refresh = _logic.loadData;
 

@@ -439,7 +439,8 @@ console.warn('!! ToDo: onAfterColumnHide()');
 
 
 
-    	var CurrentObject = null;		// current ABObject being displayed
+        var CurrentObject = null;		// current ABObject being displayed
+        var CurrentDC   = null;			// current ABViewDataCollection
     	var EditField	= null;			// which field (column header) is popup editor for
     	var EditNode	= null;			// which html node (column header) is popup editor for
 
@@ -960,41 +961,57 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
                 // supressed this because it seems to be making an extra call?
     			// _logic.refresh();
-    		},
+            },
 
 
-    		// rebuild the data table view:
-    		refresh: function(loadAll) {
+            /**
+             * @method dataCollectionLoad
+             * 
+             * @param dataCollection {ABViewDataCollection}
+             */
+			dataCollectionLoad: (dataCollection) => {
+
+				CurrentDC = dataCollection;
+				if (CurrentDC)
+					CurrentDC.bind($$(this.ui.id));
+				else
+					$$(this.ui.id).unbind();
+
+			},
+
+
+    		// // rebuild the data table view:
+    		// refresh: function(loadAll) {
                 
-    			// wait until we have an Object defined:
-    			if (CurrentObject) {
-                    var DataTable = $$(ids.component);
-                    DataTable.clearAll();
-    				//// update DataTable Content
+    		// 	// wait until we have an Object defined:
+    		// 	if (CurrentObject) {
+            //         var DataTable = $$(ids.component);
+            //         DataTable.clearAll();
+    		// 		//// update DataTable Content
 
-    				// Set the Model object with a condition / skip / limit, then
-    				// use it to load the DataTable:
-    				//// NOTE: this should take advantage of Webix dynamic data loading on
-    				//// larger data sets.
-                    var wheres = {};
-                    if (CurrentObject.workspaceFilterConditions &&
-                        CurrentObject.workspaceFilterConditions.rules &&
-                        CurrentObject.workspaceFilterConditions.rules.length > 0) {
-                        wheres = CurrentObject.workspaceFilterConditions;
-                    }
-                    var sorts = {};
-                    if (CurrentObject.workspaceSortFields &&
-                        CurrentObject.workspaceSortFields.length > 0) {
-                        sorts = CurrentObject.workspaceSortFields;
-                    }
-                    CurrentObject.model()
-                    .where(wheres)
-                    .sort(sorts)
-    				.skip(0)
-    				.limit(loadAll ? null : 30)
-    				.loadInto(DataTable);
-    			}
-    		},
+    		// 		// Set the Model object with a condition / skip / limit, then
+    		// 		// use it to load the DataTable:
+    		// 		//// NOTE: this should take advantage of Webix dynamic data loading on
+    		// 		//// larger data sets.
+            //         var wheres = {};
+            //         if (CurrentObject.workspaceFilterConditions &&
+            //             CurrentObject.workspaceFilterConditions.rules &&
+            //             CurrentObject.workspaceFilterConditions.rules.length > 0) {
+            //             wheres = CurrentObject.workspaceFilterConditions;
+            //         }
+            //         var sorts = {};
+            //         if (CurrentObject.workspaceSortFields &&
+            //             CurrentObject.workspaceSortFields.length > 0) {
+            //             sorts = CurrentObject.workspaceSortFields;
+            //         }
+            //         CurrentObject.model()
+            //         .where(wheres)
+            //         .sort(sorts)
+    		// 		.skip(0)
+    		// 		.limit(loadAll ? null : 30)
+    		// 		.loadInto(DataTable);
+    		// 	}
+    		// },
 
             /**
     		 * @function refreshHeader()
@@ -1279,8 +1296,12 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
             loadAll: function() {
 
-                let isLoadAll = true;
-                _logic.refresh(isLoadAll);
+                if (CurrentDC) {
+                    CurrentDC.settings.loadAll = true;
+                    CurrentDC.reloadData();
+                }
+
+                // _logic.refresh(isLoadAll);
 
             }
 
@@ -1323,8 +1344,9 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
         // 
         // Define our external interface methods:
         // 
+        this.dataCollectionLoad = _logic.dataCollectionLoad;
         this.objectLoad = _logic.objectLoad;
-        this.refresh = _logic.refresh;
+        // this.refresh = _logic.refresh;
         this.refreshHeader = _logic.refreshHeader;
         this.addRow = _logic.rowAdd;
 

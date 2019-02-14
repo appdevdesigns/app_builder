@@ -448,13 +448,14 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                 onColumnOrderChange:_logic.callbackColumnOrderChange,
                 onCheckboxChecked:_logic.callbackCheckboxChecked
 			});
+			KanBan.init();
+			Gantt.init();
 
 			CurrentDc.init();
-			CurrentDc.bind($$(DataTable.ui.id));
 
-
-            KanBan.init();
-            Gantt.init();
+			DataTable.dataCollectionLoad(CurrentDc);
+			// KanBan.dataCollectionLoad(CurrentDc);
+			Gantt.dataCollectionLoad(CurrentDc);
 
 
     		PopupDefineLabelComponent.init({
