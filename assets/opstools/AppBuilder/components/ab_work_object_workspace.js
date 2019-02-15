@@ -454,7 +454,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 			CurrentDc.init();
 
 			DataTable.dataCollectionLoad(CurrentDc);
-			// KanBan.dataCollectionLoad(CurrentDc);
+			KanBan.dataCollectionLoad(CurrentDc);
 			Gantt.dataCollectionLoad(CurrentDc);
 
 
@@ -566,7 +566,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                 _logic.getBadgeFilters();
 				// this will be handled by the server side request now
 				_logic.loadData();
-                KanBan.refresh();
+                // KanBan.refresh();
                 Gantt.refresh();
                 // DataTable.refresh();
     		},
@@ -743,7 +743,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                 _logic.getBadgeSortFields();
                 DataTable.refreshHeader();
 				_logic.loadData();
-                KanBan.refresh();
+                // KanBan.refresh();
                 Gantt.refresh();
             },
             
@@ -1149,9 +1149,19 @@ console.error('TODO: toolbarPermission()');
 						filterConditions: wheres,
 						sortFields: sorts
 					}
-				};
+                };
+
 				CurrentDc.clearAll();
-				CurrentDc.loadData(0, 30);
+
+                // WORKAROUND: load all data becuase kanban does not support pagination now
+                let view = CurrentObject.workspaceViews.getCurrentView();
+                if (view.type === 'kanban') {
+                    CurrentDc.settings.loadAll = true;
+                    CurrentDc.loadData(0);
+                }
+                else {
+                    CurrentDc.loadData(0, 30);
+                }
 
 			},
 

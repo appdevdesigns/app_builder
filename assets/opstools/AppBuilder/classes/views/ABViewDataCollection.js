@@ -1461,7 +1461,8 @@ export default class ABViewDataCollection extends ABView {
 
 		if (component.config.view == 'datatable' ||
 			component.config.view == 'dataview' ||
-			component.config.view == 'treetable') {
+			component.config.view == 'treetable' ||
+			component.config.view == 'kanban') {
 
 			if (dc) {
 

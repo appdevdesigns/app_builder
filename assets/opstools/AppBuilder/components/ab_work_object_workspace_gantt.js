@@ -153,7 +153,10 @@ export default class ABWorkObjectGantt extends OP.Component {
 			 */
 			dataCollectionLoad: (dataCollection) => {
 
-				// CurrentDC = dataCollection;
+				CurrentDC = dataCollection;
+
+				// TODO: pagination & real-time update
+				// https://docs.dhtmlx.com/grid__big_datasets_loading.html
 				// if (CurrentDC)
 				// 	CurrentDC.bind($$(ids.gantt));
 				// else
