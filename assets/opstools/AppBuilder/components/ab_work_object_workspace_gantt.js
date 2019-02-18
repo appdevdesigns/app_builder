@@ -155,7 +155,23 @@ export default class ABWorkObjectGantt extends OP.Component {
 
 				CurrentDC = dataCollection;
 
-				// TODO: pagination & real-time update
+				// real-time update
+				CurrentDC.on('create', vals => {
+					_logic.updateTaskItem(vals, true);
+				});
+				CurrentDC.on('update', vals => {
+					_logic.updateTaskItem(vals, true);
+				});
+				CurrentDC.on('delete', taskId => {
+
+					// remove this task in gantt
+					let gantt = $$(ids.gantt).getGantt();
+					if (gantt && gantt.isTaskExists(taskId))
+						gantt.deleteTask(taskId);
+
+				});
+
+				// TODO: pagination
 				// https://docs.dhtmlx.com/grid__big_datasets_loading.html
 				// if (CurrentDC)
 				// 	CurrentDC.bind($$(ids.gantt));
@@ -321,7 +337,9 @@ export default class ABWorkObjectGantt extends OP.Component {
 				data['start_date'] = data[CurrentStartDateField.columnName];
 				data['duration'] = data[CurrentDurationField.columnName] || 0;
 				data['progress'] = CurrentProgressField ? parseFloat(data[CurrentProgressField.columnName] || 0) : 0;
-				data['end_date'] = gantt.calculateEndDate(data['start_date'], data['duration']);
+
+				if (data['start_date'] && data['duration'])
+					data['end_date'] = gantt.calculateEndDate(data['start_date'], data['duration']);
 
 				if (index != null)
 					data['order'] = index;
@@ -413,7 +431,7 @@ export default class ABWorkObjectGantt extends OP.Component {
 			},
 
 
-			updateTaskItem(data) {
+			updateTaskItem(data, ignoreSelect = false) {
 
 				let gantt = $$(ids.gantt).getGantt();
 
@@ -429,15 +447,19 @@ export default class ABWorkObjectGantt extends OP.Component {
 						task[key] = updatedTask[key];
 					}
 
-					gantt.updateTask(data.id);
+					if (data['start_date'] && data['duration']) // these fields are required when update
+						gantt.updateTask(data.id);
 				}
 				// insert
 				else {
 					let newTask = _logic.convertFormat(gantt, data);
 					gantt.addTask(newTask);
 
-					gantt.selectTask(data.id);
-					_logic.selectTask(data.id);
+					if (!ignoreSelect) {
+						gantt.selectTask(data.id);
+						_logic.selectTask(data.id);
+					}
+
 				}
 
 			},

@@ -1283,17 +1283,17 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
             },
 
 
-            busy: function() {
+            busy: () => {
 
-                if (DataTable.showProgress)
-                    DataTable.showProgress({ type: "icon" });
+                if ($$(this.ui.id).showProgress)
+                    $$(this.ui.id).showProgress({ type: "icon" });
 
             },
 
-            ready: function() {
+            ready: () => {
 
-                if (DataTable.hideProgress)
-                    DataTable.hideProgress();
+                if ($$(this.ui.id).hideProgress)
+                    $$(this.ui.id).hideProgress();
 
             },
 

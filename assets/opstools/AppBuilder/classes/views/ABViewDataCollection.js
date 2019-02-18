@@ -1073,6 +1073,7 @@ export default class ABViewDataCollection extends ABView {
 	
 				if (!this.__dataCollection.exists(values.id)) {
 					this.__dataCollection.add(values, 0);
+					this.emit('create', values);
 					// this.__dataCollection.setCursor(rowData.id);
 				}
 
@@ -1122,8 +1123,10 @@ export default class ABViewDataCollection extends ABView {
 					});
 
 					// If this item needs to update
-					if (Object.keys(updateItemData).length > 0)
+					if (Object.keys(updateItemData).length > 0) {
 						this.__dataCollection.updateItem(d.id, updateItemData);
+						this.emit('update', this.__dataCollection.getItem(d.id));
+					}
 
 				});
 
@@ -1159,6 +1162,7 @@ export default class ABViewDataCollection extends ABView {
 						var model = obj.model();
 						model.normalizeData(values);
 						this.__dataCollection.updateItem(values.id, values);
+						this.emit('update', values);
 
 						// If the update item is current cursor, then should tell components to update.
 						var currData = this.getCursor();
@@ -1172,6 +1176,7 @@ export default class ABViewDataCollection extends ABView {
 							this.emit("changeCursor", null);
 
 						this.__dataCollection.remove(values.id);
+						this.emit('delete', values.id);
 					}
 				}
 				// filter before add new record
@@ -1180,6 +1185,7 @@ export default class ABViewDataCollection extends ABView {
 					// this means the updated record was not loaded yet so we are adding it to the top of the grid
 					// the placemet will probably change on the next load of the data
 					this.__dataCollection.add(values, 0);
+					this.emit('create', values);
 				}
 			}
 
@@ -1254,8 +1260,10 @@ export default class ABViewDataCollection extends ABView {
 					});
 
 					// If this item needs to update
-					if (Object.keys(updateItemData).length > 0)
+					if (Object.keys(updateItemData).length > 0) {
 						this.__dataCollection.updateItem(d.id, updateItemData);
+						this.emit('update', this.__dataCollection.getItem(d.id));
+					}
 
 				});
 
@@ -1316,6 +1324,7 @@ export default class ABViewDataCollection extends ABView {
 								this.emit("changeCursor", null);
 
 							this.__dataCollection.remove(values[PK]);
+							this.emit('delete', values[PK]);
 						}
 					});
 
@@ -1345,6 +1354,7 @@ export default class ABViewDataCollection extends ABView {
 					this.emit("changeCursor", null);
 
 				this.__dataCollection.remove(deleteId);
+				this.emit('delete', deleteId);
 			}
 
 			// if it is a linked object
@@ -1380,8 +1390,10 @@ export default class ABViewDataCollection extends ABView {
 					});
 
 					// If this item needs to update
-					if (Object.keys(updateRelateVals).length > 0)
+					if (Object.keys(updateRelateVals).length > 0) {
 						this.__dataCollection.updateItem(d.id, updateRelateVals);
+						this.emit('update', this.__dataCollection.getItem(d.id));
+					}
 
 				});
 
