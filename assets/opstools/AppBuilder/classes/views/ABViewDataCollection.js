@@ -112,7 +112,7 @@ export default class ABViewDataCollection extends ABView {
 		this.__filterComponent = new RowFilter();
 		this.__filterComponent.objectLoad(this.datasource);
 		this.__filterComponent.viewLoad(this);
-		this.__filterComponent.setValue(this.settings.objectWorkspace.filterConditions || ABViewPropertyDefaults.objectWorkspace.filterConditions);
+		this.setFilterConditions(this.settings.objectWorkspace.filterConditions);
 
 		this.__bindComponentIds = [];
 
@@ -1658,8 +1658,10 @@ export default class ABViewDataCollection extends ABView {
 	loadData(start, limit, callback) {
 
 		// mark data status is initializing
-		if (this._dataStatus == this.dataStatusFlag.notInitial)
+		if (this._dataStatus == this.dataStatusFlag.notInitial) {
 			this._dataStatus = this.dataStatusFlag.initializing;
+			this.emit("initializingData", {});
+		}
 
 		var obj = this.datasource;
 		if (obj == null) {
@@ -2044,6 +2046,12 @@ export default class ABViewDataCollection extends ABView {
 
 	}
 
+	setFilterConditions(filterConditions) {
+
+		if (this.__filterComponent)
+			this.__filterComponent.setValue(filterConditions || ABViewPropertyDefaults.objectWorkspace.filterConditions);
+	}
+
 	hideProgressOfComponents() {
 
 		this.__bindComponentIds.forEach(comId => {
@@ -2083,6 +2091,8 @@ export default class ABViewDataCollection extends ABView {
 	clearAll() {
 		if (this.__dataCollection)
 			this.__dataCollection.clearAll();
+
+		this._dataStatus = this.dataStatusFlag.notInitial;
 	}
 
 

@@ -645,9 +645,11 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 // .update(item.id, patch)
     					.then(()=>{
 
-    						DataTable.updateItem(editor.row, item);
-    						DataTable.clearSelection();
-    						DataTable.refresh(editor.row);
+							if (DataTable.exists(editor.row)) {
+								DataTable.updateItem(editor.row, item);
+								DataTable.clearSelection();
+								DataTable.refresh(editor.row);
+							}
 
     					})
     					.catch((err)=>{
@@ -971,11 +973,23 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
              */
 			dataCollectionLoad: (dataCollection) => {
 
+				let DataTable = $$(this.ui.id);
 				CurrentDC = dataCollection;
-				if (CurrentDC)
-					CurrentDC.bind($$(this.ui.id));
+				if (CurrentDC) {
+					CurrentDC.bind(DataTable);
+					CurrentDC.on("initializingData", () => {
+
+						_logic.busy();
+
+					});
+					CurrentDC.on("initializedData", () => {
+
+						_logic.ready();
+
+					});
+				}
 				else
-					$$(this.ui.id).unbind();
+					DataTable.unbind();
 
 			},
 
@@ -1266,6 +1280,21 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                 } else {
                     node.style.visibility = "visible";                            
                 }
+            },
+
+
+            busy: function() {
+
+                if (DataTable.showProgress)
+                    DataTable.showProgress({ type: "icon" });
+
+            },
+
+            ready: function() {
+
+                if (DataTable.hideProgress)
+                    DataTable.hideProgress();
+
             },
 
 

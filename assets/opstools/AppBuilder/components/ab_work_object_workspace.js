@@ -1129,7 +1129,10 @@ console.error('TODO: toolbarPermission()');
             loadData: function() {
 
 				// update ABViewDataCollection settings
-				var wheres = {};
+				var wheres = {
+					glue: 'and',
+					rules: []
+				};
 				if (CurrentObject.workspaceFilterConditions && 
 					CurrentObject.workspaceFilterConditions.rules &&
 					CurrentObject.workspaceFilterConditions.rules.length > 0) {
@@ -1151,6 +1154,7 @@ console.error('TODO: toolbarPermission()');
 					}
                 };
 
+				CurrentDc.setFilterConditions(wheres);
 				CurrentDc.clearAll();
 
                 // WORKAROUND: load all data becuase kanban does not support pagination now
