@@ -69,7 +69,6 @@ export default class ABWorkObjectGantt extends OP.Component {
 					ready: function (gantt) {
 
 						_logic.attachEvents();
-						_logic.loadData();
 
 					}
 				},
@@ -155,6 +154,14 @@ export default class ABWorkObjectGantt extends OP.Component {
 
 				CurrentDC = dataCollection;
 
+				if (CurrentDC.dataStatus == CurrentDC.dataStatusFlag.initialized) {
+					_logic.initData();
+				}
+
+				CurrentDC.on('initializedData', () => {
+					_logic.initData();
+				});
+
 				// real-time update
 				CurrentDC.on('create', vals => {
 					_logic.updateTaskItem(vals, true);
@@ -191,6 +198,25 @@ export default class ABWorkObjectGantt extends OP.Component {
 					return ganttView;
 				else
 					return null;
+
+			},
+
+			initData: () => {
+
+				let gantt = $$(ids.gantt).getGantt();
+				if (!gantt) return;
+
+				gantt.clearAll();
+
+				let gantt_data = {
+					data: (CurrentDC.getData() || [])
+						.map((d, index) => _logic.convertFormat(gantt, d, index))
+						.filter(d => d['start_date'] && d['duration']) // required fields
+				};
+
+				gantt.parse(gantt_data);
+
+				_logic.sort();
 
 			},
 
@@ -248,79 +274,6 @@ export default class ABWorkObjectGantt extends OP.Component {
 					});
 				}
 
-
-			},
-
-			loadData: () => {
-
-				let gantt = $$(ids.gantt).getGantt();
-
-				gantt.clearAll();
-
-				if (!CurrentGanttView || !CurrentStartDateField || !CurrentDurationField)
-					return;
-
-				_logic.busy();
-
-				// Set the Model object with a condition / skip / limit, then
-				// use it to load the DataTable:
-				//// NOTE: this should take advantage of Webix dynamic data loading on
-				//// larger data sets.
-				var wheres = { glue: "and", rules: [] };
-				if (CurrentObject.workspaceFilterConditions &&
-					CurrentObject.workspaceFilterConditions.rules &&
-					CurrentObject.workspaceFilterConditions.rules.length > 0) {
-					wheres = _.cloneDeep(CurrentObject.workspaceFilterConditions);
-				}
-
-				var sorts = [];
-				if (CurrentObject.workspaceSortFields &&
-					CurrentObject.workspaceSortFields.length > 0) {
-					sorts = CurrentObject.workspaceSortFields;
-				}
-
-				// Start date should have data
-				wheres.rules.push({
-					key: CurrentStartDateField.id,
-					rule: "greater",
-					value: new Date(-8640000000000000) // minimal date
-				});
-
-				// Duration should more than 0
-				wheres.rules.push({
-					key: CurrentDurationField.id,
-					rule: "greater",
-					value: 0
-				});
-
-				if (sorts.length < 1) {
-					sorts.push({
-						key: CurrentStartDateField.id,
-						dir: 'asc'
-					});
-				}
-
-				// WORKAROUND: load all data for now
-				CurrentObject.model()
-					.findAll({
-						where: wheres,
-						sort: sorts,
-					})
-					.then((data) => {
-
-						let gantt_data = {
-							data: (data.data || []).map((d, index) => {
-
-								return _logic.convertFormat(gantt, d, index);
-
-							})
-						}
-
-						gantt.parse(gantt_data);
-
-						_logic.ready();
-
-					});
 
 			},
 
@@ -464,6 +417,8 @@ export default class ABWorkObjectGantt extends OP.Component {
 
 				}
 
+				_logic.sort();
+
 			},
 
 
@@ -502,6 +457,19 @@ export default class ABWorkObjectGantt extends OP.Component {
 					}
 				});
 
+			},
+
+			sort: () => {
+
+				if (CurrentObject.workspaceSortFields &&
+					CurrentObject.workspaceSortFields.length > 0)
+					return;
+
+				let gantt = $$(ids.gantt).getGantt();
+				if (!gantt) return;
+
+				// default sort
+				gantt.sort("start_date", false);
 			}
 
 
@@ -516,7 +484,6 @@ export default class ABWorkObjectGantt extends OP.Component {
 		this.objectLoad = _logic.objectLoad;
 		this.dataCollectionLoad = _logic.dataCollectionLoad;
 		this.addTask = _logic.addTask;
-		this.refresh = _logic.loadData;
 
 	}
 

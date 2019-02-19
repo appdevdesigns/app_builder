@@ -1838,14 +1838,6 @@ export default class ABViewDataCollection extends ABView {
 	
 						});
 
-
-						// mark initialized data
-						if (this._dataStatus != this.dataStatusFlag.initialized) {
-							this._dataStatus = this.dataStatusFlag.initialized;
-							this.emit("initializedData", {});
-						}
-
-
 						// populate data to webix's data collection and the loading cursor is hidden here
 						this.__dataCollection.parse(data);
 	
@@ -1862,6 +1854,12 @@ export default class ABViewDataCollection extends ABView {
 							// set static cursor
 							this.setStaticCursor();
 	
+						}
+
+						// mark initialized data
+						if (this._dataStatus != this.dataStatusFlag.initialized) {
+							this._dataStatus = this.dataStatusFlag.initialized;
+							this.emit("initializedData", {});
 						}
 
 						if (callback)

@@ -543,7 +543,6 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		callbackAddFields:function(field) {
 				DataTable.refreshHeader();
 				_logic.loadData();
-    			// DataTable.refresh();
     		},
 
 
@@ -566,9 +565,6 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                 _logic.getBadgeFilters();
 				// this will be handled by the server side request now
 				_logic.loadData();
-                // KanBan.refresh();
-                Gantt.refresh();
-                // DataTable.refresh();
     		},
 
     		/**
@@ -580,7 +576,6 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                 // We need to load data first because there isn't anything to look at if we don't
 				DataTable.refreshHeader();
 				_logic.loadData();
-                // DataTable.refresh();
 
                 _logic.getBadgeFrozenColumn();
     		},
@@ -685,7 +680,6 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     								.then(()=>{
 										DataTable.refreshHeader();
 										_logic.loadData();
-    									// DataTable.refresh();
                                         
                                         // recursive fn to remove any form/detail fields related to this field
                                         function checkPages(list, cb) {
@@ -731,7 +725,6 @@ export default class ABWorkObjectWorkspace extends OP.Component {
             callbackMassUpdate: function() {
 				// _logic.getBadgeSortFields();
 				_logic.loadData();
-                // DataTable.refresh();
             },
 
     		/**
@@ -743,8 +736,6 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                 _logic.getBadgeSortFields();
                 DataTable.refreshHeader();
 				_logic.loadData();
-                // KanBan.refresh();
-                Gantt.refresh();
             },
             
             /**
@@ -756,7 +747,6 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                 _logic.switchWorkspaceView(view);
 				DataTable.refreshHeader();
 				_logic.loadData();
-                // DataTable.refresh();
     		},
             
             
@@ -1159,7 +1149,7 @@ console.error('TODO: toolbarPermission()');
 
                 // WORKAROUND: load all data becuase kanban does not support pagination now
                 let view = CurrentObject.workspaceViews.getCurrentView();
-                if (view.type === 'kanban') {
+                if (view.type === 'gantt' || view.type === 'kanban') {
                     CurrentDc.settings.loadAll = true;
                     CurrentDc.loadData(0);
                 }
