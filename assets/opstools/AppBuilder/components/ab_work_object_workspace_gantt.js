@@ -159,17 +159,36 @@ export default class ABWorkObjectGantt extends OP.Component {
 				}
 
 				CurrentDC.on('initializedData', () => {
+
+					if (CurrentObject.currentView().type != "gantt")
+						return;
+
 					_logic.initData();
+
 				});
 
 				// real-time update
 				CurrentDC.on('create', vals => {
+
+					if (CurrentObject.currentView().type != "gantt")
+						return;
+
 					_logic.updateTaskItem(vals, true);
+
 				});
+
 				CurrentDC.on('update', vals => {
+
+					if (CurrentObject.currentView().type != "gantt")
+						return;
+
 					_logic.updateTaskItem(vals, true);
+
 				});
 				CurrentDC.on('delete', taskId => {
+
+					if (CurrentObject.currentView().type != "gantt")
+						return;
 
 					// remove this task in gantt
 					let gantt = $$(ids.gantt).getGantt();
