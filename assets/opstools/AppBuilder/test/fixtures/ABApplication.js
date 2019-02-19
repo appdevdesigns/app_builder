@@ -170,6 +170,26 @@ let jsonApp = {
 								"label": "Number"
 							}
 						]
+					},
+					{
+						"id": "dfa0e438-8bc6-47dc-bbc6-7a95f4c9b30c",
+						"key": "date",
+						"icon": "calendar",
+						"columnName": "Date",
+						"settings": {
+							"validateCondition": "none",
+							"validateRangeUnit": "days",
+							"validateRangeBefore": "0",
+							"validateRangeAfter": "0",
+							"validateStartDate": "null",
+							"validateEndDate": "null"
+						},
+						"translations": [
+							{
+								"language_code": "en",
+								"label": "Date"
+							}
+						]
 					}
 				]
 			}

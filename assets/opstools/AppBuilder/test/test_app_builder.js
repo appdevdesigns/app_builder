@@ -15,8 +15,10 @@ import './classes/RowFilter'
 
 // Import data field test cases
 import './classes/dataFields/ABFieldBoolean'
+import './classes/dataFields/ABFieldCalculate'
 import './classes/dataFields/ABFieldConnect'
 import './classes/dataFields/ABFieldDate'
+import './classes/dataFields/ABFieldEmail'
 import './classes/dataFields/ABFieldList'
 import './classes/dataFields/ABFieldNumber'
 import './classes/dataFields/ABFieldSelectivity'

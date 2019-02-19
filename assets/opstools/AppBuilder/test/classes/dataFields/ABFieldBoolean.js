@@ -68,6 +68,7 @@ describe("ABFieldBoolean unit tests", () => {
 			assert.equal('check-square-o', defaultValues.icon);
 			assert.equal(menuName, defaultValues.menuName);
 			assert.equal(description, defaultValues.description);
+			assert.isTrue(defaultValues.supportRequire);
 		});
 
 		it('.columnHeader: should return valid column config', () => {
@@ -111,7 +112,7 @@ describe("ABFieldBoolean unit tests", () => {
 			assert.equal(`<div class="ab-boolean-display">${common.checkbox()}</div>`, result);
 		});
 
-		it('.columnHeader: template() should return read-only checkbox when value is false', () => {
+		it('.columnHeader: template() should return read-only uncheck checkbox when value is false', () => {
 			let isEditable = false;
 			var columnConfig = target.columnHeader(null, null, isEditable);
 
@@ -126,7 +127,7 @@ describe("ABFieldBoolean unit tests", () => {
 			assert.equal("<div class='webix_icon fa-square-o'></div>", result);
 		});
 
-		it('.columnHeader: template() should return read-only checkbox when value is true', () => {
+		it('.columnHeader: template() should return read-only checked checkbox when value is true', () => {
 			let isEditable = false;
 			var columnConfig = target.columnHeader(null, null, isEditable);
 
@@ -163,6 +164,42 @@ describe("ABFieldBoolean unit tests", () => {
 
 			assert.isDefined(rowData[columnName]);
 			assert.isTrue(rowData[columnName] == 0);
+		});
+
+		it('.formComponent: should return form component { common, newInstance }', () => {
+
+			assert.isDefined(target.formComponent);
+			assert.isFunction(target.formComponent);
+
+			let result = target.formComponent();
+
+			// common property
+			assert.isDefined(result.common);
+			assert.isFunction(result.common);
+			assert.equal('checkbox', result.common().key);
+
+			// newInstance property
+			assert.isDefined(result.newInstance);
+			assert.isFunction(result.newInstance);
+
+		});
+
+		it('.detailComponent: should return detail component { common, newInstance }', () => {
+
+			assert.isDefined(target.detailComponent);
+			assert.isFunction(target.detailComponent);
+
+			let result = target.detailComponent();
+
+			// common property
+			assert.isDefined(result.common);
+			assert.isFunction(result.common);
+			assert.equal('detailcheckbox', result.common().key);
+
+			// newInstance property
+			assert.isDefined(result.newInstance);
+			assert.isFunction(result.newInstance);
+
 		});
 
 	});
