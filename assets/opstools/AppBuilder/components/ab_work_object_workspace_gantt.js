@@ -447,13 +447,15 @@ export default class ABWorkObjectGantt extends OP.Component {
 						task[key] = updatedTask[key];
 					}
 
-					if (data['start_date'] && data['duration']) // these fields are required when update
+					if (data['start_date'] && data['duration']) // these fields are required
 						gantt.updateTask(data.id);
 				}
 				// insert
 				else {
 					let newTask = _logic.convertFormat(gantt, data);
-					gantt.addTask(newTask);
+
+					if (newTask['start_date'] && newTask['duration']) // these fields are required
+						gantt.addTask(newTask);
 
 					if (!ignoreSelect) {
 						gantt.selectTask(data.id);
