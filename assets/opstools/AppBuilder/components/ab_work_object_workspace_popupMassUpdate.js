@@ -120,7 +120,8 @@ export default class AB_Work_Object_Workspace_PopupMassUpdate extends OP.Compone
 								                CurrentObject.model()
 								                .update(rowData.id, rowData)
 								                .then(()=>{
-								                    DataTable.refresh(); // We need this in the object builder
+													// DataTable.refresh(); // We need this in the object builder
+													// We use DataCollection instead
 													next();
 								                }, next);
 											

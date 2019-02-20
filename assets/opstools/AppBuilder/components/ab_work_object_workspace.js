@@ -448,13 +448,14 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                 onColumnOrderChange:_logic.callbackColumnOrderChange,
                 onCheckboxChecked:_logic.callbackCheckboxChecked
 			});
+			KanBan.init();
+			Gantt.init();
 
 			CurrentDc.init();
-			CurrentDc.bind($$(DataTable.ui.id));
 
-
-            KanBan.init();
-            Gantt.init();
+			DataTable.dataCollectionLoad(CurrentDc);
+			KanBan.dataCollectionLoad(CurrentDc);
+			Gantt.dataCollectionLoad(CurrentDc);
 
 
     		PopupDefineLabelComponent.init({
@@ -542,7 +543,6 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		callbackAddFields:function(field) {
 				DataTable.refreshHeader();
 				_logic.loadData();
-    			// DataTable.refresh();
     		},
 
 
@@ -565,9 +565,6 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                 _logic.getBadgeFilters();
 				// this will be handled by the server side request now
 				_logic.loadData();
-                KanBan.refresh();
-                Gantt.refresh();
-                // DataTable.refresh();
     		},
 
     		/**
@@ -579,7 +576,6 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                 // We need to load data first because there isn't anything to look at if we don't
 				DataTable.refreshHeader();
 				_logic.loadData();
-                // DataTable.refresh();
 
                 _logic.getBadgeFrozenColumn();
     		},
@@ -684,7 +680,6 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     								.then(()=>{
 										DataTable.refreshHeader();
 										_logic.loadData();
-    									// DataTable.refresh();
                                         
                                         // recursive fn to remove any form/detail fields related to this field
                                         function checkPages(list, cb) {
@@ -730,7 +725,6 @@ export default class ABWorkObjectWorkspace extends OP.Component {
             callbackMassUpdate: function() {
 				// _logic.getBadgeSortFields();
 				_logic.loadData();
-                // DataTable.refresh();
             },
 
     		/**
@@ -742,8 +736,6 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                 _logic.getBadgeSortFields();
                 DataTable.refreshHeader();
 				_logic.loadData();
-                KanBan.refresh();
-                Gantt.refresh();
             },
             
             /**
@@ -755,7 +747,6 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                 _logic.switchWorkspaceView(view);
 				DataTable.refreshHeader();
 				_logic.loadData();
-                // DataTable.refresh();
     		},
             
             
@@ -1128,7 +1119,10 @@ console.error('TODO: toolbarPermission()');
             loadData: function() {
 
 				// update ABViewDataCollection settings
-				var wheres = {};
+				var wheres = {
+					glue: 'and',
+					rules: []
+				};
 				if (CurrentObject.workspaceFilterConditions && 
 					CurrentObject.workspaceFilterConditions.rules &&
 					CurrentObject.workspaceFilterConditions.rules.length > 0) {
@@ -1148,9 +1142,20 @@ console.error('TODO: toolbarPermission()');
 						filterConditions: wheres,
 						sortFields: sorts
 					}
-				};
+                };
+
+				CurrentDc.setFilterConditions(wheres);
 				CurrentDc.clearAll();
-				CurrentDc.loadData(0, 30);
+
+                // WORKAROUND: load all data becuase kanban does not support pagination now
+                let view = CurrentObject.workspaceViews.getCurrentView();
+                if (view.type === 'gantt' || view.type === 'kanban') {
+                    CurrentDc.settings.loadAll = true;
+                    CurrentDc.loadData(0);
+                }
+                else {
+                    CurrentDc.loadData(0, 30);
+                }
 
 			},
 

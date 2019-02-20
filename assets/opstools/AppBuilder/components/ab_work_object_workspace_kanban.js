@@ -45,6 +45,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 		let FormSide = new AB_Work_Form(App, idBase + '_kanban_form');
 
 		var CurrentObject = null;	// current ABObject being displayed
+		var CurrentDC = null;
 		var CurrentVerticalField = null;
 		var CurrentHorizontalField = null;
 		var CurrentOwnerField = null;
@@ -356,8 +357,6 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 							}
 
-							_logic.loadData();
-
 
 							next();
 
@@ -388,54 +387,22 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 			},
 
-			loadData: function () {
+			/**
+			 * @method dataCollectionLoad
+			 * 
+			 * @param dataCollection {ABViewDataCollection}
+			 */
+			dataCollectionLoad: (dataCollection) => {
 
-				if (!CurrentObject || !CurrentVerticalField)
-					return;
+				CurrentDC = dataCollection;
 
-				$$(ids.kanban).clearAll();
-
-				// Show loading cursor
-				_logic.busy();
-
-				// Set the Model object with a condition / skip / limit, then
-				// use it to load the DataTable:
-				//// NOTE: this should take advantage of Webix dynamic data loading on
-				//// larger data sets.
-				var wheres = {};
-				if (CurrentObject.workspaceFilterConditions &&
-					CurrentObject.workspaceFilterConditions.rules &&
-					CurrentObject.workspaceFilterConditions.rules.length > 0) {
-					wheres = CurrentObject.workspaceFilterConditions;
-				}
-
-				var sorts = {};
-				if (CurrentObject.workspaceSortFields &&
-					CurrentObject.workspaceSortFields.length > 0) {
-					sorts = CurrentObject.workspaceSortFields;
-				}
-
-				// WORKAROUND: load all data for now
-				CurrentObject.model()
-					.findAll({
-						where: wheres,
-						sort: sorts,
-					})
-					.then((data) => {
-
-						// show empty data to "Other" panel
-						if (CurrentHorizontalField) {
-							(data.data || []).forEach(d => {
-								d[CurrentHorizontalField.columnName] = d[CurrentHorizontalField.columnName] || "";
-							})
-						}
-
-						$$(ids.kanban).parse(data.data);
-
-						_logic.ready();
-					});
+				if (CurrentDC)
+					CurrentDC.bind($$(ids.kanban));
+				else
+					$$(ids.kanban).unbind();
 
 			},
+
 
 			updateStatus: function (rowId, status) {
 
@@ -587,8 +554,8 @@ export default class ABWorkObjectKanBan extends OP.Component {
 		this.hide = _logic.hide;
 		this.show = _logic.show;
 		this.objectLoad = _logic.objectLoad;
+		this.dataCollectionLoad = _logic.dataCollectionLoad;
 		this.addCard = _logic.addCard;
-		this.refresh = _logic.loadData;
 
 	}
 

@@ -112,7 +112,7 @@ export default class ABViewDataCollection extends ABView {
 		this.__filterComponent = new RowFilter();
 		this.__filterComponent.objectLoad(this.datasource);
 		this.__filterComponent.viewLoad(this);
-		this.__filterComponent.setValue(this.settings.objectWorkspace.filterConditions || ABViewPropertyDefaults.objectWorkspace.filterConditions);
+		this.setFilterConditions(this.settings.objectWorkspace.filterConditions);
 
 		this.__bindComponentIds = [];
 
@@ -1073,6 +1073,7 @@ export default class ABViewDataCollection extends ABView {
 	
 				if (!this.__dataCollection.exists(values.id)) {
 					this.__dataCollection.add(values, 0);
+					this.emit('create', values);
 					// this.__dataCollection.setCursor(rowData.id);
 				}
 
@@ -1122,8 +1123,10 @@ export default class ABViewDataCollection extends ABView {
 					});
 
 					// If this item needs to update
-					if (Object.keys(updateItemData).length > 0)
+					if (Object.keys(updateItemData).length > 0) {
 						this.__dataCollection.updateItem(d.id, updateItemData);
+						this.emit('update', this.__dataCollection.getItem(d.id));
+					}
 
 				});
 
@@ -1159,6 +1162,7 @@ export default class ABViewDataCollection extends ABView {
 						var model = obj.model();
 						model.normalizeData(values);
 						this.__dataCollection.updateItem(values.id, values);
+						this.emit('update', values);
 
 						// If the update item is current cursor, then should tell components to update.
 						var currData = this.getCursor();
@@ -1172,6 +1176,7 @@ export default class ABViewDataCollection extends ABView {
 							this.emit("changeCursor", null);
 
 						this.__dataCollection.remove(values.id);
+						this.emit('delete', values.id);
 					}
 				}
 				// filter before add new record
@@ -1180,6 +1185,7 @@ export default class ABViewDataCollection extends ABView {
 					// this means the updated record was not loaded yet so we are adding it to the top of the grid
 					// the placemet will probably change on the next load of the data
 					this.__dataCollection.add(values, 0);
+					this.emit('create', values);
 				}
 			}
 
@@ -1254,8 +1260,10 @@ export default class ABViewDataCollection extends ABView {
 					});
 
 					// If this item needs to update
-					if (Object.keys(updateItemData).length > 0)
+					if (Object.keys(updateItemData).length > 0) {
 						this.__dataCollection.updateItem(d.id, updateItemData);
+						this.emit('update', this.__dataCollection.getItem(d.id));
+					}
 
 				});
 
@@ -1316,6 +1324,7 @@ export default class ABViewDataCollection extends ABView {
 								this.emit("changeCursor", null);
 
 							this.__dataCollection.remove(values[PK]);
+							this.emit('delete', values[PK]);
 						}
 					});
 
@@ -1345,6 +1354,7 @@ export default class ABViewDataCollection extends ABView {
 					this.emit("changeCursor", null);
 
 				this.__dataCollection.remove(deleteId);
+				this.emit('delete', deleteId);
 			}
 
 			// if it is a linked object
@@ -1380,8 +1390,10 @@ export default class ABViewDataCollection extends ABView {
 					});
 
 					// If this item needs to update
-					if (Object.keys(updateRelateVals).length > 0)
+					if (Object.keys(updateRelateVals).length > 0) {
 						this.__dataCollection.updateItem(d.id, updateRelateVals);
+						this.emit('update', this.__dataCollection.getItem(d.id));
+					}
 
 				});
 
@@ -1461,7 +1473,8 @@ export default class ABViewDataCollection extends ABView {
 
 		if (component.config.view == 'datatable' ||
 			component.config.view == 'dataview' ||
-			component.config.view == 'treetable') {
+			component.config.view == 'treetable' ||
+			component.config.view == 'kanban') {
 
 			if (dc) {
 
@@ -1657,8 +1670,10 @@ export default class ABViewDataCollection extends ABView {
 	loadData(start, limit, callback) {
 
 		// mark data status is initializing
-		if (this._dataStatus == this.dataStatusFlag.notInitial)
+		if (this._dataStatus == this.dataStatusFlag.notInitial) {
 			this._dataStatus = this.dataStatusFlag.initializing;
+			this.emit("initializingData", {});
+		}
 
 		var obj = this.datasource;
 		if (obj == null) {
@@ -1823,14 +1838,6 @@ export default class ABViewDataCollection extends ABView {
 	
 						});
 
-
-						// mark initialized data
-						if (this._dataStatus != this.dataStatusFlag.initialized) {
-							this._dataStatus = this.dataStatusFlag.initialized;
-							this.emit("initializedData", {});
-						}
-
-
 						// populate data to webix's data collection and the loading cursor is hidden here
 						this.__dataCollection.parse(data);
 	
@@ -1847,6 +1854,12 @@ export default class ABViewDataCollection extends ABView {
 							// set static cursor
 							this.setStaticCursor();
 	
+						}
+
+						// mark initialized data
+						if (this._dataStatus != this.dataStatusFlag.initialized) {
+							this._dataStatus = this.dataStatusFlag.initialized;
+							this.emit("initializedData", {});
 						}
 
 						if (callback)
@@ -2043,6 +2056,12 @@ export default class ABViewDataCollection extends ABView {
 
 	}
 
+	setFilterConditions(filterConditions) {
+
+		if (this.__filterComponent)
+			this.__filterComponent.setValue(filterConditions || ABViewPropertyDefaults.objectWorkspace.filterConditions);
+	}
+
 	hideProgressOfComponents() {
 
 		this.__bindComponentIds.forEach(comId => {
@@ -2082,6 +2101,8 @@ export default class ABViewDataCollection extends ABView {
 	clearAll() {
 		if (this.__dataCollection)
 			this.__dataCollection.clearAll();
+
+		this._dataStatus = this.dataStatusFlag.notInitial;
 	}
 
 
