@@ -159,6 +159,35 @@ describe("ABFieldFile unit tests", () => {
 			assert.equal(expect, result);
 		});
 
+		it('.customDisplay: should initial uploader to div', () => {
+
+			let row = {},
+				node = webix.ui({
+					view: 'template',
+					template: '<div class="ab-file-holder"></div>'
+				});
+
+			target.customDisplay(row, mockApp, node.$view);
+
+			assert.isNotNull(node.$view.querySelector('.file-data-field-icon'));
+			assert.isNotNull(node.$view.querySelector('.file-data-field-name'));
+
+		});
+
+		it('.customEdit: should always return false', () => {
+
+			let row = {},
+				node = webix.ui({
+					view: 'template',
+					template: '<div class="ab-file-holder"></div>'
+				});
+
+			let result = target.customEdit(row, mockApp, node.$view);
+
+			assert.isFalse(result);
+
+		});
+
 		it('.formComponent: should return form component { common, newInstance }', () => {
 
 			assert.isDefined(target.formComponent);
@@ -307,13 +336,82 @@ describe("ABFieldFile unit tests", () => {
 
 			let item = webix.ui({
 				view: 'template',
-				template: `<div class="file-data-field-name" file-uuid="${row[columnName].uuid}"><a href="#">${row[columnName].uuid}</a></div>`
+				template: `<div class="file-data-field-name" file-uuid="${row[columnName].uuid}"><a href="#">${row[columnName].filename}</a></div>`
 			});
 
 			let result = target.getValue(item, row);
 
 			assert.equal(row[columnName].uuid, result.uuid);
 			assert.equal(row[columnName].filename, result.filename);
+
+		});
+
+		it('.setValue: should set valid HTML dom when data is set', () => {
+
+			let row = {};
+			row[columnName] = {
+				uuid: "UUID",
+				filename: "FILENAME"
+			};
+
+			let item = webix.ui({
+				view: 'template',
+				template: '<div>' +
+					'<div class="file-data-field-icon"></div>' + // file icon
+					'<div class="file-data-field-name">' +
+					'	<a></a>' +  // file name
+					'	<div class="ab-delete-photo"></div>' + // remove icon
+					'</div>' +
+					'</div>'
+			});
+
+			target.setValue(item, row);
+
+			let elem = item.$view,
+				fileicon = elem.querySelector('.file-data-field-icon'),
+				fileName = elem.querySelector('.file-data-field-name'),
+				fileDeleteIcon = fileName.querySelector('.ab-delete-photo'),
+				fileLink = fileName.querySelector('a');
+
+			assert.equal('none', fileicon.style.display, 'should not display the file icon');
+			assert.equal('block', fileDeleteIcon.style.display, 'should show remove icon');
+
+			assert.equal('block', fileName.style.display, 'should show file name');
+			assert.equal(row[columnName].uuid, fileName.getAttribute("file-uuid"), 'should match UUID');
+
+			assert.equal(`file:///opsportal/file/${mockObject.application.name}/${row[columnName].uuid}`, fileLink.href);
+			assert.equal(row[columnName].filename, fileLink.innerHTML);
+
+		});
+
+		it('.setValue: should set valid HTML dom when data is empty', () => {
+
+			let row = {};
+
+			let item = webix.ui({
+				view: 'template',
+				template: '<div>' +
+					'<div class="file-data-field-icon"></div>' + // file icon
+					'<div class="file-data-field-name">' +
+					'	<a></a>' +  // file name
+					'	<div class="ab-delete-photo"></div>' + // remove icon
+					'</div>' +
+					'</div>'
+			});
+
+			target.setValue(item, row);
+
+			let elem = item.$view,
+				fileicon = elem.querySelector('.file-data-field-icon'),
+				fileName = elem.querySelector('.file-data-field-name'),
+				fileDeleteIcon = fileName.querySelector('.ab-delete-photo'),
+				fileLink = fileName.querySelector('a');
+
+			assert.equal('block', fileicon.style.display, 'should display the file icon');
+			assert.equal('none', fileDeleteIcon.style.display, 'should not display remove icon');
+
+			assert.equal('none', fileName.style.display, 'should not display file name');
+			assert.isNull(fileName.getAttribute("file-uuid"), 'should be null');
 
 		});
 
