@@ -1049,7 +1049,9 @@ console.error('TODO: toolbarPermission()');
 
 					if ($$(ids.buttonRowNew))
 						$$(ids.buttonRowNew).enable();
-				}
+                }
+
+                CurrentDc.datasource = CurrentObject;
 
                 DataTable.objectLoad(CurrentObject);
                 KanBan.objectLoad(CurrentObject);

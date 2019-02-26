@@ -1,8 +1,14 @@
 import AB from '../../../components/ab'
 import ABFieldDate from "../../../classes/dataFields/ABFieldDate"
 
+import sampleApp from "../../fixtures/ABApplication"
+
 let validFormat = (date) => {
 	return moment(date).format('YYYY-MM-DD HH:mm:ss');
+}
+
+let dateFormat = (date) => {
+	return moment(date).format('YYYY-MM-DD');
 }
 
 describe("ABFieldDate unit tests", () => {
@@ -28,7 +34,7 @@ describe("ABFieldDate unit tests", () => {
 		ab = new AB();
 
 		mockApp = ab._app;
-		mockObject = {};
+		mockObject = sampleApp.objects()[0];
 
 		target = new ABFieldDate({
 			columnName: columnName,
@@ -72,19 +78,11 @@ describe("ABFieldDate unit tests", () => {
 			assert.equal('calendar', defaultValues.icon);
 			assert.equal(menuName, defaultValues.menuName);
 			assert.equal(description, defaultValues.description);
+			assert.isTrue(defaultValues.supportRequire);
+
 		});
 
 		it('.columnHeader: should return date column config', () => {
-			var columnConfig = target.columnHeader();
-
-			assert.equal('datetime', columnConfig.editor, 'should be "date" editor');
-			assert.isUndefined(columnConfig.sort, 'should not define sort in webix datatable');
-			assert.isDefined(columnConfig.format);
-			assert.isDefined(columnConfig.editFormat);
-		});
-
-		it('.columnHeader: should return date/time column config when has includeTime setting', () => {
-			target.settings.includeTime = 1;
 			var columnConfig = target.columnHeader();
 
 			assert.equal('datetime', columnConfig.editor, 'should be "datetime" editor');
@@ -106,6 +104,40 @@ describe("ABFieldDate unit tests", () => {
 			assert.isNotNaN(Date.parse(rowData[columnName]), 'should parse valid date object');
 		});
 
+		it('.defaultValue: should set valid time to data', () => {
+			var rowData = {};
+
+			// set specific date as default
+			target.settings.defaultTime = 3
+			target.settings.defaultTimeValue = new Date(1986, 2, 28, 2, 40);
+
+			// Set default value
+			target.defaultValue(rowData);
+
+			assert.isDefined(rowData[columnName]);
+
+			let dateResult = new Date(rowData[columnName]);
+
+			assert.equal(target.settings.defaultTimeValue.getHours(), dateResult.getHours());
+			assert.equal(target.settings.defaultTimeValue.getMinutes(), dateResult.getMinutes());
+			assert.equal(target.settings.defaultTimeValue.getSeconds(), dateResult.getSeconds());
+			assert.equal(target.settings.defaultTimeValue.getMilliseconds(), dateResult.getMilliseconds());
+		});
+
+
+		it('.defaultValue: should set current time to data', () => {
+			var rowData = {};
+
+			// set setting to current time as default
+			target.settings.defaultTime = 2; // Current Time
+
+			// Set default value
+			target.defaultValue(rowData);
+
+			assert.isDefined(rowData[columnName]);
+			assert.isNotNaN(Date.parse(rowData[columnName]), 'should parse valid date object');
+		});
+
 		it('.defaultValue: should set valid date to data', () => {
 			var rowData = {};
 
@@ -117,8 +149,13 @@ describe("ABFieldDate unit tests", () => {
 			target.defaultValue(rowData);
 
 			assert.isDefined(rowData[columnName]);
-			assert.equal(target.settings.defaultDateValue.toISOString(), rowData[columnName]);
+
+			let expect = dateFormat(target.settings.defaultDateValue),
+				result = dateFormat(rowData[columnName]);
+
+			assert.equal(expect, result);
 		});
+
 
 		it('.isValidData - dateRange: should pass when enter date is in range', () => {
 			let validator = { addError: function () { } };
@@ -141,7 +178,7 @@ describe("ABFieldDate unit tests", () => {
 			// // .isValidDate should convert Date to ISO when valid
 			// assert.equal(currentDate.toISOString(), rowData[columnName]);
 
-			assert.equal(validFormat(currentDate), rowData[columnName]);
+			assert.equal(dateFormat(currentDate), dateFormat(rowData[columnName]));
 
 		});
 
@@ -182,7 +219,7 @@ describe("ABFieldDate unit tests", () => {
 			// // .isValidDate should convert Date to ISO when valid
 			// assert.equal(enterDate.toISOString(), rowData[columnName]);
 
-			assert.equal(validFormat(enterDate), rowData[columnName]);
+			assert.equal(dateFormat(enterDate), dateFormat(rowData[columnName]));
 
 		});
 
@@ -221,7 +258,7 @@ describe("ABFieldDate unit tests", () => {
 			// // .isValidDate should convert Date to ISO when valid
 			// assert.equal(enterDate.toISOString(), rowData[columnName]);
 
-			assert.equal(validFormat(enterDate), rowData[columnName]);
+			assert.equal(dateFormat(enterDate), dateFormat(rowData[columnName]));
 		});
 
 		it('.isValidData - equal: should not pass when enter date does not equal validate date', () => {
@@ -256,7 +293,7 @@ describe("ABFieldDate unit tests", () => {
 			sandbox.assert.notCalled(stubAddError);
 
 			// .isValidDate should convert Date to ISO when valid
-			assert.equal(validFormat(enterDate), rowData[columnName]);
+			assert.equal(dateFormat(enterDate), dateFormat(rowData[columnName]));
 		});
 
 		it('.isValidData - not equal: should not pass when enter date equals validate date', () => {
@@ -291,7 +328,7 @@ describe("ABFieldDate unit tests", () => {
 			sandbox.assert.notCalled(stubAddError);
 
 			// .isValidDate should convert Date to ISO when valid
-			assert.equal(validFormat(enterDate), rowData[columnName]);
+			assert.equal(dateFormat(enterDate), dateFormat(rowData[columnName]));
 		});
 
 		it('.isValidData - greater than: should not pass when enter date does not greater than validate date', () => {
@@ -326,7 +363,7 @@ describe("ABFieldDate unit tests", () => {
 			sandbox.assert.notCalled(stubAddError);
 
 			// .isValidDate should convert Date to ISO when valid
-			assert.equal(validFormat(enterDate), rowData[columnName]);
+			assert.equal(dateFormat(enterDate), dateFormat(rowData[columnName]));
 		});
 
 		it('.isValidData - lower than: should not pass when enter date does not lower than validate date', () => {

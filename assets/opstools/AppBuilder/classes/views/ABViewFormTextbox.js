@@ -171,10 +171,6 @@ export default class ABViewFormTextbox extends ABViewFormField {
 	component(App) {
 
 		var component = super.component(App);
-		var field = this.field();
-
-		webix.codebase = "/js/webix/extras/";
-
 
 		var idBase = this.parentFormUniqueID( 'ABViewFormTextbox_' + this.id + "_f_" );
 		var ids = {
@@ -198,7 +194,8 @@ export default class ABViewFormTextbox extends ABViewFormField {
 				component.ui.css = "ab-rich-text";
 				component.ui.body = {
 					view: 'tinymce-editor',
-					value: ""
+					value: "",
+					cdn: "/js/webix/extras/tinymce"
 				};
 				break;
 		}

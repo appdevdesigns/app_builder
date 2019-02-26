@@ -49,6 +49,12 @@ var defaultValues = {
 	periodFormat: 'none',
 	timeDelimiter: 'colon',
 */
+	dateFormat: 1, // 1 (Ignore date), 2, 3, 4, 5
+	defaultDate: 1, // 1 (None), 2 (Current Date), 3 (Specific Date)
+	defaultDateValue: null, // {Date}
+	timeFormat: 1, // 1 (Ignore time), 2, 3
+	defaultTime: 1, // 1 (None), 2 (Current Time), 3 (Specific Time)
+	defaultTimeValue: null, // {Date}
 	validateCondition: "none",
 	validateRangeUnit: "days",
 	validateRangeBefore: 0,
@@ -1175,21 +1181,46 @@ class ABFieldDate extends ABField {
 		// if no default value is set, then don't insert a value.
 		if (values[this.columnName] == null) {
 
-			// // Set current date as default
-			if (this.settings.defaultDate == 2) {
-				values[this.columnName] = (new Date()).toISOString();
-			}
-			else if (this.settings.defaultDate == 3) {
+			let dateResult;
 
-				if (this.settings.defaultTimeValue && this.settings.defaultDateValue) {
-					var defaultDate = new Date(this.settings.defaultDateValue);
-					var defaultTime =  new Date(this.settings.defaultTimeValue);
-					values[this.columnName] = new Date(defaultDate.getFullYear(), defaultDate.getMonth(), defaultDate.getDate(), defaultTime.getHours(), defaultTime.getMinutes(), defaultTime.getSeconds()).toISOString();
-				}
-				else if (this.settings.defaultDateValue) {
-					values[this.columnName] = (new Date(this.settings.defaultDateValue)).toISOString();
-				}
+			// Set current date as default
+			if (this.settings.defaultDate == 2) {
+				dateResult = new Date();
 			}
+			// Set specific date as default
+			else if (this.settings.defaultDate == 3 && this.settings.defaultDateValue) {
+				dateResult = new Date(this.settings.defaultDateValue);
+			}
+
+			// Set current time as default
+			if (this.settings.defaultTime == 2) {
+
+				let currDate = new Date();
+	
+				if (dateResult == null)
+					dateResult = new Date();
+
+				dateResult.setHours(currDate.getHours());
+				dateResult.setMinutes(currDate.getMinutes());
+				dateResult.setSeconds(currDate.getSeconds());
+				dateResult.setMilliseconds(currDate.getMilliseconds());
+			}
+			// Set specific time as default
+			else if (this.settings.defaultTime == 3 && this.settings.defaultTimeValue) {
+
+				let defaultTime =  new Date(this.settings.defaultTimeValue);
+	
+				if (dateResult == null)
+					dateResult = new Date();
+
+				dateResult.setHours(defaultTime.getHours());
+				dateResult.setMinutes(defaultTime.getMinutes());
+				dateResult.setSeconds(defaultTime.getSeconds());
+				dateResult.setMilliseconds(defaultTime.getMilliseconds());
+			}
+
+			if (dateResult != null)
+				values[this.columnName] = dateResult.toISOString();
 
 		}
 	}

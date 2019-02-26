@@ -294,7 +294,6 @@ class ABFieldString extends ABField {
 			}
 		}
 
-		
 	}
 
 

@@ -15,12 +15,18 @@ import './classes/RowFilter'
 
 // Import data field test cases
 import './classes/dataFields/ABFieldBoolean'
+import './classes/dataFields/ABFieldCalculate'
 import './classes/dataFields/ABFieldConnect'
 import './classes/dataFields/ABFieldDate'
+import './classes/dataFields/ABFieldEmail'
+import './classes/dataFields/ABFieldFile'
+import './classes/dataFields/ABFieldFormula'
+import './classes/dataFields/ABFieldImage'
 import './classes/dataFields/ABFieldList'
+import './classes/dataFields/ABFieldLongText'
 import './classes/dataFields/ABFieldNumber'
 import './classes/dataFields/ABFieldSelectivity'
-import './classes/dataFields/ABFieldLongText'
+import './classes/dataFields/ABFieldString'
 import './classes/dataFields/ABFieldUser'
 
 // import OP test cases

@@ -611,7 +611,7 @@ class ABFieldFile extends ABField {
 			filename: fileLink.innerHTML
 		};
 	}
-	
+
 	setValue(item, rowData) {
 
 		if (!item) return;
