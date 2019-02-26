@@ -23,9 +23,10 @@ import './classes/dataFields/ABFieldFile'
 import './classes/dataFields/ABFieldFormula'
 import './classes/dataFields/ABFieldImage'
 import './classes/dataFields/ABFieldList'
+import './classes/dataFields/ABFieldLongText'
 import './classes/dataFields/ABFieldNumber'
 import './classes/dataFields/ABFieldSelectivity'
-import './classes/dataFields/ABFieldLongText'
+import './classes/dataFields/ABFieldString'
 import './classes/dataFields/ABFieldUser'
 
 // import OP test cases
