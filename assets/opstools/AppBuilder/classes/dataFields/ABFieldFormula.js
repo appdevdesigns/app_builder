@@ -31,9 +31,9 @@ var ABFieldFormulaDefaults = {
 };
 
 var defaultValues = {
-	field: "",			// id of ABField : NOTE - store our connect field to support when there are multi - linked columns
-	objectLink: "",		// id of ABObject
-	fieldLink: "",		// id of ABField
+	field: "",			// id of ABFieldConnect : NOTE - store our connect field to support when there are multi - linked columns
+	object: "",			// id of ABObject
+	fieldLink: "",		// id of ABFieldNumber or ABFieldCalculate
 	type: "sum"		// "sum", "average", "max", "min", "count"
 };
 
@@ -334,27 +334,21 @@ class ABFieldFormula extends ABField {
 		// calculate
 		switch (this.settings.type) {
 			case "sum":
-				numberList.forEach(num => result += num);
+				result = numberList.reduce((sum, val) => sum + (val || 0)); 
 				break;
 
 			case "average":
 				if (numberList.length > 0) {
-					numberList.forEach(num => result += num); // sum
-					result = result / numberList.length;
+					let sum = numberList.reduce((sum, val) => sum + (val || 0)); // sum
+					result = sum / numberList.length;
 				}
 				break;
 
 			case "max":
-				numberList.forEach(num => {
-					if (result < num)
-						result = num;
-				});
+				result = Math.max(...numberList) || 0;
 				break;
 			case "min":
-				numberList.forEach(num => {
-					if (result > num)
-						result = num;
-				});
+				result = Math.min(...numberList) || 0;
 				break;
 			case "count":
 				result = numberList.length;
@@ -364,7 +358,15 @@ class ABFieldFormula extends ABField {
 		var rowDataFormat = {};
 		rowDataFormat[fieldLink.columnName] = result;
 
-		return fieldLink.format(rowDataFormat);
+
+		// ABFieldCalculate does not need to .format again
+		if (fieldLink.key == "calculate") {
+			return result;
+		}
+		else {
+			return fieldLink.format(rowDataFormat);
+		}
+
 
 	}
 

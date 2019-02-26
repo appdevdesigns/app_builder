@@ -1,8 +1,7 @@
 import AB from '../../../components/ab'
-import ABFieldEmail from "../../../classes/dataFields/ABFieldFile"
+import ABFieldFile from '../../../classes/dataFields/ABFieldFile';
 
 import sampleApp from "../../fixtures/ABApplication"
-import ABFieldFile from '../../../classes/dataFields/ABFieldFile';
 
 describe("ABFieldFile unit tests", () => {
 
@@ -29,12 +28,12 @@ describe("ABFieldFile unit tests", () => {
 		mockApp = ab._app;
 		mockObject = sampleApp.objects()[0];
 
-		target = new ABFieldEmail({
+		target = new ABFieldFile({
 			columnName: columnName,
 			settings: {}
 		}, mockObject);
 
-		targetComponent = ABFieldEmail.propertiesComponent(mockApp);
+		targetComponent = ABFieldFile.propertiesComponent(mockApp);
 
 		// render edit component
 		targetComponent.ui.container = "ab_test_div";
