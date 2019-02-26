@@ -510,16 +510,23 @@ export default class ABViewChart extends ABViewContainer  {
 			var sumNumber2 = 0;
 			var countNumber = dInfo.length; 
 
-			if(valueCol.key == "formula") {
-				var obj = this.application.objects(obj => obj.id == valueCol.object.id)[0];
-				var objLink = this.application.objects(obj => obj.id == valueCol.settings.object)[0];
-				var fieldBase = obj.fields(f => f.id == valueCol.settings.field)[0];
-				var fieldLink = objLink.fields(f => f.id == valueCol.settings.fieldLink)[0];
-			}
+			switch(valueCol.key) {
+				case "formula": {
+					var obj = this.application.objects(obj => obj.id == valueCol.object.id)[0];
+					var objLink = this.application.objects(obj => obj.id == valueCol.settings.object)[0];
+					var fieldBase = obj.fields(f => f.id == valueCol.settings.field)[0];
+					var fieldLink = objLink.fields(f => f.id == valueCol.settings.fieldLink)[0];
+				}
+					break;
 
-			if(valueCol.key == "calculate") {
-				var obj = this.application.objects(obj => obj.id == valueCol.object.id)[0];
-				var place = valueCol.settings.decimalPlaces;
+				case "calculate": {
+					var obj = this.application.objects(obj => obj.id == valueCol.object.id)[0];
+					var place = valueCol.settings.decimalPlaces;
+				}
+					break;
+					
+				default:
+					break;
 			}
 			
 			dInfo.forEach((item) => {
@@ -529,102 +536,108 @@ export default class ABViewChart extends ABViewContainer  {
 					var numberVal2 = parseFloat(item[numberColName2]) || 0;
 				}
 				
-				//Formula Datatype
-				if(valueCol.key == "formula") {
-					var data = item[fieldBase.relationName()];
-					if (!Array.isArray(data)) {
-						data = [data];
+				switch(valueCol.key) {
+					//Formula Datatype
+					case "formula" : {
+						var data = item[fieldBase.relationName()];
+						if (!Array.isArray(data)) {
+							data = [data];
+						}
+						var numberList = [];
+
+						// pull number from data
+						switch (fieldLink.key) {
+							case "calculate":
+								data.forEach(d => {
+									numberList.push(parseFloat(fieldLink.format(d) || 0));
+								});
+								break;
+							case "number":
+								numberList = data.map(d => d[fieldLink.columnName] || 0);
+								break;
+						}
+
+						var result = 0;
+
+						// calculate
+						switch (valueCol.settings.type) {
+							case "sum":
+								numberList.forEach(num => result += num);
+								break;
+							case "average":
+								if (numberList.length > 0) {
+									numberList.forEach(num => result += num); // sum
+									result = result / numberList.length;
+								}
+								break;
+							case "max":
+								numberList.forEach(num => {
+									if (result < num)
+										result = num;
+								});
+								break;
+							case "min":
+								numberList.forEach(num => {
+									if (result > num)
+										result = num;
+								});
+								break;
+							case "count":
+								result = numberList.length;
+								break;
+						}
+						numberVal = result;
 					}
-					var numberList = [];
+						break;
 
-					// pull number from data
-					switch (fieldLink.key) {
-						case "calculate":
-							data.forEach(d => {
-								numberList.push(parseFloat(fieldLink.format(d) || 0));
-							});
-							break;
-						case "number":
-							numberList = data.map(d => d[fieldLink.columnName] || 0);
-							break;
-					}
+					//Calcualte Datatype
+					case "calculate": {
+						var formula = valueCol.settings.formula;
+						// replace with current date
+						formula = formula.replace(/\(CURRENT\)/g, "(new Date())");
 
-					var result = 0;
+						obj.fields().forEach(f => {
 
-					// calculate
-					switch (valueCol.settings.type) {
-						case "sum":
-							numberList.forEach(num => result += num);
-							break;
-						case "average":
-							if (numberList.length > 0) {
-								numberList.forEach(num => result += num); // sum
-								result = result / numberList.length;
+							var colName = f.columnName;
+							if (colName.indexOf('.') > -1) // QUERY: get only column name
+								colName = colName.split('.')[1];
+
+							// if template does not contain, then should skip
+							if (formula.indexOf('{' + colName + '}') < 0)
+								return;
+
+							// number fields
+							if (f.key == 'number') {
+								let numberVal = "(#numberVal#)".replace("#numberVal#", item[f.columnName] || 0); // (number) - NOTE : (-5) to support negative number
+								formula = formula.replace(new RegExp('{' + colName + '}', 'g'), numberVal);
 							}
-							break;
-						case "max":
-							numberList.forEach(num => {
-								if (result < num)
-									result = num;
-							});
-							break;
-						case "min":
-							numberList.forEach(num => {
-								if (result > num)
-									result = num;
-							});
-							break;
-						case "count":
-							result = numberList.length;
-							break;
+							// calculate and formula fields
+							else if (f.key == 'calculate' || f.key == "formula") {
+								let calVal = "(#calVal#)".replace("#calVal#", f.format(item) || 0);
+								formula = formula.replace(new RegExp('{' + colName + '}', 'g'), calVal);
+							}
+							// date fields
+							else if (f.key == 'date') {
+								let dateVal = '"#dataVal#"'.replace("#dataVal#", item[f.columnName] ? item[f.columnName] : ""); // "date"
+								formula = formula.replace(new RegExp('{' + colName + '}', 'g'), dateVal);
+							}
+							// boolean fields
+							else if (f.key == 'boolean') {
+								let booleanVal = "(#booleanVal#)".replace("#booleanVal#", item[f.columnName] || 0); // show 1 or 0 for boolean
+								formula = formula.replace(new RegExp('{' + colName + '}', 'g'), booleanVal);
+							}
+						});
+
+						// decimal places - toFixed()
+						// FIX: floating number calculation 
+						// https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/
+						numberVal = parseFloat(eval(formula).toFixed(place || 0));
 					}
-					numberVal = result;
+						break;
+
+					default:
+						break;
 				}
-
-				//Calcualte Datatype
-				if(valueCol.key == "calculate"){
-					var formula = valueCol.settings.formula;
-					// replace with current date
-					formula = formula.replace(/\(CURRENT\)/g, "(new Date())");
-
-					obj.fields().forEach(f => {
-
-						var colName = f.columnName;
-						if (colName.indexOf('.') > -1) // QUERY: get only column name
-							colName = colName.split('.')[1];
-
-						// if template does not contain, then should skip
-						if (formula.indexOf('{' + colName + '}') < 0)
-							return;
-
-						// number fields
-						if (f.key == 'number') {
-							let numberVal = "(#numberVal#)".replace("#numberVal#", item[f.columnName] || 0); // (number) - NOTE : (-5) to support negative number
-							formula = formula.replace(new RegExp('{' + colName + '}', 'g'), numberVal);
-						}
-						// calculate and formula fields
-						else if (f.key == 'calculate' || f.key == "formula") {
-							let calVal = "(#calVal#)".replace("#calVal#", f.format(item) || 0);
-							formula = formula.replace(new RegExp('{' + colName + '}', 'g'), calVal);
-						}
-						// date fields
-						else if (f.key == 'date') {
-							let dateVal = '"#dataVal#"'.replace("#dataVal#", item[f.columnName] ? item[f.columnName] : ""); // "date"
-							formula = formula.replace(new RegExp('{' + colName + '}', 'g'), dateVal);
-						}
-						// boolean fields
-						else if (f.key == 'boolean') {
-							let booleanVal = "(#booleanVal#)".replace("#booleanVal#", item[f.columnName] || 0); // show 1 or 0 for boolean
-							formula = formula.replace(new RegExp('{' + colName + '}', 'g'), booleanVal);
-						}
-					});
-
-					// decimal places - toFixed()
-					// FIX: floating number calculation 
-					// https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/
-					numberVal = parseFloat(eval(formula).toFixed(place || 0));
-				}
-
 				if (sumData[labelKey] == null) {
 
 					var label = labelKey;
