@@ -973,6 +973,18 @@ export default class ABViewDataCollection extends ABView {
 		return obj;
 	}
 
+	/**
+	 * @property datasource
+	 * set a object to data collection
+	 * 
+	 * @param {ABObject} object
+	 */
+	set datasource(object) {
+
+		this.settings.objectUrl = object.urlPointer();
+
+		this.__filterComponent.objectLoad(this.datasource);
+	}
 
 	/**
 	* @property sourceType
