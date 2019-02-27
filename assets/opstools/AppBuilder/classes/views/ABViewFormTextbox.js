@@ -172,7 +172,7 @@ export default class ABViewFormTextbox extends ABViewFormField {
 
 		var component = super.component(App);
 
-		var idBase = this.parentFormUniqueID( 'ABViewFormTextbox_' + this.id + "_f_" );
+		var idBase = this.parentFormUniqueID('ABViewFormTextbox_' + this.id + "_f_");
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		}
@@ -195,7 +195,12 @@ export default class ABViewFormTextbox extends ABViewFormField {
 				component.ui.body = {
 					view: 'tinymce-editor',
 					value: "",
-					cdn: "/js/webix/extras/tinymce"
+					cdn: "/js/webix/extras/tinymce",
+					config: {
+						plugins: "link",
+						menubar: "format edit",
+						toolbar: "undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | fontsizeselect | link"
+					}
 				};
 				break;
 		}
@@ -209,8 +214,8 @@ export default class ABViewFormTextbox extends ABViewFormField {
 				this.settings.type == 'rich' &&
 				$$(component.ui.id)) {
 
-					// recreate rich editor
-					webix.ui(component.ui, $$(component.ui.id));
+				// recreate rich editor
+				webix.ui(component.ui, $$(component.ui.id));
 
 			}
 		}
