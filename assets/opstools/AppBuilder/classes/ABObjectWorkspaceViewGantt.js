@@ -323,7 +323,7 @@ export default class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView {
 					let $duration = $$(ids.duration);
 					if (!$duration) return;
 
-					if (val == "none") {
+					if (!val || val == "none") {
 						$duration.enable();
 					}
 					else {
@@ -337,7 +337,7 @@ export default class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView {
 					let $endDate = $$(ids.endDate);
 					if (!$endDate) return;
 
-					if (val == "none") {
+					if (!val || val == "none") {
 						$endDate.enable();
 					}
 					else {
