@@ -116,7 +116,7 @@ function MONTH(dateString) {
 	return dataDate.getMonth() + 1;
 }
 
-function DATE(dateString) {
+function DAY(dateString) {
 
 	// validate
 	if (!dateString) return 0
@@ -124,6 +124,20 @@ function DATE(dateString) {
 	if (!dataDate) return 0
 
 	return dataDate.getDate();
+}
+
+function DATE(dateString) {
+
+	// validate
+	if (!dateString) return 0
+	let dataDate = new Date(dateString);
+	if (!dataDate) return 0
+
+	// number of miliseconds in one day
+	let oneDay = 86400000; // 1000 * 60 * 60 * 24
+
+	// Convert back to days and return
+	return Math.round(dataDate.getTime() / oneDay);
 }
 
 var ABFieldCalculateDefaults = {
@@ -418,7 +432,12 @@ var ABFieldCalculateComponent = new ABFieldComponent({
 				});
 
 				options.push({
-					label: "Date of [Current date]",
+					label: "Day of [Current date]",
+					function: "DAY(CURRENT)"
+				});
+
+				options.push({
+					label: "Get days of [Current date] (since January 1, 1970)",
 					function: "DATE(CURRENT)"
 				});
 
@@ -441,7 +460,12 @@ var ABFieldCalculateComponent = new ABFieldComponent({
 					});
 
 					options.push({
-						label: "Date of [" + f.label + "]",
+						label: "Day of [" + f.label + "]",
+						function: "DAY({#column#})".replace("#column#", f.columnName)
+					});
+
+					options.push({
+						label: `Get days of [${f.label}] (since January 1, 1970)`,
 						function: "DATE({#column#})".replace("#column#", f.columnName)
 					});
 
