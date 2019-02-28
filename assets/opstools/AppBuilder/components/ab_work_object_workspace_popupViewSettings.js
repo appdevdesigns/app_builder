@@ -248,33 +248,45 @@ export default class AB_Work_Object_Workspace_PopupAddView extends OP.Component 
             },
 
             buttonSave: function() {
-                if ($$(ids.form).validate()) {
+                if (!$$(ids.form).validate())
+                    return;
 
-                    var view = {};
+                var view = {};
 
-                    switch($$(ids.typeInput).getValue()) {
-                        case ABObjectWorkspaceViewKanban.type():
-                            view = comKanban.values();
-                            break;
-                        case ABObjectWorkspaceViewGantt.type():
-                            view = comGantt.values();
-                            break;
-                    }
+                switch($$(ids.typeInput).getValue()) {
+                    case ABObjectWorkspaceViewKanban.type():
 
-                    // save the new/updated view
-                    view.name = $$(ids.nameInput).getValue();
-                    view.type = $$(ids.typeInput).getValue();
+                        // validate
+                        if (comKanban.validate && !comKanban.validate($$(ids.form)))
+                            return;
 
-                    if (_view) {
-						var viewObj = _object.workspaceViews.updateView(_view, view);
-                        this.callbacks.onViewUpdated(viewObj);
-                    } 
-                    else {
-						var viewObj = _object.workspaceViews.addView(view);
-                        this.callbacks.onViewAdded(viewObj);
-                    }
-                    this.hide();
+                        view = comKanban.values();
+                        break;
+
+                    case ABObjectWorkspaceViewGantt.type():
+
+                        // validate
+                        if (comGantt.validate && !comGantt.validate($$(ids.form)))
+                            return;
+
+                        view = comGantt.values($$(ids.form));
+                        break;
                 }
+
+                // save the new/updated view
+                view.name = $$(ids.nameInput).getValue();
+                view.type = $$(ids.typeInput).getValue();
+
+                if (_view) {
+                    var viewObj = _object.workspaceViews.updateView(_view, view);
+                    this.callbacks.onViewUpdated(viewObj);
+                } 
+                else {
+                    var viewObj = _object.workspaceViews.addView(view);
+                    this.callbacks.onViewAdded(viewObj);
+                }
+                this.hide();
+
             }
         });
 

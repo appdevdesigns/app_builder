@@ -40,6 +40,7 @@ export default class ABWorkObjectGantt extends OP.Component {
 			CurrentDC = null,
 			CurrentGanttView = null,
 			CurrentStartDateField = null,
+			CurrentEndDateField = null,
 			CurrentDurationField = null,
 			CurrentProgressField = null;
 
@@ -123,11 +124,12 @@ export default class ABWorkObjectGantt extends OP.Component {
 				if (!CurrentGanttView) return;
 
 				// Fields
-				CurrentStartDateField = CurrentGanttView.getStartDateField();
-				CurrentDurationField = CurrentGanttView.getDurationField();
-				CurrentProgressField = CurrentGanttView.getProgressField();
+				CurrentStartDateField = CurrentGanttView.startDateField;
+				CurrentEndDateField = CurrentGanttView.endDateField;
+				CurrentDurationField = CurrentGanttView.durationField;
+				CurrentProgressField = CurrentGanttView.progressField;
 
-				if (!CurrentObject || !CurrentGanttView || !CurrentStartDateField || !CurrentDurationField)
+				if (!CurrentObject || !CurrentGanttView || !CurrentStartDateField || (!CurrentEndDateField && !CurrentDurationField))
 					return;
 
 				// rebuild
@@ -230,7 +232,7 @@ export default class ABWorkObjectGantt extends OP.Component {
 				let gantt_data = {
 					data: (CurrentDC.getData() || [])
 						.map((d, index) => _logic.convertFormat(gantt, d, index))
-						.filter(d => d['start_date'] && d['duration']) // required fields
+						.filter(d => d['start_date'] && (d['end_date'] || d['duration'])) // required fields
 				};
 
 				gantt.parse(gantt_data);
@@ -300,18 +302,28 @@ export default class ABWorkObjectGantt extends OP.Component {
 
 				data = data || {};
 
-				if (!CurrentStartDateField || !CurrentDurationField)
+				if (!CurrentStartDateField || (!CurrentEndDateField && !CurrentDurationField))
 					return data;
 
 				data['id'] = data.id;
 				// define label
 				data['text'] = CurrentObject.displayData(data);
 				data['start_date'] = data[CurrentStartDateField.columnName];
-				data['duration'] = data[CurrentDurationField.columnName] || 0;
 				data['progress'] = CurrentProgressField ? parseFloat(data[CurrentProgressField.columnName] || 0) : 0;
 
-				if (data['start_date'] && data['duration'])
+				if (CurrentEndDateField)
+					data['end_date'] = data[CurrentEndDateField.columnName];
+
+				if (CurrentDurationField)
+					data['duration'] = data[CurrentDurationField.columnName] || 0;
+
+				// Calculate end date
+				if (!data['end_date'] && data['start_date'] && data['duration'])
 					data['end_date'] = gantt.calculateEndDate(data['start_date'], data['duration']);
+
+				// Calculate duration
+				if (!data['duration'] && data['start_date'] && data['end_date'])
+					data['duration'] = gantt.calculateDuration(data['start_date'], data['end_date']);
 
 				if (index != null)
 					data['order'] = index;
@@ -370,14 +382,19 @@ export default class ABWorkObjectGantt extends OP.Component {
 
 			updateTaskDate: (rowId) => {
 
-				if (!CurrentGanttView || !CurrentStartDateField || !CurrentDurationField)
+				if (!CurrentGanttView || !CurrentStartDateField || (!CurrentEndDateField && !CurrentDurationField))
 					return;
 
 				let task = gantt.getTask(rowId);
 
 				let patch = {};
 				patch[CurrentStartDateField.columnName] = task.start_date;
-				patch[CurrentDurationField.columnName] = task.duration;
+
+				if (CurrentEndDateField)
+					patch[CurrentEndDateField.columnName] = task.end_date;
+
+				if (CurrentDurationField)
+					patch[CurrentDurationField.columnName] = task.duration;
 
 				_logic.updateTask(rowId, patch);
 
@@ -390,7 +407,7 @@ export default class ABWorkObjectGantt extends OP.Component {
 				if (!ganttView) return;
 
 				// Fields
-				let progressField = ganttView.getProgressField();
+				let progressField = ganttView.progressField;
 				if (!progressField) return;
 
 				let task = gantt.getTask(rowId);
@@ -419,14 +436,14 @@ export default class ABWorkObjectGantt extends OP.Component {
 						task[key] = updatedTask[key];
 					}
 
-					if (data['start_date'] && data['duration']) // these fields are required
+					if (data['start_date'] && (data['end_date'] || data['duration'])) // these fields are required
 						gantt.updateTask(data.id);
 				}
 				// insert
 				else {
 					let newTask = _logic.convertFormat(gantt, data);
 
-					if (newTask['start_date'] && newTask['duration']) // these fields are required
+					if (newTask['start_date'] && (newTask['end_date'] || newTask['duration'])) // these fields are required
 						gantt.addTask(newTask);
 
 					if (!ignoreSelect) {
