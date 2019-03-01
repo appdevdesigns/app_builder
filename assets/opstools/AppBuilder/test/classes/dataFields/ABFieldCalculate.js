@@ -227,7 +227,14 @@ describe("ABFieldCalculate unit tests", () => {
 
 			let result = target.formComponent();
 
-			assert.isNull(result);
+			// common property
+			assert.isDefined(result.common);
+			assert.isFunction(result.common);
+			assert.equal('fieldreadonly', result.common().key);
+
+			// newInstance property
+			assert.isDefined(result.newInstance);
+			assert.isFunction(result.newInstance);
 
 		});
 

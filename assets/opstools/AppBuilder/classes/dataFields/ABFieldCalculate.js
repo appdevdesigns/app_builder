@@ -645,8 +645,7 @@ class ABFieldCalculate extends ABField {
 	*/
 	formComponent() {
 
-		// not support in the form widget
-		return null;
+		return super.formComponent('fieldreadonly');
 	}
 
 
