@@ -134,9 +134,9 @@ export default class ABViewFormReadonly extends ABViewFormField {
 			// labelWidth: settings.labelWidth,
 			body: {
 				id: ids.template,
-				view: "template",
+				view: 'label',
 				borderless: true,
-				template: ""
+				label: ""
 			}
 		};
 
@@ -226,7 +226,6 @@ export default class ABViewFormReadonly extends ABViewFormField {
 			}
 
 		};
-
 
 		return component;
 	}
