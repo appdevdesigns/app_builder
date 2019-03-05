@@ -423,6 +423,9 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 	border-radius: 6px;
 	margin-right: 4px;
 }
+.readonlyField {
+	background-color: #fff;
+}
 .selectivity-single-select {
 	background: transparent !important;
 }

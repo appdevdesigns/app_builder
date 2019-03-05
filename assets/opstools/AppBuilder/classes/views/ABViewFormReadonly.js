@@ -136,6 +136,7 @@ export default class ABViewFormReadonly extends ABViewFormField {
 				id: ids.template,
 				view: 'label',
 				borderless: true,
+				css: { "background-color": "#fff" },
 				label: ""
 			}
 		};
@@ -162,6 +163,9 @@ export default class ABViewFormReadonly extends ABViewFormField {
 
 			let $form = $elem.getFormView();
 			if (!$form) return;
+
+			let rowData = $form.getValues();
+			component.logic.refresh(rowData);
 
 			$form.attachEvent("onChange", function (newv, oldv) {
 
@@ -215,7 +219,7 @@ export default class ABViewFormReadonly extends ABViewFormField {
 				else if (settings.showLabel == true && settings.labelPosition == 'top')
 					newWidth = 0;
 
-				let template = (`<div class="customField">${templateLabel}#template#</div>`)
+				let template = (`<div class="readonlyField">${templateLabel}#template#</div>`)
 					.replace(/#template#/g, field.columnHeader(null, newWidth, true).template(rowData));
 
 				// Re-build template element
