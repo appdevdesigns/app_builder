@@ -137,3 +137,4 @@ AD.Control = {
 	}
 }
 
+module.exports = AD;

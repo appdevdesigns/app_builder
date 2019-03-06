@@ -1,10 +1,12 @@
+import Comm from "./comm/comm"
+
 class OPUser {
 
 	constructor() {
 
 		// get current user
 		if (this.currentUser == null) {
-			OP.Comm.Service.get({ url: "/site/user/data" }).then((data) => {
+			Comm.Service.get({ url: "/site/user/data" }).then((data) => {
 
 
 				this.currentUser = data.user;
@@ -14,7 +16,7 @@ class OPUser {
 
 		// get the user list
 		if (this.userList == null) {
-			OP.Comm.Service.get({ url: "/appdev-core/siteuser" }).then((data) => {
+			Comm.Service.get({ url: "/appdev-core/siteuser" }).then((data) => {
 
 				this.userList = data;
 

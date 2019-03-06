@@ -29,6 +29,9 @@ import './classes/dataFields/ABFieldSelectivity'
 import './classes/dataFields/ABFieldString'
 import './classes/dataFields/ABFieldUser'
 
+// Import view test cases
+import './classes/views/ABView'
+
 // import OP test cases
 import './OP/multilingual'
 import './OP/comm_service'

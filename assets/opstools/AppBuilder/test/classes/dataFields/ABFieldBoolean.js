@@ -100,7 +100,7 @@ describe("ABFieldBoolean unit tests", () => {
 
 			let row = {},
 				common = {
-					checkbox: function() {
+					checkbox: function () {
 						return "EDITABLE CHECKBOX"
 					}
 				},
@@ -203,5 +203,27 @@ describe("ABFieldBoolean unit tests", () => {
 		});
 
 	});
+
+	/* Boolean field component test cases */
+	describe('Boolean field component test cases', () => {
+
+		it('should exist boolean component', () => {
+			assert.isDefined(targetComponent);
+		});
+
+		it('should return valid key', () => {
+
+			let result = targetComponent.values();
+
+			assert.equal('boolean', result.key);
+			assert.equal(0, result.settings.default);
+			assert.equal(1, result.settings.showIcon);
+			assert.equal(0, result.settings.required);
+
+		});
+
+
+	});
+
 
 });
