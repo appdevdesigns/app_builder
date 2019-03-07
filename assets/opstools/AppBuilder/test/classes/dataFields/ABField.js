@@ -114,7 +114,7 @@ describe("ABField unit tests", () => {
 		it('.editorValues: should return valid settings', () => {
 
 			let label = "LABEL";
-			let columnName = "COLUMN NAME"; 
+			let columnName = "COLUMN NAME";
 			let settings = {
 				label: label,
 				columnName: columnName,
@@ -175,7 +175,7 @@ describe("ABField unit tests", () => {
 
 			target.id = "TEST ID";
 
-			let stubFieldRemove = sandbox.stub(mockObject, 'fieldRemove').callsFake(function () { });
+			let stubFieldRemove = sandbox.stub(mockObject, 'fieldRemove').callsFake(function () { return Promise.resolve(); });
 			let result = target.destroy();
 
 			assert.isTrue(result instanceof Promise);
@@ -188,11 +188,62 @@ describe("ABField unit tests", () => {
 
 		});
 
-		// it('.save: should ', (done) => {
+		it('.save: should add correctly', (done) => {
 
-		// 	done();
+			delete target.id;
 
-		// });
+			let model = target.object.model();
+
+			let stubFindAll = sandbox.stub(model, 'findAll').callsFake(function () { return Promise.resolve({ data: [] }); });
+			let stubFieldSave = sandbox.stub(mockObject, 'fieldSave').callsFake(function () { return Promise.resolve(); });
+			let stubMigrateCreate = sandbox.stub(target, 'migrateCreate').callsFake(function () { return Promise.resolve(); });
+			let stubMigrateUpdate = sandbox.stub(target, 'migrateUpdate').callsFake(function () { return Promise.resolve(); });
+
+			let result = target.save();
+
+			assert.isTrue(result instanceof Promise);
+	
+			result.then(() => {
+
+				sandbox.assert.notCalled(stubFindAll);
+				sandbox.assert.calledOnce(stubFieldSave);
+				sandbox.assert.calledOnce(stubMigrateCreate);
+				sandbox.assert.notCalled(stubMigrateUpdate);
+
+				done();
+			});
+
+		});
+
+		it('.save: should update correctly', (done) => {
+
+			target.id = "TEST ID";
+			target.settings.required = true;
+			target.settings.default = true;
+
+			let model = target.object.model();
+
+			let stubFindAll = sandbox.stub(model, 'findAll').callsFake(function () { return Promise.resolve({ data: [] }); });
+			let stubFieldSave = sandbox.stub(mockObject, 'fieldSave').callsFake(function () { return Promise.resolve(); });
+			let stubMigrateCreate = sandbox.stub(target, 'migrateCreate').callsFake(function () { return Promise.resolve(); });
+			let stubMigrateUpdate = sandbox.stub(target, 'migrateUpdate').callsFake(function () { return Promise.resolve(); });
+
+			let result = target.save();
+
+			assert.isTrue(result instanceof Promise);
+
+			result.then(() => {
+
+				sandbox.assert.calledOnce(stubFindAll);
+				sandbox.assert.calledOnce(stubFieldSave);
+				sandbox.assert.calledOnce(stubMigrateUpdate);
+				sandbox.assert.notCalled(stubMigrateCreate);
+
+				done();
+
+			});
+
+		});
 
 	});
 
