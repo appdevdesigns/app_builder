@@ -1,6 +1,13 @@
 // create window variable
 global.window = global;
 
+const jsdom = require("jsdom");
+const { JSDOM } = jsdom;
+
+// create a test div
+const dom = new JSDOM(`<div id="ab_test_div"></div>`);
+window.document = dom.window.document;
+
 require("../../../../node_modules/mocha/mocha.js");
 window.assert = require("../../../../node_modules/chai/chai.js").assert;
 window.sinon = require("../../../../node_modules/sinon/pkg/sinon.js");

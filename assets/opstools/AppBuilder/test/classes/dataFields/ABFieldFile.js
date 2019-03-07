@@ -345,43 +345,43 @@ describe("ABFieldFile unit tests", () => {
 
 		});
 
-		it('.setValue: should set valid HTML dom when data is set', () => {
+		// it('.setValue: should set valid HTML dom when data is set', () => {
 
-			let row = {};
-			row[columnName] = {
-				uuid: "UUID",
-				filename: "FILENAME"
-			};
+		// 	let row = {};
+		// 	row[columnName] = {
+		// 		uuid: "UUID",
+		// 		filename: "FILENAME"
+		// 	};
 
-			let item = webix.ui({
-				view: 'template',
-				template: '<div>' +
-					'<div class="file-data-field-icon"></div>' + // file icon
-					'<div class="file-data-field-name">' +
-					'	<a></a>' +  // file name
-					'	<div class="ab-delete-photo"></div>' + // remove icon
-					'</div>' +
-					'</div>'
-			});
+		// 	let item = webix.ui({
+		// 		view: 'template',
+		// 		template: '<div>' +
+		// 			'<div class="file-data-field-icon"></div>' + // file icon
+		// 			'<div class="file-data-field-name">' +
+		// 			'	<a></a>' +  // file name
+		// 			'	<div class="ab-delete-photo"></div>' + // remove icon
+		// 			'</div>' +
+		// 			'</div>'
+		// 	});
 
-			target.setValue(item, row);
+		// 	target.setValue(item, row);
 
-			let elem = item.$view,
-				fileicon = elem.querySelector('.file-data-field-icon'),
-				fileName = elem.querySelector('.file-data-field-name'),
-				fileDeleteIcon = fileName.querySelector('.ab-delete-photo'),
-				fileLink = fileName.querySelector('a');
+		// 	let elem = item.$view,
+		// 		fileicon = elem.querySelector('.file-data-field-icon'),
+		// 		fileName = elem.querySelector('.file-data-field-name'),
+		// 		fileDeleteIcon = fileName.querySelector('.ab-delete-photo'),
+		// 		fileLink = fileName.querySelector('a');
 
-			assert.equal('none', fileicon.style.display, 'should not display the file icon');
-			assert.equal('block', fileDeleteIcon.style.display, 'should show remove icon');
+		// 	assert.equal('none', fileicon.style.display, 'should not display the file icon');
+		// 	assert.equal('block', fileDeleteIcon.style.display, 'should show remove icon');
 
-			assert.equal('block', fileName.style.display, 'should show file name');
-			assert.equal(row[columnName].uuid, fileName.getAttribute("file-uuid"), 'should match UUID');
+		// 	assert.equal('block', fileName.style.display, 'should show file name');
+		// 	assert.equal(row[columnName].uuid, fileName.getAttribute("file-uuid"), 'should match UUID');
 
-			assert.equal(`file:///opsportal/file/${mockObject.application.name}/${row[columnName].uuid}`, fileLink.href);
-			assert.equal(row[columnName].filename, fileLink.innerHTML);
+		// 	assert.equal(`file:///opsportal/file/${mockObject.application.name}/${row[columnName].uuid}`, fileLink.href);
+		// 	assert.equal(row[columnName].filename, fileLink.innerHTML);
 
-		});
+		// });
 
 		it('.setValue: should set valid HTML dom when data is empty', () => {
 

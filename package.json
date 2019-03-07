@@ -15,7 +15,7 @@
     "testbuild": "node_modules/.bin/webpack --config ./assets/opstools/AppBuilder/test/webpack.config.js",
     "testwatch": "node_modules/.bin/webpack --config ./assets/opstools/AppBuilder/test/webpack.config.js --watch --progress",
     "testclient": "node_modules/mocha-phantomjs/bin/mocha-phantomjs -p node_modules/phantomjs/bin/phantomjs assets/opstools/AppBuilder/test/test-all.html --reporter dot --ignore-resource-errors ",
-    "testcover": "node_modules/nyc/bin/nyc.js node_modules/mocha/bin/mocha -p node_modules/phantomjs/bin/phantomjs assets/opstools/AppBuilder/test/test-all.html"
+    "testcover": "./node_modules/nyc/bin/nyc.js --reporter=html ./node_modules/mocha/bin/mocha assets/opstools/AppBuilder/test/test.js --reporter dot -r jsdom-global/register"
   },
   "repository": {
     "type": "git",

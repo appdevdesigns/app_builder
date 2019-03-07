@@ -73,7 +73,8 @@ export default class ABField extends ABFieldBase {
 
   		for(var f in defaultValues) {
 			var component = $$(ids[f]);
-			component.setValue(defaultValues[f]);
+			if (component)
+				component.setValue(defaultValues[f]);
 		}
 
 		// hide warning message of null data

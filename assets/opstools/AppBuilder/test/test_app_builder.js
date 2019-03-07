@@ -14,6 +14,8 @@ import './components/ab_work_object_workspace_popupSortFields'
 import './classes/RowFilter'
 
 // Import data field test cases
+import './classes/dataFields/ABField'
+import './classes/dataFields/ABFieldBase'
 import './classes/dataFields/ABFieldBoolean'
 import './classes/dataFields/ABFieldCalculate'
 import './classes/dataFields/ABFieldConnect'
