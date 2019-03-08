@@ -140,6 +140,44 @@ function DATE(dateString) {
 	return Math.round(dataDate.getTime() / oneDay);
 }
 
+function HOUR(dateString) {
+
+	// validate
+	if (!dateString) return 0
+	let dataDate = new Date(dateString);
+	if (!dataDate) return 0
+
+	// number of miliseconds in one hour
+	let oneHour = 3600000; // 1000 * 60 * 60
+
+	// Convert back to days and return
+	return Math.round(dataDate.getTime() / oneHour);
+}
+
+function MINUTE(dateString) {
+
+	// validate
+	if (!dateString) return 0
+	let dataDate = new Date(dateString);
+	if (!dataDate) return 0
+
+	// number of miliseconds in one hour
+	let oneMinute = 60000; // 1000 * 60
+
+	// Convert back to days and return
+	return Math.round(dataDate.getTime() / oneMinute);
+}
+
+function MINUTE_TO_HOUR(mins) {
+
+	var hours = (mins / 60);
+	var rhours = Math.floor(hours);
+	var minutes = (hours - rhours) * 60;
+	var rminutes = Math.round(minutes);
+
+	return parseFloat(`${rhours}.${rminutes}`);
+}
+
 var ABFieldCalculateDefaults = {
 	key: 'calculate',	// unique key to reference this specific DataField
 
@@ -441,6 +479,21 @@ var ABFieldCalculateComponent = new ABFieldComponent({
 					function: "DATE(CURRENT)"
 				});
 
+				options.push({
+					label: "Get hours of [Current date] (since January 1, 1970)",
+					function: "HOUR(CURRENT)"
+				});
+
+				options.push({
+					label: "Get minutes of [Current date] (since January 1, 1970)",
+					function: "MINUTE(CURRENT)"
+				});
+
+				options.push({
+					label: "Convert minutes to hours (Format: hours.minutes)",
+					function: "MINUTE_TO_HOUR()"
+				});
+
 				/** DATE FIELDS */
 				ABFieldCalculateComponent.CurrentObject.fields(f => f.key == "date").forEach(f => {
 
@@ -467,6 +520,16 @@ var ABFieldCalculateComponent = new ABFieldComponent({
 					options.push({
 						label: `Get days of [${f.label}] (since January 1, 1970)`,
 						function: "DATE({#column#})".replace("#column#", f.columnName)
+					});
+
+					options.push({
+						label: `Get hours of [${f.label}] (since January 1, 1970)`,
+						function: "HOUR({#column#})".replace("#column#", f.columnName)
+					});
+
+					options.push({
+						label: `Get minutes of [${f.label}] (since January 1, 1970)`,
+						function: "MINUTE({#column#})".replace("#column#", f.columnName)
 					});
 
 				});
