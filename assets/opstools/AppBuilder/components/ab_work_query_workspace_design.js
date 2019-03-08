@@ -717,7 +717,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 				var object = (option.object ? option.object : option.field.datasourceLink);
 
-				var fields = object.fields().map(f => {
+				var fields = object.fields(f => f.fieldSupportQuery()).map(f => {
 					return {
 						id: f.urlPointer(),
 						value: f.label

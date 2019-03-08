@@ -458,6 +458,11 @@ var ABFieldCalculateComponent = new ABFieldComponent({
 
 				var options = [];
 
+				options.push({
+					label: "Convert minutes to hours (Format: hours.minutes)",
+					function: "MINUTE_TO_HOUR()"
+				});
+
 				/** CURRENT DATE */
 				options.push({
 					label: "Year of [Current date]",
@@ -487,11 +492,6 @@ var ABFieldCalculateComponent = new ABFieldComponent({
 				options.push({
 					label: "Get minutes of [Current date] (since January 1, 1970)",
 					function: "MINUTE(CURRENT)"
-				});
-
-				options.push({
-					label: "Convert minutes to hours (Format: hours.minutes)",
-					function: "MINUTE_TO_HOUR()"
 				});
 
 				/** DATE FIELDS */

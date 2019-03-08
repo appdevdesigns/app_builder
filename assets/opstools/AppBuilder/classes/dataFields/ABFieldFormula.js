@@ -28,6 +28,15 @@ var ABFieldFormulaDefaults = {
 	isFilterable: false,
 	useAsLabel: false,
 
+	supportQuery: (field) => {
+
+		let fieldLink = field.fieldLink();
+		if (fieldLink == null) return false;
+
+		// Not support calculate field in query
+		return fieldLink.key !== "calculate";
+	}
+
 };
 
 var defaultValues = {
@@ -115,8 +124,8 @@ var ABFieldFormulaComponent = new ABFieldComponent({
 				objLink.fields().forEach(fLink => {
 
 					// pull 'number' and 'calculate' fields from link objects
-					// if (fLink.key == 'number' || fLink.key == 'calculate') {
-					if (fLink.key == 'number') { // NOTE: calculate fields does not support in queries
+					if (fLink.key == 'number' || fLink.key == 'calculate') {
+					// if (fLink.key == 'number') { // NOTE: calculate fields does not support in queries
 						options.push({
 							// UUID:UUID
 							id: "#field#:#fieldLink#".replace("#field#", f.id).replace("#fieldLink#", fLink.id),

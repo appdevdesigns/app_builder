@@ -164,6 +164,19 @@ module.exports = class ABFieldBase {
 
 	}
 
+	fieldSupportQuery() {
+		if (this.defaults.supportQuery != null) {
+			if (typeof this.defaults.supportQuery === "function") {
+				return this.defaults.supportQuery(this);
+			}
+			else {
+				return this.defaults.supportQuery;
+			}
+		}
+
+		return true;
+	}
+
 
 
 	///
