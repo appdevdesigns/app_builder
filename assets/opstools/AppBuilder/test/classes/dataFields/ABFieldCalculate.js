@@ -142,7 +142,7 @@ describe("ABFieldCalculate unit tests", () => {
 
 			let result = target.format(row);
 			let expect = '8888889888,000';
-			assert(expect, result);
+			assert.equal(expect, result);
 
 			// case 2
 			target.settings.decimalSign = "period";
@@ -151,7 +151,7 @@ describe("ABFieldCalculate unit tests", () => {
 
 			result = target.format(row);
 			expect = '8888888788.00000';
-			assert(expect, result);
+			assert.equal(expect, result);
 
 			// case 3
 			target.settings.decimalSign = "space";
@@ -160,63 +160,81 @@ describe("ABFieldCalculate unit tests", () => {
 
 			result = target.format(row);
 			expect = '17777777776 0000000000';
-			assert(expect, result);
+			assert.equal(expect, result);
 
 		});
 
-		it('.format: should return data with valid age', () => {
+		it('.format: should return data with valid AGE', () => {
+
+			target.settings.decimalSign = "none";
+			target.settings.decimalPlaces = 0;
 
 			let dateColName = 'Date';
 			let row = {};
 			row[dateColName] = new Date(1986, 2, 28);
 
-			target.settings.formula = `AGE(${dateColName})`;
+			target.settings.formula = `AGE({${dateColName}})`;
 
 			let result = target.format(row);
-			let expect = 33;
-			assert(expect, result);
+			let expect = 32;
+
+			assert.equal(expect, result);
 
 		});
 
-		it('.format: should return data with valid year', () => {
+		it('.format: should return data with valid YEAR', () => {
 
 			let dateColName = 'Date';
 			let row = {};
 			row[dateColName] = new Date(1986, 2, 28);
 
-			target.settings.formula = `YEAR(${dateColName})`;
+			target.settings.formula = `YEAR({${dateColName}})`;
 
 			let result = target.format(row);
 			let expect = 1986;
-			assert(expect, result);
+			assert.equal(expect, result);
 
 		});
 
-		it('.format: should return data with valid month', () => {
+		it('.format: should return data with valid MONTH', () => {
 
 			let dateColName = 'Date';
 			let row = {};
 			row[dateColName] = new Date(1986, 2, 28);
 
-			target.settings.formula = `MONTH(${dateColName})`;
+			target.settings.formula = `MONTH({${dateColName}})`;
 
 			let result = target.format(row);
 			let expect = 2;
-			assert(expect, result);
+			assert.equal(expect, result);
 
 		});
 
-		it('.format: should return data with valid date', () => {
+		// it('.format: should return data with valid DAY', () => {
+
+		// 	let dayColName = 'Day';
+		// 	let row = {};
+		// 	row[dayColName] = new Date(1986, 2, 28);
+
+		// 	target.settings.formula = `DAY({${dayColName}})`;
+
+		// 	let result = target.format(row);
+		// 	let expect = 28;
+		// 	assert.equal(expect, result);
+
+		// });
+
+		it('.format: should return data with valid DATE', () => {
 
 			let dateColName = 'Date';
 			let row = {};
 			row[dateColName] = new Date(1986, 2, 28);
 
-			target.settings.formula = `DATE(${dateColName})`;
+			target.settings.formula = `DATE({${dateColName}})`;
 
 			let result = target.format(row);
-			let expect = 28;
-			assert(expect, result);
+			let expect = 5930;
+			assert.equal(expect, result);
 
 		});
 
@@ -253,6 +271,27 @@ describe("ABFieldCalculate unit tests", () => {
 			// newInstance property
 			assert.isDefined(result.newInstance);
 			assert.isFunction(result.newInstance);
+
+		});
+
+	});
+
+
+	/* Calculate field component test cases */
+	describe('Calculate field component test cases', () => {
+
+		it('should exist calculate component', () => {
+			assert.isDefined(targetComponent);
+		});
+
+		it('should return valid key', () => {
+
+			let result = targetComponent.values();
+
+			assert.equal('calculate', result.key);
+			assert.equal(1, result.settings.showIcon);
+			assert.equal(0, result.settings.required, 'required should be 0');
+			assert.isUndefined(result.settings.default, 'default should be undefined');
 
 		});
 

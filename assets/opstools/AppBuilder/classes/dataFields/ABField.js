@@ -650,14 +650,16 @@ export default class ABField extends ABFieldBase {
 		if (!item) return;
 	
 		var val;
-		if (typeof rowData[this.columnName] != "undefined") {
+
+		if ((rowData == null || rowData[this.columnName] == null) && defaultValue != null) {
+			val = defaultValue;
+		}
+		else if (rowData && rowData[this.columnName] != null) {
 			val = rowData[this.columnName];
-		} else {
+		}
+		else {
 			val = rowData;
 		}
-		
-		if (typeof val == "undefined")
-			val = defaultValue;
 
 		item.setValue(val);
 	};

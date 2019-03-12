@@ -113,7 +113,7 @@ function MONTH(dateString) {
 	if (!dataDate) return 0
 
 	// Start at 0
-	return dataDate.getMonth() + 1;
+	return dataDate.getMonth();
 }
 
 function DAY(dateString) {
@@ -688,7 +688,18 @@ class ABFieldCalculate extends ABField {
 		}
 
 		try {
-			return convertToJs(this.object, this.settings.formula, rowData, place);
+			let result = convertToJs(this.object, this.settings.formula, rowData, place);
+
+			switch (this.settings.decimalSign) {
+				case 'comma':
+					result = result.replace('.', ',');
+					break;
+				case 'space':
+					result = result.replace('.', ' ');
+					break;
+			}
+
+			return result;
 		}
 		catch (err) {
 			return "";
