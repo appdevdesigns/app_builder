@@ -249,7 +249,12 @@ class ABFieldConnect extends ABField {
 
 							knex.schema.table(tableName, (t) => {
 
-								let linkCol = t.integer(this.columnName).unsigned().nullable();
+								let linkCol;
+
+								if (linkObject.PK() == 'id')
+									linkCol = t.integer(this.columnName).unsigned().nullable();
+								else // uuid
+									linkCol = t.string(this.columnName).nullable();
 
 								// NOTE: federated table does not support reference column
 								if (!linkObject.isExternal && this.connName == linkObject.connName) {
@@ -294,7 +299,11 @@ class ABFieldConnect extends ABField {
 	
 								knex.schema.table(tableName, (t) => {
 	
-									let linkCol = t.integer(this.columnName).unsigned().nullable();
+									let linkCol;
+									if (linkObject.PK() == 'id')
+										linkCol = t.integer(this.columnName).unsigned().nullable();
+									else // uuid
+										linkCol = t.string(this.columnName).nullable();
 
 									// NOTE: federated table does not support reference column
 									if (!linkObject.isExternal && this.connName == linkObject.connName) {
@@ -339,9 +348,11 @@ class ABFieldConnect extends ABField {
 
 							linkKnex.schema.table(linkTableName, (t) => {
 
-								let linkCol = t.integer(linkColumnName)
-									.unsigned()
-									.nullable();
+								let linkCol;
+								if (object.PK() == 'id')
+									linkCol = t.integer(linkColumnName).unsigned().nullable();
+								else // uuid
+									linkCol = t.string(linkColumnName).nullable();
 
 								// NOTE: federated table does not support reference column
 								if (!this.object.isExternal && this.connName == linkObject.connName) {
@@ -401,9 +412,18 @@ class ABFieldConnect extends ABField {
 								var targetFkName = getFkName(linkObject.name, linkColumnName);
 
 								// create columns
-								let linkCol = t.integer(this.object.name).unsigned().nullable();
-								let linkCol2 = t.integer(linkObject.name).unsigned().nullable();
+								let linkCol;
+								let linkCol2;
 
+								if (this.object.PK() == 'id')
+									linkCol = t.integer(this.object.name).unsigned().nullable();
+								else // uuid
+									linkCol = t.string(this.object.name).nullable();
+
+								if (linkObject.PK() == 'id')
+									linkCol2 = t.integer(linkObject.name).unsigned().nullable();
+								else // uuid
+									linkCol2 = t.string(linkObject.name).nullable();
 
 								// NOTE: federated table does not support reference column
 								if ((!this.object.isExternal && !linkObject.isExternal) &&
@@ -584,10 +604,10 @@ class ABFieldConnect extends ABField {
 
 			if (myParameter[this.columnName]) {
 
-				let pk = "id";
+				let PK;
 				let datasourceLink = this.datasourceLink;
 				if (datasourceLink) {
-					pk = datasourceLink.PK();
+					PK = datasourceLink.PK();
 				}
 
 				// if value is array, then get id of array
@@ -595,22 +615,38 @@ class ABFieldConnect extends ABField {
 					let result = [];
 
 					myParameter[this.columnName].forEach(function (d) {
-						let val = parseInt(d[pk] || d.id || d);
 
-						// validate INT value
-						if (val && !isNaN(val))
+						let val = d[PK] || d.id || d;
+
+						if (PK == 'id') {
+							val = parseInt(d[PK] || d.id || d);
+
+							// validate INT value
+							if (val && !isNaN(val))
+								result.push(val);
+						}
+						// uuid
+						else {
 							result.push(val);
+						}
+
 					});
 
 					myParameter[this.columnName] = result;
 				}
 				// if value is a object
 				else {
-					myParameter[this.columnName] = parseInt(myParameter[this.columnName][pk] || myParameter[this.columnName].id || myParameter[this.columnName]);
 
-					// validate INT value
-					if (isNaN(myParameter[this.columnName]))
-						myParameter[this.columnName] = null;
+					myParameter[this.columnName] = myParameter[this.columnName][PK] || myParameter[this.columnName].id || myParameter[this.columnName];
+
+					if (PK == 'id') {
+						myParameter[this.columnName] = parseInt(myParameter[this.columnName]);
+
+						// validate INT value
+						if (isNaN(myParameter[this.columnName]))
+							myParameter[this.columnName] = null;
+					}
+
 				}
 
 

@@ -462,7 +462,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		callbackFrozenColumns: function() {
                 // We need to load data first because there isn't anything to look at if we don't
 				DataTable.refreshHeader();
-				_logic.loadData();
+				// _logic.loadData();
                 // DataTable.refresh();
 
                 _logic.getBadgeFrozenColumn();

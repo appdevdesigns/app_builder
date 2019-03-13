@@ -173,6 +173,12 @@ module.exports = class ABObject extends ABObjectBase {
 							t.collate('utf8_unicode_ci');
 
 							var fieldUpdates = [];
+
+							// Adding a new field to store UUID
+							fieldUpdates.push(t.string('uuid'));
+							// NOTE: MySQL version 5 does not support default with a function
+							// .defaultTo(knex.raw('uuid()')));
+
 							this.fields().forEach((f)=>{
 
 								fieldUpdates.push(f.migrateCreate(knex));
@@ -296,7 +302,6 @@ module.exports = class ABObject extends ABObjectBase {
 			allFields.forEach(function(f) {
 				f.jsonSchemaProperties(jsonSchema.properties);
 			})
-
 
 			class MyModel extends Model {
 
@@ -502,6 +507,7 @@ module.exports = class ABObject extends ABObjectBase {
 
 		return {
 
+			uuid: { type: 'string' },
 			created_at:{ type:['null', 'string'], pattern: AppBuilder.rules.SQLDateTimeRegExp },
 			updated_at:{ type:['null', 'string'], pattern: AppBuilder.rules.SQLDateTimeRegExp },
 			properties:{ type:['null', 'object'] }

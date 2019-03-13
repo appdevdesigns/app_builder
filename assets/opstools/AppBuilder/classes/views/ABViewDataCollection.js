@@ -1329,26 +1329,27 @@ export default class ABViewDataCollection extends ABView {
 
 		AD.comm.hub.subscribe('ab.datacollection.delete', (msg, data) => {
 
-			if (!this.datasource)
-			return;
+			let obj = this.datasource;
+			if (!obj)
+				return;
 
 			// id of a deleted item
-			var deleteId = data.data;
+			var deleteId = data.data; // uuid
 
 			// if it is the source object
-			if (this.datasource.id == data.objectId &&
+			if (obj.id == data.objectId &&
 				this.__dataCollection.exists(deleteId)) {
 
 				// If the deleted item is current cursor, then the current cursor should be cleared.
 				var currData = this.getCursor();
-				if (currData && currData.id == deleteId)
+				if (currData && currData[obj.PK()] == deleteId)
 					this.emit("changeCursor", null);
 
 				this.__dataCollection.remove(deleteId);
 			}
 
 			// if it is a linked object
-			let connectedFields = this.datasource.fields(f =>
+			let connectedFields = obj.fields(f =>
 				f.key == 'connectObject' &&
 				f.datasourceLink &&
 				f.datasourceLink.id == data.objectId

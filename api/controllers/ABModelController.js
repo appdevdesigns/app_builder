@@ -45,6 +45,36 @@ function resolvePendingTransaction() {
     }
 }
 
+/**
+ * @functon cleanUp
+ * clean up data before response to clients
+ * 
+ * @param {ABObject} - object
+ * @param {Object|Array} - data
+ */
+function cleanUp(object, data) {
+
+    if (data == null)
+        return null;
+
+    if (object.PK() === 'uuid') {
+
+        // array
+        if (data.forEach) {
+            data.forEach(d => {
+                delete d.id;
+            });
+        }
+        // object
+        else {
+            delete data.id;
+        }
+
+    }
+
+    return data;
+}
+
 /** 
  * @function updateRelationValues
  * Make sure an object's relationships are properly updated.
@@ -445,6 +475,11 @@ module.exports = {
                     }
                 });
 
+                // add UUID of a new row
+                createParams = cleanUp(object, createParams);
+                if (object.PK() === 'uuid')
+                    createParams.uuid = uuid();
+
                 var validationErrors = object.isValidData(createParams);
                 if (validationErrors.length == 0) {
 
@@ -495,15 +530,18 @@ module.exports = {
                                         req.user.data)
                                         .then((newItem) => {
 
+                                            // remove ids
+                                            let result = cleanUp(object, newItem[0]);
+
                                             resolvePendingTransaction();
-                                            res.AD.success(newItem[0]);
+                                            res.AD.success(result);
 
                                             // We want to broadcast the change from the server to the client so all datacollections can properly update
                                             // Build a payload that tells us what was updated
                                             var payload = {
                                                 objectId: object.id,
-                                                data: newItem[0]
-                                            }
+                                                data: result
+                                            };
 
                                             // Broadcast the create
                                             sails.sockets.broadcast(object.id, "ab.datacollection.create", payload);
@@ -638,6 +676,9 @@ module.exports = {
                 var populate = req.options._populate;
                 if (populate == null) populate = true;
 
+                // promise for the total count. this was moved below the filters because webix will get caught in an infinte loop of queries if you don't pass the right count
+                var pCount = object.queryCount({ where: whereCount, populate: false }, req.user.data);
+
                 var query = object.queryFind({
                     where: where,
                     sort: sort,
@@ -645,9 +686,6 @@ module.exports = {
                     limit: limit,
                     populate: populate
                 }, req.user.data);
-
-                // promise for the total count. this was moved below the filters because webix will get caught in an infinte loop of queries if you don't pass the right count
-                var pCount = object.queryCount({ where: whereCount, populate: false }, req.user.data);
 
                 // TODO:: we need to refactor to remove Promise.all so we no longer have Promise within Promises.
                 Promise.all([
@@ -664,6 +702,10 @@ module.exports = {
                         var result = {};
                         var count = values[0].count;
                         var rows = values[1];
+
+                        // remove ids
+                        rows = cleanUp(object, rows);
+
                         result.data = rows;
 
                         // webix pagination format:
@@ -869,7 +911,8 @@ module.exports = {
             function (next) {
                 // Now we can delete because we have the current record saved as oldItem and our related records saved as relatedItems
                 object.model().query()
-                    .deleteById(id)
+                    .delete()
+                    .where(object.PK(), '=', id)
                     .then((numRows) => {
 
                         resolvePendingTransaction();
@@ -1151,12 +1194,17 @@ module.exports = {
                                 updateParams[object.PK()] = ref(object.PK());
                             }
 
+                            updateParams = cleanUp(object, updateParams);
+
                             sails.log.verbose('ABModelController.update(): updateParams:', updateParams);
+
+                            let defaultUpdate = {};
+                            defaultUpdate[object.PK()] = id;
 
                             var query = object.model().query();
 
                             // Do Knex update data tasks
-                            query.patch(updateParams || { id: id }).where(object.PK(), id)
+                            query.patch(updateParams || defaultUpdate).where(object.PK(), id)
                                 .then((values) => {
 
                                     // create a new query when use same query, then new data are created duplicate
@@ -1192,14 +1240,17 @@ module.exports = {
                                             return query3
                                                 .catch((err) => { return Promise.reject(err); })
                                                 .then((newItem) => {
+
+                                                    let result = cleanUp(object, newItem[0]);
+
                                                     resolvePendingTransaction();
-                                                    res.AD.success(newItem[0]);
+                                                    res.AD.success(result);
 
                                                     // We want to broadcast the change from the server to the client so all datacollections can properly update
                                                     // Build a payload that tells us what was updated
                                                     var payload = {
                                                         objectId: object.id,
-                                                        data: newItem[0]
+                                                        data: result
                                                     }
 
                                                     // Broadcast the update
@@ -1363,7 +1414,7 @@ module.exports = {
 
                     // get translations values for the external object
                     // it will update to translations table after model values updated
-                    var transParams = _.cloneDeep(allParams.translations);
+                    // var transParams = _.cloneDeep(allParams.translations);
 
 
                     // filter invalid columns
@@ -1439,6 +1490,8 @@ module.exports = {
                         }
                     }
 
+                    allParams = cleanUp(object, allParams);
+
                     sails.log.verbose('ABModelController.upsert(): allParams:', allParams);
 
                     // Upsert data
@@ -1487,14 +1540,16 @@ module.exports = {
                         req.user.data)
                         .then((updateItem) => {
 
+                            let result = cleanUp(object, updateItem);
+
                             resolvePendingTransaction();
-                            res.AD.success(updateItem);
+                            res.AD.success(result);
 
                             // We want to broadcast the change from the server to the client so all datacollections can properly update
                             // Build a payload that tells us what was updated
                             var payload = {
                                 objectId: object.id,
-                                data: updateItem
+                                data: result
                             }
 
                             // Broadcast the update

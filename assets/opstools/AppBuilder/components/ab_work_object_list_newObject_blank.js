@@ -147,6 +147,8 @@ export default class AB_Work_Object_List_NewObject_Blank extends OP.Component { 
 
                 var values = Form.getValues();
 
+                // set uuid to be primary column
+                values.primaryColumnName = "uuid";
 
                 // now send data back to be added:
                 _logic.callbacks.onSave(values, function(validator) {
