@@ -173,6 +173,12 @@ module.exports = class ABObject extends ABObjectBase {
 							t.collate('utf8_unicode_ci');
 
 							var fieldUpdates = [];
+
+							// Adding a new field to store UUID
+							fieldUpdates.push(t.string('uuid'));
+							// NOTE: MySQL version 5 does not support default with a function
+							// .defaultTo(knex.raw('uuid()')));
+
 							this.fields().forEach((f)=>{
 
 								fieldUpdates.push(f.migrateCreate(knex));
@@ -296,7 +302,6 @@ module.exports = class ABObject extends ABObjectBase {
 			allFields.forEach(function(f) {
 				f.jsonSchemaProperties(jsonSchema.properties);
 			})
-
 
 			class MyModel extends Model {
 
@@ -502,6 +507,7 @@ module.exports = class ABObject extends ABObjectBase {
 
 		return {
 
+			uuid: { type: 'string' },
 			created_at:{ type:['null', 'string'], pattern: AppBuilder.rules.SQLDateTimeRegExp },
 			updated_at:{ type:['null', 'string'], pattern: AppBuilder.rules.SQLDateTimeRegExp },
 			properties:{ type:['null', 'object'] }
@@ -1179,7 +1185,8 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 	    // query relation data
 		if (query.eager) {
 
-			var relationNames = [];
+			var relationNames = [],
+				excludeIds = [];
 			
 			if (options.populate) {
 
@@ -1190,7 +1197,15 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 					})
 					.forEach(f => {
 
-						relationNames.push(f.relationName());
+						let relationName = f.relationName();
+
+						// Exclude .id column by adding (unselectId) function name to .eager()
+						if (f.datasourceLink &&
+							f.datasourceLink.PK() === 'uuid') {
+							relationName += '(unselectId)';
+						}
+
+						relationNames.push(relationName);
 
 						// Get translation data of External object
 						if (f.datasourceLink &&
@@ -1208,9 +1223,21 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 			}
 
 			if (relationNames.length > 0)
-				query.eager('[#fieldNames#]'.replace('#fieldNames#', relationNames.join(', ')));
 
-	    }
+				query.eager(`[${relationNames.join(', ')}]`, {
+
+					// if the linked object's PK is uuid, then exclude .id
+					unselectId: (builder) => {
+						builder.omit(['id']);
+					}
+
+				});
+
+			// Exclude .id column
+			if (this.PK() === 'uuid')
+				query.omit(this.model(), ['id']);
+
+		}
 
 		// sails.log.debug('SQL:', query.toString() );
 	}

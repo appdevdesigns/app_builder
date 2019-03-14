@@ -1053,13 +1053,13 @@ export default class ABViewDataCollection extends ABView {
 
 
 		// relate data functions
-		let isRelated = (relateData, rowId) => {
+		let isRelated = (relateData, rowId, PK = 'id') => {
 
 			if (Array.isArray(relateData)) {
-				return relateData.filter(v => (v.id || v) == rowId).length > 0;
+				return relateData.filter(v => (v[PK] || v) == rowId).length > 0;
 			}
 			else {
-				return relateData && (relateData.id == rowId || relateData == rowId);
+				return relateData && (relateData[PK] || relateData) == rowId;
 			}
 
 		};
@@ -1102,8 +1102,9 @@ export default class ABViewDataCollection extends ABView {
 			if (connectedFields && connectedFields.length > 0) {
 
 				// various PK name
-				if (!values.id && connectedFields[0].object.PK() != 'id')
-					values.id = values[connectedFields[0].object.PK()];
+				let PK = connectedFields[0].object.PK();
+				if (!values.id && PK != 'id')
+					values.id = values[PK];
 
 				this.__dataCollection.find({}).forEach(d => {
 
@@ -1117,7 +1118,7 @@ export default class ABViewDataCollection extends ABView {
 						// Relate data
 						if (Array.isArray(rowRelateVal) &&
 							rowRelateVal.filter(v => v == values.id || v.id == values.id).length < 1 &&
-							isRelated(updateRelateVal, d.id)) {
+							isRelated(updateRelateVal, d.id, PK)) {
 
 							rowRelateVal.push(values);
 
@@ -1126,7 +1127,7 @@ export default class ABViewDataCollection extends ABView {
 						}
 						else if (!Array.isArray(rowRelateVal) &&
 							(rowRelateVal != values.id || rowRelateVal.id != values.id) &&
-							isRelated(updateRelateVal, d.id)) {
+							isRelated(updateRelateVal, d.id, PK)) {
 
 							updateItemData[f.relationName()] = values;
 							updateItemData[f.columnName] = values.id || values;
@@ -1212,8 +1213,9 @@ export default class ABViewDataCollection extends ABView {
 			if (connectedFields && connectedFields.length > 0) {
 
 				// various PK name
-				if (!values.id && connectedFields[0].object.PK() != 'id')
-					values.id = values[connectedFields[0].object.PK()];
+				let PK = connectedFields[0].object.PK();
+				if (!values.id && PK != 'id')
+					values.id = values[PK];
 
 				this.__dataCollection.find({}).forEach(d => {
 
@@ -1221,27 +1223,27 @@ export default class ABViewDataCollection extends ABView {
 
 					connectedFields.forEach(f => {
 
-						var updateRelateVal = values[f.fieldLink.relationName()] || {};
+						let updateRelateVal = values[f.fieldLink.relationName()] || {};
 						let rowRelateVal = d[f.relationName()] || {};
 
 						// Unrelate data
 						if (Array.isArray(rowRelateVal) &&
 							rowRelateVal.filter(v => v == values.id || v.id == values.id).length > 0 &&
-							!isRelated(updateRelateVal, d.id)) {
+							!isRelated(updateRelateVal, d.id, PK)) {
 
 							updateItemData[f.relationName()] = rowRelateVal.filter(v => (v.id || v) != values.id);
 							updateItemData[f.columnName] = updateItemData[f.relationName()].map(v => v.id || v);
 						}
 						else if (!Array.isArray(rowRelateVal) &&
 							(rowRelateVal == values.id || rowRelateVal.id == values.id) &&
-							!isRelated(updateRelateVal, d.id)) {
+							!isRelated(updateRelateVal, d.id, PK)) {
 
 							updateItemData[f.relationName()] = null;
 							updateItemData[f.columnName] = null;
 						}
 
 						// Relate data or Update
-						if (Array.isArray(rowRelateVal) && isRelated(updateRelateVal, d.id)) {
+						if (Array.isArray(rowRelateVal) && isRelated(updateRelateVal, d.id, PK)) {
 
 							// update relate data
 							if (rowRelateVal.filter(v => v == values.id || v.id == values.id).length > 0) {
@@ -1262,7 +1264,7 @@ export default class ABViewDataCollection extends ABView {
 						}
 						else if (!Array.isArray(rowRelateVal) &&
 							(rowRelateVal != values.id || rowRelateVal.id != values.id) && 
-							isRelated(updateRelateVal, d.id)) {
+							isRelated(updateRelateVal, d.id, PK)) {
 
 							updateItemData[f.relationName()] = values;
 							updateItemData[f.columnName] = values.id || values;
@@ -1350,19 +1352,20 @@ export default class ABViewDataCollection extends ABView {
 
 		AD.comm.hub.subscribe('ab.datacollection.delete', (msg, data) => {
 
-			if (!this.datasource)
-			return;
+			let obj = this.datasource;
+			if (!obj)
+				return;
 
 			// id of a deleted item
-			var deleteId = data.data;
+			var deleteId = data.data; // uuid
 
 			// if it is the source object
-			if (this.datasource.id == data.objectId &&
+			if (obj.id == data.objectId &&
 				this.__dataCollection.exists(deleteId)) {
 
 				// If the deleted item is current cursor, then the current cursor should be cleared.
 				var currData = this.getCursor();
-				if (currData && currData.id == deleteId)
+				if (currData && currData[obj.PK()] == deleteId)
 					this.emit("changeCursor", null);
 
 				this.__dataCollection.remove(deleteId);
@@ -1370,7 +1373,7 @@ export default class ABViewDataCollection extends ABView {
 			}
 
 			// if it is a linked object
-			let connectedFields = this.datasource.fields(f =>
+			let connectedFields = obj.fields(f =>
 				f.key == 'connectObject' &&
 				f.datasourceLink &&
 				f.datasourceLink.id == data.objectId

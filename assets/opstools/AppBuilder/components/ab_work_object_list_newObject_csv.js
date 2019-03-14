@@ -329,6 +329,7 @@ export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 
 				// create new object
 				var newObjAttr = {
+					primaryColumnName: "uuid", // set uuid to be primary column
 					name: $$(ids.form).getValues()['name'],
 					fields: []
 				};

@@ -153,7 +153,7 @@ export default class ABModel {
 	/**
 	 * @method delete
 	 * remove this model instance from the server
-	 * @param {integer} id  the .id of the instance to remove.
+	 * @param {integer|UUID} id  the .id of the instance to remove.
 	 * @return {Promise}
 	 */
 	delete(id) {
