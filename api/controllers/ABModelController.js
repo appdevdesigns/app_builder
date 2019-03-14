@@ -530,17 +530,14 @@ module.exports = {
                                         req.user.data)
                                         .then((newItem) => {
 
-                                            // remove ids
-                                            let result = cleanUp(object, newItem[0]);
-
                                             resolvePendingTransaction();
-                                            res.AD.success(result);
+                                            res.AD.success(newItem[0]);
 
                                             // We want to broadcast the change from the server to the client so all datacollections can properly update
                                             // Build a payload that tells us what was updated
                                             var payload = {
                                                 objectId: object.id,
-                                                data: result
+                                                data: newItem[0]
                                             };
 
                                             // Broadcast the create
@@ -702,9 +699,6 @@ module.exports = {
                         var result = {};
                         var count = values[0].count;
                         var rows = values[1];
-
-                        // remove ids
-                        rows = cleanUp(object, rows);
 
                         result.data = rows;
 
@@ -1241,7 +1235,7 @@ module.exports = {
                                                 .catch((err) => { return Promise.reject(err); })
                                                 .then((newItem) => {
 
-                                                    let result = cleanUp(object, newItem[0]);
+                                                    let result = newItem[0];
 
                                                     resolvePendingTransaction();
                                                     res.AD.success(result);
@@ -1540,16 +1534,14 @@ module.exports = {
                         req.user.data)
                         .then((updateItem) => {
 
-                            let result = cleanUp(object, updateItem);
-
                             resolvePendingTransaction();
-                            res.AD.success(result);
+                            res.AD.success(updateItem);
 
                             // We want to broadcast the change from the server to the client so all datacollections can properly update
                             // Build a payload that tells us what was updated
                             var payload = {
                                 objectId: object.id,
-                                data: result
+                                data: updateItem
                             }
 
                             // Broadcast the update

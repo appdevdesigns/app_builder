@@ -1185,7 +1185,8 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 	    // query relation data
 		if (query.eager) {
 
-			var relationNames = [];
+			var relationNames = [],
+				excludeIds = [];
 			
 			if (options.populate) {
 
@@ -1196,7 +1197,15 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 					})
 					.forEach(f => {
 
-						relationNames.push(f.relationName());
+						let relationName = f.relationName();
+
+						// Exclude .id column by adding (unselectId) function name to .eager()
+						if (f.datasourceLink &&
+							f.datasourceLink.PK() === 'uuid') {
+							relationName += '(unselectId)';
+						}
+
+						relationNames.push(relationName);
 
 						// Get translation data of External object
 						if (f.datasourceLink &&
@@ -1214,9 +1223,21 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 			}
 
 			if (relationNames.length > 0)
-				query.eager('[#fieldNames#]'.replace('#fieldNames#', relationNames.join(', ')));
 
-	    }
+				query.eager(`[${relationNames.join(', ')}]`, {
+
+					// if the linked object's PK is uuid, then exclude .id
+					unselectId: (builder) => {
+						builder.omit(['id']);
+					}
+
+				});
+
+			// Exclude .id column
+			if (this.PK() === 'uuid')
+				query.omit(this.model(), ['id']);
+
+		}
 
 		// sails.log.debug('SQL:', query.toString() );
 	}

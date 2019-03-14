@@ -1203,7 +1203,7 @@ export default class ABViewDataCollection extends ABView {
 
 					connectedFields.forEach(f => {
 
-						var updateRelateVal = values[f.fieldLink.relationName()] || {};
+						let updateRelateVal = values[f.fieldLink.relationName()] || {};
 						let rowRelateVal = d[f.relationName()] || {};
 
 						// Unrelate data
