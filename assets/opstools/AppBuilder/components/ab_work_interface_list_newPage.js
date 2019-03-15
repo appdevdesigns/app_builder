@@ -11,8 +11,6 @@ import AB_Work_Interface_List_NewPage_QuickPage from "./ab_work_interface_list_n
 import AB_Work_Interface_List_NewPage_ReportPage from "./ab_work_interface_list_newPage_reportPage"
 import ABPage from '../classes/views/ABViewPage'
 
-var uuid = require('uuid');
-
 
 export default class AB_Work_Interface_List_NewPage extends OP.Component {  
 

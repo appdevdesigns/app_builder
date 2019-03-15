@@ -39,6 +39,7 @@ export default class AB_Work_Object extends OP.Component {   //.extend(idBase, f
 		// Our webix UI definition:
 		this.ui = {
 			id: ids.component,
+			type: "space",
 			margin: 10,
 			cols: [
 				ObjectList.ui,

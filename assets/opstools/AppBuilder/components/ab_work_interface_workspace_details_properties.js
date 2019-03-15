@@ -39,7 +39,7 @@ export default class AB_Work_Interface_Workspace_Details_Properties extends OP.C
             rows:[
                 {
                     view: 'toolbar',
-                    css: 'ab-data-toolbar',
+                    css: 'ab-data-toolbar webix_dark',
                     cols: [
                         {
                         view: 'label',

@@ -21,7 +21,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 		var labels = {
 			common: App.labels,
 			component: {
-				selectQuery: L('ab.query.selectQuery', "*Select an query to work with."),
+				
 
 
 				// formHeader: L('ab.application.form.header', "*Application Info"),
@@ -65,7 +65,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 			// // Toolbar:
 			// toolbar: this.unique('toolbar'),
 
-			noSelection: this.unique('noSelection'),
+			
 			selectedObject: this.unique('selectedObject'),
 
 		}
@@ -81,7 +81,6 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 			webix.extend($$(ids.tree), webix.ProgressBar);
 			webix.extend($$(ids.tabObjects), webix.ProgressBar);
 
-			$$(ids.noSelection).show();
 
 			DataFilter.init({
 				onChange: _logic.save,
@@ -124,7 +123,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 				// NOTE: to clear a visual glitch when multiple views are updating
 				// at one time ... stop the animation on this one:
-				$$(ids.noSelection).show(false, false);
+				// $$(ids.noSelection).show(false, false);
 			},
 
 
@@ -838,26 +837,8 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 			id: ids.component,
 			rows: [
 				{
-					id: ids.noSelection,
-					rows: [
-						{
-							maxHeight: App.config.xxxLargeSpacer,
-							hidden: App.config.hideMobile
-						},
-						{
-							view: 'label',
-							align: "center",
-							label: labels.component.selectQuery
-						},
-						{
-							maxHeight: App.config.xxxLargeSpacer,
-							hidden: App.config.hideMobile
-						}
-					]
-				},
-				{
 					id: ids.selectedObject,
-					type: "space",
+					type: "form",
 					rows: [
 						{
 							cols: [
@@ -867,7 +848,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 											view: "label",
 											label: L('ab.object.querybuilder.manageObjects', "*Manage Objects"),
 											css: "ab-query-label",
-											height: 50
+											// height: 50
 										},
 										// {
 										// 	autowidth: true,
@@ -930,7 +911,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 									]
 								},
 								{
-									width: 10
+									width: 20
 								},
 								{
 									gravity: 2,
@@ -939,12 +920,15 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 											view: "label",
 											label: L('ab.object.querybuilder.manageFields', "*Manage Fields"),
 											css: "ab-query-label",
-											height: 50
+											// height: 50
 										},
 										{
 											view: "tabview",
 											id: ids.tabObjects,
-											tabMinWidth: 200,
+											tabMinWidth: 180,
+											tabbar: {
+												bottomOffset: 1,
+											},
 											cells: [
 												{} // require
 											],
@@ -968,13 +952,13 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 							view: "label",
 							label: L('ab.object.querybuilder.manageFilters', "*Manage Filters"),
 							css: "ab-query-label",
-							height: 50
+							// height: 50
 						},
 						DataFilter.ui,
 						{
 							id: ids.datatable,
 							view: 'datatable',
-							minHeight: 200,
+							minHeight: 180,
 							dragColumn: true,
 							columns: [],
 							data: [],

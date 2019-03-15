@@ -6,7 +6,7 @@
  *
  */
 
-import AB_Work_Form from "app_builder/assets/opstools/AppBuilder/components/ab_work_object_workspace_formSidePanel"
+import AB_Work_Form from "./ab_work_object_workspace_formSidePanel"
 
 export default class ABWorkObjectGantt extends OP.Component {
 

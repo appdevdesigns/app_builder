@@ -395,8 +395,7 @@ PopupRecordRule.qbFixAfterShow();
 				labelWidth: App.config.labelWidthLarge,
 				body: {
 					type: "clean",
-					paddingY: 20,
-					paddingX: 10,
+					padding: 10,
 					rows: [
 						{
 							name: 'fields',
@@ -468,8 +467,7 @@ PopupRecordRule.qbFixAfterShow();
 				labelWidth: App.config.labelWidthLarge,
 				body: {
 					type: "clean",
-					paddingY: 20,
-					paddingX: 10,
+					padding: 10,
 					rows: [
 						{
 							cols: [

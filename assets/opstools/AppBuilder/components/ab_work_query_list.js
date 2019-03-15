@@ -139,7 +139,7 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 				// 	}
 				// },
 				{
-					view: App.custom.editunitlist.view, // "editunitlist"
+					view: App.custom.editlist.view, // "editlist"
 					id: ids.list,
 					width: App.config.columnWidthLarge,
 
@@ -181,6 +181,7 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 					view: 'button',
 					id: ids.buttonNew,
 					value: labels.component.addNew,
+					type: "form",
 					click: function () {
 						_logic.clickNewObject(true); // pass true so it will select the new object after you created it
 					}

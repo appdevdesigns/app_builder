@@ -29,7 +29,9 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 			component: {
 
 				// formHeader: L('ab.application.form.header', "*Application Info"),
-				backToApplication: L('ab.application.backToApplication', "*Back to Applications page"),
+				backToApplication: L('ab.application.backToApplication', "*Back to Apps"),
+				collapseMenu: L('ab.application.collapseMenu', "*Collapse Menu"),
+				expandMenu: L('ab.application.expandMenu', "*Expand Menu"),
 				synchronize: L('ab.application.synchronize', "*Synchronize"),
 				objectTitle: L('ab.object.title', "*Objects"),
 				queryTitle: L('ab.object.query', "*Queries"),
@@ -50,6 +52,8 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 			tab_query:      this.unique('tab_query'),
 			tab_interface: 	this.unique('tab_interface'),
 			workspace: 		this.unique('workspace'),
+			collapseMenu: 	this.unique('collapseMenu'),
+			expandMenu:		this.unique('expandMenu')
 		}
 
 
@@ -57,7 +61,35 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 		var AppQueryWorkspace = new AB_Work_Query(App);
 		var AppInterfaceWorkspace = new AB_Work_Interface(App);
 
+		var sidebarItems = 	[{
+			id: ids.tab_object,
+			value: labels.component.objectTitle,
+			icon: "fa fa-fw fa-database"
+		},
+		{
+			id: ids.tab_query,
+			value: labels.component.queryTitle,
+			icon: "fa fa-fw fa-filter"
+		},
+		{
+			id: ids.tab_interface,
+			value: labels.component.interfaceTitle,
+			icon: "fa fa-fw fa-id-card-o"
+		}];
 
+		var expandMenu = {
+			id: ids.expandMenu, 
+			value: labels.component.expandMenu, 
+			icon: "fa fa-fw fa-chevron-circle-right"
+		};
+
+		var collapseMenu = {
+			id: ids.collapseMenu, 
+			value: labels.component.collapseMenu, 
+			icon: "fa fa-fw fa-chevron-circle-left"
+		};
+							
+		var selectedItem = ids.tab_object;
 
 		// Our webix UI definition:
 		this.ui = {
@@ -67,29 +99,39 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 					view: "toolbar",
 					id: ids.toolBar,
 					autowidth: true,
-					cols: [
+					elements: [
 						{
 							view: "button",
 							label: labels.component.backToApplication,
-							width: 200,
+							autowidth: true,
+							align: "left",
 							type: "icon",
 							icon: "fa fa-arrow-left",
 							align: "left",
-
+						
 							click: function () {
 								App.actions.transitionApplicationChooser();
 							}
 						},
+						// {
+						// 	view: "button", 
+						// 	type: "icon", 
+						// 	icon: "fa fa-bars",
+						// 	width: 37, 
+						// 	align: "left", 
+						// 	css: "app_button", 
+						// 	click: function(){
+						// 		$$(ids.tabbar).toggle();
+						// 	}
+						// },
+						{},
 						{
 							view: "label",
+							css: "appTitle",
 							id: ids.labelAppName,
 							align: "center"
 						},
-						{
-							view: "spacer",
-							width: 200,
-							alrign: "right"
-						}
+						{}
 						// {
 						// 	id: ids.buttonSync,
 						// 	view: "button",
@@ -131,61 +173,49 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 				// 		}
 				// 	}
 				// },
-				{ height: App.config.mediumSpacer },
 				{
 					cols: [
 						{
-							width: App.config.mediumSpacer
-						},
-						{
-							rows: [
-								{
-									view: "tabbar",
-									id: ids.tabbar,
-									value: ids.tab_object,
-									multiview: true,
-									fitBiggest: true,
-									options: [
-										{
-											id: ids.tab_object,
-											value: labels.component.objectTitle,
-											width: App.config.tabWidthMedium
-										},
-										{
-											id: ids.tab_query,
-											value: labels.component.queryTitle,
-											width: App.config.tabWidthMedium
-										},
-										{
-											id: ids.tab_interface,
-											value: labels.component.interfaceTitle,
-											width: App.config.tabWidthMedium
-										}
-									],
-									on: {
-										onChange: function (idNew, idOld) {
-											if (idNew != idOld) {
-												_logic.tabSwitch(idNew, idOld);
-											}
-										}
+							css: "webix_dark",
+							view: "sidebar",
+							id: ids.tabbar,
+							width: 160,
+							data: sidebarItems.concat(collapseMenu),
+							on: {
+								onAfterSelect: function (id) {
+									if (id == ids.collapseMenu) {
+										setTimeout(function(){
+											$$(ids.tabbar).remove(ids.collapseMenu);
+											$$(ids.tabbar).add(expandMenu);
+											$$(ids.tabbar).toggle();
+											$$(ids.tabbar).select(selectedItem);
+											webix.storage.local.put("state", $$(ids.tabbar).getState());
+										}, 0);
+									} else if (id == ids.expandMenu) {
+										setTimeout(function(){
+											$$(ids.tabbar).remove(ids.expandMenu);
+											$$(ids.tabbar).add(collapseMenu);
+											$$(ids.tabbar).toggle();
+											$$(ids.tabbar).select(selectedItem);
+											webix.storage.local.put("state", $$(ids.tabbar).getState());
+										}, 0);
+									} else {
+										_logic.tabSwitch(id);
+										selectedItem = id;
 									}
-								},
-								{
-									id: ids.workspace,
-									cells: [
-										AppObjectWorkspace.ui,
-										AppQueryWorkspace.ui,
-										AppInterfaceWorkspace.ui
-									]
 								}
-							]
+							}
 						},
 						{
-							width: App.config.mediumSpacer
+							id: ids.workspace,
+							cells: [
+								AppObjectWorkspace.ui,
+								AppQueryWorkspace.ui,
+								AppInterfaceWorkspace.ui
+							]
 						}
 					]
 				},
-				{ height: App.config.mediumSpacer }
 			]
 		};
 
@@ -204,7 +234,19 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 //// and then when they update anything in those workspace editors, this get's updated.
 
 			// initialize the Object Workspace to show first.
+			var state = webix.storage.local.get("state");
+			$$(ids.tabbar).setState(state);
+			
+			if (state.collapsed) {
+				setTimeout(function(){
+					$$(ids.tabbar).remove(ids.collapseMenu);
+					$$(ids.tabbar).add(expandMenu);
+				}, 0);
+			}
+
 			_logic.tabSwitch(ids.tab_object);
+			$$(ids.tabbar).select(ids.tab_object);
+
 		}
 
 
@@ -256,9 +298,8 @@ console.error('TODO: ab_work.logic.synchronize()!');
 			 * Every time a tab switch happens, decide which workspace to show.
 			 *
 			 * @param {string} idTab	the id of the tab that was changed to.
-			 * @param {string} idOld	the previous tab id
 			 */
-			tabSwitch:function(idTab, idOld) {
+			tabSwitch:function(idTab) {
 
 				switch( idTab ) {
 
