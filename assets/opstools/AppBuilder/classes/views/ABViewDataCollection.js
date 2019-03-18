@@ -415,8 +415,7 @@ export default class ABViewDataCollection extends ABView {
 				labelWidth: App.config.labelWidthLarge,
 				body: {
 					type: "clean",
-					paddingY: 20,
-					paddingX: 10,
+					padding: 10,
 					rows: [
 						{
 							view: "richselect",
@@ -461,8 +460,7 @@ export default class ABViewDataCollection extends ABView {
 				labelWidth: App.config.labelWidthLarge,
 				body: {
 					type: "clean",
-					paddingY: 20,
-					paddingX: 10,
+					padding: 10,
 					rows: [
 						{
 							name: "filterPanel",

@@ -413,8 +413,7 @@ export default class ABViewGrid extends ABViewWidget  {
 				labelWidth: App.config.labelWidthLarge,
 				body:{
 					type: "clean",
-					paddingY: 20,
-					paddingX: 10,
+					padding: 10,
 					rows:[
 						{
 							view:"checkbox",
@@ -461,8 +460,7 @@ export default class ABViewGrid extends ABViewWidget  {
 				labelWidth: App.config.labelWidthLarge,
 				body:{
 					type: "clean",
-					paddingY: 20,
-					paddingX: 10,
+					padding: 10,
 			        rows:[
 						{
 							view:"select",
@@ -533,8 +531,7 @@ export default class ABViewGrid extends ABViewWidget  {
 				labelWidth: App.config.labelWidthLarge,
 				body: {
 					type: "clean",
-					paddingY: 20,
-					paddingX: 10,
+					padding: 10,
 					rows:[
 						{
 							view:"select",
@@ -552,8 +549,7 @@ export default class ABViewGrid extends ABViewWidget  {
 				labelWidth: App.config.labelWidthLarge,
 				body:{
 					type: "clean",
-					paddingY: 20,
-					paddingX: 10,
+					padding: 10,
 			        rows:[
 						{
 							view:"select",
@@ -610,8 +606,7 @@ export default class ABViewGrid extends ABViewWidget  {
 				labelWidth: App.config.labelWidthLarge,
 				body:{
 					type: "clean",
-					paddingY: 20,
-					paddingX: 10,
+					padding: 10,
 					rows: [
 						{
 							cols: [

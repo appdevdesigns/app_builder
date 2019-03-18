@@ -104,9 +104,10 @@ export default class AB_Work_Interface_List extends OP.Component {
 				{
 					view: 'button',
 					id: ids.buttonNew,
+					type: "form",
 					value: labels.component.addNew,
 					click: function () {
-						_logic.clickNewView();
+						App.actions.clickNewView();
 					}
 				}
 			]
@@ -511,17 +512,6 @@ console.error('!! todo: onBeforeEditStop() editing');
 			},
 
 
-			/**
-			 * @function clickNewView
-			 *
-			 * Manages initiating the transition to the new Object Popup window
-			 */
-			clickNewView:function() {
-
-				// show the new popup
-				PopupNewPageComponent.show();
-			},
-
 
 			refreshTemplateItem: function(view) {
 				// make sure this item is updated in our list:
@@ -611,7 +601,18 @@ console.error('!! todo: onBeforeEditStop() editing');
 					List.select(view.id);
 				}
 
-			}
+			},
+			
+			/**
+			 * @function clickNewView
+			 *
+			 * Manages initiating the transition to the new Object Popup window
+			 */
+			clickNewView:function() {
+
+				// show the new popup
+				PopupNewPageComponent.show();
+			}		
 
 		})
 

@@ -64,7 +64,7 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                 {
                     view: 'toolbar',
                     id: ids.toolbar,
-                    css: 'ab-data-toolbar',
+                    css: 'ab-data-toolbar webix_dark',
                     cols: [
                         // {
                         //     view: 'label',
@@ -141,6 +141,22 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                     type: "space",
                     css: "gray",
                     cols: [
+                        {
+                            id: ids.toolbarNewDataCollection,
+                            view: "button",
+                            type: "iconButton", 
+                            icon: "fa fa-plus",
+                            label: labels.component.newDataSource,
+                            align: "right",
+                            autowidth: true,
+                            hidden: true,
+                            on: {
+                                onItemClick: function(id, e) {
+                                    _logic.newDataCollection();
+                                }
+                            }
+                        },
+                        ComponentMenu.ui,
                         // {
                         //     view: "segmented",
                         //     id: ids.toolbarViewPage,
@@ -162,32 +178,14 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                             view: "checkbox",
                             id: ids.toolbarViewMode,
                             labelRight: labels.component.viewModePreview,
-                            labelWidth: App.config.labelWidthCheckbox,
-                            align: "right",
-                            autowidth: true,
+                            labelWidth: 0,
+                            width: 85,
                             on: {
                                 onChange: function (newValue, oldValue) {
                                     _logic.viewModeChange(newValue, oldValue);
                                 }
                             }
-                        },
-
-                        {
-                            id: ids.toolbarNewDataCollection,
-                            view: "button",
-                            type: "iconButton", 
-                            icon: "fa fa-plus",
-                            label: labels.component.newDataSource,
-                            align: "right",
-                            autowidth: true,
-                            hidden: true,
-                            on: {
-                                onItemClick: function(id, e) {
-                                    _logic.newDataCollection();
-                                }
-                            }
-                        },
-                        ComponentMenu.ui
+                        }
                     ]
                 },
                 // {

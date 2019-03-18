@@ -21,8 +21,8 @@ export default class ABChooseList extends OP.Component {
 			common: App.labels,
 
 			component: {
-				title: L('ab.application.application', '*Application'),
-
+				title: L('ab.application.application', '*Applications'),
+				settings: L('ab.application.settings', '*Settings'),
 				createNew: L('ab.application.createNew', '*Add new application'),
 				noApplication: L('ab.application.noApplication', "*There is no application data"),
 
@@ -48,6 +48,7 @@ export default class ABChooseList extends OP.Component {
 
 			id: ids.component,
 			responsive:"hide",
+			type:"space",
 
 			cols: [
 				{
@@ -69,16 +70,17 @@ export default class ABChooseList extends OP.Component {
 							view: "toolbar",
 							id: ids.toolBar,
 							cols: [
+								{ view: "label", label:labels.component.title, fillspace: true },
 								{ 
 			                        view:"button", 
 			                        type:"icon", 
-			                        icon:"fa fa-male",
-			                        width:25,
+									label: labels.component.settings,
+			                        icon:"fa fa-cog",
+			                        autowidth:true,
 			                        click:()=>{
 			                            this.emit('view.config');
 			                        }
 			                    },
-								{ view: "label", label:labels.component.title, fillspace: true },
 								{
 									id: ids.buttonCreateNewApplication,
 									view: "button",
@@ -98,8 +100,8 @@ export default class ABChooseList extends OP.Component {
 									autowidth: true,
 									upload: '/app_builder/appJSON',
 									multiple: false,
-									type: "icon",
-									icon: "fa fa-upload",
+									// type: "icon",
+									// icon: "fa fa-upload",
 									autosend: true,
 									on: {
 										onAfterFileAdd: function () {
@@ -139,6 +141,9 @@ export default class ABChooseList extends OP.Component {
 								"ab-app-list-edit": function (ev, id, trg) {
 									return _logic.onClickListEdit(ev, id, trg);
 								}
+							},
+							onHover: {
+								
 							}
 						},
 						{

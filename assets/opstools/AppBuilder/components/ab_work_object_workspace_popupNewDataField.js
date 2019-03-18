@@ -55,60 +55,66 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
             // },
 
             body: {
+                view: "scrollview",
+                scroll:"y",
                 css: 'ab-add-fields-popup',
                 borderless: true,
-                rows: [
-                    {
-                        view: "richselect",
-                        id: ids.types,
-                        label: labels.component.fieldType,
-                        labelWidth: App.config.labelWidthLarge,
-                        options: [
-                            //We will add these later
-                            { id: 'temporary', view: 'temporary' }
-                        ],
-                        on: {
-                            onChange: function (id, ev, node) {
-                                _logic.onChange(id);
+                body: {
+                    type: "form",
+                    rows: [
+                        {
+                            view: "richselect",
+                            id: ids.types,
+                            label: labels.component.fieldType,
+                            labelWidth: App.config.labelWidthLarge,
+                            options: [
+                                //We will add these later
+                                { id: 'temporary', view: 'temporary' }
+                            ],
+                            on: {
+                                onChange: function (id, ev, node) {
+                                    _logic.onChange(id);
+                                }
                             }
+                        },
+                        {
+                            height: 10,
+                            type: "line"
+                        },
+                        {
+                            view: 'multiview',
+                            id: ids.editDefinitions,
+                            padding: 0,
+                            // NOTE: can't leave this an empty []. We redefine this value later.
+                            cells: [{ id: 'del_me', view: 'label', label: 'edit definition here' }]
+                        },
+                        { height: 10 },
+                        {
+                            cols: [
+                                { fillspace: true },
+                                {
+                                    view: "button",
+                                    value: labels.common.cancel,
+                                    css: "ab-cancel-button",
+                                    autowidth: true,
+                                    click: function () {
+                                        _logic.buttonCancel();
+                                    }
+                                },
+                                {
+                                    view: "button",
+                                    id: ids.buttonSave,
+                                    label: labels.component.addNewField,
+                                    autowidth: true,
+                                    type: "form",
+                                    click: function () {
+                                        _logic.buttonSave();
+                                    }
+                                }
+                            ]
                         }
-                    },
-                    {
-                        height: 10,
-                        type: "line"
-                    },
-                    {
-                        view: 'multiview',
-                        id: ids.editDefinitions,
-                        // NOTE: can't leave this an empty []. We redefine this value later.
-                        cells: [{ id: 'del_me', view: 'label', label: 'edit definition here' }]
-                    },
-                    { height: 10 },
-                    {
-                        cols: [
-                            { fillspace: true },
-                            {
-                                view: "button",
-                                value: labels.common.cancel,
-                                css: "ab-cancel-button",
-                                autowidth: true,
-                                click: function () {
-                                    _logic.buttonCancel();
-                                }
-                            },
-                            {
-                                view: "button",
-                                id: ids.buttonSave,
-                                label: labels.component.addNewField,
-                                autowidth: true,
-                                type: "form",
-                                click: function () {
-                                    _logic.buttonSave();
-                                }
-                            }
-                        ]
-                    }
-                ]
+                    ]    
+                }
             },
             on: {
                 //onBeforeShow: function () {

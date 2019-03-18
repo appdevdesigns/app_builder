@@ -55,6 +55,7 @@ export default class ABChoose extends OP.Component {  // .extend(idBase, functio
 
 			id: ids.component,
 			responsive:"hide",
+			type: "space",
 			cols: [
 				{
 					maxWidth: App.config.appListSpacerColMaxWidth,
@@ -139,15 +140,13 @@ export default class ABChoose extends OP.Component {  // .extend(idBase, functio
 									name: "permissions",
 									id: ids.appFormPermissionList,
 									view: "list",
-									//height: 130,
 									autowidth: true,
-									autoheight: true,
 									margin: 0,
 									css: "ab-app-form-permission",
 									template: "{common.markCheckbox()} #name#",
 									type:{
 										markCheckbox:function(obj ){
-											return "<span class='check webix_icon fa fa-"+(obj.markCheckbox?"check-":"")+"square-o'></span>";
+											return "<span class='check webix_icon fa fa-fw fa-"+(obj.markCheckbox?"check-":"")+"square-o'></span>";
 										}
 									},
 									on: {
@@ -185,7 +184,6 @@ export default class ABChoose extends OP.Component {  // .extend(idBase, functio
 							]
 						},
 						{
-							maxHeight: App.config.appListSpacerRowHeight,
 							hidden: App.config.hideMobile
 						}
 					]

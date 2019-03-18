@@ -193,8 +193,7 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 				labelWidth: App.config.labelWidthLarge,
 				body: {
 					type: "clean",
-					paddingY: 20,
-					paddingX: 10,
+					padding: 10,
 					rows: [
 						{
 							cols: [
@@ -381,9 +380,9 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 		var templateLabel = '';
 		if (settings.showLabel == true) {
 			if (settings.labelPosition == 'top')
-				templateLabel = '<label style="display:block; text-align: left; margin: 0; padding:1px 7.5px 0 3px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" class="webix_inp_top_label '+requiredClass+'">#label#</label>';
+				templateLabel = '<label style="display:block; text-align: left; margin: 0; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" class="webix_inp_top_label '+requiredClass+'">#label#</label>';
 			else
-				templateLabel = '<label style="width: #width#px; display: inline-block; line-height: 32px; float: left; margin: 0; padding:1px 7.5px 0 3px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" class="'+requiredClass+'">#label#</label>';
+				templateLabel = '<label style="width: #width#px; display: inline-block; line-height: 32px; float: left; margin: 0; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" class="webix_inp_label '+requiredClass+'">#label#</label>';
 		}
 
 		var newWidth = settings.labelWidth;

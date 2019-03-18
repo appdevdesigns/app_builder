@@ -54,6 +54,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
             common: App.labels,
             component: {
                 addNewRow: L('ab.object.addNewRow', "*Add new row"),
+                addNew: L('ab.object.addNew', '*Add new object'),
                 selectObject: L('ab.object.selectObject', "*Select an object to work with."),
                 // formHeader: L('ab.application.form.header', "*Application Info"),
                 deleteSelected: L('ab.object.toolbar.deleteRecords', "*Delete"),
@@ -163,23 +164,25 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 
 
 
-        var submenuFixedItems = [
-            {
-                $template: "Separator"
-            },
-            {
-                value: "New View",
-                icon: "fa fa-plus",
-                id: ids.viewMenuNewView, 
-            },
-        ];
+        var newViewButton = {
+			view: "button",
+			type: "icon",
+            label: "New view",
+			width: 120,
+            icon: "fa fa-plus-circle",
+			align: "left",
+            id: ids.viewMenuNewView,
+			click: function() {
+				PopupViewSettingsComponent.show();
+			}
+        };
         
         var menu = {
             view: "menu",
-            css: "darkgray",
-            borderless: true,
-            minWidth: 150,
-            autowidth: true,
+            // css: "darkgray",
+            // borderless: true,
+            // minWidth: 150,
+            // autowidth: true,
             id: ids.viewMenu,
             data: [],
             on: {
@@ -188,9 +191,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     if (id === ids.viewMenuButton) {
                         return;
                     }
-                    if (id === ids.viewMenuNewView) {
-                        PopupViewSettingsComponent.show();
-                    } else if (item.isView) {
+					if (item.isView) {
                         var view = CurrentObject.workspaceViews.list(v => v.id === id)[0];
                         _logic.switchWorkspaceView(view);
                     } else if (item.action === 'edit') {
@@ -213,12 +214,17 @@ export default class ABWorkObjectWorkspace extends OP.Component {
             view: 'toolbar',
             id: ids.toolbar,
             hidden: true,
-            css: "transparent",
-            borderless: true,
-            paddingY: 2,
-            paddingX: 0,
-            margin: 0,
+            css: "webix_dark",
+			elementsConfig: {
+				autowidth: true,
+				padding: 0,
+				margin: 0,
+				
+			},
+			margin: 0,
+			padding: 0,
             cols: [
+				{ responsive:"hide" },
                 {
                     view: view,
                     id: ids.buttonAddField,
@@ -226,76 +232,82 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                     icon: "fa fa-plus",
                     type: "icon",
                     hidden: !settings.isFieldAddable,
-                    minWidth: 115,
+                    // minWidth: 115,
                     // autowidth: true,
                     click:function() {
                         _logic.toolbarAddFields(this.$view);
                     }
                 },
+				{ responsive:"hide" },
                 {
                     view: view,
                     id: ids.buttonFieldsVisible,
                     label: labels.component.hideFields,
                     icon: "fa fa-eye-slash",
                     type: "icon",
-                    minWidth: 105,
+                    // minWidth: 105,
                     // autowidth: true,
                     badge: 0,
                     click: function () {
                         _logic.toolbarFieldsVisible(this.$view);
                     }
                 },
+				{ responsive:"hide" },
                 {
                     view: view,
                     id: ids.buttonFilter,
                     label: labels.component.filterFields,
                     icon: "fa fa-filter",
                     type: "icon",
-                    minWidth: 70,
+                    // minWidth: 70,
                     // autowidth: true,
                     badge: 0,
                     click: function () {
                         _logic.toolbarFilter(this.$view);
                     }
                 },
+				{ responsive:"hide" },
                 {
                     view: view,
                     id: ids.buttonSort,
                     label: labels.component.sortFields,
                     icon: "fa fa-sort",
                     type: "icon",
-                    minWidth: 60,
+                    // minWidth: 60,
                     // autowidth: true,
                     badge: 0,
                     click: function () {
                         _logic.toolbarSort(this.$view);
                     }
                 },
+				{ responsive:"hide" },
                 {
                     view: view,
                     id: ids.buttonFrozen,
                     label: labels.component.frozenColumns,
                     icon: "fa fa-thumb-tack",
                     type: "icon",
-                    minWidth: 75,
+                    // minWidth: 75,
                     // autowidth: true,
                     badge: 0,
                     click: function(){
                         _logic.toolbarFrozen(this.$view);
                     }
                 },
+				{ responsive:"hide" },
                 {
                     view: view,
                     id: ids.buttonLabel,
                     label: labels.component.defineLabel,
                     icon: "fa fa-crosshairs",
                     type: "icon",
-                    minWidth: 75,
+                    // minWidth: 75,
                     // autowidth: true,
                     click: function () {
                         _logic.toolbarDefineLabel(this.$view);
                     }
                 },
+				{ responsive:"hide" },
                 // {
                 //  view: view,
                 //  label: labels.component.permission,
@@ -313,30 +325,32 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 					label: labels.component.import,
 					icon: "fa fa-upload",
 					type: "icon",
-					minWidth: 80,
+					// minWidth: 80,
 					click: function() {
 						_logic.toolbarButtonImport();
 					}
 				},
+				{ responsive:"hide" },
                 {
                     view: view,
                     id: ids.buttonExport,
                     label: labels.component.export,
                     icon: "fa fa-download",
                     type: "icon",
-                    minWidth: 80,
+                    // minWidth: 80,
                     // autowidth: true,
                     click: function() {
                         _logic.toolbarButtonExport(this.$view);
                     }
                 },
+				{ responsive:"hide" },
                 {
                     view: view,
                     id: ids.buttonMassUpdate,
                     label: labels.component.massUpdate,
                     icon: "fa fa-pencil-square-o",
                     type: "icon",
-                    minWidth: 65,
+                    // minWidth: 65,
                     // autowidth: true,
                     badge: 0,
                     hidden:true,
@@ -344,20 +358,22 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                         _logic.toolbarMassUpdate(this.$view);
                     }
                 },
+				{ responsive:"hide" },
                 {
                     view: view,
                     id: ids.buttonDeleteSelected,
                     label: labels.component.deleteSelected,
                     icon: "fa fa-trash",
                     type: "icon",
-                    minWidth: 85,
+                    // minWidth: 85,
                     // autowidth: true,
                     badge: 0,
                     hidden:true,
                     click: function () {
                         _logic.toolbarDeleteSelected(this.$view);
                     }
-                }
+                },
+				{ responsive:"hide" }
             ]
         }
 
@@ -378,11 +394,32 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     						maxHeight: App.config.xxxLargeSpacer,
     						hidden: App.config.hideMobile
     					},
+						{
+    						view:'label',
+    						align: "center",
+							height: 200,
+    						label: "<div style='display: block; font-size: 180px; background-color: #666; color: transparent; text-shadow: 0px 1px 1px rgba(255,255,255,0.5); -webkit-background-clip: text; -moz-background-clip: text; background-clip: text;' class='fa fa-database'></div>"
+    					},
     					{
     						view:'label',
     						align: "center",
-    						label:labels.component.selectObject
+    						label: labels.component.selectObject
     					},
+                        {
+                            cols: [
+                                {},
+                                {
+                                    view: "button",
+                                    label: labels.component.addNew,
+                                    type: "form",
+                                    autowidth: true,
+                                    click: function() {
+                                        App.actions.addNewObject(true);
+                                    }
+                                },
+                                {}
+                            ]
+                        },
     					{
     						maxHeight: App.config.xxxLargeSpacer,
     						hidden: App.config.hideMobile
@@ -391,47 +428,48 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     			},
     			{
     				id: ids.selectedObject,
+					type: "wide",
+					paddingY: 0,
                     // css: "ab-data-toolbar",
                     // borderless: true,
     				rows: [
-                        {
-                            type: "clean",
-                            css: "ab-data-toolbar",
-                            cols: [
-                                menu,
-                                { width: 1, css: "white" }, // separator
-                                toolbar
-                            ]
-                        },
+						{
+							cols: [
+								newViewButton,
+								menu
+							]
+						},
+						toolbar,
 						// DataTable.ui,
                         {
-                            view: "multiview",
-                            cells:[
-                                KanBan.ui,
-                                DataTable.ui,
-                                Gantt.ui,
-                            ]
-                        },
-						(settings.isInsertable ? 
-    					{
-    						cols: [
-    							{
-    								view: "button",
-    								id: ids.buttonRowNew,
-    								value: labels.component.addNewRow,
-    								click: function () {
-    									_logic.rowAdd();
-    								}
-    							}
-    						]
-						} : 
-						{ 
-							view: 'layout',
-							rows: [],
-							hidden: true
-						})
+							padding: 0,
+							rows: [
+								{
+									view: "multiview",
+									cells:[
+										KanBan.ui,
+										DataTable.ui,
+										Gantt.ui,
+									]
+								},
+								(settings.isInsertable ? 
+								{
+									view: "button",
+									type: "form",
+									id: ids.buttonRowNew,
+									value: labels.component.addNewRow,
+									click: function () {
+										_logic.rowAdd();
+									}
+								} : 
+								{ 
+									view: 'layout',
+									rows: [],
+									hidden: true
+								})
+							]
+                        }
     				]
-
     			}
     		]
     	};
@@ -1227,16 +1265,13 @@ console.error('TODO: toolbarPermission()');
                             action: 'delete',
                         }
                     ]
-                })).concat(submenuFixedItems);
+                }));
 
-                var currView = CurrentObject.workspaceViews.getCurrentView();
-                var icon = currView.constructor.icon();
+                // var currView = CurrentObject.workspaceViews.getCurrentView();
+                // var icon = currView.constructor.icon();
 
-                $$(ids.viewMenu).define('data', [{
-                    value: `View: <span class="fa ${icon}"></span> <b>${currView.name}</b>`,
-                    id: ids.viewMenuButton,
-                    submenu,
-                }]);
+				$$(ids.viewMenu).clearAll();
+				$$(ids.viewMenu).define('data', submenu);
                 $$(ids.viewMenu).refresh();
             },
 		}

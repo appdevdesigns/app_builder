@@ -63,6 +63,46 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 			id:ids.component,
 			rows: [
 				{
+					view: App.custom.editunitlist.view, // "editunitlist"
+					id: ids.list,
+					width: App.config.columnWidthLarge,
+
+					select: true,
+
+					editaction: 'custom',
+					editable: true,
+					editor: "text",
+					editValue: "label",
+
+					uniteBy: function(item) {
+						return "";
+					},
+					template: function(obj, common) {
+						return _logic.templateListItem(obj, common);
+					},
+					type: {
+						height: 35,
+						headerHeight:35,
+						iconGear: "<div class='ab-object-list-edit'><span class='webix_icon fa fa-cog'></span></div>"
+					},
+					on: {
+						onAfterSelect: function (id) {
+							_logic.selectObject(id);
+						},
+						onBeforeEditStop: function (state, editor) {
+							_logic.onBeforeEditStop(state, editor);
+						},
+						onAfterEditStop: function (state, editor, ignoreUpdate) {
+							_logic.onAfterEditStop(state, editor, ignoreUpdate);
+						}
+					},
+					onClick: {
+						"ab-object-list-edit": function (e, id, trg) {
+							_logic.clickEditMenu(e, id, trg);
+						}
+					}
+				},
+				{
 					view: "accordion",
 					multi: true,
 					css: "ab-object-list-filter",
@@ -70,8 +110,8 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 						{
 							id: ids.listSetting,
 							header: labels.component.listSetting,
-							headerHeight: 30,
-							headerAltHeight: 30,
+							headerHeight: 45,
+							headerAltHeight: 45,
 							body: {
 								padding: 5,
 								rows: [
@@ -131,48 +171,10 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 					}
 				},
 				{
-					view: App.custom.editunitlist.view, // "editunitlist"
-					id: ids.list,
-					width: App.config.columnWidthLarge,
-
-					select: true,
-
-					editaction: 'custom',
-					editable: true,
-					editor: "text",
-					editValue: "label",
-
-					uniteBy: function(item) {
-						return "   ";
-					},
-					template: function(obj, common) {
-						return _logic.templateListItem(obj, common);
-					},
-					type: {
-						// height: 35,
-						iconGear: "<div class='ab-object-list-edit'><span class='webix_icon fa fa-cog'></span></div>"
-					},
-					on: {
-						onAfterSelect: function (id) {
-							_logic.selectObject(id);
-						},
-						onBeforeEditStop: function (state, editor) {
-							_logic.onBeforeEditStop(state, editor);
-						},
-						onAfterEditStop: function (state, editor, ignoreUpdate) {
-							_logic.onAfterEditStop(state, editor, ignoreUpdate);
-						}
-					},
-					onClick: {
-						"ab-object-list-edit": function (e, id, trg) {
-							_logic.clickEditMenu(e, id, trg);
-						}
-					}
-				},
-				{
 					view: 'button',
 					id: ids.buttonNew,
 					value: labels.component.addNew,
+					type: "form",
 					click: function () {
 						_logic.clickNewObject(true); // pass true so it will select the new object after you created it
 					}
@@ -347,7 +349,7 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 				}
 				else {
 					$$(ids.list).define("uniteBy", (item) => {
-						return "   "; 
+						return "Data Objects"; 
 					});
 				}
 

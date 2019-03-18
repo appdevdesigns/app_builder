@@ -86,6 +86,7 @@ export default class ABChooseConfig extends OP.Component {
 		this.ui = {
 
 			id: ids.component,
+			type: "space",
 			cols: [
 				{
 					maxWidth: App.config.appListSpacerColMaxWidth,

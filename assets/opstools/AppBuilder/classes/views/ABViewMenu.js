@@ -271,8 +271,7 @@ export default class ABViewMenu extends ABViewWidget {
 				body: {
 					view: "layout",
 					type: "clean",
-					paddingY: 20,
-					paddingX: 10,
+					padding: 10,
 					rows: [
 						{
 							name: "pages",

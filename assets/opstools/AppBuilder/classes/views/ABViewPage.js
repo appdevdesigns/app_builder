@@ -252,8 +252,7 @@ export default class ABViewPage extends ABViewContainer {
                 labelWidth: App.config.labelWidthLarge,
                 body: {
                     type: "clean",
-                    paddingY: 20,
-                    paddingX: 10,
+                    padding: 10,
                     rows: [
                         {
                             cols: [
@@ -286,8 +285,7 @@ export default class ABViewPage extends ABViewContainer {
                 labelWidth: App.config.labelWidthLarge,
                 body: {
                     type: "clean",
-                    paddingY: 20,
-                    paddingX: 10,
+                    padding: 10,
                     rows: [
                         {
             				name: 'permissions',

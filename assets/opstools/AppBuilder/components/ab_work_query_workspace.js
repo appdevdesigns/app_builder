@@ -24,18 +24,22 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 		var L = this.Label;
 
 		var labels = {
-			design: L('ab.query.designMode', "*Design mode"),
-			run: L('ab.query.runMode', "*Run mode"),
-			loadAll: L('ab.query.loadAll', "*Load all")
+			design: L('ab.query.designMode', "*Build Query"),
+			addNew: L('ab.query.addNew', "*Add new query"),
+			run: L('ab.query.runMode', "*View Query"),
+			loadAll: L('ab.query.loadAll', "*Load all"),
+			selectQuery: L('ab.query.selectQuery', "*Select a query to work with.")
 		};
 
 
 		// internal list of Webix IDs to reference our UI components.
 		var ids = {
 			component: this.unique('component'),
+			multiview: this.unique('multiview'),
 			toolbar: this.unique('toolbar'),
 			modeButton: this.unique('modeButton'),
-			loadAllButton: this.unique('loadAllButton')
+			loadAllButton: this.unique('loadAllButton'),
+			noSelection: this.unique('noSelection')
 		};
 
 		var settingsDataTable = {
@@ -54,56 +58,112 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 
 		// Our webix UI definition:
 		this.ui = {
+			type: "line",
+			id: ids.component,
 			rows: [
 				{
-					view: 'toolbar',
+					view: 'tabbar',
 					id: ids.toolbar,
-					css: "ab-data-toolbar",
-					cols: [
+					hidden: true,
+					borderless: false,
+					bottomOffset: 0,
+					// css: "ab-data-toolbar",
+					options: [
 						{
-							view: 'button',
-							id: ids.modeButton,
-							label: labels.design,
-							icon: "fa fa-tasks",
+							value: labels.design,
+							icon: "fa fa-sliders",
 							type: "icon",
-							width: 140,
-							click: function () {
-
-								if (CurrentMode == 'run')
-									CurrentMode = 'design';
-								else 
-									CurrentMode = 'run';
-
-								_logic.changeMode(CurrentMode);
+							id: "design",
+							on: {
+								'click': function () {
+									_logic.changeMode('run');
+								}								
 							}
 						},
 						{
-							view: 'button',
-							id: ids.loadAllButton,
-							label: labels.loadAll,
-							icon: "fa fa-download",
+							value: labels.run,
+							icon: "fa fa-table",
 							type: "icon",
-							width: 140,
-							hidden: true,
-							click: function () {
-								_logic.loadAll();
+							id: "run",
+							on: {
+								'click': function () {
+									_logic.changeMode('design');
+								}
 							}
 						}
-					]
+					],
+					on: {
+						'onChange': function (newv, oldv) {
+							if (newv != oldv) {
+								_logic.changeMode(newv);
+							}
+						}
+					}
 				},
 				{
 					view: 'multiview',
-					id: ids.component,
+					id: ids.multiview,
 					cells: [
+						{
+							id: ids.noSelection,
+							rows: [
+								{
+									maxHeight: App.config.xxxLargeSpacer,
+									hidden: App.config.hideMobile
+								},
+								{
+									view:'label',
+									align: "center",
+									height: 200,
+									label: "<div style='display: block; font-size: 180px; background-color: #666; color: transparent; text-shadow: 0px 1px 1px rgba(255,255,255,0.5); -webkit-background-clip: text; -moz-background-clip: text; background-clip: text;' class='fa fa-filter'></div>"
+								},
+								{
+									view: 'label',
+									align: "center",
+									label: labels.selectQuery
+								},
+								{
+									cols: [
+										{},
+										{
+											view: "button",
+											label: labels.addNew,
+											type: "form",
+											autowidth: true,
+											click: function() {
+												App.actions.addNewQuery(true);
+											}
+										},
+										{}
+									]
+								},
+								{
+									maxHeight: App.config.xxxLargeSpacer,
+									hidden: App.config.hideMobile
+								}
+							]
+						},
 						QueryDesignComponent.ui,
 						DataTable.ui
 					]
+				},
+				{
+					view: 'button',
+					id: ids.loadAllButton,
+					label: labels.loadAll,
+					type: "form",
+					hidden: true,
+					click: function () {
+						_logic.loadAll();
+					}
 				}
 			]
 		};
 
 		// Our init() function for setting up our UI
 		this.init = function () {
+			
+			$$(ids.noSelection).show();
 
 			QueryDesignComponent.init();
 
@@ -144,6 +204,8 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 			 */
 			clearWorkspace: function () {
 				CurrentQuery = null;
+				
+				// $$(ids.noSelection).show(false, false);
 
 				QueryDesignComponent.clearWorkspace();
 
@@ -162,35 +224,53 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 				CurrentQuery = query;
 
 				_logic.changeMode(CurrentMode);
+				
+				// $$(ids.noSelection).show(false, false);
 
+			},
+			
+			/**
+			 * @function resetTabs()
+			 *
+			 * When a new query is set we need to reset the tabs too
+			 *
+			 */
+			resetTabs: function () {
+				$$(ids.toolbar).setValue("design");
 			},
 
 
 			changeMode: function (mode) {
+				
+				// $$(ids.noSelection).hide(false, false);
+				$$(ids.toolbar).show(false, false);
 
 				// Run
 				if (mode == 'run') {
-					$$(ids.modeButton).define('label', labels.design);
-					$$(ids.modeButton).define('icon', "fa fa-tasks");
+					// $$(ids.modeButton).define('label', labels.design);
+					// $$(ids.modeButton).define('icon', "fa fa-tasks");
 					$$(ids.loadAllButton).show();
+					// $$(ids.loadAllButton).refresh();
 
 					DataTable.populateObjectWorkspace(CurrentQuery);
 
-					$$(ids.component).setValue(DataTable.ui.id);
+					$$(ids.multiview).setValue(DataTable.ui.id);
 				}
 				// Design
 				else {
-					$$(ids.modeButton).define('label', labels.run);
-					$$(ids.modeButton).define('icon', "fa fa-cubes");
+					// $$(ids.modeButton).define('label', labels.run);
+					// $$(ids.modeButton).define('icon', "fa fa-cubes");
 					$$(ids.loadAllButton).hide();
+					// $$(ids.loadAllButton).refresh();
 
 					$$(QueryDesignComponent.ui.id).show(true);
 
 					QueryDesignComponent.populateQueryWorkspace(CurrentQuery);
 
 				}
-
-				$$(ids.modeButton).refresh();
+				
+				
+				// $$(ids.modeButton).refresh();
 
 			},
 
@@ -213,6 +293,7 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 		this.applicationLoad = _logic.applicationLoad;
 		this.clearWorkspace = _logic.clearWorkspace;
 		this.populateQueryWorkspace = _logic.populateQueryWorkspace;
+		this.resetTabs = _logic.resetTabs;
 
 
 	}
