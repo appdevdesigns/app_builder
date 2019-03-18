@@ -315,8 +315,18 @@ class ABFieldDate extends ABField {
 					// for now, just don't return the date.  But in the future decide what to do based upon our 
 					// settings:
 					// if required -> return a default value? return null? 
+					if (this.settings.required) {
+
+						if (this.settings.defaultDateValue)
+							myParameter[this.columnName] = new Date(this.settings.defaultDateValue);
+						else
+							delete myParameter[this.columnName];
+
+					}
 					// if !required -> just don't return a value like now?
-					delete myParameter[this.columnName];
+					else {
+						myParameter[this.columnName] = null;
+					}
 
 				}
 				// convert to SQL date format
