@@ -343,7 +343,9 @@ class ABFieldFormula extends ABField {
 		// calculate
 		switch (this.settings.type) {
 			case "sum":
-				result = numberList.reduce((sum, val) => sum + (val || 0)); 
+				if (numberList.length > 0) {
+					result = numberList.reduce((sum, val) => sum + (val || 0)); 
+				}
 				break;
 
 			case "average":
