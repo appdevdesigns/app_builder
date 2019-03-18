@@ -231,8 +231,8 @@ export default class ABWorkObjectGantt extends OP.Component {
 
 				let gantt_data = {
 					data: (CurrentDC.getData() || [])
-						.map((d, index) => _logic.convertFormat(gantt, d, index))
-						.filter(d => d['start_date'] && (d['end_date'] || d['duration'])) // required fields
+						.map((d, index) => _logic.convertFormat(gantt, d))
+						// .map((d, index) => _logic.convertFormat(gantt, d, index))
 				};
 
 				gantt.parse(gantt_data);
@@ -305,17 +305,19 @@ export default class ABWorkObjectGantt extends OP.Component {
 				if (!CurrentStartDateField || (!CurrentEndDateField && !CurrentDurationField))
 					return data;
 
+				let currDate = new Date();
+
 				data['id'] = data.id;
 				// define label
 				data['text'] = CurrentObject.displayData(data);
-				data['start_date'] = data[CurrentStartDateField.columnName];
+				data['start_date'] = data[CurrentStartDateField.columnName] || currDate;
 				data['progress'] = CurrentProgressField ? parseFloat(data[CurrentProgressField.columnName] || 0) : 0;
 
 				if (CurrentEndDateField)
-					data['end_date'] = data[CurrentEndDateField.columnName];
+					data['end_date'] = data[CurrentEndDateField.columnName] || currDate;
 
 				if (CurrentDurationField)
-					data['duration'] = data[CurrentDurationField.columnName] || 0;
+					data['duration'] = data[CurrentDurationField.columnName] || 1;
 
 				// Calculate end date
 				if (!data['end_date'] && data['start_date'] && data['duration'])
@@ -324,6 +326,12 @@ export default class ABWorkObjectGantt extends OP.Component {
 				// Calculate duration
 				if (!data['duration'] && data['start_date'] && data['end_date'])
 					data['duration'] = gantt.calculateDuration(data['start_date'], data['end_date']);
+
+				// Default values
+				if (!data['end_date'] && !data['duration']) {
+					data['end_date'] = currDate;
+					data['duration'] = 1;
+				}
 
 				if (index != null)
 					data['order'] = index;
@@ -505,7 +513,33 @@ export default class ABWorkObjectGantt extends OP.Component {
 				if (!gantt) return;
 
 				// default sort
-				gantt.sort("start_date", false);
+				let MAX_date = new Date(8640000000000000);
+				gantt.sort(function(a, b) {
+
+					let aStartDate = a['start_date'],
+						aEndDate = a['end_date'],
+						aDuration = a['duration'] || 1,
+
+						bStartDate = b['start_date'],
+						bEndDate = b['end_date'],
+						bDuration = b['duration'] || 1;
+
+					// if no start date, then be a last item
+					if (a[CurrentStartDateField.columnName] == null || b[CurrentStartDateField.columnName] == null) {
+						return (a[CurrentStartDateField.columnName] || MAX_date) - (b[CurrentStartDateField.columnName] || MAX_date);
+					}
+					else if (aStartDate != bStartDate) {
+						return aStartDate - bStartDate;
+					}
+					else if (aEndDate != bEndDate) {
+						return aEndDate - bEndDate;
+					}
+					else if (aDuration != bDuration) {
+						return bDuration - aDuration;
+					}
+
+				}, false);
+
 			}
 
 

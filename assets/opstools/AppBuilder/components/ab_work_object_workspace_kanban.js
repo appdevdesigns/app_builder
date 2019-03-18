@@ -9,8 +9,8 @@
 import ABFieldList from "../classes/dataFields/ABFieldList";
 import ABFieldUser from "../classes/dataFields/ABFieldUser";
 
-import AB_Work_Form from "app_builder/assets/opstools/AppBuilder/components/ab_work_object_workspace_formSidePanel"
-import ABFieldConnect from "app_builder/assets/opstools/AppBuilder/classes/dataFields/ABFieldConnect";
+import AB_Work_Form from "./ab_work_object_workspace_formSidePanel"
+import ABFieldConnect from "../classes/dataFields/ABFieldConnect";
 
 
 export default class ABWorkObjectKanBan extends OP.Component {

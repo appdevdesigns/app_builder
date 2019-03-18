@@ -133,15 +133,11 @@ export default class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView {
 			if (view && view.endDate) {
 				$$(ids.endDate).define("value", view.endDate || defaultValues.endDate);
 				$$(ids.endDate).refresh();
-
-				ViewComponent.logic.onEndDateChange(view.endDate);
 			}
 
 			if (view && view.duration) {
 				$$(ids.duration).define("value", view.duration || defaultValues.duration);
 				$$(ids.duration).refresh();
-
-				ViewComponent.logic.onDurationChange(view.duration);
 			}
 
 			if (view && view.progress) {
@@ -192,12 +188,7 @@ export default class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView {
 									placeholder: labels.component.endDatePlaceholder,
 									labelWidth: 180,
 									name: "endDate",
-									options: [],
-									on: {
-										onChange: (newVal, oldVal) => {
-											ViewComponent.logic.onEndDateChange(newVal);
-										}
-									}
+									options: []
 								},
 								{
 									view: "button",
@@ -220,12 +211,7 @@ export default class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView {
 									placeholder: labels.component.durationPlaceholder,
 									labelWidth: 180,
 									name: "duration",
-									options: [],
-									on: {
-										onChange: (newVal, oldVal) => {
-											ViewComponent.logic.onDurationChange(newVal);
-										}
-									}
+									options: []
 								},
 								{
 									view: "button",
@@ -317,35 +303,6 @@ export default class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView {
 			},
 
 			logic: {
-
-				onEndDateChange: (val) => {
-
-					let $duration = $$(ids.duration);
-					if (!$duration) return;
-
-					if (!val || val == "none") {
-						$duration.enable();
-					}
-					else {
-						$duration.disable();
-					}
-
-				},
-
-				onDurationChange: (val) => {
-
-					let $endDate = $$(ids.endDate);
-					if (!$endDate) return;
-
-					if (!val || val == "none") {
-						$endDate.enable();
-					}
-					else {
-						$endDate.disable();
-					}
-
-				}
-
 			}
 
 		});

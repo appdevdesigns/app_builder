@@ -1173,6 +1173,8 @@ console.error('TODO: toolbarPermission()');
 
                     // save current view
                     CurrentObject.save();
+
+                    _logic.loadData();
                 }
             },
 
