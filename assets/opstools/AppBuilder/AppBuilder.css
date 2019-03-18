@@ -101,9 +101,13 @@ label {
 	float: left;
 	height: 100%;
 }
-.ab-app-list-edit, .ab-object-list-edit {
+.ab-app-list-edit, .ab-object-list-edit, .ab-page-list-edit {
 	float:right;
 	height: 100%;
+	opacity: 0.6;
+}
+.ab-app-list-edit:hover, .ab-object-list-edit:hover, .ab-page-list-edit:hover {
+	opacity: 1;
 }
 .ab-app-list-edit .webix_list_item {
 	line-height: 50px;
