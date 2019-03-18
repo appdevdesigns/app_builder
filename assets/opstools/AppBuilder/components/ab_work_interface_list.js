@@ -107,7 +107,7 @@ export default class AB_Work_Interface_List extends OP.Component {
 					type: "form",
 					value: labels.component.addNew,
 					click: function () {
-						_logic.clickNewView();
+						App.actions.clickNewView();
 					}
 				}
 			]

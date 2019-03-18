@@ -50,6 +50,7 @@ export default {
 	labelWidthLarge: 120,
 	labelWidthXLarge: 150,
 	labelWidthXXLarge: 200,
+	labelWidthXXXLarge: 280,
 	labelWidthCheckbox: 0,
 
 	// show elements on desktop

@@ -25,6 +25,7 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 
 		var labels = {
 			design: L('ab.query.designMode', "*Build Query"),
+			addNew: L('ab.query.addNew', "*Add new query"),
 			run: L('ab.query.runMode', "*View Query"),
 			loadAll: L('ab.query.loadAll', "*Load all"),
 			selectQuery: L('ab.query.selectQuery', "*Select a query to work with.")
@@ -120,6 +121,21 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 									view: 'label',
 									align: "center",
 									label: labels.selectQuery
+								},
+								{
+									cols: [
+										{},
+										{
+											view: "button",
+											label: labels.addNew,
+											type: "form",
+											autowidth: true,
+											click: function() {
+												App.actions.addNewQuery(true);
+											}
+										},
+										{}
+									]
 								},
 								{
 									maxHeight: App.config.xxxLargeSpacer,

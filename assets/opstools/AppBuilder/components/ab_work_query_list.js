@@ -592,7 +592,7 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 				return $$(ids.list).getSelectedItem();
 			},
 
-			addNewObject:function(selectNew, callback) {
+			addNewQuery:function(selectNew, callback) {
 				_logic.clickNewObject(selectNew, callback);
 			}
 

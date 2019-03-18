@@ -463,6 +463,8 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 			 * @return {Promise}
 			 */
 			save: () => {
+				
+				console.log("Changed **********************");
 
 				return new Promise((resolve, reject) => {
 
@@ -791,6 +793,8 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 
 			refreshDataTable: function () {
+				
+				console.log("Refresh data table *******");
 
 				var DataTable = $$(ids.datatable);
 
@@ -801,7 +805,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 
 				// set data:
-				CurrentQuery.model().findAll({ limit: 20 })
+				CurrentQuery.model().findAll({ limit: 20, where: CurrentQuery.workspaceViews.getCurrentView().filterConditions, sort: CurrentQuery.workspaceViews.getCurrentView().sortFields })
 					.then((response) => {
 
 						DataTable.clearAll();

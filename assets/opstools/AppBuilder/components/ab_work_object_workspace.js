@@ -54,6 +54,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
             common: App.labels,
             component: {
                 addNewRow: L('ab.object.addNewRow', "*Add new row"),
+                addNew: L('ab.object.addNew', '*Add new object'),
                 selectObject: L('ab.object.selectObject', "*Select an object to work with."),
                 // formHeader: L('ab.application.form.header', "*Application Info"),
                 deleteSelected: L('ab.object.toolbar.deleteRecords', "*Delete"),
@@ -404,6 +405,21 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     						align: "center",
     						label: labels.component.selectObject
     					},
+                        {
+                            cols: [
+                                {},
+                                {
+                                    view: "button",
+                                    label: labels.component.addNew,
+                                    type: "form",
+                                    autowidth: true,
+                                    click: function() {
+                                        App.actions.addNewObject(true);
+                                    }
+                                },
+                                {}
+                            ]
+                        },
     					{
     						maxHeight: App.config.xxxLargeSpacer,
     						hidden: App.config.hideMobile

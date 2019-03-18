@@ -490,6 +490,7 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 				];
 
 				var $optionUpdateExsits = {
+					type: "clean",
 					rows: [
 						{
 							cols: [
@@ -866,7 +867,7 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 						{
 							// Label
 							view: 'label',
-							autowidth: true,
+							width: this.App.config.labelWidthSmall,
 							label: this.labels.component.set
 						},
 						{
@@ -886,7 +887,7 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 						{
 							// Label
 							view: 'label',
-							autowidth: true,
+							width: this.App.config.labelWidthSmall,
 							label: this.labels.component.to
 						},
 

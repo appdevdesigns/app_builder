@@ -17,7 +17,7 @@ label {
 	left: 2px;
 }
 .selectivity-multiple-selected-item, .selectivity-single-selected-item {
-	background: #3498db !important;
+	background: #337ab7 !important;
 	padding: 0 10px;
 	border-radius: 15px !important;
 	color: #FFF !important;
@@ -238,7 +238,7 @@ label {
 }
 .ab-menu-link.webix_menu-x .webix_list_item {
 	background: transparent;
-	color: #3498db;
+	color: #337ab7;
 	font-weight: bold;
 	padding: 0;
 	margin-right: 15px;
@@ -248,4 +248,72 @@ label {
 }
 .ab-custom-field .webix_template {
 	padding: 0;
+}
+
+.ab-component-form-rule {
+	background-color: #dcdcdc;
+}
+.ab-main-container .webix_querybuilder_wrap .webix_layout_form, .ab-main-container .ab-component-form-rules .webix_layout_form {
+	background: inherit !important;
+}
+.ab-component-form-rules .webix_view {
+	background: transparent !important;
+}
+.ab-component-form-rules {
+	background: #ddd;
+    border-radius: 5px;
+    box-shadow: inset 0px 2px 5px 0px rgba(0,0,0,0.4);
+	position: relative;
+	overflow: visible;
+}
+.ab-component-form-rules-delete {
+    background: transparent;
+}
+.ab-component-form-rules-delete .ab-component-remove {
+	position: absolute;
+	top: -6px;
+	right: -8px;
+	border-radius: 100%;
+}
+/* Connect object data */
+.ab-connect-add-new a.fa {
+	width: 35px;
+	height: 35px;
+	display: block;
+	float: left;
+	border-radius: 4px;
+	background: #1ca1c1;
+	color: white;
+	opacity: 1;
+	text-align: center;
+	line-height: 35px;
+}
+.ab-connect-add-new a.fa:hover {
+	text-decoration: none;
+}
+.ab-connect-data-info {
+	display: inline-block;
+	width: 90px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.ab-connect-data-disable {
+	background-color: #aaa;
+}
+.stop-scrolling {
+  height: 100%;
+  overflow: hidden;
+}
+.ab-scroll-y {
+	overflow-y: auto !important;
+}
+.ab-ellipses-text, .ab-ellipses-text > div {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+.webix_dtable .webix_ss_footer td:hover , .webix_dtable .webix_ss_header td:hover {
+	border-right-color: #dadee0;
 }

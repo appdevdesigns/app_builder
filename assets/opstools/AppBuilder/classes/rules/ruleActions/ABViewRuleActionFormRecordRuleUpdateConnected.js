@@ -161,7 +161,7 @@ export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABVie
 					id: ids.selectConnectedField,
 					view: "richselect",
 					label: this.labels.component.selectField,
-					labelWidth: this.App.config.labelWidthLarge,
+					labelWidth: this.App.config.labelWidthXXXLarge,
 					value: this.selectedField,
 					options: this.fieldDropList,
 					on: {
