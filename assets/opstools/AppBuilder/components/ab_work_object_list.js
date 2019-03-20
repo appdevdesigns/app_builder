@@ -127,6 +127,7 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 										on: {
 											onTimedKeyPress: function() {
 												_logic.listSearch();
+												_logic.save();
 											}
 										}
 									},
@@ -143,6 +144,7 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 										on: {
 											onChange: (newVal, oldVal) => {
 												_logic.listSort(newVal);
+												_logic.save();
 											}
 										}
 									},
@@ -154,6 +156,7 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 										on: {
 											onChange: (newVal, oldVal) => {
 												_logic.listGroup(newVal);
+												_logic.save();
 											}
 										}
 									}
@@ -164,9 +167,11 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 					on: {
 						onAfterCollapse: (id) => {
 							_logic.listSettingCollapse();
+							_logic.save();
 						},
 						onAfterExpand: (id) => {
 							_logic.listSettingExpand();
+							_logic.save();
 						}
 					}
 				},
@@ -186,6 +191,9 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 
 		var CurrentApplication = null;
 		var objectList = null;
+
+		let _initialized = false;
+		let _settings = {};
 
 
 		// Our init() function for setting up our UI
@@ -212,6 +220,17 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 				onClick: _logic.callbackObjectEditorMenu,
 				hideCopy: true
 			})
+
+			_settings = webix.storage.local.get("object_settings") || {
+				objectlistIsOpen: false,
+				objectlistSearchText: "",
+				objectlistSortDirection: "",
+				objectlistIsGroup: false
+			};
+
+			// mark initialed
+			_initialized = true;
+
 		}
 
 
@@ -249,11 +268,22 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 				});
 
 				// setup object list settings
-				$$(ids.listSetting).define("collapsed", CurrentApplication.objectlistIsOpen != true);
+				$$(ids.listSetting).getParentView().blockEvent();
+				$$(ids.listSetting).define("collapsed", _settings.objectlistIsOpen != true);
 				$$(ids.listSetting).refresh();
-				$$(ids.searchText).setValue(CurrentApplication.objectlistSearchText);
-				$$(ids.sort).setValue(CurrentApplication.objectlistSortDirection);
-				$$(ids.group).setValue(CurrentApplication.objectlistIsGroup);
+				$$(ids.listSetting).getParentView().unblockEvent();
+				
+				$$(ids.searchText).blockEvent();
+				$$(ids.searchText).setValue(_settings.objectlistSearchText);
+				$$(ids.searchText).unblockEvent();
+
+				$$(ids.sort).blockEvent();
+				$$(ids.sort).setValue(_settings.objectlistSortDirection);
+				$$(ids.sort).unblockEvent();
+				
+				$$(ids.group).blockEvent();
+				$$(ids.group).setValue(_settings.objectlistIsGroup);
+				$$(ids.group).unblockEvent();
 
 
 				// clear our list and display our objects:
@@ -266,7 +296,7 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 
 
 				// sort objects
-				_logic.listSort(CurrentApplication.objectlistSortDirection);
+				_logic.listSort(_settings.objectlistSortDirection);
 
 				// filter object list
 				_logic.listSearch();
@@ -290,17 +320,23 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 			},
 
 			listSettingCollapse: function() {
-				if (CurrentApplication && CurrentApplication.objectlistIsOpen != false) {
-					CurrentApplication.objectlistIsOpen = false;
-					CurrentApplication.save();
-				}
+
+				// if (CurrentApplication && CurrentApplication.objectlistIsOpen != false) {
+				// 	CurrentApplication.objectlistIsOpen = false;
+
+				_settings.objectlistIsOpen = false;
+
+				// }
+
 			},
 
 			listSettingExpand: function() {
-				if (CurrentApplication && CurrentApplication.objectlistIsOpen != true) {
-					CurrentApplication.objectlistIsOpen = true;
-					CurrentApplication.save();
-				}
+				// if (CurrentApplication && CurrentApplication.objectlistIsOpen != true) {
+				// 	CurrentApplication.objectlistIsOpen = true;
+
+				_settings.objectlistIsOpen = true;
+
+				// }
 			},
 
 			listBusy:function() {
@@ -318,11 +354,11 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 					return !item.label || item.label.toLowerCase().indexOf(searchText) > -1;
 				});
 
-				// save to database
-				if (CurrentApplication && CurrentApplication.objectlistSearchText != searchText) {
-					CurrentApplication.objectlistSearchText = searchText;
-					CurrentApplication.save();
-				}
+				// if (CurrentApplication && CurrentApplication.objectlistSearchText != searchText) {
+
+				_settings.objectlistSearchText = searchText;
+
+				// }
 
 			},
 
@@ -333,11 +369,13 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 
 				_logic.listSearch();
 
-				// save to database
-				if (CurrentApplication && CurrentApplication.objectlistSortDirection != sortType) {
-					CurrentApplication.objectlistSortDirection = sortType;
-					CurrentApplication.save();
-				}
+				// // save to database
+				// if (CurrentApplication && CurrentApplication.objectlistSortDirection != sortType) {
+				// CurrentApplication.objectlistSortDirection = sortType;
+
+				_settings.objectlistSortDirection = sortType;
+
+				// }
 
 			},
 
@@ -355,11 +393,13 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 
 				$$(ids.list).refresh();
 
-				// save to database
-				if (CurrentApplication && CurrentApplication.objectlistIsGroup != isGroup) {
-					CurrentApplication.objectlistIsGroup = isGroup;
-					CurrentApplication.save();
-				}
+				// // save to database
+				// if (CurrentApplication && CurrentApplication.objectlistIsGroup != isGroup) {
+				// 	CurrentApplication.objectlistIsGroup = isGroup;
+
+				_settings.objectlistIsGroup = isGroup;
+
+				// }
 
 			},
 
@@ -408,6 +448,20 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 				}
 
 				return true;
+			},
+
+			/**
+			 * @function save()
+			 * 
+			 */
+			save: function() {
+
+				// if this UI does not be initialed, then skip it
+				if (!_initialized) return;
+
+				// CurrentApplication.save();
+				webix.storage.local.put("object_settings", _settings);
+
 			},
 
 
