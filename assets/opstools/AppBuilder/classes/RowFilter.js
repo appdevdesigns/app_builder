@@ -1612,7 +1612,7 @@ export default class RowFilter extends OP.Component {
 						result = inQueryFieldFilter.isValid(rowData);
 						break;
 					case 'not_in_query_field':
-						result = inQueryFieldFilter.isValid(rowData);
+						result = !inQueryFieldFilter.isValid(rowData);
 						break;
 				}
 
