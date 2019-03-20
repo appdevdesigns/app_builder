@@ -80,7 +80,9 @@ var ABViewPropertyDefaults = {
 	loadAll: false,
 	isQuery: false, // if true it is a query, otherwise it is a object.
 
-	fixSelect: "" // _CurrentUser, _FirstRecord, _FirstRecordDefault or row id
+	fixSelect: "", // _CurrentUser, _FirstRecord, _FirstRecordDefault or row id
+
+	syncType: 1, // 1 (Server), 2 (Client)
 }
 
 
@@ -202,6 +204,9 @@ export default class ABViewDataCollection extends ABView {
 		// Convert to boolean
 		this.settings.loadAll = JSON.parse(this.settings.loadAll || ABViewPropertyDefaults.loadAll);
 		this.settings.isQuery = JSON.parse(this.settings.isQuery || ABViewPropertyDefaults.isQuery);
+
+		// Convert to number
+		this.settings.syncType = parseInt(this.settings.syncType || ABViewPropertyDefaults.syncType);
 
 	}
 
@@ -710,6 +715,9 @@ export default class ABViewDataCollection extends ABView {
 
 		// set fix select value
 		view.settings.fixSelect = $$(ids.fixSelect).getValue();
+
+		// set sync type flag
+		view.settings.syncType = view.settings.syncType || ABViewPropertyDefaults.syncType;
 
 		// refresh data collection
 		view.init();
@@ -2117,6 +2125,18 @@ export default class ABViewDataCollection extends ABView {
 
 		this._dataStatus = this.dataStatusFlag.notInitial;
 	}
+
+	get syncTypeFlag() {
+		return {
+			server: 1,
+			client: 2
+		};
+	}
+
+	get syncType() {
+		return this.settings.syncType || ABViewPropertyDefaults.syncType;
+	}
+
 
 
 }
