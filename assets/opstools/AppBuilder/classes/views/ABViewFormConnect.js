@@ -23,6 +23,8 @@ var ABViewFormConnectPropertyComponentDefaults = {
 			rules: []
 		},
 	},
+	popupWidth: 700,
+	popupHeight: 450
 }
 
 
@@ -188,6 +190,34 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 			},
 			{
 				view: "fieldset",
+				name: "addNewSettings",
+				label: L('ab.component.connect.addNewSettings', '*Add New Popup Settings:'),
+				labelWidth: App.config.labelWidthLarge,
+				body: {
+					type: "clean",
+					padding: 10,
+					rows: [
+						{
+                            view: "text",
+            				name:'popupWidth',
+            				placeholder: L('ab.component.connect.popupWidthPlaceholder', '*Set popup width'),
+                            label: L("ab.component.page.popupWidth", "*Width:"),
+                            labelWidth: App.config.labelWidthLarge,
+                            validate:webix.rules.isNumber
+                        },
+                        {
+                            view: "text",
+            				name:'popupHeight',
+            				placeholder: L('ab.component.connect.popupHeightPlaceholder', '*Set popup height'),
+                            label: L("ab.component.page.popupHeight", "*Height:"),
+                            labelWidth: App.config.labelWidthLarge,
+                            validate:webix.rules.isNumber
+						},
+					]
+				}
+			},
+			{
+				view: "fieldset",
 				name: "advancedOption",
 				label: L('ab.component.connect.advancedOptions', '*Advanced Options:'),
 				labelWidth: App.config.labelWidthLarge,
@@ -262,6 +292,8 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 		$$(ids.formView).refresh();
 
 		$$(ids.formView).setValue(view.settings.formView || ABViewFormConnectPropertyComponentDefaults.formView);
+		$$(ids.popupWidth).setValue(view.settings.popupWidth || ABViewFormConnectPropertyComponentDefaults.popupWidth);
+		$$(ids.popupHeight).setValue(view.settings.popupHeight || ABViewFormConnectPropertyComponentDefaults.popupHeight);
 		
 		// initial populate of popups
 		this.populatePopupEditors(view);
@@ -288,6 +320,8 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 		super.propertyEditorValues(ids, view);
 
 		view.settings.formView = $$(ids.formView).getValue();
+		view.settings.popupWidth = $$(ids.popupWidth).getValue();
+		view.settings.popupHeight = $$(ids.popupHeight).getValue();
 		
 	}
 	
@@ -578,20 +612,30 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 					view: "window",
 					id: ids.popup,
 					modal: true,
-					position:function(state){
-						state.left = x + 20; // offset the popups
-						state.top = y + 20;
-					},
+					position: "center",
+					// position:function(state){
+					// 	state.left = x + 20; // offset the popups
+					// 	state.top = y + 20;
+					// },
 					resize: true,
-					width: 700,
-					height: 450,
+					width: parseInt(this.settings.popupWidth) || 700,
+					height: (parseInt(this.settings.popupHeight) + 44) || 450,
 					css: 'ab-main-container',
 					head: {
 						view: "toolbar",
+						css: "webix_dark",
 						cols: [
-							{ view: "label", label: page.label },
+							{ 
+								view: "label", 
+								label: page.label,
+								css: "modal_title",
+								align: "center"
+							},
 							{
-								view: "button", label: "Close", width: 100, align: "right",
+								view: "button", 
+								label: "Close", 
+								autowidth: true, 
+								align: "center",
 								click: function () {
 
 									var popup = this.getTopParentView();

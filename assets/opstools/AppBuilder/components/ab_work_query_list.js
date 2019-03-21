@@ -139,7 +139,7 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 				// 	}
 				// },
 				{
-					view: App.custom.editlist.view, // "editlist"
+					view: App.custom.editunitlist.view, // "editunitlist"
 					id: ids.list,
 					width: App.config.columnWidthLarge,
 
@@ -151,13 +151,14 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 					editValue: "label",
 
 					uniteBy: function(item) {
-						return "   ";
+						return "Data Queries";
 					},
 					template: function(obj, common) {
 						return _logic.templateListItem(obj, common);
 					},
 					type: {
 						height: 35,
+						headerHeight:35,
 						iconGear: "<div class='ab-object-list-edit'><span class='webix_icon fa fa-cog'></span></div>"
 					},
 					on: {

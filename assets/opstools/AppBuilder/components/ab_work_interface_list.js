@@ -56,6 +56,16 @@ export default class AB_Work_Interface_List extends OP.Component {
 			id:ids.component,
 			rows: [
 				{
+					view: "unitlist",
+					uniteBy: "Pages", 
+					height: 34,
+					data: [" "],
+					type: {
+						height: 0,
+						headerHeight:35
+					}
+				},
+				{
 					view: App.custom.edittree.view,  // "edittree",
 					id: ids.list,
 					width: App.config.columnWidthLarge,

@@ -101,9 +101,13 @@ label {
 	float: left;
 	height: 100%;
 }
-.ab-app-list-edit, .ab-object-list-edit {
+.ab-app-list-edit, .ab-object-list-edit, .ab-page-list-edit {
 	float:right;
 	height: 100%;
+	opacity: 0.6;
+}
+.ab-app-list-edit:hover, .ab-object-list-edit:hover, .ab-page-list-edit:hover {
+	opacity: 1;
 }
 .ab-app-list-edit .webix_list_item {
 	line-height: 50px;
@@ -149,7 +153,10 @@ label {
 	opacity: 0.4;
 }
 .webix_el_button button {
-	font-size: 14px;
+	/* font-size: 14px; */
+}
+.webix_el_button button.webixtype_standard:hover {
+	text-decoration: underline;
 }
 .webix_menu-x .webix_list_item {
 	line-height: 31px;
@@ -158,12 +165,13 @@ label {
 	background: white;
 }
 .ab-component-tools {
-	float: right;
-	margin: -2px 20px 0 0;
+	position: absolute;
+	top: 2px;
+	right: 33px;
 }
 .ab-component-remove, .ab-component-edit {
-	width: 33px;
-	height: 33px;
+	width: 31px;
+	height: 31px;
 	display: inline-block;
 	margin-right: 1px;
 	font-size: 18px;
@@ -246,6 +254,9 @@ label {
 .ab-menu-link.webix_menu-x .webix_list_item:hover {
 	text-decoration: underline;
 }
+.ab-custom-field {
+	overflow: visible;
+}
 .ab-custom-field .webix_template {
 	padding: 0;
 }
@@ -290,6 +301,7 @@ label {
 }
 .ab-connect-add-new a.fa:hover {
 	text-decoration: none;
+	background-color: #1992af;
 }
 .ab-connect-data-info {
 	display: inline-block;
@@ -316,4 +328,116 @@ label {
 }
 .webix_dtable .webix_ss_footer td:hover , .webix_dtable .webix_ss_header td:hover {
 	border-right-color: #dadee0;
+}
+
+
+/* Interface Editor */
+.ab-widget-header {
+	background-color: #DDD;
+}
+.ab-widget-header .webix_icon_btn {
+	opacity: 0.7;
+	margin-left: 5px;
+}
+.ab-main-container .widget_drag {
+    position: absolute;
+    z-index: 1;
+    top: 0px;
+    right: 0px;
+    width: 33px;
+    opacity: 1;
+    cursor: move;
+    background-color: #AAA;
+    height: 31px;
+    color: #fff;
+}
+.ab-main-container .widget_drag:hover {
+	opacity: 0.8;
+}
+.ab-main-container .widget_drag .webix_icon {
+	line-height: 28px;
+    width: 33px;
+    height: 33px;
+    text-align: center;
+}
+.webix_el_checkbox .webix_label_right {
+	padding-top: 0;
+}
+.webix_cell .ab-image-data-field {
+	padding: 10px 0;
+}
+.ab-image-data-field {
+	width: 100%;
+	height: 100%;
+}
+.detailsView .webix_icon:hover, .edit .webix_icon:hover, .trash .webix_icon:hover {
+	cursor: pointer;
+}
+.ab-layout-header {
+	position: relative;
+}
+.ab-layout-header > .ab-component-tools {
+	right: 0px;	
+}
+
+.transparent {
+	background: transparent !important;
+}
+.webix_modal {
+	opacity: 0.8;
+}
+.modal_title .webix_el_box {
+	font-size: 18px;
+}
+/* Loading Screen */
+.ab-loading-screen {
+	background: #000;
+	opacity: 0.7;
+	position: absolute !important;
+}
+.ab-loading-body {
+	background: #000;
+	border-width: 0px !important;
+}
+.ab-loading-message {
+	color: #fff !important;
+	background: #000 !important;
+	font-size: 30px !important;
+	text-align: center;
+	vertical-align: middle;
+	border-width: 0px !important;
+	padding-top: 20% !important;
+	height: 100px !important;
+}
+.ab-loading-button {
+	text-align: center;
+}
+.ab-loading-button button {
+	background-color: #003B7E;
+	width: 200px;
+}
+.ab-loading-cancel-button {
+	text-align: center;
+	background: transparent;
+}
+.ab-loading-cancel-button a {
+	color: #fff !important;
+}
+.ab-loading-screen .webix_progress_bottom {
+	height: 40px !important;
+	opacity: 1;
+}
+.ab-loading-screen .webix_progress_bottom .webix_progress_state {
+	height: 40px !important;
+}
+.webix_menu-x .webix_list_item:last-child {
+	border-top-right-radius: 2px;
+	border-bottom-right-radius: 2px;
+}
+.webix_menu-x .webix_list_item:first-child {
+	border-top-left-radius: 2px;
+	border-bottom-left-radius: 2px;
+}
+.preview_item {
+	background: #666;
 }

@@ -22,7 +22,7 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
             common: App.labels,
             component: {
 
-                editorTipText: L('ab.interface.editorTipText', '*Choose Layout or Preview mode. Drag and drop componenents to reorder.'),
+                editorTipText: L('ab.interface.editorTipText', '*Choose "Layout" or "Data Collections" mode. "Layout" allows you to build pages and "Data Collections" gives pages access to your data objects.'),
                 editorTipTitle: L('ab.interface.editorTipTitle', '*Tip'),
                 viewModeLayout: L('ab.interface.viewModeLayout', '*Layout'),
                 viewModeData: L('ab.interface.viewModeData', '*Data'),
@@ -45,6 +45,9 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
             toolbarViewMode: this.unique('toolbarViewMode'),
             toolbarViewPage: this.unique('toolbarViewPage'),
             toolbarNewDataCollection: this.unique('toolbarNewDataCollection'),
+            
+            layoutView: this.unique('layoutView'),
+            dataView: this.unique('dataView'),
 
             noContent: this.unique('noContent'),
             editArea: this.unique('editArea')
@@ -102,6 +105,35 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                                 }
                             }
                         },
+                        // {
+                        //     view:"segmented", 
+                        //     value:ids.layoutView, 
+                        //     selected: ids.layoutView,
+                        //     options:[
+                        //         {
+                        //             id:ids.layoutView,
+                        //             value:L("ab.component.page.layout", "*Layout")
+                        //         }, 
+                        //         {
+                        //             id:ids.dataView,
+                        //             value:L("ab.component.page.datacollections", "*Data Collections")
+                        //         }
+                        //     ],
+                        //     on: {
+                        //         "onAfterTabClick": function(id, e){
+                        //             console.log(id);
+                        //             if (id == ids.layoutView) {
+                        //                 setTimeout(function() {
+                        //                     App.actions.interfaceViewPartChange('layout', 'data')
+                        //                 }, 0);
+                        //             } else {
+                        //                 setTimeout(function() {
+                        //                     App.actions.interfaceViewPartChange('data', 'layout')
+                        //                 }, 0);
+                        //             }
+                        //         }
+                        //     }
+                        // },
                         {
                             view: "icon", 
                             icon: "fa fa-info-circle",
@@ -141,22 +173,6 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                     type: "space",
                     css: "gray",
                     cols: [
-                        {
-                            id: ids.toolbarNewDataCollection,
-                            view: "button",
-                            type: "iconButton", 
-                            icon: "fa fa-plus",
-                            label: labels.component.newDataSource,
-                            align: "right",
-                            autowidth: true,
-                            hidden: true,
-                            on: {
-                                onItemClick: function(id, e) {
-                                    _logic.newDataCollection();
-                                }
-                            }
-                        },
-                        ComponentMenu.ui,
                         // {
                         //     view: "segmented",
                         //     id: ids.toolbarViewPage,
@@ -173,7 +189,6 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                         //         }
                         //     }
                         // },
-                        {},
                         {
                             view: "checkbox",
                             id: ids.toolbarViewMode,
@@ -185,7 +200,24 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                                     _logic.viewModeChange(newValue, oldValue);
                                 }
                             }
-                        }
+                        },
+                        {},
+                        {
+                            id: ids.toolbarNewDataCollection,
+                            view: "button",
+                            type: "iconButton", 
+                            icon: "fa fa-plus",
+                            label: labels.component.newDataSource,
+                            align: "right",
+                            autowidth: true,
+                            hidden: true,
+                            on: {
+                                onItemClick: function(id, e) {
+                                    _logic.newDataCollection();
+                                }
+                            }
+                        },
+                        ComponentMenu.ui
                     ]
                 },
                 // {

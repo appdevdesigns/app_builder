@@ -16,8 +16,12 @@ export default class AB_Work_Interface_Workspace_Editor_Layout extends OP.Compon
 		var ids = {
 			
 			component: this.unique('component'),
-			editArea: this.unique('editArea')
-
+			editArea: this.unique('editArea'),
+			editAreaContainer: this.unique('editAreaContainer'),
+			editAreaLeft: this.unique('editAreaLeft'),
+			editAreaRight: this.unique('editAreaRight'),
+			editAreaTop: this.unique('editAreaTop'),
+			editAreaBottom: this.unique('editAreaBottom')
 		};
 
 
@@ -26,13 +30,34 @@ export default class AB_Work_Interface_Workspace_Editor_Layout extends OP.Compon
 			view: 'scrollview',
 			id: ids.component,
 			body: {
-				rows: [
+				cols: [
 					{
-						// view:'template',
-						view: 'layout',
-						id: ids.editArea,
-						rows: [],
-						// template:'[edit Area]'							
+						id: ids.editAreaLeft,
+						width: 1
+					},
+					{
+						id: ids.editAreaContainer,
+						rows: [
+							{
+								id: ids.editAreaTop,
+								height: 1
+							},
+							{
+								// view:'template',
+								view: 'layout',
+								id: ids.editArea,
+								rows: [],
+								// template:'[edit Area]'							
+							},
+							{
+								id: ids.editAreaBottom,
+								height: 1
+							}
+						]
+					},
+					{
+						id: ids.editAreaRight,
+						width: 1
 					}
 				]
 			}
@@ -82,8 +107,52 @@ export default class AB_Work_Interface_Workspace_Editor_Layout extends OP.Compon
 				var editorComponent;
 				if (CurrentViewMode == "preview") {
 					editorComponent = view.component(App);
+					console.log(CurrentView);
+					if (CurrentView.settings.type == "popup" && CurrentView.settings.popupWidth && CurrentView.settings.popupHeight) {
+						$$(ids.editAreaContainer).define({width: parseInt(CurrentView.settings.popupWidth)});
+						$$(ids.editArea).define({height: parseInt(CurrentView.settings.popupHeight)});
+						webix.html.addCss($$(ids.editAreaLeft).getNode(), "preview_item");
+						webix.html.addCss($$(ids.editAreaRight).getNode(), "preview_item");
+						webix.html.addCss($$(ids.editAreaTop).getNode(), "preview_item");
+						webix.html.addCss($$(ids.editAreaBottom).getNode(), "preview_item");
+						$$(ids.editAreaLeft).define({width: 0});
+						$$(ids.editAreaRight).define({width: 0});
+						$$(ids.editAreaTop).define({height: 0});
+						$$(ids.editAreaBottom).define({height: 0});
+					} else if (CurrentView.settings.type == "page" && CurrentView.settings.fixedPageWidth == 1 && CurrentView.settings.pageWidth) {
+						$$(ids.editAreaContainer).define({width: parseInt(CurrentView.settings.pageWidth)});
+						$$(ids.editArea).define({height: 0});
+						webix.html.removeCss($$(ids.editAreaLeft).getNode(), "preview_item");
+						webix.html.removeCss($$(ids.editAreaRight).getNode(), "preview_item");
+						webix.html.removeCss($$(ids.editAreaTop).getNode(), "preview_item");
+						webix.html.removeCss($$(ids.editAreaBottom).getNode(), "preview_item");
+						$$(ids.editAreaLeft).define({width: 0});
+						$$(ids.editAreaRight).define({width: 0});
+						$$(ids.editAreaTop).define({height: 1});
+						$$(ids.editAreaBottom).define({height: 1});
+					} else {
+						$$(ids.editAreaContainer).define({width: 0});
+						$$(ids.editArea).define({height: 0});
+						webix.html.removeCss($$(ids.editAreaLeft).getNode(), "preview_item");
+						webix.html.removeCss($$(ids.editAreaRight).getNode(), "preview_item");
+						webix.html.removeCss($$(ids.editAreaTop).getNode(), "preview_item");
+						webix.html.removeCss($$(ids.editAreaBottom).getNode(), "preview_item");
+						$$(ids.editAreaLeft).define({width: 1});
+						$$(ids.editAreaRight).define({width: 1});
+						$$(ids.editAreaTop).define({height: 1});
+						$$(ids.editAreaBottom).define({height: 1});
+					}
 				} else {
 					editorComponent = view.editorComponent(App, "preview");
+					$$(ids.editAreaContainer).define({width: 0});
+					webix.html.removeCss($$(ids.editAreaLeft).getNode(), "preview_item");
+					webix.html.removeCss($$(ids.editAreaRight).getNode(), "preview_item");
+					webix.html.removeCss($$(ids.editAreaTop).getNode(), "preview_item");
+					webix.html.removeCss($$(ids.editAreaBottom).getNode(), "preview_item");
+					$$(ids.editAreaLeft).define({width: 1});
+					$$(ids.editAreaRight).define({width: 1});
+					$$(ids.editAreaTop).define({height: 1});
+					$$(ids.editAreaBottom).define({height: 1});
 				}
 				// editorComponent.ui.id = ids.editArea;
 				// webix.ui(editorComponent.ui, $$(ids.editArea));
