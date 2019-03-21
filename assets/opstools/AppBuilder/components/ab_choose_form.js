@@ -71,6 +71,7 @@ export default class ABChoose extends OP.Component {  // .extend(idBase, functio
 						},
 						{
 							view: "toolbar",
+							css: "webix_dark",
 							cols: [{ view: "label", label: labels.component.formHeader, fillspace: true }]
 						},
 						{
