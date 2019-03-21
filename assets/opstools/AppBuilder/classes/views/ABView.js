@@ -1042,7 +1042,7 @@ export default class ABView extends ABViewBase {
 			// not allowed Detail's widgets
 			'detailcheckbox', 'detailcustom', 'detailimage', 'detailselectivity', 'detailtext', 'detailtree', 
 			// not allowed Form's widgets
-			'button', 'checkbox', 'connect', 'datepicker', 'fieldcustom', 'textbox', 'numberbox', 'selectsingle', 'formtree',
+			'button', 'checkbox', 'connect', 'datepicker', 'fieldcustom', 'textbox', 'numberbox', 'selectsingle', 'formtree', 'fieldreadonly',
 			// not allowed Chart's Widgets
 			'pie', 'bar', 'line', 'area',
 			// not allowed Report page

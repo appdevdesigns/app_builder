@@ -35,14 +35,13 @@ export default class AB_Work_Interface_Workspace_Editor_Components extends OP.Co
 		this.ui = {
 			id: ids.component,
 			view: "button",
-			type: "iconButton",
-			icon: "fa fa-plus",
+			type: "form",
 			label: labels.component.addWidget,
-			align: "right",
+			align: "center",
 			autowidth: true,
 			on: {
 				onItemClick: function (id, e) {
-					_logic.showPopup(this.$view);
+					_logic.showPopup();
 				}
 			}
 		};
@@ -58,14 +57,46 @@ export default class AB_Work_Interface_Workspace_Editor_Components extends OP.Co
 			}
 
 			webix.ui({
-				view: "popup",
+				view: "window",
 				id: ids.popup,
-				width: 160,
-				height: 300,
+				modal: true,
+				width: 500,
+				height: 350,
 				select: false,
+				position: "center",
+				head: {
+					view: "toolbar",
+					css: "webix_dark",
+					cols: [
+						{ 
+							view: "label", 
+							label: labels.component.addWidget,
+							css: "modal_title",
+							align: "center"
+						},
+						{
+							view: "button", 
+							label: "Close", 
+							autowidth: true, 
+							align: "center",
+							click: function () {
+								_logic.hidePopup();
+							}
+						}
+					]
+				},
 				body: {
 					id: ids.list,
-					view: 'list',
+					view: 'dataview',
+					css: 'ab-dataview-table borderless',
+					borderless: true,
+					xCount:5, //the number of items in a row
+				    yCount:3, //the number of items in a column
+					type: {
+						borderless: true,
+						width: 100,
+						height: 100,
+					},
 					template: function (obj, common) {
 						return _logic.template(obj, common);
 					},
@@ -108,8 +139,8 @@ export default class AB_Work_Interface_Workspace_Editor_Components extends OP.Co
 				$$(ids.component).hide();
 			},
 
-			showPopup: function (buttonDom) {
-				$$(ids.popup).show(buttonDom);
+			showPopup: function () {
+				$$(ids.popup).show();
 			},
 
 			hidePopup: function () {
@@ -155,7 +186,7 @@ export default class AB_Work_Interface_Workspace_Editor_Components extends OP.Co
 						label = L(label, label);
 					}
 
-					return "<div class='ab-component-in-page'><i class='fa fa-#icon# webix_icon_btn' aria-hidden='true'></i> #name#</div>"
+					return "<div class='ab-component-in-page'><i class='fa fa-2x fa-#icon#' aria-hidden='true'></i><br/>#name#</div>"
 						.replace(/#icon#/g, obj.common().icon)
 						.replace(/#name#/g, label);
 

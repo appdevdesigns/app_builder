@@ -76,12 +76,12 @@ export default class AB_Work_Interface_List extends OP.Component {
 					editable: true,
 					editor: "text",
 					editValue: "label",
+					css: "ab-tree-ui",
 
 					template: function(obj, common) {
 						return _logic.templateListItem(obj, common);
 					},
 					type: {
-						height: "auto",
 						iconGear: "<span class='webix_icon fa fa-cog'></span>"
 					},
 					on: {
