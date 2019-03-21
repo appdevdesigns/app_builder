@@ -56,7 +56,7 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 		// the popup edit list for each entry in the list.
 		var PopupEditObjectComponent = new ABListEditMenu(App);
 
-
+		console.log("look here------------------>", App.custom.editunitlist.view);
 
 		// Our webix UI definition:
 		this.ui = {
@@ -75,7 +75,7 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 					editValue: "label",
 
 					uniteBy: function(item) {
-						return "";
+						return "Data Objects";
 					},
 					template: function(obj, common) {
 						return _logic.templateListItem(obj, common);

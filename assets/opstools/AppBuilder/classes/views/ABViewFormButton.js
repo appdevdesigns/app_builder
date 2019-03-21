@@ -15,11 +15,11 @@ function L(key, altText) {
 
 var ABViewFormButtonPropertyComponentDefaults = {
 	includeSave: true,
-	saveLabel: '*save',
+	saveLabel: '*Save',
 	includeCancel: true,
-	cancelLabel: '*cancel',
+	cancelLabel: '*Cancel',
 	includeReset: false,
-	resetLabel: '*reset',
+	resetLabel: '*Reset',
 	afterCancel: null,
 	alignment: 'right'
 }
@@ -264,13 +264,14 @@ export default class ABViewFormButton extends ABView {
 		if (this.settings.includeCancel != null ? JSON.parse(this.settings.includeCancel) : ABViewFormButtonPropertyComponentDefaults.includeCancel) {
 			_ui.cols.push({
 				view: "button",
-				type: "standard",
-				css: "ab-cancel-button",
 				autowidth: true,
 				value: this.settings.cancelLabel != null ? this.settings.cancelLabel : ABViewFormButtonPropertyComponentDefaults.cancelLabel,
 				click: function () {
 					_logic.onCancel(this);
 				}
+			},
+			{
+				width: 10
 			});
 		}
 		
@@ -278,13 +279,14 @@ export default class ABViewFormButton extends ABView {
 		if (this.settings.includeReset != null ? JSON.parse(this.settings.includeReset) : ABViewFormButtonPropertyComponentDefaults.includeReset) {
 			_ui.cols.push({
 				view: "button",
-				type: "standard",
-				css: "ab-reset-button",
 				autowidth: true,
 				value: this.settings.resetLabel != null ? this.settings.resetLabel : ABViewFormButtonPropertyComponentDefaults.resetLabel,
 				click: function () {
 					_logic.onClear(this);
 				}
+			},
+			{
+				width: 10
 			});
 		}
 

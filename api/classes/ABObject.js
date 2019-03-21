@@ -38,6 +38,20 @@ module.exports = class ABObject extends ABObjectBase {
 }
 */
 
+        // Get filter and sort conditions of current view to be default settings
+		if (attributes.objectWorkspaceViews) {
+
+			let currViewId = attributes.objectWorkspaceViews.currentViewID;
+
+			let currView = attributes.objectWorkspaceViews.list.filter(v => v.id == currViewId)[0];
+			if (currView) {
+
+				this.objectWorkspace.filterConditions = currView.filterConditions || [];
+				this.objectWorkspace.sortFields = currView.sortFields || [];
+
+			}
+		}
+
 
   	}
 
