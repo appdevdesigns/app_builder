@@ -199,8 +199,7 @@ export default class ABViewLabel extends ABViewWidget  {
 				label: L('ab.component.label.formatting','*Format Options:'), 
 				body:{
 					type: "clean",
-					paddingY: 20,
-					paddingX: 10,
+					padding: 10,
 			        rows:[
 						{
 							view: "radio", 

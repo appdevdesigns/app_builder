@@ -41,28 +41,6 @@ export default class AB_Work_Object_Workspace_PopupHideFields extends OP.Compone
             body: {
                 rows: [
                     {
-                        cols: [
-                            {
-                                view: 'button',
-                                value: labels.component.showAll,
-                                on: {
-                                    onItemClick: function() {
-                                        _logic.clickShowAll();
-                                    }
-                                }
-                            },
-                            {
-                                view: 'button',
-                                value: labels.component.hideAll,
-                                on: {
-                                    onItemClick: function() {
-                                        _logic.clickHideAll();
-                                    }
-                                }
-                            }
-                        ]
-                    },
-                    {
                         view: 'list',
                         id: ids.list,
                         maxHeight: 350,
@@ -75,6 +53,29 @@ export default class AB_Work_Object_Workspace_PopupHideFields extends OP.Compone
                                 _logic.clickListItem(id, e, node);
                             }
                         }
+                    },
+                    {
+                        cols: [
+                            {
+                                view: 'button',
+                                value: labels.component.hideAll,
+                                on: {
+                                    onItemClick: function() {
+                                        _logic.clickHideAll();
+                                    }
+                                }
+                            },
+                            {
+                                view: 'button',
+                                value: labels.component.showAll,
+                                type: "form",
+                                on: {
+                                    onItemClick: function() {
+                                        _logic.clickShowAll();
+                                    }
+                                }
+                            }
+                        ]
                     }
                 ]
             },

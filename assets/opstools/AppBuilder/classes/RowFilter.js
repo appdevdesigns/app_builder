@@ -771,8 +771,7 @@ export default class RowFilter extends OP.Component {
 				return {
 					view: "button",
 					id: ids.addNewFilter,
-					icon: "fa fa-plus",
-					type: "iconButton",
+					type: "form",
 					label: labels.component.addNewFilter,
 					click: function () {
 

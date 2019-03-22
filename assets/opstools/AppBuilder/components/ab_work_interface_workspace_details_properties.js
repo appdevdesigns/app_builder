@@ -16,7 +16,7 @@ export default class AB_Work_Interface_Workspace_Details_Properties extends OP.C
         var labels = {
             common: App.labels,
             component: {
-                propertiesTipText: L('ab.interface.propertiesTipText', "*Edit a components properties here."),
+                propertiesTipText: L('ab.interface.propertiesTipText', "*Edit a widgets properties here."),
                 propertiesTipTitle: L('ab.interface.propertiesTipTitle', "*Tip"),
                 properties: L('ab.interface.properties', "*Properties"),
             }
@@ -39,7 +39,7 @@ export default class AB_Work_Interface_Workspace_Details_Properties extends OP.C
             rows:[
                 {
                     view: 'toolbar',
-                    css: 'ab-data-toolbar',
+                    css: 'ab-data-toolbar webix_dark',
                     cols: [
                         {
                         view: 'label',

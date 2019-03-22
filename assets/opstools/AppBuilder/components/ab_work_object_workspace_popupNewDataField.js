@@ -44,71 +44,99 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
             view: "window",
             position:"center",
             id: ids.component,
-            autoheight: true,
-            maxHeight: 500,
-            minWidth: 400,
-            head:L('ab.add_fields.fieldAddNew', "*Add new field"),
+            resize: true,
+            modal: true,
+            height: 500,
+            width: 700,
+            head: {
+                view: "toolbar",
+                css: "webix_dark",
+                cols: [
+                    { 
+                        view: "label", 
+                        label: L('ab.add_fields.fieldAddNew', "*Add new field"),
+                        css: "modal_title",
+                        align: "center"
+                    },
+                    {
+                        view: "button", 
+                        label: "Close", 
+                        autowidth: true, 
+                        align: "center",
+                        click: function () {
 
+                            _logic.buttonCancel();
+
+                        }
+                    }
+                ]
+            },
             // ready: function () {
             //  console.error('ready() called!!!')
             //  _logic.resetState();
             // },
 
             body: {
+                view: "scrollview",
+                scroll:"y",
                 css: 'ab-add-fields-popup',
                 borderless: true,
-                rows: [
-                    {
-                        view: "richselect",
-                        id: ids.types,
-                        label: labels.component.fieldType,
-                        labelWidth: App.config.labelWidthLarge,
-                        options: [
-                            //We will add these later
-                            { id: 'temporary', view: 'temporary' }
-                        ],
-                        on: {
-                            onChange: function (id, ev, node) {
-                                _logic.onChange(id);
+                body: {
+                    type: "form",
+                    rows: [
+                        {
+                            view: "richselect",
+                            id: ids.types,
+                            label: labels.component.fieldType,
+                            labelWidth: App.config.labelWidthLarge,
+                            options: [
+                                //We will add these later
+                                { id: 'temporary', view: 'temporary' }
+                            ],
+                            on: {
+                                onChange: function (id, ev, node) {
+                                    _logic.onChange(id);
+                                }
                             }
+                        },
+                        {
+                            height: 10,
+                            type: "line"
+                        },
+                        {
+                            view: 'multiview',
+                            id: ids.editDefinitions,
+                            padding: 0,
+                            // NOTE: can't leave this an empty []. We redefine this value later.
+                            cells: [{ id: 'del_me', view: 'label', label: 'edit definition here' }]
+                        },
+                        { height: 10 },
+                        {
+                            cols: [
+                                { fillspace: true },
+                                {
+                                    view: "button",
+                                    value: labels.common.cancel,
+                                    css: "ab-cancel-button",
+                                    autowidth: true,
+                                    click: function () {
+                                        _logic.buttonCancel();
+                                    }
+                                },
+                                {
+                                    view: "button",
+                                    id: ids.buttonSave,
+                                    label: labels.component.addNewField,
+                                    autowidth: true,
+                                    type: "form",
+                                    click: function () {
+                                        _logic.buttonSave();
+                                    }
+                                }
+                            ]
                         }
-                    },
-                    {
-                        height: 10,
-                        type: "line"
-                    },
-                    {
-                        view: 'multiview',
-                        id: ids.editDefinitions,
-                        // NOTE: can't leave this an empty []. We redefine this value later.
-                        cells: [{ id: 'del_me', view: 'label', label: 'edit definition here' }]
-                    },
-                    { height: 10 },
-                    {
-                        cols: [
-                            { fillspace: true },
-                            {
-                                view: "button",
-                                value: labels.common.cancel,
-                                css: "ab-cancel-button",
-                                autowidth: true,
-                                click: function () {
-                                    _logic.buttonCancel();
-                                }
-                            },
-                            {
-                                view: "button",
-                                id: ids.buttonSave,
-                                label: labels.component.addNewField,
-                                autowidth: true,
-                                type: "form",
-                                click: function () {
-                                    _logic.buttonSave();
-                                }
-                            }
-                        ]
-                    }
-                ]
+                    ]    
+                }
             },
             on: {
                 //onBeforeShow: function () {

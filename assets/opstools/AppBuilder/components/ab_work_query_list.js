@@ -151,13 +151,14 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 					editValue: "label",
 
 					uniteBy: function(item) {
-						return "   ";
+						return "Data Queries";
 					},
 					template: function(obj, common) {
 						return _logic.templateListItem(obj, common);
 					},
 					type: {
 						height: 35,
+						headerHeight:35,
 						iconGear: "<div class='ab-object-list-edit'><span class='webix_icon fa fa-cog'></span></div>"
 					},
 					on: {
@@ -181,6 +182,7 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 					view: 'button',
 					id: ids.buttonNew,
 					value: labels.component.addNew,
+					type: "form",
 					click: function () {
 						_logic.clickNewObject(true); // pass true so it will select the new object after you created it
 					}
@@ -591,7 +593,7 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 				return $$(ids.list).getSelectedItem();
 			},
 
-			addNewObject:function(selectNew, callback) {
+			addNewQuery:function(selectNew, callback) {
 				_logic.clickNewObject(selectNew, callback);
 			}
 

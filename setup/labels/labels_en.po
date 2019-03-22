@@ -422,8 +422,8 @@ msgstr "Permission"
 #. path: app_builder
 #. code: en
 #. key: ab.object.toolbar.addFields
-msgid "Add new column"
-msgstr "Add new column"
+msgid "New column"
+msgstr "New column"
 
 #. path: app_builder
 #. code: en

@@ -56,6 +56,16 @@ export default class AB_Work_Interface_List extends OP.Component {
 			id:ids.component,
 			rows: [
 				{
+					view: "unitlist",
+					uniteBy: "Pages", 
+					height: 34,
+					data: [" "],
+					type: {
+						height: 0,
+						headerHeight:35
+					}
+				},
+				{
 					view: App.custom.edittree.view,  // "edittree",
 					id: ids.list,
 					width: App.config.columnWidthLarge,
@@ -66,12 +76,12 @@ export default class AB_Work_Interface_List extends OP.Component {
 					editable: true,
 					editor: "text",
 					editValue: "label",
+					css: "ab-tree-ui",
 
 					template: function(obj, common) {
 						return _logic.templateListItem(obj, common);
 					},
 					type: {
-						height: "auto",
 						iconGear: "<span class='webix_icon fa fa-cog'></span>"
 					},
 					on: {
@@ -104,9 +114,10 @@ export default class AB_Work_Interface_List extends OP.Component {
 				{
 					view: 'button',
 					id: ids.buttonNew,
+					type: "form",
 					value: labels.component.addNew,
 					click: function () {
-						_logic.clickNewView();
+						App.actions.clickNewView();
 					}
 				}
 			]
@@ -511,17 +522,6 @@ console.error('!! todo: onBeforeEditStop() editing');
 			},
 
 
-			/**
-			 * @function clickNewView
-			 *
-			 * Manages initiating the transition to the new Object Popup window
-			 */
-			clickNewView:function() {
-
-				// show the new popup
-				PopupNewPageComponent.show();
-			},
-
 
 			refreshTemplateItem: function(view) {
 				// make sure this item is updated in our list:
@@ -611,7 +611,18 @@ console.error('!! todo: onBeforeEditStop() editing');
 					List.select(view.id);
 				}
 
-			}
+			},
+			
+			/**
+			 * @function clickNewView
+			 *
+			 * Manages initiating the transition to the new Object Popup window
+			 */
+			clickNewView:function() {
+
+				// show the new popup
+				PopupNewPageComponent.show();
+			}		
 
 		})
 

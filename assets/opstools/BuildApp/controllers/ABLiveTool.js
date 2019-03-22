@@ -35,11 +35,6 @@ steal(
 								return;
 							}
 
-							AD.comm.hub.subscribe('opsportal.resize', function (message, data) {
-								self.height = data.height;
-								self.resize(data.height);
-							});
-
 							self.containerDomID = self.unique('ab_live_tool', self.options.app, self.options.page);
 
 							self.debounceResize = false;
@@ -61,6 +56,7 @@ steal(
 
 							AD.comm.hub.subscribe('opsportal.resize', function (message, data) {
 								self.height = data.height;
+								self.debounceResize = false; // if we do not set this the resize is never set
 								self.resize(data.height);
 							});
 
@@ -220,6 +216,11 @@ steal(
 
 							// Clear UI content
 							var rootDomId = self.getPageDomID(self.rootPage.id);
+							
+							// var parentContainer = self.element.parent()[0];
+							// parentContainer.style.width = "900px";
+							// parentContainer.style.margin = "0 auto";
+							
 							if ($$(rootDomId))
 								webix.ui({}, $$(rootDomId));
 
@@ -258,6 +259,12 @@ steal(
 
 							// Define page id to be batch id of webix.multiview
 							ui.batch = page.id;
+							
+							if (parseInt(page.settings.pageWidth) > 0 && parseInt(page.settings.fixedPageWidth) == 1) {
+								var parentContainer = self.element.parent()[0];
+								parentContainer.style.width = parseInt(page.settings.pageWidth) + "px";
+								parentContainer.style.margin = "0 auto";
+							}
 
 							switch (page.settings.type) {
 								case 'popup':
@@ -267,15 +274,24 @@ steal(
 										modal: true,
 										position: "center",
 										resize: true,
-										width: 700,
-										height: 450,
+										width: parseInt(page.settings.popupWidth) || 700,
+										height: (parseInt(page.settings.popupHeight) + 44) || 450,
 										css: 'ab-main-container',
 										head: {
 											view: "toolbar",
+											css: "webix_dark",
 											cols: [
-												{ view: "label", label: page.label },
+												{ 
+													view: "label", 
+													label: page.label,
+													css: "modal_title",
+													align: "center"
+												},
 												{
-													view: "button", label: "Close", width: 100, align: "right",
+													view: "button", 
+													label: "Close", 
+													autowidth: true, 
+													align: "center",
 													click: function () {
 
 														var popup = this.getTopParentView();
@@ -309,6 +325,8 @@ steal(
 									break;
 								case 'page':
 								default:
+								
+									console.log(ui);
 									if ($$(pageDomId)) {
 										// Change page type (Popup -> Page)
 										if ($$(pageDomId).config.view == 'window') {

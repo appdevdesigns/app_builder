@@ -42,15 +42,6 @@ export default class AB_Work_Object_Workspace_PopupFrozenColumns extends OP.Comp
 			body: {
 				rows: [
 					{
-						view: 'button', 
-						value: labels.component.clearAll, 
-						on: {
-							'onItemClick': function(id, e, node) {
-								return _logic.clickClearAll();								
-							}
-						}
-					},
-					{
 						view: 'list',
 						id: ids.list,
 						width: 250,
@@ -63,7 +54,17 @@ export default class AB_Work_Object_Workspace_PopupFrozenColumns extends OP.Comp
 								_logic.clickListItem(id, e, node);
 							}
 						}
-					}
+					},
+					{
+						view: 'button', 
+						value: labels.component.clearAll, 
+						type: "form",
+						on: {
+							'onItemClick': function(id, e, node) {
+								return _logic.clickClearAll();								
+							}
+						}
+					},
 				]
 			},
 			on: {

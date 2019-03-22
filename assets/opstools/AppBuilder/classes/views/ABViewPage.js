@@ -20,6 +20,10 @@ function L(key, altText) {
 
 var ABPropertyComponentDefaults = {
     type: 'page', // 'page', 'popup' or 'reportPage'
+    popupWidth: 700,
+    popupHeight: 450,
+    pageWidth: null,
+    fixedPageWidth: 0
 }
 
 var ABViewDefaults = {
@@ -247,13 +251,72 @@ export default class ABViewPage extends ABViewContainer {
             },
             {
                 view: "fieldset",
+                name: "popupSettings",
+                label: L('ab.component.page.popupSettings', '*Popup Settings'),
+                labelWidth: App.config.labelWidthLarge,
+                body: {
+                    type: "clean",
+                    padding: 10,
+                    rows: [
+                        {
+                            view: "text",
+            				name:'popupWidth',
+            				placeholder: L('ab.component.page.popupWidthPlaceholder', '*Set popup width'),
+                            label: L("ab.component.page.popupWidth", "*Width:"),
+                            labelWidth: App.config.labelWidthLarge,
+                            validate:webix.rules.isNumber
+                        },
+                        {
+                            view: "text",
+            				name:'popupHeight',
+            				placeholder: L('ab.component.page.popupHeightPlaceholder', '*Set popup height'),
+                            label: L("ab.component.page.popupHeight", "*Height:"),
+                            labelWidth: App.config.labelWidthLarge,
+                            validate:webix.rules.isNumber
+                        }
+                    ]
+                }
+            },
+            {
+                view: "fieldset",
+                name: "pageSettings",
+                label: L('ab.component.page.pageSettings', '*Page Settings'),
+                labelWidth: App.config.labelWidthLarge,
+                body: {
+                    type: "clean",
+                    padding: 10,
+                    rows: [
+                        {
+                            view:"checkbox", 
+                            name:"fixedPageWidth",
+                            labelRight:L("ab.component.page.fixedPageWidth", "*Page has fixed width"),
+                            labelWidth: App.config.labelWidthCheckbox,
+                            click: function (id,event) {
+                                if (this.getValue() == 1) {
+                                    $$(ids.pageWidth).show();
+                                } else {
+                                    $$(ids.pageWidth).hide();
+                                }
+                            }
+                        },
+                        {
+                            view: "text",
+            				name:'pageWidth',
+            				placeholder: L('ab.component.page.pageWidthPlaceholder', '*Set page width'),
+                            label: L("ab.component.page.popupHeight", "*Page width:"),
+                            labelWidth: App.config.labelWidthLarge
+                        }
+                    ]
+                }
+            },
+            {
+                view: "fieldset",
                 name: "dataCollectionPanel",
                 label: L('ab.component.page.dataCollections', '*Data Collections:'),
                 labelWidth: App.config.labelWidthLarge,
                 body: {
                     type: "clean",
-                    paddingY: 20,
-                    paddingX: 10,
+                    padding: 10,
                     rows: [
                         {
                             cols: [
@@ -286,8 +349,7 @@ export default class ABViewPage extends ABViewContainer {
                 labelWidth: App.config.labelWidthLarge,
                 body: {
                     type: "clean",
-                    paddingY: 20,
-                    paddingX: 10,
+                    padding: 10,
                     rows: [
                         {
             				name: 'permissions',
@@ -320,6 +382,10 @@ export default class ABViewPage extends ABViewContainer {
         super.propertyEditorPopulate(App, ids, view, logic);
 
         $$(ids.type).setValue(view.settings.type || ABPropertyComponentDefaults.type);
+        $$(ids.popupWidth).setValue(view.settings.popupWidth || ABPropertyComponentDefaults.popupWidth);
+        $$(ids.popupHeight).setValue(view.settings.popupHeight || ABPropertyComponentDefaults.popupHeight);
+        $$(ids.pageWidth).setValue(view.settings.pageWidth || ABPropertyComponentDefaults.pageWidth);
+        $$(ids.fixedPageWidth).setValue(view.settings.fixedPageWidth || ABPropertyComponentDefaults.fixedPageWidth);
 
         // Disable select type of page when this page is root 
         if (view.isRoot()) {
@@ -334,6 +400,21 @@ export default class ABViewPage extends ABViewContainer {
             $$(ids.pagePermissionPanel).hide();
             $$(ids.type).show();
             $$(ids.dataCollectionPanel).hide();
+        }
+        
+        if (view.settings.type == "popup") {
+            $$(ids.popupSettings).show();
+            $$(ids.pageSettings).hide();
+        } else {
+            $$(ids.popupSettings).hide();
+            $$(ids.pageSettings).show();
+        }
+        
+        console.log("view.settings.fixedPageWidth: ", view.settings.fixedPageWidth);
+        if (view.settings.fixedPageWidth == 1) {
+            $$(ids.pageWidth).show();
+        } else {
+            $$(ids.pageWidth).hide();
         }
 
         this.populateBadgeNumber(ids, view);
@@ -360,6 +441,10 @@ export default class ABViewPage extends ABViewContainer {
         super.propertyEditorValues(ids, view);
 
         view.settings.type = $$(ids.type).getValue();
+        view.settings.popupWidth = $$(ids.popupWidth).getValue();
+        view.settings.popupHeight = $$(ids.popupHeight).getValue();
+        view.settings.pageWidth = $$(ids.pageWidth).getValue();
+        view.settings.fixedPageWidth = $$(ids.fixedPageWidth).getValue();
 
     }
 
@@ -440,9 +525,9 @@ export default class ABViewPage extends ABViewContainer {
     component(App) {
 
         var comp = super.component(App);
-
         var _ui = {
             view: "scrollview",
+            borderless: true,
             body: comp.ui
         };
 

@@ -11,7 +11,7 @@
 export default {
 
 	// Application List
-	appListRowHeight: 70,
+	appListRowHeight: 67,
 
 	// button types
 	buttonWidthLarge: 200,

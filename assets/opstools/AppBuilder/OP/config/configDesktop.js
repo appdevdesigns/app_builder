@@ -11,7 +11,7 @@
 export default {
 
 	// Application List
-	appListRowHeight: 70,
+	appListRowHeight: 67,
 
 	// button types
 	buttonWidthLarge: 200,
@@ -50,6 +50,7 @@ export default {
 	labelWidthLarge: 120,
 	labelWidthXLarge: 150,
 	labelWidthXXLarge: 200,
+	labelWidthXXXLarge: 280,
 	labelWidthCheckbox: 0,
 
 	// show elements on desktop

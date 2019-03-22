@@ -45,6 +45,7 @@ export default class AB_Work_Interface extends OP.Component {
 		// Our webix UI definition:
 		this.ui = {
 			id: ids.component,
+			type: "space",
 			cols: [
 				ViewList.ui,
 				{ view: "resizer"},

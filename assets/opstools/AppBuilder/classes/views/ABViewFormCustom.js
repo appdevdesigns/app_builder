@@ -133,12 +133,12 @@ export default class ABViewFormCustom extends ABViewFormField {
 			settings = form.settings;
 
 		var requiredClass = "";
-		if (field.settings.required == 1) {
+		if (field.settings.required || this.settings.required) {
 			requiredClass = "webix_required";
 		}
 
 		var templateLabel = '';
-		if (settings.showLabel == true) {
+		if (settings.showLabel) {
 			if (settings.labelPosition == 'top')
 				templateLabel = '<label style="display:block; text-align: left; margin: 0; padding:1px 7.5px 0 3px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" class="webix_inp_top_label '+requiredClass+'">#label#</label>';
 			else

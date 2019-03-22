@@ -18,7 +18,7 @@ export default class AB_Work_Object_Workspace_PopupMassUpdate extends OP.Compone
 			common : App.labels,
 			component: {
 
-				addNewSort: 	L('ab.sort_fields.addNewSort', 	"*Add new sort"),
+				addFieldEdit: 	L('ab.sort_fields.addFieldEdit', 	"*Add field to edit"),
 				selectField:	L('ab.sort_fields.selectField', "*Please select field"),
 				textAsc:		L('ab.sort_fields.textAsc', 	"*A -> Z"),
 				textDesc: 		L('ab.sort_fields.textDesc', 	"*Z -> A"),
@@ -54,7 +54,8 @@ export default class AB_Work_Object_Workspace_PopupMassUpdate extends OP.Compone
 					{ height: 10 },
 					{
 						view: 'button',
-						label: 'Add field to edit',
+                        type: 'form',
+						label: labels.component.addFieldEdit,
 						click: function () {
 							// var update_records_popup = this.getTopParentView();
 							_logic.addNewField();
@@ -64,6 +65,12 @@ export default class AB_Work_Object_Workspace_PopupMassUpdate extends OP.Compone
 					{ height: 15 },
 					{
 						cols: [
+                            {},
+                            {
+                                view: "button", value: "Cancel", width: 100, click: function () {
+                                    this.getTopParentView().hide();
+                                }
+                            },
 							{
 								view: "button", label: "Update", type: "form", width: 120,
 								click: function () {
@@ -203,11 +210,6 @@ export default class AB_Work_Object_Workspace_PopupMassUpdate extends OP.Compone
 									// 		update_records_popup.hide();
 									// 	}
 									// });
-								}
-							},
-							{
-								view: "button", value: "Cancel", width: 100, click: function () {
-									this.getTopParentView().hide();
 								}
 							}
 						]
@@ -356,7 +358,7 @@ export default class AB_Work_Object_Workspace_PopupMassUpdate extends OP.Compone
 								}
 							}
 						},
-						{ view: 'label', label: "<b>{0}</b>".replace("{0}", " To "), width: 30 },
+						{ view: 'label', label: "{0}".replace("{0}", " To "), width: 30 },
 						{},
 						{
 							view: 'button', icon: "fa fa-trash", type: "icon", width: 30, click: function () {

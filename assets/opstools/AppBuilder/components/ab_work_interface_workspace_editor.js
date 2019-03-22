@@ -22,7 +22,7 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
             common: App.labels,
             component: {
 
-                editorTipText: L('ab.interface.editorTipText', '*Choose Layout or Preview mode. Drag and drop componenents to reorder.'),
+                editorTipText: L('ab.interface.editorTipText', '*Check "Preview" to see what your layout will look like, Click "Add Widget" to add new items to the page.'),
                 editorTipTitle: L('ab.interface.editorTipTitle', '*Tip'),
                 viewModeLayout: L('ab.interface.viewModeLayout', '*Layout'),
                 viewModeData: L('ab.interface.viewModeData', '*Data'),
@@ -45,6 +45,9 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
             toolbarViewMode: this.unique('toolbarViewMode'),
             toolbarViewPage: this.unique('toolbarViewPage'),
             toolbarNewDataCollection: this.unique('toolbarNewDataCollection'),
+            
+            layoutView: this.unique('layoutView'),
+            dataView: this.unique('dataView'),
 
             noContent: this.unique('noContent'),
             editArea: this.unique('editArea')
@@ -64,7 +67,7 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                 {
                     view: 'toolbar',
                     id: ids.toolbar,
-                    css: 'ab-data-toolbar',
+                    css: 'ab-data-toolbar webix_dark',
                     cols: [
                         // {
                         //     view: 'label',
@@ -102,6 +105,35 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                                 }
                             }
                         },
+                        // {
+                        //     view:"segmented", 
+                        //     value:ids.layoutView, 
+                        //     selected: ids.layoutView,
+                        //     options:[
+                        //         {
+                        //             id:ids.layoutView,
+                        //             value:L("ab.component.page.layout", "*Layout")
+                        //         }, 
+                        //         {
+                        //             id:ids.dataView,
+                        //             value:L("ab.component.page.datacollections", "*Data Collections")
+                        //         }
+                        //     ],
+                        //     on: {
+                        //         "onAfterTabClick": function(id, e){
+                        //             console.log(id);
+                        //             if (id == ids.layoutView) {
+                        //                 setTimeout(function() {
+                        //                     App.actions.interfaceViewPartChange('layout', 'data')
+                        //                 }, 0);
+                        //             } else {
+                        //                 setTimeout(function() {
+                        //                     App.actions.interfaceViewPartChange('data', 'layout')
+                        //                 }, 0);
+                        //             }
+                        //         }
+                        //     }
+                        // },
                         {
                             view: "icon", 
                             icon: "fa fa-info-circle",
@@ -157,21 +189,19 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                         //         }
                         //     }
                         // },
-                        {},
                         {
                             view: "checkbox",
                             id: ids.toolbarViewMode,
                             labelRight: labels.component.viewModePreview,
-                            labelWidth: App.config.labelWidthCheckbox,
-                            align: "right",
-                            autowidth: true,
+                            labelWidth: 0,
+                            width: 85,
                             on: {
                                 onChange: function (newValue, oldValue) {
                                     _logic.viewModeChange(newValue, oldValue);
                                 }
                             }
                         },
-
+                        {},
                         {
                             id: ids.toolbarNewDataCollection,
                             view: "button",

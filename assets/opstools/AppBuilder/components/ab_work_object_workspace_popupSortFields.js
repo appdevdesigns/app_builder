@@ -52,6 +52,7 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 			elements: [
 				{
 					view: "button", 
+					type: "form",
 					value: labels.component.addNewSort, 
 					on: {
 						onItemClick: function(id, e, node) {
@@ -66,7 +67,7 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 			view:"popup",
 			id: ids.component,
 			// autoheight:true,
-			width: 500,
+			width: 600,
 			body: formUI,
 			on: {
 				onShow: function () {

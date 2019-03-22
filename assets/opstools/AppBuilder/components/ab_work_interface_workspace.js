@@ -21,7 +21,8 @@ export default class AB_Work_Interface_Workspace extends OP.Component {
             common: App.labels,
             component: {
                 // formHeader: L('ab.application.form.header', "*Application Info"),
-                selectPage: L('ab.interface.selectPage', "*Select a page to edit")
+                selectPage: L('ab.interface.selectPage', "*Select a page to edit"),
+                newPage: L('ab.inferface.newPage', "*Add a new page")
             }
         };
         
@@ -58,7 +59,28 @@ export default class AB_Work_Interface_Workspace extends OP.Component {
                         {
                             view:'label',
                             align: "center",
+                            height: 200,
+                            label: "<div style='display: block; font-size: 180px; background-color: #666; color: transparent; text-shadow: 0px 1px 1px rgba(255,255,255,0.5); -webkit-background-clip: text; -moz-background-clip: text; background-clip: text;' class='fa fa-file-text-o'></div>"
+                        },
+                        {
+                            view:'label',
+                            align: "center",
                             label:labels.component.selectPage
+                        },
+                        {
+                            cols: [
+                                {},
+                                {
+                                    view: "button",
+                                    label: labels.component.newPage,
+                                    type: "form",
+                                    autowidth: true,
+                                    click: function() {
+                                        App.actions.clickNewView();
+                                    }
+                                },
+                                {}
+                            ]
                         },
                         {
                             maxHeight: App.config.xxxLargeSpacer,
@@ -70,7 +92,7 @@ export default class AB_Work_Interface_Workspace extends OP.Component {
                     id: ids.selectedView,
                     cols: [
                         ColumnEditor.ui,
-                        { view: "resizer"},
+                        { view: "resizer", css: "bg_gray", width: 10},
                         ColumnDetails.ui
                     ]
                 }

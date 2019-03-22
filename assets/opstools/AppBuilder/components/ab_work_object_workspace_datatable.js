@@ -298,7 +298,7 @@ console.warn('!! ToDo: onAfterColumnHide()');
 
             let customDisplays = (data) => {
 
-                if (!CurrentObject) return;
+                if (!CurrentObject || !DataTable.data) return;
 
                 var displayRecords = [];
 
@@ -1203,7 +1203,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                         if (o.text)
                             tip += o.text + "<br/>";
                     });
-                } else if (typeof obj[common.column.id] == "undefined" && typeof obj[common.column.id+"__relation"] != "undefined") {
+                } else if (typeof obj[common.column.id] != "undefined" && typeof obj[common.column.id+"__relation"] != "undefined") {
 
                     var relationData = obj[common.column.id+"__relation"];
                     if (!Array.isArray(relationData))

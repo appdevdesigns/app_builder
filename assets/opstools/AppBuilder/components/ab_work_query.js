@@ -39,7 +39,7 @@ export default class AB_Work_Query extends OP.Component {   //.extend(idBase, fu
 		// Our webix UI definition:
 		this.ui = {
 			id: ids.component,
-			margin: 10,
+			type: "space",
 			cols: [
 				QueryList.ui,
 				{ view: "resizer"},
@@ -82,6 +82,7 @@ export default class AB_Work_Query extends OP.Component {   //.extend(idBase, fu
 
 
 			querySelected: function(query) {
+				QueryWorkspace.resetTabs();
 				QueryWorkspace.populateQueryWorkspace(query);
 			},
 

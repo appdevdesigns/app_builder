@@ -52,7 +52,7 @@ export default class ABViewFormField extends ABView {
 				$$(ids.required).setValue(field.settings.required);
 				$$(ids.required).disable();
 			} else {
-				$$(ids.required).setValue(view.settings.required  != null ? view.settings.required : ABViewFormFieldPropertyComponentDefaults.required);
+				$$(ids.required).setValue((view.settings.required != null) ? view.settings.required : ABViewFormFieldPropertyComponentDefaults.required);
 			}
 		}
 	}
@@ -61,7 +61,9 @@ export default class ABViewFormField extends ABView {
 
 		super.propertyEditorValues(ids, view);
 
+		console.log("here");
 		view.settings.required = $$(ids.required).getValue();
+		console.log(view);
 
 	}
 
