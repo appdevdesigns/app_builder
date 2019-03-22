@@ -106,6 +106,7 @@ export default class ABViewRuleList {
 			css: 'ab-main-container',
 			head: {
 				view: "toolbar",
+				css: "webix_dark",
 				cols: [
 					{ view: "label", label: labels.component.header },
 					{

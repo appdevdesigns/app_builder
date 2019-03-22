@@ -62,7 +62,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 					cols: [],
 					userList: {
 						view: 'menu',
-						yCount: 8,
+						// yCount: 8,
 						// scroll: false,
 						template: '<i class="fa fa-user"></i> #value#',
 						width: 150,
@@ -90,10 +90,10 @@ export default class ABWorkObjectKanBan extends OP.Component {
 								let data = $$(ids.kanban).getItem(itemId);
 								FormSide.show(data);
 								$$(ids.resizer).show();
-							}
-							else
+							} else {
 								FormSide.hide();
 								$$(ids.resizer).hide();
+							}
 						},
 						onAfterStatusChange: (rowId, status, list) => {
 
