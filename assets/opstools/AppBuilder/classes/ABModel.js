@@ -801,8 +801,8 @@ reject(err);
 				// get the relation name so we can change the original object
 				var relationName = c.relationName();
 
-				if (d[c.columnName] == null)
-					d[c.columnName] = '';
+				// if (d[c.columnName] == null)
+				// 	d[c.columnName] = '';
 
 				// if there is no data we can exit now
 				if (d[relationName] == null) return;
