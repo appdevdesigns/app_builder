@@ -69,7 +69,10 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 				import: L('ab.object.toolbar.import', "*Import"),
                 "export": L('ab.object.toolbar.export', "*Export"),
                 confirmDeleteTitle : L('ab.object.delete.title', "*Delete data field"),
-                confirmDeleteMessage : L('ab.object.delete.message', "*Do you want to delete <b>{0}</b>?")
+                confirmDeleteMessage : L('ab.object.delete.message', "*Do you want to delete <b>{0}</b>?"),
+                newView: L('ab.object.new.view', "*New view"),
+                deleteView: L('ab.object.delete.view', "*Delete View?"),
+                deleteViewMessage: L('ab.object.delete.view.message', "*Are you sure you want to remove this view?")
             }
 		};
 
@@ -167,7 +170,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
         var newViewButton = {
 			view: "button",
 			type: "icon",
-            label: "New view",
+            label: labels.component.newView,
 			width: 120,
             icon: "fa fa-plus-circle",
 			align: "left",
@@ -198,9 +201,19 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                         var view = CurrentObject.workspaceViews.list(v => v.id === item.viewId)[0];
                         PopupViewSettingsComponent.show(view);
                     } else if (item.action === 'delete') {
-                        var view = CurrentObject.workspaceViews.list(v => v.id === item.viewId)[0];
-                        CurrentObject.workspaceViews.removeView(view);
-                        _logic.switchWorkspaceView(CurrentObject.workspaceViews.getCurrentView());
+                        // Ask the user what to do about the existing file:
+                        OP.Dialog.Confirm({
+                            title: labels.component.deleteView,
+                            message: labels.component.deleteViewMessage,
+                            callback: (result) => {
+                                if (result) {
+                                    var view = CurrentObject.workspaceViews.list(v => v.id === item.viewId)[0];
+                                    CurrentObject.workspaceViews.removeView(view);
+                                    _logic.switchWorkspaceView(CurrentObject.workspaceViews.getCurrentView());
+                                }
+                            }
+                        })
+
                     }
                 }
             },
