@@ -145,6 +145,7 @@ export default class AB_Work_Interface_Workspace_Editor_Layout extends OP.Compon
 				} else {
 					editorComponent = view.editorComponent(App, "preview");
 					$$(ids.editAreaContainer).define({width: 0});
+					$$(ids.editArea).define({height: 0});
 					webix.html.removeCss($$(ids.editAreaLeft).getNode(), "preview_item");
 					webix.html.removeCss($$(ids.editAreaRight).getNode(), "preview_item");
 					webix.html.removeCss($$(ids.editAreaTop).getNode(), "preview_item");
