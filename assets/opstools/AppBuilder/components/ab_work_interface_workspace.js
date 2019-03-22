@@ -92,7 +92,7 @@ export default class AB_Work_Interface_Workspace extends OP.Component {
                     id: ids.selectedView,
                     cols: [
                         ColumnEditor.ui,
-                        { view: "resizer", css: "bg_gray", width: 10},
+                        { view: "resizer", css: "bg_gray", width: 11},
                         ColumnDetails.ui
                     ]
                 }

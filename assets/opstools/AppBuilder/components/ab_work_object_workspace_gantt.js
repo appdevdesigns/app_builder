@@ -34,6 +34,7 @@ export default class ABWorkObjectGantt extends OP.Component {
 		let ids = {
 			component: this.unique(idBase + '_workspace_gantt_border'),
 			gantt: this.unique(idBase + '_workspace_gantt'),
+			resizer: this.unique(idBase + '_workspace_gantt_resizer')
 		}
 
 		let CurrentObject = null,
@@ -76,7 +77,9 @@ export default class ABWorkObjectGantt extends OP.Component {
 				{
 					id: ids.resizer,
 					view: "resizer",
-					borderless: true,
+					hidden: true,
+					css: "bg_gray", 
+					width: 11
 				},
 				FormSide.ui
 			]
@@ -118,6 +121,7 @@ export default class ABWorkObjectGantt extends OP.Component {
 				$$(ids.component).show();
 
 				FormSide.hide();
+				$$(ids.resizer).hide();
 
 				// Get object's kanban view
 				CurrentGanttView = _logic.getCurrentView();
@@ -346,6 +350,7 @@ export default class ABWorkObjectGantt extends OP.Component {
 				let task = gantt.getTask(rowId);
 
 				FormSide.show(task || {});
+				$$(ids.resizer).show();
 
 			},
 
@@ -362,6 +367,7 @@ export default class ABWorkObjectGantt extends OP.Component {
 
 				// show the side form
 				FormSide.show();
+				$$(ids.resizer).show();
 
 			},
 
