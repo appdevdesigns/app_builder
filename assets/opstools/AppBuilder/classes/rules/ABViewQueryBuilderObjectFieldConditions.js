@@ -42,7 +42,7 @@ export default class ABViewQueryBuilderObjectFieldConditions {
 			// make sure rule is provided
 			if (rule) {
 
-				if (rule.glue) {
+				if (rule.glue && rule.rules) {
 					rule.rules.forEach((r)=>{
 						processCondition(r);
 					})
