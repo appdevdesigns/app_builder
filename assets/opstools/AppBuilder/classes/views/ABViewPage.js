@@ -247,7 +247,18 @@ export default class ABViewPage extends ABViewContainer {
                 options: [
                     { id: 'page', value: L('ab.components.page.page', "*Page") },
                     { id: 'popup', value: L('ab.components.page.popup', "*Popup") }
-                ]
+                ],
+                on: {
+                    "onChange": function(newv, oldv) {
+                        if (newv == "page") {
+                            $$(ids.popupSettings).hide();
+                            $$(ids.pageSettings).show();
+                        } else {
+                            $$(ids.popupSettings).show();
+                            $$(ids.pageSettings).hide();                            
+                        }
+                    }
+                }
             },
             {
                 view: "fieldset",

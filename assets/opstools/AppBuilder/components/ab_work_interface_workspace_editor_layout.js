@@ -21,7 +21,8 @@ export default class AB_Work_Interface_Workspace_Editor_Layout extends OP.Compon
 			editAreaLeft: this.unique('editAreaLeft'),
 			editAreaRight: this.unique('editAreaRight'),
 			editAreaTop: this.unique('editAreaTop'),
-			editAreaBottom: this.unique('editAreaBottom')
+			editAreaBottom: this.unique('editAreaBottom'),
+			editAreaSamplePopup: this.unique('editAreaSamplePopup')
 		};
 
 
@@ -37,15 +38,31 @@ export default class AB_Work_Interface_Workspace_Editor_Layout extends OP.Compon
 					},
 					{
 						id: ids.editAreaContainer,
+						type: "clean",
 						rows: [
 							{
 								id: ids.editAreaTop,
 								height: 1
 							},
 							{
+								id: ids.editAreaSamplePopup,
+								view: "toolbar",
+								css: "webix_dark",
+								hidden: true,
+								cols: [
+									{},
+									{
+										view: "label",
+										label: "Sample Popup"
+									},
+									{}
+								]
+							},
+							{
 								// view:'template',
 								view: 'layout',
 								id: ids.editArea,
+								borderless: true,
 								rows: [],
 								// template:'[edit Area]'							
 							},
@@ -119,6 +136,7 @@ export default class AB_Work_Interface_Workspace_Editor_Layout extends OP.Compon
 						$$(ids.editAreaRight).define({width: 0});
 						$$(ids.editAreaTop).define({height: 0});
 						$$(ids.editAreaBottom).define({height: 0});
+						$$(ids.editAreaSamplePopup).show();
 					} else if (CurrentView.settings.type == "page" && CurrentView.settings.fixedPageWidth == 1 && CurrentView.settings.pageWidth) {
 						$$(ids.editAreaContainer).define({width: parseInt(CurrentView.settings.pageWidth)});
 						$$(ids.editArea).define({height: 0});
@@ -130,6 +148,7 @@ export default class AB_Work_Interface_Workspace_Editor_Layout extends OP.Compon
 						$$(ids.editAreaRight).define({width: 0});
 						$$(ids.editAreaTop).define({height: 1});
 						$$(ids.editAreaBottom).define({height: 1});
+						$$(ids.editAreaSamplePopup).hide();
 					} else {
 						$$(ids.editAreaContainer).define({width: 0});
 						$$(ids.editArea).define({height: 0});
@@ -141,6 +160,7 @@ export default class AB_Work_Interface_Workspace_Editor_Layout extends OP.Compon
 						$$(ids.editAreaRight).define({width: 1});
 						$$(ids.editAreaTop).define({height: 1});
 						$$(ids.editAreaBottom).define({height: 1});
+						$$(ids.editAreaSamplePopup).hide();
 					}
 				} else {
 					editorComponent = view.editorComponent(App, "preview");
@@ -154,6 +174,7 @@ export default class AB_Work_Interface_Workspace_Editor_Layout extends OP.Compon
 					$$(ids.editAreaRight).define({width: 1});
 					$$(ids.editAreaTop).define({height: 1});
 					$$(ids.editAreaBottom).define({height: 1});
+					$$(ids.editAreaSamplePopup).hide();
 				}
 				// editorComponent.ui.id = ids.editArea;
 				// webix.ui(editorComponent.ui, $$(ids.editArea));
