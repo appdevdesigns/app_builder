@@ -251,7 +251,7 @@ class ABFieldConnect extends ABField {
 
 								let linkCol;
 
-								if (linkObject.PK() == 'id')
+								if (linkPK == 'id')
 									linkCol = t.integer(this.columnName).unsigned().nullable();
 								else // uuid
 									linkCol = t.string(this.columnName).nullable();
@@ -300,7 +300,7 @@ class ABFieldConnect extends ABField {
 								knex.schema.table(tableName, (t) => {
 	
 									let linkCol;
-									if (linkObject.PK() == 'id')
+									if (linkPK == 'id')
 										linkCol = t.integer(this.columnName).unsigned().nullable();
 									else // uuid
 										linkCol = t.string(this.columnName).nullable();
@@ -349,7 +349,7 @@ class ABFieldConnect extends ABField {
 							linkKnex.schema.table(linkTableName, (t) => {
 
 								let linkCol;
-								if (object.PK() == 'id')
+								if (this.object.PK() == 'id')
 									linkCol = t.integer(linkColumnName).unsigned().nullable();
 								else // uuid
 									linkCol = t.string(linkColumnName).nullable();
@@ -420,7 +420,7 @@ class ABFieldConnect extends ABField {
 								else // uuid
 									linkCol = t.string(this.object.name).nullable();
 
-								if (linkObject.PK() == 'id')
+								if (linkPK == 'id')
 									linkCol2 = t.integer(linkObject.name).unsigned().nullable();
 								else // uuid
 									linkCol2 = t.string(linkObject.name).nullable();
