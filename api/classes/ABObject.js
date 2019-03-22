@@ -189,7 +189,8 @@ module.exports = class ABObject extends ABObjectBase {
 							var fieldUpdates = [];
 
 							// Adding a new field to store UUID
-							fieldUpdates.push(t.string('uuid'));
+							t.string('uuid').notNullable();
+							t.unique('uuid');
 							// NOTE: MySQL version 5 does not support default with a function
 							// .defaultTo(knex.raw('uuid()')));
 
