@@ -30,7 +30,8 @@ export default class AB_Work_Object_Workspace_PopupAddView extends OP.Component 
                 namePlaceholder: L(
                     "ab.add_view.name_placeholder",
                     "* Create a name for the view"
-                )
+                ),
+                viewSettings: L("ab.add_view.view_settings", "*View Settings")
             }
         };
 
@@ -142,7 +143,27 @@ export default class AB_Work_Object_Workspace_PopupAddView extends OP.Component 
             id: ids.component,
             height: 400,
             width: 400,
-            head: "View Settings",
+            head: {
+                view: "toolbar",
+                css: "webix_dark",
+                cols: [
+                    { 
+                        view: "label", 
+                        label: labels.component.viewSettings,
+                        css: "modal_title",
+                        align: "center"
+                    },
+                    {
+                        view: "button", 
+                        label: "Close", 
+                        autowidth: true, 
+                        align: "center",
+                        click: function () {
+                            _logic.buttonCancel();
+                        }
+                    }
+                ]
+            },
             position: "center",
             body: formUI,
             modal: true,

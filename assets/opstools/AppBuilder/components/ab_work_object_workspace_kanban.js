@@ -89,9 +89,11 @@ export default class ABWorkObjectKanBan extends OP.Component {
 							if (itemId) {
 								let data = $$(ids.kanban).getItem(itemId);
 								FormSide.show(data);
+								$$(ids.resizer).show();
 							}
 							else
 								FormSide.hide();
+								$$(ids.resizer).hide();
 						},
 						onAfterStatusChange: (rowId, status, list) => {
 
@@ -109,7 +111,9 @@ export default class ABWorkObjectKanBan extends OP.Component {
 				{
 					id: ids.resizer,
 					view: "resizer",
-					borderless: true,
+					css: "bg_gray",
+					width: 11,
+					hidden: true
 				},
 				FormSide.ui
 			]
@@ -190,6 +194,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 				$$(ids.component).show();
 
 				FormSide.hide();
+				$$(ids.resizer).hide();
 
 				if (!CurrentObject) return;
 
@@ -498,6 +503,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 				// show the side form
 				FormSide.show();
+				$$(ids.resizer).show();
 
 			},
 

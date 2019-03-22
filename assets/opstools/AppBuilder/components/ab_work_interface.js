@@ -48,7 +48,7 @@ export default class AB_Work_Interface extends OP.Component {
 			type: "space",
 			cols: [
 				ViewList.ui,
-				{ view: "resizer"},
+				{ view: "resizer", width: 11},
 				ViewWorkspace.ui
 			]
 		};

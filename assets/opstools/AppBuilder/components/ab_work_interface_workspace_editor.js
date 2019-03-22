@@ -22,7 +22,7 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
             common: App.labels,
             component: {
 
-                editorTipText: L('ab.interface.editorTipText', '*Choose "Layout" or "Data Collections" mode. "Layout" allows you to build pages and "Data Collections" gives pages access to your data objects.'),
+                editorTipText: L('ab.interface.editorTipText', '*Check "Preview" to see what your layout will look like, Click "Add Widget" to add new items to the page.'),
                 editorTipTitle: L('ab.interface.editorTipTitle', '*Tip'),
                 viewModeLayout: L('ab.interface.viewModeLayout', '*Layout'),
                 viewModeData: L('ab.interface.viewModeData', '*Data'),

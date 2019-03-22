@@ -25,6 +25,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 		var labels = {
 			common: App.labels,
 			component: {
+				editRecord: L('ab._workspace_formSidePanel', "*Edit Record"),
 			}
 		};
 
@@ -43,26 +44,38 @@ export default class ABWorkObjectKanBan extends OP.Component {
 			hidden: true,
 			rows: [
 				{
-					cols: [{},
-					{
-						view: "icon",
-						icon: "wxi-close",
-						align: "right",
-						click: function (id) {
+					view: "toolbar",
+					css: "webix_dark",
+					cols: [
+						{
+	                        view: 'label',
+	                        label: labels.component.editRecord
+                        },
+						{
+							view: "icon",
+							icon: "wxi-close",
+							align: "right",
+							click: function (id) {
 
-							_logic.hide();
+								_logic.hide();
 
+							}
 						}
-					}
 					]
 				},
 				{
-					id: ids.form,
-					view: 'form',
-					borderless: true,
-					rows: []
-				},
-				{}
+					view: "scrollview",
+					body: {
+						rows: [
+							{
+								id: ids.form,
+								view: 'form',
+								borderless: true,
+								rows: []
+							}
+						]
+					}
+				}
 			]
 		};
 
@@ -152,7 +165,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 				let formCom = form.component(App);
 
 				// Rebuild form
-				webix.ui(formCom.ui.rows, $$(ids.form));
+				webix.ui(formCom.ui.rows.concat({}), $$(ids.form));
 				webix.extend($$(ids.form), webix.ProgressBar);
 
 				formCom.init({
