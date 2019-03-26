@@ -93,10 +93,17 @@ export default class ABViewTab extends ABViewWidget {
 		var component = this.component(App);
 
 		var tabElem = component.ui;
+		
+		console.log(component.ui);
 
 		if (tabElem.rows) {
 			tabElem.rows[0].id = ids.component;
 			tabElem.rows[0].tabbar = {
+				bottomOffset: 0,
+				topOffset: 17,
+				borderless: false,
+				tabOffset: 17,
+				height: 60,
 				on: {
 					onItemClick: (id, e) => {
 
@@ -513,12 +520,17 @@ export default class ABViewTab extends ABViewWidget {
 		if (this._viewComponents.length > 0) {
 			_ui = {
 				type: "space",
-				paddingX: 17,
-				paddingY: 17,
 				rows: [
 					{
 						view: 'tabview',
 						id: ids.component,
+						tabbar: {
+							bottomOffset: 0,
+							topOffset: 17,
+							borderless: false,
+							tabOffset: 17,
+							height: 60
+						},
 						multiview: {
 							height: this.settings.height,
 							on: {
@@ -621,8 +633,19 @@ export default class ABViewTab extends ABViewWidget {
 						// able to 'scroll' in tab view
 						id: v.view.id,
 						view: 'scrollview',
-						body: v.component.ui
-
+						css: 'ab-tabview-scrollview',
+						body: {
+							cols: [
+								{ width: 17 },
+								{
+									rows: [
+										v.component.ui,
+										{ height: 17 }
+									]
+								},
+								{ width: 17 }
+							]
+						}
 					}, $$(v.view.id));
 
 					v.component.init();
