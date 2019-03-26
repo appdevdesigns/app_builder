@@ -268,7 +268,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 									}
 
 									horizontalVals.push({
-										id: "",
+										id: null,
 										text: "Other"
 									});
 
@@ -408,7 +408,6 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 			},
 
-
 			updateStatus: function (rowId, status) {
 
 				if (!CurrentVerticalField) return;
@@ -427,12 +426,26 @@ export default class ABWorkObjectKanBan extends OP.Component {
 					patch[CurrentVerticalField.columnName] = status;
 				}
 
+				// update empty value
+				let needRefresh = false;
+				for(let key in patch) {
+
+					if (patch[key] == null) {
+						patch[key] = "";
+
+						// WORKAROUND: if update data is empty, then it will need to refresh the kanban after update
+						needRefresh = true;
+					}
+				}
 
 				CurrentObject.model()
 					.update(rowId, patch)
 					.then(() => {
 
 						_logic.ready();
+
+						if (needRefresh)
+							_logic.show();
 
 					})
 					.catch((err) => {
