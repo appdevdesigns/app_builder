@@ -519,7 +519,7 @@ export default class ABViewTab extends ABViewWidget {
 
 		if (this._viewComponents.length > 0) {
 			_ui = {
-				type: "space",
+				type: "clean",
 				rows: [
 					{
 						view: 'tabview',
@@ -528,7 +528,7 @@ export default class ABViewTab extends ABViewWidget {
 							bottomOffset: 0,
 							topOffset: 17,
 							borderless: false,
-							tabOffset: 17,
+							tabOffset: 18,
 							height: 60
 						},
 						multiview: {
@@ -636,14 +636,14 @@ export default class ABViewTab extends ABViewWidget {
 						css: 'ab-tabview-scrollview',
 						body: {
 							cols: [
-								{ width: 17 },
+								{ width: 17, borderless: true },
 								{
 									rows: [
 										v.component.ui,
 										{ height: 17 }
 									]
 								},
-								{ width: 17 }
+								{ width: 17, borderless: true }
 							]
 						}
 					}, $$(v.view.id));
