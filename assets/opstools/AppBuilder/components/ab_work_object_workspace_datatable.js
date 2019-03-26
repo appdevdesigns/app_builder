@@ -1037,125 +1037,127 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                 
                 columnSplitRight = 0;
     			// wait until we have an Object defined:
-    			if (CurrentObject) {
-    				var DataTable = $$(ids.component);
-                    DataTable.define('leftSplit', 0);
-                    DataTable.define('rightSplit', 0);
-    				DataTable.clearAll();
+                if (!CurrentObject)
+                    return;
 
-                    //// update DataTable structure:
-    				// get column list from our CurrentObject
-    				var columnHeaders = CurrentObject.columnHeaders(true, settings.isEditable, settings.summaryColumns, settings.countColumns);
-                    
-                    columnHeaders.forEach(function(col) {
-                        col.fillspace = false;
+                var DataTable = $$(ids.component);
+                DataTable.define('leftSplit', 0);
+                DataTable.define('rightSplit', 0);
+                // DataTable.clearAll();
 
-                        // group header
-                        if (settings.groupBy &&
-                            settings.groupBy == col.id) {
+                //// update DataTable structure:
+                // get column list from our CurrentObject
+                var columnHeaders = CurrentObject.columnHeaders(true, settings.isEditable, settings.summaryColumns, settings.countColumns);
+                
+                columnHeaders.forEach(function(col) {
+                    col.fillspace = false;
 
-                            var groupField = CurrentObject.fields(f => f.columnName == col.id)[0];
-                            if (groupField) {
+                    // group header
+                    if (settings.groupBy &&
+                        settings.groupBy == col.id) {
 
-                                col.template = function(obj, common) {
+                        var groupField = CurrentObject.fields(f => f.columnName == col.id)[0];
+                        if (groupField) {
 
-                                    if (obj.$group) {
+                            col.template = function(obj, common) {
 
-                                        let rowData = {};
-                                        rowData[groupField.columnName] = obj.value;
+                                if (obj.$group) {
 
-                                        return common.treetable(obj, common) + groupField.format(rowData);
-                                    }
-                                    else
-                                        return groupField.format(obj);
-    
+                                    let rowData = {};
+                                    rowData[groupField.columnName] = obj.value;
+
+                                    return common.treetable(obj, common) + groupField.format(rowData);
                                 }
-                            }
+                                else
+                                    return groupField.format(obj);
 
+                            }
                         }
 
+                    }
+
+                });
+                
+                if (settings.labelAsField) {
+                    console.log(CurrentObject);
+                    columnHeaders.unshift({
+                        id: "appbuilder_label_field",
+                        header: "Label",
+                        fillspace: true,
+                        template: function(obj){
+                            return CurrentObject.displayData(obj);
+                        },
+                        // css: { 'text-align': 'center' }
                     });
-                    
-                    if (settings.labelAsField) {
-                        console.log(CurrentObject);
-                        columnHeaders.unshift({
-                            id: "appbuilder_label_field",
-                            header: "Label",
-                            fillspace: true,
-                            template: function(obj){
-                                return CurrentObject.displayData(obj);
-                            },
-                            // css: { 'text-align': 'center' }
-                        });
-                    }
-
-                    if (settings.massUpdate) {
-                        columnHeaders.unshift({
-                            id: "appbuilder_select_item",
-        					header: { content:"masterCheckbox", contentId:"mch" },
-        					width: 40,
-        					template: "<div class='singleSelect'>{common.checkbox()}</div>",
-        					css: { 'text-align': 'center' }                            
-                        });
-                        columnSplitLeft = 1;
-                    }
-                    else {
-                        columnSplitLeft = 0;
-                    }
-                    if (settings.detailsView != null && !settings.hideButtons) {
-                        columnHeaders.push({
-                            id: "appbuilder_view_detail",
-        					header: "",
-        					width: 40,
-                            template: function(obj, common){
-                                return "<div class='detailsView'><span class='webix_icon fa fa-eye'></span></div>";
-                            },
-        					css: { 'text-align': 'center' }                            
-                        });
-                        columnSplitRight++;
-                    }
-                    if (settings.editView != null && !settings.hideButtons) {
-                        columnHeaders.push({
-                            id: "appbuilder_view_edit",
-        					header: "",
-        					width: 40,
-        					template: "<div class='edit'>{common.editIcon()}</div>",
-        					css: { 'text-align': 'center' }                            
-                        });
-                        columnSplitRight++;
-                    }
-                    if (settings.allowDelete) {
-        				columnHeaders.push({
-        					id: "appbuilder_trash",
-        					header: "",
-        					width: 40,
-        					template: "<div class='trash'>{common.trashIcon()}</div>",
-        					css: { 'text-align': 'center' }
-        				});
-                        columnSplitRight++;
-                    }
-                    
-                    // add fillspace to last editiable column
-                    var lastCol = columnHeaders[columnHeaders.length-1-columnSplitRight];
-                    if (lastCol) {
-                        lastCol.fillspace = true;
-                        lastCol.minWidth = lastCol.width;
-                        lastCol.width = 150; // set a width for last column but by default it will fill the available space or use the minWidth to take up more
-                    }
-                    
-    				DataTable.refreshColumns(columnHeaders);
-
-
-    				// freeze columns:
-    				if (CurrentObject.workspaceFrozenColumnID != "") {
-    					DataTable.define('leftSplit', DataTable.getColumnIndex(CurrentObject.workspaceFrozenColumnID) + 1);
-    				} else {
-                        DataTable.define('leftSplit', columnSplitLeft);
-                    }
-                    _logic.freezeDeleteColumn();
-                    DataTable.refreshColumns();
-
                 }
+
+                if (settings.massUpdate) {
+                    columnHeaders.unshift({
+                        id: "appbuilder_select_item",
+                        header: { content:"masterCheckbox", contentId:"mch" },
+                        width: 40,
+                        template: "<div class='singleSelect'>{common.checkbox()}</div>",
+                        css: { 'text-align': 'center' }                            
+                    });
+                    columnSplitLeft = 1;
+                }
+                else {
+                    columnSplitLeft = 0;
+                }
+                if (settings.detailsView != null && !settings.hideButtons) {
+                    columnHeaders.push({
+                        id: "appbuilder_view_detail",
+                        header: "",
+                        width: 40,
+                        template: function(obj, common){
+                            return "<div class='detailsView'><span class='webix_icon fa fa-eye'></span></div>";
+                        },
+                        css: { 'text-align': 'center' }                            
+                    });
+                    columnSplitRight++;
+                }
+                if (settings.editView != null && !settings.hideButtons) {
+                    columnHeaders.push({
+                        id: "appbuilder_view_edit",
+                        header: "",
+                        width: 40,
+                        template: "<div class='edit'>{common.editIcon()}</div>",
+                        css: { 'text-align': 'center' }                            
+                    });
+                    columnSplitRight++;
+                }
+                if (settings.allowDelete) {
+                    columnHeaders.push({
+                        id: "appbuilder_trash",
+                        header: "",
+                        width: 40,
+                        template: "<div class='trash'>{common.trashIcon()}</div>",
+                        css: { 'text-align': 'center' }
+                    });
+                    columnSplitRight++;
+                }
+                
+                // add fillspace to last editiable column
+                var lastCol = columnHeaders[columnHeaders.length-1-columnSplitRight];
+                if (lastCol) {
+                    lastCol.fillspace = true;
+                    lastCol.minWidth = lastCol.width;
+                    lastCol.width = 150; // set a width for last column but by default it will fill the available space or use the minWidth to take up more
+                }
+                
+                DataTable.refreshColumns(columnHeaders);
+
+
+                // freeze columns:
+                if (CurrentObject.workspaceFrozenColumnID != "") {
+                    DataTable.define('leftSplit', DataTable.getColumnIndex(CurrentObject.workspaceFrozenColumnID) + 1);
+                } else {
+                    DataTable.define('leftSplit', columnSplitLeft);
+                }
+                _logic.freezeDeleteColumn();
+                DataTable.refreshColumns();
+
+                // }
                 
             },
 
@@ -1210,7 +1212,8 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                         relationData = [relationData];
 
                     (relationData || []).forEach(function (o) {
-                        tip += o.text + "<br/>";
+                        if (o)
+                            tip += o.text + "<br/>";
                     });
                 } else if (typeof obj[common.column.id+"__relation"] != "undefined" && typeof obj[common.column.id] == "number") {
                     tip = obj[common.column.id+"__relation"].text;
