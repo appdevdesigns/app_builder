@@ -125,7 +125,7 @@ describe('ab_work_object_workspace_popupHideFields component', () => {
 			target.objectLoad(mockObj);
 
 			// Set up simulated button click and spy for clickHideAll function
-			let buttonClickFn = target.ui.body.rows[0].cols[1].on.onItemClick,
+			let buttonClickFn = target.ui.body.rows[1].cols[0].on.onItemClick,
 				spyLogicClickHideAll = sandbox.spy(target._logic, 'clickHideAll');
 			
 			// Tell the app the save was successfull	
@@ -151,7 +151,7 @@ describe('ab_work_object_workspace_popupHideFields component', () => {
 			target.objectLoad(mockObj);
 			
 			// Set up simulated button click and spy for clickShowAll function
-			let buttonClickFn = target.ui.body.rows[0].cols[0].on.onItemClick,
+			let buttonClickFn = target.ui.body.rows[1].cols[1].on.onItemClick,
 				spyLogicClickShowAll = sandbox.spy(target._logic, 'clickShowAll');
 			
 			// Tell the app the save was successfull	
@@ -177,7 +177,7 @@ describe('ab_work_object_workspace_popupHideFields component', () => {
 			target.objectLoad(mockObj);
 
 			// Set up simulated list item click and spy for clickListItem function
-			let itemClickFn = target.ui.body.rows[1].on.onItemClick,
+			let itemClickFn = target.ui.body.rows[0].on.onItemClick,
 				onShowFn = target.ui.on.onShow,
 				spyLogicClickListItem = sandbox.spy(target._logic, 'clickListItem');
 			
@@ -221,7 +221,7 @@ describe('ab_work_object_workspace_popupHideFields component', () => {
 			target.objectLoad(mockObj);
 
 			// Set up simulated list item click and spy for clickListItem function
-			let itemClickFn = target.ui.body.rows[1].on.onItemClick,
+			let itemClickFn = target.ui.body.rows[0].on.onItemClick,
 				onShowFn = target.ui.on.onShow,
 				spyLogicClickListItem = sandbox.spy(target._logic, 'clickListItem');
 			

@@ -112,7 +112,7 @@ describe('ab_work_object_workspace_popupFrozenColumns component', () => {
 			target.objectLoad(mockObj);
 			
 			// Set up simulated button click and spy for clickClearAll function
-			let buttonClickFn = target.ui.body.rows[0].on.onItemClick,
+			let buttonClickFn = target.ui.body.rows[1].on.onItemClick,
 				spyLogicClickClearAll = sandbox.spy(target._logic, 'clickClearAll');
 			
 			// Tell the app the save was successfull	
@@ -138,7 +138,7 @@ describe('ab_work_object_workspace_popupFrozenColumns component', () => {
 			target.objectLoad(mockObj);
 			
 			// Set up simulated list item click and spy for clickListItem function
-			let itemClickFn = target.ui.body.rows[1].on.onItemClick,
+			let itemClickFn = target.ui.body.rows[0].on.onItemClick,
 				onShowFn = target.ui.on.onShow,
 				spyLogicClickListItem = sandbox.spy(target._logic, 'clickListItem');
 			

@@ -176,7 +176,7 @@ describe("ABFieldCalculate unit tests", () => {
 			target.settings.formula = `AGE({${dateColName}})`;
 
 			let result = target.format(row);
-			let expect = 32;
+			let expect = 33;
 
 			assert.equal(expect, result);
 
