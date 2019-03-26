@@ -268,7 +268,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 									}
 
 									horizontalVals.push({
-										id: "",
+										id: null,
 										text: "Other"
 									});
 
@@ -408,7 +408,6 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 			},
 
-
 			updateStatus: function (rowId, status) {
 
 				if (!CurrentVerticalField) return;
@@ -427,6 +426,11 @@ export default class ABWorkObjectKanBan extends OP.Component {
 					patch[CurrentVerticalField.columnName] = status;
 				}
 
+				// update empty value
+				for(let key in patch) {
+					if (patch[key] == null)
+						patch[key] = "";
+				}
 
 				CurrentObject.model()
 					.update(rowId, patch)
