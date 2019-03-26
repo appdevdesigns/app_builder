@@ -169,6 +169,10 @@ label {
 	top: 2px;
 	right: 33px;
 }
+.ab-component-tools.ab-tab-tools {
+	right: 0;
+	z-index: 200;
+}
 .ab-component-remove, .ab-component-edit {
 	width: 31px;
 	height: 31px;
@@ -457,7 +461,7 @@ label {
 	z-index: 1;
 	top: 31px;
 }
-.ab-component-in-page {
+.ab-dataview-table .ab-component-in-page {
 	text-align: center;
 	line-height: 15px;
 	vertical-align: middle;
@@ -479,4 +483,55 @@ label {
 }
 .webix_list_item:hover {
 	background: rgba(0,0,0,0.05);
+}
+.webix_all_tabs .webix_item_tab.webix_selected, .webix_all_tabs .webix_item_tab.webix_selected:hover, .webix_all_tabs .webix_item_tab.webix_selected:active, .webix_all_tabs .webix_item_tab.webix_selected:focus {
+	color: white;
+	background: #1ca1c199;
+	box-shadow: inset 0 -3px #1ca1c1;
+}
+.webix_all_tabs .webix_item_tab {
+	box-shadow: inset 0px 1px 3px rgba(0,0,0,0.25);	
+	background: #ebedf0;
+}
+.ab-tab-back:hover, .ab-tab-next:hover {
+	cursor: e-resize;
+	opacity: 1;
+}
+.ab-tab-back:hover {
+	cursor: w-resize;
+}
+.ab-tab-back, .ab-tab-next {
+	float: left;
+	margin-left: 10px;
+	background: #1ca1c1;
+	opacity: 0.8;
+	width: 20px;
+	height: 20px;
+	border-radius: 10px;
+	line-height: 18px;
+	padding-right: 2px;
+	color: white;
+}
+.ab-tab-edit {
+	opacity: 0.4;
+}
+.ab-tab-edit:hover {
+	opacity: 1;
+}
+.ab-tab-next {
+	float: right;
+	margin-right: 10px;
+	padding-left: 2px;
+}
+.webix_all_tabs div:nth-child(2) .ab-tab-back {
+	display: none;
+}
+.webix_all_tabs div:nth-last-child(2) .ab-tab-next {
+	display: none;
+}
+.webix_tab_filler:nth-last-child(1) {
+	width: 17px !important;
+}
+.ab-tabview-scrollview {
+	margin-top: -1px;
 }
