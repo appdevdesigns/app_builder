@@ -1234,7 +1234,6 @@ class ABFieldDate extends ABField {
 	 * data seems invalid.
 	 * @param {obj} data  a key=>value hash of the inputs to parse.
 	 * @param {OPValidator} validator  provided Validator fn
-	 * @return {array} 
 	 */
 	isValidData(data, validator) {
 		

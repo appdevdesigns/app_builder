@@ -108,6 +108,16 @@ export default class ABViewFormField extends ABView {
 				_ui.required = 1;
 			}
 
+			_ui.validate = (val, data, colName) => {
+
+				let validator = OP.Validation.validator();
+
+				field.isValidData(data, validator);
+
+				return validator.pass();
+
+			};
+
 		}
 
 		var _init = () => {}
