@@ -1,0 +1,3 @@
+[submodule "assets/opstools/AppBuilder/classes/core"]
+	path = assets/opstools/AppBuilder/classes/core
+	url = /Users/codingMonkey/Sites/web/sails/node_modules/app_builder/assets/opstools/AppBuilder/classes/core
