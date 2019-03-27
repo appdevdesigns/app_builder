@@ -171,7 +171,7 @@ label {
 }
 .ab-component-tools.ab-tab-tools {
 	right: 0;
-	z-index: 200;
+	z-index: 100;
 }
 .ab-component-remove, .ab-component-edit {
 	width: 31px;
