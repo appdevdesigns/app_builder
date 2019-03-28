@@ -281,10 +281,11 @@ class ABFieldList extends ABField {
 
 		myParameter = super.requestParam(allParameters);
 
-		// '' (empty string) to null
+		// 'none' or '' (empty string) to null
 		if (myParameter &&
 			myParameter[this.columnName] != undefined && 
-			myParameter[this.columnName] == '') {
+			(myParameter[this.columnName] == '' || myParameter[this.columnName] == 'none')
+			) {
 			myParameter[this.columnName] = null;
 		}
 
