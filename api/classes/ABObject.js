@@ -180,19 +180,19 @@ module.exports = class ABObject extends ABObjectBase {
 					if (!exists) {
 						sails.log.verbose('... creating!!!');
 						return knex.schema.createTable(tableName, (t) => {
-							t.increments('id').primary();
+
+							// Use .uuid to be primary key instead
+							// t.increments('id').primary();
+							t.string('uuid').primary();
+							// NOTE: MySQL version 5 does not support default with a function
+							// .defaultTo(knex.raw('uuid()')));
+
 							t.timestamps();
 							t.engine('InnoDB');
 							t.charset('utf8');
 							t.collate('utf8_unicode_ci');
 
 							var fieldUpdates = [];
-
-							// Adding a new field to store UUID
-							t.string('uuid').notNullable();
-							t.unique('uuid');
-							// NOTE: MySQL version 5 does not support default with a function
-							// .defaultTo(knex.raw('uuid()')));
 
 							this.fields().forEach((f)=>{
 
