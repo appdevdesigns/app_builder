@@ -16,7 +16,9 @@ function L(key, altText) {
 
 
 var ABViewTabPropertyComponentDefaults = {
-	height: 0
+	height: 0,
+	stackTabs: 0, // use sidebar view instead of tabview
+	darkTheme: 0 // set dark theme css or not
 }
 
 
@@ -66,6 +68,8 @@ export default class ABViewTab extends ABViewWidget {
 
 		// convert from "0" => 0
 		this.settings.height = parseInt(this.settings.height);
+		this.settings.stackTabs = parseInt(this.settings.stackTabs);
+		this.settings.darkTheme = parseInt(this.settings.darkTheme);
 
 	}
 
@@ -94,8 +98,6 @@ export default class ABViewTab extends ABViewWidget {
 
 		var tabElem = component.ui;
 		
-		console.log(component.ui);
-
 		if (tabElem.rows) {
 			tabElem.rows[0].id = ids.component;
 			tabElem.rows[0].tabbar = {
@@ -154,12 +156,64 @@ export default class ABViewTab extends ABViewWidget {
 				});
 
 			}
+		} else if (tabElem.cols) { // if we detect colums we are using sidebar and need to format the onItemClick event differently
+			tabElem.cols[1].id = ids.component;
+			tabElem.cols[0].on = {
+				onItemClick: (id, e) => {
+
+					var tabId = id.replace("_menu", ""),
+						tab = this.views(v => v.id == tabId)[0],
+						currIndex = this._views.findIndex((v) => v.id == tabId);
+						
+					component.onShow(tabId);
+
+					// Rename
+					if (e.target.classList.contains('rename')) {
+
+						ABViewTab.popupShow(tab);
+
+					}
+					// Reorder back
+					else if (e.target.classList.contains('move-back')) {
+
+						this.viewReorder(tabId, currIndex - 1);
+
+						// refresh editor view
+						this.emit('properties.updated', this);
+
+					}
+					// Reorder next
+					else if (e.target.classList.contains('move-next')) {
+
+						this.viewReorder(tabId, currIndex + 1);
+
+						// refresh editor view
+						this.emit('properties.updated', this);
+
+					}
+
+				}
+			};
+
+			// Add action buttons
+			if (tabElem.cols[0].data && tabElem.cols[0].data.length > 0) {
+				tabElem.cols[0].data.forEach((sidebarItem) => {
+
+					// Add 'edit' icon
+					sidebarItem.value = (sidebarItem.value + ' <i class="fa fa-pencil-square rename ab-tab-edit"></i>');
+					// Add 'move up' icon
+					sidebarItem.value += '<i class="fa fa-caret-up move-back ab-tab-up"></i>';
+					// Add 'move down' icon
+					sidebarItem.value += ' <i class="fa fa-caret-down move-next ab-tab-down"></i>';
+
+				});
+
+			}
 		}
 
 		var _ui = {
 			rows: [
-				tabElem,
-				{}
+				tabElem
 			]
 		};
 
@@ -173,6 +227,29 @@ export default class ABViewTab extends ABViewWidget {
 				$$(ids.component).config.view == "tabview") {
 				webix.ui({
 					container: $$(ids.component).getMultiview().$view,
+					view: 'template',
+					type: 'clean',
+					autoheight: false,
+					borderless: true,
+					height: 1,
+					width: 0,
+					template: '<div class="ab-component-tools ab-layout-view ab-tab-tools">' +
+					'<i class="fa fa-trash ab-component-remove"></i>' +
+					'<i class="fa fa-edit ab-component-edit"></i>' +
+					'</div>',
+					onClick: {
+						"ab-component-edit": function (e, id, trg) {
+							_logic.tabEdit(e, id, trg);
+						},
+						"ab-component-remove": function (e, id, trg) {
+							_logic.tabRemove(e, id, trg);
+						}
+					}
+				});
+			} else if ($$(ids.component) &&
+				$$(ids.component).config.view == "multiview") {
+				webix.ui({
+					container: $$(ids.component).$view,
 					view: 'template',
 					type: 'clean',
 					autoheight: false,
@@ -278,11 +355,11 @@ export default class ABViewTab extends ABViewWidget {
 	// Property Editor
 	// 
 
-	static addTab(ids, _logic, tabName) {
+	static addTab(ids, _logic, tabName, tabIcon) {
 
 		// get current instance and .addTab()
 		var LayoutView = _logic.currentEditObject();
-		LayoutView.addTab(tabName);
+		LayoutView.addTab(tabName, tabIcon);
 
 		// trigger a save()
 		this.propertyEditorSave(ids, LayoutView);
@@ -290,7 +367,7 @@ export default class ABViewTab extends ABViewWidget {
 	}
 
 
-	static editTab(ids, _logic, tabId, tabName) {
+	static editTab(ids, _logic, tabId, tabName, tabIcon) {
 
 		// get current instance and rename tab
 		var LayoutView = _logic.currentEditObject();
@@ -299,6 +376,7 @@ export default class ABViewTab extends ABViewWidget {
 		if (!editedTab) return;
 
 		editedTab.label = tabName;
+		editedTab.tabicon = tabIcon;
 
 		// trigger a save()
 		this.propertyEditorSave(ids, LayoutView);
@@ -318,11 +396,12 @@ export default class ABViewTab extends ABViewWidget {
 			if (tab) {
 				form.setValues({
 					id: tab.id,
-					label: tab.label
+					label: tab.label, 
+					tabicon: tab.tabicon
 				});
 
 				popup.getHead().setHTML(L('ab.component.tab.editTab', '*Edit Tab'));
-				button.setValue(L('ab.common.edit', "*Save"));
+				button.setValue(L('ab.common.save', "*Save"));
 			}
 			// Add new tab
 			else {
@@ -376,7 +455,7 @@ export default class ABViewTab extends ABViewWidget {
 		webix.ui({
 			id: 'ab-component-tab-add-new-tab-popup',
 			view: "window",
-			height: 150,
+			height: 250,
 			width: 300,
 			modal: true,
 			position: "center",
@@ -391,6 +470,23 @@ export default class ABViewTab extends ABViewWidget {
 						id: 'ab-component-tab-name',
 						label: L('ab.component.tab.label', '*Label'),
 						required: true
+					},
+					{
+						view:"combo",
+						id:"ab-component-tab-icon", 
+						name: "tabicon",
+						label:"Icon", 
+						options:{
+							filter:function(item, value){
+								if(item.value.toString().toLowerCase().indexOf(value.toLowerCase())===0)
+									return true;
+								return false;
+							},
+							body: { 
+								data:App.icons,
+								template:"<i class='fa fa-fw fa-#value#'></i> #value#",            
+							}          
+						},
 					},
 					// action buttons
 					{
@@ -422,11 +518,11 @@ export default class ABViewTab extends ABViewWidget {
 
 										// add
 										if (vals.id == null) {
-											this.addTab(ids, _logic, vals.label);
+											this.addTab(ids, _logic, vals.label, vals.tabicon);
 										}
 										// edit
 										else {
-											this.editTab(ids, _logic, vals.id, vals.label);
+											this.editTab(ids, _logic, vals.id, vals.label, vals.tabicon);
 										}
 
 										this.popupReady();
@@ -452,6 +548,27 @@ export default class ABViewTab extends ABViewWidget {
 				name: 'height',
 				label: L('ab.component.tab.height', '*Height')
 			},
+			{
+				view: "checkbox",
+				name: "stackTabs",
+				labelRight: L('ab.component.tab.stack', '*Stack Tabs Vertically'),
+				labelWidth: App.config.labelWidthCheckbox,
+				on: {
+					"onChange": (newv, oldv) => {
+						if (newv == 1) {
+							$$(ids.darkTheme).show();
+						} else {
+							$$(ids.darkTheme).hide();
+						}
+					}
+				}
+			},
+			{
+				view: "checkbox",
+				name: "darkTheme",
+				labelRight: L('ab.component.tab.darkTheme', '*Use Dark Theme'),
+				labelWidth: App.config.labelWidthCheckbox
+			},
 			// [button] : add tab
 			{
 				view: 'button',
@@ -470,6 +587,14 @@ export default class ABViewTab extends ABViewWidget {
 		super.propertyEditorPopulate(App, ids, view);
 
 		$$(ids.height).setValue(view.settings.height || ABViewTabPropertyComponentDefaults.height);
+		$$(ids.stackTabs).setValue(view.settings.stackTabs || ABViewTabPropertyComponentDefaults.stackTabs);
+		$$(ids.darkTheme).setValue(view.settings.darkTheme || ABViewTabPropertyComponentDefaults.darkTheme);
+		
+		if (view.settings.stackTabs) {
+			$$(ids.darkTheme).show();
+		} else {
+			$$(ids.darkTheme).hide();
+		}
 	}
 
 
@@ -478,16 +603,19 @@ export default class ABViewTab extends ABViewWidget {
 		super.propertyEditorValues(ids, view);
 
 		view.settings.height = $$(ids.height).getValue();
+		view.settings.stackTabs = $$(ids.stackTabs).getValue();
+		view.settings.darkTheme = $$(ids.darkTheme).getValue();
 	}
 
 
 
 
-	addTab(tabName) {
+	addTab(tabName, tabIcon) {
 
 		this._views.push(ABViewManager.newView({
 			key: ABViewContainer.common().key,
-			label: tabName
+			label: tabName,
+			tabicon: tabIcon
 		}, this.application, this));
 
 	}
@@ -513,49 +641,91 @@ export default class ABViewTab extends ABViewWidget {
 		var idBase = 'ABViewTab_' + this.id;
 		var ids = {
 			component: App.unique(idBase + '_component'),
+			sidebar: App.unique(idBase + '_sidebar')
 		}
 
 		var _ui = {};
 
 		if (this._viewComponents.length > 0) {
-			_ui = {
-				type: "clean",
-				rows: [
-					{
-						view: 'tabview',
-						id: ids.component,
-						tabbar: {
-							bottomOffset: 0,
-							topOffset: 17,
-							borderless: false,
-							tabOffset: 18,
-							height: 60
-						},
-						multiview: {
-							height: this.settings.height,
+			if (this.settings.stackTabs) {
+				_ui = {
+					cols: [
+						{
+							view: "sidebar",
+							id: ids.sidebar,
+							scroll: true,
+							css: this.settings.darkTheme ? "webix_dark" : "",
+							data: this._viewComponents.map((v) => {
+								return {
+									id: v.view.id + "_menu",
+									value: v.view.label,
+									icon: v.view.tabicon ? "fa fa-fw fa-"+v.view.tabicon : ""
+								};
+							}),
 							on: {
-								onViewChange: function(prevId, nextId) {
+								'onItemClick': function(nextId) {
+									nextId = nextId.replace("_menu", "");
 									_onShow(nextId);
 								}
 							}
 						},
-						cells: this._viewComponents.map((v) => {
+						{
+							view: "multiview",
+							id: ids.component,
+							keepViews: true,
+							height: this.settings.height,
+							cells: this._viewComponents.map((v) => {
+								var tabUi = {
+									id: v.view.id,
+									// ui will be loaded when its tab is opened
+									view: 'layout',
+									rows: []
+								};
 
-							var tabUi = {
-								id: v.view.id,
-								// ui will be loaded when its tab is opened
-								view: 'layout',
-								rows: []
-							};
+								return tabUi;
+							})
+						}
+					]
+				}
+			} else {
+				_ui = {
+					type: "clean",
+					rows: [
+						{
+							view: 'tabview',
+							id: ids.component,
+							tabbar: {
+								bottomOffset: 0,
+								topOffset: 17,
+								borderless: true,
+								tabOffset: 18,
+								height: 60
+							},
+							multiview: {
+								height: this.settings.height,
+								on: {
+									onViewChange: function(prevId, nextId) {
+										_onShow(nextId);
+									}
+								}
+							},
+							cells: this._viewComponents.map((v) => {
 
-							return {
-								id: v.view.id,
-								header: v.view.label,
-								body: tabUi
-							};
-						})
-					}
-				]
+								var tabUi = {
+									id: v.view.id,
+									// ui will be loaded when its tab is opened
+									view: 'layout',
+									rows: []
+								};
+
+								return {
+									header: "<span class='webix_icon fa fa-"+v.view.tabicon+"'></span> " + v.view.label,
+									body: tabUi
+								};
+							})
+						}
+					]
+				}
 			}
 		}
 		else {
@@ -582,7 +752,8 @@ export default class ABViewTab extends ABViewWidget {
 
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
-
+			var parent = this;
+			
 			if ($$(ids.component))
 				webix.extend($$(ids.component), webix.ProgressBar)
 
@@ -610,6 +781,7 @@ export default class ABViewTab extends ABViewWidget {
 		}
 
 		var _onShow = (viewId) => {
+			var parent = this;
 
 			this._viewComponents.forEach((v, index) => {
 
@@ -627,26 +799,38 @@ export default class ABViewTab extends ABViewWidget {
 
 					v.component = v.view.component(App);
 
-					// update tab UI
-					webix.ui({
+					if (parent.settings.stackTabs) {
+						// update multiview UI
+						webix.ui({
+							// able to 'scroll' in tab view
+							id: v.view.id,
+							view: 'scrollview',
+							css: 'ab-multiview-scrollview',
+							body: v.component.ui
+						}, $$(v.view.id));
+					} else {
+						// update tab UI
+						webix.ui({
 
-						// able to 'scroll' in tab view
-						id: v.view.id,
-						view: 'scrollview',
-						css: 'ab-tabview-scrollview',
-						body: {
-							cols: [
-								{ width: 17, borderless: true },
-								{
-									rows: [
-										v.component.ui,
-										{ height: 17 }
-									]
-								},
-								{ width: 17, borderless: true }
-							]
-						}
-					}, $$(v.view.id));
+							// able to 'scroll' in tab view
+							id: v.view.id,
+							view: 'scrollview',
+							css: 'ab-tabview-scrollview',
+							borderless: true,
+							body: {
+								cols: [
+									{ width: 17 },
+									{
+										rows: [
+											v.component.ui,
+											{ height: 17 }
+										]
+									},
+									{ width: 17 }
+								]
+							}
+						}, $$(v.view.id));
+					}
 
 					v.component.init();
 
@@ -669,6 +853,11 @@ export default class ABViewTab extends ABViewWidget {
 					v.component &&
 					v.component.onShow)
 					v.component.onShow();
+
+				if (parent.settings.stackTabs && v.view.id == viewId) {
+					$$(viewId).show(false, false);
+					$$(ids.sidebar).select(viewId + "_menu");
+				}
 
 			});
 		}
