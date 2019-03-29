@@ -80,11 +80,25 @@ export default class ABViewDataview extends ABViewDetail {
 			component: App.unique(idBase + '_component'),
 		}
 
-		com.ui = {
+		let viewDef = {
 			id: ids.component,
 			type: 'space',
 			rows: []
 		};
+
+		// if height is set, then add Y scrollbar
+		if (this.settings.height) {
+			com.ui = {
+				view: "scrollview",
+				height: this.settings.height,
+				scroll: "y",
+				body: viewDef
+			};
+		}
+		// no scrollbar
+		else {
+			com.ui = viewDef;
+		}
 
 		com.init = (options) => {
 
@@ -113,7 +127,7 @@ export default class ABViewDataview extends ABViewDetail {
 			baseCom.onShow();
 
 			// clear UI
-			webix.ui(com.ui, $$(ids.component));
+			webix.ui([], $$(ids.component));
 
 			var dc = this.dataCollection;
 			if (!dc) return;
@@ -156,7 +170,7 @@ export default class ABViewDataview extends ABViewDetail {
 			rows.forEach(row => {
 
 				// add tasks
-				tasks.push(new Promise((next,err) => {
+				tasks.push(new Promise((next, err) => {
 
 					// pull container definition
 					super.print(row).then(containerDef => {
