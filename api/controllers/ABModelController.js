@@ -654,7 +654,7 @@ module.exports = {
     find: function (req, res) {
 
         newPendingTransaction();
-        AppBuilder.routes.verifyAndReturnObject(req, res)
+        AppBuilder.routes.verifyAndReturnGlobalObject(req, res)
             .then(function (object) {
 
                 // verify that the request is from a socket not a normal HTTP
