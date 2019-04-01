@@ -48,6 +48,12 @@ export default class UIComponent extends EventEmitter {
 				custom:{
 
 				},
+                
+                /*
+                 * Icons
+                 * this will provide you with the list of avaialbe font awesome 4.7.0 icons to use in interface building
+                 */
+                icons: OP.Icons.icons,
 
 
 				Label: L,

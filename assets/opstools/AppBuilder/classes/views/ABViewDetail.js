@@ -355,6 +355,8 @@ export default class ABViewDetail extends ABViewContainer {
 
 				this.views().forEach((f) => {
 
+					if (!f.field) return;
+
 					var field = f.field();
 					var val;
 

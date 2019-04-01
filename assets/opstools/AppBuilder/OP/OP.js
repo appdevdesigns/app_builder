@@ -21,6 +21,7 @@ import Component from "./component"
 import Config from "./config/config"
 import CustomComponent from "./customComponent"
 import DateTime from "./dateTime"
+import Icons from "./icons"
 import Model from "./model"
 import Multilingual from "./multilingual"
 import Test from "./test"
@@ -45,6 +46,8 @@ if (!window.OP) {
     OP.CustomComponent = CustomComponent;  // Webix Custom Components
     
     OP.DateTime = DateTime;
+	
+	OP.Icons = Icons;
 
 	OP.Dialog = AD.op.Dialog;
 

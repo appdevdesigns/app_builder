@@ -12,6 +12,7 @@ var EventEmitter = require('events').EventEmitter;
 
 var ABViewBaseDefaults = {
 	icon: 'window-maximize',
+	tabicon: "" // no default tab icons
 }
 
 // var _ = require("lodash");
@@ -56,6 +57,7 @@ module.exports = class ABViewBase extends EventEmitter {
 			id: this.id,
 			key: this.key,
 			icon: this.icon,
+			tabicon: this.tabicon,
 
 			name: this.name,
 			// parent: this.parent,
@@ -80,6 +82,7 @@ module.exports = class ABViewBase extends EventEmitter {
 		this.id = values.id;			// NOTE: only exists after .save()
 		this.key = values.key;
 		this.icon = values.icon || ABViewBaseDefaults.icon;
+		this.tabicon = values.tabicon || ABViewBaseDefaults.tabicon;
 
 		// this.parent = values.parent || null;
 

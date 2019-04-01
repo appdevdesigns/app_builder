@@ -493,14 +493,21 @@ label {
 	box-shadow: inset 0px 1px 3px rgba(0,0,0,0.25);	
 	background: #ebedf0;
 }
-.ab-tab-back:hover, .ab-tab-next:hover {
+.ab-tab-back:hover, .ab-tab-next:hover, .ab-tab-up:hover, .ab-tab-down:hover {
 	cursor: e-resize;
 	opacity: 1;
 }
 .ab-tab-back:hover {
 	cursor: w-resize;
 }
-.ab-tab-back, .ab-tab-next {
+.ab-tab-up:hover {
+	cursor: n-resize;
+	opacity: 1;
+}
+.ab-tab-down:hover {
+	cursor: s-resize;
+}
+.ab-tab-back, .ab-tab-next, .ab-tab-up, .ab-tab-down {
 	float: left;
 	margin-left: 10px;
 	background: #1ca1c1;
@@ -521,7 +528,12 @@ label {
 .ab-tab-next {
 	float: right;
 	margin-right: 10px;
-	padding-left: 2px;
+	padding-left: 6px;
+}
+.ab-tab-up, .ab-tab-down {
+	float: right;
+	margin: 12px -2px 12px 15px;
+	padding-left: 6px;
 }
 .webix_all_tabs div:nth-child(2) .ab-tab-back {
 	display: none;
