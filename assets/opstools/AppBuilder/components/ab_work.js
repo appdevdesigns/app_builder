@@ -235,13 +235,15 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 
 			// initialize the Object Workspace to show first.
 			var state = webix.storage.local.get("state");
-			$$(ids.tabbar).setState(state);
-			
-			if (state.collapsed) {
-				setTimeout(function(){
-					$$(ids.tabbar).remove(ids.collapseMenu);
-					$$(ids.tabbar).add(expandMenu);
-				}, 0);
+			if (state) {
+				$$(ids.tabbar).setState(state);
+				
+				if (state.collapsed) {
+					setTimeout(function(){
+						$$(ids.tabbar).remove(ids.collapseMenu);
+						$$(ids.tabbar).add(expandMenu);
+					}, 0);
+				}
 			}
 
 			_logic.tabSwitch(ids.tab_object);
