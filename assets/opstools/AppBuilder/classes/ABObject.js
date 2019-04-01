@@ -15,6 +15,8 @@ function L(key, altText) {
 export default class ABObject extends ABObjectBase {
 
     constructor(attributes, application) {
+    	// Transition to global Object Definitions
+		attributes = attributes.json || attributes;
     	super(attributes, application);
 /*
 {

@@ -8,6 +8,7 @@ var AD = require('ad-utils');
 var _ = require('lodash');
 var moment = require('moment');
 var uuid = require('node-uuid');
+var async = require("async");
 
 
 
@@ -167,19 +168,25 @@ module.exports = {
             return new Promise(
                 (resolve, reject) => {
 
-                    var appID = req.param('appID', -1);
+                    // Transition to Global Objects: remove connection to a specific Application
+
+                    // TODO: what happens when there are no Applications defined?
+
+
+                    // var appID = req.param('appID', -1);
                     var objID = req.param('objID', -1);
 
-                    sails.log.verbose('... appID:' + appID);
+                    // sails.log.verbose('... appID:' + appID);
                     sails.log.verbose('... objID:' + objID);
 
                     // Verify input params are valid:
                     var invalidError = null;
 
-                    if (appID == -1) {
-                        invalidError = ADCore.error.fromKey('E_MISSINGPARAM');
-                        invalidError.details = 'missing application.id';
-                    } else if (objID == -1) {
+                    // if (appID == -1) {
+                    //     invalidError = ADCore.error.fromKey('E_MISSINGPARAM');
+                    //     invalidError.details = 'missing application.id';
+                    // } else if (objID == -1) {
+                    if (objID == -1) {
                         invalidError = ADCore.error.fromKey('E_MISSINGPARAM');
                         invalidError.details = 'missing object.id';
                     }
@@ -192,9 +199,9 @@ module.exports = {
                     }
 
 
-                    ABApplication.findOne({ id: appID })
-                        .then(function (app) {
-
+                    ABApplication.find({})
+                        .then(function (appList) {
+                            var app = appList[0];
                             if (app) {
 
                                 var Application = app.toABClass();
@@ -229,7 +236,224 @@ module.exports = {
                                 // error: couldn't find the application
                                 var err = ADCore.error.fromKey('E_NOTFOUND');
                                 err.message = "Application not found.";
-                                err.appID = appID;
+                                // err.appID = appID;
+                                sails.log.error(err);
+                                res.AD.error(err, 404);
+                                reject(err);
+                            }
+
+                        })
+                        .catch(function (err) {
+
+                            // on MySQL connection problems, retry
+                            if (err.message && err.message.indexOf('Could not connect to MySQL') > -1) {
+
+                                // let's try it again:
+                                sails.log.error('AppBuilder:verifyAndReturnObject():MySQL connection error --> retrying.');
+                                AppBuilder.routes.verifyAndReturnObject(req, res)
+                                .then(resolve)
+                                .catch(reject)
+                                return;
+                            }
+
+                            // otherwise, just send back the error:
+                            ADCore.error.log('ABApplication.findOne() failed:', { error: err, message: err.message, id: appID });
+                            res.AD.error(err);
+                            reject(err);
+                        });
+
+                }
+            )
+
+        },
+
+
+        verifyAndReturnGlobalObject:: function (req, res) {
+
+            return new Promise(
+                (resolve, reject) => {
+
+                    // Transition to Global Objects: remove connection to a specific Application
+
+                    // TODO: what happens when there are no Applications defined?
+
+
+                    // var appID = req.param('appID', -1);
+                    var objID = req.param('objID', -1);
+
+                    // sails.log.verbose('... appID:' + appID);
+                    sails.log.verbose('... objID:' + objID);
+
+                    // Verify input params are valid:
+                    var invalidError = null;
+
+                    // if (appID == -1) {
+                    //     invalidError = ADCore.error.fromKey('E_MISSINGPARAM');
+                    //     invalidError.details = 'missing application.id';
+                    // } else if (objID == -1) {
+                    if (objID == -1) {
+                        invalidError = ADCore.error.fromKey('E_MISSINGPARAM');
+                        invalidError.details = 'missing object.id';
+                    }
+                    if (invalidError) {
+                        sails.log.error(invalidError);
+                        invalidError.HTTPCode = 400;
+                        // res.AD.error(invalidError, 400);
+                        reject(invalidError);
+                        return;
+                    }
+
+                    var globalObject = null;
+
+
+                    // at the end of this attempt, we need to return the 1 Obj that is 
+                    // asked for.  
+                    // But we will need to compile a list of All Objects, each with their
+                    // own App attached, and each App needs to reference the full list of Objects
+                    // ... what have we gotten ourselves into ?
+
+                    async.series([
+
+                    // step 1: Pull full list of objects.
+                    // step 2: for each Object => get the Application it belongs to
+                    // step 3: convert each Object into an ABObject tied to it's Application
+                    // step 4: each ABApplication needs to now reference this full list of objects
+                    // step 5: return just this one object
+
+                    ], (err)=>{
+
+                    })
+
+
+
+
+                    ABObject.findOne({id:objID})
+                        .then((object)=>{
+
+                            if (!object) {
+
+                                // return ABQuery.findOne({id:objID})
+                                // .then((query)=>{
+                                //     if (!query) {
+
+                                //         // error: object not found!
+                                //         var err = ADCore.error.fromKey('E_NOTFOUND');
+                                //         err.message = "Object not found.";
+                                //         err.objid = objID;
+                                //         sails.log.error(err);
+                                //         res.AD.error(err, 404);
+                                //         reject(err);
+                                //         return;
+                                //     }
+                                //     return query
+                                // })
+                            } 
+
+                            return object;
+                        })
+                        .then((foundObj)=>{
+                            if (!foundObj) {
+                                return;
+                            }
+
+                            globalObject = foundObj;
+
+                            var appID = foundObj.json.createdInAppID;
+                            if (!appID) {
+                                return;
+                            }
+
+                            return ABApplication.findOne({id:appID});
+                        })
+                        // Convert the returned DB record into a fully functional
+                        // ABApplication object.
+                        .then((app)=>{
+                            if (!app) {
+                                return;
+                            }
+
+                            var Application = app.toABClass();
+
+                            // Now step through the process of filling out 
+                            // Application._objects, Application._queries, ...
+                            return ABObject.findAll()
+                                .then((objects)=>{
+
+                                    var allObjects = [];
+                                    objects.forEach((obj)=>{
+                                        allObjects.push(obj.toABObj(Application));
+                                    })
+
+                                    Application._objects = allObjects
+return Application;
+                                    // return ABQueries.findAll();
+                                })
+                                // .then((queries)=>{
+
+                                //     var allQueries = [];
+                                //     queries.forEach((obj)=>{
+                                //         allQueries.push(obj.toABObj(Application));
+                                //     })
+
+                                //     Application._queries = allQueries;
+
+                                //     // return ABDataCollections.findAll();
+                                // })
+                                // .then((datacollections)=>{
+
+                                //     var allDatacollections = [];
+                                //     datacollections.forEach((obj)=>{
+                                //         allDatacollections.push(obj.toABObj(Application));
+                                //     })
+
+                                //     Application._datacollections = allDatacollections;
+
+                                //     // return Application;
+                                // })
+
+                        })
+                        .then((Application)=>{
+
+                        })
+
+                    ABApplication.find({})
+                        .then(function (appList) {
+                            var app = appList[0];
+                            if (app) {
+
+                                var Application = app.toABClass();
+                                var object = Application.objects((o) => { return o.id == objID; })[0];
+
+                                if (object) {
+
+                                    resolve(object);
+
+                                } else {
+
+                                    // check to see if provided objID is actually a query:
+                                    var query = Application.queries((q) => { return q.id == objID; })[0];
+                                    if (query) {
+                                        resolve(query);
+                                    } else {
+
+                                        // error: object not found!
+                                        var err = ADCore.error.fromKey('E_NOTFOUND');
+                                        err.message = "Object not found.";
+                                        err.objid = objID;
+                                        sails.log.error(err);
+                                        res.AD.error(err, 404);
+                                        reject(err);
+
+                                    }
+
+                                }
+
+                            } else {
+
+                                // error: couldn't find the application
+                                var err = ADCore.error.fromKey('E_NOTFOUND');
+                                err.message = "Application not found.";
+                                // err.appID = appID;
                                 sails.log.error(err);
                                 res.AD.error(err, 404);
                                 reject(err);

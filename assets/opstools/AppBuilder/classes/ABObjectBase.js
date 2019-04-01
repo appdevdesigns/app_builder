@@ -351,7 +351,7 @@ module.exports =  class ABObjectBase {
 	 * @return {string} 
 	 */
 	 urlRest() {
-	 	return '/app_builder/model/application/#appID#/object/#objID#'
+	 	return '/app_builder/model/object/#objID#'
 			.replace('#appID#', this.application.id)
 			.replace('#objID#', this.id);
 	 }

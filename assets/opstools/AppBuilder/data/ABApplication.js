@@ -21,6 +21,52 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 		// ** Objects
 
+
+		objectFindAll: function () {
+			return new Promise(
+				(resolve, reject) => {
+
+					OP.Comm.Service.get({
+						url: '/app_builder/objects'
+					}, function (err, result) {
+						if (err)
+							reject(err);
+						else
+							resolve(result);
+					});
+				}
+
+			);
+		},
+
+		queriesFindAll: ()=>{
+			return Promise.resolve([]);
+		},
+
+		datacollectionsFindAll:()=>{
+			return Promise.resolve([]);
+		},
+
+		objectCreate: function (object) {
+
+			return new Promise(
+				(resolve, reject) => {
+					OP.Comm.Service.post({
+						url: '/app_builder/objects',
+						data: {
+							object: object
+						}
+					}, function (err, result) {
+						if (err)
+							reject(err);
+						else
+							resolve(result);
+					});
+				}
+
+			);
+		},
+
 		objectSave: function (appId, object) {
 
 			return new Promise(

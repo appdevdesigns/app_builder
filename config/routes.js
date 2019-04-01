@@ -12,6 +12,12 @@ module.exports = {
     'put /app_builder/application/:appID/info':
         'app_builder/ABApplicationController.applicationSave',
 
+
+    // new Object route definitions:
+    'get /app_builder/objects': "app_builder/ABApplicationController.objectFindAll",
+    'post /app_builder/objects': "app_builder/ABApplicationController.objectCreate",
+
+
     /* Application Objects */
     'put /app_builder/application/:appID/object':
         'app_builder/ABApplicationController.objectSave',
@@ -101,7 +107,12 @@ module.exports = {
     // put  url   // update the object data
     // delete url // remove the object data
     // put  url   // refresh object model
-    'get /app_builder/model/application/:appID/object/:objID' : 
+
+    // old application.object route:
+    // 'get /app_builder/model/application/:appID/object/:objID' : 
+    //     'app_builder/ABModelController.find',
+
+    'get /app_builder/model/object/:objID' : 
         'app_builder/ABModelController.find',
 
     'post /app_builder/model/application/:appID/object/:objID' : 

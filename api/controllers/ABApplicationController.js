@@ -60,6 +60,39 @@ module.exports = {
     /* Objects */
 
     /**
+     * GET /app_builder/objects
+     * return the list of object definitions
+     */
+    objectFindAll: function(req, res) {
+
+        ABObject.find()
+        .then((objects)=>{
+            res.AD.success(objects);
+        })
+        .catch((err)=>{
+            res.AD.error(err);
+        })
+    },
+
+    /**
+     * POST /app_builder/objects
+     * create a new ABObject
+     */
+    objectCreate: function(req, res) {
+
+        var object = req.body.object;
+
+        ABObject.create(object)
+        .then((objUpdated)=>{
+            res.AD.success(objUpdated);
+        })
+        .catch((err)=>{
+            res.AD.error(err);
+        })
+    },
+
+
+    /**
      * PUT /app_builder/application/:appID/object
      * 
      * Add/Update a object into ABApplication
