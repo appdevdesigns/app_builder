@@ -110,6 +110,7 @@ export default class ABViewTab extends ABViewWidget {
 			tabElem.rows[0].tabbar = {
 				height: 60,
 				type: "bottom",
+				css: this.settings.darkTheme ? "webix_dark" : "",
 				on: {
 					onItemClick: (id, e) => {
 
@@ -569,12 +570,10 @@ export default class ABViewTab extends ABViewWidget {
 				on: {
 					"onChange": (newv, oldv) => {
 						if (newv == 1) {
-							$$(ids.darkTheme).show();
 							$$(ids.sidebarWidth).show();
 							$$(ids.sidebarPos).show();
 							$$(ids.iconOnTop).hide();
 						} else {
-							$$(ids.darkTheme).hide();
 							$$(ids.sidebarWidth).hide();
 							$$(ids.sidebarPos).hide();
 							$$(ids.iconOnTop).show();
@@ -635,12 +634,10 @@ export default class ABViewTab extends ABViewWidget {
 		$$(ids.iconOnTop).setValue(view.settings.iconOnTop || ABViewTabPropertyComponentDefaults.iconOnTop);
 		
 		if (view.settings.stackTabs) {
-			$$(ids.darkTheme).show();
 			$$(ids.sidebarWidth).show();
 			$$(ids.sidebarPos).show();
 			$$(ids.iconOnTop).hide();
 		} else {
-			$$(ids.darkTheme).hide();
 			$$(ids.sidebarWidth).hide();
 			$$(ids.sidebarPos).hide();
 			$$(ids.iconOnTop).show();
@@ -758,10 +755,12 @@ export default class ABViewTab extends ABViewWidget {
 							id: ids.component,
 							tabbar: {
 								height: 60,
-								type: "bottom"
+								type: "bottom",
+								css: this.settings.darkTheme ? "webix_dark" : ""
 							},
 							multiview: {
 								height: this.settings.height,
+								borderless: true,
 								on: {
 									onViewChange: function(prevId, nextId) {
 										_onShow(nextId);
@@ -879,6 +878,7 @@ export default class ABViewTab extends ABViewWidget {
 							// able to 'scroll' in tab view
 							id: v.view.id,
 							view: 'scrollview',
+							borderless: true,
 							css: 'ab-tabview-scrollview',
 							body: v.component.ui,
 						}, $$(v.view.id));
