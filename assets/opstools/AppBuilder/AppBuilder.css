@@ -547,3 +547,6 @@ label {
 .ab-tabview-scrollview {
 	margin-top: -1px;
 }
+.ab-tabIconContainer {
+	display: inline-block;
+}
