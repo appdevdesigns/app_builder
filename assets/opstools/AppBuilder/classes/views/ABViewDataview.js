@@ -20,7 +20,8 @@ function L(key, altText) {
 var ABViewDataviewDefaults = {
 	key: 'dataview',					// {string} unique key for this view
 	icon: 'th',							// {string} fa-[icon] reference for this view
-	labelKey: 'ab.components.dataview'	// {string} the multilingual label key for the class label
+	labelKey: 'ab.components.dataview',	// {string} the multilingual label key for the class label
+	xCount: 1 // {int} the number of columns per row (need at least one)
 }
 
 export default class ABViewDataview extends ABViewDetail {
@@ -50,6 +51,40 @@ export default class ABViewDataview extends ABViewDetail {
 	//
 	// Property Editor
 	// 
+
+	static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
+
+		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
+
+		return commonUI.concat([
+			{
+				view:"counter", 
+				name:"xCount",
+				min: 1, // we cannot have 0 columns per row so lets not accept it
+				label: L('ab.components.dataview.xCount', "*Items in a row"), 
+				labelWidth: App.config.labelWidthXLarge,
+				step:1 
+			}
+		]);
+
+	}
+
+	static propertyEditorPopulate(App, ids, view) {
+
+		super.propertyEditorPopulate(App, ids, view);
+
+		$$(ids.xCount).setValue(view.settings.xCount || ABViewDataviewDefaults.xCount);
+
+	}
+
+	static propertyEditorValues(ids, view) {
+
+		super.propertyEditorValues(ids, view);
+
+		view.settings.xCount = $$(ids.xCount).getValue();
+
+	}
+
 
 	/**
 	 * @method fromValues()
@@ -82,6 +117,8 @@ export default class ABViewDataview extends ABViewDetail {
 
 		let viewDef = {
 			id: ids.component,
+			paddingX: 5,
+			paddingY: 9,
 			type: 'space',
 			rows: []
 		};
@@ -133,12 +170,58 @@ export default class ABViewDataview extends ABViewDetail {
 			if (!dc) return;
 
 			var rows = dc.getData();
-
-			rows.forEach(row => {
-
+			
+			// lets build a grid based off the number of columns we want in each row
+			var dataGrid = [];
+			var colCount = 1; // start with column 1
+			var rowObj = {cols:[]}; // create row that has a cols array to push items into
+			// loop through items and put them into columns
+			rows.forEach(row=> {
+				// if the column value is higher than the number of columns allowed begin a new row
+				if (colCount > parseInt(this.settings.xCount)) {
+					dataGrid.push(rowObj);
+					rowObj = {cols:[]};
+					colCount = 1;
+				} 
+				
+				// get the components configuation
 				let detailCom = _.cloneDeep(super.component(App, row.id));
 
-				$$(ids.component).addView(detailCom.ui);
+				// adjust the UI to make sure it will look like a "card"
+				detailCom.ui.type = "space";
+				detailCom.ui.paddingX = 5;
+				detailCom.ui.paddingY = 1;
+
+				// put the component into the column
+				rowObj.cols.push(detailCom.ui);
+
+				// we are done with this column move to the next
+				colCount++;
+
+			});
+			
+			// get any empty cols with number of colums minus the mod of the length and the xCount
+			var emptyCols = parseInt(this.settings.xCount) - (rows.length % parseInt(this.settings.xCount));
+			
+			// make sure that we need emptyCols, that we are doing more than one column per row and that the emptyCols does not equal the number per row
+			if (emptyCols && (parseInt(this.settings.xCount) > 1) && (emptyCols != parseInt(this.settings.xCount))) {
+				for (var i = 0; i < emptyCols; i++) { 
+					// add a spacer to fill column space
+					rowObj.cols.push({});
+				};
+			}
+			
+			// push in the last row
+			dataGrid.push(rowObj);
+
+			// dynamically create the UI with this new configuration
+			webix.ui(dataGrid, $$(ids.component));			
+
+			// loop through the components so we can initialize their data
+			// this has to be done after they have been attached to the view so we couldn't have done in the previous step
+			rows.forEach(row => {
+			
+				let detailCom = _.cloneDeep(super.component(App, row.id));
 
 				detailCom.init();
 				detailCom.logic.displayData(row);

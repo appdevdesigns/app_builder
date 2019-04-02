@@ -306,7 +306,8 @@ console.warn('!! ToDo: onAfterColumnHide()');
                 // It is a private function. It returns what record index are showing
                 // let scrollState = DataTable.Sj(), // webix5
                 // let scrollState = DataTable.Ug(), // webix6.1.0
-                let scrollState = DataTable.pw(), // webix6.2.0
+                // let scrollState = DataTable.pw(), // webix6.2.0
+                let scrollState = DataTable.xw(), // webix6.2.6
                     startRecIndex = scrollState[0],
                     endRecIndex = scrollState[1],
                     index = 0;
