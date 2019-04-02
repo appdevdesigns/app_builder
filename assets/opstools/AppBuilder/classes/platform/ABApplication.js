@@ -174,6 +174,14 @@ if (attributes.json && attributes.json.objects) {
 //  -- Each object under it's application object, then each Application needs to 
 //  -- referece the full list of objects.  
 //  -- HOW to do this in an efficient manner on every API Find() request?
+//
+//     ===>  NEW IDEA: just fold into the Object.settings the required info from an Application that it needs on the server.
+//   		 this way we don't need to associate the Object with an Application directly.  But can just pull that Object def.
+//			 since an object is created withing the context of designing an Application, we can store the specific application 
+//			 related info then.  When an Application updates it self, and the chages would effect what is stored in an Object,
+//			 the Application can then modify those object definitions.
+//
+
 
 // update ABApplication.objects, .queries, .datacollections to work off the 
 // global definitions.  ==>  so we make ABObject instances out of _AllObjects
