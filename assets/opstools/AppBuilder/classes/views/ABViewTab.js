@@ -18,7 +18,8 @@ function L(key, altText) {
 var ABViewTabPropertyComponentDefaults = {
 	height: 0,
 	stackTabs: 0, // use sidebar view instead of tabview
-	darkTheme: 0 // set dark theme css or not
+	darkTheme: 0, // set dark theme css or not
+	sidebarWidth: 200 // width of sidebar menu when stacking tabs
 }
 
 
@@ -70,6 +71,7 @@ export default class ABViewTab extends ABViewWidget {
 		this.settings.height = parseInt(this.settings.height);
 		this.settings.stackTabs = parseInt(this.settings.stackTabs);
 		this.settings.darkTheme = parseInt(this.settings.darkTheme);
+		this.settings.sidebarWidth = parseInt(this.settings.sidebarWidth);
 
 	}
 
@@ -557,8 +559,10 @@ export default class ABViewTab extends ABViewWidget {
 					"onChange": (newv, oldv) => {
 						if (newv == 1) {
 							$$(ids.darkTheme).show();
+							$$(ids.sidebarWidth).show();
 						} else {
 							$$(ids.darkTheme).hide();
+							$$(ids.sidebarWidth).hide();
 						}
 					}
 				}
@@ -568,6 +572,12 @@ export default class ABViewTab extends ABViewWidget {
 				name: "darkTheme",
 				labelRight: L('ab.component.tab.darkTheme', '*Use Dark Theme'),
 				labelWidth: App.config.labelWidthCheckbox
+			},
+			{
+				view: "counter",
+				name: "sidebarWidth",
+				label: L('ab.component.tab.sidebarWidth', '*Width of Sidebar'),
+				labelWidth: App.config.labelWidthXLarge
 			},
 			// [button] : add tab
 			{
@@ -589,11 +599,14 @@ export default class ABViewTab extends ABViewWidget {
 		$$(ids.height).setValue(view.settings.height || ABViewTabPropertyComponentDefaults.height);
 		$$(ids.stackTabs).setValue(view.settings.stackTabs || ABViewTabPropertyComponentDefaults.stackTabs);
 		$$(ids.darkTheme).setValue(view.settings.darkTheme || ABViewTabPropertyComponentDefaults.darkTheme);
+		$$(ids.sidebarWidth).setValue(view.settings.sidebarWidth || ABViewTabPropertyComponentDefaults.sidebarWidth);
 		
 		if (view.settings.stackTabs) {
 			$$(ids.darkTheme).show();
+			$$(ids.sidebarWidth).show();
 		} else {
 			$$(ids.darkTheme).hide();
+			$$(ids.sidebarWidth).hide();
 		}
 	}
 
@@ -605,6 +618,7 @@ export default class ABViewTab extends ABViewWidget {
 		view.settings.height = $$(ids.height).getValue();
 		view.settings.stackTabs = $$(ids.stackTabs).getValue();
 		view.settings.darkTheme = $$(ids.darkTheme).getValue();
+		view.settings.sidebarWidth = $$(ids.sidebarWidth).getValue();
 	}
 
 
@@ -653,6 +667,7 @@ export default class ABViewTab extends ABViewWidget {
 						{
 							view: "sidebar",
 							id: ids.sidebar,
+							width: this.settings.sidebarWidth ? this.settings.sidebarWidth : 0,
 							scroll: true,
 							css: this.settings.darkTheme ? "webix_dark" : "",
 							data: this._viewComponents.map((v) => {
