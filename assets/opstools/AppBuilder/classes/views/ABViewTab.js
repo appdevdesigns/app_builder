@@ -18,7 +18,10 @@ function L(key, altText) {
 var ABViewTabPropertyComponentDefaults = {
 	height: 0,
 	stackTabs: 0, // use sidebar view instead of tabview
-	darkTheme: 0 // set dark theme css or not
+	darkTheme: 0, // set dark theme css or not
+	sidebarWidth: 200, // width of sidebar menu when stacking tabs
+	sidebarPos: "left", // the default position of sidebar
+	iconOnTop: 0 // do you want to put the icon above the text label?
 }
 
 
@@ -70,6 +73,10 @@ export default class ABViewTab extends ABViewWidget {
 		this.settings.height = parseInt(this.settings.height);
 		this.settings.stackTabs = parseInt(this.settings.stackTabs);
 		this.settings.darkTheme = parseInt(this.settings.darkTheme);
+		this.settings.sidebarWidth = parseInt(this.settings.sidebarWidth);
+		this.settings.sidebarPos = this.settings.sidebarPos;
+		this.settings.iconOnTop = parseInt(this.settings.iconOnTop);
+		
 
 	}
 
@@ -101,11 +108,9 @@ export default class ABViewTab extends ABViewWidget {
 		if (tabElem.rows) {
 			tabElem.rows[0].id = ids.component;
 			tabElem.rows[0].tabbar = {
-				bottomOffset: 0,
-				topOffset: 17,
-				borderless: false,
-				tabOffset: 17,
 				height: 60,
+				type: "bottom",
+				css: this.settings.darkTheme ? "webix_dark" : "",
 				on: {
 					onItemClick: (id, e) => {
 
@@ -157,8 +162,17 @@ export default class ABViewTab extends ABViewWidget {
 
 			}
 		} else if (tabElem.cols) { // if we detect colums we are using sidebar and need to format the onItemClick event differently
-			tabElem.cols[1].id = ids.component;
-			tabElem.cols[0].on = {
+			var viewIndex = 1;
+			var tabIndex = 0;
+			
+			if (this.settings.sidebarPos == "right") {
+				// the sidebar is in the second column now so we need to reference it properly
+				var viewIndex = 0;
+				var tabIndex = 1;
+			}
+			
+			tabElem.cols[viewIndex].id = ids.component;
+			tabElem.cols[tabIndex].on = {
 				onItemClick: (id, e) => {
 
 					var tabId = id.replace("_menu", ""),
@@ -196,8 +210,8 @@ export default class ABViewTab extends ABViewWidget {
 			};
 
 			// Add action buttons
-			if (tabElem.cols[0].data && tabElem.cols[0].data.length > 0) {
-				tabElem.cols[0].data.forEach((sidebarItem) => {
+			if (tabElem.cols[tabIndex].data && tabElem.cols[tabIndex].data.length > 0) {
+				tabElem.cols[tabIndex].data.forEach((sidebarItem) => {
 
 					// Add 'edit' icon
 					sidebarItem.value = (sidebarItem.value + ' <i class="fa fa-pencil-square rename ab-tab-edit"></i>');
@@ -556,18 +570,44 @@ export default class ABViewTab extends ABViewWidget {
 				on: {
 					"onChange": (newv, oldv) => {
 						if (newv == 1) {
-							$$(ids.darkTheme).show();
+							$$(ids.sidebarWidth).show();
+							$$(ids.sidebarPos).show();
+							$$(ids.iconOnTop).hide();
 						} else {
-							$$(ids.darkTheme).hide();
+							$$(ids.sidebarWidth).hide();
+							$$(ids.sidebarPos).hide();
+							$$(ids.iconOnTop).show();
 						}
 					}
 				}
 			},
 			{
 				view: "checkbox",
+				name: "iconOnTop",
+				labelRight: L('ab.component.tab.darkTheme', '*Position icon above text'),
+				labelWidth: App.config.labelWidthCheckbox
+			},
+			{
+				view: "checkbox",
 				name: "darkTheme",
 				labelRight: L('ab.component.tab.darkTheme', '*Use Dark Theme'),
 				labelWidth: App.config.labelWidthCheckbox
+			},
+			{
+				view: "counter",
+				name: "sidebarWidth",
+				label: L('ab.component.tab.sidebarWidth', '*Width of Sidebar'),
+				labelWidth: App.config.labelWidthXLarge
+			},
+			{
+				view: "richselect",
+				name: "sidebarPos",
+				label: L('ab.component.tab.sidebarPos', '*Position of Sidebar'),
+				labelWidth: App.config.labelWidthXLarge,
+				options:[ 
+			        { "id":"left", "value":L('ab.common.left', '*Left')}, 
+					{ "id":"right", "value":L('ab.common.right', '*Right')}
+			    ]
 			},
 			// [button] : add tab
 			{
@@ -589,11 +629,18 @@ export default class ABViewTab extends ABViewWidget {
 		$$(ids.height).setValue(view.settings.height || ABViewTabPropertyComponentDefaults.height);
 		$$(ids.stackTabs).setValue(view.settings.stackTabs || ABViewTabPropertyComponentDefaults.stackTabs);
 		$$(ids.darkTheme).setValue(view.settings.darkTheme || ABViewTabPropertyComponentDefaults.darkTheme);
+		$$(ids.sidebarWidth).setValue(view.settings.sidebarWidth || ABViewTabPropertyComponentDefaults.sidebarWidth);
+		$$(ids.sidebarPos).setValue(view.settings.sidebarPos || ABViewTabPropertyComponentDefaults.sidebarPos);
+		$$(ids.iconOnTop).setValue(view.settings.iconOnTop || ABViewTabPropertyComponentDefaults.iconOnTop);
 		
 		if (view.settings.stackTabs) {
-			$$(ids.darkTheme).show();
+			$$(ids.sidebarWidth).show();
+			$$(ids.sidebarPos).show();
+			$$(ids.iconOnTop).hide();
 		} else {
-			$$(ids.darkTheme).hide();
+			$$(ids.sidebarWidth).hide();
+			$$(ids.sidebarPos).hide();
+			$$(ids.iconOnTop).show();
 		}
 	}
 
@@ -605,6 +652,9 @@ export default class ABViewTab extends ABViewWidget {
 		view.settings.height = $$(ids.height).getValue();
 		view.settings.stackTabs = $$(ids.stackTabs).getValue();
 		view.settings.darkTheme = $$(ids.darkTheme).getValue();
+		view.settings.sidebarWidth = $$(ids.sidebarWidth).getValue();
+		view.settings.sidebarPos = $$(ids.sidebarPos).getValue();
+		view.settings.iconOnTop = $$(ids.iconOnTop).getValue();
 	}
 
 
@@ -648,44 +698,53 @@ export default class ABViewTab extends ABViewWidget {
 
 		if (this._viewComponents.length > 0) {
 			if (this.settings.stackTabs) {
-				_ui = {
-					cols: [
-						{
-							view: "sidebar",
-							id: ids.sidebar,
-							scroll: true,
-							css: this.settings.darkTheme ? "webix_dark" : "",
-							data: this._viewComponents.map((v) => {
-								return {
-									id: v.view.id + "_menu",
-									value: v.view.label,
-									icon: v.view.tabicon ? "fa fa-fw fa-"+v.view.tabicon : ""
-								};
-							}),
-							on: {
-								'onItemClick': function(nextId) {
-									nextId = nextId.replace("_menu", "");
-									_onShow(nextId);
-								}
-							}
-						},
-						{
-							view: "multiview",
-							id: ids.component,
-							keepViews: true,
-							height: this.settings.height,
-							cells: this._viewComponents.map((v) => {
-								var tabUi = {
-									id: v.view.id,
-									// ui will be loaded when its tab is opened
-									view: 'layout',
-									rows: []
-								};
-
-								return tabUi;
-							})
+				
+				var sidebar = {
+					view: "sidebar",
+					id: ids.sidebar,
+					width: this.settings.sidebarWidth ? this.settings.sidebarWidth : 0,
+					scroll: true,
+					position: this.settings.sidebarPos ? this.settings.sidebarPos : "left",
+					css: this.settings.darkTheme ? "webix_dark" : "",
+					data: this._viewComponents.map((v) => {
+						return {
+							id: v.view.id + "_menu",
+							value: v.view.label,
+							icon: v.view.tabicon ? "fa fa-fw fa-"+v.view.tabicon : ""
+						};
+					}),
+					on: {
+						'onItemClick': function(nextId) {
+							nextId = nextId.replace("_menu", "");
+							_onShow(nextId);
 						}
-					]
+					}
+				};
+				
+				var multiview = {
+					view: "multiview",
+					id: ids.component,
+					keepViews: true,
+					height: this.settings.height,
+					cells: this._viewComponents.map((v) => {
+						var tabUi = {
+							id: v.view.id,
+							// ui will be loaded when its tab is opened
+							view: 'layout',
+							rows: []
+						};
+
+						return tabUi;
+					})
+				};
+
+				var columns = [sidebar, multiview];
+				if (this.settings.sidebarPos == "right") {
+					columns = [multiview, sidebar];
+				}
+				
+				_ui = {
+					cols: columns
 				}
 			} else {
 				_ui = {
@@ -695,14 +754,13 @@ export default class ABViewTab extends ABViewWidget {
 							view: 'tabview',
 							id: ids.component,
 							tabbar: {
-								bottomOffset: 0,
-								topOffset: 17,
-								borderless: true,
-								tabOffset: 18,
-								height: 60
+								height: 60,
+								type: "bottom",
+								css: this.settings.darkTheme ? "webix_dark" : ""
 							},
 							multiview: {
 								height: this.settings.height,
+								borderless: true,
 								on: {
 									onViewChange: function(prevId, nextId) {
 										_onShow(nextId);
@@ -717,9 +775,14 @@ export default class ABViewTab extends ABViewWidget {
 									view: 'layout',
 									rows: []
 								};
+								
+								var tabTemplate = "<span class='fa fa-lg fa-fw fa-"+v.view.tabicon+"'></span> " + v.view.label;
+								if (this.settings.iconOnTop) {
+									tabTemplate = "<div class='ab-tabIconContainer'><span class='fa fa-lg fa-fw fa-"+v.view.tabicon+"'></span><br/>" + v.view.label + "</div>";
+								}
 
 								return {
-									header: "<span class='webix_icon fa fa-"+v.view.tabicon+"'></span> " + v.view.label,
+									header: tabTemplate,
 									body: tabUi
 								};
 							})
@@ -815,20 +878,9 @@ export default class ABViewTab extends ABViewWidget {
 							// able to 'scroll' in tab view
 							id: v.view.id,
 							view: 'scrollview',
-							css: 'ab-tabview-scrollview',
 							borderless: true,
-							body: {
-								cols: [
-									{ width: 17 },
-									{
-										rows: [
-											v.component.ui,
-											{ height: 17 }
-										]
-									},
-									{ width: 17 }
-								]
-							}
+							css: 'ab-tabview-scrollview',
+							body: v.component.ui,
 						}, $$(v.view.id));
 					}
 
