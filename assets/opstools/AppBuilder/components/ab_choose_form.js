@@ -25,13 +25,13 @@ export default class ABChoose extends OP.Component {  // .extend(idBase, functio
 			component: {
 
 				formHeader: L('ab.application.form.header', "*Application Info"),
+				formDescription: L('ab.application.form.formDescription', "*Description"),
 				placeholderName: L('ab.application.form.placeholderName', "*Application name"),
 				placeholderDescription: L('ab.application.form.placeholderDescription', "*Application description"),
-				formDescription: L('ab.application.form.formDescription', "*Description"),
 
 				sectionPermission: L('ab.application.form.sectionPermission', "*Permission"),
 				permissionHeader: L('ab.application.form.headerPermission',  "*Who can use this app?"),
-				createNewRole: L('ab.application.form.createNewRoleButton', "*Create new roll"),
+				createNewRole: L('ab.application.form.createNewRoleButton', "*Create new role"),
 
 				invalidName: L('ab.application.invalidName', "*This application name is invalid"),
 				duplicateName: L('ab.application.duplicateName', "*Name must be unique."),
@@ -102,8 +102,7 @@ export default class ABChoose extends OP.Component {  // .extend(idBase, functio
 								{
 									name: "description",
 									view: "textarea",
-									// label: labels.common.formDescription,
-									label: "Description",
+									label: labels.component.formDescription,
 									labelAlign: "left",
 									labelWidth: 100,
 									placeholder: labels.component.placeholderDescription,

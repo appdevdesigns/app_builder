@@ -85,6 +85,12 @@ msgstr "Rename"
 
 #. path: app_builder
 #. code: en
+#. key: ab.common.required
+msgid "Required"
+msgstr "Required"
+
+#. path: app_builder
+#. code: en
 #. key: ab.common.processing
 msgid "Processing..."
 msgstr "Processing..."
@@ -223,6 +229,12 @@ msgstr "Application Info"
 
 #. path: app_builder
 #. code: en
+#. key: ab.application.form.formDescription
+msgid "Description"
+msgstr "Description"
+
+#. path: app_builder
+#. code: en
 #. key: ab.application.form.placeholderName
 msgid "Application name"
 msgstr "Application name"
@@ -232,6 +244,18 @@ msgstr "Application name"
 #. key: ab.application.form.placeholderDescription
 msgid "Application description"
 msgstr "Application description"
+
+#. path: app_builder
+#. code: en
+#. key: ab.application.form.headerPermission
+msgid "Who can use this app?"
+msgstr "Who can use this app?"
+
+#. path: app_builder
+#. code: en
+#. key: ab.application.form.createNewRoleButton
+msgid "Create new role"
+msgstr "Create new role"
 
 #. path: app_builder
 #. code: en
@@ -424,6 +448,36 @@ msgstr "Permission"
 #. key: ab.object.toolbar.addFields
 msgid "New column"
 msgstr "New column"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.toolbar.import
+msgid "Import"
+msgstr "Import"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.toolbar.export
+msgid "Export"
+msgstr "Export"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.new.view
+msgid "New view"
+msgstr "New view"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.fieldAddNew
+msgid "Add new field"
+msgstr "Add new field"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.fieldType
+msgid "Field type"
+msgstr "Field type"
 
 #. path: app_builder
 #. code: en
@@ -901,6 +955,12 @@ msgstr "Interface"
 
 #. path: app_builder
 #. code: en
+#. key: ab.interface.header
+msgid "Pages"
+msgstr "Pages"
+
+#. path: app_builder
+#. code: en
 #. key: ab.interface.addNewPage
 msgid "Add a new page"
 msgstr "Add a new page"
@@ -940,12 +1000,6 @@ msgstr "System could not save <b>{0}</b>."
 #. key: ab.common.save.success
 msgid "<b>{0}</b> is saved."
 msgstr "<b>{0}</b> is saved."
-
-#. path: app_builder
-#. code: en
-#. key: ab.equation.date_year
-msgid "%s:Returns the year of a given date"
-msgstr "%s:Returns the year of a given date"
 
 #. path: app_builder
 #. code: en
@@ -1153,6 +1207,30 @@ msgstr "Section Name"
 
 #. path: app_builder
 #. code: en
+#. key: ab.dataField.string.menuName
+msgid "Single line text"
+msgstr "Single line text"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.string.description
+msgid "Short string value"
+msgstr "Short string value"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.longstring.menuName
+msgid "Long text"
+msgstr "Long text"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.longstring.description
+msgid "Multiple lines of text"
+msgstr "Multiple lines of text"
+
+#. path: app_builder
+#. code: en
 #. key: ab.interface.quickPage
 msgid "Quick Page"
 msgstr "Quick Page"
@@ -1336,6 +1414,12 @@ msgstr "Tree"
 #. key: ab.components.pivot
 msgid "Pivot"
 msgstr "Pivot"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.list.title
+msgid "Data Objects"
+msgstr "Data Objects"
 
 #. path: app_builder
 #. code: en

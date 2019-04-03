@@ -255,7 +255,7 @@ export default class ABField extends ABFieldBase {
 					id: ids.required,
 					name: "required",
 					hidden: !Field.supportRequire,
-					labelRight: App.labels.dataFieldRequired,
+					labelRight: App.labels.required,
 					// disallowEdit: true,
 					labelWidth: App.config.labelWidthCheckbox,
 					on: {

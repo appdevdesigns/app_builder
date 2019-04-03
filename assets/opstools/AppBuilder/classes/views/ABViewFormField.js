@@ -33,7 +33,7 @@ export default class ABViewFormField extends ABView {
 				name: 'required',
 				view: 'checkbox',
 				labelWidth: App.config.labelWidthCheckbox,
-				labelRight: L('ab.component.form.field.required', '*Required')
+				labelRight: L('ab.common.required', '*Required')
 			}
 		]);
 

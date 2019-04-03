@@ -21,11 +21,11 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 			common : App.labels,
 			component: {
 
-				// formHeader: L('ab.application.form.header', "*Application Info"),
 				addNew: L('ab.object.addNew', '*Add new object'),
 
 				confirmDeleteTitle: L('ab.object.delete.title', "*Delete object"),
 				confirmDeleteMessage: L('ab.object.delete.message', "*Do you want to delete <b>{0}</b>?"),
+				title: L('ab.object.list.title', '*Data Objects'),
 				listSearch: L('ab.object.list.search', "*Search"),
 				searchPlaceholder: L('ab.object.list.search.placeholder', "*Object name"),
 				listSetting: L('ab.object.list.setting', "*Setting"),
@@ -56,7 +56,7 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 		// the popup edit list for each entry in the list.
 		var PopupEditObjectComponent = new ABListEditMenu(App);
 
-		console.log("look here------------------>", App.custom.editunitlist.view);
+		// console.log("look here------------------>", App.custom.editunitlist.view);
 
 		// Our webix UI definition:
 		this.ui = {
@@ -75,7 +75,7 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 					editValue: "label",
 
 					uniteBy: function(item) {
-						return "Data Objects";
+						return labels.component.title;
 					},
 					template: function(obj, common) {
 						return _logic.templateListItem(obj, common);
@@ -387,7 +387,7 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 				}
 				else {
 					$$(ids.list).define("uniteBy", (item) => {
-						return "Data Objects"; 
+						return labels.component.title;
 					});
 				}
 

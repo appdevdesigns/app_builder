@@ -22,10 +22,10 @@ var ABFieldLongTextDefaults = {
 	icon: 'align-right',   // font-awesome icon reference.  (without the 'fa-')		
 	
 	// menuName: what gets displayed in the Editor drop list
-	menuName : L('ab.dataField.string.menuName', '*Long text'),
+	menuName : L('ab.dataField.longstring.menuName', '*Long text'),
 	
 	// description: what gets displayed in the Editor description.
-	description: L('ab.dataField.string.description', '*Multiple lines of text'),
+	description: L('ab.dataField.longstring.description', '*Multiple lines of text'),
 	
 	// what types of Sails ORM attributes can be imported into this data type?
 	// http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options

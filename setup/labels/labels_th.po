@@ -85,6 +85,12 @@ msgstr "เปลี่ยนชื่อ"
 
 #. path: app_builder
 #. code: th
+#. key: ab.common.required
+msgid "Required"
+msgstr "ต้องระบุค่า"
+
+#. path: app_builder
+#. code: th
 #. key: ab.common.processing
 msgid "Processing..."
 msgstr "กำลังประมวลผล..."
@@ -223,6 +229,12 @@ msgstr "ข้อมูลแอปพลิเคชั่น"
 
 #. path: app_builder
 #. code: th
+#. key: ab.application.form.formDescription
+msgid "Description"
+msgstr "คำอธิบาย"
+
+#. path: app_builder
+#. code: th
 #. key: ab.application.form.placeholderName
 msgid "Application name"
 msgstr "ชื่อแอปพลิเคชั่น"
@@ -232,6 +244,18 @@ msgstr "ชื่อแอปพลิเคชั่น"
 #. key: ab.application.form.placeholderDescription
 msgid "Application description"
 msgstr "รายละเอียดแอปพลิเคชั่น"
+
+#. path: app_builder
+#. code: th
+#. key: ab.application.form.headerPermission
+msgid "Who can use this app?"
+msgstr "กลุ่มใดสามารถใช้แอพนี้ได้บ้าง?"
+
+#. path: app_builder
+#. code: th
+#. key: ab.application.form.createNewRoleButton
+msgid "Create new role"
+msgstr "สร้างกลุ่มใหม่"
 
 #. path: app_builder
 #. code: th
@@ -424,6 +448,36 @@ msgstr "สิทธิ์การเข้าถึง"
 #. key: ab.object.toolbar.addFields
 msgid "Add new column"
 msgstr "เพิ่มคอลัมน์ใหม่"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.toolbar.import
+msgid "Import"
+msgstr "นำเข้า"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.toolbar.export
+msgid "Export"
+msgstr "ส่งออก"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.new.view
+msgid "New view"
+msgstr "มุมมองใหม่"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.fieldAddNew
+msgid "Add new field"
+msgstr "เพิ่มฟิลด์ใหม่"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.fieldType
+msgid "Field type"
+msgstr "ประเภท"
 
 #. path: app_builder
 #. code: th
@@ -931,45 +985,39 @@ msgstr "<b>{0}</b> ถูกบันทึกแล้ว"
 
 #. path: app_builder
 #. code: th
-#. key: ab.equation.date_year
-msgid "%s:Returns the year of a given date"
-msgstr "[th] %s:Returns the year of a given date"
-
-#. path: app_builder
-#. code: th
 #. key: ab.interface.delete.message
 msgid "Do you want to delete <b>{0}</b>?"
-msgstr "คุณต้องการลบ<b>{0}</b>หรือไม่"
+msgstr "คุณต้องการลบ<b>{0}</b>หรือไม่?"
 
 #. path: app_builder
 #. code: th
 #. key: ab.component.tab.addPage
 msgid "Add a tab below"
-msgstr "[th] Add a tab below"
+msgstr "เพิ่มแท็บด้านล่าง"
 
 #. path: app_builder
 #. code: th
 #. key: ab.component.tab.enterTabName
 msgid "Enter a tab name"
-msgstr "[th] Enter a tab name"
+msgstr "กรอกชื่อแท็บ"
 
 #. path: app_builder
 #. code: th
 #. key: ab.component.tab.invalidTabName
 msgid "Tab name cannot be empty"
-msgstr "[th] Tab name cannot be empty"
+msgstr "จำเป็นต้องกรอกชื่อแท็บ"
 
 #. path: app_builder
 #. code: th
 #. key: ab.component.tab.chooseIcon
 msgid "Choose an icon"
-msgstr "[th] Choose an icon"
+msgstr "เลือกไอคอน"
 
 #. path: app_builder
 #. code: th
 #. key: ab.component.tab.addTab
 msgid "Add Tab"
-msgstr "[th] Add Tab"
+msgstr "เพิ่มแท็บ"
 
 #. path: app_builder
 #. code: th
@@ -1011,73 +1059,73 @@ msgstr "#appName# ซ้ำกับชื่อแอปพลิเคชั�
 #. code: th
 #. key: ab.components.label
 msgid "Label"
-msgstr "[th] Label"
+msgstr "ป้ายคำ"
 
 #. path: app_builder
 #. code: th
 #. key: ab.component.label.text
 msgid "Text"
-msgstr "[th] Text"
+msgstr "ข้อความ"
 
 #. path: app_builder
 #. code: th
 #. key: ab.component.label.textPlaceholder
 msgid "Text Placeholder"
-msgstr "[th] Text Placeholder"
+msgstr "ข้อความ"
 
 #. path: app_builder
 #. code: th
 #. key: ab.component.label.formatting
 msgid "format options:"
-msgstr "[th] format options:"
+msgstr "รูปแบบ:"
 
 #. path: app_builder
 #. code: th
 #. key: ab.component.label.formatting.normal
 msgid "normal"
-msgstr "[th] normal"
+msgstr "ปกติ"
 
 #. path: app_builder
 #. code: th
 #. key: ab.component.label.formatting.title
 msgid "title"
-msgstr "[th] title"
+msgstr "หัวข้อ"
 
 #. path: app_builder
 #. code: th
 #. key: ab.component.label.formatting.description
 msgid "description"
-msgstr "[th] description"
+msgstr "คำอธิบาย"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.view
 msgid "View"
-msgstr "[th] View"
+msgstr "มุมมอง"
 
 #. path: app_builder
 #. code: th
 #. key: ab.validation.view.label.unique
 msgid "View label must be unique among peers."
-msgstr "[th] View label must be unique among peers."
+msgstr "ข้อความต้องไม่ซ้ำกับข้อความอื่น"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.view.dropHere
 msgid "Drop Component Here"
-msgstr "[th] Drop Component Here"
+msgstr "วางส่วนประกอบที่นี้"
 
 #. path: app_builder
 #. code: th
 #. key: ab.interface.component.confirmDeleteTitle
 msgid "Delete Component"
-msgstr "[th] Delete Component"
+msgstr "ลบส่วนประกอบ"
 
 #. path: app_builder
 #. code: th
 #. key: ab.interface.component.confirmDeleteMessage
 msgid "Do you want to delete <b>{0}</b>?"
-msgstr "[th] Do you want to delete <b>{0}</b>?"
+msgstr "คุณต้องการลบ<b>{0}</b>หรือไม่?"
 
 #. path: app_builder
 #. code: th
@@ -1089,73 +1137,103 @@ msgstr "คุณสมบัติ"
 #. code: th
 #. key: ab.interface.selectPage
 msgid "Select a Page to edit"
-msgstr "[th] Select a Page to edit"
+msgstr "เลือกหน้าแสดงผล"
 
 #. path: app_builder
 #. code: th
 #. key: ab.interface.viewModeBlock
 msgid "Block"
-msgstr "[th] Block"
+msgstr "บล็อค"
 
 #. path: app_builder
 #. code: th
 #. key: ab.interface.viewModePreview
 msgid "Preview"
-msgstr "ภาพตัวอย่าง"
+msgstr "ดูตัวอย่าง"
 
 #. path: app_builder
 #. code: th
 #. key: ab.interface.page.parentList
 msgid "Parent Page"
-msgstr "[th] Parent Page"
+msgstr "หน้าต้นกำเนิด"
 
 #. path: app_builder
 #. code: th
 #. key: ab.interface.rootPage
 msgid "[Root Page]"
-msgstr "[th] [Root Page]"
+msgstr "[หน้าหลัก]"
 
 #. path: app_builder
 #. code: th
 #. key: ab.interface.components
 msgid "Components"
-msgstr "[th] Components"
+msgstr "ส่วนประกอบ"
 
 #. path: app_builder
 #. code: th
 #. key: ab.interface.noComponents
 msgid "No Components"
-msgstr "[th] No Components"
+msgstr "ไม่มีส่วนประกอบ"
 
 #. path: app_builder
 #. code: th
 #. key: ab.dataField.common.headerLabel
 msgid "Section Title"
-msgstr "[th] Section Title"
+msgstr "หัวข้อ"
 
 #. path: app_builder
 #. code: th
 #. key: ab.dataField.common.headerLabelPlaceholder
 msgid "Section Name"
-msgstr "[th] Section Name"
+msgstr "ชื่อกลุ่ม"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.string.menuName
+msgid "Single line text"
+msgstr "ข้อความ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.string.description
+msgid "Short string value"
+msgstr "ข้อความแบบสั้น"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.longstring.menuName
+msgid "Long text"
+msgstr "ข้อความยาว"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.longstring.description
+msgid "Multiple lines of text"
+msgstr "ข้อความแบบยาว"
 
 #. path: app_builder
 #. code: th
 #. key: ab.interface.quickPage
 msgid "Quick Page"
-msgstr "[th] Quick Page"
+msgstr "หน้าทางลัด"
 
 #. path: app_builder
 #. code: th
 #. key: ab.interface.blankPage
 msgid "Blank Page"
-msgstr "[th] Blank Page"
+msgstr "หน้าเปล่า"
 
 #. path: app_builder
 #. code: th
 #. key: ab.interface.title
 msgid "Interface"
 msgstr "ส่วนแสดงผล"
+
+#. path: app_builder
+#. code: th
+#. key: ab.interface.header
+msgid "Pages"
+msgstr "หน้าแสดงผล"
 
 #. path: app_builder
 #. code: th
@@ -1167,151 +1245,151 @@ msgstr "เลือกที่เก็บข้อมูล"
 #. code: th
 #. key: ab.common.none
 msgid "None"
-msgstr "[th] None"
+msgstr "ว่างเปล่า"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.form.dataSource
 msgid "Data Source"
-msgstr "[th] Data Source"
+msgstr "แหล่งข้อมูล"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.form.object
 msgid "Object"
-msgstr "[th] Object"
+msgstr "ที่เก็บข้อมูล"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.form.linkedTo
 msgid "Linked To"
-msgstr "[th] Linked To"
+msgstr "เชื่อมกับ"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.form.linkField
 msgid "Link Field"
-msgstr "[th] Link Field"
+msgstr "เชื่อมกับฟิลด์"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.form.text
 msgid "Text"
-msgstr "[th] Text"
+msgstr "กล่องข้อความ"
 
 #. path: app_builder
 #. code: th
 #. key: ab.abfield.labelPlaceholder
 msgid "label placeholder"
-msgstr "[th] label placeholder"
+msgstr "ป้ายชื่อ"
 
 #. path: app_builder
 #. code: th
 #. key: ab.component.form.text.useFormDefaults
 msgid "use form defaults"
-msgstr "[th] use form defaults"
+msgstr "ใช้ตามค่าของฟอร์ม"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.button
 msgid "Button"
-msgstr "[th] Button"
+msgstr "ปุ่ม"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.form
 msgid "Form"
-msgstr "[th] Form"
+msgstr "ฟอร์ม"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.checkbox
 msgid "Checkbox"
-msgstr "[th] Checkbox"
+msgstr "ช่องทำเครื่องหมาย"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.custom
 msgid "Custom"
-msgstr "[th] Custom"
+msgstr "กำหนดเอง"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.detail
 msgid "Detail"
-msgstr "[th] Detail"
+msgstr "รายละเอียดข้อมูล"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.dataview
 msgid "Data view"
-msgstr "[th] Data view"
+msgstr "แสดงข้อมูล"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.datepicker
 msgid "Date Picker"
-msgstr "[th] Date Picker"
+msgstr "ตัวเลือกวันที่"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.grid
 msgid "Grid"
-msgstr "[th] Grid"
+msgstr "ตาราง"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.image
 msgid "Image"
-msgstr "[th] Image"
+msgstr "รูปภาพ"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.layout
 msgid "Layout"
-msgstr "[th] Layout"
+msgstr "โครงร่าง"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.list
 msgid "List"
-msgstr "[th] List"
+msgstr "รายการ"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.menu
 msgid "Menu"
-msgstr "[th] Menu"
+msgstr "เมนู"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.number
 msgid "Number"
-msgstr "[th] Number"
+msgstr "ตัวเลข"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.selectsingle
 msgid "Single Select"
-msgstr "[th] Single Select"
+msgstr "ตัวเลือกแบบเดี่ยว"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.tab
 msgid "Tab"
-msgstr "[th] Tab"
+msgstr "แท็บ"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.text
 msgid "Text"
-msgstr "[th] Text"
+msgstr "ข้อความ"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.textbox
 msgid "Textbox"
-msgstr "[th] Textbox"
+msgstr "กล่องข้อความ"
 
 #. path: app_builder
 #. code: th
@@ -1324,6 +1402,12 @@ msgstr "[th] Tree"
 #. key: ab.components.pivot
 msgid "Pivot"
 msgstr "[th] Pivot"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.list.title
+msgid "Data Objects"
+msgstr "ที่เก็บข้อมูล"
 
 #. path: app_builder
 #. code: th
@@ -1365,263 +1449,263 @@ msgstr "จัดกลุ่ม"
 #. code: th
 #. key: ab.components.connect
 msgid "Connect"
-msgstr "[th] Connect"
+msgstr "เชื่อมต่อ"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.chart
 msgid "Chart"
-msgstr "[th] Chart"
+msgstr "แผนภูมิ"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.chart.pie
 msgid "Pie Chart"
-msgstr "[th] Pie Chart"
+msgstr "แผนภูมิวงกลม"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.chart.bar
 msgid "Bar Chart"
-msgstr "[th] Bar Chart"
+msgstr "แผนภูมิแท่ง"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.chart.line
 msgid "Line Chart"
-msgstr "[th] Line Chart"
+msgstr "แผนภูมิเส้น"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.chart.area
 msgid "Area Chart"
-msgstr "[th] Area Chart"
+msgstr "แผนภูมิพื้นที่"
 
 #. path: app_builder
 #. code: th
 #. key: ab.component.ruleaction.updateConnectedRecord
 msgid "Update Connected Record"
-msgstr "[th] Update Connected Record"
+msgstr "แก้ไขข้อมูลที่เชื่อมต่อ"
 
 #. path: app_builder
 #. code: th
 #. key: ab.ruleAction.Update.required
 msgid "A value is required"
-msgstr "[th] A value is required"
+msgstr "ต้องระบุค่า"
 
 #. path: app_builder
 #. code: th
 #. key: ab.component.form.set
 msgid "Set"
-msgstr "[th] Set"
+msgstr "กำหนด"
 
 #. path: app_builder
 #. code: th
 #. key: ab.component.form.to
 msgid "To"
-msgstr "[th] To"
+msgstr "เป็น"
 
 #. path: app_builder
 #. code: th
 #. key: ab.ruleAction.UpdateConnected.selectField
 msgid "Select which connected object to update."
-msgstr "[th] Select which connected object to update."
+msgstr "เลือกที่เก็บข้อมูลจะแก้ไข"
 
 #. path: app_builder
 #. code: th
 #. key: ab.ruleAction.UpdateConnected.remoteCondition
 msgid "How to choose which object:"
-msgstr "[th] How to choose which object:"
+msgstr "วิธีการเลือกที่เก็บข้อมูล:"
 
 #. path: app_builder
 #. code: th
 #. key: ab.component.form.action
 msgid "Action"
-msgstr "[th] Action"
+msgstr "กระทำ"
 
 #. path: app_builder
 #. code: th
 #. key: ab.component.form.when
 msgid "When"
-msgstr "[th] When"
+msgstr "เมื่อ"
 
 #. path: app_builder
 #. code: th
 #. key: ab.component.form.values
 msgid "Values"
-msgstr "[th] Values"
+msgstr "ค่า"
 
 #. path: app_builder
 #. code: th
 #. key: ab.interface.addWidget
 msgid "Add Widget"
-msgstr "[th] Add Widget"
+msgstr "เพิ่มส่วนประกอบ"
 
 #. path: app_builder
 #. code: th
 #. key: ab.common.componentDropZone
 msgid "add widgets here"
-msgstr "[th] add widgets here"
+msgstr "เพิ่มส่วนประกอบที่นี้"
 
 #. path: app_builder
 #. code: th
 #. key: ab.dataField.common.showIcon
 msgid "show icon?"
-msgstr "[th] show icon?"
+msgstr "แสดงไอคอน?"
 
 #. path: app_builder
 #. code: th
 #. key: ab.dataField.common.columnNamePlaceholder
 msgid "Database field name"
-msgstr "[th] Database field name"
+msgstr "ชื่อฟิลด์ในฐานข้อมูล"
 
 #. path: app_builder
 #. code: th
 #. key: ab.dataField.common.columnName
 msgid "Field Name"
-msgstr "[th] Field Name"
+msgstr "ชื่อฟิลด์"
 
 #. path: app_builder
 #. code: th
 #. key: ab.dataField.common.fieldLabelPlaceholder
 msgid "Label"
-msgstr "[th] Label"
+msgstr "ป้ายชื่อ"
 
 #. path: app_builder
 #. code: th
 #. key: ab.dataField.common.fieldLabel
 msgid "Label"
-msgstr "[th] Label"
+msgstr "ป้ายชื่อ"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.conditionalcontainer
 msgid "Conditional Container"
-msgstr "[th] Conditional Container"
+msgstr "ตัวบรรจุส่วนประกอบแบบมีเงื่อนไข"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.container.columns
 msgid "Columns"
-msgstr "[th] Columns"
+msgstr "คอลัมน์"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.page.type
 msgid "Type"
-msgstr "[th] Type"
+msgstr "ประเภท"
 
 #. path: app_builder
 #. code: th
 #. key: ab.component.selectsingle.type
 msgid "Type"
-msgstr "[th] Type"
+msgstr "ประเภท"
 
 #. path: app_builder
 #. code: th
 #. key: ab.component.textbox.type
 msgid "Type"
-msgstr "[th] Type"
+msgstr "ประเภท"
 
 #. path: app_builder
 #. code: th
 #. key: ab.dataField.file.fileType
 msgid "Type"
-msgstr "[th] Type"
+msgstr "ประเภท"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.page.popup
 msgid "Popup"
-msgstr "[th] Popup"
+msgstr "ป๊อปอัพ"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.page.page
 msgid "Page"
-msgstr "[th] Page"
+msgstr "หน้า"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.common.showlabel
 msgid "Display Label"
-msgstr "[th] Display Label"
+msgstr "แสดงป้ายชื่อ"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.common.labelPosition
 msgid "Label Position"
-msgstr "[th] Label Position"
+msgstr "ตำแหน่งของป้ายชื่อ"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.common.left
 msgid "Left"
-msgstr "[th] Left"
+msgstr "ซ้าย"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.common.top
 msgid "Top"
-msgstr "[th] Top"
+msgstr "บน"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.common.labelWidth
 msgid "Label Width"
-msgstr "[th] Label Width"
+msgstr "ความกว้างของป้ายชื่อ"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.common.heigth
 msgid "Height"
-msgstr "[th] Height"
+msgstr "ความสูง"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.form.clearOnLoad
 msgid "Clear on load"
-msgstr "[th] Clear on load"
+msgstr "ล้างข้อมูลตอนโหลด"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.form.rules
 msgid "Rules"
-msgstr "[th] Rules"
+msgstr "กฏ"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.form.submitRules
 msgid "Submit Rules"
-msgstr "[th] Submit Rules"
+msgstr "กฏตอนส่งข้อมูล"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.form.settings
 msgid "Settings"
-msgstr "[th] Settings"
+msgstr "ตั้งค่า"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.form.displayRules
 msgid "Display Rules"
-msgstr "[th] Display Rules"
+msgstr "กฏตอนแสดงข้อมูล"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.form.recordRules
 msgid "Record Rules"
-msgstr "[th] Record Rules"
+msgstr "กฏตอนกรอกข้อมูล"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.common.height
 msgid "Height"
-msgstr "[th] Height"
+msgstr "ความสูง"
 
 #. path: app_builder
 #. code: th
 #. key: ab.components.form.addNewRule
 msgid "Add new rule"
-msgstr "[th] Add new rule"
+msgstr "เพิ่มกฏใหม่"
 

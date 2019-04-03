@@ -81,7 +81,10 @@ export default class UIComponent extends EventEmitter {
 					no: 	  L('ab.common.no', "*No"),
 
 					none: 	  L('ab.common.none', "*None"),
-					
+					close: 	  L('ab.common.close', "*Close"),
+
+					required: L('ab.common.required', '*Required'),
+
 					invalidMessage: {
 						required: 	  L('ab.common.invalid_message.required', "*This field is required"),
 					},
@@ -110,7 +113,6 @@ export default class UIComponent extends EventEmitter {
 					dataFieldColumnNamePlaceholder: L('ab.dataField.common.columnNamePlaceholder', '*Database field name'),
 
 					dataFieldShowIcon: L('ab.dataField.common.showIcon', '*show icon?'),
-                    dataFieldRequired: L('ab.dataField.common.required', '*Required'),
 					
 					componentDropZone: L('ab.common.componentDropZone', '*add widgets here')
 				},

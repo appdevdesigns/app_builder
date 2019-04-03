@@ -60,7 +60,7 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
                     },
                     {
                         view: "button", 
-                        label: "Close", 
+                        label: labels.common.close,
                         autowidth: true, 
                         align: "center",
                         click: function () {

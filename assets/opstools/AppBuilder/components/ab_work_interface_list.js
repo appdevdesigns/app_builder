@@ -26,7 +26,7 @@ export default class AB_Work_Interface_List extends OP.Component {
 
 			component: {
 
-				// formHeader: L('ab.application.form.header', "*Application Info"),
+				title: L('ab.interface.header', 'Pages'),
 				addNew: L('ab.interface.addNewPage', '*Add new Page'),
 
 				confirmDeleteTitle: L('ab.interface.delete.title', "*Delete Page"),
@@ -57,7 +57,7 @@ export default class AB_Work_Interface_List extends OP.Component {
 			rows: [
 				{
 					view: "unitlist",
-					uniteBy: "Pages", 
+					uniteBy: labels.component.title, 
 					height: 34,
 					data: [" "],
 					type: {

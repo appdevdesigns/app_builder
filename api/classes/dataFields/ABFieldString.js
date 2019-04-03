@@ -24,7 +24,7 @@ var ABFieldStringDefaults = {
 	menuName : L('ab.dataField.string.menuName', '*Single line text'),
 	
 	// description: what gets displayed in the Editor description.
-	description: L('ab.dataField.string.description', '*short string value'),
+	description: L('ab.dataField.string.description', '*Short string value'),
 	
 	// what types of Sails ORM attributes can be imported into this data type?
 	// http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
