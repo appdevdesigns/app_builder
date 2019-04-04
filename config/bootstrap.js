@@ -127,6 +127,12 @@ function verifyWellKnownConfigs(next) {
 
 function setupPollingMCC(next) {
 
+	// skip this step
+	if (sails.config.appbuilder && 
+		sails.config.appbuilder.mcc &&
+		sails.config.appbuilder.mcc.enabled === false)
+		return next();
+
 	var delay = sails.config.appbuilder.mcc.pollFrequency || (1000 * 5); // every 5 sec
 
 	var timerId = setTimeout(function request() {
@@ -335,3 +341,4 @@ sails.log.warn('... making default SDC data directory:', pathMobileDir);
 	.catch(next);
 
 }
+
