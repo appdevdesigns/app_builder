@@ -18,6 +18,13 @@ var ABViewMenuPropertyComponentDefaults = {
 	orientation: 'x',
 	buttonStyle: 'ab-menu-default',
 	menuAlignment: 'ab-menu-left',
+	menuInToolbar: 1,
+	menuPadding: 10,
+	menuTheme: "",
+	menuPosition: "left",
+	menuTextLeft: "",
+	menuTextRight: "",
+	menuTextCenter: "",
 	// [
 	// 		{
 	//			pageId: uuid,
@@ -157,10 +164,19 @@ export default class ABViewMenu extends ABViewWidget {
 		var component = this.component(App);
 
 		var menu = component.ui;
+		if (component.ui.elements) {
+			var menuIndex = 0;
+			component.ui.elements.forEach( (elem)=> {
+				if (elem.view == "menu") {
+					menu = component.ui.elements[menuIndex];
+				}
+				menuIndex++;
+			});
+		}
 		menu.id = ids.component;
-		menu.rows[0].drag = true;
-		menu.rows[0].id = ids.component;
-		menu.rows[0].on = {
+		menu.drag = true;
+		// menu[0].id = ids.component;
+		menu.on = {
 			onAfterDrop: (context, native_event) => {
 				var orderedPageIds = context.from.data.order.slice(0);
 
@@ -234,7 +250,7 @@ export default class ABViewMenu extends ABViewWidget {
 				view: "richselect",
 				label: L('ab.component.menu.orientation', '*Orientation'),
 				value: ABViewMenuPropertyComponentDefaults.orientation,
-				labelWidth: App.config.labelWidthLarge,
+				labelWidth: App.config.labelWidthXLarge,
 				options: [
 					{ id: 'x', value: L('ab.component.menu.horizontal', '*Horizontal') },
 					{ id: 'y', value: L('ab.component.menu.vertical', '*Vertical') }
@@ -245,7 +261,7 @@ export default class ABViewMenu extends ABViewWidget {
 				view: "richselect",
 				label: L('ab.component.menu.buttonStyle', '*Button Style'),
 				value: ABViewMenuPropertyComponentDefaults.buttonStyle,
-				labelWidth: App.config.labelWidthLarge,
+				labelWidth: App.config.labelWidthXLarge,
 				options: [
 					{ id: 'ab-menu-default', value: L('ab.component.menu.defaulButton', '*Default') },
 					{ id: 'ab-menu-link', value: L('ab.component.menu.linkeButton', '*Link') }
@@ -259,9 +275,84 @@ export default class ABViewMenu extends ABViewWidget {
 				labelWidth: App.config.labelWidthXLarge,
 				options: [
 					{ id: 'ab-menu-left', value: L('ab.component.menu.alignLeft', '*Left') },
-					{ id: 'ab-menu-right', value: L('ab.component.menu.alignRight', '*Right')},
-					{ id: 'ab-menu-center', value: L('ab.component.menu.alignCenter', '*Center')}
+					{ id: 'ab-menu-center', value: L('ab.component.menu.alignCenter', '*Center')},
+					{ id: 'ab-menu-right', value: L('ab.component.menu.alignRight', '*Right')}
 				]
+			},
+			{
+				name: 'menuInToolbar',
+				view: "checkbox",
+				labelRight: L('ab.component.menu.menuInToolbar', '*Put menu in toolbar'),
+				value: ABViewMenuPropertyComponentDefaults.menuInToolbar,
+				labelWidth: App.config.labelWidthCheckbox
+			},
+			{
+				name: "toolbarFieldset",
+				view: "fieldset",
+				label: L('ab.component.menu.toolbarSettings', '*Toolbar Settings:'),
+				labelWidth: App.config.labelWidthLarge,
+				body: {
+					view: "layout",
+					type: "clean",
+					padding: 10,
+					rows: [
+						{
+							name: 'menuPadding',
+							view: "counter",
+							label: L('ab.component.menu.menuPadding', '*Toolbar padding'),
+							value: ABViewMenuPropertyComponentDefaults.menuPadding,
+							labelWidth: App.config.labelWidthLarge
+						},
+						{
+							name: 'menuTheme',
+							view: "richselect",
+							label: L('ab.component.menu.menuTheme', '*Toolbar theme'),
+							value: ABViewMenuPropertyComponentDefaults.menuTheme,
+							labelWidth: App.config.labelWidthLarge,
+							options: [
+								{ id: "white" , value: L('ab.component.menu.menuTheme.light', '*White (Default)')},
+								{ id: "bg_gray" , value: L('ab.component.menu.menuTheme.gray', '*Gray')},
+								{ id: "webix_dark" , value: L('ab.component.menu.menuTheme.dark', '*Dark')},
+							]
+						},
+						{
+							name: 'menuPosition',
+							view: "richselect",
+							label: L('ab.component.menu.menuPosition', '*Menu Position'),
+							value: ABViewMenuPropertyComponentDefaults.menuPosition,
+							labelWidth: App.config.labelWidthLarge,
+							options: [
+								{ id: "left" , value: L('ab.common.left', '*Left')},
+								{ id: "center" , value: L('ab.common.center', '*Center')},
+								{ id: "right" , value: L('ab.common.right', '*Right')},
+							]
+						},
+						{
+							name: 'menuTextLeft',
+							view: "text",
+							label: L('ab.component.menu.menuTextLeft', '*Text Left'),
+							placeholder: L('ab.component.menu.menuTextLeftPlaceholder', '*Place text in left region of toolbar.'),
+							labelWidth: App.config.labelWidthLarge,
+							labelPosition:"top"
+						},
+						{
+							name: 'menuTextCenter',
+							view: "text",
+							label: L('ab.component.menu.menuTextCenter', '*Text Center'),
+							placeholder: L('ab.component.menu.menuTextCenterPlaceholder', '*Place text in center region of toolbar.'),
+							labelWidth: App.config.labelWidthLarge,
+							labelPosition:"top"
+						},
+						{
+							name: 'menuTextRight',
+							view: "text",
+							label: L('ab.component.menu.menuTextRight', '*Text Right'),
+							placeholder: L('ab.component.menu.menuTextRighttPlaceholder', '*Place text in right region of toolbar.'),
+							labelWidth: App.config.labelWidthLarge,
+							labelPosition:"top"
+						},
+					]
+				}
 			},
 			{
 				name: "pagesFieldset",
@@ -337,6 +428,13 @@ export default class ABViewMenu extends ABViewWidget {
 		$$(ids.orientation).setValue(view.settings.orientation || ABViewMenuPropertyComponentDefaults.orientation);
 		$$(ids.buttonStyle).setValue(view.settings.buttonStyle || ABViewMenuPropertyComponentDefaults.buttonStyle);
 		$$(ids.menuAlignment).setValue(view.settings.menuAlignment || ABViewMenuPropertyComponentDefaults.menuAlignment);
+		$$(ids.menuInToolbar).setValue(parseInt(view.settings.menuInToolbar) || ABViewMenuPropertyComponentDefaults.menuInToolbar);
+		$$(ids.menuPadding).setValue(view.settings.menuPadding || ABViewMenuPropertyComponentDefaults.menuPadding);
+		$$(ids.menuTheme).setValue(view.settings.menuTheme || ABViewMenuPropertyComponentDefaults.menuTheme);
+		$$(ids.menuPosition).setValue(view.settings.menuPosition || ABViewMenuPropertyComponentDefaults.menuPosition);
+		$$(ids.menuTextLeft).setValue(view.settings.menuTextLeft || ABViewMenuPropertyComponentDefaults.menuTextLeft);
+		$$(ids.menuTextCenter).setValue(view.settings.menuTextCenter || ABViewMenuPropertyComponentDefaults.menuTextCenter);
+		$$(ids.menuTextRight).setValue(view.settings.menuTextRight || ABViewMenuPropertyComponentDefaults.menuTextRight);
 
 		var pageTree = new webix.TreeCollection();
 		var application = view.application;
@@ -416,6 +514,13 @@ export default class ABViewMenu extends ABViewWidget {
 		view.settings.orientation = $$(ids.orientation).getValue();
 		view.settings.buttonStyle = $$(ids.buttonStyle).getValue();
 		view.settings.menuAlignment = $$(ids.menuAlignment).getValue();
+		view.settings.menuInToolbar = $$(ids.menuInToolbar).getValue();
+		view.settings.menuPadding = $$(ids.menuPadding).getValue();
+		view.settings.menuTheme = $$(ids.menuTheme).getValue();
+		view.settings.menuPosition = $$(ids.menuPosition).getValue();
+		view.settings.menuTextLeft = $$(ids.menuTextLeft).getValue();
+		view.settings.menuTextCenter = $$(ids.menuTextCenter).getValue();
+		view.settings.menuTextRight = $$(ids.menuTextRight).getValue();
 
 		var pagesIdList = []
 		var temp = $$(ids.pages).data.count();
@@ -477,47 +582,111 @@ export default class ABViewMenu extends ABViewWidget {
 
 
 		var _ui = {
-			type: "form",
-			borderless:true,
-			rows: [
-				{
-					id: ids.component,
-					view: "menu",
-					autoheight: true,
-					datatype: "json",
-					css: css,
-					layout: this.settings.orientation || ABViewMenuPropertyComponentDefaults.orientation,
-					on: {
-						onItemClick: (id, e, node) => {
+			id: ids.component,
+			view: "menu",
+			autoheight: true,
+			autowidth:true,
+			datatype: "json",
+			css: css,
+			layout: this.settings.orientation || ABViewMenuPropertyComponentDefaults.orientation,
+			on: {
+				onItemClick: (id, e, node) => {
 
-							// switch tab view
-							var item = $$(ids.component).getItem(id);
-							if (item.type == "tab") {
+					// switch tab view
+					var item = $$(ids.component).getItem(id);
+					if (item.type == "tab") {
 
-								this.changePage(item.pageId);
+						this.changePage(item.pageId);
 
-								var redirectPage = this.application.pages(p => p.id == item.pageId, true)[0];
-								if (!redirectPage) return;
+						var redirectPage = this.application.pages(p => p.id == item.pageId, true)[0];
+						if (!redirectPage) return;
 
-								var tabView = redirectPage.views(v => v.id == item.id, true)[0];
-								if (!tabView) return;
+						var tabView = redirectPage.views(v => v.id == item.id, true)[0];
+						if (!tabView) return;
 
-								var tab = tabView.parent;
-								if (!tab) return;
+						var tab = tabView.parent;
+						if (!tab) return;
 
-								tab.emit('changeTab', tabView.id);
+						tab.emit('changeTab', tabView.id);
 
-							}
-							// switch page
-							else {
-								this.changePage(id);
-							}
-
-						}
 					}
+					// switch page
+					else {
+						this.changePage(id);
+					}
+
 				}
-			]
+			}
 		};
+		
+		if (parseInt(this.settings.menuInToolbar)) {
+			var elems = [];
+			var menuIncluded = false;
+			
+			if (this.settings.menuPosition && this.settings.menuPosition == "left") {
+				menuIncluded = true;
+				elems.push( _ui );
+			} else if (this.settings.menuTextLeft && this.settings.menuTextLeft.length) {
+				elems.push({
+					view: "label",
+					label: this.settings.menuTextLeft,
+					align: "left",
+					autowidth: true
+				});
+			} else {
+				elems.push({
+					view: "label",
+					label: "",
+					autowidth: true
+				});
+			}
+
+			if (this.settings.menuPosition && this.settings.menuPosition == "center") {
+				menuIncluded = true;
+				elems.push( _ui );
+			} else if (this.settings.menuTextCenter && this.settings.menuTextCenter.length) {
+				elems.push({
+					view: "label",
+					label: this.settings.menuTextCenter,
+					align: "center"
+				});
+			} else {
+				elems.push({
+					view: "label",
+					label: "",
+					autowidth: true
+				});
+			}
+			
+			if (this.settings.menuPosition && this.settings.menuPosition == "right") {
+				menuIncluded = true;
+				elems.push( _ui );
+			} else if (this.settings.menuTextRight && this.settings.menuTextRight.length) {
+				elems.push({
+					view: "label",
+					label: this.settings.menuTextRight,
+					align: "right",
+					autowidth: true
+				});
+			} else {
+				elems.push({
+					view: "label",
+					label: "",
+					autowidth: true
+				});
+			}
+			
+			if (menuIncluded == false) {
+				elems = [ _ui ];
+			}
+			
+			_ui = {
+				view: "toolbar",
+				css: this.settings.menuTheme ? this.settings.menuTheme : ABViewMenuPropertyComponentDefaults.menuTheme,
+				padding: this.settings.menuPadding ? parseInt(this.settings.menuPadding) : ABViewMenuPropertyComponentDefaults.menuPadding,
+				elements: elems
+			}
+		}
 
 		// make sure each of our child views get .init() called
 		var _init = (options) => {

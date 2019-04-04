@@ -269,8 +269,8 @@ export default class ABViewDetail extends ABViewContainer {
 
 		$$(ids.showLabel).setValue(view.settings.showLabel != null ? view.settings.showLabel : ABViewDetailPropertyComponentDefaults.showLabel);
 		$$(ids.labelPosition).setValue(view.settings.labelPosition || ABViewDetailPropertyComponentDefaults.labelPosition);
-		$$(ids.labelWidth).setValue(view.settings.labelWidth || ABViewDetailPropertyComponentDefaults.labelWidth);
-		$$(ids.height).setValue(view.settings.height || ABViewDetailPropertyComponentDefaults.height);
+		$$(ids.labelWidth).setValue(parseInt(view.settings.labelWidth) || ABViewDetailPropertyComponentDefaults.labelWidth);
+		$$(ids.height).setValue(parseInt(view.settings.height) || ABViewDetailPropertyComponentDefaults.height);
 
 		// update properties when a field component is deleted
 		view.views().forEach((v) => {
