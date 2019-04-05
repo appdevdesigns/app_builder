@@ -57,8 +57,8 @@ var ABFieldEmailComponent = new ABFieldComponent({
 				id: ids.default,
 				name:'default',
 				labelWidth: App.config.labelWidthXLarge,
-				label: L('ab.dataField.email.defaultLabel', '*Default'),
-				placeholder: L('ab.dataField.email.default', '*Enter default email')
+				label: L('ab.common.default', '*Default'),
+				placeholder: L('ab.common.defaultPlaceholder', '*Enter default value')
 			}
 		]
 	},

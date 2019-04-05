@@ -73,6 +73,24 @@ msgstr "ปิด"
 
 #. path: app_builder
 #. code: th
+#. key: ab.common.default
+msgid "Default"
+msgstr "ค่าเริ่มต้น"
+
+#. path: app_builder
+#. code: th
+#. key: ab.common.defaultPlaceholder
+msgid "DefaultPlaceholder"
+msgstr "ระบุค่าเริ่มต้น"
+
+#. path: app_builder
+#. code: th
+#. key: ab.common.none
+msgid "None"
+msgstr "ไม่กำหนด"
+
+#. path: app_builder
+#. code: th
 #. key: ab.common.newName
 msgid "New Name"
 msgstr "ชื่อใหม่"
@@ -82,6 +100,12 @@ msgstr "ชื่อใหม่"
 #. key: ab.common.rename
 msgid "Rename"
 msgstr "เปลี่ยนชื่อ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.common.reset
+msgid "Reset"
+msgstr "เริ่มใหม่"
 
 #. path: app_builder
 #. code: th
@@ -409,15 +433,33 @@ msgstr "คุณต้องการลบข้อมูลนี้หรื
 
 #. path: app_builder
 #. code: th
+#. key: ab.object.toolbar.deleteRecords
+msgid "Delete"
+msgstr "ลบ"
+
+#. path: app_builder
+#. code: th
 #. key: ab.object.toolbar.hideFields
 msgid "Hide fields"
 msgstr "ซ่อนข้อมูล"
 
 #. path: app_builder
 #. code: th
+#. key: ab.object.toolbar.massUpdate
+msgid "Edit"
+msgstr "แก้ไข"
+
+#. path: app_builder
+#. code: th
 #. key: ab.object.toolbar.filterFields
 msgid "Add filters"
 msgstr "เพิ่มกรองข้อมูล"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.toolbar.resetFilter
+msgid "Reset Filter"
+msgstr "ยกเลิกกรองข้อมูล"
 
 #. path: app_builder
 #. code: th
@@ -1177,6 +1219,30 @@ msgstr "ไม่มีส่วนประกอบ"
 
 #. path: app_builder
 #. code: th
+#. key: ab.dataField.boolean.menuName
+msgid "Checkbox"
+msgstr "ช่องทำเครื่องหมาย"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.boolean.description
+msgid "A single checkbox that can be checked or unchecked."
+msgstr "ช่องสำหรับทำเครื่องหมายเลือกหรือไม่เลือก"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.boolean.check
+msgid "Check"
+msgstr "เลือก"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.boolean.uncheck
+msgid "Uncheck"
+msgstr "ไม่เลือก"
+
+#. path: app_builder
+#. code: th
 #. key: ab.dataField.common.headerLabel
 msgid "Section Title"
 msgstr "หัวข้อ"
@@ -1201,6 +1267,66 @@ msgstr "ข้อความแบบสั้น"
 
 #. path: app_builder
 #. code: th
+#. key: ab.dataField.string.supportMultilingual
+msgid "Support multilingual"
+msgstr "รองรับหลายภาษา"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.list.menuName
+msgid "Select list"
+msgstr "ตัวเลือกรายการ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.list.description
+msgid "Select list allows you to select predefined options below from a dropdown."
+msgstr "คุณสามารถกำหนดตัวเลือกต่างๆ เพื่อเลือกเป็นค่าของข้อมูล"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.list.isMultiple
+msgid "Multiselect"
+msgstr "เลือกหลายค่าได้"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.list.hasColors
+msgid "Customize Colors"
+msgstr "กำหนดสีได้"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.list.options
+msgid "Options"
+msgstr "ตัวเลือก"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.list.optionDeleteTitle
+msgid "Delete Option"
+msgstr "ลบตัวเลือก"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.list.optionDeleteText
+msgid "All exisiting entries with this value will be cleared. Are you sure you want to delete this option?"
+msgstr "ค่าเดิมที่เลือกไว้ทั้งหมดจะถูกล้าง คุณยังต้องการลบตัวเลือกนี้หรือไม่?"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.list.addNewOption
+msgid "Add new option"
+msgstr "เพิ่มตัวเลือกใหม่"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.list.selectDefault
+msgid "Select Default"
+msgstr "ค่าเริ่มต้น"
+
+#. path: app_builder
+#. code: th
 #. key: ab.dataField.longstring.menuName
 msgid "Long text"
 msgstr "ข้อความยาว"
@@ -1210,6 +1336,288 @@ msgstr "ข้อความยาว"
 #. key: ab.dataField.longstring.description
 msgid "Multiple lines of text"
 msgstr "ข้อความแบบยาว"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.number.menuName
+msgid "Number"
+msgstr "ตัวเลข"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.number.description
+msgid "A Float or Integer Value"
+msgstr "ตัวเลขจำนวนเต็มและทศนิยม"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.number.format
+msgid "Format"
+msgstr "รูปแบบ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.number.format.euroBefore
+msgid "€ (before)"
+msgstr "€ (ก่อน)"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.number.format.euroAfter
+msgid "€ (after)"
+msgstr "€ (หลัง)"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.number.decimals
+msgid "Decimal"
+msgstr "ทศนิยม"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.number.places
+msgid "Places"
+msgstr "จำนวนทศนิยม"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.number.rounding
+msgid "Rounding"
+msgstr "ปัด"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.number.roundUp
+msgid "Round Up"
+msgstr "ปัดขึ้น"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.number.roundDown
+msgid "Round Down"
+msgstr "ปัดลง"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.number.thousands
+msgid "Thousands"
+msgstr "หน่วยพัน"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.number.comma
+msgid "Comma"
+msgstr "จุลภาค (,)"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.number.period
+msgid "Period"
+msgstr "จุด (.)"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.number.space
+msgid "Space"
+msgstr "เว้นวรรค ( )"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.number.validation
+msgid "Validation"
+msgstr "ตรวจสอบข้อมูล"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.number.minimum
+msgid "Minimum"
+msgstr "ขั้นต่ำ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.number.maximum
+msgid "Maximum"
+msgstr "สูงสุด"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.date.menuName
+msgid "Date"
+msgstr "วันที่"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.date.description
+msgid "Pick one from a calendar"
+msgstr "ข้อมูลวันและเวลา"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.date.dateFormat
+msgid "Date Format"
+msgstr "รูปแบบวันที่"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.date.ignoreDate
+msgid "Ignore Date"
+msgstr "ไม่กำหนดวันที่"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.date.currentDate
+msgid "Current Date"
+msgstr "วันที่ปัจจุบัน"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.date.specificDate
+msgid "Specific Date"
+msgstr "ระบุวันที่"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.date.validationCriteria
+msgid "Validation criteria"
+msgstr "ตรวจสอบข้อมูล"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.date.condition
+msgid "Condition"
+msgstr "เงื่อนไข"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.date.validate.range
+msgid "Range"
+msgstr "ช่วงเวลา"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.date.validate.between
+msgid "Between"
+msgstr "ระหว่าง"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.date.validate.notBetween
+msgid "Not between"
+msgstr "ไม่อยู่ในระหว่าง"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.date.validate.equal
+msgid "Equal to"
+msgstr "เท่ากับ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.date.validate.notEqual
+msgid "Not equal to"
+msgstr "ไม่เท่ากับ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.date.validate.greaterThan
+msgid "Greater than"
+msgstr "มากกว่า"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.date.validate.lessThan
+msgid "Less than"
+msgstr "น้อยกว่า"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.date.validate.greaterAndEqual
+msgid "Greater than or Equal to"
+msgstr "มากกว่าหรือเท่ากับ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.date.validate.lessAndEqual
+msgid "Less than or Equal to"
+msgstr "น้อยกว่าหรือเท่ากับ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.date.unit
+msgid "Unit"
+msgstr "หน่วย"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.date.days
+msgid "Days"
+msgstr "วัน"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.date.months
+msgid "Months"
+msgstr "เดือน"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.date.years
+msgid "Years"
+msgstr "ปี"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.date.before
+msgid "Before"
+msgstr "ก่อน"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.date.after
+msgid "After"
+msgstr "หลัง"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.date.startDate
+msgid "Start Date"
+msgstr "Start Date"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.date.endDate
+msgid "End Date"
+msgstr "End Date"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.date.timeFormat
+msgid "Time Format"
+msgstr "รูปแบบเวลา"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.date.ignoreTime
+msgid "Ignore Time"
+msgstr "ไม่ระบุเวลา"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.date.defaultTime
+msgid "Default Time"
+msgstr "ค่าเริ่มต้นเวลา"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.date.currentTime
+msgid "Current Time"
+msgstr "เวลาปัจจุบัน"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.date.specificTime
+msgid "Specific Time"
+msgstr "ระบุเวลา"
 
 #. path: app_builder
 #. code: th
@@ -1240,12 +1648,6 @@ msgstr "หน้าแสดงผล"
 #. key: ab.object.selectObject
 msgid "Select an object to work with."
 msgstr "เลือกที่เก็บข้อมูล"
-
-#. path: app_builder
-#. code: th
-#. key: ab.common.none
-msgid "None"
-msgstr "ว่างเปล่า"
 
 #. path: app_builder
 #. code: th

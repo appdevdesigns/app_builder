@@ -20,10 +20,10 @@ var ABFieldLongTextDefaults = {
 	icon: 'align-right',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
 
 	// menuName: what gets displayed in the Editor drop list
-	menuName: L('ab.dataField.LongText.menuName', '*Long text'),
+	menuName: L('ab.dataField.longstring.menuName', '*Long text'),
 
 	// description: what gets displayed in the Editor description.
-	description: L('ab.dataField.LongText.description', '*Multiple lines of text'),
+	description: L('ab.dataField.longstring.description', '*Multiple lines of text'),
 
 	supportRequire: true
 
@@ -66,9 +66,9 @@ var ABFieldLongTextComponent = new ABFieldComponent({
 				view: "text",
 				id: ids.default,
 				name: 'default',
-				label: L('ab.dataField.string.defaultLabel', '*Default'),
 				labelPosition:"top",
-				placeholder: L('ab.dataField.string.default', '*Default text')
+				label: L('ab.common.default', '*Default'),
+				placeholder: L('ab.common.defaultPlaceholder', '*Enter default value')
 			},
 			{
 				view: "checkbox",

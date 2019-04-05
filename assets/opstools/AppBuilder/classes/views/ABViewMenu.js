@@ -263,7 +263,7 @@ export default class ABViewMenu extends ABViewWidget {
 				value: ABViewMenuPropertyComponentDefaults.buttonStyle,
 				labelWidth: App.config.labelWidthXLarge,
 				options: [
-					{ id: 'ab-menu-default', value: L('ab.component.menu.defaulButton', '*Default') },
+					{ id: 'ab-menu-default', value: L('ab.common.default', '*Default') },
 					{ id: 'ab-menu-link', value: L('ab.component.menu.linkeButton', '*Link') }
 				]
 			},

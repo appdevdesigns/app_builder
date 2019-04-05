@@ -66,7 +66,7 @@ var ABField[template]Component = new ABFieldComponent({
 			// 	view: "text",
 			// 	name:'textDefault',
 			// 	labelWidth: App.config.labelWidthLarge,
-			// 	placeholder: L('ab.dataField.string.default', '*Default text')
+			// 	placeholder: L('ab.common.default', '*Default')
 			// },
 			// {
 			// 	view: "checkbox",

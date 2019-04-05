@@ -15,11 +15,11 @@ function L(key, altText) {
 
 var ABViewFormButtonPropertyComponentDefaults = {
 	includeSave: true,
-	saveLabel: '*Save',
+	saveLabel: '',
 	includeCancel: true,
-	cancelLabel: '*Cancel',
+	cancelLabel: '',
 	includeReset: false,
-	resetLabel: '*Reset',
+	resetLabel: '',
 	afterCancel: null,
 	alignment: 'right'
 }
@@ -71,6 +71,54 @@ export default class ABViewFormButton extends ABView {
 	///
 	/// Instance Methods
 	///
+
+	toObj() {
+
+		// labels are multilingual values:
+		let labels = [];
+
+		if (this.settings.saveLabel)
+			labels.push('saveLabel');
+
+		if (this.settings.cancelLabel)
+			labels.push('cancelLabel');
+
+		if (this.settings.resetLabel)
+			labels.push('resetLabel');
+
+		OP.Multilingual.unTranslate(this.settings, this.settings, labels);
+
+
+		let result = super.toObj();
+
+		return result;
+
+	}
+
+	fromValues(values) {
+
+		super.fromValues(values);
+
+		// labels are multilingual values:
+		let labels = [];
+
+		if (this.settings.saveLabel)
+			labels.push('saveLabel');
+
+		if (this.settings.cancelLabel)
+			labels.push('cancelLabel');
+
+		if (this.settings.resetLabel)
+			labels.push('resetLabel');
+
+		OP.Multilingual.unTranslate(this.settings, this.settings, labels);
+
+
+		this.settings.includeSave = JSON.parse(this.settings.includeSave || ABViewFormButtonPropertyComponentDefaults.includeSave);
+		this.settings.includeCancel = JSON.parse(this.settings.includeCancel || ABViewFormButtonPropertyComponentDefaults.includeCancel);
+		this.settings.includeReset = JSON.parse(this.settings.includeReset || ABViewFormButtonPropertyComponentDefaults.includeReset);
+
+	}
 
 
 	//
@@ -207,11 +255,13 @@ export default class ABViewFormButton extends ABView {
 		$$(ids.afterCancel).define('options', opts);
 
 		$$(ids.includeSave).setValue(view.settings.includeSave != null ? view.settings.includeSave : ABViewFormButtonPropertyComponentDefaults.includeSave);
-		$$(ids.saveLabel).setValue(view.settings.saveLabel != null ? view.settings.saveLabel : ABViewFormButtonPropertyComponentDefaults.saveLabel);
 		$$(ids.includeCancel).setValue(view.settings.includeCancel != null ? view.settings.includeCancel : ABViewFormButtonPropertyComponentDefaults.includeCancel);
-		$$(ids.cancelLabel).setValue(view.settings.cancelLabel != null ? view.settings.cancelLabel : ABViewFormButtonPropertyComponentDefaults.cancelLabel);
 		$$(ids.includeReset).setValue(view.settings.includeReset != null ? view.settings.includeReset : ABViewFormButtonPropertyComponentDefaults.includeReset);
-		$$(ids.resetLabel).setValue(view.settings.resetLabel != null ? view.settings.resetLabel : ABViewFormButtonPropertyComponentDefaults.resetLabel);
+
+		$$(ids.saveLabel).setValue(view.settings.saveLabel || "");
+		$$(ids.cancelLabel).setValue(view.settings.cancelLabel || "");
+		$$(ids.resetLabel).setValue(view.settings.resetLabel || "");
+
 		$$(ids.afterCancel).setValue(view.settings.afterCancel || ABViewFormButtonPropertyComponentDefaults.afterCancel);
 		$$(ids.alignment).setValue(view.settings.alignment || ABViewFormButtonPropertyComponentDefaults.alignment);
 
@@ -261,11 +311,11 @@ export default class ABViewFormButton extends ABView {
 		}
 
 		// cancel button
-		if (this.settings.includeCancel != null ? JSON.parse(this.settings.includeCancel) : ABViewFormButtonPropertyComponentDefaults.includeCancel) {
+		if (this.settings.includeCancel) {
 			_ui.cols.push({
 				view: "button",
 				autowidth: true,
-				value: this.settings.cancelLabel != null ? this.settings.cancelLabel : ABViewFormButtonPropertyComponentDefaults.cancelLabel,
+				value: this.settings.cancelLabel || L("ab.common.cancel", "*Cancel"),
 				click: function () {
 					_logic.onCancel(this);
 				}
@@ -276,11 +326,11 @@ export default class ABViewFormButton extends ABView {
 		}
 		
 		// reset button
-		if (this.settings.includeReset != null ? JSON.parse(this.settings.includeReset) : ABViewFormButtonPropertyComponentDefaults.includeReset) {
+		if (this.settings.includeReset) {
 			_ui.cols.push({
 				view: "button",
 				autowidth: true,
-				value: this.settings.resetLabel != null ? this.settings.resetLabel : ABViewFormButtonPropertyComponentDefaults.resetLabel,
+				value: this.settings.resetLabel || L("ab.common.reset", "*Reset"),
 				click: function () {
 					_logic.onClear(this);
 				}
@@ -291,12 +341,13 @@ export default class ABViewFormButton extends ABView {
 		}
 
 		// save button
-		if (this.settings.includeSave != null ? JSON.parse(this.settings.includeSave) : ABViewFormButtonPropertyComponentDefaults.includeSave) {
+		if (this.settings.includeSave) {
+
 			_ui.cols.push({
 				view: "button",
 				type: "form",
 				autowidth: true,
-				value: this.settings.saveLabel != null ? this.settings.saveLabel : ABViewFormButtonPropertyComponentDefaults.saveLabel,
+				value: this.settings.saveLabel || L("ab.common.save", "*Save"),
 				click: function () {
 					_logic.callbacks.onSaveClick(this);
 				}
