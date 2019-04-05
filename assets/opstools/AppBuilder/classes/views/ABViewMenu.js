@@ -20,7 +20,7 @@ var ABViewMenuPropertyComponentDefaults = {
 	menuAlignment: 'ab-menu-left',
 	menuInToolbar: 1,
 	menuPadding: 10,
-	menuTheme: "",
+	menuTheme: "bg_gray",
 	menuPosition: "left",
 	menuTextLeft: "",
 	menuTextRight: "",
@@ -535,6 +535,9 @@ export default class ABViewMenu extends ABViewWidget {
 					type = "tab";
 					tabId = currentPageId;
 					currentPageId = currentItem.pageParent().id;
+				} else {
+					// if we have left the tabs we were looping through we need to reset the tabId
+					tabId = "";
 				}
 
 				pagesIdList.push({ 
