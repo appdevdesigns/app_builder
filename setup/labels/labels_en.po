@@ -151,6 +151,12 @@ msgstr "<b>{0}</b> is created."
 
 #. path: app_builder
 #. code: en
+#. key: ab.common.update
+msgid "Update"
+msgstr "Update"
+
+#. path: app_builder
+#. code: en
 #. key: ab.common.update.error
 msgid "System could not update <b>{0}</b>."
 msgstr "System could not update <b>{0}</b>."
@@ -979,6 +985,24 @@ msgstr "Unchecked -> Checked"
 
 #. path: app_builder
 #. code: en
+#. key: ab.massUpdate.addFieldEdit
+msgid "Add field to edit"
+msgstr "Add field to edit"
+
+#. path: app_builder
+#. code: en
+#. key: ab.massDelete.title
+msgid "Delete Multiple Records"
+msgstr "Delete Multiple Records"
+
+#. path: app_builder
+#. code: en
+#. key: ab.massDelete.description
+msgid "Are you sure you want to delete the selected records?"
+msgstr "Are you sure you want to delete the selected records?"
+
+#. path: app_builder
+#. code: en
 #. key: ab.visible_fields.showAll
 msgid "Show all"
 msgstr "Show all"
@@ -1270,6 +1294,192 @@ msgstr "Section Title"
 #. key: ab.dataField.common.headerLabelPlaceholder
 msgid "Section Name"
 msgstr "Section Name"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.common.headerLabelPlaceholder
+msgid "Section Name"
+msgstr "Section Name"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.email.menuName
+msgid "Email"
+msgstr "Email"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.email.description
+msgid "Email fields are used to store email addresses."
+msgstr "Email fields are used to store email addresses."
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.file.menuName
+msgid "File Attachment"
+msgstr "File Attachment"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.file.description
+msgid "Attach a File to this object."
+msgstr "Attach a File to this object."
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.file.fileSize
+msgid "Size (MB)"
+msgstr "Size (MB)"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.formula.menuName
+msgid "Formula"
+msgstr "Formula"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.formula.description
+msgid "Formula Description"
+msgstr ""
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.formula.type
+msgid "Type"
+msgstr "Type"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.formula.type.sum
+msgid "Sum"
+msgstr "Sum"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.formula.type.max
+msgid "Max"
+msgstr "Maximum"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.formula.type.min
+msgid "Min"
+msgstr "Minimum"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.formula.type.average
+msgid "Average"
+msgstr "Average"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.formula.type.count
+msgid "Count"
+msgstr "Count"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.formula.field
+msgid "Field"
+msgstr "Field"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.image.menuName
+msgid "Image Attachment"
+msgstr "Image Attachment"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.image.description
+msgid "Attach an image to this object."
+msgstr "Attach an image to this object."
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.image.width
+msgid "Width"
+msgstr "Width"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.image.height
+msgid "Height"
+msgstr "Height"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.image.defaultImage
+msgid "Default Image"
+msgstr "Default Image"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.textformula.menuName
+msgid "Text Formula"
+msgstr "Text Formula"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.textformula.description
+msgid "Text Formula Description"
+msgstr "Text Formula Description"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.textformula.formula
+msgid "Formula"
+msgstr "Formula"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.tree.menuName
+msgid "Data Tree"
+msgstr "Data Tree"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.tree.description
+msgid "Data tree allows you to build a hierarchical set of selectable data. (ex: Categories and sub-categories)"
+msgstr "Data tree allows you to build a hierarchical set of selectable data. (ex: Categories and sub-categories)"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.tree.options
+msgid "Options"
+msgstr "Options"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.tree.addNewOption
+msgid "Add new option"
+msgstr "Add new option"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.user.menuName
+msgid "User"
+msgstr "User"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.user.description
+msgid "Add user to a record"
+msgstr "Add user to a record"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.user.isMultiple
+msgid "Allow multiple users"
+msgstr "Allow multiple users"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.user.isCurrentUser
+msgid "Default value as current user"
+msgstr "Default value as current user"
 
 #. path: app_builder
 #. code: en
