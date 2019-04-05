@@ -384,10 +384,10 @@ var ABFieldDateComponent = new ABFieldComponent({
 				view: "richselect", 
 				name: "dateFormat",
 				id: ids.dateFormat,
-				label: "Date Format",
+				label: L('ab.dataField.date.dateFormat', "*Date Format"),
 				labelWidth: 110,
 				value: 1, options: [
-					{ id: 1, value: "Ignore Date" },
+					{ id: 1, value: L('ab.dataField.date.ignoreDate', "*Ignore Date") },
 					{ id: 2, value: "dd/mm/yyyy" },
 					{ id: 3, value: "mm/dd/yyyy" },
 					{ id: 4, value: "M D, yyyy" },
@@ -405,12 +405,12 @@ var ABFieldDateComponent = new ABFieldComponent({
 						view: "richselect", 
 						name: "defaultDate",
 						id: ids.defaultDate,
-						label: "Default Date",
+						label: L('ab.common.default', "*Default"),
 						labelWidth: 110,
 						value: 1, options: [
-							{ id: 1, value: "None" },
-							{ id: 2, value: "Current Date" },
-							{ id: 3, value: "Specific Date" }
+							{ id: 1, value: L('ab.common.none', "*None") },
+							{ id: 2, value: L('ab.dataField.date.currentDate', "*Current Date") },
+							{ id: 3, value: L('ab.dataField.date.specificDate', "*Specific Date") }
 						],
 						on: {
 							onChange: (newVal, oldVal) => {
@@ -758,27 +758,27 @@ var ABFieldDateComponent = new ABFieldComponent({
 			// Validator
 			{
 				view: 'label',
-				label: "Validation criteria",
+				label: L('ab.dataField.date.validationCriteria', "*Validation criteria"),
 				css: 'ab-text-bold'
 			},
 			{
 				id: ids.validateCondition,
 				view: "select",
 				name: "validateCondition",
-				label: "Condition",
+				label: L('ab.dataField.date.condition', "*Condition"),
 				labelWidth: 100,
 				value: 'none',
 				options: [
-					{ id: 'none', value: '[None]' },
-					{ id: 'dateRange', value: 'Range' },
-					{ id: 'between', value: 'Between' },
-					{ id: 'notBetween', value: 'Not between' },
-					{ id: '=', value: 'Equal to' },
-					{ id: '<>', value: 'Not equal to' },
-					{ id: '>', value: 'Greater than' },
-					{ id: '<', value: 'Less than' },
-					{ id: '>=', value: 'Greater than or Equal to' },
-					{ id: '<=', value: 'Less than or Equal to' }
+					{ id: 'none', value: L('ab.common.none', "*None") },
+					{ id: 'dateRange', value: L('ab.dataField.date.validate.range', "*Range") },
+					{ id: 'between', value: L('ab.dataField.date.validate.between', "*Between") },
+					{ id: 'notBetween', value: L('ab.dataField.date.validate.notBetween', "*Not between") },
+					{ id: '=', value: L('ab.dataField.date.validate.equal', "*Equal to") },
+					{ id: '<>', value: L('ab.dataField.date.validate.notEqual', "*Not equal to") },
+					{ id: '>', value: L('ab.dataField.date.validate.greaterThan', "*Greater than") },
+					{ id: '<', value: L('ab.dataField.date.validate.lessThan', "*Less than") },
+					{ id: '>=', value: L('ab.dataField.date.validate.greaterAndEqual', "*Greater than or Equal to") },
+					{ id: '<=', value: L('ab.dataField.date.validate.lessAndEqual', "*Less than or Equal to") }
 				],
 				on: {
 					onChange: (newVal, oldVal) => {
@@ -825,12 +825,12 @@ var ABFieldDateComponent = new ABFieldComponent({
 						id: ids.validateRangeUnit,
 						view: "select",
 						name: "validateRangeUnit",
-						label: 'Unit',
+						label: L('ab.dataField.date.unit', "*Unit"),
 						labelWidth: 100,
 						options: [
-							{ id: 'days', value: 'Days' },
-							{ id: 'months', value: 'Months' },
-							{ id: 'years', value: 'Years' }
+							{ id: 'days', value: L('ab.dataField.date.days', "*Days") },
+							{ id: 'months', value: L('ab.dataField.date.months', "*Months") },
+							{ id: 'years', value: L('ab.dataField.date.years', "*Years") }
 						],
 						on: {
 							onChange: (newVal) => {
@@ -848,9 +848,13 @@ var ABFieldDateComponent = new ABFieldComponent({
 								width: 140,
 								borderless: true,
 								template: () => {
-									var beforeLabel = 'Before #number# #unit#'
+
+									let unit = $$(ids.validateRangeUnit).getValue(),
+										selectedUnit = $$(ids.validateRangeUnit).config.options.filter(opt => opt.id == unit)[0];
+
+									var beforeLabel = L('ab.dataField.date.before', "*Before") + ' #number# #unit#'
 										.replace('#number#', $$(ids.validateRangeBefore).getValue())
-										.replace('#unit#', $$(ids.validateRangeUnit).getValue());
+										.replace('#unit#', selectedUnit.value);
 
 									return beforeLabel;
 								}
@@ -867,9 +871,13 @@ var ABFieldDateComponent = new ABFieldComponent({
 								align: 'right',
 								borderless: true,
 								template: () => {
-									var afterLabel = 'After #number# #unit#'
+
+									let unit = $$(ids.validateRangeUnit).getValue(),
+										selectedUnit = $$(ids.validateRangeUnit).config.options.filter(opt => opt.id == unit)[0];
+
+									var afterLabel = L('ab.dataField.date.after', "*After") + ' #number# #unit#'
 										.replace('#number#', $$(ids.validateRangeAfter).getValue())
-										.replace('#unit#', $$(ids.validateRangeUnit).getValue());
+										.replace('#unit#', selectedUnit.value);
 
 									return afterLabel;
 								}
@@ -906,7 +914,7 @@ var ABFieldDateComponent = new ABFieldComponent({
 				id: ids.validateStartDate,
 				name: "validateStartDate",
 				view: 'datepicker',
-				label: 'Start Date',
+				label: L('ab.dataField.date.startDate', "*Start Date"),
 				labelWidth: 100,
 				hidden: true
 			},
@@ -914,7 +922,7 @@ var ABFieldDateComponent = new ABFieldComponent({
 				id: ids.validateEndDate,
 				name: "validateEndDate",
 				view: 'datepicker',
-				label: 'End Date',
+				label: L('ab.dataField.date.endDate', "*End Date"),
 				labelWidth: 100,
 				hidden: true
 			},
@@ -922,10 +930,10 @@ var ABFieldDateComponent = new ABFieldComponent({
 				view: "richselect", 
 				name: "timeFormat",
 				id: ids.timeFormat,
-				label: "Time Format",
+				label: L('ab.dataField.date.timeFormat', '*Time Format'),
 				labelWidth: 110,
 				value: 1, options: [
-					{ id: 1, value: "Ignore Time" },
+					{ id: 1, value: L('ab.dataField.date.ignoreTime', '*Ignore Time') },
 					{ id: 2, value: "HH:MM AM/PM" },
 					{ id: 3, value: "HH:MM (military)" }
 				],
@@ -941,12 +949,12 @@ var ABFieldDateComponent = new ABFieldComponent({
 						view: "richselect", 
 						name: "defaultTime",
 						id: ids.defaultTime,
-						label: "Default Time",
+						label: L('ab.dataField.date.defaultTime', '*Default Time'),
 						labelWidth: 110,
 						value: 1, options: [
-							{ id: 1, value: "None" },
-							{ id: 2, value: "Current Time" },
-							{ id: 3, value: "Specific Time" }
+							{ id: 1, value: L('ab.common.none', "*None") },
+							{ id: 2, value: L('ab.dataField.date.currentTime', "*Current Time") },
+							{ id: 3, value: L('ab.dataField.date.specificTime', "*Specific Time") }
 						],
 						on: {
 							onChange: (newVal, oldVal) => {

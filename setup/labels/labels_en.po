@@ -73,6 +73,24 @@ msgstr "Close"
 
 #. path: app_builder
 #. code: en
+#. key: ab.common.default
+msgid "Default"
+msgstr "Default"
+
+#. path: app_builder
+#. code: en
+#. key: ab.common.defaultPlaceholder
+msgid "DefaultPlaceholder"
+msgstr "Enter default value"
+
+#. path: app_builder
+#. code: en
+#. key: ab.common.none
+msgid "None"
+msgstr "None"
+
+#. path: app_builder
+#. code: en
 #. key: ab.common.newName
 msgid "New Name"
 msgstr "New Name"
@@ -82,6 +100,12 @@ msgstr "New Name"
 #. key: ab.common.rename
 msgid "Rename"
 msgstr "Rename"
+
+#. path: app_builder
+#. code: en
+#. key: ab.common.reset
+msgid "Reset"
+msgstr "Reset"
 
 #. path: app_builder
 #. code: en
@@ -409,15 +433,33 @@ msgstr "Do you want to delete this row?"
 
 #. path: app_builder
 #. code: en
+#. key: ab.object.toolbar.deleteRecords
+msgid "Delete"
+msgstr "Delete"
+
+#. path: app_builder
+#. code: en
 #. key: ab.object.toolbar.hideFields
 msgid "Hide fields"
 msgstr "Hide fields"
 
 #. path: app_builder
 #. code: en
+#. key: ab.object.toolbar.massUpdate
+msgid "Edit"
+msgstr "Edit"
+
+#. path: app_builder
+#. code: en
 #. key: ab.object.toolbar.filterFields
 msgid "Add filters"
 msgstr "Add filters"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.toolbar.resetFilter
+msgid "Reset Filter"
+msgstr "Reset Filter"
 
 #. path: app_builder
 #. code: en
@@ -1195,6 +1237,30 @@ msgstr "No Components"
 
 #. path: app_builder
 #. code: en
+#. key: ab.dataField.boolean.menuName
+msgid "Checkbox"
+msgstr "Checkbox"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.boolean.description
+msgid "A single checkbox that can be checked or unchecked."
+msgstr "A single checkbox that can be checked or unchecked."
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.boolean.check
+msgid "Check"
+msgstr "Check"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.boolean.uncheck
+msgid "Uncheck"
+msgstr "Uncheck"
+
+#. path: app_builder
+#. code: en
 #. key: ab.dataField.common.headerLabel
 msgid "Section Title"
 msgstr "Section Title"
@@ -1219,6 +1285,66 @@ msgstr "Short string value"
 
 #. path: app_builder
 #. code: en
+#. key: ab.dataField.string.supportMultilingual
+msgid "Support multilingual"
+msgstr "Support multilingual"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.list.menuName
+msgid "Select list"
+msgstr "Select list"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.list.description
+msgid "Select list allows you to select predefined options below from a dropdown."
+msgstr "Select list allows you to select predefined options below from a dropdown."
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.list.isMultiple
+msgid "Multiselect"
+msgstr "Multiselect"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.list.hasColors
+msgid "Customize Colors"
+msgstr "Customize Colors"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.list.options
+msgid "Options"
+msgstr "Options"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.list.optionDeleteTitle
+msgid "Delete Option"
+msgstr "Delete Option"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.list.optionDeleteText
+msgid "All exisiting entries with this value will be cleared. Are you sure you want to delete this option?"
+msgstr "All exisiting entries with this value will be cleared. Are you sure you want to delete this option?"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.list.addNewOption
+msgid "Add new option"
+msgstr "Add new option"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.list.selectDefault
+msgid "Select Default"
+msgstr "Select Default"
+
+#. path: app_builder
+#. code: en
 #. key: ab.dataField.longstring.menuName
 msgid "Long text"
 msgstr "Long text"
@@ -1228,6 +1354,288 @@ msgstr "Long text"
 #. key: ab.dataField.longstring.description
 msgid "Multiple lines of text"
 msgstr "Multiple lines of text"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.number.menuName
+msgid "Number"
+msgstr "Number"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.number.description
+msgid "A Float or Integer Value"
+msgstr "A Float or Integer Value"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.number.format
+msgid "Format"
+msgstr "Format"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.number.format.euroBefore
+msgid "€ (before)"
+msgstr "€ (before)"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.number.format.euroAfter
+msgid "€ (after)"
+msgstr "€ (after)"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.number.decimals
+msgid "Decimal"
+msgstr "Decimal"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.number.places
+msgid "Places"
+msgstr "Places"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.number.rounding
+msgid "Rounding"
+msgstr "Rounding"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.number.roundUp
+msgid "Round Up"
+msgstr "Round Up"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.number.roundDown
+msgid "Round Down"
+msgstr "Round Down"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.number.thousands
+msgid "Thousands"
+msgstr "Thousands"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.number.comma
+msgid "Comma"
+msgstr "Comma"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.number.period
+msgid "Period"
+msgstr "Period"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.number.space
+msgid "Space"
+msgstr "Space"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.number.validation
+msgid "Validation"
+msgstr "Validation"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.number.minimum
+msgid "Minimum"
+msgstr "Minimum"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.number.maximum
+msgid "Maximum"
+msgstr "Maximum"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.date.menuName
+msgid "Date"
+msgstr "Date"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.date.description
+msgid "Pick one from a calendar"
+msgstr "Pick one from a calendar"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.date.dateFormat
+msgid "Date Format"
+msgstr "Date Format"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.date.ignoreDate
+msgid "Ignore Date"
+msgstr "Ignore Date"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.date.currentDate
+msgid "Current Date"
+msgstr "Current Date"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.date.specificDate
+msgid "Specific Date"
+msgstr "Specific Date"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.date.validationCriteria
+msgid "Validation criteria"
+msgstr "Validation criteria"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.date.condition
+msgid "Condition"
+msgstr "Condition"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.date.validate.range
+msgid "Range"
+msgstr "Range"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.date.validate.between
+msgid "Between"
+msgstr "Between"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.date.validate.notBetween
+msgid "Not between"
+msgstr "Not between"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.date.validate.equal
+msgid "Equal to"
+msgstr "Equal to"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.date.validate.notEqual
+msgid "Not equal to"
+msgstr "Not equal to"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.date.validate.greaterThan
+msgid "Greater than"
+msgstr "Greater than"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.date.validate.lessThan
+msgid "Less than"
+msgstr "Less than"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.date.validate.greaterAndEqual
+msgid "Greater than or Equal to"
+msgstr "Greater than or Equal to"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.date.validate.lessAndEqual
+msgid "Less than or Equal to"
+msgstr "Less than or Equal to"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.date.unit
+msgid "Unit"
+msgstr "Unit"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.date.days
+msgid "Days"
+msgstr "Days"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.date.months
+msgid "Months"
+msgstr "Months"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.date.years
+msgid "Years"
+msgstr "Years"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.date.before
+msgid "Before"
+msgstr "Before"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.date.after
+msgid "After"
+msgstr "After"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.date.startDate
+msgid "Start Date"
+msgstr "Start Date"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.date.endDate
+msgid "End Date"
+msgstr "End Date"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.date.timeFormat
+msgid "Time Format"
+msgstr "Time Format"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.date.ignoreTime
+msgid "Ignore Time"
+msgstr "Ignore Time"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.date.defaultTime
+msgid "Default Time"
+msgstr "Default Time"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.date.currentTime
+msgid "Current Time"
+msgstr "Current Time"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.date.specificTime
+msgid "Specific Time"
+msgstr "Specific Time"
 
 #. path: app_builder
 #. code: en
@@ -1252,12 +1660,6 @@ msgstr "Interface"
 #. key: ab.object.selectObject
 msgid "Select an object to work with."
 msgstr "Select an object to work with."
-
-#. path: app_builder
-#. code: en
-#. key: ab.common.none
-msgid "None"
-msgstr "None"
 
 #. path: app_builder
 #. code: en

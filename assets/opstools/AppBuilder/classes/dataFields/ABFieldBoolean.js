@@ -51,14 +51,18 @@ var ABFieldBooleanComponent = new ABFieldComponent({
 			{
 				name: "default",
 				view: "checkbox",
-				label: "Default",
+				label: L("ab.common.default", "*Default"),
 				labelPosition: "left",
 				labelWidth: 70,
-				labelRight: 'Uncheck',
+				labelRight: L("ab.dataField.boolean.uncheck", "*Uncheck"),
 				css: "webix_table_checkbox",
 				on: {
 					onChange: function (newVal, oldVal) {
-						this.define('labelRight', newVal ? 'Check' : 'Uncheck');
+
+						let checkLabel = L("ab.dataField.boolean.check", "*Check");
+						let uncheckLabel = L("ab.dataField.boolean.uncheck", "*Uncheck");
+
+						this.define('labelRight', newVal ? checkLabel : uncheckLabel);
 						this.refresh();
 					}
 				}

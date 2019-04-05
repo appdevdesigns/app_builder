@@ -195,7 +195,7 @@ var ABFieldCalculateDefaults = {
 };
 
 var delimiterList = [
-	{ id: 'none', value: L('ab.dataField.number.none', "*None") },
+	{ id: 'none', value: L('ab.common.none', "*None") },
 	{ id: 'comma', value: L('ab.dataField.number.comma', "*Comma"), sign: ',' },
 	{ id: 'period', value: L('ab.dataField.number.period', "*Period"), sign: '.' },
 	{ id: 'space', value: L('ab.dataField.number.space', "*Space"), sign: ' ' }

@@ -180,7 +180,7 @@ var ABFieldListComponent = new ABFieldComponent({
 				name: "isMultiple",
 				disallowEdit: true,
 				id: ids.isMultiple,
-				labelRight: L('ab.dataField.list.isMultiple', 'Multiselect'),
+				labelRight: L('ab.dataField.list.isMultiple', '*Multiselect'),
 				labelWidth: 0,
 				value: false,
 				on: {
@@ -202,7 +202,7 @@ var ABFieldListComponent = new ABFieldComponent({
 				view: "checkbox",
 				name: "hasColors",
 				id: ids.hasColors,
-				labelRight: L('ab.dataField.list.hasColors', 'Customize Colors'),
+				labelRight: L('ab.dataField.list.hasColors', '*Customize Colors'),
 				labelWidth: 0,
 				value: false,
 				on: {
@@ -213,7 +213,7 @@ var ABFieldListComponent = new ABFieldComponent({
 					}
 				}
 			},
-			{ view: "label", label: "<b>Options</b>" },
+			{ view: "label", label: `<b>${L('ab.dataField.list.options', '*Options')}</b>` },
 			{
 				id: ids.options,
 				name: 'options',
@@ -291,7 +291,7 @@ var ABFieldListComponent = new ABFieldComponent({
 			},
 			{
 				view: "button",
-				value: "Add new option",
+				value: L('ab.dataField.list.addNewOption', '*Add new option'),
 				click: function () {
 					var itemId = webix.uid();
 					var nextHex = getNextHex();
@@ -304,7 +304,7 @@ var ABFieldListComponent = new ABFieldComponent({
 				placeholder: L('ab.dataField.list.selectDefault', "*Select Default"),
 				name: "default",
 				view: 'richselect',
-				label: 'Default'
+				label: L('ab.common.default', "*Default")
 			},
 			{
 				id: ids.multipleDefault,
@@ -319,7 +319,7 @@ var ABFieldListComponent = new ABFieldComponent({
 					css:  "customFieldCls", 
 					borderless: true,
 					template:
-		 				'<label style="width: 80px;text-align: left;line-height:32px;" class="webix_inp_label">Default</label>' +
+		 				`<label style="width: 80px;text-align: left;line-height:32px;" class="webix_inp_label">${L('ab.common.default', "*Default")}</label>` +
 						'<div style="margin-left: 80px; height: 36px;" class="list-data-values form-entry"></div>',
 				}
 			}

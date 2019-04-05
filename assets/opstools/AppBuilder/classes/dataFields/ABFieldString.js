@@ -62,8 +62,8 @@ var ABFieldStringComponent = new ABFieldComponent({
 				id: ids.default,
 				name:'default',
 				labelWidth: App.config.labelWidthXLarge,
-				label: L('ab.dataField.string.defaultLabel', '*Default'),
-				placeholder: L('ab.dataField.string.default', '*Enter default value')
+				label: L('ab.common.default', '*Default'),
+				placeholder: L('ab.common.defaultPlaceholder', '*Enter default value')
 			},
 			{
 				view: "checkbox",

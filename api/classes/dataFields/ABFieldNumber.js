@@ -38,7 +38,7 @@ var ABFieldNumberDefaults = {
 
 
 var formatList = [
-	{ id: 'none', value: L('ab.dataField.number.none', "*None") },
+	{ id: 'none', value: L('ab.common.none', "*None") },
 	{ id: 'dollar', value: L('ab.dataField.number.format.dollar', "$"), sign: "$", position: "prefix" },
 	{ id: 'pound', value: L('ab.dataField.number.format.pound', "£"), sign: "£", position: "prefix" },
 	{ id: 'euroBefore', value: L('ab.dataField.number.format.euroBefore', "€ (before)"), sign: "€", position: "prefix" },

@@ -1271,7 +1271,7 @@ export default class ABViewGrid extends ABViewWidget  {
 							{
 								view: "button",
 								id: ids.buttonMassUpdate,
-								label: L("ab.component.label.massUpdate", "*Edit fields"),
+								label: L('ab.object.toolbar.massUpdate', "*Edit"),
 								icon: "fa fa-pencil-square-o",
 								type: "icon",
 								badge: 0,
@@ -1284,7 +1284,7 @@ export default class ABViewGrid extends ABViewWidget  {
 							{
 								view: "button",
 								id: ids.buttonDeleteSelected,
-								label: L("ab.component.label.deleteSelected", "*Delete Records"),
+								label: L('ab.object.toolbar.deleteRecords', "*Delete"),
 								icon: "fa fa-trash",
 								type: "icon",
 								badge: 0,
@@ -1297,7 +1297,7 @@ export default class ABViewGrid extends ABViewWidget  {
 							{
 								view: "button",
 								id: ids.buttonFilter,
-								label: L("ab.component.label.filterFields", "*Add filters"),
+								label: L('ab.object.toolbar.filterFields', "*Filters"),
 								icon: "fa fa-filter",
 								type: "icon",
 								badge: 0,
@@ -1309,7 +1309,7 @@ export default class ABViewGrid extends ABViewWidget  {
 							{
 								view: "button",
 								id: ids.buttonSort,
-								label: L("ab.component.label.sortFields", "*Apply sort"),
+								label: L('ab.object.toolbar.sortFields', "*Sort"),
 								icon: "fa fa-sort",
 								type: "icon",
 								badge: 0,
@@ -1321,7 +1321,7 @@ export default class ABViewGrid extends ABViewWidget  {
 							{
 								view: "button",
 								id: ids.buttonExport,
-								label: L("ab.component.label.export", "*Export"),
+								label: L('ab.object.toolbar.export', "*Export"),
 								icon: "fa fa-print",
 								type: "icon",
 								badge: 0,
@@ -1353,7 +1353,7 @@ export default class ABViewGrid extends ABViewWidget  {
 							{
 								view: "button",
 								id: ids.resetFilterButton,
-								label: L("ab.component.label.resetFilter", "*Reset Filter"),
+								label: L('ab.object.toolbar.resetFilter', "*Reset Filter"),
 								icon: "fa fa-ban",
 								type: "icon",
 								badge: 0,

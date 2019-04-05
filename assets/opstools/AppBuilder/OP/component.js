@@ -83,6 +83,9 @@ export default class UIComponent extends EventEmitter {
 					none: 	  L('ab.common.none', "*None"),
 					close: 	  L('ab.common.close', "*Close"),
 
+					default: L('ab.common.default', '*Default'),
+					defaultPlaceholder: L('ab.common.defaultPlaceholder', '*Enter default value'),
+
 					required: L('ab.common.required', '*Required'),
 
 					invalidMessage: {

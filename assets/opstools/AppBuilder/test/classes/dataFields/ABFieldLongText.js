@@ -50,8 +50,8 @@ describe("ABFieldLongText unit tests", () => {
 		it('should have valid defaults', () => {
 			let defaultValues = ABFieldLongText.defaults();
 
-			let menuName = L('ab.dataField.LongText.menuName', '*Long text');
-			let description = L('ab.dataField.LongText.description', '*Multiple lines of text.');
+			let menuName = L('ab.dataField.longstring.menuName', '*Long text');
+			let description = L('ab.dataField.longstring.description', '*Multiple lines of text.');
 
 			assert.equal('LongText', defaultValues.key);
 			assert.equal('align-right', defaultValues.icon);

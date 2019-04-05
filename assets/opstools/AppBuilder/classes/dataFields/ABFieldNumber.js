@@ -32,7 +32,7 @@ var ABFieldNumberDefaults = {
 
 
 var formatList = [
-	{ id: 'none', value: L('ab.dataField.number.none', "*None") },
+	{ id: 'none', value: L('ab.common.none', "*None") },
 	{ id: 'dollar', value: L('ab.dataField.number.format.dollar', "$"), sign: "$", position: "prefix" },
 	{ id: 'pound', value: L('ab.dataField.number.format.pound', "£"), sign: "£", position: "prefix" },
 	{ id: 'euroBefore', value: L('ab.dataField.number.format.euroBefore', "€ (before)"), sign: "€", position: "prefix" },
@@ -41,7 +41,7 @@ var formatList = [
 ];
 
 var delimiterList = [
-	{ id: 'none', value: L('ab.dataField.number.none', "*None") },
+	{ id: 'none', value: L('ab.common.none', "*None") },
 	{ id: 'comma', value: L('ab.dataField.number.comma', "*Comma"), sign: ',' },
 	{ id: 'period', value: L('ab.dataField.number.period', "*Period"), sign: '.' },
 	{ id: 'space', value: L('ab.dataField.number.space', "*Space"), sign: ' ' }
@@ -123,11 +123,12 @@ var ABFieldNumberComponent = new ABFieldComponent({
 			// },
 			{
 				view: "text",
-				label: L("ab.dataField.number.defaultValue", "*Default Value"),
+				label: L("ab.common.default", "*Default"),
 				labelWidth: App.config.labelWidthXLarge,
 				id: ids.default,
 				name: "default",
-				placeholder: L('ab.dataField.number.defaultNumber', '*Default number'),
+				placeholder: L('ab.common.defaultPlaceholder', '*Enter default value'),
+				labelPosition:"top",
 				on: {
 					onChange: function (newVal, oldVal) {
 						// Validate number
@@ -183,7 +184,7 @@ var ABFieldNumberComponent = new ABFieldComponent({
 				id: ids.typeDecimalPlaces,
 				name: 'typeDecimalPlaces',
 				disallowEdit: true,
-				label: "Places",
+				label: L('ab.dataField.number.places', "*Places"),
 				value: 'none',
 				labelWidth: App.config.labelWidthXLarge,
 				disabled: true,
@@ -209,7 +210,7 @@ var ABFieldNumberComponent = new ABFieldComponent({
 				disabled: true,
 				hidden: true,
 				options: [
-					{ id: 'none', value: L('ab.dataField.number.default', "*Default") },
+					{ id: 'none', value: L('ab.common.default', "*Default") },
 					{ id: 'roundUp', value: L('ab.dataField.number.roundUp', "*Round Up") },
 					{ id: 'roundDown', value: L('ab.dataField.number.roundDown', "*Round Down") }
 				]
