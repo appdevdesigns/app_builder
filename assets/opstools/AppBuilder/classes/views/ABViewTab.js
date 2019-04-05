@@ -242,9 +242,7 @@ export default class ABViewTab extends ABViewWidget {
 				webix.ui({
 					container: $$(ids.component).getMultiview().$view,
 					view: 'template',
-					type: 'clean',
 					autoheight: false,
-					borderless: true,
 					height: 1,
 					width: 0,
 					template: '<div class="ab-component-tools ab-layout-view ab-tab-tools">' +
@@ -265,9 +263,7 @@ export default class ABViewTab extends ABViewWidget {
 				webix.ui({
 					container: $$(ids.component).$view,
 					view: 'template',
-					type: 'clean',
 					autoheight: false,
-					borderless: true,
 					height: 1,
 					width: 0,
 					template: '<div class="ab-component-tools ab-layout-view ab-tab-tools">' +
@@ -748,7 +744,6 @@ export default class ABViewTab extends ABViewWidget {
 				}
 			} else {
 				_ui = {
-					type: "clean",
 					rows: [
 						{
 							view: 'tabview',
@@ -760,7 +755,6 @@ export default class ABViewTab extends ABViewWidget {
 							},
 							multiview: {
 								height: this.settings.height,
-								borderless: true,
 								on: {
 									onViewChange: function(prevId, nextId) {
 										_onShow(nextId);
@@ -878,7 +872,6 @@ export default class ABViewTab extends ABViewWidget {
 							// able to 'scroll' in tab view
 							id: v.view.id,
 							view: 'scrollview',
-							borderless: true,
 							css: 'ab-tabview-scrollview',
 							body: v.component.ui,
 						}, $$(v.view.id));

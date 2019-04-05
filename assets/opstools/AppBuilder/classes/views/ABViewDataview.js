@@ -62,7 +62,7 @@ export default class ABViewDataview extends ABViewDetail {
 				name:"xCount",
 				min: 1, // we cannot have 0 columns per row so lets not accept it
 				label: L('ab.components.dataview.xCount', "*Items in a row"), 
-				labelWidth: App.config.labelWidthXLarge,
+				labelWidth: App.config.labelWidthLarge,
 				step:1 
 			}
 		]);
