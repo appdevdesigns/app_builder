@@ -16,7 +16,7 @@ function L(key, altText) {
 var ABViewFormButtonPropertyComponentDefaults = {
 	includeSave: true,
 	saveLabel: '',
-	includeCancel: true,
+	includeCancel: false,
 	cancelLabel: '',
 	includeReset: false,
 	resetLabel: '',

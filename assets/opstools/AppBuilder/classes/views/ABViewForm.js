@@ -1387,11 +1387,11 @@ resolve();
 
 	focusOnFirst() {
 
-		var topPosition = this.views().length;
+		var topPosition = 0;
 		var topPositionId = "";
 		this.views().forEach((item) => {
 			if(item.key == "textbox" || item.key == "numberbox") {
-				if (item.position.y < topPosition) {
+				if (item.position.y == topPosition) {
 					topPosition = item.position.y;
 					topPositionId = item.id;
 				}

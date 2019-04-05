@@ -20,7 +20,7 @@ var ABViewMenuPropertyComponentDefaults = {
 	menuAlignment: 'ab-menu-left',
 	menuInToolbar: 1,
 	menuPadding: 10,
-	menuTheme: "",
+	menuTheme: "bg_gray",
 	menuPosition: "left",
 	menuTextLeft: "",
 	menuTextRight: "",
@@ -535,6 +535,9 @@ export default class ABViewMenu extends ABViewWidget {
 					type = "tab";
 					tabId = currentPageId;
 					currentPageId = currentItem.pageParent().id;
+				} else {
+					// if we have left the tabs we were looping through we need to reset the tabId
+					tabId = "";
 				}
 
 				pagesIdList.push({ 
@@ -627,11 +630,12 @@ export default class ABViewMenu extends ABViewWidget {
 				menuIncluded = true;
 				elems.push( _ui );
 			} else if (this.settings.menuTextLeft && this.settings.menuTextLeft.length) {
+				let width = this.settings.menuTextLeft.length * 15;
 				elems.push({
 					view: "label",
 					label: this.settings.menuTextLeft,
 					align: "left",
-					autowidth: true
+					width: width
 				});
 			} else {
 				elems.push({
@@ -645,11 +649,15 @@ export default class ABViewMenu extends ABViewWidget {
 				menuIncluded = true;
 				elems.push( _ui );
 			} else if (this.settings.menuTextCenter && this.settings.menuTextCenter.length) {
+				let width = this.settings.menuTextLeft.length * 15;
+				elems.push({});
 				elems.push({
 					view: "label",
 					label: this.settings.menuTextCenter,
-					align: "center"
+					align: "center",
+					width: width
 				});
+				elems.push({});
 			} else {
 				elems.push({
 					view: "label",
@@ -662,11 +670,12 @@ export default class ABViewMenu extends ABViewWidget {
 				menuIncluded = true;
 				elems.push( _ui );
 			} else if (this.settings.menuTextRight && this.settings.menuTextRight.length) {
+				let width = this.settings.menuTextLeft.length * 15;
 				elems.push({
 					view: "label",
 					label: this.settings.menuTextRight,
 					align: "right",
-					autowidth: true
+					width: width
 				});
 			} else {
 				elems.push({
