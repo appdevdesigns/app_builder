@@ -975,8 +975,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 
                 if (deleteTasks.length > 0) {
                     OP.Dialog.Confirm({
-                        title: "Delete Multiple Records",
-                        text:  "Are you sure you want to delete the selected records?",
+                        title: L("ab.massDelete.title", "*Delete Multiple Records"),
+                        text:  L("ab.massDelete.description", "*Are you sure you want to delete the selected records?"),
                         callback: function (result) {
                             if (result) {
                                 async.parallel(deleteTasks, function (err) {

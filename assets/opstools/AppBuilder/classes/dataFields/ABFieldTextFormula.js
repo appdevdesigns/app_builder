@@ -17,10 +17,10 @@ var ABFieldTextFormulaDefaults = {
 	icon: 'question',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
 
 	// menuName: what gets displayed in the Editor drop list
-	menuName: L('ab.dataField.TextFormula.menuName', '*Text Formula'),
+	menuName: L('ab.dataField.textformula.menuName', '*Text Formula'),
 
 	// description: what gets displayed in the Editor description.
-	description: L('ab.dataField.TextFormula.description', '*Text Formula'),
+	description: L('ab.dataField.textformula.description', '*Text Formula'),
 
 }
 
@@ -63,7 +63,7 @@ var ABFieldTextFormulaComponent = new ABFieldComponent({
 			{
 				id: ids.textFormula,
 				view: "textarea",
-				label: "Text Formula",
+				label: L("ab.dataField.textformula.formula", "*Text Formula"),
 				name: "textFormula",
 				editor: "text",
 				labelWidth: App.config.labelWidthLarge,

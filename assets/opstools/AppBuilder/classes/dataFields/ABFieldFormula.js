@@ -71,11 +71,11 @@ var ABFieldFormulaComponent = new ABFieldComponent({
 				labelWidth: App.config.labelWidthMedium,
 				value: "sum",
 				options: [
-					{ id: "sum", value: "Sum" },
-					{ id: "max", value: "Max" },
-					{ id: "min", value: "Min" },
-					{ id: "average", value: "Average" },
-					{ id: "count", value: "Count" }
+					{ id: "sum", value: L('ab.dataField.formula.type.sum', '*Sum') },
+					{ id: "max", value: L('ab.dataField.formula.type.max', '*Max') },
+					{ id: "min", value: L('ab.dataField.formula.type.min', '*Min') },
+					{ id: "average", value: L('ab.dataField.formula.type.average', '*Average') },
+					{ id: "count", value: L('ab.dataField.formula.type.count', '*Count') }
 				]
 			},
 			{

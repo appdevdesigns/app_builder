@@ -76,7 +76,7 @@ var ABFieldImageComponent = new ABFieldComponent({
 					{
 						view:"checkbox",
 						name:"useWidth", 
-						labelRight:L('ab.dataField.image.width', "*width"), 
+						labelRight:L('ab.dataField.image.width', "*Width"), 
 			            width: 80,
 			            labelWidth: 0,
 						value:1,
@@ -100,7 +100,7 @@ var ABFieldImageComponent = new ABFieldComponent({
 						view:"checkbox",
 						name:"useHeight",
 // id:componentIds.useHeight, 
-						labelRight:L('ab.dataField.image.height', "*height"), 
+						labelRight:L('ab.dataField.image.height', "*Height"), 
 			          	width: 80,
 			            labelWidth: 0,
 						value:1,
@@ -124,7 +124,7 @@ var ABFieldImageComponent = new ABFieldComponent({
 					{
 						view: "checkbox",
 						name: "useDefaultImage",
-						labelRight:L('ab.dataField.image.defaultImage', "*default image"), 
+						labelRight:L('ab.dataField.image.defaultImage', "*Default image"), 
 						width: 200,
 						labelWidth: 0,
 						value:0,

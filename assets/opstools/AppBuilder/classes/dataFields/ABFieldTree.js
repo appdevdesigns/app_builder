@@ -61,7 +61,7 @@ var ABFieldTreeComponent = new ABFieldComponent({
 
     return [{
         view: "label",
-        label: "<b>Options</b>"
+        label: `<b>${L("ab.dataField.tree.options", "*Options")}</b>`
       },
       {
         id: ids.options,
@@ -101,7 +101,7 @@ var ABFieldTreeComponent = new ABFieldComponent({
       },
       {
         view: "button",
-        value: "Add new option",
+        value: L("ab.dataField.tree.addNewOption", "*Add new option"),
         click: () => {
           var itemId = webix.uid().toString();
           treeCol.data.add({

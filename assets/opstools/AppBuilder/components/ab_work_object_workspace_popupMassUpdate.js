@@ -18,16 +18,7 @@ export default class AB_Work_Object_Workspace_PopupMassUpdate extends OP.Compone
 			common : App.labels,
 			component: {
 
-				addFieldEdit: 	L('ab.sort_fields.addFieldEdit', 	"*Add field to edit"),
-				selectField:	L('ab.sort_fields.selectField', "*Please select field"),
-				textAsc:		L('ab.sort_fields.textAsc', 	"*A -> Z"),
-				textDesc: 		L('ab.sort_fields.textDesc', 	"*Z -> A"),
-				dateAsc: 		L('ab.sort_fields.dateAsc', 	"*Before -> After"),
-				dateDesc: 		L('ab.sort_fields.dateDesc', 	"*After -> Before"),
-				numberAsc: 		L('ab.sort_fields.numberAsc', 	"*1 -> 9"),
-				numberDesc: 	L('ab.sort_fields.numberDesc', 	"*9 -> 1"),
-				booleanAsc: 	L('ab.sort_fields.booleanAsc', 	"*Checked -> Unchecked"),
-				booleanDesc: 	L('ab.sort_fields.booleanDesc', "*Unchecked -> Checked")
+				addFieldEdit: 	L('ab.massUpdate.addFieldEdit', "*Add field to edit"),
 
 			}
 		}
@@ -67,12 +58,12 @@ export default class AB_Work_Object_Workspace_PopupMassUpdate extends OP.Compone
 						cols: [
                             {},
                             {
-                                view: "button", value: "Cancel", width: 100, click: function () {
+                                view: "button", value: L("ab.common.cancel", "*Cancel"), width: 100, click: function () {
                                     this.getTopParentView().hide();
                                 }
                             },
 							{
-								view: "button", label: "Update", type: "form", width: 120,
+								view: "button", label: L("ab.common.update", "*Update"), type: "form", width: 120,
 								click: function () {
 									// Update values to records
 									// alert("hello");
@@ -331,7 +322,7 @@ export default class AB_Work_Object_Workspace_PopupMassUpdate extends OP.Compone
 					cols: [
 						{
 							view: "richselect",
-							label: "Set",
+							label: L("ab.component.form.set", "*Set"),
 							labelWidth: 40,
 							width: 200,
 							options: options,
@@ -339,26 +330,25 @@ export default class AB_Work_Object_Workspace_PopupMassUpdate extends OP.Compone
 								"onChange": function (columnId) {
 									var update_item = this.getParentView(),
 										columnData = CurrentObject.fields().filter(function (col) { return col.columnName == columnId; })[0],
-                                        fieldComponent = columnData.formComponent(),
-                                        abView = fieldComponent.newInstance(CurrentObject.application),
-                                        inputView = abView.component(App).ui;
+										fieldComponent = columnData.formComponent(),
+										abView = fieldComponent.newInstance(CurrentObject.application),
+										viewComponent = abView.component(App),
+										inputView = viewComponent.ui;
 
 									// Change component to display value
 									update_item.removeView(update_item.getChildViews()[2]);
 									update_item.addView(inputView, 2);
 
 									// Show custom display of data field
-									// columnData.customDisplay(columnData, App, update_item.getChildViews()[2].$view);
-
-                                    abView.component(App).init();
+									viewComponent.init();
 
 									_logic.refreshFieldList();
-                                    $$(this).adjust();
-                                    $$(update_item).adjust();
+									$$(this).adjust();
+									$$(update_item).adjust();
 								}
 							}
 						},
-						{ view: 'label', label: "{0}".replace("{0}", " To "), width: 30 },
+						{ view: 'label', label: ` ${L("ab.component.form.to", "*To")} `, width: 30 },
 						{},
 						{
 							view: 'button', icon: "fa fa-trash", type: "icon", width: 30, click: function () {

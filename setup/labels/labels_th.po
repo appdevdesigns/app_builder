@@ -151,6 +151,12 @@ msgstr "<b>{0}</b> ถูกสร้างแล้ว"
 
 #. path: app_builder
 #. code: th
+#. key: ab.common.update
+msgid "Update"
+msgstr "แก้ไข"
+
+#. path: app_builder
+#. code: th
 #. key: ab.common.update.error
 msgid "System could not update <b>{0}</b>."
 msgstr "ระบบไม่สมารถแก้ไข <b>{0}</b>"
@@ -967,6 +973,24 @@ msgstr "ไม่เช็ค -> เช็ค"
 
 #. path: app_builder
 #. code: th
+#. key: ab.massUpdate.addFieldEdit
+msgid "Add field to edit"
+msgstr "เพิ่มฟิลด์เพื่อแก้ไข"
+
+#. path: app_builder
+#. code: th
+#. key: ab.massDelete.title
+msgid "Delete Multiple Records"
+msgstr "ลบหลายเรคคอร์ด"
+
+#. path: app_builder
+#. code: th
+#. key: ab.massDelete.description
+msgid "Are you sure you want to delete the selected records?"
+msgstr "คุณต้องการลบเรคคอร์ดที่คุณเลือกหรือไม่?"
+
+#. path: app_builder
+#. code: th
 #. key: ab.visible_fields.showAll
 msgid "Show all"
 msgstr "โชว์ทั้งหมด"
@@ -1252,6 +1276,186 @@ msgstr "หัวข้อ"
 #. key: ab.dataField.common.headerLabelPlaceholder
 msgid "Section Name"
 msgstr "ชื่อกลุ่ม"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.email.menuName
+msgid "Email"
+msgstr "อีเมลล์"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.email.description
+msgid "Email fields are used to store email addresses."
+msgstr "เพื่อเก็บข้อมูลอีเมลล์"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.file.menuName
+msgid "File Attachment"
+msgstr "ไฟล์ข้อมูล"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.file.description
+msgid "Attach a File to this object."
+msgstr "เก็บไฟล์ข้อมูลต่างๆ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.file.fileSize
+msgid "ความจุ (MB)"
+msgstr "ความจุ (MB)"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.formula.menuName
+msgid "Formula"
+msgstr "คำนวณข้อมูลที่เชื่อม"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.formula.description
+msgid "Formula Description"
+msgstr ""
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.formula.type
+msgid "Type"
+msgstr "แบบ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.formula.type.sum
+msgid "Sum"
+msgstr "ผลรวม"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.formula.type.max
+msgid "Max"
+msgstr "ค่าที่มากที่สุด"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.formula.type.min
+msgid "Min"
+msgstr "ค่าที่น้อยที่สุด"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.formula.type.average
+msgid "Average"
+msgstr "ค่าเฉลี่ย"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.formula.type.count
+msgid "Count"
+msgstr "จำนวนทั้งหมด"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.formula.field
+msgid "Field"
+msgstr "ฟิลด์"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.image.menuName
+msgid "Image Attachment"
+msgstr "รูปภาพ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.image.description
+msgid "Attach an image to this object."
+msgstr "เก็บไฟล์รูปภาพ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.image.width
+msgid "Width"
+msgstr "กว้าง"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.image.height
+msgid "Height"
+msgstr "สูง"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.image.defaultImage
+msgid "Default Image"
+msgstr "รูปภาพเริ่มต้น"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.textformula.menuName
+msgid "Text Formula"
+msgstr "คำนวณข้อความ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.textformula.description
+msgid "Text Formula Description"
+msgstr "คำนวณข้อความ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.textformula.formula
+msgid "Formula"
+msgstr "สูตร"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.tree.menuName
+msgid "Data Tree"
+msgstr "ตัวเลือกแบบเชิงลำดับชั้น"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.tree.description
+msgid "Data tree allows you to build a hierarchical set of selectable data. (ex: Categories and sub-categories)"
+msgstr "สามารถสร้างตัวเลือกแบบเชิงลำดับชั้นได้ (ยกตัวอย่างเช่น: หมวดหมู่ และ หมวดหมู่ย่อย)"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.tree.options
+msgid "Options"
+msgstr "ตัวเลือก"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.tree.addNewOption
+msgid "Add new option"
+msgstr "เพิ่มตัวเลือกใหม่"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.user.menuName
+msgid "User"
+msgstr "ข้อมูลผู้ใช้"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.user.description
+msgid "Add user to a record"
+msgstr "เก็บข้อมูลผู้ใช้"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.user.isMultiple
+msgid "Allow multiple users"
+msgstr "สามารถผู้ใช้หลายคนได้"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.user.isCurrentUser
+msgid "Default value as current user"
+msgstr "ค่าเริ่มต้นเป็นผู้ใช้ปัจจุบัน"
 
 #. path: app_builder
 #. code: th
