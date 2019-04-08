@@ -264,6 +264,7 @@ steal(
 								var parentContainer = self.element.parent()[0];
 								parentContainer.style.width = parseInt(page.settings.pageWidth) + "px";
 								parentContainer.style.margin = "0 auto";
+								parentContainer.classList.add(page.settings.pageBackground);
 							}
 
 							switch (page.settings.type) {

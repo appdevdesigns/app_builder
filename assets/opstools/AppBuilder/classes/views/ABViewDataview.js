@@ -124,7 +124,7 @@ export default class ABViewDataview extends ABViewDetail {
 		};
 
 		// if height is set, then add Y scrollbar
-		if (this.settings.height) {
+		if (this.settings.height >= 0) {
 			com.ui = {
 				view: "scrollview",
 				height: this.settings.height,

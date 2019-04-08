@@ -23,7 +23,8 @@ var ABPropertyComponentDefaults = {
     popupWidth: 700,
     popupHeight: 450,
     pageWidth: null,
-    fixedPageWidth: 0
+    fixedPageWidth: 0,
+    pageBackground: "ab-background-default"
 }
 
 var ABViewDefaults = {
@@ -316,6 +317,17 @@ export default class ABViewPage extends ABViewContainer {
             				placeholder: L('ab.component.page.pageWidthPlaceholder', '*Set page width'),
                             label: L("ab.component.page.popupHeight", "*Page width:"),
                             labelWidth: App.config.labelWidthLarge
+                        },
+                        {
+                            view: "richselect",
+                            name:'pageBackground',
+                            label: L("ab.component.page.popupHeight", "*Page background:"),
+                            labelWidth: App.config.labelWidthXLarge,
+                            options: [
+                                { "id":"ab-background-default", "value":L('ab.component.page.pageBackgroundDefault', '*White (default)')}, 
+                                { "id":"ab-background-gray", "value":L('ab.component.page.pageBackgroundDark', '*Dark')}, 
+                                // { "id":"ab-background-texture", "value":L('ab.component.page.pageBackgroundTextured', '*Textured')}
+                            ]
                         }
                     ]
                 }
@@ -397,6 +409,7 @@ export default class ABViewPage extends ABViewContainer {
         $$(ids.popupHeight).setValue(view.settings.popupHeight || ABPropertyComponentDefaults.popupHeight);
         $$(ids.pageWidth).setValue(view.settings.pageWidth || ABPropertyComponentDefaults.pageWidth);
         $$(ids.fixedPageWidth).setValue(view.settings.fixedPageWidth || ABPropertyComponentDefaults.fixedPageWidth);
+        $$(ids.pageBackground).setValue(view.settings.pageBackground || ABPropertyComponentDefaults.pageBackground);
 
         // Disable select type of page when this page is root 
         if (view.isRoot()) {
@@ -421,7 +434,6 @@ export default class ABViewPage extends ABViewContainer {
             $$(ids.pageSettings).show();
         }
         
-        console.log("view.settings.fixedPageWidth: ", view.settings.fixedPageWidth);
         if (view.settings.fixedPageWidth == 1) {
             $$(ids.pageWidth).show();
         } else {
@@ -456,6 +468,7 @@ export default class ABViewPage extends ABViewContainer {
         view.settings.popupHeight = $$(ids.popupHeight).getValue();
         view.settings.pageWidth = $$(ids.pageWidth).getValue();
         view.settings.fixedPageWidth = $$(ids.fixedPageWidth).getValue();
+        view.settings.pageBackground = $$(ids.pageBackground).getValue();
 
     }
 
@@ -539,6 +552,7 @@ export default class ABViewPage extends ABViewContainer {
         var _ui = {
             view: "scrollview",
             borderless: true,
+            css: this.settings.pageBackground || ABPropertyComponentDefaults.pageBackground,
             body: comp.ui
         };
 
