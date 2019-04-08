@@ -359,3 +359,6 @@ console.error('TODO: ab_work.logic.synchronize()!');
 	}
 
 }
+
+// export to ABLiveTool
+window.ABWorkUI = AB_Work;

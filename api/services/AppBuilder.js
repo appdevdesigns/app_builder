@@ -994,26 +994,51 @@ module.exports = {
     },
 
 
-    updateNavView: function (application, page, langCode) {
+    /**
+     * @method updateNavView
+     * 
+     * @param {ABApplication} application 
+     * @param {Object} options - {
+     *                              name: string,
+     *                              label: string,
+     *                              urlPointer: string,
+     *                              icon: string [optional - "file-o"],
+     *                              isAdminPage: boolean
+     *                          }
+     * @param {string} langCode 
+     * 
+     * @return Promise
+     */
+    updateNavView: function (application, options, langCode) {
 
-        if (!page) return Promise.reject(new Error('invalid page'));
-
-         // find page name
-         var pageLabel;
-         page.translations.forEach((trans) => {
-             if (trans.language_code == 'en') {
-                pageLabel = trans.label.replace(/[^a-z0-9 ]/gi, '');
-             }
-         });
+        if (!options) return Promise.reject(new Error('invalid page'));
 
         var appID = application.id,
             appName = AppBuilder.rules.toApplicationNameFormat(application.name),
-            pageName = AppBuilder.rules.nameFilter(page.name),
+            pageName = AppBuilder.rules.nameFilter(options.name),
             pageKey = getPageKey(appName, pageName),
             toolKey = _.kebabCase(pageKey),
-            toolLabel = pageLabel,
+            toolLabel = options.label,
             pagePermsAction = pageKey + '.view',
-            pagePerms = 'adcore.admin,' + pagePermsAction,
+            pagePerms = 'adcore.admin,' + pagePermsAction;
+
+        let controllerIncludes = [];
+
+        // Admin page
+        if (options.isAdminPage) {
+            controllerIncludes = [
+                {
+                    // Switching to the new ABAdminLiveTool controller:
+                    key: 'opstools.BuildApp.ABAdminLiveTool',
+                    path: 'opstools/BuildApp/controllers/ABAdminLiveTool.js',
+                    init: {
+                        app: application.id
+                    }
+                }
+            ];
+        }
+        // Normal page
+        else {
             controllerIncludes = [
                 {
                     // Switching to the new ABLiveTool controller:
@@ -1021,10 +1046,11 @@ module.exports = {
                     path: 'opstools/BuildApp/controllers/ABLiveTool.js',
                     init: {
                         app: application.id,
-                        page: page.urlPointer()
+                        page: options.urlPointer
                     }
                 }
             ];
+        }
 
         var roles = [];
         var objectIncludes = [];
@@ -1122,7 +1148,7 @@ module.exports = {
                     var def = {
                         key: toolKey,
                         permissions: pagePerms,
-                        icon: page.icon,
+                        icon: options.icon || "file-o",
                         label: toolLabel,
                         // context: pageKey,
                         controller: 'OPView',

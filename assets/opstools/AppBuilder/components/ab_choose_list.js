@@ -132,7 +132,10 @@ export default class ABChooseList extends OP.Component {
 							},
 							type: {
 								height: App.config.appListRowHeight, // Defines item height
-								iconGear: "<span class='webix_icon fa fa-cog'></span>"
+								iconGear: "<span class='webix_icon fa fa-cog'></span>",
+								iconAdmin: function(app) {
+									return app.isAdminApp ? "<span class='webix_icon fa fa-circle-o-notch'></span> " : "";
+								}
 							},
 							select: false,
 							onClick: {
@@ -427,6 +430,7 @@ export default class ABChooseList extends OP.Component {
 				return _templateListItem
 					.replace('#label#', obj.label || '')
 					.replace('#description#', obj.description || '')
+					.replace('{common.iconAdmin}', common.iconAdmin(obj))
 					.replace('{common.iconGear}', common.iconGear);
 			}
 		}
@@ -441,7 +445,7 @@ export default class ABChooseList extends OP.Component {
 		var _templateListItem = [
 			"<div class='ab-app-list-item'>",
 				"<div class='ab-app-list-info'>",
-					"<div class='ab-app-list-name'>#label#</div>",
+					"<div class='ab-app-list-name'>{common.iconAdmin}#label#</div>",
 					"<div class='ab-app-list-description'>#description#</div>",
 				"</div>",
 				"<div class='ab-app-list-edit'>",
