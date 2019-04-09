@@ -323,13 +323,14 @@ export default class ABWorkObjectGantt extends OP.Component {
 				if (CurrentDurationField)
 					data['duration'] = data[CurrentDurationField.columnName] || 1;
 
+				// Calculate duration
+				if (!data['duration'] && data['start_date'] && data['end_date'])
+					data['duration'] = gantt.calculateDuration(data['start_date'], data['end_date']);
+
 				// Calculate end date
 				if (!data['end_date'] && data['start_date'] && data['duration'])
 					data['end_date'] = gantt.calculateEndDate(data['start_date'], data['duration']);
 
-				// Calculate duration
-				if (!data['duration'] && data['start_date'] && data['end_date'])
-					data['duration'] = gantt.calculateDuration(data['start_date'], data['end_date']);
 
 				// Default values
 				if (!data['end_date'] && !data['duration']) {
@@ -450,8 +451,22 @@ export default class ABWorkObjectGantt extends OP.Component {
 						task[key] = updatedTask[key];
 					}
 
-					if (data['start_date'] && (data['end_date'] || data['duration'])) // these fields are required
+					if (data['start_date'] && (data['end_date'] || data['duration'])) { // these fields are required
 						gantt.updateTask(data.id);
+
+						// after call .updateTask function. end_date and duration values will be calculated.
+						// update these values to display in form properly
+						task = gantt.getTask(data.id);
+
+						if (CurrentEndDateField)
+							task[CurrentEndDateField.columnName] = task['end_date'];
+		
+						if (CurrentDurationField)
+							task[CurrentDurationField.columnName] = task['duration'];
+
+						gantt.updateTask(data.id);
+
+					}
 				}
 				// insert
 				else {
@@ -468,6 +483,10 @@ export default class ABWorkObjectGantt extends OP.Component {
 				}
 
 				_logic.sort();
+
+				// If form opens, then update form data 
+				if (FormSide.isVisible())
+					_logic.selectTask(data.id);
 
 			},
 
