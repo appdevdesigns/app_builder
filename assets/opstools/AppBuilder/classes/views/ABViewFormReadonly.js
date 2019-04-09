@@ -127,8 +127,9 @@ export default class ABViewFormReadonly extends ABViewFormField {
 			labelWidth: 0,
 			paddingY: 0,
 			paddingX: 0,
+			readonly: true,
 			css: "ab-readonly-field",
-			name: component.ui.name,
+			// name: component.ui.name,
 			// label:  field.label,
 			// labelPosition: settings.labelPosition, // webix.forminput does not have .labelPosition T T
 			// labelWidth: settings.labelWidth,
