@@ -71,11 +71,13 @@ module.exports = {
 
                 return new Promise((next, err) => {
 
+                    let pageName = "Application Admin Page";
+
                     // Update Admin App page
                     if (appIsAdmin) {
                         let options = {
                             isAdminPage: true,
-                            name: "Application Admin Page",
+                            name: pageName,
                             label: "Admin",
                             icon: "fa-circle-o-notch" // TODO admin app icon
                         };
@@ -88,8 +90,12 @@ module.exports = {
                     }
                     // Remove Admin App page
                     else {
-                        // TODO
-                        next();
+
+                        AppBuilder.removeNavView(app, pageName)
+                            .catch(err)
+                            .then(() => {
+                                next();
+                            });
                     }
 
                 });

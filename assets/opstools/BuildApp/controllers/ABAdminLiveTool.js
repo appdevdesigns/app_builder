@@ -37,7 +37,9 @@ steal(
 							self.App = new OP.Component(null, self.containerDomID).App;
 
 							// get workspace UI
-							self.WorkspaceUI = new AB.ABWorkUI(self.App);
+							self.WorkspaceUI = new AB.ABWorkUI(self.App, {
+								IsBackHidden: true
+							});
 
 							// Store page/sub page .components()
 							// These values will be defined in .renderPage()
@@ -172,6 +174,9 @@ steal(
 							self.renderPageContainer();
 
 							webix.ready(function () {
+
+								// init
+								self.WorkspaceUI.init();
 
 								self.showPage();
 
