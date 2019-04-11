@@ -18,8 +18,8 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
         var labels = {
             common: App.labels,
             component: {
-                columns: L('ab.object.columns', "Columns"),
-                existing: L('ab.object.existing', "Existing"),
+                existing: L('ab.object.import.title', "*Existing"),
+                columns: L('ab.object.import.columns', "*Columns"),
             }
         };
 
@@ -325,8 +325,8 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
                         template: (obj, common) => {
 
                             return `
-                                <span class="float-left">${common.isvisible(obj, common)}</span>
-                                <span class="float-left">${obj.label}</span>
+                                <span style="float: left;">${common.isvisible(obj, common)}</span>
+                                <span style="float: left;">${obj.label}</span>
                             `;
 
                         }

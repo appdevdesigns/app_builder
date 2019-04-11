@@ -6,12 +6,18 @@
  *
  */
 import ABField from "../classes/dataFields/ABField"
+import ABFieldBoolean from "../classes/dataFields/ABFieldBoolean"
+import ABFieldString from "../classes/dataFields/ABFieldString"
+import ABFieldLongText from "../classes/dataFields/ABFieldLongText"
+import ABFieldNumber from "../classes/dataFields/ABFieldNumber"
+import ABFieldDate from "../classes/dataFields/ABFieldDate"
+
 import CSVImporter from "../classes/CSVImporter"
 
 export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 
 	constructor(App) {
-		super(App, 'ab_work_object_list_newObject');
+		super(App, 'ab_work_object_list_newObject_csv');
 		var L = this.Label;
 
 		var labels = {
@@ -22,7 +28,7 @@ export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 				importCsvHeader: L('ab.object.form.csv.importCsvHeader', "*Import CSV"),
 				selectCsvFile: L('ab.object.form.csv.selectCsvFile', "*Choose a CSV file"),
 
-				fileTypeErrorTitle: L('ab.object.form.csv.fileTypeError', "*This file extension is disallow"),
+				fileTypeErrorTitle: L('ab.object.form.csv.fileTypeErrorTitle', "*This file extension is disallow"),
 				fileTypeError: L('ab.object.form.csv.fileTypeError', "*Please only upload CSV file"),
 
 				separatedBy: L('ab.object.form.csv.separatedBy', "*Separated by"),
@@ -46,7 +52,7 @@ export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 
 		var dataRows = [];
 
-		var csvImporter = new CSVImporter();
+		var csvImporter = new CSVImporter(App);
 
 		// Our webix UI definition:
 		this.ui = {
@@ -147,19 +153,19 @@ export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 							dataType: {
 								view: "select",
 								options: [
-									{ id: 'string', value: 'Single text' },
-									{ id: 'LongText', value: 'Long text' },
-									{ id: 'number', value: 'Number' },
-									{ id: 'date', value: 'Date' },
-									{ id: 'boolean', value: 'Checkbox' },
+									{ id: 'string', value: ABFieldString.defaults().menuName },
+									{ id: 'LongText', value: ABFieldLongText.defaults().menuName },
+									{ id: 'number', value: ABFieldNumber.defaults().menuName },
+									{ id: 'date', value: ABFieldDate.defaults().menuName },
+									{ id: 'boolean', value: ABFieldBoolean.defaults().menuName },
 								],
 								width: 120
-							},
+							}
 						},
 						template:
-						'<span class="float-left">{common.include()}</span>' +
-						'<span class="float-left">{common.columnName()}</span>' +
-						'<span class="float-left">{common.dataType()}</span>'
+						'<span style="float: left;">{common.include()}</span>' +
+						'<span style="float: left;">{common.columnName()}</span>' +
+						'<span style="float: left;">{common.dataType()}</span>'
 					},
 					{
 						margin: 5,

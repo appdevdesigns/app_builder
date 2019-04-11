@@ -139,6 +139,12 @@ msgstr "ชื่อหัวตาราง"
 
 #. path: app_builder
 #. code: th
+#. key: ab.common.create
+msgid "Create"
+msgstr "สร้างใหม่"
+
+#. path: app_builder
+#. code: th
 #. key: ab.common.create.error
 msgid "System could not create <b>{0}</b>."
 msgstr "ระบบไม่สามารถสร้าง <b>{0}</b>"
@@ -322,6 +328,108 @@ msgstr "Object Menu"
 #. key: ab.object.form.placeholderName
 msgid "Object name"
 msgstr "ชื่อที่เก็บข้อมูล"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.form.addNewObject
+msgid "Add Object"
+msgstr "เพิ่มที่เก็บข้อมูล"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.form.csv.importCsvHeader
+msgid "Import CSV"
+msgstr "นำเข้า CSV"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.form.csv.selectCsvFile
+msgid "Choose a CSV file"
+msgstr "เลือกไฟล์ CSV"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.form.csv.fileTypeErrorTitle
+msgid "This file extension is disallow"
+msgstr "ไฟล์นี้ไม่ถูกต้อง"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.form.csv.fileTypeError
+msgid "Please only upload CSV file"
+msgstr "คุณอัพโหลดเฉพาะไฟล์ CSV"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.form.csv.separatedBy
+msgid "Separated by"
+msgstr "แบ่งโดย"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.form.csv.separatedBy.comma
+msgid "Comma (,)"
+msgstr "จุลภาค (,)"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.form.csv.separatedBy.tab
+msgid "Tab (&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)"
+msgstr "แท็บ (&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.form.csv.separatedBy.semicolon
+msgid "Semicolon (;)"
+msgstr "อัฒภาค (;)"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.form.csv.separatedBy.space
+msgid "Space ( )"
+msgstr "ช่องว่าง ( )"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.form.csv.headerFirstLine
+msgid "Header on first line"
+msgstr "แถวแรกเป็นหัวข้อ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.form.csv.import
+msgid "Import"
+msgstr "นำเข้า"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.external.title
+msgid "External"
+msgstr "ภายนอก"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.external.connections
+msgid "Connections"
+msgstr "เชื่อมต่อ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.external.columns
+msgid "Columns"
+msgstr "คอลัมน์"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.import.title
+msgid "Existing"
+msgstr "ที่มีอยู่"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.import.columns
+msgid "Columns"
+msgstr "คอลัมน์"
 
 #. path: app_builder
 #. code: th

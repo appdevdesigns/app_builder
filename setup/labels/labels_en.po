@@ -139,6 +139,12 @@ msgstr "Header name"
 
 #. path: app_builder
 #. code: en
+#. key: ab.common.create
+msgid "Create"
+msgstr "Create"
+
+#. path: app_builder
+#. code: en
 #. key: ab.common.create.error
 msgid "System could not create <b>{0}</b>."
 msgstr "System could not create <b>{0}</b>."
@@ -322,6 +328,108 @@ msgstr "Object Menu"
 #. key: ab.object.form.placeholderName
 msgid "Object name"
 msgstr "Object name"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.form.addNewObject
+msgid "Add Object"
+msgstr "Add Object"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.form.csv.importCsvHeader
+msgid "Import CSV"
+msgstr "Import CSV"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.form.csv.selectCsvFile
+msgid "Choose a CSV file"
+msgstr "Choose a CSV file"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.form.csv.fileTypeErrorTitle
+msgid "This file extension is disallow"
+msgstr "This file extension is disallow"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.form.csv.fileTypeError
+msgid "Please only upload CSV file"
+msgstr "Please only upload CSV file"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.form.csv.separatedBy
+msgid "Separated by"
+msgstr "Separated by"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.form.csv.separatedBy.comma
+msgid "Comma (,)"
+msgstr "Comma (,)"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.form.csv.separatedBy.tab
+msgid "Tab (&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)"
+msgstr "Tab (&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.form.csv.separatedBy.semicolon
+msgid "Semicolon (;)"
+msgstr "Semicolon (;)"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.form.csv.separatedBy.space
+msgid "Space ( )"
+msgstr "Space ( )"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.form.csv.headerFirstLine
+msgid "Header on first line"
+msgstr "Header on first line"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.form.csv.import
+msgid "Import"
+msgstr "Import"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.external.title
+msgid "External"
+msgstr "External"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.external.connections
+msgid "Connections"
+msgstr "Connections"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.external.columns
+msgid "Columns"
+msgstr "Columns"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.import.title
+msgid "Existing"
+msgstr "Existing"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.import.columns
+msgid "Columns"
+msgstr "Columns"
 
 #. path: app_builder
 #. code: en

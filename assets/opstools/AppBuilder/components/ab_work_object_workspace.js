@@ -1266,13 +1266,13 @@ console.error('TODO: toolbarPermission()');
                     $css: view.id === currentViewId ? "selected" : "",
                     icon: view.constructor.icon(),
                     submenu: view.isDefaultView ? null : [{
-                            value: "Edit",
+                            value: L('ab.common.edit', "*Edit"),
                             icon: "fa fa-cog",
                             viewId: view.id,
                             action: 'edit',
                         },
                         {
-                            value: "Delete",
+                            value: L('ab.common.delete', "*Delete"),
                             icon: "fa fa-trash",
                             viewId: view.id,
                             action: 'delete',
