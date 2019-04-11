@@ -150,6 +150,7 @@ export default class ABChoose extends OP.Component {  // .extend(idBase, functio
 									id: ids.appFormPermissionList,
 									view: "list",
 									autowidth: true,
+									height: 140,
 									margin: 0,
 									css: "ab-app-form-permission",
 									template: "{common.markCheckbox()} #name#",
