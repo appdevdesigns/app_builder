@@ -1267,6 +1267,138 @@ msgstr "ไม่เลือก"
 
 #. path: app_builder
 #. code: th
+#. key: ab.dataField.calculate.menuName
+msgid "Calculate"
+msgstr "คำนวณ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.calculate.description
+msgid "Calculate Description"
+msgstr ""
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.calculate.add
+msgid "+ Adds"
+msgstr "+ บวก"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.calculate.subtract
+msgid "- Subtracts"
+msgstr "- ลบ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.calculate.multiple
+msgid "* Multiples"
+msgstr "* คูณ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.calculate.divide
+msgid "/ Divides"
+msgstr "/ หาร"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.calculate.openBracket
+msgid "( Open Bracket"
+msgstr "( วงเล็บเปิด"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.calculate.closedBracket
+msgid ") Closed Bracket"
+msgstr ") วงเล็บปิด"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.calculate.equation
+msgid "Equation"
+msgstr "สูตร"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.calculate.numberFields
+msgid "Number Fields"
+msgstr "ฟิลด์ตัวเลข"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.calculate.dateFields
+msgid "Date Fields"
+msgstr "ฟิลด์วันที่"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.calculate.numberFn
+msgid "Number Operators"
+msgstr "เครื่องหมายคณิตศาสตร์"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.calculate.decimalSign
+msgid "Decimals"
+msgstr "เลขทศนิยม"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.calculate.decimalPlaces
+msgid "Places"
+msgstr "จำนวนทศนิยม"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.calculate.functions.minuteToHourCurrent
+msgid "Convert minutes to hours (Format: hours.minutes)"
+msgstr "แปลงจำนวนนาทีเป็นชั่วโมง (รูปแบบ: ชั่วโมง.นาที)"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.calculate.functions.age
+msgid "Calculate age from [#fieldName#]"
+msgstr "คำนวณอายุจาก [#fieldName#]"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.calculate.functions.year
+msgid "Year of [#fieldName#]"
+msgstr "แสดงปีของ [#fieldName#]"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.calculate.functions.month
+msgid "Month of [#fieldName#]"
+msgstr "แสดงเดือนของ [#fieldName#]"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.calculate.functions.day
+msgid "Day of [#fieldName#]"
+msgstr "แสดงวันของ [#fieldName#]"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.calculate.functions.date
+msgid "Get days of [#fieldName#] (since January 1, 1970)"
+msgstr "จำนวนวันของ [#fieldName#] (ตั้งแต่ 1 มกราคม 1970)"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.calculate.functions.hour
+msgid "Get hours of [#fieldName#] (since January 1, 1970)"
+msgstr "จำนวนชั่วโมงของ [#fieldName#] (ตั้งแต่ 1 มกราคม 1970)"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.calculate.functions.minute
+msgid "Get minutes of [#fieldName#] (since January 1, 1970)"
+msgstr "จำนวนนาทีของ [#fieldName#](ตั้งแต่ 1 มกราคม 1970)"
+
+#. path: app_builder
+#. code: th
 #. key: ab.dataField.common.headerLabel
 msgid "Section Title"
 msgstr "หัวข้อ"
@@ -1276,6 +1408,72 @@ msgstr "หัวข้อ"
 #. key: ab.dataField.common.headerLabelPlaceholder
 msgid "Section Name"
 msgstr "ชื่อกลุ่ม"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.connectObject.menuName
+msgid "Connect to another record"
+msgstr "เชื่อมข้อมูล"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.connectObject.description
+msgid "Connect two data objects together"
+msgstr "เชื่อมข้อมูลของที่เก็บข้อมูล 2 แหล่งเข้าด้วยกัน"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.connectObject.connectToObject
+msgid "Connected to:"
+msgstr "เชื่อมไปยัง:"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.connectObject.connectToObjectPlaceholder
+msgid "Select object"
+msgstr "เลือกแหล่งข้อมูล"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.connectObject.connectToNewObject
+msgid "Connect to new Object"
+msgstr "เชื่อมไปยังแหล่งข้อมูลใหม่"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.connectObject.hasMany
+msgid "many"
+msgstr "หลาย"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.connectObject.belongTo
+msgid "one"
+msgstr "หนึ่ง"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.connectObject.selectedObject
+msgid "<b>#selectedObjLabel#</b>"
+msgstr "<b>#selectedObjLabel#</b> ข้อมูล"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.connectObject.connectWith
+msgid "Each <b>#selectedObjLabel#</b> entry connects with"
+msgstr "<b>#selectedObjLabel#</b> สามารถมีได้"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.connectObject.entry
+msgid "entry"
+msgstr "ข้อมูล"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.connectObject.entries
+msgid "entries"
+msgstr "ข้อมูล"
 
 #. path: app_builder
 #. code: th

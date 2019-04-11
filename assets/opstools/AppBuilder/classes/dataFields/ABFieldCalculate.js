@@ -459,38 +459,38 @@ var ABFieldCalculateComponent = new ABFieldComponent({
 				var options = [];
 
 				options.push({
-					label: "Convert minutes to hours (Format: hours.minutes)",
+					label: L("ab.dataField.calculate.functions.minuteToHourCurrent", "*Convert minutes to hours (Format: hours.minutes)"),
 					function: "MINUTE_TO_HOUR()"
 				});
 
 				/** CURRENT DATE */
 				options.push({
-					label: "Year of [Current date]",
+					label: L("ab.dataField.calculate.functions.year", "*Year of [#fieldName#]").replace("#fieldName#", "Current"),
 					function: "YEAR(CURRENT)"
 				});
 
 				options.push({
-					label: "Month of [Current date]",
+					label: L("ab.dataField.calculate.functions.month", "*Month of [#fieldName#]").replace("#fieldName#", "Current"),
 					function: "MONTH(CURRENT)"
 				});
 
 				options.push({
-					label: "Day of [Current date]",
+					label: L("ab.dataField.calculate.functions.day", "*Day of [#fieldName#]").replace("#fieldName#", "Current"),
 					function: "DAY(CURRENT)"
 				});
 
 				options.push({
-					label: "Get days of [Current date] (since January 1, 1970)",
+					label: L("ab.dataField.calculate.functions.date", "*Get days of [#fieldName#] (since January 1, 1970)").replace("#fieldName#", "Current"),
 					function: "DATE(CURRENT)"
 				});
 
 				options.push({
-					label: "Get hours of [Current date] (since January 1, 1970)",
+					label: L("ab.dataField.calculate.functions.hour", "*Get hours of [#fieldName#] (since January 1, 1970)").replace("#fieldName#", "Current"),
 					function: "HOUR(CURRENT)"
 				});
 
 				options.push({
-					label: "Get minutes of [Current date] (since January 1, 1970)",
+					label: L("ab.dataField.calculate.functions.minute", "*Get minutes of [#fieldName#] (since January 1, 1970)").replace("#fieldName#", "Current"),
 					function: "MINUTE(CURRENT)"
 				});
 
@@ -498,37 +498,37 @@ var ABFieldCalculateComponent = new ABFieldComponent({
 				ABFieldCalculateComponent.CurrentObject.fields(f => f.key == "date").forEach(f => {
 
 					options.push({
-						label: "Calculate age from [" + f.label + "]",
+						label: L("ab.dataField.calculate.functions.age","*Calculate age from [#fieldName#]").replace("#fieldName#", f.label),
 						function: "AGE({#column#})".replace("#column#", f.columnName)
 					});
 
 					options.push({
-						label: "Year of [" + f.label + "]",
+						label: L("ab.dataField.calculate.functions.year", "*Year of [#fieldName#]").replace("#fieldName#", f.label),
 						function: "YEAR({#column#})".replace("#column#", f.columnName)
 					});
 
 					options.push({
-						label: "Month of [" + f.label + "]",
+						label: L("ab.dataField.calculate.functions.month", "*Month of [#fieldName#]").replace("#fieldName#", f.label),
 						function: "MONTH({#column#})".replace("#column#", f.columnName)
 					});
 
 					options.push({
-						label: "Day of [" + f.label + "]",
+						label: L("ab.dataField.calculate.functions.day", "*Day of [#fieldName#]").replace("#fieldName#", f.label),
 						function: "DAY({#column#})".replace("#column#", f.columnName)
 					});
 
 					options.push({
-						label: `Get days of [${f.label}] (since January 1, 1970)`,
+						label: L("ab.dataField.calculate.functions.date", "*Get days of [#fieldName#] (since January 1, 1970)").replace("#fieldName#", f.label),
 						function: "DATE({#column#})".replace("#column#", f.columnName)
 					});
 
 					options.push({
-						label: `Get hours of [${f.label}] (since January 1, 1970)`,
+						label: L("ab.dataField.calculate.functions.hour", "*Get hours of [#fieldName#] (since January 1, 1970)").replace("#fieldName#", f.label),
 						function: "HOUR({#column#})".replace("#column#", f.columnName)
 					});
 
 					options.push({
-						label: `Get minutes of [${f.label}] (since January 1, 1970)`,
+						label: L("ab.dataField.calculate.functions.minute", "*Get minutes of [#fieldName#] (since January 1, 1970)").replace("#fieldName#", f.label),
 						function: "MINUTE({#column#})".replace("#column#", f.columnName)
 					});
 
