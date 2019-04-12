@@ -13,7 +13,8 @@ function L(key, altText) {
 }
 
 var ABViewFormFieldPropertyComponentDefaults = {
-	required:0
+	required: 0,
+	disable: 0
 }
 
 export default class ABViewFormField extends ABView {
@@ -34,6 +35,12 @@ export default class ABViewFormField extends ABView {
 				view: 'checkbox',
 				labelWidth: App.config.labelWidthCheckbox,
 				labelRight: L('ab.common.required', '*Required')
+			},
+			{
+				name: 'disable',
+				view: 'checkbox',
+				labelWidth: App.config.labelWidthCheckbox,
+				labelRight: L('ab.common.disable', '*Disable')
 			}
 		]);
 
@@ -46,24 +53,33 @@ export default class ABViewFormField extends ABView {
 
 		var field = view.field();
 
-		if (field) {
-			$$(ids.fieldLabel).setValue(field.label);
-			if (field.settings.required == 1) {
-				$$(ids.required).setValue(field.settings.required);
-				$$(ids.required).disable();
-			} else {
-				$$(ids.required).setValue((view.settings.required != null) ? view.settings.required : ABViewFormFieldPropertyComponentDefaults.required);
-			}
+		$$(ids.fieldLabel).setValue(field ? field.label : "");
+
+		if (field && field.settings.required == 1) {
+			$$(ids.required).setValue(field.settings.required);
+			$$(ids.required).disable();
+		} 
+		else {
+			$$(ids.required).setValue((view.settings.required != null) ? view.settings.required : ABViewFormFieldPropertyComponentDefaults.required);
 		}
+
+		if (view && view.settings.disable) {
+			$$(ids.disable).setValue(view.settings.disable);
+		} 
+		else {
+			$$(ids.disable).setValue(ABViewFormFieldPropertyComponentDefaults.disable);
+		}
+
 	}
 	
 	static propertyEditorValues(ids, view) {
 
 		super.propertyEditorValues(ids, view);
 
-		console.log("here");
+		// console.log("here");
 		view.settings.required = $$(ids.required).getValue();
-		console.log(view);
+		view.settings.disable = $$(ids.disable).getValue();
+		// console.log(view);
 
 	}
 
@@ -106,6 +122,11 @@ export default class ABViewFormField extends ABView {
 			
 			if (field.settings.required || this.settings.required) {
 				_ui.required = 1;
+			}
+
+
+			if (this.settings.disable) {
+				_ui.disabled = true;
 			}
 
 			_ui.validate = (val, data, colName) => {

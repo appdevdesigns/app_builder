@@ -85,6 +85,12 @@ msgstr "ระบุค่าเริ่มต้น"
 
 #. path: app_builder
 #. code: th
+#. key: ab.common.disable
+msgid "Disable"
+msgstr "ปิดการใช้งาน"
+
+#. path: app_builder
+#. code: th
 #. key: ab.common.none
 msgid "None"
 msgstr "ไม่กำหนด"

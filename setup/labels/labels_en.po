@@ -85,6 +85,12 @@ msgstr "Enter default value"
 
 #. path: app_builder
 #. code: en
+#. key: ab.common.disable
+msgid "Disable"
+msgstr "Disable"
+
+#. path: app_builder
+#. code: en
 #. key: ab.common.none
 msgid "None"
 msgstr "None"
