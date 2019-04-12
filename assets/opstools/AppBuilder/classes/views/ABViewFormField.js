@@ -63,7 +63,7 @@ export default class ABViewFormField extends ABView {
 			$$(ids.required).setValue((view.settings.required != null) ? view.settings.required : ABViewFormFieldPropertyComponentDefaults.required);
 		}
 
-		if (view && view.settings.disable) {
+		if (view && view.settings.disable == 1) {
 			$$(ids.disable).setValue(view.settings.disable);
 		} 
 		else {
@@ -125,7 +125,7 @@ export default class ABViewFormField extends ABView {
 			}
 
 
-			if (this.settings.disable) {
+			if (this.settings.disable == 1) {
 				_ui.disabled = true;
 			}
 

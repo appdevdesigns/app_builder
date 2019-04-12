@@ -450,10 +450,10 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 				height: component.ui.height,
 				template: template,
 				onClick: {
-					"customField": function (id, e, trg) {
+					"customField": (id, e, trg) => {
 						var rowData = {};
 
-						if ($$(ids.component)) {
+						if ($$(ids.component) && this.settings.disable != 1) {
 							var node = $$(ids.component).$view;
 							field.customEdit(rowData, App, node);
 						}
@@ -525,7 +525,8 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 			field.customDisplay(rowData, App, node, {
 				editable: true,
 				formView: this.settings.formView,
-				filters: this.settings.objectWorkspace.filterConditions
+				filters: this.settings.objectWorkspace.filterConditions,
+				editable: (this.settings.disable == 1 ? false : true)
 			});
 
 		};
