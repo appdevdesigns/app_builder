@@ -295,6 +295,120 @@ msgstr "สร้างกลุ่มใหม่"
 
 #. path: app_builder
 #. code: th
+#. key: ab.add_view.name
+msgid "Name"
+msgstr "ชื่อ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_view.type
+msgid "Type"
+msgstr "ประเภท"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_view.type.grid
+msgid "Grid"
+msgstr "ตาราง"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_view.type.kanban
+msgid "Kanban"
+msgstr "คัมบัง"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_view.type.gantt
+msgid "Gantt"
+msgstr "แผนภูมิแกนต์"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_view.name_placeholder
+msgid "Create a name for the view"
+msgstr "ชื่อมุมมอง"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_view.view_settings
+msgid "View Settings"
+msgstr "ตั้งค่ามุมมอง"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_view.kanban.vGroup
+msgid "Vertical Grouping"
+msgstr "การจัดกลุ่มแนวตั้ง"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_view.kanban.hGroup
+msgid "Horizontal Grouping"
+msgstr "การจัดกลุ่มแนวนอน"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_view.kanban.owner
+msgid "Card Owner"
+msgstr "เจ้าของการ์ด"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_view.kanban.grouping_placeholder
+msgid "Select a field"
+msgstr "เลือกฟิลด์"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_view.kanban.owner_placeholder
+msgid "Select a user field"
+msgstr "เลือกฟิลด์ User"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_view.kanban.none_option
+msgid "None"
+msgstr "ไม่กำหนด"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_view.gantt.startDate
+msgid "Start Date"
+msgstr "วันที่เริ่มต้น"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_view.gantt.endDate
+msgid "End Date"
+msgstr "วันที่สิ้นสุด"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_view.gantt.duration
+msgid "Duration"
+msgstr "ระยะเวลา"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_view.gantt.progress
+msgid "Progress"
+msgstr "ความคืบหน้า"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_view.gantt.datePlaceholder
+msgid "Select a date field"
+msgstr "เลือกฟิลด์วันที่"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_view.gantt.numberPlaceholder
+msgid "Select a number field"
+msgstr "เลือกฟิลด์ตัวเลข"
+
+#. path: app_builder
+#. code: th
 #. key: ab.object.title
 msgid "Objects"
 msgstr "ข้อมูล"

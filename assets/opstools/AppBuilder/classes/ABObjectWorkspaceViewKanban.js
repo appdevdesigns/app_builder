@@ -68,18 +68,18 @@ export default class ABObjectWorkspaceViewKanban extends ABObjectWorkspaceView {
 		let labels = {
 			common: App.labels,
 			component: {
-				vGroup: L("ab.add_view.vGroup", "*Vertical Grouping"),
-				hGroup: L("ab.add_view.hGroup", "*Horizontal Grouping"),
-				owner: L("ab.add_view.owner", "*Card Owner"),
+				vGroup: L("ab.add_view.kanban.vGroup", "*Vertical Grouping"),
+				hGroup: L("ab.add_view.kanban.hGroup", "*Horizontal Grouping"),
+				owner: L("ab.add_view.kanban.owner", "*Card Owner"),
 				groupingPlaceholder: L(
-					"ab.add_view.grouping_placeholder",
+					"ab.add_view.kanban.grouping_placeholder",
 					"*Select a field"
 				),
 				ownerPlaceholder: L(
-					"ab.add_view.owner_placeholder",
-					"*Select user field"
+					"ab.add_view.kanban.owner_placeholder",
+					"*Select a user field"
 				),
-				noneOption: L("ab.add_view.none_option", "*None"),
+				noneOption: L("ab.add_view.kanban.none_option", "*None"),
 
 			}
 		};

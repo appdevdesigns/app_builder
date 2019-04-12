@@ -68,28 +68,19 @@ export default class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView {
 		let labels = {
 			common: App.labels,
 			component: {
-				startDate: L("ab.gantt.startDate", "*Start Date"),
-				endDate: L("ab.gantt.endDate", "*End Date"),
-				duration: L("ab.gantt.duration", "*Duration"),
-				progress: L("ab.gantt.progress", "*Progress"),
+				startDate: L("ab.add_view.gantt.startDate", "*Start Date"),
+				endDate: L("ab.add_view.gantt.endDate", "*End Date"),
+				duration: L("ab.add_view.gantt.duration", "*Duration"),
+				progress: L("ab.add_view.gantt.progress", "*Progress"),
 
-				startDatePlaceholder: L(
-					"ab.gantt.startDatePlaceholder",
+				datePlaceholder: L(
+					"ab.add_view.gantt.datePlaceholder",
 					"*Select a date field"
 				),
-				endDatePlaceholder: L(
-					"ab.gantt.endDatePlaceholder",
-					"*Select a date field"
-				),
-				durationPlaceholder: L(
-					"ab.gantt.durationPlaceholder",
-					"*Select a number field"
-				),
-				progressPlaceholder: L(
-					"ab.gantt.progressPlaceholder",
+				numberPlaceholder: L(
+					"ab.add_view.gantt.numberPlaceholder",
 					"*Select a number field"
 				)
-
 			}
 		};
 
@@ -103,7 +94,7 @@ export default class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView {
 			$$(ids.startDate).define('options', dateFields);
 
 			// Add default option
-			dateFields.unshift({ id: "none", value: labels.component.endDatePlaceholder });
+			dateFields.unshift({ id: "none", value: labels.component.datePlaceholder });
 
 			// End date
 			$$(ids.endDate).define('options', dateFields);
@@ -114,7 +105,7 @@ export default class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView {
 				.map(({ id, label }) => ({ id, value: label }));
 
 			// Add default option
-			numberFields.unshift({ id: "none", value: labels.component.durationPlaceholder });
+			numberFields.unshift({ id: "none", value: labels.component.numberPlaceholder });
 			$$(ids.duration).define('options', numberFields);
 
 			// Progress
@@ -161,7 +152,7 @@ export default class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView {
 									id: ids.startDate,
 									view: "richselect",
 									label: `<span class='webix_icon fa fa-calendar'></span> ${labels.component.startDate}`,
-									placeholder: labels.component.startDatePlaceholder,
+									placeholder: labels.component.datePlaceholder,
 									labelWidth: 180,
 									name: "startDate",
 									required: true,
@@ -185,7 +176,7 @@ export default class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView {
 									id: ids.endDate,
 									view: "richselect",
 									label: `<span class='webix_icon fa fa-calendar'></span> ${labels.component.endDate}`,
-									placeholder: labels.component.endDatePlaceholder,
+									placeholder: labels.component.datePlaceholder,
 									labelWidth: 180,
 									name: "endDate",
 									options: []
@@ -208,7 +199,7 @@ export default class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView {
 									id: ids.duration,
 									view: "richselect",
 									label: `<span class='webix_icon fa fa-hashtag'></span> ${labels.component.duration}`,
-									placeholder: labels.component.durationPlaceholder,
+									placeholder: labels.component.numberPlaceholder,
 									labelWidth: 180,
 									name: "duration",
 									options: []
@@ -231,7 +222,7 @@ export default class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView {
 									id: ids.progress,
 									view: "richselect",
 									label: `<span class='webix_icon fa fa-hashtag'></span> ${labels.component.progress}`,
-									placeholder: labels.component.progressPlaceholder,
+									placeholder: labels.component.numberPlaceholder,
 									labelWidth: 180,
 									name: "progress",
 									required: false,
