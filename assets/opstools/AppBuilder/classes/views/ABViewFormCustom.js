@@ -177,6 +177,9 @@ export default class ABViewFormCustom extends ABViewFormField {
 				onClick: {
 					"customField": (id, e, trg) => {
 
+						if (this.settings.disable == 1) 
+							return;
+
 						var rowData = {}; 
 
 						var formView = this.parentFormComponent();
@@ -228,24 +231,10 @@ export default class ABViewFormCustom extends ABViewFormField {
 			var rowData = {},
 					node = elem.$view;
 
-			if (this.settings.disable == 1) {
-
-				let displayVal = field.format(rowData);
-				let customElem = node.getElementsByClassName('customField')[0];
-				if (customElem) {
-					customElem.innerHTML = displayVal;
-				}
-
-			}
-			else {
-
-				field.customDisplay(rowData, App, node, {
-					editable: true,
-					formId: ids.component
-				});
-
-			}
-
+			field.customDisplay(rowData, App, node, {
+				formId: ids.component,
+				editable: (this.settings.disable == 1 ? false : true)
+			});
 
 		};
 

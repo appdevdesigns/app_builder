@@ -451,9 +451,13 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 				template: template,
 				onClick: {
 					"customField": (id, e, trg) => {
+
+						if (this.settings.disable == 1) 
+							return;
+
 						var rowData = {};
 
-						if ($$(ids.component) && this.settings.disable != 1) {
+						if ($$(ids.component)) {
 							var node = $$(ids.component).$view;
 							field.customEdit(rowData, App, node);
 						}
