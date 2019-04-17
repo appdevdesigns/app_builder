@@ -1156,7 +1156,7 @@ PopupRecordRule.qbFixAfterShow();
 		var isValid = true;
 
 		// validate required fields
-		var requiredFields = this.fieldComponents(fComp => fComp.settings.required).map(fComp => fComp.field());
+		var requiredFields = this.fieldComponents(fComp => fComp.settings.required == true).map(fComp => fComp.field());
 		requiredFields.forEach(f => {
 
 			if (!formVals[f.columnName] && 

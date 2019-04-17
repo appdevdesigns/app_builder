@@ -408,7 +408,7 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 			settings = form.settings;
 
 		var requiredClass = "";
-		if (field.settings.required || this.settings.required) {
+		if (field.settings.required == true || this.settings.required == true) {
 			requiredClass = "webix_required";
 		}
 		var templateLabel = '';
