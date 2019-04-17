@@ -614,9 +614,6 @@ label {
 .ab-edit-page .webix_accordionitem:hover {
 	position: relative;
 }
-.ab-edit-page.ab-details-page .webix_accordionitem:hover .webix_accordionitem_header {
-	display: none !important;
-}
 .ab-edit-page .webix_accordionitem:hover .webix_accordionitem_header {
 	display: block !important;
 	position: absolute;
@@ -631,13 +628,11 @@ label {
 	font-family: "FontAwesome";
 	color: #94a1b3;
 }
-.ab-edit-page.ab-details-page .webix_accordionitem:hover .webix_accordionitem_header .webix_accordionitem_button:before {
-	content: "\f013";
-	font-family: "FontAwesome";
+.ab-edit-page.ab-detail-page .webix_accordionitem:hover .webix_accordionitem_header .webix_accordionitem_button:before {
 	color: white;
 }
 .ab-edit-page .webix_accordionitem .webix_accordionitem_header:hover .webix_accordionitem_button:before {
-	color: #94a1b3;
+	color: #94a1b3 !important;
 }
 .ab-custom-template .webix_template {
 	padding: 10px;
