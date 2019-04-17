@@ -142,13 +142,17 @@ export default class ABViewText extends ABViewWidget {
 			view: 'tinymce-editor',
 			value: this.text || ABViewTextPropertyComponentDefaults.text,
 			config: {
-				plugins: "textcolor table",
-				toolbar: 'bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist | table | forecolor backcolor',
-				menu: {
-					file: { title: 'File', items: 'newdocument' },
-					edit: { title: 'Edit', items: 'undo redo | cut copy paste pastetext | selectall' },
-					format: { title: 'Format', items: 'formats | removeformat' }
-				},
+				plugins: [
+			        "advlist autolink lists link image charmap print preview anchor",
+			        "searchreplace visualblocks code fullscreen",
+			        "insertdatetime media table contextmenu paste imagetools wordcount"
+			    ],
+				toolbar: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image",
+				// menu: {
+				// 	file: { title: 'File', items: 'newdocument' },
+				// 	edit: { title: 'Edit', items: 'undo redo | cut copy paste pastetext | selectall' },
+				// 	format: { title: 'Format', items: 'formats | removeformat' }
+				// },
 				init_instance_callback: (editor) => {
 
 					editor.on('KeyUp', (event) => {
@@ -283,6 +287,12 @@ export default class ABViewText extends ABViewWidget {
 	static propertyUpdateFieldOptions(ids, view, dcId) {
 
 		var datacollection = view.pageRoot().dataCollections(dc => dc.id == dcId)[0];
+		
+		if (!datacollection && view.parent.key == "dataview") {
+			datacollection = view.pageRoot().dataCollections(dc => dc.id == view.parent.settings.datacollection)[0];
+			$$(ids.datacollection).setValue(view.parent.settings.datacollection);
+		}
+
 		var object = datacollection ? datacollection.datasource : null;
 
 		// Pull field list
@@ -341,11 +351,11 @@ export default class ABViewText extends ABViewWidget {
 	 * @param {obj} App 
 	 * @return {obj} UI component
 	 */
-	component(App) {
+	component(App, idPrefix) {
 
 		let baseCom = super.component(App);
 
-		var idBase = 'ABViewText_' + this.id;
+		var idBase = 'ABViewText_' + (idPrefix ? idPrefix : '') + this.id;
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		}
@@ -353,9 +363,9 @@ export default class ABViewText extends ABViewWidget {
 		
 		var _logic = {
 			
-			displayText: () => {
+			displayText: (val) => {
 
-				var result = this.displayText();
+				var result = this.displayText(val);
 
 				if ($$(ids.component)) {
 					$$(ids.component).define("template", result);
@@ -372,6 +382,7 @@ export default class ABViewText extends ABViewWidget {
 			id: ids.component,
 			view: 'template',
 			minHeight: 10,
+			css: 'ab-custom-template',
 			borderless: true
 		};
 
@@ -392,7 +403,7 @@ export default class ABViewText extends ABViewWidget {
 
 			// listen DC events
 			let dc = this.dataCollection;
-			if (dc) {
+			if (dc && this.parent.key != "dataview") {
 
 				this.eventAdd({
 					emitter: dc,
@@ -432,18 +443,22 @@ export default class ABViewText extends ABViewWidget {
 	 * @return {ABViewDataCollection}
 	 */
 	get dataCollection() {
-		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.datacollection)[0];
+		if (this.parent.key == "dataview") {
+			return this.pageRoot().dataCollections((dc) => dc.id == this.parent.settings.datacollection)[0];
+		} else {
+			return this.pageRoot().dataCollections((dc) => dc.id == this.settings.datacollection)[0];
+		}
 	}
 
 
-	displayText() {
+	displayText(val) {
 
 		var result = this.text;
 
 		let clearTemplateValue = (result) => {
 			return result.replace(/{(.*?)}/g, "");
 		};
-
+		
 		var dc = this.dataCollection;
 		if (!dc) return clearTemplateValue(result);
 
@@ -451,14 +466,20 @@ export default class ABViewText extends ABViewWidget {
 		if (!object) return clearTemplateValue(result);
 
 		object.fields().forEach(f => {
+			
+			var rowData = val || dc.getCursor() || {};
 
-			var template = new RegExp('{' + f.label + '}', 'g'),
-				rowData = dc.getCursor() || {},
-				data = f.format(rowData) || "???"; // "???" default value 
+			var template = new RegExp('{' + f.label + '}', 'g');
+			var prepend = "";
+			if (f.key == "image") {
+				prepend = "/opsportal/image/" + this.application.name + "/";
+			}	
+			var data = prepend + f.format(rowData) || "???"; // "???" default value 
 
 			result = result.replace(template, data);
 
 		});
+
 
 		return clearTemplateValue(result);
 	}

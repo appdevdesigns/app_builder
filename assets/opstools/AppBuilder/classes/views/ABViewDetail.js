@@ -26,7 +26,7 @@ var ABViewDetailPropertyComponentDefaults = {
 	showLabel: true,
 	labelPosition: 'left',
 	labelWidth: 120,
-	height: 200
+	height: 0
 }
 
 export default class ABViewDetail extends ABViewContainer {
@@ -355,49 +355,49 @@ export default class ABViewDetail extends ABViewContainer {
 
 				this.views().forEach((f) => {
 
-					if (!f.field) return;
+					if (f.field) {
+						var field = f.field();
+						var val;
 
-					var field = f.field();
-					var val;
+						if (!field) return;
 
-					if (!field) return;
-
-					// get value of relation when field is a connect field
-					if (field.key == "connectObject") {
-						val = field.pullRelationValues(rowData);
-					}
-					else if (field.key == "list") {
-						val = rowData[field.columnName];
-
-						if (field.settings.isMultiple == 0) {
-							let myVal = "";
-
-							field.settings.options.forEach(function (options) {
-								if (options.id == val)
-									myVal = options.text;
-							});
-
-							if (field.settings.hasColors) {
-								let myHex = "#66666";
-								field.settings.options.forEach(function (h) {
-									if (h.text == myVal)
-										myHex = h.hex;
-								});
-								myVal = '<span class="selectivity-multiple-selected-item rendered" style="background-color:' + myHex + ' !important;">' + myVal + '</span>';
-							}
-
-							val = myVal;
+						// get value of relation when field is a connect field
+						if (field.key == "connectObject") {
+							val = field.pullRelationValues(rowData);
 						}
-					}
-					else if (field.key == "user") {
-						val = rowData[field.columnName];
+						else if (field.key == "list") {
+							val = rowData[field.columnName];
 
-						if (field.settings.isMultiple == 0)
-							val = val ? '<span class="selectivity-multiple-selected-item rendered" style="background-color:#eee !important; color: #666 !important; box-shadow: inset 0px 1px 1px #333;"><i style="opacity: 0.6;" class="fa fa-user"></i> ' + val + '</span>' : "";
+							if (field.settings.isMultiple == 0) {
+								let myVal = "";
 
-					}
-					else if (rowData) {
-						val = field.format(rowData);
+								field.settings.options.forEach(function (options) {
+									if (options.id == val)
+										myVal = options.text;
+								});
+
+								if (field.settings.hasColors) {
+									let myHex = "#66666";
+									field.settings.options.forEach(function (h) {
+										if (h.text == myVal)
+											myHex = h.hex;
+									});
+									myVal = '<span class="selectivity-multiple-selected-item rendered" style="background-color:' + myHex + ' !important;">' + myVal + '</span>';
+								}
+
+								val = myVal;
+							}
+						}
+						else if (field.key == "user") {
+							val = rowData[field.columnName];
+
+							if (field.settings.isMultiple == 0)
+								val = val ? '<span class="selectivity-multiple-selected-item rendered" style="background-color:#eee !important; color: #666 !important; box-shadow: inset 0px 1px 1px #333;"><i style="opacity: 0.6;" class="fa fa-user"></i> ' + val + '</span>' : "";
+
+						}
+						else if (rowData) {
+							val = field.format(rowData);
+						}
 					}
 
 					// set value to each components
@@ -409,6 +409,11 @@ export default class ABViewDetail extends ABViewContainer {
 					if (vComponent.logic &&
 						vComponent.logic.setValue) {
 						vComponent.logic.setValue(val);
+					}
+					
+					if (vComponent.logic &&
+						vComponent.logic.displayText) {
+						vComponent.logic.displayText(rowData);
 					}
 
 				});
@@ -456,7 +461,7 @@ export default class ABViewDetail extends ABViewContainer {
 	* return the list of components available on this view to display in the editor.
 	*/
 	componentList() {
-		var viewsToAllow = ['label'],
+		var viewsToAllow = ['label', 'text'],
 			allComponents = ABViewManager.allViews();
 
 		return allComponents.filter((c) => {
