@@ -548,7 +548,7 @@ label {
 	width: 17px !important;
 }
 .ab-tabview-scrollview {
-	margin-top: -1px;
+	/* margin-top: -1px; */
 }
 .ab-tabIconContainer {
 	display: inline-block;
@@ -587,4 +587,63 @@ label {
 }
 .ab-background-gray .webix_view.webix_layout_form {
 	background: transparent;
+}
+.ab-detail-view .webix_accordionitem {
+	border-radius: 5px;
+	box-shadow: rgba(0, 0, 0, 0.2) 0px 1px 2px 0px;
+	border-color: transparent;
+}
+.ab-detail-hover .webix_accordionitem:hover {
+	box-shadow: rgba(0, 0, 0, 0.2) 0px 3px 2px 0px;
+}
+.ab-detail-page .webix_accordionitem:hover .webix_accordionitem_body::after {
+	background: #1ca1c1b3;
+	width: 100%;
+	height: 100%;
+	display: block;
+	position: absolute;
+	cursor: pointer;
+	top: 0;
+	font-family: "FontAwesome";
+	content: "";
+	color: white;
+	text-align: center;
+	font-size: 72px;
+	vertical-align: middle;
+}
+/* .ab-edit-page .webix_accordionitem:hover .webix_accordionitem_body::before {
+	display: block;
+	position: absolute;
+	top: 0;
+	right: 0;
+	cursor: pointer;
+	font-family: "FontAwesome";
+	content: "\f013";
+	color: white;
+	text-align: center;
+	z-index: 2;
+	padding: 10px;
+} */
+.ab-edit-page .webix_accordionitem:hover {
+	position: relative;
+}
+.ab-edit-page .webix_accordionitem:hover .webix_accordionitem_header {
+	display: block !important;
+	position: absolute;
+	right: 0;
+	top: 0;
+	border: 0;
+	z-index: 1;
+	border-bottom-left-radius: 10px;
+}
+.ab-edit-page .webix_accordionitem:hover .webix_accordionitem_header .webix_accordionitem_button:before {
+	content: "\f013";
+	font-family: "FontAwesome";
+	color: white;
+}
+.ab-edit-page .webix_accordionitem .webix_accordionitem_header:hover .webix_accordionitem_button:before {
+	color: #94a1b3;
+}
+.ab-custom-template .webix_template {
+	padding: 10px;
 }

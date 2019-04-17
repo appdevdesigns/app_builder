@@ -1398,7 +1398,7 @@ resolve();
 			}
 		});
 		var childComponent = this.viewComponents[topPositionId];
-		if(childComponent) {
+		if(childComponent && $$(childComponent.ui.id)) {
 			$$(childComponent.ui.id).focus();
 		}
 

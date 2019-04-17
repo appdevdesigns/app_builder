@@ -21,7 +21,11 @@ var ABViewDataviewDefaults = {
 	key: 'dataview',					// {string} unique key for this view
 	icon: 'th',							// {string} fa-[icon] reference for this view
 	labelKey: 'ab.components.dataview',	// {string} the multilingual label key for the class label
-	xCount: 1 // {int} the number of columns per row (need at least one)
+	xCount: 1, // {int} the number of columns per row (need at least one)
+	detailsPage:'',
+	detailsTab:'',
+	editPage:'',
+	editTab:''
 }
 
 export default class ABViewDataview extends ABViewDetail {
@@ -64,6 +68,29 @@ export default class ABViewDataview extends ABViewDetail {
 				label: L('ab.components.dataview.xCount', "*Items in a row"), 
 				labelWidth: App.config.labelWidthLarge,
 				step:1 
+			},
+			{ 
+				view: "fieldset", 
+				label: L('ab.component.label.linkedPages', '*Linked Pages:'),
+				labelWidth: App.config.labelWidthLarge,
+				body:{
+					type: "clean",
+					padding: 10,
+					rows:[
+						{
+							view:"select",
+							name:"detailsPage",
+							label: L('ab.component.label.detailsPage', '*Details Page:'),
+							labelWidth: App.config.labelWidthLarge,
+						},
+						{
+							view:"select",
+							name:"editPage",
+							label: L('ab.component.label.editForm', '*Edit Form:'), 
+							labelWidth: App.config.labelWidthLarge,
+						}
+					]
+				}
 			}
 		]);
 
@@ -75,6 +102,31 @@ export default class ABViewDataview extends ABViewDetail {
 
 		$$(ids.xCount).setValue(view.settings.xCount || ABViewDataviewDefaults.xCount);
 
+		view.populateEditor(ids, view);
+		
+		var details = view.settings.detailsPage;
+		if (view.settings.detailsTab != "") {
+			details += ":"+view.settings.detailsTab;
+		}
+		$$(ids.detailsPage).setValue(details);
+		var edit = view.settings.editPage;
+		if (view.settings.editTab != "") {
+			edit += ":"+view.settings.editTab;
+		}
+		$$(ids.editPage).setValue(edit);
+
+		
+		
+		// when a change is made in the properties the popups need to reflect the change
+		this.updateEventIds = this.updateEventIds || {}; // { viewId: boolean, ..., viewIdn: boolean }
+		if (!this.updateEventIds[view.id]) {
+			this.updateEventIds[view.id] = true;
+
+			view.addListener('properties.updated', function() {
+				view.populateEditor(ids, view);
+			}, this);
+		}
+		
 	}
 
 	static propertyEditorValues(ids, view) {
@@ -82,6 +134,26 @@ export default class ABViewDataview extends ABViewDetail {
 		super.propertyEditorValues(ids, view);
 
 		view.settings.xCount = $$(ids.xCount).getValue();
+		
+		var detailsPage = $$(ids.detailsPage).getValue();
+		var detailsTab = "";
+		if (detailsPage.split(":").length > 1) {
+			var detailsVals = detailsPage.split(":");
+			detailsPage = detailsVals[0];
+			detailsTab = detailsVals[1];
+		} 
+		view.settings.detailsPage = detailsPage;
+		view.settings.detailsTab = detailsTab;
+		
+		var editPage = $$(ids.editPage).getValue();
+		var editTab = "";
+		if (editPage.split(":").length > 1) {
+			var editVals = editPage.split(":");
+			editPage = editVals[0];
+			editTab = editVals[1];
+		} 
+		view.settings.editPage = editPage;
+		view.settings.editTab = editTab;
 
 	}
 
@@ -95,6 +167,11 @@ export default class ABViewDataview extends ABViewDetail {
 	fromValues(values) {
 
 		super.fromValues(values);
+		
+		this.settings.detailsPage = this.settings.detailsPage || ABViewDataviewDefaults.detailsPage;
+		this.settings.editPage = this.settings.editPage || ABViewDataviewDefaults.editPage;
+		this.settings.detailsTab = this.settings.detailsTab || ABViewDataviewDefaults.detailsTab;
+		this.settings.editTab = this.settings.editTab || ABViewDataviewDefaults.editTab;
 
 	}
 
@@ -117,8 +194,8 @@ export default class ABViewDataview extends ABViewDetail {
 
 		let viewDef = {
 			id: ids.component,
-			paddingX: 5,
-			paddingY: 9,
+			paddingX: 15,
+			paddingY: 19,
 			type: 'space',
 			rows: []
 		};
@@ -156,11 +233,50 @@ export default class ABViewDataview extends ABViewDetail {
 		};
 
 		com.logic = {
+			changePage: (dc, id, page) => {
+				dc.setCursor(id);
+				super.changePage(page);
+			},
+			
+			// we need to recursivly look backwards to toggle tabs into view when a user choosed to select a tab for edit or details views
+			toggleTab: (parentTab, wb) => {
+				
+				// find the tab
+				var tab = wb.getTopParentView().queryView({id:parentTab});
+				// if we didn't pass and id we may have passed a domNode
+				if (tab == null) {
+					tab = $$(parentTab);
+				}
+
+				if (tab == null) return;
+				
+				// set the tabbar to to the tab
+				var tabbar = tab.getParentView().getParentView();
+				
+				if (tabbar == null) return;
+				
+				if (tabbar.setValue) { // if we have reached the top we won't have a tab
+					tabbar.setValue(parentTab);
+				}
+				
+				// find if it is in a multiview of a tab
+				var nextTab = tabbar.queryView({view:"scrollview"}, "parent");
+				// if so then do this again
+				if (nextTab) {
+					com.toggleTab(nextTab, wb);
+				}
+			}
+
 		};
 
 		com.onShow = () => {
 
-			let baseCom = super.component(App);
+			var editPage = this.settings.editPage;
+			var detailsPage = this.settings.detailsPage;
+			var editTab = this.settings.editTab;
+			var detailsTab = this.settings.detailsTab;
+
+			let baseCom = super.component(App, this.id);
 			baseCom.onShow();
 
 			// clear UI
@@ -189,8 +305,18 @@ export default class ABViewDataview extends ABViewDetail {
 
 				// adjust the UI to make sure it will look like a "card"
 				detailCom.ui.type = "space";
-				detailCom.ui.paddingX = 5;
-				detailCom.ui.paddingY = 1;
+				detailCom.ui.css = "ab-detail-view";
+				if (detailsPage || editPage) {
+					detailCom.ui.css += " ab-detail-hover ab-record-" + row.id;
+				}
+				if (detailsPage) {
+					detailCom.ui.css += " ab-detail-page";
+				}
+				if (editPage) {
+					detailCom.ui.css += " ab-edit-page";
+				}
+				detailCom.ui.paddingX = 10;
+				detailCom.ui.paddingY = 6;
 
 				// put the component into the column
 				rowObj.cols.push(detailCom.ui);
@@ -215,8 +341,43 @@ export default class ABViewDataview extends ABViewDetail {
 			dataGrid.push(rowObj);
 
 			// dynamically create the UI with this new configuration
-			webix.ui(dataGrid, $$(ids.component));			
-
+			webix.ui(dataGrid, $$(ids.component));
+			
+			if (detailsPage || editPage) {
+				$$(ids.component).$view.onclick = function(e) {
+					var clicked = false;
+					if (editPage) {
+						for (let p of e.path) {
+							if (p.className && p.className.indexOf("webix_accordionitem_header") > -1) {
+								clicked = true;
+								$(p.parentNode.parentNode)[0].classList.forEach((c) => {
+									if (c.indexOf("ab-record-") > -1) {
+										var record = parseInt(c.replace("ab-record-", ""));
+										com.logic.changePage(dc, record, editPage);
+										// com.logic.toggleTab(detailsTab, ids.component);
+									}
+								});
+								break;
+							}
+						};
+					}
+					if (detailsPage && !clicked) {
+						for (let p of e.path) {
+							if (p.className && p.className.indexOf("webix_accordionitem") > -1) {
+								$(p.parentNode.parentNode)[0].classList.forEach((c) => {
+									if (c.indexOf("ab-record-") > -1) {
+										var record = parseInt(c.replace("ab-record-", ""));
+										com.logic.changePage(dc, record, detailsPage);
+										// com.logic.toggleTab(detailsTab, ids.component);
+									}
+								});
+								break;
+							}
+						};
+					}
+				};
+			}
+			
 			// loop through the components so we can initialize their data
 			// this has to be done after they have been attached to the view so we couldn't have done in the previous step
 			rows.forEach(row => {
@@ -233,6 +394,98 @@ export default class ABViewDataview extends ABViewDetail {
 		return com;
 
 	}
+	
+	
+	populateEditor(ids, view) {
+		// Set the options of the possible detail views
+		var detailViews = [
+			{ id:'', value:L('ab.component.label.noLinkedView', '*No linked view') }
+		];
+
+		detailViews = view.loopPages(view, view.application._pages, detailViews, "detail");
+		$$(ids.detailsPage).define("options", detailViews);
+		$$(ids.detailsPage).refresh();
+
+		// Set the options of the possible edit forms
+		var editForms = [
+			{id:'', value:L('ab.component.label.noLinkedForm', '*No linked form')}
+		];
+		editForms = view.loopPages(view, view.application._pages, editForms, "form");
+		view.application._pages.forEach((o)=>{
+			o._views.forEach((j)=>{
+				if (j.key == "form" && j.settings.object == view.settings.datacollection) {
+					editForms.push({id:j.parent.id, value:j.label});				
+				}
+				if (j.key == "tab") {
+					j._views.forEach((k)=>{
+						k._views.forEach((l)=>{	
+							if (l.key == "form" && l.settings.datacollection == view.settings.datacollection) {
+								editForms.push({id:l.parent.id, value:l.label});				
+							}
+						});
+					});
+				}
+			});
+		});
+		$$(ids.editPage).define("options", editForms);
+		$$(ids.editPage).refresh();
+	}
+	
+	loopPages(view, pages, detailViews, type) {
+		if (typeof pages == "array" || typeof pages == "object") {
+			pages.forEach((p)=>{
+				if (p._pages.length > 0) {
+					detailViews = view.loopPages(view, p._pages, detailViews, type);
+				}
+				detailViews = view.loopViews(view, p._views, detailViews, type);
+			});
+		}
+		detailViews = view.loopViews(view, pages, detailViews);
+		return detailViews;
+	}
+	
+	loopViews(view, views, detailViews, type) {
+		if (typeof views == "array" || typeof views == "object") {
+			views.forEach((v)=>{
+				if (v.key == type && v.settings.datacollection == view.settings.datacollection) {
+					detailViews.push({id:v.pageParent().id, value:v.label});
+				}
+				// find views inside layouts
+				else if (v.key == "layout" || v.key == "viewcontainer") {
+					detailViews = view.loopViews(view, v._views, detailViews, type);
+				}
+				// find views inside Tab component
+				else if (v.key == "tab") {
+					var tabViews = v.views();
+					tabViews.forEach(tab => {
+						
+						var viewContainer = tab.views(subT => subT.key == "tab");
+						viewContainer.forEach(vc => {
+
+							vc.views().forEach((st)=>{
+								// detailViews = view.loopViews(view, st._views, detailViews, type);							
+								var subViews = st.views(subV => subV.key == type && subV.settings.datacollection == view.settings.datacollection);
+								subViews.forEach( (sub)=>{
+									detailViews.push({id:v.pageParent().id + ":" + st.id, value:st.label + ":" + sub.label});								
+								});
+							});
+
+						});
+
+						var subViews = tab.views(subV => subV.key == type && subV.settings.datacollection == view.settings.datacollection);
+						subViews.forEach( (sub)=>{
+							detailViews.push({id:v.pageParent().id + ":" + tab.id, value:tab.label + ":" + sub.label});								
+						});
+
+					});
+
+				}
+			});
+			return detailViews;
+		}
+		return detailViews;
+	}
+	
 
 
 	//// Report ////
