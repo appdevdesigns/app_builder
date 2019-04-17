@@ -47,7 +47,7 @@ export default class ABWorkObjectPopupImport extends OP.Component {
 			columnList: this.unique(idBase + '_columnList')
 		};
 
-		var csvImporter = new CSVImporter();
+		var csvImporter = new CSVImporter(App);
 
 		// webix UI definition:
 		this.ui = {

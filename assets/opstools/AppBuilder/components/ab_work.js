@@ -16,8 +16,10 @@ import AB_Work_Interface from "./ab_work_interface"
 export default class AB_Work extends OP.Component {  // ('ab_work', function(App) {
 
 
-	constructor(App) {
+	constructor(App, options) {
 		super(App, 'ab_work');
+
+		options = options || {};
 
 		var L = this.Label;
 
@@ -29,7 +31,7 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 			component: {
 
 				// formHeader: L('ab.application.form.header', "*Application Info"),
-				backToApplication: L('ab.application.backToApplication', "*Back to Apps"),
+				backToApplication: L('ab.application.backToApplication', "*Back to Applications page"),
 				collapseMenu: L('ab.application.collapseMenu', "*Collapse Menu"),
 				expandMenu: L('ab.application.expandMenu', "*Expand Menu"),
 				synchronize: L('ab.application.synchronize', "*Synchronize"),
@@ -108,7 +110,7 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 							type: "icon",
 							icon: "fa fa-arrow-left",
 							align: "left",
-						
+							hidden: options.IsBackHidden || false, // hide this button in the admin lve page
 							click: function () {
 								App.actions.transitionApplicationChooser();
 							}
@@ -359,3 +361,6 @@ console.error('TODO: ab_work.logic.synchronize()!');
 	}
 
 }
+
+// export to ABLiveTool
+window.ABWorkUI = AB_Work;

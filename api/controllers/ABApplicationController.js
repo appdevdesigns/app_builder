@@ -33,26 +33,84 @@ module.exports = {
     applicationSave: function(req, res) {
         var appID = req.param('appID');
         var appInfo = req.body.translations;
+        var appIsAdmin = JSON.parse(req.body.isAdminApp || false);
 
-        ABApplication.findOne({ id: appID })
-            .fail(res.AD.error)
-            .then(function (app) {
+        Promise.resolve()
+            .catch(() => {
+                res.AD.error(true);
+            })
+            .then(() => {
 
-                if (!app)
-                    return res.AD.error("Could not found this application");
+                // Save application data
+                return new Promise((next, err) => {
 
-                app.json.translations = appInfo;
+                    ABApplication.findOne({ id: appID })
+                    .fail(res.AD.error)
+                    .then(function (app) {
+        
+                        if (!app)
+                            return res.AD.error("Could not found this application");
+        
+                        app.json.isAdminApp = appIsAdmin;
+                        app.json.translations = appInfo;
+        
+                        // save to database
+                        app.save(function (errMessage) {
+                            if (errMessage) 
+                                err(errMessage);
+                            else
+                                next(app);
+                        });
+                        
+        
+                    });
 
-                // save to database
-                app.save(function (err) {
-                    if (err)
-                        res.AD.error(true);
-                    else
-                        res.AD.success(true);
                 });
-                
+            })
+            .then((app) => {
 
+                return new Promise((next, err) => {
+
+                    let pageName = "Application Admin Page";
+
+                    // Update Admin App page
+                    if (appIsAdmin) {
+                        let options = {
+                            isAdminPage: true,
+                            name: pageName,
+                            label: "Admin",
+                            icon: "fa-circle-o-notch" // TODO admin app icon
+                        };
+    
+                        AppBuilder.updateNavView(app, options)
+                            .catch(err)
+                            .then(() => {
+                                next();
+                            });
+                    }
+                    // Remove Admin App page
+                    else {
+
+                        AppBuilder.removeNavView(app, pageName)
+                            .catch(err)
+                            .then(() => {
+                                next();
+                            });
+                    }
+
+                });
+            })
+            .then(() => {
+
+                // final
+                return new Promise((next, err) => {
+
+                    res.AD.success(true);
+                    next();
+
+                });
             });
+
 
     },
 
@@ -280,10 +338,27 @@ module.exports = {
                     var langCode = ADCore.user.current(req).getLanguageCode(); // 'en';
 
                     var pageClass = data.appClass._pages.filter(p => p.id == vals.id)[0];
-                    if (pageClass)
-                        return AppBuilder.updateNavView(data.app, pageClass, langCode)
+                    if (pageClass) {
+
+                        // find page name
+                        var pageLabel;
+                        (pageClass.translations || []).forEach((trans) => {
+                            if (trans.language_code == 'en') {
+                               pageLabel = trans.label.replace(/[^a-z0-9 ]/gi, '');
+                            }
+                        });
+
+                        let options ={
+                            name: pageClass.name,
+                            label: pageLabel || vals.label || pageClass.name,
+                            urlPointer: pageClass.urlPointer(),
+                            icon: pageClass.icon
+                        };
+
+                        return AppBuilder.updateNavView(data.app, options, langCode)
                             .catch(reject)
                             .then(resolve);
+                    }
                     else
                         resolve();
 

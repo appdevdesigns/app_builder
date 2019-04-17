@@ -20,9 +20,9 @@ export default class AB_Work_Object_List_NewObject_External extends OP.Component
         var labels = {
             common: App.labels,
             component: {
-                connections: L('ab.object.connections', "*Connections"),
-                columns: L('ab.object.columns', "*Columns"),
-                external: L('ab.object.external', "*External"),
+                external: L('ab.object.external.title', "*External"),
+                connections: L('ab.object.external.connections', "*Connections"),
+                columns: L('ab.object.external.columns', "*Columns")
             }
         };
 
@@ -410,8 +410,8 @@ export default class AB_Work_Object_List_NewObject_External extends OP.Component
                                 width: 120,
                                 options: {
                                     body: {
-                                        template: '<span class="float-left webix_icon fa fa-#icon#" style="line-height: 30px;"></span>' +
-                                                    '<span class="float-left" style="width: 40px;">#name#</span>',
+                                        template: '<span class="webix_icon fa fa-#icon#" style="float: left; line-height: 30px;"></span>' +
+                                                    '<span style="float: left; width: 40px;">#name#</span>',
                                         data: _logic.getTypeOptions()
                                     }
                                 }
@@ -439,9 +439,9 @@ export default class AB_Work_Object_List_NewObject_External extends OP.Component
                             // For normal columns, display checkbox and text
                             else {
                                 return `
-                                        <span class="float-left">${common.isvisible(obj, common)}</span>
-                                        <span class="float-left">${common.fieldKey(obj, common)}</span>
-                                        <span class="float-left">${common.label(obj, common)}</span>
+                                        <span style="float: left;">${common.isvisible(obj, common)}</span>
+                                        <span style="float: left;">${common.fieldKey(obj, common)}</span>
+                                        <span style="float: left;">${common.label(obj, common)}</span>
                                         `;
                             }
 

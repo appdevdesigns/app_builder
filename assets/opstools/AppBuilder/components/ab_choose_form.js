@@ -26,6 +26,7 @@ export default class ABChoose extends OP.Component {  // .extend(idBase, functio
 
 				formHeader: L('ab.application.form.header', "*Application Info"),
 				formDescription: L('ab.application.form.formDescription', "*Description"),
+				formAdminApp: L('ab.application.form.formAdminApp', "*Admin Application"),
 				placeholderName: L('ab.application.form.placeholderName', "*Application name"),
 				placeholderDescription: L('ab.application.form.placeholderDescription', "*Application description"),
 
@@ -110,6 +111,14 @@ export default class ABChoose extends OP.Component {  // .extend(idBase, functio
 								},
 								{ height: App.config.smallSpacer },
 								{
+									name: "isAdminApp",
+									view: "checkbox",
+									label: labels.component.formAdminApp,
+									labelAlign: "left",
+									labelWidth: 100
+								},
+								{ height: App.config.smallSpacer },
+								{
 									view: "toolbar",
 									css: "ab-toolbar-submenu",
 									cols: [
@@ -141,6 +150,7 @@ export default class ABChoose extends OP.Component {  // .extend(idBase, functio
 									id: ids.appFormPermissionList,
 									view: "list",
 									autowidth: true,
+									height: 140,
 									margin: 0,
 									css: "ab-app-form-permission",
 									template: "{common.markCheckbox()} #name#",
@@ -196,7 +206,7 @@ export default class ABChoose extends OP.Component {  // .extend(idBase, functio
 			]
 		};
 
-		const FormFields = ['label', 'description'];
+		const FormFields = ['label', 'description', 'isAdminApp'];
 
 
 
@@ -223,7 +233,8 @@ export default class ABChoose extends OP.Component {  // .extend(idBase, functio
 				var newApp = {
 					name: values.label,
 					label: values.label,
-					description: values.description
+					description: values.description,
+					isAdminApp: values.isAdminApp
 				};
 
 				async.waterfall([
@@ -290,6 +301,7 @@ export default class ABChoose extends OP.Component {  // .extend(idBase, functio
 						// Update application data
 						Application.label = values.label;
 						Application.description = values.description;
+						Application.isAdminApp = values.isAdminApp;
 
 						if (app_role && app_role.id)
 							Application.role = app_role.id;

@@ -447,6 +447,12 @@ export default class ABWorkObjectKanBan extends OP.Component {
 						if (needRefresh)
 							_logic.show();
 
+						// update form data
+						if (FormSide.isVisible()) {
+							let data = $$(ids.kanban).getItem(rowId);
+							FormSide.refresh(data);
+						}
+
 					})
 					.catch((err) => {
 
@@ -474,6 +480,12 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 						// update card
 						$$(ids.kanban).updateItem(rowId, updatedRow);
+
+						// update form data
+						if (FormSide.isVisible()) {
+							let data = $$(ids.kanban).getItem(rowId);
+							FormSide.refresh(data);
+						}
 
 						_logic.ready();
 

@@ -281,11 +281,15 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 			},
 
 			listBusy:function() {
-				$$(ids.list).showProgress({ type: "icon" });
+				if ($$(ids.list) &&
+					$$(ids.list).showProgress)
+					$$(ids.list).showProgress({ type: "icon" });
 			},
 
 			listReady:function() {
-				$$(ids.list).hideProgress();
+				if ($$(ids.list) &&
+					$$(ids.list).hideProgress)
+					$$(ids.list).hideProgress();
 			},
 
 			listSearch: function() {

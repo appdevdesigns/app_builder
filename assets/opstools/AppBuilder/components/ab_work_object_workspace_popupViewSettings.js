@@ -27,10 +27,7 @@ export default class AB_Work_Object_Workspace_PopupAddView extends OP.Component 
             component: {
                 name: L("ab.add_view.name", "*Name"),
                 type: L("ab.add_view.type", "*Type"),
-                namePlaceholder: L(
-                    "ab.add_view.name_placeholder",
-                    "* Create a name for the view"
-                ),
+                namePlaceholder: L("ab.add_view.name_placeholder", "*Create a name for the view"),
                 viewSettings: L("ab.add_view.view_settings", "*View Settings")
             }
         };
@@ -82,15 +79,15 @@ export default class AB_Work_Object_Workspace_PopupAddView extends OP.Component 
                     options: [
                         {
                             id: ABObjectWorkspaceViewGrid.type(),
-                            value: "Grid"
+                            value: L("ab.add_view.type.grid", "*Grid")
                         },
                         {
                             id: ABObjectWorkspaceViewKanban.type(),
-                            value: "Kanban"
+                            value: L("ab.add_view.type.kanban", "*Kanban")
                         },
                         {
                             id: ABObjectWorkspaceViewGantt.type(),
-                            value: "Gantt"
+                            value: L("ab.add_view.type.gantt", "*Gantt")
                         }
                     ],
                     value: ABObjectWorkspaceViewGrid.type(),
@@ -155,7 +152,7 @@ export default class AB_Work_Object_Workspace_PopupAddView extends OP.Component 
                     },
                     {
                         view: "button", 
-                        label: "Close", 
+                        label: labels.common.close, 
                         autowidth: true, 
                         align: "center",
                         click: function () {

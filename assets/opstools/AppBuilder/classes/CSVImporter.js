@@ -1,16 +1,24 @@
-export default class RowFilter {
+export default class CSVImporter {
 
-	constructor() {
+	constructor(App) {
+
+		var L = App.Label;
+
+		this.labels = {
+			comma: L("ab.object.form.csv.separatedBy.comma", "*Comma (,)"),
+			tab: L("ab.object.form.csv.separatedBy.tab", "*Tab (&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)"),
+			semicolon: L("ab.object.form.csv.separatedBy.semicolon", "*Semicolon (;)"),
+			space: L("ab.object.form.csv.separatedBy.space", "*Space ( )")
+		};
 
 	}
 
 	getSeparateItems() {
-
 		return [
-			{ id: ",", value: "Comma (,)" },
-			{ id: "\t", value: "Tab (&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)" },
-			{ id: ";", value: "Semicolon (;)" },
-			{ id: "\s", value: "Space ( )" }
+			{ id: ",", value: this.labels.comma },
+			{ id: "\t", value: this.labels.tab },
+			{ id: ";", value: this.labels.semicolon },
+			{ id: "\s", value: this.labels.space }
 		];
 	}
 

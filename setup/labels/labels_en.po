@@ -85,6 +85,12 @@ msgstr "Enter default value"
 
 #. path: app_builder
 #. code: en
+#. key: ab.common.disable
+msgid "Disable"
+msgstr "Disable"
+
+#. path: app_builder
+#. code: en
 #. key: ab.common.none
 msgid "None"
 msgstr "None"
@@ -136,6 +142,12 @@ msgstr "Description"
 #. key: ab.common.headerName
 msgid "Header name"
 msgstr "Header name"
+
+#. path: app_builder
+#. code: en
+#. key: ab.common.create
+msgid "Create"
+msgstr "Create"
 
 #. path: app_builder
 #. code: en
@@ -289,6 +301,120 @@ msgstr "Create new role"
 
 #. path: app_builder
 #. code: en
+#. key: ab.add_view.name
+msgid "Name"
+msgstr "Name"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_view.type
+msgid "Type"
+msgstr "Type"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_view.type.grid
+msgid "Grid"
+msgstr "Grid"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_view.type.kanban
+msgid "Kanban"
+msgstr "Kanban"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_view.type.gantt
+msgid "Gantt"
+msgstr "Gantt"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_view.name_placeholder
+msgid "Create a name for the view"
+msgstr "Create a name for the view"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_view.view_settings
+msgid "View Settings"
+msgstr "View Settings"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_view.kanban.vGroup
+msgid "Vertical Grouping"
+msgstr "Vertical Grouping"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_view.kanban.hGroup
+msgid "Horizontal Grouping"
+msgstr "Horizontal Grouping"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_view.kanban.owner
+msgid "Card Owner"
+msgstr "Card Owner"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_view.kanban.grouping_placeholder
+msgid "Select a field"
+msgstr "Select a field"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_view.kanban.owner_placeholder
+msgid "Select a user field"
+msgstr "Select a user field"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_view.kanban.none_option
+msgid "None"
+msgstr "None"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_view.gantt.startDate
+msgid "Start Date"
+msgstr "Start Date"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_view.gantt.endDate
+msgid "End Date"
+msgstr "End Date"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_view.gantt.duration
+msgid "Duration"
+msgstr "Duration"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_view.gantt.progress
+msgid "Progress"
+msgstr "Progress"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_view.gantt.datePlaceholder
+msgid "Select a date field"
+msgstr "Select a date field"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_view.gantt.numberPlaceholder
+msgid "Select a number field"
+msgstr "Select a number field"
+
+#. path: app_builder
+#. code: en
 #. key: ab.object.title
 msgid "Objects"
 msgstr "Objects"
@@ -322,6 +448,108 @@ msgstr "Object Menu"
 #. key: ab.object.form.placeholderName
 msgid "Object name"
 msgstr "Object name"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.form.addNewObject
+msgid "Add Object"
+msgstr "Add Object"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.form.csv.importCsvHeader
+msgid "Import CSV"
+msgstr "Import CSV"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.form.csv.selectCsvFile
+msgid "Choose a CSV file"
+msgstr "Choose a CSV file"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.form.csv.fileTypeErrorTitle
+msgid "This file extension is disallow"
+msgstr "This file extension is disallow"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.form.csv.fileTypeError
+msgid "Please only upload CSV file"
+msgstr "Please only upload CSV file"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.form.csv.separatedBy
+msgid "Separated by"
+msgstr "Separated by"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.form.csv.separatedBy.comma
+msgid "Comma (,)"
+msgstr "Comma (,)"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.form.csv.separatedBy.tab
+msgid "Tab (&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)"
+msgstr "Tab (&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.form.csv.separatedBy.semicolon
+msgid "Semicolon (;)"
+msgstr "Semicolon (;)"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.form.csv.separatedBy.space
+msgid "Space ( )"
+msgstr "Space ( )"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.form.csv.headerFirstLine
+msgid "Header on first line"
+msgstr "Header on first line"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.form.csv.import
+msgid "Import"
+msgstr "Import"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.external.title
+msgid "External"
+msgstr "External"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.external.connections
+msgid "Connections"
+msgstr "Connections"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.external.columns
+msgid "Columns"
+msgstr "Columns"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.import.title
+msgid "Existing"
+msgstr "Existing"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.import.columns
+msgid "Columns"
+msgstr "Columns"
 
 #. path: app_builder
 #. code: en
@@ -1285,6 +1513,144 @@ msgstr "Uncheck"
 
 #. path: app_builder
 #. code: en
+#. key: ab.dataField.calculate.menuName
+msgid "Calculate"
+msgstr "Calculate"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.calculate.description
+msgid "Calculate Description"
+msgstr ""
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.calculate.add
+msgid "+ Adds"
+msgstr "+ Adds"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.calculate.subtract
+msgid "- Subtracts"
+msgstr "- Subtracts"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.calculate.multiple
+msgid "* Multiples"
+msgstr "* Multiples"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.calculate.divide
+msgid "/ Divides"
+msgstr "/ Divides"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.calculate.openBracket
+msgid "( Open Bracket"
+msgstr "( Open Bracket"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.calculate.closedBracket
+msgid ") Closed Bracket"
+msgstr ") Closed Bracket"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.calculate.equation
+msgid "Equation"
+msgstr "Equation"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.calculate.numberFields
+msgid "Number Fields"
+msgstr "Number Fields"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.calculate.dateFields
+msgid "Date Fields"
+msgstr "Date Fields"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.calculate.numberFn
+msgid "Number Operators"
+msgstr "Number Operators"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.calculate.decimalSign
+msgid "Decimals"
+msgstr "Decimals"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.calculate.decimalPlaces
+msgid "Places"
+msgstr "Places"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.calculate.functions.minuteToHourCurrent
+msgid "Convert minutes to hours (Format: hours.minutes)"
+msgstr "Convert minutes to hours (Format: hours.minutes)"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.calculate.functions.age
+msgid "Calculate age from [#fieldName#]"
+msgstr "Calculate age from [#fieldName#]"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.calculate.functions.yearCurrent
+msgid "Year of [Current date]"
+msgstr "Convert minutes to hours (Format: hours.minutes)"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.calculate.functions.year
+msgid "Year of [#fieldName#]"
+msgstr "Year of [#fieldName#]"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.calculate.functions.month
+msgid "Month of [#fieldName#]"
+msgstr "Month of [#fieldName#]"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.calculate.functions.day
+msgid "Day of [#fieldName#]"
+msgstr "Day of [#fieldName#]"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.calculate.functions.date
+msgid "Get days of [#fieldName#] (since January 1, 1970)"
+msgstr "Get days of [#fieldName#] (since January 1, 1970)"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.calculate.functions.hour
+msgid "Get hours of [#fieldName#] (since January 1, 1970)"
+msgstr "Get hours of [#fieldName#] (since January 1, 1970)"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.calculate.functions.minute
+msgid "Get minutes of [#fieldName#] (since January 1, 1970)"
+msgstr "Get minutes of [#fieldName#] (since January 1, 1970)"
+
+#. path: app_builder
+#. code: en
 #. key: ab.dataField.common.headerLabel
 msgid "Section Title"
 msgstr "Section Title"
@@ -1297,9 +1663,69 @@ msgstr "Section Name"
 
 #. path: app_builder
 #. code: en
-#. key: ab.dataField.common.headerLabelPlaceholder
-msgid "Section Name"
-msgstr "Section Name"
+#. key: ab.dataField.connectObject.menuName
+msgid "Connect to another record"
+msgstr "Connect to another record"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.connectObject.description
+msgid "Connect two data objects together"
+msgstr "Connect two data objects together"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.connectObject.connectToObject
+msgid "Connected to:"
+msgstr "Connected to:"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.connectObject.connectToObjectPlaceholder
+msgid "Select object"
+msgstr "Select object"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.connectObject.connectToNewObject
+msgid "Connect to new Object"
+msgstr "Connect to new Object"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.connectObject.hasMany
+msgid "many"
+msgstr "many"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.connectObject.belongTo
+msgid "one"
+msgstr "one"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.connectObject.selectedObject
+msgid "<b>#selectedObjLabel#</b> entry."
+msgstr "<b>#selectedObjLabel#</b> entry."
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.connectObject.connectWith
+msgid "Each <b>#selectedObjLabel#</b> entry connects with"
+msgstr "Each <b>#selectedObjLabel#</b> entry connects with"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.connectObject.entry
+msgid "entry"
+msgstr "entry"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.connectObject.entries
+msgid "entries"
+msgstr "entries"
 
 #. path: app_builder
 #. code: en

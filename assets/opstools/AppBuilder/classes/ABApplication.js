@@ -320,6 +320,7 @@ export default class ABApplication extends ABApplicationBase {
 		return OP.Comm.Service.put({
 			url: '/app_builder/application/' + this.id + '/info',
 			data: {
+				isAdminApp: values.isAdminApp,
 				translations: values.json.translations
 			}
 		});

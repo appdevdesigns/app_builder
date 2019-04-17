@@ -122,6 +122,10 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 			},
 
+			isVisible: function() {
+				return $$(ids.component).isVisible();
+			},
+
 			refreshForm: function (data) {
 
 				if (!CurrentObject)
@@ -244,6 +248,8 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 		this.hide = _logic.hide;
 		this.show = _logic.show;
+		this.refresh = _logic.refreshForm;
+		this.isVisible = _logic.isVisible;
 		this.objectLoad = _logic.objectLoad;
 
 	}

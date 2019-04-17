@@ -10,6 +10,7 @@ import ABViewRule from "./ABViewRule"
 import RoleConfirmMessage from "./ruleActions/ABViewRuleActionFormSubmitRuleConfirmMessage"
 import RuleExistPage from "./ruleActions/ABViewRuleActionFormSubmitRuleExistPage"
 import RuleParentPage from "./ruleActions/ABViewRuleActionFormSubmitRuleParentPage"
+import RuleClosePopup from "./ruleActions/ABViewRuleActionFormSubmitRuleClosePopup"
 import RuleWebsite from "./ruleActions/ABViewRuleActionFormSubmitRuleWebsite"
 import RuleEmail from "./ruleActions/ABViewRuleActionFormSubmitRuleEmail"
 
@@ -42,6 +43,7 @@ export default class ABViewRuleListFormSubmitRules extends ABViewRuleList {
 			new RoleConfirmMessage(this.App, this.idBase + '_ruleActionConfirmMessage'),
 			new RuleExistPage(this.App, this.idBase + '_ruleActionExistPage'),
 			new RuleParentPage(this.App, this.idBase + '_ruleActionParentPage'),
+			new RuleClosePopup(this.App, this.idBase + '_ruleActionClosePopup'),
 			new RuleWebsite(this.App, this.idBase + '_ruleActionWebsite'),
 			new RuleEmail(this.App, this.idBase + '_ruleActionEmail')
 		];

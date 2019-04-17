@@ -450,7 +450,11 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 				height: component.ui.height,
 				template: template,
 				onClick: {
-					"customField": function (id, e, trg) {
+					"customField": (id, e, trg) => {
+
+						if (this.settings.disable == 1) 
+							return;
+
 						var rowData = {};
 
 						if ($$(ids.component)) {
@@ -525,7 +529,8 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 			field.customDisplay(rowData, App, node, {
 				editable: true,
 				formView: this.settings.formView,
-				filters: this.settings.objectWorkspace.filterConditions
+				filters: this.settings.objectWorkspace.filterConditions,
+				editable: (this.settings.disable == 1 ? false : true)
 			});
 
 		};
@@ -547,25 +552,40 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 
 				// find the selectivity component
 				var elem = $$(ids.component);
+				if (!elem) return;
+
 				// get the linked Object for current field
-				var linkedObj = field.datasourceLink;
+				// var linkedObj = field.datasourceLink;
 				// isolate the connected field data that was saved
 				// var savedItem = linkedObj.displayData(saveData);
 				// repopulate the selectivity options now that there is a new one added
-				var filters = {};
-				if (this.settings.objectWorkspace && this.settings.objectWorkspace.filterConditions) {
-					filters = this.settings.objectWorkspace.filterConditions;
-				}
+				// var filters = {};
+				// if (this.settings.objectWorkspace && this.settings.objectWorkspace.filterConditions) {
+				// 	filters = this.settings.objectWorkspace.filterConditions;
+				// }
+
 				field.getOptions(this.settings.objectWorkspace.filterConditions, "").then(function (data) {
 					// find option with the matching id to the savedData
-					var myOption = data.filter(d => d.id == saveData.id);
+					var myOption = data.filter(d => d.id == saveData.id)[0];
+					if (myOption == null) return;
+
+					let fieldVal = field.getValue(elem);
+					if (Array.isArray(fieldVal)) {
+						// Keep selected items
+						fieldVal.push(myOption);
+					}
+					else {
+						fieldVal = myOption;
+					}
+
 					var values = {};
 					// retrieve the related field name
 					var relatedField = field.relationName();
 					// format payload to the setValue requirements
-					values[relatedField] = myOption[0];
+					values[relatedField] = fieldVal;
 					// set the value of selectivity to the matching item that was just created
 					field.setValue(elem, values);
+
 					// close the popup when we are finished
 					$$(ids.popup).close();
 				});

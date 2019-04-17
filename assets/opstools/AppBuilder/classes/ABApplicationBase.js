@@ -30,7 +30,8 @@ module.exports = class ABApplicationBase {
 		if (typeof this.json == "string")
 			this.json = JSON.parse(this.json);
     	this.name  = attributes.name || this.json.name || "";
-    	this.role  = attributes.role;
+		this.role  = attributes.role;
+		this.isAdminApp = JSON.parse(attributes.json.isAdminApp || false);
 
 
 	  	// import all our ABObjects
@@ -170,7 +171,8 @@ module.exports = class ABApplicationBase {
 			id:this.id,
 			name:this.name,
 			json:this.json,
-			role:this.role
+			role:this.role,
+			isAdminApp: this.isAdminApp
 		}
 	}
 
