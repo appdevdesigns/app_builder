@@ -151,7 +151,7 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 					editValue: "label",
 
 					uniteBy: function(item) {
-						return "Data Queries";
+						return L("ab.query.header", "*Data Queries");
 					},
 					template: function(obj, common) {
 						return _logic.templateListItem(obj, common);

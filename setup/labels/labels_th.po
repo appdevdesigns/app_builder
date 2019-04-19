@@ -223,24 +223,6 @@ msgstr "แอปพลิเคชั่น"
 
 #. path: app_builder
 #. code: th
-#. key: ab.application.unsyncDataMessage
-msgid "There are {0} out of sync data"
-msgstr "มีข้อมูลที่ยังไม่ได้ซิ้งค์ เป็นจำนวน {0}"
-
-#. path: app_builder
-#. code: th
-#. key: ab.application.unsyncDataHeader
-msgid "Unsynchronized data"
-msgstr "ข้อมูลที่ยังไม่ได้ซิ้งค์"
-
-#. path: app_builder
-#. code: th
-#. key: ab.application.synchronize
-msgid "Synchronize"
-msgstr "ซิ้งค์ข้อมูล"
-
-#. path: app_builder
-#. code: th
 #. key: ab.application.dataOfflineMessage
 msgid "This data is offline."
 msgstr "ข้อมูลชุดนี้ยังไม่ได้ถูกซิ้งค์ไปยังเซอร์เวอร์"
@@ -250,6 +232,18 @@ msgstr "ข้อมูลชุดนี้ยังไม่ได้ถูก
 #. key: ab.application.backToApplication
 msgid "Back to Applications page"
 msgstr "กลับไปหน้าแอปพลิเคชั่น"
+
+#. path: app_builder
+#. code: th
+#. key: ab.application.collapseMenu
+msgid "Collapse Menu"
+msgstr "ย่อเมนู"
+
+#. path: app_builder
+#. code: th
+#. key: ab.application.expandMenu
+msgid "Expand Menu"
+msgstr "ขยายเมนู"
 
 #. path: app_builder
 #. code: th
@@ -2741,3 +2735,26 @@ msgstr "ความสูง"
 msgid "Add new rule"
 msgstr "เพิ่มกฏใหม่"
 
+#. path: app_builder
+#. code: th
+#. key: ab.query.title
+msgid "Queries"
+msgstr "มุมมองข้อมูล"
+
+#. path: app_builder
+#. code: th
+#. key: ab.query.header
+msgid "Data Queries"
+msgstr "มุมมองข้อมูล"
+
+#. path: app_builder
+#. code: th
+#. key: ab.query.addNew
+msgid "Add new query"
+msgstr "เพิ่มมุมมองข้อมูลใหม่"
+
+#. path: app_builder
+#. code: th
+#. key: ab.query.addNewQuery
+msgid "Add query"
+msgstr "เพิ่มมุมมองข้อมูล"

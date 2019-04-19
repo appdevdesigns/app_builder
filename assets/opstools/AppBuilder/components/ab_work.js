@@ -30,13 +30,11 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 
 			component: {
 
-				// formHeader: L('ab.application.form.header', "*Application Info"),
 				backToApplication: L('ab.application.backToApplication', "*Back to Applications page"),
 				collapseMenu: L('ab.application.collapseMenu', "*Collapse Menu"),
 				expandMenu: L('ab.application.expandMenu', "*Expand Menu"),
-				synchronize: L('ab.application.synchronize', "*Synchronize"),
 				objectTitle: L('ab.object.title', "*Objects"),
-				queryTitle: L('ab.object.query', "*Queries"),
+				queryTitle: L('ab.query.title', "*Queries"),
 				interfaceTitle: L('ab.interface.title', "*Interface")
 			}
 		}
@@ -134,18 +132,6 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 							align: "center"
 						},
 						{}
-						// {
-						// 	id: ids.buttonSync,
-						// 	view: "button",
-						// 	type: "icon",
-						// 	icon: "refresh",
-						// 	label: labels.component.synchronize,
-						// 	autowidth: true,
-						// 	align: "right",
-						// 	click: function () {
-						// 		_logic.synchronize();
-						// 	}
-						// }
 					]
 				},
 				//{ height: App.config.mediumSpacer },
@@ -277,22 +263,6 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 			show:function() {
 
 				$$(ids.component).show();
-			},
-
-
-			/**
-			 * @function synchronize
-			 *
-			 * Kick off the Synchronization process.
-			 */
-			synchronize:function() {
-
-	// self.element.trigger(self.options.synchronizeEvent, {
-	// 	appID: AD.classes.AppBuilder.currApp.id
-	// });
-	//// Question: where should this logic go?  Here or in ab.js ?
-
-console.error('TODO: ab_work.logic.synchronize()!');
 			},
 
 
