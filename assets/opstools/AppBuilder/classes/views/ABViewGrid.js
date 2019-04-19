@@ -14,11 +14,9 @@ import ABPopupMassUpdate from "../../components/ab_work_object_workspace_popupMa
 import ABPopupSummaryColumns from "../../components/ab_work_object_workspace_popupSummaryColumns"
 import ABPopupCountColumns from "../../components/ab_work_object_workspace_popupCountColumns"
 import ABPopupExport from "../../components/ab_work_object_workspace_popupExport"
-import ABViewGridFilterMenu from "../rules/ABViewGridFilterMenu"
+import ABViewPropertyFilterData from "./viewProperties/ABViewPropertyFilterData"
 import ABViewWidget from "./ABViewWidget"
 import ABFieldImage from "../dataFields/ABFieldImage"
-
-import RowFilter from '../RowFilter'
 
 
 function L(key, altText) {
@@ -56,7 +54,8 @@ var ABViewGridPropertyComponentDefaults = {
 	gridFilter: {
 		filterOption: 0,
 		queryRules: [],
-		userFilterPosition: 'toolbar'
+		userFilterPosition: 'toolbar',
+		globalFilterPosition: 'default'
 	},
 	summaryFields: [], // array of [field ids] to add the summary column in footer
 	countFields: [], // array of [field ids] to add the summary column in footer
@@ -117,6 +116,9 @@ export default class ABViewGrid extends ABViewWidget  {
 		// OP.Multilingual.unTranslate(this, this, ['label', 'text']);
 
 		var obj = super.toObj();
+
+		obj.settings.gridFilter = PopupGridFilterMenu.toSettings();
+
 		obj.views = [];
 		return obj;
 	}
@@ -168,25 +170,8 @@ export default class ABViewGrid extends ABViewWidget  {
 			if (typeof(this.settings.objectWorkspace.countColumns) == "undefined") this.settings.objectWorkspace.countColumns = [];
 		}
 
-
-		if (this.settings.gridFilter == null)
-			this.settings.gridFilter = {
-				queryRules: []
-			};
-
-		this.settings.gridFilter.filterOption = JSON.parse(this.settings.gridFilter.filterOption || 0);
-
-		//Convert some condition from string to integer
-		(this.settings.gridFilter.queryRules || []).forEach(qr => {
-			if (qr.queryRules[0] != "") {
-				qr.queryRules[0].rules.forEach(rule => {
-					if (/^[+-]?\d+(\.\d+)?$/.exec(rule.value)) {
-						rule.value = JSON.parse(rule.value);
-					}
-
-				});
-			}
-		});
+		// filter property
+		PopupGridFilterMenu.fromSettings(this.settings.gridFilter);
 
     	// we are not allowed to have sub views:
     	this._views = [];
@@ -257,11 +242,30 @@ export default class ABViewGrid extends ABViewWidget  {
 		PopupHideFieldComponent = new ABPopupHideFields(App, idBase+"_hide");
 		PopupFrozenColumnsComponent = new ABPopupFrozenColumns(App, idBase+"_freeze");
 
-		PopupGridFilterMenu = new ABViewGridFilterMenu();
-		PopupGridFilterMenu.component(App, idBase + "_gridfiltermenu");
 		PopupSummaryColumnsComponent = new ABPopupSummaryColumns(App, idBase+"_summary");
 		PopupCountColumnsComponent = new ABPopupCountColumns(App, idBase+"_count");
-		
+
+		PopupGridFilterMenu = new ABViewPropertyFilterData(App, idBase + "_gridfiltermenu");
+		let filterComponent = PopupGridFilterMenu.propertyComponent();
+
+		let filter_property_popup = webix.ui({
+			view: "window",
+			modal: true,
+			position: "center",
+			resize: true,
+			width: 700,
+			height: 450,
+			css: 'ab-main-container',
+			head: {
+				view: "toolbar",
+				cols: [
+					{ view: "label", label: L("ab.component.grid.filterMenu", "*Filter Menu") },
+				]
+			},
+			body: filterComponent.ui
+		});
+
+
 		_logic.newObject = () => {
 			var currObj = _logic.currentEditObject();
 			currObj.settings.objectWorkspace = {
@@ -298,8 +302,10 @@ export default class ABViewGrid extends ABViewWidget  {
 			var currView = _logic.currentEditObject();
 
 			PopupGridFilterMenu.fromSettings(currView.settings.gridFilter);
-			PopupGridFilterMenu.show();
-	
+
+			// show filter popup
+			filter_property_popup.show();
+
 		}
 
 		_logic.summaryColumns = ($view) => {
@@ -321,8 +327,18 @@ export default class ABViewGrid extends ABViewWidget  {
 			currView.settings.gridFilter = settings;
 			// currView.settings.isFilterable = settings.filterOption == 1 ? true : false;
 
+			// hide filter popup
+			filter_property_popup.hide();
+
 			// trigger a save()
 			this.propertyEditorSave(ids, currView);
+		}
+
+		_logic.gridFilterCancel = () => {
+
+			// hide filter popup
+			filter_property_popup.hide();
+
 		}
 
 		_logic.callbackSaveSummaryColumns = (data) => {
@@ -390,8 +406,9 @@ export default class ABViewGrid extends ABViewWidget  {
 		});
 
 
-		PopupGridFilterMenu.init({
-			onSave: _logic.gridFilterSave
+		filterComponent.init({
+			onSave: _logic.gridFilterSave,
+			onCancel: _logic.gridFilterCancel
 		});
 		
 		PopupSummaryColumnsComponent.init({
@@ -917,11 +934,6 @@ export default class ABViewGrid extends ABViewWidget  {
 			buttonSort: App.unique(idBase+'_buttonSort'),
 			buttonExport: App.unique(idBase+'_buttonExport'),
 
-			filterMenutoolbar: App.unique(idBase+'_filterMenuToolbar'),
-			resetFilterButton: App.unique(idBase+'_resetFilterButton'),
-			globalFilterForm: App.unique(idBase+'_globalFilterForm'),
-			globalFilterFormContainer: App.unique(idBase+'_globalFilterFormContainer')
-
 		}
 		
 		var labels = {
@@ -970,28 +982,14 @@ export default class ABViewGrid extends ABViewWidget  {
 			hideButtons: this.settings.hideButtons,
 			groupBy: this.settings.groupBy
 		}
-		
-		var isFiltered = false,
-			waitMilliseconds = 50,
-			filterTimeoutId;
-			
-		var globalFilterPosition = "default";
-		if (this.settings.gridFilter && this.settings.gridFilter.globalFilterPosition) {
-			globalFilterPosition = this.settings.gridFilter.globalFilterPosition;
-		}
 
 		let DataTable = new ABWorkspaceDatatable(App, idBase, settings);
 		let PopupMassUpdateComponent = new ABPopupMassUpdate(App, idBase+"_mass");
 		let PopupSortDataTableComponent = new ABPopupSortField(App, idBase+"_sort");
-		let rowFilter = new RowFilter(App, idBase+"_filter");
-		let rowFilterForm = new RowFilter(App, idBase+"_filter_form");
 		let exportPopup = new ABPopupExport(App, idBase+"_export");
-		let filter_popup = webix.ui({
-			view: "popup",
-			width: 800,
-			hidden: true,
-			body: rowFilter.ui
-		});
+
+		PopupGridFilterMenu.fromSettings(this.settings.gridFilter);
+		let filterUI = PopupGridFilterMenu.component();
 
 
 		let _init = () => {
@@ -1009,15 +1007,9 @@ export default class ABViewGrid extends ABViewWidget  {
 					onChange: _logic.callbackSortData
 				});
 
-				rowFilter.init({
-					onChange: () => {
-						_logic.callbackFilterData(rowFilter);	// be notified when there is a change in the filter
-					}
-				});
-
-				rowFilterForm.init({
-					onChange: () => {
-						_logic.callbackFilterData(rowFilterForm);	// be notified when there is a change in the filter
+				filterUI.init({
+					onFilterData: (fnFilter) => {
+						_logic.callbackFilterData(fnFilter);	// be notified when there is a change in the filter
 					}
 				});
 
@@ -1039,30 +1031,17 @@ export default class ABViewGrid extends ABViewWidget  {
 				if (this.settings.allowDelete == false) {
 					$$(ids.buttonDeleteSelected).hide();
 				}
-				
+
 				if (this.settings.gridFilter.filterOption != 1 || 
 					this.settings.gridFilter.userFilterPosition != "toolbar") {
 					$$(ids.buttonFilter).hide();
 				}
-				
-				if (this.settings.gridFilter.filterOption == 1 && 
-					this.settings.gridFilter.userFilterPosition == "form") {
-					$$(rowFilterForm.ui.id).show();
-				}
-				else {
-					$$(rowFilterForm.ui.id).hide();
-				}
 
-				if (this.settings.gridFilter.filterOption == 3) {
-					$$(ids.globalFilterFormContainer).show();
-					if (this.settings.gridFilter.globalFilterPosition == "single") {
-						$$(DataTable.ui.id).hide();
-					}
+				if (this.settings.gridFilter.filterOption == 3 && 
+					this.settings.gridFilter.globalFilterPosition == "single") {
+					$$(DataTable.ui.id).hide();
 				}
-				else {
-					$$(ids.globalFilterFormContainer).hide();
-				}
-				
+	
 				if (this.settings.isSortable == false) {
 					$$(ids.buttonSort).hide();
 				}
@@ -1075,9 +1054,6 @@ export default class ABViewGrid extends ABViewWidget  {
 					DataTable.hideHeader();
 				}
 
-				if (this.settings.gridFilter.filterOption == 2) {
-					$$(ids.filterMenutoolbar).show();
-				}
 				// var dataSource = this.application.objects((o)=>{
 				// 	return o.id == this.settings.dataSource;
 				// });
@@ -1092,10 +1068,8 @@ export default class ABViewGrid extends ABViewWidget  {
 					DataTable.objectLoad(CurrentObject);
 					PopupMassUpdateComponent.objectLoad(CurrentObject, DataTable);
 					PopupSortDataTableComponent.objectLoad(CurrentObject, this);
-					rowFilter.viewLoad(this);
-					rowFilter.objectLoad(CurrentObject);
-					rowFilterForm.viewLoad(this);
-					rowFilterForm.objectLoad(CurrentObject);
+					PopupGridFilterMenu.objectLoad(CurrentObject);
+					PopupGridFilterMenu.viewLoad(this);
 					exportPopup.objectLoad(CurrentObject);
 					exportPopup.setGridComponent($$(DataTable.ui.id));
 					exportPopup.setHiddenFields(dataCopy.objectWorkspace.hiddenFields);
@@ -1199,70 +1173,6 @@ export default class ABViewGrid extends ABViewWidget  {
 				padding: 17,
 				rows: [
 					{
-						id: ids.globalFilterFormContainer,
-						hidden: true,
-						cols: [
-							{						
-								id: ids.globalFilterForm,
-								view:"text",
-								placeholder:"Search or scan a barcode to see results",
-								on:{
-									onTimedKeyPress:function(){
-										var text = this.getValue().trim().toLowerCase().split(" ");
-										var table = $$(DataTable.ui.id);
-										var columns = table.config.columns;
-										var count = 0;
-										var matchArray = [];
-										table.filter(function(obj){
-											matchArray = [];
-											// console.log("filter", obj);
-											for (var i=0; i<columns.length; i++) {
-												for (var x=0; x<text.length; x++) {
-													var searchFor = text[x];
-													if (obj[columns[i].id] && obj[columns[i].id].toString().toLowerCase().indexOf(searchFor) !== -1) {
-														// console.log("matched on:", searchFor);
-														if (matchArray.indexOf(searchFor) == -1) {
-															matchArray.push(searchFor);
-														}
-													}
-												}
-											}
-											// console.log("Filter By:", text.length, text);
-											// console.log("Matches:", matchArray);
-											if (matchArray.length == text.length) {
-												count++;
-												return true;
-											} else {
-												return false;
-											}
-										});
-										if (globalFilterPosition == "single") {
-											if (count == 1) {
-												table.show();
-												table.select(table.getFirstId(), false);
-												table.callEvent("onItemClick", [ table.getFirstId(), "auto", null ]);
-											} else {
-												table.hide(); 
-											}
-										}
-									}
-								}
-							},
-							{
-								view:"button", 
-								width: 28, 
-								type:"icon", 
-								icon:"fa fa-times",
-								click: function() {
-									$$(ids.globalFilterForm).setValue("");
-									$$(ids.globalFilterForm).focus();
-									$$(ids.globalFilterForm).callEvent("onTimedKeyPress");
-								}
-							}
-						]
-					},
-					rowFilterForm.ui,
-					{
 						view: 'toolbar',
 						id: ids.toolbar,
 						hidden: true,
@@ -1344,26 +1254,7 @@ export default class ABViewGrid extends ABViewWidget  {
 							*/
 						]
 					},
-					{
-						view: 'toolbar',
-						id: ids.filterMenutoolbar,
-						css: "ab-data-toolbar",
-						hidden: true,
-						cols: [
-							{
-								view: "button",
-								id: ids.resetFilterButton,
-								label: L('ab.object.toolbar.resetFilter', "*Reset Filter"),
-								icon: "fa fa-ban",
-								type: "icon",
-								badge: 0,
-								autowidth: true,
-								click: function() {
-									_logic.resetFilterMenu();
-								}
-							}
-						]
-					},
+					filterUI.ui,
 					DataTable.ui
 				]
 			};
@@ -1392,21 +1283,31 @@ export default class ABViewGrid extends ABViewWidget  {
 
 			},
 
-			callbackFilterData: (row_filter) => {
+			callbackFilterData: (fnFilter) => {
 
-				var filterRules = (row_filter.getValue().rules || []);
+				// var filterRules = (fnFilter.getValue().rules || []);
 
-				if ($$(ids.buttonFilter)) {
-					$$(ids.buttonFilter).define('badge', filterRules.length);
-					$$(ids.buttonFilter).refresh();
-				}
+				// if ($$(ids.buttonFilter)) {
+				// 	$$(ids.buttonFilter).define('badge', filterRules.length);
+				// 	$$(ids.buttonFilter).refresh();
+				// }
 
 				// client filter data
-				$$(DataTable.ui.id).filter(function(rowData) {
+				if (fnFilter) {
+					let table = $$(DataTable.ui.id);
+					table.filter(fnFilter);
 
-					return row_filter.isValid(rowData);
+					if (this.settings.gridFilter.globalFilterPosition == "single") {
+						if (table.count() > 0) {
+							table.show();
+							table.select(table.getFirstId(), false);
+							table.callEvent("onItemClick", [table.getFirstId(), "auto", null]);
+						} else {
+							table.hide();
+						}
+					}
 
-				});
+				}
 
 			},
 
@@ -1488,7 +1389,7 @@ export default class ABViewGrid extends ABViewWidget  {
 			},
 			
 			toolbarFilter: ($view) => {
-				filter_popup.show($view);
+				filterUI.showPopup($view);
 			},
 
 			toolbarSort: ($view) => {
@@ -1501,30 +1402,6 @@ export default class ABViewGrid extends ABViewWidget  {
 
 			toolbarMassUpdate: function ($view) {
 				PopupMassUpdateComponent.show($view);
-			},
-		
-			resetFilterMenu: () => {
-				$$(DataTable.ui.id).filter();
-			},
-
-			applyFilterMenuToDataTable: (queryRules) => {
-
-				var id = "hiddenQB_"+webix.uid();
-
-				var ui = {
-					id:id,
-					hidden:true,
-					view:'querybuilder'
-				}
-				var hiddenQB = webix.ui(ui);
-		
-				hiddenQB.setValue(queryRules);
-		
-				var QBHelper = hiddenQB.getFilterHelper();
-		
-				hiddenQB.destructor();	// remove the QB 
-
-				$$(DataTable.ui.id).filter(QBHelper);
 			}
 
 		}
@@ -1538,26 +1415,6 @@ export default class ABViewGrid extends ABViewWidget  {
 				$$(DataTable.ui.id).adjust();
 			}
 
-
-			if (this.settings.gridFilter.filterOption == 2) {
-				if (this.settings.gridFilter.queryRules.length > 0) {
-					this.settings.gridFilter.queryRules.forEach(qr => {
-						var filterRuleButton = {
-							view: "button",
-							label: qr.ruleName,
-							icon: "fa fa-filter",
-							type: "icon",
-							badge: 0,
-							autowidth: true,
-							click: function() {
-								_logic.applyFilterMenuToDataTable(qr.queryRules);
-							}
-						};
-						$$(ids.filterMenutoolbar).addView(filterRuleButton);
-					});
-				}
-			}
-			
 			var dc = this.dataCollection;
 			if (dc) {
 
@@ -1730,6 +1587,7 @@ export default class ABViewGrid extends ABViewWidget  {
 			// PopupFilterDataTableComponent.objectLoad(dataCopy, view);
 			// PopupSortFieldComponent.objectLoad(dataCopy, view);
 			PopupFrozenColumnsComponent.objectLoad(dataCopy, view);
+
 			PopupGridFilterMenu.objectLoad(dataCopy);
 
 			PopupSummaryColumnsComponent.objectLoad(dataCopy, view);

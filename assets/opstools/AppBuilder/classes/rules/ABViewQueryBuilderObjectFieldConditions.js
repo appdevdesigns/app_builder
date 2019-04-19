@@ -251,8 +251,8 @@ export default class ABViewQueryBuilderObjectFieldConditions {
 
 				var QB = $$(ids.queryBuilder);
 				if (QB) {
-					QB.setValue(values);
-					if (values[0].rules && values[0].rules.length) {
+					if (values[0] && values[0].rules && values[0].rules.length) {
+						QB.setValue(values[0]);
 						$$(ids.queryBuilderContainer).show();
 						$$(ids.showQBButton).hide();
 					}

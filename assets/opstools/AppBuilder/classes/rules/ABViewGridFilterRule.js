@@ -154,7 +154,9 @@ export default class ABViewGridFilterRule {
 			$$(this.ids.ruleName).setValue(settings.ruleName);
 
 			//Prevent from null queryRule
-			if (settings.queryRules[0]) {
+			if (settings.queryRules &&
+				settings.queryRules.rules &&
+				settings.queryRules.rules[0]) {
 				this.objectQB.setValue(settings.queryRules);
 			}
 		}
@@ -172,6 +174,12 @@ export default class ABViewGridFilterRule {
 
 	showQueryBuilderContainer() {
 		this.objectQB.showQueryBuilderContainer();
+	}
+
+	conditionFields() {
+
+		return this.objectQB.conditionFields();
+
 	}
 
 }
