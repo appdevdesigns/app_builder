@@ -6,6 +6,7 @@
  */
 
 import ABView from "./views/ABView"
+import ABViewCarousel from "./views/ABViewCarousel"
 import ABViewChart from "./views/ABViewChart"
 import ABViewChartPie from "./views/ABViewChartPie"
 import ABViewChartBar from "./views/ABViewChartBar"
@@ -59,6 +60,7 @@ import ABViewReportPanel from "./views/ABViewReportPanel"
 var Views = {};
 Views[ABView.common().key] = ABView;
 
+Views[ABViewCarousel.common().key] = ABViewCarousel;
 Views[ABViewChart.common().key] = ABViewChart;
 Views[ABViewChartPie.common().key] = ABViewChartPie;
 Views[ABViewChartBar.common().key] = ABViewChartBar;

@@ -805,13 +805,14 @@ PopupRecordRule.qbFixAfterShow();
 
 			displayData: (rowData) => {
 
+				var customFields = this.fieldComponents((comp) => {
+					return (comp instanceof ABViewFormCustom) ||
+						// rich text
+						((comp instanceof ABViewFormTextbox) && comp.settings.type == 'rich')
+				});
+
 				// Set default values
 				if (rowData == null) {
-					var customFields = this.fieldComponents((comp) => {
-						return (comp instanceof ABViewFormCustom) ||
-							// rich text
-							((comp instanceof ABViewFormTextbox) && comp.settings.type == 'rich')
-					});
 					customFields.forEach((f) => {
 
 						var field = f.field();
@@ -820,7 +821,7 @@ PopupRecordRule.qbFixAfterShow();
 						var comp = this.viewComponents[f.id];
 						if (comp == null) return;
 
-						var colName = field.columnName;
+						// var colName = field.columnName;
 
 						// set value to each components
 						var defaultRowData = {};
@@ -853,11 +854,6 @@ PopupRecordRule.qbFixAfterShow();
 
 				// Populate value to custom fields
 				else {
-					var customFields = this.fieldComponents((comp) => {
-						return (comp instanceof ABViewFormCustom) ||
-							// rich text
-							((comp instanceof ABViewFormTextbox) && comp.settings.type == 'rich')
-					});
 					customFields.forEach((f) => {
 
 						var comp = this.viewComponents[f.id];

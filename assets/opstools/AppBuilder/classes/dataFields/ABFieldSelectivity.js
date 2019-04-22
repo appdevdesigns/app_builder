@@ -145,16 +145,17 @@ export default class ABFieldSelectivity extends ABField {
 	}
 
 	selectivitySet(domNode, data, App, row) {
-		if (domNode && domNode.selectivity) {
+		if (!domNode || !domNode.selectivity)
+			return;
 
-			data = this.prepareData(data, domNode.selectivity.options.multiple);
+		data = this.prepareData(data, domNode.selectivity.options.multiple);
 
-			if ((Array.isArray(data) && data[0]) || // Check Array
-				(data && data.id)) // Check a object
-				domNode.selectivity.setData(data);
-			else
-				domNode.selectivity.clear();
-		}
+		if ((Array.isArray(data) && data[0]) || // Check Array
+			(data && data.id)) // Check a object
+			domNode.selectivity.setData(data);
+		else
+			domNode.selectivity.clear();
+
 	}
 
 	selectivityDestroy(domNode) {
