@@ -5,8 +5,11 @@
  *
  */
 
+import ABViewPropertyFilterData from "./viewProperties/ABViewPropertyFilterData"
 import ABViewWidget from "./ABViewWidget"
+
 import ABFieldImage from "../dataFields/ABFieldImage"
+
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -28,7 +31,7 @@ var ABViewDefaults = {
 	labelKey: 'ab.components.carousel' // {string} the multilingual label key for the class label
 };
 
-
+var PopupCarouselFilterMenu = null;
 
 export default class ABViewCarousel extends ABViewWidget {
 
@@ -67,6 +70,26 @@ export default class ABViewCarousel extends ABViewWidget {
 	///
 
 	/**
+	 * @method toObj()
+	 *
+	 * properly compile the current state of this ABViewLabel instance
+	 * into the values needed for saving.
+	 *
+	 * @return {json}
+	 */
+	toObj() {
+
+		// OP.Multilingual.unTranslate(this, this, ['label', 'text']);
+
+		var obj = super.toObj();
+
+		obj.settings.filter = PopupCarouselFilterMenu.toSettings();
+
+		obj.views = [];
+		return obj;
+	}
+
+	/**
 	 * @method fromValues()
 	 *
 	 * initialze this object with the given set of values.
@@ -82,6 +105,9 @@ export default class ABViewCarousel extends ABViewWidget {
 		this.settings.hideItem = JSON.parse(this.settings.hideItem || ABViewCarouselPropertyComponentDefaults.hideItem);
 		this.settings.hideButton = JSON.parse(this.settings.hideButton || ABViewCarouselPropertyComponentDefaults.hideButton);
 		this.settings.navigationType = this.settings.navigationType || ABViewCarouselPropertyComponentDefaults.navigationType;
+
+		// filter property
+		PopupCarouselFilterMenu.fromSettings(this.settings.filter);
 
 	}
 
@@ -115,7 +141,66 @@ export default class ABViewCarousel extends ABViewWidget {
 
 	static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
 
-		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
+		var idBase = 'ABViewCarouselPropertyEditor';
+
+		let commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
+
+		PopupCarouselFilterMenu = new ABViewPropertyFilterData(App, idBase + "_carouselfiltermenu");
+		let filterComponent = PopupCarouselFilterMenu.propertyComponent();
+
+		let filter_property_popup = webix.ui({
+			view: "window",
+			modal: true,
+			position: "center",
+			resize: true,
+			width: 700,
+			height: 450,
+			css: 'ab-main-container',
+			head: {
+				view: "toolbar",
+				cols: [
+					{ view: "label", label: L("ab.component.grid.filterMenu", "*Filter Menu") },
+				]
+			},
+			body: filterComponent.ui
+		});
+
+		_logic.filterMenuShow = () => {
+
+			var currView = _logic.currentEditObject();
+
+			PopupCarouselFilterMenu.fromSettings(currView.settings.filter);
+
+			// show filter popup
+			filter_property_popup.show();
+
+		}
+
+		_logic.filterSave = (settings) => {
+
+			var currView = _logic.currentEditObject();
+			currView.settings.filter = settings;
+
+			// hide filter popup
+			filter_property_popup.hide();
+
+			// trigger a save()
+			this.propertyEditorSave(ids, currView);
+		}
+
+		_logic.filterCancel = () => {
+
+			// hide filter popup
+			filter_property_popup.hide();
+
+		}
+
+
+		filterComponent.init({
+			onSave: _logic.filterSave,
+			onCancel: _logic.filterCancel
+		});
+
 
 		return commonUI.concat([
 			{
@@ -262,7 +347,7 @@ export default class ABViewCarousel extends ABViewWidget {
 									type: "icon",
 									badge: 0,
 									click: function () {
-										_logic.gridFilterMenuShow(this.$view);
+										_logic.filterMenuShow(this.$view);
 									}
 								}
 							]
@@ -278,6 +363,8 @@ export default class ABViewCarousel extends ABViewWidget {
 	static propertyEditorPopulate(App, ids, view) {
 
 		super.propertyEditorPopulate(App, ids, view);
+
+		if (!view) return;
 
 		// Set the objects you can choose from in the list
 		var defaultOption = { id: '', value: L('ab.component.label.selectObject', '*Select an object') };
@@ -301,6 +388,12 @@ export default class ABViewCarousel extends ABViewWidget {
 		$$(ids.hideItem).setValue(view.settings.hideItem);
 		$$(ids.hideButton).setValue(view.settings.hideButton);
 		$$(ids.navigationType).setValue(view.settings.navigationType);
+
+		// Populate values to QueryBuilder
+		var selectedDc = view.dataCollection;
+		if (selectedDc) {
+			PopupCarouselFilterMenu.objectLoad(selectedDc.datasource);
+		}
 
 	}
 
@@ -332,20 +425,27 @@ export default class ABViewCarousel extends ABViewWidget {
 			component: App.unique(idBase + '_component'),
 		}
 
+		PopupCarouselFilterMenu.fromSettings(this.settings.filter);
+		let filterUI = PopupCarouselFilterMenu.component();
 
 		let _ui = {
 			cols: [
 				{
-					id: ids.component,
-					view: "carousel",
-					cols: [],
-					width: this.settings.width,
-					height: this.settings.height,
-					navigation: {
-						items: !this.settings.hideItem,
-						buttons: !this.settings.hideButton,
-						type: this.settings.navigationType
-					}
+					rows: [
+						filterUI.ui, // filter UI
+						{
+							id: ids.component,
+							view: "carousel",
+							cols: [],
+							width: this.settings.width,
+							height: this.settings.height,
+							navigation: {
+								items: !this.settings.hideItem,
+								buttons: !this.settings.hideButton,
+								type: this.settings.navigationType
+							}
+						}
+					]
 				},
 				{} // spacer
 			]
@@ -358,6 +458,9 @@ export default class ABViewCarousel extends ABViewWidget {
 			let dc = this.dataCollection;
 			if (!dc) return;
 
+			let object = dc.datasource;
+			if (!object) return;
+
 			this.eventAdd({
 				emitter: dc,
 				eventName: "loadData",
@@ -367,18 +470,27 @@ export default class ABViewCarousel extends ABViewWidget {
 				}
 			});
 
+			PopupCarouselFilterMenu.objectLoad(object);
+			PopupCarouselFilterMenu.viewLoad(this);
 
-
+			filterUI.init({
+				onFilterData: (fnFilter) => {
+					_logic.onShow(fnFilter);	// be notified when there is a change in the filter
+				}
+			});
 
 		};
 
 		let _logic = {
 
 			myTemplate: (row) => {
-				return `<img src="${row.src}" class="content" ondragstart="return false" width="${this.settings.width}"/><div class="title">${row.title || ""}</div>`;
+				if (row && row.src)
+					return `<img src="${row.src}" class="content" ondragstart="return false" width="${this.settings.width}"/><div class="title">${row.title || ""}</div>`;
+				else // empty image
+					return "";
 			},
 
-			onShow: () => {
+			onShow: (fnFilter) => {
 
 				let dc = this.dataCollection;
 				if (!dc) return;
@@ -389,7 +501,9 @@ export default class ABViewCarousel extends ABViewWidget {
 				let field = this.imageField;
 				if (!field) return;
 
-				let rows = dc.getData();
+				fnFilter = fnFilter || filterUI.getFilter();
+
+				let rows = dc.getData(fnFilter);
 
 				let images = [];
 
@@ -407,11 +521,37 @@ export default class ABViewCarousel extends ABViewWidget {
 
 				});
 
-				// re-render
-				if (images && images.length)
-					webix.ui(images, $$(ids.component));
+				// empty image
+				if (images.length < 1) {
+					images.push(
+						{
+							rows: [
+								{
+									view: 'label',
+									align: "center",
+									height: this.settings.height,
+									label: "<div style='display: block; font-size: 180px; background-color: #666; color: transparent; text-shadow: 0px 1px 1px rgba(255,255,255,0.5); -webkit-background-clip: text; -moz-background-clip: text; background-clip: text;' class='fa fa-picture-o'></div>"
+								},
+								{
+									view: 'label',
+									align: "center",
+									label: "No image"
+								}
+							]
+						}
+					);
+				}
 
+
+				// re-render
+				webix.ui(images, $$(ids.component));
+
+			},
+
+			showFilterPopup: ($view) => {
+				filterUI.showPopup($view);
 			}
+
 
 		}
 

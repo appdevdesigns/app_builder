@@ -522,7 +522,7 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 					// }
 
 					// be notified when there is a change in the filter
-					logic.callbacks.onFilterData((rowData) => {
+					logic.triggerCallback((rowData) => {
 
 						return this.rowFilter.isValid(rowData);
 
@@ -534,7 +534,7 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 				onChange: () => {
 
 					// be notified when there is a change in the filter
-					logic.callbacks.onFilterData((rowData) => {
+					logic.triggerCallback((rowData) => {
 
 						return this.rowFilterForm.isValid(rowData);
 
@@ -599,8 +599,17 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 				onFilterData: function (fnFilter) { console.warn('NO onFilterData()') }
 			},
 
+			triggerCallback: (fnFilter) => {
+
+				instance.__currentFilter = fnFilter;
+				logic.callbacks.onFilterData(this.__currentFilter);
+
+			},
+
 			resetFilter: () => {
-				logic.callbacks.onFilterData(function (rowData) { return true; });
+
+				logic.triggerCallback(function (rowData) { return true; });
+
 			},
 
 			selectFilter: (queryRules) => {
@@ -623,7 +632,25 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 
 				hiddenQB.destructor();	// remove the QB 
 
-				logic.callbacks.onFilterData(QBHelper);
+				logic.triggerCallback(QBHelper);
+
+			},
+
+			getFilter() {
+
+				// default filter
+				if (instance.__currentFilter == null) {
+
+					// if empty search text in global single mode, then no display rows
+					if (instance.settings.filterOption == 3 &&
+						instance.settings.globalFilterPosition == "single")
+						instance.__currentFilter = (row) => { return false };
+					// always true, show every rows
+					else
+						instance.__currentFilter = (row) => { return true };
+				}
+
+				return instance.__currentFilter;
 			},
 
 			showFilterPopup($view) {
@@ -666,7 +693,7 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 
 				};
 
-				logic.callbacks.onFilterData(isTextValid);
+				logic.triggerCallback(isTextValid);
 
 				// var table = $$(DataTable.ui.id);
 				// var columns = table.config.columns;
@@ -713,7 +740,9 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 			logic: logic,
 
 			showPopup: logic.showFilterPopup,
-			closePopup: logic.closeFilterPopup
+			closePopup: logic.closeFilterPopup,
+
+			getFilter: logic.getFilter
 		};
 
 	}
