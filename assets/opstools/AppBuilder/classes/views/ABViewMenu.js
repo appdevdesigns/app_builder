@@ -125,7 +125,8 @@ export default class ABViewMenu extends ABViewWidget {
 			var page = this.settings.pages[i];
 			if (page instanceof Object) {
 				page.isChecked = JSON.parse(page.isChecked || false);
-				page.translations = OP.Multilingual.translate(page, page, ["aliasname"]);
+
+				OP.Multilingual.translate(page, page, ["aliasname"]);
 			}
 			// Compatible with old data
 			else if (typeof page == 'string') {
@@ -409,6 +410,7 @@ export default class ABViewMenu extends ABViewWidget {
 										item.aliasname = state.value;
 										this.updateItem(item);
 									}
+
 									_logic.onChange();
 								}
 							}
@@ -441,13 +443,20 @@ export default class ABViewMenu extends ABViewWidget {
 		var currentPage = view.pageParent();
 		var parentPage = currentPage.pageParent();
 
+		/**
+		 * @method addPage
+		 * 
+		 * @param {ABView} page 
+		 * @param {integer} index 
+		 * @param {uuid} parentId 
+		 */
 		var addPage = function (page, index, parentId) {
 
-			// update label of the page
+			// update .aliasname and .translations of the page
 			if(view.settings.pages) {
 				view.settings.pages.forEach((localpage)=> {
 					if(localpage.pageId == page.id) {
-						page.aliasname = localpage.aliasname;
+						page.aliasname = view.getAliasname(localpage);
 					}
 				});
 			}
@@ -540,13 +549,15 @@ export default class ABViewMenu extends ABViewWidget {
 					tabId = "";
 				}
 
+				let pageInfo = view.settings.pages.filter(p => p.pageId == currentPageId)[0];
+
 				pagesIdList.push({ 
 					pageId: currentPageId,
 					tabId: tabId,
 					type: type,
 					isChecked: currentItem.checked,
 					aliasname: currentItem.aliasname,
-					translations: []
+					translations: pageInfo && pageInfo.translations ? pageInfo.translations : []
 				});
 			}
 		}
@@ -749,24 +760,7 @@ export default class ABViewMenu extends ABViewWidget {
 
 			if (displayPage.isChecked) {
 
-				var label =  displayPage.aliasname;
-				if (!label) {
-
-					var page = this.application.pages(p => p.id == displayPage.pageId, true)[0];
-					if (page) {
-
-						if (displayPage.type == "tab") {
-							var tabView = page.views(v => v.id == displayPage.tabId, true)[0];
-							if (tabView) {
-								label = tabView.label;
-							}
-						}
-						else {
-							label = page.label;
-						}
-
-					}
-				}
+				var label = this.getAliasname(displayPage);
 
 				menu.add({
 					id: displayPage.tabId || displayPage.pageId,
@@ -801,6 +795,51 @@ export default class ABViewMenu extends ABViewWidget {
 		// });
 
 		// return insertPages;
+
+	}
+
+	/**
+	 * @method getAliasname
+	 * @param pageInfo - an object in settings
+	 * { 
+	 * 	pageId: uuid,
+	 * 	tabId: uuid, 
+	 * 	type: string, - "page" or "tab"
+	 * 	isChecked: bool,
+	 * 	aliasname: string,
+	 *	translations: []
+	 *}
+	 * 
+	 * @return {string}
+	 */
+	getAliasname(pageInfo) {
+
+		var label =  pageInfo.aliasname;
+
+		// if alias is empty, then find label of page or tab
+		if (!label ||
+			// remove [en] or [th] etc.
+			!(label.replace(/\[.{2,}\]/g, ""))) {
+
+			// find label of the actual page
+			var page = this.application.pages(p => p.id == pageInfo.pageId, true)[0];
+			if (page) {
+
+				// find label of the tab view
+				if (pageInfo.type == "tab") {
+					var tabView = page.views(v => v.id == pageInfo.tabId, true)[0];
+					if (tabView) {
+						label = tabView.label;
+					}
+				}
+				else {
+					label = page.label;
+				}
+
+			}
+		}
+
+		return label;
 
 	}
 
