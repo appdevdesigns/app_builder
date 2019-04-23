@@ -791,6 +791,8 @@ PopupRecordRule.qbFixAfterShow();
 
 			}
 
+			_onShow();
+
 		}
 
 		var _logic = this._logic = {
@@ -912,25 +914,25 @@ PopupRecordRule.qbFixAfterShow();
 
 			var Form = $$(ids.component);
 
-			var customFields = this.fieldComponents((comp) => {
-				return (comp instanceof ABViewFormCustom) ||
-					// rich text
-					((comp instanceof ABViewFormTextbox) && comp.settings.type == 'rich')
-			});
-			customFields.forEach((f) => {
+			// var customFields = this.fieldComponents((comp) => {
+			// 	return (comp instanceof ABViewFormCustom) ||
+			// 		// rich text
+			// 		((comp instanceof ABViewFormTextbox) && comp.settings.type == 'rich')
+			// });
+			// customFields.forEach((f) => {
 
-				var field = f.field();
-				if (!field) return;
+			// 	var field = f.field();
+			// 	if (!field) return;
 
-				var component = this.viewComponents[f.id];
-				if (!component) return;
+			// 	var component = this.viewComponents[f.id];
+			// 	if (!component) return;
 
-				// set value to each components
-				var rowData = {};
-				field.defaultValue(rowData);
-				field.setValue($$(component.ui.id), rowData);
+			// 	// set value to each components
+			// 	var rowData = {};
+			// 	field.defaultValue(rowData);
+			// 	field.setValue($$(component.ui.id), rowData);
 
-			});
+			// });
 
 			var dc = this.dataCollection;
 			if (dc) {
@@ -939,7 +941,8 @@ PopupRecordRule.qbFixAfterShow();
 					dc.bind(Form);
 
 				// clear current cursor on load
-				if (this.settings.clearOnLoad || _logic.callbacks.clearOnLoad() ) {
+				// if (this.settings.clearOnLoad || _logic.callbacks.clearOnLoad() ) {
+				if (this.settings.clearOnLoad) {
 					dc.setCursor(null);
 					_logic.displayData(null);
 				}
