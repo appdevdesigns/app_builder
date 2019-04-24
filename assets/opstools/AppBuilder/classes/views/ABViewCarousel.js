@@ -83,8 +83,6 @@ export default class ABViewCarousel extends ABViewWidget {
 
 		var obj = super.toObj();
 
-		obj.settings.filter = PopupCarouselFilterMenu.toSettings();
-
 		obj.views = [];
 		return obj;
 	}
@@ -107,7 +105,7 @@ export default class ABViewCarousel extends ABViewWidget {
 		this.settings.navigationType = this.settings.navigationType || ABViewCarouselPropertyComponentDefaults.navigationType;
 
 		// filter property
-		PopupCarouselFilterMenu.fromSettings(this.settings.filter);
+		this.filterHelper.fromSettings(this.settings.filter);
 
 	}
 
@@ -145,8 +143,7 @@ export default class ABViewCarousel extends ABViewWidget {
 
 		let commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
 
-		PopupCarouselFilterMenu = new ABViewPropertyFilterData(App, idBase + "_carouselfiltermenu");
-		let filterComponent = PopupCarouselFilterMenu.propertyComponent();
+		PopupCarouselFilterMenu = ABViewPropertyFilterData.propertyComponent(App, idBase);
 
 		let filter_property_popup = webix.ui({
 			view: "window",
@@ -162,27 +159,29 @@ export default class ABViewCarousel extends ABViewWidget {
 					{ view: "label", label: L("ab.component.grid.filterMenu", "*Filter Menu") },
 				]
 			},
-			body: filterComponent.ui
+			body: PopupCarouselFilterMenu.ui
 		});
 
 		_logic.filterMenuShow = () => {
 
 			var currView = _logic.currentEditObject();
 
-			PopupCarouselFilterMenu.fromSettings(currView.settings.filter);
+			PopupCarouselFilterMenu.setSettings(currView.settings.filter);
 
 			// show filter popup
 			filter_property_popup.show();
 
 		}
 
-		_logic.filterSave = (settings) => {
+		_logic.filterSave = () => {
 
 			var currView = _logic.currentEditObject();
-			currView.settings.filter = settings;
 
 			// hide filter popup
 			filter_property_popup.hide();
+
+			// refresh settings
+			this.propertyEditorValues(ids, currView);
 
 			// trigger a save()
 			this.propertyEditorSave(ids, currView);
@@ -196,7 +195,7 @@ export default class ABViewCarousel extends ABViewWidget {
 		}
 
 
-		filterComponent.init({
+		PopupCarouselFilterMenu.init({
 			onSave: _logic.filterSave,
 			onCancel: _logic.filterCancel
 		});
@@ -409,6 +408,7 @@ export default class ABViewCarousel extends ABViewWidget {
 		view.settings.hideItem = $$(ids.hideItem).getValue();
 		view.settings.hideButton = $$(ids.hideButton).getValue();
 		view.settings.navigationType = $$(ids.navigationType).getValue();
+		view.settings.filter = PopupCarouselFilterMenu.getSettings();
 
 	}
 
@@ -425,9 +425,13 @@ export default class ABViewCarousel extends ABViewWidget {
 			component: App.unique(idBase + '_component'),
 		}
 
-		PopupCarouselFilterMenu.fromSettings(this.settings.filter);
-		let filterUI = PopupCarouselFilterMenu.component();
+		var dc = this.dataCollection;
+		if (dc) {
+			this.filterHelper.objectLoad(dc.datasource);
+			this.filterHelper.fromSettings(this.settings.filter);
+		}
 
+		let filterUI = this.filterHelper.component(App, idBase);
 		let _ui = {
 			cols: [
 				{
@@ -470,8 +474,8 @@ export default class ABViewCarousel extends ABViewWidget {
 				}
 			});
 
-			PopupCarouselFilterMenu.objectLoad(object);
-			PopupCarouselFilterMenu.viewLoad(this);
+			this.filterHelper.objectLoad(object);
+			this.filterHelper.viewLoad(this);
 
 			filterUI.init({
 				onFilterData: (fnFilter) => {
@@ -500,6 +504,14 @@ export default class ABViewCarousel extends ABViewWidget {
 
 				let field = this.imageField;
 				if (!field) return;
+
+				if (dc && dc.dataStatus == dc.dataStatusFlag.notInitial) {
+					// load data when a widget is showing
+					dc.loadData();
+
+					// it will call .onShow again after dc loads completely
+					return;
+				}
 
 				fnFilter = fnFilter || filterUI.getFilter();
 
@@ -563,6 +575,15 @@ export default class ABViewCarousel extends ABViewWidget {
 
 			onShow: _logic.onShow
 		};
+
+	}
+
+	get filterHelper() {
+
+		if (this.__filterHelper == null)
+			this.__filterHelper = new ABViewPropertyFilterData();
+
+		return this.__filterHelper;
 
 	}
 

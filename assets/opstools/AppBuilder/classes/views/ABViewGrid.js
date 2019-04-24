@@ -4,8 +4,8 @@
  * An ABViewGrid defines a Grid view type.
  *
  */
+import ABViewWidget from "./ABViewWidget"
 
-import ABPropertyComponent from "../ABPropertyComponent"
 import ABWorkspaceDatatable from "../../components/ab_work_object_workspace_datatable"
 import ABPopupHideFields from "../../components/ab_work_object_workspace_popupHideFields"
 import ABPopupSortField from "../../components/ab_work_object_workspace_popupSortFields"
@@ -14,9 +14,10 @@ import ABPopupMassUpdate from "../../components/ab_work_object_workspace_popupMa
 import ABPopupSummaryColumns from "../../components/ab_work_object_workspace_popupSummaryColumns"
 import ABPopupCountColumns from "../../components/ab_work_object_workspace_popupCountColumns"
 import ABPopupExport from "../../components/ab_work_object_workspace_popupExport"
-import ABViewPropertyFilterData from "./viewProperties/ABViewPropertyFilterData"
-import ABViewWidget from "./ABViewWidget"
+
 import ABFieldImage from "../dataFields/ABFieldImage"
+
+import ABViewPropertyFilterData from "./viewProperties/ABViewPropertyFilterData"
 
 
 function L(key, altText) {
@@ -88,9 +89,10 @@ export default class ABViewGrid extends ABViewWidget  {
 	 */
     constructor(values, application, parent) {
 
-    	super( values, application, parent, ABViewDefaults );
-		
-    	// OP.Multilingual.translate(this, this, ['text']);
+		super( values, application, parent, ABViewDefaults );
+
+		// OP.Multilingual.translate(this, this, ['text']);
+
 
   	}
 
@@ -116,8 +118,6 @@ export default class ABViewGrid extends ABViewWidget  {
 		// OP.Multilingual.unTranslate(this, this, ['label', 'text']);
 
 		var obj = super.toObj();
-
-		obj.settings.gridFilter = PopupGridFilterMenu.toSettings();
 
 		obj.views = [];
 		return obj;
@@ -171,7 +171,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		}
 
 		// filter property
-		PopupGridFilterMenu.fromSettings(this.settings.gridFilter);
+		this.filterHelper.fromSettings(this.settings.gridFilter);
 
     	// we are not allowed to have sub views:
     	this._views = [];
@@ -245,8 +245,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		PopupSummaryColumnsComponent = new ABPopupSummaryColumns(App, idBase+"_summary");
 		PopupCountColumnsComponent = new ABPopupCountColumns(App, idBase+"_count");
 
-		PopupGridFilterMenu = new ABViewPropertyFilterData(App, idBase + "_gridfiltermenu");
-		let filterComponent = PopupGridFilterMenu.propertyComponent();
+		PopupGridFilterMenu = ABViewPropertyFilterData.propertyComponent(App, idBase + "_gridfiltermenu");
 
 		let filter_property_popup = webix.ui({
 			view: "window",
@@ -262,7 +261,7 @@ export default class ABViewGrid extends ABViewWidget  {
 					{ view: "label", label: L("ab.component.grid.filterMenu", "*Filter Menu") },
 				]
 			},
-			body: filterComponent.ui
+			body: PopupGridFilterMenu.ui
 		});
 
 
@@ -301,7 +300,7 @@ export default class ABViewGrid extends ABViewWidget  {
 
 			var currView = _logic.currentEditObject();
 
-			PopupGridFilterMenu.fromSettings(currView.settings.gridFilter);
+			PopupGridFilterMenu.setSettings(currView.settings.gridFilter);
 
 			// show filter popup
 			filter_property_popup.show();
@@ -321,14 +320,16 @@ export default class ABViewGrid extends ABViewWidget  {
 			_logic.onChange();
 		}
 
-		_logic.gridFilterSave = (settings) => {
+		_logic.gridFilterSave = () => {
 
 			var currView = _logic.currentEditObject();
-			currView.settings.gridFilter = settings;
 			// currView.settings.isFilterable = settings.filterOption == 1 ? true : false;
 
 			// hide filter popup
 			filter_property_popup.hide();
+
+			// refresh settings
+			this.propertyEditorValues(ids, currView);
 
 			// trigger a save()
 			this.propertyEditorSave(ids, currView);
@@ -406,7 +407,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		});
 
 
-		filterComponent.init({
+		PopupGridFilterMenu.init({
 			onSave: _logic.gridFilterSave,
 			onCancel: _logic.gridFilterCancel
 		});
@@ -891,6 +892,8 @@ export default class ABViewGrid extends ABViewWidget  {
 		view.settings.hideButtons = $$(ids.hideButtons).getValue();
 		view.settings.groupBy = $$(ids.groupBy).getValue();
 
+		view.settings.gridFilter = PopupGridFilterMenu.getSettings();
+
 	}
 
 	static propertyUpdateGridFilterObject(ids, view) {
@@ -939,7 +942,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		var labels = {
 			common: App.labels
 		};
-		
+
 		var CurrentObject = null;
 		
 		// var linkedPage = null;
@@ -988,8 +991,8 @@ export default class ABViewGrid extends ABViewWidget  {
 		let PopupSortDataTableComponent = new ABPopupSortField(App, idBase+"_sort");
 		let exportPopup = new ABPopupExport(App, idBase+"_export");
 
-		PopupGridFilterMenu.fromSettings(this.settings.gridFilter);
-		let filterUI = PopupGridFilterMenu.component();
+		this.filterHelper.fromSettings(this.settings.gridFilter);
+		let filterUI = this.filterHelper.component(App, idBase + "_gridfilter");
 
 
 		let _init = () => {
@@ -1018,7 +1021,8 @@ export default class ABViewGrid extends ABViewWidget  {
 				if (this.settings.massUpdate ||
 					this.settings.isSortable ||
 					this.settings.isExportable ||
-					(this.settings.gridFilter.filterOption && 
+					(this.settings.gridFilter &&
+					this.settings.gridFilter.filterOption && 
 					this.settings.gridFilter.userFilterPosition == "toolbar")) {
 					$$(ids.toolbar).show();
 				}
@@ -1032,14 +1036,17 @@ export default class ABViewGrid extends ABViewWidget  {
 					$$(ids.buttonDeleteSelected).hide();
 				}
 
-				if (this.settings.gridFilter.filterOption != 1 || 
-					this.settings.gridFilter.userFilterPosition != "toolbar") {
-					$$(ids.buttonFilter).hide();
-				}
+				if (this.settings.gridFilter) {
 
-				if (this.settings.gridFilter.filterOption == 3 && 
-					this.settings.gridFilter.globalFilterPosition == "single") {
-					$$(DataTable.ui.id).hide();
+					if (this.settings.gridFilter.filterOption != 1 || 
+						this.settings.gridFilter.userFilterPosition != "toolbar") {
+						$$(ids.buttonFilter).hide();
+					}
+
+					if (this.settings.gridFilter.filterOption == 3 && 
+						this.settings.gridFilter.globalFilterPosition == "single") {
+						$$(DataTable.ui.id).hide();
+					}
 				}
 	
 				if (this.settings.isSortable == false) {
@@ -1068,8 +1075,8 @@ export default class ABViewGrid extends ABViewWidget  {
 					DataTable.objectLoad(CurrentObject);
 					PopupMassUpdateComponent.objectLoad(CurrentObject, DataTable);
 					PopupSortDataTableComponent.objectLoad(CurrentObject, this);
-					PopupGridFilterMenu.objectLoad(CurrentObject);
-					PopupGridFilterMenu.viewLoad(this);
+					this.filterHelper.objectLoad(CurrentObject);
+					this.filterHelper.viewLoad(this);
 					exportPopup.objectLoad(CurrentObject);
 					exportPopup.setGridComponent($$(DataTable.ui.id));
 					exportPopup.setHiddenFields(dataCopy.objectWorkspace.hiddenFields);
@@ -1852,6 +1859,16 @@ export default class ABViewGrid extends ABViewWidget  {
 		return ['dataSource', 'detailsPage', 'detailsTab', 'editPage', 'editTab'];
 
 	}
+
+	get filterHelper() {
+
+		if (this.__filterHelper == null)
+			this.__filterHelper = new ABViewPropertyFilterData();
+
+		return this.__filterHelper;
+
+	}
+
 
 	// Custom functions needed for UI
 

@@ -1,16 +1,6 @@
 export default class ABViewProperty {
 
-	/**
-	 * @param {object} App 
-	 *      The shared App object that is created in OP.Component
-	 * @param {string} idBase
-	 *      Identifier for this component
-	 */
-	constructor(App, idBase) {
-
-		this.App = App;
-		this.idBase = idBase;
-
+	constructor() {
 	}
 
 	/**
@@ -35,7 +25,7 @@ export default class ABViewProperty {
 	 * 						logic: object
 	 * 					}
 	 */
-	propertyComponent() {
+	static propertyComponent() {
 
 		let ui = {
 			view: 'template',
@@ -68,17 +58,14 @@ export default class ABViewProperty {
 
 	}
 
-	toSettings() {
-
-		return {};
-
-	}
-
-
 	/** == UI == */
 	/**
 	 * @function component
 	 * return the view and logic to display in display widget
+	 * @param {object} App 
+	 *      The shared App object that is created in OP.Component
+	 * @param {string} idBase
+	 *      Identifier for this component
 	 * 
 	 * @return {Object} - {
 	 * 						ui: webix element,
@@ -86,7 +73,10 @@ export default class ABViewProperty {
 	 * 						logic: object
 	 * 					}
 	 */
-	component() {
+	component(App, idBase) {
+
+		this.App = App;
+		this.idBase = idBase;
 
 		let ui = {
 			view: 'template',

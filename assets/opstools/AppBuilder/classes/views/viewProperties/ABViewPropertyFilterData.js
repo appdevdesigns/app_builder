@@ -7,44 +7,23 @@ var L = (key, altText) => {
 	return AD.lang.label.getLabel(key) || altText;
 };
 
+var getRule = (object) => {
+	var FilterRule = new ABViewGridFilterRule();
+	FilterRule.objectLoad(object);
+
+	return FilterRule;
+};
+
+var rowFilter = null;
+var rowFilterForm = null;
+
 export default class ABViewPropertyFilterData extends ABViewProperty {
 
-	/**
-	 * @param {object} App 
-	 *      The shared App object that is created in OP.Component
-	 * @param {string} idBase
-	 *      Identifier for this component
-	 */
-	constructor(App, idBase) {
-		super(App, idBase);
+	constructor() {
+		super();
 
-		this.ids = {
-			/** Property */
-			filterRules: idBase + '_rules',
-			filterRulesScrollview: idBase + '_filterRulesScrollview',
-
-			filterOptionRadio: idBase + '_filterOptionRadio',
-			filterUser: idBase + '_filterUser',
-			filterGlobal: idBase + "_filterGlobal",
-			filterMenuLayout: idBase + '_filterMenuLayout',
-
-			needLoadAllLabel: idBase + '_needLoadAll',
-
-			/** UI */
-			filterPanel: App.unique(idBase + '_filterPanel'),
-			globalFilterFormContainer: App.unique(idBase + '_globalFilterFormContainer'),
-			globalFilterForm: App.unique(idBase + '_globalFilterForm'),
-			filterMenutoolbar: App.unique(idBase + '_filterMenuToolbar'),
-			resetFilterButton: App.unique(idBase + '_resetFilterButton'),
-
-		};
-
+		this.object = null;
 		this.queryRules = [];
-		this.currentObject = null;
-		this.isLoadAll = false;
-
-		this.rowFilter = new RowFilter(App, idBase + "_filter");
-		this.rowFilterForm = new RowFilter(App, idBase + "_filter_form");
 
 	}
 
@@ -69,12 +48,24 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 		};
 	}
 
-	propertyComponent() {
+	static propertyComponent(App, idBase) {
 
 		let base = super.propertyComponent();
 
-		let App = this.App;
-		let ids = this.ids;
+		let ids = {
+			/** Property */
+			filterRules: idBase + '_rules',
+			filterRulesScrollview: idBase + '_filterRulesScrollview',
+
+			filterOptionRadio: idBase + '_filterOptionRadio',
+			filterUser: idBase + '_filterUser',
+			filterGlobal: idBase + "_filterGlobal",
+			filterMenuLayout: idBase + '_filterMenuLayout',
+
+			needLoadAllLabel: idBase + '_needLoadAll',
+
+		};
+
 		let labels = {
 			common: App.labels,
 			component: {
@@ -148,7 +139,7 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 									label: labels.component.addNewFilter,
 									width: 150,
 									click: () => {
-										this.addFilterRule();
+										logic.addFilterRule();
 									},
 								},
 								{
@@ -218,7 +209,7 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 
 			callbacks: {
 				onCancel: function () { console.warn('NO onCancel()!') },
-				onSave: function (field) { console.warn('NO onSave()!') },
+				onSave: function () { console.warn('NO onSave()!') },
 			},
 
 			buttonCancel: function () {
@@ -226,10 +217,131 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 			},
 
 			buttonSave: () => {
+				logic.callbacks.onSave();
+			},
 
-				var results = this.toSettings();
+			objectLoad(object) {
+				this.object = object;
+				this.isLoadAll = object.isLoadAll;
 
-				logic.callbacks.onSave(results);
+				//tell each of our rules about our object
+				if (this.queryRules &&
+					this.queryRules.length) {
+					this.queryRules.forEach((r) => {
+						r.objectLoad(object);
+					});
+				}
+
+			},
+
+			setSettings(settings) {
+
+				//Convert some condition from string to integer
+				(settings.queryRules || []).forEach(qr => {
+					if (qr &&
+						qr.queryRules &&
+						qr.queryRules[0] &&
+						qr.queryRules[0].rules) {
+						qr.queryRules[0].rules.forEach(rule => {
+							if (/^[+-]?\d+(\.\d+)?$/.exec(rule.value)) {
+								rule.value = JSON.parse(rule.value);
+							}
+
+						});
+					}
+
+				});
+
+				$$(ids.filterOptionRadio).setValue(settings.filterOption);
+				$$(ids.filterUser).setValue(settings.userFilterPosition || ABViewPropertyFilterData.default.userFilterPosition);
+				$$(ids.filterGlobal).setValue(settings.globalFilterPosition || ABViewPropertyFilterData.default.globalFilterPosition);
+
+				// clear any existing Rules:
+				if (this.queryRules &&
+					this.queryRules.length > 0) {
+					this.queryRules.forEach((rule) => {
+						if ($$(ids.filterRules))
+							$$(ids.filterRules).removeView(rule.ids.component);
+					})
+				}
+				this.queryRules = [];
+
+				(settings.queryRules || []).forEach((ruleSettings) => {
+					logic.addFilterRule(ruleSettings);
+				});
+
+
+				// set object to every rules
+				logic.objectLoad(this.object);
+
+			},
+
+			getSettings() {
+
+				var settings = this.settings || {};
+				settings.filterOption = JSON.parse($$(ids.filterOptionRadio).getValue());
+				settings.queryRules = [];
+
+				switch (settings.filterOption) {
+					case 1: // Enable User filters
+						settings.userFilterPosition = $$(ids.filterUser).getValue();
+						break;
+					case 2: // Use a filter menu
+						this.queryRules.forEach((r) => {
+							settings.queryRules.push(r.toSettings());
+						});
+						break;
+					case 3: // Use a global filter menu
+						settings.globalFilterPosition = $$(ids.filterGlobal).getValue();
+						break;
+				}
+
+				return settings;
+			},
+
+
+			/**
+			 * @method addFilterRule
+			 * Instantiate a new Rule in our list.
+			 * @param {obj} settings  The settings object from the Rule we created in .toSettings()
+			 */
+			addFilterRule(settings) {
+
+				if (this.object == null)
+					return;
+
+				var Rule = getRule(this.object);
+				this.queryRules.push(Rule);
+
+
+				// if we have tried to create our component:
+				if (this.ids) {
+
+					// if our actually exists, then populate it:
+					var RulesUI = $$(this.ids.filterRules);
+					if (RulesUI) {
+
+						// make sure Rule.ui is created before calling .init()
+						Rule.component(this.App, this.idBase);  // prepare the UI component
+						var viewId = RulesUI.addView(Rule.ui);
+						Rule.showQueryBuilderContainer();
+						Rule.init({
+							onDelete: (deletedRule) => {
+
+								$$(this.ids.filterRules).removeView(Rule.ids.component);
+
+								var index = this.queryRules.indexOf(deletedRule);
+								if (index !== -1) {
+									this.queryRules.splice(index, 1);
+								}
+							}
+						});
+					}
+				}
+
+				if (settings) {
+					Rule.fromSettings(settings);
+				}
 			},
 
 			onShow: function () {
@@ -273,7 +385,10 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 			ui: ui,
 			init: init,
 			logic: logic,
-			onShow: logic.onShow
+			onShow: logic.onShow,
+			objectLoad: logic.objectLoad,
+			setSettings: logic.setSettings,
+			getSettings: logic.getSettings
 		};
 
 	}
@@ -285,72 +400,41 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 	 */
 	fromSettings(settings) {
 
-		settings = settings || {
-			queryRules: []
-		};
-
-		settings.filterOption = JSON.parse(settings.filterOption || 0);
-
-		//Convert some condition from string to integer
-		(settings.queryRules || []).forEach(qr => {
-			if (qr &&
-				qr.queryRules &&
-				qr.queryRules[0] &&
-				qr.queryRules[0].rules) {
-				qr.queryRules[0].rules.forEach(rule => {
-					if (/^[+-]?\d+(\.\d+)?$/.exec(rule.value)) {
-						rule.value = JSON.parse(rule.value);
-					}
-
-				});
-			}
-		});
-
-		// clear any existing Rules:
-		if (this.queryRules.length > 0) {
-			this.queryRules.forEach((rule) => {
-				$$(this.ids.filterRules).removeView(rule.ids.component);
-			})
-		}
 		this.queryRules = [];
 
+		settings = settings || {};
+
 		settings.filterOption = JSON.parse(settings.filterOption || ABViewPropertyFilterData.default.filterOption);
-		$$(this.ids.filterOptionRadio).setValue(settings.filterOption);
 
-		$$(this.ids.filterUser).setValue(settings.userFilterPosition || ABViewPropertyFilterData.default.userFilterPosition);
+		(settings.queryRules || []).forEach(qr => {
 
-		$$(this.ids.filterGlobal).setValue(settings.globalFilterPosition || ABViewPropertyFilterData.default.globalFilterPosition);
+			if (qr) {
 
-		(settings.queryRules || []).forEach((ruleSettings) => {
-			this.addFilterRule(ruleSettings);
+				//Convert some condition from string to integer
+				if (qr.queryRules &&
+					qr.queryRules[0] &&
+					qr.queryRules[0].rules) {
+					qr.queryRules[0].rules.forEach(rule => {
+						if (/^[+-]?\d+(\.\d+)?$/.exec(rule.value)) {
+							rule.value = JSON.parse(rule.value);
+						}
+					});
+				}
+
+				var Rule = getRule(this.object);
+				Rule.fromSettings(qr);
+				this.queryRules.push(Rule);
+
+			}
+
 		});
 
 		this.settings = settings;
 	}
 
 	toSettings() {
-
-		var settings = {};
-		settings.filterOption = JSON.parse($$(this.ids.filterOptionRadio).getValue());
-		settings.queryRules = [];
-
-		switch (settings.filterOption) {
-			case 1: // Enable User filters
-				settings.userFilterPosition = $$(this.ids.filterUser).getValue();
-				break;
-			case 2: // Use a filter menu
-				this.queryRules.forEach((r) => {
-					settings.queryRules.push(r.toSettings());
-				});
-				break;
-			case 3: // Use a global filter menu
-				settings.globalFilterPosition = $$(this.ids.filterGlobal).getValue();
-				break;
-		}
-
-		return settings;
+		return this.settings;
 	}
-
 
 
 	/**
@@ -361,81 +445,71 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 	 * @param {ABObject} The object that will be used to evaluate the Rules
 	 */
 	objectLoad(object) {
-		this.currentObject = object;
-		this.isLoadAll = object.isLoadAll;
+		this.object = object;
 
 		//tell each of our rules about our object
-		this.queryRules.forEach((r) => {
-			r.objectLoad(object);
-		});
+		if (this.queryRules &&
+			this.queryRules.length) {
+			this.queryRules.forEach((r) => {
+				r.objectLoad(object);
+			});
+		}
 
-		this.rowFilter.objectLoad(object);
-		this.rowFilterForm.objectLoad(object);
+		if (rowFilter)
+			rowFilter.objectLoad(object);
+
+		if (rowFilterForm)
+			rowFilterForm.objectLoad(object);
 
 	}
 
 	viewLoad(view) {
-		this.rowFilter.viewLoad(view);
-		this.rowFilterForm.viewLoad(view);
+		this.view = view;
+
+		if (rowFilter)
+			rowFilter.viewLoad(view);
+
+		if (rowFilterForm)
+			rowFilterForm.viewLoad(view);
 	}
-
-	getRule() {
-		var FilterRule = new ABViewGridFilterRule();
-		FilterRule.objectLoad(this.currentObject);
-
-		return FilterRule;
-	}
-
-	/**
-	 * @method addFilterRule
-	 * Instantiate a new Rule in our list.
-	 * @param {obj} settings  The settings object from the Rule we created in .toSettings()
-	 */
-	addFilterRule(settings) {
-
-		if (this.currentObject == null)
-			return;
-
-		var Rule = this.getRule();
-		this.queryRules.push(Rule);
-
-
-		// if we have tried to create our component:
-		if (this.ids) {
-
-			// if our actually exists, then populate it:
-			var RulesUI = $$(this.ids.filterRules);
-			if (RulesUI) {
-
-				// make sure Rule.ui is created before calling .init()
-				Rule.component(this.App, this.idBase);  // prepare the UI component
-				var viewId = RulesUI.addView(Rule.ui);
-				Rule.showQueryBuilderContainer();
-				Rule.init({
-					onDelete: (deletedRule) => {
-
-						$$(this.ids.filterRules).removeView(Rule.ids.component);
-
-						var index = this.queryRules.indexOf(deletedRule);
-						if (index !== -1) {
-							this.queryRules.splice(index, 1);
-						}
-					}
-				});
-			}
-		}
-
-		if (settings) {
-			Rule.fromSettings(settings);
-		}
-	}
-
 
 	/** == UI == */
-	component() {
+	/**
+	 * @param {object} App 
+	 *      The shared App object that is created in OP.Component
+	 * @param {string} idBase
+	 *      Identifier for this component
+	 */
+	component(App, idBase) {
+
+		super.component(App, idBase);
+
+		rowFilter = new RowFilter(App, idBase + "_filter");
+		rowFilterForm = new RowFilter(App, idBase + "_filter_form");
+
+		if (this.object) {
+			rowFilter.objectLoad(this.object);
+			rowFilterForm.objectLoad(this.object);
+		}
+
+		if (this.view) {
+			rowFilter.viewLoad(this.view);
+			rowFilterForm.viewLoad(this.view);
+		}
+
+		let ids = {
+			/** UI */
+			filterPanel: App.unique(idBase + '_filterPanel'),
+			globalFilterFormContainer: App.unique(idBase + '_globalFilterFormContainer'),
+			globalFilterForm: App.unique(idBase + '_globalFilterForm'),
+			filterMenutoolbar: App.unique(idBase + '_filterMenuToolbar'),
+			resetFilterButton: App.unique(idBase + '_resetFilterButton')
+		};
 
 		let instance = this;
-		let ids = this.ids;
+
+		// hide filter form
+		rowFilterForm.ui.hidden = true;
 
 		let _ui = {
 			id: ids.filterPanel,
@@ -472,7 +546,7 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 						}
 					]
 				},
-				this.rowFilterForm.ui,
+				rowFilterForm.ui,
 				{
 					view: 'toolbar',
 					id: ids.filterMenutoolbar,
@@ -502,7 +576,7 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 				view: "popup",
 				width: 800,
 				hidden: true,
-				body: this.rowFilter.ui
+				body: rowFilter.ui
 			});
 
 			// register callbacks:
@@ -510,11 +584,11 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 				logic.callbacks[c] = options[c] || logic.callbacks[c];
 			}
 
-			this.rowFilter.init({
+			rowFilter.init({
 				onChange: () => {
 
 					// TODO : Badge
-					// var filterRules = (this.rowFilter.getValue().rules || []);
+					// var filterRules = (rowFilter.getValue().rules || []);
 
 					// if ($$(ids.buttonFilter)) {
 					// 	$$(ids.buttonFilter).define('badge', filterRules.length);
@@ -524,26 +598,26 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 					// be notified when there is a change in the filter
 					logic.triggerCallback((rowData) => {
 
-						return this.rowFilter.isValid(rowData);
+						return rowFilter.isValid(rowData);
 
 					});
 				}
 			});
 
-			this.rowFilterForm.init({
+			rowFilterForm.init({
 				onChange: () => {
 
 					// be notified when there is a change in the filter
 					logic.triggerCallback((rowData) => {
 
-						return this.rowFilterForm.isValid(rowData);
+						return rowFilterForm.isValid(rowData);
 
 					});
 				}
 			});
 
 			$$(ids.filterPanel).hide();
-			$$(this.rowFilterForm.ui.id).hide();
+			$$(rowFilterForm.ui.id).hide();
 			$$(ids.filterMenutoolbar).hide();
 			$$(ids.globalFilterFormContainer).hide();
 
@@ -552,7 +626,7 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 
 					switch (this.settings.userFilterPosition) {
 						case "form":
-							$$(this.rowFilterForm.ui.id).show();
+							$$(rowFilterForm.ui.id).show();
 							$$(ids.filterPanel).show();
 							break;
 						case "toolbar":
@@ -616,7 +690,7 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 
 				let id = "hiddenQB_" + webix.uid();
 
-				let queryRule = instance.getRule();
+				let queryRule = getRule(this.object);
 
 				let ui = {
 					id: id,
