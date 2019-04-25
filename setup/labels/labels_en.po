@@ -1363,6 +1363,12 @@ msgstr "#appName# is duplicate."
 
 #. path: app_builder
 #. code: en
+#. key: ab.components.carousel
+msgid "Carousel"
+msgstr "Carousel"
+
+#. path: app_builder
+#. code: en
 #. key: ab.components.label
 msgid "Label"
 msgstr "Label"

@@ -1345,6 +1345,12 @@ msgstr "#appName# ซ้ำกับชื่อแอปพลิเคชั�
 
 #. path: app_builder
 #. code: th
+#. key: ab.components.carousel
+msgid "Carousel"
+msgstr "ภาพสไลด์"
+
+#. path: app_builder
+#. code: th
 #. key: ab.components.label
 msgid "Label"
 msgstr "ป้ายคำ"
