@@ -55,7 +55,11 @@ export default class ABViewProperty {
 	}
 
 	fromSettings(settings) {
+		this.settings = settings;
+	}
 
+	toSettings() {
+		return this.settings || {};
 	}
 
 	/** == UI == */

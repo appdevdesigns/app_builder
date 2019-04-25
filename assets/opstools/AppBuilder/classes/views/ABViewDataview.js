@@ -6,11 +6,8 @@
  */
 
 import ABViewDetail from "./ABViewDetail"
-import ABPropertyComponent from "../ABPropertyComponent"
-import ABViewDetailComponent from "./ABViewDetailComponent"
-import ABViewManager from "../ABViewManager"
-import { resolve } from "url";
-import { runInNewContext } from "vm";
+``
+import ABViewPropertyLinkPage from "./viewProperties/ABViewPropertyLinkPage"
 
 
 function L(key, altText) {
@@ -58,7 +55,11 @@ export default class ABViewDataview extends ABViewDetail {
 
 	static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
 
+		var idBase = 'ABViewDataviewPropertyEditor';
+
 		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
+
+		this.linkPageComponent = ABViewPropertyLinkPage.propertyComponent(App, idBase);
 
 		return commonUI.concat([
 			{
@@ -69,29 +70,7 @@ export default class ABViewDataview extends ABViewDetail {
 				labelWidth: App.config.labelWidthLarge,
 				step:1 
 			},
-			{ 
-				view: "fieldset", 
-				label: L('ab.component.label.linkedPages', '*Linked Pages:'),
-				labelWidth: App.config.labelWidthLarge,
-				body:{
-					type: "clean",
-					padding: 10,
-					rows:[
-						{
-							view:"select",
-							name:"detailsPage",
-							label: L('ab.component.label.detailsPage', '*Details Page:'),
-							labelWidth: App.config.labelWidthLarge,
-						},
-						{
-							view:"select",
-							name:"editPage",
-							label: L('ab.component.label.editForm', '*Edit Form:'), 
-							labelWidth: App.config.labelWidthLarge,
-						}
-					]
-				}
-			}
+			this.linkPageComponent.ui
 		]);
 
 	}
@@ -102,18 +81,21 @@ export default class ABViewDataview extends ABViewDetail {
 
 		$$(ids.xCount).setValue(view.settings.xCount || ABViewDataviewDefaults.xCount);
 
-		view.populateEditor(ids, view);
+		this.linkPageComponent.viewLoad(view);
+		this.linkPageComponent.setSettings(view.settings);
+
+		// view.populateEditor(ids, view);
 		
-		var details = view.settings.detailsPage;
-		if (view.settings.detailsTab != "") {
-			details += ":"+view.settings.detailsTab;
-		}
-		$$(ids.detailsPage).setValue(details);
-		var edit = view.settings.editPage;
-		if (view.settings.editTab != "") {
-			edit += ":"+view.settings.editTab;
-		}
-		$$(ids.editPage).setValue(edit);
+		// var details = view.settings.detailsPage;
+		// if (view.settings.detailsTab != "") {
+		// 	details += ":"+view.settings.detailsTab;
+		// }
+		// $$(ids.detailsPage).setValue(details);
+		// var edit = view.settings.editPage;
+		// if (view.settings.editTab != "") {
+		// 	edit += ":"+view.settings.editTab;
+		// }
+		// $$(ids.editPage).setValue(edit);
 
 		
 		
@@ -134,26 +116,31 @@ export default class ABViewDataview extends ABViewDetail {
 		super.propertyEditorValues(ids, view);
 
 		view.settings.xCount = $$(ids.xCount).getValue();
+
+		let linkSettings = this.linkPageComponent.getSettings();
+		for (let key in linkSettings) {
+			view.settings[key] = linkSettings[key];
+		}
 		
-		var detailsPage = $$(ids.detailsPage).getValue();
-		var detailsTab = "";
-		if (detailsPage.split(":").length > 1) {
-			var detailsVals = detailsPage.split(":");
-			detailsPage = detailsVals[0];
-			detailsTab = detailsVals[1];
-		} 
-		view.settings.detailsPage = detailsPage;
-		view.settings.detailsTab = detailsTab;
+		// var detailsPage = $$(ids.detailsPage).getValue();
+		// var detailsTab = "";
+		// if (detailsPage.split(":").length > 1) {
+		// 	var detailsVals = detailsPage.split(":");
+		// 	detailsPage = detailsVals[0];
+		// 	detailsTab = detailsVals[1];
+		// } 
+		// view.settings.detailsPage = detailsPage;
+		// view.settings.detailsTab = detailsTab;
 		
-		var editPage = $$(ids.editPage).getValue();
-		var editTab = "";
-		if (editPage.split(":").length > 1) {
-			var editVals = editPage.split(":");
-			editPage = editVals[0];
-			editTab = editVals[1];
-		} 
-		view.settings.editPage = editPage;
-		view.settings.editTab = editTab;
+		// var editPage = $$(ids.editPage).getValue();
+		// var editTab = "";
+		// if (editPage.split(":").length > 1) {
+		// 	var editVals = editPage.split(":");
+		// 	editPage = editVals[0];
+		// 	editTab = editVals[1];
+		// } 
+		// view.settings.editPage = editPage;
+		// view.settings.editTab = editTab;
 
 	}
 
@@ -192,6 +179,8 @@ export default class ABViewDataview extends ABViewDetail {
 			component: App.unique(idBase + '_component'),
 		}
 
+		let linkPage = this.linkPageHelper.component(App, idBase);
+
 		let viewDef = {
 			id: ids.component,
 			paddingX: 15,
@@ -219,6 +208,12 @@ export default class ABViewDataview extends ABViewDetail {
 			var dc = this.dataCollection;
 			if (!dc) return;
 
+			// initial the link page helper
+			linkPage.init({
+				view: this,
+				dataCollection: dc
+			});
+
 			com.onShow();
 
 			this.eventAdd({
@@ -233,10 +228,6 @@ export default class ABViewDataview extends ABViewDetail {
 		};
 
 		com.logic = {
-			changePage: (dc, id, page) => {
-				dc.setCursor(id);
-				super.changePage(page);
-			},
 			
 			// we need to recursivly look backwards to toggle tabs into view when a user choosed to select a tab for edit or details views
 			toggleTab: (parentTab, wb) => {
@@ -344,7 +335,7 @@ export default class ABViewDataview extends ABViewDetail {
 			webix.ui(dataGrid, $$(ids.component));
 			
 			if (detailsPage || editPage) {
-				$$(ids.component).$view.onclick = function(e) {
+				$$(ids.component).$view.onclick = (e) => {
 					var clicked = false;
 					if (editPage) {
 						for (let p of e.path) {
@@ -352,8 +343,9 @@ export default class ABViewDataview extends ABViewDetail {
 								clicked = true;
 								$(p.parentNode.parentNode)[0].classList.forEach((c) => {
 									if (c.indexOf("ab-record-") > -1) {
-										var record = parseInt(c.replace("ab-record-", ""));
-										com.logic.changePage(dc, record, editPage);
+										// var record = parseInt(c.replace("ab-record-", ""));
+										var record = c.replace("ab-record-", "");
+										linkPage.changePage(editPage, record);
 										// com.logic.toggleTab(detailsTab, ids.component);
 									}
 								});
@@ -366,8 +358,9 @@ export default class ABViewDataview extends ABViewDetail {
 							if (p.className && p.className.indexOf("webix_accordionitem") > -1) {
 								$(p.parentNode.parentNode)[0].classList.forEach((c) => {
 									if (c.indexOf("ab-record-") > -1) {
-										var record = parseInt(c.replace("ab-record-", ""));
-										com.logic.changePage(dc, record, detailsPage);
+										// var record = parseInt(c.replace("ab-record-", ""));
+										var record = c.replace("ab-record-", "");
+										linkPage.changePage(detailsPage, record);
 										// com.logic.toggleTab(detailsTab, ids.component);
 									}
 								});
@@ -396,40 +389,40 @@ export default class ABViewDataview extends ABViewDetail {
 	}
 	
 	
-	populateEditor(ids, view) {
-		// Set the options of the possible detail views
-		var detailViews = [
-			{ id:'', value:L('ab.component.label.noLinkedView', '*No linked view') }
-		];
+	// populateEditor(ids, view) {
+	// 	// Set the options of the possible detail views
+	// 	var detailViews = [
+	// 		{ id:'', value:L('ab.component.label.noLinkedView', '*No linked view') }
+	// 	];
 
-		detailViews = view.loopPages(view, view.application._pages, detailViews, "detail");
-		$$(ids.detailsPage).define("options", detailViews);
-		$$(ids.detailsPage).refresh();
+	// 	detailViews = view.loopPages(view, view.application._pages, detailViews, "detail");
+	// 	$$(ids.detailsPage).define("options", detailViews);
+	// 	$$(ids.detailsPage).refresh();
 
-		// Set the options of the possible edit forms
-		var editForms = [
-			{id:'', value:L('ab.component.label.noLinkedForm', '*No linked form')}
-		];
-		editForms = view.loopPages(view, view.application._pages, editForms, "form");
-		view.application._pages.forEach((o)=>{
-			o._views.forEach((j)=>{
-				if (j.key == "form" && j.settings.object == view.settings.datacollection) {
-					editForms.push({id:j.parent.id, value:j.label});				
-				}
-				if (j.key == "tab") {
-					j._views.forEach((k)=>{
-						k._views.forEach((l)=>{	
-							if (l.key == "form" && l.settings.datacollection == view.settings.datacollection) {
-								editForms.push({id:l.parent.id, value:l.label});				
-							}
-						});
-					});
-				}
-			});
-		});
-		$$(ids.editPage).define("options", editForms);
-		$$(ids.editPage).refresh();
-	}
+	// 	// Set the options of the possible edit forms
+	// 	var editForms = [
+	// 		{id:'', value:L('ab.component.label.noLinkedForm', '*No linked form')}
+	// 	];
+	// 	editForms = view.loopPages(view, view.application._pages, editForms, "form");
+	// 	view.application._pages.forEach((o)=>{
+	// 		o._views.forEach((j)=>{
+	// 			if (j.key == "form" && j.settings.object == view.settings.datacollection) {
+	// 				editForms.push({id:j.parent.id, value:j.label});				
+	// 			}
+	// 			if (j.key == "tab") {
+	// 				j._views.forEach((k)=>{
+	// 					k._views.forEach((l)=>{	
+	// 						if (l.key == "form" && l.settings.datacollection == view.settings.datacollection) {
+	// 							editForms.push({id:l.parent.id, value:l.label});				
+	// 						}
+	// 					});
+	// 				});
+	// 			}
+	// 		});
+	// 	});
+	// 	$$(ids.editPage).define("options", editForms);
+	// 	$$(ids.editPage).refresh();
+	// }
 	
 	loopPages(view, pages, detailViews, type) {
 		if (typeof pages == "array" || typeof pages == "object") {
@@ -485,7 +478,15 @@ export default class ABViewDataview extends ABViewDetail {
 		}
 		return detailViews;
 	}
-	
+
+	get linkPageHelper() {
+
+		if (this.__linkPageHelper == null)
+			this.__linkPageHelper = new ABViewPropertyLinkPage();
+
+		return this.__linkPageHelper;
+
+	}
 
 
 	//// Report ////
