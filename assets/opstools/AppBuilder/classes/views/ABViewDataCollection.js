@@ -1859,6 +1859,9 @@ export default class ABViewDataCollection extends ABView {
 	
 						});
 
+						// store total count
+						this.__totalCount = data.total_count;
+
 						// populate data to webix's data collection and the loading cursor is hidden here
 						this.__dataCollection.parse(data);
 	
@@ -2124,6 +2127,10 @@ export default class ABViewDataCollection extends ABView {
 			this.__dataCollection.clearAll();
 
 		this._dataStatus = this.dataStatusFlag.notInitial;
+	}
+
+	get totalCount() {
+		return this.__totalCount || 0;
 	}
 
 	get syncTypeFlag() {

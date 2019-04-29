@@ -176,37 +176,36 @@ export default class ABViewDataview extends ABViewDetail {
 
 		var idBase = 'ABViewDataview_' + this.id;
 		var ids = {
+			scrollview: App.unique(idBase + '_scrollview'),
 			component: App.unique(idBase + '_component'),
 		}
 
 		let linkPage = this.linkPageHelper.component(App, idBase);
 
-		let viewDef = {
-			id: ids.component,
-			paddingX: 15,
-			paddingY: 19,
-			type: 'space',
-			rows: []
+		com.ui = {
+			id: ids.scrollview,
+			view: "scrollview",
+			scroll: "y",
+			body: {
+				id: ids.component,
+				view: 'layout',
+				paddingX: 15,
+				paddingY: 19,
+				type: 'space',
+				rows: []
+			},
+			on: {
+				onAfterScroll: function () {
+					let pos = this.getScrollState();
+
+					com.logic.scroll(pos);
+				}
+			}
 		};
 
-		// if height is set, then add Y scrollbar
-		if (this.settings.height >= 0) {
-			com.ui = {
-				view: "scrollview",
-				height: this.settings.height,
-				scroll: "y",
-				body: viewDef
-			};
-		}
-		// no scrollbar
-		else {
-			com.ui = {
-				cols: [
-					viewDef,
-					{} // spacer
-				]
-			};
-		}
+		if (this.settings.height)
+			com.ui.height = this.settings.height;
+
 
 		com.init = (options) => {
 
@@ -232,6 +231,26 @@ export default class ABViewDataview extends ABViewDetail {
 		};
 
 		com.logic = {
+
+			busy: () => {
+
+				let Layout = $$(ids.component);
+
+				Layout.disable();
+
+				if (Layout.showProgress)
+					Layout.showProgress({ type: "icon" });
+			},
+
+			ready: () => {
+
+				let Layout = $$(ids.component);
+
+				Layout.enable();
+
+				if (Layout.hideProgress)
+					Layout.hideProgress();
+			},
 
 			// we need to recursivly look backwards to toggle tabs into view when a user choosed to select a tab for edit or details views
 			toggleTab: (parentTab, wb) => {
@@ -260,6 +279,49 @@ export default class ABViewDataview extends ABViewDetail {
 				if (nextTab) {
 					com.toggleTab(nextTab, wb);
 				}
+			},
+
+			/**
+			 * @method scroll
+			 * @param pos - {
+			 * 					x: {integer},
+			 * 					y: {integer}
+			 * 				}
+			 */
+			scroll: (pos) => {
+
+				let loadWhen = 40;
+
+				let y = pos.y;
+				let maxYPos = $$(ids.component).$height - $$(ids.scrollview).$height;
+				if (maxYPos - y <= loadWhen) {
+
+					if (this.loadMoreTimer)
+						return;
+
+					var dc = this.dataCollection;
+					if (!dc) return;
+
+					if (this._rowCount >= dc.totalCount)
+						return;
+
+					// loading cursor
+					com.logic.busy();
+
+					dc.loadData(this._rowCount || 0)
+						.catch(() => {
+							com.logic.ready();
+						})
+						.then(() => {
+							com.logic.ready();
+						});
+
+					this.loadMoreTimer = setTimeout(() => {
+						this.loadMoreTimer = null;
+					}, 1100);
+
+				}
+
 			}
 
 		};
@@ -280,7 +342,15 @@ export default class ABViewDataview extends ABViewDetail {
 			var dc = this.dataCollection;
 			if (!dc) return;
 
+			// add loading cursor
+			var Layout = $$(ids.component);
+			if (Layout)
+				webix.extend(Layout, webix.ProgressBar);
+
 			var rows = dc.getData();
+
+			// store total of rows
+			this._rowCount = rows.length;
 
 			// lets build a grid based off the number of columns we want in each row
 			var dataGrid = [];
