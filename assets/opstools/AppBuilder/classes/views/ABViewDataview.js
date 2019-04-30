@@ -6,7 +6,7 @@
  */
 
 import ABViewDetail from "./ABViewDetail"
-``
+
 import ABViewPropertyLinkPage from "./viewProperties/ABViewPropertyLinkPage"
 
 
