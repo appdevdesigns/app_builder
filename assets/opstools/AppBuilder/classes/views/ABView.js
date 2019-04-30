@@ -416,16 +416,14 @@ export default class ABView extends ABViewBase {
 		// find into recursively
 		if (filter && deep) {
 
-			result = this._views.filter(filter);
+			result = result.concat(this._views.filter(filter));
 
-			if (result.length < 1) {
-				this._views.forEach(v => {
-					var subViews = v.views(filter, deep);
-					if (subViews && subViews.length > 0) {
-						result = subViews;
-					}
-				});
-			}
+			this._views.forEach(v => {
+				var subViews = v.views(filter, deep);
+				if (subViews && subViews.length > 0) {
+					result = result.concat(subViews);
+				}
+			});
 
 		}
 

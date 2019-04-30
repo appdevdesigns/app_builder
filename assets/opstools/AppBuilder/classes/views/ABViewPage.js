@@ -689,16 +689,14 @@ export default class ABViewPage extends ABViewContainer {
 
             if (this._pages && this._pages.length > 0) {
 
-                result = this._pages.filter(filter);
+                result = result.concat(this._pages.filter(filter));
 
-                if (result.length < 1) {
-                    this._pages.forEach((p) => {
-                        var subPages = p.pages(filter, deep);
-                        if (subPages && subPages.length > 0) {
-                            result = subPages;
-                        }
-                    });
-                }
+                this._pages.forEach((p) => {
+                    var subPages = p.pages(filter, deep);
+                    if (subPages && subPages.length > 0) {
+                        result = result.concat(subPages);
+                    }
+                });
             }
 
         }

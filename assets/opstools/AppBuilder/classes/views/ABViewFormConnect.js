@@ -277,7 +277,7 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 					return v.key == "form" && 
 						v.dataCollection &&
 						v.dataCollection.datasource.id == view.field().settings.linkObject;
-				}).length;
+				}, true).length;
 			}, true)
 			.map(p => {
 				return {
@@ -703,30 +703,30 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 		return [];
 	}
 	
-	loopPages(view, o, detailViews, type) {
-		if (typeof o == "array" || typeof o == "object") {
-			o.forEach((p)=>{
-				if (p._pages.length > 0) {
-					detailViews = view.loopPages(view, p._pages, detailViews, type);
-				}
-				detailViews = view.loopViews(view, p._views, detailViews, type);
-			});
-		}
-		detailViews = view.loopViews(view, o, detailViews);
-		return detailViews;
-	}
+	// loopPages(view, o, detailViews, type) {
+	// 	if (typeof o == "array" || typeof o == "object") {
+	// 		o.forEach((p)=>{
+	// 			if (p._pages.length > 0) {
+	// 				detailViews = view.loopPages(view, p._pages, detailViews, type);
+	// 			}
+	// 			detailViews = view.loopViews(view, p._views, detailViews, type);
+	// 		});
+	// 	}
+	// 	detailViews = view.loopViews(view, o, detailViews);
+	// 	return detailViews;
+	// }
 	
-	loopViews(view, o, detailViews, type) {
-		if (typeof o == "array" || typeof o == "object") {
-			o.forEach((j)=>{
-				if (j.key == type) {
-					detailViews.push({id:j.parent.id, value:j.label});				
-				}
-			});
-			return detailViews;			
-		}
-		return detailViews;
-	}
+	// loopViews(view, o, detailViews, type) {
+	// 	if (typeof o == "array" || typeof o == "object") {
+	// 		o.forEach((j)=>{
+	// 			if (j.key == type) {
+	// 				detailViews.push({id:j.parent.id, value:j.label});				
+	// 			}
+	// 		});
+	// 		return detailViews;			
+	// 	}
+	// 	return detailViews;
+	// }
 
 
 };

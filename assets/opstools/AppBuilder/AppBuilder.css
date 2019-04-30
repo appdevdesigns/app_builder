@@ -588,6 +588,35 @@ label {
 .ab-background-gray .webix_view.webix_layout_form {
 	background: transparent;
 }
+.ab-carousel-image-container {
+	position: relative;
+}
+.ab-carousel-image-container img {
+	width: 100%;
+	height: auto;
+}
+.ab-carousel-image-title {
+	position: absolute;
+	top: 8px;
+	left: 1px;
+	font-size: 18px;
+}
+.ab-carousel-image-icon {
+	position: absolute;
+	top: 0px;
+	right: 0px;
+	font-size: 20px;
+	border-bottom-left-radius: 8px;
+	background: rgba(255, 255, 255, 0.4);
+ }
+.ab-carousel-image-icon span {
+	opacity: 0.6;
+	margin: 6px;
+}
+.ab-carousel-image-icon span:hover {
+	opacity: 1;
+	cursor: pointer;
+}
 .ab-detail-view .webix_accordionitem {
 	border-radius: 5px;
 	box-shadow: rgba(0, 0, 0, 0.2) 0px 1px 2px 0px;

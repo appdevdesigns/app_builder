@@ -88,37 +88,43 @@ export default class ABViewPropertyLinkPage extends ABViewProperty {
 				this.view = view;
 
 				// Set the options of the possible detail views
-				var detailViews = [
-					{ id: '', value: L('ab.component.label.noLinkedView', '*No linked view') }
-				];
+				let pagesHasDetail = view.pageRoot()
+					.pages(p => {
+						return p.views(v => {
+							return v.key == "detail" &&
+								(v.settings.datacollection == view.settings.datacollection ||
+									v.settings.datacollection == view.settings.dataSource);
+						}, true).length;
+					}, true)
+					.map(p => {
+						return {
+							id: p.id,
+							value: p.label
+						}
+					});
 
-				detailViews = view.loopPages(view, view.application._pages, detailViews, "detail");
-				$$(ids.detailsPage).define("options", detailViews);
+				pagesHasDetail.unshift({ id: '', value: L('ab.component.label.noLinkedView', '*No linked view') });
+				$$(ids.detailsPage).define("options", pagesHasDetail);
 				$$(ids.detailsPage).refresh();
 
 				// Set the options of the possible edit forms
-				var editForms = [
-					{ id: '', value: L('ab.component.label.noLinkedForm', '*No linked form') }
-				];
-				editForms = view.loopPages(view, view.application._pages, editForms, "form");
-				view.application._pages.forEach((o) => {
-					o._views.forEach((j) => {
-						if (j.key == "form" && j.settings.object == view.settings.datacollection) {
-							editForms.push({ id: j.parent.id, value: j.label });
-						}
-						if (j.key == "tab") {
-							j._views.forEach((k) => {
-								k._views.forEach((l) => {
-									if (l.key == "form" && l.settings.datacollection == view.settings.datacollection) {
-										editForms.push({ id: l.parent.id, value: l.label });
-									}
-								});
-							});
+				let pagesHasForm = view.pageRoot()
+					.pages(p => {
+						return p.views(v => {
+							return v.key == "form" &&
+								(v.settings.datacollection == view.settings.datacollection ||
+									v.settings.datacollection == view.settings.dataSource);
+						}, true).length;
+					}, true)
+					.map(p => {
+						return {
+							id: p.id,
+							value: p.label
 						}
 					});
-				});
 
-				$$(ids.editPage).define("options", editForms);
+				pagesHasForm.unshift({ id: '', value: L('ab.component.label.noLinkedForm', '*No linked form') });
+				$$(ids.editPage).define("options", pagesHasForm);
 				$$(ids.editPage).refresh();
 
 			},

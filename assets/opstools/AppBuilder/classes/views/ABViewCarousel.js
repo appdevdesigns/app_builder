@@ -6,6 +6,7 @@
  */
 
 import ABViewPropertyFilterData from "./viewProperties/ABViewPropertyFilterData"
+import ABViewPropertyLinkPage from "./viewProperties/ABViewPropertyLinkPage"
 import ABViewWidget from "./ABViewWidget"
 
 import ABFieldImage from "../dataFields/ABFieldImage"
@@ -17,11 +18,20 @@ function L(key, altText) {
 
 
 var ABViewCarouselPropertyComponentDefaults = {
+
+	dataSource: null, 	// uuid of data collection
+	field: null, 		// uuid
+
 	width: 460,
 	height: 275,
 	hideItem: false,
 	hideButton: false,
-	navigationType: "corner" // "corner" || "side"
+	navigationType: "corner", // "corner" || "side"
+
+	detailsPage: null,	// uuid
+	detailsTab: null,	// uuid
+	editPage: null,		// uuid
+	editTab: null		// uuid
 };
 
 
@@ -144,6 +154,7 @@ export default class ABViewCarousel extends ABViewWidget {
 		let commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
 
 		PopupCarouselFilterMenu = ABViewPropertyFilterData.propertyComponent(App, idBase);
+		this.linkPageComponent = ABViewPropertyLinkPage.propertyComponent(App, idBase);
 
 		let filter_property_popup = webix.ui({
 			view: "window",
@@ -258,31 +269,32 @@ export default class ABViewCarousel extends ABViewWidget {
 				}
 			},
 
-			{
-				view: "fieldset",
-				label: L('ab.component.label.linkedPages', '*Linked Pages:'),
-				labelWidth: App.config.labelWidthLarge,
-				body: {
-					type: "clean",
-					padding: 10,
-					rows: [
-						{
-							view: "select",
-							name: "detailsPage",
-							label: L('ab.component.label.detailsPage', '*Details Page:'),
-							labelWidth: App.config.labelWidthLarge,
-							options: []
-						},
-						{
-							view: "select",
-							name: "editPage",
-							label: L('ab.component.label.editForm', '*Edit Form:'),
-							labelWidth: App.config.labelWidthLarge,
-							options: []
-						}
-					]
-				}
-			},
+			this.linkPageComponent.ui,
+			// {
+			// 	view: "fieldset",
+			// 	label: L('ab.component.label.linkedPages', '*Linked Pages:'),
+			// 	labelWidth: App.config.labelWidthLarge,
+			// 	body: {
+			// 		type: "clean",
+			// 		padding: 10,
+			// 		rows: [
+			// 			{
+			// 				view: "select",
+			// 				name: "detailsPage",
+			// 				label: L('ab.component.label.detailsPage', '*Details Page:'),
+			// 				labelWidth: App.config.labelWidthLarge,
+			// 				options: []
+			// 			},
+			// 			{
+			// 				view: "select",
+			// 				name: "editPage",
+			// 				label: L('ab.component.label.editForm', '*Edit Form:'),
+			// 				labelWidth: App.config.labelWidthLarge,
+			// 				options: []
+			// 			}
+			// 		]
+			// 	}
+			// },
 			{
 				view: "fieldset",
 				label: L('ab.component.label.customizeDisplay', '*Customize Display:'),
@@ -394,6 +406,11 @@ export default class ABViewCarousel extends ABViewWidget {
 			PopupCarouselFilterMenu.objectLoad(selectedDc.datasource);
 		}
 
+		// Populate values to QueryBuilder
+		this.linkPageComponent.viewLoad(view);
+		this.linkPageComponent.setSettings(view.settings);
+
+
 	}
 
 	static propertyEditorValues(ids, view) {
@@ -408,7 +425,15 @@ export default class ABViewCarousel extends ABViewWidget {
 		view.settings.hideItem = $$(ids.hideItem).getValue();
 		view.settings.hideButton = $$(ids.hideButton).getValue();
 		view.settings.navigationType = $$(ids.navigationType).getValue();
+
+		// filter
 		view.settings.filter = PopupCarouselFilterMenu.getSettings();
+
+		// link pages
+		let linkSettings = this.linkPageComponent.getSettings();
+		for (let key in linkSettings) {
+			view.settings[key] = linkSettings[key];
+		}
 
 	}
 
@@ -432,9 +457,13 @@ export default class ABViewCarousel extends ABViewWidget {
 		}
 
 		let filterUI = this.filterHelper.component(App, idBase);
+		let linkPage = this.linkPageHelper.component(App, idBase);
+
 		let _ui = {
+			borderless: true,
 			cols: [
 				{
+					borderless: true,
 					rows: [
 						filterUI.ui, // filter UI
 						{
@@ -480,6 +509,7 @@ export default class ABViewCarousel extends ABViewWidget {
 				}
 			});
 
+			// filter helper
 			this.filterHelper.objectLoad(object);
 			this.filterHelper.viewLoad(this);
 
@@ -489,13 +519,31 @@ export default class ABViewCarousel extends ABViewWidget {
 				}
 			});
 
+			// link page helper
+			linkPage.init({
+				view: this,
+				dataCollection: dc
+			});
+
+
 		};
 
 		let _logic = {
 
 			myTemplate: (row) => {
-				if (row && row.src)
-					return `<img src="${row.src}" class="content" ondragstart="return false" width="${this.settings.width}"/><div class="title">${row.title || ""}</div>`;
+				if (row && row.src) {
+
+					let template = `<div class="ab-carousel-image-container">` +
+						`<img src="${row.src}" class="content" ondragstart="return false" />` +
+						// `<div class="ab-carousel-image-title">${"TITLE" || row.title || ""}</div>` +
+						`<div class="ab-carousel-image-icon">` +
+						((this.settings.detailsPage || this.settings.detailsTab) ? `<span ab-row-id="${row.id}" class="ab-carousel-detail webix_icon fa fa-eye"></span>` : "") +
+						((this.settings.editPage || this.settings.editTab) ? `<span ab-row-id="${row.id}" class="ab-carousel-edit webix_icon fa fa-pencil"></span>` : "") +
+						`</div>` +
+						`</div>`;
+
+					return template;
+				}
 				else // empty image
 					return "";
 			},
@@ -575,6 +623,7 @@ export default class ABViewCarousel extends ABViewWidget {
 					if (imgFile) {
 						images.push({
 							css: "image", template: _logic.myTemplate, data: {
+								id: r.id,
 								// title: obj, // TODO : get label of object
 								src: `/opsportal/image/${obj.application.name}/${imgFile}`
 							}
@@ -619,6 +668,38 @@ export default class ABViewCarousel extends ABViewWidget {
 				if (Carousel)
 					webix.extend(Carousel, webix.ProgressBar);
 
+				// link pages events
+				var editPage = this.settings.editPage;
+				var detailsPage = this.settings.detailsPage;
+				if (detailsPage || editPage) {
+					$$(ids.component).$view.onclick = (e) => {
+						var clicked = false;
+						if (editPage) {
+							for (let p of e.path) {
+								if (p.className && p.className.indexOf("ab-carousel-edit") > -1) {
+									clicked = true;
+
+									let rowId = p.getAttribute("ab-row-id");
+									linkPage.changePage(editPage, rowId);
+
+									break;
+								}
+							};
+						}
+						if (detailsPage && !clicked) {
+							for (let p of e.path) {
+								if (p.className && p.className.indexOf("ab-carousel-detail") > -1) {
+
+									let rowId = p.getAttribute("ab-row-id");
+									linkPage.changePage(detailsPage, rowId);
+
+									break;
+								}
+							};
+						}
+					};
+				}
+
 			},
 
 			showFilterPopup: ($view) => {
@@ -648,12 +729,21 @@ export default class ABViewCarousel extends ABViewWidget {
 
 	}
 
+	get linkPageHelper() {
+
+		if (this.__linkPageHelper == null)
+			this.__linkPageHelper = new ABViewPropertyLinkPage();
+
+		return this.__linkPageHelper;
+
+	}
+
 	/**
 	 * @property dataCollection
 	 * return ABViewDataCollection of this form
-	 * 
+	 *
 	 * @return {ABViewDataCollection}
-	 */
+	*/
 	get dataCollection() {
 		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.dataSource)[0];
 	}

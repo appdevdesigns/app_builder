@@ -501,60 +501,60 @@ export default class ABViewDataview extends ABViewDetail {
 	// 	$$(ids.editPage).refresh();
 	// }
 
-	loopPages(view, pages, detailViews, type) {
-		if (typeof pages == "array" || typeof pages == "object") {
-			pages.forEach((p) => {
-				if (p._pages.length > 0) {
-					detailViews = view.loopPages(view, p._pages, detailViews, type);
-				}
-				detailViews = view.loopViews(view, p._views, detailViews, type);
-			});
-		}
-		detailViews = view.loopViews(view, pages, detailViews);
-		return detailViews;
-	}
+	// loopPages(view, pages, detailViews, type) {
+	// 	if (typeof pages == "array" || typeof pages == "object") {
+	// 		pages.forEach((p) => {
+	// 			if (p._pages.length > 0) {
+	// 				detailViews = view.loopPages(view, p._pages, detailViews, type);
+	// 			}
+	// 			detailViews = view.loopViews(view, p._views, detailViews, type);
+	// 		});
+	// 	}
+	// 	detailViews = view.loopViews(view, pages, detailViews);
+	// 	return detailViews;
+	// }
 
-	loopViews(view, views, detailViews, type) {
-		if (typeof views == "array" || typeof views == "object") {
-			views.forEach((v) => {
-				if (v.key == type && v.settings.datacollection == view.settings.datacollection) {
-					detailViews.push({ id: v.pageParent().id, value: v.label });
-				}
-				// find views inside layouts
-				else if (v.key == "layout" || v.key == "viewcontainer") {
-					detailViews = view.loopViews(view, v._views, detailViews, type);
-				}
-				// find views inside Tab component
-				else if (v.key == "tab") {
-					var tabViews = v.views();
-					tabViews.forEach(tab => {
+	// loopViews(view, views, detailViews, type) {
+	// 	if (typeof views == "array" || typeof views == "object") {
+	// 		views.forEach((v) => {
+	// 			if (v.key == type && v.settings.datacollection == view.settings.datacollection) {
+	// 				detailViews.push({ id: v.pageParent().id, value: v.label });
+	// 			}
+	// 			// find views inside layouts
+	// 			else if (v.key == "layout" || v.key == "viewcontainer") {
+	// 				detailViews = view.loopViews(view, v._views, detailViews, type);
+	// 			}
+	// 			// find views inside Tab component
+	// 			else if (v.key == "tab") {
+	// 				var tabViews = v.views();
+	// 				tabViews.forEach(tab => {
 
-						var viewContainer = tab.views(subT => subT.key == "tab");
-						viewContainer.forEach(vc => {
+	// 					var viewContainer = tab.views(subT => subT.key == "tab");
+	// 					viewContainer.forEach(vc => {
 
-							vc.views().forEach((st) => {
-								// detailViews = view.loopViews(view, st._views, detailViews, type);							
-								var subViews = st.views(subV => subV.key == type && subV.settings.datacollection == view.settings.datacollection);
-								subViews.forEach((sub) => {
-									detailViews.push({ id: v.pageParent().id + ":" + st.id, value: st.label + ":" + sub.label });
-								});
-							});
+	// 						vc.views().forEach((st) => {
+	// 							// detailViews = view.loopViews(view, st._views, detailViews, type);							
+	// 							var subViews = st.views(subV => subV.key == type && subV.settings.datacollection == view.settings.datacollection);
+	// 							subViews.forEach((sub) => {
+	// 								detailViews.push({ id: v.pageParent().id + ":" + st.id, value: st.label + ":" + sub.label });
+	// 							});
+	// 						});
 
-						});
+	// 					});
 
-						var subViews = tab.views(subV => subV.key == type && subV.settings.datacollection == view.settings.datacollection);
-						subViews.forEach((sub) => {
-							detailViews.push({ id: v.pageParent().id + ":" + tab.id, value: tab.label + ":" + sub.label });
-						});
+	// 					var subViews = tab.views(subV => subV.key == type && subV.settings.datacollection == view.settings.datacollection);
+	// 					subViews.forEach((sub) => {
+	// 						detailViews.push({ id: v.pageParent().id + ":" + tab.id, value: tab.label + ":" + sub.label });
+	// 					});
 
-					});
+	// 				});
 
-				}
-			});
-			return detailViews;
-		}
-		return detailViews;
-	}
+	// 			}
+	// 		});
+	// 		return detailViews;
+	// 	}
+	// 	return detailViews;
+	// }
 
 	get linkPageHelper() {
 
