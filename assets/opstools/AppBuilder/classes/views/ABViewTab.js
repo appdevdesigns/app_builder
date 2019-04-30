@@ -770,9 +770,20 @@ export default class ABViewTab extends ABViewWidget {
 									rows: []
 								};
 								
-								var tabTemplate = "<span class='fa fa-lg fa-fw fa-"+v.view.tabicon+"'></span> " + v.view.label;
-								if (this.settings.iconOnTop) {
-									tabTemplate = "<div class='ab-tabIconContainer'><span class='fa fa-lg fa-fw fa-"+v.view.tabicon+"'></span><br/>" + v.view.label + "</div>";
+
+								var tabTemplate = "";
+								// tab icon
+								if (v.view.tabicon) {
+									if (this.settings.iconOnTop) {
+										tabTemplate = "<div class='ab-tabIconContainer'><span class='fa fa-lg fa-fw fa-"+v.view.tabicon+"'></span><br/>" + v.view.label + "</div>";
+									}
+									else {
+										tabTemplate = "<span class='fa fa-lg fa-fw fa-"+v.view.tabicon+"'></span> " + v.view.label;
+									}
+								}
+								// no icon
+								else {
+									tabTemplate = v.view.label;
 								}
 
 								return {
