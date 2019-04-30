@@ -24,6 +24,7 @@ var ABViewCarouselPropertyComponentDefaults = {
 
 	width: 460,
 	height: 275,
+	showLabel: true,
 	hideItem: false,
 	hideButton: false,
 	navigationType: "corner", // "corner" || "side"
@@ -110,6 +111,7 @@ export default class ABViewCarousel extends ABViewWidget {
 		// convert from "0" => 0
 		this.settings.width = parseInt(this.settings.width || ABViewCarouselPropertyComponentDefaults.width);
 		this.settings.height = parseInt(this.settings.height || ABViewCarouselPropertyComponentDefaults.height);
+		this.settings.showLabel = JSON.parse(this.settings.showLabel || ABViewCarouselPropertyComponentDefaults.showLabel);
 		this.settings.hideItem = JSON.parse(this.settings.hideItem || ABViewCarouselPropertyComponentDefaults.hideItem);
 		this.settings.hideButton = JSON.parse(this.settings.hideButton || ABViewCarouselPropertyComponentDefaults.hideButton);
 		this.settings.navigationType = this.settings.navigationType || ABViewCarouselPropertyComponentDefaults.navigationType;
@@ -316,6 +318,13 @@ export default class ABViewCarousel extends ABViewWidget {
 
 						{
 							view: "checkbox",
+							name: "showLabel",
+							labelRight: L('ab.component.carousel.showLabel', '*Show label of image'),
+							labelWidth: App.config.labelWidthCheckbox
+						},
+
+						{
+							view: "checkbox",
 							name: "hideItem",
 							labelRight: L('ab.component.carousel.hideItem', '*Hide item list'),
 							labelWidth: App.config.labelWidthCheckbox
@@ -396,6 +405,7 @@ export default class ABViewCarousel extends ABViewWidget {
 
 		$$(ids.width).setValue(view.settings.width);
 		$$(ids.height).setValue(view.settings.height);
+		$$(ids.showLabel).setValue(view.settings.showLabel);
 		$$(ids.hideItem).setValue(view.settings.hideItem);
 		$$(ids.hideButton).setValue(view.settings.hideButton);
 		$$(ids.navigationType).setValue(view.settings.navigationType);
@@ -422,6 +432,7 @@ export default class ABViewCarousel extends ABViewWidget {
 
 		view.settings.width = $$(ids.width).getValue();
 		view.settings.height = $$(ids.height).getValue();
+		view.settings.showLabel = $$(ids.showLabel).getValue();
 		view.settings.hideItem = $$(ids.hideItem).getValue();
 		view.settings.hideButton = $$(ids.hideButton).getValue();
 		view.settings.navigationType = $$(ids.navigationType).getValue();
@@ -535,7 +546,7 @@ export default class ABViewCarousel extends ABViewWidget {
 
 					let template = `<div class="ab-carousel-image-container">` +
 						`<img src="${row.src}" class="content" ondragstart="return false" />` +
-						// `<div class="ab-carousel-image-title">${"TITLE" || row.title || ""}</div>` +
+						(this.settings.showLabel ? `<div class="ab-carousel-image-title">${row.label || ""}</div>` : "") +
 						`<div class="ab-carousel-image-icon">` +
 						((this.settings.detailsPage || this.settings.detailsTab) ? `<span ab-row-id="${row.id}" class="ab-carousel-detail webix_icon fa fa-eye"></span>` : "") +
 						((this.settings.editPage || this.settings.editTab) ? `<span ab-row-id="${row.id}" class="ab-carousel-edit webix_icon fa fa-pencil"></span>` : "") +
@@ -621,12 +632,19 @@ export default class ABViewCarousel extends ABViewWidget {
 
 					let imgFile = r[field.columnName];
 					if (imgFile) {
+
+						let imgData = {
+							id: r.id,
+							src: `/opsportal/image/${obj.application.name}/${imgFile}`
+						};
+
+						// label of row data
+						if (this.settings.showLabel) {
+							imgData.label = obj.displayData(r);
+						}
+
 						images.push({
-							css: "image", template: _logic.myTemplate, data: {
-								id: r.id,
-								// title: obj, // TODO : get label of object
-								src: `/opsportal/image/${obj.application.name}/${imgFile}`
-							}
+							css: "image", template: _logic.myTemplate, data: imgData
 						});
 					}
 

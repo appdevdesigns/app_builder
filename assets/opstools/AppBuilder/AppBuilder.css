@@ -597,9 +597,13 @@ label {
 }
 .ab-carousel-image-title {
 	position: absolute;
-	top: 8px;
-	left: 1px;
+	top: 0;
+	left: 0;
 	font-size: 18px;
+	padding: 4px;
+	background: rgba(0, 0, 0, 0.4);
+	border-bottom-right-radius: 8px;
+	color: #fff;
 }
 .ab-carousel-image-icon {
 	position: absolute;
