@@ -447,6 +447,12 @@ export default class ABViewCarousel extends ABViewWidget {
 								items: !this.settings.hideItem,
 								buttons: !this.settings.hideButton,
 								type: this.settings.navigationType
+							},
+							on: {
+								onShow: function () {
+									let activeIndex = $$(ids.component).getActiveIndex();
+									_logic.switchImage(activeIndex);
+								}
 							}
 						}
 					]
@@ -492,6 +498,50 @@ export default class ABViewCarousel extends ABViewWidget {
 					return `<img src="${row.src}" class="content" ondragstart="return false" width="${this.settings.width}"/><div class="title">${row.title || ""}</div>`;
 				else // empty image
 					return "";
+			},
+
+			busy: () => {
+
+				let Carousel = $$(ids.component);
+
+				Carousel.disable();
+
+				if (Carousel.showProgress)
+					Carousel.showProgress({ type: "icon" });
+			},
+
+			ready: () => {
+
+				let Carousel = $$(ids.component);
+
+				Carousel.enable();
+
+				if (Carousel.hideProgress)
+					Carousel.hideProgress();
+			},
+
+			switchImage: (current_position) => {
+
+				let dc = this.dataCollection;
+				if (!dc) return;
+
+				// Check want to load more images
+				if (current_position >= (this._imageCount - 1) && // check last image
+					dc.totalCount > this._rowCount) {
+
+					// loading cursor
+					_logic.busy();
+
+					dc.loadData(this._rowCount || 0)
+						.catch(() => {
+							_logic.ready();
+						})
+						.then(() => {
+							_logic.ready();
+						});
+
+				}
+
 			},
 
 			onShow: (fnFilter) => {
@@ -554,9 +604,20 @@ export default class ABViewCarousel extends ABViewWidget {
 					);
 				}
 
+				// store total of rows
+				this._rowCount = rows.length;
+
+				// store total of images
+				this._imageCount = images.length;
+
+				var Carousel = $$(ids.component);
 
 				// re-render
-				webix.ui(images, $$(ids.component));
+				webix.ui(images, Carousel);
+
+				// add loading cursor
+				if (Carousel)
+					webix.extend(Carousel, webix.ProgressBar);
 
 			},
 
