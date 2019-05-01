@@ -220,9 +220,9 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 				logic.callbacks.onSave();
 			},
 
-			objectLoad(object) {
+			objectLoad(object, isLoadAll = false) {
 				this.object = object;
-				this.isLoadAll = object.isLoadAll;
+				this.isLoadAll = isLoadAll;
 
 				//tell each of our rules about our object
 				if (this.queryRules &&

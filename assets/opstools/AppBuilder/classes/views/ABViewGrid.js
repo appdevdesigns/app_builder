@@ -76,7 +76,7 @@ var ABViewDefaults = {
 
 var PopupHideFieldComponent = null;
 var PopupFrozenColumnsComponent = null;
-var PopupGridFilterMenu = null;
+var PopupFilterProperty = null;
 var PopupSummaryColumnsComponent = null;
 var PopupCountColumnsComponent = null;
 
@@ -245,7 +245,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		PopupSummaryColumnsComponent = new ABPopupSummaryColumns(App, idBase+"_summary");
 		PopupCountColumnsComponent = new ABPopupCountColumns(App, idBase+"_count");
 
-		PopupGridFilterMenu = ABViewPropertyFilterData.propertyComponent(App, idBase + "_gridfiltermenu");
+		PopupFilterProperty = ABViewPropertyFilterData.propertyComponent(App, idBase + "_gridfiltermenu");
 
 		let filter_property_popup = webix.ui({
 			view: "window",
@@ -261,13 +261,13 @@ export default class ABViewGrid extends ABViewWidget  {
 					{ view: "label", label: L("ab.component.grid.filterMenu", "*Filter Menu") },
 				]
 			},
-			body: PopupGridFilterMenu.ui
+			body: PopupFilterProperty.ui
 		});
 
 
 		_logic.newObject = () => {
-			var currObj = _logic.currentEditObject();
-			currObj.settings.objectWorkspace = {
+			var currView = _logic.currentEditObject();
+			currView.settings.objectWorkspace = {
 				sortFields:[],
 				filterConditions:[],
 				frozenColumnID:"",
@@ -275,7 +275,7 @@ export default class ABViewGrid extends ABViewWidget  {
 				summaryColumns:[],
 				countColumns:[]
 			};
-			currObj.populatePopupEditors(currObj);
+			currView.populatePopupEditors(currView);
 			
 		}
 		
@@ -300,7 +300,7 @@ export default class ABViewGrid extends ABViewWidget  {
 
 			var currView = _logic.currentEditObject();
 
-			PopupGridFilterMenu.setSettings(currView.settings.gridFilter);
+			PopupFilterProperty.setSettings(currView.settings.gridFilter);
 
 			// show filter popup
 			filter_property_popup.show();
@@ -407,7 +407,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		});
 
 
-		PopupGridFilterMenu.init({
+		PopupFilterProperty.init({
 			onSave: _logic.gridFilterSave,
 			onCancel: _logic.gridFilterCancel
 		});
@@ -892,7 +892,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		view.settings.hideButtons = $$(ids.hideButtons).getValue();
 		view.settings.groupBy = $$(ids.groupBy).getValue();
 
-		view.settings.gridFilter = PopupGridFilterMenu.getSettings();
+		view.settings.gridFilter = PopupFilterProperty.getSettings();
 
 	}
 
@@ -909,11 +909,14 @@ export default class ABViewGrid extends ABViewWidget  {
 			// 	selectedDc.settings.loadAll = true;
 			// }
 
-			var dataCopy = selectedDc.datasource.clone();
-			dataCopy.objectWorkspace = view.settings.objectWorkspace;
-			dataCopy.isLoadAll = selectedDc.settings.loadAll;
+			// var dataCopy = selectedDc.datasource.clone();
+			// dataCopy.objectWorkspace = view.settings.objectWorkspace;
+			// dataCopy.isLoadAll = selectedDc.settings.loadAll;
 
-			PopupGridFilterMenu.objectLoad(dataCopy);
+			let object = selectedDc.datasource;
+			if (object) {
+				PopupFilterProperty.objectLoad(object, selectedDc.settings.loadAll);
+			}
 		}
 	}
 	/*
@@ -1068,18 +1071,17 @@ export default class ABViewGrid extends ABViewWidget  {
 
 				if (dc && dc.datasource) {
 
-					var dataCopy = dc.datasource.clone();
-					dataCopy.objectWorkspace = this.settings.objectWorkspace;
-					CurrentObject = dataCopy;
+					CurrentObject = dc.datasource;
 
 					DataTable.objectLoad(CurrentObject);
 					PopupMassUpdateComponent.objectLoad(CurrentObject, DataTable);
-					PopupSortDataTableComponent.objectLoad(CurrentObject, this);
+					PopupSortDataTableComponent.objectLoad(CurrentObject);
+					PopupSortDataTableComponent.setValue(this.settings.objectWorkspace.sortFields);
 					this.filterHelper.objectLoad(CurrentObject);
 					this.filterHelper.viewLoad(this);
 					exportPopup.objectLoad(CurrentObject);
 					exportPopup.setGridComponent($$(DataTable.ui.id));
-					exportPopup.setHiddenFields(dataCopy.objectWorkspace.hiddenFields);
+					exportPopup.setHiddenFields(this.settings.objectWorkspace.hiddenFields);
 					exportPopup.setFilename(this.label);
 					DataTable.refreshHeader();
 
@@ -1154,8 +1156,8 @@ export default class ABViewGrid extends ABViewWidget  {
 				}
 				
 				
-			}	
-			
+			}
+
 		};
 
 		// specify height of the grid
@@ -1278,9 +1280,9 @@ export default class ABViewGrid extends ABViewWidget  {
 				}
 			},
 			
-			callbackSortData: () => {
+			callbackSortData: (sort_settings) => {
 
-				var sortRules = (this.settings.objectWorkspace.sortFields || []);
+				let sortRules = sort_settings || [];
 
 				$$(ids.buttonSort).define('badge', sortRules.length);
 				$$(ids.buttonSort).refresh();
@@ -1583,26 +1585,26 @@ export default class ABViewGrid extends ABViewWidget  {
 		dataCopy.isLoadAll = dc.settings.loadAll;
 
 		// if (view.settings.dataSource != "") {
-			// var dataSource = view.application.objects((o)=>{
-			// 	return o.id == view.settings.dataSource;
-			// });
-			// var dataSource = this.dataCollection;
-			// var dataCopy = dataSource.datasource.clone();
-			// console.log(view);
-			// dataCopy.objectWorkspace = view.settings.objectWorkspace;
-			PopupHideFieldComponent.objectLoad(dataCopy, view);
-			// PopupFilterDataTableComponent.objectLoad(dataCopy, view);
-			// PopupSortFieldComponent.objectLoad(dataCopy, view);
-			PopupFrozenColumnsComponent.objectLoad(dataCopy, view);
+		// var dataSource = view.application.objects((o)=>{
+		// 	return o.id == view.settings.dataSource;
+		// });
+		// var dataSource = this.dataCollection;
+		// var dataCopy = dataSource.datasource.clone();
+		// console.log(view);
+		// dataCopy.objectWorkspace = view.settings.objectWorkspace;
+		PopupHideFieldComponent.objectLoad(dataCopy, view);
+		// PopupFilterDataTableComponent.objectLoad(dataCopy, view);
+		// PopupSortFieldComponent.objectLoad(dataCopy, view);
+		PopupFrozenColumnsComponent.objectLoad(dataCopy, view);
 
-			PopupGridFilterMenu.objectLoad(dataCopy);
+		PopupFilterProperty.objectLoad(dataCopy);
 
-			PopupSummaryColumnsComponent.objectLoad(dataCopy, view);
-			PopupSummaryColumnsComponent.setValue(view.settings.objectWorkspace.summaryColumns);
+		PopupSummaryColumnsComponent.objectLoad(dataCopy, view);
+		PopupSummaryColumnsComponent.setValue(view.settings.objectWorkspace.summaryColumns);
 
-			PopupCountColumnsComponent.objectLoad(dataCopy, view);
-			PopupCountColumnsComponent.setValue(view.settings.objectWorkspace.countColumns);
-		// }
+		PopupCountColumnsComponent.objectLoad(dataCopy, view);
+		PopupCountColumnsComponent.setValue(view.settings.objectWorkspace.countColumns);
+	// }
 	}
 
 	populateBadgeNumber(ids, view) {

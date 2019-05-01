@@ -1197,7 +1197,7 @@ export default class RowFilter extends OP.Component {
 					});
 				}
 
-				return _.cloneDeep(config_settings);
+				return config_settings;
 
 			},
 
@@ -1208,7 +1208,7 @@ export default class RowFilter extends OP.Component {
 				// block .onChange event
 				_logic.blockOnChange();
 
-				config_settings = settings || {};
+				config_settings = _.cloneDeep(settings || {});
 
 				// Redraw form with no elements
 				var $viewForm = $$(ids.filterForm);

@@ -369,14 +369,20 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 		// Clone ABObject
 		var field = view.field();
 		var linkedObj = field.datasourceLink;
-		var objectCopy = linkedObj.clone();
-		if (objectCopy) {
-			objectCopy.objectWorkspace = view.settings.objectWorkspace;
-			filterConditions = objectCopy.objectWorkspace.filterConditions || ABViewFormConnectPropertyComponentDefaults.objectWorkspace.filterConditions;
+		if (linkedObj &&
+			linkedObj.objectWorkspace &&
+			linkedObj.objectWorkspace.filterConditions) {
+			filterConditions = linkedObj.objectWorkspace.filterConditions;
 		}
+		// var objectCopy = linkedObj.clone();
+		// if (objectCopy) {
+		// 	objectCopy.objectWorkspace = view.settings.objectWorkspace;
+		// 	filterConditions = objectCopy.objectWorkspace.filterConditions || ABViewFormConnectPropertyComponentDefaults.objectWorkspace.filterConditions;
+		// }
 
 		// Populate data to popups
-		FilterComponent.objectLoad(objectCopy);
+		// FilterComponent.objectLoad(objectCopy);
+		FilterComponent.objectLoad(linkedObj);
 		FilterComponent.setValue(filterConditions);
 		FilterComponent.viewLoad(view);
 

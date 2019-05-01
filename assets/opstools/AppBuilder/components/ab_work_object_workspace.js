@@ -538,8 +538,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 // ?? what is this for ??
     		// var fieldList = DataTable.getFieldList();
 
-    		PopupSortFieldComponent.init({
-    			onChange:_logic.callbackSortFields		// be notified when there is a change in the sort fields
+			PopupSortFieldComponent.init({
+				onChange:_logic.callbackSortFields		// be notified when there is a change in the sort fields
 			});
 
 			PopupImportObjectComponent.init({
@@ -779,17 +779,24 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 				_logic.loadData();
             },
 
-    		/**
-    		 * @function callbackSortFields
-    		 *
-    		 * call back for when the sort fields popup changes
-    		 */
-    		callbackSortFields: function() {
-                _logic.getBadgeSortFields();
-                DataTable.refreshHeader();
-				_logic.loadData();
-            },
-            
+			/**
+			 * @function callbackSortFields
+			 * 
+			 * call back for when the sort fields popup changes
+			 **/
+			callbackSortFields: function(sort_settings) {
+
+				CurrentObject.workspaceSortFields = sort_settings;
+				CurrentObject.save()
+					.then(() => {
+
+						_logic.getBadgeSortFields();
+						DataTable.refreshHeader();
+						_logic.loadData();
+		
+					});
+			},
+
             /**
     		 * @function callbackViewAdded
     		 *
@@ -1116,6 +1123,7 @@ console.error('TODO: toolbarPermission()');
 				PopupHideFieldComponent.objectLoad(CurrentObject);
 				PopupMassUpdateComponent.objectLoad(CurrentObject, DataTable);
 				PopupSortFieldComponent.objectLoad(CurrentObject);
+				PopupSortFieldComponent.setValue(CurrentObject.objectWorkspace.sortFields);
 				PopupImportObjectComponent.objectLoad(CurrentObject);
                 PopupExportObjectComponent.objectLoad(CurrentObject);
 				PopupExportObjectComponent.objectLoad(CurrentObject);

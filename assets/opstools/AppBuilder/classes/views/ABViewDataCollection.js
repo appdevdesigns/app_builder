@@ -5,7 +5,6 @@
  */
 
 import ABView from "./ABView"
-import ABPropertyComponent from "../ABPropertyComponent"
 import ABPopupSortField from "../../components/ab_work_object_workspace_popupSortFields"
 import ABWorkspaceDatatable from "../../components/ab_work_object_workspace_datatable"
 
@@ -407,6 +406,20 @@ export default class ABViewDataCollection extends ABView {
 
 			}
 
+
+		};
+
+		_logic.onSortChange = (sortSettings) => {
+
+			let view = _logic.currentEditObject();
+			if (!view) return;
+
+			view.settings = view.settings || {};
+			view.settings.objectWorkspace = view.settings.objectWorkspace || {};
+			// store sort settings
+			view.settings.objectWorkspace.sortFields = sortSettings || [];
+
+			_logic.onChange();
 
 		};
 
@@ -886,7 +899,7 @@ export default class ABViewDataCollection extends ABView {
 		PopupSortFieldComponent = new ABPopupSortField(App, idBase + "_sort");
 		PopupSortFieldComponent.init({
 			// when we make a change in the popups we want to make sure we save the new workspace to the properties to do so just fire an onChange event
-			onChange: _logic.onChange
+			onChange: _logic.onSortChange
 		});
 
 	}
@@ -894,28 +907,31 @@ export default class ABViewDataCollection extends ABView {
 
 	static populatePopupEditors(view) {
 
-		var filterConditions = ABViewPropertyDefaults.objectWorkspace.filterConditions;
+		let object = view.datasource;
+		if (object) {
 
-		// Clone ABObject
-		if (view.datasource) {
+			let filterConditions = ABViewPropertyDefaults.objectWorkspace.filterConditions;
+			let sortConditions = ABViewPropertyDefaults.objectWorkspace.sortFields;
+			if (view.settings.objectWorkspace) {
 
-			var objectCopy = view.datasource.clone();
-			if (objectCopy) {
-				objectCopy.objectWorkspace = view.settings.objectWorkspace;
-	
-				filterConditions = objectCopy.objectWorkspace.filterConditions || ABViewPropertyDefaults.objectWorkspace.filterConditions;
+				if (view.settings.objectWorkspace.filterConditions)
+					filterConditions = view.settings.objectWorkspace.filterConditions;
+
+				if (view.settings.objectWorkspace.sortFields)
+					sortConditions = view.settings.objectWorkspace.sortFields;
 			}
-	
+
 			// Populate data to popups
-			FilterComponent.objectLoad(objectCopy);
+			FilterComponent.objectLoad(object);
 			FilterComponent.viewLoad(view);
 			FilterComponent.setValue(filterConditions);
-			view.__filterComponent.objectLoad(objectCopy);
+			view.__filterComponent.objectLoad(object);
 			view.__filterComponent.viewLoad(view);
 			view.__filterComponent.setValue(filterConditions);
-	
-			PopupSortFieldComponent.objectLoad(objectCopy, view);
-	
+
+			PopupSortFieldComponent.objectLoad(object);
+			PopupSortFieldComponent.setValue(sortConditions);
+
 		}
 
 	}

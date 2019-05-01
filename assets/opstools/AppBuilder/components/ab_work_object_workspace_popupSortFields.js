@@ -13,7 +13,7 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 
 		idBase = idBase || 'ab_work_object_workspace_popupSortFields';
 
-        super(App, idBase);
+		super(App, idBase);
 		var L = this.Label;
 
 		var labels = {
@@ -57,6 +57,7 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 					on: {
 						onItemClick: function(id, e, node) {
 							_logic.clickAddNewSort();
+							_logic.triggerOnChange();
 						}
 					}
 				}
@@ -89,8 +90,7 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 		}
 
 
-		var CurrentObject = null;
-		var CurrentView = null;
+		let CurrentObject = null;
 
 		// our internal business logic
 		var _logic = this._logic = {
@@ -115,9 +115,8 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 			 */
 			// clickAddNewSort: function(by, dir, isMulti, id) {
 			clickAddNewSort: function(fieldId, dir) {
-				// Prevent duplicate fields
-				var sort_popup = $$(ids.component),
-					sort_form = $$(ids.form);
+
+				var sort_form = $$(ids.form);
 
 				var viewIndex = sort_form.getChildViews().length - 1;
 				var listFields = _logic.getFieldList(true);
@@ -141,7 +140,7 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 							options: [{ id: '', value: labels.component.selectField }],
 							on: {
 								onChange: function (newv, oldv) { // 'asc' or 'desc' values
-									_logic.saveSorts();
+									_logic.triggerOnChange();
 								}
 							}
 						},
@@ -154,7 +153,7 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 								onItemClick: function() {
 									sort_form.removeView(this.getParentView());
 									_logic.refreshFieldList(true);
-									_logic.saveSorts();									
+									_logic.triggerOnChange();
 								}
 							} 
 						}
@@ -174,7 +173,7 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 				// 	var isMultilingualField = sort_form.getChildViews()[viewIndex].getChildViews()[2];
 				// 	isMultilingualField.setValue(isMulti);
 				// }
-				_logic.callbacks.onChange();
+
 			},
 
 			/**
@@ -242,13 +241,61 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 			 * @function objectLoad
 			 * Ready the Popup according to the current object
 			 * @param {ABObject} object  the currently selected object.
-			 * @param {ABObject} currView  the custom settings for a view if editing in interface builder
-             */
-            objectLoad: function(object, currView) {
-                CurrentObject = object;
-                if (currView != null) CurrentView = currView;
+			 */
+			objectLoad: function(object) {
+				CurrentObject = object;
 			},
-			
+
+			/**
+			 * @method setSettings
+			 * 
+			 * @param {Array} settings - [
+			 * 								{
+			 * 									key: uuid,		// id of ABField
+			 *	 								dir: string,	// 'asc' or 'desc'
+			 * 								}
+			 * 							]
+			 */
+			setSettings: (settings) => {
+				this._settings = _.cloneDeep(settings);
+			},
+
+			/**
+			 * @function getSettings
+			 * 
+			 * @return {Array} - [
+			 * 						{
+			 * 							key: uuid,		// id of ABField
+			 * 							dir: string,	// 'asc' or 'desc'
+			 * 						}
+			 * 					]
+			 */
+			getSettings: function() {
+
+				var sort_form = $$(ids.form),
+					sortFields = [];
+
+				var childViews = sort_form.getChildViews();
+				if (childViews.length > 1) { // Ignore 'Add new sort' button
+					childViews.forEach(function (cView, index) {
+						if (childViews.length - 1 <= index)
+							return false;
+
+						var fieldId = cView.getChildViews()[0].getValue();
+						var dir = cView.getChildViews()[1].getValue();
+						sortFields.push({
+							// "by":by, 
+							"key": fieldId,
+							"dir":dir, 
+							// "isMulti":isMultiLingual
+						})
+					});
+				}
+
+				return sortFields;
+
+			},
+
 			onChangeCombo: function(columnId, el) {
 				var allFields = CurrentObject.fields();
 				var columnConfig = "",
@@ -299,7 +346,7 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 
 				_logic.refreshFieldList();
 
-				_logic.saveSorts();
+				_logic.triggerOnChange();
 			},
 
 			/**
@@ -307,9 +354,8 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 			 * Ready the Popup according to the current object
 			 * @param {ABObject} object  the currently selected object.
 			 */
-			onShow: function() {
-				var sort_popup = $$(ids.component),
-					sort_form = $$(ids.form);
+			onShow: () => {
+				var sort_form = $$(ids.form);
 
 				// clear field options in the form
 				webix.ui(formUI, sort_form);
@@ -320,7 +366,7 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 				// 	}
 				// });
 
-				var sorts = CurrentObject.workspaceSortFields;
+				var sorts = this._settings;
 				if (sorts && sorts.forEach) {
 					sorts.forEach((s) => {
 						_logic.clickAddNewSort(s.key, s.dir);
@@ -337,8 +383,7 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 			 * return an updated field list so you cannot duplicate a sort
 			 */
 			refreshFieldList: function (ignoreRemoveViews) {
-				var sort_popup = $$(ids.component),
-					sort_form = $$(ids.form),
+				var sort_form = $$(ids.form),
 					listFields = _logic.getFieldList(false),
 					selectedFields = [],
 					removeChildViews = [];
@@ -390,7 +435,7 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 							return true;
 						});
 
-						// var enableFields = $(listFields).not(selectedFieldsExcludeCurField).get();						
+						// var enableFields = $(listFields).not(selectedFieldsExcludeCurField).get();
 						var enableFields = listFields.filter(function(x){
 							if(Array.isArray(selectedFieldsExcludeCurField) && selectedFieldsExcludeCurField.indexOf(x) !== -1){
 								return false;
@@ -407,63 +452,44 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 
 
 			/**
-			 * @function saveSorts
+			 * @function triggerOnChange
 			 * This parses the sort form to build in order the sorts then saves to the application object workspace
 			 */
-			saveSorts: function() {
-				// Prevent duplicate fields
-				var sort_popup = $$(ids.component),
-					sort_form = $$(ids.form),
-					sortFields = [];
+			triggerOnChange: () => {
 
-				var childViews = sort_form.getChildViews();
-				if (childViews.length > 1) { // Ignore 'Add new sort' button
-					childViews.forEach(function (cView, index) {
-						if (childViews.length - 1 <= index)
-							return false;
+				this._settings = _logic.getSettings();
 
-						var fieldId = cView.getChildViews()[0].getValue();
-						var dir = cView.getChildViews()[1].getValue();
-						sortFields.push({
-							// "by":by, 
-							"key": fieldId,
-							"dir":dir, 
-							// "isMulti":isMultiLingual
-						})
-					});
-				}
+				_logic.callbacks.onChange(this._settings);
 
-				if (CurrentView != null) {
-					CurrentView.settings = CurrentView.settings || {};
-					CurrentView.settings.objectWorkspace = CurrentView.settings.objectWorkspace || {};
-					CurrentView.settings.objectWorkspace.sortFields = sortFields;
-					_logic.callbacks.onChange(CurrentView.settings.objectWorkspace);
-				} else {
-					CurrentObject.workspaceSortFields = sortFields;
-					CurrentObject.save()
-					.then(function(){
-						_logic.callbacks.onChange();
-					})
-					.catch(function(err){
-						OP.Error.log('Error trying to save workspaceSortFields', {error:err, fields:sortFields });
-					});
-				}
+				// if (CurrentView != null) {
+				// 	CurrentView.settings = CurrentView.settings || {};
+				// 	CurrentView.settings.objectWorkspace = CurrentView.settings.objectWorkspace || {};
+				// 	CurrentView.settings.objectWorkspace.sortFields = sortFields;
+				// 	_logic.callbacks.onChange(CurrentView.settings.objectWorkspace);
+				// } else {
+				// 	CurrentObject.workspaceSortFields = sortFields;
+				// 	CurrentObject.save()
+				// 	.then(function(){
+				// 		_logic.callbacks.onChange();
+				// 	})
+				// 	.catch(function(err){
+				// 		OP.Error.log('Error trying to save workspaceSortFields', {error:err, fields:sortFields });
+				// 	});
+				// }
 			},
 
 
-            /**
-             * @function show()
-             *
-             * Show this component.
-             * @param {obj} $view  the webix.$view to hover the popup around.
+			/**
+			 * @function show()
+			 *
+			 * Show this component.
+			 * @param {obj} $view  the webix.$view to hover the popup around.
 			 * @param {uuid} fieldId the fieldId we want to prefill the sort with
-             */
-            show:function($view, fieldId, options) {
-                if (options != null) {
-                    $$(ids.component).show($view, options);
-                } else {
-                    $$(ids.component).show($view);
-                }
+			 */
+			show:function($view, fieldId, options) {
+
+				$$(ids.component).show($view, options || null);
+				
 				if (fieldId) {
 					_logic.clickAddNewSort(fieldId);
 				}
@@ -498,12 +524,13 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 						var aValue = a[by],
 							bValue = b[by];
 
-						if ($.isArray(aValue)) {
-							aValue = $.map(aValue, function (item) { return item.text }).join(' ');
+							
+						if (Array.isArray(aValue)) {
+							aValue = (aValue || []).map(function (item) { return item.text || item; }).join(' ');
 						}
 
-						if ($.isArray(bValue)) {
-							bValue = $.map(bValue, function (item) { return item.text }).join(' ');
+						if (Array.isArray(bValue)) {
+							bValue = (bValue || []).map(function (item) { return item.text || item; }).join(' ');
 						}
 
 						if (aValue != bValue) {
@@ -513,7 +540,6 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 							else {
 								result = aValue < bValue ? 1 : -1;
 							}
-							return;
 						}
 
 					});
@@ -530,9 +556,7 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 
 		// Expose any globally accessible Actions:
 		this.actions({
-
-
-		})
+		});
 
 
 		// 
@@ -541,6 +565,9 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 		this.objectLoad = _logic.objectLoad;
 		this.show = _logic.show;
 		this.sort = _logic.sort;
+
+		this.setValue = _logic.setSettings;
+		this.getValue = _logic.getSettings;
 
 	}
 

@@ -788,14 +788,16 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 
 			populateFilters: (dataCollection, filterConditions) => {
 				var filterConditions = filterConditions || ABViewRuleActionObjectUpdaterDefaults.filterConditions;
-				// Clone ABObject
-				var objectCopy = dataCollection.datasource.clone();
-				if (objectCopy) {
-					objectCopy.objectWorkspace.filterConditions = filterConditions;
-				}
+
+				// // Clone ABObject
+				// var objectCopy = dataCollection.datasource.clone();
+				// if (objectCopy) {
+				// 	objectCopy.objectWorkspace.filterConditions = filterConditions;
+				// }
 
 				// Populate data to popups
-				FilterComponent.objectLoad(objectCopy);
+				// FilterComponent.objectLoad(objectCopy);
+				FilterComponent.objectLoad(dataCollection.datasource);
 				FilterComponent.viewLoad(this.currentForm);
 				FilterComponent.setValue(filterConditions);
 			},

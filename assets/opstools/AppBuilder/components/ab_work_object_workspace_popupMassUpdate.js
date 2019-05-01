@@ -465,7 +465,7 @@ export default class AB_Work_Object_Workspace_PopupMassUpdate extends OP.Compone
 						 var selectedValue = item.getChildViews()[0].getValue();
 						 if (selectedValue) {
 							 var removeIndex = null,
-								 removeItem = $.grep(options, function (f, index) {
+								 removeItem = options.filter(function (f, index) {
 									 if (f.name == selectedValue) {
 										 removeIndex = index;
 										 return true;
@@ -480,7 +480,7 @@ export default class AB_Work_Object_Workspace_PopupMassUpdate extends OP.Compone
 					 });
 				 }
 
-				 return $.map(options, function (opt) { return { id: opt.columnName, value: opt.label } });
+				 return (options || []).map(function (opt) { return { id: opt.columnName, value: opt.label } });
 			 },
 
 
@@ -494,7 +494,7 @@ export default class AB_Work_Object_Workspace_PopupMassUpdate extends OP.Compone
  				var update_items = update_panel.getChildViews();
  				update_items.forEach(function (item, index) {
  					var fieldName = item.getChildViews()[0].getValue(),
- 						fieldObj = $.grep(fieldList, function (f) { return f.id == fieldName });
+ 						fieldObj = fieldList.filter(function (f) { return f.id == fieldName });
 
  					if (fieldObj.length > 0) {
  						// Add selected field to list
@@ -506,7 +506,7 @@ export default class AB_Work_Object_Workspace_PopupMassUpdate extends OP.Compone
  				update_items = update_panel.getChildViews();
  				update_items.forEach(function (item, index) {
  					var fieldName = item.getChildViews()[0].getValue(),
- 						fieldObj = $.grep(fieldList, function (f) { return f.id == fieldName });
+ 						fieldObj = fieldList.filter(function (f) { return f.id == fieldName });
 
  					// Remove selected duplicate items
  					var selectedFieldsExcludeCurField = $(selectedFields).not(fieldObj);
