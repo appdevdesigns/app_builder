@@ -18,6 +18,7 @@ module.exports = {
 				"js/selectivity/selectivity.min",
 				"js/vfs_fonts",
 				"js/moment-locales.min",
+				"js/formio.full.min",
 				"OpsPortal/classes/OpsWebixDataCollection",
 				"opstools/BuildApp/OP_Bundle"
 			],
@@ -30,18 +31,25 @@ module.exports = {
 			],
 			"sideBundle": true
 		},
-        "js/vfs_fonts": {
-            "format": "global",
-            "deps": [
-                "js/pdfmake"
-            ],
-            "sideBundle": true
-        },
-        "js/pdfmake": {
-            "format": "global",
-            "deps": [
-            ],
-            "sideBundle": true
-        }
+		"js/vfs_fonts": {
+			"format": "global",
+			"deps": [
+				"js/pdfmake"
+			],
+			"sideBundle": true
+		},
+		"js/pdfmake": {
+			"format": "global",
+			"deps": [
+			],
+			"sideBundle": true
+		},
+		"js/formio.full.min": {
+			"format": "global",
+			"deps": [
+				"js/formio.full.min.css"
+			],
+			"sideBundle": true
+		}
 	}
 };

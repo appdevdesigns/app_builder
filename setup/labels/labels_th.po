@@ -2743,6 +2743,18 @@ msgstr "เพิ่มกฏใหม่"
 
 #. path: app_builder
 #. code: th
+#. key: ab.components.formBuilder
+msgid "Form Builder"
+msgstr "ตัวสร้างฟอร์ม"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.formViewer
+msgid "Form Viewer"
+msgstr "ตัวแสดงฟอร์ม"
+
+#. path: app_builder
+#. code: th
 #. key: ab.query.title
 msgid "Queries"
 msgstr "มุมมองข้อมูล"

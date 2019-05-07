@@ -2773,6 +2773,18 @@ msgstr "Add new rule"
 
 #. path: app_builder
 #. code: en
+#. key: ab.components.formBuilder
+msgid "Form Builder"
+msgstr "Form Builder"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.formViewer
+msgid "Form Viewer"
+msgstr "Form Viewer"
+
+#. path: app_builder
+#. code: en
 #. key: ab.query.title
 msgid "Queries"
 msgstr "Queries"

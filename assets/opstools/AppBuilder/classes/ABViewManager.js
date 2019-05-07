@@ -47,6 +47,9 @@ import ABViewFormReadonly from "./views/ABViewFormReadonly"
 import ABViewFormTextbox from "./views/ABViewFormTextbox"
 import ABViewFormTree from "./views/ABViewFormTree"
 
+import ABViewFormBuilder from "./views/ABViewFormBuilder"
+import ABViewFormViewer from "./views/ABViewFormViewer"
+
 import ABViewReport from "./views/ABViewReport"
 import ABViewReportPage from "./views/ABViewReportPage"
 import ABViewReportPanel from "./views/ABViewReportPanel"
@@ -103,6 +106,9 @@ Views[ABViewFormTextbox.common().key] = ABViewFormTextbox;
 Views[ABViewFormTree.common().key] = ABViewFormTree;
 // Views[ABViewForm.common().key] = ABViewForm;
 // Views[ABViewFormText.common().key] = ABViewFormText;
+
+Views[ABViewFormBuilder.common().key] = ABViewFormBuilder;
+Views[ABViewFormViewer.common().key] = ABViewFormViewer;
 
 Views[ABViewReport.common().key] = ABViewReport;
 Views[ABViewReportPage.common().key] = ABViewReportPage;
