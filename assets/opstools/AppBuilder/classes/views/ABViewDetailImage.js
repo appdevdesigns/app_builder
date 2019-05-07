@@ -141,6 +141,8 @@ export default class ABViewDetailImage extends ABViewDetailComponent {
 			component: App.unique(idBase + '_component'),
 		}
 
+		var defaultImageUrl = field.settings.defaultImageUrl;
+
 		component.ui.id = ids.component;
 
 		var _logic = {
@@ -149,8 +151,9 @@ export default class ABViewDetailImage extends ABViewDetailComponent {
 
 				var imageTemplate = '';
 
-				if (val) {
-					var imageUrl = "/opsportal/image/" + this.application.name + "/" + val;
+				if (val || (!val && defaultImageUrl)) {
+
+					var imageUrl = imageUrl = "/opsportal/image/" + this.application.name + "/" + (val || defaultImageUrl);
 
 					imageTemplate = '<div class="ab-image-data-field"><div style="float: left; background-size: cover; background-position: center center; background-image:url(\'#imageUrl#\');  width: #width#px; height: #height#px;"></div></div>'
 						.replace("#imageUrl#", imageUrl)
