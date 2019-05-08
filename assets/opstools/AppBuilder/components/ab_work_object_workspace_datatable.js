@@ -1,6 +1,6 @@
 
 /*
- * ab_work_object_workspace
+ * ab_work_object_workspace_datatable
  *
  * Manage the Object Workspace area.
  *
@@ -47,6 +47,7 @@ export default class ABWorkObjectDatatable extends OP.Component {
             hideButtons: params.hideButtons || false,
             groupBy: params.groupBy || "",
             hiddenFields: params.hiddenFields || [],
+            frozenColumnID: params.frozenColumnID || ""
         };
 
         var L = this.Label;
@@ -593,10 +594,11 @@ console.warn('!! ToDo: onAfterColumnHide()');
                     _logic.callbacks.onColumnOrderChange(CurrentObject);
                     // freeze columns:
                     var DataTable = $$(ids.component);
-                    if (CurrentObject.workspaceFrozenColumnID != "") {
-                        DataTable.define('leftSplit', DataTable.getColumnIndex(CurrentObject.workspaceFrozenColumnID) + columnSplitLeft);
+                    let frozenColumnID = settings.frozenColumnID || CurrentObject.workspaceFrozenColumnID;
+                    if (frozenColumnID != "") {
+                        DataTable.define('leftSplit', DataTable.getColumnIndex(frozenColumnID) + columnSplitLeft);
                     } else {
-                        DataTable.define('leftSplit', columnSplitLeft);                        
+                        DataTable.define('leftSplit', columnSplitLeft);
                     }
                     _logic.freezeDeleteColumn();
                     DataTable.refreshColumns();
@@ -1151,8 +1153,9 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
 
                 // freeze columns:
-                if (CurrentObject.workspaceFrozenColumnID != "") {
-                    DataTable.define('leftSplit', DataTable.getColumnIndex(CurrentObject.workspaceFrozenColumnID) + 1);
+                let frozenColumnID = settings.frozenColumnID || CurrentObject.workspaceFrozenColumnID;
+                if (frozenColumnID != "") {
+                    DataTable.define('leftSplit', DataTable.getColumnIndex(frozenColumnID) + 1);
                 } else {
                     DataTable.define('leftSplit', columnSplitLeft);
                 }

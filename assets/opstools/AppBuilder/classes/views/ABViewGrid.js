@@ -326,6 +326,17 @@ export default class ABViewGrid extends ABViewWidget  {
 
 		}
 
+		_logic.callbackFrozenFields = (settings) => {
+
+			var currView = _logic.currentEditObject();
+
+			currView.objectWorkspace = currView.objectWorkspace || {};
+			currView.objectWorkspace.frozenColumnID = settings || "";
+
+			_logic.onChange();
+
+		}
+
 		_logic.callbackSaveWorkspace = (data) => {
 			// when we make a change in the popups we want to make sure we save the new workspace to the properties to do so just fire an onChange event
 			_logic.onChange();
@@ -414,7 +425,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		// });
 		
 		PopupFrozenColumnsComponent.init({
-			onChange:_logic.callbackSaveWorkspace		// be notified when there is a change in the hidden fields
+			onChange:_logic.callbackFrozenFields		// be notified when there is a change in the hidden fields
 		});
 
 
@@ -907,6 +918,7 @@ export default class ABViewGrid extends ABViewWidget  {
 
 		view.settings.objectWorkspace = view.objectWorkspace || {};
 		view.settings.objectWorkspace.hiddenFields = PopupHideFieldComponent.getValue();
+		view.settings.objectWorkspace.frozenColumnID = PopupFrozenColumnsComponent.getValue();
 
 	}
 
@@ -1001,7 +1013,8 @@ export default class ABViewGrid extends ABViewWidget  {
 			labelAsField: this.settings.labelAsField,
 			hideButtons: this.settings.hideButtons,
 			groupBy: this.settings.groupBy,
-			hiddenFields: this.settings.objectWorkspace.hiddenFields
+			hiddenFields: this.settings.objectWorkspace.hiddenFields,
+			frozenColumnID: this.settings.objectWorkspace.frozenColumnID
 		}
 
 		let DataTable = new ABWorkspaceDatatable(App, idBase, settings);
@@ -1614,7 +1627,9 @@ export default class ABViewGrid extends ABViewWidget  {
 		PopupHideFieldComponent.setFrozenColumnID(view.settings.objectWorkspace.frozenColumnID || "");
 		// PopupFilterDataTableComponent.objectLoad(dataCopy, view);
 		// PopupSortFieldComponent.objectLoad(dataCopy, view);
-		PopupFrozenColumnsComponent.objectLoad(object, view);
+		PopupFrozenColumnsComponent.objectLoad(object);
+		PopupFrozenColumnsComponent.setValue(view.settings.objectWorkspace.frozenColumnID || "");
+		PopupFrozenColumnsComponent.setHiddenFields(view.settings.objectWorkspace.hiddenFields || []);
 
 		PopupFilterProperty.objectLoad(object);
 
