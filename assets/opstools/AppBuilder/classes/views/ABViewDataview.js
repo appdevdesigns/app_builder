@@ -228,6 +228,12 @@ export default class ABViewDataview extends ABViewDetail {
 					com.onShow();
 				}
 			});
+
+			if (dc.dataStatus == dc.dataStatusFlag.notInitial) {
+				// load data when a widget is showing
+				dc.loadData();
+			}
+
 		};
 
 		com.logic = {
@@ -457,7 +463,7 @@ export default class ABViewDataview extends ABViewDetail {
 			});
 
 
-			$$(ids.component).adjust();
+			$$(ids.scrollview).adjust();
 
 		};
 
