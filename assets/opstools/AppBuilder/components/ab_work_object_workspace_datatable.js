@@ -47,7 +47,7 @@ export default class ABWorkObjectDatatable extends OP.Component {
             hideButtons: params.hideButtons || false,
             groupBy: params.groupBy || "",
             hiddenFields: params.hiddenFields || [],
-            frozenColumnID: params.frozenColumnID || ""
+            frozenColumnID: params.frozenColumnID
         };
 
         var L = this.Label;
@@ -594,7 +594,7 @@ console.warn('!! ToDo: onAfterColumnHide()');
                     _logic.callbacks.onColumnOrderChange(CurrentObject);
                     // freeze columns:
                     var DataTable = $$(ids.component);
-                    let frozenColumnID = settings.frozenColumnID || CurrentObject.workspaceFrozenColumnID;
+                    let frozenColumnID = settings.frozenColumnID != null ? settings.frozenColumnID : CurrentObject.workspaceFrozenColumnID;
                     if (frozenColumnID != "") {
                         DataTable.define('leftSplit', DataTable.getColumnIndex(frozenColumnID) + columnSplitLeft);
                     } else {
@@ -1153,7 +1153,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
 
                 // freeze columns:
-                let frozenColumnID = settings.frozenColumnID || CurrentObject.workspaceFrozenColumnID;
+                let frozenColumnID = settings.frozenColumnID != null ? settings.frozenColumnID : CurrentObject.workspaceFrozenColumnID;
                 if (frozenColumnID != "") {
                     DataTable.define('leftSplit', DataTable.getColumnIndex(frozenColumnID) + 1);
                 } else {

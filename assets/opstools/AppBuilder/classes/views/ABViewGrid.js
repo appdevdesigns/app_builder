@@ -1014,7 +1014,7 @@ export default class ABViewGrid extends ABViewWidget  {
 			hideButtons: this.settings.hideButtons,
 			groupBy: this.settings.groupBy,
 			hiddenFields: this.settings.objectWorkspace.hiddenFields,
-			frozenColumnID: this.settings.objectWorkspace.frozenColumnID
+			frozenColumnID: this.settings.objectWorkspace.frozenColumnID || ""
 		}
 
 		let DataTable = new ABWorkspaceDatatable(App, idBase, settings);
