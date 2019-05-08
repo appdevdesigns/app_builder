@@ -496,7 +496,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 				placeholder = L('ab.dataField.connect.placeholder_multiple', '*Select items');
 			}
 			var readOnly = false;
-			if (editable != null && editable == false) {
+			if (editable != null && !editable) {
 				readOnly = true;
 				placeholder = "";
 			}
@@ -912,22 +912,24 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 		// if (_.isEmpty(rowData)) return; removed because sometimes we will want to set this to empty
 
-		var val = rowData[this.columnName];
-		if (typeof val == "undefined") {
-			val = rowData;
+		// var val = rowData[this.columnName];
+		// if (typeof val == "undefined") {
+		// 	// val = rowData;
 
-			// if ! val in proper selectivity format ->  strange case
-			var testVal = Array.isArray(val) ? val[0] : val;
-			if (!(testVal.id && testVal.text)) {
-				val = this.pullRelationValues(rowData);
-			}
+		// 	// if ! val in proper selectivity format ->  strange case
+		// 	var testVal = Array.isArray(rowData) ? rowData[0] : rowData;
+		// 	if (!(testVal.id && testVal.text)) {
+		// 		val = this.pullRelationValues(rowData);
+		// 	}
 
-		} else {
+		// } else {
 
-			// convert our val into pullRelationValues
-			// get label to display
-			val = this.pullRelationValues(rowData);
-		}
+		// 	// convert our val into pullRelationValues
+		// 	// get label to display
+		// 	val = this.pullRelationValues(rowData);
+		// }
+
+		let val = this.pullRelationValues(rowData);
 
 		// get selectivity dom
 		var domSelectivity = item.$view.querySelector('.connect-data-values');
