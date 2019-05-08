@@ -515,9 +515,9 @@ export default class ABObjectQuery extends ABObject {
 	
 	// return the column headers for this object
 	// @param {bool} isObjectWorkspace  return the settings saved for the object workspace
-	columnHeaders (isObjectWorkspace, isEditable, summaryColumns, countColumns) {
+	columnHeaders (isObjectWorkspace, isEditable, summaryColumns, countColumns, hiddenFieldNames) {
 		
-		var headers = super.columnHeaders(isObjectWorkspace, isEditable, summaryColumns, countColumns);
+		var headers = super.columnHeaders(isObjectWorkspace, isEditable, summaryColumns, countColumns, hiddenFieldNames);
 
 		headers.forEach(h => {
 

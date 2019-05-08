@@ -467,7 +467,7 @@ module.exports =  class ABObjectBase {
 	}
 
 	get workspaceHiddenFields() {
-		return this.objectWorkspace.hiddenFields;
+		return this.objectWorkspace.hiddenFields || [];
 	}
 
 	set workspaceHiddenFields( fields ) {

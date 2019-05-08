@@ -314,7 +314,18 @@ export default class ABViewGrid extends ABViewWidget  {
 		_logic.countColumns = ($view) => {
 			PopupCountColumnsComponent.show($view, {pos:"top"});
 		}
-		
+
+		_logic.callbackHideFields = (settings) => {
+
+			var currView = _logic.currentEditObject();
+
+			currView.objectWorkspace = currView.objectWorkspace || {};
+			currView.objectWorkspace.hiddenFields = settings;
+
+			_logic.onChange();
+
+		}
+
 		_logic.callbackSaveWorkspace = (data) => {
 			// when we make a change in the popups we want to make sure we save the new workspace to the properties to do so just fire an onChange event
 			_logic.onChange();
@@ -391,7 +402,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		// }
 		
 		PopupHideFieldComponent.init({
-			onChange:_logic.callbackSaveWorkspace		// be notified when there is a change in the hidden fields
+			onChange:_logic.callbackHideFields			// be notified when there is a change in the hidden fields
 		});
 		
 		// PopupFilterDataTableComponent.init({
@@ -735,7 +746,7 @@ export default class ABViewGrid extends ABViewWidget  {
 							cols: [
 								{ 
 								    view:"label", 
-								    label: L("ab.component.label.summaryFields", "*Count Fields:"),
+								    label: L("ab.component.label.countFields", "*Count Fields:"),
 									css: 'ab-text-bold',
 									width: App.config.labelWidthXLarge,
 								},
@@ -894,6 +905,9 @@ export default class ABViewGrid extends ABViewWidget  {
 
 		view.settings.gridFilter = PopupFilterProperty.getSettings();
 
+		view.settings.objectWorkspace = view.objectWorkspace || {};
+		view.settings.objectWorkspace.hiddenFields = PopupHideFieldComponent.getValue();
+
 	}
 
 	static propertyUpdateGridFilterObject(ids, view) {
@@ -986,7 +1000,8 @@ export default class ABViewGrid extends ABViewWidget  {
 			hideHeader: this.settings.hideHeader,
 			labelAsField: this.settings.labelAsField,
 			hideButtons: this.settings.hideButtons,
-			groupBy: this.settings.groupBy
+			groupBy: this.settings.groupBy,
+			hiddenFields: this.settings.objectWorkspace.hiddenFields
 		}
 
 		let DataTable = new ABWorkspaceDatatable(App, idBase, settings);
@@ -1573,16 +1588,18 @@ export default class ABViewGrid extends ABViewWidget  {
 	
 	populatePopupEditors(view, dataSource) {
 		var dc = this.dataCollection;
-
-		if (!dc || !dc.datasource) return;
+		if (!dc) return;
 		// if (view.settings.gridFilter.filterOption == 2) {
 		// 	//Force to LoadAll
 		// 	dc.settings.loadAll = true;
 		// }
 
-		var dataCopy = dc.datasource.clone();
-		dataCopy.objectWorkspace = view.settings.objectWorkspace;
-		dataCopy.isLoadAll = dc.settings.loadAll;
+		let object = dc.datasource;
+		if (!object) return;
+
+		// var dataCopy = dc.datasource.clone();
+		// dataCopy.objectWorkspace = view.settings.objectWorkspace;
+		// dataCopy.isLoadAll = dc.settings.loadAll;
 
 		// if (view.settings.dataSource != "") {
 		// var dataSource = view.application.objects((o)=>{
@@ -1592,17 +1609,19 @@ export default class ABViewGrid extends ABViewWidget  {
 		// var dataCopy = dataSource.datasource.clone();
 		// console.log(view);
 		// dataCopy.objectWorkspace = view.settings.objectWorkspace;
-		PopupHideFieldComponent.objectLoad(dataCopy, view);
+		PopupHideFieldComponent.objectLoad(object);
+		PopupHideFieldComponent.setValue(view.settings.objectWorkspace.hiddenFields || []);
+		PopupHideFieldComponent.setFrozenColumnID(view.settings.objectWorkspace.frozenColumnID || "");
 		// PopupFilterDataTableComponent.objectLoad(dataCopy, view);
 		// PopupSortFieldComponent.objectLoad(dataCopy, view);
-		PopupFrozenColumnsComponent.objectLoad(dataCopy, view);
+		PopupFrozenColumnsComponent.objectLoad(object, view);
 
-		PopupFilterProperty.objectLoad(dataCopy);
+		PopupFilterProperty.objectLoad(object);
 
-		PopupSummaryColumnsComponent.objectLoad(dataCopy, view);
+		PopupSummaryColumnsComponent.objectLoad(object, view);
 		PopupSummaryColumnsComponent.setValue(view.settings.objectWorkspace.summaryColumns);
 
-		PopupCountColumnsComponent.objectLoad(dataCopy, view);
+		PopupCountColumnsComponent.objectLoad(object, view);
 		PopupCountColumnsComponent.setValue(view.settings.objectWorkspace.countColumns);
 	// }
 	}

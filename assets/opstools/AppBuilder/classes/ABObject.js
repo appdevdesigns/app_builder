@@ -290,7 +290,7 @@ export default class ABObject extends ABObjectBase {
 
 	// return the column headers for this object
 	// @param {bool} isObjectWorkspace  return the settings saved for the object workspace
-	columnHeaders (isObjectWorkspace, isEditable, summaryColumns, countColumns) {
+	columnHeaders (isObjectWorkspace, isEditable, summaryColumns, countColumns, hiddenFieldNames) {
 
 		summaryColumns = summaryColumns || [];
 		countColumns = countColumns || [];
@@ -333,14 +333,20 @@ export default class ABObject extends ABObjectBase {
 		// update our headers with any settings applied in the Object Workspace
 		if (isObjectWorkspace) {
 
-			// hide any hiddenfields
-			if (this.workspaceHiddenFields.length > 0) {
-				this.workspaceHiddenFields.forEach((hfID)=>{
+			let hiddenFieldList = [];
+
+			if (hiddenFieldNames && hiddenFieldNames.length > 0)
+				hiddenFieldList = hiddenFieldNames;
+			else if (this.workspaceHiddenFields)
+				hiddenFieldList = this.workspaceHiddenFields;
+
+			if (hiddenFieldList.length > 0) {
+				hiddenFieldList.forEach((hfID)=>{
 					headers.forEach((h)=> {
 						if (columnNameLookup[h.id] == hfID){
 							h.hidden = true;
 						}
-					})
+					});
 				});
 			}
 		}
@@ -354,14 +360,21 @@ export default class ABObject extends ABObjectBase {
 	// any custom display operations
 	// @param {Webix.DataStore} data a webix datastore of all the rows effected
 	//        by the render.
-	customDisplays(data, App, DataTable, ids, isEditable) {
-		var fields = this.fields(f => this.objectWorkspace.hiddenFields.indexOf(f.columnName) < 0);
+	customDisplays(data, App, DataTable, rowIds, isEditable) {
 
 		if (!data || !data.getFirstId) return;
 
-		if (ids != null) {
-			var ids = ids;
-			ids.forEach((id)=>{
+		// var fields = this.fields(f => this.workspaceHiddenFields.indexOf(f.columnName) < 0);
+		let fields = [];
+		DataTable.eachColumn((columnName) => {
+
+			let field = this.fields(f => f.columnName == columnName)[0];
+			if (field)
+				fields.push(field);
+		});
+
+		if (rowIds != null) {
+			rowIds.forEach((id)=>{
 				var row = data.getItem(id);
 				fields.forEach((f)=>{
 					var node = DataTable.getItemNode({ row: row.id, column: f.columnName });
@@ -370,7 +383,8 @@ export default class ABObject extends ABObjectBase {
 					});
 				});
 			});
-		} else {
+		}
+		else {
 			var id = data.getFirstId();
 			while(id) {
 				var row = data.getItem(id);
