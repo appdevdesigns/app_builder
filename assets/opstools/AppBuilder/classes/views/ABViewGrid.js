@@ -1332,7 +1332,15 @@ export default class ABViewGrid extends ABViewWidget  {
 				// client filter data
 				if (fnFilter) {
 					let table = $$(DataTable.ui.id);
-					table.filter(fnFilter);
+					table.filter((rowData) => {
+
+						// rowData is null when is not load from paging
+						if (rowData == null) 
+							return false;
+
+						return fnFilter(rowData);
+
+					});
 
 					if (this.settings.gridFilter.globalFilterPosition == "single") {
 						if (table.count() > 0) {

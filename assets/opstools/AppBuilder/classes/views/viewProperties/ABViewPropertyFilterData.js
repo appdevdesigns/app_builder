@@ -205,6 +205,9 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 
 		};
 
+		let instance = this;
+		instance.queryRules = [];
+
 		let logic = {
 
 			callbacks: {
@@ -225,9 +228,9 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 				this.isLoadAll = isLoadAll;
 
 				//tell each of our rules about our object
-				if (this.queryRules &&
-					this.queryRules.length) {
-					this.queryRules.forEach((r) => {
+				if (instance.queryRules &&
+					instance.queryRules.length) {
+					instance.queryRules.forEach((r) => {
 						r.objectLoad(object);
 					});
 				}
@@ -257,14 +260,14 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 				$$(ids.filterGlobal).setValue(settings.globalFilterPosition || ABViewPropertyFilterData.default.globalFilterPosition);
 
 				// clear any existing Rules:
-				if (this.queryRules &&
-					this.queryRules.length > 0) {
-					this.queryRules.forEach((rule) => {
+				if (instance.queryRules &&
+					instance.queryRules.length > 0) {
+					instance.queryRules.forEach((rule) => {
 						if ($$(ids.filterRules))
 							$$(ids.filterRules).removeView(rule.ids.component);
 					})
 				}
-				this.queryRules = [];
+				instance.queryRules = [];
 
 				(settings.queryRules || []).forEach((ruleSettings) => {
 					logic.addFilterRule(ruleSettings);
@@ -287,7 +290,7 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 						settings.userFilterPosition = $$(ids.filterUser).getValue();
 						break;
 					case 2: // Use a filter menu
-						this.queryRules.forEach((r) => {
+						instance.queryRules.forEach((r) => {
 							settings.queryRules.push(r.toSettings());
 						});
 						break;
@@ -311,28 +314,28 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 					return;
 
 				var Rule = getRule(this.object);
-				this.queryRules.push(Rule);
+				instance.queryRules.push(Rule);
 
 
 				// if we have tried to create our component:
-				if (this.ids) {
+				if (ids) {
 
 					// if our actually exists, then populate it:
-					var RulesUI = $$(this.ids.filterRules);
+					var RulesUI = $$(ids.filterRules);
 					if (RulesUI) {
 
 						// make sure Rule.ui is created before calling .init()
-						Rule.component(this.App, this.idBase);  // prepare the UI component
+						Rule.component(App, idBase);  // prepare the UI component
 						var viewId = RulesUI.addView(Rule.ui);
 						Rule.showQueryBuilderContainer();
 						Rule.init({
 							onDelete: (deletedRule) => {
 
-								$$(this.ids.filterRules).removeView(Rule.ids.component);
+								$$(ids.filterRules).removeView(Rule.ids.component);
 
-								var index = this.queryRules.indexOf(deletedRule);
+								var index = instance.queryRules.indexOf(deletedRule);
 								if (index !== -1) {
-									this.queryRules.splice(index, 1);
+									instance.queryRules.splice(index, 1);
 								}
 							}
 						});
