@@ -7,9 +7,14 @@ var L = (key, altText) => {
 	return AD.lang.label.getLabel(key) || altText;
 };
 
-var getRule = (object) => {
+var getRule = (object, App, idBase) => {
 	var FilterRule = new ABViewGridFilterRule();
 	FilterRule.objectLoad(object);
+
+	// run .component because it need to have .getValue and .setValue functions to Rule
+	// NOTE: ABViewQueryBuilderObjectFieldCondition - why does not return new object from .compnent ?
+	if (App, idBase)
+		FilterRule.component(App, idBase);
 
 	return FilterRule;
 };
@@ -19,11 +24,14 @@ var rowFilterForm = null;
 
 export default class ABViewPropertyFilterData extends ABViewProperty {
 
-	constructor() {
+	constructor(App, idBase) {
 		super();
 
 		this.object = null;
 		this.queryRules = [];
+
+		this.App = App;
+		this.idBase = idBase;
 
 	}
 
@@ -224,8 +232,8 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 			},
 
 			objectLoad(object, isLoadAll = false) {
-				this.object = object;
-				this.isLoadAll = isLoadAll;
+				instance.object = object;
+				instance.isLoadAll = isLoadAll;
 
 				//tell each of our rules about our object
 				if (instance.queryRules &&
@@ -273,10 +281,6 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 					logic.addFilterRule(ruleSettings);
 				});
 
-
-				// set object to every rules
-				logic.objectLoad(this.object);
-
 			},
 
 			getSettings() {
@@ -310,10 +314,10 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 			 */
 			addFilterRule(settings) {
 
-				if (this.object == null)
+				if (instance.object == null)
 					return;
 
-				var Rule = getRule(this.object);
+				var Rule = getRule(instance.object, App, idBase);
 				instance.queryRules.push(Rule);
 
 
@@ -487,6 +491,9 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 
 		super.component(App, idBase);
 
+		this.App = App;
+		this.idBase = idBase;
+
 		rowFilter = new RowFilter(App, idBase + "_filter");
 		rowFilterForm = new RowFilter(App, idBase + "_filter_form");
 
@@ -620,7 +627,8 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 			});
 
 			$$(ids.filterPanel).hide();
-			$$(rowFilterForm.ui.id).hide();
+			if ($$(rowFilterForm.ui.id))
+				$$(rowFilterForm.ui.id).hide();
 			$$(ids.filterMenutoolbar).hide();
 			$$(ids.globalFilterFormContainer).hide();
 
@@ -643,7 +651,8 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 					$$(ids.filterMenutoolbar).show();
 
 					// populate filter items
-					if (this.settings.queryRules.length > 0) {
+					if (this.settings.queryRules &&
+						this.settings.queryRules.length > 0) {
 						this.settings.queryRules.forEach(qr => {
 							var filterRuleButton = {
 								view: "button",
@@ -693,7 +702,7 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 
 				let id = "hiddenQB_" + webix.uid();
 
-				let queryRule = getRule(this.object);
+				let queryRule = getRule(this.object, this.App, this.idBase);
 
 				let ui = {
 					id: id,

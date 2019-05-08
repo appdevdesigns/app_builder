@@ -298,9 +298,7 @@ export default class ABViewGrid extends ABViewWidget  {
 
 		_logic.gridFilterMenuShow = () => {
 
-			var currView = _logic.currentEditObject();
-
-			PopupFilterProperty.setSettings(currView.settings.gridFilter);
+			let currView = _logic.currentEditObject();
 
 			// show filter popup
 			filter_property_popup.show();
@@ -1022,9 +1020,8 @@ export default class ABViewGrid extends ABViewWidget  {
 		let PopupSortDataTableComponent = new ABPopupSortField(App, idBase+"_sort");
 		let exportPopup = new ABPopupExport(App, idBase+"_export");
 
-		this.filterHelper.fromSettings(this.settings.gridFilter);
 		let filterUI = this.filterHelper.component(App, idBase + "_gridfilter");
-
+		this.filterHelper.fromSettings(this.settings.gridFilter);
 
 		let _init = () => {
 
@@ -1640,6 +1637,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		PopupFrozenColumnsComponent.setHiddenFields(view.settings.objectWorkspace.hiddenFields || []);
 
 		PopupFilterProperty.objectLoad(object);
+		PopupFilterProperty.setSettings(view.settings.gridFilter);
 
 		PopupSummaryColumnsComponent.objectLoad(object, view);
 		PopupSummaryColumnsComponent.setValue(view.settings.objectWorkspace.summaryColumns);
