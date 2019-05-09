@@ -17,6 +17,7 @@ function L(key, altText) {
 
 var ABViewTabPropertyComponentDefaults = {
 	height: 0,
+	minWidth: 0,
 	stackTabs: 0, // use sidebar view instead of tabview
 	darkTheme: 0, // set dark theme css or not
 	sidebarWidth: 200, // width of sidebar menu when stacking tabs
@@ -71,6 +72,7 @@ export default class ABViewTab extends ABViewWidget {
 
 		// convert from "0" => 0
 		this.settings.height = parseInt(this.settings.height);
+		this.settings.minWidth = parseInt(this.settings.minWidth || 0);
 		this.settings.stackTabs = parseInt(this.settings.stackTabs);
 		this.settings.darkTheme = parseInt(this.settings.darkTheme);
 		this.settings.sidebarWidth = parseInt(this.settings.sidebarWidth);
@@ -559,6 +561,11 @@ export default class ABViewTab extends ABViewWidget {
 				label: L('ab.component.tab.height', '*Height')
 			},
 			{
+				view: 'counter',
+				name: 'minWidth',
+				label: L('ab.component.tab.minWidth', '*Minimum width')
+			},
+			{
 				view: "checkbox",
 				name: "stackTabs",
 				labelRight: L('ab.component.tab.stack', '*Stack Tabs Vertically'),
@@ -623,6 +630,7 @@ export default class ABViewTab extends ABViewWidget {
 		super.propertyEditorPopulate(App, ids, view);
 
 		$$(ids.height).setValue(view.settings.height || ABViewTabPropertyComponentDefaults.height);
+		$$(ids.minWidth).setValue(view.settings.minWidth || ABViewTabPropertyComponentDefaults.minWidth);
 		$$(ids.stackTabs).setValue(view.settings.stackTabs || ABViewTabPropertyComponentDefaults.stackTabs);
 		$$(ids.darkTheme).setValue(view.settings.darkTheme || ABViewTabPropertyComponentDefaults.darkTheme);
 		$$(ids.sidebarWidth).setValue(view.settings.sidebarWidth || ABViewTabPropertyComponentDefaults.sidebarWidth);
@@ -646,6 +654,7 @@ export default class ABViewTab extends ABViewWidget {
 		super.propertyEditorValues(ids, view);
 
 		view.settings.height = $$(ids.height).getValue();
+		view.settings.minWidth = $$(ids.minWidth).getValue();
 		view.settings.stackTabs = $$(ids.stackTabs).getValue();
 		view.settings.darkTheme = $$(ids.darkTheme).getValue();
 		view.settings.sidebarWidth = $$(ids.sidebarWidth).getValue();
@@ -721,6 +730,7 @@ export default class ABViewTab extends ABViewWidget {
 					view: "multiview",
 					id: ids.component,
 					keepViews: true,
+					minWidth: this.settings.minWidth,
 					height: this.settings.height,
 					cells: this._viewComponents.map((v) => {
 						var tabUi = {
@@ -748,6 +758,7 @@ export default class ABViewTab extends ABViewWidget {
 						{
 							view: 'tabview',
 							id: ids.component,
+							minWidth: this.settings.minWidth,
 							tabbar: {
 								height: 60,
 								type: "bottom",

@@ -343,7 +343,12 @@ export default class ABViewDataview extends ABViewDetail {
 			baseCom.onShow();
 
 			// clear UI
-			webix.ui([], $$(ids.component));
+			webix.ui([{
+				view: 'label',
+				label: 'No data',
+				height: 50, 
+				align: "center"
+			}], $$(ids.component));
 
 			var dc = this.dataCollection;
 			if (!dc) return;
