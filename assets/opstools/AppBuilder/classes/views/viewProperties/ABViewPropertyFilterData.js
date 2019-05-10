@@ -28,7 +28,7 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 		super();
 
 		this.object = null;
-		this.queryRules = [];
+		// this.queryRules = [];
 
 		this.App = App;
 		this.idBase = idBase;
@@ -407,34 +407,34 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 	 */
 	fromSettings(settings) {
 
-		this.queryRules = [];
+		// this.queryRules = [];
 
 		settings = settings || {};
 
 		settings.filterOption = JSON.parse(settings.filterOption || ABViewPropertyFilterData.default.filterOption);
 
-		(settings.queryRules || []).forEach(qr => {
+		// (settings.queryRules || []).forEach(qr => {
 
-			if (qr) {
+		// 	if (qr) {
 
-				//Convert some condition from string to integer
-				if (qr.queryRules &&
-					qr.queryRules[0] &&
-					qr.queryRules[0].rules) {
-					qr.queryRules[0].rules.forEach(rule => {
-						if (/^[+-]?\d+(\.\d+)?$/.exec(rule.value)) {
-							rule.value = JSON.parse(rule.value);
-						}
-					});
-				}
+		// 		//Convert some condition from string to integer
+		// 		if (qr.queryRules &&
+		// 			qr.queryRules[0] &&
+		// 			qr.queryRules[0].rules) {
+		// 			qr.queryRules[0].rules.forEach(rule => {
+		// 				if (/^[+-]?\d+(\.\d+)?$/.exec(rule.value)) {
+		// 					rule.value = JSON.parse(rule.value);
+		// 				}
+		// 			});
+		// 		}
 
-				var Rule = getRule(this.object);
-				Rule.fromSettings(qr);
-				this.queryRules.push(Rule);
+		// 		var Rule = getRule(this.object);
+		// 		Rule.fromSettings(qr);
+		// 		this.queryRules.push(Rule);
 
-			}
+		// 	}
 
-		});
+		// });
 
 		this.settings = settings;
 	}
@@ -455,12 +455,12 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 		this.object = object;
 
 		//tell each of our rules about our object
-		if (this.queryRules &&
-			this.queryRules.length) {
-			this.queryRules.forEach((r) => {
-				r.objectLoad(object);
-			});
-		}
+		// if (this.queryRules &&
+		// 	this.queryRules.length) {
+		// 	this.queryRules.forEach((r) => {
+		// 		r.objectLoad(object);
+		// 	});
+		// }
 
 		if (rowFilter)
 			rowFilter.objectLoad(object);
