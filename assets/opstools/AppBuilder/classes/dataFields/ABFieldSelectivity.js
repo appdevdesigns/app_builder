@@ -176,6 +176,11 @@ export default class ABFieldSelectivity extends ABField {
 		} else if (multiple && !Array.isArray(data)) {
 			data = [data];
 		}
+
+		if (data == null && multiple) {
+			data = [];
+		}
+
 		return data;
 	}
 

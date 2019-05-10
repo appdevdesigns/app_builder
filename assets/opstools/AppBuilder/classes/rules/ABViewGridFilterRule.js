@@ -133,7 +133,9 @@ export default class ABViewGridFilterRule {
 	objectLoad(object) {
 		this.currentObject = object;
 
-		this.objectQB = new ObjectQueryBuilder();
+		if (this.objectQB == null)
+			this.objectQB = new ObjectQueryBuilder();
+
 		this.objectQB.objectLoad(object);
 		
 

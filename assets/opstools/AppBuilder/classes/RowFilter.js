@@ -1313,7 +1313,7 @@ export default class RowFilter extends OP.Component {
 				if (rowData == null)
 					return false;
 
-				var result = (config_settings.glue === "glue" ? true : false);
+				var result = (config_settings.glue === "and" ? true : false);
 
 				config_settings.rules.forEach(filter => {
 
@@ -1355,7 +1355,7 @@ export default class RowFilter extends OP.Component {
 							break;
 					}
 
-					if (config_settings.glue === "glue") {
+					if (config_settings.glue === "and") {
 						result = result && condResult;
 					} else {
 						result = result || condResult;

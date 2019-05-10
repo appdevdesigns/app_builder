@@ -228,6 +228,12 @@ export default class ABViewDataview extends ABViewDetail {
 					com.onShow();
 				}
 			});
+
+			if (dc.dataStatus == dc.dataStatusFlag.notInitial) {
+				// load data when a widget is showing
+				dc.loadData();
+			}
+
 		};
 
 		com.logic = {
@@ -337,7 +343,12 @@ export default class ABViewDataview extends ABViewDetail {
 			baseCom.onShow();
 
 			// clear UI
-			webix.ui([], $$(ids.component));
+			webix.ui([{
+				view: 'label',
+				label: 'No data',
+				height: 50, 
+				align: "center"
+			}], $$(ids.component));
 
 			var dc = this.dataCollection;
 			if (!dc) return;
@@ -457,7 +468,7 @@ export default class ABViewDataview extends ABViewDetail {
 			});
 
 
-			$$(ids.component).adjust();
+			$$(ids.scrollview).adjust();
 
 		};
 

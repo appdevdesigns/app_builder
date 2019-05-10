@@ -7,9 +7,14 @@ var L = (key, altText) => {
 	return AD.lang.label.getLabel(key) || altText;
 };
 
-var getRule = (object) => {
+var getRule = (object, App, idBase) => {
 	var FilterRule = new ABViewGridFilterRule();
 	FilterRule.objectLoad(object);
+
+	// run .component because it need to have .getValue and .setValue functions to Rule
+	// NOTE: ABViewQueryBuilderObjectFieldCondition - why does not return new object from .compnent ?
+	if (App, idBase)
+		FilterRule.component(App, idBase);
 
 	return FilterRule;
 };
@@ -19,11 +24,14 @@ var rowFilterForm = null;
 
 export default class ABViewPropertyFilterData extends ABViewProperty {
 
-	constructor() {
+	constructor(App, idBase) {
 		super();
 
 		this.object = null;
-		this.queryRules = [];
+		// this.queryRules = [];
+
+		this.App = App;
+		this.idBase = idBase;
 
 	}
 
@@ -205,6 +213,9 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 
 		};
 
+		let instance = this;
+		instance.queryRules = [];
+
 		let logic = {
 
 			callbacks: {
@@ -221,13 +232,13 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 			},
 
 			objectLoad(object, isLoadAll = false) {
-				this.object = object;
-				this.isLoadAll = isLoadAll;
+				instance.object = object;
+				instance.isLoadAll = isLoadAll;
 
 				//tell each of our rules about our object
-				if (this.queryRules &&
-					this.queryRules.length) {
-					this.queryRules.forEach((r) => {
+				if (instance.queryRules &&
+					instance.queryRules.length) {
+					instance.queryRules.forEach((r) => {
 						r.objectLoad(object);
 					});
 				}
@@ -257,22 +268,18 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 				$$(ids.filterGlobal).setValue(settings.globalFilterPosition || ABViewPropertyFilterData.default.globalFilterPosition);
 
 				// clear any existing Rules:
-				if (this.queryRules &&
-					this.queryRules.length > 0) {
-					this.queryRules.forEach((rule) => {
+				if (instance.queryRules &&
+					instance.queryRules.length > 0) {
+					instance.queryRules.forEach((rule) => {
 						if ($$(ids.filterRules))
 							$$(ids.filterRules).removeView(rule.ids.component);
 					})
 				}
-				this.queryRules = [];
+				instance.queryRules = [];
 
 				(settings.queryRules || []).forEach((ruleSettings) => {
 					logic.addFilterRule(ruleSettings);
 				});
-
-
-				// set object to every rules
-				logic.objectLoad(this.object);
 
 			},
 
@@ -287,7 +294,7 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 						settings.userFilterPosition = $$(ids.filterUser).getValue();
 						break;
 					case 2: // Use a filter menu
-						this.queryRules.forEach((r) => {
+						instance.queryRules.forEach((r) => {
 							settings.queryRules.push(r.toSettings());
 						});
 						break;
@@ -307,32 +314,32 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 			 */
 			addFilterRule(settings) {
 
-				if (this.object == null)
+				if (instance.object == null)
 					return;
 
-				var Rule = getRule(this.object);
-				this.queryRules.push(Rule);
+				var Rule = getRule(instance.object, App, idBase);
+				instance.queryRules.push(Rule);
 
 
 				// if we have tried to create our component:
-				if (this.ids) {
+				if (ids) {
 
 					// if our actually exists, then populate it:
-					var RulesUI = $$(this.ids.filterRules);
+					var RulesUI = $$(ids.filterRules);
 					if (RulesUI) {
 
 						// make sure Rule.ui is created before calling .init()
-						Rule.component(this.App, this.idBase);  // prepare the UI component
+						Rule.component(App, idBase);  // prepare the UI component
 						var viewId = RulesUI.addView(Rule.ui);
 						Rule.showQueryBuilderContainer();
 						Rule.init({
 							onDelete: (deletedRule) => {
 
-								$$(this.ids.filterRules).removeView(Rule.ids.component);
+								$$(ids.filterRules).removeView(Rule.ids.component);
 
-								var index = this.queryRules.indexOf(deletedRule);
+								var index = instance.queryRules.indexOf(deletedRule);
 								if (index !== -1) {
-									this.queryRules.splice(index, 1);
+									instance.queryRules.splice(index, 1);
 								}
 							}
 						});
@@ -400,34 +407,34 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 	 */
 	fromSettings(settings) {
 
-		this.queryRules = [];
+		// this.queryRules = [];
 
 		settings = settings || {};
 
 		settings.filterOption = JSON.parse(settings.filterOption || ABViewPropertyFilterData.default.filterOption);
 
-		(settings.queryRules || []).forEach(qr => {
+		// (settings.queryRules || []).forEach(qr => {
 
-			if (qr) {
+		// 	if (qr) {
 
-				//Convert some condition from string to integer
-				if (qr.queryRules &&
-					qr.queryRules[0] &&
-					qr.queryRules[0].rules) {
-					qr.queryRules[0].rules.forEach(rule => {
-						if (/^[+-]?\d+(\.\d+)?$/.exec(rule.value)) {
-							rule.value = JSON.parse(rule.value);
-						}
-					});
-				}
+		// 		//Convert some condition from string to integer
+		// 		if (qr.queryRules &&
+		// 			qr.queryRules[0] &&
+		// 			qr.queryRules[0].rules) {
+		// 			qr.queryRules[0].rules.forEach(rule => {
+		// 				if (/^[+-]?\d+(\.\d+)?$/.exec(rule.value)) {
+		// 					rule.value = JSON.parse(rule.value);
+		// 				}
+		// 			});
+		// 		}
 
-				var Rule = getRule(this.object);
-				Rule.fromSettings(qr);
-				this.queryRules.push(Rule);
+		// 		var Rule = getRule(this.object);
+		// 		Rule.fromSettings(qr);
+		// 		this.queryRules.push(Rule);
 
-			}
+		// 	}
 
-		});
+		// });
 
 		this.settings = settings;
 	}
@@ -448,12 +455,12 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 		this.object = object;
 
 		//tell each of our rules about our object
-		if (this.queryRules &&
-			this.queryRules.length) {
-			this.queryRules.forEach((r) => {
-				r.objectLoad(object);
-			});
-		}
+		// if (this.queryRules &&
+		// 	this.queryRules.length) {
+		// 	this.queryRules.forEach((r) => {
+		// 		r.objectLoad(object);
+		// 	});
+		// }
 
 		if (rowFilter)
 			rowFilter.objectLoad(object);
@@ -483,6 +490,9 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 	component(App, idBase) {
 
 		super.component(App, idBase);
+
+		this.App = App;
+		this.idBase = idBase;
 
 		rowFilter = new RowFilter(App, idBase + "_filter");
 		rowFilterForm = new RowFilter(App, idBase + "_filter_form");
@@ -617,7 +627,8 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 			});
 
 			$$(ids.filterPanel).hide();
-			$$(rowFilterForm.ui.id).hide();
+			if ($$(rowFilterForm.ui.id))
+				$$(rowFilterForm.ui.id).hide();
 			$$(ids.filterMenutoolbar).hide();
 			$$(ids.globalFilterFormContainer).hide();
 
@@ -640,7 +651,8 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 					$$(ids.filterMenutoolbar).show();
 
 					// populate filter items
-					if (this.settings.queryRules.length > 0) {
+					if (this.settings.queryRules &&
+						this.settings.queryRules.length > 0) {
 						this.settings.queryRules.forEach(qr => {
 							var filterRuleButton = {
 								view: "button",
@@ -690,7 +702,7 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 
 				let id = "hiddenQB_" + webix.uid();
 
-				let queryRule = getRule(this.object);
+				let queryRule = getRule(this.object, this.App, this.idBase);
 
 				let ui = {
 					id: id,

@@ -650,6 +650,19 @@ export default class ABViewCarousel extends ABViewWidget {
 
 				});
 
+				// insert the default image to first item
+				if (field.settings.defaultImageUrl) {
+					images.unshift({
+						css: "image",
+						template: _logic.myTemplate,
+						data: {
+							id: OP.Util.uuid(),
+							src: `/opsportal/image/${obj.application.name}/${field.settings.defaultImageUrl}`,
+							label: "Default image",
+						}
+					});
+				}
+
 				// empty image
 				if (images.length < 1) {
 					images.push(

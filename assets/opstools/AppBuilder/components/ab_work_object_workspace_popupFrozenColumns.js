@@ -61,7 +61,7 @@ export default class AB_Work_Object_Workspace_PopupFrozenColumns extends OP.Comp
 						type: "form",
 						on: {
 							'onItemClick': function(id, e, node) {
-								return _logic.clickClearAll();								
+								return _logic.clickClearAll();
 							}
 						}
 					},
@@ -113,25 +113,12 @@ export default class AB_Work_Object_Workspace_PopupFrozenColumns extends OP.Comp
 			 * @function clickClearAll
 			 * the user clicked the [clear all] option.  So show unfreeze all our columns.
 			 */
-			clickClearAll: function () {
-				// store empty string to not freeze any columns
-				if (CurrentView != null) {
-					CurrentView.settings.objectWorkspace.frozenColumnID = "";
-					_logic.callbacks.onChange(CurrentView.settings.objectWorkspace);
-					_logic.iconsReset();
-				} else {
-					CurrentObject.workspaceFrozenColumnID = "";
-					CurrentObject.save()
-					.then(function(){
-						_logic.iconsReset();
-						_logic.callbacks.onChange();
-						return false;
-					})
-					.catch(function(err){
-						OP.Error.log('Error trying to save workspaceFrozenColumnID', {error:err, fields:"" });
-						return false;
-					})
-				}
+			clickClearAll: () => {
+
+				_logic.setValue("");
+				_logic.iconsReset();
+				_logic.callbacks.onChange(this._setting);
+
 			},
 
 
@@ -139,34 +126,23 @@ export default class AB_Work_Object_Workspace_PopupFrozenColumns extends OP.Comp
 			 * @function clickListItem
 			 * update the list to show which columns are frozen by showing an icon next to the column name
 			 */
-			clickListItem: function(id, e, node) {
+			clickListItem: (id, e, node) => {
 				// update our Object with current frozen column id
 				var List = $$(ids.list);
 				var recordClicked = List.getItem(id);
 				var label = recordClicked.columnName;
 				
-				if (CurrentObject.workspaceHiddenFields.indexOf(label) != -1) {
+				if ((this._hiddenFields || []).indexOf(label) != -1) {
 					OP.Dialog.Alert({
 						text: labels.component.errorHidden
 					});
 					return;
 				}
 
-				if (CurrentView != null) {
-					CurrentView.settings.objectWorkspace.frozenColumnID = label;
-					_logic.callbacks.onChange(CurrentView.settings.objectWorkspace);
-					_logic.iconsReset();
-				} else {
-					CurrentObject.workspaceFrozenColumnID = label;
-					CurrentObject.save()
-					.then(function(){
-						_logic.iconsReset();
-						_logic.callbacks.onChange()
-					})
-					.catch(function(err){
-						OP.Error.log('Error trying to save workspaceFrozenColumnID', {error:err, fields:label });
-					})
-				}
+				_logic.setValue(label);
+				_logic.iconsReset();
+				_logic.callbacks.onChange(this._setting);
+
 			},
 
 			/**
@@ -198,7 +174,7 @@ export default class AB_Work_Object_Workspace_PopupFrozenColumns extends OP.Comp
 			 * @function iconsReset
 			 * Reset the icon displays according to the current values in our Object
 			 */
-			iconsReset: function() {
+			iconsReset: () => {
 				var List = $$(ids.list);
 				var isFrozen = false;
 
@@ -211,7 +187,7 @@ export default class AB_Work_Object_Workspace_PopupFrozenColumns extends OP.Comp
 					// find it's HTML Node
 					var node = List.getItemNode(id);
 
-					if (CurrentObject.workspaceFrozenColumnID == "") {
+					if (this._setting == "") {
 						// if there isn't any frozen columns just use the plain icon
 						_logic.iconDefault(node);
 					} else if (isFrozen == false) {
@@ -222,11 +198,11 @@ export default class AB_Work_Object_Workspace_PopupFrozenColumns extends OP.Comp
 						_logic.iconDefault(node);
 					}
 
-					if (CurrentObject.workspaceFrozenColumnID == label) {
+					if (this._setting == label) {
 						isFrozen = true;
 					}
 
-					if (CurrentObject.workspaceHiddenFields.indexOf(label) != -1) {
+					if ((this._hiddenFields || []).indexOf(label) != -1) {
 						node.style.opacity = 0.4;
 						node.querySelector('.ab-frozen-field-icon').classList.remove("fa-circle");
 						node.querySelector('.ab-frozen-field-icon').classList.remove("fa-circle-o");
@@ -247,11 +223,9 @@ export default class AB_Work_Object_Workspace_PopupFrozenColumns extends OP.Comp
 			 * @function objectLoad
 			 * Ready the Popup according to the current object
 			 * @param {ABObject} object  the currently selected object.
-			 * @param {ABObject} currView  the custom settings for a view if editing in interface builder
              */
-            objectLoad: function(object, currView) {
+            objectLoad: function(object) {
                 CurrentObject = object;
-                if (currView != null) CurrentView = currView;
 			},
 
 			onShow: function() {
@@ -283,7 +257,19 @@ export default class AB_Work_Object_Workspace_PopupFrozenColumns extends OP.Comp
                 } else {
                     $$(ids.component).show($view);
                 }
-	        }
+			},
+			
+			setValue: (setting) => {
+				this._setting = setting;
+			},
+
+			getValue: () => {
+				return this._setting;
+			},
+
+			setHiddenFields: (hidden_fields) => {
+				this._hiddenFields = hidden_fields || [];
+			}
 
 		}
 
@@ -302,6 +288,10 @@ export default class AB_Work_Object_Workspace_PopupFrozenColumns extends OP.Comp
 		this.objectLoad = _logic.objectLoad;
 		this.show = _logic.show;
 
+		this.setValue = _logic.setValue;
+		this.getValue = _logic.getValue;
+
+		this.setHiddenFields = _logic.setHiddenFields;
 
 	}
 

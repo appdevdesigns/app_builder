@@ -1880,8 +1880,7 @@ export default class ABViewDataCollection extends ABView {
 
 						// populate data to webix's data collection and the loading cursor is hidden here
 						this.__dataCollection.parse(data);
-	
-	
+
 						var linkDc = this.dataCollectionLink;
 						if (linkDc) {
 	
@@ -1900,6 +1899,11 @@ export default class ABViewDataCollection extends ABView {
 						if (this._dataStatus != this.dataStatusFlag.initialized) {
 							this._dataStatus = this.dataStatusFlag.initialized;
 							this.emit("initializedData", {});
+						}
+
+						// If dc set load all, then it will not trigger .loadData in dc at .onAfterLoad event
+						if (this.settings.loadAll) {
+							this.emit("loadData", {});
 						}
 
 						if (callback)

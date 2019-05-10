@@ -623,25 +623,45 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		 *
     		 * call back for when the hidden fields have changed.
     		 */
-    		callbackFrozenColumns: function() {
+    		callbackFrozenColumns: function(frozen_field_id) {
                 // We need to load data first because there isn't anything to look at if we don't
-				DataTable.refreshHeader();
 				// _logic.loadData();
-                // DataTable.refresh();
+				// DataTable.refresh();
+				
+				CurrentObject.workspaceFrozenColumnID = frozen_field_id;
+				CurrentObject.save()
+					.then(() => {
 
-                _logic.getBadgeFrozenColumn();
-    		},
+						_logic.getBadgeFrozenColumn();
+
+						PopupHideFieldComponent.setFrozenColumnID(CurrentObject.objectWorkspace.frozenColumnID || "");
+		
+						DataTable.refreshHeader();
+		
+					});
+
+			},
 
     		/**
     		 * @function callbackFieldsVisible
     		 *
     		 * call back for when the hidden fields have changed.
     		 */
-    		callbackFieldsVisible: function() {
-                _logic.getBadgeHiddenFields();
-    			// if you unhide a field it may fall inside the frozen columns range so lets check
-    			_logic.callbackFrozenColumns();
-    		},
+    		callbackFieldsVisible: function(hidden_fields_settings) {
+
+				CurrentObject.workspaceHiddenFields = hidden_fields_settings;
+				CurrentObject.save()
+					.then(() => {
+
+						_logic.getBadgeHiddenFields();
+
+						PopupFrozenColumnsComponent.setHiddenFields(hidden_fields_settings);
+
+						DataTable.refreshHeader();
+
+					});
+
+			},
 
             /**
     		 * @function callbackCheckboxChecked
@@ -688,10 +708,12 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                         }
 
                         // update our Object with current hidden fields
-                        CurrentObject.workspaceHiddenFields = newFields;
+						CurrentObject.workspaceHiddenFields = newFields;
                         CurrentObject.save()
                         .then(function(){
-                            _logic.callbackFieldsVisible();
+							PopupHideFieldComponent.setValue(CurrentObject.objectWorkspace.hiddenFields);
+							PopupFrozenColumnsComponent.setHiddenFields(CurrentObject.objectWorkspace.hiddenFields);
+							DataTable.refreshHeader();
                         })
                         .catch(function(err){
                             OP.Error.log('Error trying to save workspaceHiddenFields', {error:err, fields:newFields });
@@ -707,7 +729,10 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                         CurrentObject.workspaceFrozenColumnID = field.columnName;
                         CurrentObject.save()
                         .then(function(){
-                            _logic.callbackFrozenColumns();
+
+							PopupFrozenColumnsComponent.setValue(CurrentObject.objectWorkspace.frozenColumnID || "");
+							PopupHideFieldComponent.setFrozenColumnID(CurrentObject.objectWorkspace.frozenColumnID || "");
+							DataTable.refreshHeader();
                         })
                         .catch(function(err){
                             OP.Error.log('Error trying to save workspaceFrozenColumnID', {error:err, fields:field.columnName });
@@ -1120,7 +1145,11 @@ console.error('TODO: toolbarPermission()');
 				PopupDefineLabelComponent.objectLoad(CurrentObject);
 				PopupFilterDataTableComponent.objectLoad(CurrentObject);
 				PopupFrozenColumnsComponent.objectLoad(CurrentObject);
+				PopupFrozenColumnsComponent.setValue(CurrentObject.objectWorkspace.frozenColumnID || "");
+				PopupFrozenColumnsComponent.setHiddenFields(CurrentObject.objectWorkspace.hiddenFields);
 				PopupHideFieldComponent.objectLoad(CurrentObject);
+				PopupHideFieldComponent.setValue(CurrentObject.objectWorkspace.hiddenFields);
+				PopupHideFieldComponent.setFrozenColumnID(CurrentObject.objectWorkspace.frozenColumnID || "");
 				PopupMassUpdateComponent.objectLoad(CurrentObject, DataTable);
 				PopupSortFieldComponent.objectLoad(CurrentObject);
 				PopupSortFieldComponent.setValue(CurrentObject.objectWorkspace.sortFields);
@@ -1132,7 +1161,8 @@ console.error('TODO: toolbarPermission()');
                 PopupExportObjectComponent.setFilename(CurrentObject.label);
                 PopupViewSettingsComponent.objectLoad(CurrentObject);
 
-                _logic.refreshToolBarView();
+				DataTable.refreshHeader();
+				_logic.refreshToolBarView();
 
 				// $$(ids.component).setValue(ids.selectedObject);
 				$$(ids.selectedObject).show(true, false);
@@ -1244,10 +1274,9 @@ console.error('TODO: toolbarPermission()');
              */
             refreshToolBarView: function() {
 
-				// We can hide fields now that data is loaded
-				_logic.callbackFieldsVisible();
-				
 				// get badge counts for server side components
+				_logic.getBadgeHiddenFields();
+				_logic.getBadgeFrozenColumn();
 				_logic.getBadgeSortFields();
 				_logic.getBadgeFilters();
 
@@ -1261,7 +1290,7 @@ console.error('TODO: toolbarPermission()');
 				else {
 					$$(ids.buttonAddField).enable();
                 }
-                
+
             },
 
             refreshViewMenu: function() {
