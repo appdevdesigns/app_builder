@@ -93,6 +93,7 @@ describe('ab_work_object_workspace_popupSortFields component', () => {
 			// Load first object from a sample ABApplication
 			let mockObj = sampleApp.objects()[0];
 			target.objectLoad(mockObj);
+			target.setValue(mockObj.workspaceSortFields);
 			
 			// Set up simulated button click and spy for clickAddNewSort function
 			let addNewSortButtonClickFn = target.ui.body.elements[target.ui.body.elements.length - 1].on.onItemClick,
@@ -120,9 +121,11 @@ describe('ab_work_object_workspace_popupSortFields component', () => {
 			
 			// Assume clear all button is clicked
 			addNewSortButtonClickFn(null, null, null);
+
+			let result = target.getValue();
 			
 			// Assert the number of times the click add new sort should match the number of entries in the database
-			sandbox.assert.callCount(spyLogicClickAddNewSort, mockObj.workspaceSortFields.length + 1);
+			sandbox.assert.callCount(spyLogicClickAddNewSort, result.length);
 			
 		});
 

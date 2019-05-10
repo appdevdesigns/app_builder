@@ -110,6 +110,7 @@ describe('ab_work_object_workspace_popupFrozenColumns component', () => {
 			// Load first object from a sample ABApplication
 			let mockObj = sampleApp.objects()[0];
 			target.objectLoad(mockObj);
+			target.setValue(mockObj.workspaceFrozenColumnID);
 			
 			// Set up simulated button click and spy for clickClearAll function
 			let buttonClickFn = target.ui.body.rows[1].on.onItemClick,
@@ -125,9 +126,11 @@ describe('ab_work_object_workspace_popupFrozenColumns component', () => {
 			
 			// Assert _logic.clickClearAll should be called when claer all button is clicked
 			sandbox.assert.calledOnce(spyLogicClickClearAll);
+
+			let result = target.getValue();
 			
 			// Assert frozen column should be empty string
-			assert.equal('', mockObj.workspaceFrozenColumnID);
+			assert.equal('', result);
 
 		});
 
@@ -136,6 +139,7 @@ describe('ab_work_object_workspace_popupFrozenColumns component', () => {
 			// Load first object from a sample ABApplication
 			let mockObj = sampleApp.objects()[0];
 			target.objectLoad(mockObj);
+			target.setValue(mockObj.workspaceFrozenColumnID);
 			
 			// Set up simulated list item click and spy for clickListItem function
 			let itemClickFn = target.ui.body.rows[0].on.onItemClick,
@@ -161,8 +165,10 @@ describe('ab_work_object_workspace_popupFrozenColumns component', () => {
 			// Assert _logic.clickClearAll should be called when claer all button is clicked
 			sandbox.assert.calledOnce(spyLogicClickListItem);
 			
+			let result = target.getValue();
+
 			// Assert frozen column should be the columanName of the item clicked
-			assert.equal(mockObj.fields()[1].columnName, mockObj.workspaceFrozenColumnID);
+			assert.equal(mockObj.fields()[1].columnName, result);
 
 		});
 
