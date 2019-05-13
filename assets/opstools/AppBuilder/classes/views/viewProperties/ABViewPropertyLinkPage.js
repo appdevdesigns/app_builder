@@ -87,13 +87,31 @@ export default class ABViewPropertyLinkPage extends ABViewProperty {
 
 				this.view = view;
 
+				let filter = (v, widgetKey) => {
+					return v.key == widgetKey &&
+						(v.settings.datacollection == view.settings.datacollection ||
+							v.settings.datacollection == view.settings.dataSource);
+				};
+
 				// Set the options of the possible detail views
-				let pagesHasDetail = view.pageRoot()
+				let pagesHasDetail = [];
+
+				pagesHasDetail = pagesHasDetail.concat(view.pageRoot().views(v => {
+					return filter(v, "detail");
+				}, true)
+					.map(p => {
+						return {
+							id: p.id,
+							value: p.label
+						}
+					}));
+
+				pagesHasDetail = pagesHasDetail.concat(view.pageRoot()
 					.pages(p => {
 						return p.views(v => {
-							return v.key == "detail" &&
-								(v.settings.datacollection == view.settings.datacollection ||
-									v.settings.datacollection == view.settings.dataSource);
+
+							return filter(v, "detail");
+
 						}, true).length;
 					}, true)
 					.map(p => {
@@ -101,19 +119,31 @@ export default class ABViewPropertyLinkPage extends ABViewProperty {
 							id: p.id,
 							value: p.label
 						}
-					});
+					}));
 
 				pagesHasDetail.unshift({ id: '', value: L('ab.component.label.noLinkedView', '*No linked view') });
 				$$(ids.detailsPage).define("options", pagesHasDetail);
 				$$(ids.detailsPage).refresh();
 
 				// Set the options of the possible edit forms
-				let pagesHasForm = view.pageRoot()
+				let pagesHasForm = [];
+
+				pagesHasForm = pagesHasForm.concat(view.pageRoot().views(v => {
+					return filter(v, "form");
+				}, true)
+					.map(p => {
+						return {
+							id: p.id,
+							value: p.label
+						}
+					}));
+
+				pagesHasForm = pagesHasForm.concat(view.pageRoot()
 					.pages(p => {
 						return p.views(v => {
-							return v.key == "form" &&
-								(v.settings.datacollection == view.settings.datacollection ||
-									v.settings.datacollection == view.settings.dataSource);
+
+							return filter(v, "form");
+
 						}, true).length;
 					}, true)
 					.map(p => {
@@ -121,7 +151,7 @@ export default class ABViewPropertyLinkPage extends ABViewProperty {
 							id: p.id,
 							value: p.label
 						}
-					});
+					}));
 
 				pagesHasForm.unshift({ id: '', value: L('ab.component.label.noLinkedForm', '*No linked form') });
 				$$(ids.editPage).define("options", pagesHasForm);

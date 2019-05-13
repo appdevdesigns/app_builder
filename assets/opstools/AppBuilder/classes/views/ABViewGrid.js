@@ -18,6 +18,7 @@ import ABPopupExport from "../../components/ab_work_object_workspace_popupExport
 import ABFieldImage from "../dataFields/ABFieldImage"
 
 import ABViewPropertyFilterData from "./viewProperties/ABViewPropertyFilterData"
+import ABViewPropertyLinkPage from "./viewProperties/ABViewPropertyLinkPage"
 
 
 function L(key, altText) {
@@ -246,6 +247,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		PopupCountColumnsComponent = new ABPopupCountColumns(App, idBase+"_count");
 
 		PopupFilterProperty = ABViewPropertyFilterData.propertyComponent(App, idBase + "_gridfiltermenu");
+		this.linkPageComponent = ABViewPropertyLinkPage.propertyComponent(App, idBase + "_gridlinkpage");
 
 		let filter_property_popup = webix.ui({
 			view: "window",
@@ -581,63 +583,64 @@ export default class ABViewGrid extends ABViewWidget  {
 					]
 				}
 			},
-			{ 
-				view: "fieldset", 
-				label: L('ab.component.label.linkedPages', '*Linked Pages:'),
-				labelWidth: App.config.labelWidthLarge,
-				body:{
-					type: "clean",
-					padding: 10,
-			        rows:[
-						{
-							view:"select",
-							name:"detailsPage",
-							label: L('ab.component.label.detailsPage', '*Details Page:'),
-							labelWidth: App.config.labelWidthLarge,
-							// on: {
-							// 	onChange: function(newv, oldv) {
-							// 		if (newv != oldv) {
-							// 			_logic.updateDetailsView(newv);
-							// 		}
-							// 	}
-							// }
-						},
-						// {
-						// 	view:"text",
-						// 	name:"linkedPage",
-						// 	height:0
-						// },
-						// {
-						// 	view:"text",
-						// 	name:"linkedPageView",
-						// 	height:0
-						// },
-						{
-							view:"select",
-							name:"editPage",
-							label: L('ab.component.label.editForm', '*Edit Form:'), 
-							labelWidth: App.config.labelWidthLarge,
-							// on: {
-							// 	onChange: function(newv, oldv) {
-							// 		if (newv != oldv) {
-							// 			_logic.updateEditForm(newv);
-							// 		}
-							// 	}
-							// }
-						},
-						// {
-						// 	view:"text",
-						// 	name:"linkedEditPage",
-						// 	height:0
-						// },
-						// {
-						// 	view:"text",
-						// 	name:"linkedEditPageForm",
-						// 	height:0
-						// }
-			        ]
-		    	}
-		    },
+			this.linkPageComponent.ui,
+			// { 
+			// 	view: "fieldset", 
+			// 	label: L('ab.component.label.linkedPages', '*Linked Pages:'),
+			// 	labelWidth: App.config.labelWidthLarge,
+			// 	body:{
+			// 		type: "clean",
+			// 		padding: 10,
+			//         rows:[
+			// 			{
+			// 				view:"select",
+			// 				name:"detailsPage",
+			// 				label: L('ab.component.label.detailsPage', '*Details Page:'),
+			// 				labelWidth: App.config.labelWidthLarge,
+			// 				// on: {
+			// 				// 	onChange: function(newv, oldv) {
+			// 				// 		if (newv != oldv) {
+			// 				// 			_logic.updateDetailsView(newv);
+			// 				// 		}
+			// 				// 	}
+			// 				// }
+			// 			},
+			// 			// {
+			// 			// 	view:"text",
+			// 			// 	name:"linkedPage",
+			// 			// 	height:0
+			// 			// },
+			// 			// {
+			// 			// 	view:"text",
+			// 			// 	name:"linkedPageView",
+			// 			// 	height:0
+			// 			// },
+			// 			{
+			// 				view:"select",
+			// 				name:"editPage",
+			// 				label: L('ab.component.label.editForm', '*Edit Form:'), 
+			// 				labelWidth: App.config.labelWidthLarge,
+			// 				// on: {
+			// 				// 	onChange: function(newv, oldv) {
+			// 				// 		if (newv != oldv) {
+			// 				// 			_logic.updateEditForm(newv);
+			// 				// 		}
+			// 				// 	}
+			// 				// }
+			// 			},
+			// 			// {
+			// 			// 	view:"text",
+			// 			// 	name:"linkedEditPage",
+			// 			// 	height:0
+			// 			// },
+			// 			// {
+			// 			// 	view:"text",
+			// 			// 	name:"linkedEditPageForm",
+			// 			// 	height:0
+			// 			// }
+			//         ]
+		    // 	}
+		    // },
 			{
 				view: "fieldset", 
 				label: L('ab.component.label.customizeDisplay', '*Customize Display:'),
@@ -865,6 +868,10 @@ export default class ABViewGrid extends ABViewWidget  {
 		//Load Datacollection to QueryBuilder
 		this.propertyUpdateGridFilterObject(ids, view);
 
+		// Populate values to link page properties
+		this.linkPageComponent.viewLoad(view);
+		this.linkPageComponent.setSettings(view.settings);
+
 	}
 	
 	static propertyEditorValues(ids, view) {
@@ -917,6 +924,12 @@ export default class ABViewGrid extends ABViewWidget  {
 		view.settings.objectWorkspace = view.objectWorkspace || {};
 		view.settings.objectWorkspace.hiddenFields = PopupHideFieldComponent.getValue();
 		view.settings.objectWorkspace.frozenColumnID = PopupFrozenColumnsComponent.getValue();
+
+		// link pages
+		let linkSettings = this.linkPageComponent.getSettings();
+		for (let key in linkSettings) {
+			view.settings[key] = linkSettings[key];
+		}
 
 	}
 
@@ -1023,6 +1036,8 @@ export default class ABViewGrid extends ABViewWidget  {
 		let filterUI = this.filterHelper.component(App, idBase + "_gridfilter");
 		this.filterHelper.fromSettings(this.settings.gridFilter);
 
+		let linkPage = this.linkPageHelper.component(App, idBase + "_gridlinkpage");
+
 		let _init = () => {
 
 			if (this.settings.dataSource != "") {
@@ -1109,6 +1124,12 @@ export default class ABViewGrid extends ABViewWidget  {
 					exportPopup.setHiddenFields(this.settings.objectWorkspace.hiddenFields);
 					exportPopup.setFilename(this.label);
 					DataTable.refreshHeader();
+
+					// link page helper
+					linkPage.init({
+						view: this,
+						dataCollection: dc
+					});
 
 					dc.bind($$(DataTable.ui.id));
 
@@ -1353,9 +1374,11 @@ export default class ABViewGrid extends ABViewWidget  {
 
 			},
 
-			changePage: (dc, id, page) => {
-				dc.setCursor(id);
-				super.changePage(page);
+			changePage: (dc, rowId, page) => {
+
+				linkPage.changePage(page, rowId);
+				// dc.setCursor(id);
+				// super.changePage(page);
 			},
 			
 			selectRow: (rowData) => {
@@ -1564,41 +1587,41 @@ export default class ABViewGrid extends ABViewWidget  {
 		// $$(ids.linkedField).setValue(view.settings.linkedField);
 		
 		// Set the options of the possible detail views
-		var detailViews = [
-			{ id:'', value:L('ab.component.label.noLinkedView', '*No linked view') }
-		];
+		// var detailViews = [
+		// 	{ id:'', value:L('ab.component.label.noLinkedView', '*No linked view') }
+		// ];
 
-		detailViews = view.loopPages(view, view.application._pages, detailViews, "detail");
-		$$(ids.detailsPage).define("options", detailViews);
-		$$(ids.detailsPage).refresh();
+		// detailViews = view.loopPages(view, view.application._pages, detailViews, "detail");
+		// $$(ids.detailsPage).define("options", detailViews);
+		// $$(ids.detailsPage).refresh();
 		// console.log("populate details view dropdown");
 		// if (view.settings.linkedPage != "" && view.settings.linkedPageView != "") {
 		// 	$$(ids.detailsPage).setValue(view.settings.linkedPage+"|"+view.settings.linkedPageView);
 		// }
 
 		// Set the options of the possible edit forms
-		var editForms = [
-			{id:'', value:L('ab.component.label.noLinkedForm', '*No linked form')}
-		];
-		editForms = view.loopPages(view, view.application._pages, editForms, "form");
-		view.application._pages.forEach((o)=>{
-			o._views.forEach((j)=>{
-				if (j.key == "form" && j.settings.object == view.settings.dataSource) {
-					editForms.push({id:j.parent.id, value:j.label});				
-				}
-				if (j.key == "tab") {
-					j._views.forEach((k)=>{
-						k._views.forEach((l)=>{	
-							if (l.key == "form" && l.settings.datacollection == view.settings.dataSource) {
-								editForms.push({id:l.parent.id, value:l.label});				
-							}
-						});
-					});
-				}
-			});
-		});
-		$$(ids.editPage).define("options", editForms);
-		$$(ids.editPage).refresh();
+		// var editForms = [
+		// 	{id:'', value:L('ab.component.label.noLinkedForm', '*No linked form')}
+		// ];
+		// editForms = view.loopPages(view, view.application._pages, editForms, "form");
+		// view.application._pages.forEach((o)=>{
+		// 	o._views.forEach((j)=>{
+		// 		if (j.key == "form" && j.settings.object == view.settings.dataSource) {
+		// 			editForms.push({id:j.parent.id, value:j.label});				
+		// 		}
+		// 		if (j.key == "tab") {
+		// 			j._views.forEach((k)=>{
+		// 				k._views.forEach((l)=>{	
+		// 					if (l.key == "form" && l.settings.datacollection == view.settings.dataSource) {
+		// 						editForms.push({id:l.parent.id, value:l.label});				
+		// 					}
+		// 				});
+		// 			});
+		// 		}
+		// 	});
+		// });
+		// $$(ids.editPage).define("options", editForms);
+		// $$(ids.editPage).refresh();
 		// if (view.settings.linkedEditPage != "" && view.settings.linkedEditPageForm != "") {
 		// 	$$(ids.editForm).setValue(view.settings.linkedEditPage+"|"+view.settings.linkedEditPageForm);
 		// }
@@ -1695,60 +1718,60 @@ export default class ABViewGrid extends ABViewWidget  {
 
 	}
 	
-	loopPages(view, pages, detailViews, type) {
-		if (typeof pages == "array" || typeof pages == "object") {
-			pages.forEach((p)=>{
-				if (p._pages.length > 0) {
-					detailViews = view.loopPages(view, p._pages, detailViews, type);
-				}
-				detailViews = view.loopViews(view, p._views, detailViews, type);
-			});
-		}
-		detailViews = view.loopViews(view, pages, detailViews);
-		return detailViews;
-	}
+	// loopPages(view, pages, detailViews, type) {
+	// 	if (typeof pages == "array" || typeof pages == "object") {
+	// 		pages.forEach((p)=>{
+	// 			if (p._pages.length > 0) {
+	// 				detailViews = view.loopPages(view, p._pages, detailViews, type);
+	// 			}
+	// 			detailViews = view.loopViews(view, p._views, detailViews, type);
+	// 		});
+	// 	}
+	// 	detailViews = view.loopViews(view, pages, detailViews);
+	// 	return detailViews;
+	// }
 	
-	loopViews(view, views, detailViews, type) {
-		if (typeof views == "array" || typeof views == "object") {
-			views.forEach((v)=>{
-				if (v.key == type && v.settings.datacollection == view.settings.dataSource) {
-					detailViews.push({id:v.pageParent().id, value:v.label});
-				}
-				// find views inside layouts
-				else if (v.key == "layout" || v.key == "viewcontainer") {
-					detailViews = view.loopViews(view, v._views, detailViews, type);
-				}
-				// find views inside Tab component
-				else if (v.key == "tab") {
-					var tabViews = v.views();
-					tabViews.forEach(tab => {
+	// loopViews(view, views, detailViews, type) {
+	// 	if (typeof views == "array" || typeof views == "object") {
+	// 		views.forEach((v)=>{
+	// 			if (v.key == type && v.settings.datacollection == view.settings.dataSource) {
+	// 				detailViews.push({id:v.pageParent().id, value:v.label});
+	// 			}
+	// 			// find views inside layouts
+	// 			else if (v.key == "layout" || v.key == "viewcontainer") {
+	// 				detailViews = view.loopViews(view, v._views, detailViews, type);
+	// 			}
+	// 			// find views inside Tab component
+	// 			else if (v.key == "tab") {
+	// 				var tabViews = v.views();
+	// 				tabViews.forEach(tab => {
 						
-						var viewContainer = tab.views(subT => subT.key == "tab");
-						viewContainer.forEach(vc => {
+	// 					var viewContainer = tab.views(subT => subT.key == "tab");
+	// 					viewContainer.forEach(vc => {
 
-							vc.views().forEach((st)=>{
-								// detailViews = view.loopViews(view, st._views, detailViews, type);							
-								var subViews = st.views(subV => subV.key == type && subV.settings.datacollection == view.settings.dataSource);
-								subViews.forEach( (sub)=>{
-									detailViews.push({id:v.pageParent().id + ":" + st.id, value:st.label + ":" + sub.label});								
-								});
-							});
+	// 						vc.views().forEach((st)=>{
+	// 							// detailViews = view.loopViews(view, st._views, detailViews, type);							
+	// 							var subViews = st.views(subV => subV.key == type && subV.settings.datacollection == view.settings.dataSource);
+	// 							subViews.forEach( (sub)=>{
+	// 								detailViews.push({id:v.pageParent().id + ":" + st.id, value:st.label + ":" + sub.label});								
+	// 							});
+	// 						});
 
-						});
+	// 					});
 
-						var subViews = tab.views(subV => subV.key == type && subV.settings.datacollection == view.settings.dataSource);
-						subViews.forEach( (sub)=>{
-							detailViews.push({id:v.pageParent().id + ":" + tab.id, value:tab.label + ":" + sub.label});								
-						});
+	// 					var subViews = tab.views(subV => subV.key == type && subV.settings.datacollection == view.settings.dataSource);
+	// 					subViews.forEach( (sub)=>{
+	// 						detailViews.push({id:v.pageParent().id + ":" + tab.id, value:tab.label + ":" + sub.label});								
+	// 					});
 
-					});
+	// 				});
 
-				}
-			});
-			return detailViews;
-		}
-		return detailViews;
-	}
+	// 			}
+	// 		});
+	// 		return detailViews;
+	// 	}
+	// 	return detailViews;
+	// }
 	
 	/**
 	 * @property dataCollection
@@ -1908,6 +1931,15 @@ export default class ABViewGrid extends ABViewWidget  {
 			this.__filterHelper = new ABViewPropertyFilterData();
 
 		return this.__filterHelper;
+
+	}
+
+	get linkPageHelper() {
+
+		if (this.__linkPageHelper == null)
+			this.__linkPageHelper = new ABViewPropertyLinkPage();
+
+		return this.__linkPageHelper;
 
 	}
 

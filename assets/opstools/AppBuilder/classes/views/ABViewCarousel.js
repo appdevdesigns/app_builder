@@ -416,7 +416,7 @@ export default class ABViewCarousel extends ABViewWidget {
 			PopupCarouselFilterMenu.objectLoad(selectedDc.datasource);
 		}
 
-		// Populate values to QueryBuilder
+		// Populate values to link page properties
 		this.linkPageComponent.viewLoad(view);
 		this.linkPageComponent.setSettings(view.settings);
 
