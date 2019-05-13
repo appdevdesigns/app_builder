@@ -124,7 +124,7 @@ describe("ABFieldBoolean unit tests", () => {
 
 			let result = columnConfig.template(row, common, value, config);
 
-			assert.equal("<div class='webix_icon fa-square-o'></div>", result);
+			assert.equal("<div class='webix_icon fa fa-square-o'></div>", result);
 		});
 
 		it('.columnHeader: template() should return read-only checked checkbox when value is true', () => {
@@ -139,7 +139,7 @@ describe("ABFieldBoolean unit tests", () => {
 
 			let result = columnConfig.template(row, common, value, config);
 
-			assert.equal("<div class='webix_icon fa-check-square-o'></div>", result);
+			assert.equal("<div class='webix_icon fa fa-check-square-o'></div>", result);
 		});
 
 		it('.defaultValue: should set 1', () => {
