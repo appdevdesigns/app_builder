@@ -123,6 +123,7 @@ describe('ab_work_object_workspace_popupHideFields component', () => {
 			// Load first object from a sample ABApplication
 			let mockObj = mockApplication.objects()[0];
 			target.objectLoad(mockObj);
+			target.setValue(mockObj.workspaceHiddenFields);
 
 			// Set up simulated button click and spy for clickHideAll function
 			let buttonClickFn = target.ui.body.rows[1].cols[0].on.onItemClick,
@@ -138,9 +139,11 @@ describe('ab_work_object_workspace_popupHideFields component', () => {
 			
 			// Assert _logic.clickClearAll should be called when hide all button is clicked
 			sandbox.assert.calledOnce(spyLogicClickHideAll);
+
+			let result = target.getValue();
 			
 			// Assert length of hidden column array should be the same as the length of the sample objects fields array
-			assert.equal(mockObj.fields().length, mockObj.workspaceHiddenFields.length);
+			assert.equal(mockObj.fields().length, result.length);
 
 		});
 
@@ -149,6 +152,7 @@ describe('ab_work_object_workspace_popupHideFields component', () => {
 			// Load first object from a sample ABApplication
 			let mockObj = mockApplication.objects()[0];
 			target.objectLoad(mockObj);
+			target.setValue(mockObj.workspaceHiddenFields);
 			
 			// Set up simulated button click and spy for clickShowAll function
 			let buttonClickFn = target.ui.body.rows[1].cols[1].on.onItemClick,
@@ -164,9 +168,11 @@ describe('ab_work_object_workspace_popupHideFields component', () => {
 			
 			// Assert _logic.clickClearAll should be called when show all button is clicked
 			sandbox.assert.calledOnce(spyLogicClickShowAll);
+
+			let result = target.getValue();
 			
 			// Assert length of hidden column array should be 0
-			assert.equal(0, mockObj.workspaceHiddenFields.length);
+			assert.equal(0, result.length);
 
 		});
 
@@ -219,6 +225,8 @@ describe('ab_work_object_workspace_popupHideFields component', () => {
 			// Load first object from a sample ABApplication
 			let mockObj = mockApplication.objects()[0];
 			target.objectLoad(mockObj);
+			target.setValue(mockObj.workspaceHiddenFields);
+			target.setFrozenColumnID(mockObj.workspaceFrozenColumnID);
 
 			// Set up simulated list item click and spy for clickListItem function
 			let itemClickFn = target.ui.body.rows[0].on.onItemClick,

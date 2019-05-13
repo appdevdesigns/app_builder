@@ -202,9 +202,9 @@ class ABFieldBoolean extends ABField {
 			// readonly
 			else {
 				if (value)
-					return "<div class='webix_icon fa-check-square-o'></div>";
+					return "<div class='webix_icon fa fa-check-square-o'></div>";
 				else
-					return "<div class='webix_icon fa-square-o'></div>";
+					return "<div class='webix_icon fa fa-square-o'></div>";
 			}
 
 		};
