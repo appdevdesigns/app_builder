@@ -1054,8 +1054,8 @@ export default class ABViewGrid extends ABViewWidget  {
 				});
 
 				filterUI.init({
-					onFilterData: (fnFilter) => {
-						_logic.callbackFilterData(fnFilter);	// be notified when there is a change in the filter
+					onFilterData: (fnFilter, filterRules) => {
+						_logic.callbackFilterData(fnFilter, filterRules);	// be notified when there is a change in the filter
 					}
 				});
 
@@ -1338,14 +1338,14 @@ export default class ABViewGrid extends ABViewWidget  {
 
 			},
 
-			callbackFilterData: (fnFilter) => {
+			callbackFilterData: (fnFilter, filterRules) => {
 
-				// var filterRules = (fnFilter.getValue().rules || []);
+				filterRules = filterRules || [];
 
-				// if ($$(ids.buttonFilter)) {
-				// 	$$(ids.buttonFilter).define('badge', filterRules.length);
-				// 	$$(ids.buttonFilter).refresh();
-				// }
+				if ($$(ids.buttonFilter)) {
+					$$(ids.buttonFilter).define('badge', filterRules.length);
+					$$(ids.buttonFilter).refresh();
+				}
 
 				// client filter data
 				if (fnFilter) {

@@ -597,8 +597,7 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 			rowFilter.init({
 				onChange: () => {
 
-					// TODO : Badge
-					// var filterRules = (rowFilter.getValue().rules || []);
+					let filterRules = (rowFilter.getValue().rules || []);
 
 					// if ($$(ids.buttonFilter)) {
 					// 	$$(ids.buttonFilter).define('badge', filterRules.length);
@@ -610,19 +609,21 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 
 						return rowFilter.isValid(rowData);
 
-					});
+					}, filterRules);
 				}
 			});
 
 			rowFilterForm.init({
 				onChange: () => {
 
+					let filterRules = (rowFilterForm.getValue().rules || []);
+
 					// be notified when there is a change in the filter
 					logic.triggerCallback((rowData) => {
 
 						return rowFilterForm.isValid(rowData);
 
-					});
+					}, filterRules);
 				}
 			});
 
@@ -682,19 +683,22 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 				/**
 				 * @param {function} fnFilter 
 				 */
-				onFilterData: function (fnFilter) { console.warn('NO onFilterData()') }
+				onFilterData: function (fnFilter, filterRules) { console.warn('NO onFilterData()') }
 			},
 
-			triggerCallback: (fnFilter) => {
+			triggerCallback: (fnFilter, filterRules) => {
 
 				instance.__currentFilter = fnFilter;
-				logic.callbacks.onFilterData(this.__currentFilter);
+				logic.callbacks.onFilterData(this.__currentFilter, filterRules);
 
 			},
 
 			resetFilter: () => {
 
-				logic.triggerCallback(function (rowData) { return true; });
+				let showAllFn = function (rowData) { return true; },
+					filterRules = [];
+
+				logic.triggerCallback(showAllFn, filterRules);
 
 			},
 
