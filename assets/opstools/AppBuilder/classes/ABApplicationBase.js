@@ -24,6 +24,11 @@ module.exports = class ABApplicationBase {
 
     constructor(attributes) {
 
+    	if (!attributes.json) {
+    		console.error("AppBuilder:ABApplicationBase: received attributes without a .json description.  That seems janky! attributes:", attributes);
+    	}
+    	attributes.json = attributes.json || {};
+
     	// ABApplication Attributes
     	this.id    = attributes.id;
     	this.json  = attributes.json || {};
