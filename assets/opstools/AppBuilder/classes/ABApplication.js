@@ -8,6 +8,7 @@ import ABMobileApp from "./ABMobileApp"
 import ABViewManager from "./ABViewManager"
 import ABViewPage from "./views/ABViewPage"
 import ABViewReportPage from "./views/ABViewReportPage"
+import ABViewReport from "./views/ABViewReport"
 import ABFieldManager from "./ABFieldManager"
 
 
