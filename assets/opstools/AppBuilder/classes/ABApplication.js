@@ -505,7 +505,8 @@ export default class ABApplication extends ABApplicationBase {
 
 		// make sure this is an ABViewPage description
 		if (values.key != ABViewPage.common().key &&
-			values.key != ABViewReportPage.common().key)
+			values.key != ABViewReportPage.common().key &&
+			values.key != ABViewReport.common().key)
 			values.key = ABViewPage.common().key;
 
 		return new ABViewManager.newView(values, this, null);

@@ -728,8 +728,10 @@ export default class ABViewPage extends ABViewContainer {
      */
     pageNew(values) {
 
-        // make sure this is an ABViewPage description
-        values.key = ABViewDefaults.key;
+        // make sure this is an ABViewPage or ABViewReport description
+        if (values.key != ABViewDefaults.key &&
+            values.key != "report")
+            values.key = ABViewDefaults.key;
 
         // NOTE: this returns a new ABView component.  
         // when creating a new page, the 3rd param should be null, to signify 

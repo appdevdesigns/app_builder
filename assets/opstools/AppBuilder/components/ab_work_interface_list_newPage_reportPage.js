@@ -97,13 +97,19 @@ export default class AB_Work_Interface_List_NewPage_ReportPage extends OP.Compon
 				var addPage = function (page, indent) {
 					indent = indent || '';
 					options.push({ id: page.urlPointer(), value: indent + page.label });
-					page.pages(p => p instanceof ABViewReportPage).forEach(function (p) {
+					page.pages().forEach(function (p) {
 						addPage(p, indent + '-');
 					})
+					// page.pages(p => p instanceof ABViewReportPage).forEach(function (p) {
+					// 	addPage(p, indent + '-');
+					// })
 				}
-				application.pages(p => p instanceof ABViewReportPage).forEach(function (page) {
+				application.pages().forEach(function (page) {
 					addPage(page, '');
 				});
+				// application.pages(p => p instanceof ABViewReportPage).forEach(function (page) {
+				// 	addPage(page, '');
+				// });
 
 				$$(ids.parentList).define('options', options);
 				$$(ids.parentList).refresh();
