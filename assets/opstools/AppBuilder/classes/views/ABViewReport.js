@@ -269,6 +269,21 @@ export default class ABViewReport extends ABViewPage {
 
 		return new Promise((resolve, reject) => {
 
+			pdfMake.fonts = {
+				THSarabunNew: {
+					normal: 'THSarabunNew.ttf',
+					bold: 'THSarabunNew Bold.ttf',
+					italics: 'THSarabunNew Italic.ttf',
+					bolditalics: 'THSarabunNew BoldItalic.ttf'
+				},
+				Roboto: {
+					normal: 'Roboto-Regular.ttf',
+					bold: 'Roboto-Medium.ttf',
+					italics: 'Roboto-Italic.ttf',
+					bolditalics: 'Roboto-MediumItalic.ttf'
+				}
+			};
+
 			var docDefinition = {
 				// a string or { width: number, height: number }
 				pageSize: this.settings.pageSize,
@@ -285,7 +300,8 @@ export default class ABViewReport extends ABViewPage {
 				],
 
 				defaultStyle: {
-					columnGap: 10
+					columnGap: 10,
+					font: 'THSarabunNew' // Default font
 				},
 
 				// TODO: row gap
@@ -507,7 +523,7 @@ export default class ABViewReport extends ABViewPage {
 				view: 'button',
 				value: "Preview PDF",
 				on: {
-					onItemClick: function(id, e) {
+					onItemClick: function (id, e) {
 
 						var $previewButton = this;
 
