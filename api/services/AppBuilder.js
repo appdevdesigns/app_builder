@@ -268,7 +268,7 @@ module.exports = {
         },
 
 
-        verifyAndReturnGlobalObject:: function (req, res) {
+        verifyAndReturnGlobalObject: function (req, res) {
 
             return new Promise(
                 (resolve, reject) => {
