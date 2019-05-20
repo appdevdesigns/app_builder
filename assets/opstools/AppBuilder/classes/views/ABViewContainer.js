@@ -143,7 +143,11 @@ export default class ABViewContainer extends ABView {
 
 
 			var Dashboard = $$(ids.component);
-			webix.extend(Dashboard, webix.OverlayBox);
+			if (Dashboard) {
+				webix.extend(Dashboard, webix.OverlayBox);
+				webix.extend(Dashboard, webix.ProgressBar);
+			}
+
 
 			// this.views().reverse().forEach((child) => {
 
@@ -269,28 +273,35 @@ export default class ABViewContainer extends ABView {
 				OP.Dialog.Confirm({
 					title: L('ab.interface.component.confirmDeleteTitle', '*Delete component'),
 					text: L('ab.interface.component.confirmDeleteMessage', 'Do you want to delete <b>{0}</b>?').replace('{0}', deletedView.label),
-					callback: function (result) {
+					callback: (result) => {
 						if (result) {
 
-							var Dashboard = $$(ids.component);
+							// store the removed view to signal event in .onChange
+							this.__deletedView = deletedView;
 
-							deletedView.destroy()
-								.then(() => {
+							let Dashboard = $$(ids.component);
 
-									// signal the current view has been deleted.
-									deletedView.emit('destroyed', deletedView);
+							// remove UI of this component in template
+							var deletedElem = Dashboard.queryView({ name: id });
+							if (deletedElem) {
+								// this calls the remove REST to API server
+								Dashboard.removeView(deletedElem);
+							}
 
-									// remove UI of this component in template
-									var deletedElem = Dashboard.queryView({ name: id });
-									if (deletedElem)
-										Dashboard.removeView(deletedElem);
+							// deletedView.destroy()
+							// 	.then(() => {
 
-									_logic.showEmptyPlaceholder();
+							// // signal the current view has been deleted.
+							// deletedView.emit('destroyed', deletedView);
 
-								})
-								.catch((err) => {
-									OP.Error.log('Error trying to delete selected View:', { error: err, view: deletedView })
-								})
+							_logic.showEmptyPlaceholder();
+
+							// })
+							// .catch((err) => {
+							// 	OP.Error.log('Error trying to delete selected View:', { error: err, view: deletedView })
+
+							// 	_logic.ready();
+							// })
 						}
 					}
 				});
@@ -326,6 +337,8 @@ export default class ABViewContainer extends ABView {
 
 			onChange: () => {
 
+				_logic.busy();
+
 				var Dashboard = $$(ids.component);
 
 				// ignore in "preview" mode
@@ -350,7 +363,31 @@ export default class ABViewContainer extends ABView {
 				});
 
 				// save template layout
-				this.save();
+				this.save()
+					.catch(() => {
+
+						OP.Error.log('Error trying to save selected View:', { error: err, view: this });
+
+						_logic.ready();
+					})
+					.then(() => {
+
+						// signal the current view has been deleted.
+						// this variable is stored in .viewDelete
+						if (this.__deletedView) {
+
+							// remove view
+							var remainingViews = this.views((v) => { return v.id != this.__deletedView.id; })
+							this._views = remainingViews;
+
+							this.__deletedView.emit('destroyed', this.__deletedView);
+
+							// clear
+							delete this.__deletedView;
+						}
+
+						_logic.ready();
+					});
 
 			},
 
@@ -373,6 +410,32 @@ export default class ABViewContainer extends ABView {
 					return maxPosition;
 				else
 					return curPosition;
+
+			},
+
+			busy: () => {
+
+				let Dashboard = $$(ids.component);
+				if (Dashboard) {
+
+					Dashboard.disable();
+
+					if (Dashboard.showProgress)
+						Dashboard.showProgress({ type: "icon" });
+				}
+
+			},
+
+			ready: () => {
+
+				let Dashboard = $$(ids.component);
+				if (Dashboard) {
+
+					Dashboard.enable();
+
+					if (Dashboard.hideProgress)
+						Dashboard.hideProgress();
+				}
 
 			}
 
