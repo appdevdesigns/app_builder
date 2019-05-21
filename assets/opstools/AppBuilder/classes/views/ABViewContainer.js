@@ -79,7 +79,7 @@ export default class ABViewContainer extends ABView {
 		this.settings.columns = parseInt(this.settings.columns || ABPropertyComponentDefaults.columns);
 
 		if (typeof this.settings.gravity != "undefined") {
-			this.settings.gravity.map(function(gravity) {
+			this.settings.gravity.map(function (gravity) {
 				return parseInt(gravity);
 			});
 		}
@@ -276,14 +276,19 @@ export default class ABViewContainer extends ABView {
 					callback: (result) => {
 						if (result) {
 
-							// store the removed view to signal event in .onChange
-							this.__deletedView = deletedView;
-
 							let Dashboard = $$(ids.component);
 
 							// remove UI of this component in template
 							var deletedElem = Dashboard.queryView({ name: id });
 							if (deletedElem) {
+
+								// store the removed view to signal event in .onChange
+								this.__deletedView = deletedView;
+
+								// remove view
+								var remainingViews = this.views((v) => { return v.id != deletedView.id; })
+								this._views = remainingViews;
+
 								// this calls the remove REST to API server
 								Dashboard.removeView(deletedElem);
 							}
@@ -375,11 +380,6 @@ export default class ABViewContainer extends ABView {
 						// signal the current view has been deleted.
 						// this variable is stored in .viewDelete
 						if (this.__deletedView) {
-
-							// remove view
-							var remainingViews = this.views((v) => { return v.id != this.__deletedView.id; })
-							this._views = remainingViews;
-
 							this.__deletedView.emit('destroyed', this.__deletedView);
 
 							// clear
@@ -485,12 +485,12 @@ export default class ABViewContainer extends ABView {
 		_logic.addColumnGravity = (newVal, oldVal) => {
 			var pos = $$(ids.gravity).getParentView().index($$(ids.gravity));
 			$$(ids.gravity).getParentView().addView({
-				view:"counter", 
-				value:"1",
+				view: "counter",
+				value: "1",
 				min: 1,
-				label:"Column "+newVal+" Gravity",
+				label: "Column " + newVal + " Gravity",
 				labelWidth: App.config.labelWidthXLarge,
-				css:"gravity_counter",
+				css: "gravity_counter",
 				on: {
 					onChange: () => {
 						_logic.onChange();
@@ -500,7 +500,7 @@ export default class ABViewContainer extends ABView {
 		}
 
 		_logic.removeColumnGravity = (newVal, oldVal) => {
-			$$(ids.gravity).getParentView().removeView($$(ids.gravity).getParentView().getChildViews()[$$(ids.gravity).getParentView().index($$(ids.gravity)) - 1 ]);
+			$$(ids.gravity).getParentView().removeView($$(ids.gravity).getParentView().getChildViews()[$$(ids.gravity).getParentView().index($$(ids.gravity)) - 1]);
 		}
 
 		// in addition to the common .label  values, we 
@@ -517,7 +517,7 @@ export default class ABViewContainer extends ABView {
 
 						if (newVal > 8)
 							$$(ids.columns).setValue(8);
-						
+
 						if (newVal > oldVal) {
 							_logic.addColumnGravity(newVal, oldVal);
 						} else if (newVal < oldVal) {
@@ -528,8 +528,8 @@ export default class ABViewContainer extends ABView {
 				}
 			},
 			{
-				view:"text",
-				name:"gravity",
+				view: "text",
+				name: "gravity",
 				height: 1
 			}
 		]);
@@ -542,19 +542,19 @@ export default class ABViewContainer extends ABView {
 		super.propertyEditorPopulate(App, ids, view, logic);
 
 		$$(ids.columns).setValue(view.settings.columns || ABPropertyComponentDefaults.columns);
-		
-		var gravityCounters = $$(ids.gravity).getParentView().queryView({ css:"gravity_counter" }, "all").map(counter => $$(ids.gravity).getParentView().removeView(counter)); 
+
+		var gravityCounters = $$(ids.gravity).getParentView().queryView({ css: "gravity_counter" }, "all").map(counter => $$(ids.gravity).getParentView().removeView(counter));
 
 		for (var step = 1; step <= $$(ids.columns).getValue(); step++) {
 			var pos = $$(ids.gravity).getParentView().index($$(ids.gravity));
 			$$(ids.gravity).getParentView().addView({
-				view:"counter", 
-				value:"1",
+				view: "counter",
+				value: "1",
 				min: 1,
-				label:"Column "+step+" Gravity",
+				label: "Column " + step + " Gravity",
 				labelWidth: App.config.labelWidthXLarge,
-				css:"gravity_counter",
-				value: (view.settings.gravity && view.settings.gravity[step-1]) ? view.settings.gravity[step-1] : ABPropertyComponentDefaults.gravity,
+				css: "gravity_counter",
+				value: (view.settings.gravity && view.settings.gravity[step - 1]) ? view.settings.gravity[step - 1] : ABPropertyComponentDefaults.gravity,
 				on: {
 					onChange: () => {
 						logic.onChange();
@@ -587,9 +587,9 @@ export default class ABViewContainer extends ABView {
 		super.propertyEditorValues(ids, view);
 
 		view.settings.columns = $$(ids.columns).getValue();
-		
+
 		var gravity = [];
-		var gravityCounters = $$(ids.gravity).getParentView().queryView({ css:"gravity_counter" }, "all").map(counter => gravity.push($$(counter).getValue()));
+		var gravityCounters = $$(ids.gravity).getParentView().queryView({ css: "gravity_counter" }, "all").map(counter => gravity.push($$(counter).getValue()));
 		view.settings.gravity = gravity;
 
 	}
@@ -605,7 +605,7 @@ export default class ABViewContainer extends ABView {
 	 */
 	component(App, idPrefix) {
 
-		var idBase = 'ABViewContainer_' + (idPrefix || '') +this.id;
+		var idBase = 'ABViewContainer_' + (idPrefix || '') + this.id;
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		};
@@ -617,9 +617,9 @@ export default class ABViewContainer extends ABView {
 			changePage: (pageId) => {
 				this.changePage(pageId);
 			},
-			
+
 			callbacks: {
-				
+
 			},
 
 			getElements: (views) => {
@@ -630,12 +630,12 @@ export default class ABViewContainer extends ABView {
 				views.forEach((v) => {
 
 					var component = v.component(App, idPrefix);
-					
+
 					this.viewComponents[v.id] = component;
-					
+
 					// if key == "form" or "button" register the callbacks to the parent
 					// NOTE this will only work on the last form of a page!
-					if ( (v.key == "form") && v._logic.callbacks) {
+					if ((v.key == "form") && v._logic.callbacks) {
 						_logic.callbacks = v._logic.callbacks;
 					}
 
@@ -664,14 +664,14 @@ export default class ABViewContainer extends ABView {
 
 					// Get the last row
 					var curRow = rows[rows.length - 1];
-					
+
 					var newPos = v.position.x || 0;
 					var getGrav = 1;
-					
+
 					if (curRow.cols[newPos] && curRow.cols[newPos].gravity) {
 						var getGrav = curRow.cols[newPos].gravity
 					}
-					
+
 					component.ui.gravity = getGrav;
 
 					// Add ui of sub-view to column
@@ -709,7 +709,7 @@ export default class ABViewContainer extends ABView {
 		var _init = (options) => {
 			// register our callbacks:
 			if (options) {
-				for(var c in _logic.callbacks) {
+				for (var c in _logic.callbacks) {
 					_logic.callbacks[c] = options[c] || _logic.callbacks[c];
 				}
 			}
@@ -748,8 +748,8 @@ export default class ABViewContainer extends ABView {
 
 			});
 
-			if ($$(this.id) && $$(this.id).resize) 
-				setTimeout( () => {
+			if ($$(this.id) && $$(this.id).resize)
+				setTimeout(() => {
 					$$(this.id).resize();
 				}, 100);
 
@@ -770,7 +770,7 @@ export default class ABViewContainer extends ABView {
 		// Sort views from y, x positions
 		return this.views().sort((a, b) => {
 
-			if (a.position.y == b.position.y) 
+			if (a.position.y == b.position.y)
 				return a.position.x - b.position.x;
 			else
 				return a.position.y - b.position.y;
@@ -794,7 +794,7 @@ export default class ABViewContainer extends ABView {
 			var tasks = [];
 
 			// add each definition of component to position
-			this.views().forEach((v , vIndex) => {
+			this.views().forEach((v, vIndex) => {
 
 				tasks.push(new Promise((next, err) => {
 
@@ -824,26 +824,26 @@ export default class ABViewContainer extends ABView {
 
 					// NOTE: fill undefined to prevent render PDF errors
 					var fillUndefined = (columns, numberOfCol) => {
-			
+
 						for (var x = 0; x < numberOfCol; x++) {
-			
+
 							if (columns[x] == null)
 								columns[x] = [];
-				
+
 							var rows = columns[x];
 							if (!Array.isArray(columns[x]))
 								rows = [columns[x]];
-			
+
 							rows.forEach((row, y) => {
-			
+
 								if (row == null)
 									columns[x][y] = {};
 								else if (row.columns)
 									fillUndefined(row.columns, row.columns.length);
-			
+
 							});
 						}
-			
+
 					};
 
 					fillUndefined(reportDef.columns, this.settings.columns);
