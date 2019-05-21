@@ -460,8 +460,18 @@ module.exports = {
                 var allParams = req.allParams();
                 sails.log.verbose('ABModelController.create(): allParams:', allParams);
 
+                var initialUUID = allParams.uuid;
+
                 // return the parameters from the input params that relate to this object
                 var createParams = object.requestParams(allParams);
+
+                // 21 May 2019 : Johnny
+                // object.requestParams() will not return UUID by default.
+                // however, since a mobile client can pass that in, we need to make
+                // sure it is included in our data:
+                if (initialUUID) {
+                    createParams.uuid = initialUUID;
+                }
 
                 // return the parameters of connectObject data field values 
                 var updateRelationParams = object.requestRelationParams(allParams);
@@ -477,7 +487,11 @@ module.exports = {
 
                 // add UUID of a new row
                 createParams = cleanUp(object, createParams);
-                if (object.PK() === 'uuid')
+
+                // 21 May '19 : Johnny : mobile devices will initiate .create()
+                // operations with uuid already set.  We can't overwrite them 
+                // here:
+                if ((object.PK() === 'uuid') && (!createParams['uuid']))
                     createParams.uuid = uuid();
 
                 var validationErrors = object.isValidData(createParams);
