@@ -259,7 +259,7 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 				// Design
 				else {
 					// $$(ids.modeButton).define('label', labels.run);
-					// $$(ids.modeButton).define('icon', "fa fa-cubes");
+					// $$(ids.modeButton).define('icon', "fa fa-filter");
 					$$(ids.loadAllButton).hide();
 					// $$(ids.loadAllButton).refresh();
 
