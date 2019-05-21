@@ -2365,6 +2365,12 @@ msgstr "ตัวเลือกวันที่"
 
 #. path: app_builder
 #. code: th
+#. key: ab.components.docxBuilder
+msgid "DOCX Builder"
+msgstr "ตัวสร้าง DOCX"
+
+#. path: app_builder
+#. code: th
 #. key: ab.components.grid
 msgid "Grid"
 msgstr "ตาราง"

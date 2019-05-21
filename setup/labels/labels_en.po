@@ -2383,15 +2383,21 @@ msgstr "Date Picker"
 
 #. path: app_builder
 #. code: en
+#. key: ab.components.datepicker
+msgid "Date Picker"
+msgstr "Date Picker"
+
+#. path: app_builder
+#. code: en
 #. key: ab.components.grid
 msgid "Grid"
 msgstr "Grid"
 
 #. path: app_builder
 #. code: en
-#. key: ab.components.image
-msgid "Image"
-msgstr "Image"
+#. key: ab.components.docxBuilder
+msgid "DOCX Builder"
+msgstr "DOCX Builder"
 
 #. path: app_builder
 #. code: en

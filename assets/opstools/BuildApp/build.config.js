@@ -18,6 +18,7 @@ module.exports = {
 				"js/selectivity/selectivity.min",
 				"js/vfs_fonts",
 				"js/moment-locales.min",
+				"js/docxtemplater-latest.min",
 				"OpsPortal/classes/OpsWebixDataCollection",
 				"opstools/BuildApp/OP_Bundle"
 			],
@@ -30,18 +31,38 @@ module.exports = {
 			],
 			"sideBundle": true
 		},
-        "js/vfs_fonts": {
-            "format": "global",
-            "deps": [
-                "js/pdfmake"
-            ],
-            "sideBundle": true
-        },
-        "js/pdfmake": {
-            "format": "global",
-            "deps": [
-            ],
-            "sideBundle": true
-        }
+		"js/vfs_fonts": {
+			"format": "global",
+			"deps": [
+				"js/pdfmake"
+			],
+			"sideBundle": true
+		},
+		"js/pdfmake": {
+			"format": "global",
+			"deps": [
+			],
+			"sideBundle": true
+		},
+		"js/docxtemplater-latest.min": {
+			"format": "global",
+			"deps": [
+				"js/jszip.min",
+				"js/jszip-utils.min"
+			],
+			"sideBundle": true
+		},
+		"js/jszip.min": {
+			"format": "global",
+			"deps": [
+			],
+			"sideBundle": true
+		},
+		"js/jszip-utils.min": {
+			"format": "global",
+			"deps": [
+			],
+			"sideBundle": true
+		}
 	}
 };
