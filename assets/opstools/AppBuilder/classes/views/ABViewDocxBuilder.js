@@ -465,7 +465,25 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 							let currCursor = {};
 							let dc = this.dataCollection;
 							if (dc) {
-								currCursor = dc.getCursor() || {};
+								currCursor = dc.getCursor();
+
+								// update property names to column labels to match format names in docx file
+								if(currCursor) {
+
+									let obj = dc.datasource;
+									if (obj) {
+
+										currCursor = _.clone(currCursor);
+
+										obj.fields().forEach(f => {
+											currCursor[f.label] = currCursor[f.columnName];
+										});
+									}
+
+								}
+								else {
+									currCursor = {};
+								}
 							}
 
 							doc.setData(currCursor);
