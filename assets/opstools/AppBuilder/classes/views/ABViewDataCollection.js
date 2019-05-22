@@ -231,6 +231,7 @@ export default class ABViewDataCollection extends ABView {
 
 		var settings = {
 			allowDelete: 0,
+			configureHeaders: false,
 			detailsView: "",
 			editView: "",
 			isEditable: 0,
