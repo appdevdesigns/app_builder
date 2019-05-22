@@ -476,7 +476,7 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 										currCursor = _.clone(currCursor);
 
 										obj.fields().forEach(f => {
-											currCursor[f.label] = currCursor[f.columnName];
+											currCursor[f.label] = f.format(currCursor);
 										});
 									}
 
