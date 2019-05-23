@@ -117,6 +117,7 @@ export default class AB_Work_Interface_Workspace_Editor_Components extends OP.Co
 		var _logic = this.logic = {
 
 			callbacks: {
+				onAddingWidget: function () { console.warn('NO onAddingWidget()!') },
 				onAddWidget: function () { console.warn('NO onAddWidget()!') }
 			},
 
@@ -156,10 +157,14 @@ export default class AB_Work_Interface_Workspace_Editor_Components extends OP.Co
 
 				var newComp = component.newInstance(CurrentView.application, CurrentView);
 
+				// show loading cursor
+				_logic.callbacks.onAddingWidget();
+
 				CurrentView.viewSave(newComp)
 					.then(() => {
 
 						// callback to parent
+						// hide loading cursor
 						_logic.callbacks.onAddWidget();
 
 					});

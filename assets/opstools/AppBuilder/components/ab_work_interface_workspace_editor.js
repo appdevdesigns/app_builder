@@ -256,11 +256,23 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
 //// TODO: save the last CurrentViewMode in the workspace data and use that here:
             $$(ids.toolbarViewMode).setValue(CurrentViewMode);
 
+            EditorLayout.init();
+
             ComponentMenu.init({
+                onAddingWidget: () => {
+
+                    // show loading cursor
+                    EditorLayout.busy();
+
+                },
                 onAddWidget: () => {
 
                     // refresh editor page when a widget is added
                     _logic.viewLoad(CurrentView);
+
+                    // hide loading cursor
+                    EditorLayout.ready();
+
                 }
             });
         };
