@@ -6,7 +6,6 @@
  */
 
 import ABViewDetailComponent from "./ABViewDetailComponent"
-import ABPropertyComponent from "../ABPropertyComponent"
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -14,6 +13,7 @@ function L(key, altText) {
 
 
 var ABViewDetailTextPropertyComponentDefaults = {
+	height: 0
 }
 
 
@@ -63,6 +63,21 @@ export default class ABViewDetailText extends ABViewDetailComponent {
 	///
 	/// Instance Methods
 	///
+
+
+	/**
+	 * @method fromValues()
+	 *
+	 * initialze this object with the given set of values.
+	 * @param {obj} values
+	 */
+	fromValues(values) {
+
+		super.fromValues(values);
+
+		// convert from "0" => 0
+		this.settings.height = parseInt(this.settings.height || ABViewDetailTextPropertyComponentDefaults.height);
+	}
 
 	//
 	//	Editor Related
@@ -123,6 +138,12 @@ export default class ABViewDetailText extends ABViewDetailComponent {
 		// in addition to the common .label  values, we 
 		// ask for:
 		return commonUI.concat([
+			{
+				view: 'counter',
+				name: "height",
+				label: L("ab.components.common.height", "*Height:"),
+				labelWidth: App.config.labelWidthLarge,
+			}
 		]);
 
 	}
@@ -131,11 +152,15 @@ export default class ABViewDetailText extends ABViewDetailComponent {
 
 		super.propertyEditorPopulate(App, ids, view);
 
+		$$(ids.height).setValue(view.settings.height || ABViewDetailTextPropertyComponentDefaults.height);
+
 	}
 
 	static propertyEditorValues(ids, view) {
 
 		super.propertyEditorValues(ids, view);
+
+		view.settings.height = $$(ids.height).getValue();
 
 	}
 
@@ -161,6 +186,9 @@ export default class ABViewDetailText extends ABViewDetailComponent {
 		component.ui.id = ids.component;
 
 		component.ui.css = "ab-text";
+
+		if (this.settings.height)
+			component.ui.height = this.settings.height;
 
 		return {
 			ui: component.ui,
