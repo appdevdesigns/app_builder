@@ -168,15 +168,21 @@ export default class ABViewDetail extends ABViewContainer {
 			}
 			// remove field in the form
 			else {
-				var fieldView = currView.views(c => c.settings.fieldId == fieldId)[0];
+				let fieldView = currView.views(c => c.settings.fieldId == fieldId)[0];
+				if (fieldView) {
+					let remainingViews = currView.views(c => c.settings.fieldId != fieldId);
+					currView._views = remainingViews;
 
-				if (fieldView)
-					fieldView.destroy();
+					// fieldView.destroy();
+				}
 
 			}
 
 			// trigger a save()
-			this.propertyEditorSave(ids, currView);
+			// this.propertyEditorSave(ids, currView);
+
+			// Call REST API to server in ABViewContainer
+			currView.emit('properties.updated', currView);
 
 		};
 
