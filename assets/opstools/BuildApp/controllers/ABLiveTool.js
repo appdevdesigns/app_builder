@@ -77,8 +77,8 @@ steal(
 									self.resize(data.height);
 								});
 
-							// Check this is active menu
-							self.menuChange(self.options.areaKey);
+							// Check this is active
+							self.menuChange();
 
 						},
 
@@ -126,6 +126,16 @@ steal(
 						menuChange: function(areaKey, toolKey) {
 
 							var self = this;
+
+							// Get current area key
+							if (areaKey == null) {
+
+								let currAreaElem = document.querySelector('#op-list-menu > .op-container.active');
+								if (!currAreaElem) return;
+								
+								areaKey = currAreaElem.getAttribute("area");
+
+							}
 
 							// Get current tool key
 							if (toolKey == null) {

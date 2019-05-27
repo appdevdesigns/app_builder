@@ -17,6 +17,8 @@ steal(
 
 							options = AD.defaults({
 								app: -1,
+								areaKey: "",
+								toolKey: -1
 							}, options);
 							self.options = options;
 
@@ -74,6 +76,9 @@ steal(
 									self.resize(data.height);
 								});
 
+
+							self.menuChange();
+
 						},
 
 						initDOM: function () {
@@ -118,6 +123,16 @@ steal(
 						menuChange: function(areaKey, toolKey) {
 
 							var self = this;
+
+							// Get current area key
+							if (areaKey == null) {
+
+								let currAreaElem = document.querySelector('#op-list-menu > .op-container.active');
+								if (!currAreaElem) return;
+								
+								areaKey = currAreaElem.getAttribute("area");
+
+							}
 
 							// Get current tool key
 							if (toolKey == null) {
