@@ -17,7 +17,9 @@ steal(
 
 							options = AD.defaults({
 								app: -1,
-								page: -1
+								page: -1,
+								areaKey: "",
+								toolKey: -1
 							}, options);
 							self.options = options;
 
@@ -52,19 +54,34 @@ steal(
 							self.initDOM();
 							self.initModels();
 
-							self.getData();
+							self.__events = {};
 
-							AD.comm.hub.subscribe('opsportal.resize', function (message, data) {
-								self.height = data.height;
-								self.debounceResize = false; // if we do not set this the resize is never set
-								self.resize(data.height);
-							});
+							if (self.__events.areaShow == null)
+								self.__events.areaShow = AD.comm.hub.subscribe('opsportal.area.show', function (message, data) {
+
+									self.menuChange(data.area);
+
+								});
+
+							if (self.__events.toolShow == null)
+								self.__events.toolShow = AD.comm.hub.subscribe('opsportal.tool.show', function(message, data) {
+
+									self.menuChange(data.area, data.tool);
+
+								});
+
+							if (self.__events.resize == null)
+								self.__events.resize = AD.comm.hub.subscribe('opsportal.resize', function (message, data) {
+									self.height = data.height;
+									self.debounceResize = false; // if we do not set this the resize is never set
+									self.resize(data.height);
+								});
 
 
 						},
 
 						initDOM: function () {
-							console.log('... creating ABLiveTool <div> ');
+							// console.log('... creating ABLiveTool <div> ');
 
 							this.element.html('<div style="background-color: #fff !important" id="#domID#"><div class="ab-loading">Loading&#8230;</div></div>'.replace(/#domID#/g, this.containerDomID));
 
@@ -80,11 +97,54 @@ steal(
 						},
 
 						initPage: function () {
+
 							var self = this;
+
+							// Wait until the tool's area has been shown
+							if (!self.activated) return;
 
 							self.renderPageContainer();
 
 							self.initEvents(self.rootPage);
+
+							webix.ready(function () {
+
+								self.showPage();
+
+								self.resize(self.height || 600);
+							});
+
+						},
+
+						menuChange: function(areaKey, toolKey) {
+
+							var self = this;
+
+							// Get current tool key
+							if (toolKey == null) {
+
+								// get active tool element
+								let currToolElem = document.querySelector('#op-masthead-sublinks [area="{area}"] .active'.replace("{area}", areaKey));
+								if (!currToolElem) return;
+								
+								toolKey = currToolElem.getAttribute("op-tool-id");
+
+							}
+
+							// Check it is our page 
+							if (self.options.areaKey == areaKey && 
+								self.options.toolKey == toolKey) {
+
+								if (!self.activated) {
+									self.activated = true;
+
+									self.getData();
+								}
+								else {
+									self.showPage();
+								}
+
+							}
 
 						},
 
@@ -94,6 +154,19 @@ steal(
 
 							self.data = {};
 							async.series([
+								// Show loading spinners
+								function (next) {
+
+									var areaMenuItem = document.body.querySelector('[class="op-container"][area="'+self.options.areaKey+'"]');
+									if (areaMenuItem) {
+										areaMenuItem.insertAdjacentHTML(
+											'beforeend',
+											'<span class="icon '+self.options.areaKey+'_appLoading"><i class="fa fa-refresh fa-spin"></i></span>');
+									}
+
+									next();
+
+								},
 								// Get application data
 								function (next) {
 									ABApplication.getApplicationById(self.options.app)
@@ -113,73 +186,43 @@ steal(
 									if (self.rootPage == null)
 										return next();
 
-									let areaKey = 'ab-' + self.data.application.name.trim();
-									areaKey = areaKey.toLowerCase().replace(/[^a-z0-9]/gi, '');
+									self.initPage();
 
-									var appKey = 'AB_' + String(self.data.application.name).replace(/[^a-z0-9]/gi, ''),
-										pageKey = ['opstools', appKey, self.rootPage.name.replace(/[^a-z0-9]/gi, '').toLowerCase()].join('.'),
-										toolKey = _.kebabCase(pageKey);
+									// let areaKey = 'ab-' + self.data.application.name.trim();
+									// areaKey = areaKey.toLowerCase().replace(/[^a-z0-9]/gi, '');
 
+									// // If there is a ops-area, it should trigger that ops-area to render page
+									// // Because 'opsportal.tool.show' and 'opsportal.area.show' are not trigger
+									// var opsMenus = document.body.querySelectorAll('#op-list-menu > .op-container');
+									// if (opsMenus.length == 1) {
+									// 	opsMenus[0].click();
+									// }
+									// // If this area is showing
+									// else {
+									// 	// TODO: How to get current area ?
+									// 	var currPanel = document.body.querySelector('#op-masthead-sublinks > ul:not([style*="display:none"]):not([style*="display: none"])');
+									// 	if (currPanel) {
+									// 		var currArea = currPanel.getAttribute('area');
+									// 		if (currArea == areaKey) {
+									// 			callback(null, { area: areaKey });
+									// 		}
+									// 	}
+									// }
 
-									var callback = function (message, data) {
+									next();
 
-										// var areaData = data.area.toLowerCase().replace(/[^a-z0-9]/gi, '');
-										// if (areaData == areaKey) {
+								},
 
-										// get active tool element
-										let currToolElem = document.querySelector('#op-masthead-sublinks [area="{area}"] .active'.replace("{area}", data.area));
-										if (!currToolElem) return;
-										
-										let currToolKey = currToolElem.getAttribute("op-tool-key");
-										if (currToolKey != toolKey) return;
+								// Hide loading spinners
+								function () {
 
-										if (!self.activated) {
-											self.activated = true;
-
-											self.startPage();
-										}
-										else {
-											self.showPage();
-										}
-
-										// }
-									};
-
-									if (self.subID1 == null)
-										self.subID1 = AD.comm.hub.subscribe('opsportal.tool.show', callback);
-
-									if (self.subID2 == null)
-										self.subID2 = AD.comm.hub.subscribe('opsportal.area.show', callback);
-
-									// If there is a ops-area, it should trigger that ops-area to render page
-									// Because 'opsportal.tool.show' and 'opsportal.area.show' are not trigger
-									var opsMenus = document.body.querySelectorAll('#op-list-menu > .op-container');
-									if (opsMenus.length == 1) {
-										opsMenus[0].click();
-									}
-									// If this area is showing
-									else {
-										// TODO: How to get current area ?
-										var currPanel = document.body.querySelector('#op-masthead-sublinks > ul:not([style*="display:none"]):not([style*="display: none"])');
-										if (currPanel) {
-											var currArea = currPanel.getAttribute('area');
-											if (currArea == areaKey) {
-												callback(null, { area: areaKey });
-											}
-										}
-									}
-									
 									// we will remove the loading spinners on the menu now
-									var opsMenuItem = document.body.querySelectorAll('#op-list-menu > .op-container .'+areaKey+'_appLoading');
+									var opsMenuItem = document.body.querySelectorAll('#op-list-menu > .op-container .'+self.options.areaKey+'_appLoading');
 									if (opsMenuItem.length) {
 										opsMenuItem.forEach((x) => {
 											x.remove();
 										})
 									}
-									
-
-									next();
-
 								}
 
 							], function (err) {
@@ -188,24 +231,6 @@ steal(
 							});
 
 							return q;
-						},
-
-						startPage: function () {
-
-							var self = this;
-
-							// Wait until the tool's area has been shown
-							if (!self.activated) return;
-
-							self.initPage();
-
-							webix.ready(function () {
-
-								self.showPage();
-
-								self.resize(self.height || 600);
-							});
-
 						},
 
 						renderPageContainer: function () {
@@ -327,7 +352,7 @@ steal(
 								case 'page':
 								default:
 								
-									console.log(ui);
+									// console.log(ui);
 									if ($$(pageDomId)) {
 										// Change page type (Popup -> Page)
 										if ($$(pageDomId).config.view == 'window') {
@@ -409,10 +434,10 @@ steal(
 
 							// Trigger .onShow to the component
 							var loadPage = setInterval(function () {
-								console.log("loading page");
+								// console.log("loading page");
 
 								if (self.pageComponents[pageId] && self.pageComponents[pageId].onShow) {
-									console.log("canceling load");
+									// console.log("canceling load");
 									clearInterval(loadPage);
 									for (const element of document.getElementById(self.containerDomID).getElementsByClassName("ab-loading")) {
 										element.style.display = "none";
