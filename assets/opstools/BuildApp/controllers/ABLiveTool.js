@@ -219,7 +219,7 @@ steal(
 								},
 
 								// Hide loading spinners
-								function () {
+								function (next) {
 
 									// we will remove the loading spinners on the menu now
 									var opsMenuItem = document.body.querySelectorAll('#op-list-menu > .op-container .'+self.options.areaKey+'_appLoading');
@@ -228,6 +228,8 @@ steal(
 											x.remove();
 										})
 									}
+
+									next();
 								}
 
 							], function (err) {
