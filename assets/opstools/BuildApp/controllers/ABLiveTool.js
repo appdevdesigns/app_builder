@@ -77,6 +77,8 @@ steal(
 									self.resize(data.height);
 								});
 
+							// Check this is active menu
+							self.menuChange(self.options.areaKey);
 
 						},
 
