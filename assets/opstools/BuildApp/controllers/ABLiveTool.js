@@ -83,7 +83,12 @@ steal(
 						initDOM: function () {
 							// console.log('... creating ABLiveTool <div> ');
 
-							this.element.html('<div style="background-color: #fff !important" id="#domID#"><div class="ab-loading">Loading&#8230;</div></div>'.replace(/#domID#/g, this.containerDomID));
+							var css = "background-color: #fff !important; font-size: 30px; line-height: 80px; padding-top: 160px; text-align: center; width: 100%;";
+
+							this.element.html(
+								'<div id="#domID#">'.replace(/#domID#/g, this.containerDomID) +
+								'<div style="' + css + '" class="ab-loading"><i class="fa fa-refresh fa-spin fa-3x fa-fw"></i><br/>Loading&#8230;' +
+								'</div></div>');
 
 							// this.element.html(
 							// 	('<div id="#domID#"></div>' +
