@@ -178,7 +178,8 @@ export default class ABChooseList extends OP.Component {
 			 */
 			busy: function() {
 				if ($$(ids.list).showProgress)
-					$$(ids.list).showProgress({ icon: 'cursor' });
+					$$(ids.list).showProgress({ type: "icon" });
+
 			},
 
 
@@ -219,14 +220,18 @@ export default class ABChooseList extends OP.Component {
 			 *
 			 * Load all the ABApplications and display them in our App List
 			 */
-			loadData:function(){
+			loadData:() => {
+
+				if (this.loaded)
+					return;
+
+				this.loaded = true;
 
 				// Get applications data from the server
 				_logic.busy();
+
 				ABApplication.allApplications()
 					.then(function (data) {
-
-						_logic.ready();
 
 						// make sure our overlay is updated when items are added/removed
 						// from our data list.
@@ -241,6 +246,8 @@ export default class ABChooseList extends OP.Component {
 						_data.listApplications = data;
 
 						_logic.refreshList();
+
+						_logic.ready();
 					})
 					.catch(function (err) {
 						_logic.ready();
@@ -413,7 +420,11 @@ export default class ABChooseList extends OP.Component {
 			 * Trigger our List component to show
 			 */
 			show:function() {
+
 				$$(ids.component).show();
+
+				// start things off by loading the current list of Applications
+				_logic.loadData();
 			},
 
 
@@ -469,8 +480,6 @@ export default class ABChooseList extends OP.Component {
 				onClick: _logic.callbackApplicationEditorMenu
 			})
 
-			// start things off by loading the current list of Applications
-			_logic.loadData();
 		}
 
 
@@ -557,9 +566,7 @@ export default class ABChooseList extends OP.Component {
 		})
 
 
-		this.show = function() {
-			$$(ids.component).show();
-		}
+		this.show = _logic.show;
 
 	}
 
