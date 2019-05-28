@@ -480,12 +480,19 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 
 												currCursor[label] = f.format(currCursor);
 
+												if (currCursor[label] == null)
+													currCursor[label] = '';
+
 											});
 										}
 										// Normal Objects
 										else {
 											obj.fields().forEach(f => {
 												currCursor[f.label] = f.format(currCursor);
+
+												if (currCursor[f.label] == null)
+													currCursor[f.label] = '';
+
 											});
 										}
 
