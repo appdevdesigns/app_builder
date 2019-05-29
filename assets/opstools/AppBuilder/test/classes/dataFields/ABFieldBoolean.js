@@ -96,7 +96,9 @@ describe("ABFieldBoolean unit tests", () => {
 
 		it('.columnHeader: template() should return editable checkbox', () => {
 			let isEditable = true;
-			var columnConfig = target.columnHeader(null, null, isEditable);
+			var columnConfig = target.columnHeader({
+				editable: isEditable
+			});
 
 			let row = {},
 				common = {
@@ -114,7 +116,9 @@ describe("ABFieldBoolean unit tests", () => {
 
 		it('.columnHeader: template() should return read-only uncheck checkbox when value is false', () => {
 			let isEditable = false;
-			var columnConfig = target.columnHeader(null, null, isEditable);
+			var columnConfig = target.columnHeader({
+				editable: isEditable
+			});
 
 			let value = false;
 
@@ -129,7 +133,9 @@ describe("ABFieldBoolean unit tests", () => {
 
 		it('.columnHeader: template() should return read-only checked checkbox when value is true', () => {
 			let isEditable = false;
-			var columnConfig = target.columnHeader(null, null, isEditable);
+			var columnConfig = target.columnHeader({
+				editable: isEditable
+			});
 
 			let value = true;
 

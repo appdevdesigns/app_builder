@@ -221,7 +221,10 @@ export default class ABViewFormReadonly extends ABViewFormField {
 					newWidth = 0;
 
 				let template = (`<div class="readonlyField">${templateLabel}#template#</div>`)
-					.replace(/#template#/g, field.columnHeader(null, newWidth, true).template(rowData));
+					.replace(/#template#/g, field.columnHeader({
+						width: newWidth,
+						editable: true
+					}).template(rowData));
 
 				// Re-build template element
 				if ($$(ids.template)) {

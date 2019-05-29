@@ -325,13 +325,16 @@ class ABFieldTree extends ABField {
   }
 
   // return the grid column header definition for this instance of ABFieldTree
-  columnHeader(isObjectWorkspace, width, isForm) {
-    var config = super.columnHeader(isObjectWorkspace);
+  columnHeader(options) {
+
+    options = options || {};
+
+    var config = super.columnHeader(options);
     var field = this;
     
     var formClass = "";
     var placeHolder = "";
-    if (isForm) {
+    if (options.isForm) {
         formClass = " form-entry";
         placeHolder = "<span style='color: #CCC; padding: 0 5px;'>"+L('ab.dataField.tree.placeholder', '*Select items')+"</span>";
     }
@@ -386,8 +389,8 @@ class ABFieldTree extends ABField {
 
         // field.setBadge(node, App, row);
         
-        if (width) {
-          return '<div style="margin-left: ' + width + 'px;" class="list-data-values'+formClass+'">'+nodeHTML+'</div>';
+        if (options.width) {
+          return '<div style="margin-left: ' + options.width + 'px;" class="list-data-values'+formClass+'">'+nodeHTML+'</div>';
         } else {
           return '<div class="list-data-values'+formClass+'">'+nodeHTML+'</div>';
         }

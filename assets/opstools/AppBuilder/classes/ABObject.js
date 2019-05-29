@@ -300,7 +300,10 @@ export default class ABObject extends ABObjectBase {
 
 		// get the header for each of our fields:
 		this.fields().forEach(function(f){
-			var header = f.columnHeader(isObjectWorkspace, null, isEditable);
+			var header = f.columnHeader({
+				isObjectWorkspace: isObjectWorkspace,
+				editable: isEditable
+			});
 
 			header.alias = f.alias || undefined; // query type
 			header.fieldURL = f.urlPointer();

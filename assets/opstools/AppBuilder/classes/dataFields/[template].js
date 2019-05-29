@@ -221,8 +221,8 @@ class ABField[template] extends ABField {
 	///
 
 	// return the grid column header definition for this instance of ABField[template]
-	columnHeader(isObjectWorkspace) {
-		var config = super.columnHeader(isObjectWorkspace);
+	columnHeader(options) {
+		var config = super.columnHeader(options);
 
 		config.editor = 'text';  // '[edit_type]'   for editor of a column in grid component.
 		// We can use editor type following the site below

@@ -437,7 +437,11 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 		var template = ('<div class="customField">' + templateLabel + "#template#" + '</div>')
 			.replace(/#width#/g, settings.labelWidth)
 			.replace(/#label#/g, field.label)
-			.replace(/#template#/g, field.columnHeader(null, newWidth, true, showAddButton).template({}));
+			.replace(/#template#/g, field.columnHeader({
+				width: newWidth, 
+				editable: true, 
+				showAddButton: showAddButton
+			}).template({}));
 
 
 

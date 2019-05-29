@@ -128,7 +128,9 @@ describe("ABFieldFile unit tests", () => {
 
 		it('.columnHeader: .template should return valid file upload HTML', () => {
 			let editable = true;
-			let columnConfig = target.columnHeader(null, null, editable);
+			let columnConfig = target.columnHeader({
+				editable: editable
+			});
 
 			let row = {};
 			row[columnName] = {

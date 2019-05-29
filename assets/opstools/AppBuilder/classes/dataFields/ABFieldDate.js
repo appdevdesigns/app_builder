@@ -1127,8 +1127,8 @@ class ABFieldDate extends ABField {
 	///
 
 	// return the grid column header definition for this instance of ABFieldDate
-	columnHeader(isObjectWorkspace) {
-		var config = super.columnHeader(isObjectWorkspace);
+	columnHeader(options) {
+		var config = super.columnHeader(options);
 
 		// if (this.settings.includeTime)
 			config.editor = 'datetime';

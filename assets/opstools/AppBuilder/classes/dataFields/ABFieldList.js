@@ -657,8 +657,11 @@ class ABFieldList extends ABFieldSelectivity {
 	///
 
 	// return the grid column header definition for this instance of ABFieldList
-	columnHeader(isObjectWorkspace, width, editable) {
-		var config = super.columnHeader(isObjectWorkspace);
+	columnHeader(options) {
+
+		options = options || {};
+
+		var config = super.columnHeader(options);
 		var field = this;
 		var App = App;
 
@@ -669,15 +672,15 @@ class ABFieldList extends ABFieldSelectivity {
 
 				var node = document.createElement("div");
 				node.classList.add("list-data-values");
-				if (typeof width != "undefined") {
-					node.style.marginLeft = width+'px';				
+				if (typeof options.width != "undefined") {
+					node.style.marginLeft = options.width+'px';
 				}
 				
 				var domNode = node;
 
 				var placeholder = L('ab.dataField.list.placeholder_multiple', '*Select items');
 				var readOnly = false;
-				if (editable != null && editable == false) {
+				if (options.editable != null && options.editable == false) {
 					readOnly = true;
 					placeholder = "";
 				}
@@ -714,11 +717,11 @@ class ABFieldList extends ABFieldSelectivity {
 			
 			var formClass = "";
 		    var placeHolder = "";
-		    if (editable) {
+		    if (options.editable) {
 		        formClass = " form-entry";
 		        placeHolder = "<span style='color: #CCC; padding: 0 5px;'>"+L('ab.dataField.list.placeholder', '*Select item')+"</span>";
 			}
-			var isRemovable = (editable && !this.settings.required);
+			var isRemovable = (options.editable && !this.settings.required);
 			
 			config.template = function(obj) {
 				var myHex = "#666666";

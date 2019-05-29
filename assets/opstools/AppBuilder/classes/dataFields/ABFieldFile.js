@@ -277,8 +277,11 @@ class ABFieldFile extends ABField {
 	///
 
 	// return the grid column header definition for this instance of ABFieldFile
-	columnHeader (isObjectWorkspace, newWidth, editable) {
-		var config = super.columnHeader(isObjectWorkspace);
+	columnHeader (options) {
+
+		options = options || {};
+
+		var config = super.columnHeader(options);
 
 		config.editor = false; 
 
@@ -292,7 +295,7 @@ class ABFieldFile extends ABField {
 				'<div class="ab-file-data-field" style="float: left;">',
 				'<div class="webix_view ab-file-holder">',
 				'<div class="webix_template">',
-				this.fileTemplate(obj, editable),
+				this.fileTemplate(obj, options.editable),
 				'</div>',
 				'</div>',
 				'</div>'

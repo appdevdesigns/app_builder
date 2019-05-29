@@ -6,7 +6,6 @@
  */
 
 import ABViewDetailComponent from "./ABViewDetailComponent"
-import ABPropertyComponent from "../ABPropertyComponent"
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -14,6 +13,8 @@ function L(key, altText) {
 
 
 var ABViewDetailImagePropertyComponentDefaults = {
+	height: 80,
+	width: 120
 }
 
 
@@ -45,6 +46,21 @@ export default class ABViewDetailImage extends ABViewDetailComponent {
 	///
 	/// Instance Methods
 	///
+
+	/**
+	 * @method fromValues()
+	 *
+	 * initialze this object with the given set of values.
+	 * @param {obj} values
+	 */
+	fromValues(values) {
+
+		super.fromValues(values);
+
+		// convert from "0" => 0
+		this.settings.height = parseInt(this.settings.height || ABViewDetailImagePropertyComponentDefaults.height);
+		this.settings.width = parseInt(this.settings.width || ABViewDetailImagePropertyComponentDefaults.width);
+	}
 
 	//
 	//	Editor Related
@@ -105,6 +121,18 @@ export default class ABViewDetailImage extends ABViewDetailComponent {
 		// in addition to the common .label  values, we 
 		// ask for:
 		return commonUI.concat([
+			{
+				view: 'counter',
+				name: "height",
+				label: L("ab.components.common.height", "*Height:"),
+				labelWidth: App.config.labelWidthLarge,
+			},
+			{
+				view: 'counter',
+				name: "width",
+				label: L("ab.components.common.width", "*Width:"),
+				labelWidth: App.config.labelWidthLarge,
+			}
 		]);
 
 	}
@@ -113,11 +141,17 @@ export default class ABViewDetailImage extends ABViewDetailComponent {
 
 		super.propertyEditorPopulate(App, ids, view);
 
+		$$(ids.height).setValue(view.settings.height || ABViewDetailImagePropertyComponentDefaults.height);
+		$$(ids.width).setValue(view.settings.width || ABViewDetailImagePropertyComponentDefaults.width);
+
 	}
 
 	static propertyEditorValues(ids, view) {
 
 		super.propertyEditorValues(ids, view);
+
+		view.settings.height = $$(ids.height).getValue();
+		view.settings.width = $$(ids.width).getValue();
 
 	}
 
@@ -145,6 +179,12 @@ export default class ABViewDetailImage extends ABViewDetailComponent {
 
 		component.ui.id = ids.component;
 
+		if (this.settings.height)
+			component.ui.height = this.settings.height;
+
+		// if (this.settings.width)
+		// 	component.ui.width = this.settings.width;
+
 		var _logic = {
 
 			setValue: (val) => {
@@ -153,12 +193,19 @@ export default class ABViewDetailImage extends ABViewDetailComponent {
 
 				if (val || (!val && defaultImageUrl)) {
 
-					var imageUrl = imageUrl = "/opsportal/image/" + this.application.name + "/" + (val || defaultImageUrl);
+					let imageUrl = imageUrl = "/opsportal/image/" + this.application.name + "/" + (val || defaultImageUrl);
+					let width = field.settings.imageWidth ? field.settings.imageWidth + 'px' : '200px';
+					let height = field.settings.imageHeight ? field.settings.imageHeight + 'px' : '100%';
 
-					imageTemplate = '<div class="ab-image-data-field"><div style="float: left; background-size: cover; background-position: center center; background-image:url(\'#imageUrl#\');  width: #width#px; height: #height#px;"></div></div>'
-						.replace("#imageUrl#", imageUrl)
-						.replace(/#width#/g, field.settings.imageWidth || 50)
-						.replace(/#height#/g, field.settings.imageHeight || 50);
+					if (this.settings.height)
+						height = this.settings.height + 'px';
+
+					if (this.settings.width)
+						width = this.settings.width + 'px';
+
+					imageTemplate = `<div class="ab-image-data-field">` +
+								`<div style="float: left; background-size: cover; background-position: center center; background-image:url('${imageUrl}');  width: ${width}; height: ${height};">` +
+								`</div></div>`;
 				}
 
 				component.logic.setValue(ids.component, imageTemplate);

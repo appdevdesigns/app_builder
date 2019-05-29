@@ -5,7 +5,7 @@
  */
 
 import ABViewFormField from "./ABViewFormField"
-import ABPropertyComponent from "../ABPropertyComponent"
+import ABFieldImage from "../dataFields/ABFieldImage"
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -151,10 +151,28 @@ export default class ABViewFormCustom extends ABViewFormField {
 		else if (settings.showLabel == true && settings.labelPosition == 'top')
 			newWidth = 0;
 
+		let height = 38;
+		if (field instanceof ABFieldImage) {
+			if (field.settings.useHeight) {
+				height = parseInt(field.settings.imageHeight) || 80;
+			}
+			else {
+				height = 80;
+			}
+		}
+		else if (settings.showLabel == true && settings.labelPosition == 'top') {
+			height = 80;
+		}
+	
+
 		var template = ('<div class="customField">' + templateLabel + "#template#" + '</div>')
 			.replace(/#width#/g, settings.labelWidth)
 			.replace(/#label#/g, field.label)
-			.replace(/#template#/g, field.columnHeader(null, newWidth, true).template({}));
+			.replace(/#template#/g, field.columnHeader({
+				width: newWidth,
+				height: height,
+				editable: true
+			}).template({}));
 
 
 		component.ui = {
@@ -174,6 +192,7 @@ export default class ABViewFormCustom extends ABViewFormField {
 				css:  "customFieldCls", 
 				borderless: true,
 				template: template,
+				height: height,
 				onClick: {
 					"customField": (id, e, trg) => {
 
@@ -200,16 +219,6 @@ export default class ABViewFormCustom extends ABViewFormField {
 // component.ui.id = ids.component;
 // component.ui.view = "template";
 // component.ui.css = "customFieldCls";
-
-		if (settings.showLabel == true && settings.labelPosition == 'top') {
-			component.ui.body.height = 80;
-		}
-		else if (field.settings.useHeight) {
-			component.ui.body.height = parseInt(field.settings.imageHeight) || 38;
-		}
-		else {
-			component.ui.body.height = 38;
-		}
 // component.ui.borderless = true;
 // component.ui.template = '<div class="customField">' + template + '</div>';
 // component.ui.onClick = {
@@ -231,10 +240,17 @@ export default class ABViewFormCustom extends ABViewFormField {
 			var rowData = {},
 					node = elem.$view;
 
-			field.customDisplay(rowData, App, node, {
+			let options = {
 				formId: ids.component,
 				editable: (this.settings.disable == 1 ? false : true)
-			});
+			};
+
+			if (field instanceof ABFieldImage) {
+				options.height = field.settings.useHeight ? (parseInt(field.settings.imageHeight) || 80) : 80;
+				options.width = field.settings.useWidth ? (parseInt(field.settings.imageWidth) || newWidth) : newWidth;
+			}
+
+			field.customDisplay(rowData, App, node, options);
 
 		};
 
