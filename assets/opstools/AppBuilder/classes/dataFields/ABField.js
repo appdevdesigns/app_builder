@@ -499,8 +499,7 @@ export default class ABField extends ABFieldBase {
 	///
 
 	migrateCreate() {
-		var url = '/app_builder/migrate/application/#appID#/object/#objID#/field/#fieldID#'
-			.replace('#appID#', this.object.application.id)
+		var url = '/app_builder/migrate/object/#objID#/field/#fieldID#'
 			.replace('#objID#', this.object.id)
 			.replace('#fieldID#', this.id)
 
@@ -511,8 +510,7 @@ export default class ABField extends ABFieldBase {
 
 
 	migrateUpdate() {
-		var url = '/app_builder/migrate/application/#appID#/object/#objID#/field/#fieldID#'
-			.replace('#appID#', this.object.application.id)
+		var url = '/app_builder/migrate/object/#objID#/field/#fieldID#'
 			.replace('#objID#', this.object.id)
 			.replace('#fieldID#', this.id)
 
@@ -523,8 +521,7 @@ export default class ABField extends ABFieldBase {
 
 
 	migrateDrop() {
-		var url = '/app_builder/migrate/application/#appID#/object/#objID#/field/#fieldID#'
-			.replace('#appID#', this.object.application.id)
+		var url = '/app_builder/migrate/object/#objID#/field/#fieldID#'
 			.replace('#objID#', this.object.id)
 			.replace('#fieldID#', this.id)
 

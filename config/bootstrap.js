@@ -35,7 +35,9 @@ module.exports = function (cb) {
     		// verify .well-known directory exists:
     		verifyWellKnownDir,
     		verifyWellKnownConfigs,
-    		verifyDataDir,
+			verifyDataDir,
+
+			cacheABClassObjects,
 
     		setupPollingMCC,
 
@@ -124,6 +126,24 @@ function verifyWellKnownConfigs(next) {
     
 }
 
+function cacheABClassObjects(next) {
+
+	ABObject.find()
+		.catch(next)
+		.then(objects => {
+
+			objects.forEach(obj => {
+
+				// it will be cached here
+				obj.toABClass();
+
+			});
+
+			next();
+
+		});
+
+}
 
 function setupPollingMCC(next) {
 

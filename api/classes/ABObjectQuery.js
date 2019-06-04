@@ -2,7 +2,7 @@
 var path = require('path');
 var _ = require('lodash');
 
-var ABObject = require(path.join(__dirname, 'ABObject'));
+var ABClassObject = require(path.join(__dirname, 'ABClassObject'));
 
 var Model = require('objection').Model;
 
@@ -14,7 +14,7 @@ var PolicyList = [
 	require(path.join(__dirname, '..', 'policies', 'ABModelConvertQueryFieldConditions'))
 ]
 
-module.exports = class ABObjectQuery extends ABObject {
+module.exports = class ABObjectQuery extends ABClassObject {
 
 	constructor(attributes, application) {
 		super(attributes, application);

@@ -25,6 +25,53 @@ module.exports = {
     /* Application */
 
     /**
+     * GET /app_builder/abapplication
+     * 
+     */
+    find: function(req, res) {
+
+        let cond = req.query;
+
+        ABApplication.find(cond)
+            .populate("objects")
+            .catch(err => {
+                res.AD.error(err);
+            })
+            .then(apps => {
+
+                let result = (apps || []).map(a => a.toValidJsonFormat());
+
+                res.AD.success(result);
+
+            });
+
+
+    },
+
+
+    /**
+     * GET /app_builder/abapplication/{id}
+     * 
+     */
+    findOne: function(req, res) {
+
+        var appID = req.param('appID');
+
+        ABApplication.findOne(appID)
+            .populate("objects")
+            .catch(() => {
+                res.AD.error(`System cound not found this application: ${appID}`);
+            })
+            .then(app => {
+
+                res.AD.success(app.toValidJsonFormat());
+
+            });
+
+    },
+
+
+    /**
      * PUT /app_builder/application/:appID/info
      * 
      * Save info (name/description) of ABApplicaiton
@@ -113,116 +160,6 @@ module.exports = {
 
 
     },
-
-
-    /* Objects */
-
-    /**
-     * PUT /app_builder/application/:appID/object
-     * 
-     * Add/Update a object into ABApplication
-     */
-    objectSave: function (req, res) {
-        var appID = req.param('appID');
-        var object = req.body.object;
-
-
-        jsonDataSave( appID, 'objects', object, req, res );
-
-
-        // ABApplication.findOne({ id: appID })
-        //     .fail(res.AD.error)
-        //     .then(function (app) {
-
-        //         if (app) {
-
-        //             app.json.objects = app.json.objects || [];
-
-        //             var indexObj = -1;
-        //             var updateObj = app.json.objects.filter(function (obj, index) {
-
-        //                 var isExists = obj.id == object.id;
-        //                 if (isExists) indexObj = index;
-
-        //                 return isExists;
-        //             })[0];
-
-        //             // update
-        //             if (updateObj) {
-        //                 app.json.objects[indexObj] = object;
-        //             }
-        //             // add new
-        //             else {
-        //                 app.json.objects.push(object);
-        //             }
-
-        //             // save to database
-        //             app.save(function (err) {
-        //                 if (err)
-        //                     res.AD.error(true);
-        //                 else
-        //                     res.AD.success(true);
-        //             });
-        //         }
-        //         else {
-        //             res.AD.success(true);
-        //         }
-
-
-        //     });
-
-    },
-
-    /**
-     * DELETE /app_builder/application/:appID/object/:id
-     * 
-     * Delete a object in ABApplication
-     */
-    objectDestroy: function (req, res) {
-        var appID = req.param('appID');
-        var objectID = req.param('id');
-
-        jsonDataDestroy( appID, 'objects', objectID, req, res);
-
-        // ABApplication.findOne({ id: appID })
-        //     .fail(res.AD.error)
-        //     .then(function (app) {
-
-        //         if (app) {
-
-        //             app.json.objects = app.json.objects || [];
-
-        //             var indexObj = -1;
-        //             var updateObj = app.json.objects.filter(function (obj, index) {
-
-        //                 var isExists = obj.id == objectID;
-        //                 if (isExists) indexObj = index;
-
-        //                 return isExists;
-        //             })[0];
-
-        //             // remove
-        //             if (indexObj > -1) {
-        //                 app.json.objects.splice(indexObj, 1);
-        //             }
-
-        //             // save to database
-        //             app.save(function (err) {
-        //                 if (err)
-        //                     res.AD.error(true);
-        //                 else
-        //                     res.AD.success(true);
-        //             });
-        //         }
-        //         else {
-        //             res.AD.success(true);
-        //         }
-
-
-        //     });
-
-    },
-
 
 
     /* Pages */

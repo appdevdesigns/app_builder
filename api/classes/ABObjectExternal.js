@@ -1,7 +1,7 @@
 var path = require('path');
 var _ = require('lodash');
 
-var ABObject = require(path.join(__dirname, 'ABObject'));
+var ABClassObject = require(path.join(__dirname, 'ABClassObject'));
 
 var Model = require('objection').Model;
 
@@ -47,7 +47,7 @@ function getColumnFn(colType) {
 
 // to minimize .knex bindings (and connection pools!)
 
-module.exports = class ABObjectExternal extends ABObject {
+module.exports = class ABObjectExternal extends ABClassObject {
 
 	constructor(attributes, application) {
 		super(attributes, application);

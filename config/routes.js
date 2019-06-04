@@ -9,15 +9,21 @@
 module.exports = {
 
     /* Application Info */
+    'get /app_builder/abapplication':
+        'app_builder/ABApplicationController.find',
+
+    'get /app_builder/abapplication/:appID':
+        'app_builder/ABApplicationController.findOne',
+
     'put /app_builder/application/:appID/info':
         'app_builder/ABApplicationController.applicationSave',
 
     /* Application Objects */
-    'put /app_builder/application/:appID/object':
-        'app_builder/ABApplicationController.objectSave',
+    'put /app_builder/object':
+        'app_builder/ABObjectController.objectSave',
 
-    'delete /app_builder/application/:appID/object/:id':
-        'app_builder/ABApplicationController.objectDestroy',
+    'delete /app_builder/object/:objectId':
+        'app_builder/ABObjectController.objectDestroy',
 
     /* Application Pages */
     'put /app_builder/application/:appID/page':    
@@ -73,24 +79,24 @@ module.exports = {
     
 
     /* Migration Services */
-    // app_builder/migrate/application/:appID/object/:objID
-    // app_builder/migrate/application/:appID/object/:objID/field/:fieldID
+    // app_builder/migrate/object/:objID
+    // app_builder/migrate/object/:objID/field/:fieldID
     // post url   // create the object/field table info
     // put  url   // update the object/field table info
     // delete url // remove the object/field table info
-    'post /app_builder/migrate/application/:appID/object/:objID' : 
+    'post /app_builder/migrate/object/:objID' : 
         'app_builder/ABMigrationController.createObject',
 
-    'delete /app_builder/migrate/application/:appID/object/:objID' : 
+    'delete /app_builder/migrate/object/:objID' : 
         'app_builder/ABMigrationController.dropObject',
 
-    'post /app_builder/migrate/application/:appID/object/:objID/field/:fieldID' : 
+    'post /app_builder/migrate/object/:objID/field/:fieldID' : 
         'app_builder/ABMigrationController.createField',
 
-    'put /app_builder/migrate/application/:appID/object/:objID/field/:fieldID' :
+    'put /app_builder/migrate/object/:objID/field/:fieldID' :
         'app_builder/ABMigrationController.updateField',
 
-    'delete /app_builder/migrate/application/:appID/object/:objID/field/:fieldID' :
+    'delete /app_builder/migrate/object/:objID/field/:fieldID' :
         'app_builder/ABMigrationController.dropField',
 
 

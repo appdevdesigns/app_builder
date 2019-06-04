@@ -88,7 +88,7 @@ module.exports =  class ABObjectBase {
 		var newFields = [];
 
 	  	fieldSettings.forEach((field) => {
-	  		newFields.push( this.application.fieldNew(field, this) );
+	  		newFields.push( this.fieldNew(field, this) );
 	  	})
 	  	this._fields = newFields;
 	}
@@ -238,7 +238,10 @@ module.exports =  class ABObjectBase {
 	 * @return {ABField}
 	 */
 	fieldNew ( values ) {
-		return this.application.fieldNew( values, this );
+
+		// It should apply in a individual object
+		return {};
+
 	}
 
 

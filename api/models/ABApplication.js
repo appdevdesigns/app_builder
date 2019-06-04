@@ -23,11 +23,12 @@ module.exports = {
     attributes: {
 
         json : 'json', 
-        
-        // objects: { collection: 'ABObject', via: 'application' },
-
         // pages: { collection: 'ABPage', via: 'application' },
 
+        objects: {
+            collection: 'ABObject',
+            via: 'applications'
+        },
 
         name: {
             type: 'string',
@@ -71,7 +72,17 @@ module.exports = {
 
         toABClass: function () {
 
-            return new ABClassApplication(this);
+            let app = this.toValidJsonFormat();
+
+            return new ABClassApplication(app);
+
+        },
+
+        toValidJsonFormat: function() {
+
+            this.json.objects = (this.objects || []).map(obj => obj.json);
+
+            return this;
 
         },
 

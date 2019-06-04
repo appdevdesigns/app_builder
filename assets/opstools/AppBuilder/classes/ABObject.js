@@ -4,7 +4,7 @@ import ABApplication from "./ABApplication"
 import ABObjectBase from "./ABObjectBase"
 
 // import OP from "OP"
-// import ABFieldManager from "./ABFieldManager"
+import ABFieldManager from "./ABFieldManager"
 import ABModel from "./ABModel"
 import ABObjectWorkspaceViewCollection from "./ABObjectWorkspaceViewCollection";
 
@@ -89,6 +89,25 @@ export default class ABObject extends ABObjectBase {
 	///
 	/// Instance Methods
 	///
+
+	/**
+	 * @method fieldNew()
+	 *
+	 * return an instance of a new (unsaved) ABField that is tied to this
+	 * ABObject.
+	 *
+	 * NOTE: this new field is not included in our this.fields until a .save()
+	 * is performed on the field.
+	 *
+	 * @param {obj} values  the initial values for this field.  
+	 *						{ key:'{string}'} is required 
+	 * @return {ABField}
+	 */
+	fieldNew ( values ) {
+		// NOTE: ABFieldManager returns the proper ABFieldXXXX instance.
+		return ABFieldManager.newField( values, this );
+	}
+
 
 
 	/// ABApplication data methods
@@ -253,15 +272,12 @@ export default class ABObject extends ABObjectBase {
 	}
 
 
-
-
 	///
 	/// DB Migrations
 	///
 
 	migrateCreate() {
-		var url = '/app_builder/migrate/application/#appID#/object/#objID#'
-			.replace('#appID#', this.application.id)
+		var url = '/app_builder/migrate/object/#objID#'
 			.replace('#objID#', this.id);
 
 		return OP.Comm.Service.post({
@@ -271,8 +287,7 @@ export default class ABObject extends ABObjectBase {
 
 
 	migrateDrop() {
-		var url = '/app_builder/migrate/application/#appID#/object/#objID#'
-			.replace('#appID#', this.application.id)
+		var url = '/app_builder/migrate/object/#objID#'
 			.replace('#objID#', this.id);
 
 		return OP.Comm.Service['delete']({

@@ -27,7 +27,7 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 				(resolve, reject) => {
 
 					OP.Comm.Service.put({
-						url: '/app_builder/application/' + appId + '/object',
+						url: `/app_builder/object?appID=${appId}`,
 						data: {
 							object: object
 						}
@@ -48,7 +48,7 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 				(resolve, reject) => {
 
 					OP.Comm.Service.delete({
-						url: '/app_builder/application/' + appId + '/object/' + objectId
+						url: `/app_builder/object/${objectId}`
 					}, function (err, result) {
 						if (err)
 							reject(err);

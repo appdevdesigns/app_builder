@@ -9,8 +9,6 @@ import ABViewManager from "./ABViewManager"
 import ABViewPage from "./views/ABViewPage"
 import ABViewReportPage from "./views/ABViewReportPage"
 import ABViewReport from "./views/ABViewReport"
-import ABFieldManager from "./ABFieldManager"
-
 
 var _AllApplications = [];
 
@@ -450,6 +448,7 @@ export default class ABApplication extends ABApplicationBase {
 			this._objects.push(object);
 		}
 
+		// update
 		return this.Model.staticData.objectSave(this.id, object.toObj())
 			.then(() => {
 				// TODO : Should update _AllApplications in 
@@ -457,6 +456,7 @@ export default class ABApplication extends ABApplicationBase {
 			.catch(()=>{
 				console.error('!!! error with .ABApplication.objectSave()');
 			});
+
 	}
 
 
@@ -464,25 +464,6 @@ export default class ABApplication extends ABApplicationBase {
 	/// Fields
 	/// 
 
-
-	/**
-	 * @method fieldNew()
-	 *
-	 * return an instance of a new (unsaved) ABField that is tied to this
-	 * ABObject.
-	 *
-	 * NOTE: this new field is not included in our this.fields until a .save()
-	 * is performed on the field.
-	 *
-	 * @param {obj} values  the initial values for this field.  
-	 *						{ key:'{string}'} is required 
-	 * @param {ABObject} parent  the parent object this field belongs to.
-	 * @return {ABField}
-	 */
-	fieldNew ( values, parent ) {
-		// NOTE: ABFieldManager returns the proper ABFieldXXXX instance.
-		return ABFieldManager.newField( values, parent );
-	}
 
 
 	///
