@@ -27,7 +27,8 @@ module.exports = {
 
         objects: {
             collection: 'ABObject',
-            via: 'applications'
+            via: 'applications',
+            through: 'abapplicationabobject'
         },
 
         name: {
@@ -80,7 +81,9 @@ module.exports = {
 
         toValidJsonFormat: function() {
 
-            this.json.objects = (this.objects || []).map(obj => obj.json);
+            let objects = this.objects;
+
+            this.json.objects = (objects || []).map(obj => obj.toValidJsonFormat(objects).json);
 
             return this;
 

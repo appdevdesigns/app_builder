@@ -24,7 +24,8 @@ module.exports = {
 
 		applications: {
 			collection: 'ABApplication',
-			via: 'objects'
+			via: 'objects',
+			through: 'abapplicationabobject'
 		},
 
 		_Klass: function () {
@@ -34,6 +35,26 @@ module.exports = {
 		toABClass: function () {
 
 			return new ABClassObject(this);
+
+		},
+
+		toValidJsonFormat: function (objects) {
+
+			// remove connected fields that does not link to objects in application
+			this.json.fields = this.json.fields.filter(f => {
+
+				if (f.key == 'connectObject' &&
+					f.settings &&
+					!objects.filter(o => o.id == f.settings.linkObject).length) {
+					return false;
+				}
+				else {
+					return true;
+				}
+
+			});
+
+			return this;
 
 		}
 

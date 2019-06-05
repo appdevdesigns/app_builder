@@ -459,6 +459,30 @@ export default class ABApplication extends ABApplicationBase {
 
 	}
 
+	objectOther() {
+
+		return OP.Comm.Service.get({
+			url: `/app_builder/application/${this.id}/otherobjects`
+		});
+
+	}
+
+	objectImport(objectId) {
+
+		return OP.Comm.Service.put({
+			url: `/app_builder/application/${this.id}/importObject/${objectId}`
+		});
+
+	}
+
+	objectExclude(objectId) {
+
+		return OP.Comm.Service.put({
+			url: `/app_builder/application/${this.id}/excludeObject/${objectId}`
+		});
+
+	}
+
 
 	///
 	/// Fields

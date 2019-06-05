@@ -346,7 +346,6 @@ export default class ABModel {
 			(resolve, reject) => {
 
 				OP.Comm.Socket.get({
-				// OP.Comm.Service.get({
 					url: this.object.urlRest(),
 					params: cond
 					// params: newCond
@@ -832,7 +831,8 @@ reject(err);
 
 				// set .id to relation columns
 				let objectLink = c.datasourceLink;
-				if (objectLink.PK() != 'id' &&
+				if (objectLink &&
+					objectLink.PK() != 'id' &&
 					d[relationName] &&
 					!d[relationName].id) {
 

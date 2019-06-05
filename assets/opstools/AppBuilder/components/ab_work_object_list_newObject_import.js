@@ -71,9 +71,7 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
                 currentApp = app;
                 _logic.formClear();
                 _logic.busyStart();
-                OP.Comm.Service.get({
-                    url: '/app_builder/application/' + app.id + '/findModels'
-                })
+                currentApp.objectOther()
                     .then((list) => {
 
 
@@ -209,29 +207,31 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
                 saveButton.disable();
                 _logic.busyStart();
 
-                var columns = $$(ids.columnList)
-                    .data
-                    .find({})
-                    .map((col) => {
-                        return {
-                            id: col.id,
-                            isHidden: !col.isvisible
-                        };
-                    });
+                // var columns = $$(ids.columnList)
+                //     .data
+                //     .find({})
+                //     .map((col) => {
+                //         return {
+                //             id: col.id,
+                //             isHidden: !col.isvisible
+                //         };
+                //     });
 
-                OP.Comm.Service.post({
-                    url: '/app_builder/application/' + currentApp.id + '/importModel',
-                    data: {
-                        sourceAppId: selectedObj.application.id,
-                        objectId: selectedObj.id,
-                        columns: columns
-                    }
-                })
+                // OP.Comm.Service.post({
+                //     url: '/app_builder/application/' + currentApp.id + '/importModel',
+                //     data: {
+                //         sourceAppId: selectedObj.application.id,
+                //         objectId: selectedObj.id,
+                //         columns: columns
+                //     }
+                // })
+                currentApp.objectImport(selectedObj.id)
                     .then((objValues) => {
                         saveButton.enable();
                         _logic.busyEnd();
 
                         var newObj = new ABObject(objValues, currentApp);
+                        currentApp._objects.push(newObj);
 
                         _logic.callbacks.onDone(newObj);
                     })

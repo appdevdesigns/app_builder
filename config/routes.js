@@ -19,6 +19,9 @@ module.exports = {
         'app_builder/ABApplicationController.applicationSave',
 
     /* Application Objects */
+    'get /app_builder/application/:appID/otherobjects':
+        'app_builder/ABObjectController.objectOther',
+
     'put /app_builder/object':
         'app_builder/ABObjectController.objectSave',
 
@@ -67,16 +70,21 @@ module.exports = {
     /* Import & Export */
     'get /app_builder/appJSON/:id':
         'app_builder/ABApplicationController.jsonExport',
-        
+
     'post /app_builder/appJSON':
         'app_builder/ABApplicationController.jsonImport',
+
+    'put /app_builder/application/:appID/importObject/:objID':
+        'app_builder/ABObjectController.importObject',
+
+    'put /app_builder/application/:appID/excludeObject/:objID':
+        'app_builder/ABObjectController.excludeObject',
+
+    // 'get /app_builder/application/:appID/findModels':
+    //     'app_builder/ABApplicationController.findModels',
     
-    'get /app_builder/application/:appID/findModels':
-        'app_builder/ABApplicationController.findModels',
-    
-    'post /app_builder/application/:appID/importModel':
-        'app_builder/ABApplicationController.importModel',
-    
+    // 'post /app_builder/application/:appID/importModel':
+    //     'app_builder/ABApplicationController.importModel',
 
     /* Migration Services */
     // app_builder/migrate/object/:objID

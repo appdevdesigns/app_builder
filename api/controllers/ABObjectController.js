@@ -19,6 +19,42 @@ module.exports = {
 	},
 
 	/**
+	 * GET /app_builder/application/:appID/otherobjects
+	 * 
+	 */
+	objectOther: function (req, res) {
+
+		let appID = req.param('appID');
+
+		let queryString = [
+			"SELECT `#objTable#`.`json` FROM `#objTable#` ",
+			"INNER JOIN `#joinTable#` ",
+			"ON `#objTable#`.`id` = `#joinTable#`.`object` ",
+			"WHERE `#joinTable#`.`application` != #appID#"
+		].join('')
+			.replace(/#objTable#/g, ABObject.tableName)
+			.replace(/#joinTable#/g, ABApplicationABObject.tableName)
+			.replace(/#appID#/g, appID);
+
+		ABObject.query(queryString, [],
+
+			(err, objects) => {
+
+				if (err) {
+					console.error(err);
+					return res.AD.error("Could not get other objects");
+				}
+
+				let result = (objects || [])
+					.map(obj => JSON.parse(obj.json));
+
+				res.AD.success(result);
+
+			});
+
+	},
+
+	/**
 	* PUT /app_builder/object?appID=[appId]
 	* 
 	* Add a new object
@@ -46,8 +82,7 @@ module.exports = {
 						})
 						.then(app => {
 
-							if (!app)
-							{
+							if (!app) {
 								res.AD.error("Could not found application");
 								return error(errMessage);
 							}
@@ -148,7 +183,7 @@ module.exports = {
 					// this.objectCache(objClass);
 
 					next();
-	
+
 				});
 
 			})
@@ -186,6 +221,131 @@ module.exports = {
 
 	},
 
+	/**
+	* PUT /app_builder/application/:appID/importObject/:objID
+	* 
+	* Import object to application
+	*/
+	importObject: function (req, res) {
+
+		let appID = req.param('appID'),
+			objID = req.param('objID');
+
+
+		Promise.resolve()
+			// find relation of application and object
+			.then(() => {
+
+				return new Promise((next, err) => {
+
+					ABApplicationABObject.findOne({
+						application: appID,
+						object: objID
+					})
+						.fail(err)
+						.then(result => {
+
+							next(result);
+
+						});
+
+				});
+
+			})
+			.then(exists => {
+
+				return new Promise((next, err) => {
+
+					if (exists)
+						return next();
+
+					ABApplicationABObject.create({
+						application: appID,
+						object: objID
+					})
+						.fail(err)
+						.then(() => {
+
+							next();
+
+						});
+
+				});
+
+			})
+			// get object list of application
+			.then(() => {
+
+				return new Promise((next, err) => {
+
+					ABApplication.findOne({ id: appID })
+						.populate("objects")
+						.fail(err)
+						.then(app => {
+
+							if (app)
+								next(app.objects);
+							else
+								next([]);
+
+						});
+
+				});
+
+			})
+			// return valid object json
+			.then(objectList => {
+
+				return new Promise((next, err) => {
+
+					ABObject.findOne({ id: objID })
+						.fail(err)
+						.then(obj => {
+
+							if (obj) {
+								res.AD.success(obj.toValidJsonFormat(objectList).json);
+								next();
+							}
+							else {
+								err("System could not this object");
+							}
+
+						});
+
+				});
+
+			});
+
+	},
+
+	/**
+	* PUT /app_builder/application/:appID/excludeObject/:objID
+	* 
+	* Exclude object from application
+	*/
+	excludeObject: function (req, res) {
+
+		let appID = req.param('appID'),
+			objID = req.param('objID');
+
+		ABApplicationABObject.destroy({
+			application: appID,
+			object: objID
+		})
+			.fail(err => {
+
+				res.AD.error(err);
+
+			})
+			.then(() => {
+
+				res.AD.success(true);
+
+			});
+
+	},
+
+
 
 	/** Cache **/
 
@@ -194,7 +354,7 @@ module.exports = {
 	 * 
 	 * @param {ABClassObject} object 
 	 */
-	objectCache: function(object) {
+	objectCache: function (object) {
 
 		if (object == null)
 			return;
@@ -210,7 +370,7 @@ module.exports = {
 	 * 
 	 * @return {ABClassObject}
 	 */
-	objectGet: function(id) {
+	objectGet: function (id) {
 
 		return __ObjectPool[id] || null;
 
@@ -221,7 +381,7 @@ module.exports = {
 	 * 
 	 * @param {uuid} id 
 	 */
-	objectRemove: function(id) {
+	objectRemove: function (id) {
 
 		if (id == null)
 			return;
