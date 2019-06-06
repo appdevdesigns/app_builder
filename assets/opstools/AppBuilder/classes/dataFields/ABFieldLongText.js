@@ -254,8 +254,8 @@ class ABFieldLongText extends ABField {
 	///
 
 	// return the grid column header definition for this instance of ABFieldLongText
-	columnHeader(isObjectWorkspace) {
-		var config = super.columnHeader(isObjectWorkspace);
+	columnHeader(options) {
+		var config = super.columnHeader(options);
 
 		config.editor = 'text';  // '[edit_type]'   for your unique situation
 		// config.sort = 'string' // '[sort_type]'   for your unique situation

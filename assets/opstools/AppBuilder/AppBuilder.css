@@ -670,3 +670,12 @@ label {
 .ab-custom-template .webix_template {
 	padding: 10px;
 }
+
+.image-data-field-image {
+	position: relative;
+}
+.ab-delete-photo {
+	position: absolute;
+	top: 0;
+	right: 0;
+}

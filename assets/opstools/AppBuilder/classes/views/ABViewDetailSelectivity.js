@@ -14,6 +14,7 @@ function L(key, altText) {
 
 
 var ABViewDetailPropertyComponentDefaults = {
+	height: 0
 }
 
 
@@ -45,6 +46,20 @@ export default class ABViewDetailSelectivity extends ABViewDetailComponent {
 	///
 	/// Instance Methods
 	///
+
+	/**
+	 * @method fromValues()
+	 *
+	 * initialze this object with the given set of values.
+	 * @param {obj} values
+	 */
+	fromValues(values) {
+
+		super.fromValues(values);
+
+		// convert from "0" => 0
+		this.settings.height = parseInt(this.settings.height || ABViewDetailPropertyComponentDefaults.height);
+	}
 
 	//
 	//	Editor Related
@@ -105,6 +120,12 @@ export default class ABViewDetailSelectivity extends ABViewDetailComponent {
 		// in addition to the common .label  values, we 
 		// ask for:
 		return commonUI.concat([
+			{
+				view: 'counter',
+				name: "height",
+				label: L("ab.components.common.height", "*Height:"),
+				labelWidth: App.config.labelWidthLarge,
+			}
 		]);
 
 	}
@@ -113,11 +134,15 @@ export default class ABViewDetailSelectivity extends ABViewDetailComponent {
 
 		super.propertyEditorPopulate(App, ids, view);
 
+		$$(ids.height).setValue(view.settings.height || ABViewDetailPropertyComponentDefaults.height);
+
 	}
 
 	static propertyEditorValues(ids, view) {
 
 		super.propertyEditorValues(ids, view);
+
+		view.settings.height = $$(ids.height).getValue();
 
 	}
 
@@ -145,6 +170,8 @@ export default class ABViewDetailSelectivity extends ABViewDetailComponent {
 
 		component.ui.id = ids.component;
 
+		if (this.settings.height)
+			component.ui.height = this.settings.height;
 
 		var _init = (options) => {
 

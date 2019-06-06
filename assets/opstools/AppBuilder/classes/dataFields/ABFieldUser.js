@@ -236,8 +236,8 @@ class ABFieldUser extends ABFieldSelectivity {
 	///
 
 	// return the grid column header definition for this instance of ABFieldUser
-	columnHeader(isObjectWorkspace, width, editable) {
-		var config = super.columnHeader(isObjectWorkspace);
+	columnHeader(options) {
+		var config = super.columnHeader(options);
 		var field = this;
 		var App = App;
 
@@ -250,14 +250,14 @@ class ABFieldUser extends ABFieldSelectivity {
 
 				var node = document.createElement("div");
 				node.classList.add("list-data-values");
-				if (typeof width != "undefined") {
-					node.style.marginLeft = width+'px';				
+				if (typeof opitons.width != "undefined") {
+					node.style.marginLeft = opitons.width+'px';				
 				}
 				
 				var domNode = node;
 				
 				var readOnly = false;
-				if (editable != null && editable == false) {
+				if (options.editable != null && options.editable == false) {
 					readOnly = true;
 				}
 
@@ -288,7 +288,7 @@ class ABFieldUser extends ABFieldSelectivity {
 			
 			var formClass = "";
 			var placeHolder = "";
-			if (editable) {
+			if (options.editable) {
 				formClass = " form-entry";
 				placeHolder = "<span style='color: #CCC; padding: 0 5px;'>"+L('ab.dataField.user.placeholder_single', '*Select user')+"</span>";
 			}

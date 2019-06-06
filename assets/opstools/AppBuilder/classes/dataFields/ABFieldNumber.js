@@ -492,8 +492,8 @@ class ABFieldNumber extends ABField {
 	///
 
 	// return the grid column header definition for this instance of ABFieldNumber
-	columnHeader(isObjectWorkspace, includeSumFooter) {
-		var config = super.columnHeader(isObjectWorkspace);
+	columnHeader(options) {
+		var config = super.columnHeader(options);
 
 		config.editor = 'number';		// [edit_type] simple inline editing.
 

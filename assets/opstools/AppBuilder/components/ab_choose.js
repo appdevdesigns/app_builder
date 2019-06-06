@@ -61,7 +61,7 @@ export default class ABChoose extends OP.Component {   // (idBase, function(App)
 				AppList.show();
 			})
 
-			AppList.show();
+			// AppList.show();
 		}
 
 
@@ -81,9 +81,16 @@ export default class ABChoose extends OP.Component {   // (idBase, function(App)
 
 		var _logic = {
 
+			show: () => {
+
+				AppList.show();
+
+			}
+
 		}
 
 		this._logic = _logic;
+		this.show = _logic.show;
 
 	}
 

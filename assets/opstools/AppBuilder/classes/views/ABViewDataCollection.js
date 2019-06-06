@@ -231,6 +231,7 @@ export default class ABViewDataCollection extends ABView {
 
 		var settings = {
 			allowDelete: 0,
+			configureHeaders: false,
 			detailsView: "",
 			editView: "",
 			isEditable: 0,
@@ -572,7 +573,7 @@ export default class ABViewDataCollection extends ABView {
 			return {
 				id: q.id,
 				value: q.label,
-				icon: 'fa fa-cubes',
+				icon: 'fa fa-filter',
 				disabled: q.isDisabled()
 			}
 		});

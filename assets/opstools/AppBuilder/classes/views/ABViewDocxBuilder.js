@@ -6,6 +6,7 @@
  */
 
 import ABViewWidget from "./ABViewWidget"
+import ABObjectQuery from "../ABObjectQuery";
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -298,19 +299,14 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 		let selectedDcId = (view.settings.datacollection ? view.settings.datacollection : null);
 
 		// Pull data collections to options
-		let dcOptions = view.pageRoot().dataCollections(dc => {
+		let dcOptions = view.pageRoot().dataCollections()
+			.map((dc) => {
 
-			let obj = dc.datasource;
-
-			return dc.sourceType == "object" && obj && !obj.isImported;
-
-		}).map((dc) => {
-
-			return {
-				id: dc.id,
-				value: dc.label
-			};
-		});
+				return {
+					id: dc.id,
+					value: dc.label
+				};
+			});
 
 		dcOptions.unshift({
 			id: null,
@@ -468,16 +464,38 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 								currCursor = dc.getCursor();
 
 								// update property names to column labels to match format names in docx file
-								if(currCursor) {
+								if (currCursor) {
 
 									let obj = dc.datasource;
 									if (obj) {
 
 										currCursor = _.clone(currCursor);
 
-										obj.fields().forEach(f => {
-											currCursor[f.label] = currCursor[f.columnName];
-										});
+										// Query Objects
+										if (obj instanceof ABObjectQuery) {
+											obj.fields().forEach(f => {
+
+												// Replace alias with label of object
+												let label = f.columnName.replace(f.alias, f.object.label);
+
+												currCursor[label] = f.format(currCursor);
+
+												if (currCursor[label] == null)
+													currCursor[label] = '';
+
+											});
+										}
+										// Normal Objects
+										else {
+											obj.fields().forEach(f => {
+												currCursor[f.label] = f.format(currCursor);
+
+												if (currCursor[f.label] == null)
+													currCursor[f.label] = '';
+
+											});
+										}
+
 									}
 
 								}

@@ -539,25 +539,29 @@ export default class ABField extends ABFieldBase {
 	/// Working with Actual Object Values:
 	///
 
-	/*
+	/**
 	 * @function columnHeader
 	 * Return the column header for a webix grid component for this specific
 	 * data field.
-	 * @param {bool} isObjectWorkspace is this being used in the Object
-	 *								   workspace.
+	 * @param {Object} options - {
+	 * 							isObjectWorkspace: {bool},  is this being used in the Object workspace.
+	 * 							width: {int},
+	 * 							height: {int},
+	 * 							editable: {bool}
+	 * 						} 
 	 * @return {obj}  configuration obj
 	 */
-	columnHeader (isObjectWorkspace) {
+	columnHeader (options) {
+
+		options = options || {};
 
 		var config = {
 			id: this.columnName, // this.id,
 			header: this.label
 		};
 
-		if (isObjectWorkspace) {
-			if (this.settings.showIcon) {
-				config.header = '<span class="webix_icon fa fa-{icon}"></span>'.replace('{icon}', this.fieldIcon() ) + config.header;
-			}
+		if (options.isObjectWorkspace && this.settings.showIcon) {
+			config.header = '<span class="webix_icon fa fa-{icon}"></span>'.replace('{icon}', this.fieldIcon() ) + config.header;
 		}
 
 		return config;

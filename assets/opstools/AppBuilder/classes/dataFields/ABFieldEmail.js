@@ -202,8 +202,8 @@ class ABFieldEmail extends ABField {
 	///
 
 	// return the grid column header definition for this instance of ABFieldBoolean
-	columnHeader(isObjectWorkspace) {
-		var config = super.columnHeader(isObjectWorkspace);
+	columnHeader(options) {
+		var config = super.columnHeader(options);
 
 		config.editor = 'text';
 

@@ -180,7 +180,7 @@ export default class AB_Work_Interface_Workspace_Editor_Data extends OP.Componen
 				let icon = dataCollection.icon;
 
 				if (dataCollection.settings.isQuery)
-					icon = "cubes";
+					icon = "filter";
 
 				return _template
 					.replace('#objID#', dataCollection.id)

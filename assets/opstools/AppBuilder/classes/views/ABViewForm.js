@@ -277,13 +277,21 @@ export default class ABViewForm extends ABViewContainer {
 				var formView = currView.parentFormComponent();
 				var fieldView = formView.fieldComponents().filter(c => c.settings.fieldId == fieldId)[0];
 
-				if (fieldView)
-					fieldView.destroy();
+				if (fieldView) {
+
+					let remainingViews = formView.views(c => c.settings.fieldId != fieldId);
+					formView._views = remainingViews;
+
+					// fieldView.destroy();
+				}
 
 			}
 
 			// trigger a save()
-			this.propertyEditorSave(ids, currView);
+			// this.propertyEditorSave(ids, currView);
+
+			// Call REST API to server in ABViewContainer
+			currView.emit('properties.updated', currView);
 
 		};
 

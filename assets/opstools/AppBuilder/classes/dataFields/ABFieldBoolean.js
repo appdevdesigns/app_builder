@@ -183,8 +183,11 @@ class ABFieldBoolean extends ABField {
 	///
 
 	// return the grid column header definition for this instance of ABFieldBoolean
-	columnHeader(isObjectWorkspace, width, isEditable) {
-		var config = super.columnHeader(isObjectWorkspace);
+	columnHeader(options) {
+
+		options = options || {};
+
+		var config = super.columnHeader(options);
 
 		config.editor = 'template';
 		config.css = 'center';
@@ -195,7 +198,7 @@ class ABFieldBoolean extends ABField {
 				return row[this.columnName];
 
 			// editable
-			if (isEditable) {
+			if (options.editable) {
 				return '<div class="ab-boolean-display">' + common.checkbox(row, common, value, config) + '</div>';
 			}
 

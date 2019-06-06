@@ -337,7 +337,9 @@ describe("ABField unit tests", () => {
 			target.settings.showIcon = true;
 
 			let isObjectWorkspace = true;
-			let result = target.columnHeader(isObjectWorkspace);
+			let result = target.columnHeader({
+				isObjectWorkspace: isObjectWorkspace
+			});
 
 			assert.equal(target.columnName, result.id);
 			assert.equal(`<span class="webix_icon fa fa-${target.fieldIcon()}"></span>${target.label}`, result.header);
@@ -349,7 +351,9 @@ describe("ABField unit tests", () => {
 			target.settings.showIcon = false;
 
 			let isObjectWorkspace = true;
-			let result = target.columnHeader(isObjectWorkspace);
+			let result = target.columnHeader({
+				isObjectWorkspace: isObjectWorkspace
+			});
 
 			assert.equal(target.columnName, result.id);
 			assert.equal(target.label, result.header);
