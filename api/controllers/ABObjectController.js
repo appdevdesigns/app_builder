@@ -19,6 +19,62 @@ module.exports = {
 	},
 
 	/**
+	* GET /app_builder/application/:appID/object/:objectId
+	* 
+	* Get a object
+	*/
+	objectFindone: function (req, res) {
+
+		let appID = req.param('appID');
+		let objectId = req.param('objectId');
+
+		Promise.resolve()
+			.then(() => {
+
+				return new Promise((next, err) => {
+
+					ABApplication.findOne(appID)
+						.populate("objects")
+						.fail(error => {
+							err(error);
+							res.AD.error(`System cound not found this application: ${appID}`);
+						})
+						.then(app => {
+
+							app = app.toValidJsonFormat();
+
+							next(app.json.objects);
+
+						});
+
+				});
+
+			})
+			.then(objects => {
+
+				return new Promise((next, err) => {
+
+					ABObject.findOne({ id: objectId })
+					.fail(error => {
+						err(error);
+						res.AD.error(error);
+					})
+					.then(object => {
+
+						let result = object.toValidJsonFormat(objects).json;
+
+						res.AD.success(result);
+						next();
+
+					});
+
+				});
+
+			});
+
+	},
+
+	/**
 	 * GET /app_builder/application/:appID/otherobjects
 	 * 
 	 */
@@ -27,10 +83,12 @@ module.exports = {
 		let appID = req.param('appID');
 
 		let queryString = [
-			"SELECT `#objTable#`.`json` FROM `#objTable#` ",
-			"INNER JOIN `#joinTable#` ",
-			"ON `#objTable#`.`id` = `#joinTable#`.`object` ",
-			"WHERE `#joinTable#`.`application` != #appID#"
+			"SELECT `#objTable#`.`json` ",
+			"FROM `#objTable#` ",
+			"WHERE `#objTable#`.`id` NOT IN ( ",
+			"	SELECT `object` FROM `#joinTable#` ",
+			"	WHERE `#joinTable#`.`application` = #appID# ",
+			")"
 		].join('')
 			.replace(/#objTable#/g, ABObject.tableName)
 			.replace(/#joinTable#/g, ABApplicationABObject.tableName)
@@ -46,7 +104,9 @@ module.exports = {
 				}
 
 				let result = (objects || [])
-					.map(obj => JSON.parse(obj.json));
+					.map(obj => {
+						return JSON.parse(obj.json);
+					});
 
 				res.AD.success(result);
 

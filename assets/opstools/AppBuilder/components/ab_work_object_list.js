@@ -529,10 +529,13 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 					return;
 				}
 
-				if (objectList.exists(object.id))
-					objectList.updateItem(object.id, object);
-				else
-					objectList.add(object);
+				let objects = CurrentApplication.objects();
+				objectList.parse(objects);
+
+				// if (objectList.exists(object.id))
+				// 	objectList.updateItem(object.id, object);
+				// else
+				// 	objectList.add(object);
 
 				if (selectNew != null && selectNew == true) {
 					$$(ids.list).select(object.id);
@@ -551,6 +554,24 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 			clickNewObject:function(selectNew, callback) {
 				// show the new popup
 				PopupNewObjectComponent.show(selectNew, callback);
+			},
+
+			exclude: function() {
+				var objectId = $$(ids.list).getSelectedId(false);
+
+				_logic.listBusy();
+
+				CurrentApplication.objectExclude(objectId)
+					.then(() => {
+
+						objectList.remove(objectId);
+
+						_logic.listReady();
+
+						// clear object workspace
+						_logic.callbacks.onChange(null);
+					});
+
 			},
 
 			rename: function () {
@@ -590,6 +611,9 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 				switch (action) {
 					case 'rename':
 						_logic.rename();
+						break;
+					case 'exclude':
+						_logic.exclude();
 						break;
 					case 'delete':
 						_logic.remove();

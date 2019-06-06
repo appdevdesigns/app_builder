@@ -439,6 +439,12 @@ msgstr "Object Menu"
 
 #. path: app_builder
 #. code: en
+#. key: ab.object.exclude
+msgid "Exclude"
+msgstr "Exclude"
+
+#. path: app_builder
+#. code: en
 #. key: ab.object.form.placeholderName
 msgid "Object name"
 msgstr "Object name"

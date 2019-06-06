@@ -469,16 +469,108 @@ export default class ABApplication extends ABApplicationBase {
 
 	objectImport(objectId) {
 
-		return OP.Comm.Service.put({
-			url: `/app_builder/application/${this.id}/importObject/${objectId}`
+		return new Promise((resolve, reject) => {
+
+			OP.Comm.Service.put({
+				url: `/app_builder/application/${this.id}/importObject/${objectId}`
+			})
+			.catch(reject)
+			.then(newObj => {
+
+				let refreshTasks = [];
+
+				// add connect field to exist objects
+				(newObj.fields || []).forEach(f => {
+
+					if (f.key == 'connectObject') {
+
+						let linkObject = this.objects(obj => obj.id == f.settings.linkObject)[0];
+						if (linkObject) {
+							refreshTasks.push(this.objectRefresh(linkObject.id));
+						}
+
+					}
+
+				});
+
+				Promise.all(refreshTasks)
+					.catch(reject)
+					.then(() => {
+
+						resolve(newObj);
+
+					});
+
+			});
+
 		});
 
 	}
 
 	objectExclude(objectId) {
 
-		return OP.Comm.Service.put({
-			url: `/app_builder/application/${this.id}/excludeObject/${objectId}`
+		return new Promise((resolve, reject) => {
+
+			OP.Comm.Service.put({
+				url: `/app_builder/application/${this.id}/excludeObject/${objectId}`
+			})
+			.catch(reject)
+			.then(() => {
+
+				// exclude object from application
+				let remainObjects = this.objects(o => o.id != objectId);
+				this._objects = remainObjects;
+
+				// exclude conected fields who link to this object
+				this.objects().forEach(obj => {
+
+					let remainFields = obj.fields(f => {
+
+						if (f.key == 'connectObject' &&
+							f.settings &&
+							f.settings.linkObject == objectId) {
+							return false;
+						}
+						else {
+							return true;
+						}
+
+					});
+					obj._fields = remainFields;
+
+				});
+
+
+				resolve();
+
+			});
+
+		});
+
+	}
+
+	objectRefresh(objectId) {
+
+		return new Promise((resolve, reject) => {
+
+			OP.Comm.Service.get({
+				url: `/app_builder/application/${this.id}/object/${objectId}`
+			})
+			.catch(reject)
+			.then(object => {
+
+				this.objects().forEach((obj, index) => {
+
+					if (obj.id == objectId) {
+						this._objects[index] = new ABObject(object, this);
+					}
+
+				});
+
+				resolve();
+
+			});
+
 		});
 
 	}

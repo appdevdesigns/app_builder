@@ -19,6 +19,9 @@ module.exports = {
         'app_builder/ABApplicationController.applicationSave',
 
     /* Application Objects */
+    'get /app_builder/application/:appID/object/:objectId':
+        'app_builder/ABObjectController.objectFindone',
+
     'get /app_builder/application/:appID/otherobjects':
         'app_builder/ABObjectController.objectOther',
 

@@ -34,7 +34,7 @@ module.exports = {
 
         ABApplication.find(cond)
             .populate("objects")
-            .catch(err => {
+            .fail(err => {
                 res.AD.error(err);
             })
             .then(apps => {
@@ -59,7 +59,7 @@ module.exports = {
 
         ABApplication.findOne(appID)
             .populate("objects")
-            .catch(() => {
+            .fail(() => {
                 res.AD.error(`System cound not found this application: ${appID}`);
             })
             .then(app => {

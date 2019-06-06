@@ -155,6 +155,7 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
                                 id: f.id,
                                 label: f.label,
                                 isvisible: true,
+                                icon: f.icon
                                 // disabled: !supported
                             });
 
@@ -324,9 +325,13 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
                         },
                         template: (obj, common) => {
 
+                            // return `
+                            //     <span style="float: left;">${common.isvisible(obj, common)}</span>
+                            //     <span style="float: left;">${obj.label}</span>
+                            // `;
                             return `
-                                <span style="float: left;">${common.isvisible(obj, common)}</span>
-                                <span style="float: left;">${obj.label}</span>
+                                <span style="float: left;"><i class="fa fa-${obj.icon}"></i></span>
+                                <span style="float: left;"> ${obj.label}</span>
                             `;
 
                         }

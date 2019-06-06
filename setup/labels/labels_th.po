@@ -439,6 +439,12 @@ msgstr "Object Menu"
 
 #. path: app_builder
 #. code: th
+#. key: ab.object.exclude
+msgid "Exclude"
+msgstr "นำออก"
+
+#. path: app_builder
+#. code: th
 #. key: ab.object.form.placeholderName
 msgid "Object name"
 msgstr "ชื่อที่เก็บข้อมูล"

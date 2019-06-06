@@ -141,7 +141,8 @@ export default class AB_Work_Interface_List extends OP.Component {
 			});
 
 			PopupEditPageComponent.init({
-				onClick: _logic.callbackPageEditMenu
+				onClick: _logic.callbackPageEditMenu,
+				hideExclude: true
 			})
 		}
 
