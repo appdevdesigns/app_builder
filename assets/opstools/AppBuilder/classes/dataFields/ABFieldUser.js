@@ -44,13 +44,17 @@ var ABFieldUserDefaults = {
 var defaultValues = {
 	editable: 1,
 	isMultiple: 0,
-	isCurrentUser: 0
+	isCurrentUser: 0,
+	isShowProfileImage: 0,
+	isShowUsername: 1
 };
 
 var ids = {
 	editable: "ab-user-editable",
 	isMultiple: "ab-user-multiple-option",
-	isCurrentUser: "ab-user-current-user-option"
+	isCurrentUser: "ab-user-current-user-option",
+	isShowProfileImage: "ab-user-show-profile-image-option",
+	isShowUsername: "ab-user-show-username-option"
 }
 
 /**
@@ -99,6 +103,20 @@ var ABFieldUserComponent = new ABFieldComponent({
 				hidden: true,
 				id: ids.editable,
 				labelRight: L('ab.dataField.user.editableLabel', '*Editable'),
+				labelWidth: App.config.labelWidthCheckbox
+			},
+			{
+				view: 'checkbox',
+				name: 'isShowProfileImage',
+				id: ids.isShowProfileImage,
+				labelRight: L('ab.dataField.user.isShowProfileImage', '*Show Profile Image'),
+				labelWidth: App.config.labelWidthCheckbox
+			},
+			{
+				view: 'checkbox',
+				name: 'isShowUsername',
+				id: ids.isShowUsername,
+				labelRight: L('ab.dataField.user.showUsername', '*Show Username'),
 				labelWidth: App.config.labelWidthCheckbox
 			}
 		]
@@ -171,6 +189,8 @@ class ABFieldUser extends ABFieldSelectivity {
 		this.settings.editable = parseInt(this.settings.editable);
 		this.settings.isMultiple = parseInt(this.settings.isMultiple);
 		this.settings.isCurrentUser = parseInt(this.settings.isCurrentUser);
+		this.settings.isShowProfileImage = parseInt(this.settings.isShowProfileImage);
+		this.settings.isShowUsername = parseInt(this.settings.isShowUsername);
 
 	}
 
@@ -280,17 +300,25 @@ class ABFieldUser extends ABFieldSelectivity {
 
 				var myHex = "#666666";
 				var myText = placeHolder;
+				var imageId = '';
 				var users = field.getUsers();
 
 				users.forEach(function(h) {
 					if (h.id == obj[field.columnName]) {
 						myText = h.value;
+						imageId = h.image;
 					}
 				});
 				if (obj[field.columnName]) {
-					var removeIcon = options.editable ? '<a class="selectivity-multiple-selected-item-remove" style="color: #333;"><i class="fa fa-remove"></i></a>' : '';
-
-					return '<span class="selectivity-multiple-selected-item rendered" style="background-color:#eee !important; color: #666 !important; box-shadow: inset 0px 1px 1px #333;"><i style="opacity: 0.6;" class="fa fa-user"></i> '+myText+ removeIcon + ' </span>';
+					var removeIcon = editable ? '<a class="selectivity-multiple-selected-item-remove" style="color: #333;"><i class="fa fa-remove"></i></a>' : '';
+					var profileImage = '<i style="opacity: 0.6;" class="fa fa-user"></i>';
+					if(field.settings.isShowProfileImage && imageId) {
+						profileImage = "<img src='/opsportal/image/UserProfile/" + imageId + "' style='border-radius:3px; margin:3px;' width=28 height=28 />";
+					}
+					if(!field.settings.isShowUsername) {
+						myText = "";
+					}
+					return '<span class="selectivity-multiple-selected-item rendered" style="background-color:#eee !important; color: #666 !important; box-shadow: inset 0px 1px 1px #333;">'+ profileImage + myText + removeIcon + ' </span>';
 				} else {
 					return myText;
 				}
@@ -575,7 +603,8 @@ class ABFieldUser extends ABFieldSelectivity {
 
 		return OP.User.userlist().map((u) => {
 			var result = {
-				id: u.username
+				id: u.username,
+				image: u.image_id
 			};
 
 			if (this.settings.isMultiple) {
