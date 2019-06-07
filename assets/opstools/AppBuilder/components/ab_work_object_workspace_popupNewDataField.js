@@ -432,10 +432,26 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
                                             if (!_editField) {
                                                 Promise.resolve()
                                                     .then(() => {
-                                                        return field.migrateCreate();
+
+                                                        return new Promise((next, err) => {
+
+                                                            field.migrateCreate()
+                                                                .catch(err)
+                                                                .then(() => next());
+
+                                                        });
+
                                                     })
                                                     .then(() => {
-                                                        return linkCol.migrateCreate();
+
+                                                        return new Promise((next, err) => {
+
+                                                            linkCol.migrateCreate()
+                                                                .catch(err)
+                                                                .then(() => next());
+
+                                                        });
+
                                                     })
                                                     .then(() => {
 
@@ -747,3 +763,4 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
     }
 
 }
+
