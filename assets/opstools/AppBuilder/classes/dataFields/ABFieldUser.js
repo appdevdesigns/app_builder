@@ -244,6 +244,9 @@ class ABFieldUser extends ABFieldSelectivity {
 		var field = this;
 		var App = App;
 
+		var editable = options.editable;
+		var width = options.width;
+
 		// Multiple select list
 		if (field.settings.isMultiple) {
 			config.template = (row) => {
@@ -253,14 +256,14 @@ class ABFieldUser extends ABFieldSelectivity {
 
 				var node = document.createElement("div");
 				node.classList.add("list-data-values");
-				if (typeof opitons.width != "undefined") {
-					node.style.marginLeft = opitons.width+'px';
+				if (typeof width != "undefined") {
+					node.style.marginLeft = width+'px';
 				}
 				
 				var domNode = node;
 				
 				var readOnly = false;
-				if (options.editable != null && options.editable == false) {
+				if (editable != null && editable == false) {
 					readOnly = true;
 				}
 
@@ -291,7 +294,7 @@ class ABFieldUser extends ABFieldSelectivity {
 			
 			var formClass = "";
 			var placeHolder = "";
-			if (options.editable) {
+			if (editable) {
 				formClass = " form-entry";
 				placeHolder = "<span style='color: #CCC; padding: 0 5px;'>"+L('ab.dataField.user.placeholder_single', '*Select user')+"</span>";
 			}
@@ -313,7 +316,7 @@ class ABFieldUser extends ABFieldSelectivity {
 					}
 				});
 				if (obj[field.columnName]) {
-					var removeIcon = options.editable ? '<a class="selectivity-multiple-selected-item-remove" style="color: #333;"><i class="fa fa-remove"></i></a>' : '';
+					var removeIcon = editable ? '<a class="selectivity-multiple-selected-item-remove" style="color: #333;"><i class="fa fa-remove"></i></a>' : '';
 					var profileImage = '<i style="opacity: 0.6;" class="fa fa-user"></i>';
 					if(field.settings.isShowProfileImage && imageId) {
 						profileImage = "<img src='/opsportal/image/UserProfile/" + imageId + "' style='border-radius:3px; margin:3px;' width=28 height=28 />";

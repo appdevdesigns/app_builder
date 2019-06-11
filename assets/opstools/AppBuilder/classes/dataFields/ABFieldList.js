@@ -667,20 +667,23 @@ class ABFieldList extends ABFieldSelectivity {
 
 		// Multiple select list
 		if (this.settings.isMultiple == true) {
-			
+
+			var width = options.width,
+				editable = options.editable;
+
 			config.template = (row) => {
 
 				var node = document.createElement("div");
 				node.classList.add("list-data-values");
-				if (typeof options.width != "undefined") {
-					node.style.marginLeft = options.width+'px';
+				if (typeof width != "undefined") {
+					node.style.marginLeft = width + 'px';
 				}
 				
 				var domNode = node;
 
 				var placeholder = L('ab.dataField.list.placeholder_multiple', '*Select items');
 				var readOnly = false;
-				if (options.editable != null && options.editable == false) {
+				if (editable != null && editable == false) {
 					readOnly = true;
 					placeholder = "";
 				}

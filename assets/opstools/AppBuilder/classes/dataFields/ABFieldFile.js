@@ -285,6 +285,8 @@ class ABFieldFile extends ABField {
 
 		config.editor = false; 
 
+		var editable = options.editable;
+
 		// populate our default template:
 		config.template = (obj) => {
 
@@ -295,7 +297,7 @@ class ABFieldFile extends ABField {
 				'<div class="ab-file-data-field" style="float: left;">',
 				'<div class="webix_view ab-file-holder">',
 				'<div class="webix_template">',
-				this.fileTemplate(obj, options.editable),
+				this.fileTemplate(obj, editable),
 				'</div>',
 				'</div>',
 				'</div>'

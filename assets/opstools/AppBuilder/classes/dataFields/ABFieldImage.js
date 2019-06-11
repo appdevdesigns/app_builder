@@ -509,6 +509,8 @@ OP.Dialog.Alert({
 			width = options.width + "px";
 		}
 
+		var editable = options.editable;
+
 		// populate our default template:
 		config.template = (obj) => {
 
@@ -524,7 +526,7 @@ OP.Dialog.Alert({
 				'<div class="webix_view ab-image-holder" style="#useWidth#">'.replace('#useWidth#', widthStyle),
 				'<div class="webix_template">',
 				this.imageTemplate(obj, {
-					editable: options.editable,
+					editable: editable,
 					height: height,
 					width: width
 				}),
