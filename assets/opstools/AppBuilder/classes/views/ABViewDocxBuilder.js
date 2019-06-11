@@ -7,6 +7,7 @@
 
 import ABViewWidget from "./ABViewWidget"
 import ABObjectQuery from "../ABObjectQuery";
+import ABFieldConnect from "../dataFields/ABFieldConnect";
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -471,6 +472,28 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 
 										currCursor = _.clone(currCursor);
 
+										let normalizeCursor = (field, label) => {
+
+											if (field instanceof ABFieldConnect) {
+
+												// If field is connected field, then 
+												// {
+												//		fieldName: {Object} or [Array]
+												//		fieldName_label: "Value1, Value2"
+												// }
+
+												currCursor[label] = currCursor[label];
+												currCursor[label + '_label'] = field.format(currCursor);
+											}
+											else {
+												currCursor[label] = field.format(currCursor);
+											}
+
+											if (currCursor[label] == null)
+												currCursor[label] = '';
+
+										};
+
 										// Query Objects
 										if (obj instanceof ABObjectQuery) {
 											obj.fields().forEach(f => {
@@ -478,20 +501,15 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 												// Replace alias with label of object
 												let label = f.columnName.replace(f.alias, f.object.label);
 
-												currCursor[label] = f.format(currCursor);
-
-												if (currCursor[label] == null)
-													currCursor[label] = '';
+												normalizeCursor(f, label);
 
 											});
 										}
 										// Normal Objects
 										else {
 											obj.fields().forEach(f => {
-												currCursor[f.label] = f.format(currCursor);
 
-												if (currCursor[f.label] == null)
-													currCursor[f.label] = '';
+												normalizeCursor(f, f.label);
 
 											});
 										}
@@ -504,6 +522,7 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 								}
 							}
 
+console.log("DOCX data: ", currCursor);
 							doc.setData(currCursor);
 
 							try {
