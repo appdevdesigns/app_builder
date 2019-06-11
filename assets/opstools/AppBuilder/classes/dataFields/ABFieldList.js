@@ -1020,7 +1020,7 @@ class ABFieldList extends ABFieldSelectivity {
 			val = [val];
 
 		var displayOpts = this.settings.options
-							.filter(opt => val.filter(v => v == opt.id).length > 0)
+							.filter(opt => val.filter(v => (v.id || v) == opt.id).length > 0)
 							.map(opt => opt.text);
 
 		return displayOpts.join(', ');
