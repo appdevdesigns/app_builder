@@ -668,7 +668,7 @@ class ABFieldList extends ABFieldSelectivity {
 		// Multiple select list
 		if (this.settings.isMultiple == true) {
 			
-			config.template = function(row) {
+			config.template = (row) => {
 
 				var node = document.createElement("div");
 				node.classList.add("list-data-values");
@@ -723,10 +723,10 @@ class ABFieldList extends ABFieldSelectivity {
 			}
 			var isRemovable = (options.editable && !this.settings.required);
 			
-			config.template = function(obj) {
+			config.template = (obj) => {
 				var myHex = "#666666";
 				var myText = placeHolder;
-				field.settings.options.forEach(function(h) {
+				field.settings.options.forEach((h) => {
 					if (h.id == obj[field.columnName]) {
 						myHex = h.hex;
 						myText = h.text;

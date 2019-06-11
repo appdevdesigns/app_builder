@@ -479,7 +479,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 		var field = this;
 		var App = App;
 
-		config.template = function (row) {
+		config.template = (row) => {
 
 			if (row.$group)
 				return row[field.columnName];

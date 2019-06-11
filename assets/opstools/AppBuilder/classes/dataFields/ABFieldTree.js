@@ -340,7 +340,7 @@ class ABFieldTree extends ABField {
     }
 
     
-    config.template = function (obj) {
+    config.template = (obj) => {
 
         if (obj.$group)
           return obj[field.columnName];

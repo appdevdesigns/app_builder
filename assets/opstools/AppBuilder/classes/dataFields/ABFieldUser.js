@@ -246,7 +246,7 @@ class ABFieldUser extends ABFieldSelectivity {
 
 		// Multiple select list
 		if (field.settings.isMultiple) {
-			config.template = function(row) {
+			config.template = (row) => {
 
 				if (row.$group)
 					return row[field.columnName];
@@ -254,7 +254,7 @@ class ABFieldUser extends ABFieldSelectivity {
 				var node = document.createElement("div");
 				node.classList.add("list-data-values");
 				if (typeof opitons.width != "undefined") {
-					node.style.marginLeft = opitons.width+'px';				
+					node.style.marginLeft = opitons.width+'px';
 				}
 				
 				var domNode = node;
@@ -296,7 +296,7 @@ class ABFieldUser extends ABFieldSelectivity {
 				placeHolder = "<span style='color: #CCC; padding: 0 5px;'>"+L('ab.dataField.user.placeholder_single', '*Select user')+"</span>";
 			}
 			
-			config.template = function(obj) {
+			config.template = (obj) => {
 
 				if (obj.$group)
 					return obj[field.columnName];
@@ -306,7 +306,7 @@ class ABFieldUser extends ABFieldSelectivity {
 				var imageId = '';
 				var users = field.getUsers();
 
-				users.forEach(function(h) {
+				users.forEach((h) => {
 					if (h.id == obj[field.columnName]) {
 						myText = h.value;
 						imageId = h.image;
