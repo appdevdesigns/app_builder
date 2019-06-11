@@ -1007,6 +1007,14 @@ class ABFieldList extends ABFieldSelectivity {
 
 		var val = this.dataValue(rowData) || [];
 
+		if (typeof val == "string") {
+			try {
+				val = JSON.parse(val);
+			}
+			catch (e) {
+			}
+		}
+
 		// Convert to array
 		if (!Array.isArray(val))
 			val = [val];
