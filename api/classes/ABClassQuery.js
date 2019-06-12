@@ -14,10 +14,10 @@ var PolicyList = [
 	require(path.join(__dirname, '..', 'policies', 'ABModelConvertQueryFieldConditions'))
 ]
 
-module.exports = class ABObjectQuery extends ABClassObject {
+module.exports = class ABClassQuery extends ABClassObject {
 
-	constructor(attributes, application) {
-		super(attributes, application);
+	constructor(attributes) {
+		super(attributes);
 
 		/*
 		{
@@ -410,8 +410,8 @@ module.exports = class ABObjectQuery extends ABClassObject {
 	 * @return {Promise}
 	 */
 	migrateCreate(knex) {
-		sails.log.verbose('ABObjectQuery.migrateCreate()');
-		sails.log.debug('ABObjectQuery.migrateCreate() called, but no migrations allowed.')
+		sails.log.verbose('ABClassQuery.migrateCreate()');
+		sails.log.debug('ABClassQuery.migrateCreate() called, but no migrations allowed.')
 
 		// just continue gracefully:
 		return new Promise(
@@ -433,7 +433,7 @@ module.exports = class ABObjectQuery extends ABClassObject {
 	 */
 	migrateDrop(knex) {
 		sails.log.verbose('ABObject.migrateDrop()');
-		sails.log.debug('ABObjectQuery.migrateDrop() called, but no migrations allowed.')
+		sails.log.debug('ABClassQuery.migrateDrop() called, but no migrations allowed.')
 
 		// just continue gracefully:
 		return new Promise(
@@ -1159,7 +1159,7 @@ module.exports = class ABObjectQuery extends ABClassObject {
 
 
 
-						sails.log.debug('ABObjectQuery.queryFind - SQL:', query.toString());
+						sails.log.debug('ABClassQuery.queryFind - SQL:', query.toString());
 
 						// after all that, resolve our promise with the query results
 						resolve(query); // query.then(resolve);

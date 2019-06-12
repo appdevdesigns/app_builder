@@ -6,6 +6,9 @@
  *
  */
 
+import ABBlankQuery from "./ab_work_query_list_newQuery_blank"
+import ABImportQuery from "./ab_work_query_list_newQuery_import"
+
 export default class AB_Work_Query_List_NewQuery extends OP.Component {   //.extend(idBase, function(App) {
 
 	constructor(App) {
@@ -15,23 +18,18 @@ export default class AB_Work_Query_List_NewQuery extends OP.Component {   //.ext
 		var labels = {
 			common: App.labels,
 			component: {
-				addNew: L('ab.query.addNew', '*Add new query'),
-				queryName: L('ab.query.name', '*Name'),
-				queryNamePlaceholder: L('ab.query.namePlaceholder', '*Query name'),
-				addNewQuery: L('ab.query.addNewQuery', '*Add query'),
-				object: L('ab.query.object', '*Object'),
-				objectPlaceholder: L('ab.query.objectPlaceholder', '*Select an object')
+				addNew: L('ab.query.addNew', '*Add new query')
 			}
-		}
+		};
 
 		// internal list of Webix IDs to reference our UI components.
 		var ids = {
 			component: this.unique('component'),
-			form: this.unique('form'),
-			buttonCancel: this.unique('buttonCancel'),
-			buttonSave: this.unique('buttonSave'),
-			object: this.unique('object')
-		}
+			tab: this.unique('tab')
+		};
+
+		let BlankTab = new ABBlankQuery(App);
+		let ImportTab = new ABImportQuery(App);
 
 		// Our webix UI definition:
 		this.ui = {
@@ -41,56 +39,24 @@ export default class AB_Work_Query_List_NewQuery extends OP.Component {   //.ext
 			modal: true,
 			head: labels.component.addNew,
 			body: {
-				view: "form",
-				id: ids.form,
-				rules: {
-				},
-				elements: [
-					{
-						view: "text",
-						label: labels.component.queryName,
-						name: "name",
-						required: true,
-						placeholder: labels.component.queryNamePlaceholder,
-						labelWidth: App.config.labelWidthMedium
-					},
-					{
-						view: "richselect",
-						id: ids.object,
-						name: "object",
-						label: labels.component.object,
-						labelWidth: App.config.labelWidthMedium,
-						placeholder: labels.component.objectPlaceholder,
-						required: true
-					},
-					{
-						margin: 5,
-						cols: [
-							{ fillspace: true },
-							{
-								view: "button",
-								id: ids.buttonCancel,
-								value: labels.common.cancel,
-								css: "ab-cancel-button",
-								autowidth: true,
-								click: function () {
-									_logic.hide();
-								}
-							},
-							{
-								view: "button",
-								id: ids.buttonSave,
-								value: labels.component.addNewQuery,
-								autowidth: true,
-								type: "form",
-								click: function () {
-									return _logic.save();
-								}
-							}
-						]
-					}
-				]
+				// TODO
+				// view: "tabview",
+				// id: ids.tab,
+				// cells: [
+				// 	BlankTab.ui,
+				// 	ImportTab.ui,
+				// ],
+				// tabbar: {
+				// 	on: {
+				// 		onAfterTabClick: (id) => {
+	
+				// 			_logic.switchTab(id);
+
+				// 		}
+				// 	}
+				// }
 			}
+
 		};
 
 
@@ -114,14 +80,16 @@ export default class AB_Work_Query_List_NewQuery extends OP.Component {   //.ext
 				onBusyEnd: _logic.hideBusy
 			}
 
+			// TODO
+			// BlankTab.init(ourCBs);
+			// ImportTab.init(ourCBs);
+
 		}
 
 
 
 		// our internal business logic
 		var _logic = this._logic = {
-
-
 
 
 			/**
@@ -184,6 +152,18 @@ export default class AB_Work_Query_List_NewQuery extends OP.Component {   //.ext
 				_logic.callbacks.onDone(null, query, selectNew, null);		// tell parent component we're done
 			},
 
+			switchTab: (tabId) => {
+
+				if (tabId == BlankTab.ui.body.id) {
+					if (BlankTab.onShow)
+						BlankTab.onShow(currentApplication);
+				}
+				else if (tabId == ImportTab.ui.body.id) {
+					if (ImportTab.onShow)
+						ImportTab.onShow(currentApplication);
+				}
+
+			},
 
 			/**
 			 * @function save
@@ -237,29 +217,9 @@ export default class AB_Work_Query_List_NewQuery extends OP.Component {   //.ext
 			 *
 			 * Show this component.
 			 */
-			show: function (shouldSelectNew, callbackFunction) {
+			show: function () {
 				if ($$(ids.component))
 					$$(ids.component).show();
-
-				// populate object list
-				if ($$(ids.object)) {
-
-					let objectOpts = currentApplication.objects().map(obj => {
-						return {
-							id: obj.id,
-							value: obj.label
-						};
-					});
-
-					$$(ids.object).define("options", objectOpts);
-					$$(ids.object).refresh();
-				}
-
-				// clear form
-				$$(ids.form).setValues({
-					name: '',
-					object: ''
-				});
 			}
 
 		}

@@ -3,10 +3,10 @@ var path = require('path');
 var ABApplicationBase = require(path.join(__dirname,  "..", "..", "assets", "opstools", "AppBuilder", "classes",  "ABApplicationBase.js"));
 
 var ABClassObject       = require(path.join(__dirname, 'ABClassObject'));
+var ABClassQuery  = require(path.join(__dirname, 'ABClassQuery'));
 var ABViewPage     = require(path.join(__dirname, 'ABViewPage'));
 var ABObjectExternal = require(path.join(__dirname, 'ABObjectExternal'));
 var ABObjectImport = require(path.join(__dirname, 'ABObjectImport'));
-var ABObjectQuery  = require(path.join(__dirname, 'ABObjectQuery'));
 var ABMobileApp    = require(path.join(__dirname, 'ABMobileApp'));
 
 
@@ -51,7 +51,7 @@ module.exports =  class ABClassApplication extends ABApplicationBase {
 		else if (values.isImported == true)
 			return new ABObjectImport(values, this);
 		else
-			return new ABClassObject(values, this);
+			return new ABClassObject(values);
 	}
 
 
@@ -69,14 +69,14 @@ module.exports =  class ABClassApplication extends ABApplicationBase {
 	/**
 	 * @method queryNew()
 	 *
-	 * return an instance of a new (unsaved) ABObjectQuery that is tied to this
+	 * return an instance of a new (unsaved) ABClassQuery that is tied to this
 	 * ABApplication.
 	 *
-	 * @return {ABObjectQuery}
+	 * @return {ABClassQuery}
 	 */
 	queryNew( values ) {
 
-		return new ABObjectQuery(values, this);
+		return new ABClassQuery(values);
 
 	}
 

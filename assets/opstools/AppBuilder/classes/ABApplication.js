@@ -316,13 +316,11 @@ export default class ABApplication extends ABApplicationBase {
 		values.json = values.json || {};
 		values.json.translations = values.json.translations || [];
 
-		return OP.Comm.Service.put({
-			url: '/app_builder/application/' + this.id + '/info',
-			data: {
-				isAdminApp: values.isAdminApp,
-				translations: values.json.translations
-			}
+		return this.Model.staticData.updateInfo(this.id, {
+			isAdminApp: values.isAdminApp,
+			translations: values.json.translations
 		});
+
 	}
 
 	/// ABApplication Permission methods
@@ -339,12 +337,9 @@ export default class ABApplication extends ABApplicationBase {
 	 * @return {Promise}
 	 */
 	assignPermissions(permItems) {
-		return OP.Comm.Service.put({
-			url: '/app_builder/' + this.id + '/role/assign',
-			data: {
-				roles: permItems
-			}
-		});
+
+		return this.Model.staticData.assignPermissions(this.id, permItems);
+
 	}
 
 
@@ -357,7 +352,9 @@ export default class ABApplication extends ABApplicationBase {
 	 * @return {Promise} 	resolve(list) : list {array} Role assignments
 	 */
 	getPermissions() {
-		return OP.Comm.Service.get({ url: '/app_builder/' + this.id + '/role' });
+
+		return this.Model.staticData.getPermissions(this.id);
+
 	}
 
 
@@ -372,7 +369,8 @@ export default class ABApplication extends ABApplicationBase {
 
 		// TODO: need to take created role and store as : .json.applicationRole = role.id
 
-		return OP.Comm.Service.post({ url: '/app_builder/' + this.id + '/role' });
+		return this.Model.staticData.createPermission(this.id);
+
 	}
 
 
@@ -387,8 +385,9 @@ export default class ABApplication extends ABApplicationBase {
 	deletePermission() {
 
 		// TODO: need to remove created role from : .json.applicationRole
-		
-		return OP.Comm.Service.delete({ url: '/app_builder/' + this.id + '/role' });
+
+		return this.Model.staticData.deletePermission(this.id);
+
 	}
 
 
@@ -427,7 +426,7 @@ export default class ABApplication extends ABApplicationBase {
 		var remaininObjects = this.objects(function (o) { return o.id != object.id; })
 		this._objects = remaininObjects;
 
-		return this.Model.staticData.objectDestroy(this.id, object.id)
+		return this.Model.staticData.objectDestroy(object.id)
 			.then(() => {
 				// TODO : Should update _AllApplications in 
 			});
@@ -461,9 +460,7 @@ export default class ABApplication extends ABApplicationBase {
 
 	objectOther() {
 
-		return OP.Comm.Service.get({
-			url: `/app_builder/application/${this.id}/otherobjects`
-		});
+		return this.Model.staticData.objectOther(this.id);
 
 	}
 
@@ -471,9 +468,7 @@ export default class ABApplication extends ABApplicationBase {
 
 		return new Promise((resolve, reject) => {
 
-			OP.Comm.Service.put({
-				url: `/app_builder/application/${this.id}/importObject/${objectId}`
-			})
+			this.Model.staticData.objectImport(this.id, objectId)
 			.catch(reject)
 			.then(newObj => {
 
@@ -497,6 +492,9 @@ export default class ABApplication extends ABApplicationBase {
 					.catch(reject)
 					.then(() => {
 
+						// add to list
+						this._objects.push(newObj);
+
 						resolve(newObj);
 
 					});
@@ -511,9 +509,7 @@ export default class ABApplication extends ABApplicationBase {
 
 		return new Promise((resolve, reject) => {
 
-			OP.Comm.Service.put({
-				url: `/app_builder/application/${this.id}/excludeObject/${objectId}`
-			})
+			this.Model.staticData.objectExclude(this.id, objectId)
 			.catch(reject)
 			.then(() => {
 
@@ -553,9 +549,7 @@ export default class ABApplication extends ABApplicationBase {
 
 		return new Promise((resolve, reject) => {
 
-			OP.Comm.Service.get({
-				url: `/app_builder/application/${this.id}/object/${objectId}`
-			})
+			this.Model.staticData.objectGet(this.id, objectId)
 			.catch(reject)
 			.then(object => {
 
@@ -749,7 +743,7 @@ export default class ABApplication extends ABApplicationBase {
 		var remaininQueries = this.queries(function (q) { return q.id != query.id; })
 		this._queries = remaininQueries;
 
-		return this.Model.staticData.queryDestroy(this.id, query.id)
+		return this.Model.staticData.queryDestroy(query.id)
 			.then(() => {
 				// TODO : Should update _AllApplications in 
 			});
@@ -770,7 +764,7 @@ export default class ABApplication extends ABApplicationBase {
 			this._queries.push(query);
 		}
 
-		return this.Model.staticData.querySave(this.id, query.toObj())
+		return this.Model.staticData.querySave(query.toObj())
 			.then(() => {
 				// TODO : Should update _AllApplications in 
 			})
@@ -778,6 +772,48 @@ export default class ABApplication extends ABApplicationBase {
 				console.error('!!! error with .ABApplication.querySave()');
 			});
 	}
+
+	queryImport(queryId) {
+
+		return new Promise((resolve, reject) => {
+
+			this.Model.staticData.queryImport(this.id, queryId)
+				.catch(reject)
+				.then(newQuery => {
+
+					// add to list
+					var isIncluded = (this.queries(q => q.id == newQuery.id).length > 0);
+					if (!isIncluded) {
+						this._queries.push(newQuery);
+					}
+
+					resolve(newQuery);
+
+				});
+
+		});
+
+	}
+
+	queryExclude(queryId) {
+
+		return new Promise((resolve, reject) => {
+
+			this.Model.staticData.queryExclude(this.id, queryId)
+				.catch(reject)
+				.then(() => {
+
+					// remove query from list
+					this._queries = this.queries(q => q.id != queryId);
+
+					resolve();
+
+				});
+
+		});
+
+	}
+
 
 
 

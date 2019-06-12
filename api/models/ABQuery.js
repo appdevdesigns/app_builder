@@ -1,20 +1,15 @@
 /**
- * ABObject.js
+ * ABQuery.js
  *
  * @description :: TODO: You might write a short summary of how this model works and what it represents here.
  * @docs        :: http://sailsjs.org/documentation/concepts/models-and-orm/models
  */
 
-var uuid = require('uuid/v4'),
-	path = require('path');
-
-var ABClassObject = require(path.join('..', 'classes', 'ABClassObject'));
+var uuid = require('uuid/v4');
 
 module.exports = {
 
-	tableName: 'appbuilder_object',
-
-	// connection: 'appdev_default',
+	tableName: 'appbuilder_query',
 
 	attributes: {
 
@@ -24,45 +19,23 @@ module.exports = {
 
 		applications: {
 			collection: 'ABApplication',
-			via: 'objects',
-			through: 'abapplicationabobject'
+			via: 'queries',
 		},
 
-		queries: {
-			collection: 'ABQuery',
-			via: 'objects'
+		objects: {
+			collection: 'ABObject',
+			via: 'queries',
 		},
 
 		_Klass: function () {
-			return ABObject;
+			return ABQuery;
 		},
 
 		toABClass: function () {
 
-			return new ABClassObject(this);
-
-		},
-
-		toValidJsonFormat: function (objects) {
-
-			// remove connected fields that does not link to objects in application
-			this.json.fields = this.json.fields.filter(f => {
-
-				if (f.key == 'connectObject' &&
-					f.settings &&
-					!objects.filter(o => o.id == f.settings.linkObject).length) {
-					return false;
-				}
-				else {
-					return true;
-				}
-
-			});
-
-			return this;
+			// return new ABClassObject(this);
 
 		}
-
 
 	},
 

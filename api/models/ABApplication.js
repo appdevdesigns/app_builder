@@ -25,12 +25,6 @@ module.exports = {
         json : 'json', 
         // pages: { collection: 'ABPage', via: 'application' },
 
-        objects: {
-            collection: 'ABObject',
-            via: 'applications',
-            through: 'abapplicationabobject'
-        },
-
         name: {
             type: 'string',
             required: true,
@@ -43,6 +37,16 @@ module.exports = {
             model: 'PermissionRole'
         },
 
+        objects: {
+            collection: 'ABObject',
+            via: 'applications',
+            through: 'abapplicationabobject'
+        },
+
+        queries: {
+            collection: 'ABQuery',
+            via: 'applications'
+        },
 
         // this will pull in the translations using .populate('translations')
         translations: {
@@ -84,6 +88,7 @@ module.exports = {
             let objects = this.objects;
 
             this.json.objects = (objects || []).map(obj => obj.toValidJsonFormat(objects).json);
+            this.json.queries = (this.queries || []).map(q => q.json);
 
             return this;
 

@@ -19,48 +19,96 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 		useSockets: true,
 		restURL: '/app_builder/abapplication',
 
+		updateInfo: function (appId, data) {
+			return OP.Comm.Service.put({
+				url: `/app_builder/application/${appId}/info`,
+				data: data
+			});
+		},
+
+		// ** Permissions
+
+		assignPermissions(appId, permItems) {
+			return OP.Comm.Service.put({
+				url: `/app_builder/${appId}/role/assign`,
+				data: {
+					roles: permItems
+				}
+			});
+		},
+
+		getPermissions(appId) {
+			return OP.Comm.Service.get({ url: `/app_builder/${appId}/role` });
+		},
+
+		createPermission(appId) {
+			return OP.Comm.Service.post({ url: `/app_builder/${appId}/role` });
+		},
+
+		deletePermission(appId) {
+			return OP.Comm.Service.delete({ url: `/app_builder/${appId}/role` });
+		},
+
+
+
+
 		// ** Objects
+
+		objectGet: function(appId, objectId) {
+
+			return OP.Comm.Service.get({
+				url: `/app_builder/application/${appId}/object/${objectId}`
+			});
+
+		},
 
 		objectSave: function (appId, object) {
 
-			return new Promise(
-				(resolve, reject) => {
-
-					OP.Comm.Service.put({
-						url: `/app_builder/object?appID=${appId}`,
-						data: {
-							object: object
-						}
-					}, function (err, result) {
-						if (err)
-							reject(err);
-						else
-							resolve(result);
-					});
+			return OP.Comm.Service.put({
+				url: `/app_builder/object?appID=${appId}`,
+				data: {
+					object: object
 				}
-
-			);
+			});
 		},
 
-		objectDestroy: function (appId, objectId) {
+		objectDestroy: function (objectId) {
 
-			return new Promise(
-				(resolve, reject) => {
-
-					OP.Comm.Service.delete({
-						url: `/app_builder/object/${objectId}`
-					}, function (err, result) {
-						if (err)
-							reject(err);
-						else
-							resolve(result);
-					});
-
-				}
-
-			);
+			return OP.Comm.Service.delete({
+				url: `/app_builder/object/${objectId}`
+			}, function (err, result) {
+				if (err)
+					reject(err);
+				else
+					resolve(result);
+			});
 
 		},
+
+		objectOther: function (appId) {
+
+			return OP.Comm.Service.get({
+				url: `/app_builder/application/${appId}/otherobjects`
+			});
+
+		},
+
+		objectImport: function (appId, objectId) {
+
+			return OP.Comm.Service.put({
+				url: `/app_builder/application/${appId}/importObject/${objectId}`
+			});
+
+		},
+
+		objectExclude: function (appId, objectId) {
+
+			return OP.Comm.Service.put({
+				url: `/app_builder/application/${appId}/excludeObject/${objectId}`
+			});
+
+		},
+
 
 
 		// ** Pages
@@ -134,26 +182,43 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 		/**
 		 * @method querySave
 		 * 
-		 * @param {guid} appId
-		 * @param {object} data
+		 * @param {object} query
 		 * @return {Promise}
 		 */
-		querySave: function (appId, query) {
+		querySave: function (query) {
 
 			return new Promise(
 				(resolve, reject) => {
 
-					OP.Comm.Service.put({
-						url: '/app_builder/application/' + appId + '/query',
-						data: {
-							data: query
-						}
-					}, function (err, result) {
-						if (err)
-							reject(err);
-						else
-							resolve(result);
-					});
+					if (query.id) {
+
+						OP.Comm.Service.put({
+							url: '/app_builder/abquery' + query.id,
+							data: {
+								data: query
+							}
+						}, function (err, result) {
+							if (err)
+								reject(err);
+							else
+								resolve(result);
+						});	
+					}
+					else {
+
+						OP.Comm.Service.post({
+							url: '/app_builder/abquery',
+							data: {
+								data: query
+							}
+						}, function (err, result) {
+							if (err)
+								reject(err);
+							else
+								resolve(result);
+						});	
+					}
+
 				}
 
 			);
@@ -162,17 +227,16 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 		/**
 		 * @method queryDestroy
 		 * 
-		 * @param {guid} appId
 		 * @param {guid} queryId
 		 * @return {Promise}
 		 */
-		queryDestroy: function (appId, queryId) {
+		queryDestroy: function (queryId) {
 
 			return new Promise(
 				(resolve, reject) => {
 
 					OP.Comm.Service.delete({
-						url: '/app_builder/application/' + appId + '/query/' + queryId
+						url: '/app_builder/abquery/' + queryId
 					}, function (err, result) {
 						if (err)
 							reject(err);
@@ -183,6 +247,22 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 				}
 
 			);
+
+		},
+
+		queryImport: function(appId, queryId) {
+
+			return OP.Comm.Service.post({
+				url: `/app_builder/abapplication/${appId}/queries/${queryId}`
+			});
+
+		},
+
+		queryExclude: function(appId, queryId) {
+
+			return OP.Comm.Service.delete({
+				url: `/app_builder/abapplication/${appId}/queries/${queryId}`
+			});
 
 		},
 

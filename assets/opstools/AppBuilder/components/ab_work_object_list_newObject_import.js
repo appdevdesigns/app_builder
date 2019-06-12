@@ -232,7 +232,6 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
                         _logic.busyEnd();
 
                         var newObj = new ABObject(objValues, currentApp);
-                        currentApp._objects.push(newObj);
 
                         _logic.callbacks.onDone(newObj);
                     })

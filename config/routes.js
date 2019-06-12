@@ -31,19 +31,18 @@ module.exports = {
     'delete /app_builder/object/:objectId':
         'app_builder/ABObjectController.objectDestroy',
 
+    'put /app_builder/application/:appID/importObject/:objID':
+        'app_builder/ABObjectController.importObject',
+
+    'put /app_builder/application/:appID/excludeObject/:objID':
+        'app_builder/ABObjectController.excludeObject',
+
     /* Application Pages */
     'put /app_builder/application/:appID/page':    
         'app_builder/ABApplicationController.pageSave',
 
     'delete /app_builder/application/:appID/page':
         'app_builder/ABApplicationController.pageDestroy',
-
-    /* Application Queries */
-    'put /app_builder/application/:appID/query':
-        'app_builder/ABApplicationController.querySave',
-
-    'delete /app_builder/application/:appID/query/:id':
-        'app_builder/ABApplicationController.queryDestroy',
 
     /* Application permissions */
     'get /app_builder/user/roles':
@@ -76,12 +75,6 @@ module.exports = {
 
     'post /app_builder/appJSON':
         'app_builder/ABApplicationController.jsonImport',
-
-    'put /app_builder/application/:appID/importObject/:objID':
-        'app_builder/ABObjectController.importObject',
-
-    'put /app_builder/application/:appID/excludeObject/:objID':
-        'app_builder/ABObjectController.excludeObject',
 
     // 'get /app_builder/application/:appID/findModels':
     //     'app_builder/ABApplicationController.findModels',

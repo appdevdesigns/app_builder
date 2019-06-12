@@ -14,8 +14,8 @@ var __ModelPool = {};	// reuse any previously created Model connections
 
 class ABClassObject extends ABObjectBase {
 
-	constructor(attributes, application) {
-		super(attributes.json || {}, application);
+	constructor(attributes) {
+		super(attributes.json || {});
 
 /*
 {

@@ -39,12 +39,12 @@ module.exports = function (cb) {
 
 			cacheABClassObjects,
 
-    		setupPollingMCC,
+//     		setupPollingMCC,
 
-// NOTE: remove this when we no longer manually add the SDC app info:
-addSDCAppInfo,
-defaultEmailNotificationInvite,
-addSDCAppDataDirectory
+// // NOTE: remove this when we no longer manually add the SDC app info:
+// addSDCAppInfo,
+// defaultEmailNotificationInvite,
+// addSDCAppDataDirectory
 
 
     	], (err,data) => {

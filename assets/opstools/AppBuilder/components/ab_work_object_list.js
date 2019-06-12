@@ -598,6 +598,9 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 
 									objectList.remove(selectedObject.id);
 
+									// refresh items list
+									_logic.callbackNewObject();
+
 									// clear object workspace
 									_logic.callbacks.onChange(null);
 								});

@@ -215,7 +215,7 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 			PopupEditObjectComponent.init({
 				onClick: _logic.callbackObjectEditorMenu,
 				hideCopy: true,
-				hideExclude: true
+				hideExclude: false
 			})
 
 			// attach any passed in callbacks.
@@ -480,28 +480,36 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 			},
 
 			rename: function () {
-				var objectId = $$(ids.list).getSelectedId(false);
-				$$(ids.list).edit(objectId);
+				let queryId = $$(ids.list).getSelectedId(false);
+				$$(ids.list).edit(queryId);
+			},
+
+			exclude: function() {
+
+				let queryId = $$(ids.list).getSelectedId(false);
+
+				CurrentApplication.queryExclude(queryId);
+
 			},
 
 			remove: function () {
 
-				var selectedObject = $$(ids.list).getSelectedItem(false);
+				var selectedQuery = $$(ids.list).getSelectedItem(false);
 
 				// verify they mean to do this:
 				OP.Dialog.Confirm({
 					title: labels.component.confirmDeleteTitle,
-					message: labels.component.confirmDeleteMessage.replace('{0}', selectedObject.label),
+					message: labels.component.confirmDeleteMessage.replace('{0}', selectedQuery.label),
 					callback: (isOK) => {
 
 						if (isOK) {
 							_logic.listBusy();
 
-							selectedObject.destroy()
+							selectedQuery.destroy()
 								.then(() => {
 									_logic.listReady();
 
-									queryList.remove(selectedObject.id);
+									queryList.remove(selectedQuery.id);
 
 									_logic.callbacks.onItemSelected( null );
 // App.actions.clearQueryWorkspace();
@@ -560,6 +568,9 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 				switch (action) {
 					case 'rename':
 						_logic.rename();
+						break;
+					case 'exclude':
+						_logic.exclude();
 						break;
 					case 'delete':
 						_logic.remove();

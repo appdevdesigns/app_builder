@@ -34,6 +34,7 @@ module.exports = {
 
         ABApplication.find(cond)
             .populate("objects")
+            .populate("queries")
             .fail(err => {
                 res.AD.error(err);
             })
@@ -59,6 +60,7 @@ module.exports = {
 
         ABApplication.findOne(appID)
             .populate("objects")
+            .populate("queries")
             .fail(() => {
                 res.AD.error(`System cound not found this application: ${appID}`);
             })
@@ -665,41 +667,6 @@ module.exports = {
             });
 
     },
-
-
-
-
-    /* Queries */
-
-    /**
-     * PUT /app_builder/application/:appID/query
-     * 
-     * Add/Update a object into ABApplication
-     */
-    querySave: function (req, res) {
-        var appID = req.param('appID');
-        var query = req.param('data');
-
-console.log('querySave():');
-console.log('allParams:', req.allParams());
-
-        jsonDataSave( appID, 'queries', query, req, res );
-
-    },
-
-    /**
-     * DELETE /app_builder/application/:appID/query/:id
-     * 
-     * Delete a query in ABApplication
-     */
-    queryDestroy: function (req, res) {
-        var appID = req.param('appID');
-        var queryID = req.param('id');
-
-        jsonDataDestroy( appID, 'queries', queryID, req, res )
-
-    },
-
 
 
     /* Mobile Apps */
