@@ -339,16 +339,17 @@ class ABFieldTree extends ABField {
         placeHolder = "<span style='color: #CCC; padding: 0 5px;'>"+L('ab.dataField.tree.placeholder', '*Select items')+"</span>";
     }
 
-    
-    config.template = function (obj) {
+    var width = options.width;
+
+    config.template = (obj) => {
 
         if (obj.$group)
           return obj[field.columnName];
 
         var branches = [];
-        var options = _.cloneDeep(field.settings.options);
-        options = new webix.TreeCollection({
-          data: options
+        var selectOptions = _.cloneDeep(field.settings.options);
+        selectOptions = new webix.TreeCollection({
+          data: selectOptions
         });
 
         var values = obj;
@@ -356,14 +357,14 @@ class ABFieldTree extends ABField {
           values = obj[field.columnName];
         }
 
-        options.data.each(function(obj) {
+        selectOptions.data.each(function(obj) {
           if (typeof values.indexOf != "undefined" && values.indexOf(obj.id) != -1) {
             var html = "";
 
             var rootid = obj.id;
             while (this.getParentId(rootid)) {
-              options.data.each(function(par) {
-                if (options.data.getParentId(rootid) == par.id) {
+              selectOptions.data.each(function(par) {
+                if (selectOptions.data.getParentId(rootid) == par.id) {
                   html = par.text + ": " + html;
                 }
               });
@@ -389,8 +390,8 @@ class ABFieldTree extends ABField {
 
         // field.setBadge(node, App, row);
         
-        if (options.width) {
-          return '<div style="margin-left: ' + options.width + 'px;" class="list-data-values'+formClass+'">'+nodeHTML+'</div>';
+        if (width) {
+          return '<div style="margin-left: ' + width + 'px;" class="list-data-values'+formClass+'">'+nodeHTML+'</div>';
         } else {
           return '<div class="list-data-values'+formClass+'">'+nodeHTML+'</div>';
         }

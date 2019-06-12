@@ -667,20 +667,23 @@ class ABFieldList extends ABFieldSelectivity {
 
 		// Multiple select list
 		if (this.settings.isMultiple == true) {
-			
-			config.template = function(row) {
+
+			var width = options.width,
+				editable = options.editable;
+
+			config.template = (row) => {
 
 				var node = document.createElement("div");
 				node.classList.add("list-data-values");
-				if (typeof options.width != "undefined") {
-					node.style.marginLeft = options.width+'px';
+				if (typeof width != "undefined") {
+					node.style.marginLeft = width + 'px';
 				}
 				
 				var domNode = node;
 
 				var placeholder = L('ab.dataField.list.placeholder_multiple', '*Select items');
 				var readOnly = false;
-				if (options.editable != null && options.editable == false) {
+				if (editable != null && editable == false) {
 					readOnly = true;
 					placeholder = "";
 				}
@@ -723,10 +726,10 @@ class ABFieldList extends ABFieldSelectivity {
 			}
 			var isRemovable = (options.editable && !this.settings.required);
 			
-			config.template = function(obj) {
+			config.template = (obj) => {
 				var myHex = "#666666";
 				var myText = placeHolder;
-				field.settings.options.forEach(function(h) {
+				field.settings.options.forEach((h) => {
 					if (h.id == obj[field.columnName]) {
 						myHex = h.hex;
 						myText = h.text;

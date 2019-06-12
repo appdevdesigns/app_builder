@@ -479,15 +479,19 @@ class ABFieldConnect extends ABFieldSelectivity {
 		var field = this;
 		var App = App;
 
-		config.template = function (row) {
+		var width = options.width,
+			editable = options.editable,
+			showAddButton = options.showAddButton;
+
+		config.template = (row) => {
 
 			if (row.$group)
 				return row[field.columnName];
 
 			var node = document.createElement("div");
 			node.classList.add("connect-data-values");
-			if (typeof options.width != "undefined") {
-				node.style.marginLeft = options.width + 'px';
+			if (typeof width != "undefined") {
+				node.style.marginLeft = width + 'px';
 			}
 
 			var domNode = node;
@@ -499,7 +503,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 				placeholder = L('ab.dataField.connect.placeholder_multiple', '*Select items');
 			}
 			var readOnly = false;
-			if (options.editable != null && !options.editable) {
+			if (editable != null && !editable) {
 				readOnly = true;
 				placeholder = "";
 			}
@@ -519,7 +523,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 				data: selectedData
 			}, App, row);
 
-			if (options.showAddButton) {
+			if (showAddButton) {
 				var iDiv = document.createElement('div');
 				iDiv.className = 'ab-connect-add-new';
 				iDiv.innerHTML = '<a href="javascript:void(0);" class="fa fa-plus ab-connect-add-new-link"></a>';
