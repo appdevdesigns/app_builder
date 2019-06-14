@@ -539,7 +539,9 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 
 				if (selectNew != null && selectNew == true) {
 					$$(ids.list).select(object.id);
-				} else {
+				}
+
+				if (callback) {
 					callback();
 				}
 

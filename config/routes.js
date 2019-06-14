@@ -9,11 +9,20 @@
 module.exports = {
 
     /* Application Info */
-    'get /app_builder/abapplication':
+    'get /app_builder/application':
         'app_builder/ABApplicationController.find',
 
-    'get /app_builder/abapplication/:appID':
+    'get /app_builder/application/:appID':
         'app_builder/ABApplicationController.findOne',
+
+    'post /app_builder/application':
+        'app_builder/ABApplicationController.applicationCreate',
+
+    'put /app_builder/application/:appID':
+        'app_builder/ABApplicationController.applicationUpdate',
+
+    'delete /app_builder/application/:appID':
+        'app_builder/ABApplicationController.applicationRemove',
 
     'put /app_builder/application/:appID/info':
         'app_builder/ABApplicationController.applicationSave',

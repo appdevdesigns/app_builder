@@ -17,7 +17,8 @@
 OP.Model.extend('opstools.BuildApp.ABApplication',
 	{
 		useSockets: true,
-		restURL: '/app_builder/abapplication',
+		// restURL: '/app_builder/abapplication',
+		restURL: '/app_builder/application',
 
 		updateInfo: function (appId, data) {
 			return OP.Comm.Service.put({
@@ -76,11 +77,6 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 			return OP.Comm.Service.delete({
 				url: `/app_builder/object/${objectId}`
-			}, function (err, result) {
-				if (err)
-					reject(err);
-				else
-					resolve(result);
 			});
 
 		},

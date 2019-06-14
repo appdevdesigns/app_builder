@@ -3,19 +3,19 @@ var path = require('path');
 var _ = require('lodash');
 
 var ABObjectBase = require(path.join(__dirname,  "..", "..", "assets", "opstools", "AppBuilder", "classes",  "ABObjectBase.js"));
-var ABObjectController = require(path.join(__dirname,  "..", "controllers", "ABObjectController"));
 var ABFieldManager = require(path.join(__dirname, 'ABFieldManager'));
 
 var Model = require('objection').Model;
 
 
+var __ObjectPool = {};
 var __ModelPool = {};	// reuse any previously created Model connections
 						// to minimize .knex bindings (and connection pools!)
 
 class ABClassObject extends ABObjectBase {
 
 	constructor(attributes) {
-		super(attributes.json || {});
+		super(attributes || {});
 
 /*
 {
@@ -53,7 +53,7 @@ class ABClassObject extends ABObjectBase {
 			}
 		}
 
-		ABObjectController.objectCache(this);
+		this.constructor.objectCache(this);
 
 	}
 
@@ -339,7 +339,7 @@ class ABClassObject extends ABObjectBase {
 		connectFields.forEach((f) => {
 			// find linked object name
 			// var linkObject = this.application.objects((obj) => { return obj.id == f.settings.linkObject; })[0];
-			let linkObject = ABObjectController.objectGet(f.settings.linkObject);
+			let linkObject = this.constructor.objectGet(f.settings.linkObject);
 			if (linkObject == null) return;
 
 			var linkField = f.fieldLink();
@@ -1217,6 +1217,51 @@ sails.log.debug('ABClassObject.queryCount - SQL:', query.toString() );
 
 		// sails.log.debug('SQL:', query.toString() );
 	}
+
+
+	/** Caching */
+
+	/**
+	 * @function objectCache
+	 * 
+	 * @param {ABClassObject} object 
+	 */
+	static objectCache(object) {
+
+		if (object == null)
+			return;
+
+		__ObjectPool[object.id] = object;
+
+	}
+
+	/**
+	 * @function objectGet
+	 * 
+	 * @param {uuid} id 
+	 * 
+	 * @return {ABClassObject}
+	 */
+	static objectGet(id) {
+
+		return __ObjectPool[id] || null;
+
+	}
+
+	/**
+	 * @function objectRemove
+	 * 
+	 * @param {uuid} id 
+	 */
+	static objectRemove(id) {
+
+		if (id == null)
+			return;
+
+		delete __ObjectPool[id];
+
+	}
+
 
 }
 

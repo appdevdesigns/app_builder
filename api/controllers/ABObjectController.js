@@ -5,9 +5,11 @@
  * @help        :: See http://sailsjs.org/#!/documentation/concepts/Controllers
  */
 
+var path = require('path');
 var uuid = require('uuid/v4');
 
-var __ObjectPool = {};
+var ABApplicationGraph = require(path.join('..', 'graphModels', 'ABApplication'));
+var ABObjectGraph = require(path.join('..', 'graphModels', 'ABObject'));
 
 module.exports = {
 
@@ -28,49 +30,19 @@ module.exports = {
 		let appID = req.param('appID');
 		let objectId = req.param('objectId');
 
-		Promise.resolve()
-			.then(() => {
-
-				return new Promise((next, err) => {
-
-					ABApplication.findOne(appID)
-						.populate("objects")
-						.fail(error => {
-							err(error);
-							res.AD.error(`System cound not found this application: ${appID}`);
-						})
-						.then(app => {
-
-							app = app.toValidJsonFormat();
-
-							next(app.json.objects);
-
-						});
-
-				});
-
-			})
-			.then(objects => {
-
-				return new Promise((next, err) => {
-
-					ABObject.findOne({ id: objectId })
-					.fail(error => {
+		ABObjectGraph.findOne(objectId)
+					.catch(error => {
 						err(error);
 						res.AD.error(error);
 					})
 					.then(object => {
 
-						let result = object.toValidJsonFormat(objects).json;
+						let result = object.json;
 
 						res.AD.success(result);
 						next();
 
-					});
-
-				});
-
-			});
+					});;
 
 	},
 
@@ -123,10 +95,11 @@ module.exports = {
 
 		let appID = req.query.appID;
 		let object = req.body.object;
+		let application;
 
 		Promise.resolve()
 
-			// Get table name of this object
+			// Set table name of this object
 			.then(() => {
 
 				return new Promise((next, error) => {
@@ -135,8 +108,8 @@ module.exports = {
 					if (object.tableName || !appID)
 						return next();
 
-					ABApplication.findOne({ id: appID })
-						.fail(errMessage => {
+						ABApplicationGraph.findOne(appID)
+						.catch(errMessage => {
 							error(errMessage);
 							res.AD.error("Could not found application");
 						})
@@ -147,10 +120,12 @@ module.exports = {
 								return error(errMessage);
 							}
 
-							let application = app.toABClass();
+							application = app;
+
+							let appClass = app.toABClass();
 
 							// Set table name here
-							object.tableName = AppBuilder.rules.toObjectNameFormat(application.dbApplicationName(), object.name);
+							object.tableName = AppBuilder.rules.toObjectNameFormat(appClass.dbApplicationName(), object.name);
 
 							next();
 
@@ -160,14 +135,13 @@ module.exports = {
 
 			})
 
-			// Find object by id
+			// Save object
 			.then(() => {
 
 				return new Promise((next, error) => {
 
-					ABObject.findOne({ id: object.id })
-						.populate('applications')
-						.fail(errMessage => {
+					ABObjectGraph.upsert(object.id, object)
+						.catch(errMessage => {
 
 							error(errMessage);
 							res.AD.error(true);
@@ -183,66 +157,26 @@ module.exports = {
 
 			})
 
-			.then(objectData => {
+			// Set relation to application
+			.then(obj => {
 
 				return new Promise((next, error) => {
 
-					// Update
-					if (objectData) {
+					if (application == null)
+						return next();
 
-						objectData.json = object;
+					obj.relate(ABObjectGraph.relations.applications, application)
+						.catch(errMessage => {
 
-						// Import this object to application
-						// TODO: check duplicate
-						if (appID)
-							objectData.applications.push(appID);
+							error(errMessage);
+							res.AD.error(true);
 
-						objectData.save()
-							.fail(error)
-							.then(() => {
-								next(objectData);
-							});
+						})
+						.then(() => {
 
-					}
-					// Insert
-					else {
+							next(obj);
 
-						let id = object.id || uuid();
-						object.id = id;
-
-						let newApp = {
-							id: id,
-							json: object,
-							applications: []
-						};
-
-						// Import this object to application
-						if (appID)
-							newApp.applications.push(appID);
-
-						ABObject.create(newApp)
-							.fail(error)
-							.then(result => {
-								next(result);
-							});
-
-					}
-
-				});
-
-			})
-
-			// Update cache
-			.then(objectData => {
-
-				return new Promise((next, error) => {
-
-					// Cache in .constructor of ABClassObject
-					objectData.toABClass();
-
-					// this.objectCache(objClass);
-
-					next();
+						});
 
 				});
 
@@ -269,12 +203,9 @@ module.exports = {
 	objectDestroy: function (req, res) {
 		let objectID = req.param('objectId');
 
-		ABObject.destroy({ id: objectID })
-			.fail(res.AD.error)
+		ABObjectGraph.remove(objectID)
+			.catch(res.AD.error)
 			.then(() => {
-
-				// remove cache
-				this.objectRemove(objectID);
 
 				res.AD.success(true);
 			});
@@ -402,51 +333,6 @@ module.exports = {
 				res.AD.success(true);
 
 			});
-
-	},
-
-
-
-	/** Cache **/
-
-	/**
-	 * @function objectCache
-	 * 
-	 * @param {ABClassObject} object 
-	 */
-	objectCache: function (object) {
-
-		if (object == null)
-			return;
-
-		__ObjectPool[object.id] = object;
-
-	},
-
-	/**
-	 * @function objectGet
-	 * 
-	 * @param {uuid} id 
-	 * 
-	 * @return {ABClassObject}
-	 */
-	objectGet: function (id) {
-
-		return __ObjectPool[id] || null;
-
-	},
-
-	/**
-	 * @function objectRemove
-	 * 
-	 * @param {uuid} id 
-	 */
-	objectRemove: function (id) {
-
-		if (id == null)
-			return;
-
-		delete __ObjectPool[id];
 
 	}
 

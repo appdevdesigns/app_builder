@@ -9,9 +9,10 @@ var AD = require('ad-utils');
 var fs = require('fs');
 var _ = require('lodash');
 var path = require('path');
-var async = require('async');
 
 var ABViewPage = require(path.join('..', 'classes', 'ABViewPage'));
+
+var ApplicationGraph = require(path.join('..', 'graphModels', 'ABApplication'));
 
 module.exports = {
 
@@ -19,59 +20,162 @@ module.exports = {
         model: "abapplication", // all lowercase model name
         actions: false,
         shortcuts: false,
-        rest: true
+        rest: false
     },
 
     /* Application */
 
     /**
-     * GET /app_builder/abapplication
+     * GET /app_builder/application
      * 
      */
     find: function(req, res) {
 
         let cond = req.query;
 
-        ABApplication.find(cond)
-            .populate("objects")
-            .populate("queries")
-            .fail(err => {
-                res.AD.error(err);
-            })
+        ApplicationGraph
+            .find(cond, ['objects'])
             .then(apps => {
 
-                let result = (apps || []).map(a => a.toValidJsonFormat());
+                res.AD.success((apps || []).map(a => a.toValidJsonFormat()));
 
-                res.AD.success(result);
+            },
+            err => {
+
+                if (err.code == 404) {
+                    res.AD.error("System cound not found this application", 404);
+                }
+                else {
+                    res.AD.error(false);
+                }
+
+                console.error(cond, err);
 
             });
-
 
     },
 
 
     /**
-     * GET /app_builder/abapplication/{id}
+     * GET /app_builder/application/:appID
      * 
      */
     findOne: function(req, res) {
 
         var appID = req.param('appID');
 
-        ABApplication.findOne(appID)
-            .populate("objects")
-            .populate("queries")
-            .fail(() => {
-                res.AD.error(`System cound not found this application: ${appID}`);
-            })
+        ApplicationGraph
+            .findOne(appID, ['objects'])
             .then(app => {
 
                 res.AD.success(app.toValidJsonFormat());
+
+            },
+            err => {
+
+                if (err.code == 404) {
+                    res.AD.error("System cound not found this application", 404);
+                }
+                else {
+                    res.AD.error(false);
+                }
+
+                console.error(err);
 
             });
 
     },
 
+    /**
+     * POST /app_builder/application
+     * create new application
+     * 
+     */
+    applicationCreate: function(req, res) {
+
+        let appValues = req.body;
+
+        ApplicationGraph.insert(appValues)
+            .then(app => {
+
+                res.AD.success(app);
+
+            },
+            err => {
+
+                if (err.code == 404) {
+                    res.AD.error("System cound not found this application", 404);
+                }
+                else {
+                    res.AD.error(false);
+                }
+
+                console.error(err);
+
+            });
+
+    },
+
+    /**
+     * PUT /app_builder/application/:appID
+     * update an application
+     * 
+     */
+    applicationUpdate: function(req, res) {
+
+        let appID = req.param('appID');
+        let appValues = req.body;
+
+        ApplicationGraph.update(appID, appValues)
+            .then(app => {
+
+                res.AD.success(app);
+
+            },
+            err => {
+
+                if (err.code == 404) {
+                    res.AD.error("System cound not found this application", 404);
+                }
+                else {
+                    res.AD.error(false);
+                }
+
+                console.error(err);
+
+            });
+
+    },
+
+    /**
+     * DELETE /app_builder/application/:appID
+     * remove an application
+     * 
+     */
+    applicationRemove: function(req, res) {
+
+        let appID = req.param('appID');
+
+        ApplicationGraph.remove(appID)
+            .then(() => {
+
+                res.AD.success(true);
+
+            },
+            err => {
+
+                if (err.code == 404) {
+                    res.AD.error("System cound not found this application", 404);
+                }
+                else {
+                    res.AD.error(false);
+                }
+
+                console.error(err);
+
+            });
+
+    },
 
     /**
      * PUT /app_builder/application/:appID/info
@@ -93,25 +197,24 @@ module.exports = {
                 // Save application data
                 return new Promise((next, err) => {
 
-                    ABApplication.findOne({ id: appID })
-                    .fail(res.AD.error)
+                    let appValues = {
+                        isAdminApp: appIsAdmin,
+                        translations: appInfo
+                    };
+
+                    ApplicationGraph.update(appID, appValues)
+                    .catch(res.AD.error)
                     .then(function (app) {
         
-                        if (!app)
-                            return res.AD.error("Could not found this application");
-        
-                        app.json.isAdminApp = appIsAdmin;
-                        app.json.translations = appInfo;
-        
-                        // save to database
-                        app.save(function (errMessage) {
-                            if (errMessage) 
-                                err(errMessage);
-                            else
-                                next(app);
-                        });
-                        
-        
+                        if (app) {
+                            // TODO return valid app values
+                            next(app);
+                        }
+                        else {
+                            err("NOT FOUND");
+                            res.AD.error("Could not found this application");
+                        }
+
                     });
 
                 });
@@ -183,14 +286,15 @@ module.exports = {
                 // Pull a application
                 return new Promise((resolve, reject) => {
 
-                    ABApplication.findOne({ id: appID })
-                        .exec((err, result) => {
-                            if (err) return reject(err);
+                    ApplicationGraph.findOne(appID)
+                        .catch(reject)
+                        .then(result => {
 
                             resolve({
                                 app: result,
                                 appClass: result.toABClass()
                             });
+
                         });
 
                 });
@@ -252,16 +356,14 @@ module.exports = {
                     data.app.json = updateApp.json;
 
                     // save to database
-                    data.app.save(function (err) {
-                        if (err)
-                            reject(true);
-                        else {
+                    data.app.save()
+                        .catch(reject)
+                        .then(() => {
 
                             // refresh application class
                             data.appClass = data.app.toABClass();
 
                             resolve(data);
-                        }
                     });
 
 
@@ -334,10 +436,10 @@ module.exports = {
                 // Pull a application
                 return new Promise((resolve, reject) => {
 
-                    ABApplication.findOne({ id: appID })
-                        .exec((err, result) => {
-                            if (err) reject(err);
-                            else resolve(result);
+                    ApplicationGraph.findOne(appID)
+                        .catch(reject)
+                        .then(result => {
+                            resolve(result);
                         });
 
                 });
@@ -379,12 +481,12 @@ module.exports = {
                     Application.json = updateApp.json;
 
                     // save to database
-                    Application.save(function (err) {
-                        if (err)
-                            reject(err);
-                        else
+                    Application.save()
+                        .catch(reject)
+                        .then(() => {
                             resolve(Application);
-                    });
+                        });
+
                 });
 
             })
@@ -577,7 +679,7 @@ module.exports = {
         var appID = req.param('appID');
         var result = [];
 
-        ABApplication.find({ id: { '!': appID } })
+        ApplicationGraph.find({ id: { '!': appID } })
             .populate('translations')
             .fail(res.AD.error)
             .then(function (apps) {
@@ -648,7 +750,7 @@ module.exports = {
                 // Pull a application
                 return new Promise((resolve, reject) => {
 
-                    ABApplication.findOne({ id: targetAppID })
+                    ApplicationGraph.findOne({ id: targetAppID })
                         .fail(reject)
                         .then(function (app) {
 
@@ -707,7 +809,7 @@ function jsonDataSave( appID, keyData, jsonEntry, req, res ) {
 console.log();
 console.log('jsonDataSave(): keyData['+ keyData + ']  jsonEntry:', jsonEntry);
 console.log();
-    ABApplication.findOne({ id: appID })
+    ApplicationGraph.findOne({ id: appID })
         .fail(res.AD.error)
         .then(function (app) {
 
@@ -735,12 +837,13 @@ console.log();
 console.log('app.json['+keyData+'] : ', app.json[keyData]);
 console.log();
                 // save to database
-                app.save(function (err) {
-                    if (err)
+                app.save()
+                    .catch(err => {
                         res.AD.error(true);
-                    else
+                    })
+                    .then(() => {
                         res.AD.success(true);
-                });
+                    });
             }
             else {
                 res.AD.success(true);
@@ -753,7 +856,7 @@ console.log();
 
 function jsonDataDestroy( appID, keyData, itemID, req, res ) {
 
-    ABApplication.findOne({ id: appID })
+    ApplicationGraph.findOne({ id: appID })
         .fail(res.AD.error)
         .then(function (app) {
 
@@ -776,12 +879,13 @@ function jsonDataDestroy( appID, keyData, itemID, req, res ) {
                 }
 
                 // save to database
-                app.save(function (err) {
-                    if (err)
+                app.save()
+                    .catch(() => {
                         res.AD.error(true);
-                    else
+                    })
+                    .then(() => {
                         res.AD.success(true);
-                });
+                    });
             }
             else {
                 res.AD.success(true);

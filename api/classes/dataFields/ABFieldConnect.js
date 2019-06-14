@@ -10,7 +10,7 @@ var ABField = require(path.join(__dirname, "ABField.js"));
 var async = require('async');
 var _ = require('lodash');
 
-var ABObjectController = require(path.join(__dirname,  "..", "..", "controllers", "ABObjectController"));
+var ABClassObject = require(path.join("..", "ABClassObject"));
 
 function L(key, altText) {
 	return altText;  // AD.lang.label.getLabel(key) || altText;
@@ -194,7 +194,7 @@ class ABFieldConnect extends ABField {
 	get datasourceLink() {
 		// var application = this.object.application,
 		// 	linkObject = application.objects((obj) => { return obj.id == this.settings.linkObject; })[0];
-		let linkObject = ABObjectController.objectGet(this.settings.linkObject);
+		let linkObject = ABClassObject.objectGet(this.settings.linkObject);
 
 		return linkObject;
 	}

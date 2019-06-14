@@ -9,7 +9,7 @@ var _ = require('lodash');
 var moment = require('moment');
 var uuid = require('node-uuid');
 
-
+var ABObjectGraph = require(path.join('..', 'graphModels', 'ABObject'));
 
 
 
@@ -187,7 +187,7 @@ module.exports = {
                     }
 
 
-                    ABObject.findOne({ id: objID })
+                    ABObjectGraph.findOne(objID)
                         .then(function (objectData) {
 
                             if (!objectData) {

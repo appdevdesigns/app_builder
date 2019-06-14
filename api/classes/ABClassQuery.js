@@ -14,7 +14,7 @@ var PolicyList = [
 	require(path.join(__dirname, '..', 'policies', 'ABModelConvertQueryFieldConditions'))
 ]
 
-module.exports = class ABClassQuery extends ABClassObject {
+class ABClassQuery extends ABClassObject {
 
 	constructor(attributes) {
 		super(attributes);
@@ -1315,5 +1315,6 @@ module.exports = class ABClassQuery extends ABClassObject {
 		return errors;
 	}
 
-
 }
+
+module.exports = ABClassQuery;

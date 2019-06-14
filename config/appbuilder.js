@@ -54,4 +54,12 @@ module.exports.appbuilder = {
   //
   // sails.config.appbuilder.pathFiles
   pathFiles: path.join('data', 'app_builder'),
+
+  graphDB: {
+    url: 'http://127.0.0.1:8529',
+    databaseName: 'appBuilder',
+    user: 'root',
+    pass: 'admin'
+  }
+
 };

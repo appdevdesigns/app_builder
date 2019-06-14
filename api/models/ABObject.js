@@ -90,10 +90,16 @@ module.exports = {
 
 	afterCreate: function (newRecord, cb) {
 
+		// Cache in .constructor of ABClassObject
+		newRecord.toABClass();
+
 		cb();
 	},
 
 	afterUpdate: function (updatedRecord, cb) {
+
+		// Cache in .constructor of ABClassObject
+		updatedRecord.toABClass();
 
 		cb();
 	},
@@ -105,6 +111,9 @@ module.exports = {
 	},
 
 	afterDestroy: function (record, cb) {
+
+		// remove cache
+		ABClassObject.objectRemove(record.id);
 
 		cb();
 	},
