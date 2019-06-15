@@ -51,6 +51,29 @@ class ABModelBase {
 		return this.constructor.unrelate(relation.edgeName, fromId, toId);
 	}
 
+	static get relations() {
+
+		return {
+			// relationName: {
+			// 	edgeName: "Name of edge collection",
+			// 	linkCollection: "Name of link collection",
+			// 	direction: Enum of this.relateDirection
+			// }
+		};
+	}
+
+	static get lifecycle() {
+
+		return {
+			beforeCreate: (recordToCreate) => Promise.resolve(),
+			afterCreate: (newlyCreatedRecord) => Promise.resolve(),
+			beforeUpdate: (valuesToSet) => Promise.resolve(),
+			afterUpdate: (updatedRecord) => Promise.resolve(),
+			beforeDestroy: (id) => Promise.resolve(),
+			afterDestroy: (destroyedRecord) => Promise.resolve()
+		};
+
+	}
 
 	static query(aqlCommand, returnArray = true) {
 
@@ -165,12 +188,40 @@ class ABModelBase {
 	static insert(values) {
 
 		values = new this(values || {});
-		values = JSON.stringify(values);
 
-		return this.query(`
-						INSERT ${values} INTO ${this.collectionName}
-						RETURN NEW
-					`, false);
+		let newlyCreatedRecord;
+
+		return Promise.resolve()
+
+			// Before create
+			.then(() => this.lifecycle.beforeCreate(values))
+
+			// Creating
+			.then(() => {
+
+				return new Promise((next, err) => {
+
+					values = JSON.stringify(values);
+
+					this.query(`
+								INSERT ${values} INTO ${this.collectionName}
+								RETURN NEW
+							`, false)
+						.catch(err)
+						.then(doc => {
+							newlyCreatedRecord = doc;
+							next();
+						});
+
+				});
+
+			})
+
+			// After create
+			.then(() => this.lifecycle.afterCreate(newlyCreatedRecord))
+
+			// Return result
+			.then(() => Promise.resolve(newlyCreatedRecord));
 
 	}
 
@@ -184,14 +235,42 @@ class ABModelBase {
 	static update(id, updates) {
 
 		updates = new this(updates || {});
-		updates = JSON.stringify(updates);
 
-		return this.query(`
-						FOR row IN ${this.collectionName}
-						FILTER row.id == '${id}'
-						UPDATE row WITH ${updates} IN ${this.collectionName}
-						RETURN NEW
-					`, false)
+		let updatedRecord;
+
+		return Promise.resolve()
+
+			// Before update
+			.then(() => this.lifecycle.beforeUpdate(updates))
+
+			// Updating
+			.then(() => {
+
+				return new Promise((next, err) => {
+
+					updates = JSON.stringify(updates);
+
+					this.query(`
+							FOR row IN ${this.collectionName}
+							FILTER row.id == '${id}'
+							UPDATE row WITH ${updates} IN ${this.collectionName}
+							RETURN NEW
+						`, false)
+						.catch(err)
+						.then(doc => {
+							updatedRecord = doc;
+							next();
+						});
+
+				});
+
+			})
+
+			// After update
+			.then(() => this.lifecycle.afterUpdate(updatedRecord))
+
+			// Return result
+			.then(() => Promise.resolve(updatedRecord));
 
 	}
 
@@ -213,7 +292,7 @@ class ABModelBase {
 						UPDATE ${updates}
 						IN ${this.collectionName}
 						RETURN NEW
-					`, false)
+					`, false);
 
 	}
 
@@ -221,15 +300,62 @@ class ABModelBase {
 	 * @function remove
 	 * 
 	 * @param {string} id 
-	 * @return {Promise} - return boolean
+	 * @return {Promise} - return a removed row
 	 */
 	static remove(id) {
 
-		return this.query(`
-						FOR row IN ${this.collectionName}
-						FILTER row.id == '${id}'
-						REMOVE row IN ${this.collectionName}
-					`, false)
+		let destroyedRecord;
+
+		return Promise.resolve()
+
+			// Before remove
+			.then(() => this.lifecycle.beforeDestroy(id))
+
+			// Removing
+			.then(() => {
+
+				return new Promise((next, err) => {
+
+					this.query(`
+							FOR row IN ${this.collectionName}
+							FILTER row.id == '${id}'
+							REMOVE row IN ${this.collectionName}
+							RETURN OLD
+						`, false)
+						.catch(err)
+						.then(doc => {
+							destroyedRecord = doc;
+							next();
+						});
+
+				});
+
+			})
+
+			// Clear relations
+			.then(() => {
+
+				if (destroyedRecord == null)
+					return Promise.resolve();
+
+				let tasks = [];
+
+				for (let key in this.relations) {
+
+					let rel = this.relations[key];
+
+					tasks.push(this.clearRelate(rel.edgeName, destroyedRecord._id));
+				}
+
+				return Promise.all(tasks);
+
+			})
+
+			// After remove
+			.then(() => this.lifecycle.afterDestroy(destroyedRecord))
+
+			// Return result
+			.then(() => Promise.resolve(destroyedRecord));
 
 	}
 
@@ -255,7 +381,7 @@ class ABModelBase {
 						INSERT { _from: '${fromId}', _to: '${toId}' }
 						UPDATE { _from: '${fromId}', _to: '${toId}' }
 						IN ${edgeName}
-					`, false)
+					`);
 
 	}
 
@@ -274,7 +400,25 @@ class ABModelBase {
 						FILTER row._from == '${fromId}'
 						AND row._to == '${toId}'
 						REMOVE row IN ${edgeName}
-					`, false)
+					`);
+
+	}
+
+	/**
+	 * @function clearRelate
+	 * 
+	 * @param {string} edgeName - Name of edge collection
+	 * @param {string} id - _id of node
+	 * @return {Promise}
+	 */
+	static clearRelate(edgeName, id) {
+
+		return this.query(`
+						FOR row IN ${edgeName}
+						FILTER row._from == '${id}'
+						OR row._to == '${id}'
+						REMOVE row IN ${edgeName}
+					`);
 
 	}
 
