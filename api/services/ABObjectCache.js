@@ -30,11 +30,11 @@ module.exports = {
 	},
 
 	/**
-	 * @function objectRemove
+	 * @function remove
 	 * 
 	 * @param {uuid} id 
 	 */
-	objectRemove: function (id) {
+	remove: function (id) {
 
 		if (id == null)
 			return;

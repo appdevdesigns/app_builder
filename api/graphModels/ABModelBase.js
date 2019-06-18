@@ -8,12 +8,11 @@ class ABModelBase {
 
 	constructor(attributes) {
 
-		if (this.id == null)
-			this.id = uuid();
+		// uuid from ._key to .id
+		this.id = attributes._key;
 
 		// ignore default properties of ArangoDB
-		// let ignoreProps = ['_key', '_id', '_rev'];
-		let ignoreProps = ['_key', '_rev'];
+		let ignoreProps = ['_key', '_id', '_rev'];
 
 		// copy attributes
 		attributes = attributes || {};
@@ -35,20 +34,36 @@ class ABModelBase {
 		return this.constructor.remove(this.id);
 	}
 
-	relate(relation, linkNode) {
+	relate(relation, linkId) {
 
-		let fromId = (ABModelBase.OUTBOUND ? this._id : linkNode._id),
-			toId = (ABModelBase.OUTBOUND ? linkNode._id : this._id);
+		if (typeof relation == 'string')
+			relation = this.constructor._getRelation(relation);
 
-		return this.constructor.relate(relation.edgeName, fromId, toId);
+		if (relation == null) {
+			ADCore.error.log('.relate: No relation found', { node: linkId });
+			return Promise.resolve();
+		}
+
+		let fromId = (relation.direction == ABModelBase.relateDirection.OUTBOUND ? this.id : linkId),
+			toId = (relation.direction == ABModelBase.relateDirection.OUTBOUND ? linkId : this.id);
+
+		return this.constructor.relate(relation, fromId, toId);
 	}
 
-	unrelate(relation, linkNode) {
+	unrelate(relation, linkId) {
 
-		let fromId = (ABModelBase.OUTBOUND ? this._id : linkNode._id),
-			toId = (ABModelBase.OUTBOUND ? linkNode._id : this._id);
+		if (typeof relation == 'string')
+			relation = this.constructor._getRelation(relation);
 
-		return this.constructor.unrelate(relation.edgeName, fromId, toId);
+		if (relation == null) {
+			ADCore.error.log('.unrelate: No relation found', { node: linkId });
+			return Promise.resolve();
+		}
+
+		let fromId = (relation.direction == ABModelBase.relateDirection.OUTBOUND ? this.id : linkId),
+			toId = (relation.direction == ABModelBase.relateDirection.OUTBOUND ? linkId : this.id);
+
+		return this.constructor.unrelate(relation, fromId, toId);
 	}
 
 	static get relations() {
@@ -168,7 +183,7 @@ class ABModelBase {
 
 		return this.query(`
 						FOR row IN ${this.collectionName}
-						FILTER row.id == '${id}'
+						FILTER row._key == '${id}'
 						LIMIT 1
 						RETURN MERGE(row, ${aqlRelations})
 					`, false);
@@ -201,6 +216,7 @@ class ABModelBase {
 	static insert(values) {
 
 		values = new this(values || {});
+		values._key = uuid();
 
 		let newlyCreatedRecord;
 
@@ -265,7 +281,7 @@ class ABModelBase {
 
 					this.query(`
 							FOR row IN ${this.collectionName}
-							FILTER row.id == '${id}'
+							FILTER row._key == '${id}'
 							UPDATE row WITH ${updates} IN ${this.collectionName}
 							RETURN NEW
 						`, false)
@@ -301,6 +317,9 @@ class ABModelBase {
 
 		updates = new this(updates || {});
 
+		if (addNew)
+			updates._key = uuid();
+
 		return Promise.resolve()
 
 			// Before create/update
@@ -314,7 +333,7 @@ class ABModelBase {
 					updates = JSON.stringify(updates);
 
 					this.query(`
-							UPSERT { id: '${id}' }
+							UPSERT { _key: '${id}' }
 							INSERT ${updates}
 							UPDATE ${updates}
 							IN ${this.collectionName}
@@ -362,7 +381,7 @@ class ABModelBase {
 
 					this.query(`
 							FOR row IN ${this.collectionName}
-							FILTER row.id == '${id}'
+							FILTER row._key == '${id}'
 							REMOVE row IN ${this.collectionName}
 							RETURN OLD
 						`, false)
@@ -388,7 +407,7 @@ class ABModelBase {
 
 					let rel = this.relations[key];
 
-					tasks.push(this.clearRelate(rel.edgeName, destroyedRecord._id));
+					tasks.push(this.clearRelate(rel, destroyedRecord.id));
 				}
 
 				return Promise.all(tasks);
@@ -413,18 +432,28 @@ class ABModelBase {
 	/**
 	 * @function relate
 	 * 
-	 * @param {string} edgeName - Name of edge collection
-	 * @param {string} fromId - _id of node
-	 * @param {string} toId - _id of node
+	 * @param {Object} relation - Relation settings
+	 * @param {string} fromId - _key of node
+	 * @param {string} toId - _key of node
 	 * @return {Promise}
 	 */
-	static relate(edgeName, fromId, toId) {
+	static relate(relation, fromId, toId) {
+
+		// Get _id of documents
+		if (relation.direction == this.relateDirection.OUTBOUND) {
+			fromId = this._getId(fromId);
+			toId = this._getId(toId, relation.linkCollection);
+		}
+		else {
+			fromId = this._getId(fromId, relation.linkCollection);
+			toId = this._getId(toId);
+		}
 
 		return this.query(`
 						UPSERT { _from: '${fromId}', _to: '${toId}' }
 						INSERT { _from: '${fromId}', _to: '${toId}' }
 						UPDATE { _from: '${fromId}', _to: '${toId}' }
-						IN ${edgeName}
+						IN ${relation.edgeName}
 					`);
 
 	}
@@ -432,18 +461,28 @@ class ABModelBase {
 	/**
 	 * @function unrelate
 	 * 
-	 * @param {string} edgeName - Name of edge collection
-	 * @param {string} fromId - _id of node
-	 * @param {string} toId - _id of node
+	 * @param {Object} relation - Relation settings
+	 * @param {string} fromId - _key of node
+	 * @param {string} toId - _key of node
 	 * @return {Promise}
 	 */
-	static unrelate(edgeName, fromId, toId) {
+	static unrelate(relation, fromId, toId) {
+
+		// Get _id of documents
+		if (relation.direction == this.relateDirection.OUTBOUND) {
+			fromId = this._getId(fromId);
+			toId = this._getId(toId, relation.linkCollection);
+		}
+		else {
+			fromId = this._getId(fromId, relation.linkCollection);
+			toId = this._getId(toId);
+		}
 
 		return this.query(`
-						FOR row IN ${edgeName}
+						FOR row IN ${relation.edgeName}
 						FILTER row._from == '${fromId}'
 						AND row._to == '${toId}'
-						REMOVE row IN ${edgeName}
+						REMOVE row IN ${relation.edgeName}
 					`);
 
 	}
@@ -451,17 +490,19 @@ class ABModelBase {
 	/**
 	 * @function clearRelate
 	 * 
-	 * @param {string} edgeName - Name of edge collection
-	 * @param {string} id - _id of node
+	 * @param {Object} relation - Relation settings
+	 * @param {string} key - _key of node
 	 * @return {Promise}
 	 */
-	static clearRelate(edgeName, id) {
+	static clearRelate(relation, key) {
+
+		let id = this._getId(key);
 
 		return this.query(`
-						FOR row IN ${edgeName}
+						FOR row IN ${relation.edgeName}
 						FILTER row._from == '${id}'
 						OR row._to == '${id}'
-						REMOVE row IN ${edgeName}
+						REMOVE row IN ${relation.edgeName}
 					`);
 
 	}
@@ -478,7 +519,7 @@ class ABModelBase {
 	/** Private methods */
 
 	/**
-	 * @method getAqlRelations
+	 * @method _aqlRelations
 	 * 
 	 * @param {Array} relations - Array of relation name (string)
 	 * 
@@ -501,6 +542,31 @@ class ABModelBase {
 
 		return aql;
 
+	}
+
+
+	/**
+	 * @method _getRelation
+	 * 
+	 * @param {string} relationName - Name of relation
+	 * 
+	 * @return {Object} - Relation
+	 */
+	static _getRelation(relationName) {
+		return this.relations[relationName];
+	}
+
+	/**
+	 * @method _getId
+	 * return _id format of ArangoDB
+	 * 
+	 * @param {string} key - key of a document
+	 * @param {string} collectionName - [optional]
+	 * 
+	 * @return {string} - return _id format
+	 */
+	static _getId(key, collectionName = this.collectionName) {
+		return `${collectionName}/${key}`;
 	}
 
 }

@@ -448,19 +448,13 @@ export default class ABApplication extends ABApplicationBase {
 		}
 
 		// update
-		return this.Model.staticData.objectSave(this.id, object.toObj())
-			.then(() => {
-				// TODO : Should update _AllApplications in 
-			})
-			.catch(()=>{
-				console.error('!!! error with .ABApplication.objectSave()');
-			});
+		return this.Model.staticData.objectSave(this.id, object.toObj());
 
 	}
 
-	objectOther() {
+	objectFind(cond) {
 
-		return this.Model.staticData.objectOther(this.id);
+		return this.Model.staticData.objectFind(cond);
 
 	}
 
@@ -493,9 +487,10 @@ export default class ABApplication extends ABApplicationBase {
 					.then(() => {
 
 						// add to list
-						this._objects.push(newObj);
+						var newObjClass = this.objectNew(newObj);
+						this._objects.push(newObjClass);
 
-						resolve(newObj);
+						resolve(newObjClass);
 
 					});
 
@@ -549,7 +544,7 @@ export default class ABApplication extends ABApplicationBase {
 
 		return new Promise((resolve, reject) => {
 
-			this.Model.staticData.objectGet(this.id, objectId)
+			this.Model.staticData.objectGet(objectId)
 			.catch(reject)
 			.then(object => {
 

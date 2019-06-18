@@ -8,8 +8,8 @@
 var path = require('path');
 var uuid = require('uuid/v4');
 
-var ABApplicationGraph = require(path.join('..', 'graphModels', 'ABApplication'));
-var ABObjectGraph = require(path.join('..', 'graphModels', 'ABObject'));
+var ABGraphApplication = require(path.join('..', 'graphModels', 'ABApplication'));
+var ABGraphObject = require(path.join('..', 'graphModels', 'ABObject'));
 
 module.exports = {
 
@@ -20,71 +20,51 @@ module.exports = {
 		rest: false
 	},
 
-	/**
-	* GET /app_builder/application/:appID/object/:objectId
-	* 
-	* Get a object
-	*/
-	objectFindone: function (req, res) {
-
-		let appID = req.param('appID');
-		let objectId = req.param('objectId');
-
-		ABObjectGraph.findOne(objectId)
-					.catch(error => {
-						err(error);
-						res.AD.error(error);
-					})
-					.then(object => {
-
-						let result = object.json;
-
-						res.AD.success(result);
-						next();
-
-					});;
-
-	},
 
 	/**
-	 * GET /app_builder/application/:appID/otherobjects
+	 * GET /app_builder/object
 	 * 
+	 * Find objects
 	 */
-	objectOther: function (req, res) {
+	objectFind: function (req, res) {
 
-		let appID = req.param('appID');
+		let cond = req.query;
 
-		let queryString = [
-			"SELECT `#objTable#`.`json` ",
-			"FROM `#objTable#` ",
-			"WHERE `#objTable#`.`id` NOT IN ( ",
-			"	SELECT `object` FROM `#joinTable#` ",
-			"	WHERE `#joinTable#`.`application` = #appID# ",
-			")"
-		].join('')
-			.replace(/#objTable#/g, ABObject.tableName)
-			.replace(/#joinTable#/g, ABApplicationABObject.tableName)
-			.replace(/#appID#/g, appID);
+		ABGraphObject.find(cond)
+			.catch(error => {
+				err(error);
+				res.AD.error(error);
+			})
+			.then(objects => {
 
-		ABObject.query(queryString, [],
-
-			(err, objects) => {
-
-				if (err) {
-					console.error(err);
-					return res.AD.error("Could not get other objects");
-				}
-
-				let result = (objects || [])
-					.map(obj => {
-						return JSON.parse(obj.json);
-					});
-
-				res.AD.success(result);
+				res.AD.success(objects || []);
 
 			});
 
 	},
+
+	/**
+	* GET /app_builder/object/:objectId
+	* 
+	* Get a object
+	*/
+	objectFindOne: function (req, res) {
+
+		let objectId = req.param('objectId');
+
+		ABGraphObject.findOne(objectId)
+			.catch(error => {
+				err(error);
+				res.AD.error(error);
+			})
+			.then(object => {
+
+				res.AD.success(object);
+
+			});
+
+	},
+
 
 	/**
 	* PUT /app_builder/object?appID=[appId]
@@ -108,7 +88,7 @@ module.exports = {
 					if (object.tableName || !appID)
 						return next();
 
-						ABApplicationGraph.findOne(appID)
+					ABGraphApplication.findOne(appID)
 						.catch(errMessage => {
 							error(errMessage);
 							res.AD.error("Could not found application");
@@ -140,7 +120,7 @@ module.exports = {
 
 				return new Promise((next, error) => {
 
-					ABObjectGraph.upsert(object.id, object)
+					ABGraphObject.upsert(object.id, object)
 						.catch(errMessage => {
 
 							error(errMessage);
@@ -165,7 +145,7 @@ module.exports = {
 					if (application == null)
 						return next();
 
-					obj.relate(ABObjectGraph.relations.applications, application)
+					obj.relate(ABGraphObject.relations.applications, application.id)
 						.catch(errMessage => {
 
 							error(errMessage);
@@ -183,11 +163,11 @@ module.exports = {
 			})
 
 			// Finally
-			.then(() => {
+			.then(obj => {
 
 				return new Promise((next, error) => {
 
-					res.AD.success(true);
+					res.AD.success(obj);
 					next();
 
 				})
@@ -203,7 +183,7 @@ module.exports = {
 	objectDestroy: function (req, res) {
 		let objectID = req.param('objectId');
 
-		ABObjectGraph.remove(objectID)
+		ABGraphObject.remove(objectID)
 			.catch(res.AD.error)
 			.then(() => {
 
@@ -222,86 +202,74 @@ module.exports = {
 		let appID = req.param('appID'),
 			objID = req.param('objID');
 
+		let application,
+			object;
 
 		Promise.resolve()
-			// find relation of application and object
+
+			// Get an application
 			.then(() => {
 
 				return new Promise((next, err) => {
 
-					ABApplicationABObject.findOne({
-						application: appID,
-						object: objID
-					})
-						.fail(err)
-						.then(result => {
-
-							next(result);
-
-						});
-
-				});
-
-			})
-			.then(exists => {
-
-				return new Promise((next, err) => {
-
-					if (exists)
-						return next();
-
-					ABApplicationABObject.create({
-						application: appID,
-						object: objID
-					})
-						.fail(err)
-						.then(() => {
-
-							next();
-
-						});
-
-				});
-
-			})
-			// get object list of application
-			.then(() => {
-
-				return new Promise((next, err) => {
-
-					ABApplication.findOne({ id: appID })
-						.populate("objects")
-						.fail(err)
+					ABGraphApplication.findOne(appID, ['objects'])
+						.catch(err)
 						.then(app => {
 
-							if (app)
-								next(app.objects);
-							else
-								next([]);
+							application = app;
 
+							next();
 						});
 
 				});
 
 			})
-			// return valid object json
-			.then(objectList => {
+
+			// Get an object
+			.then(() => {
 
 				return new Promise((next, err) => {
 
-					ABObject.findOne({ id: objID })
-						.fail(err)
+					ABGraphObject.findOne(objID)
+						.catch(err)
 						.then(obj => {
 
-							if (obj) {
-								res.AD.success(obj.toValidJsonFormat(objectList).json);
-								next();
-							}
-							else {
-								err("System could not this object");
-							}
+							object = obj;
 
+							next();
 						});
+
+
+				});
+
+			})
+
+			// Set relate
+			.then(() => {
+
+				return new Promise((next, err) => {
+
+					// if exists
+					if (application.objects.filter(obj => obj.id == objID)[0])
+						return next();
+
+					application.relate('objects', object.id)
+						.catch(err)
+						.then(() => {
+							next();
+						});
+
+				});
+
+			})
+
+			// Return a object to result
+			.then(() => {
+
+				return new Promise((next, err) => {
+
+					res.AD.success(object);
+					next();
 
 				});
 
@@ -319,11 +287,12 @@ module.exports = {
 		let appID = req.param('appID'),
 			objID = req.param('objID');
 
-		ABApplicationABObject.destroy({
-			application: appID,
-			object: objID
-		})
-			.fail(err => {
+		ABGraphObject.unrelate(
+			ABGraphObject.relations.applications,
+			appID,
+			objID
+		)
+			.catch(err => {
 
 				res.AD.error(err);
 

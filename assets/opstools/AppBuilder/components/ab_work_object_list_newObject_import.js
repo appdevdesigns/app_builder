@@ -71,7 +71,7 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
                 currentApp = app;
                 _logic.formClear();
                 _logic.busyStart();
-                currentApp.objectOther()
+                currentApp.objectFind()
                     .then((list) => {
 
 
@@ -145,11 +145,12 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
                             var fieldClass = ABFieldManager.allFields().filter((field) => field.defaults().key == f.key)[0];
                             if (fieldClass == null) return;
 
-                            // if the field is not support to import, then it is invisible
-                            if (fieldClass.defaults().supportImport == false) return;
+                            // If connect field does not link to objects in app, then skip
+                            if (f.key == 'connectObject' &&
+                                !currentApp.objects(obj => obj.id == f.settings.linkObject)[0]) {
+                                return;
+                            }
 
-                            // // TODO
-                            // var supported = true;
 
                             colNames.push({
                                 id: f.id,
@@ -227,11 +228,9 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
                 //     }
                 // })
                 currentApp.objectImport(selectedObj.id)
-                    .then((objValues) => {
+                    .then(newObj => {
                         saveButton.enable();
                         _logic.busyEnd();
-
-                        var newObj = new ABObject(objValues, currentApp);
 
                         _logic.callbacks.onDone(newObj);
                     })

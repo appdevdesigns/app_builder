@@ -69,7 +69,7 @@ class ABApplication extends ABModelBase {
 
 				return new Promise((next, err) => {
 
-					this.constructor.findOne(id)
+					this.findOne(id)
 						.catch(err)
 						.then(next);
 

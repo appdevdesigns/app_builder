@@ -30,9 +30,6 @@ var ABFieldConnectDefaults = {
 	isFilterable: true,  // now we can filter using Queries
 	useAsLabel: false,
 
-	// supportImport: flag to support import object across applications
-	supportImport: false,
-
 	supportRequire: false
 
 };

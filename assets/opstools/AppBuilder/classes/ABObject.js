@@ -217,14 +217,19 @@ export default class ABObject extends ABObjectBase {
 				// if this is our initial save()
 				if (!this.id) {
 
-					this.id = OP.Util.uuid();	// setup default .id
+					// this.id = OP.Util.uuid();	// setup default .id
 					this.label = this.label || this.name;
 					this.urlPath = this.urlPath || this.application.name + '/' + this.name;
 					isAdd = true;
 				}
 
 				this.application.objectSave(this)
-				.then(() => {
+				.then(newObj => {
+
+					if (newObj && 
+						newObj.id &&
+						!this.id)
+						this.id = newObj.id;
 
 					if (isAdd) {
 
@@ -474,9 +479,48 @@ export default class ABObject extends ABObjectBase {
 
 	}
 
+	///
+	/// Fields
+	///
+
+	/**
+	 * @method fields()
+	 *
+	 * return an array of all the ABFields for this ABObject.
+	 *
+	 * @return {array}
+	 */
+	fields (filter) {
+
+		filter = filter || function() { return true; };
+
+		let availableConnectFn = (f) => {
+			if (f.key == 'connectObject' &&
+				this.application.objects(obj => obj.id == f.settings.linkObject).length < 1) {
+
+				return false
+
+			}
+			else {
+				return true;
+			}
+		};
+
+		return this._fields.filter(filter).filter(availableConnectFn);
+	}
 
 
+	/**
+	 * @method connectFields()
+	 *
+	 * return an array of the ABFieldConnect that is connect object fields.
+	 *
+	 * @return {array}
+	 */
+	connectFields () {
 
+		return this.fields(function(f) { return f.key == 'connectObject'; });
+	}
 
 	///
 	/// Working with data from server

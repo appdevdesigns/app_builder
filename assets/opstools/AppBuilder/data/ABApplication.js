@@ -55,10 +55,21 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 		// ** Objects
 
-		objectGet: function(appId, objectId) {
+		objectFind: function (cond) {
 
 			return OP.Comm.Service.get({
-				url: `/app_builder/application/${appId}/object/${objectId}`
+				url: `/app_builder/object`,
+				data: {
+					query: cond
+				}
+			});
+
+		},
+
+		objectGet: function(objectId) {
+
+			return OP.Comm.Service.get({
+				url: `/app_builder/object/${objectId}`
 			});
 
 		},
@@ -77,14 +88,6 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 			return OP.Comm.Service.delete({
 				url: `/app_builder/object/${objectId}`
-			});
-
-		},
-
-		objectOther: function (appId) {
-
-			return OP.Comm.Service.get({
-				url: `/app_builder/application/${appId}/otherobjects`
 			});
 
 		},
