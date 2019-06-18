@@ -14,8 +14,14 @@ class ABApplication extends ABModelBase {
 
 		return {
 			objects: {
-				edgeName: "applicationHasObjects",
+				edgeName: "applicationObject",
 				linkCollection: "object",
+				direction: this.relateDirection.OUTBOUND
+			},
+
+			queries: {
+				edgeName: "applicationQuery",
+				linkCollection: "query",
 				direction: this.relateDirection.OUTBOUND
 			}
 		};

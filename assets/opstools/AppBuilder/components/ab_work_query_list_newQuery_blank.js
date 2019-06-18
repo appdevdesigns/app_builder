@@ -138,7 +138,11 @@ export default class AB_Work_Query_List_NewQuery_Blank extends OP.Component {
 			*/
 			hide: function () {
 
-				$$(ids.component).hide();
+				let $elem = $$(ids.component);
+				if ($elem &&
+					$elem.hide)
+					$elem.hide();
+
 			},
 
 

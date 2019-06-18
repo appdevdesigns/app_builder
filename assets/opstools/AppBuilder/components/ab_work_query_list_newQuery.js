@@ -39,22 +39,21 @@ export default class AB_Work_Query_List_NewQuery extends OP.Component {   //.ext
 			modal: true,
 			head: labels.component.addNew,
 			body: {
-				// TODO
-				// view: "tabview",
-				// id: ids.tab,
-				// cells: [
-				// 	BlankTab.ui,
-				// 	ImportTab.ui,
-				// ],
-				// tabbar: {
-				// 	on: {
-				// 		onAfterTabClick: (id) => {
-	
-				// 			_logic.switchTab(id);
+				view: "tabview",
+				id: ids.tab,
+				cells: [
+					BlankTab.ui,
+					// ImportTab.ui,
+				],
+				tabbar: {
+					on: {
+						onAfterTabClick: (id) => {
 
-				// 		}
-				// 	}
-				// }
+							_logic.switchTab(id);
+
+						}
+					}
+				}
 			}
 
 		};
@@ -81,7 +80,7 @@ export default class AB_Work_Query_List_NewQuery extends OP.Component {   //.ext
 			}
 
 			// TODO
-			// BlankTab.init(ourCBs);
+			BlankTab.init(ourCBs);
 			// ImportTab.init(ourCBs);
 
 		}

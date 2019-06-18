@@ -11,7 +11,7 @@ module.exports = {
 		model: "abquery", // all lowercase model name
 		actions: false,
 		shortcuts: false,
-		rest: true
+		rest: false
 	},
 
 	// /**

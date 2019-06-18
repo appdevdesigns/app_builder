@@ -13,8 +13,14 @@ class ABObject extends ABModelBase {
 
 		return {
 			applications: {
-				edgeName: "applicationHasObjects",
+				edgeName: "applicationObject",
 				linkCollection: "application",
+				direction: this.relateDirection.INBOUND
+			},
+
+			queries: {
+				edgeName: "queryObject",
+				linkCollection: "query",
 				direction: this.relateDirection.INBOUND
 			}
 		};

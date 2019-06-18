@@ -34,7 +34,7 @@ module.exports = {
         let cond = req.query;
 
         ApplicationGraph
-            .find(cond, ['objects'])
+            .find(cond, ['objects', 'queries'])
             .then(apps => {
 
                 res.AD.success((apps || []).map(a => a.toValidJsonFormat()));
@@ -65,7 +65,7 @@ module.exports = {
         var appID = req.param('appID');
 
         ApplicationGraph
-            .findOne(appID, ['objects'])
+            .findOne(appID, ['objects', 'queries'])
             .then(app => {
 
                 res.AD.success(app.toValidJsonFormat());

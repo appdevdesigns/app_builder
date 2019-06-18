@@ -72,27 +72,34 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
                 _logic.formClear();
                 _logic.busyStart();
                 currentApp.objectFind()
-                    .then((list) => {
+                    .then(objects => {
 
+                        let availableObjs = [];
 
-                        list.forEach((data) => {
+                        objects.forEach(obj => {
+
+                            // skip if this object is in application
+                            if (currentApp.objects(o => o.id == obj.id)[0])
+                                return;
 
                             // translate label of objects
-                            OP.Multilingual.translate(data, data, ['label']);
+                            OP.Multilingual.translate(obj, obj, ['label']);
 
                             // translate label of application
-                            OP.Multilingual.translate(data.application, data.application, ['label']);
+                            OP.Multilingual.translate(obj.application, obj.application, ['label']);
 
                             // translate label of fields
-                            if (data.fields && data.fields.forEach) {
-                                data.fields.forEach((f) => {
+                            if (obj.fields && obj.fields.forEach) {
+                                obj.fields.forEach((f) => {
                                     OP.Multilingual.translate(f, f, ['label']);
                                 });
                             }
 
+                            availableObjs.push(obj);
+
                         });
 
-                        $$(ids.objectList).parse(list, 'json');
+                        $$(ids.objectList).parse(availableObjs, 'json');
 
                         _logic.busyEnd();
 
