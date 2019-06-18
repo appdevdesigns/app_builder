@@ -62,18 +62,14 @@ class ABModelBase {
 		};
 	}
 
-	static get lifecycle() {
+	// Lifecycle
+	static beforeCreate(recordToCreate) { return Promise.resolve(); }
+	static afterCreate(newlyCreatedRecord) { return Promise.resolve(); }
+	static beforeUpdate(valuesToSet) { return Promise.resolve(); }
+	static afterUpdate(updatedRecord) { return Promise.resolve(); }
+	static beforeDestroy(id) { return Promise.resolve(); }
+	static afterDestroy(destroyedRecord) { return Promise.resolve(); }
 
-		return {
-			beforeCreate: (recordToCreate) => Promise.resolve(),
-			afterCreate: (newlyCreatedRecord) => Promise.resolve(),
-			beforeUpdate: (valuesToSet) => Promise.resolve(),
-			afterUpdate: (updatedRecord) => Promise.resolve(),
-			beforeDestroy: (id) => Promise.resolve(),
-			afterDestroy: (destroyedRecord) => Promise.resolve()
-		};
-
-	}
 
 	static query(aqlCommand, returnArray = true) {
 
@@ -180,6 +176,23 @@ class ABModelBase {
 	}
 
 	/**
+	 * @method findOneSync
+	 * 
+	 * @param {uuid} id
+	 * @param {Array} relations 
+	 * 
+	 * @return {Object} - A document
+	 */
+	static findOneSync(id, relations = []) {
+
+		// NOTE: Convert async to sync because .relationMappings of Knex does not support async
+		let findOneSync = rpc(this.findOne);
+
+		return findOneSync(id, relations);
+
+	}
+
+	/**
 	 * @function insert
 	 * 
 	 * @param {Object} values 
@@ -194,7 +207,7 @@ class ABModelBase {
 		return Promise.resolve()
 
 			// Before create
-			.then(() => this.lifecycle.beforeCreate(values))
+			.then(() => this.beforeCreate(values))
 
 			// Creating
 			.then(() => {
@@ -218,7 +231,7 @@ class ABModelBase {
 			})
 
 			// After create
-			.then(() => this.lifecycle.afterCreate(newlyCreatedRecord))
+			.then(() => this.afterCreate(newlyCreatedRecord))
 
 			// Return result
 			.then(() => Promise.resolve(newlyCreatedRecord));
@@ -241,7 +254,7 @@ class ABModelBase {
 		return Promise.resolve()
 
 			// Before update
-			.then(() => this.lifecycle.beforeUpdate(updates))
+			.then(() => this.beforeUpdate(updates))
 
 			// Updating
 			.then(() => {
@@ -267,7 +280,7 @@ class ABModelBase {
 			})
 
 			// After update
-			.then(() => this.lifecycle.afterUpdate(updatedRecord))
+			.then(() => this.afterUpdate(updatedRecord))
 
 			// Return result
 			.then(() => Promise.resolve(updatedRecord));
@@ -283,16 +296,47 @@ class ABModelBase {
 	 */
 	static upsert(id, updates) {
 
-		updates = new this(updates || {});
-		updates = JSON.stringify(updates);
+		let addNew = updates.id == null,
+			updatedRecord;
 
-		return this.query(`
-						UPSERT { id: '${id}' }
-						INSERT ${updates}
-						UPDATE ${updates}
-						IN ${this.collectionName}
-						RETURN NEW
-					`, false);
+		updates = new this(updates || {});
+
+		return Promise.resolve()
+
+			// Before create/update
+			.then(() => addNew ? this.beforeCreate(updates) : this.beforeUpdate(updates))
+
+			// Creating/Updating
+			.then(() => {
+
+				return new Promise((next, err) => {
+
+					updates = JSON.stringify(updates);
+
+					this.query(`
+							UPSERT { id: '${id}' }
+							INSERT ${updates}
+							UPDATE ${updates}
+							IN ${this.collectionName}
+							RETURN NEW
+					`, false)
+						// RETURN { doc: NEW, type: OLD ? 'insert': 'update' }
+						.catch(err)
+						.then(doc => {
+							updatedRecord = doc;
+							next();
+						});
+
+				});
+
+			})
+
+			// After create/update
+			.then(() => addNew ? this.afterCreate(updatedRecord) : this.afterUpdate(updatedRecord))
+
+			// Return result
+			.then(() => Promise.resolve(updatedRecord));
+
 
 	}
 
@@ -309,7 +353,7 @@ class ABModelBase {
 		return Promise.resolve()
 
 			// Before remove
-			.then(() => this.lifecycle.beforeDestroy(id))
+			.then(() => this.beforeDestroy(id))
 
 			// Removing
 			.then(() => {
@@ -352,7 +396,7 @@ class ABModelBase {
 			})
 
 			// After remove
-			.then(() => this.lifecycle.afterDestroy(destroyedRecord))
+			.then(() => this.afterDestroy(destroyedRecord))
 
 			// Return result
 			.then(() => Promise.resolve(destroyedRecord));

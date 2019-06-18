@@ -53,7 +53,7 @@ class ABClassObject extends ABObjectBase {
 			}
 		}
 
-		this.constructor.objectCache(this);
+		ABObjectCache.cache(this);
 
 	}
 
@@ -301,7 +301,7 @@ class ABClassObject extends ABObjectBase {
 
 			// rename class name
 			// NOTE: prevent cache same table in difference apps
-			Object.defineProperty(MyModel, 'name', {value: modelName });
+			Object.defineProperty(MyModel, 'name', { value: modelName });
 
 			__ModelPool[modelName] = MyModel;
 
@@ -339,7 +339,7 @@ class ABClassObject extends ABObjectBase {
 		connectFields.forEach((f) => {
 			// find linked object name
 			// var linkObject = this.application.objects((obj) => { return obj.id == f.settings.linkObject; })[0];
-			let linkObject = this.constructor.objectGet(f.settings.linkObject);
+			let linkObject = ABObjectCache.get(f.settings.linkObject);
 			if (linkObject == null) return;
 
 			var linkField = f.fieldLink();
@@ -1217,51 +1217,6 @@ sails.log.debug('ABClassObject.queryCount - SQL:', query.toString() );
 
 		// sails.log.debug('SQL:', query.toString() );
 	}
-
-
-	/** Caching */
-
-	/**
-	 * @function objectCache
-	 * 
-	 * @param {ABClassObject} object 
-	 */
-	static objectCache(object) {
-
-		if (object == null)
-			return;
-
-		__ObjectPool[object.id] = object;
-
-	}
-
-	/**
-	 * @function objectGet
-	 * 
-	 * @param {uuid} id 
-	 * 
-	 * @return {ABClassObject}
-	 */
-	static objectGet(id) {
-
-		return __ObjectPool[id] || null;
-
-	}
-
-	/**
-	 * @function objectRemove
-	 * 
-	 * @param {uuid} id 
-	 */
-	static objectRemove(id) {
-
-		if (id == null)
-			return;
-
-		delete __ObjectPool[id];
-
-	}
-
 
 }
 

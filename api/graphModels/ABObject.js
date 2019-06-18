@@ -21,29 +21,30 @@ class ABObject extends ABModelBase {
 
 	}
 
-	toABClass() {
+	static afterCreate(newRecord) {
 
-		return new ABClassObject(this);
+		// Cache in .constructor of ABClassObject
+		newRecord.toABClass();
 
 	}
 
-	toValidJsonFormat(objects) {
+	static afterUpdate(updatedRecord) {
 
-		// // remove connected fields that does not link to objects in application
-		// this.json.fields = this.json.fields.filter(f => {
+		// Cache in .constructor of ABClassObject
+		updatedRecord.toABClass();
 
-		// 	if (f.key == 'connectObject' &&
-		// 		f.settings &&
-		// 		!objects.filter(o => o.id == f.settings.linkObject).length) {
-		// 		return false;
-		// 	}
-		// 	else {
-		// 		return true;
-		// 	}
+	}
 
-		// });
+	static afterDestroy(record) {
 
-		return this;
+		// remove cache
+		ABObjectCache.remove(record.id);
+
+	}
+
+	toABClass() {
+
+		return new ABClassObject(this);
 
 	}
 

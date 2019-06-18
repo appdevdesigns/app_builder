@@ -12,6 +12,8 @@ var AD = require('ad-utils');
 var fs = require('fs');
 var async = require('async');
 
+var ABGraphObject = require(path.join('..', 'api', 'graphModels', 'ABObject'));
+
 
 module.exports = function (cb) {
 
@@ -128,7 +130,7 @@ function verifyWellKnownConfigs(next) {
 
 function cacheABClassObjects(next) {
 
-	ABObject.find()
+	ABGraphObject.find()
 		.catch(next)
 		.then(objects => {
 

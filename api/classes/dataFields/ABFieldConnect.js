@@ -194,7 +194,7 @@ class ABFieldConnect extends ABField {
 	get datasourceLink() {
 		// var application = this.object.application,
 		// 	linkObject = application.objects((obj) => { return obj.id == this.settings.linkObject; })[0];
-		let linkObject = ABClassObject.objectGet(this.settings.linkObject);
+		let linkObject = ABObjectCache.get(this.settings.linkObject);
 
 		return linkObject;
 	}

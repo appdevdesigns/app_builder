@@ -113,7 +113,7 @@ module.exports = {
 	afterDestroy: function (record, cb) {
 
 		// remove cache
-		ABClassObject.objectRemove(record.id);
+		ABObjectCache.remove(record.id);
 
 		cb();
 	},
