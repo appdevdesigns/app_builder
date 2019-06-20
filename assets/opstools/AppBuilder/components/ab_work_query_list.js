@@ -488,7 +488,19 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 
 				let queryId = $$(ids.list).getSelectedId(false);
 
-				CurrentApplication.queryExclude(queryId);
+				_logic.listBusy();
+
+				CurrentApplication.queryExclude(queryId)
+					.then(() => {
+
+						queryList.remove(queryId);
+
+						_logic.listReady();
+
+						// clear query workspace
+						_logic.callbacks.onItemSelected(null);
+					});
+
 
 			},
 

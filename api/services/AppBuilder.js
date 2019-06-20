@@ -9,7 +9,8 @@ var _ = require('lodash');
 var moment = require('moment');
 var uuid = require('node-uuid');
 
-var ABObjectGraph = require(path.join('..', 'graphModels', 'ABObject'));
+var ABGraphObject = require(path.join('..', 'graphModels', 'ABObject'));
+var ABGraphQuery = require(path.join('..', 'graphModels', 'ABQuery'));
 
 
 
@@ -164,96 +165,92 @@ module.exports = {
          */
         verifyAndReturnObject: function (req, res) {
 
-            return new Promise(
-                (resolve, reject) => {
+            let result;
+            let objID = req.param('objID', -1);
 
-                    var objID = req.param('objID', -1);
+            sails.log.verbose('... objID:' + objID);
 
-                    sails.log.verbose('... objID:' + objID);
+            // Verify input params are valid:
+            let invalidError = null;
 
-                    // Verify input params are valid:
-                    var invalidError = null;
+            if (objID == -1) {
+                invalidError = ADCore.error.fromKey('E_MISSINGPARAM');
+                invalidError.details = 'missing object.id';
+            }
+            if (invalidError) {
+                sails.log.error(invalidError);
+                invalidError.HTTPCode = 400;
+                // res.AD.error(invalidError, 400);
+                return Promise.reject(invalidError);
+            }
 
-                    if (objID == -1) {
-                        invalidError = ADCore.error.fromKey('E_MISSINGPARAM');
-                        invalidError.details = 'missing object.id';
-                    }
-                    if (invalidError) {
-                        sails.log.error(invalidError);
-                        invalidError.HTTPCode = 400;
-                        // res.AD.error(invalidError, 400);
-                        reject(invalidError);
-                        return;
-                    }
+            let sendError = () => {
 
+                if (!result) {
+                    // error: couldn't find the application
+                    var err = ADCore.error.fromKey('E_NOTFOUND');
+                    err.message = "Object/Query not found.";
+                    // err.appID = appID;
+                    err.objID = objID;
+                    sails.log.error(err);
+                    res.AD.error(err, 404);
+                    return Promise.reject(err);
+                }
 
-                    ABObjectGraph.findOne(objID)
-                        .then(function (objectData) {
+            }
 
-                            if (!objectData) {
-                                // error: couldn't find the application
-                                var err = ADCore.error.fromKey('E_NOTFOUND');
-                                err.message = "Object not found.";
-                                // err.appID = appID;
-                                err.objID = objID;
-                                sails.log.error(err);
-                                res.AD.error(err, 404);
-                                reject(err);
-                                return;
-                            }
+            return Promise.resolve()
+                .then(() => {
 
-                            var object = objectData.toABClass();
+                    return new Promise((next, err) => {
 
-                            if (object) {
+                        ABGraphObject.findOne(objID)
+                        .catch(err)
+                        .then(function (object) {
 
-                                resolve(object);
+                            if (object)
+                                result = object.toABClass();
 
-                            } else {
+                            next();
 
-                                // TODO: query
-                                reject("Not implement query");
-
-                                // // check to see if provided objID is actually a query:
-                                // var query = Application.queries((q) => { return q.id == objID; })[0];
-                                // if (query) {
-                                //     resolve(query);
-                                // } else {
-
-                                //     // error: object not found!
-                                //     var err = ADCore.error.fromKey('E_NOTFOUND');
-                                //     err.message = "Object not found.";
-                                //     err.objid = objID;
-                                //     sails.log.error(err);
-                                //     res.AD.error(err, 404);
-                                //     reject(err);
-
-                                // }
-
-                            }
-
-
-                        })
-                        .catch(function (err) {
-
-                            // on MySQL connection problems, retry
-                            if (err.message && err.message.indexOf('Could not connect to MySQL') > -1) {
-
-                                // let's try it again:
-                                sails.log.error('AppBuilder:verifyAndReturnObject():MySQL connection error --> retrying.');
-                                AppBuilder.routes.verifyAndReturnObject(req, res)
-                                .then(resolve)
-                                .catch(reject)
-                                return;
-                            }
-
-                            // otherwise, just send back the error:
-                            ADCore.error.log('ABObject.findOne() failed:', { error: err, message: err.message, id: objID });
-                            res.AD.error(err);
-                            reject(err);
                         });
 
-                }
-            )
+                    });
+
+                })
+                .then(() => {
+
+                    return new Promise((next, err) => {
+
+                        if (result)
+                            return next();
+
+                        ABGraphQuery.findOne(objID)
+                        .catch(err)
+                        .then(function (query) {
+
+                            if (query)
+                                result = query.toABClass();
+
+                            next();
+
+                        });
+
+                    });
+
+                })
+                .then(() => {
+                    return new Promise((next, err) => {
+
+                        if (result)
+                            next(result);
+                        else {
+                            err();
+                            return sendError();
+                        }
+
+                    });
+                });
 
         }
         // verifyAndReturnObject: function (req, res) {

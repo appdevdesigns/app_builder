@@ -10,7 +10,7 @@ var _ = require('lodash');
 var path = require('path');
 var async = require('async');
 
-var ABObjectGraph = require(path.join('..', 'graphModels', 'ABObject'));
+var ABGraphObject = require(path.join('..', 'graphModels', 'ABObject'));
 
 var reloading = null;
 
@@ -169,7 +169,7 @@ function verifyAndReturnField(req, res) {
             let objID = req.param('objID', -1);
 
             // AppBuilder.routes.verifyAndReturnObject(req, res)
-            ABObjectGraph.findOne(objID)
+            ABGraphObject.findOne(objID)
             .then(function(objectData){
 
                 let object = objectData.toABClass();
@@ -224,7 +224,7 @@ function simpleObjectOperation(req, res, operation) {
     // NOTE: verifyAnd...() handles any errors and responses internally.
     // only need to responde to an object being passed back on .resolve()
     // AppBuilder.routes.verifyAndReturnObject(req, res)
-    ABObjectGraph.findOne(objID)
+    ABGraphObject.findOne(objID)
     .then(function(objectData){
 
         let object = objectData.toABClass();

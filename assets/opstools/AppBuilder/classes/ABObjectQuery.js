@@ -120,18 +120,33 @@ export default class ABObjectQuery extends ABObject {
 	 */
 	save () {
 
-		var isAdd = false;
+		// var isAdd = false;
 
 		// if this is our initial save()
 		if (!this.id) {
 
-			this.id = OP.Util.uuid();	// setup default .id
+			// this.id = OP.Util.uuid();	// setup default .id
 			this.label = this.label || this.name;
 			this.urlPath = this.urlPath || this.application.name + '/' + this.name;
-			isAdd = true;
+			// isAdd = true;
 		}
 
-		return this.application.querySave(this);
+		return new Promise((resolve, reject) => {
+			this.application.querySave(this)
+				.then(newQuery => {
+
+					if (newQuery && 
+						newQuery.id &&
+						!this.id)
+						this.id = newQuery.id;
+
+					resolve(this);
+
+				})
+				.catch(function(err){
+					reject(err);
+				});
+		});
 	}
 
 

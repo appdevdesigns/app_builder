@@ -738,10 +738,7 @@ export default class ABApplication extends ABApplicationBase {
 		var remaininQueries = this.queries(function (q) { return q.id != query.id; })
 		this._queries = remaininQueries;
 
-		return this.Model.staticData.queryDestroy(query.id)
-			.then(() => {
-				// TODO : Should update _AllApplications in 
-			});
+		return this.Model.staticData.queryDestroy(query.id);
 	}
 
 
@@ -759,13 +756,7 @@ export default class ABApplication extends ABApplicationBase {
 			this._queries.push(query);
 		}
 
-		return this.Model.staticData.querySave(query.toObj())
-			.then(() => {
-				// TODO : Should update _AllApplications in 
-			})
-			.catch(()=>{
-				console.error('!!! error with .ABApplication.querySave()');
-			});
+		return this.Model.staticData.querySave(this.id, query.toObj());
 	}
 
 	queryImport(queryId) {

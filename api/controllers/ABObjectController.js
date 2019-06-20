@@ -6,7 +6,6 @@
  */
 
 var path = require('path');
-var uuid = require('uuid/v4');
 
 var ABGraphApplication = require(path.join('..', 'graphModels', 'ABApplication'));
 var ABGraphObject = require(path.join('..', 'graphModels', 'ABObject'));
@@ -193,7 +192,7 @@ module.exports = {
 	},
 
 	/**
-	* PUT /app_builder/application/:appID/importObject/:objID
+	* PUT /app_builder/application/:appID/object/:objID
 	* 
 	* Import object to application
 	*/
@@ -278,7 +277,7 @@ module.exports = {
 	},
 
 	/**
-	* PUT /app_builder/application/:appID/excludeObject/:objID
+	* DELETE /app_builder/application/:appID/object/:objID
 	* 
 	* Exclude object from application
 	*/

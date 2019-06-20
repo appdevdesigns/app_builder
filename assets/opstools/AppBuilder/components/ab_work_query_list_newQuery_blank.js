@@ -71,7 +71,7 @@ export default class AB_Work_Query_List_NewQuery_Blank extends OP.Component {
 								css: "ab-cancel-button",
 								autowidth: true,
 								click: function () {
-									_logic.hide();
+									_logic.cancel();
 								}
 							},
 							{
@@ -109,101 +109,13 @@ export default class AB_Work_Query_List_NewQuery_Blank extends OP.Component {
 
 			callbacks: {
 				onCancel: function () { console.warn('NO onCancel()!') },
-				onSave: function (values, cb) { console.warn('NO onSave()!') },
+				onBusyStart: function() { console.warn('NO onBusyStart()!') },
+				onDone: function (query) { console.warn('NO onDone()!') },
 			},
 
 			onShow: (app) => {
 
 				currentApp = app;
-
-			},
-
-			cancel: function () {
-
-				_logic.formClear();
-				_logic.callbacks.onCancel();
-			},
-
-
-			formClear: function () {
-				$$(ids.form).clearValidation();
-				$$(ids.form).clear();
-			},
-
-
-			/**
-			* @function hide()
-			*
-			* hide this component.
-			*/
-			hide: function () {
-
-				let $elem = $$(ids.component);
-				if ($elem &&
-					$elem.hide)
-					$elem.hide();
-
-			},
-
-
-			/**
-			* @function save
-			*
-			* verify the current info is ok, package it, and return it to be 
-			* added to the application.createModel() method.
-			*/
-			save: function () {
-
-				// validate
-				if (!$$(ids.form).validate()) return;
-
-				var saveButton = $$(ids.buttonSave);
-				saveButton.disable();
-
-				var formVals = $$(ids.form).getValues(),
-					queryName = formVals["name"],
-					objectId = formVals["object"];
-
-				var selectedObj = currentApp.objects(obj => obj.id == objectId)[0];
-
-				// create an instance of ABObjectQuery
-				var query = currentApp.queryNew({
-					name: queryName,
-					label: queryName,
-					joins: {
-						alias: "BASE_OBJECT", // TODO
-						objectURL: selectedObj.urlPointer(),
-						links: []
-					}
-				});
-
-				// save to db
-				query.save()
-					.then(() => {
-						saveButton.enable();
-
-						_logic.done(query);
-					})
-					.catch(err => {
-
-						saveButton.enable();
-
-						_logic.callbacks.onDone(err);
-
-					});
-
-			},
-
-
-			/**
-			* @function show()
-			*
-			* Show this component.
-			*/
-			show: function () {
-
-				if ($$(ids.component))
-					$$(ids.component).show();
 
 				// populate object list
 				if ($$(ids.object)) {
@@ -224,7 +136,71 @@ export default class AB_Work_Query_List_NewQuery_Blank extends OP.Component {
 					name: '',
 					object: ''
 				});
+
+			},
+
+			cancel: function () {
+
+				_logic.formClear();
+				_logic.callbacks.onCancel();
+			},
+
+
+			formClear: function () {
+				$$(ids.form).clearValidation();
+				$$(ids.form).clear();
+			},
+
+			/**
+			* @function save
+			*
+			* verify the current info is ok, package it, and return it to be 
+			* added to the application.createModel() method.
+			*/
+			save: function () {
+
+				// validate
+				if (!$$(ids.form).validate()) return;
+
+				_logic.callbacks.onBusyStart();
+
+				let saveButton = $$(ids.buttonSave);
+				saveButton.disable();
+
+				let formVals = $$(ids.form).getValues(),
+					queryName = formVals["name"],
+					objectId = formVals["object"];
+
+				let selectedObj = currentApp.objects(obj => obj.id == objectId)[0];
+
+				// create an instance of ABObjectQuery
+				let query = currentApp.queryNew({
+					name: queryName,
+					label: queryName,
+					joins: {
+						alias: "BASE_OBJECT", // TODO
+						objectURL: selectedObj.urlPointer(),
+						links: []
+					}
+				});
+
+				// save to db
+				query.save()
+					.then(() => {
+						saveButton.enable();
+
+						_logic.callbacks.onDone(query);
+					})
+					.catch(err => {
+
+						saveButton.enable();
+
+						_logic.callbacks.onDone(null);
+
+					});
+
 			}
+
 		};
 
 

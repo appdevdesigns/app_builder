@@ -54,6 +54,14 @@ export default class AB_Work_Query_List_NewQuery extends OP.Component {   //.ext
 						}
 					}
 				}
+			},
+			on: {
+				onBeforeShow: () => {
+
+					var id = $$(ids.tab).getValue();
+					_logic.switchTab(id);
+
+				}
 			}
 
 		};
@@ -140,7 +148,7 @@ export default class AB_Work_Query_List_NewQuery extends OP.Component {   //.ext
 
 			/**
 			 * Finished saving, so hide the popup and clean up.
-			 * @param {object} query
+			 * @param {ABObjectQuery} query
 			 */
 			done: (query) => {
 
@@ -157,59 +165,13 @@ export default class AB_Work_Query_List_NewQuery extends OP.Component {   //.ext
 					if (BlankTab.onShow)
 						BlankTab.onShow(currentApplication);
 				}
-				else if (tabId == ImportTab.ui.body.id) {
-					if (ImportTab.onShow)
-						ImportTab.onShow(currentApplication);
-				}
+				// TODO
+				// else if (tabId == ImportTab.ui.body.id) {
+				// 	if (ImportTab.onShow)
+				// 		ImportTab.onShow(currentApplication);
+				// }
 
 			},
-
-			/**
-			 * @function save
-			 *
-			 * take the data gathered by our child creation tabs, and
-			 * add it to our current application.
-			 *
-			 */
-			save: function () {
-
-				// validate
-				if (!$$(ids.form).validate()) return;
-
-				// show loading cursor
-				_logic.showBusy();
-
-				var formVals = $$(ids.form).getValues(),
-					queryName = formVals["name"],
-					objectId = formVals["object"];
-
-				var selectedObj = currentApplication.objects(obj => obj.id == objectId)[0];
-
-				// create an instance of ABObjectQuery
-				var query = currentApplication.queryNew({
-					name: queryName,
-					label: queryName,
-					joins: {
-						alias: "BASE_OBJECT", // TODO
-						objectURL: selectedObj.urlPointer(),
-						links: []
-					}
-				});
-
-				// save to db
-				query.save()
-					.then(() => {
-						_logic.done(query);
-					})
-					.catch(err => {
-
-						_logic.hideBusy();
-						_logic.callbacks.onDone(err);
-
-					});
-
-			},
-
 
 			/**
 			 * @function show()
@@ -219,6 +181,10 @@ export default class AB_Work_Query_List_NewQuery extends OP.Component {   //.ext
 			show: function () {
 				if ($$(ids.component))
 					$$(ids.component).show();
+
+				var id = $$(ids.tab).getValue();
+				_logic.switchTab(id);
+
 			}
 
 		}

@@ -5,6 +5,11 @@
  * @help        :: See http://sailsjs.org/#!/documentation/concepts/Controllers
  */
 
+var path = require('path');
+
+var ABGraphApplication = require(path.join('..', 'graphModels', 'ABApplication'));
+var ABGraphQuery = require(path.join('..', 'graphModels', 'ABQuery'));
+
 module.exports = {
 
 	_config: {
@@ -14,114 +19,253 @@ module.exports = {
 		rest: false
 	},
 
-	// /**
-	//  * PUT /app_builder/application/:appID/importQuery/:queryId
-	//  * 
-	//  * Import a query into application
-	//  */
-	// importQuery: function (req, res) {
+	/**
+	 * GET /app_builder/query
+	 * 
+	 * Find queries
+	 */
+	queryFind: function (req, res) {
 
-	// 	let appID = req.param('appID'),
-	// 		objID = req.param('objID');
+		let cond = req.query;
+
+		ABGraphQuery.find(cond)
+			.catch(error => {
+				err(error);
+				res.AD.error(error);
+			})
+			.then(queries => {
+
+				res.AD.success(queries || []);
+
+			});
+
+	},
+
+	/**
+	* GET /app_builder/query/:queryID
+	* 
+	* Get a query
+	*/
+	queryFindOne: function (req, res) {
+
+		let queryID = req.param('queryID');
+
+		ABGraphQuery.findOne(queryID)
+			.catch(error => {
+				err(error);
+				res.AD.error(error);
+			})
+			.then(query => {
+
+				res.AD.success(query);
+
+			});
+
+	},
 
 
-	// 	Promise.resolve()
-	// 		// find relation of application and object
-	// 		.then(() => {
+	/**
+	* PUT /app_builder/query?appID=[appId]
+	* 
+	* Add a new query
+	*/
+	querySave: function (req, res) {
 
-	// 			return new Promise((next, err) => {
+		let appID = req.query.appID;
+		let query = req.body.query;
 
-	// 				ABApplicationABObject.findOne({
-	// 					application: appID,
-	// 					object: objID
-	// 				})
-	// 					.fail(err)
-	// 					.then(result => {
+		Promise.resolve()
 
-	// 						next(result);
+			// Save query
+			.then(() => {
 
-	// 					});
+				return new Promise((next, error) => {
 
-	// 			});
+					ABGraphQuery.upsert(query.id, query)
+						.catch(errMessage => {
 
-	// 		})
-	// 		.then(exists => {
+							error(errMessage);
+							res.AD.error(true);
 
-	// 			return new Promise((next, err) => {
+						})
+						.then(result => {
 
-	// 				if (exists)
-	// 					return next();
+							next(result);
 
-	// 				ABApplicationABObject.create({
-	// 					application: appID,
-	// 					object: objID
-	// 				})
-	// 					.fail(err)
-	// 					.then(() => {
+						});
 
-	// 						next();
+				});
 
-	// 					});
+			})
 
-	// 			});
+			// Set relation to application
+			.then(query => {
 
-	// 		})
-	// 		// get object list of application
-	// 		.then(() => {
+				return new Promise((next, error) => {
 
-	// 			return new Promise((next, err) => {
+					if (appID == null)
+						return next();
 
-	// 				ABApplication.findOne({ id: appID })
-	// 					.populate("objects")
-	// 					.fail(err)
-	// 					.then(app => {
+					query.relate(ABGraphQuery.relations.applications, appID)
+						.catch(errMessage => {
 
-	// 						if (app)
-	// 							next(app.objects);
-	// 						else
-	// 							next([]);
+							error(errMessage);
+							res.AD.error(true);
 
-	// 					});
+						})
+						.then(() => {
 
-	// 			});
+							next(query);
 
-	// 		})
-	// 		// return valid object json
-	// 		.then(objectList => {
+						});
 
-	// 			return new Promise((next, err) => {
+				});
 
-	// 				ABObject.findOne({ id: objID })
-	// 					.fail(err)
-	// 					.then(obj => {
+			})
 
-	// 						if (obj) {
-	// 							res.AD.success(obj.toValidJsonFormat(objectList).json);
-	// 							next();
-	// 						}
-	// 						else {
-	// 							err("System could not this object");
-	// 						}
+			// TODO: Relate objects
 
-	// 					});
+			// Finally
+			.then(query => {
 
-	// 			});
+				return new Promise((next, error) => {
 
-	// 		});
+					res.AD.success(query);
+					next();
 
-	// },
-	// /**
-	//  * PUT /app_builder/application/:appID/excludeQuery/:queryId
-	//  * 
-	//  * Exclude a query from application
-	//  */
-	// excludeQuery: function (req, res) {
+				})
+			});
 
-	// 	var appID = req.param('appID');
-	// 	var queryID = req.param('id');
+	},
 
-	// 	jsonDataDestroy(appID, 'queries', queryID, req, res)
+	/**
+	* DELETE /app_builder/query/:queryID
+	* 
+	* Delete a query
+	*/
+	queryDestroy: function (req, res) {
+		let queryID = req.param('queryID');
 
-	// },
+		ABGraphQuery.remove(queryID)
+			.catch(res.AD.error)
+			.then(() => {
+
+				res.AD.success(true);
+			});
+
+	},
+
+	/**
+	* PUT /app_builder/application/:appID/query/:queryID
+	* 
+	* Import query to application
+	*/
+	importQuery: function (req, res) {
+
+		let appID = req.param('appID'),
+			queryID = req.param('queryID');
+
+		let application,
+			query;
+
+		Promise.resolve()
+
+			// Get an application
+			.then(() => {
+
+				return new Promise((next, err) => {
+
+					ABGraphApplication.findOne(appID, ['queries'])
+						.catch(err)
+						.then(app => {
+
+							application = app;
+
+							next();
+						});
+
+				});
+
+			})
+
+			// Get a query
+			.then(() => {
+
+				return new Promise((next, err) => {
+
+					ABGraphQuery.findOne(queryID)
+						.catch(err)
+						.then(q => {
+
+							query = q;
+
+							next();
+						});
+
+
+				});
+
+			})
+
+			// Set relate
+			.then(() => {
+
+				return new Promise((next, err) => {
+
+					// if exists
+					if (application.queries.filter(q => q.id == queryID)[0])
+						return next();
+
+					application.relate('queries', query.id)
+						.catch(err)
+						.then(() => {
+							next();
+						});
+
+				});
+
+			})
+
+			// Return a object to result
+			.then(() => {
+
+				return new Promise((next, err) => {
+
+					res.AD.success(query);
+					next();
+
+				});
+
+			});
+
+	},
+
+	/**
+	* DELETE /app_builder/application/:appID/query/:queryID
+	* 
+	* Exclude query from application
+	*/
+	excludeQuery: function (req, res) {
+
+		let appID = req.param('appID'),
+			queryID = req.param('queryID');
+
+		ABGraphQuery.unrelate(
+			ABGraphQuery.relations.applications,
+			appID,
+			queryID
+		)
+			.catch(err => {
+
+				res.AD.error(err);
+
+			})
+			.then(() => {
+
+				res.AD.success(true);
+
+			});
+
+	}
 
 }

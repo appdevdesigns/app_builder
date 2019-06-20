@@ -115,17 +115,6 @@ export default class AB_Work_Object_List_NewObject_Blank extends OP.Component { 
 
 
             /**
-             * @function hide()
-             *
-             * hide this component.
-             */
-            hide:function() {
-
-                $$(ids.component).hide();
-            },
-
-
-            /**
              * @function save
              *
              * verify the current info is ok, package it, and return it to be 

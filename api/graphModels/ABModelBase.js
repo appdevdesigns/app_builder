@@ -22,6 +22,15 @@ class ABModelBase {
 				continue;
 
 			this[key] = attributes[key];
+
+			// create model instances of relation list
+			let relation = this.constructor.relations[key];
+			if (relation) {
+				(this[key] || []).forEach((item, index) => {
+					this[key][index] = new ABModelBase(item);
+				});
+			}
+
 		}
 
 	}

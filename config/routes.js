@@ -27,7 +27,7 @@ module.exports = {
     'put /app_builder/application/:appID/info':
         'app_builder/ABApplicationController.applicationSave',
 
-    /* Application Objects */
+    /* Objects */
     'get /app_builder/object':
         'app_builder/ABObjectController.objectFind',
 
@@ -40,18 +40,38 @@ module.exports = {
     'delete /app_builder/object/:objectId':
         'app_builder/ABObjectController.objectDestroy',
 
-    'put /app_builder/application/:appID/importObject/:objID':
+    'put /app_builder/application/:appID/object/:objID':
         'app_builder/ABObjectController.importObject',
 
-    'put /app_builder/application/:appID/excludeObject/:objID':
+    'delete /app_builder/application/:appID/object/:objID':
         'app_builder/ABObjectController.excludeObject',
 
     /* Application Pages */
-    'put /app_builder/application/:appID/page':    
+    'put /app_builder/application/:appID/page':
         'app_builder/ABApplicationController.pageSave',
 
     'delete /app_builder/application/:appID/page':
         'app_builder/ABApplicationController.pageDestroy',
+
+
+    /* Queries */
+    'get /app_builder/query':
+        'app_builder/ABQueryController.queryFind',
+
+    'get /app_builder/query/:queryID':
+        'app_builder/ABQueryController.queryFindOne',
+
+    'put /app_builder/query':
+        'app_builder/ABQueryController.querySave',
+
+    'delete /app_builder/query/:queryID':
+        'app_builder/ABQueryController.queryDestroy',
+
+    'put /app_builder/application/:appID/query/:queryID':
+        'app_builder/ABQueryController.importQuery',
+
+    'delete /app_builder/application/:appID/query/:queryID':
+        'app_builder/ABQueryController.excludeQuery',
 
     /* Application permissions */
     'get /app_builder/user/roles':
