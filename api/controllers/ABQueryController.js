@@ -123,7 +123,61 @@ module.exports = {
 
 			})
 
-			// TODO: Relate objects
+			// Clear relations of objects
+			.then(query => {
+
+				return new Promise((next, error) => {
+
+					query.clearRelate('objects')
+						.catch(errMessage => {
+
+							error(errMessage);
+							res.AD.error(true);
+
+						})
+						.then(() => {
+
+							next(query);
+
+						});
+
+				});
+			})
+
+			// Set relation to objects
+			.then(query => {
+
+				let tasks = [];
+
+				let storeObjectId = (parentObjectId, alias, joins = {}) => {
+
+					let parentObject = ABObjectCache.get(parentObjectId);
+
+					// relate to object
+					tasks.push(query.relate('objects', parentObjectId, {
+						alias: alias // store alias name
+					}));
+
+					// loop join
+					(joins.links || []).forEach(link => {
+
+						let field = parentObject.fields(f => f.id == link.fieldID)[0];
+						if (!field) return;
+
+						let nextObjectId = field.settings.linkObject;
+
+						storeObjectId(nextObjectId, link.alias, link);
+
+					});
+
+				};
+
+				// start to store join objects
+				storeObjectId(query.joins.objectID, query.joins.alias, query.joins);
+
+				return Promise.all(tasks);
+
+			})
 
 			// Finally
 			.then(query => {

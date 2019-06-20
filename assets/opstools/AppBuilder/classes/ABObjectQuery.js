@@ -39,7 +39,7 @@ export default class ABObjectQuery extends ABObject {
 	fields:[
 		{
 			alias: "",
-			fieldURL:'#/url/to/field',
+			fieldID:'uuid',
 		}
 	],
 
@@ -47,7 +47,7 @@ export default class ABObjectQuery extends ABObject {
 	// we store a list of joins:
 	joins:{
 		alias: "",							// the alias name of table - use in SQL command
-		objectURL:"#/...",					// the base object of the join
+		objectID: "uuid",					// id of the connection object
 		links: [
 			{
 				alias: "",							// the alias name of table - use in SQL command
@@ -228,12 +228,16 @@ export default class ABObjectQuery extends ABObject {
 
 			if (fieldInfo == null) return;
 
-			var field = this.application.urlResolve(fieldInfo.fieldURL);
+			// TODO : pull object by alias name
+			let object = null;
+			if (!object) return;
+
+			let field = object.fields(f => f.id == fieldInfo.fieldID)[0];
 
 			// should be a field of base/join objects
 			if (field && this.canFilterField(field) &&
 				// check duplicate
-				newFields.filter(f => f.alias == fieldInfo.alias && f.field.urlPointer() == fieldInfo.fieldURL).length < 1) { 
+				newFields.filter(f => f.alias == fieldInfo.alias && f.field.id == fieldInfo.fieldID).length < 1) { 
 
 				let clonedField = _.clone(field, false);
 		
@@ -276,7 +280,8 @@ export default class ABObjectQuery extends ABObject {
 		this._fields.forEach((fieldInfo) => {
 			currFields.push( {
 				alias: fieldInfo.alias,
-				fieldURL: fieldInfo.field.urlPointer()
+				objectID: fieldInfo.field.object.id,
+				fieldID: fieldInfo.field.id
 			})
 		})
 		return currFields;
@@ -347,10 +352,10 @@ export default class ABObjectQuery extends ABObject {
 	 */
 	objectBase () {
 
-		if (!this._joins.objectURL)
+		if (!this._joins.objectID)
 			return null;
 
-		return this.application.urlResolve(this._joins.objectURL) || null;
+		return this.application.objects(obj => obj.id == this._joins.objectID)[0] || null;
 
 	}
 
@@ -421,7 +426,7 @@ export default class ABObjectQuery extends ABObject {
 				// Convert our saved settings:
 				//	{
 				//		alias: "",							// the alias name of table - use in SQL command
-				//		objectURL:"#/...",					// the base object of the join
+				//		objectID: "uuid",					// id of the connection object
 				//		links: [
 				//			{
 				//				alias: "",							// the alias name of table - use in SQL command
@@ -452,9 +457,9 @@ export default class ABObjectQuery extends ABObject {
 
 		}
 
-		if (!this._joins.objectURL)
-			// TODO: this is old query version
-			return;
+		// if (!this._joins.objectURL)
+		// 	// TODO: this is old query version
+		// 	return;
 
 		// store the root object
 		var rootObject = this.objectBase();
@@ -536,38 +541,41 @@ export default class ABObjectQuery extends ABObject {
 
 		headers.forEach(h => {
 
-			var field = this.application.urlResolve(h.fieldURL);
-			if (field) {
+			// TODO : pull object by alias
+			let object = null;
+			if (!object) return;
 
-				// NOTE: query v1
-				let alias = "";
-				if (Array.isArray(this.joins())) {
-					alias = field.object.name;
-				}
-				else {
-					alias = h.alias;
-				}
+			let field = object.fields(f => f.id == h.fieldID)[0];
+			if (!field) return;
 
-				// include object name {aliasName}.{columnName}
-				// to use it in grid headers & hidden fields
-				h.id = '{aliasName}.{columnName}'
-						.replace('{aliasName}', alias)
-						.replace('{columnName}', field.columnName);
-
-				// label
-				h.header = '{objectLabel}.{fieldLabel}'
-							.replace('{objectLabel}', field.object.label)
-							.replace('{fieldLabel}', field.label);
-
-				// icon
-				if (field.settings &&
-					field.settings.showIcon) {
-					h.header = '<span class="webix_icon fa fa-{icon}"></span>'.replace('{icon}', field.fieldIcon() ) + h.header;
-				}
-
-				h.adjust = true;
-				h.minWidth = 220;
+			// NOTE: query v1
+			let alias = "";
+			if (Array.isArray(this.joins())) {
+				alias = field.object.name;
 			}
+			else {
+				alias = h.alias;
+			}
+
+			// include object name {aliasName}.{columnName}
+			// to use it in grid headers & hidden fields
+			h.id = '{aliasName}.{columnName}'
+					.replace('{aliasName}', alias)
+					.replace('{columnName}', field.columnName);
+
+			// label
+			h.header = '{objectLabel}.{fieldLabel}'
+						.replace('{objectLabel}', field.object.label)
+						.replace('{fieldLabel}', field.label);
+
+			// icon
+			if (field.settings &&
+				field.settings.showIcon) {
+				h.header = '<span class="webix_icon fa fa-{icon}"></span>'.replace('{icon}', field.fieldIcon() ) + h.header;
+			}
+
+			h.adjust = true;
+			h.minWidth = 220;
 
 		});
 

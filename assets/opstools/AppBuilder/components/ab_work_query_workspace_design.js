@@ -263,7 +263,9 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 								if (objBase.id == f.field.object.id)
 									f.alias = "BASE_OBJECT";
 								else {
-									let fromObj = CurrentApplication.urlResolve(l.objectURL);
+									let fromObj = CurrentQuery.objects(obj => obj.id == l.objectID)[0];
+									if (!fromObj) return;
+
 									let fromField = fromObj.fields(fi => fi.id == l.fieldID)[0];
 									if (fromField && fromField.datasourceLink.id == f.field.object.id)
 										f.alias = alias;
@@ -475,7 +477,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 					/** joins **/
 					let joins = {
 						alias: "BASE_OBJECT",
-						objectURL: objectBase.urlPointer(), // the base object of the join
+						objectID: objectBase.id, // the base object of the join
 						links: []
 					};
 
@@ -537,9 +539,12 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 					/** fields **/
 					var fields = $$(ids.datatable).config.columns.map(col => { // an array of field's url
 
-						var field = CurrentQuery.application.urlResolve(col.fieldURL);
-						if (!field)
-							return;
+						// TODO: pull object by alias
+						let object = null;
+						if (!object) return;
+
+						let field = object.fields(f => f.id == col.fieldID);
+						if (!field) return;
 
 						// avoid add fields that not exists alias
 						if (col.alias != "BASE_OBJECT" &&
@@ -548,7 +553,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 						return {
 							alias: col.alias,
-							fieldURL: col.fieldURL
+							fieldID: col.fieldID
 						};
 					}).filter(col => col != null);
 
@@ -636,9 +641,9 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 				// *** Field double list ***
 				let $viewDbl = $$(aliasName).queryView({ name: 'fields' });
 				if ($viewDbl) {
-					let fieldURLs = CurrentQuery.fields(f => f.alias == aliasName).map(f => f.urlPointer());
+					let fieldIDs = CurrentQuery.fields(f => f.alias == aliasName).map(f => f.id);
 
-					$viewDbl.setValue(fieldURLs);
+					$viewDbl.setValue(fieldIDs);
 				}
 
 			},
@@ -655,10 +660,10 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 					if ($viewDbl && $viewDbl.getValue()) {
 
 						// pull an array of field's url
-						let selectedFields = $viewDbl.getValue().split(',').map(fUrl => {
+						let selectedFields = $viewDbl.getValue().split(',').map(fieldID => {
 							return {
 								alias: $viewTab.config.aliasName,
-								fieldURL: fUrl
+								fieldID: fieldID
 							};
 						});
 						fields = fields.concat(selectedFields);
@@ -668,11 +673,11 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 				});
 
 				// keep same order of fields
-				var orderFieldUrls = $$(ids.datatable).config.columns.map(col => col.fieldURL);
+				var orderFieldUrls = $$(ids.datatable).config.columns.map(col => col.fieldID);
 				fields.sort((a, b) => {
 
-					var indexA = orderFieldUrls.indexOf(a.fieldURL),
-						indexB = orderFieldUrls.indexOf(b.fieldURL);
+					var indexA = orderFieldUrls.indexOf(a.fieldID),
+						indexB = orderFieldUrls.indexOf(b.fieldID);
 
 					if (indexA < 0) indexA = 999;
 					if (indexB < 0) indexB = 999;

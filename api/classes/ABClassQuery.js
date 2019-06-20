@@ -19,6 +19,14 @@ class ABClassQuery extends ABClassObject {
 	constructor(attributes) {
 		super(attributes);
 
+		this.objects = (attributes.objects.map(obj => {
+
+			let result = new ABClassObject(obj);
+			result.alias = obj.alias; // TODO
+
+			return result;
+		}) || []);
+
 		/*
 		{
 			id: uuid(),
@@ -32,6 +40,9 @@ class ABClassQuery extends ABClassObject {
 			translations:[
 				{}
 			],
+			objects: [
+				{ABObject}
+			],
 			fields:[
 				{
 					alias: "",
@@ -42,7 +53,7 @@ class ABClassQuery extends ABClassObject {
 			// we store a list of joins:
 			joins: {
 				alias: "",							// the alias name of table - use in SQL command
-				objectURL:"#/...",					// the base object of the join
+				objectID: "uuid",					// id of the connection object
 				links: [
 					{
 						alias: "",							// the alias name of table - use in SQL command
@@ -147,12 +158,16 @@ class ABClassQuery extends ABClassObject {
 
 			if (fieldInfo == null) return;
 
-			var field = this.application.urlResolve(fieldInfo.fieldURL);
+			// TODO: pull a object by alias
+			let object = null;
+			if (!object) return;
+
+			var field = object.fields(f => f.id == fieldInfo.fieldID)[0];
 
 			// should be a field of base/join objects
 			if (field && this.canFilterField(field) &&
 				// check duplicate
-				newFields.filter(f => f.alias == fieldInfo.alias && f.field.urlPointer() == fieldInfo.fieldURL).length < 1) { 
+				newFields.filter(f => f.alias == fieldInfo.alias && f.field.id == fieldInfo.fieldID).length < 1) { 
 
 				// add alias to field
 				let cloneField = _.clone(field, false);
@@ -189,24 +204,24 @@ class ABClassQuery extends ABClassObject {
 	}
 
 
-	/**
-	 * @method objects()
-	 *
-	 * return an array of all the ABObjects for this Query.
-	 *
-	 * @return {array}
-	 */
-	objects(filter) {
+	// /**
+	//  * @method objects()
+	//  *
+	//  * return an array of all the ABObjects for this Query.
+	//  *
+	//  * @return {array}
+	//  */
+	// objects(filter) {
 
-		if (!this._objects) return [];
+	// 	if (!this._objects) return [];
 
-		filter = filter || function () { return true; };
+	// 	filter = filter || function () { return true; };
 
-		// get all objects (values of a object)
-		let objects = Object.keys(this._objects).map(key => { return this._objects[key]; });
+	// 	// get all objects (values of a object)
+	// 	let objects = Object.keys(this._objects).map(key => { return this._objects[key]; });
 
-		return (objects || []).filter(filter);
-	}
+	// 	return (objects || []).filter(filter);
+	// }
 
 	/**
 	 * @method objectAlias()
@@ -240,10 +255,10 @@ class ABClassQuery extends ABClassObject {
 	 */
 	objectBase () {
 
-		if (!this._joins.objectURL)
+		if (!this._joins.objectID)
 			return null;
 
-		return this.application.urlResolve(this._joins.objectURL) || null;
+		return (this.objects || []).filter(obj => obj.id == this._joins.objectID)[0] || null;
 
 	}
 
@@ -284,7 +299,7 @@ class ABClassQuery extends ABClassObject {
 				// Convert our saved settings:
 				//	{
 				//		alias: "",							// the alias name of table - use in SQL command
-				//		objectURL:"#/...",					// the base object of the join
+				//		objectID: "uuid",					// id of the connection object
 				//		links: [
 				//			{
 				//				alias: "",							// the alias name of table - use in SQL command
@@ -318,7 +333,7 @@ class ABClassQuery extends ABClassObject {
 			return;
 
 		// store the root object
-		var rootObject = this.application.urlResolve(this._joins.objectURL);
+		var rootObject = this.objects(obj => obj.id == this._joins.objectID)[0];
 		if (!rootObject) {
 			this._objects = newObjects;
 			return;
@@ -1251,12 +1266,6 @@ class ABClassQuery extends ABClassObject {
 	 * @return {QueryBuilder}
 	 */
 	queryCount(options, userData, tableName) {
-
-		// if (_.isUndefined(tableName)) {
-		// 	var firstLink = this.joins()[0];
-		// 	var baseObject = this.application.urlResolve(firstLink.objectURL);
-		// 	tableName = baseObject.dbTableName();
-		// }
 
 		// options = options || {};
 

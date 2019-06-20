@@ -179,7 +179,7 @@ export default class AB_Work_Query_List_NewQuery_Blank extends OP.Component {
 					label: queryName,
 					joins: {
 						alias: "BASE_OBJECT", // TODO
-						objectURL: selectedObj.urlPointer(),
+						objectID: selectedObj.id,
 						links: []
 					}
 				});

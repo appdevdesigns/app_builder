@@ -6,7 +6,9 @@ var ABGraphDB = require(path.join('..', 'services', 'ABGraphDB'));
 
 class ABModelBase {
 
-	constructor(attributes) {
+	constructor(attributes, options) {
+
+		options = options || {};
 
 		// uuid from ._key to .id
 		this.id = attributes._key;
@@ -18,18 +20,19 @@ class ABModelBase {
 		attributes = attributes || {};
 		for (let key in attributes) {
 
-			if (ignoreProps.indexOf(key) > -1)
+			if (ignoreProps.indexOf(key) > -1 &&
+				!options.includeDefault)
 				continue;
 
 			this[key] = attributes[key];
 
-			// create model instances of relation list
-			let relation = this.constructor.relations[key];
-			if (relation) {
-				(this[key] || []).forEach((item, index) => {
-					this[key][index] = new ABModelBase(item);
-				});
-			}
+			// // create model instances of relation list
+			// let relation = this.constructor.relations[key];
+			// if (relation) {
+			// 	(this[key] || []).forEach((item, index) => {
+			// 		this[key][index] = new ABModelBase(item);
+			// 	});
+			// }
 
 		}
 
@@ -43,7 +46,7 @@ class ABModelBase {
 		return this.constructor.remove(this.id);
 	}
 
-	relate(relation, linkId) {
+	relate(relation, linkId, values = {}) {
 
 		if (typeof relation == 'string')
 			relation = this.constructor._getRelation(relation);
@@ -56,7 +59,7 @@ class ABModelBase {
 		let fromId = (relation.direction == ABModelBase.relateDirection.OUTBOUND ? this.id : linkId),
 			toId = (relation.direction == ABModelBase.relateDirection.OUTBOUND ? linkId : this.id);
 
-		return this.constructor.relate(relation, fromId, toId);
+		return this.constructor.relate(relation, fromId, toId, values);
 	}
 
 	unrelate(relation, linkId) {
@@ -73,6 +76,20 @@ class ABModelBase {
 			toId = (relation.direction == ABModelBase.relateDirection.OUTBOUND ? linkId : this.id);
 
 		return this.constructor.unrelate(relation, fromId, toId);
+	}
+
+	clearRelate(relation) {
+
+		if (typeof relation == 'string')
+			relation = this.constructor._getRelation(relation);
+
+		if (relation == null) {
+			ADCore.error.log('.clearRelate: No relation found', { node: this });
+			return Promise.resolve();
+		}
+
+		return this.constructor.clearRelate(relation, this.id);
+
 	}
 
 	static get relations() {
@@ -224,8 +241,12 @@ class ABModelBase {
 	 */
 	static insert(values) {
 
-		values = new this(values || {});
-		values._key = uuid();
+		if (values._key == null)
+			values._key = uuid();
+
+		values = new this(values || {}, {
+			includeDefault: true
+		});
 
 		let newlyCreatedRecord;
 
@@ -324,10 +345,12 @@ class ABModelBase {
 		let addNew = updates.id == null,
 			updatedRecord;
 
-		updates = new this(updates || {});
-
 		if (addNew)
 			updates._key = uuid();
+
+		updates = new this(updates || {}, {
+			includeDefault: true
+		});
 
 		return Promise.resolve()
 
@@ -446,7 +469,7 @@ class ABModelBase {
 	 * @param {string} toId - _key of node
 	 * @return {Promise}
 	 */
-	static relate(relation, fromId, toId) {
+	static relate(relation, fromId, toId, values = {}) {
 
 		// Get _id of documents
 		if (relation.direction == this.relateDirection.OUTBOUND) {
@@ -458,10 +481,15 @@ class ABModelBase {
 			toId = this._getId(toId);
 		}
 
+		values._from = fromId;
+		values._to = toId;
+
+		values = JSON.stringify(values);
+
 		return this.query(`
-						UPSERT { _from: '${fromId}', _to: '${toId}' }
-						INSERT { _from: '${fromId}', _to: '${toId}' }
-						UPDATE { _from: '${fromId}', _to: '${toId}' }
+						UPSERT ${values}
+						INSERT ${values}
+						UPDATE ${values}
 						IN ${relation.edgeName}
 					`);
 
