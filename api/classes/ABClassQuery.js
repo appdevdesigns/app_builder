@@ -19,13 +19,11 @@ class ABClassQuery extends ABClassObject {
 	constructor(attributes) {
 		super(attributes);
 
-		this.objects = (attributes.objects.map(obj => {
-
-			let result = new ABClassObject(obj);
-			result.alias = obj.alias; // TODO
-
-			return result;
-		}) || []);
+		// populate connection objects
+		this._objects = {};
+		(attributes.objects || []).forEach(obj => {
+			this._objects[obj.alias] = new ABClassObject(obj);
+		});
 
 		/*
 		{
@@ -158,8 +156,8 @@ class ABClassQuery extends ABClassObject {
 
 			if (fieldInfo == null) return;
 
-			// TODO: pull a object by alias
-			let object = null;
+			// pull a object by alias
+			let object = this.objectByAlias(fieldInfo.alias);
 			if (!object) return;
 
 			var field = object.fields(f => f.id == fieldInfo.fieldID)[0];
@@ -204,24 +202,38 @@ class ABClassQuery extends ABClassObject {
 	}
 
 
-	// /**
-	//  * @method objects()
-	//  *
-	//  * return an array of all the ABObjects for this Query.
-	//  *
-	//  * @return {array}
-	//  */
-	// objects(filter) {
+	/**
+	 * @method objects()
+	 *
+	 * return an array of all the ABObjects for this Query.
+	 *
+	 * @return {array}
+	 */
+	objects(filter) {
 
-	// 	if (!this._objects) return [];
+		if (!this._objects) return [];
 
-	// 	filter = filter || function () { return true; };
+		filter = filter || function () { return true; };
 
-	// 	// get all objects (values of a object)
-	// 	let objects = Object.keys(this._objects).map(key => { return this._objects[key]; });
+		// get all objects (values of a object)
+		let objects = Object.keys(this._objects).map(key => { return this._objects[key]; });
 
-	// 	return (objects || []).filter(filter);
-	// }
+		return (objects || []).filter(filter);
+	}
+
+
+	/**
+	 * @method objectByAlias()
+	 * return ABClassObject search by alias name
+	 *
+	 * @param {string} - alias name
+	 * @return {ABClassObject}
+	 */
+	objectByAlias(alias) {
+
+		return this._objects[alias];
+
+	}
 
 	/**
 	 * @method objectAlias()
@@ -258,7 +270,7 @@ class ABClassQuery extends ABClassObject {
 		if (!this._joins.objectID)
 			return null;
 
-		return (this.objects || []).filter(obj => obj.id == this._joins.objectID)[0] || null;
+		return this.objects(obj => obj.id == this._joins.objectID)[0] || null;
 
 	}
 

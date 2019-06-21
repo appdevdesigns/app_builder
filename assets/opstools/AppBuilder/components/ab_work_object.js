@@ -35,6 +35,7 @@ export default class AB_Work_Object extends OP.Component {   //.extend(idBase, f
 		var ObjectList = new AB_Work_Object_List(App);
 		var ObjectWorkspace = new AB_Work_Object_Workspace(App);
 
+		let CurrentApplication;
 
 		// Our webix UI definition:
 		this.ui = {
@@ -75,6 +76,9 @@ export default class AB_Work_Object extends OP.Component {   //.extend(idBase, f
 			 * @param {ABApplication} application
 			 */
 			applicationLoad: function(application) {
+
+				CurrentApplication = application;
+
 				ObjectWorkspace.clearObjectWorkspace();
 				ObjectList.applicationLoad(application);
 				ObjectWorkspace.applicationLoad(application);
@@ -89,6 +93,21 @@ export default class AB_Work_Object extends OP.Component {   //.extend(idBase, f
 			show:function() {
 
 				$$(ids.component).show();
+
+				if (CurrentApplication &&
+					!CurrentApplication.loadedObjects) {
+
+					ObjectList.busy();
+
+					CurrentApplication.objectLoad()
+						.then(() => {
+
+							ObjectList.applicationLoad(CurrentApplication);
+							ObjectList.ready();
+
+						});
+				}
+
 			},
 
 			callbackSelectObject: function(object) {

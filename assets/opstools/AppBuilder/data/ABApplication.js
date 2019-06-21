@@ -55,6 +55,13 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 		// ** Objects
 
+		objectLoad: function (appId) {
+
+			return OP.Comm.Service.get({
+				url: `/app_builder/application/${appId}/objects`
+			});
+		},
+
 		objectFind: function (cond) {
 
 			return OP.Comm.Service.get({
@@ -155,6 +162,13 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 
 		// ** Queries
+
+		queryLoad: function (appId) {
+
+			return OP.Comm.Service.get({
+				url: `/app_builder/application/${appId}/queries`
+			});
+		},
 
 		/**
 		 * @method querySave

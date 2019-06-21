@@ -19,6 +19,29 @@ module.exports = {
 		rest: false
 	},
 
+
+
+	/**
+	 * GET /app_builder/application/:appID/queries
+	 * 
+	 * Get queries of application
+	 */
+	queryApplication: function(req, res) {
+
+		let appID = req.param('appID');
+
+		ABGraphQuery.findWithRelation('applications', appID, ['objects'])
+			.catch(error => {
+				res.AD.error(error);
+			})
+			.then(queries => {
+
+				res.AD.success(queries || []);
+
+			});
+
+	},
+
 	/**
 	 * GET /app_builder/query
 	 * 

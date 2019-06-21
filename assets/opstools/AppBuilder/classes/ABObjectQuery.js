@@ -17,8 +17,16 @@ import ABObject from "./ABObject"
 
 export default class ABObjectQuery extends ABObject {
 
-    constructor(attributes, application) {
-    	super(attributes, application);
+	constructor(attributes, application) {
+		super(attributes, application);
+
+		// populate connection objects
+		this._objects = {};
+		(attributes.objects || []).forEach(obj => {
+			this._objects[obj.alias] = new ABObject(obj);
+		});
+
+
 /*
 {
 	id: uuid(),
@@ -32,7 +40,7 @@ export default class ABObjectQuery extends ABObject {
 		{}
 	],
 
-
+	objects: [{ABObject}]
 
 	// ABOBjectQuery Specific Changes
 	// we store a list of fields by their urls:
@@ -228,8 +236,8 @@ export default class ABObjectQuery extends ABObject {
 
 			if (fieldInfo == null) return;
 
-			// TODO : pull object by alias name
-			let object = null;
+			// pull object by alias name
+			let object = this.objectByAlias(fieldInfo.alias);
 			if (!object) return;
 
 			let field = object.fields(f => f.id == fieldInfo.fieldID)[0];
@@ -358,6 +366,20 @@ export default class ABObjectQuery extends ABObject {
 		return this.application.objects(obj => obj.id == this._joins.objectID)[0] || null;
 
 	}
+
+	/**
+	 * @method objectByAlias()
+	 * return ABClassObject search by alias name
+	 *
+	 * @param {string} - alias name
+	 * @return {ABClassObject}
+	 */
+	objectByAlias(alias) {
+
+		return this._objects[alias];
+
+	}
+
 
 
 	/**
@@ -541,8 +563,8 @@ export default class ABObjectQuery extends ABObject {
 
 		headers.forEach(h => {
 
-			// TODO : pull object by alias
-			let object = null;
+			// pull object by alias
+			let object = this.objectByAlias(h.alias);
 			if (!object) return;
 
 			let field = object.fields(f => f.id == h.fieldID)[0];

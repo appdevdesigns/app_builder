@@ -35,6 +35,7 @@ export default class AB_Work_Query extends OP.Component {   //.extend(idBase, fu
 		var QueryList = new AB_Work_Query_List(App);
 		var QueryWorkspace = new AB_Work_Query_Workspace(App);
 
+		let CurrentApplication;
 
 		// Our webix UI definition:
 		this.ui = {
@@ -74,6 +75,9 @@ export default class AB_Work_Query extends OP.Component {   //.extend(idBase, fu
 			 * @param {ABApplication} application
 			 */
 			applicationLoad: function(application) {
+
+				CurrentApplication = application;
+
 				QueryWorkspace.clearWorkspace();
 
 				QueryList.applicationLoad(application);
@@ -95,7 +99,19 @@ export default class AB_Work_Query extends OP.Component {   //.extend(idBase, fu
 
 				$$(ids.component).show();
 
-				QueryList.refresh();
+				if (CurrentApplication &&
+					!CurrentApplication.loadedQueries) {
+
+					QueryList.busy();
+
+					CurrentApplication.queryLoad()
+						.then(() => {
+
+							QueryList.refresh();
+							QueryList.ready();
+
+						});
+				}
 
 			}
 		}

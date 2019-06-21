@@ -21,6 +21,28 @@ module.exports = {
 
 
 	/**
+	 * GET /app_builder/application/:appID/objects
+	 * 
+	 * Get objects of application
+	 */
+	objectApplication: function(req, res) {
+
+		let appID = req.param('appID');
+
+		ABGraphObject.findWithRelation('applications', appID)
+			.catch(error => {
+				res.AD.error(error);
+			})
+			.then(objects => {
+
+				res.AD.success(objects || []);
+
+			});
+
+	},
+
+
+	/**
 	 * GET /app_builder/object
 	 * 
 	 * Find objects

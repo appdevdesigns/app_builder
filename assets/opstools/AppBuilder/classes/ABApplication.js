@@ -397,6 +397,34 @@ export default class ABApplication extends ABApplicationBase {
 	///
 
 
+	objectLoad() {
+
+		if (this.loadedObjects)
+			return Promise.resolve();
+
+		return new Promise((resolve, reject) => {
+
+			this.Model.staticData.objectLoad(this.id)
+				.catch(reject)
+				.then(objects => {
+
+					this.loadedObjects = true;
+
+					var newObjects = [];
+					(objects || []).forEach((obj) => {
+						newObjects.push( this.objectNew(obj) );  
+					})
+					this._objects = newObjects;
+
+					resolve();
+
+				});
+
+		});
+
+	}
+
+
 	/**
 	 * @method objectNew()
 	 *
@@ -707,6 +735,36 @@ export default class ABApplication extends ABApplicationBase {
 	///
 	/// Queries
 	///
+
+	queryLoad() {
+
+		if (this.loadedQueries)
+			return Promise.resolve();
+
+		return new Promise((resolve, reject) => {
+
+			this.Model.staticData.queryLoad(this.id)
+				.catch(reject)
+				.then(queries => {
+
+					this.loadedQueries = true;
+
+					var newQueries = [];
+					(queries || []).forEach((query) => {
+						// prevent processing of null values.
+						if (query) {
+							  newQueries.push( this.queryNew(query) );
+						  }
+					  })
+					this._queries = newQueries;
+
+					resolve();
+
+				});
+
+		});
+
+	}
 
 	/**
 	 * @method queryNew()

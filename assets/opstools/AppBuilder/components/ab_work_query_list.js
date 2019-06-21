@@ -633,6 +633,8 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 		// 
 		this.applicationLoad = _logic.applicationLoad;
 		this.refresh = _logic.refresh;
+		this.busy = _logic.listBusy;
+		this.ready = _logic.listReady;
 
 	}
 

@@ -14,7 +14,7 @@ class ABModelBase {
 		this.id = attributes._key;
 
 		// ignore default properties of ArangoDB
-		let ignoreProps = ['_key', '_id', '_rev'];
+		let ignoreProps = ['_key', '_id', '_rev', '_from', '_to'];
 
 		// copy attributes
 		attributes = attributes || {};
@@ -26,13 +26,13 @@ class ABModelBase {
 
 			this[key] = attributes[key];
 
-			// // create model instances of relation list
-			// let relation = this.constructor.relations[key];
-			// if (relation) {
-			// 	(this[key] || []).forEach((item, index) => {
-			// 		this[key][index] = new ABModelBase(item);
-			// 	});
-			// }
+			// create model instances of relation list
+			let relation = this.constructor.relations[key];
+			if (relation) {
+				(this[key] || []).forEach((item, index) => {
+					this[key][index] = new ABModelBase(item);
+				});
+			}
 
 		}
 
@@ -113,7 +113,7 @@ class ABModelBase {
 
 
 	static query(aqlCommand, returnArray = true) {
-
+		console.log(aqlCommand);
 		return Promise.resolve()
 
 			// Execute AQL command
@@ -217,19 +217,30 @@ class ABModelBase {
 	}
 
 	/**
-	 * @method findOneSync
+	 * @method findWithRelation
 	 * 
-	 * @param {uuid} id
+	 * @param {String|Object} relation
+	 * @param {uuid} linkId 
 	 * @param {Array} relations 
 	 * 
 	 * @return {Object} - A document
 	 */
-	static findOneSync(id, relations = []) {
+	static findWithRelation(relation, linkId, relations = []) {
 
-		// NOTE: Convert async to sync because .relationMappings of Knex does not support async
-		let findOneSync = rpc(this.findOne);
+		if (typeof relation == 'string')
+			relation = this._getRelation(relation);
 
-		return findOneSync(id, relations);
+		linkId = this._getId(linkId, relation.linkCollection);
+
+		let aqlRelations = this._aqlRelations(relations);
+
+		return this.query(`
+						FOR row IN ${this.collectionName}
+						FOR join in ${relation.edgeName}
+						FILTER join.${relation.direction == this.relateDirection.OUTBOUND ? "_from" : "_to"} == row._id
+						&& join.${relation.direction == this.relateDirection.OUTBOUND ? "_to" : "_from"} == '${linkId}'
+						RETURN MERGE(row, ${aqlRelations})
+					`);
 
 	}
 
@@ -569,8 +580,22 @@ class ABModelBase {
 		relations.forEach(relationName => {
 
 			let r = this.relations[relationName];
+			if (r == null) return;
 
-			result[relationName] = `(FOR sub IN 1..1 ${r.direction} row ${r.edgeName} RETURN sub)`;
+			// https://www.arangodb.com/docs/stable/aql/tutorial-traversal.html
+			// result[relationName] = `(FOR sub IN 1..1 ${r.direction} row ${r.edgeName} RETURN sub)`;
+
+			// https://www.arangodb.com/docs/stable/aql/examples-join.html
+			// NOTE: use join mechanism to get values in edge collection
+			result[relationName] =
+				`(FOR link IN ${r.edgeName} ` +
+				`FILTER link.${r.direction == this.relateDirection.OUTBOUND ? "_from" : "_to"} == row._id ` +
+
+				`FOR sub IN ${r.linkCollection} ` +
+				`FILTER sub._id == link.${r.direction == this.relateDirection.OUTBOUND ? "_to" : "_from"} ` +
+
+				`RETURN MERGE(link, sub))`;
+
 		});
 
 		let aql = JSON.stringify(result)

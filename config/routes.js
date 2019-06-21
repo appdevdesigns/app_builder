@@ -28,6 +28,9 @@ module.exports = {
         'app_builder/ABApplicationController.applicationSave',
 
     /* Objects */
+    'get /app_builder/application/:appID/objects':
+        'app_builder/ABObjectController.objectApplication',
+
     'get /app_builder/object':
         'app_builder/ABObjectController.objectFind',
 
@@ -55,6 +58,9 @@ module.exports = {
 
 
     /* Queries */
+    'get /app_builder/application/:appID/queries':
+        'app_builder/ABQueryController.queryApplication',
+
     'get /app_builder/query':
         'app_builder/ABQueryController.queryFind',
 

@@ -539,8 +539,8 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 					/** fields **/
 					var fields = $$(ids.datatable).config.columns.map(col => { // an array of field's url
 
-						// TODO: pull object by alias
-						let object = null;
+						// pull object by alias
+						let object = CurrentQuery.objectByAlias(col.alias);
 						if (!object) return;
 
 						let field = object.fields(f => f.id == col.fieldID);

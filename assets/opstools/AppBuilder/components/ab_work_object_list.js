@@ -666,6 +666,8 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 		// Define our external interface methods:
 		// 
 		this.applicationLoad = _logic.applicationLoad;
+		this.busy = _logic.listBusy;
+		this.ready = _logic.listReady;
 
 	}
 

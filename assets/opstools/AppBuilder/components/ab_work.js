@@ -263,6 +263,10 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 			show:function() {
 
 				$$(ids.component).show();
+
+				let tabId = $$(ids.tabbar).getSelectedId();
+				_logic.tabSwitch(tabId);
+
 			},
 
 
@@ -279,22 +283,19 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 
 					// Object Workspace Tab
 					case ids.tab_object:
-
-						// $$(ids.buttonSync).show();
+	
 						AppObjectWorkspace.show();
 						break;
 
 					// Query Workspace Tab
 					case ids.tab_query:
 
-						// $$(ids.buttonSync).show();
 						AppQueryWorkspace.show();
 						break;
 
 					// Interface Workspace Tab
 					case ids.tab_interface:
 
-						// $$(ids.buttonSync).hide();
 						AppInterfaceWorkspace.show();
 						break;
 				}
