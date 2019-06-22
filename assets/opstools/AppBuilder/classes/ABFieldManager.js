@@ -21,6 +21,7 @@ import ABFieldConnect from "./dataFields/ABFieldConnect"
 import ABFieldCalculate from "./dataFields/ABFieldCalculate"
 import ABFieldTextFormula from "./dataFields/ABFieldTextFormula"
 import ABFieldFormula from "./dataFields/ABFieldFormula"
+import ABFieldAutoIndex from "./dataFields/ABFieldAutoIndex" 
 
 /*
  * Fields
@@ -42,6 +43,7 @@ Fields[ABFieldConnect.defaults().key] = ABFieldConnect;
 Fields[ABFieldCalculate.defaults().key] = ABFieldCalculate;
 Fields[ABFieldTextFormula.defaults().key] = ABFieldTextFormula;
 Fields[ABFieldFormula.defaults().key] = ABFieldFormula;
+Fields[ABFieldAutoIndex.defaults().key] = ABFieldAutoIndex;
 
 
 export default  {

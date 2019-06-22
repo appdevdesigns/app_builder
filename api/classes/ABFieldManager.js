@@ -21,6 +21,7 @@ var ABFieldConnect = require( path.join(__dirname, "dataFields", "ABFieldConnect
 var ABFieldCalculate = require( path.join(__dirname, "dataFields", "ABFieldCalculate" ));
 var ABFieldTextFormula = require( path.join(__dirname, "dataFields", "ABFieldTextFormula"));
 var ABFieldFormula = require( path.join(__dirname, "dataFields", "ABFieldFormula" ));
+var ABFieldAutoIndex = require( path.join(__dirname, "dataFields", "ABFieldAutoIndex" ));
 
 /*
  * Fields
@@ -42,7 +43,7 @@ Fields[ABFieldConnect.defaults().key] = ABFieldConnect;
 Fields[ABFieldCalculate.defaults().key] = ABFieldCalculate;
 Fields[ABFieldTextFormula.defaults().key] = ABFieldTextFormula;
 Fields[ABFieldFormula.defaults().key] = ABFieldFormula;
-
+Fields[ABFieldAutoIndex.defaults().key] = ABFieldAutoIndex;
 
 module.exports = {
 

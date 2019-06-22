@@ -214,18 +214,23 @@ function setValueToFormula(object, formulaString, rowData) {
 	var matches_field_array = formulaString.match(fieldRegExp);
 	matches_field_array.forEach(element => {
 		var columnName = element.replace(/{|}|\"/g, '');
-		if (rowData.hasOwnProperty(columnName)) {
-			formulaString = formulaString.replace(element, rowData[columnName] ? rowData[columnName] : "");
-		}
-		else {
-			object.fields().forEach(field => {
-				//Calculate Field
-				if(field.columnName == columnName && field.key == "calculate") {
+		object.fields().forEach(field => {
+			if(field.columnName == columnName){
+				if(field.key == "AutoIndex") {
+					//Check AutoIndex Field
+					let autoIndexVal = field.format(rowData) || 0;
+					formulaString = formulaString.replace(element, autoIndexVal);
+				}
+				else if(field.key == "calculate") {
+					//Calculate Field
 					let calVal = "(#calVal#)".replace("#calVal#", field.format(rowData) || 0);
 					formulaString = formulaString.replace(element, eval(calVal));
 				}
-			});
-		}
+				else {
+					formulaString = formulaString.replace(element, rowData[columnName] ? rowData[columnName] : "");
+				}
+			}
+		});
 	});
 
 	return formulaString;
