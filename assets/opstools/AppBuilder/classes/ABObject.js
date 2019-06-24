@@ -497,6 +497,7 @@ export default class ABObject extends ABObjectBase {
 
 		let availableConnectFn = (f) => {
 			if (f.key == 'connectObject' &&
+				this.application &&
 				this.application.objects(obj => obj.id == f.settings.linkObject).length < 1) {
 
 				return false

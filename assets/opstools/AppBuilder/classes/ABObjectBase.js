@@ -354,6 +354,10 @@ module.exports =  class ABObjectBase {
 	 * @return {string} 
 	 */
 	 urlRest() {
+
+		if (this.application == null)
+			return null;
+
 	 	return '/app_builder/model/application/#appID#/object/#objID#'
 			.replace('#appID#', this.application.id)
 			.replace('#objID#', this.id);
@@ -366,6 +370,10 @@ module.exports =  class ABObjectBase {
 	 * @return {string} 
 	 */
 	urlRestItem(id) {
+
+		if (this.application == null)
+			return null;
+
 		return `/app_builder/model/application/${this.application.id}/object/${this.id}/${id}`;
 	}
 
@@ -376,6 +384,10 @@ module.exports =  class ABObjectBase {
 	 * @return {string} 
 	 */
 	urlRestRefresh() {
+
+		if (this.application == null)
+			return null;
+
 		return '/app_builder/model/application/#appID#/refreshobject/#objID#'
 			.replace('#appID#', this.application.id)
 			.replace('#objID#', this.id);
@@ -388,6 +400,10 @@ module.exports =  class ABObjectBase {
 	 * @return {string} 
 	 */
 	urlRestCount() {
+
+		if (this.application == null)
+			return null;
+
 		return '/app_builder/model/application/#appID#/count/#objID#'
 			.replace('#appID#', this.application.id)
 			.replace('#objID#', this.id);
@@ -535,6 +551,10 @@ module.exports =  class ABObjectBase {
 	 * @return {string} 
 	 */
 	urlPointer(acrossApp) {
+
+		if (this.application == null)
+			return null;
+
 		return this.application.urlObject(acrossApp)+this.id;
 	}
 

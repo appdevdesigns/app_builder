@@ -51,7 +51,7 @@ module.exports = {
 
 		let cond = req.query;
 
-		ABGraphQuery.find(cond)
+		ABGraphQuery.find(cond, ['objects'])
 			.catch(error => {
 				err(error);
 				res.AD.error(error);
@@ -73,7 +73,7 @@ module.exports = {
 
 		let queryID = req.param('queryID');
 
-		ABGraphQuery.findOne(queryID)
+		ABGraphQuery.findOne(queryID, ['objects'])
 			.catch(error => {
 				err(error);
 				res.AD.error(error);
@@ -113,7 +113,9 @@ module.exports = {
 						})
 						.then(result => {
 
-							next(result);
+							query = result;
+
+							next();
 
 						});
 
@@ -122,7 +124,7 @@ module.exports = {
 			})
 
 			// Set relation to application
-			.then(query => {
+			.then(() => {
 
 				return new Promise((next, error) => {
 
@@ -138,7 +140,7 @@ module.exports = {
 						})
 						.then(() => {
 
-							next(query);
+							next();
 
 						});
 
@@ -147,7 +149,7 @@ module.exports = {
 			})
 
 			// Clear relations of objects
-			.then(query => {
+			.then(() => {
 
 				return new Promise((next, error) => {
 
@@ -160,7 +162,7 @@ module.exports = {
 						})
 						.then(() => {
 
-							next(query);
+							next();
 
 						});
 
@@ -168,7 +170,7 @@ module.exports = {
 			})
 
 			// Set relation to objects
-			.then(query => {
+			.then(() => {
 
 				let tasks = [];
 
@@ -198,17 +200,19 @@ module.exports = {
 				// start to store join objects
 				storeObjectId(query.joins.objectID, query.joins.alias, query.joins);
 
-				// Final
-				Promise.all(tasks)
-					.catch(errMessage => {
+				return Promise.all(tasks);
 
-						error(errMessage);
-						res.AD.error(true);
+			})
 
+			// Final - Pass result
+			.then(() => {
+
+				ABGraphQuery.findOne(query.id, ['objects'])
+					.catch(error => {
+						res.AD.error(error);
 					})
-					.then(() => {
+					.then(query => {
 
-						// Pass result to client
 						res.AD.success(query);
 
 					});

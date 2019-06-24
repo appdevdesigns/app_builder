@@ -23,7 +23,7 @@ export default class ABObjectQuery extends ABObject {
 		// populate connection objects
 		this._objects = {};
 		(attributes.objects || []).forEach(obj => {
-			this._objects[obj.alias] = new ABObject(obj);
+			this._objects[obj.alias] = new ABObject(obj, application);
 		});
 
 
@@ -363,7 +363,7 @@ export default class ABObjectQuery extends ABObject {
 		if (!this._joins.objectID)
 			return null;
 
-		return this.application.objects(obj => obj.id == this._joins.objectID)[0] || null;
+		return this.objects(obj => obj.id == this._joins.objectID)[0] || null;
 
 	}
 

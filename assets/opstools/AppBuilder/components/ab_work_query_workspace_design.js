@@ -424,6 +424,10 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 				object.connectFields().forEach(f => {
 
 					let objectLink = CurrentQuery.objects(obj => obj.id == f.settings.linkObject)[0];
+
+					// if (objectLink == null)
+					// 	objectLink = CurrentQuery.application.objects(obj => obj.id == f.settings.linkObject)[0];
+
 					if (objectLink == null)
 						return;
 
@@ -469,13 +473,13 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 			 * 
 			 * @return {Promise}
 			 */
-			save: () => {
+			save: (selctedFields = null) => {
 				
 				console.log("Changed **********************");
 
 				return new Promise((resolve, reject) => {
 
-					var tree = $$(ids.tree);
+					var $tree = $$(ids.tree);
 
 					var objectBase = CurrentQuery.objectBase();
 
@@ -488,19 +492,20 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 					let lookupFields = {};
 
-					let $checkedItem = tree.getChecked()
-						.map(id => tree.getItem(id))
+					let $checkedItem = $tree.getChecked()
+						.map(id => $tree.getItem(id))
 						.sort((a, b) => a.$level - b.$level);
+
 					($checkedItem || []).forEach($treeItem => {
 
-						let field = CurrentQuery.fields(f => f.id == $treeItem.fieldID)[0];
-						if (!field) return;
+						// let field = CurrentQuery.fields(f => f.id == $treeItem.fieldID)[0];
+						// if (!field) return;
 
 						// alias name
 						let aliasName = $treeItem.alias;
 						if (!aliasName) {
 							aliasName = _logic.aliasName();
-							tree.updateItem($treeItem.id, {
+							$tree.updateItem($treeItem.id, {
 								alias: aliasName
 							});
 						}
@@ -517,7 +522,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 						let links = joins.links, // default is links of base
 							newJoin = {
 								alias: aliasName,
-								fieldID: field.id,
+								fieldID: $treeItem.fieldID,
 								type: joinType,
 								links: []
 							};
@@ -525,8 +530,8 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 						if ($treeItem.$level > 1) {
 
 							// pull parent join
-							let parentId = tree.getParentId($treeItem.id),
-								$parentItem = tree.getItem(parentId);
+							let parentId = $tree.getParentId($treeItem.id),
+								$parentItem = $tree.getItem(parentId);
 
 							links = lookupFields[$parentItem.alias].links;
 						}
@@ -542,27 +547,29 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 					CurrentQuery.importJoins(joins);
 
 					/** fields **/
-					var fields = $$(ids.datatable).config.columns.map(col => { // an array of field's url
+					if (selctedFields == null) {
+						selctedFields = $$(ids.datatable).config.columns.map(col => { // an array of field ids
 
-						// pull object by alias
-						let object = CurrentQuery.objectByAlias(col.alias);
-						if (!object) return;
+							// pull object by alias
+							let object = CurrentQuery.objectByAlias(col.alias);
+							if (!object) return;
 
-						let field = object.fields(f => f.id == col.fieldID);
-						if (!field) return;
+							let field = object.fields(f => f.id == col.fieldID)[0];
+							if (!field) return;
 
-						// avoid add fields that not exists alias
-						if (col.alias != "BASE_OBJECT" &&
-							CurrentQuery.links(l => l.alias == col.alias).length < 1)
-							return;
+							// avoid add fields that not exists alias
+							if (col.alias != "BASE_OBJECT" &&
+								CurrentQuery.links(l => l.alias == col.alias).length < 1)
+								return;
 
-						return {
-							alias: col.alias,
-							fieldID: col.fieldID
-						};
-					}).filter(col => col != null);
+							return {
+								alias: col.alias,
+								fieldID: col.fieldID
+							};
+						}).filter(col => col != null);
+					}
 
-					CurrentQuery.importFields(fields);
+					CurrentQuery.importFields(selctedFields);
 
 
 					/** where **/
@@ -690,15 +697,15 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 					return indexA - indexB;
 				});
 
-				CurrentQuery.importFields(fields);
-
-				// refresh columns of data table
-				_logic.refreshDataTable();
+				// CurrentQuery.importFields(fields);
 
 
 				// call save to db
-				_logic.save()
+				_logic.save(fields)
 					.then(() => {
+
+						// refresh columns of data table
+						_logic.refreshDataTable();
 
 						// refresh filter
 						_logic.refreshFilter();
