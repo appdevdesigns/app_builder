@@ -203,7 +203,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 
 						let findCond = {
-							fieldUrl: field.urlPointer()
+							fieldID: field.id
 						};
 						if (parentId != null) {
 							findCond.$parent = parentId;
@@ -232,10 +232,12 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 								open: true
 							});
 
-							let childItems = _logic.getChildItems(field.datasourceLink, $item.id);
+							let objectLink = CurrentQuery.objects(obj => obj.id == field.settings.linkObject)[0];
+
+							let childItems = _logic.getChildItems(objectLink, $item.id);
 							$$(ids.tree).parse(childItems);
 
-							fnCheckItem(treeStore, field.datasourceLink, link.links, $item.id);
+							fnCheckItem(treeStore, objectLink, link.links, $item.id);
 						}
 
 					});
@@ -267,7 +269,9 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 									if (!fromObj) return;
 
 									let fromField = fromObj.fields(fi => fi.id == l.fieldID)[0];
-									if (fromField && fromField.datasourceLink.id == f.field.object.id)
+									if (!fromField) return;
+
+									if (fromField.settings.linkObject == f.field.object.id)
 										f.alias = alias;
 								}
 
@@ -360,7 +364,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 						var fieldLink = objFrom.fields(f => f.id == join.fieldID)[0];
 						if (!fieldLink) return;
 
-						var objLink = fieldLink.datasourceLink;
+						var objLink = CurrentQuery.objects(obj => obj.id == fieldLink.settings.linkObject)[0];
 						if (!objLink) return;
 						// if (!objLink ||
 						// 	// prevent join recursive base object
@@ -419,20 +423,21 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 				object.connectFields().forEach(f => {
 
-					if (f.datasourceLink == null)
+					let objectLink = CurrentQuery.objects(obj => obj.id == f.settings.linkObject)[0];
+					if (objectLink == null)
 						return;
 
-					let fieldUrl = f.urlPointer();
+					let fieldID = f.id;
 
 					// add items to tree
 					var label = "#object# (#field#)"
-						.replace("#object#", f.datasourceLink.label)
+						.replace("#object#", objectLink.label)
 						.replace("#field#", f.label);
 
 					result.data.push({
 						value: label, // a label of link object
-						fieldUrl: fieldUrl,
-						objectId: f.datasourceLink.id,
+						fieldID: fieldID,
+						objectId: objectLink.id,
 						checked: false,
 						disabled: false, // always enable
 						open: false,
@@ -488,7 +493,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 						.sort((a, b) => a.$level - b.$level);
 					($checkedItem || []).forEach($treeItem => {
 
-						let field = CurrentQuery.application.urlResolve($treeItem.fieldUrl);
+						let field = CurrentQuery.fields(f => f.id == $treeItem.fieldID)[0];
 						if (!field) return;
 
 						// alias name
@@ -721,11 +726,11 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 				if (option.object == null && option.field == null)
 					throw new Error("Invalid params");
 
-				var object = (option.object ? option.object : option.field.datasourceLink);
+				var object = (option.object ? option.object : CurrentQuery.objects(obj => obj.id == option.field.settings.linkObject)[0]);
 
 				var fields = object.fields(f => f.fieldSupportQuery()).map(f => {
 					return {
-						id: f.urlPointer(),
+						id: f.id,
 						value: f.label
 					};
 				});
@@ -909,9 +914,17 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 													let item = this.getItem(id);
 													if (item.$count===-1){
-														let field = CurrentApplication.urlResolve(item.fieldUrl);
-														let childItems = _logic.getChildItems(field.datasourceLink, id);
+
+														let field = CurrentQuery.fields(f => f.id == item.fieldID)[0];
+														if (!field) return;
+
+														let objectLink = CurrentQuery.objects(obj => obj.id == field.settings.linkObject)[0];
+														if (!objectLink) return;
+
+														let childItems = _logic.getChildItems(objectLink, id);
+
 														$$(ids.tree).parse(childItems);
+
 													}
 
 												}

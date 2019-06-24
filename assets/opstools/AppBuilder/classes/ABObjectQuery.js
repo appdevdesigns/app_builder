@@ -376,7 +376,7 @@ export default class ABObjectQuery extends ABObject {
 	 */
 	objectByAlias(alias) {
 
-		return this._objects[alias];
+		return (this._objects || {})[alias];
 
 	}
 
@@ -413,7 +413,7 @@ export default class ABObjectQuery extends ABObject {
 		var newObjects = {};
 		var newLinks = [];
 
-		function storeObject(object, alias) {
+		let storeObject = (object, alias) => {
 			if (!object) return;
 
 			// var inThere = newObjects.filter(obj => obj.id == object.id && obj.alias == alias ).length > 0;
@@ -426,7 +426,7 @@ export default class ABObjectQuery extends ABObject {
 			// }
 		}
 
-		function storeLinks(links) {
+		let storeLinks = (links) => {
 
 			(links || []).forEach(link => {
 
@@ -439,7 +439,7 @@ export default class ABObjectQuery extends ABObject {
 
 		}
 
-		function processJoin(baseObject, joins) {
+		let processJoin = (baseObject, joins) => {
 
 			if (!baseObject) return;
 
@@ -466,7 +466,7 @@ export default class ABObjectQuery extends ABObject {
 				if (!linkField) return;
 
 				// track our linked object
-				var linkObject = linkField.datasourceLink;
+				var linkObject = this.objects(obj => obj.id == linkField.settings.linkObject)[0];
 				if (!linkObject) return;
 
 				storeObject(linkObject, link.alias);
@@ -547,8 +547,8 @@ export default class ABObjectQuery extends ABObject {
 		if (!field) return false;
 
 		// I can filter a field if it's object OR the object it links to can be filtered:
-		var object = field.object;
-		var linkedObject = field.datasourceLink;
+		let object = field.object;
+		let linkedObject = this.objects(obj => obj.id == field.settings.linkObject)[0];
 
 		return this.canFilterObject(object) || this.canFilterObject(linkedObject);
 	}

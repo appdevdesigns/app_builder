@@ -231,7 +231,7 @@ class ABClassQuery extends ABClassObject {
 	 */
 	objectByAlias(alias) {
 
-		return this._objects[alias];
+		return (this._objects || {})[alias];
 
 	}
 
@@ -270,7 +270,7 @@ class ABClassQuery extends ABClassObject {
 		if (!this._joins.objectID)
 			return null;
 
-		return this.objects(obj => obj.id == this._joins.objectID)[0] || null;
+		return ABObjectCache.get(this._joins.objectID) || null;
 
 	}
 
@@ -289,7 +289,7 @@ class ABClassQuery extends ABClassObject {
 
 		var newObjects = {};
 
-		function storeObject(object, alias) {
+		let storeObject = (object, alias) => {
 			if (!object) return;
 
 			// var inThere = newObjects.filter(obj => obj.id == object.id && obj.alias == alias ).length > 0;
@@ -300,9 +300,9 @@ class ABClassQuery extends ABClassObject {
 			// 	object: object
 			// });
 			// }
-		}
+		};
 
-		function processJoin(baseObject, joins) {
+		let processJoin = (baseObject, joins) => {
 
 			if (!baseObject) return;
 
@@ -338,14 +338,14 @@ class ABClassQuery extends ABClassObject {
 
 			});
 
-		}
+		};
 
 		if (!this._joins.objectURL)
 			// TODO: this is old query version
 			return;
 
 		// store the root object
-		var rootObject = this.objects(obj => obj.id == this._joins.objectID)[0];
+		var rootObject = ABObjectCache.get(this._joins.objectID);
 		if (!rootObject) {
 			this._objects = newObjects;
 			return;
@@ -869,7 +869,7 @@ class ABClassQuery extends ABClassObject {
 						let fieldConnect = f.object.fields(fld => fld.id == f.settings.field)[0];
 						if (!fieldConnect) return;
 
-						let objectNumber = f.object.application.objects(obj => obj.id == f.settings.object)[0];
+						let objectNumber = ABObjectCache.get(f.settings.object);
 						if (!objectNumber) return;
 
 						let fieldNumber = objectNumber.fields(fld => fld.id == f.settings.fieldLink)[0];

@@ -326,6 +326,7 @@ export default class ABObject extends ABObjectBase {
 			});
 
 			header.alias = f.alias || undefined; // query type
+			header.fieldID = f.id;
 			header.fieldURL = f.urlPointer();
 
 			if (f.settings.width != 0) {

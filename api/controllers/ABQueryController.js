@@ -198,19 +198,21 @@ module.exports = {
 				// start to store join objects
 				storeObjectId(query.joins.objectID, query.joins.alias, query.joins);
 
-				return Promise.all(tasks);
+				// Final
+				Promise.all(tasks)
+					.catch(errMessage => {
 
-			})
+						error(errMessage);
+						res.AD.error(true);
 
-			// Finally
-			.then(query => {
+					})
+					.then(() => {
 
-				return new Promise((next, error) => {
+						// Pass result to client
+						res.AD.success(query);
 
-					res.AD.success(query);
-					next();
+					});
 
-				})
 			});
 
 	},
