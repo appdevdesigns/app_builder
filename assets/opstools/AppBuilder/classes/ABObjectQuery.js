@@ -148,6 +148,12 @@ export default class ABObjectQuery extends ABObject {
 						!this.id)
 						this.id = newQuery.id;
 
+					// populate connection objects
+					this._objects = {};
+					(newQuery.objects || []).forEach(obj => {
+						this._objects[obj.alias] = new ABObject(obj, this.application);
+					});
+
 					resolve(this);
 
 				})
@@ -240,7 +246,7 @@ export default class ABObjectQuery extends ABObject {
 			let object = this.objectByAlias(fieldInfo.alias);
 			if (!object) return;
 
-			let field = object.fields(f => f.id == fieldInfo.fieldID)[0];
+			let field = object.fields(f => f.id == fieldInfo.fieldID, true)[0];
 
 			// should be a field of base/join objects
 			if (field && this.canFilterField(field) &&
@@ -462,7 +468,7 @@ export default class ABObjectQuery extends ABObject {
 				//		]
 				//	},
 
-				var linkField = baseObject.fields((f) => { return f.id == link.fieldID; })[0];
+				var linkField = baseObject.fields(f => f.id == link.fieldID, true)[0];
 				if (!linkField) return;
 
 				// track our linked object
@@ -567,7 +573,7 @@ export default class ABObjectQuery extends ABObject {
 			let object = this.objectByAlias(h.alias);
 			if (!object) return;
 
-			let field = object.fields(f => f.id == h.fieldID)[0];
+			let field = object.fields(f => f.id == h.fieldID, true)[0];
 			if (!field) return;
 
 			// NOTE: query v1

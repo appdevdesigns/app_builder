@@ -480,6 +480,12 @@ export default class ABApplication extends ABApplicationBase {
 
 	}
 
+	objectGet(id) {
+
+		return this.Model.staticData.objectGet(id);
+
+	}
+
 	objectFind(cond) {
 
 		return this.Model.staticData.objectFind(cond);

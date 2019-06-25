@@ -486,12 +486,14 @@ export default class ABObject extends ABObjectBase {
 
 	/**
 	 * @method fields()
-	 *
 	 * return an array of all the ABFields for this ABObject.
 	 *
+	 * @param filter {Object}
+	 * @param getAll {Boolean} - [Optional]
+	 * 
 	 * @return {array}
 	 */
-	fields (filter) {
+	fields (filter, getAll = false) {
 
 		filter = filter || function() { return true; };
 
@@ -508,20 +510,28 @@ export default class ABObject extends ABObjectBase {
 			}
 		};
 
-		return this._fields.filter(filter).filter(availableConnectFn);
+		let result = this._fields.filter(filter);
+
+		if (!getAll) {
+			result = result.filter(availableConnectFn);
+		}
+
+		return result;
 	}
 
 
 	/**
 	 * @method connectFields()
-	 *
 	 * return an array of the ABFieldConnect that is connect object fields.
 	 *
+	 * @param filter {Object}
+	 * @param getAll {Boolean} - [Optional]
+	 * 
 	 * @return {array}
 	 */
-	connectFields () {
+	connectFields (getAll = false) {
 
-		return this.fields(function(f) { return f.key == 'connectObject'; });
+		return this.fields(f => f.key == 'connectObject', getAll);
 	}
 
 	///
