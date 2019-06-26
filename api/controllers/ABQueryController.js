@@ -276,7 +276,7 @@ module.exports = {
 
 				return new Promise((next, err) => {
 
-					ABGraphQuery.findOne(queryID)
+					ABGraphQuery.findOne(queryID, ['objects'])
 						.catch(err)
 						.then(q => {
 

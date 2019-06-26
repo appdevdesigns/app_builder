@@ -320,12 +320,13 @@ class ABModelBase {
 
 					updates = JSON.stringify(updates);
 
-					this.query(`
-							FOR row IN ${this.collectionName}
-							FILTER row._key == '${id}'
-							UPDATE row WITH ${updates} IN ${this.collectionName}
-							RETURN NEW
-						`, false)
+					this.query(
+						`FOR row IN ${this.collectionName} ` +
+						`FILTER row._key == '${id}' ` +
+						// `UPDATE row WITH ${updates} IN ${this.collectionName} ` +
+						`REPLACE row WITH ${updates} IN ${this.collectionName} ` +
+						`RETURN NEW`
+						, false)
 						.catch(err)
 						.then(doc => {
 							updatedRecord = doc;
@@ -375,13 +376,14 @@ class ABModelBase {
 
 					updates = JSON.stringify(updates);
 
-					this.query(`
-							UPSERT { _key: '${id}' }
-							INSERT ${updates}
-							UPDATE ${updates}
-							IN ${this.collectionName}
-							RETURN NEW
-					`, false)
+					this.query(
+							`UPSERT { _key: '${id}' } ` +
+							`INSERT ${updates} ` +
+							// `UPDATE ${updates} ` +
+							`REPLACE ${updates} ` +
+							`IN ${this.collectionName} ` +
+							`RETURN NEW`
+					, false)
 						// RETURN { doc: NEW, type: OLD ? 'insert': 'update' }
 						.catch(err)
 						.then(doc => {

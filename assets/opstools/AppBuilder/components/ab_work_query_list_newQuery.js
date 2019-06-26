@@ -31,6 +31,8 @@ export default class AB_Work_Query_List_NewQuery extends OP.Component {   //.ext
 		let BlankTab = new ABBlankQuery(App);
 		let ImportTab = new ABImportQuery(App);
 
+		let CurrentApplication = null;
+
 		// Our webix UI definition:
 		this.ui = {
 			view: "window",
@@ -43,7 +45,7 @@ export default class AB_Work_Query_List_NewQuery extends OP.Component {   //.ext
 				id: ids.tab,
 				cells: [
 					BlankTab.ui,
-					// ImportTab.ui,
+					ImportTab.ui,
 				],
 				tabbar: {
 					on: {
@@ -87,9 +89,8 @@ export default class AB_Work_Query_List_NewQuery extends OP.Component {   //.ext
 				onBusyEnd: _logic.hideBusy
 			}
 
-			// TODO
 			BlankTab.init(ourCBs);
-			// ImportTab.init(ourCBs);
+			ImportTab.init(ourCBs);
 
 		}
 
@@ -106,7 +107,7 @@ export default class AB_Work_Query_List_NewQuery extends OP.Component {   //.ext
 			 */
 			applicationLoad: function (application) {
 				// _logic.show();
-				currentApplication = application;	// remember our current Application.
+				CurrentApplication = application;	// remember our current Application.
 			},
 
 
@@ -163,13 +164,12 @@ export default class AB_Work_Query_List_NewQuery extends OP.Component {   //.ext
 
 				if (tabId == BlankTab.ui.body.id) {
 					if (BlankTab.onShow)
-						BlankTab.onShow(currentApplication);
+						BlankTab.onShow(CurrentApplication);
 				}
-				// TODO
-				// else if (tabId == ImportTab.ui.body.id) {
-				// 	if (ImportTab.onShow)
-				// 		ImportTab.onShow(currentApplication);
-				// }
+				else if (tabId == ImportTab.ui.body.id) {
+					if (ImportTab.onShow)
+						ImportTab.onShow(CurrentApplication);
+				}
 
 			},
 
@@ -188,9 +188,6 @@ export default class AB_Work_Query_List_NewQuery extends OP.Component {   //.ext
 			}
 
 		}
-
-
-		var currentApplication = null;
 
 
 		// Expose any globally accessible Actions:

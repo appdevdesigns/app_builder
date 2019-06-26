@@ -149,9 +149,12 @@ export default class ABObjectQuery extends ABObject {
 						this.id = newQuery.id;
 
 					// populate connection objects
-					this._objects = {};
+					this._objects = this._objects || {};
 					(newQuery.objects || []).forEach(obj => {
-						this._objects[obj.alias] = new ABObject(obj, this.application);
+
+						if (this._objects[obj.alias] == null)
+							this._objects[obj.alias] = new ABObject(obj, this.application);
+
 					});
 
 					resolve(this);

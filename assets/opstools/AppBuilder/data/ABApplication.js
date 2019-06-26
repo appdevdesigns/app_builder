@@ -170,6 +170,17 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 			});
 		},
 
+		queryFind: function (cond) {
+
+			return OP.Comm.Service.get({
+				url: `/app_builder/query`,
+				data: {
+					query: cond
+				}
+			});
+
+		},
+
 		/**
 		 * @method querySave
 		 * 

@@ -772,6 +772,12 @@ export default class ABApplication extends ABApplicationBase {
 
 	}
 
+	queryFind(cond) {
+
+		return this.Model.staticData.queryFind(cond);
+
+	}
+
 	/**
 	 * @method queryNew()
 	 *
@@ -831,13 +837,15 @@ export default class ABApplication extends ABApplicationBase {
 				.catch(reject)
 				.then(newQuery => {
 
+					let newQueryClass = this.queryNew(newQuery);
+
 					// add to list
 					var isIncluded = (this.queries(q => q.id == newQuery.id).length > 0);
 					if (!isIncluded) {
-						this._queries.push(newQuery);
+						this._queries.push(newQueryClass);
 					}
 
-					resolve(newQuery);
+					resolve(newQueryClass);
 
 				});
 

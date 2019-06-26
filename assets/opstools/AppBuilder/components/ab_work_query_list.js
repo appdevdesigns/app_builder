@@ -209,7 +209,7 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 			}
 
 			PopupNewQueryComponent.init({
-				onDone: _logic.callbackNewObject
+				onDone: _logic.callbackNewQuery
 			});
 
 			PopupEditObjectComponent.init({
@@ -443,11 +443,11 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 
 
 			/**
-			 * @function callbackNewObject
+			 * @function callbackNewQuery
 			 *
-			 * Once a New Object was created in the Popup, follow up with it here.
+			 * Once a New Query was created in the Popup, follow up with it here.
 			 */
-			callbackNewObject:function(err, query, selectNew, callback) {
+			callbackNewQuery:function(err, query, selectNew, callback) {
 
 				if (err) {
 					OP.Error.log('Error creating New Query', {error: err});
