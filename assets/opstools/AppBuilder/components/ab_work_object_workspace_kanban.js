@@ -45,7 +45,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 		let FormSide = new AB_Work_Form(App, idBase + '_kanban_form');
 
 		var CurrentObject = null;	// current ABObject being displayed
-		var CurrentDC = null;
+		var CurrentDataview = null;
 		var CurrentVerticalField = null;
 		var CurrentHorizontalField = null;
 		var CurrentOwnerField = null;
@@ -393,16 +393,16 @@ export default class ABWorkObjectKanBan extends OP.Component {
 			},
 
 			/**
-			 * @method dataCollectionLoad
+			 * @method dataviewLoad
 			 * 
-			 * @param dataCollection {ABViewDataCollection}
+			 * @param dataview {ABDataview}
 			 */
-			dataCollectionLoad: (dataCollection) => {
+			dataviewLoad: (dataview) => {
 
-				CurrentDC = dataCollection;
+				CurrentDataview = dataview;
 
-				if (CurrentDC)
-					CurrentDC.bind($$(ids.kanban));
+				if (CurrentDataview)
+					CurrentDataview.bind($$(ids.kanban));
 				else
 					$$(ids.kanban).unbind();
 
@@ -585,7 +585,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 		this.hide = _logic.hide;
 		this.show = _logic.show;
 		this.objectLoad = _logic.objectLoad;
-		this.dataCollectionLoad = _logic.dataCollectionLoad;
+		this.dataviewLoad = _logic.dataviewLoad;
 		this.addCard = _logic.addCard;
 
 	}

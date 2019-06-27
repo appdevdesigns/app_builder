@@ -874,6 +874,131 @@ export default class ABApplication extends ABApplicationBase {
 
 
 
+	///
+	/// Data views
+	///
+
+	dataviewLoad() {
+
+		if (this.loadedDataview)
+			return Promise.resolve();
+
+		return new Promise((resolve, reject) => {
+
+			this.Model.staticData.dataviewLoad(this.id)
+				.catch(reject)
+				.then(dataviews => {
+
+					this.loadedDataview = true;
+
+					var newDataviews = [];
+					(dataviews || []).forEach(dataview => {
+						// prevent processing of null values.
+						if (dataview) {
+							  newDataviews.push( this.dataviewNew(dataview) );
+						  }
+					  })
+					this._dataviews = newDataviews;
+
+					resolve();
+
+				});
+
+		});
+
+	}
+
+	dataviewFind(cond) {
+
+		return this.Model.staticData.dataviewFind(cond);
+
+	}
+
+	dataviewNew(values) {
+
+		// TODO
+		return new ABDataview(values, this);
+	}
+
+
+	/**
+	 * @method dataviewDestroy()
+	 *
+	 * remove the current ABDataview from our list of ._dataviews.
+	 *
+	 * @param {ABDataview} dataview
+	 * @return {Promise}
+	 */
+	dataviewDestroy(dataview) {
+
+		var remaininDataviews = this.dataviews(dView => dView.id != dataview.id)
+		this._dataviews = remaininDataviews;
+
+		return this.Model.staticData.dataviewDestroy(dataview.id);
+	}
+
+
+	/**
+	 * @method dataviewSave()
+	 *
+	 * persist the current ABDataview in our list of ._dataviews.
+	 *
+	 * @param {ABDataview} dataview
+	 * @return {Promise}
+	 */
+	dataviewSave(dataview) {
+		var isIncluded = (this.dataviews(dView => dView.id == dataview.id).length > 0);
+		if (!isIncluded) {
+			this._dataviews.push(dataview);
+		}
+
+		return this.Model.staticData.dataviewSave(this.id, dataview.toObj());
+	}
+
+	dataviewImport(dataviewId) {
+
+		return new Promise((resolve, reject) => {
+
+			this.Model.staticData.dataviewImport(this.id, dataviewId)
+				.catch(reject)
+				.then(newDataview => {
+
+					let newDataviewClass = this.dataviewNew(newDataview);
+
+					// add to list
+					var isIncluded = (this.dataviews(q => q.id == newDataview.id).length > 0);
+					if (!isIncluded) {
+						this._dataviews.push(newDataviewClass);
+					}
+
+					resolve(newDataviewClass);
+
+				});
+
+		});
+
+	}
+
+	dataviewExclude(dataviewId) {
+
+		return new Promise((resolve, reject) => {
+
+			this.Model.staticData.dataviewExclude(this.id, dataviewId)
+				.catch(reject)
+				.then(() => {
+
+					// remove query from list
+					this._dataviews = this.dataviews(dView => dView.id != dataviewId);
+
+					resolve();
+
+				});
+
+		});
+
+	}
+
+
 
 
 	///

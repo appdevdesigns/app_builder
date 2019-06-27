@@ -22,7 +22,14 @@ class ABQuery extends ABModelBase {
 				edgeName: "queryObject",
 				linkCollection: "object",
 				direction: this.relateDirection.OUTBOUND
+			},
+
+			dataviews: {
+				edgeName: "dataviewQuery",
+				linkCollection: "dataview",
+				direction: this.relateDirection.INBOUND
 			}
+
 		};
 
 	}

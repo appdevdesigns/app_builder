@@ -1,5 +1,3 @@
-import ABViewDataCollection from "../classes/views/ABViewDataCollection"
-
 export default class AB_Work_Interface_Workspace_Editor_Data extends OP.Component {
 
 	constructor(App) {
@@ -74,26 +72,26 @@ export default class AB_Work_Interface_Workspace_Editor_Data extends OP.Componen
 				// clear list
 				$$(ids.dataCollections).clearAll();
 
-				// render editor ui
-				if (CurrentView instanceof ABViewDataCollection) {
+				// // render editor ui
+				// if (CurrentView instanceof ABViewDataCollection) {
 
-					$$(ids.dataCollections).hide();
-					$$(ids.editDataCollection).show();
+				// 	$$(ids.dataCollections).hide();
+				// 	$$(ids.editDataCollection).show();
 
-					var editorComponent = CurrentView.editorComponent(App, 'preview');
-					$$(ids.editDataCollection).addView(editorComponent.ui);
-					editorComponent.init();
+				// 	var editorComponent = CurrentView.editorComponent(App, 'preview');
+				// 	$$(ids.editDataCollection).addView(editorComponent.ui);
+				// 	editorComponent.init();
 
-				}
-				// load view's data sources in list
-				else {
+				// }
+				// // load view's data sources in list
+				// else {
 
-					$$(ids.dataCollections).show();
-					$$(ids.editDataCollection).hide();
+				$$(ids.dataCollections).show();
+				$$(ids.editDataCollection).hide();
 
-					$$(ids.dataCollections).parse(CurrentRootPage.dataCollections());
+				$$(ids.dataCollections).parse(CurrentRootPage.dataCollections());
 
-				}
+				// }
 
 			},
 

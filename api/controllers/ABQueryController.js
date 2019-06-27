@@ -22,7 +22,7 @@ module.exports = {
 
 
 	/**
-	 * GET /app_builder/application/:appID/queries
+	 * GET /app_builder/application/:appID/query
 	 * 
 	 * Get queries of application
 	 */

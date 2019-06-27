@@ -10,8 +10,6 @@ import ABComponentMenu from "./ab_work_interface_workspace_editor_components"
 import ABEditorLayout from "./ab_work_interface_workspace_editor_layout"
 import ABEditorData from "./ab_work_interface_workspace_editor_data"
 
-import ABViewDataCollection from "../classes/views/ABViewDataCollection"
-
 export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
     
     constructor(App) {
@@ -380,19 +378,19 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                 $$(ids.toolbarMap).refresh();
 
                 // 
-                if (CurrentViewPart == 'data' &&
-                    (CurrentView.isRoot() || 
-                    CurrentView instanceof ABViewDataCollection)) {
+                // if (CurrentViewPart == 'data' &&
+                //     (CurrentView.isRoot() || 
+                //     CurrentView instanceof ABViewDataCollection)) {
 
-                    _logic.showDataPart();
-                    EditorData.viewLoad(view);
-                }
-                else {
+                //     _logic.showDataPart();
+                //     EditorData.viewLoad(view);
+                // }
+                // else {
 
-                    _logic.showLayoutPart();
-                    EditorLayout.viewLoad(view);
-                    ComponentMenu.viewLoad(view);
-                }
+                _logic.showLayoutPart();
+                EditorLayout.viewLoad(view);
+                ComponentMenu.viewLoad(view);
+                // }
 
                 _logic.onViewResize();
 

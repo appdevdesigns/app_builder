@@ -1046,8 +1046,8 @@ export default class RowFilter extends OP.Component {
 								
 							if (linkObjectId) {
 
-								_View.pageRoot()
-								.dataCollections(dc => dc.datasource && dc.datasource.id == linkObjectId)
+								_View.application
+								.dataviews(dv => dv.datasource && dv.datasource.id == linkObjectId)
 								.forEach(dc => {
 
 									dcOptions.push({
@@ -1667,20 +1667,20 @@ export default class RowFilter extends OP.Component {
 					rowData = rowData[columnName] || {};
 				}
 
-				var dc = _View.pageRoot().dataCollections(dc => dc.id == compareValue)[0];
+				var dataview = _View.application.dataviews(dv => dv.id == compareValue)[0];
 					
 				switch (rule) {
 					case 'in_data_collection':
-						if (!dc)
+						if (!dataview)
 							return false;
 							
-						result = (dc.getData(d => d.id == rowData.id).length > 0);
+						result = (dataview.getData(d => d.id == rowData.id).length > 0);
 						break;
 					case 'not_in_data_collection':
-						if (!dc)
+						if (!dataview)
 							return true;
 							
-						result = (dc.getData(d => d.id == rowData.id).length < 1);
+						result = (dataview.getData(d => d.id == rowData.id).length < 1);
 						break;
 				}
 				

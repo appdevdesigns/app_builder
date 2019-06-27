@@ -130,7 +130,7 @@ function parseQueryCondition(_where, object, req, res, cb) {
             var dc;
             object.application.pages().forEach(p => {
                 if (dc == null)
-                    dc = p.dataCollections.filter(dColl => dColl.id == cond.value)[0];
+                    dc = p.application.dataviews(dColl => dColl.id == cond.value)[0];
             });
 
             if (!dc) {

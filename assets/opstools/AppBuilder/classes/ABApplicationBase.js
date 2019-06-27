@@ -309,9 +309,6 @@ module.exports = class ABApplicationBase {
 	/// Queries
 	///
 
-
-
-
 	/**
 	 * @method queries()
 	 *
@@ -326,6 +323,27 @@ module.exports = class ABApplicationBase {
 		filter = filter || function() {return true; };
 
 		return this._queries.filter(filter);
+
+	}
+
+	///
+	/// Data views
+	///
+
+	/**
+	 * @method dataviews()
+	 *
+	 * return an array of all the ABDataview for this ABApplication.
+	 *
+	 * @param {fn} filter  	a filter fn to return a set of ABDataview that 
+	 *						this fn returns true for.
+	 * @return {array} 	array of ABDataview
+	 */
+	dataviews (filter) {
+
+		filter = filter || function() { return true; };
+
+		return this._dataviews.filter(filter);
 
 	}
 

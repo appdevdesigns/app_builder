@@ -166,12 +166,12 @@ export default class ABViewLabel extends ABViewWidget {
 	 * 
 	 * @param {Object} ids 
 	 * @param {ABViewForm} view - the current component
-	 * @param {string} dcId - id of ABViewDataCollection
+	 * @param {string} dvId - id of ABDataview
 	 */
-	static propertyUpdateFieldOptions(ids, view, dcId) {
+	static propertyUpdateFieldOptions(ids, view, dvId) {
 
-		var datacollection = view.pageRoot().dataCollections(dc => dc.id == dcId)[0];
-		var object = datacollection ? datacollection.datasource : null;
+		var dataview = view.application.dataviews(dv => dv.id == dvId)[0];
+		var object = dataview ? dataview.datasource : null;
 
 		// Pull field list
 		var fieldOptions = [];
@@ -200,7 +200,7 @@ export default class ABViewLabel extends ABViewWidget {
 		var SourceSelector = $$(ids.datacollection);
 
 		// Pull data collections to options
-		var dcOptions = view.pageRoot().dataCollections().map((dc) => {
+		var dcOptions = view.application.dataviews().map((dc) => {
 
 			return {
 				id: dc.id,
@@ -294,12 +294,12 @@ export default class ABViewLabel extends ABViewWidget {
 
 	/**
 	 * @property dataCollection
-	 * return ABViewDataCollection of this form
+	 * return ABDataview of this form
 	 * 
-	 * @return {ABViewDataCollection}
+	 * @return {ABDataview}
 	 */
 	get dataCollection() {
-		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.datacollection)[0];
+		return this.application.dataviews(dv => dv.id == this.settings.datacollection)[0];
 	}
 
 

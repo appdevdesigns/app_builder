@@ -520,9 +520,9 @@ export default class ABViewGrid extends ABViewWidget  {
 										$$(ids.detailsPage).setValue("");
 										$$(ids.editPage).setValue("");
 
-										var currDc = _logic.currentEditObject().pageRoot().dataCollections(dc => dc.id == newv)[0];
+										var currDv = _logic.currentEditObject().application.dataviews(dv => dv.id == newv)[0];
 										// disallow edit data of query
-										if (currDc && currDc.sourceType == "query") {
+										if (currDv && currDv.sourceType == "query") {
 
 											$$(ids.isEditable).setValue(false);
 											$$(ids.massUpdate).setValue(false);
@@ -1519,10 +1519,10 @@ export default class ABViewGrid extends ABViewWidget  {
 		// 	objects.push({id:o.id, value:o.label});
 		// });
 		// Pull data collections to options
-		var objectOptions = view.pageRoot().dataCollections().map((dc) => {
+		var objectOptions = view.application.dataviews().map(dv => {
 			return {
-				id: dc.id,
-				value: dc.label
+				id: dv.id,
+				value: dv.label
 			};
 		});
 		objectOptions.unshift(defaultOption);
@@ -1775,12 +1775,12 @@ export default class ABViewGrid extends ABViewWidget  {
 	
 	/**
 	 * @property dataCollection
-	 * return ABViewDataCollection of this form
+	 * return ABDataview of this form
 	 * 
-	 * @return {ABViewDataCollection}
+	 * @return {ABDataview}
 	 */
 	get dataCollection() {
-		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.dataSource)[0];
+		return this.application.dataviews(dv => dv.id == this.settings.dataSource)[0];
 	}
 	
 	removeField(field, cb) {

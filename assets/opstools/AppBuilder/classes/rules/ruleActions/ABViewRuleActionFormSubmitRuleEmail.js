@@ -544,11 +544,10 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 
 				var options = [];
 
-				var pageRoot = this.currentForm.pageRoot(),
-					// get data collections who is query and contains email field
-					dcQueries = pageRoot.dataCollections(dc => {
-						let obj = dc.datasource;
-						return dc.settings.isQuery &&
+				// get data collections who is query and contains email field
+				let dcQueries = this.currentForm.application.dataviews(dv => {
+						let obj = dv.datasource;
+						return dv.settings.isQuery &&
 								obj &&
 								obj.fields(f => f.key == 'email').length > 0;
 					});
@@ -693,7 +692,7 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 								var dcId = dcIdAndFieldId.split('|')[0];
 								var fieldId = dcIdAndFieldId.split('|')[1];
 
-								var dcQuery = this.currentForm.pageRoot().dataCollections(dc => dc.id == dcId)[0];
+								var dcQuery = this.currentForm.application.dataviews(dv => dv.id == dcId)[0];
 								if (!dcQuery) return next();
 
 								var field = dcQuery.datasource.fields(f => f.id == fieldId)[0];

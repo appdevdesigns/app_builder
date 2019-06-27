@@ -28,7 +28,7 @@ module.exports = {
         'app_builder/ABApplicationController.applicationSave',
 
     /* Objects */
-    'get /app_builder/application/:appID/objects':
+    'get /app_builder/application/:appID/object':
         'app_builder/ABObjectController.objectApplication',
 
     'get /app_builder/object':
@@ -58,7 +58,7 @@ module.exports = {
 
 
     /* Queries */
-    'get /app_builder/application/:appID/queries':
+    'get /app_builder/application/:appID/query':
         'app_builder/ABQueryController.queryApplication',
 
     'get /app_builder/query':
@@ -78,6 +78,30 @@ module.exports = {
 
     'delete /app_builder/application/:appID/query/:queryID':
         'app_builder/ABQueryController.excludeQuery',
+
+
+    /* Data views */
+    'get /app_builder/application/:appID/dataview':
+        'app_builder/ABDataviewController.dataviewApplication',
+
+    'get /app_builder/dataview':
+        'app_builder/ABDataviewController.dataviewFind',
+
+    'get /app_builder/dataview/:dataviewId':
+        'app_builder/ABDataviewController.dataviewFindOne',
+
+    'put /app_builder/dataview':
+        'app_builder/ABDataviewController.dataviewSave',
+
+    'delete /app_builder/dataview/:dataviewId':
+        'app_builder/ABDataviewController.dataviewDestroy',
+
+    'put /app_builder/application/:appID/dataview/:dataviewID':
+        'app_builder/ABDataviewController.importDataview',
+
+    'delete /app_builder/application/:appID/dataview/:dataviewID':
+        'app_builder/ABDataviewController.excludeDataview',
+
 
     /* Application permissions */
     'get /app_builder/user/roles':

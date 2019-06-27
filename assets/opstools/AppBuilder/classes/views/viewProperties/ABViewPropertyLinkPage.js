@@ -234,7 +234,7 @@ export default class ABViewPropertyLinkPage extends ABViewProperty {
 		 * @method init
 		 * @param {Object} options - {
 		 * 								view: {ABView},
-		 * 								dataCollection: {ABViewDataCollection}
+		 * 								dataCollection: {ABDataview}
 		 * 							}
 		 */
 		let init = (options) => {

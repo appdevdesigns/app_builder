@@ -282,14 +282,14 @@ export default class ABViewText extends ABViewWidget {
 	 * 
 	 * @param {Object} ids 
 	 * @param {ABViewForm} view - the current component
-	 * @param {string} dcId - id of ABViewDataCollection
+	 * @param {string} dcId - id of ABDataview
 	 */
 	static propertyUpdateFieldOptions(ids, view, dcId) {
 
-		var datacollection = view.pageRoot().dataCollections(dc => dc.id == dcId)[0];
-		
+		var datacollection = view.application.dataviews(dv => dv.id == dcId)[0];
+
 		if (!datacollection && view.parent.key == "dataview") {
-			datacollection = view.pageRoot().dataCollections(dc => dc.id == view.parent.settings.datacollection)[0];
+			datacollection = view.application.dataviews(dv => dv.id == view.parent.settings.datacollection)[0];
 			$$(ids.datacollection).setValue(view.parent.settings.datacollection);
 		}
 
@@ -314,19 +314,19 @@ export default class ABViewText extends ABViewWidget {
 		var SourceSelector = $$(ids.datacollection);
 
 		// Pull data collections to options
-		var dcOptions = view.pageRoot().dataCollections().map((dc) => {
+		var dvOptions = view.application.dataviews().map(dv => {
 
 			return {
-				id: dc.id,
-				value: dc.label
+				id: dv.id,
+				value: dv.label
 			};
 		});
 
-		dcOptions.unshift({
+		dvOptions.unshift({
 			id: null,
 			value: '[Select]'
 		});
-		SourceSelector.define('options', dcOptions);
+		SourceSelector.define('options', dvOptions);
 		SourceSelector.define('value', dataCollectionId);
 		SourceSelector.refresh();
 
@@ -402,7 +402,7 @@ export default class ABViewText extends ABViewWidget {
 			baseCom.onShow(viewId);
 
 			// listen DC events
-			let dc = this.dataCollection;
+			let dc = this.dataview;
 			if (dc && this.parent.key != "dataview") {
 
 				this.eventAdd({
@@ -438,15 +438,15 @@ export default class ABViewText extends ABViewWidget {
 
 	/**
 	 * @property dataCollection
-	 * return ABViewDataCollection of this form
+	 * return ABDataview of this form
 	 * 
-	 * @return {ABViewDataCollection}
+	 * @return {ABDataview}
 	 */
-	get dataCollection() {
+	get dataview() {
 		if (this.parent.key == "dataview") {
-			return this.pageRoot().dataCollections((dc) => dc.id == this.parent.settings.datacollection)[0];
+			return this.application.dataviews(dv => dv.id == this.parent.settings.datacollection)[0];
 		} else {
-			return this.pageRoot().dataCollections((dc) => dc.id == this.settings.datacollection)[0];
+			return this.application.dataviews(dv => dv.id == this.settings.datacollection)[0];
 		}
 	}
 
@@ -459,7 +459,7 @@ export default class ABViewText extends ABViewWidget {
 			return result.replace(/{(.*?)}/g, "");
 		};
 		
-		var dc = this.dataCollection;
+		var dc = this.dataview;
 		if (!dc) return clearTemplateValue(result);
 
 		var object = dc.datasource;

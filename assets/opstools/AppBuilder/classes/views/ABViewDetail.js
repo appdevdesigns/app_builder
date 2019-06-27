@@ -255,10 +255,10 @@ export default class ABViewDetail extends ABViewContainer {
 		super.propertyEditorPopulate(App, ids, view);
 
 		var SourceSelector = $$(ids.datacollection);
-		var dataCollectionId = (view.settings.datacollection ? view.settings.datacollection : null);
+		var dataviewId = view.settings.datacollection || null;
 
-		// Pull data collections to options
-		var dcOptions = view.pageRoot().dataCollections().map((dc) => {
+		// Pull data views to options
+		var dvOptions = view.application.dataviews().map((dc) => {
 
 			return {
 				id: dc.id,
@@ -266,12 +266,12 @@ export default class ABViewDetail extends ABViewContainer {
 			};
 		});
 
-		SourceSelector.define('options', dcOptions);
-		SourceSelector.define('value', dataCollectionId);
+		SourceSelector.define('options', dvOptions);
+		SourceSelector.define('value', dataviewId);
 		SourceSelector.refresh();
 
 
-		this.propertyUpdateFieldOptions(ids, view, dataCollectionId);
+		this.propertyUpdateFieldOptions(ids, view, dataviewId);
 
 		$$(ids.showLabel).setValue(view.settings.showLabel != null ? view.settings.showLabel : ABViewDetailPropertyComponentDefaults.showLabel);
 		$$(ids.labelPosition).setValue(view.settings.labelPosition || ABViewDetailPropertyComponentDefaults.labelPosition);
@@ -299,8 +299,8 @@ export default class ABViewDetail extends ABViewContainer {
 
 	static propertyUpdateFieldOptions(ids, view, dcId) {
 
-		var datacollection = view.pageRoot().dataCollections(dc => dc.id == dcId)[0];
-		var object = datacollection ? datacollection.datasource : null;
+		var dataview = view.application.dataviews(dc => dc.id == dcId)[0];
+		var object = dataview ? dataview.datasource : null;
 
 
 		// Pull field list
@@ -479,12 +479,12 @@ export default class ABViewDetail extends ABViewContainer {
 
 	/**
 	 * @property dataCollection
-	 * return ABViewDataCollection of this detail
+	 * return ABDataview of this detail
 	 * 
-	 * @return {ABViewDataCollection}
+	 * @return {ABDataview}
 	 */
 	get dataCollection() {
-		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.datacollection)[0];
+		return this.application.dataviews(dv => dv.id == this.settings.datacollection)[0];
 	}
 
 

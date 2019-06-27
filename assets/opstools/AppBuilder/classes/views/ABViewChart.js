@@ -270,10 +270,10 @@ export default class ABViewChart extends ABViewContainer  {
 	static populateDataCollection(ids, view) {
 
 		// Set the objects you can choose from in the list
-		var objectOptions = view.pageRoot().dataCollections().map((dc) => {
+		var objectOptions = view.application.dataviews().map(dv => {
 			return {
-				id: dc.id,
-				value: dc.label
+				id: dv.id,
+				value: dv.label
 			};
 		});
 
@@ -437,12 +437,12 @@ export default class ABViewChart extends ABViewContainer  {
 
 	/**
 	 * @property dataCollection
-	 * return ABViewDataCollection of this form
+	 * return ABDataview of this form
 	 * 
-	 * @return {ABViewDataCollection}
+	 * @return {ABDataview}
 	 */
 	get dataCollection() {
-		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.dataSource)[0];
+		return this.application.dataviews(dv => dv.id == this.settings.dataSource)[0];
 	}
 
 	labelField() {

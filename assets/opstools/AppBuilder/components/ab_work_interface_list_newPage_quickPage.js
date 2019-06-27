@@ -6,7 +6,7 @@
  *
  */
 
-import ABViewDataCollection from '../classes/views/ABViewDataCollection'
+import ABDataview from '../classes/ABDataview'
 import ABViewDetail from '../classes/views/ABViewDetail'
 import ABViewForm from '../classes/views/ABViewForm'
 import ABViewFormButton from '../classes/views/ABViewFormButton'
@@ -246,14 +246,13 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 			},
 
 
-			getDataCollection: function (label, obj, parentDc) {
+			getDataview: function (label, obj, parentDc) {
 
 				var dcConfig = {
 					id: OP.Util.uuid(),
 					label: label || obj.label,
 					settings: {
 						object: obj.id,
-						objectUrl: obj.urlPointer(),
 						loadAll: 0,
 						fixSelect: ""
 					}
@@ -268,7 +267,7 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 						dcConfig.settings.linkField = linkField.id;
 				}
 
-				return new ABViewDataCollection(dcConfig, CurrentApplication);
+				return new ABDataview(dcConfig, CurrentApplication);
 
 			},
 
@@ -353,7 +352,7 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 
 				var pages = [];
 				var views = [];
-				var dataCollections = [];
+				var dataviews = [];
 				var formValues = $$(ids.form).getValues();
 				var subValues = $$(ids.subObjs).getValues();
 
@@ -371,8 +370,8 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 
 					// a data collection for edit
 					var addDcLabel = "Add " + CurrentObj.label;
-					addDc = _logic.getDataCollection(addDcLabel, CurrentObj);
-					dataCollections.push(addDc.toObj());
+					addDc = _logic.getDataview(addDcLabel, CurrentObj);
+					dataviews.push(addDc.toObj());
 
 					var addForm = _logic.getFormView(addDc);
 
@@ -419,8 +418,8 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 				if (formValues.editable || formValues.showGrid || formValues.viewable) {
 					// a data collection for edit
 					var editDcLabel = "Edit " + CurrentObj.label;
-					editDc = _logic.getDataCollection(editDcLabel, CurrentObj);
-					dataCollections.push(editDc.toObj());
+					editDc = _logic.getDataview(editDcLabel, CurrentObj);
+					dataviews.push(editDc.toObj());
 				}
 
 
@@ -503,8 +502,8 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 
 								// create a data collection
 								var dcLabel = "Edit " + childObj.label;
-								var childEditDc = _logic.getDataCollection(dcLabel, childObj, editDc);
-								dataCollections.push(childEditDc.toObj());
+								var childEditDc = _logic.getDataview(dcLabel, childObj, editDc);
+								dataviews.push(childEditDc.toObj());
 
 								viewsOfDetail.push(
 									// Title
@@ -542,8 +541,8 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 
 								// create a data collection
 								var dcLabel = "Add " + childObj.label;
-								var childAddDc = _logic.getDataCollection(dcLabel, childObj, editDc);
-								dataCollections.push(childAddDc.toObj());
+								var childAddDc = _logic.getDataview(dcLabel, childObj, editDc);
+								dataviews.push(childAddDc.toObj());
 
 								// add to menu
 								menuSubPages.push(subPageId);
@@ -628,8 +627,8 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 					// a data collection for add
 					var addDcLabel = "Add " + CurrentObj.label;
 					if (addDc == null) {
-						addDc = _logic.getDataCollection(addDcLabel, CurrentObj);
-						dataCollections.push(addDc.toObj());
+						addDc = _logic.getDataview(addDcLabel, CurrentObj);
+						dataviews.push(addDc.toObj());
 					}
 
 					// add the title to the form
@@ -650,16 +649,15 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 
 				}
 
+				// TODO: save data views to the application
+				// dataviews
 
 				return {
 					parent: CurrentPage, // should be either null or an {}
 					name: $$(ids.name).getValue().trim(),
 					key: ABViewPage.common().key,
 					views: views,
-					pages: pages,
-
-					// data collection list will add to the root page
-					dataCollections: dataCollections
+					pages: pages
 				}
 
 			}

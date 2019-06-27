@@ -21,7 +21,7 @@ module.exports = {
 
 
 	/**
-	 * GET /app_builder/application/:appID/objects
+	 * GET /app_builder/application/:appID/object
 	 * 
 	 * Get objects of application
 	 */

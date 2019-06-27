@@ -58,7 +58,7 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 		objectLoad: function (appId) {
 
 			return OP.Comm.Service.get({
-				url: `/app_builder/application/${appId}/objects`
+				url: `/app_builder/application/${appId}/object`
 			});
 		},
 
@@ -166,7 +166,7 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 		queryLoad: function (appId) {
 
 			return OP.Comm.Service.get({
-				url: `/app_builder/application/${appId}/queries`
+				url: `/app_builder/application/${appId}/query`
 			});
 		},
 
@@ -225,6 +225,68 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 			return OP.Comm.Service.delete({
 				url: `/app_builder/application/${appId}/query/${queryId}`
+			});
+
+		},
+
+		// ** Data views
+
+		dataviewLoad: function (appId) {
+
+			return OP.Comm.Service.get({
+				url: `/app_builder/application/${appId}/dataview`
+			});
+		},
+
+		dataviewFind: function (cond) {
+
+			return OP.Comm.Service.get({
+				url: `/app_builder/dataview`,
+				data: {
+					query: cond
+				}
+			});
+
+		},
+
+		dataviewGet: function(dataviewId) {
+
+			return OP.Comm.Service.get({
+				url: `/app_builder/dataview/${dataviewId}`
+			});
+
+		},
+
+		dataviewSave: function (appId, dataview) {
+
+			return OP.Comm.Service.put({
+				url: `/app_builder/dataview?appID=${appId}`,
+				data: {
+					dataview: dataview
+				}
+			});
+		},
+
+		dataviewDestroy: function (dataviewId) {
+
+			return OP.Comm.Service.delete({
+				url: `/app_builder/dataview/${dataviewId}`
+			});
+
+		},
+
+		dataviewImport: function (appId, dataviewId) {
+
+			return OP.Comm.Service.put({
+				url: `/app_builder/application/${appId}/dataview/${dataviewId}`
+			});
+
+		},
+
+		dataviewExclude: function (appId, dataviewId) {
+
+			return OP.Comm.Service.delete({
+				url: `/app_builder/application/${appId}/dataview/${dataviewId}`
 			});
 
 		},

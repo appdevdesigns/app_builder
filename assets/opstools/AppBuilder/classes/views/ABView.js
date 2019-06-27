@@ -1136,7 +1136,7 @@ export default class ABView extends ABViewBase {
 		let config = this.toObj();
 
 		// remove sub-elements property
-		['pages', 'views', 'dataCollections'].forEach(prop => {
+		['pages', 'views'].forEach(prop => {
 			delete config[prop];
 		});
 
@@ -1174,17 +1174,6 @@ export default class ABView extends ABViewBase {
 				let copiedView = v.copy(lookUpIds, result);
 
 				result._views.push(copiedView);
-			});
-		}
-
-		// copy data collections
-		if (this.dataCollections) {
-			result._dataCollections = [];
-			this.dataCollections().forEach(dc => {
-
-				let copiedDc = dc.copy(lookUpIds, result);
-
-				result._dataCollections.push(copiedDc);
 			});
 		}
 

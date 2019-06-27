@@ -475,11 +475,11 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 				$componentView.id = ids.value;  // set our expected id 
 
 				// find all the DataSources
-				var dataCollections = this.currentForm.pageRoot().dataCollections((dc) => { return dc.datasource });
+				var datasources = this.currentForm.application.dataviews(dv => dv.datasource);
 
 				// create a droplist with those dataSources
 				var optionsDataSources = [];
-				dataCollections.forEach((dc) => {
+				datasources.forEach((dc) => {
 					optionsDataSources.push({ id: dc.id, value: dc.label });
 				});
 
@@ -501,7 +501,7 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 									placeholder: this.labels.component.chooseSource,
 									on: {
 										'onChange': (newv, oldv) => {
-											var selectedDataCollections = this.currentForm.pageRoot().dataCollections((dc) => { return dc.id == newv; })[0];
+											var selectedDataCollections = this.currentForm.application.dataviews(dv => dv.id == newv)[0];
 											if (selectedDataCollections && 
 												(selectedDataCollections.sourceType == "query" || field.key != 'connectObject')) {
 
@@ -562,7 +562,7 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 										$row.addView(FilterComponent.ui, 1);
 
 										var collectionId = $$(ids.selectDc).getValue();
-										var dataCollection = this.currentForm.pageRoot().dataCollections((dc) => { return dc.id == collectionId; })[0];
+										var dataCollection = this.currentForm.application.dataviews(dv => dv.id == collectionId)[0];
 										if (dataCollection) {
 											_logic.populateFilters(dataCollection);
 										}
@@ -586,8 +586,8 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 				// UPDATE: ok, in practice we have not had any use cases where
 				// we want individual values on connectedObject fields, but 
 				// instead we want to insert the current selected element from 
-				// a relevant datacollection.  So, replace the fieldComponet 
-				// from a connectedObject field with a list of dataCollections that
+				// a relevant data view.  So, replace the fieldComponet 
+				// from a connectedObject field with a list of data views that
 				// are based upon the same object we are connected to:
 				if (field.key == 'connectObject') {
 
@@ -597,18 +597,18 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 
 					// find all the DataSources that are based upon this ABObject
 					// to do this, we find the root Page we are on, then ask that Page for datasources:
-					dataCollections = dataCollections.filter((dc) => { return dc.datasource.id == connectedObject.id; });
+					datasources = datasources.filter((dc) => { return dc.datasource.id == connectedObject.id; });
 
-					var dataCollectionQueries = this.currentForm.pageRoot().dataCollections((dc) => {
-						return dc.sourceType == "query" && dc.datasource.canFilterObject(connectedObject)
+					var dataCollectionQueries = this.currentForm.application.dataviews(dv => {
+						return dv.sourceType == "query" && dv.datasource.canFilterObject(connectedObject)
 						// return dc.datasource.id == connectedObject.id;
 					});
 
-					dataCollections = dataCollections.concat(dataCollectionQueries);
+					datasources = datasources.concat(dataCollectionQueries);
 
 					// refresh a droplist with those dataSources
 					optionsDataSources = [];
-					dataCollections.forEach((dc) => {
+					datasources.forEach((dc) => {
 						optionsDataSources.push({ id: dc.id, value: dc.label });
 					})
 
@@ -743,7 +743,7 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 
 						if (selectBy != "select-one") {
 							var collectionId = data.value;
-							var dataCollection = this.currentForm.pageRoot().dataCollections((dc) => { return dc.id == collectionId; })[0];
+							var dataCollection = this.currentForm.application.dataviews(dv => dv.id == collectionId)[0];
 							if (dataCollection && data.filterConditions) {
 								_logic.populateFilters(dataCollection, data.filterConditions);
 							}
@@ -1007,7 +1007,7 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 
 
 						// op.value is the DataCollection.id we need to find
-						var dataCollection = this.currentForm.pageRoot().dataCollections((dc) => { return dc.id == op.value; })[0];
+						var dataCollection = this.currentForm.application.dataviews(dv => dv.id == op.value)[0];
 
 						// we don't want to mess with the dataCollection directly since it might 
 						// be used by other parts of the system and this refresh might reset

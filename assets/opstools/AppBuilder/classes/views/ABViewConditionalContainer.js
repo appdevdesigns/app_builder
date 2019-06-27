@@ -204,11 +204,11 @@ export default class ABViewConditionalContainer extends ABViewContainer {
 		var SourceSelector = $$(ids.datacollection);
 
 		// Pull data collections to options
-		var dcOptions = view.pageRoot().dataCollections().map((dc) => {
+		var dcOptions = view.application.dataviews().map((dv) => {
 
 			return {
-				id: dc.id,
-				value: dc.label
+				id: dv.id,
+				value: dv.label
 			};
 		});
 
@@ -239,7 +239,7 @@ export default class ABViewConditionalContainer extends ABViewContainer {
 
 		// specify data collection id
 		if (dataCollectionId) {
-			dc = view.pageRoot().dataCollections(d => d.id == dataCollectionId)[0];
+			dc = view.application.dataviews(d => d.id == dataCollectionId)[0];
 		}
 
 		if (dc && dc.datasource) {
@@ -387,12 +387,12 @@ export default class ABViewConditionalContainer extends ABViewContainer {
 
 	/**
 	 * @method dataCollection
-	 * return ABViewDataCollection of this form
+	 * return ABDataview of this form
 	 * 
-	 * @return {ABViewDataCollection}
+	 * @return {ABDataview}
 	 */
 	get dataCollection() {
-		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.datacollection)[0];
+		return this.application.dataviews(dv => dv.id == this.settings.datacollection)[0];
 	}
 
 	populateFilterComponent() {

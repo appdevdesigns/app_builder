@@ -95,14 +95,6 @@ export default class ABViewPage extends ABViewContainer {
         obj.pages = pages;
 
 
-        // compile our data sources
-        var dataCollections = [];
-        this._dataCollections.forEach((data) => {
-            dataCollections.push(data.toObj())
-        })
-
-        obj.dataCollections = dataCollections;
-
 
         return obj;
     }
@@ -136,14 +128,6 @@ export default class ABViewPage extends ABViewContainer {
         this._pages = pages;
 
 
-        // now properly handle our data sources.
-        var dataCollections = [];
-        (values.dataCollections || []).forEach((data) => {
-            dataCollections.push(this.dataCollectionNew(data));
-        })
-        this._dataCollections = dataCollections;
-
-
         // the default columns of ABView is 1
         this.settings.columns = this.settings.columns || 1;
         this.settings.gravity = this.settings.gravity || [1];
@@ -173,15 +157,6 @@ export default class ABViewPage extends ABViewContainer {
         var _init = (options) => {
 
             comp.init(options);
-
-            // initialize data sources
-            let pageRoot = this.pageRoot();
-            if (pageRoot) {
-                pageRoot.dataCollections().forEach((dc) => {
-                    dc.init();
-                });
-            }
-
 
         };
 
@@ -559,14 +534,6 @@ export default class ABViewPage extends ABViewContainer {
         var _init = (options) => {
 
             comp.init(options);
-
-            // initialize data sources
-            let pageRoot = this.pageRoot();
-            if (pageRoot) {
-                pageRoot.dataCollections().forEach((dc) => {
-                    dc.init();
-                });
-            }
 
         }
 

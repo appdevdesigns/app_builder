@@ -806,9 +806,9 @@ export default class ABViewDataCollection extends ABView {
 			var linkDcOptions = [];
 
 			// pull data collections that are link to object
-			var linkDcs = rootPage.dataCollections((dc) => {
+			var linkDcs = rootPage.application.dataviews((dv) => {
 
-				return linkObjectIds.filter((objId) => dc.settings.object == objId).length > 0;
+				return linkObjectIds.filter((objId) => dv.settings.object == objId).length > 0;
 
 			});
 
@@ -1468,10 +1468,7 @@ export default class ABViewDataCollection extends ABView {
 	*/
 	get dataCollectionLink() {
 
-		let pageRoot = this.pageRoot();
-		if (!pageRoot) return null;
-
-		return pageRoot.dataCollections((dc) => dc.id == this.settings.linkDataCollection)[0];
+		return this.application.dataviews(dv => dv.id == this.settings.linkDataCollection)[0];
 	}
 
 	/**
@@ -1812,22 +1809,21 @@ export default class ABViewDataCollection extends ABView {
 
 							dcFilters.push(
 								new Promise((next, err) => {
-									var dc = this.pageRoot().dataCollections(dc => dc.id == rule.value)[0];
-									
-									if (!dc) return next();
+									var dataview = this.application.dataviews(dv => dv.id == rule.value)[0];									
+									if (!dataview) return next();
 
-									switch (dc.dataStatus) {
+									switch (dataview.dataStatus) {
 
-										case dc.dataStatusFlag.notInitial:
-											dc.loadData().catch(err);
+										case dataview.dataStatusFlag.notInitial:
+											dataview.loadData().catch(err);
 											// no break;
 
-										case dc.dataStatusFlag.initializing:
+										case dataview.dataStatusFlag.initializing:
 
 											// wait until the link dc initialized data
 											// NOTE: if linked data collections are recursive, then it is infinity looping.
 											this.eventAdd({
-												emitter: dc,
+												emitter: dataview,
 												eventName: "initializedData",
 												listener: () => {
 
@@ -1839,7 +1835,7 @@ export default class ABViewDataCollection extends ABView {
 
 											break;
 
-										case dc.dataStatusFlag.initialized:
+										case dataview.dataStatusFlag.initialized:
 											next();
 											break;
 

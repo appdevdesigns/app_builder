@@ -299,8 +299,8 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 
 		let selectedDcId = (view.settings.datacollection ? view.settings.datacollection : null);
 
-		// Pull data collections to options
-		let dcOptions = view.pageRoot().dataCollections()
+		// Pull data views to options
+		let dvOptions = view.application.dataviews()
 			.map((dc) => {
 
 				return {
@@ -309,11 +309,11 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 				};
 			});
 
-		dcOptions.unshift({
+		dvOptions.unshift({
 			id: null,
 			value: '[Select]'
 		});
-		$DcSelector.define('options', dcOptions);
+		$DcSelector.define('options', dvOptions);
 		$DcSelector.define('value', selectedDcId);
 		$DcSelector.refresh();
 
@@ -585,16 +585,16 @@ console.log("DOCX data: ", currCursor);
 
 	/**
 	 * @property dataCollection
-	 * return ABViewDataCollection of this form
+	 * return ABDataview of this form
 	 * 
-	 * @return {ABViewDataCollection}
+	 * @return {ABDataview}
 	 */
 	get dataCollection() {
 
 		if (this.settings.datacollection == null)
 			return null;
 
-		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.datacollection)[0];
+		return this.application.dataviews(dv => dv.id == this.settings.datacollection)[0];
 	}
 
 

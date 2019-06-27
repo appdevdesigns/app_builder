@@ -216,7 +216,7 @@ export default class ABViewPivot extends ABViewWidget {
 		var SourceSelector = $$(ids.datacollection);
 
 		// Pull data collections to options
-		var dcOptions = view.pageRoot().dataCollections().map((dc) => {
+		var dcOptions = view.application.dataviews().map((dc) => {
 
 			return {
 				id: dc.id,
@@ -393,12 +393,12 @@ export default class ABViewPivot extends ABViewWidget {
 
 	/**
 	 * @property dataCollection
-	 * return ABViewDataCollection of this form
+	 * return ABDataview of this form
 	 * 
-	 * @return {ABViewDataCollection}
+	 * @return {ABDataview}
 	 */
 	get dataCollection() {
-		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.datacollection)[0];
+		return this.application.dataviews(dv => dv.id == this.settings.datacollection)[0];
 	}
 
 

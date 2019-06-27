@@ -444,7 +444,7 @@ console.warn('!! ToDo: onAfterColumnHide()');
 
 
         var CurrentObject = null;		// current ABObject being displayed
-        var CurrentDC   = null;			// current ABViewDataCollection
+        var CurrentDataview = null;		// current ABDataview
     	var EditField	= null;			// which field (column header) is popup editor for
     	var EditNode	= null;			// which html node (column header) is popup editor for
 
@@ -972,22 +972,22 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
 
             /**
-             * @method dataCollectionLoad
+             * @method dataviewLoad
              * 
-             * @param dataCollection {ABViewDataCollection}
+             * @param dataview {ABDataview}
              */
-			dataCollectionLoad: (dataCollection) => {
+			dataviewLoad: (dataview) => {
 
 				let DataTable = $$(this.ui.id);
-				CurrentDC = dataCollection;
-				if (CurrentDC) {
-					CurrentDC.bind(DataTable);
-					CurrentDC.on("initializingData", () => {
+				CurrentDataview = dataview;
+				if (CurrentDataview) {
+					CurrentDataview.bind(DataTable);
+					CurrentDataview.on("initializingData", () => {
 
 						_logic.busy();
 
 					});
-					CurrentDC.on("initializedData", () => {
+					CurrentDataview.on("initializedData", () => {
 
 						_logic.ready();
 
@@ -1334,9 +1334,9 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
             loadAll: function() {
 
-                if (CurrentDC) {
-                    CurrentDC.settings.loadAll = true;
-                    CurrentDC.reloadData();
+                if (CurrentDataview) {
+                    CurrentDataview.settings.loadAll = true;
+                    CurrentDataview.reloadData();
                 }
 
                 // _logic.refresh(isLoadAll);
@@ -1382,7 +1382,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
         // 
         // Define our external interface methods:
         // 
-        this.dataCollectionLoad = _logic.dataCollectionLoad;
+        this.dataviewLoad = _logic.dataviewLoad;
         this.objectLoad = _logic.objectLoad;
         // this.refresh = _logic.refresh;
         this.refreshHeader = _logic.refreshHeader;
