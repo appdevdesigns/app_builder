@@ -1227,14 +1227,15 @@ console.error('TODO: toolbarPermission()');
 					sorts = CurrentObject.workspaceSortFields;
 				}
 
-				CurrentDataview.settings = {
-					object: CurrentObject.id,
-					objectUrl: CurrentObject.urlPointer(),
+				CurrentDataview.datasource = CurrentObject;
+
+				CurrentDataview.fromValues({
+					datasourceID: CurrentObject.id,
 					objectWorkspace: {
 						filterConditions: wheres,
 						sortFields: sorts
 					}
-                };
+				});
 
 				CurrentDataview.setFilterConditions(wheres);
 				CurrentDataview.clearAll();

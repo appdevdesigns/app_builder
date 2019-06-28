@@ -1,3 +1,7 @@
+
+import ABListNewDataview from "./ab_work_dataview_list_newDataview"
+import ABListEditMenu from "./ab_common_popupEditMenu"
+
 export default class AB_Work_Dataview_List extends OP.Component {
 
 	constructor(App) {
@@ -24,6 +28,11 @@ export default class AB_Work_Dataview_List extends OP.Component {
 			buttonNew: this.unique('buttonNew')
 		};
 
+		// There is a Popup for adding a new Data view:
+		var PopupNewDataviewComponent = new ABListNewDataview(App);
+
+		// the popup edit list for each entry in the list.
+		var PopupEditObjectComponent = new ABListEditMenu(App);
 
 		// Our webix UI definition:
 		this.ui = {
@@ -33,7 +42,7 @@ export default class AB_Work_Dataview_List extends OP.Component {
 					view: App.custom.editunitlist.view, // "editunitlist"
 					id: ids.list,
 					width: App.config.columnWidthLarge,
-
+height: 300,
 					select: true,
 
 					editaction: 'custom',
@@ -41,15 +50,15 @@ export default class AB_Work_Dataview_List extends OP.Component {
 					editor: "text",
 					editValue: "label",
 
-					uniteBy: function(item) {
+					uniteBy: function (item) {
 						return labels.component.title;
 					},
-					template: function(obj, common) {
+					template: function (obj, common) {
 						return _logic.templateListItem(obj, common);
 					},
 					type: {
 						height: 35,
-						headerHeight:35,
+						headerHeight: 35,
 						iconGear: "<div class='ab-object-list-edit'><span class='webix_icon fa fa-cog'></span></div>"
 					},
 					on: {
@@ -75,20 +84,46 @@ export default class AB_Work_Dataview_List extends OP.Component {
 					value: labels.component.addNew,
 					type: "form",
 					click: function () {
-						_logic.clickNewObject(true); // pass true so it will select the new object after you created it
+						_logic.clickNewDataview(true); // pass true so it will select the new object after you created it
 					}
 				}
 			]
 		};
 
 		var CurrentApplication = null;
-		var objectList = null;
+		var dataviewList = null;
 
 		let _initialized = false;
 		let _settings = {};
 
 		// Our init() function for setting up our UI
 		this.init = (options) => {
+
+			// register our callbacks:
+			for (var c in _logic.callbacks) {
+				_logic.callbacks[c] = options[c] || _logic.callbacks[c];
+			}
+
+			if ($$(ids.component))
+				$$(ids.component).adjust();
+
+			if ($$(ids.list)) {
+				webix.extend($$(ids.list), webix.ProgressBar);
+				$$(ids.list).adjust();
+			}
+
+			PopupNewDataviewComponent.init({
+				onDone: _logic.callbackNewDataview
+			});
+
+			PopupEditObjectComponent.init({
+				onClick: _logic.callbackDataviewEditorMenu,
+				hideCopy: true
+			});
+
+			// mark initialed
+			_initialized = true;
+
 		};
 
 
@@ -115,73 +150,155 @@ export default class AB_Work_Dataview_List extends OP.Component {
 			 *										we are working with.
 			 */
 			applicationLoad: function (application) {
-				// _logic.listBusy();
+				_logic.listBusy();
 
-				// CurrentApplication = application;
+				CurrentApplication = application;
 
-				// // get a DataCollection of all our objects
-				// objectList = new webix.DataCollection({
-				// 	data: application.objects(),
-				// });
+				// get a DataCollection of all our objects
+				dataviewList = new webix.DataCollection({
+					data: application.dataviews(),
+				});
 
-				// // setup object list settings
-				// $$(ids.listSetting).getParentView().blockEvent();
-				// $$(ids.listSetting).define("collapsed", _settings.objectlistIsOpen != true);
-				// $$(ids.listSetting).refresh();
-				// $$(ids.listSetting).getParentView().unblockEvent();
+				// clear our list and display our objects:
+				var List = $$(ids.list);
+				List.clearAll();
+				List.data.unsync();
+				List.data.sync(dataviewList);
+				List.refresh();
+				List.unselectAll();
 
-				// $$(ids.searchText).blockEvent();
-				// $$(ids.searchText).setValue(_settings.objectlistSearchText);
-				// $$(ids.searchText).unblockEvent();
+				// hide progress loading cursor
+				_logic.listReady();
 
-				// $$(ids.sort).blockEvent();
-				// $$(ids.sort).setValue(_settings.objectlistSortDirection);
-				// $$(ids.sort).unblockEvent();
-
-				// $$(ids.group).blockEvent();
-				// $$(ids.group).setValue(_settings.objectlistIsGroup);
-				// $$(ids.group).unblockEvent();
-
-
-				// // clear our list and display our objects:
-				// var List = $$(ids.list);
-				// List.clearAll();
-				// List.data.unsync();
-				// List.data.sync(objectList);
-				// List.refresh();
-				// List.unselectAll();
-
-
-				// // sort objects
-				// _logic.listSort(_settings.objectlistSortDirection);
-
-				// // filter object list
-				// _logic.listSearch();
-
-
-				// // hide progress loading cursor
-				// _logic.listReady();
-
-
-				// // prepare our Popup with the current Application
-				// PopupNewObjectComponent.applicationLoad(application);
+				// prepare our Popup with the current Application
+				PopupNewDataviewComponent.applicationLoad(application);
 
 			},
 
+			/**
+			 * @function clickNewDataview
+			 *
+			 * Manages initiating the transition to the new Object Popup window
+			 */
+			clickNewDataview: function (selectNew, callback) {
+				// show the new popup
+				PopupNewDataviewComponent.show(selectNew, callback);
+			},
+
+			/**
+			 * @function callbackNewDataview
+			 *
+			 * Once a New Data view was created in the Popup, follow up with it here.
+			 */
+			callbackNewDataview: function (err, dataview, selectNew, callback) {
+
+				if (err) {
+					OP.Error.log('Error creating New Dataview', { error: err });
+					return;
+				}
+
+				let dataviews = CurrentApplication.dataviews();
+				dataviewList.parse(dataviews);
+
+				// if (objectList.exists(object.id))
+				// 	objectList.updateItem(object.id, object);
+				// else
+				// 	objectList.add(object);
+
+				if (selectNew != null && selectNew == true) {
+					$$(ids.list).select(dataview.id);
+				}
+				else if (callback) {
+					callback();
+				}
+
+			},
 
 			clickEditMenu: function (e, id, trg) {
-				// // Show menu
-				// PopupEditObjectComponent.show(trg);
+				// Show menu
+				PopupEditObjectComponent.show(trg);
 
-				// return false;
+				return false;
+			},
+
+			callbackDataviewEditorMenu: function (action) {
+				switch (action) {
+					case 'rename':
+						_logic.rename();
+						break;
+					case 'exclude':
+						_logic.exclude();
+						break;
+					case 'delete':
+						_logic.remove();
+						break;
+				}
+			},
+
+			exclude: function () {
+				var dataviewId = $$(ids.list).getSelectedId(false);
+
+				_logic.listBusy();
+
+				CurrentApplication.dataviewExclude(dataviewId)
+					.then(() => {
+
+						dataviewList.remove(dataviewId);
+
+						_logic.listReady();
+
+						// clear object workspace
+						_logic.callbacks.onChange(null);
+					});
+
+			},
+
+			rename: function () {
+				var dataviewId = $$(ids.list).getSelectedId(false);
+				$$(ids.list).edit(dataviewId);
+			},
+
+			remove: function () {
+
+				var selectedDataview = $$(ids.list).getSelectedItem(false);
+
+				// verify they mean to do this:
+				OP.Dialog.Confirm({
+					title: labels.component.confirmDeleteTitle,
+					message: labels.component.confirmDeleteMessage.replace('{0}', selectedDataview.label),
+					callback: (isOK) => {
+
+						if (isOK) {
+							_logic.listBusy();
+
+							selectedDataview.destroy()
+								.then(() => {
+									_logic.listReady();
+
+									objectList.remove(selectedDataview.id);
+
+									// refresh items list
+									_logic.callbackNewDataview();
+
+									// clear object workspace
+									_logic.callbacks.onChange(null);
+								});
+
+						}
+					}
+				})
 			},
 
 			listBusy: () => {
-
+				if ($$(ids.list) &&
+					$$(ids.list).showProgress)
+					$$(ids.list).showProgress({ type: "icon" });
 			},
 
 			listReady: () => {
-				
+				if ($$(ids.list) &&
+					$$(ids.list).hideProgress)
+					$$(ids.list).hideProgress();
 			}
 
 		};

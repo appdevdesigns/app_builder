@@ -785,12 +785,12 @@ PopupRecordRule.qbFixAfterShow();
 				});
 
 				// bind the cursor event of the parent DC
-				var linkDc = dc.dataCollectionLink;
-				if (linkDc) {
+				var linkDv = dc.dataviewLink;
+				if (linkDv) {
 
 					// update the value of link field when data of the parent dc is changed
 					this.eventAdd({
-						emitter: linkDc,
+						emitter: linkDv,
 						eventName: 'changeCursor',
 						listener: _logic.displayParentData
 					});
@@ -962,10 +962,10 @@ PopupRecordRule.qbFixAfterShow();
 				_logic.displayData(data);
 
 				// select parent data to default value
-				var linkDc = dc.dataCollectionLink;
-				if (data == null && linkDc) {
+				var linkDv = dc.dataviewLink;
+				if (data == null && linkDv) {
 
-					var parentData = linkDc.getCursor();
+					var parentData = linkDv.getCursor();
 					_logic.displayParentData(parentData);
 				}
 			}
@@ -1231,19 +1231,19 @@ PopupRecordRule.qbFixAfterShow();
 		formView.clearValidation();
 
 		// get ABDataview
-		var dc = this.dataview;
-		if (dc == null) return Promise.resolve();
+		var dv = this.dataview;
+		if (dv == null) return Promise.resolve();
 
 		// get ABObject
-		var obj = dc.datasource;
+		var obj = dv.datasource;
 		if (obj == null) return Promise.resolve();
 
 		// get ABModel
-		var model = dc.model;
+		var model = dv.model;
 		if (model == null) return Promise.resolve();
 
 		// get update data
-		var formVals = this.getFormValues(formView, obj, dc.dataCollectionLink);
+		var formVals = this.getFormValues(formView, obj, dv.dataviewLink);
 
 		// validate data
 		if (!this.validateData(formView, obj, formVals)) {
@@ -1258,16 +1258,16 @@ PopupRecordRule.qbFixAfterShow();
 		var formReady = (newFormVals) => {
 
 			// clear cursor after saving.
-			if (dc) {
+			if (dv) {
 				if (this.settings.clearOnSave) {
-					dc.setCursor(null);
+					dv.setCursor(null);
 					formView.clear();
 				}
 				else {
 
 					if (newFormVals &&
 						newFormVals.id)
-						dc.setCursor(newFormVals.id);
+						dv.setCursor(newFormVals.id);
 
 				}
 			}

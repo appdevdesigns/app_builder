@@ -768,10 +768,10 @@ export default class ABDataview extends EventEmitter {
 
 
 		// add listeners when cursor of link data collection is changed
-		let linkDc = this.dataviewLink;
-		if (linkDc) {
+		let linkDv = this.dataviewLink;
+		if (linkDv) {
 			this.eventAdd({
-				emitter: linkDc,
+				emitter: linkDv,
 				eventName: "changeCursor",
 				listener: () => { this.refreshLinkCursor(); }
 			});
@@ -844,21 +844,21 @@ export default class ABDataview extends EventEmitter {
 				// check data status of link data collection and listen change cursor event
 				return new Promise((resolve, reject) => {
 
-					let linkDc = this.dataCollectionLink;
-					if (!linkDc) return resolve();
+					let linkDv = this.dataviewLink;
+					if (!linkDv) return resolve();
 
-					switch (linkDc.dataStatus) {
+					switch (linkDv.dataStatus) {
 
-						case linkDc.dataStatusFlag.notInitial:
-							linkDc.loadData().catch(reject);
+						case linkDv.dataStatusFlag.notInitial:
+							linkDv.loadData().catch(reject);
 						// no break;
 
-						case linkDc.dataStatusFlag.initializing:
+						case linkDv.dataStatusFlag.initializing:
 
 							// wait until the link dc initialized data
 							// NOTE: if linked data collections are recursive, then it is infinity looping.
 							this.eventAdd({
-								emitter: linkDc,
+								emitter: linkDv,
 								eventName: "initializedData",
 								listener: () => {
 
@@ -870,7 +870,7 @@ export default class ABDataview extends EventEmitter {
 
 							break;
 
-						case linkDc.dataStatusFlag.initialized:
+						case linkDv.dataStatusFlag.initialized:
 							resolve();
 							break;
 
@@ -966,8 +966,8 @@ export default class ABDataview extends EventEmitter {
 							// populate data to webix's data collection and the loading cursor is hidden here
 							this.__dataCollection.parse(data);
 
-							var linkDc = this.dataCollectionLink;
-							if (linkDc) {
+							var linkDv = this.dataviewLink;
+							if (linkDv) {
 
 								// filter data by match link data collection
 								this.refreshLinkCursor();
@@ -1030,8 +1030,8 @@ export default class ABDataview extends EventEmitter {
 				var isValid = this.__filterComponent.isValid(row);
 
 				// parent dc filter
-				var linkDc = this.dataCollectionLink;
-				if (isValid && linkDc) {
+				var linkDv = this.dataviewLink;
+				if (isValid && linkDv) {
 					isValid = this.isParentFilterValid(row);
 				}
 
@@ -1054,14 +1054,14 @@ export default class ABDataview extends EventEmitter {
 		// data is empty
 		if (rowData == null) return null;
 
-		var linkDc = this.dataCollectionLink;
-		if (linkDc == null) return true;
+		var linkDv = this.dataviewLink;
+		if (linkDv == null) return true;
 
 		var fieldLink = this.fieldLink;
 		if (fieldLink == null) return true;
 
 		// the parent's cursor is not set.
-		var linkCursor = linkDc.getCursor();
+		var linkCursor = linkDv.getCursor();
 		if (linkCursor == null) return false;
 
 		var linkVal = rowData[fieldLink.relationName()];

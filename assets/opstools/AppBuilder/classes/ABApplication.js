@@ -916,7 +916,6 @@ export default class ABApplication extends ABApplicationBase {
 
 	dataviewNew(values) {
 
-		// TODO
 		return new ABDataview(values, this);
 	}
 

@@ -203,7 +203,7 @@ module.exports = class ABApplicationBase {
 
 		filter = filter || function() {return true; };
 
-		return this._objects.filter(filter);
+		return (this._objects || []).filter(filter);
 
 	}
 
@@ -322,7 +322,7 @@ module.exports = class ABApplicationBase {
 
 		filter = filter || function() {return true; };
 
-		return this._queries.filter(filter);
+		return (this._queries || []).filter(filter);
 
 	}
 
@@ -343,7 +343,7 @@ module.exports = class ABApplicationBase {
 
 		filter = filter || function() { return true; };
 
-		return this._dataviews.filter(filter);
+		return (this._dataviews || []).filter(filter);
 
 	}
 
