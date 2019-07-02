@@ -20,7 +20,7 @@ module.exports = {
 
 		let appID = req.param('appID');
 
-		ABGraphDataview.findWithRelation('applications', appID)
+		ABGraphDataview.findWithRelation('applications', appID, ['object', 'query'])
 			.catch(error => {
 				res.AD.error(error);
 			})
@@ -42,7 +42,7 @@ module.exports = {
 
 		let cond = req.query;
 
-		ABGraphDataview.find(cond)
+		ABGraphDataview.find(cond, ['object', 'query'])
 			.catch(error => {
 				err(error);
 				res.AD.error(error);
@@ -137,13 +137,59 @@ module.exports = {
 
 			})
 
+			// Set relation to data source
+			.then(dView => {
+
+				return new Promise((next, error) => {
+
+					let isQuery = JSON.parse(dView.settings.isQuery || false);
+						relationName = '',
+						datasourceID = '';
+
+					if (isQuery) {
+						relationName = 'query';
+						datasourceID = dView.settings.datasourceID;
+					}
+					else {
+						relationName = 'object';
+						datasourceID = dView.settings.datasourceID;
+					}
+
+					dView.relate(relationName, datasourceID)
+						.catch(errMessage => {
+
+							error(errMessage);
+							res.AD.error(true);
+
+						})
+						.then(() => {
+
+							next(dView);
+
+						});
+
+				});
+
+			})
+
 			// Finally
 			.then(dView => {
 
 				return new Promise((next, error) => {
 
-					res.AD.success(dView);
-					next();
+					ABGraphDataview.findOne(dView.id, ['object', 'query'])
+						.catch(errMessage => {
+
+							error(errMessage);
+							res.AD.error(true);
+
+						})
+						.then(result => {
+
+							res.AD.success(result);
+							next();
+		
+						});
 
 				})
 			});
@@ -184,7 +230,7 @@ module.exports = {
 
 				return new Promise((next, err) => {
 
-					ABGraphDataview.findOne(dataviewID)
+					ABGraphDataview.findOne(dataviewID, ['object', 'query'])
 						.catch(err)
 						.then(dataview => {
 							next(dataview);
@@ -239,7 +285,7 @@ module.exports = {
 			dataviewID = req.param('dataviewID');
 
 		ABGraphDataview.unrelate(
-			'applications',
+			ABGraphDataview.relations.applications,
 			appID,
 			dataviewID
 		)

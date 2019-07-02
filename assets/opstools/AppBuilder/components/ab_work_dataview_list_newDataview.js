@@ -1,12 +1,91 @@
+/*
+ * ab_work_dataview_list_newDataview
+ *
+ * Display the form for creating a new Dataview.
+ *
+ */
+
+import ABBlankDataview from "./ab_work_dataview_list_newDataview_blank"
+
 export default class AB_Work_Dataview_List_NewDataview extends OP.Component {
 
 	constructor(App) {
 		super(App, 'ab_work_dataview_list_newdataview');
+		var L = this.Label;
+
+		var labels = {
+			common: App.labels,
+			component: {
+				addNew: L('ab.dataview.addNew', '*Add new data view')
+			}
+		}
+
+		// internal list of Webix IDs to reference our UI components.
+		var ids = {
+			component: this.unique('component'),
+			tab: this.unique('tab')
+		}
 
 		let CurrentApplication;
 
+		let BlankTab = new ABBlankDataview(App);
+
+
+		// Our webix UI definition:
+		this.ui = {
+			view: "window",
+			id: ids.component,
+			position: "center",
+			modal: true,
+			head: labels.component.addNew,
+			body: {
+				view: "tabview",
+				id: ids.tab,
+				cells: [
+					BlankTab.ui
+				],
+				tabbar: {
+					on: {
+						onAfterTabClick: (id) => {
+
+							_logic.switchTab(id);
+
+						}
+					}
+				}
+			},
+			on: {
+				onBeforeShow: () => {
+
+					var id = $$(ids.tab).getValue();
+					_logic.switchTab(id);
+
+				}
+			}
+		};
+
 		// Our init() function for setting up our UI
 		this.init = (options) => {
+			webix.ui(this.ui);
+			webix.extend($$(ids.component), webix.ProgressBar);
+
+			// register our callbacks:
+			for (var c in _logic.callbacks) {
+				_logic.callbacks[c] = options[c] || _logic.callbacks[c];
+			}
+			var ourCBs = {
+				onCancel: _logic.hide,
+				onSave: _logic.save,
+				onDone: _logic.done,
+				onBusyStart: _logic.showBusy,
+				onBusyEnd: _logic.hideBusy
+			}
+
+			BlankTab.init(ourCBs);
+			// CsvTab.init(ourCBs);
+			// ImportTab.init(ourCBs);
+			// ExternalTab.init(ourCBs);
+
 		}
 
 		// our internal business logic
@@ -61,12 +140,12 @@ export default class AB_Work_Dataview_List_NewDataview extends OP.Component {
 
 			/**
 			 * Finished saving, so hide the popup and clean up.
-			 * @param {object} obj
+			 * @param {ABDataview} dataview
 			 */
-			done: (obj) => {
+			done: (dataview) => {
 				_logic.hideBusy();
-				_logic.hide();							// hide our popup
-				_logic.callbacks.onDone(null, obj, selectNew, callback);		// tell parent component we're done
+				_logic.hide();								// hide our popup
+				_logic.callbacks.onDone(null, dataview);	// tell parent component we're done
 			},
 
 
@@ -93,11 +172,11 @@ export default class AB_Work_Dataview_List_NewDataview extends OP.Component {
 				}
 
 				// create a new (unsaved) instance of our object:
-				var newObject = CurrentApplication.objectNew(values);
+				var newDataview = CurrentApplication.dataviewNew(values);
 
 
 				// have newObject validate it's values.
-				var validator = newObject.isValid();
+				var validator = newDataview.isValid();
 				if (validator.fail()) {
 					cb(validator);							// tell current Tab component the errors
 					return false;							// stop here.
@@ -108,7 +187,7 @@ export default class AB_Work_Dataview_List_NewDataview extends OP.Component {
 				_logic.showBusy();
 
 				// if we get here, save the new Object
-				newObject.save()
+				newDataview.save()
 					.then(function (obj) {
 
 						// successfully done:
@@ -129,13 +208,12 @@ export default class AB_Work_Dataview_List_NewDataview extends OP.Component {
 			 *
 			 * Show this component.
 			 */
-			show: function (shouldSelectNew, callbackFunction) {
-				if (shouldSelectNew != null) {
-					selectNew = shouldSelectNew;
-					callback = callbackFunction;
-				}
+			show: function () {
 				if ($$(ids.component))
 					$$(ids.component).show();
+
+				var id = $$(ids.tab).getValue();
+				_logic.switchTab(id);
 			},
 
 			switchTab: function (tabId) {
@@ -144,10 +222,11 @@ export default class AB_Work_Dataview_List_NewDataview extends OP.Component {
 					if (BlankTab.onShow)
 						BlankTab.onShow(CurrentApplication);
 				}
-				else if (tabId == ImportTab.ui.body.id) {
-					if (ImportTab.onShow)
-						ImportTab.onShow(CurrentApplication);
-				}
+				// TODO
+				// else if (tabId == ImportTab.ui.body.id) {
+				// 	if (ImportTab.onShow)
+				// 		ImportTab.onShow(CurrentApplication);
+				// }
 
 			}
 

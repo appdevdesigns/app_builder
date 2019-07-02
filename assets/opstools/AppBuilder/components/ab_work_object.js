@@ -95,7 +95,8 @@ export default class AB_Work_Object extends OP.Component {   //.extend(idBase, f
 				$$(ids.component).show();
 
 				if (CurrentApplication &&
-					!CurrentApplication.loadedObjects) {
+					(!CurrentApplication.loadedObjects ||
+					ObjectList.count() < 1)) {
 
 					ObjectList.busy();
 

@@ -345,6 +345,11 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 
 			},
 
+			listCount: function() {
+				if ($$(ids.list))
+					return $$(ids.list).count();
+			},
+
 			onAfterEditStop: function(state, editor, ignoreUpdate) {
 
 				_logic.showGear(editor.id);
@@ -635,6 +640,7 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 		this.refresh = _logic.refresh;
 		this.busy = _logic.listBusy;
 		this.ready = _logic.listReady;
+		this.count = _logic.listCount;
 
 	}
 

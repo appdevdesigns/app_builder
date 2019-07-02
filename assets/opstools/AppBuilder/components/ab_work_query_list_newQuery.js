@@ -182,7 +182,7 @@ export default class AB_Work_Query_List_NewQuery extends OP.Component {   //.ext
 				if ($$(ids.component))
 					$$(ids.component).show();
 
-				var id = $$(ids.tab).getValue();
+				let id = $$(ids.tab).getValue();
 				_logic.switchTab(id);
 
 			}

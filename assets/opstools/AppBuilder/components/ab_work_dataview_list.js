@@ -42,7 +42,6 @@ export default class AB_Work_Dataview_List extends OP.Component {
 					view: App.custom.editunitlist.view, // "editunitlist"
 					id: ids.list,
 					width: App.config.columnWidthLarge,
-height: 300,
 					select: true,
 
 					editaction: 'custom',
@@ -63,7 +62,7 @@ height: 300,
 					},
 					on: {
 						onAfterSelect: function (id) {
-							_logic.selectObject(id);
+							_logic.selectDataview(id);
 						},
 						onBeforeEditStop: function (state, editor) {
 							_logic.onBeforeEditStop(state, editor);
@@ -91,6 +90,7 @@ height: 300,
 		};
 
 		var CurrentApplication = null;
+		var CurrentDataview = null;
 		var dataviewList = null;
 
 		let _initialized = false;
@@ -175,6 +175,70 @@ height: 300,
 
 			},
 
+			selectDataview: function (dataviewId) {
+
+				CurrentDataview = $$(ids.list).getItem(dataviewId);
+
+				_logic.callbacks.onChange(CurrentDataview);
+
+			},
+
+			/**
+			 * @function templateListItem
+			 *
+			 * Defines the template for each row of our Data view list.
+			 *
+			 * @param {ABDataview} obj the current instance of ABDataview for the row.
+			 * @param {?} common the webix.common icon data structure
+			 * @return {string}
+			 */
+			templateListItem: function (dataview, common) {
+				return `<div class='ab-dataview-list-item'>
+					<i class="fa ${dataview.settings.isQuery ? "fa-filter" : "fa-database"}"></i>
+					${dataview.label || '??label??'}
+					${common.iconGear}
+					</div>`;
+			},
+
+			onBeforeEditStop: function (state, editor) {
+
+				var selectedObject = $$(ids.list).getSelectedItem(false);
+				selectedObject.label = state.value;
+
+				return true;
+			},
+
+			onAfterEditStop: function (state, editor, ignoreUpdate) {
+
+				if (state.value == state.old)
+					return;
+
+				_logic.listBusy();
+
+				var selectedObject = $$(ids.list).getSelectedItem(false);
+				selectedObject.label = state.value;
+
+				// Call server to rename
+				selectedObject.save()
+					.catch(function () {
+						_logic.listReady();
+
+						OP.Dialog.Alert({
+							text: labels.common.renameErrorMessage.replace("{0}", state.old)
+						});
+
+					})
+					.then(function () {
+						_logic.listReady();
+
+						// TODO : should use message box
+						OP.Dialog.Alert({
+							text: labels.common.renameSuccessMessage.replace("{0}", state.value)
+						});
+
+					});
+			},
+
 			/**
 			 * @function clickNewDataview
 			 *
@@ -243,7 +307,8 @@ height: 300,
 				CurrentApplication.dataviewExclude(dataviewId)
 					.then(() => {
 
-						dataviewList.remove(dataviewId);
+						if (dataviewList.exists(dataviewId))
+							dataviewList.remove(dataviewId);
 
 						_logic.listReady();
 
@@ -275,10 +340,11 @@ height: 300,
 								.then(() => {
 									_logic.listReady();
 
-									objectList.remove(selectedDataview.id);
+									if (dataviewList.exists(selectedDataview.id))
+										dataviewList.remove(selectedDataview.id);
 
 									// refresh items list
-									_logic.callbackNewDataview();
+									// _logic.callbackNewDataview();
 
 									// clear object workspace
 									_logic.callbacks.onChange(null);
@@ -299,9 +365,23 @@ height: 300,
 				if ($$(ids.list) &&
 					$$(ids.list).hideProgress)
 					$$(ids.list).hideProgress();
+			},
+
+			listCount: () => {
+				if ($$(ids.list))
+					return $$(ids.list).count();
 			}
 
 		};
+
+		// Expose any globally accessible Actions:
+		this.actions({
+
+			addNewDataview: function (selectNew, callback) {
+				_logic.clickNewDataview(selectNew, callback);
+			}
+
+		})
 
 		// 
 		// Define our external interface methods:
@@ -309,6 +389,7 @@ height: 300,
 		this.applicationLoad = _logic.applicationLoad;
 		this.busy = _logic.listBusy;
 		this.ready = _logic.listReady;
+		this.count = _logic.listCount;
 
 
 	}

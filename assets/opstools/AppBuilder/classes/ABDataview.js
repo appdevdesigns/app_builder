@@ -42,12 +42,12 @@ export default class ABDataview extends EventEmitter {
 		this.__dataCollection = this._dataCollectionNew([]);
 
 		// Populate data source: ABObject or ABObjectQuery
-		if (attributes.object) {
-			this.__datasource = new ABObject(attributes.object, application);
+		if (attributes.object && attributes.object[0]) {
+			this.__datasource = new ABObject(attributes.object[0], application);
 			this.settings.isQuery = false;
 		}
-		else if (attributes.query) {
-			this.__datasource = new ABObjectQuery(attributes.query, application);
+		else if (attributes.query && attributes.query[0]) {
+			this.__datasource = new ABObjectQuery(attributes.query[0], application);
 			this.settings.isQuery = true;
 		}
 
@@ -74,6 +74,8 @@ export default class ABDataview extends EventEmitter {
 	 * @param {obj} values
 	 */
 	fromValues(values) {
+
+		this.id = values.id;
 
 		values.settings = values.settings || {};
 		this.settings = this.settings || {};
@@ -113,11 +115,12 @@ export default class ABDataview extends EventEmitter {
 
 		OP.Multilingual.unTranslate(this, this, ["label"]);
 
-		// var result = super.toObj();
-
-		// result.objectWorkspaceViews = this.workspaceViews.toObj();
-
-		return result;
+		return {
+			id: this.id,
+			label: this.label,
+			settings: _.cloneDeep(this.settings || {}),
+			translations: this.translations,
+		};
 
 	}
 
@@ -132,9 +135,42 @@ export default class ABDataview extends EventEmitter {
 	*/
 	save() {
 
-		// TODO
-		return Promise.resolve();
+		if (!this.id) {
 
+			// this.id = OP.Util.uuid();	// setup default .id
+			this.label = this.label || this.name;
+		}
+
+		return new Promise((resolve, reject) => {
+			this.application.dataviewSave(this)
+				.then(newDataview => {
+
+					if (newDataview &&
+						newDataview.id &&
+						!this.id)
+						this.id = newDataview.id;
+
+					resolve(this);
+
+				})
+				.catch(function (err) {
+					reject(err);
+				});
+		});
+
+	}
+
+	/**
+	 * @method destroy()
+	 *
+	 * destroy the current instance of ABDataview
+	 *
+	 * also remove it from our parent application
+	 *
+	 * @return {Promise}
+	 */
+	destroy () {
+		return this.application.dataviewDestroy(this);
 	}
 
 	/**

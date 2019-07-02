@@ -113,7 +113,7 @@ class ABModelBase {
 
 
 	static query(aqlCommand, returnArray = true) {
-		console.log(aqlCommand);
+
 		return Promise.resolve()
 
 			// Execute AQL command

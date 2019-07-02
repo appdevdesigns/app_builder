@@ -100,7 +100,8 @@ export default class AB_Work_Query extends OP.Component {   //.extend(idBase, fu
 				$$(ids.component).show();
 
 				if (CurrentApplication &&
-					!CurrentApplication.loadedQueries) {
+					(!CurrentApplication.loadedQueries ||
+					QueryList.count() < 1)) {
 
 					QueryList.busy();
 

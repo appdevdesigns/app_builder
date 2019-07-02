@@ -407,6 +407,11 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 
 			},
 
+			listCount: function() {
+				if ($$(ids.list))
+					return $$(ids.list).count();
+			},
+
 			onAfterEditStop: function(state, editor, ignoreUpdate) {
 
 				_logic.showGear(editor.id);
@@ -668,6 +673,7 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 		this.applicationLoad = _logic.applicationLoad;
 		this.busy = _logic.listBusy;
 		this.ready = _logic.listReady;
+		this.count = _logic.listCount;
 
 	}
 

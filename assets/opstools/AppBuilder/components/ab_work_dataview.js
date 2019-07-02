@@ -71,7 +71,7 @@ export default class AB_Work_Dataview extends OP.Component {
 
 				CurrentApplication = application;
 
-				DataviewWorkspace.clearObjectWorkspace();
+				DataviewWorkspace.clearWorkspace();
 				DataviewList.applicationLoad(application);
 				DataviewWorkspace.applicationLoad(application);
 			},
@@ -87,7 +87,8 @@ export default class AB_Work_Dataview extends OP.Component {
 				$$(ids.component).show();
 
 				if (CurrentApplication &&
-					!CurrentApplication.loadedDataviews) {
+					(!CurrentApplication.loadedDataview ||
+					DataviewList.count() < 1)) {
 
 					DataviewList.busy();
 
@@ -105,9 +106,9 @@ export default class AB_Work_Dataview extends OP.Component {
 			callbackSelectDataview: function (dataview) {
 
 				if (dataview == null)
-					DataviewWorkspace.clearDataviewWorkspace();
+					DataviewWorkspace.clearWorkspace();
 				else
-					DataviewWorkspace.populateDataviewWorkspace(dataview);
+					DataviewWorkspace.populateWorkspace(dataview);
 			}
 
 		}
