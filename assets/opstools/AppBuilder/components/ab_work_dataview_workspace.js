@@ -141,6 +141,8 @@ export default class AB_Work_Dataview_Workspace extends OP.Component {
 
 				this._application = application;
 
+				this.Property.applicationLoad(application);
+
 			},
 
 			/**
@@ -151,8 +153,15 @@ export default class AB_Work_Dataview_Workspace extends OP.Component {
 			populateWorkspace: (dataview) => {
 
 				let ids = this.ids;
+				let DataTable = this.DataTable;
 
 				this._dataview = dataview;
+
+				let $datatable = $$(DataTable.ui.id);
+				// unbind
+				$datatable.clearAll();
+				$datatable.data.unsync();
+				$datatable.unbind();
 
 				if (dataview) {
 
@@ -162,15 +171,13 @@ export default class AB_Work_Dataview_Workspace extends OP.Component {
 					if (dataview &&
 						dataview.datasource) {
 
-						let DataTable = this.DataTable;
-
 						DataTable.objectLoad(dataview.datasource);
 						DataTable.refreshHeader();
 
 						// bind a data collection to the display grid
-						dataview.bind($$(DataTable.ui.id));
+						dataview.bind($datatable);
 
-						$$(DataTable.ui.id).adjust();
+						$datatable.adjust();
 
 						// load data
 						if (dataview.dataStatus == dataview.dataStatusFlag.notInitial)
@@ -181,6 +188,9 @@ export default class AB_Work_Dataview_Workspace extends OP.Component {
 				else {
 					this._logic.clearWorkspace();
 				}
+
+				// Property
+				this.Property.dataviewLoad(dataview);
 
 			},
 

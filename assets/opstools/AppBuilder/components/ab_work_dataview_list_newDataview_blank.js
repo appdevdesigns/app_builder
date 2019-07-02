@@ -115,8 +115,6 @@ export default class AB_Work_Query_List_NewDataview_Blank extends OP.Component {
 
 			onShow: (app) => {
 
-				let tasks = [];
-
 				// clear form
 				$$(ids.form).setValues({
 					name: '',
@@ -124,48 +122,38 @@ export default class AB_Work_Query_List_NewDataview_Blank extends OP.Component {
 				});
 
 				CurrentApplication = app;
+
+				if (!$$(ids.object))
+					return;
+
+				// populate object list
+				let datasourceOpts = [];
+
 				if (CurrentApplication) {
 
-					// Load objects
-					tasks.push(CurrentApplication.objectLoad());
+					// Objects
+					datasourceOpts = datasourceOpts.concat(CurrentApplication.objects().map(obj => {
+						return {
+							id: obj.id,
+							value: obj.label,
+							icon: 'fa fa-database',
+							isQuery: false
+						};
+					}));
 
-					// Load queries
-					tasks.push(CurrentApplication.queryLoad());
+					// Queries
+					datasourceOpts = datasourceOpts.concat(CurrentApplication.queries().map(q => {
+						return {
+							id: q.id,
+							value: q.label,
+							icon: 'fa fa-filter',
+							isQuery: true
+						};
+					}));
 				}
 
-				Promise.all(tasks)
-					.then(() => {
-
-						if (!$$(ids.object))
-							return;
-
-						// populate object list
-						let datasourceOpts = [];
-
-						// Objects
-						datasourceOpts = datasourceOpts.concat(CurrentApplication.objects().map(obj => {
-							return {
-								id: obj.id,
-								value: obj.label,
-								icon: 'fa fa-database',
-								isQuery: false
-							};
-						}));
-
-						// Queries
-						datasourceOpts = datasourceOpts.concat(CurrentApplication.queries().map(q => {
-							return {
-								id: q.id,
-								value: q.label,
-								icon: 'fa fa-filter',
-								isQuery: true
-							};
-						}));
-
-						$$(ids.object).define("options", datasourceOpts);
-						$$(ids.object).refresh();
-
-					});
+				$$(ids.object).define("options", datasourceOpts);
+				$$(ids.object).refresh();
 
 			},
 

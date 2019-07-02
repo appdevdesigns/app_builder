@@ -852,7 +852,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                 var DataTable = $$(ids.component);
                 var minHeight = 0;
                 defaultHeight = 0;
-                CurrentObject._fields.forEach(function (f) {
+                CurrentObject.fields().forEach(function (f) {
                     if (f.key == "image") {                
                         imageFields.push(f.columnName);
                         if (parseInt(f.settings.useHeight) == 1 && parseInt(f.settings.imageHeight) > minHeight) {
@@ -1231,7 +1231,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                 } else if (common.column.editor == "date") {
                     tip = common.column.format(obj[common.column.id]);
                 } else if (common.column.editor == "richselect") {
-                    CurrentObject._fields.forEach(function (f) {
+                    CurrentObject.fields().forEach(function (f) {
                         if (f.columnName == common.column.id) {
                             if (f.settings.options) {
                                 f.settings.options.forEach(function (o) {

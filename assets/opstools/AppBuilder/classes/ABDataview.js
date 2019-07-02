@@ -10,7 +10,9 @@ var DefaultValues = {
 	object: {}, // json of ABObject
 	query: {}, // json of ABObjectQuery
 	settings: {
-		datasourceID: '', // id of ABObject or ABObjectQuery
+		datasourceID: '', 		// id of ABObject or ABObjectQuery
+		linkDatasourceID: '',	// id of ABObject or ABObjectQuery
+		linkFieldID: '',		// id of ABField
 		objectWorkspace: {
 			filterConditions: { // array of filters to apply to the data table
 				glue: 'and',
@@ -150,8 +152,21 @@ export default class ABDataview extends EventEmitter {
 						!this.id)
 						this.id = newDataview.id;
 
-					resolve(this);
+					// update data source
+					let updateDataview = this.application.dataviews(dv => dv.id == this.id)[0];
+					if (updateDataview) {
 
+						if (newDataview.object && newDataview.object[0]) {
+							updateDataview.datasource = new ABObject(newDataview.object[0], this.application);
+							this.settings.isQuery = false;
+						}
+						else if (newDataview.query && newDataview.query[0]) {
+							updateDataview.datasource = new ABObjectQuery(newDataview.query[0], this.application);
+							this.settings.isQuery = true;
+						}
+					}
+
+					resolve(this);
 				})
 				.catch(function (err) {
 					reject(err);
@@ -169,7 +184,7 @@ export default class ABDataview extends EventEmitter {
 	 *
 	 * @return {Promise}
 	 */
-	destroy () {
+	destroy() {
 		return this.application.dataviewDestroy(this);
 	}
 

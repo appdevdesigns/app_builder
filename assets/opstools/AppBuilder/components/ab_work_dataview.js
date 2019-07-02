@@ -12,18 +12,6 @@ export default class AB_Work_Dataview extends OP.Component {
 	constructor(App) {
 		super(App, 'ab_work_dataview');
 
-		let L = this.Label;
-		let labels = {
-
-			common: App.labels,
-
-			component: {
-
-				// formHeader: L('ab.application.form.header', "*Application Info"),
-
-			}
-		}
-
 		let DataviewList = new AB_Work_Dataview_List(App);
 		let DataviewWorkspace = new AB_Work_Dataview_Workspace(App);
 
@@ -32,7 +20,6 @@ export default class AB_Work_Dataview extends OP.Component {
 		// internal list of Webix IDs to reference our UI components.
 		let ids = {
 			component: this.unique('component'),
-
 		}
 
 		// Our webix UI definition:
@@ -86,20 +73,31 @@ export default class AB_Work_Dataview extends OP.Component {
 
 				$$(ids.component).show();
 
-				if (CurrentApplication &&
-					(!CurrentApplication.loadedDataview ||
-					DataviewList.count() < 1)) {
+				DataviewList.busy();
 
-					DataviewList.busy();
+				let tasks = [];
 
-					CurrentApplication.dataviewLoad()
-						.then(() => {
+				if (CurrentApplication) {
 
-							DataviewList.applicationLoad(CurrentApplication);
-							DataviewList.ready();
+					// Load objects
+					tasks.push(CurrentApplication.objectLoad());
 
-						});
+					// Load queries
+					tasks.push(CurrentApplication.queryLoad());
+
+					// Load data views
+					if (!CurrentApplication.loadedDataview || DataviewList.count() < 1)
+						tasks.push(CurrentApplication.dataviewLoad());
 				}
+
+				Promise.all(tasks)
+					.then(() => {
+
+						DataviewWorkspace.applicationLoad(CurrentApplication);
+						DataviewList.applicationLoad(CurrentApplication);
+						DataviewList.ready();
+
+					});
 
 			},
 
