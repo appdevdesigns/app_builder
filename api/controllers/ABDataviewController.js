@@ -9,6 +9,26 @@ var path = require('path');
 
 var ABGraphDataview = require(path.join('..', 'graphModels', 'ABDataview'));
 
+function pullDataview(dataviewID) {
+
+	return Promise.resolve()
+
+		// Get data view
+		.then(ABGraphDataview.findOne(dataviewID, ['object']))
+
+		// When data source is query, then pull objects of query
+		.then(dataview => {
+
+			let isQuery = JSON.parse(dataview.settings.isQuery);
+			if (isQuery) {
+
+			}
+
+			return Promise.resolve(dataview);
+		})
+
+}
+
 module.exports = {
 
 	/**
@@ -16,11 +36,11 @@ module.exports = {
 	 * 
 	 * Get data views of application
 	 */
-	dataviewApplication: function(req, res) {
+	dataviewApplication: function (req, res) {
 
 		let appID = req.param('appID');
 
-		ABGraphDataview.findWithRelation('applications', appID, ['object', 'query'])
+		ABGraphDataview.findWithRelation('applications', appID, ['object'])
 			.catch(error => {
 				res.AD.error(error);
 			})
@@ -42,7 +62,7 @@ module.exports = {
 
 		let cond = req.query;
 
-		ABGraphDataview.find(cond, ['object', 'query'])
+		ABGraphDataview.find(cond, ['object'])
 			.catch(error => {
 				err(error);
 				res.AD.error(error);
@@ -137,12 +157,36 @@ module.exports = {
 
 			})
 
+			// Remove relations from data source
+			.then(dView => {
+
+				return new Promise((next, error) => {
+
+					let isQuery = JSON.parse(dView.settings.isQuery || false),
+						relationName = isQuery ? 'query' : 'object';
+
+					dView.unrelate(relationName)
+						.catch(errMessage => {
+
+							error(errMessage);
+							res.AD.error(true);
+
+						})
+						.then(() => {
+
+							next(dView);
+
+						});
+
+				});
+			})
+
 			// Set relation to data source
 			.then(dView => {
 
 				return new Promise((next, error) => {
 
-					let isQuery = JSON.parse(dView.settings.isQuery || false);
+					let isQuery = JSON.parse(dView.settings.isQuery || false),
 						relationName = '',
 						datasourceID = '';
 
@@ -177,7 +221,7 @@ module.exports = {
 
 				return new Promise((next, error) => {
 
-					ABGraphDataview.findOne(dView.id, ['object', 'query'])
+					ABGraphDataview.findOne(dView.id, ['object'])
 						.catch(errMessage => {
 
 							error(errMessage);
@@ -188,7 +232,7 @@ module.exports = {
 
 							res.AD.success(result);
 							next();
-		
+
 						});
 
 				})
@@ -230,7 +274,7 @@ module.exports = {
 
 				return new Promise((next, err) => {
 
-					ABGraphDataview.findOne(dataviewID, ['object', 'query'])
+					ABGraphDataview.findOne(dataviewID, ['object'])
 						.catch(err)
 						.then(dataview => {
 							next(dataview);

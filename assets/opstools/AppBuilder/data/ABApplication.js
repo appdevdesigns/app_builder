@@ -20,6 +20,13 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 		// restURL: '/app_builder/abapplication',
 		restURL: '/app_builder/application',
 
+		// TEMPORARILY
+		get: function(appId){
+			return OP.Comm.Service.get({
+				url: `/app_builder/application/${appId}`
+			});
+		},
+
 		updateInfo: function (appId, data) {
 			return OP.Comm.Service.put({
 				url: `/app_builder/application/${appId}/info`,

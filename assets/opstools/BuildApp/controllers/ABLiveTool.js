@@ -235,11 +235,9 @@ steal(
 
 									// we will remove the loading spinners on the menu now
 									var opsMenuItem = document.body.querySelectorAll('#op-list-menu > .op-container .'+self.options.areaKey+'_appLoading');
-									if (opsMenuItem.length) {
-										opsMenuItem.forEach((x) => {
-											x.remove();
-										})
-									}
+									(opsMenuItem || []).forEach((x) => {
+										x.remove();
+									});
 
 									next();
 								}

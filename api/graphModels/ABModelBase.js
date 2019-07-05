@@ -62,7 +62,7 @@ class ABModelBase {
 		return this.constructor.relate(relation, fromId, toId, values);
 	}
 
-	unrelate(relation, linkId) {
+	unrelate(relation, linkId = null) {
 
 		if (typeof relation == 'string')
 			relation = this.constructor._getRelation(relation);
@@ -516,22 +516,42 @@ class ABModelBase {
 	 * @param {string} toId - _key of node
 	 * @return {Promise}
 	 */
-	static unrelate(relation, fromId, toId) {
+	static unrelate(relation, fromId = null, toId = null) {
+
+		// Should define either values
+		if (!fromId && !toId)
+			return Promise.resolve();
 
 		// Get _id of documents
 		if (relation.direction == this.relateDirection.OUTBOUND) {
-			fromId = this._getId(fromId);
-			toId = this._getId(toId, relation.linkCollection);
+			if (fromId)
+				fromId = this._getId(fromId);
+
+			if (toId)
+				toId = this._getId(toId, relation.linkCollection);
 		}
 		else {
-			fromId = this._getId(fromId, relation.linkCollection);
-			toId = this._getId(toId);
+			if (fromId)
+				fromId = this._getId(fromId, relation.linkCollection);
+
+			if (toId)
+				toId = this._getId(toId);
+		}
+
+		let condition = "";
+		if (fromId && toId) {
+			condition = `row._from == '${fromId}' AND row._to == '${toId}'`;
+		}
+		else if (fromId) {
+			condition = `row._from == '${fromId}'`;
+		}
+		else if (toId) {
+			condition = `row._to == '${toId}'`;
 		}
 
 		return this.query(`
 						FOR row IN ${relation.edgeName}
-						FILTER row._from == '${fromId}'
-						AND row._to == '${toId}'
+						FILTER ${condition}
 						REMOVE row IN ${relation.edgeName}
 					`);
 

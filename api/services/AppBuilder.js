@@ -9,6 +9,7 @@ var _ = require('lodash');
 var moment = require('moment');
 var uuid = require('node-uuid');
 
+var ABGraphApplication = require(path.join('..', 'graphModels', 'ABApplication'));
 var ABGraphObject = require(path.join('..', 'graphModels', 'ABObject'));
 var ABGraphQuery = require(path.join('..', 'graphModels', 'ABQuery'));
 
@@ -923,21 +924,18 @@ module.exports = {
 
                 async.series([
                     function (next) {
-                        ABApplication.find({ id: appID })
-                            .populate('translations')
-                            .then(function (list) {
+                        ABGraphApplication.findOne(appID)
+                            .then(function (app) {
 
-                                if (!list || !list[0]) {
+                                if (!app) {
                                     var err = new Error('Application not found');
                                     ADCore.error.log('Application not found ', { error: err, appID: appID });
                                     next(err);
                                     return;
                                 }
 
-
-                                var obj = list[0];
                                 // Only numbers and alphabets will be used
-                                Application = obj;
+                                Application = app;
                                 next();
                                 return null;
                             })
@@ -963,7 +961,7 @@ module.exports = {
                         var label = areaName;  // default if no translations provided
 
                         // now take the 1st translation we find:
-                        Application.translations.some(function (trans) {
+                        (Application.json.translations || []).some(function (trans) {
                             if (label == areaName) {
                                 label = trans.label;
                                 return true;  // stops the looping.
@@ -1014,16 +1012,15 @@ module.exports = {
 
                 async.series([
                     function (next) {
-                        ABApplication.find({ id: appID })
-                            .populate('translations')
-                            .then(function (list) {
-                                if (!list || !list[0]) {
+                        ABGraphApplication.findOne(appID)
+                            .then(function (app) {
+                                if (!app) {
                                     throw new Error('Application not found');
                                 }
-                                var obj = list[0];
+
                                 // Only numbers and alphabets will be used
-                                Application = obj;
-                                appName = AppBuilder.rules.toApplicationNameFormat(obj.name);
+                                Application = app;
+                                // appName = AppBuilder.rules.toApplicationNameFormat(app.name);
 
                                 next();
                                 return null;
@@ -1038,7 +1035,7 @@ module.exports = {
                         var areaName = Application.name;
                         var areaKey = Application.areaKey();
                         var label = areaName;  // default if no translations provided
-                        Application.translations.some(function (trans) {
+                        (Application.json.translations || []).some(function (trans) {
                             if (label == areaName) {
                                 label = trans.label;
                                 return true;  // stops the looping.
@@ -2137,7 +2134,7 @@ module.exports = {
                                 pullData();
                             }
                             else {
-                                ABApplication.findOne({ id: page.application })
+                                ABGraphApplication.findOne(page.application)
                                     .then(function (result) {
                                         if (result) {
                                             applications[page.application] = result;

@@ -68,7 +68,10 @@ module.exports = {
             .findOne(appID)
             .then(app => {
 
-                res.AD.success(app.toValidJsonFormat());
+                if (app)
+                    res.AD.success(app.toValidJsonFormat());
+                else
+                    res.AD.success(null);
 
             },
             err => {

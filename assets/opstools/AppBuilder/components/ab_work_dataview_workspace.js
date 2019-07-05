@@ -122,7 +122,9 @@ export default class AB_Work_Dataview_Workspace extends OP.Component {
 	init() {
 
 		this.DataTable.init({});
-		this.Property.init();
+		this.Property.init({
+			onSave: this._logic.populateWorkspace
+		});
 
 		this._logic.populateWorkspace(this._dataview);
 
@@ -206,6 +208,7 @@ export default class AB_Work_Dataview_Workspace extends OP.Component {
 				$$(this.ids.noSelection).show();
 
 			}
+
 		};
 
 	}

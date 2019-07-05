@@ -88,10 +88,13 @@ export default class ABDataview extends EventEmitter {
 
 		// if this is being instantiated on a read from the Property UI,
 		this.settings.datasourceID = values.settings.datasourceID || DefaultValues.settings.datasourceID;
+		this.settings.linkDatasourceID = values.settings.linkDatasourceID || DefaultValues.settings.linkDatasourceID;
+		this.settings.linkFieldID = values.settings.linkFieldID || DefaultValues.settings.linkFieldID;
 		this.settings.objectWorkspace = values.settings.objectWorkspace || {
 			filterConditions: DefaultValues.settings.objectWorkspace.filterConditions,
 			sortFields: DefaultValues.settings.objectWorkspace.sortFields
 		};
+		this.settings.fixSelect = values.settings.fixSelect;
 
 		// Convert to boolean
 		this.settings.loadAll = JSON.parse(values.settings.loadAll || DefaultValues.settings.loadAll);
