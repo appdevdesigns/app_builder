@@ -1062,8 +1062,21 @@ export default class ABView extends ABViewBase {
 	changePage(pageId) {
 		this.emit('changePage', pageId);
 	}
-	
-	
+
+	/**
+	 * @property dataview
+	 * return data source
+	 * 
+	 * @return {ABDataview}
+	 */
+	get dataview() {
+
+		let dataviewID = (this.settings || {}).dataviewID;
+		if (!dataviewID) return null;
+
+		return this.application.dataviews(dv => dv.id == dataviewID)[0];
+	}
+
 	removeField(field, cb) {
 		
 		// if this view has matching field then destroy()

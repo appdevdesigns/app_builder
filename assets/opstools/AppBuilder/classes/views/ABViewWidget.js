@@ -155,6 +155,4 @@ export default class ABViewWidget extends ABView {
 		return base;
 	}
 
-
-
 }

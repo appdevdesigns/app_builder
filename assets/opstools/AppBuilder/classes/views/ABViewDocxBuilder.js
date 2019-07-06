@@ -460,14 +460,14 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 
 							// get current cursor
 							let currCursor = {};
-							let dc = this.dataCollection;
-							if (dc) {
-								currCursor = dc.getCursor();
+							let dv = this.dataview;
+							if (dv) {
+								currCursor = dv.getCursor();
 
 								// update property names to column labels to match format names in docx file
 								if (currCursor) {
 
-									let obj = dc.datasource;
+									let obj = dv.datasource;
 									if (obj) {
 
 										currCursor = _.clone(currCursor);
@@ -582,21 +582,5 @@ console.log("DOCX data: ", currCursor);
 	downloadUrl() {
 		return `/opsportal/file/${this.application.name}/${this.settings.filename}`;
 	}
-
-	/**
-	 * @property dataCollection
-	 * return ABDataview of this form
-	 * 
-	 * @return {ABDataview}
-	 */
-	get dataCollection() {
-
-		if (this.settings.datacollection == null)
-			return null;
-
-		return this.application.dataviews(dv => dv.id == this.settings.datacollection)[0];
-	}
-
-
 
 }

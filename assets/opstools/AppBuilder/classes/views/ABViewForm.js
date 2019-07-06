@@ -774,18 +774,18 @@ PopupRecordRule.qbFixAfterShow();
 			}
 
 			// bind a data collection to form component
-			var dc = this.dataview;
-			if (dc) {
+			let dv = this.dataview;
+			if (dv) {
 
 				// listen DC events
 				this.eventAdd({
-					emitter: dc,
+					emitter: dv,
 					eventName: 'changeCursor',
 					listener: _logic.displayData
 				});
 
 				// bind the cursor event of the parent DC
-				var linkDv = dc.dataviewLink;
+				var linkDv = dv.dataviewLink;
 				if (linkDv) {
 
 					// update the value of link field when data of the parent dc is changed
@@ -878,14 +878,14 @@ PopupRecordRule.qbFixAfterShow();
 
 			displayParentData: (rowData) => {
 
-				var dc = this.dataview;
-				var currCursor = dc.getCursor();
+				let dv = this.dataview;
+				var currCursor = dv.getCursor();
 
 				// If the cursor is selected, then it will not update value of the parent field
 				if (currCursor != null) return;
 
 				var Form = $$(ids.component),
-					relationField = dc.fieldLink;
+					relationField = dv.fieldLink;
 
 				if (relationField == null) return;
 
@@ -992,22 +992,6 @@ PopupRecordRule.qbFixAfterShow();
 
 		}
 	}
-
-
-	/**
-	 * @property dataview
-	 * return ABDataview of this form
-	 * 
-	 * @return {ABDataview}
-	 */
-	get dataview() {
-
-		if (this.settings.datacollection == null)
-			return null;
-
-		return this.application.dataviews(dv => dv.id == this.settings.datacollection)[0];
-	}
-
 
 	/**
 	 * @method fieldComponents()

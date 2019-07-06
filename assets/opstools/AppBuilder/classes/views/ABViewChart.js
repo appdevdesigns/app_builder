@@ -435,41 +435,31 @@ export default class ABViewChart extends ABViewContainer  {
 		}
 	}
 
-	/**
-	 * @property dataCollection
-	 * return ABDataview of this form
-	 * 
-	 * @return {ABDataview}
-	 */
-	get dataCollection() {
-		return this.application.dataviews(dv => dv.id == this.settings.dataSource)[0];
-	}
-
 	labelField() {
-		var dc = this.dataCollection;
-		if (!dc) return null;
+		var dv = this.dataview;
+		if (!dv) return null;
 
-		var obj = dc.datasource;
+		var obj = dv.datasource;
 		if (!obj) return null;
 
 		return obj.fields((f) => f.id == this.settings.columnLabel)[0]
 	}
 
 	valueField() {
-		var dc = this.dataCollection;
-		if (!dc) return null;
+		var dv = this.dataview;
+		if (!dv) return null;
 
-		var obj = dc.datasource;
+		var obj = dv.datasource;
 		if (!obj) return null;
 		
 		return obj.fields((f) => f.id == this.settings.columnValue)[0]
 	}
 
 	valueField2() {
-		var dc = this.dataCollection;
-		if (!dc) return null;
+		var dv = this.dataview;
+		if (!dv) return null;
 
-		var obj = dc.datasource;
+		var obj = dv.datasource;
 		if (!obj) return null;
 		
 		return obj.fields((f) => f.id == this.settings.columnValue2)[0]
@@ -480,8 +470,8 @@ export default class ABViewChart extends ABViewContainer  {
 			this.dcChart = new webix.DataCollection();
 		}
 
-		var dc = this.dataCollection;
-		if (dc == null) return this.dcChart;
+		var dv = this.dataview;
+		if (dv == null) return this.dcChart;
 
 
 		var labelCol = this.labelField();
@@ -502,7 +492,7 @@ export default class ABViewChart extends ABViewContainer  {
 
 		var refreshData = () => { 
 			
-			var dInfo = dc.getData();
+			var dInfo = dv.getData();
 
 			var result = [];
 			var sumData = {};
@@ -730,19 +720,19 @@ export default class ABViewChart extends ABViewContainer  {
 
 		refreshData();
 
-		dc.__dataCollection.attachEvent("onAfterAdd", function(id, index){
+		dv.__dataCollection.attachEvent("onAfterAdd", function(id, index){
 			refreshData();
 		});
 
-		dc.__dataCollection.attachEvent("onAfterDelete", function(id){
+		dv.__dataCollection.attachEvent("onAfterDelete", function(id){
 			refreshData();
 		});
 
-		dc.__dataCollection.attachEvent("onDataUpdate", function(id, data){
+		dv.__dataCollection.attachEvent("onDataUpdate", function(id, data){
 			refreshData();
 			return true;
 		});
-		dc.__dataCollection.attachEvent("onAfterLoad", function(){
+		dv.__dataCollection.attachEvent("onAfterLoad", function(){
 			refreshData();
 		});
 		return this.dcChart;

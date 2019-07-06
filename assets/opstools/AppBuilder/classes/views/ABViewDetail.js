@@ -433,16 +433,16 @@ export default class ABViewDetail extends ABViewContainer {
 			container.onShow();
 
 			// listen DC events
-			var dc = this.dataCollection;
-			if (dc) {
+			let dv = this.dataview;
+			if (dv) {
 
-				var currData = dc.getCursor();
+				let currData = dv.getCursor();
 				if (currData) {
 					_logic.displayData(currData);
 				}
 
 				this.eventAdd({
-					emitter: dc,
+					emitter: dv,
 					eventName: 'changeCursor',
 					listener: _logic.displayData
 				})
@@ -474,19 +474,6 @@ export default class ABViewDetail extends ABViewContainer {
 			return viewsToAllow.indexOf(c.common().key) > -1;
 		});
 	}
-
-
-
-	/**
-	 * @property dataCollection
-	 * return ABDataview of this detail
-	 * 
-	 * @return {ABDataview}
-	 */
-	get dataCollection() {
-		return this.application.dataviews(dv => dv.id == this.settings.datacollection)[0];
-	}
-
 
 	clearFieldComponents() {
 		this.views().forEach((comp) => {

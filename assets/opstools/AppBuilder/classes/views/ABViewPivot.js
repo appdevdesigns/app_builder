@@ -302,19 +302,19 @@ export default class ABViewPivot extends ABViewWidget {
 
 					return new Promise((next, err) => {
 
-						var dc = this.dataCollection;
-						if (!dc) return next();
+						let dv = this.dataview;
+						if (!dv) return next();
 
-						var data = dc.getData();
+						let data = dv.getData();
 						if (data.length > 0) return next(data);
 
 						// load data at first
 
-						dc.loadData()
+						dv.loadData()
 							.catch(err)
 							.then(() => {
 
-								next(dc.getData());
+								next(dv.getData());
 
 							});
 					});
@@ -326,10 +326,10 @@ export default class ABViewPivot extends ABViewWidget {
 
 					return new Promise((next, err) => {
 
-						var dc = this.dataCollection;
-						if (!dc) return next();
+						let dv = this.dataview;
+						if (!dv) return next();
 
-						var object = dc.datasource;
+						let object = dv.datasource;
 						if (!object) return next();
 
 						var dataMapped = data.map(d => {
@@ -397,7 +397,7 @@ export default class ABViewPivot extends ABViewWidget {
 	 * 
 	 * @return {ABDataview}
 	 */
-	get dataCollection() {
+	get dataview() {
 		return this.application.dataviews(dv => dv.id == this.settings.datacollection)[0];
 	}
 

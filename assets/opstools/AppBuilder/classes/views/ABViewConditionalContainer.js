@@ -318,18 +318,18 @@ export default class ABViewConditionalContainer extends ABViewContainer {
 
 			this.populateFilterComponent();
 
-			var dc = this.dataCollection;
-			if (dc) {
+			var dv = this.dataview;
+			if (dv) {
 
 				// listen DC events
 				this.eventAdd({
-					emitter: dc,
+					emitter: dv,
 					eventName: 'loadData',
 					listener: _logic.displayView
 				});
 
 				this.eventAdd({
-					emitter: dc,
+					emitter: dv,
 					eventName: 'changeCursor',
 					listener: _logic.displayView
 				});
@@ -344,17 +344,17 @@ export default class ABViewConditionalContainer extends ABViewContainer {
 
 			displayView: (currData) => {
 
-				var dc = this.dataCollection;
-				if (dc) {
+				let dv = this.dataview;
+				if (dv) {
 
 					if (currData == null) {
-						currData = dc.getCursor();
+						currData = dv.getCursor();
 					}
 
 					// show 'waiting' panel
 					if (!currData &&
-						(dc.dataStatus == dc.dataStatusFlag.notInitial ||
-						 dc.dataStatus == dc.dataStatusFlag.initializing)) {
+						(dv.dataStatus == dv.dataStatusFlag.notInitial ||
+						 dv.dataStatus == dv.dataStatusFlag.initializing)) {
 						$$(ids.component).showBatch('wait');
 						return;
 					}
@@ -385,21 +385,11 @@ export default class ABViewConditionalContainer extends ABViewContainer {
 
 	}
 
-	/**
-	 * @method dataCollection
-	 * return ABDataview of this form
-	 * 
-	 * @return {ABDataview}
-	 */
-	get dataCollection() {
-		return this.application.dataviews(dv => dv.id == this.settings.datacollection)[0];
-	}
-
 	populateFilterComponent() {
 
-		var dc = this.dataCollection;
-		if (dc && dc.datasource)
-			this.__filterComponent.objectLoad(dc.datasource);
+		let dv = this.dataview;
+		if (dv && dv.datasource)
+			this.__filterComponent.objectLoad(dv.datasource);
 		else
 			this.__filterComponent.objectLoad(null);
 

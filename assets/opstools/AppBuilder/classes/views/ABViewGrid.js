@@ -212,9 +212,9 @@ export default class ABViewGrid extends ABViewWidget  {
 			init: () => {
 
 				// remove id of the component in caching for refresh .bind of the data collection
-				let dc = this.dataCollection;
-				if (dc)
-					dc.removeComponent(DataTable.ui.id);
+				let dv = this.dataview;
+				if (dv)
+					dv.removeComponent(DataTable.ui.id);
 
 				DataTable.init();
 			}
@@ -1107,11 +1107,11 @@ export default class ABViewGrid extends ABViewWidget  {
 				// var dataSource = this.application.objects((o)=>{
 				// 	return o.id == this.settings.dataSource;
 				// });
-				var dc = this.dataCollection;
+				var dv = this.dataview;
 
-				if (dc && dc.datasource) {
+				if (dv && dv.datasource) {
 
-					CurrentObject = dc.datasource;
+					CurrentObject = dv.datasource;
 
 					DataTable.objectLoad(CurrentObject);
 					PopupMassUpdateComponent.objectLoad(CurrentObject, DataTable);
@@ -1128,10 +1128,10 @@ export default class ABViewGrid extends ABViewWidget  {
 					// link page helper
 					linkPage.init({
 						view: this,
-						dataCollection: dc
+						dataCollection: dv
 					});
 
-					dc.bind($$(DataTable.ui.id));
+					dv.bind($$(DataTable.ui.id));
 
 					var editPage = this.settings.editPage;
 					var detailsPage = this.settings.detailsPage;
@@ -1174,21 +1174,21 @@ export default class ABViewGrid extends ABViewWidget  {
 						if (e == "auto") {
 							// automatically choose the details page if a record matches
 							// later on we can decide if we want to have the choice to select the edit page intead.
-							_logic.changePage(dc, item, detailsPage);
+							_logic.changePage(dv, item, detailsPage);
 							toggleTab(detailsTab, this);
 						} else if (e.target.className.indexOf('eye') > -1) {
-							_logic.changePage(dc, item, detailsPage);
+							_logic.changePage(dv, item, detailsPage);
 							toggleTab(detailsTab, this);
 						} else if (e.target.className.indexOf('pencil') > -1) {
-							_logic.changePage(dc, item, editPage);
+							_logic.changePage(dv, item, editPage);
 							toggleTab(editTab, this);
 						} else if (e.target.className.indexOf('trash') > -1) {
 							// don't do anything for delete it is handled elsewhere
 						} else if ( !isEditable && detailsPage.length ) {
-							_logic.changePage(dc, item, detailsPage);
+							_logic.changePage(dv, item, detailsPage);
 							toggleTab(detailsTab, this);
 						} else if ( !isEditable && !detailsPage.length && editPage.length) {
-							_logic.changePage(dc, item, editPage);
+							_logic.changePage(dv, item, editPage);
 							toggleTab(editTab, this);
 						}
 						
@@ -1480,11 +1480,11 @@ export default class ABViewGrid extends ABViewWidget  {
 				$$(DataTable.ui.id).adjust();
 			}
 
-			var dc = this.dataCollection;
-			if (dc) {
+			var dv = this.dataview;
+			if (dv) {
 
 				this.eventAdd({
-					emitter: dc,
+					emitter: dv,
 					eventName: 'changeCursor',
 					listener: _logic.selectRow
 				});
@@ -1543,9 +1543,9 @@ export default class ABViewGrid extends ABViewWidget  {
 		let groupFields = [
 			{ id: '', value: L('ab.component.grid.noGroupBy', '*No group field') }
 		];
-		var dc = this.dataCollection;
-		if (dc && dc.datasource) {
-			dc.datasource.fields(f => {
+		var dv = this.dataview;
+		if (dv && dv.datasource) {
+			dv.datasource.fields(f => {
 				return f.key != 'connectObject' && view.settings.objectWorkspace.hiddenFields.indexOf(f.columnName) < 0;
 			}).forEach(f => {
 				groupFields.push({
@@ -1628,14 +1628,14 @@ export default class ABViewGrid extends ABViewWidget  {
 	}
 	
 	populatePopupEditors(view, dataSource) {
-		var dc = this.dataCollection;
-		if (!dc) return;
+		var dv = this.dataview;
+		if (!dv) return;
 		// if (view.settings.gridFilter.filterOption == 2) {
 		// 	//Force to LoadAll
 		// 	dc.settings.loadAll = true;
 		// }
 
-		let object = dc.datasource;
+		let object = dv.datasource;
 		if (!object) return;
 
 		// var dataCopy = dc.datasource.clone();
@@ -1772,17 +1772,7 @@ export default class ABViewGrid extends ABViewWidget  {
 	// 	}
 	// 	return detailViews;
 	// }
-	
-	/**
-	 * @property dataCollection
-	 * return ABDataview of this form
-	 * 
-	 * @return {ABDataview}
-	 */
-	get dataCollection() {
-		return this.application.dataviews(dv => dv.id == this.settings.dataSource)[0];
-	}
-	
+
 	removeField(field, cb) {
 		
 		var shouldSave = false;
@@ -1829,7 +1819,7 @@ export default class ABViewGrid extends ABViewWidget  {
 
 			var reportDef = {};
 
-			var dc = this.dataCollection;
+			var dc = this.dataview;
 			if (!dc) return resolve(reportDef);
 	
 			var object = dc.datasource;

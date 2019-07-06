@@ -402,11 +402,11 @@ export default class ABViewText extends ABViewWidget {
 			baseCom.onShow(viewId);
 
 			// listen DC events
-			let dc = this.dataview;
-			if (dc && this.parent.key != "dataview") {
+			let dv = this.dataview;
+			if (dv && this.parent.key != "dataview") {
 
 				this.eventAdd({
-					emitter: dc,
+					emitter: dv,
 					eventName: 'changeCursor',
 					listener: _logic.displayText
 				});
@@ -444,9 +444,9 @@ export default class ABViewText extends ABViewWidget {
 	 */
 	get dataview() {
 		if (this.parent.key == "dataview") {
-			return this.application.dataviews(dv => dv.id == this.parent.settings.datacollection)[0];
+			return this.application.dataviews(dv => dv.id == this.parent.settings.dataviewID)[0];
 		} else {
-			return this.application.dataviews(dv => dv.id == this.settings.datacollection)[0];
+			return this.application.dataviews(dv => dv.id == this.settings.dataviewID)[0];
 		}
 	}
 
@@ -459,15 +459,15 @@ export default class ABViewText extends ABViewWidget {
 			return result.replace(/{(.*?)}/g, "");
 		};
 		
-		var dc = this.dataview;
-		if (!dc) return clearTemplateValue(result);
+		var dv = this.dataview;
+		if (!dv) return clearTemplateValue(result);
 
-		var object = dc.datasource;
+		var object = dv.datasource;
 		if (!object) return clearTemplateValue(result);
 
 		object.fields().forEach(f => {
 			
-			var rowData = val || dc.getCursor() || {};
+			var rowData = val || dv.getCursor() || {};
 
 			var template = new RegExp('{' + f.label + '}', 'g');
 			var prepend = "";

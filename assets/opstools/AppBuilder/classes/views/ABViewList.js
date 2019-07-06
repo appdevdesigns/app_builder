@@ -104,9 +104,9 @@ export default class ABViewLabel extends ABViewWidget {
 			init: () => {
 
 				// remove id of the component in caching for refresh .bind of the data collection
-				let dc = this.dataCollection;
-				if (dc)
-					dc.removeComponent(ListView.ui.id);
+				let dv = this.dataview;
+				if (dv)
+					dv.removeComponent(ListView.ui.id);
 
 				ListView.init();
 			}
@@ -272,11 +272,11 @@ export default class ABViewLabel extends ABViewWidget {
 
 		var _init = (options) => {
 
-			var dc = this.dataCollection;
-			if (!dc) return;
+			var dv = this.dataview;
+			if (!dv) return;
 
 			// bind dc to component
-			dc.bind($$(ids.component));
+			dv.bind($$(ids.component));
 
 		}
 
@@ -291,25 +291,12 @@ export default class ABViewLabel extends ABViewWidget {
 		}
 	}
 
-
-	/**
-	 * @property dataCollection
-	 * return ABDataview of this form
-	 * 
-	 * @return {ABDataview}
-	 */
-	get dataCollection() {
-		return this.application.dataviews(dv => dv.id == this.settings.datacollection)[0];
-	}
-
-
-
 	field() {
 
-		var dc = this.dataCollection;
-		if (!dc) return null;
+		var dv = this.dataview;
+		if (!dv) return null;
 
-		var object = dc.datasource;
+		var object = dv.datasource;
 		if (!object) return null;
 
 		return object.fields(f => f.id == this.settings.field)[0];
@@ -332,13 +319,13 @@ export default class ABViewLabel extends ABViewWidget {
 				ul: []
 			};
 
-			var dc = this.dataCollection;
-			if (!dc) return resolve(reportDef);
+			var dv = this.dataview;
+			if (!dv) return resolve(reportDef);
 
 			var field = this.field();
 			if (!field) return resolve(reportDef);
 
-			dc.getData().forEach(item => {
+			dv.getData().forEach(item => {
 
 				var display = field.format(item);
 
