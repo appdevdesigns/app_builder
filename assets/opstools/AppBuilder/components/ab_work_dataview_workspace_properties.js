@@ -23,7 +23,7 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 			propertyPanel: this.unique('propertyPanel'),
 
 			dataSource: this.unique('dataSource'),
-			linkDataSource: this.unique('linkDataSource'),
+			linkDataview: this.unique('linkDataview'),
 			linkField: this.unique('linkField'),
 			loadAll: this.unique('loadAll'),
 			fixSelect: this.unique('fixSelect'),
@@ -101,10 +101,10 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 										},
 										// link to another data collection
 										{
-											id: ids.linkDataSource,
+											id: ids.linkDataview,
 											view: "select",
-											name: "linkDataSource",
-											label: L('ab.component.datacollection.linkDataSource', '*Linked To:'),
+											name: "linkDataview",
+											label: L('ab.component.datacollection.linkDataview', '*Linked To:'),
 											labelWidth: this.App.config.labelWidthLarge,
 											options: [],
 											hidden: 1,
@@ -339,13 +339,13 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 				}
 
 				$$(ids.dataSource).define('value', settings.datasourceID);
-				$$(ids.linkDataSource).define('value', settings.linkDatasourceID);
+				$$(ids.linkDataview).define('value', settings.linkDataviewID);
 				$$(ids.linkField).define('value', settings.linkFieldID);
 				$$(ids.loadAll).define('value', settings.loadAll);
 				$$(ids.fixSelect).define('value', settings.fixSelect);
 
 				$$(ids.dataSource).refresh();
-				$$(ids.linkDataSource).refresh();
+				$$(ids.linkDataview).refresh();
 				$$(ids.linkField).refresh();
 				$$(ids.loadAll).refresh();
 				$$(ids.fixSelect).refresh();
@@ -381,7 +381,7 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 
 				this._dataview.settings = this._dataview.settings || {};
 				this._dataview.settings.datasourceID = $$(ids.dataSource).getValue();
-				this._dataview.settings.linkDatasourceID = $$(ids.linkDataSource).getValue();
+				this._dataview.settings.linkDataviewID = $$(ids.linkDataview).getValue();
 				this._dataview.settings.linkFieldID = $$(ids.linkField).getValue();
 				this._dataview.settings.objectWorkspace = {};
 				this._dataview.settings.objectWorkspace.filterConditions = this.FilterComponent.getValue();
@@ -449,15 +449,15 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 
 						linkDvOptions.unshift({ id: '', value: L('ab.component.datacollection.selectLinkSource', '*Select a link source') });
 
-						$$(ids.linkDataSource).show();
-						$$(ids.linkDataSource).define("options", linkDvOptions);
-						$$(ids.linkDataSource).define("value", this._dataview ? this._dataview.settings.linkDatasourceID : '');
-						$$(ids.linkDataSource).refresh();
+						$$(ids.linkDataview).show();
+						$$(ids.linkDataview).define("options", linkDvOptions);
+						$$(ids.linkDataview).define("value", this._dataview ? this._dataview.settings.linkDataviewID : '');
+						$$(ids.linkDataview).refresh();
 					}
 					else {
 
 						// hide options
-						$$(ids.linkDataSource).hide();
+						$$(ids.linkDataview).hide();
 						$$(ids.linkField).hide();
 					}
 
@@ -465,7 +465,7 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 				else {
 
 					// hide options
-					$$(ids.linkDataSource).hide();
+					$$(ids.linkDataview).hide();
 					$$(ids.linkField).hide();
 				}
 

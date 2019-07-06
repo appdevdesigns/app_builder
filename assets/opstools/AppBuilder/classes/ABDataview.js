@@ -11,7 +11,7 @@ var DefaultValues = {
 	query: {}, // json of ABObjectQuery
 	settings: {
 		datasourceID: '', 		// id of ABObject or ABObjectQuery
-		linkDatasourceID: '',	// id of ABObject or ABObjectQuery
+		linkDataviewID: '',	// id of ABDataview
 		linkFieldID: '',		// id of ABField
 		objectWorkspace: {
 			filterConditions: { // array of filters to apply to the data table
@@ -83,12 +83,13 @@ export default class ABDataview extends EventEmitter {
 		this.settings = this.settings || {};
 
 		// label
+		this.translations = values.translations || [];
 		this.label = values.label;
 		OP.Multilingual.translate(this, this, ['label']);
 
 		// if this is being instantiated on a read from the Property UI,
 		this.settings.datasourceID = values.settings.datasourceID || DefaultValues.settings.datasourceID;
-		this.settings.linkDatasourceID = values.settings.linkDatasourceID || DefaultValues.settings.linkDatasourceID;
+		this.settings.linkDataviewID = values.settings.linkDataviewID || DefaultValues.settings.linkDataviewID;
 		this.settings.linkFieldID = values.settings.linkFieldID || DefaultValues.settings.linkFieldID;
 		this.settings.objectWorkspace = values.settings.objectWorkspace || {
 			filterConditions: DefaultValues.settings.objectWorkspace.filterConditions,
@@ -122,7 +123,6 @@ export default class ABDataview extends EventEmitter {
 
 		return {
 			id: this.id,
-			label: this.label,
 			settings: _.cloneDeep(this.settings || {}),
 			translations: this.translations,
 		};
