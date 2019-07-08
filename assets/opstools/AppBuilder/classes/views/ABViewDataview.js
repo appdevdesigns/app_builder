@@ -209,19 +209,19 @@ export default class ABViewDataview extends ABViewDetail {
 
 		com.init = (options) => {
 
-			var dc = this.dataCollection;
-			if (!dc) return;
+			var dv = this.dataview;
+			if (!dv) return;
 
 			// initial the link page helper
 			linkPage.init({
 				view: this,
-				dataCollection: dc
+				dataview: dv
 			});
 
 			com.onShow();
 
 			this.eventAdd({
-				emitter: dc,
+				emitter: dv,
 				eventName: "loadData",
 				listener: () => {
 
@@ -229,9 +229,9 @@ export default class ABViewDataview extends ABViewDetail {
 				}
 			});
 
-			if (dc.dataStatus == dc.dataStatusFlag.notInitial) {
+			if (dv.dataStatus == dv.dataStatusFlag.notInitial) {
 				// load data when a widget is showing
-				dc.loadData();
+				dv.loadData();
 			}
 
 		};
@@ -305,16 +305,16 @@ export default class ABViewDataview extends ABViewDetail {
 					if (this.loadMoreTimer)
 						return;
 
-					var dc = this.dataCollection;
-					if (!dc) return;
+					var dv = this.dataview;
+					if (!dv) return;
 
-					if (this._rowCount >= dc.totalCount)
+					if (this._rowCount >= dv.totalCount)
 						return;
 
 					// loading cursor
 					com.logic.busy();
 
-					dc.loadData(this._rowCount || 0)
+					dv.loadData(this._rowCount || 0)
 						.catch(() => {
 							com.logic.ready();
 						})
@@ -350,15 +350,15 @@ export default class ABViewDataview extends ABViewDetail {
 				align: "center"
 			}], $$(ids.component));
 
-			var dc = this.dataCollection;
-			if (!dc) return;
+			var dv = this.dataview;
+			if (!dv) return;
 
 			// add loading cursor
 			var Layout = $$(ids.component);
 			if (Layout)
 				webix.extend(Layout, webix.ProgressBar);
 
-			var rows = dc.getData();
+			var rows = dv.getData();
 
 			// store total of rows
 			this._rowCount = rows.length;
@@ -494,13 +494,13 @@ export default class ABViewDataview extends ABViewDetail {
 	// 	editForms = view.loopPages(view, view.application._pages, editForms, "form");
 	// 	view.application._pages.forEach((o)=>{
 	// 		o._views.forEach((j)=>{
-	// 			if (j.key == "form" && j.settings.object == view.settings.datacollection) {
+	// 			if (j.key == "form" && j.settings.object == view.settings.dataviewID) {
 	// 				editForms.push({id:j.parent.id, value:j.label});				
 	// 			}
 	// 			if (j.key == "tab") {
 	// 				j._views.forEach((k)=>{
 	// 					k._views.forEach((l)=>{	
-	// 						if (l.key == "form" && l.settings.datacollection == view.settings.datacollection) {
+	// 						if (l.key == "form" && l.settings.dataviewID == view.settings.dataviewID) {
 	// 							editForms.push({id:l.parent.id, value:l.label});				
 	// 						}
 	// 					});
@@ -528,7 +528,7 @@ export default class ABViewDataview extends ABViewDetail {
 	// loopViews(view, views, detailViews, type) {
 	// 	if (typeof views == "array" || typeof views == "object") {
 	// 		views.forEach((v) => {
-	// 			if (v.key == type && v.settings.datacollection == view.settings.datacollection) {
+	// 			if (v.key == type && v.settings.dataviewID == view.settings.dataviewID) {
 	// 				detailViews.push({ id: v.pageParent().id, value: v.label });
 	// 			}
 	// 			// find views inside layouts
@@ -545,7 +545,7 @@ export default class ABViewDataview extends ABViewDetail {
 
 	// 						vc.views().forEach((st) => {
 	// 							// detailViews = view.loopViews(view, st._views, detailViews, type);							
-	// 							var subViews = st.views(subV => subV.key == type && subV.settings.datacollection == view.settings.datacollection);
+	// 							var subViews = st.views(subV => subV.key == type && subV.settings.dataviewID == view.settings.dataviewID);
 	// 							subViews.forEach((sub) => {
 	// 								detailViews.push({ id: v.pageParent().id + ":" + st.id, value: st.label + ":" + sub.label });
 	// 							});
@@ -553,7 +553,7 @@ export default class ABViewDataview extends ABViewDetail {
 
 	// 					});
 
-	// 					var subViews = tab.views(subV => subV.key == type && subV.settings.datacollection == view.settings.datacollection);
+	// 					var subViews = tab.views(subV => subV.key == type && subV.settings.dataviewID == view.settings.dataviewID);
 	// 					subViews.forEach((sub) => {
 	// 						detailViews.push({ id: v.pageParent().id + ":" + tab.id, value: tab.label + ":" + sub.label });
 	// 					});
@@ -585,10 +585,10 @@ export default class ABViewDataview extends ABViewDetail {
 
 			var reportDef = [];
 
-			var dc = this.dataCollection;
-			if (!dc) return reportDef;
+			var dv = this.dataview;
+			if (!dv) return reportDef;
 
-			var rows = dc.getData();
+			var rows = dv.getData();
 
 			var tasks = [];
 

@@ -545,22 +545,22 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 				var options = [];
 
 				// get data collections who is query and contains email field
-				let dcQueries = this.currentForm.application.dataviews(dv => {
+				let dvQueries = this.currentForm.application.dataviews(dv => {
 						let obj = dv.datasource;
 						return dv.settings.isQuery &&
 								obj &&
 								obj.fields(f => f.key == 'email').length > 0;
 					});
 
-				dcQueries.forEach(dc => {
+				dvQueries.forEach(dv => {
 
-					if (dc.datasource) {
-						dc.datasource.fields(f => f.key == 'email').forEach(f => {
+					if (dv.datasource) {
+						dv.datasource.fields(f => f.key == 'email').forEach(f => {
 
 							options.push({
-								id: dc.id + '|' + f.id, // dataCollectionID|fieldID
+								id: dv.id + '|' + f.id, // ABDataviewID|fieldID
 								value: "{dcLabel}.{fieldLabel}"
-									.replace("{dcLabel}", dc.label)
+									.replace("{dcLabel}", dv.label)
 									.replace("{fieldLabel}", f.label)
 							});
 
@@ -686,11 +686,11 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 							// query
 							else if (rec.emailType == 'query') {
 
-								var dcIdAndFieldId = rec.value; // dataCollectionId|fieldId
-								if (!dcIdAndFieldId) return next();
+								var dvIdAndFieldId = rec.value; // ABDataviewId|fieldId
+								if (!dvIdAndFieldId) return next();
 
-								var dcId = dcIdAndFieldId.split('|')[0];
-								var fieldId = dcIdAndFieldId.split('|')[1];
+								var dcId = dvIdAndFieldId.split('|')[0];
+								var fieldId = dvIdAndFieldId.split('|')[1];
 
 								var dcQuery = this.currentForm.application.dataviews(dv => dv.id == dcId)[0];
 								if (!dcQuery) return next();

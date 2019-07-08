@@ -264,7 +264,7 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 		// editForms = view.loopPages(view, view.application._pages, editForms, "form");
 		// view.application._pages.forEach((o)=>{
 		// 	o._views.forEach((j)=>{
-		// 		if (j.key == "form" && j.settings.object == view.settings.dataSource) {
+		// 		if (j.key == "form" && j.settings.object == view.settings.dataviewID) {
 		// 			// editForms.push({id:j.parent.id+"|"+j.id, value:j.label});
 		// 			editForms.push({id:j.parent.id, value:j.label});				
 		// 		}
@@ -275,8 +275,8 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 			.pages(p => {
 				return p.views(v => {
 					return v.key == "form" && 
-						v.dataCollection &&
-						v.dataCollection.datasource.id == view.field().settings.linkObject;
+						v.dataview &&
+						v.dataview.datasource.id == view.field().settings.linkObject;
 				}, true).length;
 			}, true)
 			.map(p => {

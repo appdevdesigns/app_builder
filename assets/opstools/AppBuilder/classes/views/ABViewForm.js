@@ -34,7 +34,7 @@ var ABViewFormDefaults = {
 }
 
 var ABViewFormPropertyComponentDefaults = {
-	datacollection: null,
+	dataviewID: null,
 	showLabel: true,
 	labelPosition: 'left',
 	labelWidth: 120,
@@ -387,7 +387,7 @@ PopupRecordRule.qbFixAfterShow();
 
 		return commonUI.concat([
 			{
-				name: 'datacollection',
+				name: 'dataview',
 				view: 'richselect',
 				label: L('ab.components.form.dataSource', "*Data Source"),
 				labelWidth: App.config.labelWidthLarge,
@@ -550,8 +550,8 @@ PopupRecordRule.qbFixAfterShow();
 		super.propertyEditorPopulate(App, ids, view, logic);
 
 		var formCom = view.parentFormComponent();
-		var dataCollectionId = (formCom.settings.datacollection ? formCom.settings.datacollection : null);
-		var SourceSelector = $$(ids.datacollection);
+		var dataviewId = (formCom.settings.dataviewID ? formCom.settings.dataviewID : null);
+		var SourceSelector = $$(ids.dataview);
 
 		// Pull data collections to options
 		var dvOptions = view.application.dataviews(dv => {
@@ -573,10 +573,10 @@ PopupRecordRule.qbFixAfterShow();
 			value: '[Select]'
 		});
 		SourceSelector.define('options', dvOptions);
-		SourceSelector.define('value', dataCollectionId);
+		SourceSelector.define('value', dataviewId);
 		SourceSelector.refresh();
 
-		this.propertyUpdateFieldOptions(ids, view, dataCollectionId);
+		this.propertyUpdateFieldOptions(ids, view, dataviewId);
 
 
 		// update properties when a field component is deleted
@@ -593,7 +593,7 @@ PopupRecordRule.qbFixAfterShow();
 		$$(ids.clearOnLoad).setValue(view.settings.clearOnLoad || ABViewFormPropertyComponentDefaults.clearOnLoad);
 		$$(ids.clearOnSave).setValue(view.settings.clearOnSave || ABViewFormPropertyComponentDefaults.clearOnSave);
 
-		this.propertyUpdateRules(ids, view, dataCollectionId);
+		this.propertyUpdateRules(ids, view, dataviewId);
 		this.populateBadgeNumber(ids, view);
 
 		// when a change is made in the properties the popups need to reflect the change
@@ -613,7 +613,7 @@ PopupRecordRule.qbFixAfterShow();
 
 		super.propertyEditorValues(ids, view);
 
-		view.settings.datacollection = $$(ids.datacollection).getValue();
+		view.settings.dataviewID = $$(ids.dataview).getValue();
 		view.settings.showLabel = $$(ids.showLabel).getValue();
 		view.settings.labelPosition = $$(ids.labelPosition).getValue() || ABViewFormPropertyComponentDefaults.labelPosition;
 		view.settings.labelWidth = $$(ids.labelWidth).getValue() || ABViewFormPropertyComponentDefaults.labelWidth;
@@ -662,11 +662,11 @@ PopupRecordRule.qbFixAfterShow();
 		if (!view) return;
 
 		// Populate values to rules
-		var selectedDc = view.dataCollection;
-		if (selectedDc) {
-			PopupDisplayRule.objectLoad(selectedDc.datasource);
-			PopupRecordRule.objectLoad(selectedDc.datasource);
-			PopupSubmitRule.objectLoad(selectedDc.datasource);
+		var selectedDv = view.dataview;
+		if (selectedDv) {
+			PopupDisplayRule.objectLoad(selectedDv.datasource);
+			PopupRecordRule.objectLoad(selectedDv.datasource);
+			PopupSubmitRule.objectLoad(selectedDv.datasource);
 		}
 
 
@@ -1396,7 +1396,7 @@ resolve();
 	}
 
 	copyUpdateProperyList() {
-		return ['datacollection'];
+		return ['dataviewID'];
 	}
 
 

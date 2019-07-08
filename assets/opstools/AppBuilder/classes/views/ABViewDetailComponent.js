@@ -159,13 +159,13 @@ export default class ABViewDetailComponent extends ABViewWidget {
 		var detailCom = this.detailComponent();
 		if (!detailCom) return null;
 
-		var dc = detailCom.dataCollection;
-		if (!dc) return null;
+		var dv = detailCom.dataview;
+		if (!dv) return null;
 
 		var field = this.field();
 		if (!field) return null;
 
-		var currData = dc.getCursor();
+		var currData = dv.getCursor();
 		if (currData)
 			return currData[field.columnName];
 		else
@@ -191,13 +191,13 @@ export default class ABViewDetailComponent extends ABViewWidget {
 			var detailCom = this.detailComponent();
 			if (!detailCom) return resolve(reportDef);
 
-			var dc = detailCom.dataCollection;
-			if (!dc) return resolve(reportDef);
+			var dv = detailCom.dataview;
+			if (!dv) return resolve(reportDef);
 
 			var field = this.field();
 			if (!field) return resolve(reportDef);
 
-			rowData = rowData || dc.getCursor() || {};
+			rowData = rowData || dv.getCursor() || {};
 
 			var text = (field.format(rowData) || "");
 

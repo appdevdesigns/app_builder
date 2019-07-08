@@ -17,7 +17,7 @@ function L(key, altText) {
 
 
 var ABViewPivotPropertyComponentDefaults = {
-	datacollection: null,
+	dataviewID: null,
 	removeMissed: 0,
 	totalColumn: 0,
 	separateLabel: 0,
@@ -163,7 +163,7 @@ export default class ABViewPivot extends ABViewWidget {
 
 		return commonUI.concat([
 			{
-				name: 'datacollection',
+				name: 'dataview',
 				view: 'richselect',
 				label: L('ab.components.pivot.dataSource', "*Data Source"),
 				labelWidth: App.config.labelWidthLarge
@@ -212,8 +212,8 @@ export default class ABViewPivot extends ABViewWidget {
 
 		super.propertyEditorPopulate(App, ids, view);
 
-		var dataCollectionId = (view.settings.datacollection ? view.settings.datacollection : null);
-		var SourceSelector = $$(ids.datacollection);
+		var dataviewId = (view.settings.dataviewID ? view.settings.dataviewID : null);
+		var SourceSelector = $$(ids.dataview);
 
 		// Pull data collections to options
 		var dcOptions = view.application.dataviews().map((dc) => {
@@ -229,7 +229,7 @@ export default class ABViewPivot extends ABViewWidget {
 			value: '[Select]'
 		});
 		SourceSelector.define('options', dcOptions);
-		SourceSelector.define('value', dataCollectionId);
+		SourceSelector.define('value', dataviewId);
 		SourceSelector.refresh();
 
 		$$(ids.removeMissed).setValue(view.settings.removeMissed);
@@ -247,7 +247,7 @@ export default class ABViewPivot extends ABViewWidget {
 
 		super.propertyEditorValues(ids, view);
 
-		view.settings.datacollection = $$(ids.datacollection).getValue();
+		view.settings.dataviewID = $$(ids.dataview).getValue();
 
 		view.settings.removeMissed = $$(ids.removeMissed).getValue();
 		view.settings.totalColumn = $$(ids.totalColumn).getValue();
@@ -390,18 +390,6 @@ export default class ABViewPivot extends ABViewWidget {
 		return [];
 	}
 
-
-	/**
-	 * @property dataCollection
-	 * return ABDataview of this form
-	 * 
-	 * @return {ABDataview}
-	 */
-	get dataview() {
-		return this.application.dataviews(dv => dv.id == this.settings.datacollection)[0];
-	}
-
-
 	//// Report ////
 
 	/**
@@ -493,7 +481,7 @@ export default class ABViewPivot extends ABViewWidget {
 	}
 
 	copyUpdateProperyList() {
-		return ['datacollection'];
+		return ['dataviewID'];
 	}
 
 

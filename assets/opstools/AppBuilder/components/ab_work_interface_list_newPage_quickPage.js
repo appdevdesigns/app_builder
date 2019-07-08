@@ -246,7 +246,7 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 			},
 
 
-			getDataview: function (label, obj, parentDc) {
+			getDataview: function (label, obj, parentDv) {
 
 				var dcConfig = {
 					id: OP.Util.uuid(),
@@ -258,13 +258,13 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 					}
 				}
 
-				if (parentDc) {
+				if (parentDv) {
 
-					dcConfig.settings.linkDataCollection = parentDc.id;
+					dcConfig.settings.linkDataviewID = parentDv.id;
 
-					var linkField = obj.fields(f => f.datasourceLink && f.datasourceLink.id == parentDc.datasource.id)[0];
+					var linkField = obj.fields(f => f.datasourceLink && f.datasourceLink.id == parentDv.datasource.id)[0];
 					if (linkField)
-						dcConfig.settings.linkField = linkField.id;
+						dcConfig.settings.linkFieldID = linkField.id;
 				}
 
 				return new ABDataview(dcConfig, CurrentApplication);
@@ -272,13 +272,13 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 			},
 
 
-			getFormView: function (dc) {
+			getFormView: function (dv) {
 
 				// create a new form instance
 				var newForm = new ABViewForm({
-					label: dc.label + " Form",
+					label: dv.label + " Form",
 					settings: {
-						datacollection: dc.id,
+						dataviewID: dv.id,
 						showLabel: true,
 						labelPosition: 'left',
 						labelWidth: 120,
@@ -294,7 +294,7 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 				}, CurrentApplication);
 
 				// populate fields to a form
-				var object = CurrentApplication.objects(obj => obj.id == dc.settings.object)[0];
+				var object = CurrentApplication.objects(obj => obj.id == dv.settings.object)[0];
 				if (object) {
 					object.fields().forEach((f, index) => {
 						newForm.addFieldToForm(f, index);
@@ -319,13 +319,13 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 			},
 
 
-			getDetailView: function (dc) {
+			getDetailView: function (dv) {
 
 				// create a new detail instance
 				var newDetail = new ABViewDetail({
-					label: "Details of " + dc.label,
+					label: "Details of " + dv.label,
 					settings: {
-						datacollection: dc.id,
+						dataviewID: dv.id,
 						showLabel: true,
 						labelPosition: 'left',
 						labelWidth: 120
@@ -333,7 +333,7 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 				}, CurrentApplication);
 
 				// populate fields to a form
-				var object = dc.datasource;
+				var object = dv.datasource;
 				if (object) {
 					object.fields().forEach((f, index) => {
 						newDetail.addFieldToView(f, index);
@@ -360,8 +360,8 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 				var editPageId = null;
 				var viewPageId = null;
 
-				var addDc = null;
-				var editDc = null;
+				var addDv = null;
+				var editDv = null;
 
 				// Add a 'add' page
 				if (formValues.addable) {
@@ -370,10 +370,10 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 
 					// a data collection for edit
 					var addDcLabel = "Add " + CurrentObj.label;
-					addDc = _logic.getDataview(addDcLabel, CurrentObj);
-					dataviews.push(addDc.toObj());
+					addDv = _logic.getDataview(addDcLabel, CurrentObj);
+					dataviews.push(addDv.toObj());
 
-					var addForm = _logic.getFormView(addDc);
+					var addForm = _logic.getFormView(addDv);
 
 					// Add a 'add' page
 					pages.push({
@@ -418,8 +418,8 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 				if (formValues.editable || formValues.showGrid || formValues.viewable) {
 					// a data collection for edit
 					var editDcLabel = "Edit " + CurrentObj.label;
-					editDc = _logic.getDataview(editDcLabel, CurrentObj);
-					dataviews.push(editDc.toObj());
+					editDv = _logic.getDataview(editDcLabel, CurrentObj);
+					dataviews.push(editDv.toObj());
 				}
 
 
@@ -428,7 +428,7 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 
 					editPageId = OP.Util.uuid();
 
-					var editForm = _logic.getFormView(editDc);
+					var editForm = _logic.getFormView(editDv);
 
 					// Add a 'edit' page
 					pages.push({
@@ -462,7 +462,7 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 
 					viewPageId = OP.Util.uuid();
 
-					var newDetail = _logic.getDetailView(editDc);
+					var newDetail = _logic.getDetailView(editDv);
 					newDetail.position = newDetail.position || {};
 					newDetail.position.y = 1;
 
@@ -502,8 +502,8 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 
 								// create a data collection
 								var dcLabel = "Edit " + childObj.label;
-								var childEditDc = _logic.getDataview(dcLabel, childObj, editDc);
-								dataviews.push(childEditDc.toObj());
+								var childEditDv = _logic.getDataview(dcLabel, childObj, editDv);
+								dataviews.push(childEditDv.toObj());
 
 								viewsOfDetail.push(
 									// Title
@@ -525,7 +525,7 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 										icon: ABViewGrid.common().icon,
 										label: childObj.label + "'s grid",
 										settings: {
-											dataSource: childEditDc.id,
+											dataviewID: childEditDv.id,
 											height: 300
 										},
 										position: {
@@ -541,13 +541,13 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 
 								// create a data collection
 								var dcLabel = "Add " + childObj.label;
-								var childAddDc = _logic.getDataview(dcLabel, childObj, editDc);
-								dataviews.push(childAddDc.toObj());
+								var childAddDv = _logic.getDataview(dcLabel, childObj, editDv);
+								dataviews.push(childAddDv.toObj());
 
 								// add to menu
 								menuSubPages.push(subPageId);
 
-								var newForm = _logic.getFormView(childAddDc);
+								var newForm = _logic.getFormView(childAddDv);
 
 								pages.push({
 									id: subPageId,
@@ -612,7 +612,7 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 						icon: ABViewGrid.common().icon,
 						label: CurrentObj.label,
 						settings: {
-							dataSource: editDc.id,
+							dataviewID: editDv.id,
 							height: 300,
 							editPage: formValues.editable ? editPageId : null,
 							detailsPage: formValues.viewable ? viewPageId : null
@@ -626,9 +626,9 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 
 					// a data collection for add
 					var addDcLabel = "Add " + CurrentObj.label;
-					if (addDc == null) {
-						addDc = _logic.getDataview(addDcLabel, CurrentObj);
-						dataviews.push(addDc.toObj());
+					if (addDv == null) {
+						addDv = _logic.getDataview(addDcLabel, CurrentObj);
+						dataviews.push(addDv.toObj());
 					}
 
 					// add the title to the form
@@ -642,7 +642,7 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 						}
 					});
 
-					var editForm = _logic.getFormView(addDc);
+					var editForm = _logic.getFormView(addDv);
 
 					// add the new form to page
 					views.push(editForm.toObj());
@@ -690,7 +690,7 @@ export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compone
 							{
 								view: "select",
 								id: ids.selectObject,
-								name: "datacollection",
+								name: "dataviewID",
 								label: "Select a data source",
 								labelWidth: 170,
 								options: [],

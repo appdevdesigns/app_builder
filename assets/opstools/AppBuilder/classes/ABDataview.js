@@ -1380,4 +1380,45 @@ export default class ABDataview extends EventEmitter {
 		return dc;
 	}
 
+	// Clone
+
+	clone(settings) {
+		settings = settings || this.toObj();
+		var clonedDataview = new ABDataview(settings, this.application);
+
+		return new Promise((resolve, reject) => {
+
+			// load the data
+			clonedDataview.loadData()
+				.then(() => {
+
+					// set the cursor
+					var cursorID = this.getCursor();
+
+					if (cursorID) {
+						// NOTE: webix documentation issue: .getCursor() is supposed to return
+						// the .id of the item.  However it seems to be returning the {obj} 
+						if (cursorID.id) cursorID = cursorID.id;
+
+						clonedDataview.setCursor(cursorID);
+					}
+
+					resolve(clonedDataview);
+				})
+				.catch(reject);
+		})
+	}
+
+	filteredClone(filters) {
+		var obj = this.toObj();
+
+		// check to see that filters are set (this is sometimes helpful to select the first record without doing so at the data collection level)
+		if (typeof filters != "undefined") {
+			obj.settings.objectWorkspace.filterConditions = { glue: 'and', rules: [obj.settings.objectWorkspace.filterConditions, filters] }
+		}
+
+		return this.clone(obj); // new ABViewDataCollection(settings, this.application, this.parent);
+
+	}
+
 }

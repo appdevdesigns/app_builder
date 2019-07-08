@@ -13,7 +13,7 @@ function L(key, altText) {
 }
 
 var ABViewListPropertyComponentDefaults = {
-	datacollection: null,
+	dataviewID: null,
 	field: null,
 	height: 0
 }
@@ -135,7 +135,7 @@ export default class ABViewLabel extends ABViewWidget {
 
 		return commonUI.concat([
 			{
-				name: 'datacollection',
+				name: 'dataview',
 				view: 'richselect',
 				label: L('ab.components.list.dataSource', "*Data Source"),
 				labelWidth: App.config.labelWidthLarge,
@@ -196,8 +196,8 @@ export default class ABViewLabel extends ABViewWidget {
 
 		super.propertyEditorPopulate(App, ids, view);
 
-		var dataCollectionId = (view.settings.datacollection ? view.settings.datacollection : null);
-		var SourceSelector = $$(ids.datacollection);
+		var dataviewId = (view.settings.dataviewId ? view.settings.dataviewId : null);
+		var SourceSelector = $$(ids.dataview);
 
 		// Pull data collections to options
 		var dcOptions = view.application.dataviews().map((dc) => {
@@ -213,10 +213,10 @@ export default class ABViewLabel extends ABViewWidget {
 			value: '[Select]'
 		});
 		SourceSelector.define('options', dcOptions);
-		SourceSelector.define('value', dataCollectionId);
+		SourceSelector.define('value', dataviewId);
 		SourceSelector.refresh();
 
-		this.propertyUpdateFieldOptions(ids, view, dataCollectionId);
+		this.propertyUpdateFieldOptions(ids, view, dataviewId);
 
 		$$(ids.field).setValue(view.settings.field);
 		$$(ids.height).setValue(view.settings.height);
@@ -228,7 +228,7 @@ export default class ABViewLabel extends ABViewWidget {
 
 		super.propertyEditorValues(ids, view);
 
-		view.settings.datacollection = $$(ids.datacollection).getValue();
+		view.settings.dataviewID = $$(ids.dataview).getValue();
 		view.settings.field = $$(ids.field).getValue();
 		view.settings.height = $$(ids.height).getValue();
 
@@ -342,7 +342,7 @@ export default class ABViewLabel extends ABViewWidget {
 
 	copyUpdateProperyList() {
 
-		return ['datacollection'];
+		return ['dataviewID'];
 
 	}
 

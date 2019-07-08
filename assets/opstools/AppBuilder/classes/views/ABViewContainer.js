@@ -727,12 +727,12 @@ export default class ABViewContainer extends ABView {
 
 		var _onShow = () => {
 
-			let dc = this.dataCollection; // get from a function or a (get) property
-			if (dc &&
-				dc.dataStatus == dc.dataStatusFlag.notInitial) {
+			let dv = this.dataview; // get from a function or a (get) property
+			if (dv &&
+				dv.dataStatus == dv.dataStatusFlag.notInitial) {
 
 				// load data when a widget is showing
-				dc.loadData();
+				dv.loadData();
 
 			}
 

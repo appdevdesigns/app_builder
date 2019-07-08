@@ -19,7 +19,7 @@ function L(key, altText) {
 
 var ABViewCarouselPropertyComponentDefaults = {
 
-	dataSource: null, 	// uuid of data collection
+	dataviewID: null, 	// uuid of ABDataview
 	field: null, 		// uuid
 
 	width: 460,
@@ -225,7 +225,7 @@ export default class ABViewCarousel extends ABViewWidget {
 					rows: [
 						{
 							view: "select",
-							name: "dataSource",
+							name: "dataview",
 							label: L('ab.component.label.dataSource', '*Object:'),
 							labelWidth: App.config.labelWidthLarge,
 							options: [],
@@ -397,10 +397,10 @@ export default class ABViewCarousel extends ABViewWidget {
 			};
 		});
 		objectOptions.unshift(defaultOption);
-		$$(ids.dataSource).define("options", objectOptions);
-		$$(ids.dataSource).refresh();
+		$$(ids.dataview).define("options", objectOptions);
+		$$(ids.dataview).refresh();
 
-		$$(ids.dataSource).setValue(view.settings.dataSource);
+		$$(ids.dataview).setValue(view.settings.dataviewID);
 		$$(ids.field).setValue(view.settings.field);
 
 		$$(ids.width).setValue(view.settings.width);
@@ -411,9 +411,9 @@ export default class ABViewCarousel extends ABViewWidget {
 		$$(ids.navigationType).setValue(view.settings.navigationType);
 
 		// Populate values to QueryBuilder
-		var selectedDc = view.dataCollection;
-		if (selectedDc) {
-			PopupCarouselFilterMenu.objectLoad(selectedDc.datasource);
+		var selectedDv = view.dataview;
+		if (selectedDv) {
+			PopupCarouselFilterMenu.objectLoad(selectedDv.datasource);
 		}
 
 		// Populate values to link page properties
@@ -427,7 +427,7 @@ export default class ABViewCarousel extends ABViewWidget {
 
 		super.propertyEditorValues(ids, view);
 
-		view.settings.dataSource = $$(ids.dataSource).getValue();
+		view.settings.dataviewID = $$(ids.dataview).getValue();
 		view.settings.field = $$(ids.field).getValue();
 
 		view.settings.width = $$(ids.width).getValue();
@@ -533,7 +533,7 @@ export default class ABViewCarousel extends ABViewWidget {
 			// link page helper
 			linkPage.init({
 				view: this,
-				dataCollection: dv
+				dataview: dv
 			});
 
 

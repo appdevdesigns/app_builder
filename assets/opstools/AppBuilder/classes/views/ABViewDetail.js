@@ -22,7 +22,7 @@ var ABViewDetailDefaults = {
 }
 
 var ABViewDetailPropertyComponentDefaults = {
-	datacollection: null,
+	dataviewID: null,
 	showLabel: true,
 	labelPosition: 'left',
 	labelWidth: 120,
@@ -188,7 +188,7 @@ export default class ABViewDetail extends ABViewContainer {
 
 		return commonUI.concat([
 			{
-				name: 'datacollection',
+				name: 'dataview',
 				view: 'richselect',
 				label: L('ab.components.detail.dataSource', "*Data Source"),
 				labelWidth: App.config.labelWidthLarge,
@@ -254,8 +254,8 @@ export default class ABViewDetail extends ABViewContainer {
 
 		super.propertyEditorPopulate(App, ids, view);
 
-		var SourceSelector = $$(ids.datacollection);
-		var dataviewId = view.settings.datacollection || null;
+		var SourceSelector = $$(ids.dataview);
+		var dataviewId = view.settings.dataviewID || null;
 
 		// Pull data views to options
 		var dvOptions = view.application.dataviews().map((dc) => {
@@ -289,7 +289,7 @@ export default class ABViewDetail extends ABViewContainer {
 
 		super.propertyEditorValues(ids, view);
 
-		view.settings.datacollection = $$(ids.datacollection).getValue();
+		view.settings.dataviewID = $$(ids.dataview).getValue();
 		view.settings.showLabel = $$(ids.showLabel).getValue();
 		view.settings.labelPosition = $$(ids.labelPosition).getValue();
 		view.settings.labelWidth = $$(ids.labelWidth).getValue();
@@ -513,7 +513,7 @@ export default class ABViewDetail extends ABViewContainer {
 
 	copyUpdateProperyList() {
 
-		return ['datacollection'];
+		return ['dataviewID'];
 
 	}
 

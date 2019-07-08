@@ -88,9 +88,7 @@ export default class ABViewPropertyLinkPage extends ABViewProperty {
 				this.view = view;
 
 				let filter = (v, widgetKey) => {
-					return v.key == widgetKey &&
-						(v.settings.datacollection == view.settings.datacollection ||
-							v.settings.datacollection == view.settings.dataSource);
+					return v.key == widgetKey && v.settings.dataviewID == view.settings.dataviewID;
 				};
 
 				// Set the options of the possible detail views
@@ -234,7 +232,7 @@ export default class ABViewPropertyLinkPage extends ABViewProperty {
 		 * @method init
 		 * @param {Object} options - {
 		 * 								view: {ABView},
-		 * 								dataCollection: {ABDataview}
+		 * 								dataview: {ABDataview}
 		 * 							}
 		 */
 		let init = (options) => {
@@ -244,8 +242,8 @@ export default class ABViewPropertyLinkPage extends ABViewProperty {
 			if (options.view)
 				this.view = options.view;
 
-			if (options.dataCollection)
-				this.dataCollection = options.dataCollection;
+			if (options.dataview)
+				this.dataview = options.dataview;
 
 		}
 
@@ -253,8 +251,8 @@ export default class ABViewPropertyLinkPage extends ABViewProperty {
 
 			changePage: (pageId, rowId) => {
 
-				if (this.dataCollection)
-					this.dataCollection.setCursor(rowId);
+				if (this.dataview)
+					this.dataview.setCursor(rowId);
 
 				if (this.view)
 					this.view.changePage(pageId);

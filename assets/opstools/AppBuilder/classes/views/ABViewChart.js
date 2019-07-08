@@ -13,7 +13,7 @@ function L(key, altText) {
 
 
 var ABViewChartPropertyComponentDefaults = {
-	dataSource: null,
+	dataviewID: null,
 	columnValue: null,
 	columnLabel: null,
 	columnValue2: null,
@@ -149,7 +149,7 @@ export default class ABViewChart extends ABViewContainer  {
 				}
 			},
 			{
-				name: 'dataSource',
+				name: 'dataview',
 				view: 'richselect',
 				label: L('ab.component.chart.dataSource', '*Chart Data'),
 				labelWidth: App.config.labelWidthLarge
@@ -222,11 +222,11 @@ export default class ABViewChart extends ABViewContainer  {
 
 		super.propertyEditorPopulate(App, ids, view);
 
-		this.populateDataCollection(ids, view);
+		this.populateDataview(ids, view);
 		this.populateFieldOptions(ids, view);
 
 		$$(ids.multipleSeries).setValue(view.settings.multipleSeries || ABViewChartPropertyComponentDefaults.multipleSeries);
-		$$(ids.dataSource).setValue(view.settings.dataSource || ABViewChartPropertyComponentDefaults.dataSource);
+		$$(ids.dataview).setValue(view.settings.dataviewID || ABViewChartPropertyComponentDefaults.dataviewID);
 		$$(ids.columnValue).setValue(view.settings.columnValue || ABViewChartPropertyComponentDefaults.columnValue);
 		$$(ids.columnLabel).setValue(view.settings.columnLabel || ABViewChartPropertyComponentDefaults.columnLabel);
 		$$(ids.isPercentage).setValue(view.settings.isPercentage != null ? view.settings.isPercentage : ABViewChartPiePropertyComponentDefaults.isPercentage);
@@ -249,7 +249,7 @@ export default class ABViewChart extends ABViewContainer  {
 		super.propertyEditorValues(ids, view);
 
 		view.settings.multipleSeries = $$(ids.multipleSeries).getValue();
-		view.settings.dataSource = $$(ids.dataSource).getValue();
+		view.settings.dataviewID = $$(ids.dataview).getValue();
 		view.settings.columnValue = $$(ids.columnValue).getValue();
 		view.settings.columnLabel = $$(ids.columnLabel).getValue();
 		view.settings.isPercentage = $$(ids.isPercentage).getValue();
@@ -267,7 +267,7 @@ export default class ABViewChart extends ABViewContainer  {
 		}
 	}
 
-	static populateDataCollection(ids, view) {
+	static populateDataview(ids, view) {
 
 		// Set the objects you can choose from in the list
 		var objectOptions = view.application.dataviews().map(dv => {
@@ -281,8 +281,8 @@ export default class ABViewChart extends ABViewContainer  {
 		var defaultOption = { id: '', value: L('ab.component.label.selectObject', '*Select an object') };
 		objectOptions.unshift(defaultOption);
 
-		$$(ids.dataSource).define("options", objectOptions);
-		$$(ids.dataSource).refresh();
+		$$(ids.dataview).define("options", objectOptions);
+		$$(ids.dataview).refresh();
 
 	}
 
@@ -295,10 +295,10 @@ export default class ABViewChart extends ABViewContainer  {
 		$$(ids.columnValue).define("options", []);
 		$$(ids.columnValue).refresh();
 
-		var dc = view.dataCollection;
-		if (dc == null) return;
+		var dv = view.dataview;
+		if (dv == null) return;
 
-		var obj = dc.datasource;
+		var obj = dv.datasource;
 		if (obj == null) return;
 
 		var normalFields = obj.fields((f) => f.key != 'connectObject');
@@ -340,10 +340,10 @@ export default class ABViewChart extends ABViewContainer  {
 		$$(ids.columnValue2).refresh();
 		$$(ids.columnValue2).enable();
 
-		var dc = view.dataCollection;
-		if (dc == null) return;
+		var dv = view.dataview;
+		if (dv == null) return;
 
-		var obj = dc.datasource;
+		var obj = dv.datasource;
 		if (obj == null) return;
 
 		var numFields = obj.fields((f) => f.key == 'number');
@@ -740,7 +740,7 @@ export default class ABViewChart extends ABViewContainer  {
 
 	copyUpdateProperyList() {
 
-		return ['dataSource'];
+		return ['dataviewID'];
 
 	}
 

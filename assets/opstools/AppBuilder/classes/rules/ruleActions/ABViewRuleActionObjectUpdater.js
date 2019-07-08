@@ -501,12 +501,12 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 									placeholder: this.labels.component.chooseSource,
 									on: {
 										'onChange': (newv, oldv) => {
-											var selectedDataCollections = this.currentForm.application.dataviews(dv => dv.id == newv)[0];
-											if (selectedDataCollections && 
-												(selectedDataCollections.sourceType == "query" || field.key != 'connectObject')) {
+											var selectedDataview = this.currentForm.application.dataviews(dv => dv.id == newv)[0];
+											if (selectedDataview && 
+												(selectedDataview.sourceType == "query" || field.key != 'connectObject')) {
 
 												var queryFieldOptions = [];
-												selectedDataCollections.datasource.fields().forEach((f) => {
+												selectedDataview.datasource.fields().forEach((f) => {
 													queryFieldOptions.push({ id: f.id, value: f.label })
 												});
 												$$(ids.queryField).define("options", queryFieldOptions);
@@ -545,7 +545,7 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 										$row.addView({}, 1);
 									} else {
 
-										var options = this.currentForm.dataCollection.datasource.fields().map(function (f) {
+										var options = this.currentForm.dataview.datasource.fields().map(function (f) {
 											return {
 												id: f.id,
 												value: f.label
@@ -561,10 +561,10 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 
 										$row.addView(FilterComponent.ui, 1);
 
-										var collectionId = $$(ids.selectDc).getValue();
-										var dataCollection = this.currentForm.application.dataviews(dv => dv.id == collectionId)[0];
-										if (dataCollection) {
-											_logic.populateFilters(dataCollection);
+										var dataviewId = $$(ids.selectDc).getValue();
+										var dataView = this.currentForm.application.dataviews(dv => dv.id == dataviewId)[0];
+										if (dataView) {
+											_logic.populateFilters(dataView);
 										}
 									}
 								}
@@ -599,12 +599,12 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 					// to do this, we find the root Page we are on, then ask that Page for datasources:
 					datasources = datasources.filter((dc) => { return dc.datasource.id == connectedObject.id; });
 
-					var dataCollectionQueries = this.currentForm.application.dataviews(dv => {
+					var dataViewQueries = this.currentForm.application.dataviews(dv => {
 						return dv.sourceType == "query" && dv.datasource.canFilterObject(connectedObject)
 						// return dc.datasource.id == connectedObject.id;
 					});
 
-					datasources = datasources.concat(dataCollectionQueries);
+					datasources = datasources.concat(dataViewQueries);
 
 					// refresh a droplist with those dataSources
 					optionsDataSources = [];
@@ -743,9 +743,9 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 
 						if (selectBy != "select-one") {
 							var collectionId = data.value;
-							var dataCollection = this.currentForm.application.dataviews(dv => dv.id == collectionId)[0];
-							if (dataCollection && data.filterConditions) {
-								_logic.populateFilters(dataCollection, data.filterConditions);
+							var dataView = this.currentForm.application.dataviews(dv => dv.id == collectionId)[0];
+							if (dataView && data.filterConditions) {
+								_logic.populateFilters(dataView, data.filterConditions);
 							}
 						}
 					}
@@ -786,18 +786,18 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 				}
 			},
 
-			populateFilters: (dataCollection, filterConditions) => {
+			populateFilters: (dataView, filterConditions) => {
 				var filterConditions = filterConditions || ABViewRuleActionObjectUpdaterDefaults.filterConditions;
 
 				// // Clone ABObject
-				// var objectCopy = dataCollection.datasource.clone();
+				// var objectCopy = dataView.datasource.clone();
 				// if (objectCopy) {
 				// 	objectCopy.objectWorkspace.filterConditions = filterConditions;
 				// }
 
 				// Populate data to popups
 				// FilterComponent.objectLoad(objectCopy);
-				FilterComponent.objectLoad(dataCollection.datasource);
+				FilterComponent.objectLoad(dataView.datasource);
 				FilterComponent.viewLoad(this.currentForm);
 				FilterComponent.setValue(filterConditions);
 			},
@@ -992,7 +992,7 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 						value = OP.User.username();
 
 					// in the case of a connected Field, we use op.value to get the 
-					// datacollection, and find it's currently selected value:
+					// dataview, and find it's currently selected value:
 					if (field.key == 'connectObject' || 
 						op.valueType == 'exist') {
 
@@ -1006,13 +1006,13 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 						// we insert our PK into the value from the DC.
 
 
-						// op.value is the DataCollection.id we need to find
-						var dataCollection = this.currentForm.application.dataviews(dv => dv.id == op.value)[0];
+						// op.value is the ABDataview.id we need to find
+						var dataView = this.currentForm.application.dataviews(dv => dv.id == op.value)[0];
 
-						// we don't want to mess with the dataCollection directly since it might 
+						// we don't want to mess with the dataView directly since it might 
 						// be used by other parts of the system and this refresh might reset
 						// it's cursor.
-						// var clonedDataCollection = dataCollection.filteredClone(op.filterConditions);
+						// var clonedDataView = dataView.filteredClone(op.filterConditions);
 
 						// loop through rules to find "same-as-field" or "not-same-as-field"
 						// adjust operator and switch key value to actual value when found
@@ -1022,7 +1022,7 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 								return (r.rule == "same_as_field" || r.rule == "not_same_as_field");
 							}).forEach((item) => {
 
-								var valueField = this.currentForm.dataCollection.datasource.fields((f) => { return f.id == item.value; })[0];
+								var valueField = this.currentForm.dataview.datasource.fields((f) => { return f.id == item.value; })[0];
 								if (valueField.key == "connectObject") {
 									item.value = valueField.format(this._formData);
 								} else {
@@ -1037,8 +1037,8 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 							});
 						}
 
-						var connectedPromise = dataCollection.filteredClone(filterConditions)
-							.then(function (clonedDataCollection) {
+						var connectedPromise = dataView.filteredClone(filterConditions)
+							.then(function (clonedDataView) {
 
 
 								switch (op.selectBy) {
@@ -1048,7 +1048,7 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 									// TODO: rename to 'select-cursor'
 									case 'select-one':
 									default:
-										value = clonedDataCollection.getCursor(); // dataCollection.getItem(dataCollection.getCursor());
+										value = clonedDataView.getCursor(); // dataView.getItem(dataView.getCursor());
 
 										if (value) {
 											// NOTE: webix documentation issue: .getCursor() is supposed to return
@@ -1056,7 +1056,7 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 
 											if (op.valueType == 'exist') {
 
-												var fieldWithValue = clonedDataCollection.datasource.fields((f) => {
+												var fieldWithValue = clonedDataView.datasource.fields((f) => {
 													return f.id == op.queryField;
 												})[0];
 
@@ -1085,25 +1085,25 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 
 										var newValues = [];
 
-										var currRow = clonedDataCollection.getFirstRecord();
+										var currRow = clonedDataView.getFirstRecord();
 										while (currRow) {
 
 											// do something there
 
-											switch (clonedDataCollection.sourceType) {
-												// case: datacollection is an object 
+											switch (clonedDataView.sourceType) {
+												// case: dataview is an object 
 												// we want to set our field to this values
 												case 'object':
 
 													newValues.push(currRow.id);
 													break;
 
-												// case: datacollection is a query 
+												// case: dataview is a query 
 												// our field is a pointer to an object. we want to pull out that object 
 												// from the query data.
 												case 'query':
 
-													var fieldWithValue = clonedDataCollection.datasource.fields((f) => {
+													var fieldWithValue = clonedDataView.datasource.fields((f) => {
 														return f.id == op.queryField;
 													})[0];
 
@@ -1127,7 +1127,7 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 													break;
 											}
 
-											currRow = clonedDataCollection.getNextRecord(currRow);
+											currRow = clonedDataView.getNextRecord(currRow);
 										}
 
 
@@ -1156,17 +1156,17 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 									case 'filter-select-one':
 										newValues = [];
 
-										value = clonedDataCollection.getFirstRecord();
+										value = clonedDataView.getFirstRecord();
 
 										if (value) {
 
-											// case: datacollection is a query 
+											// case: dataview is a query 
 											// our field is a pointer to an object. we want to pull out that object 
 											// from the query data.
-											if (clonedDataCollection.sourceType == 'query' || 
+											if (clonedDataView.sourceType == 'query' || 
 												(op.valueType == 'exist' && op.queryField) ) {
 
-												var fieldWithValue = clonedDataCollection.datasource.fields((f) => {
+												var fieldWithValue = clonedDataView.datasource.fields((f) => {
 													return f.id == op.queryField;
 												})[0];
 
@@ -1183,9 +1183,9 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 												value = newValue;
 
 											}
-											// case: datacollection is an object 
+											// case: dataview is an object 
 											// we want to set our field to this values
-											else if (clonedDataCollection.sourceType == 'object') {
+											else if (clonedDataView.sourceType == 'object') {
 
 												// NOTE: webix documentation issue: .getCursor() is supposed to return
 												// the .id of the item.  However it seems to be returning the {obj} 
@@ -1268,10 +1268,10 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 					} else {
 
 						// get the model from the provided Form Obj:
-						var dc = options.form.dataCollection;
-						if (!dc) return resolve();
+						var dv = options.form.dataview;
+						if (!dv) return resolve();
 
-						var model = dc.model;
+						var model = dv.model;
 						model.update(options.data.id, options.data)
 							.catch((err) => {
 								OP.Error.log('!!! ABViewRuleActionFormRecordRuleUpdate.process(): update error:', { error: err, data: options.data });

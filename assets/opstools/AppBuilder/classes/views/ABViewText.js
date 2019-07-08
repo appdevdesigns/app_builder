@@ -18,7 +18,7 @@ function L(key, altText) {
 var ABViewTextPropertyComponentDefaults = {
 	text: '',
 	height: 0,
-	datacollection: null
+	dataviewID: null
 }
 
 
@@ -250,7 +250,7 @@ export default class ABViewText extends ABViewWidget {
 				labelWidth: App.config.labelWidthLarge,
 			},
 			{
-				name: 'datacollection',
+				name: 'dataview',
 				view: 'richselect',
 				label: L('ab.components.list.dataSource', "*Data Source"),
 				labelWidth: App.config.labelWidthLarge,
@@ -282,18 +282,18 @@ export default class ABViewText extends ABViewWidget {
 	 * 
 	 * @param {Object} ids 
 	 * @param {ABViewForm} view - the current component
-	 * @param {string} dcId - id of ABDataview
+	 * @param {string} dvId - id of ABDataview
 	 */
-	static propertyUpdateFieldOptions(ids, view, dcId) {
+	static propertyUpdateFieldOptions(ids, view, dvId) {
 
-		var datacollection = view.application.dataviews(dv => dv.id == dcId)[0];
+		var dataview = view.application.dataviews(dv => dv.id == dvId)[0];
 
-		if (!datacollection && view.parent.key == "dataview") {
-			datacollection = view.application.dataviews(dv => dv.id == view.parent.settings.datacollection)[0];
-			$$(ids.datacollection).setValue(view.parent.settings.datacollection);
+		if (!dataview && view.parent.key == "dataview") {
+			dataview = view.application.dataviews(dv => dv.id == view.parent.settings.dataviewID)[0];
+			$$(ids.dataview).setValue(view.parent.settings.dataviewID);
 		}
 
-		var object = datacollection ? datacollection.datasource : null;
+		var object = dataview ? dataview.datasource : null;
 
 		// Pull field list
 		$$(ids.field).clearAll();
@@ -310,8 +310,8 @@ export default class ABViewText extends ABViewWidget {
 
 		$$(ids.height).setValue(view.settings.height);
 
-		var dataCollectionId = (view.settings.datacollection ? view.settings.datacollection : null);
-		var SourceSelector = $$(ids.datacollection);
+		var dataviewID = (view.settings.dataviewID ? view.settings.dataviewID : null);
+		var SourceSelector = $$(ids.dataview);
 
 		// Pull data collections to options
 		var dvOptions = view.application.dataviews().map(dv => {
@@ -327,10 +327,10 @@ export default class ABViewText extends ABViewWidget {
 			value: '[Select]'
 		});
 		SourceSelector.define('options', dvOptions);
-		SourceSelector.define('value', dataCollectionId);
+		SourceSelector.define('value', dataviewID);
 		SourceSelector.refresh();
 
-		this.propertyUpdateFieldOptions(ids, view, dataCollectionId);
+		this.propertyUpdateFieldOptions(ids, view, dataviewID);
 
 	}
 
@@ -340,7 +340,7 @@ export default class ABViewText extends ABViewWidget {
 		super.propertyEditorValues(ids, view);
 
 		view.settings.height = $$(ids.height).getValue();
-		view.settings.datacollection = $$(ids.datacollection).getValue();
+		view.settings.dataviewID = $$(ids.dataview).getValue();
 
 	}
 
@@ -437,7 +437,7 @@ export default class ABViewText extends ABViewWidget {
 
 
 	/**
-	 * @property dataCollection
+	 * @property dataview
 	 * return ABDataview of this form
 	 * 
 	 * @return {ABDataview}
@@ -509,7 +509,7 @@ export default class ABViewText extends ABViewWidget {
 
 	copyUpdateProperyList() {
 
-		return ['datacollection'];
+		return ['dataviewID'];
 
 	}
 

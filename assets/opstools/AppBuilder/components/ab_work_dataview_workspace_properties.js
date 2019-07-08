@@ -311,7 +311,7 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 				}
 
 				// populate link data collection options
-				this._logic.initLinkDataCollectionOptions();
+				this._logic.initLinkDataviewOptions();
 
 				// populate link fields
 				this._logic.initLinkFieldOptions();
@@ -418,7 +418,7 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 
 			},
 
-			initLinkDataCollectionOptions: (settings) => {
+			initLinkDataviewOptions: (settings) => {
 
 				let ids = this.ids;
 

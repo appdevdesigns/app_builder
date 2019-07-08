@@ -16,7 +16,7 @@ function L(key, altText) {
 
 var ABViewDocxBuilderPropertyComponentDefaults = {
 	buttonlabel: "Download DOCX",
-	datacollection: null,
+	dataviewID: null,
 	width: 200,
 	filename: "", // uuid
 	filelabel: "output.docx"
@@ -190,7 +190,7 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 					padding: 10,
 					rows: [
 						{
-							name: 'datacollection',
+							name: 'dataview',
 							view: 'richselect',
 							label: L('ab.components.docxBuilder.dataSource', "*Data Source"),
 							labelWidth: App.config.labelWidthLarge
@@ -295,9 +295,9 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 
 		super.propertyEditorPopulate(App, ids, view);
 
-		let $DcSelector = $$(ids.datacollection);
+		let $DcSelector = $$(ids.dataview);
 
-		let selectedDcId = (view.settings.datacollection ? view.settings.datacollection : null);
+		let selectedDvId = (view.settings.dataviewID ? view.settings.dataviewID : null);
 
 		// Pull data views to options
 		let dvOptions = view.application.dataviews()
@@ -314,7 +314,7 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 			value: '[Select]'
 		});
 		$DcSelector.define('options', dvOptions);
-		$DcSelector.define('value', selectedDcId);
+		$DcSelector.define('value', selectedDvId);
 		$DcSelector.refresh();
 
 		$$(ids.filelabel).setValue(view.settings.filelabel);
@@ -335,7 +335,7 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 		super.propertyEditorValues(ids, view);
 
 		view.settings.buttonlabel = $$(ids.buttonlabel).getValue();
-		view.settings.datacollection = $$(ids.datacollection).getValue();
+		view.settings.dataviewID = $$(ids.dataview).getValue();
 		view.settings.width = $$(ids.width).getValue();
 		view.settings.filelabel = $$(ids.filelabel).getValue();
 
