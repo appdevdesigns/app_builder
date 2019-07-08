@@ -127,13 +127,13 @@ function parseQueryCondition(_where, object, req, res, cb) {
         } else {
 
             // make sure we find our Data collection
-            var dc;
+            var dv;
             object.application.pages().forEach(p => {
-                if (dc == null)
-                    dc = p.application.dataviews(dColl => dColl.id == cond.value)[0];
+                if (dv == null)
+                    dv = p.application.dataviews(dColl => dColl.id == cond.value)[0];
             });
 
-            if (!dc) {
+            if (!dv) {
 
                 ADCore.error.log('AppBuilder:Policy:ABModelConvertDataCollectionCondition:Could not find specified data collection:', { dcId:cond.value, condition:cond });
                     
@@ -144,10 +144,11 @@ function parseQueryCondition(_where, object, req, res, cb) {
 
             } 
             
-            var sourceObject = object.application.objects(obj => obj.id == dc.settings.object)[0];
+            // var sourceObject = object.application.objects(obj => obj.id == dc.settings.object)[0];
+            var sourceObject = ABObjectCache.get(dv.settings.datasourceID);
             if (!sourceObject) {
 
-                ADCore.error.log('AppBuilder:Policy:ABModelConvertDataCollectionCondition:Source object not exists:', { field:field, sourceObject:sourceObject, dc:dc });
+                ADCore.error.log('AppBuilder:Policy:ABModelConvertDataCollectionCondition:Source object not exists:', { field:field, sourceObject:sourceObject, dc:dv });
                 var err = new Error('Source object not exists.');
                 cb(err);
                 return;
@@ -308,8 +309,8 @@ function parseQueryCondition(_where, object, req, res, cb) {
 
                 var query = sourceObject.queryFind({
                     columnNames: [objectColumn],
-                    where: dc.settings.objectWorkspace.filterConditions,
-                    sort: dc.settings.objectWorkspace.sortFields || []
+                    where: dv.settings.objectWorkspace.filterConditions,
+                    sort: dv.settings.objectWorkspace.sortFields || []
                 }, req.user.data);
                 // query.clearSelect().column(objectColumn);
 

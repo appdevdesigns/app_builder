@@ -727,7 +727,8 @@ class ABFieldConnect extends ABField {
 
 			// return join table name
 			tableName = AppBuilder.rules.toJunctionTableNameFormat(
-											this.object.application.name, // application name
+											// this.object.application.name, // application name
+											"JOIN_MN",
 											sourceObjectName, // table name
 											targetObjectName, // linked table name
 											columnName); // column name
