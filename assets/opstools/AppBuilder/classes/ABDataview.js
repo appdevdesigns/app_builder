@@ -1300,7 +1300,7 @@ export default class ABDataview extends EventEmitter {
 	setFilterConditions(filterConditions) {
 
 		if (this.__filterComponent)
-			this.__filterComponent.setValue(filterConditions || DefaultValues.objectWorkspace.filterConditions);
+			this.__filterComponent.setValue(filterConditions || DefaultValues.settings.objectWorkspace.filterConditions);
 	}
 
 
