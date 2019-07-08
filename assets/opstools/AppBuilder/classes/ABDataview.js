@@ -251,7 +251,7 @@ export default class ABDataview extends EventEmitter {
 		let object = this.datasource;
 		if (!object) return null;
 
-		return object.fields((f) => f.id == this.settings.linkField)[0];
+		return object.fields((f) => f.id == this.settings.linkFieldID)[0];
 	}
 
 	/**
