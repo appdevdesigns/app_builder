@@ -502,7 +502,7 @@ export default class ABViewChart extends ABViewContainer  {
 
 			switch(valueCol.key) {
 				case "formula": {
-					var obj = this.application.objects(obj => obj.id == valueCol.object.id)[0];
+					var obj = valueCol.object;
 					var objLink = this.application.objects(obj => obj.id == valueCol.settings.object)[0];
 					var fieldBase = obj.fields(f => f.id == valueCol.settings.field)[0];
 					var fieldLink = objLink.fields(f => f.id == valueCol.settings.fieldLink)[0];
@@ -510,7 +510,7 @@ export default class ABViewChart extends ABViewContainer  {
 					break;
 
 				case "calculate": {
-					var obj = this.application.objects(obj => obj.id == valueCol.object.id)[0];
+					var obj = valueCol.object;
 					var place = valueCol.settings.decimalPlaces;
 				}
 					break;

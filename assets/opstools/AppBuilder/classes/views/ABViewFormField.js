@@ -5,8 +5,6 @@
  */
 
 import ABView from "./ABView"
-import ABPropertyComponent from "../ABPropertyComponent"
-import ABViewManager from "../ABViewManager"
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -169,10 +167,17 @@ export default class ABViewFormField extends ABView {
 	// }
 
 	field() {
-		var object = this.application.objects((obj) => obj.id == this.settings.objectId)[0];
+
+		let form = this.parentFormComponent();
+		if (form == null) return null;
+
+		let dataview = form.dataview();
+		if (dataview == null) return null;
+
+		let object = dataview.datasource;
 		if (object == null) return null;
 
-		var field = object.fields((v) => v.id == this.settings.fieldId)[0];
+		let field = object.fields((v) => v.id == this.settings.fieldId)[0];
 		return field;
 	}
 

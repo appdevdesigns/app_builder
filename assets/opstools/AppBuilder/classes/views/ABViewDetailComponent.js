@@ -139,10 +139,17 @@ export default class ABViewDetailComponent extends ABViewWidget {
 	}
 
 	field() {
-		var object = this.application.objects((obj) => obj.id == this.settings.objectId)[0];
+
+		let detailComponent = this.detailComponent();
+		if (detailComponent == null) return null;
+
+		let dataview = detailComponent.dataview;
+		if (dataview == null) return null;
+
+		let object = dataview.datasource;
 		if (object == null) return null;
 
-		var field = object.fields((v) => v.id == this.settings.fieldId)[0];
+		let field = object.fields((v) => v.id == this.settings.fieldId)[0];
 
 		// set .alias to support queries that contains alias name
 		// [aliasName].[columnName]

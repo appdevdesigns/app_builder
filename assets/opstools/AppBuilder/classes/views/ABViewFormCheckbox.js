@@ -6,16 +6,10 @@
  */
 
 import ABViewFormField from "./ABViewFormField"
-import ABPropertyComponent from "../ABPropertyComponent"
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
-
-
-var ABViewFormCheckboxPropertyComponentDefaults = {
-}
-
 
 var ABViewFormCheckboxDefaults = {
 	key: 'checkbox',		// {string} unique key for this view
@@ -118,7 +112,6 @@ export default class ABViewFormCheckbox extends ABViewFormField {
 	component(App) {
 
 		var component = super.component(App);
-		var field = this.field();
 
 		var idBase = this.parentFormUniqueID('ABViewFormCheckbox_' + this.id + "_f_" ); 
 		var ids = {

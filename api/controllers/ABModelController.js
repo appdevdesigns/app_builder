@@ -1310,7 +1310,7 @@ console.error(err);
                                         };
 
                                         // WORKAROUND : Get invalid field
-                                        var invalidFields = object.fields(f => err.sqlMessage.indexOf(f.columnName) > -1);
+                                        var invalidFields = object.fields(f => (err.sqlMessage || "").indexOf(f.columnName) > -1);
                                         invalidFields.forEach(f => {
 
                                             errorResponse.invalidAttributes[f.columnName] = [
