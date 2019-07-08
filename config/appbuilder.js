@@ -58,8 +58,8 @@ module.exports.appbuilder = {
   graphDB: {
     url: 'http://127.0.0.1:8529',
     databaseName: 'appBuilder',
-    user: 'root',
-    pass: 'admin'
+    user: '',
+    pass: ''
   }
 
 };

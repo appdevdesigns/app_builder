@@ -60,7 +60,7 @@ export default class ABViewDetailComponent extends ABViewWidget {
 			settings = detailView.settings;
 
 		var isUsers = false;
-		if (field.key == "user")
+		if (field && field.key == "user")
 			isUsers = true;
 
 		var templateLabel = '';
@@ -77,13 +77,13 @@ export default class ABViewDetailComponent extends ABViewWidget {
 
 		var template = (templateLabel)
 			.replace(/#width#/g, settings.labelWidth)
-			.replace(/#label#/g, field.label);
+			.replace(/#label#/g, field ? field.label : "");
 
 		var height = 38;
 		if (settings.labelPosition == 'top')
 			height = height * 2;
 
-		if (field.settings && typeof field.settings.useHeight != "undefined" && field.settings.useHeight == 1) {
+		if (field && field.settings && typeof field.settings.useHeight != "undefined" && field.settings.useHeight == 1) {
 			height = parseInt(field.settings.imageHeight) || height;
 		}
 
