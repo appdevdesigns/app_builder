@@ -222,12 +222,16 @@ steal(
 
 										if (!dv) return;
 
+										let datasource = dv.datasource;
+										if (!datasource) return;
+
 										if (dv.settings &&
-											dv.settings.isQuery) {
-											self.data.application._queries.push(dv.datasource);
+											dv.settings.isQuery &&
+											self.data.application.queries(q => q.id == datasource.id).length < 1) {
+											self.data.application._queries.push(datasource);
 										}
-										else {
-											self.data.application._objects.push(dv.datasource);
+										else if (self.data.application.objects(o => o.id == datasource.id).length < 1) {
+											self.data.application._objects.push(datasource);
 										}
 
 									});
