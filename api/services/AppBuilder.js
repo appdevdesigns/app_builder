@@ -1089,7 +1089,7 @@ module.exports = {
      * @param {Object} options - {
      *                              name: string,
      *                              label: string,
-     *                              urlPointer: string,
+     *                              pageID: uuid,
      *                              icon: string [optional - "file-o"],
      *                              isAdminPage: boolean
      *                          }
@@ -1134,7 +1134,7 @@ module.exports = {
                     path: 'opstools/BuildApp/controllers/ABLiveTool.js',
                     init: {
                         app: application.id,
-                        page: options.urlPointer
+                        page: options.pageID
                     }
                 }
             ];

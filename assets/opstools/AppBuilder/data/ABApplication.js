@@ -20,10 +20,10 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 		// restURL: '/app_builder/abapplication',
 		restURL: '/app_builder/application',
 
-		// TEMPORARILY
-		get: function(appId){
-			return OP.Comm.Service.get({
-				url: `/app_builder/application/${appId}`
+		// NOTE: .findOne calls /app_builder/application?id={appId}
+		get: function(appId, pageID){
+			return OP.Comm.Socket.get({
+				url: `/app_builder/application/${appId}?pageID=${pageID}`
 			});
 		},
 
@@ -46,7 +46,7 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 		},
 
 		getPermissions(appId) {
-			return OP.Comm.Service.get({ url: `/app_builder/${appId}/role` });
+			return OP.Comm.Socket.get({ url: `/app_builder/${appId}/role` });
 		},
 
 		createPermission(appId) {
@@ -64,14 +64,14 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 		objectLoad: function (appId) {
 
-			return OP.Comm.Service.get({
+			return OP.Comm.Socket.get({
 				url: `/app_builder/application/${appId}/object`
 			});
 		},
 
 		objectFind: function (cond) {
 
-			return OP.Comm.Service.get({
+			return OP.Comm.Socket.get({
 				url: `/app_builder/object`,
 				data: {
 					query: cond
@@ -82,7 +82,7 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 		objectGet: function(objectId) {
 
-			return OP.Comm.Service.get({
+			return OP.Comm.Socket.get({
 				url: `/app_builder/object/${objectId}`
 			});
 
@@ -172,14 +172,14 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 		queryLoad: function (appId) {
 
-			return OP.Comm.Service.get({
+			return OP.Comm.Socket.get({
 				url: `/app_builder/application/${appId}/query`
 			});
 		},
 
 		queryFind: function (cond) {
 
-			return OP.Comm.Service.get({
+			return OP.Comm.Socket.get({
 				url: `/app_builder/query`,
 				data: {
 					query: cond
@@ -240,14 +240,14 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 		dataviewLoad: function (appId) {
 
-			return OP.Comm.Service.get({
+			return OP.Comm.Socket.get({
 				url: `/app_builder/application/${appId}/dataview`
 			});
 		},
 
 		dataviewFind: function (cond) {
 
-			return OP.Comm.Service.get({
+			return OP.Comm.Socket.get({
 				url: `/app_builder/dataview`,
 				data: {
 					query: cond
@@ -258,7 +258,7 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 		dataviewGet: function(dataviewId) {
 
-			return OP.Comm.Service.get({
+			return OP.Comm.Socket.get({
 				url: `/app_builder/dataview/${dataviewId}`
 			});
 

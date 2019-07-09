@@ -100,46 +100,30 @@ export default class ABApplication extends ABApplicationBase {
 	 * Get application who includes data view list
 	 * This function is used in the live display
 	 *
+	 * @param {uuid} appID
+	 * @param {uuid} pageID [optional]
+	 * 
 	 * @return {Promise}
 	 */
-	static getApplicationById(id) {
+	static getApplicationById(appID, pageID = null) {
 
-		return Promise.resolve()
-			.then(() => {
+		return new Promise((resolve, reject) => {
 
-				return new Promise((next, err) => {
+			var ModelApplication = OP.Model.get('opstools.BuildApp.ABApplication');
+			ModelApplication.Models(ABApplication); // set the Models  setting.
 
-					var ModelApplication = OP.Model.get('opstools.BuildApp.ABApplication');
-					ModelApplication.Models(ABApplication); // set the Models  setting.
+			ModelApplication.staticData.get(appID, pageID)
+				.catch(reject)
+				.then(function (app) {
 
-					ModelApplication.staticData.get(id)
-						.catch(err)
-						.then(function (app) {
+					// resolve(app);
+					if (app)
+						resolve(new ABApplication(app));
+					else
+						resolve();
 
-							// resolve(app);
-							if (app)
-								next(new ABApplication(app));
-							else
-								next();
-
-						});
-				})
-
-			})
-			.then(application => {
-
-				return new Promise((next, err) => {
-
-					application.dataviewLoad()
-						.catch(err)
-						.then(() => {
-
-							next(application);
-
-						});
 				});
-
-			});
+		});
 
 	}
 

@@ -64,7 +64,7 @@ steal(
 								});
 
 							if (self.__events.toolShow == null)
-								self.__events.toolShow = AD.comm.hub.subscribe('opsportal.tool.show', function(message, data) {
+								self.__events.toolShow = AD.comm.hub.subscribe('opsportal.tool.show', function (message, data) {
 
 									self.menuChange(data.area, data.tool);
 
@@ -123,7 +123,7 @@ steal(
 
 						},
 
-						menuChange: function(areaKey, toolKey) {
+						menuChange: function (areaKey, toolKey) {
 
 							var self = this;
 
@@ -132,7 +132,7 @@ steal(
 
 								let currAreaElem = document.querySelector('#op-list-menu > .op-container.active');
 								if (!currAreaElem) return;
-								
+
 								areaKey = currAreaElem.getAttribute("area");
 
 							}
@@ -143,13 +143,13 @@ steal(
 								// get active tool element
 								let currToolElem = document.querySelector('#op-masthead-sublinks [area="{area}"] .active'.replace("{area}", areaKey));
 								if (!currToolElem) return;
-								
+
 								toolKey = currToolElem.getAttribute("op-tool-id");
 
 							}
 
 							// Check it is our page 
-							if (self.options.areaKey == areaKey && 
+							if (self.options.areaKey == areaKey &&
 								self.options.toolKey == toolKey) {
 
 								if (!self.activated) {
@@ -174,11 +174,11 @@ steal(
 								// Show loading spinners
 								function (next) {
 
-									var areaMenuItem = document.body.querySelector('[class="op-container"][area="'+self.options.areaKey+'"]');
+									var areaMenuItem = document.body.querySelector('[class="op-container"][area="' + self.options.areaKey + '"]');
 									if (areaMenuItem) {
 										areaMenuItem.insertAdjacentHTML(
 											'beforeend',
-											'<span class="icon '+self.options.areaKey+'_appLoading"><i class="fa fa-refresh fa-spin"></i></span>');
+											'<span class="icon ' + self.options.areaKey + '_appLoading"><i class="fa fa-refresh fa-spin"></i></span>');
 									}
 
 									next();
@@ -186,16 +186,54 @@ steal(
 								},
 								// Get application data
 								function (next) {
-									ABApplication.getApplicationById(self.options.app)
+									ABApplication.getApplicationById(self.options.app, self.options.page)
 										.then(function (result) {
 											self.data.application = result;
 
 											// Store the root page
 											if (self.rootPage == null)
-												self.rootPage = self.data.application.urlResolve(self.options.page);
+												self.rootPage = self.data.application.pages(p => p.id == self.options.page)[0];
 
 											next();
 										}, next);
+								},
+
+								// Get data views
+								function (next) {
+
+									if (!self.data.application) return next();
+
+									self.data.application.dataviewLoad()
+										.catch(next)
+										.then(() => {
+
+											next();
+
+										});
+
+								},
+
+								// Bind objects and queries from data views
+								function (next) {
+
+									if (!self.data.application) return next();
+
+									self.data.application.dataviews().forEach(dv => {
+
+										if (!dv) return;
+
+										if (dv.settings &&
+											dv.settings.isQuery) {
+											self.data.application._queries.push(dv.datasource);
+										}
+										else {
+											self.data.application._objects.push(dv.datasource);
+										}
+
+									});
+
+									next();
+
 								},
 
 								function (next) {
@@ -234,7 +272,7 @@ steal(
 								function (next) {
 
 									// we will remove the loading spinners on the menu now
-									var opsMenuItem = document.body.querySelectorAll('#op-list-menu > .op-container .'+self.options.areaKey+'_appLoading');
+									var opsMenuItem = document.body.querySelectorAll('#op-list-menu > .op-container .' + self.options.areaKey + '_appLoading');
 									(opsMenuItem || []).forEach((x) => {
 										x.remove();
 									});
@@ -258,11 +296,11 @@ steal(
 
 							// Clear UI content
 							var rootDomId = self.getPageDomID(self.rootPage.id);
-							
+
 							// var parentContainer = self.element.parent()[0];
 							// parentContainer.style.width = "900px";
 							// parentContainer.style.margin = "0 auto";
-							
+
 							if ($$(rootDomId))
 								webix.ui({}, $$(rootDomId));
 
@@ -301,7 +339,7 @@ steal(
 
 							// Define page id to be batch id of webix.multiview
 							ui.batch = page.id;
-							
+
 							if (parseInt(page.settings.pageWidth) > 0 && parseInt(page.settings.fixedPageWidth) == 1) {
 								var parentContainer = self.element.parent()[0];
 								parentContainer.style.width = parseInt(page.settings.pageWidth) + "px";
@@ -324,16 +362,16 @@ steal(
 											view: "toolbar",
 											css: "webix_dark",
 											cols: [
-												{ 
-													view: "label", 
+												{
+													view: "label",
 													label: page.label,
 													css: "modal_title",
 													align: "center"
 												},
 												{
-													view: "button", 
-													label: "Close", 
-													autowidth: true, 
+													view: "button",
+													label: "Close",
+													autowidth: true,
 													align: "center",
 													click: function () {
 
@@ -368,7 +406,7 @@ steal(
 									break;
 								case 'page':
 								default:
-								
+
 									// console.log(ui);
 									if ($$(pageDomId)) {
 										// Change page type (Popup -> Page)
@@ -415,7 +453,7 @@ steal(
 						*/
 						showPage: function (pageId) {
 							var self = this;
-							
+
 							// if pageId is not passed we will clear the peviousPageId so it won't load, this fixes a bug with the popup pages
 							if (pageId == null) {
 								self.previousPageId = null;

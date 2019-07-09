@@ -62,14 +62,23 @@ module.exports = {
      */
     findOne: function(req, res) {
 
-        var appID = req.param('appID');
+        let appID = req.param('appID');
+        let pageID = req.query.pageID || null;
 
         ApplicationGraph
             .findOne(appID)
             .then(app => {
 
-                if (app)
-                    res.AD.success(app.toValidJsonFormat());
+                if (app) {
+                    let result = app.toValidJsonFormat();
+
+                    // Reduce data size to the live display
+                    if (pageID) {
+                        result.pages = (result.pages || []).filter(p => p.id == pageID);
+                    }
+
+                    res.AD.success(result);
+                }
                 else
                     res.AD.success(null);
 
@@ -395,7 +404,7 @@ module.exports = {
                         let options ={
                             name: pageClass.name,
                             label: pageLabel || vals.label || pageClass.name,
-                            urlPointer: pageClass.urlPointer(),
+                            pageID: pageClass.id,
                             icon: pageClass.icon
                         };
 
