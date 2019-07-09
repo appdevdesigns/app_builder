@@ -203,7 +203,17 @@ module.exports = {
             return Promise.resolve()
                 .then(() => {
 
+                    // Get from caching
+                    result = ABObjectCache.get(objID);
+                    return Promise.resolve();
+
+                })
+                .then(() => {
+
                     return new Promise((next, err) => {
+
+                        if (result)
+                            return next();
 
                         ABGraphObject.findOne(objID)
                         .catch(err)
