@@ -8,6 +8,51 @@
 var path = require('path');
 
 var ABGraphDataview = require(path.join('..', 'graphModels', 'ABDataview'));
+var ABGraphQuery = require(path.join('..', 'graphModels', 'ABQuery'));
+
+
+/**
+ * @method pullQueryDatasource
+ * 
+ * @param {ABDataview} dataview
+ * @return {Promise}
+ */
+function pullQueryDatasource(dataview) {
+
+	return new Promise((resolve, reject) => {
+
+		if (dataview == null)
+			return resolve(null);
+
+
+		let isQuery = JSON.parse(dataview.settings.isQuery);
+		if (isQuery &&
+			(!dataview.query || !dataview.query[0])) {
+
+			let queryID = dataview.settings.datasourceID;
+
+			// Data source is query
+			ABGraphQuery.findOne(queryID, ['objects'])
+				.catch(reject)
+				.then(q => {
+
+					if (q)
+						dataview.query = [q];
+
+					resolve(dataview);
+
+				});
+
+		}
+		else {
+
+			// Data source is object
+			return resolve(dataview);
+		}
+
+	});
+
+}
 
 function pullDataview(dataviewID) {
 
@@ -17,15 +62,7 @@ function pullDataview(dataviewID) {
 		.then(ABGraphDataview.findOne(dataviewID, ['object']))
 
 		// When data source is query, then pull objects of query
-		.then(dataview => {
-
-			let isQuery = JSON.parse(dataview.settings.isQuery);
-			if (isQuery) {
-
-			}
-
-			return Promise.resolve(dataview);
-		})
+		.then(pullQueryDatasource);
 
 }
 
@@ -41,12 +78,23 @@ module.exports = {
 		let appID = req.param('appID');
 
 		ABGraphDataview.findWithRelation('applications', appID, ['object'])
-			.catch(error => {
-				res.AD.error(error);
-			})
+			.catch(res.AD.error)
 			.then(dataviews => {
 
-				res.AD.success(dataviews || []);
+				let tasks = [];
+
+				// pull Query data source
+				(dataviews || []).forEach(dv => {
+					tasks.push(pullQueryDatasource(dv));
+				});
+
+				Promise.all(tasks)
+					.catch(res.AD.error)
+					.then(() => {
+
+						res.AD.success(dataviews || []);
+
+					});
 
 			});
 
@@ -64,12 +112,24 @@ module.exports = {
 
 		ABGraphDataview.find(cond, ['object'])
 			.catch(error => {
-				err(error);
 				res.AD.error(error);
 			})
 			.then(dataviews => {
 
-				res.AD.success(dataviews || []);
+				let tasks = [];
+
+				// pull Query data source
+				(dataviews || []).forEach(dv => {
+					tasks.push(pullQueryDatasource(dv));
+				});
+
+				Promise.all(tasks)
+					.catch(res.AD.error)
+					.then(() => {
+
+						res.AD.success(dataviews || []);
+
+					});
 
 			});
 
@@ -84,7 +144,7 @@ module.exports = {
 
 		let dataviewId = req.param('dataviewId');
 
-		ABGraphDataview.findOne(dataviewId)
+		pullDataview(dataviewId)
 			.catch(error => {
 				err(error);
 				res.AD.error(error);
@@ -221,7 +281,7 @@ module.exports = {
 
 				return new Promise((next, error) => {
 
-					ABGraphDataview.findOne(dView.id, ['object'])
+					pullDataview(dView.id)
 						.catch(errMessage => {
 
 							error(errMessage);
@@ -274,7 +334,7 @@ module.exports = {
 
 				return new Promise((next, err) => {
 
-					ABGraphDataview.findOne(dataviewID, ['object'])
+					pullDataview(dataviewID)
 						.catch(err)
 						.then(dataview => {
 							next(dataview);
