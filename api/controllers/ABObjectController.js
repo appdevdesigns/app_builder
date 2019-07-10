@@ -88,6 +88,30 @@ module.exports = {
 
 
 	/**
+	* GET /app_builder/object/info
+	* 
+	*/
+	objectInfo: function(req, res) {
+
+		let cond = req.query;
+
+		ABGraphObject.find(cond, {
+			select: ['id', 'translations']
+		})
+			.catch(error => {
+				err(error);
+				res.AD.error(error);
+			})
+			.then(objects => {
+
+				res.AD.success(objects || []);
+
+			});
+
+	},
+
+
+	/**
 	* PUT /app_builder/object?appID=[appId]
 	* 
 	* Add a new object
@@ -233,7 +257,9 @@ module.exports = {
 
 				return new Promise((next, err) => {
 
-					ABGraphApplication.findOne(appID, ['objects'])
+					ABGraphApplication.findOne(appID, {
+						relations: ['objects']
+					})
 						.catch(err)
 						.then(app => {
 

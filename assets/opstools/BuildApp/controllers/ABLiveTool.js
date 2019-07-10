@@ -186,7 +186,7 @@ steal(
 								},
 								// Get application data
 								function (next) {
-									ABApplication.getApplicationById(self.options.app, self.options.page)
+									ABApplication.get(self.options.app, self.options.page)
 										.then(function (result) {
 											self.data.application = result;
 

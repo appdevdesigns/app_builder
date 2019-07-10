@@ -99,6 +99,39 @@ module.exports = {
     },
 
     /**
+     * GET /app_builder/application/info
+     * Return application id and label
+     * 
+     */
+    applicationInfo: function(req, res) {
+
+        let cond = req.query;
+
+        ApplicationGraph
+            .find(cond, {
+                select: ['id', 'json.translations']
+            })
+            .then(apps => {
+
+                res.AD.success((apps || []).map(a => a.toValidJsonFormat()));
+
+            },
+            err => {
+
+                if (err.code == 404) {
+                    res.AD.error("System cound not found this application", 404);
+                }
+                else {
+                    res.AD.error(false);
+                }
+
+                console.error(cond, err);
+
+            });
+
+    },
+
+    /**
      * POST /app_builder/application
      * create new application
      * 

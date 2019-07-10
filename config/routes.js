@@ -12,6 +12,9 @@ module.exports = {
     'get /app_builder/application':
         'app_builder/ABApplicationController.find',
 
+    'get /app_builder/application/info':
+        'app_builder/ABApplicationController.applicationInfo',
+
     'get /app_builder/application/:appID':
         'app_builder/ABApplicationController.findOne',
 
@@ -33,6 +36,9 @@ module.exports = {
 
     'get /app_builder/object':
         'app_builder/ABObjectController.objectFind',
+
+    'get /app_builder/object/info':
+        'app_builder/ABObjectController.objectInfo',
 
     'get /app_builder/object/:objectId':
         'app_builder/ABObjectController.objectFindOne',
@@ -63,6 +69,9 @@ module.exports = {
 
     'get /app_builder/query':
         'app_builder/ABQueryController.queryFind',
+
+    'get /app_builder/query/info':
+        'app_builder/ABQueryController.queryInfo',
 
     'get /app_builder/query/:queryID':
         'app_builder/ABQueryController.queryFindOne',

@@ -230,20 +230,35 @@ export default class ABChooseList extends OP.Component {
 				// Get applications data from the server
 				_logic.busy();
 
-				ABApplication.allApplications()
+				// ABApplication.allApplications()
+				ABApplication.applicationInfo()
 					.then(function (data) {
+
+						// // make sure our overlay is updated when items are added/removed
+						// // from our data list.
+						// data.attachEvent("onAfterAdd", function(id, index){
+						//     _logic.refreshOverlay();
+						// });
+
+						// data.attachEvent("onAfterDelete", function(id){
+						// 	_logic.refreshOverlay();
+						// })
+
+						// _data.listApplications = data;
+
+						_data.listApplications = new webix.DataCollection({
+							data: data || [],
+						});
 
 						// make sure our overlay is updated when items are added/removed
 						// from our data list.
-						data.attachEvent("onAfterAdd", function(id, index){
+						_data.listApplications.attachEvent("onAfterAdd", function(id, index){
 						    _logic.refreshOverlay();
 						});
 
-						data.attachEvent("onAfterDelete", function(id){
+						_data.listApplications.attachEvent("onAfterDelete", function(id){
 							_logic.refreshOverlay();
 						})
-
-						_data.listApplications = data;
 
 						_logic.refreshList();
 
@@ -304,19 +319,54 @@ export default class ABChooseList extends OP.Component {
 									
 				_logic.busy();
 
-				$$(ids.list).select(id);
+				Promise.resolve()
+					.then(() => {
+						return new Promise((next, err) => {
 
-				var selectedApp = $$(ids.list).getItem(id);
+							$$(ids.list).select(id);
 
-				if (selectedApp) {
+							let selectedApp = $$(ids.list).getItem(id);
 
-					// set the common App so it is accessible for all the Applications views
-					selectedApp.App = App;		
-					_logic.ready();
+							// loaded full data of application already
+							if (selectedApp._isFullLoaded) {
+								next(selectedApp);
+							}
+							// there is meta of application, need to load full data
+							else {
+								ABApplication.get(id)
+									.then(app => {
 
-					// We've selected an Application to work with
-					App.actions.transitionWorkspace( selectedApp );
-				}
+										app._isFullLoaded = true;
+
+										// update to list
+										_data.listApplications.updateItem(id, app);
+
+										next(_data.listApplications.getItem(id));
+
+									});
+							}
+						});
+					})
+					.then(selectedApp => {
+						return new Promise((next, err) => {
+
+							if (selectedApp) {
+		
+								// set the common App so it is accessible for all the Applications views
+								selectedApp.App = App;
+								_logic.ready();
+
+								// We've selected an Application to work with
+								App.actions.transitionWorkspace( selectedApp );
+							}
+							else {
+								_logic.ready();
+							}
+
+							next();
+
+						});
+					});
 
 				return false; // block default behavior
 			},

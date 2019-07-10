@@ -236,7 +236,9 @@ module.exports = {
                         if (result)
                             return next();
 
-                        ABGraphQuery.findOne(objID, ['objects'])
+                        ABGraphQuery.findOne(objID, {
+                            relations: ['objects']
+                        })
                         .catch(err)
                         .then(function (query) {
 

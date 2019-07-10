@@ -30,7 +30,9 @@ module.exports = {
 
 		let appID = req.param('appID');
 
-		ABGraphQuery.findWithRelation('applications', appID, ['objects'])
+		ABGraphQuery.findWithRelation('applications', appID, {
+			relations: ['objects']
+		})
 			.catch(error => {
 				res.AD.error(error);
 			})
@@ -51,7 +53,9 @@ module.exports = {
 
 		let cond = req.query;
 
-		ABGraphQuery.find(cond, ['objects'])
+		ABGraphQuery.find(cond, {
+			relations: ['objects']
+		})
 			.catch(error => {
 				err(error);
 				res.AD.error(error);
@@ -73,7 +77,9 @@ module.exports = {
 
 		let queryID = req.param('queryID');
 
-		ABGraphQuery.findOne(queryID, ['objects'])
+		ABGraphQuery.findOne(queryID, {
+			relations: ['objects']
+		})
 			.catch(error => {
 				err(error);
 				res.AD.error(error);
@@ -81,6 +87,29 @@ module.exports = {
 			.then(query => {
 
 				res.AD.success(query);
+
+			});
+
+	},
+
+	/**
+	 * GET /app_builder/query/info
+	 * 
+	 */
+	queryInfo: function (req, res) {
+
+		let cond = req.query;
+
+		ABGraphQuery.find(cond, {
+			select: ['id', 'translations']
+		})
+			.catch(error => {
+				err(error);
+				res.AD.error(error);
+			})
+			.then(queries => {
+
+				res.AD.success(queries || []);
 
 			});
 
@@ -207,7 +236,9 @@ module.exports = {
 			// Final - Pass result
 			.then(() => {
 
-				ABGraphQuery.findOne(query.id, ['objects'])
+				ABGraphQuery.findOne(query.id, {
+					relations: ['objects']
+				})
 					.catch(error => {
 						res.AD.error(error);
 					})
@@ -258,7 +289,9 @@ module.exports = {
 
 				return new Promise((next, err) => {
 
-					ABGraphApplication.findOne(appID, ['queries'])
+					ABGraphApplication.findOne(appID, {
+						relations: ['queries']
+					})
 						.catch(err)
 						.then(app => {
 
@@ -276,7 +309,9 @@ module.exports = {
 
 				return new Promise((next, err) => {
 
-					ABGraphQuery.findOne(queryID, ['objects'])
+					ABGraphQuery.findOne(queryID, {
+						relations: ['objects']
+					})
 						.catch(err)
 						.then(q => {
 

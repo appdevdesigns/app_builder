@@ -21,9 +21,16 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 		restURL: '/app_builder/application',
 
 		// NOTE: .findOne calls /app_builder/application?id={appId}
-		get: function(appId, pageID){
+		get: function(appID, pageID){
 			return OP.Comm.Socket.get({
-				url: `/app_builder/application/${appId}?pageID=${pageID}`
+				url: `/app_builder/application/${appID}?pageID=${pageID}`
+			});
+		},
+
+		// Get id and label of Applications
+		info: function() {
+			return OP.Comm.Socket.get({
+				url: `/app_builder/application/info`
 			});
 		},
 
@@ -73,6 +80,18 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 			return OP.Comm.Socket.get({
 				url: `/app_builder/object`,
+				data: {
+					query: cond
+				}
+			});
+
+		},
+
+		// Get id and label of objects
+		objectInfo: function (cond) {
+
+			return OP.Comm.Socket.get({
+				url: `/app_builder/object/info`,
 				data: {
 					query: cond
 				}
@@ -181,6 +200,18 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 			return OP.Comm.Socket.get({
 				url: `/app_builder/query`,
+				data: {
+					query: cond
+				}
+			});
+
+		},
+
+		// Get id and label of objects
+		queryInfo: function (cond) {
+
+			return OP.Comm.Socket.get({
+				url: `/app_builder/query/info`,
 				data: {
 					query: cond
 				}

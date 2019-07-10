@@ -32,7 +32,9 @@ function pullQueryDatasource(dataview) {
 			let queryID = dataview.settings.datasourceID;
 
 			// Data source is query
-			ABGraphQuery.findOne(queryID, ['objects'])
+			ABGraphQuery.findOne(queryID, {
+				relations: ['objects']
+			})
 				.catch(reject)
 				.then(q => {
 
@@ -59,7 +61,9 @@ function pullDataview(dataviewID) {
 	return Promise.resolve()
 
 		// Get data view
-		.then(ABGraphDataview.findOne(dataviewID, ['object']))
+		.then(ABGraphDataview.findOne(dataviewID, {
+			relations: ['object']
+		}))
 
 		// When data source is query, then pull objects of query
 		.then(pullQueryDatasource);
@@ -77,7 +81,9 @@ module.exports = {
 
 		let appID = req.param('appID');
 
-		ABGraphDataview.findWithRelation('applications', appID, ['object'])
+		ABGraphDataview.findWithRelation('applications', appID, {
+			relations: ['object']
+		})
 			.catch(res.AD.error)
 			.then(dataviews => {
 
@@ -110,7 +116,9 @@ module.exports = {
 
 		let cond = req.query;
 
-		ABGraphDataview.find(cond, ['object'])
+		ABGraphDataview.find(cond, {
+			relations: ['object']
+		})
 			.catch(error => {
 				res.AD.error(error);
 			})

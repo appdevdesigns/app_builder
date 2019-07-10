@@ -94,9 +94,39 @@ export default class ABApplication extends ABApplicationBase {
 		)
 	}
 
+	/**
+	 * @function applicationInfo
+	 * Get id and label of all applications
+	 *
+	 * @return {Promise}
+	 */
+	static applicationInfo() {
+		return new Promise(
+			(resolve, reject) => {
+
+				var ModelApplication = OP.Model.get('opstools.BuildApp.ABApplication');
+				ModelApplication.Models(ABApplication); // set the Models  setting.
+
+				ModelApplication.staticData.info()
+					.then(function (list) {
+
+						let apps = [];
+
+						(list || []).forEach(app => {
+							apps.push(new ABApplication(app));
+						});
+
+						resolve(apps);
+					})
+					.catch(reject);
+
+			}
+		)
+	}
+
 
 	/**
-	 * @function getApplicationById
+	 * @function get
 	 * Get application who includes data view list
 	 * This function is used in the live display
 	 *
@@ -105,7 +135,7 @@ export default class ABApplication extends ABApplicationBase {
 	 * 
 	 * @return {Promise}
 	 */
-	static getApplicationById(appID, pageID = null) {
+	static get(appID, pageID = null) {
 
 		return new Promise((resolve, reject) => {
 
@@ -617,8 +647,6 @@ export default class ABApplication extends ABApplicationBase {
 	///
 	/// Pages
 	///
-
-
 
 	/**
 	 * @method pageNew()

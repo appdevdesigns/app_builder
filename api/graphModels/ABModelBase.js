@@ -177,20 +177,30 @@ class ABModelBase {
 	/**
 	 * @method find
 	 * 
-	 * @param {Object} cond 
-	 * @param {Array} relations 
+	 * @param {Object} cond
+	 * @param {Object} options - {
+	 * 								relations: [],	// List of relation name
+	 * 								select: []		// List of property name
+	 * 							}
 	 * 
 	 * @return {Promise}
 	 */
-	static find(cond, relations = []) {
+	static find(cond = {}, options = {}) {
+
+		if (options.relations == null)
+			options.relations = []
+
+		if (options.select == null)
+			options.select = []
 
 		// TODO paging, sorting
 
-		let aqlRelations = this._aqlRelations(relations);
+		let aqlRelations = this._aqlRelations(options.relations);
+		let aqlReturn = this._aqlSelects(options.select);
 
 		return this.query(`
 						FOR row IN ${this.collectionName}
-						RETURN MERGE(row, ${aqlRelations})
+						RETURN MERGE(${aqlReturn}, ${aqlRelations})
 					`);
 
 	}
@@ -199,19 +209,29 @@ class ABModelBase {
 	 * @method findOne
 	 * 
 	 * @param {uuid} id
-	 * @param {Array} relations 
+	 * @param {Object} options - {
+	 * 								relations: [],	// List of relation name
+	 * 								select: []		// List of property name
+	 * 							}
 	 * 
 	 * @return {Promise}
 	 */
-	static findOne(id, relations = []) {
+	static findOne(id, options = {}) {
 
-		let aqlRelations = this._aqlRelations(relations);
+		if (options.relations == null)
+			options.relations = []
+
+		if (options.select == null)
+			options.select = []
+
+		let aqlRelations = this._aqlRelations(options.relations);
+		let aqlReturn = this._aqlSelects(options.select);
 
 		return this.query(`
 						FOR row IN ${this.collectionName}
 						FILTER row._key == '${id}'
 						LIMIT 1
-						RETURN MERGE(row, ${aqlRelations})
+						RETURN MERGE(${aqlReturn}, ${aqlRelations})
 					`, false);
 
 	}
@@ -221,25 +241,35 @@ class ABModelBase {
 	 * 
 	 * @param {String|Object} relation
 	 * @param {uuid} linkId 
-	 * @param {Array} relations 
+	 * @param {Object} options - {
+	 * 								relations: [],	// List of relation name
+	 * 								select: []		// List of property name
+	 * 							}
 	 * 
 	 * @return {Object} - A document
 	 */
-	static findWithRelation(relation, linkId, relations = []) {
+	static findWithRelation(relation, linkId, options = {}) {
+
+		if (options.relations == null)
+			options.relations = []
+
+		if (options.select == null)
+			options.select = []
 
 		if (typeof relation == 'string')
 			relation = this._getRelation(relation);
 
 		linkId = this._getId(linkId, relation.linkCollection);
 
-		let aqlRelations = this._aqlRelations(relations);
+		let aqlRelations = this._aqlRelations(options.relations);
+		let aqlReturn = this._aqlSelects(options.select);
 
 		return this.query(`
 						FOR row IN ${this.collectionName}
 						FOR join in ${relation.edgeName}
 						FILTER join.${relation.direction == this.relateDirection.OUTBOUND ? "_from" : "_to"} == row._id
 						&& join.${relation.direction == this.relateDirection.OUTBOUND ? "_to" : "_from"} == '${linkId}'
-						RETURN MERGE(row, ${aqlRelations})
+						RETURN MERGE(${aqlReturn}, ${aqlRelations})
 					`);
 
 	}
@@ -587,6 +617,42 @@ class ABModelBase {
 
 
 	/** Private methods */
+	/**
+	 * @method _aqlSelects
+	 * 
+	 * @param {Array} select - Array of property name (string)
+	 * 
+	 * @return {string} - AQL select syntax
+	 */
+	static _aqlSelects(select = []) {
+
+		if (select && select.length > 0) {
+
+			let result = {};
+
+			select.forEach(propName => {
+
+				// json.translations
+				if (propName.indexOf('.') > -1) {
+					let parentName = propName.split('.')[0];
+					let attrName = propName.split('.')[1];
+					result[parentName] = result[parentName] || {};
+					result[parentName][attrName] = `row.${propName}`;
+				}
+				else {
+					result[propName] = `row.${propName}`;
+				}
+
+			});
+
+			// { name: row.name, age: row.age }
+			return JSON.stringify(result).replace(/"/g, "");
+		}
+		else {
+			return "row";
+		}
+
+	}
 
 	/**
 	 * @method _aqlRelations
