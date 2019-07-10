@@ -66,7 +66,8 @@ export default class AB_Work_Query_List_NewQuery_Import extends OP.Component {
 				_logic.formClear();
 				_logic.busyStart();
 
-				CurrentApplication.queryFind()
+				// CurrentApplication.queryFind()
+				CurrentApplication.queryInfo()
 					.then(queries => {
 
 						let availableQueries = [];
@@ -79,16 +80,6 @@ export default class AB_Work_Query_List_NewQuery_Import extends OP.Component {
 
 							// translate label of objects
 							OP.Multilingual.translate(query, query, ['label']);
-
-							// translate label of application
-							OP.Multilingual.translate(query.application, query.application, ['label']);
-
-							// translate label of fields
-							if (query.fields && query.fields.forEach) {
-								query.fields.forEach((f) => {
-									OP.Multilingual.translate(f, f, ['label']);
-								});
-							}
 
 							availableQueries.push(query);
 

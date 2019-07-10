@@ -71,7 +71,8 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
                 currentApp = app;
                 _logic.formClear();
                 _logic.busyStart();
-                currentApp.objectFind()
+                // currentApp.objectFind()
+                currentApp.objectInfo()
                     .then(objects => {
 
                         let availableObjs = [];
@@ -84,16 +85,6 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
 
                             // translate label of objects
                             OP.Multilingual.translate(obj, obj, ['label']);
-
-                            // translate label of application
-                            OP.Multilingual.translate(obj.application, obj.application, ['label']);
-
-                            // translate label of fields
-                            if (obj.fields && obj.fields.forEach) {
-                                obj.fields.forEach((f) => {
-                                    OP.Multilingual.translate(f, f, ['label']);
-                                });
-                            }
 
                             availableObjs.push(obj);
 
@@ -133,46 +124,54 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
             objectSelect: function () {
                 $$(ids.columnList).clearAll();
 
-                var selectedObj = $$(ids.objectList).getSelectedItem(false);
+                let selectedObj = $$(ids.objectList).getSelectedItem(false);
                 if (selectedObj) {
 
                     _logic.busyStart();
 
-                    var colNames = [];
+                    let colNames = [];
 
-                    // Parse results and update column list
-                    if (selectedObj.fields && selectedObj.fields.forEach) {
-                        selectedObj.fields.forEach((f) => {
+                    Promise.resolve()
+                        .then(() => currentApp.objectGet(selectedObj.id))
 
-                            // Skip these columns
-                            // TODO : skip connect field
-                            // if (col.model) continue;
-                            // if (col.collection) continue;
+                        .then(obj => {
 
-                            var fieldClass = ABFieldManager.allFields().filter((field) => field.defaults().key == f.key)[0];
-                            if (fieldClass == null) return;
+                            // Parse results and update column list
+                            if (obj) {
+                                obj.fields().forEach((f) => {
 
-                            // If connect field does not link to objects in app, then skip
-                            if (f.key == 'connectObject' &&
-                                !currentApp.objects(obj => obj.id == f.settings.linkObject)[0]) {
-                                return;
+                                    // Skip these columns
+                                    // TODO : skip connect field
+                                    // if (col.model) continue;
+                                    // if (col.collection) continue;
+
+                                    let fieldClass = ABFieldManager.allFields().filter((field) => field.defaults().key == f.key)[0];
+                                    if (fieldClass == null) return;
+
+                                    // If connect field does not link to objects in app, then skip
+                                    if (f.key == 'connectObject' &&
+                                        !currentApp.objects(obj => obj.id == f.settings.linkObject)[0]) {
+                                        return;
+                                    }
+
+
+                                    colNames.push({
+                                        id: f.id,
+                                        label: f.label,
+                                        isvisible: true,
+                                        icon: f.icon
+                                        // disabled: !supported
+                                    });
+
+                                });
                             }
 
+                            $$(ids.columnList).parse(colNames);
 
-                            colNames.push({
-                                id: f.id,
-                                label: f.label,
-                                isvisible: true,
-                                icon: f.icon
-                                // disabled: !supported
-                            });
+                            _logic.busyEnd();
 
                         });
-                    }
 
-                    $$(ids.columnList).parse(colNames);
-
-                    _logic.busyEnd();
                 }
             },
 

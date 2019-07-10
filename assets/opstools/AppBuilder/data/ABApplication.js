@@ -196,6 +196,14 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 			});
 		},
 
+		queryGet: function(queryId) {
+
+			return OP.Comm.Service.get({
+				url: `/app_builder/query/${queryId}`
+			});
+
+		},
+
 		queryFind: function (cond) {
 
 			return OP.Comm.Socket.get({

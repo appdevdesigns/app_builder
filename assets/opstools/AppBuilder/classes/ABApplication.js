@@ -521,13 +521,57 @@ export default class ABApplication extends ABApplicationBase {
 
 	objectGet(id) {
 
-		return this.Model.staticData.objectGet(id);
+		return new Promise((resolve, reject) => {
+
+			this.Model.staticData.objectGet(id)
+				.catch(reject)
+				.then(object => {
+
+					if (object) {
+						resolve(this.objectNew(object, this));
+					}
+					else {
+						resolve(null);
+					}
+
+				});
+
+		});
 
 	}
 
 	objectFind(cond) {
 
-		return this.Model.staticData.objectFind(cond);
+		return new Promise((resolve, reject) => {
+
+			this.Model.staticData.objectFind(cond)
+				.catch(reject)
+				.then(objects => {
+
+					if (objects && objects.forEach) {
+
+						let result = [];
+
+						objects.forEach(obj => {
+							result.push(this.objectNew(obj, this));
+						});
+
+						resolve(result);
+
+					}
+					else {
+						resolve(null);
+					}
+
+				});
+
+		});
+
+	}
+
+	objectInfo(cond) {
+
+		return this.Model.staticData.objectInfo(cond);
 
 	}
 
@@ -809,9 +853,60 @@ export default class ABApplication extends ABApplicationBase {
 
 	}
 
+	queryGet(id) {
+
+		return new Promise((resolve, reject) => {
+
+			this.Model.staticData.queryGet(id)
+				.catch(reject)
+				.then(query => {
+
+					if (query) {
+						resolve(this.queryNew(query, this));
+					}
+					else {
+						resolve(null);
+					}
+
+				});
+
+		});
+
+	}
+
 	queryFind(cond) {
 
-		return this.Model.staticData.queryFind(cond);
+		return new Promise((resolve, reject) => {
+
+			this.Model.staticData.queryFind(cond)
+				.catch(reject)
+				.then(queries => {
+
+					if (queries &&
+						queries.forEach) {
+
+						let result = [];
+
+						queries.forEach(q => {
+							result.push(this.queryNew(q, this));
+						});
+
+						resolve(result);
+
+					}
+					else {
+						resolve(null);
+					}
+
+				});
+
+		});
+
+	}
+
+	queryInfo(cond) {
+
+		return this.Model.staticData.queryInfo(cond);
 
 	}
 
