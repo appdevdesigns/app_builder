@@ -215,7 +215,7 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 		},
 
-		// Get id and label of objects
+		// Get id and label of queries
 		queryInfo: function (cond) {
 
 			return OP.Comm.Socket.get({
@@ -299,6 +299,18 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 			return OP.Comm.Socket.get({
 				url: `/app_builder/dataview/${dataviewId}`
+			});
+
+		},
+
+		// Get id and label of data views
+		dataviewInfo: function (cond) {
+
+			return OP.Comm.Socket.get({
+				url: `/app_builder/dataview/info`,
+				data: {
+					query: cond
+				}
 			});
 
 		},

@@ -553,7 +553,9 @@ export default class ABApplication extends ABApplicationBase {
 						let result = [];
 
 						objects.forEach(obj => {
-							result.push(this.objectNew(obj, this));
+
+							if (obj)
+								result.push(this.objectNew(obj, this));
 						});
 
 						resolve(result);
@@ -888,7 +890,8 @@ export default class ABApplication extends ABApplicationBase {
 						let result = [];
 
 						queries.forEach(q => {
-							result.push(this.queryNew(q, this));
+							if (q)
+								result.push(this.queryNew(q, this));
 						});
 
 						resolve(result);
@@ -1042,7 +1045,32 @@ export default class ABApplication extends ABApplicationBase {
 
 	dataviewFind(cond) {
 
-		return this.Model.staticData.dataviewFind(cond);
+		return new Promise((resolve, reject) => {
+
+			this.Model.staticData.dataviewFind(cond)
+				.catch(reject)
+				.then(dataviews => {
+
+					var result = [];
+
+					(dataviews || []).forEach(dataview => {
+						// prevent processing of null values.
+						if (dataview) {
+							result.push( this.dataviewNew(dataview, this) );
+						}
+					})
+
+					resolve(result);
+
+				});
+
+		});
+
+	}
+
+	dataviewInfo(cond) {
+
+		return this.Model.staticData.dataviewInfo(cond);
 
 	}
 

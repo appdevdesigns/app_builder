@@ -96,6 +96,9 @@ module.exports = {
     'get /app_builder/dataview':
         'app_builder/ABDataviewController.dataviewFind',
 
+    'get /app_builder/dataview/info':
+        'app_builder/ABDataviewController.dataviewInfo',
+
     'get /app_builder/dataview/:dataviewId':
         'app_builder/ABDataviewController.dataviewFindOne',
 

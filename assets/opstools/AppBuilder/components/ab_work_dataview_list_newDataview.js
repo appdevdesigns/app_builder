@@ -6,6 +6,7 @@
  */
 
 import ABBlankDataview from "./ab_work_dataview_list_newDataview_blank"
+import ABImportDataview from "./ab_work_dataview_list_newDataview_import"
 
 export default class AB_Work_Dataview_List_NewDataview extends OP.Component {
 
@@ -29,6 +30,7 @@ export default class AB_Work_Dataview_List_NewDataview extends OP.Component {
 		let CurrentApplication;
 
 		let BlankTab = new ABBlankDataview(App);
+		let ImportTab = new ABImportDataview(App);
 
 
 		// Our webix UI definition:
@@ -42,7 +44,8 @@ export default class AB_Work_Dataview_List_NewDataview extends OP.Component {
 				view: "tabview",
 				id: ids.tab,
 				cells: [
-					BlankTab.ui
+					BlankTab.ui,
+					ImportTab.ui
 				],
 				tabbar: {
 					on: {
@@ -82,9 +85,7 @@ export default class AB_Work_Dataview_List_NewDataview extends OP.Component {
 			}
 
 			BlankTab.init(ourCBs);
-			// CsvTab.init(ourCBs);
-			// ImportTab.init(ourCBs);
-			// ExternalTab.init(ourCBs);
+			ImportTab.init(ourCBs);
 
 		}
 
@@ -222,11 +223,10 @@ export default class AB_Work_Dataview_List_NewDataview extends OP.Component {
 					if (BlankTab.onShow)
 						BlankTab.onShow(CurrentApplication);
 				}
-				// TODO
-				// else if (tabId == ImportTab.ui.body.id) {
-				// 	if (ImportTab.onShow)
-				// 		ImportTab.onShow(CurrentApplication);
-				// }
+				else if (tabId == ImportTab.ui.body.id) {
+					if (ImportTab.onShow)
+						ImportTab.onShow(CurrentApplication);
+				}
 
 			}
 

@@ -61,12 +61,12 @@ function pullDataview(dataviewID) {
 	return Promise.resolve()
 
 		// Get data view
-		.then(ABGraphDataview.findOne(dataviewID, {
+		.then(() => ABGraphDataview.findOne(dataviewID, {
 			relations: ['object']
 		}))
 
 		// When data source is query, then pull objects of query
-		.then(pullQueryDatasource);
+		.then(dataview => pullQueryDatasource(dataview));
 
 }
 
@@ -160,6 +160,30 @@ module.exports = {
 			.then(dataview => {
 
 				res.AD.success(dataview);
+
+			});
+
+	},
+
+
+	/**
+	* GET /app_builder/dataview/info
+	* 
+	*/
+	dataviewInfo: function (req, res) {
+
+		let cond = req.query;
+
+		ABGraphDataview.find(cond, {
+			select: ['id', 'translations']
+		})
+			.catch(error => {
+				err(error);
+				res.AD.error(error);
+			})
+			.then(dataviews => {
+
+				res.AD.success(dataviews || []);
 
 			});
 
@@ -342,7 +366,9 @@ module.exports = {
 
 				return new Promise((next, err) => {
 
-					pullDataview(dataviewID)
+					ABGraphDataview.findOne(dataviewID, {
+						relations: ['applications']
+					})
 						.catch(err)
 						.then(dataview => {
 							next(dataview);
@@ -365,7 +391,7 @@ module.exports = {
 					dataview.relate('applications', appID)
 						.catch(err)
 						.then(() => {
-							next(dataview);
+							next();
 						});
 
 				});
@@ -373,12 +399,23 @@ module.exports = {
 			})
 
 			// Return a dataview to result
-			.then(dataview => {
+			.then(() => {
 
 				return new Promise((next, err) => {
 
-					res.AD.success(dataview);
-					next();
+					pullDataview(dataviewID)
+						.catch(errMessage => {
+
+							error(errMessage);
+							res.AD.error(true);
+
+						})
+						.then(result => {
+
+							res.AD.success(result);
+							next();
+
+						});
 
 				});
 
