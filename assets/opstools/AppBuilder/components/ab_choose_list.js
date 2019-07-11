@@ -252,6 +252,7 @@ export default class ABChooseList extends OP.Component {
 						_data.listApplications = new webix.DataCollection({
 							data: data || [],
 						});
+						_data.listApplications.sort("label");
 
 						// make sure our overlay is updated when items are added/removed
 						// from our data list.
@@ -329,7 +330,12 @@ export default class ABChooseList extends OP.Component {
 								app._isFullLoaded = true;
 	
 								// update to list
-								_data.listApplications.updateItem(appId, app);
+								// _data.listApplications.updateItem(appId, app);
+
+								// NOTE: could not use .updateItem() because it redirects same object not new Application instance from .get()
+								_data.listApplications.remove(appId, app);
+								_data.listApplications.add(app);
+								_data.listApplications.sort("label");
 	
 								resolve(_data.listApplications.getItem(appId));
 	
