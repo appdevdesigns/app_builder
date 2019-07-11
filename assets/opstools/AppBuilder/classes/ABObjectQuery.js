@@ -15,73 +15,34 @@
 
 import ABObject from "./ABObject"
 
+// io.socket.on("ab.query.update", function (msg) {
+
+// 	AD.comm.hub.publish("ab.query.update", {
+// 		queryId: msg.queryId,
+// 		data: msg.data
+// 	});
+
+// });
+
+// io.socket.on("ab.query.delete", function (msg) {
+// });
+
 export default class ABObjectQuery extends ABObject {
 
 	constructor(attributes, application) {
 		super(attributes, application);
 
-		// populate connection objects
-		this._objects = {};
-		(attributes.objects || []).forEach(obj => {
-			this._objects[obj.alias] = new ABObject(obj, application);
+		this.fromValues(attributes);
+
+		// listen
+		AD.comm.hub.subscribe("ab.query.update", (msg, data) => {
+
+			if (this.id == data.queryId)
+				this.fromValues(data.data);
+
 		});
 
-
-/*
-{
-	id: uuid(),
-	name: 'name',
-	labelFormat: 'xxxxx',
-	isImported: 1/0,
-	urlPath:'string',
-	importFromObject: 'string', // JSON Schema style reference:  '#[ABApplication.id]/objects/[ABObject.id]'
-								// to get other object:  ABApplication.objectFromRef(obj.importFromObject);
-	translations:[
-		{}
-	],
-
-	objects: [{ABObject}]
-
-	// ABOBjectQuery Specific Changes
-	// we store a list of fields by their urls:
-	fields:[
-		{
-			alias: "",
-			fieldID:'uuid',
-		}
-	],
-
-
-	// we store a list of joins:
-	joins:{
-		alias: "",							// the alias name of table - use in SQL command
-		objectID: "uuid",					// id of the connection object
-		links: [
-			{
-				alias: "",							// the alias name of table - use in SQL command
-				fieldID: "uuid",					// the connection field of the object we are joining with.
-				type:[left, right, inner, outer]	// join type: these should match the names of the knex methods
-						=> innerJoin, leftJoin, leftOuterJoin, rightJoin, rightOuterJoin, fullOuterJoin
-				links: [
-					...
-				]
-			}
-		]
-
-	},
-
-
-	where: { QBWhere }
-}
-*/
-
-
-		// import all our ABObjects 
-		this.importJoins(attributes.joins || {});
-		this.importFields(attributes.fields || []); // import after joins are imported
-		// this.where = attributes.where || {}; // .workspaceFilterConditions
-
-  	}
+	}
 
 
 
@@ -99,6 +60,73 @@ export default class ABObjectQuery extends ABObject {
 	///
 	/// Instance Methods
 	///
+
+	fromValues (attributes) {
+
+		super.fromValues(attributes);
+
+		// populate connection objects
+		this._objects = {};
+		(attributes.objects || []).forEach(obj => {
+			this._objects[obj.alias] = new ABObject(obj, this.application);
+		});
+
+
+		/*
+		{
+			id: uuid(),
+			name: 'name',
+			labelFormat: 'xxxxx',
+			isImported: 1/0,
+			urlPath:'string',
+			importFromObject: 'string', // JSON Schema style reference:  '#[ABApplication.id]/objects/[ABObject.id]'
+									// to get other object:  ABApplication.objectFromRef(obj.importFromObject);
+			translations:[
+			{}
+			],
+
+			objects: [{ABObject}]
+
+			// ABOBjectQuery Specific Changes
+			// we store a list of fields by their urls:
+			fields:[
+			{
+				alias: "",
+				fieldID:'uuid',
+			}
+			],
+
+
+			// we store a list of joins:
+			joins:{
+			alias: "",							// the alias name of table - use in SQL command
+			objectID: "uuid",					// id of the connection object
+			links: [
+				{
+					alias: "",							// the alias name of table - use in SQL command
+					fieldID: "uuid",					// the connection field of the object we are joining with.
+					type:[left, right, inner, outer]	// join type: these should match the names of the knex methods
+							=> innerJoin, leftJoin, leftOuterJoin, rightJoin, rightOuterJoin, fullOuterJoin
+					links: [
+						...
+					]
+				}
+			]
+
+			},
+
+
+			where: { QBWhere }
+		}
+		*/
+
+
+		// import all our ABObjects 
+		this.importJoins(attributes.joins || {});
+		this.importFields(attributes.fields || []); // import after joins are imported
+		// this.where = attributes.where || {}; // .workspaceFilterConditions
+
+	}
 
 
 	/// ABApplication data methods

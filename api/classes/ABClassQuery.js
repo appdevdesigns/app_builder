@@ -340,7 +340,7 @@ class ABClassQuery extends ABClassObject {
 
 		};
 
-		if (!this._joins.objectURL)
+		if (!this._joins.objectID)
 			// TODO: this is old query version
 			return;
 

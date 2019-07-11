@@ -40,6 +40,25 @@ class ABQuery extends ABModelBase {
 
 	}
 
+	static afterCreate(newRecord) {
+
+		// Cache in .constructor of ABClassObject
+		newRecord.toABClass();
+
+	}
+
+	static afterUpdate(updatedRecord) {
+
+		// Cache in .constructor of ABClassObject
+		updatedRecord.toABClass();
+
+		// Broadcast
+		sails.sockets.broadcast(updatedRecord.id, "ab.query.update", {
+			queryId: updatedRecord.id,
+			data: updatedRecord
+		});
+
+	}
 
 }
 

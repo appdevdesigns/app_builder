@@ -863,7 +863,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 						.catch(reject)
 						.then(obj => {
 
-							objectLink = new ABObject(obj, CurrentQuery.application);
+							objectLink = obj;
 							resolve(objectLink)
 
 						});

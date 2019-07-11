@@ -46,6 +46,12 @@ class ABObject extends ABModelBase {
 		// Cache in .constructor of ABClassObject
 		updatedRecord.toABClass();
 
+		// Broadcast
+		sails.sockets.broadcast(updatedRecord.id, "ab.object.update", {
+			objectId: updatedRecord.id,
+			data: updatedRecord
+		});
+
 	}
 
 	static afterDestroy(record) {

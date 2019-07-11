@@ -12,38 +12,41 @@ function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
+// Start listening for server events for object updates and call triggerEvent as the callback
+io.socket.on("ab.object.update", function (msg) {
+
+	AD.comm.hub.publish("ab.object.update", {
+		objectId: msg.objectId,
+		data: msg.data
+	});
+
+});
+
+// io.socket.on("ab.object.delete", function (msg) {
+// });
+
 export default class ABObject extends ABObjectBase {
 
     constructor(attributes, application) {
     	super(attributes, application);
-/*
-{
-	id: uuid(),
-	name: 'name',
-	labelFormat: 'xxxxx',
-	isImported: 1/0,
-	isExternal: 1/0,
-	urlPath:'string',
-	importFromObject: 'string', // JSON Schema style reference:  '#[ABApplication.id]/objects/[ABObject.id]'
-								// to get other object:  ABApplication.objectFromRef(obj.importFromObject);
-	translations:[
-		{}
-	],
-	fields:[
-		{ABDataField}
-	]
-}
-*/
 
-        this.workspaceViews = new ABObjectWorkspaceViewCollection(
-            attributes,
-            this,
-            application
-        );
+		this.workspaceViews = new ABObjectWorkspaceViewCollection(
+			attributes,
+			this,
+			application
+		);
 
-    	// multilingual fields: label, description
-		OP.Multilingual.translate(this, this, ['label']);
-  	}
+		this.fromValues(attributes);
+
+		// listen
+		AD.comm.hub.subscribe("ab.object.update", (msg, data) => {
+
+			if (this.id == data.objectId)
+				this.fromValues(data.data);
+
+		});
+
+	}
 
 
 
@@ -52,7 +55,41 @@ export default class ABObject extends ABObjectBase {
   	///
   	/// Available to the Class level object.  These methods are not dependent
   	/// on the instance values of the Application.
-  	///
+	///
+	  
+
+
+	fromValues(attributes) {
+
+		/*
+		{
+			id: uuid(),
+			name: 'name',
+			labelFormat: 'xxxxx',
+			isImported: 1/0,
+			isExternal: 1/0,
+			urlPath:'string',
+			importFromObject: 'string', // JSON Schema style reference:  '#[ABApplication.id]/objects/[ABObject.id]'
+										// to get other object:  ABApplication.objectFromRef(obj.importFromObject);
+			translations:[
+				{}
+			],
+			fields:[
+				{ABDataField}
+			]
+		}
+		*/
+
+		super.fromValues(attributes);
+
+		if (this.workspaceViews)
+			this.workspaceViews.fromObj(attributes);
+
+		// multilingual fields: label, description
+		OP.Multilingual.translate(this, this, ['label']);
+
+
+	}
 
 
 
