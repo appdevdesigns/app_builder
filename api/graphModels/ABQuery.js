@@ -52,11 +52,20 @@ class ABQuery extends ABModelBase {
 		// Cache in .constructor of ABClassObject
 		updatedRecord.toABClass();
 
-		// Broadcast
-		sails.sockets.broadcast(updatedRecord.id, "ab.query.update", {
-			queryId: updatedRecord.id,
-			data: updatedRecord
-		});
+		this.findOne(updatedRecord.id, {
+			relations: ['objects']
+		})
+			.then(query => {
+
+				// Broadcast
+				if (query) {
+					sails.sockets.broadcast(query.id, "ab.query.update", {
+						queryId: query.id,
+						data: query
+					});
+				}
+
+			});
 
 	}
 

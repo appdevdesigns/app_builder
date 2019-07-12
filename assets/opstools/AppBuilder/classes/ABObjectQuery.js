@@ -15,14 +15,14 @@
 
 import ABObject from "./ABObject"
 
-// io.socket.on("ab.query.update", function (msg) {
+io.socket.on("ab.query.update", function (msg) {
 
-// 	AD.comm.hub.publish("ab.query.update", {
-// 		queryId: msg.queryId,
-// 		data: msg.data
-// 	});
+	AD.comm.hub.publish("ab.query.update", {
+		queryId: msg.queryId,
+		data: msg.data
+	});
 
-// });
+});
 
 // io.socket.on("ab.query.delete", function (msg) {
 // });
@@ -67,6 +67,7 @@ export default class ABObjectQuery extends ABObject {
 
 		// populate connection objects
 		this._objects = {};
+
 		(attributes.objects || []).forEach(obj => {
 			this._objects[obj.alias] = new ABObject(obj, this.application);
 		});
