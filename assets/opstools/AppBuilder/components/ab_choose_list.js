@@ -237,32 +237,19 @@ export default class ABChooseList extends OP.Component {
 				ABApplication.applicationInfo()
 					.then(function (data) {
 
-						// // make sure our overlay is updated when items are added/removed
-						// // from our data list.
-						// data.attachEvent("onAfterAdd", function(id, index){
-						//     _logic.refreshOverlay();
-						// });
-
-						// data.attachEvent("onAfterDelete", function(id){
-						// 	_logic.refreshOverlay();
-						// })
-
-						// _data.listApplications = data;
-
-						_data.listApplications = new webix.DataCollection({
-							data: data || [],
-						});
-						_data.listApplications.sort("label");
-
 						// make sure our overlay is updated when items are added/removed
 						// from our data list.
-						_data.listApplications.attachEvent("onAfterAdd", function(id, index){
+						data.attachEvent("onAfterAdd", function(id, index){
 						    _logic.refreshOverlay();
 						});
 
-						_data.listApplications.attachEvent("onAfterDelete", function(id){
+						data.attachEvent("onAfterDelete", function(id){
 							_logic.refreshOverlay();
 						})
+
+						_data.listApplications = data;
+
+						_data.listApplications.sort("label");
 
 						_logic.refreshList();
 

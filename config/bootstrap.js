@@ -39,14 +39,15 @@ module.exports = function (cb) {
     		verifyWellKnownConfigs,
 			verifyDataDir,
 
+			initialGraphDB,
 			cacheABClassObjects,
 
-//     		setupPollingMCC,
+			setupPollingMCC,
 
-// // NOTE: remove this when we no longer manually add the SDC app info:
-// addSDCAppInfo,
-// defaultEmailNotificationInvite,
-// addSDCAppDataDirectory
+// NOTE: remove this when we no longer manually add the SDC app info:
+addSDCAppInfo,
+defaultEmailNotificationInvite,
+addSDCAppDataDirectory
 
 
     	], (err,data) => {
@@ -125,7 +126,7 @@ function verifyWellKnownConfigs(next) {
 		}
 	}
 	processConfig(defaultConfigContents, next);
-    
+
 }
 
 function cacheABClassObjects(next) {
@@ -364,3 +365,12 @@ sails.log.warn('... making default SDC data directory:', pathMobileDir);
 
 }
 
+function initialGraphDB(next) {
+
+	ABGraphDB.initCollections()
+		.catch(next)
+		.then(() => {
+			next();
+		});
+
+}

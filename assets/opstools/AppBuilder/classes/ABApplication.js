@@ -19,6 +19,7 @@ function L(key, altText) {
 }
 
 function toArray(DC) {
+
 	var ary = [];
 
 	var id = DC.getFirstId();
@@ -116,7 +117,13 @@ export default class ABApplication extends ABApplicationBase {
 							apps.push(new ABApplication(app));
 						});
 
-						resolve(apps);
+						// if (_AllApplications == null) {
+						_AllApplications = new webix.DataCollection({
+							data: apps || [],
+						});
+						// }
+
+						resolve(_AllApplications);
 					})
 					.catch(reject);
 
