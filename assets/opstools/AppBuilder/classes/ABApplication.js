@@ -134,22 +134,20 @@ export default class ABApplication extends ABApplicationBase {
 
 	/**
 	 * @function get
-	 * Get application who includes data view list
-	 * This function is used in the live display
+	 * Get an application
 	 *
 	 * @param {uuid} appID
-	 * @param {uuid} pageID [optional]
 	 * 
 	 * @return {Promise}
 	 */
-	static get(appID, pageID = null) {
+	static get(appID) {
 
 		return new Promise((resolve, reject) => {
 
 			var ModelApplication = OP.Model.get('opstools.BuildApp.ABApplication');
 			ModelApplication.Models(ABApplication); // set the Models  setting.
 
-			ModelApplication.staticData.get(appID, pageID)
+			ModelApplication.staticData.get(appID)
 				.catch(reject)
 				.then(function (app) {
 
@@ -1164,6 +1162,36 @@ export default class ABApplication extends ABApplicationBase {
 
 	}
 
+	/**
+	 * @function livepage
+	 * Get application who includes data view list
+	 * This function is used in the live display
+	 *
+	 * @param {uuid} appID
+	 * @param {uuid} pageID
+	 * 
+	 * @return {Promise}
+	 */
+	static livepage(appID, pageID) {
+
+		return new Promise((resolve, reject) => {
+
+			var ModelApplication = OP.Model.get('opstools.BuildApp.ABApplication');
+			ModelApplication.Models(ABApplication); // set the Models  setting.
+
+			ModelApplication.staticData.livepage(appID, pageID)
+				.catch(reject)
+				.then(function (app) {
+
+					if (app)
+						resolve(new ABApplication(app));
+					else
+						resolve();
+
+				});
+		});
+
+	}
 
 
 

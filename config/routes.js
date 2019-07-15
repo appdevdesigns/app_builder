@@ -139,7 +139,12 @@ module.exports = {
     'put /app_builder/page/:action_key/role': 
         'app_builder/ABApplicationController.addPageRoles',
 
-        
+
+    /* Live display */
+    'get /app_builder/application/:appID/livepage/:pageID':
+        'app_builder/ABApplicationController.livePage',
+
+
     /* Import & Export */
     'get /app_builder/appJSON/:id':
         'app_builder/ABApplicationController.jsonExport',

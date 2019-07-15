@@ -73,6 +73,16 @@ module.exports = class ABApplicationBase {
 		this._queries = newQueries;
 
 
+		var newDataviews = [];
+		(attributes.json.dataviews || []).forEach(dataview => {
+			// prevent processing of null values.
+			if (dataview) {
+				  newDataviews.push( this.dataviewNew(dataview) );
+			  }
+		  })
+		this._dataviews = newDataviews;
+
+
 		// Mobile Apps
 		// an Application can have one or more Mobile Apps registered.
 		var newMobileApps = [];

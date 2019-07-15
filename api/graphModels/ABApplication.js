@@ -141,11 +141,13 @@ class ABApplication extends ABModelBase {
 
 	toValidJsonFormat() {
 
-		// this.json.objects = (this.objects || []);
-		// this.json.queries = (this.queries || []);
+		this.json.objects = (this.objects || []);
+		this.json.queries = (this.queries || []);
+		this.json.dataviews = (this.dataviews || []);
 
 		delete this.objects;
 		delete this.queries;
+		delete this.dataviews;
 
 		return this;
 

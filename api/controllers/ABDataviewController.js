@@ -81,28 +81,42 @@ module.exports = {
 
 		let appID = req.param('appID');
 
-		ABGraphDataview.findWithRelation('applications', appID, {
-			relations: ['object']
-		})
+		this.pullDataviewOfApplication(appID)
 			.catch(res.AD.error)
 			.then(dataviews => {
+				res.AD.success(dataviews || []);
+			});
 
-				let tasks = [];
+	},
 
-				// pull Query data source
-				(dataviews || []).forEach(dv => {
-					tasks.push(pullQueryDatasource(dv));
+	pullDataviewOfApplication(appID) {
+
+		return new Promise((resolve, reject) => {
+
+			ABGraphDataview.findWithRelation('applications', appID, {
+				relations: ['object']
+			})
+				.catch(reject)
+				.then(dataviews => {
+	
+					let tasks = [];
+	
+					// pull Query data source
+					(dataviews || []).forEach(dv => {
+						tasks.push(pullQueryDatasource(dv));
+					});
+	
+					Promise.all(tasks)
+						.catch(reject)
+						.then(() => {
+	
+							resolve(dataviews || []);
+	
+						});
+	
 				});
 
-				Promise.all(tasks)
-					.catch(res.AD.error)
-					.then(() => {
-
-						res.AD.success(dataviews || []);
-
-					});
-
-			});
+		});
 
 	},
 

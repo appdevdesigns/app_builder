@@ -349,6 +349,13 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 		},
 
+		// ** Live Display
+
+		livepage: function(appID, pageID){
+			return OP.Comm.Socket.get({
+				url: `/app_builder/application/${appID}/livepage/${pageID}`
+			});
+		},
 
 		// ** Mobile Apps
 

@@ -11,6 +11,7 @@ var _ = require('lodash');
 var path = require('path');
 
 var ABViewPage = require(path.join('..', 'classes', 'ABViewPage'));
+var ABDataviewController = require(path.join(__dirname, 'ABDataviewController'));
 
 var ApplicationGraph = require(path.join('..', 'graphModels', 'ABApplication'));
 
@@ -63,7 +64,6 @@ module.exports = {
     findOne: function(req, res) {
 
         let appID = req.param('appID');
-        let pageID = req.query.pageID || null;
 
         ApplicationGraph
             .findOne(appID)
@@ -71,11 +71,6 @@ module.exports = {
 
                 if (app) {
                     let result = app.toValidJsonFormat();
-
-                    // Reduce data size to the live display
-                    if (pageID) {
-                        result.pages = (result.pages || []).filter(p => p.id == pageID);
-                    }
 
                     res.AD.success(result);
                 }
@@ -638,6 +633,71 @@ module.exports = {
         })
     },
 
+
+    /**
+     * GET /app_builder/application/:appID/livepage/:pageID
+     * 
+     * Return live display
+     */
+    livePage: function (req, res) {
+
+        let appID = req.param('appID');
+        let pageID = req.param('pageID');
+
+        Promise.resolve()
+            .then(() => {
+
+                // Find application and page
+                return new Promise((next, err) => {
+
+                    ApplicationGraph
+                        .findOne(appID)
+                        .then(app => {
+
+                            if (!app)
+                                return next(null);
+
+                            let result = app.toValidJsonFormat();
+
+                            // Reduce data size to the live display
+                            if (pageID) {
+                                result.pages = (result.pages || []).filter(p => p.id == pageID);
+                            }
+
+                            next(result);
+
+                        }, err);
+
+                });
+
+            }, console.error)
+
+            // Pull data views
+            .then(app => {
+
+                return new Promise((next, err) => {
+
+                    if (!app) 
+                        return next();
+
+                    ABDataviewController.pullDataviewOfApplication(app.id)
+                        .catch(err)
+                        .then(dataviews => {
+                            app.json.dataviews = (dataviews || []);
+
+                            next(app);
+                        });
+
+                });
+            }, console.error)
+
+            .then(app => {
+
+                res.AD.success(app);
+
+            });
+
+    },
 
 
     /**

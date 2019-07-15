@@ -186,7 +186,7 @@ steal(
 								},
 								// Get application data
 								function (next) {
-									ABApplication.get(self.options.app, self.options.page)
+									ABApplication.livepage(self.options.app, self.options.page)
 										.then(function (result) {
 											self.data.application = result;
 
@@ -196,21 +196,6 @@ steal(
 
 											next();
 										}, next);
-								},
-
-								// Get data views
-								function (next) {
-
-									if (!self.data.application) return next();
-
-									self.data.application.dataviewLoad()
-										.catch(next)
-										.then(() => {
-
-											next();
-
-										});
-
 								},
 
 								// Bind objects and queries from data views
