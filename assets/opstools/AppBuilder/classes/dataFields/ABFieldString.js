@@ -26,7 +26,8 @@ var ABFieldStringDefaults = {
 	// description: what gets displayed in the Editor description.
 	description: L('ab.dataField.string.description', '*short string value'),
 
-	supportRequire: true
+	supportRequire: true,
+	supportUnique: true,
 
 }
 

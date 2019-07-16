@@ -25,7 +25,8 @@ var ABFieldNumberDefaults = {
 	// description: what gets displayed in the Editor description.
 	description: L('ab.dataField.number.description', '*A Float or Integer Value'),
 
-	supportRequire: true
+	supportRequire: true,
+	supportUnique: true,
 
 }
 

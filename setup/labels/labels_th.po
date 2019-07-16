@@ -121,6 +121,12 @@ msgstr "ต้องระบุค่า"
 
 #. path: app_builder
 #. code: th
+#. key: ab.common.unique
+msgid "Unique"
+msgstr "ค่าไม่ซ้ำกัน"
+
+#. path: app_builder
+#. code: th
 #. key: ab.common.processing
 msgid "Processing..."
 msgstr "กำลังประมวลผล..."

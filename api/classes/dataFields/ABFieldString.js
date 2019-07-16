@@ -191,6 +191,14 @@ class ABFieldString extends ABField {
 								else
 									currCol.nullable();
 
+								// field is unique
+								if (this.settings.unique) {
+									currCol.unique();
+								}
+								// NOTE: Wait for dropUniqueIfExists() https://github.com/tgriesser/knex/issues/2167
+								// else {
+								// 	t.dropUnique(this.columnName);
+								// }
 
 								if (exists)
 									currCol.alter();

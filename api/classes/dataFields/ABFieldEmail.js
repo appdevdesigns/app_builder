@@ -139,7 +139,7 @@ class ABFieldEmail extends ABField {
 							else
 								currCol.defaultTo(null);
 
-								// field is required (not null)
+							// field is required (not null)
 							if (this.settings.required) {
 								currCol.notNullable();
 							}
@@ -147,6 +147,14 @@ class ABFieldEmail extends ABField {
 								currCol.nullable();
 							}
 
+							// field is unique
+							if (this.settings.unique) {
+								currCol.unique();
+							}
+							// NOTE: Wait for dropUniqueIfExists() https://github.com/tgriesser/knex/issues/2167
+							// else {
+							// 	t.dropUnique(this.columnName);
+							// }
 
 							// alter column when exist:
 							if (exists) {
