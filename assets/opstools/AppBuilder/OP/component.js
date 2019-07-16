@@ -89,6 +89,7 @@ export default class UIComponent extends EventEmitter {
 					disable: L('ab.common.disable', '*Disable'),
 
 					required: L('ab.common.required', '*Required'),
+					unique: L('ab.common.unique', '*Unique'),
 
 					invalidMessage: {
 						required: 	  L('ab.common.invalid_message.required', "*This field is required"),

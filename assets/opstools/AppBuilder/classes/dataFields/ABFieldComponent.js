@@ -79,6 +79,7 @@ export default class ABFieldComponent {
 			showIcon: App.unique(this.idBase+'_showIcon'),
 			required: App.unique(this.idBase+'_required'),
 			numberOfNull: App.unique(this.idBase+'_numberOfNull'),
+			unique: App.unique(this.idBase+'_unique'),
 		}
 
     	this.eachDeep(elements, (e) => {

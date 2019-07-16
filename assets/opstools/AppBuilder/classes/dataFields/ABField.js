@@ -68,7 +68,8 @@ export default class ABField extends ABFieldBase {
   			label: '',
   			columnName:'',
   			showIcon:1,
-			required:0
+			required:0,
+			unique:0
   		}
 
   		for(var f in defaultValues) {
@@ -98,6 +99,7 @@ export default class ABField extends ABFieldBase {
   		$$(ids.columnName).setValue(field.columnName);
   		$$(ids.showIcon).setValue(field.settings.showIcon);
 		$$(ids.required).setValue(field.settings.required);
+		$$(ids.unique).setValue(field.settings.unique);
 
   	}
 
@@ -267,7 +269,6 @@ export default class ABField extends ABFieldBase {
 						}
 					}
 				},
-
 				// warning message: number of null value rows 
 				{
 					view: "label",
@@ -275,6 +276,16 @@ export default class ABField extends ABFieldBase {
 					css: { color: '#f00' },
 					label: "",
 					hidden: true
+				},
+
+				{
+					view: "checkbox",
+					id: ids.unique,
+					name: "unique",
+					hidden: !Field.supportUnique,
+					labelRight: App.labels.unique,
+					disallowEdit: true,
+					labelWidth: App.config.labelWidthCheckbox
 				}
 			]
 		};

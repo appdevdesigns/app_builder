@@ -25,7 +25,8 @@ var ABFieldEmailDefaults = {
 	// description: what gets displayed in the Editor description.
 	description: L('ab.dataField.email.description', '*Email fields are used to store email addresses.'),
 
-	supportRequire: true
+	supportRequire: true,
+	supportUnique: true,
 
 }
 

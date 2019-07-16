@@ -121,6 +121,12 @@ msgstr "Required"
 
 #. path: app_builder
 #. code: en
+#. key: ab.common.unique
+msgid "Unique"
+msgstr "Unique"
+
+#. path: app_builder
+#. code: en
 #. key: ab.common.processing
 msgid "Processing..."
 msgstr "Processing..."
