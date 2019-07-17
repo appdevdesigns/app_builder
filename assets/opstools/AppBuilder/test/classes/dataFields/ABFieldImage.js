@@ -202,7 +202,9 @@ describe("ABFieldImage unit tests", () => {
 		it('.imageTemplate: should return read-only HTML for empty data', () => {
 
 			let row = {},
-				editable = false;
+				options = {
+					editable: false
+				};
 
 			row[columnName] = '';
 
@@ -212,7 +214,7 @@ describe("ABFieldImage unit tests", () => {
 				'</div>' +
 				'<div class="image-data-field-image" style="display:none width:100%; height:100%; background-repeat: no-repeat; background-position: center center; background-size: cover; "></div>'
 			].join('');
-			let result = target.imageTemplate(row, editable);
+			let result = target.imageTemplate(row, options);
 
 			assert.equal(expect, result);
 
@@ -221,7 +223,9 @@ describe("ABFieldImage unit tests", () => {
 		it('.imageTemplate: should return read-only HTML for exists data', () => {
 
 			let row = {},
-				editable = false;
+				options = {
+					editable: false
+				};
 
 			row[columnName] = "IMAGE VALUE";
 
@@ -232,7 +236,7 @@ describe("ABFieldImage unit tests", () => {
 				`<div class="image-data-field-image" style=" width:100%; height:100%; background-repeat: no-repeat; background-position: center center; background-size: cover; background-image:url('/opsportal/image/AppDev_Apps/${row[columnName]}');">` +
 				'</div>'
 			].join('');
-			let result = target.imageTemplate(row, editable);
+			let result = target.imageTemplate(row, options);
 
 			assert.equal(expect, result);
 
@@ -241,7 +245,9 @@ describe("ABFieldImage unit tests", () => {
 		it('.imageTemplate: should return HTML for empty data', () => {
 
 			let row = {},
-				editable = true;
+				options = {
+					editable: true
+				};
 
 			row[columnName] = '';
 
@@ -254,7 +260,7 @@ describe("ABFieldImage unit tests", () => {
 				'<i class="fa fa-times delete-image"></i>' +
 				'</a></div>'
 			].join('');
-			let result = target.imageTemplate(row, editable);
+			let result = target.imageTemplate(row, options);
 
 			assert.equal(expect, result);
 
@@ -263,7 +269,9 @@ describe("ABFieldImage unit tests", () => {
 		it('.imageTemplate: should return HTML for exists data', () => {
 
 			let row = {},
-				editable = true;
+				options = {
+					editable: true
+				};
 
 			row[columnName] = 'IMAGE';
 
@@ -275,7 +283,7 @@ describe("ABFieldImage unit tests", () => {
 				'<a style="" class="ab-delete-photo" href="javascript:void(0);"><i class="fa fa-times delete-image"></i></a>' +
 				'</div>'
 			].join('');
-			let result = target.imageTemplate(row, editable);
+			let result = target.imageTemplate(row, options);
 
 			assert.equal(expect, result);
 
