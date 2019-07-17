@@ -489,9 +489,16 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 			},
 
 			showGear: function(id) {
-				var gearIcon = $$(ids.list).getItemNode(id).querySelector('.ab-object-list-edit');
-				gearIcon.style.visibility = "visible";
-				gearIcon.style.display = "block";
+
+				let $item = $$(ids.list).getItemNode(id);
+				if ($item) {
+					let gearIcon = $item.querySelector('.ab-object-list-edit');
+					if (gearIcon) {
+						gearIcon.style.visibility = "visible";
+						gearIcon.style.display = "block";
+					}
+				}
+
 			},
 
 			/**

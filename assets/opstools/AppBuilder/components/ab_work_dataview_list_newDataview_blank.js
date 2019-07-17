@@ -58,7 +58,11 @@ export default class AB_Work_Query_List_NewDataview_Blank extends OP.Component {
 						label: labels.component.object,
 						labelWidth: App.config.labelWidthMedium,
 						placeholder: labels.component.objectPlaceholder,
-						required: false
+						required: false,
+						options: [
+							{ id: "one", value: "One" },
+							{ id: "two", value: "Two" }
+						]
 					},
 					{
 						margin: 5,
@@ -154,6 +158,13 @@ export default class AB_Work_Query_List_NewDataview_Blank extends OP.Component {
 
 				$$(ids.object).define("options", datasourceOpts);
 				$$(ids.object).refresh();
+
+				// Set width of item list
+				let $suggestView = $$(ids.object).getPopup();
+				$suggestView.attachEvent('onShow', () => {
+					$suggestView.define('width', 350);
+					$suggestView.resize();
+				});
 
 			},
 

@@ -413,9 +413,14 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 			},
 
 			showGear: function(id) {
-				var gearIcon = $$(ids.list).getItemNode(id).querySelector('.ab-object-list-edit');
-				gearIcon.style.visibility = "visible";
-				gearIcon.style.display = "block";
+				let $item = $$(ids.list).getItemNode(id);
+				if ($item) {
+					let gearIcon = $item.querySelector('.ab-object-list-edit');
+					if (gearIcon) {
+						gearIcon.style.visibility = "visible";
+						gearIcon.style.display = "block";
+					}
+				}
 			},
 
 			/**

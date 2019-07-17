@@ -129,6 +129,14 @@ export default class AB_Work_Query_List_NewQuery_Blank extends OP.Component {
 
 					$$(ids.object).define("options", objectOpts);
 					$$(ids.object).refresh();
+
+					// Set width of item list
+					let $suggestView = $$(ids.object).getPopup();
+					$suggestView.attachEvent('onShow', () => {
+						$suggestView.define('width', 350);
+						$suggestView.resize();
+					});
+
 				}
 
 				// clear form
