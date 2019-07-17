@@ -32,6 +32,7 @@ describe("ABField unit tests", () => {
 			fieldDescription: "TEST_ABField_description",
 			showIcon: "TEST_ABField_icon",
 			required: "TEST_ABField_required",
+			unique: "TEST_ABField_unique",
 			numberOfNull: "TEST_ABField_numberOfNull"
 		};
 
@@ -97,7 +98,8 @@ describe("ABField unit tests", () => {
 				columnName: 'COLUMN NAME',
 				settings: {
 					showIcon: 1,
-					required: 1
+					required: 1,
+					unique: 1
 				}
 			};
 
@@ -108,6 +110,7 @@ describe("ABField unit tests", () => {
 			assert.equal(field.columnName, $$(ids.columnName).getValue());
 			assert.equal(field.settings.showIcon, $$(ids.showIcon).getValue());
 			assert.equal(field.settings.required, $$(ids.required).getValue());
+			assert.equal(field.settings.unique, $$(ids.unique).getValue());
 
 		});
 
