@@ -35,7 +35,9 @@ module.exports = {
         let cond = req.query;
 
         ApplicationGraph
-            .find(cond)
+            .find({
+                where: cond
+            })
             .then(apps => {
 
                 res.AD.success((apps || []).map(a => a.toValidJsonFormat()));
@@ -103,8 +105,9 @@ module.exports = {
         let cond = req.query;
 
         ApplicationGraph
-            .find(cond, {
-                select: ['id', 'json.translations']
+            .find({
+                select: ['id', 'json.translations'],
+                where: cond
             })
             .then(apps => {
 

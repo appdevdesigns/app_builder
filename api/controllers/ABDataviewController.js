@@ -130,8 +130,9 @@ module.exports = {
 
 		let cond = req.query;
 
-		ABGraphDataview.find(cond, {
-			relations: ['object']
+		ABGraphDataview.find({
+			relations: ['object'],
+			where: cond
 		})
 			.catch(error => {
 				res.AD.error(error);
@@ -167,10 +168,7 @@ module.exports = {
 		let dataviewId = req.param('dataviewId');
 
 		pullDataview(dataviewId)
-			.catch(error => {
-				err(error);
-				res.AD.error(error);
-			})
+			.catch(res.AD.error)
 			.then(dataview => {
 
 				res.AD.success(dataview);
@@ -188,13 +186,11 @@ module.exports = {
 
 		let cond = req.query;
 
-		ABGraphDataview.find(cond, {
-			select: ['id', 'translations']
+		ABGraphDataview.find({
+			select: ['id', 'translations'],
+			where: cond
 		})
-			.catch(error => {
-				err(error);
-				res.AD.error(error);
-			})
+			.catch(res.AD.error)
 			.then(dataviews => {
 
 				res.AD.success(dataviews || []);
@@ -420,7 +416,7 @@ module.exports = {
 					pullDataview(dataviewID)
 						.catch(errMessage => {
 
-							error(errMessage);
+							err(errMessage);
 							res.AD.error(true);
 
 						})
@@ -452,11 +448,7 @@ module.exports = {
 			appID,
 			dataviewID
 		)
-			.catch(err => {
-
-				res.AD.error(err);
-
-			})
+			.catch(res.AD.error)
 			.then(() => {
 
 				res.AD.success(true);

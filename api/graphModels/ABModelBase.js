@@ -177,29 +177,42 @@ class ABModelBase {
 	/**
 	 * @method find
 	 * 
-	 * @param {Object} cond
 	 * @param {Object} options - {
+	 * 								where: {},		// https://sailsjs.com/documentation/concepts/models-and-orm/query-language
 	 * 								relations: [],	// List of relation name
-	 * 								select: []		// List of property name
+	 * 								select: [],		// List of property name
+	 * 								skip: 0,
+	 * 								limit: 20,
+	 * 								sort: []		// [{ firstName: 'ASC'}, { lastName: 'DESC'}]
 	 * 							}
 	 * 
 	 * @return {Promise}
 	 */
-	static find(cond = {}, options = {}) {
+	static find(options = {}) {
+
+		if (options.where == null)
+			options.where = {};
 
 		if (options.relations == null)
-			options.relations = []
+			options.relations = [];
 
 		if (options.select == null)
-			options.select = []
+			options.select = [];
 
-		// TODO paging, sorting
+		if (options.sort == null)
+			options.sort = [];
 
+		// TODO paging
+
+		let aqlFilters = this._aqlFilter(options.where);
+		let aqlSort = this._aqlSort(options.sort);
 		let aqlRelations = this._aqlRelations(options.relations);
 		let aqlReturn = this._aqlSelects(options.select);
 
 		return this.query(`
 						FOR row IN ${this.collectionName}
+						${aqlFilters}
+						${aqlSort}
 						RETURN MERGE(${aqlReturn}, ${aqlRelations})
 					`);
 
@@ -219,10 +232,10 @@ class ABModelBase {
 	static findOne(id, options = {}) {
 
 		if (options.relations == null)
-			options.relations = []
+			options.relations = [];
 
 		if (options.select == null)
-			options.select = []
+			options.select = [];
 
 		let aqlRelations = this._aqlRelations(options.relations);
 		let aqlReturn = this._aqlSelects(options.select);
@@ -242,25 +255,37 @@ class ABModelBase {
 	 * @param {String|Object} relation
 	 * @param {uuid} linkId 
 	 * @param {Object} options - {
+	 * 								where: {},		// https://sailsjs.com/documentation/concepts/models-and-orm/query-language
 	 * 								relations: [],	// List of relation name
 	 * 								select: []		// List of property name
+	 * 								skip: 0,
+	 * 								limit: 20,
+	 * 								sort: []		// [{ firstName: 'ASC'}, { lastName: 'DESC'}]
 	 * 							}
-	 * 
+	 *
 	 * @return {Object} - A document
 	 */
 	static findWithRelation(relation, linkId, options = {}) {
 
+		if (options.where == null)
+			options.where = {};
+
 		if (options.relations == null)
-			options.relations = []
+			options.relations = [];
 
 		if (options.select == null)
-			options.select = []
+			options.select = [];
+
+		if (options.sort == null)
+			options.sort = [];
 
 		if (typeof relation == 'string')
 			relation = this._getRelation(relation);
 
 		linkId = this._getId(linkId, relation.linkCollection);
 
+		let aqlFilters = this._aqlFilter(options.where);
+		let aqlSort = this._aqlSort(options.sort);
 		let aqlRelations = this._aqlRelations(options.relations);
 		let aqlReturn = this._aqlSelects(options.select);
 
@@ -269,6 +294,8 @@ class ABModelBase {
 						FOR join in ${relation.edgeName}
 						FILTER join.${relation.direction == this.relateDirection.OUTBOUND ? "_from" : "_to"} == row._id
 						&& join.${relation.direction == this.relateDirection.OUTBOUND ? "_to" : "_from"} == '${linkId}'
+						${aqlFilters}
+						${aqlSort}
 						RETURN MERGE(${aqlReturn}, ${aqlRelations})
 					`);
 
@@ -407,13 +434,13 @@ class ABModelBase {
 					updates = JSON.stringify(updates);
 
 					this.query(
-							`UPSERT { _key: '${id}' } ` +
-							`INSERT ${updates} ` +
-							// `UPDATE ${updates} ` +
-							`REPLACE ${updates} ` +
-							`IN ${this.collectionName} ` +
-							`RETURN NEW`
-					, false)
+						`UPSERT { _key: '${id}' } ` +
+						`INSERT ${updates} ` +
+						// `UPDATE ${updates} ` +
+						`REPLACE ${updates} ` +
+						`IN ${this.collectionName} ` +
+						`RETURN NEW`
+						, false)
 						// RETURN { doc: NEW, type: OLD ? 'insert': 'update' }
 						.catch(err)
 						.then(doc => {
@@ -692,6 +719,117 @@ class ABModelBase {
 
 		return aql;
 
+	}
+
+	/**
+	 * @method _aqlFilter
+	 	 * 
+	 * @param {Object} where - define parameters as same as https://sailsjs.com/documentation/concepts/models-and-orm/query-language
+	 * 
+	 * @return {string} - AQL FILTER clause
+	 */
+	static _aqlFilter(where = {}) {
+
+		let filters = [];
+
+		Object.keys(where).forEach(prop => {
+
+			let whereClause = where[prop];
+			if (whereClause == null) return;
+
+			try {
+				whereClause = JSON.parse(whereClause);
+			}
+			catch (err) { }
+			console.log(whereClause);
+
+			// { 'id': "guid" }
+			if (typeof whereClause == 'string') {
+
+				// if there are comma, then should be IN condition to an array.
+				if (whereClause.indexOf(',') > -1) {
+					let val = (whereClause || "").split(',');
+					filters.push(`FILTER row.${prop} IN [${(val || []).map(v => `'${v}'`)}]`);
+				}
+				else {
+					filters.push(`FILTER row.${prop} == '${whereClause}'`);
+				}
+
+			}
+			// { 'age': { ">": 30 } }
+			else {
+				Object.keys(whereClause).forEach(operate => {
+
+					let val = whereClause[operate];
+					if (val == null) return;
+
+					switch (operate) {
+						case '<':
+						case '<=':
+						case '>':
+						case '>=':
+						case '!=':
+							filters.push(`FILTER row.${prop} ${operate} '${val}'`);
+							break;
+						case 'nin':
+							val = (val || "").split(',');
+							filters.push(`FILTER row.${prop} NOT IN [${(val || []).map(v => `'${v}'`)}]`);
+							break;
+						case 'in':
+							val = (val || "").split(',');
+							filters.push(`FILTER row.${prop} IN [${(val || []).map(v => `'${v}'`)}]`);
+							break;
+						case 'contains':
+							filters.push(`FILTER CONTAINS(row.${prop}, '${val}')`);
+							break;
+						case 'startsWith':
+							filters.push(`FILTER LIKE(row.${prop}, '${val}%', true)`);
+							break;
+						case 'endsWith':
+							filters.push(`FILTER LIKE(row.${prop}, '%${val}', true)`);
+							break;
+					}
+				});
+			}
+
+		});
+
+		return filters.join(' ');
+
+	}
+
+
+	/**
+	 * @method _aqlSort
+	 	 * 
+	 * @param {Array} sorts - [{ firstName: 'ASC'}, { lastName: 'DESC'}]
+	 * 
+	 * @return {string} - AQL SORT clause
+	 */
+	static _aqlSort(sorts = []) {
+
+		let sortClauses = [];
+
+		sorts.forEach(sort => {
+
+			Object.keys(sort || {}).forEach(prop => {
+
+				let direction = sort[prop]; // 'asc' || 'desc'
+				if (direction == 'desc')
+					direction = "DESC";
+				else
+					direction = "ASC";
+
+				sortClauses.push(`row.${prop} ${direction}`);
+
+			});
+		});
+
+		// SORT row.firstName ASC, row.lastName DESC
+		if (sortClauses.length > 0)
+			return `SORT ${sortClauses.join(', ')}`;
+		else
+			return "";
 	}
 
 

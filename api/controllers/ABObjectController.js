@@ -51,15 +51,12 @@ module.exports = {
 
 		let cond = req.query;
 
-		ABGraphObject.find(cond)
-			.catch(error => {
-				err(error);
-				res.AD.error(error);
-			})
+		ABGraphObject.find({
+			where: cond
+		})
+			.catch(res.AD.error)
 			.then(objects => {
-
 				res.AD.success(objects || []);
-
 			});
 
 	},
@@ -74,10 +71,7 @@ module.exports = {
 		let objectId = req.param('objectId');
 
 		ABGraphObject.findOne(objectId)
-			.catch(error => {
-				err(error);
-				res.AD.error(error);
-			})
+			.catch(res.AD.error)
 			.then(object => {
 
 				res.AD.success(object);
@@ -95,13 +89,11 @@ module.exports = {
 
 		let cond = req.query;
 
-		ABGraphObject.find(cond, {
-			select: ['id', 'translations']
+		ABGraphObject.find({
+			select: ['id', 'translations'],
+			where: cond
 		})
-			.catch(error => {
-				err(error);
-				res.AD.error(error);
-			})
+			.catch(res.AD.error)
 			.then(objects => {
 
 				res.AD.success(objects || []);
