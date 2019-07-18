@@ -367,7 +367,7 @@ sails.log.warn('... making default SDC data directory:', pathMobileDir);
 
 function initialGraphDB(next) {
 
-	ABGraphDB.initCollections()
+	ABGraphDB.initial()
 		.catch(next)
 		.then(() => {
 			next();
