@@ -11,7 +11,6 @@ module.exports = {
 		if (conn != null)
 			return conn
 
-
 		let url = sails.config.appbuilder.graphDB.url,
 			databaseName = sails.config.appbuilder.graphDB.databaseName,
 			user = sails.config.appbuilder.graphDB.user,
@@ -25,95 +24,128 @@ module.exports = {
 
 	},
 
-	initCollections: () => {
+	initial: () => {
 
-		return new Promise((resolve, reject) => {
+		return Promise.resolve()
 
-			let tasks = [];
+			// Initial database
+			.then(() => {
 
-			let db = ABGraphDB.database();
-			let modelsPath = path.join(__dirname, "..", "graphModels");
+				return new Promise((next, err) => {
 
-			fs.readdirSync(modelsPath).forEach(fileName => {
+					let db = ABGraphDB.database();
 
-				if (fileName == "ABModelBase.js")
-					return;
+					db.exists().then(exists => {
 
-				let model = require(path.join(modelsPath, fileName));
+						if (exists)
+							return next();
 
-				// Initial collections
-				tasks.push(new Promise((next, err) => {
+						let url = sails.config.appbuilder.graphDB.url,
+							databaseName = sails.config.appbuilder.graphDB.databaseName,
+							user = sails.config.appbuilder.graphDB.user,
+							pass = sails.config.appbuilder.graphDB.pass;
 
-					let collection = db.collection(model.collectionName);
+						let newDB = new Database(url);
+						newDB.useBasicAuth(user, pass);
+						newDB.createDatabase(databaseName, [{ username: user, passwd: pass }])
+							.then(() => {
 
-					Promise.resolve()
-						.then(() => {
-							return new Promise((ok, error) => {
+								conn = null;
 
-								collection.exists()
-									.catch(error)
-									.then(exists => {
-										ok(exists);
-									});
+								next();
+							}, err);
 
-							});
-						})
-						.then(exists => {
-							if (exists)
-								return Promise.resolve();
-							else
-								return collection.create();
-						}, err)
-						.then(next, err);
+					});
 
-				}));
+				});
 
-				// Initial edges
-				Object.keys(model.relations || {}).forEach(relationName => {
+			})
 
-					let edgeName = (model.relations || {})[relationName].edgeName;
+			// Initial collections
+			.then(() => {
 
-					tasks.push(new Promise((next, err) => {
+				let tasks = [];
 
-						let edge = db.edgeCollection(edgeName);
+				let db = ABGraphDB.database();
+
+				let modelsPath = path.join(__dirname, "..", "graphModels");
+
+				fs.readdirSync(modelsPath).forEach(fileName => {
+
+					if (fileName == "ABModelBase.js")
+						return;
+
+					let model = require(path.join(modelsPath, fileName));
+
+					// Initial collections
+					tasks.push(() => new Promise((next, err) => {
+
+						let collection = db.collection(model.collectionName);
 
 						Promise.resolve()
 							.then(() => {
 								return new Promise((ok, error) => {
 
-									edge.exists()
+									collection.exists()
 										.catch(error)
-										.then(exists => {
-											ok(exists);
-										});
+										.then(exists => ok(exists));
 
 								});
-							})
-							.then(exists => {
-								if (exists)
-									return Promise.resolve();
-								else
-									return edge.create();
 							}, err)
-							.then(next, err);
+							.then(exists => {
+
+								return new Promise((ok, error) => {
+									if (exists)
+										return ok();
+
+									collection.create()
+										.catch(error)
+										.then(() => ok());
+
+								});
+							}, err)
+							.then(() => next());
 
 					}));
 
+					// Initial edges
+					Object.keys(model.relations || {}).forEach(relationName => {
+
+						let edgeName = (model.relations || {})[relationName].edgeName;
+
+						tasks.push(() => new Promise((next, err) => {
+
+							let edge = db.edgeCollection(edgeName);
+
+							Promise.resolve()
+								.then(() => {
+									return new Promise((ok, error) => {
+
+										edge.exists()
+											.catch(error)
+											.then(exists => ok(exists));
+
+									});
+								}, err)
+								.then(exists => {
+									if (exists)
+										return Promise.resolve();
+									else
+										return edge.create();
+								}, err)
+								.then(() => next());
+
+						}));
+
+					});
+
 				});
 
+				return tasks.reduce((promiseChain, currTask) => {
+					return promiseChain.then(currTask);
+				}, Promise.resolve());
+
 			});
-
-			// Final task
-			tasks.push(() => {
-				resolve();
-				return Promise.resolve();
-			});
-
-			tasks.reduce((promiseChain, currTask) => {
-				return promiseChain.then(currTask);
-			}, Promise.resolve());
-
-		});
 
 	}
 
