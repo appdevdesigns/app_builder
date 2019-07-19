@@ -202,10 +202,9 @@ class ABModelBase {
 		if (options.sort == null)
 			options.sort = [];
 
-		// TODO paging
-
 		let aqlFilters = this._aqlFilter(options.where);
 		let aqlSort = this._aqlSort(options.sort);
+		let aqlPagination = this._aqlPagination(options.skip, options.limit);
 		let aqlRelations = this._aqlRelations(options.relations);
 		let aqlReturn = this._aqlSelects(options.select);
 
@@ -213,6 +212,7 @@ class ABModelBase {
 						FOR row IN ${this.collectionName}
 						${aqlFilters}
 						${aqlSort}
+						${aqlPagination}
 						RETURN MERGE(${aqlReturn}, ${aqlRelations})
 					`);
 
@@ -286,6 +286,7 @@ class ABModelBase {
 
 		let aqlFilters = this._aqlFilter(options.where);
 		let aqlSort = this._aqlSort(options.sort);
+		let aqlPagination = this._aqlPagination(options.skip, options.limit);
 		let aqlRelations = this._aqlRelations(options.relations);
 		let aqlReturn = this._aqlSelects(options.select);
 
@@ -296,6 +297,7 @@ class ABModelBase {
 						&& join.${relation.direction == this.relateDirection.OUTBOUND ? "_to" : "_from"} == '${linkId}'
 						${aqlFilters}
 						${aqlSort}
+						${aqlPagination}
 						RETURN MERGE(${aqlReturn}, ${aqlRelations})
 					`);
 
@@ -830,6 +832,27 @@ class ABModelBase {
 			return `SORT ${sortClauses.join(', ')}`;
 		else
 			return "";
+	}
+
+	/**
+	 * @method _aqlPagination
+	 * 
+	 * @param {number} offset
+	 * @param {number} count
+	 * 
+	 * @return {string} - AQL LIMIT clause
+	 */
+	static _aqlPagination(offset, count) {
+
+		if (offset != null && count != null) {
+			return `LIMIT ${offset} ${count}`;
+		}
+		else if (count != null) {
+			return `LIMIT ${count}`;
+		}
+		else {
+			return "";
+		}
 	}
 
 
