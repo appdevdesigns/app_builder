@@ -8,53 +8,6 @@
 var path = require('path');
 
 var ABGraphDataview = require(path.join('..', 'graphModels', 'ABDataview'));
-var ABGraphQuery = require(path.join('..', 'graphModels', 'ABQuery'));
-
-
-/**
- * @method pullQueryDatasource
- * 
- * @param {ABDataview} dataview
- * @return {Promise}
- */
-function pullQueryDatasource(dataview) {
-
-	return new Promise((resolve, reject) => {
-
-		if (dataview == null)
-			return resolve(null);
-
-
-		let isQuery = JSON.parse(dataview.settings.isQuery);
-		if (isQuery &&
-			(!dataview.query || !dataview.query[0])) {
-
-			let queryID = dataview.settings.datasourceID;
-
-			// Data source is query
-			ABGraphQuery.findOne(queryID, {
-				relations: ['objects']
-			})
-				.catch(reject)
-				.then(q => {
-
-					if (q)
-						dataview.query = [q];
-
-					resolve(dataview);
-
-				});
-
-		}
-		else {
-
-			// Data source is object
-			return resolve(dataview);
-		}
-
-	});
-
-}
 
 function pullDataview(dataviewID) {
 
@@ -66,7 +19,7 @@ function pullDataview(dataviewID) {
 		}))
 
 		// When data source is query, then pull objects of query
-		.then(dataview => pullQueryDatasource(dataview));
+		.then(dataview => dataview.pullQueryDatasource());
 
 }
 
@@ -103,7 +56,7 @@ module.exports = {
 	
 					// pull Query data source
 					(dataviews || []).forEach(dv => {
-						tasks.push(pullQueryDatasource(dv));
+						tasks.push(dv.pullQueryDatasource());
 					});
 	
 					Promise.all(tasks)
@@ -143,7 +96,7 @@ module.exports = {
 
 				// pull Query data source
 				(dataviews || []).forEach(dv => {
-					tasks.push(pullQueryDatasource(dv));
+					tasks.push(dv.pullQueryDatasource());
 				});
 
 				Promise.all(tasks)

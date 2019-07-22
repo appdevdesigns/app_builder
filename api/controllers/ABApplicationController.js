@@ -14,6 +14,7 @@ var ABViewPage = require(path.join('..', 'classes', 'ABViewPage'));
 var ABDataviewController = require(path.join(__dirname, 'ABDataviewController'));
 
 var ApplicationGraph = require(path.join('..', 'graphModels', 'ABApplication'));
+var DataviewGraph = require(path.join('..', 'graphModels', 'ABDataview'));
 
 module.exports = {
 
@@ -663,8 +664,8 @@ module.exports = {
                             let result = app.toValidJsonFormat();
 
                             // Reduce data size to the live display
-                            if (pageID) {
-                                result.pages = (result.pages || []).filter(p => p.id == pageID);
+                            if (pageID && result.json) {
+                                result.json.pages = (result.json.pages || []).filter(p => p.id == pageID);
                             }
 
                             next(result);
@@ -683,13 +684,58 @@ module.exports = {
                     if (!app) 
                         return next();
 
-                    ABDataviewController.pullDataviewOfApplication(app.id)
-                        .catch(err)
-                        .then(dataviews => {
-                            app.json.dataviews = (dataviews || []);
+                    // pull ids of data view
+                    let dataviewIds = [];
 
-                            next(app);
+                    let addDataviewIdToList = (views) => {
+
+                        (views || []).forEach(p => {
+
+                            if (!p) return;
+
+                            // add data view id
+                            if (p.settings &&
+                                p.settings.dataviewID &&
+                                dataviewIds.indexOf(p.settings.dataviewID) < 0) {
+                                dataviewIds.push(p.settings.dataviewID);
+                            }
+    
+                            addDataviewIdToList(p.pages || []);
+                            addDataviewIdToList(p.views || []);
+    
                         });
+                    };
+
+                    addDataviewIdToList(app.json.pages);
+
+                    // query data views
+                    DataviewGraph.find({
+                        relations: ['object'],
+                        where: {
+                            "_key": dataviewIds
+                        }
+                    })
+                    .catch(err)
+                    .then(dataviews => {
+
+                        let tasks = [];
+
+                        // pull Query data source
+                        (dataviews || []).forEach(dv => {
+                            tasks.push(dv.pullQueryDatasource());
+                        });
+
+                        Promise.all(tasks)
+                            .catch(err)
+                            .then(() => {
+
+                                app.json.dataviews = (dataviews || []);
+
+                                next(app);
+
+                            });
+
+                    });
 
                 });
             }, console.error)

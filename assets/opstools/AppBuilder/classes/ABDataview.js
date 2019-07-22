@@ -44,13 +44,13 @@ export default class ABDataview extends EventEmitter {
 		this.__dataCollection = this._dataCollectionNew([]);
 
 		// Populate data source: ABObject or ABObjectQuery
-		if (attributes.object && attributes.object[0]) {
-			this.__datasource = new ABObject(attributes.object[0], application);
-			this.settings.isQuery = false;
-		}
-		else if (attributes.query && attributes.query[0]) {
+		if (attributes.query && attributes.query[0]) {
 			this.__datasource = new ABObjectQuery(attributes.query[0], application);
 			this.settings.isQuery = true;
+		}
+		else if (attributes.object && attributes.object[0]) {
+			this.__datasource = new ABObject(attributes.object[0], application);
+			this.settings.isQuery = false;
 		}
 
 		// Set filter value
