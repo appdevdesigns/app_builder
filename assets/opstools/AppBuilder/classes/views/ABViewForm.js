@@ -1272,7 +1272,12 @@ PopupRecordRule.qbFixAfterShow();
 
 				// mark error
 				for (let attr in err.invalidAttributes) {
-					formView.markInvalid(attr, err.invalidAttributes[attr].message);
+
+					let invalidAttrs = err.invalidAttributes[attr];
+					if (invalidAttrs && invalidAttrs[0])
+						invalidAttrs = invalidAttrs[0];
+
+					formView.markInvalid(attr, invalidAttrs.message);
 				}
 
 			}
