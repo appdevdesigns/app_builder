@@ -523,13 +523,26 @@ steal(
 
 									if (page.id == data.rootPage.id) {
 
-										// clear the cache of events
-										self.changePageEventIds = {};
+										// Wait 5 seconds to re-render the live page
+										if (self._pageUpdateEvent)
+											clearTimeout(self._pageUpdateEvent);
 
-										// update the root page instance
-										self.rootPage = data.rootPage;
+										self._pageUpdateEvent = setTimeout(function() {
 
-										self.activated = false;
+											// clear the cache of events
+											self.changePageEventIds = {};
+
+											// update the root page instance
+											// self.rootPage = data.rootPage;
+											self.rootPage = null;
+
+											// self.activated = false;
+
+											self.getData();
+
+											delete self._pageUpdateEvent;
+
+										}, 5000);
 
 									}
 
