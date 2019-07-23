@@ -523,7 +523,7 @@ steal(
 
 									if (page.id == data.rootPage.id) {
 
-										// Wait 5 seconds to re-render the live page
+										// Wait 7 seconds to re-render the live page
 										if (self._pageUpdateEvent)
 											clearTimeout(self._pageUpdateEvent);
 
@@ -542,7 +542,7 @@ steal(
 
 											delete self._pageUpdateEvent;
 
-										}, 5000);
+										}, 7000);
 
 									}
 
