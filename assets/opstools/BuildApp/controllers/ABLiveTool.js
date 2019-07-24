@@ -532,6 +532,8 @@ steal(
 
 										self.activated = false;
 
+										self.initDOM();
+
 									}
 
 								});
