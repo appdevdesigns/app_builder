@@ -804,9 +804,12 @@ export default class ABApplication extends ABApplicationBase {
 				// TODO : Should update _AllApplications in 
 
 				// Trigger a update event to the live display page
-				AD.comm.hub.publish('ab.interface.update', {
-					rootPage: page.pageRoot()	// instance of the root page
-				});
+				let rootPage = page.pageRoot();
+				if (rootPage) {
+					AD.comm.hub.publish('ab.interface.update', {
+						rootPageId: rootPage.id
+					});
+				}
 
 			});
 

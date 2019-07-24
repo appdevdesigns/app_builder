@@ -521,28 +521,16 @@ steal(
 								 */
 								self.updatePageEventId = AD.comm.hub.subscribe('ab.interface.update', function (msg, data) {
 
-									if (page.id == data.rootPage.id) {
+									if (page.id == data.rootPageId) {
 
-										// Wait 7 seconds to re-render the live page
-										if (self._pageUpdateEvent)
-											clearTimeout(self._pageUpdateEvent);
+										// clear the cache of events
+										self.changePageEventIds = {};
 
-										self._pageUpdateEvent = setTimeout(function() {
+										// remove stored root page
+										// it will re-render when this page will be triggered
+										delete self.rootPage;
 
-											// clear the cache of events
-											self.changePageEventIds = {};
-
-											// update the root page instance
-											// self.rootPage = data.rootPage;
-											self.rootPage = null;
-
-											// self.activated = false;
-
-											self.getData();
-
-											delete self._pageUpdateEvent;
-
-										}, 7000);
+										self.activated = false;
 
 									}
 
@@ -670,6 +658,24 @@ steal(
 							// destroy view's modal
 							if ($$(pageElemId))
 								$$(pageElemId).destructor();
+
+						},
+
+						showUpdatingPopup: function() {
+
+							let popup = document.createElement("div");
+							let message = document.createTextNode("UI is updating..."); 
+
+							popup.appendChild(message);  
+
+							let containerDOM = document.getElementById(this.containerDomID); 
+							document.body.insertBefore(popup, containerDOM); 
+
+						},
+
+						hideUpdatingPopup: function() {
+
+							// document.remo
 
 						},
 
