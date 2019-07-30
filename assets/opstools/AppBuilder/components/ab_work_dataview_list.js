@@ -94,7 +94,6 @@ export default class AB_Work_Dataview_List extends OP.Component {
 		var dataviewList = null;
 
 		let _initialized = false;
-		let _settings = {};
 
 		// Our init() function for setting up our UI
 		this.init = (options) => {

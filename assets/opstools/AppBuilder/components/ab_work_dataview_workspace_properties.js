@@ -328,15 +328,15 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 					dataview.on('loadData', this._logic.populateFixSelector);
 				}
 
-				// if selected soruce is a query, then hide advanced options UI
-				if (settings.isQuery) {
-					$$(ids.filterPanel).hide();
-					$$(ids.sortPanel).hide();
-				}
-				else {
-					$$(ids.filterPanel).show();
-					$$(ids.sortPanel).show();
-				}
+				// // if selected soruce is a query, then hide advanced options UI
+				// if (settings.isQuery) {
+				// 	$$(ids.filterPanel).hide();
+				// 	$$(ids.sortPanel).hide();
+				// }
+				// else {
+				// 	$$(ids.filterPanel).show();
+				// 	$$(ids.sortPanel).show();
+				// }
 
 				$$(ids.dataSource).define('value', settings.datasourceID);
 				$$(ids.linkDataview).define('value', settings.linkDataviewID);

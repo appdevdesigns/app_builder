@@ -159,14 +159,15 @@ export default class ABDataview extends EventEmitter {
 					let updateDataview = this.application.dataviews(dv => dv.id == this.id)[0];
 					if (updateDataview) {
 
-						if (newDataview.object && newDataview.object[0]) {
-							updateDataview.datasource = new ABObject(newDataview.object[0], this.application);
-							this.settings.isQuery = false;
-						}
-						else if (newDataview.query && newDataview.query[0]) {
+						if (newDataview.query && newDataview.query[0]) {
 							updateDataview.datasource = new ABObjectQuery(newDataview.query[0], this.application);
 							this.settings.isQuery = true;
 						}
+						else if (newDataview.object && newDataview.object[0]) {
+							updateDataview.datasource = new ABObject(newDataview.object[0], this.application);
+							this.settings.isQuery = false;
+						}
+
 					}
 
 					resolve(this);
