@@ -359,9 +359,10 @@ class ABModelBase {
 	 * 
 	 * @param {string} id 
 	 * @param {Object} updates 
+	 * @param {boolean} replace - mark to replace whole json
 	 * @return {Promise} - return a row is updated
 	 */
-	static update(id, updates) {
+	static update(id, updates, replace = false) {
 
 		updates = new this(updates || {});
 
@@ -379,11 +380,12 @@ class ABModelBase {
 
 					updates = JSON.stringify(updates);
 
+					let action = replace ? "REPLACE" : "UPDATE";
+
 					this.query(
 						`FOR row IN ${this.collectionName} ` +
 						`FILTER row._key == '${id}' ` +
-						// `UPDATE row WITH ${updates} IN ${this.collectionName} ` +
-						`REPLACE row WITH ${updates} IN ${this.collectionName} ` +
+						`${action} row WITH ${updates} IN ${this.collectionName} ` +
 						`RETURN NEW`
 						, false)
 						.catch(err)

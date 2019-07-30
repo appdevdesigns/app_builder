@@ -170,6 +170,9 @@ module.exports = {
         let appID = req.param('appID');
         let appValues = req.body;
 
+        if (!appID)
+            return res.AD.error("Not found", 404);
+
         ApplicationGraph.update(appID, appValues)
             .then(app => {
 
@@ -232,6 +235,10 @@ module.exports = {
         var appInfo = req.body.translations;
         var appIsAdmin = JSON.parse(req.body.isAdminApp || false);
 
+        if (!appID) {
+            return res.AD.error("Not found", 404);
+        }
+ 
         Promise.resolve()
             .catch(() => {
                 res.AD.error(true);
