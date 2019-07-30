@@ -1370,11 +1370,21 @@ export default class ABViewGrid extends ABViewWidget  {
 
 			},
 
-			changePage: (dc, rowId, page) => {
+			changePage: (dv, rowItem, page) => {
 
-				linkPage.changePage(page, rowId);
-				// dc.setCursor(id);
-				// super.changePage(page);
+				let rowId = (rowItem && rowItem.row ? rowItem.row : null);
+
+				// Set cursor to data view
+				if (dv) {
+					dv.setCursor(rowId);
+				}
+
+				// Pass settings to link page module
+				if (linkPage) {
+					linkPage.changePage(page, rowId);
+				}
+
+				super.changePage(page);
 			},
 			
 			selectRow: (rowData) => {

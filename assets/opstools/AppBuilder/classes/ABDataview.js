@@ -237,7 +237,7 @@ export default class ABDataview extends EventEmitter {
 		if (!this.application)
 			return null;
 
-		return this.application.dataviews(dv => dv.id == this.settings.linkDataview)[0];
+		return this.application.dataviews(dv => dv.id == this.settings.linkDataviewID)[0];
 	}
 
 	/**
@@ -1418,6 +1418,70 @@ export default class ABDataview extends EventEmitter {
 		}
 
 		return this.clone(obj); // new ABViewDataCollection(settings, this.application, this.parent);
+
+	}
+
+
+	//
+	// Event handles
+	//
+
+	/**
+	 * @method eventAdd()
+	 *
+	 * 
+	 *
+	 * @param {object} evt - {
+	 * 							emitter: object,
+	 * 							eventName: string,
+	 * 							listener: function
+	 * 						}
+	 */
+	eventAdd(evt) {
+
+		if (!evt ||
+			!evt.emitter ||
+			!evt.listener)
+			return;
+
+		this.__events = this.__events || [];
+
+		let exists = this.__events.find(e => {
+			return e.emitter == evt.emitter &&
+				e.eventName == evt.eventName;
+			// && e.listener == evt.listener;
+		});
+
+		if (!exists || exists.length < 1) {
+
+			// add to array
+			this.__events.push({
+				emitter: evt.emitter,
+				eventName: evt.eventName,
+				listener: evt.listener
+			});
+
+			// listening this event
+			evt.emitter.on(evt.eventName, evt.listener);
+		}
+
+	}
+
+
+	/**
+	 * @method eventClear()
+	 * unsubscribe all events.
+	 * should do it before destroy a component
+	 *
+	 */
+	eventClear() {
+
+		if (this.__events &&
+			this.__events.length > 0) {
+			this.__events.forEach(e => {
+				e.emitter.removeListener(e.eventName, e.listener);
+			});
+		}
 
 	}
 

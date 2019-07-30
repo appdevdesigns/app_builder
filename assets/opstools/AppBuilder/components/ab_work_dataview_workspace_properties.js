@@ -479,11 +479,12 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 
 				// get fields that link to our ABObject
 				if (this._dataview &&
-					this._dataview.datasourceLink) {
+					this._dataview.dataviewLink) {
 
 					let object = this._dataview.datasource;
-					let linkObject = this._dataview.datasourceLink;
-					let relationFields = object.connectFields().filter(link => link.settings.linkObject == linkObject.id);
+					let linkDataview = this._dataview.dataviewLink;
+					let linkObject = linkDataview.datasource;
+					let relationFields = object.connectFields().filter(link => link.settings.linkObject == (linkObject || {}).id);
 
 					// pull fields to options
 					relationFields.forEach((f) => {

@@ -203,20 +203,36 @@ steal(
 
 									if (!self.data.application) return next();
 
+									let storeObject = (datasource) => {
+										if (self.data.application.objects(o => o.id == datasource.id).length < 1) {
+											self.data.application._objects.push(datasource);
+										}
+									};
+
 									self.data.application.dataviews().forEach(dv => {
 
 										if (!dv) return;
 
+										dv.init();
+
 										let datasource = dv.datasource;
 										if (!datasource) return;
 
+										// Queries
 										if (dv.settings &&
 											dv.settings.isQuery &&
 											self.data.application.queries(q => q.id == datasource.id).length < 1) {
+
 											self.data.application._queries.push(datasource);
+
+											datasource.objects().forEach(obj => {
+												storeObject(obj);
+											});
+
 										}
-										else if (self.data.application.objects(o => o.id == datasource.id).length < 1) {
-											self.data.application._objects.push(datasource);
+										// Objects
+										else {
+											storeObject(datasource);
 										}
 
 									});
