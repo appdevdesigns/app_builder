@@ -208,7 +208,7 @@ export default class ABChoose extends OP.Component {  // .extend(idBase, functio
 
 		const FormFields = ['label', 'description', 'isAdminApp'];
 
-
+		let Application;
 
 		this.init = function() {
 			webix.extend($$(ids.form), webix.ProgressBar);
@@ -361,7 +361,8 @@ export default class ABChoose extends OP.Component {  // .extend(idBase, functio
 				_logic.formBusy();
 
 				// if there is a selected Application, then this is an UPDATE
-				var updateApp = App.actions.getSelectedApplication();
+				// var updateApp = App.actions.getSelectedApplication();
+				var updateApp = Application;
 				if (updateApp) { 
 
 					if (_logic.formValidate('update')) {
@@ -458,18 +459,20 @@ export default class ABChoose extends OP.Component {  // .extend(idBase, functio
 			 */
 			formPopulate: function(application) {
 
+				Application = application;
+
 				var Form = $$(ids.form);
 
 				// Populate data to form
-				if (application) {
+				if (Application) {
 					FormFields.forEach(function(f){
 						if (Form.elements[f]) {
-							Form.elements[f].setValue(application[f]);
+							Form.elements[f].setValue(Application[f]);
 						}
 					})
 				}
 
-				// _logic.permissionPopulate(application);
+				// _logic.permissionPopulate(Application);
 
 			},
 
@@ -490,6 +493,8 @@ export default class ABChoose extends OP.Component {  // .extend(idBase, functio
 			 * return the form to an empty state.
 			 */
 			formReset: function() {
+
+				Application = null;
 
 				$$(ids.form).clear();
 				$$(ids.form).clearValidation();
