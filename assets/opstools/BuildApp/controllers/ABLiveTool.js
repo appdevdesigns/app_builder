@@ -526,6 +526,19 @@ steal(
 								});
 							}
 
+							let needToReloadPage = () => {
+
+								// clear the cache of events
+								self.changePageEventIds = {};
+
+								// remove stored root page
+								// it will re-render when this page will be triggered
+								delete self.rootPage;
+
+								self.activated = false;
+
+								self.initDOM();
+							};
 
 							if (!self.updatePageEventId && page.isRoot()) {
 
@@ -538,18 +551,25 @@ steal(
 								self.updatePageEventId = AD.comm.hub.subscribe('ab.interface.update', function (msg, data) {
 
 									if (page.id == data.rootPageId) {
+										needToReloadPage();
+									}
 
-										// clear the cache of events
-										self.changePageEventIds = {};
+								});
+							}
 
-										// remove stored root page
-										// it will re-render when this page will be triggered
-										delete self.rootPage;
+							if (!self.updateDataviewEventId && page.isRoot()) {
 
-										self.activated = false;
+								/**
+								 * @event ab.dataview.update
+								 * This event is triggered when the dataview is updated
+								 * 
+								 * @param data.dataviewId {uuid} - id of the data view
+								 */
+								self.updateDataviewEventId = AD.comm.hub.subscribe('ab.dataview.update', function (msg, data) {
 
-										self.initDOM();
-
+									let updatedDv = self.data.application.dataviews(dv => dv.id == data.dataviewId)[0];
+									if (updatedDv) {
+										needToReloadPage();
 									}
 
 								});

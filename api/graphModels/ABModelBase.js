@@ -780,7 +780,10 @@ class ABModelBase {
 							filters.push(`FILTER row.${prop} NOT IN [${(val || []).map(v => `'${v}'`)}]`);
 							break;
 						case 'in':
-							val = (val || "").split(',');
+
+							if (typeof val == 'string')
+								val = (val || "").split(',');
+
 							filters.push(`FILTER row.${prop} IN [${(val || []).map(v => `'${v}'`)}]`);
 							break;
 						case 'contains':

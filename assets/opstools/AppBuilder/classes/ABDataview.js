@@ -170,6 +170,10 @@ export default class ABDataview extends EventEmitter {
 
 					}
 
+					AD.comm.hub.publish('ab.dataview.update', {
+						dataviewId: this.id
+					});
+
 					resolve(this);
 				})
 				.catch(function (err) {

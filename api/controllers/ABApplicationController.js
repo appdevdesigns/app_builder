@@ -719,7 +719,7 @@ module.exports = {
                     DataviewGraph.find({
                         relations: ['object'],
                         where: {
-                            "_key": dataviewIds
+                            "_key": { "in": dataviewIds }
                         }
                     })
                     .catch(err)

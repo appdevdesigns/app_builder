@@ -1043,6 +1043,12 @@ export default class ABApplication extends ABApplicationBase {
 					  })
 					this._dataviews = newDataviews;
 
+					// Initial data views
+					this.dataviews().forEach(dataview => {
+						if (dataview)
+							dataview.init();
+					});
+
 					resolve();
 
 				});
