@@ -1,6 +1,7 @@
 module.exports = {
 	"paths": {
-		"opstools/BuildApp": "opstools/BuildApp/BuildApp.js"
+		"opstools/BuildApp": "opstools/BuildApp/BuildApp.js",
+		"bundles/opstools/BuildApp": "dist/bundles/opstools/BuildApp.js?v=2"
 	},
 	"bundle": [
 		"opstools/BuildApp"
