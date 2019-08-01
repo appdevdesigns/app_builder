@@ -650,7 +650,7 @@ export default class ABApplication extends ABApplicationBase {
 							return true;
 						}
 
-					});
+					}, true);
 					obj._fields = remainFields;
 
 				});

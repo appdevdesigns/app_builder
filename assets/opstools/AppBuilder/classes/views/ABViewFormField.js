@@ -177,7 +177,7 @@ export default class ABViewFormField extends ABView {
 		let object = dataview.datasource;
 		if (object == null) return null;
 
-		let field = object.fields((v) => v.id == this.settings.fieldId)[0];
+		let field = object.fields((v) => v.id == this.settings.fieldId, true)[0];
 		return field;
 	}
 
