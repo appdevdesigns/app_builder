@@ -667,9 +667,9 @@ export default class ABChoose extends OP.Component {  // .extend(idBase, functio
 				PermForm.showProgress({ type: 'icon' });
 				async.waterfall([
 					function (next) {
-						AD.comm.service.get({ url: '/app_builder/user/roles' })
-							.fail(function (err) { next(err); })
-							.done(function (roles) {
+						OP.Comm.Service.get({ url: '/app_builder/user/roles' })
+							.catch(next)
+							.then(function (roles) {
 
 								// scan the roles and determine if any of them have been created
 								// after the current Application.name:

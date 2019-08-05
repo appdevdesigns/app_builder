@@ -560,6 +560,7 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 				if (CurrentApplication)
 					queryList.parse(CurrentApplication.queries());
 
+				queryList.sort("label", "asc");
 
 				// clear our list and display our objects:
 				var List = $$(ids.list);

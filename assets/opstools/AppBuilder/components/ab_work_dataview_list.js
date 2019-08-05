@@ -157,6 +157,7 @@ export default class AB_Work_Dataview_List extends OP.Component {
 				dataviewList = new webix.DataCollection({
 					data: application.dataviews(),
 				});
+				dataviewList.sort("label", "asc");
 
 				// clear our list and display our objects:
 				var List = $$(ids.list);
