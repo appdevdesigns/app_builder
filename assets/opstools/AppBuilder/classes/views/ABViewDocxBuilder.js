@@ -5,9 +5,10 @@
  *
  */
 
-import ABViewWidget from "./ABViewWidget"
-import ABObjectQuery from "../ABObjectQuery";
 import ABFieldConnect from "../dataFields/ABFieldConnect";
+import ABFieldImage from "../dataFields/ABFieldImage";
+import ABObjectQuery from "../ABObjectQuery";
+import ABViewWidget from "./ABViewWidget"
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -431,7 +432,118 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 
 				_logic.busy();
 
+				let currCursor = {};
+				let images = {};
+
 				Promise.resolve()
+					// Get current cursor
+					.then(() => {
+
+						let dv = this.dataview;
+						if (dv) {
+							currCursor = dv.getCursor();
+
+							// update property names to column labels to match format names in docx file
+							if (currCursor) {
+
+								let obj = dv.datasource;
+								if (obj) {
+
+									currCursor = _.clone(currCursor);
+
+									let normalizeCursor = (field, label) => {
+
+										if (field instanceof ABFieldConnect) {
+
+											// If field is connected field, then 
+											// {
+											//		fieldName: {Object} or [Array]
+											//		fieldName_label: "Value1, Value2"
+											// }
+
+											currCursor[label] = currCursor[label];
+											currCursor[label + '_label'] = field.format(currCursor);
+										}
+										else {
+											currCursor[label] = field.format(currCursor);
+										}
+
+										if (currCursor[label] == null)
+											currCursor[label] = '';
+
+									};
+
+									// Query Objects
+									if (obj instanceof ABObjectQuery) {
+										obj.fields().forEach(f => {
+
+											// Replace alias with label of object
+											let label = f.columnName.replace(f.alias, f.object.label);
+
+											normalizeCursor(f, label);
+
+										});
+									}
+									// Normal Objects
+									else {
+										obj.fields().forEach(f => {
+
+											normalizeCursor(f, f.label);
+
+										});
+									}
+
+								}
+
+							}
+							else {
+								currCursor = {};
+							}
+						}
+
+						console.log("DOCX data: ", currCursor);
+
+						return Promise.resolve();
+					})
+					// Download images
+					.then(() => {
+
+						let dv = this.dataview;
+						if (!dv) return Promise.resolve();
+
+						let obj = dv.datasource;
+						if (!obj) return Promise.resolve();
+
+						let tasks = [];
+
+						obj.fields(f => f instanceof ABFieldImage).forEach(f => {
+
+							let imageVal = f.format(currCursor);
+							if (!imageVal) return;
+
+							tasks.push(new Promise((ok, bad) => {
+
+								let imgUrl = `/opsportal/image/${this.application.name}/${imageVal}`;
+
+								JSZipUtils.getBinaryContent(imgUrl, function (error, content) {
+									if (error)
+										return bad(error);
+									else {
+
+										// store binary of image
+										images[imageVal] = content;
+
+										ok();
+									}
+								});
+
+							}));
+
+						});
+
+						return Promise.all(tasks);
+
+					})
 					.then(() => {
 
 						// Download the template file
@@ -456,78 +568,72 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 						return new Promise((next, err) => {
 
 							let zip = new JSZip(content);
-							let doc = (new Docxtemplater()).loadZip(zip);
+							let doc = new Docxtemplater();
 
-							// get current cursor
-							let currCursor = {};
-							let dv = this.dataview;
-							if (dv) {
-								currCursor = dv.getCursor();
+							let imageModule = new ImageModule({
+								centered: false,
+								getImage: (tagValue, tagName) => {
 
-								// update property names to column labels to match format names in docx file
-								if (currCursor) {
+									// NOTE: .getImage of version 3.0.2 does not support async
+									//			we can buy newer version to support it
+									//			https://docxtemplater.com/modules/image/
+
+									return images[tagValue] || "";
+
+								},
+								getSize: (imgBuffer, tagValue, tagName) => {
+
+									let defaultVal = [300, 160];
+
+									let dv = this.dataview;
+									if (!dv) return defaultVal;
 
 									let obj = dv.datasource;
-									if (obj) {
+									if (!obj) return defaultVal;
 
-										currCursor = _.clone(currCursor);
+									let imageField = obj.fields(f => f.columnName == tagName)[0];
+									if (imageField.settings.useWidth &&
+										imageField.settings.imageWidth)
+										defaultVal[0] = imageField.settings.imageWidth;
 
-										let normalizeCursor = (field, label) => {
-
-											if (field instanceof ABFieldConnect) {
-
-												// If field is connected field, then 
-												// {
-												//		fieldName: {Object} or [Array]
-												//		fieldName_label: "Value1, Value2"
-												// }
-
-												currCursor[label] = currCursor[label];
-												currCursor[label + '_label'] = field.format(currCursor);
-											}
-											else {
-												currCursor[label] = field.format(currCursor);
-											}
-
-											if (currCursor[label] == null)
-												currCursor[label] = '';
-
-										};
-
-										// Query Objects
-										if (obj instanceof ABObjectQuery) {
-											obj.fields().forEach(f => {
-
-												// Replace alias with label of object
-												let label = f.columnName.replace(f.alias, f.object.label);
-
-												normalizeCursor(f, label);
-
-											});
-										}
-										// Normal Objects
-										else {
-											obj.fields().forEach(f => {
-
-												normalizeCursor(f, f.label);
-
-											});
-										}
-
-									}
-
+									if (imageField.settings.useHeight &&
+										imageField.settings.imageHeight)
+										defaultVal[1] = imageField.settings.imageHeight;
+	
+									return defaultVal;
 								}
-								else {
-									currCursor = {};
-								}
-							}
+								// getSize: function (imgBuffer, tagValue, tagName) {
+								// 	if (imgBuffer) {
+								// 		var maxWidth = 300;
+								// 		var maxHeight = 160;
 
-console.log("DOCX data: ", currCursor);
-							doc.setData(currCursor);
+								// 		// Find aspect ratio image dimensions
+								// 		try {
+								// 			var image = sizeOf(imgBuffer);
+								// 			var ratio = Math.min(maxWidth / image.width, maxHeight / image.height);
+
+								// 			return [image.width * ratio, image.height * ratio];
+								// 		}
+								// 		// if invalid image, then should return 0, 0 sizes
+								// 		catch (err) {
+								// 			return [0, 0];
+								// 		}
+
+								// 	}
+								// 	else {
+								// 		return [0, 0];
+								// 	}
+								// }
+							});
 
 							try {
-								// render the document
-								doc.render()
+
+								doc
+									.attachModule(imageModule)
+									.loadZip(zip)
+									.setData(currCursor)
+									.render(); // render the document
+
 							}
 							catch (error) {
 
