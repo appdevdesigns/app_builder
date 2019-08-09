@@ -591,7 +591,19 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 									let obj = dv.datasource;
 									if (!obj) return defaultVal;
 
+									// This is a query object
+									if (tagName.indexOf('.') > -1) {
+										let tagNames = tagName.split('.');
+
+										obj = obj.objects(o => o.label == tagNames[0])[0]; // Label of object
+										if (!obj) return defaultVal;
+
+										tagName = tagNames[1];  // Field name
+									}
+
 									let imageField = obj.fields(f => f.columnName == tagName)[0];
+									if (!imageField || !imageField.settings) return defaultVal;
+
 									if (imageField.settings.useWidth &&
 										imageField.settings.imageWidth)
 										defaultVal[0] = imageField.settings.imageWidth;
