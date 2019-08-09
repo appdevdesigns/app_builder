@@ -119,6 +119,40 @@ module.exports = {
 
 		Promise.resolve()
 
+			// Set view name of this query
+			.then(() => {
+
+				return new Promise((next, error) => {
+
+					// If view name is set, then skip this step
+					if (query.viewName || !appID)
+						return next();
+
+					ABGraphApplication.findOne(appID)
+						.catch(errMessage => {
+							error(errMessage);
+							res.AD.error("Could not found application");
+						})
+						.then(app => {
+
+							if (!app) {
+								res.AD.error("Could not found application");
+								return error(errMessage);
+							}
+
+							let appClass = app.toABClass();
+
+							// Set table name here
+							query.viewName = AppBuilder.rules.toObjectNameFormat(appClass.dbApplicationName(), 'View_' + query.name);
+
+							next();
+
+						});
+
+				});
+
+			})
+
 			// Save query
 			.then(() => {
 
@@ -224,19 +258,43 @@ module.exports = {
 
 			})
 
-			// Final - Pass result
+			// Pull query data
 			.then(() => {
 
-				ABGraphQuery.findOne(query.id, {
-					relations: ['objects']
-				})
-					.catch(res.AD.error)
-					.then(query => {
+				return new Promise((next, error) => {
 
-						res.AD.success(query);
+					ABGraphQuery.findOne(query.id, {
+						relations: ['objects']
+					})
+						.catch(error)
+						.then(queryData => {
+							next(queryData);
+						});
 
-					});
+				});
 
+			})
+
+			// Create/Update SQL view
+			.then(q => {
+	
+				return new Promise((next, error) => {
+
+					let qClass = q.toABClass();
+
+					ABMigration.createQuery(qClass)
+						.catch(error)
+						.then(() => {
+							next(q);
+						});
+	
+				});
+
+			})
+
+			// Final - Pass result
+			.then(query => {
+				res.AD.success(query);
 			});
 
 	},
@@ -247,14 +305,23 @@ module.exports = {
 	* Delete a query
 	*/
 	queryDestroy: function (req, res) {
+
 		let queryID = req.param('queryID');
 
-		ABGraphQuery.remove(queryID)
-			.catch(res.AD.error)
-			.then(() => {
+		Promise.resolve()
 
-				res.AD.success(true);
-			});
+			// Remove from DB
+			.then(() => ABGraphQuery.remove(queryID), res.AD.error)
+
+			// Drop SQL view
+			.then(removedQuery => {
+
+				let qClass = removedQuery.toABClass();
+				return ABMigration.dropQuery(qClass);
+
+			}, res.AD.error)
+
+			.then(() => res.AD.success(true));
 
 	},
 

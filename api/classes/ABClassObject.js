@@ -1001,6 +1001,12 @@ sails.log.debug('ABClassObject.queryCount - SQL:', query.toString() );
 						columnName = parts.join('.');
 					}
 
+					// ABClassQuery: 
+					// If this is query who create MySQL view, then column name does not have `
+					if (this.viewName) {
+						columnName = '`' + columnName.replace(/`/g, "") + '`';
+					}
+
 					whereRaw = whereRaw
 						.replace('{fieldName}', columnName)
 						.replace('{operator}', operator)
@@ -1096,9 +1102,16 @@ sails.log.debug('ABClassObject.queryCount - SQL:', query.toString() );
 					sortClause = "{prefix}.`{columnName}`"
 									.replace('{prefix}', orderField.dbPrefix())
 									.replace('{columnName}', orderField.columnName);
-	            }
-	            query.orderByRaw(sortClause + " " + o.dir);
-	        })
+
+					// ABClassQuery: 
+					// If this is query who create MySQL view, then column name does not have `
+					if (this.viewName) {
+						sortClause = '`' + sortClause.replace(/`/g, "") + '`';
+					}
+
+				}
+				query.orderByRaw(sortClause + " " + o.dir);
+			})
 		}
 		
 
