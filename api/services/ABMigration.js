@@ -89,6 +89,21 @@ module.exports = {
 
     },
 
+    createQuery:function(query) {
+
+        var knex = ABMigration.connection(query.connName);
+        return query.migrateCreate(knex);
+
+    },
+
+
+    dropQuery:function(query) {
+
+        var knex = ABMigration.connection(query.connName);
+        return query.migrateDrop(knex);
+
+    },
+
     createField:function(field) {
 
         // disallow to create a new column in the external table

@@ -1145,19 +1145,19 @@ console.error('TODO: toolbarPermission()');
 				PopupDefineLabelComponent.objectLoad(CurrentObject);
 				PopupFilterDataTableComponent.objectLoad(CurrentObject);
 				PopupFrozenColumnsComponent.objectLoad(CurrentObject);
-				PopupFrozenColumnsComponent.setValue(CurrentObject.objectWorkspace.frozenColumnID || "");
-				PopupFrozenColumnsComponent.setHiddenFields(CurrentObject.objectWorkspace.hiddenFields);
+				PopupFrozenColumnsComponent.setValue(CurrentObject.workspaceFrozenColumnID || "");
+				PopupFrozenColumnsComponent.setHiddenFields(CurrentObject.workspaceHiddenFields);
 				PopupHideFieldComponent.objectLoad(CurrentObject);
-				PopupHideFieldComponent.setValue(CurrentObject.objectWorkspace.hiddenFields);
-				PopupHideFieldComponent.setFrozenColumnID(CurrentObject.objectWorkspace.frozenColumnID || "");
+				PopupHideFieldComponent.setValue(CurrentObject.workspaceHiddenFields);
+				PopupHideFieldComponent.setFrozenColumnID(CurrentObject.workspaceFrozenColumnID || "");
 				PopupMassUpdateComponent.objectLoad(CurrentObject, DataTable);
 				PopupSortFieldComponent.objectLoad(CurrentObject);
-				PopupSortFieldComponent.setValue(CurrentObject.objectWorkspace.sortFields);
+				PopupSortFieldComponent.setValue(CurrentObject.workspaceSortFields);
 				PopupImportObjectComponent.objectLoad(CurrentObject);
                 PopupExportObjectComponent.objectLoad(CurrentObject);
 				PopupExportObjectComponent.objectLoad(CurrentObject);
 				PopupExportObjectComponent.setGridComponent($$(DataTable.ui.id));
-				PopupExportObjectComponent.setHiddenFields(CurrentObject.objectWorkspace.hiddenFields);
+				PopupExportObjectComponent.setHiddenFields(CurrentObject.workspaceHiddenFields);
                 PopupExportObjectComponent.setFilename(CurrentObject.label);
                 PopupViewSettingsComponent.objectLoad(CurrentObject);
 
@@ -1230,10 +1230,12 @@ console.error('TODO: toolbarPermission()');
 				CurrentDataview.datasource = CurrentObject;
 
 				CurrentDataview.fromValues({
-					datasourceID: CurrentObject.id,
-					objectWorkspace: {
-						filterConditions: wheres,
-						sortFields: sorts
+					settings: {
+						datasourceID: CurrentObject.id,
+						objectWorkspace: {
+							filterConditions: wheres,
+							sortFields: sorts
+						}	
 					}
 				});
 
