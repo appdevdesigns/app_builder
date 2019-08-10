@@ -146,6 +146,22 @@ function cacheABClassObjects(next) {
 
 		});
 
+
+	ABGraphQuery.find()
+		.catch(next)
+		.then(queries => {
+
+			(queries || []).forEach(q => {
+
+				// it will be cached here
+				q.toABClass();
+
+			});
+
+			next();
+
+		});
+
 }
 
 function setupPollingMCC(next) {

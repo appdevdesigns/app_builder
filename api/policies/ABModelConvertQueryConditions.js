@@ -127,7 +127,8 @@ function parseQueryCondition(_where, object, req, res, cb) {
         } else {
 
             // make sure we find our QueryObject
-            var QueryObj = object.application.queries((q)=>{ return q.id == cond.value; })[0];
+            // var QueryObj = object.application.queries((q)=>{ return q.id == cond.value; })[0];
+            var QueryObj = ABObjectCache.get(cond.value);
             if (!QueryObj) {
 
                 ADCore.error.log('AppBuilder:Policy:ABModelConvertQueryConditions:Could not find specified query object:', { qid:cond.value, condition:cond });
@@ -157,6 +158,15 @@ function parseQueryCondition(_where, object, req, res, cb) {
 
                 // if this is our special 'this_object' 'in_query'  queryID  filter:
                 if (cond.key == 'this_object') {
+
+                    if (!QueryObj.canFilterObject(object)) {
+
+                        ADCore.error.log('AppBuilder:Policy:ABModelConvertQueryConditions:object not filterable by Query:', { object:object, queryObj:QueryObj });
+                        var err = new Error('Object not filterable by Query.');
+                        cb(err);
+                        return;
+
+                    }
 
                     let alias = QueryObj.objectAlias(object.id);
 
@@ -344,7 +354,8 @@ var querySQL = query.toString();
                         .then((data)=>{
 
                             sails.log.info('.... query data : ', data);
-                            var ids = data.map((d)=>{ return d[parseColumn] });
+                            // var ids = data.map((d)=>{ return d[parseColumn] });
+                            var ids = data.map((d)=>{ return d[queryColumn] });
 
 
                             done(null, ids);

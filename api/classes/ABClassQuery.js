@@ -1003,11 +1003,19 @@ class ABClassQuery extends ABClassObject {
 		});
 
 		// when empty columns, then add default id
-		if (selects.length == 0 && columns.length == 0) {
-			selects.push("#alias#.#pk# AS PK"
-				.replace("#alias#", joinSetting.alias || fromBaseTable)
-				.replace("#pk#", this.objectBase().PK()));
-		}
+		// if (selects.length == 0 && columns.length == 0) {
+		Object.keys(this._objects).forEach(alias => {
+
+			let object = this.objectByAlias(alias);
+			if (!object) return;
+
+			// selects.push("#alias#.#pk# AS PK"
+			selects.push("#alias#.#pk# AS #alias#.#pk#"
+				.replace(/#alias#/g, alias || fromBaseTable)
+				.replace(/#pk#/g, object.PK()));
+
+		});
+		// }
 
 		query.column(columns);
 		query.select(selects);
@@ -1192,7 +1200,7 @@ sails.log.debug('ABClassQuery.migrateCreate - SQL:', sqlCommand);
 						this.populateFindConditions(query, options, userData);
 
 						// after all that, resolve our promise with the query results
-						resolve(query); // query.then(resolve);
+						// resolve(query); // query.then(resolve);
 					}
 				})
 
@@ -1205,7 +1213,19 @@ sails.log.debug('ABClassQuery.migrateCreate - SQL:', sqlCommand);
 			}
 
 			if (options.columnNames && options.columnNames.length) {
-				query.clearSelect().column(options.columnNames);
+
+				// MySQL view: remove ` in column name
+				options.columnNames = options.columnNames.map(colName => {
+
+					if (typeof colName == 'string') {
+						colName = '`' + (colName || "").replace(/`/g, '') + '`';
+						colName = ABMigration.connection().raw(colName);	
+					}
+
+					return colName;
+				});
+
+				query.clearSelect().select(options.columnNames);
 			}
 
 

@@ -139,7 +139,8 @@ function parseQueryCondition(_where, object, req, res, cb) {
             var queryFieldID = values[1];
 
             // make sure we find our QueryObject
-            var QueryObj = object.application.queries((q)=>{ return q.id == queryID; })[0];
+            // var QueryObj = object.application.queries((q)=>{ return q.id == queryID; })[0];
+            var QueryObj = ABObjectCache.get(cond.value);
             if (!QueryObj) {
 
                 ADCore.error.log('AppBuilder:Policy:ABModelConvertQueryFieldConditions:Could not find specified query object:', { qid:cond.value, condition:cond });
