@@ -12,6 +12,7 @@ import ABViewChartPie from "./views/ABViewChartPie"
 import ABViewChartBar from "./views/ABViewChartBar"
 import ABViewChartLine from "./views/ABViewChartLine"
 import ABViewChartArea from "./views/ABViewChartArea"
+import ABViewComment from "./views/ABViewComment"
 import ABViewConditionalContainer from "./views/ABViewConditionalContainer"
 import ABViewContainer from "./views/ABViewContainer"
 import ABViewDocxBuilder from "./views/ABViewDocxBuilder"
@@ -67,6 +68,7 @@ Views[ABViewChartBar.common().key] = ABViewChartBar;
 Views[ABViewChartLine.common().key] = ABViewChartLine;
 Views[ABViewChartArea.common().key] = ABViewChartArea;
 
+Views[ABViewComment.common().key] = ABViewComment;
 Views[ABViewConditionalContainer.common().key] = ABViewConditionalContainer;
 Views[ABViewContainer.common().key] = ABViewContainer;
 Views[ABViewDataview.common().key] = ABViewDataview;
