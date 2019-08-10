@@ -13,9 +13,10 @@ function L(key, altText) {
 }
 
 var ABViewCommentPropertyComponentDefaults = {
-	dataSource: null,
+	dataviewID: null,
 	columnUser: null,
 	columnComment: null,
+	height: 300,
 	label: '',	// label is required and you can add more if the component needs them
 	// format:0  	// 0 - normal, 1 - title, 2 - description
 }
@@ -88,7 +89,7 @@ export default class ABViewComment extends ABViewWidget  {
     	// convert from "0" => 0
     	// this.settings.format = parseInt(this.settings.format);
     	// if this is being instantiated on a read from the Property UI,
-		this.settings.dataSource = this.settings.dataSource || ABViewCommentPropertyComponentDefaults.dataSource;
+		this.settings.height = parseInt(this.settings.height || 0);
 
 	}
 
@@ -107,60 +108,13 @@ export default class ABViewComment extends ABViewWidget  {
 	editorComponent(App, mode) {
 
 		var idBase = 'ABViewCommentEditorComponent';
-		var ids = {
-			component: App.unique(idBase + '_component')
-		}
+		var CommentView = this.component(App, idBase);
 
-		var component = this.component(App);
-		var _ui = component.ui;
-		_ui.id = ids.component;
-
-		var _init = (options) => {
-
-			if(this.settings.dataSource) {
-				let dc = this.dataCollection; // get from a function or a (get) property
-
-                dc.__dataCollection.attachEvent("onAfterLoad", function(){
-					_logic.refreshComment();
-                });
-
-				if (dc &&
-					dc.dataStatus == dc.dataStatusFlag.notInitial) {
-	
-					// load data when a widget is showing
-					dc.loadData();
-	
-				}
-			}
-			
-		}
-
-		var _logic = {
-			refreshComment:() => {
-				var commentData = this.getCommentData();
-                if(commentData.data) {
-                   $$(ids.component).parse(commentData);
-                }
-			}
-		} 
-
-		var onShow = () => {
-			
-			var commentData = this.getCommentData();
-			if(commentData.data) {
-				$$(ids.component).parse(commentData);
-			}
-			
-			$$(ids.component).attachEvent("onBeforeAdd",function(id, obj, index){
-				var comment = obj.text;
-			});
-		}
 		return {
-			ui:_ui,
-			init:_init,
-			logic:_logic,
-
-			onShow: onShow
+			ui: CommentView.ui,
+			init: CommentView.init,
+			logic: CommentView.logic,
+			onShow: CommentView.onShow,
 		}
 	}
 
@@ -172,27 +126,44 @@ export default class ABViewComment extends ABViewWidget  {
 
 		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
 
+		// _logic functions
+
+		_logic.selectSource = (dcId, oldDcId) => {
+
+			var currView = _logic.currentEditObject();
+
+			// Update field options in property
+			this.propertyUpdateFieldOptions(ids, currView, dcId);
+
+		};
+
 		// in addition to the common .label  values, we 
 		// ask for:
 		return commonUI.concat([
 			{
 				name: 'dataSource',
 				view: 'richselect',
-				label: L('ab.component.comment.dataSource', '*Data Source'),
+				label: L('ab.component.form.dataSource', '*Data Source'),
 				labelWidth: App.config.labelWidthLarge
 			},
 			{
 				name: 'columnUser',
 				view: 'richselect',
-				label: L('ab.component.comment.columnUser', '*User Column'),
+				label: L('ab.component.comment.columnUser', '*Select a user field'),
 				labelWidth: App.config.labelWidthLarge
 			},
 			{
 				name: 'columnComment',
 				view: 'richselect',
-				label: L('ab.component.comment.columnComment', '*Comment Column'),
+				label: L('ab.component.comment.columnComment', '*Select a comment field'),
 				labelWidth: App.config.labelWidthLarge
 			},
+			{
+				view: 'counter',
+				name: "height",
+				label: L("ab.component.common.height", "*Height:"),
+				labelWidth: App.config.labelWidthLarge,
+			}
 		]);
 
 	}
@@ -200,15 +171,17 @@ export default class ABViewComment extends ABViewWidget  {
 	static propertyEditorPopulate(App, ids, view) {
 
 		super.propertyEditorPopulate(App, ids, view);
+		
+		var dataviewId = (view.settings.dataviewID ? view.settings.dataviewID : null);
 
-		this.populateDataCollection(ids, view);
-		this.populateFieldOptions(ids, view);
+		this.propertyUpdateDataviewOptions(ids, view, dataviewId);
+		this.propertyUpdateUserFieldOptions(ids, view, dataviewId);
+		this.propertyUpdateCommentFieldOptions(ids, view, dataviewId);
 
-		$$(ids.dataSource).setValue(view.settings.dataSource || ABViewCommentPropertyComponentDefaults.dataSource);
+		$$(ids.dataSource).setValue(view.settings.dataviewID || ABViewCommentPropertyComponentDefaults.dataviewID);
 		$$(ids.columnUser).setValue(view.settings.columnUser || ABViewCommentPropertyComponentDefaults.columnUser);
 		$$(ids.columnComment).setValue(view.settings.columnComment || ABViewCommentPropertyComponentDefaults.columnComment);
-
-		// Make sure you set the values for this property editor in Webix
+		$$(ids.height).setValue(view.settings.height || ABViewCommentPropertyComponentDefaults.height);
 	}
 
 
@@ -216,75 +189,87 @@ export default class ABViewComment extends ABViewWidget  {
 
 		super.propertyEditorValues(ids, view);
 
-		view.settings.dataSource = $$(ids.dataSource).getValue();
+		view.settings.dataviewID = $$(ids.dataSource).getValue();
 		view.settings.columnUser = $$(ids.columnUser).getValue();
 		view.settings.columnComment = $$(ids.columnComment).getValue();
-
-		this.populateFieldOptions(ids, view);
+		view.settings.height = $$(ids.height).getValue();
 
 		// Retrive the values of your properties from Webix and store them in the view
 	}
 
-	static populateDataCollection(ids, view) {
+	static propertyUpdateDataviewOptions(ids, view, dataviewId) {
 
-		// Set the objects you can choose from in the list
-		var objectOptions = view.pageRoot().dataCollections().map((dc) => {
+		// Pull data collections to options
+		var dvOptions = view.application.dataviews().map((dv) => {
+
 			return {
-				id: dc.id,
-				value: dc.label
+				id: dv.id,
+				value: dv.label
 			};
 		});
 
-		// Add a default option
-		var defaultOption = { id: '', value: L('ab.component.label.selectObject', '*Select an object') };
-		objectOptions.unshift(defaultOption);
+		dvOptions.unshift({
+			id: null,
+			value: '[Select]'
+		});
 
-		$$(ids.dataSource).define("options", objectOptions);
+		$$(ids.dataSource).define('options', dvOptions);
+		$$(ids.dataSource).define('value', dataviewId);
 		$$(ids.dataSource).refresh();
 
 	}
 
-	static populateFieldOptions(ids, view) {
+	static propertyUpdateUserFieldOptions(ids, view, dvId) {
 
-		// clear options
-		$$(ids.columnUser).define("options", []);
+		var dataview = view.application.dataviews(dv => dv.id == dvId)[0];
+		var object = dataview ? dataview.datasource : null;
+
+		// Pull field list
+		var fieldOptions = [];
+		if (object != null) {
+
+			fieldOptions = object.fields((f) => f.key == 'user').map(f => {
+
+				return {
+					id: f.id,
+					value: f.label
+				};
+
+			});
+		}
+		// Add a default option
+		var defaultOption = { id: null, value: '[Select]' };
+		fieldOptions.unshift(defaultOption);
+		
+		$$(ids.columnUser).define("options", fieldOptions);
 		$$(ids.columnUser).refresh();
 
-		$$(ids.columnComment).define("options", []);
+	}
+
+	static propertyUpdateCommentFieldOptions(ids, view, dvId) {
+
+		var dataview = view.application.dataviews(dv => dv.id == dvId)[0];
+		var object = dataview ? dataview.datasource : null;
+
+		// Pull field list
+		var fieldOptions = [];
+		if (object != null) {
+
+			fieldOptions = object.fields((f) => f.key == 'string' || f.key == 'LongText').map(f => {
+
+				return {
+					id: f.id,
+					value: f.label
+				};
+
+			});
+		}
+		// Add a default option
+		var defaultOption = { id: null, value: '[Select]' };
+		fieldOptions.unshift(defaultOption);
+		
+		$$(ids.columnComment).define("options", fieldOptions);
 		$$(ids.columnComment).refresh();
-
-		var dc = view.dataCollection;
-		if (dc == null) return;
-
-		var obj = dc.datasource;
-		if (obj == null) return;
-
-		var userFields = obj.fields((f) => f.key == 'user');
-		var textFields = obj.fields((f) => f.key == 'string' || f.key == 'LongText');
-
-
-		var convertOption = (opt) => {
-			return {
-				id: opt.id,
-				value: opt.columnName,
-				key: opt.key
-			}
-		};
-
-		var userFieldsOptions = userFields.map(convertOption);
-		var textFieldsOptions = textFields.map(convertOption);
-
-		var defaultOption = { id: '', value: L('ab.component.label.selectColumn', '*Select a column'), key: '' };
-		userFieldsOptions.unshift(defaultOption);
-		textFieldsOptions.unshift(defaultOption);
-
-		$$(ids.columnUser).define("options", userFieldsOptions);
-		$$(ids.columnUser).refresh();
-		$$(ids.columnUser).enable();
-
-		$$(ids.columnComment).define("options", textFieldsOptions);
-		$$(ids.columnComment).refresh();
-		$$(ids.columnComment).enable();
 
 	}
 
@@ -295,12 +280,6 @@ export default class ABViewComment extends ABViewWidget  {
 	 * @return {obj} UI component
 	 */
 	component(App) {
-
-		// get a UI component for each of our child views
-		var viewComponents = [];
-		this.views().forEach((v)=>{
-			viewComponents.push(v.component(App));
-		})
 
 		var idBase = 'ABViewComment_'+this.id;
 		var ids = {
@@ -315,6 +294,7 @@ export default class ABViewComment extends ABViewWidget  {
 			view: "comments",
 			users: userList,
 			currentUser: userId,
+			height: this.settings.height,
 			on: {
 				'onBeforeAdd': function (id, obj, index) {
 					_logic.addComment(obj.text);
@@ -325,28 +305,22 @@ export default class ABViewComment extends ABViewWidget  {
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
 			
-			if(this.settings.dataSource) {
+			var dv = this.dataview;
+			if (!dv) return;
 
-				let dc = this.dataCollection; // get from a function or a (get) property
+			// bind dc to component
+			dv.bind($$(ids.component));
+			
+			dv.__dataCollection.attachEvent("onAfterLoad", function(){
+				_logic.refreshComment();
+            });
 
-                dc.__dataCollection.attachEvent("onAfterLoad", function(){
-					_logic.refreshComment();
-                });
-
-				if (dc &&
-					dc.dataStatus == dc.dataStatusFlag.notInitial) {
-	
-					// load data when a widget is showing
-					dc.loadData();
-	
-				}
-			}
 		}
 
 		var _logic = {
 			refreshComment:() => {
 				var commentData = this.getCommentData();
-                if(commentData.data) {
+                if(commentData) {
                    $$(ids.component).parse(commentData);
                 }
 			},
@@ -356,22 +330,26 @@ export default class ABViewComment extends ABViewWidget  {
 		}
 
 		var onShow = () => {
+			var dv = this.dataview;
+			if (dv &&
+				dv.dataStatus == dv.dataStatusFlag.notInitial) {
 
-			var commentData = this.getCommentData();
-			if(commentData.data) {
-				$$(ids.component).parse(commentData);
+				// load data when a widget is showing
+				dv.loadData();
 			}
 
-			$$(ids.component).attachEvent("onBeforeAdd",function(id, obj, index){
-				_logic.addComment(obj.text);
-			});
+			_logic.refreshComment();
+			if(!$$(ids.component).hasEvent("onBeforeAdd")) {
+				$$(ids.component).attachEvent("onBeforeAdd",function(id, obj, index){
+					_logic.addComment(obj.text);
+				});
+			}
 		}
 
 		return {
 			ui:_ui,
 			init:_init,
 			logic:_logic,
-
 			onShow: onShow
 		}
 	}
@@ -385,31 +363,22 @@ export default class ABViewComment extends ABViewWidget  {
 		return [];
 	}
 
-	/**
-	 * @property dataCollection
-	 * return ABViewDataCollection of this form
-	 * 
-	 * @return {ABViewDataCollection}
-	 */
-	get dataCollection() {
-		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.dataSource)[0];
-	}
-
 	getUserField() {
-		var dc = this.dataCollection;
-		if (!dc) return null;
+		var dv = this.dataview;
+		if (!dv) return null;
 
-		var obj = dc.datasource;
+		var obj = dv.datasource;
 		if (!obj) return null;
 		
 		return obj.fields((f) => f.id == this.settings.columnUser)[0]
 	}
 
 	getCommentField() {
-		var dc = this.dataCollection;
-		if (!dc) return null;
 
-		var obj = dc.datasource;
+		var dv = this.dataview;
+		if (!dv) return null;
+
+		var obj = dv.datasource;
 		if (!obj) return null;
 		
 		return obj.fields((f) => f.id == this.settings.columnComment)[0]
@@ -467,9 +436,9 @@ export default class ABViewComment extends ABViewWidget  {
 	getCommentData() {
 		var result = { 
 		}
-
-		var dc = this.dataCollection;
-		if (dc == null) return result;
+		
+		var dv = this.dataview;
+		if (!dv) return null;
 
 		var userCol = this.getUserField();
 		var commentCol = this.getCommentField();
@@ -479,7 +448,7 @@ export default class ABViewComment extends ABViewWidget  {
 		var userColName = userCol.columnName;
 		var commentColName = commentCol.columnName;
 
-		var dataObject = dc.getData();
+		var dataObject = dv.getData();
 		var dataList = [];
 
 		dataObject.forEach((item, index) => {
@@ -502,16 +471,15 @@ export default class ABViewComment extends ABViewWidget  {
 
 	saveData(commentText) {
 		
-		// get ABViewDataCollection
-		var dc = this.dataCollection;
-		if (dc == null) return Promise.resolve();
+		var dv = this.dataview;
+		if (!dv) return Promise.resolve();
 
 		// get ABObject
-		var obj = dc.datasource;
+		var obj = dv.datasource;
 		if (obj == null) return Promise.resolve();
 
 		// get ABModel
-		var model = dc.model;
+		var model = dv.model;
 		if (model == null) return Promise.resolve();
 
 		if (commentText == null) return Promise.resolve();
