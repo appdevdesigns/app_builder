@@ -2782,3 +2782,21 @@ msgstr "เพิ่มมุมมองข้อมูลใหม่"
 #. key: ab.query.addNewQuery
 msgid "Add query"
 msgstr "เพิ่มมุมมองข้อมูล"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.comment
+msgid "Comment"
+msgstr "กล่องแสดงความคิดเห็น"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.comment.columnUser
+msgid "Select a user field"
+msgstr "เลือกฟิลด์ผู้ใช้"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.comment.columnComment
+msgid "Select a comment field"
+msgstr "เลือกฟิลด์ข้อความ"
