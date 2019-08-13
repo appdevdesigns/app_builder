@@ -896,7 +896,8 @@ export default class RowFilter extends OP.Component {
 				if (isQueryField) {
 
 					var options = [];
-					var Queries = _Object.application.queries((q) => { return q.canFilterField(field); });
+					// var Queries = _Object.application.queries((q) => { return q.canFilterField(field); });
+					var Queries = _Object.application.queries((q) => { return q.canFilterObject(field.datasourceLink); });
 					Queries.forEach((q) => {
 						options.push({
 							id: q.id,
