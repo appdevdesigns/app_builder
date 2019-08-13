@@ -1,3 +1,5 @@
+import ABObjectQuery from "./ABObjectQuery";
+
 /**
  *  support get data from objects and queries
  */
@@ -187,7 +189,18 @@ export default class RowFilter extends OP.Component {
 
 				// insert our 'this object' entry if an Object was given.
 				if (_Object) {
-					_Fields.unshift({ id: 'this_object', label: _Object.label });
+
+					let thisObjOption = {
+						id: 'this_object',
+						label: _Object.label
+					};
+
+					// If object is query ,then should define default alias: "BASE_OBJECT"
+					if (_Object instanceof ABObjectQuery) {
+						thisObjOption.alias = 'BASE_OBJECT';
+					}
+
+					_Fields.unshift(thisObjOption);
 				}
 
 			},
