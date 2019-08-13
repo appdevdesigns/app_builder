@@ -221,6 +221,10 @@ class ABFieldAutoIndex extends ABField {
 		// do your special convert data here.
 		// myParameter[this.columnName] = parseInt(myParameter[this.columnName]);
 
+		// To prevent return empty string ''
+		if (!myParameter[this.columnName])
+			delete myParameter[this.columnName];
+
 		return myParameter;
 	}
 
