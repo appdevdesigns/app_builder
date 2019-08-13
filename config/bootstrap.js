@@ -13,6 +13,7 @@ var fs = require('fs');
 var async = require('async');
 
 var ABGraphObject = require(path.join('..', 'api', 'graphModels', 'ABObject'));
+var ABGraphQuery = require(path.join('..', 'api', 'graphModels', 'ABQuery'));
 
 
 module.exports = function (cb) {
@@ -131,24 +132,32 @@ function verifyWellKnownConfigs(next) {
 
 function cacheABClassObjects(next) {
 
-	ABGraphObject.find()
-		.catch(next)
-		.then(objects => {
+	let tasks = [];
 
-			objects.forEach(obj => {
+	tasks.push(new Promise((resolve, reject) => {
 
-				// it will be cached here
-				obj.toABClass();
+		ABGraphObject.find()
+			.catch(reject)
+			.then(objects => {
+
+				objects.forEach(obj => {
+
+					// it will be cached here
+					obj.toABClass();
+
+				});
+
+				resolve();
 
 			});
+	}));
 
-			next();
+	tasks.push(new Promise((resolve, reject) => {
 
-		});
-
-
-	ABGraphQuery.find()
-		.catch(next)
+		ABGraphQuery.find({
+			relations: ['objects']
+		})
+		.catch(reject)
 		.then(queries => {
 
 			(queries || []).forEach(q => {
@@ -158,9 +167,15 @@ function cacheABClassObjects(next) {
 
 			});
 
-			next();
+			resolve();
 
 		});
+
+	}));
+
+	Promise.all(tasks)
+		.catch(next)
+		.then(() => next());
 
 }
 
