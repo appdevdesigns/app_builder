@@ -419,17 +419,17 @@ class ABFieldAutoIndex extends ABField {
 	*/
 	formComponent() {
 		
-		return super.formComponent('[form_component_key]');
+		return super.formComponent('fieldreadonly');
 	}
 
 
 	detailComponent() {
 		
-		var detailComponentSetting = super.detailComponent();
+		let detailComponentSetting = super.detailComponent();
 
 		detailComponentSetting.common = () => {
 			return {
-				key: '[detail_component_key]'
+				key: 'detailtext'
 			}
 		};
 
