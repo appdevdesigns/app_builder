@@ -291,7 +291,7 @@ class ABFieldFile extends ABField {
 		config.template = (obj) => {
 
 			if (obj.$group)
-				return obj[this.columnName];
+				return this.dataValue(obj);
 
 			var fileDiv = [
 				'<div class="ab-file-data-field" style="float: left;">',
@@ -528,13 +528,17 @@ class ABFieldFile extends ABField {
 			})
 			
 		}
-		else if (!row[this.columnName] || !row[this.columnName].uuid) {
+		else {
+			let rowData = this.dataValue(row);
+			if (!rowData || !rowData.uuid) {
 
-			var uploaderId = node.dataset['uploaderId'],
-				uploader = $$(uploaderId);
+				var uploaderId = node.dataset['uploaderId'],
+					uploader = $$(uploaderId);
 
-			if (uploader && uploader.fileDialog)
-				uploader.fileDialog({ rowid: row.id });
+				if (uploader && uploader.fileDialog)
+					uploader.fileDialog({ rowid: row.id });
+			}
+
 		}
 
 		return false;
@@ -581,12 +585,13 @@ class ABFieldFile extends ABField {
 		var value = '';
 		var name = '';
 
-		if (obj[this.columnName]) {
-			value = obj[this.columnName].uuid;
-			name = obj[this.columnName].filename;
+		let rowData = this.dataValue(obj);
+		if (rowData) {
+			value = rowData.uuid;
+			name = rowData.filename;
 		};
 
-		if ((value != '') && (name != '')) {
+		if (value && name) {
 			iconDisplay =  'display:none';
 			fileDisplay = '';
 			fileURL =  '/opsportal/file/' + this.object.application.name + '/' + value;
@@ -626,7 +631,7 @@ class ABFieldFile extends ABField {
 
 		var val = null;
 		if (rowData) {
-			val = rowData[this.columnName];
+			val = this.dataValue(rowData);
 
 			// if (val == null) {
 			// 	// assume they just sent us a single value
@@ -671,6 +676,24 @@ class ABFieldFile extends ABField {
 		
 		super.isValidData(data, validator);
 		
+	}
+
+	dataValue(rowData) {
+
+		let propName = "{objectName}.{columnName}"
+			.replace('{objectName}', this.alias || this.object.name)
+			.replace('{columnName}', this.columnName);
+
+		let result = rowData[this.columnName] || rowData[propName] || {};
+		if (typeof result == 'string') {
+			try {
+				result = JSON.parse(result);
+			}
+			catch (err) {}
+		}
+
+		return result;
+
 	}
 
 	format(rowData) {
