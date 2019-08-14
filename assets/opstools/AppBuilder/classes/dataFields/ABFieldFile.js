@@ -673,6 +673,27 @@ class ABFieldFile extends ABField {
 		
 	}
 
+	format(rowData) {
+
+		let result = this.dataValue(rowData);
+		if (result) {
+
+			if (typeof result == 'string') {
+				try {
+					result = JSON.parse(result);
+				}
+				catch(err) {}
+			}
+
+			// return file name
+			return result ? (result.filename || "") : "";
+		}
+		else {
+			return "";
+		}
+
+	}
+
 }
 
 
