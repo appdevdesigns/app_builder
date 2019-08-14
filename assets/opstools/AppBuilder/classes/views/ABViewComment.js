@@ -306,7 +306,12 @@ export default class ABViewComment extends ABViewWidget  {
 
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
-			
+
+			var $comment = $$(ids.component);
+			if ($comment) {
+				webix.extend($comment, webix.ProgressBar);
+			}
+
 			var dv = this.dataview;
 			if (!dv) return;
 
@@ -376,6 +381,8 @@ export default class ABViewComment extends ABViewWidget  {
 				if (this.__refreshTimeout)
 					clearTimeout(this.__refreshTimeout);
 
+				_logic.busy();
+
 				this.__refreshTimeout = setTimeout(() => {
 
 					// clear comments
@@ -395,11 +402,38 @@ export default class ABViewComment extends ABViewWidget  {
 
 					delete this.__refreshTimeout;
 
-				}, 500);
+					_logic.ready();
+
+				}, 150);
 
 			},
 			addComment:(commentText) => {
 				this.saveData(commentText);
+			},
+			busy: () => {
+
+				let $comment = $$(ids.component);
+				if ($comment) {
+
+					$comment.disable();
+
+					if ($comment.showProgress)
+						$comment.showProgress({ type: "icon" });
+				}
+
+
+			},
+			ready: () => {
+
+				let $comment = $$(ids.component);
+				if ($comment) {
+
+					$comment.enable();
+
+					if ($comment.hideProgress)
+						$comment.hideProgress();
+				}
+
 			}
 		}
 
@@ -551,23 +585,46 @@ export default class ABViewComment extends ABViewWidget  {
 	// }
 
 	saveData(commentText) {
+
+		if (commentText == null ||
+			commentText == "") 
+			return Promise.resolve();
 		
-		var dv = this.dataview;
+		let dv = this.dataview;
 		if (!dv) return Promise.resolve();
 
 		// get ABObject
-		var obj = dv.datasource;
+		let obj = dv.datasource;
 		if (obj == null) return Promise.resolve();
 
 		// get ABModel
-		var model = dv.model;
+		let model = dv.model;
 		if (model == null) return Promise.resolve();
 
-		if (commentText == null) return Promise.resolve();
+		let comment = {};
 
-		var comment = {};
-		comment[obj.fields((f) => f.id == this.settings.columnUser)[0].columnName] = OP.User.username();
-		comment[obj.fields((f) => f.id == this.settings.columnComment)[0].columnName] = commentText; 
+		let userField = this.getUserField();
+		if (userField)
+			comment[userField.columnName] = OP.User.username();
+
+		let commentField = this.getCommentField();
+		if (commentField)
+			comment[commentField.columnName] = commentText;
+
+		// add parent cursor to default
+		let dvLink = dv.dataviewLink;
+		if (dvLink &&
+			dvLink.getCursor()) {
+
+			let objectLink = dvLink.datasource;
+			let fieldLink = dv.fieldLink;
+
+			if (objectLink && 
+				fieldLink) {
+				comment[fieldLink.columnName] = {};
+				comment[fieldLink.columnName][objectLink.PK()] = dvLink.getCursor().id;
+			}
+		}
 
 		return new Promise(
 			(resolve, reject) => {
