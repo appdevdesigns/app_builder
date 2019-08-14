@@ -109,7 +109,8 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 											options: [],
 											hidden: 1,
 											on: {
-												onChange: (newv, oldv) => {
+												onChange: (linkedDvId, oldv) => {
+													this._logic.initLinkFieldOptions(linkedDvId);
 													this._logic.save();
 												}
 											}
@@ -418,7 +419,7 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 
 			},
 
-			initLinkDataviewOptions: (settings) => {
+			initLinkDataviewOptions: () => {
 
 				let ids = this.ids;
 
@@ -471,18 +472,26 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 
 			},
 
-			initLinkFieldOptions: () => {
+			initLinkFieldOptions: (linkedDvId = null) => {
 
 				let ids = this.ids;
 
 				let linkFieldOptions = [];
+				let linkDataview = null;
+
+				// Specify id of linked data view
+				if (linkedDvId) {
+					linkDataview = this._application.dataviews(dv => dv.id == linkedDvId)[0];
+				}
+				// Pull from current data view
+				else if (this._dataview && this._dataview.dataviewLink) {
+					linkDataview = this._dataview.dataviewLink;
+				}
 
 				// get fields that link to our ABObject
-				if (this._dataview &&
-					this._dataview.dataviewLink) {
+				if (linkDataview) {
 
 					let object = this._dataview.datasource;
-					let linkDataview = this._dataview.dataviewLink;
 					let linkObject = linkDataview.datasource;
 					let relationFields = object.connectFields().filter(link => link.settings.linkObject == (linkObject || {}).id);
 
