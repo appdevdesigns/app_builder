@@ -286,6 +286,8 @@ export default class ABViewComment extends ABViewWidget  {
 			component: App.unique(idBase+'_component'),
 		}
 
+		let base = super.component(App);
+
 		var userList = this.getUserData();
 		var userId = this.getCurrentUserId();
 
@@ -309,20 +311,92 @@ export default class ABViewComment extends ABViewWidget  {
 			if (!dv) return;
 
 			// bind dc to component
-			dv.bind($$(ids.component));
+			// dv.bind($$(ids.component));
+
+			this.__dvEvents = this.__dvEvents || {};
+
+			if (!this.__dvEvents.create) 
+				this.__dvEvents.create = dv.on('create', () => _logic.refreshComment());
 			
-			dv.__dataCollection.attachEvent("onAfterLoad", function(){
-				_logic.refreshComment();
-            });
+			if (!this.__dvEvents.update) 
+				this.__dvEvents.update = dv.on('update', () => _logic.refreshComment());
+
+			if (!this.__dvEvents.delete)
+				this.__dvEvents.delete = dv.on('delete', () => _logic.refreshComment());
+
+			if (!this.__dvEvents.loadData)
+				this.__dvEvents.loadData = dv.on('loadData', () => _logic.refreshComment());
 
 		}
 
 		var _logic = {
+
+			getCommentData: () => {
+
+				let dv = this.dataview;
+				if (!dv) return null;
+
+				let userCol = this.getUserField();
+				let commentCol = this.getCommentField();
+
+				if (!userCol || !commentCol) return null;
+
+				let userColName = userCol.columnName;
+				let commentColName = commentCol.columnName;
+
+				let dataObject = dv.getData();
+				let dataList = [];
+
+				dataObject.forEach((item, index) => {
+
+					if(item[commentColName]) {
+
+						var user = this.getUserData().find(user => { return user.value == item[userColName]});
+						var data = {
+							user_id: (user) ? user.id : 0,
+							date: new Date(item["created_at"]), 
+							text: item[commentColName]
+						};
+
+						dataList.push(data);
+
+					}
+				});
+
+				dataList.sort(function(a, b){
+					return new Date(a.date).getTime() - new Date(b.date).getTime();
+				});
+
+				return {
+					data: dataList
+				};
+			},
 			refreshComment:() => {
-				var commentData = this.getCommentData();
-                if(commentData) {
-                   $$(ids.component).parse(commentData);
-                }
+
+				if (this.__refreshTimeout)
+					clearTimeout(this.__refreshTimeout);
+
+				this.__refreshTimeout = setTimeout(() => {
+
+					// clear comments
+					let $commentList = $$(ids.component).queryView({ view: "list" });
+					if ($commentList)
+						$commentList.clearAll();
+
+					// populate comments
+					let commentData = _logic.getCommentData();
+	                if(commentData) {
+	                   $$(ids.component).parse(commentData);
+	                }
+
+					// scroll to the last item
+					if ($commentList)
+						$commentList.scrollTo(0, Number.MAX_SAFE_INTEGER);
+
+					delete this.__refreshTimeout;
+
+				}, 500);
+
 			},
 			addComment:(commentText) => {
 				this.saveData(commentText);
@@ -330,20 +404,22 @@ export default class ABViewComment extends ABViewWidget  {
 		}
 
 		var onShow = () => {
-			var dv = this.dataview;
-			if (dv &&
-				dv.dataStatus == dv.dataStatusFlag.notInitial) {
 
-				// load data when a widget is showing
-				dv.loadData();
-			}
+			base.onShow();
+			// var dv = this.dataview;
+			// if (dv &&
+			// 	dv.dataStatus == dv.dataStatusFlag.notInitial) {
+
+			// 	// load data when a widget is showing
+			// 	dv.loadData();
+			// }
 
 			_logic.refreshComment();
-			if(!$$(ids.component).hasEvent("onBeforeAdd")) {
-				$$(ids.component).attachEvent("onBeforeAdd",function(id, obj, index){
-					_logic.addComment(obj.text);
-				});
-			}
+			// if(!$$(ids.component).hasEvent("onBeforeAdd")) {
+			// 	$$(ids.component).attachEvent("onBeforeAdd",function(id, obj, index){
+			// 		_logic.addComment(obj.text);
+			// 	});
+			// }
 		}
 
 		return {
@@ -433,41 +509,46 @@ export default class ABViewComment extends ABViewWidget  {
 		return userList;
 	}
 
-	getCommentData() {
-		var result = { 
-		}
-		
-		var dv = this.dataview;
-		if (!dv) return null;
+	// getCommentData() {
 
-		var userCol = this.getUserField();
-		var commentCol = this.getCommentField();
+	// 	let dv = this.dataview;
+	// 	if (!dv) return null;
 
-		if (!commentCol) return result;
+	// 	let userCol = this.getUserField();
+	// 	let commentCol = this.getCommentField();
 
-		var userColName = userCol.columnName;
-		var commentColName = commentCol.columnName;
+	// 	if (!commentCol) return null;
 
-		var dataObject = dv.getData();
-		var dataList = [];
+	// 	let userColName = userCol.columnName;
+	// 	let commentColName = commentCol.columnName;
 
-		dataObject.forEach((item, index) => {
-			if(item[commentColName] != "") {
-				var user = this.getUserData().find(user => { return user.value == item[userColName]});
-				var data = { user_id: (user) ? user.id : 0,
-							date: new Date(item["created_at"]), 
-							text: item[commentColName]};
-				dataList.push(data);
-			}
-		});
+	// 	let dataObject = dv.getData();
+	// 	let dataList = [];
 
-		dataList.sort(function(a, b){
-			return new Date(a.date).getTime() - new Date(b.date).getTime();
-		});
+	// 	dataObject.forEach((item, index) => {
 
-		result.data = dataList;
-		return result;
-	}
+	// 		if(item[commentColName]) {
+
+	// 			var user = this.getUserData().find(user => { return user.value == item[userColName]});
+	// 			var data = {
+	// 				user_id: (user) ? user.id : 0,
+	// 				date: new Date(item["created_at"]), 
+	// 				text: item[commentColName]
+	// 			};
+
+	// 			dataList.push(data);
+
+	// 		}
+	// 	});
+
+	// 	dataList.sort(function(a, b){
+	// 		return new Date(a.date).getTime() - new Date(b.date).getTime();
+	// 	});
+
+	// 	return {
+	// 		data: dataList
+	// 	};
+	// }
 
 	saveData(commentText) {
 		
