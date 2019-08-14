@@ -254,7 +254,7 @@ class ABFieldAutoIndex extends ABField {
 
 		// // text to Int:
 		// this.settings.supportMultilingual = parseInt(this.settings.supportMultilingual);
-		this.settings.currentIndex = parseInt(this.settings.currentIndex);
+		this.settings.currentIndex = parseInt(this.settings.currentIndex || 1);
 		this.settings.displayLength = parseInt(this.settings.displayLength);
 
 	}
@@ -350,17 +350,20 @@ class ABFieldAutoIndex extends ABField {
 		if (!values[this.columnName]) {
 
 			if (this.settings.currentIndex == null) {
-				this.settings.currentIndex = 0;	
+				this.settings.currentIndex = 1;
 			}
 
 			// Set default value
 			values[this.columnName] = this.settings.currentIndex;
-			this.settings.currentIndex+=1;
+			this.settings.currentIndex += 1;
 			this.save();
 		}
 	}
 
 	format(rowData) {
+
+		if (!rowData[this.columnName])
+			return "";
 
 		try {
 			var resultAutoIndex = setValueToIndex(this.settings.prefix, this.settings.delimiter, this.settings.displayLength, rowData[this.columnName]);
