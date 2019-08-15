@@ -347,6 +347,22 @@ class ABFieldLongText extends ABField {
 		return detailComponentSetting;
 	}
 
+	/**
+	 * @method setValue
+	 * this function uses for form component and mass update popup
+	 * to get value of fields that apply custom editor
+	 * 
+	 * @param {Object} item - Webix element
+	 * @param {Object} rowData - data of row
+	 * 
+	 * @return {Object}
+	 */
+	setValue(item, rowData) {
+		
+		super.setValue(item, rowData, "");
+	
+	};
+
 
 }
 
