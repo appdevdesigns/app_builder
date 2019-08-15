@@ -298,8 +298,20 @@ export default class ABViewComment extends ABViewWidget  {
 			currentUser: userId,
 			height: this.settings.height,
 			on: {
-				'onBeforeAdd': function (id, obj, index) {
+				onBeforeAdd: function (id, obj, index) {
 					_logic.addComment(obj.text);
+				},
+				// NOTE: no update event of comment widget !!
+				// Updating event handles in .init function
+				// https://docs.webix.com/api__ui.comments_onbeforeeditstart_event.html#comment-4509366150
+
+				// onAfterEditStart: function (rowId) {
+				// 	let item = this.getItem(rowId);
+
+				// 	_logic.updateComment(rowId, item);
+				// },
+				onAfterDelete: function(rowId) {
+					_logic.deleteComment(rowId);
 				}
 			}
 		};
@@ -307,9 +319,27 @@ export default class ABViewComment extends ABViewWidget  {
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
 
-			var $comment = $$(ids.component);
+			this.__dvEvents = this.__dvEvents || {};
+
+			let $comment = $$(ids.component);
 			if ($comment) {
-				webix.extend($comment, webix.ProgressBar);
+
+				let $commentList = $comment.queryView({ view: "list" });
+				if ($commentList) {
+
+					// Updating comment event
+					if (!this.__dvEvents.onStoreUpdated)
+						this.__dvEvents.onStoreUpdated = $commentList.data.attachEvent("onStoreUpdated", (rowId, data, operate) => {
+
+							if (operate == "update") {
+								_logic.updateComment(rowId, (data || {}).text);
+							}
+
+						});
+	
+					// Implement progress bar
+					webix.extend($commentList, webix.ProgressBar);
+				}
 			}
 
 			var dv = this.dataview;
@@ -317,8 +347,6 @@ export default class ABViewComment extends ABViewWidget  {
 
 			// bind dc to component
 			// dv.bind($$(ids.component));
-
-			this.__dvEvents = this.__dvEvents || {};
 
 			if (!this.__dvEvents.create) 
 				this.__dvEvents.create = dv.on('create', () => _logic.refreshComment());
@@ -358,6 +386,7 @@ export default class ABViewComment extends ABViewWidget  {
 
 						var user = this.getUserData().find(user => { return user.value == item[userColName]});
 						var data = {
+							id: item.id,
 							user_id: (user) ? user.id : 0,
 							date: new Date(item["created_at"]), 
 							text: item[commentColName]
@@ -385,8 +414,11 @@ export default class ABViewComment extends ABViewWidget  {
 
 				this.__refreshTimeout = setTimeout(() => {
 
+					let $comment = $$(ids.component);
+					if (!$comment) return;
+
 					// clear comments
-					let $commentList = $$(ids.component).queryView({ view: "list" });
+					let $commentList = $comment.queryView({ view: "list" });
 					if ($commentList)
 						$commentList.clearAll();
 
@@ -404,35 +436,60 @@ export default class ABViewComment extends ABViewWidget  {
 
 					_logic.ready();
 
-				}, 150);
+				}, 90);
 
 			},
-			addComment:(commentText) => {
+			addComment: (commentText) => {
 				this.saveData(commentText);
+			},
+			updateComment: (rowId, commentText) => {
+				let model = this.model();
+				if (!model)
+					return Promise.resolve();
+
+				let commentField = this.getCommentField();
+				if (!commentField)
+					return Promise.resolve();
+
+				let values = {};
+				values[commentField.columnName] = commentText || "";
+
+				return model.update(rowId, values);
+			},
+			deleteComment: (rowId) => {
+				let model = this.model();
+				if (!model) return;
+
+				return model.delete(rowId);
+
 			},
 			busy: () => {
 
 				let $comment = $$(ids.component);
-				if ($comment) {
+				if (!$comment) return;
 
-					$comment.disable();
+				let $commentList = $comment.queryView({ view: "list" });
+				if (!$commentList) return;
 
-					if ($comment.showProgress)
-						$comment.showProgress({ type: "icon" });
-				}
+				$commentList.disable();
+
+				if ($commentList.showProgress)
+					$commentList.showProgress({ type: "icon" });
 
 
 			},
 			ready: () => {
 
 				let $comment = $$(ids.component);
-				if ($comment) {
+				if (!$comment) return;
 
-					$comment.enable();
+				let $commentList = $comment.queryView({ view: "list" });
+				if (!$commentList) return;
 
-					if ($comment.hideProgress)
-						$comment.hideProgress();
-				}
+				$commentList.enable();
+
+				if ($commentList.hideProgress)
+					$commentList.hideProgress();
 
 			}
 		}
@@ -583,22 +640,34 @@ export default class ABViewComment extends ABViewWidget  {
 	// 		data: dataList
 	// 	};
 	// }
+	
+	model() {
+
+		let dv = this.dataview;
+		if (!dv) return null;
+
+		// get ABObject
+		let obj = dv.datasource;
+		if (obj == null) return null;
+
+		// get ABModel
+		let model = dv.model;
+		if (model == null) return null;
+
+		return model;
+
+	}
 
 	saveData(commentText) {
 
 		if (commentText == null ||
 			commentText == "") 
 			return Promise.resolve();
-		
+
 		let dv = this.dataview;
-		if (!dv) return Promise.resolve();
+		if (!dv) return null;
 
-		// get ABObject
-		let obj = dv.datasource;
-		if (obj == null) return Promise.resolve();
-
-		// get ABModel
-		let model = dv.model;
+		let model = this.model();
 		if (model == null) return Promise.resolve();
 
 		let comment = {};
