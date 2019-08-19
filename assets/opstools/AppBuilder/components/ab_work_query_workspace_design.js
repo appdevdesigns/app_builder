@@ -5,7 +5,7 @@
  *
  */
 
-import ABObject from "../classes/ABObject"
+import ABDataview from "../classes/ABDataview" 
 import RowFilter from "../classes/RowFilter"
 
 export default class ABWorkQueryWorkspaceDesign extends OP.Component {
@@ -66,8 +66,8 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 			// // Toolbar:
 			// toolbar: this.unique('toolbar'),
 
-			
 			selectedObject: this.unique('selectedObject'),
+			grouping: this.unique('grouping')
 
 		}
 
@@ -94,6 +94,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 		var CurrentApplication = null;
 		var CurrentQuery = null;
+		var CurrentDataview = null;
 
 		var DataFilter = new RowFilter(App, idBase + "_filter");
 
@@ -143,6 +144,13 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 					_logic.clearWorkspace();
 					return;
 				}
+
+				CurrentDataview = new ABDataview({
+					query: [CurrentQuery.toObj()],
+					settings: {
+						datasourceID: CurrentQuery.id
+					}
+				}, CurrentApplication);
 
 				var objBase = CurrentQuery.objectBase();
 
@@ -239,6 +247,9 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 					fnAddTab(objBase, links);
 
+					/** Grouping **/
+					$$(ids.grouping).define("value", query.settings.grouping);
+					$$(ids.grouping).refresh();
 
 					// remove a temporary tab
 					$$(ids.tabObjects).removeView('temp');
@@ -475,6 +486,11 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 					/** depth **/
 					// CurrentQuery.objectWorkspace.depth = $$(ids.depth).getValue();
+
+					/** grouping **/
+					CurrentQuery.settings = {
+						grouping: $$(ids.grouping).getValue()
+					};
 
 					// Save to db
 					CurrentQuery.save()
@@ -820,29 +836,56 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 			refreshDataTable: function () {
 				
+				if (CurrentDataview == null)
+					return;
+				
 				console.log("Refresh data table *******");
 
-				var DataTable = $$(ids.datatable);
-
+				let DataTable = $$(ids.datatable);
+				DataTable.clearAll();
 
 				// set columns:
 				var columns = CurrentQuery.columnHeaders(false, false);
 				DataTable.refreshColumns(columns);
 
+				let qCurrentView = CurrentQuery.workspaceViews.getCurrentView();
+
+				CurrentDataview.clearAll();
+				CurrentDataview.datasource = CurrentQuery;
+
+				// Set filter and sort conditions
+				CurrentDataview.fromValues({
+					query: [CurrentQuery.toObj()],
+					settings: {
+						datasourceID: CurrentQuery.id,
+						objectWorkspace: {
+							filterConditions: qCurrentView.filterConditions,
+							sortFields: qCurrentView.sortFields
+						}
+					}
+				});
 
 				// set data:
-				CurrentQuery.model().findAll({ limit: 20, where: CurrentQuery.workspaceViews.getCurrentView().filterConditions, sort: CurrentQuery.workspaceViews.getCurrentView().sortFields })
-					.then((response) => {
+				CurrentDataview.loadData(0, 20, () => {
 
-						DataTable.clearAll();
+					// Bind datatable view to data view
+					CurrentDataview.unbind(DataTable);
+					CurrentDataview.bind(DataTable);
 
-						response.data.forEach((d) => {
-							DataTable.add(d);
-						})
-					})
-					.catch((err) => {
-						OP.Error.log('Error running Query:', { error: err, query: CurrentQuery });
-					});
+				});
+				// CurrentQuery.model().findAll({ limit: 20, where: CurrentQuery.workspaceViews.getCurrentView().filterConditions, sort: CurrentQuery.workspaceViews.getCurrentView().sortFields })
+				// 	.then((response) => {
+
+				// 		DataTable.clearAll();
+
+				// 		response.data.forEach((d) => {
+				// 			DataTable.add(d);
+				// 		})
+				// 	})
+				// 	.catch((err) => {
+				// 		OP.Error.log('Error running Query:', { error: err, query: CurrentQuery });
+				// 	});
+
 
 			},
 
@@ -1010,17 +1053,28 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 								}
 							]
 						},
+						// grouping
+						{
+							id: ids.grouping,
+							view: "checkbox",
+							label: L('ab.object.querybuilder.grouping', "*Grouping"),
+							on: {
+								onChange: () => {
+									_logic.save();
+								}
+							}
+						},
 						// filter
 						{
 							view: "label",
 							label: L('ab.object.querybuilder.manageFilters', "*Manage Filters"),
-							css: "ab-query-label",
+							css: "ab-query-label"
 							// height: 50
 						},
 						DataFilter.ui,
 						{
 							id: ids.datatable,
-							view: 'datatable',
+							view: 'treetable',
 							minHeight: 180,
 							dragColumn: true,
 							columns: [],

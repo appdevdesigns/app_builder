@@ -68,7 +68,11 @@ class ABClassQuery extends ABClassObject {
 			},
 
 
-			where: { QBWhere }
+			where: { QBWhere },
+			settings: {
+				grouping: false							// Boolean
+			}
+
 		}
 		*/
 
@@ -76,6 +80,15 @@ class ABClassQuery extends ABClassObject {
 		this.importJoins(attributes.joins || {});
 		this.importFields(attributes.fields || []); // import after joins are imported
 		// this.where = attributes.where || {}; // .workspaceFilterConditions
+
+		this.settings = this.settings || {};
+
+		if (attributes && attributes.settings) {
+
+			// convert from "0" => true/false
+			this.settings.grouping = JSON.parse(attributes.settings.grouping || false);
+		}
+
 
 	}
 
@@ -116,6 +129,8 @@ class ABClassQuery extends ABClassObject {
 
 		result.joins = this.exportJoins();  //object;
 		// result.where = this.where; // .workspaceFilterConditions
+
+		result.settings = this.settings;
 
 		return result;
 
@@ -425,7 +440,6 @@ class ABClassQuery extends ABClassObject {
 
 		return this.canFilterObject(object) || this.canFilterObject(linkedObject);
 	}
-
 
 
 
@@ -1077,7 +1091,7 @@ sails.log.debug('ABClassQuery.migrateCreate - SQL:', sqlCommand);
 	 * 		The current user's data (which can be used in our conditions.)
 	 * @return {QueryBuilder}
 	 */
-	queryFind(options, userData) {
+	queryFind(options = {}, userData) {
 
 		return new Promise((resolve, reject) => {
 
@@ -1139,7 +1153,7 @@ sails.log.debug('ABClassQuery.migrateCreate - SQL:', sqlCommand);
 						this.select(sqlCommand).as('result');
 
 					})
-					.join(raw("(SELECT @rownum := 0) rownum")).as('rId');
+					.join(raw(`(SELECT @rownum := ${options.offset || 0}) rownum`)).as('rId');
 			}
 
 			if (options) {
@@ -1341,7 +1355,8 @@ sails.log.debug('ABClassQuery.queryFind - SQL:', query.toString());
 		return this.queryFind(options, userData)
 			.then(result => {
 
-				return result[0]['count'];
+				return result[0];
+				// return result[0]['count'];
 
 			});
 

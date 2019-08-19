@@ -43,16 +43,6 @@ export default class ABDataview extends EventEmitter {
 
 		this.__dataCollection = this._dataCollectionNew([]);
 
-		// Populate data source: ABObject or ABObjectQuery
-		if (attributes.query && attributes.query[0]) {
-			this.__datasource = new ABObjectQuery(attributes.query[0], application);
-			this.settings.isQuery = true;
-		}
-		else if (attributes.object && attributes.object[0]) {
-			this.__datasource = new ABObject(attributes.object[0], application);
-			this.settings.isQuery = false;
-		}
-
 		// Set filter value
 		this.__filterComponent = new RowFilter();
 		this.__filterComponent.objectLoad(this.datasource);
@@ -103,6 +93,23 @@ export default class ABDataview extends EventEmitter {
 
 		// Convert to number
 		this.settings.syncType = parseInt(values.settings.syncType || DefaultValues.settings.syncType);
+
+		// Populate data source: ABObject or ABObjectQuery
+		if (values.query && values.query[0]) {
+			this.__datasource = new ABObjectQuery(values.query[0], this.application);
+			this.settings.isQuery = true;
+
+			if (this.__datasource.isGroup) {
+				if (!this.__treeCollection)
+					this.__treeCollection = this._treeCollectionNew();
+
+				this.__isGroup = true;
+			}
+		}
+		else if (values.object && values.object[0]) {
+			this.__datasource = new ABObject(values.object[0], this.application);
+			this.settings.isQuery = false;
+		}
 
 	}
 
@@ -297,7 +304,25 @@ export default class ABDataview extends EventEmitter {
 			(this.settings.fixSelect != "_FirstRecordDefault" || this.settings.fixSelect == rowId))
 			return;
 
-		var dc = this.__dataCollection;
+		let tc = this.__treeCollection;
+		if (tc) {
+
+			if (tc.getCursor() != rowId)
+				tc.setCursor(rowId);
+
+			// Find deepest child id for data collection
+			let lastRowId = rowId;
+			while (lastRowId) {
+
+				lastRowId = tc.getFirstChildId(lastRowId);
+				if (lastRowId)
+					rowId = lastRowId;
+
+			}
+
+		}
+
+		let dc = this.__dataCollection;
 		if (dc) {
 
 			if (dc.getCursor() != rowId)
@@ -359,21 +384,23 @@ export default class ABDataview extends EventEmitter {
 			linkCursor = dvLink.getCursor();
 		}
 
-		if (this.__dataCollection) {
-			this.__dataCollection.filter(rowData => {
+		let filterData = (rowData) => {
 
-				// if link dc cursor is null, then show all data
-				if (linkCursor == null)
-					return true;
-				else
-					return this.isParentFilterValid(rowData);
+			// if link dc cursor is null, then show all data
+			if (linkCursor == null)
+				return true;
+			else
+				return this.isParentFilterValid(rowData);
 
-			});
+		};
 
-			this.setStaticCursor();
+		if (this.__dataCollection)
+			this.__dataCollection.filter(filterData);
 
-		}
+		if (this.__treeCollection)
+			this.__treeCollection.filter(filterData);
 
+		this.setStaticCursor();
 	}
 
 	setStaticCursor() {
@@ -409,8 +436,12 @@ export default class ABDataview extends EventEmitter {
 				}, true);
 
 				// set a first row of current user to cursor
-				if (row)
+				if (row) {
 					this.__dataCollection.setCursor(row.id);
+
+					if (this.__treeCollection)
+						this.__treeCollection.setCursor(row.id);
+				}
 			}
 			else if (this.settings.fixSelect == "_FirstRecord" || this.settings.fixSelect == "_FirstRecordDefault") {
 				// // find a row that contains the current user
@@ -430,11 +461,18 @@ export default class ABDataview extends EventEmitter {
 
 				// set a first row to cursor
 				var rowId = this.__dataCollection.getFirstId();
-				if (rowId)
+				if (rowId) {
 					this.__dataCollection.setCursor(rowId);
+	
+					if (this.__treeCollection)
+						this.__treeCollection.setCursor(row.id);
+				}
 			}
 			else {
 				this.__dataCollection.setCursor(this.settings.fixSelect);
+
+				if (this.__treeCollection)
+					this.__treeCollection.setCursor(this.settings.fixSelect);
 			}
 
 		}
@@ -452,14 +490,15 @@ export default class ABDataview extends EventEmitter {
 		if (this.initialized) return;
 		this.initialized = true;
 
-		this.__dataCollection.attachEvent("onAfterCursorChange", () => {
+		if (!this.__dataCollection.___AD.onAfterCursorChange) {
+			this.__dataCollection.___AD.onAfterCursorChange = this.__dataCollection.attachEvent("onAfterCursorChange", () => {
 
-			var currData = this.getCursor();
+				var currData = this.getCursor();
 
-			this.emit("changeCursor", currData);
+				this.emit("changeCursor", currData);
 
-		});
-
+			});
+		}
 
 		// relate data functions
 		let isRelated = (relateData, rowId, PK = 'id') => {
@@ -497,6 +536,14 @@ export default class ABDataview extends EventEmitter {
 					this.emit('create', values);
 					// this.__dataCollection.setCursor(rowData.id);
 				}
+
+				if (!this.__treeCollection &&
+					!this.__treeCollection.exists(values.id)) {
+					this.parseTreeCollection({
+						data: [values]
+					});
+				}
+
 
 			}
 
@@ -547,6 +594,10 @@ export default class ABDataview extends EventEmitter {
 					// If this item needs to update
 					if (Object.keys(updateItemData).length > 0) {
 						this.__dataCollection.updateItem(d.id, updateItemData);
+
+						if (this.__treeCollection)
+							this.__treeCollection.updateItem(d.id, updateItemData);
+
 						this.emit('update', this.__dataCollection.getItem(d.id));
 					}
 
@@ -584,6 +635,10 @@ export default class ABDataview extends EventEmitter {
 						var model = obj.model();
 						model.normalizeData(values);
 						this.__dataCollection.updateItem(values.id, values);
+
+						if (this.__treeCollection)
+							this.__treeCollection.updateItem(values.id, values)
+
 						this.emit('update', values);
 
 						// If the update item is current cursor, then should tell components to update.
@@ -598,6 +653,10 @@ export default class ABDataview extends EventEmitter {
 							this.emit("changeCursor", null);
 
 						this.__dataCollection.remove(values.id);
+
+						if (this.__treeCollection)
+							this.__treeCollection.remove(values.id);
+
 						this.emit('delete', values.id);
 					}
 				}
@@ -607,6 +666,12 @@ export default class ABDataview extends EventEmitter {
 					// this means the updated record was not loaded yet so we are adding it to the top of the grid
 					// the placemet will probably change on the next load of the data
 					this.__dataCollection.add(values, 0);
+
+					if (this.__treeCollection)
+						this.parseTreeCollection({
+							data: [values]
+						});
+
 					this.emit('create', values);
 				}
 			}
@@ -685,6 +750,10 @@ export default class ABDataview extends EventEmitter {
 					// If this item needs to update
 					if (Object.keys(updateItemData).length > 0) {
 						this.__dataCollection.updateItem(d.id, updateItemData);
+
+						if (this.__treeCollection)
+							this.__treeCollection.updateItem(d.id, updateItemData);
+
 						this.emit('update', this.__dataCollection.getItem(d.id));
 					}
 
@@ -778,6 +847,10 @@ export default class ABDataview extends EventEmitter {
 					this.emit("changeCursor", null);
 
 				this.__dataCollection.remove(deleteId);
+
+				if (this.__treeCollection)
+					this.__treeCollection.remove(deleteId);
+
 				this.emit('delete', deleteId);
 			}
 
@@ -815,7 +888,13 @@ export default class ABDataview extends EventEmitter {
 
 					// If this item needs to update
 					if (Object.keys(updateRelateVals).length > 0) {
+
 						this.__dataCollection.updateItem(d.id, updateRelateVals);
+
+						if (this.__treeCollection)
+							this.__treeCollection.updateItem(d.id, updateRelateVals);
+
+
 						this.emit('update', this.__dataCollection.getItem(d.id));
 					}
 
@@ -1025,6 +1104,8 @@ export default class ABDataview extends EventEmitter {
 							// populate data to webix's data collection and the loading cursor is hidden here
 							this.__dataCollection.parse(data);
 
+							this.parseTreeCollection(data);
+
 							var linkDv = this.dataviewLink;
 							if (linkDv) {
 
@@ -1075,6 +1156,10 @@ export default class ABDataview extends EventEmitter {
 
 	reloadData() {
 		this.__dataCollection.clearAll();
+
+		if (this.__treeCollection)
+			this.__treeCollection.clearAll();
+
 		return this.loadData(null, null, null);
 	}
 
@@ -1148,6 +1233,9 @@ export default class ABDataview extends EventEmitter {
 		if (this.__dataCollection)
 			this.__dataCollection.clearAll();
 
+		if (this.__treeCollection)
+			this.__treeCollection.clearAll();
+
 		this._dataStatus = this.dataStatusFlag.notInitial;
 	}
 
@@ -1215,9 +1303,20 @@ export default class ABDataview extends EventEmitter {
 				// initial data of treetable
 				if (component.config.view == 'treetable') {
 
-					// NOTE: tree data does not support dynamic loading when scrolling
-					// https://forum.webix.com/discussion/3078/dynamic-loading-in-treetable
-					component.parse(dc.find({}));
+					if (this.datasource &&
+						this.datasource.isGroup &&
+						this.__treeCollection) {
+
+						component.define('data', this.__treeCollection);
+						component.refresh();
+					}
+					else {
+
+						// NOTE: tree data does not support dynamic loading when scrolling
+						// https://forum.webix.com/discussion/3078/dynamic-loading-in-treetable
+						component.parse(dc.find({}));
+
+					}
 
 				}
 				else {
@@ -1244,7 +1343,8 @@ export default class ABDataview extends EventEmitter {
 
 					// NOTE : treetable should use .parse or TreeCollection
 					// https://forum.webix.com/discussion/1694/tree-and-treetable-using-data-from-datacollection
-					if (component.config.view == 'treetable') {
+					if (component.config.view == 'treetable' &&
+						!this.__treeCollection) {
 
 						component.___AD = component.___AD || {};
 						if (!component.___AD.onDcLoadData) {
@@ -1280,6 +1380,24 @@ export default class ABDataview extends EventEmitter {
 
 	}
 
+	unbind(component) {
+
+		if (!component)
+			return;
+
+		component.detachEvent("onDataRequest");
+
+		if (component.data &&
+			component.data.unsync)
+			component.data.unsync();
+
+		if (component.unbind)
+			component.unbind();
+
+		// remove from array
+		this.__bindComponentIds = (this.__bindComponentIds || []).filter(id => id != component.config.id);
+	}
+
 	hideProgressOfComponents() {
 
 		this.__bindComponentIds.forEach(comId => {
@@ -1306,6 +1424,10 @@ export default class ABDataview extends EventEmitter {
 
 		if (this.__filterComponent)
 			this.__filterComponent.setValue(filterConditions || DefaultValues.settings.objectWorkspace.filterConditions);
+	}
+
+	get isGroup() {
+		return this.__isGroup || false;
 	}
 
 
@@ -1336,53 +1458,139 @@ export default class ABDataview extends EventEmitter {
 	 * @param {Array} data - initial data
 	 */
 	_dataCollectionNew(data) {
+
 		// get a webix data collection
-		var dc = new webix.DataCollection({
+		let dc = new webix.DataCollection({
 			data: data || [],
 		});
 
+		this._extendCollection(dc);
+
+		return dc;
+	}
+
+	/**
+	 * @method _treeCollectionNew
+	 * Get webix.TreeCollection
+	 * 
+	 * @return {webix.TreeCollection}
+	 * 
+	 */
+	_treeCollectionNew() {
+
+		// get a webix data collection
+		let treeStore = new webix.TreeCollection();
+
+		this._extendCollection(treeStore);
+
+		return treeStore;
+
+	}
+
+	_extendCollection(dataStore) {
+
 		// Apply this data collection to support multi-selection
 		// https://docs.webix.com/api__refs__selectionmodel.html
-		webix.extend(dc, webix.SelectionModel);
+		webix.extend(dataStore, webix.SelectionModel);
 
 		// Implement .onDataRequest for paging loading
 		if (!this.settings.loadAll) {
 
-			dc.___AD = dc.___AD || {};
+			dataStore.___AD = dataStore.___AD || {};
 
-			if (dc.___AD.onDataRequestEvent) dc.detachEvent(dc.___AD.onDataRequestEvent);
-			dc.___AD.onDataRequestEvent = dc.attachEvent("onDataRequest", (start, count) => {
+			if (!dataStore.___AD.onDataRequestEvent) {
+				dataStore.___AD.onDataRequestEvent = dataStore.attachEvent("onDataRequest", (start, count) => {
 
-				if (start < 0) start = 0;
+					if (start < 0) start = 0;
 
-				// load more data to the data collection
-				this.loadData(start, count);
+					// load more data to the data collection
+					this.loadData(start, count);
 
-				return false;	// <-- prevent the default "onDataRequest"
-			});
+					return false;	// <-- prevent the default "onDataRequest"
+				});
+			}
 
 
-			if (dc.___AD.onAfterLoadEvent) dc.detachEvent(dc.___AD.onAfterLoadEvent);
-			dc.___AD.onAfterLoadEvent = dc.attachEvent("onAfterLoad", () => {
+			if (!dataStore.___AD.onAfterLoadEvent) {
+				dataStore.___AD.onAfterLoadEvent = dataStore.attachEvent("onAfterLoad", () => {
 
-				this.emit("loadData", {});
+					this.emit("loadData", {});
 
-			});
+				});
+			}
 
 		}
 
 		// override unused functions of selection model
-		dc.addCss = function () { };
-		dc.removeCss = function () { };
-		dc.render = function () { };
+		dataStore.addCss = function () { };
+		dataStore.removeCss = function () { };
+		dataStore.render = function () { };
 
-		dc.attachEvent("onAfterLoad", () => {
+		if (!dataStore.___AD.onAfterLoad) {
+			dataStore.___AD.onAfterLoad = dataStore.attachEvent("onAfterLoad", () => {
 
-			this.hideProgressOfComponents();
+				this.hideProgressOfComponents();
+
+			});
+		}
+
+	}
+
+	parseTreeCollection(data = {}) {
+
+		if (!(this.__datasource instanceof ABObjectQuery) ||
+			!this.__datasource.isGroup ||
+			!this.__treeCollection)
+			return;
+
+		let addRowToTree = (join = {}, row, parentId = null) => {
+
+			let alias = join.alias;
+			if (!alias) return;
+
+			let id;
+
+			// If it is the last child, then add this item to child list.
+			if (join.links == null || join.links.length == 0) {
+				this.__treeCollection.add(row, null, parentId);
+				return;
+			}
+			else
+				id = row[`${alias}.uuid`] || row[`${alias}.id`];
+
+			if (!id) return;
+
+			// Add parent node
+			if (!this.__treeCollection.exists(id)) {
+
+				let rootNode = {};
+				rootNode.id = id;
+
+				Object.keys(row).forEach(propName => {
+
+					// Pull value from alias
+					if (propName.indexOf(`${alias}.`) == 0) {
+						rootNode[propName] = row[propName];
+					}
+
+				});
+
+				this.__treeCollection.add(rootNode, null, parentId);
+			}
+
+			// Sub-joins
+			(join.links || []).forEach(link => {
+				addRowToTree(link, row, id);
+			});
+
+		};
+
+		(data.data || []).forEach(row => {
+
+			addRowToTree(this.__datasource.joins(), row);
 
 		});
 
-		return dc;
 	}
 
 	// Clone

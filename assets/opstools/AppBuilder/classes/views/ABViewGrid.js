@@ -1202,6 +1202,13 @@ export default class ABViewGrid extends ABViewWidget  {
 
 		};
 
+		// If data view supports group, then it will render 'treetable'
+		let dv = this.dataview;
+		if (dv && dv.isGroup)
+			DataTable.ui.view = 'treetable';
+		else
+			DataTable.ui.view = 'datatable';
+
 		// specify height of the grid
 		if (this.settings.height)
 			DataTable.ui.height = this.settings.height;

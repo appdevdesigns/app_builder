@@ -117,7 +117,10 @@ export default class ABObjectQuery extends ABObject {
 			},
 
 
-			where: { QBWhere }
+			where: { QBWhere },
+			settings: {
+				grouping: false							// Boolean
+			}
 		}
 		*/
 
@@ -126,6 +129,35 @@ export default class ABObjectQuery extends ABObject {
 		this.importJoins(attributes.joins || {});
 		this.importFields(attributes.fields || []); // import after joins are imported
 		// this.where = attributes.where || {}; // .workspaceFilterConditions
+
+		this.settings = this.settings || {};
+
+		if (attributes.settings) {
+
+			// convert from "0" => true/false
+			this.settings.grouping = JSON.parse(attributes.settings.grouping || false);
+		}
+
+	}
+
+	/**
+	 * @method toObj()
+	 *
+	 * properly compile the current state of this ABApplication instance
+	 * into the values needed for saving to the DB.
+	 *
+	 * Most of the instance data is stored in .json field, so be sure to
+	 * update that from all the current values of our child fields.
+	 *
+	 * @return {json}
+	 */
+	toObj () {
+
+		var result = super.toObj();
+
+		result.settings = this.settings;
+
+		return result;
 
 	}
 
@@ -207,15 +239,20 @@ export default class ABObjectQuery extends ABObject {
 	toObj () {
 
 
-		var settings = super.toObj();
+		var result = super.toObj();
 
 		/// include our additional objects and where settings:
 
-		settings.joins = this.exportJoins();  //objects;
+		result.joins = this.exportJoins();  //objects;
 		// settings.where  = this.where; // .workspaceFilterConditions
 
+		result.settings = this.settings;
 
-		return settings;
+		return result;
+	}
+
+	get isGroup() {
+		return this.settings.grouping || false;
 	}
 
 
@@ -632,6 +669,18 @@ export default class ABObjectQuery extends ABObject {
 			if (field.settings &&
 				field.settings.showIcon) {
 				h.header = '<span class="webix_icon fa fa-{icon}"></span>'.replace('{icon}', field.fieldIcon() ) + h.header;
+			}
+
+			// If this query supports grouping, then add folder icon to display in grid
+			if (this.isGroup) {
+				let originTemplate = h.template;
+
+				h.template = (item, common) => {
+					if (item[h.id])
+						return common.treetable(item, common) + (originTemplate ? originTemplate(item, common) : item[h.id]);
+					else
+						return "";
+				};
 			}
 
 			h.adjust = true;
