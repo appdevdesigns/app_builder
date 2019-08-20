@@ -1513,10 +1513,10 @@ export default class ABDataview extends EventEmitter {
 		// https://docs.webix.com/api__refs__selectionmodel.html
 		webix.extend(dataStore, webix.SelectionModel);
 
+		dataStore.___AD = dataStore.___AD || {};
+
 		// Implement .onDataRequest for paging loading
 		if (!this.settings.loadAll) {
-
-			dataStore.___AD = dataStore.___AD || {};
 
 			if (!dataStore.___AD.onDataRequestEvent) {
 				dataStore.___AD.onDataRequestEvent = dataStore.attachEvent("onDataRequest", (start, count) => {

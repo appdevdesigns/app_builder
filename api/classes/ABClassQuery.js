@@ -1259,18 +1259,24 @@ sails.log.debug('ABClassQuery.migrateCreate - SQL:', sqlCommand);
 
 								r.translations = r.translations || [];
 
-								var objectName = rKey.replace('.translations', '');
+								let objectName = rKey.replace('.translations', '');
 
-								var translations = [];
+								let translations = [];
 								if (typeof r[rKey] == 'string')
 									translations = JSON.parse(r[rKey]);
 
 								// each elements of trans
 								(translations || []).forEach((tran) => {
 
-									var newTran = {
-										language_code: tran.language_code
-									};
+									let addNew = false;
+
+									let newTran = r.translations.filter(t => t.language_code == tran.language_code)[0];
+									if (!newTran) {
+										newTran = {
+											language_code: tran.language_code
+										};
+										addNew = true;
+									}
 
 									// include objectName into property - objectName.propertyName
 									Object.keys(tran).forEach(tranKey => {
@@ -1286,8 +1292,8 @@ sails.log.debug('ABClassQuery.migrateCreate - SQL:', sqlCommand);
 
 									});
 
-
-									r.translations.push(newTran);
+									if (addNew)
+										r.translations.push(newTran);
 
 								});
 

@@ -529,7 +529,7 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 						let addDownloadTask = (fieldImage, data = {}) => {
 
 							let imageVal = fieldImage.format(data);
-							if (imageVal) {
+							if (imageVal && !images[imageVal]) {
 
 								tasks.push(new Promise((ok, bad) => {
 

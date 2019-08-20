@@ -145,12 +145,15 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 					return;
 				}
 
+				// create new data view
 				CurrentDataview = new ABDataview({
 					query: [CurrentQuery.toObj()],
 					settings: {
 						datasourceID: CurrentQuery.id
 					}
 				}, CurrentApplication);
+				CurrentDataview.datasource = CurrentQuery;
+
 
 				var objBase = CurrentQuery.objectBase();
 
@@ -864,6 +867,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 						}
 					}
 				});
+				CurrentDataview.datasource = CurrentQuery;
 
 				// set data:
 				CurrentDataview.loadData(0, 20, () => {
