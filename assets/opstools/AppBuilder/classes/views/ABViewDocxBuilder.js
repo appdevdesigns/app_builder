@@ -525,25 +525,26 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 						let addDownloadTask = (fieldImage, data = {}) => {
 
 							let imageVal = fieldImage.format(data);
-							if (!imageVal) return;
+							if (imageVal) {
 
-							tasks.push(new Promise((ok, bad) => {
+								tasks.push(new Promise((ok, bad) => {
 
-								let imgUrl = `/opsportal/image/${this.application.name}/${imageVal}`;
-
-								JSZipUtils.getBinaryContent(imgUrl, function (error, content) {
-									if (error)
-										return bad(error);
-									else {
-
-										// store binary of image
-										images[imageVal] = content;
-
-										ok();
-									}
-								});
-
-							}));
+									let imgUrl = `/opsportal/image/${this.application.name}/${imageVal}`;
+	
+									JSZipUtils.getBinaryContent(imgUrl, function (error, content) {
+										if (error)
+											return bad(error);
+										else {
+	
+											// store binary of image
+											images[imageVal] = content;
+	
+											ok();
+										}
+									});
+	
+								}));
+							}
 
 							// download images of child items
 							(data.data || []).forEach(childItem => {
