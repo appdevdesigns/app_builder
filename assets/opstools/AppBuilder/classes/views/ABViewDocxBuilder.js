@@ -441,7 +441,11 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 
 						let dv = this.dataview;
 						if (dv) {
-							currCursor = dv.getCursor(true);
+							let dcCursor = dv.getCursor();
+							let treeCursor = dv.getCursor(true);
+
+							// merge cursor to support dc and tree cursor in the report
+							currCursor = _.merge(currCursor, dcCursor, treeCursor);
 
 							// update property names to column labels to match format names in docx file
 							if (currCursor) {
