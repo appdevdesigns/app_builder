@@ -335,13 +335,33 @@ export default class ABDataview extends EventEmitter {
 
 	}
 
-	getCursor() {
+	getCursor(treeCursor = false) {
 
-		var dc = this.__dataCollection;
+		// Cursor of tree collection
+		if (treeCursor && this.__treeCollection) {
+
+			let currId = this.__treeCollection.getCursor();
+			if (currId) {
+
+				// filter current id for serialize
+				this.__treeCollection.filter(item => item.id == currId);
+
+				// pull item with child items
+				let currItem = this.__treeCollection.serialize()[0] || null;
+
+				// refresh filter
+				this.refreshLinkCursor();
+
+				return currItem;
+
+			}
+		}
+
+		let dc = this.__dataCollection;
 		if (dc == null) return null;
 
-		var currId = dc.getCursor();
-		var currItem = dc.getItem(currId);
+		let currId = dc.getCursor();
+		let currItem = dc.getItem(currId);
 
 		return currItem;
 

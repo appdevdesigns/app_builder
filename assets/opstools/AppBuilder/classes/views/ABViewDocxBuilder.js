@@ -441,7 +441,7 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 
 						let dv = this.dataview;
 						if (dv) {
-							currCursor = dv.getCursor();
+							currCursor = dv.getCursor(true);
 
 							// update property names to column labels to match format names in docx file
 							if (currCursor) {
@@ -451,7 +451,7 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 
 									currCursor = _.clone(currCursor);
 
-									let normalizeCursor = (field, label) => {
+									let normalizeCursor = (data, field, label) => {
 
 										if (field instanceof ABFieldConnect) {
 
@@ -461,15 +461,21 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 											//		fieldName_label: "Value1, Value2"
 											// }
 
-											currCursor[label] = currCursor[label];
-											currCursor[label + '_label'] = field.format(currCursor);
+											data[label] = data[label];
+											data[label + '_label'] = field.format(data);
 										}
 										else {
-											currCursor[label] = field.format(currCursor);
+											data[label] = field.format(data);
 										}
 
-										if (currCursor[label] == null)
-											currCursor[label] = '';
+										if (data[label] == null)
+											data[label] = '';
+
+
+										// normalize child items
+										(data.data || []).forEach(childItem => {
+											normalizeCursor(childItem, field, label);
+										});
 
 									};
 
@@ -480,7 +486,7 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 											// Replace alias with label of object
 											let label = f.columnName.replace(f.alias, f.object.label);
 
-											normalizeCursor(f, label);
+											normalizeCursor(currCursor, f, label);
 
 										});
 									}
@@ -488,7 +494,7 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 									else {
 										obj.fields().forEach(f => {
 
-											normalizeCursor(f, f.label);
+											normalizeCursor(currCursor, f, f.label);
 
 										});
 									}
@@ -516,9 +522,9 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 
 						let tasks = [];
 
-						obj.fields(f => f instanceof ABFieldImage).forEach(f => {
+						let addDownloadTask = (fieldImage, data = {}) => {
 
-							let imageVal = f.format(currCursor);
+							let imageVal = fieldImage.format(data);
 							if (!imageVal) return;
 
 							tasks.push(new Promise((ok, bad) => {
@@ -538,6 +544,17 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 								});
 
 							}));
+
+							// download images of child items
+							(data.data || []).forEach(childItem => {
+								addDownloadTask(fieldImage, childItem);
+							});
+
+						};
+
+						obj.fields(f => f instanceof ABFieldImage).forEach(f => {
+
+							addDownloadTask(f, currCursor);
 
 						});
 
