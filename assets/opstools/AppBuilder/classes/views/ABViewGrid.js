@@ -1398,7 +1398,9 @@ export default class ABViewGrid extends ABViewWidget  {
 
 				if (!$$(DataTable.ui.id)) return;
 
-				if (rowData && rowData.id)
+				if (rowData &&
+					rowData.id &&
+					$$(DataTable.ui.id).exists(rowData.id))
 					$$(DataTable.ui.id).select(rowData.id, false);
 				else
 					$$(DataTable.ui.id).select(null, false);

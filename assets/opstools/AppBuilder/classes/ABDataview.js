@@ -1408,11 +1408,16 @@ export default class ABDataview extends EventEmitter {
 		component.detachEvent("onDataRequest");
 
 		if (component.data &&
-			component.data.unsync)
+			component.data.unsync) {
 			component.data.unsync();
+			component.define('data', []);
+		}
 
 		if (component.unbind)
 			component.unbind();
+
+		if (component.refresh)
+			component.refresh();
 
 		// remove from array
 		this.__bindComponentIds = (this.__bindComponentIds || []).filter(id => id != component.config.id);
@@ -1605,11 +1610,19 @@ export default class ABDataview extends EventEmitter {
 
 		};
 
+		this.__treeCollection.blockEvent();
+		this.__treeCollection.data.blockEvent();
+
 		(data.data || []).forEach(row => {
 
 			addRowToTree(this.__datasource.joins(), row);
 
 		});
+
+		this.__treeCollection.unblockEvent();
+		this.__treeCollection.data.unblockEvent();
+
+		this.__treeCollection.refresh();
 
 	}
 
