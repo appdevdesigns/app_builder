@@ -485,7 +485,7 @@ export default class ABDataview extends EventEmitter {
 					this.__dataCollection.setCursor(rowId);
 	
 					if (this.__treeCollection)
-						this.__treeCollection.setCursor(row.id);
+						this.__treeCollection.setCursor(rowId);
 				}
 			}
 			else {

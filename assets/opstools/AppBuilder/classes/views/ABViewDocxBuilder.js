@@ -20,7 +20,8 @@ var ABViewDocxBuilderPropertyComponentDefaults = {
 	dataviewID: null,
 	width: 200,
 	filename: "", // uuid
-	filelabel: "output.docx"
+	filelabel: "output.docx",
+	language: "en" // en
 }
 
 
@@ -179,6 +180,25 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 
 		};
 
+		// Populate language options
+		OP.Comm.Service.get({
+			url: '/appdev-core/sitemultilinguallanguage'
+		})
+		.then(languages => {
+
+			let langOptions = (languages || []).map(lang => {
+				return {
+					id: lang.language_code,
+					value: lang.language_label
+				}
+			});
+
+			$$(ids.language).define('options', langOptions);
+			$$(ids.language).refresh();
+
+		});
+
+
 		// in addition to the common .label  values, we 
 		// ask for:
 		return commonUI.concat([
@@ -265,6 +285,24 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 
 			{
 				view: "fieldset",
+				label: L('ab.component.docxBuilder.language', '*Language:'),
+				labelWidth: App.config.labelWidthLarge,
+				body: {
+					type: "clean",
+					padding: 10,
+					rows: [
+						{
+							name: 'language',
+							view: 'richselect',
+							label: L('ab.components.docxBuilder.language', "*Language"),
+							labelWidth: App.config.labelWidthLarge
+						},
+					]
+				}
+			},
+
+			{
+				view: "fieldset",
 				label: L('ab.component.label.customizeDisplay', '*Customize Display:'),
 				labelWidth: App.config.labelWidthLarge,
 				body: {
@@ -318,6 +356,8 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 		$DcSelector.define('value', selectedDvId);
 		$DcSelector.refresh();
 
+		$$(ids.language).setValue(view.settings.language || ABViewDocxBuilderPropertyComponentDefaults.language);
+
 		$$(ids.filelabel).setValue(view.settings.filelabel);
 		$$(ids.buttonlabel).setValue(view.settings.buttonlabel);
 		$$(ids.width).setValue(view.settings.width);
@@ -339,6 +379,7 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 		view.settings.dataviewID = $$(ids.dataview).getValue();
 		view.settings.width = $$(ids.width).getValue();
 		view.settings.filelabel = $$(ids.filelabel).getValue();
+		view.settings.language = $$(ids.language).getValue();
 
 	}
 
@@ -433,6 +474,7 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 				_logic.busy();
 
 				let currCursor = {};
+				let reportValues = {};
 				let images = {};
 
 				Promise.resolve()
@@ -453,10 +495,18 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 								let obj = dv.datasource;
 								if (obj) {
 
-									currCursor = _.clone(currCursor);
+									let mlFields = obj.multilingualFields();
 
-									let normalizeCursor = (data, field, label) => {
+									let setReportValues = (baseData, targetData, field, fieldLabels = []) => {
 
+										let val = null;
+
+										// Translate multilinguage fields
+										if (mlFields.length) {
+											OP.Multilingual.translate(baseData, baseData, mlFields, this.languageCode);
+										}
+
+										// Pull value
 										if (field instanceof ABFieldConnect) {
 
 											// If field is connected field, then 
@@ -464,54 +514,87 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 											//		fieldName: {Object} or [Array]
 											//		fieldName_label: "Value1, Value2"
 											// }
-
-											data[label] = data[label];
-											data[label + '_label'] = field.format(data);
+											val = baseData[field.columnName];
+											// TODO
+											// data[label + '_label'] = field.format(baseData);
 										}
 										else {
-											data[label] = field.format(data);
+											val = field.format(baseData);
 										}
 
-										if (data[label] == null)
-											data[label] = '';
-
+										// Set value to report with every languages of label
+										fieldLabels.forEach(label => {
+											targetData[label] = val || '';
+										})
 
 										// normalize child items
-										(data.data || []).forEach(childItem => {
-											normalizeCursor(childItem, field, label);
-										});
+										if (baseData.data &&
+											baseData.data.length) {
+
+											targetData.data = targetData.data || [];
+											(baseData.data || []).forEach((childItem, index) => {
+	
+												// add new data item
+												if (targetData.data[index] == null)
+													targetData.data[index] = {};
+
+												let childTargetVal = targetData.data[index];
+
+												setReportValues(childItem, childTargetVal, field, fieldLabels);
+
+											});
+										}
 
 									};
 
-									// Query Objects
-									if (obj instanceof ABObjectQuery) {
-										obj.fields().forEach(f => {
+									obj.fields().forEach(f => {
 
-											// Replace alias with label of object
-											let label = f.columnName.replace(f.alias, f.object.label);
+										let fieldLabels = [];
 
-											normalizeCursor(currCursor, f, label);
+										// Query Objects
+										if (obj instanceof ABObjectQuery) {
 
-										});
-									}
-									// Normal Objects
-									else {
-										obj.fields().forEach(f => {
+											if (typeof f.object.translations == 'string')
+												f.object.translations = JSON.parse(f.object.translations);
 
-											normalizeCursor(currCursor, f, f.label);
+											if (typeof f.translations == 'string')
+												f.translations = JSON.parse(f.translations);
 
-										});
-									}
+											(f.object.translations || []).forEach(objTran => {
+
+												let fieldTran = (f.translations || [])
+																	.filter(fieldTran => fieldTran.language_code == objTran.language_code)[0];
+
+												if (!fieldTran) return;
+
+												let objectLabel = objTran.label;
+												let fieldLabel = fieldTran.label;
+
+												// Replace alias with label of object
+												fieldLabels.push(`${objectLabel}.${fieldLabel}`);
+
+											});
+										}
+										// Normal Objects
+										else {
+
+											if (typeof f.translations == 'string')
+												f.translations = JSON.parse(f.translations);
+
+											f.translations.forEach(tran => {
+												fieldLabels.push(tran.label);
+											});
+										}
+
+										setReportValues(currCursor, reportValues, f, fieldLabels);
+									});
 
 								}
 
 							}
-							else {
-								currCursor = {};
-							}
 						}
 
-						console.log("DOCX data: ", currCursor);
+console.log("DOCX data: ", reportValues, currCursor);
 
 						return Promise.resolve();
 					})
@@ -665,7 +748,7 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 								doc
 									.attachModule(imageModule)
 									.loadZip(zip)
-									.setData(currCursor)
+									.setData(reportValues)
 									.render(); // render the document
 
 							}
@@ -721,6 +804,10 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 
 	downloadUrl() {
 		return `/opsportal/file/${this.application.name}/${this.settings.filename}`;
+	}
+
+	get languageCode() {
+		return this.settings.language || ABViewDocxBuilderPropertyComponentDefaults.language;
 	}
 
 }
