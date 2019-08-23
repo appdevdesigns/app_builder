@@ -19,6 +19,10 @@ module.exports = class ABObjectImport extends ABObjectExternal {
 			var objData = this.toObj();
 			ADCore.error.log('ABObjectImport:dbSchemaName():No connection found for object', { objDef:objData, missingConn:this.connName });
 		}
+if (!sails.config.connections[this.connName]) {
+	console.log("Cant find connection : ", this.connName);
+	console.log(sails.config.connections);
+}
 		return sails.config.connections[this.connName].database;
 
 	}

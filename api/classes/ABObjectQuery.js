@@ -64,8 +64,19 @@ module.exports = class ABObjectQuery extends ABObject {
 		// import all our Joins 
 		this.importJoins(attributes.joins || {});
 		this.importFields(attributes.fields || []); // import after joins are imported
-		// this.where = attributes.where || {}; // .workspaceFilterConditions
-
+		// this.where = attributes.where || this.workspaceFilterConditions;
+		this.where = attributes.where;
+		if (!this.where) {
+			// load any legacy objectWorkspace.filterCondition
+			if (attributes.objectWorkspace && attributes.objectWorkspace.filterConditions) {
+				this.where = attributes.objectWorkspace.filterConditions;
+			}
+			
+			// overwrite with an updated workspaceFilterCondition
+			if (this.workspaceFilterConditions && this.workspaceFilterConditions.length > 0) {
+				this.where = this.workspaceFilterConditions;
+			}
+		} 
 	}
 
 
@@ -103,7 +114,7 @@ module.exports = class ABObjectQuery extends ABObject {
 		/// include our additional objects and where settings:
 
 		result.joins = this.exportJoins();  //object;
-		// result.where = this.where; // .workspaceFilterConditions
+		result.where = this.where; // .workspaceFilterConditions
 
 		return result;
 
@@ -471,7 +482,11 @@ module.exports = class ABObjectQuery extends ABObject {
 	 * 		The current user's data (which can be used in our conditions.)
 	 * @return {QueryBuilder}
 	 */
-	queryFind(options, userData) {
+	queryFind(options, userData, skipExistingConditions) {
+
+		if (typeof skipExistingConditions == "undefined") {
+			skipExistingConditions = false;
+		}
 
 		return new Promise((resolve, reject) => {
 
@@ -1038,36 +1053,54 @@ module.exports = class ABObjectQuery extends ABObject {
 
 			// update our condition to include the one we are defined with:
 			// 
-			if (this.workspaceFilterConditions && this.workspaceFilterConditions.glue) {
-				if (options.where && options.where.glue) {
+			if (this.where &&   // this.workspaceFilterConditions
+				this.where.glue && 
+				!skipExistingConditions) {
+
+				// we need to make sure our options.where properly contains our
+				// internal definitions as well.
+
+				// case: we have a valid passed in options.where
+				var haveOptions = (options.where && options.where.glue && options.where.rules && options.where.rules.length > 0);
+
+				// case: we have a valid internal definition:
+				var haveInternal = (this.where && this.where.rules && this.where.rules.length > 0);
+
+				// if BOTH cases are true, then we need to AND them together:
+				if (haveOptions && haveInternal) {
+				// if (options.where && options.where.glue && options.where.rules && options.where.rules.length > 0) {
 
 					// in the case where we have a condition and a condition was passed in
 					// combine our conditions
 					// queryCondition AND givenConditions:
-					// var oWhere = _.clone(options.where);
+					var oWhere = _.clone(options.where);
+					var thisWhere = _.cloneDeep(this.where);
+					
+					var newWhere = {
+						glue: "and",
+						rules: [
+							thisWhere,
+							oWhere
+						]
+					}
 
-					// var newWhere = {
-					// 	glue: 'and',
-					// 	rules: [
-					// 		this.where,
-					// 		oWhere
-					// 	]
-					// }
+					options.where = newWhere;
 
-					// options.where = newWhere;
+					// options.where.rules = options.where.rules || [];
 
-					options.where.rules = options.where.rules || [];
-
-					(this.workspaceFilterConditions.rules || []).forEach(r => {
-						// START HERE MAY 29
-						options.where.rules.push(_.clone(r));
-					});
+					// (this.where.rules || []).forEach(r => {
+					// 	// START HERE MAY 29
+					// 	options.where.rules.push(_.clone(r));
+					// });
 
 				} else {
 
-					// if we had a condition and no condition was passed in, 
-					// just use ours:
-					options.where = _.cloneDeep(this.workspaceFilterConditions);
+					if (haveInternal) {
+						// if we had a condition and no condition was passed in, 
+						// just use ours:
+						options.where = _.cloneDeep(this.where);
+					} 
+					
 				}
 			}
 
