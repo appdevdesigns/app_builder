@@ -482,7 +482,11 @@ module.exports = class ABObjectQuery extends ABObject {
 	 * 		The current user's data (which can be used in our conditions.)
 	 * @return {QueryBuilder}
 	 */
-	queryFind(options, userData) {
+	queryFind(options, userData, skipExistingConditions) {
+
+		if (typeof skipExistingConditions == "undefined") {
+			skipExistingConditions = false;
+		}
 
 		return new Promise((resolve, reject) => {
 
