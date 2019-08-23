@@ -556,7 +556,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 
 					/** where **/
-					CurrentQuery.workspaceFilterConditions = DataFilter.getValue();
+					CurrentQuery.where = DataFilter.getValue();
 
 					/** depth **/
 					// CurrentQuery.objectWorkspace.depth = $$(ids.depth).getValue();
@@ -788,7 +788,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 			refreshFilter: function () {
 
 				DataFilter.objectLoad(CurrentQuery);
-				DataFilter.setValue(CurrentQuery.workspaceFilterConditions);
+				DataFilter.setValue(CurrentQuery.where);
 			},
 
 
@@ -805,7 +805,8 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 
 				// set data:
-				CurrentQuery.model().findAll({ limit: 20, where: CurrentQuery.workspaceViews.getCurrentView().filterConditions, sort: CurrentQuery.workspaceViews.getCurrentView().sortFields })
+				// CurrentQuery.model().findAll({ limit: 20, where: CurrentQuery.workspaceViews.getCurrentView().filterConditions, sort: CurrentQuery.workspaceViews.getCurrentView().sortFields })
+				CurrentQuery.model().findAll({ limit: 20,  sort: CurrentQuery.workspaceViews.getCurrentView().sortFields })
 					.then((response) => {
 
 						DataTable.clearAll();
