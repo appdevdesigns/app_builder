@@ -968,7 +968,7 @@ export default class ABDataview extends EventEmitter {
 		var sorts = this.settings.objectWorkspace.sortFields || [];
 
 		// pull filter conditions
-		var wheres = this.settings.objectWorkspace.filterConditions;
+		var wheres = this.settings.objectWorkspace.filterConditions || null;
 
 		// calculate default value of $height of rows
 		var defaultHeight = 0;
@@ -990,6 +990,11 @@ export default class ABDataview extends EventEmitter {
 			skip: start || 0,
 			sort: sorts,
 		};
+
+		// remove where if not provided:
+		if (!wheres) {
+			delete wheres.where;
+		}
 
 		// load all data
 		if (this.settings.loadAll) {

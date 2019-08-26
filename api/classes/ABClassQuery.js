@@ -80,6 +80,22 @@ class ABClassQuery extends ABClassObject {
 		this.importJoins(attributes.joins || {});
 		this.importFields(attributes.fields || []); // import after joins are imported
 		// this.where = attributes.where || {}; // .workspaceFilterConditions
+		this.where = attributes.where;
+		// NOTE: this is for transitioning from legacy data structures.
+		// we can remove this after our changes have been accepted on working 
+		// systems.
+		if (!this.where) {
+			// load any legacy objectWorkspace.filterCondition
+			if (attributes.objectWorkspace && attributes.objectWorkspace.filterConditions) {
+				this.where = attributes.objectWorkspace.filterConditions;
+			}
+			
+			// // overwrite with an updated workspaceFilterCondition
+			// if (this.workspaceFilterConditions && this.workspaceFilterConditions.length > 0) {
+			// 	this.where = this.workspaceFilterConditions;
+			// }
+		} 
+
 
 		this.settings = this.settings || {};
 
@@ -128,7 +144,7 @@ class ABClassQuery extends ABClassObject {
 		/// include our additional objects and where settings:
 
 		result.joins = this.exportJoins();  //object;
-		// result.where = this.where; // .workspaceFilterConditions
+		result.where = this.where; // .workspaceFilterConditions
 
 		result.settings = this.settings;
 
@@ -1091,7 +1107,11 @@ sails.log.debug('ABClassQuery.migrateCreate - SQL:', sqlCommand);
 	 * 		The current user's data (which can be used in our conditions.)
 	 * @return {QueryBuilder}
 	 */
-	queryFind(options = {}, userData) {
+	queryFind(options, userData, skipExistingConditions) {
+
+		if (typeof skipExistingConditions == "undefined") {
+			skipExistingConditions = false;
+		}
 
 		return new Promise((resolve, reject) => {
 
@@ -1154,6 +1174,59 @@ sails.log.debug('ABClassQuery.migrateCreate - SQL:', sqlCommand);
 
 					})
 					.join(raw(`(SELECT @rownum := ${options.offset || 0}) rownum`)).as('rId');
+			}
+
+			// update our condition to include the one we are defined with:
+			// 
+			if (this.where &&  
+				this.where.glue && 
+				!skipExistingConditions) {
+
+				// we need to make sure our options.where properly contains our
+				// internal definitions as well.
+
+				// case: we have a valid passed in options.where
+				var haveOptions = (options.where && options.where.glue && options.where.rules && options.where.rules.length > 0);
+
+				// case: we have a valid internal definition:
+				var haveInternal = (this.where && this.where.rules && this.where.rules.length > 0);
+
+				// if BOTH cases are true, then we need to AND them together:
+				if (haveOptions && haveInternal) {
+				// if (options.where && options.where.glue && options.where.rules && options.where.rules.length > 0) {
+
+					// in the case where we have a condition and a condition was passed in
+					// combine our conditions
+					// queryCondition AND givenConditions:
+					var oWhere = _.clone(options.where);
+					var thisWhere = _.cloneDeep(this.where);
+					
+					var newWhere = {
+						glue: "and",
+						rules: [
+							thisWhere,
+							oWhere
+						]
+					}
+
+					options.where = newWhere;
+
+					// options.where.rules = options.where.rules || [];
+
+					// (this.where.rules || []).forEach(r => {
+					// 	// START HERE MAY 29
+					// 	options.where.rules.push(_.clone(r));
+					// });
+
+				} else {
+
+					if (haveInternal) {
+						// if we had a condition and no condition was passed in, 
+						// just use ours:
+						options.where = _.cloneDeep(this.where);
+					} 
+					
+				}
 			}
 
 			if (options) {

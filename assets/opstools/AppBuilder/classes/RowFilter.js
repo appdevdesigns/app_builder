@@ -1618,7 +1618,7 @@ export default class RowFilter extends OP.Component {
 				let qIdBase = "{idBase}-query-field-{id}".replace("{idBase}", idBase).replace("{id}", query.id),
 					inQueryFieldFilter = new RowFilter(App, qIdBase);
 				inQueryFieldFilter.objectLoad(query);
-				inQueryFieldFilter.setValue(query.workspaceFilterConditions);
+				inQueryFieldFilter.setValue(query.where); // workspaceFilterConditions);
 
 				switch (rule) {
 					case 'in_query_field':
@@ -1652,7 +1652,7 @@ export default class RowFilter extends OP.Component {
 				let qIdBase = "{idBase}-query-{id}".replace("{idBase}", idBase).replace("{id}", query.id),
 					inQueryFilter = new RowFilter(App, qIdBase);
 				inQueryFilter.objectLoad(query);
-				inQueryFilter.setValue(query.workspaceFilterConditions);
+				inQueryFilter.setValue(query.where); // workspaceFilterConditions);
 
 				switch (rule) {
 					case 'in_query':

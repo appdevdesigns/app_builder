@@ -39,8 +39,8 @@ export default class ABObjectQuery extends ABObject {
 
 			if (this.id == data.queryId)
 				this.fromValues(data.data);
-
 		});
+
 
 	}
 
@@ -128,7 +128,21 @@ export default class ABObjectQuery extends ABObject {
 		// import all our ABObjects 
 		this.importJoins(attributes.joins || {});
 		this.importFields(attributes.fields || []); // import after joins are imported
-		// this.where = attributes.where || {}; // .workspaceFilterConditions
+		this.where = attributes.where;
+		// NOTE: this is for transitioning from legacy data structures.
+		// we can remove this after our changes have been accepted on working 
+		// systems.
+		if (!this.where) {
+			// load any legacy objectWorkspace.filterCondition
+			if (attributes.objectWorkspace && attributes.objectWorkspace.filterConditions) {
+				this.where = attributes.objectWorkspace.filterConditions;
+			}
+			
+			// // overwrite with an updated workspaceFilterCondition
+			// if (this.workspaceFilterConditions && this.workspaceFilterConditions.length > 0) {
+			// 	this.where = this.workspaceFilterConditions;
+			// }
+		}
 
 		this.settings = this.settings || {};
 
@@ -137,27 +151,6 @@ export default class ABObjectQuery extends ABObject {
 			// convert from "0" => true/false
 			this.settings.grouping = JSON.parse(attributes.settings.grouping || false);
 		}
-
-	}
-
-	/**
-	 * @method toObj()
-	 *
-	 * properly compile the current state of this ABApplication instance
-	 * into the values needed for saving to the DB.
-	 *
-	 * Most of the instance data is stored in .json field, so be sure to
-	 * update that from all the current values of our child fields.
-	 *
-	 * @return {json}
-	 */
-	toObj () {
-
-		var result = super.toObj();
-
-		result.settings = this.settings;
-
-		return result;
 
 	}
 
@@ -244,7 +237,7 @@ export default class ABObjectQuery extends ABObject {
 		/// include our additional objects and where settings:
 
 		result.joins = this.exportJoins();  //objects;
-		// settings.where  = this.where; // .workspaceFilterConditions
+		result.where  = this.where; // .workspaceFilterConditions
 
 		result.settings = this.settings;
 

@@ -485,7 +485,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 
 					/** where **/
-					CurrentQuery.workspaceFilterConditions = DataFilter.getValue();
+					CurrentQuery.where = DataFilter.getValue();
 
 					/** depth **/
 					// CurrentQuery.objectWorkspace.depth = $$(ids.depth).getValue();
@@ -833,7 +833,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 			refreshFilter: function () {
 
 				DataFilter.objectLoad(CurrentQuery);
-				DataFilter.setValue(CurrentQuery.workspaceFilterConditions);
+				DataFilter.setValue(CurrentQuery.where);
 			},
 
 
@@ -862,7 +862,10 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 					settings: {
 						datasourceID: CurrentQuery.id,
 						objectWorkspace: {
-							filterConditions: qCurrentView.filterConditions,
+							//// NOTE: the .where condition is already part of the 
+							//// query definition, so we don't want to pass it again
+							//// as part of the workspace filter conditions.
+							// filterConditions: null,  // qCurrentView.filterConditions,
 							sortFields: qCurrentView.sortFields
 						}
 					}
