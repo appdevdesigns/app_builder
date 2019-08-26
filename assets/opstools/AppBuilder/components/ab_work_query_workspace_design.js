@@ -67,7 +67,8 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 			// toolbar: this.unique('toolbar'),
 
 			selectedObject: this.unique('selectedObject'),
-			grouping: this.unique('grouping')
+			grouping: this.unique('grouping'),
+			hidePrefix: this.unique('hidePrefix')
 
 		}
 
@@ -81,6 +82,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 			// webix.extend($$(ids.form), webix.ProgressBar);
 			webix.extend($$(ids.tree), webix.ProgressBar);
 			webix.extend($$(ids.tabObjects), webix.ProgressBar);
+			webix.extend($$(ids.datatable), webix.ProgressBar);
 
 
 			DataFilter.init({
@@ -253,6 +255,10 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 					/** Grouping **/
 					$$(ids.grouping).define("value", query.settings.grouping);
 					$$(ids.grouping).refresh();
+
+					/** Hide prefix label **/
+					$$(ids.hidePrefix).define("value", query.settings.hidePrefix);
+					$$(ids.hidePrefix).refresh();
 
 					// remove a temporary tab
 					$$(ids.tabObjects).removeView('temp');
@@ -492,7 +498,8 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 					/** grouping **/
 					CurrentQuery.settings = {
-						grouping: $$(ids.grouping).getValue()
+						grouping: $$(ids.grouping).getValue(),
+						hidePrefix: $$(ids.hidePrefix).getValue()
 					};
 
 					// Save to db
@@ -873,7 +880,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 				CurrentDataview.datasource = CurrentQuery;
 
 				// set data:
-				CurrentDataview.loadData(0, 20, () => {
+				CurrentDataview.loadData(0, 100, () => {
 
 					// Bind datatable view to data view
 					CurrentDataview.unbind(DataTable);
@@ -1065,6 +1072,19 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 							id: ids.grouping,
 							view: "checkbox",
 							label: L('ab.object.querybuilder.grouping', "*Grouping"),
+							labelWidth: App.config.labelWidthXLarge,
+							on: {
+								onChange: () => {
+									_logic.save();
+								}
+							}
+						},
+						// hide prefix labels
+						{
+							id: ids.hidePrefix,
+							view: "checkbox",
+							label: L('ab.object.querybuilder.hidePrefix', "*Hide prefix labels"),
+							labelWidth: App.config.labelWidthXLarge,
 							on: {
 								onChange: () => {
 									_logic.save();
@@ -1082,7 +1102,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 						{
 							id: ids.datatable,
 							view: 'treetable',
-							minHeight: 180,
+							minHeight: 280,
 							dragColumn: true,
 							columns: [],
 							data: [],

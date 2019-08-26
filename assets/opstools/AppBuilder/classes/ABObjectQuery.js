@@ -119,7 +119,8 @@ export default class ABObjectQuery extends ABObject {
 
 			where: { QBWhere },
 			settings: {
-				grouping: false							// Boolean
+				grouping: false,		// Boolean
+				hidePrefix: false		// Boolean
 			}
 		}
 		*/
@@ -150,6 +151,7 @@ export default class ABObjectQuery extends ABObject {
 
 			// convert from "0" => true/false
 			this.settings.grouping = JSON.parse(attributes.settings.grouping || false);
+			this.settings.hidePrefix = JSON.parse(attributes.settings.hidePrefix || false);
 		}
 
 	}
@@ -654,9 +656,13 @@ export default class ABObjectQuery extends ABObject {
 					.replace('{columnName}', field.columnName);
 
 			// label
-			h.header = '{objectLabel}.{fieldLabel}'
-						.replace('{objectLabel}', field.object.label)
-						.replace('{fieldLabel}', field.label);
+			if (this.settings &&
+				this.settings.hidePrefix) {
+				h.header = `${field.label || ""}`;
+			}
+			else {
+				h.header = `${field.object.label || ""}.${field.label || ""}`;
+			}
 
 			// icon
 			if (field.settings &&

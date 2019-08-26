@@ -70,7 +70,8 @@ class ABClassQuery extends ABClassObject {
 
 			where: { QBWhere },
 			settings: {
-				grouping: false							// Boolean
+				grouping: false,	// Boolean
+				hidePrefix: false	// Boolean
 			}
 
 		}
@@ -103,6 +104,7 @@ class ABClassQuery extends ABClassObject {
 
 			// convert from "0" => true/false
 			this.settings.grouping = JSON.parse(attributes.settings.grouping || false);
+			this.settings.hidePrefix = JSON.parse(attributes.settings.hidePrefix || false);
 		}
 
 

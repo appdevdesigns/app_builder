@@ -305,20 +305,37 @@ export default class ABDataview extends EventEmitter {
 			return;
 
 		let tc = this.__treeCollection;
-		if (tc) {
+		if (tc && 
+			tc.getCursor() != rowId) {
 
-			if (tc.getCursor() != rowId)
+			// If it is id of tree collection, then find row id of data
+			let treeCursor = tc.find({ id: rowId }, true);
+			if (treeCursor) {
 				tc.setCursor(rowId);
 
-			// Find deepest child id for data collection
-			let lastRowId = rowId;
-			while (lastRowId) {
-
-				lastRowId = tc.getFirstChildId(lastRowId);
-				if (lastRowId)
-					rowId = lastRowId;
+				// change and pass real row id to dc
+				rowId = treeCursor._rowId;
 
 			}
+			// If it is not id of tree collection, then find/set root of data
+			else {
+				let treeItem = tc.find({ _rowId: rowId }, true);
+				if (treeItem)
+					tc.setCursor(treeItem.id);
+			}
+
+			// if (tc.getCursor() != rowId)
+			// 	tc.setCursor(rowId);
+
+			// // Find deepest child id for data collection
+			// let lastRowId = rowId;
+			// while (lastRowId) {
+
+			// 	lastRowId = tc.getFirstChildId(lastRowId);
+			// 	if (lastRowId)
+			// 		rowId = lastRowId;
+
+			// }
 
 		}
 
@@ -557,7 +574,7 @@ export default class ABDataview extends EventEmitter {
 					// this.__dataCollection.setCursor(rowData.id);
 				}
 
-				if (!this.__treeCollection &&
+				if (this.__treeCollection &&
 					!this.__treeCollection.exists(values.id)) {
 					this.parseTreeCollection({
 						data: [values]
@@ -1580,35 +1597,30 @@ export default class ABDataview extends EventEmitter {
 
 			let id;
 
-			// If it is the last child, then add this item to child list.
-			if (join.links == null || join.links.length == 0) {
+			// TODO: ABObject.PK()
+			let pk = 'uuid';
 
-				if (!this.__treeCollection.exists(row.id))
-					this.__treeCollection.add(row, null, parentId);
-
-				return;
-			}
-			else
-				id = row[`${alias}.uuid`] || row[`${alias}.id`];
+			id = row[`${alias}.${pk}`];
 
 			if (!id) return;
 
 			// Add parent node
 			if (!this.__treeCollection.exists(id)) {
 
-				let rootNode = {};
-				rootNode.id = id;
+				let treeNode = {};
+				treeNode.id = id;
+				treeNode._rowId = row.id; // Keep row id for set cursor to data collection
 
 				Object.keys(row).forEach(propName => {
 
 					// Pull value from alias
 					if (propName.indexOf(`${alias}.`) == 0) {
-						rootNode[propName] = row[propName];
+						treeNode[propName] = row[propName];
 					}
 
 				});
 
-				this.__treeCollection.add(rootNode, null, parentId);
+				this.__treeCollection.add(treeNode, null, parentId);
 			}
 
 			// Sub-joins
@@ -1618,11 +1630,32 @@ export default class ABDataview extends EventEmitter {
 
 		};
 
+		// Show loading cursor
+		(this.__bindComponentIds || []).forEach(comId => {
+
+			let boundComp = $$(comId);
+			if (boundComp &&
+				boundComp.showProgress)
+				boundComp.showProgress({ type: "icon" });
+
+		});
+
 		(data.data || []).forEach(row => {
 
 			addRowToTree(this.__datasource.joins(), row);
 
 		});
+
+		// Hide loading cursor
+		(this.__bindComponentIds || []).forEach(comId => {
+
+			let boundComp = $$(comId);
+			if (boundComp &&
+				boundComp.hideProgress)
+				boundComp.hideProgress();
+
+		})
+		
 
 	}
 
