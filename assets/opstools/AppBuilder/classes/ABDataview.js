@@ -992,9 +992,9 @@ export default class ABDataview extends EventEmitter {
 		};
 
 		// remove where if not provided:
-		if (!wheres) {
-			delete wheres.where;
-		}
+		// if (!wheres) {
+		// 	delete wheres.where;
+		// }
 
 		// load all data
 		if (this.settings.loadAll) {
@@ -1582,7 +1582,10 @@ export default class ABDataview extends EventEmitter {
 
 			// If it is the last child, then add this item to child list.
 			if (join.links == null || join.links.length == 0) {
-				this.__treeCollection.add(row, null, parentId);
+
+				if (!this.__treeCollection.exists(row.id))
+					this.__treeCollection.add(row, null, parentId);
+
 				return;
 			}
 			else
@@ -1615,19 +1618,11 @@ export default class ABDataview extends EventEmitter {
 
 		};
 
-		this.__treeCollection.blockEvent();
-		this.__treeCollection.data.blockEvent();
-
 		(data.data || []).forEach(row => {
 
 			addRowToTree(this.__datasource.joins(), row);
 
 		});
-
-		this.__treeCollection.unblockEvent();
-		this.__treeCollection.data.unblockEvent();
-
-		this.__treeCollection.refresh();
 
 	}
 
