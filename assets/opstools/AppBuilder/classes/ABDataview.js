@@ -1595,13 +1595,8 @@ export default class ABDataview extends EventEmitter {
 			let alias = join.alias;
 			if (!alias) return;
 
-			let id;
-
 			// TODO: ABObject.PK()
-			let pk = 'uuid';
-
-			id = row[`${alias}.${pk}`];
-
+			let id = row[`${alias}.uuid`] || row[`${alias}.id`];
 			if (!id) return;
 
 			// Add parent node
