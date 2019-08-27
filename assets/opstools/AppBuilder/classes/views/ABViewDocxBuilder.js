@@ -184,19 +184,19 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 		OP.Comm.Service.get({
 			url: '/appdev-core/sitemultilinguallanguage'
 		})
-		.then(languages => {
+			.then(languages => {
 
-			let langOptions = (languages || []).map(lang => {
-				return {
-					id: lang.language_code,
-					value: lang.language_label
-				}
+				let langOptions = (languages || []).map(lang => {
+					return {
+						id: lang.language_code,
+						value: lang.language_label
+					}
+				});
+
+				$$(ids.language).define('options', langOptions);
+				$$(ids.language).refresh();
+
 			});
-
-			$$(ids.language).define('options', langOptions);
-			$$(ids.language).refresh();
-
-		});
 
 
 		// in addition to the common .label  values, we 
@@ -533,7 +533,7 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 
 											targetData.data = targetData.data || [];
 											(baseData.data || []).forEach((childItem, index) => {
-	
+
 												// add new data item
 												if (targetData.data[index] == null)
 													targetData.data[index] = {};
@@ -563,7 +563,7 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 											(f.object.translations || []).forEach(objTran => {
 
 												let fieldTran = (f.translations || [])
-																	.filter(fieldTran => fieldTran.language_code == objTran.language_code)[0];
+													.filter(fieldTran => fieldTran.language_code == objTran.language_code)[0];
 
 												if (!fieldTran) return;
 
@@ -594,7 +594,7 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 							}
 						}
 
-console.log("DOCX data: ", reportValues, currCursor);
+						console.log("DOCX data: ", reportValues, currCursor);
 
 						return Promise.resolve();
 					})
@@ -617,19 +617,19 @@ console.log("DOCX data: ", reportValues, currCursor);
 								tasks.push(new Promise((ok, bad) => {
 
 									let imgUrl = `/opsportal/image/${this.application.name}/${imageVal}`;
-	
+
 									JSZipUtils.getBinaryContent(imgUrl, function (error, content) {
 										if (error)
 											return bad(error);
 										else {
-	
+
 											// store binary of image
 											images[imageVal] = content;
-	
+
 											ok();
 										}
 									});
-	
+
 								}));
 							}
 
@@ -716,7 +716,7 @@ console.log("DOCX data: ", reportValues, currCursor);
 									if (imageField.settings.useHeight &&
 										imageField.settings.imageHeight)
 										defaultVal[1] = imageField.settings.imageHeight;
-	
+
 									return defaultVal;
 								}
 								// getSize: function (imgBuffer, tagValue, tagName) {
@@ -749,6 +749,31 @@ console.log("DOCX data: ", reportValues, currCursor);
 									.attachModule(imageModule)
 									.loadZip(zip)
 									.setData(reportValues)
+									.setOptions({
+										parser: function (tag) {
+											return {
+												'get': function (scope, context) {
+
+													// NOTE: AppBuilder custom filter : no return empty items
+													if (tag.indexOf('data|') == 0) {
+
+														let prop = (tag.split('|')[1] || "").trim();
+
+														return (scope['data'] || []).filter(function(item) {
+															return item[prop] ? true : false;
+														});
+
+													}
+													else if (tag === '.') {
+														return scope;
+													}
+													else {
+														return scope[tag];
+													}
+												}
+											};
+										},
+									})
 									.render(); // render the document
 
 							}
