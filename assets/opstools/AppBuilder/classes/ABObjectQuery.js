@@ -676,7 +676,7 @@ export default class ABObjectQuery extends ABObject {
 
 				h.template = (item, common) => {
 					if (item[h.id])
-						return common.treetable(item, common) + (originTemplate ? originTemplate(item, common) : item[h.id]);
+						return common.icon(item, common) + (originTemplate ? originTemplate(item, common) : item[h.id]);
 					else
 						return "";
 				};
