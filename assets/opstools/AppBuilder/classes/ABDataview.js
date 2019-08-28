@@ -324,23 +324,10 @@ export default class ABDataview extends EventEmitter {
 					tc.setCursor(treeItem.id);
 			}
 
-			// if (tc.getCursor() != rowId)
-			// 	tc.setCursor(rowId);
-
-			// // Find deepest child id for data collection
-			// let lastRowId = rowId;
-			// while (lastRowId) {
-
-			// 	lastRowId = tc.getFirstChildId(lastRowId);
-			// 	if (lastRowId)
-			// 		rowId = lastRowId;
-
-			// }
-
 		}
 
 		let dc = this.__dataCollection;
-		if (dc) {
+		if (dc && dc.exists(rowId)) {
 
 			if (dc.getCursor() != rowId)
 				dc.setCursor(rowId);
@@ -363,7 +350,7 @@ export default class ABDataview extends EventEmitter {
 				let currItem = this.__treeCollection.getItem(currId);
 
 				// filter current id for serialize
-				this.__treeCollection.filter(item => item._row == currItem._row);
+				this.__treeCollection.filter(item => item._rowId == currItem._rowId);
 
 				// pull item with child items
 				let currItemAndChilds = this.__treeCollection.serialize()[0] || null;
@@ -439,7 +426,6 @@ export default class ABDataview extends EventEmitter {
 		if (this.__treeCollection)
 			this.__treeCollection.filter(filterData);
 
-		this.setStaticCursor();
 	}
 
 	setStaticCursor() {
@@ -647,6 +633,7 @@ export default class ABDataview extends EventEmitter {
 
 			// filter link data collection's cursor
 			this.refreshLinkCursor();
+			this.setStaticCursor();
 
 		});
 
@@ -803,6 +790,7 @@ export default class ABDataview extends EventEmitter {
 
 			// filter link data collection's cursor
 			this.refreshLinkCursor();
+			this.setStaticCursor();
 
 		});
 
@@ -864,6 +852,7 @@ export default class ABDataview extends EventEmitter {
 
 			// filter link data collection's cursor
 			this.refreshLinkCursor();
+			this.setStaticCursor();
 
 		});
 
@@ -950,7 +939,10 @@ export default class ABDataview extends EventEmitter {
 			this.eventAdd({
 				emitter: linkDv,
 				eventName: "changeCursor",
-				listener: () => { this.refreshLinkCursor(); }
+				listener: () => { 
+					this.refreshLinkCursor();
+					this.setStaticCursor();
+				}
 			});
 		}
 
@@ -1155,6 +1147,7 @@ export default class ABDataview extends EventEmitter {
 
 								// filter data by match link data collection
 								this.refreshLinkCursor();
+								this.setStaticCursor();
 
 							}
 							else {
