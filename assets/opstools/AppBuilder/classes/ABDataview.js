@@ -327,10 +327,12 @@ export default class ABDataview extends EventEmitter {
 		}
 
 		let dc = this.__dataCollection;
-		if (dc && dc.exists(rowId)) {
+		if (dc) {
 
-			if (dc.getCursor() != rowId)
-				dc.setCursor(rowId);
+			if (dc.getCursor() != rowId) {
+				if (dc.exists(rowId) || rowId == null)
+					dc.setCursor(rowId);
+			}
 			// If set rowId equal current cursor, it will not trigger .onAfterCursorChange event
 			else {
 				this.emit("changeCursor", this.getCursor());
