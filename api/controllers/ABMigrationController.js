@@ -223,11 +223,11 @@ function simpleObjectOperation(req, res, operation) {
 
     // NOTE: verifyAnd...() handles any errors and responses internally.
     // only need to responde to an object being passed back on .resolve()
-    // AppBuilder.routes.verifyAndReturnObject(req, res)
-    ABGraphObject.findOne(objID)
-    .then(function(objectData){
+    AppBuilder.routes.verifyAndReturnObject(req, res)
+    // ABGraphObject.findOne(objID)
+    .then(function(object){
 
-        let object = objectData.toABClass();
+        // let object = objectData.toABClass();
 
         ABMigration[operation](object)
         .then(function(){
