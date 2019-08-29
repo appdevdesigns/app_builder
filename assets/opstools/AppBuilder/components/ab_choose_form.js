@@ -113,8 +113,7 @@ export default class ABChoose extends OP.Component {  // .extend(idBase, functio
 								{
 									name: "isAdminApp",
 									view: "checkbox",
-									label: labels.component.formAdminApp,
-									labelAlign: "left",
+									labelRight: labels.component.formAdminApp,
 									labelWidth: 100
 								},
 								{ height: App.config.smallSpacer },
