@@ -246,6 +246,29 @@ export default class ABObjectQuery extends ABObject {
 		return result;
 	}
 
+	/**
+	 * @method columnResize()
+	 *
+	 * save the new width of a column
+	 *
+	 * @param {} id The instance of the field to save.
+	 * @param {int} newWidth the new width of the field
+	 * @param {int} oldWidth the old width of the field
+	 * @return {Promise}
+	 */
+	columnResize( columnName, newWidth, oldWidth ) {
+
+		let field = this.fields(f => f.columnName == columnName)[0];
+		if (field) {
+			field.settings.width = newWidth;
+
+			return this.save();
+		}
+		else {
+			return Promise.resolve();
+		}
+	}
+
 	get isGroup() {
 		return this.settings.grouping || false;
 	}
