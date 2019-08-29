@@ -415,13 +415,14 @@ var ABFieldListComponent = new ABFieldComponent({
 		values: (ids, values) => {
 
 			// Get options list from UI, then set them to settings
-			values.settings.options = $$(ids.options).find({}).map(function (opt) {
-				return {
+			values.settings.options = [];
+			$$(ids.options).data.each(opt => {
+				values.settings.options.push({
 					id: opt.id,
 					text: opt.value,
 					hex: opt.hex,
 					translations: opt.translations
-				}
+				});
 			});
 
 			// Un-translate options list
