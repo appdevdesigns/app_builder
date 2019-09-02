@@ -140,10 +140,11 @@ class ABFieldAutoIndex extends ABField {
 						// Create a new column here.
 						var currCol = t.string(this.columnName);
 						currCol.defaultTo(null);
-						currCol.unique();
 
 						if (exists) 
 							currCol.alter();
+						else
+							currCol.unique();
 
 					})
 						.then(() => {

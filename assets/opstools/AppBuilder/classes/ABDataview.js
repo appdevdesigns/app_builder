@@ -545,31 +545,46 @@ export default class ABDataview extends EventEmitter {
 		AD.comm.hub.subscribe('ab.datacollection.create', (msg, data) => {
 
 			let obj = this.datasource;
-			if (!obj)
-				return;
+			if (!obj) return;
 
-			var values = data.data;
+			let needAdd = false;
+			let updatedVals = {};
 
-			if (obj.id == data.objectId) {
+			// Query
+			if (obj instanceof ABObjectQuery) {
+
+				let objList = obj.objects(o => o.id == data.objectId) || [];
+
+				needAdd = objList.length > 0;
+				updatedVals = this._queryUpdateData(objList, data.data);
+			}
+			else {
+				needAdd = obj.id == data.objectId;
+				updatedVals = data.data;
+			}
+
+			if (needAdd) {
 
 				// normalize data before add to data collection
 				var model = obj.model();
-				model.normalizeData(values);
+				model.normalizeData(updatedVals);
 
 				// filter condition before add 
-				if (!this.__filterComponent.isValid(values))
+				if (!this.__filterComponent.isValid(updatedVals))
 					return;
 
-				if (!this.__dataCollection.exists(values.id)) {
-					this.__dataCollection.add(values, 0);
-					this.emit('create', values);
+				if (!this.__dataCollection.exists(updatedVals.id)) {
+					this.__dataCollection.add(updatedVals, 0);
+					this.emit('create', updatedVals);
 					// this.__dataCollection.setCursor(rowData.id);
 				}
 
-				if (this.__treeCollection &&
-					!this.__treeCollection.exists(values.id)) {
+				if (this.__treeCollection
+					// && this.__treeCollection.exists(updatedVals.id)
+					) {
+
 					this.parseTreeCollection({
-						data: [values]
+						data: [updatedVals]
 					});
 				}
 
@@ -584,12 +599,14 @@ export default class ABDataview extends EventEmitter {
 			);
 
 			// update relation data
-			if (connectedFields && connectedFields.length > 0) {
+			if (obj instanceof ABObject &&
+				connectedFields && 
+				connectedFields.length > 0) {
 
 				// various PK name
 				let PK = connectedFields[0].object.PK();
-				if (!values.id && PK != 'id')
-					values.id = values[PK];
+				if (!updatedVals.id && PK != 'id')
+					updatedVals.id = updatedVals[PK];
 
 				this.__dataCollection.find({}).forEach(d => {
 
@@ -597,25 +614,25 @@ export default class ABDataview extends EventEmitter {
 
 					connectedFields.forEach(f => {
 
-						var updateRelateVal = values[f.fieldLink.relationName()] || {};
+						var updateRelateVal = updatedVals[f.fieldLink.relationName()] || {};
 						let rowRelateVal = d[f.relationName()] || {};
 
 						// Relate data
 						if (Array.isArray(rowRelateVal) &&
-							rowRelateVal.filter(v => v == values.id || v.id == values.id).length < 1 &&
+							rowRelateVal.filter(v => v == updatedVals.id || v.id == updatedVals.id).length < 1 &&
 							isRelated(updateRelateVal, d.id, PK)) {
 
-							rowRelateVal.push(values);
+							rowRelateVal.push(updatedVals);
 
 							updateItemData[f.relationName()] = rowRelateVal;
 							updateItemData[f.columnName] = updateItemData[f.relationName()].map(v => v.id || v);
 						}
 						else if (!Array.isArray(rowRelateVal) &&
-							(rowRelateVal != values.id || rowRelateVal.id != values.id) &&
+							(rowRelateVal != updatedVals.id || rowRelateVal.id != updatedVals.id) &&
 							isRelated(updateRelateVal, d.id, PK)) {
 
-							updateItemData[f.relationName()] = values;
-							updateItemData[f.columnName] = values.id || values;
+							updateItemData[f.relationName()] = updatedVals;
+							updateItemData[f.columnName] = updatedVals.id || updatedVals;
 						}
 
 					});
@@ -678,12 +695,7 @@ export default class ABDataview extends EventEmitter {
 
 					isExists = updatedIds.length > 0;
 
-					// Add alias to properties of update data
-					Object.keys(values).forEach(key => {
-						objList.forEach(oItem => {
-							updatedVals[`${oItem.alias}.${key}`] = values[key];
-						});
-					});
+					updatedVals = this._queryUpdateData(objList, values);
 
 				}
 			}
@@ -923,27 +935,67 @@ export default class ABDataview extends EventEmitter {
 		AD.comm.hub.subscribe('ab.datacollection.delete', (msg, data) => {
 
 			let obj = this.datasource;
-			if (!obj)
-				return;
+			if (!obj) return;
 
-			// id of a deleted item
-			var deleteId = data.data; // uuid
+			let deleteId = data.data;
+			let needDelete = false;
+			let deletedIds = [];
+			let deletedTreeIds = []
+
+			// Query
+			if (obj instanceof ABObjectQuery) {
+				let objList = obj.objects(o => o.id == data.objectId) || [];
+				needDelete = (objList.length > 0);
+				if (needDelete) {
+
+					(objList || []).forEach(o => {
+
+						deletedIds = this.__dataCollection.find(item => {
+							return item[`${o.alias}.${o.PK()}`] == deleteId;
+						}).map(o => o.id) || [];
+
+						// grouped queries
+						if (this.__treeCollection) {
+							deletedTreeIds = this.__treeCollection.find(item => {
+								return item[`${o.alias}.${o.PK()}`] == deleteId;
+							}).map(o => o.id) || [];
+						}
+					});
+
+				}
+			}
+			// Object
+			else {
+				needDelete = (obj.id == data.objectId);
+				if (needDelete) {
+					deletedIds.push(deleteId);
+				}
+			}
 
 			// if it is the source object
-			if (obj.id == data.objectId &&
-				this.__dataCollection.exists(deleteId)) {
+			if (needDelete) {
 
 				// If the deleted item is current cursor, then the current cursor should be cleared.
 				var currData = this.getCursor();
-				if (currData && currData[obj.PK()] == deleteId)
-					this.emit("changeCursor", null);
 
-				this.__dataCollection.remove(deleteId);
+				deletedIds.forEach(delId => {
 
-				if (this.__treeCollection)
-					this.__treeCollection.remove(deleteId);
+					if (currData && currData[obj.PK()] == delId)
+						this.emit("changeCursor", null);
 
-				this.emit('delete', deleteId);
+					if (this.__dataCollection.exists(delId))
+						this.__dataCollection.remove(delId);
+				});
+
+				if (this.__treeCollection) {
+					deletedTreeIds.forEach(delId => {
+						if (this.__treeCollection.exists(delId))
+							this.__treeCollection.remove(delId);
+					})
+				}
+
+				if (deletedIds[0])
+					this.emit('delete', deletedIds[0]);
 			}
 
 			// if it is a linked object
@@ -954,7 +1006,10 @@ export default class ABDataview extends EventEmitter {
 			);
 
 			// update relation data
-			if (connectedFields && connectedFields.length > 0) {
+			if (obj instanceof ABObject &&
+				deletedIds[0] &&
+				connectedFields &&
+				connectedFields.length > 0) {
 
 				this.__dataCollection.find({}).forEach(d => {
 
@@ -1709,7 +1764,26 @@ export default class ABDataview extends EventEmitter {
 				boundComp.hideProgress();
 
 		})
+	}
 
+	/**
+	 * @method _queryUpdateData
+	 * 
+	 * @param {Array} objList - List of ABObject
+	 * @param {Object} values 
+	 */
+	_queryUpdateData(objList, values) {
+
+		let updatedVals = {};
+
+		// Add alias to properties of update data
+		Object.keys(values).forEach(key => {
+			objList.forEach(oItem => {
+				updatedVals[`${oItem.alias}.${key}`] = values[key];
+			});
+		});
+
+		return updatedVals;
 
 	}
 
