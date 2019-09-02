@@ -653,6 +653,7 @@ export default class ABDataview extends EventEmitter {
 			let needUpdate = false;
 			let isExists = false;
 			let updatedIds = [];
+			let updatedTreeIds = [];
 			let updatedVals = {};
 
 			// Query
@@ -662,9 +663,17 @@ export default class ABDataview extends EventEmitter {
 				if (needUpdate) {
 
 					(objList || []).forEach(o => {
+
 						updatedIds = this.__dataCollection.find(item => {
 							return item[`${o.alias}.${o.PK()}`] == (values[o.PK()] || values.id);
 						}).map(o => o.id) || [];
+
+						// grouped queries
+						if (this.__treeCollection) {
+							updatedTreeIds = this.__treeCollection.find(item => {
+								return item[`${o.alias}.${o.PK()}`] == (values[o.PK()] || values.id);
+							}).map(o => o.id) || [];
+						}
 					});
 
 					isExists = updatedIds.length > 0;
@@ -706,15 +715,13 @@ export default class ABDataview extends EventEmitter {
 
 						updatedIds.forEach(itemId => {
 							this.__dataCollection.updateItem(itemId, updatedVals);
-						})
+						});
 
 						if (this.__treeCollection) {
-							// TODO: update data in tree
-							// updatedIds.forEach(itemId => {
-
-							// 	this.__treeCollection.updateItem(updatedVals.id, updatedVals);
-
-							// })
+							// update data in tree
+							updatedTreeIds.forEach(itemId => {
+								this.__treeCollection.updateItem(itemId, updatedVals);
+							});
 						}
 
 						this.emit('update', updatedVals);
