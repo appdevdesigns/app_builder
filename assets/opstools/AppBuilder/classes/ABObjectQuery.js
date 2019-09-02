@@ -439,7 +439,12 @@ export default class ABObjectQuery extends ABObject {
 		filter = filter || function(){ return true; };
 
 		// get all objects (values of a object)
-		let objects = Object.keys(this._objects).map(key => { return this._objects[key]; });
+		let objects = Object.keys(this._objects).map(key => { 
+			let obj = this._objects[key];
+			obj.alias = key;
+
+			return obj;
+		});
 
 		return (objects || []).filter(filter);
 	}

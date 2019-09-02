@@ -392,6 +392,8 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 	 */
 	component(App) {
 
+		let baseCom = super.component(App);
+
 		var idBase = 'ABViewDocxBuilder_' + this.id;
 		var ids = {
 			button: App.unique(idBase + '_button'),
@@ -814,7 +816,8 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 		return {
 			ui: _ui,
 			init: _init,
-			logic: _logic
+			logic: _logic,
+			onShow: baseCom.onShow
 		}
 
 	}
