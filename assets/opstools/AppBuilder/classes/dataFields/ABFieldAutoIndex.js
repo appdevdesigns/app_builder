@@ -346,18 +346,21 @@ class ABFieldAutoIndex extends ABField {
 	 */
 	defaultValue(values) {
 
-		// if no default value is set, then don't insert a value.
-		if (!values[this.columnName]) {
+		// // if no default value is set, then don't insert a value.
+		// if (!values[this.columnName]) {
 
-			if (this.settings.currentIndex == null) {
-				this.settings.currentIndex = 1;
-			}
+		// 	if (this.settings.currentIndex == null) {
+		// 		this.settings.currentIndex = 1;
+		// 	}
 
-			// Set default value
-			values[this.columnName] = this.settings.currentIndex;
-			this.settings.currentIndex += 1;
-			this.save();
-		}
+		// 	// Set default value
+		// 	values[this.columnName] = this.settings.currentIndex;
+		// 	this.settings.currentIndex += 1;
+		// 	this.save();
+		// }
+
+		// Remove every values, then we will use AUTO_INCREMENT of MySQL
+		delete values[this.columnName];
 	}
 
 	format(rowData) {
