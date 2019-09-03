@@ -692,14 +692,7 @@ class ABFieldList extends ABFieldSelectivity {
 				// var domNode = node.querySelector('.list-data-values');
 
 				// get selected values
-				var selectedData = [];
-				if (row[field.columnName] != null) {
-					selectedData = row[field.columnName];
-
-					if (typeof selectedData == 'string')
-						selectedData = JSON.parse(selectedData);
-	
-				}
+				let selectedData = this._getSelectedOptions(row);
 
 				// Render selectivity
 				field.selectivityRender(domNode, {
@@ -787,14 +780,7 @@ class ABFieldList extends ABFieldSelectivity {
 			var domNode = node.querySelector('.list-data-values');
 
 			// get selected values
-			var selectedData = [];
-			if (row[this.columnName] != null) {
-				selectedData = row[this.columnName];
-
-				if (typeof selectedData == 'string')
-					selectedData = JSON.parse(selectedData);
-
-			}
+			var selectedData = this._getSelectedOptions(row);
 
 			// Render selectivity
 			this.selectivityRender(domNode, {
@@ -989,25 +975,22 @@ class ABFieldList extends ABFieldSelectivity {
 	setValue(item, rowData) {
 
 		if (this.settings.isMultiple) {
-			
-			var val = rowData[this.columnName];
-			if (typeof val == 'undefined') {
-				// assume they just sent us a single value
-				val = rowData;
-			}
+
+			let selectedOpts = this._getSelectedOptions(rowData);
 			
 			// get selectivity dom
 			var domSelectivity = item.$view.querySelector('.list-data-values');
+
 			// set value to selectivity
-			this.selectivitySet(domSelectivity, val, this.App);
+			this.selectivitySet(domSelectivity, selectedOpts, this.App);
 			
 		} else {
-			super.setValue(item, rowData);  
+			super.setValue(item, rowData);
 		}
 	}
 
 
-	format(rowData) {
+	format(rowData, options = {}) {
 
 		var val = this.dataValue(rowData) || [];
 
@@ -1025,12 +1008,42 @@ class ABFieldList extends ABFieldSelectivity {
 
 		var displayOpts = this.settings.options
 							.filter(opt => val.filter(v => (v.id || v) == opt.id).length > 0)
-							.map(opt => opt.text);
+							.map(opt => {
+
+								let text = opt.text;
+								let languageCode = options.languageCode || AD.lang.currentLanguage;
+
+								// Pull text of option with specify language code
+								let optTran = (opt.translations || []).filter(o => o.language_code == languageCode)[0];
+								if (optTran)
+									text = optTran.text;
+
+								return text;
+							});
 
 		return displayOpts.join(', ');
 
 	}
 
+	_getSelectedOptions(rowData = {}) {
+
+		let result = [];
+		if (rowData[this.columnName] != null) {
+			result = rowData[this.columnName];
+
+			if (typeof result == 'string')
+				result = JSON.parse(result);
+
+			// Pull text with current language
+			result = (this.settings.options || []).filter(opt => {
+				return (result || []).filter(v => (opt.id || opt) == (v.id || v)).length > 0
+			});
+
+		}
+
+		return result;
+
+	}
 
 }
 

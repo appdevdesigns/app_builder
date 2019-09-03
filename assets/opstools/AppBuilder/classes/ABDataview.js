@@ -304,7 +304,18 @@ export default class ABDataview extends EventEmitter {
 			(this.settings.fixSelect != "_FirstRecordDefault" || this.settings.fixSelect == rowId))
 			return;
 
-		this.setCursorTree(rowId);
+		if (this.__treeCollection) {
+			// set cursor of tree collection
+			this.setCursorTree(rowId);
+
+			// pull current row id
+			let currTreeId = this.__treeCollection.getCursor();
+			if (currTreeId) {
+				let currTreeItem = this.__treeCollection.getItem(currTreeId);
+				if (currTreeItem)
+					rowId = currTreeItem._rowId;
+			}
+		}
 
 		let dc = this.__dataCollection;
 		if (dc) {
@@ -1728,6 +1739,9 @@ export default class ABDataview extends EventEmitter {
 					}
 
 				});
+
+				if (row.translations)
+					treeNode.translations = row.translations;
 
 				this.__treeCollection.add(treeNode, null, parentId);
 			}

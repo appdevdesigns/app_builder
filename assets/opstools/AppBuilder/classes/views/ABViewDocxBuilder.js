@@ -521,7 +521,9 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 											// data[label + '_label'] = field.format(baseData);
 										}
 										else {
-											val = field.format(baseData);
+											val = field.format(baseData, {
+												languageCode: this.languageCode
+											});
 										}
 
 										// Set value to report with every languages of label
@@ -596,7 +598,7 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 							}
 						}
 
-						console.log("DOCX data: ", reportValues, currCursor);
+console.log("DOCX data: ", reportValues, currCursor);
 
 						return Promise.resolve();
 					})
