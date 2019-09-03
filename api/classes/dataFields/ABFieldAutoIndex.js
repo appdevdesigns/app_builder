@@ -233,7 +233,7 @@ class ABFieldAutoIndex extends ABField {
 
 		// Remove every values, then we will use AUTO_INCREMENT of MySQL
 		if (myParameter &&
-			myParameter[this.columnName])
+			myParameter[this.columnName] != null)
 			delete myParameter[this.columnName];
 
 		return myParameter;
