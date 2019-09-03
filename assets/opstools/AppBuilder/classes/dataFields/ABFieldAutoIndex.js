@@ -17,7 +17,7 @@ var ids = {
 	delimiterText: 'delimiterText',
 	displayLength: 'diisplayLength',
 	previewText: 'previewText',
-	currentIndex: 'currentIndex',
+	// currentIndex: 'currentIndex',
 }
 
 var ABFieldAutoIndexDefaults = {
@@ -37,7 +37,7 @@ var ABFieldAutoIndexDefaults = {
 // defaultValues: the keys must match a .name of your elements to set it's default value.
 var defaultValues = { 
 	'displayLength':4,
-	'currentIndex': 0
+	// 'currentIndex': 0
 }
 
 
@@ -159,13 +159,13 @@ var ABFieldAutoIndexComponent = new ABFieldComponent({
 				label: L('ab.dataField.previewText', '*Preview'),
 				disabled: true,
 			},
-			{
-				id: ids.currentIndex,
-				view: "text",
-				name: 'currentIndex',
-				value: 0,
-				hidden: true
-			}
+			// {
+			// 	id: ids.currentIndex,
+			// 	view: "text",
+			// 	name: 'currentIndex',
+			// 	value: 0,
+			// 	hidden: true
+			// }
 			// {
 			// 	view: "checkbox",
 			// 	name:'supportMultilingual',
@@ -212,7 +212,7 @@ var ABFieldAutoIndexComponent = new ABFieldComponent({
 	// 		.values(ids, values) : return the current values from the form
 	logic: {
 		populate: (ids, values) => {
-			var currentObject = ABFieldAutoIndexComponent.currentObject;
+			// var currentObject = ABFieldAutoIndexComponent.currentObject;
 			previewChange();
 
 		}
@@ -254,7 +254,7 @@ class ABFieldAutoIndex extends ABField {
 
 		// // text to Int:
 		// this.settings.supportMultilingual = parseInt(this.settings.supportMultilingual);
-		this.settings.currentIndex = parseInt(this.settings.currentIndex || 1);
+		// this.settings.currentIndex = parseInt(this.settings.currentIndex || 1);
 		this.settings.displayLength = parseInt(this.settings.displayLength);
 
 	}
