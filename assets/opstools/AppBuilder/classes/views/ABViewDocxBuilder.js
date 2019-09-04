@@ -505,7 +505,8 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 
 										// Translate multilinguage fields
 										if (mlFields.length) {
-											OP.Multilingual.translate(baseData, baseData, mlFields, this.languageCode);
+											let transFields = (mlFields || []).filter(fieldName => baseData[fieldName] != null);
+											OP.Multilingual.translate(baseData, baseData, transFields, this.languageCode);
 										}
 
 										// Pull value
