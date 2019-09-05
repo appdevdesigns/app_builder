@@ -215,7 +215,6 @@ class ABFieldString extends ABField {
 		super.fromValues(values);
 
 		// we're responsible for setting up our specific settings:
-		this.settings.default = values.settings.default || '';
 		this.settings.supportMultilingual = values.settings.supportMultilingual+"" || "0";
 
 		// text to Int:
@@ -223,6 +222,8 @@ class ABFieldString extends ABField {
 
 		if (this.settings.supportMultilingual)
 			OP.Multilingual.translate(this.settings, this.settings, ["default"]);
+		else
+			this.settings.default = values.settings.default || '';
 
 	}
 
@@ -244,6 +245,8 @@ class ABFieldString extends ABField {
 
 		if (this.settings.supportMultilingual)
 			OP.Multilingual.unTranslate(obj.settings, obj.settings, ["default"]);
+		else
+			obj.settings.default = this.settings.default;
 
 		return obj;
 	}

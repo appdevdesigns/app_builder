@@ -159,22 +159,14 @@ class ABFieldLongText extends ABField {
 	constructor(values, object) {
 		super(values, object, ABFieldLongTextDefaults);
 
-    	/*
-    	{
+		/*
+		{
 			settings: {
 				default: 'string',
 				supportMultilingual: 1/0
 			}
-    	}
-    	*/
-
-		// we're responsible for setting up our specific settings:
-		for (var dv in defaultValues) {
-			this.settings[dv] = values.settings[dv] || defaultValues[dv];
 		}
-
-		// // text to Int:
-		this.settings.supportMultilingual = parseInt(this.settings.supportMultilingual);
+		*/
 
 	}
 
@@ -213,6 +205,55 @@ class ABFieldLongText extends ABField {
 		// validator.addError('columnName', L('ab.validation.object.name.unique', 'Field columnName must be unique (#name# already used in this Application)').replace('#name#', this.name) );
 
 		return validator;
+	}
+
+
+	/**
+	 * @method fromValues()
+	 *
+	 * initialze this object with the given set of values.
+	 * @param {obj} values
+	 */
+	fromValues(values) {
+
+		super.fromValues(values);
+
+		// we're responsible for setting up our specific settings:
+		this.settings.supportMultilingual = values.settings.supportMultilingual+"" || "0";
+
+		// text to Int:
+		this.settings.supportMultilingual = parseInt(this.settings.supportMultilingual);
+
+		if (this.settings.supportMultilingual)
+			OP.Multilingual.translate(this.settings, this.settings, ["default"]);
+		else
+			this.settings.default = values.settings.default || '';
+
+
+	}
+
+
+	/**
+	 * @method toObj()
+	 *
+	 * properly compile the current state of this ABApplication instance
+	 * into the values needed for saving to the DB.
+	 *
+	 * Most of the instance data is stored in .json field, so be sure to
+	 * update that from all the current values of our child fields.
+	 *
+	 * @return {json}
+	 */
+	toObj() {
+
+		var obj = super.toObj();
+
+		if (this.settings.supportMultilingual)
+			OP.Multilingual.unTranslate(obj.settings, obj.settings, ["default"]);
+		else
+			obj.settings.default = this.settings.default;
+
+		return obj;
 	}
 
 
