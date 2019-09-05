@@ -171,10 +171,18 @@ export default class ABViewFormField extends ABView {
 		let form = this.parentFormComponent();
 		if (form == null) return null;
 
-		let dataview = form.dataview;
-		if (dataview == null) return null;
+		let object;
+		if (form._currentObject) {
+			object = form._currentObject;
+		}
+		else {
 
-		let object = dataview.datasource;
+			let dataview = form.dataview;
+			if (dataview == null) return null;
+	
+			object = dataview.datasource;
+		}
+
 		if (object == null) return null;
 
 		let field = object.fields((v) => v.id == this.settings.fieldId, true)[0];

@@ -47,7 +47,9 @@ export default class ABWorkObjectDatatable extends OP.Component {
             hideButtons: params.hideButtons || false,
             groupBy: params.groupBy || "",
             hiddenFields: params.hiddenFields || [],
-            frozenColumnID: params.frozenColumnID
+            frozenColumnID: params.frozenColumnID,
+
+            isTreeDatable: params.isTreeDatable || 0 // if true webix.treedatable, otherwise webix.datatable
         };
 
         var L = this.Label;
@@ -255,7 +257,7 @@ console.warn('!! ToDo: onAfterColumnHide()');
         };
 
         // Grouping
-        if (settings.groupBy) {
+        if (settings.isTreeDatable || settings.groupBy) {
 
             // switch datatable to support tree
             this.ui.view = "treetable";

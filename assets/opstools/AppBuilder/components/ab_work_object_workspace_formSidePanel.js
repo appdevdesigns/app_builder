@@ -145,6 +145,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 					}
 				};
 				let form = new ABViewForm(formAttrs, CurrentObject.application);
+				form.objectLoad(CurrentObject);
 
 				// Populate child elements
 				CurrentObject.fields().forEach((f, index) => {

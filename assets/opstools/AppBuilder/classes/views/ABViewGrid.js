@@ -1025,7 +1025,8 @@ export default class ABViewGrid extends ABViewWidget  {
 			hideButtons: this.settings.hideButtons,
 			groupBy: this.settings.groupBy,
 			hiddenFields: this.settings.objectWorkspace.hiddenFields,
-			frozenColumnID: this.settings.objectWorkspace.frozenColumnID || ""
+			frozenColumnID: this.settings.objectWorkspace.frozenColumnID || "",
+			isTreeDatable: this.dataview && this.dataview.isGroup
 		}
 
 		let DataTable = new ABWorkspaceDatatable(App, idBase, settings);
@@ -1201,13 +1202,6 @@ export default class ABViewGrid extends ABViewWidget  {
 			}
 
 		};
-
-		// If data view supports group, then it will render 'treetable'
-		let dv = this.dataview;
-		if (dv && dv.isGroup)
-			DataTable.ui.view = 'treetable';
-		else
-			DataTable.ui.view = 'datatable';
 
 		// specify height of the grid
 		if (this.settings.height)
