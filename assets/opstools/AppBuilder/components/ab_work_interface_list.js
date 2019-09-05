@@ -386,7 +386,8 @@ console.error('!! todo: onBeforeEditStop() editing');
 				_logic.listBusy();
 
 				// get a copy of the page
-				let copiedPage = selectedPage.copy();
+				let copiedPage = selectedPage.copy(null, selectedPage.parent);
+				copiedPage.parent = selectedPage.parent;
 
 				// saving
 				let savePageFn = (p) => {
