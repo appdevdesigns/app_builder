@@ -368,41 +368,47 @@ export default class ABViewDetail extends ABViewContainer {
 						if (!field) return;
 
 						// get value of relation when field is a connect field
-						if (field.key == "connectObject") {
-							val = field.pullRelationValues(rowData);
-						}
-						else if (field.key == "list") {
-							val = rowData[field.columnName];
+						switch(field.key) {
+							case "connectObject":
+								val = field.pullRelationValues(rowData);
+								break;
+							case "list":
+								val = rowData[field.columnName];
 
-							if (field.settings.isMultiple == 0) {
-								let myVal = "";
+								if (field.settings.isMultiple == 0) {
+									let myVal = "";
 
-								field.settings.options.forEach(function (options) {
-									if (options.id == val)
-										myVal = options.text;
-								});
-
-								if (field.settings.hasColors) {
-									let myHex = "#66666";
-									field.settings.options.forEach(function (h) {
-										if (h.text == myVal)
-											myHex = h.hex;
+									field.settings.options.forEach(function (options) {
+										if (options.id == val)
+											myVal = options.text;
 									});
-									myVal = '<span class="selectivity-multiple-selected-item rendered" style="background-color:' + myHex + ' !important;">' + myVal + '</span>';
+
+									if (field.settings.hasColors) {
+										let myHex = "#66666";
+										field.settings.options.forEach(function (h) {
+											if (h.text == myVal)
+												myHex = h.hex;
+										});
+										myVal = '<span class="selectivity-multiple-selected-item rendered" style="background-color:' + myHex + ' !important;">' + myVal + '</span>';
+									}
+
+									val = myVal;
 								}
+								break;
+							case "user":
+								val = rowData[field.columnName];
 
-								val = myVal;
-							}
-						}
-						else if (field.key == "user") {
-							val = rowData[field.columnName];
-
-							if (field.settings.isMultiple == 0)
-								val = val ? '<span class="selectivity-multiple-selected-item rendered" style="background-color:#eee !important; color: #666 !important; box-shadow: inset 0px 1px 1px #333;"><i style="opacity: 0.6;" class="fa fa-user"></i> ' + val + '</span>' : "";
-
-						}
-						else if (rowData) {
-							val = field.format(rowData);
+								if (field.settings.isMultiple == 0)
+									val = val ? '<span class="selectivity-multiple-selected-item rendered" style="background-color:#eee !important; color: #666 !important; box-shadow: inset 0px 1px 1px #333;"><i style="opacity: 0.6;" class="fa fa-user"></i> ' + val + '</span>' : "";
+								break;
+							case "file":
+								val = rowData[field.columnName];
+								break;
+							default:
+								if (rowData) {
+									val = field.format(rowData);
+								}
+								break;
 						}
 					}
 
