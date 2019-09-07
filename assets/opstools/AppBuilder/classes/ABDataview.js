@@ -332,24 +332,24 @@ export default class ABDataview extends EventEmitter {
 
 	}
 
-	setCursorTree(rowId) {
+	/**
+	 * 
+	 * @param {string|number} itemId - Id of item or Id of row data
+	 */
+	setCursorTree(itemId) {
 
 		let tc = this.__treeCollection;
 		if (tc &&
-			tc.getCursor() != rowId) {
+			tc.getCursor() != itemId) {
 
 			// If it is id of tree collection, then find row id of data
-			let treeCursor = tc.find({ id: rowId }, true);
+			let treeCursor = tc.find({ id: itemId }, true);
 			if (treeCursor) {
-				tc.setCursor(rowId);
-
-				// change and pass real row id to dc
-				rowId = treeCursor._rowId;
-
+				tc.setCursor(itemId);
 			}
 			// If it is not id of tree collection, then find/set root of data
 			else {
-				let treeItem = tc.find({ _rowId: rowId, $parent: 0 }, true);
+				let treeItem = tc.find({ _rowId: itemId, $parent: 0 }, true);
 				if (treeItem)
 					tc.setCursor(treeItem.id);
 			}
@@ -592,7 +592,7 @@ export default class ABDataview extends EventEmitter {
 
 				if (this.__treeCollection
 					// && this.__treeCollection.exists(updatedVals.id)
-					) {
+				) {
 
 					this.parseTreeCollection({
 						data: [updatedVals]
@@ -611,7 +611,7 @@ export default class ABDataview extends EventEmitter {
 
 			// update relation data
 			if (obj instanceof ABObject &&
-				connectedFields && 
+				connectedFields &&
 				connectedFields.length > 0) {
 
 				// various PK name
@@ -796,7 +796,7 @@ export default class ABDataview extends EventEmitter {
 
 			// update relation data
 			if (obj instanceof ABObject &&
-				connectedFields && 
+				connectedFields &&
 				connectedFields.length > 0) {
 
 				// various PK name
@@ -1715,20 +1715,35 @@ export default class ABDataview extends EventEmitter {
 			!this.__treeCollection)
 			return;
 
-		let addRowToTree = (join = {}, row, parentId = null) => {
+		let addRowToTree = (join = {}, parentAlias = null) => {
 
 			let alias = join.alias;
-			if (!alias) return;
 
-			// TODO: ABObject.PK()
-			let id = row[`${alias}.uuid`] || row[`${alias}.id`];
-			if (!id) return;
+			(data.data || []).forEach(row => {
 
-			// Add parent node
-			if (!this.__treeCollection.exists(id)) {
+				let dataId = row[`${alias}.uuid`] || row[`${alias}.id`];
+				if (!dataId) return;
+
+				// find parent nodes
+				let parentItemIds = [];
+				let parentId = row[`${parentAlias}.uuid`] || row[`${parentAlias}.id`];
+				if (parentId) {
+					parentItemIds = this.__treeCollection
+										.find(item => item._alias == parentAlias && item._dataId == parentId)
+										.map(item => item.id);
+				}
+
+				// check exists
+				let exists = this.__treeCollection.find(item => {
+					return item._alias == alias && 
+							item._dataId == dataId && 
+							(parentItemIds.length == 0 || parentItemIds.indexOf(item.$parent) > -1);
+				}, true);
+				if (exists) return;
 
 				let treeNode = {};
-				treeNode.id = id;
+				treeNode._alias = alias;
+				treeNode._dataId = dataId;
 				treeNode._rowId = row.id; // Keep row id for set cursor to data collection
 
 				Object.keys(row).forEach(propName => {
@@ -1743,12 +1758,20 @@ export default class ABDataview extends EventEmitter {
 				if (row.translations)
 					treeNode.translations = row.translations;
 
-				this.__treeCollection.add(treeNode, null, parentId);
-			}
+				// child nodes
+				if (parentItemIds.length > 0)
+					parentItemIds.forEach(parentItemId => {
+						this.__treeCollection.add(treeNode, null, parentItemId);
+					});
+				// root node
+				else
+					this.__treeCollection.add(treeNode, null);
+
+			});
 
 			// Sub-joins
 			(join.links || []).forEach(link => {
-				addRowToTree(link, row, id);
+				addRowToTree(link, alias);
 			});
 
 		};
@@ -1763,11 +1786,8 @@ export default class ABDataview extends EventEmitter {
 
 		});
 
-		(data.data || []).forEach(row => {
+		addRowToTree(this.__datasource.joins());
 
-			addRowToTree(this.__datasource.joins(), row);
-
-		});
 
 		// Hide loading cursor
 		(this.__bindComponentIds || []).forEach(comId => {

@@ -529,8 +529,13 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 
 										// Set value to report with every languages of label
 										fieldLabels.forEach(label => {
-											targetData[label] = val || '';
-										})
+
+											if (val) 
+												targetData[label] = val;
+											else if (!targetData[label])
+												targetData[label] = '';
+
+										});
 
 										// normalize child items
 										if (baseData.data &&
@@ -552,6 +557,7 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 
 									};
 
+									// For support label of columns every languages
 									obj.fields().forEach(f => {
 
 										let fieldLabels = [];
