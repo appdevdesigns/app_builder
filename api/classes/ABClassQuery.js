@@ -688,6 +688,22 @@ class ABClassQuery extends ABClassObject {
 					Bclause = parses[parses.length - 1];
 				}
 
+				// Make sure table and column include `
+				let convertColumnName = (columnName = "") => {
+
+					if (columnName.indexOf('`') > -1)
+						return columnName;
+
+					let result = [];
+
+					columnName.split('.').forEach(col => {
+						result.push("`" + col + "`");
+					});
+
+					return result.join('.');
+
+				};
+
 				let fullJoinCommand = ("inner join ( " +
 					"SELECT {joinTable}.{joinPk} FROM {joinTable} " +
 					"LEFT OUTER JOIN {baseTable} ON {baseTable}.{A} {op} {joinTable}.{B} " +
@@ -696,14 +712,14 @@ class ABClassQuery extends ABClassObject {
 					"RIGHT OUTER JOIN {baseTable} ON {baseTable}.{A} {op} {joinTable}.{B} " +
 					") as {joinTableName} " +
 					"on {joinTableAlias}.{joinPk} {op} {joinTableName}.{joinPk}")
-					.replace(/{baseTable}/g, object.dbTableName(true))
-					.replace(/{joinTable}/g, joinTable)
-					.replace(/{joinTableAlias}/g, (alias ? alias : joinTable))
-					.replace(/{joinTableName}/g, joinAliasName)
+					.replace(/{baseTable}/g, convertColumnName(object.dbTableName(true)))
+					.replace(/{joinTable}/g, convertColumnName(joinTable))
+					.replace(/{joinTableAlias}/g, convertColumnName(alias ? alias : joinTable))
+					.replace(/{joinTableName}/g, convertColumnName(joinAliasName))
 					.replace(/{joinPk}/g, joinObj.PK())
-					.replace(/{A}/g, Aclause)
+					.replace(/{A}/g, convertColumnName(Aclause))
 					.replace(/{op}/g, op)
-					.replace(/{B}/g, Bclause);
+					.replace(/{B}/g, convertColumnName(Bclause));
 
 				query.joinRaw(fullJoinCommand);
 
