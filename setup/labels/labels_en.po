@@ -2834,5 +2834,5 @@ msgstr "Select a comment field"
 #. path: app_builder
 #. code: en
 #. key: ab.components.kanban
-msgid "Kanban"
+msgid "Kanban widget"
 msgstr "Kanban"
