@@ -669,59 +669,74 @@ class ABClassQuery extends ABClassObject {
 				if (alias)
 					joinTableAlias += (" AS " + alias);
 
+				// NOTE: Full outer join match every single rows
 				query['innerJoin'](joinTableAlias, function () {
 					this.on(1, '=', 1);
 				});
 
-				let joinAliasName = joinObj.id.replace(/[^a-zA-Z0-9]+/g, "");
+				// let joinAliasName = joinObj.id.replace(/[^a-zA-Z0-9]+/g, "");
 
-				let Aclause;
-				let Bclause;
+				// let Aclause;
+				// let Bclause;
 
-				if (A.indexOf('.') > -1) {
-					let parses = A.split('.');
-					Aclause = parses[parses.length - 1];
-				}
+				// if (A.indexOf('.') > -1) {
+				// 	let parses = A.split('.');
+				// 	Aclause = parses[parses.length - 1];
+				// }
 
-				if (B.indexOf('.') > -1) {
-					let parses = B.split('.');
-					Bclause = parses[parses.length - 1];
-				}
+				// if (B.indexOf('.') > -1) {
+				// 	let parses = B.split('.');
+				// 	Bclause = parses[parses.length - 1];
+				// }
 
-				// Make sure table and column include `
-				let convertColumnName = (columnName = "") => {
+				// // Make sure table and column include `
+				// let convertColumnName = (columnName = "") => {
 
-					if (columnName.indexOf('`') > -1)
-						return columnName;
+				// 	if (columnName.indexOf('`') > -1)
+				// 		return columnName;
 
-					let result = [];
+				// 	let result = [];
 
-					columnName.split('.').forEach(col => {
-						result.push("`" + col + "`");
-					});
+				// 	columnName.split('.').forEach(col => {
+				// 		result.push("`" + col + "`");
+				// 	});
 
-					return result.join('.');
+				// 	return result.join('.');
 
-				};
+				// };
 
-				let fullJoinCommand = ("inner join ( " +
-					"SELECT {joinTable}.{joinPk} FROM {joinTable} " +
-					"LEFT OUTER JOIN {baseTable} ON {baseTable}.{A} {op} {joinTable}.{B} " +
-					"UNION " +
-					"SELECT {joinTable}.{joinPk} FROM {joinTable} " +
-					"RIGHT OUTER JOIN {baseTable} ON {baseTable}.{A} {op} {joinTable}.{B} " +
-					") as {joinTableName} " +
-					"on {joinTableAlias}.{joinPk} {op} {joinTableName}.{joinPk}")
-					.replace(/{baseTable}/g, convertColumnName(object.dbTableName(true)))
-					.replace(/{joinTable}/g, convertColumnName(joinTable))
-					.replace(/{joinTableAlias}/g, convertColumnName(alias ? alias : joinTable))
-					.replace(/{joinTableName}/g, convertColumnName(joinAliasName))
-					.replace(/{joinPk}/g, joinObj.PK())
-					.replace(/{A}/g, convertColumnName(Aclause))
-					.replace(/{op}/g, op)
-					.replace(/{B}/g, convertColumnName(Bclause));
+				// let fullJoinCommand = "";
 
-				query.joinRaw(fullJoinCommand);
+				// // If Many-to-Many relations
+				// if (false) {
+				// 	fullJoinCommand = ("SELECT t1.uuid, t2.uuid FROM `bootCamp`.`AB_test_Player` AS t1 " +
+				// 							"LEFT JOIN `bootCamp`.`AB_test_HallOfFame` AS t2 " +
+				// 							"ON 1 = 1 " +
+				// 							"UNION ALL " +
+				// 							"SELECT t1.uuid, t2.uuid FROM `bootCamp`.`AB_test_Player` AS t1 " +
+				// 							"RIGHT JOIN `bootCamp`.`AB_test_HallOfFame` AS t2 " +
+				// 							"ON 1 = 1");
+				// }
+				// else {
+				// 	fullJoinCommand = ("inner join ( " +
+				// 				"SELECT {joinTable}.{joinPk} FROM {joinTable} " +
+				// 				"LEFT JOIN {baseTable} ON {baseTable}.{A} {op} {joinTable}.{B} " +
+				// 				"UNION ALL " +
+				// 				"SELECT {joinTable}.{joinPk} FROM {joinTable} " +
+				// 				"RIGHT JOIN {baseTable} ON {baseTable}.{A} {op} {joinTable}.{B} " +
+				// 				") as {joinTableName} " +
+				// 				"on {joinTableAlias}.{joinPk} {op} {joinTableName}.{joinPk}")
+				// 				.replace(/{baseTable}/g, convertColumnName(object.dbTableName(true)))
+				// 				.replace(/{joinTable}/g, convertColumnName(joinTable))
+				// 				.replace(/{joinTableAlias}/g, convertColumnName(alias ? alias : joinTable))
+				// 				.replace(/{joinTableName}/g, convertColumnName(joinAliasName))
+				// 				.replace(/{joinPk}/g, joinObj.PK())
+				// 				.replace(/{A}/g, convertColumnName(Aclause))
+				// 				.replace(/{op}/g, op)
+				// 				.replace(/{B}/g, convertColumnName(Bclause));
+				// }
+
+				// query.joinRaw(fullJoinCommand);
 
 			}
 			else {
