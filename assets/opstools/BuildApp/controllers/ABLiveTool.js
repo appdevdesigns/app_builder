@@ -505,7 +505,7 @@ steal(
 									self.pageComponents[pageId].onShow();
 								}
 
-							}, 10);
+							}, 60);
 
 						},
 
@@ -699,19 +699,19 @@ steal(
 
 						},
 
-						showUpdatingPopup: function() {
+						showUpdatingPopup: function () {
 
 							let popup = document.createElement("div");
-							let message = document.createTextNode("UI is updating..."); 
+							let message = document.createTextNode("UI is updating...");
 
-							popup.appendChild(message);  
+							popup.appendChild(message);
 
-							let containerDOM = document.getElementById(this.containerDomID); 
-							document.body.insertBefore(popup, containerDOM); 
+							let containerDOM = document.getElementById(this.containerDomID);
+							document.body.insertBefore(popup, containerDOM);
 
 						},
 
-						hideUpdatingPopup: function() {
+						hideUpdatingPopup: function () {
 
 							// document.remo
 
@@ -730,7 +730,6 @@ steal(
 					}); // end AD.Control.extend
 				}); // end steal.import
 			});
-
 		}); // end System.import
 	}
 ); // end steal

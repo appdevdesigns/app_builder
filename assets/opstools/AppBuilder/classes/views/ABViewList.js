@@ -196,7 +196,7 @@ export default class ABViewLabel extends ABViewWidget {
 
 		super.propertyEditorPopulate(App, ids, view);
 
-		var dataviewId = (view.settings.dataviewId ? view.settings.dataviewId : null);
+		var dataviewId = (view.settings.dataviewID ? view.settings.dataviewID : null);
 		var SourceSelector = $$(ids.dataview);
 
 		// Pull data collections to options

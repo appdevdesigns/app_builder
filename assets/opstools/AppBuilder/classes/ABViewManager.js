@@ -27,6 +27,7 @@ import ABViewGrid from "./views/ABViewGrid"
 import ABViewImage from "./views/ABViewImage"
 import ABViewTab from "./views/ABViewTab"
 import ABViewText from "./views/ABViewText"
+import ABViewKanban from "./views/ABViewKanban"
 
 import ABViewDetail from "./views/ABViewDetail"
 import ABViewDetailCheckbox from "./views/ABViewDetailCheckbox"
@@ -83,6 +84,7 @@ Views[ABViewGrid.common().key] = ABViewGrid;
 Views[ABViewImage.common().key] = ABViewImage;
 Views[ABViewTab.common().key] = ABViewTab;
 Views[ABViewText.common().key] = ABViewText;
+Views[ABViewKanban.common().key] = ABViewKanban;
 
 Views[ABViewDetail.common().key] = ABViewDetail;
 Views[ABViewDetailCheckbox.common().key] = ABViewDetailCheckbox;

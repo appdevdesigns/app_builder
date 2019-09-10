@@ -108,7 +108,8 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 			hide: function () {
 
-				$$(ids.component).hide();
+				if ($$(ids.component))
+					$$(ids.component).hide();
 
 				_logic.callbacks.onClose();
 
@@ -116,19 +117,22 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 			show: function (data) {
 
-				$$(ids.component).show();
+				if ($$(ids.component))
+					$$(ids.component).show();
 
 				_logic.refreshForm(data);
 
 			},
 
 			isVisible: function() {
-				return $$(ids.component).isVisible();
+				return $$(ids.component) ? $$(ids.component).isVisible() : false;
 			},
 
 			refreshForm: function (data) {
 
-				if (!CurrentObject)
+				let $formView = $$(ids.form);
+
+				if (!CurrentObject || !$formView)
 					return;
 
 				data = data || {};
@@ -170,21 +174,21 @@ export default class ABWorkObjectKanBan extends OP.Component {
 				let formCom = form.component(App);
 
 				// Rebuild form
-				webix.ui(formCom.ui.rows.concat({}), $$(ids.form));
-				webix.extend($$(ids.form), webix.ProgressBar);
+				webix.ui(formCom.ui.rows.concat({}), $formView);
+				webix.extend($formView, webix.ProgressBar);
 
 				formCom.init({
 					onBeforeSaveData: () => {
 
 						// show progress icon
-						if ($$(ids.form).showProgress)
-							$$(ids.form).showProgress({ type: "icon" });
+						if ($formView.showProgress)
+							$formView.showProgress({ type: "icon" });
 
 						// get update data
-						var formVals = form.getFormValues($$(ids.form), CurrentObject);
+						var formVals = form.getFormValues($formView, CurrentObject);
 
 						// validate data
-						if (!form.validateData($$(ids.form), CurrentObject, formVals))
+						if (!form.validateData($formView, CurrentObject, formVals))
 							return false;
 
 						if (formVals.id) {
@@ -194,16 +198,16 @@ export default class ABWorkObjectKanBan extends OP.Component {
 									// TODO : error message
 									console.error(err);
 
-									if ($$(ids.form).hideProgress)
-										$$(ids.form).hideProgress({ type: "icon" });
+									if ($formView.hideProgress)
+										$formView.hideProgress({ type: "icon" });
 
 								})
 								.then((updateVals) => {
 
 									_logic.callbacks.onUpdateData(updateVals);
 
-									if ($$(ids.form).hideProgress)
-										$$(ids.form).hideProgress({ type: "icon" });
+									if ($formView.hideProgress)
+										$formView.hideProgress({ type: "icon" });
 
 								});
 						}
@@ -215,16 +219,16 @@ export default class ABWorkObjectKanBan extends OP.Component {
 									// TODO : error message
 									console.error(err);
 
-									if ($$(ids.form).hideProgress)
-										$$(ids.form).hideProgress({ type: "icon" });
+									if ($formView.hideProgress)
+										$formView.hideProgress({ type: "icon" });
 
 								})
 								.then((newVals) => {
 
 									_logic.callbacks.onAddData(newVals);
 
-									if ($$(ids.form).hideProgress)
-										$$(ids.form).hideProgress({ type: "icon" });
+									if ($formView.hideProgress)
+										$formView.hideProgress({ type: "icon" });
 
 								});
 						}
@@ -234,8 +238,8 @@ export default class ABWorkObjectKanBan extends OP.Component {
 				});
 
 				// display data
-				$$(ids.form).clear();
-				$$(ids.form).parse(data);
+				$formView.clear();
+				$formView.parse(data);
 
 				formCom.onShow(data);
 

@@ -2800,3 +2800,9 @@ msgstr "เลือกฟิลด์ผู้ใช้"
 #. key: ab.components.comment.columnComment
 msgid "Select a comment field"
 msgstr "เลือกฟิลด์ข้อความ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.kanban
+msgid "Kanban"
+msgstr "คัมบัง"

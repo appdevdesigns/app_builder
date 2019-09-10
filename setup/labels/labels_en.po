@@ -2830,3 +2830,9 @@ msgstr "Select a user field"
 #. key: ab.components.comment.columnComment
 msgid "Select a comment field"
 msgstr "Select a comment field"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.kanban
+msgid "Kanban"
+msgstr "Kanban"

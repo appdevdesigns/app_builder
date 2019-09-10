@@ -86,13 +86,21 @@ export default class ABWorkObjectKanBan extends OP.Component {
 					data: [],
 					on: {
 						onListAfterSelect: (itemId, list) => {
+
+							if (CurrentDataview)
+								CurrentDataview.setCursor(itemId);
+
 							if (itemId) {
 								let data = $$(ids.kanban).getItem(itemId);
 								FormSide.show(data);
-								$$(ids.resizer).show();
+
+								if ($$(ids.resizer))
+									$$(ids.resizer).show();
 							} else {
 								FormSide.hide();
-								$$(ids.resizer).hide();
+
+								if ($$(ids.resizer))
+									$$(ids.resizer).hide();
 							}
 						},
 						onAfterStatusChange: (rowId, status, list) => {
@@ -123,7 +131,8 @@ export default class ABWorkObjectKanBan extends OP.Component {
 		// Our init() function for setting up our UI
 		this.init = (options) => {
 
-			webix.extend($$(ids.kanban), webix.ProgressBar);
+			if ($$(ids.kanban))
+				webix.extend($$(ids.kanban), webix.ProgressBar);
 
 			FormSide.init({
 				onAddData: _logic.saveData,
@@ -191,24 +200,36 @@ export default class ABWorkObjectKanBan extends OP.Component {
 			 */
 			show: function () {
 
-				$$(ids.component).show();
+				if ($$(ids.component))
+					$$(ids.component).show();
 
 				FormSide.hide();
-				$$(ids.resizer).hide();
 
-				if (!CurrentObject) return;
+				if ($$(ids.resizer))
+					$$(ids.resizer).hide();
 
-				// Get object's kanban view
-				let kanbanView = CurrentObject.workspaceViews.getCurrentView();
-				if (!kanbanView || kanbanView.type != "kanban") return;
+				if (CurrentObject) {
+					// Get object's kanban view
+					let kanbanView = CurrentObject.workspaceViews.getCurrentView();
+					if (kanbanView && kanbanView.type == "kanban") {
 
+						// Set Kanban fields
+						_logic.setFields({
+							verticalGrouping: kanbanView.getVerticalGroupingField(),
+							horizontalGrouping: kanbanView.getHorizontalGroupingField(),
+							ownerField: kanbanView.getOwnerField()
+						});
+					}
+
+				}
+	
 				// Get vertical grouping field and populate to kanban list
 				// NOTE: this field should be the select list type
-				CurrentVerticalField = kanbanView.getVerticalGroupingField();
+				CurrentVerticalField = _logic.getVerticalGroupingField();
 				if (!CurrentVerticalField) return;
 
 				let horizontalOptions = [];
-				CurrentHorizontalField = kanbanView.getHorizontalGroupingField();
+				CurrentHorizontalField = _logic.getHorizontalGroupingField();
 
 				Promise.resolve()
 					.then(() => {
@@ -328,7 +349,7 @@ export default class ABWorkObjectKanBan extends OP.Component {
 							$$(ids.kanban).reconstruct();
 
 							// Owner field
-							CurrentOwnerField = kanbanView.getOwnerField();
+							CurrentOwnerField = _logic.getOwnerField();
 							if (CurrentOwnerField) {
 
 								let $menuUser = $$(ids.kanban).getUserList();
@@ -515,10 +536,12 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 			unselect: function () {
 
-				$$(ids.kanban).eachList(function (list, status) {
-					if (list && list.unselect)
-						list.unselect();
-				});
+				if ($$(ids.kanban)) {
+					$$(ids.kanban).eachList(function (list, status) {
+						if (list && list.unselect)
+							list.unselect();
+					});
+				}
 
 			},
 
@@ -571,6 +594,43 @@ export default class ABWorkObjectKanBan extends OP.Component {
 					}
 				});
 
+			},
+
+
+			/**
+			 * @method setFields
+			 * 
+			 * @param options - {
+			 * 		verticalGrouping:	{ABField} - required
+			 * 		horizontalGrouping:	{ABField} - optional
+			 * 		ownerField:			{ABField} - optional
+			 * }
+			 * 
+			 */
+			setFields: (options) => {
+
+				this._verticalGrouping = options.verticalGrouping;
+				this._horizontalGrouping = options.horizontalGrouping;
+				this._ownerField = options.ownerField;
+
+			},
+
+			getVerticalGroupingField: () => {
+
+				return this._verticalGrouping ? this._verticalGrouping : null;
+
+			},
+
+			getHorizontalGroupingField: () => {
+
+				return this._horizontalGrouping ? this._horizontalGrouping : null;
+
+			},
+
+			getOwnerField: () => {
+
+				return this._ownerField ? this._ownerField : null;
+
 			}
 
 
@@ -584,8 +644,11 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 		this.hide = _logic.hide;
 		this.show = _logic.show;
+
 		this.objectLoad = _logic.objectLoad;
 		this.dataviewLoad = _logic.dataviewLoad;
+		this.setFields = _logic.setFields;
+
 		this.addCard = _logic.addCard;
 
 	}
