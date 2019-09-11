@@ -3,6 +3,8 @@ var path = require('path');
 var _ = require('lodash');
 
 var ABClassObject = require(path.join(__dirname, 'ABClassObject'));
+var ABObjectExternal = require(path.join(__dirname, 'ABObjectExternal'));
+var ABObjectImport = require(path.join(__dirname, 'ABObjectImport'));
 
 var Model = require('objection').Model;
 
@@ -22,7 +24,14 @@ class ABClassQuery extends ABClassObject {
 		// populate connection objects
 		this._objects = {};
 		(attributes.objects || []).forEach(obj => {
-			this._objects[obj.alias] = new ABClassObject(obj);
+
+			if (obj.isExternal == true)
+				this._objects[obj.alias] = new ABObjectExternal(obj);
+			else if (obj.isImported == true)
+				this._objects[obj.alias] = new ABObjectImport(obj);
+			else
+				this._objects[obj.alias] = new ABClassObject(obj);
+
 		});
 
 		this.viewName = attributes.viewName;
