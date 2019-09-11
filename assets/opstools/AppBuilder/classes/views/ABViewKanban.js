@@ -274,7 +274,7 @@ export default class ABViewKanban extends ABViewWidget {
 		};
 
 		if (dataview) {
-			kanbanUI = Kanban.ui.cols[0]
+			kanbanUI = Kanban.ui.cols[0];
 		}
 
 		let _init = () => {
