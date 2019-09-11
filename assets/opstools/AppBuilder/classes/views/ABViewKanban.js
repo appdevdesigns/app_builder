@@ -9,6 +9,8 @@ import ABViewWidget from "./ABViewWidget"
 import ABWorkspaceKanban from "../../components/ab_work_object_workspace_kanban"
 import ABWorkspaceViewKanban from "../ABObjectWorkspaceViewKanban"
 
+import ABViewPropertyLinkPage from "./viewProperties/ABViewPropertyLinkPage"
+
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
@@ -97,6 +99,9 @@ export default class ABViewKanban extends ABViewWidget {
 		if (this._kanbanViewComponent == null)
 			this._kanbanViewComponent = ABWorkspaceViewKanban.component(App, idBase);
 
+		if (this._linkPageComponent == null)
+			this._linkPageComponent = ABViewPropertyLinkPage.propertyComponent(App, idBase + "_gridlinkpage");
+
 		// _logic functions
 
 		_logic.selectSource = (dcId, oldDcId) => {
@@ -107,19 +112,6 @@ export default class ABViewKanban extends ABViewWidget {
 			this.propertyUpdateFieldOptions(ids, currView, dcId);
 
 		};
-
-		// vGroup: L("ab.add_view.kanban.vGroup", "*Vertical Grouping"),
-		// 		hGroup: L("ab.add_view.kanban.hGroup", "*Horizontal Grouping"),
-		// 		owner: L("ab.add_view.kanban.owner", "*Card Owner"),
-		// 		groupingPlaceholder: L(
-		// 			"ab.add_view.kanban.grouping_placeholder",
-		// 			"*Select a field"
-		// 		),
-		// 		ownerPlaceholder: L(
-		// 			"ab.add_view.kanban.owner_placeholder",
-		// 			"*Select a user field"
-		// 		),
-		// 		noneOption: L("ab.add_view.kanban.none_option", "*None"),
 
 		return commonUI.concat([
 			{
@@ -166,7 +158,8 @@ export default class ABViewKanban extends ABViewWidget {
 						}
 					]
 				}
-			}
+			},
+			this._linkPageComponent.ui
 		]);
 
 	}
@@ -228,6 +221,8 @@ export default class ABViewKanban extends ABViewWidget {
 		$$(ids.hGroup).setValue(view.settings.horizontalGroupingField);
 		$$(ids.owner).setValue(view.settings.ownerField);
 
+		this._linkPageComponent.viewLoad(view);
+		this._linkPageComponent.setSettings(view.settings);
 
 	}
 
@@ -239,6 +234,12 @@ export default class ABViewKanban extends ABViewWidget {
 		view.settings.verticalGroupingField = $$(ids.vGroup).getValue() || null;
 		view.settings.horizontalGroupingField = $$(ids.hGroup).getValue() || null;
 		view.settings.ownerField = $$(ids.owner).getValue() || null;
+
+		// link pages
+		let linkSettings = this._linkPageComponent.getSettings();
+		for (let key in linkSettings) {
+			view.settings[key] = linkSettings[key];
+		}
 
 	}
 
@@ -257,6 +258,7 @@ export default class ABViewKanban extends ABViewWidget {
 		// };
 
 		let Kanban = new ABWorkspaceKanban(App, idBase);
+		let LinkPage = this.linkPageHelper.component(App, idBase + "_kanbanlinkpage");
 		let dataview = this.dataview;
 
 		// Show empty data source UI
@@ -279,7 +281,9 @@ export default class ABViewKanban extends ABViewWidget {
 
 		let _init = () => {
 
-			Kanban.init();
+			Kanban.init({
+				onSelect: _logic.onSelect
+			});
 
 			if (dataview) {
 				Kanban.dataviewLoad(dataview);
@@ -308,10 +312,36 @@ export default class ABViewKanban extends ABViewWidget {
 
 			}
 
+			// link page helper
+			LinkPage.init({
+				view: this,
+				dataview: dataview
+			});
+
 		};
 
 		// our internal business logic
 		let _logic = {
+
+			onSelect: (itemId) => {
+
+				let page;
+				if (this.settings.editPage)
+					page = this.settings.editPage;
+				else if (this.settings.detailsPage)
+					page = this.settings.detailsPage;
+
+				if (!page) return;
+
+				// Pass settings to link page module
+				if (LinkPage) {
+					LinkPage.changePage(page, itemId);
+				}
+
+				super.changePage(page);
+
+			}
+
 		};
 
 		let _onShow = () => {
@@ -328,6 +358,15 @@ export default class ABViewKanban extends ABViewWidget {
 			onShow: _onShow
 		};
 
+
+	}
+
+	get linkPageHelper() {
+
+		if (this.__linkPageHelper == null)
+			this.__linkPageHelper = new ABViewPropertyLinkPage();
+
+		return this.__linkPageHelper;
 
 	}
 

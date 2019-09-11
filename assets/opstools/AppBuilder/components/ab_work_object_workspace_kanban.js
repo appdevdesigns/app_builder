@@ -90,6 +90,9 @@ export default class ABWorkObjectKanBan extends OP.Component {
 							if (CurrentDataview)
 								CurrentDataview.setCursor(itemId);
 
+							if (_logic.callbacks.onSelect)
+								_logic.callbacks.onSelect(itemId);
+
 							if (itemId) {
 								let data = $$(ids.kanban).getItem(itemId);
 								FormSide.show(data);
@@ -129,7 +132,12 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 
 		// Our init() function for setting up our UI
-		this.init = (options) => {
+		this.init = (options = {}) => {
+
+			// register our callbacks:
+			for (var c in _logic.callbacks) {
+				_logic.callbacks[c] = options[c] || _logic.callbacks[c];
+			}
 
 			if ($$(ids.kanban))
 				webix.extend($$(ids.kanban), webix.ProgressBar);
@@ -145,6 +153,10 @@ export default class ABWorkObjectKanBan extends OP.Component {
 
 		// our internal business logic
 		var _logic = this._logic = {
+
+			callbacks: {
+				onSelect: function (itemId) { }
+			},
 
 			kanbanListTemplate: function () {
 
