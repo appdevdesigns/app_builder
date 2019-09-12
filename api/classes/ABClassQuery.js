@@ -1162,41 +1162,7 @@ sails.log.debug('ABClassQuery.migrateCreate - SQL:', sqlCommand);
 			let query = ABMigration.connection().queryBuilder();
 			query.from(this.dbViewName());
 
-			// update our condition to include the one we are defined with:
-			// 
-			if (this.workspaceFilterConditions && this.workspaceFilterConditions.glue) {
-				if (options.where && options.where.glue) {
-
-					// in the case where we have a condition and a condition was passed in
-					// combine our conditions
-					// queryCondition AND givenConditions:
-					// var oWhere = _.clone(options.where);
-
-					// var newWhere = {
-					// 	glue: 'and',
-					// 	rules: [
-					// 		this.where,
-					// 		oWhere
-					// 	]
-					// }
-
-					// options.where = newWhere;
-
-					options.where.rules = options.where.rules || [];
-
-					(this.workspaceFilterConditions.rules || []).forEach(r => {
-						// START HERE MAY 29
-						options.where.rules.push(_.clone(r));
-					});
-
-				} else {
-
-					// if we had a condition and no condition was passed in, 
-					// just use ours:
-					options.where = _.cloneDeep(this.workspaceFilterConditions);
-				}
-			}
-
+			
 			if (!options.ignoreIncludeId) {
 				// SELECT Running Number to be .id as a subquery
 				// SQL: select @rownum:=@rownum+1 as `id`, result.*
