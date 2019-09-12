@@ -806,8 +806,7 @@ class ABClassQuery extends ABClassObject {
 			// Connect fields
 			if (f.key == 'connectObject') {
 
-				let connectColFormat = ("`{linkDbName}`.`{linkTableName}`.`{columnName}` as `{displayPrefix}.{columnName}`, " + 
-					"(SELECT CONCAT(" +
+				let connectColFormat = ("(SELECT CONCAT(" +
 					"'[',GROUP_CONCAT(JSON_OBJECT('id', `{linkDbName}`.`{linkTableName}`.`{columnName}`)),']')" +
 					" FROM `{linkDbName}`.`{linkTableName}`" +
 					" WHERE `{linkDbName}`.`{linkTableName}`.`{linkColumnName}` = {prefix}.`{baseColumnName}`" + 
