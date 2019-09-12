@@ -208,15 +208,16 @@ function parseQueryCondition(_where, object, req, res, cb) {
                     } else {
 
                         // get the linked field:
-                        var linkedField = field.fieldLink();
+                        // var linkedField = field.fieldLink();
 
                         // based upon the type of link:
                         var linkCase = field.linkType()+':'+field.linkViaType();
                          switch(linkCase.toLowerCase()) {
-    
+
                             case 'one:one':
                             case 'one:many':
-                                
+                            case 'many:one':
+
                                 // this field is used in final filter condition
                                 newKey = field.columnName;
 
@@ -229,7 +230,7 @@ function parseQueryCondition(_where, object, req, res, cb) {
                                 }
                                 else {
                                     var dbTableName = field.object.dbTableName(true);
-                                    if (dbTableName) { newKey = dbTableName + '.' + newKey } 
+                                    if (dbTableName) { newKey = dbTableName + '.' + newKey }
                                 }
 
 
@@ -237,28 +238,28 @@ function parseQueryCondition(_where, object, req, res, cb) {
                                 parseColumn = linkedObject.PK(); // 'id';
 
                                 // make this the queryColumn:
-                                queryColumn = QueryObj.objectAlias(linkedObject.id)+'.'+parseColumn;   
-                                continueSingle(newKey, parseColumn, queryColumn);                             
-                                break;
-
-
-                            case 'many:one':
-                                // they contain my .PK
-
-                                // my .PK is what is used on our filter
-                                newKey = object.PK(); // 'id';
-
-                                if (object.objectAlias)
-                                    newKey = object.objectAlias(linkedObject.id) + '.' + newKey;
-
-                                // I need to pull out the linkedField's columnName
-                                parseColumn = linkedField.columnName;
-
-                                // make this the queryColumn:
-                                queryColumn = QueryObj.objectAlias(linkedObject.id)+'.'+linkedField.columnName;
-
+                                queryColumn = QueryObj.objectAlias(linkedObject.id)+'.'+parseColumn;
                                 continueSingle(newKey, parseColumn, queryColumn);
                                 break;
+
+
+                            // case 'many:one':
+                            //     // they contain my .PK
+
+                            //     // my .PK is what is used on our filter
+                            //     newKey = object.PK(); // 'id';
+
+                            //     if (object.objectAlias)
+                            //         newKey = object.objectAlias(linkedObject.id) + '.' + newKey;
+
+                            //     // I need to pull out the linkedField's columnName
+                            //     parseColumn = linkedField.columnName;
+
+                            //     // make this the queryColumn:
+                            //     queryColumn = QueryObj.objectAlias(linkedObject.id)+'.'+linkedField.columnName;
+
+                            //     continueSingle(newKey, parseColumn, queryColumn);
+                            //     break;
 
 
                             case 'many:many':

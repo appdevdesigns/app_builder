@@ -752,19 +752,24 @@ sails.log.debug('ABClassObject.queryCount - SQL:', query.toString() );
 	                }
 	                (condition.rules || []).forEach((r)=>{
 
-	                    Query[nextCombineKey]( function() { 
+						if (r && r.rules) {
+							parseCondition(r, Query);
+						}
+						else {
+							Query[nextCombineKey]( function() { 
 
-	                        // NOTE: pass 'this' as the Query object
-	                        // so we can perform embedded queries:
-							// parseCondition(r, this);
-							
-							// 'this' is changed type QueryBuilder to QueryBuilderBase
-							parseCondition(r, this);  // Query
-	                    });
-	                    
-	                })
-	                
-	                return;
+								// NOTE: pass 'this' as the Query object
+								// so we can perform embedded queries:
+								// parseCondition(r, this);
+								
+								// 'this' is changed type QueryBuilder to QueryBuilderBase
+								parseCondition(r, this);  // Query
+							});
+						}
+
+					});
+
+					return;
 				}
 
 				// Convert field id to column name

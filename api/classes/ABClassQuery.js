@@ -806,16 +806,24 @@ class ABClassQuery extends ABClassObject {
 			// Connect fields
 			if (f.key == 'connectObject') {
 
-				let connectColFormat = ("(SELECT CONCAT(" +
+				let connectColFormat = (
+					"(SELECT `{linkDbName}`.`{linkTableName}`.`{columnName}`" +
+					" FROM `{linkDbName}`.`{linkTableName}`" +
+					" WHERE `{linkDbName}`.`{linkTableName}`.`{linkColumnName}` = {prefix}.`{baseColumnName}`" + 
+					" AND `{linkDbName}`.`{linkTableName}`.`{columnName}` IS NOT NULL)" +
+					" as `{displayPrefix}.{displayName}`, " +
+
+					"(SELECT CONCAT(" +
 					"'[',GROUP_CONCAT(JSON_OBJECT('id', `{linkDbName}`.`{linkTableName}`.`{columnName}`)),']')" +
 					" FROM `{linkDbName}`.`{linkTableName}`" +
 					" WHERE `{linkDbName}`.`{linkTableName}`.`{linkColumnName}` = {prefix}.`{baseColumnName}`" + 
 					" AND `{linkDbName}`.`{linkTableName}`.`{columnName}` IS NOT NULL)" +
-					" as `{displayPrefix}.{displayName}`") // add object's name to display name
+					" as `{displayPrefix}.{displayRelationName}`") // add object's name to display name
 					.replace(/{prefix}/g, f.dbPrefix())
 					.replace(/{baseColumnName}/g, obj.PK())
 					.replace(/{displayPrefix}/g, (f.alias ? f.alias : obj.name))
-					.replace(/{displayName}/g, f.relationName());
+					.replace(/{displayName}/g, f.columnName)
+					.replace(/{displayRelationName}/g, f.relationName());
 
 
 				let selectField = '';
@@ -959,17 +967,17 @@ class ABClassQuery extends ABClassObject {
 
 					joinClause = (" INNER JOIN {joinTable} ON {joinTable}.{linkObjectName} = {linkTable}.{linkColumn} "
 						.replace(/{joinTable}/g, fieldConnect.joinTableName(true))
-						.replace("{linkObjectName}", objectNumber.name)
-						.replace("{linkTable}", objectNumber.dbTableName(true))
-						.replace("{linkColumn}", objectNumber.PK()));
+						.replace(/{linkObjectName}/g, objectNumber.name)
+						.replace(/{linkTable}/g, objectNumber.dbTableName(true))
+						.replace(/{linkColumn}/g, objectNumber.PK()));
 
 					whereClause = ("{joinTable}.{joinColumn} = {table}.{id} AND {linkTable}.{column} IS NOT NULL"
 						.replace(/{joinTable}/g, fieldConnect.joinTableName(true))
-						.replace('{joinColumn}', fieldConnect.object.name)
-						.replace('{table}', f.dbPrefix())
-						.replace('{id}', fieldConnect.object.PK()))
+						.replace(/{joinColumn}/g, fieldConnect.object.name)
+						.replace(/{table}/g, f.dbPrefix())
+						.replace(/{id}/g, fieldConnect.object.PK()))
 						.replace(/{linkTable}/g, objectNumber.dbTableName(true))
-						.replace('{column}', fieldNumber.columnName);
+						.replace(/{column}/g, fieldNumber.columnName);
 
 				}
 
@@ -982,7 +990,7 @@ class ABClassQuery extends ABClassObject {
 					.replace(/{FN}/g, functionName)
 					.replace(/{linkTable}/g, objectNumber.dbTableName(true))
 					.replace(/{linkColumn}/g, fieldNumber.columnName)
-					.replace('{displayPrefix}', (f.alias ? f.alias : obj.name))
+					.replace(/{displayPrefix}/g, (f.alias ? f.alias : obj.name))
 					.replace(/{displayName}/g, f.columnName);
 
 
@@ -1157,281 +1165,297 @@ sails.log.debug('ABClassQuery.migrateCreate - SQL:', sqlCommand);
 			skipExistingConditions = false;
 		}
 
-		return new Promise((resolve, reject) => {
+		let raw = ABMigration.connection().raw,
+			query = ABMigration.connection().queryBuilder();
+		query.from(this.dbViewName());
 
-			let query = ABMigration.connection().queryBuilder();
-			query.from(this.dbViewName());
+		return Promise.resolve()
 
-			// update our condition to include the one we are defined with:
-			// 
-			if (this.workspaceFilterConditions && this.workspaceFilterConditions.glue) {
-				if (options.where && options.where.glue) {
+			// Filter condition
+			.then(() => {
 
-					// in the case where we have a condition and a condition was passed in
-					// combine our conditions
-					// queryCondition AND givenConditions:
-					// var oWhere = _.clone(options.where);
+				return new Promise((next, bad) => {
 
-					// var newWhere = {
-					// 	glue: 'and',
-					// 	rules: [
-					// 		this.where,
-					// 		oWhere
-					// 	]
-					// }
+					if (!options.ignoreIncludeId) {
 
-					// options.where = newWhere;
-
-					options.where.rules = options.where.rules || [];
-
-					(this.workspaceFilterConditions.rules || []).forEach(r => {
-						// START HERE MAY 29
-						options.where.rules.push(_.clone(r));
-					});
-
-				} else {
-
-					// if we had a condition and no condition was passed in, 
-					// just use ours:
-					options.where = _.cloneDeep(this.workspaceFilterConditions);
-				}
-			}
-
-			if (!options.ignoreIncludeId) {
-				// SELECT Running Number to be .id as a subquery
-				// SQL: select @rownum:=@rownum+1 as `id`, result.*
-				//		from (
-				//			select distinct ...
-				// 		) result , (SELECT @rownum:=0) r;
-				let raw = ABMigration.connection().raw,
-					queryRoot = ABMigration.connection().queryBuilder(),
-					queryString = query.toString();
-
-				query = queryRoot
-					.select(raw("@rownum := @rownum + 1 AS id, result.*"))
-					.from(function () {
-
-						let sqlCommand = raw(queryString.replace('select ', ''));
-
-						// sub query
-						this.select(sqlCommand).as('result');
-
-					})
-					.join(raw(`(SELECT @rownum := ${options.offset || 0}) rownum`)).as('rId');
-			}
-
-			// update our condition to include the one we are defined with:
-			// 
-			if (this.where &&  
-				this.where.glue && 
-				!skipExistingConditions) {
-
-				// we need to make sure our options.where properly contains our
-				// internal definitions as well.
-
-				// case: we have a valid passed in options.where
-				var haveOptions = (options.where && options.where.glue && options.where.rules && options.where.rules.length > 0);
-
-				// case: we have a valid internal definition:
-				var haveInternal = (this.where && this.where.rules && this.where.rules.length > 0);
-
-				// if BOTH cases are true, then we need to AND them together:
-				if (haveOptions && haveInternal) {
-				// if (options.where && options.where.glue && options.where.rules && options.where.rules.length > 0) {
-
-					// in the case where we have a condition and a condition was passed in
-					// combine our conditions
-					// queryCondition AND givenConditions:
-					var oWhere = _.clone(options.where);
-					var thisWhere = _.cloneDeep(this.where);
-					
-					var newWhere = {
-						glue: "and",
-						rules: [
-							thisWhere,
-							oWhere
-						]
+						// SELECT Running Number to be .id as a subquery
+						// SQL: select @rownum:=@rownum+1 as `id`, result.*
+						//		from (
+						//			select distinct ...
+						// 		) result , (SELECT @rownum:=0) r;
+						let queryRoot = ABMigration.connection().queryBuilder(),
+							queryString = query.toString();
+		
+						query = queryRoot
+							.select(raw("@rownum := @rownum + 1 AS id, result.*"))
+							.from(function () {
+		
+								let sqlCommand = raw(queryString.replace('select ', ''));
+		
+								// sub query
+								this.select(sqlCommand).as('result');
+		
+							})
+							.join(raw(`(SELECT @rownum := ${options.offset || 0}) rownum`)).as('rId');
 					}
 
-					options.where = newWhere;
+					// update our condition to include the one we are defined with:
+					// 
+					if (this.workspaceFilterConditions && this.workspaceFilterConditions.glue) {
+						if (options.where && options.where.glue) {
 
-					// options.where.rules = options.where.rules || [];
+							// in the case where we have a condition and a condition was passed in
+							// combine our conditions
+							// queryCondition AND givenConditions:
+							// var oWhere = _.clone(options.where);
 
-					// (this.where.rules || []).forEach(r => {
-					// 	// START HERE MAY 29
-					// 	options.where.rules.push(_.clone(r));
-					// });
+							// var newWhere = {
+							// 	glue: 'and',
+							// 	rules: [
+							// 		this.where,
+							// 		oWhere
+							// 	]
+							// }
 
-				} else {
+							// options.where = newWhere;
 
-					if (haveInternal) {
-						// if we had a condition and no condition was passed in, 
-						// just use ours:
-						options.where = _.cloneDeep(this.where);
-					} 
-					
-				}
-			}
+							options.where.rules = options.where.rules || [];
 
-			if (options) {
+							(this.workspaceFilterConditions.rules || []).forEach(r => {
+								// START HERE MAY 29
+								options.where.rules.push(_.clone(r));
+							});
 
-				// run the options.where through our existing policy filters
-				// get array of policies to run through
-				let processPolicy = (indx, cb) => {
+						} else {
 
-					if (indx >= PolicyList.length) {
-						cb();
-					} else {
+							// if we had a condition and no condition was passed in, 
+							// just use ours:
+							options.where = _.cloneDeep(this.workspaceFilterConditions);
+						}
+					}
 
-						// load the policy
-						let policy = PolicyList[indx];
+					// update our condition to include the one we are defined with:
+					// 
+					if (this.where &&  
+						this.where.glue && 
+						!skipExistingConditions) {
 
-						// run the policy on my data
-						// policy(req, res, cb)
-						// 	req.options._where
-						//  req.user.data
-						let myReq = {
-							options: {
-								_where: options.where
-							},
-							user: {
-								data: userData
-							},
-							param: (id) => {
-								if (id == "appID") {
-									return this.application.id;
-								} else if (id == "objID") {
-									return this.id;
+						// we need to make sure our options.where properly contains our
+						// internal definitions as well.
+
+						// case: we have a valid passed in options.where
+						var haveOptions = (options.where && options.where.glue && options.where.rules && options.where.rules.length > 0);
+
+						// case: we have a valid internal definition:
+						var haveInternal = (this.where && this.where.rules && this.where.rules.length > 0);
+
+						// if BOTH cases are true, then we need to AND them together:
+						if (haveOptions && haveInternal) {
+						// if (options.where && options.where.glue && options.where.rules && options.where.rules.length > 0) {
+
+							// in the case where we have a condition and a condition was passed in
+							// combine our conditions
+							// queryCondition AND givenConditions:
+							var oWhere = _.clone(options.where);
+							var thisWhere = _.cloneDeep(this.where);
+							
+							var newWhere = {
+								glue: "and",
+								rules: [
+									thisWhere,
+									oWhere
+								]
+							}
+
+							options.where = newWhere;
+
+							// options.where.rules = options.where.rules || [];
+
+							// (this.where.rules || []).forEach(r => {
+							// 	// START HERE MAY 29
+							// 	options.where.rules.push(_.clone(r));
+							// });
+
+						} else {
+
+							if (haveInternal) {
+								// if we had a condition and no condition was passed in, 
+								// just use ours:
+								options.where = _.cloneDeep(this.where);
+							} 
+							
+						}
+					}
+
+					if (options) {
+
+						// run the options.where through our existing policy filters
+						// get array of policies to run through
+						let processPolicy = (indx, cb) => {
+
+							if (indx >= PolicyList.length) {
+								cb();
+							} else {
+
+								// load the policy
+								let policy = PolicyList[indx];
+
+								// run the policy on my data
+								// policy(req, res, cb)
+								// 	req.options._where
+								//  req.user.data
+								let myReq = {
+									options: {
+										_where: options.where
+									},
+									user: {
+										data: userData
+									},
+									param: (id) => {
+										if (id == "appID") {
+											return this.application.id;
+										} else if (id == "objID") {
+											return this.id;
+										}
+									}
 								}
+
+								policy(myReq, {}, (err) => {
+
+									if (err) {
+										cb(err);
+									} else {
+										// try the next one
+										processPolicy(indx + 1, cb);
+									}
+								})
 							}
 						}
 
-						policy(myReq, {}, (err) => {
+						// run each One
+						processPolicy(0, (err) => {
+
+							// now that I'm through with updating our Conditions
 
 							if (err) {
-								cb(err);
+								bad(err);
 							} else {
-								// try the next one
-								processPolicy(indx + 1, cb);
+
+								// when finished populate our Find Conditions
+								this.populateFindConditions(query, options, userData);
+
+								next();
 							}
 						})
+
 					}
-				}
 
-				// run each One
-				processPolicy(0, (err) => {
-
-					// now that I'm through with updating our Conditions
-
-					if (err) {
-						reject(err);
-					} else {
-
-						// when finished populate our Find Conditions
-						this.populateFindConditions(query, options, userData);
-
-						// after all that, resolve our promise with the query results
-						// resolve(query); // query.then(resolve);
-					}
 				})
 
-			}
+			})
 
-			// 
+			// Select columns
+			.then(() => {
 
-			if (options.ignoreIncludeColumns) { // get count of rows does not need to include columns
-				query.clearSelect();
-			}
-
-			if (options.columnNames && options.columnNames.length) {
-
-				// MySQL view: remove ` in column name
-				options.columnNames = options.columnNames.map(colName => {
-
-					if (typeof colName == 'string') {
-						colName = '`' + (colName || "").replace(/`/g, '') + '`';
-						colName = ABMigration.connection().raw(colName);	
-					}
-
-					return colName;
-				});
-
-				query.clearSelect().select(options.columnNames);
-			}
-
-
-			// edit property names of .translation
-			// {objectName}.{columnName}
-			if (!options.ignoreEditTranslations) {
-
-				query.on('query-response', function (rows, obj, builder) {
-
-					(rows || []).forEach((r) => {
-
-						// each rows
-						Object.keys(r).forEach((rKey) => {
-
-							// objectName.translations
-							if (rKey.endsWith('.translations')) {
-
-								r.translations = r.translations || [];
-
-								let objectName = rKey.replace('.translations', '');
-
-								let translations = [];
-								if (typeof r[rKey] == 'string')
-									translations = JSON.parse(r[rKey]);
-
-								// each elements of trans
-								(translations || []).forEach((tran) => {
-
-									let addNew = false;
-
-									let newTran = r.translations.filter(t => t.language_code == tran.language_code)[0];
-									if (!newTran) {
-										newTran = {
-											language_code: tran.language_code
-										};
-										addNew = true;
-									}
-
-									// include objectName into property - objectName.propertyName
-									Object.keys(tran).forEach(tranKey => {
-
-										if (tranKey == 'language_code') return;
-
-										var newTranKey = "{objectName}.{propertyName}"
-											.replace("{objectName}", objectName)
-											.replace("{propertyName}", tranKey);
-
-										// add new property name
-										newTran[newTranKey] = tran[tranKey]
-
-									});
-
-									if (addNew)
-										r.translations.push(newTran);
-
-								});
-
-
-								// remove old translations
-								delete rows[rKey];
-
-							}
-
-						});
-
+				if (options.ignoreIncludeColumns) { // get count of rows does not need to include columns
+					query.clearSelect();
+				}
+	
+				if (options.columnNames && options.columnNames.length) {
+	
+					// MySQL view: remove ` in column name
+					options.columnNames = options.columnNames.map(colName => {
+	
+						if (typeof colName == 'string') {
+							colName = '`' + (colName || "").replace(/`/g, '') + '`';
+							colName = ABMigration.connection().raw(colName);	
+						}
+	
+						return colName;
 					});
+	
+					query.clearSelect().select(options.columnNames);
+				}
+	
+	
+				// edit property names of .translation
+				// {objectName}.{columnName}
+				if (!options.ignoreEditTranslations) {
+	
+					query.on('query-response', function (rows, obj, builder) {
+	
+						(rows || []).forEach((r) => {
+	
+							// each rows
+							Object.keys(r).forEach((rKey) => {
+	
+								// objectName.translations
+								if (rKey.endsWith('.translations')) {
+	
+									r.translations = r.translations || [];
+	
+									let objectName = rKey.replace('.translations', '');
+	
+									let translations = [];
+									if (typeof r[rKey] == 'string')
+										translations = JSON.parse(r[rKey]);
+	
+									// each elements of trans
+									(translations || []).forEach((tran) => {
+	
+										let addNew = false;
+	
+										let newTran = r.translations.filter(t => t.language_code == tran.language_code)[0];
+										if (!newTran) {
+											newTran = {
+												language_code: tran.language_code
+											};
+											addNew = true;
+										}
+	
+										// include objectName into property - objectName.propertyName
+										Object.keys(tran).forEach(tranKey => {
+	
+											if (tranKey == 'language_code') return;
+	
+											var newTranKey = "{objectName}.{propertyName}"
+												.replace("{objectName}", objectName)
+												.replace("{propertyName}", tranKey);
+	
+											// add new property name
+											newTran[newTranKey] = tran[tranKey]
+	
+										});
+	
+										if (addNew)
+											r.translations.push(newTran);
+	
+									});
+	
+	
+									// remove old translations
+									delete rows[rKey];
+	
+								}
+	
+							});
+	
+						});
+	
+					});
+	
+				} // if ignoreEditTranslations
 
-				});
+				return Promise.resolve();
 
-			} // if ignoreEditTranslations
+			})
+
+			// Final
+			.then(() => {
 
 sails.log.debug('ABClassQuery.queryFind - SQL:', query.toString());
-			resolve(query);
-
-		});
+				return Promise.resolve(query);
+			});
 
 	}
 
