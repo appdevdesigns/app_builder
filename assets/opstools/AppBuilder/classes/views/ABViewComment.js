@@ -16,6 +16,7 @@ var ABViewCommentPropertyComponentDefaults = {
 	dataviewID: null,
 	columnUser: null,
 	columnComment: null,
+	columnDate: null,
 	height: 300,
 	label: '',	// label is required and you can add more if the component needs them
 	// format:0  	// 0 - normal, 1 - title, 2 - description
@@ -133,7 +134,9 @@ export default class ABViewComment extends ABViewWidget  {
 			var currView = _logic.currentEditObject();
 
 			// Update field options in property
-			this.propertyUpdateFieldOptions(ids, currView, dcId);
+			this.propertyUpdateUserFieldOptions(ids, currView, dcId);
+			this.propertyUpdateCommentFieldOptions(ids, currView, dcId);
+			this.propertyUpdateDateFieldOptions(ids, currView, dcId)
 
 		};
 
@@ -144,7 +147,10 @@ export default class ABViewComment extends ABViewWidget  {
 				name: 'dataSource',
 				view: 'richselect',
 				label: L('ab.component.form.dataSource', '*Data Source'),
-				labelWidth: App.config.labelWidthLarge
+				labelWidth: App.config.labelWidthLarge,
+				on: {
+					onChange: _logic.selectSource
+				}
 			},
 			{
 				name: 'columnUser',
@@ -156,6 +162,12 @@ export default class ABViewComment extends ABViewWidget  {
 				name: 'columnComment',
 				view: 'richselect',
 				label: L('ab.component.comment.columnComment', '*Select a comment field'),
+				labelWidth: App.config.labelWidthLarge
+			},
+			{
+				name: 'columnDate',
+				view: 'richselect',
+				label: L('ab.component.comment.columnDate', '*Select a date field'),
 				labelWidth: App.config.labelWidthLarge
 			},
 			{
@@ -177,10 +189,12 @@ export default class ABViewComment extends ABViewWidget  {
 		this.propertyUpdateDataviewOptions(ids, view, dataviewId);
 		this.propertyUpdateUserFieldOptions(ids, view, dataviewId);
 		this.propertyUpdateCommentFieldOptions(ids, view, dataviewId);
+		this.propertyUpdateDateFieldOptions(ids, view, dataviewId)
 
 		$$(ids.dataSource).setValue(view.settings.dataviewID || ABViewCommentPropertyComponentDefaults.dataviewID);
 		$$(ids.columnUser).setValue(view.settings.columnUser || ABViewCommentPropertyComponentDefaults.columnUser);
 		$$(ids.columnComment).setValue(view.settings.columnComment || ABViewCommentPropertyComponentDefaults.columnComment);
+		$$(ids.columnDate).setValue(view.settings.columnDate || ABViewCommentPropertyComponentDefaults.columnDate);
 		$$(ids.height).setValue(view.settings.height || ABViewCommentPropertyComponentDefaults.height);
 	}
 
@@ -192,6 +206,7 @@ export default class ABViewComment extends ABViewWidget  {
 		view.settings.dataviewID = $$(ids.dataSource).getValue();
 		view.settings.columnUser = $$(ids.columnUser).getValue();
 		view.settings.columnComment = $$(ids.columnComment).getValue();
+		view.settings.columnDate = $$(ids.columnDate).getValue();
 		view.settings.height = $$(ids.height).getValue();
 
 		// Retrive the values of your properties from Webix and store them in the view
@@ -273,6 +288,33 @@ export default class ABViewComment extends ABViewWidget  {
 
 	}
 
+	static propertyUpdateDateFieldOptions(ids, view, dvId) {
+
+		var dataview = view.application.dataviews(dv => dv.id == dvId)[0];
+		var object = dataview ? dataview.datasource : null;
+
+		// Pull field list
+		var fieldOptions = [];
+		if (object != null) {
+
+			fieldOptions = object.fields((f) => f.key == 'date').map(f => {
+
+				return {
+					id: f.id,
+					value: f.label
+				};
+
+			});
+		}
+		// Add a default option
+		var defaultOption = { id: null, value: '[Select]' };
+		fieldOptions.unshift(defaultOption);
+		
+		$$(ids.columnDate).define("options", fieldOptions);
+		$$(ids.columnDate).refresh();
+
+	}
+
 	/*
 	 * @component()
 	 * return a UI component based upon this view.
@@ -299,7 +341,7 @@ export default class ABViewComment extends ABViewWidget  {
 			height: this.settings.height,
 			on: {
 				onBeforeAdd: function (id, obj, index) {
-					_logic.addComment(obj.text);
+					_logic.addComment(obj.text, new Date());
 				},
 				// NOTE: no update event of comment widget !!
 				// Updating event handles in .init function
@@ -371,11 +413,13 @@ export default class ABViewComment extends ABViewWidget  {
 
 				let userCol = this.getUserField();
 				let commentCol = this.getCommentField();
+				let dateCol = this.getDateField();
 
 				if (!userCol || !commentCol) return null;
 
 				let userColName = userCol.columnName;
 				let commentColName = commentCol.columnName;
+				let dateColName = dateCol ? dateCol.columnName : null;
 
 				let dataObject = dv.getData();
 				let dataList = [];
@@ -388,7 +432,8 @@ export default class ABViewComment extends ABViewWidget  {
 						var data = {
 							id: item.id,
 							user_id: (user) ? user.id : 0,
-							date: new Date(item["created_at"]), 
+							date: item[dateColName] ? new Date(item[dateColName]) : null,
+							default_date: new Date(item["created_at"]),
 							text: item[commentColName]
 						};
 
@@ -398,7 +443,12 @@ export default class ABViewComment extends ABViewWidget  {
 				});
 
 				dataList.sort(function(a, b){
-					return new Date(a.date).getTime() - new Date(b.date).getTime();
+					if(dateColName) {
+						return new Date(a.date).getTime() - new Date(b.date).getTime();
+					}
+					else {
+						return new Date(a.default_date).getTime() - new Date(b.default_date).getTime();
+					}
 				});
 
 				return {
@@ -439,8 +489,8 @@ export default class ABViewComment extends ABViewWidget  {
 				}, 90);
 
 			},
-			addComment: (commentText) => {
-				this.saveData(commentText);
+			addComment: (commentText, dateTime) => {
+				this.saveData(commentText, dateTime);
 			},
 			updateComment: (rowId, commentText) => {
 				let model = this.model();
@@ -497,20 +547,8 @@ export default class ABViewComment extends ABViewWidget  {
 		var onShow = () => {
 
 			base.onShow();
-			// var dv = this.dataview;
-			// if (dv &&
-			// 	dv.dataStatus == dv.dataStatusFlag.notInitial) {
-
-			// 	// load data when a widget is showing
-			// 	dv.loadData();
-			// }
 
 			_logic.refreshComment();
-			// if(!$$(ids.component).hasEvent("onBeforeAdd")) {
-			// 	$$(ids.component).attachEvent("onBeforeAdd",function(id, obj, index){
-			// 		_logic.addComment(obj.text);
-			// 	});
-			// }
 		}
 
 		return {
@@ -551,6 +589,16 @@ export default class ABViewComment extends ABViewWidget  {
 		return obj.fields((f) => f.id == this.settings.columnComment)[0]
 	}
 
+	getDateField() {
+
+		var dv = this.dataview;
+		if (!dv) return null;
+
+		var obj = dv.datasource;
+		if (!obj) return null;
+		
+		return obj.fields((f) => f.id == this.settings.columnDate)[0]
+	}
 
 	getUsers() {
 
@@ -599,47 +647,6 @@ export default class ABViewComment extends ABViewWidget  {
 		});
 		return userList;
 	}
-
-	// getCommentData() {
-
-	// 	let dv = this.dataview;
-	// 	if (!dv) return null;
-
-	// 	let userCol = this.getUserField();
-	// 	let commentCol = this.getCommentField();
-
-	// 	if (!commentCol) return null;
-
-	// 	let userColName = userCol.columnName;
-	// 	let commentColName = commentCol.columnName;
-
-	// 	let dataObject = dv.getData();
-	// 	let dataList = [];
-
-	// 	dataObject.forEach((item, index) => {
-
-	// 		if(item[commentColName]) {
-
-	// 			var user = this.getUserData().find(user => { return user.value == item[userColName]});
-	// 			var data = {
-	// 				user_id: (user) ? user.id : 0,
-	// 				date: new Date(item["created_at"]), 
-	// 				text: item[commentColName]
-	// 			};
-
-	// 			dataList.push(data);
-
-	// 		}
-	// 	});
-
-	// 	dataList.sort(function(a, b){
-	// 		return new Date(a.date).getTime() - new Date(b.date).getTime();
-	// 	});
-
-	// 	return {
-	// 		data: dataList
-	// 	};
-	// }
 	
 	model() {
 
@@ -658,7 +665,7 @@ export default class ABViewComment extends ABViewWidget  {
 
 	}
 
-	saveData(commentText) {
+	saveData(commentText, dateTime) {
 
 		if (commentText == null ||
 			commentText == "") 
@@ -679,6 +686,10 @@ export default class ABViewComment extends ABViewWidget  {
 		let commentField = this.getCommentField();
 		if (commentField)
 			comment[commentField.columnName] = commentText;
+
+		let dateField = this.getDateField();
+		if (dateField)
+			comment[dateField.columnName] = dateTime;
 
 		// add parent cursor to default
 		let dvLink = dv.dataviewLink;
