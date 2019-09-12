@@ -491,7 +491,10 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 
 					/** where **/
-					CurrentQuery.where = DataFilter.getValue();
+					let filterConditions = DataFilter.getValue();
+					let currView = CurrentQuery.currentView();
+					if (currView)
+						currView.update({ filterConditions });
 
 					/** depth **/
 					// CurrentQuery.objectWorkspace.depth = $$(ids.depth).getValue();
@@ -839,8 +842,14 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 			refreshFilter: function () {
 
+				let filterConditions;
+				let currView = CurrentQuery.currentView();
+				if (currView) {
+					filterConditions = currView.filterConditions;
+				}
+
 				DataFilter.objectLoad(CurrentQuery);
-				DataFilter.setValue(CurrentQuery.where);
+				DataFilter.setValue(filterConditions);
 			},
 
 
