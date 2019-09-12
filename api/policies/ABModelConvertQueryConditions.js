@@ -174,7 +174,7 @@ function parseQueryCondition(_where, object, req, res, cb) {
                     newKey = object.PK(); // 'id';  // the final filter needs to be 'id IN []', so 'id'
                     parseColumn = object.PK(); // 'id';  // make sure we pull our 'id' values from the query
 
-                    continueSingle(newKey, parseColumn, queryColumn);
+                    continueSingle(newKey, parseColumn, queryColumn, 'this_object');
 
                 } else {
                     // this is a linkField IN QUERY filter:
@@ -216,7 +216,6 @@ function parseQueryCondition(_where, object, req, res, cb) {
 
                             case 'one:one':
                             case 'one:many':
-                            case 'many:one':
 
                                 // this field is used in final filter condition
                                 newKey = field.columnName;
@@ -239,9 +238,28 @@ function parseQueryCondition(_where, object, req, res, cb) {
 
                                 // make this the queryColumn:
                                 queryColumn = QueryObj.objectAlias(linkedObject.id)+'.'+parseColumn;
-                                continueSingle(newKey, parseColumn, queryColumn);
+                                continueSingle(newKey, parseColumn, queryColumn, linkCase);
                                 break;
 
+                            case 'many:one':
+                                // this field is used in final filter condition
+                                newKey = field.relationName();
+
+                                if (object.objectAlias) {
+                                    newKey =  object.objectAlias(field.object.id) + '.' + newKey;
+                                }
+                                else {
+                                    var dbTableName = field.object.dbTableName(true);
+                                    if (dbTableName) { newKey = dbTableName + '.' + newKey }
+                                }
+
+                                // I need to pull out the PK from the filter Query:
+                                parseColumn = linkedObject.PK(); // 'id';
+
+                                // make this the queryColumn:
+                                queryColumn = QueryObj.objectAlias(linkedObject.id)+'.'+parseColumn;
+                                continueSingle(newKey, parseColumn, queryColumn, linkCase);
+                                break;
 
                             // case 'many:one':
                             //     // they contain my .PK
@@ -315,7 +333,7 @@ function parseQueryCondition(_where, object, req, res, cb) {
                 // buildCondition
                 // final step of recreating the condition into the 
                 // proper Field IN []  format;
-                function buildCondition(newKey, ids) {
+                function buildCondition(newKey, ids, linkCase) {
 
                     // convert cond into an IN or NOT IN
                     cond.key = newKey;
@@ -325,6 +343,12 @@ function parseQueryCondition(_where, object, req, res, cb) {
                     }
                     cond.rule = convert[cond.rule];
                     cond.value = _.uniq(ids); // use _.uniq() to only return unique values (no duplicates)
+
+                    // M:1 - filter __relation column in MySQL view with string
+                    if (linkCase == 'many:one') {
+                        cond.rule = 'contains';
+                        cond.value = ids[0] || "";
+                    }
 
                     sails.log.info('.... new Condition:', cond);
 
@@ -389,14 +413,14 @@ var querySQL = query.toString();
                 // continueSingle
                 // in 3 of our 4 cases we only need to run a single Query to 
                 // finish our conversion.
-                function continueSingle(newKey, parseColumn, queryColumn) {
+                function continueSingle(newKey, parseColumn, queryColumn, linkCase) {
 
                     processQueryValues(parseColumn, queryColumn, (err, ids)=>{
 
                         if (err) {
                             cb(err);
                         } else {
-                            buildCondition(newKey, ids)
+                            buildCondition(newKey, ids, linkCase)
                         }
 
                     });

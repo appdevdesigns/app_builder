@@ -807,12 +807,6 @@ class ABClassQuery extends ABClassObject {
 			if (f.key == 'connectObject') {
 
 				let connectColFormat = (
-					"(SELECT `{linkDbName}`.`{linkTableName}`.`{columnName}`" +
-					" FROM `{linkDbName}`.`{linkTableName}`" +
-					" WHERE `{linkDbName}`.`{linkTableName}`.`{linkColumnName}` = {prefix}.`{baseColumnName}`" + 
-					" AND `{linkDbName}`.`{linkTableName}`.`{columnName}` IS NOT NULL)" +
-					" as `{displayPrefix}.{displayName}`, " +
-
 					"(SELECT CONCAT(" +
 					"'[',GROUP_CONCAT(JSON_OBJECT('id', `{linkDbName}`.`{linkTableName}`.`{columnName}`)),']')" +
 					" FROM `{linkDbName}`.`{linkTableName}`" +
@@ -1197,41 +1191,6 @@ sails.log.debug('ABClassQuery.migrateCreate - SQL:', sqlCommand);
 		
 							})
 							.join(raw(`(SELECT @rownum := ${options.offset || 0}) rownum`)).as('rId');
-					}
-
-					// update our condition to include the one we are defined with:
-					// 
-					if (this.workspaceFilterConditions && this.workspaceFilterConditions.glue) {
-						if (options.where && options.where.glue) {
-
-							// in the case where we have a condition and a condition was passed in
-							// combine our conditions
-							// queryCondition AND givenConditions:
-							// var oWhere = _.clone(options.where);
-
-							// var newWhere = {
-							// 	glue: 'and',
-							// 	rules: [
-							// 		this.where,
-							// 		oWhere
-							// 	]
-							// }
-
-							// options.where = newWhere;
-
-							options.where.rules = options.where.rules || [];
-
-							(this.workspaceFilterConditions.rules || []).forEach(r => {
-								// START HERE MAY 29
-								options.where.rules.push(_.clone(r));
-							});
-
-						} else {
-
-							// if we had a condition and no condition was passed in, 
-							// just use ours:
-							options.where = _.cloneDeep(this.workspaceFilterConditions);
-						}
 					}
 
 					// update our condition to include the one we are defined with:
