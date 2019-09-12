@@ -806,7 +806,8 @@ class ABClassQuery extends ABClassObject {
 			// Connect fields
 			if (f.key == 'connectObject') {
 
-				let connectColFormat = ("(SELECT CONCAT(" +
+				let connectColFormat = ("`{linkDbName}`.`{linkTableName}`.`{columnName}` as `{displayPrefix}.{columnName}`, " + 
+					"(SELECT CONCAT(" +
 					"'[',GROUP_CONCAT(JSON_OBJECT('id', `{linkDbName}`.`{linkTableName}`.`{columnName}`)),']')" +
 					" FROM `{linkDbName}`.`{linkTableName}`" +
 					" WHERE `{linkDbName}`.`{linkTableName}`.`{linkColumnName}` = {prefix}.`{baseColumnName}`" + 
@@ -814,8 +815,8 @@ class ABClassQuery extends ABClassObject {
 					" as `{displayPrefix}.{displayName}`") // add object's name to display name
 					.replace(/{prefix}/g, f.dbPrefix())
 					.replace(/{baseColumnName}/g, obj.PK())
-					.replace('{displayPrefix}', (f.alias ? f.alias : obj.name))
-					.replace('{displayName}', f.relationName());
+					.replace(/{displayPrefix}/g, (f.alias ? f.alias : obj.name))
+					.replace(/{displayName}/g, f.relationName());
 
 
 				let selectField = '';
@@ -825,14 +826,15 @@ class ABClassQuery extends ABClassObject {
 				// 1:M
 				if (f.settings.linkType == 'one' && f.settings.linkViaType == 'many') {
 
-					selectField = ("IF({prefix}.`{columnName}` IS NOT NULL, " +
+					selectField = ("{prefix}.`{columnName}` as '{displayPrefix}.{columnName}', " +
+						"IF({prefix}.`{columnName}` IS NOT NULL, " +
 						"JSON_OBJECT('id', {prefix}.`{columnName}`)," +
 						"NULL)" +
 						" as '{displayPrefix}.{displayName}'")
 						.replace(/{prefix}/g, f.dbPrefix())
 						.replace(/{columnName}/g, f.columnName)
-						.replace('{displayPrefix}', (f.alias ? f.alias : obj.name))
-						.replace('{displayName}', f.relationName());
+						.replace(/{displayPrefix}/g, (f.alias ? f.alias : obj.name))
+						.replace(/{displayName}/g, f.relationName());
 
 				}
 
@@ -851,14 +853,15 @@ class ABClassQuery extends ABClassObject {
 				else if (f.settings.linkType == 'one' && f.settings.linkViaType == 'one') {
 
 					if (f.settings.isSource) {
-						selectField = ("IF({prefix}.`{columnName}` IS NOT NULL, " +
+						selectField =  ("{prefix}.`{columnName}` as '{displayPrefix}.{columnName}', " +
+							"IF({prefix}.`{columnName}` IS NOT NULL, " +
 							"JSON_OBJECT('id', {prefix}.`{columnName}`)," +
 							"NULL)" +
 							" as '{displayPrefix}.{displayName}'")
 							.replace(/{prefix}/g, f.dbPrefix())
 							.replace(/{columnName}/g, f.columnName)
-							.replace('{displayPrefix}', (f.alias ? f.alias : obj.name))
-							.replace('{displayName}', f.relationName());
+							.replace(/{displayPrefix}/g, (f.alias ? f.alias : obj.name))
+							.replace(/{displayName}/g, f.relationName());
 					}
 					else {
 						selectField = connectColFormat
