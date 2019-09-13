@@ -392,7 +392,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 			 * @return {Promise}
 			 */
 			save: (selctedFields = null) => {
-				
+			
 				console.log("Changed **********************");
 
 				return new Promise((resolve, reject) => {
@@ -491,10 +491,8 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 
 					/** where **/
-					let filterConditions = DataFilter.getValue();
-					let currView = CurrentQuery.currentView();
-					if (currView)
-						currView.update({ filterConditions });
+					CurrentQuery.where = DataFilter.getValue();
+
 
 					/** depth **/
 					// CurrentQuery.objectWorkspace.depth = $$(ids.depth).getValue();
@@ -842,14 +840,8 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 			refreshFilter: function () {
 
-				let filterConditions;
-				let currView = CurrentQuery.currentView();
-				if (currView) {
-					filterConditions = currView.filterConditions;
-				}
-
 				DataFilter.objectLoad(CurrentQuery);
-				DataFilter.setValue(filterConditions);
+				DataFilter.setValue(CurrentQuery.where);
 			},
 
 
