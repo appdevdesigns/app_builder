@@ -26,7 +26,7 @@ module.exports = function (req, res, next) {
 
 						// 1:1 - Get rows that no relation with 
 					if (r.rule == 'have_no_relation') {
-						var relation_name = AppBuilder.rules.toFieldRelationFormat(field.columnName);
+						// var relation_name = AppBuilder.rules.toFieldRelationFormat(field.columnName);
 
 						var objectLink = field.datasourceLink;
 						if (!objectLink) return;
@@ -39,10 +39,18 @@ module.exports = function (req, res, next) {
 					// if we are searching a multilingual field it is stored in translations so we need to search JSON
 					else if (field.isMultilingual) {
 
-						var userData = req.user.data;
+						let userData = req.user.data;
+						let tranColName;
 
-						r.key = ('JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({tableName}.translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({tableName}.translations, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))')
-							.replace(/{tableName}/g, field.object.dbTableName(true))
+						if (object)
+							tranColName = "`{tableName}.translations`";
+						else 
+							tranColName = "`{tableName}`.`translations`";
+
+						tranColName = tranColName.replace(/{tableName}/g, field.object.dbTableName(true));
+
+						r.key = ('JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({tranColName}, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({tranColName}, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))')
+							.replace(/{tranColName}/g, tranColName)
 							.replace(/{languageCode}/g, userData.languageCode)
 							.replace(/{columnName}/g, field.columnName);
 					}
