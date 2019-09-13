@@ -44,10 +44,7 @@ export default class ABDataview extends EventEmitter {
 		this.__dataCollection = this._dataCollectionNew([]);
 
 		// Set filter value
-		this.__filterComponent = new RowFilter();
-		this.__filterComponent.objectLoad(this.datasource);
-		this.__filterComponent.viewLoad(this);
-		this.setFilterConditions(this.settings.objectWorkspace.filterConditions);
+		this.refreshFilterConditions();
 
 		this.__bindComponentIds = [];
 
@@ -223,7 +220,7 @@ export default class ABDataview extends EventEmitter {
 
 		this.__datasource = object;
 
-		this.__filterComponent.objectLoad(this.datasource);
+		this.refreshFilterConditions();
 	}
 
 	/**
@@ -581,7 +578,7 @@ export default class ABDataview extends EventEmitter {
 				model.normalizeData(updatedVals);
 
 				// filter condition before add 
-				if (!this.__filterComponent.isValid(updatedVals))
+				if (!this.isValidData(updatedVals))
 					return;
 
 				if (!this.__dataCollection.exists(updatedVals.id)) {
@@ -731,7 +728,7 @@ export default class ABDataview extends EventEmitter {
 
 				if (isExists) {
 
-					if (this.__filterComponent.isValid(updatedVals)) {
+					if (this.isValidData(updatedVals)) {
 						// normalize data before update data collection
 						var model = obj.model();
 						model.normalizeData(updatedVals);
@@ -772,7 +769,7 @@ export default class ABDataview extends EventEmitter {
 					}
 				}
 				// filter before add new record
-				else if (this.__filterComponent.isValid(updatedVals)) {
+				else if (this.isValidData(updatedVals)) {
 
 					// this means the updated record was not loaded yet so we are adding it to the top of the grid
 					// the placemet will probably change on the next load of the data
@@ -1338,7 +1335,7 @@ export default class ABDataview extends EventEmitter {
 			return dc.find(row => {
 
 				// data collection filter
-				var isValid = this.__filterComponent.isValid(row);
+				var isValid = this.isValidData(row);
 
 				// parent dc filter
 				var linkDv = this.dataviewLink;
@@ -1592,10 +1589,44 @@ export default class ABDataview extends EventEmitter {
 
 	}
 
-	setFilterConditions(filterConditions) {
+	refreshFilterConditions(wheres = null) {
 
-		if (this.__filterComponent)
-			this.__filterComponent.setValue(filterConditions || DefaultValues.settings.objectWorkspace.filterConditions);
+		// Set filter of data source
+		if (this.__filterDatasource == null)
+			this.__filterDatasource = new RowFilter();
+
+		this.__filterDatasource.objectLoad(this.datasource);
+		this.__filterDatasource.viewLoad(this);
+
+		if (this.datasource) {
+			let currentView = this.datasource.workspaceViews.getCurrentView();
+			if (currentView && currentView.filterConditions) {
+				this.__filterDatasource.setValue(currentView.filterConditions);
+			}
+		}
+		else {
+			this.__filterDatasource.setValue(DefaultValues.settings.objectWorkspace.filterConditions);
+		}
+
+		// Set filter of data view
+		if (this.__filterDataview == null)
+			this.__filterDataview = new RowFilter();
+
+		this.__filterDataview.objectLoad(this.datasource);
+		this.__filterDataview.viewLoad(this);
+
+		if (wheres)
+			this.settings.objectWorkspace.filterConditions = wheres;
+
+		if (this.settings &&
+			this.settings.objectWorkspace &&
+			this.settings.objectWorkspace.filterConditions) {
+			this.__filterDataview.setValue(this.settings.objectWorkspace.filterConditions);
+		}
+		else {
+			this.__filterDataview.setValue(DefaultValues.settings.objectWorkspace.filterConditions);
+		}
+
 	}
 
 	get isGroup() {
@@ -1729,15 +1760,15 @@ export default class ABDataview extends EventEmitter {
 				let parentId = row[`${parentAlias}.uuid`] || row[`${parentAlias}.id`];
 				if (parentId) {
 					parentItemIds = this.__treeCollection
-										.find(item => item._alias == parentAlias && item._dataId == parentId)
-										.map(item => item.id);
+						.find(item => item._alias == parentAlias && item._dataId == parentId)
+						.map(item => item.id);
 				}
 
 				// check exists
 				let exists = this.__treeCollection.find(item => {
-					return item._alias == alias && 
-							item._dataId == dataId && 
-							(parentItemIds.length == 0 || parentItemIds.indexOf(item.$parent) > -1);
+					return item._alias == alias &&
+						item._dataId == dataId &&
+						(parentItemIds.length == 0 || parentItemIds.indexOf(item.$parent) > -1);
 				}, true);
 				if (exists) return;
 
@@ -1818,6 +1849,20 @@ export default class ABDataview extends EventEmitter {
 		});
 
 		return updatedVals;
+
+	}
+
+	isValidData(rowData) {
+
+		let result = true;
+
+		if (this.__filterDatasource)
+			result = result && this.__filterDatasource.isValid(rowData);
+
+		if (this.__filterDataview)
+			result = result && this.__filterDataview.isValid(rowData);
+
+		return result;
 
 	}
 

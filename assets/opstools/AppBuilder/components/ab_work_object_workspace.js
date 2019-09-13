@@ -1239,7 +1239,7 @@ console.error('TODO: toolbarPermission()');
 					}
 				});
 
-				CurrentDataview.setFilterConditions(wheres);
+				CurrentDataview.refreshFilterConditions(wheres);
 				CurrentDataview.clearAll();
 
                 // WORKAROUND: load all data becuase kanban does not support pagination now
