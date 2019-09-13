@@ -547,9 +547,7 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 					this.FilterComponent.objectLoad(datasource);
 					this.FilterComponent.viewLoad(this._dataview);
 					this.FilterComponent.setValue(filterConditions);
-					this._dataview.__filterComponent.objectLoad(datasource);
-					this._dataview.__filterComponent.viewLoad(this._dataview);
-					this._dataview.__filterComponent.setValue(filterConditions);
+					this._dataview.refreshFilterConditions(filterConditions);
 
 					this.PopupSortFieldComponent.objectLoad(datasource);
 					this.PopupSortFieldComponent.setValue(sortConditions);
