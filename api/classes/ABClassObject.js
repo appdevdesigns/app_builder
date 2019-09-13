@@ -814,10 +814,20 @@ sails.log.debug('ABClassObject.queryCount - SQL:', query.toString() );
 
 							}
 							else {
-								condition.key = ('JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({prefix}.`translations`, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({prefix}.`translations`, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))')
-												.replace(/{prefix}/g, field.dbPrefix())
+
+								let transCol;
+								// If it is a query
+								if (this.viewName)
+									transCol = "`{prefix}.translations`";
+								else
+									transCol = "`{prefix}`.`translations`";
+
+								transCol = transCol.replace("{prefix}", field.dbPrefix().replace(/`/g, ""));
+
+								condition.key = ABMigration.connection().raw(('JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({transCol}, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({transCol}, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))')
+												.replace(/{transCol}/g, transCol)
 												.replace(/{languageCode}/g, userData.languageCode)
-												.replace(/{columnName}/g, field.columnName);
+												.replace(/{columnName}/g, field.columnName));
 							}
 						}
 
@@ -841,7 +851,7 @@ sails.log.debug('ABClassObject.queryCount - SQL:', query.toString() );
 	            //     value: ''
 	            // }
 
-	            sails.log.verbose('... basic condition:', JSON.stringify(condition, null, 4));
+// sails.log.verbose('... basic condition:', JSON.stringify(condition, null, 4));
 
 	            // We are going to use the 'raw' queries for knex becuase the '.' 
 	            // for JSON searching is misinterpreted as a sql identifier
@@ -994,22 +1004,25 @@ sails.log.debug('ABClassObject.queryCount - SQL:', query.toString() );
 	            // update our where statement:
 				if (columnName && operator) {
 
-					// make sure to ` ` columnName (if it isn't our special '1' condition )
-					// see Policy:ABModelConvertSameAsUserConditions  for when that is applied
-					if (columnName != '1' && columnName.indexOf("`") == -1) {
+					if (typeof columnName == 'string') {
 
-						// if columnName is  a  table.field  then be sure to `` each one individually
-						var parts = columnName.split('.');
-						for (var p=0; p < parts.length; p++) {
-							parts[p] = "`"+parts[p]+"`";
+						// make sure to ` ` columnName (if it isn't our special '1' condition )
+						// see Policy:ABModelConvertSameAsUserConditions  for when that is applied
+						if (columnName != '1' && columnName.indexOf("`") == -1) {
+
+							// if columnName is  a  table.field  then be sure to `` each one individually
+							var parts = columnName.split('.');
+							for (var p=0; p < parts.length; p++) {
+								parts[p] = "`"+parts[p]+"`";
+							}
+							columnName = parts.join('.');
 						}
-						columnName = parts.join('.');
-					}
 
-					// ABClassQuery: 
-					// If this is query who create MySQL view, then column name does not have `
-					if (this.viewName) {
-						columnName = '`' + columnName.replace(/`/g, "") + '`';
+						// ABClassQuery: 
+						// If this is query who create MySQL view, then column name does not have `
+						if (this.viewName) {
+							columnName = '`' + columnName.replace(/`/g, "") + '`';
+						}
 					}
 
 					whereRaw = whereRaw
