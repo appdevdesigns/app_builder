@@ -42,10 +42,12 @@ module.exports = function (req, res, next) {
 						let userData = req.user.data;
 						let tranColName;
 
-						if (object)
+						// Query
+						if (object.viewName)
 							tranColName = "`{tableName}.translations`";
+						// Object
 						else 
-							tranColName = "`{tableName}`.`translations`";
+							tranColName = "{tableName}.translations";
 
 						tranColName = tranColName.replace(/{tableName}/g, field.object.dbTableName(true));
 

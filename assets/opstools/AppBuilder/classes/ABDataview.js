@@ -1598,15 +1598,10 @@ export default class ABDataview extends EventEmitter {
 		this.__filterDatasource.objectLoad(this.datasource);
 		this.__filterDatasource.viewLoad(this);
 
-		if (this.datasource) {
-			let currentView = this.datasource.workspaceViews.getCurrentView();
-			if (currentView && currentView.filterConditions) {
-				this.__filterDatasource.setValue(currentView.filterConditions);
-			}
-		}
-		else {
+		if (this.datasource)
+			this.__filterDatasource.setValue(this.datasource.where);
+		else
 			this.__filterDatasource.setValue(DefaultValues.settings.objectWorkspace.filterConditions);
-		}
 
 		// Set filter of data view
 		if (this.__filterDataview == null)

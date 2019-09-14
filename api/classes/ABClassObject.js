@@ -820,7 +820,7 @@ sails.log.debug('ABClassObject.queryCount - SQL:', query.toString() );
 								if (this.viewName)
 									transCol = "`{prefix}.translations`";
 								else
-									transCol = "`{prefix}`.`translations`";
+									transCol = "{prefix}.translations";
 
 								transCol = transCol.replace("{prefix}", field.dbPrefix().replace(/`/g, ""));
 
