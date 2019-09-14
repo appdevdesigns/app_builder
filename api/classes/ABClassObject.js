@@ -47,7 +47,7 @@ class ABClassObject extends ABObjectBase {
 			let currView = attributes.objectWorkspaceViews.list.filter(v => v.id == currViewId)[0];
 			if (currView) {
 
-				this.objectWorkspace.filterConditions = currView.filterConditions || [];
+				this.objectWorkspace.filterConditions = currView.filterConditions || {};
 				this.objectWorkspace.sortFields = currView.sortFields || [];
 
 			}

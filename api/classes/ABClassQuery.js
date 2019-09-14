@@ -89,22 +89,24 @@ class ABClassQuery extends ABClassObject {
 		// import all our Joins 
 		this.importJoins(attributes.joins || {});
 		this.importFields(attributes.fields || []); // import after joins are imported
-		// this.where = attributes.where || {}; // .workspaceFilterConditions
-		this.where = attributes.where;
+
+		this._where = attributes.where;
+		this._objectWorkspaceViews = attributes.objectWorkspaceViews || {};
+
 		// NOTE: this is for transitioning from legacy data structures.
 		// we can remove this after our changes have been accepted on working 
 		// systems.
-		if (!this.where) {
-			// load any legacy objectWorkspace.filterCondition
-			if (attributes.objectWorkspace && attributes.objectWorkspace.filterConditions) {
-				this.where = attributes.objectWorkspace.filterConditions;
-			}
+		// if (!this._where) {
+		// 	// load any legacy objectWorkspace.filterCondition
+		// 	if (attributes.objectWorkspace && attributes.objectWorkspace.filterConditions) {
+		// 		this._where = attributes.objectWorkspace.filterConditions;
+		// 	}
 			
-			// // overwrite with an updated workspaceFilterCondition
-			// if (this.workspaceFilterConditions && this.workspaceFilterConditions.length > 0) {
-			// 	this.where = this.workspaceFilterConditions;
-			// }
-		} 
+		// 	// // overwrite with an updated workspaceFilterCondition
+		// 	// if (this.workspaceFilterConditions && this.workspaceFilterConditions.length > 0) {
+		// 	// 	this._where = this.workspaceFilterConditions;
+		// 	// }
+		// } 
 
 
 		this.settings = this.settings || {};
@@ -155,7 +157,7 @@ class ABClassQuery extends ABClassObject {
 		/// include our additional objects and where settings:
 
 		result.joins = this.exportJoins();  //object;
-		result.where = this.where; // .workspaceFilterConditions
+		result.where = this._where; // .workspaceFilterConditions
 
 		result.settings = this.settings;
 
@@ -427,6 +429,38 @@ class ABClassQuery extends ABClassObject {
 		filter = filter || function() { return true; };
 
 		return this._fields.map(fInfo => fInfo.field).filter(result => filter(result));
+
+	}
+
+	where (workspaceViewId = null) {
+
+		let result = {};
+
+		if (workspaceViewId) {
+
+			if (!this._objectWorkspaceViews)
+				result = {};
+
+			let workspaceView = (this._objectWorkspaceViews.list || []).filter(v => v.id == workspaceViewId)[0];
+			if (!workspaceView)
+				result = {};
+			else
+				result = workspaceView.filterConditions || {};
+
+		}
+		else {
+
+			result = this._where || {};
+
+		}
+
+		// Add default .glue
+		if (!result.glue && 
+			result.rules &&
+			result.rules.length > 0)
+			result.glue = "and";
+
+		return result;
 
 	}
 
@@ -1147,17 +1181,23 @@ sails.log.debug('ABClassQuery.migrateCreate - SQL:', sqlCommand);
 	 * return a a knex QueryBuilder ready to perform a select() statment.
 	 * NOTE: ObjectQuery overrides this to return queries already joined with 
 	 * multiple tables.
-	 * @param {obj} options  
-	 *		A set of optional conditions to add to the find():
+	 * @param {obj} options - A set of optional conditions to add to the find():
+	 * 					{
+	 * 						columnNames: [string],
+	 * 						where: object,
+	 * 						offset: number,
+	 * 						ignoreIncludeId: boolean,
+	 * 						ignoreIncludeColumns: boolean,
+	 * 						ignoreEditTranslations: boolean,
+	 * 						skipExistingConditions: boolean,
+	 * 						workspaceView: guid
+	 * 					}
+	 *
 	 * @param {obj} userData 
 	 * 		The current user's data (which can be used in our conditions.)
 	 * @return {QueryBuilder}
 	 */
-	queryFind(options, userData, skipExistingConditions) {
-
-		if (typeof skipExistingConditions == "undefined") {
-			skipExistingConditions = false;
-		}
+	queryFind(options = {}, userData) {
 
 		let raw = ABMigration.connection().raw,
 			query = ABMigration.connection().queryBuilder();
@@ -1195,18 +1235,20 @@ sails.log.debug('ABClassQuery.migrateCreate - SQL:', sqlCommand);
 
 					// update our condition to include the one we are defined with:
 					// 
-					if (this.where &&  
-						this.where.glue && 
-						!skipExistingConditions) {
+					// let where = this.where(options.workspaceView);
+					let where = this.where();
+					if (where &&  
+						where.glue && 
+						!options.skipExistingConditions) {
 
 						// we need to make sure our options.where properly contains our
 						// internal definitions as well.
 
 						// case: we have a valid passed in options.where
-						var haveOptions = (options.where && options.where.glue && options.where.rules && options.where.rules.length > 0);
+						var haveOptions = (options.where && options.where.rules && options.where.rules.length > 0);
 
 						// case: we have a valid internal definition:
-						var haveInternal = (this.where && this.where.rules && this.where.rules.length > 0);
+						var haveInternal = (where && where.rules && where.rules.length > 0);
 
 						// if BOTH cases are true, then we need to AND them together:
 						if (haveOptions && haveInternal) {
@@ -1216,7 +1258,7 @@ sails.log.debug('ABClassQuery.migrateCreate - SQL:', sqlCommand);
 							// combine our conditions
 							// queryCondition AND givenConditions:
 							var oWhere = _.clone(options.where);
-							var thisWhere = _.cloneDeep(this.where);
+							var thisWhere = _.cloneDeep(where);
 							
 							var newWhere = {
 								glue: "and",
@@ -1240,7 +1282,7 @@ sails.log.debug('ABClassQuery.migrateCreate - SQL:', sqlCommand);
 							if (haveInternal) {
 								// if we had a condition and no condition was passed in, 
 								// just use ours:
-								options.where = _.cloneDeep(this.where);
+								options.where = _.cloneDeep(where);
 							} 
 							
 						}
