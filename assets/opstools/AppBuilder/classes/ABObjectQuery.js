@@ -129,19 +129,19 @@ export default class ABObjectQuery extends ABObject {
 		// import all our ABObjects 
 		this.importJoins(attributes.joins || {});
 		this.importFields(attributes.fields || []); // import after joins are imported
-		this._where = attributes.where || {};
+		this.where = attributes.where || {};
 		// NOTE: this is for transitioning from legacy data structures.
 		// we can remove this after our changes have been accepted on working 
 		// systems.
-		// if (!this._where) {
+		// if (!this.where) {
 		// 	// load any legacy objectWorkspace.filterCondition
 		// 	if (attributes.objectWorkspace && attributes.objectWorkspace.filterConditions) {
-		// 		this._where = attributes.objectWorkspace.filterConditions;
+		// 		this.where = attributes.objectWorkspace.filterConditions;
 		// 	}
 			
 		// 	// // overwrite with an updated workspaceFilterCondition
 		// 	// if (this.workspaceFilterConditions && this.workspaceFilterConditions.length > 0) {
-		// 	// 	this._where = this.workspaceFilterConditions;
+		// 	// 	this.where = this.workspaceFilterConditions;
 		// 	// }
 		// }
 
@@ -239,7 +239,7 @@ export default class ABObjectQuery extends ABObject {
 		/// include our additional objects and where settings:
 
 		result.joins = this.exportJoins();  //objects;
-		result.where  = this._where; // .workspaceFilterConditions
+		result.where  = this.where; // .workspaceFilterConditions
 
 		result.settings = this.settings;
 
@@ -732,15 +732,6 @@ export default class ABObjectQuery extends ABObject {
 	urlPointer(acrossApp) {
 		return this.application.urlQuery(acrossApp) + this.id;
 	}
-
-	get where() {
-		return this._where;
-	}
-
-	set where(val) {
-		this._where = val || {};
-	}
-
 
 	/**
 	 * @method isReadOnly

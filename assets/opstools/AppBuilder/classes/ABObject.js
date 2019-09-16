@@ -602,13 +602,5 @@ export default class ABObject extends ABObjectBase {
 		return this.workspaceViews.getCurrentView();
 	}
 
-	get where() {
-		let currentView = this.currentView();
-		if (currentView && 
-			currentView.filterConditions)
-			return currentView.filterConditions;
-		else 
-			return {};
-	}
 }
 
