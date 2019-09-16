@@ -90,7 +90,7 @@ class ABClassQuery extends ABClassObject {
 		this.importJoins(attributes.joins || {});
 		this.importFields(attributes.fields || []); // import after joins are imported
 
-		this._where = attributes.where;
+		this.where = attributes.where;
 		this._objectWorkspaceViews = attributes.objectWorkspaceViews || {};
 
 		// NOTE: this is for transitioning from legacy data structures.
@@ -157,7 +157,7 @@ class ABClassQuery extends ABClassObject {
 		/// include our additional objects and where settings:
 
 		result.joins = this.exportJoins();  //object;
-		result.where = this._where; // .workspaceFilterConditions
+		result.where = this.where; // .workspaceFilterConditions
 
 		result.settings = this.settings;
 
@@ -431,39 +431,6 @@ class ABClassQuery extends ABClassObject {
 		return this._fields.map(fInfo => fInfo.field).filter(result => filter(result));
 
 	}
-
-	where (workspaceViewId = null) {
-
-		let result = {};
-
-		if (workspaceViewId) {
-
-			if (!this._objectWorkspaceViews)
-				result = {};
-
-			let workspaceView = (this._objectWorkspaceViews.list || []).filter(v => v.id == workspaceViewId)[0];
-			if (!workspaceView)
-				result = {};
-			else
-				result = workspaceView.filterConditions || {};
-
-		}
-		else {
-
-			result = this._where || {};
-
-		}
-
-		// Add default .glue
-		if (!result.glue && 
-			result.rules &&
-			result.rules.length > 0)
-			result.glue = "and";
-
-		return result;
-
-	}
-
 
 
 
@@ -1235,8 +1202,7 @@ sails.log.debug('ABClassQuery.migrateCreate - SQL:', sqlCommand);
 
 					// update our condition to include the one we are defined with:
 					// 
-					// let where = this.where(options.workspaceView);
-					let where = this.where();
+					let where = this.where;
 					if (where &&  
 						where.glue && 
 						!options.skipExistingConditions) {
