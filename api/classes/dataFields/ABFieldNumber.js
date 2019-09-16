@@ -156,8 +156,6 @@ class ABFieldNumber extends ABField {
 			(resolve, reject) => {
 
 				var tableName = this.object.dbTableName();
-				var defaultTo = parseInt(this.settings.default) || 0;
-
 
 				// if this column doesn't already exist (you never know)
 				knex.schema.hasColumn(tableName, this.columnName)
@@ -182,7 +180,8 @@ class ABFieldNumber extends ABField {
 							}
 
 							// field is required (not null)
-							if (this.settings.required) {
+							if (this.settings.required &&
+								this.settings.default != null) {
 								currCol.notNullable();
 							}
 							else {
@@ -190,7 +189,10 @@ class ABFieldNumber extends ABField {
 							}
 
 							// set default value
-							currCol.defaultTo(defaultTo);
+							if (this.settings.default != null) {
+								let defaultTo = parseInt(this.settings.default) || 0;
+								currCol.defaultTo(defaultTo);
+							}
 							// if (defaultTo != null) {
 							// 	currCol.defaultTo(defaultTo);
 							// }

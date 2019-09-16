@@ -394,23 +394,23 @@ var ABFieldListComponent = new ABFieldComponent({
 		 * @param {string} newVal	The new value of label
 		 * @param {string} oldVal	The previous value
 		 */
-		requiredOnChange: (newVal, oldVal, ids) => {
+		// requiredOnChange: (newVal, oldVal, ids) => {
 			
-			// when require number, then default value needs to be reqired
-			$$(ids.default).define("required", newVal);
-			$$(ids.default).refresh();
+		// 	// when require number, then default value needs to be reqired
+		// 	$$(ids.default).define("required", newVal);
+		// 	$$(ids.default).refresh();
 
-			if ($$(ids.multipleDefault).$view.querySelector(".webix_inp_label")) {
-				if (newVal) {
-					$$(ids.multipleDefault).define("required", true);
-					$$(ids.multipleDefault).$view.querySelector(".webix_inp_label").classList.add("webix_required");
-				} else {
-					$$(ids.multipleDefault).define("required", false);
-					$$(ids.multipleDefault).$view.querySelector(".webix_inp_label").classList.remove("webix_required");
-				}
-			}
+		// 	if ($$(ids.multipleDefault).$view.querySelector(".webix_inp_label")) {
+		// 		if (newVal) {
+		// 			$$(ids.multipleDefault).define("required", true);
+		// 			$$(ids.multipleDefault).$view.querySelector(".webix_inp_label").classList.add("webix_required");
+		// 		} else {
+		// 			$$(ids.multipleDefault).define("required", false);
+		// 			$$(ids.multipleDefault).$view.querySelector(".webix_inp_label").classList.remove("webix_required");
+		// 		}
+		// 	}
 			
-		},
+		// },
 
 		values: (ids, values) => {
 
