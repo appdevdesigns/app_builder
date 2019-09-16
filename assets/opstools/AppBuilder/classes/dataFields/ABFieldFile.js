@@ -599,7 +599,7 @@ class ABFieldFile extends ABField {
 
 		var html = [
 			'<div class="file-data-field-icon" style="text-align: center; height: inherit; display: table-cell; vertical-align: middle; border: 2px dotted #CCC; background: #FFF; border-radius: 10px; font-size: 11px; line-height: 13px; padding: 0 10px; '+iconDisplay+'"><i class="fa fa-file fa-2x" style="opacity: 0.6; font-size: 32px; margin-top: 3px; margin-bottom: 5px;"></i>#drag#</div>',
-			'<div class="file-data-field-name" style="' + fileDisplay + ' width:100%; height:100%; position:relative; "><a target="_blank" href="' + fileURL +'">' + name + '</a>#remove#</div>',
+			'<div class="file-data-field-name" style="' + fileDisplay + ' width:100%; height:100%; position:relative; "><a target="_blank" href="' + fileURL +'">' + (name || "") + '</a>#remove#</div>',
 		].join('');
 
 		html = html.replace('#drag#', editable ? '<br/>Drag and drop or click here' : '');
