@@ -177,6 +177,7 @@ export default class AB_Work_Dataview_Workspace extends OP.Component {
 						DataTable.refreshHeader();
 
 						// bind a data collection to the display grid
+						dataview.unbind($datatable);
 						dataview.bind($datatable);
 
 						$datatable.adjust();

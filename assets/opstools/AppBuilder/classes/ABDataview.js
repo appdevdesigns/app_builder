@@ -1550,6 +1550,9 @@ export default class ABDataview extends EventEmitter {
 			return;
 
 		component.detachEvent("onDataRequest");
+		if (component.___AD &&
+			component.___AD.onDataRequestEvent)
+			delete component.___AD.onDataRequestEvent
 
 		if (component.data &&
 			component.data.unsync) {
