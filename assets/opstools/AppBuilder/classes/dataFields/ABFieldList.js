@@ -962,6 +962,10 @@ class ABFieldList extends ABFieldSelectivity {
 	
 	getValue(item, rowData) {
 		var values = {};
+
+		if (!item)
+			return values;
+
 		if (this.settings.isMultiple) {
 			var domNode = item.$view.querySelector('.list-data-values');
 			values = this.selectivityGet(domNode);
@@ -973,6 +977,9 @@ class ABFieldList extends ABFieldSelectivity {
 
 
 	setValue(item, rowData) {
+
+		if (!item)
+			return;
 
 		if (this.settings.isMultiple) {
 

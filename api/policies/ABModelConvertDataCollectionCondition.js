@@ -267,7 +267,8 @@ function parseQueryCondition(_where, object, req, res, cb) {
                                         .where(sourceObject.name, 'IN', ids)
                                         .then((data)=>{
 
-                                            var myIds = data.map((d)=>{ return d[parseName] });
+                                            var myIds = data.map((d)=>{ return d[parseName] }).filter(d => d != null);
+                                            myIds = _.uniq(myIds);
 
                                             var myPK = object.PK(); // 'id';
                                             buildCondition( myPK, myIds);
