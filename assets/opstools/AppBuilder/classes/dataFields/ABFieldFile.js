@@ -578,7 +578,7 @@ class ABFieldFile extends ABField {
 	fileTemplate(obj, editable) {
 
 		var iconDisplay = '';
-		var fileDisplay = 'display:none';
+		var fileDisplay = 'display:none;';
 		var fileURL = '';
 
 
@@ -592,7 +592,7 @@ class ABFieldFile extends ABField {
 		};
 
 		if (value && name) {
-			iconDisplay =  'display:none';
+			iconDisplay =  'display:none;';
 			fileDisplay = '';
 			fileURL =  '/opsportal/file/' + this.object.application.name + '/' + value;
 		}
