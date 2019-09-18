@@ -9,11 +9,9 @@
 import ABViewContainer from "./ABViewContainer"
 import ABViewFormButton from "./ABViewFormButton"
 import ABViewFormCustom from "./ABViewFormCustom"
-import ABViewFormDatepicker from "./ABViewFormDatepicker"
 import ABViewFormField from "./ABViewFormField"
 import ABViewFormTextbox from "./ABViewFormTextbox"
 import ABViewManager from "../ABViewManager"
-import ABPropertyComponent from "../ABPropertyComponent"
 
 import ABDisplayRule from "./ABViewFormPropertyDisplayRule"
 // import ABRecordRule from "./ABViewFormPropertyRecordRule"
@@ -288,10 +286,10 @@ export default class ABViewForm extends ABViewContainer {
 			}
 
 			// trigger a save()
-			// this.propertyEditorSave(ids, currView);
+			this.propertyEditorSave(ids, currView);
 
-			// Call REST API to server in ABViewContainer
-			currView.emit('properties.updated', currView);
+			// // Call REST API to server in ABViewContainer
+			// currView.emit('properties.updated', currView);
 
 		};
 

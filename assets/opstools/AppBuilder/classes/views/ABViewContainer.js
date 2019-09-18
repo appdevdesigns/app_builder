@@ -342,52 +342,60 @@ export default class ABViewContainer extends ABView {
 
 			onChange: () => {
 
-				_logic.busy();
+				return new Promise((resolve, reject) => {
 
-				var Dashboard = $$(ids.component);
+					_logic.busy();
 
-				// ignore in "preview" mode
-				if (Dashboard == null || Dashboard.config.view != "dashboard") return;
+					var Dashboard = $$(ids.component);
+	
+					// ignore in "preview" mode
+					if (Dashboard == null || Dashboard.config.view != "dashboard") return;
+	
+					var viewState = Dashboard.serialize();
+	
+					// save view position state to views
+					this.views().forEach((v) => {
+	
+						var state = viewState.filter((vs) => vs.name == v.id)[0];
+						if (state) {
+	
+							v.position.x = state.x;
+							v.position.y = state.y;
+	
+							// validate position data
+							if (v.position.x < 0) v.position.x = 0;
+							if (v.position.y < 0) v.position.y = 0;
+						}
+	
+					});
+	
+					// save template layout
+					this.save()
+						.catch(err => {
+	
+							OP.Error.log('Error trying to save selected View:', { error: err, view: this });
+	
+							_logic.ready();
 
-				var viewState = Dashboard.serialize();
+							reject(err);
+						})
+						.then(() => {
+	
+							// signal the current view has been deleted.
+							// this variable is stored in .viewDelete
+							if (this.__deletedView) {
+								this.__deletedView.emit('destroyed', this.__deletedView);
+	
+								// clear
+								delete this.__deletedView;
+							}
+	
+							_logic.ready();
 
-				// save view position state to views
-				this.views().forEach((v) => {
-
-					var state = viewState.filter((vs) => vs.name == v.id)[0];
-					if (state) {
-
-						v.position.x = state.x;
-						v.position.y = state.y;
-
-						// validate position data
-						if (v.position.x < 0) v.position.x = 0;
-						if (v.position.y < 0) v.position.y = 0;
-					}
+							resolve();
+						});
 
 				});
-
-				// save template layout
-				this.save()
-					.catch(() => {
-
-						OP.Error.log('Error trying to save selected View:', { error: err, view: this });
-
-						_logic.ready();
-					})
-					.then(() => {
-
-						// signal the current view has been deleted.
-						// this variable is stored in .viewDelete
-						if (this.__deletedView) {
-							this.__deletedView.emit('destroyed', this.__deletedView);
-
-							// clear
-							delete this.__deletedView;
-						}
-
-						_logic.ready();
-					});
 
 			},
 
@@ -540,6 +548,7 @@ export default class ABViewContainer extends ABView {
 	static propertyEditorPopulate(App, ids, view, logic) {
 
 		super.propertyEditorPopulate(App, ids, view, logic);
+		this._App = App;
 
 		$$(ids.columns).setValue(view.settings.columns || ABPropertyComponentDefaults.columns);
 
@@ -563,20 +572,21 @@ export default class ABViewContainer extends ABView {
 			}, pos);
 		}
 
-		// when a change is made in the properties the popups need to reflect the change
-		this.updateEventIds = this.updateEventIds || {}; // { viewId: boolean, ..., viewIdn: boolean }
-		if (!this.updateEventIds[view.id]) {
-			this.updateEventIds[view.id] = true;
+		// NOTE : Move to .propertyEditorSave
+		// // when a change is made in the properties the popups need to reflect the change
+		// this.updateEventIds = this.updateEventIds || {}; // { viewId: boolean, ..., viewIdn: boolean }
+		// if (!this.updateEventIds[view.id]) {
+		// 	this.updateEventIds[view.id] = true;
 
-			// refresh dashboard to update "position.x" and "position.y" of child views
-			view.addListener('properties.updated', function () {
+		// 	// refresh dashboard to update "position.x" and "position.y" of child views
+		// 	view.addListener('properties.updated', function () {
 
-				setTimeout(() => {
-					view.editorComponent(App).logic.onChange();
-				}, 100)
+		// 		setTimeout(() => {
+		// 			view.editorComponent(App).logic.onChange();
+		// 		}, 100)
 
-			}, this);
-		}
+		// 	}, this);
+		// }
 
 
 	}
@@ -589,8 +599,21 @@ export default class ABViewContainer extends ABView {
 		view.settings.columns = $$(ids.columns).getValue();
 
 		var gravity = [];
-		var gravityCounters = $$(ids.gravity).getParentView().queryView({ css: "gravity_counter" }, "all").map(counter => gravity.push($$(counter).getValue()));
+		// var gravityCounters = $$(ids.gravity).getParentView().queryView({ css: "gravity_counter" }, "all").map(counter => gravity.push($$(counter).getValue()));
 		view.settings.gravity = gravity;
+
+	}
+
+	static propertyEditorSave(ids, view) {
+
+		this.propertyEditorValues(ids, view);
+
+		// refresh dashboard to update "position.x" and "position.y" of child views
+		view.emit('properties.updated', view);
+
+		// save to server here
+		let editorComponent = view.editorComponent(this._App);
+		return editorComponent.logic.onChange();
 
 	}
 

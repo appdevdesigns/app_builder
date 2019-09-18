@@ -179,10 +179,10 @@ export default class ABViewDetail extends ABViewContainer {
 			}
 
 			// trigger a save()
-			// this.propertyEditorSave(ids, currView);
+			this.propertyEditorSave(ids, currView);
 
-			// Call REST API to server in ABViewContainer
-			currView.emit('properties.updated', currView);
+			// // Call REST API to server in ABViewContainer
+			// currView.emit('properties.updated', currView);
 
 		};
 
