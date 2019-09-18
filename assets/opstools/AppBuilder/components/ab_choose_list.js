@@ -554,7 +554,8 @@ export default class ABChooseList extends OP.Component {
 			MenuComponent.init({
 				onClick: _logic.callbackApplicationEditorMenu
 			})
-
+		
+			this.show();
 		}
 
 

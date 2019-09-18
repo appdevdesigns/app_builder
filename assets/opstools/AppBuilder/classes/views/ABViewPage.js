@@ -176,9 +176,11 @@ export default class ABViewPage extends ABViewContainer {
 
         var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
 
-        _logic.permissionClick = (id, e, node) => {
+        _logic.permissionClick = (id, e, node, isRetry=false) => {
             var List = $$(ids.permissions);
             var item = List.getItem(id); 
+
+            List.showProgress({type:'icon'});
 
             if (item.markCheckbox) {
 
@@ -191,7 +193,40 @@ export default class ABViewPage extends ABViewContainer {
 
                     item.markCheckbox = false;
                     List.updateItem(id, item); 
+                    List.hideProgress();
 
+                }).catch((err)=>{
+                    console.error(err);
+                    if (err.code == "E_NOACTIONKEY") {
+
+                        // if this our second time through, then display an error:
+                        if (isRetry) {
+                            console.error("Error Saving Permisison: ", err);
+                            List.hideProgress();
+                            return;
+                        }
+
+                        // in the case where no ActionKey was present,
+                        // we can still mark that this is no longer connected:
+                        item.markCheckbox = false;
+                        List.updateItem(id, item); 
+
+                        // Now if we got here, there is an issue with the data in our
+                        // Permissions.  These permissions get created when a Page is 
+                        // .created/saved, so let's run through our pages again and
+                        // save() them
+                        var allSaves = [];
+                        item._view.application.pages().forEach((page)=>{
+                            allSaves.push(page.save());
+                        })
+
+                        // once that is all done, try this again:
+                        Promise.all(allSaves)
+                        .then(()=>{
+                            _logic.permissionClick(id, e, node, true);
+                        })
+
+                    }
                 });
 
             } else {
@@ -205,7 +240,36 @@ export default class ABViewPage extends ABViewContainer {
 
                     item.markCheckbox = true;
                     List.updateItem(id, item); 
+                    List.hideProgress();
 
+                }).catch((err)=>{
+                    console.error(err);
+                    if (err.code == "E_NOACTIONKEY") {
+
+
+                        // if this our second time through, then display an error:
+                        if (isRetry) {
+                            console.error("Error Saving Permisison: ", err);
+                            List.hideProgress();
+                            return;
+                        }
+
+                        // Now if we got here, there is an issue with the data in our
+                        // Permissions.  These permissions get created when a Page is 
+                        // .created/saved, so let's run through our pages again and
+                        // save() them
+                        var allSaves = [];
+                        item._view.application.pages().forEach((page)=>{
+                            allSaves.push(page.save());
+                        })
+
+                        // once that is all done, try this again:
+                        Promise.all(allSaves)
+                        .then(()=>{
+                            _logic.permissionClick(id, e, node, true);
+                        })
+
+                    }
                 });
 
             }
@@ -338,7 +402,6 @@ export default class ABViewPage extends ABViewContainer {
             }
         ]);
 
-
     }
 
 
@@ -412,6 +475,16 @@ export default class ABViewPage extends ABViewContainer {
         var action_key = this.getPageActionKey(view);
         var roles = [];
         
+        var List = $$(ids.permissions);
+
+        // make sure our list has been made into a ProgressBar
+        if (!List.showProgress) {
+            webix.extend(List, webix.ProgressBar);
+        }
+        
+        List.clearAll();
+        List.showProgress({type:'icon'});
+
         view.application.getPermissions()
             .then(function (selected_role_ids) {
                 var app_roles = selected_role_ids;
@@ -433,19 +506,23 @@ export default class ABViewPage extends ABViewContainer {
                                 r.markCheckbox = false;
                             }
                             r.action_key = action_key;
+                            r._view = view;
                             roles.push(r);
                         }
                     });
                     
                     roles = _.orderBy(roles, 'id', 'asc');
                     
-                    $$(ids.permissions).clearAll();
-                    $$(ids.permissions).parse(roles);
+                    List.parse(roles);
+                    List.hideProgress();
 
                 });
 
             })
-            .catch(function (err) { next(err); });
+            .catch(function (err) { 
+                List.hideProgress();
+                next(err); 
+            });
         
     }
 
