@@ -329,7 +329,8 @@ function parseQueryCondition(_where, object, req, res, cb) {
                             .then((data)=>{
 
                                 sails.log.info('.... query data : ', data);
-                                var ids = data.map((d)=>{ return d[parseColumn] });
+                                var ids = data.map((d)=>{ return d[parseColumn] }).filter(d => d != null);
+                                ids = _.uniq(ids);
 
 
                                 done(null, ids);

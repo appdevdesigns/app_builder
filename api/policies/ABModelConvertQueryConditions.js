@@ -305,7 +305,8 @@ function parseQueryCondition(_where, object, req, res, cb) {
                                         .where(linkedObject.name, 'IN', ids)
                                         .then((data)=>{
 
-                                            var myIds = data.map((d)=>{ return d[parseName] });
+                                            var myIds = data.map((d)=>{ return d[parseName] }).filter(d => d != null);
+                                            myIds = _.uniq(myIds);
 
                                             var myPK = object.PK(); // 'id';
 
@@ -380,8 +381,8 @@ var querySQL = query.toString();
 
                             sails.log.info('.... query data : ', data);
                             // var ids = data.map((d)=>{ return d[parseColumn] });
-                            var ids = data.map((d)=>{ return d[queryColumn] });
-
+                            var ids = data.map((d)=>{ return d[queryColumn] }).filter(d => d != null);
+                            ids = _.uniq(ids);
 
                             done(null, ids);
                             // buildCondition(newKey, ids);
