@@ -91,6 +91,14 @@ class ABClassQuery extends ABClassObject {
 		this.importFields(attributes.fields || []); // import after joins are imported
 
 		this.where = attributes.where;
+
+		// Fix default glue value
+		if (this.where &&
+			!this.where.glue &&
+			this.where.rules && 
+			this.where.rules.length > 0)
+			this.where.glue = "and";
+
 		this._objectWorkspaceViews = attributes.objectWorkspaceViews || {};
 
 		// NOTE: this is for transitioning from legacy data structures.

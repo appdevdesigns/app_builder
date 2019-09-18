@@ -689,15 +689,15 @@ export default class ABDataview extends EventEmitter {
 
 					(objList || []).forEach(o => {
 
-						updatedIds = this.__dataCollection.find(item => {
+						updatedIds = updatedIds.concat(this.__dataCollection.find(item => {
 							return item[`${o.alias}.${o.PK()}`] == (values[o.PK()] || values.id);
-						}).map(o => o.id) || [];
+						}).map(o => o.id) || []);
 
 						// grouped queries
 						if (this.__treeCollection) {
-							updatedTreeIds = this.__treeCollection.find(item => {
+							updatedTreeIds = updatedTreeIds.concat(this.__treeCollection.find(item => {
 								return item[`${o.alias}.${o.PK()}`] == (values[o.PK()] || values.id);
-							}).map(o => o.id) || [];
+							}).map(o => o.id) || []);
 						}
 					});
 
@@ -733,12 +733,14 @@ export default class ABDataview extends EventEmitter {
 						var model = obj.model();
 						model.normalizeData(updatedVals);
 
+						updatedIds = _.uniq(updatedIds);
 						updatedIds.forEach(itemId => {
 							this.__dataCollection.updateItem(itemId, updatedVals);
 						});
 
 						if (this.__treeCollection) {
 							// update data in tree
+							updatedTreeIds = _.uniq(updatedTreeIds);
 							updatedTreeIds.forEach(itemId => {
 								this.__treeCollection.updateItem(itemId, updatedVals);
 							});
@@ -1602,10 +1604,25 @@ export default class ABDataview extends EventEmitter {
 		this.__filterDatasource.viewLoad(this);
 
 		if (this.datasource) {
-			let currentView = this.datasource.currentView();
-			if (currentView && currentView.filterConditions)
-				this.__filterDatasource.setValue(currentView.filterConditions);
-			else 
+
+			let filterConditions;
+
+			// Query
+			if (this.datasource instanceof ABObjectQuery) {
+				filterConditions = this.datasource.where;
+			}
+			// Object
+			else if (this.datasource instanceof ABObject) {
+
+				let currentView = this.datasource.currentView();
+				if (currentView && currentView.filterConditions)
+					filterConditions = currentView.filterConditions;
+
+			}
+
+			if (filterConditions)
+				this.__filterDatasource.setValue(filterConditions);
+			else
 				this.__filterDatasource.setValue({});
 		}
 		else
@@ -1847,7 +1864,36 @@ export default class ABDataview extends EventEmitter {
 		// Add alias to properties of update data
 		Object.keys(values).forEach(key => {
 			objList.forEach(oItem => {
-				updatedVals[`${oItem.alias}.${key}`] = values[key];
+
+				let alias = oItem.alias;
+
+				updatedVals[`${alias}.${key}`] = values[key];
+
+				// Add alias to properties of .translations
+				if (key == 'translations' &&
+					values['translations'] &&
+					values['translations'].length) {
+
+					updatedVals.translations = [];
+
+					values['translations'].forEach(tran => {
+
+						let updatedTran = {};
+
+						Object.keys(tran).forEach(tranKey => {
+
+							if (tranKey == "language_code")
+								updatedTran["language_code"] = tran["language_code"];
+							else
+								updatedTran[`${alias}.${tranKey}`] = tran[tranKey];
+
+						});
+
+						updatedVals.translations.push(updatedTran);
+
+					});
+				}
+
 			});
 		});
 
