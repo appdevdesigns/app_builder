@@ -39,9 +39,9 @@ export default class ABChoose extends OP.Component {   // (idBase, function(App)
 			animate:false,
 			id: ids.component,
 			cells: [
-				AppConfig.ui,
 				AppList.ui,
-				AppForm.ui
+				AppForm.ui,
+				AppConfig.ui
 			]
 		};
 
