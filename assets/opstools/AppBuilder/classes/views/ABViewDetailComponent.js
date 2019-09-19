@@ -60,7 +60,7 @@ export default class ABViewDetailComponent extends ABViewWidget {
 			settings = detailView.settings;
 
 		var isUsers = false;
-		if (field.key == "user")
+		if (field && field.key == "user")
 			isUsers = true;
 
 		var templateLabel = '';
@@ -77,13 +77,13 @@ export default class ABViewDetailComponent extends ABViewWidget {
 
 		var template = (templateLabel)
 			.replace(/#width#/g, settings.labelWidth)
-			.replace(/#label#/g, field.label);
+			.replace(/#label#/g, field ? field.label : "");
 
 		var height = 38;
 		if (settings.labelPosition == 'top')
 			height = height * 2;
 
-		if (field.settings && typeof field.settings.useHeight != "undefined" && field.settings.useHeight == 1) {
+		if (field && field.settings && typeof field.settings.useHeight != "undefined" && field.settings.useHeight == 1) {
 			height = parseInt(field.settings.imageHeight) || height;
 		}
 
@@ -139,10 +139,17 @@ export default class ABViewDetailComponent extends ABViewWidget {
 	}
 
 	field() {
-		var object = this.application.objects((obj) => obj.id == this.settings.objectId)[0];
+
+		let detailComponent = this.detailComponent();
+		if (detailComponent == null) return null;
+
+		let dataview = detailComponent.dataview;
+		if (dataview == null) return null;
+
+		let object = dataview.datasource;
 		if (object == null) return null;
 
-		var field = object.fields((v) => v.id == this.settings.fieldId)[0];
+		let field = object.fields((v) => v.id == this.settings.fieldId, true)[0];
 
 		// set .alias to support queries that contains alias name
 		// [aliasName].[columnName]
@@ -159,13 +166,13 @@ export default class ABViewDetailComponent extends ABViewWidget {
 		var detailCom = this.detailComponent();
 		if (!detailCom) return null;
 
-		var dc = detailCom.dataCollection;
-		if (!dc) return null;
+		var dv = detailCom.dataview;
+		if (!dv) return null;
 
 		var field = this.field();
 		if (!field) return null;
 
-		var currData = dc.getCursor();
+		var currData = dv.getCursor();
 		if (currData)
 			return currData[field.columnName];
 		else
@@ -191,13 +198,13 @@ export default class ABViewDetailComponent extends ABViewWidget {
 			var detailCom = this.detailComponent();
 			if (!detailCom) return resolve(reportDef);
 
-			var dc = detailCom.dataCollection;
-			if (!dc) return resolve(reportDef);
+			var dv = detailCom.dataview;
+			if (!dv) return resolve(reportDef);
 
 			var field = this.field();
 			if (!field) return resolve(reportDef);
 
-			rowData = rowData || dc.getCursor() || {};
+			rowData = rowData || dv.getCursor() || {};
 
 			var text = (field.format(rowData) || "");
 

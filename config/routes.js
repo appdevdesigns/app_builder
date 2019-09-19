@@ -9,29 +9,111 @@
 module.exports = {
 
     /* Application Info */
+    'get /app_builder/application':
+        'app_builder/ABApplicationController.find',
+
+    'get /app_builder/application/info':
+        'app_builder/ABApplicationController.applicationInfo',
+
+    'get /app_builder/application/:appID':
+        'app_builder/ABApplicationController.findOne',
+
+    'post /app_builder/application':
+        'app_builder/ABApplicationController.applicationCreate',
+
+    'put /app_builder/application/:appID':
+        'app_builder/ABApplicationController.applicationUpdate',
+
+    'delete /app_builder/application/:appID':
+        'app_builder/ABApplicationController.applicationRemove',
+
     'put /app_builder/application/:appID/info':
         'app_builder/ABApplicationController.applicationSave',
 
-    /* Application Objects */
-    'put /app_builder/application/:appID/object':
-        'app_builder/ABApplicationController.objectSave',
+    /* Objects */
+    'get /app_builder/application/:appID/object':
+        'app_builder/ABObjectController.objectApplication',
 
-    'delete /app_builder/application/:appID/object/:id':
-        'app_builder/ABApplicationController.objectDestroy',
+    'get /app_builder/object':
+        'app_builder/ABObjectController.objectFind',
+
+    'get /app_builder/object/info':
+        'app_builder/ABObjectController.objectInfo',
+
+    'get /app_builder/object/:objectId':
+        'app_builder/ABObjectController.objectFindOne',
+
+    'put /app_builder/object':
+        'app_builder/ABObjectController.objectSave',
+
+    'delete /app_builder/object/:objectId':
+        'app_builder/ABObjectController.objectDestroy',
+
+    'put /app_builder/application/:appID/object/:objID':
+        'app_builder/ABObjectController.importObject',
+
+    'delete /app_builder/application/:appID/object/:objID':
+        'app_builder/ABObjectController.excludeObject',
 
     /* Application Pages */
-    'put /app_builder/application/:appID/page':    
+    'put /app_builder/application/:appID/page':
         'app_builder/ABApplicationController.pageSave',
 
     'delete /app_builder/application/:appID/page':
         'app_builder/ABApplicationController.pageDestroy',
 
-    /* Application Queries */
-    'put /app_builder/application/:appID/query':
-        'app_builder/ABApplicationController.querySave',
 
-    'delete /app_builder/application/:appID/query/:id':
-        'app_builder/ABApplicationController.queryDestroy',
+    /* Queries */
+    'get /app_builder/application/:appID/query':
+        'app_builder/ABQueryController.queryApplication',
+
+    'get /app_builder/query':
+        'app_builder/ABQueryController.queryFind',
+
+    'get /app_builder/query/info':
+        'app_builder/ABQueryController.queryInfo',
+
+    'get /app_builder/query/:queryID':
+        'app_builder/ABQueryController.queryFindOne',
+
+    'put /app_builder/query':
+        'app_builder/ABQueryController.querySave',
+
+    'delete /app_builder/query/:queryID':
+        'app_builder/ABQueryController.queryDestroy',
+
+    'put /app_builder/application/:appID/query/:queryID':
+        'app_builder/ABQueryController.importQuery',
+
+    'delete /app_builder/application/:appID/query/:queryID':
+        'app_builder/ABQueryController.excludeQuery',
+
+
+    /* Data views */
+    'get /app_builder/application/:appID/dataview':
+        'app_builder/ABDataviewController.dataviewApplication',
+
+    'get /app_builder/dataview':
+        'app_builder/ABDataviewController.dataviewFind',
+
+    'get /app_builder/dataview/info':
+        'app_builder/ABDataviewController.dataviewInfo',
+
+    'get /app_builder/dataview/:dataviewId':
+        'app_builder/ABDataviewController.dataviewFindOne',
+
+    'put /app_builder/dataview':
+        'app_builder/ABDataviewController.dataviewSave',
+
+    'delete /app_builder/dataview/:dataviewId':
+        'app_builder/ABDataviewController.dataviewDestroy',
+
+    'put /app_builder/application/:appID/dataview/:dataviewID':
+        'app_builder/ABDataviewController.importDataview',
+
+    'delete /app_builder/application/:appID/dataview/:dataviewID':
+        'app_builder/ABDataviewController.excludeDataview',
+
 
     /* Application permissions */
     'get /app_builder/user/roles':
@@ -57,40 +139,44 @@ module.exports = {
     'put /app_builder/page/:action_key/role': 
         'app_builder/ABApplicationController.addPageRoles',
 
-        
+
+    /* Live display */
+    'get /app_builder/application/:appID/livepage/:pageID':
+        'app_builder/ABApplicationController.livePage',
+
+
     /* Import & Export */
     'get /app_builder/appJSON/:id':
         'app_builder/ABApplicationController.jsonExport',
-        
+
     'post /app_builder/appJSON':
         'app_builder/ABApplicationController.jsonImport',
+
+    // 'get /app_builder/application/:appID/findModels':
+    //     'app_builder/ABApplicationController.findModels',
     
-    'get /app_builder/application/:appID/findModels':
-        'app_builder/ABApplicationController.findModels',
-    
-    'post /app_builder/application/:appID/importModel':
-        'app_builder/ABApplicationController.importModel',
-    
+    // 'post /app_builder/application/:appID/importModel':
+    //     'app_builder/ABApplicationController.importModel',
 
     /* Migration Services */
-    // app_builder/migrate/application/:appID/object/:objID
-    // app_builder/migrate/application/:appID/object/:objID/field/:fieldID
+    // app_builder/migrate/object/:objID
+    // app_builder/migrate/object/:objID/field/:fieldID
     // post url   // create the object/field table info
     // put  url   // update the object/field table info
     // delete url // remove the object/field table info
-    'post /app_builder/migrate/application/:appID/object/:objID' : 
+    'post /app_builder/migrate/object/:objID' : 
         'app_builder/ABMigrationController.createObject',
 
-    'delete /app_builder/migrate/application/:appID/object/:objID' : 
+    'delete /app_builder/migrate/object/:objID' : 
         'app_builder/ABMigrationController.dropObject',
 
-    'post /app_builder/migrate/application/:appID/object/:objID/field/:fieldID' : 
+    'post /app_builder/migrate/object/:objID/field/:fieldID' : 
         'app_builder/ABMigrationController.createField',
 
-    'put /app_builder/migrate/application/:appID/object/:objID/field/:fieldID' :
+    'put /app_builder/migrate/object/:objID/field/:fieldID' :
         'app_builder/ABMigrationController.updateField',
 
-    'delete /app_builder/migrate/application/:appID/object/:objID/field/:fieldID' :
+    'delete /app_builder/migrate/object/:objID/field/:fieldID' :
         'app_builder/ABMigrationController.dropField',
 
 

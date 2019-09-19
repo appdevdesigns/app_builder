@@ -17,6 +17,8 @@ steal(
 
 							options = AD.defaults({
 								app: -1,
+								areaKey: "",
+								toolKey: -1
 							}, options);
 							self.options = options;
 
@@ -51,21 +53,43 @@ steal(
 							self.initDOM();
 							self.initModels();
 
-							self.getData();
+							self.__events = {};
 
-							AD.comm.hub.subscribe('opsportal.resize', function (message, data) {
-								self.height = data.height;
-								self.debounceResize = false; // if we do not set this the resize is never set
-								self.resize(data.height);
-							});
+							if (self.__events.areaShow == null)
+								self.__events.areaShow = AD.comm.hub.subscribe('opsportal.area.show', function (message, data) {
 
+									self.menuChange(data.area);
+
+								});
+
+							if (self.__events.toolShow == null)
+								self.__events.toolShow = AD.comm.hub.subscribe('opsportal.tool.show', function(message, data) {
+
+									self.menuChange(data.area, data.tool);
+
+								});
+
+							if (self.__events.resize == null)
+								self.__events.resize = AD.comm.hub.subscribe('opsportal.resize', function (message, data) {
+									self.height = data.height;
+									self.debounceResize = false; // if we do not set this the resize is never set
+									self.resize(data.height);
+								});
+
+
+							self.menuChange();
 
 						},
 
 						initDOM: function () {
 							console.log('... creating ABAdminLiveTool <div> ');
 
-							this.element.html('<div style="background-color: #fff !important" id="#domID#"><div class="ab-loading">Loading&#8230;</div></div>'.replace(/#domID#/g, this.containerDomID));
+							var css = "background-color: #fff !important; font-size: 30px; line-height: 80px; padding-top: 160px; text-align: center; width: 100%;";
+
+							this.element.html(
+								'<div id="#domID#">'.replace(/#domID#/g, this.containerDomID) +
+								'<div style="' + css + '" class="ab-loading"><i class="fa fa-refresh fa-spin fa-3x fa-fw"></i><br/>Loading&#8230;' +
+								'</div></div>');
 						},
 
 						initModels: function () {
@@ -73,98 +97,7 @@ steal(
 							this.Models.ABApplication = OP.Model.get('opstools.BuildApp.ABApplication');
 						},
 
-						getData: function () {
-							var self = this,
-								q = $.Deferred();
-
-							self.data = {};
-							async.series([
-								// Get application data
-								function (next) {
-									ABApplication.getApplicationById(self.options.app)
-										.then(function (result) {
-											self.data.application = result;
-
-											next();
-										}, next);
-								},
-
-								function (next) {
-
-									let areaKey = 'ab-' + self.data.application.name.trim();
-									areaKey = areaKey.toLowerCase().replace(/[^a-z0-9]/gi, '');
-
-									var appKey = 'AB_' + String(self.data.application.name).replace(/[^a-z0-9]/gi, ''),
-										pageKey = ['opstools', appKey, "Application Admin Page".replace(/[^a-z0-9]/gi, '').toLowerCase()].join('.'),
-										toolKey = _.kebabCase(pageKey);
-
-
-									var callback = function (message, data) {
-
-										// get active tool element
-										let currToolElem = document.querySelector('#op-masthead-sublinks [area="{area}"] .active'.replace("{area}", data.area));
-										if (!currToolElem) return;
-
-										let currToolKey = currToolElem.getAttribute("op-tool-key");
-										if (currToolKey != toolKey) return;
-
-										if (!self.activated) {
-											self.activated = true;
-
-											self.startPage();
-										}
-										else {
-											self.showPage();
-										}
-
-									};
-
-									if (self.subID1 == null)
-										self.subID1 = AD.comm.hub.subscribe('opsportal.tool.show', callback);
-
-									if (self.subID2 == null)
-										self.subID2 = AD.comm.hub.subscribe('opsportal.area.show', callback);
-
-									// If there is a ops-area, it should trigger that ops-area to render page
-									// Because 'opsportal.tool.show' and 'opsportal.area.show' are not trigger
-									var opsMenus = document.body.querySelectorAll('#op-list-menu > .op-container');
-									if (opsMenus.length == 1) {
-										opsMenus[0].click();
-									}
-									// If this area is showing
-									else {
-										// TODO: How to get current area ?
-										var currPanel = document.body.querySelector('#op-masthead-sublinks > ul:not([style*="display:none"]):not([style*="display: none"])');
-										if (currPanel) {
-											var currArea = currPanel.getAttribute('area');
-											if (currArea == areaKey) {
-												callback(null, { area: areaKey });
-											}
-										}
-									}
-
-									// we will remove the loading spinners on the menu now
-									var opsMenuItem = document.body.querySelectorAll('#op-list-menu > .op-container .' + areaKey + '_appLoading');
-									if (opsMenuItem.length) {
-										opsMenuItem.forEach((x) => {
-											x.remove();
-										})
-									}
-
-
-									next();
-
-								}
-
-							], function (err) {
-								if (err) q.reject(err);
-								else q.resolve();
-							});
-
-							return q;
-						},
-
-						startPage: function () {
+						initPage: function () {
 
 							var self = this;
 
@@ -172,6 +105,8 @@ steal(
 							if (!self.activated) return;
 
 							self.renderPageContainer();
+
+							self.initEvents();
 
 							webix.ready(function () {
 
@@ -183,6 +118,106 @@ steal(
 								self.resize(self.height || 600);
 							});
 
+						},
+
+						menuChange: function(areaKey, toolKey) {
+
+							var self = this;
+
+							// Get current area key
+							if (areaKey == null) {
+
+								let currAreaElem = document.querySelector('#op-list-menu > .op-container.active');
+								if (!currAreaElem) return;
+								
+								areaKey = currAreaElem.getAttribute("area");
+
+							}
+
+							// Get current tool key
+							if (toolKey == null) {
+
+								// get active tool element
+								let currToolElem = document.querySelector('#op-masthead-sublinks [area="{area}"] .active'.replace("{area}", areaKey));
+								if (!currToolElem) return;
+								
+								toolKey = currToolElem.getAttribute("op-tool-id");
+
+							}
+
+							// Check it is our page 
+							if (self.options.areaKey == areaKey && 
+								self.options.toolKey == toolKey) {
+
+								if (!self.activated) {
+									self.activated = true;
+
+									self.getData();
+								}
+								else {
+									self.showPage();
+								}
+
+							}
+
+						},
+
+						getData: function () {
+							var self = this,
+								q = $.Deferred();
+
+							self.data = {};
+							async.series([
+								// Show loading spinners
+								function (next) {
+
+									var areaMenuItem = document.body.querySelector('[class="op-container"][area="'+self.options.areaKey+'"]');
+									if (areaMenuItem) {
+										areaMenuItem.insertAdjacentHTML(
+											'beforeend',
+											'<span class="icon '+self.options.areaKey+'_appLoading"><i class="fa fa-refresh fa-spin"></i></span>');
+									}
+
+									next();
+
+								},
+								// Get application data
+								function (next) {
+									ABApplication.get(self.options.app)
+										.then(function (result) {
+											self.data.application = result;
+
+											next();
+										}, next);
+								},
+
+								function (next) {
+
+									self.initPage();
+
+									next();
+								},
+
+								// Hide loading spinners
+								function (next) {
+
+									// we will remove the loading spinners on the menu now
+									var opsMenuItem = document.body.querySelectorAll('#op-list-menu > .op-container .'+self.options.areaKey+'_appLoading');
+									if (opsMenuItem.length) {
+										opsMenuItem.forEach((x) => {
+											x.remove();
+										})
+									}
+
+									next();
+								}
+
+							], function (err) {
+								if (err) q.reject(err);
+								else q.resolve();
+							});
+
+							return q;
 						},
 
 						renderPageContainer: function () {

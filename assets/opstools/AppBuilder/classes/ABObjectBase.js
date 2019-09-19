@@ -1,30 +1,83 @@
 module.exports =  class ABObjectBase {
 
 	constructor(attributes, application) {
-/*
-{
-	id: uuid(),
-	connName: 'string', // Sails DB connection name: 'appdev_default', 'legacy_hris', etc. Default is 'appBuilder'.
-	name: 'name',
-	labelFormat: 'xxxxx',
-	isImported: 1/0,
-	isExternal: 1/0,
-	tableName:'string',  // NOTE: store table name of import object to ignore async
-	primaryColumnName: 'string', // NOTE: store column name of PK
-	transColumnName: 'string', // NOTE: store column name of translations table
-	urlPath:'string',
-	importFromObject: 'string', // JSON Schema style reference:  '#[ABApplication.id]/objects/[ABObject.id]'
-								// to get other object:	 ABApplication.objectFromRef(obj.importFromObject);
-	translations:[
-		{}
-	],
-	fields:[
-		{ABDataField}
-	]
-}
-*/
-	  	// link me to my parent ABApplication
-	  	this.application = application;
+
+		// link me to my parent ABApplication
+		this.application = application;
+
+		this.fromValues(attributes);
+
+	}
+
+
+
+  	///
+  	/// Static Methods
+  	///
+  	/// Available to the Class level object. These methods are not dependent
+  	/// on the instance values of the Application.
+  	///
+
+
+
+	///
+	/// Instance Methods
+	///
+
+	/**
+	 * @method importFields
+	 * instantiate a set of fields from the given attributes.
+	 * @param {array} fieldSettings The different settings for each field to create.
+	 *							[ { fieldURL: 'xxxxx' }, ... ]
+	 */
+	importFields(fieldSettings) {
+		var newFields = [];
+
+	  	(fieldSettings || []).forEach((field) => {
+	  		newFields.push( this.fieldNew(field, this) );
+	  	})
+	  	this._fields = newFields;
+	}
+
+
+	/**
+	 * @method exportFields
+	 * convert our array of fields into a settings object for saving to disk.
+	 * @return {array}
+	 */
+	exportFields() {
+		var currFields = [];
+		this._fields.forEach((obj) => {
+			currFields.push(obj.toObj())
+		})
+		return currFields;
+	}
+
+
+	fromValues (attributes) {
+
+		/*
+		{
+			id: uuid(),
+			connName: 'string', // Sails DB connection name: 'appdev_default', 'legacy_hris', etc. Default is 'appBuilder'.
+			name: 'name',
+			labelFormat: 'xxxxx',
+			isImported: 1/0,
+			isExternal: 1/0,
+			tableName:'string',  // NOTE: store table name of import object to ignore async
+			primaryColumnName: 'string', // NOTE: store column name of PK
+			transColumnName: 'string', // NOTE: store column name of translations table
+			urlPath:'string',
+			importFromObject: 'string', // JSON Schema style reference:  '#[ABApplication.id]/objects/[ABObject.id]'
+										// to get other object:	 ABApplication.objectFromRef(obj.importFromObject);
+			translations:[
+				{}
+			],
+			fields:[
+				{ABDataField}
+			]
+		}
+		*/
 
 		// ABApplication Attributes (or is it ABObject attributes?)
 		this.id	= attributes.id;
@@ -55,56 +108,13 @@ module.exports =  class ABObjectBase {
 			hiddenFields:[], // array of [ids] to add hidden:true to
 		};
 
-	  	// import all our ABField 
-	  	this.importFields(attributes.fields || []);
+		// import all our ABField 
+		this.importFields(attributes.fields || []);
 
 
-	  	// convert '0' to 0
-	  	this.isImported = parseInt(this.isImported || 0);
-  	}
+		// convert '0' to 0
+		this.isImported = parseInt(this.isImported || 0);
 
-
-
-  	///
-  	/// Static Methods
-  	///
-  	/// Available to the Class level object. These methods are not dependent
-  	/// on the instance values of the Application.
-  	///
-
-
-
-	///
-	/// Instance Methods
-	///
-
-	/**
-	 * @method importFields
-	 * instantiate a set of fields from the given attributes.
-	 * @param {array} fieldSettings The different settings for each field to create.
-	 *							[ { fieldURL: 'xxxxx' }, ... ]
-	 */
-	importFields(fieldSettings) {
-		var newFields = [];
-
-	  	fieldSettings.forEach((field) => {
-	  		newFields.push( this.application.fieldNew(field, this) );
-	  	})
-	  	this._fields = newFields;
-	}
-
-
-	/**
-	 * @method exportFields
-	 * convert our array of fields into a settings object for saving to disk.
-	 * @return {array}
-	 */
-	exportFields() {
-		var currFields = [];
-		this._fields.forEach((obj) => {
-			currFields.push(obj.toObj())
-		})
-		return currFields;
 	}
 
 
@@ -238,7 +248,10 @@ module.exports =  class ABObjectBase {
 	 * @return {ABField}
 	 */
 	fieldNew ( values ) {
-		return this.application.fieldNew( values, this );
+
+		// It should apply in a individual object
+		return {};
+
 	}
 
 
@@ -351,6 +364,10 @@ module.exports =  class ABObjectBase {
 	 * @return {string} 
 	 */
 	 urlRest() {
+
+		if (this.application == null)
+			return null;
+
 	 	return '/app_builder/model/application/#appID#/object/#objID#'
 			.replace('#appID#', this.application.id)
 			.replace('#objID#', this.id);
@@ -363,6 +380,10 @@ module.exports =  class ABObjectBase {
 	 * @return {string} 
 	 */
 	urlRestItem(id) {
+
+		if (this.application == null)
+			return null;
+
 		return `/app_builder/model/application/${this.application.id}/object/${this.id}/${id}`;
 	}
 
@@ -373,6 +394,10 @@ module.exports =  class ABObjectBase {
 	 * @return {string} 
 	 */
 	urlRestRefresh() {
+
+		if (this.application == null)
+			return null;
+
 		return '/app_builder/model/application/#appID#/refreshobject/#objID#'
 			.replace('#appID#', this.application.id)
 			.replace('#objID#', this.id);
@@ -385,6 +410,10 @@ module.exports =  class ABObjectBase {
 	 * @return {string} 
 	 */
 	urlRestCount() {
+
+		if (this.application == null)
+			return null;
+
 		return '/app_builder/model/application/#appID#/count/#objID#'
 			.replace('#appID#', this.application.id)
 			.replace('#objID#', this.id);
@@ -532,6 +561,10 @@ module.exports =  class ABObjectBase {
 	 * @return {string} 
 	 */
 	urlPointer(acrossApp) {
+
+		if (this.application == null)
+			return null;
+
 		return this.application.urlObject(acrossApp)+this.id;
 	}
 

@@ -10,6 +10,7 @@ var _ = require('lodash');
 var path = require('path');
 var async = require('async');
 
+var ABGraphObject = require(path.join('..', 'graphModels', 'ABObject'));
 
 var reloading = null;
 
@@ -19,7 +20,7 @@ module.exports = {
     /**
      * createObject
      *
-     * post app_builder/migrate/application/:appID/object/:objID
+     * post app_builder/migrate/object/:objID
      */
     createObject: function(req, res) {
 
@@ -31,7 +32,7 @@ module.exports = {
     /**
      * dropObject
      *
-     * delete app_builder/migrate/application/:appID/object/:objID
+     * delete app_builder/migrate/object/:objID
      */
     dropObject: function(req, res) {
         
@@ -44,7 +45,7 @@ module.exports = {
     /**
      * createField
      *
-     * post app_builder/migrate/application/:appID/object/:objID/field/:fieldID
+     * post app_builder/migrate/object/:objID/field/:fieldID
      */
     createField: function(req, res) {
 
@@ -58,7 +59,7 @@ module.exports = {
     /**
      * updateField
      *
-     * put app_builder/migrate/application/:appID/object/:objID/field/:fieldID
+     * put app_builder/migrate/object/:objID/field/:fieldID
      */
     updateField: function(req, res) {
         
@@ -72,7 +73,7 @@ module.exports = {
     /**
      * dropField
      *
-     * delete app_builder/migrate/application/:appID/object/:objID/field/:fieldID
+     * delete app_builder/migrate/object/:objID/field/:fieldID
      */
     dropField: function(req, res) {
 
@@ -165,9 +166,13 @@ function verifyAndReturnField(req, res) {
     return new Promise(
         (resolve, reject) => {
 
-            AppBuilder.routes.verifyAndReturnObject(req, res)
-            .then(function(object){
+            let objID = req.param('objID', -1);
 
+            // AppBuilder.routes.verifyAndReturnObject(req, res)
+            ABGraphObject.findOne(objID)
+            .then(function(objectData){
+
+                let object = objectData.toABClass();
 
                 var fieldID = req.param('fieldID', -1);
 
@@ -181,7 +186,6 @@ function verifyAndReturnField(req, res) {
                     res.AD.error(invalidError, 400);
                     reject();
                 } 
-
 
                 // find and return our field
                 var field = object.fields((f) => { return f.id == fieldID; })[0];
@@ -215,10 +219,15 @@ function simpleObjectOperation(req, res, operation) {
     
     sails.log.info('ABMigrationConroller.'+operation+'()');
 
+    let objID = req.param('objID', -1);
+
     // NOTE: verifyAnd...() handles any errors and responses internally.
     // only need to responde to an object being passed back on .resolve()
     AppBuilder.routes.verifyAndReturnObject(req, res)
+    // ABGraphObject.findOne(objID)
     .then(function(object){
+
+        // let object = objectData.toABClass();
 
         ABMigration[operation](object)
         .then(function(){

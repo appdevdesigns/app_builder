@@ -278,8 +278,8 @@ class ABFieldFormula extends ABField {
 	///
 
 	// return the grid column header definition for this instance of ABFieldFormula
-	columnHeader(isObjectWorkspace) {
-		var config = super.columnHeader(isObjectWorkspace);
+	columnHeader(options) {
+		var config = super.columnHeader(options);
 
 		config.editor = null; // read only
 		config.css = 'textCell';

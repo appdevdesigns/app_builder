@@ -168,7 +168,9 @@ class ABFieldList extends ABField {
 							else {
 								// Changed to string to fix issue where new items could not be added because type of field was ENUM and we do not support field modifications
 								// field is required (not null)
-								if (this.settings.required) {
+								if (this.settings.required &&
+									this.settings.default &&
+									this.settings.default != 'none') {
 									currCol = t.string(this.columnName).notNullable();
 								}
 								else {
@@ -176,7 +178,8 @@ class ABFieldList extends ABField {
 								}
 
 								
-								if (this.settings.default && this.settings.default != 'none') {
+								if (this.settings.default &&
+									this.settings.default != 'none') {
 									currCol.defaultTo(this.settings.default);
 								}
 								else {

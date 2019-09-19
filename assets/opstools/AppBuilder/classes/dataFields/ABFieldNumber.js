@@ -25,7 +25,8 @@ var ABFieldNumberDefaults = {
 	// description: what gets displayed in the Editor description.
 	description: L('ab.dataField.number.description', '*A Float or Integer Value'),
 
-	supportRequire: true
+	supportRequire: true,
+	supportUnique: true,
 
 }
 
@@ -358,13 +359,13 @@ var ABFieldNumberComponent = new ABFieldComponent({
 		 * @param {string} newVal	The new value of label
 		 * @param {string} oldVal	The previous value
 		 */
-		requiredOnChange: (newVal, oldVal, ids) => {
+		// requiredOnChange: (newVal, oldVal, ids) => {
 
-			// when require number, then default value needs to be reqired
-			$$(ids.default).define("required", newVal);
-			$$(ids.default).refresh();
+		// 	// when require number, then default value needs to be reqired
+		// 	$$(ids.default).define("required", newVal);
+		// 	$$(ids.default).refresh();
 
-		},
+		// },
 
 		populate: (ids, values) => {
 			if (values.settings.validation) {
@@ -492,8 +493,8 @@ class ABFieldNumber extends ABField {
 	///
 
 	// return the grid column header definition for this instance of ABFieldNumber
-	columnHeader(isObjectWorkspace, includeSumFooter) {
-		var config = super.columnHeader(isObjectWorkspace);
+	columnHeader(options) {
+		var config = super.columnHeader(options);
 
 		config.editor = 'number';		// [edit_type] simple inline editing.
 

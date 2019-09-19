@@ -19,7 +19,7 @@ function L(key, altText) {
 
 var ABViewCarouselPropertyComponentDefaults = {
 
-	dataSource: null, 	// uuid of data collection
+	dataviewID: null, 	// uuid of ABDataview
 	field: null, 		// uuid
 
 	width: 460,
@@ -225,7 +225,7 @@ export default class ABViewCarousel extends ABViewWidget {
 					rows: [
 						{
 							view: "select",
-							name: "dataSource",
+							name: "dataview",
 							label: L('ab.component.label.dataSource', '*Object:'),
 							labelWidth: App.config.labelWidthLarge,
 							options: [],
@@ -238,7 +238,7 @@ export default class ABViewCarousel extends ABViewWidget {
 
 										let imageFields = [];
 
-										let dc = _logic.currentEditObject().pageRoot().dataCollections(dc => dc.id == newv)[0];
+										let dc = _logic.currentEditObject().application.dataviews(dv => dv.id == newv)[0];
 										if (dc) {
 
 											let datasource = dc.datasource;
@@ -390,17 +390,17 @@ export default class ABViewCarousel extends ABViewWidget {
 		var defaultOption = { id: '', value: L('ab.component.label.selectObject', '*Select an object') };
 
 		// Pull data collections to options
-		var objectOptions = view.pageRoot().dataCollections().map((dc) => {
+		var objectOptions = view.application.dataviews().map(dv => {
 			return {
-				id: dc.id,
-				value: dc.label
+				id: dv.id,
+				value: dv.label
 			};
 		});
 		objectOptions.unshift(defaultOption);
-		$$(ids.dataSource).define("options", objectOptions);
-		$$(ids.dataSource).refresh();
+		$$(ids.dataview).define("options", objectOptions);
+		$$(ids.dataview).refresh();
 
-		$$(ids.dataSource).setValue(view.settings.dataSource);
+		$$(ids.dataview).setValue(view.settings.dataviewID);
 		$$(ids.field).setValue(view.settings.field);
 
 		$$(ids.width).setValue(view.settings.width);
@@ -411,12 +411,12 @@ export default class ABViewCarousel extends ABViewWidget {
 		$$(ids.navigationType).setValue(view.settings.navigationType);
 
 		// Populate values to QueryBuilder
-		var selectedDc = view.dataCollection;
-		if (selectedDc) {
-			PopupCarouselFilterMenu.objectLoad(selectedDc.datasource);
+		var selectedDv = view.dataview;
+		if (selectedDv) {
+			PopupCarouselFilterMenu.objectLoad(selectedDv.datasource);
 		}
 
-		// Populate values to QueryBuilder
+		// Populate values to link page properties
 		this.linkPageComponent.viewLoad(view);
 		this.linkPageComponent.setSettings(view.settings);
 
@@ -427,7 +427,7 @@ export default class ABViewCarousel extends ABViewWidget {
 
 		super.propertyEditorValues(ids, view);
 
-		view.settings.dataSource = $$(ids.dataSource).getValue();
+		view.settings.dataviewID = $$(ids.dataview).getValue();
 		view.settings.field = $$(ids.field).getValue();
 
 		view.settings.width = $$(ids.width).getValue();
@@ -461,9 +461,9 @@ export default class ABViewCarousel extends ABViewWidget {
 			component: App.unique(idBase + '_component'),
 		}
 
-		var dc = this.dataCollection;
-		if (dc) {
-			this.filterHelper.objectLoad(dc.datasource);
+		var dv = this.dataview;
+		if (dv) {
+			this.filterHelper.objectLoad(dv.datasource);
 			this.filterHelper.fromSettings(this.settings.filter);
 		}
 
@@ -505,14 +505,14 @@ export default class ABViewCarousel extends ABViewWidget {
 		// make sure each of our child views get .init() called
 		let _init = (options) => {
 
-			let dc = this.dataCollection;
-			if (!dc) return;
+			let dv = this.dataview;
+			if (!dv) return;
 
-			let object = dc.datasource;
+			let object = dv.datasource;
 			if (!object) return;
 
 			this.eventAdd({
-				emitter: dc,
+				emitter: dv,
 				eventName: "loadData",
 				listener: () => {
 
@@ -533,7 +533,7 @@ export default class ABViewCarousel extends ABViewWidget {
 			// link page helper
 			linkPage.init({
 				view: this,
-				dataCollection: dc
+				dataview: dv
 			});
 
 
@@ -581,17 +581,17 @@ export default class ABViewCarousel extends ABViewWidget {
 
 			switchImage: (current_position) => {
 
-				let dc = this.dataCollection;
-				if (!dc) return;
+				let dv = this.dataview;
+				if (!dv) return;
 
 				// Check want to load more images
 				if (current_position >= (this._imageCount - 1) && // check last image
-					dc.totalCount > this._rowCount) {
+					dv.totalCount > this._rowCount) {
 
 					// loading cursor
 					_logic.busy();
 
-					dc.loadData(this._rowCount || 0)
+					dv.loadData(this._rowCount || 0)
 						.catch(() => {
 							_logic.ready();
 						})
@@ -605,18 +605,18 @@ export default class ABViewCarousel extends ABViewWidget {
 
 			onShow: (fnFilter) => {
 
-				let dc = this.dataCollection;
-				if (!dc) return;
+				let dv = this.dataview;
+				if (!dv) return;
 
-				let obj = dc.datasource;
+				let obj = dv.datasource;
 				if (!obj) return;
 
 				let field = this.imageField;
 				if (!field) return;
 
-				if (dc && dc.dataStatus == dc.dataStatusFlag.notInitial) {
+				if (dv && dv.dataStatus == dv.dataStatusFlag.notInitial) {
 					// load data when a widget is showing
-					dc.loadData();
+					dv.loadData();
 
 					// it will call .onShow again after dc loads completely
 					return;
@@ -624,7 +624,7 @@ export default class ABViewCarousel extends ABViewWidget {
 
 				fnFilter = fnFilter || filterUI.getFilter();
 
-				let rows = dc.getData(fnFilter);
+				let rows = dv.getData(fnFilter);
 
 				let images = [];
 
@@ -769,21 +769,11 @@ export default class ABViewCarousel extends ABViewWidget {
 
 	}
 
-	/**
-	 * @property dataCollection
-	 * return ABViewDataCollection of this form
-	 *
-	 * @return {ABViewDataCollection}
-	*/
-	get dataCollection() {
-		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.dataSource)[0];
-	}
-
 	get imageField() {
-		let dc = this.dataCollection;
-		if (!dc) return null;
+		let dv = this.dataview;
+		if (!dv) return null;
 
-		let obj = dc.datasource;
+		let obj = dv.datasource;
 		if (!obj) return null;
 
 		return obj.fields(f => f.id == this.settings.field)[0];

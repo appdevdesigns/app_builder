@@ -139,7 +139,8 @@ function parseQueryCondition(_where, object, req, res, cb) {
             var queryFieldID = values[1];
 
             // make sure we find our QueryObject
-            var QueryObj = object.application.queries((q)=>{ return q.id == queryID; })[0];
+            // var QueryObj = object.application.queries((q)=>{ return q.id == queryID; })[0];
+            var QueryObj = ABObjectCache.get(queryID);
             if (!QueryObj) {
 
                 ADCore.error.log('AppBuilder:Policy:ABModelConvertQueryFieldConditions:Could not find specified query object:', { qid:cond.value, condition:cond });
@@ -207,7 +208,7 @@ function parseQueryCondition(_where, object, req, res, cb) {
                     }
                     
                     // get the query field's object and column name
-                    var columnName = queryField.dbPrefix().replace(/`/g, "") + "." + queryField.columnName;
+                    let columnName = queryField.dbPrefix().replace(/`/g, "") + "." + queryField.columnName;
                     
                     // run the Query, and parse out that data
                     var query = null;
@@ -228,7 +229,8 @@ function parseQueryCondition(_where, object, req, res, cb) {
                                 sails.log.info('.... query data : ', data);
                                 var values = data.map((d)=>{ 
 
-                                    let result = d[queryField.columnName];
+                                    // let result = d[queryField.columnName];
+                                    let result = d[columnName];
 
                                     // Convert SQL data time format
                                     if (result && queryField instanceof ABFieldDate) {

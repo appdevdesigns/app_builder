@@ -325,27 +325,31 @@ class ABFieldTree extends ABField {
   }
 
   // return the grid column header definition for this instance of ABFieldTree
-  columnHeader(isObjectWorkspace, width, isForm) {
-    var config = super.columnHeader(isObjectWorkspace);
+  columnHeader(options) {
+
+    options = options || {};
+
+    var config = super.columnHeader(options);
     var field = this;
     
     var formClass = "";
     var placeHolder = "";
-    if (isForm) {
+    if (options.isForm) {
         formClass = " form-entry";
         placeHolder = "<span style='color: #CCC; padding: 0 5px;'>"+L('ab.dataField.tree.placeholder', '*Select items')+"</span>";
     }
 
-    
-    config.template = function (obj) {
+    var width = options.width;
+
+    config.template = (obj) => {
 
         if (obj.$group)
           return obj[field.columnName];
 
         var branches = [];
-        var options = _.cloneDeep(field.settings.options);
-        options = new webix.TreeCollection({
-          data: options
+        var selectOptions = _.cloneDeep(field.settings.options);
+        selectOptions = new webix.TreeCollection({
+          data: selectOptions
         });
 
         var values = obj;
@@ -353,14 +357,14 @@ class ABFieldTree extends ABField {
           values = obj[field.columnName];
         }
 
-        options.data.each(function(obj) {
+        selectOptions.data.each(function(obj) {
           if (typeof values.indexOf != "undefined" && values.indexOf(obj.id) != -1) {
             var html = "";
 
             var rootid = obj.id;
             while (this.getParentId(rootid)) {
-              options.data.each(function(par) {
-                if (options.data.getParentId(rootid) == par.id) {
+              selectOptions.data.each(function(par) {
+                if (selectOptions.data.getParentId(rootid) == par.id) {
                   html = par.text + ": " + html;
                 }
               });

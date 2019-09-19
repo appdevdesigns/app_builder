@@ -394,23 +394,23 @@ var ABFieldListComponent = new ABFieldComponent({
 		 * @param {string} newVal	The new value of label
 		 * @param {string} oldVal	The previous value
 		 */
-		requiredOnChange: (newVal, oldVal, ids) => {
+		// requiredOnChange: (newVal, oldVal, ids) => {
 			
-			// when require number, then default value needs to be reqired
-			$$(ids.default).define("required", newVal);
-			$$(ids.default).refresh();
+		// 	// when require number, then default value needs to be reqired
+		// 	$$(ids.default).define("required", newVal);
+		// 	$$(ids.default).refresh();
 
-			if ($$(ids.multipleDefault).$view.querySelector(".webix_inp_label")) {
-				if (newVal) {
-					$$(ids.multipleDefault).define("required", true);
-					$$(ids.multipleDefault).$view.querySelector(".webix_inp_label").classList.add("webix_required");
-				} else {
-					$$(ids.multipleDefault).define("required", false);
-					$$(ids.multipleDefault).$view.querySelector(".webix_inp_label").classList.remove("webix_required");
-				}
-			}
+		// 	if ($$(ids.multipleDefault).$view.querySelector(".webix_inp_label")) {
+		// 		if (newVal) {
+		// 			$$(ids.multipleDefault).define("required", true);
+		// 			$$(ids.multipleDefault).$view.querySelector(".webix_inp_label").classList.add("webix_required");
+		// 		} else {
+		// 			$$(ids.multipleDefault).define("required", false);
+		// 			$$(ids.multipleDefault).$view.querySelector(".webix_inp_label").classList.remove("webix_required");
+		// 		}
+		// 	}
 			
-		},
+		// },
 
 		values: (ids, values) => {
 
@@ -658,20 +658,26 @@ class ABFieldList extends ABFieldSelectivity {
 	///
 
 	// return the grid column header definition for this instance of ABFieldList
-	columnHeader(isObjectWorkspace, width, editable) {
-		var config = super.columnHeader(isObjectWorkspace);
+	columnHeader(options) {
+
+		options = options || {};
+
+		var config = super.columnHeader(options);
 		var field = this;
 		var App = App;
 
 		// Multiple select list
 		if (this.settings.isMultiple == true) {
-			
-			config.template = function(row) {
+
+			var width = options.width,
+				editable = options.editable;
+
+			config.template = (row) => {
 
 				var node = document.createElement("div");
 				node.classList.add("list-data-values");
 				if (typeof width != "undefined") {
-					node.style.marginLeft = width+'px';				
+					node.style.marginLeft = width + 'px';
 				}
 				
 				var domNode = node;
@@ -686,14 +692,7 @@ class ABFieldList extends ABFieldSelectivity {
 				// var domNode = node.querySelector('.list-data-values');
 
 				// get selected values
-				var selectedData = [];
-				if (row[field.columnName] != null) {
-					selectedData = row[field.columnName];
-
-					if (typeof selectedData == 'string')
-						selectedData = JSON.parse(selectedData);
-	
-				}
+				let selectedData = this._getSelectedOptions(row);
 
 				// Render selectivity
 				field.selectivityRender(domNode, {
@@ -715,16 +714,16 @@ class ABFieldList extends ABFieldSelectivity {
 			
 			var formClass = "";
 		    var placeHolder = "";
-		    if (editable) {
+		    if (options.editable) {
 		        formClass = " form-entry";
 		        placeHolder = "<span style='color: #CCC; padding: 0 5px;'>"+L('ab.dataField.list.placeholder', '*Select item')+"</span>";
 			}
-			var isRemovable = (editable && !this.settings.required);
+			var isRemovable = (options.editable && !this.settings.required);
 			
-			config.template = function(obj) {
+			config.template = (obj) => {
 				var myHex = "#666666";
 				var myText = placeHolder;
-				field.settings.options.forEach(function(h) {
+				field.settings.options.forEach((h) => {
 					if (h.id == obj[field.columnName]) {
 						myHex = h.hex;
 						myText = h.text;
@@ -781,14 +780,7 @@ class ABFieldList extends ABFieldSelectivity {
 			var domNode = node.querySelector('.list-data-values');
 
 			// get selected values
-			var selectedData = [];
-			if (row[this.columnName] != null) {
-				selectedData = row[this.columnName];
-
-				if (typeof selectedData == 'string')
-					selectedData = JSON.parse(selectedData);
-
-			}
+			var selectedData = this._getSelectedOptions(row);
 
 			// Render selectivity
 			this.selectivityRender(domNode, {
@@ -970,6 +962,10 @@ class ABFieldList extends ABFieldSelectivity {
 	
 	getValue(item, rowData) {
 		var values = {};
+
+		if (!item)
+			return values;
+
 		if (this.settings.isMultiple) {
 			var domNode = item.$view.querySelector('.list-data-values');
 			values = this.selectivityGet(domNode);
@@ -982,41 +978,79 @@ class ABFieldList extends ABFieldSelectivity {
 
 	setValue(item, rowData) {
 
+		if (!item)
+			return;
+
 		if (this.settings.isMultiple) {
-			
-			var val = rowData[this.columnName];
-			if (typeof val == 'undefined') {
-				// assume they just sent us a single value
-				val = rowData;
-			}
+
+			let selectedOpts = this._getSelectedOptions(rowData);
 			
 			// get selectivity dom
 			var domSelectivity = item.$view.querySelector('.list-data-values');
+
 			// set value to selectivity
-			this.selectivitySet(domSelectivity, val, this.App);
+			this.selectivitySet(domSelectivity, selectedOpts, this.App);
 			
 		} else {
-			super.setValue(item, rowData);  
+			super.setValue(item, rowData);
 		}
 	}
 
 
-	format(rowData) {
+	format(rowData, options = {}) {
 
 		var val = this.dataValue(rowData) || [];
+
+		if (typeof val == "string") {
+			try {
+				val = JSON.parse(val);
+			}
+			catch (e) {
+			}
+		}
 
 		// Convert to array
 		if (!Array.isArray(val))
 			val = [val];
 
 		var displayOpts = this.settings.options
-							.filter(opt => val.filter(v => v == opt.id).length > 0)
-							.map(opt => opt.text);
+							.filter(opt => val.filter(v => (v.id || v) == opt.id).length > 0)
+							.map(opt => {
+
+								let text = opt.text;
+								let languageCode = options.languageCode || AD.lang.currentLanguage;
+
+								// Pull text of option with specify language code
+								let optTran = (opt.translations || []).filter(o => o.language_code == languageCode)[0];
+								if (optTran)
+									text = optTran.text;
+
+								return text;
+							});
 
 		return displayOpts.join(', ');
 
 	}
 
+	_getSelectedOptions(rowData = {}) {
+
+		let result = [];
+		if (rowData[this.columnName] != null) {
+			result = rowData[this.columnName];
+
+			if (typeof result == 'string')
+				result = JSON.parse(result);
+
+			// Pull text with current language
+			result = (this.settings.options || []).filter(opt => {
+				return (result || []).filter(v => (opt.id || opt) == (v.id || v)).length > 0
+			});
+
+		}
+
+		return result;
+
+	}
 
 }
 

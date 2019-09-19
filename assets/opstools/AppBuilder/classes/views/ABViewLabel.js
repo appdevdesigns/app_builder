@@ -15,7 +15,8 @@ function L(key, altText) {
 
 var ABViewLabelPropertyComponentDefaults = {
 	label:'',
-	format:0  	// 0 - normal, 1 - title, 2 - description
+	format:0,  	// 0 - normal, 1 - title, 2 - description
+	alignment: 'left'
 }
 
 
@@ -104,7 +105,8 @@ export default class ABViewLabel extends ABViewWidget  {
     	// .text is coming in under .settings.label
     	this.text = values.text || values.settings.text || '*text';
 
-    	this.settings.format = this.settings.format || ABViewLabelPropertyComponentDefaults.format;
+		this.settings.format = this.settings.format || ABViewLabelPropertyComponentDefaults.format;
+		this.settings.alignment = this.settings.alignment || ABViewLabelPropertyComponentDefaults.alignment;
 
     	// we are not allowed to have sub views:
     	this._views = [];
@@ -146,7 +148,8 @@ export default class ABViewLabel extends ABViewWidget  {
 				{
 					id: ids.component,
 					view: 'label',
-					label: this.text || ''
+					label: this.text || '',
+					align: this.settings.alignment,
 				},
 				{}
 			]
@@ -214,7 +217,28 @@ export default class ABViewLabel extends ABViewWidget  {
 			        	}
 			        ]
 		    	}
-		    },
+			},
+			{ 
+				view: "fieldset", 
+				label: L('ab.component.label.alignment','*Alignment:'), 
+				body:{
+					type: "clean",
+					padding: 10,
+					rows:[
+						{
+							view: "radio", 
+							name: "alignment",
+							vertical: true,
+							value: ABViewLabelPropertyComponentDefaults.alignment, 
+							options:[
+								{ id: 'left', value: L('ab.component.label.alignment.left','*Left') },
+								{ id: 'center', value: L('ab.component.label.alignment.center','*Center')  },
+								{ id: 'right', value: L('ab.component.label.alignment.right','*Right') }
+							]
+						}
+					]
+				}
+			},
 			{}
 		]);
 
@@ -227,6 +251,7 @@ export default class ABViewLabel extends ABViewWidget  {
 
 		$$(ids.text).setValue(view.text);
 		$$(ids.format).setValue(view.settings.format);
+		$$(ids.alignment).setValue(view.settings.alignment);
 	}
 
 
@@ -236,6 +261,7 @@ export default class ABViewLabel extends ABViewWidget  {
 
 		view.text  = $$(ids.text).getValue();
 		view.settings.format = $$(ids.format).getValue();
+		view.settings.alignment = $$(ids.alignment).getValue();
 	}
 
 
@@ -271,6 +297,7 @@ export default class ABViewLabel extends ABViewWidget  {
 					view: 'label',
 					// css: 'ab-component-header ab-ellipses-text',
 					label: this.text || '*',
+					align: this.settings.alignment,
 					type: {
 						height: "auto"
 					}
@@ -374,7 +401,8 @@ export default class ABViewLabel extends ABViewWidget  {
 		return new Promise((resolve, reject) => {
 
 			var reportDef = {
-				text: this.text
+				text: this.text,
+				alignment: this.settings.alignment
 			};
 	
 			// 0 - normal, 1 - title, 2 - description

@@ -129,10 +129,17 @@ export default class ABViewChartComponent extends ABViewWidget {
 	}
 
 	field() {
-		var object = this.application.objects((obj) => obj.id == this.settings.objectId)[0];
+
+		let chart = this.chartComponent();
+		if (chart == null) return null;
+
+		let dataview = chart.dataview;
+		if (dataview == null) return null;
+
+		let object = dataview.datasource;
 		if (object == null) return null;
 
-		var field = object.fields((v) => v.id == this.settings.fieldId)[0];
+		let field = object.fields((v) => v.id == this.settings.fieldId)[0];
 		return field;
 	}
 

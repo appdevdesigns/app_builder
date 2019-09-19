@@ -84,15 +84,18 @@ export default class ABObjectWorkspaceViewKanban extends ABObjectWorkspaceView {
 			}
 		};
 
-		let refreshOptions = (object, view) => {
+		let refreshOptions = (object, view, options = {}) => {
 
 			// Utility function to initialize the options for a field select input
 			const initSelect = (
-				id,
+				$option,
 				attribute,
 				filter = f => f.key === ABFieldList.defaults().key,
 				isRequired,
 			) => {
+
+				if ($option == null || object == null)
+					return;
 
 				// populate options
 				var options = object
@@ -102,23 +105,23 @@ export default class ABObjectWorkspaceViewKanban extends ABObjectWorkspaceView {
 				if (!isRequired && options.length) {
 					options.unshift({ id: 0, value: labels.component.noneOption });
 				}
-				$$(id).define("options", options);
+				$option.define("options", options);
 
 				// select a value
 				if (view) {
 					if (view[attribute]) {
-						$$(id).define("value", view[attribute]);
+						$option.define("value", view[attribute]);
 					}
-					else if (!isRequired) {
-						$$(id).define("value", options[0].id);
+					else if (!isRequired && options[0]) {
+						$option.define("value", options[0].id);
 					}
 				}
 				else if (options.filter(o => o.id).length === 1) {
 					// If there's just one (real) option, default to the first one
-					$$(id).define("value", options[0].id);
+					$option.define("value", options[0].id);
 				}
 
-				$$(id).refresh();
+				$option.refresh();
 			};
 
 			const verticalGroupingFieldFilter = field =>
@@ -135,19 +138,19 @@ export default class ABObjectWorkspaceViewKanban extends ABObjectWorkspaceView {
 				].includes(field.key);
 
 			initSelect(
-				ids.vGroupInput,
+				options.vGroupInput || $$(ids.vGroupInput),
 				"verticalGroupingField",
 				verticalGroupingFieldFilter,
 				true,
 			);
 			initSelect(
-				ids.hGroupInput,
+				options.hGroupInput || $$(ids.hGroupInput),
 				"horizontalGroupingField",
 				horizontalGroupingFieldFilter,
 				false,
 			);
 			initSelect(
-				ids.ownerInput,
+				options.ownerInput || $$(ids.ownerInput),
 				"ownerField",
 				f => {
 					// User field
@@ -296,6 +299,10 @@ export default class ABObjectWorkspaceViewKanban extends ABObjectWorkspaceView {
 
 				return result;
 
+			},
+
+			logic: {
+				refreshOptions: refreshOptions
 			}
 
 		});

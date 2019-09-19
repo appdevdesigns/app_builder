@@ -74,7 +74,6 @@ describe("ABFieldConnect unit tests", () => {
 			assert.isFalse(defaultValues.isSortable);
 			assert.isTrue(defaultValues.isFilterable);
 			assert.isFalse(defaultValues.useAsLabel);
-			assert.isFalse(defaultValues.supportImport);
 			assert.isFalse(defaultValues.supportRequire);
 		});
 

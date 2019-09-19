@@ -505,7 +505,8 @@ export default class ABViewMenu extends ABViewWidget {
 			view.settings.pages.forEach((page) => {
 
 				if(page.isChecked) {
-					$$(ids.pages).checkItem(page.tabId || page.pageId);
+					if ($$(ids.pages).exists(page.tabId || page.pageId))
+						$$(ids.pages).checkItem(page.tabId || page.pageId);
 				}
 
 			});
@@ -760,7 +761,10 @@ export default class ABViewMenu extends ABViewWidget {
 
 			if (displayPage.isChecked) {
 
-				var label = this.getAliasname(displayPage);
+				let existsPage = this.application.pages(p => p.id == displayPage.pageId, true)[0];
+				if (!existsPage) return;
+
+				let label = this.getAliasname(displayPage);
 
 				menu.add({
 					id: displayPage.tabId || displayPage.pageId,

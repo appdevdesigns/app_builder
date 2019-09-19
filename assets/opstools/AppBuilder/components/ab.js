@@ -118,7 +118,7 @@ export default class AB extends OP.Component {    //('ab', function(App) {
 		};
 
 
-		this.init = function() {
+		this.init = () => {
 
 			AppChooser.init();
 			AppWorkspace.init();
@@ -128,6 +128,41 @@ export default class AB extends OP.Component {    //('ab', function(App) {
 
 			// perform an initial resize adjustment
 			$$(ids.component).adjust();
+
+			if (this.__areaShowEvent == null)
+				this.__areaShowEvent = AD.comm.hub.subscribe('opsportal.area.show', (message, data) => {
+
+					_logic.changeArea(data.area);
+
+				});
+
+
+			// Check if this is active area
+			_logic.changeArea();
+
+		};
+
+		var _logic = this._logic = {
+
+			changeArea: (areaKey) => {
+
+				// Get current area key
+				if (areaKey == null) {
+
+					let currAreaElem = document.querySelector('#op-list-menu > .op-container.active');
+					if (!currAreaElem) return;
+					
+					areaKey = currAreaElem.getAttribute("area");
+				}
+
+
+				if (areaKey == "app-builder") {
+					// It will load application data at first time here.
+					AppChooser.show();
+				}
+
+			}
+
 		}
 
 
@@ -135,7 +170,6 @@ export default class AB extends OP.Component {    //('ab', function(App) {
 		this.actions({
 
 		})
-
 
 
 		this._app = App;  // for unit testing.

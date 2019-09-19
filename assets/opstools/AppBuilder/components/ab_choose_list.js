@@ -177,8 +177,12 @@ export default class ABChooseList extends OP.Component {
 			 * show a busy indicator on our App List
 			 */
 			busy: function() {
+
+				$$(ids.list).disable();
+
 				if ($$(ids.list).showProgress)
-					$$(ids.list).showProgress({ icon: 'cursor' });
+					$$(ids.list).showProgress({ type: "icon" });
+
 			},
 
 
@@ -189,7 +193,7 @@ export default class ABChooseList extends OP.Component {
 				switch (action) {
 
 					case 'edit':
-						App.actions.transitionApplicationForm(selectedApp);
+						_logic.editApplication(selectedApp.id);
 						break;
 
 					case 'delete':
@@ -219,14 +223,19 @@ export default class ABChooseList extends OP.Component {
 			 *
 			 * Load all the ABApplications and display them in our App List
 			 */
-			loadData:function(){
+			loadData:() => {
+
+				if (this.loaded)
+					return;
+
+				this.loaded = true;
 
 				// Get applications data from the server
 				_logic.busy();
-				ABApplication.allApplications()
-					.then(function (data) {
 
-						_logic.ready();
+				// ABApplication.allApplications()
+				ABApplication.applicationInfo()
+					.then(function (data) {
 
 						// make sure our overlay is updated when items are added/removed
 						// from our data list.
@@ -240,7 +249,11 @@ export default class ABChooseList extends OP.Component {
 
 						_data.listApplications = data;
 
+						_data.listApplications.sort("label");
+
 						_logic.refreshList();
+
+						_logic.ready();
 					})
 					.catch(function (err) {
 						_logic.ready();
@@ -286,6 +299,39 @@ export default class ABChooseList extends OP.Component {
 				return false; // block default behavior
 			},
 
+			pullApplication: (appId) => {
+
+				return new Promise((resolve, reject) => {
+
+					let selectedApp = $$(ids.list).getItem(appId);
+
+					// loaded full data of application already
+					if (selectedApp._isFullLoaded) {
+						resolve(selectedApp);
+					}
+					// there is meta of application, need to load full data
+					else {
+						ABApplication.get(appId)
+							.then(app => {
+	
+								app._isFullLoaded = true;
+	
+								// update to list
+								// _data.listApplications.updateItem(appId, app);
+
+								// NOTE: could not use .updateItem() because it redirects same object not new Application instance from .get()
+								_data.listApplications.remove(appId, app);
+								_data.listApplications.add(app);
+								_data.listApplications.sort("label");
+	
+								resolve(_data.listApplications.getItem(appId));
+	
+							});
+					}
+
+				});
+
+			},
 
 			/**
 			 * @function onClickListItem
@@ -299,21 +345,54 @@ export default class ABChooseList extends OP.Component {
 
 				$$(ids.list).select(id);
 
-				var selectedApp = $$(ids.list).getItem(id);
+				Promise.resolve()
 
-				if (selectedApp) {
+					.then(() => _logic.pullApplication(id))
 
-					// set the common App so it is accessible for all the Applications views
-					selectedApp.App = App;		
-					_logic.ready();
+					.then(selectedApp => {
+						return new Promise((next, err) => {
 
-					// We've selected an Application to work with
-					App.actions.transitionWorkspace( selectedApp );
-				}
+							if (selectedApp) {
+		
+								// set the common App so it is accessible for all the Applications views
+								selectedApp.App = App;
+
+								// We've selected an Application to work with
+								App.actions.transitionWorkspace( selectedApp );
+							}
+
+							_logic.ready();
+							next();
+
+						});
+					});
 
 				return false; // block default behavior
 			},
 
+
+			editApplication: (appId) => {
+
+				_logic.busy();
+
+				Promise.resolve()
+
+					.then(() => _logic.pullApplication(appId))
+
+					.then(selectedApp => {
+						return new Promise((next, err) => {
+
+							if (selectedApp) {
+								App.actions.transitionApplicationForm(selectedApp);
+							}
+
+							_logic.ready();
+							next();
+
+						});
+					});
+
+			},
 
 			/**
 			 * @function onFileUpload
@@ -369,6 +448,9 @@ export default class ABChooseList extends OP.Component {
 			 * remove the busy indicator on our App List
 			 */
 			ready: function() {
+
+				$$(ids.list).enable();
+
 				if ($$(ids.list).hideProgress)
 					$$(ids.list).hideProgress();
 			},
@@ -413,7 +495,11 @@ export default class ABChooseList extends OP.Component {
 			 * Trigger our List component to show
 			 */
 			show:function() {
+
 				$$(ids.component).show();
+
+				// start things off by loading the current list of Applications
+				_logic.loadData();
 			},
 
 
@@ -468,9 +554,8 @@ export default class ABChooseList extends OP.Component {
 			MenuComponent.init({
 				onClick: _logic.callbackApplicationEditorMenu
 			})
-
-			// start things off by loading the current list of Applications
-			_logic.loadData();
+		
+			this.show();
 		}
 
 
@@ -557,9 +642,7 @@ export default class ABChooseList extends OP.Component {
 		})
 
 
-		this.show = function() {
-			$$(ids.component).show();
-		}
+		this.show = _logic.show;
 
 	}
 

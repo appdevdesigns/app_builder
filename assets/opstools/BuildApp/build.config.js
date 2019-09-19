@@ -1,6 +1,7 @@
 module.exports = {
 	"paths": {
-		"opstools/BuildApp": "opstools/BuildApp/BuildApp.js"
+		"opstools/BuildApp": "opstools/BuildApp/BuildApp.js",
+		"bundles/opstools/BuildApp": "dist/bundles/opstools/BuildApp.js?v=2"
 	},
 	"bundle": [
 		"opstools/BuildApp"
@@ -18,6 +19,7 @@ module.exports = {
 				"js/selectivity/selectivity.min",
 				"js/vfs_fonts",
 				"js/moment-locales.min",
+				"js/docxtemplater-image-module.v3.0.2.min",
 				"OpsPortal/classes/OpsWebixDataCollection",
 				"opstools/BuildApp/OP_Bundle"
 			],
@@ -30,18 +32,45 @@ module.exports = {
 			],
 			"sideBundle": true
 		},
-        "js/vfs_fonts": {
-            "format": "global",
-            "deps": [
-                "js/pdfmake"
-            ],
-            "sideBundle": true
-        },
-        "js/pdfmake": {
-            "format": "global",
-            "deps": [
-            ],
-            "sideBundle": true
-        }
+		"js/vfs_fonts": {
+			"format": "global",
+			"deps": [
+				"js/pdfmake"
+			],
+			"sideBundle": true
+		},
+		"js/pdfmake": {
+			"format": "global",
+			"deps": [
+			],
+			"sideBundle": true
+		},
+		"js/docxtemplater-image-module.v3.0.2.min": {
+			"format": "global",
+			"deps": [
+				"js/docxtemplater.v3.0.12.min"
+			],
+			"sideBundle": true
+		},
+		"js/docxtemplater.v3.0.12.min": {
+			"format": "global",
+			"deps": [
+				"js/jszip.min",
+				"js/jszip-utils.min"
+			],
+			"sideBundle": true
+		},
+		"js/jszip.min": {
+			"format": "global",
+			"deps": [
+			],
+			"sideBundle": true
+		},
+		"js/jszip-utils.min": {
+			"format": "global",
+			"deps": [
+			],
+			"sideBundle": true
+		}
 	}
 };

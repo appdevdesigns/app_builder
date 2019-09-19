@@ -26,6 +26,7 @@ export default class ABCommonPopupEditMenu extends OP.Component {
 			component: {
 
 				copy: L('ab.page.copy', "*Copy"),
+				exclude: L('ab.object.exclude', "*Exclude"),
 
 				menu: L('ab.application.menu', "*Application Menu"),
 				confirmDeleteTitle: L('ab.application.delete.title', "*Delete application"),
@@ -72,6 +73,7 @@ export default class ABCommonPopupEditMenu extends OP.Component {
 		var _menuOptions = [
 			{ label: labels.common.rename, icon: "fa fa-pencil-square-o", command:'rename' },
 			{ label: labels.component.copy, icon: "fa fa-files-o", command:'copy' },
+			{ label: labels.component.exclude, icon: "fa fa-reply", command:'exclude' },
 			{ label: labels.common.delete, icon: "fa fa-trash", command:'delete' }
 		];
 
@@ -97,6 +99,15 @@ export default class ABCommonPopupEditMenu extends OP.Component {
 				let itemCopy = $$(ids.list).data.find(item => item.label == labels.component.copy)[0];
 				if (itemCopy) {
 					$$(ids.list).remove(itemCopy.id);
+					$$(ids.list).refresh();
+				}
+			}
+
+			// hide "exclude" item
+			if (options.hideExclude) {
+				let hideExclude = $$(ids.list).data.find(item => item.label == labels.component.exclude)[0];
+				if (hideExclude) {
+					$$(ids.list).remove(hideExclude.id);
 					$$(ids.list).refresh();
 				}
 			}

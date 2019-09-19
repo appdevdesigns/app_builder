@@ -18,7 +18,7 @@ function L(key, altText) {
 var ABViewTextPropertyComponentDefaults = {
 	text: '',
 	height: 0,
-	datacollection: null
+	dataviewID: null
 }
 
 
@@ -250,7 +250,7 @@ export default class ABViewText extends ABViewWidget {
 				labelWidth: App.config.labelWidthLarge,
 			},
 			{
-				name: 'datacollection',
+				name: 'dataview',
 				view: 'richselect',
 				label: L('ab.components.list.dataSource', "*Data Source"),
 				labelWidth: App.config.labelWidthLarge,
@@ -282,18 +282,18 @@ export default class ABViewText extends ABViewWidget {
 	 * 
 	 * @param {Object} ids 
 	 * @param {ABViewForm} view - the current component
-	 * @param {string} dcId - id of ABViewDataCollection
+	 * @param {string} dvId - id of ABDataview
 	 */
-	static propertyUpdateFieldOptions(ids, view, dcId) {
+	static propertyUpdateFieldOptions(ids, view, dvId) {
 
-		var datacollection = view.pageRoot().dataCollections(dc => dc.id == dcId)[0];
-		
-		if (!datacollection && view.parent.key == "dataview") {
-			datacollection = view.pageRoot().dataCollections(dc => dc.id == view.parent.settings.datacollection)[0];
-			$$(ids.datacollection).setValue(view.parent.settings.datacollection);
+		var dataview = view.application.dataviews(dv => dv.id == dvId)[0];
+
+		if (!dataview && view.parent.key == "dataview") {
+			dataview = view.application.dataviews(dv => dv.id == view.parent.settings.dataviewID)[0];
+			$$(ids.dataview).setValue(view.parent.settings.dataviewID);
 		}
 
-		var object = datacollection ? datacollection.datasource : null;
+		var object = dataview ? dataview.datasource : null;
 
 		// Pull field list
 		$$(ids.field).clearAll();
@@ -310,27 +310,27 @@ export default class ABViewText extends ABViewWidget {
 
 		$$(ids.height).setValue(view.settings.height);
 
-		var dataCollectionId = (view.settings.datacollection ? view.settings.datacollection : null);
-		var SourceSelector = $$(ids.datacollection);
+		var dataviewID = (view.settings.dataviewID ? view.settings.dataviewID : null);
+		var SourceSelector = $$(ids.dataview);
 
 		// Pull data collections to options
-		var dcOptions = view.pageRoot().dataCollections().map((dc) => {
+		var dvOptions = view.application.dataviews().map(dv => {
 
 			return {
-				id: dc.id,
-				value: dc.label
+				id: dv.id,
+				value: dv.label
 			};
 		});
 
-		dcOptions.unshift({
+		dvOptions.unshift({
 			id: null,
 			value: '[Select]'
 		});
-		SourceSelector.define('options', dcOptions);
-		SourceSelector.define('value', dataCollectionId);
+		SourceSelector.define('options', dvOptions);
+		SourceSelector.define('value', dataviewID);
 		SourceSelector.refresh();
 
-		this.propertyUpdateFieldOptions(ids, view, dataCollectionId);
+		this.propertyUpdateFieldOptions(ids, view, dataviewID);
 
 	}
 
@@ -340,7 +340,7 @@ export default class ABViewText extends ABViewWidget {
 		super.propertyEditorValues(ids, view);
 
 		view.settings.height = $$(ids.height).getValue();
-		view.settings.datacollection = $$(ids.datacollection).getValue();
+		view.settings.dataviewID = $$(ids.dataview).getValue();
 
 	}
 
@@ -402,11 +402,11 @@ export default class ABViewText extends ABViewWidget {
 			baseCom.onShow(viewId);
 
 			// listen DC events
-			let dc = this.dataCollection;
-			if (dc && this.parent.key != "dataview") {
+			let dv = this.dataview;
+			if (dv && this.parent.key != "dataview") {
 
 				this.eventAdd({
-					emitter: dc,
+					emitter: dv,
 					eventName: 'changeCursor',
 					listener: _logic.displayText
 				});
@@ -437,16 +437,16 @@ export default class ABViewText extends ABViewWidget {
 
 
 	/**
-	 * @property dataCollection
-	 * return ABViewDataCollection of this form
+	 * @property dataview
+	 * return ABDataview of this form
 	 * 
-	 * @return {ABViewDataCollection}
+	 * @return {ABDataview}
 	 */
-	get dataCollection() {
+	get dataview() {
 		if (this.parent.key == "dataview") {
-			return this.pageRoot().dataCollections((dc) => dc.id == this.parent.settings.datacollection)[0];
+			return this.application.dataviews(dv => dv.id == this.parent.settings.dataviewID)[0];
 		} else {
-			return this.pageRoot().dataCollections((dc) => dc.id == this.settings.datacollection)[0];
+			return this.application.dataviews(dv => dv.id == this.settings.dataviewID)[0];
 		}
 	}
 
@@ -459,15 +459,15 @@ export default class ABViewText extends ABViewWidget {
 			return result.replace(/{(.*?)}/g, "");
 		};
 		
-		var dc = this.dataCollection;
-		if (!dc) return clearTemplateValue(result);
+		var dv = this.dataview;
+		if (!dv) return clearTemplateValue(result);
 
-		var object = dc.datasource;
+		var object = dv.datasource;
 		if (!object) return clearTemplateValue(result);
 
 		object.fields().forEach(f => {
 			
-			var rowData = val || dc.getCursor() || {};
+			var rowData = val || dv.getCursor() || {};
 
 			var template = new RegExp('{' + f.label + '}', 'g');
 			var prepend = "";
@@ -509,7 +509,7 @@ export default class ABViewText extends ABViewWidget {
 
 	copyUpdateProperyList() {
 
-		return ['datacollection'];
+		return ['dataviewID'];
 
 	}
 

@@ -12,6 +12,9 @@ var AD = require('ad-utils');
 var fs = require('fs');
 var async = require('async');
 
+var ABGraphObject = require(path.join('..', 'api', 'graphModels', 'ABObject'));
+var ABGraphQuery = require(path.join('..', 'api', 'graphModels', 'ABQuery'));
+
 
 module.exports = function (cb) {
 
@@ -35,9 +38,12 @@ module.exports = function (cb) {
     		// verify .well-known directory exists:
     		verifyWellKnownDir,
     		verifyWellKnownConfigs,
-    		verifyDataDir,
+			verifyDataDir,
 
-    		setupPollingMCC,
+			initialGraphDB,
+			cacheABClassObjects,
+
+			setupPollingMCC,
 
 // NOTE: remove this when we no longer manually add the SDC app info:
 addSDCAppInfo,
@@ -121,9 +127,57 @@ function verifyWellKnownConfigs(next) {
 		}
 	}
 	processConfig(defaultConfigContents, next);
-    
+
 }
 
+function cacheABClassObjects(next) {
+
+	let tasks = [];
+
+	tasks.push(new Promise((resolve, reject) => {
+
+		ABGraphObject.find()
+			.catch(reject)
+			.then(objects => {
+
+				objects.forEach(obj => {
+
+					// it will be cached here
+					obj.toABClass();
+
+				});
+
+				resolve();
+
+			});
+	}));
+
+	tasks.push(new Promise((resolve, reject) => {
+
+		ABGraphQuery.find({
+			relations: ['objects']
+		})
+		.catch(reject)
+		.then(queries => {
+
+			(queries || []).forEach(q => {
+
+				// it will be cached here
+				q.toABClass();
+
+			});
+
+			resolve();
+
+		});
+
+	}));
+
+	Promise.all(tasks)
+		.catch(next)
+		.then(() => next());
+
+}
 
 function setupPollingMCC(next) {
 
@@ -342,3 +396,12 @@ sails.log.warn('... making default SDC data directory:', pathMobileDir);
 
 }
 
+function initialGraphDB(next) {
+
+	ABGraphDB.initial()
+		.catch(next)
+		.then(() => {
+			next();
+		});
+
+}

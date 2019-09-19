@@ -22,7 +22,7 @@ var ABViewDetailDefaults = {
 }
 
 var ABViewDetailPropertyComponentDefaults = {
-	datacollection: null,
+	dataviewID: null,
 	showLabel: true,
 	labelPosition: 'left',
 	labelWidth: 120,
@@ -168,21 +168,27 @@ export default class ABViewDetail extends ABViewContainer {
 			}
 			// remove field in the form
 			else {
-				var fieldView = currView.views(c => c.settings.fieldId == fieldId)[0];
+				let fieldView = currView.views(c => c.settings.fieldId == fieldId)[0];
+				if (fieldView) {
+					let remainingViews = currView.views(c => c.settings.fieldId != fieldId);
+					currView._views = remainingViews;
 
-				if (fieldView)
-					fieldView.destroy();
+					// fieldView.destroy();
+				}
 
 			}
 
 			// trigger a save()
 			this.propertyEditorSave(ids, currView);
 
+			// // Call REST API to server in ABViewContainer
+			// currView.emit('properties.updated', currView);
+
 		};
 
 		return commonUI.concat([
 			{
-				name: 'datacollection',
+				name: 'dataview',
 				view: 'richselect',
 				label: L('ab.components.detail.dataSource', "*Data Source"),
 				labelWidth: App.config.labelWidthLarge,
@@ -248,11 +254,11 @@ export default class ABViewDetail extends ABViewContainer {
 
 		super.propertyEditorPopulate(App, ids, view);
 
-		var SourceSelector = $$(ids.datacollection);
-		var dataCollectionId = (view.settings.datacollection ? view.settings.datacollection : null);
+		var SourceSelector = $$(ids.dataview);
+		var dataviewId = view.settings.dataviewID || null;
 
-		// Pull data collections to options
-		var dcOptions = view.pageRoot().dataCollections().map((dc) => {
+		// Pull data views to options
+		var dvOptions = view.application.dataviews().map((dc) => {
 
 			return {
 				id: dc.id,
@@ -260,12 +266,12 @@ export default class ABViewDetail extends ABViewContainer {
 			};
 		});
 
-		SourceSelector.define('options', dcOptions);
-		SourceSelector.define('value', dataCollectionId);
+		SourceSelector.define('options', dvOptions);
+		SourceSelector.define('value', dataviewId);
 		SourceSelector.refresh();
 
 
-		this.propertyUpdateFieldOptions(ids, view, dataCollectionId);
+		this.propertyUpdateFieldOptions(ids, view, dataviewId);
 
 		$$(ids.showLabel).setValue(view.settings.showLabel != null ? view.settings.showLabel : ABViewDetailPropertyComponentDefaults.showLabel);
 		$$(ids.labelPosition).setValue(view.settings.labelPosition || ABViewDetailPropertyComponentDefaults.labelPosition);
@@ -283,7 +289,7 @@ export default class ABViewDetail extends ABViewContainer {
 
 		super.propertyEditorValues(ids, view);
 
-		view.settings.datacollection = $$(ids.datacollection).getValue();
+		view.settings.dataviewID = $$(ids.dataview).getValue();
 		view.settings.showLabel = $$(ids.showLabel).getValue();
 		view.settings.labelPosition = $$(ids.labelPosition).getValue();
 		view.settings.labelWidth = $$(ids.labelWidth).getValue();
@@ -293,8 +299,8 @@ export default class ABViewDetail extends ABViewContainer {
 
 	static propertyUpdateFieldOptions(ids, view, dcId) {
 
-		var datacollection = view.pageRoot().dataCollections(dc => dc.id == dcId)[0];
-		var object = datacollection ? datacollection.datasource : null;
+		var dataview = view.application.dataviews(dc => dc.id == dcId)[0];
+		var object = dataview ? dataview.datasource : null;
 
 
 		// Pull field list
@@ -362,41 +368,47 @@ export default class ABViewDetail extends ABViewContainer {
 						if (!field) return;
 
 						// get value of relation when field is a connect field
-						if (field.key == "connectObject") {
-							val = field.pullRelationValues(rowData);
-						}
-						else if (field.key == "list") {
-							val = rowData[field.columnName];
+						switch(field.key) {
+							case "connectObject":
+								val = field.pullRelationValues(rowData);
+								break;
+							case "list":
+								val = rowData[field.columnName];
 
-							if (field.settings.isMultiple == 0) {
-								let myVal = "";
+								if (field.settings.isMultiple == 0) {
+									let myVal = "";
 
-								field.settings.options.forEach(function (options) {
-									if (options.id == val)
-										myVal = options.text;
-								});
-
-								if (field.settings.hasColors) {
-									let myHex = "#66666";
-									field.settings.options.forEach(function (h) {
-										if (h.text == myVal)
-											myHex = h.hex;
+									field.settings.options.forEach(function (options) {
+										if (options.id == val)
+											myVal = options.text;
 									});
-									myVal = '<span class="selectivity-multiple-selected-item rendered" style="background-color:' + myHex + ' !important;">' + myVal + '</span>';
+
+									if (field.settings.hasColors) {
+										let myHex = "#66666";
+										field.settings.options.forEach(function (h) {
+											if (h.text == myVal)
+												myHex = h.hex;
+										});
+										myVal = '<span class="selectivity-multiple-selected-item rendered" style="background-color:' + myHex + ' !important;">' + myVal + '</span>';
+									}
+
+									val = myVal;
 								}
+								break;
+							case "user":
+								val = rowData[field.columnName];
 
-								val = myVal;
-							}
-						}
-						else if (field.key == "user") {
-							val = rowData[field.columnName];
-
-							if (field.settings.isMultiple == 0)
-								val = val ? '<span class="selectivity-multiple-selected-item rendered" style="background-color:#eee !important; color: #666 !important; box-shadow: inset 0px 1px 1px #333;"><i style="opacity: 0.6;" class="fa fa-user"></i> ' + val + '</span>' : "";
-
-						}
-						else if (rowData) {
-							val = field.format(rowData);
+								if (field.settings.isMultiple == 0)
+									val = val ? '<span class="selectivity-multiple-selected-item rendered" style="background-color:#eee !important; color: #666 !important; box-shadow: inset 0px 1px 1px #333;"><i style="opacity: 0.6;" class="fa fa-user"></i> ' + val + '</span>' : "";
+								break;
+							case "file":
+								val = rowData[field.columnName];
+								break;
+							default:
+								if (rowData) {
+									val = field.format(rowData);
+								}
+								break;
 						}
 					}
 
@@ -427,16 +439,16 @@ export default class ABViewDetail extends ABViewContainer {
 			container.onShow();
 
 			// listen DC events
-			var dc = this.dataCollection;
-			if (dc) {
+			let dv = this.dataview;
+			if (dv) {
 
-				var currData = dc.getCursor();
+				let currData = dv.getCursor();
 				if (currData) {
 					_logic.displayData(currData);
 				}
 
 				this.eventAdd({
-					emitter: dc,
+					emitter: dv,
 					eventName: 'changeCursor',
 					listener: _logic.displayData
 				})
@@ -468,19 +480,6 @@ export default class ABViewDetail extends ABViewContainer {
 			return viewsToAllow.indexOf(c.common().key) > -1;
 		});
 	}
-
-
-
-	/**
-	 * @property dataCollection
-	 * return ABViewDataCollection of this detail
-	 * 
-	 * @return {ABViewDataCollection}
-	 */
-	get dataCollection() {
-		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.datacollection)[0];
-	}
-
 
 	clearFieldComponents() {
 		this.views().forEach((comp) => {
@@ -520,7 +519,7 @@ export default class ABViewDetail extends ABViewContainer {
 
 	copyUpdateProperyList() {
 
-		return ['datacollection'];
+		return ['dataviewID'];
 
 	}
 

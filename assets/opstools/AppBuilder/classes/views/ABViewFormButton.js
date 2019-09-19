@@ -396,8 +396,8 @@ export default class ABViewFormButton extends ABView {
 				// get form component
 				var form = this.parentFormComponent();
 
-				// get ABViewDataCollection
-				var dc = form.dataCollection;
+				// get ABDataview
+				var dc = form.dataview;
 
 				// clear cursor of DC
 				if (dc) {
@@ -427,8 +427,8 @@ export default class ABViewFormButton extends ABView {
 				// get form component
 				var form = this.parentFormComponent();
 
-				// get ABViewDataCollection
-				var dc = form.dataCollection;
+				// get ABDataview
+				var dc = form.dataview;
 
 				// clear cursor of DC
 				if (dc) {

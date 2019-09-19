@@ -2,7 +2,6 @@ var uuid = require('node-uuid');
 var path = require('path');
 var _ = require('lodash');
 
-var ABObject = require(path.join(__dirname, "..", "classes", "ABObject.js"));
 var ABObjectExternal = require(path.join(__dirname, "..", "classes", "ABObjectExternal.js"));
 var ABFieldBase = require(path.join(__dirname, "..", "..", "assets", "opstools", "AppBuilder", "classes", "dataFields", "ABFieldBase.js"));
 

@@ -209,12 +209,13 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 			}
 
 			PopupNewQueryComponent.init({
-				onDone: _logic.callbackNewObject
+				onDone: _logic.callbackNewQuery
 			});
 
 			PopupEditObjectComponent.init({
 				onClick: _logic.callbackObjectEditorMenu,
-				hideCopy: true
+				hideCopy: true,
+				hideExclude: false
 			})
 
 			// attach any passed in callbacks.
@@ -344,6 +345,11 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 
 			},
 
+			listCount: function() {
+				if ($$(ids.list))
+					return $$(ids.list).count();
+			},
+
 			onAfterEditStop: function(state, editor, ignoreUpdate) {
 
 				_logic.showGear(editor.id);
@@ -407,9 +413,14 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 			},
 
 			showGear: function(id) {
-				var gearIcon = $$(ids.list).getItemNode(id).querySelector('.ab-object-list-edit');
-				gearIcon.style.visibility = "visible";
-				gearIcon.style.display = "block";
+				let $item = $$(ids.list).getItemNode(id);
+				if ($item) {
+					let gearIcon = $item.querySelector('.ab-object-list-edit');
+					if (gearIcon) {
+						gearIcon.style.visibility = "visible";
+						gearIcon.style.display = "block";
+					}
+				}
 			},
 
 			/**
@@ -442,11 +453,11 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 
 
 			/**
-			 * @function callbackNewObject
+			 * @function callbackNewQuery
 			 *
-			 * Once a New Object was created in the Popup, follow up with it here.
+			 * Once a New Query was created in the Popup, follow up with it here.
 			 */
-			callbackNewObject:function(err, query, selectNew, callback) {
+			callbackNewQuery:function(err, query, selectNew, callback) {
 
 				if (err) {
 					OP.Error.log('Error creating New Query', {error: err});
@@ -479,28 +490,48 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 			},
 
 			rename: function () {
-				var objectId = $$(ids.list).getSelectedId(false);
-				$$(ids.list).edit(objectId);
+				let queryId = $$(ids.list).getSelectedId(false);
+				$$(ids.list).edit(queryId);
+			},
+
+			exclude: function() {
+
+				let queryId = $$(ids.list).getSelectedId(false);
+
+				_logic.listBusy();
+
+				CurrentApplication.queryExclude(queryId)
+					.then(() => {
+
+						queryList.remove(queryId);
+
+						_logic.listReady();
+
+						// clear query workspace
+						_logic.callbacks.onItemSelected(null);
+					});
+
+
 			},
 
 			remove: function () {
 
-				var selectedObject = $$(ids.list).getSelectedItem(false);
+				var selectedQuery = $$(ids.list).getSelectedItem(false);
 
 				// verify they mean to do this:
 				OP.Dialog.Confirm({
 					title: labels.component.confirmDeleteTitle,
-					message: labels.component.confirmDeleteMessage.replace('{0}', selectedObject.label),
+					message: labels.component.confirmDeleteMessage.replace('{0}', selectedQuery.label),
 					callback: (isOK) => {
 
 						if (isOK) {
 							_logic.listBusy();
 
-							selectedObject.destroy()
+							selectedQuery.destroy()
 								.then(() => {
 									_logic.listReady();
 
-									queryList.remove(selectedObject.id);
+									queryList.remove(selectedQuery.id);
 
 									_logic.callbacks.onItemSelected( null );
 // App.actions.clearQueryWorkspace();
@@ -529,6 +560,7 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 				if (CurrentApplication)
 					queryList.parse(CurrentApplication.queries());
 
+				queryList.sort("label", "asc");
 
 				// clear our list and display our objects:
 				var List = $$(ids.list);
@@ -559,6 +591,9 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 				switch (action) {
 					case 'rename':
 						_logic.rename();
+						break;
+					case 'exclude':
+						_logic.exclude();
 						break;
 					case 'delete':
 						_logic.remove();
@@ -609,6 +644,9 @@ searchPlaceholder: L('ab.query.list.search.placeholder', "*Query name"),
 		// 
 		this.applicationLoad = _logic.applicationLoad;
 		this.refresh = _logic.refresh;
+		this.busy = _logic.listBusy;
+		this.ready = _logic.listReady;
+		this.count = _logic.listCount;
 
 	}
 

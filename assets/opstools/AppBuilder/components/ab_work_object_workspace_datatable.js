@@ -47,7 +47,9 @@ export default class ABWorkObjectDatatable extends OP.Component {
             hideButtons: params.hideButtons || false,
             groupBy: params.groupBy || "",
             hiddenFields: params.hiddenFields || [],
-            frozenColumnID: params.frozenColumnID
+            frozenColumnID: params.frozenColumnID,
+
+            isTreeDatable: params.isTreeDatable || 0 // if true webix.treedatable, otherwise webix.datatable
         };
 
         var L = this.Label;
@@ -255,7 +257,7 @@ console.warn('!! ToDo: onAfterColumnHide()');
         };
 
         // Grouping
-        if (settings.groupBy) {
+        if (settings.isTreeDatable || settings.groupBy) {
 
             // switch datatable to support tree
             this.ui.view = "treetable";
@@ -444,7 +446,7 @@ console.warn('!! ToDo: onAfterColumnHide()');
 
 
         var CurrentObject = null;		// current ABObject being displayed
-        var CurrentDC   = null;			// current ABViewDataCollection
+        var CurrentDataview = null;		// current ABDataview
     	var EditField	= null;			// which field (column header) is popup editor for
     	var EditNode	= null;			// which html node (column header) is popup editor for
 
@@ -852,7 +854,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                 var DataTable = $$(ids.component);
                 var minHeight = 0;
                 defaultHeight = 0;
-                CurrentObject._fields.forEach(function (f) {
+                CurrentObject.fields().forEach(function (f) {
                     if (f.key == "image") {                
                         imageFields.push(f.columnName);
                         if (parseInt(f.settings.useHeight) == 1 && parseInt(f.settings.imageHeight) > minHeight) {
@@ -972,22 +974,22 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
 
             /**
-             * @method dataCollectionLoad
+             * @method dataviewLoad
              * 
-             * @param dataCollection {ABViewDataCollection}
+             * @param dataview {ABDataview}
              */
-			dataCollectionLoad: (dataCollection) => {
+			dataviewLoad: (dataview) => {
 
 				let DataTable = $$(this.ui.id);
-				CurrentDC = dataCollection;
-				if (CurrentDC) {
-					CurrentDC.bind(DataTable);
-					CurrentDC.on("initializingData", () => {
+				CurrentDataview = dataview;
+				if (CurrentDataview) {
+					CurrentDataview.bind(DataTable);
+					CurrentDataview.on("initializingData", () => {
 
 						_logic.busy();
 
 					});
-					CurrentDC.on("initializedData", () => {
+					CurrentDataview.on("initializedData", () => {
 
 						_logic.ready();
 
@@ -1205,14 +1207,15 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
              */
             toolTip:function(obj, common) {
                 var tip = "";
-                if (Array.isArray(obj[common.column.id])) {
-                    obj[common.column.id].forEach(function (o) {
+                var columnName = common.column.id.replace(" ", "");
+                if (Array.isArray(obj[columnName])) {
+                    obj[columnName].forEach(function (o) {
                         if (o.text)
                             tip += o.text + "<br/>";
                     });
-                } else if (typeof obj[common.column.id] != "undefined" && typeof obj[common.column.id+"__relation"] != "undefined") {
+                } else if (typeof obj[columnName+"__relation"] != "undefined") {
 
-                    var relationData = obj[common.column.id+"__relation"];
+                    var relationData = obj[columnName+"__relation"];
                     if (!Array.isArray(relationData))
                         relationData = [relationData];
 
@@ -1220,22 +1223,24 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                         if (o)
                             tip += o.text + "<br/>";
                     });
-                } else if (typeof obj[common.column.id+"__relation"] != "undefined" && typeof obj[common.column.id] == "number") {
-                    tip = obj[common.column.id+"__relation"].text;
-                } else if (imageFields.indexOf(common.column.id) != -1) {
-                    if (obj[common.column.id] == null) {
+                } else if (typeof obj[columnName+"__relation"] != "undefined" && typeof obj[columnName] == "number") {
+                    tip = obj[columnName+"__relation"].text;
+                } else if (imageFields.indexOf(columnName) != -1) {
+                    if (obj[columnName] == null) {
                         return "";
                     } else {
-                        tip = "<img style='max-width: 500px; max-height: 500px;' src='/opsportal/image/" + CurrentObject.application.name+"/"+obj[common.column.id]+"' />";                
+                        tip = "<img style='max-width: 500px; max-height: 500px;' src='/opsportal/image/" + CurrentObject.application.name+"/"+obj[columnName]+"' />";                
                     }
                 } else if (common.column.editor == "date") {
-                    tip = common.column.format(obj[common.column.id]);
+                    tip = common.column.format(obj[columnName]);
                 } else if (common.column.editor == "richselect") {
-                    CurrentObject._fields.forEach(function (f) {
-                        if (f.columnName == common.column.id) {
+
+                    CurrentObject.fields().forEach(function (f) {
+                        if (f.columnName == columnName) {
+
                             if (f.settings.options) {
                                 f.settings.options.forEach(function (o) {
-                                    if (o.id == obj[common.column.id]) {
+                                    if (o.id == obj[columnName]) {
                                         tip = o.text;
                                     }
                                 })                                
@@ -1243,7 +1248,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                         }
                     })
                 } else {
-                    tip = obj[common.column.id];
+                    tip = obj[columnName];
                 }
                 if (tip == null) {
                     return "";
@@ -1334,9 +1339,9 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
             loadAll: function() {
 
-                if (CurrentDC) {
-                    CurrentDC.settings.loadAll = true;
-                    CurrentDC.reloadData();
+                if (CurrentDataview) {
+                    CurrentDataview.settings.loadAll = true;
+                    CurrentDataview.reloadData();
                 }
 
                 // _logic.refresh(isLoadAll);
@@ -1382,7 +1387,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
         // 
         // Define our external interface methods:
         // 
-        this.dataCollectionLoad = _logic.dataCollectionLoad;
+        this.dataviewLoad = _logic.dataviewLoad;
         this.objectLoad = _logic.objectLoad;
         // this.refresh = _logic.refresh;
         this.refreshHeader = _logic.refreshHeader;

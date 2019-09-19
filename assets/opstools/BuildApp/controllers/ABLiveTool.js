@@ -17,7 +17,9 @@ steal(
 
 							options = AD.defaults({
 								app: -1,
-								page: -1
+								page: -1,
+								areaKey: "",
+								toolKey: -1
 							}, options);
 							self.options = options;
 
@@ -52,21 +54,43 @@ steal(
 							self.initDOM();
 							self.initModels();
 
-							self.getData();
+							self.__events = {};
 
-							AD.comm.hub.subscribe('opsportal.resize', function (message, data) {
-								self.height = data.height;
-								self.debounceResize = false; // if we do not set this the resize is never set
-								self.resize(data.height);
-							});
+							if (self.__events.areaShow == null)
+								self.__events.areaShow = AD.comm.hub.subscribe('opsportal.area.show', function (message, data) {
 
+									self.menuChange(data.area);
+
+								});
+
+							if (self.__events.toolShow == null)
+								self.__events.toolShow = AD.comm.hub.subscribe('opsportal.tool.show', function (message, data) {
+
+									self.menuChange(data.area, data.tool);
+
+								});
+
+							if (self.__events.resize == null)
+								self.__events.resize = AD.comm.hub.subscribe('opsportal.resize', function (message, data) {
+									self.height = data.height;
+									self.debounceResize = false; // if we do not set this the resize is never set
+									self.resize(data.height);
+								});
+
+							// Check this is active
+							self.menuChange();
 
 						},
 
 						initDOM: function () {
-							console.log('... creating ABLiveTool <div> ');
+							// console.log('... creating ABLiveTool <div> ');
 
-							this.element.html('<div style="background-color: #fff !important" id="#domID#"><div class="ab-loading">Loading&#8230;</div></div>'.replace(/#domID#/g, this.containerDomID));
+							var css = "background-color: #fff !important; font-size: 30px; line-height: 80px; padding-top: 160px; text-align: center; width: 100%;";
+
+							this.element.html(
+								'<div id="#domID#">'.replace(/#domID#/g, this.containerDomID) +
+								'<div style="' + css + '" class="ab-loading"><i class="fa fa-refresh fa-spin fa-3x fa-fw"></i><br/>Loading&#8230;' +
+								'</div></div>');
 
 							// this.element.html(
 							// 	('<div id="#domID#"></div>' +
@@ -80,124 +104,15 @@ steal(
 						},
 
 						initPage: function () {
-							var self = this;
-
-							self.renderPageContainer();
-
-							self.initEvents(self.rootPage);
-
-						},
-
-						getData: function () {
-							var self = this,
-								q = $.Deferred();
-
-							self.data = {};
-							async.series([
-								// Get application data
-								function (next) {
-									ABApplication.getApplicationById(self.options.app)
-										.then(function (result) {
-											self.data.application = result;
-
-											// Store the root page
-											if (self.rootPage == null)
-												self.rootPage = self.data.application.urlResolve(self.options.page);
-
-											next();
-										}, next);
-								},
-
-								function (next) {
-
-									if (self.rootPage == null)
-										return next();
-
-									let areaKey = 'ab-' + self.data.application.name.trim();
-									areaKey = areaKey.toLowerCase().replace(/[^a-z0-9]/gi, '');
-
-									var appKey = 'AB_' + String(self.data.application.name).replace(/[^a-z0-9]/gi, ''),
-										pageKey = ['opstools', appKey, self.rootPage.name.replace(/[^a-z0-9]/gi, '').toLowerCase()].join('.'),
-										toolKey = _.kebabCase(pageKey);
-
-
-									var callback = function (message, data) {
-
-										// var areaData = data.area.toLowerCase().replace(/[^a-z0-9]/gi, '');
-										// if (areaData == areaKey) {
-
-										// get active tool element
-										let currToolElem = document.querySelector('#op-masthead-sublinks [area="{area}"] .active'.replace("{area}", data.area));
-										if (!currToolElem) return;
-										
-										let currToolKey = currToolElem.getAttribute("op-tool-key");
-										if (currToolKey != toolKey) return;
-
-										if (!self.activated) {
-											self.activated = true;
-
-											self.startPage();
-										}
-										else {
-											self.showPage();
-										}
-
-										// }
-									};
-
-									if (self.subID1 == null)
-										self.subID1 = AD.comm.hub.subscribe('opsportal.tool.show', callback);
-
-									if (self.subID2 == null)
-										self.subID2 = AD.comm.hub.subscribe('opsportal.area.show', callback);
-
-									// If there is a ops-area, it should trigger that ops-area to render page
-									// Because 'opsportal.tool.show' and 'opsportal.area.show' are not trigger
-									var opsMenus = document.body.querySelectorAll('#op-list-menu > .op-container');
-									if (opsMenus.length == 1) {
-										opsMenus[0].click();
-									}
-									// If this area is showing
-									else {
-										// TODO: How to get current area ?
-										var currPanel = document.body.querySelector('#op-masthead-sublinks > ul:not([style*="display:none"]):not([style*="display: none"])');
-										if (currPanel) {
-											var currArea = currPanel.getAttribute('area');
-											if (currArea == areaKey) {
-												callback(null, { area: areaKey });
-											}
-										}
-									}
-									
-									// we will remove the loading spinners on the menu now
-									var opsMenuItem = document.body.querySelectorAll('#op-list-menu > .op-container .'+areaKey+'_appLoading');
-									if (opsMenuItem.length) {
-										opsMenuItem.forEach((x) => {
-											x.remove();
-										})
-									}
-									
-
-									next();
-
-								}
-
-							], function (err) {
-								if (err) q.reject(err);
-								else q.resolve();
-							});
-
-							return q;
-						},
-
-						startPage: function () {
 
 							var self = this;
 
 							// Wait until the tool's area has been shown
 							if (!self.activated) return;
 
-							self.initPage();
+							self.renderPageContainer();
+
+							self.initEvents(self.rootPage);
 
 							webix.ready(function () {
 
@@ -208,6 +123,176 @@ steal(
 
 						},
 
+						menuChange: function (areaKey, toolKey) {
+
+							var self = this;
+
+							// Get current area key
+							if (areaKey == null) {
+
+								let currAreaElem = document.querySelector('#op-list-menu > .op-container.active');
+								if (!currAreaElem) return;
+
+								areaKey = currAreaElem.getAttribute("area");
+
+							}
+
+							// Get current tool key
+							if (toolKey == null) {
+
+								// get active tool element
+								let currToolElem = document.querySelector('#op-masthead-sublinks [area="{area}"] .active'.replace("{area}", areaKey));
+								if (!currToolElem) return;
+
+								toolKey = currToolElem.getAttribute("op-tool-id");
+
+							}
+
+							// Check it is our page 
+							if (self.options.areaKey == areaKey &&
+								self.options.toolKey == toolKey) {
+
+								if (!self.activated) {
+									self.activated = true;
+
+									self.getData();
+								}
+								else {
+									self.showPage();
+								}
+
+							}
+
+						},
+
+						getData: function () {
+							var self = this,
+								q = $.Deferred();
+
+							self.data = {};
+							async.series([
+								// Show loading spinners
+								function (next) {
+
+									var areaMenuItem = document.body.querySelector('[class="op-container"][area="' + self.options.areaKey + '"]');
+									if (areaMenuItem) {
+										areaMenuItem.insertAdjacentHTML(
+											'beforeend',
+											'<span class="icon ' + self.options.areaKey + '_appLoading"><i class="fa fa-refresh fa-spin"></i></span>');
+									}
+
+									next();
+
+								},
+								// Get application data
+								function (next) {
+									ABApplication.livepage(self.options.app, self.options.page)
+										.then(function (result) {
+											self.data.application = result;
+
+											// Store the root page
+											if (self.rootPage == null)
+												self.rootPage = self.data.application.pages(p => p.id == self.options.page)[0];
+
+											next();
+										}, next);
+								},
+
+								// Bind objects and queries from data views
+								function (next) {
+
+									if (!self.data.application) return next();
+
+									let storeObject = (datasource) => {
+										if (self.data.application.objects(o => o.id == datasource.id).length < 1) {
+											self.data.application._objects.push(datasource);
+										}
+									};
+
+									self.data.application.dataviews().forEach(dv => {
+
+										if (!dv) return;
+
+										dv.init();
+
+										let datasource = dv.datasource;
+										if (!datasource) return;
+
+										// Queries
+										if (dv.settings &&
+											dv.settings.isQuery &&
+											self.data.application.queries(q => q.id == datasource.id).length < 1) {
+
+											self.data.application._queries.push(datasource);
+
+											datasource.objects().forEach(obj => {
+												storeObject(obj);
+											});
+
+										}
+										// Objects
+										else {
+											storeObject(datasource);
+										}
+
+									});
+
+									next();
+
+								},
+
+								function (next) {
+
+									if (self.rootPage == null)
+										return next();
+
+									self.initPage();
+
+									// let areaKey = 'ab-' + self.data.application.name.trim();
+									// areaKey = areaKey.toLowerCase().replace(/[^a-z0-9]/gi, '');
+
+									// // If there is a ops-area, it should trigger that ops-area to render page
+									// // Because 'opsportal.tool.show' and 'opsportal.area.show' are not trigger
+									// var opsMenus = document.body.querySelectorAll('#op-list-menu > .op-container');
+									// if (opsMenus.length == 1) {
+									// 	opsMenus[0].click();
+									// }
+									// // If this area is showing
+									// else {
+									// 	// TODO: How to get current area ?
+									// 	var currPanel = document.body.querySelector('#op-masthead-sublinks > ul:not([style*="display:none"]):not([style*="display: none"])');
+									// 	if (currPanel) {
+									// 		var currArea = currPanel.getAttribute('area');
+									// 		if (currArea == areaKey) {
+									// 			callback(null, { area: areaKey });
+									// 		}
+									// 	}
+									// }
+
+									next();
+
+								},
+
+								// Hide loading spinners
+								function (next) {
+
+									// we will remove the loading spinners on the menu now
+									var opsMenuItem = document.body.querySelectorAll('#op-list-menu > .op-container .' + self.options.areaKey + '_appLoading');
+									(opsMenuItem || []).forEach((x) => {
+										x.remove();
+									});
+
+									next();
+								}
+
+							], function (err) {
+								if (err) q.reject(err);
+								else q.resolve();
+							});
+
+							return q;
+						},
+
 						renderPageContainer: function () {
 							var self = this;
 
@@ -216,11 +301,11 @@ steal(
 
 							// Clear UI content
 							var rootDomId = self.getPageDomID(self.rootPage.id);
-							
+
 							// var parentContainer = self.element.parent()[0];
 							// parentContainer.style.width = "900px";
 							// parentContainer.style.margin = "0 auto";
-							
+
 							if ($$(rootDomId))
 								webix.ui({}, $$(rootDomId));
 
@@ -259,7 +344,7 @@ steal(
 
 							// Define page id to be batch id of webix.multiview
 							ui.batch = page.id;
-							
+
 							if (parseInt(page.settings.pageWidth) > 0 && parseInt(page.settings.fixedPageWidth) == 1) {
 								var parentContainer = self.element.parent()[0];
 								parentContainer.style.width = parseInt(page.settings.pageWidth) + "px";
@@ -282,16 +367,16 @@ steal(
 											view: "toolbar",
 											css: "webix_dark",
 											cols: [
-												{ 
-													view: "label", 
+												{
+													view: "label",
 													label: page.label,
 													css: "modal_title",
 													align: "center"
 												},
 												{
-													view: "button", 
-													label: "Close", 
-													autowidth: true, 
+													view: "button",
+													label: "Close",
+													autowidth: true,
 													align: "center",
 													click: function () {
 
@@ -326,8 +411,8 @@ steal(
 									break;
 								case 'page':
 								default:
-								
-									console.log(ui);
+
+									// console.log(ui);
 									if ($$(pageDomId)) {
 										// Change page type (Popup -> Page)
 										if ($$(pageDomId).config.view == 'window') {
@@ -373,7 +458,7 @@ steal(
 						*/
 						showPage: function (pageId) {
 							var self = this;
-							
+
 							// if pageId is not passed we will clear the peviousPageId so it won't load, this fixes a bug with the popup pages
 							if (pageId == null) {
 								self.previousPageId = null;
@@ -409,10 +494,10 @@ steal(
 
 							// Trigger .onShow to the component
 							var loadPage = setInterval(function () {
-								console.log("loading page");
+								// console.log("loading page");
 
 								if (self.pageComponents[pageId] && self.pageComponents[pageId].onShow) {
-									console.log("canceling load");
+									// console.log("canceling load");
 									clearInterval(loadPage);
 									for (const element of document.getElementById(self.containerDomID).getElementsByClassName("ab-loading")) {
 										element.style.display = "none";
@@ -420,7 +505,7 @@ steal(
 									self.pageComponents[pageId].onShow();
 								}
 
-							}, 10);
+							}, 60);
 
 						},
 
@@ -441,6 +526,19 @@ steal(
 								});
 							}
 
+							let needToReloadPage = () => {
+
+								// clear the cache of events
+								self.changePageEventIds = {};
+
+								// remove stored root page
+								// it will re-render when this page will be triggered
+								delete self.rootPage;
+
+								self.activated = false;
+
+								self.initDOM();
+							};
 
 							if (!self.updatePageEventId && page.isRoot()) {
 
@@ -452,16 +550,26 @@ steal(
 								 */
 								self.updatePageEventId = AD.comm.hub.subscribe('ab.interface.update', function (msg, data) {
 
-									if (page.id == data.rootPage.id) {
+									if (page.id == data.rootPageId) {
+										needToReloadPage();
+									}
 
-										// clear the cache of events
-										self.changePageEventIds = {};
+								});
+							}
 
-										// update the root page instance
-										self.rootPage = data.rootPage;
+							if (!self.updateDataviewEventId && page.isRoot()) {
 
-										self.activated = false;
+								/**
+								 * @event ab.dataview.update
+								 * This event is triggered when the dataview is updated
+								 * 
+								 * @param data.dataviewId {uuid} - id of the data view
+								 */
+								self.updateDataviewEventId = AD.comm.hub.subscribe('ab.dataview.update', function (msg, data) {
 
+									let updatedDv = self.data.application.dataviews(dv => dv.id == data.dataviewId)[0];
+									if (updatedDv) {
+										needToReloadPage();
 									}
 
 								});
@@ -591,6 +699,24 @@ steal(
 
 						},
 
+						showUpdatingPopup: function () {
+
+							let popup = document.createElement("div");
+							let message = document.createTextNode("UI is updating...");
+
+							popup.appendChild(message);
+
+							let containerDOM = document.getElementById(this.containerDomID);
+							document.body.insertBefore(popup, containerDOM);
+
+						},
+
+						hideUpdatingPopup: function () {
+
+							// document.remo
+
+						},
+
 						getPageDomID: function (pageId) {
 							return this.unique('ab_live_page', this.options.app, pageId);
 						},
@@ -604,7 +730,6 @@ steal(
 					}); // end AD.Control.extend
 				}); // end steal.import
 			});
-
 		}); // end System.import
 	}
 ); // end steal

@@ -70,11 +70,6 @@ export default class RowUpdater extends OP.Component {
 					};
 				});
 
-				// // Remove fields who are selected
-				// if (excludeSelected) {
-				// 	console.log("PONG: ", $$(ids.updateForm).getValues());
-				// }
-
 				return options;
 
 			},

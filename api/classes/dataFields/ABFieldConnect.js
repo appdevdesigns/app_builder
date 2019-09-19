@@ -10,6 +10,8 @@ var ABField = require(path.join(__dirname, "ABField.js"));
 var async = require('async');
 var _ = require('lodash');
 
+var ABClassObject = require(path.join("..", "ABClassObject"));
+
 function L(key, altText) {
 	return altText;  // AD.lang.label.getLabel(key) || altText;
 }
@@ -116,6 +118,16 @@ class ABFieldConnect extends ABField {
 		// text to Int:
 		this.settings.isSource = parseInt(this.settings.isSource || 0);
 
+		// // Query the linked object
+		// ABObject.findOne(this.settings.linkObject)
+		// 	.then(linkObject => {
+
+		// 		if (linkObject) {
+		// 			this.datasourceLink = linkObject.toABClass();
+		// 		}
+
+		// 	});
+
 	}
 
 
@@ -180,8 +192,9 @@ class ABFieldConnect extends ABField {
 
 
 	get datasourceLink() {
-		var application = this.object.application,
-			linkObject = application.objects((obj) => { return obj.id == this.settings.linkObject; })[0];
+		// var application = this.object.application,
+		// 	linkObject = application.objects((obj) => { return obj.id == this.settings.linkObject; })[0];
+		let linkObject = ABObjectCache.get(this.settings.linkObject);
 
 		return linkObject;
 	}
@@ -714,7 +727,8 @@ class ABFieldConnect extends ABField {
 
 			// return join table name
 			tableName = AppBuilder.rules.toJunctionTableNameFormat(
-											this.object.application.name, // application name
+											// this.object.application.name, // application name
+											"JOINMN",
 											sourceObjectName, // table name
 											targetObjectName, // linked table name
 											columnName); // column name

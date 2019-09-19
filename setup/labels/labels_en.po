@@ -121,6 +121,12 @@ msgstr "Required"
 
 #. path: app_builder
 #. code: en
+#. key: ab.common.unique
+msgid "Unique"
+msgstr "Unique"
+
+#. path: app_builder
+#. code: en
 #. key: ab.common.processing
 msgid "Processing..."
 msgstr "Processing..."
@@ -436,6 +442,12 @@ msgstr "Add new object"
 #. key: ab.object.menu
 msgid "Object Menu"
 msgstr "Object Menu"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.exclude
+msgid "Exclude"
+msgstr "Exclude"
 
 #. path: app_builder
 #. code: en
@@ -2383,15 +2395,21 @@ msgstr "Date Picker"
 
 #. path: app_builder
 #. code: en
+#. key: ab.components.datepicker
+msgid "Date Picker"
+msgstr "Date Picker"
+
+#. path: app_builder
+#. code: en
 #. key: ab.components.grid
 msgid "Grid"
 msgstr "Grid"
 
 #. path: app_builder
 #. code: en
-#. key: ab.components.image
-msgid "Image"
-msgstr "Image"
+#. key: ab.components.docxBuilder
+msgid "DOCX Builder"
+msgstr "DOCX Builder"
 
 #. path: app_builder
 #. code: en
@@ -2794,3 +2812,27 @@ msgstr "Add new query"
 #. key: ab.query.addNewQuery
 msgid "Add query"
 msgstr "Add query"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.comment
+msgid "Comment"
+msgstr "Comment"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.comment.columnUser
+msgid "Select a user field"
+msgstr "Select a user field"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.comment.columnComment
+msgid "Select a comment field"
+msgstr "Select a comment field"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.kanban
+msgid "Kanban widget"
+msgstr "Kanban"

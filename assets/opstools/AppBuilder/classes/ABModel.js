@@ -184,7 +184,7 @@ export default class ABModel {
 	/**
 	 * @method staleRefresh
 	 * Process a request to refresh the data for a given entry.
-	 * This method is called from a ABViewDataCollection when it receives 
+	 * This method is called from a ABDataview when it receives 
 	 * a 'ab.datacollection.stale' message.
 	 * This method will try to queue similar reqeusts and then issue 1 large
 	 * request, rather than numerous individual ones.
@@ -346,7 +346,6 @@ export default class ABModel {
 			(resolve, reject) => {
 
 				OP.Comm.Socket.get({
-				// OP.Comm.Service.get({
 					url: this.object.urlRest(),
 					params: cond
 					// params: newCond
@@ -832,7 +831,8 @@ reject(err);
 
 				// set .id to relation columns
 				let objectLink = c.datasourceLink;
-				if (objectLink.PK() != 'id' &&
+				if (objectLink &&
+					objectLink.PK() != 'id' &&
 					d[relationName] &&
 					!d[relationName].id) {
 

@@ -17,7 +17,7 @@ function L(key, altText) {
 
 
 var ABViewPivotPropertyComponentDefaults = {
-	datacollection: null,
+	dataviewID: null,
 	removeMissed: 0,
 	totalColumn: 0,
 	separateLabel: 0,
@@ -163,7 +163,7 @@ export default class ABViewPivot extends ABViewWidget {
 
 		return commonUI.concat([
 			{
-				name: 'datacollection',
+				name: 'dataview',
 				view: 'richselect',
 				label: L('ab.components.pivot.dataSource', "*Data Source"),
 				labelWidth: App.config.labelWidthLarge
@@ -212,11 +212,11 @@ export default class ABViewPivot extends ABViewWidget {
 
 		super.propertyEditorPopulate(App, ids, view);
 
-		var dataCollectionId = (view.settings.datacollection ? view.settings.datacollection : null);
-		var SourceSelector = $$(ids.datacollection);
+		var dataviewId = (view.settings.dataviewID ? view.settings.dataviewID : null);
+		var SourceSelector = $$(ids.dataview);
 
 		// Pull data collections to options
-		var dcOptions = view.pageRoot().dataCollections().map((dc) => {
+		var dcOptions = view.application.dataviews().map((dc) => {
 
 			return {
 				id: dc.id,
@@ -229,7 +229,7 @@ export default class ABViewPivot extends ABViewWidget {
 			value: '[Select]'
 		});
 		SourceSelector.define('options', dcOptions);
-		SourceSelector.define('value', dataCollectionId);
+		SourceSelector.define('value', dataviewId);
 		SourceSelector.refresh();
 
 		$$(ids.removeMissed).setValue(view.settings.removeMissed);
@@ -247,7 +247,7 @@ export default class ABViewPivot extends ABViewWidget {
 
 		super.propertyEditorValues(ids, view);
 
-		view.settings.datacollection = $$(ids.datacollection).getValue();
+		view.settings.dataviewID = $$(ids.dataview).getValue();
 
 		view.settings.removeMissed = $$(ids.removeMissed).getValue();
 		view.settings.totalColumn = $$(ids.totalColumn).getValue();
@@ -302,19 +302,19 @@ export default class ABViewPivot extends ABViewWidget {
 
 					return new Promise((next, err) => {
 
-						var dc = this.dataCollection;
-						if (!dc) return next();
+						let dv = this.dataview;
+						if (!dv) return next();
 
-						var data = dc.getData();
+						let data = dv.getData();
 						if (data.length > 0) return next(data);
 
 						// load data at first
 
-						dc.loadData()
+						dv.loadData()
 							.catch(err)
 							.then(() => {
 
-								next(dc.getData());
+								next(dv.getData());
 
 							});
 					});
@@ -326,10 +326,10 @@ export default class ABViewPivot extends ABViewWidget {
 
 					return new Promise((next, err) => {
 
-						var dc = this.dataCollection;
-						if (!dc) return next();
+						let dv = this.dataview;
+						if (!dv) return next();
 
-						var object = dc.datasource;
+						let object = dv.datasource;
 						if (!object) return next();
 
 						var dataMapped = data.map(d => {
@@ -389,18 +389,6 @@ export default class ABViewPivot extends ABViewWidget {
 	componentList() {
 		return [];
 	}
-
-
-	/**
-	 * @property dataCollection
-	 * return ABViewDataCollection of this form
-	 * 
-	 * @return {ABViewDataCollection}
-	 */
-	get dataCollection() {
-		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.datacollection)[0];
-	}
-
 
 	//// Report ////
 
@@ -493,7 +481,7 @@ export default class ABViewPivot extends ABViewWidget {
 	}
 
 	copyUpdateProperyList() {
-		return ['datacollection'];
+		return ['dataviewID'];
 	}
 
 

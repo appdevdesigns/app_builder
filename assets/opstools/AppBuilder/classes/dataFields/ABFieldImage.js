@@ -348,6 +348,8 @@ class ABFieldImage extends ABField {
     	// text to Int:
     	this.settings.useWidth = parseInt(this.settings.useWidth);
 		this.settings.useHeight = parseInt(this.settings.useHeight);
+    	this.settings.imageWidth = parseInt(this.settings.imageWidth);
+		this.settings.imageHeight = parseInt(this.settings.imageHeight);
 		this.settings.useDefaultImage = parseInt(this.settings.useDefaultImage);
     	this.settings.removeExistingData = parseInt(this.settings.removeExistingData);
   	}
@@ -483,13 +485,12 @@ OP.Dialog.Alert({
 
 
 	// return the grid column header definition for this instance of ABFieldImage
-	columnHeader (isObjectWorkspace, newWidth, editable) {
-		var config = super.columnHeader(isObjectWorkspace);
+	columnHeader (options) {
+
+		options = options || {};
+
+		var config = super.columnHeader(options);
 		var field = this;
-		var dropWidth = 0;
-		if (newWidth) {
-			dropWidth = newWidth;
-		}
 
 		config.editor = false;  // 'text';  // '[edit_type]'   for your unique situation
 		// config.sort   = 'string' // '[sort_type]'   for your unique situation
@@ -501,7 +502,15 @@ OP.Dialog.Alert({
 			height = (field.settings.imageHeight || 33) + "px";
 			width = (field.settings.imageWidth || 100) + "px";
 		}
-		
+		if (options.height) {
+			height = options.height + "px";
+		}
+		if (options.width) {
+			width = options.width + "px";
+		}
+
+		var editable = options.editable;
+
 		// populate our default template:
 		config.template = (obj) => {
 
@@ -516,7 +525,11 @@ OP.Dialog.Alert({
 				'<div class="ab-image-data-field" style="float: left; #useWidth#">'.replace('#useWidth#', widthStyle),
 				'<div class="webix_view ab-image-holder" style="#useWidth#">'.replace('#useWidth#', widthStyle),
 				'<div class="webix_template">',
-				this.imageTemplate(obj, editable),
+				this.imageTemplate(obj, {
+					editable: editable,
+					height: height,
+					width: width
+				}),
 				'</div>',
 				'</div>',
 				'</div>'
@@ -560,15 +573,21 @@ OP.Dialog.Alert({
 			parentContainer.innerHTML = '';
 			// parentContainer.id = idBase;	// change it to the unique one.
 
-			var imgHeight = 33;
+			var imgHeight = 0;
 			if (this.settings.useHeight){
 				imgHeight = parseInt(this.settings.imageHeight) || imgHeight;
 			}
 
-			var imgWidth = 50;
+			var imgWidth = 0;
 			if (this.settings.useWidth){
 				imgWidth = parseInt(this.settings.imageWidth) || imgWidth;
 			}
+
+			if (options.height)
+				imgHeight = options.height;
+
+			if (options.width)
+				imgWidth = options.width;
 //// TODO: actually pay attention to the height and width when 
 //// displaying the images.
 
@@ -580,7 +599,11 @@ OP.Dialog.Alert({
 				// id: ids.container,
 				container: parentContainer,
 
-				template:this.imageTemplate(row, options.editable),
+				template:this.imageTemplate(row, {
+					editable: options.editable,
+					height: imgHeight ? imgHeight + 'px' : 0,
+					width: imgWidth ? imgWidth + 'px' : 0
+				}),
 
 				borderless:true,
 				height: imgHeight,
@@ -801,7 +824,11 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 	}
 
 
-	imageTemplate(obj, editable) {
+	imageTemplate(obj, options) {
+
+		options = options || {};
+		options.height = options.height || '100%';
+		options.width = options.width || '100%';
 
 		// deault view is icon:
 		var iconDisplay = '';
@@ -834,11 +861,11 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 
 		var html = [
 			'<div class="image-data-field-icon" style="text-align: center; height: inherit; display: table-cell; vertical-align: middle; border: 2px dotted #CCC; background: #FFF; border-radius: 10px; font-size: 11px; line-height: 13px; padding: 0 8px; '+iconDisplay+'"><i class="fa fa-picture-o fa-2x" style="opacity: 0.6; font-size: 32px; margin-bottom: 5px;"></i>#drag#</div>',
-			'<div class="image-data-field-image" style="'+imageDisplay+' width:100%; height:100%; background-repeat: no-repeat; background-position: center center; background-size: cover; '+imageURL+'">#remove#</div>',
+			`<div class="image-data-field-image" style="${imageDisplay} width:${options.width}; height:${options.height}; background-repeat: no-repeat; background-position: center center; background-size: cover; ${imageURL}">#remove#</div>`,
 		].join('');
 
-		html = html.replace('#drag#', editable ? '<br/>Drag and drop or click here' : '');
-		html = html.replace('#remove#', editable ? '<a style="' + imageDisplay + '" class="ab-delete-photo" href="javascript:void(0);"><i class="fa fa-times delete-image"></i></a>' : '');
+		html = html.replace('#drag#', options.editable ? '<br/>Drag and drop or click here' : '');
+		html = html.replace('#remove#', options.editable ? '<a style="' + imageDisplay + '" class="ab-delete-photo" href="javascript:void(0);"><i class="fa fa-times delete-image"></i></a>' : '');
 
 		return html;
 

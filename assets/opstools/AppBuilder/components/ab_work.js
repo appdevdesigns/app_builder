@@ -9,6 +9,7 @@
 // import ABApplication from "../classes/ABApplication"
 import AB_Work_Object from "./ab_work_object"
 import AB_Work_Query from "./ab_work_query"
+import AB_Work_Dataview from "./ab_work_dataview"
 import AB_Work_Interface from "./ab_work_interface"
 
 
@@ -35,6 +36,7 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 				expandMenu: L('ab.application.expandMenu', "*Expand Menu"),
 				objectTitle: L('ab.object.title', "*Objects"),
 				queryTitle: L('ab.query.title', "*Queries"),
+				dataviewTitle: L('ab.dataview.title', "*Data views"),
 				interfaceTitle: L('ab.interface.title', "*Interface")
 			}
 		}
@@ -50,6 +52,7 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 			tabbar:  		this.unique('tabbar'),
 			tab_object: 	this.unique('tab_object'),
 			tab_query:      this.unique('tab_query'),
+			tab_dataview:	this.unique('tab_dataview'),
 			tab_interface: 	this.unique('tab_interface'),
 			workspace: 		this.unique('workspace'),
 			collapseMenu: 	this.unique('collapseMenu'),
@@ -59,6 +62,7 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 
 		var AppObjectWorkspace = new AB_Work_Object(App);
 		var AppQueryWorkspace = new AB_Work_Query(App);
+		var AppDataviewWorkspace = new AB_Work_Dataview(App);
 		var AppInterfaceWorkspace = new AB_Work_Interface(App);
 
 		var sidebarItems = 	[{
@@ -70,6 +74,11 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 			id: ids.tab_query,
 			value: labels.component.queryTitle,
 			icon: "fa fa-fw fa-filter"
+		},
+		{
+			id: ids.tab_dataview,
+			value: labels.component.dataviewTitle,
+			icon: "fa fa-fw fa-table"
 		},
 		{
 			id: ids.tab_interface,
@@ -199,6 +208,7 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 							cells: [
 								AppObjectWorkspace.ui,
 								AppQueryWorkspace.ui,
+								AppDataviewWorkspace.ui,
 								AppInterfaceWorkspace.ui
 							]
 						}
@@ -214,6 +224,7 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 
 			AppObjectWorkspace.init();
 			AppQueryWorkspace.init();
+			AppDataviewWorkspace.init();
 			AppInterfaceWorkspace.init();
 
 //// TODO: keep track of the last workspace in application.workspace.lastWorkspace on every
@@ -263,6 +274,10 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 			show:function() {
 
 				$$(ids.component).show();
+
+				let tabId = $$(ids.tabbar).getSelectedId();
+				_logic.tabSwitch(tabId);
+
 			},
 
 
@@ -279,22 +294,25 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 
 					// Object Workspace Tab
 					case ids.tab_object:
-
-						// $$(ids.buttonSync).show();
+	
 						AppObjectWorkspace.show();
 						break;
 
 					// Query Workspace Tab
 					case ids.tab_query:
 
-						// $$(ids.buttonSync).show();
 						AppQueryWorkspace.show();
+						break;
+
+					// Dataview Workspace Tab
+					case ids.tab_dataview:
+
+						AppDataviewWorkspace.show();
 						break;
 
 					// Interface Workspace Tab
 					case ids.tab_interface:
 
-						// $$(ids.buttonSync).hide();
 						AppInterfaceWorkspace.show();
 						break;
 				}
@@ -319,6 +337,7 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 				_logic.applicationInit(application);
 				AppObjectWorkspace.applicationLoad(application);
 				AppQueryWorkspace.applicationLoad(application);
+				AppDataviewWorkspace.applicationLoad(application);
 				AppInterfaceWorkspace.applicationLoad(application);
 
 

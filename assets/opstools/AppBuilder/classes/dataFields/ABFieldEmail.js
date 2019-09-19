@@ -25,7 +25,8 @@ var ABFieldEmailDefaults = {
 	// description: what gets displayed in the Editor description.
 	description: L('ab.dataField.email.description', '*Email fields are used to store email addresses.'),
 
-	supportRequire: true
+	supportRequire: true,
+	supportUnique: true,
 
 }
 
@@ -87,13 +88,13 @@ var ABFieldEmailComponent = new ABFieldComponent({
 		 * @param {string} newVal	The new value of label
 		 * @param {string} oldVal	The previous value
 		 */
-		requiredOnChange: (newVal, oldVal, ids) => {
+		// requiredOnChange: (newVal, oldVal, ids) => {
 
-			// when require value, then default value needs to be reqired
-			$$(ids.default).define("required", newVal);
-			$$(ids.default).refresh();
+		// 	// when require value, then default value needs to be reqired
+		// 	$$(ids.default).define("required", newVal);
+		// 	$$(ids.default).refresh();
 
-		},
+		// },
 
 		isValid: (ids, isValid) => {
 
@@ -202,8 +203,8 @@ class ABFieldEmail extends ABField {
 	///
 
 	// return the grid column header definition for this instance of ABFieldBoolean
-	columnHeader(isObjectWorkspace) {
-		var config = super.columnHeader(isObjectWorkspace);
+	columnHeader(options) {
+		var config = super.columnHeader(options);
 
 		config.editor = 'text';
 

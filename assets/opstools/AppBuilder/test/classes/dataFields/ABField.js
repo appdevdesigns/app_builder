@@ -32,6 +32,7 @@ describe("ABField unit tests", () => {
 			fieldDescription: "TEST_ABField_description",
 			showIcon: "TEST_ABField_icon",
 			required: "TEST_ABField_required",
+			unique: "TEST_ABField_unique",
 			numberOfNull: "TEST_ABField_numberOfNull"
 		};
 
@@ -97,7 +98,8 @@ describe("ABField unit tests", () => {
 				columnName: 'COLUMN NAME',
 				settings: {
 					showIcon: 1,
-					required: 1
+					required: 1,
+					unique: 1
 				}
 			};
 
@@ -108,6 +110,7 @@ describe("ABField unit tests", () => {
 			assert.equal(field.columnName, $$(ids.columnName).getValue());
 			assert.equal(field.settings.showIcon, $$(ids.showIcon).getValue());
 			assert.equal(field.settings.required, $$(ids.required).getValue());
+			assert.equal(field.settings.unique, $$(ids.unique).getValue());
 
 		});
 
@@ -288,8 +291,7 @@ describe("ABField unit tests", () => {
 			assert.isTrue(result instanceof Promise);
 			sandbox.assert.calledOnce(stubPost);
 			sandbox.assert.calledWith(stubPost, {
-				url: '/app_builder/migrate/application/#appID#/object/#objID#/field/#fieldID#'
-					.replace('#appID#', target.object.application.id)
+				url: '/app_builder/migrate/object/#objID#/field/#fieldID#'
 					.replace('#objID#', target.object.id)
 					.replace('#fieldID#', target.id)
 			});
@@ -306,8 +308,7 @@ describe("ABField unit tests", () => {
 			assert.isTrue(result instanceof Promise);
 			sandbox.assert.calledOnce(stubPut);
 			sandbox.assert.calledWith(stubPut, {
-				url: '/app_builder/migrate/application/#appID#/object/#objID#/field/#fieldID#'
-					.replace('#appID#', target.object.application.id)
+				url: '/app_builder/migrate/object/#objID#/field/#fieldID#'
 					.replace('#objID#', target.object.id)
 					.replace('#fieldID#', target.id)
 			});
@@ -324,8 +325,7 @@ describe("ABField unit tests", () => {
 			assert.isTrue(result instanceof Promise);
 			sandbox.assert.calledOnce(stubDelete);
 			sandbox.assert.calledWith(stubDelete, {
-				url: '/app_builder/migrate/application/#appID#/object/#objID#/field/#fieldID#'
-					.replace('#appID#', target.object.application.id)
+				url: '/app_builder/migrate/object/#objID#/field/#fieldID#'
 					.replace('#objID#', target.object.id)
 					.replace('#fieldID#', target.id)
 			});
@@ -337,7 +337,9 @@ describe("ABField unit tests", () => {
 			target.settings.showIcon = true;
 
 			let isObjectWorkspace = true;
-			let result = target.columnHeader(isObjectWorkspace);
+			let result = target.columnHeader({
+				isObjectWorkspace: isObjectWorkspace
+			});
 
 			assert.equal(target.columnName, result.id);
 			assert.equal(`<span class="webix_icon fa fa-${target.fieldIcon()}"></span>${target.label}`, result.header);
@@ -349,7 +351,9 @@ describe("ABField unit tests", () => {
 			target.settings.showIcon = false;
 
 			let isObjectWorkspace = true;
-			let result = target.columnHeader(isObjectWorkspace);
+			let result = target.columnHeader({
+				isObjectWorkspace: isObjectWorkspace
+			});
 
 			assert.equal(target.columnName, result.id);
 			assert.equal(target.label, result.header);

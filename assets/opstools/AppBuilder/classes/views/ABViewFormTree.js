@@ -204,7 +204,9 @@ export default class ABViewFormTree extends ABViewFormCustom {
  		var template = (templateLabel + "#template#")
  			.replace(/#width#/g, settings.labelWidth)
  			.replace(/#label#/g, field.label)
- 			.replace(/#template#/g, field.columnHeader(null, newWidth).template);
+ 			.replace(/#template#/g, field.columnHeader({
+				width: newWidth
+			 }).template);
 
  		component.ui.id = ids.component;
  		component.ui.view = "template";

@@ -64,7 +64,7 @@ export default class AB_Work_Interface_Workspace_Editor_Layout extends OP.Compon
 								id: ids.editArea,
 								borderless: true,
 								rows: [],
-								// template:'[edit Area]'							
+								// template:'[edit Area]'
 							},
 							{
 								id: ids.editAreaBottom,
@@ -85,6 +85,11 @@ export default class AB_Work_Interface_Workspace_Editor_Layout extends OP.Compon
 
 		// setting up UI
 		this.init = function () {
+
+			let EditArea = $$(ids.editArea);
+			if (EditArea)
+				webix.extend(EditArea, webix.ProgressBar);
+
 		};
 
 
@@ -184,7 +189,10 @@ export default class AB_Work_Interface_Workspace_Editor_Layout extends OP.Compon
 				if (editorComponent.onShow)
 					editorComponent.onShow();
 
-				$$(ids.component).adjust();
+				setTimeout(() => {
+					$$(ids.component).adjust();
+					$$(ids.editAreaContainer).adjust();
+				}, 250);
 
 			},
 
@@ -197,6 +205,34 @@ export default class AB_Work_Interface_Workspace_Editor_Layout extends OP.Compon
 			viewModeChange: function(viewMode) {
 
 				CurrentViewMode = viewMode;
+
+			},
+
+			busy: () => {
+
+				let EditArea = $$(ids.editArea);
+				if (EditArea) {
+
+					EditArea.disable();
+
+					if (EditArea.showProgress)
+						EditArea.showProgress({ type: "icon" });
+
+				}
+
+			},
+
+			ready: () => {
+
+				let EditArea = $$(ids.editArea);
+				if (EditArea) {
+
+					EditArea.enable();
+
+					if (EditArea.hideProgress)
+						EditArea.hideProgress();
+
+				}
 
 			}
 
@@ -212,6 +248,9 @@ export default class AB_Work_Interface_Workspace_Editor_Layout extends OP.Compon
 		this.show = _logic.show;
 		this.viewLoad = _logic.viewLoad;
 		this.viewModeChange = _logic.viewModeChange;
+
+		this.busy = _logic.busy;
+		this.ready = _logic.ready;
 
 	}
 

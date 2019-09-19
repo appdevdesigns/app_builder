@@ -14,7 +14,7 @@
     "watch": "node_modules/.bin/webpack --watch --progress",
     "testbuild": "node_modules/.bin/webpack --config ./assets/opstools/AppBuilder/test/webpack.config.js",
     "testwatch": "node_modules/.bin/webpack --config ./assets/opstools/AppBuilder/test/webpack.config.js --watch --progress",
-    "testclient": "node_modules/mocha-phantomjs/bin/mocha-phantomjs -p node_modules/phantomjs/bin/phantomjs assets/opstools/AppBuilder/test/test-all.html --reporter dot --ignore-resource-errors ",
+    "testclient": "node_modules/mocha-phantomjs/bin/mocha-phantomjs -p node_modules/phantomjs-prebuilt/bin/phantomjs assets/opstools/AppBuilder/test/test-all.html --reporter dot --ignore-resource-errors ",
     "testcover": "./node_modules/nyc/bin/nyc.js --reporter=html ./node_modules/mocha/bin/mocha assets/opstools/AppBuilder/test/test-all.js --reporter dot -r jsdom-global/register"
   },
   "repository": {
@@ -29,7 +29,7 @@
   "homepage": "https://github.com/appdevdesigns/app_builder#readme",
   "dependencies": {
     "ad-utils": "appdevdesigns/ad-utils",
-    "appdev-cli": "appdevdesigns/appdev-cli",
+    "arangojs": "^6.10.0",
     "async": "^1.5.2",
     "knex": "^0.13.0",
     "lodash": "^4.13.1",
@@ -59,10 +59,9 @@
     "mocha": "3.5.3",
     "mocha-phantomjs": "^4.1.0",
     "nyc": "^13.3.0",
-    "phantomjs": "^2.1.7",
+    "phantomjs-prebuilt": "^2.1.16",
     "sinon": "^2.3.1",
     "style-loader": "^0.16.1",
-    "supertest": "^1.2.0",
     "uglifyjs-webpack-plugin": "^0.4.3",
     "webpack": "^2.5.1"
   }

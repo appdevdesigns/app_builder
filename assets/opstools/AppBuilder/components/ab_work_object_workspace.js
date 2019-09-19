@@ -8,6 +8,8 @@
 
 import ABApplication from "../classes/ABApplication"
 
+import ABDataview from "../classes/ABDataview"
+
 import ABWorkspaceDatatable from "./ab_work_object_workspace_datatable"
 import ABWorkspaceKanBan from "./ab_work_object_workspace_kanban"
 import ABWorkspaceGantt from "./ab_work_object_workspace_gantt"
@@ -22,8 +24,6 @@ import ABPopupSortField from "./ab_work_object_workspace_popupSortFields"
 import ABPopupExport from "./ab_work_object_workspace_popupExport"
 import ABPopupImport from "./ab_work_object_workspace_popupImport"
 import ABPopupViewSettings from "./ab_work_object_workspace_popupViewSettings"
-
-import ABViewDataCollection from "../classes/views/ABViewDataCollection"
 
 
 export default class ABWorkObjectWorkspace extends OP.Component {
@@ -393,7 +393,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 
 
 		// create ABViewDataCollection
-		var CurrentDc = new ABViewDataCollection({}, CurrentApplication);
+		var CurrentDataview = new ABDataview({}, CurrentApplication);
 
     	// Our webix UI definition:
     	this.ui = {
@@ -502,11 +502,11 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 			KanBan.init();
 			Gantt.init();
 
-			CurrentDc.init();
+			CurrentDataview.init();
 
-			DataTable.dataCollectionLoad(CurrentDc);
-			KanBan.dataCollectionLoad(CurrentDc);
-			Gantt.dataCollectionLoad(CurrentDc);
+			DataTable.dataviewLoad(CurrentDataview);
+			KanBan.dataviewLoad(CurrentDataview);
+			Gantt.dataviewLoad(CurrentDataview);
 
 
     		PopupDefineLabelComponent.init({
@@ -582,7 +582,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 
 				PopupNewDataFieldComponent.applicationLoad(application);
 
-				CurrentDc.application = CurrentApplication;
+				CurrentDataview.application = CurrentApplication;
 
 			},
 
@@ -1135,7 +1135,7 @@ console.error('TODO: toolbarPermission()');
 						$$(ids.buttonRowNew).enable();
                 }
 
-                CurrentDc.datasource = CurrentObject;
+                CurrentDataview.datasource = CurrentObject;
 
                 DataTable.objectLoad(CurrentObject);
                 KanBan.objectLoad(CurrentObject);
@@ -1145,19 +1145,19 @@ console.error('TODO: toolbarPermission()');
 				PopupDefineLabelComponent.objectLoad(CurrentObject);
 				PopupFilterDataTableComponent.objectLoad(CurrentObject);
 				PopupFrozenColumnsComponent.objectLoad(CurrentObject);
-				PopupFrozenColumnsComponent.setValue(CurrentObject.objectWorkspace.frozenColumnID || "");
-				PopupFrozenColumnsComponent.setHiddenFields(CurrentObject.objectWorkspace.hiddenFields);
+				PopupFrozenColumnsComponent.setValue(CurrentObject.workspaceFrozenColumnID || "");
+				PopupFrozenColumnsComponent.setHiddenFields(CurrentObject.workspaceHiddenFields);
 				PopupHideFieldComponent.objectLoad(CurrentObject);
-				PopupHideFieldComponent.setValue(CurrentObject.objectWorkspace.hiddenFields);
-				PopupHideFieldComponent.setFrozenColumnID(CurrentObject.objectWorkspace.frozenColumnID || "");
+				PopupHideFieldComponent.setValue(CurrentObject.workspaceHiddenFields);
+				PopupHideFieldComponent.setFrozenColumnID(CurrentObject.workspaceFrozenColumnID || "");
 				PopupMassUpdateComponent.objectLoad(CurrentObject, DataTable);
 				PopupSortFieldComponent.objectLoad(CurrentObject);
-				PopupSortFieldComponent.setValue(CurrentObject.objectWorkspace.sortFields);
+				PopupSortFieldComponent.setValue(CurrentObject.workspaceSortFields);
 				PopupImportObjectComponent.objectLoad(CurrentObject);
                 PopupExportObjectComponent.objectLoad(CurrentObject);
 				PopupExportObjectComponent.objectLoad(CurrentObject);
 				PopupExportObjectComponent.setGridComponent($$(DataTable.ui.id));
-				PopupExportObjectComponent.setHiddenFields(CurrentObject.objectWorkspace.hiddenFields);
+				PopupExportObjectComponent.setHiddenFields(CurrentObject.workspaceHiddenFields);
                 PopupExportObjectComponent.setFilename(CurrentObject.label);
                 PopupViewSettingsComponent.objectLoad(CurrentObject);
 
@@ -1227,26 +1227,29 @@ console.error('TODO: toolbarPermission()');
 					sorts = CurrentObject.workspaceSortFields;
 				}
 
-				CurrentDc.settings = {
-					object: CurrentObject.id,
-					objectUrl: CurrentObject.urlPointer(),
-					objectWorkspace: {
-						filterConditions: wheres,
-						sortFields: sorts
-					}
-                };
+				CurrentDataview.datasource = CurrentObject;
 
-				CurrentDc.setFilterConditions(wheres);
-				CurrentDc.clearAll();
+				CurrentDataview.fromValues({
+					settings: {
+						datasourceID: CurrentObject.id,
+						objectWorkspace: {
+							filterConditions: wheres,
+							sortFields: sorts
+						}	
+					}
+				});
+
+				CurrentDataview.refreshFilterConditions(wheres);
+				CurrentDataview.clearAll();
 
                 // WORKAROUND: load all data becuase kanban does not support pagination now
                 let view = CurrentObject.workspaceViews.getCurrentView();
                 if (view.type === 'gantt' || view.type === 'kanban') {
-                    CurrentDc.settings.loadAll = true;
-                    CurrentDc.loadData(0);
+                    CurrentDataview.settings.loadAll = true;
+                    CurrentDataview.loadData(0);
                 }
                 else {
-                    CurrentDc.loadData(0, 30);
+                    CurrentDataview.loadData(0, 30);
                 }
 
 			},

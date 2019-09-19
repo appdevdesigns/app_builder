@@ -569,7 +569,7 @@ module.exports = {
 
 
                         }, (err) => {
-
+console.error(err);
                             // handle invalid values here:
                             if (err instanceof ValidationError) {
 
@@ -604,12 +604,23 @@ module.exports = {
                                 };
 
                                 // WORKAROUND : Get invalid field
-                                var invalidFields = object.fields(f => err.sqlMessage.indexOf(f.columnName) > -1);
+                                var invalidFields = object.fields(f => ((err.sqlMessage || "").toLowerCase()).indexOf((f.columnName || "").toLowerCase()) > -1);
                                 invalidFields.forEach(f => {
+
+                                    let errorMessage;
+
+                                    switch (err.code) {
+                                        case "ER_DUP_ENTRY": 
+                                            errorMessage = "The value is a duplicate value and therefore, not valid.";
+                                            break;
+                                        default:
+                                            errorMessage = err.sqlMessage;
+                                            break;
+                                    }
 
                                     errorResponse.invalidAttributes[f.columnName] = [
                                         {
-                                            message: err.sqlMessage
+                                            message: errorMessage
                                         }
                                     ];
 
@@ -1310,12 +1321,23 @@ module.exports = {
                                         };
 
                                         // WORKAROUND : Get invalid field
-                                        var invalidFields = object.fields(f => err.sqlMessage.indexOf(f.columnName) > -1);
+                                        var invalidFields = object.fields(f => ((err.sqlMessage || "").toLowerCase()).indexOf((f.columnName || "").toLowerCase()) > -1);
                                         invalidFields.forEach(f => {
+
+                                            let errorMessage;
+
+                                            switch (err.code) {
+                                                case "ER_DUP_ENTRY": 
+                                                    errorMessage = "The value is a duplicate value and therefore, not valid.";
+                                                    break;
+                                                default:
+                                                    errorMessage = err.sqlMessage;
+                                                    break;
+                                            }
 
                                             errorResponse.invalidAttributes[f.columnName] = [
                                                 {
-                                                    message: err.sqlMessage
+                                                    message: errorMessage
                                                 }
                                             ];
     
@@ -1652,3 +1674,4 @@ module.exports = {
 
 
 };
+

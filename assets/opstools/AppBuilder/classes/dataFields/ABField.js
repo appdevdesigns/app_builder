@@ -68,7 +68,8 @@ export default class ABField extends ABFieldBase {
   			label: '',
   			columnName:'',
   			showIcon:1,
-			required:0
+			required:0,
+			unique:0
   		}
 
   		for(var f in defaultValues) {
@@ -98,6 +99,7 @@ export default class ABField extends ABFieldBase {
   		$$(ids.columnName).setValue(field.columnName);
   		$$(ids.showIcon).setValue(field.settings.showIcon);
 		$$(ids.required).setValue(field.settings.required);
+		$$(ids.unique).setValue(field.settings.unique);
 
   	}
 
@@ -267,7 +269,6 @@ export default class ABField extends ABFieldBase {
 						}
 					}
 				},
-
 				// warning message: number of null value rows 
 				{
 					view: "label",
@@ -275,6 +276,16 @@ export default class ABField extends ABFieldBase {
 					css: { color: '#f00' },
 					label: "",
 					hidden: true
+				},
+
+				{
+					view: "checkbox",
+					id: ids.unique,
+					name: "unique",
+					hidden: !Field.supportUnique,
+					labelRight: App.labels.unique,
+					disallowEdit: true,
+					labelWidth: App.config.labelWidthCheckbox
 				}
 			]
 		};
@@ -499,8 +510,7 @@ export default class ABField extends ABFieldBase {
 	///
 
 	migrateCreate() {
-		var url = '/app_builder/migrate/application/#appID#/object/#objID#/field/#fieldID#'
-			.replace('#appID#', this.object.application.id)
+		var url = '/app_builder/migrate/object/#objID#/field/#fieldID#'
 			.replace('#objID#', this.object.id)
 			.replace('#fieldID#', this.id)
 
@@ -511,8 +521,7 @@ export default class ABField extends ABFieldBase {
 
 
 	migrateUpdate() {
-		var url = '/app_builder/migrate/application/#appID#/object/#objID#/field/#fieldID#'
-			.replace('#appID#', this.object.application.id)
+		var url = '/app_builder/migrate/object/#objID#/field/#fieldID#'
 			.replace('#objID#', this.object.id)
 			.replace('#fieldID#', this.id)
 
@@ -523,8 +532,7 @@ export default class ABField extends ABFieldBase {
 
 
 	migrateDrop() {
-		var url = '/app_builder/migrate/application/#appID#/object/#objID#/field/#fieldID#'
-			.replace('#appID#', this.object.application.id)
+		var url = '/app_builder/migrate/object/#objID#/field/#fieldID#'
 			.replace('#objID#', this.object.id)
 			.replace('#fieldID#', this.id)
 
@@ -539,25 +547,29 @@ export default class ABField extends ABFieldBase {
 	/// Working with Actual Object Values:
 	///
 
-	/*
+	/**
 	 * @function columnHeader
 	 * Return the column header for a webix grid component for this specific
 	 * data field.
-	 * @param {bool} isObjectWorkspace is this being used in the Object
-	 *								   workspace.
+	 * @param {Object} options - {
+	 * 							isObjectWorkspace: {bool},  is this being used in the Object workspace.
+	 * 							width: {int},
+	 * 							height: {int},
+	 * 							editable: {bool}
+	 * 						} 
 	 * @return {obj}  configuration obj
 	 */
-	columnHeader (isObjectWorkspace) {
+	columnHeader (options) {
+
+		options = options || {};
 
 		var config = {
 			id: this.columnName, // this.id,
 			header: this.label
 		};
 
-		if (isObjectWorkspace) {
-			if (this.settings.showIcon) {
-				config.header = '<span class="webix_icon fa fa-{icon}"></span>'.replace('{icon}', this.fieldIcon() ) + config.header;
-			}
+		if (options.isObjectWorkspace && this.settings.showIcon) {
+			config.header = '<span class="webix_icon fa fa-{icon}"></span>'.replace('{icon}', this.fieldIcon() ) + config.header;
 		}
 
 		return config;

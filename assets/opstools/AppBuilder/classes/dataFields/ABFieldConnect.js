@@ -30,9 +30,6 @@ var ABFieldConnectDefaults = {
 	isFilterable: true,  // now we can filter using Queries
 	useAsLabel: false,
 
-	// supportImport: flag to support import object across applications
-	supportImport: false,
-
 	supportRequire: false
 
 };
@@ -471,12 +468,19 @@ class ABFieldConnect extends ABFieldSelectivity {
 	///
 
 	// return the grid column header definition for this instance of ABFieldConnect
-	columnHeader(isObjectWorkspace, width, editable, showAddButton) {
-		var config = super.columnHeader(isObjectWorkspace);
+	columnHeader(options) {
+
+		options = options || {};
+
+		var config = super.columnHeader(options);
 		var field = this;
 		var App = App;
 
-		config.template = function (row) {
+		var width = options.width,
+			editable = options.editable,
+			showAddButton = options.showAddButton;
+
+		config.template = (row) => {
 
 			if (row.$group)
 				return row[field.columnName];
