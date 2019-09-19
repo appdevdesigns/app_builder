@@ -37,7 +37,11 @@ module.exports =  class ABField extends ABFieldBase {
 			},
 			translations:[]
   		}
-  		*/
+		  */
+		
+		// text to Int:
+		this.settings.unique = parseInt(this.settings.unique || 0);
+
 
   	}
 

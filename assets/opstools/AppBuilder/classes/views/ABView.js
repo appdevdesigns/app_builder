@@ -1062,8 +1062,21 @@ export default class ABView extends ABViewBase {
 	changePage(pageId) {
 		this.emit('changePage', pageId);
 	}
-	
-	
+
+	/**
+	 * @property dataview
+	 * return data source
+	 * 
+	 * @return {ABDataview}
+	 */
+	get dataview() {
+
+		let dataviewID = (this.settings || {}).dataviewID;
+		if (!dataviewID) return null;
+
+		return this.application.dataviews(dv => dv.id == dataviewID)[0];
+	}
+
 	removeField(field, cb) {
 		
 		// if this view has matching field then destroy()
@@ -1136,7 +1149,7 @@ export default class ABView extends ABViewBase {
 		let config = this.toObj();
 
 		// remove sub-elements property
-		['pages', 'views', 'dataCollections'].forEach(prop => {
+		['pages', 'views'].forEach(prop => {
 			delete config[prop];
 		});
 
@@ -1174,17 +1187,6 @@ export default class ABView extends ABViewBase {
 				let copiedView = v.copy(lookUpIds, result);
 
 				result._views.push(copiedView);
-			});
-		}
-
-		// copy data collections
-		if (this.dataCollections) {
-			result._dataCollections = [];
-			this.dataCollections().forEach(dc => {
-
-				let copiedDc = dc.copy(lookUpIds, result);
-
-				result._dataCollections.push(copiedDc);
 			});
 		}
 

@@ -140,7 +140,8 @@ class ABFieldEmail extends ABField {
 								currCol.defaultTo(null);
 
 							// field is required (not null)
-							if (this.settings.required) {
+							if (this.settings.required &&
+								this.settings.default) {
 								currCol.notNullable();
 							}
 							else {

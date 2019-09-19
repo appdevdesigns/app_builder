@@ -31,9 +31,6 @@ module.exports = class ABViewPage extends ABViewBase {
 
 		this.views = values.views || [];
 
-		// now properly handle our data collections.
-		this.dataCollections = values.dataCollections || [];
-
 	}
 
 
@@ -59,8 +56,6 @@ module.exports = class ABViewPage extends ABViewBase {
 		result.pages = pages;
 
 		result.views = this.views;
-		result.dataCollections = this.dataCollections;
-
 
 		return result;
 	}

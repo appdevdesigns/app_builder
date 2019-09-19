@@ -118,7 +118,9 @@ export default class ABPropertyComponent {
 		var _init = function() {
 
 			// call our provided .init() routine
-			this.init(ids);
+			if (this.init != _init)
+				this.init(ids);
+
 		}
 
 
@@ -226,7 +228,20 @@ export default class ABPropertyComponent {
 			onChange:(newVal, oldVal) => {
 				// ignore onChange() when populating
 				if (!this.isPopulating && typeof this.currentObject != "undefined") {
+
+					_logic.busy();
+
 					this.EditObject.propertyEditorSave(ids, this.currentObject)
+						.catch((err) => {
+
+							// TODO: handle error
+							_logic.ready();
+						})
+						.then(() => {
+
+							_logic.ready();
+
+						});
 				}
 			},
 
@@ -289,6 +304,34 @@ export default class ABPropertyComponent {
 				}
 
 				return values;
+			},
+
+			busy: () => {
+
+				let propPanel = $$(ids.component);
+				if (!propPanel) return;
+
+				propPanel.disable();
+
+				if (!propPanel.showProgress)
+					webix.extend(propPanel, webix.ProgressBar);
+
+				propPanel.showProgress({ type: 'icon' });
+
+			},
+
+			ready: () => {
+
+				let propPanel = $$(ids.component);
+				if (!propPanel) return;
+
+				propPanel.enable();
+
+				if (!propPanel.hideProgress)
+					webix.extend(propPanel, webix.ProgressBar);
+
+				propPanel.hideProgress();
+
 			}
 
 		}

@@ -33,6 +33,7 @@ export default class AB_Work_Interface extends OP.Component {
 		var ViewList = new AB_Work_Interface_List(App);
 		var ViewWorkspace = new AB_Work_Interface_Workspace(App);
 
+		var CurrentApplication;
 
 		// internal list of Webix IDs to reference our UI components.
 		var ids = {
@@ -57,7 +58,9 @@ export default class AB_Work_Interface extends OP.Component {
 
 		// Our init() function for setting up our UI
 		this.init = function() {
-			// webix.extend($$(ids.form), webix.ProgressBar);
+
+			webix.extend($$(ids.component), webix.ProgressBar);
+
 			ViewList.init();
 			ViewWorkspace.init();
 
@@ -77,6 +80,8 @@ export default class AB_Work_Interface extends OP.Component {
 			 */
 			applicationLoad:function(application) {
 
+				CurrentApplication = application;
+
 				App.actions.clearInterfaceWorkspace();
 				ViewList.applicationLoad(application);
 
@@ -91,7 +96,39 @@ export default class AB_Work_Interface extends OP.Component {
 			show:function() {
 
 				$$(ids.component).show();
-			}
+
+				if (CurrentApplication &&
+					!CurrentApplication.loadedDataview) {
+
+					_logic.busy();
+
+					CurrentApplication.dataviewLoad()
+						.then(() => {
+
+							_logic.ready();
+
+						});
+				}
+
+			},
+
+			busy: () => {
+
+				if ($$(ids.component) &&
+					$$(ids.component).showProgress)
+					$$(ids.component).showProgress({ type: "icon" });
+
+			},
+
+			ready: () => {
+
+				if ($$(ids.component) &&
+					$$(ids.component).hideProgress)
+					$$(ids.component).hideProgress();
+
+			},
+
+
 		}
 		this._logic = _logic;
 

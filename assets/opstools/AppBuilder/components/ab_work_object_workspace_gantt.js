@@ -38,7 +38,7 @@ export default class ABWorkObjectGantt extends OP.Component {
 		}
 
 		let CurrentObject = null,
-			CurrentDC = null,
+			CurrentDataview = null,
 			CurrentGanttView = null,
 			CurrentStartDateField = null,
 			CurrentEndDateField = null,
@@ -152,19 +152,19 @@ export default class ABWorkObjectGantt extends OP.Component {
 			},
 
 			/**
-			 * @method dataCollectionLoad
+			 * @method dataviewLoad
 			 * 
-			 * @param dataCollection {ABViewDataCollection}
+			 * @param dataview {ABDataview}
 			 */
-			dataCollectionLoad: (dataCollection) => {
+			dataviewLoad: (dataview) => {
 
-				CurrentDC = dataCollection;
+				CurrentDataview = dataview;
 
-				if (CurrentDC.dataStatus == CurrentDC.dataStatusFlag.initialized) {
+				if (CurrentDataview.dataStatus == CurrentDataview.dataStatusFlag.initialized) {
 					_logic.initData();
 				}
 
-				CurrentDC.on('initializedData', () => {
+				CurrentDataview.on('initializedData', () => {
 
 					if (CurrentObject.currentView().type != "gantt")
 						return;
@@ -174,7 +174,7 @@ export default class ABWorkObjectGantt extends OP.Component {
 				});
 
 				// real-time update
-				CurrentDC.on('create', vals => {
+				CurrentDataview.on('create', vals => {
 
 					if (CurrentObject.currentView().type != "gantt")
 						return;
@@ -183,7 +183,7 @@ export default class ABWorkObjectGantt extends OP.Component {
 
 				});
 
-				CurrentDC.on('update', vals => {
+				CurrentDataview.on('update', vals => {
 
 					if (CurrentObject.currentView().type != "gantt")
 						return;
@@ -191,7 +191,7 @@ export default class ABWorkObjectGantt extends OP.Component {
 					_logic.updateTaskItem(vals, true);
 
 				});
-				CurrentDC.on('delete', taskId => {
+				CurrentDataview.on('delete', taskId => {
 
 					if (CurrentObject.currentView().type != "gantt")
 						return;
@@ -234,7 +234,7 @@ export default class ABWorkObjectGantt extends OP.Component {
 				gantt.clearAll();
 
 				let gantt_data = {
-					data: (CurrentDC.getData() || [])
+					data: (CurrentDataview.getData() || [])
 						.map((d, index) => _logic.convertFormat(gantt, d))
 						// .map((d, index) => _logic.convertFormat(gantt, d, index))
 				};
@@ -577,7 +577,7 @@ export default class ABWorkObjectGantt extends OP.Component {
 		this.hide = _logic.hide;
 		this.show = _logic.show;
 		this.objectLoad = _logic.objectLoad;
-		this.dataCollectionLoad = _logic.dataCollectionLoad;
+		this.dataviewLoad = _logic.dataviewLoad;
 		this.addTask = _logic.addTask;
 
 	}

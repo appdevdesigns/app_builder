@@ -1,3 +1,5 @@
+import ABObjectQuery from "./ABObjectQuery";
+
 /**
  *  support get data from objects and queries
  */
@@ -187,7 +189,18 @@ export default class RowFilter extends OP.Component {
 
 				// insert our 'this object' entry if an Object was given.
 				if (_Object) {
-					_Fields.unshift({ id: 'this_object', label: _Object.label });
+
+					let thisObjOption = {
+						id: 'this_object',
+						label: _Object.label
+					};
+
+					// If object is query ,then should define default alias: "BASE_OBJECT"
+					if (_Object instanceof ABObjectQuery) {
+						thisObjOption.alias = 'BASE_OBJECT';
+					}
+
+					_Fields.unshift(thisObjOption);
 				}
 
 			},
@@ -896,7 +909,8 @@ export default class RowFilter extends OP.Component {
 				if (isQueryField) {
 
 					var options = [];
-					var Queries = _Object.application.queries((q) => { return q.canFilterField(field); });
+					// var Queries = _Object.application.queries((q) => { return q.canFilterField(field); });
+					var Queries = _Object.application.queries((q) => { return q.canFilterObject(field.datasourceLink); });
 					Queries.forEach((q) => {
 						options.push({
 							id: q.id,
@@ -1046,8 +1060,8 @@ export default class RowFilter extends OP.Component {
 								
 							if (linkObjectId) {
 
-								_View.pageRoot()
-								.dataCollections(dc => dc.datasource && dc.datasource.id == linkObjectId)
+								_View.application
+								.dataviews(dv => dv.datasource && dv.datasource.id == linkObjectId)
 								.forEach(dc => {
 
 									dcOptions.push({
@@ -1604,7 +1618,7 @@ export default class RowFilter extends OP.Component {
 				let qIdBase = "{idBase}-query-field-{id}".replace("{idBase}", idBase).replace("{id}", query.id),
 					inQueryFieldFilter = new RowFilter(App, qIdBase);
 				inQueryFieldFilter.objectLoad(query);
-				inQueryFieldFilter.setValue(query.workspaceFilterConditions);
+				inQueryFieldFilter.setValue(query.where); // workspaceFilterConditions);
 
 				switch (rule) {
 					case 'in_query_field':
@@ -1638,7 +1652,7 @@ export default class RowFilter extends OP.Component {
 				let qIdBase = "{idBase}-query-{id}".replace("{idBase}", idBase).replace("{id}", query.id),
 					inQueryFilter = new RowFilter(App, qIdBase);
 				inQueryFilter.objectLoad(query);
-				inQueryFilter.setValue(query.workspaceFilterConditions);
+				inQueryFilter.setValue(query.where); // workspaceFilterConditions);
 
 				switch (rule) {
 					case 'in_query':
@@ -1667,20 +1681,20 @@ export default class RowFilter extends OP.Component {
 					rowData = rowData[columnName] || {};
 				}
 
-				var dc = _View.pageRoot().dataCollections(dc => dc.id == compareValue)[0];
+				var dataview = _View.application.dataviews(dv => dv.id == compareValue)[0];
 					
 				switch (rule) {
 					case 'in_data_collection':
-						if (!dc)
+						if (!dataview)
 							return false;
 							
-						result = (dc.getData(d => d.id == rowData.id).length > 0);
+						result = (dataview.getData(d => d.id == rowData.id).length > 0);
 						break;
 					case 'not_in_data_collection':
-						if (!dc)
+						if (!dataview)
 							return true;
 							
-						result = (dc.getData(d => d.id == rowData.id).length < 1);
+						result = (dataview.getData(d => d.id == rowData.id).length < 1);
 						break;
 				}
 				

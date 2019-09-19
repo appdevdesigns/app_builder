@@ -125,13 +125,13 @@ var ABFieldStringComponent = new ABFieldComponent({
 		 * @param {string} newVal	The new value of label
 		 * @param {string} oldVal	The previous value
 		 */
-		requiredOnChange: (newVal, oldVal, ids) => {
+		// requiredOnChange: (newVal, oldVal, ids) => {
 
-			// when require value, then default value needs to be reqired
-			$$(ids.default).define("required", newVal);
-			$$(ids.default).refresh();
+		// 	// when require value, then default value needs to be reqired
+		// 	$$(ids.default).define("required", newVal);
+		// 	$$(ids.default).refresh();
 
-		},
+		// },
 
 	},
 
@@ -163,13 +163,6 @@ class ABFieldString extends ABField {
 			}
     	}
     	*/
-
-    	// we're responsible for setting up our specific settings:
-    	this.settings.default = values.settings.default || '';
-    	this.settings.supportMultilingual = values.settings.supportMultilingual+"" || "0";
-
-    	// text to Int:
-    	this.settings.supportMultilingual = parseInt(this.settings.supportMultilingual);
 
   	}
 
@@ -212,6 +205,30 @@ class ABFieldString extends ABField {
 
 
 	/**
+	 * @method fromValues()
+	 *
+	 * initialze this object with the given set of values.
+	 * @param {obj} values
+	 */
+	fromValues(values) {
+
+		super.fromValues(values);
+
+		// we're responsible for setting up our specific settings:
+		this.settings.supportMultilingual = values.settings.supportMultilingual+"" || "0";
+
+		// text to Int:
+		this.settings.supportMultilingual = parseInt(this.settings.supportMultilingual);
+
+		if (this.settings.supportMultilingual)
+			OP.Multilingual.translate(this.settings, this.settings, ["default"]);
+		else
+			this.settings.default = values.settings.default || '';
+
+	}
+
+
+	/**
 	 * @method toObj()
 	 *
 	 * properly compile the current state of this ABApplication instance
@@ -222,14 +239,17 @@ class ABFieldString extends ABField {
 	 *
 	 * @return {json}
 	 */
-	// toObj () {
+	toObj() {
 
-	// 	var obj = super.toObj();
+		var obj = super.toObj();
 
-	// 	// obj.settings = this.settings;  // <--  super.toObj()
+		if (this.settings.supportMultilingual)
+			OP.Multilingual.unTranslate(obj.settings, obj.settings, ["default"]);
+		else
+			obj.settings.default = this.settings.default;
 
-	// 	return obj;
-	// }
+		return obj;
+	}
 
 
 

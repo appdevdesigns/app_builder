@@ -13,7 +13,7 @@ function L(key, altText) {
 }
 
 var ABViewListPropertyComponentDefaults = {
-	datacollection: null,
+	dataviewID: null,
 	field: null,
 	height: 0
 }
@@ -104,9 +104,9 @@ export default class ABViewLabel extends ABViewWidget {
 			init: () => {
 
 				// remove id of the component in caching for refresh .bind of the data collection
-				let dc = this.dataCollection;
-				if (dc)
-					dc.removeComponent(ListView.ui.id);
+				let dv = this.dataview;
+				if (dv)
+					dv.removeComponent(ListView.ui.id);
 
 				ListView.init();
 			}
@@ -135,7 +135,7 @@ export default class ABViewLabel extends ABViewWidget {
 
 		return commonUI.concat([
 			{
-				name: 'datacollection',
+				name: 'dataview',
 				view: 'richselect',
 				label: L('ab.components.list.dataSource', "*Data Source"),
 				labelWidth: App.config.labelWidthLarge,
@@ -166,12 +166,12 @@ export default class ABViewLabel extends ABViewWidget {
 	 * 
 	 * @param {Object} ids 
 	 * @param {ABViewForm} view - the current component
-	 * @param {string} dcId - id of ABViewDataCollection
+	 * @param {string} dvId - id of ABDataview
 	 */
-	static propertyUpdateFieldOptions(ids, view, dcId) {
+	static propertyUpdateFieldOptions(ids, view, dvId) {
 
-		var datacollection = view.pageRoot().dataCollections(dc => dc.id == dcId)[0];
-		var object = datacollection ? datacollection.datasource : null;
+		var dataview = view.application.dataviews(dv => dv.id == dvId)[0];
+		var object = dataview ? dataview.datasource : null;
 
 		// Pull field list
 		var fieldOptions = [];
@@ -196,11 +196,11 @@ export default class ABViewLabel extends ABViewWidget {
 
 		super.propertyEditorPopulate(App, ids, view);
 
-		var dataCollectionId = (view.settings.datacollection ? view.settings.datacollection : null);
-		var SourceSelector = $$(ids.datacollection);
+		var dataviewId = (view.settings.dataviewID ? view.settings.dataviewID : null);
+		var SourceSelector = $$(ids.dataview);
 
 		// Pull data collections to options
-		var dcOptions = view.pageRoot().dataCollections().map((dc) => {
+		var dcOptions = view.application.dataviews().map((dc) => {
 
 			return {
 				id: dc.id,
@@ -213,10 +213,10 @@ export default class ABViewLabel extends ABViewWidget {
 			value: '[Select]'
 		});
 		SourceSelector.define('options', dcOptions);
-		SourceSelector.define('value', dataCollectionId);
+		SourceSelector.define('value', dataviewId);
 		SourceSelector.refresh();
 
-		this.propertyUpdateFieldOptions(ids, view, dataCollectionId);
+		this.propertyUpdateFieldOptions(ids, view, dataviewId);
 
 		$$(ids.field).setValue(view.settings.field);
 		$$(ids.height).setValue(view.settings.height);
@@ -228,7 +228,7 @@ export default class ABViewLabel extends ABViewWidget {
 
 		super.propertyEditorValues(ids, view);
 
-		view.settings.datacollection = $$(ids.datacollection).getValue();
+		view.settings.dataviewID = $$(ids.dataview).getValue();
 		view.settings.field = $$(ids.field).getValue();
 		view.settings.height = $$(ids.height).getValue();
 
@@ -272,11 +272,11 @@ export default class ABViewLabel extends ABViewWidget {
 
 		var _init = (options) => {
 
-			var dc = this.dataCollection;
-			if (!dc) return;
+			var dv = this.dataview;
+			if (!dv) return;
 
 			// bind dc to component
-			dc.bind($$(ids.component));
+			dv.bind($$(ids.component));
 
 		}
 
@@ -291,25 +291,12 @@ export default class ABViewLabel extends ABViewWidget {
 		}
 	}
 
-
-	/**
-	 * @property dataCollection
-	 * return ABViewDataCollection of this form
-	 * 
-	 * @return {ABViewDataCollection}
-	 */
-	get dataCollection() {
-		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.datacollection)[0];
-	}
-
-
-
 	field() {
 
-		var dc = this.dataCollection;
-		if (!dc) return null;
+		var dv = this.dataview;
+		if (!dv) return null;
 
-		var object = dc.datasource;
+		var object = dv.datasource;
 		if (!object) return null;
 
 		return object.fields(f => f.id == this.settings.field)[0];
@@ -332,13 +319,13 @@ export default class ABViewLabel extends ABViewWidget {
 				ul: []
 			};
 
-			var dc = this.dataCollection;
-			if (!dc) return resolve(reportDef);
+			var dv = this.dataview;
+			if (!dv) return resolve(reportDef);
 
 			var field = this.field();
 			if (!field) return resolve(reportDef);
 
-			dc.getData().forEach(item => {
+			dv.getData().forEach(item => {
 
 				var display = field.format(item);
 
@@ -355,7 +342,7 @@ export default class ABViewLabel extends ABViewWidget {
 
 	copyUpdateProperyList() {
 
-		return ['datacollection'];
+		return ['dataviewID'];
 
 	}
 

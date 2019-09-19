@@ -16,7 +16,6 @@ var _ = require('lodash');
 
 module.exports = function(req, res, next) {
     
-
     // our QB Conditions look like:
     // {
     //   "glue": "and",
@@ -147,9 +146,15 @@ function parseCondition(_where, object, req, res, cb) {
             // data from the found object to our current object.
             processObjectWithUser(object, [], req,  (err, lookups)=>{
 
+                // if an error results, cancel process.
+                if (err) {
+                    cb(err);
+                    return;
+                }
+
                 // process each of the lookups and return the final set of data values
                 // that represent the current users version of the data.
-                processLookup(lookups, (err, data)=>{
+                processLookup(lookups, req, (err, data)=>{
 
                     if (err) {
                         cb(err);
@@ -211,7 +216,22 @@ function parseCondition(_where, object, req, res, cb) {
 
                         // cond.value : should be an [] of values that matched the [user]
                         // cond.key is the field in data that we want to match on
-                        var fieldValues = data.map((d)=>{ return d[cond.key]; });
+                        var fieldValues;
+
+                        // if this is a Query, and the field is a connectObject
+                        // then we have to decode the data:
+                        if (object.joins && field.key == "connectObject") {
+                            var relationKey = cond.alias+"."+field.relationName();
+                            var connectedObjects = data.map((d)=>{ return d[relationKey];})
+                            fieldValues = connectedObjects.map((d)=>{ 
+                                if (typeof d == "string") {
+                                    d = JSON.parse(d);
+                                }
+                                return d.id || d["uuid"]; 
+                            })
+                        } else {
+                            fieldValues = data.map((d)=>{ return d[cond.key]; });
+                        }
 
                         // return an array of unique values (no repeats)
                         cond.value = _.uniq(fieldValues); 
@@ -221,7 +241,7 @@ function parseCondition(_where, object, req, res, cb) {
 
                     }
 
-                })
+                }) // processLookup()
 
 
             });  // processObjectWithUser()
@@ -255,7 +275,6 @@ function processObjectWithUser( obj, listAlreadyChecked, req,  cb ) {
     if (userField) {
         // this obj has a USER field!!! 
 
-
         // return a lookup for this object, with entries where userField == current user
         var cond = {
             glue:'and',
@@ -287,7 +306,7 @@ function processObjectWithUser( obj, listAlreadyChecked, req,  cb ) {
             return;
         }
 
-        
+        // search through a list of fields to find a connected obj that has a User field
         ProcessField(connectionFields, obj, listAlreadyChecked, req,  cb);
 
     } // if !user
@@ -296,7 +315,15 @@ function processObjectWithUser( obj, listAlreadyChecked, req,  cb ) {
 
 
 
-
+/**
+ * @function ProcessField
+ * process a list of connected fields for obj that might have a User Field.
+ * @param {array} list of connectedObj fields to search for User Fields
+ * @param {ABObject} obj the current obj that these fields are a part of
+ * @param {array} listAlreadyChecked an array of obj.id's that have already been checked
+ * @param {req} req  the sails request object (that contains our user info)
+ * @param {fn} cb  the callback to call once we found our Obj.UserField
+ */
 function ProcessField( list, obj, listAlreadyChecked, req, cb) {
 
     // if we got to the end, then there were no successful fields:
@@ -412,16 +439,20 @@ function ProcessField( list, obj, listAlreadyChecked, req, cb) {
 } // end ProcessField()
 
 
-
+//// LEFT OFF HERE:
+//// Now debug why the Query interface is sending the condition as workplace
+//// and as options to the incoming request.
 
 /**
  * @function processLookup
- * perform the lookups on the provided list and return the final data
+ * perform the lookups on the provided list and return the final data.
+ * the final data should be data that matches the Original Object we are
+ * resolving the conditions for.
  * @param {array} list  [{lookup}]
  * @param {fn}    cb    call back for when the processing is finished.
  * @param {array} data  array of rows of data returned from previous lookup.
  */
-function processLookup( list, cb, data) {
+function processLookup( list, req, cb, data) {
 
     if (!list) {
         // this is the case where there were no objects found.
@@ -461,11 +492,11 @@ function processLookup( list, cb, data) {
     // }
     if (lookup.cond) {
         
-        lookup.object.queryFind({where:lookup.cond})
+        lookup.object.queryFind({where:lookup.cond}, req.user.data)
         .then((rows) => {
 
             // now pass these back to the next lookup:
-            processLookup(list, cb, rows);
+            processLookup(list, req, cb, rows);
 
             // TODO: refactor to not use cb, but instead chain promises???
             return null;
@@ -497,11 +528,11 @@ function processLookup( list, cb, data) {
             }]
         }
 
-        lookup.obj.queryFind({where:cond})
+        lookup.obj.queryFind({where:cond}, req.user.data, true)  // just send the user data
         .then((items) => {
 
             // now pass these back to the next lookup:
-            processLookup(list, cb, items);
+            processLookup(list, req, cb, items);
             return null;
         })
         .catch((err)=>{
@@ -529,7 +560,7 @@ function processLookup( list, cb, data) {
             .then((items)=>{
 
                 // now pass these back to the next lookup:
-                processLookup(list, cb, items);
+                processLookup(list, req, cb, items);
                 return null;
             })
             .catch((err) => {

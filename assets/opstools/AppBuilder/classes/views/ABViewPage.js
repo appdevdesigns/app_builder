@@ -95,14 +95,6 @@ export default class ABViewPage extends ABViewContainer {
         obj.pages = pages;
 
 
-        // compile our data sources
-        var dataCollections = [];
-        this._dataCollections.forEach((data) => {
-            dataCollections.push(data.toObj())
-        })
-
-        obj.dataCollections = dataCollections;
-
 
         return obj;
     }
@@ -136,14 +128,6 @@ export default class ABViewPage extends ABViewContainer {
         this._pages = pages;
 
 
-        // now properly handle our data sources.
-        var dataCollections = [];
-        (values.dataCollections || []).forEach((data) => {
-            dataCollections.push(this.dataCollectionNew(data));
-        })
-        this._dataCollections = dataCollections;
-
-
         // the default columns of ABView is 1
         this.settings.columns = this.settings.columns || 1;
         this.settings.gravity = this.settings.gravity || [1];
@@ -174,15 +158,6 @@ export default class ABViewPage extends ABViewContainer {
 
             comp.init(options);
 
-            // initialize data sources
-            let pageRoot = this.pageRoot();
-            if (pageRoot) {
-                pageRoot.dataCollections().forEach((dc) => {
-                    dc.init();
-                });
-            }
-
-
         };
 
 
@@ -201,9 +176,11 @@ export default class ABViewPage extends ABViewContainer {
 
         var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
 
-        _logic.permissionClick = (id, e, node) => {
+        _logic.permissionClick = (id, e, node, isRetry=false) => {
             var List = $$(ids.permissions);
             var item = List.getItem(id); 
+
+            List.showProgress({type:'icon'});
 
             if (item.markCheckbox) {
 
@@ -216,7 +193,40 @@ export default class ABViewPage extends ABViewContainer {
 
                     item.markCheckbox = false;
                     List.updateItem(id, item); 
+                    List.hideProgress();
 
+                }).catch((err)=>{
+                    console.error(err);
+                    if (err.code == "E_NOACTIONKEY") {
+
+                        // if this our second time through, then display an error:
+                        if (isRetry) {
+                            console.error("Error Saving Permisison: ", err);
+                            List.hideProgress();
+                            return;
+                        }
+
+                        // in the case where no ActionKey was present,
+                        // we can still mark that this is no longer connected:
+                        item.markCheckbox = false;
+                        List.updateItem(id, item); 
+
+                        // Now if we got here, there is an issue with the data in our
+                        // Permissions.  These permissions get created when a Page is 
+                        // .created/saved, so let's run through our pages again and
+                        // save() them
+                        var allSaves = [];
+                        item._view.application.pages().forEach((page)=>{
+                            allSaves.push(page.save());
+                        })
+
+                        // once that is all done, try this again:
+                        Promise.all(allSaves)
+                        .then(()=>{
+                            _logic.permissionClick(id, e, node, true);
+                        })
+
+                    }
                 });
 
             } else {
@@ -230,7 +240,36 @@ export default class ABViewPage extends ABViewContainer {
 
                     item.markCheckbox = true;
                     List.updateItem(id, item); 
+                    List.hideProgress();
 
+                }).catch((err)=>{
+                    console.error(err);
+                    if (err.code == "E_NOACTIONKEY") {
+
+
+                        // if this our second time through, then display an error:
+                        if (isRetry) {
+                            console.error("Error Saving Permisison: ", err);
+                            List.hideProgress();
+                            return;
+                        }
+
+                        // Now if we got here, there is an issue with the data in our
+                        // Permissions.  These permissions get created when a Page is 
+                        // .created/saved, so let's run through our pages again and
+                        // save() them
+                        var allSaves = [];
+                        item._view.application.pages().forEach((page)=>{
+                            allSaves.push(page.save());
+                        })
+
+                        // once that is all done, try this again:
+                        Promise.all(allSaves)
+                        .then(()=>{
+                            _logic.permissionClick(id, e, node, true);
+                        })
+
+                    }
                 });
 
             }
@@ -334,39 +373,6 @@ export default class ABViewPage extends ABViewContainer {
             },
             {
                 view: "fieldset",
-                name: "dataCollectionPanel",
-                label: L('ab.component.page.dataCollections', '*Data Collections:'),
-                labelWidth: App.config.labelWidthLarge,
-                body: {
-                    type: "clean",
-                    padding: 10,
-                    rows: [
-                        {
-                            cols: [
-                                {
-                                    view: "label",
-                                    label: L("ab.component.page.collections", "*Collections:"),
-                                    width: App.config.labelWidthLarge,
-                                },
-                                {
-                                    view: "button",
-                                    name: "datacollection",
-                                    label: L("ab.component.page.settings", "*Settings"),
-                                    icon: "fa fa-gear",
-                                    type: "icon",
-                                    badge: 0,
-                                    click: function () {
-                                        App.actions.interfaceViewPartChange('data');
-                                    }
-                                }
-                            ]
-                        }
-
-                    ]
-                }
-            },
-            {
-                view: "fieldset",
                 name: "pagePermissionPanel",
                 label: L('ab.component.page.pagePermissions', '*Page Permissions:'),
                 labelWidth: App.config.labelWidthLarge,
@@ -396,7 +402,6 @@ export default class ABViewPage extends ABViewContainer {
             }
         ]);
 
-
     }
 
 
@@ -414,8 +419,7 @@ export default class ABViewPage extends ABViewContainer {
         // Disable select type of page when this page is root 
         if (view.isRoot()) {
             $$(ids.type).hide();
-            $$(ids.dataCollectionPanel).show();
-            
+
             // Update permission options
             $$(ids.pagePermissionPanel).show();
             this.propertyUpdatePermissionsOptions(ids, view);
@@ -423,7 +427,6 @@ export default class ABViewPage extends ABViewContainer {
         else {
             $$(ids.pagePermissionPanel).hide();
             $$(ids.type).show();
-            $$(ids.dataCollectionPanel).hide();
         }
         
         if (view.settings.type == "popup") {
@@ -439,22 +442,6 @@ export default class ABViewPage extends ABViewContainer {
         } else {
             $$(ids.pageWidth).hide();
         }
-
-        this.populateBadgeNumber(ids, view);
-
-        // when data collections are added/deleted, then update number of badge
-        this.viewUpdateEventIds = this.viewUpdateEventIds || {}; // { viewId: number, ..., viewIdn: number }
-        if (!this.viewUpdateEventIds[view.id]) {
-            this.viewUpdateEventIds[view.id] = AD.comm.hub.subscribe('ab.interface.update', (message, data) => {
-
-                if (data.rootPage && data.rootPage.id == view.id) {
-                    this.populateBadgeNumber(ids, view);
-                }
-
-            });
-
-        }
-
 
     }
 
@@ -472,21 +459,6 @@ export default class ABViewPage extends ABViewContainer {
 
     }
 
-
-    static populateBadgeNumber(ids, view) {
-
-        var dataCols = view.dataCollections();
-        if (dataCols && dataCols.length > 0) {
-            $$(ids.datacollection).define('badge', dataCols.length);
-            $$(ids.datacollection).refresh();
-        }
-        else {
-            $$(ids.datacollection).define('badge', 0);
-            $$(ids.datacollection).refresh();
-        }
-
-    }
-    
     static getPageActionKey(view) {
         
         return ['opstools', "AB_" + String(view.application.name).replace(/[^a-z0-9]/gi, ''), String(view.name).replace(/[^a-z0-9]/gi, '').toLowerCase(), "view"].join('.');
@@ -503,6 +475,16 @@ export default class ABViewPage extends ABViewContainer {
         var action_key = this.getPageActionKey(view);
         var roles = [];
         
+        var List = $$(ids.permissions);
+
+        // make sure our list has been made into a ProgressBar
+        if (!List.showProgress) {
+            webix.extend(List, webix.ProgressBar);
+        }
+        
+        List.clearAll();
+        List.showProgress({type:'icon'});
+
         view.application.getPermissions()
             .then(function (selected_role_ids) {
                 var app_roles = selected_role_ids;
@@ -524,19 +506,23 @@ export default class ABViewPage extends ABViewContainer {
                                 r.markCheckbox = false;
                             }
                             r.action_key = action_key;
+                            r._view = view;
                             roles.push(r);
                         }
                     });
                     
                     roles = _.orderBy(roles, 'id', 'asc');
                     
-                    $$(ids.permissions).clearAll();
-                    $$(ids.permissions).parse(roles);
+                    List.parse(roles);
+                    List.hideProgress();
 
                 });
 
             })
-            .catch(function (err) { next(err); });
+            .catch(function (err) { 
+                List.hideProgress();
+                next(err); 
+            });
         
     }
 
@@ -559,14 +545,6 @@ export default class ABViewPage extends ABViewContainer {
         var _init = (options) => {
 
             comp.init(options);
-
-            // initialize data sources
-            let pageRoot = this.pageRoot();
-            if (pageRoot) {
-                pageRoot.dataCollections().forEach((dc) => {
-                    dc.init();
-                });
-            }
 
         }
 
@@ -759,97 +737,6 @@ export default class ABViewPage extends ABViewContainer {
     }
 
 
-
-    ///
-    /// Data sources
-    ///
-
-    /**
-     * @method dataCollections()
-     *
-     * return an array of all the ABViewDataCollection for this ABViewPage.
-     *
-     * @param {fn} filter		a filter fn to return a set of ABViewDataCollection that this fn
-     *							returns true for.
-     * 
-     * @return {array}			array of ABViewDataCollection
-     */
-    dataCollections(filter) {
-
-        if (!this._dataCollections) return [];
-
-        filter = filter || function () { return true; };
-
-        return this._dataCollections.filter(filter);
-
-    }
-
-
-
-    /**
-     * @method dataCollectionNew()
-     *
-     * return an instance of a new (unsaved) ABViewDataCollection that is tied to this
-     * ABViewPage.
-     *
-     * NOTE: this new data source is not included in our this.dataCollections until a .save()
-     * is performed on the page.
-     *
-     * @return {ABViewPage}
-     */
-    dataCollectionNew(values) {
-
-        values = values || {};
-        values.key = 'datacollection';
-
-        // NOTE: this returns a new ABViewDataCollection component.  
-        // when creating a new page, the 3rd param should be null, to signify 
-        // the top level component.
-        var dataCollection = new ABViewManager.newView(values, this.application, this);
-        dataCollection.parent = this;
-
-        return dataCollection;
-    }
-
-
-
-    /**
-     * @method dataCollectionDestroy()
-     *
-     * remove the current ABViewDataCollection from our list of ._dataCollections.
-     *
-     * @param {ABViewDataCollection} dataCollection
-     * @return {Promise}
-     */
-    dataCollectionDestroy(dataCollection) {
-
-        var remainingDataCollections = this.dataCollections(function (data) { return data.id != dataCollection.id; })
-        this._dataCollections = remainingDataCollections;
-        return this.save();
-    }
-
-
-
-    /**
-     * @method dataCollectionSave()
-     *
-     * persist the current ABViewDataCollection in our list of ._dataCollections.
-     *
-     * @param {ABViewDataCollection} object
-     * @return {Promise}
-     */
-    dataCollectionSave(dataCollection) {
-        var isIncluded = (this.dataCollections(function (data) { return data.id == dataCollection.id }).length > 0);
-        if (!isIncluded) {
-            this._dataCollections.push(dataCollection);
-        }
-
-        return this.save();
-    }
-
-
-
-
     /**
      * @method urlView()
      * return the url pointer for views in this application.
@@ -874,65 +761,7 @@ export default class ABViewPage extends ABViewContainer {
             return this.application.urlPage() + this.id;
         }
     }
-    
-    removeFieldSubPages(field, cb) {
-        var done = 0;
-        
-        // for each subpage, removeField(field)
-        var subPages = this.pages();
-        subPages.forEach((sp)=>{
-            sp.removeField(field, (err)=>{
-                if (err) {
-                    cb(err);
-                } else {
-                    done ++;
-                    if (done >= subPages.length) {
-                        cb();
-                    }
-                }
-            })
-        });
 
-        if (subPages.length == 0) {
-            cb();
-        }
-
-    }
-
-
-    removeField(field, cb) {
-		
-        super.removeField(field, (err)=>{
-            
-            if (err) {
-                cb(err);
-            } else {
-                var done = 0;
-                
-                // for each data collection, removeField(field)
-                var listDC = this.dataCollections();
-                listDC.forEach((dc)=>{
-                    dc.removeField(field, (err)=>{
-                        if (err) {
-                            cb(err);
-                        } else {
-                            done ++;
-                            if (done >= listDC.length) {
-                                // for each subpage, removeField(field)
-                                this.removeFieldSubPages(field, cb);
-                            }
-                        }
-                    })
-                });
-                
-                if (listDC.length == 0) {
-                    this.removeFieldSubPages(field, cb);
-                }
-            }
-        });
-        
-	}  
-    
     updateIcon(obj) {
         // icon of page
         if (obj.settings.type == 'popup') {
@@ -961,10 +790,6 @@ export default class ABViewPage extends ABViewContainer {
 
                 if (currView.views) {
                     currView.views().forEach(v =>  mapNewIdFn(v));
-                }
-
-                if (currView.dataCollections) {
-                    currView.dataCollections().forEach(dc =>  mapNewIdFn(dc));
                 }
 
             };

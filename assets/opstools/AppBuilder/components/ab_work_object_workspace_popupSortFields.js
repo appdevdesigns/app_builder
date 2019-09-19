@@ -457,6 +457,9 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 			 */
 			triggerOnChange: () => {
 
+				// block .onChange callback
+				if (this._blockOnChange) return;
+
 				this._settings = _logic.getSettings();
 
 				_logic.callbacks.onChange(this._settings);
@@ -478,6 +481,14 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 				// }
 			},
 
+			blockOnChange: () => {
+				this._blockOnChange = true;
+			},
+
+			unblockOnChange: () => {
+				this._blockOnChange = false;
+			},
+
 
 			/**
 			 * @function show()
@@ -486,13 +497,18 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 			 * @param {obj} $view  the webix.$view to hover the popup around.
 			 * @param {uuid} fieldId the fieldId we want to prefill the sort with
 			 */
-			show:function($view, fieldId, options) {
+			show: ($view, fieldId, options) => {
+
+				_logic.blockOnChange();
 
 				$$(ids.component).show($view, options || null);
-				
+
 				if (fieldId) {
 					_logic.clickAddNewSort(fieldId);
 				}
+
+				_logic.unblockOnChange();
+
 			},
 
 			/**

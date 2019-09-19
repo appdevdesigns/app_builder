@@ -225,7 +225,8 @@ export default class ABWorkQueryWorkspace extends OP.Component {
 
 				_logic.changeMode(CurrentMode);
 				
-				// $$(ids.noSelection).show(false, false);
+				if (query == null)
+					$$(ids.noSelection).show(false, false);
 
 			},
 			

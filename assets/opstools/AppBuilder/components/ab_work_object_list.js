@@ -407,6 +407,11 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 
 			},
 
+			listCount: function() {
+				if ($$(ids.list))
+					return $$(ids.list).count();
+			},
+
 			onAfterEditStop: function(state, editor, ignoreUpdate) {
 
 				_logic.showGear(editor.id);
@@ -484,9 +489,16 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 			},
 
 			showGear: function(id) {
-				var gearIcon = $$(ids.list).getItemNode(id).querySelector('.ab-object-list-edit');
-				gearIcon.style.visibility = "visible";
-				gearIcon.style.display = "block";
+
+				let $item = $$(ids.list).getItemNode(id);
+				if ($item) {
+					let gearIcon = $item.querySelector('.ab-object-list-edit');
+					if (gearIcon) {
+						gearIcon.style.visibility = "visible";
+						gearIcon.style.display = "block";
+					}
+				}
+
 			},
 
 			/**
@@ -529,10 +541,13 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 					return;
 				}
 
-				if (objectList.exists(object.id))
-					objectList.updateItem(object.id, object);
-				else
-					objectList.add(object);
+				let objects = CurrentApplication.objects();
+				objectList.parse(objects);
+
+				// if (objectList.exists(object.id))
+				// 	objectList.updateItem(object.id, object);
+				// else
+				// 	objectList.add(object);
 
 				if (selectNew != null && selectNew == true) {
 					$$(ids.list).select(object.id);
@@ -552,6 +567,24 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 			clickNewObject:function(selectNew, callback) {
 				// show the new popup
 				PopupNewObjectComponent.show(selectNew, callback);
+			},
+
+			exclude: function() {
+				var objectId = $$(ids.list).getSelectedId(false);
+
+				_logic.listBusy();
+
+				CurrentApplication.objectExclude(objectId)
+					.then(() => {
+
+						objectList.remove(objectId);
+
+						_logic.listReady();
+
+						// clear object workspace
+						_logic.callbacks.onChange(null);
+					});
+
 			},
 
 			rename: function () {
@@ -578,6 +611,9 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 
 									objectList.remove(selectedObject.id);
 
+									// refresh items list
+									_logic.callbackNewObject();
+
 									// clear object workspace
 									_logic.callbacks.onChange(null);
 								});
@@ -591,6 +627,9 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 				switch (action) {
 					case 'rename':
 						_logic.rename();
+						break;
+					case 'exclude':
+						_logic.exclude();
 						break;
 					case 'delete':
 						_logic.remove();
@@ -639,6 +678,9 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 		// Define our external interface methods:
 		// 
 		this.applicationLoad = _logic.applicationLoad;
+		this.busy = _logic.listBusy;
+		this.ready = _logic.listReady;
+		this.count = _logic.listCount;
 
 	}
 

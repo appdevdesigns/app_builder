@@ -1,6 +1,7 @@
 module.exports = {
 	"paths": {
-		"opstools/BuildApp": "opstools/BuildApp/BuildApp.js"
+		"opstools/BuildApp": "opstools/BuildApp/BuildApp.js",
+		"bundles/opstools/BuildApp": "dist/bundles/opstools/BuildApp.js?v=2"
 	},
 	"bundle": [
 		"opstools/BuildApp"
@@ -18,7 +19,7 @@ module.exports = {
 				"js/selectivity/selectivity.min",
 				"js/vfs_fonts",
 				"js/moment-locales.min",
-				"js/docxtemplater-latest.min",
+				"js/docxtemplater-image-module.v3.0.2.min",
 				"OpsPortal/classes/OpsWebixDataCollection",
 				"opstools/BuildApp/OP_Bundle"
 			],
@@ -44,7 +45,14 @@ module.exports = {
 			],
 			"sideBundle": true
 		},
-		"js/docxtemplater-latest.min": {
+		"js/docxtemplater-image-module.v3.0.2.min": {
+			"format": "global",
+			"deps": [
+				"js/docxtemplater.v3.0.12.min"
+			],
+			"sideBundle": true
+		},
+		"js/docxtemplater.v3.0.12.min": {
 			"format": "global",
 			"deps": [
 				"js/jszip.min",

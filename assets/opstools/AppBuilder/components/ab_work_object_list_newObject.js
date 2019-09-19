@@ -32,7 +32,8 @@ export default class AB_Work_Object_List_NewObject extends OP.Component {   //.e
 		var labels = {
 			common : App.labels,
 			component: {
-				addNew: L('ab.object.addNew', '*Add new object')			}
+				addNew: L('ab.object.addNew', '*Add new object')
+			}
 		}
 
 		// internal list of Webix IDs to reference our UI components.

@@ -3,18 +3,19 @@ var path = require('path');
 var _ = require('lodash');
 
 var ABObjectBase = require(path.join(__dirname,  "..", "..", "assets", "opstools", "AppBuilder", "classes",  "ABObjectBase.js"));
-// var ABFieldManager = require(path.join(__dirname, 'ABFieldManager'));
+var ABFieldManager = require(path.join(__dirname, 'ABFieldManager'));
+
 var Model = require('objection').Model;
 
 
+var __ObjectPool = {};
 var __ModelPool = {};	// reuse any previously created Model connections
 						// to minimize .knex bindings (and connection pools!)
 
+class ABClassObject extends ABObjectBase {
 
-module.exports = class ABObject extends ABObjectBase {
-
-    constructor(attributes, application) {
-		super(attributes, application);
+	constructor(attributes) {
+		super(attributes || {});
 
 /*
 {
@@ -46,77 +47,42 @@ module.exports = class ABObject extends ABObjectBase {
 			let currView = attributes.objectWorkspaceViews.list.filter(v => v.id == currViewId)[0];
 			if (currView) {
 
-				this.objectWorkspace.filterConditions = currView.filterConditions || [];
+				this.objectWorkspace.filterConditions = currView.filterConditions || {};
 				this.objectWorkspace.sortFields = currView.sortFields || [];
 
 			}
 		}
 
+		ABObjectCache.cache(this);
 
-  	}
-
-
-
-  	///
-  	/// Static Methods
-  	///
-  	/// Available to the Class level object.  These methods are not dependent
-  	/// on the instance values of the Application.
-  	///
-
-
-
-
+	}
 
 	///
 	/// Instance Methods
 	///
 
-	/**
-	 * @method toObj()
-	 *
-	 * properly compile the current state of this ABApplication instance
-	 * into the values needed for saving to the DB.
-	 *
-	 * Most of the instance data is stored in .json field, so be sure to
-	 * update that from all the current values of our child fields.
-	 *
-	 * @return {json}
-	 */
-	toObj () {
-
-		var result = super.toObj();
-
-		// NOTE: store table name of import object to ignore async
-		result.tableName = this.tableName;
-
-		return result;
-
-	}
-
-
 	///
 	/// Fields
 	///
 
-
-	// *
-	//  * @method fieldNew()
-	//  *
-	//  * return an instance of a new (unsaved) ABField that is tied to this
-	//  * ABObject.
-	//  *
-	//  * NOTE: this new field is not included in our this.fields until a .save()
-	//  * is performed on the field.
-	//  *
-	//  * @return {ABField}
-	 
-	// fieldNew ( values ) {
-	// 	// NOTE: ABFieldManager.newField() returns the proper ABFieldXXXX instance.
-	// 	return ABFieldManager.newField( values, this );
-	// }
-
-
+	/**
+	 * @method fieldNew()
+	 *
+	 * return an instance of a new (unsaved) ABField that is tied to a given
+	 * ABObject.
+	 *
+	 * NOTE: this new field is not included in our this.fields until a .save()
+	 * is performed on the field.
+	 *
+	 * @param {obj} values  the initial values for this field.  
+	 *						{ key:'{string}'} is required 
+	 * @param {ABObject} object  the parent object this field belongs to.
+	 * @return {ABField}
+	 */
+	fieldNew ( values, object ) {
+		// NOTE: ABFieldManager returns the proper ABFieldXXXX instance.
+		return ABFieldManager.newField( values, object );
+	}
 
 
 
@@ -133,17 +99,6 @@ module.exports = class ABObject extends ABObjectBase {
 
 	dbTableName(prefixSchema = false) {
 
-		var tableName = "";
-
-		tableName =  AppBuilder.rules.toObjectNameFormat(this.application.dbApplicationName(), this.name);
-		// var modelName = this.name.toLowerCase();
-		// if (!sails.models[modelName]) {
-		// 	throw new Error(`Imported object model not found: ${modelName}`);
-		// }
-		// else {
-		// 	return sails.models[modelName].waterline.schema[modelName].tableName;
-		// }
-
 		if (prefixSchema) {
 
 			// pull database name
@@ -151,10 +106,10 @@ module.exports = class ABObject extends ABObjectBase {
 
 			return "#schema#.#table#"
 					.replace("#schema#", schemaName)
-					.replace("#table#", tableName);
+					.replace("#table#", this.tableName);
 		}
 		else {
-			return tableName;
+			return this.tableName;
 		}
 	}
 
@@ -166,7 +121,7 @@ module.exports = class ABObject extends ABObjectBase {
 	 * @return {Promise}
 	 */
 	migrateCreate(knex) {
-		sails.log.verbose('ABObject.migrateCreate()');
+		sails.log.verbose('ABClassObject.migrateCreate()');
 
 		var tableName = this.dbTableName();
 		sails.log.verbose('.... dbTableName:'+ tableName);
@@ -229,7 +184,7 @@ module.exports = class ABObject extends ABObjectBase {
 	 * @return {Promise}
 	 */
 	migrateDrop(knex) {
-		sails.log.verbose('ABObject.migrateDrop()');
+		sails.log.verbose('ABClassObject.migrateDrop()');
 
 		var tableName = this.dbTableName();
 		sails.log.verbose('.... dbTableName:'+ tableName);
@@ -279,13 +234,18 @@ module.exports = class ABObject extends ABObjectBase {
 
 	modelName() {
 
-		let appName = this.application.name,
-			tableName = this.dbTableName(true);
+		// return this.id.
+		// 	replace(/[^a-zA-Z0-9]/g, ""); // remove special characters to allow model name to be class name
 
-		return '#appName##tableName#'
-				.replace('#appName#', appName)
-				.replace('#tableName#', tableName)
-				.replace(/[^a-zA-Z0-9]/g, ""); // remove special characters to allow model name to be class name
+		// let appName = this.application.name,
+		// 	tableName = this.dbTableName(true);
+
+		// return '#appName##tableName#'
+		// 		.replace('#appName#', appName)
+		// 		.replace('#tableName#', tableName)
+		// 		.replace(/[^a-zA-Z0-9]/g, ""); // remove special characters to allow model name to be class name
+
+		return this.tableName.replace(/[^a-zA-Z0-9]/g, ""); // remove special characters to allow model name to be class name
 
 	}
 
@@ -341,7 +301,7 @@ module.exports = class ABObject extends ABObjectBase {
 
 			// rename class name
 			// NOTE: prevent cache same table in difference apps
-			Object.defineProperty(MyModel, 'name', {value: modelName });
+			Object.defineProperty(MyModel, 'name', { value: modelName });
 
 			__ModelPool[modelName] = MyModel;
 
@@ -378,7 +338,8 @@ module.exports = class ABObject extends ABObjectBase {
 
 		connectFields.forEach((f) => {
 			// find linked object name
-			var linkObject = this.application.objects((obj) => { return obj.id == f.settings.linkObject; })[0];
+			// var linkObject = this.application.objects((obj) => { return obj.id == f.settings.linkObject; })[0];
+			let linkObject = ABObjectCache.get(f.settings.linkObject);
 			if (linkObject == null) return;
 
 			var linkField = f.fieldLink();
@@ -570,7 +531,7 @@ module.exports = class ABObject extends ABObjectBase {
 				this.populateFindConditions(query, options, userData)
 			}
 
-sails.log.debug('ABObject.queryFind - SQL:', query.toString() );
+sails.log.debug('ABClassObject.queryFind - SQL:', query.toString() );
 
             resolve(query);
         })
@@ -627,7 +588,7 @@ sails.log.debug('ABObject.queryFind - SQL:', query.toString() );
 				.countDistinct('{field} as count'.replace("{field}", pkField))
 				.whereNotNull(pkField).first();
 
-sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
+sails.log.debug('ABClassObject.queryCount - SQL:', query.toString() );
 
 		return query;
 	}
@@ -757,7 +718,7 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 	    // Apply filters
 	    if (!_.isEmpty(where)) {
 
-	        sails.log.info('ABObject.populateFindConditions(): .where condition:', JSON.stringify(where, null, 4));
+	        sails.log.info('ABClassObject.populateFindConditions(): .where condition:', JSON.stringify(where, null, 4));
 
 
 
@@ -791,19 +752,24 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 	                }
 	                (condition.rules || []).forEach((r)=>{
 
-	                    Query[nextCombineKey]( function() { 
+						if (r && r.rules) {
+							parseCondition(r, Query);
+						}
+						else {
+							Query[nextCombineKey]( function() { 
 
-	                        // NOTE: pass 'this' as the Query object
-	                        // so we can perform embedded queries:
-							// parseCondition(r, this);
-							
-							// 'this' is changed type QueryBuilder to QueryBuilderBase
-							parseCondition(r, this);  // Query
-	                    });
-	                    
-	                })
-	                
-	                return;
+								// NOTE: pass 'this' as the Query object
+								// so we can perform embedded queries:
+								// parseCondition(r, this);
+								
+								// 'this' is changed type QueryBuilder to QueryBuilderBase
+								parseCondition(r, this);  // Query
+							});
+						}
+
+					});
+
+					return;
 				}
 
 				// Convert field id to column name
@@ -848,10 +814,20 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 
 							}
 							else {
-								condition.key = ('JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({prefix}.`translations`, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({prefix}.`translations`, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))')
-												.replace(/{prefix}/g, field.dbPrefix())
+
+								let transCol;
+								// If it is a query
+								if (this.viewName)
+									transCol = "`{prefix}.translations`";
+								else
+									transCol = "{prefix}.translations";
+
+								transCol = transCol.replace("{prefix}", field.dbPrefix().replace(/`/g, ""));
+
+								condition.key = ABMigration.connection().raw(('JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({transCol}, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({transCol}, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))')
+												.replace(/{transCol}/g, transCol)
 												.replace(/{languageCode}/g, userData.languageCode)
-												.replace(/{columnName}/g, field.columnName);
+												.replace(/{columnName}/g, field.columnName));
 							}
 						}
 
@@ -875,7 +851,7 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 	            //     value: ''
 	            // }
 
-	            sails.log.verbose('... basic condition:', JSON.stringify(condition, null, 4));
+// sails.log.verbose('... basic condition:', JSON.stringify(condition, null, 4));
 
 	            // We are going to use the 'raw' queries for knex becuase the '.' 
 	            // for JSON searching is misinterpreted as a sql identifier
@@ -1028,16 +1004,25 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 	            // update our where statement:
 				if (columnName && operator) {
 
-					// make sure to ` ` columnName (if it isn't our special '1' condition )
-					// see Policy:ABModelConvertSameAsUserConditions  for when that is applied
-					if (columnName != '1' && columnName.indexOf("`") == -1) {
+					if (typeof columnName == 'string') {
 
-						// if columnName is  a  table.field  then be sure to `` each one individually
-						var parts = columnName.split('.');
-						for (var p=0; p < parts.length; p++) {
-							parts[p] = "`"+parts[p]+"`";
+						// make sure to ` ` columnName (if it isn't our special '1' condition )
+						// see Policy:ABModelConvertSameAsUserConditions  for when that is applied
+						if (columnName != '1' && columnName.indexOf("`") == -1) {
+
+							// if columnName is  a  table.field  then be sure to `` each one individually
+							var parts = columnName.split('.');
+							for (var p=0; p < parts.length; p++) {
+								parts[p] = "`"+parts[p]+"`";
+							}
+							columnName = parts.join('.');
 						}
-						columnName = parts.join('.');
+
+						// ABClassQuery: 
+						// If this is query who create MySQL view, then column name does not have `
+						if (this.viewName) {
+							columnName = '`' + columnName.replace(/`/g, "") + '`';
+						}
 					}
 
 					whereRaw = whereRaw
@@ -1135,9 +1120,16 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 					sortClause = "{prefix}.`{columnName}`"
 									.replace('{prefix}', orderField.dbPrefix())
 									.replace('{columnName}', orderField.columnName);
-	            }
-	            query.orderByRaw(sortClause + " " + o.dir);
-	        })
+
+					// ABClassQuery: 
+					// If this is query who create MySQL view, then column name does not have `
+					if (this.viewName) {
+						sortClause = '`' + sortClause.replace(/`/g, "") + '`';
+					}
+
+				}
+				query.orderByRaw(sortClause + " " + o.dir);
+			})
 		}
 		
 
@@ -1259,3 +1251,4 @@ sails.log.debug('ABObject.queryCount - SQL:', query.toString() );
 
 }
 
+module.exports = ABClassObject;

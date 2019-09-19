@@ -71,30 +71,26 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
                 currentApp = app;
                 _logic.formClear();
                 _logic.busyStart();
-                OP.Comm.Service.get({
-                    url: '/app_builder/application/' + app.id + '/findModels'
-                })
-                    .then((list) => {
+                // currentApp.objectFind()
+                currentApp.objectInfo()
+                    .then(objects => {
 
+                        let availableObjs = [];
 
-                        list.forEach((data) => {
+                        objects.forEach(obj => {
+
+                            // skip if this object is in application
+                            if (currentApp.objects(o => o.id == obj.id)[0])
+                                return;
 
                             // translate label of objects
-                            OP.Multilingual.translate(data, data, ['label']);
+                            OP.Multilingual.translate(obj, obj, ['label']);
 
-                            // translate label of application
-                            OP.Multilingual.translate(data.application, data.application, ['label']);
-
-                            // translate label of fields
-                            if (data.fields && data.fields.forEach) {
-                                data.fields.forEach((f) => {
-                                    OP.Multilingual.translate(f, f, ['label']);
-                                });
-                            }
+                            availableObjs.push(obj);
 
                         });
 
-                        $$(ids.objectList).parse(list, 'json');
+                        $$(ids.objectList).parse(availableObjs, 'json');
 
                         _logic.busyEnd();
 
@@ -128,44 +124,54 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
             objectSelect: function () {
                 $$(ids.columnList).clearAll();
 
-                var selectedObj = $$(ids.objectList).getSelectedItem(false);
+                let selectedObj = $$(ids.objectList).getSelectedItem(false);
                 if (selectedObj) {
 
                     _logic.busyStart();
 
-                    var colNames = [];
+                    let colNames = [];
 
-                    // Parse results and update column list
-                    if (selectedObj.fields && selectedObj.fields.forEach) {
-                        selectedObj.fields.forEach((f) => {
+                    Promise.resolve()
+                        .then(() => currentApp.objectGet(selectedObj.id))
 
-                            // Skip these columns
-                            // TODO : skip connect field
-                            // if (col.model) continue;
-                            // if (col.collection) continue;
+                        .then(obj => {
 
-                            var fieldClass = ABFieldManager.allFields().filter((field) => field.defaults().key == f.key)[0];
-                            if (fieldClass == null) return;
+                            // Parse results and update column list
+                            if (obj) {
+                                obj.fields().forEach((f) => {
 
-                            // if the field is not support to import, then it is invisible
-                            if (fieldClass.defaults().supportImport == false) return;
+                                    // Skip these columns
+                                    // TODO : skip connect field
+                                    // if (col.model) continue;
+                                    // if (col.collection) continue;
 
-                            // // TODO
-                            // var supported = true;
+                                    let fieldClass = ABFieldManager.allFields().filter((field) => field.defaults().key == f.key)[0];
+                                    if (fieldClass == null) return;
 
-                            colNames.push({
-                                id: f.id,
-                                label: f.label,
-                                isvisible: true,
-                                // disabled: !supported
-                            });
+                                    // If connect field does not link to objects in app, then skip
+                                    if (f.key == 'connectObject' &&
+                                        !currentApp.objects(obj => obj.id == f.settings.linkObject)[0]) {
+                                        return;
+                                    }
+
+
+                                    colNames.push({
+                                        id: f.id,
+                                        label: f.label,
+                                        isvisible: true,
+                                        icon: f.icon
+                                        // disabled: !supported
+                                    });
+
+                                });
+                            }
+
+                            $$(ids.columnList).parse(colNames);
+
+                            _logic.busyEnd();
 
                         });
-                    }
 
-                    $$(ids.columnList).parse(colNames);
-
-                    _logic.busyEnd();
                 }
             },
 
@@ -209,29 +215,28 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
                 saveButton.disable();
                 _logic.busyStart();
 
-                var columns = $$(ids.columnList)
-                    .data
-                    .find({})
-                    .map((col) => {
-                        return {
-                            id: col.id,
-                            isHidden: !col.isvisible
-                        };
-                    });
+                // var columns = $$(ids.columnList)
+                //     .data
+                //     .find({})
+                //     .map((col) => {
+                //         return {
+                //             id: col.id,
+                //             isHidden: !col.isvisible
+                //         };
+                //     });
 
-                OP.Comm.Service.post({
-                    url: '/app_builder/application/' + currentApp.id + '/importModel',
-                    data: {
-                        sourceAppId: selectedObj.application.id,
-                        objectId: selectedObj.id,
-                        columns: columns
-                    }
-                })
-                    .then((objValues) => {
+                // OP.Comm.Service.post({
+                //     url: '/app_builder/application/' + currentApp.id + '/importModel',
+                //     data: {
+                //         sourceAppId: selectedObj.application.id,
+                //         objectId: selectedObj.id,
+                //         columns: columns
+                //     }
+                // })
+                currentApp.objectImport(selectedObj.id)
+                    .then(newObj => {
                         saveButton.enable();
                         _logic.busyEnd();
-
-                        var newObj = new ABObject(objValues, currentApp);
 
                         _logic.callbacks.onDone(newObj);
                     })
@@ -324,9 +329,13 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
                         },
                         template: (obj, common) => {
 
+                            // return `
+                            //     <span style="float: left;">${common.isvisible(obj, common)}</span>
+                            //     <span style="float: left;">${obj.label}</span>
+                            // `;
                             return `
-                                <span style="float: left;">${common.isvisible(obj, common)}</span>
-                                <span style="float: left;">${obj.label}</span>
+                                <span style="float: left;"><i class="fa fa-${obj.icon}"></i></span>
+                                <span style="float: left;"> ${obj.label}</span>
                             `;
 
                         }

@@ -9,9 +9,12 @@ var AD = require('ad-utils');
 var fs = require('fs');
 var _ = require('lodash');
 var path = require('path');
-var async = require('async');
 
 var ABViewPage = require(path.join('..', 'classes', 'ABViewPage'));
+
+var ApplicationGraph = require(path.join('..', 'graphModels', 'ABApplication'));
+var DataviewGraph = require(path.join('..', 'graphModels', 'ABDataview'));
+var ObjectGraph = require(path.join('..', 'graphModels', 'ABObject'));
 
 module.exports = {
 
@@ -19,10 +22,207 @@ module.exports = {
         model: "abapplication", // all lowercase model name
         actions: false,
         shortcuts: false,
-        rest: true
+        rest: false
     },
 
     /* Application */
+
+    /**
+     * GET /app_builder/application
+     * 
+     */
+    find: function(req, res) {
+
+        let cond = req.query;
+
+        ApplicationGraph
+            .find({
+                where: cond
+            })
+            .then(apps => {
+
+                res.AD.success((apps || []).map(a => a.toValidJsonFormat()));
+
+            },
+            err => {
+
+                if (err.code == 404) {
+                    res.AD.error("System cound not found this application", 404);
+                }
+                else {
+                    res.AD.error(false);
+                }
+
+                console.error(cond, err);
+
+            });
+
+    },
+
+
+    /**
+     * GET /app_builder/application/:appID
+     * 
+     */
+    findOne: function(req, res) {
+
+        let appID = req.param('appID');
+
+        ApplicationGraph
+            .findOne(appID)
+            .then(app => {
+
+                if (app) {
+                    let result = app.toValidJsonFormat();
+
+                    res.AD.success(result);
+                }
+                else
+                    res.AD.success(null);
+
+            },
+            err => {
+
+                if (err.code == 404) {
+                    res.AD.error("System cound not found this application", 404);
+                }
+                else {
+                    res.AD.error(false);
+                }
+
+                console.error(err);
+
+            });
+
+    },
+
+    /**
+     * GET /app_builder/application/info
+     * Return application id and label
+     * 
+     */
+    applicationInfo: function(req, res) {
+
+        let cond = req.query;
+
+        ApplicationGraph
+            .find({
+                select: ['id', 'json.translations'],
+                where: cond
+            })
+            .then(apps => {
+
+                res.AD.success((apps || []).map(a => a.toValidJsonFormat()));
+
+            },
+            err => {
+
+                if (err.code == 404) {
+                    res.AD.error("System cound not found this application", 404);
+                }
+                else {
+                    res.AD.error(false);
+                }
+
+                console.error(cond, err);
+
+            });
+
+    },
+
+    /**
+     * POST /app_builder/application
+     * create new application
+     * 
+     */
+    applicationCreate: function(req, res) {
+
+        let appValues = req.body;
+
+        ApplicationGraph.insert(appValues)
+            .then(app => {
+
+                res.AD.success(app);
+
+            },
+            err => {
+
+                if (err.code == 404) {
+                    res.AD.error("System cound not found this application", 404);
+                }
+                else {
+                    res.AD.error(false);
+                }
+
+                console.error(err);
+
+            });
+
+    },
+
+    /**
+     * PUT /app_builder/application/:appID
+     * update an application
+     * 
+     */
+    applicationUpdate: function(req, res) {
+
+        let appID = req.param('appID');
+        let appValues = req.body;
+
+        if (!appID)
+            return res.AD.error("Not found", 404);
+
+        ApplicationGraph.update(appID, appValues)
+            .then(app => {
+
+                res.AD.success(app);
+
+            },
+            err => {
+
+                if (err.code == 404) {
+                    res.AD.error("System cound not found this application", 404);
+                }
+                else {
+                    res.AD.error(false);
+                }
+
+                console.error(err);
+
+            });
+
+    },
+
+    /**
+     * DELETE /app_builder/application/:appID
+     * remove an application
+     * 
+     */
+    applicationRemove: function(req, res) {
+
+        let appID = req.param('appID');
+
+        ApplicationGraph.remove(appID)
+            .then(() => {
+
+                res.AD.success(true);
+
+            },
+            err => {
+
+                if (err.code == 404) {
+                    res.AD.error("System cound not found this application", 404);
+                }
+                else {
+                    res.AD.error(false);
+                }
+
+                console.error(err);
+
+            });
+
+    },
 
     /**
      * PUT /app_builder/application/:appID/info
@@ -35,6 +235,10 @@ module.exports = {
         var appInfo = req.body.translations;
         var appIsAdmin = JSON.parse(req.body.isAdminApp || false);
 
+        if (!appID) {
+            return res.AD.error("Not found", 404);
+        }
+ 
         Promise.resolve()
             .catch(() => {
                 res.AD.error(true);
@@ -44,25 +248,24 @@ module.exports = {
                 // Save application data
                 return new Promise((next, err) => {
 
-                    ABApplication.findOne({ id: appID })
-                    .fail(res.AD.error)
+                    let appValues = {
+                        isAdminApp: appIsAdmin,
+                        translations: appInfo
+                    };
+
+                    ApplicationGraph.update(appID, appValues)
+                    .catch(res.AD.error)
                     .then(function (app) {
         
-                        if (!app)
-                            return res.AD.error("Could not found this application");
-        
-                        app.json.isAdminApp = appIsAdmin;
-                        app.json.translations = appInfo;
-        
-                        // save to database
-                        app.save(function (errMessage) {
-                            if (errMessage) 
-                                err(errMessage);
-                            else
-                                next(app);
-                        });
-                        
-        
+                        if (app) {
+                            // TODO return valid app values
+                            next(app);
+                        }
+                        else {
+                            err("NOT FOUND");
+                            res.AD.error("Could not found this application");
+                        }
+
                     });
 
                 });
@@ -115,116 +318,6 @@ module.exports = {
     },
 
 
-    /* Objects */
-
-    /**
-     * PUT /app_builder/application/:appID/object
-     * 
-     * Add/Update a object into ABApplication
-     */
-    objectSave: function (req, res) {
-        var appID = req.param('appID');
-        var object = req.body.object;
-
-
-        jsonDataSave( appID, 'objects', object, req, res );
-
-
-        // ABApplication.findOne({ id: appID })
-        //     .fail(res.AD.error)
-        //     .then(function (app) {
-
-        //         if (app) {
-
-        //             app.json.objects = app.json.objects || [];
-
-        //             var indexObj = -1;
-        //             var updateObj = app.json.objects.filter(function (obj, index) {
-
-        //                 var isExists = obj.id == object.id;
-        //                 if (isExists) indexObj = index;
-
-        //                 return isExists;
-        //             })[0];
-
-        //             // update
-        //             if (updateObj) {
-        //                 app.json.objects[indexObj] = object;
-        //             }
-        //             // add new
-        //             else {
-        //                 app.json.objects.push(object);
-        //             }
-
-        //             // save to database
-        //             app.save(function (err) {
-        //                 if (err)
-        //                     res.AD.error(true);
-        //                 else
-        //                     res.AD.success(true);
-        //             });
-        //         }
-        //         else {
-        //             res.AD.success(true);
-        //         }
-
-
-        //     });
-
-    },
-
-    /**
-     * DELETE /app_builder/application/:appID/object/:id
-     * 
-     * Delete a object in ABApplication
-     */
-    objectDestroy: function (req, res) {
-        var appID = req.param('appID');
-        var objectID = req.param('id');
-
-        jsonDataDestroy( appID, 'objects', objectID, req, res);
-
-        // ABApplication.findOne({ id: appID })
-        //     .fail(res.AD.error)
-        //     .then(function (app) {
-
-        //         if (app) {
-
-        //             app.json.objects = app.json.objects || [];
-
-        //             var indexObj = -1;
-        //             var updateObj = app.json.objects.filter(function (obj, index) {
-
-        //                 var isExists = obj.id == objectID;
-        //                 if (isExists) indexObj = index;
-
-        //                 return isExists;
-        //             })[0];
-
-        //             // remove
-        //             if (indexObj > -1) {
-        //                 app.json.objects.splice(indexObj, 1);
-        //             }
-
-        //             // save to database
-        //             app.save(function (err) {
-        //                 if (err)
-        //                     res.AD.error(true);
-        //                 else
-        //                     res.AD.success(true);
-        //             });
-        //         }
-        //         else {
-        //             res.AD.success(true);
-        //         }
-
-
-        //     });
-
-    },
-
-
-
     /* Pages */
 
     /**
@@ -244,14 +337,15 @@ module.exports = {
                 // Pull a application
                 return new Promise((resolve, reject) => {
 
-                    ABApplication.findOne({ id: appID })
-                        .exec((err, result) => {
-                            if (err) return reject(err);
+                    ApplicationGraph.findOne(appID)
+                        .catch(reject)
+                        .then(result => {
 
                             resolve({
                                 app: result,
                                 appClass: result.toABClass()
                             });
+
                         });
 
                 });
@@ -313,16 +407,14 @@ module.exports = {
                     data.app.json = updateApp.json;
 
                     // save to database
-                    data.app.save(function (err) {
-                        if (err)
-                            reject(true);
-                        else {
+                    data.app.save()
+                        .catch(reject)
+                        .then(() => {
 
                             // refresh application class
                             data.appClass = data.app.toABClass();
 
                             resolve(data);
-                        }
                     });
 
 
@@ -351,7 +443,7 @@ module.exports = {
                         let options ={
                             name: pageClass.name,
                             label: pageLabel || vals.label || pageClass.name,
-                            urlPointer: pageClass.urlPointer(),
+                            pageID: pageClass.id,
                             icon: pageClass.icon
                         };
 
@@ -395,10 +487,10 @@ module.exports = {
                 // Pull a application
                 return new Promise((resolve, reject) => {
 
-                    ABApplication.findOne({ id: appID })
-                        .exec((err, result) => {
-                            if (err) reject(err);
-                            else resolve(result);
+                    ApplicationGraph.findOne(appID)
+                        .catch(reject)
+                        .then(result => {
+                            resolve(result);
                         });
 
                 });
@@ -440,12 +532,12 @@ module.exports = {
                     Application.json = updateApp.json;
 
                     // save to database
-                    Application.save(function (err) {
-                        if (err)
-                            reject(err);
-                        else
+                    Application.save()
+                        .catch(reject)
+                        .then(() => {
                             resolve(Application);
-                    });
+                        });
+
                 });
 
             })
@@ -553,6 +645,192 @@ module.exports = {
     },
 
 
+    /**
+     * GET /app_builder/application/:appID/livepage/:pageID
+     * 
+     * Return live display
+     */
+    livePage: function (req, res) {
+
+        let appID = req.param('appID');
+        let pageID = req.param('pageID');
+
+        let dataviewIds = [];
+        let linkFieldIds = [];
+
+        Promise.resolve()
+            .then(() => {
+
+                // Find application and page
+                return new Promise((next, err) => {
+
+                    ApplicationGraph
+                        .findOne(appID)
+                        .then(app => {
+
+                            if (!app)
+                                return next(null);
+
+                            let result = app.toValidJsonFormat();
+
+                            // Reduce data size to the live display
+                            if (pageID && result.json) {
+                                result.json.pages = (result.json.pages || []).filter(p => p.id == pageID);
+                            }
+
+                            next(result);
+
+                        }, err);
+
+                });
+
+            }, console.error)
+
+            .then(app => {
+
+                let addDataviewIdToList = (views) => {
+
+                    (views || []).forEach(v => {
+
+                        if (!v) return;
+
+                        // add data view id
+                        if (v.settings &&
+                            v.settings.dataviewID &&
+                            dataviewIds.indexOf(v.settings.dataviewID) < 0) {
+                            dataviewIds.push(v.settings.dataviewID);
+                        }
+
+                        // add id of link objects who are used in detail and form widgets
+                        if (v.key == "detail" || v.key == "form") {
+                            (v.views || []).forEach(subView => {
+
+                                if (subView.key == "detailselectivity" || subView.key == "connect") {
+                                    linkFieldIds.push({
+                                        objectId: subView.settings.objectId,
+                                        fieldId: subView.settings.fieldId
+                                    });
+                                }
+
+                            });
+                        }
+
+                        addDataviewIdToList(v.pages || []);
+                        addDataviewIdToList(v.views || []);
+
+                    });
+                };
+
+                addDataviewIdToList(app.json.pages);
+
+                return Promise.resolve(app);
+
+            })
+
+            // Pull data views
+            .then(app => {
+
+                return new Promise((next, err) => {
+
+                    if (!app) 
+                        return next();
+
+                    // pull ids of data view
+                    DataviewGraph.find({
+                        relations: ['object'],
+                        where: {
+                            "_key": { "in": dataviewIds }
+                        }
+                    })
+                    .catch(err)
+                    .then(dataviews => {
+
+                        let tasks = [];
+
+                        // pull Query data source
+                        (dataviews || []).forEach(dv => {
+                            tasks.push(dv.pullQueryDatasource());
+                        });
+
+                        Promise.all(tasks)
+                            .catch(err)
+                            .then(() => {
+
+                                app.json.dataviews = (dataviews || []);
+
+                                next(app);
+
+                            });
+
+                    });
+
+                });
+            }, console.error)
+
+            // Pull link objects who are used in detail and form widgets
+            .then(app => {
+
+                return new Promise((next, err) => {
+
+                    let remainsObjectIds = [];
+
+                    // Pull objects and queries from data views
+                    let datasources = app.json.dataviews.map(dv => {
+                        if (dv.query && dv.query[0]) {
+                            return dv.query[0];
+                        }
+                        else if (dv.object && dv.object[0]) {
+                            return dv.object[0];
+                        }
+                    });
+
+                    // Find missing objects
+                    (linkFieldIds || []).forEach(item => {
+                        let object = datasources.filter(obj => obj.id == item.objectId)[0];
+                        if (!object){
+                            remainsObjectIds.push(item.objectId);
+                        }
+                        else {
+
+                            let field = (object.fields || []).filter(f => f.id == item.fieldId)[0];
+                            if (field) {
+                                let linkObject = datasources.filter(obj => obj.id == field.settings.linkObject)[0];
+                                if (!linkObject)
+                                    remainsObjectIds.push(field.settings.linkObject);
+                            }
+                        }
+
+                    });
+
+                    if (remainsObjectIds.length < 1)
+                        return next(app);
+
+                    ObjectGraph.find({
+                        where: {
+                            "_key": { "in": remainsObjectIds }
+                        }
+                    })
+                    .catch(err)
+                    .then(objects => {
+
+                        app.json.objects = objects;
+
+                        next(app);
+
+                    });
+
+                });
+
+            })
+
+            .then(app => {
+
+                res.AD.success(app);
+
+            });
+
+    },
+
 
     /**
      * GET /app_builder/appJSON/:id?download=1
@@ -638,7 +916,7 @@ module.exports = {
         var appID = req.param('appID');
         var result = [];
 
-        ABApplication.find({ id: { '!': appID } })
+        ApplicationGraph.find({ id: { '!': appID } })
             .populate('translations')
             .fail(res.AD.error)
             .then(function (apps) {
@@ -709,7 +987,7 @@ module.exports = {
                 // Pull a application
                 return new Promise((resolve, reject) => {
 
-                    ABApplication.findOne({ id: targetAppID })
+                    ApplicationGraph.findOne({ id: targetAppID })
                         .fail(reject)
                         .then(function (app) {
 
@@ -728,41 +1006,6 @@ module.exports = {
             });
 
     },
-
-
-
-
-    /* Queries */
-
-    /**
-     * PUT /app_builder/application/:appID/query
-     * 
-     * Add/Update a object into ABApplication
-     */
-    querySave: function (req, res) {
-        var appID = req.param('appID');
-        var query = req.param('data');
-
-console.log('querySave():');
-console.log('allParams:', req.allParams());
-
-        jsonDataSave( appID, 'queries', query, req, res );
-
-    },
-
-    /**
-     * DELETE /app_builder/application/:appID/query/:id
-     * 
-     * Delete a query in ABApplication
-     */
-    queryDestroy: function (req, res) {
-        var appID = req.param('appID');
-        var queryID = req.param('id');
-
-        jsonDataDestroy( appID, 'queries', queryID, req, res )
-
-    },
-
 
 
     /* Mobile Apps */
@@ -803,7 +1046,7 @@ function jsonDataSave( appID, keyData, jsonEntry, req, res ) {
 console.log();
 console.log('jsonDataSave(): keyData['+ keyData + ']  jsonEntry:', jsonEntry);
 console.log();
-    ABApplication.findOne({ id: appID })
+    ApplicationGraph.findOne({ id: appID })
         .fail(res.AD.error)
         .then(function (app) {
 
@@ -831,12 +1074,13 @@ console.log();
 console.log('app.json['+keyData+'] : ', app.json[keyData]);
 console.log();
                 // save to database
-                app.save(function (err) {
-                    if (err)
+                app.save()
+                    .catch(err => {
                         res.AD.error(true);
-                    else
+                    })
+                    .then(() => {
                         res.AD.success(true);
-                });
+                    });
             }
             else {
                 res.AD.success(true);
@@ -849,7 +1093,7 @@ console.log();
 
 function jsonDataDestroy( appID, keyData, itemID, req, res ) {
 
-    ABApplication.findOne({ id: appID })
+    ApplicationGraph.findOne({ id: appID })
         .fail(res.AD.error)
         .then(function (app) {
 
@@ -872,12 +1116,13 @@ function jsonDataDestroy( appID, keyData, itemID, req, res ) {
                 }
 
                 // save to database
-                app.save(function (err) {
-                    if (err)
+                app.save()
+                    .catch(() => {
                         res.AD.error(true);
-                    else
+                    })
+                    .then(() => {
                         res.AD.success(true);
-                });
+                    });
             }
             else {
                 res.AD.success(true);

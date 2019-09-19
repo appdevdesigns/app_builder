@@ -180,13 +180,15 @@ class ABFieldString extends ABField {
 								var currCol = t.string(this.columnName);
 
 								// default value
-								if (this.settings.default && this.settings.default.indexOf("{uuid}") == -1)
+								if (this.settings.default && 
+									this.settings.default.indexOf("{uuid}") == -1)
 									currCol.defaultTo(this.settings.default);
 								else
 									currCol.defaultTo(null);
 
 								// not nullable/nullable
-								if (this.settings.required) 
+								if (this.settings.required &&
+									this.settings.default)
 									currCol.notNullable();
 								else
 									currCol.nullable();

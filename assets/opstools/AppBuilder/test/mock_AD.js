@@ -75,6 +75,11 @@ AD.comm = {
 		}
 	},
 
+	hub: {
+		subscribe: function(eventName, cb) {
+		}
+	},
+
 
 	// AD.comm.mockURL(method, url, value, success);
 	//

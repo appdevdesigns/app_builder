@@ -175,7 +175,7 @@ export default class ABViewDetailImage extends ABViewDetailComponent {
 			component: App.unique(idBase + '_component'),
 		}
 
-		var defaultImageUrl = field.settings.defaultImageUrl;
+		var defaultImageUrl = field ? field.settings.defaultImageUrl : "";
 
 		component.ui.id = ids.component;
 
@@ -194,8 +194,8 @@ export default class ABViewDetailImage extends ABViewDetailComponent {
 				if (val || (!val && defaultImageUrl)) {
 
 					let imageUrl = imageUrl = "/opsportal/image/" + this.application.name + "/" + (val || defaultImageUrl);
-					let width = field.settings.imageWidth ? field.settings.imageWidth + 'px' : '200px';
-					let height = field.settings.imageHeight ? field.settings.imageHeight + 'px' : '100%';
+					let width = ((field && field.settings.imageWidth) ? field.settings.imageWidth + 'px' : '200px');
+					let height = ((field && field.settings.imageHeight) ? field.settings.imageHeight + 'px' : '100%');
 
 					if (this.settings.height)
 						height = this.settings.height + 'px';

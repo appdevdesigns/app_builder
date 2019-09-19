@@ -29,7 +29,7 @@ function L(key, altText) {
 var ABViewGridPropertyComponentDefaults = {
 	label:'',	// label is required and you can add more if the component needs them
 	// format:0  	// 0 - normal, 1 - title, 2 - description
-	dataSource:'',
+	dataviewID:'', // uuid of ABDataview
 	isEditable:0,
 	massUpdate:0,
 	allowDelete:0,
@@ -136,7 +136,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		super.fromValues(values);
 
     	// if this is being instantiated on a read from the Property UI,
-		this.settings.dataSource = this.settings.dataSource || ABViewGridPropertyComponentDefaults.dataSource;
+		this.settings.dataviewID = this.settings.dataviewID || ABViewGridPropertyComponentDefaults.dataviewID;
 		
 		// Convert to boolean
 		this.settings.isEditable = JSON.parse(this.settings.isEditable || ABViewGridPropertyComponentDefaults.isEditable);
@@ -212,9 +212,9 @@ export default class ABViewGrid extends ABViewWidget  {
 			init: () => {
 
 				// remove id of the component in caching for refresh .bind of the data collection
-				let dc = this.dataCollection;
-				if (dc)
-					dc.removeComponent(DataTable.ui.id);
+				let dv = this.dataview;
+				if (dv)
+					dv.removeComponent(DataTable.ui.id);
 
 				DataTable.init();
 			}
@@ -504,7 +504,7 @@ export default class ABViewGrid extends ABViewWidget  {
 			        rows:[
 						{
 							view:"select",
-							name:"dataSource",
+							name:"dataview",
 							label: L('ab.component.label.dataSource', '*Object:'),
 							labelWidth: App.config.labelWidthLarge,
 							on: {
@@ -520,9 +520,9 @@ export default class ABViewGrid extends ABViewWidget  {
 										$$(ids.detailsPage).setValue("");
 										$$(ids.editPage).setValue("");
 
-										var currDc = _logic.currentEditObject().pageRoot().dataCollections(dc => dc.id == newv)[0];
+										var currDv = _logic.currentEditObject().application.dataviews(dv => dv.id == newv)[0];
 										// disallow edit data of query
-										if (currDc && currDc.sourceType == "query") {
+										if (currDv && currDv.sourceType == "query") {
 
 											$$(ids.isEditable).setValue(false);
 											$$(ids.massUpdate).setValue(false);
@@ -819,7 +819,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		
 		this.view = view;
 
-		$$(ids.dataSource).setValue(view.settings.dataSource);
+		$$(ids.dataview).setValue(view.settings.dataviewID);
 		$$(ids.isEditable).setValue(view.settings.isEditable);
 		$$(ids.massUpdate).setValue(view.settings.massUpdate);
 		$$(ids.allowDelete).setValue(view.settings.allowDelete);
@@ -865,7 +865,7 @@ export default class ABViewGrid extends ABViewWidget  {
 			}, this);
 		}
 		
-		//Load Datacollection to QueryBuilder
+		//Load ABDataview to QueryBuilder
 		this.propertyUpdateGridFilterObject(ids, view);
 
 		// Populate values to link page properties
@@ -879,7 +879,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		super.propertyEditorValues(ids, view);
 
 		// Retrive the values of your properties from Webix and store them in the view
-		view.settings.dataSource = $$(ids.dataSource).getValue();
+		view.settings.dataviewID = $$(ids.dataview).getValue();
 		view.settings.isEditable = $$(ids.isEditable).getValue();
 		view.settings.massUpdate = $$(ids.massUpdate).getValue();
 		view.settings.allowDelete = $$(ids.allowDelete).getValue();
@@ -938,9 +938,9 @@ export default class ABViewGrid extends ABViewWidget  {
 		if (!view) return;
 
 		// Populate values to QueryBuilder
-		var selectedDc = view.dataCollection;
+		var selectedDv = view.dataview;
 
-		if (selectedDc) {
+		if (selectedDv) {
 			// if (view.settings.gridFilter.filterOption == 2) {
 			// 	//Force to LoadAll
 			// 	selectedDc.settings.loadAll = true;
@@ -950,9 +950,9 @@ export default class ABViewGrid extends ABViewWidget  {
 			// dataCopy.objectWorkspace = view.settings.objectWorkspace;
 			// dataCopy.isLoadAll = selectedDc.settings.loadAll;
 
-			let object = selectedDc.datasource;
+			let object = selectedDv.datasource;
 			if (object) {
-				PopupFilterProperty.objectLoad(object, selectedDc.settings.loadAll);
+				PopupFilterProperty.objectLoad(object, selectedDv.settings.loadAll);
 			}
 		}
 	}
@@ -1025,7 +1025,8 @@ export default class ABViewGrid extends ABViewWidget  {
 			hideButtons: this.settings.hideButtons,
 			groupBy: this.settings.groupBy,
 			hiddenFields: this.settings.objectWorkspace.hiddenFields,
-			frozenColumnID: this.settings.objectWorkspace.frozenColumnID || ""
+			frozenColumnID: this.settings.objectWorkspace.frozenColumnID || "",
+			isTreeDatable: this.dataview && this.dataview.isGroup
 		}
 
 		let DataTable = new ABWorkspaceDatatable(App, idBase, settings);
@@ -1040,7 +1041,7 @@ export default class ABViewGrid extends ABViewWidget  {
 
 		let _init = () => {
 
-			if (this.settings.dataSource != "") {
+			if (this.settings.dataviewID != "") {
 				DataTable.init({
 					onCheckboxChecked: _logic.callbackCheckboxChecked
 				});
@@ -1104,14 +1105,10 @@ export default class ABViewGrid extends ABViewWidget  {
 					DataTable.hideHeader();
 				}
 
-				// var dataSource = this.application.objects((o)=>{
-				// 	return o.id == this.settings.dataSource;
-				// });
-				var dc = this.dataCollection;
+				var dv = this.dataview;
+				if (dv && dv.datasource) {
 
-				if (dc && dc.datasource) {
-
-					CurrentObject = dc.datasource;
+					CurrentObject = dv.datasource;
 
 					DataTable.objectLoad(CurrentObject);
 					PopupMassUpdateComponent.objectLoad(CurrentObject, DataTable);
@@ -1128,10 +1125,10 @@ export default class ABViewGrid extends ABViewWidget  {
 					// link page helper
 					linkPage.init({
 						view: this,
-						dataCollection: dc
+						dataview: dv
 					});
 
-					dc.bind($$(DataTable.ui.id));
+					dv.bind($$(DataTable.ui.id));
 
 					var editPage = this.settings.editPage;
 					var detailsPage = this.settings.detailsPage;
@@ -1174,21 +1171,21 @@ export default class ABViewGrid extends ABViewWidget  {
 						if (e == "auto") {
 							// automatically choose the details page if a record matches
 							// later on we can decide if we want to have the choice to select the edit page intead.
-							_logic.changePage(dc, item, detailsPage);
+							_logic.changePage(dv, item, detailsPage);
 							toggleTab(detailsTab, this);
 						} else if (e.target.className.indexOf('eye') > -1) {
-							_logic.changePage(dc, item, detailsPage);
+							_logic.changePage(dv, item, detailsPage);
 							toggleTab(detailsTab, this);
 						} else if (e.target.className.indexOf('pencil') > -1) {
-							_logic.changePage(dc, item, editPage);
+							_logic.changePage(dv, item, editPage);
 							toggleTab(editTab, this);
 						} else if (e.target.className.indexOf('trash') > -1) {
 							// don't do anything for delete it is handled elsewhere
 						} else if ( !isEditable && detailsPage.length ) {
-							_logic.changePage(dc, item, detailsPage);
+							_logic.changePage(dv, item, detailsPage);
 							toggleTab(detailsTab, this);
 						} else if ( !isEditable && !detailsPage.length && editPage.length) {
-							_logic.changePage(dc, item, editPage);
+							_logic.changePage(dv, item, editPage);
 							toggleTab(editTab, this);
 						}
 						
@@ -1222,7 +1219,7 @@ export default class ABViewGrid extends ABViewWidget  {
 				{}
 			]
 		};
-		if (this.settings.dataSource != "") {
+		if (this.settings.dataviewID != "") {
 			tableUI = {
 				type: "space",
 				padding: 17,
@@ -1374,18 +1371,30 @@ export default class ABViewGrid extends ABViewWidget  {
 
 			},
 
-			changePage: (dc, rowId, page) => {
+			changePage: (dv, rowItem, page) => {
 
-				linkPage.changePage(page, rowId);
-				// dc.setCursor(id);
-				// super.changePage(page);
+				let rowId = (rowItem && rowItem.row ? rowItem.row : null);
+
+				// Set cursor to data view
+				if (dv) {
+					dv.setCursor(rowId);
+				}
+
+				// Pass settings to link page module
+				if (linkPage) {
+					linkPage.changePage(page, rowId);
+				}
+
+				super.changePage(page);
 			},
 			
 			selectRow: (rowData) => {
 
 				if (!$$(DataTable.ui.id)) return;
 
-				if (rowData && rowData.id)
+				if (rowData &&
+					rowData.id &&
+					$$(DataTable.ui.id).exists(rowData.id))
 					$$(DataTable.ui.id).select(rowData.id, false);
 				else
 					$$(DataTable.ui.id).select(null, false);
@@ -1480,11 +1489,11 @@ export default class ABViewGrid extends ABViewWidget  {
 				$$(DataTable.ui.id).adjust();
 			}
 
-			var dc = this.dataCollection;
-			if (dc) {
+			var dv = this.dataview;
+			if (dv) {
 
 				this.eventAdd({
-					emitter: dc,
+					emitter: dv,
 					eventName: 'changeCursor',
 					listener: _logic.selectRow
 				});
@@ -1519,23 +1528,23 @@ export default class ABViewGrid extends ABViewWidget  {
 		// 	objects.push({id:o.id, value:o.label});
 		// });
 		// Pull data collections to options
-		var objectOptions = view.pageRoot().dataCollections().map((dc) => {
+		var objectOptions = view.application.dataviews().map(dv => {
 			return {
-				id: dc.id,
-				value: dc.label
+				id: dv.id,
+				value: dv.label
 			};
 		});
 		objectOptions.unshift(defaultOption);
-		$$(ids.dataSource).define("options", objectOptions);
-		$$(ids.dataSource).refresh();
+		$$(ids.dataview).define("options", objectOptions);
+		$$(ids.dataview).refresh();
 		// console.log("getting data source");
-		// console.log($$(ids.dataSource).getValue());
-		// console.log(view.settings.dataSource);
-		if (view.settings.dataSource != '') {
-			$$(ids.dataSource).setValue(view.settings.dataSource);
+		// console.log($$(ids.dataview).getValue());
+		// console.log(view.settings.dataviewID);
+		if (view.settings.dataview != '') {
+			$$(ids.dataview).setValue(view.settings.dataviewID);
 			// $$(ids.linkedObject).show();
 		} else {
-			$$(ids.dataSource).setValue('');
+			$$(ids.dataview).setValue('');
 			// $$(ids.linkedObject).hide();
 		}
 
@@ -1543,9 +1552,9 @@ export default class ABViewGrid extends ABViewWidget  {
 		let groupFields = [
 			{ id: '', value: L('ab.component.grid.noGroupBy', '*No group field') }
 		];
-		var dc = this.dataCollection;
-		if (dc && dc.datasource) {
-			dc.datasource.fields(f => {
+		var dv = this.dataview;
+		if (dv && dv.datasource) {
+			dv.datasource.fields(f => {
 				return f.key != 'connectObject' && view.settings.objectWorkspace.hiddenFields.indexOf(f.columnName) < 0;
 			}).forEach(f => {
 				groupFields.push({
@@ -1560,7 +1569,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		// Set the connected objects you can choose from in the list
 		// var linkedObjects = [];
 		// var linkedObjectsOptions = {id:'', value:L('ab.component.label.noLinkedObject', '*No linked object')};
-		// linkedObjects = view.application.connectedObjects(view.settings.dataSource);
+		// linkedObjects = view.application.connectedObjects(view.settings.dataviewID);
 		// linkedObjects.unshift(linkedObjectsOptions);
 		// 
 		// $$(ids.linkedObject)
@@ -1578,7 +1587,7 @@ export default class ABViewGrid extends ABViewWidget  {
 		// var connectedFields = [];
 		// // var connectedFieldsOptions = {id:'', value:L('ab.component.label.selectField', '*Select a field')};
 		// if (view.settings.linkedObject != '') {
-		// 	connectedFields = view.application.connectedFields(view.settings.dataSource, view.settings.linkedObject);
+		// 	connectedFields = view.application.connectedFields(view.settings.dataviewID, view.settings.linkedObject);
 		// 	// connectedFields.unshift(connectedFieldsOptions);			
 		// }
 		// 
@@ -1606,13 +1615,13 @@ export default class ABViewGrid extends ABViewWidget  {
 		// editForms = view.loopPages(view, view.application._pages, editForms, "form");
 		// view.application._pages.forEach((o)=>{
 		// 	o._views.forEach((j)=>{
-		// 		if (j.key == "form" && j.settings.object == view.settings.dataSource) {
+		// 		if (j.key == "form" && j.settings.object == view.settings.dataviewID) {
 		// 			editForms.push({id:j.parent.id, value:j.label});				
 		// 		}
 		// 		if (j.key == "tab") {
 		// 			j._views.forEach((k)=>{
 		// 				k._views.forEach((l)=>{	
-		// 					if (l.key == "form" && l.settings.datacollection == view.settings.dataSource) {
+		// 					if (l.key == "form" && l.settings.dataviewID == view.settings.dataviewID) {
 		// 						editForms.push({id:l.parent.id, value:l.label});				
 		// 					}
 		// 				});
@@ -1628,25 +1637,25 @@ export default class ABViewGrid extends ABViewWidget  {
 	}
 	
 	populatePopupEditors(view, dataSource) {
-		var dc = this.dataCollection;
-		if (!dc) return;
+		var dv = this.dataview;
+		if (!dv) return;
 		// if (view.settings.gridFilter.filterOption == 2) {
 		// 	//Force to LoadAll
 		// 	dc.settings.loadAll = true;
 		// }
 
-		let object = dc.datasource;
+		let object = dv.datasource;
 		if (!object) return;
 
 		// var dataCopy = dc.datasource.clone();
 		// dataCopy.objectWorkspace = view.settings.objectWorkspace;
 		// dataCopy.isLoadAll = dc.settings.loadAll;
 
-		// if (view.settings.dataSource != "") {
+		// if (view.settings.dataviewID != "") {
 		// var dataSource = view.application.objects((o)=>{
-		// 	return o.id == view.settings.dataSource;
+		// 	return o.id == view.settings.dataviewID;
 		// });
-		// var dataSource = this.dataCollection;
+		// var dataSource = this.dataview;
 		// var dataCopy = dataSource.datasource.clone();
 		// console.log(view);
 		// dataCopy.objectWorkspace = view.settings.objectWorkspace;
@@ -1734,7 +1743,7 @@ export default class ABViewGrid extends ABViewWidget  {
 	// loopViews(view, views, detailViews, type) {
 	// 	if (typeof views == "array" || typeof views == "object") {
 	// 		views.forEach((v)=>{
-	// 			if (v.key == type && v.settings.datacollection == view.settings.dataSource) {
+	// 			if (v.key == type && v.settings.dataviewID == view.settings.dataSource) {
 	// 				detailViews.push({id:v.pageParent().id, value:v.label});
 	// 			}
 	// 			// find views inside layouts
@@ -1751,7 +1760,7 @@ export default class ABViewGrid extends ABViewWidget  {
 
 	// 						vc.views().forEach((st)=>{
 	// 							// detailViews = view.loopViews(view, st._views, detailViews, type);							
-	// 							var subViews = st.views(subV => subV.key == type && subV.settings.datacollection == view.settings.dataSource);
+	// 							var subViews = st.views(subV => subV.key == type && subV.settings.dataviewID == view.settings.dataSource);
 	// 							subViews.forEach( (sub)=>{
 	// 								detailViews.push({id:v.pageParent().id + ":" + st.id, value:st.label + ":" + sub.label});								
 	// 							});
@@ -1759,7 +1768,7 @@ export default class ABViewGrid extends ABViewWidget  {
 
 	// 					});
 
-	// 					var subViews = tab.views(subV => subV.key == type && subV.settings.datacollection == view.settings.dataSource);
+	// 					var subViews = tab.views(subV => subV.key == type && subV.settings.dataviewID == view.settings.dataSource);
 	// 					subViews.forEach( (sub)=>{
 	// 						detailViews.push({id:v.pageParent().id + ":" + tab.id, value:tab.label + ":" + sub.label});								
 	// 					});
@@ -1772,17 +1781,7 @@ export default class ABViewGrid extends ABViewWidget  {
 	// 	}
 	// 	return detailViews;
 	// }
-	
-	/**
-	 * @property dataCollection
-	 * return ABViewDataCollection of this form
-	 * 
-	 * @return {ABViewDataCollection}
-	 */
-	get dataCollection() {
-		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.dataSource)[0];
-	}
-	
+
 	removeField(field, cb) {
 		
 		var shouldSave = false;
@@ -1829,7 +1828,7 @@ export default class ABViewGrid extends ABViewWidget  {
 
 			var reportDef = {};
 
-			var dc = this.dataCollection;
+			var dc = this.dataview;
 			if (!dc) return resolve(reportDef);
 	
 			var object = dc.datasource;
@@ -1921,7 +1920,7 @@ export default class ABViewGrid extends ABViewWidget  {
 
 	copyUpdateProperyList() {
 
-		return ['dataSource', 'detailsPage', 'detailsTab', 'editPage', 'editTab'];
+		return ['dataviewID', 'detailsPage', 'detailsTab', 'editPage', 'editTab'];
 
 	}
 

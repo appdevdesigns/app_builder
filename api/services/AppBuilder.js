@@ -9,7 +9,9 @@ var _ = require('lodash');
 var moment = require('moment');
 var uuid = require('node-uuid');
 
-
+var ABGraphApplication = require(path.join('..', 'graphModels', 'ABApplication'));
+var ABGraphObject = require(path.join('..', 'graphModels', 'ABObject'));
+var ABGraphQuery = require(path.join('..', 'graphModels', 'ABQuery'));
 
 
 
@@ -164,101 +166,203 @@ module.exports = {
          */
         verifyAndReturnObject: function (req, res) {
 
-            return new Promise(
-                (resolve, reject) => {
+            let result;
+            let objID = req.param('objID', -1);
 
-                    var appID = req.param('appID', -1);
-                    var objID = req.param('objID', -1);
+            sails.log.verbose('... objID:' + objID);
 
-                    sails.log.verbose('... appID:' + appID);
-                    sails.log.verbose('... objID:' + objID);
+            // Verify input params are valid:
+            let invalidError = null;
 
-                    // Verify input params are valid:
-                    var invalidError = null;
+            if (objID == -1) {
+                invalidError = ADCore.error.fromKey('E_MISSINGPARAM');
+                invalidError.details = 'missing object.id';
+            }
+            if (invalidError) {
+                sails.log.error(invalidError);
+                invalidError.HTTPCode = 400;
+                // res.AD.error(invalidError, 400);
+                return Promise.reject(invalidError);
+            }
 
-                    if (appID == -1) {
-                        invalidError = ADCore.error.fromKey('E_MISSINGPARAM');
-                        invalidError.details = 'missing application.id';
-                    } else if (objID == -1) {
-                        invalidError = ADCore.error.fromKey('E_MISSINGPARAM');
-                        invalidError.details = 'missing object.id';
-                    }
-                    if (invalidError) {
-                        sails.log.error(invalidError);
-                        invalidError.HTTPCode = 400;
-                        // res.AD.error(invalidError, 400);
-                        reject(invalidError);
-                        return;
-                    }
+            let sendError = () => {
 
+                if (!result) {
+                    // error: couldn't find the application
+                    var err = ADCore.error.fromKey('E_NOTFOUND');
+                    err.message = "Object/Query not found.";
+                    // err.appID = appID;
+                    err.objID = objID;
+                    sails.log.error(err);
+                    res.AD.error(err, 404);
+                    return Promise.reject(err);
+                }
 
-                    ABApplication.findOne({ id: appID })
-                        .then(function (app) {
+            }
 
-                            if (app) {
+            return Promise.resolve()
+                .then(() => {
 
-                                var Application = app.toABClass();
-                                var object = Application.objects((o) => { return o.id == objID; })[0];
+                    // Get from caching
+                    result = ABObjectCache.get(objID);
+                    return Promise.resolve();
 
-                                if (object) {
+                })
+                .then(() => {
 
-                                    resolve(object);
+                    return new Promise((next, err) => {
 
-                                } else {
+                        if (result)
+                            return next();
 
-                                    // check to see if provided objID is actually a query:
-                                    var query = Application.queries((q) => { return q.id == objID; })[0];
-                                    if (query) {
-                                        resolve(query);
-                                    } else {
+                        ABGraphObject.findOne(objID)
+                        .catch(err)
+                        .then(function (object) {
 
-                                        // error: object not found!
-                                        var err = ADCore.error.fromKey('E_NOTFOUND');
-                                        err.message = "Object not found.";
-                                        err.objid = objID;
-                                        sails.log.error(err);
-                                        res.AD.error(err, 404);
-                                        reject(err);
+                            if (object)
+                                result = object.toABClass();
 
-                                    }
+                            next();
 
-                                }
-
-                            } else {
-
-                                // error: couldn't find the application
-                                var err = ADCore.error.fromKey('E_NOTFOUND');
-                                err.message = "Application not found.";
-                                err.appID = appID;
-                                sails.log.error(err);
-                                res.AD.error(err, 404);
-                                reject(err);
-                            }
-
-                        })
-                        .catch(function (err) {
-
-                            // on MySQL connection problems, retry
-                            if (err.message && err.message.indexOf('Could not connect to MySQL') > -1) {
-
-                                // let's try it again:
-                                sails.log.error('AppBuilder:verifyAndReturnObject():MySQL connection error --> retrying.');
-                                AppBuilder.routes.verifyAndReturnObject(req, res)
-                                .then(resolve)
-                                .catch(reject)
-                                return;
-                            }
-
-                            // otherwise, just send back the error:
-                            ADCore.error.log('ABApplication.findOne() failed:', { error: err, message: err.message, id: appID });
-                            res.AD.error(err);
-                            reject(err);
                         });
 
-                }
-            )
+                    });
+
+                })
+                .then(() => {
+
+                    return new Promise((next, err) => {
+
+                        if (result)
+                            return next();
+
+                        ABGraphQuery.findOne(objID, {
+                            relations: ['objects']
+                        })
+                        .catch(err)
+                        .then(function (query) {
+
+                            if (query)
+                                result = query.toABClass();
+
+                            next();
+
+                        });
+
+                    });
+
+                })
+                .then(() => {
+                    return new Promise((next, err) => {
+
+                        if (result)
+                            next(result);
+                        else {
+                            err();
+                            return sendError();
+                        }
+
+                    });
+                });
 
         }
+        // verifyAndReturnObject: function (req, res) {
+
+        //     return new Promise(
+        //         (resolve, reject) => {
+
+        //             var appID = req.param('appID', -1);
+        //             var objID = req.param('objID', -1);
+
+        //             sails.log.verbose('... appID:' + appID);
+        //             sails.log.verbose('... objID:' + objID);
+
+        //             // Verify input params are valid:
+        //             var invalidError = null;
+
+        //             if (appID == -1) {
+        //                 invalidError = ADCore.error.fromKey('E_MISSINGPARAM');
+        //                 invalidError.details = 'missing application.id';
+        //             } else if (objID == -1) {
+        //                 invalidError = ADCore.error.fromKey('E_MISSINGPARAM');
+        //                 invalidError.details = 'missing object.id';
+        //             }
+        //             if (invalidError) {
+        //                 sails.log.error(invalidError);
+        //                 invalidError.HTTPCode = 400;
+        //                 // res.AD.error(invalidError, 400);
+        //                 reject(invalidError);
+        //                 return;
+        //             }
+
+
+        //             ABApplication.findOne({ id: appID })
+        //                 .then(function (app) {
+
+        //                     if (app) {
+
+        //                         var Application = app.toABClass();
+        //                         var object = Application.objects((o) => { return o.id == objID; })[0];
+
+        //                         if (object) {
+
+        //                             resolve(object);
+
+        //                         } else {
+
+        //                             // check to see if provided objID is actually a query:
+        //                             var query = Application.queries((q) => { return q.id == objID; })[0];
+        //                             if (query) {
+        //                                 resolve(query);
+        //                             } else {
+
+        //                                 // error: object not found!
+        //                                 var err = ADCore.error.fromKey('E_NOTFOUND');
+        //                                 err.message = "Object not found.";
+        //                                 err.objid = objID;
+        //                                 sails.log.error(err);
+        //                                 res.AD.error(err, 404);
+        //                                 reject(err);
+
+        //                             }
+
+        //                         }
+
+        //                     } else {
+
+        //                         // error: couldn't find the application
+        //                         var err = ADCore.error.fromKey('E_NOTFOUND');
+        //                         err.message = "Application not found.";
+        //                         err.appID = appID;
+        //                         sails.log.error(err);
+        //                         res.AD.error(err, 404);
+        //                         reject(err);
+        //                     }
+
+        //                 })
+        //                 .catch(function (err) {
+
+        //                     // on MySQL connection problems, retry
+        //                     if (err.message && err.message.indexOf('Could not connect to MySQL') > -1) {
+
+        //                         // let's try it again:
+        //                         sails.log.error('AppBuilder:verifyAndReturnObject():MySQL connection error --> retrying.');
+        //                         AppBuilder.routes.verifyAndReturnObject(req, res)
+        //                         .then(resolve)
+        //                         .catch(reject)
+        //                         return;
+        //                     }
+
+        //                     // otherwise, just send back the error:
+        //                     ADCore.error.log('ABApplication.findOne() failed:', { error: err, message: err.message, id: appID });
+        //                     res.AD.error(err);
+        //                     reject(err);
+        //                 });
+
+        //         }
+        //     )
+
+        // }
 
     },
 
@@ -832,21 +936,18 @@ module.exports = {
 
                 async.series([
                     function (next) {
-                        ABApplication.find({ id: appID })
-                            .populate('translations')
-                            .then(function (list) {
+                        ABGraphApplication.findOne(appID)
+                            .then(function (app) {
 
-                                if (!list || !list[0]) {
+                                if (!app) {
                                     var err = new Error('Application not found');
                                     ADCore.error.log('Application not found ', { error: err, appID: appID });
                                     next(err);
                                     return;
                                 }
 
-
-                                var obj = list[0];
                                 // Only numbers and alphabets will be used
-                                Application = obj;
+                                Application = app;
                                 next();
                                 return null;
                             })
@@ -872,7 +973,7 @@ module.exports = {
                         var label = areaName;  // default if no translations provided
 
                         // now take the 1st translation we find:
-                        Application.translations.some(function (trans) {
+                        (Application.json.translations || []).some(function (trans) {
                             if (label == areaName) {
                                 label = trans.label;
                                 return true;  // stops the looping.
@@ -923,16 +1024,15 @@ module.exports = {
 
                 async.series([
                     function (next) {
-                        ABApplication.find({ id: appID })
-                            .populate('translations')
-                            .then(function (list) {
-                                if (!list || !list[0]) {
+                        ABGraphApplication.findOne(appID)
+                            .then(function (app) {
+                                if (!app) {
                                     throw new Error('Application not found');
                                 }
-                                var obj = list[0];
+
                                 // Only numbers and alphabets will be used
-                                Application = obj;
-                                appName = AppBuilder.rules.toApplicationNameFormat(obj.name);
+                                Application = app;
+                                // appName = AppBuilder.rules.toApplicationNameFormat(app.name);
 
                                 next();
                                 return null;
@@ -947,7 +1047,7 @@ module.exports = {
                         var areaName = Application.name;
                         var areaKey = Application.areaKey();
                         var label = areaName;  // default if no translations provided
-                        Application.translations.some(function (trans) {
+                        (Application.json.translations || []).some(function (trans) {
                             if (label == areaName) {
                                 label = trans.label;
                                 return true;  // stops the looping.
@@ -1001,7 +1101,7 @@ module.exports = {
      * @param {Object} options - {
      *                              name: string,
      *                              label: string,
-     *                              urlPointer: string,
+     *                              pageID: uuid,
      *                              icon: string [optional - "file-o"],
      *                              isAdminPage: boolean
      *                          }
@@ -1046,7 +1146,7 @@ module.exports = {
                     path: 'opstools/BuildApp/controllers/ABLiveTool.js',
                     init: {
                         app: application.id,
-                        page: options.urlPointer
+                        page: options.pageID
                     }
                 }
             ];
@@ -2046,7 +2146,7 @@ module.exports = {
                                 pullData();
                             }
                             else {
-                                ABApplication.findOne({ id: page.application })
+                                ABGraphApplication.findOne(page.application)
                                     .then(function (result) {
                                         if (result) {
                                             applications[page.application] = result;

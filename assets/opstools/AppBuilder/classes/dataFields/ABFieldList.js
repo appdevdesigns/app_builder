@@ -394,34 +394,35 @@ var ABFieldListComponent = new ABFieldComponent({
 		 * @param {string} newVal	The new value of label
 		 * @param {string} oldVal	The previous value
 		 */
-		requiredOnChange: (newVal, oldVal, ids) => {
+		// requiredOnChange: (newVal, oldVal, ids) => {
 			
-			// when require number, then default value needs to be reqired
-			$$(ids.default).define("required", newVal);
-			$$(ids.default).refresh();
+		// 	// when require number, then default value needs to be reqired
+		// 	$$(ids.default).define("required", newVal);
+		// 	$$(ids.default).refresh();
 
-			if ($$(ids.multipleDefault).$view.querySelector(".webix_inp_label")) {
-				if (newVal) {
-					$$(ids.multipleDefault).define("required", true);
-					$$(ids.multipleDefault).$view.querySelector(".webix_inp_label").classList.add("webix_required");
-				} else {
-					$$(ids.multipleDefault).define("required", false);
-					$$(ids.multipleDefault).$view.querySelector(".webix_inp_label").classList.remove("webix_required");
-				}
-			}
+		// 	if ($$(ids.multipleDefault).$view.querySelector(".webix_inp_label")) {
+		// 		if (newVal) {
+		// 			$$(ids.multipleDefault).define("required", true);
+		// 			$$(ids.multipleDefault).$view.querySelector(".webix_inp_label").classList.add("webix_required");
+		// 		} else {
+		// 			$$(ids.multipleDefault).define("required", false);
+		// 			$$(ids.multipleDefault).$view.querySelector(".webix_inp_label").classList.remove("webix_required");
+		// 		}
+		// 	}
 			
-		},
+		// },
 
 		values: (ids, values) => {
 
 			// Get options list from UI, then set them to settings
-			values.settings.options = $$(ids.options).find({}).map(function (opt) {
-				return {
+			values.settings.options = [];
+			$$(ids.options).data.each(opt => {
+				values.settings.options.push({
 					id: opt.id,
 					text: opt.value,
 					hex: opt.hex,
 					translations: opt.translations
-				}
+				});
 			});
 
 			// Un-translate options list
@@ -691,14 +692,7 @@ class ABFieldList extends ABFieldSelectivity {
 				// var domNode = node.querySelector('.list-data-values');
 
 				// get selected values
-				var selectedData = [];
-				if (row[field.columnName] != null) {
-					selectedData = row[field.columnName];
-
-					if (typeof selectedData == 'string')
-						selectedData = JSON.parse(selectedData);
-	
-				}
+				let selectedData = this._getSelectedOptions(row);
 
 				// Render selectivity
 				field.selectivityRender(domNode, {
@@ -786,14 +780,7 @@ class ABFieldList extends ABFieldSelectivity {
 			var domNode = node.querySelector('.list-data-values');
 
 			// get selected values
-			var selectedData = [];
-			if (row[this.columnName] != null) {
-				selectedData = row[this.columnName];
-
-				if (typeof selectedData == 'string')
-					selectedData = JSON.parse(selectedData);
-
-			}
+			var selectedData = this._getSelectedOptions(row);
 
 			// Render selectivity
 			this.selectivityRender(domNode, {
@@ -975,6 +962,10 @@ class ABFieldList extends ABFieldSelectivity {
 	
 	getValue(item, rowData) {
 		var values = {};
+
+		if (!item)
+			return values;
+
 		if (this.settings.isMultiple) {
 			var domNode = item.$view.querySelector('.list-data-values');
 			values = this.selectivityGet(domNode);
@@ -987,26 +978,26 @@ class ABFieldList extends ABFieldSelectivity {
 
 	setValue(item, rowData) {
 
+		if (!item)
+			return;
+
 		if (this.settings.isMultiple) {
-			
-			var val = rowData[this.columnName];
-			if (typeof val == 'undefined') {
-				// assume they just sent us a single value
-				val = rowData;
-			}
+
+			let selectedOpts = this._getSelectedOptions(rowData);
 			
 			// get selectivity dom
 			var domSelectivity = item.$view.querySelector('.list-data-values');
+
 			// set value to selectivity
-			this.selectivitySet(domSelectivity, val, this.App);
+			this.selectivitySet(domSelectivity, selectedOpts, this.App);
 			
 		} else {
-			super.setValue(item, rowData);  
+			super.setValue(item, rowData);
 		}
 	}
 
 
-	format(rowData) {
+	format(rowData, options = {}) {
 
 		var val = this.dataValue(rowData) || [];
 
@@ -1024,12 +1015,42 @@ class ABFieldList extends ABFieldSelectivity {
 
 		var displayOpts = this.settings.options
 							.filter(opt => val.filter(v => (v.id || v) == opt.id).length > 0)
-							.map(opt => opt.text);
+							.map(opt => {
+
+								let text = opt.text;
+								let languageCode = options.languageCode || AD.lang.currentLanguage;
+
+								// Pull text of option with specify language code
+								let optTran = (opt.translations || []).filter(o => o.language_code == languageCode)[0];
+								if (optTran)
+									text = optTran.text;
+
+								return text;
+							});
 
 		return displayOpts.join(', ');
 
 	}
 
+	_getSelectedOptions(rowData = {}) {
+
+		let result = [];
+		if (rowData[this.columnName] != null) {
+			result = rowData[this.columnName];
+
+			if (typeof result == 'string')
+				result = JSON.parse(result);
+
+			// Pull text with current language
+			result = (this.settings.options || []).filter(opt => {
+				return (result || []).filter(v => (opt.id || opt) == (v.id || v)).length > 0
+			});
+
+		}
+
+		return result;
+
+	}
 
 }
 

@@ -1021,13 +1021,13 @@ var ABFieldDateComponent = new ABFieldComponent({
 		 * @param {string} newVal	The new value of label
 		 * @param {string} oldVal	The previous value
 		 */
-		requiredOnChange: (newVal, oldVal, ids) => {
+		// requiredOnChange: (newVal, oldVal, ids) => {
 
-			// when require value, then default value needs to be reqired
-			$$(ids.defaultDateValue).define("required", newVal);
-			$$(ids.defaultDateValue).refresh();
+		// 	// when require value, then default value needs to be reqired
+		// 	$$(ids.defaultDateValue).define("required", newVal);
+		// 	$$(ids.defaultDateValue).refresh();
 
-		},
+		// },
 
 	},
 

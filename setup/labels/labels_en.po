@@ -445,6 +445,12 @@ msgstr "Object Menu"
 
 #. path: app_builder
 #. code: en
+#. key: ab.object.exclude
+msgid "Exclude"
+msgstr "Exclude"
+
+#. path: app_builder
+#. code: en
 #. key: ab.object.form.placeholderName
 msgid "Object name"
 msgstr "Object name"
@@ -2806,3 +2812,27 @@ msgstr "Add new query"
 #. key: ab.query.addNewQuery
 msgid "Add query"
 msgstr "Add query"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.comment
+msgid "Comment"
+msgstr "Comment"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.comment.columnUser
+msgid "Select a user field"
+msgstr "Select a user field"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.comment.columnComment
+msgid "Select a comment field"
+msgstr "Select a comment field"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.kanban
+msgid "Kanban widget"
+msgstr "Kanban"

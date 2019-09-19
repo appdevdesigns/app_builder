@@ -141,7 +141,8 @@ export default class AB_Work_Interface_List extends OP.Component {
 			});
 
 			PopupEditPageComponent.init({
-				onClick: _logic.callbackPageEditMenu
+				onClick: _logic.callbackPageEditMenu,
+				hideExclude: true
 			})
 		}
 
@@ -385,7 +386,8 @@ console.error('!! todo: onBeforeEditStop() editing');
 				_logic.listBusy();
 
 				// get a copy of the page
-				let copiedPage = selectedPage.copy();
+				let copiedPage = selectedPage.copy(null, selectedPage.parent);
+				copiedPage.parent = selectedPage.parent;
 
 				// saving
 				let savePageFn = (p) => {

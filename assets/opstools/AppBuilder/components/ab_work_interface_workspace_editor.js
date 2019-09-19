@@ -8,9 +8,6 @@
 
 import ABComponentMenu from "./ab_work_interface_workspace_editor_components"
 import ABEditorLayout from "./ab_work_interface_workspace_editor_layout"
-import ABEditorData from "./ab_work_interface_workspace_editor_data"
-
-import ABViewDataCollection from "../classes/views/ABViewDataCollection"
 
 export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
     
@@ -39,25 +36,21 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
         // internal list of Webix IDs to reference our UI components.
         var ids = {
             component: this.unique('component'),
-            
+
             toolbar: this.unique('toolbar'),
             toolbarMap: this.unique('toolbarMap'),
             toolbarViewMode: this.unique('toolbarViewMode'),
             toolbarViewPage: this.unique('toolbarViewPage'),
-            toolbarNewDataCollection: this.unique('toolbarNewDataCollection'),
-            
+
             layoutView: this.unique('layoutView'),
             dataView: this.unique('dataView'),
 
-            noContent: this.unique('noContent'),
-            editArea: this.unique('editArea')
+            noContent: this.unique('noContent')
         };
 
         var ComponentMenu = new ABComponentMenu(App);
         var EditorLayout = new ABEditorLayout(App);
-        var EditorData = new ABEditorData(App);
-        
-        
+
         // webix UI definition:
         this.ui = {
             view: 'layout',
@@ -105,35 +98,6 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                                 }
                             }
                         },
-                        // {
-                        //     view:"segmented", 
-                        //     value:ids.layoutView, 
-                        //     selected: ids.layoutView,
-                        //     options:[
-                        //         {
-                        //             id:ids.layoutView,
-                        //             value:L("ab.component.page.layout", "*Layout")
-                        //         }, 
-                        //         {
-                        //             id:ids.dataView,
-                        //             value:L("ab.component.page.datacollections", "*Data Collections")
-                        //         }
-                        //     ],
-                        //     on: {
-                        //         "onAfterTabClick": function(id, e){
-                        //             console.log(id);
-                        //             if (id == ids.layoutView) {
-                        //                 setTimeout(function() {
-                        //                     App.actions.interfaceViewPartChange('layout', 'data')
-                        //                 }, 0);
-                        //             } else {
-                        //                 setTimeout(function() {
-                        //                     App.actions.interfaceViewPartChange('data', 'layout')
-                        //                 }, 0);
-                        //             }
-                        //         }
-                        //     }
-                        // },
                         {
                             view: "icon", 
                             icon: "fa fa-info-circle",
@@ -173,22 +137,6 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                     type: "space",
                     css: "gray",
                     cols: [
-                        // {
-                        //     view: "segmented",
-                        //     id: ids.toolbarViewPage,
-                        //     css: "ab-view-chooser",
-                        //     options: [
-                        //         { id: "layout", value: labels.component.viewModeLayout },
-                        //         { id: "data", value: labels.component.viewModeData }
-                        //     ],
-                        //     inputWidth: 200,
-                        //     align: "left",
-                        //     on: {
-                        //         onChange: function (newValue, oldValue) {
-                        //             _logic.viewPartChange(newValue, oldValue);
-                        //         }
-                        //     }
-                        // },
                         {
                             view: "checkbox",
                             id: ids.toolbarViewMode,
@@ -202,45 +150,11 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                             }
                         },
                         {},
-                        {
-                            id: ids.toolbarNewDataCollection,
-                            view: "button",
-                            type: "iconButton", 
-                            icon: "fa fa-plus",
-                            label: labels.component.newDataSource,
-                            align: "right",
-                            autowidth: true,
-                            hidden: true,
-                            on: {
-                                onItemClick: function(id, e) {
-                                    _logic.newDataCollection();
-                                }
-                            }
-                        },
                         ComponentMenu.ui
                     ]
                 },
-                // {
-                //     id: ids.noContent,
-                //     view: 'label',
-                //     align: 'center',
-                //     label: labels.component.editorPlaceholder
-                // },
-                {
-                    view: 'multiview',
-                    fitBiggest: true,
-                    id: ids.editArea,
-                    cols: [
-                        EditorLayout.ui,
-                        EditorData.ui
-                    ]
-                }
-            ],
-            on: {
-                onViewResize: function() {
-                    _logic.onViewResize();
-                }
-            }
+                EditorLayout.ui
+            ]
         };
         
 
@@ -379,60 +293,11 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                 $$(ids.toolbarMap).parse(view.allParents());
                 $$(ids.toolbarMap).refresh();
 
-                // 
-                if (CurrentViewPart == 'data' &&
-                    (CurrentView.isRoot() || 
-                    CurrentView instanceof ABViewDataCollection)) {
-
-                    _logic.showDataPart();
-                    EditorData.viewLoad(view);
-                }
-                else {
-
-                    _logic.showLayoutPart();
-                    EditorLayout.viewLoad(view);
-                    ComponentMenu.viewLoad(view);
-                }
-
-                _logic.onViewResize();
-
-            },
-
-            viewPartChange: function(newV, oldV) {
-                if (newV == oldV) return;
-
-                CurrentViewPart = newV;
-
-                // data
-                if (CurrentViewPart == 'data') {
-                    _logic.showDataPart();
-                }
-                // layout
-                else {
-                    _logic.showLayoutPart();
-                }
-
-                App.actions.populateInterfaceWorkspace(CurrentView);
-
-            },
-
-            showDataPart: function() {
-
-                EditorData.show();
-                
-                _logic.hideLayoutButtons();
-                _logic.showNewDataCollection();
-                
-            },
-
-            showLayoutPart: function() {
-
-                // Change view part to 'layout'
-                CurrentViewPart = 'layout';
-
+                EditorLayout.viewLoad(view);
                 EditorLayout.show();
-                _logic.showLayoutButtons();
-                _logic.hideNewDataCollection();
+
+                ComponentMenu.viewLoad(view);
+                ComponentMenu.show();
 
             },
 
@@ -459,66 +324,8 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                 _logic.viewLoad(CurrentView);
             },
 
-            newDataCollection: function() {
-                EditorData.newDataCollection();
-            },
-
-            onViewResize: function() {
-                $$(ids.editArea).adjust();
-                $$(ids.editArea).resizeChildren();
-            },
-
-            showLayoutButtons: function() {
-                $$(ids.toolbarViewMode).show();
-                ComponentMenu.show();
-            },
-
-            hideLayoutButtons: function() {
-                $$(ids.toolbarViewMode).hide();
-                ComponentMenu.hide();
-            },
-
-            showNewDataCollection: function() {
-                $$(ids.toolbarNewDataCollection).show();
-            },
-
-            hideNewDataCollection: function() {
-                $$(ids.toolbarNewDataCollection).hide();
-            }
         };
-        
-        
-        // Expose any globally accessible Actions:
-        this.actions({
-            
-            /**
-             * @function populateApplicationForm()
-             *
-             * Initialze the Form with the values from the provided 
-             * ABApplication.
-             *
-             * If no ABApplication is provided, then show an empty form. 
-             * (create operation)
-             *
-             * @param {ABApplication} Application
-             *      [optional] The current ABApplication we are working with.
-             */
-            // populateApplicationForm: function(Application){
-                
-            // 	_logic.formReset();
-            // 	if (Application) {
-            // 		// populate Form here:
-            // 		_logic.formPopulate(Application);
-            // 	}
-            // 	_logic.permissionPopulate(Application);
-            // 	_logic.show();
-            // }
 
-            interfaceViewPartChange: _logic.viewPartChange
-
-        });
-        
-        
         // Interface methods for parent component:
         this.show = _logic.show;
         this.viewLoad = _logic.viewLoad;

@@ -137,8 +137,8 @@ class ABFieldBoolean extends ABField {
 							var currCol = t.boolean(this.columnName);
 
 							// Set default value to column
-							if (this.settings['default'] != null) {
-								currCol.defaultTo(this.settings['default']);
+							if (this.settings.default) {
+								currCol.defaultTo(this.settings.default);
 							}
 							else {
 								currCol.defaultTo(null);
@@ -146,7 +146,8 @@ class ABFieldBoolean extends ABField {
 		
 
 							// not nullable/nullable
-							if (this.settings.required)
+							if (this.settings.required &&
+								this.settings.default)
 								currCol.notNullable();
 							else
 								currCol.nullable();

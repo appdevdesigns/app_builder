@@ -4,7 +4,7 @@ import ABApplication from "./ABApplication"
 import ABObjectBase from "./ABObjectBase"
 
 // import OP from "OP"
-// import ABFieldManager from "./ABFieldManager"
+import ABFieldManager from "./ABFieldManager"
 import ABModel from "./ABModel"
 import ABObjectWorkspaceViewCollection from "./ABObjectWorkspaceViewCollection";
 
@@ -12,38 +12,41 @@ function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
+// Start listening for server events for object updates and call triggerEvent as the callback
+io.socket.on("ab.object.update", function (msg) {
+
+	AD.comm.hub.publish("ab.object.update", {
+		objectId: msg.objectId,
+		data: msg.data
+	});
+
+});
+
+// io.socket.on("ab.object.delete", function (msg) {
+// });
+
 export default class ABObject extends ABObjectBase {
 
     constructor(attributes, application) {
     	super(attributes, application);
-/*
-{
-	id: uuid(),
-	name: 'name',
-	labelFormat: 'xxxxx',
-	isImported: 1/0,
-	isExternal: 1/0,
-	urlPath:'string',
-	importFromObject: 'string', // JSON Schema style reference:  '#[ABApplication.id]/objects/[ABObject.id]'
-								// to get other object:  ABApplication.objectFromRef(obj.importFromObject);
-	translations:[
-		{}
-	],
-	fields:[
-		{ABDataField}
-	]
-}
-*/
 
-        this.workspaceViews = new ABObjectWorkspaceViewCollection(
-            attributes,
-            this,
-            application
-        );
+		this.workspaceViews = new ABObjectWorkspaceViewCollection(
+			attributes,
+			this,
+			application
+		);
 
-    	// multilingual fields: label, description
-		OP.Multilingual.translate(this, this, ['label']);
-  	}
+		this.fromValues(attributes);
+
+		// listen
+		AD.comm.hub.subscribe("ab.object.update", (msg, data) => {
+
+			if (this.id == data.objectId)
+				this.fromValues(data.data);
+
+		});
+
+	}
 
 
 
@@ -52,7 +55,41 @@ export default class ABObject extends ABObjectBase {
   	///
   	/// Available to the Class level object.  These methods are not dependent
   	/// on the instance values of the Application.
-  	///
+	///
+	  
+
+
+	fromValues(attributes) {
+
+		/*
+		{
+			id: uuid(),
+			name: 'name',
+			labelFormat: 'xxxxx',
+			isImported: 1/0,
+			isExternal: 1/0,
+			urlPath:'string',
+			importFromObject: 'string', // JSON Schema style reference:  '#[ABApplication.id]/objects/[ABObject.id]'
+										// to get other object:  ABApplication.objectFromRef(obj.importFromObject);
+			translations:[
+				{}
+			],
+			fields:[
+				{ABDataField}
+			]
+		}
+		*/
+
+		super.fromValues(attributes);
+
+		if (this.workspaceViews)
+			this.workspaceViews.fromObj(attributes);
+
+		// multilingual fields: label, description
+		OP.Multilingual.translate(this, this, ['label']);
+
+
+	}
 
 
 
@@ -89,6 +126,25 @@ export default class ABObject extends ABObjectBase {
 	///
 	/// Instance Methods
 	///
+
+	/**
+	 * @method fieldNew()
+	 *
+	 * return an instance of a new (unsaved) ABField that is tied to this
+	 * ABObject.
+	 *
+	 * NOTE: this new field is not included in our this.fields until a .save()
+	 * is performed on the field.
+	 *
+	 * @param {obj} values  the initial values for this field.  
+	 *						{ key:'{string}'} is required 
+	 * @return {ABField}
+	 */
+	fieldNew ( values ) {
+		// NOTE: ABFieldManager returns the proper ABFieldXXXX instance.
+		return ABFieldManager.newField( values, this );
+	}
+
 
 
 	/// ABApplication data methods
@@ -198,14 +254,19 @@ export default class ABObject extends ABObjectBase {
 				// if this is our initial save()
 				if (!this.id) {
 
-					this.id = OP.Util.uuid();	// setup default .id
+					// this.id = OP.Util.uuid();	// setup default .id
 					this.label = this.label || this.name;
 					this.urlPath = this.urlPath || this.application.name + '/' + this.name;
 					isAdd = true;
 				}
 
 				this.application.objectSave(this)
-				.then(() => {
+				.then(newObj => {
+
+					if (newObj && 
+						newObj.id &&
+						!this.id)
+						this.id = newObj.id;
 
 					if (isAdd) {
 
@@ -253,15 +314,12 @@ export default class ABObject extends ABObjectBase {
 	}
 
 
-
-
 	///
 	/// DB Migrations
 	///
 
 	migrateCreate() {
-		var url = '/app_builder/migrate/application/#appID#/object/#objID#'
-			.replace('#appID#', this.application.id)
+		var url = '/app_builder/migrate/object/#objID#'
 			.replace('#objID#', this.id);
 
 		return OP.Comm.Service.post({
@@ -271,8 +329,7 @@ export default class ABObject extends ABObjectBase {
 
 
 	migrateDrop() {
-		var url = '/app_builder/migrate/application/#appID#/object/#objID#'
-			.replace('#appID#', this.application.id)
+		var url = '/app_builder/migrate/object/#objID#'
 			.replace('#objID#', this.id);
 
 		return OP.Comm.Service['delete']({
@@ -306,6 +363,7 @@ export default class ABObject extends ABObjectBase {
 			});
 
 			header.alias = f.alias || undefined; // query type
+			header.fieldID = f.id;
 			header.fieldURL = f.urlPointer();
 
 			if (f.settings.width != 0) {
@@ -459,9 +517,59 @@ export default class ABObject extends ABObjectBase {
 
 	}
 
+	///
+	/// Fields
+	///
+
+	/**
+	 * @method fields()
+	 * return an array of all the ABFields for this ABObject.
+	 *
+	 * @param filter {Object}
+	 * @param getAll {Boolean} - [Optional]
+	 * 
+	 * @return {array}
+	 */
+	fields (filter, getAll = false) {
+
+		filter = filter || function() { return true; };
+
+		let availableConnectFn = (f) => {
+			if (f.key == 'connectObject' &&
+				this.application &&
+				this.application.objects(obj => obj.id == f.settings.linkObject).length < 1) {
+
+				return false
+
+			}
+			else {
+				return true;
+			}
+		};
+
+		let result = this._fields.filter(filter);
+
+		if (!getAll) {
+			result = result.filter(availableConnectFn);
+		}
+
+		return result;
+	}
 
 
+	/**
+	 * @method connectFields()
+	 * return an array of the ABFieldConnect that is connect object fields.
+	 *
+	 * @param filter {Object}
+	 * @param getAll {Boolean} - [Optional]
+	 * 
+	 * @return {array}
+	 */
+	connectFields (getAll = false) {
 
+		return this.fields(f => f.key == 'connectObject', getAll);
+	}
 
 	///
 	/// Working with data from server
@@ -493,5 +601,6 @@ export default class ABObject extends ABObjectBase {
 	currentView() {
 		return this.workspaceViews.getCurrentView();
 	}
+
 }
 

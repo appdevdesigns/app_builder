@@ -14,7 +14,7 @@ function L(key, altText) {
 }
 
 var ABViewPropertyDefaults = {
-	datacollection: null,
+	dataviewID: null,
 	filterConditions: {}
 }
 
@@ -82,11 +82,11 @@ export default class ABViewConditionalContainer extends ABViewContainer {
 
 		var idBase = 'ABViewConditionalContainerPropertyEditor';
 
-		_logic.changeDataCollection = (dcId) => {
+		_logic.changeDataview = (dvId) => {
 
 			var view = _logic.currentEditObject();
 
-			this.populatePopupEditors(ids, view, dcId);
+			this.populatePopupEditors(ids, view, dvId);
 
 		};
 
@@ -150,13 +150,13 @@ export default class ABViewConditionalContainer extends ABViewContainer {
 
 		return commonUI.concat([
 			{
-				name: 'datacollection',
+				name: 'dataview',
 				view: 'richselect',
 				label: L('ab.components.conditionalcontainer.dataSource', "*Data Source"),
 				labelWidth: App.config.labelWidthLarge,
 				on: {
-					onChange: function (dcId) {
-						_logic.changeDataCollection(dcId);
+					onChange: function (dvId) {
+						_logic.changeDataview(dvId);
 					}
 				}
 			},
@@ -200,15 +200,15 @@ export default class ABViewConditionalContainer extends ABViewContainer {
 
 		super.propertyEditorPopulate(App, ids, view);
 
-		var dataCollectionId = (view.settings.datacollection ? view.settings.datacollection : null);
-		var SourceSelector = $$(ids.datacollection);
+		var dataviewId = (view.settings.dataviewID ? view.settings.dataviewID : null);
+		var SourceSelector = $$(ids.dataview);
 
 		// Pull data collections to options
-		var dcOptions = view.pageRoot().dataCollections().map((dc) => {
+		var dcOptions = view.application.dataviews().map((dv) => {
 
 			return {
-				id: dc.id,
-				value: dc.label
+				id: dv.id,
+				value: dv.label
 			};
 		});
 
@@ -217,7 +217,7 @@ export default class ABViewConditionalContainer extends ABViewContainer {
 			value: '[Select]'
 		});
 		SourceSelector.define('options', dcOptions);
-		SourceSelector.define('value', dataCollectionId);
+		SourceSelector.define('value', dataviewId);
 		SourceSelector.refresh();
 
 		this.populatePopupEditors(ids, view);
@@ -228,23 +228,23 @@ export default class ABViewConditionalContainer extends ABViewContainer {
 
 		super.propertyEditorValues(ids, view);
 
-		view.settings.datacollection = $$(ids.datacollection).getValue();
+		view.settings.dataviewID = $$(ids.dataview).getValue();
 
 	}
 
-	static populatePopupEditors(ids, view, dataCollectionId) {
+	static populatePopupEditors(ids, view, dataviewId) {
 
 		// pull current data collection
-		var dc = view.dataCollection;
+		var dv = view.dataview;
 
 		// specify data collection id
-		if (dataCollectionId) {
-			dc = view.pageRoot().dataCollections(d => d.id == dataCollectionId)[0];
+		if (dataviewId) {
+			dv = view.application.dataviews(d => d.id == dataviewId)[0];
 		}
 
-		if (dc && dc.datasource) {
-			FilterComponent.objectLoad(dc.datasource);
-			view.__filterComponent.objectLoad(dc.datasource);
+		if (dv && dv.datasource) {
+			FilterComponent.objectLoad(dv.datasource);
+			view.__filterComponent.objectLoad(dv.datasource);
 		}
 		else {
 			FilterComponent.objectLoad(null);
@@ -318,18 +318,18 @@ export default class ABViewConditionalContainer extends ABViewContainer {
 
 			this.populateFilterComponent();
 
-			var dc = this.dataCollection;
-			if (dc) {
+			var dv = this.dataview;
+			if (dv) {
 
 				// listen DC events
 				this.eventAdd({
-					emitter: dc,
+					emitter: dv,
 					eventName: 'loadData',
 					listener: _logic.displayView
 				});
 
 				this.eventAdd({
-					emitter: dc,
+					emitter: dv,
 					eventName: 'changeCursor',
 					listener: _logic.displayView
 				});
@@ -344,17 +344,17 @@ export default class ABViewConditionalContainer extends ABViewContainer {
 
 			displayView: (currData) => {
 
-				var dc = this.dataCollection;
-				if (dc) {
+				let dv = this.dataview;
+				if (dv) {
 
 					if (currData == null) {
-						currData = dc.getCursor();
+						currData = dv.getCursor();
 					}
 
 					// show 'waiting' panel
 					if (!currData &&
-						(dc.dataStatus == dc.dataStatusFlag.notInitial ||
-						 dc.dataStatus == dc.dataStatusFlag.initializing)) {
+						(dv.dataStatus == dv.dataStatusFlag.notInitial ||
+						 dv.dataStatus == dv.dataStatusFlag.initializing)) {
 						$$(ids.component).showBatch('wait');
 						return;
 					}
@@ -385,21 +385,11 @@ export default class ABViewConditionalContainer extends ABViewContainer {
 
 	}
 
-	/**
-	 * @method dataCollection
-	 * return ABViewDataCollection of this form
-	 * 
-	 * @return {ABViewDataCollection}
-	 */
-	get dataCollection() {
-		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.datacollection)[0];
-	}
-
 	populateFilterComponent() {
 
-		var dc = this.dataCollection;
-		if (dc && dc.datasource)
-			this.__filterComponent.objectLoad(dc.datasource);
+		let dv = this.dataview;
+		if (dv && dv.datasource)
+			this.__filterComponent.objectLoad(dv.datasource);
 		else
 			this.__filterComponent.objectLoad(null);
 
@@ -409,7 +399,7 @@ export default class ABViewConditionalContainer extends ABViewContainer {
 	}
 
 	copyUpdateProperyList() {
-		return ['datacollection']
+		return ['dataviewID']
 	}
 
 

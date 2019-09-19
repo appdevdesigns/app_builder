@@ -131,15 +131,11 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 		
 		_logic.onFilterChange = () => {
 
-			var view = _logic.currentEditObject();
+			let view = _logic.currentEditObject();
+			let filterValues = FilterComponent.getValue() || {};
 
-			var filterValues = FilterComponent.getValue();
-
-			view.settings.objectWorkspace.filterConditions = filterValues;
-
-
-			var allComplete = true;
-			filterValues.rules.forEach((f) => {
+			let allComplete = true;
+			(filterValues.rules || []).forEach((f) => {
 
 				// if all 3 fields are present, we are good.
 				if ((f.key)
@@ -264,7 +260,7 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 		// editForms = view.loopPages(view, view.application._pages, editForms, "form");
 		// view.application._pages.forEach((o)=>{
 		// 	o._views.forEach((j)=>{
-		// 		if (j.key == "form" && j.settings.object == view.settings.dataSource) {
+		// 		if (j.key == "form" && j.settings.object == view.settings.dataviewID) {
 		// 			// editForms.push({id:j.parent.id+"|"+j.id, value:j.label});
 		// 			editForms.push({id:j.parent.id, value:j.label});				
 		// 		}
@@ -275,8 +271,8 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 			.pages(p => {
 				return p.views(v => {
 					return v.key == "form" && 
-						v.dataCollection &&
-						v.dataCollection.datasource.id == view.field().settings.linkObject;
+						v.dataview &&
+						v.dataview.datasource.id == view.field().settings.linkObject;
 				}, true).length;
 			}, true)
 			.map(p => {
@@ -322,7 +318,10 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 		view.settings.formView = $$(ids.formView).getValue();
 		view.settings.popupWidth = $$(ids.popupWidth).getValue();
 		view.settings.popupHeight = $$(ids.popupHeight).getValue();
-		
+		view.settings.objectWorkspace = {
+			filterConditions: FilterComponent.getValue()
+		};
+
 	}
 	
 	static populateBadgeNumber(ids, view) {
@@ -364,27 +363,37 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 
 	static populatePopupEditors(view) {
 
-		var filterConditions = ABViewFormConnectPropertyComponentDefaults.objectWorkspace.filterConditions;
+		let filterConditions = ABViewFormConnectPropertyComponentDefaults.objectWorkspace.filterConditions;
 
-		// Clone ABObject
-		var field = view.field();
-		var linkedObj = field.datasourceLink;
-		if (linkedObj &&
-			linkedObj.objectWorkspace &&
-			linkedObj.objectWorkspace.filterConditions) {
-			filterConditions = linkedObj.objectWorkspace.filterConditions;
-		}
+		// // Clone ABObject
+		// var field = view.field();
+		// var linkedObj = field.datasourceLink;
+		// if (linkedObj &&
+		// 	linkedObj.objectWorkspace &&
+		// 	linkedObj.objectWorkspace.filterConditions) {
+		// 	filterConditions = linkedObj.objectWorkspace.filterConditions;
+		// }
 		// var objectCopy = linkedObj.clone();
 		// if (objectCopy) {
 		// 	objectCopy.objectWorkspace = view.settings.objectWorkspace;
 		// 	filterConditions = objectCopy.objectWorkspace.filterConditions || ABViewFormConnectPropertyComponentDefaults.objectWorkspace.filterConditions;
 		// }
 
+		if (view.settings.objectWorkspace &&
+			view.settings.objectWorkspace.filterConditions)
+			filterConditions = view.settings.objectWorkspace.filterConditions;
+
 		// Populate data to popups
 		// FilterComponent.objectLoad(objectCopy);
-		FilterComponent.objectLoad(linkedObj);
-		FilterComponent.setValue(filterConditions);
+		let field = view.field();
+		if (field) {
+			let linkedObj = field.datasourceLink;
+			if (linkedObj)
+				FilterComponent.objectLoad(linkedObj);
+		}
+
 		FilterComponent.viewLoad(view);
+		FilterComponent.setValue(filterConditions);
 
 	}
 

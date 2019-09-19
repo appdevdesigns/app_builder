@@ -138,12 +138,16 @@ class ABFieldAutoIndex extends ABField {
 					return knex.schema.table(tableName, (t) => {
 
 						// Create a new column here.
-						var currCol = t.string(this.columnName);
-						currCol.defaultTo(null);
-						currCol.unique();
+						if (!exists)
+							t.specificType(this.columnName, "INT UNSIGNED NULL AUTO_INCREMENT UNIQUE");
 
-						if (exists) 
-							currCol.alter();
+						// var currCol = t.integer(this.columnName)
+						// 				.nullable();
+
+						// if (exists) 
+						// 	currCol.alter();
+						// else
+						// 	currCol.unique();
 
 					})
 						.then(() => {
@@ -198,7 +202,8 @@ class ABFieldAutoIndex extends ABField {
 		if (!obj[this.columnName]) {
 
 			// Set json schema type to validate
-			obj[this.columnName] = { type:'string' }
+			// obj[this.columnName] = { type:'string' }
+			obj[this.columnName] = { "type": "null" };
 
 		}
 		
@@ -220,6 +225,16 @@ class ABFieldAutoIndex extends ABField {
 
 		// do your special convert data here.
 		// myParameter[this.columnName] = parseInt(myParameter[this.columnName]);
+
+		// // To prevent return empty string ''
+		// if (myParameter &&
+		// 	!myParameter[this.columnName])
+		// 	delete myParameter[this.columnName];
+
+		// Remove every values, then we will use AUTO_INCREMENT of MySQL
+		if (myParameter &&
+			myParameter[this.columnName] != null)
+			delete myParameter[this.columnName];
 
 		return myParameter;
 	}

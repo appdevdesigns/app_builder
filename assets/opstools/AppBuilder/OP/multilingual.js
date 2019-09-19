@@ -48,7 +48,7 @@ export default {
 	 *						 the obj[field] value.
 	 *
 	 */
-	translate:function(obj, json, fields) {
+	translate:function(obj, json, fields, languageCode = null) {
 
 		json = json || {};
 		fields = fields || [];
@@ -61,7 +61,7 @@ export default {
 			json.translations = JSON.parse(json.translations);
 		}
 
-		var currLanguage = AD.lang.currentLanguage || 'en';
+		var currLanguage = languageCode || AD.lang.currentLanguage || 'en';
 
 		if (fields && fields.length > 0) {
 

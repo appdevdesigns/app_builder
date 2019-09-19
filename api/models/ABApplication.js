@@ -23,11 +23,7 @@ module.exports = {
     attributes: {
 
         json : 'json', 
-        
-        // objects: { collection: 'ABObject', via: 'application' },
-
         // pages: { collection: 'ABPage', via: 'application' },
-
 
         name: {
             type: 'string',
@@ -41,6 +37,16 @@ module.exports = {
             model: 'PermissionRole'
         },
 
+        objects: {
+            collection: 'ABObject',
+            via: 'applications',
+            through: 'abapplicationabobject'
+        },
+
+        queries: {
+            collection: 'ABQuery',
+            via: 'applications'
+        },
 
         // this will pull in the translations using .populate('translations')
         translations: {
@@ -71,7 +77,20 @@ module.exports = {
 
         toABClass: function () {
 
-            return new ABClassApplication(this);
+            let app = this.toValidJsonFormat();
+
+            return new ABClassApplication(app);
+
+        },
+
+        toValidJsonFormat: function() {
+
+            let objects = this.objects;
+
+            this.json.objects = (objects || []).map(obj => obj.toValidJsonFormat(objects).json);
+            this.json.queries = (this.queries || []).map(q => q.json);
+
+            return this;
 
         },
 

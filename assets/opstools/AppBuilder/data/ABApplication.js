@@ -17,50 +17,130 @@
 OP.Model.extend('opstools.BuildApp.ABApplication',
 	{
 		useSockets: true,
-		restURL: '/app_builder/abapplication',
+		// restURL: '/app_builder/abapplication',
+		restURL: '/app_builder/application',
+
+		// NOTE: .findOne calls /app_builder/application?id={appId}
+		get: function(appID, pageID){
+			return OP.Comm.Socket.get({
+				url: `/app_builder/application/${appID}?pageID=${pageID}`
+			});
+		},
+
+		// Get id and label of Applications
+		info: function() {
+			return OP.Comm.Socket.get({
+				url: `/app_builder/application/info`
+			});
+		},
+
+		updateInfo: function (appId, data) {
+			return OP.Comm.Service.put({
+				url: `/app_builder/application/${appId}/info`,
+				data: data
+			});
+		},
+
+		// ** Permissions
+
+		assignPermissions(appId, permItems) {
+			return OP.Comm.Service.put({
+				url: `/app_builder/${appId}/role/assign`,
+				data: {
+					roles: permItems
+				}
+			});
+		},
+
+		getPermissions(appId) {
+			return OP.Comm.Socket.get({ url: `/app_builder/${appId}/role` });
+		},
+
+		createPermission(appId) {
+			return OP.Comm.Service.post({ url: `/app_builder/${appId}/role` });
+		},
+
+		deletePermission(appId) {
+			return OP.Comm.Service.delete({ url: `/app_builder/${appId}/role` });
+		},
+
+
+
 
 		// ** Objects
 
+		objectLoad: function (appId) {
+
+			return OP.Comm.Socket.get({
+				url: `/app_builder/application/${appId}/object`
+			});
+		},
+
+		objectFind: function (cond) {
+
+			return OP.Comm.Socket.get({
+				url: `/app_builder/object`,
+				data: {
+					query: cond
+				}
+			});
+
+		},
+
+		// Get id and label of objects
+		objectInfo: function (cond) {
+
+			return OP.Comm.Socket.get({
+				url: `/app_builder/object/info`,
+				data: {
+					query: cond
+				}
+			});
+
+		},
+
+		objectGet: function(objectId) {
+
+			return OP.Comm.Socket.get({
+				url: `/app_builder/object/${objectId}`
+			});
+
+		},
+
 		objectSave: function (appId, object) {
 
-			return new Promise(
-				(resolve, reject) => {
-
-					OP.Comm.Service.put({
-						url: '/app_builder/application/' + appId + '/object',
-						data: {
-							object: object
-						}
-					}, function (err, result) {
-						if (err)
-							reject(err);
-						else
-							resolve(result);
-					});
+			return OP.Comm.Service.put({
+				url: `/app_builder/object?appID=${appId}`,
+				data: {
+					object: object
 				}
-
-			);
+			});
 		},
 
-		objectDestroy: function (appId, objectId) {
+		objectDestroy: function (objectId) {
 
-			return new Promise(
-				(resolve, reject) => {
-
-					OP.Comm.Service.delete({
-						url: '/app_builder/application/' + appId + '/object/' + objectId
-					}, function (err, result) {
-						if (err)
-							reject(err);
-						else
-							resolve(result);
-					});
-
-				}
-
-			);
+			return OP.Comm.Service.delete({
+				url: `/app_builder/object/${objectId}`
+			});
 
 		},
+
+		objectImport: function (appId, objectId) {
+
+			return OP.Comm.Service.put({
+				url: `/app_builder/application/${appId}/object/${objectId}`
+			});
+
+		},
+
+		objectExclude: function (appId, objectId) {
+
+			return OP.Comm.Service.delete({
+				url: `/app_builder/application/${appId}/object/${objectId}`
+			});
+
+		},
+
 
 
 		// ** Pages
@@ -78,24 +158,14 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 			// remove sub-pages properties
 			delete page['pages'];
 
-			return new Promise(
-				(resolve, reject) => {
-
-					OP.Comm.Service.put({
-						url: '/app_builder/application/' + appId + '/page',
-						data: {
-							resolveUrl: resolveUrl,
-							data: page
-						}
-					}, function (err, result) {
-						if (err)
-							reject(err);
-						else
-							resolve(result);
-					});
+			return OP.Comm.Service.put({
+				url: '/app_builder/application/' + appId + '/page',
+				data: {
+					resolveUrl: resolveUrl,
+					data: page
 				}
+			});
 
-			);
 		},
 
 		/**
@@ -107,85 +177,185 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 		 */
 		pageDestroy: function (appId, resolveUrl) {
 
-			return new Promise(
-				(resolve, reject) => {
-
-					OP.Comm.Service.delete({
-						url: '/app_builder/application/' + appId + '/page',
-						data: {
-							resolveUrl: resolveUrl
-						}
-					}, function (err, result) {
-						if (err)
-							reject(err);
-						else
-							resolve(result);
-					});
-
+			return OP.Comm.Service.delete({
+				url: '/app_builder/application/' + appId + '/page',
+				data: {
+					resolveUrl: resolveUrl
 				}
-
-			);
+			});
 
 		},
 
 
 		// ** Queries
 
+		queryLoad: function (appId) {
+
+			return OP.Comm.Socket.get({
+				url: `/app_builder/application/${appId}/query`
+			});
+		},
+
+		queryGet: function(queryId) {
+
+			return OP.Comm.Service.get({
+				url: `/app_builder/query/${queryId}`
+			});
+
+		},
+
+		queryFind: function (cond) {
+
+			return OP.Comm.Socket.get({
+				url: `/app_builder/query`,
+				data: {
+					query: cond
+				}
+			});
+
+		},
+
+		// Get id and label of queries
+		queryInfo: function (cond) {
+
+			return OP.Comm.Socket.get({
+				url: `/app_builder/query/info`,
+				data: {
+					query: cond
+				}
+			});
+
+		},
+
 		/**
 		 * @method querySave
 		 * 
-		 * @param {guid} appId
-		 * @param {object} data
+		 * @param {uuid} appId
+		 * @param {object} query
 		 * @return {Promise}
 		 */
 		querySave: function (appId, query) {
 
-			return new Promise(
-				(resolve, reject) => {
-
-					OP.Comm.Service.put({
-						url: '/app_builder/application/' + appId + '/query',
-						data: {
-							data: query
-						}
-					}, function (err, result) {
-						if (err)
-							reject(err);
-						else
-							resolve(result);
-					});
+			return OP.Comm.Service.put({
+				url: `/app_builder/query?appID=${appId}`,
+				data: {
+					query: query
 				}
+			});
 
-			);
 		},
 
 		/**
 		 * @method queryDestroy
 		 * 
-		 * @param {guid} appId
 		 * @param {guid} queryId
 		 * @return {Promise}
 		 */
-		queryDestroy: function (appId, queryId) {
+		queryDestroy: function (queryId) {
 
-			return new Promise(
-				(resolve, reject) => {
-
-					OP.Comm.Service.delete({
-						url: '/app_builder/application/' + appId + '/query/' + queryId
-					}, function (err, result) {
-						if (err)
-							reject(err);
-						else
-							resolve(result);
-					});
-
-				}
-
-			);
+			return OP.Comm.Service.delete({
+				url: `/app_builder/query/${queryId}`
+			});
 
 		},
 
+		queryImport: function(appId, queryId) {
+
+			return OP.Comm.Service.put({
+				url: `/app_builder/application/${appId}/query/${queryId}`
+			});
+
+		},
+
+		queryExclude: function(appId, queryId) {
+
+			return OP.Comm.Service.delete({
+				url: `/app_builder/application/${appId}/query/${queryId}`
+			});
+
+		},
+
+		// ** Data views
+
+		dataviewLoad: function (appId) {
+
+			return OP.Comm.Socket.get({
+				url: `/app_builder/application/${appId}/dataview`
+			});
+		},
+
+		dataviewFind: function (cond) {
+
+			return OP.Comm.Socket.get({
+				url: `/app_builder/dataview`,
+				data: {
+					query: cond
+				}
+			});
+
+		},
+
+		dataviewGet: function(dataviewId) {
+
+			return OP.Comm.Socket.get({
+				url: `/app_builder/dataview/${dataviewId}`
+			});
+
+		},
+
+		// Get id and label of data views
+		dataviewInfo: function (cond) {
+
+			return OP.Comm.Socket.get({
+				url: `/app_builder/dataview/info`,
+				data: {
+					query: cond
+				}
+			});
+
+		},
+
+		dataviewSave: function (appId, dataview) {
+
+			return OP.Comm.Service.put({
+				url: `/app_builder/dataview?appID=${appId}`,
+				data: {
+					dataview: dataview
+				}
+			});
+		},
+
+		dataviewDestroy: function (dataviewId) {
+
+			return OP.Comm.Service.delete({
+				url: `/app_builder/dataview/${dataviewId}`
+			});
+
+		},
+
+		dataviewImport: function (appId, dataviewId) {
+
+			return OP.Comm.Service.put({
+				url: `/app_builder/application/${appId}/dataview/${dataviewId}`
+			});
+
+		},
+
+		dataviewExclude: function (appId, dataviewId) {
+
+			return OP.Comm.Service.delete({
+				url: `/app_builder/application/${appId}/dataview/${dataviewId}`
+			});
+
+		},
+
+		// ** Live Display
+
+		livepage: function(appID, pageID){
+			return OP.Comm.Socket.get({
+				url: `/app_builder/application/${appID}/livepage/${pageID}`
+			});
+		},
 
 		// ** Mobile Apps
 

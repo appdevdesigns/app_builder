@@ -29,6 +29,7 @@
   "homepage": "https://github.com/appdevdesigns/app_builder#readme",
   "dependencies": {
     "ad-utils": "appdevdesigns/ad-utils",
+    "arangojs": "^6.10.0",
     "async": "^1.5.2",
     "knex": "^0.13.0",
     "lodash": "^4.13.1",

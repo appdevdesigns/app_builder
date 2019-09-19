@@ -9,11 +9,9 @@
 import ABViewContainer from "./ABViewContainer"
 import ABViewFormButton from "./ABViewFormButton"
 import ABViewFormCustom from "./ABViewFormCustom"
-import ABViewFormDatepicker from "./ABViewFormDatepicker"
 import ABViewFormField from "./ABViewFormField"
 import ABViewFormTextbox from "./ABViewFormTextbox"
 import ABViewManager from "../ABViewManager"
-import ABPropertyComponent from "../ABPropertyComponent"
 
 import ABDisplayRule from "./ABViewFormPropertyDisplayRule"
 // import ABRecordRule from "./ABViewFormPropertyRecordRule"
@@ -34,7 +32,7 @@ var ABViewFormDefaults = {
 }
 
 var ABViewFormPropertyComponentDefaults = {
-	datacollection: null,
+	dataviewID: null,
 	showLabel: true,
 	labelPosition: 'left',
 	labelWidth: 120,
@@ -288,10 +286,10 @@ export default class ABViewForm extends ABViewContainer {
 			}
 
 			// trigger a save()
-			// this.propertyEditorSave(ids, currView);
+			this.propertyEditorSave(ids, currView);
 
-			// Call REST API to server in ABViewContainer
-			currView.emit('properties.updated', currView);
+			// // Call REST API to server in ABViewContainer
+			// currView.emit('properties.updated', currView);
 
 		};
 
@@ -387,7 +385,7 @@ PopupRecordRule.qbFixAfterShow();
 
 		return commonUI.concat([
 			{
-				name: 'datacollection',
+				name: 'dataview',
 				view: 'richselect',
 				label: L('ab.components.form.dataSource', "*Data Source"),
 				labelWidth: App.config.labelWidthLarge,
@@ -550,15 +548,15 @@ PopupRecordRule.qbFixAfterShow();
 		super.propertyEditorPopulate(App, ids, view, logic);
 
 		var formCom = view.parentFormComponent();
-		var dataCollectionId = (formCom.settings.datacollection ? formCom.settings.datacollection : null);
-		var SourceSelector = $$(ids.datacollection);
+		var dataviewId = (formCom.settings.dataviewID ? formCom.settings.dataviewID : null);
+		var SourceSelector = $$(ids.dataview);
 
 		// Pull data collections to options
-		var dcOptions = view.pageRoot().dataCollections(dc => {
+		var dvOptions = view.application.dataviews(dv => {
 
-			var obj = dc.datasource;
+			var obj = dv.datasource;
 
-			return dc.sourceType == "object" && obj && !obj.isImported;
+			return dv.sourceType == "object" && obj && !obj.isImported;
 
 		}).map((dc) => {
 
@@ -568,15 +566,15 @@ PopupRecordRule.qbFixAfterShow();
 			};
 		});
 
-		dcOptions.unshift({
+		dvOptions.unshift({
 			id: null,
 			value: '[Select]'
 		});
-		SourceSelector.define('options', dcOptions);
-		SourceSelector.define('value', dataCollectionId);
+		SourceSelector.define('options', dvOptions);
+		SourceSelector.define('value', dataviewId);
 		SourceSelector.refresh();
 
-		this.propertyUpdateFieldOptions(ids, view, dataCollectionId);
+		this.propertyUpdateFieldOptions(ids, view, dataviewId);
 
 
 		// update properties when a field component is deleted
@@ -593,7 +591,7 @@ PopupRecordRule.qbFixAfterShow();
 		$$(ids.clearOnLoad).setValue(view.settings.clearOnLoad || ABViewFormPropertyComponentDefaults.clearOnLoad);
 		$$(ids.clearOnSave).setValue(view.settings.clearOnSave || ABViewFormPropertyComponentDefaults.clearOnSave);
 
-		this.propertyUpdateRules(ids, view, dataCollectionId);
+		this.propertyUpdateRules(ids, view, dataviewId);
 		this.populateBadgeNumber(ids, view);
 
 		// when a change is made in the properties the popups need to reflect the change
@@ -613,7 +611,7 @@ PopupRecordRule.qbFixAfterShow();
 
 		super.propertyEditorValues(ids, view);
 
-		view.settings.datacollection = $$(ids.datacollection).getValue();
+		view.settings.dataviewID = $$(ids.dataview).getValue();
 		view.settings.showLabel = $$(ids.showLabel).getValue();
 		view.settings.labelPosition = $$(ids.labelPosition).getValue() || ABViewFormPropertyComponentDefaults.labelPosition;
 		view.settings.labelWidth = $$(ids.labelWidth).getValue() || ABViewFormPropertyComponentDefaults.labelWidth;
@@ -630,14 +628,14 @@ PopupRecordRule.qbFixAfterShow();
 	 * 
 	 * @param {Object} ids 
 	 * @param {ABViewForm} view - the current component
-	 * @param {string} dcId - id of ABViewDataCollection
+	 * @param {string} dcId - id of ABDataview
 	 */
 	static propertyUpdateFieldOptions(ids, view, dcId) {
 
 		var formComponent = view.parentFormComponent();
 		var existsFields = formComponent.fieldComponents();
-		var datacollection = view.pageRoot().dataCollections(dc => dc.id == dcId)[0];
-		var object = datacollection ? datacollection.datasource : null;
+		var dataview = view.application.dataviews(dv => dv.id == dcId)[0];
+		var object = dataview ? dataview.datasource : null;
 
 		// Pull field list
 		var fieldOptions = [];
@@ -662,11 +660,11 @@ PopupRecordRule.qbFixAfterShow();
 		if (!view) return;
 
 		// Populate values to rules
-		var selectedDc = view.dataCollection;
-		if (selectedDc) {
-			PopupDisplayRule.objectLoad(selectedDc.datasource);
-			PopupRecordRule.objectLoad(selectedDc.datasource);
-			PopupSubmitRule.objectLoad(selectedDc.datasource);
+		var selectedDv = view.dataview;
+		if (selectedDv) {
+			PopupDisplayRule.objectLoad(selectedDv.datasource);
+			PopupRecordRule.objectLoad(selectedDv.datasource);
+			PopupSubmitRule.objectLoad(selectedDv.datasource);
 		}
 
 
@@ -774,23 +772,23 @@ PopupRecordRule.qbFixAfterShow();
 			}
 
 			// bind a data collection to form component
-			var dc = this.dataCollection;
-			if (dc) {
+			let dv = this.dataview;
+			if (dv) {
 
 				// listen DC events
 				this.eventAdd({
-					emitter: dc,
+					emitter: dv,
 					eventName: 'changeCursor',
 					listener: _logic.displayData
 				});
 
 				// bind the cursor event of the parent DC
-				var linkDc = dc.dataCollectionLink;
-				if (linkDc) {
+				var linkDv = dv.dataviewLink;
+				if (linkDv) {
 
 					// update the value of link field when data of the parent dc is changed
 					this.eventAdd({
-						emitter: linkDc,
+						emitter: linkDv,
 						eventName: 'changeCursor',
 						listener: _logic.displayParentData
 					});
@@ -878,14 +876,14 @@ PopupRecordRule.qbFixAfterShow();
 
 			displayParentData: (rowData) => {
 
-				var dc = this.dataCollection;
-				var currCursor = dc.getCursor();
+				let dv = this.dataview;
+				var currCursor = dv.getCursor();
 
 				// If the cursor is selected, then it will not update value of the parent field
 				if (currCursor != null) return;
 
 				var Form = $$(ids.component),
-					relationField = dc.fieldLink;
+					relationField = dv.fieldLink;
 
 				if (relationField == null) return;
 
@@ -942,7 +940,7 @@ PopupRecordRule.qbFixAfterShow();
 
 			// });
 
-			var dc = this.dataCollection;
+			var dc = this.dataview;
 			if (dc) {
 
 				if (Form)
@@ -962,10 +960,10 @@ PopupRecordRule.qbFixAfterShow();
 				_logic.displayData(data);
 
 				// select parent data to default value
-				var linkDc = dc.dataCollectionLink;
-				if (data == null && linkDc) {
+				var linkDv = dc.dataviewLink;
+				if (data == null && linkDv) {
 
-					var parentData = linkDc.getCursor();
+					var parentData = linkDv.getCursor();
 					_logic.displayParentData(parentData);
 				}
 			}
@@ -992,22 +990,6 @@ PopupRecordRule.qbFixAfterShow();
 
 		}
 	}
-
-
-	/**
-	 * @property dataCollection
-	 * return ABViewDataCollection of this form
-	 * 
-	 * @return {ABViewDataCollection}
-	 */
-	get dataCollection() {
-
-		if (this.settings.datacollection == null)
-			return null;
-
-		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.datacollection)[0];
-	}
-
 
 	/**
 	 * @method fieldComponents()
@@ -1089,7 +1071,7 @@ PopupRecordRule.qbFixAfterShow();
 	 * 
 	 * @param {webix form} formView 
 	 * @param {ABObject} obj
-	 * @param {ABViewDataCollection} dcLink [optional]
+	 * @param {ABDataview} dcLink [optional]
 	 */
 	getFormValues(formView, obj, dcLink) {
 
@@ -1230,20 +1212,20 @@ PopupRecordRule.qbFixAfterShow();
 
 		formView.clearValidation();
 
-		// get ABViewDataCollection
-		var dc = this.dataCollection;
-		if (dc == null) return Promise.resolve();
+		// get ABDataview
+		var dv = this.dataview;
+		if (dv == null) return Promise.resolve();
 
 		// get ABObject
-		var obj = dc.datasource;
+		var obj = dv.datasource;
 		if (obj == null) return Promise.resolve();
 
 		// get ABModel
-		var model = dc.model;
+		var model = dv.model;
 		if (model == null) return Promise.resolve();
 
 		// get update data
-		var formVals = this.getFormValues(formView, obj, dc.dataCollectionLink);
+		var formVals = this.getFormValues(formView, obj, dv.dataviewLink);
 
 		// validate data
 		if (!this.validateData(formView, obj, formVals)) {
@@ -1258,16 +1240,16 @@ PopupRecordRule.qbFixAfterShow();
 		var formReady = (newFormVals) => {
 
 			// clear cursor after saving.
-			if (dc) {
+			if (dv) {
 				if (this.settings.clearOnSave) {
-					dc.setCursor(null);
+					dv.setCursor(null);
 					formView.clear();
 				}
 				else {
 
 					if (newFormVals &&
 						newFormVals.id)
-						dc.setCursor(newFormVals.id);
+						dv.setCursor(newFormVals.id);
 
 				}
 			}
@@ -1288,7 +1270,12 @@ PopupRecordRule.qbFixAfterShow();
 
 				// mark error
 				for (let attr in err.invalidAttributes) {
-					formView.markInvalid(attr, err.invalidAttributes[attr].message);
+
+					let invalidAttrs = err.invalidAttributes[attr];
+					if (invalidAttrs && invalidAttrs[0])
+						invalidAttrs = invalidAttrs[0];
+
+					formView.markInvalid(attr, invalidAttrs.message);
 				}
 
 			}
@@ -1366,7 +1353,7 @@ resolve();
 
 	doRecordRules(rowData) {
 
-		var object = this.dataCollection.datasource;
+		var object = this.dataview.datasource;
 
 		var RecordRules = new ABRecordRule();
 		RecordRules.formLoad(this);
@@ -1379,7 +1366,7 @@ resolve();
 
 	doSubmitRules(rowData) {
 
-		var object = this.dataCollection.datasource;
+		var object = this.dataview.datasource;
 		
 		var SubmitRules = new ABSubmitRule();
 		SubmitRules.formLoad(this);
@@ -1412,7 +1399,12 @@ resolve();
 	}
 
 	copyUpdateProperyList() {
-		return ['datacollection'];
+		return ['dataviewID'];
+	}
+
+	// Use this function in kanban
+	objectLoad(object) {
+		this._currentObject = object;
 	}
 
 

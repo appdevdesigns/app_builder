@@ -127,7 +127,8 @@ function parseQueryCondition(_where, object, req, res, cb) {
         } else {
 
             // make sure we find our QueryObject
-            var QueryObj = object.application.queries((q)=>{ return q.id == cond.value; })[0];
+            // var QueryObj = object.application.queries((q)=>{ return q.id == cond.value; })[0];
+            var QueryObj = ABObjectCache.get(cond.value);
             if (!QueryObj) {
 
                 ADCore.error.log('AppBuilder:Policy:ABModelConvertQueryConditions:Could not find specified query object:', { qid:cond.value, condition:cond });
@@ -158,13 +159,22 @@ function parseQueryCondition(_where, object, req, res, cb) {
                 // if this is our special 'this_object' 'in_query'  queryID  filter:
                 if (cond.key == 'this_object') {
 
+                    if (!QueryObj.canFilterObject(object)) {
+
+                        ADCore.error.log('AppBuilder:Policy:ABModelConvertQueryConditions:object not filterable by Query:', { object:object, queryObj:QueryObj });
+                        var err = new Error('Object not filterable by Query.');
+                        cb(err);
+                        return;
+
+                    }
+
                     let alias = QueryObj.objectAlias(object.id);
 
                     queryColumn = alias+'.'+object.PK();
                     newKey = object.PK(); // 'id';  // the final filter needs to be 'id IN []', so 'id'
                     parseColumn = object.PK(); // 'id';  // make sure we pull our 'id' values from the query
 
-                    continueSingle(newKey, parseColumn, queryColumn);
+                    continueSingle(newKey, parseColumn, queryColumn, 'this_object');
 
                 } else {
                     // this is a linkField IN QUERY filter:
@@ -198,15 +208,15 @@ function parseQueryCondition(_where, object, req, res, cb) {
                     } else {
 
                         // get the linked field:
-                        var linkedField = field.fieldLink();
+                        // var linkedField = field.fieldLink();
 
                         // based upon the type of link:
                         var linkCase = field.linkType()+':'+field.linkViaType();
                          switch(linkCase.toLowerCase()) {
-    
+
                             case 'one:one':
                             case 'one:many':
-                                
+
                                 // this field is used in final filter condition
                                 newKey = field.columnName;
 
@@ -219,7 +229,7 @@ function parseQueryCondition(_where, object, req, res, cb) {
                                 }
                                 else {
                                     var dbTableName = field.object.dbTableName(true);
-                                    if (dbTableName) { newKey = dbTableName + '.' + newKey } 
+                                    if (dbTableName) { newKey = dbTableName + '.' + newKey }
                                 }
 
 
@@ -227,28 +237,47 @@ function parseQueryCondition(_where, object, req, res, cb) {
                                 parseColumn = linkedObject.PK(); // 'id';
 
                                 // make this the queryColumn:
-                                queryColumn = QueryObj.objectAlias(linkedObject.id)+'.'+parseColumn;   
-                                continueSingle(newKey, parseColumn, queryColumn);                             
+                                queryColumn = QueryObj.objectAlias(linkedObject.id)+'.'+parseColumn;
+                                continueSingle(newKey, parseColumn, queryColumn, linkCase);
                                 break;
-
 
                             case 'many:one':
-                                // they contain my .PK
+                                // this field is used in final filter condition
+                                newKey = field.relationName();
 
-                                // my .PK is what is used on our filter
-                                newKey = object.PK(); // 'id';
+                                if (object.objectAlias) {
+                                    newKey =  object.objectAlias(field.object.id) + '.' + newKey;
+                                }
+                                else {
+                                    var dbTableName = field.object.dbTableName(true);
+                                    if (dbTableName) { newKey = dbTableName + '.' + newKey }
+                                }
 
-                                if (object.objectAlias)
-                                    newKey = object.objectAlias(linkedObject.id) + '.' + newKey;
-
-                                // I need to pull out the linkedField's columnName
-                                parseColumn = linkedField.columnName;
+                                // I need to pull out the PK from the filter Query:
+                                parseColumn = linkedObject.PK(); // 'id';
 
                                 // make this the queryColumn:
-                                queryColumn = QueryObj.objectAlias(linkedObject.id)+'.'+linkedField.columnName;
-
-                                continueSingle(newKey, parseColumn, queryColumn);
+                                queryColumn = QueryObj.objectAlias(linkedObject.id)+'.'+parseColumn;
+                                continueSingle(newKey, parseColumn, queryColumn, linkCase);
                                 break;
+
+                            // case 'many:one':
+                            //     // they contain my .PK
+
+                            //     // my .PK is what is used on our filter
+                            //     newKey = object.PK(); // 'id';
+
+                            //     if (object.objectAlias)
+                            //         newKey = object.objectAlias(linkedObject.id) + '.' + newKey;
+
+                            //     // I need to pull out the linkedField's columnName
+                            //     parseColumn = linkedField.columnName;
+
+                            //     // make this the queryColumn:
+                            //     queryColumn = QueryObj.objectAlias(linkedObject.id)+'.'+linkedField.columnName;
+
+                            //     continueSingle(newKey, parseColumn, queryColumn);
+                            //     break;
 
 
                             case 'many:many':
@@ -276,7 +305,8 @@ function parseQueryCondition(_where, object, req, res, cb) {
                                         .where(linkedObject.name, 'IN', ids)
                                         .then((data)=>{
 
-                                            var myIds = data.map((d)=>{ return d[parseName] });
+                                            var myIds = data.map((d)=>{ return d[parseName] }).filter(d => d != null);
+                                            myIds = _.uniq(myIds);
 
                                             var myPK = object.PK(); // 'id';
 
@@ -304,7 +334,7 @@ function parseQueryCondition(_where, object, req, res, cb) {
                 // buildCondition
                 // final step of recreating the condition into the 
                 // proper Field IN []  format;
-                function buildCondition(newKey, ids) {
+                function buildCondition(newKey, ids, linkCase) {
 
                     // convert cond into an IN or NOT IN
                     cond.key = newKey;
@@ -314,6 +344,12 @@ function parseQueryCondition(_where, object, req, res, cb) {
                     }
                     cond.rule = convert[cond.rule];
                     cond.value = _.uniq(ids); // use _.uniq() to only return unique values (no duplicates)
+
+                    // M:1 - filter __relation column in MySQL view with string
+                    if (linkCase == 'many:one') {
+                        cond.rule = 'contains';
+                        cond.value = ids[0] || "";
+                    }
 
                     sails.log.info('.... new Condition:', cond);
 
@@ -344,8 +380,9 @@ var querySQL = query.toString();
                         .then((data)=>{
 
                             sails.log.info('.... query data : ', data);
-                            var ids = data.map((d)=>{ return d[parseColumn] });
-
+                            // var ids = data.map((d)=>{ return d[parseColumn] });
+                            var ids = data.map((d)=>{ return d[queryColumn] }).filter(d => d != null);
+                            ids = _.uniq(ids);
 
                             done(null, ids);
                             // buildCondition(newKey, ids);
@@ -377,14 +414,14 @@ var querySQL = query.toString();
                 // continueSingle
                 // in 3 of our 4 cases we only need to run a single Query to 
                 // finish our conversion.
-                function continueSingle(newKey, parseColumn, queryColumn) {
+                function continueSingle(newKey, parseColumn, queryColumn, linkCase) {
 
                     processQueryValues(parseColumn, queryColumn, (err, ids)=>{
 
                         if (err) {
                             cb(err);
                         } else {
-                            buildCondition(newKey, ids)
+                            buildCondition(newKey, ids, linkCase)
                         }
 
                     });

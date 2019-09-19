@@ -291,8 +291,7 @@ describe("ABField unit tests", () => {
 			assert.isTrue(result instanceof Promise);
 			sandbox.assert.calledOnce(stubPost);
 			sandbox.assert.calledWith(stubPost, {
-				url: '/app_builder/migrate/application/#appID#/object/#objID#/field/#fieldID#'
-					.replace('#appID#', target.object.application.id)
+				url: '/app_builder/migrate/object/#objID#/field/#fieldID#'
 					.replace('#objID#', target.object.id)
 					.replace('#fieldID#', target.id)
 			});
@@ -309,8 +308,7 @@ describe("ABField unit tests", () => {
 			assert.isTrue(result instanceof Promise);
 			sandbox.assert.calledOnce(stubPut);
 			sandbox.assert.calledWith(stubPut, {
-				url: '/app_builder/migrate/application/#appID#/object/#objID#/field/#fieldID#'
-					.replace('#appID#', target.object.application.id)
+				url: '/app_builder/migrate/object/#objID#/field/#fieldID#'
 					.replace('#objID#', target.object.id)
 					.replace('#fieldID#', target.id)
 			});
@@ -327,8 +325,7 @@ describe("ABField unit tests", () => {
 			assert.isTrue(result instanceof Promise);
 			sandbox.assert.calledOnce(stubDelete);
 			sandbox.assert.calledWith(stubDelete, {
-				url: '/app_builder/migrate/application/#appID#/object/#objID#/field/#fieldID#'
-					.replace('#appID#', target.object.application.id)
+				url: '/app_builder/migrate/object/#objID#/field/#fieldID#'
 					.replace('#objID#', target.object.id)
 					.replace('#fieldID#', target.id)
 			});

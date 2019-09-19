@@ -291,7 +291,7 @@ class ABFieldFile extends ABField {
 		config.template = (obj) => {
 
 			if (obj.$group)
-				return obj[this.columnName];
+				return this.dataValue(obj);
 
 			var fileDiv = [
 				'<div class="ab-file-data-field" style="float: left;">',
@@ -528,13 +528,17 @@ class ABFieldFile extends ABField {
 			})
 			
 		}
-		else if (!row[this.columnName] || !row[this.columnName].uuid) {
+		else {
+			let rowData = this.dataValue(row);
+			if (!rowData || !rowData.uuid) {
 
-			var uploaderId = node.dataset['uploaderId'],
-				uploader = $$(uploaderId);
+				var uploaderId = node.dataset['uploaderId'],
+					uploader = $$(uploaderId);
 
-			if (uploader && uploader.fileDialog)
-				uploader.fileDialog({ rowid: row.id });
+				if (uploader && uploader.fileDialog)
+					uploader.fileDialog({ rowid: row.id });
+			}
+
 		}
 
 		return false;
@@ -574,27 +578,28 @@ class ABFieldFile extends ABField {
 	fileTemplate(obj, editable) {
 
 		var iconDisplay = '';
-		var fileDisplay = 'display:none';
+		var fileDisplay = 'display:none;';
 		var fileURL = '';
 
 
 		var value = '';
 		var name = '';
 
-		if (obj[this.columnName]) {
-			value = obj[this.columnName].uuid;
-			name = obj[this.columnName].filename;
+		let rowData = this.dataValue(obj);
+		if (rowData) {
+			value = rowData.uuid;
+			name = rowData.filename;
 		};
 
-		if ((value != '') && (name != '')) {
-			iconDisplay =  'display:none';
+		if (value && name) {
+			iconDisplay =  'display:none;';
 			fileDisplay = '';
 			fileURL =  '/opsportal/file/' + this.object.application.name + '/' + value;
 		}
 
 		var html = [
 			'<div class="file-data-field-icon" style="text-align: center; height: inherit; display: table-cell; vertical-align: middle; border: 2px dotted #CCC; background: #FFF; border-radius: 10px; font-size: 11px; line-height: 13px; padding: 0 10px; '+iconDisplay+'"><i class="fa fa-file fa-2x" style="opacity: 0.6; font-size: 32px; margin-top: 3px; margin-bottom: 5px;"></i>#drag#</div>',
-			'<div class="file-data-field-name" style="' + fileDisplay + ' width:100%; height:100%; position:relative; "><a target="_blank" href="' + fileURL +'">' + name + '</a>#remove#</div>',
+			'<div class="file-data-field-name" style="' + fileDisplay + ' width:100%; height:100%; position:relative; "><a target="_blank" href="' + fileURL +'">' + (name || "") + '</a>#remove#</div>',
 		].join('');
 
 		html = html.replace('#drag#', editable ? '<br/>Drag and drop or click here' : '');
@@ -626,7 +631,7 @@ class ABFieldFile extends ABField {
 
 		var val = null;
 		if (rowData) {
-			val = rowData[this.columnName];
+			val = this.dataValue(rowData);
 
 			// if (val == null) {
 			// 	// assume they just sent us a single value
@@ -671,6 +676,45 @@ class ABFieldFile extends ABField {
 		
 		super.isValidData(data, validator);
 		
+	}
+
+	dataValue(rowData) {
+
+		let propName = "{objectName}.{columnName}"
+			.replace('{objectName}', this.alias || this.object.name)
+			.replace('{columnName}', this.columnName);
+
+		let result = rowData[this.columnName] || rowData[propName] || {};
+		if (typeof result == 'string') {
+			try {
+				result = JSON.parse(result);
+			}
+			catch (err) {}
+		}
+
+		return result;
+
+	}
+
+	format(rowData) {
+
+		let result = this.dataValue(rowData);
+		if (result) {
+
+			if (typeof result == 'string') {
+				try {
+					result = JSON.parse(result);
+				}
+				catch(err) {}
+			}
+
+			// return file name
+			return result ? (result.filename || "") : "";
+		}
+		else {
+			return "";
+		}
+
 	}
 
 }

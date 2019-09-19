@@ -173,8 +173,8 @@ export default class ABViewDetailCustom extends ABViewDetailComponent {
 		var template = (templateLabel + "#result#")
 		// var template = (templateLabel)
 			.replace(/#width#/g, detailView.settings.labelWidth)
-			.replace(/#label#/g, field.label)
-			.replace(/#result#/g, field.columnHeader().template({}));
+			.replace(/#label#/g, field ? field.label : "")
+			.replace(/#result#/g, field ? field.columnHeader().template({}) : "");
 
 		component.ui.id = ids.component;
 		component.ui.view = "template";
@@ -189,11 +189,13 @@ export default class ABViewDetailCustom extends ABViewDetailComponent {
 
 		component.onShow = () => {
 
+			if (!field) return;
+
 			var elem = $$(ids.component);
 			if (!elem) return;
 
 			var detailCom = this.detailComponent(),
-				rowData = detailCom.dataCollection.getCursor() || {},
+				rowData = detailCom.dataview.getCursor() || {},
 				node = elem.$view;
 
 			field.customDisplay(rowData, App, node, {
@@ -203,6 +205,8 @@ export default class ABViewDetailCustom extends ABViewDetailComponent {
 		};
 
 		component.logic.setValue = (val) => {
+
+			if (!field) return;
 
 			var elem = $$(ids.component);
 			if (!elem) return;

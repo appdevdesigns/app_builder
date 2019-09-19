@@ -12,9 +12,9 @@ import ABViewChartPie from "./views/ABViewChartPie"
 import ABViewChartBar from "./views/ABViewChartBar"
 import ABViewChartLine from "./views/ABViewChartLine"
 import ABViewChartArea from "./views/ABViewChartArea"
+import ABViewComment from "./views/ABViewComment"
 import ABViewConditionalContainer from "./views/ABViewConditionalContainer"
 import ABViewContainer from "./views/ABViewContainer"
-import ABViewDataCollection from "./views/ABViewDataCollection"
 import ABViewDocxBuilder from "./views/ABViewDocxBuilder"
 import ABViewDataview from "./views/ABViewDataview"
 import ABViewPage from "./views/ABViewPage"
@@ -27,6 +27,7 @@ import ABViewGrid from "./views/ABViewGrid"
 import ABViewImage from "./views/ABViewImage"
 import ABViewTab from "./views/ABViewTab"
 import ABViewText from "./views/ABViewText"
+import ABViewKanban from "./views/ABViewKanban"
 
 import ABViewDetail from "./views/ABViewDetail"
 import ABViewDetailCheckbox from "./views/ABViewDetailCheckbox"
@@ -68,9 +69,9 @@ Views[ABViewChartBar.common().key] = ABViewChartBar;
 Views[ABViewChartLine.common().key] = ABViewChartLine;
 Views[ABViewChartArea.common().key] = ABViewChartArea;
 
+Views[ABViewComment.common().key] = ABViewComment;
 Views[ABViewConditionalContainer.common().key] = ABViewConditionalContainer;
 Views[ABViewContainer.common().key] = ABViewContainer;
-Views[ABViewDataCollection.common().key] = ABViewDataCollection;
 Views[ABViewDataview.common().key] = ABViewDataview;
 Views[ABViewDocxBuilder.common().key] = ABViewDocxBuilder;
 Views[ABViewPage.common().key] = ABViewPage;
@@ -83,6 +84,7 @@ Views[ABViewGrid.common().key] = ABViewGrid;
 Views[ABViewImage.common().key] = ABViewImage;
 Views[ABViewTab.common().key] = ABViewTab;
 Views[ABViewText.common().key] = ABViewText;
+Views[ABViewKanban.common().key] = ABViewKanban;
 
 Views[ABViewDetail.common().key] = ABViewDetail;
 Views[ABViewDetailCheckbox.common().key] = ABViewDetailCheckbox;

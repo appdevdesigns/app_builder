@@ -6,7 +6,9 @@
  */
 
 var async = require('async');
+var path = require('path');
 
+var ApplicationGraph = require(path.join('..', 'graphModels', 'ABApplication'));
 
 module.exports = {
 
@@ -22,19 +24,17 @@ module.exports = {
 			return;
 		}
 
-		appId = parseInt(appId);
+		// appId = parseInt(appId);
 
 		async.waterfall([
 			function (next) {
 				// Find application
-				ABApplication.findOne({ id: appId })
-					.exec(function (err, app) {
-						if (err) {
-							res.AD.error(err);
-							next(err);
-							return;
-						}
-
+				ApplicationGraph.findOne(appId)
+					.catch(err => {
+						res.AD.error(err);
+						next(err);
+					})
+					.then(app => {
 						next(null, app);
 					});
 			},
@@ -82,20 +82,17 @@ module.exports = {
 			return;
 		}
 
-		appId = parseInt(appId);
+		// appId = parseInt(appId);
 
 		async.waterfall([
 			function (next) {
 				// Find application
-				ABApplication.findOne({ id: appId })
-					.populate('role')
-					.exec(function (err, record) {
-						if (err) {
-							res.AD.error(err);
-							next(err);
-							return;
-						}
-
+				ApplicationGraph.findOne(appId)
+					.catch(err => {
+						res.AD.error(err);
+						next(err);
+					})
+					.then(record => {
 						next(null, record);
 					});
 			},
@@ -116,16 +113,15 @@ module.exports = {
 						})
 						.then(function (role) {
 							app.role = role.id;
-							app.save(function (err) {
-								if (err) {
+							app.save()
+								.catch(err => {
 									res.AD.error(err);
 									next(err);
-									return;
-								}
-
-								res.AD.success(role);
-								next();
-							});
+								})
+								.then(() => {
+									res.AD.success(role);
+									next();	
+								});
 						});
 				}
 			},
@@ -144,20 +140,17 @@ module.exports = {
 			return;
 		}
 
-		appId = parseInt(appId);
+		// appId = parseInt(appId);
 
 		async.waterfall([
 			function (next) {
 				// Find application
-				ABApplication.findOne({ id: appId })
-					.populate('role')
-					.exec(function (err, app) {
-						if (err) {
-							res.AD.error(err);
-							next(err);
-							return;
-						}
-
+				ApplicationGraph.findOne(appId)
+					.catch(err => {
+						res.AD.error(err);
+						next(err);
+					})
+					.then(app => {
 						next(null, app);
 					});
 
@@ -196,20 +189,18 @@ module.exports = {
 			return;
 		}
 
-		appId = parseInt(appId);
+		// appId = parseInt(appId);
 		roleIds = roleIds.filter(function (r) { return r && r.id !== null && typeof r.id !== 'undefined' });
 
 		async.waterfall([
 			function (next) {
 				// Get application
-				ABApplication.findOne({ id: appId })
-					.exec(function (err, app) {
-						if (err) {
-							res.AD.error(err);
-							next(err);
-							return;
-						}
-
+				ApplicationGraph.findOne(appId)
+					.catch(err => {
+						res.AD.error(err);
+						next(err);
+					})
+					.then(app => {
 						next(null, app);
 					});
 			},
