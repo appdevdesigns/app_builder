@@ -101,7 +101,7 @@ export default class ABModel {
 		var shouldTranslate = false;
 		if (mlFields.length) {
 			mlFields.forEach(function(field) {
-				if (typeof values[field] != "undefined") {
+				if (values[field] != null) {
 					shouldTranslate = true;
 				}
 			});
