@@ -1012,7 +1012,7 @@ module.exports = {
     /* An Application may have one or more Mobile Apps. */
 
     /**
-     * GET /app_builder/application/allmobileapps
+     * GET /app_builder/mobile/apps
      * 
      * return a list of all Mobile Apps across all Applications.
      * (administrative)

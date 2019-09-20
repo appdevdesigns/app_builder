@@ -594,9 +594,9 @@ console.error(err);
 				});
 
 
-				// "/app_builder/application/allmobileapps"
+				// "/app_builder/mobile/apps"
 				OP.Comm.Service.get({
-					url: "/app_builder/application/allmobileapps"
+					url: "/app_builder/mobile/apps"
 				})
 				.then((data)=>{
 

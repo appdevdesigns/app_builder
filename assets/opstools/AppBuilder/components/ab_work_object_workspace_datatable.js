@@ -1207,14 +1207,15 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
              */
             toolTip:function(obj, common) {
                 var tip = "";
-                if (Array.isArray(obj[common.column.id])) {
-                    obj[common.column.id].forEach(function (o) {
+                var columnName = common.column.id.replace(" ", "");
+                if (Array.isArray(obj[columnName])) {
+                    obj[columnName].forEach(function (o) {
                         if (o.text)
                             tip += o.text + "<br/>";
                     });
-                } else if (typeof obj[common.column.id] != "undefined" && typeof obj[common.column.id+"__relation"] != "undefined") {
+                } else if (typeof obj[columnName+"__relation"] != "undefined") {
 
-                    var relationData = obj[common.column.id+"__relation"];
+                    var relationData = obj[columnName+"__relation"];
                     if (!Array.isArray(relationData))
                         relationData = [relationData];
 
@@ -1222,22 +1223,24 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                         if (o)
                             tip += o.text + "<br/>";
                     });
-                } else if (typeof obj[common.column.id+"__relation"] != "undefined" && typeof obj[common.column.id] == "number") {
-                    tip = obj[common.column.id+"__relation"].text;
-                } else if (imageFields.indexOf(common.column.id) != -1) {
-                    if (obj[common.column.id] == null) {
+                } else if (typeof obj[columnName+"__relation"] != "undefined" && typeof obj[columnName] == "number") {
+                    tip = obj[columnName+"__relation"].text;
+                } else if (imageFields.indexOf(columnName) != -1) {
+                    if (obj[columnName] == null) {
                         return "";
                     } else {
-                        tip = "<img style='max-width: 500px; max-height: 500px;' src='/opsportal/image/" + CurrentObject.application.name+"/"+obj[common.column.id]+"' />";                
+                        tip = "<img style='max-width: 500px; max-height: 500px;' src='/opsportal/image/" + CurrentObject.application.name+"/"+obj[columnName]+"' />";                
                     }
                 } else if (common.column.editor == "date") {
-                    tip = common.column.format(obj[common.column.id]);
+                    tip = common.column.format(obj[columnName]);
                 } else if (common.column.editor == "richselect") {
+
                     CurrentObject.fields().forEach(function (f) {
-                        if (f.columnName == common.column.id) {
+                        if (f.columnName == columnName) {
+
                             if (f.settings.options) {
                                 f.settings.options.forEach(function (o) {
-                                    if (o.id == obj[common.column.id]) {
+                                    if (o.id == obj[columnName]) {
                                         tip = o.text;
                                     }
                                 })                                
@@ -1245,7 +1248,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                         }
                     })
                 } else {
-                    tip = obj[common.column.id];
+                    tip = obj[columnName];
                 }
                 if (tip == null) {
                     return "";

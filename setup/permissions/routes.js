@@ -56,6 +56,6 @@ module.exports = {
     'get /app_builder/relay/uninitializedusers': abMobileAdmin,
     'post /app_builder/relay/initialize': abMobileAdmin,
     'post /app_builder/relay/publishusers': abMobileAdmin,
-    'get /app_builder/application/allmobileapps': abMobileAdmin,
+    'get /app_builder/mobile/apps': abMobileAdmin,
 
 };
