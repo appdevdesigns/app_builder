@@ -294,32 +294,32 @@ export default class ABDataview extends EventEmitter {
 	/// Cursor
 	///
 
-	setCursor(rowId) {
+	setCursor(itemId) {
 
 		// If the static cursor is set, then this DC could not set cursor to other rows
 		if (this.settings.fixSelect &&
-			(this.settings.fixSelect != "_FirstRecordDefault" || this.settings.fixSelect == rowId))
+			(this.settings.fixSelect != "_FirstRecordDefault" || this.settings.fixSelect == itemId))
 			return;
 
 		if (this.__treeCollection) {
 			// set cursor of tree collection
-			this.setCursorTree(rowId);
+			this.setCursorTree(itemId);
 
 			// pull current row id
 			let currTreeId = this.__treeCollection.getCursor();
 			if (currTreeId) {
 				let currTreeItem = this.__treeCollection.getItem(currTreeId);
 				if (currTreeItem)
-					rowId = currTreeItem._rowId;
+					itemId = currTreeItem._itemId;
 			}
 		}
 
 		let dc = this.__dataCollection;
 		if (dc) {
 
-			if (dc.getCursor() != rowId) {
-				if (dc.exists(rowId) || rowId == null)
-					dc.setCursor(rowId);
+			if (dc.getCursor() != itemId) {
+				if (dc.exists(itemId) || itemId == null)
+					dc.setCursor(itemId);
 			}
 			// If set rowId equal current cursor, it will not trigger .onAfterCursorChange event
 			else {
@@ -346,7 +346,7 @@ export default class ABDataview extends EventEmitter {
 			}
 			// If it is not id of tree collection, then find/set root of data
 			else {
-				let treeItem = tc.find({ _rowId: itemId, $parent: 0 }, true);
+				let treeItem = tc.find({ _itemId: itemId, $parent: 0 }, true);
 				if (treeItem)
 					tc.setCursor(treeItem.id);
 			}
@@ -365,7 +365,7 @@ export default class ABDataview extends EventEmitter {
 				let currItem = this.__treeCollection.getItem(currId);
 
 				// filter current id for serialize
-				this.__treeCollection.filter(item => item._rowId == currItem._rowId);
+				this.__treeCollection.filter(item => item._itemId == currItem._itemId);
 
 				// pull item with child items
 				let currItemAndChilds = this.__treeCollection.serialize()[0] || null;
@@ -498,12 +498,17 @@ export default class ABDataview extends EventEmitter {
 				// if (row)
 				// 	this.__dataCollection.setCursor(row.id);
 
-				// set a first row to cursor
-				var rowId = this.__dataCollection.getFirstId();
-				if (rowId) {
-					this.__dataCollection.setCursor(rowId);
+				let currRowId = this.__dataCollection.getCursor();
+				if (!currRowId) {
 
-					this.setCursorTree(rowId);
+					// set a first row to cursor
+					let rowId = this.__dataCollection.getFirstId();
+					if (rowId) {
+						this.__dataCollection.setCursor(rowId);
+	
+						this.setCursorTree(rowId);
+					}
+
 				}
 			}
 			else {
@@ -1795,7 +1800,7 @@ export default class ABDataview extends EventEmitter {
 				let treeNode = {};
 				treeNode._alias = alias;
 				treeNode._dataId = dataId;
-				treeNode._rowId = row.id; // Keep row id for set cursor to data collection
+				treeNode._itemId = row.id; // Keep row id for set cursor to data collection
 
 				Object.keys(row).forEach(propName => {
 
