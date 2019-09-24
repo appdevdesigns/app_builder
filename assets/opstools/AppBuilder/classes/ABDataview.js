@@ -505,7 +505,7 @@ export default class ABDataview extends EventEmitter {
 					let rowId = this.__dataCollection.getFirstId();
 					if (rowId) {
 						this.__dataCollection.setCursor(rowId);
-	
+
 						this.setCursorTree(rowId);
 					}
 
@@ -560,114 +560,178 @@ export default class ABDataview extends EventEmitter {
 			let obj = this.datasource;
 			if (!obj) return;
 
+			if (!data || !data.data) return;
+
 			let needAdd = false;
-			let updatedVals = {};
+			let updatedVals = [];
 
-			// Query
-			if (obj instanceof ABObjectQuery) {
+			Promise.resolve()
+				.then(() => {
 
-				let objList = obj.objects(o => o.id == data.objectId) || [];
+					return new Promise((next, bad) => {
 
-				needAdd = objList.length > 0;
-				updatedVals = this._queryUpdateData(objList, data.data);
-			}
-			else {
-				needAdd = obj.id == data.objectId;
-				updatedVals = data.data;
-			}
+						// Query
+						if (obj instanceof ABObjectQuery) {
 
-			if (needAdd) {
+							let objList = obj.objects(o => o.id == data.objectId) || [];
 
-				// normalize data before add to data collection
-				var model = obj.model();
-				model.normalizeData(updatedVals);
+							needAdd = objList.length > 0;
 
-				// filter condition before add 
-				if (!this.isValidData(updatedVals))
-					return;
+							if (!needAdd)
+								return next();
 
-				if (!this.__dataCollection.exists(updatedVals.id)) {
-					this.__dataCollection.add(updatedVals, 0);
-					this.emit('create', updatedVals);
-					// this.__dataCollection.setCursor(rowData.id);
-				}
+							let where = {
+								glue: "or",
+								rules: []
+							};
 
-				if (this.__treeCollection
-					// && this.__treeCollection.exists(updatedVals.id)
-				) {
+							objList.forEach(o => {
 
-					this.parseTreeCollection({
-						data: [updatedVals]
-					});
-				}
+								let newDataId = data.data[`${o.PK()}`];
+								if (!newDataId) return;
 
+								where.rules.push({
+									key: `${o.alias}.${o.PK()}`,
+									rule: "equals",
+									value: newDataId
+								});
 
-			}
+							});
 
-			// if it is a linked object
-			let connectedFields = this.datasource.fields(f =>
-				f.key == 'connectObject' &&
-				f.datasourceLink &&
-				f.datasourceLink.id == data.objectId
-			);
+							obj.model().findAll({
+								where: where
+							})
+								.catch(bad)
+								.then(newQueryData => {
 
-			// update relation data
-			if (obj instanceof ABObject &&
-				connectedFields &&
-				connectedFields.length > 0) {
+									// TODO: CHeck this
+									// (newQueryData.data || []).forEach(d => {
+									// 	updatedVals.push(this._queryUpdateData(objList, d));
+									// });
 
-				// various PK name
-				let PK = connectedFields[0].object.PK();
-				if (!updatedVals.id && PK != 'id')
-					updatedVals.id = updatedVals[PK];
+									updatedVals = newQueryData.data || [];
 
-				this.__dataCollection.find({}).forEach(d => {
+									// TODO: .id
+									updatedVals.forEach(v => {
+										delete v.id;
+									});
 
-					let updateItemData = {};
+									next();
 
-					connectedFields.forEach(f => {
+								});
 
-						var updateRelateVal = updatedVals[f.fieldLink.relationName()] || {};
-						let rowRelateVal = d[f.relationName()] || {};
-
-						// Relate data
-						if (Array.isArray(rowRelateVal) &&
-							rowRelateVal.filter(v => v == updatedVals.id || v.id == updatedVals.id).length < 1 &&
-							isRelated(updateRelateVal, d.id, PK)) {
-
-							rowRelateVal.push(updatedVals);
-
-							updateItemData[f.relationName()] = rowRelateVal;
-							updateItemData[f.columnName] = updateItemData[f.relationName()].map(v => v.id || v);
 						}
-						else if (!Array.isArray(rowRelateVal) &&
-							(rowRelateVal != updatedVals.id || rowRelateVal.id != updatedVals.id) &&
-							isRelated(updateRelateVal, d.id, PK)) {
-
-							updateItemData[f.relationName()] = updatedVals;
-							updateItemData[f.columnName] = updatedVals.id || updatedVals;
+						// Object
+						else {
+							needAdd = obj.id == data.objectId;
+							updatedVals = [data.data];
+							next();
 						}
 
 					});
 
-					// If this item needs to update
-					if (Object.keys(updateItemData).length > 0) {
-						this.__dataCollection.updateItem(d.id, updateItemData);
+				})
+				.then(() => {
 
-						if (this.__treeCollection)
-							this.__treeCollection.updateItem(d.id, updateItemData);
+					if (needAdd) {
 
-						this.emit('update', this.__dataCollection.getItem(d.id));
+						// normalize data before add to data collection
+						var model = obj.model();
+						model.normalizeData(updatedVals);
+
+						// filter condition before add 
+						if (!this.isValidData(updatedVals))
+							return;
+
+						if (!this.__dataCollection.exists(updatedVals.id)) {
+							this.__dataCollection.add(updatedVals, 0);
+							this.emit('create', updatedVals);
+							// this.__dataCollection.setCursor(rowData.id);
+						}
+
+						if (this.__treeCollection // && this.__treeCollection.exists(updatedVals.id)
+						) {
+
+							this.parseTreeCollection({
+								data: updatedVals
+							});
+						}
+
+
 					}
 
+					// ABObject only
+					if (!(obj instanceof ABObjectQuery)) {
+
+						// if it is a linked object
+						let connectedFields = this.datasource.fields(f =>
+							f.key == 'connectObject' &&
+							f.datasourceLink &&
+							f.datasourceLink.id == data.objectId
+						);
+
+						// It should always be only one item for ABObject
+						updatedVals = updatedVals[0];
+
+						// update relation data
+						if (updatedVals &&
+							connectedFields &&
+							connectedFields.length > 0) {
+
+							// various PK name
+							let PK = connectedFields[0].object.PK();
+							if (!updatedVals.id && PK != 'id')
+								updatedVals.id = updatedVals[PK];
+
+							this.__dataCollection.find({}).forEach(d => {
+
+								let updateItemData = {};
+
+								connectedFields.forEach(f => {
+
+									var updateRelateVal = updatedVals[f.fieldLink.relationName()] || {};
+									let rowRelateVal = d[f.relationName()] || {};
+
+									// Relate data
+									if (Array.isArray(rowRelateVal) &&
+										rowRelateVal.filter(v => v == updatedVals.id || v.id == updatedVals.id).length < 1 &&
+										isRelated(updateRelateVal, d.id, PK)) {
+
+										rowRelateVal.push(updatedVals);
+
+										updateItemData[f.relationName()] = rowRelateVal;
+										updateItemData[f.columnName] = updateItemData[f.relationName()].map(v => v.id || v);
+									}
+									else if (!Array.isArray(rowRelateVal) &&
+										(rowRelateVal != updatedVals.id || rowRelateVal.id != updatedVals.id) &&
+										isRelated(updateRelateVal, d.id, PK)) {
+
+										updateItemData[f.relationName()] = updatedVals;
+										updateItemData[f.columnName] = updatedVals.id || updatedVals;
+									}
+
+								});
+
+								// If this item needs to update
+								if (Object.keys(updateItemData).length > 0) {
+									this.__dataCollection.updateItem(d.id, updateItemData);
+
+									if (this.__treeCollection)
+										this.__treeCollection.updateItem(d.id, updateItemData);
+
+									this.emit('update', this.__dataCollection.getItem(d.id));
+								}
+
+							});
+
+						}
+					}
+
+					// filter link data collection's cursor
+					this.refreshLinkCursor();
+					this.setStaticCursor();
+
 				});
-
-			}
-
-
-			// filter link data collection's cursor
-			this.refreshLinkCursor();
-			this.setStaticCursor();
 
 		});
 
