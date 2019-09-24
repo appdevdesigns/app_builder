@@ -604,14 +604,7 @@ export default class ABDataview extends EventEmitter {
 								.catch(bad)
 								.then(newQueryData => {
 
-									// TODO: CHeck this
-									// (newQueryData.data || []).forEach(d => {
-									// 	updatedVals.push(this._queryUpdateData(objList, d));
-									// });
-
 									updatedVals = newQueryData.data || [];
-
-									// TODO: .id
 									updatedVals.forEach(v => {
 										delete v.id;
 									});
@@ -639,15 +632,20 @@ export default class ABDataview extends EventEmitter {
 						var model = obj.model();
 						model.normalizeData(updatedVals);
 
-						// filter condition before add 
-						if (!this.isValidData(updatedVals))
-							return;
 
-						if (!this.__dataCollection.exists(updatedVals.id)) {
-							this.__dataCollection.add(updatedVals, 0);
-							this.emit('create', updatedVals);
-							// this.__dataCollection.setCursor(rowData.id);
-						}
+						(updatedVals || []).forEach(updatedV => {
+
+							// filter condition before add 
+							if (!this.isValidData(updatedV))
+								return;
+
+							if (!this.__dataCollection.exists(updatedV[`${obj.PK()}`])) {
+								this.__dataCollection.add(updatedV, 0);
+								this.emit('create', updatedV);
+								// this.__dataCollection.setCursor(rowData.id);
+							}
+
+						});
 
 						if (this.__treeCollection // && this.__treeCollection.exists(updatedVals.id)
 						) {
