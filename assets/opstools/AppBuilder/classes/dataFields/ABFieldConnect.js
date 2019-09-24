@@ -757,11 +757,18 @@ class ABFieldConnect extends ABFieldSelectivity {
 	 * 
 	 * @return {Promise}
 	 */
-	getOptions(filters, term) {
+	getOptions(where, term) {
 		return new Promise(
 			(resolve, reject) => {
 
-				filters = filters || {};
+				where = where || {};
+
+				if (!where.glue)
+					where.glue = "and";
+
+				if (!where.rules)
+					where.rules = [];
+
 				term = term || '';
 
 				// check if linked object value is not define, should return a empty array
@@ -783,11 +790,12 @@ class ABFieldConnect extends ABFieldSelectivity {
 				// Get linked object model
 				var linkedModel = linkedObj.model();
 
-				var where = filters;
-
 				// M:1 - get data that's only empty relation value
 				if (this.settings.linkType == 'many' && this.settings.linkViaType == 'one') {
-					where[linkedCol.id] = 'null';
+					where.rules.push({
+						key: linkedCol.id,
+						rule: "is_null"
+					});
 					// where[linkedCol.columnName] = null;
 				}
 				// 1:1
@@ -797,11 +805,19 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 						// NOTE: make sure "haveNoRelation" shows up as an operator
 						// the value ":0" doesn't matter, we just need 'haveNoRelation' as an operator.
-						where[linkedCol.id] = { 'haveNoRelation': 0 };
+						// newRule[linkedCol.id] = { 'haveNoRelation': 0 };
+						where.rules.push({
+							key: linkedCol.id,
+							rule: "haveNoRelation"
+						});
 					}
 					// 1:1 - get data that's only empty relation value by query null value from link table
 					else {
-						where[linkedCol.id] = 'null';
+						where.rules.push({
+							key: linkedCol.id,
+							rule: "is_null"
+						});
+						// newRule[linkedCol.id] = 'null';
 						// where[linkedCol.id] = null;
 					}
 				}
