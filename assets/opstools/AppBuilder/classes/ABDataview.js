@@ -294,32 +294,32 @@ export default class ABDataview extends EventEmitter {
 	/// Cursor
 	///
 
-	setCursor(rowId) {
+	setCursor(itemId) {
 
 		// If the static cursor is set, then this DC could not set cursor to other rows
 		if (this.settings.fixSelect &&
-			(this.settings.fixSelect != "_FirstRecordDefault" || this.settings.fixSelect == rowId))
+			(this.settings.fixSelect != "_FirstRecordDefault" || this.settings.fixSelect == itemId))
 			return;
 
 		if (this.__treeCollection) {
 			// set cursor of tree collection
-			this.setCursorTree(rowId);
+			this.setCursorTree(itemId);
 
 			// pull current row id
 			let currTreeId = this.__treeCollection.getCursor();
 			if (currTreeId) {
 				let currTreeItem = this.__treeCollection.getItem(currTreeId);
 				if (currTreeItem)
-					rowId = currTreeItem._rowId;
+					itemId = currTreeItem._itemId;
 			}
 		}
 
 		let dc = this.__dataCollection;
 		if (dc) {
 
-			if (dc.getCursor() != rowId) {
-				if (dc.exists(rowId) || rowId == null)
-					dc.setCursor(rowId);
+			if (dc.getCursor() != itemId) {
+				if (dc.exists(itemId) || itemId == null)
+					dc.setCursor(itemId);
 			}
 			// If set rowId equal current cursor, it will not trigger .onAfterCursorChange event
 			else {
@@ -346,7 +346,7 @@ export default class ABDataview extends EventEmitter {
 			}
 			// If it is not id of tree collection, then find/set root of data
 			else {
-				let treeItem = tc.find({ _rowId: itemId, $parent: 0 }, true);
+				let treeItem = tc.find({ _itemId: itemId, $parent: 0 }, true);
 				if (treeItem)
 					tc.setCursor(treeItem.id);
 			}
@@ -365,7 +365,7 @@ export default class ABDataview extends EventEmitter {
 				let currItem = this.__treeCollection.getItem(currId);
 
 				// filter current id for serialize
-				this.__treeCollection.filter(item => item._rowId == currItem._rowId);
+				this.__treeCollection.filter(item => item._itemId == currItem._itemId);
 
 				// pull item with child items
 				let currItemAndChilds = this.__treeCollection.serialize()[0] || null;
@@ -498,12 +498,17 @@ export default class ABDataview extends EventEmitter {
 				// if (row)
 				// 	this.__dataCollection.setCursor(row.id);
 
-				// set a first row to cursor
-				var rowId = this.__dataCollection.getFirstId();
-				if (rowId) {
-					this.__dataCollection.setCursor(rowId);
+				let currRowId = this.__dataCollection.getCursor();
+				if (!currRowId) {
 
-					this.setCursorTree(rowId);
+					// set a first row to cursor
+					let rowId = this.__dataCollection.getFirstId();
+					if (rowId) {
+						this.__dataCollection.setCursor(rowId);
+
+						this.setCursorTree(rowId);
+					}
+
 				}
 			}
 			else {
@@ -555,114 +560,176 @@ export default class ABDataview extends EventEmitter {
 			let obj = this.datasource;
 			if (!obj) return;
 
+			if (!data || !data.data) return;
+
 			let needAdd = false;
-			let updatedVals = {};
+			let updatedVals = [];
 
-			// Query
-			if (obj instanceof ABObjectQuery) {
+			Promise.resolve()
+				.then(() => {
 
-				let objList = obj.objects(o => o.id == data.objectId) || [];
+					return new Promise((next, bad) => {
 
-				needAdd = objList.length > 0;
-				updatedVals = this._queryUpdateData(objList, data.data);
-			}
-			else {
-				needAdd = obj.id == data.objectId;
-				updatedVals = data.data;
-			}
+						// Query
+						if (obj instanceof ABObjectQuery) {
 
-			if (needAdd) {
+							let objList = obj.objects(o => o.id == data.objectId) || [];
 
-				// normalize data before add to data collection
-				var model = obj.model();
-				model.normalizeData(updatedVals);
+							needAdd = objList.length > 0;
 
-				// filter condition before add 
-				if (!this.isValidData(updatedVals))
-					return;
+							if (!needAdd)
+								return next();
 
-				if (!this.__dataCollection.exists(updatedVals.id)) {
-					this.__dataCollection.add(updatedVals, 0);
-					this.emit('create', updatedVals);
-					// this.__dataCollection.setCursor(rowData.id);
-				}
+							let where = {
+								glue: "or",
+								rules: []
+							};
 
-				if (this.__treeCollection
-					// && this.__treeCollection.exists(updatedVals.id)
-				) {
+							objList.forEach(o => {
 
-					this.parseTreeCollection({
-						data: [updatedVals]
-					});
-				}
+								let newDataId = data.data[`${o.PK()}`];
+								if (!newDataId) return;
 
+								where.rules.push({
+									key: `${o.alias}.${o.PK()}`,
+									rule: "equals",
+									value: newDataId
+								});
 
-			}
+							});
 
-			// if it is a linked object
-			let connectedFields = this.datasource.fields(f =>
-				f.key == 'connectObject' &&
-				f.datasourceLink &&
-				f.datasourceLink.id == data.objectId
-			);
+							obj.model().findAll({
+								where: where
+							})
+								.catch(bad)
+								.then(newQueryData => {
 
-			// update relation data
-			if (obj instanceof ABObject &&
-				connectedFields &&
-				connectedFields.length > 0) {
+									updatedVals = newQueryData.data || [];
+									updatedVals.forEach(v => {
+										delete v.id;
+									});
 
-				// various PK name
-				let PK = connectedFields[0].object.PK();
-				if (!updatedVals.id && PK != 'id')
-					updatedVals.id = updatedVals[PK];
+									next();
 
-				this.__dataCollection.find({}).forEach(d => {
+								});
 
-					let updateItemData = {};
-
-					connectedFields.forEach(f => {
-
-						var updateRelateVal = updatedVals[f.fieldLink.relationName()] || {};
-						let rowRelateVal = d[f.relationName()] || {};
-
-						// Relate data
-						if (Array.isArray(rowRelateVal) &&
-							rowRelateVal.filter(v => v == updatedVals.id || v.id == updatedVals.id).length < 1 &&
-							isRelated(updateRelateVal, d.id, PK)) {
-
-							rowRelateVal.push(updatedVals);
-
-							updateItemData[f.relationName()] = rowRelateVal;
-							updateItemData[f.columnName] = updateItemData[f.relationName()].map(v => v.id || v);
 						}
-						else if (!Array.isArray(rowRelateVal) &&
-							(rowRelateVal != updatedVals.id || rowRelateVal.id != updatedVals.id) &&
-							isRelated(updateRelateVal, d.id, PK)) {
-
-							updateItemData[f.relationName()] = updatedVals;
-							updateItemData[f.columnName] = updatedVals.id || updatedVals;
+						// Object
+						else {
+							needAdd = obj.id == data.objectId;
+							updatedVals = [data.data];
+							next();
 						}
 
 					});
 
-					// If this item needs to update
-					if (Object.keys(updateItemData).length > 0) {
-						this.__dataCollection.updateItem(d.id, updateItemData);
+				})
+				.then(() => {
 
-						if (this.__treeCollection)
-							this.__treeCollection.updateItem(d.id, updateItemData);
+					if (needAdd) {
 
-						this.emit('update', this.__dataCollection.getItem(d.id));
+						// normalize data before add to data collection
+						var model = obj.model();
+						model.normalizeData(updatedVals);
+
+
+						(updatedVals || []).forEach(updatedV => {
+
+							// filter condition before add 
+							if (!this.isValidData(updatedV))
+								return;
+
+							if (!this.__dataCollection.exists(updatedV[`${obj.PK()}`])) {
+								this.__dataCollection.add(updatedV, 0);
+								this.emit('create', updatedV);
+								// this.__dataCollection.setCursor(rowData.id);
+							}
+
+						});
+
+						if (this.__treeCollection // && this.__treeCollection.exists(updatedVals.id)
+						) {
+
+							this.parseTreeCollection({
+								data: updatedVals
+							});
+						}
+
+
 					}
 
+					// ABObject only
+					if (!(obj instanceof ABObjectQuery)) {
+
+						// if it is a linked object
+						let connectedFields = this.datasource.fields(f =>
+							f.key == 'connectObject' &&
+							f.datasourceLink &&
+							f.datasourceLink.id == data.objectId
+						);
+
+						// It should always be only one item for ABObject
+						updatedVals = updatedVals[0];
+
+						// update relation data
+						if (updatedVals &&
+							connectedFields &&
+							connectedFields.length > 0) {
+
+							// various PK name
+							let PK = connectedFields[0].object.PK();
+							if (!updatedVals.id && PK != 'id')
+								updatedVals.id = updatedVals[PK];
+
+							this.__dataCollection.find({}).forEach(d => {
+
+								let updateItemData = {};
+
+								connectedFields.forEach(f => {
+
+									var updateRelateVal = updatedVals[f.fieldLink.relationName()] || {};
+									let rowRelateVal = d[f.relationName()] || {};
+
+									// Relate data
+									if (Array.isArray(rowRelateVal) &&
+										rowRelateVal.filter(v => v == updatedVals.id || v.id == updatedVals.id).length < 1 &&
+										isRelated(updateRelateVal, d.id, PK)) {
+
+										rowRelateVal.push(updatedVals);
+
+										updateItemData[f.relationName()] = rowRelateVal;
+										updateItemData[f.columnName] = updateItemData[f.relationName()].map(v => v.id || v);
+									}
+									else if (!Array.isArray(rowRelateVal) &&
+										(rowRelateVal != updatedVals.id || rowRelateVal.id != updatedVals.id) &&
+										isRelated(updateRelateVal, d.id, PK)) {
+
+										updateItemData[f.relationName()] = updatedVals;
+										updateItemData[f.columnName] = updatedVals.id || updatedVals;
+									}
+
+								});
+
+								// If this item needs to update
+								if (Object.keys(updateItemData).length > 0) {
+									this.__dataCollection.updateItem(d.id, updateItemData);
+
+									if (this.__treeCollection)
+										this.__treeCollection.updateItem(d.id, updateItemData);
+
+									this.emit('update', this.__dataCollection.getItem(d.id));
+								}
+
+							});
+
+						}
+					}
+
+					// filter link data collection's cursor
+					this.refreshLinkCursor();
+					this.setStaticCursor();
+
 				});
-
-			}
-
-
-			// filter link data collection's cursor
-			this.refreshLinkCursor();
-			this.setStaticCursor();
 
 		});
 
@@ -1795,7 +1862,7 @@ export default class ABDataview extends EventEmitter {
 				let treeNode = {};
 				treeNode._alias = alias;
 				treeNode._dataId = dataId;
-				treeNode._rowId = row.id; // Keep row id for set cursor to data collection
+				treeNode._itemId = row.id; // Keep row id for set cursor to data collection
 
 				Object.keys(row).forEach(propName => {
 

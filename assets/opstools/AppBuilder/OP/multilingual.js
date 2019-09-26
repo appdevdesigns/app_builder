@@ -82,7 +82,7 @@ export default {
 					// copy each field to the root object
 					fields.forEach(function(f){
 
-						if (t[f])
+						if (t[f] != null)
 							obj[f] = t[f];
 
 						obj[f] = obj[f] || '';  // default to '' if not found. 
@@ -97,7 +97,12 @@ export default {
 
 				// copy each field to the root object
 				fields.forEach(function(f){
-					obj[f] = "[" + currLanguage + "]" + (first[f] || '');  // default to '' if not found. 
+
+						if (first[f] != null &&
+							first[f] != "")
+							obj[f] = `[${currLanguage}]${first[f]}`;
+						else
+							obj[f] = ''; // default to '' if not found. 
 				})
 			}
 
@@ -148,7 +153,7 @@ export default {
 						
 						// verify obj[f] is defined 
 						// --> DONT erase the existing translation
-						if (typeof obj[f] != 'undefined'){
+						if (obj[f] != null){
 							t[f] = obj[f];
 						}
 						
@@ -168,7 +173,7 @@ export default {
 	            trans.language_code = currLanguage;
 
 	            fields.forEach(function (field) {
-	                if (obj[field] != null) {
+					if (obj[field] != null) {
 	                    trans[field] = obj[field];
 	                }
 	            })
