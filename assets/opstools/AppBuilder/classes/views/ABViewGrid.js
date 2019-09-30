@@ -1920,7 +1920,7 @@ export default class ABViewGrid extends ABViewWidget  {
 
 	copyUpdateProperyList() {
 
-		return ['dataviewID', 'detailsPage', 'detailsTab', 'editPage', 'editTab'];
+		return ['detailsPage', 'detailsTab', 'editPage', 'editTab'];
 
 	}
 

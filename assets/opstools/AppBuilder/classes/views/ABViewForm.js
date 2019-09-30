@@ -1414,10 +1414,6 @@ resolve();
 
 	}
 
-	copyUpdateProperyList() {
-		return ['dataviewID'];
-	}
-
 	// Use this function in kanban
 	objectLoad(object) {
 		this._currentObject = object;

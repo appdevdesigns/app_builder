@@ -398,9 +398,4 @@ export default class ABViewConditionalContainer extends ABViewContainer {
 
 	}
 
-	copyUpdateProperyList() {
-		return ['dataviewID']
-	}
-
-
 }

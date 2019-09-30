@@ -507,11 +507,4 @@ export default class ABViewText extends ABViewWidget {
 
 	}
 
-	copyUpdateProperyList() {
-
-		return ['dataviewID'];
-
-	}
-
-
 }
