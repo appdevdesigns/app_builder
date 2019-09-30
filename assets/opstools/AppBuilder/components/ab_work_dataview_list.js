@@ -16,7 +16,7 @@ export default class AB_Work_Dataview_List extends OP.Component {
 
 				confirmDeleteTitle: L('ab.dataview.delete.title', "*Delete data view"),
 				confirmDeleteMessage: L('ab.dataview.delete.message', "*Do you want to delete <b>{0}</b>?"),
-				title: L('ab.dataview.list.title', '*Data Views'),
+				title: L('ab.dataview.list.title', '*Data Collections'),
 			}
 		};
 
