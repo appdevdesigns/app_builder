@@ -22,6 +22,7 @@ import ABFieldCalculate from "./dataFields/ABFieldCalculate"
 import ABFieldTextFormula from "./dataFields/ABFieldTextFormula"
 import ABFieldFormula from "./dataFields/ABFieldFormula"
 import ABFieldAutoIndex from "./dataFields/ABFieldAutoIndex" 
+import ABFieldJson from "./dataFields/ABFieldJson" 
 
 /*
  * Fields
@@ -44,6 +45,7 @@ Fields[ABFieldCalculate.defaults().key] = ABFieldCalculate;
 Fields[ABFieldTextFormula.defaults().key] = ABFieldTextFormula;
 Fields[ABFieldFormula.defaults().key] = ABFieldFormula;
 Fields[ABFieldAutoIndex.defaults().key] = ABFieldAutoIndex;
+Fields[ABFieldJson.defaults().key] = ABFieldJson;
 
 
 export default  {
