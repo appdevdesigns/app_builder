@@ -738,10 +738,4 @@ export default class ABViewChart extends ABViewContainer  {
 		return this.dcChart;
 	}
 
-	copyUpdateProperyList() {
-
-		return ['dataviewID'];
-
-	}
-
 }

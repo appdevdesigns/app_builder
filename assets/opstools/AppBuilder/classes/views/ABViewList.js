@@ -340,11 +340,5 @@ export default class ABViewLabel extends ABViewWidget {
 
 	}
 
-	copyUpdateProperyList() {
-
-		return ['dataviewID'];
-
-	}
-
 
 }

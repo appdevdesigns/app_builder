@@ -480,9 +480,4 @@ export default class ABViewPivot extends ABViewWidget {
 
 	}
 
-	copyUpdateProperyList() {
-		return ['dataviewID'];
-	}
-
-
 }

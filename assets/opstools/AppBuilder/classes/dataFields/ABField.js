@@ -751,7 +751,7 @@ export default class ABField extends ABFieldBase {
 				values.settings = values.settings || {};
 				values.settings.objectId = this.object.id;
 				values.settings.fieldId = this.id;
-				// values.id = this.id;
+				values.id = OP.Util.uuid();	// new view/widget id
 
 				var ABFieldPlaceholder = application.viewNew(values, application, parent); // ABViewManager.newView(values, application, parent);
 				// ABFieldPlaceholder.formatTitle();

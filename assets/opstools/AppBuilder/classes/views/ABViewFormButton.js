@@ -21,7 +21,8 @@ var ABViewFormButtonPropertyComponentDefaults = {
 	includeReset: false,
 	resetLabel: '',
 	afterCancel: null,
-	alignment: 'right'
+	alignment: 'right',
+	isDefault: false	// mark default button of form widget
 }
 
 var ABViewFormButtonDefaults = {
@@ -117,6 +118,8 @@ export default class ABViewFormButton extends ABView {
 		this.settings.includeSave = JSON.parse(this.settings.includeSave || ABViewFormButtonPropertyComponentDefaults.includeSave);
 		this.settings.includeCancel = JSON.parse(this.settings.includeCancel || ABViewFormButtonPropertyComponentDefaults.includeCancel);
 		this.settings.includeReset = JSON.parse(this.settings.includeReset || ABViewFormButtonPropertyComponentDefaults.includeReset);
+
+		this.settings.isDefault = JSON.parse(this.settings.isDefault || ABViewFormButtonPropertyComponentDefaults.isDefault);
 
 	}
 

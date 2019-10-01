@@ -517,13 +517,4 @@ export default class ABViewDetail extends ABViewContainer {
 
 	}
 
-	copyUpdateProperyList() {
-
-		return ['dataviewID'];
-
-	}
-
-
-
-
 }

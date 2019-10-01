@@ -229,7 +229,7 @@ export default class ABViewForm extends ABViewContainer {
 
 				});
 
-				formView.addDefaultButton(fields.length);
+				formView.refreshDefaultButton(ids);
 
 			}
 
@@ -257,23 +257,23 @@ export default class ABViewForm extends ABViewContainer {
 
 		_logic.check = (e, fieldId) => {
 
-			var currView = _logic.currentEditObject();
+			let currView = _logic.currentEditObject();
+			let formView = currView.parentFormComponent();
 
 			// update UI list
-			var item = $$(ids.fields).getItem(fieldId);
+			let item = $$(ids.fields).getItem(fieldId);
 			item.selected = item.selected ? 0 : 1;
 			$$(ids.fields).updateItem(fieldId, item);
 
 			// add a field to the form
 			if (item.selected) {
-				var fieldView = currView.addFieldToForm(item);
+				let fieldView = currView.addFieldToForm(item);
 				if (fieldView)
 					fieldView.once('destroyed', () => this.propertyEditorPopulate(App, ids, currView));
 			}
 			// remove field in the form
 			else {
-				var formView = currView.parentFormComponent();
-				var fieldView = formView.fieldComponents().filter(c => c.settings.fieldId == fieldId)[0];
+				let fieldView = formView.fieldComponents().filter(c => c.settings.fieldId == fieldId)[0];
 
 				if (fieldView) {
 
@@ -284,6 +284,8 @@ export default class ABViewForm extends ABViewContainer {
 				}
 
 			}
+
+			formView.refreshDefaultButton(ids);
 
 			// trigger a save()
 			this.propertyEditorSave(ids, currView);
@@ -1057,11 +1059,25 @@ PopupRecordRule.qbFixAfterShow();
 	}
 
 
-	addDefaultButton(yPosition) {
+	refreshDefaultButton(ids) {
+
+		// If default button is not exists, then skip this
+		let exists = this.views(v => !(v instanceof ABViewFormButton) && !v.settings.isDefault).length > 0;
+		if (!exists) return;
+
+		// Remove default save button
+		this._views = (this._views || []).filter(v => !(v instanceof ABViewFormButton) && !v.settings.isDefault);
 
 		// Add a default button
 		var newButton = ABViewFormButton.newInstance(this.application, this);
-		newButton.position.y = yPosition;
+		newButton.settings.isDefault = true;
+
+		// Set to last item
+		if ((this._views.length || 0) > ($$(ids.fields).length || 0))
+			newButton.position.y = this._views.length;
+		else
+			newButton.position.y = $$(ids.fields).length;
+
 		this._views.push(newButton);
 
 	}
@@ -1396,10 +1412,6 @@ resolve();
 			$$(childComponent.ui.id).focus();
 		}
 
-	}
-
-	copyUpdateProperyList() {
-		return ['dataviewID'];
 	}
 
 	// Use this function in kanban
