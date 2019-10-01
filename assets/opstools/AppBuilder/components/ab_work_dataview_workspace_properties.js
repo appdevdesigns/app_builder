@@ -314,8 +314,7 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 
 				var view = $$(this.ids.list).getItem(id);
 				setTimeout(() => {
-					this.App.actions.tabSwitch(this.App.actions.getInterfaceId());
-					$$(this.App.actions.getTabBarId()).select(this.App.actions.getInterfaceId());
+					this.App.actions.tabSwitch('interface');
 					this.App.actions.populateInterfaceWorkspace(view);
 				}, 50);
 
@@ -919,8 +918,7 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 				var template = this._templateListItem;
 				
 				var hasDataView = "";
-				
-				if (item.settings && item.settings.dataviewID && this._dataview && this._dataview.id && (item.settings.dataviewID == this._dataview.id)) {
+				if (item.dataview && this._dataview && this._dataview.id && (item.dataview.id == this._dataview.id)) {
 					hasDataView = "<i class='pull-right webix_icon hasDataView fa fa-check-circle'></i>";
 				}
 

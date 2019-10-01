@@ -341,18 +341,15 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 
 						AppInterfaceWorkspace.show();
 						break;
+						
+					// Interface Workspace Tab 
+					case "interface":
+						AppInterfaceWorkspace.show();
+						$$(ids.tabbar).select(ids.tab_interface);
+						break;
 				}
 
 			},
-			
-			getInterfaceId:function() {
-				return ids.tab_interface;
-			},
-			
-			getTabBarId:function() {
-				return ids.tabbar;
-			}
-
 
 		})
 
