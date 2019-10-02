@@ -665,13 +665,13 @@ module.exports = {
                 return new Promise((next, err) => {
 
                     ApplicationGraph
-                        .find({id: appID})
+                        .findOne(appID)
                         .then(app => {
 
                             if (!app)
                                 return next(null);
 
-                            let result = app[0].toValidJsonFormat();
+                            let result = app.toValidJsonFormat();
 
                             // Reduce data size to the live display
                             if (pageID && result.json) {
