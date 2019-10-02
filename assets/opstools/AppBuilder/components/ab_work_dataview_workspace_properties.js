@@ -919,7 +919,7 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 				
 				var hasDataView = "";
 				if (item.dataview && this._dataview && this._dataview.id && (item.dataview.id == this._dataview.id)) {
-					hasDataView = "<i class='pull-right webix_icon hasDataView fa fa-check-circle'></i>";
+					hasDataView = "<i class='webix_icon hasDataView fa fa-check-circle'></i>";
 				}
 
 				template = template.replace("#typeIcon#", item.icon || item.viewIcon())
