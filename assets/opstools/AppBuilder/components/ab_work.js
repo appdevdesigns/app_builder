@@ -36,7 +36,7 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 				expandMenu: L('ab.application.expandMenu', "*Expand Menu"),
 				objectTitle: L('ab.object.title', "*Objects"),
 				queryTitle: L('ab.query.title', "*Queries"),
-				dataviewTitle: L('ab.dataview.title', "*Data views"),
+				dataviewTitle: L('ab.dataview.title', "*Data Collections"),
 				interfaceTitle: L('ab.interface.title', "*Interface")
 			}
 		}
@@ -197,7 +197,7 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 											webix.storage.local.put("state", $$(ids.tabbar).getState());
 										}, 0);
 									} else {
-										_logic.tabSwitch(id);
+										App.actions.tabSwitch(id);
 										selectedItem = id;
 									}
 								}
@@ -245,7 +245,7 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 				}
 			}
 
-			_logic.tabSwitch(ids.tab_object);
+			App.actions.tabSwitch(ids.tab_object);
 			$$(ids.tabbar).select(ids.tab_object);
 
 		}
@@ -276,11 +276,37 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 				$$(ids.component).show();
 
 				let tabId = $$(ids.tabbar).getSelectedId();
-				_logic.tabSwitch(tabId);
+				App.actions.tabSwitch(tabId);
 
+			}
+
+
+		}
+		this._logic = _logic;
+
+
+
+		this.actions({
+
+			/**
+			 * @function transitionWorkspace
+			 *
+			 * Switch the UI to view the App Workspace screen.
+			 *
+			 * @param {ABApplication} application
+			 */
+			transitionWorkspace:function(application){
+
+				_logic.applicationInit(application);
+				AppObjectWorkspace.applicationLoad(application);
+				AppQueryWorkspace.applicationLoad(application);
+				AppDataviewWorkspace.applicationLoad(application);
+				AppInterfaceWorkspace.applicationLoad(application);
+
+
+				_logic.show();	
 			},
-
-
+			
 			/**
 			 * @function tabSwitch
 			 *
@@ -315,34 +341,15 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 
 						AppInterfaceWorkspace.show();
 						break;
+						
+					// Interface Workspace Tab 
+					case "interface":
+						AppInterfaceWorkspace.show();
+						$$(ids.tabbar).select(ids.tab_interface);
+						break;
 				}
 
-			}
-		}
-		this._logic = _logic;
-
-
-
-		this.actions({
-
-			/**
-			 * @function transitionWorkspace
-			 *
-			 * Switch the UI to view the App Workspace screen.
-			 *
-			 * @param {ABApplication} application
-			 */
-			transitionWorkspace:function(application){
-
-				_logic.applicationInit(application);
-				AppObjectWorkspace.applicationLoad(application);
-				AppQueryWorkspace.applicationLoad(application);
-				AppDataviewWorkspace.applicationLoad(application);
-				AppInterfaceWorkspace.applicationLoad(application);
-
-
-				_logic.show();	
-			}
+			},
 
 		})
 
