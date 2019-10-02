@@ -1,4 +1,6 @@
 import ABPopupSortField from "./ab_work_object_workspace_popupSortFields"
+import ABViewTab from "../classes/views/ABViewTab"
+import ABViewDetail from "../classes/views/ABViewDetail"
 import RowFilter from "../classes/RowFilter"
 
 function L(key, altText) {
@@ -32,7 +34,9 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 			sortPanel: this.unique('sortPanel'),
 
 			buttonFilter: this.unique('buttonFilter'),
-			buttonSort: this.unique('buttonSort')
+			buttonSort: this.unique('buttonSort'),
+			
+			list: this.unique('list')
 		};
 
 		this.callbacks = {
@@ -44,17 +48,31 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 		// 
 		this.applicationLoad = this._logic.applicationLoad;
 		this.dataviewLoad = this._logic.dataviewLoad;
+		
+		/*
+		 * _templateListItem
+		 *
+		 * The Object Row template definition.
+		 */
+		this._templateListItem = [
+			"<div class='ab-page-list-item'>",
+				"{common.icon()} <span class='webix_icon fa fa-#typeIcon#'></span> #label# #hasDataView#",
+			"</div>"
+		].join('');
+		
+		this.viewList = null;
+
 
 	}
 
 	get ui() {
 
+		let App = this.App;
 		let ids = this.ids;
 		let instance = this;
 
 		return {
-			view: 'layout',
-			width: 350,
+			width: App.config.columnWidthXLarge,
 			rows: [
 				{
 					view: 'toolbar',
@@ -68,16 +86,14 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 				},
 				{
 					view: "scrollview",
+					id: ids.propertyPanel,
 					body: {
-						id: ids.propertyPanel,
-						view: 'layout',
-						padding: 5,
+						padding: 15,
 						rows: [
-
 							{
 								view: "fieldset",
 								label: L('ab.component.datacollection.dataSource', '*Data Source:'),
-								labelWidth: this.App.config.labelWidthLarge,
+								labelWidth: App.config.labelWidthLarge,
 								body: {
 									type: "clean",
 									padding: 10,
@@ -87,7 +103,7 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 											view: "richselect",
 											name: "dataSource",
 											label: L('ab.component.datacollection.source', '*Source:'),
-											labelWidth: this.App.config.labelWidthLarge,
+											labelWidth: App.config.labelWidthLarge,
 											options: {
 												data: []
 											},
@@ -105,7 +121,7 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 											view: "select",
 											name: "linkDataview",
 											label: L('ab.component.datacollection.linkDataview', '*Linked To:'),
-											labelWidth: this.App.config.labelWidthLarge,
+											labelWidth: App.config.labelWidthLarge,
 											options: [],
 											hidden: 1,
 											on: {
@@ -120,7 +136,7 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 											view: "select",
 											name: "linkField",
 											label: L('ab.component.datacollection.linkedField', '*Linked Field:'),
-											labelWidth: this.App.config.labelWidthLarge,
+											labelWidth: App.config.labelWidthLarge,
 											options: [],
 											hidden: 1,
 											on: {
@@ -134,9 +150,8 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 							},
 							{
 								view: "fieldset",
-								name: "advancedOption",
 								label: L('ab.component.datacollection.advancedOptions', '*Advanced Options:'),
-								labelWidth: this.App.config.labelWidthLarge,
+								labelWidth: App.config.labelWidthLarge,
 								body: {
 									type: "clean",
 									padding: 10,
@@ -148,7 +163,7 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 												{
 													view: "label",
 													label: L("ab.component.datacollection.filterData", "*Filter Data:"),
-													width: this.App.config.labelWidthLarge,
+													width: App.config.labelWidthLarge,
 												},
 												{
 													id: ids.buttonFilter,
@@ -171,7 +186,7 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 												{
 													view: "label",
 													label: L("ab.component.datacollection.sortData", "*Sort Data:"),
-													width: this.App.config.labelWidthLarge,
+													width: App.config.labelWidthLarge,
 												},
 												{
 													id: ids.buttonSort,
@@ -192,7 +207,7 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 												{
 													view: "label",
 													label: L("ab.component.datacollection.loadAll", "*Load all:"),
-													width: this.App.config.labelWidthLarge,
+													width: App.config.labelWidthLarge,
 												},
 												{
 													id: ids.loadAll,
@@ -212,7 +227,7 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 											view: "select",
 											name: "fixSelect",
 											label: L('ab.component.datacollection.fixSelect', '*Select:'),
-											labelWidth: this.App.config.labelWidthLarge,
+											labelWidth: App.config.labelWidthLarge,
 											options: [],
 											on: {
 												onChange: (newv, oldv) => {
@@ -222,8 +237,42 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 										}
 									]
 								}
+							},
+							{
+								view: "fieldset",
+								label: L('ab.component.datacollection.dataUsed', '*Data used in...'),
+								labelWidth: App.config.labelWidthLarge,
+								body: {
+									view: App.custom.edittree.view,  // "edittree",
+									id: ids.list,
+									select: true,
+									editaction: 'custom',
+									editable: true,
+									editor: "text",
+									editValue: "label",
+									borderless: true,
+									padding: 0,
+									css: "ab-tree-ui",
+									minHeight: 300,
+									template: (obj, common) => {
+										return this._logic.templateListItem(obj, common);
+									},
+									type: {
+										iconGear: "<span class='webix_icon fa fa-cog'></span>"
+									},
+									on: {
+										onAfterSelect: (id) => {
+											this._logic.onAfterSelect(id);
+										},
+									},
+								}
+							},
+							{
+								maxHeight: App.config.mediumSpacer,
+								height: App.config.mediumSpacer,
+								minHeight: App.config.mediumSpacer,
+								hidden: App.config.hideMobile
 							}
-
 						]
 					}
 				}
@@ -240,6 +289,11 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 		for (var c in this.callbacks) {
 			this.callbacks[c] = options[c] || this.callbacks[c];
 		}
+		
+		if ($$(this.ids.list)) {
+			webix.extend($$(this.ids.list), webix.ProgressBar);
+			$$(this.ids.list).adjust();
+		}
 
 		if ($$(this.ids.propertyPanel))
 			webix.extend($$(this.ids.propertyPanel), webix.ProgressBar);
@@ -250,6 +304,21 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 	get _logic() {
 
 		return {
+			
+			/**
+			 * @function onAfterSelect()
+			 *
+			 * Perform these actions when a View is selected in the List.
+			 */
+			onAfterSelect: (id) => {
+
+				var view = $$(this.ids.list).getItem(id);
+				setTimeout(() => {
+					this.App.actions.tabSwitch('interface');
+					this.App.actions.populateInterfaceWorkspace(view);
+				}, 50);
+
+			},
 
 			applicationLoad: (application) => {
 
@@ -296,6 +365,71 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 				});
 
 				$$(ids.dataSource).refresh();
+				
+				this._logic.listBusy();
+
+				// this so it looks right/indented in a tree view:
+				this.viewList = new webix.TreeCollection();
+
+				/**
+				 * @method addPage
+				 * 
+				 * @param {ABView} page 
+				 * @param {integer} index 
+				 * @param {uuid} parentId 
+				 */
+				var addPage = (page, index, parentId) => {
+
+					// add to tree collection
+					this.viewList.add(page, index, parentId);
+					
+					// add sub-pages
+					if (page instanceof ABViewDetail) {
+						return 
+					}
+
+					var subPages = (page.pages ? page.pages() : []);
+					subPages.forEach((childPage, childIndex)=>{
+						addPage(childPage, childIndex, page.id);
+					});
+
+					// add non-tab components
+					page.views(v => !(v instanceof ABViewTab)).forEach((widgetView, widgetIndex) => {
+
+						var wIndex = (subPages.length + widgetIndex);
+						addPage(widgetView, wIndex, page.id);
+
+					});
+
+					// add tabs
+					page.views(v => v instanceof ABViewTab).forEach((tab, tabIndex) => {
+
+						// tab views
+						tab.views().forEach((tabView, tabViewIndex) => {
+
+							// tab items will be below sub-page items
+							var tIndex = (subPages.length + tabIndex + tabViewIndex);
+
+							addPage(tabView, tIndex, page.id);
+
+						});
+
+					});
+
+				}
+				this._application.pages().forEach((p, index)=>{
+					addPage(p, index);
+				})
+
+				// clear our list and display our objects:
+				var List = $$(ids.list);
+				List.clearAll();
+				List.data.unsync();
+				List.data.sync(this.viewList);
+				List.refresh();
+				List.unselectAll();
+				
+				this._logic.listReady();
 
 			},
 
@@ -350,6 +484,7 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 				$$(ids.linkField).refresh();
 				$$(ids.loadAll).refresh();
 				$$(ids.fixSelect).refresh();
+				$$(ids.list).openAll();
 
 			},
 
@@ -767,7 +902,51 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 
 				this._logic.save();
 
-			}
+			},
+			
+			/**
+			 * @function templateListItem
+			 *
+			 * Defines the template for each row of our ObjectList.
+			 *
+			 * @param {obj} obj the current instance of ABObject for the row.
+			 * @param {?} common the webix.common icon data structure
+			 * @return {string}
+			 */
+			templateListItem: (item, common) => {
+
+				var template = this._templateListItem;
+				
+				var hasDataView = "";
+				if (item.dataview && this._dataview && this._dataview.id && (item.dataview.id == this._dataview.id)) {
+					hasDataView = "<i class='pull-right webix_icon hasDataView fa fa-check-circle'></i>";
+				}
+
+				template = template.replace("#typeIcon#", item.icon || item.viewIcon())
+					.replace('#label#', item.label)
+					.replace('{common.icon()}', common.icon(item))
+					.replace('#hasDataView#', hasDataView);
+
+				return template;
+
+			},
+			
+			listBusy: () => {
+				let ids = this.ids;
+				
+				if ($$(ids.list) &&
+					$$(ids.list).showProgress)
+					$$(ids.list).showProgress({ type: "icon" });
+			},
+
+
+			listReady: () => {
+				let ids = this.ids;
+				
+				if ($$(ids.list) &&
+					$$(ids.list).hideProgress)
+					$$(ids.list).hideProgress();
+			},
 
 
 		};
