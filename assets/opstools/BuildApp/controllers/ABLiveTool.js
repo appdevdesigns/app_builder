@@ -187,6 +187,7 @@ steal(
 								// Get application data
 								function (next) {
 									ABApplication.livepage(self.options.app, self.options.page)
+										.catch(console.error)
 										.then(function (result) {
 											self.data.application = result;
 

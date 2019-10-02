@@ -688,6 +688,9 @@ module.exports = {
 
             .then(app => {
 
+                if (!app) 
+                    return Promise.resolve();
+
                 let addDataviewIdToList = (views) => {
 
                     (views || []).forEach(v => {
@@ -772,6 +775,9 @@ module.exports = {
 
                 return new Promise((next, err) => {
 
+                    if (!app)
+                        return next();
+
                     let remainsObjectIds = [];
 
                     // Pull objects and queries from data views
@@ -825,7 +831,10 @@ module.exports = {
 
             .then(app => {
 
-                res.AD.success(app);
+                if (app)
+                    res.AD.success(app);
+                else 
+                    res.AD.error("Not found this application", 404);
 
             });
 
