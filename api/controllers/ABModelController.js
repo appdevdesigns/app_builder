@@ -612,7 +612,8 @@ module.exports = {
             //// Step 4:  Process any afterCreate() lifecycle handlers
             ////
             (next) => {
-                next();
+                var key = `${object.id}.afterCreate`;
+                ABModelLifecycle.process(key, newItem, next);
             }
 
         ], (err,data)=>{

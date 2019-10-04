@@ -525,7 +525,24 @@ function addSDCObjectLifecycleBeforeCreate(next) {
 
 	}
 
+
+	///
+	/// The 2nd handler we need to register is the ability to send an email
+	/// to people related to a new coach change request.
+	///
+	/// this handler should be on the .afterCreate object lifecycle:
+	var key2 = `${CoachChangeReqID}.afterCreate`;
+	var handler2 = (createParams, cb) => {
+		console.log(`::: ${key2} handler.`);
+
+
+		
+		cb();
+	}
+
+
 	ABModelLifecycle.register(key, handler);
+	ABModelLifecycle.register(key2, handler2);
 	next();
 }
 
