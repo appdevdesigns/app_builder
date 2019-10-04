@@ -453,6 +453,270 @@ module.exports = {
     create: function (req, res) {
 
         newPendingTransaction();
+        var allParams = req.allParams();
+        sails.log.verbose('ABModelController.create(): allParams:', allParams);
+
+        var createParams;  // used in several process steps below:
+        var object;        // the ABObject to use for this operation
+        var newItem;       // the new entry that is created in the DB
+        var validationErrors; // any errors found by object.isValid(createParams)
+        var errorQueryInsertThen = false; 
+            // flag for errors that are reported during the query.find(success(), err()) 
+        var errorQueryInsertCatch = false;
+            // flag for errors that are reported during the query.find().catch(err); 
+
+        async.series([
+
+            ////
+            //// Step 1:  Process and prepare the incoming data
+            ////
+            (next) => {
+
+                AppBuilder.routes.verifyAndReturnObject(req, res)
+                    .then(function (foundObject) {
+
+                        object = foundObject;
+
+                        var initialUUID = allParams.uuid;
+
+                        // return the parameters from the input params that relate to this object
+                        createParams = object.requestParams(allParams);
+
+                        // 21 May 2019 : Johnny
+                        // object.requestParams() will not return UUID by default.
+                        // however, since a mobile client can pass that in, we need to make
+                        // sure it is included in our data:
+                        if (initialUUID) {
+                            createParams.uuid = initialUUID;
+                        }
+
+                        // TODO:: this logic should be in the ABField...js 
+                        object.fields().forEach((e) => {
+                            if (e.key == "string" && e.settings.default.indexOf("{uuid}") >= 0 && typeof createParams[e.columnName] == "undefined") {
+                                createParams[e.columnName] = uuid();
+                            } else if (e.key == "user" && e.settings.isCurrentUser == 1 && typeof createParams[e.columnName] == "undefined") {
+                                createParams[e.columnName] = req.user.data.username;
+                            }
+                        });
+
+                        // add UUID of a new row
+                        createParams = cleanUp(object, createParams);
+
+                        // 21 May '19 : Johnny : mobile devices will initiate .create()
+                        // operations with uuid already set.  We can't overwrite them 
+                        // here:
+                        if ((object.PK() === 'uuid') && (!createParams['uuid']))
+                            createParams.uuid = uuid();
+
+                        validationErrors = object.isValidData(createParams);
+                        if (validationErrors.length == 0) {
+
+                            // this is a create operation, so ... 
+                            // createParams.created_at = (new Date()).toISOString();
+                            if (!object.isExternal && !object.isImported) {
+                                createParams.created_at = AppBuilder.rules.toSQLDateTime(new Date());
+                            }
+
+                            sails.log.verbose('ABModelController.create(): createParams:', createParams);
+                            next();
+                        } else {
+                            var error = new Error("E_VALIDATION");
+                            error.code = "E_VALIDATION";
+                            next(error);
+                        }
+
+                    })
+                    .catch(next);
+            },
+
+            ////
+            //// Step 2:  Process any beforeCreate() lifecycle handlers
+            ////
+            (next) => {
+                var key = `${object.id}.beforeCreate`;
+                ABModelLifecycle.process(key, createParams, next);
+            },
+
+            ////
+            //// Step 3:  Perform the operation
+            ////
+            (next) => {
+
+                    var query = object.model().query();
+
+                    query.insert(createParams)
+                        .then((newObj) => {
+
+                            // return the parameters of connectObject data field values 
+                            var updateRelationParams = object.requestRelationParams(allParams);
+                            var updateTasks = updateRelationValues(object, newObj[object.PK()], updateRelationParams);
+
+
+                            // update translation of the external object
+                            if ((object.isExternal || object.isImported) &&
+                                createParams.translations)
+                                updateTasks.push(updateTranslationsValues(object, newObj[object.PK()], createParams.translations, true));
+
+
+                            // update relation values sequentially
+                            return updateTasks.reduce((promiseChain, currTask) => {
+                                return promiseChain.then(currTask);
+                            }, Promise.resolve([]))
+                                .catch((err) => { return Promise.reject(err); })
+                                .then((values) => {
+
+                                    // // Query the new row to response to client
+                                    return object.queryFind({
+                                        where: {
+                                            glue: 'and',
+                                            rules: [
+                                                {
+                                                    key: object.PK(),
+                                                    rule: "equals",
+                                                    value: newObj[object.PK()] || ''
+                                                }
+                                            ]
+                                        },
+                                        offset: 0,
+                                        limit: 1,
+                                        populate: true
+                                    },
+                                        req.user.data)
+                                        .then((itemLookup) => {
+
+                                            newItem = itemLookup[0];
+                                            next(null, newItem);
+
+                                        });
+
+
+                                });
+
+
+                        }, (err) => {
+                            errorQueryInsertThen = true;
+                            next(err);
+                            // handle invalid values here:
+                            
+
+                        })
+                        .catch((err) => {
+                            errorQueryInsertCatch = true;
+                            next(err);
+                        })
+
+
+            },
+
+            ////
+            //// Step 4:  Process any afterCreate() lifecycle handlers
+            ////
+            (next) => {
+                next();
+            }
+
+        ], (err,data)=>{
+
+            // final:  format and prepare a response
+
+            // if this is an Error:
+            if (err) {
+console.error(err);
+                //// Object discovered validation errors:
+
+                // return an invalid values response:
+                var errorResponse = {
+                    error: 'E_VALIDATION',
+                    invalidAttributes: {
+
+                    }
+                }
+
+                var attr = errorResponse.invalidAttributes;
+
+                // if error from object.isValidData(createParams) 
+                if (validationErrors.length > 0) {
+                    validationErrors.forEach((e) => {
+                        attr[e.name] = attr[e.name] || [];
+                        attr[e.name].push(e);
+                    })
+                } else if (errorQueryInsertThen) {
+                    // if error from the query.insert.then()
+                
+                    if (err instanceof ValidationError) {
+
+                        for (var e in err.data) {
+                            attr[e] = attr[e] || [];
+                            err.data[e].forEach((eObj) => {
+                                eObj.name = e;
+                                attr[e].push(eObj);
+                            })
+                        }
+
+                    }
+                    else {
+                        // probably a result from our sql operation:
+                        // scan error messages and fill out our errorResponse:
+
+                        // WORKAROUND : Get invalid field
+                        var invalidFields = object.fields(f => ((err.sqlMessage || "").toLowerCase()).indexOf((f.columnName || "").toLowerCase()) > -1);
+                        invalidFields.forEach(f => {
+
+                            let errorMessage;
+
+                            switch (err.code) {
+                                case "ER_DUP_ENTRY": 
+                                    errorMessage = "The value is a duplicate value and therefore, not valid.";
+                                    break;
+                                default:
+                                    errorMessage = err.sqlMessage;
+                                    break;
+                            }
+
+                            errorResponse.invalidAttributes[f.columnName] = [
+                                {
+                                    message: errorMessage
+                                }
+                            ];
+
+                        });
+                    }
+                } else if (errorQueryInsertCatch) {
+                    // something threw an error:
+                    // if (!(err instanceof ValidationError)) {
+                        ADCore.error.log('Error performing object.create()!', { error: err, data:createParams, object:object.name })
+                        errorResponse = err;
+                    // }
+                } else if (err.code == "E_OBJLIFECYCLE") {
+                    // if there was a complaint due to an object lifecycle task,
+                    // we return that error here.
+                    errorResponse = err;
+                }
+
+                // now send the error message:
+                resolvePendingTransaction();
+                res.AD.error(errorResponse);
+                return;
+            }
+
+
+            // return a Successful operation:
+            resolvePendingTransaction();
+            res.AD.success(newItem);
+
+            // We want to broadcast the change from the server to the client so all datacollections can properly update
+            // Build a payload that tells us what was updated
+            var payload = {
+                objectId: object.id,
+                data: newItem
+            };
+
+            // Broadcast the create
+            sails.sockets.broadcast(object.id, "ab.datacollection.create", payload);
+        })
+
+/*
+        newPendingTransaction();
         AppBuilder.routes.verifyAndReturnObject(req, res)
             .then(function (object) {
 
@@ -666,6 +930,7 @@ console.error(err);
                 }
 
             })
+*/
 
     },
 

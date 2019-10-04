@@ -48,7 +48,8 @@ module.exports = function (cb) {
 // NOTE: remove this when we no longer manually add the SDC app info:
 addSDCAppInfo,
 defaultEmailNotificationInvite,
-addSDCAppDataDirectory
+addSDCAppDataDirectory,
+addSDCObjectLifecycleBeforeCreate
 
 
     	], (err,data) => {
@@ -394,6 +395,138 @@ sails.log.warn('... making default SDC data directory:', pathMobileDir);
 	})
 	.catch(next);
 
+}
+
+function sdcObjectByID(ID) {
+	var mockReq = {
+		param:(/* objID */) => {
+			return ID;
+		}
+	}
+	return AppBuilder.routes.verifyAndReturnObject(mockReq, {})
+}
+function addSDCObjectLifecycleBeforeCreate(next) {
+
+	// the SDC Coach Change Request object's beforeCreate key:
+	var CoachChangeReqID = "fc8dac75-05cc-468b-b196-bce72286296a";
+
+
+	///
+	/// The 1st handler we need to register is the ability to pre populate
+	/// the .New Coach entry on a CoachChangeRequest when a NewCoachEmail is
+	/// provided.
+	///
+	/// this handler should be on the .beforeCreate object lifecycle:
+	var key = `${CoachChangeReqID}.beforeCreate`;
+	var handler = (createParams, cb) => {
+		
+		var allTasks = [];
+
+// //// testing: 
+// createParams["New Coach Email"] = "jhausman@zteam.biz";
+// debugger;
+
+		// if we have the New Coach Email but are missing a New Coach entry:
+		if (createParams["New Coach Email"] && !createParams["New Coach"]) {
+
+			// common error handler if we have any hiccups along the way:
+			var bailError = (code, msg)=>{
+				var error = new Error(msg);
+				error.code = code;
+				throw error;
+			}
+
+			// get New Coach Email
+			// get renData
+			// add renData.Staff to createParams["New Coach"];
+
+			var foundEmail;
+			var task = Promise.resolve()
+				.then(()=>{
+					// get the HrisEmail object: 
+					return sdcObjectByID("83a364fb-e181-45a9-a8de-c9db674fe641");
+				})
+				.then((objHRISEmail)=>{
+					if (!objHRISEmail) {
+						bailError("E_NOTFOUND", "Could not find HRIS Email Object.");
+						return;
+					}
+					return objHRISEmail.queryFind({
+	                        where: {
+	                            glue: 'and',
+	                            rules: [
+	                                {
+	                                    key: "email_address",
+	                                    rule: "equals",
+	                                    value: createParams["New Coach Email"]
+	                                }
+	                            ]
+	                        },
+	                        offset: 0,
+	                        limit: 1,
+	                        populate: false
+	                    },
+	                    {})
+				})
+				.then((emailRows)=>{
+					console.log("Found Email Row:", emailRows);
+					if (!emailRows || emailRows.length == 0) {
+						bailError("E_NOTFOUND", `Provided email was not found. [${createParams["New Coach Email"]}]`);
+						return;
+					}
+					foundEmail = emailRows[0];
+					// now get the Staff object 
+					return sdcObjectByID("4759b063-67c6-4580-9c2e-fdede54ef51c");
+				})
+				.then((objStaff)=>{
+					if (!objStaff) {
+						bailError("E_NOTFOUND", `Could not find the Staff object.`);
+						return;
+					}
+					return objStaff.queryFind({
+	                        where: {
+	                            glue: 'and',
+	                            rules: [
+	                                {
+	                                    key: "Profile",
+	                                    rule: "equals",
+	                                    value: foundEmail.ren_id
+	                                }
+	                            ]
+	                        },
+	                        offset: 0,
+	                        limit: 1,
+	                        populate: false
+	                    },
+	                    {})
+				})
+				.then((staffRows)=>{
+					if (!staffRows || staffRows.length == 0) {
+						bailError("E_NOTFOUND", `Could not find Staff information for the provided email address.`);
+						return;
+					}
+
+					// now update our create parameters with the populated Staff information.
+					createParams["New Coach"] = staffRows[0].uuid;
+
+				})
+
+
+			allTasks.push(task);
+		}
+
+		// insert any other tasks here:
+
+		Promise.all(allTasks)
+		.then(()=>{
+			cb();
+		})
+		.catch(cb);
+
+	}
+
+	ABModelLifecycle.register(key, handler);
+	next();
 }
 
 function initialGraphDB(next) {
