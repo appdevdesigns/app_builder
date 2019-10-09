@@ -120,6 +120,21 @@ export default class ABFieldSelectivity extends ABField {
 			domNode.selectivity = selectivityInput;
 		}
 
+		// WORKAROUND : remove caret icon of selectivity
+		if (settings.readOnly) {
+
+			let caretElems = domNode.getElementsByClassName("selectivity-caret");
+			for (let i = 0; i < caretElems.length; i++) {
+
+				let caretElm = caretElems[i];
+				if (caretElm) {
+					caretElm.parentNode.removeChild(caretElm);
+				}
+
+			}
+
+		}
+
 		// remember our settings values
 		this.selectivitySettings = settings;
 	}

@@ -665,13 +665,13 @@ module.exports = {
                 return new Promise((next, err) => {
 
                     ApplicationGraph
-                        .find({id: appID})
+                        .findOne(appID)
                         .then(app => {
 
                             if (!app)
                                 return next(null);
 
-                            let result = app[0].toValidJsonFormat();
+                            let result = app.toValidJsonFormat();
 
                             // Reduce data size to the live display
                             if (pageID && result.json) {
@@ -687,6 +687,9 @@ module.exports = {
             }, console.error)
 
             .then(app => {
+
+                if (!app) 
+                    return Promise.resolve();
 
                 let addDataviewIdToList = (views) => {
 
@@ -772,6 +775,9 @@ module.exports = {
 
                 return new Promise((next, err) => {
 
+                    if (!app)
+                        return next();
+
                     let remainsObjectIds = [];
 
                     // Pull objects and queries from data views
@@ -825,7 +831,10 @@ module.exports = {
 
             .then(app => {
 
-                res.AD.success(app);
+                if (app)
+                    res.AD.success(app);
+                else 
+                    res.AD.error("Not found this application", 404);
 
             });
 

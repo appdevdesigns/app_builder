@@ -158,7 +158,7 @@ class ABModelBase {
 						next(result);
 
 					}
-					// return a Objct
+					// return a Object
 					else {
 						let result = (rows || [])[0];
 						if (result)
@@ -745,7 +745,6 @@ class ABModelBase {
 				whereClause = JSON.parse(whereClause);
 			}
 			catch (err) { }
-			console.log(whereClause);
 
 			// { 'id': "guid" }
 			if (typeof whereClause == 'string') {

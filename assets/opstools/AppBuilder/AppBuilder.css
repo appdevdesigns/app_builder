@@ -682,3 +682,10 @@ label {
 	top: 0;
 	right: 0;
 }
+.hasDataView {
+	color: #1ca1c1;
+	margin: 5px;
+	position: absolute;
+	right: 0;
+	background: white;
+}
