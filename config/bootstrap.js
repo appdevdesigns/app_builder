@@ -611,6 +611,9 @@ AppDev Team
 				});
 
 		} else {
+			sails.log("Warning: ChangeCoachRequest.afterCreate(): not enough info to send email.");
+			// Question: do we error out here?  or do we leave this, since this is expected in the 
+			// Object Builder interface when they click [add new row]?
 			cb()
 		}
 
