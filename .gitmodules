@@ -1,0 +1,3 @@
+[submodule "assets/opstools/AppBuilder/classes/core"]
+	path = assets/opstools/AppBuilder/classes/core
+	url = https://github.com/appdevdesigns/appbuilder_class_core.git
