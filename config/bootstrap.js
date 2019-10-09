@@ -607,6 +607,7 @@ AppDev Team
 			})
 				.fail(cb)
 				.then(function () {
+					sails.log("ChangeCoachRequest.afterCreate(): Email sent successfully.")
 					cb();
 				});
 
