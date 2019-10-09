@@ -398,6 +398,8 @@ sails.log.warn('... making default SDC data directory:', pathMobileDir);
 }
 
 function sdcObjectByID(ID) {
+	// a helper fn() to reuse the .verifyAndReturnObject() method
+	// of finding an Object.
 	var mockReq = {
 		param:(/* objID */) => {
 			return ID;
@@ -405,6 +407,12 @@ function sdcObjectByID(ID) {
 	}
 	return AppBuilder.routes.verifyAndReturnObject(mockReq, {})
 }
+
+/**
+ * @function addSDCObjectLifecycleBeforeCreate
+ * setup the SDC beforeCreate lifecycle handler.
+ * @param {fn} next  a node style callback 
+ */
 function addSDCObjectLifecycleBeforeCreate(next) {
 
 	// the SDC Coach Change Request object's beforeCreate key:
@@ -534,10 +542,78 @@ function addSDCObjectLifecycleBeforeCreate(next) {
 	var key2 = `${CoachChangeReqID}.afterCreate`;
 	var handler2 = (createParams, cb) => {
 		console.log(`::: ${key2} handler.`);
+console.log(createParams);
+
+		var notify = {
+			emailSubject: "A coach change request has been made that you need to approve/deny.",
+			fromName: "AppDev Team",
+			fromEmail: "appdev@zteam.biz"
+		};
+		var recipients = [];
+		var body = `
+Please open the “myDevelopment” tool in your Connexted! app and tap on “Change Coach/Coachee” item and then tap on “Change Requests” to approve or deny the current coach change requests that you are connected to.
+
+Thank you,
+AppDev Team
+`;
+
+		var okToSend = true; // optimistic
 
 
-		
-		cb();
+		// decide who gets this email based upon the current Use Case.
+		switch(createParams.UseCase) {
+			case 1:
+				if (createParams["New Coach Email"] && createParams["Current Coach Email"]) {
+					recipients.push(createParams["New Coach Email"]);
+					recipients.push(createParams["Current Coach Email"]);
+				} else {
+					okToSend = false;
+				}
+				break;
+
+			case 2:
+				if (createParams["New Coach Email"]) {
+					recipients.push(createParams["New Coach Email"]);
+				} else {
+					okToSend = false;
+				}
+				break;
+
+			case 4:
+				if (createParams["Coachee Email"] && createParams["Current Coach Email"]) {
+					recipients.push(createParams["Current Coach Email"]);
+					recipients.push(createParams["Coachee Email"]);
+				} else {
+					okToSend = false;
+				}
+				break;
+
+		}
+
+// recipients = ["jhausman@zteam.biz", "james.duncan@zteam.biz"];
+// okToSend = true;
+
+// console.log("Email to Send:", {
+// 			notify,
+// 			recipients,
+// 			body
+// 		});
+
+		if (okToSend) {
+			EmailNotifications.send({
+				notify,
+				recipients,
+				body
+			})
+				.fail(cb)
+				.then(function () {
+					cb();
+				});
+
+		} else {
+			cb()
+		}
+
 	}
 
 
