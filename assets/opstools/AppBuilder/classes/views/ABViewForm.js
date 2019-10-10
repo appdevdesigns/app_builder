@@ -799,7 +799,7 @@ PopupRecordRule.qbFixAfterShow();
 
 			}
 
-			_onShow();
+			// _onShow();
 
 		}
 
