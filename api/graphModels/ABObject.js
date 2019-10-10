@@ -2,6 +2,8 @@ var path = require('path');
 
 var ABModelBase = require('./ABModelBase');
 var ABClassObject = require(path.join('..', 'classes', 'ABClassObject'));
+var ABObjectExternal = require(path.join('..', 'classes', 'ABObjectExternal'));
+var ABObjectImport = require(path.join('..', 'classes', 'ABObjectImport'));
 
 class ABObject extends ABModelBase {
 
@@ -63,7 +65,12 @@ class ABObject extends ABModelBase {
 
 	toABClass() {
 
-		return new ABClassObject(this);
+		if (this.isExternal == true)
+			return new ABObjectExternal(this);
+		else if (this.isImported == true)
+			return new ABObjectImport(this);
+		else
+			return new ABClassObject(this);
 
 	}
 
