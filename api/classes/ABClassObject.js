@@ -788,7 +788,8 @@ sails.log.debug('ABClassObject.queryCount - SQL:', query.toString() );
 						if (field.isMultilingual) {
 
 							// TODO: move to ABOBjectExternal.js
-							if (field.object.isExternal || field.object.isImported) {
+							if (!this.viewName && // NOTE: check if this object is a query, then it includes .translations already
+								(field.object.isExternal || field.object.isImported)) {
 
 								let transTable = field.object.dbTransTableName();
 
@@ -1093,7 +1094,8 @@ sails.log.debug('ABClassObject.queryCount - SQL:', query.toString() );
 	            if (orderField.settings.supportMultilingual == 1) {
 
 					// TODO: move to ABOBjectExternal.js
-					if (orderField.object.isExternal || field.object.isImported) {
+					if (!this.viewName && // NOTE: check if this object is a query, then it includes .translations already
+						(orderField.object.isExternal || field.object.isImported)) {
 
 						let prefix = "";
 						if (orderField.alias) {
@@ -1135,50 +1137,52 @@ sails.log.debug('ABClassObject.queryCount - SQL:', query.toString() );
 
 		// TODO : move to ABObjectExternal.js
 		// Special case
-		var multilingualFields = this.fields(f => f.isMultilingual && (f.object.isExternal || f.object.isImported));
-		multilingualFields.forEach(f => {
+		if (!this.viewName) { // NOTE: check if this object is a query, then it includes .translations already
+			var multilingualFields = this.fields(f => f.isMultilingual && (f.object.isExternal || f.object.isImported));
+			multilingualFields.forEach(f => {
 
-			let whereRules = (where.rules || []);
-			let sortRules = (sort || []);
+				let whereRules = (where.rules || []);
+				let sortRules = (sort || []);
 
-			if (whereRules.filter(r => r.key == f.id)[0] || 
-				(sortRules.filter && sortRules.filter(o => o.key == f.id)[0])) {
+				if (whereRules.filter(r => r.key == f.id)[0] || 
+					(sortRules.filter && sortRules.filter(o => o.key == f.id)[0])) {
 
-				let transTable = f.object.dbTransTableName();
+					let transTable = f.object.dbTransTableName();
 
-				let prefix = "";
-				let prefixTran = "";
-				let tableTran = "";
-				if (f.alias) {
-					prefix = "{alias}".replace("{alias}", f.alias);
-					prefixTran = "{alias}_Trans".replace("{alias}", f.alias);
-					tableTran = "{tableName} AS {alias}"
-									.replace("{tableName}", f.object.dbTransTableName(true))
-									.replace("{alias}", prefixTran);
+					let prefix = "";
+					let prefixTran = "";
+					let tableTran = "";
+					if (f.alias) {
+						prefix = "{alias}".replace("{alias}", f.alias);
+						prefixTran = "{alias}_Trans".replace("{alias}", f.alias);
+						tableTran = "{tableName} AS {alias}"
+										.replace("{tableName}", f.object.dbTransTableName(true))
+										.replace("{alias}", prefixTran);
+					}
+					else {
+						prefix = "{databaseName}.{tableName}"
+									.replace('{databaseName}', f.object.dbSchemaName())
+									.replace('{tableName}', f.object.dbTableName());
+						prefixTran = "{databaseName}.{tableName}"
+									.replace('{databaseName}', f.object.dbSchemaName())
+									.replace('{tableName}', transTable);
+						tableTran = f.object.dbTransTableName(true);
+					}
+
+
+					let	baseClause = '{prefix}.{columnName}'
+									.replace('{prefix}', prefix)
+									.replace('{columnName}', f.object.PK()),
+						connectedClause = '{prefix}.{columnName}'
+									.replace('{prefix}', prefixTran)
+									.replace('{columnName}', f.object.transColumnName);
+		
+					if (!(query._statements || []).filter(s => s.table == transTable).length) // prevent join duplicate
+						query.innerJoin(tableTran, baseClause, '=', connectedClause);
 				}
-				else {
-					prefix = "{databaseName}.{tableName}"
-								.replace('{databaseName}', f.object.dbSchemaName())
-								.replace('{tableName}', f.object.dbTableName());
-					prefixTran = "{databaseName}.{tableName}"
-								.replace('{databaseName}', f.object.dbSchemaName())
-								.replace('{tableName}', transTable);
-					tableTran = f.object.dbTransTableName(true);
-				}
 
-
-				let	baseClause = '{prefix}.{columnName}'
-								.replace('{prefix}', prefix)
-								.replace('{columnName}', f.object.PK()),
-					connectedClause = '{prefix}.{columnName}'
-								.replace('{prefix}', prefixTran)
-								.replace('{columnName}', f.object.transColumnName);
-	
-				if (!(query._statements || []).filter(s => s.table == transTable).length) // prevent join duplicate
-					query.innerJoin(tableTran, baseClause, '=', connectedClause);
-			}
-
-		});
+			});
+		}
 
 
 	    // apply any offset/limit if provided.
@@ -1225,7 +1229,7 @@ sails.log.debug('ABClassObject.queryCount - SQL:', query.toString() );
 
 
 			// TODO: Move to ABObjectExternal
-			if ((this.isExternal || this.isImported) && this.transColumnName) {
+			if (!this.viewName && (this.isExternal || this.isImported) && this.transColumnName) {
 				relationNames.push('translations');
 			}
 
