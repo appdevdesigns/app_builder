@@ -652,9 +652,11 @@ export default class ABViewContainer extends ABView {
 
 				views.forEach((v) => {
 
-					var component = v.component(App, idPrefix);
-
-					this.viewComponents[v.id] = component;
+					let component = this.viewComponents[v.id];
+					if (!component) {
+						component = v.component(App, idPrefix);
+						this.viewComponents[v.id] = component;
+					}
 
 					// if key == "form" or "button" register the callbacks to the parent
 					// NOTE this will only work on the last form of a page!

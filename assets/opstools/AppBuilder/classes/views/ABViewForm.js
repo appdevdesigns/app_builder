@@ -832,6 +832,8 @@ PopupRecordRule.qbFixAfterShow();
 						if (comp == null) return;
 
 						// var colName = field.columnName;
+						if (this._showed)
+							comp.onShow();
 
 						// set value to each components
 						var defaultRowData = {};
@@ -868,6 +870,9 @@ PopupRecordRule.qbFixAfterShow();
 
 						var comp = this.viewComponents[f.id];
 						if (comp == null) return;
+
+						if (this._showed)
+							comp.onShow();
 
 						// set value to each components
 						if (f.field())
@@ -916,6 +921,8 @@ PopupRecordRule.qbFixAfterShow();
 		};
 
 		var _onShow = (data) => {
+
+			this._showed = true;
 
 			// call .onShow in the base component
 			component.onShow();
