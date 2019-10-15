@@ -13,7 +13,7 @@
 // A where statement is also part of the definition.
 // 
 
-import ABObject from "./ABObject"
+import ABObject from "./platform/ABObject"
 
 io.socket.on("ab.query.update", function (msg) {
 

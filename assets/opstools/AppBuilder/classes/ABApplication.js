@@ -2,7 +2,7 @@
 // import OP from "OP"
 import ABApplicationBase from "./ABApplicationBase"
 import "../data/ABApplication"
-import ABObject from "./ABObject"
+import ABObject from "./platform/ABObject"
 import ABObjectQuery from "./ABObjectQuery"
 import ABDataview from "./ABDataview"
 import ABMobileApp from "./ABMobileApp"
