@@ -115,6 +115,11 @@ module.exports = {
         'app_builder/ABDataviewController.excludeDataview',
 
 
+    /* ABFieldUser */
+    'get /app_builder/user/list':
+        'app_builder/ABUserController.getUserList',
+
+
     /* Application permissions */
     'get /app_builder/user/roles':
         'app_builder/ABUserController.getRoles',
