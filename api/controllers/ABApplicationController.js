@@ -788,7 +788,7 @@ module.exports = {
                         else if (dv.object && dv.object[0]) {
                             return dv.object[0];
                         }
-                    });
+                    }).filter(ds => ds);
 
                     // Find missing objects
                     (linkFieldIds || []).forEach(item => {
