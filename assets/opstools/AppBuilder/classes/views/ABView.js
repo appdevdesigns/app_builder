@@ -196,18 +196,37 @@ export default class ABView extends ABViewBase {
 		return new Promise(
 			(resolve, reject) => {
 
+				// // if this is our initial save()
+				// if (!this.id) {
+				// 	this.id = OP.Util.uuid();	// setup default .id
+				// }
+
+				// // if this is not a child of another view then tell it's
+  				// // application to save this view.
+				//  var parent = this.parent;
+  				// if (!parent) parent = this.application;
+
+				// parent.viewSave(this)
+				// 	.then(resolve)
+				// 	.catch(reject)
+
 				// if this is our initial save()
 				if (!this.id) {
 					this.id = OP.Util.uuid();	// setup default .id
 				}
 
-				// if this is not a child of another view then tell it's
-  				// application to save this view.
-				 var parent = this.parent;
-  				if (!parent) parent = this.application;
+				this.application.pageSave(this)
+					.then(() => {
 
-				parent.viewSave(this)
-					.then(resolve)
+						// persist the current ABViewPage in our list of ._pages.
+						let parent = this.parent || this.application;
+						let isIncluded = (parent.views(v => v.id == this.id).length > 0);
+						if (!isIncluded) {
+							parent._views.push(this);
+						}
+
+						resolve();
+					})
 					.catch(reject)
 			}
 		)

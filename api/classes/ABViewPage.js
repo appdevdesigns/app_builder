@@ -29,7 +29,8 @@ module.exports = class ABViewPage extends ABViewBase {
 		this._pages = pages;
 
 
-		this.views = values.views || [];
+		this._views = values.views || [];
+		this.views = this._views;
 
 	}
 
