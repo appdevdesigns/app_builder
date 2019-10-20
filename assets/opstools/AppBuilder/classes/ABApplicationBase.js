@@ -1,5 +1,5 @@
 
-
+var ABDefinition = require( "../classes/ABDefinition" );
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -96,6 +96,17 @@ module.exports = class ABApplicationBase {
 
 
 
+		var newProcesses = [];
+		(attributes.json.processIDs || []).forEach((pID)=>{
+			if (pID) {
+				newProcesses.push(this.processNew(pID));
+			}
+		})
+		this._processes = newProcesses;
+		this.processIDs = attributes.json.processIDs;
+
+
+
 		// Object List Settings
 		attributes.json.objectListSettings 		= attributes.json.objectListSettings || {};
 		this.objectListSettings 				= this.objectListSettings || {};
@@ -181,6 +192,7 @@ module.exports = class ABApplicationBase {
 		})
 		this.json.mobileApps = currApps;
 
+		this.json.processIDs = this.processIDs;
 
 		return {
 			id:this.id,
@@ -430,6 +442,31 @@ module.exports = class ABApplicationBase {
 		filter = filter || function() {return true; };
 
 		return this._mobileApps.filter(filter);
+
+	}
+
+
+
+	///
+	/// Processes
+	///
+
+
+
+	/**
+	 * @method processes()
+	 *
+	 * return an array of all the ABProcesses for this ABApplication.
+	 *
+	 * @param {fn} filter  	a filter fn to return a set of ABProcesses that 
+	 *						this fn returns true for.
+	 * @return {array} 	array of ABProcesses
+	 */
+	processes (filter) {
+
+		filter = filter || function() {return true; };
+
+		return this._processes.filter(filter);
 
 	}
 

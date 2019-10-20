@@ -10,6 +10,7 @@
 import AB_Work_Object from "./ab_work_object"
 import AB_Work_Query from "./ab_work_query"
 import AB_Work_Dataview from "./ab_work_dataview"
+import AB_Work_Process from "./ab_work_process"
 import AB_Work_Interface from "./ab_work_interface"
 
 
@@ -37,6 +38,7 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 				objectTitle: L('ab.object.title', "*Objects"),
 				queryTitle: L('ab.query.title', "*Queries"),
 				dataviewTitle: L('ab.dataview.title', "*Data Collections"),
+				processTitle: L('ab.process.title', "*Process"),
 				interfaceTitle: L('ab.interface.title', "*Interface")
 			}
 		}
@@ -53,6 +55,7 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 			tab_object: 	this.unique('tab_object'),
 			tab_query:      this.unique('tab_query'),
 			tab_dataview:	this.unique('tab_dataview'),
+			tab_processview:	this.unique('tab_processview'),
 			tab_interface: 	this.unique('tab_interface'),
 			workspace: 		this.unique('workspace'),
 			collapseMenu: 	this.unique('collapseMenu'),
@@ -63,6 +66,7 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 		var AppObjectWorkspace = new AB_Work_Object(App);
 		var AppQueryWorkspace = new AB_Work_Query(App);
 		var AppDataviewWorkspace = new AB_Work_Dataview(App);
+		var AppProcessWorkspace = new AB_Work_Process(App);
 		var AppInterfaceWorkspace = new AB_Work_Interface(App);
 
 		var sidebarItems = 	[{
@@ -78,6 +82,11 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 		{
 			id: ids.tab_dataview,
 			value: labels.component.dataviewTitle,
+			icon: "fa fa-fw fa-table"
+		},
+		{
+			id: ids.tab_processview,
+			value: labels.component.processTitle,
 			icon: "fa fa-fw fa-table"
 		},
 		{
@@ -209,6 +218,7 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 								AppObjectWorkspace.ui,
 								AppQueryWorkspace.ui,
 								AppDataviewWorkspace.ui,
+								AppProcessWorkspace.ui,
 								AppInterfaceWorkspace.ui
 							]
 						}
@@ -225,6 +235,7 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 			AppObjectWorkspace.init();
 			AppQueryWorkspace.init();
 			AppDataviewWorkspace.init();
+			AppProcessWorkspace.init();
 			AppInterfaceWorkspace.init();
 
 //// TODO: keep track of the last workspace in application.workspace.lastWorkspace on every
@@ -301,6 +312,7 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 				AppObjectWorkspace.applicationLoad(application);
 				AppQueryWorkspace.applicationLoad(application);
 				AppDataviewWorkspace.applicationLoad(application);
+				AppProcessWorkspace.applicationLoad(application);
 				AppInterfaceWorkspace.applicationLoad(application);
 
 
@@ -336,6 +348,12 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 						AppDataviewWorkspace.show();
 						break;
 
+					// Process Workspace Tab
+					case ids.tab_processview:
+
+						AppProcessWorkspace.show();
+						break;
+
 					// Interface Workspace Tab
 					case ids.tab_interface:
 
@@ -349,7 +367,7 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 						break;
 				}
 
-			},
+			}
 
 		})
 

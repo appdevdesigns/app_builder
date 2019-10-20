@@ -11,6 +11,10 @@ import ABViewPage from "./views/ABViewPage"
 import ABViewReportPage from "./views/ABViewReportPage"
 import ABViewReport from "./views/ABViewReport"
 
+import ABDefinition from "../classes/ABDefinition"
+
+const ABProcess = require("./ABProcess");
+
 var _AllApplications = [];
 
 
@@ -105,27 +109,33 @@ export default class ABApplication extends ABApplicationBase {
 		return new Promise(
 			(resolve, reject) => {
 
-				var ModelApplication = OP.Model.get('opstools.BuildApp.ABApplication');
-				ModelApplication.Models(ABApplication); // set the Models  setting.
+				// NOTE: make sure all ABDefinitions are loaded before
+				// pulling our Applications ... 
+				ABDefinition.loadAll()
+					.then(()=>{
 
-				ModelApplication.staticData.info()
-					.then(function (list) {
+						var ModelApplication = OP.Model.get('opstools.BuildApp.ABApplication');
+						ModelApplication.Models(ABApplication); // set the Models  setting.
 
-						let apps = [];
+						ModelApplication.staticData.info()
+							.then(function (list) {
 
-						(list || []).forEach(app => {
-							apps.push(new ABApplication(app));
-						});
+								let apps = [];
 
-						// if (_AllApplications == null) {
-						_AllApplications = new webix.DataCollection({
-							data: apps || [],
-						});
-						// }
+								(list || []).forEach(app => {
+									apps.push(new ABApplication(app));
+								});
 
-						resolve(_AllApplications);
+								// if (_AllApplications == null) {
+								_AllApplications = new webix.DataCollection({
+									data: apps || [],
+								});
+								// }
+
+								resolve(_AllApplications);
+							})
+							.catch(reject);
 					})
-					.catch(reject);
 
 			}
 		)
@@ -1305,6 +1315,32 @@ export default class ABApplication extends ABApplicationBase {
 			.catch(()=>{
 				console.error('!!! error with .ABApplication.mobileAppSave()');
 			});
+	}
+
+
+	///
+	/// Processes
+	///
+
+
+
+	/**
+	 * @method processNew(id)
+	 *
+	 * return an instance of a new ABProcess that is tied to this
+	 * ABApplication.
+	 *
+	 * NOTE: this new app is not included in our this.mobileApp until a .save()
+	 * is performed on the App.
+	 *
+	 * @return {ABMobileApp}
+	 */
+	processNew(id) {
+		var processDef = ABDefinition.definition(id);
+		if (processDef) {
+			return new ABProcess(processDef, this);
+		}
+		return null;
 	}
 
 
