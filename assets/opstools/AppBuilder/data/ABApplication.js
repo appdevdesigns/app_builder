@@ -143,42 +143,43 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 
 
-		// ** Pages
+		// ** Views
 
 		/**
-		 * @method pageSave
+		 * @method viewSave
 		 * 
 		 * @param {guid} appId
 		 * @param {string} resolveUrl
 		 * @param {object} data
 		 * @return {Promise}
 		 */
-		pageSave: function (appId, resolveUrl, page) {
+		viewSave: function (appId, resolveUrl, data) {
 
-			// remove sub-pages properties
-			delete page['pages'];
+			// remove sub-pages and sub-views properties
+			delete data['pages'];
+			delete data['views'];
 
 			return OP.Comm.Service.put({
-				url: '/app_builder/application/' + appId + '/page',
+				url: '/app_builder/application/' + appId + '/view',
 				data: {
 					resolveUrl: resolveUrl,
-					data: page
+					data: data
 				}
 			});
 
 		},
 
 		/**
-		 * @method pageDestroy
+		 * @method viewDestroy
 		 * 
 		 * @param {guid} appId
 		 * @param {string} resolveUrl
 		 * @return {Promise}
 		 */
-		pageDestroy: function (appId, resolveUrl) {
+		viewDestroy: function (appId, resolveUrl) {
 
 			return OP.Comm.Service.delete({
-				url: '/app_builder/application/' + appId + '/page',
+				url: '/app_builder/application/' + appId + '/view',
 				data: {
 					resolveUrl: resolveUrl
 				}

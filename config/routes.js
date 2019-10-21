@@ -55,12 +55,12 @@ module.exports = {
     'delete /app_builder/application/:appID/object/:objID':
         'app_builder/ABObjectController.excludeObject',
 
-    /* Application Pages */
-    'put /app_builder/application/:appID/page':
-        'app_builder/ABApplicationController.pageSave',
+    /* Application Views */
+    'put /app_builder/application/:appID/view':
+        'app_builder/ABApplicationController.viewSave',
 
-    'delete /app_builder/application/:appID/page':
-        'app_builder/ABApplicationController.pageDestroy',
+    'delete /app_builder/application/:appID/view':
+        'app_builder/ABApplicationController.viewDestroy',
 
 
     /* Queries */

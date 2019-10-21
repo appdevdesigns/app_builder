@@ -163,13 +163,18 @@ export default class ABView extends ABViewBase {
 				// verify we have been .save() before:
 				if (this.id) {
 
-					// if this is not a child of another view then tell it's
-  					// application to save this view.
-					var parent = this.parent;
-					if (!parent) parent = this.application;
+					this.application.viewDestroy(this)
+						.then(() => {
 
-					parent.viewDestroy(this)
-						.then(resolve)
+							// remove the page in list
+							let parent = this.parent;
+							if (parent) {
+								let remainingPages = parent.views(v => v.id != this.id);
+								parent._views = remainingPages;
+							}
+
+							resolve();
+						})
 						.catch(reject);
 
 				} else {
@@ -215,7 +220,7 @@ export default class ABView extends ABViewBase {
 					this.id = OP.Util.uuid();	// setup default .id
 				}
 
-				this.application.pageSave(this)
+				this.application.viewSave(this)
 					.then(() => {
 
 						// persist the current ABViewPage in our list of ._pages.

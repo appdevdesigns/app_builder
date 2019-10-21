@@ -10,7 +10,7 @@ var fs = require('fs');
 var _ = require('lodash');
 var path = require('path');
 
-var ABViewPage = require(path.join('..', 'classes', 'ABViewPage'));
+var ABView = require(path.join('..', 'classes', 'ABView'));
 
 var ApplicationGraph = require(path.join('..', 'graphModels', 'ABApplication'));
 var DataviewGraph = require(path.join('..', 'graphModels', 'ABDataview'));
@@ -318,14 +318,14 @@ module.exports = {
     },
 
 
-    /* Pages */
+    /* Views */
 
     /**
-     * PUT /app_builder/application/:appID/page
+     * PUT /app_builder/application/:appID/view
      * 
-     * Add/Update a page into ABApplication
+     * Add/Update a page/view into ABApplication
      */
-    pageSave: function (req, res) {
+    viewSave: function (req, res) {
         var appID = req.param('appID');
         var resolveUrl = req.body.resolveUrl;
         var vals = req.body.data;
@@ -362,7 +362,8 @@ module.exports = {
                     // update
                     if (updateItem) {
 
-                        var ignoreProps = ['id', 'pages', '_pages'];
+                        // var ignoreProps = ['id', 'pages', '_pages'];
+                        var ignoreProps = ['id', 'pages', '_pages', 'views', '_views'];
 
                         // clear old values
                         for (var key in updateItem) {
@@ -397,7 +398,7 @@ module.exports = {
                         // add new page/view to the parent
                         if (parent && parent.push) {
 
-                            parent.push(new ABViewPage(vals, data.appClass));
+                            parent.push(new ABView(vals, data.appClass));
 
                         }
                     }
@@ -471,11 +472,11 @@ module.exports = {
     },
 
     /**
-     * DELETE /app_builder/application/:appID/page
+     * DELETE /app_builder/application/:appID/view
      * 
-     * Delete a page in ABApplication
+     * Delete a page/view in ABApplication
      */
-    pageDestroy: function (req, res) {
+    viewDestroy: function (req, res) {
         var appID = req.param('appID');
         var resolveUrl = req.body.resolveUrl;
         var pageName;
