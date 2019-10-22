@@ -521,7 +521,8 @@ export default class ABViewPage extends ABViewContainer {
             })
             .catch(function (err) { 
                 List.hideProgress();
-                next(err); 
+
+                console.error(err);
             });
         
     }
