@@ -81,12 +81,22 @@ debugger;
 	 */
 	save () {
 
-		return new Promise(
-			(resolve, reject) => {
+		// if this is an update:
+		// if (this.id) {
+		// 	return ABDefinition.update(this.id, this.toDefinition());
+		// } else {
 
-debugger;				
+		// 	return ABDefinition.create(this.toDefinition());
+		// }
+
+		return this.toDefinition().save().then((data)=>{
+			// if I didn't have an .id then this was a create()
+			// and I need to update my data with the generated .id
+
+			if (!this.id) {
+				this.id = data.id;
 			}
-		)
+		})
 	}
 
 

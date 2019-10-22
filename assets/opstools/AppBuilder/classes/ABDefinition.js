@@ -35,6 +35,27 @@ module.exports = class ABDefinition extends ABDefinitionCore {
   	/// Available to the Class level object.  These methods are not dependent
   	/// on the instance values of the Application.
 	///
+
+
+
+	/**
+	 * @method create()
+	 *
+	 * create a given ABDefinition
+	 *
+	 * @param {obj} data   the values of the ABDefinition obj
+	 * @return {Promise}   the updated value of the ABDefinition entry from the server.
+	 */
+	static create(data) {
+
+		return OP.Comm.Service.post({
+				url: `/app_builder/abdefinition`,
+				data: data
+			})
+			.then((serverDef)=>{
+				return __AllDefinitions[serverDef.id] = serverDef;
+			});
+	}
 	  
 	/**
 	 * @method loadAll()
@@ -55,6 +76,36 @@ module.exports = class ABDefinition extends ABDefinitionCore {
 			});
 	}
 
+	/**
+	 * @method update()
+	 *
+	 * update a given ABDefinition
+	 *
+	 * @param {string} id  the id of the definition to update
+	 * @param {obj} data   the values of the ABDefinition obj
+	 * @return {Promise}   the updated value of the ABDefinition entry from the server.
+	 */
+	static update(id, data) {
+
+		return OP.Comm.Service.put({
+				url: `/app_builder/abdefinition/${id}`,
+				data: data
+			})
+			.then((serverDef)=>{
+				__AllDefinitions[serverDef.id] = serverDef;
+
+			});
+	}
+
+
+	static definition(id) {
+		var def = __AllDefinitions[id];
+		if (def) {
+			return def.json;
+		}
+		return null
+	}
+
 
 	fromValues(attributes) {
 
@@ -68,8 +119,6 @@ module.exports = class ABDefinition extends ABDefinitionCore {
 		*/
 
 		super.fromValues(attributes);
-
-
 	}
 
 
@@ -132,12 +181,12 @@ debugger;
 	 */
 	save () {
 
-		return new Promise(
-			(resolve, reject) => {
+		if (this.id) {
+			return ABDefinition.update(this.id, this.toObj());
+		} else {
+			return ABDefinition.create(this.toObj());
+		}
 
-debugger;				
-			}
-		)
 	}
 
 

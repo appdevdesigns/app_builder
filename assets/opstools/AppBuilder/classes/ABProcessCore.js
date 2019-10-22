@@ -2,6 +2,7 @@
 
 // import ABApplication from "./ABApplication"
 
+var ABDefinition = require("./ABDefinition");
 
 module.exports = class ABProcessCore  {
 
@@ -35,8 +36,8 @@ module.exports = class ABProcessCore  {
 		*/
 		this.id = attributes.id;
 		this.name = attributes.name || "";
-		this.type = attributes.type || "";
-		this.json = attributes.json || null;
+		// this.type = attributes.type || "";
+		// this.json = attributes.json || null;
 	}
 
 
@@ -57,14 +58,14 @@ module.exports = class ABProcessCore  {
 
 		// OP.Multilingual.unTranslate(this, this, ["label"]);
 
+	toDefinition () {
 
-		return {
+		return new ABDefinition({
 			id: this.id,
 			name: this.name,
-			type: this.type,
-			json: this.json
-		};
-
+			type: "process",
+			json: this.toObj()
+		});
 	}
 
 

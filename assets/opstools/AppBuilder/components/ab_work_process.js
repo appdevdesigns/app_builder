@@ -57,12 +57,11 @@ export default class AB_Work_Process extends OP.Component {   //.extend(idBase, 
 		this.init = function() {
 
 			ProcessWorkspace.init();
-			ProcessList.on("select", ()=>{
-				_logic.callbackSelectProcess();
+			ProcessList.init();
+			
+			ProcessList.on("select", (process)=>{
+				_logic.workonProcess(process);
 			});
-			// ProcessList.init({
-			// 	onChange: _logic.callbackSelectProcess
-			// });
 
 		}
 
@@ -114,12 +113,12 @@ export default class AB_Work_Process extends OP.Component {   //.extend(idBase, 
 
 			},
 
-			callbackSelectProcess: function(object) {
+			workonProcess: function(process) {
 
-				if (object == null)
+				if (process == null)
 					ProcessWorkspace.clearProcessWorkspace();
 				else
-					ProcessWorkspace.populateProcessWorkspace(object);
+					ProcessWorkspace.populateProcessWorkspace(process);
 			}
 
 		}

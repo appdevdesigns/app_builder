@@ -97,13 +97,26 @@ module.exports = class ABApplicationBase {
 
 
 		var newProcesses = [];
+		var removePIDs = [];
 		(attributes.json.processIDs || []).forEach((pID)=>{
 			if (pID) {
-				newProcesses.push(this.processNew(pID));
+				var p = this.processNew(pID);
+				if (p) {
+					newProcesses.push(p);
+				} else {
+					// remove pID from list
+					removePIDs.push(pID);
+				}
+				
 			}
 		})
+		if (attributes.json.processIDs) {
+			// remove those missing pIDs.
+			attributes.json.processIDs = attributes.json.processIDs.filter((pr)=>{ return removePIDs.indexOf(pr) == -1; });
+		}
+		
 		this._processes = newProcesses;
-		this.processIDs = attributes.json.processIDs;
+		this.processIDs = attributes.json.processIDs || [];
 
 
 

@@ -76,8 +76,14 @@ module.exports = {
 
 	beforeCreate: function (values, cb) {
 
-		if (!values.id)
+		if (!values.id) {
 			values.id = uuid();
+		}
+
+		// make sure embedded .json.id matches our .id 
+		if (values.json && !values.json.id) {
+			values.json.id = values.id;
+		}
 
 		cb();
 	},

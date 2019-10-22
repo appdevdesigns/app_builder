@@ -1343,6 +1343,24 @@ export default class ABApplication extends ABApplicationBase {
 		return null;
 	}
 
+	/**
+	 * @method processCreate()
+	 *
+	 * create a new Process tied to this Application.
+	 * and update our references to point to this process.
+	 *
+	 * @return {ABMobileApp}
+	 */
+	processCreate(json) {
+		var newProcess = new ABProcess(json, this);
+		return newProcess.save()
+			.then(()=>{
+				this.processIDs.push(newProcess.id);
+				this._processes.push(newProcess);
+				return this.save();
+			})
+	}
+
 
 }
 
