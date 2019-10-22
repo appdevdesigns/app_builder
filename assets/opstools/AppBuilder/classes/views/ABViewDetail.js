@@ -117,7 +117,7 @@ export default class ABViewDetail extends ABViewContainer {
 
 			let currView = _logic.currentEditObject();
 
-			Promise.resolve()
+			return Promise.resolve()
 				.then(() => {
 
 					// remove all old field components
@@ -166,6 +166,8 @@ export default class ABViewDetail extends ABViewContainer {
 
 					currView.emit('properties.updated', currView);
 					_logic.ready();
+
+					return Promise.resolve();
 
 				});
 
