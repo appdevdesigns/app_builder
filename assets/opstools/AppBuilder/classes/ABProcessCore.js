@@ -3,10 +3,13 @@
 // import ABApplication from "./ABApplication"
 
 var ABDefinition = require("./ABDefinition");
+var ABMLClass = require("./ABMLClass");
 
-module.exports = class ABProcessCore  {
+module.exports = class ABProcessCore extends ABMLClass {
 
     constructor(attributes, application) {
+
+    	super(/* ["label"] */);
 
 		this.fromValues(attributes);
 		this.application = application;
@@ -38,6 +41,14 @@ module.exports = class ABProcessCore  {
 		this.name = attributes.name || "";
 		// this.type = attributes.type || "";
 		// this.json = attributes.json || null;
+
+
+		super.fromValues(); // perform translation on this object.
+			// NOTE: keep this at the end of .fromValues();
+
+		if (!this.label) {
+			this.label = this.name;
+		}
 	}
 
 
@@ -56,7 +67,22 @@ module.exports = class ABProcessCore  {
 	 */
 	toObj () {
 
+		// default label value
+		if (!this.label) {
+			this.label = this.name;
+		}
+
 		// OP.Multilingual.unTranslate(this, this, ["label"]);
+		var data = super.toObj();
+
+		var fieldsToSave = ["id", "name"];
+		fieldsToSave.forEach((f)=>{
+			data[f] = this[f];
+		})
+
+		return data;
+	}
+
 
 	toDefinition () {
 
