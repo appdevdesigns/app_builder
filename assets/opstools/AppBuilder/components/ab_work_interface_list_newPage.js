@@ -8,7 +8,7 @@
 
 import AB_Work_Interface_List_NewPage_BlankPage from "./ab_work_interface_list_newPage_blankPage"
 import AB_Work_Interface_List_NewPage_QuickPage from "./ab_work_interface_list_newPage_quickPage"
-import AB_Work_Interface_List_NewPage_ReportPage from "./ab_work_interface_list_newPage_reportPage"
+// import AB_Work_Interface_List_NewPage_ReportPage from "./ab_work_interface_list_newPage_reportPage"
 import ABPage from '../classes/views/ABViewPage'
 
 
@@ -53,7 +53,7 @@ export default class AB_Work_Interface_List_NewPage extends OP.Component {
 
 		var BlankPage = new AB_Work_Interface_List_NewPage_BlankPage(App);
 		var QuickPage = new AB_Work_Interface_List_NewPage_QuickPage(App);
-		var ReportPage = new AB_Work_Interface_List_NewPage_ReportPage(App);
+		// var ReportPage = new AB_Work_Interface_List_NewPage_ReportPage(App);
 
 
 		// Our webix UI definition:
@@ -77,7 +77,7 @@ width: 650,
 						options: [
 							{ id: ids.tabBlank, value: labels.component.blankPage },
 							{ id: ids.tabQuick, value: labels.component.quickPage },
-							{ id: ids.tabReport, value: labels.component.reportPage }
+							// { id: ids.tabReport, value: labels.component.reportPage }
 						],
 						on: {
 							onChange: function(newTab, oldTab){
