@@ -7,6 +7,7 @@
 
 import ABView from "./ABView"
 import ABPropertyComponent from "../ABPropertyComponent"
+import { basename } from "path";
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -221,7 +222,7 @@ export default class ABViewContainer extends ABView {
 			// NOTE: listen after populate views by .addView
 			if (this._onChangeId) Dashboard.detachEvent(this._onChangeId);
 			this._onChangeId = Dashboard.attachEvent("onChange", () => {
-				_logic.onChange();
+				_logic.onReorder();
 			});
 
 
@@ -354,7 +355,7 @@ export default class ABViewContainer extends ABView {
 				return false;
 			},
 
-			onChange: () => {
+			onReorder: () => {
 
 				return new Promise((resolve, reject) => {
 
@@ -512,12 +513,7 @@ export default class ABViewContainer extends ABView {
 				min: 1,
 				label: "Column " + newVal + " Gravity",
 				labelWidth: App.config.labelWidthXLarge,
-				css: "gravity_counter",
-				on: {
-					onChange: () => {
-						_logic.onChange();
-					}
-				}
+				css: "gravity_counter"
 			}, pos);
 		}
 
@@ -577,12 +573,7 @@ export default class ABViewContainer extends ABView {
 				label: "Column " + step + " Gravity",
 				labelWidth: App.config.labelWidthXLarge,
 				css: "gravity_counter",
-				value: (view.settings.gravity && view.settings.gravity[step - 1]) ? view.settings.gravity[step - 1] : ABPropertyComponentDefaults.gravity,
-				on: {
-					onChange: () => {
-						logic.onChange();
-					}
-				}
+				value: (view.settings.gravity && view.settings.gravity[step - 1]) ? view.settings.gravity[step - 1] : ABPropertyComponentDefaults.gravity
 			}, pos);
 		}
 
@@ -620,14 +611,26 @@ export default class ABViewContainer extends ABView {
 
 	static propertyEditorSave(ids, view) {
 
-		this.propertyEditorValues(ids, view);
+		return Promise.resolve()
+				.then(() => {
 
-		// refresh dashboard to update "position.x" and "position.y" of child views
-		view.emit('properties.updated', view);
+					this.propertyEditorValues(ids, view);
 
-		// save to server here
-		let editorComponent = view.editorComponent(this._App);
-		return editorComponent.logic.onChange();
+					// Save .settings of container
+					return view.save();
+
+				})
+				.then(() => {
+
+					// signal the current view has been updated.
+					view.emit('properties.updated', view);
+
+					// Save reorder of subviews
+					let editorComponent = view.editorComponent(this._App);
+					return editorComponent.logic.onReorder();
+	
+				});
+
 
 	}
 

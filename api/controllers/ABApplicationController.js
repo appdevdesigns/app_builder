@@ -1124,9 +1124,9 @@ function _UpdateNavPage(appClass, app, langCode, updateItem) {
         if (appClass == null || app == null)
             return resolve();
 
-        let rootPage = updateItem.pageRoot();
+        let rootPage = updateItem.isRoot() ? updateItem : updateItem.pageRoot();
         let rootPageId = rootPage.id;
-        let rootPageLabel = (updateItem.isRoot() ? updateItem.label : rootPage.label);
+        let rootPageLabel = rootPage.label;
 
         var pageClass = appClass._pages.filter(p => p.id == rootPageId)[0];
         if (pageClass) {

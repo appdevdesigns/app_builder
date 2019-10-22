@@ -604,11 +604,12 @@ export default class ABViewPage extends ABViewContainer {
      *
      * persist this instance of ABViewPage with it's parent
      *
+     * @param includeSubViews {Boolean}
      *
      * @return {Promise}
      *         .resolve( {this} )
      */
-    save() {
+    save(includeSubViews = false) {
         return new Promise(
             (resolve, reject) => {
 
@@ -623,7 +624,7 @@ export default class ABViewPage extends ABViewContainer {
                     this.name = this.label + "_" + this.id.split("-")[1];
                 }
 
-                this.application.viewSave(this)
+                this.application.viewSave(this, includeSubViews)
                     .then(() => {
 
                         // persist the current ABViewPage in our list of ._pages.

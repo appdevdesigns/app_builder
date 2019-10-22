@@ -89,7 +89,7 @@ width: 650,
 						cells: [
 							BlankPage.ui,
 							QuickPage.ui,
-							ReportPage.ui
+							// ReportPage.ui
 						]
 					},
 					{
@@ -133,7 +133,7 @@ width: 650,
 
 			BlankPage.init();
 			QuickPage.init();
-			ReportPage.init();
+			// ReportPage.init();
 
 			// register our callbacks:
 			for(var c in _logic.callbacks) {
@@ -162,7 +162,7 @@ width: 650,
 
 				BlankPage.applicationLoad(application);
 				QuickPage.applicationLoad(application);
-				ReportPage.applicationLoad(application);
+				// ReportPage.applicationLoad(application);
 			},
 
 
@@ -194,20 +194,22 @@ width: 650,
 					SaveButton.disable();
 					CurrentEditor.formBusy();
 
-					page.save()
+					let includeSubview = true;
+
+					page.save(includeSubview)
 					.then(()=>{
 
 						// save sub-pages sequentially
 						var subTasks = Promise.resolve();
 						page.pages().forEach(subPage => {
-							subTasks = subTasks.then(x => subPage.save());
+							subTasks = subTasks.then(x => subPage.save(includeSubview));
 						});
 
 						_logic.callbacks.onSave(page);
 
 						BlankPage.clear();
 						QuickPage.clear();
-						ReportPage.clear();
+						// ReportPage.clear();
 
 						_logic.hide();
 
@@ -294,10 +296,10 @@ width: 650,
 							CurrentEditor = QuickPage;
 							QuickPage.show();
 							break;
-						case ids.tabReport:
-							CurrentEditor = ReportPage;
-							ReportPage.show();
-							break;
+						// case ids.tabReport:
+						// 	CurrentEditor = ReportPage;
+						// 	ReportPage.show();
+						// 	break;
 					}
 				}
 			}

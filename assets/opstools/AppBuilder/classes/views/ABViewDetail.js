@@ -148,7 +148,7 @@ export default class ABViewDetail extends ABViewContainer {
 
 							let yPosition = (fields.length - index - 1);
 
-							tasks.push(() => currView.addFieldToView(f, yPosition, ids, App));
+							tasks.push(() => currView.addFieldToView(f, yPosition, ids, App).save());
 
 							// update item to UI list
 							f.selected = 1;
@@ -191,7 +191,7 @@ export default class ABViewDetail extends ABViewContainer {
 
 			// add a field to the form
 			if (item.selected) {
-				currView.addFieldToView(item, null, ids, App)
+				currView.addFieldToView(item, null, ids, App).save()
 					.then(() => {
 						// Refresh UI
 						currView.emit('properties.updated', currView);
@@ -555,7 +555,7 @@ export default class ABViewDetail extends ABViewContainer {
 		// update properties when a sub-view is destroyed
 		newView.once('destroyed', () => { ABViewDetail.propertyEditorPopulate(App, ids, this); });
 
-		return newView.save();
+		return newView;
 
 	}
 

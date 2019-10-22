@@ -193,11 +193,12 @@ export default class ABView extends ABViewBase {
 	 *
 	 * persist this instance of ABView with it's parent
 	 *
-	 *
+	 * @param includeSubViews {Boolean}
+	 * 
 	 * @return {Promise}
 	 *						.resolve( {this} )
 	 */
-	save() {
+	save(includeSubViews = false) {
 		return new Promise(
 			(resolve, reject) => {
 
@@ -220,7 +221,7 @@ export default class ABView extends ABViewBase {
 					this.id = OP.Util.uuid();	// setup default .id
 				}
 
-				this.application.viewSave(this)
+				this.application.viewSave(this, includeSubViews)
 					.then(() => {
 
 						// persist the current ABViewPage in our list of ._pages.
@@ -955,14 +956,22 @@ export default class ABView extends ABViewBase {
 
 		this.propertyEditorValues(ids, view);
 
-		return view.save()
-			.then(function () {
-				// signal the current view has been updated.
-				view.emit('properties.updated', view);
-			})
-			.catch(function (err) {
-				OP.Error.log('unable to save view:', { error: err, view: view });
-			});
+		return new Promise((resolve, reject) => {
+
+			view.save()
+				.then(function () {
+
+					// signal the current view has been updated.
+					view.emit('properties.updated', view);
+
+					resolve();
+
+				})
+				.catch(function (err) {
+					OP.Error.log('unable to save view:', { error: err, view: view });
+					reject(err);
+				});
+		});
 	}
 
 

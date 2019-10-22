@@ -786,9 +786,11 @@ export default class ABApplication extends ABApplicationBase {
 	 * persist the current ABView in our list of ._pages or ._views.
 	 *
 	 * @param {ABView} view
+	 * @param {Boolean} includeSubViews
+	 * 
 	 * @return {Promise}
 	 */
-	viewSave(view) {
+	viewSave(view, includeSubViews = false) {
 		// var isIncluded = (this.pages(function (p) { return p.id == page.id }).length > 0);
 		// if (!isIncluded) {
 		// 	this._pages.push(page);
@@ -798,7 +800,7 @@ export default class ABApplication extends ABApplicationBase {
 			data = view.toObj();
 
 		// return this.save();
-		return this.Model.staticData.viewSave(this.id, resolveUrl, data)
+		return this.Model.staticData.viewSave(this.id, resolveUrl, data, includeSubViews)
 			.then(() => {
 
 				// TODO : Should update _AllApplications in 

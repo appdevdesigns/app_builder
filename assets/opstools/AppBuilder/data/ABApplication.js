@@ -151,13 +151,18 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 		 * @param {guid} appId
 		 * @param {string} resolveUrl
 		 * @param {object} data
+		 * @param {Boolean} includeSubViews [optional]
+		 * 
 		 * @return {Promise}
 		 */
-		viewSave: function (appId, resolveUrl, data) {
+		viewSave: function (appId, resolveUrl, data, includeSubViews = false) {
 
-			// remove sub-pages and sub-views properties
+			// remove sub-pages properties
 			delete data['pages'];
-			delete data['views'];
+
+			// remove sub-views properties
+			if (!includeSubViews)
+				delete data['views'];
 
 			return OP.Comm.Service.put({
 				url: '/app_builder/application/' + appId + '/view',
