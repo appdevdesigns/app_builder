@@ -315,11 +315,6 @@ export default class ABView extends ABViewBase {
 
 
 
-	isRoot() {
-		return this.parent == null;
-	}
-
-
     /**
     * @method allParents()
     *
@@ -380,37 +375,6 @@ export default class ABView extends ABViewBase {
 		}
 
 		return key+uniqueInstanceID;
-	}
-
-
-	pageParent(filterFn) {
-
-		if (filterFn == null) filterFn = () => true;
-
-		var parentPage = this.parent;
-
-		// if current page is the root page, then return itself.
-		if (this.isRoot() &&
-			(this.key == 'page' || this.key == 'reportPage')) {
-			return this;
-		}
-
-		while (parentPage && ((parentPage.key != 'page' && parentPage.key != 'reportPage') || !filterFn(parentPage))) {
-			parentPage = parentPage.parent;
-		}
-
-		return parentPage;
-	}
-
-
-	pageRoot() {
-		var rootPage = this.pageParent();
-
-		while (rootPage && !rootPage.isRoot()) {
-			rootPage = rootPage.pageParent();
-		}
-
-		return rootPage;
 	}
 
 

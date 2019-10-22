@@ -816,6 +816,42 @@ export default class ABApplication extends ABApplicationBase {
 	}
 
 
+	/**
+	 * @method viewReorder()
+	 *
+	 * save order of ._views.
+	 *
+	 * @param {ABView} view
+	 * @return {Promise}
+	 */
+	viewReorder(view) {
+
+		let resolveUrl = view.urlPointer(),
+			data = (view.views() || []).map(v => {
+				return {
+					id: v.id,
+					position: v.position
+				}
+			});
+
+		return this.Model.staticData.viewReorder(this.id, resolveUrl, data)
+			.then(() => {
+
+				// TODO : Should update _AllApplications in 
+
+				// Trigger a update event to the live display page
+				let rootPage = view.pageRoot();
+				if (rootPage) {
+					AD.comm.hub.publish('ab.interface.update', {
+						rootPageId: rootPage.id
+					});
+				}
+
+			});
+
+	}
+
+
 
 	/**
 	 * @method urlPage()

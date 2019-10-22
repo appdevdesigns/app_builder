@@ -187,6 +187,26 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 		},
 
+		/**
+		 * @method viewReorder
+		 * 
+		 * @param {guid} appId
+		 * @param {string} resolveUrl
+		 * @param {array} subviews
+		 * @return {Promise}
+		 */
+		viewReorder: function (appId, resolveUrl, subviews) {
+
+			return OP.Comm.Service.put({
+				url: '/app_builder/application/' + appId + '/viewReorder',
+				data: {
+					resolveUrl: resolveUrl,
+					data: subviews
+				}
+			});
+
+		},
+
 
 		// ** Queries
 

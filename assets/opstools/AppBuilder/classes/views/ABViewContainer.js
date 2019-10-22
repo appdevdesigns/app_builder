@@ -384,7 +384,7 @@ export default class ABViewContainer extends ABView {
 					});
 	
 					// save template layout
-					this.save()
+					this.saveReorder()
 						.catch(err => {
 	
 							OP.Error.log('Error trying to save selected View:', { error: err, view: this });
@@ -819,6 +819,12 @@ export default class ABViewContainer extends ABView {
 				return a.position.y - b.position.y;
 
 		});
+
+	}
+
+	saveReorder() {
+
+		return this.application.viewReorder(this);
 
 	}
 

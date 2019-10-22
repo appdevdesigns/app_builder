@@ -62,6 +62,8 @@ module.exports = {
     'delete /app_builder/application/:appID/view':
         'app_builder/ABApplicationController.viewDestroy',
 
+    'put /app_builder/application/:appID/viewReorder':
+        'app_builder/ABApplicationController.viewReorder',
 
     /* Queries */
     'get /app_builder/application/:appID/query':

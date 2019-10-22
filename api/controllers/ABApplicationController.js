@@ -329,6 +329,7 @@ module.exports = {
         var appID = req.param('appID');
         var resolveUrl = req.body.resolveUrl;
         var vals = req.body.data;
+        var updateItem;
 
         Promise.resolve()
             .catch((err) => { res.AD.error(err); })
@@ -357,7 +358,7 @@ module.exports = {
 
                     if (data == null) return resolve();
 
-                    var updateItem = data.appClass.urlResolve(resolveUrl);
+                    updateItem = data.appClass.urlResolve(resolveUrl);
 
                     // update
                     if (updateItem) {
@@ -423,39 +424,104 @@ module.exports = {
             })
             .then((data) => {
 
-                // Update page's nav view
+                if (updateItem == null)
+                    return Promise.resolve();
+
+                let langCode = ADCore.user.current(req).getLanguageCode(); // 'en';
+
+                // Update nav page
+                return _UpdateNavPage(data.appClass, data.app, langCode, updateItem);
+
+            })
+            .then(() => {
+
+                // Finish
                 return new Promise((resolve, reject) => {
 
-                    if (data == null) return resolve();
-
-                    var langCode = ADCore.user.current(req).getLanguageCode(); // 'en';
-
-                    var pageClass = data.appClass._pages.filter(p => p.id == vals.id)[0];
-                    if (pageClass) {
-
-                        // find page name
-                        var pageLabel;
-                        (pageClass.translations || []).forEach((trans) => {
-                            if (trans.language_code == 'en') {
-                               pageLabel = trans.label.replace(/[^a-z0-9 ]/gi, '');
-                            }
-                        });
-
-                        let options ={
-                            name: pageClass.name,
-                            label: pageLabel || vals.label || pageClass.name,
-                            pageID: pageClass.id,
-                            icon: pageClass.icon
-                        };
-
-                        return AppBuilder.updateNavView(data.app, options, langCode)
-                            .catch(reject)
-                            .then(resolve);
-                    }
-                    else
-                        resolve();
+                    res.AD.success(true);
+                    resolve();
 
                 });
+            });
+
+    },
+
+    /**
+     * PUT /app_builder/application/:appID/viewReorder
+     * 
+     * Reorder sub-views
+     */
+    viewReorder: function (req, res) {
+
+        let appID = req.param('appID');
+        let resolveUrl = req.body.resolveUrl;
+        let subviews = req.body.data || [];
+        let updateItem;
+
+        Promise.resolve()
+            .catch((err) => { res.AD.error(err); })
+            .then(() => {
+
+                // Pull a application
+                return new Promise((resolve, reject) => {
+
+                    ApplicationGraph.findOne(appID)
+                        .catch(reject)
+                        .then(result => {
+
+                            resolve({
+                                app: result,
+                                appClass: result.toABClass()
+                            });
+
+                        });
+
+                });
+            })
+            .then((data) => {
+
+                // Update .position of sub-views
+                return new Promise((resolve, reject) => {
+
+                    updateItem = data.appClass.urlResolve(resolveUrl);
+                    if (updateItem == null) return resolve();
+
+                    (updateItem._views || []).forEach(v => {
+
+                        let subView = subviews.filter(subV => subV.id == v.id)[0];
+                        if (subView && subView.position) {
+                            v.position = subView.position;
+                        }
+
+                    });
+
+                    // update data to application
+                    var updateApp = data.appClass.toObj();
+                    data.app.json = updateApp.json;
+
+                    // save to database
+                    data.app.save()
+                        .catch(reject)
+                        .then(() => {
+
+                            // refresh application class
+                            data.appClass = data.app.toABClass();
+
+                            resolve(data);
+                    });
+
+
+                });
+            })
+            .then((data) => {
+
+                if (updateItem == null)
+                    return Promise.resolve();
+
+                let langCode = ADCore.user.current(req).getLanguageCode(); // 'en';
+
+                // Update nav page
+                return _UpdateNavPage(data.appClass, data.app, langCode, updateItem);
 
             })
             .then(() => {
@@ -1049,6 +1115,47 @@ module.exports = {
     }
 
 };
+
+function _UpdateNavPage(appClass, app, langCode, updateItem) {
+
+    // Update page's nav view
+    return new Promise((resolve, reject) => {
+
+        if (appClass == null || app == null)
+            return resolve();
+
+        let rootPage = updateItem.pageRoot();
+        let rootPageId = rootPage.id;
+        let rootPageLabel = (updateItem.isRoot() ? updateItem.label : rootPage.label);
+
+        var pageClass = appClass._pages.filter(p => p.id == rootPageId)[0];
+        if (pageClass) {
+
+            // find page name
+            var pageLabel;
+            (pageClass.translations || []).forEach((trans) => {
+                if (trans.language_code == 'en') {
+                    pageLabel = trans.label.replace(/[^a-z0-9 ]/gi, '');
+                }
+            });
+
+            let options ={
+                name: pageClass.name,
+                label: pageLabel || rootPageLabel || pageClass.name,
+                pageID: pageClass.id,
+                icon: pageClass.icon
+            };
+
+            return AppBuilder.updateNavView(app, options, langCode)
+                .catch(reject)
+                .then(resolve);
+        }
+        else
+            resolve();
+
+    });
+
+}
 
 
 
