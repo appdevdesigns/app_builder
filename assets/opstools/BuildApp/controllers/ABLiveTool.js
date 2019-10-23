@@ -80,6 +80,15 @@ steal(
 							// Check this is active
 							self.menuChange();
 
+							// FIX: If there is only menu item, then click the first item to default
+							var menuList = document.getElementsByClassName('op-list')[0];
+							if (menuList) {
+								var menuItems = menuList.getElementsByClassName('op-container');
+								if (menuItems.length === 1) {
+									menuItems[0].click();
+								}
+							}
+
 						},
 
 						initDOM: function () {

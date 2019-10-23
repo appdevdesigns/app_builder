@@ -387,9 +387,23 @@ export default class ABPropertyComponent {
     		if (e.on && e.on.onChange) {
     			this.oldOnChange[e.name] = e.on.onChange;
     			e.on.onChange = (newVal, oldVal) => {
-    				if (this.oldOnChange[e.name]) this.oldOnChange[e.name](newVal, oldVal);
-    				_logic.onChange(newVal, oldVal);
-    			}
+
+					// If this function is null, then run .onChange 
+					if (this.oldOnChange[e.name] == null)
+						_logic.onChange(newVal, oldVal);
+
+					// If this is Promise, then wait until it done
+					let result = this.oldOnChange[e.name](newVal, oldVal);
+					if (result instanceof Promise) {
+						result.then(() => {
+							_logic.onChange(newVal, oldVal);
+						});
+					}
+					else {
+						_logic.onChange(newVal, oldVal);
+					}
+
+				}
     		} else {
     			if (!e.on) e.on = {};
     			if (!e.on.onChange) e.on.onChange = _logic.onChange;

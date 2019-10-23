@@ -465,6 +465,54 @@ class ABModelBase {
 
 	}
 
+	// static updateSubArray() {
+
+	// 	updates = new this(updates || {});
+
+	// 	let updatedRecord;
+
+	// 	return Promise.resolve()
+
+	// 		// Before update
+	// 		.then(() => this.beforeUpdate(updates))
+
+	// 		// Updating
+	// 		.then(() => {
+
+	// 			return new Promise((next, err) => {
+
+	// 				updates = JSON.stringify(updates);
+
+	// 				this.query(
+	// 					`FOR row IN ${this.collectionName} ` +
+	// 					`FILTER row._key == '${rowId}'` +
+						
+	// 					`LET alteredList = (` +
+	// 					`	FOR sub IN row.${arrayName}` +
+	// 					`	LET newItem = (sub.id == '${subId}' ? MERGE(sub, ${updates}) : sub)` +
+	// 					`	RETURN newItem` +
+	// 					`)` +
+						
+	// 					`UPDATE row WITH { ${arrayName}: alteredList } IN ${this.collectionName}`
+	// 					, false)
+	// 					.catch(err)
+	// 					.then(doc => {
+	// 						updatedRecord = doc;
+	// 						next();
+	// 					});
+
+	// 			});
+
+	// 		})
+
+	// 		// After update
+	// 		.then(() => this.afterUpdate(updatedRecord))
+
+	// 		// Return result
+	// 		.then(() => Promise.resolve(updatedRecord));
+
+	// }
+
 	/**
 	 * @function remove
 	 * 

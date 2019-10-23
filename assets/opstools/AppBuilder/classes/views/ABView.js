@@ -163,13 +163,18 @@ export default class ABView extends ABViewBase {
 				// verify we have been .save() before:
 				if (this.id) {
 
-					// if this is not a child of another view then tell it's
-  					// application to save this view.
-					var parent = this.parent;
-					if (!parent) parent = this.application;
+					this.application.viewDestroy(this)
+						.then(() => {
 
-					parent.viewDestroy(this)
-						.then(resolve)
+							// remove the page in list
+							let parent = this.parent;
+							if (parent) {
+								let remainingPages = parent.views(v => v.id != this.id);
+								parent._views = remainingPages;
+							}
+
+							resolve();
+						})
 						.catch(reject);
 
 				} else {
@@ -188,26 +193,46 @@ export default class ABView extends ABViewBase {
 	 *
 	 * persist this instance of ABView with it's parent
 	 *
-	 *
+	 * @param includeSubViews {Boolean}
+	 * 
 	 * @return {Promise}
 	 *						.resolve( {this} )
 	 */
-	save() {
+	save(includeSubViews = false) {
 		return new Promise(
 			(resolve, reject) => {
+
+				// // if this is our initial save()
+				// if (!this.id) {
+				// 	this.id = OP.Util.uuid();	// setup default .id
+				// }
+
+				// // if this is not a child of another view then tell it's
+  				// // application to save this view.
+				//  var parent = this.parent;
+  				// if (!parent) parent = this.application;
+
+				// parent.viewSave(this)
+				// 	.then(resolve)
+				// 	.catch(reject)
 
 				// if this is our initial save()
 				if (!this.id) {
 					this.id = OP.Util.uuid();	// setup default .id
 				}
 
-				// if this is not a child of another view then tell it's
-  				// application to save this view.
-				 var parent = this.parent;
-  				if (!parent) parent = this.application;
+				this.application.viewSave(this, includeSubViews)
+					.then(() => {
 
-				parent.viewSave(this)
-					.then(resolve)
+						// persist the current ABViewPage in our list of ._pages.
+						let parent = this.parent || this.application;
+						let isIncluded = (parent.views(v => v.id == this.id).length > 0);
+						if (!isIncluded) {
+							parent._views.push(this);
+						}
+
+						resolve();
+					})
 					.catch(reject)
 			}
 		)
@@ -291,11 +316,6 @@ export default class ABView extends ABViewBase {
 
 
 
-	isRoot() {
-		return this.parent == null;
-	}
-
-
     /**
     * @method allParents()
     *
@@ -356,37 +376,6 @@ export default class ABView extends ABViewBase {
 		}
 
 		return key+uniqueInstanceID;
-	}
-
-
-	pageParent(filterFn) {
-
-		if (filterFn == null) filterFn = () => true;
-
-		var parentPage = this.parent;
-
-		// if current page is the root page, then return itself.
-		if (this.isRoot() &&
-			(this.key == 'page' || this.key == 'reportPage')) {
-			return this;
-		}
-
-		while (parentPage && ((parentPage.key != 'page' && parentPage.key != 'reportPage') || !filterFn(parentPage))) {
-			parentPage = parentPage.parent;
-		}
-
-		return parentPage;
-	}
-
-
-	pageRoot() {
-		var rootPage = this.pageParent();
-
-		while (rootPage && !rootPage.isRoot()) {
-			rootPage = rootPage.pageParent();
-		}
-
-		return rootPage;
 	}
 
 
@@ -967,14 +956,22 @@ export default class ABView extends ABViewBase {
 
 		this.propertyEditorValues(ids, view);
 
-		return view.save()
-			.then(function () {
-				// signal the current view has been updated.
-				view.emit('properties.updated', view);
-			})
-			.catch(function (err) {
-				OP.Error.log('unable to save view:', { error: err, view: view });
-			});
+		return new Promise((resolve, reject) => {
+
+			view.save()
+				.then(function () {
+
+					// signal the current view has been updated.
+					view.emit('properties.updated', view);
+
+					resolve();
+
+				})
+				.catch(function (err) {
+					OP.Error.log('unable to save view:', { error: err, view: view });
+					reject(err);
+				});
+		});
 	}
 
 

@@ -521,7 +521,8 @@ export default class ABViewPage extends ABViewContainer {
             })
             .catch(function (err) { 
                 List.hideProgress();
-                next(err); 
+
+                console.error(err);
             });
         
     }
@@ -576,7 +577,7 @@ export default class ABViewPage extends ABViewContainer {
                 // verify we have been .save() before:
                 if (this.id) {
 
-                    this.application.pageDestroy(this)
+                    this.application.viewDestroy(this)
                         .then(() => {
 
                             // remove the page in list
@@ -604,11 +605,12 @@ export default class ABViewPage extends ABViewContainer {
      *
      * persist this instance of ABViewPage with it's parent
      *
+     * @param includeSubViews {Boolean}
      *
      * @return {Promise}
      *         .resolve( {this} )
      */
-    save() {
+    save(includeSubViews = false) {
         return new Promise(
             (resolve, reject) => {
 
@@ -623,7 +625,7 @@ export default class ABViewPage extends ABViewContainer {
                     this.name = this.label + "_" + this.id.split("-")[1];
                 }
 
-                this.application.pageSave(this)
+                this.application.viewSave(this, includeSubViews)
                     .then(() => {
 
                         // persist the current ABViewPage in our list of ._pages.
@@ -722,16 +724,16 @@ export default class ABViewPage extends ABViewContainer {
 
 
     /**
-     * @method pageDestroy()
+     * @method viewDestroy()
      *
-     * remove the current ABViewPage from our list of ._pages.
+     * remove the current ABViewPage from our list of ._pages or ._views.
      *
-     * @param {ABViewPage} page
+     * @param {ABView} view
      * @return {Promise}
      */
-    pageDestroy(page) {
+    viewDestroy(view) {
 
-        var remainingPages = this.pages(function (p) { return p.id != page.id; })
+        var remainingPages = this.pages(function (p) { return p.id != view.id; })
         this._pages = remainingPages;
         return this.save();
     }

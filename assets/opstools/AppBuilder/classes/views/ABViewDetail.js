@@ -113,36 +113,63 @@ export default class ABViewDetail extends ABViewContainer {
 
 			// TODO : warning message
 
-			var currView = _logic.currentEditObject();
+			_logic.busy();
 
-			// remove all old field components
-			if (oldDcId != null)
-				currView.clearFieldComponents();
+			let currView = _logic.currentEditObject();
 
-			// Update field options in property
-			this.propertyUpdateFieldOptions(ids, currView, dcId);
+			return Promise.resolve()
+				.then(() => {
 
-			// add all fields to editor by default
-			if (currView._views.length < 1) {
+					// remove all old field components
+					if (oldDcId != null)
+						return currView.clearFieldComponents();
 
-				var fields = $$(ids.fields).find({});
-				fields.reverse();
-				fields.forEach((f, index) => {
+				})
+				.then(() => {
 
-					if (!f.selected) {
+					// refresh UI
+					currView.emit('properties.updated', currView);
 
-						var yPosition = (fields.length - index - 1);
+					_logic.busy();
 
-						currView.addFieldToView(f, yPosition, ids, App);
+					// Update field options in property
+					this.propertyUpdateFieldOptions(ids, currView, dcId);
 
-						// update item to UI list
-						f.selected = 1;
-						$$(ids.fields).updateItem(f.id, f);
-					}
+					// add all fields to editor by default
+					if (currView._views.length > 0)
+						return Promise.resolve();
+
+					let tasks = [];
+					let fields = $$(ids.fields).find({});
+					fields.reverse();
+					fields.forEach((f, index) => {
+
+						if (!f.selected) {
+
+							let yPosition = (fields.length - index - 1);
+
+							tasks.push(() => currView.addFieldToView(f, yPosition, ids, App).save());
+
+							// update item to UI list
+							f.selected = 1;
+							$$(ids.fields).updateItem(f.id, f);
+						}
+
+					});
+
+					return tasks.reduce((promiseChain, currTask) => {
+						return promiseChain.then(currTask);
+					}, Promise.resolve([]));
+
+				})
+				.then(() => {
+
+					currView.emit('properties.updated', currView);
+					_logic.ready();
+
+					return Promise.resolve();
 
 				});
-
-			}
 
 		};
 
@@ -164,25 +191,30 @@ export default class ABViewDetail extends ABViewContainer {
 
 			// add a field to the form
 			if (item.selected) {
-				currView.addFieldToView(item, null, ids, App);
+				currView.addFieldToView(item, null, ids, App).save()
+					.then(() => {
+						// Refresh UI
+						currView.emit('properties.updated', currView);
+					});
 			}
 			// remove field in the form
 			else {
 				let fieldView = currView.views(c => c.settings.fieldId == fieldId)[0];
 				if (fieldView) {
-					let remainingViews = currView.views(c => c.settings.fieldId != fieldId);
-					currView._views = remainingViews;
+					// let remainingViews = currView.views(c => c.settings.fieldId != fieldId);
+					// currView._views = remainingViews;
 
-					// fieldView.destroy();
+					fieldView.destroy()
+						.then(() => {
+							// Refresh UI
+							currView.emit('properties.updated', currView);
+						});
 				}
 
 			}
 
 			// trigger a save()
-			this.propertyEditorSave(ids, currView);
-
-			// // Call REST API to server in ABViewContainer
-			// currView.emit('properties.updated', currView);
+			// this.propertyEditorSave(ids, currView);
 
 		};
 
@@ -482,9 +514,17 @@ export default class ABViewDetail extends ABViewContainer {
 	}
 
 	clearFieldComponents() {
+
+		let tasks = [];
+
 		this.views().forEach((comp) => {
-			comp.destroy();
+			tasks.push(() => comp.destroy())
 		});
+
+		return tasks.reduce((promiseChain, currTask) => {
+			return promiseChain.then(currTask);
+		}, Promise.resolve([]));
+
 	}
 
 	addFieldToView(field, yPosition, ids, App) {
@@ -492,7 +532,7 @@ export default class ABViewDetail extends ABViewContainer {
 		if (field == null)
 			return;
 
-		var newView = field.detailComponent().newInstance(this.application, this);
+		let newView = field.detailComponent().newInstance(this.application, this);
 		if (newView == null)
 			return;
 
@@ -514,6 +554,8 @@ export default class ABViewDetail extends ABViewContainer {
 
 		// update properties when a sub-view is destroyed
 		newView.once('destroyed', () => { ABViewDetail.propertyEditorPopulate(App, ids, this); });
+
+		return newView;
 
 	}
 

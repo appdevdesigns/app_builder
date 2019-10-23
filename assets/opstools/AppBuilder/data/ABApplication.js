@@ -143,44 +143,70 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 
 
-		// ** Pages
+		// ** Views
 
 		/**
-		 * @method pageSave
+		 * @method viewSave
 		 * 
 		 * @param {guid} appId
 		 * @param {string} resolveUrl
 		 * @param {object} data
+		 * @param {Boolean} includeSubViews [optional]
+		 * 
 		 * @return {Promise}
 		 */
-		pageSave: function (appId, resolveUrl, page) {
+		viewSave: function (appId, resolveUrl, data, includeSubViews = false) {
 
 			// remove sub-pages properties
-			delete page['pages'];
+			delete data['pages'];
+
+			// remove sub-views properties
+			if (!includeSubViews)
+				delete data['views'];
 
 			return OP.Comm.Service.put({
-				url: '/app_builder/application/' + appId + '/page',
+				url: '/app_builder/application/' + appId + '/view',
 				data: {
 					resolveUrl: resolveUrl,
-					data: page
+					data: data
 				}
 			});
 
 		},
 
 		/**
-		 * @method pageDestroy
+		 * @method viewDestroy
 		 * 
 		 * @param {guid} appId
 		 * @param {string} resolveUrl
 		 * @return {Promise}
 		 */
-		pageDestroy: function (appId, resolveUrl) {
+		viewDestroy: function (appId, resolveUrl) {
 
 			return OP.Comm.Service.delete({
-				url: '/app_builder/application/' + appId + '/page',
+				url: '/app_builder/application/' + appId + '/view',
 				data: {
 					resolveUrl: resolveUrl
+				}
+			});
+
+		},
+
+		/**
+		 * @method viewReorder
+		 * 
+		 * @param {guid} appId
+		 * @param {string} resolveUrl
+		 * @param {array} subviews
+		 * @return {Promise}
+		 */
+		viewReorder: function (appId, resolveUrl, subviews) {
+
+			return OP.Comm.Service.put({
+				url: '/app_builder/application/' + appId + '/viewReorder',
+				data: {
+					resolveUrl: resolveUrl,
+					data: subviews
 				}
 			});
 

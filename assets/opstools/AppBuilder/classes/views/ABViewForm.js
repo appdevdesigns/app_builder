@@ -194,47 +194,83 @@ export default class ABViewForm extends ABViewContainer {
 
 			// TODO : warning message
 
-			var currView = _logic.currentEditObject();
-			var formView = currView.parentFormComponent();
+			_logic.busy();
 
-			// remove all old components
-			if (oldDcId != null) {
-				var oldComps = formView.views();
-				oldComps.forEach(child => child.destroy());
-			}
+			let currView = _logic.currentEditObject();
+			let formView = currView.parentFormComponent();
 
-			// Update field options in property
-			this.propertyUpdateFieldOptions(ids, currView, dcId);
-
-			// add all fields to editor by default
-			if (currView._views.length < 1) {
-
-				var fields = $$(ids.fields).find({});
-				fields.reverse();
-				fields.forEach((f, index) => {
-
-					if (!f.selected) {
-
-						var yPosition = (fields.length - index - 1);
-
-						// Add new form field
-						var newFieldView = currView.addFieldToForm(f, yPosition);
-						if (newFieldView)
-							newFieldView.once('destroyed', () => this.propertyEditorPopulate(App, ids, currView));
-
-						// update item to UI list
-						f.selected = 1;
-						$$(ids.fields).updateItem(f.id, f);
+			return Promise.resolve()
+				.then(() => {
+					// remove all old components
+					let destroyTasks = [];
+					if (oldDcId != null) {
+						let oldComps = formView.views();
+						oldComps.forEach(child => destroyTasks.push(() => child.destroy()));
 					}
+
+					return destroyTasks.reduce((promiseChain, currTask) => {
+						return promiseChain.then(currTask);
+					}, Promise.resolve([]));
+				})
+				.then(() => {
+
+					// refresh UI
+					formView.emit('properties.updated', currView);
+
+					_logic.busy();
+
+					// Update field options in property
+					this.propertyUpdateFieldOptions(ids, currView, dcId);
+
+					// add all fields to editor by default
+					if (currView._views.length > 0)
+						return Promise.resolve();
+
+					let saveTasks = [];
+					let fields = $$(ids.fields).find({});
+					fields.reverse();
+					fields.forEach((f, index) => {
+
+						if (!f.selected) {
+
+							let yPosition = (fields.length - index - 1);
+
+							// Add new form field
+							let newFieldView = currView.addFieldToForm(f, yPosition);
+							if (newFieldView)
+								newFieldView.once('destroyed', () => this.propertyEditorPopulate(App, ids, currView));
+
+							// Call save API
+							saveTasks.push(() => newFieldView.save());
+
+							// update item to UI list
+							f.selected = 1;
+							$$(ids.fields).updateItem(f.id, f);
+						}
+
+					});
+
+					saveTasks.push(() => formView.refreshDefaultButton(ids).save());
+
+					return saveTasks.reduce((promiseChain, currTask) => {
+						return promiseChain.then(currTask);
+					}, Promise.resolve([]));
+
+				})
+				.then(() => {
+
+					// refresh UI
+					formView.emit('properties.updated', currView);
+
+					// Update field options in property
+					this.propertyUpdateRules(ids, currView, dcId);
+
+					_logic.ready();
+
+					return Promise.resolve();
 
 				});
 
-				formView.refreshDefaultButton(ids);
-
-			}
-
-			// Update field options in property
-			this.propertyUpdateRules(ids, currView, dcId);
 
 		};
 
@@ -265,33 +301,52 @@ export default class ABViewForm extends ABViewContainer {
 			item.selected = item.selected ? 0 : 1;
 			$$(ids.fields).updateItem(fieldId, item);
 
+			let doneFn = () => {
+
+				formView.refreshDefaultButton(ids).save()
+					.then(() => {
+
+						// refresh UI
+						currView.emit('properties.updated', currView);
+
+					});
+
+				// // trigger a save()
+				// this.propertyEditorSave(ids, currView);
+
+			};
+
 			// add a field to the form
 			if (item.selected) {
 				let fieldView = currView.addFieldToForm(item);
-				if (fieldView)
-					fieldView.once('destroyed', () => this.propertyEditorPopulate(App, ids, currView));
+				if (fieldView) {
+					fieldView.save()
+						.then(() => {
+
+							fieldView.once('destroyed', () => this.propertyEditorPopulate(App, ids, currView));
+
+							doneFn();
+
+						});
+				}
 			}
 			// remove field in the form
 			else {
 				let fieldView = formView.fieldComponents().filter(c => c.settings.fieldId == fieldId)[0];
-
 				if (fieldView) {
 
-					let remainingViews = formView.views(c => c.settings.fieldId != fieldId);
-					formView._views = remainingViews;
+					// let remainingViews = formView.views(c => c.settings.fieldId != fieldId);
+					// formView._views = remainingViews;
 
-					// fieldView.destroy();
+					fieldView.destroy()
+						.then(() => {
+
+							doneFn();
+
+						});
 				}
 
 			}
-
-			formView.refreshDefaultButton(ids);
-
-			// trigger a save()
-			this.propertyEditorSave(ids, currView);
-
-			// // Call REST API to server in ABViewContainer
-			// currView.emit('properties.updated', currView);
 
 		};
 
@@ -799,7 +854,7 @@ PopupRecordRule.qbFixAfterShow();
 
 			}
 
-			_onShow();
+			// _onShow();
 
 		}
 
@@ -832,6 +887,8 @@ PopupRecordRule.qbFixAfterShow();
 						if (comp == null) return;
 
 						// var colName = field.columnName;
+						if (this._showed)
+							comp.onShow();
 
 						// set value to each components
 						var defaultRowData = {};
@@ -868,6 +925,9 @@ PopupRecordRule.qbFixAfterShow();
 
 						var comp = this.viewComponents[f.id];
 						if (comp == null) return;
+
+						if (this._showed)
+							comp.onShow();
 
 						// set value to each components
 						if (f.field())
@@ -916,6 +976,8 @@ PopupRecordRule.qbFixAfterShow();
 		};
 
 		var _onShow = (data) => {
+
+			this._showed = true;
 
 			// call .onShow in the base component
 			component.onShow();
@@ -1053,7 +1115,6 @@ PopupRecordRule.qbFixAfterShow();
 		// add a new component
 		this._views.push(newView);
 
-
 		return newView;
 
 	}
@@ -1079,6 +1140,8 @@ PopupRecordRule.qbFixAfterShow();
 			newButton.position.y = $$(ids.fields).length;
 
 		this._views.push(newButton);
+
+		return newButton;
 
 	}
 

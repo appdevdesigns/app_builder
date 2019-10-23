@@ -10,7 +10,7 @@ var fs = require('fs');
 var _ = require('lodash');
 var path = require('path');
 
-var ABViewPage = require(path.join('..', 'classes', 'ABViewPage'));
+var ABView = require(path.join('..', 'classes', 'ABView'));
 
 var ApplicationGraph = require(path.join('..', 'graphModels', 'ABApplication'));
 var DataviewGraph = require(path.join('..', 'graphModels', 'ABDataview'));
@@ -318,17 +318,18 @@ module.exports = {
     },
 
 
-    /* Pages */
+    /* Views */
 
     /**
-     * PUT /app_builder/application/:appID/page
+     * PUT /app_builder/application/:appID/view
      * 
-     * Add/Update a page into ABApplication
+     * Add/Update a page/view into ABApplication
      */
-    pageSave: function (req, res) {
+    viewSave: function (req, res) {
         var appID = req.param('appID');
         var resolveUrl = req.body.resolveUrl;
         var vals = req.body.data;
+        var updateItem;
 
         Promise.resolve()
             .catch((err) => { res.AD.error(err); })
@@ -357,12 +358,13 @@ module.exports = {
 
                     if (data == null) return resolve();
 
-                    var updateItem = data.appClass.urlResolve(resolveUrl);
+                    updateItem = data.appClass.urlResolve(resolveUrl);
 
                     // update
                     if (updateItem) {
 
-                        var ignoreProps = ['id', 'pages', '_pages'];
+                        // var ignoreProps = ['id', 'pages', '_pages'];
+                        var ignoreProps = ['id', 'pages', '_pages', 'views', '_views'];
 
                         // clear old values
                         for (var key in updateItem) {
@@ -397,7 +399,7 @@ module.exports = {
                         // add new page/view to the parent
                         if (parent && parent.push) {
 
-                            parent.push(new ABViewPage(vals, data.appClass));
+                            parent.push(new ABView(vals, data.appClass));
 
                         }
                     }
@@ -422,39 +424,13 @@ module.exports = {
             })
             .then((data) => {
 
-                // Update page's nav view
-                return new Promise((resolve, reject) => {
+                if (updateItem == null)
+                    return Promise.resolve();
 
-                    if (data == null) return resolve();
+                let langCode = ADCore.user.current(req).getLanguageCode(); // 'en';
 
-                    var langCode = ADCore.user.current(req).getLanguageCode(); // 'en';
-
-                    var pageClass = data.appClass._pages.filter(p => p.id == vals.id)[0];
-                    if (pageClass) {
-
-                        // find page name
-                        var pageLabel;
-                        (pageClass.translations || []).forEach((trans) => {
-                            if (trans.language_code == 'en') {
-                               pageLabel = trans.label.replace(/[^a-z0-9 ]/gi, '');
-                            }
-                        });
-
-                        let options ={
-                            name: pageClass.name,
-                            label: pageLabel || vals.label || pageClass.name,
-                            pageID: pageClass.id,
-                            icon: pageClass.icon
-                        };
-
-                        return AppBuilder.updateNavView(data.app, options, langCode)
-                            .catch(reject)
-                            .then(resolve);
-                    }
-                    else
-                        resolve();
-
-                });
+                // Update nav page
+                return _UpdateNavPage(data.appClass, data.app, langCode, updateItem);
 
             })
             .then(() => {
@@ -471,11 +447,102 @@ module.exports = {
     },
 
     /**
-     * DELETE /app_builder/application/:appID/page
+     * PUT /app_builder/application/:appID/viewReorder
      * 
-     * Delete a page in ABApplication
+     * Reorder sub-views
      */
-    pageDestroy: function (req, res) {
+    viewReorder: function (req, res) {
+
+        let appID = req.param('appID');
+        let resolveUrl = req.body.resolveUrl;
+        let subviews = req.body.data || [];
+        let updateItem;
+
+        Promise.resolve()
+            .catch((err) => { res.AD.error(err); })
+            .then(() => {
+
+                // Pull a application
+                return new Promise((resolve, reject) => {
+
+                    ApplicationGraph.findOne(appID)
+                        .catch(reject)
+                        .then(result => {
+
+                            resolve({
+                                app: result,
+                                appClass: result.toABClass()
+                            });
+
+                        });
+
+                });
+            })
+            .then((data) => {
+
+                // Update .position of sub-views
+                return new Promise((resolve, reject) => {
+
+                    updateItem = data.appClass.urlResolve(resolveUrl);
+                    if (updateItem == null) return resolve();
+
+                    (updateItem._views || []).forEach(v => {
+
+                        let subView = subviews.filter(subV => subV.id == v.id)[0];
+                        if (subView && subView.position) {
+                            v.position = subView.position;
+                        }
+
+                    });
+
+                    // update data to application
+                    var updateApp = data.appClass.toObj();
+                    data.app.json = updateApp.json;
+
+                    // save to database
+                    data.app.save()
+                        .catch(reject)
+                        .then(() => {
+
+                            // refresh application class
+                            data.appClass = data.app.toABClass();
+
+                            resolve(data);
+                    });
+
+
+                });
+            })
+            .then((data) => {
+
+                if (updateItem == null)
+                    return Promise.resolve();
+
+                let langCode = ADCore.user.current(req).getLanguageCode(); // 'en';
+
+                // Update nav page
+                return _UpdateNavPage(data.appClass, data.app, langCode, updateItem);
+
+            })
+            .then(() => {
+
+                // Finish
+                return new Promise((resolve, reject) => {
+
+                    res.AD.success(true);
+                    resolve();
+
+                });
+            });
+
+    },
+
+    /**
+     * DELETE /app_builder/application/:appID/view
+     * 
+     * Delete a page/view in ABApplication
+     */
+    viewDestroy: function (req, res) {
         var appID = req.param('appID');
         var resolveUrl = req.body.resolveUrl;
         var pageName;
@@ -788,7 +855,7 @@ module.exports = {
                         else if (dv.object && dv.object[0]) {
                             return dv.object[0];
                         }
-                    });
+                    }).filter(ds => ds);
 
                     // Find missing objects
                     (linkFieldIds || []).forEach(item => {
@@ -1048,6 +1115,47 @@ module.exports = {
     }
 
 };
+
+function _UpdateNavPage(appClass, app, langCode, updateItem) {
+
+    // Update page's nav view
+    return new Promise((resolve, reject) => {
+
+        if (appClass == null || app == null)
+            return resolve();
+
+        let rootPage = updateItem.isRoot() ? updateItem : updateItem.pageRoot();
+        let rootPageId = rootPage.id;
+        let rootPageLabel = rootPage.label;
+
+        var pageClass = appClass._pages.filter(p => p.id == rootPageId)[0];
+        if (pageClass) {
+
+            // find page name
+            var pageLabel;
+            (pageClass.translations || []).forEach((trans) => {
+                if (trans.language_code == 'en') {
+                    pageLabel = trans.label.replace(/[^a-z0-9 ]/gi, '');
+                }
+            });
+
+            let options ={
+                name: pageClass.name,
+                label: pageLabel || rootPageLabel || pageClass.name,
+                pageID: pageClass.id,
+                icon: pageClass.icon
+            };
+
+            return AppBuilder.updateNavView(app, options, langCode)
+                .catch(reject)
+                .then(resolve);
+        }
+        else
+            resolve();
+
+    });
+
+}
 
 
 

@@ -405,13 +405,14 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 	 * @return {obj} UI component
 	 */
 	component(App) {		
-		var component = super.component(App);
+
 		var field = this.field();
-		var form = this.parentFormComponent();
-
 		// this field may be deleted
-		if (!field) return component;
+		if (!field)
+			return super.component(App);
 
+		var component = {};
+		var form = this.parentFormComponent();
 		var idBase = this.parentFormUniqueID('ABViewFormConnect_' + this.id + "_f_");
 		var ids = {
 			component: App.unique(idBase + '_component'),
@@ -443,123 +444,18 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 			newWidth = 0;
 		}
 
-		var template = ('<div class="customField">' + templateLabel + "#template#" + '</div>')
+		let template = ('<div class="customField">' + templateLabel + "#template#" + '</div>')
 			.replace(/#width#/g, settings.labelWidth)
 			.replace(/#label#/g, field.label)
 			.replace(/#template#/g, field.columnHeader({
 				width: newWidth, 
 				editable: true, 
-				showAddButton: showAddButton
+				showAddButton: showAddButton,
+				skipRenderSelectivity: true
 			}).template({}));
 
-
-
-		component.ui = {
-			id: 	ids.component,
-			view: 	"forminput",
-			labelWidth: 0,
-			paddingY: 0,
-			paddingX: 0,
-			css:    "ab-custom-field",
-		    name:   component.ui.name,
-		    body:{
-				view: App.custom.focusabletemplate.view,
-				css:  "webix_el_box",
-				borderless: true,
-				height: component.ui.height,
-				template: template,
-				onClick: {
-					"customField": (id, e, trg) => {
-
-						if (this.settings.disable == 1) 
-							return;
-
-						var rowData = {};
-
-						if ($$(ids.component)) {
-							var node = $$(ids.component).$view;
-							field.customEdit(rowData, App, node);
-						}
-					},
-					"ab-connect-add-new-link": function (e, id, trg) {
-						var topParentView = this.getTopParentView();
-						component.logic.openFormPopup(topParentView.config.left, topParentView.config.top);
-						e.stopPropagation();
-						return false;
-					}
-				}
-		    }, 
-		}
-
-		if (settings.showLabel == true && settings.labelPosition == 'top') {
-			component.ui.body.height = 80;
-		}
-		else {
-			component.ui.body.height = 38;
-		}
-
-
-// component.ui.id = ids.component;
-// // component.ui.view = "template";
-// component.ui.view = 'forminput';
-// // component.ui.focus = ()=>{};
-
-// component.ui.body = {
-// 	view: App.custom.focusabletemplate.view,
-// 	template:'<div class="customField">' + template + '</div>',
-// 	// focus: function() {}
-// }
-
-// component.ui.body.css = "webix_el_box";
-
-// if (settings.showLabel == true && settings.labelPosition == 'top') {
-// 	component.ui.body.height = 80;
-// }
-// else if (field.settings.useHeight) {
-// 	component.ui.body.height = parseInt(field.settings.imageHeight);
-// }
-// else {
-// 	component.ui.body.height = 38;
-// }
-// component.ui.body.borderless = true;
-// component.ui.body.template = '<div class="customField">' + template + '</div>';
-// component.ui.body.onClick = {
-// 	"customField": function (id, e, trg) {
-// 		var rowData = {};
-
-// 		if ($$(ids.component)) {
-// 			var node = $$(ids.component).$view;
-// 			field.customEdit(rowData, App, node);
-// 		}
-// 	},
-// 	"ab-connect-add-new-link": function (id, e, trg) {
-// 		component.logic.openFormPopup();
-// 	}
-// };
-
-		component.onShow = () => {
-
-			var elem = $$(ids.component);
-			if (!elem) return;
-
-			var rowData = {},
-				node = elem.$view;
-
-			field.customDisplay(rowData, App, node, {
-				editable: true,
-				formView: this.settings.formView,
-				filters: this.settings.objectWorkspace.filterConditions,
-				editable: (this.settings.disable == 1 ? false : true)
-			});
-
+		component.init = (options) => {
 		};
-
-// // make sure each of our child views get .init() called
-// component.init = (options) => {
-
-// 	component.onShow();
-
-// }
 
 		component.logic = {
 
@@ -709,6 +605,65 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 
 		};
 
+		component.ui = {
+			id: 	ids.component,
+			view: 	"forminput",
+			labelWidth: 0,
+			paddingY: 0,
+			paddingX: 0,
+			css:    "ab-custom-field",
+		    name:   field.columnName,
+		    body:{
+				view: App.custom.focusabletemplate.view,
+				css:  "webix_el_box",
+				borderless: true,
+				template: template,
+				onClick: {
+					"customField": (id, e, trg) => {
+
+						if (this.settings.disable == 1) 
+							return;
+
+						var rowData = {};
+
+						if ($$(ids.component)) {
+							var node = $$(ids.component).$view;
+							field.customEdit(rowData, App, node);
+						}
+					},
+					"ab-connect-add-new-link": function (e, id, trg) {
+						var topParentView = this.getTopParentView();
+						component.logic.openFormPopup(topParentView.config.left, topParentView.config.top);
+						e.stopPropagation();
+						return false;
+					}
+				}
+		    }, 
+		}
+
+		if (settings.showLabel == true && settings.labelPosition == 'top') {
+			component.ui.body.height = 80;
+		}
+		else {
+			component.ui.body.height = 38;
+		}
+
+		component.onShow = () => {
+
+			var elem = $$(ids.component);
+			if (!elem) return;
+
+			var rowData = {},
+				node = elem.$view;
+
+			field.customDisplay(rowData, App, node, {
+				editable: true,
+				formView: this.settings.formView,
+				filters: this.settings.objectWorkspace.filterConditions,
+				editable: (this.settings.disable == 1 ? false : true)
+			});
+
+		};
 
 		return component;
 	}

@@ -758,20 +758,20 @@ export default class ABApplication extends ABApplicationBase {
 
 
 	/**
-	 * @method pageDestroy()
+	 * @method viewDestroy()
 	 *
-	 * remove the current ABViewPage from our list of ._pages.
+	 * remove the current ABView from our list of ._pages or ._views.
 	 *
-	 * @param {ABViewPage} page
+	 * @param {ABView} view
 	 * @return {Promise}
 	 */
-	pageDestroy(page) {
+	viewDestroy(view) {
 
 		// return this.save();
 
-		var resolveUrl = page.urlPointer();
+		var resolveUrl = view.urlPointer();
 
-		return this.Model.staticData.pageDestroy(this.id, resolveUrl)
+		return this.Model.staticData.viewDestroy(this.id, resolveUrl)
 			.then(() => {
 				// TODO : Should update _AllApplications in 
 			});
@@ -781,30 +781,68 @@ export default class ABApplication extends ABApplicationBase {
 
 
 	/**
-	 * @method pageSave()
+	 * @method viewSave()
 	 *
-	 * persist the current ABViewPage in our list of ._pages.
+	 * persist the current ABView in our list of ._pages or ._views.
 	 *
-	 * @param {ABViewPage} object
+	 * @param {ABView} view
+	 * @param {Boolean} includeSubViews
+	 * 
 	 * @return {Promise}
 	 */
-	pageSave(page) {
+	viewSave(view, includeSubViews = false) {
 		// var isIncluded = (this.pages(function (p) { return p.id == page.id }).length > 0);
 		// if (!isIncluded) {
 		// 	this._pages.push(page);
 		// }
 
-		var resolveUrl = page.urlPointer(),
-			data = page.toObj();
+		var resolveUrl = view.urlPointer(),
+			data = view.toObj();
 
 		// return this.save();
-		return this.Model.staticData.pageSave(this.id, resolveUrl, data)
+		return this.Model.staticData.viewSave(this.id, resolveUrl, data, includeSubViews)
 			.then(() => {
 
 				// TODO : Should update _AllApplications in 
 
 				// Trigger a update event to the live display page
-				let rootPage = page.pageRoot();
+				let rootPage = view.pageRoot();
+				if (rootPage) {
+					AD.comm.hub.publish('ab.interface.update', {
+						rootPageId: rootPage.id
+					});
+				}
+
+			});
+
+	}
+
+
+	/**
+	 * @method viewReorder()
+	 *
+	 * save order of ._views.
+	 *
+	 * @param {ABView} view
+	 * @return {Promise}
+	 */
+	viewReorder(view) {
+
+		let resolveUrl = view.urlPointer(),
+			data = (view.views() || []).map(v => {
+				return {
+					id: v.id,
+					position: v.position
+				}
+			});
+
+		return this.Model.staticData.viewReorder(this.id, resolveUrl, data)
+			.then(() => {
+
+				// TODO : Should update _AllApplications in 
+
+				// Trigger a update event to the live display page
+				let rootPage = view.pageRoot();
 				if (rootPage) {
 					AD.comm.hub.publish('ab.interface.update', {
 						rootPageId: rootPage.id

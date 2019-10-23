@@ -257,7 +257,7 @@ export default class ABViewFormCustom extends ABViewFormField {
 		// make sure each of our child views get .init() called
 		component.init = (options) => {
 
-			component.onShow();
+			// component.onShow();
 
 		}
 

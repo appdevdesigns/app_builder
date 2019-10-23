@@ -160,7 +160,8 @@ export default class AB_Work_Interface_Workspace_Editor_Components extends OP.Co
 				// show loading cursor
 				_logic.callbacks.onAddingWidget();
 
-				CurrentView.viewSave(newComp)
+				// CurrentView.viewSave(newComp)
+				newComp.save()
 					.then(() => {
 
 						// callback to parent

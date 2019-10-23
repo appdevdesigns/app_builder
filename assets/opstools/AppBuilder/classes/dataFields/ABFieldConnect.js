@@ -513,12 +513,14 @@ class ABFieldConnect extends ABFieldSelectivity {
 			var multiselect = (field.settings.linkType == 'many');
 
 			// Render selectivity
-			field.selectivityRender(domNode, {
-				multiple: multiselect,
-				readOnly: readOnly,
-				placeholder: placeholder,
-				data: selectedData
-			}, App, row);
+			if (!options.skipRenderSelectivity) {
+				field.selectivityRender(domNode, {
+					multiple: multiselect,
+					readOnly: readOnly,
+					placeholder: placeholder,
+					data: selectedData
+				}, App, row);
+			}
 
 			if (showAddButton) {
 				var iDiv = document.createElement('div');
