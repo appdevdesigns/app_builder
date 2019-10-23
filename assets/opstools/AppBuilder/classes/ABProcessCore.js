@@ -43,7 +43,7 @@ module.exports = class ABProcessCore extends ABMLClass {
 		// this.json = attributes.json || null;
 
 
-		super.fromValues(); // perform translation on this object.
+		super.fromValues(attributes); // perform translation on this object.
 			// NOTE: keep this at the end of .fromValues();
 
 		if (!this.label) {

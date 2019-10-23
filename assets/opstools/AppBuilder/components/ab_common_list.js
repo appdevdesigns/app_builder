@@ -6,6 +6,7 @@
  *
  */
 
+import ABListEditMenu from "./ab_common_popupEditMenu" 
 
 export default class AB_Common_List extends OP.Component {   //.extend(idBase, function(App) {
 
@@ -61,8 +62,11 @@ export default class AB_Common_List extends OP.Component {   //.extend(idBase, f
 // var PopupNewProcessComponent = new ABListNewProcess(App);
 
 		// the popup edit list for each entry in the list.
-// var PopupEditProcessComponent = new ABListEditMenu(App);
-
+	var PopupEditProcessComponent = new ABListEditMenu(App);
+		attributes.menu = attributes.menu || {};
+		attributes.menu.copy = (typeof attributes.menu.copy == "undefined")? true: attributes.menu.copy;
+		attributes.menu.exclude = (typeof attributes.menu.exclude == "undefined")? true: attributes.menu.exclude;
+//PopupListEditMenuComponent
 		// console.log("look here------------------>", App.custom.editunitlist.view);
 
 		// Our webix UI definition:
@@ -223,10 +227,39 @@ export default class AB_Common_List extends OP.Component {   //.extend(idBase, f
 // 	onDone: _logic.callbackNewProcess
 // });
 
-// PopupEditProcessComponent.init({
-// 	onClick: _logic.callbackProcessEditorMenu,
-// 	hideCopy: true
-// })
+			PopupEditProcessComponent.init({
+				// onClick: _logic.callbackProcessEditorMenu,
+				hideCopy: !attributes.menu.copy,
+				hideExclude: !attributes.menu.exclude
+			})
+
+
+			PopupEditProcessComponent.on("click", (command)=>{
+				var selectedItem = $$(ids.list).getSelectedItem(false);
+				switch(command) {
+
+					case "delete":
+						this._logic.remove();
+						break;
+
+					case "rename":
+						this._logic.rename();
+						break;
+
+					case "exclude":
+						this.emit("exclude", selectedItem);
+						break;
+
+					case "copy":
+						this._logic.copy(selectedItem);
+						// this.emit("copy", selectedItem);
+						break;
+
+					default:
+						this.emit("menu", {command:command, id:selectedItem.id})
+						break;
+				}
+			})
 
 			_settings = webix.storage.local.get(this.idBase) || {
 				objectlistIsOpen: false,
@@ -331,6 +364,41 @@ export default class AB_Common_List extends OP.Component {   //.extend(idBase, f
 				return false;
 			},
 
+			/*
+			 * @function copy
+			 * make a copy of the current selected item.
+			 * 
+			 * copies should have all the same .toObj() data,
+			 * but will need unique names, and ids.
+			 * 
+			 * we start the process by making a copy and then
+			 * having the user enter a new label/name for it.
+			 * 
+			 * our .afterEdit() routines will detect it is a copy
+			 * then alert the parent UI component of the "copied" data
+			 *
+			 * @param {obj} selectedItem the currently selected item in
+			 * 		our list.
+			 */
+			copy: function(selectedItem) {
+
+				var newItem = selectedItem.toObj();
+				newItem.id = "copy_"+(itemList?itemList.count():"01");
+				delete newItem.translations;
+				newItem.name = newItem.name+" copy";
+				newItem.label = newItem.name;
+
+				// find the current index of the item being copied:
+				var list = $$(ids.list);
+				var selectedIndex = list.getIndexById(list.getSelectedId());
+
+				// insert copy in it's place and make it editable:
+				list.add(newItem, selectedIndex);
+				list.select(newItem.id);
+				list.edit(newItem.id);
+
+			},
+
 			listSettingCollapse: function() {
 
 				// if (CurrentApplication && CurrentApplication.objectlistIsOpen != false) {
@@ -424,7 +492,7 @@ export default class AB_Common_List extends OP.Component {   //.extend(idBase, f
 					return $$(ids.list).count();
 			},
 
-			onAfterEditStop: function(state, editor, ignoreUpdate) {
+			onAfterEditStop: (state, editor, ignoreUpdate) => {
 
 				_logic.showGear(editor.id);
 
@@ -434,25 +502,47 @@ export default class AB_Common_List extends OP.Component {   //.extend(idBase, f
 					var selectedItem = $$(ids.list).getSelectedItem(false);
 					selectedItem.label = state.value;
 
-					// Call server to rename
-					selectedItem.save()
-						.catch(function () {
-							_logic.listReady();
+					// if this item supports .save()
+					if (selectedItem.save) {
 
-							OP.Dialog.Alert({
-								text: labels.common.renameErrorMessage.replace("{0}", state.old)
+						// Call server to rename
+						selectedItem.save()
+							.catch(function () {
+								_logic.listReady();
+
+								OP.Dialog.Alert({
+									text: labels.common.renameErrorMessage.replace("{0}", state.old)
+								});
+
+							})
+							.then(function () {
+								_logic.listReady();
+
+								// TODO : should use message box
+								// OP.Dialog.Alert({
+								// 	text: labels.common.renameSuccessMessage.replace("{0}", state.value)
+								// });
+
 							});
 
-						})
-						.then(function () {
-							_logic.listReady();
+					} else {
 
-							// TODO : should use message box
-							OP.Dialog.Alert({
-								text: labels.common.renameSuccessMessage.replace("{0}", state.value)
-							});
+						// maybe this is from a .copy() command:
+						if (selectedItem.id.indexOf("copy_") == 0) {
 
-						});
+							// if so, then our default name should be what
+							// the label is:
+							selectedItem.name = selectedItem.label;
+							var currID = selectedItem.id;
+
+							// remove our temp id
+							delete selectedItem.id;
+
+							// alert the parent UI of the copied data:
+							this.emit("copied", { item:selectedItem, currID: currID });
+						}
+					}
+
 				}
 			},
 
@@ -461,11 +551,14 @@ export default class AB_Common_List extends OP.Component {   //.extend(idBase, f
 				var selectedItem = $$(ids.list).getSelectedItem(false);
 				selectedItem.label = state.value;
 
-				var validator = selectedItem.isValid();
-				if (validator.fail()) {
-					selectedItem.label = state.old;
+				// if this item supports isValid()
+				if (selectedItem.isValid) {
+					var validator = selectedItem.isValid();
+					if (validator.fail()) {
+						selectedItem.label = state.old;
 
-					return false; // stop here.
+						return false; // stop here.
+					}
 				}
 
 				return true;
@@ -547,29 +640,29 @@ export default class AB_Common_List extends OP.Component {   //.extend(idBase, f
 			 *
 			 * Once a New Process was created in the Popup, follow up with it here.
 			 */
-			callbackNewProcess:function(err, object, selectNew, callback){
+			// callbackNewProcess:function(err, object, selectNew, callback){
 
-				if (err) {
-					OP.Error.log('Error creating New Process', {error: err});
-					return;
-				}
+			// 	if (err) {
+			// 		OP.Error.log('Error creating New Process', {error: err});
+			// 		return;
+			// 	}
 
-				let objects = CurrentApplication.objects();
-				itemList.parse(objects);
+			// 	let objects = CurrentApplication.objects();
+			// 	itemList.parse(objects);
 
-				// if (processList.exists(object.id))
-				// 	processList.updateItem(object.id, object);
-				// else
-				// 	processList.add(object);
+			// 	// if (processList.exists(object.id))
+			// 	// 	processList.updateItem(object.id, object);
+			// 	// else
+			// 	// 	processList.add(object);
 
-				if (selectNew != null && selectNew == true) {
-					$$(ids.list).select(object.id);
-				}
-				else if (callback) {
-					callback();
-				}
+			// 	if (selectNew != null && selectNew == true) {
+			// 		$$(ids.list).select(object.id);
+			// 	}
+			// 	else if (callback) {
+			// 		callback();
+			// 	}
 
-			},
+			// },
 
 
 			/**
@@ -616,7 +709,7 @@ export default class AB_Common_List extends OP.Component {   //.extend(idBase, f
 				$$(ids.list).edit(itemId);
 			},
 
-			remove: function () {
+			remove: () => {
 
 				var selectedItem = $$(ids.list).getSelectedItem(false);
 
@@ -635,16 +728,21 @@ export default class AB_Common_List extends OP.Component {   //.extend(idBase, f
 
 									itemList.remove(selectedItem.id);
 
-									// refresh items list
-									_logic.callbackNewProcess();
+									// let the calling component know about 
+									// the deletion:
+									this.emit("deleted", selectedItem);
 
 									// clear object workspace
-									_logic.callbacks.onChange(null);
+									this.emit("selectd", null);
 								});
 
 						}
 					}
 				})
+			},
+
+			select: (id)=>{
+				$$(ids.list).select(id);
 			},
 
 			callbackProcessEditorMenu: function (action) {
@@ -706,6 +804,7 @@ export default class AB_Common_List extends OP.Component {   //.extend(idBase, f
 		this.busy = _logic.listBusy;
 		this.ready = _logic.listReady;
 		this.count = _logic.listCount;
+		this.select = _logic.select;
 
 	}
 

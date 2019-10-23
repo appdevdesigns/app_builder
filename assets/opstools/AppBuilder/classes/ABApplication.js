@@ -141,6 +141,19 @@ export default class ABApplication extends ABApplicationBase {
 		)
 	}
 
+	/**
+	 * @function allCurrentApplications
+	 * return the current list of applications
+	 *
+	 * @return {Promise} resolved with _AllApplications {webix.datacollection}
+	 */
+	static allCurrentApplications() {
+		return Promise.resolve()
+			.then(()=>{
+				return _AllApplications;
+			})
+	}
+
 
 	/**
 	 * @function get
@@ -1349,7 +1362,7 @@ export default class ABApplication extends ABApplicationBase {
 	 * create a new Process tied to this Application.
 	 * and update our references to point to this process.
 	 *
-	 * @return {ABMobileApp}
+	 * @return {Promise}  resolved with an {ABProcess}
 	 */
 	processCreate(json) {
 		var newProcess = new ABProcess(json, this);
@@ -1358,9 +1371,26 @@ export default class ABApplication extends ABApplicationBase {
 				this.processIDs.push(newProcess.id);
 				this._processes.push(newProcess);
 				return this.save();
+			}).then(()=>{
+				return newProcess;
 			})
 	}
 
+	/**
+	 * @method processRemove()
+	 *
+	 * update our references to no longer point to this process.
+	 *
+	 * NOTE: it doesn't delete the process. Just excludes it from our list.
+	 *
+	 * @return {Promise}  resolved with an {}
+	 */
+	processRemove(Process) {
+		// remove references to the Process:
+		this.processIDs = this.processIDs.filter((pid)=>{ return pid != Process.id; });
+		this._processes = this._processes.filter((p)=>{ return p.id != Process.id;});
+		return this.save();
+	}
 
 }
 

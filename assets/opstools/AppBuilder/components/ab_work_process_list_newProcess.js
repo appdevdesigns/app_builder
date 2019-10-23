@@ -86,7 +86,7 @@ export default class ab_work_process_list_newProcess extends OP.Component {   //
         this.init = ( options ) => {
             // this is a popup, so create our UI here:
             webix.ui(this.ui);
-            webix.extend($$(ids.form), webix.ProgressBar);
+            webix.extend($$(ids.component), webix.ProgressBar);
 
             this.hide();
         }

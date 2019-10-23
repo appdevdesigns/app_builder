@@ -151,7 +151,7 @@ export default class ABCommonPopupEditMenu extends OP.Component {
 			 * @function onItemClick
 			 * process which item in our popup was selected.
 			 */
-			onItemClick: function (itemNode) {
+			onItemClick: (itemNode) => {
 
 				// hide our popup before we trigger any other possible UI animation: (like .edit)
 				// NOTE: if the UI is animating another component, and we do .hide()
@@ -168,7 +168,8 @@ export default class ABCommonPopupEditMenu extends OP.Component {
 				var label = itemNode.textContent.trim();
 				var option = _menuOptions.filter((mo)=>{ return mo.label == label;})[0];
 				if (option) {
-					this.callbacks.onClick(option.command);
+					this._logic.callbacks.onClick(option.command);
+					this.emit("click", option.command);
 				}
 
 				this.hide();
@@ -192,6 +193,7 @@ export default class ABCommonPopupEditMenu extends OP.Component {
 		// external interface:
 		this.menuOptions = _logic.menuOptions;
 		this.show = _logic.show;
+		this.hide = _logic.hide;
 	}
 
 }

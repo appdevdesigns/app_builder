@@ -30,8 +30,10 @@ module.exports =  class ABMLClassCore {
 	 * called during the .fromValues() work chain.  Should be called
 	 * AFTER all the current data is already populated.  
 	 */
-	fromValues() {
+	fromValues(attributes) {
 
+		this.translations = attributes.translations;
+		
 		// multilingual fields: label, description
 		this.translate();
 

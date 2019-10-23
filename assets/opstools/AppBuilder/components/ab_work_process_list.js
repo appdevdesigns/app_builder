@@ -64,8 +64,25 @@ export default class AB_Work_Process_List extends OP.Component {   //.extend(idB
     		});
 
     		ListComponent.on("exclude", (process)=>{
-    			this._logic.exclude(process);
+    			this._logic.exclude(process)
     		});
+
+    		ListComponent.on("copied", (data)=>{
+    			this._logic.copy(data)
+    		});
+
+
+    		// ListComponent.on("menu", (data)=>{
+    		// 	console.log(data);
+    		// 	switch (data.command) {
+    		// 		case "exclude":
+    		// 			this._logic.exclude(process);
+    		// 			break;
+
+    		// 		case "copy":
+    		// 			break;
+    		// 	}
+    		// })
 
 
     		//
@@ -81,11 +98,12 @@ export default class AB_Work_Process_List extends OP.Component {   //.extend(idB
 
 				AddForm.busy();
 				CurrentApplication.processCreate(values)
-				.then(()=>{
+				.then((newProcess)=>{
 					ListComponent.dataLoad(CurrentApplication.processes());
 					AddForm.ready();
 					AddForm.clear();
     				AddForm.hide();
+    				ListComponent.select(newProcess.id);
 				})
 				.catch((err)=>{
 console.error(err);
@@ -166,19 +184,43 @@ console.log(".clickNewProcess(): show popup here!  SelectNew:"+selectNew);
 
 			},
 
-			exclude: function(process) {
+			/*
+			 * @function copy
+			 * the list component notified us of a copy action and has
+			 * given us the new data for the copied item.
+			 * 
+			 * now our job is to create a new instance of that Item and
+			 * tell the list to display it
+			 */
+			copy: function(data) {
 
 				ListComponent.busy();
 
-				CurrentApplication.processExclude(process.id)
-					.then(() => {
-
+				CurrentApplication.processCreate(data.item)
+					.then((newProcess) => {
+						ListComponent.ready();
 						ListComponent.dataLoad(CurrentApplication.processes());
+						ListComponent.select(newProcess.id);
+					});
 
+			},
+
+			/*
+			 * @function exclude
+			 * the list component notified us of an exclude action and which
+			 * item was chosen.
+			 * 
+			 * perform the removal and update the UI.
+			 */
+			exclude: function(process) {
+
+				ListComponent.busy();
+				CurrentApplication.processRemove(process)
+					.then(() => {
+						ListComponent.dataLoad(CurrentApplication.processes());
 						// clear object workspace
 						this.emit("selected", null);
 					});
-
 			},
 
 		}

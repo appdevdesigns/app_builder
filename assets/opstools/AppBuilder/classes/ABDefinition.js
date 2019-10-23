@@ -56,6 +56,26 @@ module.exports = class ABDefinition extends ABDefinitionCore {
 				return __AllDefinitions[serverDef.id] = serverDef;
 			});
 	}
+
+
+
+	/**
+	 * @method destroy()
+	 *
+	 * remove a given ABDefinition
+	 *
+	 * @param {obj} data   the values of the ABDefinition obj
+	 * @return {Promise}   the updated value of the ABDefinition entry from the server.
+	 */
+	static destroy(id) {
+
+		return OP.Comm.Service.delete({
+				url: `/app_builder/abdefinition/${id}`
+			})
+			.then((serverDef)=>{
+				delete __AllDefinitions[id];
+			});
+	}
 	  
 	/**
 	 * @method loadAll()
@@ -162,11 +182,7 @@ module.exports = class ABDefinition extends ABDefinitionCore {
 	 * @return {Promise}
 	 */
 	destroy () {
-		return new Promise(
-			(resolve, reject) => {
-debugger;
-			}
-		);
+		return ABDefinition.destroy(this.id);
 	}
 
 
