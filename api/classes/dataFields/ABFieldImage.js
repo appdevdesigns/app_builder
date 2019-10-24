@@ -94,6 +94,18 @@ class ABFieldImage extends ABField {
 		return errors;
 	}
 
+	/**
+	 * @method isValidParams
+	 * Parse through the given parameters and return an error if this field's
+	 * data seems invalid.
+	 * @param {obj} allParameters  a key=>value hash of the inputs to parse.
+	 * @return {array} 
+	 */
+	isValidData(allParameters) {
+		var errors = [];
+
+		return errors;
+	}
 
 	/**
 	 * @method toObj()
