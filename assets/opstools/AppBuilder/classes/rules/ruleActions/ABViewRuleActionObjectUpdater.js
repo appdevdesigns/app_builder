@@ -600,7 +600,7 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 					datasources = datasources.filter((dc) => { return dc.datasource.id == connectedObject.id; });
 
 					var dataViewQueries = this.currentForm.application.dataviews(dv => {
-						return dv.sourceType == "query" && dv.datasource.canFilterObject(connectedObject)
+						return dv.sourceType == "query" && dv.datasource && dv.datasource.canFilterObject(connectedObject)
 						// return dc.datasource.id == connectedObject.id;
 					});
 
