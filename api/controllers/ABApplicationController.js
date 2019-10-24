@@ -399,7 +399,8 @@ module.exports = {
                         // add new page/view to the parent
                         if (parent && parent.push) {
 
-                            parent.push(new ABView(vals, data.appClass));
+                            updateItem = new ABView(vals, data.appClass);
+                            parent.push(updateItem);
 
                         }
                     }
