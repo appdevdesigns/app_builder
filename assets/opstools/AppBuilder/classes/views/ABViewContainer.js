@@ -364,7 +364,7 @@ export default class ABViewContainer extends ABView {
 					var Dashboard = $$(ids.component);
 	
 					// ignore in "preview" mode
-					if (Dashboard == null || Dashboard.config.view != "dashboard") return;
+					// if (Dashboard == null || Dashboard.config.view != "dashboard") return;
 	
 					var viewState = Dashboard.serialize();
 	
@@ -513,7 +513,12 @@ export default class ABViewContainer extends ABView {
 				min: 1,
 				label: "Column " + newVal + " Gravity",
 				labelWidth: App.config.labelWidthXLarge,
-				css: "gravity_counter"
+				css: "gravity_counter",
+				on: {
+					onChange: () => {
+						logic.onChange();
+					}
+				}
 			}, pos);
 		}
 
@@ -573,7 +578,12 @@ export default class ABViewContainer extends ABView {
 				label: "Column " + step + " Gravity",
 				labelWidth: App.config.labelWidthXLarge,
 				css: "gravity_counter",
-				value: (view.settings.gravity && view.settings.gravity[step - 1]) ? view.settings.gravity[step - 1] : ABPropertyComponentDefaults.gravity
+				value: (view.settings.gravity && view.settings.gravity[step - 1]) ? view.settings.gravity[step - 1] : ABPropertyComponentDefaults.gravity,
+				on: {
+					onChange: () => {
+						logic.onChange();
+					}
+				}
 			}, pos);
 		}
 
@@ -604,7 +614,7 @@ export default class ABViewContainer extends ABView {
 		view.settings.columns = $$(ids.columns).getValue();
 
 		var gravity = [];
-		// var gravityCounters = $$(ids.gravity).getParentView().queryView({ css: "gravity_counter" }, "all").map(counter => gravity.push($$(counter).getValue()));
+		$$(ids.gravity).getParentView().queryView({ css: "gravity_counter" }, "all").map(counter => gravity.push($$(counter).getValue()));
 		view.settings.gravity = gravity;
 
 	}
