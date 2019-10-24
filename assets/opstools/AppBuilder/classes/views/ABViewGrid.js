@@ -25,7 +25,6 @@ function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
-
 var ABViewGridPropertyComponentDefaults = {
 	label:'',	// label is required and you can add more if the component needs them
 	// format:0  	// 0 - normal, 1 - title, 2 - description
@@ -51,6 +50,8 @@ var ABViewGridPropertyComponentDefaults = {
 		// filterConditions:[], // array of filters to apply to the data table
 		frozenColumnID:"", // id of column you want to stop freezing
 		hiddenFields:[], // array of [ids] to add hidden:true to
+		summaryColumns:[],
+		countColumns:[]
 	},
 	height: 0,
 	gridFilter: {
@@ -355,6 +356,7 @@ export default class ABViewGrid extends ABViewWidget  {
 
 			// trigger a save()
 			this.propertyEditorSave(ids, currView);
+
 		}
 
 		_logic.gridFilterCancel = () => {
@@ -680,7 +682,7 @@ export default class ABViewGrid extends ABViewWidget  {
 								},
 								{
 									view: view,
-									id: ids.gridFilterMenuButton,
+									name: "buttonFilterData",
 									label: L("ab.component.label.settings", "*Settings"),
 									icon: "fa fa-gear",
 									type: "icon",
@@ -921,9 +923,11 @@ export default class ABViewGrid extends ABViewWidget  {
 
 		view.settings.gridFilter = PopupFilterProperty.getSettings();
 
-		view.settings.objectWorkspace = view.objectWorkspace || {};
+		view.settings.objectWorkspace = view.settings.objectWorkspace || {};
 		view.settings.objectWorkspace.hiddenFields = PopupHideFieldComponent.getValue();
 		view.settings.objectWorkspace.frozenColumnID = PopupFrozenColumnsComponent.getValue();
+		// view.settings.objectWorkspace.summaryColumns = PopupSummaryColumnsComponent.getValue();
+		// view.settings.objectWorkspace.countColumns = PopupCountColumnsComponent.getValue();
 
 		// link pages
 		let linkSettings = this.linkPageComponent.getSettings();
@@ -1674,10 +1678,10 @@ export default class ABViewGrid extends ABViewWidget  {
 		PopupFilterProperty.setSettings(view.settings.gridFilter);
 
 		PopupSummaryColumnsComponent.objectLoad(object, view);
-		PopupSummaryColumnsComponent.setValue(view.settings.objectWorkspace.summaryColumns);
+		PopupSummaryColumnsComponent.setValue(view.settings.objectWorkspace.summaryColumns || []);
 
 		PopupCountColumnsComponent.objectLoad(object, view);
-		PopupCountColumnsComponent.setValue(view.settings.objectWorkspace.countColumns);
+		PopupCountColumnsComponent.setValue(view.settings.objectWorkspace.countColumns || []);
 	// }
 	}
 
@@ -1694,6 +1698,15 @@ export default class ABViewGrid extends ABViewWidget  {
 			$$(ids.buttonFieldsVisible).refresh();
 		}
 
+		if (view.settings.gridFilter && 
+			view.settings.gridFilter.filterOption) {
+			$$(ids.buttonFilterData).define('badge', "Y");
+			$$(ids.buttonFilterData).refresh();
+		}
+		else {
+			$$(ids.buttonFilterData).define('badge', 0);
+			$$(ids.buttonFilterData).refresh();
+		}
 
 		if (view.settings.objectWorkspace &&
 			view.settings.objectWorkspace.frozenColumnID) {
@@ -1786,7 +1799,7 @@ export default class ABViewGrid extends ABViewWidget  {
 
 	removeField(field, cb) {
 		
-		var shouldSave = false;
+		let shouldSave = false;
 
 		// check to see if there is a frozenColumnID and if it matches the deleted field
 		if (this.settings.objectWorkspace.frozenColumnID && this.settings.objectWorkspace.frozenColumnID == field.columnName) {
@@ -1795,11 +1808,11 @@ export default class ABViewGrid extends ABViewWidget  {
 			// flag the object to be saved later
 			shouldSave = true;
 		}
-		
+
 		// check to see if there are hidden fields
 		if (this.settings.objectWorkspace.hiddenFields && this.settings.objectWorkspace.hiddenFields.length) {
 			// find if the deleted field is in the array
-			var index = this.settings.objectWorkspace.hiddenFields.indexOf(field.columnName);
+			let index = this.settings.objectWorkspace.hiddenFields.indexOf(field.columnName);
 			// if so splice it out of the array
 			if (index > -1) {
 				this.settings.objectWorkspace.hiddenFields.splice(index, 1);
@@ -1807,7 +1820,30 @@ export default class ABViewGrid extends ABViewWidget  {
 				shouldSave = true;
 			}
 		}
-		
+
+		// check to see if there are hidden fields
+		if (this.settings.objectWorkspace.summaryColumns && this.settings.objectWorkspace.summaryColumns.length) {
+			// find if the deleted field is in the array
+			let index = this.settings.objectWorkspace.summaryColumns.indexOf(field.id);
+			// if so splice it out of the array
+			if (index > -1) {
+				this.settings.objectWorkspace.summaryColumns.splice(index, 1);
+				// flag the object to be saved later
+				shouldSave = true;
+			}
+		}
+
+		// check to see if there are hidden fields
+		if (this.settings.objectWorkspace.countColumns && this.settings.objectWorkspace.countColumns.length) {
+			// find if the deleted field is in the array
+			let index = this.settings.objectWorkspace.countColumns.indexOf(field.id);
+			// if so splice it out of the array
+			if (index > -1) {
+				this.settings.objectWorkspace.countColumns.splice(index, 1);
+				// flag the object to be saved later
+				shouldSave = true;
+			}
+		}
 		// if settings were changed call the callback
 	
 		cb(null, shouldSave);
