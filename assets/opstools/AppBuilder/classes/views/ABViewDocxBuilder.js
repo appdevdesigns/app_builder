@@ -212,10 +212,11 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 					rows: [
 						{
 							name: 'dataview',
-							view: 'richselect',
+							// view: 'richselect',
+							view: 'multicombo',
 							label: L('ab.components.docxBuilder.dataSource', "*Data Source"),
 							labelWidth: App.config.labelWidthLarge
-						},
+						}
 					]
 				}
 			},
@@ -348,10 +349,6 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 				};
 			});
 
-		dvOptions.unshift({
-			id: null,
-			value: '[Select]'
-		});
 		$DcSelector.define('options', dvOptions);
 		$DcSelector.define('value', selectedDvId);
 		$DcSelector.refresh();
@@ -471,11 +468,25 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 
 			},
 
+			onShow: (viewId) => {
+
+				this.dataviews.forEach(dv => {
+
+					if (dv &&
+						dv.dataStatus == dv.dataStatusFlag.notInitial) {
+
+						// load data when a widget is showing
+						dv.loadData();
+					}
+
+				});
+	
+			},
+
 			renderFile: () => {
 
 				_logic.busy();
 
-				let currCursor = {};
 				let reportValues = {};
 				let images = {};
 
@@ -483,140 +494,164 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 					// Get current cursor
 					.then(() => {
 
-						let dv = this.dataview;
-						if (dv) {
+						let dataviews = this.dataviews;
+						let isDvLabelAdded = dataviews.length > 1;
+
+						dataviews.forEach(dv => {
+
+							if (dv == null) return;
+
+							let obj = dv.datasource;
+							if (obj == null) return;
+	
+							let dvValues = [];
+							let dataList = [];
+
 							let dcCursor = dv.getCursor();
 							let treeCursor = dv.getCursor(true);
-
+	
 							// merge cursor to support dc and tree cursor in the report
-							currCursor = _.merge(currCursor, dcCursor, treeCursor);
-
+							if (dcCursor)
+								dataList.push(_.merge({}, dcCursor, treeCursor));
+							else
+								dataList = dv.getData();
+	
 							// update property names to column labels to match format names in docx file
-							if (currCursor) {
+							let mlFields = obj.multilingualFields();
+	
+							let setReportValues = (baseData, targetData, field, fieldLabels = []) => {
+	
+								let val = null;
 
-								let obj = dv.datasource;
-								if (obj) {
-
-									let mlFields = obj.multilingualFields();
-
-									let setReportValues = (baseData, targetData, field, fieldLabels = []) => {
-
-										let val = null;
-
-										// Translate multilinguage fields
-										if (mlFields.length) {
-											let transFields = (mlFields || []).filter(fieldName => baseData[fieldName] != null);
-											OP.Multilingual.translate(baseData, baseData, transFields, this.languageCode);
-										}
-
-										// Pull value
-										if (field instanceof ABFieldConnect) {
-
-											// If field is connected field, then 
-											// {
-											//		fieldName: {Object} or [Array]
-											//		fieldName_label: "Value1, Value2"
-											// }
-											val = baseData[field.columnName];
-											// TODO
-											// data[label + '_label'] = field.format(baseData);
-										}
-										else {
-											val = field.format(baseData, {
-												languageCode: this.languageCode
-											});
-										}
-
-										// Set value to report with every languages of label
-										fieldLabels.forEach(label => {
-
-											if (val) 
-												targetData[label] = val;
-											else if (!targetData[label])
-												targetData[label] = '';
-
-										});
-
-										// normalize child items
-										if (baseData.data &&
-											baseData.data.length) {
-
-											targetData.data = targetData.data || [];
-											(baseData.data || []).forEach((childItem, index) => {
-
-												// add new data item
-												if (targetData.data[index] == null)
-													targetData.data[index] = {};
-
-												let childTargetVal = targetData.data[index];
-
-												setReportValues(childItem, childTargetVal, field, fieldLabels);
-
-											});
-										}
-
-									};
-
-									// For support label of columns every languages
-									obj.fields().forEach(f => {
-
-										let fieldLabels = [];
-
-										// Query Objects
-										if (obj instanceof ABObjectQuery) {
-
-											if (typeof f.object.translations == 'string')
-												f.object.translations = JSON.parse(f.object.translations);
-
-											if (typeof f.translations == 'string')
-												f.translations = JSON.parse(f.translations);
-
-											(f.object.translations || []).forEach(objTran => {
-
-												let fieldTran = (f.translations || [])
-													.filter(fieldTran => fieldTran.language_code == objTran.language_code)[0];
-
-												if (!fieldTran) return;
-
-												let objectLabel = objTran.label;
-												let fieldLabel = fieldTran.label;
-
-												// Replace alias with label of object
-												fieldLabels.push(`${objectLabel}.${fieldLabel}`);
-
-											});
-										}
-										// Normal Objects
-										else {
-
-											if (typeof f.translations == 'string')
-												f.translations = JSON.parse(f.translations);
-
-											f.translations.forEach(tran => {
-												fieldLabels.push(tran.label);
-											});
-										}
-
-										setReportValues(currCursor, reportValues, f, fieldLabels);
+								targetData.id = baseData.id;
+	
+								// Translate multilinguage fields
+								if (mlFields.length) {
+									let transFields = (mlFields || []).filter(fieldName => baseData[fieldName] != null);
+									OP.Multilingual.translate(baseData, baseData, transFields, this.languageCode);
+								}
+	
+								// Pull value
+								if (field instanceof ABFieldConnect) {
+	
+									// If field is connected field, then 
+									// {
+									//		fieldName: {Object} or [Array]
+									//		fieldName_label: "Value1, Value2"
+									// }
+									val = baseData[field.columnName];
+									// TODO
+									// data[label + '_label'] = field.format(baseData);
+								}
+								else {
+									val = field.format(baseData, {
+										languageCode: this.languageCode
 									});
+								}
+	
+								// Set value to report with every languages of label
+								fieldLabels.forEach(label => {
+	
+									if (val) 
+										targetData[label] = val;
+									else if (!targetData[label])
+										targetData[label] = '';
+	
+								});
+	
+								// normalize child items
+								if (baseData.data &&
+									baseData.data.length) {
+	
+									targetData.data = targetData.data || [];
+									(baseData.data || []).forEach((childItem, index) => {
 
+										// add new data item
+										if (targetData.data[index] == null)
+											targetData.data[index] = {};
+
+										setReportValues(childItem, targetData.data[index], field, fieldLabels);
+	
+									});
 								}
 
-							}
-						}
+							};
+	
+							dataList.forEach(data => {
 
-console.log("DOCX data: ", reportValues, currCursor);
+								let resultData = {};
+
+								// For support label of columns every languages
+								obj.fields().forEach(f => {
+
+									let fieldLabels = [];
+
+									// Query Objects
+									if (obj instanceof ABObjectQuery) {
+
+										if (typeof f.object.translations == 'string')
+											f.object.translations = JSON.parse(f.object.translations);
+
+										if (typeof f.translations == 'string')
+											f.translations = JSON.parse(f.translations);
+
+										(f.object.translations || []).forEach(objTran => {
+
+											let fieldTran = (f.translations || [])
+												.filter(fieldTran => fieldTran.language_code == objTran.language_code)[0];
+
+											if (!fieldTran) return;
+
+											let objectLabel = objTran.label;
+											let fieldLabel = fieldTran.label;
+
+											// Replace alias with label of object
+											fieldLabels.push(`${objectLabel}.${fieldLabel}`);
+
+										});
+									}
+									// Normal Objects
+									else {
+
+										if (typeof f.translations == 'string')
+											f.translations = JSON.parse(f.translations);
+
+										f.translations.forEach(tran => {
+											fieldLabels.push(tran.label);
+										});
+									}
+
+									setReportValues(data, resultData, f, fieldLabels);
+								});
+
+								dvValues.push(resultData);
+
+							});
+
+
+							// If data sources have more than 1, then add label of data source
+							if (isDvLabelAdded)
+								reportValues[dv.label] = (dvValues.length > 1 ? dvValues : dvValues[0]);
+							else 
+								reportValues = (dvValues.length > 1 ? dvValues : dvValues[0]);
+
+						});
 
 						return Promise.resolve();
 					})
 					// Download images
 					.then(() => {
 
+console.log("DOCX data: ", reportValues);
+
 						let dv = this.dataview;
 						if (!dv) return Promise.resolve();
 
 						let obj = dv.datasource;
 						if (!obj) return Promise.resolve();
+
+						let currCursor = dv.getCursor();
+						if (!currCursor) return Promise.resolve();
 
 						let tasks = [];
 
@@ -775,6 +810,25 @@ console.log("DOCX data: ", reportValues, currCursor);
 														});
 
 													}
+													// NOTE: AppBuilder custom filter of another data source
+													else if (tag.indexOf('$') == 0) {
+
+														let props = tag.replace('$', '').split('|');
+														let propSource = props[0].trim();
+														let propFilter = props[1].trim();
+
+														if (!propSource || !propFilter)
+															return "";
+
+														let sourceVals = reportValues[propSource];
+														if (sourceVals && !Array.isArray(sourceVals))
+															sourceVals = [sourceVals];
+
+														return (sourceVals || []).filter(function(item) {
+															return item.id == scope[propFilter];
+														});
+
+													}
 													else if (tag === '.') {
 														return scope;
 													}
@@ -826,7 +880,7 @@ console.log("DOCX data: ", reportValues, currCursor);
 			ui: _ui,
 			init: _init,
 			logic: _logic,
-			onShow: baseCom.onShow
+			onShow: _logic.onShow
 		}
 
 	}
@@ -845,6 +899,17 @@ console.log("DOCX data: ", reportValues, currCursor);
 
 	get languageCode() {
 		return this.settings.language || ABViewDocxBuilderPropertyComponentDefaults.language;
+	}
+
+	get dataviews() {
+
+		let dataviewID = (this.settings || {}).dataviewID;
+		if (!dataviewID) return null;
+
+		let dvList = dataviewID.split(',') || [];
+
+		return this.application.dataviews(dv => dvList.indexOf(dv.id) > -1) || [];
+
 	}
 
 }
