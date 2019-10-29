@@ -766,10 +766,24 @@ module.exports = {
                         if (!v) return;
 
                         // add data view id
-                        if (v.settings &&
-                            v.settings.dataviewID &&
-                            dataviewIds.indexOf(v.settings.dataviewID) < 0) {
-                            dataviewIds.push(v.settings.dataviewID);
+                        let dvIDS = (v.settings && v.settings.dataviewID ? v.settings.dataviewID : "");
+                        if (dvIDS) {
+
+                            // multi dv ids
+                            if (dvIDS.indexOf(',') > -1) {
+                                dvIDS.split(',').forEach(dvId => {
+                                    if (dataviewIds.indexOf(dvId) < 0) {
+                                        dataviewIds.push(dvId);
+                                    }
+                                });
+                            }
+                            // single dv id
+                            else {
+                                if (dataviewIds.indexOf(dvIDS) < 0) {
+                                    dataviewIds.push(dvIDS);
+                                }
+                            }
+
                         }
 
                         // add id of link objects who are used in detail and form widgets
