@@ -825,7 +825,12 @@ console.log("DOCX data: ", reportValues);
 															sourceVals = [sourceVals];
 
 														return (sourceVals || []).filter(function(item) {
-															return item.id == scope[propFilter];
+
+															let comparer = scope[propFilter];
+															if (Array.isArray(comparer))
+																return comparer.filter(c => (c.id || c) == item.id).length > 0;
+															else
+																return item.id == comparer;
 														});
 
 													}

@@ -1869,6 +1869,13 @@ export default class ABDataview extends EventEmitter {
 					// Pull value from alias
 					if (propName.indexOf(`${alias}.`) == 0) {
 						treeNode[propName] = row[propName];
+
+						// Change property name of connected field
+						if (propName.indexOf("__relation") > -1) {
+							let connectedLabel = propName.replace("__relation", "");
+							if (!treeNode[connectedLabel])
+								treeNode[connectedLabel] = row[propName];
+						}
 					}
 
 				});
