@@ -904,7 +904,7 @@ console.log("DOCX data: ", reportValues);
 	get dataviews() {
 
 		let dataviewID = (this.settings || {}).dataviewID;
-		if (!dataviewID) return null;
+		if (!dataviewID) return [];
 
 		let dvList = dataviewID.split(',') || [];
 
