@@ -631,10 +631,14 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 
 
 							// If data sources have more than 1, then add label of data source
-							if (isDvLabelAdded)
-								reportValues[dv.label] = (dvValues.length > 1 ? dvValues : dvValues[0]);
+							let dataviewData = (dvValues.length > 1 ? dvValues : dvValues[0]);
+							if (isDvLabelAdded) {
+								(dv.translations || []).forEach(tran => {
+									reportValues[tran.label] = dataviewData;
+								});
+							}
 							else 
-								reportValues = (dvValues.length > 1 ? dvValues : dvValues[0]);
+								reportValues = dataviewData;
 
 						});
 
