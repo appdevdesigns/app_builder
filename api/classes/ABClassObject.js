@@ -234,8 +234,8 @@ class ABClassObject extends ABObjectBase {
 
 	modelName() {
 
-		// return this.id.
-		// 	replace(/[^a-zA-Z0-9]/g, ""); // remove special characters to allow model name to be class name
+		return this.id.
+			replace(/[^a-zA-Z]/g, ""); // remove special characters and numbers to allow model name to be class name
 
 		// let appName = this.application.name,
 		// 	tableName = this.dbTableName(true);
@@ -531,7 +531,12 @@ class ABClassObject extends ABObjectBase {
 				this.populateFindConditions(query, options, userData)
 			}
 
-sails.log.debug('ABClassObject.queryFind - SQL:', query.toString() );
+			try {
+				sails.log.debug('ABClassObject.queryFind - SQL:', query.toString() );
+			}
+			catch (e) {
+				// sails.log.debug('ABClassObject.queryFind - SQL:', query.debug() );
+			}
 
             resolve(query);
         })
@@ -588,7 +593,12 @@ sails.log.debug('ABClassObject.queryFind - SQL:', query.toString() );
 				.countDistinct('{field} as count'.replace("{field}", pkField))
 				.whereNotNull(pkField).first();
 
-sails.log.debug('ABClassObject.queryCount - SQL:', query.toString() );
+		try {
+			sails.log.debug('ABClassObject.queryCount - SQL:', query.toString() );
+		}
+		catch(e) {
+			// sails.log.debug('ABClassObject.queryFind - SQL:', query.debug() );
+		}
 
 		return query;
 	}
@@ -1256,3 +1266,4 @@ sails.log.debug('ABClassObject.queryCount - SQL:', query.toString() );
 }
 
 module.exports = ABClassObject;
+
