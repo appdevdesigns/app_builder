@@ -1240,7 +1240,7 @@ debugger;
             .then(() => {
                 // If we are linked to another datacollection then wait for it
                 let linkDc = this.dataviewLink;
-                if (!linkDc) return;
+                if (!linkDc) return Promise.resolve();
 
                 return waitForDataCollectionToInitialize(linkDc);
             })

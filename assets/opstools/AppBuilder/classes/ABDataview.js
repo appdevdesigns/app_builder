@@ -1,7 +1,7 @@
 
 import ABObjectQuery from "./ABObjectQuery";
 
-const ABDataViewCore = require("./ABDataViewCore");
+const ABDataViewCore = require("./ABDataviewCore");
 
 
 export default class ABDataview extends ABDataViewCore {

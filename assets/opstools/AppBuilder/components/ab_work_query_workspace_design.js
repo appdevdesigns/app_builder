@@ -880,13 +880,12 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 				});
 				CurrentDataview.datasource = CurrentQuery;
 
+				// Bind datatable view to data view
+				CurrentDataview.unbind(DataTable);
+				CurrentDataview.bind(DataTable);
+
 				// set data:
 				CurrentDataview.loadData(0, 100, () => {
-
-					// Bind datatable view to data view
-					CurrentDataview.unbind(DataTable);
-					CurrentDataview.bind(DataTable);
-
 				});
 				// CurrentQuery.model().findAll({ limit: 20, where: CurrentQuery.workspaceViews.getCurrentView().filterConditions, sort: CurrentQuery.workspaceViews.getCurrentView().sortFields })
 				// 	.then((response) => {
