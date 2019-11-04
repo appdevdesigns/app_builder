@@ -2,7 +2,7 @@ var path = require('path');
 
 var ABViewBase = require(path.join(__dirname, "..", "..", "assets", "opstools", "AppBuilder", "classes", "views", "ABViewBase.js"));
 
-module.exports = class ABViewPage extends ABViewBase {
+module.exports = class ABView extends ABViewBase {
 
 	constructor(attributes, application, parent) {
 		super(attributes, application, parent);
@@ -22,14 +22,22 @@ module.exports = class ABViewPage extends ABViewBase {
 		super.fromValues(values);
 
 		// now properly handle our sub pages.
-		var pages = [];
+		let pages = [];
 		(values.pages || []).forEach((child) => {
-			pages.push(this.pageNew(child));
+			pages.push(this.viewNew(child));
 		})
 		this._pages = pages;
 
 
-		this.views = values.views || [];
+		// now properly handle our sub views.
+		let views = [];
+		(values.views || []).forEach(v => {
+			views.push(this.viewNew(v));
+		});
+		this._views = views;
+
+		if (values.position)
+			this.position = values.position;
 
 	}
 
@@ -37,17 +45,17 @@ module.exports = class ABViewPage extends ABViewBase {
 	/**
 	 * @method toObj()
 	 *
-	 * properly compile the current state of this ABViewPage instance
+	 * properly compile the current state of this ABView instance
 	 * into the values needed for saving to the DB.
 	 *
 	 * @return {json}
 	 */
 	toObj() {
 
-		var result = super.toObj();
+		let result = super.toObj();
 
 		// compile our pages
-		var pages = [];
+		let pages = [];
 		if (this._pages && this._pages.forEach) {
 			this._pages.forEach((page) => {
 				pages.push(page.toObj());
@@ -55,19 +63,28 @@ module.exports = class ABViewPage extends ABViewBase {
 		}
 		result.pages = pages;
 
-		result.views = this.views;
+		let views = [];
+		if (this._views && this._views.forEach) {
+			this._views.forEach(v => {
+				views.push(v.toObj());
+			});
+		}
+		result.views = views;
+
+		if (this.position)
+			result.position = this.position;
 
 		return result;
 	}
 
 	/**
-	 * @method pageNew()
+	 * @method viewNew()
 	 *
 	 *
-	 * @return {ABViewPage}
+	 * @return {ABView}
 	 */
-	pageNew(values) {
-		return new ABViewPage(values, this.application, this);
+	viewNew(values) {
+		return new ABView(values, this.application, this);
 	}
 
 }

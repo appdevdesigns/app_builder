@@ -12,6 +12,22 @@ module.exports = {
 		Permissions.getUserRoles(req, true)
 			.fail(function (err) { res.AD.error(err); })
 			.then(function (result) { res.AD.success(result); });
+	},
+
+	// GET: /app_builder/user/list
+	getUserList: function (req, res) {
+
+		SiteUser.find({}, {
+			select: [
+				'username',
+				'image_id'
+			]
+		})
+			.fail(function (err) { res.AD.error(err); })
+			.then(function (result) {
+				res.AD.success(result || []);
+			});
+
 	}
 
 };

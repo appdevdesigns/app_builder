@@ -7,6 +7,7 @@
 
 import ABView from "./ABView"
 import ABPropertyComponent from "../ABPropertyComponent"
+import { basename } from "path";
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -221,7 +222,7 @@ export default class ABViewContainer extends ABView {
 			// NOTE: listen after populate views by .addView
 			if (this._onChangeId) Dashboard.detachEvent(this._onChangeId);
 			this._onChangeId = Dashboard.attachEvent("onChange", () => {
-				_logic.onChange();
+				_logic.onReorder();
 			});
 
 
@@ -276,37 +277,51 @@ export default class ABViewContainer extends ABView {
 					callback: (result) => {
 						if (result) {
 
-							let Dashboard = $$(ids.component);
+							// let Dashboard = $$(ids.component);
 
-							// remove UI of this component in template
-							var deletedElem = Dashboard.queryView({ name: id });
-							if (deletedElem) {
+							// // remove UI of this component in template
+							// var deletedElem = Dashboard.queryView({ name: id });
+							// if (deletedElem) {
 
-								// store the removed view to signal event in .onChange
-								this.__deletedView = deletedView;
+							// 	// store the removed view to signal event in .onChange
+							// 	this.__deletedView = deletedView;
 
-								// remove view
-								var remainingViews = this.views((v) => { return v.id != deletedView.id; })
-								this._views = remainingViews;
+							// 	// remove view
+							// 	var remainingViews = this.views((v) => { return v.id != deletedView.id; })
+							// 	this._views = remainingViews;
 
-								// this calls the remove REST to API server
-								Dashboard.removeView(deletedElem);
-							}
+							// 	// this calls the remove REST to API server
+							// 	Dashboard.removeView(deletedElem);
+							// }
 
-							// deletedView.destroy()
-							// 	.then(() => {
+							_logic.busy();
 
-							// // signal the current view has been deleted.
-							// deletedView.emit('destroyed', deletedView);
+							deletedView.destroy()
+								.then(() => {
 
-							_logic.showEmptyPlaceholder();
+									// signal the current view has been deleted.
+									deletedView.emit('destroyed', deletedView);
 
-							// })
-							// .catch((err) => {
-							// 	OP.Error.log('Error trying to delete selected View:', { error: err, view: deletedView })
+									let Dashboard = $$(ids.component);
 
-							// 	_logic.ready();
-							// })
+									// Update UI
+									var deletedElem = Dashboard.queryView({ name: id });
+									if (deletedElem) {
+										Dashboard.blockEvent();
+										Dashboard.removeView(deletedElem);
+										Dashboard.unblockEvent();
+									}
+
+									_logic.showEmptyPlaceholder();
+
+									_logic.ready();
+
+								})
+								.catch((err) => {
+									OP.Error.log('Error trying to delete selected View:', { error: err, view: deletedView })
+
+									_logic.ready();
+								});
 						}
 					}
 				});
@@ -340,7 +355,7 @@ export default class ABViewContainer extends ABView {
 				return false;
 			},
 
-			onChange: () => {
+			onReorder: () => {
 
 				return new Promise((resolve, reject) => {
 
@@ -349,7 +364,7 @@ export default class ABViewContainer extends ABView {
 					var Dashboard = $$(ids.component);
 	
 					// ignore in "preview" mode
-					if (Dashboard == null || Dashboard.config.view != "dashboard") return;
+					// if (Dashboard == null || Dashboard.config.view != "dashboard") return;
 	
 					var viewState = Dashboard.serialize();
 	
@@ -370,7 +385,7 @@ export default class ABViewContainer extends ABView {
 					});
 	
 					// save template layout
-					this.save()
+					this.saveReorder()
 						.catch(err => {
 	
 							OP.Error.log('Error trying to save selected View:', { error: err, view: this });
@@ -381,14 +396,14 @@ export default class ABViewContainer extends ABView {
 						})
 						.then(() => {
 	
-							// signal the current view has been deleted.
-							// this variable is stored in .viewDelete
-							if (this.__deletedView) {
-								this.__deletedView.emit('destroyed', this.__deletedView);
+							// // signal the current view has been deleted.
+							// // this variable is stored in .viewDelete
+							// if (this.__deletedView) {
+							// 	this.__deletedView.emit('destroyed', this.__deletedView);
 	
-								// clear
-								delete this.__deletedView;
-							}
+							// 	// clear
+							// 	delete this.__deletedView;
+							// }
 	
 							_logic.ready();
 
@@ -501,7 +516,7 @@ export default class ABViewContainer extends ABView {
 				css: "gravity_counter",
 				on: {
 					onChange: () => {
-						_logic.onChange();
+						logic.onChange();
 					}
 				}
 			}, pos);
@@ -599,21 +614,33 @@ export default class ABViewContainer extends ABView {
 		view.settings.columns = $$(ids.columns).getValue();
 
 		var gravity = [];
-		// var gravityCounters = $$(ids.gravity).getParentView().queryView({ css: "gravity_counter" }, "all").map(counter => gravity.push($$(counter).getValue()));
+		$$(ids.gravity).getParentView().queryView({ css: "gravity_counter" }, "all").map(counter => gravity.push($$(counter).getValue()));
 		view.settings.gravity = gravity;
 
 	}
 
 	static propertyEditorSave(ids, view) {
 
-		this.propertyEditorValues(ids, view);
+		return Promise.resolve()
+				.then(() => {
 
-		// refresh dashboard to update "position.x" and "position.y" of child views
-		view.emit('properties.updated', view);
+					this.propertyEditorValues(ids, view);
 
-		// save to server here
-		let editorComponent = view.editorComponent(this._App);
-		return editorComponent.logic.onChange();
+					// Save .settings of container
+					return view.save();
+
+				})
+				.then(() => {
+
+					// signal the current view has been updated.
+					view.emit('properties.updated', view);
+
+					// Save reorder of subviews
+					let editorComponent = view.editorComponent(this._App);
+					return editorComponent.logic.onReorder();
+	
+				});
+
 
 	}
 
@@ -652,9 +679,11 @@ export default class ABViewContainer extends ABView {
 
 				views.forEach((v) => {
 
-					var component = v.component(App, idPrefix);
-
+					let component = this.viewComponents[v.id];
+					// if (!component) {
+					component = v.component(App, idPrefix);
 					this.viewComponents[v.id] = component;
+					// }
 
 					// if key == "form" or "button" register the callbacks to the parent
 					// NOTE this will only work on the last form of a page!
@@ -740,6 +769,10 @@ export default class ABViewContainer extends ABView {
 			// attach all the .UI views:
 			for (var key in this.viewComponents) {
 
+				// skip when the view is removed.
+				if (this.views(v => v.id == key)[0] == null)
+					return;
+
 				var component = this.viewComponents[key];
 
 				// Initial component along with options in case there are callbacks we need to listen for
@@ -799,6 +832,12 @@ export default class ABViewContainer extends ABView {
 				return a.position.y - b.position.y;
 
 		});
+
+	}
+
+	saveReorder() {
+
+		return this.application.viewReorder(this);
 
 	}
 

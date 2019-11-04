@@ -4,7 +4,7 @@ var ABApplicationBase = require(path.join(__dirname,  "..", "..", "assets", "ops
 
 var ABClassObject       = require(path.join(__dirname, 'ABClassObject'));
 var ABClassQuery  = require(path.join(__dirname, 'ABClassQuery'));
-var ABViewPage     = require(path.join(__dirname, 'ABViewPage'));
+var ABView     = require(path.join(__dirname, 'ABView'));
 var ABObjectExternal = require(path.join(__dirname, 'ABObjectExternal'));
 var ABObjectImport = require(path.join(__dirname, 'ABObjectImport'));
 var ABMobileApp    = require(path.join(__dirname, 'ABMobileApp'));
@@ -56,13 +56,13 @@ module.exports =  class ABClassApplication extends ABApplicationBase {
 
 
 	/**
-	 * @method pageNew()
+	 * @method viewNew()
 	 *
 	 *
-	 * @return {ABViewPage}
+	 * @return {ABView}
 	 */
 	pageNew( values ) {
-		return new ABViewPage(values, this);
+		return new ABView(values, this);
 	}
 
 

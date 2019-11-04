@@ -126,4 +126,40 @@ module.exports = class ABViewBase extends EventEmitter {
 		return this.urlPointer() + '/_views/';
 	}
 
+	isRoot() {
+		return this.parent == null;
+	}
+
+	pageParent(filterFn) {
+
+		if (filterFn == null) filterFn = () => true;
+
+		var parentPage = this.parent;
+
+		// if current page is the root page, then return itself.
+		if (this.isRoot() &&
+			(this.key == 'page' || this.key == 'reportPage')) {
+			return this;
+		}
+
+		while (parentPage && ((parentPage.key != 'page' && parentPage.key != 'reportPage') || !filterFn(parentPage))) {
+			parentPage = parentPage.parent;
+		}
+
+		return parentPage;
+	}
+
+
+	pageRoot() {
+		var rootPage = this.pageParent();
+
+		while (rootPage && !rootPage.isRoot()) {
+			rootPage = rootPage.pageParent();
+		}
+
+		return rootPage;
+	}
+
+
+
 }

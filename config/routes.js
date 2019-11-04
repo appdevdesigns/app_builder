@@ -55,13 +55,15 @@ module.exports = {
     'delete /app_builder/application/:appID/object/:objID':
         'app_builder/ABObjectController.excludeObject',
 
-    /* Application Pages */
-    'put /app_builder/application/:appID/page':
-        'app_builder/ABApplicationController.pageSave',
+    /* Application Views */
+    'put /app_builder/application/:appID/view':
+        'app_builder/ABApplicationController.viewSave',
 
-    'delete /app_builder/application/:appID/page':
-        'app_builder/ABApplicationController.pageDestroy',
+    'delete /app_builder/application/:appID/view':
+        'app_builder/ABApplicationController.viewDestroy',
 
+    'put /app_builder/application/:appID/viewReorder':
+        'app_builder/ABApplicationController.viewReorder',
 
     /* Queries */
     'get /app_builder/application/:appID/query':
@@ -113,6 +115,11 @@ module.exports = {
 
     'delete /app_builder/application/:appID/dataview/:dataviewID':
         'app_builder/ABDataviewController.excludeDataview',
+
+
+    /* ABFieldUser */
+    'get /app_builder/user/list':
+        'app_builder/ABUserController.getUserList',
 
 
     /* Application permissions */

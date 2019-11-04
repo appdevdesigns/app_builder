@@ -8,7 +8,7 @@
 
 import AB_Work_Interface_List_NewPage_BlankPage from "./ab_work_interface_list_newPage_blankPage"
 import AB_Work_Interface_List_NewPage_QuickPage from "./ab_work_interface_list_newPage_quickPage"
-import AB_Work_Interface_List_NewPage_ReportPage from "./ab_work_interface_list_newPage_reportPage"
+// import AB_Work_Interface_List_NewPage_ReportPage from "./ab_work_interface_list_newPage_reportPage"
 import ABPage from '../classes/views/ABViewPage'
 
 
@@ -53,7 +53,7 @@ export default class AB_Work_Interface_List_NewPage extends OP.Component {
 
 		var BlankPage = new AB_Work_Interface_List_NewPage_BlankPage(App);
 		var QuickPage = new AB_Work_Interface_List_NewPage_QuickPage(App);
-		var ReportPage = new AB_Work_Interface_List_NewPage_ReportPage(App);
+		// var ReportPage = new AB_Work_Interface_List_NewPage_ReportPage(App);
 
 
 		// Our webix UI definition:
@@ -77,7 +77,7 @@ width: 650,
 						options: [
 							{ id: ids.tabBlank, value: labels.component.blankPage },
 							{ id: ids.tabQuick, value: labels.component.quickPage },
-							{ id: ids.tabReport, value: labels.component.reportPage }
+							// { id: ids.tabReport, value: labels.component.reportPage }
 						],
 						on: {
 							onChange: function(newTab, oldTab){
@@ -89,7 +89,7 @@ width: 650,
 						cells: [
 							BlankPage.ui,
 							QuickPage.ui,
-							ReportPage.ui
+							// ReportPage.ui
 						]
 					},
 					{
@@ -133,7 +133,7 @@ width: 650,
 
 			BlankPage.init();
 			QuickPage.init();
-			ReportPage.init();
+			// ReportPage.init();
 
 			// register our callbacks:
 			for(var c in _logic.callbacks) {
@@ -162,7 +162,7 @@ width: 650,
 
 				BlankPage.applicationLoad(application);
 				QuickPage.applicationLoad(application);
-				ReportPage.applicationLoad(application);
+				// ReportPage.applicationLoad(application);
 			},
 
 
@@ -194,20 +194,22 @@ width: 650,
 					SaveButton.disable();
 					CurrentEditor.formBusy();
 
-					page.save()
+					let includeSubview = true;
+
+					page.save(includeSubview)
 					.then(()=>{
 
 						// save sub-pages sequentially
 						var subTasks = Promise.resolve();
 						page.pages().forEach(subPage => {
-							subTasks = subTasks.then(x => subPage.save());
+							subTasks = subTasks.then(x => subPage.save(includeSubview));
 						});
 
 						_logic.callbacks.onSave(page);
 
 						BlankPage.clear();
 						QuickPage.clear();
-						ReportPage.clear();
+						// ReportPage.clear();
 
 						_logic.hide();
 
@@ -294,10 +296,10 @@ width: 650,
 							CurrentEditor = QuickPage;
 							QuickPage.show();
 							break;
-						case ids.tabReport:
-							CurrentEditor = ReportPage;
-							ReportPage.show();
-							break;
+						// case ids.tabReport:
+						// 	CurrentEditor = ReportPage;
+						// 	ReportPage.show();
+						// 	break;
 					}
 				}
 			}

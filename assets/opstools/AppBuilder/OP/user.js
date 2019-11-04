@@ -16,7 +16,7 @@ class OPUser {
 
 		// get the user list
 		if (this.userList == null) {
-			Comm.Service.get({ url: "/appdev-core/siteuser" }).then((data) => {
+			Comm.Service.get({ url: "/app_builder/user/list" }).then((data) => {
 
 				this.userList = data;
 

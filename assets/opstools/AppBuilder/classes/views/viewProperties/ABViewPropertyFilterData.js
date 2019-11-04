@@ -245,7 +245,7 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 
 			},
 
-			setSettings(settings) {
+			setSettings(settings = {}) {
 
 				//Convert some condition from string to integer
 				(settings.queryRules || []).forEach(qr => {
@@ -286,7 +286,7 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 			getSettings() {
 
 				var settings = this.settings || {};
-				settings.filterOption = JSON.parse($$(ids.filterOptionRadio).getValue());
+				settings.filterOption = JSON.parse($$(ids.filterOptionRadio).getValue() || 0);
 				settings.queryRules = [];
 
 				switch (settings.filterOption) {
@@ -362,7 +362,7 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 
 			setFilterOption: function (value) {
 
-				switch (JSON.parse(value)) {
+				switch (JSON.parse(value || 0)) {
 					case 1: // Enable User filters
 						$$(ids.filterMenuLayout).hide();
 						$$(ids.filterGlobal).hide();
@@ -378,6 +378,7 @@ export default class ABViewPropertyFilterData extends ABViewProperty {
 						$$(ids.filterMenuLayout).hide();
 						$$(ids.filterGlobal).show();
 						break;
+					case 0:
 					default: // Do not Allow User filters
 						$$(ids.filterUser).hide();
 						$$(ids.filterMenuLayout).hide();
