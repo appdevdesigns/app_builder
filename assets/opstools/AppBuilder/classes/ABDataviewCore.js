@@ -1008,7 +1008,7 @@ debugger;
 
 		});
 
-		AD.comm.hub.subscribe('ab.datacollection.delete', (msg, data) => {
+		this.on('ab.datacollection.delete', (msg, data) => {
 debugger;
 			let obj = this.datasource;
 			if (!obj) return;
