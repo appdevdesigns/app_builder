@@ -172,6 +172,10 @@ export default class ABWorkProcessWorkspace extends OP.Component {
         // Our init() function for setting up our UI
         this.init = function() {
             $$(ids.noSelection).show();
+
+            ModelUI.init();
+            TestUI.init();
+            MonitorUI.init();
         };
 
         var CurrentApplication = null;
@@ -198,6 +202,10 @@ export default class ABWorkProcessWorkspace extends OP.Component {
                 PopupNewDataFieldComponent.applicationLoad(application);
 
                 CurrentDataview.application = CurrentApplication;
+
+                ModelUI.applicationLoad(application);
+                TestUI.applicationLoad(application);
+                MonitorUI.applicationLoad(application);
             },
 
             /**
@@ -233,6 +241,10 @@ export default class ABWorkProcessWorkspace extends OP.Component {
                 // NOTE: to clear a visual glitch when multiple views are updating
                 // at one time ... stop the animation on this one:
                 $$(ids.noSelection).show(false, false);
+
+                ModelUI.clearWorkspace();
+                TestUI.clearWorkspace();
+                MonitorUI.clearWorkspace();
             },
 
             /**
@@ -246,6 +258,10 @@ export default class ABWorkProcessWorkspace extends OP.Component {
                 $$(ids.selectedItem).show();
 
                 CurrentProcess = process;
+
+                ModelUI.populateWorkspace(process);
+                TestUI.populateWorkspace(process);
+                MonitorUI.populateWorkspace(process);
             },
 
             /**

@@ -105,7 +105,7 @@ export default class ABWorkProcessWorkspaceTest extends OP.Component {
              * @param {ABObject} object     current ABObject instance we are working with.
              */
             populateWorkspace: function(process) {
-                $$(ids.selectedItem).show();
+                // $$(ids.selectedItem).show();
 
                 CurrentProcess = process;
             },
