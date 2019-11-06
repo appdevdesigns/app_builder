@@ -288,18 +288,6 @@ module.exports = class ABApplicationBase {
 
 	
 	/**
-	 * @method objectByID()
-	 * return the specific object requested by the provided id.
-	 * @param {string} id
-	 * @return {obj}
-	 */
-	objectByID (id) {
-	 
-		return this.objects((o)=>{ return o.id == id; })[0];
-	}
-
-	
-	/**
 	 * @method objectNew()
 	 *
 	 * return an instance of a new (unsaved) ABObject that is tied to this

@@ -1234,7 +1234,7 @@ sails.log.debug('ABClassObject.queryCount - SQL:', query.toString() );
 			}
 
 			if (relationNames.length > 0)
-
+console.log(relationNames)
 				query.eager(`[${relationNames.join(', ')}]`, {
 
 					// if the linked object's PK is uuid, then exclude .id

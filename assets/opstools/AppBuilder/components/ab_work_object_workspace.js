@@ -6,27 +6,27 @@
  *
  */
 
-import ABApplication from "../classes/ABApplication"
+let ABApplication = require("../classes/platform/ABApplication");
 
-import ABDataview from "../classes/ABDataview"
+let ABDataview = require("../classes/ABDataview");
 
-import ABWorkspaceDatatable from "./ab_work_object_workspace_datatable"
-import ABWorkspaceKanBan from "./ab_work_object_workspace_kanban"
-import ABWorkspaceGantt from "./ab_work_object_workspace_gantt"
+let ABWorkspaceDatatable = require("./ab_work_object_workspace_datatable");
+let ABWorkspaceKanBan = require("./ab_work_object_workspace_kanban");
+let ABWorkspaceGantt = require("./ab_work_object_workspace_gantt");
 
-import ABPopupDefineLabel from "./ab_work_object_workspace_popupDefineLabel"
-import ABPopupFilterDataTable from "./ab_work_object_workspace_popupFilterDataTable"
-import ABPopupFrozenColumns from "./ab_work_object_workspace_popupFrozenColumns"
-import ABPopupHideFields from "./ab_work_object_workspace_popupHideFields"
-import ABPopupMassUpdate from "./ab_work_object_workspace_popupMassUpdate"
-import ABPopupNewDataField from "./ab_work_object_workspace_popupNewDataField"
-import ABPopupSortField from "./ab_work_object_workspace_popupSortFields"
-import ABPopupExport from "./ab_work_object_workspace_popupExport"
-import ABPopupImport from "./ab_work_object_workspace_popupImport"
-import ABPopupViewSettings from "./ab_work_object_workspace_popupViewSettings"
+let ABPopupDefineLabel = require("./ab_work_object_workspace_popupDefineLabel");
+let ABPopupFilterDataTable = require("./ab_work_object_workspace_popupFilterDataTable");
+let ABPopupFrozenColumns = require("./ab_work_object_workspace_popupFrozenColumns");
+let ABPopupHideFields = require("./ab_work_object_workspace_popupHideFields");
+let ABPopupMassUpdate = require("./ab_work_object_workspace_popupMassUpdate");
+let ABPopupNewDataField = require("./ab_work_object_workspace_popupNewDataField");
+let ABPopupSortField = require("./ab_work_object_workspace_popupSortFields");
+let ABPopupExport = require("./ab_work_object_workspace_popupExport");
+let ABPopupImport = require("./ab_work_object_workspace_popupImport");
+let ABPopupViewSettings = require("./ab_work_object_workspace_popupViewSettings");
 
 
-export default class ABWorkObjectWorkspace extends OP.Component {
+module.exports = class ABWorkObjectWorkspace extends OP.Component {
 
     /**
      * @param {object} App

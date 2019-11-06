@@ -6,11 +6,11 @@
  *
  */
 
-import ABApplication from "../classes/ABApplication"
+let ABApplication = require("../classes/platform/ABApplication")
 
 
 
-export default class ABChoose extends OP.Component {  // .extend(idBase, function(App) {
+module.exports = class ABChoose extends OP.Component {  // .extend(idBase, function(App) {
 
 
 	constructor(App) {

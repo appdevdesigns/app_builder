@@ -6,15 +6,15 @@
  *
  */
 
-// import ABApplication from "../classes/ABApplication"
-import AB_Work_Object from "./ab_work_object"
-import AB_Work_Query from "./ab_work_query"
-import AB_Work_Dataview from "./ab_work_dataview"
-import AB_Work_Interface from "./ab_work_interface"
+// let ABApplication = require("../classes/platform/ABApplication");
+let AB_Work_Object = require("./ab_work_object");
+let AB_Work_Query = require("./ab_work_query");
+let AB_Work_Dataview = require("./ab_work_dataview");
+let AB_Work_Interface = require("./ab_work_interface");
 
 
 
-export default class AB_Work extends OP.Component {  // ('ab_work', function(App) {
+module.exports = class AB_Work extends OP.Component {  // ('ab_work', function(App) {
 
 
 	constructor(App, options) {
