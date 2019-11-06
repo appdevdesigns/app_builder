@@ -508,11 +508,12 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 							let dataList = [];
 
 							let dcCursor = dv.getCursor();
-							let treeCursor = dv.getCursor(true);
 	
 							// merge cursor to support dc and tree cursor in the report
-							if (dcCursor)
+							if (dcCursor) {
+								let treeCursor = dv.getCursor(true);
 								dataList.push(_.merge({}, dcCursor, treeCursor));
+							}
 							else
 								dataList = dv.getData();
 	
@@ -630,10 +631,14 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 
 
 							// If data sources have more than 1, then add label of data source
-							if (isDvLabelAdded)
-								reportValues[dv.label] = (dvValues.length > 1 ? dvValues : dvValues[0]);
+							let dataviewData = (dvValues.length > 1 ? dvValues : dvValues[0]);
+							if (isDvLabelAdded) {
+								(dv.translations || []).forEach(tran => {
+									reportValues[tran.label] = dataviewData;
+								});
+							}
 							else 
-								reportValues = (dvValues.length > 1 ? dvValues : dvValues[0]);
+								reportValues = dataviewData;
 
 						});
 
@@ -644,51 +649,63 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 
 console.log("DOCX data: ", reportValues);
 
-						let dv = this.dataview;
-						if (!dv) return Promise.resolve();
-
-						let obj = dv.datasource;
-						if (!obj) return Promise.resolve();
-
 						let currCursor = dv.getCursor();
 						if (!currCursor) return Promise.resolve();
 
 						let tasks = [];
 
-						let addDownloadTask = (fieldImage, data = {}) => {
+						let addDownloadTask = (fieldImage, data = []) => {
 
-							let imageVal = fieldImage.format(data);
-							if (imageVal && !images[imageVal]) {
+							data.forEach(d => {
 
-								tasks.push(new Promise((ok, bad) => {
-
-									let imgUrl = `/opsportal/image/${this.application.name}/${imageVal}`;
-
-									JSZipUtils.getBinaryContent(imgUrl, function (error, content) {
-										if (error)
-											return bad(error);
-										else {
-
-											// store binary of image
-											images[imageVal] = content;
-
-											ok();
-										}
-									});
-
-								}));
-							}
-
-							// download images of child items
-							(data.data || []).forEach(childItem => {
-								addDownloadTask(fieldImage, childItem);
+								let imageVal = fieldImage.format(d);
+								if (imageVal && !images[imageVal]) {
+	
+									tasks.push(new Promise((ok, bad) => {
+	
+										let imgUrl = `/opsportal/image/${this.application.name}/${imageVal}`;
+	
+										JSZipUtils.getBinaryContent(imgUrl, function (error, content) {
+											if (error)
+												return bad(error);
+											else {
+	
+												// store binary of image
+												images[imageVal] = content;
+	
+												ok();
+											}
+										});
+	
+									}));
+								}
+	
+								// download images of child items
+								addDownloadTask(fieldImage, d.data || []);
 							});
 
 						};
 
-						obj.fields(f => f instanceof ABFieldImage).forEach(f => {
+						this.dataviews.forEach(dv => {
 
-							addDownloadTask(f, currCursor);
+							if (!dv) return;
+
+							let obj = dv.datasource;
+							if (!obj) return;
+	
+							let currCursor = dv.getCursor();
+							if (currCursor) { // Current cursor
+								let treeCursor = dv.getCursor(true);
+								currCursor = [_.merge({}, currCursor, treeCursor)];
+							}
+							else // List of data
+								currCursor = dv.getData();
+	
+							obj.fields(f => f instanceof ABFieldImage).forEach(f => {
+	
+								addDownloadTask(f, currCursor);
+	
+							});
 
 						});
 
@@ -825,7 +842,12 @@ console.log("DOCX data: ", reportValues);
 															sourceVals = [sourceVals];
 
 														return (sourceVals || []).filter(function(item) {
-															return item.id == scope[propFilter];
+
+															let comparer = scope[propFilter];
+															if (Array.isArray(comparer))
+																return comparer.filter(c => (c.id || c) == item.id).length > 0;
+															else
+																return item.id == comparer;
 														});
 
 													}

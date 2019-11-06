@@ -853,6 +853,10 @@ reject(err);
 
 					}
 
+				// Change property name of connected field
+				if (!d[c.columnName])
+					d[c.columnName] = d[relationName];
+
 			});
 
 
