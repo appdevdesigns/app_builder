@@ -482,7 +482,10 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 				field.getOptions(this.settings.objectWorkspace.filterConditions, "").then(function (data) {
 					// find option with the matching id to the savedData
 					var myOption = data.filter(d => d.id == saveData.id)[0];
-					if (myOption == null) return;
+					if (myOption == null) {
+						$$(ids.popup).close();
+						return;
+					}
 
 					let fieldVal = field.getValue(elem);
 					if (Array.isArray(fieldVal)) {
