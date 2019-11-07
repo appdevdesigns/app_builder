@@ -601,6 +601,8 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 						onCancelClick:component.logic.callbackCancel,
 						clearOnLoad:component.logic.callbackClearOnLoad
 					});
+
+					popUpComp.onShow();
 				
 				}, 50);
 
