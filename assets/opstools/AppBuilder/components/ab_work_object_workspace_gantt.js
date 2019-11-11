@@ -6,9 +6,9 @@
  *
  */
 
-import AB_Work_Form from "./ab_work_object_workspace_formSidePanel"
+const AB_Work_Form = require("./ab_work_object_workspace_formSidePanel");
 
-export default class ABWorkObjectGantt extends OP.Component {
+module.exports = class ABWorkObjectGantt extends OP.Component {
 
 	/**
 	 * 

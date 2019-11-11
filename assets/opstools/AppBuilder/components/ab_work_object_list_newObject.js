@@ -15,15 +15,12 @@
  *
  */
 
-import ABBlankObject from "./ab_work_object_list_newObject_blank"
-import ABCsvObject from "./ab_work_object_list_newObject_csv"
-import ABImportObject from "./ab_work_object_list_newObject_import"
-import ABImportExternal from "./ab_work_object_list_newObject_external"
+const ABBlankObject = require("./ab_work_object_list_newObject_blank");
+const ABCsvObject = require("./ab_work_object_list_newObject_csv");
+const ABImportObject = require("./ab_work_object_list_newObject_import");
+const ABImportExternal = require("./ab_work_object_list_newObject_external");
 
-
-
-
-export default class AB_Work_Object_List_NewObject extends OP.Component {   //.extend(idBase, function(App) {
+module.exports = class AB_Work_Object_List_NewObject extends OP.Component {   //.extend(idBase, function(App) {
 
 	constructor(App) {
 		super(App, 'ab_work_object_list_newObject');

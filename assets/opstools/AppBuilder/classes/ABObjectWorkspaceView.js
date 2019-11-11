@@ -3,7 +3,7 @@
 // Manages the settings for a view in the AppBuilder Object Workspace
 
 
-export default class ABObjectWorkspaceView {
+module.exports = class ABObjectWorkspaceView {
 
 	constructor(attributes, object, defaultLabel) {
 		this.defaultLabel = defaultLabel || 'default view';

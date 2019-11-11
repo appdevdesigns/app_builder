@@ -1,15 +1,15 @@
 
-// import OP from "OP"
-import ABApplicationBase from "./ABApplicationBase"
-import "../data/ABApplication"
-import ABObject from "./platform/ABObject"
-import ABObjectQuery from "./ABObjectQuery"
-import ABDataview from "./ABDataview"
-import ABMobileApp from "./ABMobileApp"
-import ABViewManager from "./ABViewManager"
-import ABViewPage from "./views/ABViewPage"
-import ABViewReportPage from "./views/ABViewReportPage"
-import ABViewReport from "./views/ABViewReport"
+// const OP = require("OP"
+const ABApplicationBase = require("./ABApplicationBase");
+require("../data/ABApplication");
+const ABObject = require("./platform/ABObject");
+const ABObjectQuery = require("./ABObjectQuery");
+const ABDataview = require("./ABDataview");
+const ABMobileApp = require("./ABMobileApp");
+const ABViewManager = require("./core/ABViewManager");
+const ABViewPage = require("./views/ABViewPage");
+const ABViewReportPage = require("./views/ABViewReportPage");
+const ABViewReport = require("./views/ABViewReport");
 
 var _AllApplications = [];
 
@@ -32,7 +32,7 @@ function toArray(DC) {
 	return ary;
 }
 
-export default class ABApplication extends ABApplicationBase {
+module.exports = class ABApplication extends ABApplicationBase {
 
 	constructor(attributes) {
 		super(attributes);
@@ -84,7 +84,7 @@ export default class ABApplication extends ABApplicationBase {
 				ModelApplication.findAll()
 					.then(function (data) {
 
-						// NOTE: data is already a DataCollection from .findAll()
+						// NOTE: data is already a DataCollection = require(.findAll()
 						_AllApplications = data;
 
 						resolve(data);
@@ -276,7 +276,7 @@ export default class ABApplication extends ABApplicationBase {
 	 *
 	 * destroy the current instance of ABApplication
 	 *
-	 * also remove it from our _AllApplications
+	 * also remove it = require(our _AllApplications
 	 *
 	 * @return {Promise}
 	 */
@@ -331,7 +331,7 @@ export default class ABApplication extends ABApplicationBase {
 	 * into the values needed for saving to the DB.
 	 *
 	 * Most of the instance data is stored in .json field, so be sure to
-	 * update that from all the current values of our child fields.
+	 * update that = require(all the current values of our child fields.
 	 *
 	 * @return {json}
 	 */
@@ -428,7 +428,7 @@ export default class ABApplication extends ABApplicationBase {
 	 */
 	deletePermission() {
 
-		// TODO: need to remove created role from : .json.applicationRole
+		// TODO: need to remove created role = require(: .json.applicationRole
 
 		return this.Model.staticData.deletePermission(this.id);
 
@@ -488,7 +488,7 @@ export default class ABApplication extends ABApplicationBase {
 	/**
 	 * @method objectDestroy()
 	 *
-	 * remove the current ABObject from our list of ._objects.
+	 * remove the current ABObject = require(our list of ._objects.
 	 *
 	 * @param {ABObject} object
 	 * @return {Promise}
@@ -632,7 +632,7 @@ export default class ABApplication extends ABApplicationBase {
 			.catch(reject)
 			.then(() => {
 
-				// exclude object from application
+				// exclude object = require(application
 				let remainObjects = this.objects(o => o.id != objectId);
 				this._objects = remainObjects;
 
@@ -739,7 +739,7 @@ export default class ABApplication extends ABApplicationBase {
 	 * @return {ABView}
 	 */
 	viewNew(values, application, parent) {
-		return ABViewManager.newView(values, application, parent);
+		return ABViewManager.newView(values, application || this, parent);
 	}
 
 
@@ -751,8 +751,8 @@ export default class ABApplication extends ABApplicationBase {
 	 *
 	 * @return {array} of ABView objects
 	 */
-	viewAll() {
-		return ABViewManager.allViews();
+	viewAll(fn) {
+		return ABViewManager.allViews(fn);
 	}
 
 
@@ -760,7 +760,7 @@ export default class ABApplication extends ABApplicationBase {
 	/**
 	 * @method viewDestroy()
 	 *
-	 * remove the current ABView from our list of ._pages or ._views.
+	 * remove the current ABView = require(our list of ._pages or ._views.
 	 *
 	 * @param {ABView} view
 	 * @return {Promise}
@@ -979,7 +979,7 @@ export default class ABApplication extends ABApplicationBase {
 	/**
 	 * @method queryDestroy()
 	 *
-	 * remove the current ABObjectQuery from our list of ._queries.
+	 * remove the current ABObjectQuery = require(our list of ._queries.
 	 *
 	 * @param {ABObject} query
 	 * @return {Promise}
@@ -1042,7 +1042,7 @@ export default class ABApplication extends ABApplicationBase {
 				.catch(reject)
 				.then(() => {
 
-					// remove query from list
+					// remove query = require(list
 					this._queries = this.queries(q => q.id != queryId);
 
 					resolve();
@@ -1135,7 +1135,7 @@ export default class ABApplication extends ABApplicationBase {
 	/**
 	 * @method dataviewDestroy()
 	 *
-	 * remove the current ABDataview from our list of ._dataviews.
+	 * remove the current ABDataview = require(our list of ._dataviews.
 	 *
 	 * @param {ABDataview} dataview
 	 * @return {Promise}
@@ -1198,7 +1198,7 @@ export default class ABApplication extends ABApplicationBase {
 				.catch(reject)
 				.then(() => {
 
-					// remove query from list
+					// remove query = require(list
 					this._dataviews = this.dataviews(dView => dView.id != dataviewId);
 
 					resolve();
@@ -1267,7 +1267,7 @@ export default class ABApplication extends ABApplicationBase {
 	/**
 	 * @method mobileAppDestroy()
 	 *
-	 * remove the current ABMobileApp from our list of ._mobileApps.
+	 * remove the current ABMobileApp = require(our list of ._mobileApps.
 	 *
 	 * @param {ABMobileApp} app
 	 * @return {Promise}

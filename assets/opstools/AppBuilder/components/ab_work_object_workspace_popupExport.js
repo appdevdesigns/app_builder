@@ -6,7 +6,7 @@
  */
 
 
-export default class ABWorkObjectPopupExport extends OP.Component {
+module.exports = class ABWorkObjectPopupExport extends OP.Component {
 
 	constructor(App, idBase) {
 

@@ -5,55 +5,55 @@
  *
  */
 
-import ABView from "./views/ABView"
-import ABViewCarousel from "./views/ABViewCarousel"
-import ABViewChart from "./views/ABViewChart"
-import ABViewChartPie from "./views/ABViewChartPie"
-import ABViewChartBar from "./views/ABViewChartBar"
-import ABViewChartLine from "./views/ABViewChartLine"
-import ABViewChartArea from "./views/ABViewChartArea"
-import ABViewComment from "./views/ABViewComment"
-import ABViewConditionalContainer from "./views/ABViewConditionalContainer"
-import ABViewContainer from "./views/ABViewContainer"
-import ABViewDocxBuilder from "./views/ABViewDocxBuilder"
-import ABViewDataview from "./views/ABViewDataview"
-import ABViewPage from "./views/ABViewPage"
-import ABViewPivot from "./views/ABViewPivot"
-import ABViewLabel from "./views/ABViewLabel"
-import ABViewLayout from "./views/ABViewLayout"
-import ABViewList from "./views/ABViewList"
-import ABViewMenu from "./views/ABViewMenu"
-import ABViewGrid from "./views/ABViewGrid"
-import ABViewImage from "./views/ABViewImage"
-import ABViewTab from "./views/ABViewTab"
-import ABViewText from "./views/ABViewText"
-import ABViewKanban from "./views/ABViewKanban"
+const ABView = require("./views/ABView");
+const ABViewCarousel = require("./views/ABViewCarousel");
+const ABViewChart = require("./views/ABViewChart");
+const ABViewChartPie = require("./views/ABViewChartPie");
+const ABViewChartBar = require("./views/ABViewChartBar");
+const ABViewChartLine = require("./views/ABViewChartLine");
+const ABViewChartArea = require("./views/ABViewChartArea");
+const ABViewComment = require("./views/ABViewComment");
+const ABViewConditionalContainer = require("./views/ABViewConditionalContainer");
+const ABViewContainer = require("./views/ABViewContainer");
+const ABViewDocxBuilder = require("./views/ABViewDocxBuilder");
+const ABViewDataview = require("./views/ABViewDataview");
+const ABViewPage = require("./views/ABViewPage");
+const ABViewPivot = require("./views/ABViewPivot");
+const ABViewLabel = require("./views/ABViewLabel");
+const ABViewLayout = require("./views/ABViewLayout");
+const ABViewList = require("./views/ABViewList");
+const ABViewMenu = require("./views/ABViewMenu");
+const ABViewGrid = require("./views/ABViewGrid");
+const ABViewImage = require("./views/ABViewImage");
+const ABViewTab = require("./views/ABViewTab");
+const ABViewText = require("./views/ABViewText");
+const ABViewKanban = require("./views/ABViewKanban");
 
-import ABViewDetail from "./views/ABViewDetail"
-import ABViewDetailCheckbox from "./views/ABViewDetailCheckbox"
-import ABViewDetailCustom from "./views/ABViewDetailCustom"
-import ABViewDetailImage from "./views/ABViewDetailImage"
-import ABViewDetailSelectivity from "./views/ABViewDetailSelectivity"
-import ABViewDetailText from "./views/ABViewDetailText"
-import ABViewDetailTree from "./views/ABViewDetailTree"
+const ABViewDetail = require("./views/ABViewDetail");
+const ABViewDetailCheckbox = require("./views/ABViewDetailCheckbox");
+const ABViewDetailCustom = require("./views/ABViewDetailCustom");
+const ABViewDetailImage = require("./views/ABViewDetailImage");
+const ABViewDetailSelectivity = require("./views/ABViewDetailSelectivity");
+const ABViewDetailText = require("./views/ABViewDetailText");
+const ABViewDetailTree = require("./views/ABViewDetailTree");
 
-import ABViewForm from "./views/ABViewForm"
-import ABViewFormButton from "./views/ABViewFormButton"
-import ABViewFormCheckbox from "./views/ABViewFormCheckbox"
-import ABViewFormConnect from "./views/ABViewFormConnect"
-import ABViewFormCustom from "./views/ABViewFormCustom"
-import ABViewFormDatepicker from "./views/ABViewFormDatepicker"
-import ABViewFormNumber from "./views/ABViewFormNumber"
-import ABViewFormSelectSingle from "./views/ABViewFormSelectSingle"
-import ABViewFormReadonly from "./views/ABViewFormReadonly"
-import ABViewFormTextbox from "./views/ABViewFormTextbox"
-import ABViewFormTree from "./views/ABViewFormTree"
+const ABViewForm = require("./views/ABViewForm");
+const ABViewFormButton = require("./views/ABViewFormButton");
+const ABViewFormCheckbox = require("./views/ABViewFormCheckbox");
+const ABViewFormConnect = require("./views/ABViewFormConnect");
+const ABViewFormCustom = require("./views/ABViewFormCustom");
+const ABViewFormDatepicker = require("./views/ABViewFormDatepicker");
+const ABViewFormNumber = require("./views/ABViewFormNumber");
+const ABViewFormSelectSingle = require("./views/ABViewFormSelectSingle");
+const ABViewFormReadonly = require("./views/ABViewFormReadonly");
+const ABViewFormTextbox = require("./views/ABViewFormTextbox");
+const ABViewFormTree = require("./views/ABViewFormTree");
 
-import ABViewReport from "./views/ABViewReport"
-import ABViewReportPage from "./views/ABViewReportPage"
-import ABViewReportPanel from "./views/ABViewReportPanel"
+// const ABViewReport = require("./views/ABViewReport");
+// const ABViewReportPage = require("./views/ABViewReportPage");
+// const ABViewReportPanel = require("./views/ABViewReportPanel");
 
-// import ABViewFormText from "./views/ABViewFormText"
+// const ABViewFormText = require("./views/ABViewFormText");
 
 /* 
  * Views
@@ -108,13 +108,13 @@ Views[ABViewFormTree.common().key] = ABViewFormTree;
 // Views[ABViewForm.common().key] = ABViewForm;
 // Views[ABViewFormText.common().key] = ABViewFormText;
 
-Views[ABViewReport.common().key] = ABViewReport;
-Views[ABViewReportPage.common().key] = ABViewReportPage;
-Views[ABViewReportPanel.common().key] = ABViewReportPanel;
+// Views[ABViewReport.common().key] = ABViewReport;
+// Views[ABViewReportPage.common().key] = ABViewReportPage;
+// Views[ABViewReportPanel.common().key] = ABViewReportPanel;
 
 
 
-export default  {
+module.exports = {
 
 
 	/*

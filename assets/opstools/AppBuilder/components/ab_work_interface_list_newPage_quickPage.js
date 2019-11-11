@@ -6,17 +6,17 @@
  *
  */
 
-import ABDataview from '../classes/ABDataview'
-import ABViewDetail from '../classes/views/ABViewDetail'
-import ABViewForm from '../classes/views/ABViewForm'
-import ABViewFormButton from '../classes/views/ABViewFormButton'
-import ABViewGrid from '../classes/views/ABViewGrid'
-import ABViewLabel from '../classes/views/ABViewLabel'
-import ABViewMenu from '../classes/views/ABViewMenu'
-import ABViewPage from '../classes/views/ABViewPage'
+const ABDataview = require('../classes/ABDataview');
+const ABViewDetail = require('../classes/views/ABViewDetail');
+const ABViewForm = require('../classes/views/ABViewForm');
+const ABViewFormButton = require('../classes/views/ABViewFormButton');
+const ABViewGrid = require('../classes/views/ABViewGrid');
+const ABViewLabel = require('../classes/views/ABViewLabel');
+const ABViewMenu = require('../classes/views/ABViewMenu');
+const ABViewPage = require('../classes/views/ABViewPage');
 
 
-export default class AB_Work_Interface_List_NewPage_QuickPage extends OP.Component {
+module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends OP.Component {
 
 	constructor(App) {
 		super(App, 'ab_work_interface_list_newPage_quickPage');

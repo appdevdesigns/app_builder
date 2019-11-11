@@ -9,7 +9,7 @@
  */
 
 
-export default class ABCommonPopupEditMenu extends OP.Component { 
+module.exports = class ABCommonPopupEditMenu extends OP.Component {
 
 	constructor(App, idBase) {
 

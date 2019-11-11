@@ -5,7 +5,7 @@
  *
  */
 
-export default class AB_Work_Dataview_List_NewDataview_Import extends OP.Component {
+module.exports = class AB_Work_Dataview_List_NewDataview_Import extends OP.Component {
 
 	constructor(App) {
 		super(App, 'ab_work_dataview_list_newDataview_import');

@@ -5,9 +5,9 @@
  * Display the properties available for the current view.
  *
  */
-import ABViewManager from "../classes/ABViewManager"
+const ABViewManager = require("../classes/core/ABViewManager");
 
-export default class AB_Work_Interface_Workspace_Details_Properties extends OP.Component {
+module.exports = class AB_Work_Interface_Workspace_Details_Properties extends OP.Component {
 
     constructor(App) {
         super(App, 'ab_work_interface_workspace_details_properties');

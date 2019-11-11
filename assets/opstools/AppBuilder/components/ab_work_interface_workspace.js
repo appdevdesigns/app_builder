@@ -6,12 +6,12 @@
  *
  */
 
-import ABWorkspaceEditor from "./ab_work_interface_workspace_editor"
-import ABWorkspaceDetails from "./ab_work_interface_workspace_details"
+const ABWorkspaceEditor = require("./ab_work_interface_workspace_editor");
+const ABWorkspaceDetails = require("./ab_work_interface_workspace_details");
 
-import ABViewPage from "../classes/views/ABViewPage"
+const ABViewPage = require("../classes/views/ABViewPage");
 
-export default class AB_Work_Interface_Workspace extends OP.Component {
+module.exports = class AB_Work_Interface_Workspace extends OP.Component {
     
     constructor(App) {
         super(App, 'ab_work_interface_workspace');

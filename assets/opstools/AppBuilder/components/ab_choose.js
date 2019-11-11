@@ -9,12 +9,12 @@
  */
 
 
-import AB_Choose_Config from './ab_choose_config'
-import AB_Choose_List from './ab_choose_list'
-import AB_Choose_Form from './ab_choose_form'
+const AB_Choose_Config = require('./ab_choose_config');
+const AB_Choose_List = require('./ab_choose_list');
+const AB_Choose_Form = require('./ab_choose_form');
 
 
-export default class ABChoose extends OP.Component {   // (idBase, function(App) {
+module.exports = class ABChoose extends OP.Component {   // (idBase, function(App) {
 
 
 	constructor(App) {

@@ -1,7 +1,7 @@
 // ABObjectWorkspaceViewComponent.js
 //
 
-export default class ABObjectWorkspaceViewComponent {
+module.exports = class ABObjectWorkspaceViewComponent {
 
 	constructor(options) {
 

@@ -12,9 +12,9 @@ let AB_Work_Query = require("./ab_work_query");
 let AB_Work_Dataview = require("./ab_work_dataview");
 let AB_Work_Interface = require("./ab_work_interface");
 
-
-
-module.exports = class AB_Work extends OP.Component {  // ('ab_work', function(App) {
+// export to ABLiveTool
+// window.ABWorkUI = AB_Work;
+module.exports = window.ABWorkUI = class AB_Work extends OP.Component {  // ('ab_work', function(App) {
 
 
 	constructor(App, options) {
@@ -357,6 +357,3 @@ module.exports = class AB_Work extends OP.Component {  // ('ab_work', function(A
 	}
 
 }
-
-// export to ABLiveTool
-window.ABWorkUI = AB_Work;

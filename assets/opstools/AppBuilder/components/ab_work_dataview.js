@@ -4,10 +4,10 @@
  *
  */
 
-import AB_Work_Dataview_List from "./ab_work_dataview_list"
-import AB_Work_Dataview_Workspace from "./ab_work_dataview_workspace"
+const AB_Work_Dataview_List = require("./ab_work_dataview_list");
+const AB_Work_Dataview_Workspace = require("./ab_work_dataview_workspace");
 
-export default class AB_Work_Dataview extends OP.Component {
+module.exports = class AB_Work_Dataview extends OP.Component {
 
 	constructor(App) {
 		super(App, 'ab_work_dataview');

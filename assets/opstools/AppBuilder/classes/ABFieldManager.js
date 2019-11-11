@@ -6,23 +6,23 @@
  */
 
 
-import ABFieldString from "./dataFields/ABFieldString"
-import ABFieldLongText from "./dataFields/ABFieldLongText"
-import ABFieldNumber from "./dataFields/ABFieldNumber"
-import ABFieldDate from "./dataFields/ABFieldDate"
-import ABFieldBoolean from "./dataFields/ABFieldBoolean"
-import ABFieldList from "./dataFields/ABFieldList"
-import ABFieldTree from "./dataFields/ABFieldTree"
-import ABFieldEmail from "./dataFields/ABFieldEmail"
-import ABFieldImage from "./dataFields/ABFieldImage"
-import ABFieldFile from "./dataFields/ABFieldFile"
-import ABFieldUser from "./dataFields/ABFieldUser"
-import ABFieldConnect from "./dataFields/ABFieldConnect"
-import ABFieldCalculate from "./dataFields/ABFieldCalculate"
-import ABFieldTextFormula from "./dataFields/ABFieldTextFormula"
-import ABFieldFormula from "./dataFields/ABFieldFormula"
-import ABFieldAutoIndex from "./dataFields/ABFieldAutoIndex" 
-import ABFieldJson from "./dataFields/ABFieldJson" 
+const ABFieldString = require("./dataFields/ABFieldString");
+const ABFieldLongText = require("./dataFields/ABFieldLongText");
+const ABFieldNumber = require("./dataFields/ABFieldNumber");
+const ABFieldDate = require("./dataFields/ABFieldDate");
+const ABFieldBoolean = require("./dataFields/ABFieldBoolean");
+const ABFieldList = require("./dataFields/ABFieldList");
+const ABFieldTree = require("./dataFields/ABFieldTree");
+const ABFieldEmail = require("./dataFields/ABFieldEmail");
+const ABFieldImage = require("./dataFields/ABFieldImage");
+const ABFieldFile = require("./dataFields/ABFieldFile");
+const ABFieldUser = require("./dataFields/ABFieldUser");
+const ABFieldConnect = require("./dataFields/ABFieldConnect");
+const ABFieldCalculate = require("./dataFields/ABFieldCalculate");
+const ABFieldTextFormula = require("./dataFields/ABFieldTextFormula");
+const ABFieldFormula = require("./dataFields/ABFieldFormula");
+const ABFieldAutoIndex = require("./dataFields/ABFieldAutoIndex");
+const ABFieldJson = require("./dataFields/ABFieldJson");
 
 /*
  * Fields
@@ -48,7 +48,7 @@ Fields[ABFieldAutoIndex.defaults().key] = ABFieldAutoIndex;
 Fields[ABFieldJson.defaults().key] = ABFieldJson;
 
 
-export default  {
+module.exports = {
 
 
 	/*

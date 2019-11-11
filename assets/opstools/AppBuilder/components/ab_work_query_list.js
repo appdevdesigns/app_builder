@@ -6,12 +6,12 @@
  *
  */
 
-import ABListNewQuery from "./ab_work_query_list_newQuery"
-import ABListEditMenu from "./ab_common_popupEditMenu"   // "./ab_work_object_list_popupEditMenu"
+const ABListNewQuery = require("./ab_work_query_list_newQuery");
+const ABListEditMenu = require("./ab_common_popupEditMenu");   // "./ab_work_object_list_popupEditMenu"
 
 
 
-export default class AB_Work_Query_List extends OP.Component {   //.extend(idBase, function(App) {
+module.exports = class AB_Work_Query_List extends OP.Component {   //.extend(idBase, function(App) {
 
 	constructor(App) {
 		super(App, 'ab_work_query_list');

@@ -6,7 +6,7 @@
  */
 
 
-export default class AB_Work_Query_List_NewQuery_Blank extends OP.Component {
+module.exports = class AB_Work_Query_List_NewQuery_Blank extends OP.Component {
 
 	constructor(App) {
 		super(App, 'ab_work_query_list_newQuery_blank');

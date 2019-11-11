@@ -11,7 +11,7 @@ function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
-module.export = class ABFieldComponent {
+module.exports = class ABFieldComponent {
 
 
     constructor(options) {

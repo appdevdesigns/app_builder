@@ -188,7 +188,7 @@ var ABFieldFormulaComponent = new ABFieldComponent({
 
 });
 
-module.exports = class ABFieldFormula extends ABField {
+module.exports = class ABFieldFormula extends ABFieldFormulaCore {
 
 	constructor(values, object) {
 		super(values, object);

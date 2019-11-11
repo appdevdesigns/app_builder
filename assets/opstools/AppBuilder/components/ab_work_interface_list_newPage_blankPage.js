@@ -6,12 +6,12 @@
  *
  */
 
-import ABPage from '../classes/views/ABViewPage'
-import ABViewPage from '../classes/views/ABViewPage';
-import ABViewReportPage from '../classes/views/ABViewReportPage';
+const ABPage = require('../classes/views/ABViewPage');
+// const ABViewPage = require('../classes/views/ABViewPage');
+const ABViewReportPage = require('../classes/views/ABViewReportPage');
 
 
-export default class AB_Work_Interface_List_NewPage_BlankPage extends OP.Component {
+module.exports = class AB_Work_Interface_List_NewPage_BlankPage extends OP.Component {
 
 	constructor(App) {
 		super(App, 'ab_work_interface_list_newPage_blankPage');

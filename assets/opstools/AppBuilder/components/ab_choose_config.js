@@ -7,7 +7,7 @@
  */
 
 
-export default class ABChooseConfig extends OP.Component { 
+module.exports = class ABChooseConfig extends OP.Component { 
 
 	constructor(App) {
 		super(App, 'ab_choose_config');

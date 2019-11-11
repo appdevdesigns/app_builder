@@ -2,7 +2,7 @@
 //
 // Manages the settings for a Data Grid View in the AppBuilder Object Workspace
 
-import ABObjectWorkspaceView from './ABObjectWorkspaceView'
+const ABObjectWorkspaceView = require('./ABObjectWorkspaceView');
 
 var defaultValues = {
 		name: 'Default Grid',
@@ -12,7 +12,7 @@ var defaultValues = {
 		hiddenFields:[], // array of [ids] to add hidden:true to
 	};
 
-export default class ABObjectWorkspaceViewGrid extends ABObjectWorkspaceView {
+module.exports = class ABObjectWorkspaceViewGrid extends ABObjectWorkspaceView {
 
 	constructor(attributes, object) {
 		super(attributes, object, 'grid');

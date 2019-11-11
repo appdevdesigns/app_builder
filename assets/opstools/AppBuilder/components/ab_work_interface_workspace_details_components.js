@@ -7,7 +7,7 @@
  */
 
 
-export default class AB_Work_Interface_Workspace_Details_Components extends OP.Component {
+module.exports = class AB_Work_Interface_Workspace_Details_Components extends OP.Component {
 
     constructor(App) {
         super(App, 'ab_work_interface_workspace_details_components');

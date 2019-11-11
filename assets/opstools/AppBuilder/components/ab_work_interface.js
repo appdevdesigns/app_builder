@@ -6,10 +6,10 @@
  *
  */
 
-import AB_Work_Interface_List from "./ab_work_interface_list"
-import AB_Work_Interface_Workspace from "./ab_work_interface_workspace"
+const AB_Work_Interface_List = require("./ab_work_interface_list");
+const AB_Work_Interface_Workspace = require("./ab_work_interface_workspace");
 
-export default class AB_Work_Interface extends OP.Component {  
+module.exports = class AB_Work_Interface extends OP.Component {  
 
 
 	constructor(App) {

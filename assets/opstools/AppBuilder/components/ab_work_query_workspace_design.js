@@ -5,10 +5,10 @@
  *
  */
 
-import ABDataview from "../classes/ABDataview" 
-import RowFilter from "../classes/RowFilter"
+const ABDataview = require("../classes/ABDataview");
+const RowFilter = require("../classes/RowFilter");
 
-export default class ABWorkQueryWorkspaceDesign extends OP.Component {
+module.exports = class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 	/**
 	 * @param {object} ??

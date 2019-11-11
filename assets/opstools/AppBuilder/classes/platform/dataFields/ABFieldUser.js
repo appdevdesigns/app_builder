@@ -22,7 +22,7 @@ var ids = {
  * property values, etc.
  */
 var ABFieldUserComponent = new ABFieldComponent({
-	fieldDefaults: ABFieldUserDefaults,
+	fieldDefaults: ABFieldUserCore.defaults(),
 
 	elements: function (App, field) {
 		ids = field.idsUnique(ids, App);
@@ -80,7 +80,7 @@ var ABFieldUserComponent = new ABFieldComponent({
 	},
 
 	// defaultValues: the keys must match a .name of your elements to set it's default value.
-	defaultValues: defaultValues,
+	defaultValues: ABFieldUserCore.defaultValues(),
 
 	// rules: basic form validation rules for webix form entry.
 	// the keys must match a .name of your .elements for it to apply

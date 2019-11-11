@@ -56,7 +56,7 @@ io.socket.on("ab.datacollection.update", function (msg) {
 });
 
 
-export default class ABModel {
+module.exports = class ABModel {
 
 	constructor(object) {
 

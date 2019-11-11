@@ -6,6 +6,14 @@ function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
+var ids = {
+	prefixText: 'prefixText',
+	delimiterText: 'delimiterText',
+	displayLength: 'diisplayLength',
+	previewText: 'previewText',
+	// currentIndex: 'currentIndex',
+}
+
 
 /**
  * 

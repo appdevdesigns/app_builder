@@ -2,13 +2,13 @@
 //
 // Manages the settings for a Gantt Chart View in the AppBuilder Object Workspace
 
-import ABObjectWorkspaceView from './ABObjectWorkspaceView'
-import ABObjectWorkspaceViewComponent from './ABObjectWorkspaceViewComponent'
+const ABObjectWorkspaceView = require('./ABObjectWorkspaceView');
+const ABObjectWorkspaceViewComponent = require('./ABObjectWorkspaceViewComponent');
 
-import ABPopupNewDataField from '../components/ab_work_object_workspace_popupNewDataField'
+const ABPopupNewDataField = require('../components/ab_work_object_workspace_popupNewDataField');
 
-import ABFieldDate from "./dataFields/ABFieldDate";
-import ABFieldNumber from "./dataFields/ABFieldNumber";
+const ABFieldDate = require("./dataFields/ABFieldDate");
+const ABFieldNumber = require("./dataFields/ABFieldNumber");
 
 var defaultValues = {
 	name: 'Default Gantt',
@@ -20,7 +20,7 @@ var defaultValues = {
 	progress: null // id of a ABFieldNumber - decimal
 };
 
-export default class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView {
+module.exports = class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView {
 
 	constructor(attributes, object) {
 		super(attributes, object, 'gantt');

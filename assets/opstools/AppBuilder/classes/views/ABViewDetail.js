@@ -6,9 +6,7 @@
  */
 
 import ABViewContainer from "./ABViewContainer"
-import ABPropertyComponent from "../ABPropertyComponent"
 import ABViewDetailComponent from "./ABViewDetailComponent"
-import ABViewManager from "../ABViewManager"
 
 
 function L(key, altText) {
@@ -506,7 +504,7 @@ export default class ABViewDetail extends ABViewContainer {
 	*/
 	componentList() {
 		var viewsToAllow = ['label', 'text'],
-			allComponents = ABViewManager.allViews();
+			allComponents = this.application.viewAll();
 
 		return allComponents.filter((c) => {
 			return viewsToAllow.indexOf(c.common().key) > -1;

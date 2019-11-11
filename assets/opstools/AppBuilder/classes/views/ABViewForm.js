@@ -11,7 +11,6 @@ import ABViewFormButton from "./ABViewFormButton"
 import ABViewFormCustom from "./ABViewFormCustom"
 import ABViewFormField from "./ABViewFormField"
 import ABViewFormTextbox from "./ABViewFormTextbox"
-import ABViewManager from "../ABViewManager"
 
 import ABDisplayRule from "./ABViewFormPropertyDisplayRule"
 // import ABRecordRule from "./ABViewFormPropertyRecordRule"
@@ -276,13 +275,15 @@ export default class ABViewForm extends ABViewContainer {
 
 		_logic.listTemplate = (field, common) => {
 
+			let currView = _logic.currentEditObject();
+
 			// disable in form
 			var fieldComponent = field.formComponent();
 			if (fieldComponent == null) 
 				return "<i class='fa fa-times'></i>  #label# <div class='ab-component-form-fields-component-info'> Disable </div>".replace("#label#", field.label);
 
 			var componentKey = fieldComponent.common().key;
-			var formComponent = ABViewManager.allViews((v) => v.common().key == componentKey)[0];
+			var formComponent = currView.application.viewAll((v) => v.common().key == componentKey)[0];
 
 			return common.markCheckbox(field) + " #label# <div class='ab-component-form-fields-component-info'> <i class='fa fa-#icon#'></i> #component# </div>"
 				.replace("#label#", field.label)
@@ -772,7 +773,7 @@ PopupRecordRule.qbFixAfterShow();
 	 */
 	componentList() {
 		var viewsToAllow = ['label', 'layout', 'button'],
-			allComponents = ABViewManager.allViews();
+			allComponents = this.application.viewAll();
 
 		return allComponents.filter((c) => {
 			return viewsToAllow.indexOf(c.common().key) > -1;

@@ -4,12 +4,12 @@
  * Manage the Summary Columns popup.
  *
  */
-import ABFieldNumber from '../classes/dataFields/ABFieldNumber'
-import ABFieldCalculate from '../classes/dataFields/ABFieldCalculate'
-import ABFieldFormula from '../classes/dataFields/ABFieldFormula'
+const ABFieldNumber = require('../classes/dataFields/ABFieldNumber');
+const ABFieldCalculate = require('../classes/dataFields/ABFieldCalculate');
+const ABFieldFormula = require('../classes/dataFields/ABFieldFormula');
 
 
-export default class AB_Work_Object_Workspace_PopupSummaryColumns extends OP.Component {  
+module.exports = class AB_Work_Object_Workspace_PopupSummaryColumns extends OP.Component {  
 	
 		constructor(App, idBase) {
 			idBase = idBase || 'ab_work_object_workspace_popupSummaryColumns';

@@ -9,7 +9,7 @@
 import ABView from "./ABView"
 import ABViewPage from "./ABViewPage"
 import ABViewReportPanel from "./ABViewReportPanel"
-import ABViewManager from "../ABViewManager"
+import ABViewManager from "../core/ABViewManager"
 
 
 function L(key, altText) {
@@ -40,7 +40,7 @@ export default class ABViewReport extends ABViewPage {
 		if (this.views(v => v instanceof ABViewReportPanel).length < 3) {
 
 			// header
-			var header = ABViewManager.newView({
+			var header = application.viewNew({
 				key: ABViewReportPanel.common().key,
 				label: 'Header',
 				settings: {

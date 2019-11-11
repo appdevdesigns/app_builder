@@ -1,6 +1,6 @@
-import ABObject from "./ABObject";
-import ABObjectQuery from "./ABObjectQuery";
-import RowFilter from "./RowFilter"
+const ABObject = require("./ABObject");
+const ABObjectQuery = require("./ABObjectQuery");
+const RowFilter = require("./RowFilter");
 
 var EventEmitter = require('events').EventEmitter;
 

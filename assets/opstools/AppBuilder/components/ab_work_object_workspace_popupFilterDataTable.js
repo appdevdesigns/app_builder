@@ -6,10 +6,10 @@
  *
  */
 
-import RowFilter from '../classes/RowFilter'
+const RowFilter = require('../classes/RowFilter');
 
 
-export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Component {
+module.exports = class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Component {
 
     constructor(App, idBase) {
         idBase = idBase || 'ab_work_object_workspace_popupFilterDataTable';

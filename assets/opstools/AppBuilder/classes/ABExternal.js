@@ -1,4 +1,4 @@
-export default class ABExternal {
+module.exports = class ABExternal {
 
 	constructor(application) {
 		this.application = application;

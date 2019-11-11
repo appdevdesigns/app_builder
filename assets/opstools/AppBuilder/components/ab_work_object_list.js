@@ -6,12 +6,10 @@
  *
  */
 
-import ABListNewObject from "./ab_work_object_list_newObject"
-import ABListEditMenu from "./ab_common_popupEditMenu"   // "./ab_work_object_list_popupEditMenu"
+const ABListNewObject = require("./ab_work_object_list_newObject");
+const ABListEditMenu = require("./ab_common_popupEditMenu");   // "./ab_work_object_list_popupEditMenu"
 
-
-
-export default class AB_Work_Object_List extends OP.Component {   //.extend(idBase, function(App) {
+module.exports = class AB_Work_Object_List extends OP.Component {   //.extend(idBase, function(App) {
 
 	constructor(App) {
 		super(App, 'ab_work_object_list');

@@ -1,11 +1,11 @@
 
 
-import ABObjectBase from "./ABObjectBase"
+const ABObjectBase = require("./ABObjectBase");
 
-// import OP from "OP"
-import ABFieldManager from "./ABFieldManager"
-import ABModel from "./ABModel"
-import ABObjectWorkspaceViewCollection from "./ABObjectWorkspaceViewCollection";
+// const OP from "OP"
+const ABFieldManager = require("./core/ABFieldManager");
+const ABModel = require("./ABModel");
+const ABObjectWorkspaceViewCollection = require("./ABObjectWorkspaceViewCollection");
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -24,7 +24,7 @@ io.socket.on("ab.object.update", function (msg) {
 // io.socket.on("ab.object.delete", function (msg) {
 // });
 
-export default class ABObject extends ABObjectBase {
+module.exports = class ABObject extends ABObjectBase {
 
     constructor(attributes, application) {
     	super(attributes, application);

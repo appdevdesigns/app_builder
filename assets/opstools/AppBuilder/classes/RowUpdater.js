@@ -1,5 +1,5 @@
 
-export default class RowUpdater extends OP.Component {
+module.exports = class RowUpdater extends OP.Component {
 
 	constructor(App, idBase) {
 

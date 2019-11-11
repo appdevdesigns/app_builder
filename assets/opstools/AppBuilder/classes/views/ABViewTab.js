@@ -7,7 +7,7 @@
 
 import ABViewContainer from "./ABViewContainer"
 import ABViewWidget from "./ABViewWidget"
-import ABViewManager from "../ABViewManager"
+// import ABViewManager from "../ABViewManager"
 
 
 function L(key, altText) {
@@ -684,7 +684,7 @@ export default class ABViewTab extends ABViewWidget {
 		// 	tabicon: tabIcon
 		// }, this.application, this));
 
-		return ABViewManager.newView({
+		return this.application.viewNew({
 			key: ABViewContainer.common().key,
 			label: tabName,
 			tabicon: tabIcon

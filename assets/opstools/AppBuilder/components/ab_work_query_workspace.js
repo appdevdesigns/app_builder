@@ -6,12 +6,12 @@
  *
  */
 
-import ABQueryWorkspaceDesign from "./ab_work_query_workspace_design"
-import ABObjectWorkspace from "./ab_work_object_workspace"
-// import ABObjectWorkspaceDataTable from "./ab_work_object_workspace_datatable"
+const ABQueryWorkspaceDesign = require("./ab_work_query_workspace_design");
+const ABObjectWorkspace = require("./ab_work_object_workspace");
+// const ABObjectWorkspaceDataTable from "./ab_work_object_workspace_datatable"
 
 
-export default class ABWorkQueryWorkspace extends OP.Component {
+module.exports = class ABWorkQueryWorkspace extends OP.Component {
 
     /**
      * @param {object} ??

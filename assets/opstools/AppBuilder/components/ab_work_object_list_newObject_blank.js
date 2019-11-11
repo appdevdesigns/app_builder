@@ -7,7 +7,7 @@
  */
 
 
-export default class AB_Work_Object_List_NewObject_Blank extends OP.Component {   //.extend(idBase, function(App) {
+module.exports = class AB_Work_Object_List_NewObject_Blank extends OP.Component {   //.extend(idBase, function(App) {
 
     constructor(App) {
         super(App, 'ab_work_object_list_newObject_blank');

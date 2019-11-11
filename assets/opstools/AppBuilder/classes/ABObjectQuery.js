@@ -13,7 +13,7 @@
 // A where statement is also part of the definition.
 // 
 
-import ABObject from "./platform/ABObject"
+const ABObject = require("./platform/ABObject");
 
 io.socket.on("ab.query.update", function (msg) {
 
@@ -27,7 +27,7 @@ io.socket.on("ab.query.update", function (msg) {
 // io.socket.on("ab.query.delete", function (msg) {
 // });
 
-export default class ABObjectQuery extends ABObject {
+module.exports = class ABObjectQuery extends ABObject {
 
 	constructor(attributes, application) {
 		super(attributes, application);

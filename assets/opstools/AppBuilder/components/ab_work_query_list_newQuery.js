@@ -6,10 +6,10 @@
  *
  */
 
-import ABBlankQuery from "./ab_work_query_list_newQuery_blank"
-import ABImportQuery from "./ab_work_query_list_newQuery_import"
+const ABBlankQuery = require("./ab_work_query_list_newQuery_blank");
+const ABImportQuery = require("./ab_work_query_list_newQuery_import");
 
-export default class AB_Work_Query_List_NewQuery extends OP.Component {   //.extend(idBase, function(App) {
+module.exports = class AB_Work_Query_List_NewQuery extends OP.Component {   //.extend(idBase, function(App) {
 
 	constructor(App) {
 		super(App, 'ab_work_query_list_newQuery');

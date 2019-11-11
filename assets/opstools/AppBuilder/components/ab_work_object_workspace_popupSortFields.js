@@ -7,7 +7,7 @@
  */
 
 
-export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Component {   //.extend(idBase, function(App) {
+module.exports = class AB_Work_Object_Workspace_PopupSortFields extends OP.Component {   //.extend(idBase, function(App) {
 
 	constructor(App, idBase) {
 

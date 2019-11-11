@@ -1,10 +1,10 @@
 
-import ABObjectQuery from "./ABObjectQuery";
+const ABObjectQuery = require("./ABObjectQuery");
 
 const ABDataViewCore = require("./ABDataviewCore");
 
 
-export default class ABDataview extends ABDataViewCore {
+module.exports = class ABDataview extends ABDataViewCore {
 
 	constructor(attributes, application) {
 

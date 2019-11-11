@@ -2,9 +2,9 @@
 //
 // Manages the settings for a collection of views in the AppBuilder Object Workspace
 
-import ABObjectWorkspaceViewGrid from "./ABObjectWorkspaceViewGrid";
-import ABObjectWorkspaceViewKanban from "./ABObjectWorkspaceViewKanban";
-import ABObjectWorkspaceViewGantt from "./ABObjectWorkspaceViewGantt";
+const ABObjectWorkspaceViewGrid = require("./ABObjectWorkspaceViewGrid");
+const ABObjectWorkspaceViewKanban = require("./ABObjectWorkspaceViewKanban");
+const ABObjectWorkspaceViewGantt = require("./ABObjectWorkspaceViewGantt");
 
 var hashViews = {};
 hashViews[ABObjectWorkspaceViewGrid.type()] = ABObjectWorkspaceViewGrid;
@@ -16,7 +16,7 @@ const defaultAttributes = {
     list: []
 };
 
-export default class ABObjectWorkspaceViewCollection {
+module.exports = class ABObjectWorkspaceViewCollection {
     constructor(attributes, object, application) {
         // link me to my parent ABObject and ABApplication
         this.object = object;

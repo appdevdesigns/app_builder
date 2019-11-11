@@ -7,12 +7,12 @@
  */
 
 
-import AB_Work_Object_List from "./ab_work_object_list"
-import AB_Work_Object_Workspace from "./ab_work_object_workspace"
+const AB_Work_Object_List = require("./ab_work_object_list");
+const AB_Work_Object_Workspace = require("./ab_work_object_workspace");
 
 
 
-export default class AB_Work_Object extends OP.Component {   //.extend(idBase, function(App) {
+module.exports = class AB_Work_Object extends OP.Component {   //.extend(idBase, function(App) {
 
 	constructor(App) {
 		super(App, 'ab_work_object');

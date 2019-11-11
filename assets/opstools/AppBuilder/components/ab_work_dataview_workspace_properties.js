@@ -1,13 +1,13 @@
-import ABPopupSortField from "./ab_work_object_workspace_popupSortFields"
-import ABViewTab from "../classes/views/ABViewTab"
-import ABViewDetail from "../classes/views/ABViewDetail"
-import RowFilter from "../classes/RowFilter"
+const ABPopupSortField = require("./ab_work_object_workspace_popupSortFields");
+const ABViewTab = require("../classes/views/ABViewTab");
+const ABViewDetail = require("../classes/views/ABViewDetail");
+const RowFilter = require("../classes/RowFilter");
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
-export default class AB_Work_Dataview_Workspace_Properties extends OP.Component {
+module.exports = class AB_Work_Dataview_Workspace_Properties extends OP.Component {
 
 	constructor(App) {
 		super(App, 'ab_work_dataview_workspace_properties');

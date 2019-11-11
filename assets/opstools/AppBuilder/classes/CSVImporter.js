@@ -1,4 +1,4 @@
-export default class CSVImporter {
+module.exports = class CSVImporter {
 
 	constructor(App) {
 

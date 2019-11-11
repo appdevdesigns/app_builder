@@ -5,6 +5,25 @@ function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
+var ids = {
+	linkObject: 'ab-new-connectObject-list-item',
+	objectCreateNew: 'ab-new-connectObject-create-new',
+
+	fieldLink: 'ab-add-field-link-from',
+	fieldLink2: 'ab-add-field-link-from-2',
+	linkType: 'ab-add-field-link-type-to',
+	linkViaType: 'ab-add-field-link-type-from',
+	fieldLinkVia: 'ab-add-field-link-to',
+	fieldLinkVia2: 'ab-add-field-link-to-2',
+
+	link1: 'ab-link1-field-options',
+	link2: 'ab-link2-field-options',
+
+	connectDataPopup: 'ab-connect-object-data-popup'
+};
+
+var defaultValues = ABFieldConnectCore.defaultValues();
+
 function populateSelect(populate, callback) {
 	var options = [];
 	ABFieldConnectComponent.CurrentApplication.objects().forEach((o) => {
@@ -199,7 +218,7 @@ var ABFieldConnectComponent = new ABFieldComponent({
 	},
 
 	// defaultValues: the keys must match a .name of your elements to set it's default value.
-	defaultValues: ABFieldConnectCore.defaultValues(),
+	defaultValues: defaultValues,
 
 	// rules: basic form validation rules for webix form entry.
 	// the keys must match a .name of your .elements for it to apply

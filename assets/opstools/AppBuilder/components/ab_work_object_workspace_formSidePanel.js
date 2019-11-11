@@ -5,10 +5,10 @@
  *
  */
 
-import ABViewForm from '../classes/views/ABViewForm'
-import ABViewFormButton from '../classes/views/ABViewFormButton'
+const ABViewForm = require('../classes/views/ABViewForm');
+const ABViewFormButton = require('../classes/views/ABViewFormButton');
 
-export default class ABWorkObjectKanBan extends OP.Component {
+module.exports = class ABWorkObjectKanBan extends OP.Component {
 
 	/**
 	 * 

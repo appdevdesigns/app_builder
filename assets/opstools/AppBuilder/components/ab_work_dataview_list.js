@@ -1,8 +1,8 @@
 
-import ABListNewDataview from "./ab_work_dataview_list_newDataview"
-import ABListEditMenu from "./ab_common_popupEditMenu"
+const ABListNewDataview = require("./ab_work_dataview_list_newDataview");
+const ABListEditMenu = require("./ab_common_popupEditMenu");
 
-export default class AB_Work_Dataview_List extends OP.Component {
+module.exports = class AB_Work_Dataview_List extends OP.Component {
 
 	constructor(App) {
 		super(App, 'ab_work_dataview_list');

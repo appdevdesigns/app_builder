@@ -1,4 +1,4 @@
-import ABObjectQuery from "./ABObjectQuery";
+const ABObjectQuery = require("./ABObjectQuery");
 
 /**
  *  support get data from objects and queries
@@ -18,7 +18,7 @@ function getFieldVal(rowData, columnName) {
 }
 
 
-export default class RowFilter extends OP.Component {
+module.exports = class RowFilter extends OP.Component {
 
 	constructor(App, idBase) {
 

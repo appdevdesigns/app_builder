@@ -7,7 +7,7 @@
  */
 
 
-export default class ABWorkObjectPopupDefineLabel extends OP.Component {
+module.exports = class ABWorkObjectPopupDefineLabel extends OP.Component {
     
     constructor(App, idBase) {
 

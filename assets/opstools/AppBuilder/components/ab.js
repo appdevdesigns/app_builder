@@ -10,8 +10,8 @@
 
 // import '../OP/OP'
 
-import AB_Choose from './ab_choose'
-import AB_Work from './ab_work'
+const AB_Choose = require('./ab_choose');
+const AB_Work = require('./ab_work');
 
 // // Import our Custom Components here:
 // import ActiveList from '../webix_custom_components/activelist'
@@ -22,9 +22,9 @@ import AB_Work from './ab_work'
 // import FocusableTemplate from '../webix_custom_components/focusableTemplate'
 // import SavableLayout from '../webix_custom_components/savablelayout'
 
-import style from "../AppBuilder.css"
+require("../AppBuilder.css");
 
-export default class AB extends OP.Component {    //('ab', function(App) {
+module.exports = class AB extends OP.Component {    //('ab', function(App) {
 
 
 	constructor(App) {

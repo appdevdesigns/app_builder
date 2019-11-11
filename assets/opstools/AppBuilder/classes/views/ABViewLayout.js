@@ -7,7 +7,7 @@
 
 import ABViewContainer from "./ABViewContainer"
 import ABViewWidget from "./ABViewWidget"
-import ABViewManager from "../ABViewManager"
+import ABViewManager from "../core/ABViewManager"
 
 
 function L(key, altText) {

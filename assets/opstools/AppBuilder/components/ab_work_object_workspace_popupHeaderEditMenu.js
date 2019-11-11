@@ -7,7 +7,7 @@
  */
 
 
-export default class ABWorkObjectPopupHeaderEditMenu extends OP.Component {
+module.exports = class ABWorkObjectPopupHeaderEditMenu extends OP.Component {
 
     constructor(App, idBase) {
         idBase = idBase || 'ab_work_object_workspace_popupHeaderEditMenu';

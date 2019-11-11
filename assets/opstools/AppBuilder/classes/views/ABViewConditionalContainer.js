@@ -6,7 +6,7 @@
  */
 
 import ABViewContainer from "./ABViewContainer"
-import ABViewManager from "../ABViewManager"
+import ABViewManager from "../core/ABViewManager"
 import RowFilter from "../RowFilter"
 
 function L(key, altText) {

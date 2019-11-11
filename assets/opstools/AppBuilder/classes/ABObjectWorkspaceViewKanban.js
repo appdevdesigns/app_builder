@@ -2,14 +2,14 @@
 //
 // Manages the settings for a Data Grid View in the AppBuilder Object Workspace
 
-import ABObjectWorkspaceView from './ABObjectWorkspaceView'
-import ABObjectWorkspaceViewComponent from './ABObjectWorkspaceViewComponent'
+const ABObjectWorkspaceView = require('./ABObjectWorkspaceView');
+const ABObjectWorkspaceViewComponent = require('./ABObjectWorkspaceViewComponent');
 
-import ABPopupNewDataField from '../components/ab_work_object_workspace_popupNewDataField'
+const ABPopupNewDataField = require('../components/ab_work_object_workspace_popupNewDataField');
 
-import ABFieldConnect from "./dataFields/ABFieldConnect";
-import ABFieldList from "./dataFields/ABFieldList";
-import ABFieldUser from "./dataFields/ABFieldUser";
+const ABFieldConnect = require("./dataFields/ABFieldConnect");
+const ABFieldList = require("./dataFields/ABFieldList");
+const ABFieldUser = require("./dataFields/ABFieldUser");
 
 var defaultValues = {
 	name: 'Default Kanban',
@@ -20,7 +20,7 @@ var defaultValues = {
 	ownerField: null,
 };
 
-export default class ABObjectWorkspaceViewKanban extends ABObjectWorkspaceView {
+module.exports = class ABObjectWorkspaceViewKanban extends ABObjectWorkspaceView {
 
 	constructor(attributes, object) {
 		super(attributes, object, 'kanban');

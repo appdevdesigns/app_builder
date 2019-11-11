@@ -8,7 +8,7 @@
 
 import ABViewPage from "./ABViewPage"
 import ABViewReport from "./ABViewReport"
-import ABViewManager from "../ABViewManager"
+import ABViewManager from "../core/ABViewManager"
 
 
 function L(key, altText) {

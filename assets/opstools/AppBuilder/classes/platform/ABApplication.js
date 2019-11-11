@@ -29,7 +29,9 @@ function toArray(DC) {
 	return ary;
 }
 
-module.exports = class ABApplication extends ABApplicationBase {
+// export to ABLiveTool
+// window.ABApplication = ABApplication;
+module.exports = window.ABApplication = class ABApplication extends ABApplicationBase {
 
 	constructor(attributes) {
 		super(attributes);
@@ -264,6 +266,10 @@ module.exports = class ABApplication extends ABApplicationBase {
 	/// Instance Methods
 	///
 
+
+	languageDefault() {
+		return AD.lang.currentLanguage || super.languageDefault() || 'en';
+	}
 
 	/// ABApplication data methods
 
@@ -1303,6 +1309,3 @@ module.exports = class ABApplication extends ABApplicationBase {
 
 
 }
-
-// export to ABLiveTool
-window.ABApplication = ABApplication;

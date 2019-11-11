@@ -1,14 +1,14 @@
 
 
-import ABApplication from "./ABApplication"
-import ABObjectBase from "./ABObjectBase"
+// import ABApplication from "./ABApplication"
+// import ABObjectBase from "./ABObjectBase"
 
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
-export default class ABMobileApp  {
+module.exports = class ABMobileApp  {
 
     constructor(attributes, application) {
     	// super(attributes, application);

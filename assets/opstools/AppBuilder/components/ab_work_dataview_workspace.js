@@ -1,11 +1,11 @@
-import ABDataviewProperty from "./ab_work_dataview_workspace_properties"
-import ABWorkspaceDatatable from "./ab_work_object_workspace_datatable"
+const ABDataviewProperty = require("./ab_work_dataview_workspace_properties");
+const ABWorkspaceDatatable = require("./ab_work_object_workspace_datatable");
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
-export default class AB_Work_Dataview_Workspace extends OP.Component {
+module.exports = class AB_Work_Dataview_Workspace extends OP.Component {
 
 	constructor(App) {
 		let idBase = 'ab_work_dataview_workspace';

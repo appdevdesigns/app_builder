@@ -6,10 +6,10 @@
  *
  */
 
-import AB_Work_HeaderEditMenu from "./ab_work_object_workspace_popupHeaderEditMenu"
+const AB_Work_HeaderEditMenu = require("./ab_work_object_workspace_popupHeaderEditMenu");
 
 
-export default class ABWorkObjectDatatable extends OP.Component {
+module.exports = class ABWorkObjectDatatable extends OP.Component {
     
     /**
      * 
