@@ -36,6 +36,26 @@ var ABViewFormConnectDefaults = {
 
 var FilterComponent = null;
 
+function _onShow(App, compId, instance) {
+
+	let elem = $$(compId);
+	if (!elem) return;
+
+	let field = instance.field();
+	if (!field) return;
+
+	let rowData = {},
+		node = elem.$view;
+
+	field.customDisplay(rowData, App, node, {
+		editable: true,
+		formView: instance.settings.formView,
+		filters: instance.settings.objectWorkspace.filterConditions,
+		editable: (instance.settings.disable == 1 ? false : true)
+	});
+
+}
+
 export default class ABViewFormConnect extends ABViewFormCustom {
 
 	/**
@@ -96,8 +116,35 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 	 * @param {string} mode what mode are we in ['block', 'preview']
 	 * @return {Component} 
 	 */
-	// editorComponent(App, mode) {
-	// }
+	editorComponent(App, mode) {
+
+		let idBase = 'ABViewFormConnectEditorComponent';
+		let ids = {
+			component: App.unique(idBase + '_component')
+		}
+
+		let baseComp = this.component(App);
+		let templateElem = baseComp.ui;
+		templateElem.id = ids.component;
+
+		var _ui = {
+			rows: [
+				templateElem,
+				{}
+			]
+		};
+
+		return {
+			ui: _ui,
+			init: baseComp.init,
+			logic: baseComp.logic,
+			onShow: () => {
+
+				_onShow(App, ids.component, this);
+
+			}
+		}
+	}
 	
 	/**
 	 * @method fromValues()
@@ -482,7 +529,10 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 				field.getOptions(this.settings.objectWorkspace.filterConditions, "").then(function (data) {
 					// find option with the matching id to the savedData
 					var myOption = data.filter(d => d.id == saveData.id)[0];
-					if (myOption == null) return;
+					if (myOption == null) {
+						$$(ids.popup).close();
+						return;
+					}
 
 					let fieldVal = field.getValue(elem);
 					if (Array.isArray(fieldVal)) {
@@ -598,6 +648,8 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 						onCancelClick:component.logic.callbackCancel,
 						clearOnLoad:component.logic.callbackClearOnLoad
 					});
+
+					popUpComp.onShow();
 				
 				}, 50);
 
@@ -650,18 +702,7 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 
 		component.onShow = () => {
 
-			var elem = $$(ids.component);
-			if (!elem) return;
-
-			var rowData = {},
-				node = elem.$view;
-
-			field.customDisplay(rowData, App, node, {
-				editable: true,
-				formView: this.settings.formView,
-				filters: this.settings.objectWorkspace.filterConditions,
-				editable: (this.settings.disable == 1 ? false : true)
-			});
+			_onShow(App, ids.component, this);
 
 		};
 
