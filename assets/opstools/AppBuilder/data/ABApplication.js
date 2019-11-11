@@ -301,16 +301,16 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 		},
 
-		// ** Data views
+		// ** Data collections
 
-		dataviewLoad: function (appId) {
+		datacollectionLoad: function (appId) {
 
 			return OP.Comm.Socket.get({
 				url: `/app_builder/application/${appId}/dataview`
 			});
 		},
 
-		dataviewFind: function (cond) {
+		datacollectionFind: function (cond) {
 
 			return OP.Comm.Socket.get({
 				url: `/app_builder/dataview`,
@@ -321,7 +321,7 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 		},
 
-		dataviewGet: function(dataviewId) {
+		datacollectionGet: function(dataviewId) {
 
 			return OP.Comm.Socket.get({
 				url: `/app_builder/dataview/${dataviewId}`
@@ -330,7 +330,7 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 		},
 
 		// Get id and label of data views
-		dataviewInfo: function (cond) {
+		datacollectionInfo: function (cond) {
 
 			return OP.Comm.Socket.get({
 				url: `/app_builder/dataview/info`,
@@ -341,7 +341,7 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 		},
 
-		dataviewSave: function (appId, dataview) {
+		datacollectionSave: function (appId, dataview) {
 
 			return OP.Comm.Service.put({
 				url: `/app_builder/dataview?appID=${appId}`,
@@ -351,7 +351,7 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 			});
 		},
 
-		dataviewDestroy: function (dataviewId) {
+		datacollectionDestroy: function (dataviewId) {
 
 			return OP.Comm.Service.delete({
 				url: `/app_builder/dataview/${dataviewId}`
@@ -359,7 +359,7 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 		},
 
-		dataviewImport: function (appId, dataviewId) {
+		datacollectionImport: function (appId, dataviewId) {
 
 			return OP.Comm.Service.put({
 				url: `/app_builder/application/${appId}/dataview/${dataviewId}`
@@ -367,7 +367,7 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 		},
 
-		dataviewExclude: function (appId, dataviewId) {
+		datacollectionExclude: function (appId, dataviewId) {
 
 			return OP.Comm.Service.delete({
 				url: `/app_builder/application/${appId}/dataview/${dataviewId}`

@@ -1,9 +1,9 @@
 
 require("../../data/ABApplication");
 let ABApplicationBase = require("../core/ABApplicationCore");
+let ABDataCollection = require("./ABDataCollection");
 let ABObject = require("./ABObject");
 let ABObjectQuery = require("./ABObjectQuery");
-let ABDataview = require("./ABDataview");
 let ABMobileApp = require("./ABMobileApp");
 let ABViewManager = require("../core/ABViewManager");
 let ABViewPage = require("./views/ABViewPage");
@@ -1050,35 +1050,35 @@ module.exports = class ABApplication extends ABApplicationBase {
 
 
 	///
-	/// Data views
+	/// Data collections
 	///
 
-	dataviewLoad() {
+	datacollectionLoad() {
 
-		if (this.loadedDataview)
+		if (this.loadedDatacollection)
 			return Promise.resolve();
 
 		return new Promise((resolve, reject) => {
 
-			this.Model.staticData.dataviewLoad(this.id)
+			this.Model.staticData.datacollectionLoad(this.id)
 				.catch(reject)
-				.then(dataviews => {
+				.then(datacollections => {
 
-					this.loadedDataview = true;
+					this.loadedDatacollection = true;
 
-					var newDataviews = [];
-					(dataviews || []).forEach(dataview => {
+					var newDatacollections = [];
+					(datacollections || []).forEach(datacollection => {
 						// prevent processing of null values.
-						if (dataview) {
-							  newDataviews.push( this.dataviewNew(dataview) );
+						if (datacollection) {
+							  newDatacollections.push( this.datacollectionNew(datacollection) );
 						  }
 					  })
-					this._dataviews = newDataviews;
+					this._datacollections = newDatacollections;
 
 					// Initial data views
-					this.dataviews().forEach(dataview => {
-						if (dataview)
-							dataview.init();
+					this.datacollections().forEach(datacollection => {
+						if (datacollection)
+							datacollection.init();
 					});
 
 					resolve();
@@ -1089,20 +1089,20 @@ module.exports = class ABApplication extends ABApplicationBase {
 
 	}
 
-	dataviewFind(cond) {
+	datacollectionFind(cond) {
 
 		return new Promise((resolve, reject) => {
 
-			this.Model.staticData.dataviewFind(cond)
+			this.Model.staticData.datacollectionFind(cond)
 				.catch(reject)
-				.then(dataviews => {
+				.then(datacollections => {
 
 					var result = [];
 
-					(dataviews || []).forEach(dataview => {
+					(datacollections || []).forEach(datacollection => {
 						// prevent processing of null values.
-						if (dataview) {
-							result.push( this.dataviewNew(dataview, this) );
+						if (datacollection) {
+							result.push( this.datacollectionNew(datacollection, this) );
 						}
 					})
 
@@ -1114,69 +1114,69 @@ module.exports = class ABApplication extends ABApplicationBase {
 
 	}
 
-	dataviewInfo(cond) {
+	datacollectionInfo(cond) {
 
-		return this.Model.staticData.dataviewInfo(cond);
+		return this.Model.staticData.datacollectionInfo(cond);
 
 	}
 
-	dataviewNew(values) {
+	datacollectionNew(values) {
 
-		return new ABDataview(values, this);
-	}
-
-
-	/**
-	 * @method dataviewDestroy()
-	 *
-	 * remove the current ABDataview from our list of ._dataviews.
-	 *
-	 * @param {ABDataview} dataview
-	 * @return {Promise}
-	 */
-	dataviewDestroy(dataview) {
-
-		var remaininDataviews = this.dataviews(dView => dView.id != dataview.id)
-		this._dataviews = remaininDataviews;
-
-		return this.Model.staticData.dataviewDestroy(dataview.id);
+		return new ABDataCollection(values, this);
 	}
 
 
 	/**
-	 * @method dataviewSave()
+	 * @method datacollectionDestroy()
 	 *
-	 * persist the current ABDataview in our list of ._dataviews.
+	 * remove the current ABDatacollection from our list of ._datacollections.
 	 *
-	 * @param {ABDataview} dataview
+	 * @param {ABDatacollection} datacollection
 	 * @return {Promise}
 	 */
-	dataviewSave(dataview) {
-		var isIncluded = (this.dataviews(dView => dView.id == dataview.id).length > 0);
+	datacollectionDestroy(datacollection) {
+
+		var remaininDatacollections = this.datacollections(dView => dView.id != datacollection.id)
+		this._datacollections = remaininDatacollections;
+
+		return this.Model.staticData.datacollectionDestroy(datacollection.id);
+	}
+
+
+	/**
+	 * @method datacollectionSave()
+	 *
+	 * persist the current ABDatacollection in our list of ._datacollections.
+	 *
+	 * @param {ABDatacollection} datacollection
+	 * @return {Promise}
+	 */
+	datacollectionSave(datacollection) {
+		var isIncluded = (this.datacollections(dView => dView.id == datacollection.id).length > 0);
 		if (!isIncluded) {
-			this._dataviews.push(dataview);
+			this._datacollections.push(datacollection);
 		}
 
-		return this.Model.staticData.dataviewSave(this.id, dataview.toObj());
+		return this.Model.staticData.datacollectionSave(this.id, datacollection.toObj());
 	}
 
-	dataviewImport(dataviewId) {
+	datacollectionImport(datacollectionId) {
 
 		return new Promise((resolve, reject) => {
 
-			this.Model.staticData.dataviewImport(this.id, dataviewId)
+			this.Model.staticData.datacollectionImport(this.id, datacollectionId)
 				.catch(reject)
-				.then(newDataview => {
+				.then(newDatacollection => {
 
-					let newDataviewClass = this.dataviewNew(newDataview);
+					let newDatacollectionClass = this.datacollectionNew(newDatacollection);
 
 					// add to list
-					var isIncluded = (this.dataviews(q => q.id == newDataview.id).length > 0);
+					var isIncluded = (this.datacollections(q => q.id == newDatacollection.id).length > 0);
 					if (!isIncluded) {
-						this._dataviews.push(newDataviewClass);
+						this._datacollections.push(newDatacollectionClass);
 					}
 
-					resolve(newDataviewClass);
+					resolve(newDatacollectionClass);
 
 				});
 
@@ -1184,16 +1184,16 @@ module.exports = class ABApplication extends ABApplicationBase {
 
 	}
 
-	dataviewExclude(dataviewId) {
+	datacollectionExclude(datacollectionId) {
 
 		return new Promise((resolve, reject) => {
 
-			this.Model.staticData.dataviewExclude(this.id, dataviewId)
+			this.Model.staticData.datacollectionExclude(this.id, datacollectionId)
 				.catch(reject)
 				.then(() => {
 
 					// remove query from list
-					this._dataviews = this.dataviews(dView => dView.id != dataviewId);
+					this._datacollections = this.datacollections(dView => dView.id != datacollectionId);
 
 					resolve();
 
