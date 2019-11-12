@@ -340,7 +340,7 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 		let selectedDvId = (view.settings.dataviewID ? view.settings.dataviewID : null);
 
 		// Pull data views to options
-		let dvOptions = view.application.dataviews()
+		let dcOptions = view.application.datacollections()
 			.map((dc) => {
 
 				return {
@@ -349,7 +349,7 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 				};
 			});
 
-		$DcSelector.define('options', dvOptions);
+		$DcSelector.define('options', dcOptions);
 		$DcSelector.define('value', selectedDvId);
 		$DcSelector.refresh();
 
@@ -930,7 +930,7 @@ console.log("DOCX data: ", reportValues);
 
 		let dvList = dataviewID.split(',') || [];
 
-		return this.application.dataviews(dv => dvList.indexOf(dv.id) > -1) || [];
+		return this.application.datacollections(dv => dvList.indexOf(dv.id) > -1) || [];
 
 	}
 

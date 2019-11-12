@@ -1070,7 +1070,7 @@ export default class ABView extends ABViewBase {
 		let dataviewID = (this.settings || {}).dataviewID;
 		if (!dataviewID) return null;
 
-		return this.application.dataviews(dv => dv.id == dataviewID)[0];
+		return this.application.datacollections(dc => dc.id == dataviewID)[0];
 	}
 
 	removeField(field, cb) {

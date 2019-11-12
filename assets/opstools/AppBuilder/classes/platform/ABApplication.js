@@ -1199,7 +1199,7 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 				.then(() => {
 
 					// remove query from list
-					this._datacollections = this.datacollections(dView => dView.id != datacollectionId);
+					this._datacollections = this.datacollections(dc => dc.id != datacollectionId);
 
 					resolve();
 

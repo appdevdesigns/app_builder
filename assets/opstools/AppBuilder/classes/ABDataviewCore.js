@@ -151,23 +151,23 @@ module.exports = class ABDataview extends EventEmitter {
 
 		return new Promise((resolve, reject) => {
 			this.application.dataviewSave(this)
-				.then(newDataview => {
+				.then(newDC => {
 
-					if (newDataview &&
-						newDataview.id &&
+					if (newDC &&
+						newDC.id &&
 						!this.id)
-						this.id = newDataview.id;
+						this.id = newDC.id;
 
 					// update data source
-					let updateDataview = this.application.dataviews(dv => dv.id == this.id)[0];
-					if (updateDataview) {
+					let updateDC = this.application.datacollections(dc => dc.id == this.id)[0];
+					if (updateDC) {
 
-						if (newDataview.query && newDataview.query[0]) {
-							updateDataview.datasource = new ABObjectQuery(newDataview.query[0], this.application);
+						if (newDC.query && newDC.query[0]) {
+							updateDC.datasource = new ABObjectQuery(newDC.query[0], this.application);
 							this.settings.isQuery = true;
 						}
-						else if (newDataview.object && newDataview.object[0]) {
-							updateDataview.datasource = new ABObject(newDataview.object[0], this.application);
+						else if (newDC.object && newDC.object[0]) {
+							updateDC.datasource = new ABObject(newDC.object[0], this.application);
 							this.settings.isQuery = false;
 						}
 
@@ -245,7 +245,7 @@ module.exports = class ABDataview extends EventEmitter {
 		if (!this.application)
 			return null;
 
-		return this.application.dataviews(dv => dv.id == this.settings.linkDataviewID)[0];
+		return this.application.datacollections(dc => dc.id == this.settings.linkDataviewID)[0];
 	}
 
 	/**
@@ -1265,7 +1265,7 @@ debugger;
                             rule.rule == "in_data_collection" ||
                             rule.rule == "not_in_data_collection"
                         ) {
-                            var dv = this.application.dataviews(
+                            var dv = this.application.datacollections(
                                 (dc) => dc.id == rule.value
                             )[0];
                             if (dv) {

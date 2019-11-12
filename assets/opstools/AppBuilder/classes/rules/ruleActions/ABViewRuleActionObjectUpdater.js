@@ -475,7 +475,7 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 				$componentView.id = ids.value;  // set our expected id 
 
 				// find all the DataSources
-				var datasources = this.currentForm.application.dataviews(dv => dv.datasource);
+				var datasources = this.currentForm.application.datacollections(dc => dc.datasource);
 
 				// create a droplist with those dataSources
 				var optionsDataSources = [];
@@ -501,12 +501,12 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 									placeholder: this.labels.component.chooseSource,
 									on: {
 										'onChange': (newv, oldv) => {
-											var selectedDataview = this.currentForm.application.dataviews(dv => dv.id == newv)[0];
-											if (selectedDataview && 
-												(selectedDataview.sourceType == "query" || field.key != 'connectObject')) {
+											var selectedDC = this.currentForm.application.datacollections(dc => dc.id == newv)[0];
+											if (selectedDC && 
+												(selectedDC.sourceType == "query" || field.key != 'connectObject')) {
 
 												var queryFieldOptions = [];
-												selectedDataview.datasource.fields().forEach((f) => {
+												selectedDC.datasource.fields().forEach((f) => {
 													queryFieldOptions.push({ id: f.id, value: f.label })
 												});
 												$$(ids.queryField).define("options", queryFieldOptions);
@@ -561,10 +561,10 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 
 										$row.addView(FilterComponent.ui, 1);
 
-										var dataviewId = $$(ids.selectDc).getValue();
-										var dataView = this.currentForm.application.dataviews(dv => dv.id == dataviewId)[0];
-										if (dataView) {
-											_logic.populateFilters(dataView);
+										var dcId = $$(ids.selectDc).getValue();
+										var dataCollection = this.currentForm.application.datacollections(dc => dc.id == dcId)[0];
+										if (dataCollection) {
+											_logic.populateFilters(dataCollection);
 										}
 									}
 								}
@@ -599,12 +599,12 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 					// to do this, we find the root Page we are on, then ask that Page for datasources:
 					datasources = datasources.filter((dc) => { return dc.datasource.id == connectedObject.id; });
 
-					var dataViewQueries = this.currentForm.application.dataviews(dv => {
-						return dv.sourceType == "query" && dv.datasource && dv.datasource.canFilterObject(connectedObject)
+					var dcQueries = this.currentForm.application.datacollections(dc => {
+						return dc.sourceType == "query" && dc.datasource && dc.datasource.canFilterObject(connectedObject)
 						// return dc.datasource.id == connectedObject.id;
 					});
 
-					datasources = datasources.concat(dataViewQueries);
+					datasources = datasources.concat(dcQueries);
 
 					// refresh a droplist with those dataSources
 					optionsDataSources = [];
@@ -743,9 +743,9 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 
 						if (selectBy != "select-one") {
 							var collectionId = data.value;
-							var dataView = this.currentForm.application.dataviews(dv => dv.id == collectionId)[0];
-							if (dataView && data.filterConditions) {
-								_logic.populateFilters(dataView, data.filterConditions);
+							var dataCollection = this.currentForm.application.datacollections(dc => dc.id == collectionId)[0];
+							if (dataCollection && data.filterConditions) {
+								_logic.populateFilters(dataCollection, data.filterConditions);
 							}
 						}
 					}
@@ -1007,7 +1007,7 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 
 
 						// op.value is the ABDataview.id we need to find
-						var dataView = this.currentForm.application.dataviews(dv => dv.id == op.value)[0];
+						var dataCollection = this.currentForm.application.datacollections(dc => dc.id == op.value)[0];
 
 						// we don't want to mess with the dataView directly since it might 
 						// be used by other parts of the system and this refresh might reset
@@ -1037,7 +1037,7 @@ export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 							});
 						}
 
-						var connectedPromise = dataView.filteredClone(filterConditions)
+						var connectedPromise = dataCollection.filteredClone(filterConditions)
 							.then(function (clonedDataView) {
 
 

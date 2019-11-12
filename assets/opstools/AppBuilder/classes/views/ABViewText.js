@@ -286,14 +286,14 @@ export default class ABViewText extends ABViewWidget {
 	 */
 	static propertyUpdateFieldOptions(ids, view, dvId) {
 
-		var dataview = view.application.dataviews(dv => dv.id == dvId)[0];
+		var datacollection = view.application.datacollections(dc => dc.id == dvId)[0];
 
-		if (!dataview && view.parent.key == "dataview") {
-			dataview = view.application.dataviews(dv => dv.id == view.parent.settings.dataviewID)[0];
+		if (!datacollection && view.parent.key == "dataview") {
+			datacollection = view.application.datacollections(dc => dc.id == view.parent.settings.dataviewID)[0];
 			$$(ids.dataview).setValue(view.parent.settings.dataviewID);
 		}
 
-		var object = dataview ? dataview.datasource : null;
+		var object = datacollection ? datacollection.datasource : null;
 
 		// Pull field list
 		$$(ids.field).clearAll();
@@ -314,7 +314,7 @@ export default class ABViewText extends ABViewWidget {
 		var SourceSelector = $$(ids.dataview);
 
 		// Pull data collections to options
-		var dvOptions = view.application.dataviews().map(dv => {
+		var dvOptions = view.application.datacollections().map(dv => {
 
 			return {
 				id: dv.id,
@@ -444,9 +444,9 @@ export default class ABViewText extends ABViewWidget {
 	 */
 	get dataview() {
 		if (this.parent.key == "dataview") {
-			return this.application.dataviews(dv => dv.id == this.parent.settings.dataviewID)[0];
+			return this.application.datacollections(dv => dv.id == this.parent.settings.dataviewID)[0];
 		} else {
-			return this.application.dataviews(dv => dv.id == this.settings.dataviewID)[0];
+			return this.application.datacollections(dv => dv.id == this.settings.dataviewID)[0];
 		}
 	}
 

@@ -216,7 +216,7 @@ export default class ABViewPivot extends ABViewWidget {
 		var SourceSelector = $$(ids.dataview);
 
 		// Pull data collections to options
-		var dcOptions = view.application.dataviews().map((dc) => {
+		var dcOptions = view.application.datacollections().map((dc) => {
 
 			return {
 				id: dc.id,

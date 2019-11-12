@@ -288,7 +288,7 @@ export default class ABViewDetail extends ABViewContainer {
 		var dataviewId = view.settings.dataviewID || null;
 
 		// Pull data views to options
-		var dvOptions = view.application.dataviews().map((dc) => {
+		var dcOptions = view.application.datacollections().map((dc) => {
 
 			return {
 				id: dc.id,
@@ -296,7 +296,7 @@ export default class ABViewDetail extends ABViewContainer {
 			};
 		});
 
-		SourceSelector.define('options', dvOptions);
+		SourceSelector.define('options', dcOptions);
 		SourceSelector.define('value', dataviewId);
 		SourceSelector.refresh();
 
@@ -329,8 +329,8 @@ export default class ABViewDetail extends ABViewContainer {
 
 	static propertyUpdateFieldOptions(ids, view, dcId) {
 
-		var dataview = view.application.dataviews(dc => dc.id == dcId)[0];
-		var object = dataview ? dataview.datasource : null;
+		var datacollection = view.application.datacollections(dc => dc.id == dcId)[0];
+		var object = datacollection ? datacollection.datasource : null;
 
 
 		// Pull field list

@@ -238,10 +238,10 @@ export default class ABViewCarousel extends ABViewWidget {
 
 										let imageFields = [];
 
-										let dc = _logic.currentEditObject().application.dataviews(dv => dv.id == newv)[0];
-										if (dc) {
+										let dataCollection = _logic.currentEditObject().application.datacollections(dc => dc.id == newv)[0];
+										if (dataCollection) {
 
-											let datasource = dc.datasource;
+											let datasource = dataCollection.datasource;
 											if (datasource) {
 												imageFields = datasource
 													.fields(f => f instanceof ABFieldImage)
@@ -390,10 +390,10 @@ export default class ABViewCarousel extends ABViewWidget {
 		var defaultOption = { id: '', value: L('ab.component.label.selectObject', '*Select an object') };
 
 		// Pull data collections to options
-		var objectOptions = view.application.dataviews().map(dv => {
+		var objectOptions = view.application.datacollections().map(dc => {
 			return {
-				id: dv.id,
-				value: dv.label
+				id: dc.id,
+				value: dc.label
 			};
 		});
 		objectOptions.unshift(defaultOption);

@@ -1061,7 +1061,7 @@ module.exports = class RowFilter extends OP.Component {
 							if (linkObjectId) {
 
 								_View.application
-								.dataviews(dv => dv.datasource && dv.datasource.id == linkObjectId)
+								.datacollections(dv => dv.datasource && dv.datasource.id == linkObjectId)
 								.forEach(dc => {
 
 									dcOptions.push({
@@ -1681,7 +1681,7 @@ module.exports = class RowFilter extends OP.Component {
 					rowData = rowData[columnName] || {};
 				}
 
-				var dataview = _View.application.dataviews(dv => dv.id == compareValue)[0];
+				var dataview = _View.application.datacollections(dv => dv.id == compareValue)[0];
 					
 				switch (rule) {
 					case 'in_data_collection':

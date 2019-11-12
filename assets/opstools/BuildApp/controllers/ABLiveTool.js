@@ -219,18 +219,18 @@ steal(
 										}
 									};
 
-									self.data.application.dataviews().forEach(dv => {
+									self.data.application.datacollections().forEach(dc => {
 
-										if (!dv) return;
+										if (!dc) return;
 
-										dv.init();
+										dc.init();
 
-										let datasource = dv.datasource;
+										let datasource = dc.datasource;
 										if (!datasource) return;
 
 										// Queries
-										if (dv.settings &&
-											dv.settings.isQuery &&
+										if (dc.settings &&
+											dc.settings.isQuery &&
 											self.data.application.queries(q => q.id == datasource.id).length < 1) {
 
 											self.data.application._queries.push(datasource);
@@ -577,8 +577,8 @@ steal(
 								 */
 								self.updateDataviewEventId = AD.comm.hub.subscribe('ab.dataview.update', function (msg, data) {
 
-									let updatedDv = self.data.application.dataviews(dv => dv.id == data.dataviewId)[0];
-									if (updatedDv) {
+									let updatedDC = self.data.application.datacollections(dc => dc.id == data.dataviewId)[0];
+									if (updatedDC) {
 										needToReloadPage();
 									}
 

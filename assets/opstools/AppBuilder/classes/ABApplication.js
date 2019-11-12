@@ -1082,9 +1082,9 @@ module.exports = class ABApplication extends ABApplicationBase {
 					this._dataviews = newDataviews;
 
 					// Initial data views
-					this.dataviews().forEach(dataview => {
-						if (dataview)
-							dataview.init();
+					this.datacollections().forEach(dc => {
+						if (dc)
+							dc.init();
 					});
 
 					resolve();
@@ -1142,7 +1142,7 @@ module.exports = class ABApplication extends ABApplicationBase {
 	 */
 	dataviewDestroy(dataview) {
 
-		var remaininDataviews = this.dataviews(dView => dView.id != dataview.id)
+		var remaininDataviews = this.datacollections(dView => dView.id != dataview.id)
 		this._dataviews = remaininDataviews;
 
 		return this.Model.staticData.dataviewDestroy(dataview.id);
@@ -1158,7 +1158,7 @@ module.exports = class ABApplication extends ABApplicationBase {
 	 * @return {Promise}
 	 */
 	dataviewSave(dataview) {
-		var isIncluded = (this.dataviews(dView => dView.id == dataview.id).length > 0);
+		var isIncluded = (this.datacollections(dView => dView.id == dataview.id).length > 0);
 		if (!isIncluded) {
 			this._dataviews.push(dataview);
 		}
@@ -1177,7 +1177,7 @@ module.exports = class ABApplication extends ABApplicationBase {
 					let newDataviewClass = this.dataviewNew(newDataview);
 
 					// add to list
-					var isIncluded = (this.dataviews(q => q.id == newDataview.id).length > 0);
+					var isIncluded = (this.datacollections(q => q.id == newDataview.id).length > 0);
 					if (!isIncluded) {
 						this._dataviews.push(newDataviewClass);
 					}
@@ -1199,7 +1199,7 @@ module.exports = class ABApplication extends ABApplicationBase {
 				.then(() => {
 
 					// remove query = require(list
-					this._dataviews = this.dataviews(dView => dView.id != dataviewId);
+					this._dataviews = this.datacollections(dView => dView.id != dataviewId);
 
 					resolve();
 

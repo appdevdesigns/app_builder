@@ -204,11 +204,11 @@ export default class ABViewConditionalContainer extends ABViewContainer {
 		var SourceSelector = $$(ids.dataview);
 
 		// Pull data collections to options
-		var dcOptions = view.application.dataviews().map((dv) => {
+		var dcOptions = view.application.datacollections().map((dc) => {
 
 			return {
-				id: dv.id,
-				value: dv.label
+				id: dc.id,
+				value: dc.label
 			};
 		});
 
@@ -239,7 +239,7 @@ export default class ABViewConditionalContainer extends ABViewContainer {
 
 		// specify data collection id
 		if (dataviewId) {
-			dv = view.application.dataviews(d => d.id == dataviewId)[0];
+			dv = view.application.datacollections(d => d.id == dataviewId)[0];
 		}
 
 		if (dv && dv.datasource) {

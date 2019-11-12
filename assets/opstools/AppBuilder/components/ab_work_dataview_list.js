@@ -155,7 +155,7 @@ module.exports = class AB_Work_Dataview_List extends OP.Component {
 
 				// get a DataCollection of all our objects
 				dataviewList = new webix.DataCollection({
-					data: application.dataviews(),
+					data: application.datacollections(),
 				});
 				dataviewList.sort("label", "asc");
 
@@ -261,8 +261,8 @@ module.exports = class AB_Work_Dataview_List extends OP.Component {
 					return;
 				}
 
-				let dataviews = CurrentApplication.dataviews();
-				dataviewList.parse(dataviews);
+				let datacollections = CurrentApplication.datacollections();
+				dataviewList.parse(datacollections);
 
 				// if (objectList.exists(object.id))
 				// 	objectList.updateItem(object.id, object);

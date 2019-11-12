@@ -67,7 +67,7 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compo
 
 		var CurrentApplication = null,
 			CurrentPage = null,
-			CurrentDV = null;
+			CurrentDC = null;
 
 		// our internal business logic 
 		var _logic = this._logic = {
@@ -99,18 +99,18 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compo
 			 */
 			selectDataCollection: function (dataviewId) {
 
-				CurrentDV = CurrentApplication.dataviews(v => v.id == dataviewId)[0];
+				CurrentDC = CurrentApplication.datacollections(dc => dc.id == dataviewId)[0];
 
 				// No data source was choosen
-				if (CurrentDV == null) return;
+				if (CurrentDC == null) return;
 
 				$$(ids.name).show();
-				$$(ids.name).setValue(CurrentDV.label);
+				$$(ids.name).setValue(CurrentDC.label);
 
 				// Rename data source name to template
 				$$(ids.form).getChildViews().forEach(function (r) {
 					if (r && r.config.labelRight) {
-						let label = r.config.labelRight.replace(/<b>[\s\S]*?<\/b>/, '<b>"' + (CurrentDV ? CurrentDV.label : '') + '"<\/b>');
+						let label = r.config.labelRight.replace(/<b>[\s\S]*?<\/b>/, '<b>"' + (CurrentDC ? CurrentDC.label : '') + '"<\/b>');
 
 						r.define('labelRight', label);
 						r.refresh();
@@ -118,12 +118,12 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compo
 				});
 
 				// Pull data collections that parent is the selected dc
-				let subDVs = [];
-				let datasource = CurrentDV.datasource;
+				let subDCs = [];
+				let datasource = CurrentDC.datasource;
 				if (datasource) {
-					subDVs = CurrentApplication.dataviews(v => {
+					subDCs = CurrentApplication.datacollections(dc => {
 
-						let linkDatasource = v.datasource;
+						let linkDatasource = dc.datasource;
 						if (!linkDatasource) return false;
 
 						return linkDatasource.fields(f => f.key == 'connectObject' && f.settings.linkObject == datasource.id).length > 0;
@@ -134,7 +134,7 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compo
 				$$(ids.subDVs).reconstruct();
 
 				// Add title
-				if (subDVs.length > 0) {
+				if (subDCs.length > 0) {
 					$$(ids.subDVs).addView({
 						view: "label",
 						label: "Do you want to add other options?",
@@ -143,7 +143,7 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compo
 				}
 
 				// Add sub-dcs to layout
-				subDVs.forEach((subObj) => {
+				subDCs.forEach((subObj) => {
 					$$(ids.subDVs).addView({
 						view: "checkbox",
 						name: subObj.id + '|list',
@@ -232,19 +232,19 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compo
 				$$(ids.parentList).refresh();
 
 				/* Objects */
-				let dvOptions = CurrentApplication.dataviews().map(v => {
+				let dcOptions = CurrentApplication.datacollections().map(dc => {
 					return {
-						id: v.id,
-						value: v.label
+						id: dc.id,
+						value: dc.label
 					}
 				}) || [];
 
-				dvOptions.unshift({
+				dcOptions.unshift({
 					id: '',
 					value: labels.component.selectDataCollection
 				});
 
-				$$(ids.selectDataCollection).define('options', dvOptions);
+				$$(ids.selectDataCollection).define('options', dcOptions);
 				$$(ids.selectDataCollection).refresh();
 
 
@@ -330,9 +330,9 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compo
 
 				// create a new detail instance
 				var newDetail = new ABViewDetail({
-					label: "Details of " + CurrentDV.label,
+					label: "Details of " + CurrentDC.label,
 					settings: {
-						dataviewID: CurrentDV.id,
+						dataviewID: CurrentDC.id,
 						showLabel: true,
 						labelPosition: 'left',
 						labelWidth: 120
@@ -340,7 +340,7 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compo
 				}, CurrentApplication);
 
 				// populate fields to a form
-				var object = CurrentDV.datasource;
+				var object = CurrentDC.datasource;
 				if (object) {
 					object.fields().forEach((f, index) => {
 						newDetail.addFieldToView(f, index);
@@ -353,7 +353,7 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compo
 
 			values: function () {
 
-				if (!CurrentDV) return null;
+				if (!CurrentDC) return null;
 
 				// TODO : validate unique page's name 
 
@@ -371,7 +371,7 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compo
 
 					addPageId = OP.Util.uuid();
 
-					let addForm = _logic.getFormView(CurrentDV, {
+					let addForm = _logic.getFormView(CurrentDC, {
 						clearOnLoad: true
 					});
 
@@ -380,7 +380,7 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compo
 						id: addPageId,
 						key: ABViewPage.common().key,
 						icon: ABViewPage.common().icon,
-						name: "Add " + CurrentDV.label,
+						name: "Add " + CurrentDC.label,
 						settings: {
 							type: "popup"
 						},
@@ -390,7 +390,7 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compo
 								key: ABViewLabel.common().key,
 								icon: ABViewLabel.common().icon,
 								label: "Title",
-								text: "Add " + CurrentDV.label,
+								text: "Add " + CurrentDC.label,
 								settings: {
 									format: 1
 								}
@@ -420,14 +420,14 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compo
 
 					editPageId = OP.Util.uuid();
 
-					let editForm = _logic.getFormView(CurrentDV);
+					let editForm = _logic.getFormView(CurrentDC);
 
 					// Add a 'edit' page
 					pages.push({
 						id: editPageId,
 						key: ABViewPage.common().key,
 						icon: ABViewPage.common().icon,
-						name: "Edit " + CurrentDV.label,
+						name: "Edit " + CurrentDC.label,
 						settings: {
 							type: "popup"
 						},
@@ -437,7 +437,7 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compo
 								key: ABViewLabel.common().key,
 								icon: ABViewLabel.common().icon,
 								label: "Title",
-								text: "Edit " + CurrentDV.label,
+								text: "Edit " + CurrentDC.label,
 								settings: {
 									format: 1
 								}
@@ -464,7 +464,7 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compo
 							key: ABViewLabel.common().key,
 							icon: ABViewLabel.common().icon,
 							label: "Title",
-							text: "Details of " + CurrentDV.label,
+							text: "Details of " + CurrentDC.label,
 							settings: {
 								format: 1
 							},
@@ -487,7 +487,7 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compo
 								dataviewId = vals[0],
 								flag = vals[1]; // 'list' or 'form'
 
-							let childDv = CurrentApplication.dataviews(v => v.id == dataviewId)[0];
+							let childDC = CurrentApplication.datacollections(dc => dc.id == dataviewId)[0];
 
 							// Add grids of sub-dcs
 							if (flag == 'list') {
@@ -498,7 +498,7 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compo
 										key: ABViewLabel.common().key,
 										icon: ABViewLabel.common().icon,
 										label: "Title",
-										text: childDv.label,
+										text: childDC.label,
 										settings: {
 											format: 1
 										},
@@ -510,9 +510,9 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compo
 									{
 										key: ABViewGrid.common().key,
 										icon: ABViewGrid.common().icon,
-										label: childDv.label + "'s grid",
+										label: childDC.label + "'s grid",
 										settings: {
-											dataviewID: childDv.id,
+											dataviewID: childDC.id,
 											height: 300
 										},
 										position: {
@@ -529,13 +529,13 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compo
 								// add to menu
 								menuSubPages.push(subPageId);
 
-								let newForm = _logic.getFormView(childDv, { clearOnLoad: true });
+								let newForm = _logic.getFormView(childDC, { clearOnLoad: true });
 
 								pages.push({
 									id: subPageId,
 									key: ABViewPage.common().key,
 									icon: ABViewPage.common().icon,
-									name: "Add " + childDv.label,
+									name: "Add " + childDC.label,
 									settings: {
 										type: "popup"
 									},
@@ -545,7 +545,7 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compo
 											key: ABViewLabel.common().key,
 											icon: ABViewLabel.common().icon,
 											label: "Title",
-											text: "Add " + childDv.label,
+											text: "Add " + childDC.label,
 											settings: {
 												format: 1
 											}
@@ -577,7 +577,7 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compo
 						id: viewPageId,
 						key: ABViewPage.common().key,
 						icon: ABViewPage.common().icon,
-						name: "Details of " + CurrentDV.label,
+						name: "Details of " + CurrentDC.label,
 						settings: {
 							type: "popup"
 						},
@@ -592,9 +592,9 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compo
 					views.push({
 						key: ABViewGrid.common().key,
 						icon: ABViewGrid.common().icon,
-						label: CurrentDV.label,
+						label: CurrentDC.label,
 						settings: {
-							dataviewID: CurrentDV.id,
+							dataviewID: CurrentDC.id,
 							height: 300,
 							editPage: formValues.editable ? editPageId : null,
 							detailsPage: formValues.viewable ? viewPageId : null
@@ -611,13 +611,13 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compo
 						key: ABViewLabel.common().key,
 						icon: ABViewLabel.common().icon,
 						label: "Title",
-						text: 'Add ' + CurrentDV.label,
+						text: 'Add ' + CurrentDC.label,
 						settings: {
 							format: 1
 						}
 					});
 
-					let editForm = _logic.getFormView(CurrentDV, {
+					let editForm = _logic.getFormView(CurrentDC, {
 						includeCancel: true
 					});
 

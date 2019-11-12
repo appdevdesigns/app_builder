@@ -922,7 +922,7 @@ module.exports = class RowFilter extends RowFilterCore {
 						if (linkObjectId) {
 
 							this._View.application
-							.datacollections(dv => dv.datasource && dv.datasource.id == linkObjectId)
+							.datacollections(dc => dc.datasource && dc.datasource.id == linkObjectId)
 							.forEach(dc => {
 
 								dcOptions.push({

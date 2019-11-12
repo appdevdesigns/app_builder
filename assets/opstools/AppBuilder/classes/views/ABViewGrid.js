@@ -522,9 +522,9 @@ export default class ABViewGrid extends ABViewWidget  {
 										$$(ids.detailsPage).setValue("");
 										$$(ids.editPage).setValue("");
 
-										var currDv = _logic.currentEditObject().application.dataviews(dv => dv.id == newv)[0];
+										var currDC = _logic.currentEditObject().application.datacollections(dc => dc.id == newv)[0];
 										// disallow edit data of query
-										if (currDv && currDv.sourceType == "query") {
+										if (currDC && currDC.sourceType == "query") {
 
 											$$(ids.isEditable).setValue(false);
 											$$(ids.massUpdate).setValue(false);
@@ -1534,10 +1534,10 @@ export default class ABViewGrid extends ABViewWidget  {
 		// 	objects.push({id:o.id, value:o.label});
 		// });
 		// Pull data collections to options
-		var objectOptions = view.application.dataviews().map(dv => {
+		var objectOptions = view.application.datacollections().map(dc => {
 			return {
-				id: dv.id,
-				value: dv.label
+				id: dc.id,
+				value: dc.label
 			};
 		});
 		objectOptions.unshift(defaultOption);

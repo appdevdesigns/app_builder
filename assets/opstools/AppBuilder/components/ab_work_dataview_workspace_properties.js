@@ -382,7 +382,7 @@ module.exports = class AB_Work_Dataview_Workspace_Properties extends OP.Componen
 
 					// add to tree collection
 					this.viewList.add(page, index, parentId);
-					
+
 					// add sub-pages
 					if (page instanceof ABViewDetail) {
 						return 
@@ -567,16 +567,16 @@ module.exports = class AB_Work_Dataview_Workspace_Properties extends OP.Componen
 					let linkDvOptions = [];
 
 					// pull data collections that are link to object
-					let linkDvs = this._application.dataviews(dv => {
+					let linkDCs = this._application.datacollections(dc => {
 
-						return linkObjectIds.filter(objId => dv.settings.datasourceID == objId).length > 0;
+						return linkObjectIds.filter(objId => dc.settings.datasourceID == objId).length > 0;
 
 					});
 
-					if (linkDvs && linkDvs.length > 0) {
+					if (linkDCs && linkDCs.length > 0) {
 
 						// set data collections to options
-						linkDvs.forEach((dc) => {
+						linkDCs.forEach((dc) => {
 							linkDvOptions.push({
 								id: dc.id,
 								value: dc.label
@@ -612,22 +612,22 @@ module.exports = class AB_Work_Dataview_Workspace_Properties extends OP.Componen
 				let ids = this.ids;
 
 				let linkFieldOptions = [];
-				let linkDataview = null;
+				let linkDC = null;
 
 				// Specify id of linked data view
 				if (linkedDvId) {
-					linkDataview = this._application.dataviews(dv => dv.id == linkedDvId)[0];
+					linkDC = this._application.datacollections(dc => dc.id == linkedDvId)[0];
 				}
 				// Pull from current data view
 				else if (this._dataview && this._dataview.dataviewLink) {
-					linkDataview = this._dataview.dataviewLink;
+					linkDC = this._dataview.dataviewLink;
 				}
 
 				// get fields that link to our ABObject
-				if (linkDataview) {
+				if (linkDC) {
 
 					let object = this._dataview.datasource;
-					let linkObject = linkDataview.datasource;
+					let linkObject = linkDC.datasource;
 					let relationFields = object.connectFields().filter(link => link.settings.linkObject == (linkObject || {}).id);
 
 					// pull fields to options

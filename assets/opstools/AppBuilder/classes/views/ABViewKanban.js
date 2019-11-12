@@ -174,8 +174,8 @@ export default class ABViewKanban extends ABViewWidget {
 	 */
 	static propertyUpdateFieldOptions(ids, view, dvId) {
 
-		let dataview = view.application.dataviews(dv => dv.id == dvId)[0];
-		let object = dataview ? dataview.datasource : null;
+		let datacollection = view.application.datacollections(dc => dc.id == dvId)[0];
+		let object = datacollection ? datacollection.datasource : null;
 
 		// Refresh options of fields by call ABObjectWorkspaceViewKanban's function
 		if (this._kanbanViewComponent) {
@@ -200,7 +200,7 @@ export default class ABViewKanban extends ABViewWidget {
 		let SourceSelector = $$(ids.dataview);
 
 		// Pull data collections to options
-		let dcOptions = view.application.dataviews(dv => dv.settings && !dv.settings.isQuery).map((dc) => {
+		let dcOptions = view.application.datacollections(dc => dc.settings && !dc.settings.isQuery).map((dc) => {
 			return {
 				id: dc.id,
 				value: dc.label

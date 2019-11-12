@@ -212,32 +212,32 @@ export default class ABViewComment extends ABViewWidget  {
 		// Retrive the values of your properties from Webix and store them in the view
 	}
 
-	static propertyUpdateDataviewOptions(ids, view, dataviewId) {
+	static propertyUpdateDataviewOptions(ids, view, dcId) {
 
 		// Pull data collections to options
-		var dvOptions = view.application.dataviews().map((dv) => {
+		var dcOptions = view.application.datacollections().map((dc) => {
 
 			return {
-				id: dv.id,
-				value: dv.label
+				id: dc.id,
+				value: dc.label
 			};
 		});
 
-		dvOptions.unshift({
+		dcOptions.unshift({
 			id: null,
 			value: '[Select]'
 		});
 
-		$$(ids.dataSource).define('options', dvOptions);
-		$$(ids.dataSource).define('value', dataviewId);
+		$$(ids.dataSource).define('options', dcOptions);
+		$$(ids.dataSource).define('value', dcId);
 		$$(ids.dataSource).refresh();
 
 	}
 
-	static propertyUpdateUserFieldOptions(ids, view, dvId) {
+	static propertyUpdateUserFieldOptions(ids, view, dcId) {
 
-		var dataview = view.application.dataviews(dv => dv.id == dvId)[0];
-		var object = dataview ? dataview.datasource : null;
+		var datacollection = view.application.datacollections(dc => dc.id == dcId)[0];
+		var object = datacollection ? datacollection.datasource : null;
 
 		// Pull field list
 		var fieldOptions = [];
@@ -261,10 +261,10 @@ export default class ABViewComment extends ABViewWidget  {
 
 	}
 
-	static propertyUpdateCommentFieldOptions(ids, view, dvId) {
+	static propertyUpdateCommentFieldOptions(ids, view, dcId) {
 
-		var dataview = view.application.dataviews(dv => dv.id == dvId)[0];
-		var object = dataview ? dataview.datasource : null;
+		var datacollection = view.application.datacollections(dc => dc.id == dcId)[0];
+		var object = datacollection ? datacollection.datasource : null;
 
 		// Pull field list
 		var fieldOptions = [];
@@ -288,10 +288,10 @@ export default class ABViewComment extends ABViewWidget  {
 
 	}
 
-	static propertyUpdateDateFieldOptions(ids, view, dvId) {
+	static propertyUpdateDateFieldOptions(ids, view, dcId) {
 
-		var dataview = view.application.dataviews(dv => dv.id == dvId)[0];
-		var object = dataview ? dataview.datasource : null;
+		var datacollection = view.application.datacollections(dc => dc.id == dcId)[0];
+		var object = datacollection ? datacollection.datasource : null;
 
 		// Pull field list
 		var fieldOptions = [];

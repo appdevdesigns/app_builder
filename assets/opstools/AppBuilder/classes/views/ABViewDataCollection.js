@@ -806,7 +806,7 @@ export default class ABViewDataCollection extends ABView {
 			var linkDcOptions = [];
 
 			// pull data collections that are link to object
-			var linkDcs = rootPage.application.dataviews((dv) => {
+			var linkDcs = rootPage.application.datacollections((dv) => {
 
 				return linkObjectIds.filter((objId) => dv.settings.object == objId).length > 0;
 
@@ -1468,7 +1468,7 @@ export default class ABViewDataCollection extends ABView {
 	*/
 	get dataCollectionLink() {
 
-		return this.application.dataviews(dv => dv.id == this.settings.linkDataCollection)[0];
+		return this.application.datacollections(dv => dv.id == this.settings.linkDataCollection)[0];
 	}
 
 	/**
@@ -1809,7 +1809,7 @@ export default class ABViewDataCollection extends ABView {
 
 							dcFilters.push(
 								new Promise((next, err) => {
-									var dataview = this.application.dataviews(dv => dv.id == rule.value)[0];									
+									var dataview = this.application.datacollections(dv => dv.id == rule.value)[0];									
 									if (!dataview) return next();
 
 									switch (dataview.dataStatus) {

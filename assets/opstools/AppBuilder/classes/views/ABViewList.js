@@ -170,8 +170,8 @@ export default class ABViewLabel extends ABViewWidget {
 	 */
 	static propertyUpdateFieldOptions(ids, view, dvId) {
 
-		var dataview = view.application.dataviews(dv => dv.id == dvId)[0];
-		var object = dataview ? dataview.datasource : null;
+		var datacollection = view.application.datacollections(dc => dc.id == dvId)[0];
+		var object = datacollection ? datacollection.datasource : null;
 
 		// Pull field list
 		var fieldOptions = [];
@@ -200,7 +200,7 @@ export default class ABViewLabel extends ABViewWidget {
 		var SourceSelector = $$(ids.dataview);
 
 		// Pull data collections to options
-		var dcOptions = view.application.dataviews().map((dc) => {
+		var dcOptions = view.application.datacollections().map((dc) => {
 
 			return {
 				id: dc.id,

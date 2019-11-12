@@ -534,7 +534,7 @@ module.exports = class ABView extends ABViewCore {
 		let dataviewID = (this.settings || {}).dataviewID;
 		if (!dataviewID) return null;
 
-		return this.application.datacollections(dv => dv.id == dataviewID)[0];
+		return this.application.datacollections(dc => dc.id == dataviewID)[0];
 	}
 
 

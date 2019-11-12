@@ -610,11 +610,11 @@ PopupRecordRule.qbFixAfterShow();
 		var SourceSelector = $$(ids.dataview);
 
 		// Pull data collections to options
-		var dvOptions = view.application.dataviews(dv => {
+		var dcOptions = view.application.datacollections(dc => {
 
-			var obj = dv.datasource;
+			var obj = dc.datasource;
 
-			return dv.sourceType == "object" && obj && !obj.isImported;
+			return dc.sourceType == "object" && obj && !obj.isImported;
 
 		}).map((dc) => {
 
@@ -624,11 +624,11 @@ PopupRecordRule.qbFixAfterShow();
 			};
 		});
 
-		dvOptions.unshift({
+		dcOptions.unshift({
 			id: null,
 			value: '[Select]'
 		});
-		SourceSelector.define('options', dvOptions);
+		SourceSelector.define('options', dcOptions);
 		SourceSelector.define('value', dataviewId);
 		SourceSelector.refresh();
 
@@ -692,8 +692,8 @@ PopupRecordRule.qbFixAfterShow();
 
 		var formComponent = view.parentFormComponent();
 		var existsFields = formComponent.fieldComponents();
-		var dataview = view.application.dataviews(dv => dv.id == dcId)[0];
-		var object = dataview ? dataview.datasource : null;
+		var datacollection = view.application.datacollections(dc => dc.id == dcId)[0];
+		var object = datacollection ? datacollection.datasource : null;
 
 		// Pull field list
 		var fieldOptions = [];

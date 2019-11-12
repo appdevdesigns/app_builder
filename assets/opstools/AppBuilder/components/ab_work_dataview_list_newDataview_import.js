@@ -67,25 +67,25 @@ module.exports = class AB_Work_Dataview_List_NewDataview_Import extends OP.Compo
 				_logic.busyStart();
 
 				// CurrentApplication.dataviewFind()
-				CurrentApplication.dataviewInfo()
-					.then(dataviews => {
+				CurrentApplication.datacollectionInfo()
+					.then(datacollections => {
 
-						let availableDataviews = [];
+						let availableDCs = [];
 
-						dataviews.forEach(dataview => {
+						datacollections.forEach(dc => {
 
 							// skip if this object is in application
-							if (CurrentApplication.dataviews(q => q.id == dataview.id)[0])
+							if (CurrentApplication.datacollections(q => q.id == dc.id)[0])
 								return;
 
 							// translate label of objects
-							OP.Multilingual.translate(dataview, dataview, ['label']);
+							OP.Multilingual.translate(dc, dc, ['label']);
 
-							availableDataviews.push(dataview);
+							availableDCs.push(dc);
 
 						});
 
-						$$(ids.dataviewList).parse(availableDataviews, 'json');
+						$$(ids.dataviewList).parse(availableDCs, 'json');
 
 						_logic.busyEnd();
 
