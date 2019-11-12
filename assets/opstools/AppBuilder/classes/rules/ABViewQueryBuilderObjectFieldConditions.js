@@ -8,7 +8,7 @@
 // and generating the settings value to be saved.
 
 
-export default class ABViewQueryBuilderObjectFieldConditions {
+module.exports = class ABViewQueryBuilderObjectFieldConditions {
 
 	/**
 	 * @param {object} App 

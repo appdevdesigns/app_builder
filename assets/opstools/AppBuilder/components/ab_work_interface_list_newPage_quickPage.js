@@ -6,8 +6,8 @@
  *
  */
 
-const ABDataview = require('../classes/ABDataview');
-const ABViewDetail = require('../classes/views/ABViewDetail');
+const ABDataCollection = require('../classes/platform/ABDataCollection');
+const ABViewDetail = require('../classes/platform/views/ABViewDetail');
 const ABViewForm = require('../classes/views/ABViewForm');
 const ABViewFormButton = require('../classes/views/ABViewFormButton');
 const ABViewGrid = require('../classes/views/ABViewGrid');
@@ -273,7 +273,7 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compo
 						dvConfig.settings.linkFieldID = linkField.id;
 				}
 
-				return new ABDataview(dvConfig, CurrentApplication);
+				return new ABDataCollection(dvConfig, CurrentApplication);
 
 			},
 

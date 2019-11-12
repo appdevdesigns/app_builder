@@ -3,9 +3,9 @@
 // An action that allows you to update fields on an object. 
 //
 //
-import ABViewRuleAction from "../ABViewRuleAction"
+const ABViewRuleAction = require("../ABViewRuleAction");
 
-import RowFilter from "../../RowFilter"
+const RowFilter = require("../../RowFilter");
 
 var ABViewRuleActionObjectUpdaterDefaults = {
 	filterConditions: { // array of filters to apply to the data table
@@ -14,7 +14,7 @@ var ABViewRuleActionObjectUpdaterDefaults = {
 	}
 }
 
-export default class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
+module.exports = class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 
 	/**
 	 * @param {object} App 

@@ -5,13 +5,13 @@
 // the current object we just Added/Updated
 //
 //
-import ABViewRuleActionObjectUpdater from "./ABViewRuleActionObjectUpdater"
-import ABFieldConnect from "../../dataFields/ABFieldConnect"
-import ObjectQueryBuilder from "../ABViewQueryBuilderObjectFieldConditions"
+const ABViewRuleActionObjectUpdater = require("./ABViewRuleActionObjectUpdater");
+const ABFieldConnect = require("../../dataFields/ABFieldConnect");
+const ObjectQueryBuilder = require("../ABViewQueryBuilderObjectFieldConditions");
 
 
 
-export default class ABViewRuleActionFormRecordRuleUpdateConnected extends ABViewRuleActionObjectUpdater {
+module.exports = class ABViewRuleActionFormRecordRuleUpdateConnected extends ABViewRuleActionObjectUpdater {
 
 
 	constructor(App, idBase, currentForm) {
@@ -508,8 +508,8 @@ this._formData = options.data;
 
 	/**
 	 * fromSettings
-	 * initialize this Action from a given set of setting values.
-	 * @param {obj} settings  the settings {} returned from toSettings()
+	 * initialize this Action = require(a given set of setting values.
+	 * @param {obj} settings  the settings {} returned = require(toSettings()
 	 */
 	fromSettings(settings) {
 		settings = settings || {};
@@ -538,7 +538,7 @@ this._formData = options.data;
 		// settings: {
 		// 	selectedFieldID: 'guid',
 		//  qbCondition: [],
-		//	valueRules:{}		// from ABViewRuleActionObjectUpdater
+		//	valueRules:{}		// = require(ABViewRuleActionObjectUpdater
 		// }
 
 		// let our parent store our QB settings
@@ -561,7 +561,7 @@ this._formData = options.data;
 		settings.qbCondition = qbCond;
 
 
-		// if we have a display component, then request our details from it:
+		// if we have a display component, then request our details = require(it:
 		if (this._uiChooser) {
 			settings.valueRules = this._logic.toSettings();
 		}

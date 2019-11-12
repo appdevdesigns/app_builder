@@ -4,17 +4,17 @@
 // A component that is responsible for displaying the specific list of Submit
 // Rules for a form.
 //
-import ABViewRuleList from "./ABViewRuleList"
-import ABViewRule from "./ABViewRule"
+const ABViewRuleList = require("./ABViewRuleList");
+const ABViewRule = require("./ABViewRule");
 
-import RoleConfirmMessage from "./ruleActions/ABViewRuleActionFormSubmitRuleConfirmMessage"
-import RuleExistPage from "./ruleActions/ABViewRuleActionFormSubmitRuleExistPage"
-import RuleParentPage from "./ruleActions/ABViewRuleActionFormSubmitRuleParentPage"
-import RuleClosePopup from "./ruleActions/ABViewRuleActionFormSubmitRuleClosePopup"
-import RuleWebsite from "./ruleActions/ABViewRuleActionFormSubmitRuleWebsite"
-import RuleEmail from "./ruleActions/ABViewRuleActionFormSubmitRuleEmail"
+const RoleConfirmMessage = require("./ruleActions/ABViewRuleActionFormSubmitRuleConfirmMessage");
+const RuleExistPage = require("./ruleActions/ABViewRuleActionFormSubmitRuleExistPage");
+const RuleParentPage = require("./ruleActions/ABViewRuleActionFormSubmitRuleParentPage");
+const RuleClosePopup = require("./ruleActions/ABViewRuleActionFormSubmitRuleClosePopup");
+const RuleWebsite = require("./ruleActions/ABViewRuleActionFormSubmitRuleWebsite");
+const RuleEmail = require("./ruleActions/ABViewRuleActionFormSubmitRuleEmail");
 
-export default class ABViewRuleListFormSubmitRules extends ABViewRuleList {
+module.exports = class ABViewRuleListFormSubmitRules extends ABViewRuleList {
 
 	/**
 	 * @param {object} App 

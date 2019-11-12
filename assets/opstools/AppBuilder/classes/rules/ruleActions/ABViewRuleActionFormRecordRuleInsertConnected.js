@@ -7,10 +7,10 @@
 // modify it to only Insert data.
 //
 //
-import UpdateConnected from "./ABViewRuleActionFormRecordRuleUpdateConnected"
+const UpdateConnected = require("./ABViewRuleActionFormRecordRuleUpdateConnected");
 
 
-export default class ABViewRuleActionFormRecordRuleInsertConnected extends UpdateConnected {
+module.exports = class ABViewRuleActionFormRecordRuleInsertConnected extends UpdateConnected {
 
 	/**
 	 * @param {object} App 

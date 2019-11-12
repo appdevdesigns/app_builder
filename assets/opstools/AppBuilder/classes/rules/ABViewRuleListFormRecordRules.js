@@ -4,14 +4,14 @@
 // A component that is responsible for displaying the specific list of Record
 // Rules for a form.
 //
-import ABViewRuleList from "./ABViewRuleList"
-import ABViewRule from "./ABViewRule"
+const ABViewRuleList = require("./ABViewRuleList");
+const ABViewRule = require("./ABViewRule");
 
-import RoleUpdateExisting from "./ruleActions/ABViewRuleActionFormRecordRuleUpdate"
-import RoleInsertConnected from "./ruleActions/ABViewRuleActionFormRecordRuleInsertConnected"
-import RoleUpdateConnected from "./ruleActions/ABViewRuleActionFormRecordRuleUpdateConnected"
+const RoleUpdateExisting = require("./ruleActions/ABViewRuleActionFormRecordRuleUpdate");
+const RoleInsertConnected = require("./ruleActions/ABViewRuleActionFormRecordRuleInsertConnected");
+const RoleUpdateConnected = require("./ruleActions/ABViewRuleActionFormRecordRuleUpdateConnected");
 
-export default class ABViewRuleListFormRecordRules extends ABViewRuleList {
+module.exports = class ABViewRuleListFormRecordRules extends ABViewRuleList {
 
 	/**
 	 * @param {object} App 

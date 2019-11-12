@@ -271,6 +271,10 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 		return AD.lang.currentLanguage || super.languageDefault() || 'en';
 	}
 
+	uuid() {
+		return OP.Util.uuid();
+	}
+
 	/// ABApplication data methods
 
 

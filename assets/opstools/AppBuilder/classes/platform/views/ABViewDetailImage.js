@@ -1,66 +1,24 @@
-/*
- * ABViewDetailImage
- *
- * An ABViewDetailImage defines a UI string component in the detail component.
- *
- */
+const ABViewDetailImageCore = require("../../core/views/ABViewDetailImageCore");
 
-import ABViewDetailComponent from "./ABViewDetailComponent"
+const ABViewDetailImagePropertyComponentDefaults = ABViewDetailImageCore.defaultValues();
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
-
-var ABViewDetailImagePropertyComponentDefaults = {
-	height: 80,
-	width: 120
-}
-
-
-var ABViewDetailImageDefaults = {
-	key: 'detailimage',		// {string} unique key for this view
-	icon: 'image',			// {string} fa-[icon] reference for this view
-	labelKey: 'ab.components.detail.image' // {string} the multilingual label key for the class label
-}
-
-
-export default class ABViewDetailImage extends ABViewDetailComponent {
+module.exports = class ABViewDetailImage extends ABViewDetailImageCore {
 
 	/**
 	 * @param {obj} values  key=>value hash of ABView values
 	 * @param {ABApplication} application the application object this view is under
 	 * @param {ABView} parent the ABView this view is a child of. (can be null)
 	 */
-	constructor(values, application, parent) {
+	constructor(values, application, parent, defaultValues) {
 
-		super(values, application, parent, ABViewDetailImageDefaults);
+		super(values, application, parent, defaultValues);
 
 	}
 
-
-	static common() {
-		return ABViewDetailImageDefaults;
-	}
-
-	///
-	/// Instance Methods
-	///
-
-	/**
-	 * @method fromValues()
-	 *
-	 * initialze this object with the given set of values.
-	 * @param {obj} values
-	 */
-	fromValues(values) {
-
-		super.fromValues(values);
-
-		// convert from "0" => 0
-		this.settings.height = parseInt(this.settings.height || ABViewDetailImagePropertyComponentDefaults.height);
-		this.settings.width = parseInt(this.settings.width || ABViewDetailImagePropertyComponentDefaults.width);
-	}
 
 	//
 	//	Editor Related
@@ -204,8 +162,8 @@ export default class ABViewDetailImage extends ABViewDetailComponent {
 						width = this.settings.width + 'px';
 
 					imageTemplate = `<div class="ab-image-data-field">` +
-								`<div style="float: left; background-size: cover; background-position: center center; background-image:url('${imageUrl}');  width: ${width}; height: ${height};">` +
-								`</div></div>`;
+						`<div style="float: left; background-size: cover; background-position: center center; background-image:url('${imageUrl}');  width: ${width}; height: ${height};">` +
+						`</div></div>`;
 				}
 
 				component.logic.setValue(ids.component, imageTemplate);
@@ -222,66 +180,4 @@ export default class ABViewDetailImage extends ABViewDetailComponent {
 		};
 	}
 
-
-	/**
-	 * @method componentList
-	 * return the list of components available on this view to display in the editor.
-	 */
-	componentList() {
-		return [];
-	}
-
-
-	//// Report ////
-
-	/**
-	 * @method print
-	 * 
-	 * 
-	 * @return {Object} - PDF object definition
-	 */
-	print(dataRow) {
-
-		return new Promise((resolve, reject) => {
-
-			var reportDef = {};
-
-			var detailCom = this.detailComponent();
-			if (!detailCom) return resolve(reportDef);
-
-			var field = this.field();
-			if (!field) return resolve(reportDef);
-
-			field.toBase64(dataRow || this.getCurrentData()).then(imageData => {
-
-				reportDef = {
-					columns: [
-						{
-							bold: true,
-							text: field.label,
-							width: detailCom.settings.labelWidth
-						}
-					]
-				};
-
-				if (imageData && imageData.data) {
-					reportDef.columns.push({
-						image: imageData.data,
-						width: parseInt(field.settings.imageWidth || 20),
-						height: parseInt(field.settings.imageHeight || 20),
-					});
-				}
-				else {
-					reportDef.columns.push({});
-				}
-
-				resolve(reportDef);
-
-			}).catch(reject);
-
-		});
-
-	}
-
-
-}
+};

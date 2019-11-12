@@ -5,10 +5,10 @@
 // Added/Updated. 
 //
 //
-import ABViewRuleActionObjectUpdater from "./ABViewRuleActionObjectUpdater"
+const ABViewRuleActionObjectUpdater = require("./ABViewRuleActionObjectUpdater");
 
 
-export default class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleActionObjectUpdater {
+module.exports = class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleActionObjectUpdater {
 
 	/**
 	 * @param {object} App 

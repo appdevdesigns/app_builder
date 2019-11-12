@@ -3,10 +3,10 @@
 //
 //
 //
-import ABViewRuleAction from "../ABViewRuleAction"
+const ABViewRuleAction = require("../ABViewRuleAction");
 
 
-export default class ABViewRuleActionFormSubmitRuleWebsite extends ABViewRuleAction {
+module.exports = class ABViewRuleActionFormSubmitRuleWebsite extends ABViewRuleAction {
 
 	/**
 	 * @param {object} App 

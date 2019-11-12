@@ -4,19 +4,12 @@ function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
-const ABPropertyComponentDefaults = {
-	type: 'page', // 'page', 'popup' or 'reportPage'
-	popupWidth: 700,
-	popupHeight: 450,
-	pageWidth: null,
-	fixedPageWidth: 0,
-	pageBackground: "ab-background-default"
-}
+const ABPropertyComponentDefaults = ABViewPageCore.defaultValues();
 
 module.exports = class ABViewPage extends ABViewPageCore {
 
-	constructor(values, application, parent) {
-		super(values, application, parent);
+	constructor(values, application, parent, defaultValues) {
+		super(values, application, parent, defaultValues);
 	}
 
 

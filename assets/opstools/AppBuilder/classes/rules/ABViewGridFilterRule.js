@@ -1,8 +1,8 @@
 
-import ObjectQueryBuilder from "./ABViewQueryBuilderObjectFieldConditions"
+const ObjectQueryBuilder = require("./ABViewQueryBuilderObjectFieldConditions");
 
 
-export default class ABViewGridFilterRule {
+module.exports = class ABViewGridFilterRule {
 
 	/**
 	 * @param {object} App 

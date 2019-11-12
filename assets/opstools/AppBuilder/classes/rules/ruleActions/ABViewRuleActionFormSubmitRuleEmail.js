@@ -3,12 +3,12 @@
 //
 //
 //
-import ABViewRuleAction from "../ABViewRuleAction"
-import ABFieldConnect from "../../dataFields/ABFieldConnect"
-import ABFieldEmail from "../../dataFields/ABFieldEmail"
+const ABViewRuleAction = require("../ABViewRuleAction");
+const ABFieldConnect = require("../../dataFields/ABFieldConnect");
+const ABFieldEmail = require("../../dataFields/ABFieldEmail");
 
 
-export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleAction {
+module.exports = class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleAction {
 
 	/**
 	 * @param {object} App 

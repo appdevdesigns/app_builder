@@ -4,15 +4,12 @@ function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
-const ABPropertyComponentDefaults = {
-	columns: 1,
-	gravity: 1
-}
+const ABPropertyComponentDefaults = ABViewContainerCore.defaultValues();
 
 module.exports = class ABViewContainer extends ABViewContainerCore {
 
-	constructor(values, application, parent) {
-		super(values, application, parent);
+	constructor(values, application, parent, defaultValues) {
+		super(values, application, parent, defaultValues);
 	}
 
 

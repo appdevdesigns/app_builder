@@ -1,6 +1,6 @@
 const ABPopupSortField = require("./ab_work_object_workspace_popupSortFields");
 const ABViewTab = require("../classes/views/ABViewTab");
-const ABViewDetail = require("../classes/views/ABViewDetail");
+const ABViewDetail = require("../classes/platform/views/ABViewDetail");
 const RowFilter = require("../classes/RowFilter");
 
 function L(key, altText) {

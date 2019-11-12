@@ -1,14 +1,12 @@
 const ABViewCore = require("../../core/views/ABViewCore");
 const ABPropertyComponent = require("../../ABPropertyComponent"); // TODO
 
-let ABViewPropertyComponentDefaults = {
-	label: ''
-}
+const ABViewPropertyComponentDefaults = ABViewCore.defaultValues();
 
 module.exports = class ABView extends ABViewCore {
 
-	constructor(values, application, parent) {
-		super(values, application, parent);
+	constructor(values, application, parent, defaultValues) {
+		super(values, application, parent, defaultValues);
 	}
 
 
