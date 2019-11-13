@@ -511,7 +511,101 @@ module.exports = {
                 
             }
         })
+    },
+    
+    // GET: /app_builder/qr/user-qr-code
+    // send a QR code to a specified Site User
+    // @param {string} user       the SiteUser.guid 
+    // @param {string} mobileApp  id of the Mobile App
+    userQRCode:function(req, res) {
+
+// console.log('!!! adminQRCode:');
+
+        var user = req.param('user') || '--';
+        var appID = req.param('mobileApp') || '--';
+        var version = req.param('version') || '--';
+
+
+        var MobileApp = null;
+        var UserPublicToken = null;
+
+        var qrcodeBuffer = null;  // final data
+
+        async.series([
+
+            // Get the MobileApp object
+            (next) => {
+
+                ABMobile.app(appID)
+                .then((App)=>{
+
+                    if (!App) {
+                        var error = new Error('Unknown Mobile App');
+                        error.httpResponseCode = 403;
+                        next(error);
+                        return;
+                    }
+
+                    MobileApp = App;
+                    next();
+                })
+                .catch(next);
+            },
+
+
+            // Get the User's Public Auth Token:
+            (next) => {
+
+                ABMobile.publicAuthTokenForUser(user)
+                .then((token)=>{
+
+                    if (token) {
+                        UserPublicToken = token;
+                        next();
+                        return;
+                    }
+
+                    // this is an error:
+                    var error = new Error('Requested User not setup for Relay.');
+                    next(error);
+                })
+                .catch(next);
+
+            },
+
+
+            // package together our Email Data
+            (next) => {
+
+                // package the data for our QR Code 
+                var QRData = ABMobile.getQRCodeData({
+                    UserPublicToken:UserPublicToken,
+                    codePushKeys: MobileApp.codePushKeys(version)
+                })
+
+                // now convert to a Base64 image 
+                ABMobile.getQRCodeImage(QRData)
+                .then((image)=>{
+                    qrcodeBuffer = image;
+                    next();
+                })
+                .catch(next);
+            }
+
+        ], (err, data)=>{
+            if (err) {
+                res.AD.error(err, err.httpResponseCode || 400);
+            } else {
+
+// testing: simulate a remote call delay
+// setTimeout(()=>{
+                res.AD.success({image:qrcodeBuffer});    
+// }, 5000);
+                
+            }
+        })
     }
+
 
 
 };
