@@ -214,6 +214,7 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
                                 } else {
                                     // then ignore the unsaved changes
                                     unsavedChanges = false;
+                                    $$(ids.button).hide();
                                     done();
                                 }
                             }
