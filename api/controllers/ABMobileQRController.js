@@ -605,7 +605,9 @@ module.exports = {
                 res.AD.error(err, err.httpResponseCode || 400);
             } else {
 
-                res.body("<div style='width: 280px; height: 280px; margin: 100px auto; background-image:url(qrcodeBuffer);'></div>");
+                var body = "<div style='width: 280px; height: 280px; margin: 100px auto; background-size: cover; background-image:url("+qrcodeBuffer+");'></div>";
+
+                res.end(body);
                 
             }
         })
