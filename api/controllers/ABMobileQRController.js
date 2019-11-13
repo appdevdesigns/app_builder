@@ -524,6 +524,7 @@ module.exports = {
         var user = null;
         var appID = req.param('mobileApp') || '--';
         var version = req.param('version') || '--';
+        var deepLink = null;
 
 
         var MobileApp = null;
@@ -591,6 +592,10 @@ module.exports = {
                     codePushKeys: MobileApp.codePushKeys(version)
                 })
 
+                deepLink  = sails.config.appbuilder.deeplink;   // base deeplink url
+                // deepLink needs to include this data for the MobileApp 
+                deepLink += "?settings=" + encodeURIComponent(QRData);
+
                 // now convert to a Base64 image 
                 ABMobile.getQRCodeImage(QRData)
                 .then((image)=>{
@@ -605,7 +610,7 @@ module.exports = {
                 res.AD.error(err, err.httpResponseCode || 400);
             } else {
 
-                var body = "<div style='width: 280px; height: 280px; margin: 100px auto; background-size: cover; background-image:url("+qrcodeBuffer+");'></div>";
+                var body = "<div style='width: 500px; margin: 100px auto; text-align: center; font-family: helvetica, sans-serif; font-size: 14px; font-weight: bold;'><div style='width: 280px; height: 280px; margin: 0 auto 20px; background-size: cover; background-image:url("+qrcodeBuffer+");'></div><br/><a href='"+deepLink+"'>Tap this link if you are on your phone and have ConneXted installed.</a></div>";
 
                 res.end(body);
                 
