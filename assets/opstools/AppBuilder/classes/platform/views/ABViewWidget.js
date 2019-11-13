@@ -2,6 +2,10 @@ const ABViewWidgetCore = require("../../core/views/ABViewWidgetCore");
 
 const ABPropertyComponentDefaults = ABViewWidgetCore.defaultValues();
 
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
+
 module.exports = class ABViewWidget extends ABViewWidgetCore {
 
 	constructor(values, application, parent, defaultValues) {

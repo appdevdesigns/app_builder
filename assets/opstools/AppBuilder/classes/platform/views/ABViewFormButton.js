@@ -1,10 +1,14 @@
 const ABViewFormButtonCore = require("../../core/views/ABViewFormButtonCore");
 
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
+
 module.exports = class ABViewFormButton extends ABViewFormButtonCore {
 
 	constructor(values, application, parent, defaultValues) {
 
-		super(values, application, parent, defaultValues || ABViewFormButtonDefaults);
+		super(values, application, parent, defaultValues);
 
 	}
 

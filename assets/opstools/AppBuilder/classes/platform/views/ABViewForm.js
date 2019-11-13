@@ -7,6 +7,8 @@ const ABViewFormTextbox = require("./ABViewFormTextbox");
 const ABRecordRule = require("../../rules/ABViewRuleListFormRecordRules");
 const ABSubmitRule = require("../../rules/ABViewRuleListFormSubmitRules");
 
+let PopupRecordRule = null;
+let PopupSubmitRule = null;
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -50,7 +52,7 @@ module.exports = class ABViewForm extends ABViewFormCore {
 
 		var idBase = "ABViewForm";
 
-		PopupDisplayRule = new ABDisplayRule(App, idBase + "_displayrule");
+		// PopupDisplayRule = new ABDisplayRule(App, idBase + "_displayrule");
 
 		PopupRecordRule = new ABRecordRule();
 		PopupRecordRule.component(App, idBase + "_recordrule");		// prepare the UI component.
@@ -227,10 +229,10 @@ module.exports = class ABViewForm extends ABViewFormCore {
 		// Display rule
 		_logic.displayRuleShow = () => {
 
-			var currView = _logic.currentEditObject();
+			// var currView = _logic.currentEditObject();
 
-			PopupDisplayRule.setValue(currView.settings.displayRules);
-			PopupDisplayRule.show();
+			// PopupDisplayRule.setValue(currView.settings.displayRules);
+			// PopupDisplayRule.show();
 
 		};
 
@@ -299,9 +301,9 @@ module.exports = class ABViewForm extends ABViewFormCore {
 
 
 		/** Initial rule popups */
-		PopupDisplayRule.init({
-			onSave: _logic.displayRuleSave
-		});
+		// PopupDisplayRule.init({
+		// 	onSave: _logic.displayRuleSave
+		// });
 
 		PopupRecordRule.init({
 			onSave: _logic.recordRuleSave
@@ -592,7 +594,7 @@ module.exports = class ABViewForm extends ABViewFormCore {
 		// Populate values to rules
 		var selectedDv = view.dataview;
 		if (selectedDv) {
-			PopupDisplayRule.objectLoad(selectedDv.datasource);
+			// PopupDisplayRule.objectLoad(selectedDv.datasource);
 			PopupRecordRule.objectLoad(selectedDv.datasource);
 			PopupSubmitRule.objectLoad(selectedDv.datasource);
 		}

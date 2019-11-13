@@ -1,7 +1,7 @@
 const ABPopupSortField = require("./ab_work_object_workspace_popupSortFields");
-const ABViewTab = require("../classes/views/ABViewTab");
+const ABViewTab = require("../classes/platform/views/ABViewTab");
 const ABViewDetail = require("../classes/platform/views/ABViewDetail");
-const RowFilter = require("../classes/RowFilter");
+const RowFilter = require("../classes/platform/RowFilter");
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;

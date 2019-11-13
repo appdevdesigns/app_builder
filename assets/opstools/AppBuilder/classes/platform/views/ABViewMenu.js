@@ -1,4 +1,5 @@
 const ABViewMenuCore = require("../../core/views/ABViewMenuCore");
+const ABViewTab = require("./ABViewTab");
 
 const ABViewMenuPropertyComponentDefaults = ABViewMenuCore.defaultValues();
 

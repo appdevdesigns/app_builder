@@ -8,7 +8,7 @@
 
 let ABApplication = require("../classes/platform/ABApplication");
 
-let ABDataview = require("../classes/ABDataview");
+let ABDataCollection = require("../classes/platform/ABDataCollection");
 
 let ABWorkspaceDatatable = require("./ab_work_object_workspace_datatable");
 let ABWorkspaceKanBan = require("./ab_work_object_workspace_kanban");
@@ -393,7 +393,7 @@ module.exports = class ABWorkObjectWorkspace extends OP.Component {
 
 
 		// create ABViewDataCollection
-		var CurrentDataview = new ABDataview({}, CurrentApplication);
+		var CurrentDataview = new ABDataCollection({}, CurrentApplication);
 
     	// Our webix UI definition:
     	this.ui = {

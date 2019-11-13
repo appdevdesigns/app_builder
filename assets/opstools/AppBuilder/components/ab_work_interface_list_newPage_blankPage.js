@@ -8,7 +8,7 @@
 
 const ABPage = require('../classes/views/ABViewPage');
 // const ABViewPage = require('../classes/views/ABViewPage');
-const ABViewReportPage = require('../classes/views/ABViewReportPage');
+// const ABViewReportPage = require('../classes/views/ABViewReportPage');
 
 
 module.exports = class AB_Work_Interface_List_NewPage_BlankPage extends OP.Component {
@@ -98,16 +98,16 @@ module.exports = class AB_Work_Interface_List_NewPage_BlankPage extends OP.Compo
 
 				var options = [{ id: '-', value: labels.component.rootPage }];
 
-				var addPage = function (page, indent) {
-					indent = indent || '';
-					options.push({ id: page.urlPointer(), value: indent + page.label });
-					page.pages(p => !(p instanceof ABViewReportPage)).forEach(function (p) {
-						addPage(p, indent + '-');
-					})
-				}
-				application.pages(p => !(p instanceof ABViewReportPage)).forEach(function (page) {
-					addPage(page, '');
-				});
+				// var addPage = function (page, indent) {
+				// 	indent = indent || '';
+				// 	options.push({ id: page.urlPointer(), value: indent + page.label });
+				// 	page.pages(p => !(p instanceof ABViewReportPage)).forEach(function (p) {
+				// 		addPage(p, indent + '-');
+				// 	})
+				// }
+				// application.pages(p => !(p instanceof ABViewReportPage)).forEach(function (page) {
+				// 	addPage(page, '');
+				// });
 
 				$$(ids.parentList).define('options', options);
 				$$(ids.parentList).refresh();

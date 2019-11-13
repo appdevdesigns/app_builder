@@ -5,7 +5,7 @@
  *
  */
 
-const ABDataview = require("../classes/ABDataview");
+const ABDataCollection = require("../classes/platform/ABDataCollection");
 const RowFilter = require("../classes/RowFilter");
 
 module.exports = class ABWorkQueryWorkspaceDesign extends OP.Component {
@@ -148,7 +148,7 @@ module.exports = class ABWorkQueryWorkspaceDesign extends OP.Component {
 				}
 
 				// create new data view
-				CurrentDataview = new ABDataview({
+				CurrentDataview = new ABDataCollection({
 					query: [CurrentQuery.toObj()],
 					settings: {
 						datasourceID: CurrentQuery.id

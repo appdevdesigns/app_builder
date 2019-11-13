@@ -9,9 +9,9 @@ module.exports = class RowFilter extends RowFilterCore {
 		super(App, idBase);
 
 
-		var L = this.Label;
+		let L = this.Label;
 
-		this.labels = {
+		let labels = this.labels = {
 			common: (App || {}).labels,
 			component: {
 				and: L('ab.filter_fields.and', "*And"),
@@ -137,6 +137,7 @@ module.exports = class RowFilter extends RowFilterCore {
 
 			let instance = this;
 			let config_settings = this.config_settings;
+			let labels = this.labels;
 
 			return {
 				id: 'f' + webix.uid(),
@@ -1013,12 +1014,12 @@ module.exports = class RowFilter extends RowFilterCore {
 		super.init(options);
 
 		// register our callbacks:
-		for (var c in _logic.callbacks) {
-			_logic.callbacks[c] = options[c] || _logic.callbacks[c];
+		for (var c in this._logic.callbacks) {
+			this._logic.callbacks[c] = options[c] || _logic.callbacks[c];
 		}
 
 		if (options.showObjectName)
-			_settings.showObjectName = options.showObjectName;
+			this._settings.showObjectName = options.showObjectName;
 
 
 		if (options.isRecordRule) {
@@ -1042,9 +1043,10 @@ module.exports = class RowFilter extends RowFilterCore {
 		super.setValue(settings);
 
 		let ids = this.ids;
+		let logic = this._logic;
 
 		// block .onChange event
-		_logic.blockOnChange();
+		logic.blockOnChange();
 
 		let config_settings = _.cloneDeep(settings || {});
 		config_settings.rules = config_settings.rules || [];
@@ -1056,12 +1058,12 @@ module.exports = class RowFilter extends RowFilterCore {
 
 		// Add "new filter" button
 		if (config_settings.rules.length == 0) {
-			_logic.toggleAddNewButton();
+			logic.toggleAddNewButton();
 		}
 
 		config_settings.rules.forEach(f => {
 
-			var viewId = _logic.addNewFilter(),
+			var viewId = logic.addNewFilter(),
 				$viewCond = $$(viewId);
 
 			if ($viewCond == null) return;
@@ -1075,7 +1077,7 @@ module.exports = class RowFilter extends RowFilterCore {
 			// Select Field
 			$viewCond.$$(ids.field).define('value', f.key);
 			$viewCond.$$(ids.field).refresh();
-			_logic.selectField(f.key, $viewCond, true);
+			logic.selectField(f.key, $viewCond, true);
 
 			// Comparer
 			var ruleViewId = $viewCond.$$(ids.rule).getActiveId(),
@@ -1087,7 +1089,7 @@ module.exports = class RowFilter extends RowFilterCore {
 			
 			// if (f.rule == "in_query_field" || f.rule == "not_in_query_field" || f.rule == "same_as_field" || f.rule == "not_same_as_field") {
 			$viewCond.blockEvent();
-			_logic.onChangeRule(f.rule, $viewCond);
+			logic.onChangeRule(f.rule, $viewCond);
 			$viewCond.unblockEvent();
 			// }
 
@@ -1113,7 +1115,7 @@ module.exports = class RowFilter extends RowFilterCore {
 					$$(element).blockEvent();
 					$$(element).setValue(vals[index]);
 					if (index == 0) {
-						_logic.onChangeQueryFieldCombo(vals[index], $viewCond);
+						logic.onChangeQueryFieldCombo(vals[index], $viewCond);
 					}
 					$$(element).unblockEvent();
 					// $$(element).refresh();
@@ -1123,14 +1125,14 @@ module.exports = class RowFilter extends RowFilterCore {
 
 			if (field && field.key == 'user') {
 				$viewCond.blockEvent();
-				_logic.onChangeRule(f.rule, $viewCond);
+				logic.onChangeRule(f.rule, $viewCond);
 				$viewCond.blockEvent();
 			}
 
 		});
 
 		// unblock .onChange event
-		_logic.unblockOnChange();
+		logic.unblockOnChange();
 
 	}
 
