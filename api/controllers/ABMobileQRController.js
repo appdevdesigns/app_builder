@@ -511,7 +511,113 @@ module.exports = {
                 
             }
         })
+    },
+    
+    // GET: /app_builder/qr/user-qr-code
+    // send a QR code to a specified Site User
+    // @param {string} user       the SiteUser.guid 
+    // @param {string} mobileApp  id of the Mobile App
+    userQRCode:function(req, res) {
+
+// console.log('!!! adminQRCode:');
+        // TODO we need to find out who the user is not allow them to tell us
+        var user = null;
+        var appID = req.param('mobileApp') || '--';
+        var version = req.param('version') || '--';
+        var deepLink = null;
+
+
+        var MobileApp = null;
+        var UserPublicToken = null;
+        
+        var qrcodeBuffer = null;  // final data
+
+        async.series([
+
+            // Get the MobileApp object
+            (next) => {
+
+                ABMobile.app(appID)
+                .then((App)=>{
+
+                    if (!App) {
+                        var error = new Error('Unknown Mobile App');
+                        error.httpResponseCode = 403;
+                        next(error);
+                        return;
+                    }
+
+                    MobileApp = App;
+                    next();
+                })
+                .catch(next);
+            },
+            
+            // Get the current user's username
+            (next) => {
+                
+                // get current user
+                user = req.user.username();
+                next();
+
+            },
+            
+            // Get the User's Public Auth Token:
+            (next) => {
+
+                ABMobile.publicAuthTokenForUser(user)
+                .then((token)=>{
+
+                    if (token) {
+                        UserPublicToken = token;
+                        next();
+                        return;
+                    }
+
+                    // this is an error:
+                    var error = new Error('Requested User not setup for Relay.');
+                    next(error);
+                })
+                .catch(next);
+
+            },
+
+
+            // package together our Email Data
+            (next) => {
+
+                // package the data for our QR Code 
+                var QRData = ABMobile.getQRCodeData({
+                    UserPublicToken:UserPublicToken,
+                    codePushKeys: MobileApp.codePushKeys(version)
+                })
+
+                deepLink  = sails.config.appbuilder.deeplink;   // base deeplink url
+                // deepLink needs to include this data for the MobileApp 
+                deepLink += "?settings=" + encodeURIComponent(QRData);
+
+                // now convert to a Base64 image 
+                ABMobile.getQRCodeImage(QRData)
+                .then((image)=>{
+                    qrcodeBuffer = image;
+                    next();
+                })
+                .catch(next);
+            }
+
+        ], (err, data)=>{
+            if (err) {
+                res.AD.error(err, err.httpResponseCode || 400);
+            } else {
+
+                var body = "<div style='width: 500px; margin: 100px auto; text-align: center; font-family: helvetica, sans-serif; font-size: 14px; font-weight: bold;'><div style='width: 280px; height: 280px; margin: 0 auto 20px; background-size: cover; background-image:url("+qrcodeBuffer+");'></div><br/><a href='"+deepLink+"'>Tap this link if you are on your phone and have ConneXted installed.</a></div>";
+
+                res.end(body);
+                
+            }
+        })
     }
+
 
 
 };
