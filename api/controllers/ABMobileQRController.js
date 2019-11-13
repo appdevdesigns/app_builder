@@ -520,15 +520,15 @@ module.exports = {
     userQRCode:function(req, res) {
 
 // console.log('!!! adminQRCode:');
-
-        var user = req.param('user') || '--';
+        // TODO we need to find out who the user is not allow them to tell us
+        var user = null;
         var appID = req.param('mobileApp') || '--';
         var version = req.param('version') || '--';
 
 
         var MobileApp = null;
         var UserPublicToken = null;
-
+        
         var qrcodeBuffer = null;  // final data
 
         async.series([
@@ -551,8 +551,16 @@ module.exports = {
                 })
                 .catch(next);
             },
+            
+            // Get the current user's username
+            (next) => {
+                
+                // get current user
+                user = req.user.username();
+                next();
 
-
+            },
+            
             // Get the User's Public Auth Token:
             (next) => {
 
