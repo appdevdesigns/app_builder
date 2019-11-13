@@ -605,10 +605,7 @@ module.exports = {
                 res.AD.error(err, err.httpResponseCode || 400);
             } else {
 
-// testing: simulate a remote call delay
-// setTimeout(()=>{
-                res.AD.success({image:qrcodeBuffer});    
-// }, 5000);
+                res.body("<div style='width: 280px; height: 280px; margin: 100px auto; background-image:url(qrcodeBuffer);'></div>");
                 
             }
         })
