@@ -25,7 +25,22 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
             common: App.labels,
 
             component: {
-                label: L("ab.process.model.label", "*Model")
+                label: L("ab.process.model.label", "*Model"),
+                cancel: L("ab.common.cancel", "*Cancel"),
+                confirmSave: L("ab.process.model.confirmSave", "*Save?"),
+                confirmSaveMessage: L(
+                    "ab.process.model.confirmSaveMessage",
+                    "*Save your changes to {0}?"
+                ),
+                errorDisplay: L(
+                    "ab.process.model.errorDisplay",
+                    "*Error Displaying Process"
+                ),
+                errorDisplayMessage: L(
+                    "ab.process.model.errorDisplayMessage",
+                    "*Could not display the process definition for {0}. Do you want to start a blank process?"
+                ),
+                save: L("ab.common.save", "*Save")
             }
         };
 
@@ -33,8 +48,11 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
 
         // internal list of Webix IDs to reference our UI components.
         var ids = {
+            button: this.unique("_button"),
             component: this.unique("_component"),
-            modeler: this.unique("_modeler")
+            modeler: this.unique("_modeler"),
+            modelerBroken: this.unique("_modelerBroken"),
+            modelerWorking: this.unique("_modelerWorking")
         };
 
         // Our webix UI definition:
@@ -42,9 +60,37 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
             id: ids.component,
             rows: [
                 {
+                    cols: [
+                        {
+                            height: 32
+                        },
+                        {
+                            id: ids.button,
+                            view: "button",
+                            type: "icon",
+                            label: labels.component.save,
+                            icon: "fa fa-save",
+                            autowidth: true,
+                            click: () => {
+                                _logic.saveProcess(CurrentProcess);
+                            }
+                        },
+                        {
+                            height: 32
+                        }
+                    ]
+                },
+                {
+                    id: ids.modelerWorking,
                     view: "template",
                     // height: 800,
                     template: `<div id="${ids.modeler}" style="width: 100%; height: 100%;"></div>`
+                },
+                {
+                    id: ids.modelerBroken,
+                    view: "template",
+                    // height: 800,
+                    template: `<div  style="width: 100%; height: 100%;"> Big Broken Icon Here </div>`
                 }
                 // {
                 //     maxHeight: App.config.xxxLargeSpacer,
@@ -54,6 +100,7 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
         };
 
         var viewer = null;
+        var unsavedChanges = false;
 
         // Our init() function for setting up our UI
         this.init = function() {
@@ -63,6 +110,10 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
             // viewer = new BpmnModeler({
             //     container: "#" + ids.modeler
             // });
+
+            $$(ids.button).hide();
+            $$(ids.modelerBroken).hide();
+            $$(ids.modelerWorking).show();
         };
 
         var CurrentApplication = null;
@@ -94,6 +145,27 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
                 $$(ids.noSelection).show(false, false);
             },
 
+            saveProcess: (_process) => {
+                return new Promise((resolve, reject) => {
+                    viewer.saveXML({ preamble: true }, (err, xml) => {
+                        console.log(".saveXML() done:", err, xml);
+                        if (err) {
+                            reject(err);
+                        }
+                        _process.modelUpdate(xml);
+
+                        _process
+                            .save()
+                            .then(() => {
+                                unsavedChanges = false;
+                                $$(ids.button).hide();
+                                resolve();
+                            })
+                            .catch(reject);
+                    });
+                });
+            },
+
             /**
              * @function populateWorkspace()
              *
@@ -102,34 +174,103 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
              * @param {ABObject} object     current ABObject instance we are working with.
              */
             populateWorkspace: function(process) {
-                // $$(ids.selectedItem).show();
-
-                CurrentProcess = process;
-
+                // initialize the BPMN Viewer if not already initialized:
                 if (!viewer) {
+                    $$(ids.modelerBroken).hide();
+                    $$(ids.modelerWorking).show();
                     viewer = new BpmnModeler({
                         container: "#" + ids.modeler
                     });
-                }
-                ///////
-                var xml =
-                    process.xmlDefinition ||
-                    `<?xml version="1.0" encoding="UTF-8"?>
-<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd" id="sample-diagram" targetNamespace="http://bpmn.io/schema/bpmn">
-  <bpmn2:process id="Process_1" isExecutable="false">
-    <bpmn2:startEvent id="StartEvent_1"/>
-  </bpmn2:process>
-  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
-    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1">
-      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
-        <dc:Bounds height="36.0" width="36.0" x="412.0" y="240.0"/>
-      </bpmndi:BPMNShape>
-    </bpmndi:BPMNPlane>
-  </bpmndi:BPMNDiagram>
-</bpmn2:definitions>`;
 
-                viewer.importXML(xml, function(err) {
-                    console.log(".importXML(): done. ", err);
+                    // setup our Listeners:
+
+                    // when a change is made, then make the [Save] button ready:
+                    viewer.on("commandStack.changed", () => {
+                        unsavedChanges = true;
+                        $$(ids.button).show();
+                    });
+                }
+
+                var processSequence = [];
+
+                // if there are unsaved changes in our CurrentProcess
+                if (CurrentProcess && unsavedChanges) {
+                    // insert a save confirmation step
+                    processSequence.push((done) => {
+                        OP.Dialog.Confirm({
+                            title: labels.component.confirmSave,
+                            message: labels.component.confirmSaveMessage.replace(
+                                "{0}",
+                                CurrentProcess.name
+                            ),
+                            callback: (isOK) => {
+                                if (isOK) {
+                                    _logic
+                                        .saveProcess(CurrentProcess)
+                                        .then(() => {
+                                            done();
+                                        })
+                                        .catch(done);
+                                } else {
+                                    // then ignore the unsaved changes
+                                    unsavedChanges = false;
+                                    done();
+                                }
+                            }
+                        });
+                    });
+                }
+
+                // continue our sequence with loading the new process
+                processSequence.push((done) => {
+                    CurrentProcess = process;
+
+                    ///////
+                    var xml = process.modelDefinition();
+                    if (!xml) {
+                        process.modelNew();
+                        xml = process.modelDefinition();
+                    }
+
+                    viewer.clear();
+                    viewer.importXML(xml, function(err) {
+                        console.log(".importXML(): done. ", err);
+                        viewer.get("canvas").zoom("fit-viewport", "auto");
+                        done(err);
+                    });
+                });
+
+                async.series(processSequence, (err) => {
+                    if (err) {
+                        if (err.toString().indexOf("no diagram to display")) {
+                            OP.Dialog.Confirm({
+                                title: labels.component.errorDisplay,
+                                message: labels.component.errorDisplayMessage.replace(
+                                    "{0}",
+                                    CurrentProcess.name
+                                ),
+                                callback: (isOK) => {
+                                    if (isOK) {
+                                        process.modelNew();
+                                        _logic.populateWorkspace(
+                                            CurrentProcess
+                                        );
+                                    } else {
+                                        // show the broken Process page
+                                        $$(ids.modelerWorking).hide();
+                                        $$(ids.modelerBroken).show();
+                                        viewer.clear();
+                                        viewer.destroy();
+                                        viewer = null;
+                                    }
+                                }
+                            });
+                        }
+                        console.log(err);
+                    }
+
+                    $$(ids.modelerBroken).hide();
+                    $$(ids.modelerWorking).show();
                 });
             },
 
