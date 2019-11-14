@@ -1,34 +1,11 @@
-/*
- * ABViewDocxBuilder
- *
- * An ABViewDocxBuilder defines a UI label display component.
- *
- */
+const ABViewDocxBuilderCore = require("../../core/views/ABViewDocxBuilderCore");
 
-import ABFieldConnect from "../dataFields/ABFieldConnect";
-import ABFieldImage from "../dataFields/ABFieldImage";
-import ABObjectQuery from "../ABObjectQuery";
-import ABViewWidget from "./ABViewWidget"
+const ABFieldConnect = require("../dataFields/ABFieldConnect");
+const ABFieldImage = require("../dataFields/ABFieldImage");
+const ABObjectQuery = require("../ABObjectQuery");
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
-}
-
-
-var ABViewDocxBuilderPropertyComponentDefaults = {
-	buttonlabel: "Download DOCX",
-	dataviewID: null,
-	width: 200,
-	filename: "", // uuid
-	filelabel: "output.docx",
-	language: "en" // en
-}
-
-
-var ABViewDefaults = {
-	key: 'docxBuilder',		// {string} unique key for this view
-	icon: 'file-word-o',	// {string} fa-[icon] reference for this view
-	labelKey: 'ab.components.docxBuilder' // {string} the multilingual label key for the class label
 }
 
 function letUserDownload(blob, filename) {
@@ -45,63 +22,18 @@ function letUserDownload(blob, filename) {
 
 }
 
-export default class ABViewDocxBuilder extends ABViewWidget {
+module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
 
-	/**
-	 * @param {obj} values  key=>value hash of ABView values
-	 * @param {ABApplication} application the application object this view is under
-	 * @param {ABViewWidget} parent the ABViewWidget this view is a child of. (can be null)
-	 */
-	constructor(values, application, parent) {
+	constructor(values, application, parent, defaultValues) {
 
-		super(values, application, parent, ABViewDefaults);
-
-		// 		id:'uuid',					// uuid value for this obj
-		// 		key:'viewKey',				// unique key for this View Type
-		// 		icon:'font',				// fa-[icon] reference for an icon for this View Type
-		// 		label:'',					// pulled from translation
-
-		//		settings: {					// unique settings for the type of field
-		//			format: x				// the display style of the text
-		//		},
-
-		// 		views:[],					// the child views contained by this view.
-
-		//		translations:[]				// text: the actual text being displayed by this label.
-
-		// 	}
+		super(values, application, parent, defaultValues);
 
 	}
-
-	static common() {
-		return ABViewDefaults;
-	}
-
-	///
-	/// Instance Methods
-	///
-
-	/**
-	 * @method fromValues()
-	 *
-	 * initialze this object with the given set of values.
-	 * @param {obj} values
-	 */
-	fromValues(values) {
-
-		super.fromValues(values);
-
-		// convert from "0" => 0
-		this.settings.width = parseInt(this.settings.width || ABViewDocxBuilderPropertyComponentDefaults.width);
-
-	}
-
 
 
 	//
 	//	Editor Related
 	//
-
 
 	/** 
 	 * @method editorComponent
@@ -480,7 +412,7 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 					}
 
 				});
-	
+
 			},
 
 			renderFile: () => {
@@ -503,12 +435,12 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 
 							let obj = dv.datasource;
 							if (obj == null) return;
-	
+
 							let dvValues = [];
 							let dataList = [];
 
 							let dcCursor = dv.getCursor();
-	
+
 							// merge cursor to support dc and tree cursor in the report
 							if (dcCursor) {
 								let treeCursor = dv.getCursor(true);
@@ -516,25 +448,25 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 							}
 							else
 								dataList = dv.getData();
-	
+
 							// update property names to column labels to match format names in docx file
 							let mlFields = obj.multilingualFields();
-	
+
 							let setReportValues = (baseData, targetData, field, fieldLabels = []) => {
-	
+
 								let val = null;
 
 								targetData.id = baseData.id;
-	
+
 								// Translate multilinguage fields
 								if (mlFields.length) {
 									let transFields = (mlFields || []).filter(fieldName => baseData[fieldName] != null);
 									OP.Multilingual.translate(baseData, baseData, transFields, this.languageCode);
 								}
-	
+
 								// Pull value
 								if (field instanceof ABFieldConnect) {
-	
+
 									// If field is connected field, then 
 									// {
 									//		fieldName: {Object} or [Array]
@@ -549,21 +481,21 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 										languageCode: this.languageCode
 									});
 								}
-	
+
 								// Set value to report with every languages of label
 								fieldLabels.forEach(label => {
-	
-									if (val) 
+
+									if (val)
 										targetData[label] = val;
 									else if (!targetData[label])
 										targetData[label] = '';
-	
+
 								});
-	
+
 								// normalize child items
 								if (baseData.data &&
 									baseData.data.length) {
-	
+
 									targetData.data = targetData.data || [];
 									(baseData.data || []).forEach((childItem, index) => {
 
@@ -572,12 +504,12 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 											targetData.data[index] = {};
 
 										setReportValues(childItem, targetData.data[index], field, fieldLabels);
-	
+
 									});
 								}
 
 							};
-	
+
 							dataList.forEach(data => {
 
 								let resultData = {};
@@ -637,7 +569,7 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 									reportValues[tran.label] = datacollectionData;
 								});
 							}
-							else 
+							else
 								reportValues = datacollectionData;
 
 						});
@@ -647,7 +579,7 @@ export default class ABViewDocxBuilder extends ABViewWidget {
 					// Download images
 					.then(() => {
 
-console.log("DOCX data: ", reportValues);
+						console.log("DOCX data: ", reportValues);
 
 						let currCursor = dv.getCursor();
 						if (!currCursor) return Promise.resolve();
@@ -660,26 +592,26 @@ console.log("DOCX data: ", reportValues);
 
 								let imageVal = fieldImage.format(d);
 								if (imageVal && !images[imageVal]) {
-	
+
 									tasks.push(new Promise((ok, bad) => {
-	
+
 										let imgUrl = `/opsportal/image/${this.application.name}/${imageVal}`;
-	
+
 										JSZipUtils.getBinaryContent(imgUrl, function (error, content) {
 											if (error)
 												return bad(error);
 											else {
-	
+
 												// store binary of image
 												images[imageVal] = content;
-	
+
 												ok();
 											}
 										});
-	
+
 									}));
 								}
-	
+
 								// download images of child items
 								addDownloadTask(fieldImage, d.data || []);
 							});
@@ -692,7 +624,7 @@ console.log("DOCX data: ", reportValues);
 
 							let obj = dv.datasource;
 							if (!obj) return;
-	
+
 							let currCursor = dv.getCursor();
 							if (currCursor) { // Current cursor
 								let treeCursor = dv.getCursor(true);
@@ -700,11 +632,11 @@ console.log("DOCX data: ", reportValues);
 							}
 							else // List of data
 								currCursor = dv.getData();
-	
+
 							obj.fields(f => f instanceof ABFieldImage).forEach(f => {
-	
+
 								addDownloadTask(f, currCursor);
-	
+
 							});
 
 						});
@@ -822,7 +754,7 @@ console.log("DOCX data: ", reportValues);
 
 														let prop = (tag.split('|')[1] || "").trim();
 
-														return (scope['data'] || []).filter(function(item) {
+														return (scope['data'] || []).filter(function (item) {
 															return item[prop] ? true : false;
 														});
 
@@ -841,7 +773,7 @@ console.log("DOCX data: ", reportValues);
 														if (sourceVals && !Array.isArray(sourceVals))
 															sourceVals = [sourceVals];
 
-														return (sourceVals || []).filter(function(item) {
+														return (sourceVals || []).filter(function (item) {
 
 															let comparer = scope[propFilter];
 															if (Array.isArray(comparer))
@@ -904,33 +836,6 @@ console.log("DOCX data: ", reportValues);
 			logic: _logic,
 			onShow: _logic.onShow
 		}
-
-	}
-
-	uploadUrl() {
-
-		let actionKey = 'opstool.AB_' + this.application.name.replace('_', '') + '.view';
-
-		return '/' + ['opsportal', 'file', this.application.name, actionKey, '1'].join('/');
-
-	}
-
-	downloadUrl() {
-		return `/opsportal/file/${this.application.name}/${this.settings.filename}`;
-	}
-
-	get languageCode() {
-		return this.settings.language || ABViewDocxBuilderPropertyComponentDefaults.language;
-	}
-
-	get datacollections() {
-
-		let dataviewID = (this.settings || {}).dataviewID;
-		if (!dataviewID) return [];
-
-		let dvList = dataviewID.split(',') || [];
-
-		return this.application.datacollections(dv => dvList.indexOf(dv.id) > -1) || [];
 
 	}
 

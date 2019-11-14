@@ -104,7 +104,7 @@ export default class ABViewLabel extends ABViewWidget {
 			init: () => {
 
 				// remove id of the component in caching for refresh .bind of the data collection
-				let dv = this.dataview;
+				let dv = this.datacollection;
 				if (dv)
 					dv.removeComponent(ListView.ui.id);
 
@@ -135,7 +135,7 @@ export default class ABViewLabel extends ABViewWidget {
 
 		return commonUI.concat([
 			{
-				name: 'dataview',
+				name: 'datacollection',
 				view: 'richselect',
 				label: L('ab.components.list.dataSource', "*Data Source"),
 				labelWidth: App.config.labelWidthLarge,
@@ -166,7 +166,7 @@ export default class ABViewLabel extends ABViewWidget {
 	 * 
 	 * @param {Object} ids 
 	 * @param {ABViewForm} view - the current component
-	 * @param {string} dvId - id of ABDataview
+	 * @param {string} dvId - id of ABDatacollection
 	 */
 	static propertyUpdateFieldOptions(ids, view, dvId) {
 
@@ -196,8 +196,8 @@ export default class ABViewLabel extends ABViewWidget {
 
 		super.propertyEditorPopulate(App, ids, view);
 
-		var dataviewId = (view.settings.dataviewID ? view.settings.dataviewID : null);
-		var SourceSelector = $$(ids.dataview);
+		var datacollectionId = (view.settings.dataviewID ? view.settings.dataviewID : null);
+		var SourceSelector = $$(ids.datacollection);
 
 		// Pull data collections to options
 		var dcOptions = view.application.datacollections().map((dc) => {
@@ -213,10 +213,10 @@ export default class ABViewLabel extends ABViewWidget {
 			value: '[Select]'
 		});
 		SourceSelector.define('options', dcOptions);
-		SourceSelector.define('value', dataviewId);
+		SourceSelector.define('value', datacollectionId);
 		SourceSelector.refresh();
 
-		this.propertyUpdateFieldOptions(ids, view, dataviewId);
+		this.propertyUpdateFieldOptions(ids, view, datacollectionId);
 
 		$$(ids.field).setValue(view.settings.field);
 		$$(ids.height).setValue(view.settings.height);
@@ -228,7 +228,7 @@ export default class ABViewLabel extends ABViewWidget {
 
 		super.propertyEditorValues(ids, view);
 
-		view.settings.dataviewID = $$(ids.dataview).getValue();
+		view.settings.dataviewID = $$(ids.datacollection).getValue();
 		view.settings.field = $$(ids.field).getValue();
 		view.settings.height = $$(ids.height).getValue();
 
@@ -272,7 +272,7 @@ export default class ABViewLabel extends ABViewWidget {
 
 		var _init = (options) => {
 
-			var dv = this.dataview;
+			var dv = this.datacollection;
 			if (!dv) return;
 
 			// bind dc to component
@@ -293,7 +293,7 @@ export default class ABViewLabel extends ABViewWidget {
 
 	field() {
 
-		var dv = this.dataview;
+		var dv = this.datacollection;
 		if (!dv) return null;
 
 		var object = dv.datasource;
@@ -319,7 +319,7 @@ export default class ABViewLabel extends ABViewWidget {
 				ul: []
 			};
 
-			var dv = this.dataview;
+			var dv = this.datacollection;
 			if (!dv) return resolve(reportDef);
 
 			var field = this.field();

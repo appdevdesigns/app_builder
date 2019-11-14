@@ -289,8 +289,8 @@ module.exports = class ABViewFormButton extends ABViewFormButtonCore {
 				// get form component
 				var form = this.parentFormComponent();
 
-				// get ABDataview
-				var dc = form.dataview;
+				// get ABDatacollection
+				var dc = form.datacollection;
 
 				// clear cursor of DC
 				if (dc) {
@@ -320,8 +320,8 @@ module.exports = class ABViewFormButton extends ABViewFormButtonCore {
 				// get form component
 				var form = this.parentFormComponent();
 
-				// get ABDataview
-				var dc = form.dataview;
+				// get ABDatacollection
+				var dc = form.datacollection;
 
 				// clear cursor of DC
 				if (dc) {

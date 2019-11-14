@@ -1,8 +1,8 @@
 
-const ABListNewDataview = require("./ab_work_dataview_list_newDataview");
+const ABListNewDatacollection = require("./ab_work_dataview_list_newDataview");
 const ABListEditMenu = require("./ab_common_popupEditMenu");
 
-module.exports = class AB_Work_Dataview_List extends OP.Component {
+module.exports = class AB_Work_Datacollection_List extends OP.Component {
 
 	constructor(App) {
 		super(App, 'ab_work_dataview_list');
@@ -12,11 +12,11 @@ module.exports = class AB_Work_Dataview_List extends OP.Component {
 			common: App.labels,
 			component: {
 
-				addNew: L('ab.dataview.addNew', '*Add new data view'),
+				addNew: L('ab.datacollection.addNew', '*Add new data view'),
 
-				confirmDeleteTitle: L('ab.dataview.delete.title', "*Delete data view"),
-				confirmDeleteMessage: L('ab.dataview.delete.message', "*Do you want to delete <b>{0}</b>?"),
-				title: L('ab.dataview.list.title', '*Data Collections'),
+				confirmDeleteTitle: L('ab.datacollection.delete.title', "*Delete data view"),
+				confirmDeleteMessage: L('ab.datacollection.delete.message', "*Do you want to delete <b>{0}</b>?"),
+				title: L('ab.datacollection.list.title', '*Data Collections'),
 			}
 		};
 
@@ -29,7 +29,7 @@ module.exports = class AB_Work_Dataview_List extends OP.Component {
 		};
 
 		// There is a Popup for adding a new Data view:
-		var PopupNewDataviewComponent = new ABListNewDataview(App);
+		var PopupNewDatacollectionComponent = new ABListNewDatacollection(App);
 
 		// the popup edit list for each entry in the list.
 		var PopupEditObjectComponent = new ABListEditMenu(App);
@@ -62,7 +62,7 @@ module.exports = class AB_Work_Dataview_List extends OP.Component {
 					},
 					on: {
 						onAfterSelect: function (id) {
-							_logic.selectDataview(id);
+							_logic.selectDatacollection(id);
 						},
 						onBeforeEditStop: function (state, editor) {
 							_logic.onBeforeEditStop(state, editor);
@@ -83,15 +83,15 @@ module.exports = class AB_Work_Dataview_List extends OP.Component {
 					value: labels.component.addNew,
 					type: "form",
 					click: function () {
-						_logic.clickNewDataview(true); // pass true so it will select the new object after you created it
+						_logic.clickNewDatacollection(true); // pass true so it will select the new object after you created it
 					}
 				}
 			]
 		};
 
 		var CurrentApplication = null;
-		var CurrentDataview = null;
-		var dataviewList = null;
+		var CurrentDatacollection = null;
+		var datacollectionList = null;
 
 		let _initialized = false;
 
@@ -111,12 +111,12 @@ module.exports = class AB_Work_Dataview_List extends OP.Component {
 				$$(ids.list).adjust();
 			}
 
-			PopupNewDataviewComponent.init({
-				onDone: _logic.callbackNewDataview
+			PopupNewDatacollectionComponent.init({
+				onDone: _logic.callbackNewDatacollection
 			});
 
 			PopupEditObjectComponent.init({
-				onClick: _logic.callbackDataviewEditorMenu,
+				onClick: _logic.callbackDatacollectionEditorMenu,
 				hideCopy: true
 			});
 
@@ -154,16 +154,16 @@ module.exports = class AB_Work_Dataview_List extends OP.Component {
 				CurrentApplication = application;
 
 				// get a DataCollection of all our objects
-				dataviewList = new webix.DataCollection({
+				datacollectionList = new webix.DataCollection({
 					data: application.datacollections(),
 				});
-				dataviewList.sort("label", "asc");
+				datacollectionList.sort("label", "asc");
 
 				// clear our list and display our objects:
 				var List = $$(ids.list);
 				List.clearAll();
 				List.data.unsync();
-				List.data.sync(dataviewList);
+				List.data.sync(datacollectionList);
 				List.refresh();
 				List.unselectAll();
 
@@ -171,15 +171,15 @@ module.exports = class AB_Work_Dataview_List extends OP.Component {
 				_logic.listReady();
 
 				// prepare our Popup with the current Application
-				PopupNewDataviewComponent.applicationLoad(application);
+				PopupNewDatacollectionComponent.applicationLoad(application);
 
 			},
 
-			selectDataview: function (dataviewId) {
+			selectDatacollection: function (datacollectionId) {
 
-				CurrentDataview = $$(ids.list).getItem(dataviewId);
+				CurrentDatacollection = $$(ids.list).getItem(datacollectionId);
 
-				_logic.callbacks.onChange(CurrentDataview);
+				_logic.callbacks.onChange(CurrentDatacollection);
 
 			},
 
@@ -188,14 +188,14 @@ module.exports = class AB_Work_Dataview_List extends OP.Component {
 			 *
 			 * Defines the template for each row of our Data view list.
 			 *
-			 * @param {ABDataview} obj the current instance of ABDataview for the row.
+			 * @param {ABDatacollection} obj the current instance of ABDatacollection for the row.
 			 * @param {?} common the webix.common icon data structure
 			 * @return {string}
 			 */
-			templateListItem: function (dataview, common) {
-				return `<div class='ab-dataview-list-item'>
-					<i class="fa ${dataview.settings.isQuery ? "fa-filter" : "fa-database"}"></i>
-					${dataview.label || '??label??'}
+			templateListItem: function (datacollection, common) {
+				return `<div class='ab-datacollection-list-item'>
+					<i class="fa ${datacollection.settings.isQuery ? "fa-filter" : "fa-database"}"></i>
+					${datacollection.label || '??label??'}
 					${common.iconGear}
 					</div>`;
 			},
@@ -240,29 +240,29 @@ module.exports = class AB_Work_Dataview_List extends OP.Component {
 			},
 
 			/**
-			 * @function clickNewDataview
+			 * @function clickNewDatacollection
 			 *
 			 * Manages initiating the transition to the new Object Popup window
 			 */
-			clickNewDataview: function (selectNew, callback) {
+			clickNewDatacollection: function (selectNew, callback) {
 				// show the new popup
-				PopupNewDataviewComponent.show(selectNew, callback);
+				PopupNewDatacollectionComponent.show(selectNew, callback);
 			},
 
 			/**
-			 * @function callbackNewDataview
+			 * @function callbackNewDatacollection
 			 *
 			 * Once a New Data view was created in the Popup, follow up with it here.
 			 */
-			callbackNewDataview: function (err, dataview, selectNew, callback) {
+			callbackNewDatacollection: function (err, datacollection, selectNew, callback) {
 
 				if (err) {
-					OP.Error.log('Error creating New Dataview', { error: err });
+					OP.Error.log('Error creating New Datacollection', { error: err });
 					return;
 				}
 
 				let datacollections = CurrentApplication.datacollections();
-				dataviewList.parse(datacollections);
+				datacollectionList.parse(datacollections);
 
 				// if (objectList.exists(object.id))
 				// 	objectList.updateItem(object.id, object);
@@ -270,7 +270,7 @@ module.exports = class AB_Work_Dataview_List extends OP.Component {
 				// 	objectList.add(object);
 
 				if (selectNew != null && selectNew == true) {
-					$$(ids.list).select(dataview.id);
+					$$(ids.list).select(datacollection.id);
 				}
 				else if (callback) {
 					callback();
@@ -285,7 +285,7 @@ module.exports = class AB_Work_Dataview_List extends OP.Component {
 				return false;
 			},
 
-			callbackDataviewEditorMenu: function (action) {
+			callbackDatacollectionEditorMenu: function (action) {
 				switch (action) {
 					case 'rename':
 						_logic.rename();
@@ -300,15 +300,15 @@ module.exports = class AB_Work_Dataview_List extends OP.Component {
 			},
 
 			exclude: function () {
-				var dataviewId = $$(ids.list).getSelectedId(false);
+				var datacollectionId = $$(ids.list).getSelectedId(false);
 
 				_logic.listBusy();
 
-				CurrentApplication.dataviewExclude(dataviewId)
+				CurrentApplication.datacollectionExclude(datacollectionId)
 					.then(() => {
 
-						if (dataviewList.exists(dataviewId))
-							dataviewList.remove(dataviewId);
+						if (datacollectionList.exists(datacollectionId))
+							datacollectionList.remove(datacollectionId);
 
 						_logic.listReady();
 
@@ -319,32 +319,32 @@ module.exports = class AB_Work_Dataview_List extends OP.Component {
 			},
 
 			rename: function () {
-				var dataviewId = $$(ids.list).getSelectedId(false);
-				$$(ids.list).edit(dataviewId);
+				var datacollectionId = $$(ids.list).getSelectedId(false);
+				$$(ids.list).edit(datacollectionId);
 			},
 
 			remove: function () {
 
-				var selectedDataview = $$(ids.list).getSelectedItem(false);
+				var selectedDatacollection = $$(ids.list).getSelectedItem(false);
 
 				// verify they mean to do this:
 				OP.Dialog.Confirm({
 					title: labels.component.confirmDeleteTitle,
-					message: labels.component.confirmDeleteMessage.replace('{0}', selectedDataview.label),
+					message: labels.component.confirmDeleteMessage.replace('{0}', selectedDatacollection.label),
 					callback: (isOK) => {
 
 						if (isOK) {
 							_logic.listBusy();
 
-							selectedDataview.destroy()
+							selectedDatacollection.destroy()
 								.then(() => {
 									_logic.listReady();
 
-									if (dataviewList.exists(selectedDataview.id))
-										dataviewList.remove(selectedDataview.id);
+									if (datacollectionList.exists(selectedDatacollection.id))
+										datacollectionList.remove(selectedDatacollection.id);
 
 									// refresh items list
-									// _logic.callbackNewDataview();
+									// _logic.callbackNewDatacollection();
 
 									// clear object workspace
 									_logic.callbacks.onChange(null);
@@ -377,8 +377,8 @@ module.exports = class AB_Work_Dataview_List extends OP.Component {
 		// Expose any globally accessible Actions:
 		this.actions({
 
-			addNewDataview: function (selectNew, callback) {
-				_logic.clickNewDataview(selectNew, callback);
+			addNewDatacollection: function (selectNew, callback) {
+				_logic.clickNewDatacollection(selectNew, callback);
 			}
 
 		})

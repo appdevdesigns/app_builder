@@ -1,76 +1,25 @@
-/*
- * ABViewConditionalContainer
- *
- * An ABViewConditionalContainer defines a UI menu component.
- *
- */
+const ABViewConditionalContainerCore = require("../../core/views/ABViewConditionalContainerCore");
 
-import ABViewContainer from "./ABViewContainer"
-import ABViewManager from "../core/ABViewManager"
-import RowFilter from "../RowFilter"
+const ABViewPropertyDefaults = ABViewConditionalContainerCore.defaultValues();
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
-var ABViewPropertyDefaults = {
-	dataviewID: null,
-	filterConditions: {}
-}
+let FilterComponent = null;
 
-var ABViewDefaults = {
-	key: 'conditionalcontainer',	// unique key identifier for this ABView
-	icon: 'shield',					// icon reference: (without 'fa-' )
-	labelKey: 'ab.components.conditionalcontainer' // {string} the multilingual label key for the class label
-}
+module.exports = class ABViewConditionalContainer extends ABViewConditionalContainerCore {
 
-var FilterComponent = null;
-
-export default class ABViewConditionalContainer extends ABViewContainer {
-
-	/**
-	 * @param {obj} values  key=>value hash of ABView values
-	 * @param {ABApplication} application the application object this view is under
-	 * @param {ABViewWidget} parent the ABViewWidget this view is a child of. (can be null)
-	 * @param {obj} defaultValues special sub class defined default values.
-	 */
 	constructor(values, application, parent, defaultValues) {
 
-		super(values, application, parent, (defaultValues || ABViewDefaults));
-
-		// the conditional container always has 'If' and 'Else' panels
-		if (this.views(v => v instanceof ABViewContainer).length < 2) {
-
-			// 'If' panel
-			var ifPanel = ABViewManager.newView({
-				key: ABViewContainer.common().key,
-				label: 'If',
-				settings: {
-					removable: false
-				}
-			}, application, this);
-			this._views.push(ifPanel);
-
-			// 'Else' panel
-			var ifPanel = ABViewManager.newView({
-				key: ABViewContainer.common().key,
-				label: 'Else',
-				settings: {
-					removable: false
-				}
-			}, application, this);
-			this._views.push(ifPanel);
-
-		}
+		super(values, application, parent, defaultValues);
 
 		// Set filter value
 		this.__filterComponent = new RowFilter();
 		this.populateFilterComponent();
+
 	}
 
-	static common() {
-		return ABViewDefaults;
-	}
 
 	//
 	// Property Editor
@@ -235,16 +184,16 @@ export default class ABViewConditionalContainer extends ABViewContainer {
 	static populatePopupEditors(ids, view, datacollectionId) {
 
 		// pull current data collection
-		var dc = view.datacollection;
+		var dv = view.datacollection;
 
 		// specify data collection id
 		if (datacollectionId) {
-			dc = view.application.datacollections(d => d.id == datacollectionId)[0];
+			dv = view.application.datacollections(d => d.id == datacollectionId)[0];
 		}
 
-		if (dc && dc.datasource) {
-			FilterComponent.objectLoad(dc.datasource);
-			view.__filterComponent.objectLoad(dc.datasource);
+		if (dv && dv.datasource) {
+			FilterComponent.objectLoad(dv.datasource);
+			view.__filterComponent.objectLoad(dv.datasource);
 		}
 		else {
 			FilterComponent.objectLoad(null);
@@ -387,9 +336,9 @@ export default class ABViewConditionalContainer extends ABViewContainer {
 
 	populateFilterComponent() {
 
-		let dv = this.datacollection;
-		if (dv && dv.datasource)
-			this.__filterComponent.objectLoad(dv.datasource);
+		let dc = this.datacollection;
+		if (dc && dc.datasource)
+			this.__filterComponent.objectLoad(dc.datasource);
 		else
 			this.__filterComponent.objectLoad(null);
 

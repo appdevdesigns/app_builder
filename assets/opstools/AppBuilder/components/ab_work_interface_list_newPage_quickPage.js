@@ -97,9 +97,9 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compo
 			 *
 			 * Select a data collection
 			 */
-			selectDataCollection: function (dataviewId) {
+			selectDataCollection: function (datacollectionId) {
 
-				CurrentDC = CurrentApplication.datacollections(dc => dc.id == dataviewId)[0];
+				CurrentDC = CurrentApplication.datacollections(dc => dc.id == datacollectionId)[0];
 
 				// No data source was choosen
 				if (CurrentDC == null) return;
@@ -252,7 +252,7 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compo
 			},
 
 
-			getDataview: function (label, obj, parentDv) {
+			getDatacollection: function (label, obj, parentDv) {
 
 				var dvConfig = {
 					id: OP.Util.uuid(),
@@ -266,7 +266,7 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compo
 
 				if (parentDv) {
 
-					dvConfig.settings.linkDataviewID = parentDv.id;
+					dvConfig.settings.linkDatacollectionID = parentDv.id;
 
 					var linkField = obj.fields(f => f.datasourceLink && f.datasourceLink.id == parentDv.datasource.id)[0];
 					if (linkField)
@@ -278,13 +278,13 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compo
 			},
 
 
-			getFormView: (dataview, options = {}) => {
+			getFormView: (datacollection, options = {}) => {
 
 				// create a new form instance
 				let newForm = new ABViewForm({
-					label: dataview.label + " Form",
+					label: datacollection.label + " Form",
 					settings: {
-						dataviewID: dataview.id,
+						dataviewID: datacollection.id,
 						showLabel: true,
 						labelPosition: 'left',
 						labelWidth: 120,
@@ -301,7 +301,7 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compo
 				}, CurrentApplication);
 
 				// populate fields to a form
-				let object = dataview.datasource;
+				let object = datacollection.datasource;
 				if (object) {
 					object.fields().forEach((f, index) => {
 						newForm.addFieldToForm(f, index);
@@ -484,10 +484,10 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends OP.Compo
 					Object.keys(subValues).forEach((key, i) => {
 						if (subValues[key]) { // Check
 							let vals = key.split('|'),
-								dataviewId = vals[0],
+								datacollectionId = vals[0],
 								flag = vals[1]; // 'list' or 'form'
 
-							let childDC = CurrentApplication.datacollections(dc => dc.id == dataviewId)[0];
+							let childDC = CurrentApplication.datacollections(dc => dc.id == datacollectionId)[0];
 
 							// Add grids of sub-dcs
 							if (flag == 'list') {

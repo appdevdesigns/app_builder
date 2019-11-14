@@ -318,8 +318,8 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 			.pages(p => {
 				return p.views(v => {
 					return v.key == "form" && 
-						v.dataview &&
-						v.dataview.datasource.id == view.field().settings.linkObject;
+						v.datacollection &&
+						v.datacollection.datasource.id == view.field().settings.linkObject;
 				}, true).length;
 			}, true)
 			.map(p => {

@@ -232,7 +232,7 @@ export default class ABViewPropertyLinkPage extends ABViewProperty {
 		 * @method init
 		 * @param {Object} options - {
 		 * 								view: {ABView},
-		 * 								dataview: {ABDataview}
+		 * 								datacollection: {ABDatacollection}
 		 * 							}
 		 */
 		let init = (options) => {
@@ -242,8 +242,8 @@ export default class ABViewPropertyLinkPage extends ABViewProperty {
 			if (options.view)
 				this.view = options.view;
 
-			if (options.dataview)
-				this.dataview = options.dataview;
+			if (options.datacollection)
+				this.datacollection = options.datacollection;
 
 		}
 
@@ -251,8 +251,8 @@ export default class ABViewPropertyLinkPage extends ABViewProperty {
 
 			changePage: (pageId, rowId) => {
 
-				if (this.dataview)
-					this.dataview.setCursor(rowId);
+				if (this.datacollection)
+					this.datacollection.setCursor(rowId);
 
 				if (this.view)
 					this.view.changePage(pageId);

@@ -250,7 +250,7 @@ export default class ABViewText extends ABViewWidget {
 				labelWidth: App.config.labelWidthLarge,
 			},
 			{
-				name: 'dataview',
+				name: 'datacollection',
 				view: 'richselect',
 				label: L('ab.components.list.dataSource', "*Data Source"),
 				labelWidth: App.config.labelWidthLarge,
@@ -282,15 +282,15 @@ export default class ABViewText extends ABViewWidget {
 	 * 
 	 * @param {Object} ids 
 	 * @param {ABViewForm} view - the current component
-	 * @param {string} dvId - id of ABDataview
+	 * @param {string} dvId - id of ABDatacollection
 	 */
 	static propertyUpdateFieldOptions(ids, view, dvId) {
 
 		var datacollection = view.application.datacollections(dc => dc.id == dvId)[0];
 
-		if (!datacollection && view.parent.key == "dataview") {
+		if (!datacollection && view.parent.key == "datacollection") {
 			datacollection = view.application.datacollections(dc => dc.id == view.parent.settings.dataviewID)[0];
-			$$(ids.dataview).setValue(view.parent.settings.dataviewID);
+			$$(ids.datacollection).setValue(view.parent.settings.dataviewID);
 		}
 
 		var object = datacollection ? datacollection.datasource : null;
@@ -311,7 +311,7 @@ export default class ABViewText extends ABViewWidget {
 		$$(ids.height).setValue(view.settings.height);
 
 		var dataviewID = (view.settings.dataviewID ? view.settings.dataviewID : null);
-		var SourceSelector = $$(ids.dataview);
+		var SourceSelector = $$(ids.datacollection);
 
 		// Pull data collections to options
 		var dvOptions = view.application.datacollections().map(dv => {
@@ -340,7 +340,7 @@ export default class ABViewText extends ABViewWidget {
 		super.propertyEditorValues(ids, view);
 
 		view.settings.height = $$(ids.height).getValue();
-		view.settings.dataviewID = $$(ids.dataview).getValue();
+		view.settings.dataviewID = $$(ids.datacollection).getValue();
 
 	}
 
@@ -402,8 +402,8 @@ export default class ABViewText extends ABViewWidget {
 			baseCom.onShow(viewId);
 
 			// listen DC events
-			let dv = this.dataview;
-			if (dv && this.parent.key != "dataview") {
+			let dv = this.datacollection;
+			if (dv && this.parent.key != "datacollection") {
 
 				this.eventAdd({
 					emitter: dv,
@@ -437,13 +437,13 @@ export default class ABViewText extends ABViewWidget {
 
 
 	/**
-	 * @property dataview
-	 * return ABDataview of this form
+	 * @property datacollection
+	 * return ABDatacollection of this form
 	 * 
-	 * @return {ABDataview}
+	 * @return {ABDatacollection}
 	 */
-	get dataview() {
-		if (this.parent.key == "dataview") {
+	get datacollection() {
+		if (this.parent.key == "datacollection") {
 			return this.application.datacollections(dv => dv.id == this.parent.settings.dataviewID)[0];
 		} else {
 			return this.application.datacollections(dv => dv.id == this.settings.dataviewID)[0];
@@ -459,7 +459,7 @@ export default class ABViewText extends ABViewWidget {
 			return result.replace(/{(.*?)}/g, "");
 		};
 		
-		var dv = this.dataview;
+		var dv = this.datacollection;
 		if (!dv) return clearTemplateValue(result);
 
 		var object = dv.datasource;

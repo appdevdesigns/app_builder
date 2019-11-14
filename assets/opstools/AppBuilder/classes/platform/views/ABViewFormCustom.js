@@ -151,7 +151,7 @@ module.exports = class ABViewFormCustom extends ABViewFormCustomCore {
 
 						var formView = this.parentFormComponent();
 						if (formView) {
-							var dv = formView.dataview;
+							var dv = formView.datacollection;
 							if (dv)
 								rowData = dv.getCursor() || {};
 						}

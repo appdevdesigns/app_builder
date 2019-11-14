@@ -393,7 +393,7 @@ module.exports = class ABWorkObjectWorkspace extends OP.Component {
 
 
 		// create ABViewDataCollection
-		var CurrentDataview = new ABDataCollection({}, CurrentApplication);
+		var CurrentDatacollection = new ABDataCollection({}, CurrentApplication);
 
     	// Our webix UI definition:
     	this.ui = {
@@ -502,11 +502,11 @@ module.exports = class ABWorkObjectWorkspace extends OP.Component {
 			KanBan.init();
 			Gantt.init();
 
-			CurrentDataview.init();
+			CurrentDatacollection.init();
 
-			DataTable.dataviewLoad(CurrentDataview);
-			KanBan.dataviewLoad(CurrentDataview);
-			Gantt.dataviewLoad(CurrentDataview);
+			DataTable.datacollectionLoad(CurrentDatacollection);
+			KanBan.datacollectionLoad(CurrentDatacollection);
+			Gantt.datacollectionLoad(CurrentDatacollection);
 
 
     		PopupDefineLabelComponent.init({
@@ -582,7 +582,7 @@ module.exports = class ABWorkObjectWorkspace extends OP.Component {
 
 				PopupNewDataFieldComponent.applicationLoad(application);
 
-				CurrentDataview.application = CurrentApplication;
+				CurrentDatacollection.application = CurrentApplication;
 
 			},
 
@@ -1135,7 +1135,7 @@ console.error('TODO: toolbarPermission()');
 						$$(ids.buttonRowNew).enable();
                 }
 
-                CurrentDataview.datasource = CurrentObject;
+                CurrentDatacollection.datasource = CurrentObject;
 
                 DataTable.objectLoad(CurrentObject);
                 KanBan.objectLoad(CurrentObject);
@@ -1227,9 +1227,9 @@ console.error('TODO: toolbarPermission()');
 					sorts = CurrentObject.workspaceSortFields;
 				}
 
-				CurrentDataview.datasource = CurrentObject;
+				CurrentDatacollection.datasource = CurrentObject;
 
-				CurrentDataview.fromValues({
+				CurrentDatacollection.fromValues({
 					settings: {
 						datasourceID: CurrentObject.id,
 						objectWorkspace: {
@@ -1239,17 +1239,17 @@ console.error('TODO: toolbarPermission()');
 					}
 				});
 
-				CurrentDataview.refreshFilterConditions(wheres);
-				CurrentDataview.clearAll();
+				CurrentDatacollection.refreshFilterConditions(wheres);
+				CurrentDatacollection.clearAll();
 
                 // WORKAROUND: load all data becuase kanban does not support pagination now
                 let view = CurrentObject.workspaceViews.getCurrentView();
                 if (view.type === 'gantt' || view.type === 'kanban') {
-                    CurrentDataview.settings.loadAll = true;
-                    CurrentDataview.loadData(0);
+                    CurrentDatacollection.settings.loadAll = true;
+                    CurrentDatacollection.loadData(0);
                 }
                 else {
-                    CurrentDataview.loadData(0, 30);
+                    CurrentDatacollection.loadData(0, 30);
                 }
 
 			},

@@ -5,7 +5,7 @@
  *
  */
 
-module.exports = class AB_Work_Dataview_List_NewDataview_Import extends OP.Component {
+module.exports = class AB_Work_Datacollection_List_NewDataview_Import extends OP.Component {
 
 	constructor(App) {
 		super(App, 'ab_work_dataview_list_newDataview_import');
@@ -24,7 +24,7 @@ module.exports = class AB_Work_Dataview_List_NewDataview_Import extends OP.Compo
 			form: this.unique('import'),
 
 			filter: this.unique('filter'),
-			dataviewList: this.unique('dataviewList'),
+			datacollectionList: this.unique('datacollectionList'),
 
 			buttonSave: this.unique('save'),
 			buttonCancel: this.unique('cancel')
@@ -66,7 +66,7 @@ module.exports = class AB_Work_Dataview_List_NewDataview_Import extends OP.Compo
 				_logic.formClear();
 				_logic.busyStart();
 
-				// CurrentApplication.dataviewFind()
+				// CurrentApplication.datacollectionFind()
 				CurrentApplication.datacollectionInfo()
 					.then(datacollections => {
 
@@ -85,7 +85,7 @@ module.exports = class AB_Work_Dataview_List_NewDataview_Import extends OP.Compo
 
 						});
 
-						$$(ids.dataviewList).parse(availableDCs, 'json');
+						$$(ids.datacollectionList).parse(availableDCs, 'json');
 
 						_logic.busyEnd();
 
@@ -112,7 +112,7 @@ module.exports = class AB_Work_Dataview_List_NewDataview_Import extends OP.Compo
 			filter: function () {
 				// `this` should be from the Webix event
 				var filterText = this.getValue();
-				$$(ids.dataviewList).filter('#label#', filterText);
+				$$(ids.datacollectionList).filter('#label#', filterText);
 			},
 
 
@@ -127,7 +127,7 @@ module.exports = class AB_Work_Dataview_List_NewDataview_Import extends OP.Compo
 				$$(ids.form).clearValidation();
 				$$(ids.form).clear();
 				// Lists
-				$$(ids.dataviewList).clearAll();
+				$$(ids.datacollectionList).clearAll();
 
 			},
 
@@ -149,18 +149,18 @@ module.exports = class AB_Work_Dataview_List_NewDataview_Import extends OP.Compo
 			*/
 			save: function () {
 				var saveButton = $$(ids.buttonSave);
-				var selectedDataview = $$(ids.dataviewList).getSelectedItem();
-				if (!selectedDataview) return false;
+				var selectedDatacollection = $$(ids.datacollectionList).getSelectedItem();
+				if (!selectedDatacollection) return false;
 
 				saveButton.disable();
 				_logic.busyStart();
 
-				CurrentApplication.dataviewImport(selectedDataview.id)
-					.then(newDataview => {
+				CurrentApplication.datacollectionImport(selectedDatacollection.id)
+					.then(newDatacollection => {
 						saveButton.enable();
 						_logic.busyEnd();
 
-						_logic.callbacks.onDone(newDataview);
+						_logic.callbacks.onDone(newDatacollection);
 					})
 					.catch((err) => {
 						console.log('ERROR:', err);
@@ -211,7 +211,7 @@ module.exports = class AB_Work_Dataview_List_NewDataview_Import extends OP.Compo
 					// Model list
 					{
 						view: 'list',
-						id: ids.dataviewList,
+						id: ids.datacollectionList,
 						select: true,
 						height: 200,
 						minHeight: 250,

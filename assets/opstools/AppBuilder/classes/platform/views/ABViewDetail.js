@@ -153,7 +153,7 @@ module.exports = class ABViewDetail extends ABViewDetailCore {
 
 		return commonUI.concat([
 			{
-				name: 'dataview',
+				name: 'datacollection',
 				view: 'richselect',
 				label: L('ab.components.detail.dataSource', "*Data Source"),
 				labelWidth: App.config.labelWidthLarge,
@@ -219,8 +219,8 @@ module.exports = class ABViewDetail extends ABViewDetailCore {
 
 		super.propertyEditorPopulate(App, ids, view);
 
-		var SourceSelector = $$(ids.dataview);
-		var dataviewId = view.settings.dataviewID || null;
+		var SourceSelector = $$(ids.datacollection);
+		var datacollectionId = view.settings.dataviewID || null;
 
 		// Pull data views to options
 		var dcOptions = view.application.datacollections().map((dc) => {
@@ -232,11 +232,11 @@ module.exports = class ABViewDetail extends ABViewDetailCore {
 		});
 
 		SourceSelector.define('options', dcOptions);
-		SourceSelector.define('value', dataviewId);
+		SourceSelector.define('value', datacollectionId);
 		SourceSelector.refresh();
 
 
-		this.propertyUpdateFieldOptions(ids, view, dataviewId);
+		this.propertyUpdateFieldOptions(ids, view, datacollectionId);
 
 		$$(ids.showLabel).setValue(view.settings.showLabel != null ? view.settings.showLabel : ABViewDetailPropertyComponentDefaults.showLabel);
 		$$(ids.labelPosition).setValue(view.settings.labelPosition || ABViewDetailPropertyComponentDefaults.labelPosition);
@@ -254,7 +254,7 @@ module.exports = class ABViewDetail extends ABViewDetailCore {
 
 		super.propertyEditorValues(ids, view);
 
-		view.settings.dataviewID = $$(ids.dataview).getValue();
+		view.settings.dataviewID = $$(ids.datacollection).getValue();
 		view.settings.showLabel = $$(ids.showLabel).getValue();
 		view.settings.labelPosition = $$(ids.labelPosition).getValue();
 		view.settings.labelWidth = $$(ids.labelWidth).getValue();
@@ -289,7 +289,7 @@ module.exports = class ABViewDetail extends ABViewDetailCore {
 	* @method component()
 	* return a UI component based upon this view.
 	* @param {obj } App 
-	* @param {string} idPrefix - define to support in 'Dataview' widget
+	* @param {string} idPrefix - define to support in 'Datacollection' widget
 	*
 	* @return {obj } UI component
 	*/
@@ -404,7 +404,7 @@ module.exports = class ABViewDetail extends ABViewDetailCore {
 			container.onShow();
 
 			// listen DC events
-			let dv = this.dataview;
+			let dv = this.datacollection;
 			if (dv) {
 
 				let currData = dv.getCursor();

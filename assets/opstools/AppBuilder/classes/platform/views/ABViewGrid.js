@@ -84,7 +84,7 @@ module.exports = class ABViewGrid extends ABViewGridCore {
 			init: () => {
 
 				// remove id of the component in caching for refresh .bind of the data collection
-				let dv = this.dataview;
+				let dv = this.datacollection;
 				if (dv)
 					dv.removeComponent(DataTable.ui.id);
 
@@ -319,7 +319,7 @@ module.exports = class ABViewGrid extends ABViewGridCore {
 					rows: [
 						{
 							view: "select",
-							name: "dataview",
+							name: "datacollection",
 							label: L('ab.component.label.dataSource', '*Object:'),
 							labelWidth: App.config.labelWidthLarge,
 							on: {
@@ -530,7 +530,7 @@ module.exports = class ABViewGrid extends ABViewGridCore {
 
 		this.view = view;
 
-		$$(ids.dataview).setValue(view.settings.dataviewID);
+		$$(ids.datacollection).setValue(view.settings.dataviewID);
 		$$(ids.isEditable).setValue(view.settings.isEditable);
 		$$(ids.massUpdate).setValue(view.settings.massUpdate);
 		$$(ids.allowDelete).setValue(view.settings.allowDelete);
@@ -569,7 +569,7 @@ module.exports = class ABViewGrid extends ABViewGridCore {
 			}, this);
 		}
 
-		//Load ABDataview to QueryBuilder
+		//Load ABDatacollection to QueryBuilder
 		this.propertyUpdateGridFilterObject(ids, view);
 
 		// Populate values to link page properties
@@ -583,7 +583,7 @@ module.exports = class ABViewGrid extends ABViewGridCore {
 		super.propertyEditorValues(ids, view);
 
 		// Retrive the values of your properties from Webix and store them in the view
-		view.settings.dataviewID = $$(ids.dataview).getValue();
+		view.settings.dataviewID = $$(ids.datacollection).getValue();
 		view.settings.isEditable = $$(ids.isEditable).getValue();
 		view.settings.massUpdate = $$(ids.massUpdate).getValue();
 		view.settings.allowDelete = $$(ids.allowDelete).getValue();
@@ -635,7 +635,7 @@ module.exports = class ABViewGrid extends ABViewGridCore {
 		if (!view) return;
 
 		// Populate values to QueryBuilder
-		var selectedDv = view.dataview;
+		var selectedDv = view.datacollection;
 
 		if (selectedDv) {
 			let object = selectedDv.datasource;
@@ -689,7 +689,7 @@ module.exports = class ABViewGrid extends ABViewGridCore {
 			groupBy: this.settings.groupBy,
 			hiddenFields: this.settings.objectWorkspace.hiddenFields,
 			frozenColumnID: this.settings.objectWorkspace.frozenColumnID || "",
-			isTreeDatable: this.dataview && this.dataview.isGroup
+			isTreeDatable: this.datacollection && this.datacollection.isGroup
 		}
 
 		let DataTable = new ABWorkspaceDatatable(App, idBase, settings);
@@ -768,7 +768,7 @@ module.exports = class ABViewGrid extends ABViewGridCore {
 					DataTable.hideHeader();
 				}
 
-				var dv = this.dataview;
+				var dv = this.datacollection;
 				if (dv && dv.datasource) {
 
 					CurrentObject = dv.datasource;
@@ -788,7 +788,7 @@ module.exports = class ABViewGrid extends ABViewGridCore {
 					// link page helper
 					linkPage.init({
 						view: this,
-						dataview: dv
+						datacollection: dv
 					});
 
 					dv.bind($$(DataTable.ui.id));
@@ -1154,7 +1154,7 @@ module.exports = class ABViewGrid extends ABViewGridCore {
 				$$(DataTable.ui.id).adjust();
 			}
 
-			var dv = this.dataview;
+			var dv = this.datacollection;
 			if (dv) {
 
 				this.eventAdd({
@@ -1189,13 +1189,13 @@ module.exports = class ABViewGrid extends ABViewGridCore {
 			};
 		});
 		objectOptions.unshift(defaultOption);
-		$$(ids.dataview).define("options", objectOptions);
-		$$(ids.dataview).refresh();
-		if (view.settings.dataview != '') {
-			$$(ids.dataview).setValue(view.settings.dataviewID);
+		$$(ids.datacollection).define("options", objectOptions);
+		$$(ids.datacollection).refresh();
+		if (view.settings.datacollection != '') {
+			$$(ids.datacollection).setValue(view.settings.dataviewID);
 			// $$(ids.linkedObject).show();
 		} else {
-			$$(ids.dataview).setValue('');
+			$$(ids.datacollection).setValue('');
 			// $$(ids.linkedObject).hide();
 		}
 
@@ -1203,7 +1203,7 @@ module.exports = class ABViewGrid extends ABViewGridCore {
 		let groupFields = [
 			{ id: '', value: L('ab.component.grid.noGroupBy', '*No group field') }
 		];
-		var dv = this.dataview;
+		var dv = this.datacollection;
 		if (dv && dv.datasource) {
 			dv.datasource.fields(f => {
 				return f.key != 'connectObject' && view.settings.objectWorkspace.hiddenFields.indexOf(f.columnName) < 0;
@@ -1220,7 +1220,7 @@ module.exports = class ABViewGrid extends ABViewGridCore {
 	}
 
 	populatePopupEditors(view, dataSource) {
-		var dv = this.dataview;
+		var dv = this.datacollection;
 		if (!dv) return;
 
 		let object = dv.datasource;

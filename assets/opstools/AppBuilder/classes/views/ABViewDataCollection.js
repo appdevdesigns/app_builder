@@ -1809,21 +1809,21 @@ export default class ABViewDataCollection extends ABView {
 
 							dcFilters.push(
 								new Promise((next, err) => {
-									var dataview = this.application.datacollections(dv => dv.id == rule.value)[0];									
-									if (!dataview) return next();
+									var datacollection = this.application.datacollections(dv => dv.id == rule.value)[0];									
+									if (!datacollection) return next();
 
-									switch (dataview.dataStatus) {
+									switch (datacollection.dataStatus) {
 
-										case dataview.dataStatusFlag.notInitial:
-											dataview.loadData().catch(err);
+										case datacollection.dataStatusFlag.notInitial:
+											datacollection.loadData().catch(err);
 											// no break;
 
-										case dataview.dataStatusFlag.initializing:
+										case datacollection.dataStatusFlag.initializing:
 
 											// wait until the link dc initialized data
 											// NOTE: if linked data collections are recursive, then it is infinity looping.
 											this.eventAdd({
-												emitter: dataview,
+												emitter: datacollection,
 												eventName: "initializedData",
 												listener: () => {
 
@@ -1835,7 +1835,7 @@ export default class ABViewDataCollection extends ABView {
 
 											break;
 
-										case dataview.dataStatusFlag.initialized:
+										case datacollection.dataStatusFlag.initialized:
 											next();
 											break;
 

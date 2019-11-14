@@ -133,10 +133,10 @@ export default class ABViewChartComponent extends ABViewWidget {
 		let chart = this.chartComponent();
 		if (chart == null) return null;
 
-		let dataview = chart.dataview;
-		if (dataview == null) return null;
+		let datacollection = chart.datacollection;
+		if (datacollection == null) return null;
 
-		let object = dataview.datasource;
+		let object = datacollection.datasource;
 		if (object == null) return null;
 
 		let field = object.fields((v) => v.id == this.settings.fieldId)[0];

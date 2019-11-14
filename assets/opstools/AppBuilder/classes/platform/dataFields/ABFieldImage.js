@@ -279,7 +279,7 @@ var ABFieldImageComponent = new ABFieldComponent({
 module.exports = class ABFieldImage extends ABFieldImageCore {
 
 	constructor(values, object) {
-		super(values, object, ABFieldImageDefaults);
+		super(values, object);
 	}
 
 	/*

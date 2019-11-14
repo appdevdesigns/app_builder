@@ -1,96 +1,16 @@
-/*
- * ABViewComment
- *
- * An ABViewComment defines a Comment view type.
- *
- */
+const ABViewCommentCore = require("../../core/views/ABViewCommentCore");
 
-import ABViewWidget from "./ABViewWidget"
-import ABPropertyComponent from "../ABPropertyComponent"
+const ABViewCommentPropertyComponentDefaults = ABViewCommentCore.defaultValues();
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
-var ABViewCommentPropertyComponentDefaults = {
-	dataviewID: null,
-	columnUser: null,
-	columnComment: null,
-	columnDate: null,
-	height: 300,
-	label: '',	// label is required and you can add more if the component needs them
-	// format:0  	// 0 - normal, 1 - title, 2 - description
-}
+module.exports = class ABViewComment extends ABViewCommentCore {
 
-var ABViewDefaults = {
-	key: 'comment',		// {string} unique key for this view
-	icon: 'comments',		// {string} fa-[icon] reference for this view
-	labelKey: 'ab.components.comment' // {string} the multilingual label key for the class label
-}
+	constructor(values, application, parent, defaultValues) {
 
-export default class ABViewComment extends ABViewWidget  {
-
-	/**
-	 * @param {obj} values  key=>value hash of ABView values
-	 * @param {ABApplication} application the application object this view is under
-	 * @param {ABView} parent the ABView this view is a child of. (can be null)
-	 */
-    constructor(values, application, parent) {
-
-    	super( values, application, parent, ABViewDefaults );
-
-    	// OP.Multilingual.translate(this, this, ['text']);
-
-  	}
-
-  	static common() {
-  		return ABViewDefaults;
-  	}
-
-	///
-	/// Instance Methods
-	///
-
-	/**
-	 * @method toObj()
-	 *
-	 * properly compile the current state of this ABViewLabel instance
-	 * into the values needed for saving.
-	 *
-	 * @return {json}
-	 */
-	toObj () {
-
-		// OP.Multilingual.unTranslate(this, this, ['label', 'text']);
-
-		var obj = super.toObj();
-
-		return obj;
-	}
-
-	/**
-	 * @method fromValues()
-	 *
-	 * initialze this object with the given set of values.
-	 * @param {obj} values
-	 */
-	fromValues (values) {
-
-		super.fromValues(values);
-
-    	// if this is being instantiated on a read from the Property UI,
-    	// .text is coming in under .settings.label
-    	// this.text = values.text || values.settings.text || '*text';
-
-    	// this.settings.format = this.settings.format || ABViewLabelPropertyComponentDefaults.format;
-
-    	// we are not allowed to have sub views:
-    	// this._views = [];
-
-    	// convert from "0" => 0
-    	// this.settings.format = parseInt(this.settings.format);
-    	// if this is being instantiated on a read from the Property UI,
-		this.settings.height = parseInt(this.settings.height || 0);
+		super(values, application, parent, defaultValues);
 
 	}
 
@@ -183,7 +103,7 @@ export default class ABViewComment extends ABViewWidget  {
 	static propertyEditorPopulate(App, ids, view) {
 
 		super.propertyEditorPopulate(App, ids, view);
-		
+
 		var datacollectionId = (view.settings.dataviewID ? view.settings.dataviewID : null);
 
 		this.propertyUpdateDatacollectionOptions(ids, view, datacollectionId);
@@ -255,7 +175,7 @@ export default class ABViewComment extends ABViewWidget  {
 		// Add a default option
 		var defaultOption = { id: null, value: '[Select]' };
 		fieldOptions.unshift(defaultOption);
-		
+
 		$$(ids.columnUser).define("options", fieldOptions);
 		$$(ids.columnUser).refresh();
 
@@ -282,7 +202,7 @@ export default class ABViewComment extends ABViewWidget  {
 		// Add a default option
 		var defaultOption = { id: null, value: '[Select]' };
 		fieldOptions.unshift(defaultOption);
-		
+
 		$$(ids.columnComment).define("options", fieldOptions);
 		$$(ids.columnComment).refresh();
 
@@ -309,7 +229,7 @@ export default class ABViewComment extends ABViewWidget  {
 		// Add a default option
 		var defaultOption = { id: null, value: '[Select]' };
 		fieldOptions.unshift(defaultOption);
-		
+
 		$$(ids.columnDate).define("options", fieldOptions);
 		$$(ids.columnDate).refresh();
 
@@ -323,9 +243,9 @@ export default class ABViewComment extends ABViewWidget  {
 	 */
 	component(App) {
 
-		var idBase = 'ABViewComment_'+this.id;
+		var idBase = 'ABViewComment_' + this.id;
 		var ids = {
-			component: App.unique(idBase+'_component'),
+			component: App.unique(idBase + '_component'),
 		}
 
 		let base = super.component(App);
@@ -352,7 +272,7 @@ export default class ABViewComment extends ABViewWidget  {
 
 				// 	_logic.updateComment(rowId, item);
 				// },
-				onAfterDelete: function(rowId) {
+				onAfterDelete: function (rowId) {
 					_logic.deleteComment(rowId);
 				}
 			}
@@ -378,7 +298,7 @@ export default class ABViewComment extends ABViewWidget  {
 							}
 
 						});
-	
+
 					// Implement progress bar
 					webix.extend($commentList, webix.ProgressBar);
 				}
@@ -390,10 +310,10 @@ export default class ABViewComment extends ABViewWidget  {
 			// bind dc to component
 			// dv.bind($$(ids.component));
 
-			if (!this.__dvEvents.create) 
+			if (!this.__dvEvents.create)
 				this.__dvEvents.create = dv.on('create', () => _logic.refreshComment());
-			
-			if (!this.__dvEvents.update) 
+
+			if (!this.__dvEvents.update)
 				this.__dvEvents.update = dv.on('update', () => _logic.refreshComment());
 
 			if (!this.__dvEvents.delete)
@@ -426,9 +346,9 @@ export default class ABViewComment extends ABViewWidget  {
 
 				dataObject.forEach((item, index) => {
 
-					if(item[commentColName]) {
+					if (item[commentColName]) {
 
-						var user = this.getUserData().find(user => { return user.value == item[userColName]});
+						var user = this.getUserData().find(user => { return user.value == item[userColName] });
 						var data = {
 							id: item.id,
 							user_id: (user) ? user.id : 0,
@@ -442,8 +362,8 @@ export default class ABViewComment extends ABViewWidget  {
 					}
 				});
 
-				dataList.sort(function(a, b){
-					if(dateColName) {
+				dataList.sort(function (a, b) {
+					if (dateColName) {
 						return new Date(a.date).getTime() - new Date(b.date).getTime();
 					}
 					else {
@@ -455,7 +375,7 @@ export default class ABViewComment extends ABViewWidget  {
 					data: dataList
 				};
 			},
-			refreshComment:() => {
+			refreshComment: () => {
 
 				if (this.__refreshTimeout)
 					clearTimeout(this.__refreshTimeout);
@@ -474,9 +394,9 @@ export default class ABViewComment extends ABViewWidget  {
 
 					// populate comments
 					let commentData = _logic.getCommentData();
-	                if(commentData) {
-	                   $$(ids.component).parse(commentData);
-	                }
+					if (commentData) {
+						$$(ids.component).parse(commentData);
+					}
 
 					// scroll to the last item
 					if ($commentList)
@@ -552,52 +472,11 @@ export default class ABViewComment extends ABViewWidget  {
 		}
 
 		return {
-			ui:_ui,
-			init:_init,
-			logic:_logic,
+			ui: _ui,
+			init: _init,
+			logic: _logic,
 			onShow: onShow
 		}
-	}
-
-
-	/**
-	 * @method componentList
-	 * return the list of components available on this view to display in the editor.
-	 */
-	componentList() {
-		return [];
-	}
-
-	getUserField() {
-		var dv = this.datacollection;
-		if (!dv) return null;
-
-		var obj = dv.datasource;
-		if (!obj) return null;
-		
-		return obj.fields((f) => f.id == this.settings.columnUser)[0]
-	}
-
-	getCommentField() {
-
-		var dv = this.datacollection;
-		if (!dv) return null;
-
-		var obj = dv.datasource;
-		if (!obj) return null;
-		
-		return obj.fields((f) => f.id == this.settings.columnComment)[0]
-	}
-
-	getDateField() {
-
-		var dv = this.datacollection;
-		if (!dv) return null;
-
-		var obj = dv.datasource;
-		if (!obj) return null;
-		
-		return obj.fields((f) => f.id == this.settings.columnDate)[0]
 	}
 
 	getUsers() {
@@ -621,101 +500,14 @@ export default class ABViewComment extends ABViewWidget  {
 		//Anonymous User = 0
 		var currentUserId = 0;
 
-		if(!userObject) return;
+		if (!userObject) return;
 
 		userObject.forEach((item, index) => {
-			if(item.value == currentUser) {
-				currentUserId = index+1;
+			if (item.value == currentUser) {
+				currentUserId = index + 1;
 			}
 		});
 		return currentUserId;
 	}
 
-	getUserData() {
-		var userObject = this.getUsers();
-		var userList = []
-
-		if(!userObject) return;
-
-		userObject.forEach((item, index) => {
-			var imageURL = "";
-			if (item.image) {
-				imageURL = "/opsportal/image/UserProfile/" + item.image;
-			}
-			var user = { id: index+1, value: item.value, image: imageURL };
-			userList.push(user);
-		});
-		return userList;
-	}
-	
-	model() {
-
-		let dv = this.datacollection;
-		if (!dv) return null;
-
-		// get ABObject
-		let obj = dv.datasource;
-		if (obj == null) return null;
-
-		// get ABModel
-		let model = dv.model;
-		if (model == null) return null;
-
-		return model;
-
-	}
-
-	saveData(commentText, dateTime) {
-
-		if (commentText == null ||
-			commentText == "") 
-			return Promise.resolve();
-
-		let dv = this.datacollection;
-		if (!dv) return null;
-
-		let model = this.model();
-		if (model == null) return Promise.resolve();
-
-		let comment = {};
-
-		let userField = this.getUserField();
-		if (userField)
-			comment[userField.columnName] = OP.User.username();
-
-		let commentField = this.getCommentField();
-		if (commentField)
-			comment[commentField.columnName] = commentText;
-
-		let dateField = this.getDateField();
-		if (dateField)
-			comment[dateField.columnName] = dateTime;
-
-		// add parent cursor to default
-		let dvLink = dv.datacollectionLink;
-		if (dvLink &&
-			dvLink.getCursor()) {
-
-			let objectLink = dvLink.datasource;
-			let fieldLink = dv.fieldLink;
-
-			if (objectLink && 
-				fieldLink) {
-				comment[fieldLink.columnName] = {};
-				comment[fieldLink.columnName][objectLink.PK()] = dvLink.getCursor().id;
-			}
-		}
-
-		return new Promise(
-			(resolve, reject) => {
-				model.create(comment)
-				.catch((err) => {
-					reject(err);
-				})
-				.then(() => {
-					resolve();
-				});
-			}
-		);
-	}
 }

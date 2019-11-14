@@ -558,7 +558,7 @@ module.exports = class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleAct
 						dv.datasource.fields(f => f.key == 'email').forEach(f => {
 
 							options.push({
-								id: dv.id + '|' + f.id, // ABDataviewID|fieldID
+								id: dv.id + '|' + f.id, // ABDatacollectionID|fieldID
 								value: "{dcLabel}.{fieldLabel}"
 									.replace("{dcLabel}", dv.label)
 									.replace("{fieldLabel}", f.label)
@@ -686,7 +686,7 @@ module.exports = class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleAct
 							// query
 							else if (rec.emailType == 'query') {
 
-								var dvIdAndFieldId = rec.value; // ABDataviewId|fieldId
+								var dvIdAndFieldId = rec.value; // ABDatacollectionId|fieldId
 								if (!dvIdAndFieldId) return next();
 
 								var dcId = dvIdAndFieldId.split('|')[0];

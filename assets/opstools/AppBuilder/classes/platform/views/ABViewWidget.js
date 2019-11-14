@@ -78,7 +78,7 @@ module.exports = class ABViewWidget extends ABViewWidgetCore {
 
 		base.onShow = (viewId) => {
 
-			let dv = this.dataview; // get from a function or a (get) property
+			let dv = this.datacollection; // get from a function or a (get) property
 			if (dv &&
 				dv.dataStatus == dv.dataStatusFlag.notInitial) {
 

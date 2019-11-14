@@ -149,7 +149,7 @@ export default class ABViewChart extends ABViewContainer  {
 				}
 			},
 			{
-				name: 'dataview',
+				name: 'datacollection',
 				view: 'richselect',
 				label: L('ab.component.chart.dataSource', '*Chart Data'),
 				labelWidth: App.config.labelWidthLarge
@@ -222,11 +222,11 @@ export default class ABViewChart extends ABViewContainer  {
 
 		super.propertyEditorPopulate(App, ids, view);
 
-		this.populateDataview(ids, view);
+		this.populateDatacollection(ids, view);
 		this.populateFieldOptions(ids, view);
 
 		$$(ids.multipleSeries).setValue(view.settings.multipleSeries || ABViewChartPropertyComponentDefaults.multipleSeries);
-		$$(ids.dataview).setValue(view.settings.dataviewID || ABViewChartPropertyComponentDefaults.dataviewID);
+		$$(ids.datacollection).setValue(view.settings.dataviewID || ABViewChartPropertyComponentDefaults.dataviewID);
 		$$(ids.columnValue).setValue(view.settings.columnValue || ABViewChartPropertyComponentDefaults.columnValue);
 		$$(ids.columnLabel).setValue(view.settings.columnLabel || ABViewChartPropertyComponentDefaults.columnLabel);
 		$$(ids.isPercentage).setValue(view.settings.isPercentage != null ? view.settings.isPercentage : ABViewChartPiePropertyComponentDefaults.isPercentage);
@@ -249,7 +249,7 @@ export default class ABViewChart extends ABViewContainer  {
 		super.propertyEditorValues(ids, view);
 
 		view.settings.multipleSeries = $$(ids.multipleSeries).getValue();
-		view.settings.dataviewID = $$(ids.dataview).getValue();
+		view.settings.dataviewID = $$(ids.datacollection).getValue();
 		view.settings.columnValue = $$(ids.columnValue).getValue();
 		view.settings.columnLabel = $$(ids.columnLabel).getValue();
 		view.settings.isPercentage = $$(ids.isPercentage).getValue();
@@ -267,7 +267,7 @@ export default class ABViewChart extends ABViewContainer  {
 		}
 	}
 
-	static populateDataview(ids, view) {
+	static populateDatacollection(ids, view) {
 
 		// Set the objects you can choose from in the list
 		var objectOptions = view.application.datacollections().map(dc => {
@@ -281,8 +281,8 @@ export default class ABViewChart extends ABViewContainer  {
 		var defaultOption = { id: '', value: L('ab.component.label.selectObject', '*Select an object') };
 		objectOptions.unshift(defaultOption);
 
-		$$(ids.dataview).define("options", objectOptions);
-		$$(ids.dataview).refresh();
+		$$(ids.datacollection).define("options", objectOptions);
+		$$(ids.datacollection).refresh();
 
 	}
 
@@ -295,7 +295,7 @@ export default class ABViewChart extends ABViewContainer  {
 		$$(ids.columnValue).define("options", []);
 		$$(ids.columnValue).refresh();
 
-		var dv = view.dataview;
+		var dv = view.datacollection;
 		if (dv == null) return;
 
 		var obj = dv.datasource;
@@ -340,7 +340,7 @@ export default class ABViewChart extends ABViewContainer  {
 		$$(ids.columnValue2).refresh();
 		$$(ids.columnValue2).enable();
 
-		var dv = view.dataview;
+		var dv = view.datacollection;
 		if (dv == null) return;
 
 		var obj = dv.datasource;
@@ -436,7 +436,7 @@ export default class ABViewChart extends ABViewContainer  {
 	}
 
 	labelField() {
-		var dv = this.dataview;
+		var dv = this.datacollection;
 		if (!dv) return null;
 
 		var obj = dv.datasource;
@@ -446,7 +446,7 @@ export default class ABViewChart extends ABViewContainer  {
 	}
 
 	valueField() {
-		var dv = this.dataview;
+		var dv = this.datacollection;
 		if (!dv) return null;
 
 		var obj = dv.datasource;
@@ -456,7 +456,7 @@ export default class ABViewChart extends ABViewContainer  {
 	}
 
 	valueField2() {
-		var dv = this.dataview;
+		var dv = this.datacollection;
 		if (!dv) return null;
 
 		var obj = dv.datasource;
@@ -470,7 +470,7 @@ export default class ABViewChart extends ABViewContainer  {
 			this.dcChart = new webix.DataCollection();
 		}
 
-		var dv = this.dataview;
+		var dv = this.datacollection;
 		if (dv == null) return this.dcChart;
 
 

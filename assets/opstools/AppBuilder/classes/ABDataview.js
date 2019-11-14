@@ -1,10 +1,10 @@
 
 const ABObjectQuery = require("./ABObjectQuery");
 
-const ABDataViewCore = require("./ABDataviewCore");
+const ABDataCollectionCore = require("./ABDatacollectionCore");
 
 
-module.exports = class ABDataview extends ABDataViewCore {
+module.exports = class ABDatacollection extends ABDataCollectionCore {
 
 	constructor(attributes, application) {
 
@@ -44,7 +44,7 @@ module.exports = class ABDataview extends ABDataViewCore {
 	/**
 	* @method save()
 	*
-	* persist this instance of ABDataview with it's parent
+	* persist this instance of ABDatacollection with it's parent
 	*
 	*
 	* @return {Promise}
@@ -56,8 +56,8 @@ module.exports = class ABDataview extends ABDataViewCore {
 			.then((myView)=>{
 
 				// when it is done, then publish the update:
-				AD.comm.hub.publish('ab.dataview.update', {
-					dataviewId: this.id
+				AD.comm.hub.publish('ab.datacollection.update', {
+					datacollectionId: this.id
 				});
 
 				return myView;

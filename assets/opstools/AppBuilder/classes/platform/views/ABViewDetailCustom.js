@@ -149,7 +149,7 @@ module.exports = class ABViewDetailCustom extends ABViewDetailCustomCore {
 			if (!elem) return;
 
 			var detailCom = this.detailComponent(),
-				rowData = detailCom.dataview.getCursor() || {},
+				rowData = detailCom.datacollection.getCursor() || {},
 				node = elem.$view;
 
 			field.customDisplay(rowData, App, node, {

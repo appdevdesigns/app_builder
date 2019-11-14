@@ -11,7 +11,7 @@ var DefaultValues = {
 	query: {}, // json of ABObjectQuery
 	settings: {
 		datasourceID: '', 		// id of ABObject or ABObjectQuery
-		linkDataviewID: '',	// id of ABDataview
+		linkDatacollectionID: '',	// id of ABDatacollection
 		linkFieldID: '',		// id of ABField
 		objectWorkspace: {
 			filterConditions: { // array of filters to apply to the data table
@@ -29,7 +29,7 @@ var DefaultValues = {
 	}
 };
 
-module.exports = class ABDataview extends EventEmitter {
+module.exports = class ABDatacollection extends EventEmitter {
 
 	constructor(attributes, application) {
 
@@ -76,7 +76,7 @@ module.exports = class ABDataview extends EventEmitter {
 
 		// if this is being instantiated on a read from the Property UI,
 		this.settings.datasourceID = values.settings.datasourceID || DefaultValues.settings.datasourceID;
-		this.settings.linkDataviewID = values.settings.linkDataviewID || DefaultValues.settings.linkDataviewID;
+		this.settings.linkDatacollectionID = values.settings.linkDatacollectionID || DefaultValues.settings.linkDatacollectionID;
 		this.settings.linkFieldID = values.settings.linkFieldID || DefaultValues.settings.linkFieldID;
 		this.settings.objectWorkspace = values.settings.objectWorkspace || {
 			filterConditions: DefaultValues.settings.objectWorkspace.filterConditions,
@@ -135,7 +135,7 @@ module.exports = class ABDataview extends EventEmitter {
 	/**
 	* @method save()
 	*
-	* persist this instance of ABDataview with it's parent
+	* persist this instance of ABDatacollection with it's parent
 	*
 	*
 	* @return {Promise}
@@ -150,7 +150,7 @@ module.exports = class ABDataview extends EventEmitter {
 		}
 
 		return new Promise((resolve, reject) => {
-			this.application.dataviewSave(this)
+			this.application.datacollectionSave(this)
 				.then(newDC => {
 
 					if (newDC &&
@@ -173,8 +173,8 @@ module.exports = class ABDataview extends EventEmitter {
 
 					}
 
-					// AD.comm.hub.publish('ab.dataview.update', {
-					// 	dataviewId: this.id
+					// AD.comm.hub.publish('ab.datacollection.update', {
+					// 	datacollectionId: this.id
 					// });
 
 					resolve(this);
@@ -189,14 +189,14 @@ module.exports = class ABDataview extends EventEmitter {
 	/**
 	 * @method destroy()
 	 *
-	 * destroy the current instance of ABDataview
+	 * destroy the current instance of ABDatacollection
 	 *
 	 * also remove it from our parent application
 	 *
 	 * @return {Promise}
 	 */
 	destroy() {
-		return this.application.dataviewDestroy(this);
+		return this.application.datacollectionDestroy(this);
 	}
 
 	/**
@@ -235,17 +235,17 @@ module.exports = class ABDataview extends EventEmitter {
 	}
 
 	/**
-	* @method dataviewLink
-	* return a ABDataview that link of this.
+	* @method datacollectionLink
+	* return a ABDatacollection that link of this.
 	*
-	* @return {ABDataview}
+	* @return {ABDatacollection}
 	*/
-	get dataviewLink() {
+	get datacollectionLink() {
 
 		if (!this.application)
 			return null;
 
-		return this.application.datacollections(dc => dc.id == this.settings.linkDataviewID)[0];
+		return this.application.datacollections(dc => dc.id == this.settings.linkDatacollectionID)[0];
 	}
 
 	/**
@@ -419,7 +419,7 @@ module.exports = class ABDataview extends EventEmitter {
 	refreshLinkCursor() {
 
 		let linkCursor;
-		let dvLink = this.dataviewLink;
+		let dvLink = this.datacollectionLink;
 		if (dvLink) {
 			linkCursor = dvLink.getCursor();
 		}
@@ -1129,7 +1129,7 @@ debugger;
 
 
 		// add listeners when cursor of link data collection is changed
-		let linkDv = this.dataviewLink;
+		let linkDv = this.datacollectionLink;
 		if (linkDv) {
 			this.eventAdd({
 				emitter: linkDv,
@@ -1239,7 +1239,7 @@ debugger;
             //
             .then(() => {
                 // If we are linked to another datacollection then wait for it
-                let linkDc = this.dataviewLink;
+                let linkDc = this.datacollectionLink;
                 if (!linkDc) return Promise.resolve();
 
                 return waitForDataCollectionToInitialize(linkDc);
@@ -1308,7 +1308,7 @@ debugger;
 							this.processIncomingData(data);
 							
 ////
-//// LEFT OFF: debugging ABDataviewCore : why UI isn't updated after
+//// LEFT OFF: debugging ABDatacollectionCore : why UI isn't updated after
 //// data loads?
 ////  -->  check the .init() for messing with onAfterChange ...
 
@@ -1349,7 +1349,7 @@ debugger;
             this.parseTreeCollection(data);
 
             // if we are linked, then refresh our cursor
-            var linkDv = this.dataviewLink;
+            var linkDv = this.datacollectionLink;
             if (linkDv) {
 
                 // filter data by match link data collection
@@ -1404,7 +1404,7 @@ debugger;
 				var isValid = this.isValidData(row);
 
 				// parent dc filter
-				var linkDv = this.dataviewLink;
+				var linkDv = this.datacollectionLink;
 				if (isValid && linkDv) {
 					isValid = this.isParentFilterValid(row);
 				}
@@ -1428,7 +1428,7 @@ debugger;
 		// data is empty
 		if (rowData == null) return null;
 
-		var linkDv = this.dataviewLink;
+		var linkDv = this.datacollectionLink;
 		if (linkDv == null) return true;
 
 		var fieldLink = this.fieldLink;
@@ -1554,11 +1554,11 @@ debugger;
 			this.__filterDatasource.setValue(DefaultValues.settings.objectWorkspace.filterConditions);
 
 		// Set filter of data view
-		if (this.__filterDataview == null)
-			this.__filterDataview = new RowFilter();
+		if (this.__filterDatacollection == null)
+			this.__filterDatacollection = new RowFilter();
 
-		this.__filterDataview.objectLoad(this.datasource);
-		this.__filterDataview.viewLoad(this);
+		this.__filterDatacollection.objectLoad(this.datasource);
+		this.__filterDatacollection.viewLoad(this);
 
 		if (wheres)
 			this.settings.objectWorkspace.filterConditions = wheres;
@@ -1566,10 +1566,10 @@ debugger;
 		if (this.settings &&
 			this.settings.objectWorkspace &&
 			this.settings.objectWorkspace.filterConditions) {
-			this.__filterDataview.setValue(this.settings.objectWorkspace.filterConditions);
+			this.__filterDatacollection.setValue(this.settings.objectWorkspace.filterConditions);
 		}
 		else {
-			this.__filterDataview.setValue(DefaultValues.settings.objectWorkspace.filterConditions);
+			this.__filterDatacollection.setValue(DefaultValues.settings.objectWorkspace.filterConditions);
 		}
 
 	}
@@ -1779,8 +1779,8 @@ debugger;
 		if (this.__filterDatasource)
 			result = result && this.__filterDatasource.isValid(rowData);
 
-		if (this.__filterDataview)
-			result = result && this.__filterDataview.isValid(rowData);
+		if (this.__filterDatacollection)
+			result = result && this.__filterDatacollection.isValid(rowData);
 
 		return result;
 
@@ -1790,12 +1790,12 @@ debugger;
 
 	clone(settings) {
 		settings = settings || this.toObj();
-		var clonedDataview = new ABDataview(settings, this.application);
+		var clonedDatacollection = new ABDatacollection(settings, this.application);
 
 		return new Promise((resolve, reject) => {
 
 			// load the data
-			clonedDataview.loadData()
+			clonedDatacollection.loadData()
 				.then(() => {
 
 					// set the cursor
@@ -1806,10 +1806,10 @@ debugger;
 						// the .id of the item.  However it seems to be returning the {obj} 
 						if (cursorID.id) cursorID = cursorID.id;
 
-						clonedDataview.setCursor(cursorID);
+						clonedDatacollection.setCursor(cursorID);
 					}
 
-					resolve(clonedDataview);
+					resolve(clonedDatacollection);
 				})
 				.catch(reject);
 		})

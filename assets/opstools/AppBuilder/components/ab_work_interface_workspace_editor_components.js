@@ -88,7 +88,7 @@ module.exports = class AB_Work_Interface_Workspace_Editor_Components extends OP.
 				body: {
 					id: ids.list,
 					view: 'dataview',
-					css: 'ab-dataview-table borderless',
+					css: 'ab-datacollection-table borderless',
 					borderless: true,
 					xCount:5, //the number of items in a row
 				    yCount:3, //the number of items in a column

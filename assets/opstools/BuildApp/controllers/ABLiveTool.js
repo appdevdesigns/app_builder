@@ -567,17 +567,17 @@ steal(
 								});
 							}
 
-							if (!self.updateDataviewEventId && page.isRoot()) {
+							if (!self.updateDatacollectionEventId && page.isRoot()) {
 
 								/**
-								 * @event ab.dataview.update
-								 * This event is triggered when the dataview is updated
+								 * @event ab.datacollection.update
+								 * This event is triggered when the datacollection is updated
 								 * 
-								 * @param data.dataviewId {uuid} - id of the data view
+								 * @param data.datacollectionId {uuid} - id of the data view
 								 */
-								self.updateDataviewEventId = AD.comm.hub.subscribe('ab.dataview.update', function (msg, data) {
+								self.updateDatacollectionEventId = AD.comm.hub.subscribe('ab.datacollection.update', function (msg, data) {
 
-									let updatedDC = self.data.application.datacollections(dc => dc.id == data.dataviewId)[0];
+									let updatedDC = self.data.application.datacollections(dc => dc.id == data.datacollectionId)[0];
 									if (updatedDC) {
 										needToReloadPage();
 									}

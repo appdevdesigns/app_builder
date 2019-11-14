@@ -1,102 +1,27 @@
-/*
- * ABViewCarousel
- *
- * An ABViewCarousel defines a UI label display component.
- *
- */
+const ABViewCarouselCore = require("../../core/views/ABViewCarouselCore");
 
-import ABViewPropertyFilterData from "./viewProperties/ABViewPropertyFilterData"
-import ABViewPropertyLinkPage from "./viewProperties/ABViewPropertyLinkPage"
-import ABViewWidget from "./ABViewWidget"
+const ABViewPropertyFilterData = require("./viewProperties/ABViewPropertyFilterData");
+const ABViewPropertyLinkPage = require("./viewProperties/ABViewPropertyLinkPage");
 
-import ABFieldImage from "../dataFields/ABFieldImage"
-
+const ABFieldImage = require("../dataFields/ABFieldImage");
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
+let PopupCarouselFilterMenu = null;
 
-var ABViewCarouselPropertyComponentDefaults = {
+module.exports = class ABViewCarousel extends ABViewCarouselCore {
 
-	dataviewID: null, 	// uuid of ABDatacollection
-	field: null, 		// uuid
+	constructor(values, application, parent, defaultValues) {
 
-	width: 460,
-	height: 275,
-	showLabel: true,
-	hideItem: false,
-	hideButton: false,
-	navigationType: "corner", // "corner" || "side"
+		super(values, application, parent, defaultValues);
 
-	detailsPage: null,	// uuid
-	detailsTab: null,	// uuid
-	editPage: null,		// uuid
-	editTab: null		// uuid
-};
-
-
-var ABViewDefaults = {
-	key: 'carousel',		// {string} unique key for this view
-	icon: 'clone',			// {string} fa-[icon] reference for this view
-	labelKey: 'ab.components.carousel' // {string} the multilingual label key for the class label
-};
-
-var PopupCarouselFilterMenu = null;
-
-export default class ABViewCarousel extends ABViewWidget {
-
-	/**
- * @param {obj} values  key=>value hash of ABView values
- * @param {ABApplication} application the application object this view is under
- * @param {ABViewWidget} parent the ABViewWidget this view is a child of. (can be null)
- */
-	constructor(values, application, parent) {
-
-		super(values, application, parent, ABViewDefaults);
-
-		// 		id:'uuid',					// uuid value for this obj
-		// 		key:'viewKey',				// unique key for this View Type
-		// 		icon:'font',				// fa-[icon] reference for an icon for this View Type
-		// 		label:'',					// pulled from translation
-
-		//		settings: {					// unique settings for the type of field
-		//			format: x				// the display style of the text
-		//		},
-
-		// 		views:[],					// the child views contained by this view.
-
-		//		translations:[]				// text: the actual text being displayed by this label.
-
-		// 	}
-
-	}
-
-	static common() {
-		return ABViewDefaults;
 	}
 
 	///
 	/// Instance Methods
 	///
-
-	/**
-	 * @method toObj()
-	 *
-	 * properly compile the current state of this ABViewLabel instance
-	 * into the values needed for saving.
-	 *
-	 * @return {json}
-	 */
-	toObj() {
-
-		// OP.Multilingual.unTranslate(this, this, ['label', 'text']);
-
-		var obj = super.toObj();
-
-		obj.views = [];
-		return obj;
-	}
 
 	/**
 	 * @method fromValues()
@@ -108,19 +33,10 @@ export default class ABViewCarousel extends ABViewWidget {
 
 		super.fromValues(values);
 
-		// convert from "0" => 0
-		this.settings.width = parseInt(this.settings.width || ABViewCarouselPropertyComponentDefaults.width);
-		this.settings.height = parseInt(this.settings.height || ABViewCarouselPropertyComponentDefaults.height);
-		this.settings.showLabel = JSON.parse(this.settings.showLabel || ABViewCarouselPropertyComponentDefaults.showLabel);
-		this.settings.hideItem = JSON.parse(this.settings.hideItem || ABViewCarouselPropertyComponentDefaults.hideItem);
-		this.settings.hideButton = JSON.parse(this.settings.hideButton || ABViewCarouselPropertyComponentDefaults.hideButton);
-		this.settings.navigationType = this.settings.navigationType || ABViewCarouselPropertyComponentDefaults.navigationType;
-
 		// filter property
 		this.filterHelper.fromSettings(this.settings.filter);
 
 	}
-
 
 
 	//
@@ -769,15 +685,5 @@ export default class ABViewCarousel extends ABViewWidget {
 
 	}
 
-	get imageField() {
-		let dv = this.datacollection;
-		if (!dv) return null;
-
-		let obj = dv.datasource;
-		if (!obj) return null;
-
-		return obj.fields(f => f.id == this.settings.field)[0];
-
-	}
 
 }

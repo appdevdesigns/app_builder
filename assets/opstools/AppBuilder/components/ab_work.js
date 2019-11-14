@@ -9,7 +9,7 @@
 // let ABApplication = require("../classes/platform/ABApplication");
 let AB_Work_Object = require("./ab_work_object");
 let AB_Work_Query = require("./ab_work_query");
-let AB_Work_Dataview = require("./ab_work_dataview");
+let AB_Work_Datacollection = require("./ab_work_dataview");
 let AB_Work_Interface = require("./ab_work_interface");
 
 // export to ABLiveTool
@@ -36,7 +36,7 @@ module.exports = window.ABWorkUI = class AB_Work extends OP.Component {  // ('ab
 				expandMenu: L('ab.application.expandMenu', "*Expand Menu"),
 				objectTitle: L('ab.object.title', "*Objects"),
 				queryTitle: L('ab.query.title', "*Queries"),
-				dataviewTitle: L('ab.dataview.title', "*Data Collections"),
+				datacollectionTitle: L('ab.datacollection.title', "*Data Collections"),
 				interfaceTitle: L('ab.interface.title', "*Interface")
 			}
 		}
@@ -62,7 +62,7 @@ module.exports = window.ABWorkUI = class AB_Work extends OP.Component {  // ('ab
 
 		var AppObjectWorkspace = new AB_Work_Object(App);
 		var AppQueryWorkspace = new AB_Work_Query(App);
-		var AppDataviewWorkspace = new AB_Work_Dataview(App);
+		var AppDatacollectionWorkspace = new AB_Work_Datacollection(App);
 		var AppInterfaceWorkspace = new AB_Work_Interface(App);
 
 		var sidebarItems = 	[{
@@ -77,7 +77,7 @@ module.exports = window.ABWorkUI = class AB_Work extends OP.Component {  // ('ab
 		},
 		{
 			id: ids.tab_dataview,
-			value: labels.component.dataviewTitle,
+			value: labels.component.datacollectionTitle,
 			icon: "fa fa-fw fa-table"
 		},
 		{
@@ -208,7 +208,7 @@ module.exports = window.ABWorkUI = class AB_Work extends OP.Component {  // ('ab
 							cells: [
 								AppObjectWorkspace.ui,
 								AppQueryWorkspace.ui,
-								AppDataviewWorkspace.ui,
+								AppDatacollectionWorkspace.ui,
 								AppInterfaceWorkspace.ui
 							]
 						}
@@ -224,7 +224,7 @@ module.exports = window.ABWorkUI = class AB_Work extends OP.Component {  // ('ab
 
 			AppObjectWorkspace.init();
 			AppQueryWorkspace.init();
-			AppDataviewWorkspace.init();
+			AppDatacollectionWorkspace.init();
 			AppInterfaceWorkspace.init();
 
 //// TODO: keep track of the last workspace in application.workspace.lastWorkspace on every
@@ -300,7 +300,7 @@ module.exports = window.ABWorkUI = class AB_Work extends OP.Component {  // ('ab
 				_logic.applicationInit(application);
 				AppObjectWorkspace.applicationLoad(application);
 				AppQueryWorkspace.applicationLoad(application);
-				AppDataviewWorkspace.applicationLoad(application);
+				AppDatacollectionWorkspace.applicationLoad(application);
 				AppInterfaceWorkspace.applicationLoad(application);
 
 
@@ -330,10 +330,10 @@ module.exports = window.ABWorkUI = class AB_Work extends OP.Component {  // ('ab
 						AppQueryWorkspace.show();
 						break;
 
-					// Dataview Workspace Tab
+					// Datacollection Workspace Tab
 					case ids.tab_dataview:
 
-						AppDataviewWorkspace.show();
+						AppDatacollectionWorkspace.show();
 						break;
 
 					// Interface Workspace Tab

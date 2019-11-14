@@ -1032,7 +1032,7 @@ export default class ABView extends ABViewBase {
 		// } else {
 
 		// views not allowed to drop onto this View:
-		var viewsToIgnore = ['view', 'page', 'formpanel', 'datacollection', 'viewcontainer',
+		var viewsToIgnore = ['view', 'page', 'formpanel', 'dataview', 'viewcontainer',
 			// not allowed Detail's widgets
 			'detailcheckbox', 'detailcustom', 'detailimage', 'detailselectivity', 'detailtext', 'detailtree', 
 			// not allowed Form's widgets
@@ -1060,12 +1060,12 @@ export default class ABView extends ABViewBase {
 	}
 
 	/**
-	 * @property dataview
+	 * @property datacollection
 	 * return data source
 	 * 
-	 * @return {ABDataview}
+	 * @return {ABDatacollection}
 	 */
-	get dataview() {
+	get datacollection() {
 
 		let dataviewID = (this.settings || {}).dataviewID;
 		if (!dataviewID) return null;

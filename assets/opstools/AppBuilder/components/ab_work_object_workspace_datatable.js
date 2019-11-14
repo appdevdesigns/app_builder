@@ -446,7 +446,7 @@ console.warn('!! ToDo: onAfterColumnHide()');
 
 
         var CurrentObject = null;		// current ABObject being displayed
-        var CurrentDataview = null;		// current ABDataview
+        var CurrentDatacollection = null;		// current ABDatacollection
     	var EditField	= null;			// which field (column header) is popup editor for
     	var EditNode	= null;			// which html node (column header) is popup editor for
 
@@ -974,22 +974,22 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
 
             /**
-             * @method dataviewLoad
+             * @method datacollectionLoad
              * 
-             * @param dataview {ABDataview}
+             * @param datacollection {ABDatacollection}
              */
-			dataviewLoad: (dataview) => {
+			datacollectionLoad: (datacollection) => {
 
 				let DataTable = $$(this.ui.id);
-				CurrentDataview = dataview;
-				if (CurrentDataview) {
-					CurrentDataview.bind(DataTable);
-					CurrentDataview.on("initializingData", () => {
+				CurrentDatacollection = datacollection;
+				if (CurrentDatacollection) {
+					CurrentDatacollection.bind(DataTable);
+					CurrentDatacollection.on("initializingData", () => {
 
 						_logic.busy();
 
 					});
-					CurrentDataview.on("initializedData", () => {
+					CurrentDatacollection.on("initializedData", () => {
 
 						_logic.ready();
 
@@ -1339,9 +1339,9 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
             loadAll: function() {
 
-                if (CurrentDataview) {
-                    CurrentDataview.settings.loadAll = true;
-                    CurrentDataview.reloadData();
+                if (CurrentDatacollection) {
+                    CurrentDatacollection.settings.loadAll = true;
+                    CurrentDatacollection.reloadData();
                 }
 
                 // _logic.refresh(isLoadAll);
@@ -1387,7 +1387,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
         // 
         // Define our external interface methods:
         // 
-        this.dataviewLoad = _logic.dataviewLoad;
+        this.datacollectionLoad = _logic.datacollectionLoad;
         this.objectLoad = _logic.objectLoad;
         // this.refresh = _logic.refresh;
         this.refreshHeader = _logic.refreshHeader;

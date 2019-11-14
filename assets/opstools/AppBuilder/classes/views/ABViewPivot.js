@@ -163,7 +163,7 @@ export default class ABViewPivot extends ABViewWidget {
 
 		return commonUI.concat([
 			{
-				name: 'dataview',
+				name: 'datacollection',
 				view: 'richselect',
 				label: L('ab.components.pivot.dataSource', "*Data Source"),
 				labelWidth: App.config.labelWidthLarge
@@ -212,8 +212,8 @@ export default class ABViewPivot extends ABViewWidget {
 
 		super.propertyEditorPopulate(App, ids, view);
 
-		var dataviewId = (view.settings.dataviewID ? view.settings.dataviewID : null);
-		var SourceSelector = $$(ids.dataview);
+		var datacollectionId = (view.settings.dataviewID ? view.settings.dataviewID : null);
+		var SourceSelector = $$(ids.datacollection);
 
 		// Pull data collections to options
 		var dcOptions = view.application.datacollections().map((dc) => {
@@ -229,7 +229,7 @@ export default class ABViewPivot extends ABViewWidget {
 			value: '[Select]'
 		});
 		SourceSelector.define('options', dcOptions);
-		SourceSelector.define('value', dataviewId);
+		SourceSelector.define('value', datacollectionId);
 		SourceSelector.refresh();
 
 		$$(ids.removeMissed).setValue(view.settings.removeMissed);
@@ -247,7 +247,7 @@ export default class ABViewPivot extends ABViewWidget {
 
 		super.propertyEditorValues(ids, view);
 
-		view.settings.dataviewID = $$(ids.dataview).getValue();
+		view.settings.dataviewID = $$(ids.datacollection).getValue();
 
 		view.settings.removeMissed = $$(ids.removeMissed).getValue();
 		view.settings.totalColumn = $$(ids.totalColumn).getValue();
@@ -302,7 +302,7 @@ export default class ABViewPivot extends ABViewWidget {
 
 					return new Promise((next, err) => {
 
-						let dv = this.dataview;
+						let dv = this.datacollection;
 						if (!dv) return next();
 
 						let data = dv.getData();
@@ -326,7 +326,7 @@ export default class ABViewPivot extends ABViewWidget {
 
 					return new Promise((next, err) => {
 
-						let dv = this.dataview;
+						let dv = this.datacollection;
 						if (!dv) return next();
 
 						let object = dv.datasource;

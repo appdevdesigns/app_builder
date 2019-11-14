@@ -38,7 +38,7 @@ module.exports = class ABWorkObjectGantt extends OP.Component {
 		}
 
 		let CurrentObject = null,
-			CurrentDataview = null,
+			CurrentDatacollection = null,
 			CurrentGanttView = null,
 			CurrentStartDateField = null,
 			CurrentEndDateField = null,
@@ -152,19 +152,19 @@ module.exports = class ABWorkObjectGantt extends OP.Component {
 			},
 
 			/**
-			 * @method dataviewLoad
+			 * @method datacollectionLoad
 			 * 
-			 * @param dataview {ABDataview}
+			 * @param datacollection {ABDatacollection}
 			 */
-			dataviewLoad: (dataview) => {
+			datacollectionLoad: (datacollection) => {
 
-				CurrentDataview = dataview;
+				CurrentDatacollection = datacollection;
 
-				if (CurrentDataview.dataStatus == CurrentDataview.dataStatusFlag.initialized) {
+				if (CurrentDatacollection.dataStatus == CurrentDatacollection.dataStatusFlag.initialized) {
 					_logic.initData();
 				}
 
-				CurrentDataview.on('initializedData', () => {
+				CurrentDatacollection.on('initializedData', () => {
 
 					if (CurrentObject.currentView().type != "gantt")
 						return;
@@ -174,7 +174,7 @@ module.exports = class ABWorkObjectGantt extends OP.Component {
 				});
 
 				// real-time update
-				CurrentDataview.on('create', vals => {
+				CurrentDatacollection.on('create', vals => {
 
 					if (CurrentObject.currentView().type != "gantt")
 						return;
@@ -183,7 +183,7 @@ module.exports = class ABWorkObjectGantt extends OP.Component {
 
 				});
 
-				CurrentDataview.on('update', vals => {
+				CurrentDatacollection.on('update', vals => {
 
 					if (CurrentObject.currentView().type != "gantt")
 						return;
@@ -191,7 +191,7 @@ module.exports = class ABWorkObjectGantt extends OP.Component {
 					_logic.updateTaskItem(vals, true);
 
 				});
-				CurrentDataview.on('delete', taskId => {
+				CurrentDatacollection.on('delete', taskId => {
 
 					if (CurrentObject.currentView().type != "gantt")
 						return;
@@ -234,7 +234,7 @@ module.exports = class ABWorkObjectGantt extends OP.Component {
 				gantt.clearAll();
 
 				let gantt_data = {
-					data: (CurrentDataview.getData() || [])
+					data: (CurrentDatacollection.getData() || [])
 						.map((d, index) => _logic.convertFormat(gantt, d))
 						// .map((d, index) => _logic.convertFormat(gantt, d, index))
 				};
@@ -577,7 +577,7 @@ module.exports = class ABWorkObjectGantt extends OP.Component {
 		this.hide = _logic.hide;
 		this.show = _logic.show;
 		this.objectLoad = _logic.objectLoad;
-		this.dataviewLoad = _logic.dataviewLoad;
+		this.datacollectionLoad = _logic.datacollectionLoad;
 		this.addTask = _logic.addTask;
 
 	}

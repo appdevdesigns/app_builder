@@ -184,7 +184,7 @@ module.exports = class ABModel {
 	/**
 	 * @method staleRefresh
 	 * Process a request to refresh the data for a given entry.
-	 * This method is called from a ABDataview when it receives 
+	 * This method is called from a ABDatacollection when it receives 
 	 * a 'ab.datacollection.stale' message.
 	 * This method will try to queue similar reqeusts and then issue 1 large
 	 * request, rather than numerous individual ones.

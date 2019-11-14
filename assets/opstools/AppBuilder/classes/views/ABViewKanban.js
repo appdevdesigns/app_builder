@@ -16,7 +16,7 @@ function L(key, altText) {
 }
 
 let ABViewKanbanPropertyComponentDefaults = {
-	dataviewID: "", // uuid of ABDataview
+	dataviewID: "", // uuid of ABDatacollection
 	verticalGroupingField: "", // uuid of ABField
 	horizontalGroupingField: "", // uuid of ABField
 	ownerField: "", // uuid of ABField
@@ -77,7 +77,7 @@ export default class ABViewKanban extends ABViewWidget {
 			init: () => {
 
 				// remove id of the component in caching for refresh .bind of the data collection
-				let dv = this.dataview;
+				let dv = this.datacollection;
 				if (dv)
 					dv.removeComponent(Kanban.ui.id);
 
@@ -123,7 +123,7 @@ export default class ABViewKanban extends ABViewWidget {
 					padding: 10,
 					rows: [
 						{
-							name: 'dataview',
+							name: 'datacollection',
 							view: 'select',
 							label: L('ab.components.list.dataSource', "*Data Source"),
 							labelWidth: App.config.labelWidthXLarge,
@@ -170,7 +170,7 @@ export default class ABViewKanban extends ABViewWidget {
 	 * 
 	 * @param {Object} ids 
 	 * @param {ABViewForm} view - the current component
-	 * @param {string} dvId - id of ABDataview
+	 * @param {string} dvId - id of ABDatacollection
 	 */
 	static propertyUpdateFieldOptions(ids, view, dvId) {
 
@@ -196,8 +196,8 @@ export default class ABViewKanban extends ABViewWidget {
 
 		super.propertyEditorPopulate(App, ids, view);
 
-		let dataviewId = (view.settings.dataviewID ? view.settings.dataviewID : null);
-		let SourceSelector = $$(ids.dataview);
+		let datacollectionId = (view.settings.dataviewID ? view.settings.dataviewID : null);
+		let SourceSelector = $$(ids.datacollection);
 
 		// Pull data collections to options
 		let dcOptions = view.application.datacollections(dc => dc.settings && !dc.settings.isQuery).map((dc) => {
@@ -212,10 +212,10 @@ export default class ABViewKanban extends ABViewWidget {
 			value: '[Select]'
 		});
 		SourceSelector.define('options', dcOptions);
-		SourceSelector.define('value', dataviewId);
+		SourceSelector.define('value', datacollectionId);
 		SourceSelector.refresh();
 
-		this.propertyUpdateFieldOptions(ids, view, dataviewId);
+		this.propertyUpdateFieldOptions(ids, view, datacollectionId);
 
 		$$(ids.vGroup).setValue(view.settings.verticalGroupingField);
 		$$(ids.hGroup).setValue(view.settings.horizontalGroupingField);
@@ -230,7 +230,7 @@ export default class ABViewKanban extends ABViewWidget {
 
 		super.propertyEditorValues(ids, view);
 
-		view.settings.dataviewID = $$(ids.dataview).getValue();
+		view.settings.dataviewID = $$(ids.datacollection).getValue();
 		view.settings.verticalGroupingField = $$(ids.vGroup).getValue() || null;
 		view.settings.horizontalGroupingField = $$(ids.hGroup).getValue() || null;
 		view.settings.ownerField = $$(ids.owner).getValue() || null;
@@ -259,7 +259,7 @@ export default class ABViewKanban extends ABViewWidget {
 
 		let Kanban = new ABWorkspaceKanban(App, idBase);
 		let LinkPage = this.linkPageHelper.component(App, idBase + "_kanbanlinkpage");
-		let dataview = this.dataview;
+		let datacollection = this.datacollection;
 
 		// Show empty data source UI
 		let kanbanUI = {
@@ -275,7 +275,7 @@ export default class ABViewKanban extends ABViewWidget {
 			]
 		};
 
-		if (dataview) {
+		if (datacollection) {
 			kanbanUI = Kanban.ui.cols[0];
 		}
 
@@ -285,12 +285,12 @@ export default class ABViewKanban extends ABViewWidget {
 				onSelect: _logic.onSelect
 			});
 
-			if (dataview) {
-				Kanban.dataviewLoad(dataview);
+			if (datacollection) {
+				Kanban.datacollectionLoad(datacollection);
 
 				// set fields
 				let fieldSettings = {};
-				let object = dataview.datasource;
+				let object = datacollection.datasource;
 				if (object) {
 
 					Kanban.objectLoad(object);
@@ -315,7 +315,7 @@ export default class ABViewKanban extends ABViewWidget {
 			// link page helper
 			LinkPage.init({
 				view: this,
-				dataview: dataview
+				datacollection: datacollection
 			});
 
 		};

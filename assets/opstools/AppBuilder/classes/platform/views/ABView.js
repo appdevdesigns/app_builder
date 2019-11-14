@@ -493,7 +493,7 @@ module.exports = class ABView extends ABViewCore {
 		// } else {
 
 		// views not allowed to drop onto this View:
-		var viewsToIgnore = ['view', 'page', 'formpanel', 'datacollection', 'viewcontainer',
+		var viewsToIgnore = ['view', 'page', 'formpanel', 'dataview', 'viewcontainer',
 			// not allowed Detail's widgets
 			'detailcheckbox', 'detailcustom', 'detailimage', 'detailselectivity', 'detailtext', 'detailtree',
 			// not allowed Form's widgets
@@ -519,22 +519,6 @@ module.exports = class ABView extends ABViewCore {
 	changePage(pageId) {
 		this.emit('changePage', pageId);
 	}
-
-
-	/**
-	 * @property datacollection
-	 * return data source
-	 * 
-	 * @return {ABDataCollection}
-	 */
-	get datacollection() {
-
-		let dataviewID = (this.settings || {}).dataviewID;
-		if (!dataviewID) return null;
-
-		return this.application.datacollections(dc => dc.id == dataviewID)[0];
-	}
-
 
 	removeField(field, cb) {
 

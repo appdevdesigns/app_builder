@@ -98,11 +98,11 @@ module.exports = class AB_Work_Interface extends OP.Component {
 				$$(ids.component).show();
 
 				if (CurrentApplication &&
-					!CurrentApplication.loadedDataview) {
+					!CurrentApplication.loadedDatacollection) {
 
 					_logic.busy();
 
-					CurrentApplication.dataviewLoad()
+					CurrentApplication.datacollectionLoad()
 						.then(() => {
 
 							_logic.ready();

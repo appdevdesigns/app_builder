@@ -143,10 +143,10 @@ export default class ABViewDetailComponent extends ABViewWidget {
 		let detailComponent = this.detailComponent();
 		if (detailComponent == null) return null;
 
-		let dataview = detailComponent.dataview;
-		if (dataview == null) return null;
+		let datacollection = detailComponent.datacollection;
+		if (datacollection == null) return null;
 
-		let object = dataview.datasource;
+		let object = datacollection.datasource;
 		if (object == null) return null;
 
 		let field = object.fields((v) => v.id == this.settings.fieldId, true)[0];
@@ -166,7 +166,7 @@ export default class ABViewDetailComponent extends ABViewWidget {
 		var detailCom = this.detailComponent();
 		if (!detailCom) return null;
 
-		var dv = detailCom.dataview;
+		var dv = detailCom.datacollection;
 		if (!dv) return null;
 
 		var field = this.field();
@@ -198,7 +198,7 @@ export default class ABViewDetailComponent extends ABViewWidget {
 			var detailCom = this.detailComponent();
 			if (!detailCom) return resolve(reportDef);
 
-			var dv = detailCom.dataview;
+			var dv = detailCom.datacollection;
 			if (!dv) return resolve(reportDef);
 
 			var field = this.field();

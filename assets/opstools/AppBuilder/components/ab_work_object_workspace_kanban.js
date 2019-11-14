@@ -45,7 +45,7 @@ module.exports = class ABWorkObjectKanBan extends OP.Component {
 		let FormSide = new AB_Work_Form(App, idBase + '_kanban_form');
 
 		var CurrentObject = null;	// current ABObject being displayed
-		var CurrentDataview = null;
+		var CurrentDatacollection = null;
 		var CurrentVerticalField = null;
 		var CurrentHorizontalField = null;
 		var CurrentOwnerField = null;
@@ -87,8 +87,8 @@ module.exports = class ABWorkObjectKanBan extends OP.Component {
 					on: {
 						onListAfterSelect: (itemId, list) => {
 
-							if (CurrentDataview)
-								CurrentDataview.setCursor(itemId);
+							if (CurrentDatacollection)
+								CurrentDatacollection.setCursor(itemId);
 
 							if (_logic.callbacks.onSelect)
 								_logic.callbacks.onSelect(itemId);
@@ -426,16 +426,16 @@ module.exports = class ABWorkObjectKanBan extends OP.Component {
 			},
 
 			/**
-			 * @method dataviewLoad
+			 * @method datacollectionLoad
 			 * 
-			 * @param dataview {ABDataview}
+			 * @param datacollection {ABDatacollection}
 			 */
-			dataviewLoad: (dataview) => {
+			datacollectionLoad: (datacollection) => {
 
-				CurrentDataview = dataview;
+				CurrentDatacollection = datacollection;
 
-				if (CurrentDataview)
-					CurrentDataview.bind($$(ids.kanban));
+				if (CurrentDatacollection)
+					CurrentDatacollection.bind($$(ids.kanban));
 				else
 					$$(ids.kanban).unbind();
 
@@ -658,7 +658,7 @@ module.exports = class ABWorkObjectKanBan extends OP.Component {
 		this.show = _logic.show;
 
 		this.objectLoad = _logic.objectLoad;
-		this.dataviewLoad = _logic.dataviewLoad;
+		this.datacollectionLoad = _logic.datacollectionLoad;
 		this.setFields = _logic.setFields;
 
 		this.addCard = _logic.addCard;

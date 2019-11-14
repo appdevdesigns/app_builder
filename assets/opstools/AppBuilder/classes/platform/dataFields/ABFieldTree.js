@@ -192,7 +192,7 @@ var ABFieldTreeComponent = new ABFieldComponent({
 module.exports = class ABFieldTree extends ABFieldTreeCore {
 
 	constructor(values, object) {
-		super(values, object, ABFieldTreeDefaults);
+		super(values, object);
 
 	}
 

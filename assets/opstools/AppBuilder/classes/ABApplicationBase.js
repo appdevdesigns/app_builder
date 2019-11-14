@@ -73,14 +73,14 @@ module.exports = class ABApplicationBase {
 		this._queries = newQueries;
 
 
-		var newDataviews = [];
-		(attributes.json.dataviews || []).forEach(dataview => {
+		var newDatacollections = [];
+		(attributes.json.datacollections || []).forEach(datacollection => {
 			// prevent processing of null values.
-			if (dataview) {
-				  newDataviews.push( this.dataviewNew(dataview) );
+			if (datacollection) {
+				  newDatacollections.push( this.datacollectionNew(datacollection) );
 			  }
 		  })
-		this._dataviews = newDataviews;
+		this._datacollections = newDatacollections;
 
 
 		// Mobile Apps
@@ -329,19 +329,19 @@ module.exports = class ABApplicationBase {
 	///
 
 	/**
-	 * @method dataviews()
+	 * @method datacollections()
 	 *
-	 * return an array of all the ABDataview for this ABApplication.
+	 * return an array of all the ABDatacollection for this ABApplication.
 	 *
-	 * @param {fn} filter  	a filter fn to return a set of ABDataview that 
+	 * @param {fn} filter  	a filter fn to return a set of ABDatacollection that 
 	 *						this fn returns true for.
-	 * @return {array} 	array of ABDataview
+	 * @return {array} 	array of ABDatacollection
 	 */
-	dataviews (filter) {
+	datacollections (filter) {
 
 		filter = filter || function() { return true; };
 
-		return (this._dataviews || []).filter(filter);
+		return (this._datacollections || []).filter(filter);
 
 	}
 

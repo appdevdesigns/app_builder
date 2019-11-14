@@ -1681,20 +1681,20 @@ module.exports = class RowFilter extends OP.Component {
 					rowData = rowData[columnName] || {};
 				}
 
-				var dataview = _View.application.datacollections(dv => dv.id == compareValue)[0];
+				var datacollection = _View.application.datacollections(dv => dv.id == compareValue)[0];
 					
 				switch (rule) {
 					case 'in_data_collection':
-						if (!dataview)
+						if (!datacollection)
 							return false;
 							
-						result = (dataview.getData(d => d.id == rowData.id).length > 0);
+						result = (datacollection.getData(d => d.id == rowData.id).length > 0);
 						break;
 					case 'not_in_data_collection':
-						if (!dataview)
+						if (!datacollection)
 							return true;
 							
-						result = (dataview.getData(d => d.id == rowData.id).length < 1);
+						result = (datacollection.getData(d => d.id == rowData.id).length < 1);
 						break;
 				}
 				
