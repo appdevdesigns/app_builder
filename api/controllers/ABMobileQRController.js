@@ -521,7 +521,7 @@ module.exports = {
 
 // console.log('!!! adminQRCode:');
         // TODO we need to find out who the user is not allow them to tell us
-        var user = null;
+        var userGUID = null;
         var appID = req.param('mobileApp') || '--';
         var version = req.param('version') || '--';
         var deepLink = null;
@@ -556,8 +556,8 @@ module.exports = {
             // Get the current user's username
             (next) => {
                 
-                // get current user
-                user = req.user.username();
+                // get current user's GUID
+                userGUID = req.user.GUID();
                 next();
 
             },
@@ -565,7 +565,7 @@ module.exports = {
             // Get the User's Public Auth Token:
             (next) => {
 
-                ABMobile.publicAuthTokenForUser(user)
+                ABMobile.publicAuthTokenForUser(userGUID)
                 .then((token)=>{
 
                     if (token) {
