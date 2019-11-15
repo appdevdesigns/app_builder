@@ -5,8 +5,8 @@
  *
  */
 
-const ABViewForm = require('../classes/views/ABViewForm');
-const ABViewFormButton = require('../classes/views/ABViewFormButton');
+const ABViewForm = require('../classes/platform/views/ABViewForm');
+const ABViewFormButton = require('../classes/platform/views/ABViewFormButton');
 
 module.exports = class ABWorkObjectKanBan extends OP.Component {
 

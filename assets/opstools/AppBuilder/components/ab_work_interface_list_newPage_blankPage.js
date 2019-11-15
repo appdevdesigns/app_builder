@@ -6,9 +6,9 @@
  *
  */
 
-const ABPage = require('../classes/views/ABViewPage');
-// const ABViewPage = require('../classes/views/ABViewPage');
-// const ABViewReportPage = require('../classes/views/ABViewReportPage');
+const ABPage = require('../classes/platform/views/ABViewPage');
+// const ABViewPage = require('../classes/platform/views/ABViewPage');
+// const ABViewReportPage = require('../classes/platform/views/ABViewReportPage');
 
 
 module.exports = class AB_Work_Interface_List_NewPage_BlankPage extends OP.Component {

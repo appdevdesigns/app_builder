@@ -4,9 +4,9 @@
  * Manage the Summary Columns popup.
  *
  */
-const ABFieldNumber = require('../classes/dataFields/ABFieldNumber');
-const ABFieldCalculate = require('../classes/dataFields/ABFieldCalculate');
-const ABFieldFormula = require('../classes/dataFields/ABFieldFormula');
+const ABFieldNumber = require('../classes/platform/dataFields/ABFieldNumber');
+const ABFieldCalculate = require('../classes/platform/dataFields/ABFieldCalculate');
+const ABFieldFormula = require('../classes/platform/dataFields/ABFieldFormula');
 
 
 module.exports = class AB_Work_Object_Workspace_PopupSummaryColumns extends OP.Component {  

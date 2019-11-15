@@ -275,6 +275,10 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 		return OP.Util.uuid();
 	}
 
+	cloneDeep(value) {
+		return _.cloneDeep(value);
+	}
+
 	/// ABApplication data methods
 
 

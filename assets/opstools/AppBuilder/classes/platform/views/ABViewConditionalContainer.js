@@ -1,4 +1,5 @@
 const ABViewConditionalContainerCore = require("../../core/views/ABViewConditionalContainerCore");
+const RowFilter = require("../RowFilter");
 
 const ABViewPropertyDefaults = ABViewConditionalContainerCore.defaultValues();
 

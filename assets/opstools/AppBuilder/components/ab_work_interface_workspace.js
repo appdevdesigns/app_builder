@@ -9,7 +9,7 @@
 const ABWorkspaceEditor = require("./ab_work_interface_workspace_editor");
 const ABWorkspaceDetails = require("./ab_work_interface_workspace_details");
 
-const ABViewPage = require("../classes/views/ABViewPage");
+const ABViewPage = require("../classes/platform/views/ABViewPage");
 
 module.exports = class AB_Work_Interface_Workspace extends OP.Component {
     

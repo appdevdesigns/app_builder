@@ -9,7 +9,7 @@
 const AB_Work_Interface_List_NewPage_BlankPage = require("./ab_work_interface_list_newPage_blankPage");
 const AB_Work_Interface_List_NewPage_QuickPage = require("./ab_work_interface_list_newPage_quickPage");
 // const AB_Work_Interface_List_NewPage_ReportPage = require("./ab_work_interface_list_newPage_reportPage");
-// const ABPage = require('../classes/views/ABViewPage');
+// const ABPage = require('../classes/platform/views/ABViewPage');
 
 
 module.exports = class AB_Work_Interface_List_NewPage extends OP.Component {  

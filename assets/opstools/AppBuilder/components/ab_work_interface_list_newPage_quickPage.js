@@ -8,12 +8,12 @@
 
 const ABDataCollection = require('../classes/platform/ABDataCollection');
 const ABViewDetail = require('../classes/platform/views/ABViewDetail');
-const ABViewForm = require('../classes/views/ABViewForm');
-const ABViewFormButton = require('../classes/views/ABViewFormButton');
-const ABViewGrid = require('../classes/views/ABViewGrid');
-const ABViewLabel = require('../classes/views/ABViewLabel');
-const ABViewMenu = require('../classes/views/ABViewMenu');
-const ABViewPage = require('../classes/views/ABViewPage');
+const ABViewForm = require('../classes/platform/views/ABViewForm');
+const ABViewFormButton = require('../classes/platform/views/ABViewFormButton');
+const ABViewGrid = require('../classes/platform/views/ABViewGrid');
+const ABViewLabel = require('../classes/platform/views/ABViewLabel');
+const ABViewMenu = require('../classes/platform/views/ABViewMenu');
+const ABViewPage = require('../classes/platform/views/ABViewPage');
 
 
 module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends OP.Component {

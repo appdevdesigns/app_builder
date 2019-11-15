@@ -4,6 +4,8 @@ const ABFieldConnect = require("../dataFields/ABFieldConnect");
 const ABFieldImage = require("../dataFields/ABFieldImage");
 const ABObjectQuery = require("../ABObjectQuery");
 
+const ABViewDocxBuilderPropertyComponentDefaults = ABViewDocxBuilderCore.defaultValues();
+
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
