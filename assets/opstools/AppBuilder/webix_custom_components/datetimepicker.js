@@ -7,7 +7,7 @@
  */
 
 
-export default class ABCustomDateTimePicker { //.extend(ComponentKey, function(App, componentKey ) {
+module.exports = class ABCustomDateTimePicker { //.extend(ComponentKey, function(App, componentKey ) {
 
 	get key() { return 'datetimepicker'; } 
 

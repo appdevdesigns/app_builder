@@ -6,7 +6,7 @@
  *
  */
 
-export default class ABCustomFocusableTemplate {
+module.exports = class ABCustomFocusableTemplate {
 
 	get key() { return 'focusabletemplate'; } 
 

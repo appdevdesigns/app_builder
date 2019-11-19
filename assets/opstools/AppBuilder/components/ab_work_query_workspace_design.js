@@ -5,10 +5,12 @@
  *
  */
 
-const ABDataCollection = require("../classes/platform/ABDataCollection");
-const RowFilter = require("../classes/RowFilter");
+const ABComponent = require("../classes/platform/ABComponent");
 
-module.exports = class ABWorkQueryWorkspaceDesign extends OP.Component {
+const ABDataCollection = require("../classes/platform/ABDataCollection");
+const RowFilter = require("../classes/platform/RowFilter");
+
+module.exports = class ABWorkQueryWorkspaceDesign extends ABComponent {
 
 	/**
 	 * @param {object} ??

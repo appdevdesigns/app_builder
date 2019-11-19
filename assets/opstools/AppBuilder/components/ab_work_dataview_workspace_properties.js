@@ -1,3 +1,4 @@
+const ABComponent = require("../classes/platform/ABComponent");
 const ABPopupSortField = require("./ab_work_object_workspace_popupSortFields");
 const ABViewTab = require("../classes/platform/views/ABViewTab");
 const ABViewDetail = require("../classes/platform/views/ABViewDetail");
@@ -7,7 +8,7 @@ function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
-module.exports = class AB_Work_Datacollection_Workspace_Properties extends OP.Component {
+module.exports = class AB_Work_Datacollection_Workspace_Properties extends ABComponent {
 
 	constructor(App) {
 		super(App, 'ab_work_dataview_workspace_properties');

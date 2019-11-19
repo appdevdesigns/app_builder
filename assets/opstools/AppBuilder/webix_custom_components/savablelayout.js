@@ -8,9 +8,9 @@
 
 
 var ComponentKey = 'savablelayout';
-export default class ABCustomSavableLayout {
+module.exports = class ABCustomSavableLayout {
 
-	get key() { return 'savablelayout'; } 
+	get key() { return ComponentKey; } 
 
 	constructor(App) {
 		// App 	{obj}	our application instance object.

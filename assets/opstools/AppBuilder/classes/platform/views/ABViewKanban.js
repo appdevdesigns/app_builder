@@ -1,7 +1,7 @@
 const ABViewKanbanCore = require("../../core/views/ABViewKanbanCore");
 
 const ABWorkspaceKanban = require("../../../components/ab_work_object_workspace_kanban");
-const ABWorkspaceViewKanban = require("../../ABObjectWorkspaceViewKanban");
+const ABWorkspaceViewKanban = require("../workspaceViews/ABObjectWorkspaceViewKanban");
 
 const ABViewPropertyLinkPage = require("./viewProperties/ABViewPropertyLinkPage");
 

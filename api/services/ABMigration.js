@@ -5,14 +5,14 @@
  *
  */
 
-var fs = require('fs');
-var path = require('path');
-var AD = require('ad-utils');
-var _ = require('lodash');
+// const fs = require('fs');
+const path = require('path');
+// const AD = require('ad-utils');
+// const _ = require('lodash');
 
-var ABObjectExternal = require(path.join(__dirname, '..', 'classes', 'ABObjectExternal'));
+const ABObjectExternal = require(path.join(__dirname, '..', 'classes', 'platform', 'ABObjectExternal'));
 
-var knexConns = {};
+const knexConns = {};
 
 module.exports = {
 

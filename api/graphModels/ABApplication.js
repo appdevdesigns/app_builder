@@ -2,7 +2,7 @@ var _ = require('lodash');
 var path = require('path');
 
 var ABModelBase = require('./ABModelBase');
-var ABClassApplication = require(path.join('..', 'classes', 'ABClassApplication'));
+var ABClassApplication = require(path.join('..', 'classes', 'platform', 'ABApplication'));
 
 class ABApplication extends ABModelBase {
 

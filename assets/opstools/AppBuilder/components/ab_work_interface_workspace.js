@@ -6,12 +6,13 @@
  *
  */
 
+const ABComponent = require("../classes/platform/ABComponent");
 const ABWorkspaceEditor = require("./ab_work_interface_workspace_editor");
 const ABWorkspaceDetails = require("./ab_work_interface_workspace_details");
 
 const ABViewPage = require("../classes/platform/views/ABViewPage");
 
-module.exports = class AB_Work_Interface_Workspace extends OP.Component {
+module.exports = class AB_Work_Interface_Workspace extends ABComponent {
     
     constructor(App) {
         super(App, 'ab_work_interface_workspace');

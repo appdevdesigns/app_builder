@@ -7,7 +7,7 @@ const ABObjectCore = require("../core/ABObjectCore");
 // var ABFieldManager = require("../classes/ABFieldManager");
 // import ABFieldManager from "../ABFieldManager"
 
-const ABObjectWorkspaceViewCollection = require("../ABObjectWorkspaceViewCollection");
+const ABObjectWorkspaceViewCollection = require("./workspaceViews/ABObjectWorkspaceViewCollection");
 
 
 function L(key, altText) {

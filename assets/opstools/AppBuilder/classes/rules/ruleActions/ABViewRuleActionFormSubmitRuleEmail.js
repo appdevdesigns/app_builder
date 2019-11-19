@@ -4,8 +4,8 @@
 //
 //
 const ABViewRuleAction = require("../ABViewRuleAction");
-const ABFieldConnect = require("../../dataFields/ABFieldConnect");
-const ABFieldEmail = require("../../dataFields/ABFieldEmail");
+const ABFieldConnect = require("../../platform/dataFields/ABFieldConnect");
+const ABFieldEmail = require("../../platform/dataFields/ABFieldEmail");
 
 
 module.exports = class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleAction {

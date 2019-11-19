@@ -6,12 +6,14 @@
  *
  */
 
+const ABComponent = require("../classes/platform/ABComponent");
+
 const ABQueryWorkspaceDesign = require("./ab_work_query_workspace_design");
 const ABObjectWorkspace = require("./ab_work_object_workspace");
 // const ABObjectWorkspaceDataTable from "./ab_work_object_workspace_datatable"
 
 
-module.exports = class ABWorkQueryWorkspace extends OP.Component {
+module.exports = class ABWorkQueryWorkspace extends ABComponent {
 
     /**
      * @param {object} ??

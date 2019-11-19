@@ -1,4 +1,7 @@
-module.exports = class AB_Work_Interface_Workspace_Editor_Layout extends OP.Component {
+
+const ABComponent = require("../classes/platform/ABComponent");
+
+module.exports = class AB_Work_Interface_Workspace_Editor_Layout extends ABComponent {
 
 	constructor(App) {
 		super(App, 'ab_work_interface_workspace_editor_layout');

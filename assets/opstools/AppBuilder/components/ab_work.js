@@ -7,14 +7,15 @@
  */
 
 // let ABApplication = require("../classes/platform/ABApplication");
-let AB_Work_Object = require("./ab_work_object");
-let AB_Work_Query = require("./ab_work_query");
-let AB_Work_Datacollection = require("./ab_work_dataview");
-let AB_Work_Interface = require("./ab_work_interface");
+const ABComponent = require("../classes/platform/ABComponent");
+const AB_Work_Object = require("./ab_work_object");
+const AB_Work_Query = require("./ab_work_query");
+const AB_Work_Datacollection = require("./ab_work_dataview");
+const AB_Work_Interface = require("./ab_work_interface");
 
 // export to ABLiveTool
 // window.ABWorkUI = AB_Work;
-module.exports = window.ABWorkUI = class AB_Work extends OP.Component {  // ('ab_work', function(App) {
+module.exports = window.ABWorkUI = class AB_Work extends ABComponent {  // ('ab_work', function(App) {
 
 
 	constructor(App, options) {

@@ -5,10 +5,11 @@
  *
  */
 
+const ABComponent = require("../classes/platform/ABComponent");
 const ABViewForm = require('../classes/platform/views/ABViewForm');
 const ABViewFormButton = require('../classes/platform/views/ABViewFormButton');
 
-module.exports = class ABWorkObjectKanBan extends OP.Component {
+module.exports = class ABWorkObjectKanBan extends ABComponent {
 
 	/**
 	 * 

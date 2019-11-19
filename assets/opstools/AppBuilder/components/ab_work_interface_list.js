@@ -6,13 +6,12 @@
  *
  */
 
-let ABApplication = require("../classes/platform/ABApplication");
-let AB_Work_Interface_List_NewPage = require("./ab_work_interface_list_newPage");
-let AB_Common_PopupEditMenu = require("./ab_common_popupEditMenu");
+const ABComponent = require("../classes/platform/ABComponent");
+const ABApplication = require("../classes/platform/ABApplication");
+const AB_Work_Interface_List_NewPage = require("./ab_work_interface_list_newPage");
+const AB_Common_PopupEditMenu = require("./ab_common_popupEditMenu");
 
-
-
-module.exports = class AB_Work_Interface_List extends OP.Component {
+module.exports = class AB_Work_Interface_List extends ABComponent {
 
 	constructor(App) {
 		super(App, 'ab_work_interface_list');

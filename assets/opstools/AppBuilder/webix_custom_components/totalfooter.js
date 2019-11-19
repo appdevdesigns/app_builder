@@ -7,7 +7,7 @@
  */
 
 
-export default class ABTotalFooter {
+module.exports = class ABTotalFooter {
 
 	get key() { return 'totalfooter'; }
 

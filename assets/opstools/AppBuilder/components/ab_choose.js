@@ -8,13 +8,13 @@
  *
  */
 
-
+const ABComponent = require("../classes/platform/ABComponent");
 const AB_Choose_Config = require('./ab_choose_config');
 const AB_Choose_List = require('./ab_choose_list');
 const AB_Choose_Form = require('./ab_choose_form');
 
 
-module.exports = class ABChoose extends OP.Component {   // (idBase, function(App) {
+module.exports = class ABChoose extends ABComponent {   // (idBase, function(App) {
 
 
 	constructor(App) {

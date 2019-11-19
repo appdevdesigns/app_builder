@@ -1,3 +1,4 @@
+const ABComponent = require("../classes/platform/ABComponent");
 const ABDatacollectionProperty = require("./ab_work_dataview_workspace_properties");
 const ABWorkspaceDatatable = require("./ab_work_object_workspace_datatable");
 
@@ -5,7 +6,7 @@ function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
-module.exports = class AB_Work_Datacollection_Workspace extends OP.Component {
+module.exports = class AB_Work_Datacollection_Workspace extends ABComponent {
 
 	constructor(App) {
 		let idBase = 'ab_work_dataview_workspace';

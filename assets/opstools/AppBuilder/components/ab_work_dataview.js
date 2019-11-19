@@ -4,10 +4,11 @@
  *
  */
 
+const ABComponent = require("../classes/platform/ABComponent");
 const AB_Work_Datacollection_List = require("./ab_work_dataview_list");
 const AB_Work_Datacollection_Workspace = require("./ab_work_dataview_workspace");
 
-module.exports = class AB_Work_Datacollection extends OP.Component {
+module.exports = class AB_Work_Datacollection extends ABComponent {
 
 	constructor(App) {
 		super(App, 'ab_work_dataview');

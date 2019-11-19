@@ -6,6 +6,7 @@
  *
  */
 
+const ABComponent = require("../classes/platform/ABComponent");
 const ABDataCollection = require('../classes/platform/ABDataCollection');
 const ABViewDetail = require('../classes/platform/views/ABViewDetail');
 const ABViewForm = require('../classes/platform/views/ABViewForm');
@@ -16,7 +17,7 @@ const ABViewMenu = require('../classes/platform/views/ABViewMenu');
 const ABViewPage = require('../classes/platform/views/ABViewPage');
 
 
-module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends OP.Component {
+module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABComponent {
 
 	constructor(App) {
 		super(App, 'ab_work_interface_list_newPage_quickPage');

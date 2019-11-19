@@ -5,6 +5,8 @@
  * Display the form for import CSV file to a object.
  *
  */
+const ABComponent = require("../classes/platform/ABComponent");
+
 const ABField = require("../classes/platform/dataFields/ABField");
 const ABFieldBoolean = require("../classes/platform/dataFields/ABFieldBoolean");
 const ABFieldString = require("../classes/platform/dataFields/ABFieldString");
@@ -12,9 +14,9 @@ const ABFieldLongText = require("../classes/platform/dataFields/ABFieldLongText"
 const ABFieldNumber = require("../classes/platform/dataFields/ABFieldNumber");
 const ABFieldDate = require("../classes/platform/dataFields/ABFieldDate");
 
-const CSVImporter = require("../classes/CSVImporter");
+const CSVImporter = require("../classes/platform/CSVImporter");
 
-module.exports = class AB_Work_Object_List_NewObject_Csv extends OP.Component {
+module.exports = class AB_Work_Object_List_NewObject_Csv extends ABComponent {
 
 	constructor(App) {
 		super(App, 'ab_work_object_list_newObject_csv');

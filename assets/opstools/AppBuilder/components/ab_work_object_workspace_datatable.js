@@ -6,10 +6,11 @@
  *
  */
 
+const ABComponent = require("../classes/platform/ABComponent");
 const AB_Work_HeaderEditMenu = require("./ab_work_object_workspace_popupHeaderEditMenu");
 
 
-module.exports = class ABWorkObjectDatatable extends OP.Component {
+module.exports = class ABWorkObjectDatatable extends ABComponent {
     
     /**
      * 

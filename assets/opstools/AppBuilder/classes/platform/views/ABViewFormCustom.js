@@ -1,5 +1,7 @@
 const ABViewFormCustomCore = require("../../core/views/ABViewFormCustomCore");
 
+const ABFieldImage = require("../dataFields/ABFieldImage");
+
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }

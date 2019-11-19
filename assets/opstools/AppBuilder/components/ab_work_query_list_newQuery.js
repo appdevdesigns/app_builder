@@ -6,10 +6,12 @@
  *
  */
 
+const ABComponent = require("../classes/platform/ABComponent");
+
 const ABBlankQuery = require("./ab_work_query_list_newQuery_blank");
 const ABImportQuery = require("./ab_work_query_list_newQuery_import");
 
-module.exports = class AB_Work_Query_List_NewQuery extends OP.Component {   //.extend(idBase, function(App) {
+module.exports = class AB_Work_Query_List_NewQuery extends ABComponent {   //.extend(idBase, function(App) {
 
 	constructor(App) {
 		super(App, 'ab_work_query_list_newQuery');

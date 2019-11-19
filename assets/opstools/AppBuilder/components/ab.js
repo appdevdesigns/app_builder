@@ -10,6 +10,7 @@
 
 // import '../OP/OP'
 
+const ABComponent = require("../classes/platform/ABComponent");
 const AB_Choose = require('./ab_choose');
 const AB_Work = require('./ab_work');
 
@@ -24,7 +25,7 @@ const AB_Work = require('./ab_work');
 
 require("../AppBuilder.css");
 
-module.exports = class AB extends OP.Component {    //('ab', function(App) {
+module.exports = class AB extends ABComponent {    //('ab', function(App) {
 
 
 	constructor(App) {

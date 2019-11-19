@@ -6,8 +6,9 @@
  *
  */
 
+const ABComponent = require("../classes/platform/ABComponent");
 
-export default class [template] extends OP.Component {
+export default class [template] extends ABComponent {
     
     constructor(App) {
         super(App, '[template]');

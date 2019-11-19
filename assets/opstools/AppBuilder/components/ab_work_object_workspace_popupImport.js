@@ -5,10 +5,11 @@
  *
  */
 
-const CSVImporter = require("../classes/CSVImporter");
+const ABComponent = require("../classes/platform/ABComponent");
+const CSVImporter = require("../classes/platform/CSVImporter");
 
 
-module.exports = class ABWorkObjectPopupImport extends OP.Component {
+module.exports = class ABWorkObjectPopupImport extends ABComponent {
 
 	constructor(App, idBase) {
 

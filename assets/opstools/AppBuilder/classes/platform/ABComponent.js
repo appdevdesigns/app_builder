@@ -1,5 +1,7 @@
 const ABEmitter = require("./ABEmitter");
 
+const CustomComponentManager = require('../../webix_custom_components/customComponentManager');
+
 module.exports = class ABComponent extends ABEmitter {
 
 	/**
@@ -128,8 +130,8 @@ module.exports = class ABComponent extends ABEmitter {
 			}
 		}
 
-		// var componentManager = new CustomComponentManager();
-		// componentManager.initComponents(App);
+		var componentManager = new CustomComponentManager();
+		componentManager.initComponents(App);
 
 		this.App = App;
 

@@ -6,7 +6,7 @@
  *
  */
 
-export default class ABCustomNumberText {
+module.exports = class ABCustomNumberText {
 	
 		get key() { return 'numbertext'; } 
 	

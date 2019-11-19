@@ -1,9 +1,10 @@
 var path = require('path');
 
-var ABModelBase = require('./ABModelBase');
-var ABClassQuery = require(path.join('..', 'classes', 'ABClassQuery'));
+const ABClassApplication = require(path.join('..', 'classes', 'platform', 'ABApplication'));
+const ABModelBase = require('./ABModelBase');
+const ABObjectQuery = require(path.join('..', 'classes', 'platform', 'ABObjectQuery'));
 
-class ABQuery extends ABModelBase {
+module.exports = class ABQuery extends ABModelBase {
 
 	static get collectionName() {
 		return "query";
@@ -36,7 +37,11 @@ class ABQuery extends ABModelBase {
 
 	toABClass() {
 
-		return new ABClassQuery(this);
+		// NOTE: Mock ABApplication and pass it into objects
+		// because ABObjectCore needs to use .application
+		let application = new ABClassApplication({});
+
+		return new ABObjectQuery(this, application);
 
 	}
 
@@ -70,5 +75,3 @@ class ABQuery extends ABModelBase {
 	}
 
 }
-
-module.exports = ABQuery;

@@ -1,5 +1,5 @@
 const ABViewCore = require("../../core/views/ABViewCore");
-const ABPropertyComponent = require("../../ABPropertyComponent"); // TODO
+const ABPropertyComponent = require("../ABPropertyComponent");
 
 const ABViewPropertyComponentDefaults = ABViewCore.defaultValues();
 

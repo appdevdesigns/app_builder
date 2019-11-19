@@ -5,8 +5,9 @@
  *
  */
 
+const ABComponent = require("../classes/platform/ABComponent");
 
-module.exports = class AB_Work_Object_Workspace_PopupCountColumns extends OP.Component {
+module.exports = class AB_Work_Object_Workspace_PopupCountColumns extends ABComponent {
 	
 	constructor(App, idBase) {
 		idBase = idBase || 'ab_work_object_workspace_popupCountColumns';

@@ -5,7 +5,9 @@
  *
  */
 
-module.exports = class AB_Work_Datacollection_List_NewDataview_Import extends OP.Component {
+const ABComponent = require("../classes/platform/ABComponent");
+
+module.exports = class AB_Work_Datacollection_List_NewDataview_Import extends ABComponent {
 
 	constructor(App) {
 		super(App, 'ab_work_dataview_list_newDataview_import');

@@ -5,8 +5,9 @@
  *
  */
 
+const ABComponent = require("../classes/platform/ABComponent");
 
-module.exports = class ABWorkObjectPopupExport extends OP.Component {
+module.exports = class ABWorkObjectPopupExport extends ABComponent {
 
 	constructor(App, idBase) {
 

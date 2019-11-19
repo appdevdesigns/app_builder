@@ -2,21 +2,20 @@
  * Generate models and controllers for AppBuilder apps.
  */
 
-var fs = require('fs');
-var path = require('path');
-var AD = require('ad-utils');
-var _ = require('lodash');
-var moment = require('moment');
-var uuid = require('node-uuid');
+const fs = require('fs');
+const path = require('path');
+const AD = require('ad-utils');
+const _ = require('lodash');
+const moment = require('moment');
+const uuid = require('node-uuid');
 
-var ABGraphApplication = require(path.join('..', 'graphModels', 'ABApplication'));
-var ABGraphObject = require(path.join('..', 'graphModels', 'ABObject'));
-var ABGraphQuery = require(path.join('..', 'graphModels', 'ABQuery'));
+const ABGraphApplication = require(path.join('..', 'graphModels', 'ABApplication'));
+const ABGraphObject = require(path.join('..', 'graphModels', 'ABObject'));
+const ABGraphQuery = require(path.join('..', 'graphModels', 'ABQuery'));
 
-
+const FieldManager = require(path.join('..', 'classes', 'core', 'ABFieldManager.js'));
 
 // Build a reference of AB defaults for all supported Sails data field types
-var FieldManager = require(path.join('..', 'classes', 'ABFieldManager.js'));
 var sailsToAppBuilderReference = {};
 FieldManager.allFields().forEach((Field) => {
     let field = new Field({ settings: {} }, {});
@@ -3127,7 +3126,7 @@ module.exports = {
                 })
 
 /// NOTE: we can remove this reference once we stop hardcoding the SDCApp:
-var ABMobileApp = require(path.join('..', 'classes', 'ABMobileApp'));
+var ABMobileApp = require(path.join('..', 'classes', 'platform', 'ABMobileApp'));
 
 
 /// Hard Code the SDC App here:

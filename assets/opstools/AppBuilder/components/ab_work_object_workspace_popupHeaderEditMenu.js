@@ -6,8 +6,9 @@
  *
  */
 
+ const ABComponent = require("../classes/platform/ABComponent");
 
-module.exports = class ABWorkObjectPopupHeaderEditMenu extends OP.Component {
+module.exports = class ABWorkObjectPopupHeaderEditMenu extends ABComponent {
 
     constructor(App, idBase) {
         idBase = idBase || 'ab_work_object_workspace_popupHeaderEditMenu';

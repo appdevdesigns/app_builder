@@ -5,7 +5,7 @@
 //
 const ABViewRuleAction = require("../ABViewRuleAction");
 
-const RowFilter = require("../../RowFilter");
+const RowFilter = require("../../platform/RowFilter");
 
 var ABViewRuleActionObjectUpdaterDefaults = {
 	filterConditions: { // array of filters to apply to the data table

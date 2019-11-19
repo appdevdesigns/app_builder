@@ -6,14 +6,16 @@
  *
  */
 
+const ABComponent = require("../classes/platform/ABComponent");
+
+const ABFieldConnect = require("../classes/platform/dataFields/ABFieldConnect");
 const ABFieldList = require("../classes/platform/dataFields/ABFieldList");
 const ABFieldUser = require("../classes/platform/dataFields/ABFieldUser");
 
 const AB_Work_Form = require("./ab_work_object_workspace_formSidePanel");
-const ABFieldConnect = require("../classes/platform/dataFields/ABFieldConnect");
 
 
-module.exports = class ABWorkObjectKanBan extends OP.Component {
+module.exports = class ABWorkObjectKanBan extends ABComponent {
 
 	/**
 	 * 

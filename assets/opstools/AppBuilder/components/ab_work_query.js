@@ -6,13 +6,12 @@
  *
  */
 
+const ABComponent = require("../classes/platform/ABComponent");
 
 const AB_Work_Query_List = require("./ab_work_query_list");
 const AB_Work_Query_Workspace = require("./ab_work_query_workspace");
 
-
-
-module.exports = class AB_Work_Query extends OP.Component {   //.extend(idBase, function(App) {
+module.exports = class AB_Work_Query extends ABComponent {   //.extend(idBase, function(App) {
 
 	constructor(App) {
 		super(App, 'ab_work_query');

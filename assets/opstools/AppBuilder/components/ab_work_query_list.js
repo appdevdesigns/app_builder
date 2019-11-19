@@ -6,12 +6,13 @@
  *
  */
 
+const ABComponent = require("../classes/platform/ABComponent");
+
 const ABListNewQuery = require("./ab_work_query_list_newQuery");
 const ABListEditMenu = require("./ab_common_popupEditMenu");   // "./ab_work_object_list_popupEditMenu"
 
 
-
-module.exports = class AB_Work_Query_List extends OP.Component {   //.extend(idBase, function(App) {
+module.exports = class AB_Work_Query_List extends ABComponent {   //.extend(idBase, function(App) {
 
 	constructor(App) {
 		super(App, 'ab_work_query_list');

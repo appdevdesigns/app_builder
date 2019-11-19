@@ -5,7 +5,7 @@ let ABDataCollection = require("./ABDataCollection");
 let ABObject = require("./ABObject");
 let ABObjectQuery = require("./ABObjectQuery");
 let ABMobileApp = require("./ABMobileApp");
-let ABViewManager = require("../core/ABViewManager");
+let ABViewManager = require("./ABViewManager");
 let ABViewPage = require("./views/ABViewPage");
 
 var _AllApplications = [];

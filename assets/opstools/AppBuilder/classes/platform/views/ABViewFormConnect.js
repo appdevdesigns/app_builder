@@ -1,5 +1,5 @@
 const ABViewFormConnectCore = require("../../core/views/ABViewFormConnectCore");
-const RowFilter = require("../../RowFilter");
+const RowFilter = require("../RowFilter");
 
 let FilterComponent = null;
 

@@ -142,4 +142,22 @@ module.exports = class ABViewFormComponent extends ABViewFormComponentCore {
 		}
 	}
 
+	/**
+	 * @method parentFormUniqueID
+	 * return a unique ID based upon the closest form object this component is on.
+	 * @param {string} key  The basic id string we will try to make unique
+	 * @return {string} 
+	 */
+	parentFormUniqueID( key ) {
+		var form = this.parentFormComponent();
+		var uniqueInstanceID;
+		if (form) {
+			uniqueInstanceID = form.uniqueInstanceID;
+		} else {
+			uniqueInstanceID = webix.uid()
+		}
+
+		return key+uniqueInstanceID;
+	}
+
 }

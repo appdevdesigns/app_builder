@@ -6,7 +6,7 @@
 //
 //
 const ABViewRuleActionObjectUpdater = require("./ABViewRuleActionObjectUpdater");
-const ABFieldConnect = require("../../dataFields/ABFieldConnect");
+const ABFieldConnect = require("../../platform/dataFields/ABFieldConnect");
 const ObjectQueryBuilder = require("../ABViewQueryBuilderObjectFieldConditions");
 
 

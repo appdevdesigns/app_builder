@@ -1,11 +1,12 @@
-var path = require('path');
+const path = require('path');
 
-var ABModelBase = require('./ABModelBase');
-var ABClassObject = require(path.join('..', 'classes', 'ABClassObject'));
-var ABObjectExternal = require(path.join('..', 'classes', 'ABObjectExternal'));
-var ABObjectImport = require(path.join('..', 'classes', 'ABObjectImport'));
+const ABModelBase = require('./ABModelBase');
+const ABClassApplication = require(path.join('..', 'classes', 'platform', 'ABApplication'));
+const ABClassObject = require(path.join('..', 'classes', 'platform', 'ABObject'));
+const ABObjectExternal = require(path.join('..', 'classes', 'platform', 'ABObjectExternal'));
+const ABObjectImport = require(path.join('..', 'classes', 'platform', 'ABObjectImport'));
 
-class ABObject extends ABModelBase {
+module.exports = class ABObject extends ABModelBase {
 
 	static get collectionName() {
 		return "object";
@@ -65,16 +66,18 @@ class ABObject extends ABModelBase {
 
 	toABClass() {
 
+		// NOTE: Mock ABApplication and pass it into objects
+		// because ABObjectCore needs to use .application
+		let application = new ABClassApplication({});
+
 		if (this.isExternal == true)
-			return new ABObjectExternal(this);
+			return new ABObjectExternal(this, application);
 		else if (this.isImported == true)
-			return new ABObjectImport(this);
+			return new ABObjectImport(this, application);
 		else
-			return new ABClassObject(this);
+			return new ABClassObject(this, application);
 
 	}
 
 
-}
-
-module.exports = ABObject;
+};

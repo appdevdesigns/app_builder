@@ -1,5 +1,7 @@
 const ABViewFormButtonCore = require("../../core/views/ABViewFormButtonCore");
 
+const ABViewFormButtonPropertyComponentDefaults = ABViewFormButtonCore.defaultValues();
+
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
@@ -383,6 +385,24 @@ module.exports = class ABViewFormButton extends ABViewFormButtonCore {
 			};
 
 		});
+	}
+
+	/**
+	 * @method parentFormUniqueID
+	 * return a unique ID based upon the closest form object this component is on.
+	 * @param {string} key  The basic id string we will try to make unique
+	 * @return {string} 
+	 */
+	parentFormUniqueID( key ) {
+		var form = this.parentFormComponent();	
+		var uniqueInstanceID;
+		if (form) {
+			uniqueInstanceID = form.uniqueInstanceID;
+		} else {
+			uniqueInstanceID = webix.uid()
+		}
+
+		return key+uniqueInstanceID;
 	}
 
 };

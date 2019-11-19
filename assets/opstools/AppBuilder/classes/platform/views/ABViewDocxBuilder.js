@@ -361,9 +361,6 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
 			let DownloadButton = $$(ids.button);
 			let NoFileLabel = $$(ids.noFile);
 
-			if (DownloadButton)
-				webix.extend(DownloadButton, webix.ProgressBar);
-
 			if (this.settings.filename) {
 				DownloadButton.show();
 				NoFileLabel.hide();
@@ -384,9 +381,8 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
 
 				DownloadButton.disable();
 
-				if (DownloadButton.showProgress)
-					DownloadButton.showProgress({ type: "icon" });
-
+				DownloadButton.define("icon", "fa fa-refresh fa-spin");
+				DownloadButton.refresh();
 
 			},
 
@@ -397,23 +393,38 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
 
 				DownloadButton.enable();
 
-				if (DownloadButton.hideProgress)
-					DownloadButton.hideProgress();
+				DownloadButton.define("icon", "fa fa-file-word-o");
+				DownloadButton.refresh();
 
 			},
 
 			onShow: (viewId) => {
 
-				this.datacollections.forEach(dv => {
+				let tasks = [];
 
-					if (dv &&
-						dv.dataStatus == dv.dataStatusFlag.notInitial) {
+				this.datacollections.forEach(dc => {
+
+					if (dc &&
+						dc.dataStatus == dc.dataStatusFlag.notInitial) {
 
 						// load data when a widget is showing
-						dv.loadData();
+						tasks.push(dc.loadData());
 					}
 
 				});
+
+				// Show loading cursor
+				if (tasks.length > 0)
+					_logic.busy();
+
+				Promise.all(tasks)
+					.catch((err) => console.error(err))
+					.then(() => {
+
+						// Hide loading cursor
+						_logic.ready();
+
+					});
 
 			},
 

@@ -5,8 +5,9 @@
  *
  */
 
+const ABComponent = require("../classes/platform/ABComponent");
 
-module.exports = class AB_Work_Query_List_newDataview_Blank extends OP.Component {
+module.exports = class AB_Work_Query_List_newDataview_Blank extends ABComponent {
 
 	constructor(App) {
 		super(App, 'ab_work_dataview_list_newDataview_blank');

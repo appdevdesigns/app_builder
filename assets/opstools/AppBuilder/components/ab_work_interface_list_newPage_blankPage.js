@@ -6,12 +6,13 @@
  *
  */
 
+const ABComponent = require("../classes/platform/ABComponent");
 const ABPage = require('../classes/platform/views/ABViewPage');
 // const ABViewPage = require('../classes/platform/views/ABViewPage');
 // const ABViewReportPage = require('../classes/platform/views/ABViewReportPage');
 
 
-module.exports = class AB_Work_Interface_List_NewPage_BlankPage extends OP.Component {
+module.exports = class AB_Work_Interface_List_NewPage_BlankPage extends ABComponent {
 
 	constructor(App) {
 		super(App, 'ab_work_interface_list_newPage_blankPage');

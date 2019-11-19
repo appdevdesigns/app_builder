@@ -7,17 +7,17 @@
  */
 
 // Import our Custom Components here:
-import ActiveList from '../webix_custom_components/activelist'
-import CountFooter from '../webix_custom_components/countfooter'
-import DateTimePicker from '../webix_custom_components/datetimepicker'
-import EditList from '../webix_custom_components/editlist'
-import EditTree from '../webix_custom_components/edittree'
-import EditUnitList from '../webix_custom_components/editunitlist'
-import FocusableTemplate from '../webix_custom_components/focusableTemplate'
-import NumberText from '../webix_custom_components/numbertext'
-import TotalFooter from '../webix_custom_components/totalfooter'
-import TreeSuggest from '../webix_custom_components/treesuggest'
-// import SavableLayout from '../webix_custom_components/savablelayout'
+const ActiveList = require('./activelist');
+const CountFooter = require('./countfooter');
+const DateTimePicker = require('./datetimepicker');
+const EditList = require('./editlist');
+const EditTree = require('./edittree');
+const EditUnitList = require('./editunitlist');
+const FocusableTemplate = require('./focusableTemplate');
+const NumberText = require('./numbertext');
+const TotalFooter = require('./totalfooter');
+const TreeSuggest = require('./treesuggest');
+// const SavableLayout = require('./savablelayout');
 
 var componentList = [
 	ActiveList,
@@ -33,7 +33,7 @@ var componentList = [
 	// SavableLayout
 ]
 
-export default class ABCustomComponentManager {
+module.exports = class ABCustomComponentManager {
 
 	constructor() {
 	
@@ -50,4 +50,4 @@ export default class ABCustomComponentManager {
 		})
 
 	}
-}
+};

@@ -6,9 +6,10 @@
  *
  */
 
+const ABComponent = require("../classes/platform/ABComponent");
 const AB_Work_Form = require("./ab_work_object_workspace_formSidePanel");
 
-module.exports = class ABWorkObjectGantt extends OP.Component {
+module.exports = class ABWorkObjectGantt extends ABComponent {
 
 	/**
 	 * 

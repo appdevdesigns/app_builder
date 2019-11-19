@@ -6,10 +6,10 @@
  *
  */
 
+const ABComponent = require("../classes/platform/ABComponent");
 const ABFieldManager = require("../classes/core/ABFieldManager");
 
-
-module.exports = class AB_Work_Object_Workspace_PopupNewDataField extends OP.Component {   //.extend(idBase, function(App) {
+module.exports = class AB_Work_Object_Workspace_PopupNewDataField extends ABComponent {   //.extend(idBase, function(App) {
 
     constructor(App, idBase) {
         idBase = idBase || 'ab_work_object_workspace_popupNewDataField';

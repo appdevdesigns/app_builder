@@ -1,8 +1,8 @@
-
+const ABComponent = require("../classes/platform/ABComponent");
 const ABListNewDatacollection = require("./ab_work_dataview_list_newDataview");
 const ABListEditMenu = require("./ab_common_popupEditMenu");
 
-module.exports = class AB_Work_Datacollection_List extends OP.Component {
+module.exports = class AB_Work_Datacollection_List extends ABComponent {
 
 	constructor(App) {
 		super(App, 'ab_work_dataview_list');
