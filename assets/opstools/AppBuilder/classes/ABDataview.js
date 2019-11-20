@@ -349,6 +349,8 @@ export default class ABDataview extends EventEmitter {
 				let treeItem = tc.find({ _itemId: itemId, $parent: 0 }, true);
 				if (treeItem)
 					tc.setCursor(treeItem.id);
+				else
+					tc.setCursor(null);
 			}
 		}
 
@@ -504,11 +506,11 @@ export default class ABDataview extends EventEmitter {
 
 					// set a first row to cursor
 					let rowId = this.__dataCollection.getFirstId();
-					if (rowId) {
-						this.__dataCollection.setCursor(rowId);
+					// if (rowId) {
+					this.__dataCollection.setCursor(rowId);
 
-						this.setCursorTree(rowId);
-					}
+					this.setCursorTree(rowId);
+					// }
 
 				}
 			}
