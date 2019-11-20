@@ -507,7 +507,7 @@ export default class ABDataview extends EventEmitter {
 					// set a first row to cursor
 					let rowId = this.__dataCollection.getFirstId();
 					// if (rowId) {
-					this.__dataCollection.setCursor(rowId);
+					this.__dataCollection.setCursor(rowId || null);
 
 					this.setCursorTree(rowId);
 					// }
