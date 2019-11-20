@@ -499,7 +499,8 @@ export default class ABDataview extends EventEmitter {
 				// 	this.__dataCollection.setCursor(row.id);
 
 				let currRowId = this.__dataCollection.getCursor();
-				if (!currRowId) {
+				if (!currRowId || 
+					(currRowId && this.__dataCollection.getIndexById(currRowId) < 0)) { // If current cursor is filtered by parent DC, then select new cursor
 
 					// set a first row to cursor
 					let rowId = this.__dataCollection.getFirstId();
