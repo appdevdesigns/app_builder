@@ -5,124 +5,123 @@
  * @docs        :: http://sailsjs.org/documentation/concepts/models-and-orm/models
  */
 
-var uuid = require('uuid/v4'),
-	path = require('path');
+var uuid = require("uuid/v4"),
+    path = require("path");
 
 // var ABClassObject = require(path.join('..', 'classes', 'ABClassObject'));
 
+var __AllDefinitions = {};
+
 module.exports = {
+    tableName: "appbuilder_definition",
 
-	tableName: 'appbuilder_definition',
+    // connection: 'appdev_default',
 
-	// connection: 'appdev_default',
+    attributes: {
+        id: { type: "string", primaryKey: true },
 
-	attributes: {
+        // initial creation label, just for us to help lookup data.
+        name: { type: "string" },
 
-		id: { type: 'string', primaryKey: true },
+        // type of definition:
+        //  "object", "field", "process", "task", "application", "view", etc...
+        type: { type: "string", required: true },
 
-		// initial creation label, just for us to help lookup data.
-		name: { type:'string' },
+        // the json description of this definition
+        json: "json"
 
-		// type of definition:
-		//  "object", "field", "process", "task", "application", "view", etc...
-		type: { type:'string', required: true},
+        // applications: {
+        // 	collection: 'ABApplication',
+        // 	via: 'objects',
+        // 	through: 'abapplicationabobject'
+        // },
 
-		// the json description of this definition
-		json: 'json',
+        // queries: {
+        // 	collection: 'ABQuery',
+        // 	via: 'objects'
+        // },
 
-		
+        // _Klass: function () {
+        // 	return ABObject;
+        // },
 
-		// applications: {
-		// 	collection: 'ABApplication',
-		// 	via: 'objects',
-		// 	through: 'abapplicationabobject'
-		// },
+        // toABClass: function () {
 
-		// queries: {
-		// 	collection: 'ABQuery',
-		// 	via: 'objects'
-		// },
+        // 	// return new ABClassObject(this);
+        // 	var obj;
 
-		// _Klass: function () {
-		// 	return ABObject;
-		// },
+        // 	switch(this.type) {
+        // 		case "object":
+        // 		default:
+        // 			obj = new ABClassObject(this);
+        // 			break;
+        // 	}
 
-		// toABClass: function () {
+        // 	return obj;
+        // },
+    },
 
-		// 	// return new ABClassObject(this);
-		// 	var obj;
+    beforeValidate: function(values, cb) {
+        cb();
+    },
 
-		// 	switch(this.type) {
-		// 		case "object":
-		// 		default:
-		// 			obj = new ABClassObject(this);
-		// 			break;
-		// 	}
+    beforeCreate: function(values, cb) {
+        if (!values.id) {
+            values.id = uuid();
+        }
 
-		// 	return obj;
-		// },
+        // make sure embedded .json.id matches our .id
+        if (values.json && !values.json.id) {
+            values.json.id = values.id;
+        }
 
+        cb();
+    },
 
+    beforeUpdate: function(values, cb) {
+        cb();
+    },
 
+    afterCreate: function(newRecord, cb) {
+        // Cache in .constructor of ABClassObject
+        // newRecord.toABClass();
 
-	},
+        __AllDefinitions[newRecord.id] = newRecord;
+        cb();
+    },
 
+    afterUpdate: function(updatedRecord, cb) {
+        // Cache in .constructor of ABClassObject
+        // updatedRecord.toABClass();
+        __AllDefinitions[updatedRecord.id] = updatedRecord;
+        cb();
+    },
 
-	beforeValidate: function (values, cb) {
+    beforeDestroy: function(criteria, cb) {
+        cb();
+    },
 
-		cb();
-	},
+    afterDestroy: function(record, cb) {
+        // remove cache
+        // ABObjectCache.remove(record.id);
+        delete __AllDefinitions[record.id];
+        cb();
+    },
 
+    refresh: function() {
+        return ABDefinition.find({}).then((list) => {
+            (list || []).forEach((def) => {
+                __AllDefinitions[def.id] = def;
+            });
+        });
+    },
 
-	beforeCreate: function (values, cb) {
-
-		if (!values.id) {
-			values.id = uuid();
-		}
-
-		// make sure embedded .json.id matches our .id 
-		if (values.json && !values.json.id) {
-			values.json.id = values.id;
-		}
-
-		cb();
-	},
-
-
-	beforeUpdate: function (values, cb) {
-
-		cb();
-	},
-
-
-	afterCreate: function (newRecord, cb) {
-
-		// Cache in .constructor of ABClassObject
-		// newRecord.toABClass();
-
-		cb();
-	},
-
-	afterUpdate: function (updatedRecord, cb) {
-
-		// Cache in .constructor of ABClassObject
-		// updatedRecord.toABClass();
-
-		cb();
-	},
-
-	beforeDestroy: function (criteria, cb) {
-
-		cb();
-
-	},
-
-	afterDestroy: function (record, cb) {
-
-		// remove cache
-		// ABObjectCache.remove(record.id);
-
-		cb();
-	},
-
+    definitionForID: function(id) {
+        var def = __AllDefinitions[id];
+        if (def) {
+            return def.json;
+        } else {
+            return null;
+        }
+    }
 };

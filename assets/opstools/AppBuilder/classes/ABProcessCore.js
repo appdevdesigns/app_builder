@@ -7,8 +7,9 @@ module.exports = class ABProcessCore extends ABMLClass {
     constructor(attributes, application) {
         super(/* ["label"] */);
 
-        this.fromValues(attributes);
         this.application = application;
+
+        this.fromValues(attributes);
     }
 
     ///
@@ -33,6 +34,10 @@ module.exports = class ABProcessCore extends ABMLClass {
 
         // this.type = attributes.type || "";
         // this.json = attributes.json || null;
+        this.tasks = {};
+        (attributes.taskIDs || []).forEach((tID) => {
+            this.tasks[tID] = this.application.taskNew(tID, this);
+        });
 
         super.fromValues(attributes); // perform translation on this object.
         // NOTE: keep this at the end of .fromValues();
@@ -67,6 +72,11 @@ module.exports = class ABProcessCore extends ABMLClass {
             data[f] = this[f];
         });
 
+        data.taskIDs = [];
+        for (var t in this.tasks) {
+            data.taskIDs.push(this.tasks[t].id);
+        }
+
         return data;
     }
 
@@ -77,6 +87,32 @@ module.exports = class ABProcessCore extends ABMLClass {
             type: "process",
             json: this.toObj()
         });
+    }
+
+    //
+    // Triggers
+    //
+
+    /**
+     * isTriggeredBy()
+     * scan our tasks and see if we have a "trigger" task that responds to
+     * the provided key.
+     * @param {string} key the trigger key
+     * @return {bool}
+     */
+    isTriggeredBy(key) {
+        return this.triggerForKey(key) != null;
+    }
+
+    tasksForTriggerKey(key) {
+        var trigger = null;
+        for (var t in this.tasks) {
+            var task = this.tasks[t];
+            if (task && task.type == "trigger" && task.triggerKey == key) {
+                trigger = task;
+            }
+        }
+        return trigger;
     }
 
     modelDefinition() {
