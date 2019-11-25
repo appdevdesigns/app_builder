@@ -317,7 +317,8 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 		var pagesHasForm = view.pageRoot()
 			.pages(p => {
 				return p.views(v => {
-					return v.key == "form" && 
+					return v && 
+						v.key == "form" && 
 						v.dataview &&
 						v.dataview.datasource.id == view.field().settings.linkObject;
 				}, true).length;
@@ -491,13 +492,22 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 			newWidth = 0;
 		}
 
-		let template = ('<div class="customField">' + templateLabel + "#template#" + '</div>')
+		let plusButton = "";
+		if (showAddButton) {
+			let iDiv = document.createElement('div');
+			iDiv.className = 'ab-connect-add-new';
+			iDiv.innerHTML = '<a href="javascript:void(0);" class="fa fa-plus ab-connect-add-new-link"></a>';
+			// iDiv.appendChild(node);
+			plusButton = iDiv.outerHTML;
+		}
+
+		let template = ('<div class="customField">' + templateLabel + "#plusButton##template#" + '</div>')
 			.replace(/#width#/g, settings.labelWidth)
 			.replace(/#label#/g, field.label)
+			.replace(/#plusButton#/g, plusButton)
 			.replace(/#template#/g, field.columnHeader({
 				width: newWidth, 
-				editable: true, 
-				showAddButton: showAddButton,
+				editable: true,
 				skipRenderSelectivity: true
 			}).template({}));
 
