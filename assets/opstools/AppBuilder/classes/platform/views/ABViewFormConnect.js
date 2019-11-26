@@ -245,9 +245,16 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
 		var pagesHasForm = view.pageRoot()
 			.pages(p => {
 				return p.views(v => {
+<<<<<<< HEAD:assets/opstools/AppBuilder/classes/platform/views/ABViewFormConnect.js
 					return v.key == "form" &&
 						v.datacollection &&
 						v.datacollection.datasource.id == view.field().settings.linkObject;
+=======
+					return v && 
+						v.key == "form" && 
+						v.dataview &&
+						v.dataview.datasource.id == view.field().settings.linkObject;
+>>>>>>> a6524f1cd61a4497cabfa303db88ed8e75264250:assets/opstools/AppBuilder/classes/views/ABViewFormConnect.js
 				}, true).length;
 			}, true)
 			.map(p => {
@@ -419,13 +426,22 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
 			newWidth = 0;
 		}
 
-		let template = ('<div class="customField">' + templateLabel + "#template#" + '</div>')
+		let plusButton = "";
+		if (showAddButton) {
+			let iDiv = document.createElement('div');
+			iDiv.className = 'ab-connect-add-new';
+			iDiv.innerHTML = '<a href="javascript:void(0);" class="fa fa-plus ab-connect-add-new-link"></a>';
+			// iDiv.appendChild(node);
+			plusButton = iDiv.outerHTML;
+		}
+
+		let template = ('<div class="customField">' + templateLabel + "#plusButton##template#" + '</div>')
 			.replace(/#width#/g, settings.labelWidth)
 			.replace(/#label#/g, field.label)
+			.replace(/#plusButton#/g, plusButton)
 			.replace(/#template#/g, field.columnHeader({
-				width: newWidth,
+				width: newWidth, 
 				editable: true,
-				showAddButton: showAddButton,
 				skipRenderSelectivity: true
 			}).template({}));
 

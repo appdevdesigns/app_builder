@@ -440,10 +440,6 @@ module.exports = class ABViewPropertyFilterData extends ABViewProperty {
 		this.settings = settings;
 	}
 
-	toSettings() {
-		return this.settings;
-	}
-
 
 	/**
 	 * @method objectLoad
