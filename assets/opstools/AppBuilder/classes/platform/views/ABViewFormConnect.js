@@ -245,16 +245,10 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
 		var pagesHasForm = view.pageRoot()
 			.pages(p => {
 				return p.views(v => {
-<<<<<<< HEAD:assets/opstools/AppBuilder/classes/platform/views/ABViewFormConnect.js
-					return v.key == "form" &&
-						v.datacollection &&
-						v.datacollection.datasource.id == view.field().settings.linkObject;
-=======
 					return v && 
 						v.key == "form" && 
 						v.dataview &&
 						v.dataview.datasource.id == view.field().settings.linkObject;
->>>>>>> a6524f1cd61a4497cabfa303db88ed8e75264250:assets/opstools/AppBuilder/classes/views/ABViewFormConnect.js
 				}, true).length;
 			}, true)
 			.map(p => {
