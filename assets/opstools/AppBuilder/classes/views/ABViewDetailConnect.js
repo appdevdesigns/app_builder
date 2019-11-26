@@ -130,7 +130,7 @@ export default class ABViewDetailConnect extends ABViewDetailSelectivity {
 		};
 
 		// Add plus button in front of template
-		baseComp.ui.template = `${addPageComponent.ui}${baseComp.ui.template}`;
+		baseComp.ui.template = baseComp.ui.template.replace("#display#", addPageComponent.ui + " #display#");
 
 		// Click to open new data form
 		baseComp.ui.onClick = baseComp.ui.onClick || {};

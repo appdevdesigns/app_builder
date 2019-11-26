@@ -1332,13 +1332,13 @@ PopupRecordRule.qbFixAfterShow();
 
 				}
 			}
-			
-			// if there was saved data pass it up to the onSaveData callback
-			if (newFormVals) 
-				this._logic.callbacks.onSaveData(newFormVals);
 
 			if (formView.hideProgress)
 				formView.hideProgress();
+
+				// if there was saved data pass it up to the onSaveData callback
+			if (newFormVals) 
+				this._logic.callbacks.onSaveData(newFormVals);
 		};
 
 		let formError = (err) => {

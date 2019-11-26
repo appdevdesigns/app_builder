@@ -127,16 +127,30 @@ export default class ABViewPropertyAddPage extends ABViewProperty {
 			let iDiv = document.createElement('div');
 			iDiv.className = 'ab-connect-add-new';
 			iDiv.innerHTML = '<a href="javascript:void(0);" class="fa fa-plus ab-connect-add-new-link"></a>';
-			// iDiv.appendChild(node);
+
 			ui = iDiv.outerHTML;
 		}
 
 		let _logic = {
 
 			callbacks: {
-				onSaveData: (saveData) => { },
-				onCancel: () => { },
-				onClearOnLoad: () => { }
+				onSaveData: (saveData) => {
+
+					if ($$(ids.popup))
+						$$(ids.popup).close();
+
+				},
+				onCancel: () => {
+
+					if ($$(ids.popup))
+						$$(ids.popup).close();
+
+					return false;
+
+				},
+				onClearOnLoad: () => {
+					return true;
+				}
 			},
 
 			applicationLoad: (application) => {

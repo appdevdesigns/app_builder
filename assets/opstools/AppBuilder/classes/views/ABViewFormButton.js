@@ -454,9 +454,18 @@ export default class ABViewFormButton extends ABView {
 
 				// save data
 				form.saveData(formView)
-					.catch(() => { saveButton.enable(); })
+					.catch(() => { 
+
+						if (saveButton &&
+							saveButton.$view)
+							saveButton.enable();
+
+					})
 					.then(() => { 
-						saveButton.enable(); 
+
+						if (saveButton &&
+							saveButton.$view)
+							saveButton.enable();
 
 						//Focus on first focusable component
 						form.focusOnFirst();
