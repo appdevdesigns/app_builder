@@ -1,7 +1,6 @@
 // import ABApplication from "./ABApplication"
 // const ABApplication = require("./ABApplication"); // NOTE: change to require()
-const path = require("path");
-const ABProcessTask = require(path.join(__dirname, "ABProcessTask.js"));
+const ABProcessTask = require("./ABProcessTask.js");
 
 var ABProcessTaskTriggerDefaults = {
     key: "Trigger", // unique key to reference this specific Task
@@ -45,18 +44,17 @@ module.exports = class ABProcessTaskTrigger extends ABProcessTask {
         return data;
     }
 
-    trigger(data) {
-        // call my process.newInstance with
-        if (!this.process) {
-            return;
-        }
-        var context = this.process.context(data);
-        this.initState(context, { triggered: true, status: "completed" });
-        context.startTaskID = this.diagramID;
+    // trigger(data) {
+    //     // call my process.newInstance with
+    //     if (!this.process) {
+    //         return;
+    //     }
+    //     var context = this.process.context(data);
+    //     this.initState(context, { triggered: true });
 
-        // modify data in any appropriate way then:
-        this.process.instanceNew(context);
-    }
+    //     // modify data in any appropriate way then:
+    //     this.process.instanceNew(context);
+    // }
 
     /**
      * initState()
@@ -64,11 +62,20 @@ module.exports = class ABProcessTaskTrigger extends ABProcessTask {
      * @param {obj} context  the context data of the process instance
      * @param {obj} val  any values to override the default state
      */
-    initState(context, val) {
-        var myDefaults = {
-            triggered: false
-        };
+    // initState(context, val) {
+    //     val = val || {};
 
-        super.initState(context, myDefaults, val);
-    }
+    //     context.taskState = context.taskState || {};
+
+    //     // don't overwrite your settings if they already exist:
+    //     if (!context.taskState[this.id]) {
+    //         context.taskState[this.id] = {
+    //             initialized: true,
+    //             triggered: false
+    //         };
+    //         for (var v in val) {
+    //             context.taskState[this.id][v] = val[v];
+    //         }
+    //     }
+    // }
 };

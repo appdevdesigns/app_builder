@@ -29,12 +29,13 @@ module.exports = {
 
         // status: the current status of the process
         //	created:  DB row initially created, but not yet run
+        //  error:    process has encountered an Error
         //  running:  process has started,
         //  waiting:  process is waiting for an event/response
         //  completed: process has successfully completed.
         status: {
             type: "string",
-            enum: ["created", "running", "waiting", "completed"],
+            enum: ["created", "error", "running", "waiting", "completed"],
             defaultsTo: "created"
             // isIn: ["created", "running", "waiting", "completed"]
         },

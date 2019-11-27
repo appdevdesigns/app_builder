@@ -1,17 +1,5 @@
-// import ABApplication from "./ABApplication"
-// const ABApplication = require("./ABApplication"); // NOTE: change to require()
-const path = require("path");
-const ABProcessTaskCore = require(path.join(
-    __dirname,
-    "..",
-    "..",
-    "assets",
-    "opstools",
-    "AppBuilder",
-    "classes",
-    "processTasks",
-    "ABProcessTaskCore.js"
-));
+const ABProcessTaskCore = require("./ABProcessTaskCore.js");
+const ABDefinition = require("../ABDefinition.js");
 
 module.exports = class ABProcessTask extends ABProcessTaskCore {
     constructor(attributes, process, application, defaultValues) {
@@ -88,27 +76,12 @@ module.exports = class ABProcessTask extends ABProcessTaskCore {
         return validator;
         */
 
-        var isValid =
-            this.application.processes((o) => {
-                return o.name.toLowerCase() == this.name.toLowerCase();
-            }).length == 0;
-        return isValid;
-    }
+        // var isValid =
+        //     this.application.processes((o) => {
+        //         return o.name.toLowerCase() == this.name.toLowerCase();
+        //     }).length == 0;
+        // return isValid;
 
-    ////
-    //// Process Instance Methods
-    ////
-
-    /**
-     * onError()
-     * perform these actions on an Error.
-     * @param {obj} instance  the instance we are working with.
-     * @param {Error} error  the error object received.
-     */
-    onError(instance, error) {
-        super.onError(instance, error);
-
-        var text = `ProcessTask Error: ${this.key} : ${error.toString()}`;
-        ADCore.error.log(text, { instance: instance, error: error });
+        return true;
     }
 };

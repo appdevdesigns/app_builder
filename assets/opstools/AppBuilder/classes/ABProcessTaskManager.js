@@ -4,14 +4,9 @@
  * An interface for managing the different ABProcessTasks in AppBuilder.
  *
  */
-var path = require("path");
-
-var ABProcessTaskEmail = require(path.join(__dirname, "ABProcessTaskEmail"));
-var ABProcessTaskEnd = require(path.join(__dirname, "ABProcessTaskEnd"));
-var ABProcessTaskTrigger = require(path.join(
-    __dirname,
-    "ABProcessTaskTrigger"
-));
+var ABProcessTaskEmail = require("./processTasks/ABProcessTaskEmail");
+var ABProcessTaskEnd = require("./processTasks/ABProcessTaskEnd");
+var ABProcessTaskTrigger = require("./processTasks/ABProcessTaskTrigger");
 
 /*
  * Tasks
@@ -38,12 +33,12 @@ module.exports = {
 
     /*
      * @function newTask
-     * return an instance of an ABProcessTask based upon the def.key value.
+     * return an instance of an ABProcessTask based upon the values.type value.
      * @return {ABProcessTask}
      */
-    newTask: function(def, process, application) {
-        if (def.key) {
-            return new Tasks[def.key](def, process, application);
+    newTask: function(values, object, application) {
+        if (values.key) {
+            return new Tasks[values.key](values, object);
         } else {
             //// TODO: what to do here?
         }

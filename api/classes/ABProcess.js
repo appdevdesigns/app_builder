@@ -12,12 +12,8 @@ const ABProcessCore = require(path.join(
     "ABProcessCore.js"
 ));
 
-const { Engine } = require("bpmn-engine");
-const { EventEmitter } = require("events");
-
-function L(key, altText) {
-    return AD.lang.label.getLabel(key) || altText;
-}
+const ABProcessEngine = require(path.join(__dirname, "ABProcessEngine"));
+const convert = require("xml-js");
 
 module.exports = class ABProcess extends ABProcessCore {
     constructor(attributes, application) {
@@ -33,11 +29,40 @@ module.exports = class ABProcess extends ABProcessCore {
     /// on the instance values of the Application.
     ///
 
+    /**
+     * context()
+     * Return an initial context data structure for use with a running
+     * instance.
+     * @param {obj} data the initial data passed into the process
+     * @return {Promise}
+     */
     context(data) {
         return {
             input: data,
             taskState: {}
         };
+    }
+
+    /**
+     * instanceClose()
+     * Mark the current instance as having been completed.
+     * @param {obj} instance the instance we are working with.
+     * @return {Promise}
+     */
+    instanceClose(instance) {
+        instance.status = "completed";
+        return this.instanceUpdate(instance);
+    }
+
+    /**
+     * instanceError()
+     * Mark the current instance as having an error.
+     * @param {obj} instance the instance we are working with.
+     * @return {Promise}
+     */
+    instanceError(instance) {
+        instance.status = "error";
+        return this.instanceUpdate(instance);
     }
 
     /**
@@ -49,9 +74,9 @@ module.exports = class ABProcess extends ABProcessCore {
     instanceNew(data) {
         var context = data;
 
-        for (var t in this.tasks) {
-            this.tasks[t].initState(context);
-        }
+        this.tasks().forEach((t) => {
+            t.initState(context);
+        });
 
         var newInstance = {
             processID: this.id,
@@ -69,42 +94,82 @@ module.exports = class ABProcess extends ABProcessCore {
             });
     }
 
-    run(instance) {
-        debugger;
-        const engine = Engine({
-            name: instance.id,
-            source: instance.xmlDefinition,
-            variables: instance.context
-        });
+    /**
+     * instanceUpdate()
+     * Save the current instance.
+     * @param {obj} instance the instance we are working with.
+     * @return {Promise}
+     */
+    instanceUpdate(instance) {
+        return ABProcessInstance.update(instance.id, instance);
+    }
 
-        const listener = new EventEmitter();
-        listener.on("activity.enter", (elementApi, engineApi) => {
-            debugger;
-            console.log(
-                `${elementApi.type} <${elementApi.id}> of ${engineApi.name} is entered`
-            );
-        });
-        listener.on("wait", (elementApi) => {
-            elementApi.owner.logger.debug(
-                `<${elementApi.executionId} (${elementApi.id})> signal with io`,
-                elementApi.content.ioSpecification
-            );
-            debugger;
-            // elementApi.signal({
-            //     ioSpecification: {
-            //         dataOutputs: [
-            //             {
-            //                 id: "userInput",
-            //                 value: 2
-            //             }
-            //         ]
-            //     }
-            // });
-        });
-        engine.execute({
-            listener
-        });
-        console.log(`${this.id} / ${this.name} : .run()!`);
+    /**
+     * run()
+     * Step through the current process instance and have any pending tasks
+     * perform their actions.
+     * @param {obj} instance the instance we are working with.
+     * @return {Promise}
+     */
+    run(instance) {
+        // make sure the current instance is runnable:
+        if (instance.status != "error" && instance.status != "completed") {
+            var Engine = new ABProcessEngine(instance, this);
+            return Engine.pendingTasks().then((listOfPendingTasks) => {
+                // if we have no more pending tasks, then we are done.
+                if (listOfPendingTasks.length == 0) {
+                    return this.instanceClose(instance);
+                }
+
+                // else give each task a chance to do it's thing
+                async.map(
+                    listOfPendingTasks,
+                    (task, cb) => {
+                        task.do(instance)
+                            .then((isDone) => {
+                                // if the task returns it is done,
+                                // pass that along
+
+                                if (isDone) {
+                                    // make sure the next tasks know they are
+                                    // ready to run (again if necessary)
+                                    var nextTasks = task.nextTasks(instance);
+                                    nextTasks.forEach((t) => {
+                                        t.reset(instance);
+                                    });
+                                }
+
+                                cb(null, isDone);
+                            })
+                            .catch((err) => {
+                                task.onError(instance, err);
+                                this.instanceError(instance).then(() => {
+                                    cb();
+                                });
+                            });
+                    },
+                    (err, results) => {
+                        // if at least 1 task has reported back it is done
+                        // we try to run this again and process another task.
+                        var hasProgress = false;
+                        if (results) {
+                            results.forEach((res) => {
+                                if (res) hasProgress = true;
+                            });
+                        }
+                        if (hasProgress) {
+                            // repeat this process allowing new tasks to .do()
+                            return this.run(instance);
+                        } else {
+                            // update instance (and end .run())
+                            return this.instanceUpdate(instance);
+                        }
+                    }
+                );
+            });
+        } else {
+            return Promise.resolve();
+        }
     }
 
     /**
@@ -138,27 +203,6 @@ module.exports = class ABProcess extends ABProcessCore {
     }
 
     isValid() {
-        /*
-        var validator = OP.Validation.validator();
-
-        // label/name must be unique:
-        var isNameUnique =
-            this.application.processes((o) => {
-                return o.name.toLowerCase() == this.name.toLowerCase();
-            }).length == 0;
-        if (!isNameUnique) {
-            validator.addError(
-                "name",
-                L(
-                    "ab.validation.object.name.unique",
-                    `Process name must be unique ("${this.name}"" already used in this Application)`
-                )
-            );
-        }
-
-        return validator;
-        */
-
         var isValid =
             this.application.processes((o) => {
                 return o.name.toLowerCase() == this.name.toLowerCase();
