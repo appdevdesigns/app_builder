@@ -6,7 +6,8 @@
  */
 
 import ABViewFormCustom from "./ABViewFormCustom"
-import ABPropertyComponent from "../ABPropertyComponent"
+import ABViewPropertyAddPage from "./viewProperties/ABViewPropertyAddPage"
+
 
 import RowFilter from "../RowFilter"
 
@@ -156,8 +157,9 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 
 		super.fromValues(values);
 
-		this.settings.formView = this.settings.formView || ABViewFormConnectPropertyComponentDefaults.formView;
 		this.settings.objectWorkspace = this.settings.objectWorkspace || ABViewFormConnectPropertyComponentDefaults.objectWorkspace;
+
+		this.addPageTool.fromSettings(this.settings);
 
 	}
 
@@ -171,6 +173,8 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 	static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
 
 		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
+
+		let idBase = 'ABViewDetailConnectPropertyEditor';
 
 		_logic.showFilterPopup = ($view) => {
 			this.filter_popup.show($view, null, { pos: "top" });
@@ -215,22 +219,27 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 		// create filter & sort popups
 		this.initPopupEditors(App, ids, _logic);
 
+		if (this.addPageProperty == null) {
+			this.addPageProperty = ABViewPropertyAddPage.propertyComponent(App, idBase);
+			this.addPageProperty.init({
+				onSave: () => {
+
+					let currView = _logic.currentEditObject();
+
+					// refresh settings
+					this.propertyEditorValues(ids, currView);
+
+					// trigger a save()
+					this.propertyEditorSave(ids, currView);
+
+				}
+			});
+		}
+
 		// in addition to the common .label  values, we 
 		// ask for:
 		return commonUI.concat([
-			{
-				name: 'formView',
-				view: 'richselect',
-				label: L('ab.component.connect.form', '*Add New Form'),
-				labelWidth: App.config.labelWidthXLarge,
-				on: {
-					onChange: (newVal, oldVal) => {
-						if (newVal == L('ab.component.connect.no', '*No add new option')) {
-							$$(ids.formView).setValue("");
-						}
-					}
-				}
-			},
+			this.addPageProperty.ui,
 			{
 				view: "fieldset",
 				name: "addNewSettings",
@@ -301,41 +310,8 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 		super.propertyEditorPopulate(App, ids, view);
 		
 		// Set the options of the possible edit forms
-		var editForms = [
-			{id:L('ab.component.connect.no', '*No add new option'), value:L('ab.component.connect.no', '*No add new option')}
-		];
-		// editForms = view.loopPages(view, view.application._pages, editForms, "form");
-		// view.application._pages.forEach((o)=>{
-		// 	o._views.forEach((j)=>{
-		// 		if (j.key == "form" && j.settings.object == view.settings.dataviewID) {
-		// 			// editForms.push({id:j.parent.id+"|"+j.id, value:j.label});
-		// 			editForms.push({id:j.parent.id, value:j.label});				
-		// 		}
-		// 	});
-		// });
+		this.addPageProperty.setSettings(view, view.settings);
 
-		var pagesHasForm = view.pageRoot()
-			.pages(p => {
-				return p.views(v => {
-					return v && 
-						v.key == "form" && 
-						v.dataview &&
-						v.dataview.datasource.id == view.field().settings.linkObject;
-				}, true).length;
-			}, true)
-			.map(p => {
-				return {
-					id: p.id,
-					value: p.label
-				}
-			});
-
-		editForms = editForms.concat(pagesHasForm);
-
-		$$(ids.formView).define("options", editForms);
-		$$(ids.formView).refresh();
-
-		$$(ids.formView).setValue(view.settings.formView || ABViewFormConnectPropertyComponentDefaults.formView);
 		$$(ids.popupWidth).setValue(view.settings.popupWidth || ABViewFormConnectPropertyComponentDefaults.popupWidth);
 		$$(ids.popupHeight).setValue(view.settings.popupHeight || ABViewFormConnectPropertyComponentDefaults.popupHeight);
 		
@@ -363,12 +339,16 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 
 		super.propertyEditorValues(ids, view);
 
-		view.settings.formView = $$(ids.formView).getValue();
 		view.settings.popupWidth = $$(ids.popupWidth).getValue();
 		view.settings.popupHeight = $$(ids.popupHeight).getValue();
 		view.settings.objectWorkspace = {
 			filterConditions: FilterComponent.getValue()
 		};
+
+		view.settings = this.addPageProperty.getSettings(view);
+
+		// refresh settings of app page tool
+		view.addPageTool.fromSettings(view.settings);
 
 	}
 	
@@ -484,27 +464,18 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 		}
 
 		var newWidth = settings.labelWidth;
-		var showAddButton = false;
 		if (this.settings.formView) {
 			newWidth += 40;
-			showAddButton = true;
 		} else if (settings.showLabel == true && settings.labelPosition == 'top') {
 			newWidth = 0;
 		}
 
-		let plusButton = "";
-		if (showAddButton) {
-			let iDiv = document.createElement('div');
-			iDiv.className = 'ab-connect-add-new';
-			iDiv.innerHTML = '<a href="javascript:void(0);" class="fa fa-plus ab-connect-add-new-link"></a>';
-			// iDiv.appendChild(node);
-			plusButton = iDiv.outerHTML;
-		}
+		let addPageComponent = this.addPageTool.component(App, idBase);
 
 		let template = ('<div class="customField">' + templateLabel + "#plusButton##template#" + '</div>')
 			.replace(/#width#/g, settings.labelWidth)
 			.replace(/#label#/g, field.label)
-			.replace(/#plusButton#/g, plusButton)
+			.replace(/#plusButton#/g, addPageComponent.ui)
 			.replace(/#template#/g, field.columnHeader({
 				width: newWidth, 
 				editable: true,
@@ -512,6 +483,14 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 			}).template({}));
 
 		component.init = (options) => {
+
+			addPageComponent.applicationLoad(this.application);
+			addPageComponent.init({
+				onSaveData: component.logic.callbackSaveData,
+				onCancelClick: component.logic.callbackCancel,
+				clearOnLoad: component.logic.callbackClearOnLoad
+			});
+
 		};
 
 		component.logic = {
@@ -584,86 +563,86 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 
 			},
 			
-			openFormPopup: (x, y) => {
-				if ($$(ids.popup)) {
-					$$(ids.popup).show();
-					return;
-				}
+			// openFormPopup: (x, y) => {
+			// 	if ($$(ids.popup)) {
+			// 		$$(ids.popup).show();
+			// 		return;
+			// 	}
 				
-				var pageId = this.settings.formView;
-				var page = this.application.pages(function (p) {
-					return p.id == pageId;
-				}, true)[0];
+			// 	var pageId = this.settings.formView;
+			// 	var page = this.application.pages(function (p) {
+			// 		return p.id == pageId;
+			// 	}, true)[0];
 				
 				
-				// Clone page so we modify without causing problems
-				var pageClone = _.cloneDeep(page);
-				var instance = webix.uid();
-				pageClone.id = pageClone.id + "-" + instance; // lets take the stored id can create a new dynamic one so our views don't duplicate
-				var popUpComp = pageClone.component(App);
-				var ui = popUpComp.ui;
+			// 	// Clone page so we modify without causing problems
+			// 	var pageClone = _.cloneDeep(page);
+			// 	var instance = webix.uid();
+			// 	pageClone.id = pageClone.id + "-" + instance; // lets take the stored id can create a new dynamic one so our views don't duplicate
+			// 	var popUpComp = pageClone.component(App);
+			// 	var ui = popUpComp.ui;
 				
-				var popupTemplate = {
-					view: "window",
-					id: ids.popup,
-					modal: true,
-					position: "center",
-					// position:function(state){
-					// 	state.left = x + 20; // offset the popups
-					// 	state.top = y + 20;
-					// },
-					resize: true,
-					width: parseInt(this.settings.popupWidth) || 700,
-					height: (parseInt(this.settings.popupHeight) + 44) || 450,
-					css: 'ab-main-container',
-					head: {
-						view: "toolbar",
-						css: "webix_dark",
-						cols: [
-							{ 
-								view: "label", 
-								label: page.label,
-								css: "modal_title",
-								align: "center"
-							},
-							{
-								view: "button", 
-								label: "Close", 
-								autowidth: true, 
-								align: "center",
-								click: function () {
+			// 	var popupTemplate = {
+			// 		view: "window",
+			// 		id: ids.popup,
+			// 		modal: true,
+			// 		position: "center",
+			// 		// position:function(state){
+			// 		// 	state.left = x + 20; // offset the popups
+			// 		// 	state.top = y + 20;
+			// 		// },
+			// 		resize: true,
+			// 		width: parseInt(this.settings.popupWidth) || 700,
+			// 		height: (parseInt(this.settings.popupHeight) + 44) || 450,
+			// 		css: 'ab-main-container',
+			// 		head: {
+			// 			view: "toolbar",
+			// 			css: "webix_dark",
+			// 			cols: [
+			// 				{ 
+			// 					view: "label", 
+			// 					label: page.label,
+			// 					css: "modal_title",
+			// 					align: "center"
+			// 				},
+			// 				{
+			// 					view: "button", 
+			// 					label: "Close", 
+			// 					autowidth: true, 
+			// 					align: "center",
+			// 					click: function () {
 
-									var popup = this.getTopParentView();
-									popup.close();
+			// 						var popup = this.getTopParentView();
+			// 						popup.close();
 
-								}
-							}
-						]
-					},
-					body: {
-						view: "scrollview",
-						scroll: true,
-						body: ui
-					}
-				};
+			// 					}
+			// 				}
+			// 			]
+			// 		},
+			// 		body: {
+			// 			view: "scrollview",
+			// 			scroll: true,
+			// 			body: ui
+			// 		}
+			// 	};
 
-				// Create popup
-				webix.ui(popupTemplate).show();
+			// 	// Create popup
+			// 	webix.ui(popupTemplate).show();
 
-				// Initial UI components
-				setTimeout( () => {
+			// 	// Initial UI components
+			// 	setTimeout( () => {
 					
-					popUpComp.init({
-						onSaveData:component.logic.callbackSaveData,
-						onCancelClick:component.logic.callbackCancel,
-						clearOnLoad:component.logic.callbackClearOnLoad
-					});
+			// 		popUpComp.init({
+			// 			onSaveData:component.logic.callbackSaveData,
+			// 			onCancelClick:component.logic.callbackCancel,
+			// 			clearOnLoad:component.logic.callbackClearOnLoad
+			// 		});
 
-					popUpComp.onShow();
+			// 		popUpComp.onShow();
 				
-				}, 50);
+			// 	}, 50);
 
-			}
+			// }
 
 		};
 
@@ -694,8 +673,12 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 						}
 					},
 					"ab-connect-add-new-link": function (e, id, trg) {
-						var topParentView = this.getTopParentView();
-						component.logic.openFormPopup(topParentView.config.left, topParentView.config.top);
+
+						// var topParentView = this.getTopParentView();
+						// component.logic.openFormPopup(topParentView.config.left, topParentView.config.top);
+
+						addPageComponent.onClick();
+
 						e.stopPropagation();
 						return false;
 					}
@@ -726,6 +709,14 @@ export default class ABViewFormConnect extends ABViewFormCustom {
 	 */
 	componentList() {
 		return [];
+	}
+
+	get addPageTool() {
+
+		if (this.__addPageTool == null)
+			this.__addPageTool = new ABViewPropertyAddPage();
+
+		return this.__addPageTool;
 	}
 	
 	// loopPages(view, o, detailViews, type) {
