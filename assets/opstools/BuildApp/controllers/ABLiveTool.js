@@ -72,9 +72,15 @@ steal(
 
 							if (self.__events.resize == null)
 								self.__events.resize = AD.comm.hub.subscribe('opsportal.resize', function (message, data) {
-									self.height = data.height;
+									self.containerID = null;
+									if (data && data.height) {
+										self.height = data.height;
+									}
+									if (data && data.containerID) {
+										self.containerID = data.containerID;
+									}
 									self.debounceResize = false; // if we do not set this the resize is never set
-									self.resize(data.height);
+									self.resize(self.height, self.containerID);
 								});
 
 							// Check this is active
@@ -589,7 +595,7 @@ steal(
 						},
 
 
-						resize: function (height) {
+						resize: function (height, containerID) {
 							var _this = this;
 
 							// NOTE: resize() calls from the OpsPortal OPView element 
@@ -630,6 +636,11 @@ steal(
 
 									$$(_this.containerDomID).resize();
 									// $$(_this.activePage.domID).adjust(); // should be part of activePage.resize()
+									
+									if (containerID) {
+										$$(containerID).resize();
+										console.log("resized");
+									}
 
 
 									/// REFACTOR NOTES:

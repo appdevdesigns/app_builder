@@ -365,7 +365,7 @@ export default class ABViewText extends ABViewWidget {
 			
 			displayText: (val) => {
 
-				var result = this.displayText(val);
+				var result = this.displayText(val, ids.component);
 
 				if ($$(ids.component)) {
 					$$(ids.component).define("template", result);
@@ -381,6 +381,7 @@ export default class ABViewText extends ABViewWidget {
 		var _ui = {
 			id: ids.component,
 			view: 'template',
+			autoheight: true,
 			minHeight: 10,
 			css: 'ab-custom-template',
 			borderless: true
@@ -451,7 +452,7 @@ export default class ABViewText extends ABViewWidget {
 	}
 
 
-	displayText(val) {
+	displayText(val, componentID) {
 
 		var result = this.text;
 
@@ -475,6 +476,13 @@ export default class ABViewText extends ABViewWidget {
 				prepend = "/opsportal/image/" + this.application.name + "/";
 			}	
 			var data = prepend + f.format(rowData) || "???"; // "???" default value 
+
+			if (f.format(rowData) != "" && f.key == "image" && result.indexOf("onload") == -1) {
+				var params = {
+					"containerID": componentID
+				};
+				result = result.replace("img", "img onload='AD.comm.hub.publish(\"opsportal.resize\", \""+params+"\");' ")
+			}
 
 			result = result.replace(template, data);
 

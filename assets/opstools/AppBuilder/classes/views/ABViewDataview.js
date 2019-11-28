@@ -100,14 +100,14 @@ export default class ABViewDataview extends ABViewDetail {
 
 
 		// when a change is made in the properties the popups need to reflect the change
-		this.updateEventIds = this.updateEventIds || {}; // { viewId: boolean, ..., viewIdn: boolean }
-		if (!this.updateEventIds[view.id]) {
-			this.updateEventIds[view.id] = true;
-
-			view.addListener('properties.updated', function () {
-				view.populateEditor(ids, view);
-			}, this);
-		}
+		// this.updateEventIds = this.updateEventIds || {}; // { viewId: boolean, ..., viewIdn: boolean }
+		// if (!this.updateEventIds[view.id]) {
+		// 	this.updateEventIds[view.id] = true;
+		// 
+		// 	view.addListener('properties.updated', function () {
+		// 		view.populateEditor(ids, view);
+		// 	}, this);
+		// }
 
 	}
 
