@@ -477,11 +477,8 @@ export default class ABViewText extends ABViewWidget {
 			}	
 			var data = prepend + f.format(rowData) || "???"; // "???" default value 
 
-			if (f.format(rowData) != "" && f.key == "image" && result.indexOf("onload") == -1) {
-				var params = {
-					"containerID": componentID
-				};
-				result = result.replace("img", "img onload='AD.comm.hub.publish(\"opsportal.resize\", \""+params+"\");' ")
+			if (f.format(rowData) != "" && f.key == "image" && result.indexOf("onload") == -1 && componentID) {
+				result = result.replace("img", "img onload='AD.comm.hub.publish(\"component.adjust\", {\"containerID\": \""+componentID+"\"});' ")
 			}
 
 			result = result.replace(template, data);
@@ -489,7 +486,7 @@ export default class ABViewText extends ABViewWidget {
 		});
 
 
-		return clearTemplateValue(result);
+		return result;
 	}
 
 
