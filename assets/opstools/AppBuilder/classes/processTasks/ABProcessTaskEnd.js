@@ -17,6 +17,18 @@ module.exports = class ABProcessTaskEnd extends ABProcessTask {
         return ABProcessTaskEndDefaults;
     }
 
+    static DiagramReplace() {
+        return {
+            label: "Terminate End Event",
+            actionName: "replace-with-terminate-end",
+            className: "bpmn-icon-end-event-terminate",
+            target: {
+                type: "bpmn:EndEvent",
+                eventDefinitionType: "bpmn:TerminateEventDefinition"
+            }
+        };
+    }
+
     /**
      * do()
      * this method actually performs the action for this task.

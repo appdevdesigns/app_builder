@@ -17,6 +17,27 @@ Tasks[ABProcessTaskEmail.defaults().key] = ABProcessTaskEmail;
 Tasks[ABProcessTaskEnd.defaults().key] = ABProcessTaskEnd;
 Tasks[ABProcessTaskTrigger.defaults().key] = ABProcessTaskTrigger;
 
+/*
+ * StartEvents
+ * a list of Diagram Replace options for StartEvents:
+ */
+var START_EVENTS = [];
+START_EVENTS.push(ABProcessTaskTrigger.DiagramReplace());
+
+/*
+ * Tasks
+ * a list of Diagram Replace options for Tasks:
+ */
+var TASKS = [];
+TASKS.push(ABProcessTaskEmail.DiagramReplace());
+
+/*
+ * EndEvents
+ * a list of Diagram Replace options for EndEvents:
+ */
+var END_EVENTS = [];
+END_EVENTS.push(ABProcessTaskEnd.DiagramReplace());
+
 module.exports = {
     /*
      * @function allTasks
@@ -42,5 +63,17 @@ module.exports = {
         } else {
             //// TODO: what to do here?
         }
+    },
+
+    StartEvents: function() {
+        return START_EVENTS;
+    },
+
+    Tasks: function() {
+        return TASKS;
+    },
+
+    EndEvents: function() {
+        return END_EVENTS;
     }
 };

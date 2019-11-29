@@ -4,11 +4,12 @@
  * Manage the Object Workspace area.
  *
  */
-import BpmnViewer from "bpmn-js";
 import BpmnModeler from "bpmn-js/lib/Modeler";
 
 import "bpmn-js/dist/assets/diagram-js.css";
 import "bpmn-js/dist/assets/bpmn-font/css/bpmn.css";
+
+import CustomBPMN from "./ab_work_process_workspace_customBPMN";
 
 export default class ABWorkProcessWorkspaceModel extends OP.Component {
     /**
@@ -148,7 +149,7 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
             saveProcess: (_process) => {
                 return new Promise((resolve, reject) => {
                     viewer.saveXML({ preamble: true }, (err, xml) => {
-                        console.log(".saveXML() done:", err, xml);
+                        // console.log(".saveXML() done:", err, xml);
                         if (err) {
                             reject(err);
                         }
@@ -179,7 +180,8 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
                     $$(ids.modelerBroken).hide();
                     $$(ids.modelerWorking).show();
                     viewer = new BpmnModeler({
-                        container: "#" + ids.modeler
+                        container: "#" + ids.modeler,
+                        additionalModules: [CustomBPMN]
                     });
 
                     // setup our Listeners:
@@ -235,7 +237,7 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
 
                     viewer.clear();
                     viewer.importXML(xml, function(err) {
-                        console.log(".importXML(): done. ", err);
+                        // console.log(".importXML(): done. ", err);
                         viewer.get("canvas").zoom("fit-viewport", "auto");
                         done(err);
                     });

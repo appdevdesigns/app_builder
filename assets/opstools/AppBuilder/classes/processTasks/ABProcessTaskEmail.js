@@ -19,6 +19,17 @@ module.exports = class ABProcessTaskEmail extends ABProcessTask {
         return ABProcessTaskEmailDefaults;
     }
 
+    static DiagramReplace() {
+        return {
+            label: "Send Task",
+            actionName: "replace-with-send-task",
+            className: "bpmn-icon-send",
+            target: {
+                type: "bpmn:SendTask"
+            }
+        };
+    }
+
     ////
     //// Process Instance Methods
     ////

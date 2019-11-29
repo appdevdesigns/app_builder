@@ -19,6 +19,20 @@ module.exports = class ABProcessTaskTrigger extends ABProcessTask {
         return ABProcessTaskTriggerDefaults;
     }
 
+    static DiagramReplace() {
+        return {
+            label: "Signal Start Event",
+            actionName: "replace-with-signal-start",
+            className: "bpmn-icon-start-event-signal",
+            target: {
+                type: "bpmn:StartEvent",
+                // type: {string} the general bpmn category
+                //      "StartEvent", "Task", "EndEvent", "ExclusiveGateway"
+                eventDefinitionType: "bpmn:SignalEventDefinition"
+            }
+        };
+    }
+
     fromValues(attributes) {
         super.fromValues(attributes);
 
