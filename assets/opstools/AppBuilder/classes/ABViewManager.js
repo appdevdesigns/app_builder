@@ -32,6 +32,7 @@ import ABViewKanban from "./views/ABViewKanban"
 import ABViewDetail from "./views/ABViewDetail"
 import ABViewDetailCheckbox from "./views/ABViewDetailCheckbox"
 import ABViewDetailCustom from "./views/ABViewDetailCustom"
+import ABViewDetailConnect from "./views/ABViewDetailConnect"
 import ABViewDetailImage from "./views/ABViewDetailImage"
 import ABViewDetailSelectivity from "./views/ABViewDetailSelectivity"
 import ABViewDetailText from "./views/ABViewDetailText"
@@ -89,6 +90,7 @@ Views[ABViewKanban.common().key] = ABViewKanban;
 Views[ABViewDetail.common().key] = ABViewDetail;
 Views[ABViewDetailCheckbox.common().key] = ABViewDetailCheckbox;
 Views[ABViewDetailCustom.common().key] = ABViewDetailCustom;
+Views[ABViewDetailConnect.common().key] = ABViewDetailConnect;
 Views[ABViewDetailImage.common().key] = ABViewDetailImage;
 Views[ABViewDetailSelectivity.common().key] = ABViewDetailSelectivity;
 Views[ABViewDetailText.common().key] = ABViewDetailText;

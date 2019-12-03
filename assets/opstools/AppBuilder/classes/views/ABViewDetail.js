@@ -483,7 +483,33 @@ export default class ABViewDetail extends ABViewContainer {
 					emitter: dv,
 					eventName: 'changeCursor',
 					listener: _logic.displayData
-				})
+				});
+
+				this.eventAdd({
+					emitter: dv,
+					eventName: 'create',
+					listener: (createdRow) => {
+
+						let currCursor = dv.getCursor();
+						if (currCursor &&
+							currCursor.id == createdRow.id)
+							_logic.displayData(createdRow);
+	
+					}
+				});
+
+				this.eventAdd({
+					emitter: dv,
+					eventName: 'update',
+					listener: (updatedRow) => {
+
+						let currCursor = dv.getCursor();
+						if (currCursor &&
+							currCursor.id == updatedRow.id)
+							_logic.displayData(updatedRow);
+	
+					}
+				});
 
 			}
 

@@ -29,14 +29,6 @@ var ABFieldUserDefaults = {
 			return true;
 		}
 	},
-	isFilterable: (field) => {
-		if (field.settings.isMultiple) {
-			return false;
-		} else {
-			return true;
-		}
-	},
-
 	supportRequire: false
 
 }
@@ -75,6 +67,7 @@ var ABFieldUserComponent = new ABFieldComponent({
 				view: 'checkbox',
 				name: 'isMultiple',
 				id: ids.isMultiple,
+				disallowEdit: true,
 				labelRight: L('ab.dataField.user.isMultiple', '*Allow multiple users'),
 				labelWidth: App.config.labelWidthCheckbox
 			},

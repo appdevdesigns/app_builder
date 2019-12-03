@@ -250,7 +250,9 @@ export default class ABViewForm extends ABViewContainer {
 
 					});
 
-					saveTasks.push(() => formView.refreshDefaultButton(ids).save());
+					let defaultButton = formView.refreshDefaultButton(ids);
+					if (defaultButton)
+						saveTasks.push(() => defaultButton.save());
 
 					return saveTasks.reduce((promiseChain, currTask) => {
 						return promiseChain.then(currTask);
@@ -278,7 +280,7 @@ export default class ABViewForm extends ABViewContainer {
 
 			// disable in form
 			var fieldComponent = field.formComponent();
-			if (fieldComponent == null) 
+			if (fieldComponent == null)
 				return "<i class='fa fa-times'></i>  #label# <div class='ab-component-form-fields-component-info'> Disable </div>".replace("#label#", field.label);
 
 			var componentKey = fieldComponent.common().key;
@@ -370,17 +372,17 @@ export default class ABViewForm extends ABViewContainer {
 		_logic.recordRuleShow = () => {
 
 			var currView = _logic.currentEditObject();
-			
+
 			PopupRecordRule.formLoad(currView);
 			PopupRecordRule.fromSettings(currView.settings.recordRules);
 			PopupRecordRule.show();
 
-// NOTE: Querybuilder v5.2 has a bug where it won't display the [and/or] 
-// choosers properly if it hasn't been shown before the .setValue() call.
-// so this work around allows us to refresh the display after the .show()
-// on the popup.
-// When they've fixed the bug, we'll remove this workaround:
-PopupRecordRule.qbFixAfterShow();
+			// NOTE: Querybuilder v5.2 has a bug where it won't display the [and/or] 
+			// choosers properly if it hasn't been shown before the .setValue() call.
+			// so this work around allows us to refresh the display after the .show()
+			// on the popup.
+			// When they've fixed the bug, we'll remove this workaround:
+			PopupRecordRule.qbFixAfterShow();
 
 
 		};
@@ -450,8 +452,8 @@ PopupRecordRule.qbFixAfterShow();
 					onChange: _logic.selectSource
 				}
 			},
-			
-			
+
+
 			{
 				view: "fieldset",
 				label: L('ab.components.form.formFields', '*Form Fields:'),
@@ -791,11 +793,11 @@ PopupRecordRule.qbFixAfterShow();
 		var idBase = 'ABViewForm_' + this.id;
 		this.uniqueInstanceID = webix.uid();
 		var myUnique = (key) => {
-			return App.unique(idBase + '_' + key  + '_' + this.uniqueInstanceID);
+			return App.unique(idBase + '_' + key + '_' + this.uniqueInstanceID);
 		}
 		var ids = {
-			component: myUnique('_component'),	
-			layout: myUnique('_form_layout'),	
+			component: myUnique('_component'),
+			layout: myUnique('_form_layout'),
 		};
 
 		var component = super.component(App);
@@ -816,7 +818,7 @@ PopupRecordRule.qbFixAfterShow();
 		var _init = (options) => {
 			// register our callbacks:
 			if (options) {
-				for(var c in _logic.callbacks) {
+				for (var c in _logic.callbacks) {
 					_logic.callbacks[c] = options[c] || _logic.callbacks[c];
 				}
 			}
@@ -859,13 +861,13 @@ PopupRecordRule.qbFixAfterShow();
 		}
 
 		var _logic = this._logic = {
-			
-			callbacks:{
-			
-				onBeforeSaveData:function(){ return true },
-				onSaveData:function(saveData){},
-				clearOnLoad:function(){ return false }
-			
+
+			callbacks: {
+
+				onBeforeSaveData: function () { return true },
+				onSaveData: function (saveData) { },
+				clearOnLoad: function () { return false }
+
 			},
 
 			displayData: (rowData) => {
@@ -1123,25 +1125,31 @@ PopupRecordRule.qbFixAfterShow();
 	refreshDefaultButton(ids) {
 
 		// If default button is not exists, then skip this
-		let exists = this.views(v => !(v instanceof ABViewFormButton) && !v.settings.isDefault).length > 0;
-		if (!exists) return;
-
-		// Remove default save button
-		this._views = (this._views || []).filter(v => !(v instanceof ABViewFormButton) && !v.settings.isDefault);
+		let defaultButton = this.views(v => (v instanceof ABViewFormButton) && v.settings.isDefault)[0];
 
 		// Add a default button
-		var newButton = ABViewFormButton.newInstance(this.application, this);
-		newButton.settings.isDefault = true;
+		if (defaultButton == null) {
+			defaultButton = ABViewFormButton.newInstance(this.application, this);
+			defaultButton.settings.isDefault = true;
+		}
+		// Remove default button from array, then we will add it to be the last item later (.push)
+		else {
+			this._views = this.views(v => !(v instanceof ABViewFormButton) && !v.settings.isDefault);
+		}
 
-		// Set to last item
-		if ((this._views.length || 0) > ($$(ids.fields).length || 0))
-			newButton.position.y = this._views.length;
-		else
-			newButton.position.y = $$(ids.fields).length;
+		// Calculate position Y of the default button
+		let yList = this.views().map(v => (v.position.y || 0) + 1)
+		yList.push(this._views.length || 0);
+		yList.push($$(ids.fields).length || 0);
+		let posY = Math.max(...yList);
 
-		this._views.push(newButton);
+		// Update to be the last item
+		defaultButton.position.y = posY;
 
-		return newButton;
+		// Keep the default button is always the last item of array
+		this._views.push(defaultButton);
+
+		return defaultButton;
 
 	}
 
@@ -1191,12 +1199,12 @@ PopupRecordRule.qbFixAfterShow();
 			connectFields.forEach((f) => {
 
 				var formFieldCom = this.fieldComponents((fComp) => {
-					return fComp.field && fComp.field().id == f.id; 
+					return fComp.field && fComp.field().id == f.id;
 				});
 
 				if (objectLink.id == f.settings.linkObject &&
 					formFieldCom.length < 1 && // check field does not show
-					formVals[f.columnName] === undefined) { 
+					formVals[f.columnName] === undefined) {
 					formVals[f.columnName] = {};
 					formVals[f.columnName][objectLink.PK()] = dcLink.getCursor().id;
 				}
@@ -1227,7 +1235,7 @@ PopupRecordRule.qbFixAfterShow();
 		var requiredFields = this.fieldComponents(fComp => fComp.settings.required == true).map(fComp => fComp.field());
 		requiredFields.forEach(f => {
 
-			if (!formVals[f.columnName] && 
+			if (!formVals[f.columnName] &&
 				formVals[f.columnName] != '0') {
 
 				formView.markInvalid(f.columnName, '*This is a required field.');
@@ -1332,13 +1340,13 @@ PopupRecordRule.qbFixAfterShow();
 
 				}
 			}
-			
-			// if there was saved data pass it up to the onSaveData callback
-			if (newFormVals) 
-				this._logic.callbacks.onSaveData(newFormVals);
 
 			if (formView.hideProgress)
 				formView.hideProgress();
+
+			// if there was saved data pass it up to the onSaveData callback
+			if (newFormVals)
+				this._logic.callbacks.onSaveData(newFormVals);
 		};
 
 		let formError = (err) => {
@@ -1381,20 +1389,20 @@ PopupRecordRule.qbFixAfterShow();
 						.then((newFormVals) => {
 
 							this.doRecordRules(newFormVals)
-							.then(()=>{
-// make sure any updates from RecordRules get passed along here.
-								this.doSubmitRules(newFormVals);
-								formReady(newFormVals);
-								resolve(newFormVals);
-							})
-							.catch((err)=>{
-								OP.Error.log('Error processing Record Rules.', {error:err, newFormVals:newFormVals });
-// Question:  how do we respond to an error?
-// ?? just keep going ??
-this.doSubmitRules(newFormVals);
-formReady(newFormVals);
-resolve(); 	
-							})
+								.then(() => {
+									// make sure any updates from RecordRules get passed along here.
+									this.doSubmitRules(newFormVals);
+									formReady(newFormVals);
+									resolve(newFormVals);
+								})
+								.catch((err) => {
+									OP.Error.log('Error processing Record Rules.', { error: err, newFormVals: newFormVals });
+									// Question:  how do we respond to an error?
+									// ?? just keep going ??
+									this.doSubmitRules(newFormVals);
+									formReady(newFormVals);
+									resolve();
+								})
 						});
 				}
 				// else add new row
@@ -1407,21 +1415,21 @@ resolve();
 						.then((newFormVals) => {
 
 							this.doRecordRules(newFormVals)
-							.then(()=>{
+								.then(() => {
 
-								this.doSubmitRules(newFormVals);
-								formReady(newFormVals);
-								resolve(newFormVals);
-							})
-							.catch((err)=>{
-								OP.Error.log('Error processing Record Rules.', {error:err, newFormVals:newFormVals });
-// Question:  how do we respond to an error?
-// ?? just keep going ??
-this.doSubmitRules(newFormVals);
-formReady(newFormVals);
-resolve(); 	
-							})
-							
+									this.doSubmitRules(newFormVals);
+									formReady(newFormVals);
+									resolve(newFormVals);
+								})
+								.catch((err) => {
+									OP.Error.log('Error processing Record Rules.', { error: err, newFormVals: newFormVals });
+									// Question:  how do we respond to an error?
+									// ?? just keep going ??
+									this.doSubmitRules(newFormVals);
+									formReady(newFormVals);
+									resolve();
+								})
+
 						});
 				}
 			}
@@ -1438,21 +1446,21 @@ resolve();
 		RecordRules.formLoad(this);
 		RecordRules.fromSettings(this.settings.recordRules);
 		RecordRules.objectLoad(object);
-		
-		return RecordRules.process({data:rowData, form:this });
+
+		return RecordRules.process({ data: rowData, form: this });
 
 	}
 
 	doSubmitRules(rowData) {
 
 		var object = this.dataview.datasource;
-		
+
 		var SubmitRules = new ABSubmitRule();
 		SubmitRules.formLoad(this);
 		SubmitRules.fromSettings(this.settings.submitRules);
 		SubmitRules.objectLoad(object);
-		
-		return SubmitRules.process({data:rowData, form:this });
+
+		return SubmitRules.process({ data: rowData, form: this });
 
 	}
 
@@ -1463,7 +1471,7 @@ resolve();
 		var topPosition = 0;
 		var topPositionId = "";
 		this.views().forEach((item) => {
-			if(item.key == "textbox" || item.key == "numberbox") {
+			if (item.key == "textbox" || item.key == "numberbox") {
 				if (item.position.y == topPosition) {
 					topPosition = item.position.y;
 					topPositionId = item.id;
@@ -1471,7 +1479,7 @@ resolve();
 			}
 		});
 		var childComponent = this.viewComponents[topPositionId];
-		if(childComponent && $$(childComponent.ui.id)) {
+		if (childComponent && $$(childComponent.ui.id)) {
 			$$(childComponent.ui.id).focus();
 		}
 

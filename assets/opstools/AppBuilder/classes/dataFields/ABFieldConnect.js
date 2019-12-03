@@ -477,8 +477,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 		var App = App;
 
 		var width = options.width,
-			editable = options.editable,
-			showAddButton = options.showAddButton;
+			editable = options.editable;
 
 		config.template = (row) => {
 
@@ -522,15 +521,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 				}, App, row);
 			}
 
-			if (showAddButton) {
-				var iDiv = document.createElement('div');
-				iDiv.className = 'ab-connect-add-new';
-				iDiv.innerHTML = '<a href="javascript:void(0);" class="fa fa-plus ab-connect-add-new-link"></a>';
-				iDiv.appendChild(node);
-				return iDiv.outerHTML;
-			} else {
-				return node.outerHTML;
-			}
+			return domNode.outerHTML;
 
 		}
 
@@ -727,7 +718,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 		detailComponentSetting.common = () => {
 			return {
-				key: 'detailselectivity'
+				key: 'detailconnect'
 			}
 		};
 

@@ -349,6 +349,8 @@ export default class ABDataview extends EventEmitter {
 				let treeItem = tc.find({ _itemId: itemId, $parent: 0 }, true);
 				if (treeItem)
 					tc.setCursor(treeItem.id);
+				else
+					tc.setCursor(null);
 			}
 		}
 
@@ -499,15 +501,16 @@ export default class ABDataview extends EventEmitter {
 				// 	this.__dataCollection.setCursor(row.id);
 
 				let currRowId = this.__dataCollection.getCursor();
-				if (!currRowId) {
+				if (!currRowId || 
+					(currRowId && this.__dataCollection.getIndexById(currRowId) < 0)) { // If current cursor is filtered by parent DC, then select new cursor
 
 					// set a first row to cursor
 					let rowId = this.__dataCollection.getFirstId();
-					if (rowId) {
-						this.__dataCollection.setCursor(rowId);
+					// if (rowId) {
+					this.__dataCollection.setCursor(rowId || null);
 
-						this.setCursorTree(rowId);
-					}
+					this.setCursorTree(rowId);
+					// }
 
 				}
 			}

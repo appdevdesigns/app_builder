@@ -72,9 +72,20 @@ steal(
 
 							if (self.__events.resize == null)
 								self.__events.resize = AD.comm.hub.subscribe('opsportal.resize', function (message, data) {
-									self.height = data.height;
+									if (data && data.height) {
+										self.height = data.height;
+									}
 									self.debounceResize = false; // if we do not set this the resize is never set
-									self.resize(data.height);
+									self.resize(self.height);
+								});
+
+							if (self.__events.adjust == null)
+								self.__events.adjust = AD.comm.hub.subscribe('component.adjust', function (message, data) {
+									self.containerID = null;
+									if (data && data.containerID) {
+										self.containerID = data.containerID;
+									}
+									self.adjust(self.containerID);
 								});
 
 							// Check this is active
@@ -589,6 +600,13 @@ steal(
 						},
 
 
+						adjust: function (containerID) {
+							if ($$(containerID)) {
+								// $$(containerID).getTopParentView().resizeChildren();
+								$$(containerID).adjust();
+							}
+						},
+
 						resize: function (height) {
 							var _this = this;
 
@@ -629,7 +647,7 @@ steal(
 										$$(_this.containerDomID).define('height', height);
 
 									$$(_this.containerDomID).resize();
-									// $$(_this.activePage.domID).adjust(); // should be part of activePage.resize()
+									
 
 
 									/// REFACTOR NOTES:
