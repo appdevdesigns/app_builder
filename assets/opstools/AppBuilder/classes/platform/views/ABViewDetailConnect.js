@@ -5,7 +5,7 @@ function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
-export default class ABViewDetailConnect extends ABViewDetailConnectCore {
+module.exports = class ABViewDetailConnect extends ABViewDetailConnectCore {
 
 	///
 	/// Instance Methods
