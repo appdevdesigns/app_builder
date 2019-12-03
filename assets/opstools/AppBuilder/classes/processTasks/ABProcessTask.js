@@ -8,21 +8,36 @@ module.exports = class ABProcessTask extends ABProcessTaskCore {
         // listen
     }
 
-    ///
-    /// Static Methods
-    ///
-    /// Available to the Class level object.  These methods are not dependent
-    /// on the instance values of the Application.
-    ///
+    /**
+     * @method destroy()
+     * remove this task definition.
+     * @return {Promise}
+     */
+    destroy() {
+        ////
+        //// TODO: once our core conversion is complete, this .save() can be
+        //// moved to ABProcessTaskCore, and our ABDefinition.save() can take
+        //// care of the proper method to save depending on the current Platform.
+        ////
+        // return this.toDefinition()
+        //     .destroy()
+
+        //// Until then:
+        var def = this.toDefinition().toObj();
+        if (def.id) {
+            // here ABDefinition is our sails.model()
+            return ABDefinition.destroy(def.id).then(() => {
+                return this.process.taskRemove(def);
+            });
+        } else {
+            return Promise.resolve();
+        }
+    }
 
     /**
      * @method save()
-     *
      * persist this instance of ABObject with it's parent ABApplication
-     *
-     *
      * @return {Promise}
-     *						.resolve( {this} )
      */
     save() {
         ////
@@ -83,5 +98,57 @@ module.exports = class ABProcessTask extends ABProcessTaskCore {
         // return isValid;
 
         return true;
+    }
+
+    ////
+    //// Modeler Instance Methods
+    ////
+
+    onChange(defElement) {
+        /*
+        Sample DefElement:
+            {
+                "labels": [],
+                "children": [],
+                "id": "Task_08j07ni",
+                "width": 100,
+                "height": 80,
+                "type": "bpmn:SendTask",
+                "x": 20,
+                "y": -2130,
+                "order": {
+                    "level": 5
+                },
+                "businessObject": {
+                    "$type": "bpmn:SendTask",
+                    "id": "Task_08j07ni",
+                    "name": "ffff",
+                    "di": {
+                        "$type": "bpmndi:BPMNShape",
+                        "bounds": {
+                            "$type": "dc:Bounds",
+                            "x": 20,
+                            "y": -2130,
+                            "width": 100,
+                            "height": 80
+                        },
+                        "id": "SendTask_0iidv6o_di"
+                    }
+
+                    // Some elements (like EndEvents) have:
+                    .eventDefinitions: [
+                        {
+                            $type: "actual bpmn:ElementType",
+                            ...
+                        }
+                    ]
+                },
+                "incoming":[],
+                "outgoing":[]
+            }
+         */
+
+        // from the BPMI modeler we can gather a label for this:
+        this.label = defElement.businessObject.name || this.label;
     }
 };

@@ -120,6 +120,14 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
         var CurrentApplication = null;
         var CurrentProcess = null;
 
+        // A list of the "Generic" BPMN Element Types we use as placeholders
+        // until our own tasks are assigned to that element.
+        var genericElementTypes = [
+            "bpmn:Task",
+            "bpmn:StartEvent",
+            "bpmn:EndEvent"
+        ];
+
         // our internal business logic
         var _logic = {
             ////
@@ -184,6 +192,140 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
                         additionalModules: [CustomBPMN]
                     });
 
+                    // Modifying Attributes on a Diagram Shape:
+                    // var elementRegistry = viewer.get('elementRegistry');
+                    // var startEventShape = elementRegistry.get('StartEvent_1');
+                    // var modeling = viewer.get("modeling");
+                    // modeling.updateProperties(startEventShape, {
+                    //   name: 'New name'
+                    // });
+
+                    // Adding color to a diagram element:
+                    // var canvas = bpmnViewer.get('canvas');
+                    // canvas.addMarker('UserTask_XYZ', 'highlight');
+                    //   --> define svg style for "highlight"
+
+                    // get currently selected shape:
+                    // var selection = viewer.get("selection");
+                    // var selectedElements = selection.get();
+
+                    viewer.on(
+                        [
+                            "element.click"
+                            // "element.updateId",
+                            // "element.changed",
+                            // "shape.remove"
+                        ],
+                        (event) => {
+                            console.log(`${event.type}:`, event.element);
+                        }
+                    );
+                    viewer.on("element.updateId", (event) => {
+                        console.log("element.updateId:", event.element);
+                        //
+                    });
+                    // viewer.on("element.changed", (event) => {
+                    //     console.log("element.changed:", event.element);
+                    // });
+
+                    viewer.on("shape.remove", (event) => {
+                        // console.log("shape.remove:", event.element);
+                        if (CurrentProcess) {
+                            // if our current process already has this Element/Task
+                            var currTask = CurrentProcess.tasksForDiagramID(
+                                event.element.id
+                            )[0];
+                            if (currTask) {
+                                // send it an onChange(event.element);
+                                currTask.destroy();
+                            }
+                        }
+                    });
+                    viewer.on("element.changed", (event) => {
+                        console.log(`${event.type}:`, event.element);
+                        var element = event.element;
+                        var def = null;
+                        var defType = null;
+                        if (event.element.businessObject.eventDefinitions) {
+                            def =
+                                event.element.businessObject
+                                    .eventDefinitions[0];
+                        }
+                        if (def) {
+                            defType = def.$type;
+                        }
+
+                        // ignore sequence flow lines:
+                        if (element.type != "bpmn:SequenceFlow") {
+                            // if our current process already has this Element/Task
+                            var currTask = CurrentProcess.tasksForDiagramID(
+                                element.id
+                            )[0];
+                            if (currTask) {
+                                // send it an onChange(event.element);
+                                currTask.onChange(element);
+                            } else {
+                                // element.changed : can be triggered for deleted elements
+                                // make sure the shape for this element still exists,
+                                // before doing anything else here:
+                                var elementRegistry = viewer.get(
+                                    "elementRegistry"
+                                );
+                                var currentElementShape = elementRegistry.get(
+                                    element.id
+                                );
+                                if (currentElementShape) {
+                                    // shape does exist, so:
+                                    // if one of the generic elements
+                                    // that doesn't have a definition attached
+                                    // NOTE: EndEvents, are replaced with
+                                    // elements.type=="EndEvent", but a
+                                    // .eventDefinition[0].type ==
+                                    // "TerminateEndEvent"
+                                    if (
+                                        genericElementTypes.indexOf(
+                                            element.type
+                                        ) != -1 &&
+                                        !defType
+                                    ) {
+                                        // set the display to ".highlight"
+                                        var canvas = viewer.get("canvas");
+                                        canvas.addMarker(
+                                            element.id,
+                                            "highlight-undefined-task"
+                                        );
+                                    } else {
+                                        // create new process task for this
+
+                                        // if successful
+                                        // try to remove the marker
+                                        debugger;
+
+                                        var canvas = viewer.get("canvas");
+                                        canvas.removeMarker(
+                                            element.id,
+                                            "highlight-undefined-task"
+                                        );
+                                    }
+                                }
+                            }
+                        }
+                    });
+
+                    viewer.on("selection.changed", (event) => {
+                        console.log(
+                            "selection.changed: New: ",
+                            event.newSelection
+                        );
+                        console.log(
+                            "selection.changed: Old: ",
+                            event.oldSelection
+                        );
+                    });
+
+                    var modeler = viewer.getModules();
+                    // debugger;
+
                     // setup our Listeners:
 
                     // when a change is made, then make the [Save] button ready:
@@ -226,6 +368,9 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
 
                 // continue our sequence with loading the new process
                 processSequence.push((done) => {
+                    // NOTE: make sure CurrentProcess == null BEFORE .clear()
+                    CurrentProcess = null;
+                    viewer.clear();
                     CurrentProcess = process;
 
                     ///////
@@ -235,7 +380,6 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
                         xml = process.modelDefinition();
                     }
 
-                    viewer.clear();
                     viewer.importXML(xml, function(err) {
                         // console.log(".importXML(): done. ", err);
                         viewer.get("canvas").zoom("fit-viewport", "auto");

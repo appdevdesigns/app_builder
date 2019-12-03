@@ -197,4 +197,11 @@ module.exports = class ABProcessCore extends ABMLClass {
             return null;
         }
     }
+
+    taskRemove(def) {
+        var remainingTasks = this.tasks((t) => {
+            return t.id != def.id;
+        });
+        this._tasks = remainingTasks;
+    }
 };
