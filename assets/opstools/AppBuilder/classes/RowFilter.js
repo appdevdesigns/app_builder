@@ -77,7 +77,9 @@ export default class RowFilter extends OP.Component {
 				notCheckedCondition: L('ab.filter_fields.notCheckedCondition', "*is not checked"),
 
 				isCurrentUserCondition: L('ab.filter_fields.isCurrentUserCondition', "*is current user"),
-				isNotCurrentUserCondition: L('ab.filter_fields.isNotCurrentUserCondition', "*is not current user")
+				isNotCurrentUserCondition: L('ab.filter_fields.isNotCurrentUserCondition', "*is not current user"),
+				containsCurrentUserCondition: L('ab.filter_fields.containsCurrentUserCondition', "*contains current user"),
+				notContainsCurrentUserCondition: L('ab.filter_fields.notContainsCurrentUserCondition', "*does not contain current user")
 
 			}
 		};
@@ -497,6 +499,14 @@ export default class RowFilter extends OP.Component {
 										{
 											value: labels.component.isNotCurrentUserCondition,
 											id: "is_not_current_user"
+										},
+										{
+											value: labels.component.containsCurrentUserCondition,
+											id: "contain_current_user"
+										},
+										{
+											value: labels.component.notContainsCurrentUserCondition,
+											id: "not_contain_current_user"
 										},
 										{
 											value: labels.component.equalListCondition,
@@ -1003,6 +1013,8 @@ export default class RowFilter extends OP.Component {
 
 					case 'is_current_user':
 					case 'is_not_current_user':
+					case 'contain_current_user':
+					case 'not_contain_current_user':
 					case 'same_as_user':
 					case 'not_same_as_user':
 						// clear and disable the value field
@@ -1569,8 +1581,8 @@ export default class RowFilter extends OP.Component {
 
 				var value = getFieldVal(rowData, columnName);
 
-				if (Array.isArray(value))
-					value = [value];
+				// if (Array.isArray(value))
+				// 	value = [value];
 
 				switch (rule) {
 					case "is_current_user":
@@ -1578,6 +1590,20 @@ export default class RowFilter extends OP.Component {
 						break;
 					case "is_not_current_user":
 						result = value != OP.User.username();
+						break;
+					case "contain_current_user":
+
+						if (!Array.isArray(value))
+							value = [value];
+
+						result = (value || []).filter(v => (v.id || v) == OP.User.username()).length > 0;
+						break;
+					case "not_contain_current_user":
+
+						if (!Array.isArray(value))
+							value = [value];
+
+						result = (value || []).filter(v => (v.id || v) == OP.User.username()).length < 1;
 						break;
 					case "equals":
 						result = value.indexOf(compareValue) > -1;
@@ -1723,6 +1749,8 @@ export default class RowFilter extends OP.Component {
 						break;
 					case "is_current_user":
 					case "is_not_current_user":
+					case "contain_current_user":
+					case "not_contain_current_user":
 						return _logic.userValid(rowData, columnName, rule, compareValue);
 						break;
 					case 'in_data_collection':

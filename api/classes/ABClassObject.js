@@ -888,6 +888,8 @@ class ABClassObject extends ABObjectBase {
 	                'less_or_equal' : '<='
 	            }
 
+	            // normal field name:
+				var columnName =  condition.key;
 
 	            // basic case:  simple conversion
 	            var operator = conversionHash[condition.rule];
@@ -945,7 +947,19 @@ class ABClassObject extends ABObjectBase {
 	                case "is_not_current_user":
 	                    operator = "<>";
 	                    value = quoteMe(userData.username);
-	                    break;
+						break;
+
+					case "contain_current_user":
+						columnName = `JSON_SEARCH(JSON_EXTRACT(${columnName}, '$[*].id'), 'one', '${userData.username}')`;
+						operator = "IS";
+						value = "NOT NULL";
+						break;
+
+					case "not_contain_current_user":
+						columnName = `JSON_SEARCH(JSON_EXTRACT(${columnName}, '$[*].id'), 'one', '${userData.username}')`;
+						operator = "IS";
+						value = "NULL";
+						break;
 
 	                case 'is_null': 
 	                    operator = "IS NULL";
@@ -987,10 +1001,6 @@ class ABClassObject extends ABObjectBase {
 	                    break;
 
 	            }
-
-
-	            // normal field name:
-				var columnName =  condition.key;
 
 				// validate input
 				if (columnName == null || operator == null) return;

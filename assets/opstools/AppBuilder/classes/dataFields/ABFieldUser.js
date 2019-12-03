@@ -29,14 +29,6 @@ var ABFieldUserDefaults = {
 			return true;
 		}
 	},
-	isFilterable: (field) => {
-		if (field.settings.isMultiple) {
-			return false;
-		} else {
-			return true;
-		}
-	},
-
 	supportRequire: false
 
 }
