@@ -804,10 +804,10 @@ export default class ABViewContainer extends ABView {
 
 			});
 
-			if ($$(this.id) && $$(this.id).resize)
-				setTimeout(() => {
-					$$(this.id).resize();
-				}, 100);
+			// if ($$(this.id) && $$(this.id).resize)
+			// 	setTimeout(() => {
+			// 		$$(this.id).resize();
+			// 	}, 100);
 
 
 		}

@@ -602,8 +602,8 @@ steal(
 
 						adjust: function (containerID) {
 							if ($$(containerID)) {
-								$$(containerID).resize();
-								console.log("resized");
+								// $$(containerID).getTopParentView().resizeChildren();
+								$$(containerID).adjust();
 							}
 						},
 
@@ -647,7 +647,6 @@ steal(
 										$$(_this.containerDomID).define('height', height);
 
 									$$(_this.containerDomID).resize();
-									// $$(_this.activePage.domID).adjust(); // should be part of activePage.resize()
 									
 
 
