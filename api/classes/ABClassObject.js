@@ -971,8 +971,8 @@ class ABClassObject extends ABObjectBase {
 
 					case "contain_current_user":
 						columnName = `JSON_SEARCH(JSON_EXTRACT(${columnName}, '$[*].id'), 'one', '${userData.username}')`;
-						operator = "IS";
-						value = "NOT NULL";
+						operator = "IS NOT";
+						value = "NULL";
 						break;
 
 					case "not_contain_current_user":
