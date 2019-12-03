@@ -890,6 +890,26 @@ class ABClassObject extends ABObjectBase {
 
 	            // normal field name:
 				var columnName =  condition.key;
+				if (typeof columnName == 'string') {
+
+					// make sure to ` ` columnName (if it isn't our special '1' condition )
+					// see Policy:ABModelConvertSameAsUserConditions  for when that is applied
+					if (columnName != '1' && columnName.indexOf("`") == -1) {
+
+						// if columnName is  a  table.field  then be sure to `` each one individually
+						var parts = columnName.split('.');
+						for (var p=0; p < parts.length; p++) {
+							parts[p] = "`"+parts[p]+"`";
+						}
+						columnName = parts.join('.');
+					}
+
+					// ABClassQuery: 
+					// If this is query who create MySQL view, then column name does not have `
+					if (this.viewName) {
+						columnName = '`' + columnName.replace(/`/g, "") + '`';
+					}
+				}
 
 	            // basic case:  simple conversion
 	            var operator = conversionHash[condition.rule];
@@ -1024,27 +1044,6 @@ class ABClassObject extends ABObjectBase {
 
 	            // update our where statement:
 				if (columnName && operator) {
-
-					if (typeof columnName == 'string') {
-
-						// make sure to ` ` columnName (if it isn't our special '1' condition )
-						// see Policy:ABModelConvertSameAsUserConditions  for when that is applied
-						if (columnName != '1' && columnName.indexOf("`") == -1) {
-
-							// if columnName is  a  table.field  then be sure to `` each one individually
-							var parts = columnName.split('.');
-							for (var p=0; p < parts.length; p++) {
-								parts[p] = "`"+parts[p]+"`";
-							}
-							columnName = parts.join('.');
-						}
-
-						// ABClassQuery: 
-						// If this is query who create MySQL view, then column name does not have `
-						if (this.viewName) {
-							columnName = '`' + columnName.replace(/`/g, "") + '`';
-						}
-					}
 
 					whereRaw = whereRaw
 						.replace('{fieldName}', columnName)
