@@ -1,11 +1,12 @@
 // import ABApplication from "./ABApplication"
 
-var ABDefinition = require("../ABDefinition");
 var ABMLClass = require("../ABMLClass");
 
 module.exports = class ABProcessTaskCore extends ABMLClass {
     constructor(attributes, process, application, defaultValues) {
         super(["label"]);
+
+        this.defaults = defaultValues || { key: "core", icon: "core" };
 
         this.fromValues(attributes);
         this.process = process;
@@ -13,8 +14,6 @@ module.exports = class ABProcessTaskCore extends ABMLClass {
             this.processID = process.id;
         }
         this.application = application;
-
-        this.defaults = defaultValues || { key: "core", icon: "core" };
 
         //// Runtime Values
         //// these are not stored in the Definition, but rather
@@ -38,11 +37,14 @@ module.exports = class ABProcessTaskCore extends ABMLClass {
             json: "{json}"
         }
         */
+        // ABDefinition Related fields:
         this.id = attributes.id;
-        this.key = attributes.key || this.defaults.key || "?key?";
         this.name = attributes.name || "";
-        this.processID = attributes.processID || null;
         this.type = attributes.type || "process.task.unknown";
+
+        // ABProcess related fields:
+        this.key = attributes.key || this.defaults.key || "?key?";
+        this.processID = attributes.processID || null;
         this.diagramID = attributes.diagramID || "?diagramID?";
 
         super.fromValues(attributes); // perform translation on this object.
@@ -66,35 +68,26 @@ module.exports = class ABProcessTaskCore extends ABMLClass {
      */
     toObj() {
         // default label value
-        if (!this.label) {
+        if (!this.label && this.name && this.name != "") {
             this.label = this.name;
         }
 
         // untranslate this object:
         var data = super.toObj();
 
-        var fieldsToSave = ["id", "name", "processID", "type", "key"];
+        var fieldsToSave = [
+            "id",
+            "name",
+            "type",
+            "processID",
+            "diagramID",
+            "key"
+        ];
         fieldsToSave.forEach((f) => {
             data[f] = this[f];
         });
 
         return data;
-    }
-
-    /**
-     * @method toDefinition()
-     *
-     * convert this instance into an ABDefinition object.
-     *
-     * @return {ABDefinition}
-     */
-    toDefinition() {
-        return new ABDefinition({
-            id: this.id,
-            name: this.name,
-            type: "process.task",
-            json: this.toObj()
-        });
     }
 
     ////

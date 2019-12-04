@@ -38,6 +38,25 @@ TASKS.push(ABProcessTaskEmail.DiagramReplace());
 var END_EVENTS = [];
 END_EVENTS.push(ABProcessTaskEnd.DiagramReplace());
 
+/*
+ * DEFINITIONTYPES
+ * a hash of BPMN:Element.type to Default values
+ * for each of our Process Objects.
+ *
+ * NOTE: the key should be the target.eventDefinitionType
+ * if it exists, or the .target.type if not.
+ */
+var DEFINITIONTYPES = {};
+DEFINITIONTYPES[
+    ABProcessTaskEmail.DiagramReplace().target.type
+] = ABProcessTaskEmail.defaults();
+DEFINITIONTYPES[
+    ABProcessTaskEnd.DiagramReplace().target.eventDefinitionType
+] = ABProcessTaskEnd.defaults();
+DEFINITIONTYPES[
+    ABProcessTaskTrigger.DiagramReplace().target.eventDefinitionType
+] = ABProcessTaskTrigger.defaults();
+
 module.exports = {
     /*
      * @function allTasks
@@ -75,5 +94,24 @@ module.exports = {
 
     EndEvents: function() {
         return END_EVENTS;
+    },
+
+    definitionForElement: function(element) {
+        // pull the key from the embedded .eventDefinition
+        // if there is one
+        var key = null;
+        if (element.businessObject.eventDefinitions) {
+            var def = element.businessObject.eventDefinitions[0];
+            if (def) {
+                key = def.$type;
+            }
+        }
+
+        // if not, then just use the base .type
+        if (!key) {
+            key = element.type;
+        }
+
+        return DEFINITIONTYPES[key];
     }
 };

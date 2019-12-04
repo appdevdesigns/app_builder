@@ -1,6 +1,5 @@
 // import ABApplication from "./ABApplication"
 
-var ABDefinition = require("./ABDefinition");
 var ABMLClass = require("./ABMLClass");
 
 module.exports = class ABProcessCore extends ABMLClass {
@@ -30,13 +29,21 @@ module.exports = class ABProcessCore extends ABMLClass {
 		*/
         this.id = attributes.id;
         this.name = attributes.name || "";
+        this.type = attributes.type || "process";
         this.xmlDefinition = attributes.xmlDefinition || null;
 
-        // this.type = attributes.type || "";
         // this.json = attributes.json || null;
         this._tasks = {};
         (attributes.taskIDs || []).forEach((tID) => {
             this._tasks[tID] = this.application.taskNew(tID, this);
+        });
+
+        this._participants = {};
+        (attributes.participantIDs || []).forEach((pID) => {
+            this._participants[pID] = this.application.participantNew(
+                pID,
+                this
+            );
         });
 
         super.fromValues(attributes); // perform translation on this object.
@@ -77,16 +84,12 @@ module.exports = class ABProcessCore extends ABMLClass {
             data.taskIDs.push(this._tasks[t].id);
         }
 
-        return data;
-    }
+        data.participantIDs = [];
+        for (var p in this._participants) {
+            data.participantIDs.push(this._participants[p].id);
+        }
 
-    toDefinition() {
-        return new ABDefinition({
-            id: this.id,
-            name: this.name,
-            type: "process",
-            json: this.toObj()
-        });
+        return data;
     }
 
     //
@@ -199,9 +202,41 @@ module.exports = class ABProcessCore extends ABMLClass {
     }
 
     taskRemove(def) {
-        var remainingTasks = this.tasks((t) => {
-            return t.id != def.id;
+        delete this._tasks[def.id];
+    }
+
+    //
+    // Participants
+    //
+
+    /**
+     * participants()
+     * return an array of participants that match the given filter (or all tasks
+     * if no filter is provided).
+     * @param {fn} fn an iterator that returns true if the provided participants
+     *                should be returned.
+     * @return {[ABProcessParticipant,...]}
+     */
+    participants(fn) {
+        if (!fn)
+            fn = () => {
+                return true;
+            };
+        var all = Object.keys(this._participants).map((p) => {
+            return this._participants[p];
         });
-        this._tasks = remainingTasks;
+        return all.filter(fn);
+    }
+
+    /**
+     * participantsForDiagramID()
+     * return the participant(s) that are tied to the given xml diagram ID.
+     * @param {string} dID the diagram ID
+     * @return {[ABProcessParticipant,...]}
+     */
+    participantsForDiagramID(dID) {
+        return this.participants((p) => {
+            return p.diagramID == dID;
+        });
     }
 };

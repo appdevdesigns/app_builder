@@ -9,6 +9,7 @@ var ABProcessTaskEmailDefaults = {
 
 module.exports = class ABProcessTaskEmail extends ABProcessTask {
     constructor(attributes, process, application) {
+        attributes.type = attributes.type || "process.task.email";
         super(attributes, process, application, ABProcessTaskEmailDefaults);
 
         // listen

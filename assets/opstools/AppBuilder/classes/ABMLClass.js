@@ -46,4 +46,62 @@ module.exports = class ABMLClass extends ABMLClassCore {
             OP.Multilingual.unTranslate(this, this, this.mlFields);
         }
     }
+
+    /**
+     * @method destroy()
+     * remove this definition.
+     * @return {Promise}
+     */
+    destroy() {
+        ////
+        //// TODO: once our core conversion is complete, this .save() can be
+        //// moved to ABProcessTaskCore, and our ABDefinition.save() can take
+        //// care of the proper method to save depending on the current Platform.
+        ////
+        // return this.toDefinition()
+        //     .destroy()
+
+        //// Until then:
+        var def = this.toDefinition().toObj();
+        if (def.id) {
+            // here ABDefinition is our sails.model()
+            return ABDefinition.destroy(def.id);
+        } else {
+            return Promise.resolve();
+        }
+    }
+
+    /**
+     * @method save()
+     * persist this instance of ABObject with it's parent ABApplication
+     * @return {Promise}
+     */
+    save() {
+        ////
+        //// TODO: once our core conversion is complete, this .save() can be
+        //// moved to ABProcessTaskCore, and our ABDefinition.save() can take
+        //// care of the proper method to save depending on the current Platform.
+        ////
+        // return this.toDefinition()
+        //     .save()
+        //     .then((data) => {
+        //         // if I didn't have an .id then this was a create()
+        //         // and I need to update my data with the generated .id
+
+        //         if (!this.id) {
+        //             this.id = data.id;
+        //         }
+        //     });
+
+        //// Until then:
+        var def = this.toDefinition().toObj();
+        if (def.id) {
+            // here ABDefinition is our sails.model()
+            return ABDefinition.update(def.id, def);
+        } else {
+            return ABDefinition.create(def).then((data) => {
+                this.id = data.id;
+            });
+        }
+    }
 };

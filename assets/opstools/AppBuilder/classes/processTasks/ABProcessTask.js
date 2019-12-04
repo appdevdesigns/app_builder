@@ -1,5 +1,4 @@
 const ABProcessTaskCore = require("./ABProcessTaskCore.js");
-const ABDefinition = require("../ABDefinition.js");
 
 module.exports = class ABProcessTask extends ABProcessTaskCore {
     constructor(attributes, process, application, defaultValues) {
@@ -22,51 +21,9 @@ module.exports = class ABProcessTask extends ABProcessTaskCore {
         // return this.toDefinition()
         //     .destroy()
 
-        //// Until then:
-        var def = this.toDefinition().toObj();
-        if (def.id) {
-            // here ABDefinition is our sails.model()
-            return ABDefinition.destroy(def.id).then(() => {
-                return this.process.taskRemove(def);
-            });
-        } else {
-            return Promise.resolve();
-        }
-    }
-
-    /**
-     * @method save()
-     * persist this instance of ABObject with it's parent ABApplication
-     * @return {Promise}
-     */
-    save() {
-        ////
-        //// TODO: once our core conversion is complete, this .save() can be
-        //// moved to ABProcessTaskCore, and our ABDefinition.save() can take
-        //// care of the proper method to save depending on the current Platform.
-        ////
-        // return this.toDefinition()
-        //     .save()
-        //     .then((data) => {
-        //         // if I didn't have an .id then this was a create()
-        //         // and I need to update my data with the generated .id
-
-        //         if (!this.id) {
-        //             this.id = data.id;
-        //         }
-        //     });
-
-        //// Until then:
-        var def = this.toDefinition().toObj();
-        if (def.id) {
-            // here ABDefinition is our sails.model()
-            return ABDefinition.update(def.id, def);
-        } else {
-            return ABDefinition.create(def).then((data) => {
-                this.id = data.id;
-                return this.process.save();
-            });
-        }
+        return super.destroy().then(() => {
+            return this.process.taskRemove(def);
+        });
     }
 
     isValid() {
@@ -104,6 +61,22 @@ module.exports = class ABProcessTask extends ABProcessTaskCore {
     //// Modeler Instance Methods
     ////
 
+    /**
+     * fromElement()
+     * initialize this Task's values from the given BPMN:Element
+     * @param {BPMNElement}
+     */
+    fromElement(element) {
+        this.diagramID = element.id || this.diagramID;
+        this.onChange(element);
+    }
+
+    /**
+     * onChange()
+     * update the current Task with information that was relevant
+     * from the provided BPMN:Element
+     * @param {BPMNElement}
+     */
     onChange(defElement) {
         /*
         Sample DefElement:
@@ -149,6 +122,8 @@ module.exports = class ABProcessTask extends ABProcessTaskCore {
          */
 
         // from the BPMI modeler we can gather a label for this:
-        this.label = defElement.businessObject.name || this.label;
+        if (defElement.businessObject.name != "") {
+            this.label = defElement.businessObject.name;
+        }
     }
 };

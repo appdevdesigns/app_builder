@@ -15,6 +15,8 @@ module.exports = class ABProcess extends ABProcessCore {
         AD.comm.hub.subscribe("ab.abprocess.update", (msg, data) => {
             if (this.id == data.objectId) this.fromValues(data.data);
         });
+
+        this.isSaveInProgress = false;
     }
 
     ///
@@ -24,22 +26,22 @@ module.exports = class ABProcess extends ABProcessCore {
     /// on the instance values of the Application.
     ///
 
-    /**
-     * @method loadAll()
-     *
-     * load all the Definitions for The current AppBuilder:
-     *
-     * @return {array}
-     */
-    static loadAll() {
-        return OP.Comm.Socket.get({
-            url: `/app_builder/abdefinition`
-        }).then((allDefinitions) => {
-            (allDefinitions || []).forEach((def) => {
-                __AllDefinitions[def.id] = def;
-            });
-        });
-    }
+    // /**
+    //  * @method loadAll()
+    //  *
+    //  * load all the Definitions for The current AppBuilder:
+    //  *
+    //  * @return {array}
+    //  */
+    // static loadAll() {
+    //     return OP.Comm.Socket.get({
+    //         url: `/app_builder/abdefinition`
+    //     }).then((allDefinitions) => {
+    //         (allDefinitions || []).forEach((def) => {
+    //             __AllDefinitions[def.id] = def;
+    //         });
+    //     });
+    // }
 
     /// ABApplication data methods
 
@@ -106,16 +108,33 @@ module.exports = class ABProcess extends ABProcessCore {
         // 	return ABDefinition.create(this.toDefinition());
         // }
 
-        return this.toDefinition()
-            .save()
-            .then((data) => {
-                // if I didn't have an .id then this was a create()
-                // and I need to update my data with the generated .id
+        // if we have already started a save :
+        if (this.isSaveInProgress) {
+            return Promise.resolve();
+        }
 
-                if (!this.id) {
-                    this.id = data.id;
-                }
-            });
+        this.isSaveInProgress = true;
+
+        // make sure all our tasks have save()ed.
+        var allSaves = [];
+        var allTasks = this.tasks();
+        allTasks.forEach((t) => {
+            allSaves.push(t.save());
+        });
+        return Promise.all(allSaves).then(() => {
+            // now we can save our Process definition
+            return this.toDefinition()
+                .save()
+                .then((data) => {
+                    // if I didn't have an .id then this was a create()
+                    // and I need to update my data with the generated .id
+
+                    if (!this.id) {
+                        this.id = data.id;
+                    }
+                    this.isSaveInProgress = false;
+                });
+        });
     }
 
     isValid() {
@@ -137,5 +156,26 @@ module.exports = class ABProcess extends ABProcessCore {
         }
 
         return validator;
+    }
+
+    taskNewForModelDefinition(element) {
+        var task = this.application.taskNewForModelDefinition(element, this);
+        if (task) {
+            this._tasks[task.id || task.diagramID] = task;
+        }
+        return task;
+    }
+
+    participantNewForModelDefinition(element) {
+        var participant = this.application.participantNewForModelDefinition(
+            element,
+            this
+        );
+        if (participant) {
+            this._participants[
+                participant.id || participant.diagramID
+            ] = participant;
+        }
+        return participant;
     }
 };

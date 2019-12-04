@@ -9,6 +9,7 @@ var ABProcessTaskTriggerDefaults = {
 
 module.exports = class ABProcessTaskTrigger extends ABProcessTask {
     constructor(attributes, process, application) {
+        attributes.type = attributes.type || "trigger";
         super(attributes, process, application, ABProcessTaskTriggerDefaults);
 
         // listen
