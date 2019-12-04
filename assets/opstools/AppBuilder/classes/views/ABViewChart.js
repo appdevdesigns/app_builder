@@ -413,10 +413,52 @@ export default class ABViewChart extends ABViewContainer  {
 		var _init = (options) => {
 
 			container.init(options);
-			
+
 			var currentComponent = $$(ids.component);
 			if (currentComponent) {
 				webix.extend(currentComponent, webix.ProgressBar);
+			}
+
+			let dv = this.dataview;
+			if (dv) {
+
+				if (dv.dataviewLink) {
+					this.eventAdd({
+						emitter: dv.dataviewLink,
+						eventName: 'changeCursor',
+						listener: () => this.refreshData()
+					});
+				}
+
+				this.eventAdd({
+					emitter: dv,
+					eventName: 'changeCursor',
+					listener: () => this.refreshData()
+				});
+
+				this.eventAdd({
+					emitter: dv,
+					eventName: 'create',
+					listener: () => this.refreshData()
+				});
+
+				this.eventAdd({
+					emitter: dv,
+					eventName: 'update',
+					listener: () => this.refreshData()
+				});
+
+				this.eventAdd({
+					emitter: dv,
+					eventName: 'delete',
+					listener: () => this.refreshData()
+				});
+
+				this.eventAdd({
+					emitter: dv,
+					eventName: 'initializedData',
+					listener: () => this.refreshData()
+				});
 			}
 
 		}
@@ -470,6 +512,11 @@ export default class ABViewChart extends ABViewContainer  {
 			this.dcChart = new webix.DataCollection();
 		}
 
+		return this.dcChart;
+	}
+
+	refreshData() {
+
 		var dv = this.dataview;
 		if (dv == null) return this.dcChart;
 
@@ -480,7 +527,7 @@ export default class ABViewChart extends ABViewContainer  {
 
 		if (!labelCol || !valueCol) return this.dcChart;
 
-		var labelColName = labelCol.columnName;
+		// var labelColName = labelCol.columnName;
 		var numberColName = valueCol.columnName;
 
 		var numberColName2 = "";
@@ -489,253 +536,234 @@ export default class ABViewChart extends ABViewContainer  {
 		}
 
 		var colorList = ["#ee4339", "#ee9336", "#eed236", "#d3ee36", "#a7ee70", "#58dccd", "#36abee", "#476cee", "#a244ea", "#e33fc7"];
+		
+		var dInfo = dv.getData();
 
-		var refreshData = () => { 
+		var result = [];
+		var sumData = {};
+		var sumNumber = 0;
+		var sumNumber2 = 0;
+		var countNumber = dInfo.length; 
+
+		switch(valueCol.key) {
+			case "formula": {
+				var obj = valueCol.object;
+				var objLink = this.application.objects(obj => obj.id == valueCol.settings.object)[0];
+				var fieldBase = obj.fields(f => f.id == valueCol.settings.field)[0];
+				var fieldLink = objLink.fields(f => f.id == valueCol.settings.fieldLink)[0];
+			}
+				break;
+
+			case "calculate": {
+				var obj = valueCol.object;
+				var place = valueCol.settings.decimalPlaces;
+			}
+				break;
+				
+			default:
+				break;
+		}
+		
+		dInfo.forEach((item) => {
+			var labelKey = labelCol.format(item) || item.id;
+			var numberVal = parseFloat(item[numberColName] || 0);
+			if (this.settings.multipleSeries) {
+				var numberVal2 = parseFloat(item[numberColName2]) || 0;
+			}
 			
-			var dInfo = dv.getData();
-
-			var result = [];
-			var sumData = {};
-			var sumNumber = 0;
-			var sumNumber2 = 0;
-			var countNumber = dInfo.length; 
-
 			switch(valueCol.key) {
-				case "formula": {
-					var obj = valueCol.object;
-					var objLink = this.application.objects(obj => obj.id == valueCol.settings.object)[0];
-					var fieldBase = obj.fields(f => f.id == valueCol.settings.field)[0];
-					var fieldLink = objLink.fields(f => f.id == valueCol.settings.fieldLink)[0];
+				//Formula Datatype
+				case "formula" : {
+					var data = item[fieldBase.relationName()];
+					if (!Array.isArray(data)) {
+						data = [data];
+					}
+					var numberList = [];
+
+					// pull number from data
+					switch (fieldLink.key) {
+						case "calculate":
+							data.forEach(d => {
+								numberList.push(parseFloat(fieldLink.format(d) || 0));
+							});
+							break;
+						case "number":
+							numberList = data.map(d => d[fieldLink.columnName] || 0);
+							break;
+					}
+
+					var result = 0;
+
+					// calculate
+					switch (valueCol.settings.type) {
+						case "sum":
+							numberList.forEach(num => result += num);
+							break;
+						case "average":
+							if (numberList.length > 0) {
+								numberList.forEach(num => result += num); // sum
+								result = result / numberList.length;
+							}
+							break;
+						case "max":
+							numberList.forEach(num => {
+								if (result < num)
+									result = num;
+							});
+							break;
+						case "min":
+							numberList.forEach(num => {
+								if (result > num)
+									result = num;
+							});
+							break;
+						case "count":
+							result = numberList.length;
+							break;
+					}
+					numberVal = result;
 				}
 					break;
 
+				//Calcualte Datatype
 				case "calculate": {
-					var obj = valueCol.object;
-					var place = valueCol.settings.decimalPlaces;
+					var formula = valueCol.settings.formula;
+					// replace with current date
+					formula = formula.replace(/\(CURRENT\)/g, "(new Date())");
+
+					obj.fields().forEach(f => {
+
+						var colName = f.columnName;
+						if (colName.indexOf('.') > -1) // QUERY: get only column name
+							colName = colName.split('.')[1];
+
+						// if template does not contain, then should skip
+						if (formula.indexOf('{' + colName + '}') < 0)
+							return;
+
+						// number fields
+						if (f.key == 'number') {
+							let numberVal = "(#numberVal#)".replace("#numberVal#", item[f.columnName] || 0); // (number) - NOTE : (-5) to support negative number
+							formula = formula.replace(new RegExp('{' + colName + '}', 'g'), numberVal);
+						}
+						// calculate and formula fields
+						else if (f.key == 'calculate' || f.key == "formula") {
+							let calVal = "(#calVal#)".replace("#calVal#", f.format(item) || 0);
+							formula = formula.replace(new RegExp('{' + colName + '}', 'g'), calVal);
+						}
+						// date fields
+						else if (f.key == 'date') {
+							let dateVal = '"#dataVal#"'.replace("#dataVal#", item[f.columnName] ? item[f.columnName] : ""); // "date"
+							formula = formula.replace(new RegExp('{' + colName + '}', 'g'), dateVal);
+						}
+						// boolean fields
+						else if (f.key == 'boolean') {
+							let booleanVal = "(#booleanVal#)".replace("#booleanVal#", item[f.columnName] || 0); // show 1 or 0 for boolean
+							formula = formula.replace(new RegExp('{' + colName + '}', 'g'), booleanVal);
+						}
+					});
+
+					// decimal places - toFixed()
+					// FIX: floating number calculation 
+					// https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/
+					numberVal = parseFloat(eval(formula).toFixed(place || 0));
 				}
 					break;
-					
+
 				default:
 					break;
 			}
-			
-			dInfo.forEach((item) => {
-				var labelKey = labelCol.format(item) || item.id;
-				var numberVal = parseFloat(item[numberColName] || 0);
-				if (this.settings.multipleSeries) {
-					var numberVal2 = parseFloat(item[numberColName2]) || 0;
+			if (sumData[labelKey] == null) {
+
+				var label = labelKey;
+
+				// Get label of the connect field
+				if (labelCol.key == "connectObject") {
+					var relateValues = labelCol.pullRelationValues(item);
+					if (relateValues != null)
+						label = relateValues.text;
 				}
-				
-				switch(valueCol.key) {
-					//Formula Datatype
-					case "formula" : {
-						var data = item[fieldBase.relationName()];
-						if (!Array.isArray(data)) {
-							data = [data];
-						}
-						var numberList = [];
-
-						// pull number from data
-						switch (fieldLink.key) {
-							case "calculate":
-								data.forEach(d => {
-									numberList.push(parseFloat(fieldLink.format(d) || 0));
-								});
-								break;
-							case "number":
-								numberList = data.map(d => d[fieldLink.columnName] || 0);
-								break;
-						}
-
-						var result = 0;
-
-						// calculate
-						switch (valueCol.settings.type) {
-							case "sum":
-								numberList.forEach(num => result += num);
-								break;
-							case "average":
-								if (numberList.length > 0) {
-									numberList.forEach(num => result += num); // sum
-									result = result / numberList.length;
-								}
-								break;
-							case "max":
-								numberList.forEach(num => {
-									if (result < num)
-										result = num;
-								});
-								break;
-							case "min":
-								numberList.forEach(num => {
-									if (result > num)
-										result = num;
-								});
-								break;
-							case "count":
-								result = numberList.length;
-								break;
-						}
-						numberVal = result;
-					}
-						break;
-
-					//Calcualte Datatype
-					case "calculate": {
-						var formula = valueCol.settings.formula;
-						// replace with current date
-						formula = formula.replace(/\(CURRENT\)/g, "(new Date())");
-
-						obj.fields().forEach(f => {
-
-							var colName = f.columnName;
-							if (colName.indexOf('.') > -1) // QUERY: get only column name
-								colName = colName.split('.')[1];
-
-							// if template does not contain, then should skip
-							if (formula.indexOf('{' + colName + '}') < 0)
-								return;
-
-							// number fields
-							if (f.key == 'number') {
-								let numberVal = "(#numberVal#)".replace("#numberVal#", item[f.columnName] || 0); // (number) - NOTE : (-5) to support negative number
-								formula = formula.replace(new RegExp('{' + colName + '}', 'g'), numberVal);
-							}
-							// calculate and formula fields
-							else if (f.key == 'calculate' || f.key == "formula") {
-								let calVal = "(#calVal#)".replace("#calVal#", f.format(item) || 0);
-								formula = formula.replace(new RegExp('{' + colName + '}', 'g'), calVal);
-							}
-							// date fields
-							else if (f.key == 'date') {
-								let dateVal = '"#dataVal#"'.replace("#dataVal#", item[f.columnName] ? item[f.columnName] : ""); // "date"
-								formula = formula.replace(new RegExp('{' + colName + '}', 'g'), dateVal);
-							}
-							// boolean fields
-							else if (f.key == 'boolean') {
-								let booleanVal = "(#booleanVal#)".replace("#booleanVal#", item[f.columnName] || 0); // show 1 or 0 for boolean
-								formula = formula.replace(new RegExp('{' + colName + '}', 'g'), booleanVal);
-							}
-						});
-
-						// decimal places - toFixed()
-						// FIX: floating number calculation 
-						// https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/
-						numberVal = parseFloat(eval(formula).toFixed(place || 0));
-					}
-						break;
-
-					default:
-						break;
-				}
-				if (sumData[labelKey] == null) {
-
-					var label = labelKey;
-
-					// Get label of the connect field
-					if (labelCol.key == "connectObject") {
-						var relateValues = labelCol.pullRelationValues(item);
-						if (relateValues != null)
-							label = relateValues.text;
-					}
-
-					if (this.settings.multipleSeries) {
-						sumData[labelKey] = {
-							label: label || item.id,
-							value: 0,
-							value2: 0
-						};
-					} else {
-						sumData[labelKey] = {
-							label: label || item.id,
-							value: 0
-						};
-					}
-				}
-
-				sumData[labelKey].value += numberVal;
-				sumNumber += numberVal;
 
 				if (this.settings.multipleSeries) {
-					sumData[labelKey].value2 += numberVal2;
-					sumNumber2 += numberVal2;
+					sumData[labelKey] = {
+						label: label || item.id,
+						value: 0,
+						value2: 0
+					};
+				} else {
+					sumData[labelKey] = {
+						label: label || item.id,
+						value: 0
+					};
 				}
+			}
 
-			});
+			sumData[labelKey].value += numberVal;
+			sumNumber += numberVal;
+
+			if (this.settings.multipleSeries) {
+				sumData[labelKey].value2 += numberVal2;
+				sumNumber2 += numberVal2;
+			}
+
+		});
 
 
-			var index = 0;
+		var index = 0;
 
-			for (var key in sumData) {
+		for (var key in sumData) {
 
-				var val = sumData[key].value;
-				if (val <= 0) continue;
+			var val = sumData[key].value;
+			if (val <= 0) continue;
+
+			// Display to percent values
+			if (this.settings.isPercentage) {
+				val = (val / sumNumber * 100);
+				val = Math.round(val * 100) / 100; // round decimal 2 digits
+				val = val + ' %';
+			}
+
+			if (this.settings.multipleSeries) {
+
+				var val2 = sumData[key].value2;
+				if (val2 <= 0) continue;
 
 				// Display to percent values
 				if (this.settings.isPercentage) {
-					val = (val / sumNumber * 100);
-					val = Math.round(val * 100) / 100; // round decimal 2 digits
-					val = val + ' %';
+					val2 = (val2 / sumNumber2 * 100);
+					val2 = Math.round(val2 * 100) / 100; // round decimal 2 digits
+					val2 = val2 + ' %';
 				}
 
-				if (this.settings.multipleSeries) {
+				result.push({
+					label: sumData[key].label,
+					value: val,
+					value2: val2,
+					color: colorList[index % colorList.length],
+					count: countNumber,
 
-					var val2 = sumData[key].value2;
-					if (val2 <= 0) continue;
+				});
+			}
+			else {
+				result.push({
+					label: sumData[key].label,
+					value: val,
+					color: colorList[index % colorList.length],
+					count: countNumber,
 
-					// Display to percent values
-					if (this.settings.isPercentage) {
-						val2 = (val2 / sumNumber2 * 100);
-						val2 = Math.round(val2 * 100) / 100; // round decimal 2 digits
-						val2 = val2 + ' %';
-					}
-
-					result.push({
-						label: sumData[key].label,
-						value: val,
-						value2: val2,
-						color: colorList[index % colorList.length],
-						count: countNumber,
-
-					});
-				}
-				else {
-					result.push({
-						label: sumData[key].label,
-						value: val,
-						color: colorList[index % colorList.length],
-						count: countNumber,
-
-					});
-				}
-
-
-				index += 1;
+				});
 			}
 
-			this.dcChart.clearAll();
-			this.dcChart.parse(result);
 
+			index += 1;
 		}
 
-		refreshData();
+		let dcChart = this.getReportData();
+		dcChart.clearAll();
+		dcChart.parse(result);
 
-		dv.__dataCollection.attachEvent("onAfterAdd", function(id, index){
-			refreshData();
-		});
+		this.emit("refreshData", this.dcChart);
 
-		dv.__dataCollection.attachEvent("onAfterDelete", function(id){
-			refreshData();
-		});
-
-		dv.__dataCollection.attachEvent("onDataUpdate", function(id, data){
-			refreshData();
-			return true;
-		});
-		dv.__dataCollection.attachEvent("onAfterLoad", function(){
-			refreshData();
-		});
-		return this.dcChart;
 	}
 
 }

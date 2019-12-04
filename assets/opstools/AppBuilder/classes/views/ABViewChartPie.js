@@ -103,11 +103,21 @@ export default class ABViewChartPie extends ABViewWidget {
 		_ui.id = ids.component;
 
 		var _init = (options) => {
-			var reportData = this.parent.getReportData();
-			$$(ids.component).data.sync(reportData);
+
+			this.eventAdd({
+				emitter: this.parent,
+				eventName: 'refreshData',
+				listener: _logic.refreshData
+			});
+
 		}
 
 		var _logic = component.logic;
+
+		_logic.refreshData = () => {
+			var reportData = this.parent.getReportData();
+			$$(ids.component).data.sync(reportData);
+		}
 
 		return {
 			ui: _ui,
@@ -241,20 +251,48 @@ export default class ABViewChartPie extends ABViewWidget {
 		};
 
 		// make sure each of our child views get .init() called
-		var _init = (options) => {
-			var reportData = this.parent.getReportData();
-			$$(ids.component).data.sync(reportData);
+		let _init = (options) => {
+
+			this.eventAdd({
+				emitter: this.parent,
+				eventName: 'refreshData',
+				listener: (reportData) => {
+
+					// [PERFORMANCE ISSUE] If this widget does not show, then will not refresh data
+					if (this._isShow)
+						_logic.refreshData(reportData)
+
+				}
+			});
+
 		}
 
+		let _logic = {
 
-		var _logic = {
+			onShow: () => {
+
+				// Mark this widget is showing
+				this._isShow = true;
+
+				let reportData = this.parent.getReportData();
+				_logic.refreshData(reportData);
+
+			},
+
+			refreshData: (reportData) => {
+
+				$$(ids.component).data.sync(reportData);
+
+			}
 		}
 
 
 		return {
 			ui: _ui,
 			init: _init,
-			logic: _logic
+			logic: _logic,
+
+			onShow: _logic.onShow
 		}
 	}
 
