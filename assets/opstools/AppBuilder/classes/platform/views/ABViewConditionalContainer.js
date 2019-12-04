@@ -348,4 +348,12 @@ module.exports = class ABViewConditionalContainer extends ABViewConditionalConta
 
 	}
 
+	save() {
+
+		// Because conditional container has always IF and ELSE containers, then it should be include them to call save too
+		let includeSubViews = true;
+
+		return super.save(includeSubViews);
+	}
+
 }

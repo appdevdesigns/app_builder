@@ -865,8 +865,30 @@ module.exports = class ABClassObject extends ABObjectCore {
 	                'greater_or_equal' : '>=',
 	                'less'          : '<',
 	                'less_or_equal' : '<='
-	            }
+				}
+				
+				// normal field name:
+				var columnName =  condition.key;
+				if (typeof columnName == 'string') {
 
+					// make sure to ` ` columnName (if it isn't our special '1' condition )
+					// see Policy:ABModelConvertSameAsUserConditions  for when that is applied
+					if (columnName != '1' && columnName.indexOf("`") == -1) {
+
+						// if columnName is  a  table.field  then be sure to `` each one individually
+						var parts = columnName.split('.');
+						for (var p=0; p < parts.length; p++) {
+							parts[p] = "`"+parts[p]+"`";
+						}
+						columnName = parts.join('.');
+					}
+
+					// ABClassQuery: 
+					// If this is query who create MySQL view, then column name does not have `
+					if (this.viewName) {
+						columnName = '`' + columnName.replace(/`/g, "") + '`';
+					}
+				}
 
 	            // basic case:  simple conversion
 	            var operator = conversionHash[condition.rule];
@@ -924,7 +946,19 @@ module.exports = class ABClassObject extends ABObjectCore {
 	                case "is_not_current_user":
 	                    operator = "<>";
 	                    value = quoteMe(userData.username);
-	                    break;
+						break;
+
+					case "contain_current_user":
+						columnName = `JSON_SEARCH(JSON_EXTRACT(${columnName}, '$[*].id'), 'one', '${userData.username}')`;
+						operator = "IS NOT";
+						value = "NULL";
+						break;
+
+					case "not_contain_current_user":
+						columnName = `JSON_SEARCH(JSON_EXTRACT(${columnName}, '$[*].id'), 'one', '${userData.username}')`;
+						operator = "IS";
+						value = "NULL";
+						break;
 
 	                case 'is_null': 
 	                    operator = "IS NULL";
@@ -967,10 +1001,6 @@ module.exports = class ABClassObject extends ABObjectCore {
 
 	            }
 
-
-	            // normal field name:
-				var columnName =  condition.key;
-
 				// validate input
 				if (columnName == null || operator == null) return;
 
@@ -993,27 +1023,6 @@ module.exports = class ABClassObject extends ABObjectCore {
 
 	            // update our where statement:
 				if (columnName && operator) {
-
-					if (typeof columnName == 'string') {
-
-						// make sure to ` ` columnName (if it isn't our special '1' condition )
-						// see Policy:ABModelConvertSameAsUserConditions  for when that is applied
-						if (columnName != '1' && columnName.indexOf("`") == -1) {
-
-							// if columnName is  a  table.field  then be sure to `` each one individually
-							var parts = columnName.split('.');
-							for (var p=0; p < parts.length; p++) {
-								parts[p] = "`"+parts[p]+"`";
-							}
-							columnName = parts.join('.');
-						}
-
-						// ABClassQuery: 
-						// If this is query who create MySQL view, then column name does not have `
-						if (this.viewName) {
-							columnName = '`' + columnName.replace(/`/g, "") + '`';
-						}
-					}
 
 					whereRaw = whereRaw
 						.replace('{fieldName}', columnName)

@@ -60,7 +60,9 @@ module.exports = class RowFilter extends RowFilterCore {
 				notCheckedCondition: L('ab.filter_fields.notCheckedCondition', "*is not checked"),
 
 				isCurrentUserCondition: L('ab.filter_fields.isCurrentUserCondition', "*is current user"),
-				isNotCurrentUserCondition: L('ab.filter_fields.isNotCurrentUserCondition', "*is not current user")
+				isNotCurrentUserCondition: L('ab.filter_fields.isNotCurrentUserCondition', "*is not current user"),
+				containsCurrentUserCondition: L('ab.filter_fields.containsCurrentUserCondition', "*contains current user"),
+				notContainsCurrentUserCondition: L('ab.filter_fields.notContainsCurrentUserCondition', "*does not contain current user")
 
 			}
 		};
@@ -391,6 +393,14 @@ module.exports = class RowFilter extends RowFilterCore {
 									{
 										value: labels.component.isNotCurrentUserCondition,
 										id: "is_not_current_user"
+									},
+									{
+										value: labels.component.containsCurrentUserCondition,
+										id: "contain_current_user"
+									},
+									{
+										value: labels.component.notContainsCurrentUserCondition,
+										id: "not_contain_current_user"
 									},
 									{
 										value: labels.component.equalListCondition,
@@ -865,6 +875,8 @@ module.exports = class RowFilter extends RowFilterCore {
 
 				case 'is_current_user':
 				case 'is_not_current_user':
+				case 'contain_current_user':
+				case 'not_contain_current_user':
 				case 'same_as_user':
 				case 'not_same_as_user':
 					// clear and disable the value field

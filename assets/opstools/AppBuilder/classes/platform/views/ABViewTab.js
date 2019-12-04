@@ -832,7 +832,7 @@ module.exports = class ABViewTab extends ABViewTabCore {
 					// done
 					setTimeout(() => {
 
-						$$(v.view.id).adjust();
+						// $$(v.view.id).adjust();
 
 						if ($$(ids.component) &&
 							$$(ids.component).hideProgress)

@@ -123,7 +123,9 @@ module.exports = class ABViewForm extends ABViewFormCore {
 
 					});
 
-					saveTasks.push(() => formView.refreshDefaultButton(ids).save());
+					let defaultButton = formView.refreshDefaultButton(ids);
+					if (defaultButton)
+						saveTasks.push(() => defaultButton.save());
 
 					return saveTasks.reduce((promiseChain, currTask) => {
 						return promiseChain.then(currTask);
@@ -918,25 +920,31 @@ module.exports = class ABViewForm extends ABViewFormCore {
 	refreshDefaultButton(ids) {
 
 		// If default button is not exists, then skip this
-		let exists = this.views(v => !(v instanceof ABViewFormButton) && !v.settings.isDefault).length > 0;
-		if (!exists) return;
-
-		// Remove default save button
-		this._views = (this._views || []).filter(v => !(v instanceof ABViewFormButton) && !v.settings.isDefault);
+		let defaultButton = this.views(v => (v instanceof ABViewFormButton) && v.settings.isDefault)[0];
 
 		// Add a default button
-		var newButton = ABViewFormButton.newInstance(this.application, this);
-		newButton.settings.isDefault = true;
+		if (defaultButton == null) {
+			defaultButton = ABViewFormButton.newInstance(this.application, this);
+			defaultButton.settings.isDefault = true;
+		}
+		// Remove default button from array, then we will add it to be the last item later (.push)
+		else {
+			this._views = this.views(v => !(v instanceof ABViewFormButton) && !v.settings.isDefault);
+		}
 
-		// Set to last item
-		if ((this._views.length || 0) > ($$(ids.fields).length || 0))
-			newButton.position.y = this._views.length;
-		else
-			newButton.position.y = $$(ids.fields).length;
+		// Calculate position Y of the default button
+		let yList = this.views().map(v => (v.position.y || 0) + 1)
+		yList.push(this._views.length || 0);
+		yList.push($$(ids.fields).length || 0);
+		let posY = Math.max(...yList);
 
-		this._views.push(newButton);
+		// Update to be the last item
+		defaultButton.position.y = posY;
 
-		return newButton;
+		// Keep the default button is always the last item of array
+		this._views.push(defaultButton);
+
+		return defaultButton;
 
 	}
 

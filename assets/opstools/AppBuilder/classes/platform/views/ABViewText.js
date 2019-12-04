@@ -263,7 +263,7 @@ module.exports = class ABViewText extends ABViewTextCore {
 
 			displayText: (val) => {
 
-				var result = this.displayText(val);
+				var result = this.displayText(val, ids.component);
 
 				if ($$(ids.component)) {
 					$$(ids.component).define("template", result);
@@ -279,6 +279,7 @@ module.exports = class ABViewText extends ABViewTextCore {
 		var _ui = {
 			id: ids.component,
 			view: 'template',
+			autoheight: true,
 			minHeight: 10,
 			css: 'ab-custom-template',
 			borderless: true
