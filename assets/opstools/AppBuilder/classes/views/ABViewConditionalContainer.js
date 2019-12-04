@@ -52,14 +52,14 @@ export default class ABViewConditionalContainer extends ABViewContainer {
 			this._views.push(ifPanel);
 
 			// 'Else' panel
-			var ifPanel = ABViewManager.newView({
+			var elsePanel = ABViewManager.newView({
 				key: ABViewContainer.common().key,
 				label: 'Else',
 				settings: {
 					removable: false
 				}
 			}, application, this);
-			this._views.push(ifPanel);
+			this._views.push(elsePanel);
 
 		}
 
@@ -272,8 +272,16 @@ export default class ABViewConditionalContainer extends ABViewContainer {
 
 	}
 
-	/*
-	* @component()
+	save() {
+
+		// Because conditional container has always IF and ELSE containers, then it should be include them to call save too
+		let includeSubViews = true;
+
+		return super.save(includeSubViews);
+	}
+
+	/**
+	* @method component()
 	* return a UI component based upon this view.
 	* @param {obj} App 
 	* @return {obj} UI component

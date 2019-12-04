@@ -44,7 +44,9 @@ var _ = require('lodash');
     "is null"           : 'is_null',
     "is not null"       : 'is_not_null',
     "is current user"   : 'is_current_user',
-    "is not current user" : 'is_not_current_user'
+    "is not current user"          : 'is_not_current_user',
+    "contains current user"        : 'contain_current_user',
+    "doesn't contain current user" : 'not_contain_current_user'
   }
 
 
