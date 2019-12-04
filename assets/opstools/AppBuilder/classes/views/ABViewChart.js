@@ -520,7 +520,7 @@ export default class ABViewChart extends ABViewContainer  {
 			}
 			
 			dInfo.forEach((item) => {
-				var labelKey = item[labelColName] || item.id;
+				var labelKey = labelCol.format(item) || item.id;
 				var numberVal = parseFloat(item[numberColName] || 0);
 				if (this.settings.multipleSeries) {
 					var numberVal2 = parseFloat(item[numberColName2]) || 0;
