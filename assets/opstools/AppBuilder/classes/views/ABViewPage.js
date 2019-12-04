@@ -360,7 +360,7 @@ export default class ABViewPage extends ABViewContainer {
                         {
                             view: "richselect",
                             name:'pageBackground',
-                            label: L("ab.component.page.popupHeight", "*Page background:"),
+                            label: L("ab.component.page.pageBackground", "*Page background:"),
                             labelWidth: App.config.labelWidthXLarge,
                             options: [
                                 { "id":"ab-background-default", "value":L('ab.component.page.pageBackgroundDefault', '*White (default)')}, 

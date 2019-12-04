@@ -144,7 +144,7 @@ label {
 	background: #657584;
 }
 .webix_icon_btn {
-	font-size: 16px;
+	font-size: 20px;
 }
 .appTitle .webix_el_box {
 	font-size: 20px !important;
@@ -575,6 +575,9 @@ label {
 }
 .webix_tree_none {
 	display: none;
+}
+.ab-background-lightgray {
+	background: #c0c5cc;
 }
 .ab-background-gray {
 	background: #475466;
