@@ -5,8 +5,8 @@
  *
  */
 
-import ABViewWidget from "./ABViewWidget"
-import ABPropertyComponent from "../ABPropertyComponent"
+import ABViewChartComponent from "./ABViewChartComponent"
+// import ABPropertyComponent from "../ABPropertyComponent"
 // import ABViewChart from "./ABViewChart"
 
 function L(key, altText) {
@@ -35,7 +35,7 @@ var ABViewDefaults = {
 
 
 
-export default class ABViewChartLine extends ABViewWidget {
+export default class ABViewChartLine extends ABViewChartComponent {
 
 	/**
 	 * @param {obj} values  key=>value hash of ABView values
@@ -238,6 +238,8 @@ export default class ABViewChartLine extends ABViewWidget {
 	 */
 	component(App) {
 
+		let baseComp = super.component(App);
+
 		// get a UI component for each of our child views
 		var viewComponents = [];
 		this.views().forEach((v) => {
@@ -274,21 +276,21 @@ export default class ABViewChartLine extends ABViewWidget {
 			// data: reportData
 		};
 
-		// make sure each of our child views get .init() called
-		var _init = (options) => {
-			var reportData = this.parent.getReportData(true);
-			$$(ids.component).data.sync(reportData);
-		}
-
-
-		var _logic = {
-		}
+		let _init = () => {
+			baseComp.init({
+				componentId: ids.component
+			});
+		};
+		let _logic = baseComp.logic;
+		let _onShow = baseComp.onShow;
 
 
 		return {
 			ui: _ui,
 			init: _init,
-			logic: _logic
+			logic: _logic,
+
+			onShow: _onShow
 		}
 	}
 

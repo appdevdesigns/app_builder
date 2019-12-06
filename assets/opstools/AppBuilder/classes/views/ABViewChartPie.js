@@ -5,8 +5,8 @@
  *
  */
 
-import ABViewWidget from "./ABViewWidget"
-import ABPropertyComponent from "../ABPropertyComponent"
+import ABViewChartComponent from "./ABViewChartComponent"
+// import ABPropertyComponent from "../ABPropertyComponent"
 // import ABViewChart from "./ABViewChart"
 
 function L(key, altText) {
@@ -33,7 +33,7 @@ var ABViewDefaults = {
 
 
 
-export default class ABViewChartPie extends ABViewWidget {
+export default class ABViewChartPie extends ABViewChartComponent {
 
 	/**
 	 * @param {obj} values  key=>value hash of ABView values
@@ -94,35 +94,27 @@ export default class ABViewChartPie extends ABViewWidget {
 	 */
 	editorComponent(App, mode) {
 
-		var idBase = 'ABViewChartPieEditorComponent';
-		var ids = {
+		let idBase = 'ABViewChartPieEditorComponent';
+		let ids = {
 			component: App.unique(idBase + '_component')
 		}
-		var component = this.component(App);
-		var _ui = component.ui;
+		let component = this.component(App);
+		let _ui = component.ui;
 		_ui.id = ids.component;
 
-		var _init = (options) => {
-
-			this.eventAdd({
-				emitter: this.parent,
-				eventName: 'refreshData',
-				listener: _logic.refreshData
+		let _init = () => {
+			component.init({
+				componentId: ids.component
 			});
-
-		}
-
-		var _logic = component.logic;
-
-		_logic.refreshData = () => {
-			var reportData = this.parent.getReportData();
-			$$(ids.component).data.sync(reportData);
-		}
+		};
+		let _logic = component.logic;
+		let _onShow = component.onShow;
 
 		return {
 			ui: _ui,
 			init: _init,
-			logic: _logic
+			logic: _logic,
+			onShow: _onShow
 		}
 	}
 
@@ -224,6 +216,8 @@ export default class ABViewChartPie extends ABViewWidget {
 	 */
 	component(App) {
 
+		let baseComp = super.component(App);
+
 		// get a UI component for each of our child views
 		var viewComponents = [];
 		this.views().forEach((v) => {
@@ -250,41 +244,13 @@ export default class ABViewChartPie extends ABViewWidget {
 			// data: reportData
 		};
 
-		// make sure each of our child views get .init() called
-		let _init = (options) => {
-
-			this.eventAdd({
-				emitter: this.parent,
-				eventName: 'refreshData',
-				listener: (reportData) => {
-
-					// [PERFORMANCE ISSUE] If this widget does not show, then will not refresh data
-					if (this._isShow)
-						_logic.refreshData(reportData)
-
-				}
+		let _init = () => {
+			baseComp.init({
+				componentId: ids.component
 			});
-
-		}
-
-		let _logic = {
-
-			onShow: () => {
-
-				// Mark this widget is showing
-				this._isShow = true;
-
-				let reportData = this.parent.getReportData();
-				_logic.refreshData(reportData);
-
-			},
-
-			refreshData: (reportData) => {
-
-				$$(ids.component).data.sync(reportData);
-
-			}
-		}
+		};
+		let _logic = baseComp.logic;
+		let _onShow = baseComp.onShow;
 
 
 		return {
@@ -292,7 +258,7 @@ export default class ABViewChartPie extends ABViewWidget {
 			init: _init,
 			logic: _logic,
 
-			onShow: _logic.onShow
+			onShow: _onShow
 		}
 	}
 
