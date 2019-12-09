@@ -46,6 +46,14 @@ module.exports = class ABProcessTaskCore extends ABMLClass {
         this.key = attributes.key || this.defaults.key || "?key?";
         this.processID = attributes.processID || null;
         this.diagramID = attributes.diagramID || "?diagramID?";
+        this.laneDiagramID = attributes.laneDiagramID || "?laneID?";
+        // laneDiagramID : connects to the parent object that defines any
+        //      default User information for the Task.  In our case, it
+        //      might be a Participant object, or a Lane object.  by
+        //      default, a diagram's Participant obj doesn't define any
+        //      lanes, and therefore can provide that info.  Once a lane
+        //      is added, however, an object is assigned to it, and the
+        //      Lane will provide that info.
 
         super.fromValues(attributes); // perform translation on this object.
         // NOTE: keep this at the end of .fromValues();
@@ -81,6 +89,7 @@ module.exports = class ABProcessTaskCore extends ABMLClass {
             "type",
             "processID",
             "diagramID",
+            "laneDiagramID",
             "key"
         ];
         fieldsToSave.forEach((f) => {

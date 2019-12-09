@@ -61,6 +61,29 @@ module.exports = class ABProcessTask extends ABProcessTaskCore {
     //// Modeler Instance Methods
     ////
 
+    findLane(curr, cb) {
+        if (!curr) {
+            cb(null, null);
+            return;
+        }
+
+        // if current object has a LANE definition, use that one:
+        if (curr.lanes && curr.lanes.length > 0) {
+            cb(null, curr.lanes[0]);
+        } else if (curr.$type == "bpmn:Participant") {
+            // if the current is a Participant, take that one
+            cb(null, curr);
+        } else {
+            // else move upwards and check again:
+            curr = curr.$parent;
+            this.findLane(curr, cb);
+        }
+    }
+
+    setLane(Lane) {
+        this.laneDiagramID = Lane.diagramID;
+    }
+
     /**
      * fromElement()
      * initialize this Task's values from the given BPMN:Element
@@ -122,8 +145,26 @@ module.exports = class ABProcessTask extends ABProcessTaskCore {
          */
 
         // from the BPMI modeler we can gather a label for this:
-        if (defElement.businessObject.name != "") {
+        if (
+            defElement.businessObject.name &&
+            defElement.businessObject.name != ""
+        ) {
             this.label = defElement.businessObject.name;
         }
+
+        // our lane may have changed:
+        var currObj = defElement.businessObject;
+        this.findLane(currObj, (err, obj) => {
+            if (obj) {
+                this.laneDiagramID = obj.id;
+            } else {
+                // if my parent shape is a Participant, then use that:
+                if (defElement.parent.type == "bpmn:Participant") {
+                    this.laneDiagramID = defElement.parent.id;
+                } else {
+                    this.laneDiagramID = null;
+                }
+            }
+        });
     }
 };

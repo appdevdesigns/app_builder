@@ -2,7 +2,8 @@
  * ABProcessParticipant
  * manages the participant lanes in a Process Diagram.
  *
- * Participants manage users in the system, and provide a way to lookup a SiteUser.
+ * Participants manage users in the system (when there are no lanes defined)
+ * and provide a way to lookup a SiteUser.
  */
 var ABProcessParticipantCore = require("./ABProcessParticipantCore");
 

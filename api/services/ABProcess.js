@@ -38,7 +38,6 @@ module.exports = {
                         if (!listTriggers) {
                             done();
                         }
-                        debugger;
                         listTriggers.forEach((task) => {
                             task.trigger(data);
                         });
@@ -68,7 +67,7 @@ module.exports = {
         return ABServerApp.processes().then((processes) => {
             var tasks = [];
             processes.forEach((process) => {
-                var task = process.tasksForTriggerKey(key);
+                var task = process.taskForTriggerKey(key);
                 if (task) {
                     tasks.push(task);
                 }

@@ -231,12 +231,11 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
                     viewer.on("shape.remove", (event) => {
                         // console.log("shape.remove:", event.element);
                         if (CurrentProcess) {
-                            // if our current process already has this Element/Task
-                            var currTask = CurrentProcess.tasksForDiagramID(
+                            // if our current process tracks this Element/Task
+                            var currTask = CurrentProcess.elementForDiagramID(
                                 event.element.id
-                            )[0];
+                            );
                             if (currTask) {
-                                // send it an onChange(event.element);
                                 currTask.destroy();
                             }
                         }
@@ -252,113 +251,80 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
                             element.type != "bpmn:MessageFlow"
                             // MessageFlow : seems to happen between tasks between Participants
                         ) {
-                            // if this is not a Participant Lane:
-                            if (
-                                element.type != "bpmn:Participant" &&
-                                element.type != "bpmn:Lane"
-                            ) {
-                                // if our current process already has this Element/Task
-                                var currTask = CurrentProcess.tasksForDiagramID(
+                            // if our current process already has this Element/Task
+                            var currElement = CurrentProcess.elementForDiagramID(
+                                element.id
+                            );
+                            if (currElement) {
+                                // send it an onChange(event.element);
+                                currElement.onChange(element);
+                            } else {
+                                // element.changed : can be triggered for deleted elements
+                                // make sure the shape for this element still exists,
+                                // before doing anything else here:
+                                var elementRegistry = viewer.get(
+                                    "elementRegistry"
+                                );
+                                var currentElementShape = elementRegistry.get(
                                     element.id
-                                )[0];
-                                if (currTask) {
-                                    // send it an onChange(event.element);
-                                    currTask.onChange(element);
-                                } else {
-                                    // element.changed : can be triggered for deleted elements
-                                    // make sure the shape for this element still exists,
-                                    // before doing anything else here:
-                                    var elementRegistry = viewer.get(
-                                        "elementRegistry"
-                                    );
-                                    var currentElementShape = elementRegistry.get(
-                                        element.id
-                                    );
-                                    if (currentElementShape) {
-                                        // shape does exist, so:
+                                );
+                                if (currentElementShape) {
+                                    // shape does exist, so:
 
-                                        // if one of the generic elements
-                                        // that doesn't have a definition attached
-                                        // NOTE: EndEvents, are replaced with
-                                        // elements.type=="EndEvent", but a
-                                        // .eventDefinition[0].$type ==
-                                        // "TerminateEndEvent"
-                                        var def = null;
-                                        var defType = null;
-                                        if (
+                                    // if one of the generic elements
+                                    // that doesn't have a definition attached
+                                    // NOTE: EndEvents, are replaced with
+                                    // elements.type=="EndEvent", but a
+                                    // .eventDefinition[0].$type ==
+                                    // "TerminateEndEvent"
+                                    var def = null;
+                                    var defType = null;
+                                    if (
+                                        event.element.businessObject
+                                            .eventDefinitions
+                                    ) {
+                                        def =
                                             event.element.businessObject
-                                                .eventDefinitions
-                                        ) {
-                                            def =
-                                                event.element.businessObject
-                                                    .eventDefinitions[0];
-                                        }
-                                        if (def) {
-                                            defType = def.$type;
-                                        }
+                                                .eventDefinitions[0];
+                                    }
+                                    if (def) {
+                                        defType = def.$type;
+                                    }
 
-                                        if (
-                                            genericElementTypes.indexOf(
-                                                element.type
-                                            ) != -1 &&
-                                            !defType
-                                        ) {
-                                            // set the display to ".highlight"
-                                            // so the user knows it hasn't been
-                                            // fully configured yet.
+                                    if (
+                                        genericElementTypes.indexOf(
+                                            element.type
+                                        ) != -1 &&
+                                        !defType
+                                    ) {
+                                        // set the display to ".highlight"
+                                        // so the user knows it hasn't been
+                                        // fully configured yet.
+                                        var canvas = viewer.get("canvas");
+                                        canvas.addMarker(
+                                            element.id,
+                                            "highlight-undefined-task"
+                                        );
+                                    } else {
+                                        // create new process task for this
+                                        var newElement = CurrentProcess.elementNewForModelDefinition(
+                                            element
+                                        );
+                                        if (newElement) {
+                                            // if successful
+                                            // try to remove the marker if it has one
                                             var canvas = viewer.get("canvas");
-                                            canvas.addMarker(
+                                            canvas.removeMarker(
                                                 element.id,
                                                 "highlight-undefined-task"
                                             );
                                         } else {
-                                            // create new process task for this
-                                            var newTask = CurrentProcess.taskNewForModelDefinition(
+                                            debugger;
+                                            console.warn(
+                                                "no ProcessElement for BPMN Element :",
                                                 element
                                             );
-                                            if (newTask) {
-                                                // if successful
-                                                // try to remove the marker if it has one
-                                                var canvas = viewer.get(
-                                                    "canvas"
-                                                );
-                                                canvas.removeMarker(
-                                                    element.id,
-                                                    "highlight-undefined-task"
-                                                );
-                                            } else {
-                                                debugger;
-                                                console.warn(
-                                                    "unknown ProcessTask for ",
-                                                    element
-                                                );
-                                            }
                                         }
-                                    }
-                                }
-                            } else {
-                                // handle Participant lane update:
-
-                                // if our current process already has this Participant
-                                var currParticipant = CurrentProcess.participantsForDiagramID(
-                                    element.id
-                                )[0];
-                                if (currParticipant) {
-                                    // send it an onChange(event.element);
-                                    currParticipant.onChange(element);
-                                    //
-                                } else {
-                                    // create new process participant for this
-                                    var newParticipant = CurrentProcess.participantNewForModelDefinition(
-                                        element
-                                    );
-                                    if (newParticipant) {
-                                    } else {
-                                        debugger;
-                                        console.warn(
-                                            "!! Unable to add this participant:",
-                                            element
-                                        );
                                     }
                                 }
                             }
@@ -376,7 +342,7 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
                         );
                     });
 
-                    var modeler = viewer.getModules();
+                    // var modeler = viewer.getModules();
                     // debugger;
 
                     // setup our Listeners:
@@ -422,6 +388,8 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
                 // continue our sequence with loading the new process
                 processSequence.push((done) => {
                     // NOTE: make sure CurrentProcess == null BEFORE .clear()
+                    // this prevents the "shape.removed" handler from trying to
+                    // process all the deletes triggered by the .clear()
                     CurrentProcess = null;
                     viewer.clear();
                     CurrentProcess = process;

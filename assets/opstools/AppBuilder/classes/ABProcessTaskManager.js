@@ -78,7 +78,7 @@ module.exports = {
      */
     newTask: function(values, object, application) {
         if (values.key) {
-            return new Tasks[values.key](values, object);
+            return new Tasks[values.key](values, object, application);
         } else {
             //// TODO: what to do here?
         }
