@@ -98,24 +98,12 @@ export default class ABViewChartPie extends ABViewChartComponent {
 		let ids = {
 			component: App.unique(idBase + '_component')
 		}
-		let component = this.component(App);
-		let _ui = component.ui;
-		_ui.id = ids.component;
 
-		let _init = () => {
-			component.init({
-				componentId: ids.component
-			});
-		};
-		let _logic = component.logic;
-		let _onShow = component.onShow;
+		let baseEditor = super.editorComponent(App, mode, {
+			componentId: ids.component
+		});
 
-		return {
-			ui: _ui,
-			init: _init,
-			logic: _logic,
-			onShow: _onShow
-		}
+		return baseEditor;
 	}
 
 

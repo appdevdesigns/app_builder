@@ -98,26 +98,16 @@ export default class ABViewChartLine extends ABViewChartComponent {
 	 */
 	editorComponent(App, mode) {
 
-		var idBase = 'ABViewChartLineEditorComponent';
-		var ids = {
+		let idBase = 'ABViewChartLineEditorComponent';
+		let ids = {
 			component: App.unique(idBase + '_component')
-		}
-		var component = this.component(App);
-		var _ui = component.ui;
-		_ui.id = ids.component;
+		};
 
-		var _init = (options) => {
-			var reportData = this.parent.getReportData();
-			$$(ids.component).data.sync(reportData);
-		}
+		let baseEditor = super.editorComponent(App, mode, {
+			componentId: ids.component
+		});
 
-		var _logic = component.logic;
-
-		return {
-			ui: _ui,
-			init: _init,
-			logic: _logic
-		}
+		return baseEditor;
 	}
 
 
