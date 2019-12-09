@@ -465,6 +465,14 @@ module.exports = class ABApplicationBase {
         return this._processes.filter(filter);
     }
 
+    hasProcess(process) {
+        if (process && process.id) {
+            return this.processIDs.indexOf(process.id) > -1;
+        } else {
+            return false;
+        }
+    }
+
     /**
      * @method urlResolve()
      * given an object pointer, return the specific object referenced.

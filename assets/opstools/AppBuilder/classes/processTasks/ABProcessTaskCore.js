@@ -201,7 +201,7 @@ module.exports = class ABProcessTaskCore extends ABMLClass {
             }
 
             targetIDs.forEach((tid) => {
-                var targetTask = this.process.tasksForDiagramID(tid)[0];
+                var targetTask = this.process.elementForDiagramID(tid);
                 if (targetTask) {
                     nextTasks.push(targetTask);
                 } else {

@@ -6,6 +6,11 @@
  */
 const ABMLClass = require("./ABMLClass");
 
+const ABProcessParticipantDefaults = {
+    type: "process.participant" // unique key to reference this specific Task
+    // icon: "key" // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
+};
+
 module.exports = class ABProcessParticipantCore extends ABMLClass {
     constructor(attributes, process, application) {
         super(["label"]);
@@ -20,6 +25,10 @@ module.exports = class ABProcessParticipantCore extends ABMLClass {
         //// Runtime Values
         //// these are not stored in the Definition, but rather
         //// loaded and used from a running process instance.
+    }
+
+    static defaults() {
+        return ABProcessParticipantDefaults;
     }
 
     fromValues(attributes) {

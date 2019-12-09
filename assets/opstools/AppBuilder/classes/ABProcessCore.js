@@ -33,17 +33,12 @@ module.exports = class ABProcessCore extends ABMLClass {
         this.xmlDefinition = attributes.xmlDefinition || null;
 
         // this.json = attributes.json || null;
-        this._tasks = {};
-        (attributes.taskIDs || []).forEach((tID) => {
-            this._tasks[tID] = this.application.taskNew(tID, this);
-        });
-
-        this._participants = {};
-        (attributes.participantIDs || []).forEach((pID) => {
-            this._participants[pID] = this.application.participantNew(
-                pID,
-                this
-            );
+        this._elements = {};
+        (attributes.elementIDs || []).forEach((eID) => {
+            var ele = this.application.processElementNew(eID, this);
+            if (ele) {
+                this._elements[eID] = ele;
+            }
         });
 
         super.fromValues(attributes); // perform translation on this object.
@@ -79,15 +74,15 @@ module.exports = class ABProcessCore extends ABMLClass {
             data[f] = this[f];
         });
 
-        data.taskIDs = [];
-        for (var t in this._tasks) {
-            data.taskIDs.push(this._tasks[t].id);
+        data.elementIDs = [];
+        for (var e in this._elements) {
+            data.elementIDs.push(this._elements[e].id);
         }
 
-        data.participantIDs = [];
-        for (var p in this._participants) {
-            data.participantIDs.push(this._participants[p].id);
-        }
+        // data.participantIDs = [];
+        // for (var p in this._participants) {
+        //     data.participantIDs.push(this._participants[p].id);
+        // }
 
         return data;
     }
@@ -143,34 +138,38 @@ module.exports = class ABProcessCore extends ABMLClass {
     //
 
     /**
-     * tasks()
-     * return an array of tasks that match the given filter (or all tasks if
-     * no filter is provided).
-     * @param {fn} fn an iterator that returns true if the provided task should
-     *                be returned.
-     * @return {[ABProcessTask,...]}
+     * elements()
+     * return an array of elements that match the given filter (or all elements
+     * if no filter is provided).
+     * @param {fn} fn an iterator that returns true if the provided element
+     *                should be returned.
+     * @return {[ABProcessTask, ABProcessParticipant, etc...]}
      */
-    tasks(fn) {
+    elements(fn) {
         if (!fn)
             fn = () => {
                 return true;
             };
-        var allTasks = Object.keys(this._tasks).map((t) => {
-            return this._tasks[t];
+        var allElements = Object.keys(this._elements).map((e) => {
+            return this._elements[e];
         });
-        return allTasks.filter(fn);
+        return allElements.filter(fn);
     }
 
     /**
-     * tasksForDiagramID()
-     * return the task(s) that are tied to the given xml diagram ID.
+     * elementForDiagramID()
+     * return the object that is tied to the given xml diagram ID.
      * @param {string} dID the diagram ID
-     * @return {[ABProcessTask,...]}
+     * @return {ABProcess[OBJ]}
      */
-    tasksForDiagramID(dID) {
-        return this.tasks((t) => {
+    elementForDiagramID(dID) {
+        return this.elements((t) => {
             return t.diagramID == dID;
-        });
+        })[0];
+    }
+
+    elementRemove(def) {
+        delete this._elements[def.id];
     }
 
     /**
@@ -181,17 +180,17 @@ module.exports = class ABProcessCore extends ABMLClass {
      * @return {bool}
      */
     isTriggeredBy(key) {
-        return this.tasksForTriggerKey(key) != null;
+        return this.taskForTriggerKey(key) != null;
     }
 
     /**
-     * tasksForTriggerKey()
+     * taskForTriggerKey()
      * return one or more tasks that respond to the given trigger key
      * @param {string} key a trigger key
      * @return {[ABProcessTask,...]}
      */
-    tasksForTriggerKey(key) {
-        var trigger = this.tasks((t) => {
+    taskForTriggerKey(key) {
+        var trigger = this.elements((t) => {
             return t.type == "trigger" && t.triggerKey == key;
         })[0];
         if (trigger) {
@@ -201,42 +200,38 @@ module.exports = class ABProcessCore extends ABMLClass {
         }
     }
 
-    taskRemove(def) {
-        delete this._tasks[def.id];
-    }
-
     //
     // Participants
     //
 
-    /**
-     * participants()
-     * return an array of participants that match the given filter (or all tasks
-     * if no filter is provided).
-     * @param {fn} fn an iterator that returns true if the provided participants
-     *                should be returned.
-     * @return {[ABProcessParticipant,...]}
-     */
-    participants(fn) {
-        if (!fn)
-            fn = () => {
-                return true;
-            };
-        var all = Object.keys(this._participants).map((p) => {
-            return this._participants[p];
-        });
-        return all.filter(fn);
-    }
+    // /**
+    //  * participants()
+    //  * return an array of participants that match the given filter (or all tasks
+    //  * if no filter is provided).
+    //  * @param {fn} fn an iterator that returns true if the provided participants
+    //  *                should be returned.
+    //  * @return {[ABProcessParticipant,...]}
+    //  */
+    // participants(fn) {
+    //     if (!fn)
+    //         fn = () => {
+    //             return true;
+    //         };
+    //     var all = Object.keys(this._participants).map((p) => {
+    //         return this._participants[p];
+    //     });
+    //     return all.filter(fn);
+    // }
 
-    /**
-     * participantsForDiagramID()
-     * return the participant(s) that are tied to the given xml diagram ID.
-     * @param {string} dID the diagram ID
-     * @return {[ABProcessParticipant,...]}
-     */
-    participantsForDiagramID(dID) {
-        return this.participants((p) => {
-            return p.diagramID == dID;
-        });
-    }
+    // /**
+    //  * participantsForDiagramID()
+    //  * return the participant(s) that are tied to the given xml diagram ID.
+    //  * @param {string} dID the diagram ID
+    //  * @return {[ABProcessParticipant,...]}
+    //  */
+    // participantsForDiagramID(dID) {
+    //     return this.participants((p) => {
+    //         return p.diagramID == dID;
+    //     });
+    // }
 };

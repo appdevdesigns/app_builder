@@ -15,8 +15,6 @@ module.exports = class ABProcess extends ABProcessCore {
         AD.comm.hub.subscribe("ab.abprocess.update", (msg, data) => {
             if (this.id == data.objectId) this.fromValues(data.data);
         });
-
-        this.isSaveInProgress = false;
     }
 
     ///
@@ -55,38 +53,48 @@ module.exports = class ABProcess extends ABProcessCore {
      * @return {Promise}
      */
     destroy() {
-        return new Promise((resolve, reject) => {
-            this.toDefinition()
-                .destroy()
-                // .then(()=>{
-                // 	return this.application.processRemove(this)
-                // })
-                .catch((err) => {
-                    reject(err);
-                })
-                .then(() => {
-                    // allow normal processing to contine now:
-                    resolve();
-                })
-                .then(() => {
-                    // in the background
-                    // remove this reference from ALL Applications that link
-                    // to me:
-                    ABApplication.allCurrentApplications().then((apps) => {
-                        var appsWithProcess = apps.find((a) => {
-                            return a.processIDs.indexOf(this.id) != -1;
-                        });
-                        if (appsWithProcess.length > 0) {
-                            appsWithProcess.forEach((removeMe) => {
-                                console.log(
-                                    " ABProcess.destroy():additional Apps:" +
-                                        removeMe.label
-                                );
-                                removeMe.processRemove(this);
+        // remove all my Elements
+        var allElements = this.elements();
+        var allDestroy = [];
+        allElements.forEach((e) => {
+            allDestroy.push(e.destroy());
+        });
+
+        return Promise.all(allDestroy).then(() => {
+            // now remove myself
+            return new Promise((resolve, reject) => {
+                this.toDefinition()
+                    .destroy()
+                    // .then(()=>{
+                    // 	return this.application.processRemove(this)
+                    // })
+                    .catch((err) => {
+                        reject(err);
+                    })
+                    .then(() => {
+                        // allow normal processing to contine now:
+                        resolve();
+                    })
+                    .then(() => {
+                        // in the background
+                        // remove this reference from ALL Applications that link
+                        // to me:
+                        ABApplication.allCurrentApplications().then((apps) => {
+                            var appsWithProcess = apps.find((a) => {
+                                return a.hasProcess(this);
                             });
-                        }
+                            if (appsWithProcess.length > 0) {
+                                appsWithProcess.forEach((removeMe) => {
+                                    console.log(
+                                        " ABProcess.destroy():additional Apps:" +
+                                            removeMe.label
+                                    );
+                                    removeMe.processRemove(this);
+                                });
+                            }
+                        });
                     });
-                });
+            });
         });
     }
 
@@ -108,16 +116,9 @@ module.exports = class ABProcess extends ABProcessCore {
         // 	return ABDefinition.create(this.toDefinition());
         // }
 
-        // if we have already started a save :
-        if (this.isSaveInProgress) {
-            return Promise.resolve();
-        }
-
-        this.isSaveInProgress = true;
-
         // make sure all our tasks have save()ed.
         var allSaves = [];
-        var allTasks = this.tasks();
+        var allTasks = this.elements();
         allTasks.forEach((t) => {
             allSaves.push(t.save());
         });
@@ -132,7 +133,6 @@ module.exports = class ABProcess extends ABProcessCore {
                     if (!this.id) {
                         this.id = data.id;
                     }
-                    this.isSaveInProgress = false;
                 });
         });
     }
@@ -158,24 +158,25 @@ module.exports = class ABProcess extends ABProcessCore {
         return validator;
     }
 
-    taskNewForModelDefinition(element) {
-        var task = this.application.taskNewForModelDefinition(element, this);
-        if (task) {
-            this._tasks[task.id || task.diagramID] = task;
-        }
-        return task;
-    }
-
-    participantNewForModelDefinition(element) {
-        var participant = this.application.participantNewForModelDefinition(
+    /**
+     * @method elementNewForModelDefinition()
+     * create a new process element defined by the given BPMN:Element
+     *
+     * the BPMN:Element definition comes from the BPMN Modeler when a new
+     * diagram element is created.
+     *
+     * @param {BPMN:Element} element
+     *        the BPMN modeler diagram element definition
+     * @return {ABProcess[OBJ]}
+     */
+    elementNewForModelDefinition(element) {
+        var task = this.application.processElementNewForModelDefinition(
             element,
             this
         );
-        if (participant) {
-            this._participants[
-                participant.id || participant.diagramID
-            ] = participant;
+        if (task) {
+            this._elements[task.id || task.diagramID] = task;
         }
-        return participant;
+        return task;
     }
 };

@@ -22,7 +22,7 @@ module.exports = class ABProcessTask extends ABProcessTaskCore {
         //     .destroy()
 
         return super.destroy().then(() => {
-            return this.process.taskRemove(def);
+            return this.process.elementRemove(this);
         });
     }
 
