@@ -67,6 +67,8 @@ module.exports = class ABWorkQueryWorkspace extends ABComponent {
 					view: 'tabbar',
 					id: ids.toolbar,
 					hidden: true,
+					css: "webix_dark",
+					type: "bottom",
 					borderless: false,
 					bottomOffset: 0,
 					// css: "ab-data-toolbar",
