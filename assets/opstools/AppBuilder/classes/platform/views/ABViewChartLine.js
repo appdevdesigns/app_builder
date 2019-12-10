@@ -19,8 +19,7 @@ module.exports = class ABViewChartLine extends ABViewChartLineCore {
 	//	Editor Related
 	//
 
-
-	/** 
+	/**
 	 * @method editorComponent
 	 * return the Editor for this UI component.
 	 * the editor should display either a "block" view or "preview" of 
@@ -30,28 +29,17 @@ module.exports = class ABViewChartLine extends ABViewChartLineCore {
 	 */
 	editorComponent(App, mode) {
 
-		var idBase = 'ABViewChartLineEditorComponent';
-		var ids = {
+		let idBase = 'ABViewChartLineEditorComponent';
+		let ids = {
 			component: App.unique(idBase + '_component')
-		}
-		var component = this.component(App);
-		var _ui = component.ui;
-		_ui.id = ids.component;
+		};
 
-		var _init = (options) => {
-			var reportData = this.parent.getReportData();
-			$$(ids.component).data.sync(reportData);
-		}
+		let baseEditor = super.editorComponent(App, mode, {
+			componentId: ids.component
+		});
 
-		var _logic = component.logic;
-
-		return {
-			ui: _ui,
-			init: _init,
-			logic: _logic
-		}
+		return baseEditor;
 	}
-
 
 
 	//
@@ -162,13 +150,15 @@ module.exports = class ABViewChartLine extends ABViewChartLineCore {
 
 	}
 
-	/*
-	 * @component()
+	/**
+	 * @method component()
 	 * return a UI component based upon this view.
 	 * @param {obj} App 
 	 * @return {obj} UI component
 	 */
 	component(App) {
+
+		let baseComp = super.component(App);
 
 		// get a UI component for each of our child views
 		var viewComponents = [];
@@ -206,21 +196,21 @@ module.exports = class ABViewChartLine extends ABViewChartLineCore {
 			// data: reportData
 		};
 
-		// make sure each of our child views get .init() called
-		var _init = (options) => {
-			var reportData = this.parent.getReportData(true);
-			$$(ids.component).data.sync(reportData);
-		}
-
-
-		var _logic = {
-		}
+		let _init = () => {
+			baseComp.init({
+				componentId: ids.component
+			});
+		};
+		let _logic = baseComp.logic;
+		let _onShow = baseComp.onShow;
 
 
 		return {
 			ui: _ui,
 			init: _init,
-			logic: _logic
+			logic: _logic,
+
+			onShow: _onShow
 		}
 	}
 

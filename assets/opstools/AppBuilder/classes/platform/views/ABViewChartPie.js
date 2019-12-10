@@ -19,7 +19,6 @@ module.exports = class ABViewChartPie extends ABViewChartPieCore {
 	//	Editor Related
 	//
 
-
 	/** 
 	 * @method editorComponent
 	 * return the Editor for this UI component.
@@ -30,27 +29,18 @@ module.exports = class ABViewChartPie extends ABViewChartPieCore {
 	 */
 	editorComponent(App, mode) {
 
-		var idBase = 'ABViewChartPieEditorComponent';
-		var ids = {
+		let idBase = 'ABViewChartPieEditorComponent';
+		let ids = {
 			component: App.unique(idBase + '_component')
 		}
-		var component = this.component(App);
-		var _ui = component.ui;
-		_ui.id = ids.component;
 
-		var _init = (options) => {
-			var reportData = this.parent.getReportData();
-			$$(ids.component).data.sync(reportData);
-		}
+		let baseEditor = super.editorComponent(App, mode, {
+			componentId: ids.component
+		});
 
-		var _logic = component.logic;
-
-		return {
-			ui: _ui,
-			init: _init,
-			logic: _logic
-		}
+		return baseEditor;
 	}
+
 
 
 	//
@@ -113,7 +103,6 @@ module.exports = class ABViewChartPie extends ABViewChartPieCore {
 
 	}
 
-
 	static propertyEditorPopulate(App, ids, view) {
 
 		super.propertyEditorPopulate(App, ids, view);
@@ -126,7 +115,6 @@ module.exports = class ABViewChartPie extends ABViewChartPieCore {
 		$$(ids.pieType).setValue(view.settings.pieType != null ? view.settings.pieType : ABViewChartPiePropertyComponentDefaults.pieType);
 		$$(ids.isLegend).setValue(view.settings.isLegend != null ? view.settings.isLegend : ABViewChartPiePropertyComponentDefaults.isLegend);
 	}
-
 
 	static propertyEditorValues(ids, view) {
 
@@ -142,13 +130,16 @@ module.exports = class ABViewChartPie extends ABViewChartPieCore {
 
 	}
 
-	/*
-	 * @component()
+
+	/**
+	 * @method component()
 	 * return a UI component based upon this view.
 	 * @param {obj} App 
 	 * @return {obj} UI component
 	 */
 	component(App) {
+
+		let baseComp = super.component(App);
 
 		// get a UI component for each of our child views
 		var viewComponents = [];
@@ -176,21 +167,21 @@ module.exports = class ABViewChartPie extends ABViewChartPieCore {
 			// data: reportData
 		};
 
-		// make sure each of our child views get .init() called
-		var _init = (options) => {
-			var reportData = this.parent.getReportData();
-			$$(ids.component).data.sync(reportData);
-		}
-
-
-		var _logic = {
-		}
+		let _init = () => {
+			baseComp.init({
+				componentId: ids.component
+			});
+		};
+		let _logic = baseComp.logic;
+		let _onShow = baseComp.onShow;
 
 
 		return {
 			ui: _ui,
 			init: _init,
-			logic: _logic
+			logic: _logic,
+
+			onShow: _onShow
 		}
 	}
 

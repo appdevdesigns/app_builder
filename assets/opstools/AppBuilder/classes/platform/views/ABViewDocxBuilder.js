@@ -248,15 +248,38 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
 							name: 'buttonlabel',
 							view: 'text',
 							label: L('ab.components.docxBuilder.text', "*Label"),
-							labelWidth: App.config.labelWidthLarge
+							labelWidth: App.config.labelWidthXLarge
 						},
 
 						{
 							view: 'counter',
 							name: "width",
 							label: L("ab.components.docxBuilder.width", "*Width:"),
-							labelWidth: App.config.labelWidthLarge,
+							labelWidth: App.config.labelWidthXLarge,
 						},
+						{
+							view: "richselect",
+							name: 'toolbarBackground',
+							label: L("ab.component.page.toolbarBackground", "*Page background:"),
+							labelWidth: App.config.labelWidthXLarge,
+							options: [
+								{ "id": "ab-background-default", "value": L('ab.component.page.toolbarBackgroundDefault', '*White (default)') },
+								{ "id": "webix_dark", "value": L('ab.component.page.toolbarBackgroundDark', '*Dark') },
+								{ "id": "ab-background-lightgray", "value": L('ab.component.page.toolbarBackgroundDark', '*Gray') }
+							]
+						},
+
+						{
+							view: "richselect",
+							name: 'buttonPosition',
+							label: L("ab.component.page.buttonPosition", "*Button Position:"),
+							labelWidth: App.config.labelWidthXLarge,
+							options: [
+								{ "id": "left", "value": L('ab.component.page.buttonPositionLeft', '*Left (default)') },
+								{ "id": "center", "value": L('ab.component.page.buttonPositionCenter', '*Centered') },
+								{ "id": "right", "value": L('ab.component.page.buttonPositionRight', '*Right') }
+							]
+						}
 
 					]
 				}
@@ -272,6 +295,9 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
 		let $DcSelector = $$(ids.datacollection);
 
 		let selectedDvId = (view.settings.dataviewID ? view.settings.dataviewID : null);
+
+		$$(ids.toolbarBackground).setValue(view.settings.toolbarBackground || ABViewDocxBuilderPropertyComponentDefaults.toolbarBackground);
+		$$(ids.buttonPosition).setValue(view.settings.buttonPosition || ABViewDocxBuilderPropertyComponentDefaults.buttonPosition);
 
 		// Pull data views to options
 		let dcOptions = view.application.datacollections()
@@ -311,6 +337,8 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
 		view.settings.width = $$(ids.width).getValue();
 		view.settings.filelabel = $$(ids.filelabel).getValue();
 		view.settings.language = $$(ids.language).getValue();
+		view.settings.toolbarBackground = $$(ids.toolbarBackground).getValue();
+		view.settings.buttonPosition = $$(ids.buttonPosition).getValue();
 
 	}
 
@@ -331,8 +359,43 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
 			noFile: App.unique(idBase + '_noFile')
 		};
 
+		var autowidth = false;
+		var buttonWidth = this.settings.width || ABViewDocxBuilderPropertyComponentDefaults.width;
+		if (buttonWidth == 0) {
+			autowidth = true;
+		}
+
+		var leftSpacer = {
+			type: 'spacer',
+			width: 1
+		};
+		var rightSpacer = {
+			type: 'spacer',
+			width: 1
+		};
+		var buttonPos = this.settings.buttonPosition || ABViewDocxBuilderPropertyComponentDefaults.buttonPosition;
+		if (buttonPos == "left") {
+			rightSpacer = {
+				type: 'spacer'
+			};
+		} else if (buttonPos == "center") {
+			leftSpacer = {
+				type: 'spacer'
+			};
+			rightSpacer = {
+				type: 'spacer'
+			};
+		} else if (buttonPos == "right") {
+			leftSpacer = {
+				type: 'spacer'
+			};
+		}
+
 		var _ui = {
+			view: "toolbar",
+			css: this.settings.toolbarBackground || ABViewDocxBuilderPropertyComponentDefaults.toolbarBackground,
 			cols: [
+				leftSpacer,
 				{
 					id: ids.button,
 					view: "button",
@@ -340,6 +403,7 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
 					icon: "fa fa-file-word-o",
 					label: this.settings.buttonlabel || ABViewDocxBuilderPropertyComponentDefaults.buttonlabel,
 					width: this.settings.width || ABViewDocxBuilderPropertyComponentDefaults.width,
+					autowidth: autowidth,
 					click: () => {
 						_logic.renderFile();
 					}
@@ -351,7 +415,8 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
 				},
 				{
 					type: 'spacer'
-				}
+				},
+				rightSpacer
 			]
 		};
 

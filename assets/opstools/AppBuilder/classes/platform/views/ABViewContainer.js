@@ -388,6 +388,15 @@ module.exports = class ABViewContainer extends ABViewContainerCore {
 
 			});
 
+			let dv = this.dataview;
+			if (dv &&
+				dv.dataStatus == dv.dataStatusFlag.notInitial) {
+
+				// load data when a widget is showing
+				dv.loadData();
+
+			}
+
 		};
 
 		return {

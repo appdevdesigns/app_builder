@@ -230,13 +230,13 @@ module.exports = class ABViewPage extends ABViewPageCore {
 							view: "text",
 							name: 'pageWidth',
 							placeholder: L('ab.component.page.pageWidthPlaceholder', '*Set page width'),
-							label: L("ab.component.page.popupHeight", "*Page width:"),
+							label: L("ab.component.page.popupWidth", "*Page width:"),
 							labelWidth: App.config.labelWidthLarge
 						},
 						{
 							view: "richselect",
 							name: 'pageBackground',
-							label: L("ab.component.page.popupHeight", "*Page background:"),
+							label: L("ab.component.page.pageBackground", "*Page background:"),
 							labelWidth: App.config.labelWidthXLarge,
 							options: [
 								{ "id": "ab-background-default", "value": L('ab.component.page.pageBackgroundDefault', '*White (default)') },

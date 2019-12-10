@@ -30,26 +30,16 @@ module.exports = class ABViewChartArea extends ABViewChartAreaCore {
 	 */
 	editorComponent(App, mode) {
 
-		var idBase = 'ABViewChartAreaEditorComponent';
-		var ids = {
+		let idBase = 'ABViewChartAreaEditorComponent';
+		let ids = {
 			component: App.unique(idBase + '_component')
 		}
-		var component = this.component(App);
-		var _ui = component.ui;
-		_ui.id = ids.component;
+		let baseEditor = super.editorComponent(App, mode, {
+			componentId: ids.component
+		});
 
-		var _init = (options) => {
-			var reportData = this.parent.getReportData();
-			$$(ids.component).data.sync(reportData);
-		}
+		return baseEditor;
 
-		var _logic = component.logic;
-
-		return {
-			ui: _ui,
-			init: _init,
-			logic: _logic
-		}
 	}
 
 
@@ -82,12 +72,12 @@ module.exports = class ABViewChartArea extends ABViewChartAreaCore {
 			// 	min: 1,
 			// 	label: L('ab.component.chart.area.chartWidth', '*Width')
 			// },
-			// {
-			// 	name: 'chartHeight',
-			// 	view: 'counter',
-			// 	min: 1,
-			// 	label: L('ab.component.chart.area.chartHeight', '*Height')
-			// },
+			{
+				name: 'chartHeight',
+				view: 'counter',
+				min: 1,
+				label: L('ab.component.chart.area.chartHeight', '*Height')
+			},
 			{
 				name: 'stepValue',
 				view: 'counter',
@@ -118,21 +108,19 @@ module.exports = class ABViewChartArea extends ABViewChartAreaCore {
 
 	}
 
-
 	static propertyEditorPopulate(App, ids, view) {
 
 		super.propertyEditorPopulate(App, ids, view);
 
 		// Make sure you set the values for this property editor in Webix
 		// $$(ids.chartWidth).setValue(view.settings.chartWidth != null ? view.settings.chartWidth : ABViewChartAreaPropertyComponentDefaults.chartWidth);
-		// $$(ids.chartHeight).setValue(view.settings.chartHeight != null ? view.settings.chartHeight : ABViewChartAreaPropertyComponentDefaults.chartHeight);
+		$$(ids.chartHeight).setValue(view.settings.chartHeight != null ? view.settings.chartHeight : ABViewChartAreaPropertyComponentDefaults.chartHeight);
 		$$(ids.labelFontSize).setValue(view.settings.labelFontSize != null ? view.settings.labelFontSize : ABViewChartAreaPropertyComponentDefaults.labelFontSize);
 		$$(ids.stepValue).setValue(view.settings.stepValue != null ? view.settings.stepValue : ABViewChartAreaPropertyComponentDefaults.stepValue);
 		$$(ids.maxValue).setValue(view.settings.maxValue != null ? view.settings.maxValue : ABViewChartAreaPropertyComponentDefaults.maxValue);
 		$$(ids.areaType).setValue(view.settings.areaType != null ? view.settings.areaType : ABViewChartAreaPropertyComponentDefaults.areaType);
 		$$(ids.isLegend).setValue(view.settings.isLegend != null ? view.settings.isLegend : ABViewChartAreaPropertyComponentDefaults.isLegend);
 	}
-
 
 	static propertyEditorValues(ids, view) {
 
@@ -142,20 +130,22 @@ module.exports = class ABViewChartArea extends ABViewChartAreaCore {
 		view.settings.areaType = $$(ids.areaType).getValue();
 		view.settings.isLegend = $$(ids.isLegend).getValue();
 		// view.settings.chartWidth = $$(ids.chartWidth).getValue();
-		// view.settings.chartHeight = $$(ids.chartHeight).getValue();
+		view.settings.chartHeight = $$(ids.chartHeight).getValue();
 		view.settings.labelFontSize = $$(ids.labelFontSize).getValue();
 		view.settings.stepValue = $$(ids.stepValue).getValue();
 		view.settings.maxValue = $$(ids.maxValue).getValue();
 
 	}
 
-	/*
-	 * @component()
+	/**
+	 * @method component()
 	 * return a UI component based upon this view.
 	 * @param {obj} App 
 	 * @return {obj} UI component
 	 */
 	component(App) {
+
+		let baseComp = super.component(App);
 
 		// get a UI component for each of our child views
 		var viewComponents = [];
@@ -175,14 +165,14 @@ module.exports = class ABViewChartArea extends ABViewChartAreaCore {
 			type: this.settings.areaType != null ? this.settings.areaType : ABViewChartAreaPropertyComponentDefaults.areaType,
 			yAxis: {
 				start: 0,
-				step: this.settings.stepValue != null ? this.settings.stepValue : ABViewChartAreaPropertyComponentDefaults.stepValue,//"#stepValue#",
-				end: this.settings.maxValue != null ? this.settings.maxValue : ABViewChartAreaPropertyComponentDefaults.maxValue,//"#maxValue#"
+				step:  this.settings.stepValue != null ? this.settings.stepValue : ABViewChartAreaPropertyComponentDefaults.stepValue,//"#stepValue#",
+				end:  this.settings.maxValue != null ? this.settings.maxValue : ABViewChartAreaPropertyComponentDefaults.maxValue,//"#maxValue#"
 			},
 			xAxis: {
 				template: this.settings.isLegend == true ? "<div style='font-size:" + this.settings.labelFontSize + "px;'>#label#</div>" : ""
 			},
 			// legend: this.settings.isLegend == true ? "<div style='font-size:" + this.settings.labelFontSize + "px;'>#label#</div>" : "",
-			series: [
+			series: [ 
 				{
 					alpha: 0.7,
 					value: "#value#",
@@ -199,21 +189,25 @@ module.exports = class ABViewChartArea extends ABViewChartAreaCore {
 			// data: reportData
 		};
 
+		if (this.settings.chartHeight)
+			_ui.height = this.settings.chartHeight;
+
 		// make sure each of our child views get .init() called
-		var _init = (options) => {
-			var reportData = this.parent.getReportData();
-			$$(ids.component).data.sync(reportData);
+		let _init = (options) => {
+			baseComp.init({
+				componentId: ids.component
+			});
 		}
-
-
-		var _logic = {
-		}
+		let _logic = baseComp.logic;
+		let _onShow = baseComp.onShow;
 
 
 		return {
 			ui: _ui,
 			init: _init,
-			logic: _logic
+			logic: _logic,
+
+			onShow: _onShow
 		}
 	}
 
