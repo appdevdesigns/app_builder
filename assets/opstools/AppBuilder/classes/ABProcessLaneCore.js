@@ -4,24 +4,16 @@
  *
  * Lanes manage users in the system, and provide a way to lookup a SiteUser.
  */
-const ABMLClass = require("./ABMLClass");
+const ABProcessParticipant = require("./ABProcessParticipant");
 
 const ABProcessLaneDefaults = {
     type: "process.lane" // unique key to reference this specific object
     // icon: "key" // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
 };
 
-module.exports = class ABProcessLaneCore extends ABMLClass {
+module.exports = class ABProcessLaneCore extends ABProcessParticipant {
     constructor(attributes, process, application) {
-        super(["label"]);
-
-        this.process = process;
-        if (!this.processID) {
-            this.processID = process.id;
-        }
-        this.application = application;
-
-        this.fromValues(attributes);
+        super(attributes, process, application);
 
         //// Runtime Values
         //// these are not stored in the Definition, but rather
@@ -41,26 +33,9 @@ module.exports = class ABProcessLaneCore extends ABMLClass {
             json: "{json}"
         }
         */
-        // These Values are needed By ABDefinition:
-        this.id = attributes.id;
-        this.name = attributes.name || "";
+        super.fromValues(attributes);
+
         this.type = attributes.type || ABProcessLaneDefaults.type;
-
-        // Process Values:
-        this.processID = attributes.processID || null;
-        this.diagramID = attributes.diagramID || "?diagramID?";
-
-        this.where = null;
-        if (attributes.where && attributes.where != "") {
-            this.where = attributes.where;
-        }
-
-        super.fromValues(attributes); // perform translation on this object.
-        // NOTE: keep this at the end of .fromValues();
-
-        if (!this.label) {
-            this.label = this.name;
-        }
     }
 
     /**
@@ -74,27 +49,27 @@ module.exports = class ABProcessLaneCore extends ABMLClass {
      *
      * @return {json}
      */
-    toObj() {
-        // default label value
-        if (!this.label && this.name && this.name != "") {
-            this.label = this.name;
-        }
+    // toObj() {
+    //     // default label value
+    //     if (!this.label && this.name && this.name != "") {
+    //         this.label = this.name;
+    //     }
 
-        // untranslate this object:
-        var data = super.toObj();
+    //     // untranslate this object:
+    //     var data = super.toObj();
 
-        var fieldsToSave = [
-            "id",
-            "name",
-            "type",
-            "processID",
-            "diagramID",
-            "where"
-        ];
-        fieldsToSave.forEach((f) => {
-            data[f] = this[f];
-        });
+    //     var fieldsToSave = [
+    //         "id",
+    //         "name",
+    //         "type",
+    //         "processID",
+    //         "diagramID",
+    //         "where"
+    //     ];
+    //     fieldsToSave.forEach((f) => {
+    //         data[f] = this[f];
+    //     });
 
-        return data;
-    }
+    //     return data;
+    // }
 };

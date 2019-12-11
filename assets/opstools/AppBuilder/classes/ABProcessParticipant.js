@@ -77,4 +77,126 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
             this.label = defElement.businessObject.name;
         }
     }
+
+    /**
+     * diagramProperties()
+     * return a set of values for the XML shape definition based upon
+     * the current values of this objec.
+     * @return {json}
+     */
+    diagramProperties() {
+        return {
+            name: this.name
+        };
+    }
+
+    propertyIDs(id) {
+        return {
+            form: `${id}_form`,
+            name: `${id}_name`,
+            useRoles: `${id}_useRoles`
+        };
+    }
+    /**
+     * propertiesShow()
+     * display the properties panel for this Process Element.
+     * @param {string} id
+     *        the webix $$(id) of the properties panel area.
+     */
+    propertiesShow(id) {
+        var ids = this.propertyIDs(id);
+
+        var ui = {
+            id: id,
+            rows: [
+                { view: "label", label: `${this.type} :` },
+                {
+                    view: "form",
+                    id: ids.form,
+                    // width: 300,
+                    elements: [
+                        {
+                            id: ids.name,
+                            view: "text",
+                            label: "Name",
+                            name: "name",
+                            value: this.name
+                        },
+                        { template: "Select Users", type: "section" },
+                        {
+                            id: id + "_userView",
+                            cols: [
+                                {
+                                    view: "checkbox",
+                                    id: ids.useRoles,
+                                    labelRight: "by Role",
+                                    value: this.useRoles || 0
+                                }
+                            ]
+                        }
+                        // {
+                        //     margin: 5,
+                        //     cols: [
+                        //         {
+                        //             view: "button",
+                        //             value: "Login",
+                        //             css: "webix_primary"
+                        //         },
+                        //         { view: "button", value: "Cancel" }
+                        //     ]
+                        // }
+                    ]
+                }
+            ]
+        };
+        /*
+        var ui = {
+            id: id,
+            rows: [
+                {
+                    id: ids.name,
+                    view: "text",
+                    label: "Name",
+                    name: "name",
+                    value: this.name
+                },
+                {
+                    view: "tabview",
+                    cells: [
+                        {
+                            header: "Select Users",
+                            body: {
+                                id: id + "_userView",
+                                cols: [
+                                    {
+                                        view: "checkbox",
+                                        id: ids.useRoles,
+                                        labelRight: "by Role",
+                                        value: this.useRoles || 0
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        };
+*/
+
+        webix.ui(ui, $$(id));
+
+        $$(id).show();
+    }
+
+    /**
+     * propertiesStash()
+     * pull our values from our property panel.
+     * @param {string} id
+     *        the webix $$(id) of the properties panel area.
+     */
+    propertiesStash(id) {
+        var ids = this.propertyIDs(id);
+        this.name = $$(ids.name).getValue();
+        this.useRoles = $$(ids.useRoles).getValue();
+    }
 };

@@ -53,7 +53,8 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
             component: this.unique("_component"),
             modeler: this.unique("_modeler"),
             modelerBroken: this.unique("_modelerBroken"),
-            modelerWorking: this.unique("_modelerWorking")
+            modelerWorking: this.unique("_modelerWorking"),
+            properties: this.unique("_properties")
         };
 
         // Our webix UI definition:
@@ -83,9 +84,20 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
                 },
                 {
                     id: ids.modelerWorking,
-                    view: "template",
-                    // height: 800,
-                    template: `<div id="${ids.modeler}" style="width: 100%; height: 100%;"></div>`
+                    rows: [
+                        {
+                            id: ids.modelerWorking,
+                            view: "template",
+                            // height: 800,
+                            template: `<div id="${ids.modeler}" style="width: 100%; height: 100%;"></div>`
+                        },
+                        { view: "resizer", css: "bg_gray" },
+                        {
+                            id: ids.properties,
+                            view: "template",
+                            template: `<div id="${ids.properties}_div">properties here!</div>`
+                        }
+                    ]
                 },
                 {
                     id: ids.modelerBroken,
@@ -115,10 +127,12 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
             $$(ids.button).hide();
             $$(ids.modelerBroken).hide();
             $$(ids.modelerWorking).show();
+            $$(ids.properties).hide();
         };
 
         var CurrentApplication = null;
         var CurrentProcess = null;
+        var CurrentPropertiesObj = null;
 
         // A list of the "Generic" BPMN Element Types we use as placeholders
         // until our own tasks are assigned to that element.
@@ -156,6 +170,11 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
 
             saveProcess: (_process) => {
                 return new Promise((resolve, reject) => {
+                    // make sure any obj with unsaved properties get's saved:
+                    if (CurrentPropertiesObj) {
+                        _logic.propertiesSave();
+                    }
+
                     viewer.saveXML({ preamble: true }, (err, xml) => {
                         // console.log(".saveXML() done:", err, xml);
                         if (err) {
@@ -224,9 +243,6 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
                         console.log("element.updateId:", event.element);
                         //
                     });
-                    // viewer.on("element.changed", (event) => {
-                    //     console.log("element.changed:", event.element);
-                    // });
 
                     viewer.on("shape.remove", (event) => {
                         // console.log("shape.remove:", event.element);
@@ -332,6 +348,36 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
                     });
 
                     viewer.on("selection.changed", (event) => {
+                        // only show properties Pane when there is 1 selection
+                        if (event.newSelection.length == 1) {
+                            var newObj = CurrentProcess.elementForDiagramID(
+                                event.newSelection[0].id
+                            );
+                            if (newObj) {
+                                // make sure previous selection records it's properties
+                                if (
+                                    CurrentPropertiesObj &&
+                                    CurrentPropertiesObj.diagramID !=
+                                        newObj.diagramID
+                                ) {
+                                    _logic.propertiesSave();
+                                }
+
+                                CurrentPropertiesObj = newObj;
+                                newObj.propertiesShow(ids.properties);
+                            } else {
+                                $$(ids.properties).hide();
+                            }
+                        } else {
+                            // we are clearing the properties panel:
+                            // stash any current values that are there
+                            if (CurrentPropertiesObj) {
+                                _logic.propertiesSave();
+                            }
+                            CurrentPropertiesObj = null;
+                            $$(ids.properties).hide();
+                        }
+
                         console.log(
                             "selection.changed: New: ",
                             event.newSelection
@@ -394,6 +440,10 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
                     viewer.clear();
                     CurrentProcess = process;
 
+                    // new process, so let's clear our properties selection.
+                    CurrentPropertiesObj = null;
+                    $$(ids.properties).hide();
+
                     ///////
                     var xml = process.modelDefinition();
                     if (!xml) {
@@ -442,6 +492,14 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
                 });
             },
 
+            propertiesSave() {
+                CurrentPropertiesObj.propertiesStash(ids.properties);
+                _logic.updateElementProperties(
+                    CurrentPropertiesObj.diagramID,
+                    CurrentPropertiesObj.diagramProperties()
+                );
+            },
+
             /**
              * @function show()
              *
@@ -449,6 +507,21 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
              */
             show: function() {
                 $$(ids.component).show();
+            },
+
+            /**
+             * updateElementProperties()
+             * modify the XML properties of elements
+             * @param {string} diagramID
+             *        the XML diagram ID of the element
+             * @param {obj} properies
+             *        a { 'name':'value' } of the updated properties
+             */
+            updateElementProperties(diagramID, values) {
+                var elementRegistry = viewer.get("elementRegistry");
+                var elementShape = elementRegistry.get(diagramID);
+                var modeling = viewer.get("modeling");
+                modeling.updateProperties(elementShape, values);
             },
 
             loadData: function() {}

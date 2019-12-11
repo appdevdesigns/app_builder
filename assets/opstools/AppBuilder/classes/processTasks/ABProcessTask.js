@@ -167,4 +167,41 @@ module.exports = class ABProcessTask extends ABProcessTaskCore {
             }
         });
     }
+
+    /**
+     * diagramProperties()
+     * return a set of values for the XML shape definition based upon
+     * the current values of this objec.
+     * @return {json}
+     */
+    diagramProperties() {
+        return {
+            name: this.name
+        };
+    }
+    /**
+     * propertiesShow()
+     * display the properties panel for this Process Element.
+     * @param {string} id
+     *        the webix $$(id) of the properties panel area.
+     */
+    propertiesShow(id) {
+        var ui = {
+            id: id,
+            view: "label",
+            label: "this task has not implement properties yet..."
+        };
+
+        webix.ui(ui, $$(id));
+
+        $$(id).show();
+    }
+
+    /**
+     * propertiesStash()
+     * pull our values from our property panel.
+     * @param {string} id
+     *        the webix $$(id) of the properties panel area.
+     */
+    propertiesStash(id) {}
 };

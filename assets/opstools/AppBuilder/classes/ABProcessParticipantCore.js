@@ -15,12 +15,13 @@ module.exports = class ABProcessParticipantCore extends ABMLClass {
     constructor(attributes, process, application) {
         super(["label"]);
 
-        this.fromValues(attributes);
         this.process = process;
         if (!this.processID) {
             this.processID = process.id;
         }
         this.application = application;
+
+        this.fromValues(attributes);
 
         //// Runtime Values
         //// these are not stored in the Definition, but rather
@@ -43,7 +44,7 @@ module.exports = class ABProcessParticipantCore extends ABMLClass {
         // These Values are needed By ABDefinition:
         this.id = attributes.id;
         this.name = attributes.name || "";
-        this.type = attributes.type || "process.participant";
+        this.type = attributes.type || ABProcessParticipantDefaults.type;
 
         // Process Values:
         this.processID = attributes.processID || null;
