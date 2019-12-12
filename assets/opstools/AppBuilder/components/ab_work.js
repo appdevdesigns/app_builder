@@ -12,6 +12,9 @@ const AB_Work_Object = require("./ab_work_object");
 const AB_Work_Query = require("./ab_work_query");
 const AB_Work_Datacollection = require("./ab_work_dataview");
 const AB_Work_Interface = require("./ab_work_interface");
+const AB_Work_Admin_User = require("./ab_work_admin_user");
+const AB_Work_Admin_Role = require("./ab_work_admin_role");
+const AB_Work_Admin_Scope = require("./ab_work_admin_scope");
 
 // export to ABLiveTool
 // window.ABWorkUI = AB_Work;
@@ -28,7 +31,7 @@ module.exports = window.ABWorkUI = class AB_Work extends ABComponent {  // ('ab_
 
 		var labels = {
 
-			common : App.labels,
+			common: App.labels,
 
 			component: {
 
@@ -38,7 +41,11 @@ module.exports = window.ABWorkUI = class AB_Work extends ABComponent {  // ('ab_
 				objectTitle: L('ab.object.title', "*Objects"),
 				queryTitle: L('ab.query.title', "*Queries"),
 				datacollectionTitle: L('ab.datacollection.title', "*Data Collections"),
-				interfaceTitle: L('ab.interface.title', "*Interface")
+				interfaceTitle: L('ab.interface.title', "*Interface"),
+				adminTitle: L('ab.admin.title', "*Admin"),
+				userTitle: L('ab.user.title', "*Users"),
+				roleTitle: L('ab.role.title', "*Roles"),
+				scopeTitle: L('ab.scope.title', "*Scopes")
 			}
 		}
 
@@ -46,18 +53,22 @@ module.exports = window.ABWorkUI = class AB_Work extends ABComponent {  // ('ab_
 
 		// internal list of Webix IDs to reference our UI components.
 		var ids = {
-			component:  	this.unique('component'),
-			toolBar:  		this.unique('toolbar'),
-			buttonSync:  	this.unique('button_sync'),
-			labelAppName:  	this.unique('label_appname'),
-			tabbar:  		this.unique('tabbar'),
-			tab_object: 	this.unique('tab_object'),
-			tab_query:      this.unique('tab_query'),
-			tab_dataview:	this.unique('tab_dataview'),
-			tab_interface: 	this.unique('tab_interface'),
-			workspace: 		this.unique('workspace'),
-			collapseMenu: 	this.unique('collapseMenu'),
-			expandMenu:		this.unique('expandMenu')
+			component: this.unique('component'),
+			toolBar: this.unique('toolbar'),
+			buttonSync: this.unique('button_sync'),
+			labelAppName: this.unique('label_appname'),
+			tabbar: this.unique('tabbar'),
+			tab_object: this.unique('tab_object'),
+			tab_query: this.unique('tab_query'),
+			tab_dataview: this.unique('tab_dataview'),
+			tab_interface: this.unique('tab_interface'),
+			tab_admin: this.unique('tab_admin'),
+			tab_user: this.unique('tab_user'),
+			tab_role: this.unique('tab_role'),
+			tab_scope: this.unique('tab_scope'),
+			workspace: this.unique('workspace'),
+			collapseMenu: this.unique('collapseMenu'),
+			expandMenu: this.unique('expandMenu')
 		}
 
 
@@ -65,8 +76,11 @@ module.exports = window.ABWorkUI = class AB_Work extends ABComponent {  // ('ab_
 		var AppQueryWorkspace = new AB_Work_Query(App);
 		var AppDatacollectionWorkspace = new AB_Work_Datacollection(App);
 		var AppInterfaceWorkspace = new AB_Work_Interface(App);
+		let AppUserWorkspace = new AB_Work_Admin_User(App);
+		var AppRoleWorkspace = new AB_Work_Admin_Role(App);
+		var AppScopeWorkspace = new AB_Work_Admin_Scope(App);
 
-		var sidebarItems = 	[{
+		var sidebarItems = [{
 			id: ids.tab_object,
 			value: labels.component.objectTitle,
 			icon: "fa fa-fw fa-database"
@@ -85,20 +99,30 @@ module.exports = window.ABWorkUI = class AB_Work extends ABComponent {  // ('ab_
 			id: ids.tab_interface,
 			value: labels.component.interfaceTitle,
 			icon: "fa fa-fw fa-id-card-o"
+		},
+		{
+			id: ids.tab_admin,
+			value: labels.component.adminTitle,
+			icon: "fa fa-fw fa-user",
+			data: [
+				{ id: ids.tab_user, value: labels.component.userTitle, icon: "fa fa-fw fa-users" },
+				{ id: ids.tab_role, value: labels.component.roleTitle, icon: "fa fa-fw fa-user-md" },
+				{ id: ids.tab_scope, value: labels.component.scopeTitle, icon: "fa fa-fw fa-street-view" }
+			]
 		}];
 
 		var expandMenu = {
-			id: ids.expandMenu, 
-			value: labels.component.expandMenu, 
+			id: ids.expandMenu,
+			value: labels.component.expandMenu,
 			icon: "fa fa-fw fa-chevron-circle-right"
 		};
 
 		var collapseMenu = {
-			id: ids.collapseMenu, 
-			value: labels.component.collapseMenu, 
+			id: ids.collapseMenu,
+			value: labels.component.collapseMenu,
 			icon: "fa fa-fw fa-chevron-circle-left"
 		};
-							
+
 		var selectedItem = ids.tab_object;
 
 		// Our webix UI definition:
@@ -182,7 +206,7 @@ module.exports = window.ABWorkUI = class AB_Work extends ABComponent {  // ('ab_
 							on: {
 								onAfterSelect: function (id) {
 									if (id == ids.collapseMenu) {
-										setTimeout(function(){
+										setTimeout(function () {
 											$$(ids.tabbar).remove(ids.collapseMenu);
 											$$(ids.tabbar).add(expandMenu);
 											$$(ids.tabbar).toggle();
@@ -190,7 +214,7 @@ module.exports = window.ABWorkUI = class AB_Work extends ABComponent {  // ('ab_
 											webix.storage.local.put("state", $$(ids.tabbar).getState());
 										}, 0);
 									} else if (id == ids.expandMenu) {
-										setTimeout(function(){
+										setTimeout(function () {
 											$$(ids.tabbar).remove(ids.expandMenu);
 											$$(ids.tabbar).add(collapseMenu);
 											$$(ids.tabbar).toggle();
@@ -210,7 +234,10 @@ module.exports = window.ABWorkUI = class AB_Work extends ABComponent {  // ('ab_
 								AppObjectWorkspace.ui,
 								AppQueryWorkspace.ui,
 								AppDatacollectionWorkspace.ui,
-								AppInterfaceWorkspace.ui
+								AppInterfaceWorkspace.ui,
+								AppUserWorkspace.ui,
+								AppRoleWorkspace.ui,
+								AppScopeWorkspace.ui
 							]
 						}
 					]
@@ -221,25 +248,28 @@ module.exports = window.ABWorkUI = class AB_Work extends ABComponent {  // ('ab_
 
 
 		// Our init() function for setting up our UI
-		this.init = function() {
+		this.init = function () {
 
 			AppObjectWorkspace.init();
 			AppQueryWorkspace.init();
 			AppDatacollectionWorkspace.init();
 			AppInterfaceWorkspace.init();
+			AppUserWorkspace.init();
+			AppRoleWorkspace.init();
+			AppScopeWorkspace.init();
 
-//// TODO: keep track of the last workspace in application.workspace.lastWorkspace on every
-//// tab switch, then use that value here to show you which tab to display on loading.
-//// don't save application each time the tab workspace changes.  just make the setting 
-//// and then when they update anything in those workspace editors, this get's updated.
+			//// TODO: keep track of the last workspace in application.workspace.lastWorkspace on every
+			//// tab switch, then use that value here to show you which tab to display on loading.
+			//// don't save application each time the tab workspace changes.  just make the setting 
+			//// and then when they update anything in those workspace editors, this get's updated.
 
 			// initialize the Object Workspace to show first.
 			var state = webix.storage.local.get("state");
 			if (state) {
 				$$(ids.tabbar).setState(state);
-				
+
 				if (state.collapsed) {
-					setTimeout(function(){
+					setTimeout(function () {
 						$$(ids.tabbar).remove(ids.collapseMenu);
 						$$(ids.tabbar).add(expandMenu);
 					}, 0);
@@ -258,7 +288,7 @@ module.exports = window.ABWorkUI = class AB_Work extends ABComponent {  // ('ab_
 		var _logic = {
 
 
-			applicationInit:function(application) {
+			applicationInit: function (application) {
 
 				// setup Application Label:
 				$$(ids.labelAppName).define('label', application.label);
@@ -272,7 +302,7 @@ module.exports = window.ABWorkUI = class AB_Work extends ABComponent {  // ('ab_
 			 *
 			 * Show this component.
 			 */
-			show:function() {
+			show: function () {
 
 				$$(ids.component).show();
 
@@ -296,18 +326,21 @@ module.exports = window.ABWorkUI = class AB_Work extends ABComponent {  // ('ab_
 			 *
 			 * @param {ABApplication} application
 			 */
-			transitionWorkspace:function(application){
+			transitionWorkspace: function (application) {
 
 				_logic.applicationInit(application);
 				AppObjectWorkspace.applicationLoad(application);
 				AppQueryWorkspace.applicationLoad(application);
 				AppDatacollectionWorkspace.applicationLoad(application);
 				AppInterfaceWorkspace.applicationLoad(application);
+				AppUserWorkspace.applicationLoad(application);
+				AppRoleWorkspace.applicationLoad(application);
+				AppScopeWorkspace.applicationLoad(application);
 
 
-				_logic.show();	
+				_logic.show();
 			},
-			
+
 			/**
 			 * @function tabSwitch
 			 *
@@ -315,13 +348,13 @@ module.exports = window.ABWorkUI = class AB_Work extends ABComponent {  // ('ab_
 			 *
 			 * @param {string} idTab	the id of the tab that was changed to.
 			 */
-			tabSwitch:function(idTab) {
+			tabSwitch: function (idTab) {
 
-				switch( idTab ) {
+				switch (idTab) {
 
 					// Object Workspace Tab
 					case ids.tab_object:
-	
+
 						AppObjectWorkspace.show();
 						break;
 
@@ -342,12 +375,33 @@ module.exports = window.ABWorkUI = class AB_Work extends ABComponent {  // ('ab_
 
 						AppInterfaceWorkspace.show();
 						break;
-						
+
 					// Interface Workspace Tab 
 					case "interface":
 						AppInterfaceWorkspace.show();
 						$$(ids.tabbar).select(ids.tab_interface);
 						break;
+
+					// User Workspace tab
+					case ids.tab_admin:
+					case ids.tab_user:
+
+						AppUserWorkspace.show();
+						break;
+
+					// Role Workspace tab
+					case ids.tab_role:
+
+						AppRoleWorkspace.show();
+						break;
+
+					// Scope Workspace tab
+					case ids.tab_scope:
+
+						AppScopeWorkspace.show();
+						break;
+
+
 				}
 
 			},

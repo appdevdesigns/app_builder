@@ -3,7 +3,7 @@
 // import '../../../../../assets/js/webix/webix'
 
 
-import AB from './components/ab'
+const AB = require('./components/ab');
 
 
 AD.Control.OpsTool.extend('BuildApp', {
@@ -58,7 +58,7 @@ AD.Control.OpsTool.extend('BuildApp', {
 		var ui = AppBuilder.ui;
 
 		// tell the AppBuilder where to attach
-		ui.container = 'ab-main-container'
+		ui.container = 'ab-main-container';
 
 		// instantiate the UI first
 		this.AppBuilder = webix.ui(ui);
