@@ -7,9 +7,54 @@
  */
 var ABProcessParticipantCore = require("./ABProcessParticipantCore");
 
+let __Roles = null;
+let __Users = null;
+
 module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
     constructor(attributes, process, application) {
         super(attributes, process, application);
+
+        // #HACK: temporary implementation until we pull Roles into AppBuilder.
+        if (!__Roles) {
+            __Roles = [{ id: 0, value: "Select Role" }];
+            var Roles = AD.Model.get("opstools.RBAC.PermissionRole");
+            Roles.findAll()
+                .fail(function(err) {
+                    AD.error.log(
+                        "ABProcessParticipantCore: Error loading Roles",
+                        {
+                            error: err
+                        }
+                    );
+                })
+                .then(function(list) {
+                    // make sure they are all translated.
+                    list.forEach(function(l) {
+                        l.translate();
+                        __Roles.push({ id: l.id, value: l.role_label });
+                    });
+                });
+        }
+
+        // #HACK: temporary implementation until we pull Users into AppBuilder.
+        if (!__Users) {
+            __Users = [{ id: 0, value: "Select User" }];
+            var SiteUser = AD.Model.get("opstools.RBAC.SiteUser");
+            SiteUser.findAll()
+                .fail(function(err) {
+                    AD.error.log(
+                        "ABProcessParticipantCore: Error loading SiteUser",
+                        {
+                            error: err
+                        }
+                    );
+                })
+                .then(function(list) {
+                    list.forEach(function(l) {
+                        __Users.push({ id: l.id, value: l.username });
+                    });
+                });
+        }
     }
 
     ////
@@ -76,6 +121,16 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
         ) {
             this.label = defElement.businessObject.name;
         }
+
+        if (defElement.children) {
+            var laneIDs = [];
+            defElement.children.forEach((c) => {
+                if (c.type == "bpmn:Lane") {
+                    laneIDs.push(c.id);
+                }
+            });
+            this.laneIDs = laneIDs;
+        }
     }
 
     /**
@@ -94,7 +149,10 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
         return {
             form: `${id}_form`,
             name: `${id}_name`,
-            useRoles: `${id}_useRoles`
+            role: `${id}_role`,
+            useRole: `${id}_useRoles`,
+            useAccount: `${id}_useAccounts`,
+            account: `${id}_account`
         };
     }
     /**
@@ -121,19 +179,27 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
                             label: "Name",
                             name: "name",
                             value: this.name
-                        },
-                        { template: "Select Users", type: "section" },
-                        {
-                            id: id + "_userView",
-                            cols: [
-                                {
-                                    view: "checkbox",
-                                    id: ids.useRoles,
-                                    labelRight: "by Role",
-                                    value: this.useRoles || 0
-                                }
-                            ]
                         }
+                        // { template: "Select Users", type: "section" },
+                        // {
+                        //     id: id + "_userView",
+                        //     cols: [
+                        //         {
+                        //             view: "checkbox",
+                        //             id: ids.useRole,
+                        //             labelRight: "by Role",
+                        //             value: this.useRole || 0
+                        //         },
+                        //         {
+                        //             id: ids.role,
+                        //             view: "select",
+                        //             label: "Role",
+                        //             value: this.role,
+                        //             options: __Roles,
+                        //             labelAlign: "left"
+                        //         }
+                        //     ]
+                        // }
                         // {
                         //     margin: 5,
                         //     cols: [
@@ -149,39 +215,49 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
                 }
             ]
         };
-        /*
-        var ui = {
-            id: id,
-            rows: [
+
+        // If we don't have any sub lanes, then offer the select user options:
+        if (this.laneIDs && this.laneIDs.length == 0) {
+            ui.rows[1].elements.push(
+                { template: "Select Users", type: "section" },
                 {
-                    id: ids.name,
-                    view: "text",
-                    label: "Name",
-                    name: "name",
-                    value: this.name
+                    cols: [
+                        {
+                            view: "checkbox",
+                            id: ids.useRole,
+                            labelRight: "by Role",
+                            value: this.useRole || 0
+                        },
+                        {
+                            id: ids.role,
+                            view: "select",
+                            label: "Role",
+                            value: this.role,
+                            options: __Roles,
+                            labelAlign: "left"
+                        }
+                    ]
                 },
                 {
-                    view: "tabview",
-                    cells: [
+                    cols: [
                         {
-                            header: "Select Users",
-                            body: {
-                                id: id + "_userView",
-                                cols: [
-                                    {
-                                        view: "checkbox",
-                                        id: ids.useRoles,
-                                        labelRight: "by Role",
-                                        value: this.useRoles || 0
-                                    }
-                                ]
-                            }
+                            view: "checkbox",
+                            id: ids.useAccount,
+                            labelRight: "by Account",
+                            value: this.useAccount || 0
+                        },
+                        {
+                            id: ids.account,
+                            view: "select",
+                            label: "Account",
+                            value: this.account || 0,
+                            options: __Users,
+                            labelAlign: "left"
                         }
                     ]
                 }
-            ]
-        };
-*/
+            );
+        }
 
         webix.ui(ui, $$(id));
 
@@ -197,6 +273,26 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
     propertiesStash(id) {
         var ids = this.propertyIDs(id);
         this.name = $$(ids.name).getValue();
-        this.useRoles = $$(ids.useRoles).getValue();
+        if (this.laneIDs.length == 0) {
+            this.where = this.where || {};
+
+            this.useRole = $$(ids.useRole).getValue();
+            this.role = $$(ids.role).getValue();
+            if (this.useRole) {
+                this.where["role"] = [this.role];
+            } else {
+                delete this.where["role"];
+            }
+
+            this.useAccount = $$(ids.useAccount).getValue();
+            this.account = $$(ids.account).getValue();
+            if (this.useAccount) {
+                this.where["account"] = [this.account];
+            } else {
+                delete this.where["account"];
+            }
+        } else {
+            this.where = null;
+        }
     }
 };

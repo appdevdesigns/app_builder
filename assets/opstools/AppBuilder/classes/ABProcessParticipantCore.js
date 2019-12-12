@@ -49,9 +49,30 @@ module.exports = class ABProcessParticipantCore extends ABMLClass {
         // Process Values:
         this.processID = attributes.processID || null;
         this.diagramID = attributes.diagramID || "?diagramID?";
+        this.laneIDs = attributes.laneIDs || [];
         this.where = null;
         if (attributes.where && attributes.where != "") {
             this.where = attributes.where;
+        }
+
+        this.useRole = 0;
+        if (typeof attributes.useRole != "undefined") {
+            this.useRole = parseInt(attributes.useRole);
+        }
+
+        this.role = 0;
+        if (typeof attributes.role != "undefined") {
+            this.role = attributes.role;
+        }
+
+        this.useAccount = 0;
+        if (typeof attributes.useAccount != "undefined") {
+            this.useAccount = parseInt(attributes.useAccount);
+        }
+
+        this.account = 0;
+        if (typeof attributes.account != "undefined") {
+            this.account = attributes.account;
         }
 
         super.fromValues(attributes); // perform translation on this object.
@@ -88,7 +109,12 @@ module.exports = class ABProcessParticipantCore extends ABMLClass {
             "type",
             "processID",
             "diagramID",
-            "where"
+            "laneIDs",
+            "where",
+            "useRole",
+            "role",
+            "useAccount",
+            "account"
         ];
         fieldsToSave.forEach((f) => {
             data[f] = this[f];

@@ -144,8 +144,6 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
 
         // our internal business logic
         var _logic = {
-            ////
-
             /**
              * @function applicationLoad
              *
@@ -168,6 +166,12 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
                 $$(ids.noSelection).show(false, false);
             },
 
+            /**
+             * @function saveProcess()
+             * Make sure the provided process saves any changes.
+             * @param {ABProcess} _process
+             *        the current process this interface is working with.
+             */
             saveProcess: (_process) => {
                 return new Promise((resolve, reject) => {
                     // make sure any obj with unsaved properties get's saved:
@@ -348,6 +352,10 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
                     });
 
                     viewer.on("selection.changed", (event) => {
+                        if (!CurrentProcess) {
+                            return;
+                        }
+
                         // only show properties Pane when there is 1 selection
                         if (event.newSelection.length == 1) {
                             var newObj = CurrentProcess.elementForDiagramID(
@@ -492,12 +500,25 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
                 });
             },
 
+            /**
+             * propertiesSave()
+             * make sure the current values in the properties editor are
+             * stashed
+             */
             propertiesSave() {
-                CurrentPropertiesObj.propertiesStash(ids.properties);
-                _logic.updateElementProperties(
-                    CurrentPropertiesObj.diagramID,
-                    CurrentPropertiesObj.diagramProperties()
-                );
+                var thisObj = CurrentPropertiesObj;
+                thisObj.propertiesStash(ids.properties);
+
+                // NOTE: this can get called during a BPMN event phase,
+                // and we need to let that complete before trying to update the
+                // diagram element properties.
+                // an immediate timeout should let the other process complete.
+                setTimeout(() => {
+                    _logic.updateElementProperties(
+                        thisObj.diagramID,
+                        thisObj.diagramProperties()
+                    );
+                }, 0);
             },
 
             /**
@@ -520,8 +541,10 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
             updateElementProperties(diagramID, values) {
                 var elementRegistry = viewer.get("elementRegistry");
                 var elementShape = elementRegistry.get(diagramID);
-                var modeling = viewer.get("modeling");
-                modeling.updateProperties(elementShape, values);
+                if (elementShape) {
+                    var modeling = viewer.get("modeling");
+                    modeling.updateProperties(elementShape, values);
+                }
             },
 
             loadData: function() {}
