@@ -13,6 +13,14 @@ const ABProcessTaskManager = require(path.join(
     "ABProcessTaskManager"
 ));
 
+const ABProcessParticipant = require(path.join(
+    "..",
+    "classes",
+    "ABProcessParticipant"
+));
+
+const ABProcessLane = require(path.join("..", "classes", "ABProcessLane"));
+
 var __AllDefinitions = {};
 
 var Log = function(text) {
@@ -34,8 +42,32 @@ module.exports = {
         );
     },
 
-    taskNew: (tID, process) => {
+    processElementNew: (tID, process) => {
         var taskDef = ABDefinition.definitionForID(tID);
-        return ABProcessTaskManager.newTask(taskDef, process, ABServerApp);
+        if (taskDef) {
+            switch (taskDef.type) {
+                case ABProcessParticipant.defaults().type:
+                    return new ABProcessParticipant(
+                        taskDef,
+                        process,
+                        ABServerApp
+                    );
+                    break;
+
+                case ABProcessLane.defaults().type:
+                    return new ABProcessLane(taskDef, process, ABServerApp);
+                    break;
+
+                default:
+                    // default to a Task
+                    return ABProcessTaskManager.newTask(
+                        taskDef,
+                        process,
+                        ABServerApp
+                    );
+                    break;
+            }
+        }
+        return null;
     }
 };

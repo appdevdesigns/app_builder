@@ -191,7 +191,7 @@ module.exports = class ABProcessCore extends ABMLClass {
      */
     taskForTriggerKey(key) {
         var trigger = this.elements((t) => {
-            return t.type == "trigger" && t.triggerKey == key;
+            return t.triggerKey == key;
         })[0];
         if (trigger) {
             return trigger;

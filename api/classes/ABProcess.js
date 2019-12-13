@@ -58,10 +58,15 @@ module.exports = class ABProcess extends ABProcessCore {
      * instanceError()
      * Mark the current instance as having an error.
      * @param {obj} instance the instance we are working with.
+     * @param {ABProcessTask} task the task with the error
      * @return {Promise}
      */
-    instanceError(instance) {
+    instanceError(instance, task, error) {
         instance.status = "error";
+        if (task) {
+            instance.errorTasks = instance.errorTasks || {};
+            instance.errorTasks[task.diagramID] = error.toString();
+        }
         return this.instanceUpdate(instance);
     }
 
@@ -74,8 +79,10 @@ module.exports = class ABProcess extends ABProcessCore {
     instanceNew(data) {
         var context = data;
 
-        this.tasks().forEach((t) => {
-            t.initState(context);
+        this.elements().forEach((t) => {
+            if (t.initState) {
+                t.initState(context);
+            }
         });
 
         var newInstance = {
@@ -143,9 +150,11 @@ module.exports = class ABProcess extends ABProcessCore {
                             })
                             .catch((err) => {
                                 task.onError(instance, err);
-                                this.instanceError(instance).then(() => {
-                                    cb();
-                                });
+                                this.instanceError(instance, task, err).then(
+                                    () => {
+                                        cb();
+                                    }
+                                );
                             });
                     },
                     (err, results) => {

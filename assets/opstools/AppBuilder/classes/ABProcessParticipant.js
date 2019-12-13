@@ -14,46 +14,50 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
     constructor(attributes, process, application) {
         super(attributes, process, application);
 
-        // #HACK: temporary implementation until we pull Roles into AppBuilder.
-        if (!__Roles) {
-            __Roles = [{ id: 0, value: "Select Role" }];
-            var Roles = AD.Model.get("opstools.RBAC.PermissionRole");
-            Roles.findAll()
-                .fail(function(err) {
-                    AD.error.log(
-                        "ABProcessParticipantCore: Error loading Roles",
-                        {
-                            error: err
-                        }
-                    );
-                })
-                .then(function(list) {
-                    // make sure they are all translated.
-                    list.forEach(function(l) {
-                        l.translate();
-                        __Roles.push({ id: l.id, value: l.role_label });
+        // until we properly merge in the CoreV2 code, we need to make sure this
+        // doesn't run on the server:
+        if (typeof ABServerApp == "undefined") {
+            // #HACK: temporary implementation until we pull Roles into AppBuilder.
+            if (!__Roles) {
+                __Roles = [{ id: 0, value: "Select Role" }];
+                var Roles = AD.Model.get("opstools.RBAC.PermissionRole");
+                Roles.findAll()
+                    .fail(function(err) {
+                        AD.error.log(
+                            "ABProcessParticipantCore: Error loading Roles",
+                            {
+                                error: err
+                            }
+                        );
+                    })
+                    .then(function(list) {
+                        // make sure they are all translated.
+                        list.forEach(function(l) {
+                            l.translate();
+                            __Roles.push({ id: l.id, value: l.role_label });
+                        });
                     });
-                });
-        }
+            }
 
-        // #HACK: temporary implementation until we pull Users into AppBuilder.
-        if (!__Users) {
-            __Users = [];
-            var SiteUser = AD.Model.get("opstools.RBAC.SiteUser");
-            SiteUser.findAll()
-                .fail(function(err) {
-                    AD.error.log(
-                        "ABProcessParticipantCore: Error loading SiteUser",
-                        {
-                            error: err
-                        }
-                    );
-                })
-                .then(function(list) {
-                    list.forEach(function(l) {
-                        __Users.push({ id: l.id, value: l.username });
+            // #HACK: temporary implementation until we pull Users into AppBuilder.
+            if (!__Users) {
+                __Users = [];
+                var SiteUser = AD.Model.get("opstools.RBAC.SiteUser");
+                SiteUser.findAll()
+                    .fail(function(err) {
+                        AD.error.log(
+                            "ABProcessParticipantCore: Error loading SiteUser",
+                            {
+                                error: err
+                            }
+                        );
+                    })
+                    .then(function(list) {
+                        list.forEach(function(l) {
+                            __Users.push({ id: l.id, value: l.username });
+                        });
                     });
-                });
+            }
         }
     }
 
@@ -218,7 +222,10 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
 
         // If we don't have any sub lanes, then offer the select user options:
         if (this.laneIDs && this.laneIDs.length == 0) {
-            var userUI = ABProcessParticipant.selectUsersUi(id, this.users || {} );
+            var userUI = ABProcessParticipant.selectUsersUi(
+                id,
+                this.users || {}
+            );
             ui.rows[1].elements.push(userUI);
         }
 
@@ -226,9 +233,10 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
 
         $$(id).show();
     }
-    
+
     static selectUsersUi(id, obj) {
         var ids = ABProcessParticipant.propertyIDs(id);
+
         return {
             view: "fieldset",
             label: "Select Users",
@@ -242,8 +250,8 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
                                 labelRight: "by Role",
                                 labelWidth: 0,
                                 width: 120,
-                                value: (obj.useRole) ? obj.useRole : 0,
-                                click:function(id,event){
+                                value: obj.useRole ? obj.useRole : 0,
+                                click: function(id, event) {
                                     if ($$(id).getValue()) {
                                         $$(ids.role).enable();
                                     } else {
@@ -254,8 +262,8 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
                             {
                                 id: ids.role,
                                 view: "select",
-                                value: (obj.role) ? obj.role : "",
-                                disabled: (obj.useRole) ? false : true,
+                                value: obj.role ? obj.role : "",
+                                disabled: obj.useRole ? false : true,
                                 options: __Roles,
                                 labelAlign: "left"
                             }
@@ -269,8 +277,8 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
                                 labelRight: "by Account",
                                 labelWidth: 0,
                                 width: 120,
-                                value: (obj.useAccount) ? obj.useAccount : 0,
-                                click:function(id,event){
+                                value: obj.useAccount ? obj.useAccount : 0,
+                                click: function(id, event) {
                                     if ($$(id).getValue()) {
                                         $$(ids.account).enable();
                                     } else {
@@ -281,8 +289,8 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
                             {
                                 id: ids.account,
                                 view: "multicombo",
-                                value: (obj.account) ? obj.account : 0,
-                                disabled: (obj.useAccount) ? false : true,
+                                value: obj.account ? obj.account : 0,
+                                disabled: obj.useAccount ? false : true,
                                 suggest: __Users,
                                 labelAlign: "left",
                                 placeholder: "Click or type to add user..."
@@ -293,7 +301,7 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
             }
         };
     }
-    
+
     static stashUsersUi(id) {
         var obj = {};
         var ids = ABProcessParticipant.propertyIDs(id);

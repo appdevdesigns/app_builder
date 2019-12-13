@@ -23,6 +23,41 @@ module.exports = class ABProcessTaskEmail extends ABProcessTask {
     ////
     //// Process Instance Methods
     ////
+    resolveAddresses(instance, field) {
+        return new Promise((resolve, reject) => {
+            var myLane = this.process.elementForDiagramID(this.laneDiagramID);
+            if (!myLane) {
+                reject("could not find lane");
+            }
+
+            var emails = [];
+            var missingEmails = [];
+            myLane
+                .users()
+                .then((list) => {
+                    list.forEach((l) => {
+                        if (l.email) {
+                            emails.push(l.email);
+                        } else {
+                            missingEmails.push(l.username);
+                        }
+                    });
+                    if (missingEmails.length == 0) {
+                        var data = {};
+                        data[field] = emails;
+                        this.stateUpdate(instance, data);
+                        resolve();
+                    } else {
+                        var text = "These Accounts have missing emails: ";
+                        text += missingEmails.join(", ");
+                        var error = new Error(text);
+                        error.accounts = missingEmails;
+                        reject(error);
+                    }
+                })
+                .catch(reject);
+        });
+    }
 
     /**
      * do()
@@ -34,10 +69,21 @@ module.exports = class ABProcessTaskEmail extends ABProcessTask {
      */
     do(instance) {
         return new Promise((resolve, reject) => {
-            // for testing:
-            this.stateCompleted(instance);
-            this.log(instance, "Email Sent successfully");
-            resolve(true);
+            var tasks = [];
+            tasks.push(this.resolveAddresses(instance, "to"));
+            tasks.push(this.resolveAddresses(instance, "from"));
+
+            Promise.all(tasks)
+                .then(() => {
+                    // for testing:
+                    this.stateCompleted(instance);
+                    this.log(instance, "Email Sent successfully");
+                    resolve(true);
+                })
+                .catch((error) => {
+                    console.error(error);
+                    reject(error);
+                });
         });
     }
 
@@ -49,8 +95,8 @@ module.exports = class ABProcessTaskEmail extends ABProcessTask {
      */
     initState(context, val) {
         var myDefaults = {
-            to: "",
-            from: "",
+            to: [],
+            from: [],
             subject: "",
             message: ""
         };

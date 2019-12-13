@@ -43,6 +43,7 @@ module.exports = class ABProcessEngineCore {
                 { xmlRef: "bpmn2:sequenceFlow", type: "flow" },
                 { xmlRef: "bpmn2:startEvent", type: "start" },
                 { xmlRef: "bpmn2:task", type: "task" },
+                { xmlRef: "bpmn2:sendTask", type: "sendTask" },
                 { xmlRef: "bpmn2:userTask", type: "userTask" },
                 { xmlRef: "bpmn2:endEvent", type: "end" },
                 { xmlRef: "bpmn2:parallelGateway", type: "parallelGateway" }
@@ -97,9 +98,9 @@ module.exports = class ABProcessEngineCore {
      * @return {ABProcessTask} or {undefined} if not found.
      */
     startTask() {
-        return this.process.tasksForDiagramID(
+        return this.process.elementForDiagramID(
             this.instance.context.startTaskID
-        )[0];
+        );
     }
 
     /**

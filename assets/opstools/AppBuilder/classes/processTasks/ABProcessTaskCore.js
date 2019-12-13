@@ -8,12 +8,12 @@ module.exports = class ABProcessTaskCore extends ABMLClass {
 
         this.defaults = defaultValues || { key: "core", icon: "core" };
 
-        this.fromValues(attributes);
         this.process = process;
         if (!this.processID) {
             this.processID = process.id;
         }
         this.application = application;
+        this.fromValues(attributes);
 
         //// Runtime Values
         //// these are not stored in the Definition, but rather
@@ -141,7 +141,9 @@ module.exports = class ABProcessTaskCore extends ABMLClass {
      * @param {...} ...allArgs the remaining parameters sent to the log
      */
     log(instance, ...allArgs) {
-        var text = `${this.diagramID} : ${this.key} : ${allArgs.join(" ")}`;
+        var text = `${this.diagramID} : ${
+            this.name ? this.name : this.key
+        } : ${allArgs.join(" ")}`;
         instance.log.push(text);
     }
 
@@ -237,9 +239,13 @@ module.exports = class ABProcessTaskCore extends ABMLClass {
      */
     onError(instance, error) {
         if (error) {
-            var text = `Error: ${error.toString()}`;
+            var text = `${
+                this.name ? "[" + this.name + "] " : ""
+            }: ${error.toString()}`;
             this.log(instance, text);
         }
+        var myState = this.myState(instance);
+        myState.status = "error";
     }
 
     /**
@@ -262,7 +268,7 @@ module.exports = class ABProcessTaskCore extends ABMLClass {
         } else {
             // if I have already "completed" and we are being
             // asked to run again (it's possible)
-            if (myState.status == "completed") {
+            if (myState.status == "completed" || myState.status == "error") {
                 // remove my current state
                 delete instance.context.taskState[this.diagramID];
 
@@ -285,6 +291,20 @@ module.exports = class ABProcessTaskCore extends ABMLClass {
     stateCompleted(instance) {
         var myState = this.myState(instance);
         myState.status = "completed";
+    }
+
+    /**
+     * stateUpdate()
+     * update my state values with the given values data
+     * @param {obj} instance  the current ABProcessInstance
+     * @param {obj} values    the new state values
+     */
+    stateUpdate(instance, values) {
+        values = values || {};
+        var myState = this.myState(instance);
+        for (var v in values) {
+            myState[v] = values[v];
+        }
     }
 
     /**

@@ -37,8 +37,11 @@ module.exports = {
             type: "string",
             enum: ["created", "error", "running", "waiting", "completed"],
             defaultsTo: "created"
-            // isIn: ["created", "running", "waiting", "completed"]
+            // isIn: ["created", "error", "running", "waiting", "completed"]
         },
+
+        // errorTasks: { "diagramID": "error msg", "diagramID":"err msg" ]
+        errorTasks: "json",
 
         // log: the process log: an [ "task.log()", "task.log()" ]
         log: "json"

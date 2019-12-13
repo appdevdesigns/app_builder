@@ -35,6 +35,7 @@ module.exports = class ABProcessLane extends ABProcessLaneCore {
             }
         }
     }
+
     /**
      * fromElement()
      * initialize this Lane's values from the given BPMN:Lane
