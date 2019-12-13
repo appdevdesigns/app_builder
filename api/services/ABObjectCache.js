@@ -41,6 +41,27 @@ module.exports = {
 
 		delete __ObjectPool[id];
 
+	},
+
+	/**
+	 * @function list
+	 * 
+	 * @param {function} filter
+	 */
+	list: function(filter = () => true) {
+
+		let result = [];
+
+		for (let key in (__ObjectPool || {})) {
+
+			let obj = __ObjectPool[key];
+			if (filter(obj))
+				result.push(obj);
+
+		}
+
+		return result;
+
 	}
 
 }

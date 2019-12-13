@@ -1272,6 +1272,10 @@ class ABClassObject extends ABObjectBase {
 		// sails.log.debug('SQL:', query.toString() );
 	}
 
+	queries() {
+		
+	}
+
 }
 
 module.exports = ABClassObject;
