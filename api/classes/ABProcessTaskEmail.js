@@ -8,6 +8,11 @@ var ABProcessTaskEmailDefaults = {
     icon: "email" // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
 };
 
+const cote = require("cote");
+const client = new cote.Requester({
+    name: "ABProcessTaskEmail > emailer"
+});
+
 module.exports = class ABProcessTaskEmail extends ABProcessTask {
     constructor(attributes, process, application) {
         super(attributes, process, application, ABProcessTaskEmailDefaults);
@@ -75,10 +80,50 @@ module.exports = class ABProcessTaskEmail extends ABProcessTask {
 
             Promise.all(tasks)
                 .then(() => {
-                    // for testing:
-                    this.stateCompleted(instance);
-                    this.log(instance, "Email Sent successfully");
-                    resolve(true);
+                    var myState = this.myState(instance);
+                    if (!Array.isArray(myState.to)) {
+                        myState.to = [myState.to];
+                    }
+                    if (Array.isArray(myState.from)) {
+                        myState.from = myState.from.shift();
+                    }
+                    var jobData = {
+                        email: {
+                            to: myState.to,
+                            //    .to  {array}|{CSV list} of email addresses
+
+                            from: myState.from,
+                            //    .from {string} the From Email
+
+                            subject: myState.subject,
+                            //    .subject {string} The subject text of the email
+
+                            html: mystate.html
+                            //    .text {string|Buffer|Stream|attachment-like obj} plaintext version of the message
+                            //    .html {string|Buffer|Stream|attachment-like obj} HTML version of the email.
+                        }
+                    };
+                    client.send(
+                        { type: "notification.email", param: jobData },
+                        (err, results) => {
+                            debugger;
+                            if (err) {
+                                // err objects are returned as simple {} not instances of {Error}
+                                var error = new Error(
+                                    `NotificationEmail responded with an error (${err.code})`
+                                );
+                                for (var v in err) {
+                                    error[v] = err[v];
+                                }
+                                reject(error);
+                                return;
+                            }
+
+                            this.stateCompleted(instance);
+                            this.log(instance, "Email Sent successfully");
+                            resolve(true);
+                        }
+                    );
                 })
                 .catch((error) => {
                     console.error(error);
