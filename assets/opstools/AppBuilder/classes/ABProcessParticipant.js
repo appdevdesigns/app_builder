@@ -38,7 +38,7 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
 
         // #HACK: temporary implementation until we pull Users into AppBuilder.
         if (!__Users) {
-            __Users = [{ id: 0, value: "Select User" }];
+            __Users = [];
             var SiteUser = AD.Model.get("opstools.RBAC.SiteUser");
             SiteUser.findAll()
                 .fail(function(err) {
@@ -145,7 +145,7 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
         };
     }
 
-    propertyIDs(id) {
+    static propertyIDs(id) {
         return {
             form: `${id}_form`,
             name: `${id}_name`,
@@ -162,7 +162,7 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
      *        the webix $$(id) of the properties panel area.
      */
     propertiesShow(id) {
-        var ids = this.propertyIDs(id);
+        var ids = ABProcessParticipant.propertyIDs(id);
 
         var ui = {
             id: id,
@@ -218,50 +218,75 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
 
         // If we don't have any sub lanes, then offer the select user options:
         if (this.laneIDs && this.laneIDs.length == 0) {
-            ui.rows[1].elements.push(
-                { template: "Select Users", type: "section" },
-                {
-                    cols: [
-                        {
-                            view: "checkbox",
-                            id: ids.useRole,
-                            labelRight: "by Role",
-                            value: this.useRole || 0
-                        },
-                        {
-                            id: ids.role,
-                            view: "select",
-                            label: "Role",
-                            value: this.role,
-                            options: __Roles,
-                            labelAlign: "left"
-                        }
-                    ]
-                },
-                {
-                    cols: [
-                        {
-                            view: "checkbox",
-                            id: ids.useAccount,
-                            labelRight: "by Account",
-                            value: this.useAccount || 0
-                        },
-                        {
-                            id: ids.account,
-                            view: "select",
-                            label: "Account",
-                            value: this.account || 0,
-                            options: __Users,
-                            labelAlign: "left"
-                        }
-                    ]
-                }
-            );
+            var userUI = ABProcessParticipant.selectUsersUi(id, this);
+            userUI.forEach((elem)=>{
+                ui.rows[1].elements.push(elem);
+            })
         }
 
         webix.ui(ui, $$(id));
 
         $$(id).show();
+    }
+    
+    static selectUsersUi(id, obj) {
+        var ids = ABProcessParticipant.propertyIDs(id);
+        return [{ template: "Select Users", type: "section" },
+            {
+                cols: [
+                    {
+                        view: "checkbox",
+                        id: ids.useRole,
+                        labelRight: "by Role",
+                        labelWidth: 0,
+                        width: 120,
+                        value: obj.useRole || 0,
+                        click:function(id,event){
+                            if ($$(id).getValue()) {
+                                $$(ids.role).enable();
+                            } else {
+                                $$(ids.role).disable();
+                            }
+                        }
+                    },
+                    {
+                        id: ids.role,
+                        view: "select",
+                        value: obj.role,
+                        disabled: (obj.useRole) ? false : true,
+                        options: __Roles,
+                        labelAlign: "left"
+                    }
+                ]
+            },
+            {
+                cols: [
+                    {
+                        view: "checkbox",
+                        id: ids.useAccount,
+                        labelRight: "by Account",
+                        labelWidth: 0,
+                        width: 120,
+                        value: obj.useAccount || 0,
+                        click:function(id,event){
+                            if ($$(id).getValue()) {
+                                $$(ids.account).enable();
+                            } else {
+                                $$(ids.account).disable();
+                            }
+                        }
+                    },
+                    {
+                        id: ids.account,
+                        view: "multicombo",
+                        value: obj.account || 0,
+                        disabled: (obj.useAccount) ? false : true,
+                        suggest: __Users,
+                        labelAlign: "left",
+                        placeholder: "Click or type to add user..."
+                    }
+                ]
+            }];
     }
 
     /**
@@ -271,7 +296,7 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
      *        the webix $$(id) of the properties panel area.
      */
     propertiesStash(id) {
-        var ids = this.propertyIDs(id);
+        var ids = ABProcessParticipant.propertyIDs(id);
         this.name = $$(ids.name).getValue();
         if (this.laneIDs.length == 0) {
             this.where = this.where || {};

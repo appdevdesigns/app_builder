@@ -37,6 +37,7 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
             rows: [
                 {
                     id: "monitor",
+                    css: "bg_gray",
                     rows: [
                         {
                             maxHeight: App.config.xxxLargeSpacer,

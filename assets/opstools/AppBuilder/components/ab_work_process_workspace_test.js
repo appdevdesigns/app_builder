@@ -37,6 +37,7 @@ export default class ABWorkProcessWorkspaceTest extends OP.Component {
             rows: [
                 {
                     id: "test",
+                    css: "bg_gray",
                     rows: [
                         {
                             maxHeight: App.config.xxxLargeSpacer,

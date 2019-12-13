@@ -87,7 +87,7 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 		{
 			id: ids.tab_processview,
 			value: labels.component.processTitle,
-			icon: "fa fa-fw fa-table"
+			icon: "fa fa-fw fa-code-fork"
 		},
 		{
 			id: ids.tab_interface,

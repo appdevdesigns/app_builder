@@ -75,7 +75,7 @@ export default class ABWorkProcessWorkspace extends OP.Component {
                             align: "center",
                             height: 200,
                             label:
-                                "<div style='display: block; font-size: 180px; background-color: #666; color: transparent; text-shadow: 0px 1px 1px rgba(255,255,255,0.5); -webkit-background-clip: text; -moz-background-clip: text; background-clip: text;' class='fa fa-database'></div>"
+                                "<div style='display: block; font-size: 180px; background-color: #666; color: transparent; text-shadow: 0px 1px 1px rgba(255,255,255,0.5); -webkit-background-clip: text; -moz-background-clip: text; background-clip: text;' class='fa fa-code-fork'></div>"
                         },
                         {
                             view: "label",
@@ -113,13 +113,15 @@ export default class ABWorkProcessWorkspace extends OP.Component {
                         {
                             view: "tabbar",
                             id: ids.tabbar,
-                            borderless: false,
-                            bottomOffset: 0,
+                            css: "webix_dark",
+        					type: "bottom",
+        					borderless: false,
+        					bottomOffset: 0,
                             // css: "ab-data-toolbar",
                             options: [
                                 {
                                     value: labels.component.tabModel,
-                                    icon: "fa fa-sliders",
+                                    icon: "fa fa-code-fork",
                                     type: "icon",
                                     id: ids.tabModel,
                                     on: {
@@ -130,7 +132,7 @@ export default class ABWorkProcessWorkspace extends OP.Component {
                                 },
                                 {
                                     value: labels.component.tabTest,
-                                    icon: "fa fa-table",
+                                    icon: "fa fa-check-square",
                                     type: "icon",
                                     id: ids.tabTest,
                                     on: {
@@ -141,7 +143,7 @@ export default class ABWorkProcessWorkspace extends OP.Component {
                                 },
                                 {
                                     value: labels.component.tabMonitor,
-                                    icon: "fa fa-table",
+                                    icon: "fa fa-tachometer",
                                     type: "icon",
                                     id: ids.tabMonitor,
                                     on: {

@@ -7,6 +7,10 @@ var ABProcessTaskEmailDefaults = {
     icon: "email" // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
 };
 
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
+
 module.exports = class ABProcessTaskEmail extends ABProcessTask {
     constructor(attributes, process, application) {
         attributes.type = attributes.type || "process.task.email";
@@ -68,5 +72,112 @@ module.exports = class ABProcessTaskEmail extends ABProcessTask {
         };
 
         super.initState(context, myDefaults, val);
+    }
+    
+    propertyIDs(id) {
+        return {
+            name: `${id}_name`,
+            to: `${id}_to`,
+            from: `${id}_from`,
+            subject: `${id}_subject`,
+            message: `${id}_message`
+        };
+    }
+    /**
+     * propertiesShow()
+     * display the properties panel for this Process Element.
+     * @param {string} id
+     *        the webix $$(id) of the properties panel area.
+     */
+    propertiesShow(id) {
+        var ids = this.propertyIDs(id);
+
+        var ui = {
+            id: id,
+            rows: [
+                {
+                    id: ids.name,
+                    view: "text",
+                    label: L("ab.process.task.email.name", "*Name"),
+                    name: "name",
+                    value: this.name
+                },
+                {
+                    id: ids.to,
+                    view: "text",
+                    label: L("ab.process.task.email.to", "*To"),
+                    name: "to",
+                    value: this.to
+                },
+                {
+                    id: ids.from,
+                    view: "text",
+                    label: L("ab.process.task.email.from", "*From"),
+                    name: "from",
+                    value: this.from
+                },
+                {
+                    id: ids.subject,
+                    view: "text",
+                    label: L("ab.process.task.email.subject", "*Subject"),
+                    name: "subject",
+                    value: this.subject
+                },
+                {
+                    view: "spacer",
+                    height: 10
+                },
+                {
+                    id: ids.message,
+                    view: 'tinymce-editor',
+                    label: L("ab.process.task.email.message", "*Message"),
+                    name: "message",
+                    value: this.message,
+                    borderless: true,
+                    config: {
+        				plugins: [
+        			        "advlist autolink lists link image charmap print preview anchor",
+        			        "searchreplace visualblocks code fullscreen",
+        			        "insertdatetime media table contextmenu paste imagetools wordcount"
+        			    ],
+        				toolbar: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image",
+        				init_instance_callback: (editor) => {
+
+        					editor.on('KeyUp', (event) => {
+
+        						// _logic.onChange();
+
+        					});
+
+        					editor.on('Change', function (event) {
+
+        						// _logic.onChange();
+
+        					});
+
+        				}
+        			}
+                }
+            ]
+        };
+
+        webix.ui(ui, $$(id));
+
+        $$(id).show();
+    }
+
+    /**
+     * propertiesStash()
+     * pull our values from our property panel.
+     * @param {string} id
+     *        the webix $$(id) of the properties panel area.
+     */
+    propertiesStash(id) {
+        var ids = this.propertyIDs(id);
+        this.name = $$(ids.name).getValue();
+        this.to = $$(ids.to).getValue();
+        this.from = $$(ids.from).getValue();
+        this.subject = $$(ids.subject).getValue();
+        this.message = $$(ids.message).getValue();
     }
 };

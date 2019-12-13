@@ -41,7 +41,8 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
                     "ab.process.model.errorDisplayMessage",
                     "*Could not display the process definition for {0}. Do you want to start a blank process?"
                 ),
-                save: L("ab.common.save", "*Save")
+                save: L("ab.common.save", "*Save"),
+                properties: L("ab.common.properties", "*Properties")
             }
         };
 
@@ -54,48 +55,67 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
             modeler: this.unique("_modeler"),
             modelerBroken: this.unique("_modelerBroken"),
             modelerWorking: this.unique("_modelerWorking"),
-            properties: this.unique("_properties")
+            properties: this.unique("_properties"),
+            propertyPanel: this.unique("_propertyPanel")
         };
 
         // Our webix UI definition:
         this.ui = {
             id: ids.component,
+            css: "bg_gray",
             rows: [
                 {
-                    cols: [
-                        {
-                            height: 32
-                        },
-                        {
-                            id: ids.button,
-                            view: "button",
-                            type: "icon",
-                            label: labels.component.save,
-                            icon: "fa fa-save",
-                            autowidth: true,
-                            click: () => {
-                                _logic.saveProcess(CurrentProcess);
-                            }
-                        },
-                        {
-                            height: 32
-                        }
-                    ]
+                    id: ids.button,
+                    view: "button",
+                    type: "form",
+                    label: labels.component.save,
+                    icon: "fa fa-save",
+                    click: () => {
+                        _logic.saveProcess(CurrentProcess);
+                    }
                 },
                 {
                     id: ids.modelerWorking,
-                    rows: [
+                    cols: [
                         {
                             id: ids.modelerWorking,
                             view: "template",
                             // height: 800,
                             template: `<div id="${ids.modeler}" style="width: 100%; height: 100%;"></div>`
                         },
-                        { view: "resizer", css: "bg_gray" },
+                        { view: "resizer", css: "bg_gray", width: 11},
                         {
-                            id: ids.properties,
-                            view: "template",
-                            template: `<div id="${ids.properties}_div">properties here!</div>`
+                            width: App.config.columnWidthXXLarge,
+                            rows: [
+                                {
+                					view: 'toolbar',
+                					css: 'ab-data-toolbar webix_dark',
+                					cols: [
+                                        {
+                                            type: 'spacer',
+                                            width: 15
+                                        },
+                						{
+                							view: 'label',
+                							label: labels.component.properties
+                						}
+                					]
+                				},
+                                {
+                					view: "scrollview",
+                					id: ids.propertyPanel,
+                					body: {
+                						padding: 15,
+                						rows: [
+                                            {
+                                                id: ids.properties,
+                                                view: "template",
+                                                template: `<div id="${ids.properties}_div">properties here!</div>`
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
                         }
                     ]
                 },
