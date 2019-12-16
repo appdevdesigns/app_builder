@@ -5,11 +5,12 @@ const ABProcessParticipant = require("../ABProcessParticipant.js");
 
 var ABProcessTaskEmailDefaults = {
     key: "Email", // unique key to reference this specific Task
-    icon: "email" // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
+    icon: "email", // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
+    fields: ["to", "from", "subject", "message"]
 };
 
 function L(key, altText) {
-	return AD.lang.label.getLabel(key) || altText;
+    return AD.lang.label.getLabel(key) || altText;
 }
 
 module.exports = class ABProcessTaskEmail extends ABProcessTask {
@@ -34,6 +35,43 @@ module.exports = class ABProcessTaskEmail extends ABProcessTask {
                 type: "bpmn:SendTask"
             }
         };
+    }
+
+    fromValues(attributes) {
+        /*
+        {
+            id: uuid(),
+            name: 'name',
+            type: 'xxxxx',
+            json: "{json}"
+        }
+        */
+        super.fromValues(attributes);
+
+        ABProcessTaskEmailDefaults.fields.forEach((f) => {
+            this[f] = attributes[f];
+        });
+    }
+
+    /**
+     * @method toObj()
+     *
+     * properly compile the current state of this ABApplication instance
+     * into the values needed for saving to the DB.
+     *
+     * Most of the instance data is stored in .json field, so be sure to
+     * update that from all the current values of our child fields.
+     *
+     * @return {json}
+     */
+    toObj() {
+        var data = super.toObj();
+
+        ABProcessTaskEmailDefaults.fields.forEach((f) => {
+            data[f] = this[f];
+        });
+
+        return data;
     }
 
     ////
@@ -78,7 +116,7 @@ module.exports = class ABProcessTaskEmail extends ABProcessTask {
 
         super.initState(context, myDefaults, val);
     }
-    
+
     propertyIDs(id) {
         return {
             name: `${id}_name`,
@@ -92,6 +130,7 @@ module.exports = class ABProcessTaskEmail extends ABProcessTask {
             fromCustom: `${id}_from_custom`
         };
     }
+
     /**
      * propertiesShow()
      * display the properties panel for this Process Element.
@@ -209,35 +248,30 @@ module.exports = class ABProcessTaskEmail extends ABProcessTask {
                 },
                 {
                     id: ids.message,
-                    view: 'tinymce-editor',
+                    view: "tinymce-editor",
                     label: L("ab.process.task.email.message", "*Message"),
                     name: "message",
                     value: this.message,
                     borderless: true,
                     minHeight: 500,
                     config: {
-        				plugins: [
-        			        "advlist autolink lists link image charmap print preview anchor",
-        			        "searchreplace visualblocks code fullscreen",
-        			        "insertdatetime media table contextmenu paste imagetools wordcount"
-        			    ],
-        				toolbar: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image",
-        				init_instance_callback: (editor) => {
+                        plugins: [
+                            "advlist autolink lists link image charmap print preview anchor",
+                            "searchreplace visualblocks code fullscreen",
+                            "insertdatetime media table contextmenu paste imagetools wordcount"
+                        ],
+                        toolbar:
+                            "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image",
+                        init_instance_callback: (editor) => {
+                            editor.on("KeyUp", (event) => {
+                                // _logic.onChange();
+                            });
 
-        					editor.on('KeyUp', (event) => {
-
-        						// _logic.onChange();
-
-        					});
-
-        					editor.on('Change', function (event) {
-
-        						// _logic.onChange();
-
-        					});
-
-        				}
-        			}
+                            editor.on("Change", function(event) {
+                                // _logic.onChange();
+                            });
+                        }
+                    }
                 }
             ]
         };
