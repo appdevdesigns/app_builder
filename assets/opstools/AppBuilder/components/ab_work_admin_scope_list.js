@@ -1,13 +1,11 @@
 const ABComponent = require("../classes/platform/ABComponent");
 
-module.exports = class AB_Work_Admin_User_List extends ABComponent {
+module.exports = class AB_Work_Admin_Scope_List extends ABComponent {
 
 	constructor(App) {
-		super(App, 'ab_work_admin_user_list');
+		super(App, 'ab_work_admin_scope_list');
 
 		let L = this.Label;
-
-		let ABUser = OP.Model.get('opstools.BuildApp.ABUser');
 
 		// internal list of Webix IDs to reference our UI components.
 		let ids = {
@@ -20,6 +18,7 @@ module.exports = class AB_Work_Admin_User_List extends ABComponent {
 		this.ui = {
 			id: ids.component,
 			type: "space",
+			borderless: true,
 			rows: [
 				{
 					view: "toolbar",
@@ -27,7 +26,7 @@ module.exports = class AB_Work_Admin_User_List extends ABComponent {
 					cols: [
 						{
 							view: "label",
-							label: `&nbsp;&nbsp;<span class='fa fa-users'></span> ${L("ab.user.title", "*Users")}`,
+							label: `&nbsp;&nbsp;<span class='fa fa-street-view'></span> ${L("ab.scope.title", "*Scopes")}`,
 							align: "left"
 						},
 						{ fillspace: true },
@@ -38,7 +37,7 @@ module.exports = class AB_Work_Admin_User_List extends ABComponent {
 								onChange: (searchText) => {
 
 									this._isLoaded = false;
-									_logic.loadUserData();
+									_logic.loadScopeData();
 
 								}
 							}
@@ -50,38 +49,14 @@ module.exports = class AB_Work_Admin_User_List extends ABComponent {
 					view: "datatable",
 					select: "row",
 					columns: [
-						{
-							id: "status",
-							header: "",
-							width: 30,
-							template: function (usr) {
-								if (usr && (usr.permission || []).length == 0) {
-									return "<div class='fa fa-user' style='opacity: 0.45; color: gray;'></div>";
-								} else {
-									return "<div class='fa fa-user'></div>";
-								}
-							},
-							css: { "text-align": "center" }
-						},
-						{ id: "username", header: "Username", width: 200 },
-						{
-							id: "isActive", header: "Is active", width: 100,
-							template: function (obj) {
-								if (obj.isActive) {
-									return '<span class="glyphicon glyphicon-ok"></span>';
-								} else {
-									return '<span class="glyphicon glyphicon-ban-circle"></span>';
-								}
-							},
-							css: { 'text-align': 'center' }
-						},
-						{ id: "email", header: "Email", fillspace: true }
+						{ id: "name", header: "Name", width: 200 },
+						{ id: "description", header: "Description", fillspace: true }
 					],
 					data: [],
 					on: {
 						onAfterSelect: (selection, preserve) => {
 
-							_logic.selectUser(selection ? selection.id : null);
+							_logic.selectScope(selection ? selection.id : null);
 
 						}
 					}
@@ -92,15 +67,15 @@ module.exports = class AB_Work_Admin_User_List extends ABComponent {
 		let CurrentApplication;
 
 		// Our init() function for setting up our UI
-		this.init = (userDC) => {
+		this.init = (scopeDC) => {
 
-			this._userDC = userDC;
+			this._scopeDC = scopeDC;
 
-			if ($$(ids.component))
-				webix.extend($$(ids.component), webix.ProgressBar);
+			if ($$(ids.datatable))
+				webix.extend($$(ids.datatable), webix.ProgressBar);
 
 			// Bind to the data collection
-			$$(ids.datatable).data.sync(userDC);
+			$$(ids.datatable).data.sync(scopeDC);
 
 		}
 
@@ -131,11 +106,11 @@ module.exports = class AB_Work_Admin_User_List extends ABComponent {
 
 				$$(ids.component).show();
 
-				_logic.loadUserData();
+				_logic.loadScopeData();
 
 				// Set select item of datatable
-				if (this._userDC) {
-					let cursor = this._userDC.getCursor();
+				if (this._scopeDC) {
+					let cursor = this._scopeDC.getCursor();
 					if (cursor)
 						$$(ids.datatable).select(cursor.id);
 					else
@@ -144,7 +119,7 @@ module.exports = class AB_Work_Admin_User_List extends ABComponent {
 
 			},
 
-			loadUserData: () => {
+			loadScopeData: () => {
 
 				if (this._isLoaded)
 					return Promise.resolve();
@@ -160,13 +135,13 @@ module.exports = class AB_Work_Admin_User_List extends ABComponent {
 				if (searchText) {
 					cond.where = {
 						or: [
-							{ username: { contains: searchText } },
-							{ email: { contains: searchText } }
+							{ name: { contains: searchText } },
+							{ description: { contains: searchText } }
 						]
 					};
 				}
 
-				ABUser.findAll(cond)
+				CurrentApplication.scopeFind(cond)
 					.catch(err => {
 						console.error(err);
 						_logic.ready();
@@ -174,8 +149,8 @@ module.exports = class AB_Work_Admin_User_List extends ABComponent {
 					.then(data => {
 
 						// Parse to the data collection
-						if (this._userDC)
-							this._userDC.parse(data || []);
+						if (this._scopeDC)
+							this._scopeDC.parse(data || []);
 
 						_logic.ready();
 
@@ -183,31 +158,31 @@ module.exports = class AB_Work_Admin_User_List extends ABComponent {
 
 			},
 
-			selectUser: (userId) => {
+			selectScope: (userId) => {
 
-				if (!this._userDC)
+				if (!this._scopeDC)
 					return;
 
 				if (userId)
-					this._userDC.setCursor(userId);
+					this._scopeDC.setCursor(userId);
 				else
-					this._userDC.setCursor(null);
+					this._scopeDC.setCursor(null);
 
 			},
 
 			busy: () => {
 
-				if ($$(ids.component) &&
-					$$(ids.component).showProgress)
-					$$(ids.component).showProgress({ type: "icon" });
+				if ($$(ids.datatable) &&
+					$$(ids.datatable).showProgress)
+					$$(ids.datatable).showProgress({ type: "icon" });
 
 			},
 
 			ready: () => {
 
-				if ($$(ids.component) &&
-					$$(ids.component).hideProgress)
-					$$(ids.component).hideProgress();
+				if ($$(ids.datatable) &&
+					$$(ids.datatable).hideProgress)
+					$$(ids.datatable).hideProgress();
 
 			},
 

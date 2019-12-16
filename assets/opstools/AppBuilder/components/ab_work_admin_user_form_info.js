@@ -11,6 +11,7 @@ module.exports = class AB_Work_Admin_User_Form_Info extends ABComponent {
 			form: this.unique('form')
 		};
 
+		let ABUser = OP.Model.get('opstools.BuildApp.ABUser');
 		let CurrentApplication;
 
 		// Our webix UI definition:
@@ -131,18 +132,34 @@ module.exports = class AB_Work_Admin_User_Form_Info extends ABComponent {
 
 			save: () => {
 
+				if (!this._userDC)
+					return;
+
 				_logic.busy();
 
+				let currUserId = this._userDC.getCursor();
 				let vals = $$(ids.form).getValues();
 
-				// TODO
-				if (this._userDC) {
-
-					this._userDC.updateItem(vals.id, vals);
-
+				// clear 'null' value
+				for (let key in vals) {
+					if (vals[key] == null)
+						delete vals[key];
 				}
 
-				_logic.ready();
+				if (!vals['password'])
+					delete vals['password'];
+
+				ABUser.update(currUserId, vals)
+					.catch(err => {
+						console.error(err);
+						_logic.ready();
+					})
+					.then(data => {
+
+						this._userDC.updateItem(currUserId, data);
+
+						_logic.ready();
+					});
 
 			},
 

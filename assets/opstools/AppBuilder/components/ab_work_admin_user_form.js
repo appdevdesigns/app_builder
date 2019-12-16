@@ -1,7 +1,7 @@
 const ABComponent = require("../classes/platform/ABComponent");
 
 const ABAdminFormInfo = require("./ab_work_admin_user_form_info");
-const ABAdminFormRole = require("./ab_work_admin_user_form_role");
+const ABAdminFormScope = require("app_builder/assets/opstools/AppBuilder/components/ab_work_admin_user_form_scope");
 
 module.exports = class AB_Work_Admin_User_Form extends ABComponent {
 
@@ -11,7 +11,7 @@ module.exports = class AB_Work_Admin_User_Form extends ABComponent {
 		let L = this.Label;
 
 		let FormInfo = new ABAdminFormInfo(App);
-		let FormRole = new ABAdminFormRole(App);
+		let FormScope = new ABAdminFormScope(App);
 
 		// internal list of Webix IDs to reference our UI components.
 		let ids = {
@@ -28,7 +28,7 @@ module.exports = class AB_Work_Admin_User_Form extends ABComponent {
 					type: "space",
 					cols: [
 						FormInfo.ui,
-						FormRole.ui
+						FormScope.ui
 					]
 				},
 				{

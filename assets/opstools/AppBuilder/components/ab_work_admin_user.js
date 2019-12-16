@@ -1,3 +1,5 @@
+require("../data/ABUser");
+
 const ABComponent = require("../classes/platform/ABComponent");
 
 const ABAdminUserList = require("./ab_work_admin_user_list");

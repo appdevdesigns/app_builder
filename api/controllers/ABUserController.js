@@ -7,6 +7,14 @@
 
 module.exports = {
 
+	// REST API: /app_builder/abuser
+	_config: {
+		model: "siteuser", // all lowercase model name
+		//       actions: true,
+		//       shortcuts: true,
+		rest: true
+	},
+
 	// GET: /app_builder/user/roles
 	getRoles: function (req, res) {
 		Permissions.getUserRoles(req, true)
@@ -17,7 +25,7 @@ module.exports = {
 	// GET: /app_builder/user/list
 	getUserList: function (req, res) {
 
-		SiteUser.find({}, {
+		ABUser.find({}, {
 			select: [
 				'username',
 				'image_id'

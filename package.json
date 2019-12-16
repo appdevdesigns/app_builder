@@ -31,6 +31,7 @@
     "ad-utils": "appdevdesigns/ad-utils",
     "arangojs": "^6.10.0",
     "async": "^1.5.2",
+    "crypto": "^1.0.1",
     "knex": "^0.13.0",
     "lodash": "^4.13.1",
     "moment": "^2.18.1",

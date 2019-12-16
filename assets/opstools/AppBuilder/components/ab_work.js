@@ -106,7 +106,7 @@ module.exports = window.ABWorkUI = class AB_Work extends ABComponent {  // ('ab_
 			icon: "fa fa-fw fa-user",
 			data: [
 				{ id: ids.tab_user, value: labels.component.userTitle, icon: "fa fa-fw fa-users" },
-				{ id: ids.tab_role, value: labels.component.roleTitle, icon: "fa fa-fw fa-user-md" },
+				// { id: ids.tab_role, value: labels.component.roleTitle, icon: "fa fa-fw fa-user-md" },
 				{ id: ids.tab_scope, value: labels.component.scopeTitle, icon: "fa fa-fw fa-street-view" }
 			]
 		}];

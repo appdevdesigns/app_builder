@@ -438,7 +438,69 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 			);
 
-		}
+		},
+
+		// ** Scopes
+
+		scopeLoad: function (appId) {
+
+			return OP.Comm.Socket.get({
+				url: `/app_builder/application/${appId}/scope`
+			});
+		},
+
+		scopeFind: function (cond) {
+
+			return OP.Comm.Socket.get({
+				url: `/app_builder/scope`,
+				data: {
+					query: cond
+				}
+			});
+
+		},
+
+		scopeGet: function(scopeId) {
+
+			return OP.Comm.Socket.get({
+				url: `/app_builder/scope/${scopeId}`
+			});
+
+		},
+
+		scopeSave: function (appId, scope) {
+
+			return OP.Comm.Service.put({
+				url: `/app_builder/scope?appID=${appId}`,
+				data: {
+					scope: scope
+				}
+			});
+		},
+
+		scopeDestroy: function (scopeId) {
+
+			return OP.Comm.Service.delete({
+				url: `/app_builder/scope/${scopeId}`
+			});
+
+		},
+
+		scopeImport: function (appId, scopeId) {
+
+			return OP.Comm.Service.put({
+				url: `/app_builder/application/${appId}/scope/${scopeId}`
+			});
+
+		},
+
+		scopeExclude: function (appId, scopeId) {
+
+			return OP.Comm.Service.delete({
+				url: `/app_builder/application/${appId}/scope/${scopeId}`
+			});
+
+		},
 
 
 	},

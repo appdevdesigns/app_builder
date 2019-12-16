@@ -29,6 +29,12 @@ class ABApplication extends ABModelBase {
 				edgeName: "applicationDataview",
 				linkCollection: "dataview",
 				direction: this.relateDirection.OUTBOUND
+			},
+
+			scopes: {
+				edgeName: "applicationScope",
+				linkCollection: "scope",
+				direction: this.relateDirection.OUTBOUND
 			}
 
 		};

@@ -5,6 +5,7 @@ let ABDataCollection = require("./ABDataCollection");
 let ABObject = require("./ABObject");
 let ABObjectQuery = require("./ABObjectQuery");
 let ABMobileApp = require("./ABMobileApp");
+let ABScope = require("./ABScope");
 let ABViewManager = require("./ABViewManager");
 let ABViewPage = require("./views/ABViewPage");
 
@@ -251,7 +252,7 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 		var appId = parts.splice(1, 1)[0];
 
 		// pull an application
-		var app = _AllApplications.find(function(a) { return a.id == appId; })[0];
+		var app = _AllApplications.find(function (a) { return a.id == appId; })[0];
 
 		// the url of object that exclude application id
 		var objectUrl = parts.join('/');
@@ -365,7 +366,7 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 	 *
 	 * @return {Promise}
 	 */
-	updateInfo () {
+	updateInfo() {
 
 		var values = this.toObj();
 		values.json = values.json || {};
@@ -467,7 +468,7 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 
 					var newObjects = [];
 					(objects || []).forEach((obj) => {
-						newObjects.push( this.objectNew(obj) );  
+						newObjects.push(this.objectNew(obj));
 					})
 					this._objects = newObjects;
 
@@ -598,38 +599,38 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 		return new Promise((resolve, reject) => {
 
 			this.Model.staticData.objectImport(this.id, objectId)
-			.catch(reject)
-			.then(newObj => {
+				.catch(reject)
+				.then(newObj => {
 
-				let refreshTasks = [];
+					let refreshTasks = [];
 
-				// add connect field to exist objects
-				(newObj.fields || []).forEach(f => {
+					// add connect field to exist objects
+					(newObj.fields || []).forEach(f => {
 
-					if (f.key == 'connectObject') {
+						if (f.key == 'connectObject') {
 
-						let linkObject = this.objects(obj => obj.id == f.settings.linkObject)[0];
-						if (linkObject) {
-							refreshTasks.push(this.objectRefresh(linkObject.id));
+							let linkObject = this.objects(obj => obj.id == f.settings.linkObject)[0];
+							if (linkObject) {
+								refreshTasks.push(this.objectRefresh(linkObject.id));
+							}
+
 						}
-
-					}
-
-				});
-
-				Promise.all(refreshTasks)
-					.catch(reject)
-					.then(() => {
-
-						// add to list
-						var newObjClass = this.objectNew(newObj);
-						this._objects.push(newObjClass);
-
-						resolve(newObjClass);
 
 					});
 
-			});
+					Promise.all(refreshTasks)
+						.catch(reject)
+						.then(() => {
+
+							// add to list
+							var newObjClass = this.objectNew(newObj);
+							this._objects.push(newObjClass);
+
+							resolve(newObjClass);
+
+						});
+
+				});
 
 		});
 
@@ -640,36 +641,36 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 		return new Promise((resolve, reject) => {
 
 			this.Model.staticData.objectExclude(this.id, objectId)
-			.catch(reject)
-			.then(() => {
+				.catch(reject)
+				.then(() => {
 
-				// exclude object from application
-				let remainObjects = this.objects(o => o.id != objectId);
-				this._objects = remainObjects;
+					// exclude object from application
+					let remainObjects = this.objects(o => o.id != objectId);
+					this._objects = remainObjects;
 
-				// exclude conected fields who link to this object
-				this.objects().forEach(obj => {
+					// exclude conected fields who link to this object
+					this.objects().forEach(obj => {
 
-					let remainFields = obj.fields(f => {
+						let remainFields = obj.fields(f => {
 
-						if (f.key == 'connectObject' &&
-							f.settings &&
-							f.settings.linkObject == objectId) {
-							return false;
-						}
-						else {
-							return true;
-						}
+							if (f.key == 'connectObject' &&
+								f.settings &&
+								f.settings.linkObject == objectId) {
+								return false;
+							}
+							else {
+								return true;
+							}
 
-					}, true);
-					obj._fields = remainFields;
+						}, true);
+						obj._fields = remainFields;
+
+					});
+
+
+					resolve();
 
 				});
-
-
-				resolve();
-
-			});
 
 		});
 
@@ -680,20 +681,20 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 		return new Promise((resolve, reject) => {
 
 			this.Model.staticData.objectGet(objectId)
-			.catch(reject)
-			.then(object => {
+				.catch(reject)
+				.then(object => {
 
-				this.objects().forEach((obj, index) => {
+					this.objects().forEach((obj, index) => {
 
-					if (obj.id == objectId) {
-						this._objects[index] = new ABObject(object, this);
-					}
+						if (obj.id == objectId) {
+							this._objects[index] = new ABObject(object, this);
+						}
+
+					});
+
+					resolve();
 
 				});
-
-				resolve();
-
-			});
 
 		});
 
@@ -896,9 +897,9 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 					(queries || []).forEach((query) => {
 						// prevent processing of null values.
 						if (query) {
-							  newQueries.push( this.queryNew(query) );
-						  }
-					  })
+							newQueries.push(this.queryNew(query));
+						}
+					})
 					this._queries = newQueries;
 
 					resolve();
@@ -1084,9 +1085,9 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 					(datacollections || []).forEach(datacollection => {
 						// prevent processing of null values.
 						if (datacollection) {
-							  newDatacollections.push( this.datacollectionNew(datacollection) );
-						  }
-					  })
+							newDatacollections.push(this.datacollectionNew(datacollection));
+						}
+					})
 					this._datacollections = newDatacollections;
 
 					// Initial data views
@@ -1116,7 +1117,7 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 					(datacollections || []).forEach(datacollection => {
 						// prevent processing of null values.
 						if (datacollection) {
-							result.push( this.datacollectionNew(datacollection, this) );
+							result.push(this.datacollectionNew(datacollection, this));
 						}
 					})
 
@@ -1310,9 +1311,158 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 			.then(() => {
 				// TODO : Should update _AllApplications in 
 			})
-			.catch(()=>{
+			.catch(() => {
 				console.error('!!! error with .ABApplication.mobileAppSave()');
 			});
+	}
+
+	/// 
+	/// Scopes
+	/// 
+
+
+	scopeLoad() {
+
+		if (this.loadedScope)
+			return Promise.resolve();
+
+		return new Promise((resolve, reject) => {
+
+			this.Model.staticData.scopeLoad(this.id)
+				.catch(reject)
+				.then(scopes => {
+
+					this.loadedScope = true;
+
+					var newScopes = [];
+					(scopes || []).forEach(s => {
+						// prevent processing of null values.
+						if (s) {
+							newScopes.push(this.scopeNew(s));
+						}
+					})
+					this._scopes = newScopes;
+
+					// Initial data views
+					this.scopes().forEach(s => {
+						if (s)
+							s.init();
+					});
+
+					resolve();
+
+				});
+
+		});
+
+	}
+
+	scopeFind(cond) {
+
+		return new Promise((resolve, reject) => {
+
+			this.Model.staticData.scopeFind(cond)
+				.catch(reject)
+				.then(scopes => {
+
+					var result = [];
+
+					(scopes || []).forEach(s => {
+						// prevent processing of null values.
+						if (s) {
+							result.push(this.scopeNew(s, this));
+						}
+					})
+
+					resolve(result);
+
+				});
+
+		});
+
+	}
+
+	scopeNew(values = {}) {
+
+		return new ABScope(values, this);
+	}
+
+
+	/**
+	 * @method scopeDestroy()
+	 *
+	 * remove the current ABScope from our list of ._scopes.
+	 *
+	 * @param {ABScope} scope
+	 * @return {Promise}
+	 */
+	scopeDestroy(scope) {
+
+		var remaininScopes = this.scopes(s => s.id != scope.id)
+		this._scopes = remaininScopes;
+
+		return this.Model.staticData.scopeDestroy(scope.id);
+	}
+
+
+	/**
+	 * @method scopeSave()
+	 *
+	 * persist the current ABScope in our list of ._scopes.
+	 *
+	 * @param {ABScope} scope
+	 * @return {Promise}
+	 */
+	scopeSave(scope) {
+		var isIncluded = (this.scopes(s => s.id == scope.id).length > 0);
+		if (!isIncluded) {
+			this._scopes.push(scope);
+		}
+
+		return this.Model.staticData.scopeSave(this.id, scope.toObj());
+	}
+
+	scopeImport(scopeId) {
+
+		return new Promise((resolve, reject) => {
+
+			this.Model.staticData.scopeImport(this.id, scopeId)
+				.catch(reject)
+				.then(newScope => {
+
+					let newScopeClass = this.scopeNew(newScope);
+
+					// add to list
+					var isIncluded = (this.scopes(s => s.id == newScope.id).length > 0);
+					if (!isIncluded) {
+						this._scopes.push(newScopeClass);
+					}
+
+					resolve(newScopeClass);
+
+				});
+
+		});
+
+	}
+
+	scopeExclude(scopeId) {
+
+		return new Promise((resolve, reject) => {
+
+			this.Model.staticData.scopeExclude(this.id, scopeId)
+				.catch(reject)
+				.then(() => {
+
+					// remove query from list
+					this._scopes = this.scopes(s => s.id != scopeId);
+
+					resolve();
+
+				});
+
+		});
+
 	}
 
 

@@ -117,6 +117,29 @@ module.exports = {
         'app_builder/ABDataviewController.excludeDataview',
 
 
+    /* Scopes */
+    'get /app_builder/application/:appID/scope':
+        'app_builder/ABScopeController.scopeApplication',
+
+    'get /app_builder/scope':
+        'app_builder/ABScopeController.find',
+
+    'get /app_builder/scope/:scopeId':
+        'app_builder/ABScopeController.findOne',
+
+    'put /app_builder/scope':
+        'app_builder/ABScopeController.save',
+
+    'delete /app_builder/scope/:scopeId':
+        'app_builder/ABScopeController.destroy',
+
+    'put /app_builder/application/:appID/scope/:scopeID':
+        'app_builder/ABScopeController.import',
+
+    'delete /app_builder/application/:appID/scope/:scopeID':
+        'app_builder/ABScopeController.exclude',
+
+
     /* ABFieldUser */
     'get /app_builder/user/list':
         'app_builder/ABUserController.getUserList',

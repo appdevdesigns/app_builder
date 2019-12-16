@@ -1,5 +1,9 @@
 const ABComponent = require("../classes/platform/ABComponent");
 
+const ABAdminScopeList = require("./ab_work_admin_scope_list");
+const ABAdminScopeForm = require("./ab_work_admin_scope_form");
+const ABAdminScopeUser = require("./ab_work_admin_scope_user");
+
 module.exports = class AB_Work_Admin_Scope extends ABComponent {
 
 	constructor(App) {
@@ -16,6 +20,11 @@ module.exports = class AB_Work_Admin_Scope extends ABComponent {
 		}
 
 		let CurrentApplication;
+		let ScopeList = new ABAdminScopeList(App);
+		let ScopeForm = new ABAdminScopeForm(App);
+		let ScopeUser = new ABAdminScopeUser(App);
+
+		let scopeDC = new webix.DataCollection();
 
 		// internal list of Webix IDs to reference our UI components.
 		let ids = {
@@ -29,13 +38,20 @@ module.exports = class AB_Work_Admin_Scope extends ABComponent {
 		this.ui = {
 			id: ids.component,
 			type: "space",
-			rows: [
+			cols: [
+				ScopeList.ui,
 				{
-					view: 'label',
-					label: "Admin Scope"
-				},
-				{
-					fillspace: true
+					view: "tabview",
+					cells: [
+						{
+							header: "Info",
+							body: ScopeForm.ui
+						},
+						{
+							header: "Users",
+							body: ScopeUser.ui
+						}
+					]
 				}
 			]
 		};
@@ -45,14 +61,15 @@ module.exports = class AB_Work_Admin_Scope extends ABComponent {
 		// Our init() function for setting up our UI
 		this.init = function () {
 
-			// webix.extend($$(ids.component), webix.ProgressBar);
+			ScopeList.init(scopeDC);
+			ScopeForm.init(scopeDC);
+			ScopeUser.init(scopeDC);
 
 		}
 
 
 		// our internal business logic
 		var _logic = {
-
 
 			/**
 			 * @function applicationLoad
@@ -64,6 +81,9 @@ module.exports = class AB_Work_Admin_Scope extends ABComponent {
 			applicationLoad: function (application) {
 
 				CurrentApplication = application;
+
+				ScopeList.applicationLoad(application);
+				ScopeForm.applicationLoad(application);
 
 			},
 
@@ -77,24 +97,9 @@ module.exports = class AB_Work_Admin_Scope extends ABComponent {
 
 				$$(ids.component).show();
 
-			},
+				ScopeList.show();
 
-			busy: () => {
-
-				if ($$(ids.component) &&
-					$$(ids.component).showProgress)
-					$$(ids.component).showProgress({ type: "icon" });
-
-			},
-
-			ready: () => {
-
-				if ($$(ids.component) &&
-					$$(ids.component).hideProgress)
-					$$(ids.component).hideProgress();
-
-			},
-
+			}
 
 		}
 		this._logic = _logic;

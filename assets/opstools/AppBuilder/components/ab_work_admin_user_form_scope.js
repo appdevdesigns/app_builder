@@ -1,9 +1,9 @@
-const ABComponent = require("../classes/platform/ABComponent");
+const ABComponent = require("app_builder/assets/opstools/AppBuilder/classes/platform/ABComponent");
 
-module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
+module.exports = class AB_Work_Admin_User_Form_Scope extends ABComponent {
 
 	constructor(App) {
-		super(App, 'ab_work_admin_user_form_role');
+		super(App, 'ab_work_admin_user_form_scope');
 
 		let L = this.Label;
 
@@ -16,7 +16,7 @@ module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
 		// Our webix UI definition:
 		this.ui = {
 			rows: [
-				{ template: `<span class='fa fa-user-md'></span> ${L("ab.admin.userRole", "*Roles")}`, type: "header" },
+				{ template: `<span class='fa fa-street-view'></span> ${L("ab.admin.userScope", "*Scopes")}`, type: "header" },
 				{
 					view: 'list',
 					id: ids.list
