@@ -129,8 +129,13 @@ module.exports = class ABProcessTaskEmail extends ABProcessTask {
                         'onChange': (val) => { 
                             if (parseInt(val) == 1) {
                                 $$(ids.toUser).show();
+                                $$(ids.toCustom).hide();
+                            } else if (parseInt(val) == 2) {
+                                $$(ids.toUser).hide();
+                                $$(ids.toCustom).show();
                             } else {
                                 $$(ids.toUser).hide();
+                                $$(ids.toCustom).hide();
                             }
                         }
                     }
@@ -144,6 +149,7 @@ module.exports = class ABProcessTaskEmail extends ABProcessTask {
                 {
                     id: ids.toCustom,
                     view: "text",
+                    label: L("ab.process.task.email.toCustom", "*Email"),
                     placeholder: L("ab.process.task.email.toCustom", "*Type email address here..."),
                     name: "toCustom",
                     value: this.toCustom,
@@ -164,8 +170,13 @@ module.exports = class ABProcessTaskEmail extends ABProcessTask {
                         'onChange': (val) => { 
                             if (parseInt(val) == 1) {
                                 $$(ids.fromUser).show();
+                                $$(ids.fromCustom).hide();
+                            } else if (parseInt(val) == 2) {
+                                $$(ids.fromUser).hide();
+                                $$(ids.fromCustom).show();
                             } else {
                                 $$(ids.fromUser).hide();
+                                $$(ids.fromCustom).hide();
                             }
                         }
                     }
@@ -179,7 +190,8 @@ module.exports = class ABProcessTaskEmail extends ABProcessTask {
                 {
                     id: ids.fromCustom,
                     view: "text",
-                    placeholder: L("ab.process.task.email.fromCustom", "*Type email address here..."),
+                    label: L("ab.process.task.email.fromCustom", "*Email"),
+                    placeholder: L("ab.process.task.email.fromCustomPlace", "*Type email address here..."),
                     name: "fromCustom",
                     value: this.fromCustom,
                     hidden: (parseInt(this.from) == 2) ? false : true
