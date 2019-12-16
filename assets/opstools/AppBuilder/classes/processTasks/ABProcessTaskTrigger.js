@@ -7,6 +7,10 @@ var ABProcessTaskTriggerDefaults = {
     icon: "key" // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
 };
 
+function L(key, altText) {
+    return AD.lang.label.getLabel(key) || altText;
+}
+
 module.exports = class ABProcessTaskTrigger extends ABProcessTask {
     constructor(attributes, process, application) {
         attributes.type = attributes.type || "trigger";
@@ -59,38 +63,47 @@ module.exports = class ABProcessTaskTrigger extends ABProcessTask {
         return data;
     }
 
-    // trigger(data) {
-    //     // call my process.newInstance with
-    //     if (!this.process) {
-    //         return;
-    //     }
-    //     var context = this.process.context(data);
-    //     this.initState(context, { triggered: true });
-
-    //     // modify data in any appropriate way then:
-    //     this.process.instanceNew(context);
-    // }
+    propertyIDs(id) {
+        return {
+            name: `${id}_name`
+        };
+    }
 
     /**
-     * initState()
-     * setup this task's initial state variables
-     * @param {obj} context  the context data of the process instance
-     * @param {obj} val  any values to override the default state
+     * propertiesShow()
+     * display the properties panel for this Process Element.
+     * @param {string} id
+     *        the webix $$(id) of the properties panel area.
      */
-    // initState(context, val) {
-    //     val = val || {};
+    propertiesShow(id) {
+        var ids = this.propertyIDs(id);
 
-    //     context.taskState = context.taskState || {};
+        var ui = {
+            id: id,
+            rows: [
+                {
+                    id: ids.name,
+                    view: "text",
+                    label: L("ab.process.task.email.name", "*Name"),
+                    name: "name",
+                    value: this.name
+                }
+            ]
+        };
 
-    //     // don't overwrite your settings if they already exist:
-    //     if (!context.taskState[this.id]) {
-    //         context.taskState[this.id] = {
-    //             initialized: true,
-    //             triggered: false
-    //         };
-    //         for (var v in val) {
-    //             context.taskState[this.id][v] = val[v];
-    //         }
-    //     }
-    // }
+        webix.ui(ui, $$(id));
+
+        $$(id).show();
+    }
+
+    /**
+     * propertiesStash()
+     * pull our values from our property panel.
+     * @param {string} id
+     *        the webix $$(id) of the properties panel area.
+     */
+    propertiesStash(id) {
+        var ids = this.propertyIDs(id);
+        this.name = $$(ids.name).getValue();
+    }
 };
