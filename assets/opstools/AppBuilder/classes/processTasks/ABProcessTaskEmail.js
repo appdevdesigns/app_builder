@@ -1,6 +1,7 @@
 // import ABApplication from "./ABApplication"
 // const ABApplication = require("./ABApplication"); // NOTE: change to require()
 const ABProcessTask = require("./ABProcessTask.js");
+const ABProcessParticipant = require("../ABProcessParticipant.js");
 
 var ABProcessTaskEmailDefaults = {
     key: "Email", // unique key to reference this specific Task
@@ -65,10 +66,14 @@ module.exports = class ABProcessTaskEmail extends ABProcessTask {
      */
     initState(context, val) {
         var myDefaults = {
-            to: "",
-            from: "",
+            to: "0",
+            from: "0",
             subject: "",
-            message: ""
+            message: "",
+            fromUsers: {},
+            toUsers: {},
+            toCustom: "",
+            fromCustom: ""
         };
 
         super.initState(context, myDefaults, val);
@@ -80,7 +85,11 @@ module.exports = class ABProcessTaskEmail extends ABProcessTask {
             to: `${id}_to`,
             from: `${id}_from`,
             subject: `${id}_subject`,
-            message: `${id}_message`
+            fromUser: `${id}_from_user`,
+            toUser: `${id}_to_user`,
+            message: `${id}_message`,
+            toCustom: `${id}_to_custom`,
+            fromCustom: `${id}_from_custom`
         };
     }
     /**
@@ -91,6 +100,9 @@ module.exports = class ABProcessTaskEmail extends ABProcessTask {
      */
     propertiesShow(id) {
         var ids = this.propertyIDs(id);
+        
+        var toUserUI = ABProcessParticipant.selectUsersUi(id+"_to_", this.toUsers || {});
+        var fromUserUI = ABProcessParticipant.selectUsersUi(id+"_from_", this.fromUsers || {});
 
         var ui = {
             id: id,
@@ -104,17 +116,73 @@ module.exports = class ABProcessTaskEmail extends ABProcessTask {
                 },
                 {
                     id: ids.to,
-                    view: "text",
+                    view: "select",
                     label: L("ab.process.task.email.to", "*To"),
                     name: "to",
-                    value: this.to
+                    value: this.to,
+                    options: [
+                        { id: 0, value: L("ab.process.task.email.to.nextParticipant", "*Next Participant") },
+                        { id: 1, value: L("ab.process.task.email.to.selectRoleUser", "*Select Role or User") },
+                        { id: 2, value: L("ab.process.task.email.to.custom", "*Custom") }
+                    ],
+                    on:{
+                        'onChange': (val) => { 
+                            if (parseInt(val) == 1) {
+                                $$(ids.toUser).show();
+                            } else {
+                                $$(ids.toUser).hide();
+                            }
+                        }
+                    }
+                },
+                {
+                    id: ids.toUser,
+                    rows: [toUserUI],
+                    paddingY: 10,
+                    hidden: (parseInt(this.to) == 1) ? false : true
+                },
+                {
+                    id: ids.toCustom,
+                    view: "text",
+                    placeholder: L("ab.process.task.email.toCustom", "*Type email address here..."),
+                    name: "toCustom",
+                    value: this.toCustom,
+                    hidden: (parseInt(this.to) == 2) ? false : true
                 },
                 {
                     id: ids.from,
-                    view: "text",
+                    view: "select",
                     label: L("ab.process.task.email.from", "*From"),
                     name: "from",
-                    value: this.from
+                    value: this.from,
+                    options: [
+                        { id: 0, value: L("ab.process.task.email.to.nextParticipant", "*Current Participant") },
+                        { id: 1, value: L("ab.process.task.email.to.selectRoleUser", "*Select Role or User") },
+                        { id: 2, value: L("ab.process.task.email.to.custom", "*Custom") }
+                    ],
+                    on:{
+                        'onChange': (val) => { 
+                            if (parseInt(val) == 1) {
+                                $$(ids.fromUser).show();
+                            } else {
+                                $$(ids.fromUser).hide();
+                            }
+                        }
+                    }
+                },
+                {
+                    id: ids.fromUser,
+                    rows: [fromUserUI],
+                    paddingY: 10,
+                    hidden: (parseInt(this.from) == 1) ? false : true
+                },
+                {
+                    id: ids.fromCustom,
+                    view: "text",
+                    placeholder: L("ab.process.task.email.fromCustom", "*Type email address here..."),
+                    name: "fromCustom",
+                    value: this.fromCustom,
+                    hidden: (parseInt(this.from) == 2) ? false : true
                 },
                 {
                     id: ids.subject,
@@ -134,6 +202,7 @@ module.exports = class ABProcessTaskEmail extends ABProcessTask {
                     name: "message",
                     value: this.message,
                     borderless: true,
+                    minHeight: 500,
                     config: {
         				plugins: [
         			        "advlist autolink lists link image charmap print preview anchor",
@@ -179,5 +248,9 @@ module.exports = class ABProcessTaskEmail extends ABProcessTask {
         this.from = $$(ids.from).getValue();
         this.subject = $$(ids.subject).getValue();
         this.message = $$(ids.message).getValue();
+        this.toCustom = $$(ids.toCustom).getValue();
+        this.fromCustom = $$(ids.fromCustom).getValue();
+        this.toUsers = ABProcessParticipant.stashUsersUi(id+"_to_");
+        this.fromUsers = ABProcessParticipant.stashUsersUi(id+"_from_");
     }
 };

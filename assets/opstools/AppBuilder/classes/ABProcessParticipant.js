@@ -218,10 +218,8 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
 
         // If we don't have any sub lanes, then offer the select user options:
         if (this.laneIDs && this.laneIDs.length == 0) {
-            var userUI = ABProcessParticipant.selectUsersUi(id, this);
-            userUI.forEach((elem)=>{
-                ui.rows[1].elements.push(elem);
-            })
+            var userUI = ABProcessParticipant.selectUsersUi(id, this.users || {} );
+            ui.rows[1].elements.push(userUI);
         }
 
         webix.ui(ui, $$(id));
@@ -231,62 +229,82 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
     
     static selectUsersUi(id, obj) {
         var ids = ABProcessParticipant.propertyIDs(id);
-        return [{ template: "Select Users", type: "section" },
-            {
-                cols: [
+        return {
+            view: "fieldset",
+            label: "Select Users",
+            body: {
+                rows: [
                     {
-                        view: "checkbox",
-                        id: ids.useRole,
-                        labelRight: "by Role",
-                        labelWidth: 0,
-                        width: 120,
-                        value: obj.useRole || 0,
-                        click:function(id,event){
-                            if ($$(id).getValue()) {
-                                $$(ids.role).enable();
-                            } else {
-                                $$(ids.role).disable();
+                        cols: [
+                            {
+                                view: "checkbox",
+                                id: ids.useRole,
+                                labelRight: "by Role",
+                                labelWidth: 0,
+                                width: 120,
+                                value: (obj.useRole) ? obj.useRole : 0,
+                                click:function(id,event){
+                                    if ($$(id).getValue()) {
+                                        $$(ids.role).enable();
+                                    } else {
+                                        $$(ids.role).disable();
+                                    }
+                                }
+                            },
+                            {
+                                id: ids.role,
+                                view: "select",
+                                value: (obj.role) ? obj.role : "",
+                                disabled: (obj.useRole) ? false : true,
+                                options: __Roles,
+                                labelAlign: "left"
                             }
-                        }
+                        ]
                     },
                     {
-                        id: ids.role,
-                        view: "select",
-                        value: obj.role,
-                        disabled: (obj.useRole) ? false : true,
-                        options: __Roles,
-                        labelAlign: "left"
-                    }
-                ]
-            },
-            {
-                cols: [
-                    {
-                        view: "checkbox",
-                        id: ids.useAccount,
-                        labelRight: "by Account",
-                        labelWidth: 0,
-                        width: 120,
-                        value: obj.useAccount || 0,
-                        click:function(id,event){
-                            if ($$(id).getValue()) {
-                                $$(ids.account).enable();
-                            } else {
-                                $$(ids.account).disable();
+                        cols: [
+                            {
+                                view: "checkbox",
+                                id: ids.useAccount,
+                                labelRight: "by Account",
+                                labelWidth: 0,
+                                width: 120,
+                                value: (obj.useAccount) ? obj.useAccount : 0,
+                                click:function(id,event){
+                                    if ($$(id).getValue()) {
+                                        $$(ids.account).enable();
+                                    } else {
+                                        $$(ids.account).disable();
+                                    }
+                                }
+                            },
+                            {
+                                id: ids.account,
+                                view: "multicombo",
+                                value: (obj.account) ? obj.account : 0,
+                                disabled: (obj.useAccount) ? false : true,
+                                suggest: __Users,
+                                labelAlign: "left",
+                                placeholder: "Click or type to add user..."
                             }
-                        }
-                    },
-                    {
-                        id: ids.account,
-                        view: "multicombo",
-                        value: obj.account || 0,
-                        disabled: (obj.useAccount) ? false : true,
-                        suggest: __Users,
-                        labelAlign: "left",
-                        placeholder: "Click or type to add user..."
+                        ]
                     }
                 ]
-            }];
+            }
+        };
+    }
+    
+    static stashUsersUi(id) {
+        var obj = {};
+        var ids = ABProcessParticipant.propertyIDs(id);
+
+        obj.useRole = $$(ids.useRole).getValue();
+        obj.role = $$(ids.role).getValue();
+
+        obj.useAccount = $$(ids.useAccount).getValue();
+        obj.account = $$(ids.account).getValue();
+
+        return obj;
     }
 
     /**
@@ -299,23 +317,7 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
         var ids = ABProcessParticipant.propertyIDs(id);
         this.name = $$(ids.name).getValue();
         if (this.laneIDs.length == 0) {
-            this.where = this.where || {};
-
-            this.useRole = $$(ids.useRole).getValue();
-            this.role = $$(ids.role).getValue();
-            if (this.useRole) {
-                this.where["role"] = [this.role];
-            } else {
-                delete this.where["role"];
-            }
-
-            this.useAccount = $$(ids.useAccount).getValue();
-            this.account = $$(ids.account).getValue();
-            if (this.useAccount) {
-                this.where["account"] = [this.account];
-            } else {
-                delete this.where["account"];
-            }
+            this.users = ABProcessParticipant.stashUsersUi(id);
         } else {
             this.where = null;
         }

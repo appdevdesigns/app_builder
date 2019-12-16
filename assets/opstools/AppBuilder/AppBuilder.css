@@ -200,14 +200,10 @@ label {
     height: 24px;
     line-height: 24px;
 }
-.webix_view .webix_fieldset {
-	overflow: visible;
-	padding-top: 20px;
-}
-.webix_view legend {
-	position: relative;
-	top: -8px;
-	margin: 0;
+.webix_fieldset_label {
+	width: auto;
+	margin-bottom: 0;
+	border: 0;
 }
 .ab-widget-header {
 	background: #EEE;
