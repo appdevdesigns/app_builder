@@ -13,13 +13,17 @@ module.exports = class AB_Work_Admin_User_Form_Scope extends ABComponent {
 
 		let CurrentApplication;
 
+		this._scopeDC = new webix.DataCollection();
+
 		// Our webix UI definition:
 		this.ui = {
 			rows: [
 				{ template: `<span class='fa fa-street-view'></span> ${L("ab.admin.userScope", "*Scopes")}`, type: "header" },
 				{
 					view: 'list',
-					id: ids.list
+					id: ids.list,
+					select: false,
+					template: "#name#"
 				}
 			]
 		};
@@ -33,9 +37,7 @@ module.exports = class AB_Work_Admin_User_Form_Scope extends ABComponent {
 			if ($$(ids.list)) {
 				webix.extend($$(ids.list), webix.ProgressBar);
 
-				if (this._userDC)
-					$$(ids.list).bind(this._userDC);
-
+				$$(ids.list).data.sync(this._scopeDC);
 			}
 
 		};
@@ -47,6 +49,37 @@ module.exports = class AB_Work_Admin_User_Form_Scope extends ABComponent {
 			applicationLoad: (application) => {
 
 				CurrentApplication = application;
+
+			},
+
+			show: () => {
+
+				_logic.busy();
+
+				if (!this._userDC) {
+					_logic.ready();
+					return;
+				}
+
+				let currUserId = this._userDC.getCursor();
+				let currUser = this._userDC.getItem(currUserId);
+				if (!currUser) {
+					_logic.ready();
+					return;
+				}
+
+				CurrentApplication.scopeOfUser(currUser.username)
+					.catch(err => {
+						console.error(err);
+						_logic.ready();
+					})
+					.then((data) => {
+
+						this._scopeDC.clearAll();
+						this._scopeDC.parse(data || []);
+						_logic.ready();
+
+					});
 
 			},
 
@@ -72,6 +105,7 @@ module.exports = class AB_Work_Admin_User_Form_Scope extends ABComponent {
 		// Define our external interface methods:
 		// 
 		this.applicationLoad = _logic.applicationLoad;
+		this.show = _logic.show;
 
 	}
 };

@@ -45,6 +45,7 @@ module.exports = class AB_Work_Admin_User_Form extends ABComponent {
 			this._userDC = userDC;
 
 			FormInfo.init(userDC);
+			FormScope.init(userDC);
 
 		}
 
@@ -63,6 +64,9 @@ module.exports = class AB_Work_Admin_User_Form extends ABComponent {
 
 				CurrentApplication = application;
 
+				FormInfo.applicationLoad(application);
+				FormScope.applicationLoad(application);
+
 			},
 
 
@@ -74,6 +78,8 @@ module.exports = class AB_Work_Admin_User_Form extends ABComponent {
 			show: function () {
 
 				$$(ids.component).show();
+
+				FormScope.show();
 
 			}
 		}

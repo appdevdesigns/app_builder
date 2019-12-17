@@ -10,16 +10,20 @@ module.exports = class ABScope {
 
 	fromValues(values) {
 
+		this.id = values.id;
 		this.name = values.name;
 		this.description = values.description;
+		this.usernames = values.usernames || [];
 
 	}
 
 	toObj() {
 
 		return {
+			id: this.id,
 			name: this.name,
-			description: this.description
+			description: this.description,
+			usernames: this.usernames
 		};
 
 	}

@@ -121,6 +121,9 @@ module.exports = {
     'get /app_builder/application/:appID/scope':
         'app_builder/ABScopeController.scopeApplication',
 
+    'get /app_builder/user/:username/scope':
+        'app_builder/ABScopeController.scopeUser',
+
     'get /app_builder/scope':
         'app_builder/ABScopeController.find',
 

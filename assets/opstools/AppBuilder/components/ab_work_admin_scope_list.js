@@ -36,8 +36,7 @@ module.exports = class AB_Work_Admin_Scope_List extends ABComponent {
 							on: {
 								onChange: (searchText) => {
 
-									this._isLoaded = false;
-									_logic.loadScopeData();
+									_logic.filterScopes(searchText);
 
 								}
 							}
@@ -60,6 +59,29 @@ module.exports = class AB_Work_Admin_Scope_List extends ABComponent {
 
 						}
 					}
+				},
+				{
+					cols: [
+						{ fillspace: true },
+						{
+							view: 'button',
+							type: "icon",
+							icon: "fa fa-download",
+							label: "Import scope",
+							click: () => {
+
+							}
+						},
+						{
+							view: 'button',
+							type: "icon",
+							icon: "fa fa-plus",
+							label: "Create new scope",
+							click: () => {
+								_logic.createNewScope();
+							}
+						}
+					]
 				}
 			]
 		};
@@ -69,13 +91,34 @@ module.exports = class AB_Work_Admin_Scope_List extends ABComponent {
 		// Our init() function for setting up our UI
 		this.init = (scopeDC) => {
 
-			this._scopeDC = scopeDC;
-
 			if ($$(ids.datatable))
 				webix.extend($$(ids.datatable), webix.ProgressBar);
 
-			// Bind to the data collection
-			$$(ids.datatable).data.sync(scopeDC);
+			this._scopeDC = scopeDC;
+			if (this._scopeDC) {
+
+				// Bind to the data collection
+				$$(ids.datatable).data.sync(this._scopeDC);
+
+				this._scopeDC.attachEvent("onAfterCursorChange", scopeId => {
+
+					$$(ids.datatable).blockEvent();
+
+					if (scopeId)
+						$$(ids.datatable).select(scopeId);
+					else
+						$$(ids.datatable).unselect();
+
+					$$(ids.datatable).unblockEvent();
+
+				});
+
+			}
+			else {
+				$$(ids.datatable).data.unsync();
+			}
+
+
 
 		}
 
@@ -128,29 +171,27 @@ module.exports = class AB_Work_Admin_Scope_List extends ABComponent {
 
 				_logic.busy();
 
-				let cond = {};
-
-				// Search filter
-				let searchText = $$(ids.search).getValue();
-				if (searchText) {
-					cond.where = {
-						or: [
-							{ name: { contains: searchText } },
-							{ description: { contains: searchText } }
-						]
-					};
-				}
-
-				CurrentApplication.scopeFind(cond)
+				CurrentApplication.scopeLoad()
 					.catch(err => {
 						console.error(err);
 						_logic.ready();
 					})
-					.then(data => {
+					.then(() => {
 
 						// Parse to the data collection
-						if (this._scopeDC)
-							this._scopeDC.parse(data || []);
+						if (this._scopeDC) {
+
+							// Remove .application of scope list
+							// NOTE: it will cause of variable recursive call
+							let scopes = CurrentApplication.scopes().map(d => {
+								delete d.application;
+								return d;
+							});
+
+							this._scopeDC.setCursor(null);
+							this._scopeDC.clearAll();
+							this._scopeDC.parse(scopes || []);
+						}
 
 						_logic.ready();
 
@@ -158,15 +199,36 @@ module.exports = class AB_Work_Admin_Scope_List extends ABComponent {
 
 			},
 
-			selectScope: (userId) => {
+			filterScopes: (searchText) => {
 
 				if (!this._scopeDC)
 					return;
 
-				if (userId)
-					this._scopeDC.setCursor(userId);
+				this._scopeDC.setCursor(null);
+				this._scopeDC.filter(s => (s.name || "").indexOf(searchText) > -1 || (s.description || "").indexOf(searchText) > -1);
+
+			},
+
+			selectScope: (scopeId) => {
+
+				if (!this._scopeDC)
+					return;
+
+				if (scopeId)
+					this._scopeDC.setCursor(scopeId);
 				else
 					this._scopeDC.setCursor(null);
+
+			},
+
+			createNewScope: () => {
+
+				if (!this._scopeDC)
+					return;
+
+				this._scopeDC.setCursor(null);
+
+				// TODO : switch to scope info tab and focus name textbox
 
 			},
 

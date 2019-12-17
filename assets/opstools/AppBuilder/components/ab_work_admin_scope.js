@@ -29,7 +29,7 @@ module.exports = class AB_Work_Admin_Scope extends ABComponent {
 		// internal list of Webix IDs to reference our UI components.
 		let ids = {
 			component: this.unique('component'),
-
+			users: this.unique('user')
 		}
 
 
@@ -44,14 +44,33 @@ module.exports = class AB_Work_Admin_Scope extends ABComponent {
 					view: "tabview",
 					cells: [
 						{
-							header: "Info",
-							body: ScopeForm.ui
+							header: "<span class='webix_icon fa fa-street-view'></span> Info",
+							body: {
+								borderless: true,
+								rows: [
+									ScopeForm.ui
+								]
+							}
 						},
 						{
-							header: "Users",
+							id: ids.users,
+							header: "<span class='webix_icon fa fa-users'></span> Users",
 							body: ScopeUser.ui
 						}
-					]
+					],
+					tabbar: {
+						on: {
+							onAfterTabClick: (id) => {
+
+								switch (id) {
+									case ScopeUser.ui.id:
+										ScopeUser.onShow();
+										break;
+								}
+
+							}
+						}
+					}
 				}
 			]
 		};
@@ -84,6 +103,7 @@ module.exports = class AB_Work_Admin_Scope extends ABComponent {
 
 				ScopeList.applicationLoad(application);
 				ScopeForm.applicationLoad(application);
+				ScopeUser.applicationLoad(application);
 
 			},
 

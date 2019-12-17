@@ -15,8 +15,29 @@ module.exports = {
 	scopeApplication: (req, res) => {
 
 		let appID = req.param('appID');
+		let cond = req.body.query || {};
 
-		ABGraphScope.findWithRelation('applications', appID)
+		ABGraphScope.findWithRelation('applications', appID, cond)
+			.catch(error => {
+				res.AD.error(error);
+			})
+			.then(scopes => {
+
+				res.AD.success(scopes || []);
+
+			});
+
+	},
+
+	// GET /app_builder/user/:username/scope
+	scopeUser: (req, res) => {
+
+		let username = req.param('username');
+
+		ABGraphScope.query(
+			`FOR row IN scope
+			FILTER row.usernames ANY == '${username}'
+			RETURN row`)
 			.catch(error => {
 				res.AD.error(error);
 			})
@@ -31,11 +52,9 @@ module.exports = {
 	// GET /app_builder/scope
 	find: function (req, res) {
 
-		let cond = req.query;
+		let cond = req.body;
 
-		ABGraphScope.find({
-			where: cond
-		})
+		ABGraphScope.find(cond)
 			.catch(res.AD.error)
 			.then(scopes => {
 				res.AD.success(scopes || []);

@@ -116,20 +116,32 @@ module.exports = class AB_Work_Admin_Scope_Form extends ABComponent {
 
 				let currScopeId = this._scopeDC.getCursor();
 				let currScope = this._scopeDC.getItem(currScopeId);
-				if (!currScope)
-					// Add new
-					currScope = CurrentApplication.scopeNew(vals);
-				else
-					currScope.fromValues(vals);
 
-				currScope.save()
+				// Add new
+				let isAdded = false;
+				if (!currScope) {
+					currScope = CurrentApplication.scopeNew(vals);
+					isAdded = true;
+				}
+				else {
+					currScope.fromValues(vals);
+					isAdded = false;
+				}
+
+				CurrentApplication.scopeSave(currScope)
 					.catch(err => {
 						console.error(err);
 						_logic.ready();
 					})
 					.then(data => {
 
-						this._scopeDC.updateItem(currScopeId, data);
+						if (isAdded) {
+							currScope.id = data.id;
+							this._scopeDC.add(currScope);
+							this._scopeDC.setCursor(currScope.id);
+						}
+						else
+							this._scopeDC.updateItem(currScopeId, data);
 
 						_logic.ready();
 					});

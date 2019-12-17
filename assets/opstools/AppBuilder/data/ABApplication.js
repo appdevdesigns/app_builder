@@ -80,9 +80,7 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 			return OP.Comm.Socket.get({
 				url: `/app_builder/object`,
-				data: {
-					query: cond
-				}
+				params: cond
 			});
 
 		},
@@ -442,10 +440,11 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 		// ** Scopes
 
-		scopeLoad: function (appId) {
+		scopeLoad: function (appId, cond) {
 
 			return OP.Comm.Socket.get({
-				url: `/app_builder/application/${appId}/scope`
+				url: `/app_builder/application/${appId}/scope`,
+				params: cond
 			});
 		},
 
@@ -453,9 +452,15 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 			return OP.Comm.Socket.get({
 				url: `/app_builder/scope`,
-				data: {
-					query: cond
-				}
+				params: cond
+			});
+
+		},
+
+		scopeOfUser: function(username) {
+
+			return OP.Comm.Socket.get({
+				url: `/app_builder/user/${username}/scope`
 			});
 
 		},

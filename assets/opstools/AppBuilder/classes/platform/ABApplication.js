@@ -1321,14 +1321,14 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 	/// 
 
 
-	scopeLoad() {
+	scopeLoad(cond) {
 
 		if (this.loadedScope)
 			return Promise.resolve();
 
 		return new Promise((resolve, reject) => {
 
-			this.Model.staticData.scopeLoad(this.id)
+			this.Model.staticData.scopeLoad(this.id, cond)
 				.catch(reject)
 				.then(scopes => {
 
@@ -1342,12 +1342,6 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 						}
 					})
 					this._scopes = newScopes;
-
-					// Initial data views
-					this.scopes().forEach(s => {
-						if (s)
-							s.init();
-					});
 
 					resolve();
 
@@ -1379,6 +1373,32 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 				});
 
 		});
+
+	}
+
+	scopeOfUser(username) {
+
+		return new Promise((resolve, reject) => {
+
+			this.Model.staticData.scopeOfUser(username)
+				.catch(reject)
+				.then(scopes => {
+
+					var result = [];
+
+					(scopes || []).forEach(s => {
+						// prevent processing of null values.
+						if (s) {
+							result.push(this.scopeNew(s, this));
+						}
+					})
+
+					resolve(result);
+
+				});
+
+		});
+
 
 	}
 
