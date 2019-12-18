@@ -6,7 +6,16 @@ const ABProcessParticipant = require("../ABProcessParticipant.js");
 var ABProcessTaskEmailDefaults = {
     key: "Email", // unique key to reference this specific Task
     icon: "email", // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
-    fields: ["to", "from", "subject", "message"]
+    fields: [
+        "to",
+        "from",
+        "subject",
+        "message",
+        "toCustom",
+        "fromCustom",
+        "toUsers",
+        "fromUsers"
+    ]
 };
 
 function L(key, altText) {
@@ -139,9 +148,15 @@ module.exports = class ABProcessTaskEmail extends ABProcessTask {
      */
     propertiesShow(id) {
         var ids = this.propertyIDs(id);
-        
-        var toUserUI = ABProcessParticipant.selectUsersUi(id+"_to_", this.toUsers || {});
-        var fromUserUI = ABProcessParticipant.selectUsersUi(id+"_from_", this.fromUsers || {});
+
+        var toUserUI = ABProcessParticipant.selectUsersUi(
+            id + "_to_",
+            this.toUsers || {}
+        );
+        var fromUserUI = ABProcessParticipant.selectUsersUi(
+            id + "_from_",
+            this.fromUsers || {}
+        );
 
         var ui = {
             id: id,
@@ -160,12 +175,30 @@ module.exports = class ABProcessTaskEmail extends ABProcessTask {
                     name: "to",
                     value: this.to,
                     options: [
-                        { id: 0, value: L("ab.process.task.email.to.nextParticipant", "*Next Participant") },
-                        { id: 1, value: L("ab.process.task.email.to.selectRoleUser", "*Select Role or User") },
-                        { id: 2, value: L("ab.process.task.email.to.custom", "*Custom") }
+                        {
+                            id: 0,
+                            value: L(
+                                "ab.process.task.email.to.nextParticipant",
+                                "*Next Participant"
+                            )
+                        },
+                        {
+                            id: 1,
+                            value: L(
+                                "ab.process.task.email.to.selectRoleUser",
+                                "*Select Role or User"
+                            )
+                        },
+                        {
+                            id: 2,
+                            value: L(
+                                "ab.process.task.email.to.custom",
+                                "*Custom"
+                            )
+                        }
                     ],
-                    on:{
-                        'onChange': (val) => { 
+                    on: {
+                        onChange: (val) => {
                             if (parseInt(val) == 1) {
                                 $$(ids.toUser).show();
                                 $$(ids.toCustom).hide();
@@ -183,16 +216,19 @@ module.exports = class ABProcessTaskEmail extends ABProcessTask {
                     id: ids.toUser,
                     rows: [toUserUI],
                     paddingY: 10,
-                    hidden: (parseInt(this.to) == 1) ? false : true
+                    hidden: parseInt(this.to) == 1 ? false : true
                 },
                 {
                     id: ids.toCustom,
                     view: "text",
                     label: L("ab.process.task.email.toCustom", "*Email"),
-                    placeholder: L("ab.process.task.email.toCustom", "*Type email address here..."),
+                    placeholder: L(
+                        "ab.process.task.email.toCustom",
+                        "*Type email address here..."
+                    ),
                     name: "toCustom",
                     value: this.toCustom,
-                    hidden: (parseInt(this.to) == 2) ? false : true
+                    hidden: parseInt(this.to) == 2 ? false : true
                 },
                 {
                     id: ids.from,
@@ -201,12 +237,30 @@ module.exports = class ABProcessTaskEmail extends ABProcessTask {
                     name: "from",
                     value: this.from,
                     options: [
-                        { id: 0, value: L("ab.process.task.email.to.nextParticipant", "*Current Participant") },
-                        { id: 1, value: L("ab.process.task.email.to.selectRoleUser", "*Select Role or User") },
-                        { id: 2, value: L("ab.process.task.email.to.custom", "*Custom") }
+                        {
+                            id: 0,
+                            value: L(
+                                "ab.process.task.email.to.nextParticipant",
+                                "*Current Participant"
+                            )
+                        },
+                        {
+                            id: 1,
+                            value: L(
+                                "ab.process.task.email.to.selectRoleUser",
+                                "*Select Role or User"
+                            )
+                        },
+                        {
+                            id: 2,
+                            value: L(
+                                "ab.process.task.email.to.custom",
+                                "*Custom"
+                            )
+                        }
                     ],
-                    on:{
-                        'onChange': (val) => { 
+                    on: {
+                        onChange: (val) => {
                             if (parseInt(val) == 1) {
                                 $$(ids.fromUser).show();
                                 $$(ids.fromCustom).hide();
@@ -224,16 +278,19 @@ module.exports = class ABProcessTaskEmail extends ABProcessTask {
                     id: ids.fromUser,
                     rows: [fromUserUI],
                     paddingY: 10,
-                    hidden: (parseInt(this.from) == 1) ? false : true
+                    hidden: parseInt(this.from) == 1 ? false : true
                 },
                 {
                     id: ids.fromCustom,
                     view: "text",
                     label: L("ab.process.task.email.fromCustom", "*Email"),
-                    placeholder: L("ab.process.task.email.fromCustomPlace", "*Type email address here..."),
+                    placeholder: L(
+                        "ab.process.task.email.fromCustomPlace",
+                        "*Type email address here..."
+                    ),
                     name: "fromCustom",
                     value: this.fromCustom,
-                    hidden: (parseInt(this.from) == 2) ? false : true
+                    hidden: parseInt(this.from) == 2 ? false : true
                 },
                 {
                     id: ids.subject,
@@ -296,7 +353,7 @@ module.exports = class ABProcessTaskEmail extends ABProcessTask {
         this.message = $$(ids.message).getValue();
         this.toCustom = $$(ids.toCustom).getValue();
         this.fromCustom = $$(ids.fromCustom).getValue();
-        this.toUsers = ABProcessParticipant.stashUsersUi(id+"_to_");
-        this.fromUsers = ABProcessParticipant.stashUsersUi(id+"_from_");
+        this.toUsers = ABProcessParticipant.stashUsersUi(id + "_to_");
+        this.fromUsers = ABProcessParticipant.stashUsersUi(id + "_from_");
     }
 };
