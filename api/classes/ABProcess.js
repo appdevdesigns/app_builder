@@ -141,12 +141,28 @@ module.exports = class ABProcess extends ABProcessCore {
                                     // make sure the next tasks know they are
                                     // ready to run (again if necessary)
                                     var nextTasks = task.nextTasks(instance);
-                                    nextTasks.forEach((t) => {
-                                        t.reset(instance);
-                                    });
+                                    if (nextTasks) {
+                                        nextTasks.forEach((t) => {
+                                            t.reset(instance);
+                                        });
+                                        cb(null, isDone);
+                                    } else {
+                                        // if null was returned then an error
+                                        // happened during the .nextTask() fn
+                                        var error = new Error(
+                                            "error parsing next task"
+                                        );
+                                        this.instanceError(
+                                            instance,
+                                            task,
+                                            error
+                                        ).then(() => {
+                                            cb();
+                                        });
+                                    }
+                                } else {
+                                    cb(null, false);
                                 }
-
-                                cb(null, isDone);
                             })
                             .catch((err) => {
                                 task.onError(instance, err);

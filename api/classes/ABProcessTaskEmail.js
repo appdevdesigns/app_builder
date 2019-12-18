@@ -1,5 +1,8 @@
 // import ABApplication from "./ABApplication"
 // const ABApplication = require("./ABApplication"); // NOTE: change to require()
+
+const async = require("async");
+const _ = require("lodash");
 const path = require("path");
 const ABProcessTask = require(path.join(__dirname, "ABProcessTask.js"));
 
@@ -81,31 +84,47 @@ module.exports = class ABProcessTaskEmail extends ABProcessTask {
     //// Process Instance Methods
     ////
 
-    laneUserEmails(myLane) {
+    laneUserEmails(allLanes) {
+        if (!Array.isArray(allLanes)) {
+            allLanes = [allLanes];
+        }
+
         return new Promise((resolve, reject) => {
             var emails = [];
             var missingEmails = [];
-            myLane
-                .users()
-                .then((list) => {
-                    list.forEach((l) => {
-                        if (l.email) {
-                            emails.push(l.email);
-                        } else {
-                            missingEmails.push(l.username);
-                        }
-                    });
-                    if (missingEmails.length == 0) {
-                        resolve(emails);
-                    } else {
+            async.each(
+                allLanes,
+                (myLane, cb) => {
+                    myLane
+                        .users()
+                        .then((list) => {
+                            list.forEach((l) => {
+                                if (l.email) {
+                                    emails.push(l.email);
+                                } else {
+                                    missingEmails.push(l.username);
+                                }
+                            });
+                            cb();
+                        })
+                        .catch(cb);
+                },
+                (err) => {
+                    if (err) {
+                        reject(err);
+                        return;
+                    }
+                    if (missingEmails.length > 0) {
                         var text = "These Accounts have missing emails: ";
                         text += missingEmails.join(", ");
                         var error = new Error(text);
                         error.accounts = missingEmails;
                         reject(error);
+                    } else {
+                        resolve(_.uniq(emails));
                     }
-                })
-                .catch(reject);
+                }
+            );
         });
     }
 
@@ -117,47 +136,43 @@ module.exports = class ABProcessTaskEmail extends ABProcessTask {
                 case 0:
                     // select by current/next lane
 
-                    var myLane;
+                    var myLanes = [];
+
                     // if "to" field, we look for Next Lane
                     if (field == "to") {
                         // get next tasks.
                         var tasks = this.nextTasks(instance);
 
-                        // if > 1 task => ERROR
-                        if (tasks.length != 1) {
-                            var msg =
-                                "To field select 'next participant' but there are > 1 tasks";
-                            this.log(instance, msg);
-                            var Error = new Error(msg);
-                            reject(Error);
-                            return;
-                        }
+                        // find any tasks that are NOT in my current Lane
+                        tasks = tasks.filter((t) => {
+                            return t.laneDiagramID != this.laneDiagramID;
+                        });
 
-                        // if task in same lane ERROR
-                        if (tasks[0].laneDiagramID == this.laneDiagramID) {
-                            var msg =
-                                "To field selected 'next participant' but next Task is in SAME lane.";
-                            this.log(instance, msg);
-                            var Error = new Error(msg);
-                            reject(Error);
-                            return;
-                        }
-
-                        myLane = this.process.elementForDiagramID(
-                            tasks[0].laneDiagramID
-                        );
+                        // get the lanes associated with these tasks
+                        tasks.forEach((t) => {
+                            myLanes.push(
+                                this.process.elementForDiagramID(
+                                    tasks[0].laneDiagramID
+                                )
+                            );
+                        });
                     } else {
                         // else "from" field: get current lane
-                        myLane = this.process.elementForDiagramID(
-                            this.laneDiagramID
+                        myLanes.push(
+                            this.process.elementForDiagramID(this.laneDiagramID)
                         );
                     }
 
-                    if (!myLane) {
-                        reject("could not find lane");
+                    if (myLanes.length == 0) {
+                        var msg = `[${this.diagramID}].${field} == "${
+                            field == "to" ? "Next" : "Current"
+                        } Participant", but no lanes found.`;
+                        var error = new Error(msg);
+                        reject(error);
+                        return;
                     }
 
-                    this.laneUserEmails(myLane)
+                    this.laneUserEmails(myLanes)
                         .then((emails) => {
                             var data = {};
                             data[field] = emails;
@@ -254,7 +269,7 @@ module.exports = class ABProcessTaskEmail extends ABProcessTask {
                             subject: myState.subject,
                             //    .subject {string} The subject text of the email
 
-                            html: mystate.message
+                            html: myState.message
                             //    .text {string|Buffer|Stream|attachment-like obj} plaintext version of the message
                             //    .html {string|Buffer|Stream|attachment-like obj} HTML version of the email.
                         }

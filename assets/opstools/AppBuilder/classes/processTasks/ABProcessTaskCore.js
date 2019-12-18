@@ -162,7 +162,7 @@ module.exports = class ABProcessTaskCore extends ABMLClass {
      * follow the current instance diagram and return the next task(s)
      * after this task.
      * @param {obj} instance  the current ABProcessInstance
-     * @return {array}  [ABProcessTask, ...]
+     * @return {array}  [ABProcessTask, ...] or {null} if an error
      */
     nextTasks(instance) {
         var nextTasks = [];
@@ -173,7 +173,7 @@ module.exports = class ABProcessTaskCore extends ABMLClass {
                 `Did not find my definition for dID[${this.diagramID}]`
             );
             this.onError(instance, error);
-            return [];
+            return null;
         }
 
         // myDiagramObj :
@@ -190,7 +190,7 @@ module.exports = class ABProcessTaskCore extends ABMLClass {
                 `Did not find any outgoing flows for dID[${this.diagramID}]`
             );
             this.onError(instance, error);
-            return [];
+            return null;
         }
 
         if (!Array.isArray(exitFlows)) {
@@ -214,12 +214,15 @@ module.exports = class ABProcessTaskCore extends ABMLClass {
             targetIDs.forEach((tid) => {
                 var targetTask = this.process.elementForDiagramID(tid);
                 if (targetTask) {
-                    nextTasks.push(targetTask);
+                    if (nextTasks) {
+                        nextTasks.push(targetTask);
+                    }
                 } else {
                     var error = new Error(
                         `No ProcessTask instance for diagramID[${tid}]`
                     );
                     this.onError(instance, error);
+                    nextTasks = null;
                 }
             });
         };
@@ -316,7 +319,7 @@ module.exports = class ABProcessTaskCore extends ABMLClass {
     wantToDoSomething(instance) {
         var state = this.myState(instance);
         if (state) {
-            return state.status != "completed";
+            return state.status != "completed" && state.status != "error";
         } else {
             // my state wasn't defined?
             console.warn(

@@ -135,7 +135,9 @@ module.exports = class ABProcessEngineCore {
                 // else, get the next task(s) after this one
                 // and check those as well:
                 var nextTasks = task.nextTasks(this.instance);
-                list = list.concat(nextTasks);
+                if (nextTasks) {
+                    list = list.concat(nextTasks);
+                }
             }
             this.walkGraph(list, pending, cb);
         }

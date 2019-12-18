@@ -159,7 +159,10 @@ module.exports = class ABProcessTask extends ABProcessTaskCore {
                 this.laneDiagramID = obj.id;
             } else {
                 // if my parent shape is a Participant, then use that:
-                if (defElement.parent.type == "bpmn:Participant") {
+                if (
+                    defElement.parent &&
+                    defElement.parent.type == "bpmn:Participant"
+                ) {
                     this.laneDiagramID = defElement.parent.id;
                 } else {
                     this.laneDiagramID = null;
