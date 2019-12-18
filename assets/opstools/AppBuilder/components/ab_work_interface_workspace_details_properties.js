@@ -41,6 +41,7 @@ export default class AB_Work_Interface_Workspace_Details_Properties extends OP.C
                     view: 'toolbar',
                     css: 'ab-data-toolbar webix_dark',
                     cols: [
+                        { view: "spacer", width: 10 },
                         {
                         view: 'label',
                         label: labels.component.properties

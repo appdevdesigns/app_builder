@@ -78,6 +78,7 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 					view: 'toolbar',
 					css: 'ab-data-toolbar webix_dark',
 					cols: [
+						{ view: "spacer", width: 10 },
 						{
 							view: 'label',
 							label: this.labels.component.properties

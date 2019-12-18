@@ -71,6 +71,7 @@ export default class ABChooseList extends OP.Component {
 							css: "webix_dark",
 							id: ids.toolBar,
 							cols: [
+								{ view: "spacer", width: 10 },
 								{ view: "label", label:labels.component.title, fillspace: true },
 								{ 
 			                        view:"button", 
