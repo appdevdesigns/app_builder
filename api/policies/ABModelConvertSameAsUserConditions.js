@@ -387,7 +387,7 @@ function ProcessField( list, obj, listAlreadyChecked, req, cb) {
                     case 'many:one':
                         // in this case, this obj.PK  is in the connectedObj[currField.columnName]
 
-                        var linkedField = currField.fieldLink();
+                        var linkedField = currField.fieldLink;
 
                         var lookup = {
                             obj:obj,

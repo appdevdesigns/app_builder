@@ -208,7 +208,7 @@ function parseQueryCondition(_where, object, req, res, cb) {
                         }
 
                         // get the linked field:
-                        var linkedField = field.fieldLink();
+                        var linkedField = field.fieldLink;
 
                         // based upon the type of link:
                         var linkCase = field.linkType()+':'+field.linkViaType();
