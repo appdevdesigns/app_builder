@@ -8,7 +8,7 @@
 
 
 
-export default class ABCustomEditList { // .extend(ComponentKey, function(App, componentKey ) {
+module.exports = class ABCustomEditList { // .extend(ComponentKey, function(App, componentKey ) {
 
 	get key() { return 'editlist'; } 
 

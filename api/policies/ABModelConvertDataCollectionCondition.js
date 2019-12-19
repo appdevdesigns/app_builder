@@ -132,7 +132,7 @@ function parseQueryCondition(_where, object, req, res, cb) {
             // var dv;
             // object.application.pages().forEach(p => {
             //     if (dv == null)
-            //         dv = p.application.dataviews(dColl => dColl.id == cond.value)[0];
+            //         dv = p.application.datacollections(dColl => dColl.id == cond.value)[0];
             // });
 
             Promise.resolve()

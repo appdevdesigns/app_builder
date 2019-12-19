@@ -20,10 +20,10 @@
 // A Rule needs to save it's current state to an objects settings, and to 
 // initialize itself from those settings.
 //
-import ObjectQueryBuilder from "./ABViewQueryBuilderObjectFieldConditions"
+const ObjectQueryBuilder = require("./ABViewQueryBuilderObjectFieldConditions");
 
 
-export default class ABViewRule {
+module.exports = class ABViewRule {
 
 	/**
 	 * @param {object} App 

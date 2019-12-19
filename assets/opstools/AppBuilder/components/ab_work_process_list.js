@@ -7,7 +7,7 @@
 import ABCommonList from "./ab_common_list";
 import ABListNewProcess from "./ab_work_process_list_newProcess";
 
-const ABProcess = require("../classes/ABProcess");
+const ABProcess = require("../classes/platform/ABProcess");
 
 export default class AB_Work_Process_List extends OP.Component {
     //.extend(idBase, function(App) {

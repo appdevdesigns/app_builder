@@ -5,7 +5,7 @@
  *
  */
 
-import ABApplication from "../classes/ABApplication";
+import ABApplication from "../classes/platform/ABApplication";
 
 import AB_Work_Process_Workspace_Model from "./ab_work_process_workspace_model";
 import AB_Work_Process_Workspace_Monitor from "./ab_work_process_workspace_monitor";
@@ -114,9 +114,9 @@ export default class ABWorkProcessWorkspace extends OP.Component {
                             view: "tabbar",
                             id: ids.tabbar,
                             css: "webix_dark",
-        					type: "bottom",
-        					borderless: false,
-        					bottomOffset: 0,
+                            type: "bottom",
+                            borderless: false,
+                            bottomOffset: 0,
                             // css: "ab-data-toolbar",
                             options: [
                                 {

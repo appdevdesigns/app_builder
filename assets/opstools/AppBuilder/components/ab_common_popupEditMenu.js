@@ -8,8 +8,9 @@
  *
  */
 
+const ABComponent = require("../classes/platform/ABComponent");
 
-export default class ABCommonPopupEditMenu extends OP.Component { 
+module.exports = class ABCommonPopupEditMenu extends ABComponent {
 
 	constructor(App, idBase) {
 

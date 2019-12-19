@@ -6,10 +6,11 @@
  *
  */
 
-import AB_Work_Interface_List from "./ab_work_interface_list"
-import AB_Work_Interface_Workspace from "./ab_work_interface_workspace"
+const ABComponent = require("../classes/platform/ABComponent");
+const AB_Work_Interface_List = require("./ab_work_interface_list");
+const AB_Work_Interface_Workspace = require("./ab_work_interface_workspace");
 
-export default class AB_Work_Interface extends OP.Component {  
+module.exports = class AB_Work_Interface extends ABComponent {  
 
 
 	constructor(App) {
@@ -98,11 +99,11 @@ export default class AB_Work_Interface extends OP.Component {
 				$$(ids.component).show();
 
 				if (CurrentApplication &&
-					!CurrentApplication.loadedDataview) {
+					!CurrentApplication.loadedDatacollection) {
 
 					_logic.busy();
 
-					CurrentApplication.dataviewLoad()
+					CurrentApplication.datacollectionLoad()
 						.then(() => {
 
 							_logic.ready();

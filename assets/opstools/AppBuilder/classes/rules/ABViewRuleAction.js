@@ -20,7 +20,7 @@
 //
 
 
-export default class ABViewRuleAction {
+module.exports = class ABViewRuleAction {
 
 	/**
 	 * @param {object} App 

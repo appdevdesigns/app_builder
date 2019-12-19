@@ -460,23 +460,23 @@ label {
 	z-index: 1;
 	top: 31px;
 }
-.ab-dataview-table .ab-component-in-page {
+.ab-datacollection-table .ab-component-in-page {
 	text-align: center;
 	line-height: 15px;
 	vertical-align: middle;
 	display: table-cell;
 }
-.ab-dataview-table .webix_dataview_item {
+.ab-datacollection-table .webix_datacollection_item {
 	display: table;
 }
-.ab-dataview-table .fa {
+.ab-datacollection-table .fa {
 	color: #337ab7;
 	margin-bottom: 10px;
 }
-.webix_dataview.borderless .webix_dataview_item{
+.webix_datacollection.borderless .webix_datacollection_item{
 	border:none;
 }
-.webix_dataview_item:hover {
+.webix_datacollection_item:hover {
     background: #edeff0;
     border-radius: 5px;
 }
@@ -681,7 +681,7 @@ label {
 	top: 0;
 	right: 0;
 }
-.hasDataView {
+.hasDataCollection {
 	color: #1ca1c1;
 	margin: 5px;
 	position: absolute;

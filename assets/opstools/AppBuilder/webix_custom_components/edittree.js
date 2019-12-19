@@ -7,7 +7,7 @@
  */
 
 
-export default class ABCustomEditTree {   // .extend(ComponentKey, function(App, componentKey ) {
+module.exports = class ABCustomEditTree {   // .extend(ComponentKey, function(App, componentKey ) {
 
 	get key() { return 'edittree'; } 
 

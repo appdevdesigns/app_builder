@@ -1,7 +1,7 @@
 
-import ABViewGridFilterRule from "./ABViewGridFilterRule"
+const ABViewGridFilterRule = require("./ABViewGridFilterRule");
 
-export default class ABViewGridFilterMenu {
+module.exports = class ABViewGridFilterMenu {
 
 	/**
 	 * @param {object} App 

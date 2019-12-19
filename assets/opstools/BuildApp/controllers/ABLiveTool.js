@@ -230,18 +230,18 @@ steal(
 										}
 									};
 
-									self.data.application.dataviews().forEach(dv => {
+									self.data.application.datacollections().forEach(dc => {
 
-										if (!dv) return;
+										if (!dc) return;
 
-										dv.init();
+										dc.init();
 
-										let datasource = dv.datasource;
+										let datasource = dc.datasource;
 										if (!datasource) return;
 
 										// Queries
-										if (dv.settings &&
-											dv.settings.isQuery &&
+										if (dc.settings &&
+											dc.settings.isQuery &&
 											self.data.application.queries(q => q.id == datasource.id).length < 1) {
 
 											self.data.application._queries.push(datasource);
@@ -578,18 +578,18 @@ steal(
 								});
 							}
 
-							if (!self.updateDataviewEventId && page.isRoot()) {
+							if (!self.updateDatacollectionEventId && page.isRoot()) {
 
 								/**
-								 * @event ab.dataview.update
-								 * This event is triggered when the dataview is updated
+								 * @event ab.datacollection.update
+								 * This event is triggered when the datacollection is updated
 								 * 
-								 * @param data.dataviewId {uuid} - id of the data view
+								 * @param data.datacollectionId {uuid} - id of the data view
 								 */
-								self.updateDataviewEventId = AD.comm.hub.subscribe('ab.dataview.update', function (msg, data) {
+								self.updateDatacollectionEventId = AD.comm.hub.subscribe('ab.datacollection.update', function (msg, data) {
 
-									let updatedDv = self.data.application.dataviews(dv => dv.id == data.dataviewId)[0];
-									if (updatedDv) {
+									let updatedDC = self.data.application.datacollections(dc => dc.id == data.datacollectionId)[0];
+									if (updatedDC) {
 										needToReloadPage();
 									}
 

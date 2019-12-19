@@ -10,7 +10,7 @@ var async = require('async'),
     AD = require('ad-utils'),
     path = require('path');
 
-var ABClassApplication = require(path.join('..', 'classes', 'ABClassApplication'));
+var ABClassApplication = require(path.join('..', 'classes', 'platform', 'ABApplication'));
 
 
 module.exports = {

@@ -15,7 +15,7 @@ var _     = require('lodash');
 var mysql = require('mysql');
 var moment = require('moment');
 
-var Base64Images = require('../classes/Base64Images.js');
+var Base64Images = require('../classes/platform/Base64Images.js');
 
 module.exports = {
 

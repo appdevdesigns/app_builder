@@ -6,12 +6,13 @@
  *
  */
 
-import ABPage from '../classes/views/ABViewPage'
-import ABViewPage from '../classes/views/ABViewPage';
-import ABViewReportPage from '../classes/views/ABViewReportPage';
+const ABComponent = require("../classes/platform/ABComponent");
+const ABPage = require('../classes/platform/views/ABViewPage');
+// const ABViewPage = require('../classes/platform/views/ABViewPage');
+// const ABViewReportPage = require('../classes/platform/views/ABViewReportPage');
 
 
-export default class AB_Work_Interface_List_NewPage_BlankPage extends OP.Component {
+module.exports = class AB_Work_Interface_List_NewPage_BlankPage extends ABComponent {
 
 	constructor(App) {
 		super(App, 'ab_work_interface_list_newPage_blankPage');
@@ -98,16 +99,16 @@ export default class AB_Work_Interface_List_NewPage_BlankPage extends OP.Compone
 
 				var options = [{ id: '-', value: labels.component.rootPage }];
 
-				var addPage = function (page, indent) {
-					indent = indent || '';
-					options.push({ id: page.urlPointer(), value: indent + page.label });
-					page.pages(p => !(p instanceof ABViewReportPage)).forEach(function (p) {
-						addPage(p, indent + '-');
-					})
-				}
-				application.pages(p => !(p instanceof ABViewReportPage)).forEach(function (page) {
-					addPage(page, '');
-				});
+				// var addPage = function (page, indent) {
+				// 	indent = indent || '';
+				// 	options.push({ id: page.urlPointer(), value: indent + page.label });
+				// 	page.pages(p => !(p instanceof ABViewReportPage)).forEach(function (p) {
+				// 		addPage(p, indent + '-');
+				// 	})
+				// }
+				// application.pages(p => !(p instanceof ABViewReportPage)).forEach(function (page) {
+				// 	addPage(page, '');
+				// });
 
 				$$(ids.parentList).define('options', options);
 				$$(ids.parentList).refresh();

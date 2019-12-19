@@ -7,7 +7,7 @@
  */
 
 
-export default class ABCustomActiveList  {
+module.exports = class ABCustomActiveList  {
 
 	get key() { return 'activelist'; } 
 

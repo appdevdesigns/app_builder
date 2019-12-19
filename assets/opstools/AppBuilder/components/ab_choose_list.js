@@ -5,11 +5,12 @@
  * Display a list of Applications for the user to select.
  *
  */
-import ABApplication from "../classes/ABApplication"
-import AB_Choose_List_Menu from "./ab_common_popupEditMenu"
+const ABApplication = require("../classes/platform/ABApplication");
+const ABComponent = require("../classes/platform/ABComponent");
+const AB_Choose_List_Menu = require("./ab_common_popupEditMenu")
 
 
-export default class ABChooseList extends OP.Component { 
+module.exports = class ABChooseList extends ABComponent { 
 
 	constructor(App) {
 		super(App, 'ab_choose_list');

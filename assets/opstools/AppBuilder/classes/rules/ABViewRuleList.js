@@ -32,7 +32,7 @@
 //  }
 
 
-export default class ABViewRuleList {
+module.exports = class ABViewRuleList {
 
 	/**
 	 * @param {object} App 

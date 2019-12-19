@@ -8,7 +8,7 @@
 var uuid = require('uuid/v4'),
 	path = require('path');
 
-var ABClassObject = require(path.join('..', 'classes', 'ABClassObject'));
+var ABClassObject = require(path.join('..', 'classes', 'platform', 'ABObject'));
 
 module.exports = {
 

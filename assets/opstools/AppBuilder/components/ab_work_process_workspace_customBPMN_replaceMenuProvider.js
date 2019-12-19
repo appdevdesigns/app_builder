@@ -14,7 +14,7 @@ import { forEach, filter } from "min-dash";
 
 import * as replaceOptions from "bpmn-js/lib/features/replace/ReplaceOptions";
 
-import ProcessTaskManager from "../classes/ABProcessTaskManager";
+import ProcessTaskManager from "../classes/core/process/ABProcessTaskManager";
 
 /**
  * This module is an element agnostic replace menu provider for the popup menu.

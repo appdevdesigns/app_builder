@@ -4,16 +4,17 @@
  *
  */
 
-import AB_Work_Dataview_List from "./ab_work_dataview_list"
-import AB_Work_Dataview_Workspace from "./ab_work_dataview_workspace"
+const ABComponent = require("../classes/platform/ABComponent");
+const AB_Work_Datacollection_List = require("./ab_work_dataview_list");
+const AB_Work_Datacollection_Workspace = require("./ab_work_dataview_workspace");
 
-export default class AB_Work_Dataview extends OP.Component {
+module.exports = class AB_Work_Datacollection extends ABComponent {
 
 	constructor(App) {
 		super(App, 'ab_work_dataview');
 
-		let DataviewList = new AB_Work_Dataview_List(App);
-		let DataviewWorkspace = new AB_Work_Dataview_Workspace(App);
+		let DatacollectionList = new AB_Work_Datacollection_List(App);
+		let DatacollectionWorkspace = new AB_Work_Datacollection_Workspace(App);
 
 		let CurrentApplication;
 
@@ -27,18 +28,18 @@ export default class AB_Work_Dataview extends OP.Component {
 			id: ids.component,
 			type: "space",
 			cols: [
-				DataviewList.ui,
+				DatacollectionList.ui,
 				{ view: "resizer", width: 11 },
-				DataviewWorkspace.ui
+				DatacollectionWorkspace.ui
 			]
 		};
 
 		// Our init() function for setting up our UI
 		this.init = function () {
 
-			DataviewWorkspace.init();
-			DataviewList.init({
-				onChange: _logic.callbackSelectDataview
+			DatacollectionWorkspace.init();
+			DatacollectionList.init({
+				onChange: _logic.callbackSelectDatacollection
 			});
 
 		}
@@ -58,9 +59,9 @@ export default class AB_Work_Dataview extends OP.Component {
 
 				CurrentApplication = application;
 
-				DataviewWorkspace.clearWorkspace();
-				DataviewList.applicationLoad(application);
-				DataviewWorkspace.applicationLoad(application);
+				DatacollectionWorkspace.clearWorkspace();
+				DatacollectionList.applicationLoad(application);
+				DatacollectionWorkspace.applicationLoad(application);
 			},
 
 
@@ -73,7 +74,7 @@ export default class AB_Work_Dataview extends OP.Component {
 
 				$$(ids.component).show();
 
-				DataviewList.busy();
+				DatacollectionList.busy();
 
 				let tasks = [];
 
@@ -86,27 +87,27 @@ export default class AB_Work_Dataview extends OP.Component {
 					tasks.push(CurrentApplication.queryLoad());
 
 					// Load data views
-					if (!CurrentApplication.loadedDataview || DataviewList.count() < 1)
-						tasks.push(CurrentApplication.dataviewLoad());
+					if (!CurrentApplication.loadedDatacollection || DatacollectionList.count() < 1)
+						tasks.push(CurrentApplication.datacollectionLoad());
 				}
 
 				Promise.all(tasks)
 					.then(() => {
 
-						DataviewWorkspace.applicationLoad(CurrentApplication);
-						DataviewList.applicationLoad(CurrentApplication);
-						DataviewList.ready();
+						DatacollectionWorkspace.applicationLoad(CurrentApplication);
+						DatacollectionList.applicationLoad(CurrentApplication);
+						DatacollectionList.ready();
 
 					});
 
 			},
 
-			callbackSelectDataview: function (dataview) {
+			callbackSelectDatacollection: function (datacollection) {
 
-				if (dataview == null)
-					DataviewWorkspace.clearWorkspace();
+				if (datacollection == null)
+					DatacollectionWorkspace.clearWorkspace();
 				else
-					DataviewWorkspace.populateWorkspace(dataview);
+					DatacollectionWorkspace.populateWorkspace(datacollection);
 			}
 
 		}

@@ -28,7 +28,7 @@ var _     = require('lodash');
 var RP = require('request-promise-native');
 var QRCode = require('qrcode');
 
-var Base64Images = require('../classes/Base64Images.js');
+var Base64Images = require('../classes/platform/Base64Images.js');
 
 module.exports = {
 

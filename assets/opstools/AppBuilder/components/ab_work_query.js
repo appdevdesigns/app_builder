@@ -6,13 +6,12 @@
  *
  */
 
+const ABComponent = require("../classes/platform/ABComponent");
 
-import AB_Work_Query_List from "./ab_work_query_list"
-import AB_Work_Query_Workspace from "./ab_work_query_workspace"
+const AB_Work_Query_List = require("./ab_work_query_list");
+const AB_Work_Query_Workspace = require("./ab_work_query_workspace");
 
-
-
-export default class AB_Work_Query extends OP.Component {   //.extend(idBase, function(App) {
+module.exports = class AB_Work_Query extends ABComponent {   //.extend(idBase, function(App) {
 
 	constructor(App) {
 		super(App, 'ab_work_query');

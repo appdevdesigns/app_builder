@@ -5,10 +5,11 @@
  *
  */
 
-import ABBlankDataview from "./ab_work_dataview_list_newDataview_blank"
-import ABImportDataview from "./ab_work_dataview_list_newDataview_import"
+const ABComponent = require("../classes/platform/ABComponent");
+const ABBlankDataview = require("./ab_work_dataview_list_newDataview_blank");
+const ABImportDataview = require("./ab_work_dataview_list_newDataview_import");
 
-export default class AB_Work_Dataview_List_NewDataview extends OP.Component {
+module.exports = class AB_Work_Dataview_List_NewDataview extends ABComponent {
 
 	constructor(App) {
 		super(App, 'ab_work_dataview_list_newdataview');

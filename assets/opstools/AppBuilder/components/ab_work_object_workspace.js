@@ -6,27 +6,28 @@
  *
  */
 
-import ABApplication from "../classes/ABApplication"
+const ABComponent = require("../classes/platform/ABComponent");
+const ABApplication = require("../classes/platform/ABApplication");
 
-import ABDataview from "../classes/ABDataview"
+const ABDataCollection = require("../classes/platform/ABDataCollection");
 
-import ABWorkspaceDatatable from "./ab_work_object_workspace_datatable"
-import ABWorkspaceKanBan from "./ab_work_object_workspace_kanban"
-import ABWorkspaceGantt from "./ab_work_object_workspace_gantt"
+const ABWorkspaceDatatable = require("./ab_work_object_workspace_datatable");
+const ABWorkspaceKanBan = require("./ab_work_object_workspace_kanban");
+const ABWorkspaceGantt = require("./ab_work_object_workspace_gantt");
 
-import ABPopupDefineLabel from "./ab_work_object_workspace_popupDefineLabel"
-import ABPopupFilterDataTable from "./ab_work_object_workspace_popupFilterDataTable"
-import ABPopupFrozenColumns from "./ab_work_object_workspace_popupFrozenColumns"
-import ABPopupHideFields from "./ab_work_object_workspace_popupHideFields"
-import ABPopupMassUpdate from "./ab_work_object_workspace_popupMassUpdate"
-import ABPopupNewDataField from "./ab_work_object_workspace_popupNewDataField"
-import ABPopupSortField from "./ab_work_object_workspace_popupSortFields"
-import ABPopupExport from "./ab_work_object_workspace_popupExport"
-import ABPopupImport from "./ab_work_object_workspace_popupImport"
-import ABPopupViewSettings from "./ab_work_object_workspace_popupViewSettings"
+const ABPopupDefineLabel = require("./ab_work_object_workspace_popupDefineLabel");
+const ABPopupFilterDataTable = require("./ab_work_object_workspace_popupFilterDataTable");
+const ABPopupFrozenColumns = require("./ab_work_object_workspace_popupFrozenColumns");
+const ABPopupHideFields = require("./ab_work_object_workspace_popupHideFields");
+const ABPopupMassUpdate = require("./ab_work_object_workspace_popupMassUpdate");
+const ABPopupNewDataField = require("./ab_work_object_workspace_popupNewDataField");
+const ABPopupSortField = require("./ab_work_object_workspace_popupSortFields");
+const ABPopupExport = require("./ab_work_object_workspace_popupExport");
+const ABPopupImport = require("./ab_work_object_workspace_popupImport");
+const ABPopupViewSettings = require("./ab_work_object_workspace_popupViewSettings");
 
 
-export default class ABWorkObjectWorkspace extends OP.Component {
+module.exports = class ABWorkObjectWorkspace extends ABComponent {
 
     /**
      * @param {object} App
@@ -393,7 +394,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 
 
 		// create ABViewDataCollection
-		var CurrentDataview = new ABDataview({}, CurrentApplication);
+		var CurrentDatacollection = new ABDataCollection({}, CurrentApplication);
 
     	// Our webix UI definition:
     	this.ui = {
@@ -502,11 +503,11 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 			KanBan.init();
 			Gantt.init();
 
-			CurrentDataview.init();
+			CurrentDatacollection.init();
 
-			DataTable.dataviewLoad(CurrentDataview);
-			KanBan.dataviewLoad(CurrentDataview);
-			Gantt.dataviewLoad(CurrentDataview);
+			DataTable.datacollectionLoad(CurrentDatacollection);
+			KanBan.datacollectionLoad(CurrentDatacollection);
+			Gantt.datacollectionLoad(CurrentDatacollection);
 
 
     		PopupDefineLabelComponent.init({
@@ -582,7 +583,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 
 				PopupNewDataFieldComponent.applicationLoad(application);
 
-				CurrentDataview.application = CurrentApplication;
+				CurrentDatacollection.application = CurrentApplication;
 
 			},
 
@@ -1135,7 +1136,7 @@ console.error('TODO: toolbarPermission()');
 						$$(ids.buttonRowNew).enable();
                 }
 
-                CurrentDataview.datasource = CurrentObject;
+                CurrentDatacollection.datasource = CurrentObject;
 
                 DataTable.objectLoad(CurrentObject);
                 KanBan.objectLoad(CurrentObject);
@@ -1227,9 +1228,9 @@ console.error('TODO: toolbarPermission()');
 					sorts = CurrentObject.workspaceSortFields;
 				}
 
-				CurrentDataview.datasource = CurrentObject;
+				CurrentDatacollection.datasource = CurrentObject;
 
-				CurrentDataview.fromValues({
+				CurrentDatacollection.fromValues({
 					settings: {
 						datasourceID: CurrentObject.id,
 						objectWorkspace: {
@@ -1239,17 +1240,17 @@ console.error('TODO: toolbarPermission()');
 					}
 				});
 
-				CurrentDataview.refreshFilterConditions(wheres);
-				CurrentDataview.clearAll();
+				CurrentDatacollection.refreshFilterConditions(wheres);
+				CurrentDatacollection.clearAll();
 
                 // WORKAROUND: load all data becuase kanban does not support pagination now
                 let view = CurrentObject.workspaceViews.getCurrentView();
                 if (view.type === 'gantt' || view.type === 'kanban') {
-                    CurrentDataview.settings.loadAll = true;
-                    CurrentDataview.loadData(0);
+                    CurrentDatacollection.settings.loadAll = true;
+                    CurrentDatacollection.loadData(0);
                 }
                 else {
-                    CurrentDataview.loadData(0, 30);
+                    CurrentDatacollection.loadData(0, 30);
                 }
 
 			},

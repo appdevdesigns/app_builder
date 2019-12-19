@@ -6,13 +6,14 @@
  *
  */
 
-import AB_Work_Interface_List_NewPage_BlankPage from "./ab_work_interface_list_newPage_blankPage"
-import AB_Work_Interface_List_NewPage_QuickPage from "./ab_work_interface_list_newPage_quickPage"
-// import AB_Work_Interface_List_NewPage_ReportPage from "./ab_work_interface_list_newPage_reportPage"
-import ABPage from '../classes/views/ABViewPage'
+const ABComponent = require("../classes/platform/ABComponent");
+const AB_Work_Interface_List_NewPage_BlankPage = require("./ab_work_interface_list_newPage_blankPage");
+const AB_Work_Interface_List_NewPage_QuickPage = require("./ab_work_interface_list_newPage_quickPage");
+// const AB_Work_Interface_List_NewPage_ReportPage = require("./ab_work_interface_list_newPage_reportPage");
+// const ABPage = require('../classes/platform/views/ABViewPage');
 
 
-export default class AB_Work_Interface_List_NewPage extends OP.Component {  
+module.exports = class AB_Work_Interface_List_NewPage extends ABComponent {
 
 	constructor(App) {
 		super(App, 'ab_work_interface_list_newPage');

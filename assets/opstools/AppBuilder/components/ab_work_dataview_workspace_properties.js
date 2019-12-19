@@ -1,13 +1,14 @@
-import ABPopupSortField from "./ab_work_object_workspace_popupSortFields"
-import ABViewTab from "../classes/views/ABViewTab"
-import ABViewDetail from "../classes/views/ABViewDetail"
-import RowFilter from "../classes/RowFilter"
+const ABComponent = require("../classes/platform/ABComponent");
+const ABPopupSortField = require("./ab_work_object_workspace_popupSortFields");
+const ABViewTab = require("../classes/platform/views/ABViewTab");
+const ABViewDetail = require("../classes/platform/views/ABViewDetail");
+const RowFilter = require("../classes/platform/RowFilter");
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
-export default class AB_Work_Dataview_Workspace_Properties extends OP.Component {
+module.exports = class AB_Work_Datacollection_Workspace_Properties extends ABComponent {
 
 	constructor(App) {
 		super(App, 'ab_work_dataview_workspace_properties');
@@ -17,7 +18,7 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 		this.labels = {
 			common: App.labels,
 			component: {
-				properties: L('ab.dataview.properties', "*Properties"),
+				properties: L('ab.datacollection.properties', "*Properties"),
 			}
 		};
 
@@ -25,7 +26,7 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 			propertyPanel: this.unique('propertyPanel'),
 
 			dataSource: this.unique('dataSource'),
-			linkDataview: this.unique('linkDataview'),
+			linkDatacollection: this.unique('linkDatacollection'),
 			linkField: this.unique('linkField'),
 			loadAll: this.unique('loadAll'),
 			fixSelect: this.unique('fixSelect'),
@@ -40,14 +41,14 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 		};
 
 		this.callbacks = {
-			onSave: function (dataview) { }
+			onSave: function (datacollection) { }
 		};
 
 		// 
 		// Define our external interface methods:
 		// 
 		this.applicationLoad = this._logic.applicationLoad;
-		this.dataviewLoad = this._logic.dataviewLoad;
+		this.datacollectionLoad = this._logic.datacollectionLoad;
 		
 		/*
 		 * _templateListItem
@@ -56,7 +57,7 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 		 */
 		this._templateListItem = [
 			"<div class='ab-page-list-item'>",
-				"{common.icon()} <span class='webix_icon fa fa-#typeIcon#'></span> #label# #hasDataView#",
+				"{common.icon()} <span class='webix_icon fa fa-#typeIcon#'></span> #label# #hasDataCollection#",
 			"</div>"
 		].join('');
 		
@@ -118,10 +119,10 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 										},
 										// link to another data collection
 										{
-											id: ids.linkDataview,
+											id: ids.linkDatacollection,
 											view: "select",
-											name: "linkDataview",
-											label: L('ab.component.datacollection.linkDataview', '*Linked To:'),
+											name: "linkDatacollection",
+											label: L('ab.component.datacollection.linkDatacollection', '*Linked To:'),
 											labelWidth: App.config.labelWidthLarge,
 											options: [],
 											hidden: 1,
@@ -351,7 +352,7 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 				});
 				datasources = datasources.concat(queries);
 
-				datasources.unshift({ id: '', value: L('ab.dataview.selectSource', '*Select a source') });
+				datasources.unshift({ id: '', value: L('ab.datacollection.selectSource', '*Select a source') });
 
 				$$(ids.dataSource).define("options", {
 					body: {
@@ -383,7 +384,7 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 
 					// add to tree collection
 					this.viewList.add(page, index, parentId);
-					
+
 					// add sub-pages
 					if (page instanceof ABViewDetail) {
 						return 
@@ -434,20 +435,20 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 
 			},
 
-			dataviewLoad: (dataview) => {
+			datacollectionLoad: (datacollection) => {
 
 				let ids = this.ids;
 
-				this._dataview = dataview;
+				this._datacollection = datacollection;
 
 				let settings = {};
 
-				if (dataview) {
-					settings = dataview.settings || {};
+				if (datacollection) {
+					settings = datacollection.settings || {};
 				}
 
 				// populate link data collection options
-				this._logic.initLinkDataviewOptions();
+				this._logic.initLinkDatacollectionOptions();
 
 				// populate link fields
 				this._logic.initLinkFieldOptions();
@@ -459,9 +460,9 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 
 				// populate data items to fix select options
 				this._logic.populateFixSelector();
-				if (dataview) {
-					dataview.removeListener('loadData', this._logic.populateFixSelector);
-					dataview.on('loadData', this._logic.populateFixSelector);
+				if (datacollection) {
+					datacollection.removeListener('loadData', this._logic.populateFixSelector);
+					datacollection.on('loadData', this._logic.populateFixSelector);
 				}
 
 				// // if selected soruce is a query, then hide advanced options UI
@@ -475,13 +476,13 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 				// }
 
 				$$(ids.dataSource).define('value', settings.datasourceID);
-				$$(ids.linkDataview).define('value', settings.linkDataviewID);
+				$$(ids.linkDatacollection).define('value', settings.linkDatacollectionID);
 				$$(ids.linkField).define('value', settings.linkFieldID);
 				$$(ids.loadAll).define('value', settings.loadAll);
 				$$(ids.fixSelect).define('value', settings.fixSelect);
 
 				$$(ids.dataSource).refresh();
-				$$(ids.linkDataview).refresh();
+				$$(ids.linkDatacollection).refresh();
 				$$(ids.linkField).refresh();
 				$$(ids.loadAll).refresh();
 				$$(ids.fixSelect).refresh();
@@ -509,43 +510,43 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 
 			save: () => {
 
-				if (!this._dataview)
+				if (!this._datacollection)
 					return Promise.resolve();
 
 				this._logic.busy();
 
 				let ids = this.ids;
 
-				this._dataview.settings = this._dataview.settings || {};
-				this._dataview.settings.datasourceID = $$(ids.dataSource).getValue();
-				this._dataview.settings.linkDataviewID = $$(ids.linkDataview).getValue();
-				this._dataview.settings.linkFieldID = $$(ids.linkField).getValue();
-				this._dataview.settings.objectWorkspace = {};
-				this._dataview.settings.objectWorkspace.filterConditions = this.FilterComponent.getValue();
-				this._dataview.settings.objectWorkspace.sortFields = this.PopupSortFieldComponent.getValue();
-				this._dataview.settings.loadAll = $$(ids.loadAll).getValue();
-				this._dataview.settings.fixSelect = $$(ids.fixSelect).getValue();
+				this._datacollection.settings = this._datacollection.settings || {};
+				this._datacollection.settings.datasourceID = $$(ids.dataSource).getValue();
+				this._datacollection.settings.linkDatacollectionID = $$(ids.linkDatacollection).getValue();
+				this._datacollection.settings.linkFieldID = $$(ids.linkField).getValue();
+				this._datacollection.settings.objectWorkspace = {};
+				this._datacollection.settings.objectWorkspace.filterConditions = this.FilterComponent.getValue();
+				this._datacollection.settings.objectWorkspace.sortFields = this.PopupSortFieldComponent.getValue();
+				this._datacollection.settings.loadAll = $$(ids.loadAll).getValue();
+				this._datacollection.settings.fixSelect = $$(ids.fixSelect).getValue();
 
-				let selectedDS = $$(ids.dataSource).getPopup().getList().getItem(this._dataview.settings.datasourceID);
+				let selectedDS = $$(ids.dataSource).getPopup().getList().getItem(this._datacollection.settings.datasourceID);
 				if (selectedDS)
-					this._dataview.settings.isQuery = selectedDS.isQuery;
+					this._datacollection.settings.isQuery = selectedDS.isQuery;
 				else
-					this._dataview.settings.isQuery = false;
+					this._datacollection.settings.isQuery = false;
 
 				return new Promise((resolve, reject) => {
 
-					this._dataview.save()
+					this._datacollection.save()
 						.catch(err => {
 							this._logic.ready();
 							reject(err);
 						})
 						.then(() => {
 
-							this._dataview.clearAll();
+							this._datacollection.clearAll();
 
 							this._logic.ready();
 
-							this.callbacks.onSave(this._dataview);
+							this.callbacks.onSave(this._datacollection);
 
 							resolve();
 
@@ -555,12 +556,12 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 
 			},
 
-			initLinkDataviewOptions: () => {
+			initLinkDatacollectionOptions: () => {
 
 				let ids = this.ids;
 
 				// get linked data collection list
-				let objSource = this._dataview ? this._dataview.datasource : null;
+				let objSource = this._datacollection ? this._datacollection.datasource : null;
 				if (objSource != null) {
 					let linkFields = objSource.connectFields();
 					let linkObjectIds = linkFields.map(f => f.settings.linkObject);
@@ -568,16 +569,16 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 					let linkDvOptions = [];
 
 					// pull data collections that are link to object
-					let linkDvs = this._application.dataviews(dv => {
+					let linkDCs = this._application.datacollections(dc => {
 
-						return linkObjectIds.filter(objId => dv.settings.datasourceID == objId).length > 0;
+						return linkObjectIds.filter(objId => dc.settings.datasourceID == objId).length > 0;
 
 					});
 
-					if (linkDvs && linkDvs.length > 0) {
+					if (linkDCs && linkDCs.length > 0) {
 
 						// set data collections to options
-						linkDvs.forEach((dc) => {
+						linkDCs.forEach((dc) => {
 							linkDvOptions.push({
 								id: dc.id,
 								value: dc.label
@@ -586,15 +587,15 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 
 						linkDvOptions.unshift({ id: '', value: L('ab.component.datacollection.selectLinkSource', '*Select a link source') });
 
-						$$(ids.linkDataview).show();
-						$$(ids.linkDataview).define("options", linkDvOptions);
-						$$(ids.linkDataview).define("value", this._dataview ? this._dataview.settings.linkDataviewID : '');
-						$$(ids.linkDataview).refresh();
+						$$(ids.linkDatacollection).show();
+						$$(ids.linkDatacollection).define("options", linkDvOptions);
+						$$(ids.linkDatacollection).define("value", this._datacollection ? this._datacollection.settings.linkDatacollectionID : '');
+						$$(ids.linkDatacollection).refresh();
 					}
 					else {
 
 						// hide options
-						$$(ids.linkDataview).hide();
+						$$(ids.linkDatacollection).hide();
 						$$(ids.linkField).hide();
 					}
 
@@ -602,7 +603,7 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 				else {
 
 					// hide options
-					$$(ids.linkDataview).hide();
+					$$(ids.linkDatacollection).hide();
 					$$(ids.linkField).hide();
 				}
 
@@ -613,22 +614,22 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 				let ids = this.ids;
 
 				let linkFieldOptions = [];
-				let linkDataview = null;
+				let linkDC = null;
 
 				// Specify id of linked data view
 				if (linkedDvId) {
-					linkDataview = this._application.dataviews(dv => dv.id == linkedDvId)[0];
+					linkDC = this._application.datacollections(dc => dc.id == linkedDvId)[0];
 				}
 				// Pull from current data view
-				else if (this._dataview && this._dataview.dataviewLink) {
-					linkDataview = this._dataview.dataviewLink;
+				else if (this._datacollection && this._datacollection.datacollectionLink) {
+					linkDC = this._datacollection.datacollectionLink;
 				}
 
 				// get fields that link to our ABObject
-				if (linkDataview) {
+				if (linkDC) {
 
-					let object = this._dataview.datasource;
-					let linkObject = linkDataview.datasource;
+					let object = this._datacollection.datasource;
+					let linkObject = linkDC.datasource;
 					let relationFields = object.connectFields().filter(link => link.settings.linkObject == (linkObject || {}).id);
 
 					// pull fields to options
@@ -646,9 +647,9 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 					$$(ids.linkField).hide();
 
 				let linkFieldId = linkFieldOptions[0] ? linkFieldOptions[0].id : '';
-				if (this._dataview &&
-					this._dataview.settings) {
-					linkFieldId = this._dataview.settings.linkFieldID;
+				if (this._datacollection &&
+					this._datacollection.settings) {
+					linkFieldId = this._datacollection.settings.linkFieldID;
 				}
 
 				$$(ids.linkField).define("options", linkFieldOptions);
@@ -659,10 +660,10 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 
 			populatePopupEditors: () => {
 
-				if (this._dataview &&
-					this._dataview.datasource) {
+				if (this._datacollection &&
+					this._datacollection.datasource) {
 
-					let datasource = this._dataview.datasource;
+					let datasource = this._datacollection.datasource;
 
 					// array of filters to apply to the data table
 					let filterConditions = {
@@ -670,20 +671,20 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 						rules: []
 					};
 					let sortConditions = [];
-					if (this._dataview.settings.objectWorkspace) {
+					if (this._datacollection.settings.objectWorkspace) {
 
-						if (this._dataview.settings.objectWorkspace.filterConditions)
-							filterConditions = this._dataview.settings.objectWorkspace.filterConditions;
+						if (this._datacollection.settings.objectWorkspace.filterConditions)
+							filterConditions = this._datacollection.settings.objectWorkspace.filterConditions;
 
-						if (this._dataview.settings.objectWorkspace.sortFields)
-							sortConditions = this._dataview.settings.objectWorkspace.sortFields;
+						if (this._datacollection.settings.objectWorkspace.sortFields)
+							sortConditions = this._datacollection.settings.objectWorkspace.sortFields;
 					}
 
 					// Populate data to popups
 					this.FilterComponent.objectLoad(datasource);
-					this.FilterComponent.viewLoad(this._dataview);
+					this.FilterComponent.viewLoad(this._datacollection);
 					this.FilterComponent.setValue(filterConditions);
-					this._dataview.refreshFilterConditions(filterConditions);
+					this._datacollection.refreshFilterConditions(filterConditions);
 
 					this.PopupSortFieldComponent.objectLoad(datasource);
 					this.PopupSortFieldComponent.setValue(sortConditions);
@@ -695,14 +696,14 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 			populateBadgeNumber: () => {
 
 				let ids = this.ids;
-				let dataview = this._dataview;
+				let datacollection = this._datacollection;
 
-				if (dataview &&
-					dataview.settings &&
-					dataview.settings.objectWorkspace &&
-					dataview.settings.objectWorkspace.filterConditions &&
-					dataview.settings.objectWorkspace.filterConditions.rules) {
-					$$(ids.buttonFilter).define('badge', dataview.settings.objectWorkspace.filterConditions.rules.length);
+				if (datacollection &&
+					datacollection.settings &&
+					datacollection.settings.objectWorkspace &&
+					datacollection.settings.objectWorkspace.filterConditions &&
+					datacollection.settings.objectWorkspace.filterConditions.rules) {
+					$$(ids.buttonFilter).define('badge', datacollection.settings.objectWorkspace.filterConditions.rules.length);
 					$$(ids.buttonFilter).refresh();
 				}
 				else {
@@ -710,11 +711,11 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 					$$(ids.buttonFilter).refresh();
 				}
 
-				if (dataview &&
-					dataview.settings &&
-					dataview.settings.objectWorkspace &&
-					dataview.settings.objectWorkspace.sortFields) {
-					$$(ids.buttonSort).define('badge', dataview.settings.objectWorkspace.sortFields.length);
+				if (datacollection &&
+					datacollection.settings &&
+					datacollection.settings.objectWorkspace &&
+					datacollection.settings.objectWorkspace.sortFields) {
+					$$(ids.buttonSort).define('badge', datacollection.settings.objectWorkspace.sortFields.length);
 					$$(ids.buttonSort).refresh();
 				}
 				else {
@@ -729,12 +730,12 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 				let dataItems = [];
 				let fixSelect = '';
 
-				if (this._dataview &&
-					this._dataview.datasource) {
+				if (this._datacollection &&
+					this._datacollection.datasource) {
 
-					let datasource = this._dataview.datasource;
+					let datasource = this._datacollection.datasource;
 
-					dataItems = this._dataview.getData().map(item => {
+					dataItems = this._datacollection.getData().map(item => {
 						return {
 							id: item.id,
 							value: datasource ? datasource.displayData(item) : ""
@@ -757,7 +758,7 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 
 					dataItems.unshift({ id: '', value: L('ab.component.datacollection.fixSelect', '*Select fix cursor') });
 
-					fixSelect = this._dataview.settings.fixSelect || '';
+					fixSelect = this._datacollection.settings.fixSelect || '';
 
 				}
 
@@ -769,7 +770,7 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 
 			initPopupEditors: () => {
 
-				let idBase = 'ABDataviewPropertyEditor';
+				let idBase = 'ABDatacollectionPropertyEditor';
 
 				this.FilterComponent = new RowFilter(this.App, `${idBase}_filter`);
 				this.FilterComponent.init({
@@ -806,13 +807,13 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 					$$(ids.dataSource).unblockEvent();
 				}
 
-				let dataview = this._dataview;
+				let datacollection = this._datacollection;
 				let object;
 				let query;
 
-				if (dataview) {
-					object = dataview.application.objects(obj => obj.id == datasourceID)[0];
-					query = dataview.application.queries(q => q.id == datasourceID)[0];
+				if (datacollection) {
+					object = datacollection.application.objects(obj => obj.id == datasourceID)[0];
+					query = datacollection.application.queries(q => q.id == datasourceID)[0];
 				}
 
 				if (object) {
@@ -852,12 +853,12 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 
 			onFilterChange: () => {
 
-				let dataview = this._dataview;
-				if (!dataview) return;
+				let datacollection = this._datacollection;
+				if (!datacollection) return;
 
 				let filterValues = this.FilterComponent.getValue();
 
-				dataview.settings.objectWorkspace.filterConditions = filterValues;
+				datacollection.settings.objectWorkspace.filterConditions = filterValues;
 
 				var allComplete = true;
 				filterValues.rules.forEach((f) => {
@@ -895,13 +896,13 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 
 			onSortChange: (sortSettings) => {
 
-				let dataview = this._dataview;
-				if (!dataview) return;
+				let datacollection = this._datacollection;
+				if (!datacollection) return;
 
-				dataview.settings = dataview.settings || {};
-				dataview.settings.objectWorkspace = dataview.settings.objectWorkspace || {};
+				datacollection.settings = datacollection.settings || {};
+				datacollection.settings.objectWorkspace = datacollection.settings.objectWorkspace || {};
 				// store sort settings
-				dataview.settings.objectWorkspace.sortFields = sortSettings || [];
+				datacollection.settings.objectWorkspace.sortFields = sortSettings || [];
 
 				this._logic.save();
 
@@ -920,15 +921,15 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 
 				var template = this._templateListItem;
 				
-				var hasDataView = "";
-				if (item.dataview && this._dataview && this._dataview.id && (item.dataview.id == this._dataview.id)) {
-					hasDataView = "<i class='webix_icon hasDataView fa fa-check-circle'></i>";
+				var hasDataCollection = "";
+				if (item.datacollection && this._datacollection && this._datacollection.id && (item.datacollection.id == this._datacollection.id)) {
+					hasDataCollection = "<i class='webix_icon hasDataCollection fa fa-check-circle'></i>";
 				}
 
 				template = template.replace("#typeIcon#", item.icon || item.viewIcon())
 					.replace('#label#', item.label)
 					.replace('{common.icon()}', common.icon(item))
-					.replace('#hasDataView#', hasDataView);
+					.replace('#hasDataCollection#', hasDataCollection);
 
 				return template;
 

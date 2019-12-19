@@ -7,8 +7,8 @@
 
 import AB_Work_Process_List from "./ab_work_process_list";
 import AB_Work_Process_Workspace from "./ab_work_process_workspace";
-
-export default class AB_Work_Process extends OP.Component {
+//
+module.exports = class AB_Work_Process extends OP.Component {
     //.extend(idBase, function(App) {
 
     constructor(App) {
@@ -107,4 +107,4 @@ export default class AB_Work_Process extends OP.Component {
         this.applicationLoad = _logic.applicationLoad;
         this.show = _logic.show;
     }
-}
+};

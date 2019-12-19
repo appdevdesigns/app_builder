@@ -6,11 +6,13 @@
  *
  */
 
-import ABObjectWorkspaceViewGrid from "../classes/ABObjectWorkspaceViewGrid";
-import ABObjectWorkspaceViewKanban from "../classes/ABObjectWorkspaceViewKanban";
-import ABObjectWorkspaceViewGantt from "../classes/ABObjectWorkspaceViewGantt";
+const ABComponent = require("../classes/platform/ABComponent");
 
-export default class AB_Work_Object_Workspace_PopupAddView extends OP.Component {
+const ABObjectWorkspaceViewGrid = require("../classes/platform/workspaceViews/ABObjectWorkspaceViewGrid");
+const ABObjectWorkspaceViewKanban = require("../classes/platform/workspaceViews/ABObjectWorkspaceViewKanban");
+const ABObjectWorkspaceViewGantt = require("../classes/platform/workspaceViews/ABObjectWorkspaceViewGantt");
+
+module.exports = class AB_Work_Object_Workspace_PopupAddView extends ABComponent {
     //.extend(idBase, function(App) {
 
     constructor(App, idBase) {

@@ -9,8 +9,8 @@
  *
  */
 
-var path = require('path');
-var ABFieldDate = require(path.join(__dirname, "..", "classes", "dataFields", "ABFieldDate.js"));
+const path = require('path');
+const ABFieldDate = require(path.join(__dirname, "..", "classes", "platform", "dataFields", "ABFieldDate.js"));
 
 
 module.exports = function(req, res, next) {

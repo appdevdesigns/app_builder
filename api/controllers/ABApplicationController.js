@@ -10,7 +10,7 @@ var fs = require('fs');
 var _ = require('lodash');
 var path = require('path');
 
-var ABView = require(path.join('..', 'classes', 'ABView'));
+var ABView = require(path.join('..', 'classes', 'platform', 'views', 'ABView'));
 
 var ApplicationGraph = require(path.join('..', 'graphModels', 'ABApplication'));
 var DataviewGraph = require(path.join('..', 'graphModels', 'ABDataview'));

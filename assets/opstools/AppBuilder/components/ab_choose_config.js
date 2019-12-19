@@ -6,8 +6,9 @@
  *
  */
 
+const ABComponent = require("../classes/platform/ABComponent");
 
-export default class ABChooseConfig extends OP.Component { 
+module.exports = class ABChooseConfig extends ABComponent { 
 
 	constructor(App) {
 		super(App, 'ab_choose_config');

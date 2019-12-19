@@ -3,12 +3,12 @@
 //
 //
 //
-import ABViewRuleAction from "../ABViewRuleAction"
-import ABFieldConnect from "../../dataFields/ABFieldConnect"
-import ABFieldEmail from "../../dataFields/ABFieldEmail"
+const ABViewRuleAction = require("../ABViewRuleAction");
+const ABFieldConnect = require("../../platform/dataFields/ABFieldConnect");
+const ABFieldEmail = require("../../platform/dataFields/ABFieldEmail");
 
 
-export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleAction {
+module.exports = class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleAction {
 
 	/**
 	 * @param {object} App 
@@ -545,20 +545,20 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 				var options = [];
 
 				// get data collections who is query and contains email field
-				let dvQueries = this.currentForm.application.dataviews(dv => {
-						let obj = dv.datasource;
-						return dv.settings.isQuery &&
+				let dcQueries = this.currentForm.application.datacollections(dc => {
+						let obj = dc.datasource;
+						return dc.settings.isQuery &&
 								obj &&
 								obj.fields(f => f.key == 'email').length > 0;
 					});
 
-				dvQueries.forEach(dv => {
+				dcQueries.forEach(dv => {
 
 					if (dv.datasource) {
 						dv.datasource.fields(f => f.key == 'email').forEach(f => {
 
 							options.push({
-								id: dv.id + '|' + f.id, // ABDataviewID|fieldID
+								id: dv.id + '|' + f.id, // ABDatacollectionID|fieldID
 								value: "{dcLabel}.{fieldLabel}"
 									.replace("{dcLabel}", dv.label)
 									.replace("{fieldLabel}", f.label)
@@ -686,13 +686,13 @@ export default class ABViewRuleActionFormSubmitRuleEmail extends ABViewRuleActio
 							// query
 							else if (rec.emailType == 'query') {
 
-								var dvIdAndFieldId = rec.value; // ABDataviewId|fieldId
+								var dvIdAndFieldId = rec.value; // ABDatacollectionId|fieldId
 								if (!dvIdAndFieldId) return next();
 
 								var dcId = dvIdAndFieldId.split('|')[0];
 								var fieldId = dvIdAndFieldId.split('|')[1];
 
-								var dcQuery = this.currentForm.application.dataviews(dv => dv.id == dcId)[0];
+								var dcQuery = this.currentForm.application.datacollections(dc => dc.id == dcId)[0];
 								if (!dcQuery) return next();
 
 								var field = dcQuery.datasource.fields(f => f.id == fieldId)[0];

@@ -5,10 +5,11 @@
  *
  */
 
-import ABObject from '../classes/ABObject.js';
-import ABFieldManager from '../classes/ABFieldManager.js';
+const ABComponent = require("../classes/platform/ABComponent");
+ // const ABObject = require('../classes/ABObject.js');
+const ABFieldManager = require('../classes/core/ABFieldManager.js');
 
-export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
+module.exports = class AB_Work_Object_List_NewObject_Import extends ABComponent {
 
     constructor(App) {
         super(App, 'ab_work_object_list_newObject_import');

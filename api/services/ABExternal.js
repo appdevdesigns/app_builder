@@ -1,12 +1,13 @@
-var uuid = require('node-uuid');
-var path = require('path');
-var _ = require('lodash');
+const uuid = require('node-uuid');
+const path = require('path');
+const _ = require('lodash');
 
-var ABObjectExternal = require(path.join(__dirname, "..", "classes", "ABObjectExternal.js"));
-var ABFieldBase = require(path.join(__dirname, "..", "..", "assets", "opstools", "AppBuilder", "classes", "dataFields", "ABFieldBase.js"));
+const ABObjectExternal = require(path.join(__dirname, "..", "classes", "platform", "ABObjectExternal.js"));
+const ABFieldCore = require(path.join(__dirname, "..", "classes", "core", "dataFields", "ABFieldCore.js"));
+
+const FieldManager = require(path.join(__dirname, "..", "classes", "core", "ABFieldManager.js"));
 
 // Build a reference of AB defaults for all supported Sails data field types
-var FieldManager = require(path.join('..', 'classes', 'ABFieldManager.js'));
 var mysqlTypeToABFields = {};
 FieldManager.allFields().forEach((Field) => {
 	let field = new Field({ settings: {} }, {});
@@ -334,7 +335,7 @@ module.exports = {
 							Object.keys(columns).forEach(name => {
 
 								// remove reserved column
-								if (ABFieldBase.reservedNames.indexOf(name) > -1 || 
+								if (ABFieldCore.reservedNames.indexOf(name) > -1 || 
 									pkColName == name) {
 									delete columns[name];
 									return;
@@ -421,7 +422,7 @@ module.exports = {
 						return;
 					}
 
-					var reservedNames = ABFieldBase.reservedNames.concat([
+					var reservedNames = ABFieldCore.reservedNames.concat([
 						'language_code'
 					]);
 
@@ -703,7 +704,7 @@ module.exports = {
 
 						if (!col.supported ||
 							pkColName == colName ||
-							ABFieldBase.reservedNames.indexOf(colName) > -1) return;
+							ABFieldCore.reservedNames.indexOf(colName) > -1) return;
 
 						let inputCol = columnList.filter(enterCol => enterCol.name == colName)[0];
 

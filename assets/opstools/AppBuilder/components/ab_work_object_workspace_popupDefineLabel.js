@@ -6,8 +6,9 @@
  *
  */
 
+const ABComponent = require("../classes/platform/ABComponent");
 
-export default class ABWorkObjectPopupDefineLabel extends OP.Component {
+module.exports = class ABWorkObjectPopupDefineLabel extends ABComponent {
     
     constructor(App, idBase) {
 

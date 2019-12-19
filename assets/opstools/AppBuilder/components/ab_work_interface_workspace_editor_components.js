@@ -5,7 +5,9 @@
  *
  */
 
-export default class AB_Work_Interface_Workspace_Editor_Components extends OP.Component {
+const ABComponent = require("../classes/platform/ABComponent");
+
+module.exports = class AB_Work_Interface_Workspace_Editor_Components extends ABComponent {
 
 	constructor(App) {
 		super(App, 'ab_work_interface_workspace_editor_components');
@@ -88,7 +90,7 @@ export default class AB_Work_Interface_Workspace_Editor_Components extends OP.Co
 				body: {
 					id: ids.list,
 					view: 'dataview',
-					css: 'ab-dataview-table borderless',
+					css: 'ab-datacollection-table borderless',
 					borderless: true,
 					xCount:5, //the number of items in a row
 				    yCount:3, //the number of items in a column

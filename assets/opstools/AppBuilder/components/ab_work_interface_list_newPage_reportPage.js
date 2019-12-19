@@ -6,11 +6,12 @@
  *
  */
 
-import ABViewReport from '../classes/views/ABViewReport'
-import ABViewReportPage from '../classes/views/ABViewReportPage'
+const ABComponent = require("../classes/platform/ABComponent");
+const ABViewReport = require('../classes/views/ABViewReport');
+const ABViewReportPage = require('../classes/views/ABViewReportPage');
 
 
-export default class AB_Work_Interface_List_NewPage_ReportPage extends OP.Component {
+module.exports = class AB_Work_Interface_List_NewPage_ReportPage extends ABComponent {
 
 	constructor(App) {
 		super(App, 'ab_work_interface_list_newPage_reportPage');

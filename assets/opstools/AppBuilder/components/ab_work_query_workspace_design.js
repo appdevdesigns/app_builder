@@ -5,10 +5,12 @@
  *
  */
 
-import ABDataview from "../classes/ABDataview" 
-import RowFilter from "../classes/RowFilter"
+const ABComponent = require("../classes/platform/ABComponent");
 
-export default class ABWorkQueryWorkspaceDesign extends OP.Component {
+const ABDataCollection = require("../classes/platform/ABDataCollection");
+const RowFilter = require("../classes/platform/RowFilter");
+
+module.exports = class ABWorkQueryWorkspaceDesign extends ABComponent {
 
 	/**
 	 * @param {object} ??
@@ -96,7 +98,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 		var CurrentApplication = null;
 		var CurrentQuery = null;
-		var CurrentDataview = null;
+		var CurrentDatacollection = null;
 
 		var DataFilter = new RowFilter(App, idBase + "_filter");
 
@@ -148,13 +150,13 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 				}
 
 				// create new data view
-				CurrentDataview = new ABDataview({
+				CurrentDatacollection = new ABDataCollection({
 					query: [CurrentQuery.toObj()],
 					settings: {
 						datasourceID: CurrentQuery.id
 					}
 				}, CurrentApplication);
-				CurrentDataview.datasource = CurrentQuery;
+				CurrentDatacollection.datasource = CurrentQuery;
 
 
 				var objBase = CurrentQuery.objectBase();
@@ -847,7 +849,7 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 			refreshDataTable: function () {
 				
-				if (CurrentDataview == null)
+				if (CurrentDatacollection == null)
 					return;
 				
 				console.log("Refresh data table *******");
@@ -861,11 +863,11 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 
 				let qCurrentView = CurrentQuery.workspaceViews.getCurrentView();
 
-				CurrentDataview.clearAll();
-				CurrentDataview.datasource = CurrentQuery;
+				CurrentDatacollection.clearAll();
+				CurrentDatacollection.datasource = CurrentQuery;
 
 				// Set filter and sort conditions
-				CurrentDataview.fromValues({
+				CurrentDatacollection.fromValues({
 					query: [CurrentQuery.toObj()],
 					settings: {
 						datasourceID: CurrentQuery.id,
@@ -878,15 +880,14 @@ export default class ABWorkQueryWorkspaceDesign extends OP.Component {
 						}
 					}
 				});
-				CurrentDataview.datasource = CurrentQuery;
+				CurrentDatacollection.datasource = CurrentQuery;
+
+				// Bind datatable view to data view
+				CurrentDatacollection.unbind(DataTable);
+				CurrentDatacollection.bind(DataTable);
 
 				// set data:
-				CurrentDataview.loadData(0, 100, () => {
-
-					// Bind datatable view to data view
-					CurrentDataview.unbind(DataTable);
-					CurrentDataview.bind(DataTable);
-
+				CurrentDatacollection.loadData(0, 100, () => {
 				});
 				// CurrentQuery.model().findAll({ limit: 20, where: CurrentQuery.workspaceViews.getCurrentView().filterConditions, sort: CurrentQuery.workspaceViews.getCurrentView().sortFields })
 				// 	.then((response) => {

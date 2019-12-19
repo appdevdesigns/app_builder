@@ -1,11 +1,12 @@
-import ABDataviewProperty from "./ab_work_dataview_workspace_properties"
-import ABWorkspaceDatatable from "./ab_work_object_workspace_datatable"
+const ABComponent = require("../classes/platform/ABComponent");
+const ABDatacollectionProperty = require("./ab_work_dataview_workspace_properties");
+const ABWorkspaceDatatable = require("./ab_work_object_workspace_datatable");
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
-export default class AB_Work_Dataview_Workspace extends OP.Component {
+module.exports = class AB_Work_Datacollection_Workspace extends ABComponent {
 
 	constructor(App) {
 		let idBase = 'ab_work_dataview_workspace';
@@ -15,8 +16,8 @@ export default class AB_Work_Dataview_Workspace extends OP.Component {
 		this.labels = {
 			common: App.labels,
 			component: {
-				selectDataview: L('ab.dataview.selectDataview', "*Select a data view to work with."),
-				addNew: L('ab.dataview.addNew', "*Add new data view")
+				selectDatacollection: L('ab.datacollection.selectDatacollection', "*Select a data view to work with."),
+				addNew: L('ab.datacollection.addNew', "*Add new data view")
 			}
 		};
 
@@ -35,7 +36,7 @@ export default class AB_Work_Dataview_Workspace extends OP.Component {
 			isEditable: 0,
 			massUpdate: 0
 		});
-		this.Property = new ABDataviewProperty(App);
+		this.Property = new ABDatacollectionProperty(App);
 
 		// 
 		// Define our external interface methods:
@@ -75,7 +76,7 @@ export default class AB_Work_Dataview_Workspace extends OP.Component {
 						{
 							view: 'label',
 							align: "center",
-							label: labels.component.selectDataview
+							label: labels.component.selectDatacollection
 						},
 						{
 							cols: [
@@ -86,7 +87,7 @@ export default class AB_Work_Dataview_Workspace extends OP.Component {
 									type: "form",
 									autowidth: true,
 									click: function () {
-										App.actions.addNewDataview();
+										App.actions.addNewDatacollection();
 									}
 								},
 								{}
@@ -126,7 +127,7 @@ export default class AB_Work_Dataview_Workspace extends OP.Component {
 			onSave: this._logic.populateWorkspace
 		});
 
-		this._logic.populateWorkspace(this._dataview);
+		this._logic.populateWorkspace(this._datacollection);
 
 	}
 
@@ -150,14 +151,14 @@ export default class AB_Work_Dataview_Workspace extends OP.Component {
 			/**
 			 * @function populateWorkspace
 			 * 
-			 * @param {ABDataview}
+			 * @param {ABDatacollection}
 			 */
-			populateWorkspace: (dataview) => {
+			populateWorkspace: (datacollection) => {
 
 				let ids = this.ids;
 				let DataTable = this.DataTable;
 
-				this._dataview = dataview;
+				this._datacollection = datacollection;
 
 				let $datatable = $$(DataTable.ui.id);
 				// unbind
@@ -165,26 +166,26 @@ export default class AB_Work_Dataview_Workspace extends OP.Component {
 				$datatable.data.unsync();
 				$datatable.unbind();
 
-				if (dataview) {
+				if (datacollection) {
 
 					$$(ids.workspace).show();
 
 					// get data collection & object
-					if (dataview &&
-						dataview.datasource) {
+					if (datacollection &&
+						datacollection.datasource) {
 
-						DataTable.objectLoad(dataview.datasource);
+						DataTable.objectLoad(datacollection.datasource);
 						DataTable.refreshHeader();
 
 						// bind a data collection to the display grid
-						dataview.unbind($datatable);
-						dataview.bind($datatable);
+						datacollection.unbind($datatable);
+						datacollection.bind($datatable);
 
 						$datatable.adjust();
 
 						// load data
-						if (dataview.dataStatus == dataview.dataStatusFlag.notInitial)
-							dataview.loadData();
+						if (datacollection.dataStatus == datacollection.dataStatusFlag.notInitial)
+							datacollection.loadData();
 					}
 
 				}
@@ -193,7 +194,7 @@ export default class AB_Work_Dataview_Workspace extends OP.Component {
 				}
 
 				// Property
-				this.Property.dataviewLoad(dataview);
+				this.Property.datacollectionLoad(datacollection);
 
 			},
 
@@ -204,7 +205,7 @@ export default class AB_Work_Dataview_Workspace extends OP.Component {
 			 */
 			clearWorkspace: () => {
 
-				this._dataview = null;
+				this._datacollection = null;
 
 				$$(this.ids.noSelection).show();
 

@@ -3,9 +3,9 @@
 //
 //
 //
-import ABViewRuleAction from "../ABViewRuleAction"
+const ABViewRuleAction = require("../ABViewRuleAction");
 
-export default class ABViewRuleActionFormSubmitRuleClosePopup extends ABViewRuleAction {
+module.exports = class ABViewRuleActionFormSubmitRuleClosePopup extends ABViewRuleAction {
 
 	/**
 	 * @param {object} App 

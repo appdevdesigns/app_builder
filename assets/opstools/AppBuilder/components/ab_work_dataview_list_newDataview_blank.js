@@ -5,8 +5,9 @@
  *
  */
 
+const ABComponent = require("../classes/platform/ABComponent");
 
-export default class AB_Work_Query_List_NewDataview_Blank extends OP.Component {
+module.exports = class AB_Work_Query_List_newDataview_Blank extends ABComponent {
 
 	constructor(App) {
 		super(App, 'ab_work_dataview_list_newDataview_blank');
@@ -15,11 +16,11 @@ export default class AB_Work_Query_List_NewDataview_Blank extends OP.Component {
 		var labels = {
 			common: App.labels,
 			component: {
-				dataviewName: L('ab.dataview.name', '*Name'),
-				dataviewNamePlaceholder: L('ab.dataview.namePlaceholder', '*Data view name'),
-				addNewDataview: L('ab.dataview.addNew', '*Add data view'),
-				object: L('ab.dataview.object', '*Object'),
-				objectPlaceholder: L('ab.dataview.objectPlaceholder', '*Select an object')
+				datacollectionName: L('ab.datacollection.name', '*Name'),
+				datacollectionNamePlaceholder: L('ab.datacollection.namePlaceholder', '*Data view name'),
+				addNewDatacollection: L('ab.datacollection.addNew', '*Add data view'),
+				object: L('ab.datacollection.object', '*Object'),
+				objectPlaceholder: L('ab.datacollection.objectPlaceholder', '*Select an object')
 			}
 		};
 
@@ -45,10 +46,10 @@ export default class AB_Work_Query_List_NewDataview_Blank extends OP.Component {
 				elements: [
 					{
 						view: "text",
-						label: labels.component.dataviewName,
+						label: labels.component.datacollectionName,
 						name: "name",
 						required: true,
-						placeholder: labels.component.dataviewNamePlaceholder,
+						placeholder: labels.component.datacollectionNamePlaceholder,
 						labelWidth: App.config.labelWidthMedium
 					},
 					{
@@ -81,7 +82,7 @@ export default class AB_Work_Query_List_NewDataview_Blank extends OP.Component {
 							{
 								view: "button",
 								id: ids.buttonSave,
-								value: labels.component.addNewDataview,
+								value: labels.component.addNewDatacollection,
 								autowidth: true,
 								type: "form",
 								click: function () {
@@ -197,17 +198,17 @@ export default class AB_Work_Query_List_NewDataview_Blank extends OP.Component {
 				saveButton.disable();
 
 				let formVals = $$(ids.form).getValues(),
-					dataviewName = formVals["name"],
+					datacollectionName = formVals["name"],
 					objectId = formVals["object"];
 
 				// get isQuery flag
 				let $objectList = $$(ids.object).getList();
 				let selectedObject = $objectList.getItem(objectId);
 
-				// create an instance of ABDataview
-				let dataview = CurrentApplication.dataviewNew({
-					name: dataviewName,
-					label: dataviewName,
+				// create an instance of ABDatacollection
+				let datacollection = CurrentApplication.datacollectionNew({
+					name: datacollectionName,
+					label: datacollectionName,
 					settings: {
 						datasourceID: objectId,
 						isQuery: selectedObject ? selectedObject.isQuery : false
@@ -215,11 +216,11 @@ export default class AB_Work_Query_List_NewDataview_Blank extends OP.Component {
 				});
 
 				// save to db
-				dataview.save()
+				datacollection.save()
 					.then(() => {
 						saveButton.enable();
 
-						_logic.callbacks.onDone(dataview);
+						_logic.callbacks.onDone(datacollection);
 					})
 					.catch(err => {
 

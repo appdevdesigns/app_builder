@@ -5,12 +5,13 @@
  *
  */
 
-import ABExternal from '../classes/ABExternal.js';
-import ABField from '../classes/dataFields/ABField.js';
-import ABObject from '../classes/ABObject.js';
-import ABFieldManager from '../classes/ABFieldManager.js';
+const ABComponent = require("../classes/platform/ABComponent");
+const ABExternal = require('../classes/platform/ABExternal.js');
+const ABField = require('../classes/platform/dataFields/ABField.js');
+// const ABObject = require('../classes/ABObject.js');
+const ABFieldManager = require('../classes/core/ABFieldManager.js');
 
-export default class AB_Work_Object_List_NewObject_External extends OP.Component {
+module.exports = class AB_Work_Object_List_NewObject_External extends ABComponent {
 
     constructor(App) {
         super(App, 'ab_work_object_list_newObject_external');

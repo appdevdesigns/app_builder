@@ -6,7 +6,9 @@
  *
  */
  
-export default class AB_Work_Object_Workspace_PopupMassUpdate extends OP.Component {   //.extend(idBase, function(App) {
+const ABComponent = require("../classes/platform/ABComponent");
+
+module.exports = class AB_Work_Object_Workspace_PopupMassUpdate extends ABComponent {   //.extend(idBase, function(App) {
 
 	constructor(App, idBase) {
 		idBase = idBase || 'ab_work_object_workspace_popupMassUpdate';
