@@ -1,7 +1,7 @@
 /**
- * ABDefinition.js
+ * ABDefinitionModel.js
  *
- * @description :: ABDefinition is a generic object definition store.
+ * @description :: ABDefinitionModel is a generic object definition store.
  * @docs        :: http://sailsjs.org/documentation/concepts/models-and-orm/models
  */
 
@@ -109,10 +109,11 @@ module.exports = {
     },
 
     refresh: function() {
-        return ABDefinition.find({}).then((list) => {
+        return ABDefinitionModel.find({}).then((list) => {
             (list || []).forEach((def) => {
                 __AllDefinitions[def.id] = def;
             });
+            return list;
         });
     },
 

@@ -5,11 +5,10 @@ const ABProcessTaskCore = require(path.join(
     __dirname,
     "..",
     "..",
-    "assets",
-    "opstools",
-    "AppBuilder",
-    "classes",
-    "processTasks",
+    "..",
+    "core",
+    "process",
+    "tasks",
     "ABProcessTaskCore.js"
 ));
 

@@ -3,10 +3,8 @@ const ABProcessEngineCore = require(path.join(
     __dirname,
     "..",
     "..",
-    "assets",
-    "opstools",
-    "AppBuilder",
-    "classes",
+    "core",
+    "process",
     "ABProcessEngineCore.js"
 ));
 

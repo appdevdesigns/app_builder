@@ -1,36 +1,30 @@
 /**
- * ABProcessLane
- * manages a lane in a Process Diagram.
+ * ABProcessParticipant
+ * manages the participant lanes in a Process Diagram.
  *
- * Lanes manage users in the system, and provide a way to lookup a SiteUser.
+ * Participants manage users in the system (when there are no lanes defined)
+ * and provide a way to lookup a SiteUser.
  */
 const path = require("path");
-const ABProcessLaneCore = require(path.join(
+const ABProcessParticipantCore = require(path.join(
     __dirname,
     "..",
     "..",
-    "assets",
-    "opstools",
-    "AppBuilder",
-    "classes",
-    "ABProcessLaneCore.js"
+    "core",
+    "process",
+    "ABProcessParticipantCore.js"
 ));
 
-module.exports = class ABProcessLane extends ABProcessLaneCore {
+const _ = require("lodash");
+
+module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
     constructor(attributes, process, application) {
         super(attributes, process, application);
     }
 
     ////
-    //// Modeler Instance Methods
+    //// Instance Methods
     ////
-
-    //// TODO:
-    //// this code should only be in ABProcessParticipant, however until we
-    //// pull in CoreV2, we can't reference it properly on the server, so
-    //// we copy it here.
-    //// AFTER CoreV2 is integrated, remove this to api/classes/ABProcessParticipant
-
     users() {
         return new Promise((resolve, reject) => {
             var allLookups = [];
@@ -40,6 +34,7 @@ module.exports = class ABProcessLane extends ABProcessLaneCore {
             Promise.all(allLookups)
                 .then((results) => {
                     var users = results[0].concat(results[1]);
+                    users = _.uniqBy(users, "id");
                     resolve(users);
                 })
                 .catch(reject);

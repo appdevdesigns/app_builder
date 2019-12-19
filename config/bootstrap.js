@@ -665,7 +665,7 @@ function initialGraphDB(next) {
 }
 
 function loadDefinitions(next) {
-    ABDefinition.refresh()
+    ABDefinitionModel.refresh()
         .then(() => {
             next();
         })

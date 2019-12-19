@@ -4,15 +4,15 @@ const path = require("path");
 const ABProcessCore = require(path.join(
     __dirname,
     "..",
-    "..",
-    "assets",
-    "opstools",
-    "AppBuilder",
-    "classes",
+    "core",
     "ABProcessCore.js"
 ));
 
-const ABProcessEngine = require(path.join(__dirname, "ABProcessEngine"));
+const ABProcessEngine = require(path.join(
+    __dirname,
+    "process",
+    "ABProcessEngine"
+));
 const convert = require("xml-js");
 
 module.exports = class ABProcess extends ABProcessCore {

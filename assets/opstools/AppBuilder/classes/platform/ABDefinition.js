@@ -35,7 +35,7 @@ module.exports = class ABDefinition extends ABDefinitionCore {
      */
     static create(data) {
         return OP.Comm.Service.post({
-            url: `/app_builder/abdefinition`,
+            url: `/app_builder/abdefinitionmodel`,
             data: data
         }).then((serverDef) => {
             return (__AllDefinitions[serverDef.id] = serverDef);
@@ -52,7 +52,7 @@ module.exports = class ABDefinition extends ABDefinitionCore {
      */
     static destroy(id) {
         return OP.Comm.Service.delete({
-            url: `/app_builder/abdefinition/${id}`
+            url: `/app_builder/abdefinitionmodel/${id}`
         }).then((serverDef) => {
             delete __AllDefinitions[id];
         });
@@ -67,7 +67,7 @@ module.exports = class ABDefinition extends ABDefinitionCore {
      */
     static loadAll() {
         return OP.Comm.Socket.get({
-            url: `/app_builder/abdefinition`
+            url: `/app_builder/abdefinitionmodel`
         }).then((allDefinitions) => {
             (allDefinitions || []).forEach((def) => {
                 __AllDefinitions[def.id] = def;
@@ -86,7 +86,7 @@ module.exports = class ABDefinition extends ABDefinitionCore {
      */
     static update(id, data) {
         return OP.Comm.Service.put({
-            url: `/app_builder/abdefinition/${id}`,
+            url: `/app_builder/abdefinitionmodel/${id}`,
             data: data
         }).then((serverDef) => {
             return (__AllDefinitions[serverDef.id] = serverDef);

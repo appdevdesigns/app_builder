@@ -4,82 +4,29 @@
 const async = require("async");
 const _ = require("lodash");
 const path = require("path");
-const ABProcessTask = require(path.join(__dirname, "ABProcessTask.js"));
+const ABProcessTaskEmailCore = require(path.join(
+    __dirname,
+    "..",
+    "..",
+    "..",
+    "core",
+    "process",
+    "tasks",
+    "ABProcessTaskEmailCore.js"
+));
 
 const ABProcessParticipant = require(path.join(
     __dirname,
+    "..",
     "ABProcessParticipant"
 ));
-
-var ABProcessTaskEmailDefaults = {
-    key: "Email", // unique key to reference this specific Task
-    icon: "email", // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
-    fields: [
-        "to",
-        "from",
-        "subject",
-        "message",
-        "toCustom",
-        "fromCustom",
-        "toUsers",
-        "fromUsers"
-    ]
-};
 
 const cote = require("cote");
 const client = new cote.Requester({
     name: "ABProcessTaskEmail > emailer"
 });
 
-module.exports = class ABProcessTaskEmail extends ABProcessTask {
-    constructor(attributes, process, application) {
-        super(attributes, process, application, ABProcessTaskEmailDefaults);
-
-        // listen
-    }
-
-    // return the default values for this DataField
-    static defaults() {
-        return ABProcessTaskEmailDefaults;
-    }
-
-    fromValues(attributes) {
-        /*
-        {
-            id: uuid(),
-            name: 'name',
-            type: 'xxxxx',
-            json: "{json}"
-        }
-        */
-        super.fromValues(attributes);
-
-        ABProcessTaskEmailDefaults.fields.forEach((f) => {
-            this[f] = attributes[f];
-        });
-    }
-
-    /**
-     * @method toObj()
-     *
-     * properly compile the current state of this ABApplication instance
-     * into the values needed for saving to the DB.
-     *
-     * Most of the instance data is stored in .json field, so be sure to
-     * update that from all the current values of our child fields.
-     *
-     * @return {json}
-     */
-    toObj() {
-        var data = super.toObj();
-
-        ABProcessTaskEmailDefaults.fields.forEach((f) => {
-            data[f] = this[f];
-        });
-
-        return data;
-    }
-
+module.exports = class ABProcessTaskEmail extends ABProcessTaskEmailCore {
     ////
     //// Process Instance Methods
     ////
@@ -301,22 +248,5 @@ module.exports = class ABProcessTaskEmail extends ABProcessTask {
                     reject(error);
                 });
         });
-    }
-
-    /**
-     * initState()
-     * setup this task's initial state variables
-     * @param {obj} context  the context data of the process instance
-     * @param {obj} val  any values to override the default state
-     */
-    initState(context, val) {
-        var myDefaults = {
-            to: [],
-            from: [],
-            subject: this.subject,
-            message: this.message
-        };
-
-        super.initState(context, myDefaults, val);
     }
 };

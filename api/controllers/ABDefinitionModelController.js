@@ -5,16 +5,13 @@
  * @help        :: See http://sailsjs.org/#!/documentation/concepts/Controllers
  */
 
-var path = require('path');
-
+var path = require("path");
 
 module.exports = {
-
     _config: {
-        model: "abdefinition", // all lowercase model name
+        model: "abdefinitionmodel", // all lowercase model name
         actions: false,
         shortcuts: false,
         rest: true
     }
-
-}
+};
