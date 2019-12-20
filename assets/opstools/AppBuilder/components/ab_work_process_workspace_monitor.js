@@ -98,6 +98,23 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
                 $$(ids.noSelection).show(false, false);
             },
 
+            loadProcessInstances: function() {
+                if (CurrentProcess) {
+                    return OP.Comm.Socket.get({
+                        url: `/app_builder/abprocessinstance`,
+                        params: {
+                            processID: CurrentProcess.id,
+                            status: { "!": "completed" }
+                        }
+                    }).then((allInstances) => {
+                        console.log(allInstances);
+                        return allInstances;
+                    });
+                } else {
+                    return Promise.resolve([]);
+                }
+            },
+
             /**
              * @function populateWorkspace()
              *
@@ -109,6 +126,8 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
                 // $$(ids.selectedItem).show();
 
                 CurrentProcess = process;
+
+                this._logic.loadProcessInstances();
             },
 
             /**
