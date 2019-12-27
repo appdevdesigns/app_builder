@@ -438,7 +438,76 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 		},
 
-		// ** Scopes
+		// ** Roles
+
+		roleLoad: function (appId, cond) {
+
+			return OP.Comm.Socket.get({
+				url: `/app_builder/application/${appId}/role`,
+				params: cond
+			});
+		},
+
+		roleFind: function (cond) {
+
+			return OP.Comm.Socket.get({
+				url: `/app_builder/role`,
+				params: cond
+			});
+
+		},
+
+		roleOfUser: function(username) {
+
+			return OP.Comm.Socket.get({
+				url: `/app_builder/user/${username}/role`
+			});
+
+		},
+
+		roleGet: function(roleId) {
+
+			return OP.Comm.Socket.get({
+				url: `/app_builder/role/${roleId}`
+			});
+
+		},
+
+		roleSave: function (appId, role) {
+
+			return OP.Comm.Service.put({
+				url: `/app_builder/role?appID=${appId}`,
+				data: {
+					role: role
+				}
+			});
+		},
+
+		roleDestroy: function (roleId) {
+
+			return OP.Comm.Service.delete({
+				url: `/app_builder/role/${roleId}`
+			});
+
+		},
+
+		roleImport: function (appId, roleId) {
+
+			return OP.Comm.Service.put({
+				url: `/app_builder/application/${appId}/role/${roleId}`
+			});
+
+		},
+
+		roleExclude: function (appId, roleId) {
+
+			return OP.Comm.Service.delete({
+				url: `/app_builder/application/${appId}/role/${roleId}`
+			});
+
+		},
+
+		// ** Roles
 
 		scopeLoad: function (appId, cond) {
 

@@ -460,21 +460,15 @@ module.exports = class ABViewPropertyFilterData extends ABViewProperty {
 		// }
 
 		if (rowFilter)
-			rowFilter.objectLoad(object);
+			rowFilter.fieldsLoad(object.fields());
 
 		if (rowFilterForm)
-			rowFilterForm.objectLoad(object);
+			rowFilterForm.fieldsLoad(object.fields());
 
 	}
 
 	viewLoad(view) {
 		this.view = view;
-
-		if (rowFilter)
-			rowFilter.viewLoad(view);
-
-		if (rowFilterForm)
-			rowFilterForm.viewLoad(view);
 	}
 
 	/** == UI == */
@@ -495,13 +489,8 @@ module.exports = class ABViewPropertyFilterData extends ABViewProperty {
 		rowFilterForm = new RowFilter(App, idBase + "_filter_form");
 
 		if (this.object) {
-			rowFilter.objectLoad(this.object);
-			rowFilterForm.objectLoad(this.object);
-		}
-
-		if (this.view) {
-			rowFilter.viewLoad(this.view);
-			rowFilterForm.viewLoad(this.view);
+			rowFilter.fieldsLoad(this.object.fields());
+			rowFilterForm.fieldsLoad(this.object.fields());
 		}
 
 		let ids = {

@@ -5,9 +5,8 @@
  * @help        :: See http://sailsjs.org/#!/documentation/concepts/Controllers
  */
 
-const path = require('path');
-
-const ABGraphScope = require(path.join('..', 'graphModels', 'ABScope'));
+const ABGraphScope = require("../graphModels/ABScope");
+const ABGraphRole = require("../graphModels/ABRole");
 
 module.exports = {
 
@@ -18,26 +17,6 @@ module.exports = {
 		let cond = req.body.query || {};
 
 		ABGraphScope.findWithRelation('applications', appID, cond)
-			.catch(error => {
-				res.AD.error(error);
-			})
-			.then(scopes => {
-
-				res.AD.success(scopes || []);
-
-			});
-
-	},
-
-	// GET /app_builder/user/:username/scope
-	scopeUser: (req, res) => {
-
-		let username = req.param('username');
-
-		ABGraphScope.query(
-			`FOR row IN scope
-			FILTER row.usernames ANY == '${username}'
-			RETURN row`)
 			.catch(error => {
 				res.AD.error(error);
 			})
@@ -72,6 +51,21 @@ module.exports = {
 			.then(scope => {
 
 				res.AD.success(scope);
+
+			});
+
+	},
+
+	// GET /app_builder/scope/:scopeId/role
+	scopeRole: function (req, res) {
+
+		let scopeId = req.param('scopeId');
+
+		ABGraphRole.findWithRelation(ABGraphRole.relations.scopes, scopeId)
+			.catch(res.AD.error)
+			.then(roles => {
+
+				res.AD.success(roles || []);
 
 			});
 

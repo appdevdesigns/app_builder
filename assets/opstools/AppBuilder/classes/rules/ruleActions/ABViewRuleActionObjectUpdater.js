@@ -553,6 +553,7 @@ module.exports = class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 										});
 
 										FilterComponent = new RowFilter(this.App, idBase + "_filter");
+										FilterComponent.applicationLoad(this.currentForm.application);
 										FilterComponent.init({
 											isRecordRule: true,
 											onChange: _logic.onFilterChange,
@@ -797,8 +798,7 @@ module.exports = class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 
 				// Populate data to popups
 				// FilterComponent.objectLoad(objectCopy);
-				FilterComponent.objectLoad(dataView.datasource);
-				FilterComponent.viewLoad(this.currentForm);
+				FilterComponent.fieldsLoad(dataView.datasource ? dataView.datasource.fields() : []);
 				FilterComponent.setValue(filterConditions);
 			},
 

@@ -5,12 +5,223 @@
  * @help        :: See http://sailsjs.org/#!/documentation/concepts/Controllers
  */
 
-var async = require('async');
-var path = require('path');
+const async = require('async');
 
-var ApplicationGraph = require(path.join('..', 'graphModels', 'ABApplication'));
+const ApplicationGraph = require("../graphModels/ABApplication");
+const RoleGraph = require("../graphModels/ABRole");
+const ScopeGraph = require("../graphModels/ABScope");
 
 module.exports = {
+
+	// GET /app_builder/application/:appID/role
+	roleApplication: (req, res) => {
+
+		let appID = req.param('appID');
+		let cond = req.body.query || {};
+
+		RoleGraph.findWithRelation('applications', appID, cond)
+			.catch(error => {
+				res.AD.error(error);
+			})
+			.then(roles => {
+
+				res.AD.success(roles || []);
+
+			});
+
+	},
+
+
+	// GET /app_builder/role
+	find: function (req, res) {
+
+		let cond = req.body;
+
+		RoleGraph.find(cond)
+			.catch(res.AD.error)
+			.then(roles => {
+				res.AD.success(roles || []);
+			});
+
+	},
+
+	// GET /app_builder/role/:roleId
+	findOne: function (req, res) {
+
+		let roleId = req.param('roleId');
+
+		RoleGraph.findOne(roleId)
+			.catch(res.AD.error)
+			.then(role => {
+
+				res.AD.success(role);
+
+			});
+
+	},
+
+	// PUT /app_builder/role
+	save: function (req, res) {
+
+		let appID = req.query.appID;
+		let role = req.body.role;
+
+		Promise.resolve()
+
+			// Save role
+			.then(() => {
+
+				return new Promise((next, error) => {
+
+					RoleGraph.upsert(role.id, role)
+						.catch(errMessage => {
+
+							error(errMessage);
+							res.AD.error(true);
+
+						})
+						.then(result => {
+
+							next(result);
+
+						});
+
+				});
+
+			})
+
+			// Set relation to application
+			.then(role => {
+
+				return new Promise((next, error) => {
+
+					if (appID == null)
+						return next();
+
+					role.relate('applications', appID)
+						.catch(errMessage => {
+
+							error(errMessage);
+							res.AD.error(true);
+
+						})
+						.then(() => {
+
+							res.AD.success(role);
+							next();
+
+						});
+
+				});
+
+			});
+
+	},
+
+	// DELETE /app_builder/role/:roleId
+	destroy: function (req, res) {
+
+		let roleId = req.param('roleId');
+
+		RoleGraph.remove(roleId)
+			.catch(res.AD.error)
+			.then(() => {
+
+				res.AD.success(true);
+			});
+	},
+
+	// PUT /app_builder/application/:appID/role/:roleID
+	import: function (req, res) {
+
+		let appID = req.param('appID'),
+			roleID = req.param('roleID');
+
+		Promise.resolve()
+
+			// Get a role
+			.then(() => {
+
+				return new Promise((next, err) => {
+
+					RoleGraph.findOne(roleID, {
+						relations: ['applications']
+					})
+						.catch(err)
+						.then(role => {
+							next(role);
+						});
+
+
+				});
+
+			})
+
+			// Set relate
+			.then(role => {
+
+				return new Promise((next, err) => {
+
+					// if exists
+					if (role.applications.filter(app => app.id == appID)[0]) {
+						res.AD.success(role);
+						return next();
+					}
+
+					role.relate('applications', appID)
+						.catch(err)
+						.then(() => {
+
+							res.AD.success(role);
+							next();
+
+						});
+
+				});
+
+			});
+
+	},
+
+	// DELETE /app_builder/application/:appID/role/:roleID
+	exclude: function (req, res) {
+
+		let appID = req.param('appID'),
+			roleID = req.param('roleID');
+
+		RoleGraph.unrelate(
+			RoleGraph.relations.applications,
+			appID,
+			roleID
+		)
+			.catch(res.AD.error)
+			.then(() => {
+
+				res.AD.success(true);
+
+			});
+
+	},
+
+	// GET /app_builder/role/:roleId/scope
+	roleScope: function (req, res) {
+
+		let roleId = req.param('roleId');
+
+		ScopeGraph.findWithRelation(ScopeGraph.relations.roles, roleId)
+			.catch(res.AD.error)
+			.then(scope => {
+
+				res.AD.success(scope);
+
+			});
+
+	},
+
+
+	///
+	/// Roles of Application to display live view
+	///
 
 	// GET: /app_builder/:id/role
 	getRoles: function (req, res) {
@@ -40,7 +251,7 @@ module.exports = {
 			},
 			function (app, next) {
 				// Get roles from action key
-				var action_key = app.actionKeyName(); 
+				var action_key = app.actionKeyName();
 				Permissions.getRolesByActionKey(action_key)
 					.fail(function (err) {
 						res.AD.error(err);
@@ -120,7 +331,7 @@ module.exports = {
 								})
 								.then(() => {
 									res.AD.success(role);
-									next();	
+									next();
 								});
 						});
 				}
@@ -207,7 +418,7 @@ module.exports = {
 			function (app, next) {
 				// Register the permission action
 				Permissions.action.create({
-					key: app.actionKeyName(),  
+					key: app.actionKeyName(),
 					description: 'Allow the user to view the ' + app.validAppName() + ' base page',
 					language_code: 'en'
 				})
@@ -219,7 +430,7 @@ module.exports = {
 			},
 			function (app, next) {
 				// Clear permission action to roles
-				Permissions.clearPermissionRole(app.actionKeyName())  
+				Permissions.clearPermissionRole(app.actionKeyName())
 					.fail(function (err) { next(err); })
 					.then(function () { next(null, app); });
 			},
@@ -229,7 +440,7 @@ module.exports = {
 
 				roleIds.forEach(function (r) {
 					assignActionTasks.push(function (callback) {
-						Permissions.assignAction(r.id, app.actionKeyName())  
+						Permissions.assignAction(r.id, app.actionKeyName())
 							.fail(function (err) { callback(err); })
 							.then(function () { callback(); });
 					});

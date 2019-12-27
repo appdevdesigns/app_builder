@@ -164,7 +164,7 @@ module.exports = class RowFilter extends RowFilterCore {
 						on: {
 							onChange: function (newVal, oldVal) {
 
-								instance.selectCombineCondition(newVal);
+								_logic.selectCombineCondition(newVal);
 
 							}
 						}
@@ -178,7 +178,7 @@ module.exports = class RowFilter extends RowFilterCore {
 							onChange: function (columnId) {
 
 								var $viewCond = this.getParentView();
-								instance.selectField(columnId, $viewCond);
+								_logic.selectField(columnId, $viewCond);
 
 							}
 						}
@@ -241,8 +241,8 @@ module.exports = class RowFilter extends RowFilterCore {
 
 										var $viewComparer = this.getParentView();
 										var $viewCond = $viewComparer.getParentView();
-										instance.onChangeRule(condition, $viewCond);
-										instance.onChange();
+										_logic.onChangeRule(condition, $viewCond);
+										_logic.onChange();
 
 									}
 								}
@@ -277,8 +277,8 @@ module.exports = class RowFilter extends RowFilterCore {
 										
 										var $viewComparer = this.getParentView();
 										var $viewCond = $viewComparer.getParentView();
-										instance.onChangeRule(condition, $viewCond);
-										instance.onChange();
+										_logic.onChangeRule(condition, $viewCond);
+										_logic.onChange();
 
 									}
 								}
@@ -319,8 +319,8 @@ module.exports = class RowFilter extends RowFilterCore {
 
 										var $viewComparer = this.getParentView();
 										var $viewCond = $viewComparer.getParentView();
-										instance.onChangeRule(condition, $viewCond);
-										instance.onChange();
+										_logic.onChangeRule(condition, $viewCond);
+										_logic.onChange();
 
 									}
 								}
@@ -353,8 +353,8 @@ module.exports = class RowFilter extends RowFilterCore {
 
 										var $viewComparer = this.getParentView();
 										var $viewCond = $viewComparer.getParentView();
-										instance.onChangeRule(condition, $viewCond);
-										instance.onChange();
+										_logic.onChangeRule(condition, $viewCond);
+										_logic.onChange();
 									}
 								}
 							},
@@ -374,8 +374,8 @@ module.exports = class RowFilter extends RowFilterCore {
 										
 										var $viewComparer = this.getParentView();
 										var $viewCond = $viewComparer.getParentView();
-										instance.onChangeRule(condition, $viewCond);
-										instance.onChange();
+										_logic.onChangeRule(condition, $viewCond);
+										_logic.onChange();
 
 									}
 								}
@@ -416,8 +416,8 @@ module.exports = class RowFilter extends RowFilterCore {
 
 										var $viewComparer = this.getParentView();
 										var $viewCond = $viewComparer.getParentView();
-										instance.onChangeRule(condition, $viewCond);
-										instance.onChange();
+										_logic.onChangeRule(condition, $viewCond);
+										_logic.onChange();
 
 									}
 								}
@@ -450,8 +450,8 @@ module.exports = class RowFilter extends RowFilterCore {
 
 										var $viewComparer = this.getParentView();
 										var $viewCond = $viewComparer.getParentView();
-										instance.onChangeRule(condition, $viewCond);
-										instance.onChange();
+										_logic.onChangeRule(condition, $viewCond);
+										_logic.onChange();
 									}
 								}
 							},
@@ -483,8 +483,8 @@ module.exports = class RowFilter extends RowFilterCore {
 
 										var $viewComparer = this.getParentView();
 										var $viewCond = $viewComparer.getParentView();
-										instance.onChangeRule(condition, $viewCond);
-										instance.onChange();
+										_logic.onChangeRule(condition, $viewCond);
+										_logic.onChange();
 
 									}
 								}
@@ -508,7 +508,7 @@ module.exports = class RowFilter extends RowFilterCore {
 								view: "combo",
 								options: [],
 								on: {
-									onChange: instance.onChange
+									onChange: _logic.onChange
 								}
 
 							},
@@ -528,9 +528,9 @@ module.exports = class RowFilter extends RowFilterCore {
 												
 												var $viewComparer = this.getParentView();
 												var $viewCond = $viewComparer.getParentView().getParentView();
-												instance.onChangeQueryFieldCombo(value, $viewCond);
+												_logic.onChangeQueryFieldCombo(value, $viewCond);
 
-												instance.onChange();
+												_logic.onChange();
 											}
 										}
 									},
@@ -540,7 +540,7 @@ module.exports = class RowFilter extends RowFilterCore {
 										options: [],
 										placeholder: labels.component.inQueryFieldFieldPlaceholder,
 										on: {
-											onChange: instance.onChange
+											onChange: _logic.onChange
 										}
 									}
 								]
@@ -554,7 +554,7 @@ module.exports = class RowFilter extends RowFilterCore {
 								view: "combo",
 								options: [],
 								on: {
-									onChange: instance.onChange
+									onChange: _logic.onChange
 								}
 
 							},
@@ -566,7 +566,7 @@ module.exports = class RowFilter extends RowFilterCore {
 								view: "richselect",
 								options: [],
 								on: {
-									onChange: instance.onChange
+									onChange: _logic.onChange
 								}
 
 							},
@@ -580,7 +580,7 @@ module.exports = class RowFilter extends RowFilterCore {
 								view: "datepicker",
 								on: {
 									onChange: function () {
-										instance.onChange();
+										_logic.onChange();
 									}
 								}
 							},
@@ -591,7 +591,7 @@ module.exports = class RowFilter extends RowFilterCore {
 								validate: webix.rules.isNumber,
 								on: {
 									onTimedKeyPress: function () {
-										instance.onChange();
+										_logic.onChange();
 									}
 								}
 							},
@@ -603,7 +603,7 @@ module.exports = class RowFilter extends RowFilterCore {
 								options: [],
 								on: {
 									onChange: function () {
-										instance.onChange();
+										_logic.onChange();
 									}
 								}
 							},
@@ -613,7 +613,7 @@ module.exports = class RowFilter extends RowFilterCore {
 								view: 'checkbox',
 								on: {
 									onChange: function () {
-										instance.onChange();
+										_logic.onChange();
 									}
 								}
 							},
@@ -629,7 +629,7 @@ module.exports = class RowFilter extends RowFilterCore {
 								}),
 								on: {
 									onChange: function () {
-										instance.onChange();
+										_logic.onChange();
 									}
 								}
 							},
@@ -639,7 +639,7 @@ module.exports = class RowFilter extends RowFilterCore {
 								view: "text",
 								on: {
 									onTimedKeyPress: function () {
-										instance.onChange();
+										_logic.onChange();
 									}
 								}
 							},
@@ -649,7 +649,7 @@ module.exports = class RowFilter extends RowFilterCore {
 								view: "text",
 								on: {
 									onTimedKeyPress: function () {
-										instance.onChange();
+										_logic.onChange();
 									}
 								}
 							}
@@ -665,7 +665,7 @@ module.exports = class RowFilter extends RowFilterCore {
 
 							var indexView = $viewForm.index(this.getParentView());
 
-							instance.addNewFilter(indexView + 1);
+							_logic.addNewFilter(indexView + 1);
 						}
 					},
 					{
@@ -677,7 +677,7 @@ module.exports = class RowFilter extends RowFilterCore {
 
 							var $viewCond = this.getParentView();
 
-							instance.removeNewFilter($viewCond);
+							_logic.removeNewFilter($viewCond);
 						}
 					}
 				]
@@ -754,7 +754,7 @@ module.exports = class RowFilter extends RowFilterCore {
 		_logic.selectCombineCondition = (val, ignoreNotify) => {
 
 			// define combine value to configuration
-			config_settings.glue = val;
+			this.config_settings.glue = val;
 
 			// update value of every combine conditions
 			var $viewConds = $$(ids.filterForm).getChildViews();
@@ -792,7 +792,10 @@ module.exports = class RowFilter extends RowFilterCore {
 			if (field.id == 'this_object') {
 
 				var options = [];
-				var Queries = this._Object.application.queries((q) => { return q.canFilterObject(this._Object); });
+				var Queries = [];
+				if (this._Object) {
+					Queries = this._Application.queries((q) => { return q.canFilterObject(this._Object); });
+				}
 				Queries.forEach((q) => {
 					options.push({
 						id: q.id,
@@ -810,8 +813,7 @@ module.exports = class RowFilter extends RowFilterCore {
 			if (isQueryField) {
 
 				var options = [];
-				// var Queries = _Object.application.queries((q) => { return q.canFilterField(field); });
-				var Queries = this._Object.application.queries((q) => { return q.canFilterObject(field.datasourceLink); });
+				var Queries = this._Application.queries((q) => { return q.canFilterObject(field.datasourceLink); });
 				Queries.forEach((q) => {
 					options.push({
 						id: q.id,
@@ -889,12 +891,14 @@ module.exports = class RowFilter extends RowFilterCore {
 					// populate the list of Queries for this_object:
 					var options = [];
 					// Get all application's queries
-					this._Object.application.queries((q) => { return q.id != this._Object.id; }).forEach((q) => {
-						options.push({
-							id: q.id,
-							value: q.label
-						})
-					})
+					if (this._Object) {
+						this._Application.queries((q) => { return q.id != this._Object.id; }).forEach((q) => {
+							options.push({
+								id: q.id,
+								value: q.label
+							})
+						});
+					}
 
 					$viewCond.$$(ids.inputValue).$$(ids.queryFieldComboQuery).define("options", options);
 					$viewCond.$$(ids.inputValue).$$(ids.queryFieldComboQuery).refresh();
@@ -918,34 +922,32 @@ module.exports = class RowFilter extends RowFilterCore {
 					let dcOptions = [];
 
 					// pull data collection list
-					if (this._View) {
 
-						// get id of the link object
-						let linkObjectId,
-							columnId = $viewCond.$$(ids.field).getValue();
-						if (columnId == 'this_object') {
-							linkObjectId = this._Object.id;
-						}
-						else {
-							let field = this._Object.fields(f => f.id == columnId)[0];
-							if (field)
-								linkObjectId = field.settings.linkObject;
-						}
-							
-						if (linkObjectId) {
+					// get id of the link object
+					let linkObjectId,
+						columnId = $viewCond.$$(ids.field).getValue();
+					if (columnId == 'this_object' && this._Object) {
+						linkObjectId = this._Object.id;
+					}
+					else {
+						let field = this._Fields.filter(f => f.id == columnId)[0];
+						if (field)
+							linkObjectId = field.settings.linkObject;
+					}
+						
+					if (linkObjectId) {
 
-							this._View.application
-							.datacollections(dc => dc.datasource && dc.datasource.id == linkObjectId)
-							.forEach(dc => {
+						this._Application
+						.datacollections(dc => dc.datasource && dc.datasource.id == linkObjectId)
+						.forEach(dc => {
 
-								dcOptions.push({
-									id: dc.id,
-									value: dc.label
-								});	
+							dcOptions.push({
+								id: dc.id,
+								value: dc.label
+							});	
 
-							});
+						});
 
-						}
 					}
 
 					$viewCond.$$(ids.inputValue).$$(ids.dataCollection).define("options", dcOptions);
@@ -967,7 +969,7 @@ module.exports = class RowFilter extends RowFilterCore {
 			// populate the list of Queries for this_object:
 			var options = [];
 			// Get all queries fields
-			var Query = this._Object.application.queries((q) => { return q.id == value; });
+			var Query = this._Application.queries((q) => { return q.id == value; });
 			if (Query.length) {
 				Query[0].fields( (f) => { return f.key != "connectObject"; } ).forEach((q) => {
 					options.push({
@@ -1003,6 +1005,91 @@ module.exports = class RowFilter extends RowFilterCore {
 
 		_logic.unblockOnChange = () => {
 			this.__blockOnChange = false;
+		};
+
+		/**
+		 * @method getValue
+		 * 
+		 * @return {JSON} -
+		 * {
+		 * 		glue: '', // 'and', 'or'
+		 *		rules: [
+		 *			{
+		 *				key:	'column name',
+		*				rule:	'rule',
+		*				value:	'value'
+		*			}
+		*		]
+		* }
+		*/
+		_logic.getValue = () => {
+
+			let config_settings = {
+				glue: 'and',
+				rules: []
+			};
+
+			var $viewForm = $$(ids.filterForm);
+			if ($viewForm) {
+				$viewForm.getChildViews().forEach(($viewCond, index) => {
+
+					if (index == 0) {
+						config_settings.glue = $viewCond.$$(ids.glue).getValue();
+					}
+
+					var $fieldElem = $viewCond.$$(ids.field);
+					if (!$fieldElem) return;
+
+					/* field id */
+					var fieldId = $fieldElem.getValue();
+					if (!fieldId) return;
+
+					/* alias */
+					var alias;
+					var selectedOpt = $viewCond.$$(ids.field).getPopup().config.body.data.filter(opt => opt.id == fieldId)[0];
+					if (selectedOpt)
+						alias = selectedOpt.alias || undefined;
+
+					/* rule */
+					var rule = null,
+						ruleViewId = $viewCond.$$(ids.rule).getActiveId(),
+						$viewComparer = $viewCond.$$(ids.rule).queryView({ id: ruleViewId });
+					if ($viewComparer && $viewComparer.getValue)
+						rule = $viewComparer.getValue();
+
+					/* value */
+					var value = null,
+						valueViewId = $viewCond.$$(ids.inputValue).getActiveId(),
+						$viewConditionValue = $viewCond.$$(ids.inputValue).queryView({ id: valueViewId });
+					if ($viewConditionValue && $viewConditionValue.getValue) {
+						value = $viewConditionValue.getValue();
+					} else if ($viewConditionValue && $viewConditionValue.getChildViews()) {
+						var vals = [];
+						$viewConditionValue.getChildViews().forEach( element => {
+							vals.push($$(element).getValue());
+						});
+						value = vals.join(":");
+					}
+
+					// Convert date format
+					if (value instanceof Date) {
+						value = value.toISOString();
+					}
+
+					config_settings.rules.push({
+						alias: alias || undefined,
+						key: fieldId,
+						rule: rule,
+						value: value
+					});
+
+				});
+			}
+
+			this.config_settings = config_settings;
+
+			return this.config_settings;
+
 		};
 
 		// webix UI definition:
@@ -1052,6 +1139,8 @@ module.exports = class RowFilter extends RowFilterCore {
 
 	setValue(settings) {
 
+		settings = settings || {};
+
 		super.setValue(settings);
 
 		let ids = this.ids;
@@ -1060,7 +1149,7 @@ module.exports = class RowFilter extends RowFilterCore {
 		// block .onChange event
 		logic.blockOnChange();
 
-		let config_settings = _.cloneDeep(settings || {});
+		let config_settings = _.cloneDeep(settings);
 		config_settings.rules = config_settings.rules || [];
 
 		// Redraw form with no elements

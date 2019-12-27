@@ -1317,9 +1317,176 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 	}
 
 	/// 
-	/// Scopes
+	/// Roles
 	/// 
 
+	roleLoad(cond) {
+
+		if (this.loadedRole)
+		return Promise.resolve();
+
+		return new Promise((resolve, reject) => {
+
+			this.Model.staticData.roleLoad(this.id, cond)
+				.catch(reject)
+				.then(roles => {
+
+					this.loadedRole = true;
+
+					var newRoles = [];
+					(roles || []).forEach(s => {
+						// prevent processing of null values.
+						if (s) {
+							newRoles.push(this.roleNew(s));
+						}
+					})
+					this._roles = newRoles;
+
+					resolve();
+
+				});
+
+		});
+
+	}
+
+	roleFind(cond) {
+
+		return new Promise((resolve, reject) => {
+
+			this.Model.staticData.roleFind(cond)
+				.catch(reject)
+				.then(roles => {
+
+					var result = [];
+
+					(roles || []).forEach(s => {
+						// prevent processing of null values.
+						if (s) {
+							result.push(this.roleNew(s, this));
+						}
+					})
+
+					resolve(result);
+
+				});
+
+		});
+
+	}
+
+	roleOfUser(username) {
+
+		return new Promise((resolve, reject) => {
+
+			this.Model.staticData.roleOfUser(username)
+				.catch(reject)
+				.then(roles => {
+
+					var result = [];
+
+					(roles || []).forEach(s => {
+						// prevent processing of null values.
+						if (s) {
+							result.push(this.roleNew(s, this));
+						}
+					})
+
+					resolve(result);
+
+				});
+
+		});
+
+
+	}
+
+	roleNew(values = {}) {
+
+		return super.roleNew(values, this);
+	}
+
+
+	/**
+	 * @method roleDestroy()
+	 *
+	 * remove the current ABRole from our list of ._roles.
+	 *
+	 * @param {ABRole} role
+	 * @return {Promise}
+	 */
+	roleDestroy(role) {
+
+		var remaininRoles = this.roles(s => s.id != role.id)
+		this._roles = remaininRoles;
+
+		return this.Model.staticData.roleDestroy(role.id);
+	}
+
+
+	/**
+	 * @method roleSave()
+	 *
+	 * persist the current ABRole in our list of ._roles.
+	 *
+	 * @param {ABRole} role
+	 * @return {Promise}
+	 */
+	roleSave(role) {
+		var isIncluded = (this.roles(s => s.id == role.id).length > 0);
+		if (!isIncluded) {
+			this._roles.push(role);
+		}
+
+		return this.Model.staticData.roleSave(this.id, role.toObj());
+	}
+
+	roleImport(roleId) {
+
+		return new Promise((resolve, reject) => {
+
+			this.Model.staticData.roleImport(this.id, roleId)
+				.catch(reject)
+				.then(newRole => {
+
+					let newRoleClass = this.roleNew(newRole);
+
+					// add to list
+					var isIncluded = (this.roles(s => s.id == newRole.id).length > 0);
+					if (!isIncluded) {
+						this._roles.push(newRoleClass);
+					}
+
+					resolve(newRoleClass);
+
+				});
+
+		});
+
+	}
+
+	roleExclude(roleId) {
+
+		return new Promise((resolve, reject) => {
+
+			this.Model.staticData.roleExclude(this.id, roleId)
+				.catch(reject)
+				.then(() => {
+
+					// remove query from list
+					this._roles = this.roles(s => s.id != roleId);
+
+					resolve();
+
+				});
+
+		});
+
+	}
+
+	/// 
+	/// Scopes
+	/// 
 
 	scopeLoad(cond) {
 
@@ -1404,7 +1571,7 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 
 	scopeNew(values = {}) {
 
-		return new ABScope(values, this);
+		return super.scopeNew(values, this);
 	}
 
 

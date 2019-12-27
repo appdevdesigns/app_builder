@@ -42,8 +42,8 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
 
 		// Set filter value
 		this.__filterComponent = new RowFilter();
-		this.__filterComponent.objectLoad(this.datasource);
-		this.__filterComponent.viewLoad(this);
+		this.__filterComponent.applicationLoad(application);
+		this.__filterComponent.fieldsLoad(this.datasource ? this.datasource.fields() : []);
 
 		this.__filterComponent.setValue(this.settings.objectWorkspace.filterConditions || ABViewFormConnectPropertyComponentDefaults.objectWorkspace.filterConditions);
 
@@ -364,10 +364,10 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
 		if (field) {
 			let linkedObj = field.datasourceLink;
 			if (linkedObj)
-				FilterComponent.objectLoad(linkedObj);
+				FilterComponent.fieldsLoad(linkedObj.fields());
 		}
 
-		FilterComponent.viewLoad(view);
+		FilterComponent.applicationLoad(view.application);
 		FilterComponent.setValue(filterConditions);
 
 	}

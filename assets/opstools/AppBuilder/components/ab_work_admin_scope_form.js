@@ -1,9 +1,14 @@
 const ABComponent = require("../classes/platform/ABComponent");
 
+const RowFilter = require("../classes/platform/RowFilter");
+
 module.exports = class AB_Work_Admin_Scope_Form extends ABComponent {
 
 	constructor(App) {
-		super(App, 'ab_work_admin_scope_form');
+
+		let idBase = 'ab_work_admin_scope_form';
+
+		super(App, idBase);
 
 		let L = this.Label;
 
@@ -11,6 +16,8 @@ module.exports = class AB_Work_Admin_Scope_Form extends ABComponent {
 		let ids = {
 			form: this.unique('form')
 		};
+
+		this._rowFilter = new RowFilter(App, idBase);
 
 		let CurrentApplication;
 
@@ -32,6 +39,20 @@ module.exports = class AB_Work_Admin_Scope_Form extends ABComponent {
 					name: "description",
 					label: "Description",
 					placeholder: "Enter Description"
+				},
+				{
+					view: "checkbox",
+					name: "isGlobal",
+					label: "Is Global"
+				},
+				{
+					id: ids.component,
+					view: "forminput",
+					paddingY: 0,
+					paddingX: 0,
+					label: "Filter",
+					css: "ab-custom-field",
+					body: this._rowFilter.ui
 				},
 				{
 					cols: [
@@ -73,8 +94,22 @@ module.exports = class AB_Work_Admin_Scope_Form extends ABComponent {
 			if ($$(ids.form)) {
 				webix.extend($$(ids.form), webix.ProgressBar);
 
-				if (this._scopeDC)
+				if (this._scopeDC) {
 					$$(ids.form).bind(this._scopeDC);
+
+					// Update RowFilter
+					this._scopeDC.attachEvent("onAfterCursorChange", (currId) => {
+
+						if (currId) {
+							let currItem = this._scopeDC.getItem(currId);
+							this._rowFilter.setValue(currItem.filter);
+						}
+						else {
+							this._rowFilter.setValue(null);
+						}
+
+					});
+				}
 
 			}
 
@@ -95,6 +130,7 @@ module.exports = class AB_Work_Admin_Scope_Form extends ABComponent {
 			applicationLoad: function (application) {
 
 				CurrentApplication = application;
+				this._rowFilter.applicationLoad(application);
 
 			},
 
@@ -112,7 +148,7 @@ module.exports = class AB_Work_Admin_Scope_Form extends ABComponent {
 
 				_logic.busy();
 
-				let vals = $$(ids.form).getValues();
+				let vals = $$(ids.form).getValues() || {};
 
 				let currScopeId = this._scopeDC.getCursor();
 				let currScope = this._scopeDC.getItem(currScopeId);
@@ -123,10 +159,17 @@ module.exports = class AB_Work_Admin_Scope_Form extends ABComponent {
 					currScope = CurrentApplication.scopeNew(vals);
 					isAdded = true;
 				}
+				// Update
 				else {
-					currScope.fromValues(vals);
+					for (let key in vals) {
+						if (vals[key] != undefined)
+							currScope[key] = vals[key];
+					}
 					isAdded = false;
 				}
+
+				// set .filter
+				currScope.filter = this._rowFilter.getValue();
 
 				CurrentApplication.scopeSave(currScope)
 					.catch(err => {

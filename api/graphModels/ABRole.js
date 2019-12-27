@@ -1,9 +1,9 @@
 const ABModelBase = require('./ABModelBase');
 
-module.exports = class ABScope extends ABModelBase {
+module.exports = class ABRole extends ABModelBase {
 
 	static get collectionName() {
-		return "scope";
+		return "role";
 	}
 
 	static get relations() {
@@ -11,24 +11,27 @@ module.exports = class ABScope extends ABModelBase {
 		return {
 
 			applications: {
-				edgeName: "applicationScope",
+				edgeName: "applicationRole",
 				linkCollection: "application",
 				direction: this.relateDirection.INBOUND
 			},
 
-			roles: {
+			scopes: {
 				edgeName: "roleScope",
 				linkCollection: "role",
-				direction: this.relateDirection.INBOUND
-			},
-
-			object: {
-				edgeName: "scopeObject",
-				linkCollection: "object",
 				direction: this.relateDirection.OUTBOUND
 			}
 
 		};
+
+	}
+
+	static getRolesByUsername(username) {
+
+		return ABRole.query(
+			`FOR row IN role
+			FILTER row.usernames ANY == '${username}'
+			RETURN row`);
 
 	}
 

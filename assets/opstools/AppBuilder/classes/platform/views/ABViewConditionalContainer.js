@@ -17,6 +17,7 @@ module.exports = class ABViewConditionalContainer extends ABViewConditionalConta
 
 		// Set filter value
 		this.__filterComponent = new RowFilter();
+		this.__filterComponent.applicationLoad(application);
 		this.populateFilterComponent();
 
 	}
@@ -85,6 +86,7 @@ module.exports = class ABViewConditionalContainer extends ABViewConditionalConta
 		};
 
 		FilterComponent = new RowFilter(App, idBase + "_filter");
+		FilterComponent.applicationLoad(this.application);
 		FilterComponent.init({
 			// when we make a change in the popups we want to make sure we save the new workspace to the properties to do so just fire an onChange event
 			onChange: _logic.onFilterChange
@@ -193,12 +195,12 @@ module.exports = class ABViewConditionalContainer extends ABViewConditionalConta
 		}
 
 		if (dv && dv.datasource) {
-			FilterComponent.objectLoad(dv.datasource);
-			view.__filterComponent.objectLoad(dv.datasource);
+			FilterComponent.fieldsLoad(dv.datasource.fields());
+			view.__filterComponent.fieldsLoad(dv.datasource.fields());
 		}
 		else {
-			FilterComponent.objectLoad(null);
-			view.__filterComponent.objectLoad(null);
+			FilterComponent.fieldsLoad(null);
+			view.__filterComponent.fieldsLoad(null);
 		}
 
 		FilterComponent.setValue(view.settings.filterConditions || ABViewPropertyDefaults.filterConditions);
@@ -339,11 +341,10 @@ module.exports = class ABViewConditionalContainer extends ABViewConditionalConta
 
 		let dc = this.datacollection;
 		if (dc && dc.datasource)
-			this.__filterComponent.objectLoad(dc.datasource);
+			this.__filterComponent.fieldsLoad(dc.datasource.fields());
 		else
-			this.__filterComponent.objectLoad(null);
+			this.__filterComponent.fieldsLoad([]);
 
-		this.__filterComponent.viewLoad(this);
 		this.__filterComponent.setValue(this.settings.filterConditions || ABViewPropertyDefaults.filterConditions);
 
 	}

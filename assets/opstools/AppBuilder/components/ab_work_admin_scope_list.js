@@ -199,13 +199,15 @@ module.exports = class AB_Work_Admin_Scope_List extends ABComponent {
 
 			},
 
-			filterScopes: (searchText) => {
+			filterScopes: (searchText = "") => {
 
 				if (!this._scopeDC)
 					return;
 
+				searchText = searchText.toLowerCase();
+
 				this._scopeDC.setCursor(null);
-				this._scopeDC.filter(s => (s.name || "").indexOf(searchText) > -1 || (s.description || "").indexOf(searchText) > -1);
+				this._scopeDC.filter(s => (s.name || "").toLowerCase().indexOf(searchText) > -1 || (s.description || "").toLowerCase().indexOf(searchText) > -1);
 
 			},
 

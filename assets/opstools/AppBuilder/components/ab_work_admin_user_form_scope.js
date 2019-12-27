@@ -23,7 +23,13 @@ module.exports = class AB_Work_Admin_User_Form_Scope extends ABComponent {
 					view: 'list',
 					id: ids.list,
 					select: false,
-					template: "#name#"
+					template: '#name# <div class="remove fa fa-trash" style="float: right; margin-top: 8px;"></div>',
+					onClick: {
+						"remove": function (ev, id) {
+							_logic.remove(id);
+							return false;
+						}
+					}
 				}
 			]
 		};
@@ -80,6 +86,49 @@ module.exports = class AB_Work_Admin_User_Form_Scope extends ABComponent {
 						_logic.ready();
 
 					});
+
+			},
+
+			remove: (scopeId) => {
+
+				OP.Dialog.Confirm({
+					title: L('ab.scope.removeTitle', '*Remove scope'),
+					message: L('ab.scope.removeDescription', '*Do you want to remove this scope from user?'),
+					callback: (result) => {
+
+						if (!result)
+							return;
+
+						_logic.busy();
+
+						let scope = this._scopeDC.find(s => s.id == scopeId)[0];
+						if (!scope) {
+							_logic.ready();
+							return;
+						}
+
+						let currUserId = this._userDC.getCursor();
+						let currUser = this._userDC.getItem(currUserId);
+						if (!currUser) {
+							_logic.ready();
+							return;
+						}
+
+						scope.removeUser(currUser.username)
+							.catch(err => {
+								console.error(err);
+								_logic.ready();
+							})
+							.then((data) => {
+
+								this._scopeDC.remove(scopeId);
+								_logic.ready();
+
+							});
+
+					}
+				})
+
 
 			},
 

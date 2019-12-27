@@ -2,6 +2,7 @@ const ABComponent = require("../classes/platform/ABComponent");
 
 const ABAdminScopeList = require("./ab_work_admin_scope_list");
 const ABAdminScopeForm = require("./ab_work_admin_scope_form");
+const ABAdminScopeRole = require("./ab_work_admin_scope_role");
 const ABAdminScopeUser = require("./ab_work_admin_scope_user");
 
 module.exports = class AB_Work_Admin_Scope extends ABComponent {
@@ -22,6 +23,7 @@ module.exports = class AB_Work_Admin_Scope extends ABComponent {
 		let CurrentApplication;
 		let ScopeList = new ABAdminScopeList(App);
 		let ScopeForm = new ABAdminScopeForm(App);
+		let ScopeRole = new ABAdminScopeRole(App);
 		let ScopeUser = new ABAdminScopeUser(App);
 
 		let scopeDC = new webix.DataCollection();
@@ -29,6 +31,7 @@ module.exports = class AB_Work_Admin_Scope extends ABComponent {
 		// internal list of Webix IDs to reference our UI components.
 		let ids = {
 			component: this.unique('component'),
+			roles: this.unique('role'),
 			users: this.unique('user')
 		}
 
@@ -53,6 +56,11 @@ module.exports = class AB_Work_Admin_Scope extends ABComponent {
 							}
 						},
 						{
+							id: ids.roles,
+							header: "<span class='webix_icon fa fa-user-md'></span> Roles",
+							body: ScopeRole.ui
+						},
+						{
 							id: ids.users,
 							header: "<span class='webix_icon fa fa-users'></span> Users",
 							body: ScopeUser.ui
@@ -63,10 +71,13 @@ module.exports = class AB_Work_Admin_Scope extends ABComponent {
 							onAfterTabClick: (id) => {
 
 								switch (id) {
+									case ScopeRole.ui.id:
+										ScopeRole.onShow();
+										break;
 									case ScopeUser.ui.id:
 										ScopeUser.onShow();
 										break;
-								}
+									}
 
 							}
 						}
@@ -82,6 +93,7 @@ module.exports = class AB_Work_Admin_Scope extends ABComponent {
 
 			ScopeList.init(scopeDC);
 			ScopeForm.init(scopeDC);
+			ScopeRole.init(scopeDC);
 			ScopeUser.init(scopeDC);
 
 		}
@@ -103,6 +115,7 @@ module.exports = class AB_Work_Admin_Scope extends ABComponent {
 
 				ScopeList.applicationLoad(application);
 				ScopeForm.applicationLoad(application);
+				ScopeRole.applicationLoad(application);
 				ScopeUser.applicationLoad(application);
 
 			},

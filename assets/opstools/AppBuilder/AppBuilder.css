@@ -264,6 +264,9 @@ label {
 .ab-custom-field .webix_template {
 	padding: 0;
 }
+.ab-custom-field legend {
+	border-bottom: none;
+}
 
 .ab-component-form-rule {
 	background-color: #dcdcdc;

@@ -1,6 +1,6 @@
-const ABScopeCore = require("../core/ABScopeCore");
+const ABRoleCore = require("../core/ABRoleCore");
 
-module.exports = class ABScope extends ABScopeCore {
+module.exports = class ABRole extends ABRoleCore {
 
 	constructor(values, application) {
 
@@ -23,18 +23,6 @@ module.exports = class ABScope extends ABScopeCore {
 
 		var result = super.toObj();
 		return result;
-
-	}
-
-	save() {
-
-		return this.application.scopeSave(this);
-
-	}
-
-	destroy() {
-
-		return this.application.scopeDestroy(this);
 
 	}
 

@@ -91,7 +91,8 @@ module.exports = class AB_Work_Object_Workspace_PopupFilterDataTable extends ABC
 
                 CurrentObject = object;
 
-                DataFilter.objectLoad(CurrentObject);
+                DataFilter.applicationLoad(CurrentObject ? CurrentObject.application : null);
+                DataFilter.fieldsLoad(CurrentObject ? CurrentObject.fields() : []);
             },
 
 
