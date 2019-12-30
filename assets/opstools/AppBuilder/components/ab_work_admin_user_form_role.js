@@ -1,9 +1,9 @@
 const ABComponent = require("app_builder/assets/opstools/AppBuilder/classes/platform/ABComponent");
 
-module.exports = class AB_Work_Admin_User_Form_Scope extends ABComponent {
+module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
 
 	constructor(App) {
-		super(App, 'ab_work_admin_user_form_scope');
+		super(App, 'ab_work_admin_user_form_role');
 
 		let L = this.Label;
 
@@ -13,12 +13,12 @@ module.exports = class AB_Work_Admin_User_Form_Scope extends ABComponent {
 
 		let CurrentApplication;
 
-		this._scopeDC = new webix.DataCollection();
+		this._roleDC = new webix.DataCollection();
 
 		// Our webix UI definition:
 		this.ui = {
 			rows: [
-				{ template: `<span class='fa fa-street-view'></span> ${L("ab.admin.userScope", "*Scopes")}`, type: "header" },
+				{ template: `<span class='fa fa-user-md'></span> ${L("ab.admin.userRole", "*Roles")}`, type: "header" },
 				{
 					view: 'list',
 					id: ids.list,
@@ -43,7 +43,7 @@ module.exports = class AB_Work_Admin_User_Form_Scope extends ABComponent {
 			if ($$(ids.list)) {
 				webix.extend($$(ids.list), webix.ProgressBar);
 
-				$$(ids.list).data.sync(this._scopeDC);
+				$$(ids.list).data.sync(this._roleDC);
 			}
 
 		};
@@ -74,26 +74,26 @@ module.exports = class AB_Work_Admin_User_Form_Scope extends ABComponent {
 					return;
 				}
 
-				CurrentApplication.scopeOfUser(currUser.username)
+				CurrentApplication.roleOfUser(currUser.username)
 					.catch(err => {
 						console.error(err);
 						_logic.ready();
 					})
 					.then((data) => {
 
-						this._scopeDC.clearAll();
-						this._scopeDC.parse(data || []);
+						this._roleDC.clearAll();
+						this._roleDC.parse(data || []);
 						_logic.ready();
 
 					});
 
 			},
 
-			remove: (scopeId) => {
+			remove: (roleId) => {
 
 				OP.Dialog.Confirm({
-					title: L('ab.scope.removeTitle', '*Remove scope'),
-					message: L('ab.scope.removeDescription', '*Do you want to remove this scope from user?'),
+					title: L('ab.role.removeTitle', '*Remove this role'),
+					message: L('ab.role.removeDescription', '*Do you want to remove this role from user?'),
 					callback: (result) => {
 
 						if (!result)
@@ -101,8 +101,8 @@ module.exports = class AB_Work_Admin_User_Form_Scope extends ABComponent {
 
 						_logic.busy();
 
-						let scope = this._scopeDC.find(s => s.id == scopeId)[0];
-						if (!scope) {
+						let role = this._roleDC.find(s => s.id == roleId)[0];
+						if (!role) {
 							_logic.ready();
 							return;
 						}
@@ -114,14 +114,14 @@ module.exports = class AB_Work_Admin_User_Form_Scope extends ABComponent {
 							return;
 						}
 
-						scope.removeUser(currUser.username)
+						role.removeUser(currUser.username)
 							.catch(err => {
 								console.error(err);
 								_logic.ready();
 							})
 							.then((data) => {
 
-								this._scopeDC.remove(scopeId);
+								this._roleDC.remove(roleId);
 								_logic.ready();
 
 							});

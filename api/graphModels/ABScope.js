@@ -10,12 +10,6 @@ module.exports = class ABScope extends ABModelBase {
 
 		return {
 
-			applications: {
-				edgeName: "applicationScope",
-				linkCollection: "application",
-				direction: this.relateDirection.INBOUND
-			},
-
 			roles: {
 				edgeName: "roleScope",
 				linkCollection: "role",

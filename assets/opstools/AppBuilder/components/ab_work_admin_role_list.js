@@ -1,9 +1,9 @@
 const ABComponent = require("../classes/platform/ABComponent");
 
-module.exports = class AB_Work_Admin_Scope_List extends ABComponent {
+module.exports = class AB_Work_Admin_Role_List extends ABComponent {
 
 	constructor(App) {
-		super(App, 'ab_work_admin_scope_list');
+		super(App, 'ab_work_admin_role_list');
 
 		let L = this.Label;
 
@@ -26,7 +26,7 @@ module.exports = class AB_Work_Admin_Scope_List extends ABComponent {
 					cols: [
 						{
 							view: "label",
-							label: `&nbsp;&nbsp;<span class='fa fa-street-view'></span> ${L("ab.scope.title", "*Scopes")}`,
+							label: `&nbsp;&nbsp;<span class='fa fa-user-md'></span> ${L("ab.role.title", "*Roles")}`,
 							align: "left"
 						},
 						{ fillspace: true },
@@ -36,7 +36,7 @@ module.exports = class AB_Work_Admin_Scope_List extends ABComponent {
 							on: {
 								onChange: (searchText) => {
 
-									_logic.filterScopes(searchText);
+									_logic.filterRoles(searchText);
 
 								}
 							}
@@ -55,7 +55,7 @@ module.exports = class AB_Work_Admin_Scope_List extends ABComponent {
 					on: {
 						onAfterSelect: (selection, preserve) => {
 
-							_logic.selectScope(selection ? selection.id : null);
+							_logic.selectRole(selection ? selection.id : null);
 
 						}
 					}
@@ -67,7 +67,7 @@ module.exports = class AB_Work_Admin_Scope_List extends ABComponent {
 							view: 'button',
 							type: "icon",
 							icon: "fa fa-download",
-							label: "Import scope",
+							label: "Import role",
 							click: () => {
 
 							}
@@ -76,9 +76,9 @@ module.exports = class AB_Work_Admin_Scope_List extends ABComponent {
 							view: 'button',
 							type: "icon",
 							icon: "fa fa-plus",
-							label: "Create new scope",
+							label: "Create new role",
 							click: () => {
-								_logic.createNewScope();
+								_logic.createNewRole();
 							}
 						}
 					]
@@ -89,23 +89,23 @@ module.exports = class AB_Work_Admin_Scope_List extends ABComponent {
 		let CurrentApplication;
 
 		// Our init() function for setting up our UI
-		this.init = (scopeDC) => {
+		this.init = (roleDC) => {
 
 			if ($$(ids.datatable))
 				webix.extend($$(ids.datatable), webix.ProgressBar);
 
-			this._scopeDC = scopeDC;
-			if (this._scopeDC) {
+			this._roleDC = roleDC;
+			if (this._roleDC) {
 
 				// Bind to the data collection
-				$$(ids.datatable).data.sync(this._scopeDC);
+				$$(ids.datatable).data.sync(this._roleDC);
 
-				this._scopeDC.attachEvent("onAfterCursorChange", scopeId => {
+				this._roleDC.attachEvent("onAfterCursorChange", roleId => {
 
 					$$(ids.datatable).blockEvent();
 
-					if (scopeId)
-						$$(ids.datatable).select(scopeId);
+					if (roleId)
+						$$(ids.datatable).select(roleId);
 					else
 						$$(ids.datatable).unselect();
 
@@ -149,11 +149,11 @@ module.exports = class AB_Work_Admin_Scope_List extends ABComponent {
 
 				$$(ids.component).show();
 
-				_logic.loadScopeData();
+				_logic.loadRoleData();
 
 				// Set select item of datatable
-				if (this._scopeDC) {
-					let cursor = this._scopeDC.getCursor();
+				if (this._roleDC) {
+					let cursor = this._roleDC.getCursor();
 					if (cursor)
 						$$(ids.datatable).select(cursor.id);
 					else
@@ -162,7 +162,7 @@ module.exports = class AB_Work_Admin_Scope_List extends ABComponent {
 
 			},
 
-			loadScopeData: () => {
+			loadRoleData: () => {
 
 				if (this._isLoaded)
 					return Promise.resolve();
@@ -171,7 +171,7 @@ module.exports = class AB_Work_Admin_Scope_List extends ABComponent {
 
 				_logic.busy();
 
-				CurrentApplication.scopeLoad()
+				CurrentApplication.roleLoad()
 					.catch(err => {
 						console.error(err);
 						_logic.ready();
@@ -179,18 +179,18 @@ module.exports = class AB_Work_Admin_Scope_List extends ABComponent {
 					.then(() => {
 
 						// Parse to the data collection
-						if (this._scopeDC) {
+						if (this._roleDC) {
 
-							// Remove .application of scope list
+							// Remove .application of role list
 							// NOTE: it will cause of variable recursive call
-							let scopes = CurrentApplication.scopes().map(d => {
+							let roles = CurrentApplication.roles().map(d => {
 								delete d.application;
 								return d;
 							});
 
-							this._scopeDC.setCursor(null);
-							this._scopeDC.clearAll();
-							this._scopeDC.parse(scopes || []);
+							this._roleDC.setCursor(null);
+							this._roleDC.clearAll();
+							this._roleDC.parse(roles || []);
 						}
 
 						_logic.ready();
@@ -199,38 +199,38 @@ module.exports = class AB_Work_Admin_Scope_List extends ABComponent {
 
 			},
 
-			filterScopes: (searchText = "") => {
+			filterRoles: (searchText = "") => {
 
-				if (!this._scopeDC)
+				if (!this._roleDC)
 					return;
 
 				searchText = searchText.toLowerCase();
 
-				this._scopeDC.setCursor(null);
-				this._scopeDC.filter(s => (s.name || "").toLowerCase().indexOf(searchText) > -1 || (s.description || "").toLowerCase().indexOf(searchText) > -1);
+				this._roleDC.setCursor(null);
+				this._roleDC.filter(s => (s.name || "").toLowerCase().indexOf(searchText) > -1 || (s.description || "").toLowerCase().indexOf(searchText) > -1);
 
 			},
 
-			selectScope: (scopeId) => {
+			selectRole: (roleId) => {
 
-				if (!this._scopeDC)
+				if (!this._roleDC)
 					return;
 
-				if (scopeId)
-					this._scopeDC.setCursor(scopeId);
+				if (roleId)
+					this._roleDC.setCursor(roleId);
 				else
-					this._scopeDC.setCursor(null);
+					this._roleDC.setCursor(null);
 
 			},
 
-			createNewScope: () => {
+			createNewRole: () => {
 
-				if (!this._scopeDC)
+				if (!this._roleDC)
 					return;
 
-				this._scopeDC.setCursor(null);
+				this._roleDC.setCursor(null);
 
-				// TODO : switch to scope info tab and focus name textbox
+				// TODO : switch to role info tab and focus name textbox
 
 			},
 

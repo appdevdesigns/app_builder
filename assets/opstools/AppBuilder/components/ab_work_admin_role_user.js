@@ -1,9 +1,9 @@
 const ABComponent = require("../classes/platform/ABComponent");
 
-module.exports = class AB_Work_Admin_Scope_User extends ABComponent {
+module.exports = class AB_Work_Admin_Role_User extends ABComponent {
 
 	constructor(App) {
-		super(App, 'ab_work_admin_scope_user');
+		super(App, 'ab_work_admin_role_user');
 
 		let L = this.Label;
 
@@ -42,9 +42,9 @@ module.exports = class AB_Work_Admin_Scope_User extends ABComponent {
 		};
 
 		// Our init() function for setting up our UI
-		this.init = (scopeDC) => {
+		this.init = (roleDC) => {
 
-			this._scopeDC = scopeDC;
+			this._roleDC = roleDC;
 
 			if ($$(ids.datatable))
 				webix.extend($$(ids.datatable), webix.ProgressBar);

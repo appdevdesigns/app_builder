@@ -31,9 +31,9 @@ class ABApplication extends ABModelBase {
 				direction: this.relateDirection.OUTBOUND
 			},
 
-			scopes: {
-				edgeName: "applicationScope",
-				linkCollection: "scope",
+			roles: {
+				edgeName: "applicationRole",
+				linkCollection: "role",
 				direction: this.relateDirection.OUTBOUND
 			}
 

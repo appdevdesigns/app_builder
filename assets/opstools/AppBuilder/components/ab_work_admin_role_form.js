@@ -1,7 +1,5 @@
 const ABComponent = require("../classes/platform/ABComponent");
 
-const RowFilter = require("../classes/platform/RowFilter");
-
 module.exports = class AB_Work_Admin_Role_Form extends ABComponent {
 
 	constructor(App) {
@@ -16,8 +14,6 @@ module.exports = class AB_Work_Admin_Role_Form extends ABComponent {
 		let ids = {
 			form: this.unique('form')
 		};
-
-		this._rowFilter = new RowFilter(App, idBase);
 
 		let CurrentApplication;
 
@@ -39,20 +35,6 @@ module.exports = class AB_Work_Admin_Role_Form extends ABComponent {
 					name: "description",
 					label: "Description",
 					placeholder: "Enter Description"
-				},
-				{
-					view: "checkbox",
-					name: "isGlobal",
-					label: "Is Global"
-				},
-				{
-					id: ids.component,
-					view: "forminput",
-					paddingY: 0,
-					paddingX: 0,
-					label: "Filter",
-					css: "ab-custom-field",
-					body: this._rowFilter.ui
 				},
 				{
 					cols: [
@@ -87,10 +69,17 @@ module.exports = class AB_Work_Admin_Role_Form extends ABComponent {
 		};
 
 		// Our init() function for setting up our UI
-		this.init = () => {
+		this.init = (roleDC) => {
 
-			if ($$(ids.form))
+			this._roleDC = roleDC;
+
+			if ($$(ids.form)) {
 				webix.extend($$(ids.form), webix.ProgressBar);
+
+				if (this._roleDC)
+					$$(ids.form).bind(this._roleDC);
+
+			}
 
 		}
 
@@ -108,25 +97,6 @@ module.exports = class AB_Work_Admin_Role_Form extends ABComponent {
 			applicationLoad: function (application) {
 
 				CurrentApplication = application;
-				this._rowFilter.applicationLoad(application);
-
-
-				// if (this._roleDC) {
-				// 	$$(ids.form).bind(this._roleDC);
-
-				// 	// Update RowFilter
-				// 	this._roleDC.attachEvent("onAfterCursorChange", (currId) => {
-
-				// 		if (currId) {
-				// 			let currItem = this._roleDC.getItem(currId);
-				// 			this._rowFilter.setValue(currItem.filter);
-				// 		}
-				// 		else {
-				// 			this._rowFilter.setValue(null);
-				// 		}
-
-				// 	});
-				// }
 
 			},
 
@@ -163,9 +133,6 @@ module.exports = class AB_Work_Admin_Role_Form extends ABComponent {
 					}
 					isAdded = false;
 				}
-
-				// set .filter
-				currRole.filter = this._rowFilter.getValue();
 
 				CurrentApplication.roleSave(currRole)
 					.catch(err => {

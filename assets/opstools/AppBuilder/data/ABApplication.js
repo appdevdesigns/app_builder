@@ -507,7 +507,7 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 		},
 
-		// ** Roles
+		// ** Scopes
 
 		scopeLoad: function (appId, cond) {
 
@@ -530,6 +530,14 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 			return OP.Comm.Socket.get({
 				url: `/app_builder/user/${username}/scope`
+			});
+
+		},
+
+		scopeOfRole: function(roldId) {
+
+			return OP.Comm.Socket.get({
+				url: `/app_builder/role/${roldId}/scope`
 			});
 
 		},

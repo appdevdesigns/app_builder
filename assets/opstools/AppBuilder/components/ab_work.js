@@ -12,9 +12,8 @@ const AB_Work_Object = require("./ab_work_object");
 const AB_Work_Query = require("./ab_work_query");
 const AB_Work_Datacollection = require("./ab_work_dataview");
 const AB_Work_Interface = require("./ab_work_interface");
-const AB_Work_Admin_User = require("./ab_work_admin_user");
 const AB_Work_Admin_Role = require("./ab_work_admin_role");
-const AB_Work_Admin_Scope = require("./ab_work_admin_scope");
+const AB_Work_Admin_User = require("./ab_work_admin_user");
 
 // export to ABLiveTool
 // window.ABWorkUI = AB_Work;
@@ -44,8 +43,7 @@ module.exports = window.ABWorkUI = class AB_Work extends ABComponent {  // ('ab_
 				interfaceTitle: L('ab.interface.title', "*Interface"),
 				adminTitle: L('ab.admin.title', "*Admin"),
 				userTitle: L('ab.user.title', "*Users"),
-				roleTitle: L('ab.role.title', "*Roles"),
-				scopeTitle: L('ab.scope.title', "*Scopes")
+				roleTitle: L('ab.role.title', "*Roles")
 			}
 		}
 
@@ -65,7 +63,6 @@ module.exports = window.ABWorkUI = class AB_Work extends ABComponent {  // ('ab_
 			tab_admin: this.unique('tab_admin'),
 			tab_user: this.unique('tab_user'),
 			tab_role: this.unique('tab_role'),
-			tab_scope: this.unique('tab_scope'),
 			workspace: this.unique('workspace'),
 			collapseMenu: this.unique('collapseMenu'),
 			expandMenu: this.unique('expandMenu')
@@ -76,9 +73,8 @@ module.exports = window.ABWorkUI = class AB_Work extends ABComponent {  // ('ab_
 		var AppQueryWorkspace = new AB_Work_Query(App);
 		var AppDatacollectionWorkspace = new AB_Work_Datacollection(App);
 		var AppInterfaceWorkspace = new AB_Work_Interface(App);
-		let AppUserWorkspace = new AB_Work_Admin_User(App);
 		var AppRoleWorkspace = new AB_Work_Admin_Role(App);
-		var AppScopeWorkspace = new AB_Work_Admin_Scope(App);
+		let AppUserWorkspace = new AB_Work_Admin_User(App);
 
 		var sidebarItems = [{
 			id: ids.tab_object,
@@ -105,9 +101,8 @@ module.exports = window.ABWorkUI = class AB_Work extends ABComponent {  // ('ab_
 			value: labels.component.adminTitle,
 			icon: "fa fa-fw fa-user",
 			data: [
-				{ id: ids.tab_user, value: labels.component.userTitle, icon: "fa fa-fw fa-users" },
 				{ id: ids.tab_role, value: labels.component.roleTitle, icon: "fa fa-fw fa-user-md" },
-				{ id: ids.tab_scope, value: labels.component.scopeTitle, icon: "fa fa-fw fa-street-view" }
+				{ id: ids.tab_user, value: labels.component.userTitle, icon: "fa fa-fw fa-users" }
 			]
 		}];
 
@@ -235,9 +230,8 @@ module.exports = window.ABWorkUI = class AB_Work extends ABComponent {  // ('ab_
 								AppQueryWorkspace.ui,
 								AppDatacollectionWorkspace.ui,
 								AppInterfaceWorkspace.ui,
-								AppUserWorkspace.ui,
 								AppRoleWorkspace.ui,
-								AppScopeWorkspace.ui
+								AppUserWorkspace.ui
 							]
 						}
 					]
@@ -254,9 +248,8 @@ module.exports = window.ABWorkUI = class AB_Work extends ABComponent {  // ('ab_
 			AppQueryWorkspace.init();
 			AppDatacollectionWorkspace.init();
 			AppInterfaceWorkspace.init();
-			AppUserWorkspace.init();
 			AppRoleWorkspace.init();
-			AppScopeWorkspace.init();
+			AppUserWorkspace.init();
 
 			//// TODO: keep track of the last workspace in application.workspace.lastWorkspace on every
 			//// tab switch, then use that value here to show you which tab to display on loading.
@@ -333,10 +326,8 @@ module.exports = window.ABWorkUI = class AB_Work extends ABComponent {  // ('ab_
 				AppQueryWorkspace.applicationLoad(application);
 				AppDatacollectionWorkspace.applicationLoad(application);
 				AppInterfaceWorkspace.applicationLoad(application);
-				AppUserWorkspace.applicationLoad(application);
 				AppRoleWorkspace.applicationLoad(application);
-				AppScopeWorkspace.applicationLoad(application);
-
+				AppUserWorkspace.applicationLoad(application);
 
 				_logic.show();
 			},
@@ -382,25 +373,18 @@ module.exports = window.ABWorkUI = class AB_Work extends ABComponent {  // ('ab_
 						$$(ids.tabbar).select(ids.tab_interface);
 						break;
 
-					// User Workspace tab
-					case ids.tab_admin:
-					case ids.tab_user:
-
-						AppUserWorkspace.show();
-						break;
-
 					// Role Workspace tab
+					case ids.tab_admin:
 					case ids.tab_role:
 
 						AppRoleWorkspace.show();
 						break;
 
-					// Scope Workspace tab
-					case ids.tab_scope:
+					// User Workspace tab
+					case ids.tab_user:
 
-						AppScopeWorkspace.show();
+						AppUserWorkspace.show();
 						break;
-
 
 				}
 
