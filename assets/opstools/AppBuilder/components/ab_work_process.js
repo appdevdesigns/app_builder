@@ -35,7 +35,11 @@ module.exports = class AB_Work_Process extends OP.Component {
             id: ids.component,
             type: "space",
             margin: 10,
-            cols: [ProcessList.ui, { view: "resizer" }, ProcessWorkspace.ui]
+            cols: [
+                ProcessList.ui, 
+                { view: "resizer", css: "bg_gray", width: 11}, 
+                ProcessWorkspace.ui
+            ]
         };
 
         // Our init() function for setting up our UI

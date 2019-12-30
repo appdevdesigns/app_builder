@@ -19,7 +19,9 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
         var labels = {
             common: App.labels,
             component: {
-                label: L("ab.process.monitor.label", "*Monitor")
+                label: L("ab.process.monitor.label", "*Monitor"),
+                processes:  L("ab.process.monitor.processses", "*Processes"),
+                logs:  L("ab.process.monitor.logs", "*Logs"),
             }
         };
 
@@ -27,7 +29,9 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
 
         // internal list of Webix IDs to reference our UI components.
         var ids = {
-            component: this.unique("_component")
+            component: this.unique("_component"),
+            processList: this.unique("_processList"),
+            processLogs: this.unique("_processLogs")
         };
 
         // Our webix UI definition:
@@ -37,27 +41,67 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
             rows: [
                 {
                     id: "monitor",
-                    css: "bg_gray",
-                    rows: [
+                    cols: [
                         {
-                            maxHeight: App.config.xxxLargeSpacer,
-                            hidden: App.config.hideMobile
-                        },
+                            rows: [
+                                {
+                					view: 'toolbar',
+                					css: 'ab-data-toolbar webix_dark',
+                					cols: [
+                                        {
+                                            type: 'spacer',
+                                            width: 15
+                                        },
+                						{
+                							view: 'label',
+                							label: labels.component.processes
+                						}
+                					]
+                				},
+                                {
+                                    view: "list",
+                                    id: ids.processList,
+                                    item: {
+                                        height: 74,
+                                        template: "<div style=\"float: left; height: 70px; line-height: 70px; margin-right: 10px; color: red;\" class=\"fa fa-times-circle fa-2x\"></div><div style=\"padding: 5px 0; line-height: 20px\"><div style=\"font-size: 16px; font-weight: 600;\">#name#</div><div>#message#</div></div>"
+                                    },
+                                    on: {
+                                        onItemClick: function(id, e, node){
+                                            $$(ids.processList).clearCss("webix_selected");
+                                            $$(ids.processList).addCss(id, "webix_selected");
+                                            var logs = $$(ids.processList).getItem(id).logs;
+                                            $$(ids.processLogs).clearAll();
+                                            $$(ids.processLogs).parse(logs);
+                                        }
+                                    },
+                                    navigation: true
+                                }
+                            ]
+        				},
+                        { view: "resizer", css: "bg_gray", width: 11},
                         {
-                            view: "label",
-                            align: "center",
-                            height: 200,
-                            label:
-                                "<div style='display: block; font-size: 180px; background-color: #666; color: transparent; text-shadow: 0px 1px 1px rgba(255,255,255,0.5); -webkit-background-clip: text; -moz-background-clip: text; background-clip: text;' class='fa fa-database'></div>"
-                        },
-                        {
-                            view: "label",
-                            align: "center",
-                            label: labels.component.label
-                        },
-                        {
-                            maxHeight: App.config.xxxLargeSpacer,
-                            hidden: App.config.hideMobile
+                            gravity: 2,
+                            rows: [
+                                {
+                                    view: 'toolbar',
+                                    css: 'ab-data-toolbar webix_dark',
+                                    cols: [
+                                        {
+                                            type: 'spacer',
+                                            width: 15
+                                        },
+                                        {
+                                            view: 'label',
+                                            label: labels.component.logs
+                                        }
+                                    ]
+                                },
+                                {
+                                    id: ids.processLogs,
+                        			view: "list",
+                                    template: "<div style=\"padding: 5px 0; line-height: 20px\">#value#</div>"
+                        		}
+                            ]
                         }
                     ]
                 }
@@ -108,7 +152,18 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
                         }
                     }).then((allInstances) => {
                         console.log(allInstances);
-                        return allInstances;
+                        var list = [];
+                        allInstances.forEach((inst)=>{
+                            var mesg = inst.log[inst.log.length-1];
+                            mesg = mesg.split(" : ");
+                            list.push({
+                                task: mesg[0] ? mesg[0] : "No Task ID",
+                                name: mesg[1] ? mesg[1] : "No Task Name",
+                                message: mesg[2] ? mesg[2] : "No Message",
+                                logs: inst.log
+                            })
+                        });
+                        return list;
                     });
                 } else {
                     return Promise.resolve([]);
@@ -127,7 +182,7 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
 
                 CurrentProcess = process;
 
-                this._logic.loadProcessInstances();
+                $$(ids.processList).parse(this._logic.loadProcessInstances());
             },
 
             /**

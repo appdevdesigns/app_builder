@@ -222,13 +222,18 @@ module.exports = class ABProcessTaskEmail extends ABProcessTaskEmailCore {
                         }
                     };
                     client.send(
-                        { type: "notification.email", param: jobData },
+                        {
+                            type: "notification.email",
+                            param: jobData,
+                            __timeout: 2000
+                        },
                         (err, results) => {
                             debugger;
                             if (err) {
                                 // err objects are returned as simple {} not instances of {Error}
                                 var error = new Error(
-                                    `NotificationEmail responded with an error (${err.code})`
+                                    `NotificationEmail responded with an error (${err.code ||
+                                        err.toString()})`
                                 );
                                 for (var v in err) {
                                     error[v] = err[v];
