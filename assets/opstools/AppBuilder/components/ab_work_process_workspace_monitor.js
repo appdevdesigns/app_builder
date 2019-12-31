@@ -20,7 +20,7 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
             common: App.labels,
             component: {
                 label: L("ab.process.monitor.label", "*Monitor"),
-                tasks:  L("ab.process.monitor.tasks", "*Tasks"),
+                instances:  L("ab.process.monitor.instances", "*Instances"),
                 logs:  L("ab.process.monitor.logs", "*Logs"),
                 actions: L("ab.process.monitor.actions", "*Actions"),
                 details: L("ab.process.monitor.details", "*Instance Details"),
@@ -56,7 +56,7 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
                                         },
                 						{
                 							view: 'label',
-                							label: labels.component.tasks
+                							label: labels.component.instances
                 						}
                 					]
                 				},
