@@ -49,7 +49,19 @@ module.exports = class AB_Work_Admin_Role_List extends ABComponent {
 					select: "row",
 					columns: [
 						{ id: "name", header: "Name", width: 200 },
-						{ id: "description", header: "Description", fillspace: true }
+						{ id: "description", header: "Description", fillspace: true },
+						{
+							id: "exclude", header: "", width: 40,
+							template: (obj, common, value) => {
+								return '<div class="exclude"><span class="webix_icon fa fa-reply"></span></div>';
+							},
+							css: { 'text-align': 'center' }
+						},
+						{
+							id: "remove", header: "", width: 40,
+							template: "<div class='remove'>{common.trashIcon()}</div>",
+							css: { 'text-align': 'center' },
+						}
 					],
 					data: [],
 					on: {
@@ -57,6 +69,14 @@ module.exports = class AB_Work_Admin_Role_List extends ABComponent {
 
 							_logic.selectRole(selection ? selection.id : null);
 
+						}
+					},
+					onClick: {
+						"exclude": (event, data, target) => {
+							_logic.exclude(data.row);
+						},
+						"remove": (event, data, target) => {
+							_logic.remove(data.row);
 						}
 					}
 				},
@@ -231,6 +251,41 @@ module.exports = class AB_Work_Admin_Role_List extends ABComponent {
 				this._roleDC.setCursor(null);
 
 				// TODO : switch to role info tab and focus name textbox
+
+			},
+
+			exclude: (roleId) => {
+
+				_logic.busy();
+
+				CurrentApplication.roleExclude(roleId)
+					.catch(err => {
+						console.error(err);
+						_logic.ready();
+					})
+					.then(() => {
+						this._roleDC.remove(roleId);
+						_logic.ready();
+					})
+
+			},
+
+			remove: (roleId) => {
+
+				let role = this._roleDC.getItem(roleId);
+				if (!role) return;
+
+				_logic.busy();
+
+				CurrentApplication.roleDestroy(role)
+					.catch(err => {
+						console.error(err);
+						_logic.ready();
+					})
+					.then(() => {
+						this._roleDC.remove(roleId);
+						_logic.ready();
+					});
 
 			},
 
