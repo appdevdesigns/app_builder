@@ -63,7 +63,15 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
                                     id: ids.processList,
                                     item: {
                                         height: 74,
-                                        template: "<div style=\"float: left; height: 70px; line-height: 70px; margin-right: 10px; color: red;\" class=\"fa fa-times-circle fa-2x\"></div><div style=\"padding: 5px 0; line-height: 20px\"><div style=\"font-size: 16px; font-weight: 600;\">#name#</div><div>#message#</div></div>"
+                                        template: function(obj) {
+                                            var icon = "fa-clock-o";
+                                            var color = "gray";
+                                            if (obj.status == "error") {
+                                                icon = "fa-times-circle";
+                                                color = "red";
+                                            }
+                                            return "<div style=\"float: left; height: 70px; line-height: 70px; margin-right: 10px; color: "+color+";\" class=\"fa "+icon+" fa-2x\"></div><div style=\"padding: 5px 0; line-height: 20px\"><div style=\"font-size: 16px; font-weight: 600;\">"+obj.name+"</div><div>"+obj.message+"</div></div>"
+                                        }
                                     },
                                     on: {
                                         onItemClick: function(id, e, node){
@@ -151,7 +159,6 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
                             status: { "!": "completed" }
                         }
                     }).then((allInstances) => {
-                        console.log(allInstances);
                         var list = [];
                         allInstances.forEach((inst)=>{
                             var mesg = inst.log[inst.log.length-1];
@@ -160,7 +167,8 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
                                 task: mesg[0] ? mesg[0] : "No Task ID",
                                 name: mesg[1] ? mesg[1] : "No Task Name",
                                 message: mesg[2] ? mesg[2] : "No Message",
-                                logs: inst.log
+                                logs: inst.log,
+                                status: inst.status
                             })
                         });
                         return list;
@@ -182,6 +190,7 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
 
                 CurrentProcess = process;
 
+                $$(ids.processList).clearAll();
                 $$(ids.processList).parse(this._logic.loadProcessInstances());
             },
 
