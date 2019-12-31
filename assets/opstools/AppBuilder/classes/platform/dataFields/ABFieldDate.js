@@ -1,34 +1,168 @@
-var ABFieldDateCore = require('../../core/dataFields/ABFieldDateCore');
-var ABFieldComponent = require('./ABFieldComponent');
+var ABFieldDateCore = require("../../core/dataFields/ABFieldDateCore");
+var ABFieldComponent = require("./ABFieldComponent");
 
 function L(key, altText) {
-	return AD.lang.label.getLabel(key) || altText;
+    return AD.lang.label.getLabel(key) || altText;
+}
+
+function defaultDateChange() {
+    var defaultDateValue = $$(ids.defaultDate).getValue();
+    var defaultDate = parseInt(defaultDateValue);
+    switch (defaultDate) {
+        case 1:
+            {
+                $$(ids.defaultDateValue).disable();
+                $$(ids.defaultDateValue).setValue();
+            }
+            break;
+        case 2:
+            {
+                $$(ids.defaultDateValue).enable();
+                $$(ids.defaultDateValue).setValue(new Date());
+                refreshDateValue();
+            }
+            break;
+        case 3:
+            {
+                $$(ids.defaultDateValue).enable();
+                $$(ids.defaultDateValue).setValue();
+            }
+            break;
+        default:
+            {
+                $$(ids.defaultDateValue).disable();
+                $$(ids.defaultDateValue).setValue(new Date());
+            }
+            break;
+    }
+}
+
+function refreshDateValue() {
+    var defaultFormatValue = $$(ids.dateFormat).getValue();
+    var dateFormat = parseInt(defaultFormatValue);
+
+    var formatString = "";
+    switch (dateFormat) {
+        //Ignore Date
+        case (1, 2):
+            {
+                formatString = "%d/%m/%Y";
+            }
+            break;
+        //mm/dd/yyyy
+        case 3:
+            {
+                formatString = "%m/%d/%Y";
+            }
+            break;
+        //M D, yyyy
+        case 4:
+            {
+                formatString = "%M %d, %Y";
+            }
+            break;
+        //D M, yyyy
+        case 5:
+            {
+                formatString = "%d %M, %Y";
+            }
+            break;
+        default:
+            {
+                formatString = "%d/%m/%Y";
+            }
+            break;
+    }
+
+    $$(ids.defaultDateValue).define("format", formatString);
+    $$(ids.defaultDateValue).refresh();
+}
+
+function defaultTimeChange() {
+    console.log("defaultTimeChange");
+    var dateFormat = parseInt($$(ids.defaultTime).getValue());
+    switch (dateFormat) {
+        case 1:
+            {
+                $$(ids.defaultTimeValue).disable();
+                $$(ids.defaultTimeValue).setValue();
+            }
+            break;
+        case 2:
+            {
+                $$(ids.defaultTimeValue).enable();
+                $$(ids.defaultTimeValue).setValue(new Date());
+            }
+            break;
+        case 3:
+            {
+                $$(ids.defaultTimeValue).enable();
+                $$(ids.defaultTimeValue).setValue();
+            }
+            break;
+        default:
+            {
+                $$(ids.defaultTimeValue).disable();
+                $$(ids.defaultTimeValue).setValue();
+            }
+            break;
+    }
+    refreshTimevalue();
+}
+
+function refreshTimevalue() {
+    console.log("refreshTimevalue");
+    var timeFormat = parseInt($$(ids.timeFormat).getValue());
+
+    var formatString = "";
+    switch (timeFormat) {
+        //HH:MM AM/PM
+        case 2:
+            {
+                formatString = "%h:%i %A";
+            }
+            break;
+        //HH:MM (military)
+        case 3:
+            {
+                formatString = "%H:%i";
+            }
+            break;
+        default:
+            {
+                formatString = "%h:%i %A";
+            }
+            break;
+    }
+
+    $$(ids.defaultTimeValue).define("format", formatString);
+    $$(ids.defaultTimeValue).refresh();
 }
 
 var ids = {
-	default: 'ab-date-default',
-	currentToDefault: 'ab-date-current-to-default',
+    default: "ab-date-default",
+    currentToDefault: "ab-date-current-to-default",
 
-	dateDisplay: 'ab-date-display',
+    dateDisplay: "ab-date-display",
 
-	dateFormat: 'date-format',
-	defaultDate: 'default-date',
-	defaultDateValue: 'default-date-value',
-	timeFormat: 'time-format',
-	defaultTime: 'default-time',
-	defaultTimeValue: 'default-time-value',
+    dateFormat: "date-format",
+    defaultDate: "default-date",
+    defaultDateValue: "default-date-value",
+    timeFormat: "time-format",
+    defaultTime: "default-time",
+    defaultTimeValue: "default-time-value",
 
-	// validation
-	validateCondition: 'ab-date-validate-condition',
-	validateRange: 'ab-date-validate-range',
-	validateRangeUnit: 'ab-date-validate-range-unit',
-	validateRangeBefore: 'ab-date-validate-range-before',
-	validateRangeAfter: 'ab-date-validate-range-after',
-	validateRangeBeforeLabel: 'ab-date-validate-before-label',
-	validateRangeAfterLabel: 'ab-date-validate-after-label',
+    // validation
+    validateCondition: "ab-date-validate-condition",
+    validateRange: "ab-date-validate-range",
+    validateRangeUnit: "ab-date-validate-range-unit",
+    validateRangeBefore: "ab-date-validate-range-before",
+    validateRangeAfter: "ab-date-validate-range-after",
+    validateRangeBeforeLabel: "ab-date-validate-before-label",
+    validateRangeAfterLabel: "ab-date-validate-after-label",
 
-	validateStartDate: 'ab-date-validate-start-date',
-	validateEndDate: 'ab-date-validate-end-date'
+    validateStartDate: "ab-date-validate-start-date",
+    validateEndDate: "ab-date-validate-end-date"
 };
 
 /**
@@ -39,452 +173,580 @@ var ids = {
  * property values, etc.
  */
 var ABFieldDateComponent = new ABFieldComponent({
-	fieldDefaults: ABFieldDateCore.defaults(),
+    fieldDefaults: ABFieldDateCore.defaults(),
 
-	elements: (App, field) => {
-		ids = field.idsUnique(ids, App);
+    elements: (App, field) => {
+        ids = field.idsUnique(ids, App);
 
-		return [
-			{
-				view: "richselect",
-				name: "dateFormat",
-				id: ids.dateFormat,
-				label: L('ab.dataField.date.dateFormat', "*Date Format"),
-				labelWidth: 110,
-				value: 1, options: [
-					{ id: 1, value: L('ab.dataField.date.ignoreDate', "*Ignore Date") },
-					{ id: 2, value: "dd/mm/yyyy" },
-					{ id: 3, value: "mm/dd/yyyy" },
-					{ id: 4, value: "M D, yyyy" },
-					{ id: 5, value: "D M, yyyy" }
-				],
-				on: {
-					onChange: (newVal, oldVal) => {
-						refreshDateValue();
-					}
-				}
-			},
-			{
-				cols: [
-					{
-						view: "richselect",
-						name: "defaultDate",
-						id: ids.defaultDate,
-						label: L('ab.common.default', "*Default"),
-						labelWidth: 110,
-						value: 1, options: [
-							{ id: 1, value: L('ab.common.none', "*None") },
-							{ id: 2, value: L('ab.dataField.date.currentDate', "*Current Date") },
-							{ id: 3, value: L('ab.dataField.date.specificDate', "*Specific Date") }
-						],
-						on: {
-							onChange: (newVal, oldVal) => {
-								defaultDateChange();
-							}
-						}
-					},
-					{
-						view: 'datepicker',
-						name: "defaultDateValue",
-						id: ids.defaultDateValue,
-						gravity: 0.5,
-						disabled: true,
-					}
-				]
-			},
-			// Validator
-			{
-				view: 'label',
-				label: L('ab.dataField.date.validationCriteria', "*Validation criteria"),
-				css: 'ab-text-bold'
-			},
-			{
-				id: ids.validateCondition,
-				view: "select",
-				name: "validateCondition",
-				label: L('ab.dataField.date.condition', "*Condition"),
-				labelWidth: 100,
-				value: 'none',
-				options: [
-					{ id: 'none', value: L('ab.common.none', "*None") },
-					{ id: 'dateRange', value: L('ab.dataField.date.validate.range', "*Range") },
-					{ id: 'between', value: L('ab.dataField.date.validate.between', "*Between") },
-					{ id: 'notBetween', value: L('ab.dataField.date.validate.notBetween', "*Not between") },
-					{ id: '=', value: L('ab.dataField.date.validate.equal', "*Equal to") },
-					{ id: '<>', value: L('ab.dataField.date.validate.notEqual', "*Not equal to") },
-					{ id: '>', value: L('ab.dataField.date.validate.greaterThan', "*Greater than") },
-					{ id: '<', value: L('ab.dataField.date.validate.lessThan', "*Less than") },
-					{ id: '>=', value: L('ab.dataField.date.validate.greaterAndEqual', "*Greater than or Equal to") },
-					{ id: '<=', value: L('ab.dataField.date.validate.lessAndEqual', "*Less than or Equal to") }
-				],
-				on: {
-					onChange: (newVal, oldVal) => {
-						switch (newVal) {
-							case 'none':
-								$$(ids.validateRange).hide();
-								$$(ids.validateStartDate).hide();
-								$$(ids.validateEndDate).hide();
-								break;
-							case 'dateRange':
-								$$(ids.validateRange).show();
-								$$(ids.validateStartDate).hide();
-								$$(ids.validateEndDate).hide();
-								break;
-							case 'between':
-							case 'notBetween':
-								$$(ids.validateRange).hide();
-								$$(ids.validateStartDate).define('label', 'Start Date');
-								$$(ids.validateStartDate).refresh();
-								$$(ids.validateStartDate).show();
-								$$(ids.validateEndDate).show();
-								break;
-							case '=':
-							case '<>':
-							case '>':
-							case '<':
-							case '>=':
-							case '<=':
-								$$(ids.validateRange).hide();
-								$$(ids.validateStartDate).define('label', 'Date');
-								$$(ids.validateStartDate).refresh();
-								$$(ids.validateStartDate).show();
-								$$(ids.validateEndDate).hide();
-								break;
-						}
-					}
-				}
-			},
-			{
-				id: ids.validateRange,
-				hidden: true,
-				rows: [
-					{
-						id: ids.validateRangeUnit,
-						view: "select",
-						name: "validateRangeUnit",
-						label: L('ab.dataField.date.unit', "*Unit"),
-						labelWidth: 100,
-						options: [
-							{ id: 'days', value: L('ab.dataField.date.days', "*Days") },
-							{ id: 'months', value: L('ab.dataField.date.months', "*Months") },
-							{ id: 'years', value: L('ab.dataField.date.years', "*Years") }
-						],
-						on: {
-							onChange: (newVal) => {
-								$$(ids.validateRangeBeforeLabel).refresh();
-								$$(ids.validateRangeAfterLabel).refresh();
-							}
-						}
-					},
-					{
-						cols: [
-							{
-								id: ids.validateRangeBeforeLabel,
-								view: 'template',
-								align: 'left',
-								width: 140,
-								borderless: true,
-								template: () => {
+        return [
+            {
+                view: "richselect",
+                name: "dateFormat",
+                id: ids.dateFormat,
+                label: L("ab.dataField.date.dateFormat", "*Date Format"),
+                labelWidth: 110,
+                value: 1,
+                options: [
+                    {
+                        id: 1,
+                        value: L("ab.dataField.date.ignoreDate", "*Ignore Date")
+                    },
+                    { id: 2, value: "dd/mm/yyyy" },
+                    { id: 3, value: "mm/dd/yyyy" },
+                    { id: 4, value: "M D, yyyy" },
+                    { id: 5, value: "D M, yyyy" }
+                ],
+                on: {
+                    onChange: (newVal, oldVal) => {
+                        refreshDateValue();
+                    }
+                }
+            },
+            {
+                cols: [
+                    {
+                        view: "richselect",
+                        name: "defaultDate",
+                        id: ids.defaultDate,
+                        label: L("ab.common.default", "*Default"),
+                        labelWidth: 110,
+                        value: 1,
+                        options: [
+                            { id: 1, value: L("ab.common.none", "*None") },
+                            {
+                                id: 2,
+                                value: L(
+                                    "ab.dataField.date.currentDate",
+                                    "*Current Date"
+                                )
+                            },
+                            {
+                                id: 3,
+                                value: L(
+                                    "ab.dataField.date.specificDate",
+                                    "*Specific Date"
+                                )
+                            }
+                        ],
+                        on: {
+                            onChange: (newVal, oldVal) => {
+                                defaultDateChange();
+                            }
+                        }
+                    },
+                    {
+                        view: "datepicker",
+                        name: "defaultDateValue",
+                        id: ids.defaultDateValue,
+                        gravity: 0.5,
+                        disabled: true
+                    }
+                ]
+            },
+            // Validator
+            {
+                view: "label",
+                label: L(
+                    "ab.dataField.date.validationCriteria",
+                    "*Validation criteria"
+                ),
+                css: "ab-text-bold"
+            },
+            {
+                id: ids.validateCondition,
+                view: "select",
+                name: "validateCondition",
+                label: L("ab.dataField.date.condition", "*Condition"),
+                labelWidth: 100,
+                value: "none",
+                options: [
+                    { id: "none", value: L("ab.common.none", "*None") },
+                    {
+                        id: "dateRange",
+                        value: L("ab.dataField.date.validate.range", "*Range")
+                    },
+                    {
+                        id: "between",
+                        value: L(
+                            "ab.dataField.date.validate.between",
+                            "*Between"
+                        )
+                    },
+                    {
+                        id: "notBetween",
+                        value: L(
+                            "ab.dataField.date.validate.notBetween",
+                            "*Not between"
+                        )
+                    },
+                    {
+                        id: "=",
+                        value: L(
+                            "ab.dataField.date.validate.equal",
+                            "*Equal to"
+                        )
+                    },
+                    {
+                        id: "<>",
+                        value: L(
+                            "ab.dataField.date.validate.notEqual",
+                            "*Not equal to"
+                        )
+                    },
+                    {
+                        id: ">",
+                        value: L(
+                            "ab.dataField.date.validate.greaterThan",
+                            "*Greater than"
+                        )
+                    },
+                    {
+                        id: "<",
+                        value: L(
+                            "ab.dataField.date.validate.lessThan",
+                            "*Less than"
+                        )
+                    },
+                    {
+                        id: ">=",
+                        value: L(
+                            "ab.dataField.date.validate.greaterAndEqual",
+                            "*Greater than or Equal to"
+                        )
+                    },
+                    {
+                        id: "<=",
+                        value: L(
+                            "ab.dataField.date.validate.lessAndEqual",
+                            "*Less than or Equal to"
+                        )
+                    }
+                ],
+                on: {
+                    onChange: (newVal, oldVal) => {
+                        switch (newVal) {
+                            case "none":
+                                $$(ids.validateRange).hide();
+                                $$(ids.validateStartDate).hide();
+                                $$(ids.validateEndDate).hide();
+                                break;
+                            case "dateRange":
+                                $$(ids.validateRange).show();
+                                $$(ids.validateStartDate).hide();
+                                $$(ids.validateEndDate).hide();
+                                break;
+                            case "between":
+                            case "notBetween":
+                                $$(ids.validateRange).hide();
+                                $$(ids.validateStartDate).define(
+                                    "label",
+                                    "Start Date"
+                                );
+                                $$(ids.validateStartDate).refresh();
+                                $$(ids.validateStartDate).show();
+                                $$(ids.validateEndDate).show();
+                                break;
+                            case "=":
+                            case "<>":
+                            case ">":
+                            case "<":
+                            case ">=":
+                            case "<=":
+                                $$(ids.validateRange).hide();
+                                $$(ids.validateStartDate).define(
+                                    "label",
+                                    "Date"
+                                );
+                                $$(ids.validateStartDate).refresh();
+                                $$(ids.validateStartDate).show();
+                                $$(ids.validateEndDate).hide();
+                                break;
+                        }
+                    }
+                }
+            },
+            {
+                id: ids.validateRange,
+                hidden: true,
+                rows: [
+                    {
+                        id: ids.validateRangeUnit,
+                        view: "select",
+                        name: "validateRangeUnit",
+                        label: L("ab.dataField.date.unit", "*Unit"),
+                        labelWidth: 100,
+                        options: [
+                            {
+                                id: "days",
+                                value: L("ab.dataField.date.days", "*Days")
+                            },
+                            {
+                                id: "months",
+                                value: L("ab.dataField.date.months", "*Months")
+                            },
+                            {
+                                id: "years",
+                                value: L("ab.dataField.date.years", "*Years")
+                            }
+                        ],
+                        on: {
+                            onChange: (newVal) => {
+                                $$(ids.validateRangeBeforeLabel).refresh();
+                                $$(ids.validateRangeAfterLabel).refresh();
+                            }
+                        }
+                    },
+                    {
+                        cols: [
+                            {
+                                id: ids.validateRangeBeforeLabel,
+                                view: "template",
+                                align: "left",
+                                width: 140,
+                                borderless: true,
+                                template: () => {
+                                    let unit = $$(
+                                            ids.validateRangeUnit
+                                        ).getValue(),
+                                        selectedUnit = $$(
+                                            ids.validateRangeUnit
+                                        ).config.options.filter(
+                                            (opt) => opt.id == unit
+                                        )[0];
 
-									let unit = $$(ids.validateRangeUnit).getValue(),
-										selectedUnit = $$(ids.validateRangeUnit).config.options.filter(opt => opt.id == unit)[0];
+                                    var beforeLabel =
+                                        L(
+                                            "ab.dataField.date.before",
+                                            "*Before"
+                                        ) +
+                                        " #number# #unit#"
+                                            .replace(
+                                                "#number#",
+                                                $$(
+                                                    ids.validateRangeBefore
+                                                ).getValue()
+                                            )
+                                            .replace(
+                                                "#unit#",
+                                                selectedUnit.value
+                                            );
 
-									var beforeLabel = L('ab.dataField.date.before', "*Before") + ' #number# #unit#'
-										.replace('#number#', $$(ids.validateRangeBefore).getValue())
-										.replace('#unit#', selectedUnit.value);
+                                    return beforeLabel;
+                                }
+                            },
+                            {
+                                view: "label",
+                                label: "",
+                                align: "center",
+                                width: 1
+                            },
+                            {
+                                id: ids.validateRangeAfterLabel,
+                                view: "template",
+                                align: "right",
+                                borderless: true,
+                                template: () => {
+                                    let unit = $$(
+                                            ids.validateRangeUnit
+                                        ).getValue(),
+                                        selectedUnit = $$(
+                                            ids.validateRangeUnit
+                                        ).config.options.filter(
+                                            (opt) => opt.id == unit
+                                        )[0];
 
-									return beforeLabel;
-								}
-							},
-							{
-								view: 'label',
-								label: '',
-								align: 'center',
-								width: 1
-							},
-							{
-								id: ids.validateRangeAfterLabel,
-								view: 'template',
-								align: 'right',
-								borderless: true,
-								template: () => {
+                                    var afterLabel =
+                                        L("ab.dataField.date.after", "*After") +
+                                        " #number# #unit#"
+                                            .replace(
+                                                "#number#",
+                                                $$(
+                                                    ids.validateRangeAfter
+                                                ).getValue()
+                                            )
+                                            .replace(
+                                                "#unit#",
+                                                selectedUnit.value
+                                            );
 
-									let unit = $$(ids.validateRangeUnit).getValue(),
-										selectedUnit = $$(ids.validateRangeUnit).config.options.filter(opt => opt.id == unit)[0];
+                                    return afterLabel;
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        cols: [
+                            {
+                                id: ids.validateRangeBefore,
+                                view: "slider",
+                                name: "validateRangeBefore",
+                                on: {
+                                    onChange: (newVal, oldValue) => {
+                                        $$(
+                                            ids.validateRangeBeforeLabel
+                                        ).refresh();
+                                    }
+                                }
+                            },
+                            {
+                                id: ids.validateRangeAfter,
+                                view: "slider",
+                                name: "validateRangeAfter",
+                                on: {
+                                    onChange: (newVal, oldValue) => {
+                                        $$(
+                                            ids.validateRangeAfterLabel
+                                        ).refresh();
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: ids.validateStartDate,
+                name: "validateStartDate",
+                view: "datepicker",
+                label: L("ab.dataField.date.startDate", "*Start Date"),
+                labelWidth: 100,
+                hidden: true
+            },
+            {
+                id: ids.validateEndDate,
+                name: "validateEndDate",
+                view: "datepicker",
+                label: L("ab.dataField.date.endDate", "*End Date"),
+                labelWidth: 100,
+                hidden: true
+            },
+            {
+                view: "richselect",
+                name: "timeFormat",
+                id: ids.timeFormat,
+                label: L("ab.dataField.date.timeFormat", "*Time Format"),
+                labelWidth: 110,
+                value: 1,
+                options: [
+                    {
+                        id: 1,
+                        value: L("ab.dataField.date.ignoreTime", "*Ignore Time")
+                    },
+                    { id: 2, value: "HH:MM AM/PM" },
+                    { id: 3, value: "HH:MM (military)" }
+                ],
+                on: {
+                    onChange: (newVal, oldVal) => {
+                        refreshTimevalue();
+                    }
+                }
+            },
+            {
+                cols: [
+                    {
+                        view: "richselect",
+                        name: "defaultTime",
+                        id: ids.defaultTime,
+                        label: L(
+                            "ab.dataField.date.defaultTime",
+                            "*Default Time"
+                        ),
+                        labelWidth: 110,
+                        value: 1,
+                        options: [
+                            { id: 1, value: L("ab.common.none", "*None") },
+                            {
+                                id: 2,
+                                value: L(
+                                    "ab.dataField.date.currentTime",
+                                    "*Current Time"
+                                )
+                            },
+                            {
+                                id: 3,
+                                value: L(
+                                    "ab.dataField.date.specificTime",
+                                    "*Specific Time"
+                                )
+                            }
+                        ],
+                        on: {
+                            onChange: (newVal, oldVal) => {
+                                defaultTimeChange();
+                            }
+                        }
+                    },
+                    {
+                        view: "datepicker",
+                        name: "defaultTimeValue",
+                        type: "time",
+                        id: ids.defaultTimeValue,
+                        gravity: 0.5,
+                        disabled: true
+                    }
+                ]
+            }
+        ];
+    },
 
-									var afterLabel = L('ab.dataField.date.after', "*After") + ' #number# #unit#'
-										.replace('#number#', $$(ids.validateRangeAfter).getValue())
-										.replace('#unit#', selectedUnit.value);
+    // defaultValues: the keys must match a .name of your elements to set it's default value.
+    defaultValues: ABFieldDateCore.defaultValues(),
 
-									return afterLabel;
-								}
-							}
-						]
-					},
-					{
-						cols: [
-							{
-								id: ids.validateRangeBefore,
-								view: 'slider',
-								name: "validateRangeBefore",
-								on: {
-									onChange: (newVal, oldValue) => {
-										$$(ids.validateRangeBeforeLabel).refresh();
-									}
-								}
-							},
-							{
-								id: ids.validateRangeAfter,
-								view: 'slider',
-								name: "validateRangeAfter",
-								on: {
-									onChange: (newVal, oldValue) => {
-										$$(ids.validateRangeAfterLabel).refresh();
-									}
-								}
-							}
-						]
-					}
-				]
-			},
-			{
-				id: ids.validateStartDate,
-				name: "validateStartDate",
-				view: 'datepicker',
-				label: L('ab.dataField.date.startDate', "*Start Date"),
-				labelWidth: 100,
-				hidden: true
-			},
-			{
-				id: ids.validateEndDate,
-				name: "validateEndDate",
-				view: 'datepicker',
-				label: L('ab.dataField.date.endDate', "*End Date"),
-				labelWidth: 100,
-				hidden: true
-			},
-			{
-				view: "richselect",
-				name: "timeFormat",
-				id: ids.timeFormat,
-				label: L('ab.dataField.date.timeFormat', '*Time Format'),
-				labelWidth: 110,
-				value: 1, options: [
-					{ id: 1, value: L('ab.dataField.date.ignoreTime', '*Ignore Time') },
-					{ id: 2, value: "HH:MM AM/PM" },
-					{ id: 3, value: "HH:MM (military)" }
-				],
-				on: {
-					onChange: (newVal, oldVal) => {
-						refreshTimevalue();
-					}
-				}
-			},
-			{
-				cols: [
-					{
-						view: "richselect",
-						name: "defaultTime",
-						id: ids.defaultTime,
-						label: L('ab.dataField.date.defaultTime', '*Default Time'),
-						labelWidth: 110,
-						value: 1, options: [
-							{ id: 1, value: L('ab.common.none', "*None") },
-							{ id: 2, value: L('ab.dataField.date.currentTime', "*Current Time") },
-							{ id: 3, value: L('ab.dataField.date.specificTime', "*Specific Time") }
-						],
-						on: {
-							onChange: (newVal, oldVal) => {
-								defaultTimeChange();
-							}
-						}
-					},
-					{
-						view: 'datepicker',
-						name: "defaultTimeValue",
-						type: "time",
-						id: ids.defaultTimeValue,
-						gravity: 0.5,
-						disabled: true
-					}
-				]
-			},
-		]
-	},
+    // rules: basic form validation rules for webix form entry.
+    // the keys must match a .name of your .elements for it to apply
+    rules: {},
 
-	// defaultValues: the keys must match a .name of your elements to set it's default value.
-	defaultValues: ABFieldDateCore.defaultValues(),
+    // include additional behavior on default component operations here:
+    // The base routines will be processed first, then these.  Any results
+    // from the base routine, will be passed on to these:
+    logic: {
+        // isValid: function (ids, isValid) {
 
-	// rules: basic form validation rules for webix form entry.
-	// the keys must match a .name of your .elements for it to apply
-	rules: {},
+        // }
 
-	// include additional behavior on default component operations here:
-	// The base routines will be processed first, then these.  Any results
-	// from the base routine, will be passed on to these:
-	logic: {
+        populate: (ids, values) => {
+            $$(ids.defaultDateValue).setValue(
+                new Date(values.settings.defaultDateValue)
+            );
+            $$(ids.defaultTimeValue).setValue(
+                new Date(values.settings.defaultTimeValue)
+            );
+        },
 
-		// isValid: function (ids, isValid) {
+        show: function(ids) {
+            // dateDisplayRefresh();
+            refreshDateValue();
+            refreshTimevalue();
+        },
 
-		// }
+        dateDisplay: (date, settings) => {
+            var dateFormat = getDateFormat(settings);
 
-		populate: (ids, values) => {
+            return webix.Date.dateToStr(dateFormat)(date);
+        }
+    },
 
-			$$(ids.defaultDateValue).setValue(new Date(values.settings.defaultDateValue));
-			$$(ids.defaultTimeValue).setValue(new Date(values.settings.defaultTimeValue));
-		},
-
-		show: function (ids) {
-			// dateDisplayRefresh();
-			refreshDateValue();
-			refreshTimevalue();
-		},
-
-		dateDisplay: (date, settings) => {
-			var dateFormat = getDateFormat(settings);
-
-			return webix.Date.dateToStr(dateFormat)(date);
-		}
-	},
-
-	// perform any additional setup actions here.
-	// @param {obj} ids  the hash of id values for all the current form elements.
-	//					 it should have your elements + the default Header elements:
-	//						.label, .columnName, .fieldDescription, .showIcon
-	init: (ids) => {
-	}
-
-
+    // perform any additional setup actions here.
+    // @param {obj} ids  the hash of id values for all the current form elements.
+    //					 it should have your elements + the default Header elements:
+    //						.label, .columnName, .fieldDescription, .showIcon
+    init: (ids) => {}
 });
 
 module.exports = class ABFieldDate extends ABFieldDateCore {
+    constructor(values, object) {
+        super(values, object);
+    }
 
-	constructor(values, object) {
-		super(values, object);
-	}
+    /*
+     * @function propertiesComponent
+     *
+     * return a UI Component that contains the property definitions for this Field.
+     *
+     * @param {App} App the UI App instance passed around the Components.
+     * @param {stirng} idBase
+     * @return {Component}
+     */
+    static propertiesComponent(App, idBase) {
+        return ABFieldDateComponent.component(App, idBase);
+    }
 
-	/*
-	* @function propertiesComponent
-	*
-	* return a UI Component that contains the property definitions for this Field.
-	*
-	* @param {App} App the UI App instance passed around the Components.
-	* @param {stirng} idBase
-	* @return {Component}
-	*/
-	static propertiesComponent(App, idBase) {
-		return ABFieldDateComponent.component(App, idBase);
-	}
+    ///
+    /// Instance Methods
+    ///
 
-	///
-	/// Instance Methods
-	///
+    isValid() {
+        var validator = super.isValid();
 
+        // validator.addError('columnName', L('ab.validation.object.name.unique', 'Field columnName must be unique (#name# already used in this Application)').replace('#name#', this.name) );
 
-	isValid() {
+        return validator;
+    }
 
-		var validator = super.isValid();
+    ///
+    /// Working with Actual Object Values:
+    ///
 
-		// validator.addError('columnName', L('ab.validation.object.name.unique', 'Field columnName must be unique (#name# already used in this Application)').replace('#name#', this.name) );
+    // return the grid column header definition for this instance of ABFieldDate
+    columnHeader(options) {
+        var config = super.columnHeader(options);
 
-		return validator;
-	}
+        // if (this.settings.includeTime)
+        config.editor = "datetime";
+        // else
+        // 	config.editor = 'date';
 
-	///
-	/// Working with Actual Object Values:
-	///
+        // allows entering characters in datepicker input, false by default
+        config.editable = true;
 
-	// return the grid column header definition for this instance of ABFieldDate
-	columnHeader(options) {
-		var config = super.columnHeader(options);
+        // NOTE: it seems that the default value is a string in ISO format.
 
-		// if (this.settings.includeTime)
-			config.editor = 'datetime';
-		// else
-		// 	config.editor = 'date';
+        //// NOTE: webix seems unable to parse ISO string into => date here.
+        // config.map = '(date)#'+this.columnName+'#';   // so don't use this.
 
+        config.template = (row) => {
+            if (row.$group) return row[this.columnName];
 
-		// allows entering characters in datepicker input, false by default
-		config.editable = true;
+            return this.format(row);
+        };
 
+        config.format = (d) => {
+            var rowData = {};
+            rowData[this.columnName] = d;
 
-		// NOTE: it seems that the default value is a string in ISO format.
+            return this.format(rowData);
+        };
 
-		//// NOTE: webix seems unable to parse ISO string into => date here.
-		// config.map = '(date)#'+this.columnName+'#';   // so don't use this.
+        config.editFormat = (d) => {
+            // this routine needs to return a Date() object for the editor to work with.
 
-		config.template = (row) => {
+            if (d == "" || d == null) {
+                return "";
+            }
 
-			if (row.$group)
-				return row[this.columnName];
+            // else retun the actual ISO string => Date() value
+            return new Date(moment(d));
+        };
 
-			return this.format(row);
-		}
+        return config;
+    }
 
-		config.format = (d) => {
+    /*
+     * @funciton formComponent
+     * returns a drag and droppable component that is used on the UI
+     * interface builder to place form components related to this ABField.
+     *
+     * an ABField defines which form component is used to edit it's contents.
+     * However, what is returned here, needs to be able to create an instance of
+     * the component that will be stored with the ABViewForm.
+     */
+    formComponent() {
+        // NOTE: what is being returned here needs to mimic an ABView CLASS.
+        // primarily the .common() and .newInstance() methods.
+        var formComponentSetting = super.formComponent("datepicker");
 
-			var rowData = {};
-			rowData[this.columnName] = d;
+        // .common() is used to create the display in the list
+        formComponentSetting.common = () => {
+            return {
+                key: "datepicker",
+                settings: {
+                    // timepicker: this.settings.includeTime
+                }
+            };
+        };
 
-			return this.format(rowData);
-		};
+        return formComponentSetting;
+    }
 
+    detailComponent() {
+        var detailComponentSetting = super.detailComponent();
 
-		config.editFormat = (d) => {
-			// this routine needs to return a Date() object for the editor to work with.
+        detailComponentSetting.common = () => {
+            return {
+                key: "detailtext"
+            };
+        };
 
-			if ((d == '') || (d == null)) {
-				return '';
-			}
-
-			// else retun the actual ISO string => Date() value
-			return new Date(moment(d));
-		}
-
-
-		return config;
-	}
-
-	/*
-	* @funciton formComponent
-	* returns a drag and droppable component that is used on the UI
-	* interface builder to place form components related to this ABField.
-	* 
-	* an ABField defines which form component is used to edit it's contents.
-	* However, what is returned here, needs to be able to create an instance of
-	* the component that will be stored with the ABViewForm.
-	*/
-	formComponent() {
-		
-		// NOTE: what is being returned here needs to mimic an ABView CLASS.
-		// primarily the .common() and .newInstance() methods.
-		var formComponentSetting = super.formComponent('datepicker');
-
-		// .common() is used to create the display in the list
-		formComponentSetting.common = () => {
-			return {
-				key: 'datepicker',
-				settings: {
-					// timepicker: this.settings.includeTime
-				}
-			}
-		};
-
-		return formComponentSetting; 
-	}
-
-
-	detailComponent() {
-		
-		var detailComponentSetting = super.detailComponent();
-
-		detailComponentSetting.common = () => {
-			return {
-				key: 'detailtext'
-			}
-		};
-
-		return detailComponentSetting;
-	}
-
-}
+        return detailComponentSetting;
+    }
+};
