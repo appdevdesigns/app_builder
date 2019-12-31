@@ -20,8 +20,10 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
             common: App.labels,
             component: {
                 label: L("ab.process.monitor.label", "*Monitor"),
-                processes:  L("ab.process.monitor.processses", "*Processes"),
+                tasks:  L("ab.process.monitor.tasks", "*Tasks"),
                 logs:  L("ab.process.monitor.logs", "*Logs"),
+                actions: L("ab.process.monitor.actions", "*Actions"),
+                details: L("ab.process.monitor.details", "*Instance Details"),
             }
         };
 
@@ -30,7 +32,7 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
         // internal list of Webix IDs to reference our UI components.
         var ids = {
             component: this.unique("_component"),
-            processList: this.unique("_processList"),
+            taskList: this.unique("_taskList"),
             processLogs: this.unique("_processLogs")
         };
 
@@ -54,13 +56,13 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
                                         },
                 						{
                 							view: 'label',
-                							label: labels.component.processes
+                							label: labels.component.tasks
                 						}
                 					]
                 				},
                                 {
                                     view: "list",
-                                    id: ids.processList,
+                                    id: ids.taskList,
                                     item: {
                                         height: 74,
                                         template: function(obj) {
@@ -75,9 +77,9 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
                                     },
                                     on: {
                                         onItemClick: function(id, e, node){
-                                            $$(ids.processList).clearCss("webix_selected");
-                                            $$(ids.processList).addCss(id, "webix_selected");
-                                            var logs = $$(ids.processList).getItem(id).logs;
+                                            $$(ids.taskList).clearCss("webix_selected");
+                                            $$(ids.taskList).addCss(id, "webix_selected");
+                                            var logs = $$(ids.taskList).getItem(id).logs;
                                             $$(ids.processLogs).clearAll();
                                             $$(ids.processLogs).parse(logs);
                                         }
@@ -90,6 +92,59 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
                         {
                             gravity: 2,
                             rows: [
+                                {
+                                    cols: [
+                                        {
+                                            gravity: 2,
+                                            rows: [
+                                                {
+                                                    view: 'toolbar',
+                                                    css: 'ab-data-toolbar webix_dark',
+                                                    cols: [
+                                                        {
+                                                            type: 'spacer',
+                                                            width: 15
+                                                        },
+                                                        {
+                                                            view: 'label',
+                                                            label: labels.component.details
+                                                        }
+                                                    ]
+                                                },
+                                                {}
+                                            ]
+                                        },
+                                        {
+                                            view: "resizer",
+                                            css: "bg_gray",
+                                            width: 11
+                                        },
+                                        {
+                                            rows: [
+                                                {
+                                                    view: 'toolbar',
+                                                    css: 'ab-data-toolbar webix_dark',
+                                                    cols: [
+                                                        {
+                                                            type: 'spacer',
+                                                            width: 15
+                                                        },
+                                                        {
+                                                            view: 'label',
+                                                            label: labels.component.actions
+                                                        }
+                                                    ]
+                                                },
+                                                {}
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
+                                    view: "resizer",
+                                    css: "bg_gray",
+                                    height: 11
+                                },
                                 {
                                     view: 'toolbar',
                                     css: 'ab-data-toolbar webix_dark',
@@ -190,8 +245,8 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
 
                 CurrentProcess = process;
 
-                $$(ids.processList).clearAll();
-                $$(ids.processList).parse(this._logic.loadProcessInstances());
+                $$(ids.taskList).clearAll();
+                $$(ids.taskList).parse(this._logic.loadProcessInstances());
             },
 
             /**
