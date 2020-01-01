@@ -1,11 +1,20 @@
 const ABComponent = require("../classes/platform/ABComponent");
 
+const ABAdminRoleImport = require("app_builder/assets/opstools/AppBuilder/components/ab_work_admin_role_import");
+
 module.exports = class AB_Work_Admin_Role_List extends ABComponent {
 
 	constructor(App) {
 		super(App, 'ab_work_admin_role_list');
 
 		let L = this.Label;
+		let labels = {
+			common: App.labels,
+			component: {
+				confirmDeleteTitle: L('ab.role.delete.title', "*Delete role"),
+				confirmDeleteMessage: L('ab.role.delete.message', "*Do you want to remove this role ?")
+			}
+		};
 
 		// internal list of Webix IDs to reference our UI components.
 		let ids = {
@@ -13,6 +22,8 @@ module.exports = class AB_Work_Admin_Role_List extends ABComponent {
 			datatable: this.unique('datatable'),
 			search: this.unique('search')
 		};
+
+		let RoleImport = new ABAdminRoleImport(App);
 
 		// Our webix UI definition:
 		this.ui = {
@@ -89,7 +100,7 @@ module.exports = class AB_Work_Admin_Role_List extends ABComponent {
 							icon: "fa fa-download",
 							label: "Import role",
 							click: () => {
-
+								RoleImport.show();
 							}
 						},
 						{
@@ -133,6 +144,8 @@ module.exports = class AB_Work_Admin_Role_List extends ABComponent {
 
 				});
 
+				RoleImport.init(this._roleDC);
+
 			}
 			else {
 				$$(ids.datatable).data.unsync();
@@ -156,6 +169,7 @@ module.exports = class AB_Work_Admin_Role_List extends ABComponent {
 			applicationLoad: function (application) {
 
 				CurrentApplication = application;
+				RoleImport.applicationLoad(application);
 
 			},
 
@@ -275,18 +289,28 @@ module.exports = class AB_Work_Admin_Role_List extends ABComponent {
 				let role = this._roleDC.getItem(roleId);
 				if (!role) return;
 
-				_logic.busy();
+				OP.Dialog.Confirm({
+					title: labels.component.confirmDeleteTitle,
+					message: labels.component.confirmDeleteMessage,
+					callback: (isOK) => {
 
-				CurrentApplication.roleDestroy(role)
-					.catch(err => {
-						console.error(err);
-						_logic.ready();
-					})
-					.then(() => {
-						this._roleDC.remove(roleId);
-						_logic.ready();
-					});
+						if (isOK) {
 
+							_logic.busy();
+
+							CurrentApplication.roleDestroy(role)
+								.catch(err => {
+									console.error(err);
+									_logic.ready();
+								})
+								.then(() => {
+									this._roleDC.remove(roleId);
+									_logic.ready();
+								});
+
+						}
+					}
+				});
 			},
 
 			busy: () => {

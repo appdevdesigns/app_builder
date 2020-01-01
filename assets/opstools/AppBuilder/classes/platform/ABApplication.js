@@ -1488,36 +1488,6 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 	/// Scopes
 	/// 
 
-	scopeLoad(cond) {
-
-		if (this.loadedScope)
-			return Promise.resolve();
-
-		return new Promise((resolve, reject) => {
-
-			this.Model.staticData.scopeLoad(this.id, cond)
-				.catch(reject)
-				.then(scopes => {
-
-					this.loadedScope = true;
-
-					var newScopes = [];
-					(scopes || []).forEach(s => {
-						// prevent processing of null values.
-						if (s) {
-							newScopes.push(this.scopeNew(s));
-						}
-					})
-					this._scopes = newScopes;
-
-					resolve();
-
-				});
-
-		});
-
-	}
-
 	scopeFind(cond) {
 
 		return new Promise((resolve, reject) => {
@@ -1566,6 +1536,30 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 
 		});
 
+	}
+
+	scopeOfRole(roleId) {
+
+		return new Promise((resolve, reject) => {
+
+			this.Model.staticData.scopeOfRole(roleId)
+				.catch(reject)
+				.then(roles => {
+
+					var result = [];
+
+					(roles || []).forEach(s => {
+						// prevent processing of null values.
+						if (s) {
+							result.push(this.scopeNew(s, this));
+						}
+					})
+
+					resolve(result);
+
+				});
+
+		});
 
 	}
 
@@ -1598,15 +1592,16 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 	 * persist the current ABScope in our list of ._scopes.
 	 *
 	 * @param {ABScope} scope
+	 * @param {uuid} roleId
 	 * @return {Promise}
 	 */
-	scopeSave(scope) {
+	scopeSave(scope, roleId) {
 		var isIncluded = (this.scopes(s => s.id == scope.id).length > 0);
 		if (!isIncluded) {
 			this._scopes.push(scope);
 		}
 
-		return this.Model.staticData.scopeSave(this.id, scope.toObj());
+		return this.Model.staticData.scopeSave(scope.toObj(), roleId);
 	}
 
 	scopeImport(scopeId) {

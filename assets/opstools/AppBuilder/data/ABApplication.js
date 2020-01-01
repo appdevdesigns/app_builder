@@ -509,14 +509,6 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 		// ** Scopes
 
-		scopeLoad: function (appId, cond) {
-
-			return OP.Comm.Socket.get({
-				url: `/app_builder/application/${appId}/scope`,
-				params: cond
-			});
-		},
-
 		scopeFind: function (cond) {
 
 			return OP.Comm.Socket.get({
@@ -550,10 +542,10 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 		},
 
-		scopeSave: function (appId, scope) {
+		scopeSave: function (scope, roleId) {
 
 			return OP.Comm.Service.put({
-				url: `/app_builder/scope?appID=${appId}`,
+				url: `/app_builder/scope?roleID=${roleId}`,
 				data: {
 					scope: scope
 				}
@@ -568,18 +560,18 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 		},
 
-		scopeImport: function (appId, scopeId) {
+		scopeImport: function (roleId, scopeId) {
 
 			return OP.Comm.Service.put({
-				url: `/app_builder/application/${appId}/scope/${scopeId}`
+				url: `/app_builder/role/${roleId}/scope/${scopeId}`
 			});
 
 		},
 
-		scopeExclude: function (appId, scopeId) {
+		scopeExclude: function (roleId, scopeId) {
 
 			return OP.Comm.Service.delete({
-				url: `/app_builder/application/${appId}/scope/${scopeId}`
+				url: `/app_builder/role/${roleId}/scope/${scopeId}`
 			});
 
 		},

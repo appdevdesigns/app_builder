@@ -1,0 +1,264 @@
+const ABComponent = require("../classes/platform/ABComponent");
+
+const RowFilter = require("../classes/platform/RowFilter");
+
+module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
+
+	constructor(App) {
+
+		let idBase = 'ab_work_admin_role_scope_form';
+
+		super(App, idBase);
+
+		let L = this.Label;
+		let labels = {
+			common: App.labels,
+			component: {
+				newScope: L('ab.scope.new.title', "*Add new scope")
+			}
+		};
+
+		let CurrentApplication;
+
+		// internal list of Webix IDs to reference our UI components.
+		let ids = {
+			popup: this.unique('popup'),
+			form: this.unique('form'),
+			buttonSave: this.unique('buttonSave')
+		};
+
+		this._rowFilter = new RowFilter(App, idBase);
+
+		// Our webix UI definition:
+		this.ui = {
+			id: ids.popup,
+			view: "window",
+			head: labels.component.newScope,
+			hidden: true,
+			modal: true,
+			position: "center",
+			body: {
+				id: ids.form,
+				view: 'form',
+				// padding: 24,
+				width: 600,
+				elementsConfig: { labelAlign: "right", labelWidth: 100 },
+				rows: [
+					{
+						view: "text",
+						name: "name",
+						label: "Name",
+						placeholder: "Enter Name"
+					},
+					{
+						view: "text",
+						name: "description",
+						label: "Description",
+						placeholder: "Enter Description"
+					},
+					{
+						view: "checkbox",
+						name: "isGlobal",
+						label: "Is Global"
+					},
+					{
+						view: "forminput",
+						paddingY: 0,
+						paddingX: 0,
+						label: "Filter",
+						css: "ab-custom-field",
+						body: this._rowFilter.ui
+					},
+					{
+						cols: [
+							{ fillspace: true },
+							{
+								view: 'button',
+								autowidth: true,
+								value: L("ab.common.cancel", "*Cancel"),
+								click: () => {
+
+									_logic.cancel();
+
+								}
+							},
+							{
+								view: "button",
+								type: "form",
+								id: ids.buttonSave,
+								autowidth: true,
+								value: L("ab.common.save", "*Save"),
+								click: () => {
+
+									_logic.save();
+
+								}
+							}
+						]
+					},
+					{
+						fillspace: true
+					}
+				]
+			}
+		};
+
+		// Our init() function for setting up our UI
+		this.init = function (roleDC, scopeDC) {
+
+			webix.ui(this.ui);
+
+			this._roleDC = roleDC;
+			this._scopeDC = scopeDC;
+			if (this._scopeDC) {
+
+				if ($$(ids.form))
+					$$(ids.form).bind(this._scopeDC);
+
+				// Update RowFilter
+				this._scopeDC.attachEvent("onAfterCursorChange", (currId) => {
+
+					if (currId) {
+						let currItem = this._scopeDC.getItem(currId);
+						this._rowFilter.setValue(currItem.filter);
+					}
+					else {
+						this._rowFilter.setValue(null);
+					}
+
+				});
+			}
+
+			if ($$(ids.form))
+				webix.extend($$(ids.form), webix.ProgressBar);
+
+		}
+		// our internal business logic
+		let _logic = {
+
+			/**
+			 * @function applicationLoad
+			 *
+			 * Initialize the Object Workspace with the given ABApplication.
+			 *
+			 * @param {ABApplication} application 
+			 */
+			applicationLoad: function (application) {
+
+				CurrentApplication = application;
+				this._rowFilter.applicationLoad(application);
+
+			},
+
+			save: () => {
+
+				if (!this._scopeDC)
+					return;
+
+				_logic.busy();
+
+				let roleId;
+				if (this._roleDC)
+					roleId = this._roleDC.getCursor();
+
+				let vals = $$(ids.form).getValues() || {};
+
+				let currScopeId = this._scopeDC.getCursor();
+				let currScope = this._scopeDC.getItem(currScopeId);
+
+				// Add new
+				let isAdded = false;
+				if (!currScope) {
+					currScope = CurrentApplication.scopeNew(vals);
+					isAdded = true;
+				}
+				// Update
+				else {
+					for (let key in vals) {
+						if (vals[key] != undefined)
+							currScope[key] = vals[key];
+					}
+					isAdded = false;
+				}
+
+				// set .filter
+				currScope.filter = this._rowFilter.getValue();
+
+				CurrentApplication.scopeSave(currScope, roleId)
+					.catch(err => {
+						console.error(err);
+						_logic.ready();
+					})
+					.then(data => {
+
+						if (isAdded) {
+							currScope.id = data.id;
+							this._scopeDC.add(currScope);
+						}
+						else
+							this._scopeDC.updateItem(currScopeId, data);
+
+						_logic.ready();
+						_logic.hide();
+					});
+
+			},
+
+			cancel: () => {
+
+				if (this._scopeDC) {
+					this._scopeDC.setCursor(null);
+				}
+
+				_logic.hide();
+
+			},
+
+			show: () => {
+
+				if ($$(ids.popup))
+					$$(ids.popup).show();
+
+				$$(ids.form).clear();
+
+			},
+
+			hide: () => {
+
+				if ($$(ids.popup))
+					$$(ids.popup).hide();
+
+			},
+
+			busy: () => {
+
+				if ($$(ids.form) &&
+					$$(ids.form).showProgress)
+					$$(ids.form).showProgress({ type: "icon" });
+
+				$$(ids.buttonSave).disable();
+
+			},
+
+			ready: () => {
+
+				if ($$(ids.form) &&
+					$$(ids.form).hideProgress)
+					$$(ids.form).hideProgress();
+
+				$$(ids.buttonSave).enable();
+
+			},
+
+		};
+
+		this._logic = _logic;
+
+		// 
+		// Define our external interface methods:
+		// 
+		this.applicationLoad = _logic.applicationLoad;
+		this.show = _logic.show;
+	}
+
+};

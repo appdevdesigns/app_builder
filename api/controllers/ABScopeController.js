@@ -10,24 +10,6 @@ const ABGraphRole = require("../graphModels/ABRole");
 
 module.exports = {
 
-	// GET /app_builder/application/:appID/scope
-	scopeApplication: (req, res) => {
-
-		let appID = req.param('appID');
-		let cond = req.body.query || {};
-
-		ABGraphScope.findWithRelation('applications', appID, cond)
-			.catch(error => {
-				res.AD.error(error);
-			})
-			.then(scopes => {
-
-				res.AD.success(scopes || []);
-
-			});
-
-	},
-
 	// GET /app_builder/scope
 	find: function (req, res) {
 
@@ -74,7 +56,7 @@ module.exports = {
 	// PUT /app_builder/scope
 	save: function (req, res) {
 
-		let appID = req.query.appID;
+		let roleID = req.query.roleID;
 		let scope = req.body.scope;
 
 		Promise.resolve()
@@ -101,15 +83,41 @@ module.exports = {
 
 			})
 
-			// Set relation to application
+			// Set relation to role
 			.then(scope => {
 
 				return new Promise((next, error) => {
 
-					if (appID == null)
+					if (roleID == null)
 						return next();
 
-					scope.relate('applications', appID)
+					scope.relate('roles', roleID)
+						.catch(errMessage => {
+
+							error(errMessage);
+							res.AD.error(true);
+
+						})
+						.then(() => {
+
+							res.AD.success(scope);
+							next();
+
+						});
+
+				});
+
+			})
+			
+			// Set relation to object
+			.then(scope => {
+
+				return new Promise((next, error) => {
+
+					if (scope.object == null)
+						return next();
+
+					scope.relate('object', object)
 						.catch(errMessage => {
 
 							error(errMessage);
@@ -142,10 +150,10 @@ module.exports = {
 			});
 	},
 
-	// PUT /app_builder/application/:appID/scope/:scopeID'
+	// PUT /app_builder/role/:roleID/scope/:scopeID'
 	import: function (req, res) {
 
-		let appID = req.param('appID'),
+		let roleID = req.param('roleID'),
 			scopeID = req.param('scopeID');
 
 		Promise.resolve()
@@ -156,7 +164,7 @@ module.exports = {
 				return new Promise((next, err) => {
 
 					ABGraphScope.findOne(scopeID, {
-						relations: ['applications']
+						relations: ['roles']
 					})
 						.catch(err)
 						.then(scope => {
@@ -174,12 +182,12 @@ module.exports = {
 				return new Promise((next, err) => {
 
 					// if exists
-					if (scope.applications.filter(app => app.id == appID)[0]) {
+					if (scope.roles.filter(app => app.id == roleID)[0]) {
 						res.AD.success(scope);
 						return next();
 					}
 
-					scope.relate('applications', appID)
+					scope.relate('roles', roleID)
 						.catch(err)
 						.then(() => {
 
@@ -194,15 +202,15 @@ module.exports = {
 
 	},
 
-	// DELETE /app_builder/application/:appID/scope/:scopeID'
+	// DELETE /app_builder/role/:roleID/scope/:scopeID'
 	exclude: function (req, res) {
 
-		let appID = req.param('appID'),
+		let roleID = req.param('roleID'),
 			scopeID = req.param('scopeID');
 
 		ABGraphScope.unrelate(
-			ABGraphScope.relations.applications,
-			appID,
+			ABGraphScope.relations.roles,
+			roleID,
 			scopeID
 		)
 			.catch(res.AD.error)

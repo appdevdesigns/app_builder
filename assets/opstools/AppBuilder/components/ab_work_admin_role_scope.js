@@ -1,20 +1,26 @@
 const ABComponent = require("../classes/platform/ABComponent");
 
+const ABScopeForm = require("./ab_work_admin_role_scope_form");
+
 module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 
 	constructor(App) {
-		super(App, 'ab_work_admin_role_role');
+		super(App, 'ab_work_admin_role_scope');
 
 		let L = this.Label;
 		let labels = {
 			common: App.labels,
 			component: {
 
-				confirmDeleteRoleTitle: L('ab.role.deleteRow.title', "*Remove role"),
-				confirmDeleteRoleMessage: L('ab.role.deleteRow.message', "*Do you want to remove this role ?"),
+				confirmDeleteScopeTitle: L('ab.scope.deleteRow.title', "*Remove this scope"),
+				confirmDeleteScopeMessage: L('ab.scope.deleteRow.message', "*Do you want to remove this scope ?"),
 
 			}
 		};
+
+		let ScopeForm = new ABScopeForm(App);
+
+		this._scopeDC = new webix.DataCollection();
 
 		// internal list of Webix IDs to reference our UI components.
 		let ids = {
@@ -22,7 +28,6 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 		};
 
 		let CurrentApplication;
-
 
 		// Our webix UI definition:
 		this.ui = {
@@ -34,7 +39,7 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 					columns: [
 						{
 							id: "name",
-							header: "Role",
+							header: "Scope",
 							fillspace: true
 						},
 						{
@@ -50,13 +55,9 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 							width: 40
 						}
 					],
-					on: {
-						onItemClick: (roleId, e, node) => {
-
-							if (e.target.className.indexOf('trash') > -1) {
-								_logic.removeRole(roleId);
-							}
-
+					onClick: {
+						"remove": (event, data, target) => {
+							_logic.removeScope(data.row);
 						}
 					}
 				},
@@ -78,6 +79,7 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 							icon: "fa fa-plus",
 							label: "Create new scope",
 							click: () => {
+								ScopeForm.show();
 							}
 						}
 					]
@@ -87,24 +89,57 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 
 		// Our init() function for setting up our UI
 		this.init = (roleDC) => {
+
+			if ($$(ids.datatable)) {
+				$$(ids.datatable).data.sync(this._scopeDC);
+
+				webix.extend($$(ids.datatable), webix.ProgressBar);
+			}
+
+			this._roleDC = roleDC;
+			if (this._roleDC) {
+				this._roleDC.attachEvent("onAfterCursorChange", roleId => {
+					_logic.onShow();
+				});
+			}
+
+			ScopeForm.init(this._roleDC, this._scopeDC);
+
 		};
 
 		let _logic = {
 
 			applicationLoad: (application) => {
 				CurrentApplication = application;
+				ScopeForm.applicationLoad(application);
 			},
 
-			removeRole: (roleId) => {
+			busy: () => {
+
+				if ($$(ids.datatable) &&
+					$$(ids.datatable).showProgress)
+					$$(ids.datatable).showProgress({ type: "icon" });
+
+			},
+
+			ready: () => {
+
+				if ($$(ids.datatable) &&
+					$$(ids.datatable).hideProgress)
+					$$(ids.datatable).hideProgress();
+
+			},
+
+			removeScope: (scopeId) => {
 
 				let DataTable = $$(ids.datatable);
 
 				OP.Dialog.Confirm({
-					title: labels.component.confirmDeleteRoleTitle,
-					text: labels.component.confirmDeleteRoleMessage,
-					callback: (result) => {
+					title: labels.component.confirmDeleteScopeTitle,
+					text: labels.component.confirmDeleteScopeMessage,
+					callback: (isOK) => {
 
-						if (result) {
+						if (isOK) {
 							// CurrentObject.model()
 							// 	.delete(id.row)
 							// 	.then((response) => {
@@ -136,6 +171,29 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 			},
 
 			onShow: () => {
+
+				this._scopeDC.clearAll();
+
+				if (this._roleDC == null)
+					return;
+
+				let roleId = this._roleDC.getCursor();
+				if (!roleId) return;
+
+				_logic.busy();
+
+				CurrentApplication.scopeOfRole(roleId)
+					.catch(err => {
+						console.error(err);
+						_logic.ready();
+					})
+					.then(scopes => {
+
+						this._scopeDC.parse(scopes || []);
+
+						_logic.ready();
+					})
+
 			}
 
 		};

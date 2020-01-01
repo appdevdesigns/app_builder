@@ -26,4 +26,16 @@ module.exports = class ABRole extends ABRoleCore {
 
 	}
 
+	save() {
+
+		return this.application.roleSave(this);
+
+	}
+
+	destroy() {
+
+		return this.application.roleDestroy(this);
+
+	}
+
 };

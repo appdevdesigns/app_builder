@@ -118,9 +118,6 @@ module.exports = {
 
 
     /* Scopes */
-    'get /app_builder/application/:appID/scope':
-        'app_builder/ABScopeController.scopeApplication',
-
     'get /app_builder/scope':
         'app_builder/ABScopeController.find',
 
@@ -136,10 +133,10 @@ module.exports = {
     'delete /app_builder/scope/:scopeId':
         'app_builder/ABScopeController.destroy',
 
-    'put /app_builder/application/:appID/scope/:scopeID':
+    'put /app_builder/role/:roleID/scope/:scopeID':
         'app_builder/ABScopeController.import',
 
-    'delete /app_builder/application/:appID/scope/:scopeID':
+    'delete /app_builder/role/:roleID/scope/:scopeID':
         'app_builder/ABScopeController.exclude',
 
 
