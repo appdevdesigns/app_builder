@@ -1,6 +1,7 @@
 const ABComponent = require("../classes/platform/ABComponent");
 
 const ABScopeForm = require("./ab_work_admin_role_scope_form");
+const ABScopeImport = require("./ab_work_admin_role_scope_import");
 
 module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 
@@ -19,6 +20,7 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 		};
 
 		let ScopeForm = new ABScopeForm(App);
+		let ScopeImport = new ABScopeImport(App);
 
 		this._scopeDC = new webix.DataCollection();
 
@@ -45,17 +47,37 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 						{
 							id: "object",
 							header: "Object",
-							width: 300
+							width: 150
 						},
 						{
-							id: "trash",
+							id: "edit", header: "", width: 40,
+							template: (obj, common, value) => {
+								return '<div class="edit"><span class="webix_icon fa fa-edit"></span></div>';
+							},
+							css: { 'text-align': 'center' }
+						},
+						{
+							id: "exclude", header: "", width: 40,
+							template: (obj, common, value) => {
+								return '<div class="exclude"><span class="webix_icon fa fa-reply"></span></div>';
+							},
+							css: { 'text-align': 'center' }
+						},
+						{
+							id: "remove",
 							header: "",
-							template: "<div class='trash'>{common.trashIcon()}</div>",
+							template: "<div class='remove'>{common.trashIcon()}</div>",
 							css: { 'text-align': 'center' },
 							width: 40
 						}
 					],
 					onClick: {
+						"edit": (event, data, target) => {
+							_logic.editScope(data.row);
+						},
+						"exclude": (event, data, target) => {
+							_logic.excludeScope(data.row);
+						},
 						"remove": (event, data, target) => {
 							_logic.removeScope(data.row);
 						}
@@ -70,7 +92,7 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 							icon: "fa fa-download",
 							label: "Import scope",
 							click: () => {
-
+								ScopeImport.show();
 							}
 						},
 						{
@@ -104,6 +126,7 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 			}
 
 			ScopeForm.init(this._roleDC, this._scopeDC);
+			ScopeImport.init(this._roleDC, this._scopeDC);
 
 		};
 
@@ -112,6 +135,7 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 			applicationLoad: (application) => {
 				CurrentApplication = application;
 				ScopeForm.applicationLoad(application);
+				ScopeImport.applicationLoad(application);
 			},
 
 			busy: () => {
@@ -130,9 +154,46 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 
 			},
 
-			removeScope: (scopeId) => {
+			getRole: () => {
 
-				let DataTable = $$(ids.datatable);
+				if (!this._roleDC)
+					return null;
+
+				let roldId = this._roleDC.getCursor();
+				if (!roldId)
+					return null;
+
+				return this._roleDC.getItem(roldId);
+
+			},
+
+			editScope: (scopeId) => {
+
+				ScopeForm.show();
+				this._scopeDC.setCursor(scopeId);
+
+			},
+
+			excludeScope: (scopeId) => {
+
+				_logic.busy();
+
+				let role = _logic.getRole();
+
+				CurrentApplication.scopeExclude(scopeId, role)
+					.catch((err) => {
+						console.error(err);
+						_logic.ready();
+					})
+					.then(() => {
+						this._scopeDC.remove(scopeId);
+						this._scopeDC.setCursor(null);
+						_logic.ready();
+					});
+
+			},
+
+			removeScope: (scopeId) => {
 
 				OP.Dialog.Confirm({
 					title: labels.component.confirmDeleteScopeTitle,
@@ -140,31 +201,26 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 					callback: (isOK) => {
 
 						if (isOK) {
-							// CurrentObject.model()
-							// 	.delete(id.row)
-							// 	.then((response) => {
 
-							// 		if (response.numRows > 0) {
-							// 			DataTable.remove(id);
-							// 			DataTable.clearSelection();
-							// 		} else {
+							let scope = this._scopeDC.getItem(scopeId);
+							if (!scope) return;
 
-							// 			OP.Dialog.Alert({
-							// 				text: 'No rows were effected.  This does not seem right.'
-							// 			})
+							_logic.busy();
 
-							// 		}
-							// 	})
-							// 	.catch((err) => {
+							let role = _logic.getRole();
 
-							// 		OP.Error.log('Error deleting item:', { error: err });
-
-							// 		//// TODO: what do we do here?	
-							// 	});
+							CurrentApplication.scopeDestroy(scope, role)
+								.catch((err) => {
+									console.error(err);
+									_logic.ready();
+								})
+								.then(() => {
+									this._scopeDC.remove(scopeId);
+									this._scopeDC.setCursor(null);
+									_logic.ready();
+								});
 						}
 
-						DataTable.clearSelection();
-						return true;
 					}
 				});
 
@@ -177,12 +233,12 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 				if (this._roleDC == null)
 					return;
 
-				let roleId = this._roleDC.getCursor();
-				if (!roleId) return;
+				let role = _logic.getRole();
+				if (!role) return;
 
 				_logic.busy();
 
-				CurrentApplication.scopeOfRole(roleId)
+				CurrentApplication.scopeOfRole(role.id)
 					.catch(err => {
 						console.error(err);
 						_logic.ready();
@@ -190,6 +246,7 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 					.then(scopes => {
 
 						this._scopeDC.parse(scopes || []);
+						role._scopes = scopes;
 
 						_logic.ready();
 					})

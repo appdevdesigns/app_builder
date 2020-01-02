@@ -1575,12 +1575,15 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 	 * remove the current ABScope from our list of ._scopes.
 	 *
 	 * @param {ABScope} scope
+	 * @param {ABRole} role [optional]
 	 * @return {Promise}
 	 */
-	scopeDestroy(scope) {
+	scopeDestroy(scope, role) {
 
-		var remaininScopes = this.scopes(s => s.id != scope.id)
-		this._scopes = remaininScopes;
+		if (role) {
+			let remaininScopes = role.scopes(s => s.id != scope.id)
+			role._scopes = remaininScopes;
+		}
 
 		return this.Model.staticData.scopeDestroy(scope.id);
 	}
@@ -1592,35 +1595,45 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 	 * persist the current ABScope in our list of ._scopes.
 	 *
 	 * @param {ABScope} scope
-	 * @param {uuid} roleId
+	 * @param {ABRole} role [optional]
 	 * @return {Promise}
 	 */
-	scopeSave(scope, roleId) {
-		var isIncluded = (this.scopes(s => s.id == scope.id).length > 0);
-		if (!isIncluded) {
-			this._scopes.push(scope);
+	scopeSave(scope, role) {
+
+		if (role) {
+			let isIncluded = (role.scopes(s => s.id == scope.id).length > 0);
+			if (!isIncluded) {
+				role._scopes.push(scope);
+			}
 		}
 
-		return this.Model.staticData.scopeSave(scope.toObj(), roleId);
+		return this.Model.staticData.scopeSave(scope.toObj(), (role ? role.id : null));
 	}
 
-	scopeImport(scopeId) {
+	/**
+	 * @method scopeImport()
+	 *
+	 * import the current ABScope to ._scopes of the role.
+	 *
+	 * @param {ABScope} scope
+	 * @param {ABRole} role
+	 * @return {Promise}
+	 */
+	scopeImport(scope, role) {
 
 		return new Promise((resolve, reject) => {
 
-			this.Model.staticData.scopeImport(this.id, scopeId)
+			this.Model.staticData.scopeImport(role.id, scope.id)
 				.catch(reject)
 				.then(newScope => {
 
-					let newScopeClass = this.scopeNew(newScope);
-
 					// add to list
-					var isIncluded = (this.scopes(s => s.id == newScope.id).length > 0);
+					var isIncluded = (role.scopes(s => s.id == newScope.id).length > 0);
 					if (!isIncluded) {
-						this._scopes.push(newScopeClass);
+						role._scopes.push(scope);
 					}
 
-					resolve(newScopeClass);
+					resolve(scope);
 
 				});
 
@@ -1628,16 +1641,24 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 
 	}
 
-	scopeExclude(scopeId) {
+	/**
+	 * @method scopeExclude()
+	 *
+	 *
+	 * @param {uuid} scopeId
+	 * @param {ABRole} role
+	 * @return {Promise}
+	 */
+	scopeExclude(scopeId, role) {
 
 		return new Promise((resolve, reject) => {
 
-			this.Model.staticData.scopeExclude(this.id, scopeId)
+			this.Model.staticData.scopeExclude(role.id, scopeId)
 				.catch(reject)
 				.then(() => {
 
 					// remove query from list
-					this._scopes = this.scopes(s => s.id != scopeId);
+					role._scopes = role.scopes(s => s.id != scopeId);
 
 					resolve();
 

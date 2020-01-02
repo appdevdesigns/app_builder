@@ -161,6 +161,8 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 				if (this._roleDC)
 					roleId = this._roleDC.getCursor();
 
+				let role = this._roleDC.getItem(roleId);
+
 				let vals = $$(ids.form).getValues() || {};
 
 				let currScopeId = this._scopeDC.getCursor();
@@ -184,7 +186,7 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 				// set .filter
 				currScope.filter = this._rowFilter.getValue();
 
-				CurrentApplication.scopeSave(currScope, roleId)
+				CurrentApplication.scopeSave(currScope, role)
 					.catch(err => {
 						console.error(err);
 						_logic.ready();
