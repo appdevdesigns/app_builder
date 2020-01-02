@@ -23,7 +23,9 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
             instances: L("ab.process.monitor.instances", "*Instances"),
             logs: L("ab.process.monitor.logs", "*Logs"),
             actions: L("ab.process.monitor.actions", "*Actions"),
-            details: L("ab.process.monitor.details", "*Instance Details")
+            details: L("ab.process.monitor.details", "*Instance Details"),
+            reset: L("ab.process.monitor.reset", "*Reset Instance"),
+            delete: L("ab.process.monitor.delete", "*Delete Instance")
          }
       };
 
@@ -33,7 +35,9 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
       var ids = {
          component: this.unique("_component"),
          taskList: this.unique("_taskList"),
-         processLogs: this.unique("_processLogs")
+         processLogs: this.unique("_processLogs"),
+         resetButton: this.unique("_resetButton"),
+         deleteButton: this.unique("_deleteButton")
       };
 
       // Our webix UI definition:
@@ -88,7 +92,7 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
                            },
                            select: true,
                            on: {
-                              onItemClick: function(id, e, node) {
+                              onItemClick: function(id /*, e, node*/) {
                                  // NOTE: had an error where only 4 log entries appeared
                                  // adding the id: to the entries seemed to help.
                                  var logs = [];
@@ -99,6 +103,17 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
                                     });
                                  $$(ids.processLogs).clearAll();
                                  $$(ids.processLogs).parse(logs);
+                                 // when you click an instance we need to know if
+                                 // we should show the reset button if it is an error
+                                 if (
+                                    $$(ids.taskList).getItem(id).status ==
+                                    "error"
+                                 ) {
+                                    $$(ids.resetButton).show();
+                                 } else {
+                                    $$(ids.resetButton).hide();
+                                 }
+                                 $$(ids.deleteButton).show();
                               }
                            },
                            navigation: true
@@ -155,10 +170,15 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
                                     {
                                        rows: [
                                           {
+                                             id: ids.resetButton,
                                              view: "button",
-                                             label: "reset me",
+                                             css: "webix_primary",
+                                             type: "icon",
+                                             icon: "fa fa-refresh",
+                                             hidden: true,
+                                             label: labels.component.reset,
                                              on: {
-                                                onItemClick: (id, e, node) => {
+                                                onItemClick: (/*id, e, node*/) => {
                                                    var selectedInstance = $$(
                                                       ids.taskList
                                                    ).getSelectedItem();
@@ -169,7 +189,20 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
                                                    }
                                                 }
                                              }
-                                          }
+                                          },
+                                          {
+                                             id: ids.deleteButton,
+                                             view: "button",
+                                             css: "webix_danger",
+                                             type: "icon",
+                                             icon: "fa fa-trash",
+                                             hidden: true,
+                                             label: labels.component.delete,
+                                             on: {
+                                                onItemClick: (/*id, e, node*/) => {}
+                                             }
+                                          },
+                                          {}
                                        ]
                                     }
                                  ]
@@ -182,24 +215,28 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
                            height: 11
                         },
                         {
-                           view: "toolbar",
-                           css: "ab-data-toolbar webix_dark",
-                           cols: [
+                           rows: [
                               {
-                                 type: "spacer",
-                                 width: 15
+                                 view: "toolbar",
+                                 css: "ab-data-toolbar webix_dark",
+                                 cols: [
+                                    {
+                                       type: "spacer",
+                                       width: 15
+                                    },
+                                    {
+                                       view: "label",
+                                       label: labels.component.logs
+                                    }
+                                 ]
                               },
                               {
-                                 view: "label",
-                                 label: labels.component.logs
+                                 id: ids.processLogs,
+                                 view: "list",
+                                 template:
+                                    '<div style="padding: 5px 0; line-height: 20px">#value#</div>'
                               }
                            ]
-                        },
-                        {
-                           id: ids.processLogs,
-                           view: "list",
-                           template:
-                              '<div style="padding: 5px 0; line-height: 20px">#value#</div>'
                         }
                      ]
                   }
