@@ -37,7 +37,8 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
          taskList: this.unique("_taskList"),
          processLogs: this.unique("_processLogs"),
          resetButton: this.unique("_resetButton"),
-         deleteButton: this.unique("_deleteButton")
+         deleteButton: this.unique("_deleteButton"),
+         detailView: this.unique("_detailView")
       };
 
       // Our webix UI definition:
@@ -89,7 +90,7 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
                                     color +
                                     ';" class="fa ' +
                                     icon +
-                                    ' fa-2x"></div><div style="padding: 5px 0; line-height: 20px"><div style="font-size: 16px; font-weight: 600;">' +
+                                    ' fa-2x"></div><div style="margin: 5px 0; height: 60px; overflow: hidden; line-height: 20px"><div style="font-size: 16px; font-weight: 600;">' +
                                     obj.name +
                                     total +
                                     "</div><div>" +
@@ -111,6 +112,14 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
                                     });
                                  $$(ids.processLogs).clearAll();
                                  $$(ids.processLogs).parse(logs);
+                                 $$(ids.detailView).define(
+                                    "rows",
+                                    $$(ids.taskList).getItem(id).rows
+                                 );
+                                 $$(ids.detailView).reconstruct();
+                                 $$(ids.detailView)
+                                    .getChildViews()[0]
+                                    .expand();
                                  // when you click an instance we need to know if
                                  // we should show the reset button if it is an error
                                  if (
@@ -151,7 +160,18 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
                                           }
                                        ]
                                     },
-                                    {}
+                                    {
+                                       view: "scrollview",
+                                       scroll: "y",
+                                       body: {
+                                          view: "accordion",
+                                          type: "line",
+                                          padding: 0,
+                                          collapsed: true,
+                                          id: ids.detailView,
+                                          rows: []
+                                       }
+                                    }
                                  ]
                               },
                               {
@@ -304,6 +324,8 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
          loadProcessInstances: function() {
             $$(ids.resetButton).hide();
             $$(ids.deleteButton).hide();
+            $$(ids.detailView).rows = [];
+            $$(ids.detailView).reconstruct();
             if (CurrentProcess) {
                return OP.Comm.Socket.get({
                   url: `/app_builder/abprocessinstance`,
@@ -332,18 +354,50 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
                   );
                   var items = [];
                   instances.forEach((val) => {
-                     var ids = [];
+                     var instances = [];
+                     var rows = [];
                      val.forEach((v) => {
-                        ids.push(v.id);
+                        instances.push(v.id);
+                        rows.push({
+                           header: "Task Instance: " + v.id,
+                           on: {
+                              onItemClick: (/*id*/) => {
+                                 var logs = [];
+                                 v.logs.forEach((l, indx) => {
+                                    logs.push({ id: indx, value: l });
+                                 });
+                                 $$(ids.processLogs).clearAll();
+                                 $$(ids.processLogs).parse(logs);
+                              }
+                           },
+                           body: {
+                              view: "template",
+                              autoheight: true,
+                              template:
+                                 "<b>Task:</b> " +
+                                 v.task +
+                                 "<br/>" +
+                                 "<b>Name:</b> " +
+                                 v.name +
+                                 "<br/>" +
+                                 "<b>Message:</b> " +
+                                 v.message +
+                                 "<br/>" +
+                                 "<b>Status:</b> " +
+                                 v.status +
+                                 "<br/>"
+                           }
+                        });
                      });
                      items.push({
-                        ids: ids,
+                        ids: instances,
                         task: val[0].task,
                         name: val[0].name,
                         message: val[0].message,
                         logs: val[0].logs,
                         status: val[0].status,
-                        length: val.length
+                        length: val.length,
+                        rows: rows
                      });
                   });
                   return items;
