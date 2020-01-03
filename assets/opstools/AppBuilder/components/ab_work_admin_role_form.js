@@ -143,6 +143,7 @@ module.exports = class AB_Work_Admin_Role_Form extends ABComponent {
 
 						if (isAdded) {
 							currRole.id = data.id;
+							delete currRole.application;
 							this._roleDC.setCursor(null);
 							this._roleDC.add(currRole);
 							this._roleDC.setCursor(currRole.id);

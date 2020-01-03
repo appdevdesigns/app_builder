@@ -26,7 +26,9 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 
 		// internal list of Webix IDs to reference our UI components.
 		let ids = {
-			datatable: this.unique('datatable')
+			datatable: this.unique('datatable'),
+			importScope: this.unique('importScope'),
+			createScope: this.unique('createScope'),
 		};
 
 		let CurrentApplication;
@@ -45,9 +47,19 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 							fillspace: true
 						},
 						{
-							id: "object",
 							header: "Object",
-							width: 150
+							width: 150,
+							template: (scope, common, value) => {
+
+								if (scope &&
+									scope.object &&
+									scope.object[0]) {
+									return scope.object[0].label;
+								}
+								else {
+									return "";
+								}
+							},
 						},
 						{
 							id: "edit", header: "", width: 40,
@@ -87,6 +99,7 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 					cols: [
 						{ fillspace: true },
 						{
+							id: ids.importScope,
 							view: 'button',
 							type: "icon",
 							icon: "fa fa-download",
@@ -96,6 +109,7 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 							}
 						},
 						{
+							id: ids.createScope,
 							view: 'button',
 							type: "icon",
 							icon: "fa fa-plus",
@@ -234,7 +248,15 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 					return;
 
 				let role = _logic.getRole();
-				if (!role) return;
+				if (!role) {
+					$$(ids.importScope).disable();
+					$$(ids.createScope).disable();
+					return;
+				}
+				else {
+					$$(ids.importScope).enable();
+					$$(ids.createScope).enable();
+				}
 
 				_logic.busy();
 
@@ -244,6 +266,10 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 						_logic.ready();
 					})
 					.then(scopes => {
+
+						(scopes || []).forEach(s => {
+							delete s.application;
+						});
 
 						this._scopeDC.parse(scopes || []);
 						role._scopes = scopes;

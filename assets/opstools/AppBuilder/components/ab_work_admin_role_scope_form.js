@@ -24,6 +24,7 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 		let ids = {
 			popup: this.unique('popup'),
 			form: this.unique('form'),
+			object: this.unique('object'),
 			buttonSave: this.unique('buttonSave')
 		};
 
@@ -55,6 +56,13 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 						name: "description",
 						label: "Description",
 						placeholder: "Enter Description"
+					},
+					{
+						id: ids.object,
+						view: "richselect",
+						name: "objectId",
+						label: "Object",
+						options: []
 					},
 					{
 						view: "checkbox",
@@ -165,8 +173,7 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 
 				let vals = $$(ids.form).getValues() || {};
 
-				let currScopeId = this._scopeDC.getCursor();
-				let currScope = this._scopeDC.getItem(currScopeId);
+				let currScope = _logic.getScope();
 
 				// Add new
 				let isAdded = false;
@@ -193,16 +200,34 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 					})
 					.then(data => {
 
+						// Set object to scope
+						if (data.object == null || data.object[0] == null) {
+							let obj = CurrentApplication.objects(o => o.id == $$(ids.object).getValue())[0];
+							if (obj)
+								data.object = [obj];
+						}
+
 						if (isAdded) {
 							currScope.id = data.id;
 							this._scopeDC.add(currScope);
 						}
-						else
-							this._scopeDC.updateItem(currScopeId, data);
+
+						this._scopeDC.updateItem(data.id, data);
 
 						_logic.ready();
 						_logic.hide();
 					});
+
+			},
+
+			getScope: () => {
+
+				if (!this._scopeDC) return null;
+
+				let currScopeId = this._scopeDC.getCursor();
+				if (!currScopeId) return null;
+
+				return this._scopeDC.getItem(currScopeId);
 
 			},
 
@@ -220,6 +245,29 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 
 				if ($$(ids.popup))
 					$$(ids.popup).show();
+
+				let objOptions = CurrentApplication.objects().map(o => {
+					return {
+						id: o.id,
+						value: o.label
+					}
+				});
+
+				let scope = _logic.getScope();
+				if (scope &&
+					scope.object &&
+					scope.object[0]) {
+					let exists = (objOptions.filter(o => o.id == scope.object[0].id).length > 0);
+					if (!exists) {
+						objOptions.push({
+							id: scope.object[0].id,
+							value: scope.object[0].label
+						});
+					}
+				}
+
+				$$(ids.object).define("options", objOptions);
+				$$(ids.object).refresh();
 
 				$$(ids.form).clear();
 

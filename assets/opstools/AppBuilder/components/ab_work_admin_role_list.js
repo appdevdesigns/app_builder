@@ -187,9 +187,9 @@ module.exports = class AB_Work_Admin_Role_List extends ABComponent {
 
 				// Set select item of datatable
 				if (this._roleDC) {
-					let cursor = this._roleDC.getCursor();
-					if (cursor)
-						$$(ids.datatable).select(cursor.id);
+					let roleId = this._roleDC.getCursor();
+					if (roleId)
+						$$(ids.datatable).select(roleId);
 					else
 						$$(ids.datatable).unselect();
 				}

@@ -15,7 +15,10 @@ module.exports = {
 
 		let cond = req.body;
 
-		ABGraphScope.find(cond)
+		ABGraphScope.find({
+			relations: ['object'],
+			where: cond
+		})
 			.catch(res.AD.error)
 			.then(scopes => {
 				res.AD.success(scopes || []);
@@ -28,7 +31,9 @@ module.exports = {
 
 		let scopeId = req.param('scopeId');
 
-		ABGraphScope.findOne(scopeId)
+		ABGraphScope.findOne(scopeId, {
+			relations: ['object']
+		})
 			.catch(res.AD.error)
 			.then(scope => {
 
@@ -43,7 +48,9 @@ module.exports = {
 
 		let scopeId = req.param('scopeId');
 
-		ABGraphRole.findWithRelation(ABGraphRole.relations.scopes, scopeId)
+		ABGraphRole.findWithRelation(ABGraphRole.relations.scopes, scopeId, {
+			relations: ['object']
+		})
 			.catch(res.AD.error)
 			.then(roles => {
 
@@ -57,7 +64,7 @@ module.exports = {
 	save: function (req, res) {
 
 		let roleID = req.query.roleID;
-		let scope = req.body.scope;
+		let scopeValues = req.body.scope;
 
 		Promise.resolve()
 
@@ -66,16 +73,16 @@ module.exports = {
 
 				return new Promise((next, error) => {
 
-					ABGraphScope.upsert(scope.id, scope)
+					ABGraphScope.upsert(scopeValues.id, scopeValues)
 						.catch(errMessage => {
 
 							error(errMessage);
 							res.AD.error(true);
 
 						})
-						.then(result => {
+						.then(scope => {
 
-							next(result);
+							next(scope);
 
 						});
 
@@ -100,24 +107,45 @@ module.exports = {
 						})
 						.then(() => {
 
-							res.AD.success(scope);
-							next();
+							next(scope);
 
 						});
 
 				});
 
 			})
-			
+
+			// Reset relation to object
+			.then(scope => {
+
+				return new Promise((next, error) => {
+
+					scope.unrelate('object')
+						.catch(errMessage => {
+
+							error(errMessage);
+							res.AD.error(true);
+
+						})
+						.then(() => {
+
+							next(scope);
+
+						});
+
+				});
+
+			})
+
 			// Set relation to object
 			.then(scope => {
 
 				return new Promise((next, error) => {
 
-					if (scope.object == null)
+					if (scope.objectId == null)
 						return next();
 
-					scope.relate('object', object)
+					scope.relate('object', scope.objectId)
 						.catch(errMessage => {
 
 							error(errMessage);
@@ -153,73 +181,73 @@ module.exports = {
 	// PUT /app_builder/role/:roleID/scope/:scopeID'
 	import: function (req, res) {
 
-		let roleID = req.param('roleID'),
-			scopeID = req.param('scopeID');
+	let roleID = req.param('roleID'),
+		scopeID = req.param('scopeID');
 
-		Promise.resolve()
+	Promise.resolve()
 
-			// Get a scope
-			.then(() => {
+		// Get a scope
+		.then(() => {
 
-				return new Promise((next, err) => {
+			return new Promise((next, err) => {
 
-					ABGraphScope.findOne(scopeID, {
-						relations: ['roles']
-					})
-						.catch(err)
-						.then(scope => {
-							next(scope);
-						});
+				ABGraphScope.findOne(scopeID, {
+					relations: ['roles', 'object']
+				})
+					.catch(err)
+					.then(scope => {
+						next(scope);
+					});
 
 
-				});
+			});
 
-			})
+		})
 
-			// Set relate
-			.then(scope => {
+		// Set relate
+		.then(scope => {
 
-				return new Promise((next, err) => {
+			return new Promise((next, err) => {
 
-					// if exists
-					if (scope.roles.filter(app => app.id == roleID)[0]) {
+				// if exists
+				if (scope.roles.filter(app => app.id == roleID)[0]) {
+					res.AD.success(scope);
+					return next();
+				}
+
+				scope.relate('roles', roleID)
+					.catch(err)
+					.then(() => {
+
 						res.AD.success(scope);
-						return next();
-					}
+						next();
 
-					scope.relate('roles', roleID)
-						.catch(err)
-						.then(() => {
-
-							res.AD.success(scope);
-							next();
-
-						});
-
-				});
+					});
 
 			});
 
-	},
+		});
 
-	// DELETE /app_builder/role/:roleID/scope/:scopeID'
-	exclude: function (req, res) {
+},
 
-		let roleID = req.param('roleID'),
-			scopeID = req.param('scopeID');
+// DELETE /app_builder/role/:roleID/scope/:scopeID'
+exclude: function (req, res) {
 
-		ABGraphScope.unrelate(
-			ABGraphScope.relations.roles,
-			roleID,
-			scopeID
-		)
-			.catch(res.AD.error)
-			.then(() => {
+	let roleID = req.param('roleID'),
+		scopeID = req.param('scopeID');
 
-				res.AD.success(true);
+	ABGraphScope.unrelate(
+		ABGraphScope.relations.roles,
+		roleID,
+		scopeID
+	)
+		.catch(res.AD.error)
+		.then(() => {
 
-			});
+			res.AD.success(true);
 
-	}
+		});
+
+}
 
 };

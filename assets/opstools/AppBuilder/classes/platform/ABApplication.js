@@ -1544,11 +1544,11 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 
 			this.Model.staticData.scopeOfRole(roleId)
 				.catch(reject)
-				.then(roles => {
+				.then(scopes => {
 
 					var result = [];
 
-					(roles || []).forEach(s => {
+					(scopes || []).forEach(s => {
 						// prevent processing of null values.
 						if (s) {
 							result.push(this.scopeNew(s, this));

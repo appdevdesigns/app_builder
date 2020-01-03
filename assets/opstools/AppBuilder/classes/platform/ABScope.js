@@ -12,6 +12,12 @@ module.exports = class ABScope extends ABScopeCore {
 
 		super.fromValues(values);
 
+		// multilingual fields object: label
+		this.object = values.object;
+		if (this.object &&
+			this.object[0])
+			OP.Multilingual.translate(this.object[0], this.object[0], ['label']);
+
 		// multilingual fields: name, description
 		OP.Multilingual.translate(this, this, ['name', 'description']);
 
