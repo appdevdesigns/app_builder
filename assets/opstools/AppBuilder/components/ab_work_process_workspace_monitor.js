@@ -77,6 +77,13 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
                                     icon = "fa-times-circle";
                                     color = "red";
                                  }
+                                 var total = "";
+                                 if (obj.length > 1) {
+                                    total +=
+                                       "<div style='color: white; background: #657584; border-radius: 9px; font-size: 12px; font-weight: bold; padding: 0 6px; display: inline-block; line-height: 18px; vertical-align: top; margin-left: 5px;'>" +
+                                       obj.length +
+                                       "</div>";
+                                 }
                                  return (
                                     '<div style="float: left; height: 70px; line-height: 70px; margin-right: 10px; color: ' +
                                     color +
@@ -84,6 +91,7 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
                                     icon +
                                     ' fa-2x"></div><div style="padding: 5px 0; line-height: 20px"><div style="font-size: 16px; font-weight: 600;">' +
                                     obj.name +
+                                    total +
                                     "</div><div>" +
                                     obj.message +
                                     "</div></div>"
@@ -279,7 +287,23 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
             $$(ids.noSelection).show(false, false);
          },
 
+         groupBy(list, keyGetter) {
+            const map = new Map();
+            list.forEach((item) => {
+               const key = keyGetter(item);
+               const collection = map.get(key);
+               if (!collection) {
+                  map.set(key, [item]);
+               } else {
+                  collection.push(item);
+               }
+            });
+            return map;
+         },
+
          loadProcessInstances: function() {
+            $$(ids.resetButton).hide();
+            $$(ids.deleteButton).hide();
             if (CurrentProcess) {
                return OP.Comm.Socket.get({
                   url: `/app_builder/abprocessinstance`,
@@ -302,7 +326,27 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
                         status: inst.status
                      });
                   });
-                  return list;
+                  var instances = _logic.groupBy(
+                     list,
+                     (item) => item.task + item.message
+                  );
+                  var items = [];
+                  instances.forEach((val) => {
+                     var ids = [];
+                     val.forEach((v) => {
+                        ids.push(v.id);
+                     });
+                     items.push({
+                        ids: ids,
+                        task: val[0].task,
+                        name: val[0].name,
+                        message: val[0].message,
+                        logs: val[0].logs,
+                        status: val[0].status,
+                        length: val.length
+                     });
+                  });
+                  return items;
                });
             } else {
                return Promise.resolve([]);
@@ -341,7 +385,7 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
                return OP.Comm.Service.post({
                   url: `/app_builder/abprocessinstance/reset`,
                   params: {
-                     instanceID: instance.id,
+                     instanceID: instance.ids,
                      taskID: instance.task
                   }
                })
