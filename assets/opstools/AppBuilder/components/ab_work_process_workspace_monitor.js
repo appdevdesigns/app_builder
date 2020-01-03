@@ -324,7 +324,7 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
          loadProcessInstances: function() {
             $$(ids.resetButton).hide();
             $$(ids.deleteButton).hide();
-            $$(ids.detailView).rows = [];
+            $$(ids.detailView).define("rows", []);
             $$(ids.detailView).reconstruct();
             if (CurrentProcess) {
                return OP.Comm.Socket.get({
