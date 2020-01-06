@@ -34,25 +34,6 @@ module.exports = {
 
 	},
 
-	// GET /app_builder/user/:username/role
-	userRoles: (req, res) => {
-
-		// TODO: this function should allow to admin only
-
-		let username = req.param('username');
-
-		ABGraphRole.getRolesByUsername(username)
-			.catch(error => {
-				res.AD.error(error);
-			})
-			.then(roles => {
-
-				res.AD.success(roles || []);
-
-			});
-
-	},
-
 	// GET: /app_builder/user/list
 	getUserList: function (req, res) {
 
@@ -66,6 +47,32 @@ module.exports = {
 			.then(function (result) {
 				res.AD.success(result || []);
 			});
+
+	},
+
+	// GET: /app_builder/user/:user/rolescope
+	getRoleScope: function (req, res) {
+
+		let username = req.param('user');
+
+		ABGraphRole.query(`
+			FOR join IN scopeUser
+			FOR r in role
+			FOR s in scope
+			FOR rScope in roleScope
+			FILTER join._to == 'user/${username}'
+			&& join._from == s._id
+			&& rScope._to == s._id
+			&& rScope._from == r._id
+			RETURN {
+				role: r,
+				scope: s
+			}
+		`)
+		.catch(res.AD.error)
+		.then(result => {
+			res.AD.success(result || []);
+		});
 
 	}
 

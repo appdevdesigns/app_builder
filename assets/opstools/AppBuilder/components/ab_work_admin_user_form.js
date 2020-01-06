@@ -1,7 +1,7 @@
 const ABComponent = require("../classes/platform/ABComponent");
 
 const ABAdminFormInfo = require("./ab_work_admin_user_form_info");
-const ABAdminFormRole = require("app_builder/assets/opstools/AppBuilder/components/ab_work_admin_user_form_role");
+const ABAdminFormRole = require("./ab_work_admin_user_form_role");
 
 module.exports = class AB_Work_Admin_User_Form extends ABComponent {
 

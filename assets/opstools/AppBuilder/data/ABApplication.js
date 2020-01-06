@@ -457,10 +457,10 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 		},
 
-		roleOfUser: function(username) {
+		roleUsers: function(roleId) {
 
 			return OP.Comm.Socket.get({
-				url: `/app_builder/user/${username}/role`
+				url: `/app_builder/role/${roleId}/users`
 			});
 
 		},
@@ -507,6 +507,14 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 		},
 
+		roleScopeOfUser: function(username) {
+
+			return OP.Comm.Socket.get({
+				url: `/app_builder/user/${username}/rolescope`
+			});
+
+		},
+
 		// ** Scopes
 
 		scopeFind: function (cond) {
@@ -514,14 +522,6 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 			return OP.Comm.Socket.get({
 				url: `/app_builder/scope`,
 				params: cond
-			});
-
-		},
-
-		scopeOfUser: function(username) {
-
-			return OP.Comm.Socket.get({
-				url: `/app_builder/user/${username}/scope`
 			});
 
 		},
@@ -575,6 +575,15 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 			});
 
 		},
+
+		scopeRemoveUser: function(scopeId, username) {
+
+			return OP.Comm.Service.delete({
+				url: `/app_builder/scope/${scopeId}/username/${username}`
+			});
+
+		},
+
 
 
 	},

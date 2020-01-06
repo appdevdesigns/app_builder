@@ -181,73 +181,91 @@ module.exports = {
 	// PUT /app_builder/role/:roleID/scope/:scopeID'
 	import: function (req, res) {
 
-	let roleID = req.param('roleID'),
-		scopeID = req.param('scopeID');
+		let roleID = req.param('roleID'),
+			scopeID = req.param('scopeID');
 
-	Promise.resolve()
+		Promise.resolve()
 
-		// Get a scope
-		.then(() => {
+			// Get a scope
+			.then(() => {
 
-			return new Promise((next, err) => {
+				return new Promise((next, err) => {
 
-				ABGraphScope.findOne(scopeID, {
-					relations: ['roles', 'object']
-				})
-					.catch(err)
-					.then(scope => {
-						next(scope);
-					});
+					ABGraphScope.findOne(scopeID, {
+						relations: ['roles', 'object']
+					})
+						.catch(err)
+						.then(scope => {
+							next(scope);
+						});
 
 
-			});
+				});
 
-		})
+			})
 
-		// Set relate
-		.then(scope => {
+			// Set relate
+			.then(scope => {
 
-			return new Promise((next, err) => {
+				return new Promise((next, err) => {
 
-				// if exists
-				if (scope.roles.filter(app => app.id == roleID)[0]) {
-					res.AD.success(scope);
-					return next();
-				}
-
-				scope.relate('roles', roleID)
-					.catch(err)
-					.then(() => {
-
+					// if exists
+					if (scope.roles.filter(app => app.id == roleID)[0]) {
 						res.AD.success(scope);
-						next();
+						return next();
+					}
 
-					});
+					scope.relate('roles', roleID)
+						.catch(err)
+						.then(() => {
+
+							res.AD.success(scope);
+							next();
+
+						});
+
+				});
 
 			});
 
-		});
+	},
 
-},
+	// DELETE /app_builder/role/:roleID/scope/:scopeID'
+	exclude: function (req, res) {
 
-// DELETE /app_builder/role/:roleID/scope/:scopeID'
-exclude: function (req, res) {
+		let roleID = req.param('roleID'),
+			scopeID = req.param('scopeID');
 
-	let roleID = req.param('roleID'),
-		scopeID = req.param('scopeID');
+		ABGraphScope.unrelate(
+			ABGraphScope.relations.roles,
+			roleID,
+			scopeID
+		)
+			.catch(res.AD.error)
+			.then(() => {
 
-	ABGraphScope.unrelate(
-		ABGraphScope.relations.roles,
-		roleID,
-		scopeID
-	)
-		.catch(res.AD.error)
-		.then(() => {
+				res.AD.success(true);
 
-			res.AD.success(true);
+			});
 
-		});
+	},
 
-}
+	// DELETE /app_builder/scope/:scopeId/username/:username
+	scopeRemoveUser: function (req, res) {
+
+		let scopeId = req.param('scopeId');
+		let username = req.param('username');
+
+		ABGraphScope.query(`
+			FOR join IN scopeUser
+			FILTER join._from == 'scope/${scopeId}'
+			&& join._to == 'user/${username}'
+			REMOVE join IN scopeUser`)
+			.catch(res.AD.error)
+			.then(() => {
+				res.AD.success(true);
+			});
+
+	}
 
 };

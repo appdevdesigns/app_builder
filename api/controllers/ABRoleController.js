@@ -220,6 +220,75 @@ module.exports = {
 
 	},
 
+	// GET /app_builder/role/:roleId/users
+	roleUsers: function (req, res) {
+
+		let roleId = req.param('roleId');
+
+		Promise.resolve()
+			.then(() => {
+
+				return new Promise((resolve, reject) => {
+
+					RoleGraph.findOne(roleId, {
+						relations: ['scopes']
+					})
+						.catch(reject)
+						.then(role => {
+							resolve(role);
+						});
+
+				});
+
+			})
+			.then(role => {
+
+				return new Promise((resolve, reject) => {
+
+					if (!role) {
+						res.AD.success([]);
+						return resolve();
+					}
+
+					let scopeIds = (role.scopes || []).map(s => `'scope/${s.id}'`);
+					if (scopeIds < 1) {
+						res.AD.success([]);
+						return resolve();
+					}
+
+					scopeIds = scopeIds.join(', ');
+
+					ScopeGraph.query(`
+						FOR join in scopeUser
+						FOR s in scope
+						FILTER [${scopeIds}] ANY == join._from
+						&& s._id == join._from
+						RETURN {
+							scope: s,
+							username: join._to
+						}
+					`, true, true)
+						.catch(err => {
+							res.AD.error(err);
+							reject(err);
+						})
+						.then(result => {
+
+							result = (result || []).map(r => {
+								return {
+									scope: new ScopeGraph(r.scope),
+									username: r.username.replace("user/", "")
+								}
+							});
+
+							res.AD.success(result);
+							resolve();
+						});
+
+				});
+			});
+	},
+
 
 	///
 	/// Roles of Application to display live view

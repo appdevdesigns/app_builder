@@ -1,4 +1,4 @@
-const ABComponent = require("app_builder/assets/opstools/AppBuilder/classes/platform/ABComponent");
+const ABComponent = require("../classes/platform/ABComponent");
 
 module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
 
@@ -8,7 +8,7 @@ module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
 		let L = this.Label;
 
 		let ids = {
-			list: this.unique('list')
+			datatable: this.unique('datatable')
 		};
 
 		let CurrentApplication;
@@ -20,16 +20,42 @@ module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
 			rows: [
 				{ template: `<span class='fa fa-user-md'></span> ${L("ab.admin.userRole", "*Roles")}`, type: "header" },
 				{
-					view: 'list',
-					id: ids.list,
+					view: 'datatable',
+					id: ids.datatable,
 					select: false,
-					template: '#name# <div class="remove fa fa-trash" style="float: right; margin-top: 8px;"></div>',
+					data: [],
+					columns: [
+						{
+							id: "role", header: "Role", width: 150,
+							template: item => (item && item.role ? item.role.name : "")
+						},
+						{
+							id: "scope", header: "Scope", fillspace: true,
+							template: item => (item && item.scope ? item.scope.name : "")
+						},
+						// { id: "object", header: "Object", width: 150 },
+						{ id: "remove", header: "", width: 40 }
+					],
 					onClick: {
 						"remove": function (ev, id) {
 							_logic.remove(id);
 							return false;
 						}
 					}
+				},
+				{
+					cols: [
+						{ fillspace: true },
+						{
+							view: 'button',
+							type: "icon",
+							icon: "fa fa-plus",
+							label: "Add a role",
+							width: 150,
+							click: () => {
+							}
+						}
+					]
 				}
 			]
 		};
@@ -40,10 +66,10 @@ module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
 
 			this._userDC = userDC;
 
-			if ($$(ids.list)) {
-				webix.extend($$(ids.list), webix.ProgressBar);
+			if ($$(ids.datatable)) {
+				webix.extend($$(ids.datatable), webix.ProgressBar);
 
-				$$(ids.list).data.sync(this._roleDC);
+				$$(ids.datatable).data.sync(this._roleDC);
 			}
 
 		};
@@ -74,15 +100,17 @@ module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
 					return;
 				}
 
-				CurrentApplication.roleOfUser(currUser.username)
+				CurrentApplication.roleScopeOfUser(currUser.username)
 					.catch(err => {
 						console.error(err);
 						_logic.ready();
 					})
-					.then((data) => {
+					.then(roleScopes => {
+
+						roleScopes = roleScopes || [];
 
 						this._roleDC.clearAll();
-						this._roleDC.parse(data || []);
+						this._roleDC.parse(roleScopes);
 						_logic.ready();
 
 					});
@@ -114,7 +142,10 @@ module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
 							return;
 						}
 
-						role.removeUser(currUser.username)
+						// remove username from role
+						role.usernames = (role.usernames || []).filter(u => u != currUser.username);
+
+						CurrentApplication.roleSave(role)
 							.catch(err => {
 								console.error(err);
 								_logic.ready();
@@ -134,17 +165,17 @@ module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
 
 			busy: () => {
 
-				if ($$(ids.list) &&
-					$$(ids.list).showProgress)
-					$$(ids.list).showProgress({ type: "icon" });
+				if ($$(ids.datatable) &&
+					$$(ids.datatable).showProgress)
+					$$(ids.datatable).showProgress({ type: "icon" });
 
 			},
 
 			ready: () => {
 
-				if ($$(ids.list) &&
-					$$(ids.list).hideProgress)
-					$$(ids.list).hideProgress();
+				if ($$(ids.datatable) &&
+					$$(ids.datatable).hideProgress)
+					$$(ids.datatable).hideProgress();
 
 			},
 

@@ -1,6 +1,6 @@
 const ABComponent = require("../classes/platform/ABComponent");
 
-const ABAdminRoleImport = require("app_builder/assets/opstools/AppBuilder/components/ab_work_admin_role_import");
+const ABAdminRoleImport = require("./ab_work_admin_role_import");
 
 module.exports = class AB_Work_Admin_Role_List extends ABComponent {
 

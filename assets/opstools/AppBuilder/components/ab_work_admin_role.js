@@ -1,9 +1,9 @@
-const ABComponent = require("app_builder/assets/opstools/AppBuilder/classes/platform/ABComponent");
+const ABComponent = require("../classes/platform/ABComponent");
 
-const ABAdminRoleList = require("app_builder/assets/opstools/AppBuilder/components/ab_work_admin_role_list");
-const ABAdminRoleForm = require("app_builder/assets/opstools/AppBuilder/components/ab_work_admin_role_form");
-const ABAdminRoleScope = require("app_builder/assets/opstools/AppBuilder/components/ab_work_admin_role_scope");
-const ABAdminRoleUser = require("app_builder/assets/opstools/AppBuilder/components/ab_work_admin_role_user");
+const ABAdminRoleList = require("./ab_work_admin_role_list");
+const ABAdminRoleForm = require("./ab_work_admin_role_form");
+const ABAdminRoleScope = require("./ab_work_admin_role_scope");
+const ABAdminRoleUser = require("./ab_work_admin_role_user");
 
 module.exports = class AB_Work_Admin_Role extends ABComponent {
 

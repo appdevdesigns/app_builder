@@ -38,4 +38,10 @@ module.exports = class ABRole extends ABRoleCore {
 
 	}
 
+	getUsers() {
+
+		return this.application.roleUsers(this);
+
+	}
+
 };

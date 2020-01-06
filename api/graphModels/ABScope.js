@@ -20,6 +20,11 @@ module.exports = class ABScope extends ABModelBase {
 				edgeName: "scopeObject",
 				linkCollection: "object",
 				direction: this.relateDirection.OUTBOUND
+			},
+
+			users: {
+				edgeName: "scopeUser",
+				direction: this.relateDirection.OUTBOUND
 			}
 
 		};

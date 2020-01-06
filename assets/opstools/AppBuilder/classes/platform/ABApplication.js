@@ -1375,30 +1375,37 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 
 	}
 
-	roleOfUser(username) {
+	/**
+	 * @method roleUsers()
+	 *
+	 * remove the current ABRole from our list of ._roles.
+	 *
+	 * @param {ABRole} role
+	 * @return {Promise} - An array of usernames
+	 */
+	roleUsers(role) {
+
+		if (role == null)
+			return Promise.resolve();
 
 		return new Promise((resolve, reject) => {
 
-			this.Model.staticData.roleOfUser(username)
+			this.Model.staticData.roleUsers(role.id)
 				.catch(reject)
-				.then(roles => {
+				.then(scopeUsers => {
 
-					var result = [];
-
-					(roles || []).forEach(s => {
-						// prevent processing of null values.
-						if (s) {
-							result.push(this.roleNew(s, this));
+					scopeUsers = (scopeUsers || []).map(r => {
+						return {
+							scope: new ABScope(r.scope),
+							username: r.username
 						}
-					})
+					});
 
-					resolve(result);
+					resolve(scopeUsers || []);
 
 				});
 
 		});
-
-
 	}
 
 	roleNew(values = {}) {
@@ -1484,24 +1491,23 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 
 	}
 
-	/// 
-	/// Scopes
-	/// 
-
-	scopeFind(cond) {
+	roleScopeOfUser(username) {
 
 		return new Promise((resolve, reject) => {
 
-			this.Model.staticData.scopeFind(cond)
+			this.Model.staticData.roleScopeOfUser(username)
 				.catch(reject)
-				.then(scopes => {
+				.then(data => {
 
-					var result = [];
+					let result = [];
 
-					(scopes || []).forEach(s => {
+					(data || []).forEach(d => {
 						// prevent processing of null values.
-						if (s) {
-							result.push(this.scopeNew(s, this));
+						if (d) {
+							result.push({
+								role: this.roleNew(d.role, this),
+								scope: this.scopeNew(d.scope, this),
+							});
 						}
 					})
 
@@ -1513,11 +1519,16 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 
 	}
 
-	scopeOfUser(username) {
+
+	/// 
+	/// Scopes
+	/// 
+
+	scopeFind(cond) {
 
 		return new Promise((resolve, reject) => {
 
-			this.Model.staticData.scopeOfUser(username)
+			this.Model.staticData.scopeFind(cond)
 				.catch(reject)
 				.then(scopes => {
 
@@ -1659,6 +1670,22 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 
 					// remove query from list
 					role._scopes = role.scopes(s => s.id != scopeId);
+
+					resolve();
+
+				});
+
+		});
+
+	}
+
+	scopeRemoveUser(scopeId, username) {
+
+		return new Promise((resolve, reject) => {
+
+			this.Model.staticData.scopeRemoveUser(scopeId, username)
+				.catch(reject)
+				.then(() => {
 
 					resolve();
 

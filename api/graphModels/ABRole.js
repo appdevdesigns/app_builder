@@ -18,20 +18,11 @@ module.exports = class ABRole extends ABModelBase {
 
 			scopes: {
 				edgeName: "roleScope",
-				linkCollection: "role",
+				linkCollection: "scope",
 				direction: this.relateDirection.OUTBOUND
 			}
 
 		};
-
-	}
-
-	static getRolesByUsername(username) {
-
-		return ABRole.query(
-			`FOR row IN role
-			FILTER row.usernames ANY == '${username}'
-			RETURN row`);
 
 	}
 

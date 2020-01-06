@@ -44,7 +44,18 @@ module.exports = class AB_Work_Admin_Role_User extends ABComponent {
 					},
 					css: { "text-align": "center" }
 				},
-				{ id: "username", header: "Username", fillspace: true },
+				{
+					id: "username", header: "Username", width: 200,
+					template: function (scopeUser) {
+						return scopeUser.username;
+					},
+				},
+				{
+					id: "scope", header: "Scope", fillspace: true,
+					template: function (scopeUser) {
+						return scopeUser.scope ? scopeUser.scope.name : "";
+					},
+				},
 				{
 					id: "remove", header: "", width: 40,
 					template: "<div class='remove'>{common.trashIcon()}</div>",
@@ -102,17 +113,25 @@ module.exports = class AB_Work_Admin_Role_User extends ABComponent {
 				if (!role) return;
 
 				// Parse to the data collection
-				if (this._userDC)
-					this._userDC.parse((role.usernames || []).map(u => {
-						return {
-							id: u,
-							username: u
-						};
-					}));
+				if (this._userDC) {
+					_logic.busy();
+
+					CurrentApplication.roleUsers(role)
+						.catch(err => {
+							console.error(err);
+							_logic.ready();
+						})
+						.then(scopeUsers => {
+
+							this._userDC.parse(scopeUsers);
+							_logic.ready();
+
+						});
+				}
 
 			},
 
-			removeUser: (username) => {
+			removeUser: (rowId) => {
 
 				let role = _logic.getRole();
 				if (!role) return;
@@ -126,18 +145,25 @@ module.exports = class AB_Work_Admin_Role_User extends ABComponent {
 
 							_logic.busy();
 
-							role.usernames = (role.usernames || []).filter(u => u != username);
+							let scopeUser = this._userDC.getItem(rowId);
+							if (scopeUser == null) {
+								_logic.ready();
+								return;
+							}
 
-							CurrentApplication.roleSave(role)
+							let scopeId = scopeUser.scope.id;
+							let username = scopeUser.username;
+
+							CurrentApplication.scopeRemoveUser(scopeId, username)
 								.catch(err => {
 									console.error(err);
 									_logic.ready();
 								})
 								.then(() => {
 
-									$$(ids.list).unselect();
+									$$(ids.datatable).clearSelection();
 
-									this._userDC.remove(username);
+									this._userDC.remove(rowId);
 
 									_logic.ready();
 								});
