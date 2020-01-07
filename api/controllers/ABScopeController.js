@@ -250,6 +250,27 @@ module.exports = {
 
 	},
 
+	// POST /app_builder/scope/:scopeId/username/:username
+	scopeAddUser: function (req, res) {
+
+		let scopeId = req.param('scopeId');
+		let username = req.param('username');
+
+		let values = {
+			_from: `scope/${scopeId}`,
+			_to: `user/${username}`
+		}
+
+		ABGraphScope.query(`
+			INSERT ${JSON.stringify(values)} INTO scopeUser
+			RETURN NEW`)
+			.catch(res.AD.error)
+			.then(() => {
+				res.AD.success(true);
+			});
+
+	},
+
 	// DELETE /app_builder/scope/:scopeId/username/:username
 	scopeRemoveUser: function (req, res) {
 

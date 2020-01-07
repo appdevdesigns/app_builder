@@ -139,6 +139,9 @@ module.exports = {
     'delete /app_builder/role/:roleID/scope/:scopeID':
         'app_builder/ABScopeController.exclude',
 
+    'post /app_builder/scope/:scopeId/username/:username':
+        'app_builder/ABScopeController.scopeAddUser',
+
     'delete /app_builder/scope/:scopeId/username/:username':
         'app_builder/ABScopeController.scopeRemoveUser',
 

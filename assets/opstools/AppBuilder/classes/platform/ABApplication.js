@@ -1342,7 +1342,7 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 					})
 					this._roles = newRoles;
 
-					resolve();
+					resolve(this._roles);
 
 				});
 
@@ -1374,6 +1374,7 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 		});
 
 	}
+
 
 	/**
 	 * @method roleUsers()
@@ -1670,6 +1671,22 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 
 					// remove query from list
 					role._scopes = role.scopes(s => s.id != scopeId);
+
+					resolve();
+
+				});
+
+		});
+
+	}
+
+	scopeAddUser(scopeId, username) {
+
+		return new Promise((resolve, reject) => {
+
+			this.Model.staticData.scopeAddUser(scopeId, username)
+				.catch(reject)
+				.then(() => {
 
 					resolve();
 

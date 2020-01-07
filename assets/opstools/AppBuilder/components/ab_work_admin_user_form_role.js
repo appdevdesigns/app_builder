@@ -1,5 +1,7 @@
 const ABComponent = require("../classes/platform/ABComponent");
 
+const ABRoleAdd = require("./ab_work_admin_user_form_role_add");
+
 module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
 
 	constructor(App) {
@@ -12,6 +14,8 @@ module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
 		};
 
 		let CurrentApplication;
+
+		let RoleAdd = new ABRoleAdd(App);
 
 		this._roleDC = new webix.DataCollection();
 
@@ -34,7 +38,13 @@ module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
 							template: item => (item && item.scope ? item.scope.name : "")
 						},
 						// { id: "object", header: "Object", width: 150 },
-						{ id: "remove", header: "", width: 40 }
+						{
+							id: "remove",
+							header: "",
+							template: "<div class='remove'>{common.trashIcon()}</div>",
+							css: { 'text-align': 'center' },
+							width: 40
+						}
 					],
 					onClick: {
 						"remove": function (ev, id) {
@@ -53,6 +63,7 @@ module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
 							label: "Add a role",
 							width: 150,
 							click: () => {
+								RoleAdd.show();
 							}
 						}
 					]
@@ -72,6 +83,8 @@ module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
 				$$(ids.datatable).data.sync(this._roleDC);
 			}
 
+			RoleAdd.init(this._userDC, this._roleDC);
+
 		};
 
 
@@ -81,6 +94,7 @@ module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
 			applicationLoad: (application) => {
 
 				CurrentApplication = application;
+				RoleAdd.applicationLoad(application);
 
 			},
 
@@ -117,7 +131,7 @@ module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
 
 			},
 
-			remove: (roleId) => {
+			remove: (rowId) => {
 
 				OP.Dialog.Confirm({
 					title: L('ab.role.removeTitle', '*Remove this role'),
@@ -129,30 +143,26 @@ module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
 
 						_logic.busy();
 
-						let role = this._roleDC.find(s => s.id == roleId)[0];
-						if (!role) {
-							_logic.ready();
-							return;
-						}
+						let roleScope = this._roleDC.find(s => s.id == rowId)[0];
+						if (!roleScope)
+							return _logic.ready();
 
-						let currUserId = this._userDC.getCursor();
-						let currUser = this._userDC.getItem(currUserId);
-						if (!currUser) {
-							_logic.ready();
-							return;
-						}
+						let scopeId = roleScope.scope ? roleScope.scope.id : "";
+						let userId = this._userDC.getCursor();
+						let user = this._userDC.getItem(userId);
 
-						// remove username from role
-						role.usernames = (role.usernames || []).filter(u => u != currUser.username);
+						if (!scopeId || !user)
+							return _logic.ready();
 
-						CurrentApplication.roleSave(role)
+						CurrentApplication.scopeRemoveUser(scopeId, user.username)
 							.catch(err => {
 								console.error(err);
 								_logic.ready();
 							})
-							.then((data) => {
+							.then(() => {
 
-								this._roleDC.remove(roleId);
+								this._roleDC.remove(rowId);
+
 								_logic.ready();
 
 							});

@@ -19,7 +19,10 @@ module.exports = {
 		let appID = req.param('appID');
 		let cond = req.body.query || {};
 
-		RoleGraph.findWithRelation('applications', appID, cond)
+		RoleGraph.findWithRelation('applications', appID, {
+			where: cond,
+			relations: ['scope']
+		})
 			.catch(error => {
 				res.AD.error(error);
 			})
@@ -30,7 +33,6 @@ module.exports = {
 			});
 
 	},
-
 
 	// GET /app_builder/role
 	find: function (req, res) {
