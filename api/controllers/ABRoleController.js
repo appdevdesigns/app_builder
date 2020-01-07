@@ -211,7 +211,7 @@ module.exports = {
 		let roleId = req.param('roleId');
 
 		ScopeGraph.findWithRelation(ScopeGraph.relations.roles, roleId, {
-			relations: ['object']
+			relations: ['objects']
 		})
 			.catch(res.AD.error)
 			.then(scope => {

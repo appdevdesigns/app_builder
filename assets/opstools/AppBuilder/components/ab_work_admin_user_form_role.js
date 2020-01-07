@@ -30,11 +30,11 @@ module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
 					data: [],
 					columns: [
 						{
-							id: "role", header: "Role", width: 150,
+							id: "role", header: "<span class='fa fa-user-md'></span> Role", width: 150,
 							template: item => (item && item.role ? item.role.name : "")
 						},
 						{
-							id: "scope", header: "Scope", fillspace: true,
+							id: "scope", header: "<span class='fa fa-street-view'></span> Scope", fillspace: true,
 							template: item => (item && item.scope ? item.scope.name : "")
 						},
 						// { id: "object", header: "Object", width: 150 },

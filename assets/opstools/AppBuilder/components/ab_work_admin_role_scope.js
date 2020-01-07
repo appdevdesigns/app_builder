@@ -43,18 +43,17 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 					columns: [
 						{
 							id: "name",
-							header: "Scope",
+							header: '<span class="fa fa-street-view"></span> Scope',
 							fillspace: true
 						},
 						{
-							header: "Object",
+							header: '<span class="fa fa-database"></span> Object',
 							width: 150,
 							template: (scope, common, value) => {
 
 								if (scope &&
-									scope.object &&
-									scope.object[0]) {
-									return scope.object[0].label;
+									scope.objects) {
+									return (scope.objects || []).map(o => o.label).join(', ');
 								}
 								else {
 									return "";

@@ -16,7 +16,7 @@ module.exports = class ABScope extends ABModelBase {
 				direction: this.relateDirection.INBOUND
 			},
 
-			object: {
+			objects: {
 				edgeName: "scopeObject",
 				linkCollection: "object",
 				direction: this.relateDirection.OUTBOUND

@@ -31,27 +31,13 @@ module.exports = class AB_Work_Admin_Role_User extends ABComponent {
 			view: 'datatable',
 			columns: [
 				{
-					id: "status",
-					header: "",
-					width: 30,
-					template: function (usr) {
-						return "<div class='fa fa-user'></div>";
-						// if (usr && (usr.permission || []).length == 0) {
-						// 	return "<div class='fa fa-user' style='opacity: 0.45; color: gray;'></div>";
-						// } else {
-						// 	return "<div class='fa fa-user'></div>";
-						// }
-					},
-					css: { "text-align": "center" }
-				},
-				{
-					id: "username", header: "Username", width: 200,
+					id: "username", header: '<span class="fa fa-user"></span> Username', width: 200,
 					template: function (scopeUser) {
 						return scopeUser.username;
 					},
 				},
 				{
-					id: "scope", header: "Scope", fillspace: true,
+					id: "scope", header: '<span class="fa fa-street-view"></span> Scope', fillspace: true,
 					template: function (scopeUser) {
 						return scopeUser.scope ? scopeUser.scope.name : "";
 					},

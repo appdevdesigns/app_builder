@@ -58,16 +58,16 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 						placeholder: "Enter Description"
 					},
 					{
-						id: ids.object,
-						view: "richselect",
-						name: "objectId",
-						label: "Object",
-						options: []
-					},
-					{
 						view: "checkbox",
 						name: "isGlobal",
 						label: "Is Global"
+					},
+					{
+						id: ids.object,
+						view: "multicombo",
+						name: "objectIds",
+						label: "Objects",
+						options: []
 					},
 					{
 						view: "forminput",

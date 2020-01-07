@@ -16,7 +16,7 @@ module.exports = {
 		let cond = req.body;
 
 		ABGraphScope.find({
-			relations: ['object'],
+			relations: ['objects'],
 			where: cond
 		})
 			.catch(res.AD.error)
@@ -32,7 +32,7 @@ module.exports = {
 		let scopeId = req.param('scopeId');
 
 		ABGraphScope.findOne(scopeId, {
-			relations: ['object']
+			relations: ['objects']
 		})
 			.catch(res.AD.error)
 			.then(scope => {
@@ -49,7 +49,7 @@ module.exports = {
 		let scopeId = req.param('scopeId');
 
 		ABGraphRole.findWithRelation(ABGraphRole.relations.scopes, scopeId, {
-			relations: ['object']
+			relations: ['objects']
 		})
 			.catch(res.AD.error)
 			.then(roles => {
@@ -120,7 +120,7 @@ module.exports = {
 
 				return new Promise((next, error) => {
 
-					scope.unrelate('object')
+					scope.unrelate('objects')
 						.catch(errMessage => {
 
 							error(errMessage);
@@ -140,27 +140,40 @@ module.exports = {
 			// Set relation to object
 			.then(scope => {
 
-				return new Promise((next, error) => {
+				if (!scope.objectIds)
+					return Promise.resolve(scope);
 
-					if (scope.objectId == null)
-						return next();
+				let tasks = [];
 
-					scope.relate('object', scope.objectId)
-						.catch(errMessage => {
+				let objectIds = scope.objectIds.split(',');
+				(objectIds || []).forEach(objectId => {
+					if (!objectId)
+						return;
 
-							error(errMessage);
-							res.AD.error(true);
+					tasks.push(() => {
+						return new Promise((next, err) => {
 
-						})
-						.then(() => {
-
-							res.AD.success(scope);
-							next();
+							scope.relate('objects', objectId)
+								.catch(err)
+								.then(() => {
+									next();
+								});
 
 						});
+					})
 
 				});
 
+				tasks.push(() => Promise.resolve(scope));
+
+				return tasks.reduce((promiseChain, currTask) => {
+					return promiseChain.then(currTask);
+				}, Promise.resolve([]));
+			})
+
+			// Final
+			.then(scope => {
+				res.AD.success(scope);
 			});
 
 	},
@@ -192,7 +205,7 @@ module.exports = {
 				return new Promise((next, err) => {
 
 					ABGraphScope.findOne(scopeID, {
-						relations: ['roles', 'object']
+						relations: ['roles', 'objects']
 					})
 						.catch(err)
 						.then(scope => {
