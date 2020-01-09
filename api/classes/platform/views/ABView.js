@@ -28,17 +28,6 @@ module.exports = class ABView extends ABViewCore {
 		})
 		this._pages = pages;
 
-
-		// now properly handle our sub views.
-		let views = [];
-		(values.views || []).forEach(v => {
-			views.push(this.viewNew(v));
-		});
-		this._views = views;
-
-		if (values.position)
-			this.position = values.position;
-
 	}
 
 
@@ -62,17 +51,6 @@ module.exports = class ABView extends ABViewCore {
 			});
 		}
 		result.pages = pages;
-
-		let views = [];
-		if (this._views && this._views.forEach) {
-			this._views.forEach(v => {
-				views.push(v.toObj());
-			});
-		}
-		result.views = views;
-
-		if (this.position)
-			result.position = this.position;
 
 		return result;
 	}
