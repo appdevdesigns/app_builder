@@ -364,7 +364,7 @@ module.exports = {
                     if (updateItem) {
 
                         // var ignoreProps = ['id', 'pages', '_pages'];
-                        var ignoreProps = ['id', 'pages', '_pages', 'views', '_views'];
+                        var ignoreProps = ['id', 'application', 'pages', '_pages', 'views', '_views'];
 
                         // clear old values
                         for (var key in updateItem) {
