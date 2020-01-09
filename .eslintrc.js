@@ -31,7 +31,7 @@ module.exports = {
             "arrowParens": "always",
             "endOfLine": "lf",
             "printWidth": 80,
-            "tabWidth": 3
+            "tabWidth": 4
          }
       ],
       "no-console": 0, // "off", 

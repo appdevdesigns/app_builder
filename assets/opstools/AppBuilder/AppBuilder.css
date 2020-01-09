@@ -134,6 +134,9 @@ label {
 .webix_list_item .webix_icon {
 	font-size: inherit;
 }
+.webix_list_item .webix_icon.wxi-checkbox-marked {
+	font-size: 20px;
+}
 .emptypane {
 	line-height: auto;
 }
@@ -687,4 +690,11 @@ label {
 	position: absolute;
 	right: 0;
 	background: white;
+}
+.hideWebixMulticomboTag .webix_multicombo_tag {display: none}
+.hideWebixMulticomboTag .webix_multicombo_value .webix_multicombo_delete:after {
+	color: white;
+}
+.notRemovable .webix_multicombo_value {
+	padding: 0 9pt;
 }
