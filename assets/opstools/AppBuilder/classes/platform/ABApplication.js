@@ -996,6 +996,11 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
         return this.Model.staticData.datacollectionInfo(cond);
     }
 
+    datacollectionNew(values) {
+
+		return new ABDataCollection(values, this);
+	}
+
     /**
      * @method datacollectionDestroy()
      *
