@@ -374,7 +374,6 @@ module.exports = {
 
                             delete updateItem[key];
                         }
-
                         // add update values
                         for (var key in vals) {
 
@@ -723,7 +722,7 @@ module.exports = {
         let appID = req.param('appID');
         let pageID = req.param('pageID');
 
-        let dataviewIds = [];
+        let datacollectionIds = [];
         let linkFieldIds = [];
 
         Promise.resolve()
@@ -772,15 +771,15 @@ module.exports = {
                             // multi dv ids
                             if (dvIDS.indexOf(',') > -1) {
                                 dvIDS.split(',').forEach(dvId => {
-                                    if (dataviewIds.indexOf(dvId) < 0) {
-                                        dataviewIds.push(dvId);
+                                    if (datacollectionIds.indexOf(dvId) < 0) {
+                                        datacollectionIds.push(dvId);
                                     }
                                 });
                             }
                             // single dv id
                             else {
-                                if (dataviewIds.indexOf(dvIDS) < 0) {
-                                    dataviewIds.push(dvIDS);
+                                if (datacollectionIds.indexOf(dvIDS) < 0) {
+                                    datacollectionIds.push(dvIDS);
                                 }
                             }
 
@@ -824,7 +823,7 @@ module.exports = {
                     DataviewGraph.find({
                         relations: ['object'],
                         where: {
-                            "_key": { "in": dataviewIds }
+                            "_key": { "in": datacollectionIds }
                         }
                     })
                     .catch(err)
@@ -841,7 +840,7 @@ module.exports = {
                             .catch(err)
                             .then(() => {
 
-                                app.json.dataviews = (dataviews || []);
+                                app.json.datacollections = (dataviews || []);
 
                                 next(app);
 
@@ -863,7 +862,7 @@ module.exports = {
                     let remainsObjectIds = [];
 
                     // Pull objects and queries from data views
-                    let datasources = app.json.dataviews.map(dv => {
+                    let datasources = app.json.datacollections.map(dv => {
                         if (dv.query && dv.query[0]) {
                             return dv.query[0];
                         }
