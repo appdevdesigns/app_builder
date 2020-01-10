@@ -200,11 +200,12 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 					})
 					.then(data => {
 
+						delete data.application;
+
 						// Set object to scope
-						if (data.object == null || data.object[0] == null) {
-							let obj = CurrentApplication.objects(o => o.id == $$(ids.object).getValue())[0];
-							if (obj)
-								data.object = [obj];
+						let objectIds = (data.objectIds || "").split(',');
+						if (objectIds && objectIds.length) {
+							data.objects = CurrentApplication.objects(o => objectIds.indexOf(o.id) > -1);
 						}
 
 						if (isAdded) {

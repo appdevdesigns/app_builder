@@ -37,6 +37,15 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 	constructor(attributes) {
 		super(attributes);
 
+		// Live display passes data collections on load
+		let newDatacollections = [];
+		(attributes.json.datacollections || []).forEach(datacollection => {
+			// prevent processing of null values.
+			if (datacollection) {
+				newDatacollections.push(this.datacollectionNew(datacollection));
+			}
+		});
+		this._datacollections = newDatacollections;
 
 		// multilingual fields: label, description
 		OP.Multilingual.translate(this, this.json, ABApplication.fieldsMultilingual());
