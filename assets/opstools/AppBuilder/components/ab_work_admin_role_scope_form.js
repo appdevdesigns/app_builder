@@ -42,8 +42,8 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 				id: ids.form,
 				view: 'form',
 				// padding: 24,
-				width: 600,
-				elementsConfig: { labelAlign: "right", labelWidth: 100 },
+				width: 800,
+				elementsConfig: { labelAlign: "right", labelWidth: 85 },
 				rows: [
 					{
 						view: "text",
@@ -120,25 +120,23 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 			this._scopeDC = scopeDC;
 			if (this._scopeDC) {
 
-				if ($$(ids.form))
-					$$(ids.form).bind(this._scopeDC);
+				// if ($$(ids.form))
+				// 	$$(ids.form).bind(this._scopeDC);
 
 				// Update RowFilter
 				this._scopeDC.attachEvent("onAfterCursorChange", (currId) => {
 
-					if (currId) {
-						let currItem = this._scopeDC.getItem(currId);
-						this._rowFilter.setValue(currItem.filter);
-					}
-					else {
-						this._rowFilter.setValue(null);
-					}
+					_logic.refreshData();
 
 				});
 			}
 
 			if ($$(ids.form))
 				webix.extend($$(ids.form), webix.ProgressBar);
+
+			this._rowFilter.init({
+				showObjectName: true
+			});
 
 		}
 		// our internal business logic
@@ -155,6 +153,39 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 
 				CurrentApplication = application;
 				this._rowFilter.applicationLoad(application);
+
+			},
+
+			refreshData: () => {
+
+				$$(ids.form).clear();
+
+				let currScopeId = this._scopeDC.getCursor();
+				let currScope = this._scopeDC.getItem(currScopeId);
+				if (currScope) {
+
+					$$(ids.form).setValues({
+						name: currScope.name,
+						description: currScope.description,
+						isGlobal: currScope.isGlobal,
+						objectIds: currScope.objectIds
+					});
+
+					// Update row filter
+					let fieldList = [];
+					(currScope.objects() || []).forEach(obj => {
+						fieldList = fieldList.concat(obj.fields());
+					});
+
+					this._rowFilter.fieldsLoad(fieldList);
+					this._rowFilter.setValue(currScope.filter);
+				}
+				else {
+					$$(ids.form).setValues({});
+
+					this._rowFilter.fieldsLoad([], null);
+					this._rowFilter.setValue(null);
+				}
 
 			},
 
@@ -200,12 +231,10 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 					})
 					.then(data => {
 
-						delete data.application;
-
 						// Set object to scope
 						let objectIds = (data.objectIds || "").split(',');
 						if (objectIds && objectIds.length) {
-							data.objects = CurrentApplication.objects(o => objectIds.indexOf(o.id) > -1);
+							data._objects = CurrentApplication.objects(o => objectIds.indexOf(o.id) > -1);
 						}
 
 						if (isAdded) {
@@ -270,7 +299,7 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 				$$(ids.object).define("options", objOptions);
 				$$(ids.object).refresh();
 
-				$$(ids.form).clear();
+				_logic.refreshData();
 
 			},
 

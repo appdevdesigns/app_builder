@@ -138,7 +138,7 @@ module.exports = class RowFilter extends RowFilterCore {
 		_logic.getFilterUI = () => {
 
 			let instance = this;
-			let config_settings = this.config_settings;
+			let config_settings = this.config_settings || {};
 			let labels = this.labels;
 
 			return {
@@ -150,7 +150,7 @@ module.exports = class RowFilter extends RowFilterCore {
 						view: "combo",
 						id: ids.glue,
 						width: 80,
-						value: config_settings.glue,
+						value: config_settings.glue || "and",
 						options: [
 							{
 								value: labels.component.and,
@@ -1114,7 +1114,7 @@ module.exports = class RowFilter extends RowFilterCore {
 
 		// register our callbacks:
 		for (var c in this._logic.callbacks) {
-			this._logic.callbacks[c] = options[c] || _logic.callbacks[c];
+			this._logic.callbacks[c] = options[c] || this._logic.callbacks[c];
 		}
 
 		if (options.showObjectName)

@@ -215,12 +215,7 @@ module.exports = class AB_Work_Admin_Role_List extends ABComponent {
 						// Parse to the data collection
 						if (this._roleDC) {
 
-							// Remove .application of role list
-							// NOTE: it will cause of variable recursive call
-							let roles = CurrentApplication.roles().map(d => {
-								delete d.application;
-								return d;
-							});
+							let roles = CurrentApplication.roles();
 
 							this._roleDC.setCursor(null);
 							this._roleDC.clearAll();

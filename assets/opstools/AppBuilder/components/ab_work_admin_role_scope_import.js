@@ -138,9 +138,6 @@ module.exports = class AB_Work_Admin_Role_Scope_Import extends ABComponent {
 							let includedScopes = this._scopeDC.find({});
 
 							scopes = (scopes || []).filter(otherScope => includedScopes.filter(s => s.id == otherScope.id).length < 1);
-							scopes.forEach(s => {
-								delete s.application;
-							});
 
 							// refresh role list
 							$$(ids.list).parse(scopes);

@@ -44,16 +44,16 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 						{
 							id: "name",
 							header: '<span class="fa fa-street-view"></span> Scope',
-							fillspace: true
+							width: 120
 						},
 						{
 							header: '<span class="fa fa-database"></span> Object',
-							width: 150,
+							fillspace: true,
 							template: (scope, common, value) => {
 
 								if (scope &&
-									scope.objects) {
-									return (scope.objects || []).map(o => o.label).join(', ');
+									scope.objects()) {
+									return (scope.objects() || []).map(o => o.label).join(', ');
 								}
 								else {
 									return "";
@@ -265,10 +265,6 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 						_logic.ready();
 					})
 					.then(scopes => {
-
-						(scopes || []).forEach(s => {
-							delete s.application;
-						});
 
 						this._scopeDC.parse(scopes || []);
 						role._scopes = scopes;

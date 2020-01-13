@@ -133,9 +133,6 @@ module.exports = class AB_Work_Admin_Role_Import extends ABComponent {
 						.then(roles => {
 
 							roles = (roles || []).filter(otherRole => CurrentApplication.roles(r => r.id == otherRole.id).length < 1);
-							roles.forEach(r => {
-								delete r.application;
-							});
 
 							// refresh role list
 							$$(ids.list).parse(roles);

@@ -107,8 +107,25 @@ module.exports = class AB_Work_Admin_User_Form_Info extends ABComponent {
 			if ($$(ids.form)) {
 				webix.extend($$(ids.form), webix.ProgressBar);
 
-				if (this._userDC)
-					$$(ids.form).bind(this._userDC);
+				if (this._userDC) {
+					this._userDC.attachEvent("onAfterCursorChange", (currId) => {
+
+						let currUser = this._userDC.getItem(currId);
+						if (currUser)
+							$$(ids.form).setValues({
+								id: currUser.id,
+								guid: currUser.guid,
+								username: currUser.username,
+								password: currUser.password,
+								email: currUser.email,
+								isActive: currUser.isActive,
+								failedLogins: currUser.failedLogins
+							});
+						else
+							$$(ids.form).setValues({});
+					});
+				}
+				// $$(ids.form).bind(this._userDC);
 
 			}
 

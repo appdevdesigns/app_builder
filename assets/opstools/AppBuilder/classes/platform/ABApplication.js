@@ -696,7 +696,7 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 					this.objects().forEach((obj, index) => {
 
 						if (obj.id == objectId) {
-							this._objects[index] = new ABObject(object, this);
+							this._objects[index] = this.application.objectNew(object);
 						}
 
 					});
@@ -1406,7 +1406,7 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 
 					scopeUsers = (scopeUsers || []).map(r => {
 						return {
-							scope: new ABScope(r.scope),
+							scope: this.scopeNew(r.scope),
 							username: r.username
 						}
 					});

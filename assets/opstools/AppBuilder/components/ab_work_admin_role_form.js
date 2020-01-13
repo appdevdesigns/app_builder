@@ -76,8 +76,23 @@ module.exports = class AB_Work_Admin_Role_Form extends ABComponent {
 			if ($$(ids.form)) {
 				webix.extend($$(ids.form), webix.ProgressBar);
 
-				if (this._roleDC)
-					$$(ids.form).bind(this._roleDC);
+				if (this._roleDC) {
+					this._roleDC.attachEvent("onAfterCursorChange", (currId) => {
+
+						let currRole = this._roleDC.getItem(currId);
+						if (currRole) {
+							$$(ids.form).setValues({
+								name: currRole.name,
+								description: currRole.description
+							});
+						}
+						else {
+							$$(ids.form).setValues({});
+						}
+
+					});
+
+				}
 
 			}
 
@@ -143,7 +158,6 @@ module.exports = class AB_Work_Admin_Role_Form extends ABComponent {
 
 						if (isAdded) {
 							currRole.id = data.id;
-							delete currRole.application;
 							this._roleDC.setCursor(null);
 							this._roleDC.add(currRole);
 							this._roleDC.setCursor(currRole.id);
