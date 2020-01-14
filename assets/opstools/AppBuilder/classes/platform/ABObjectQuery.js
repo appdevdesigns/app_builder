@@ -108,7 +108,7 @@ module.exports = class ABObjectQuery extends ABObjectQueryCore {
 					(newQuery.objects || []).forEach(obj => {
 
 						if (this._objects[obj.alias] == null)
-							this._objects[obj.alias] = new ABObject(obj, this.application);
+							this._objects[obj.alias] = this.application.objectNew(obj);
 
 					});
 
