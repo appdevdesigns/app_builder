@@ -164,11 +164,13 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 				let currScope = this._scopeDC.getItem(currScopeId);
 				if (currScope) {
 
+					let objectIds = currScope.objects().map(o => o.id).join(',');
+
 					$$(ids.form).setValues({
 						name: currScope.name,
 						description: currScope.description,
 						isGlobal: currScope.isGlobal,
-						objectIds: currScope.objectIds
+						objectIds: objectIds
 					});
 
 					// Update row filter
@@ -221,6 +223,9 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 					isAdded = false;
 				}
 
+				// Set objects to scope
+				currScope._objects = CurrentApplication.objects(o => (vals['objectIds'] || []).indexOf(o.id) > -1);
+
 				// set .filter
 				currScope.filter = this._rowFilter.getValue();
 
@@ -230,12 +235,6 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 						_logic.ready();
 					})
 					.then(data => {
-
-						// Set object to scope
-						let objectIds = (data.objectIds || "").split(',');
-						if (objectIds && objectIds.length) {
-							data._objects = CurrentApplication.objects(o => objectIds.indexOf(o.id) > -1);
-						}
 
 						if (isAdded) {
 							currScope.id = data.id;

@@ -62,6 +62,9 @@ module.exports = class AB_Work_Admin_User extends ABComponent {
 			 */
 			applicationLoad: function (application) {
 
+				userDC.setCursor(null);
+				userDC.clearAll();
+
 				UserList.applicationLoad(application);
 				UserForm.applicationLoad(application);
 

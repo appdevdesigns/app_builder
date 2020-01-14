@@ -113,6 +113,9 @@ module.exports = class AB_Work_Admin_Role extends ABComponent {
 
 				CurrentApplication = application;
 
+				roleDC.setCursor(null);
+				roleDC.clearAll();
+
 				RoleList.applicationLoad(application);
 				RoleForm.applicationLoad(application);
 				RoleScope.applicationLoad(application);

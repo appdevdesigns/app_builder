@@ -183,7 +183,7 @@ module.exports = class AB_Work_Admin_User_Form_Role_Add extends ABComponent {
 				if (!selectedScope)
 					return _logic.ready();
 
-				CurrentApplication.scopeAddUser(selectedScope.id, user.username)
+				CurrentApplication.scopeAddUser(selectedScope.roleId, selectedScope.id, user.username)
 					.catch(err => {
 						console.error(err);
 						_logic.ready();

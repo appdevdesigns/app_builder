@@ -64,7 +64,10 @@ module.exports = {
 	save: function (req, res) {
 
 		let roleID = req.query.roleID;
+		let objectIds = req.body.scope.objectIds || [];
 		let scopeValues = req.body.scope;
+
+		delete scopeValues.objectIds;
 
 		Promise.resolve()
 
@@ -140,12 +143,11 @@ module.exports = {
 			// Set relation to object
 			.then(scope => {
 
-				if (!scope.objectIds)
+				if (!objectIds || !objectIds.length)
 					return Promise.resolve(scope);
 
 				let tasks = [];
 
-				let objectIds = scope.objectIds.split(',');
 				(objectIds || []).forEach(objectId => {
 					if (!objectId)
 						return;
@@ -259,45 +261,6 @@ module.exports = {
 
 				res.AD.success(true);
 
-			});
-
-	},
-
-	// POST /app_builder/scope/:scopeId/username/:username
-	scopeAddUser: function (req, res) {
-
-		let scopeId = req.param('scopeId');
-		let username = req.param('username');
-
-		let values = {
-			_from: `scope/${scopeId}`,
-			_to: `user/${username}`
-		}
-
-		ABGraphScope.query(`
-			INSERT ${JSON.stringify(values)} INTO scopeUser
-			RETURN NEW`)
-			.catch(res.AD.error)
-			.then(() => {
-				res.AD.success(true);
-			});
-
-	},
-
-	// DELETE /app_builder/scope/:scopeId/username/:username
-	scopeRemoveUser: function (req, res) {
-
-		let scopeId = req.param('scopeId');
-		let username = req.param('username');
-
-		ABGraphScope.query(`
-			FOR join IN scopeUser
-			FILTER join._from == 'scope/${scopeId}'
-			&& join._to == 'user/${username}'
-			REMOVE join IN scopeUser`)
-			.catch(res.AD.error)
-			.then(() => {
-				res.AD.success(true);
 			});
 
 	}

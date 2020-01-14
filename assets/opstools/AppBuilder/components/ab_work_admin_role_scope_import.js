@@ -35,7 +35,7 @@ module.exports = class AB_Work_Admin_Role_Scope_Import extends ABComponent {
 			hidden: true,
 			modal: true,
 			position: "center",
-			height: 400,
+			height: 500,
 			width: 350,
 			body: {
 				borderless: true,
@@ -63,7 +63,16 @@ module.exports = class AB_Work_Admin_Role_Scope_Import extends ABComponent {
 						data: [],
 						borderless: true,
 						select: true,
-						template: "#name# - <span class='fa fa-database'></span> Object"
+						template: (scope) => {
+
+							let templateText = `<span class='fa fa-street-view'></span> ${scope.name}`;
+							let objects = scope.objects();
+							if (objects && objects.length) {
+								templateText += ` - <span class='fa fa-database'></span> ${objects.map(obj => obj.label).join(', ')}`;
+							}
+
+							return templateText;
+						}
 					},
 
 					// Import & Cancel buttons

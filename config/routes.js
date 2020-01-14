@@ -139,12 +139,6 @@ module.exports = {
     'delete /app_builder/role/:roleID/scope/:scopeID':
         'app_builder/ABScopeController.exclude',
 
-    'post /app_builder/scope/:scopeId/username/:username':
-        'app_builder/ABScopeController.scopeAddUser',
-
-    'delete /app_builder/scope/:scopeId/username/:username':
-        'app_builder/ABScopeController.scopeRemoveUser',
-
 
     /* Users */
     'get /app_builder/user/list':
@@ -181,6 +175,13 @@ module.exports = {
 
     'get /app_builder/role/:roleId/users':
         'app_builder/ABRoleController.roleUsers',
+
+    'post /app_builder/role/:roleId/scope/:scopeId/username/:username':
+        'app_builder/ABRoleController.addUser',
+
+    'delete /app_builder/role/:roleId/scope/:scopeId/username/:username':
+        'app_builder/ABRoleController.removeUser',
+
 
 
     /* Application permissions */

@@ -35,22 +35,29 @@ module.exports = class ABScope extends ABModelBase {
 	 * @method getFilter
 	 * 
 	 * @param {string} username
-	 * @param {uuid} objectId
+	 * @param {array} objectIds
 	 * 
 	 * @return {Promise}
 	 */
-	static getFilter(username, objectId) {
+	static getFilter(username = "", objectIds = []) {
+
+		objectIds = objectIds.map(objId => `'object/${objId}'`);
 
 		return this.query(`
-				FOR join IN scopeUser
-				FOR s IN scope
-				FOR sObj IN scopeObject
-				FILTER join._to == 'user/${username}'
-				&& join._from == s._id
-				&& sObj._to == 'object/${objectId}'
-				&& sObj._from == s._id
-				RETURN s
-		`)
+			FOR sUser IN scopeUser
+			FOR s IN scope
+			FOR sObj IN scopeObject
+			FOR r in role
+			FOR rScope in roleScope
+			FILTER sUser.username == '${username}'
+			&& [${objectIds.join(',')}] ANY == sObj._to
+			&& sUser._from == r._id
+			&& sUser._to == s._id
+			&& sObj._from == s._id
+			&& rScope._from == r._id
+			&& rScope._to == s._id
+			RETURN s
+		`);
 
 	}
 

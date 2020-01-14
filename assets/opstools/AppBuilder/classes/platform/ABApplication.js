@@ -1689,11 +1689,11 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 
 	}
 
-	scopeAddUser(scopeId, username) {
+	scopeAddUser(roleId, scopeId, username) {
 
 		return new Promise((resolve, reject) => {
 
-			this.Model.staticData.scopeAddUser(scopeId, username)
+			this.Model.staticData.scopeAddUser(roleId, scopeId, username)
 				.catch(reject)
 				.then(() => {
 
@@ -1705,11 +1705,11 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 
 	}
 
-	scopeRemoveUser(scopeId, username) {
+	scopeRemoveUser(roleId, scopeId, username) {
 
 		return new Promise((resolve, reject) => {
 
-			this.Model.staticData.scopeRemoveUser(scopeId, username)
+			this.Model.staticData.scopeRemoveUser(roleId, scopeId, username)
 				.catch(reject)
 				.then(() => {
 

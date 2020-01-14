@@ -171,6 +171,8 @@ module.exports = class AB_Work_Admin_Role_List extends ABComponent {
 				CurrentApplication = application;
 				RoleImport.applicationLoad(application);
 
+				this._isLoaded = false;
+
 			},
 
 

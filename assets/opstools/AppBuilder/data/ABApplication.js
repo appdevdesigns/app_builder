@@ -515,6 +515,22 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 		},
 
+		scopeAddUser: function(roleId, scopeId, username) {
+
+			return OP.Comm.Service.post({
+				url: `/app_builder/role/${roleId}/scope/${scopeId}/username/${username}`
+			});
+
+		},
+
+		scopeRemoveUser: function(roleId, scopeId, username) {
+
+			return OP.Comm.Service.delete({
+				url: `/app_builder/role/${roleId}/scope/${scopeId}/username/${username}`
+			});
+
+		},
+
 		// ** Scopes
 
 		scopeFind: function (cond) {
@@ -575,23 +591,6 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 			});
 
 		},
-
-		scopeAddUser: function(scopeId, username) {
-
-			return OP.Comm.Service.post({
-				url: `/app_builder/scope/${scopeId}/username/${username}`
-			});
-
-		},
-
-		scopeRemoveUser: function(scopeId, username) {
-
-			return OP.Comm.Service.delete({
-				url: `/app_builder/scope/${scopeId}/username/${username}`
-			});
-
-		},
-
 
 
 	},

@@ -227,68 +227,116 @@ module.exports = {
 
 		let roleId = req.param('roleId');
 
-		Promise.resolve()
-			.then(() => {
-
-				return new Promise((resolve, reject) => {
-
-					RoleGraph.findOne(roleId, {
-						relations: ['scopes']
-					})
-						.catch(reject)
-						.then(role => {
-							resolve(role);
-						});
-
-				});
-
+		ScopeGraph.query(`
+			FOR join in scopeUser
+			FOR s in scope
+			FILTER join._from == 'role/${roleId}'
+			&& join._to == s._id
+			RETURN {
+				scope: s,
+				username: join.username
+			}
+		`, true, true)
+			.catch(err => {
+				console.error(err);
+				res.AD.error(500);
 			})
-			.then(role => {
+			.then(result => {
 
-				return new Promise((resolve, reject) => {
-
-					if (!role) {
-						res.AD.success([]);
-						return resolve();
+				result = (result || []).map(r => {
+					return {
+						scope: new ScopeGraph(r.scope),
+						username: r.username
 					}
-
-					let scopeIds = (role.scopes || []).map(s => `'scope/${s.id}'`);
-					if (scopeIds < 1) {
-						res.AD.success([]);
-						return resolve();
-					}
-
-					scopeIds = scopeIds.join(', ');
-
-					ScopeGraph.query(`
-						FOR join in scopeUser
-						FOR s in scope
-						FILTER [${scopeIds}] ANY == join._from
-						&& s._id == join._from
-						RETURN {
-							scope: s,
-							username: join._to
-						}
-					`, true, true)
-						.catch(err => {
-							res.AD.error(err);
-							reject(err);
-						})
-						.then(result => {
-
-							result = (result || []).map(r => {
-								return {
-									scope: new ScopeGraph(r.scope),
-									username: r.username.replace("user/", "")
-								}
-							});
-
-							res.AD.success(result);
-							resolve();
-						});
-
 				});
+
+				res.AD.success(result);
 			});
+	},
+
+	// POST /app_builder/role/:roleId/scope/:scopeId/username/:username
+	addUser: function (req, res) {
+
+		let roleId = req.param('roleId');
+		let scopeId = req.param('scopeId');
+		let username = req.param('username');
+
+		Promise.resolve()
+			// check duplicate
+			.then(() => new Promise((next, err) => {
+
+				ScopeGraph.query(`
+					FOR join IN scopeUser
+					FILTER join._from == 'role/${roleId}'
+					&& join._to == 'scope/${scopeId}'
+					&& join.username == '${username}'
+					LIMIT 1
+					RETURN join`)
+					.catch(err)
+					.then(cursor => {
+
+						if (cursor && cursor.all) {
+							cursor.all()
+								.catch(err)
+								.then(exists => {
+									next(exists);
+								});
+						}
+						else {
+							next(null);
+						}
+
+					});
+
+			}))
+			.then(exists => new Promise((next, err) => {
+
+				// If exists
+				if (exists) {
+					next();
+					res.AD.success(true);
+					return;
+				}
+
+				let values = {
+					_from: `role/${roleId}`,
+					_to: `scope/${scopeId}`,
+					username: username
+				};
+
+				ScopeGraph.query(`
+					INSERT ${JSON.stringify(values)} INTO scopeUser
+					RETURN NEW`)
+					.catch(error => {
+						err(error);
+						res.AD.error(error);
+					})
+					.then(() => {
+						next();
+						res.AD.success(true);
+					});
+
+			}));
+	},
+
+	// DELETE /app_builder/role/:roleId/scope/:scopeId/username/:username
+	removeUser: function (req, res) {
+
+		let roleId = req.param('roleId');
+		let scopeId = req.param('scopeId');
+		let username = req.param('username');
+
+		ScopeGraph.query(`
+			FOR join IN scopeUser
+			FILTER join._from == 'role/${roleId}'
+			&& join._to == 'scope/${scopeId}'
+			&& join.username == '${username}'
+			REMOVE join IN scopeUser`)
+			.catch(res.AD.error)
+			.then(() => {
+				res.AD.success(true);
+			});
+
 	},
 
 

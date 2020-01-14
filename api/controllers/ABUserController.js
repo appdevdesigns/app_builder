@@ -60,10 +60,11 @@ module.exports = {
 			FOR r in role
 			FOR s in scope
 			FOR rScope in roleScope
-			FILTER join._to == 'user/${username}'
-			&& join._from == s._id
-			&& rScope._to == s._id
+			FILTER join.username == '${username}'
+			&& join._from == r._id
+			&& join._to == s._id
 			&& rScope._from == r._id
+			&& rScope._to == s._id
 			RETURN {
 				role: r,
 				scope: s

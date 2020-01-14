@@ -47,7 +47,7 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 							width: 120
 						},
 						{
-							header: '<span class="fa fa-database"></span> Object',
+							header: '<span class="fa fa-database"></span> Objects',
 							fillspace: true,
 							template: (scope, common, value) => {
 
@@ -147,6 +147,10 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 
 			applicationLoad: (application) => {
 				CurrentApplication = application;
+
+				this._scopeDC.setCursor(null);
+				this._scopeDC.clearAll();
+
 				ScopeForm.applicationLoad(application);
 				ScopeImport.applicationLoad(application);
 			},

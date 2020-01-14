@@ -4,7 +4,7 @@ const _ = require('lodash');
 
 // var ABObjectBase = require(path.join(__dirname,  "..", "..", "assets", "opstools", "AppBuilder", "classes",  "ABObjectBase.js"));
 const ABObjectCore = require(path.join(__dirname,  "..", "core", "ABObjectCore.js"));
-const ABFieldManager = require(path.join(__dirname, "..", "core", "ABFieldManager"));
+// const ABFieldManager = require(path.join(__dirname, "..", "core", "ABFieldManager"));
 
 const Model = require('objection').Model;
 
@@ -716,7 +716,18 @@ module.exports = class ABClassObject extends ABObjectCore {
 			// Apply filters of scope
 			.then(() => new Promise((next, err) => {
 
-				ABGraphScope.getFilter(userData.username, this.id)
+				let objectIds = [];
+
+				// ABObjectQuery
+				if (this.viewName) {
+					objectIds = this.objects().map(obj => obj.id);
+				}
+				// ABObject
+				else {
+					objectIds = [this.id];
+				}
+
+				ABGraphScope.getFilter(userData.username, objectIds)
 					.catch(err)
 					.then(scopes => {
 

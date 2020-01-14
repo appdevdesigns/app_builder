@@ -76,6 +76,9 @@ module.exports = class AB_Work_Admin_Role_User extends ABComponent {
 
 			applicationLoad: (application) => {
 				CurrentApplication = application;
+
+				this._userDC.setCursor(null);
+				this._userDC.clearAll();
 			},
 
 			getRole: () => {
@@ -137,17 +140,20 @@ module.exports = class AB_Work_Admin_Role_User extends ABComponent {
 								return;
 							}
 
+							let roleId = this._roleDC.getCursor();
 							let scopeId = scopeUser.scope.id;
 							let username = scopeUser.username;
 
-							CurrentApplication.scopeRemoveUser(scopeId, username)
+							CurrentApplication.scopeRemoveUser(roleId, scopeId, username)
 								.catch(err => {
 									console.error(err);
 									_logic.ready();
 								})
 								.then(() => {
 
-									$$(ids.datatable).clearSelection();
+									if ($$(ids.datatable) &&
+										$$(ids.datatable).clearSelection)
+										$$(ids.datatable).clearSelection();
 
 									this._userDC.remove(rowId);
 

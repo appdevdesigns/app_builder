@@ -119,6 +119,8 @@ module.exports = class AB_Work_Admin_User_List extends ABComponent {
 
 				CurrentApplication = application;
 
+				this._isLoaded = false;
+
 			},
 
 

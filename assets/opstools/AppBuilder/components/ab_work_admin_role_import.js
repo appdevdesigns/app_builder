@@ -35,8 +35,8 @@ module.exports = class AB_Work_Admin_Role_Import extends ABComponent {
 			hidden: true,
 			modal: true,
 			position: "center",
-			height: 400,
-			width: 250,
+			height: 500,
+			width: 350,
 			body: {
 				borderless: true,
 				rows: [

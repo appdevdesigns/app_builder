@@ -94,6 +94,10 @@ module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
 			applicationLoad: (application) => {
 
 				CurrentApplication = application;
+
+				this._roleDC.setCursor(null);
+				this._roleDC.clearAll();
+
 				RoleAdd.applicationLoad(application);
 
 			},
@@ -154,7 +158,7 @@ module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
 						if (!scopeId || !user)
 							return _logic.ready();
 
-						CurrentApplication.scopeRemoveUser(scopeId, user.username)
+						CurrentApplication.scopeRemoveUser(rowId, scopeId, user.username)
 							.catch(err => {
 								console.error(err);
 								_logic.ready();
