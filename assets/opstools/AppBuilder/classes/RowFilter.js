@@ -1350,8 +1350,10 @@ export default class RowFilter extends OP.Component {
 
 					var condResult;
 					
-					if (typeof fieldInfo.key == "undefined" && fieldInfo.id != "this_object")
+					if (fieldInfo.key == null && fieldInfo.id != "this_object")
 						fieldInfo.key = "connectField"; // if you are looking at the parent object it won't have a key to analyze
+					else if (fieldInfo.id == "this_object")
+						fieldInfo.key = "thisObject";
 
 					switch (fieldInfo.key) {
 						case "string":
@@ -1378,6 +1380,9 @@ export default class RowFilter extends OP.Component {
 						case "connectField":
 						case "connectObject":
 							condResult = _logic.connectFieldValid(rowData, fieldInfo.relationName(), filter.rule, filter.value);
+							break;
+						case "thisObject":
+							condResult = _logic.inQueryValid(rowData, null, filter.rule, filter.value);
 							break;
 					}
 

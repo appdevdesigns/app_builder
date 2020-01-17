@@ -15,6 +15,7 @@ var ABView = require(path.join('..', 'classes', 'ABView'));
 var ApplicationGraph = require(path.join('..', 'graphModels', 'ABApplication'));
 var DataviewGraph = require(path.join('..', 'graphModels', 'ABDataview'));
 var ObjectGraph = require(path.join('..', 'graphModels', 'ABObject'));
+var QueryGraph = require('../graphModels/ABQuery');
 
 module.exports = {
 
@@ -725,34 +726,31 @@ module.exports = {
 
         let dataviewIds = [];
         let linkFieldIds = [];
+        let dvDataSources = [];
 
         Promise.resolve()
-            .then(() => {
+            // Find application and page
+            .then(() => new Promise((next, err) => {
 
-                // Find application and page
-                return new Promise((next, err) => {
+                ApplicationGraph
+                    .findOne(appID)
+                    .then(app => {
 
-                    ApplicationGraph
-                        .findOne(appID)
-                        .then(app => {
+                        if (!app)
+                            return next(null);
 
-                            if (!app)
-                                return next(null);
+                        let result = app.toValidJsonFormat();
 
-                            let result = app.toValidJsonFormat();
+                        // Reduce data size to the live display
+                        if (pageID && result.json) {
+                            result.json.pages = (result.json.pages || []).filter(p => p.id == pageID);
+                        }
 
-                            // Reduce data size to the live display
-                            if (pageID && result.json) {
-                                result.json.pages = (result.json.pages || []).filter(p => p.id == pageID);
-                            }
+                        next(result);
 
-                            next(result);
+                    }, err);
 
-                        }, err);
-
-                });
-
-            }, console.error)
+            }, console.error))
 
             .then(app => {
 
@@ -787,7 +785,7 @@ module.exports = {
                         }
 
                         // add id of link objects who are used in detail and form widgets
-                        if (v.key == "detail" || v.key == "form") {
+                        if (v.key == "detail" || v.key == "form" || v.key == "dataview") {
                             (v.views || []).forEach(subView => {
 
                                 if (subView.key == "detailselectivity" ||
@@ -815,103 +813,146 @@ module.exports = {
             })
 
             // Pull data views
-            .then(app => {
+            .then(app => new Promise((next, err) => {
 
-                return new Promise((next, err) => {
+                if (!app) 
+                    return next();
 
-                    if (!app) 
-                        return next();
+                // pull ids of data view
+                DataviewGraph.find({
+                    relations: ['object'],
+                    where: {
+                        "_key": { "in": dataviewIds }
+                    }
+                })
+                .catch(err)
+                .then(dataviews => {
 
-                    // pull ids of data view
-                    DataviewGraph.find({
-                        relations: ['object'],
-                        where: {
-                            "_key": { "in": dataviewIds }
-                        }
-                    })
-                    .catch(err)
-                    .then(dataviews => {
+                    let tasks = [];
 
-                        let tasks = [];
+                    // pull Query data source
+                    (dataviews || []).forEach(dv => {
+                        tasks.push(dv.pullQueryDatasource());
+                    });
 
-                        // pull Query data source
-                        (dataviews || []).forEach(dv => {
-                            tasks.push(dv.pullQueryDatasource());
+                    Promise.all(tasks)
+                        .catch(err)
+                        .then(() => {
+
+                            app.json.dataviews = (dataviews || []);
+
+                            next(app);
+
                         });
 
-                        Promise.all(tasks)
-                            .catch(err)
-                            .then(() => {
+                });
 
-                                app.json.dataviews = (dataviews || []);
+            }, console.error))
 
-                                next(app);
+            // Pull link objects who are used in detail and form widgets
+            .then(app => new Promise((next, err) => {
+
+                if (!app)
+                    return next();
+
+                let remainsObjectIds = [];
+
+                (app.json.dataviews || []).forEach(dv => {
+
+                    // Pull objects and queries from data views
+                    if (dv.query && dv.query[0]) {
+                        dvDataSources.push(dv.query[0]);
+                    }
+                    else if (dv.object && dv.object[0]) {
+                        dvDataSources.push(dv.object[0]);
+                    }
+
+                });
+
+                // Find missing objects
+                (linkFieldIds || []).forEach(item => {
+                    let object = dvDataSources.filter(obj => obj.id == item.objectId)[0];
+                    if (!object){
+                        remainsObjectIds.push(item.objectId);
+                    }
+                    else {
+
+                        let field = (object.fields || []).filter(f => f.id == item.fieldId)[0];
+                        if (field) {
+                            let linkObject = dvDataSources.filter(obj => obj.id == field.settings.linkObject)[0];
+                            if (!linkObject)
+                                remainsObjectIds.push(field.settings.linkObject);
+                        }
+                    }
+
+                });
+
+                if (remainsObjectIds.length < 1)
+                    return next(app);
+
+                ObjectGraph.find({
+                    where: {
+                        "_key": { "in": remainsObjectIds }
+                    }
+                })
+                .catch(err)
+                .then(objects => {
+
+                    app.json.objects = objects;
+
+                    next(app);
+
+                });
+
+            }))
+
+            // Pull queries from 'in_query' filter of data collections
+            .then(app => new Promise((next, err) => {
+
+                if (!app)
+                    return next();
+
+                let remainsQueryIds = [];
+
+                (app.json.dataviews || []).forEach(dv => {
+
+                    if (dv.settings &&
+                        dv.settings.objectWorkspace &&
+                        dv.settings.objectWorkspace.filterConditions) {
+
+                            (dv.settings.objectWorkspace.filterConditions.rules || []).forEach(r => {
+
+                                if ((r.rule == "in_query" || r.rule == "not_in_query") &&
+                                    dvDataSources.filter(ds => ds.id == r.value).length < 1) {
+
+                                    remainsQueryIds.push(r.value);
+                                }
 
                             });
 
-                    });
-
-                });
-            }, console.error)
-
-            // Pull link objects who are used in detail and form widgets
-            .then(app => {
-
-                return new Promise((next, err) => {
-
-                    if (!app)
-                        return next();
-
-                    let remainsObjectIds = [];
-
-                    // Pull objects and queries from data views
-                    let datasources = app.json.dataviews.map(dv => {
-                        if (dv.query && dv.query[0]) {
-                            return dv.query[0];
                         }
-                        else if (dv.object && dv.object[0]) {
-                            return dv.object[0];
-                        }
-                    }).filter(ds => ds);
-
-                    // Find missing objects
-                    (linkFieldIds || []).forEach(item => {
-                        let object = datasources.filter(obj => obj.id == item.objectId)[0];
-                        if (!object){
-                            remainsObjectIds.push(item.objectId);
-                        }
-                        else {
-
-                            let field = (object.fields || []).filter(f => f.id == item.fieldId)[0];
-                            if (field) {
-                                let linkObject = datasources.filter(obj => obj.id == field.settings.linkObject)[0];
-                                if (!linkObject)
-                                    remainsObjectIds.push(field.settings.linkObject);
-                            }
-                        }
-
-                    });
-
-                    if (remainsObjectIds.length < 1)
-                        return next(app);
-
-                    ObjectGraph.find({
-                        where: {
-                            "_key": { "in": remainsObjectIds }
-                        }
-                    })
-                    .catch(err)
-                    .then(objects => {
-
-                        app.json.objects = objects;
-
-                        next(app);
-
-                    });
 
                 });
 
-            })
+                if (remainsQueryIds.length < 1)
+                    return next(app);
+
+
+                QueryGraph.find({
+                    where: {
+                        "_key": { "in": remainsQueryIds }
+                    }
+                })
+                .catch(err)
+                .then(queries => {
+
+                    app.json.queries = queries;
+
+                    next(app);
+
+                });
+
+            }))
 
             .then(app => {
 
@@ -920,7 +961,7 @@ module.exports = {
                 else 
                     res.AD.error("Not found this application", 404);
 
-            });
+            })
 
     },
 
