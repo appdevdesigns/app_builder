@@ -790,7 +790,9 @@ module.exports = {
                         if (v.key == "detail" || v.key == "form") {
                             (v.views || []).forEach(subView => {
 
-                                if (subView.key == "detailselectivity" || subView.key == "connect") {
+                                if (subView.key == "detailselectivity" ||
+                                    subView.key == "detailconnect" ||
+                                    subView.key == "connect") {
                                     linkFieldIds.push({
                                         objectId: subView.settings.objectId,
                                         fieldId: subView.settings.fieldId
