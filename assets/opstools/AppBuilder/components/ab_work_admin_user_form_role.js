@@ -17,7 +17,7 @@ module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
 
 		let RoleAdd = new ABRoleAdd(App);
 
-		this._roleDC = new webix.DataCollection();
+		this._roleScopeDC = new webix.DataCollection();
 
 		// Our webix UI definition:
 		this.ui = {
@@ -80,10 +80,10 @@ module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
 			if ($$(ids.datatable)) {
 				webix.extend($$(ids.datatable), webix.ProgressBar);
 
-				$$(ids.datatable).data.sync(this._roleDC);
+				$$(ids.datatable).data.sync(this._roleScopeDC);
 			}
 
-			RoleAdd.init(this._userDC, this._roleDC);
+			RoleAdd.init(this._userDC, this._roleScopeDC);
 
 		};
 
@@ -95,8 +95,8 @@ module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
 
 				CurrentApplication = application;
 
-				this._roleDC.setCursor(null);
-				this._roleDC.clearAll();
+				this._roleScopeDC.setCursor(null);
+				this._roleScopeDC.clearAll();
 
 				RoleAdd.applicationLoad(application);
 
@@ -127,8 +127,8 @@ module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
 
 						roleScopes = roleScopes || [];
 
-						this._roleDC.clearAll();
-						this._roleDC.parse(roleScopes);
+						this._roleScopeDC.clearAll();
+						this._roleScopeDC.parse(roleScopes);
 						_logic.ready();
 
 					});
@@ -147,25 +147,26 @@ module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
 
 						_logic.busy();
 
-						let roleScope = this._roleDC.find(s => s.id == rowId)[0];
+						let roleScope = this._roleScopeDC.find(s => s.id == rowId)[0];
 						if (!roleScope)
 							return _logic.ready();
 
+						let roleId = roleScope.role ? roleScope.role.id : "";
 						let scopeId = roleScope.scope ? roleScope.scope.id : "";
 						let userId = this._userDC.getCursor();
 						let user = this._userDC.getItem(userId);
 
-						if (!scopeId || !user)
+						if (!roleId || !scopeId || !user)
 							return _logic.ready();
 
-						CurrentApplication.scopeRemoveUser(rowId, scopeId, user.username)
+						CurrentApplication.scopeRemoveUser(roleId, scopeId, user.username)
 							.catch(err => {
 								console.error(err);
 								_logic.ready();
 							})
 							.then(() => {
 
-								this._roleDC.remove(rowId);
+								this._roleScopeDC.remove(rowId);
 
 								_logic.ready();
 

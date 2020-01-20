@@ -741,8 +741,21 @@ module.exports = class ABClassObject extends ABObjectCore {
 							if (!s.filter) return;
 
 							(s.filter.rules || []).forEach(r => {
-								if (r.key && this.fields(f => f.id == r.key).length > 0)
-									scopeWhere.rules.push(r);
+								if (r.key) {
+									(this.fields(f => f.id == r.key) || []).forEach(f => {
+
+										let newRule = {
+											key: r.key,
+											rule: r.rule,
+											value: r.value
+										};
+
+										if (f.alias)
+											newRule.alias = f.alias;
+
+										scopeWhere.rules.push(newRule);
+									});
+								}
 							});
 
 						});
@@ -814,7 +827,9 @@ module.exports = class ABClassObject extends ABObjectCore {
 						// Convert field id to column name
 						if (AppBuilder.rules.isUuid(condition.key)) {
 
-							var field = this.fields(f => f.id == condition.key)[0];
+							var field = this.fields(f => {
+								return f.id == condition.key && (!condition.alias || f.alias == condition.alias);
+							})[0];
 							if (field) {
 
 								// convert field's id to column name

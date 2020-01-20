@@ -24,10 +24,10 @@ module.exports = class AB_Work_Admin_User_Form_Role_Add extends ABComponent {
 
 
 		// Our init() function for setting up our UI
-		this.init = (userDC, roleDC) => {
+		this.init = (userDC, roleScopeDC) => {
 
 			this._userDC = userDC;
-			this._roleDC = roleDC;
+			this._roleScopeDC = roleScopeDC;
 
 			webix.ui(this.ui);
 
@@ -88,8 +88,8 @@ module.exports = class AB_Work_Admin_User_Form_Role_Add extends ABComponent {
 					.then(() => {
 
 						// remove included roles
-						let includedRoleIds = this._roleDC.find({}).map(d => d.role ? d.role.id : "").filter(rId => rId);
-						let includedScopeIds = this._roleDC.find({}).map(d => d.scope ? d.scope.id : "").filter(sId => sId);
+						let includedRoleIds = this._roleScopeDC.find({}).map(d => d.role ? d.role.id : "").filter(rId => rId);
+						let includedScopeIds = this._roleScopeDC.find({}).map(d => d.scope ? d.scope.id : "").filter(sId => sId);
 						let roles = (CurrentApplication.roles() || []).filter(r => includedRoleIds.indexOf(r.id) < 1);
 
 						// pull scopes
@@ -194,7 +194,7 @@ module.exports = class AB_Work_Admin_User_Form_Role_Add extends ABComponent {
 						let role = CurrentApplication.roles(r => r.id == selectedScope.roleId)[0];
 						let scope = role.scopes(s => s.id == selectedScope.id)[0];
 						if (role && scope) {
-							this._roleDC.add({
+							this._roleScopeDC.add({
 								role: role,
 								scope: scope
 							});
