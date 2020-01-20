@@ -104,56 +104,82 @@ module.exports =  class ABField extends ABFieldCore {
 	migrateDrop (knex) {
 
 		sails.log.info(''+this.fieldKey()+'.migrateDrop() ');
-		return new Promise(
-			(resolve, reject) => {
 
-				// if column name is empty, then .hasColumn function always returns true
-				if (this.columnName == '') return resolve();
+		// if column name is empty, then .hasColumn function always returns true
+		if (this.columnName == '' || 
+			// if field is imported, then it will not remove column in table
+			this.object.isImported ||
+			this.object.isExternal ||
+			this.isImported) 
+			return Promise.resolve();
 
-				// if field is imported, then it will not remove column in table
-				if (this.object.isImported ||
-					this.object.isExternal ||
-					this.isImported) return resolve();
+		let tableName = this.object.dbTableName();
 
-				var tableName = this.object.dbTableName();
+		return Promise.resolve()
 
 				// if the table exists:
-				knex.schema.hasTable(tableName)
-				.then((exists) => {
-					if (exists) {
-						
-						// if this column exists
-						knex.schema.hasColumn(tableName, this.columnName)
-						.then((exists) => {
+				.then(() => {
 
-							if (exists) {
+					return new Promise((next, err) => {
 
-								// get the .table editor and drop the column
-								knex.schema.table(tableName, (t)=>{
-									t.dropColumn(this.columnName);
-								})
-								.then(resolve)
-								.catch(reject);
+						knex.schema.hasTable(tableName)
+							.then((exists) => {
 
-							} else {
+								next(exists);
 
-								// nothing to do then.
-								resolve();
-							}
+							});
 
+					});
+
+				})
+
+				// if this column exists, then drop the column
+				.then((isTableExists) => {
+
+					if (!isTableExists)
+						return Promise.resolve();
+
+					return new Promise((next, err) => {
+
+						// get the .table editor and drop the column
+						knex.schema.table(tableName, (t)=>{
+							t.dropColumn(this.columnName);
 						})
-						.catch(reject);
+						.then(next)
+						.catch(err);
 
+					});
 
-					} else {
-						resolve();
-					}
+				})
+
+				// Update queries who include the removed column
+				.then(() => {
+
+					return new Promise((next, err) => {
+
+						let tasks = [];
+
+						let queries = ABObjectCache.list(obj => obj.canFilterField && obj.canFilterField(this));
+						(queries || []).forEach(q => {
+
+							// Remove the field from query
+							q._fields = q.fields(f => {
+								return f && f.field && f.field.id != this.id;
+							});
+
+							// Update MySql view of the query
+							tasks.push(ABMigration.createQuery(q));
+
+						});
+
+						Promise.all(tasks)
+							.catch(err)
+							.then(() => next());
+
+					});
+
 				});
 
-				
-
-			}
-		)
 	}
 
 

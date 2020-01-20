@@ -72,6 +72,7 @@ module.exports = class ABChooseList extends ABComponent {
 							css: "webix_dark",
 							id: ids.toolBar,
 							cols: [
+								{ view: "spacer", width: 10 },
 								{ view: "label", label:labels.component.title, fillspace: true },
 								{ 
 			                        view:"button", 

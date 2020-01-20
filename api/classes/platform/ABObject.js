@@ -1252,3 +1252,6 @@ console.log(relationNames)
 	}
 
 }
+
+module.exports = ABClassObject;
+
