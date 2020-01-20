@@ -837,7 +837,9 @@ module.exports = class ABFieldList extends ABFieldListCore {
         // .common() is used to create the display in the list
         formComponentSetting.common = () => {
             return {
-                key: this.settings.isMultiple ? "fieldcustom" : "selectsingle",
+                key: this.settings.isMultiple
+                    ? "selectmultiple"
+                    : "selectsingle",
                 options: this.settings.options.map(function(opt) {
                     return {
                         id: opt.id,
