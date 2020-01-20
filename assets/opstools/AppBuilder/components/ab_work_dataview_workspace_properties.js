@@ -681,8 +681,7 @@ module.exports = class AB_Work_Datacollection_Workspace_Properties extends ABCom
 					}
 
 					// Populate data to popups
-					this.FilterComponent.objectLoad(datasource);
-					this.FilterComponent.viewLoad(this._datacollection);
+					this.FilterComponent.fieldsLoad(datasource ? datasource.fields() : []);
 					this.FilterComponent.setValue(filterConditions);
 					this._datacollection.refreshFilterConditions(filterConditions);
 
@@ -773,6 +772,7 @@ module.exports = class AB_Work_Datacollection_Workspace_Properties extends ABCom
 				let idBase = 'ABDatacollectionPropertyEditor';
 
 				this.FilterComponent = new RowFilter(this.App, `${idBase}_filter`);
+				this.FilterComponent.applicationLoad(this._application);
 				this.FilterComponent.init({
 					// when we make a change in the popups we want to make sure we save the new workspace to the properties to do so just fire an onChange event
 					onChange: this._logic.onFilterChange

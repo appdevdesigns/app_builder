@@ -17,6 +17,7 @@ module.exports = class ABViewConditionalContainer extends ABViewConditionalConta
 
 		// Set filter value
 		this.__filterComponent = new RowFilter();
+		this.__filterComponent.applicationLoad(application);
 		this.populateFilterComponent();
 
 	}
@@ -339,11 +340,10 @@ module.exports = class ABViewConditionalContainer extends ABViewConditionalConta
 
 		let dc = this.datacollection;
 		if (dc && dc.datasource)
-			this.__filterComponent.objectLoad(dc.datasource);
+			this.__filterComponent.fieldsLoad(dc.datasource.fields());
 		else
-			this.__filterComponent.objectLoad(null);
+			this.__filterComponent.fieldsLoad([]);
 
-		this.__filterComponent.viewLoad(this);
 		this.__filterComponent.setValue(this.settings.filterConditions || ABViewPropertyDefaults.filterConditions);
 
 	}

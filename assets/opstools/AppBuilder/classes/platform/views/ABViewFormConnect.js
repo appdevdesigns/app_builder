@@ -42,8 +42,8 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
 
 		// Set filter value
 		this.__filterComponent = new RowFilter();
-		this.__filterComponent.objectLoad(this.datasource);
-		this.__filterComponent.viewLoad(this);
+		this.__filterComponent.applicationLoad(application);
+		this.__filterComponent.fieldsLoad(this.datasource ? this.datasource.fields() : []);
 
 		this.__filterComponent.setValue(this.settings.objectWorkspace.filterConditions || ABViewFormConnectPropertyComponentDefaults.objectWorkspace.filterConditions);
 

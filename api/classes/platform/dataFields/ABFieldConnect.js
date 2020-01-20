@@ -122,7 +122,7 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
 				var linkTableName = linkObject.dbTableName(true),
 					linkPK = linkObject.PK(),
 					// TODO : should check duplicate column
-					linkColumnName = this.fieldLink().columnName;
+					linkColumnName = this.fieldLink.columnName;
 					// linkColumnName = this.object.name;
 
 				// 1:M - create a column in the table and references to id of the link table
@@ -604,7 +604,7 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
 			else {
 				sourceObjectName = linkObject.name;
 				targetObjectName = this.object.name;
-				columnName = this.fieldLink().columnName;
+				columnName = this.fieldLink.columnName;
 			}
 
 			// return join table name

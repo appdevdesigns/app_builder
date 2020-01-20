@@ -15,7 +15,6 @@ var ABView = require(path.join('..', 'classes', 'platform', 'views', 'ABView'));
 var ApplicationGraph = require(path.join('..', 'graphModels', 'ABApplication'));
 var DataviewGraph = require(path.join('..', 'graphModels', 'ABDataview'));
 var ObjectGraph = require(path.join('..', 'graphModels', 'ABObject'));
-var QueryGraph = require('../graphModels/ABQuery');
 
 module.exports = {
 
@@ -365,7 +364,7 @@ module.exports = {
                     if (updateItem) {
 
                         // var ignoreProps = ['id', 'pages', '_pages'];
-                        var ignoreProps = ['id', 'pages', '_pages', 'views', '_views'];
+                        var ignoreProps = ['id', 'application', 'pages', '_pages', 'views', '_views'];
 
                         // clear old values
                         for (var key in updateItem) {
@@ -726,31 +725,34 @@ module.exports = {
 
         let dataviewIds = [];
         let linkFieldIds = [];
-        let dvDataSources = [];
 
         Promise.resolve()
-            // Find application and page
-            .then(() => new Promise((next, err) => {
+            .then(() => {
 
-                ApplicationGraph
-                    .findOne(appID)
-                    .then(app => {
+                // Find application and page
+                return new Promise((next, err) => {
 
-                        if (!app)
-                            return next(null);
+                    ApplicationGraph
+                        .findOne(appID)
+                        .then(app => {
 
-                        let result = app.toValidJsonFormat();
+                            if (!app)
+                                return next(null);
 
-                        // Reduce data size to the live display
-                        if (pageID && result.json) {
-                            result.json.pages = (result.json.pages || []).filter(p => p.id == pageID);
-                        }
+                            let result = app.toValidJsonFormat();
 
-                        next(result);
+                            // Reduce data size to the live display
+                            if (pageID && result.json) {
+                                result.json.pages = (result.json.pages || []).filter(p => p.id == pageID);
+                            }
 
-                    }, err);
+                            next(result);
 
-            }, console.error))
+                        }, err);
+
+                });
+
+            }, console.error)
 
             .then(app => {
 
@@ -785,12 +787,10 @@ module.exports = {
                         }
 
                         // add id of link objects who are used in detail and form widgets
-                        if (v.key == "detail" || v.key == "form" || v.key == "dataview") {
+                        if (v.key == "detail" || v.key == "form") {
                             (v.views || []).forEach(subView => {
 
-                                if (subView.key == "detailselectivity" ||
-                                    subView.key == "detailconnect" ||
-                                    subView.key == "connect") {
+                                if (subView.key == "detailselectivity" || subView.key == "connect") {
                                     linkFieldIds.push({
                                         objectId: subView.settings.objectId,
                                         fieldId: subView.settings.fieldId
@@ -813,146 +813,103 @@ module.exports = {
             })
 
             // Pull data views
-            .then(app => new Promise((next, err) => {
+            .then(app => {
 
-                if (!app) 
-                    return next();
+                return new Promise((next, err) => {
 
-                // pull ids of data view
-                DataviewGraph.find({
-                    relations: ['object'],
-                    where: {
-                        "_key": { "in": dataviewIds }
-                    }
-                })
-                .catch(err)
-                .then(dataviews => {
+                    if (!app) 
+                        return next();
 
-                    let tasks = [];
+                    // pull ids of data view
+                    DataviewGraph.find({
+                        relations: ['object'],
+                        where: {
+                            "_key": { "in": dataviewIds }
+                        }
+                    })
+                    .catch(err)
+                    .then(dataviews => {
 
-                    // pull Query data source
-                    (dataviews || []).forEach(dv => {
-                        tasks.push(dv.pullQueryDatasource());
-                    });
+                        let tasks = [];
 
-                    Promise.all(tasks)
-                        .catch(err)
-                        .then(() => {
-
-                            app.json.dataviews = (dataviews || []);
-
-                            next(app);
-
+                        // pull Query data source
+                        (dataviews || []).forEach(dv => {
+                            tasks.push(dv.pullQueryDatasource());
                         });
 
-                });
+                        Promise.all(tasks)
+                            .catch(err)
+                            .then(() => {
 
-            }, console.error))
+                                app.json.dataviews = (dataviews || []);
 
-            // Pull link objects who are used in detail and form widgets
-            .then(app => new Promise((next, err) => {
-
-                if (!app)
-                    return next();
-
-                let remainsObjectIds = [];
-
-                (app.json.dataviews || []).forEach(dv => {
-
-                    // Pull objects and queries from data views
-                    if (dv.query && dv.query[0]) {
-                        dvDataSources.push(dv.query[0]);
-                    }
-                    else if (dv.object && dv.object[0]) {
-                        dvDataSources.push(dv.object[0]);
-                    }
-
-                });
-
-                // Find missing objects
-                (linkFieldIds || []).forEach(item => {
-                    let object = dvDataSources.filter(obj => obj.id == item.objectId)[0];
-                    if (!object){
-                        remainsObjectIds.push(item.objectId);
-                    }
-                    else {
-
-                        let field = (object.fields || []).filter(f => f.id == item.fieldId)[0];
-                        if (field) {
-                            let linkObject = dvDataSources.filter(obj => obj.id == field.settings.linkObject)[0];
-                            if (!linkObject)
-                                remainsObjectIds.push(field.settings.linkObject);
-                        }
-                    }
-
-                });
-
-                if (remainsObjectIds.length < 1)
-                    return next(app);
-
-                ObjectGraph.find({
-                    where: {
-                        "_key": { "in": remainsObjectIds }
-                    }
-                })
-                .catch(err)
-                .then(objects => {
-
-                    app.json.objects = objects;
-
-                    next(app);
-
-                });
-
-            }))
-
-            // Pull queries from 'in_query' filter of data collections
-            .then(app => new Promise((next, err) => {
-
-                if (!app)
-                    return next();
-
-                let remainsQueryIds = [];
-
-                (app.json.dataviews || []).forEach(dv => {
-
-                    if (dv.settings &&
-                        dv.settings.objectWorkspace &&
-                        dv.settings.objectWorkspace.filterConditions) {
-
-                            (dv.settings.objectWorkspace.filterConditions.rules || []).forEach(r => {
-
-                                if ((r.rule == "in_query" || r.rule == "not_in_query") &&
-                                    dvDataSources.filter(ds => ds.id == r.value).length < 1) {
-
-                                    remainsQueryIds.push(r.value);
-                                }
+                                next(app);
 
                             });
 
+                    });
+
+                });
+            }, console.error)
+
+            // Pull link objects who are used in detail and form widgets
+            .then(app => {
+
+                return new Promise((next, err) => {
+
+                    if (!app)
+                        return next();
+
+                    let remainsObjectIds = [];
+
+                    // Pull objects and queries from data views
+                    let datasources = app.json.dataviews.map(dv => {
+                        if (dv.query && dv.query[0]) {
+                            return dv.query[0];
+                        }
+                        else if (dv.object && dv.object[0]) {
+                            return dv.object[0];
+                        }
+                    }).filter(ds => ds);
+
+                    // Find missing objects
+                    (linkFieldIds || []).forEach(item => {
+                        let object = datasources.filter(obj => obj.id == item.objectId)[0];
+                        if (!object){
+                            remainsObjectIds.push(item.objectId);
+                        }
+                        else {
+
+                            let field = (object.fields || []).filter(f => f.id == item.fieldId)[0];
+                            if (field) {
+                                let linkObject = datasources.filter(obj => obj.id == field.settings.linkObject)[0];
+                                if (!linkObject)
+                                    remainsObjectIds.push(field.settings.linkObject);
+                            }
                         }
 
+                    });
+
+                    if (remainsObjectIds.length < 1)
+                        return next(app);
+
+                    ObjectGraph.find({
+                        where: {
+                            "_key": { "in": remainsObjectIds }
+                        }
+                    })
+                    .catch(err)
+                    .then(objects => {
+
+                        app.json.objects = objects;
+
+                        next(app);
+
+                    });
+
                 });
 
-                if (remainsQueryIds.length < 1)
-                    return next(app);
-
-
-                QueryGraph.find({
-                    where: {
-                        "_key": { "in": remainsQueryIds }
-                    }
-                })
-                .catch(err)
-                .then(queries => {
-
-                    app.json.queries = queries;
-
-                    next(app);
-
-                });
-
-            }))
+            })
 
             .then(app => {
 
@@ -961,7 +918,7 @@ module.exports = {
                 else 
                     res.AD.error("Not found this application", 404);
 
-            })
+            });
 
     },
 

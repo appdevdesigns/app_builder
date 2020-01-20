@@ -107,7 +107,7 @@ describe("ABFieldFormula unit tests", () => {
 
 			let rowData = {};
 			let relationName = target.fieldBase().relationName();
-			let linkColName = target.fieldLink().columnName;
+			let linkColName = target.fieldLink.columnName;
 
 			rowData[relationName] = [{}, {}];
 			rowData[relationName][0][linkColName] = 3;
@@ -173,7 +173,7 @@ describe("ABFieldFormula unit tests", () => {
 			target.settings.object = "8969f188-96e3-419b-b065-066148d1b77c";
 			target.settings.fieldLink = "bc5342a0-3ba1-4be1-a914-27c73c5629f6";
 
-			let result = target.fieldLink();
+			let result = target.fieldLink;
 
 			assert.equal(target.settings.fieldLink, result.id);
 			assert.equal(target.settings.object, result.object.id);
@@ -194,7 +194,7 @@ describe("ABFieldFormula unit tests", () => {
 
 					let rowData = {};
 					let relationName = target.fieldBase().relationName();
-					let linkColName = target.fieldLink().columnName;
+					let linkColName = target.fieldLink.columnName;
 
 					rowData[relationName] = [{}, {}, {}, {}, {}];
 					rowData[relationName][0][linkColName] = 1;
@@ -222,7 +222,7 @@ describe("ABFieldFormula unit tests", () => {
 
 					let rowData = {};
 					let relationName = target.fieldBase().relationName();
-					let linkColName = target.fieldLink().columnName;
+					let linkColName = target.fieldLink.columnName;
 
 					rowData[relationName] = [{}, {}, {}, {}, {}];
 					rowData[relationName][0][linkColName] = 1;
@@ -250,7 +250,7 @@ describe("ABFieldFormula unit tests", () => {
 
 					let rowData = {};
 					let relationName = target.fieldBase().relationName();
-					let linkColName = target.fieldLink().columnName;
+					let linkColName = target.fieldLink.columnName;
 
 					rowData[relationName] = [{}, {}, {}, {}, {}];
 					rowData[relationName][0][linkColName] = 1;
@@ -278,7 +278,7 @@ describe("ABFieldFormula unit tests", () => {
 
 					let rowData = {};
 					let relationName = target.fieldBase().relationName();
-					let linkColName = target.fieldLink().columnName;
+					let linkColName = target.fieldLink.columnName;
 
 					rowData[relationName] = [{}, {}, {}, {}, {}];
 					rowData[relationName][0][linkColName] = 1;
@@ -306,7 +306,7 @@ describe("ABFieldFormula unit tests", () => {
 
 					let rowData = {};
 					let relationName = target.fieldBase().relationName();
-					let linkColName = target.fieldLink().columnName;
+					let linkColName = target.fieldLink.columnName;
 
 					rowData[relationName] = [{}, {}, {}, {}, {}];
 					rowData[relationName][0][linkColName] = 1;
