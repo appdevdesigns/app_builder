@@ -10,6 +10,7 @@ import "bpmn-js/dist/assets/diagram-js.css";
 import "bpmn-js/dist/assets/bpmn-font/css/bpmn.css";
 
 import CustomBPMN from "./ab_work_process_workspace_customBPMN";
+import AppBuilderExtensions from "./ab_work_process_workspace_customBPMN_customEvents";
 
 export default class ABWorkProcessWorkspaceModel extends OP.Component {
     /**
@@ -83,30 +84,30 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
                             // height: 800,
                             template: `<div id="${ids.modeler}" style="width: 100%; height: 100%;"></div>`
                         },
-                        { view: "resizer", css: "bg_gray", width: 11},
+                        { view: "resizer", css: "bg_gray", width: 11 },
                         {
                             width: App.config.columnWidthXXLarge,
                             rows: [
                                 {
-                					view: 'toolbar',
-                					css: 'ab-data-toolbar webix_dark',
-                					cols: [
+                                    view: "toolbar",
+                                    css: "ab-data-toolbar webix_dark",
+                                    cols: [
                                         {
-                                            type: 'spacer',
+                                            type: "spacer",
                                             width: 15
                                         },
-                						{
-                							view: 'label',
-                							label: labels.component.properties
-                						}
-                					]
-                				},
+                                        {
+                                            view: "label",
+                                            label: labels.component.properties
+                                        }
+                                    ]
+                                },
                                 {
-                					view: "scrollview",
-                					id: ids.propertyPanel,
-                					body: {
-                						padding: 15,
-                						rows: [
+                                    view: "scrollview",
+                                    id: ids.propertyPanel,
+                                    body: {
+                                        padding: 15,
+                                        rows: [
                                             {
                                                 id: ids.properties,
                                                 view: "template",
@@ -232,7 +233,10 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
                     $$(ids.modelerWorking).show();
                     viewer = new BpmnModeler({
                         container: "#" + ids.modeler,
-                        additionalModules: [CustomBPMN]
+                        additionalModules: [CustomBPMN],
+                        moddleExtensions: {
+                            ab: AppBuilderExtensions()
+                        }
                     });
 
                     // Modifying Attributes on a Diagram Shape:
