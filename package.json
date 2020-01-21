@@ -28,6 +28,7 @@
   },
   "homepage": "https://github.com/appdevdesigns/app_builder#readme",
   "dependencies": {
+    "ab-utils": "github:Hiro-Nakamura/ab-utils#master",
     "ad-utils": "github:appdevdesigns/ad-utils",
     "arangojs": "^6.12.0",
     "async": "^1.5.2",
