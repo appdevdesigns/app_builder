@@ -376,7 +376,7 @@ var ABFieldCalculateComponent = new ABFieldComponent({
 			var formula = $$(ids.formula).getValue();
 
 			try {
-				convertToJs(ABFieldCalculateComponent.CurrentObject, formula, {});
+				ABFieldCalculateCore.convertToJs(ABFieldCalculateComponent.CurrentObject, formula, {});
 
 				// correct
 				return true;

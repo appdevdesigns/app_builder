@@ -31,6 +31,68 @@ var ids = {
 	validateEndDate: 'ab-date-validate-end-date'
 };
 
+function refreshDateValue() {
+	var defaultFormatValue = $$(ids.dateFormat).getValue();
+	var dateFormat = parseInt(defaultFormatValue);
+
+	var formatString = "";
+	switch (dateFormat) {
+		//Ignore Date
+		case 1, 2: {
+			formatString = "%d/%m/%Y";
+		}
+			break;
+		//mm/dd/yyyy
+		case 3: {
+			formatString = "%m/%d/%Y";
+		}
+			break;
+		//M D, yyyy
+		case 4: {
+			formatString = "%M %d, %Y";
+		}
+			break;
+		//D M, yyyy
+		case 5: {
+			formatString = "%d %M, %Y";
+		}
+			break;
+		default: {
+			formatString = "%d/%m/%Y";
+		}
+			break;
+	}
+
+	$$(ids.defaultDateValue).define("format", formatString);
+	$$(ids.defaultDateValue).refresh();
+}
+
+
+function refreshTimevalue() {
+	var timeFormat = parseInt($$(ids.timeFormat).getValue());
+
+	var formatString = "";
+	switch (timeFormat) {
+		//HH:MM AM/PM
+		case 2: {
+			formatString = "%h:%i %A";
+		}
+			break;
+		//HH:MM (military)
+		case 3: {
+			formatString = "%H:%i";
+		}
+			break;
+		default: {
+			formatString = "%h:%i %A";
+		}
+			break;
+	}
+
+	$$(ids.defaultTimeValue).define("format", formatString);
+	$$(ids.defaultTimeValue).refresh();
+}
+
 /**
  * ABFieldDateComponent
  *
