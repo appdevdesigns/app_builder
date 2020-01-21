@@ -723,7 +723,7 @@ module.exports = {
         let appID = req.param('appID');
         let pageID = req.param('pageID');
 
-        let dataviewIds = [];
+        let datacollectionIds = [];
         let linkFieldIds = [];
 
         Promise.resolve()
@@ -772,15 +772,15 @@ module.exports = {
                             // multi dv ids
                             if (dvIDS.indexOf(',') > -1) {
                                 dvIDS.split(',').forEach(dvId => {
-                                    if (dataviewIds.indexOf(dvId) < 0) {
-                                        dataviewIds.push(dvId);
+                                    if (datacollectionIds.indexOf(dvId) < 0) {
+                                        datacollectionIds.push(dvId);
                                     }
                                 });
                             }
                             // single dv id
                             else {
-                                if (dataviewIds.indexOf(dvIDS) < 0) {
-                                    dataviewIds.push(dvIDS);
+                                if (datacollectionIds.indexOf(dvIDS) < 0) {
+                                    datacollectionIds.push(dvIDS);
                                 }
                             }
 
@@ -790,7 +790,9 @@ module.exports = {
                         if (v.key == "detail" || v.key == "form") {
                             (v.views || []).forEach(subView => {
 
-                                if (subView.key == "detailselectivity" || subView.key == "connect") {
+                                if (subView.key == "detailselectivity" ||
+                                    subView.key == "detailconnect" ||
+                                    subView.key == "connect") {
                                     linkFieldIds.push({
                                         objectId: subView.settings.objectId,
                                         fieldId: subView.settings.fieldId
@@ -824,7 +826,7 @@ module.exports = {
                     DataviewGraph.find({
                         relations: ['object'],
                         where: {
-                            "_key": { "in": dataviewIds }
+                            "_key": { "in": datacollectionIds }
                         }
                     })
                     .catch(err)
@@ -841,7 +843,7 @@ module.exports = {
                             .catch(err)
                             .then(() => {
 
-                                app.json.dataviews = (dataviews || []);
+                                app.json.datacollections = (dataviews || []);
 
                                 next(app);
 
@@ -863,7 +865,7 @@ module.exports = {
                     let remainsObjectIds = [];
 
                     // Pull objects and queries from data views
-                    let datasources = app.json.dataviews.map(dv => {
+                    let datasources = app.json.datacollections.map(dv => {
                         if (dv.query && dv.query[0]) {
                             return dv.query[0];
                         }
@@ -910,6 +912,54 @@ module.exports = {
                 });
 
             })
+
+            // Pull queries from 'in_query' filter of data collections
+            .then(app => new Promise((next, err) => {
+
+                if (!app)
+                    return next();
+
+                let remainsQueryIds = [];
+
+                (app.json.datacollections || []).forEach(dc => {
+
+                    if (dc.settings &&
+                        dc.settings.objectWorkspace &&
+                        dc.settings.objectWorkspace.filterConditions) {
+
+                            (dc.settings.objectWorkspace.filterConditions.rules || []).forEach(r => {
+
+                                if ((r.rule == "in_query" || r.rule == "not_in_query") &&
+                                    dvDataSources.filter(ds => ds.id == r.value).length < 1) {
+
+                                    remainsQueryIds.push(r.value);
+                                }
+
+                            });
+
+                        }
+
+                });
+
+                if (remainsQueryIds.length < 1)
+                    return next(app);
+
+
+                QueryGraph.find({
+                    where: {
+                        "_key": { "in": remainsQueryIds }
+                    }
+                })
+                .catch(err)
+                .then(queries => {
+
+                    app.json.queries = queries;
+
+                    next(app);
+
+                });
+
+            }))
 
             .then(app => {
 
