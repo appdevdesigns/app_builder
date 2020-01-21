@@ -592,7 +592,7 @@ module.exports = class ABClassObject extends ABObjectCore {
 	 */
 	requestParams(allParameters) {
 		var usefulParameters = {};
-		this.fields().forEach((f) => {
+		this.fields(null, true).forEach((f) => {
 			var p = f.requestParam(allParameters);
 			if (p) {
 				for (var a in p) {
@@ -608,7 +608,7 @@ module.exports = class ABClassObject extends ABObjectCore {
 
 	requestRelationParams(allParameters) {
 		var usefulParameters = {};
-		this.connectFields().forEach((f) => {
+		this.connectFields(true).forEach((f) => {
 
 			if (f.requestRelationParam) {
 				var p = f.requestRelationParam(allParameters);

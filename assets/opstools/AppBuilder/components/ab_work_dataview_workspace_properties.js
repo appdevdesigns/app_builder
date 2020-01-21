@@ -79,6 +79,7 @@ module.exports = class AB_Work_Datacollection_Workspace_Properties extends ABCom
 					view: 'toolbar',
 					css: 'ab-data-toolbar webix_dark',
 					cols: [
+						{ view: "spacer", width: 10 },
 						{
 							view: 'label',
 							label: this.labels.component.properties

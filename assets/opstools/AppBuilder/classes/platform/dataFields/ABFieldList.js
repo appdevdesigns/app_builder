@@ -14,6 +14,91 @@ var ids = {
 	colorboard: 'ab-colorboard'
 };
 
+var defaultValues = ABFieldListCore.defaultValues();
+
+var colors = [
+	["#F44336", "#E91E63", "#9C27B0", "#673AB7"],
+	["#3F51B5", "#2196F3", "#03A9F4", "#00BCD4"],
+	["#009688", "#4CAF50", "#8BC34A", "#CDDC39"],
+	["#FFEB3B", "#FFC107", "#FF9800", "#FF5722"],
+	["#795548", "#9E9E9E", "#607D8B", "#000000"]
+];
+
+function getNextHex() {
+	var options = $$(ids.options);
+	var usedColors = [];
+	options.data.each(function(item) {
+		usedColors.push(item.hex);
+	})
+	var allColors = [];
+	colors.forEach(function(c) {
+		if (typeof c == "object") {
+			c.forEach(function(j) {
+				allColors.push(j);
+			});
+		}
+	});
+	var newHex = "#3498db";
+	for (var i = 0; i < allColors.length; i++) {
+		if (usedColors.indexOf(allColors[i]) == -1) {
+			newHex = allColors[i];
+			break;
+		}
+	}
+	return newHex;
+}
+
+function toggleColorControl(value) {
+	var colorPickers = $$(ids.options).$view.querySelectorAll(".ab-color-picker");
+	colorPickers.forEach(function (itm) {
+		if (value == 1)
+			itm.classList.remove("hide");
+		else
+			itm.classList.add("hide");
+	})
+}
+
+function updateDefaultList(ids, settings = {}) {
+	var optList = $$(ids.options).find({}).map(function (opt) {
+		return {
+			id: opt.id,
+			value: opt.value,
+			hex: opt.hex
+		}
+	});
+
+	if ($$(ids.isMultiple).getValue()) {
+		// Multiple default selector
+		var domNode = $$(ids.multipleDefault).$view.querySelector('.list-data-values');
+		selectivityRender.selectivityRender(domNode, {
+			multiple: true,
+			data: settings.multipleDefault,
+			placeholder: L('ab.dataField.list.placeholder_multiple', '*Select items'),
+			items: optList.map(function (opt) {
+				return {
+					id: opt.id,
+					text: opt.value,
+					hex: opt.hex
+				}
+			})
+		});
+		domNode.addEventListener("change", function(e) {
+			if (e.value.length) {
+				$$(ids.multipleDefault).define("required", false);
+			} else if ($$(ids.multipleDefault).$view.querySelector(".webix_inp_label").classList.contains("webix_required")) {
+				$$(ids.multipleDefault).define("required", true);
+			}
+		})
+	} else {
+		// Single default selector
+		$$(ids.default).define('options', optList);
+		if (settings.default)
+			$$(ids.default).setValue(settings.default);
+
+		$$(ids.default).refresh();
+	}
+
+}
 
 /**
  * ABFieldListComponent
@@ -23,7 +108,7 @@ var ids = {
  * property values, etc.
  */
 var ABFieldListComponent = new ABFieldComponent({
-	fieldDefaults: ABFieldListCore.defaults(),
+	fieldDefaults: defaultValues,
 
 	elements: (App, field) => {
 		ids = field.idsUnique(ids, App);
