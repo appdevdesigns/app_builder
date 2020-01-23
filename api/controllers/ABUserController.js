@@ -20,17 +20,21 @@ module.exports = {
 	// GET: /app_builder/user/roles
 	getRoles: function (req, res) {
 
-		let username = req.user.username();
+		Permissions.getUserRoles(req, true)
+			.fail(function (err) { res.AD.error(err); })
+			.then(function (result) { res.AD.success(result); });
 
-		ABGraphRole.getRolesByUsername(username)
-			.catch(error => {
-				res.AD.error(error);
-			})
-			.then(roles => {
+		// let username = req.user.username();
 
-				res.AD.success(roles || []);
+		// ABGraphRole.getRolesByUsername(username)
+		// 	.catch(error => {
+		// 		res.AD.error(error);
+		// 	})
+		// 	.then(roles => {
 
-			});
+		// 		res.AD.success(roles || []);
+
+		// 	});
 
 	},
 
