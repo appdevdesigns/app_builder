@@ -67,7 +67,16 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 						view: "multicombo",
 						name: "objectIds",
 						label: "Objects",
-						options: []
+						options: [],
+						on: {
+							onChange: (oldVal, newVal) => {
+
+								let scope = _logic.getScope();
+								let objects = CurrentApplication.objects(o => ($$(ids.object).getValue() || "").indexOf(o.id) > -1);
+								_logic.refreshFilterData(scope, objects);
+
+							}
+						}
 					},
 					{
 						view: "forminput",
@@ -156,12 +165,19 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 
 			},
 
+			getScope: () => {
+
+				let currScopeId = this._scopeDC.getCursor();
+				let currScope = this._scopeDC.getItem(currScopeId);
+				return currScope;
+
+			},
+
 			refreshData: () => {
 
 				$$(ids.form).clear();
 
-				let currScopeId = this._scopeDC.getCursor();
-				let currScope = this._scopeDC.getItem(currScopeId);
+				let currScope = _logic.getScope();
 				if (currScope) {
 
 					let objectIds = currScope.objects().map(o => o.id).join(',');
@@ -172,19 +188,31 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 						isGlobal: currScope.isGlobal,
 						objectIds: objectIds
 					});
+				}
+				else {
+					$$(ids.form).setValues({});
+				}
 
-					// Update row filter
+				let objects = currScope ? currScope.objects() : [];
+				_logic.refreshFilterData(currScope, objects);
+
+			},
+
+			refreshFilterData: (scope, objects = []) => {
+
+				if (scope &&
+					objects &&
+					objects.length) {
+
 					let fieldList = [];
-					(currScope.objects() || []).forEach(obj => {
+					(objects || []).forEach(obj => {
 						fieldList = fieldList.concat(obj.fields());
 					});
 
 					this._rowFilter.fieldsLoad(fieldList);
-					this._rowFilter.setValue(currScope.filter);
+					this._rowFilter.setValue(scope.filter);
 				}
 				else {
-					$$(ids.form).setValues({});
-
 					this._rowFilter.fieldsLoad([], null);
 					this._rowFilter.setValue(null);
 				}
@@ -224,7 +252,7 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 				}
 
 				// Set objects to scope
-				currScope._objects = CurrentApplication.objects(o => (vals['objectIds'] || []).indexOf(o.id) > -1);
+				currScope._objects = CurrentApplication.objects(o => (vals['objectIds'] || "").indexOf(o.id) > -1);
 
 				// set .filter
 				currScope.filter = this._rowFilter.getValue();
