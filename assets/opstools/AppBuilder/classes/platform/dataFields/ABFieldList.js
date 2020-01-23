@@ -108,7 +108,7 @@ function updateDefaultList(ids, settings = {}) {
  * property values, etc.
  */
 var ABFieldListComponent = new ABFieldComponent({
-	fieldDefaults: defaultValues,
+	fieldDefaults: ABFieldListCore.defaults(),
 
 	elements: (App, field) => {
 		ids = field.idsUnique(ids, App);
@@ -169,7 +169,7 @@ var ABFieldListComponent = new ABFieldComponent({
 					"ab-new-field-remove": (e, itemId, trg) => {
 						// Remove option item
 						// check that item is in saved data already
-						var matches = originalOptions.filter(function (x) {
+						var matches = (ABFieldListComponent._originalOptions || []).filter(function (x) {
 							return x.id == itemId;
 						})[0];
 						if (matches) {
@@ -177,13 +177,17 @@ var ABFieldListComponent = new ABFieldComponent({
 							OP.Dialog.Confirm({
 								title: L('ab.dataField.list.optionDeleteTitle', '*Delete Option'),
 								text: L('ab.dataField.list.optionDeleteText', '*All exisiting entries with this value will be cleared. Are you sure you want to delete this option?'),
-								fnYes: function () {
+								fnYes: () => {
 									// store the item that will be deleted for the save action
-									currentField.pendingDeletions = currentField.pendingDeletions || [];
-									currentField.pendingDeletions.push(itemId);
+									ABFieldListComponent._currentField.pendingDeletions = ABFieldListComponent._currentField.pendingDeletions || [];
+									ABFieldListComponent._currentField.pendingDeletions.push(itemId);
 									$$(ids.options).remove(itemId);
 								}
 							})
+						}
+						// If this item did not be saved, then remove from list
+						else {
+							$$(ids.options).remove(itemId);
 						}
 					},
 					"ab-color-picker": function (e, itemId, trg) {
@@ -266,7 +270,7 @@ var ABFieldListComponent = new ABFieldComponent({
 	},
 
 	// defaultValues: the keys must match a .name of your elements to set it's default value.
-	defaultValues: ABFieldListCore.defaultValues(),
+	defaultValues: defaultValues,
 
 	// rules: basic form validation rules for webix form entry.
 	// the keys must match a .name of your .elements for it to apply
@@ -298,20 +302,23 @@ var ABFieldListComponent = new ABFieldComponent({
 		populate: (ids, field) => {
 
 			// store the options that currently exisit to compare later for deletes
-			originalOptions = field.settings.options;
-			// we need to access the fields -> object -> model to run updates on save (may be refactored later)
-			currentField = field;
-			// empty this out so we don't try to delete already deleted options (or delete options that we canceled before running)
-			currentField.pendingDeletions = [];
+			ABFieldListComponent._originalOptions = field.settings.options;
 			// set options to webix list
-			var opts = field.settings.options.map(function (opt) {
-				return {
-					id: opt.id,
-					value: opt.text,
-					hex: opt.hex,
-					translations: opt.translations
-				}
-			});
+			let opts = [];
+			// we need to access the fields -> object -> model to run updates on save (may be refactored later)
+			ABFieldListComponent._currentField = field;
+			if (ABFieldListComponent._currentField) {
+				// empty this out so we don't try to delete already deleted options (or delete options that we canceled before running)
+				ABFieldListComponent._currentField.pendingDeletions = [];
+				opts = (field.settings.options || []).map((opt) => {
+					return {
+						id: opt.id,
+						value: opt.text,
+						hex: opt.hex,
+						translations: opt.translations
+					}
+				});
+			}
 			$$(ids.options).parse(opts);
 			$$(ids.options).refresh();
 
