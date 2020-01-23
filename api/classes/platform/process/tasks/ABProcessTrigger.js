@@ -1,7 +1,7 @@
 // import ABApplication from "./ABApplication"
 // const ABApplication = require("./ABApplication"); // NOTE: change to require()
 const path = require("path");
-const ABProcessTaskTriggerCore = require(path.join(
+const ABProcessTriggerCore = require(path.join(
     __dirname,
     "..",
     "..",
@@ -9,10 +9,10 @@ const ABProcessTaskTriggerCore = require(path.join(
     "core",
     "process",
     "tasks",
-    "ABProcessTaskTriggerCore.js"
+    "ABProcessTriggerCore.js"
 ));
 
-module.exports = class ABProcessTaskTrigger extends ABProcessTaskTriggerCore {
+module.exports = class ABProcessTaskTrigger extends ABProcessTriggerCore {
     trigger(data) {
         // call my process.newInstance with
         if (!this.process) {

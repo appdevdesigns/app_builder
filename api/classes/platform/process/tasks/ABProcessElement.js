@@ -1,7 +1,7 @@
 // import ABApplication from "./ABApplication"
 // const ABApplication = require("./ABApplication"); // NOTE: change to require()
 const path = require("path");
-const ABProcessTaskCore = require(path.join(
+const ABProcessElementCore = require(path.join(
     __dirname,
     "..",
     "..",
@@ -9,10 +9,10 @@ const ABProcessTaskCore = require(path.join(
     "core",
     "process",
     "tasks",
-    "ABProcessTaskCore.js"
+    "ABProcessElementCore.js"
 ));
 
-module.exports = class ABProcessTask extends ABProcessTaskCore {
+module.exports = class ABProcessTask extends ABProcessElementCore {
     constructor(attributes, process, application, defaultValues) {
         super(attributes, process, application, defaultValues);
 
@@ -38,7 +38,7 @@ module.exports = class ABProcessTask extends ABProcessTaskCore {
     save() {
         ////
         //// TODO: once our core conversion is complete, this .save() can be
-        //// moved to ABProcessTaskCore, and our ABDefinition.save() can take
+        //// moved to ABProcessElementCore, and our ABDefinition.save() can take
         //// care of the proper method to save depending on the current Platform.
         ////
         // return this.toDefinition()

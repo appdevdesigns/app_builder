@@ -1,7 +1,7 @@
 // import ABApplication from "./ABApplication"
 // const ABApplication = require("./ABApplication"); // NOTE: change to require()
 const path = require("path");
-const ABProcessTaskEndCore = require(path.join(
+const ABProcessEndCore = require(path.join(
     __dirname,
     "..",
     "..",
@@ -9,10 +9,10 @@ const ABProcessTaskEndCore = require(path.join(
     "core",
     "process",
     "tasks",
-    "ABProcessTaskEndCore.js"
+    "ABProcessEndCore.js"
 ));
 
-module.exports = class ABProcessTaskEnd extends ABProcessTaskEndCore {
+module.exports = class ABProcessEnd extends ABProcessEndCore {
     /**
      * do()
      * this method actually performs the action for this task.
