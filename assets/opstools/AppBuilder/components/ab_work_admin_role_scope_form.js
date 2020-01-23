@@ -200,8 +200,7 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 
 			refreshFilterData: (scope, objects = []) => {
 
-				if (scope &&
-					objects &&
+				if (objects &&
 					objects.length) {
 
 					let fieldList = [];
@@ -210,12 +209,16 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 					});
 
 					this._rowFilter.fieldsLoad(fieldList);
-					this._rowFilter.setValue(scope.filter);
 				}
 				else {
 					this._rowFilter.fieldsLoad([], null);
-					this._rowFilter.setValue(null);
 				}
+
+				if (scope &&
+					scope.filter)
+					this._rowFilter.setValue(scope.filter);
+				else
+					this._rowFilter.setValue(null);
 
 			},
 
