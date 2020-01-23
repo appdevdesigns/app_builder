@@ -1,12 +1,12 @@
 // import ABApplication from "./ABApplication"
 // const ABApplication = require("./ABApplication"); // NOTE: change to require()
-const ABProcessTaskTriggerLifecycleCore = require("../../../core/process/tasks/ABProcessTaskTriggerLifecycleCore.js");
+const ABProcessTriggerLifecycleCore = require("../../../core/process/tasks/ABProcessTriggerLifecycleCore.js");
 
 function L(key, altText) {
     return AD.lang.label.getLabel(key) || altText;
 }
 
-module.exports = class ABProcessTaskTriggerLifecycle extends ABProcessTaskTriggerLifecycleCore {
+module.exports = class ABProcessTriggerLifecycle extends ABProcessTriggerLifecycleCore {
     propertyIDs(id) {
         return {
             name: `${id}_name`,
@@ -52,7 +52,7 @@ module.exports = class ABProcessTaskTriggerLifecycle extends ABProcessTaskTrigge
                     view: "select",
                     label: "lifecycle",
                     options: [
-                        { id: "added", value: "after Add" },
+                        { id: "afterCreate", value: "after Add" },
                         { id: "updated", value: "after Update" },
                         { id: "deleted", value: "after Delete" }
                     ]

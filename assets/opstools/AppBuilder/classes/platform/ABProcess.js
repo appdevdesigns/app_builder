@@ -133,6 +133,15 @@ module.exports = class ABProcess extends ABProcessCore {
                     if (!this.id) {
                         this.id = data.id;
                     }
+
+                    // Also, our embedded elements now all have .ids
+                    // where they might not have before.  So now
+                    // rebuild our this._elements hash with all id
+                    var _new = {};
+                    Object.keys(this._elements).forEach((k) => {
+                        _new[this._elements[k].id] = this._elements[k];
+                    });
+                    this._elements = _new;
                 });
         });
     }
@@ -175,7 +184,7 @@ module.exports = class ABProcess extends ABProcessCore {
             this
         );
         if (task) {
-            this._elements[task.id || task.diagramID] = task;
+            this.elementAdd(task);
         }
         return task;
     }

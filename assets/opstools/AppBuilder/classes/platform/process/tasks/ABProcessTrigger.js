@@ -1,12 +1,12 @@
 // import ABApplication from "./ABApplication"
 // const ABApplication = require("./ABApplication"); // NOTE: change to require()
-const ABProcessTaskTriggerCore = require("../../../core/process/tasks/ABProcessTaskTriggerCore.js");
+const ABProcessTriggerCore = require("../../../core/process/tasks/ABProcessTriggerCore.js");
 
 function L(key, altText) {
     return AD.lang.label.getLabel(key) || altText;
 }
 
-module.exports = class ABProcessTaskTrigger extends ABProcessTaskTriggerCore {
+module.exports = class ABProcessTrigger extends ABProcessTriggerCore {
     propertyIDs(id) {
         return {
             name: `${id}_name`

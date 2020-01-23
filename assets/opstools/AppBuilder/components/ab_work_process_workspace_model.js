@@ -396,6 +396,12 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
                                 }
 
                                 CurrentPropertiesObj = newObj;
+                                CurrentPropertiesObj.on(
+                                    "switchTo",
+                                    (switchObj) => {
+                                        CurrentPropertiesObj = switchObj;
+                                    }
+                                );
                                 newObj.propertiesShow(ids.properties);
                             } else {
                                 $$(ids.properties).hide();
