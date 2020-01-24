@@ -256,31 +256,61 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
                     // var selection = viewer.get("selection");
                     // var selectedElements = selection.get();
 
-                    viewer.on(
-                        [
-                            "element.click"
-                            // "element.updateId",
-                            // "element.changed",
-                            // "shape.remove"
-                        ],
-                        (event) => {
-                            console.log(`${event.type}:`, event.element);
+                    // to find possible events:
+                    // do a file search on bpmn-js for ".fire(""
+
+                    viewer.on(["bpmnElement.added"], (event) => {
+                        // catch elements .added so we can initialize our
+                        // connection information.
+
+                        // console.log(`${event.type}:`, event.element);
+                        var element = event.element;
+                        if (
+                            element.type == "bpmn:SequenceFlow" ||
+                            element.type == "bpmn:MessageFlow"
+                        ) {
+                            if (CurrentProcess) {
+                                CurrentProcess.connectionUpsert(element);
+                            }
                         }
-                    );
-                    viewer.on("element.updateId", (event) => {
-                        console.log("element.updateId:", event.element);
-                        //
                     });
+
+                    // viewer.on(
+                    //     [
+                    //         "element.click"
+                    //         // "element.updateId",
+                    //         // "element.changed",
+                    //         // "shape.remove"
+                    //     ],
+                    //     (event) => {
+                    //         console.log(`${event.type}:`, event.element);
+                    //     }
+                    // );
+                    // viewer.on("element.updateId", (event) => {
+                    //     console.log("element.updateId:", event.element);
+                    //     //
+                    // });
 
                     viewer.on("shape.remove", (event) => {
                         // console.log("shape.remove:", event.element);
                         if (CurrentProcess) {
-                            // if our current process tracks this Element/Task
-                            var currTask = CurrentProcess.elementForDiagramID(
-                                event.element.id
-                            );
-                            if (currTask) {
-                                currTask.destroy();
+                            var element = event.element;
+
+                            // remove this connection
+                            if (
+                                element.type == "bpmn:SequenceFlow" ||
+                                element.type == "bpmn:MessageFlow"
+                            ) {
+                                CurrentProcess.connectionRemove(element);
+                            } else {
+                                // remove this task
+                                // if our current process tracks this Element/Task
+                                var currTask = CurrentProcess.elementForDiagramID(
+                                    element.id
+                                );
+                                if (currTask) {
+                                    currTask.destroy();
+                                }
                             }
                         }
                     });
@@ -372,6 +402,9 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
                                     }
                                 }
                             }
+                        } else {
+                            // this is a connection update:
+                            CurrentProcess.connectionUpsert(element);
                         }
                     });
 

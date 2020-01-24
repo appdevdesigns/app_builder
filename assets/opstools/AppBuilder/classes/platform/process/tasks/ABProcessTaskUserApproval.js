@@ -54,11 +54,11 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
     propertyIDs(id) {
         return {
             name: `${id}_name`,
-            who: `${id}_who`
+            who: `${id}_who`,
             // from: `${id}_from`,
             // subject: `${id}_subject`,
             // fromUser: `${id}_from_user`,
-            // toUser: `${id}_to_user`,
+            toUser: `${id}_to_user`
             // message: `${id}_message`,
             // toCustom: `${id}_to_custom`,
             // fromCustom: `${id}_from_custom`
@@ -79,6 +79,36 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
             this.toUsers || {}
         );
 
+        var whoOptions = [
+            // current lane/participant
+            {
+                id: 0,
+                value: L(
+                    "ab.process.task.email.to.currentParticipant",
+                    "*Current Participant"
+                )
+            },
+            // manually select User/Role
+            {
+                id: 1,
+                value: L(
+                    "ab.process.task.email.to.selectRoleUser",
+                    "*Select Role or User"
+                )
+            }
+        ];
+
+        // if we don't have a lane, then remove the lane option:
+        if (!this.laneDiagramID || this.laneDiagramID == "?laneID?") {
+            whoOptions.shift();
+            this.who = 1;
+        }
+
+        // here is how we can find out what possible process data
+        // fields are available to this task:
+        //   returns an [{ key:'{uuid}', label:"" }, {}, ...]
+        var listDataFields = this.process.processDataFields(this);
+
         var ui = {
             id: id,
             rows: [
@@ -95,22 +125,7 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
                     label: L("ab.process.task.approval.who", "*Who"),
                     name: "who",
                     value: this.who,
-                    options: [
-                        {
-                            id: 0,
-                            value: L(
-                                "ab.process.task.email.to.currentParticipant",
-                                "*Current Participant"
-                            )
-                        },
-                        {
-                            id: 1,
-                            value: L(
-                                "ab.process.task.email.to.selectRoleUser",
-                                "*Select Role or User"
-                            )
-                        }
-                    ],
+                    options: whoOptions,
                     on: {
                         onChange: (val) => {
                             if (parseInt(val) == 1) {
@@ -125,7 +140,7 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
                     id: ids.toUser,
                     rows: [toUserUI],
                     paddingY: 10,
-                    hidden: parseInt(this.to) == 1 ? false : true
+                    hidden: parseInt(this.who) == 1 ? false : true
                 }
             ]
         };

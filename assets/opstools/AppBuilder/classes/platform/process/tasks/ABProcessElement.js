@@ -174,7 +174,7 @@ module.exports = class ABProcessElement extends ABProcessElementCore {
     /**
      * diagramProperties()
      * return a set of values for the XML shape definition based upon
-     * the current values of this objec.
+     * the current values of this object.
      * @return {json}
      */
     diagramProperties() {
@@ -182,6 +182,7 @@ module.exports = class ABProcessElement extends ABProcessElementCore {
             name: this.name
         };
     }
+
     /**
      * propertiesShow()
      * display the properties panel for this Process Element.
