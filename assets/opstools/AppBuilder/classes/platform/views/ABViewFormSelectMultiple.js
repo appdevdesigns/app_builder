@@ -172,6 +172,14 @@ module.exports = class ABViewFormSelectMultiple extends ABViewFormSelectMultiple
         // make sure each of our child views get .init() called
         component.init = (options) => {};
 
+        component.logic = {
+            getValue: (elem) => {
+                var elem = $$(ids.component);
+
+                return field.getValue(elem);
+            }
+        };
+
         return component;
     }
 };

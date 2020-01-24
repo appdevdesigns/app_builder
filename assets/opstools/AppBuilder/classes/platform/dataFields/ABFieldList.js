@@ -867,33 +867,38 @@ module.exports = class ABFieldList extends ABFieldListCore {
         return detailComponentSetting;
     }
 
-    getValue(item, rowData) {
-        var values = {};
+    getValue(item) {
+        var values = [];
 
         if (!item) return values;
 
+        var rowData = item.getValue();
+
         if (this.settings.isMultiple) {
-            values = $$(item).getValue();
-            // var domNode = item.$view.querySelector(".list-data-values");
-            // values = this.selectivityGet(domNode);
+            this.settings.options.forEach(function(opt) {
+                if (rowData.split(",").indexOf(opt.id) > -1) {
+                    values.push(opt);
+                }
+            });
         } else {
-            values = $$(item).getValue();
+            values = rowData;
         }
         return values;
     }
 
     setValue(item, rowData) {
+        debugger;
         if (!item) return;
 
         if (this.settings.isMultiple) {
+            var vals = [];
+            if (Array.isArray(rowData)) {
+                rowData.forEach((v) => {
+                    vals.push(v.id);
+                });
+                rowData = vals.join();
+            }
             super.setValue(item, rowData);
-            // let selectedOpts = this._getSelectedOptions(rowData);
-            //
-            // // get selectivity dom
-            // var domSelectivity = item.$view.querySelector(".list-data-values");
-            //
-            // // set value to selectivity
-            // this.selectivitySet(domSelectivity, selectedOpts, this.App);
         } else {
             super.setValue(item, rowData);
         }

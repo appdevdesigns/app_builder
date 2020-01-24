@@ -2,6 +2,7 @@ const ABViewFormCore = require("../../core/views/ABViewFormCore");
 const ABViewFormButton = require("./ABViewFormButton");
 const ABViewFormCustom = require("./ABViewFormCustom");
 const ABViewFormComponent = require("./ABViewFormComponent");
+const ABViewFormSelectMultiple = require("./ABViewFormSelectMultiple");
 const ABViewFormTextbox = require("./ABViewFormTextbox");
 
 const ABRecordRule = require("../../rules/ABViewRuleListFormRecordRules");
@@ -978,6 +979,20 @@ module.exports = class ABViewForm extends ABViewFormCore {
 
             if (f.field())
                 formVals[f.field().columnName] = vComponent.logic.getValue();
+        });
+
+        // get multicombo values
+        var multiComboFields = this.fieldComponents(
+            (comp) => comp instanceof ABViewFormSelectMultiple
+        );
+        multiComboFields.forEach((f) => {
+            var vComponent = this.viewComponents[f.id];
+            if (vComponent == null) return;
+
+            if (f.field())
+                formVals[f.field().columnName] = vComponent.logic.getValue(
+                    vComponent.ui.id
+                );
         });
 
         // clear undefined values or empty arrays
