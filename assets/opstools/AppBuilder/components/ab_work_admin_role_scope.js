@@ -26,6 +26,7 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 
 		// internal list of Webix IDs to reference our UI components.
 		let ids = {
+			component: this.unique('component'),
 			datatable: this.unique('datatable'),
 			importScope: this.unique('importScope'),
 			createScope: this.unique('createScope'),
@@ -35,6 +36,7 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 
 		// Our webix UI definition:
 		this.ui = {
+			id: ids.component,
 			view: 'layout',
 			rows: [
 				{

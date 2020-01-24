@@ -1,5 +1,7 @@
 const ABComponent = require("../classes/platform/ABComponent");
 
+const ABUserAdd = require("./ab_work_admin_role_user_add");
+
 module.exports = class AB_Work_Admin_Role_User extends ABComponent {
 
 	constructor(App) {
@@ -16,43 +18,68 @@ module.exports = class AB_Work_Admin_Role_User extends ABComponent {
 
 		const ABUser = OP.Model.get('opstools.BuildApp.ABUser');
 
+		let UserAdd = new ABUserAdd(App);
+
 		this._userDC = new webix.DataCollection();
 
 		// internal list of Webix IDs to reference our UI components.
 		let ids = {
-			datatable: this.unique('datatable')
+			datatable: this.unique('datatable'),
+			addUser: this.unique('addUser')
 		};
 
 		let CurrentApplication;
 
 		// Our webix UI definition:
 		this.ui = {
-			id: ids.datatable,
-			view: 'datatable',
-			columns: [
+			id: ids.component,
+			view: 'layout',
+			rows: [
 				{
-					id: "username", header: '<span class="fa fa-user"></span> Username', width: 200,
-					template: function (scopeUser) {
-						return scopeUser.username;
-					},
+					id: ids.datatable,
+					view: 'datatable',
+					columns: [
+						{
+							id: "username", header: '<span class="fa fa-user"></span> Username', width: 200,
+							template: function (scopeUser) {
+								return scopeUser.username;
+							},
+						},
+						{
+							id: "scope", header: '<span class="fa fa-street-view"></span> Scope', fillspace: true,
+							template: function (scopeUser) {
+								return scopeUser.scope ? scopeUser.scope.name : "";
+							},
+						},
+						{
+							id: "remove", header: "", width: 40,
+							template: "<div class='remove'>{common.trashIcon()}</div>",
+							css: { 'text-align': 'center' },
+						}
+					],
+					onClick: {
+						"remove": (event, data, target) => {
+							_logic.removeUser(data.row);
+						}
+					}
 				},
 				{
-					id: "scope", header: '<span class="fa fa-street-view"></span> Scope', fillspace: true,
-					template: function (scopeUser) {
-						return scopeUser.scope ? scopeUser.scope.name : "";
-					},
-				},
-				{
-					id: "remove", header: "", width: 40,
-					template: "<div class='remove'>{common.trashIcon()}</div>",
-					css: { 'text-align': 'center' },
+					cols: [
+						{ fillspace: true },
+						{
+							id: ids.addUser,
+							view: 'button',
+							type: "icon",
+							icon: "fa fa-plus",
+							label: "Add a user",
+							width: 130,
+							click: () => {
+								UserAdd.show();
+							}
+						}
+					]
 				}
-			],
-			onClick: {
-				"remove": (event, data, target) => {
-					_logic.removeUser(data.row);
-				}
-			}
+			]
 		};
 
 		// Our init() function for setting up our UI
@@ -70,15 +97,20 @@ module.exports = class AB_Work_Admin_Role_User extends ABComponent {
 
 			$$(ids.datatable).data.sync(this._userDC);
 
+			UserAdd.init(roleDC, this._userDC);
+
 		}
 
 		let _logic = {
 
 			applicationLoad: (application) => {
+
 				CurrentApplication = application;
 
 				this._userDC.setCursor(null);
 				this._userDC.clearAll();
+
+				UserAdd.applicationLoad(application);
 			},
 
 			getRole: () => {

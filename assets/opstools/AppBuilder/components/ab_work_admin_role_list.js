@@ -259,9 +259,25 @@ module.exports = class AB_Work_Admin_Role_List extends ABComponent {
 				if (!this._roleDC)
 					return;
 
+				_logic.busy();
+
 				this._roleDC.setCursor(null);
 
-				// TODO : switch to role info tab and focus name textbox
+				// save new role
+				App.actions.roleSave({
+					name: "NEW ROLE"
+				})
+					.catch(err => {
+						console.error(err);
+						_logic.ready();
+					})
+					.then(() => {
+
+						// switch to role info tab and focus name textbox
+						App.actions.roleSwitchTab("info");
+
+						_logic.ready();
+					});
 
 			},
 

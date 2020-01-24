@@ -12,7 +12,9 @@ module.exports = class AB_Work_Admin_Role_Form extends ABComponent {
 
 		// internal list of Webix IDs to reference our UI components.
 		let ids = {
-			form: this.unique('form')
+			form: this.unique('form'),
+			text: this.unique('text'),
+			save: this.unique('save')
 		};
 
 		let CurrentApplication;
@@ -25,6 +27,7 @@ module.exports = class AB_Work_Admin_Role_Form extends ABComponent {
 			elementsConfig: { labelAlign: "right", labelWidth: 100 },
 			rows: [
 				{
+					id: ids.text,
 					view: "text",
 					name: "name",
 					label: "Name",
@@ -50,6 +53,7 @@ module.exports = class AB_Work_Admin_Role_Form extends ABComponent {
 							}
 						},
 						{
+							id: ids.save,
 							view: "button",
 							type: "form",
 							autowidth: true,
@@ -115,6 +119,19 @@ module.exports = class AB_Work_Admin_Role_Form extends ABComponent {
 
 			},
 
+			focusName: () => {
+
+				let $text = $$(ids.text);
+				if ($text) {
+					$text.focus();
+
+					let $dom = $text.getInputNode();
+					if ($dom)
+						$dom.setSelectionRange(0, ($text.getValue() || "").length);
+				}
+
+			},
+
 			cancel: () => {
 
 				if (this._roleDC)
@@ -124,47 +141,16 @@ module.exports = class AB_Work_Admin_Role_Form extends ABComponent {
 
 			save: () => {
 
-				if (!this._roleDC)
-					return;
-
 				_logic.busy();
 
 				let vals = $$(ids.form).getValues() || {};
 
-				let currRoleId = this._roleDC.getCursor();
-				let currRole = this._roleDC.getItem(currRoleId);
-
-				// Add new
-				let isAdded = false;
-				if (!currRole) {
-					currRole = CurrentApplication.roleNew(vals);
-					isAdded = true;
-				}
-				// Update
-				else {
-					for (let key in vals) {
-						if (vals[key] != undefined)
-							currRole[key] = vals[key];
-					}
-					isAdded = false;
-				}
-
-				CurrentApplication.roleSave(currRole)
+				App.actions.roleSave(vals)
 					.catch(err => {
 						console.error(err);
 						_logic.ready();
 					})
-					.then(data => {
-
-						if (isAdded) {
-							currRole.id = data.id;
-							this._roleDC.setCursor(null);
-							this._roleDC.add(currRole);
-							this._roleDC.setCursor(currRole.id);
-						}
-						else
-							this._roleDC.updateItem(currRoleId, data);
-
+					.then(() => {
 						_logic.ready();
 					});
 
@@ -176,6 +162,10 @@ module.exports = class AB_Work_Admin_Role_Form extends ABComponent {
 					$$(ids.form).showProgress)
 					$$(ids.form).showProgress({ type: "icon" });
 
+				if ($$(ids.save) &&
+					$$(ids.save).disable)
+					$$(ids.save).disable();
+
 			},
 
 			ready: () => {
@@ -183,6 +173,10 @@ module.exports = class AB_Work_Admin_Role_Form extends ABComponent {
 				if ($$(ids.form) &&
 					$$(ids.form).hideProgress)
 					$$(ids.form).hideProgress();
+
+				if ($$(ids.save) &&
+					$$(ids.save).enable)
+					$$(ids.save).enable();
 
 			},
 
@@ -194,6 +188,7 @@ module.exports = class AB_Work_Admin_Role_Form extends ABComponent {
 		// Define our external interface methods:
 		// 
 		this.applicationLoad = _logic.applicationLoad;
+		this.focusName = _logic.focusName;
 
 	}
 

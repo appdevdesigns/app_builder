@@ -31,24 +31,28 @@ module.exports = class AB_Work_Admin_Role extends ABComponent {
 		// internal list of Webix IDs to reference our UI components.
 		let ids = {
 			component: this.unique('component'),
-			scopes: this.unique('scope'),
-			users: this.unique('user')
+			info: this.unique('info'),
+			tabview: this.unique('tabview')
 		}
 
 
 
 		// Our webix UI definition:
+		let uiScope = RoleScope.ui;
+		let uiUser = RoleUser.ui;
 		this.ui = {
 			id: ids.component,
 			type: "space",
 			cols: [
 				RoleList.ui,
 				{
+					id: ids.tabview,
 					view: "tabview",
 					cells: [
 						{
 							header: "<span class='webix_icon fa fa-user-md'></span> Info",
 							body: {
+								id: ids.info,
 								borderless: true,
 								rows: [
 									RoleForm.ui
@@ -56,14 +60,12 @@ module.exports = class AB_Work_Admin_Role extends ABComponent {
 							}
 						},
 						{
-							id: ids.scopes,
 							header: "<span class='webix_icon fa fa-street-view'></span> Scopes",
-							body: RoleScope.ui
+							body: uiScope
 						},
 						{
-							id: ids.users,
 							header: "<span class='webix_icon fa fa-users'></span> Users",
-							body: RoleUser.ui
+							body: uiUser
 						}
 					],
 					tabbar: {
@@ -123,6 +125,68 @@ module.exports = class AB_Work_Admin_Role extends ABComponent {
 
 			},
 
+			switchTab: function (name) {
+
+				let tabview = $$(ids.tabview);
+				let tabbar = tabview.getTabbar();
+
+				switch (name) {
+					case "info":
+						tabbar.setValue(ids.info);
+						RoleForm.focusName();
+						break;
+					case "scope":
+						tabbar.setValue(uiScope.id);
+						break;
+					case "user":
+						tabbar.setValue(uiUser.id);
+						break;
+				}
+
+			},
+
+			roleSave: (vals) => {
+
+				let currRoleId = roleDC.getCursor();
+				let currRole = roleDC.getItem(currRoleId);
+
+				// Add new
+				let isAdded = false;
+				if (!currRole) {
+					currRole = CurrentApplication.roleNew(vals);
+					isAdded = true;
+				}
+				// Update
+				else {
+					for (let key in vals) {
+						if (vals[key] != undefined)
+							currRole[key] = vals[key];
+					}
+					isAdded = false;
+				}
+
+				return new Promise((resolve, reject) => {
+
+					CurrentApplication.roleSave(currRole)
+						.catch(reject)
+						.then(data => {
+
+							if (isAdded) {
+								currRole.id = data.id;
+								roleDC.setCursor(null);
+								roleDC.add(currRole);
+								roleDC.setCursor(currRole.id);
+							}
+							else
+								roleDC.updateItem(currRoleId, data);
+
+							resolve();
+						});
+
+				});
+
+			},
+
 			/**
 			 * @function show()
 			 *
@@ -140,6 +204,9 @@ module.exports = class AB_Work_Admin_Role extends ABComponent {
 
 
 		this.actions({
+
+			roleSwitchTab: _logic.switchTab,
+			roleSave: _logic.roleSave
 
 		});
 
