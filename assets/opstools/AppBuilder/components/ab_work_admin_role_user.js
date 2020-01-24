@@ -131,7 +131,14 @@ module.exports = class AB_Work_Admin_Role_User extends ABComponent {
 				this._userDC.clearAll();
 
 				let role = _logic.getRole();
-				if (!role) return;
+				if (!role) {
+					$$(ids.addUser).disable();
+					return;
+				}
+				else {
+					$$(ids.addUser).enable();
+				}
+
 
 				// Parse to the data collection
 				if (this._userDC) {
