@@ -21,7 +21,7 @@ var findStack = ADCore.policy.serviceStack([
 	'ABModelConvertQueryConditions', 
 	'ABModelConvertQueryFieldConditions',
 	'ABModelConvertDataCollectionCondition',
-	'ABModelConvertFieldKey'
+	// 'ABModelConvertFieldKey'
 	]);
 
 module.exports = {
