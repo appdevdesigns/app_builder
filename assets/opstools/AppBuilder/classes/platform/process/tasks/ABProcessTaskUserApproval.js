@@ -109,6 +109,11 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
         //   returns an [{ key:'{uuid}', label:"" }, {}, ...]
         var listDataFields = this.process.processDataFields(this);
 
+        // here is how we can find out what possible process objects
+        // are available to this task:
+        //   returns an [{ ABObject }, {}, ...]
+        var listDataObjects = this.process.processDataObjects(this);
+
         var ui = {
             id: id,
             rows: [
