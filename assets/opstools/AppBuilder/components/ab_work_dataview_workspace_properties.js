@@ -868,11 +868,15 @@ export default class AB_Work_Dataview_Workspace_Properties extends OP.Component 
 						&& (f.value ||
 							// these rules do not have input value
 							(f.rule == 'is_current_user' ||
-								f.rule == 'is_not_current_user' ||
-								f.rule == 'contain_current_user' ||
-								f.rule == 'not_contain_current_user' ||
-								f.rule == 'same_as_user' ||
-								f.rule == 'not_same_as_user'))) {
+							f.rule == 'is_not_current_user' ||
+							f.rule == 'contain_current_user' ||
+							f.rule == 'not_contain_current_user' ||
+							f.rule == 'same_as_user' ||
+							f.rule == 'not_same_as_user' ||
+							f.rule == 'less_current' ||
+							f.rule == 'greater_current' ||
+							f.rule == 'less_or_equal_current' ||
+							f.rule == 'greater_or_equal_current'))) {
 						allComplete = allComplete && true;
 					} else {
 

@@ -378,7 +378,6 @@ export default class ABViewDataCollection extends ABView {
 
 			var allComplete = true;
 			filterValues.rules.forEach((f) => {
-
 				// if all 3 fields are present, we are good.
 				if ((f.key)
 					&& (f.rule)
@@ -386,8 +385,15 @@ export default class ABViewDataCollection extends ABView {
 						// these rules do not have input value
 						(f.rule == 'is_current_user' ||
 						f.rule == 'is_not_current_user' ||
+						f.rule == 'contain_current_user' ||
+						f.rule == 'not_contain_current_user' ||
 						f.rule == 'same_as_user' ||
-						f.rule == 'not_same_as_user'))) {
+						f.rule == 'not_same_as_user' ||
+						f.rule == 'less_current' ||
+						f.rule == 'greater_current' ||
+						f.rule == 'less_or_equal_current' ||
+						f.rule == 'greater_or_equal_current'
+						))) {
 					allComplete = allComplete && true;
 				} else {
 
