@@ -62,6 +62,12 @@ export default class RowFilter extends OP.Component {
 				afterCondition: L('ab.filter_fields.afterCondition', "*is after"),
 				onOrBeforeCondition: L('ab.filter_fields.onOrBeforeCondition', "*is on or before"),
 				onOrAfterCondition: L('ab.filter_fields.onOrAfterCondition', "*is on or after"),
+				beforeCurrentCondition: L('ab.filter_fields.beforeCurrentCondition', "*is before current date"),
+				afterCurrentCondition: L('ab.filter_fields.afterCurrentCondition', "*is after current date"),
+				onOrBeforeCurrentCondition: L('ab.filter_fields.onOrBeforeCurrentCondition', "*is on or before current date"),
+				onOrAfterCurrentCondition: L('ab.filter_fields.onOrAfterCurrentCondition', "*is on or after current date"),
+				onLastDaysCondition: L('ab.filter_fields.onLastDaysCondition', "*last ... days"),
+				onNextDaysCondition: L('ab.filter_fields.onNextDaysCondition', "*next ... days"),
 
 				equalCondition: L('ab.filter_fields.equalCondition', ":"),
 				notEqualCondition: L('ab.filter_fields.notEqualCondition', "≠"),
@@ -292,7 +298,7 @@ export default class RowFilter extends OP.Component {
 						// Comparer
 						{
 							id: ids.rule,
-							width: 175,
+							width: 220,
 							cells: [
 								{},
 								// Query
@@ -301,6 +307,14 @@ export default class RowFilter extends OP.Component {
 									view: "combo",
 									value: 'in_query',
 									options: [
+										{
+											value: labels.component.inQuery,
+											id: 'in_query'
+										},
+										{
+											value: labels.component.notInQuery,
+											id: 'not_in_query'
+										},
 										{
 											value: labels.component.containsCondition,
 											id: "contains"
@@ -324,14 +338,6 @@ export default class RowFilter extends OP.Component {
 										{
 											value: labels.component.notSameAsUser,
 											id:'not_same_as_user'
-										},
-										{
-											value: labels.component.inQuery,
-											id: 'in_query'
-										},
-										{
-											value: labels.component.notInQuery,
-											id: 'not_in_query'
 										},
 										{
 											value: labels.component.inDataCollection,
@@ -376,6 +382,30 @@ export default class RowFilter extends OP.Component {
 										{
 											value: labels.component.onOrAfterCondition,
 											id: "greater_or_equal"
+										},
+										{
+											value: labels.component.beforeCurrentCondition,
+											id: "less_current"
+										},
+										{
+											value: labels.component.afterCurrentCondition,
+											id: "greater_current"
+										},
+										{
+											value: labels.component.onOrBeforeCurrentCondition,
+											id: "less_or_equal_current"
+										},
+										{
+											value: labels.component.onOrAfterCurrentCondition,
+											id: "greater_or_equal_current"
+										},
+										{
+											value: labels.component.onLastDaysCondition,
+											id: "last_days"
+										},
+										{
+											value: labels.component.onNextDaysCondition,
+											id: "next_days"
 										}
 									].concat(queryFieldOptions).concat(recordRuleOptions),
 									on: {
@@ -438,6 +468,14 @@ export default class RowFilter extends OP.Component {
 									value: "equals",
 									options: [
 										{
+											value: labels.component.equalListCondition,
+											id: "equals"
+										},
+										{
+											value: labels.component.notEqualListCondition,
+											id: "not_equal"
+										},
+										{
 											value: labels.component.sameAsUser,
 											id:'same_as_user'
 										},
@@ -445,14 +483,6 @@ export default class RowFilter extends OP.Component {
 											value: labels.component.notSameAsUser,
 											id:'not_same_as_user'
 										},
-										{
-											value: labels.component.equalListCondition,
-											id: "equals"
-										},
-										{
-											value: labels.component.notEqualListCondition,
-											id: "not_equal"
-										}
 									].concat(queryFieldOptions).concat(recordRuleOptions),
 									on: {
 										onChange: function( condition, oldValue) {
@@ -501,20 +531,20 @@ export default class RowFilter extends OP.Component {
 											id: "is_not_current_user"
 										},
 										{
-											value: labels.component.containsCurrentUserCondition,
-											id: "contain_current_user"
-										},
-										{
-											value: labels.component.notContainsCurrentUserCondition,
-											id: "not_contain_current_user"
-										},
-										{
 											value: labels.component.equalListCondition,
 											id: "equals"
 										},
 										{
 											value: labels.component.notEqualListCondition,
 											id: "not_equal"
+										},
+										{
+											value: labels.component.containsCurrentUserCondition,
+											id: "contain_current_user"
+										},
+										{
+											value: labels.component.notContainsCurrentUserCondition,
+											id: "not_contain_current_user"
 										}
 									].concat(queryFieldOptions).concat(recordRuleOptions),
 									on: {
@@ -693,11 +723,13 @@ export default class RowFilter extends OP.Component {
 								// Number
 								{
 									batch: "number",
+									// view: "counter",
 									view: "text",
 									validate: webix.rules.isNumber,
 									on: {
 										onTimedKeyPress: function () {
-											_logic.onChange();
+											if (this.validate())
+												_logic.onChange();
 										}
 									}
 								},
@@ -954,15 +986,21 @@ export default class RowFilter extends OP.Component {
 				var rule = null,
 					ruleViewId = $viewCond.$$(ids.rule).getActiveId(),
 					$viewComparer = $viewCond.$$(ids.rule).queryView({ id: ruleViewId });
-				if ($viewComparer && $viewComparer.getValue) {
-					rule = $viewComparer.getValue();
-					if (rule == "in_query_field" || rule == "not_in_query_field") {
-						// Show the new value inputs
-						$viewCond.$$(ids.inputValue).showBatch("queryField");
-					} else if (rule == "same_as_field" || rule == "not_same_as_field") {
-						// Show the new value inputs
-						$viewCond.$$(ids.inputValue).showBatch("fieldMatch");
+				if ($viewComparer && $viewComparer.getList) {
+
+					let defaultOpt = ($viewComparer.getList().config.data || [])[0];
+					if (defaultOpt) {
+						$viewComparer.setValue(defaultOpt.id);
 					}
+
+					// rule = $viewComparer.getValue();
+					// if (rule == "in_query_field" || rule == "not_in_query_field") {
+					// 	// Show the new value inputs
+					// 	$viewCond.$$(ids.inputValue).showBatch("queryField");
+					// } else if (rule == "same_as_field" || rule == "not_same_as_field") {
+					// 	// Show the new value inputs
+					// 	$viewCond.$$(ids.inputValue).showBatch("fieldMatch");
+					// }
 				}
 					
 				
@@ -1001,15 +1039,16 @@ export default class RowFilter extends OP.Component {
 			// 	}
 			// },
 			
-			onChangeRule: (rule, $viewCond) => {
+			onChangeRule: (rule, $viewCond, notify = false) => {
 
 				switch(rule) {
-					case 'contains':
-					case 'not_contains':
-					case 'equals':
-					case 'not_equal':
-						_logic.onChange();
-						break;
+					// If want to call notify or call .onChange(), then pass notify is true.
+					// case 'contains':
+					// case 'not_contains':
+					// case 'equals':
+					// case 'not_equal':
+					// 	_logic.onChange();
+					// 	break;
 
 					case 'is_current_user':
 					case 'is_not_current_user':
@@ -1017,9 +1056,19 @@ export default class RowFilter extends OP.Component {
 					case 'not_contain_current_user':
 					case 'same_as_user':
 					case 'not_same_as_user':
+					case "less_current":
+					case "greater_current":
+					case "less_or_equal_current":
+					case "greater_or_equal_current":
 						// clear and disable the value field
 						$viewCond.$$(ids.inputValue).showBatch("empty");
 						_logic.onChange();
+						break;
+
+					case "last_days":
+					case "next_days":
+						// Show the number input
+						$viewCond.$$(ids.inputValue).showBatch("number");
 						break;
 
 					case 'in_query_field':
@@ -1096,6 +1145,10 @@ export default class RowFilter extends OP.Component {
 					default:
 						// Show the default value inputs
 						$viewCond.$$(ids.inputValue).showBatch(batchName);
+
+						if (notify)
+							_logic.onChange();
+
 						break;
 				}
 
@@ -1286,7 +1339,12 @@ export default class RowFilter extends OP.Component {
 					if ($viewConditionValue && $viewConditionValue.setValue) {
 
 						// convert to Date object
-						if (field && field.key == 'date' && f.value) {
+						if (field && field.key == 'date' && f.value && (
+								f.rule == 'less' || 
+								f.rule == 'greater' || 
+								f.rule == 'less_or_equal' || 
+								f.rule == 'greater_or_equal'
+							)) {
 							$viewConditionValue.define('value', new Date(f.value));
 						}
 						else {
@@ -1466,8 +1524,15 @@ export default class RowFilter extends OP.Component {
 				if (!(value instanceof Date))
 					value = new Date(value);
 
-				if (!(compareValue instanceof Date))
+				if (!(compareValue instanceof Date) && (
+					rule == "less" ||
+					rule == "greater" ||
+					rule == "less_or_equal" ||
+					rule == "greater_or_equal"
+				))
 					compareValue = new Date(compareValue);
+
+				let now = new Date();
 
 				switch (rule) {
 					case "less":
@@ -1481,6 +1546,34 @@ export default class RowFilter extends OP.Component {
 						break;
 					case "greater_or_equal":
 						result = value >= compareValue;
+						break;
+					case "less_current":
+						result = value < now;
+						break;
+					case "greater_current":
+						result = value > now;
+						break;
+					case "less_or_equal_current":
+						result = value <= now;
+						break;
+					case "greater_or_equal_current":
+						result = value >= now;
+						break;
+					case "last_days":
+						if (value <= now) {
+							let startDate = now.setDate(now.getDate() - compareValue); // Minus days
+							result = value > startDate;
+						}
+						else
+							result = false;
+						break;
+					case "next_days":
+						if (value >= now) {
+							let endDate = now.setDate(now.getDate() + compareValue); // Add days
+							result = value < endDate;
+						}
+						else
+							result = false;
 						break;
 					default:
 						result = _logic.queryValid(rowData, rule, compareValue);
