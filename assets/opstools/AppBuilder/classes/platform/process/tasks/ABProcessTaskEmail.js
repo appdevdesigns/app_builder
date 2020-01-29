@@ -85,7 +85,8 @@ module.exports = class ABProcessTaskEmail extends ABProcessTaskEmailCore {
 
         var ui = {
             id: id,
-            rows: [
+            view: "form",
+            elements: [
                 {
                     id: ids.name,
                     view: "text",

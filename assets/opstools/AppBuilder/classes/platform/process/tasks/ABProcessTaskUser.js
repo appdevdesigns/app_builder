@@ -106,8 +106,8 @@ module.exports = class ABProcessTaskUser extends ABProcessTaskUserCore {
 
         webix.ui(ui, $$(id));
 
-        $$(id).show();
-        $$(id).adjust();
+        // $$(id).show();
+        // $$(id).adjust();
     }
 
     /**

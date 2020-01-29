@@ -116,7 +116,8 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
 
         var ui = {
             id: id,
-            rows: [
+            view: "form",
+            elements: [
                 {
                     id: ids.name,
                     view: "text",
@@ -153,7 +154,6 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
         webix.ui(ui, $$(id));
 
         $$(id).show();
-        $$(id).adjust();
     }
 
     /**
