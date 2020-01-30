@@ -861,13 +861,19 @@ module.exports = class ABClassObject extends ABObjectCore {
 	                'not_equal'     : '<>',
 	                'is_empty'      : '=',
 	                'is_not_empty'  : '<>',
-	                'greater'       : '>',
-	                'greater_or_equal' : '>=',
-	                'less'          : '<',
-	                'less_or_equal' : '<='
-				}
-				
-				// normal field name:
+	                'greater'                  : '>',
+	                'greater_or_equal'         : '>=',
+	                'less'                     : '<',
+	                'less_or_equal'            : '<=',
+	                'greater_current'          : '>',
+	                'greater_or_equal_current' : '>=',
+	                'less_current'             : '<',
+					'less_or_equal_current'    : '<=',
+					'last_days'                : 'BETWEEN',
+					'next_days'                : 'BETWEEN'
+	            }
+
+	            // normal field name:
 				var columnName =  condition.key;
 				if (typeof columnName == 'string') {
 
@@ -997,7 +1003,21 @@ module.exports = class ABClassObject extends ABObjectCore {
 	                    	// send a TRUE value so nothing gets filtered
 	                    	whereRaw = ' 1=1 '
 	                    }
-	                    break;
+						break;
+
+					case "greater_current" :
+					case "greater_or_equal_current" :
+					case "less_current" :
+					case "less_or_equal_current" :
+						value = "NOW()";
+						break;
+
+					case "last_days" :
+						value = `DATE_SUB(NOW(), INTERVAL ${condition.value} DAY) AND NOW()`;
+						break;
+					case "next_days" :
+						value = `NOW() AND DATE_ADD(NOW(), INTERVAL ${condition.value} DAY)`;
+						break;
 
 	            }
 
