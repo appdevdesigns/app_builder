@@ -889,6 +889,7 @@ module.exports = class ABClassObject extends ABObjectCore {
 								// if this is from a LIST, then make sure our value is the .ID
 								else if (field.key == "list" && field.settings && field.settings.options && field.settings.options.filter) {
 
+<<<<<<< HEAD
 									// NOTE: Should get 'id' or 'text' from client ??
 									var inputID = field.settings.options.filter(option => (option.id == condition.value || option.text == condition.value))[0];
 									if (inputID)
@@ -896,15 +897,208 @@ module.exports = class ABClassObject extends ABObjectCore {
 								}
 
 							}
+=======
+	            // convert QB Rule to SQL operation:
+	            var conversionHash = {
+	                'equals'        : '=',
+	                'not_equal'     : '<>',
+	                'is_empty'      : '=',
+	                'is_not_empty'  : '<>',
+	                'greater'                  : '>',
+	                'greater_or_equal'         : '>=',
+	                'less'                     : '<',
+	                'less_or_equal'            : '<=',
+	                'greater_current'          : '>',
+	                'greater_or_equal_current' : '>=',
+	                'less_current'             : '<',
+					'less_or_equal_current'    : '<=',
+					'last_days'                : 'BETWEEN',
+					'next_days'                : 'BETWEEN'
+	            }
+
+	            // normal field name:
+				var columnName =  condition.key;
+				if (typeof columnName == 'string') {
+
+					// make sure to ` ` columnName (if it isn't our special '1' condition )
+					// see Policy:ABModelConvertSameAsUserConditions  for when that is applied
+					if (columnName != '1' && columnName.indexOf("`") == -1) {
+
+						// if columnName is  a  table.field  then be sure to `` each one individually
+						var parts = columnName.split('.');
+						for (var p=0; p < parts.length; p++) {
+							parts[p] = "`"+parts[p]+"`";
+>>>>>>> 559366cc47d33a0c95f86c87d0ca6ee2e2a3b756
 						}
 
 
+<<<<<<< HEAD
 						//// Handle a basic rule:
 						// { 
 						//     key: fieldName,
 						//     rule: 'qb_rule',
 						//     value: ''
 						// }
+=======
+	            // basic case:  simple conversion
+	            var operator = conversionHash[condition.rule];
+	            var value = quoteMe(condition.value);
+
+
+
+	            // special operation cases:
+	            switch (condition.rule) {
+	                case "begins_with":
+	                    operator = 'LIKE';
+	                    value = quoteMe(condition.value + '%');
+	                    break;
+
+	                case "not_begins_with":
+	                    operator = "NOT LIKE";
+	                    value = quoteMe(condition.value + '%');
+	                    break;
+
+	                case "contains":
+	                    operator = 'LIKE';
+	                    value = quoteMe('%' + condition.value + '%');
+	                    break;
+
+	                case "not_contains":
+	                    operator = "NOT LIKE";
+	                    value = quoteMe('%' + condition.value + '%');
+	                    break;
+
+	                case "ends_with":
+	                    operator = 'LIKE';
+	                    value = quoteMe('%' + condition.value);
+	                    break;
+
+	                case "not_ends_with":
+	                    operator = "NOT LIKE";
+	                    value = quoteMe('%' + condition.value);
+	                    break;
+
+	                case "between": 
+	                    operator = "BETWEEN";
+	                    value = condition.value.map(function(v){ return quoteMe(v)}).join(' AND ');
+	                    break;
+
+	                case 'not_between':
+	                    operator = "NOT BETWEEN";
+	                    value = condition.value.map(function(v){ return quoteMe(v)}).join(' AND ');
+	                    break;
+
+	                case "is_current_user":
+	                    operator = "=";
+	                    value = quoteMe(userData.username);
+	                    break;
+
+	                case "is_not_current_user":
+	                    operator = "<>";
+	                    value = quoteMe(userData.username);
+						break;
+
+					case "contain_current_user":
+						columnName = `JSON_SEARCH(JSON_EXTRACT(${columnName}, '$[*].id'), 'one', '${userData.username}')`;
+						operator = "IS NOT";
+						value = "NULL";
+						break;
+
+					case "not_contain_current_user":
+						columnName = `JSON_SEARCH(JSON_EXTRACT(${columnName}, '$[*].id'), 'one', '${userData.username}')`;
+						operator = "IS";
+						value = "NULL";
+						break;
+
+	                case 'is_null': 
+	                    operator = "IS NULL";
+	                    value = '';
+	                    break;
+
+	                case 'is_not_null': 
+	                    operator = "IS NOT NULL";
+	                    value = '';
+	                    break;
+
+	                case "in":
+	                    operator = "IN";
+
+	                    // if we wanted an IN clause, but there were no values sent, then we 
+	                    // want to make sure this condition doesn't return anything
+	                    if (Array.isArray(condition.value) && condition.value.length > 0) {
+	                    	value = '(' + condition.value.map(function(v){ return quoteMe(v)}).join(', ') + ')';
+	                    } else {
+
+	                    	// send a false by resetting the whereRaw to a fixed value.
+	                    	// any future attempts to replace this will be ignored.
+	                    	whereRaw = ' 1=0 ';
+	                    }
+	                    break;
+
+	                case "not_in":
+	                    operator = "NOT IN";
+
+	                    // if we wanted a NOT IN clause, but there were no values sent, then we
+	                    // want to make sure this condition returns everything (not filtered)
+	                    if (Array.isArray(condition.value) && condition.value.length > 0) {
+	                    	value = '(' + condition.value.map(function(v){ return quoteMe(v)}).join(', ') + ')';
+	                    } else {
+
+	                    	// send a TRUE value so nothing gets filtered
+	                    	whereRaw = ' 1=1 '
+	                    }
+						break;
+
+					case "greater_current" :
+					case "greater_or_equal_current" :
+					case "less_current" :
+					case "less_or_equal_current" :
+						value = "NOW()";
+						break;
+
+					case "last_days" :
+						value = `DATE_SUB(NOW(), INTERVAL ${condition.value} DAY) AND NOW()`;
+						break;
+					case "next_days" :
+						value = `NOW() AND DATE_ADD(NOW(), INTERVAL ${condition.value} DAY)`;
+						break;
+
+	            }
+
+				// validate input
+				if (columnName == null || operator == null) return;
+
+	            // // if we are searching a multilingual field it is stored in translations so we need to search JSON
+	            // if (field && field.settings.supportMultilingual == 1) {
+				// 	fieldName = ('JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({tableName}.translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({tableName}.translations, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))')
+				// 					.replace(/{tableName}/g, field.object.dbTableName(true))
+				// 					.replace(/{languageCode}/g, userData.languageCode)
+				// 					.replace(/{columnName}/g, field.columnName);
+	            // } 
+
+	            // // if this is from a LIST, then make sure our value is the .ID
+	            // if (field && field.key == "list" && field.settings && field.settings.options && field.settings.options.filter) {
+	            //     // NOTE: Should get 'id' or 'text' from client ??
+	            //     var inputID = field.settings.options.filter(option => (option.id == value || option.text == value))[0];
+	            //     if (inputID)
+	            //         value = inputID.id;
+	            // }
+
+
+	            // update our where statement:
+				if (columnName && operator) {
+
+					whereRaw = whereRaw
+						.replace('{fieldName}', columnName)
+						.replace('{operator}', operator)
+						.replace('{input}', ((value != null) ?  value  : ''));
+
+
+					// Now we add in our where
+					Query.whereRaw(whereRaw);
+				}
+			};
+>>>>>>> 559366cc47d33a0c95f86c87d0ca6ee2e2a3b756
 
 		// sails.log.verbose('... basic condition:', JSON.stringify(condition, null, 4));
 
