@@ -109,9 +109,7 @@ module.exports = class ABProcessTaskEmail extends ABProcessTaskEmailCore {
                         });
                     } else {
                         // else "from" field: get current lane
-                        myLanes.push(
-                            this.process.elementForDiagramID(this.laneDiagramID)
-                        );
+                        myLanes.push(this.myLane());
                     }
 
                     if (myLanes.length == 0) {

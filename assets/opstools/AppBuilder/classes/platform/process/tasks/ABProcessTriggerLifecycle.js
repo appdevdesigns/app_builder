@@ -51,8 +51,9 @@ module.exports = class ABProcessTriggerLifecycle extends ABProcessTriggerLifecyc
                     id: ids.lifecycleList,
                     view: "select",
                     label: "lifecycle",
+                    value: this.lifecycleKey,
                     options: [
-                        { id: "afterCreate", value: "after Add" },
+                        { id: "added", value: "after Add" },
                         { id: "updated", value: "after Update" },
                         { id: "deleted", value: "after Delete" }
                     ]
