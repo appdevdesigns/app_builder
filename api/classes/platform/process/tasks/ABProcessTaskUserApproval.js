@@ -57,7 +57,8 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
         return new Promise((resolve, reject) => {
             var jobData = {
                 name: this.name,
-                process: instance.id
+                process: instance.id,
+                definition: this.id
             };
 
             if (parseInt(this.who) == 1) {
