@@ -713,7 +713,7 @@ module.exports = class ABClassObject extends ABObjectCore {
 			
 		return Promise.resolve()
 
-			// Apply filters of scope
+			// Apply filters from scopes
 			.then(() => new Promise((next, err) => {
 
 				let objectIds = [];
@@ -732,7 +732,7 @@ module.exports = class ABClassObject extends ABObjectCore {
 					.then(scopes => {
 
 						let scopeWhere = {
-							glue: 'and',
+							glue: 'or',
 							rules: []
 						};
 
