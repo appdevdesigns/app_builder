@@ -31,6 +31,34 @@ var ids = {
 	validateEndDate: 'ab-date-validate-end-date'
 };
 
+function defaultDateChange() {
+	var defaultDateValue = $$(ids.defaultDate).getValue();
+	var defaultDate = parseInt(defaultDateValue);
+	switch (defaultDate) {
+		case 1: {
+			$$(ids.defaultDateValue).disable();
+			$$(ids.defaultDateValue).setValue();
+		}
+			break;
+		case 2: {
+			$$(ids.defaultDateValue).enable();
+			$$(ids.defaultDateValue).setValue(new Date());
+			refreshDateValue();
+		}
+			break;
+		case 3: {
+			$$(ids.defaultDateValue).enable();
+			$$(ids.defaultDateValue).setValue();
+		}
+			break;
+		default: {
+			$$(ids.defaultDateValue).disable();
+			$$(ids.defaultDateValue).setValue(new Date());
+		}
+			break;
+	}
+}
+
 function refreshDateValue() {
 	var defaultFormatValue = $$(ids.dateFormat).getValue();
 	var dateFormat = parseInt(defaultFormatValue);
@@ -67,6 +95,33 @@ function refreshDateValue() {
 	$$(ids.defaultDateValue).refresh();
 }
 
+function defaultTimeChange() {
+	var dateFormat = parseInt($$(ids.defaultTime).getValue());
+	switch (dateFormat) {
+		case 1: {
+			$$(ids.defaultTimeValue).disable();
+			$$(ids.defaultTimeValue).setValue();
+		}
+			break;
+		case 2: {
+			$$(ids.defaultTimeValue).enable();
+			$$(ids.defaultTimeValue).setValue(new Date());
+
+		}
+			break;
+		case 3: {
+			$$(ids.defaultTimeValue).enable();
+			$$(ids.defaultTimeValue).setValue();
+		}
+			break;
+		default: {
+			$$(ids.defaultTimeValue).disable();
+			$$(ids.defaultTimeValue).setValue();
+		}
+			break;
+	}
+	refreshTimevalue();
+}
 
 function refreshTimevalue() {
 	var timeFormat = parseInt($$(ids.timeFormat).getValue());
@@ -402,11 +457,11 @@ var ABFieldDateComponent = new ABFieldComponent({
 			refreshTimevalue();
 		},
 
-		dateDisplay: (date, settings) => {
-			var dateFormat = getDateFormat(settings);
+		// dateDisplay: (date, settings) => {
+		// 	var dateFormat = getDateFormat(settings);
 
-			return webix.Date.dateToStr(dateFormat)(date);
-		}
+		// 	return webix.Date.dateToStr(dateFormat)(date);
+		// }
 	},
 
 	// perform any additional setup actions here.

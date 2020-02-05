@@ -354,7 +354,7 @@ module.exports = class AB_Work_Interface_List extends ABComponent {
 
 
 			onBeforeEditStop: function(state, editor) {
-console.error('!! todo: onBeforeEditStop() editing');
+console.warn('!! todo: onBeforeEditStop() editing');
 				// if (!inputValidator.validateFormat(state.value)) {
 				// 	return false;
 				// }
