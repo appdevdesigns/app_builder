@@ -3,7 +3,7 @@ const ABComponent = require("../classes/platform/ABComponent");
 module.exports = class AB_Work_Admin_User_Form_Role_Add extends ABComponent {
 
 	constructor(App) {
-		super(App, 'ab_work_admin_user_form_role_add');
+		super(App, 'ab_admin_user_form_role_add');
 
 		let L = this.Label;
 		let labels = {

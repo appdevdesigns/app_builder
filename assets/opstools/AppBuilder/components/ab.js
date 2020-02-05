@@ -13,6 +13,7 @@
 const ABComponent = require("../classes/platform/ABComponent");
 const AB_Choose = require('./ab_choose');
 const AB_Work = require('./ab_work');
+const AB_Admin = require('./ab_admin');
 
 // // Import our Custom Components here:
 // import ActiveList from '../webix_custom_components/activelist'
@@ -102,6 +103,7 @@ module.exports = class AB extends ABComponent {    //('ab', function(App) {
 		// Define the external components used in this Component:
 		var AppChooser = new AB_Choose(App);
 		var AppWorkspace = new AB_Work(App);
+		var AppAdmin = new AB_Admin(App);
 
 
 		// This component's UI definition:
@@ -114,7 +116,8 @@ module.exports = class AB extends ABComponent {    //('ab', function(App) {
 // height : 800,
 			rows:[
 				AppChooser.ui,
-				AppWorkspace.ui
+				AppWorkspace.ui,
+				AppAdmin.ui
 			]
 		};
 
@@ -123,6 +126,7 @@ module.exports = class AB extends ABComponent {    //('ab', function(App) {
 
 			AppChooser.init();
 			AppWorkspace.init();
+			AppAdmin.init();
 
 			// start off only showing the App Chooser:
 			App.actions.transitionApplicationChooser();

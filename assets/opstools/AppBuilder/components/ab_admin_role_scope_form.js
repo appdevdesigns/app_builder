@@ -6,7 +6,7 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 
 	constructor(App) {
 
-		let idBase = 'ab_work_admin_role_scope_form';
+		let idBase = 'ab_admin_role_scope_form';
 
 		super(App, idBase);
 
@@ -56,11 +56,6 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 						name: "description",
 						label: "Description",
 						placeholder: "Enter Description"
-					},
-					{
-						view: "checkbox",
-						name: "isGlobal",
-						label: "Is Global"
 					},
 					{
 						id: ids.object,
@@ -185,7 +180,6 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 					$$(ids.form).setValues({
 						name: currScope.name,
 						description: currScope.description,
-						isGlobal: currScope.isGlobal,
 						objectIds: objectIds
 					});
 				}

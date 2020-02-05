@@ -1,14 +1,14 @@
 const ABComponent = require("../classes/platform/ABComponent");
 
-const ABAdminRoleList = require("./ab_work_admin_role_list");
-const ABAdminRoleForm = require("./ab_work_admin_role_form");
-const ABAdminRoleScope = require("./ab_work_admin_role_scope");
-const ABAdminRoleUser = require("./ab_work_admin_role_user");
+const ABAdminRoleList = require("./ab_admin_role_list");
+const ABAdminRoleForm = require("./ab_admin_role_form");
+const ABAdminRoleScope = require("./ab_admin_role_scope");
+const ABAdminRoleUser = require("./ab_admin_role_user");
 
 module.exports = class AB_Work_Admin_Role extends ABComponent {
 
 	constructor(App) {
-		super(App, 'ab_work_admin_role');
+		super(App, 'ab_admin_role');
 
 		let L = this.Label;
 

@@ -1,11 +1,11 @@
 const ABComponent = require("../classes/platform/ABComponent");
 
-const ABUserAdd = require("./ab_work_admin_role_user_add");
+const ABUserAdd = require("./ab_admin_role_user_add");
 
 module.exports = class AB_Work_Admin_Role_User extends ABComponent {
 
 	constructor(App) {
-		super(App, 'ab_work_admin_role_user');
+		super(App, 'ab_admin_role_user');
 
 		let L = this.Label;
 		let labels = {

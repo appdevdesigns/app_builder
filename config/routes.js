@@ -149,8 +149,8 @@ module.exports = {
 
 
     /* Roles */
-    'get /app_builder/application/:appID/role':
-        'app_builder/ABRoleController.roleApplication',
+    // 'get /app_builder/application/:appID/role':
+    //     'app_builder/ABRoleController.roleApplication',
 
     'get /app_builder/role':
         'app_builder/ABRoleController.find',
@@ -164,11 +164,11 @@ module.exports = {
     'delete /app_builder/role/:roleId':
         'app_builder/ABRoleController.destroy',
 
-    'put /app_builder/application/:appID/role/:roleID':
-        'app_builder/ABRoleController.import',
+    // 'put /app_builder/application/:appID/role/:roleID':
+    //     'app_builder/ABRoleController.import',
 
-    'delete /app_builder/application/:appID/role/:roleID':
-        'app_builder/ABRoleController.exclude',
+    // 'delete /app_builder/application/:appID/role/:roleID':
+    //     'app_builder/ABRoleController.exclude',
 
     'get /app_builder/role/:roleId/scope':
         'app_builder/ABRoleController.roleScope',

@@ -1,11 +1,12 @@
 const ABComponent = require("../classes/platform/ABComponent");
+const ABRole = require("../classes/platform/ABRole");
 
-const ABAdminRoleImport = require("./ab_work_admin_role_import");
+const ABAdminRoleImport = require("./ab_admin_role_import");
 
 module.exports = class AB_Work_Admin_Role_List extends ABComponent {
 
 	constructor(App) {
-		super(App, 'ab_work_admin_role_list');
+		super(App, 'ab_admin_role_list');
 
 		let L = this.Label;
 		let labels = {
@@ -61,13 +62,13 @@ module.exports = class AB_Work_Admin_Role_List extends ABComponent {
 					columns: [
 						{ id: "name", header: "Name", width: 200 },
 						{ id: "description", header: "Description", fillspace: true },
-						{
-							id: "exclude", header: "", width: 40,
-							template: (obj, common, value) => {
-								return '<div class="exclude"><span class="webix_icon fa fa-reply"></span></div>';
-							},
-							css: { 'text-align': 'center' }
-						},
+						// {
+						// 	id: "exclude", header: "", width: 40,
+						// 	template: (obj, common, value) => {
+						// 		return '<div class="exclude"><span class="webix_icon fa fa-reply"></span></div>';
+						// 	},
+						// 	css: { 'text-align': 'center' }
+						// },
 						{
 							id: "remove", header: "", width: 40,
 							template: "<div class='remove'>{common.trashIcon()}</div>",
@@ -83,9 +84,9 @@ module.exports = class AB_Work_Admin_Role_List extends ABComponent {
 						}
 					},
 					onClick: {
-						"exclude": (event, data, target) => {
-							_logic.exclude(data.row);
-						},
+						// "exclude": (event, data, target) => {
+						// 	_logic.exclude(data.row);
+						// },
 						"remove": (event, data, target) => {
 							_logic.remove(data.row);
 						}
@@ -94,15 +95,15 @@ module.exports = class AB_Work_Admin_Role_List extends ABComponent {
 				{
 					cols: [
 						{ fillspace: true },
-						{
-							view: 'button',
-							type: "icon",
-							icon: "fa fa-download",
-							label: "Import role",
-							click: () => {
-								RoleImport.show();
-							}
-						},
+						// {
+						// 	view: 'button',
+						// 	type: "icon",
+						// 	icon: "fa fa-download",
+						// 	label: "Import role",
+						// 	click: () => {
+						// 		RoleImport.show();
+						// 	}
+						// },
 						{
 							view: 'button',
 							type: "icon",
@@ -158,24 +159,6 @@ module.exports = class AB_Work_Admin_Role_List extends ABComponent {
 		// our internal business logic
 		let _logic = {
 
-
-			/**
-			 * @function applicationLoad
-			 *
-			 * Initialize the Object Workspace with the given ABApplication.
-			 *
-			 * @param {ABApplication} application 
-			 */
-			applicationLoad: function (application) {
-
-				CurrentApplication = application;
-				RoleImport.applicationLoad(application);
-
-				this._isLoaded = false;
-
-			},
-
-
 			/**
 			 * @function show()
 			 *
@@ -207,18 +190,15 @@ module.exports = class AB_Work_Admin_Role_List extends ABComponent {
 
 				_logic.busy();
 
-				CurrentApplication.roleLoad()
+				ABRole.find()
 					.catch(err => {
 						console.error(err);
 						_logic.ready();
 					})
-					.then(() => {
+					.then(roles => {
 
 						// Parse to the data collection
 						if (this._roleDC) {
-
-							let roles = CurrentApplication.roles();
-
 							this._roleDC.setCursor(null);
 							this._roleDC.clearAll();
 							this._roleDC.parse(roles || []);
@@ -281,21 +261,21 @@ module.exports = class AB_Work_Admin_Role_List extends ABComponent {
 
 			},
 
-			exclude: (roleId) => {
+			// exclude: (roleId) => {
 
-				_logic.busy();
+			// 	_logic.busy();
 
-				CurrentApplication.roleExclude(roleId)
-					.catch(err => {
-						console.error(err);
-						_logic.ready();
-					})
-					.then(() => {
-						this._roleDC.remove(roleId);
-						_logic.ready();
-					})
+			// 	CurrentApplication.roleExclude(roleId)
+			// 		.catch(err => {
+			// 			console.error(err);
+			// 			_logic.ready();
+			// 		})
+			// 		.then(() => {
+			// 			this._roleDC.remove(roleId);
+			// 			_logic.ready();
+			// 		})
 
-			},
+			// },
 
 			remove: (roleId) => {
 
@@ -311,7 +291,7 @@ module.exports = class AB_Work_Admin_Role_List extends ABComponent {
 
 							_logic.busy();
 
-							CurrentApplication.roleDestroy(role)
+							role.destroy()
 								.catch(err => {
 									console.error(err);
 									_logic.ready();

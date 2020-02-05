@@ -23,6 +23,7 @@ module.exports = class ABChooseList extends ABComponent {
 
 			component: {
 				title: L('ab.application.application', '*Applications'),
+				administration: L('ab.application.administration', '*Administration'),
 				settings: L('ab.application.settings', '*Settings'),
 				createNew: L('ab.application.createNew', '*Add new application'),
 				noApplication: L('ab.application.noApplication', "*There is no application data"),
@@ -74,6 +75,16 @@ module.exports = class ABChooseList extends ABComponent {
 							cols: [
 								{ view: "spacer", width: 10 },
 								{ view: "label", label:labels.component.title, fillspace: true },
+								{ 
+									view:"button", 
+									type:"icon", 
+									label: labels.component.administration,
+									icon:"fa fa-user",
+									autowidth:true,
+									click: ()=>{
+										App.actions.transitionAdministration();
+									}
+								},
 								{ 
 			                        view:"button", 
 			                        type:"icon", 

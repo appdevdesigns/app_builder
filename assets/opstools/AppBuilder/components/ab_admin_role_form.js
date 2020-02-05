@@ -4,7 +4,7 @@ module.exports = class AB_Work_Admin_Role_Form extends ABComponent {
 
 	constructor(App) {
 
-		let idBase = 'ab_work_admin_role_form';
+		let idBase = 'ab_admin_role_form';
 
 		super(App, idBase);
 

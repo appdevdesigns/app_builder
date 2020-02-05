@@ -1,10 +1,10 @@
 const ABComponent = require("../classes/platform/ABComponent");
 
-module.exports = class AB_Work_Admin_Role_Import extends ABComponent {
+module.exports = class AB_Work_Admin_Role_Scope_Import extends ABComponent {
 
 	constructor(App) {
 
-		let idBase = 'ab_work_admin_role_import';
+		let idBase = 'ab_admin_role_scope_import';
 
 		super(App, idBase);
 
@@ -12,7 +12,7 @@ module.exports = class AB_Work_Admin_Role_Import extends ABComponent {
 		let labels = {
 			common: App.labels,
 			component: {
-				importRole: L('ab.role.import.title', "*Import exists role")
+				scopeRole: L('ab.scope.import.title', "*Import exists scope")
 			}
 		};
 
@@ -31,7 +31,7 @@ module.exports = class AB_Work_Admin_Role_Import extends ABComponent {
 		this.ui = {
 			id: ids.popup,
 			view: "window",
-			head: labels.component.importRole,
+			head: labels.component.scopeRole,
 			hidden: true,
 			modal: true,
 			position: "center",
@@ -63,7 +63,16 @@ module.exports = class AB_Work_Admin_Role_Import extends ABComponent {
 						data: [],
 						borderless: true,
 						select: true,
-						template: "#name#"
+						template: (scope) => {
+
+							let templateText = `<span class='fa fa-street-view'></span> ${scope.name}`;
+							let objects = scope.objects();
+							if (objects && objects.length) {
+								templateText += ` - <span class='fa fa-database'></span> ${objects.map(obj => obj.label).join(', ')}`;
+							}
+
+							return templateText;
+						}
 					},
 
 					// Import & Cancel buttons
@@ -97,9 +106,10 @@ module.exports = class AB_Work_Admin_Role_Import extends ABComponent {
 		};
 
 		// Our init() function for setting up our UI
-		this.init = function (roleDC) {
+		this.init = function (roleDC, scopeDC) {
 
 			this._roleDC = roleDC;
+			this._scopeDC = scopeDC;
 
 			webix.ui(this.ui);
 
@@ -125,17 +135,19 @@ module.exports = class AB_Work_Admin_Role_Import extends ABComponent {
 
 					_logic.busy();
 
-					CurrentApplication.roleFind()
+					CurrentApplication.scopeFind()
 						.catch(err => {
 							console.error(err);
 							_logic.ready();
 						})
-						.then(roles => {
+						.then(scopes => {
 
-							roles = (roles || []).filter(otherRole => CurrentApplication.roles(r => r.id == otherRole.id).length < 1);
+							let includedScopes = this._scopeDC.find({});
+
+							scopes = (scopes || []).filter(otherScope => includedScopes.filter(s => s.id == otherScope.id).length < 1);
 
 							// refresh role list
-							$$(ids.list).parse(roles);
+							$$(ids.list).parse(scopes);
 
 							_logic.ready();
 
@@ -143,6 +155,16 @@ module.exports = class AB_Work_Admin_Role_Import extends ABComponent {
 
 				}
 
+			},
+
+			getRole: () => {
+
+				if (!this._roleDC)
+					return null;
+
+				let roleId = this._roleDC.getCursor();
+
+				return this._roleDC.getItem(roleId);
 
 			},
 
@@ -185,12 +207,14 @@ module.exports = class AB_Work_Admin_Role_Import extends ABComponent {
 
 			save: () => {
 
-				let roleId = $$(ids.list).getSelectedId();
-				if (!roleId) return;
+				let importedScope = $$(ids.list).getSelectedItem();
+				if (!importedScope) return;
 
 				_logic.busy();
 
-				CurrentApplication.roleImport(roleId)
+				let role = _logic.getRole();
+
+				CurrentApplication.scopeImport(importedScope, role)
 					.catch(err => {
 						console.error(err);
 						_logic.ready();
@@ -198,16 +222,14 @@ module.exports = class AB_Work_Admin_Role_Import extends ABComponent {
 					.then(() => {
 
 						// update list
-						if (this._roleDC) {
-							let importedRole = $$(ids.list).getSelectedItem();
-							this._roleDC.add(importedRole);
+						if (this._scopeDC) {
+							this._scopeDC.add(importedScope);
 						}
 
 						_logic.ready();
 						_logic.hide();
 
-					})
-
+					});
 
 			}
 

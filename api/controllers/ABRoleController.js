@@ -13,26 +13,26 @@ const ScopeGraph = require("../graphModels/ABScope");
 
 module.exports = {
 
-	// GET /app_builder/application/:appID/role
-	roleApplication: (req, res) => {
+	// // GET /app_builder/application/:appID/role
+	// roleApplication: (req, res) => {
 
-		let appID = req.param('appID');
-		let cond = req.body.query || {};
+	// 	let appID = req.param('appID');
+	// 	let cond = req.body.query || {};
 
-		RoleGraph.findWithRelation('applications', appID, {
-			where: cond,
-			relations: ['scope']
-		})
-			.catch(error => {
-				res.AD.error(error);
-			})
-			.then(roles => {
+	// 	RoleGraph.findWithRelation('applications', appID, {
+	// 		where: cond,
+	// 		relations: ['scope']
+	// 	})
+	// 		.catch(error => {
+	// 			res.AD.error(error);
+	// 		})
+	// 		.then(roles => {
 
-				res.AD.success(roles || []);
+	// 			res.AD.success(roles || []);
 
-			});
+	// 		});
 
-	},
+	// },
 
 	// GET /app_builder/role
 	find: function (req, res) {
@@ -133,77 +133,77 @@ module.exports = {
 			});
 	},
 
-	// PUT /app_builder/application/:appID/role/:roleID
-	import: function (req, res) {
+	// // PUT /app_builder/application/:appID/role/:roleID
+	// import: function (req, res) {
 
-		let appID = req.param('appID'),
-			roleID = req.param('roleID');
+	// 	let appID = req.param('appID'),
+	// 		roleID = req.param('roleID');
 
-		Promise.resolve()
+	// 	Promise.resolve()
 
-			// Get a role
-			.then(() => {
+	// 		// Get a role
+	// 		.then(() => {
 
-				return new Promise((next, err) => {
+	// 			return new Promise((next, err) => {
 
-					RoleGraph.findOne(roleID, {
-						relations: ['applications']
-					})
-						.catch(err)
-						.then(role => {
-							next(role);
-						});
+	// 				RoleGraph.findOne(roleID, {
+	// 					relations: ['applications']
+	// 				})
+	// 					.catch(err)
+	// 					.then(role => {
+	// 						next(role);
+	// 					});
 
 
-				});
+	// 			});
 
-			})
+	// 		})
 
-			// Set relate
-			.then(role => {
+	// 		// Set relate
+	// 		.then(role => {
 
-				return new Promise((next, err) => {
+	// 			return new Promise((next, err) => {
 
-					// if exists
-					if (role.applications.filter(app => app.id == appID)[0]) {
-						res.AD.success(role);
-						return next();
-					}
+	// 				// if exists
+	// 				if (role.applications.filter(app => app.id == appID)[0]) {
+	// 					res.AD.success(role);
+	// 					return next();
+	// 				}
 
-					role.relate('applications', appID)
-						.catch(err)
-						.then(() => {
+	// 				role.relate('applications', appID)
+	// 					.catch(err)
+	// 					.then(() => {
 
-							res.AD.success(role);
-							next();
+	// 						res.AD.success(role);
+	// 						next();
 
-						});
+	// 					});
 
-				});
+	// 			});
 
-			});
+	// 		});
 
-	},
+	// },
 
-	// DELETE /app_builder/application/:appID/role/:roleID
-	exclude: function (req, res) {
+	// // DELETE /app_builder/application/:appID/role/:roleID
+	// exclude: function (req, res) {
 
-		let appID = req.param('appID'),
-			roleID = req.param('roleID');
+	// 	let appID = req.param('appID'),
+	// 		roleID = req.param('roleID');
 
-		RoleGraph.unrelate(
-			RoleGraph.relations.applications,
-			appID,
-			roleID
-		)
-			.catch(res.AD.error)
-			.then(() => {
+	// 	RoleGraph.unrelate(
+	// 		RoleGraph.relations.applications,
+	// 		appID,
+	// 		roleID
+	// 	)
+	// 		.catch(res.AD.error)
+	// 		.then(() => {
 
-				res.AD.success(true);
+	// 			res.AD.success(true);
 
-			});
+	// 		});
 
-	},
+	// },
 
 	// GET /app_builder/role/:roleId/scope
 	roleScope: function (req, res) {

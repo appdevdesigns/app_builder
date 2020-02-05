@@ -1,57 +1,57 @@
-require("../data/ABUser");
-
 const ABComponent = require("../classes/platform/ABComponent");
 
-const ABAdminUserList = require("./ab_work_admin_user_list");
-const ABAdminUserForm = require("./ab_work_admin_user_form");
+const ABAdminFormInfo = require("./ab_admin_user_form_info");
+const ABAdminFormRole = require("./ab_admin_user_form_role");
 
-module.exports = class AB_Work_Admin_User extends ABComponent {
+module.exports = class AB_Work_Admin_User_Form extends ABComponent {
 
 	constructor(App) {
-		super(App, 'ab_work_admin_user');
+		super(App, 'ab_admin_user_form');
+
+		let L = this.Label;
+
+		let FormInfo = new ABAdminFormInfo(App);
+		let FormRole = new ABAdminFormRole(App);
 
 		// internal list of Webix IDs to reference our UI components.
 		let ids = {
 			component: this.unique('component')
 		};
 
-		let userDC = new webix.DataCollection();
-
-		let UserList = new ABAdminUserList(App);
-		let UserForm = new ABAdminUserForm(App);
-
-
 		// Our webix UI definition:
 		this.ui = {
 			id: ids.component,
-			view: "multiview",
-			cells: [
-				UserList.ui,
-				UserForm.ui
+			type: "space",
+			rows: [
+				{
+					borderless: true,
+					type: "space",
+					cols: [
+						FormInfo.ui,
+						FormRole.ui
+					]
+				},
+				{
+					fillspace: true
+				}
 			]
 		};
 
+		let CurrentApplication;
 
 		// Our init() function for setting up our UI
-		this.init = function () {
+		this.init = (userDC) => {
 
-			UserList.init(userDC);
-			UserForm.init(userDC);
+			this._userDC = userDC;
 
-			userDC.attachEvent("onAfterCursorChange", (userId) => {
-
-				if (userId)
-					UserForm.show();
-				else
-					UserList.show();
-
-			});
+			FormInfo.init(userDC);
+			FormRole.init(userDC);
 
 		}
 
-
 		// our internal business logic
 		let _logic = {
+
 
 			/**
 			 * @function applicationLoad
@@ -62,13 +62,13 @@ module.exports = class AB_Work_Admin_User extends ABComponent {
 			 */
 			applicationLoad: function (application) {
 
-				userDC.setCursor(null);
-				userDC.clearAll();
+				CurrentApplication = application;
 
-				UserList.applicationLoad(application);
-				UserForm.applicationLoad(application);
+				FormInfo.applicationLoad(application);
+				FormRole.applicationLoad(application);
 
 			},
+
 
 			/**
 			 * @function show()
@@ -79,13 +79,12 @@ module.exports = class AB_Work_Admin_User extends ABComponent {
 
 				$$(ids.component).show();
 
-				UserList.show();
+				FormRole.show();
 
 			}
-
 		}
-		this._logic = _logic;
 
+		this._logic = _logic;
 
 		// 
 		// Define our external interface methods:
@@ -94,5 +93,4 @@ module.exports = class AB_Work_Admin_User extends ABComponent {
 		this.show = _logic.show;
 
 	}
-
-}
+};

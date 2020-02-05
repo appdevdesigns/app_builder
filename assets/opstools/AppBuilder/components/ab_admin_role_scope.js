@@ -1,12 +1,12 @@
 const ABComponent = require("../classes/platform/ABComponent");
 
-const ABScopeForm = require("./ab_work_admin_role_scope_form");
-const ABScopeImport = require("./ab_work_admin_role_scope_import");
+const ABScopeForm = require("./ab_admin_role_scope_form");
+const ABScopeImport = require("./ab_admin_role_scope_import");
 
 module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 
 	constructor(App) {
-		super(App, 'ab_work_admin_role_scope');
+		super(App, 'ab_admin_role_scope');
 
 		let L = this.Label;
 		let labels = {
