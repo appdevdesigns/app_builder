@@ -31,8 +31,9 @@ module.exports = class ABProcessTriggerLifecycle extends ABProcessTriggerLifecyc
         });
 
         var ui = {
+            view: "form",
             id: id,
-            rows: [
+            elements: [
                 {
                     id: ids.name,
                     view: "text",
