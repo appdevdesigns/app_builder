@@ -10,55 +10,52 @@ var ABProcessParticipantCore = require("../../core/process/ABProcessParticipantC
 let __Roles = null;
 let __Users = null;
 
+// until we properly merge in the CoreV2 code, we need to make sure this
+// doesn't run on the server:
+if (typeof ABServerApp == "undefined") {
+    // #HACK: temporary implementation until we pull Roles into AppBuilder.
+    if (!__Roles) {
+        __Roles = [{ id: 0, value: "Select Role" }];
+        var Roles = AD.Model.get("opstools.RBAC.PermissionRole");
+        Roles.findAll()
+            .fail(function(err) {
+                AD.error.log("ABProcessParticipantCore: Error loading Roles", {
+                    error: err
+                });
+            })
+            .then(function(list) {
+                // make sure they are all translated.
+                list.forEach(function(l) {
+                    l.translate();
+                    __Roles.push({ id: l.id, value: l.role_label });
+                });
+            });
+    }
+
+    // #HACK: temporary implementation until we pull Users into AppBuilder.
+    if (!__Users) {
+        __Users = [];
+        var SiteUser = AD.Model.get("opstools.RBAC.SiteUser");
+        SiteUser.findAll()
+            .fail(function(err) {
+                AD.error.log(
+                    "ABProcessParticipantCore: Error loading SiteUser",
+                    {
+                        error: err
+                    }
+                );
+            })
+            .then(function(list) {
+                list.forEach(function(l) {
+                    __Users.push({ id: l.id, value: l.username });
+                });
+            });
+    }
+}
+
 module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
     constructor(attributes, process, application) {
         super(attributes, process, application);
-
-        // until we properly merge in the CoreV2 code, we need to make sure this
-        // doesn't run on the server:
-        if (typeof ABServerApp == "undefined") {
-            // #HACK: temporary implementation until we pull Roles into AppBuilder.
-            if (!__Roles) {
-                __Roles = [{ id: 0, value: "Select Role" }];
-                var Roles = AD.Model.get("opstools.RBAC.PermissionRole");
-                Roles.findAll()
-                    .fail(function(err) {
-                        AD.error.log(
-                            "ABProcessParticipantCore: Error loading Roles",
-                            {
-                                error: err
-                            }
-                        );
-                    })
-                    .then(function(list) {
-                        // make sure they are all translated.
-                        list.forEach(function(l) {
-                            l.translate();
-                            __Roles.push({ id: l.id, value: l.role_label });
-                        });
-                    });
-            }
-
-            // #HACK: temporary implementation until we pull Users into AppBuilder.
-            if (!__Users) {
-                __Users = [];
-                var SiteUser = AD.Model.get("opstools.RBAC.SiteUser");
-                SiteUser.findAll()
-                    .fail(function(err) {
-                        AD.error.log(
-                            "ABProcessParticipantCore: Error loading SiteUser",
-                            {
-                                error: err
-                            }
-                        );
-                    })
-                    .then(function(list) {
-                        list.forEach(function(l) {
-                            __Users.push({ id: l.id, value: l.username });
-                        });
-                    });
-            }
-        }
     }
 
     ////
@@ -264,7 +261,7 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
                                 view: "select",
                                 value: obj.role ? obj.role : "",
                                 disabled: obj.useRole ? false : true,
-                                options: __Roles,
+                                options: __Roles || ["??"],
                                 labelAlign: "left"
                             }
                         ]
@@ -291,7 +288,7 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
                                 view: "multicombo",
                                 value: obj.account ? obj.account : 0,
                                 disabled: obj.useAccount ? false : true,
-                                suggest: __Users,
+                                suggest: __Users || ["??"],
                                 labelAlign: "left",
                                 placeholder: "Click or type to add user..."
                             }
@@ -306,11 +303,21 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
         var obj = {};
         var ids = ABProcessParticipant.propertyIDs(id);
 
-        obj.useRole = $$(ids.useRole).getValue();
-        obj.role = $$(ids.role).getValue();
+        if ($$(ids.useRole)) {
+            obj.useRole = $$(ids.useRole).getValue();
+        }
 
-        obj.useAccount = $$(ids.useAccount).getValue();
-        obj.account = $$(ids.account).getValue();
+        if ($$(ids.role)) {
+            obj.role = $$(ids.role).getValue();
+        }
+
+        if ($$(ids.useAccount)) {
+            obj.useAccount = $$(ids.useAccount).getValue();
+        }
+
+        if ($$(ids.account)) {
+            obj.account = $$(ids.account).getValue();
+        }
 
         return obj;
     }

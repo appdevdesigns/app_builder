@@ -272,14 +272,20 @@ module.exports = class ABProcessTaskEmail extends ABProcessTaskEmailCore {
      */
     propertiesStash(id) {
         var ids = this.propertyIDs(id);
-        this.name = $$(ids.name).getValue();
-        this.to = $$(ids.to).getValue();
-        this.from = $$(ids.from).getValue();
-        this.subject = $$(ids.subject).getValue();
-        this.message = $$(ids.message).getValue();
-        this.toCustom = $$(ids.toCustom).getValue();
-        this.fromCustom = $$(ids.fromCustom).getValue();
+        this.name = this.property(ids.name);
+        this.to = this.property(ids.to);
+        this.from = this.property(ids.from);
+        this.subject = this.property(ids.subject);
+        this.message = this.property(ids.message);
+        this.toCustom = this.property(ids.toCustom);
+        this.fromCustom = this.property(ids.fromCustom);
         this.toUsers = ABProcessParticipant.stashUsersUi(id + "_to_");
         this.fromUsers = ABProcessParticipant.stashUsersUi(id + "_from_");
+    }
+
+    property(id) {
+        if ($$(id)) {
+            return $$(id).getValue();
+        }
     }
 };
