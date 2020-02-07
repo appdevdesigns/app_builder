@@ -1,4 +1,5 @@
 const ABComponent = require("../classes/platform/ABComponent");
+const ABRole = require("../classes/platform/ABRole");
 
 const ABRoleAdd = require("./ab_admin_user_form_role_add");
 
@@ -12,8 +13,6 @@ module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
 		let ids = {
 			datatable: this.unique('datatable')
 		};
-
-		let CurrentApplication;
 
 		let RoleAdd = new ABRoleAdd(App);
 
@@ -91,17 +90,6 @@ module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
 		// our internal business logic
 		let _logic = {
 
-			applicationLoad: (application) => {
-
-				CurrentApplication = application;
-
-				this._roleScopeDC.setCursor(null);
-				this._roleScopeDC.clearAll();
-
-				RoleAdd.applicationLoad(application);
-
-			},
-
 			show: () => {
 
 				_logic.busy();
@@ -118,7 +106,7 @@ module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
 					return;
 				}
 
-				CurrentApplication.roleScopeOfUser(currUser.username)
+				ABRole.roleScopeOfUser(currUser.username)
 					.catch(err => {
 						console.error(err);
 						_logic.ready();
@@ -151,15 +139,15 @@ module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
 						if (!roleScope)
 							return _logic.ready();
 
-						let roleId = roleScope.role ? roleScope.role.id : "";
+						let role = roleScope.role;
 						let scopeId = roleScope.scope ? roleScope.scope.id : "";
 						let userId = this._userDC.getCursor();
 						let user = this._userDC.getItem(userId);
 
-						if (!roleId || !scopeId || !user)
+						if (!role || !scopeId || !user)
 							return _logic.ready();
 
-						CurrentApplication.scopeRemoveUser(roleId, scopeId, user.username)
+						role.userRemove(scopeId, user.username)
 							.catch(err => {
 								console.error(err);
 								_logic.ready();
@@ -199,7 +187,6 @@ module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
 		// 
 		// Define our external interface methods:
 		// 
-		this.applicationLoad = _logic.applicationLoad;
 		this.show = _logic.show;
 
 	}

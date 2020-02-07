@@ -1,4 +1,5 @@
 const ABComponent = require("../classes/platform/ABComponent");
+const ABRole = require("../classes/platform/ABRole");
 
 module.exports = class AB_Work_Admin_User_Form_Role_Add extends ABComponent {
 
@@ -20,9 +21,6 @@ module.exports = class AB_Work_Admin_User_Form_Role_Add extends ABComponent {
 			buttonSave: this.unique('buttonSave')
 		};
 
-		let CurrentApplication;
-
-
 		// Our init() function for setting up our UI
 		this.init = (userDC, roleScopeDC) => {
 
@@ -40,12 +38,6 @@ module.exports = class AB_Work_Admin_User_Form_Role_Add extends ABComponent {
 
 		// our internal business logic
 		let _logic = {
-
-			applicationLoad: (application) => {
-
-				CurrentApplication = application;
-
-			},
 
 			template: (item) => {
 
@@ -80,17 +72,17 @@ module.exports = class AB_Work_Admin_User_Form_Role_Add extends ABComponent {
 				}
 
 
-				CurrentApplication.roleLoad()
+				ABRole.find()
 					.catch(err => {
 						console.error(err);
 						_logic.ready();
 					})
-					.then(() => {
+					.then(roles => {
 
 						// remove included roles
 						let includedRoleIds = this._roleScopeDC.find({}).map(d => d.role ? d.role.id : "").filter(rId => rId);
 						let includedScopeIds = this._roleScopeDC.find({}).map(d => d.scope ? d.scope.id : "").filter(sId => sId);
-						let roles = (CurrentApplication.roles() || []).filter(r => includedRoleIds.indexOf(r.id) < 1);
+						roles = (roles || []).filter(r => includedRoleIds.indexOf(r.id) < 1);
 
 						// pull scopes
 						let tasks = [];
@@ -99,7 +91,7 @@ module.exports = class AB_Work_Admin_User_Form_Role_Add extends ABComponent {
 							if (r._scopes.length < 1) {
 								tasks.push(new Promise((next, err) => {
 
-									CurrentApplication.scopeOfRole(r.id)
+									r.scopeLoad()
 										.catch(err)
 										.then(scopes => {
 											r._scopes = scopes || [];
@@ -133,7 +125,7 @@ module.exports = class AB_Work_Admin_User_Form_Role_Add extends ABComponent {
 										roleData.data.push({
 											id: s.id,
 											name: s.name,
-											roleId: r.id,
+											role: r,
 											type: 'scope'
 										})
 									});
@@ -183,7 +175,11 @@ module.exports = class AB_Work_Admin_User_Form_Role_Add extends ABComponent {
 				if (!selectedScope)
 					return _logic.ready();
 
-				CurrentApplication.scopeAddUser(selectedScope.roleId, selectedScope.id, user.username)
+				let role = selectedScope.role;
+				if (!role)
+					return _logic.ready();
+
+					role.userAdd(selectedScope.id, user.username)
 					.catch(err => {
 						console.error(err);
 						_logic.ready();
@@ -191,7 +187,6 @@ module.exports = class AB_Work_Admin_User_Form_Role_Add extends ABComponent {
 					.then(() => {
 
 						// update role list of user
-						let role = CurrentApplication.roles(r => r.id == selectedScope.roleId)[0];
 						let scope = role.scopes(s => s.id == selectedScope.id)[0];
 						if (role && scope) {
 							this._roleScopeDC.add({
@@ -296,7 +291,6 @@ module.exports = class AB_Work_Admin_User_Form_Role_Add extends ABComponent {
 		// 
 		// Define our external interface methods:
 		// 
-		this.applicationLoad = _logic.applicationLoad;
 		this.show = _logic.show;
 
 	}

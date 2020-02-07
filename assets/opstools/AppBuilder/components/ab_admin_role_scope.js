@@ -32,8 +32,6 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 			createScope: this.unique('createScope'),
 		};
 
-		let CurrentApplication;
-
 		// Our webix UI definition:
 		this.ui = {
 			id: ids.component,
@@ -147,15 +145,15 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 
 		let _logic = {
 
-			applicationLoad: (application) => {
-				CurrentApplication = application;
+			// applicationLoad: (application) => {
+			// 	CurrentApplication = application;
 
-				this._scopeDC.setCursor(null);
-				this._scopeDC.clearAll();
+			// 	this._scopeDC.setCursor(null);
+			// 	this._scopeDC.clearAll();
 
-				ScopeForm.applicationLoad(application);
-				ScopeImport.applicationLoad(application);
-			},
+			// 	ScopeForm.applicationLoad(application);
+			// 	ScopeImport.applicationLoad(application);
+			// },
 
 			busy: () => {
 
@@ -188,8 +186,10 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 
 			editScope: (scopeId) => {
 
-				ScopeForm.show();
-				this._scopeDC.setCursor(scopeId);
+				ScopeForm.show()
+					.then(() => {
+						this._scopeDC.setCursor(scopeId);
+					});
 
 			},
 
@@ -199,7 +199,7 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 
 				let role = _logic.getRole();
 
-				CurrentApplication.scopeExclude(scopeId, role)
+				role.scopeExclude(scopeId)
 					.catch((err) => {
 						console.error(err);
 						_logic.ready();
@@ -226,9 +226,7 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 
 							_logic.busy();
 
-							let role = _logic.getRole();
-
-							CurrentApplication.scopeDestroy(scope, role)
+							scope.destroy()
 								.catch((err) => {
 									console.error(err);
 									_logic.ready();
@@ -265,18 +263,17 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 
 				_logic.busy();
 
-				CurrentApplication.scopeOfRole(role.id)
+				role.scopeLoad()
 					.catch(err => {
 						console.error(err);
 						_logic.ready();
 					})
-					.then(scopes => {
+					.then(() => {
 
-						this._scopeDC.parse(scopes || []);
-						role._scopes = scopes;
+						this._scopeDC.parse(role.scopes() || []);
 
 						_logic.ready();
-					})
+					});
 
 			}
 
@@ -287,7 +284,7 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 		// 
 		// Define our external interface methods:
 		// 
-		this.applicationLoad = _logic.applicationLoad;
+		// this.applicationLoad = _logic.applicationLoad;
 		this.onShow = _logic.onShow;
 
 	}

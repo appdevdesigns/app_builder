@@ -1,7 +1,7 @@
 const ABComponent = require("../classes/platform/ABComponent");
 const ABRole = require("../classes/platform/ABRole");
 
-const ABAdminRoleImport = require("./ab_admin_role_import");
+// const ABAdminRoleImport = require("./ab_admin_role_import");
 
 module.exports = class AB_Work_Admin_Role_List extends ABComponent {
 
@@ -24,7 +24,7 @@ module.exports = class AB_Work_Admin_Role_List extends ABComponent {
 			search: this.unique('search')
 		};
 
-		let RoleImport = new ABAdminRoleImport(App);
+		// let RoleImport = new ABAdminRoleImport(App);
 
 		// Our webix UI definition:
 		this.ui = {
@@ -118,8 +118,6 @@ module.exports = class AB_Work_Admin_Role_List extends ABComponent {
 			]
 		};
 
-		let CurrentApplication;
-
 		// Our init() function for setting up our UI
 		this.init = (roleDC) => {
 
@@ -145,7 +143,7 @@ module.exports = class AB_Work_Admin_Role_List extends ABComponent {
 
 				});
 
-				RoleImport.init(this._roleDC);
+				// RoleImport.init(this._roleDC);
 
 			}
 			else {
@@ -329,7 +327,6 @@ module.exports = class AB_Work_Admin_Role_List extends ABComponent {
 		// 
 		// Define our external interface methods:
 		// 
-		this.applicationLoad = _logic.applicationLoad;
 		this.show = _logic.show;
 
 	}

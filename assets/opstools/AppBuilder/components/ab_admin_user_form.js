@@ -37,8 +37,6 @@ module.exports = class AB_Work_Admin_User_Form extends ABComponent {
 			]
 		};
 
-		let CurrentApplication;
-
 		// Our init() function for setting up our UI
 		this.init = (userDC) => {
 
@@ -51,24 +49,6 @@ module.exports = class AB_Work_Admin_User_Form extends ABComponent {
 
 		// our internal business logic
 		let _logic = {
-
-
-			/**
-			 * @function applicationLoad
-			 *
-			 * Initialize the Object Workspace with the given ABApplication.
-			 *
-			 * @param {ABApplication} application 
-			 */
-			applicationLoad: function (application) {
-
-				CurrentApplication = application;
-
-				FormInfo.applicationLoad(application);
-				FormRole.applicationLoad(application);
-
-			},
-
 
 			/**
 			 * @function show()
@@ -89,7 +69,6 @@ module.exports = class AB_Work_Admin_User_Form extends ABComponent {
 		// 
 		// Define our external interface methods:
 		// 
-		this.applicationLoad = _logic.applicationLoad;
 		this.show = _logic.show;
 
 	}

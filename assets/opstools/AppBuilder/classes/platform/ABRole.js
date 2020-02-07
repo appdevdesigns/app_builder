@@ -43,7 +43,7 @@ module.exports = class ABRole extends ABRoleCore {
 
 		return new Promise((resolve, reject) => {
 
-			Model.roleScopeOfUser(username)
+			Model.staticData.roleScopeOfUser(username)
 				.catch(reject)
 				.then(data => {
 
@@ -130,13 +130,13 @@ module.exports = class ABRole extends ABRoleCore {
 
 
 	/**
-	 * @method roleUsers()
+	 * @method users()
 	 *
 	 * remove the current ABRole from our list of ._roles.
 	 *
 	 * @return {Promise} - An array of usernames
 	 */
-	roleUsers() {
+	users() {
 
 		return new Promise((resolve, reject) => {
 
@@ -200,5 +200,120 @@ module.exports = class ABRole extends ABRoleCore {
 	// 	});
 
 	// }
+
+	scopeLoad() {
+
+		return new Promise((resolve, reject) => {
+
+			this.Model.staticData.scopeOfRole(this.id)
+				.catch(reject)
+				.then(scopes => {
+
+					this._scopes = [];
+
+					(scopes || []).forEach(s => {
+						// prevent processing of null values.
+						if (s) {
+							this._scopes.push(new ABScope(s));
+						}
+					})
+
+					resolve(this._scopes);
+
+				});
+
+		});
+
+	}
+
+
+	/**
+	 * @method scopeImport()
+	 *
+	 * import the current ABScope to ._scopes of the role.
+	 *
+	 * @param {ABScope} scope
+	 * @return {Promise}
+	 */
+	scopeImport(scope) {
+
+		return new Promise((resolve, reject) => {
+
+			this.Model.staticData.scopeImport(this.id, scope.id)
+				.catch(reject)
+				.then(newScope => {
+
+					// add to list
+					var isIncluded = (this.scopes(s => s.id == newScope.id).length > 0);
+					if (!isIncluded) {
+						this._scopes.push(scope);
+					}
+
+					resolve(scope);
+
+				});
+
+		});
+
+	}
+
+	/**
+	 * @method scopeExclude()
+	 *
+	 * @param {uuid} scopeId
+	 * @return {Promise}
+	 */
+	scopeExclude(scopeId) {
+
+		return new Promise((resolve, reject) => {
+
+			this.Model.staticData.scopeExclude(this.id, scopeId)
+				.catch(reject)
+				.then(() => {
+
+					// remove query from list
+					this._scopes = this.scopes(s => s.id != scopeId);
+
+					resolve();
+
+				});
+
+		});
+
+	}
+
+
+	userAdd(scopeId, username) {
+
+		return new Promise((resolve, reject) => {
+
+			this.Model.staticData.scopeAddUser(this.id, scopeId, username)
+				.catch(reject)
+				.then(() => {
+
+					resolve();
+
+				});
+
+		});
+
+	}
+
+	userRemove(scopeId, username) {
+
+		return new Promise((resolve, reject) => {
+
+			this.Model.staticData.scopeRemoveUser(this.id, scopeId, username)
+				.catch(reject)
+				.then(() => {
+
+					resolve();
+
+				});
+
+		});
+
+	}
+
 
 };

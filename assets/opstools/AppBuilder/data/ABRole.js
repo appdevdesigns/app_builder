@@ -93,14 +93,6 @@ OP.Model.extend('opstools.BuildApp.ABRole',
 
 		},
 
-		scopeGet: function (scopeId) {
-
-			return OP.Comm.Socket.get({
-				url: `/app_builder/scope/${scopeId}`
-			});
-
-		},
-
 		scopeSave: function (scope, roleId) {
 
 			return OP.Comm.Service.put({

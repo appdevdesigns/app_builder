@@ -1,11 +1,10 @@
 
 require("../../data/ABApplication");
-let ABApplicationBase = require("../core/ABApplicationCore");
+let ABApplicationCore = require("../core/ABApplicationCore");
 let ABDataCollection = require("./ABDataCollection");
 let ABObject = require("./ABObject");
 let ABObjectQuery = require("./ABObjectQuery");
 let ABMobileApp = require("./ABMobileApp");
-let ABScope = require("./ABScope");
 let ABViewManager = require("./ABViewManager");
 let ABViewPage = require("./views/ABViewPage");
 
@@ -32,7 +31,7 @@ function toArray(DC) {
 
 // export to ABLiveTool
 // window.ABApplication = ABApplication;
-module.exports = window.ABApplication = class ABApplication extends ABApplicationBase {
+module.exports = window.ABApplication = class ABApplication extends ABApplicationCore {
 
 	constructor(attributes) {
 		super(attributes);

@@ -1,5 +1,7 @@
 const ABComponent = require("../classes/platform/ABComponent");
 
+const ABRole = require("../classes/platform/ABRole");
+
 const ABAdminRoleList = require("./ab_admin_role_list");
 const ABAdminRoleForm = require("./ab_admin_role_form");
 const ABAdminRoleScope = require("./ab_admin_role_scope");
@@ -104,27 +106,6 @@ module.exports = class AB_Work_Admin_Role extends ABComponent {
 		// our internal business logic
 		var _logic = {
 
-			/**
-			 * @function applicationLoad
-			 *
-			 * Initialize the Object Workspace with the given ABApplication.
-			 *
-			 * @param {ABApplication} application 
-			 */
-			applicationLoad: function (application) {
-
-				CurrentApplication = application;
-
-				roleDC.setCursor(null);
-				roleDC.clearAll();
-
-				RoleList.applicationLoad(application);
-				RoleForm.applicationLoad(application);
-				RoleScope.applicationLoad(application);
-				RoleUser.applicationLoad(application);
-
-			},
-
 			switchTab: function (name) {
 
 				let tabview = $$(ids.tabview);
@@ -153,7 +134,7 @@ module.exports = class AB_Work_Admin_Role extends ABComponent {
 				// Add new
 				let isAdded = false;
 				if (!currRole) {
-					currRole = CurrentApplication.roleNew(vals);
+					currRole = new ABRole(vals);
 					isAdded = true;
 				}
 				// Update
@@ -167,7 +148,7 @@ module.exports = class AB_Work_Admin_Role extends ABComponent {
 
 				return new Promise((resolve, reject) => {
 
-					CurrentApplication.roleSave(currRole)
+					currRole.save(currRole)
 						.catch(reject)
 						.then(data => {
 
@@ -215,7 +196,6 @@ module.exports = class AB_Work_Admin_Role extends ABComponent {
 		// 
 		// Define our external interface methods:
 		// 
-		this.applicationLoad = _logic.applicationLoad;
 		this.show = _logic.show;
 
 	}

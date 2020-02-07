@@ -54,23 +54,6 @@ module.exports = class AB_Work_Admin_User extends ABComponent {
 		let _logic = {
 
 			/**
-			 * @function applicationLoad
-			 *
-			 * Initialize the Object Workspace with the given ABApplication.
-			 *
-			 * @param {ABApplication} application 
-			 */
-			applicationLoad: function (application) {
-
-				userDC.setCursor(null);
-				userDC.clearAll();
-
-				UserList.applicationLoad(application);
-				UserForm.applicationLoad(application);
-
-			},
-
-			/**
 			 * @function show()
 			 *
 			 * Show this component.
@@ -90,7 +73,6 @@ module.exports = class AB_Work_Admin_User extends ABComponent {
 		// 
 		// Define our external interface methods:
 		// 
-		this.applicationLoad = _logic.applicationLoad;
 		this.show = _logic.show;
 
 	}

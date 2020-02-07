@@ -1,5 +1,8 @@
 const ABComponent = require("../classes/platform/ABComponent");
 
+const ABApplication = require("../classes/platform/ABApplication");
+const ABScope = require("../classes/platform/ABScope");
+
 const RowFilter = require("../classes/platform/RowFilter");
 
 module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
@@ -17,8 +20,6 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 				newScope: L('ab.scope.new.title', "*Add new scope")
 			}
 		};
-
-		let CurrentApplication;
 
 		// internal list of Webix IDs to reference our UI components.
 		let ids = {
@@ -67,7 +68,8 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 							onChange: (oldVal, newVal) => {
 
 								let scope = _logic.getScope();
-								let objects = CurrentApplication.objects(o => ($$(ids.object).getValue() || "").indexOf(o.id) > -1);
+								// let objects = CurrentApplication.objects(o => ($$(ids.object).getValue() || "").indexOf(o.id) > -1);
+								let objects = this._objects.filter(o => ($$(ids.object).getValue() || "").indexOf(o.id) > -1);
 								_logic.refreshFilterData(scope, objects);
 
 							}
@@ -146,19 +148,19 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 		// our internal business logic
 		let _logic = {
 
-			/**
-			 * @function applicationLoad
-			 *
-			 * Initialize the Object Workspace with the given ABApplication.
-			 *
-			 * @param {ABApplication} application 
-			 */
-			applicationLoad: function (application) {
+			// /**
+			//  * @function applicationLoad
+			//  *
+			//  * Initialize the Object Workspace with the given ABApplication.
+			//  *
+			//  * @param {ABApplication} application 
+			//  */
+			// applicationLoad: function (application) {
 
-				CurrentApplication = application;
-				this._rowFilter.applicationLoad(application);
+			// 	CurrentApplication = application;
+			// 	this._rowFilter.applicationLoad(application);
 
-			},
+			// },
 
 			getScope: () => {
 
@@ -236,7 +238,7 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 				// Add new
 				let isAdded = false;
 				if (!currScope) {
-					currScope = CurrentApplication.scopeNew(vals);
+					currScope = new ABScope(vals);
 					isAdded = true;
 				}
 				// Update
@@ -249,12 +251,13 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 				}
 
 				// Set objects to scope
-				currScope._objects = CurrentApplication.objects(o => (vals['objectIds'] || "").indexOf(o.id) > -1);
+				// currScope._objects = CurrentApplication.objects(o => (vals['objectIds'] || "").indexOf(o.id) > -1);
+				currScope._objects = this._objects.filter(o => (vals['objectIds'] || "").indexOf(o.id) > -1);
 
 				// set .filter
 				currScope.filter = this._rowFilter.getValue();
 
-				CurrentApplication.scopeSave(currScope, role)
+				currScope.save(role)
 					.catch(err => {
 						console.error(err);
 						_logic.ready();
@@ -300,30 +303,57 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 				if ($$(ids.popup))
 					$$(ids.popup).show();
 
-				let objOptions = CurrentApplication.objects().map(o => {
-					return {
-						id: o.id,
-						value: o.label
-					}
-				});
+				_logic.busy();
 
-				let scope = _logic.getScope();
-				if (scope &&
-					scope.object &&
-					scope.object[0]) {
-					let exists = (objOptions.filter(o => o.id == scope.object[0].id).length > 0);
-					if (!exists) {
-						objOptions.push({
-							id: scope.object[0].id,
-							value: scope.object[0].label
+				return Promise.resolve()
+					.then(() => new Promise((next, err) => {
+
+						if (this._objects) {
+							_logic.ready();
+							return next();
+						}
+
+						// (new ABApplication()).objectInfo()
+						(new ABApplication({})).objectFind()
+							.catch(err)
+							.then(objects => {
+
+								this._objects = objects;
+								next();
+
+							});
+					}))
+					.then(() => new Promise((next, err) => {
+
+						let objOptions = this._objects.map(o => {
+							return {
+								id: o.id,
+								value: o.label
+							}
 						});
-					}
-				}
 
-				$$(ids.object).define("options", objOptions);
-				$$(ids.object).refresh();
+						let scope = _logic.getScope();
+						if (scope &&
+							scope.object &&
+							scope.object[0]) {
+							let exists = (objOptions.filter(o => o.id == scope.object[0].id).length > 0);
+							if (!exists) {
+								objOptions.push({
+									id: scope.object[0].id,
+									value: scope.object[0].label
+								});
+							}
+						}
 
-				_logic.refreshData();
+						$$(ids.object).define("options", objOptions);
+						$$(ids.object).refresh();
+
+						_logic.refreshData();
+						_logic.ready();
+
+						next();
+
+					}));
 
 			},
 

@@ -98,7 +98,7 @@ module.exports = {
 				return new Promise((next, error) => {
 
 					if (appID == null)
-						return next();
+						return next(role);
 
 					role.relate('applications', appID)
 						.catch(errMessage => {
@@ -109,13 +109,16 @@ module.exports = {
 						})
 						.then(() => {
 
-							res.AD.success(role);
-							next();
+							next(role);
 
 						});
 
 				});
 
+			})
+			
+			.then(role => {
+				res.AD.success(role);
 			});
 
 	},

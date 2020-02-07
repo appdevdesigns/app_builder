@@ -12,7 +12,6 @@ module.exports = class AB_Work_Admin_User_Form_Info extends ABComponent {
 		};
 
 		let ABUser = OP.Model.get('opstools.BuildApp.ABUser');
-		let CurrentApplication;
 
 		// Our webix UI definition:
 		this.ui = {
@@ -134,12 +133,6 @@ module.exports = class AB_Work_Admin_User_Form_Info extends ABComponent {
 		// our internal business logic
 		let _logic = {
 
-			applicationLoad: (application) => {
-
-				CurrentApplication = application;
-
-			},
-
 			cancel: () => {
 
 				if (this._userDC)
@@ -201,7 +194,7 @@ module.exports = class AB_Work_Admin_User_Form_Info extends ABComponent {
 		// 
 		// Define our external interface methods:
 		// 
-		this.applicationLoad = _logic.applicationLoad;
+		// this.applicationLoad = _logic.applicationLoad;
 
 	}
 

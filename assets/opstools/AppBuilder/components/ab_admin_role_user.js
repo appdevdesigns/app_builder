@@ -16,8 +16,6 @@ module.exports = class AB_Work_Admin_Role_User extends ABComponent {
 			}
 		};
 
-		const ABUser = OP.Model.get('opstools.BuildApp.ABUser');
-
 		let UserAdd = new ABUserAdd(App);
 
 		this._userDC = new webix.DataCollection();
@@ -27,8 +25,6 @@ module.exports = class AB_Work_Admin_Role_User extends ABComponent {
 			datatable: this.unique('datatable'),
 			addUser: this.unique('addUser')
 		};
-
-		let CurrentApplication;
 
 		// Our webix UI definition:
 		this.ui = {
@@ -103,16 +99,6 @@ module.exports = class AB_Work_Admin_Role_User extends ABComponent {
 
 		let _logic = {
 
-			applicationLoad: (application) => {
-
-				CurrentApplication = application;
-
-				this._userDC.setCursor(null);
-				this._userDC.clearAll();
-
-				UserAdd.applicationLoad(application);
-			},
-
 			getRole: () => {
 
 				if (this._roleDC == null)
@@ -144,7 +130,7 @@ module.exports = class AB_Work_Admin_Role_User extends ABComponent {
 				if (this._userDC) {
 					_logic.busy();
 
-					CurrentApplication.roleUsers(role)
+					role.users()
 						.catch(err => {
 							console.error(err);
 							_logic.ready();
@@ -174,16 +160,16 @@ module.exports = class AB_Work_Admin_Role_User extends ABComponent {
 							_logic.busy();
 
 							let scopeUser = this._userDC.getItem(rowId);
-							if (scopeUser == null) {
+							let role = _logic.getRole();
+							if (!scopeUser || !role) {
 								_logic.ready();
 								return;
 							}
 
-							let roleId = this._roleDC.getCursor();
 							let scopeId = scopeUser.scope.id;
 							let username = scopeUser.username;
 
-							CurrentApplication.scopeRemoveUser(roleId, scopeId, username)
+							role.userRemove(scopeId, username)
 								.catch(err => {
 									console.error(err);
 									_logic.ready();
@@ -228,7 +214,6 @@ module.exports = class AB_Work_Admin_Role_User extends ABComponent {
 		// 
 		// Define our external interface methods:
 		// 
-		this.applicationLoad = _logic.applicationLoad;
 		this.onShow = _logic.onShow;
 	}
 

@@ -17,8 +17,6 @@ module.exports = class AB_Work_Admin_Role_Form extends ABComponent {
 			save: this.unique('save')
 		};
 
-		let CurrentApplication;
-
 		// Our webix UI definition:
 		this.ui = {
 			id: ids.form,
@@ -105,20 +103,6 @@ module.exports = class AB_Work_Admin_Role_Form extends ABComponent {
 		// our internal business logic
 		let _logic = {
 
-
-			/**
-			 * @function applicationLoad
-			 *
-			 * Initialize the Object Workspace with the given ABApplication.
-			 *
-			 * @param {ABApplication} application 
-			 */
-			applicationLoad: function (application) {
-
-				CurrentApplication = application;
-
-			},
-
 			focusName: () => {
 
 				let $text = $$(ids.text);
@@ -187,7 +171,6 @@ module.exports = class AB_Work_Admin_Role_Form extends ABComponent {
 		// 
 		// Define our external interface methods:
 		// 
-		this.applicationLoad = _logic.applicationLoad;
 		this.focusName = _logic.focusName;
 
 	}

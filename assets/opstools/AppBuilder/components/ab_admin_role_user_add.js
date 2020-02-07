@@ -78,7 +78,7 @@ module.exports = class AB_Work_Admin_Role_User_Add extends ABComponent {
 							role._scopes.length > 0)
 							return next();
 
-						CurrentApplication.scopeOfRole(role.id)
+						role.scopeLoad()
 							.catch(err)
 							.then(scopes => {
 
@@ -171,7 +171,7 @@ module.exports = class AB_Work_Admin_Role_User_Add extends ABComponent {
 				if (!selectedItem)
 					return _logic.ready();
 
-				CurrentApplication.scopeAddUser(role.id, selectedItem.scopeId, selectedItem.username)
+				role.userAdd(selectedItem.scopeId, selectedItem.username)
 					.catch(err => {
 						console.error(err);
 						_logic.ready();

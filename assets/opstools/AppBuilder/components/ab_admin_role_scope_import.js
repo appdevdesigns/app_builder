@@ -1,5 +1,7 @@
 const ABComponent = require("../classes/platform/ABComponent");
 
+const ABScope = require("../classes/platform/ABScope")
+
 module.exports = class AB_Work_Admin_Role_Scope_Import extends ABComponent {
 
 	constructor(App) {
@@ -120,12 +122,6 @@ module.exports = class AB_Work_Admin_Role_Scope_Import extends ABComponent {
 
 		let _logic = {
 
-			applicationLoad: function (application) {
-
-				CurrentApplication = application;
-
-			},
-
 			show: () => {
 
 				if ($$(ids.popup)) {
@@ -135,7 +131,7 @@ module.exports = class AB_Work_Admin_Role_Scope_Import extends ABComponent {
 
 					_logic.busy();
 
-					CurrentApplication.scopeFind()
+					ABScope.find()
 						.catch(err => {
 							console.error(err);
 							_logic.ready();
@@ -214,7 +210,7 @@ module.exports = class AB_Work_Admin_Role_Scope_Import extends ABComponent {
 
 				let role = _logic.getRole();
 
-				CurrentApplication.scopeImport(importedScope, role)
+				role.scopeImport(importedScope)
 					.catch(err => {
 						console.error(err);
 						_logic.ready();
@@ -238,7 +234,6 @@ module.exports = class AB_Work_Admin_Role_Scope_Import extends ABComponent {
 		// 
 		// Define our external interface methods:
 		// 
-		this.applicationLoad = _logic.applicationLoad;
 		this.show = _logic.show;
 	}
 

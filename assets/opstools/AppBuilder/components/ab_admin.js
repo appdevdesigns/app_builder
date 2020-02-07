@@ -19,6 +19,7 @@ module.exports = class ABChoose extends ABComponent {
 		let ids = {
 			component: this.unique('component'),
 			toolbar: this.unique('toolbar'),
+			list: this.unique('list')
 		}
 
 
@@ -59,6 +60,7 @@ module.exports = class ABChoose extends ABComponent {
 				{
 					cols: [
 						{
+							id: ids.list,
 							view: "list",
 							template: '<span class="fa #icon#"></span> #value#',
 							data: [
@@ -78,11 +80,17 @@ module.exports = class ABChoose extends ABComponent {
 							scroll: false,
 							on: {
 								onAfterSelect: function (id) {
-									webix.$$(id).show();
+									_logic.switchTab(id);
 								}
 							},
 							ready: function () {
-								this.select(this.getFirstId());
+
+								let selectId = this.getSelectedId();
+								if (!selectId)
+									selectId = this.getFirstId();
+
+								this.select(selectId);
+
 							}
 						},
 						{
@@ -113,10 +121,26 @@ module.exports = class ABChoose extends ABComponent {
 				if ($$(ids.component))
 					$$(ids.component).show();
 
-				AppRole.show();
+				_logic.switchTab();
 
+			},
+
+			switchTab: (tabId) => {
+
+				if (!tabId)
+					tabId = $$(ids.list).getSelectedId();
+
+				webix.$$(tabId).show();
+
+				switch (tabId) {
+					case AppRole.ui.id:
+						AppRole.show();
+						break;
+					case AppUser.ui.id:
+						AppUser.show();
+						break;
+				}
 			}
-
 		}
 
 		this.actions({

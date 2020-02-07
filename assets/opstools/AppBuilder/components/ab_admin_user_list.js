@@ -107,23 +107,6 @@ module.exports = class AB_Work_Admin_User_List extends ABComponent {
 		// our internal business logic
 		let _logic = {
 
-
-			/**
-			 * @function applicationLoad
-			 *
-			 * Initialize the Object Workspace with the given ABApplication.
-			 *
-			 * @param {ABApplication} application 
-			 */
-			applicationLoad: function (application) {
-
-				CurrentApplication = application;
-
-				this._isLoaded = false;
-
-			},
-
-
 			/**
 			 * @function show()
 			 *
@@ -133,16 +116,19 @@ module.exports = class AB_Work_Admin_User_List extends ABComponent {
 
 				$$(ids.component).show();
 
-				_logic.loadUserData();
+				_logic.loadUserData()
+					.then(() => {
 
-				// Set select item of datatable
-				if (this._userDC) {
-					let cursor = this._userDC.getCursor();
-					if (cursor)
-						$$(ids.datatable).select(cursor.id);
-					else
-						$$(ids.datatable).unselect();
-				}
+						// Set select item of datatable
+						if (this._userDC) {
+							let cursor = this._userDC.getCursor();
+							if (cursor)
+								$$(ids.datatable).select(cursor.id);
+							else
+								$$(ids.datatable).unselect();
+						}
+
+					});
 
 			},
 
@@ -168,20 +154,24 @@ module.exports = class AB_Work_Admin_User_List extends ABComponent {
 					};
 				}
 
-				ABUser.findAll(cond)
-					.catch(err => {
-						console.error(err);
-						_logic.ready();
-					})
-					.then(data => {
+				return new Promise((resolve, reject) => {
+					ABUser.findAll(cond)
+						.catch(err => {
+							console.error(err);
+							_logic.ready();
+							reject(err);
+						})
+						.then(data => {
 
-						// Parse to the data collection
-						if (this._userDC)
-							this._userDC.parse(data || []);
+							// Parse to the data collection
+							if (this._userDC)
+								this._userDC.parse(data || []);
 
-						_logic.ready();
+							_logic.ready();
+							resolve();
 
-					});
+						});
+				});
 
 			},
 
@@ -220,7 +210,6 @@ module.exports = class AB_Work_Admin_User_List extends ABComponent {
 		// 
 		// Define our external interface methods:
 		// 
-		this.applicationLoad = _logic.applicationLoad;
 		this.show = _logic.show;
 
 	}
