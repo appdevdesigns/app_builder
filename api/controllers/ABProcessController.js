@@ -11,6 +11,18 @@ reqAB.jobID = "ABProcessController.userInbox";
 
 const async = require("async");
 
+// the input validations for the userInboxUpdate route:
+var validationUserInboxUpdate = {
+    uuid: {
+        type: "string",
+        required: true
+    },
+    response: {
+        type: "string",
+        required: true
+    }
+};
+
 module.exports = {
     // get /process/inbox
     // retrieve the list of a users inbox notifications:
@@ -60,6 +72,67 @@ module.exports = {
                     return;
                 }
                 res.AD.success(inboxItems);
+            }
+        );
+    },
+
+    // post /process/inbox/:uuid
+    // param.response : {string}
+    // update a given inbox item with it's response.
+    userInboxUpdate: (req, res) => {
+        // note: reqAB.validateParameters() are not supported under
+        // node v6:
+
+        // if (
+        //     !reqAB.validateParameters(
+        //         validationUserInboxUpdate,
+        //         false,
+        //         req.allParams()
+        //     )
+        // ) {
+        //     var error = reqAB.errorValidation();
+        //     reqAB.validationReset();
+        //     res.AD.error(error);
+        //     return;
+        // }
+
+        var User = req.AD.user();
+        var user = User.userModel.id;
+
+        var uuid = req.param("uuid");
+        var response = req.param("response");
+
+        if (!uuid || !response) {
+            res.AD.error({
+                message: "both uuid && response values are required."
+            });
+            return;
+        }
+
+        var jobData = {
+            user,
+            uuid,
+            response
+        };
+        reqAB.serviceRequest(
+            "process_manager.inbox.update",
+            jobData,
+            (err, updatedForm) => {
+                if (err) {
+                    res.AD.error(err);
+                    return;
+                }
+                console.log(updatedForm);
+                if (Array.isArray(updatedForm)) {
+                    updatedForm.forEach((form) => {
+                        ABProcess.run(form.process);
+                    });
+                } else {
+                    // Now notify this process instance that it need to run again:
+                    ABProcess.run(updatedForm.process);
+                }
+
+                res.AD.success({});
             }
         );
     }

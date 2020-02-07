@@ -115,6 +115,7 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
             var jobData = {
                 formID: myState.userFormID
             };
+            reqAB.log(`checking status on user form [${myState.userFormID}]`);
             reqAB.serviceRequest(
                 "process_manager.userform.status",
                 jobData,
@@ -137,8 +138,12 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
                     }
 
                     if (userForm.status && userForm.status != "pending") {
-                        var data = { userFormResponse: userForm.response };
+                        var data = {
+                            userFormResponse: userForm.response,
+                            responder: userForm.responder
+                        };
                         this.stateUpdate(instance, data);
+                        this.stateCompleted(instance);
                         resolve(true);
                     } else {
                         // still pending:

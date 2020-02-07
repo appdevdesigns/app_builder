@@ -266,7 +266,9 @@ module.exports = {
         "app_builder/ABProcessInstanceController.resetInstance",
     // ---> initiates a "reset" on a process instance to retry after an Error
 
-    "get /process/inbox": "app_builder/ABProcessController.userInbox"
+    "get /process/inbox": "app_builder/ABProcessController.userInbox",
+    "post /process/inbox/:uuid":
+        "app_builder/ABProcessController.userInboxUpdate"
 
     /*
 
