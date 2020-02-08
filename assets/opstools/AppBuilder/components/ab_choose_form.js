@@ -36,6 +36,7 @@ module.exports = class ABChoose extends ABComponent {  // .extend(idBase, functi
 
 				invalidName: L('ab.application.invalidName', "*This application name is invalid"),
 				duplicateName: L('ab.application.duplicateName', "*Name must be unique."),
+				limitName: L('ab.application.limitName', "*Name must be less than or equal to 20"),
 
 			}
 		}
@@ -92,6 +93,7 @@ module.exports = class ABChoose extends ABComponent {  // .extend(idBase, functi
 									view: "text",
 									label: labels.common.formName,
 									placeholder: labels.component.placeholderName,
+									invalidMessage: labels.component.limitName,
 									labelWidth: 100,
 									on: {
 										onChange: function (newValue, oldValue) {
