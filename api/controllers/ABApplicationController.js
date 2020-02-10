@@ -250,7 +250,9 @@ module.exports = {
 
                     let appValues = {
                         isAdminApp: appIsAdmin,
-                        translations: appInfo
+                        json: {
+                            translations: appInfo
+                        }
                     };
 
                     ApplicationGraph.update(appID, appValues)
