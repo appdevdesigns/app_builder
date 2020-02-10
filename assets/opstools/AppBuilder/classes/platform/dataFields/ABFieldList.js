@@ -308,7 +308,7 @@ var ABFieldListComponent = new ABFieldComponent({
     },
 
     // defaultValues: the keys must match a .name of your elements to set it's default value.
-    defaultValues: defaultValues,
+    defaultValues: ABFieldListCore.defaultValues(),
 
     // rules: basic form validation rules for webix form entry.
     // the keys must match a .name of your .elements for it to apply
