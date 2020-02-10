@@ -284,7 +284,7 @@ module.exports = class ABClassObject extends ABObjectCore {
             let linkObject = ABObjectCache.get(f.settings.linkObject);
             if (linkObject == null) return;
 
-            var linkField = f.fieldLink();
+            var linkField = f.fieldLink;
             if (linkField == null) return;
 
             var linkModel = linkObject.model();
@@ -585,7 +585,7 @@ module.exports = class ABClassObject extends ABObjectCore {
 
     requestRelationParams(allParameters) {
         var usefulParameters = {};
-        this.connectFields().forEach((f) => {
+        this.connectFields(true).forEach((f) => {
             if (f.requestRelationParam) {
                 var p = f.requestRelationParam(allParameters);
                 if (p) {
@@ -1242,7 +1242,7 @@ module.exports = class ABClassObject extends ABObjectCore {
                         return (
                             (options.populate === true ||
                                 options.populate.indexOf(f.columnName) > -1) &&
-                            f.fieldLink() != null
+                            f.fieldLink != null
                         );
                     })
                     .forEach((f) => {
@@ -1296,4 +1296,32 @@ module.exports = class ABClassObject extends ABObjectCore {
     }
 
     queries() {}
+
+    ///
+    /// Fields
+    ///
+
+    /**
+     * @method fields()
+     *
+     * return an array of all the ABFields for this ABObject.
+     *
+     * @param filter {Object}
+     * @param getAll {Boolean} - [Optional]
+     *
+     * @return {array}
+     */
+    fields(filter, getAll = true) {
+
+        // NOTE: override this function because the server side should get all of fields (getAll = true)
+        return super.fields(filter, getAll);
+
+    }
+
+    connectFields (getAll = true) {
+
+        return this.fields(f => f && f.key == 'connectObject', getAll);
+
+    }
+
 };
