@@ -617,13 +617,13 @@ var ABFieldDateComponent = new ABFieldComponent({
             // dateDisplayRefresh();
             refreshDateValue();
             refreshTimevalue();
-        },
-
-        dateDisplay: (date, settings) => {
-            var dateFormat = getDateFormat(settings);
-
-            return webix.Date.dateToStr(dateFormat)(date);
         }
+
+        // dateDisplay: (date, settings) => {
+        //     var dateFormat = getDateFormat(settings);
+
+        //     return webix.Date.dateToStr(dateFormat)(date);
+        // }
     },
 
     // perform any additional setup actions here.

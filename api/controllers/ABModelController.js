@@ -191,7 +191,7 @@ function updateRelationValues(object, id, updateRelationParams) {
             ) {
                 let sourceField = field.settings.isSource
                     ? field
-                    : field.fieldLink();
+                    : field.fieldLink;
                 if (sourceField == null) return resolve();
 
                 let relateRowId = null;
@@ -301,7 +301,7 @@ function updateConnectedFields(object, newData, oldData) {
     // Parse through the connected fields
     connectFields.forEach((f) => {
         // Get the field object that the field is linked to
-        var field = f.fieldLink();
+        var field = f.fieldLink;
         // Get the relation name so we can separate the linked fields updates from the rest
         var relationName = f.relationName();
         if (Array.isArray(newData)) {

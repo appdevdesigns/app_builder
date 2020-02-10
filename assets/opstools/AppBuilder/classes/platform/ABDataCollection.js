@@ -225,6 +225,7 @@ module.exports = class ABDataCollection extends ABDataCollectionCore {
                     } else {
                         // NOTE: tree data does not support dynamic loading when scrolling
                         // https://forum.webix.com/discussion/3078/dynamic-loading-in-treetable
+                        component.define("data", []);
                         component.parse(dc.find({}));
                     }
                 } else {
@@ -254,16 +255,15 @@ module.exports = class ABDataCollection extends ABDataCollectionCore {
                     // https://forum.webix.com/discussion/1694/tree-and-treetable-using-data-from-datacollection
                     if (
                         component.config.view == "treetable" &&
-                        !this.__treeCollection
+                        !this.datasource.isGroup
                     ) {
                         component.___AD = component.___AD || {};
                         if (!component.___AD.onDcLoadData) {
-                            component.___AD.onDcLoadData = this.on(
-                                "loadData",
-                                () => {
-                                    component.parse(dc.find({}));
-                                }
-                            );
+                            component.___AD.onDcLoadData = () => {
+                                component.parse(dc.find({}));
+                            };
+
+                            this.on("loadData", component.___AD.onDcLoadData);
                         }
                     }
                 }
@@ -286,8 +286,15 @@ module.exports = class ABDataCollection extends ABDataCollectionCore {
         if (!component) return;
 
         component.detachEvent("onDataRequest");
-        if (component.___AD && component.___AD.onDataRequestEvent)
-            delete component.___AD.onDataRequestEvent;
+        if (component.___AD) {
+            if (component.___AD.onDataRequestEvent)
+                delete component.___AD.onDataRequestEvent;
+
+            if (component.___AD.onDcLoadData) {
+                this.off("loadData", component.___AD.onDcLoadData);
+                delete component.___AD.onDcLoadData;
+            }
+        }
 
         if (component.data && component.data.unsync) {
             component.data.unsync();

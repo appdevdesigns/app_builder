@@ -14,7 +14,7 @@ module.exports = function (req, res, next) {
 
 			where.rules.filter(r => AppBuilder.rules.isUuid(r.key)).forEach(r => {
 
-				var field = object.fields(f => f.id == r.key)[0];
+				var field = object.fields(f => f.id == r.key, true)[0];
 				if (field) {
 
 					// convert field's id to column name

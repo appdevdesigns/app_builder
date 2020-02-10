@@ -320,7 +320,7 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
 					position: {
 						y: object.fields().length
 					}
-				}));
+				}, CurrentApplication));
 
 				return newForm;
 

@@ -681,8 +681,7 @@ module.exports = class AB_Work_Datacollection_Workspace_Properties extends ABCom
 					}
 
 					// Populate data to popups
-					this.FilterComponent.objectLoad(datasource);
-					this.FilterComponent.viewLoad(this._datacollection);
+					this.FilterComponent.fieldsLoad(datasource ? datasource.fields() : []);
 					this.FilterComponent.setValue(filterConditions);
 					this._datacollection.refreshFilterConditions(filterConditions);
 
@@ -773,6 +772,7 @@ module.exports = class AB_Work_Datacollection_Workspace_Properties extends ABCom
 				let idBase = 'ABDatacollectionPropertyEditor';
 
 				this.FilterComponent = new RowFilter(this.App, `${idBase}_filter`);
+				this.FilterComponent.applicationLoad(this._application);
 				this.FilterComponent.init({
 					// when we make a change in the popups we want to make sure we save the new workspace to the properties to do so just fire an onChange event
 					onChange: this._logic.onFilterChange
@@ -869,11 +869,15 @@ module.exports = class AB_Work_Datacollection_Workspace_Properties extends ABCom
 						&& (f.value ||
 							// these rules do not have input value
 							(f.rule == 'is_current_user' ||
-								f.rule == 'is_not_current_user' ||
-								f.rule == 'contain_current_user' ||
-								f.rule == 'not_contain_current_user' ||
-								f.rule == 'same_as_user' ||
-								f.rule == 'not_same_as_user'))) {
+							f.rule == 'is_not_current_user' ||
+							f.rule == 'contain_current_user' ||
+							f.rule == 'not_contain_current_user' ||
+							f.rule == 'same_as_user' ||
+							f.rule == 'not_same_as_user' ||
+							f.rule == 'less_current' ||
+							f.rule == 'greater_current' ||
+							f.rule == 'less_or_equal_current' ||
+							f.rule == 'greater_or_equal_current'))) {
 						allComplete = allComplete && true;
 					} else {
 

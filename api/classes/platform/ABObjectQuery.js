@@ -568,7 +568,7 @@ module.exports = class ABClassQuery extends ABClassObject {
 							// baseObject JOIN  connectedObject ON baseObject.id = connectedObject.columnName
 
 							// columnName comes from the baseObject
-							var connectedField = connectionField.fieldLink();
+							var connectedField = connectionField.fieldLink;
 							if (!connectedField) return;  // this is a problem!
 
 
@@ -589,7 +589,7 @@ module.exports = class ABClassQuery extends ABClassObject {
 							// baseObject JOIN connectedObject ON baseObject.id == connectedObject.columnName
 
 							// columnName comes from the baseObject
-							var connectedField = connectionField.fieldLink();
+							var connectedField = connectionField.fieldLink;
 							if (!connectedField) return;  // this is a problem!
 
 
@@ -631,7 +631,7 @@ module.exports = class ABClassQuery extends ABClassObject {
 
 							//// Now connect connectedObject
 							// get connectedObjectColumn in joinTable
-							var connectedField = connectionField.fieldLink();
+							var connectedField = connectionField.fieldLink;
 							var connectedObjectColumn = connectedObject.name; // AppBuilder.rules.toJunctionTableFK(connectedObject.name, connectedField.columnName);
 
 							var connectedClause = aliasName + '.' + connectedObject.PK();
@@ -831,7 +831,7 @@ module.exports = class ABClassQuery extends ABClassObject {
 
 				let selectField = '';
 				let objLink = f.datasourceLink;
-				let fieldLink = f.fieldLink();
+				let fieldLink = f.fieldLink;
 
 				// 1:M
 				if (f.settings.linkType == 'one' && f.settings.linkViaType == 'many') {
@@ -965,7 +965,7 @@ module.exports = class ABClassQuery extends ABClassObject {
 				// M:N
 				else if (fieldConnect.settings.linkType == 'many' && fieldConnect.settings.linkViaType == 'many') {
 
-					let fieldLink = fieldConnect.fieldLink();
+					let fieldLink = fieldConnect.fieldLink;
 					if (!fieldLink) return;
 
 					joinClause = (" INNER JOIN {joinTable} ON {joinTable}.{linkObjectName} = {linkTable}.{linkColumn} "

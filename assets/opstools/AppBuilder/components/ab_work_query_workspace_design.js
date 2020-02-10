@@ -842,7 +842,8 @@ module.exports = class ABWorkQueryWorkspaceDesign extends ABComponent {
 
 			refreshFilter: function () {
 
-				DataFilter.objectLoad(CurrentQuery);
+				DataFilter.applicationLoad(CurrentQuery ? CurrentQuery.application : null);
+				DataFilter.fieldsLoad(CurrentQuery ? CurrentQuery.fields() : []);
 				DataFilter.setValue(CurrentQuery.where);
 			},
 
@@ -887,7 +888,7 @@ module.exports = class ABWorkQueryWorkspaceDesign extends ABComponent {
 				CurrentDatacollection.bind(DataTable);
 
 				// set data:
-				CurrentDatacollection.loadData(0, 100, () => {
+				CurrentDatacollection.loadData(0, 50, () => {
 				});
 				// CurrentQuery.model().findAll({ limit: 20, where: CurrentQuery.workspaceViews.getCurrentView().filterConditions, sort: CurrentQuery.workspaceViews.getCurrentView().sortFields })
 				// 	.then((response) => {

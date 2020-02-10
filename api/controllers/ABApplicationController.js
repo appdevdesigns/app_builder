@@ -789,7 +789,9 @@ module.exports = {
                         if (v.key == "detail" || v.key == "form") {
                             (v.views || []).forEach(subView => {
 
-                                if (subView.key == "detailselectivity" || subView.key == "connect") {
+                                if (subView.key == "detailselectivity" ||
+                                    subView.key == "detailconnect" ||
+                                    subView.key == "connect") {
                                     linkFieldIds.push({
                                         objectId: subView.settings.objectId,
                                         fieldId: subView.settings.fieldId
@@ -909,6 +911,54 @@ module.exports = {
                 });
 
             })
+
+            // Pull queries from 'in_query' filter of data collections
+            .then(app => new Promise((next, err) => {
+
+                if (!app)
+                    return next();
+
+                let remainsQueryIds = [];
+
+                (app.json.datacollections || []).forEach(dc => {
+
+                    if (dc.settings &&
+                        dc.settings.objectWorkspace &&
+                        dc.settings.objectWorkspace.filterConditions) {
+
+                            (dc.settings.objectWorkspace.filterConditions.rules || []).forEach(r => {
+
+                                if ((r.rule == "in_query" || r.rule == "not_in_query") &&
+                                    dvDataSources.filter(ds => ds.id == r.value).length < 1) {
+
+                                    remainsQueryIds.push(r.value);
+                                }
+
+                            });
+
+                        }
+
+                });
+
+                if (remainsQueryIds.length < 1)
+                    return next(app);
+
+
+                QueryGraph.find({
+                    where: {
+                        "_key": { "in": remainsQueryIds }
+                    }
+                })
+                .catch(err)
+                .then(queries => {
+
+                    app.json.queries = queries;
+
+                    next(app);
+
+                });
+
+            }))
 
             .then(app => {
 
