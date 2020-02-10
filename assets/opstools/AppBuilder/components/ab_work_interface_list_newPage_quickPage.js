@@ -127,7 +127,8 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
 						let linkDatasource = dc.datasource;
 						if (!linkDatasource) return false;
 
-						return linkDatasource.fields(f => f.key == 'connectObject' && f.settings.linkObject == datasource.id).length > 0;
+						return dc.id == CurrentDC.settings.linkDatacollectionID;
+						// return linkDatasource.fields(f => f.key == 'connectObject' && f.settings.linkObject == datasource.id).length > 0;
 					});
 				}
 
