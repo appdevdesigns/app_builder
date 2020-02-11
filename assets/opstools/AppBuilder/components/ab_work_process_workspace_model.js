@@ -318,7 +318,12 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
                         console.log(`${event.type}:`, event.element);
                         var element = event.element;
 
-                        // ignore sequence flow lines:
+                        // ignore label updates
+                        if (element.type == "label") {
+                            return;
+                        }
+
+                        // if not sequence flow lines:
                         if (
                             element.type != "bpmn:SequenceFlow" &&
                             // SequenceFlow : seems to happen between tasks within the same Participant
@@ -435,7 +440,7 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
                                         CurrentPropertiesObj = switchObj;
                                     }
                                 );
-                                newObj.propertiesShow(ids.properties);
+                                newObj.propertiesShow(ids.properties, App);
                             } else {
                                 $$(ids.properties).hide();
                             }
@@ -576,11 +581,12 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
                 // and we need to let that complete before trying to update the
                 // diagram element properties.
                 // an immediate timeout should let the other process complete.
+
                 setTimeout(() => {
-                    _logic.updateElementProperties(
-                        thisObj.diagramID,
-                        thisObj.diagramProperties()
-                    );
+                    var properties = thisObj.diagramProperties();
+                    properties.forEach((prop) => {
+                        _logic.updateElementProperties(prop.id, prop.def);
+                    });
                 }, 0);
             },
 

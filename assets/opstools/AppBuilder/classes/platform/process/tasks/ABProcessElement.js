@@ -178,9 +178,14 @@ module.exports = class ABProcessElement extends ABProcessElementCore {
      * @return {json}
      */
     diagramProperties() {
-        return {
-            name: this.name
-        };
+        return [
+            {
+                id: this.diagramID,
+                def: {
+                    name: this.name
+                }
+            }
+        ];
     }
 
     /**
@@ -208,4 +213,15 @@ module.exports = class ABProcessElement extends ABProcessElementCore {
      *        the webix $$(id) of the properties panel area.
      */
     propertiesStash(id) {}
+
+    /**
+     * property()
+     * return the specific property value if it exists.
+     * @return {mixed} | undefined
+     */
+    property(id) {
+        if ($$(id)) {
+            return $$(id).getValue();
+        }
+    }
 };

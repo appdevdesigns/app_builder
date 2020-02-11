@@ -282,10 +282,4 @@ module.exports = class ABProcessTaskEmail extends ABProcessTaskEmailCore {
         this.toUsers = ABProcessParticipant.stashUsersUi(id + "_to_");
         this.fromUsers = ABProcessParticipant.stashUsersUi(id + "_from_");
     }
-
-    property(id) {
-        if ($$(id)) {
-            return $$(id).getValue();
-        }
-    }
 };

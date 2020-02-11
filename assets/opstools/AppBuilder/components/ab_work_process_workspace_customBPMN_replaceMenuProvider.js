@@ -365,7 +365,8 @@ ReplaceMenuProvider.prototype.getEntries = function(element) {
 
     // gateways
     if (is(businessObject, "bpmn:Gateway")) {
-        entries = filter(replaceOptions.GATEWAY, differentType);
+        // entries = filter(replaceOptions.GATEWAY, differentType);
+        entries = filter(ProcessTaskManager.Gateways(), differentType);
 
         return this._createEntries(element, entries);
     }

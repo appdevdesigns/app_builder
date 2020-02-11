@@ -164,9 +164,14 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
      * @return {json}
      */
     diagramProperties() {
-        return {
-            name: this.name
-        };
+        return [
+            {
+                id: this.diagramID,
+                def: {
+                    name: this.name
+                }
+            }
+        ];
     }
 
     static propertyIDs(id) {
