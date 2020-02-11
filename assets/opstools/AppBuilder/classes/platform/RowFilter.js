@@ -900,7 +900,7 @@ module.exports = class RowFilter extends RowFilterCore {
 
 		};
 
-		onChangeRule: (rule, $viewCond, notify = false) => {
+		_logic.onChangeRule = (rule, $viewCond, notify = false) => {
 
 			switch(rule) {
 				// If want to call notify or call .onChange(), then pass notify is true.
