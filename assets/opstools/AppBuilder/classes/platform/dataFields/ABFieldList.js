@@ -5,11 +5,7 @@ function L(key, altText) {
     return AD.lang.label.getLabel(key) || altText;
 }
 
-// store the original options (look at logic.populate)
-var originalOptions = [];
-
-// store the current field being edited/created
-var currentField;
+var defaultValues = ABFieldListCore.defaultValues();
 
 var ids = {
     isMultiple: "ab-list-multiple-option",
@@ -308,7 +304,7 @@ var ABFieldListComponent = new ABFieldComponent({
     },
 
     // defaultValues: the keys must match a .name of your elements to set it's default value.
-    defaultValues: ABFieldListCore.defaultValues(),
+    defaultValues: defaultValues,
 
     // rules: basic form validation rules for webix form entry.
     // the keys must match a .name of your .elements for it to apply
@@ -328,11 +324,11 @@ var ABFieldListComponent = new ABFieldComponent({
             $$(ids.options).clearAll();
 
             $$(ids.default).define("options", []);
-            $$(ids.default).setValue(ABFieldListCore.defaultValues().default);
+            $$(ids.default).setValue(defaultValues.default);
 
             $$(ids.multipleDefault).define("options", []);
             $$(ids.multipleDefault).setValue(
-                ABFieldListCore.defaultValues().multipleDefault
+                defaultValues.multipleDefault
             );
         },
 
@@ -879,12 +875,13 @@ module.exports = class ABFieldList extends ABFieldListCore {
         return detailComponentSetting;
     }
 
-    getValue(item) {
+    getValue(item, rowData) {
         var values = [];
 
         if (!item) return values;
 
-        var rowData = item.getValue();
+        if (rowData == null)
+            rowData = item.getValue();
 
         if (this.settings.isMultiple) {
             this.settings.options.forEach(function(opt) {
