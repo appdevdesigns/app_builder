@@ -48,6 +48,15 @@ module.exports = class ABClassApplication extends ABApplicationCore {
     ///
     /// Objects
     ///
+    objects(filter) {
+        filter =
+            filter ||
+            function() {
+                return true;
+            };
+
+        return (ABObjectCache.list() || []).filter(filter);
+    }
 
     /**
      * @method objectNew()
