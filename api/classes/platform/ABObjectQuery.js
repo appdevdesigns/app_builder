@@ -1317,9 +1317,10 @@ sails.log.debug('ABClassQuery.migrateCreate - SQL:', sqlCommand);
 							} else {
 
 								// when finished populate our Find Conditions
-								this.populateFindConditions(query, options, userData);
+								this.populateFindConditions(query, options, userData)
+									.catch(bad)
+									.then(() => next());
 
-								next();
 							}
 						})
 

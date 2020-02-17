@@ -31,6 +31,12 @@ module.exports = class ABObject extends ABModelBase {
 				edgeName: "dataviewObject",
 				linkCollection: "dataview",
 				direction: this.relateDirection.INBOUND
+			},
+
+			scopes: {
+				edgeName: "scopeObject",
+				linkCollection: "scope",
+				direction: this.relateDirection.INBOUND
 			}
 
 		};

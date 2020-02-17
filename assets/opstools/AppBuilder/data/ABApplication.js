@@ -80,9 +80,7 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 			return OP.Comm.Socket.get({
 				url: `/app_builder/object`,
-				data: {
-					query: cond
-				}
+				params: cond
 			});
 
 		},
@@ -438,8 +436,7 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 			);
 
-		}
-
+		},
 
 	},
 	{

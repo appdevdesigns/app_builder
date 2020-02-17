@@ -364,10 +364,10 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
 		if (field) {
 			let linkedObj = field.datasourceLink;
 			if (linkedObj)
-				FilterComponent.objectLoad(linkedObj);
+				FilterComponent.fieldsLoad(linkedObj.fields());
 		}
 
-		FilterComponent.viewLoad(view);
+		FilterComponent.applicationLoad(view.application);
 		FilterComponent.setValue(filterConditions);
 
 	}

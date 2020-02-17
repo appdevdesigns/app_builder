@@ -106,8 +106,72 @@ module.exports = {
     "delete /app_builder/application/:appID/dataview/:dataviewID":
         "app_builder/ABDataviewController.excludeDataview",
 
-    /* ABFieldUser */
-    "get /app_builder/user/list": "app_builder/ABUserController.getUserList",
+    /* Scopes */
+    'get /app_builder/scope':
+        'app_builder/ABScopeController.find',
+
+    'get /app_builder/scope/:scopeId':
+        'app_builder/ABScopeController.findOne',
+
+    'get /app_builder/scope/:scopeId/role':
+        'app_builder/ABScopeController.scopeRole',
+
+    'put /app_builder/scope':
+        'app_builder/ABScopeController.save',
+
+    'delete /app_builder/scope/:scopeId':
+        'app_builder/ABScopeController.destroy',
+
+    'put /app_builder/role/:roleID/scope/:scopeID':
+        'app_builder/ABScopeController.import',
+
+    'delete /app_builder/role/:roleID/scope/:scopeID':
+        'app_builder/ABScopeController.exclude',
+
+
+    /* Users */
+    'get /app_builder/user/list':
+        'app_builder/ABUserController.getUserList',
+
+    'get /app_builder/user/:user/rolescope':
+        'app_builder/ABUserController.getRoleScope',
+
+
+    /* Roles */
+    // 'get /app_builder/application/:appID/role':
+    //     'app_builder/ABRoleController.roleApplication',
+
+    'get /app_builder/role':
+        'app_builder/ABRoleController.find',
+
+    'get /app_builder/role/:roleId':
+        'app_builder/ABRoleController.findOne',
+
+    'put /app_builder/role':
+        'app_builder/ABRoleController.save',
+
+    'delete /app_builder/role/:roleId':
+        'app_builder/ABRoleController.destroy',
+
+    // 'put /app_builder/application/:appID/role/:roleID':
+    //     'app_builder/ABRoleController.import',
+
+    // 'delete /app_builder/application/:appID/role/:roleID':
+    //     'app_builder/ABRoleController.exclude',
+
+    'get /app_builder/role/:roleId/scope':
+        'app_builder/ABRoleController.roleScope',
+
+    'get /app_builder/role/:roleId/users':
+        'app_builder/ABRoleController.roleUsers',
+
+    'post /app_builder/role/:roleId/scope/:scopeId/username/:username':
+        'app_builder/ABRoleController.addUser',
+
+    'delete /app_builder/role/:roleId/scope/:scopeId/username/:username':
+        'app_builder/ABRoleController.removeUser',
+
+
 
     /* Application permissions */
     "get /app_builder/user/roles": "app_builder/ABUserController.getRoles",

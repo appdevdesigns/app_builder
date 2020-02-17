@@ -112,7 +112,7 @@ class ABModelBase {
 	static afterDestroy(destroyedRecord) { return Promise.resolve(); }
 
 
-	static query(aqlCommand, returnArray = true) {
+	static query(aqlCommand, returnArray = true, returnPlain = false) {
 
 		return Promise.resolve()
 
@@ -154,15 +154,24 @@ class ABModelBase {
 					if (returnArray) {
 
 						// Convert to model
-						let result = (rows || []).map(r => new this(r));
+						let result = (rows || []).map(r => {
+							if (returnPlain)
+								return r;
+							else
+								return new this(r);
+						});
 						next(result);
 
 					}
 					// return a Object
 					else {
 						let result = (rows || [])[0];
-						if (result)
-							next(new this(result));
+						if (result) {
+							if (returnPlain)
+								next(result);
+							else
+								next(new this(result));
+						}
 						else
 							next(null);
 					}
@@ -823,7 +832,10 @@ class ABModelBase {
 							filters.push(`FILTER row.${prop} ${operate} '${val}'`);
 							break;
 						case 'nin':
-							val = (val || "").split(',');
+
+							if (typeof val == 'string')
+								val = (val || "").split(',');
+
 							filters.push(`FILTER row.${prop} NOT IN [${(val || []).map(v => `'${v}'`)}]`);
 							break;
 						case 'in':

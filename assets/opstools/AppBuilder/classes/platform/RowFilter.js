@@ -824,7 +824,8 @@ module.exports = class RowFilter extends RowFilterCore {
 
 				var options = [];
 				var Queries = [];
-				if (this._Object) {
+				if (this._Application &&
+					this._Object) {
 					Queries = this._Application.queries((q) => { return q.canFilterObject(this._Object); });
 				}
 				Queries.forEach((q) => {
@@ -843,14 +844,16 @@ module.exports = class RowFilter extends RowFilterCore {
 			// populate the list of Queries for a query field
 			if (isQueryField) {
 
-				var options = [];
-				var Queries = this._Application.queries((q) => { return q.canFilterObject(field.datasourceLink); });
-				Queries.forEach((q) => {
-					options.push({
-						id: q.id,
-						value: q.label
-					})
-				})
+				let options = [];
+				if (this._Application) {
+					let Queries = this._Application.queries((q) => { return q.canFilterObject(field.datasourceLink); });
+					Queries.forEach((q) => {
+						options.push({
+							id: q.id,
+							value: q.label
+						})
+					});
+				}
 
 				$viewCond.$$(ids.inputValue).$$(ids.queryCombo).define("options", options);
 				$viewCond.$$(ids.inputValue).$$(ids.queryCombo).refresh();
@@ -937,7 +940,7 @@ module.exports = class RowFilter extends RowFilterCore {
 					// populate the list of Queries for this_object:
 					var options = [];
 					// Get all application's queries
-					if (this._Object) {
+					if (this._Application && this._Object) {
 						this._Application.queries((q) => { return q.id != this._Object.id; }).forEach((q) => {
 							options.push({
 								id: q.id,
@@ -981,7 +984,7 @@ module.exports = class RowFilter extends RowFilterCore {
 							linkObjectId = field.settings.linkObject;
 					}
 						
-					if (linkObjectId) {
+					if (this._Application && linkObjectId) {
 
 						this._Application
 						.datacollections(dc => dc.datasource && dc.datasource.id == linkObjectId)
@@ -1017,19 +1020,22 @@ module.exports = class RowFilter extends RowFilterCore {
 
 		_logic.onChangeQueryFieldCombo = function(value, $viewCond) {
 			// populate the list of Queries for this_object:
-			var options = [];
+			let options = [];
 			// Get all queries fields
-			var Query = this._Application.queries((q) => { return q.id == value; });
-			if (Query.length) {
-				Query[0].fields( (f) => { return f.key != "connectObject"; } ).forEach((q) => {
-					options.push({
-						id: q.id,
-						value: q.object.label + "." + q.label
+			let Query = [];
+			if (this._Application) {
+				Query = this._Application.queries((q) => { return q.id == value; });
+				if (Query.length) {
+					Query[0].fields( (f) => { return f.key != "connectObject"; } ).forEach((q) => {
+						options.push({
+							id: q.id,
+							value: q.object.label + "." + q.label
+						})
 					})
-				})
 
-				$viewCond.$$(ids.inputValue).$$(ids.queryFieldComboField).define("options", options);
-				$viewCond.$$(ids.inputValue).$$(ids.queryFieldComboField).refresh();					
+					$viewCond.$$(ids.inputValue).$$(ids.queryFieldComboField).define("options", options);
+					$viewCond.$$(ids.inputValue).$$(ids.queryFieldComboField).refresh();					
+				}
 			}
 
 			// _logic.onChange();

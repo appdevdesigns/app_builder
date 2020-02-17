@@ -29,6 +29,12 @@ class ABApplication extends ABModelBase {
 				edgeName: "applicationDataview",
 				linkCollection: "dataview",
 				direction: this.relateDirection.OUTBOUND
+			},
+
+			roles: {
+				edgeName: "applicationRole",
+				linkCollection: "role",
+				direction: this.relateDirection.OUTBOUND
 			}
 
 		};

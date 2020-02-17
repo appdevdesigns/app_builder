@@ -7,6 +7,7 @@
 
 const ABComponent = require("../classes/platform/ABComponent");
  // const ABObject = require('../classes/ABObject.js');
+const ABApplication = require('../classes/platform/ABApplication');
 const ABFieldManager = require('../classes/core/ABFieldManager.js');
 
 module.exports = class AB_Work_Object_List_NewObject_Import extends ABComponent {
@@ -83,9 +84,6 @@ module.exports = class AB_Work_Object_List_NewObject_Import extends ABComponent 
                             // skip if this object is in application
                             if (currentApp.objects(o => o.id == obj.id)[0])
                                 return;
-
-                            // translate label of objects
-                            OP.Multilingual.translate(obj, obj, ['label']);
 
                             availableObjs.push(obj);
 
