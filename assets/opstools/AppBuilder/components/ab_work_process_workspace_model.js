@@ -441,6 +441,13 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
                                     }
                                 );
                                 newObj.propertiesShow(ids.properties, App);
+
+                                CurrentPropertiesObj.on("save", () => {
+                                    _logic.saveProcess(CurrentProcess);
+                                    CurrentPropertiesObj.propertiesShow(
+                                        ids.properties
+                                    );
+                                });
                             } else {
                                 $$(ids.properties).hide();
                             }
