@@ -146,7 +146,7 @@ module.exports = {
 
         var allUsers = req.param('user') || '--';
         var appID = req.param('mobileApp') || '--';
-        var email = req.param('email') || '--';
+        // var email = req.param('email') || '--';
         var username = req.param('username') || '--';
 
         // in case > 1 user was provided
@@ -159,7 +159,7 @@ module.exports = {
 
         async.each(allUsers, (user, cb)=>{
 
-
+            var email = '--';
             var QRAppUser = null;
             var MobileApp = null;
 
