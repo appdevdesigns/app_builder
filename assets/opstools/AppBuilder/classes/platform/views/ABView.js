@@ -493,7 +493,7 @@ module.exports = class ABView extends ABViewCore {
 		// } else {
 
 		// views not allowed to drop onto this View:
-		var viewsToIgnore = ['view', 'page', 'formpanel', 'dataview', 'viewcontainer',
+		var viewsToIgnore = ['view', 'page', 'formpanel', 'viewcontainer',
 			// not allowed Detail's widgets
 			'detailcheckbox', 'detailcustom', 'detailconnect', 'detailimage', 'detailselectivity', 'detailtext', 'detailtree',
 			// not allowed Form's widgets
