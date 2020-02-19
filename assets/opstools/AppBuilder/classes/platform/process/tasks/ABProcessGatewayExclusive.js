@@ -47,11 +47,10 @@ module.exports = class ABProcessGatewayExclusive extends ABProcessGatewayExclusi
         var abFields = listDataFields.map((f) => {
             return f.field;
         });
-        debugger;
+
         var myOutgoingConnections = this.process.connectionsOutgoing(
             this.diagramID
         );
-        console.log(myOutgoingConnections);
 
         this.__dfLookup = {};
         this.conditions = this.conditions || {};
