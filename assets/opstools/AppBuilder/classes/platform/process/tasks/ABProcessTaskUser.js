@@ -111,14 +111,6 @@ module.exports = class ABProcessTaskUser extends ABProcessTaskUserCore {
     }
 
     /**
-     * propertiesStash()
-     * pull our values from our property panel.
-     * @param {string} id
-     *        the webix $$(id) of the properties panel area.
-     */
-    propertiesStash(id) {}
-
-    /**
      * switchTo()
      * replace this object with an instance of one of our child classes:
      * @param {string} classType
@@ -144,15 +136,6 @@ module.exports = class ABProcessTaskUser extends ABProcessTaskUserCore {
                 break;
         }
 
-        // remove myself from our containing process's elements
-        this.process.elementRemove(this);
-
-        // add the new Process WITH the same id
-        this.process.elementAdd(child);
-
-        // show the child properties:
-        child.propertiesShow(propertiesID);
-
-        this.emit("switchTo", child);
+        super.switchTo(child, propertiesID);
     }
 };

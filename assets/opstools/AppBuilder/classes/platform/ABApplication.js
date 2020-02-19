@@ -463,9 +463,9 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
      *
      * @return {ABObject}
      */
-    objectNew(values) {
-        return new ABObject(values, this);
-    }
+    // objectNew(values) {
+    //     return new ABObject(values, this);
+    // }
 
     /**
      * @method objectDestroy()

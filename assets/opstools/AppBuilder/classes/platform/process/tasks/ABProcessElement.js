@@ -224,4 +224,25 @@ module.exports = class ABProcessElement extends ABProcessElementCore {
             return $$(id).getValue();
         }
     }
+
+    /**
+     * switchTo()
+     * replace this object with an instance of one of our child classes:
+     * @param {ABProcessTask*} child
+     *        an instance of the new Process Task we are replaced with.
+     * @param {string} propertiesID
+     *        the webix ui.id container for the properties panel.
+     */
+    switchTo(child, propertiesID) {
+        // remove myself from our containing process's elements
+        this.process.elementRemove(this);
+
+        // add the new Process WITH the same id
+        this.process.elementAdd(child);
+
+        // show the child properties:
+        child.propertiesShow(propertiesID);
+
+        this.emit("switchTo", child);
+    }
 };
