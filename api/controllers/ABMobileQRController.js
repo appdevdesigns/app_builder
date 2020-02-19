@@ -149,6 +149,9 @@ module.exports = {
         var email = req.param('email') || '--';
         var username = req.param('username') || '--';
 
+        // in case > 1 user was provided
+        user = user.split(","); 
+
         var QRAppUser = null;
         var MobileApp = null;
 
