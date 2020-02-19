@@ -58,7 +58,9 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
             // from: `${id}_from`,
             // subject: `${id}_subject`,
             // fromUser: `${id}_from_user`,
-            toUser: `${id}_to_user`
+            toUser: `${id}_to_user`,
+            formBuilder: `${id}_formBuilder`,
+            modalWindow: `${id}_modalWindow`
             // message: `${id}_message`,
             // toCustom: `${id}_to_custom`,
             // fromCustom: `${id}_from_custom`
@@ -107,12 +109,12 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
         // here is how we can find out what possible process data
         // fields are available to this task:
         //   returns an [{ key:'{uuid}', label:"" field:{ABDataField} }, {}, ...]
-        var listDataFields = this.process.processDataFields(this);
+        // var listDataFields = this.process.processDataFields(this);
 
         // here is how we can find out what possible process objects
         // are available to this task:
         //   returns an [{ ABObject }, {}, ...]
-        var listDataObjects = this.process.processDataObjects(this);
+        // var listDataObjects = this.process.processDataObjects(this);
 
         var ui = {
             id: id,
@@ -147,7 +149,133 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
                     rows: [toUserUI],
                     paddingY: 10,
                     hidden: parseInt(this.who) == 1 ? false : true
+                },
+                {
+                    view: "spacer",
+                    height: 10
+                },
+                {
+                    view: "toolbar",
+                    type: "clean",
+                    borderless: true,
+                    cols: [
+                        {
+                            view: "label",
+                            label: "Data To Approve"
+                        },
+                        {
+                            view: "spacer"
+                        },
+                        {
+                            view: "button",
+                            value: "Customize Layout",
+                            autowidth: true,
+                            click: () => {
+                                webix
+                                    .ui({
+                                        id: ids.modalWindow,
+                                        view: "window",
+                                        position: "center",
+                                        fullscreen: true,
+                                        modal: true,
+                                        head: {
+                                            view: "toolbar",
+                                            cols: [
+                                                {
+                                                    view: "label",
+                                                    label:
+                                                        "Customize the approval layout"
+                                                },
+                                                {
+                                                    view: "spacer"
+                                                },
+                                                {
+                                                    view: "button",
+                                                    label: "Close",
+                                                    autowidth: true,
+                                                    click: function() {
+                                                        $$(
+                                                            ids.modalWindow
+                                                        ).close();
+                                                    }
+                                                },
+                                                {
+                                                    view: "button",
+                                                    label: "Save",
+                                                    css: "primary",
+                                                    autowidth: true,
+                                                    click: () => {
+                                                        this.formBuilder = $$(
+                                                            ids.formBuilder
+                                                        ).getFormData();
+                                                        this.emit("save");
+                                                    }
+                                                }
+                                            ]
+                                        },
+                                        body: {
+                                            id: ids.formBuilder,
+                                            view: "formiobuilder",
+                                            dataObjects: this.process.processDataObjects(
+                                                this
+                                            ),
+                                            formComponents: this.preProcessFormIOComponents()
+                                        }
+                                    })
+                                    .show();
+                            }
+                        }
+                    ]
+                },
+                {
+                    view: "layout",
+                    type: "form",
+                    rows: [
+                        {
+                            view: "layout",
+                            padding: 20,
+                            rows: [
+                                {
+                                    id: ids.formPreview,
+                                    view: "formiopreview",
+                                    formComponents: this.preProcessFormIOComponents(),
+                                    height: 500
+                                }
+                            ]
+                        }
+                    ]
                 }
+                // {
+                //     view: "label",
+                //     label: "Build Custom Message"
+                // },
+                // {
+                //     id: ids.message,
+                //     view: "tinymce-editor",
+                //     label: L("ab.process.task.email.message", "*Message"),
+                //     name: "message",
+                //     value: this.message,
+                //     borderless: true,
+                //     minHeight: 500,
+                //     config: {
+                //         plugins: [
+                //             "advlist autolink lists link image charmap print preview anchor",
+                //             "searchreplace visualblocks code fullscreen",
+                //             "insertdatetime media table contextmenu paste imagetools wordcount"
+                //         ],
+                //         toolbar:
+                //             "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image",
+                //         init_instance_callback: (editor) => {
+                //             editor.on("KeyUp", (event) => {
+                //                 // _logic.onChange();
+                //             });
+                //
+                //             editor.on("Change", function(event) {
+                //                 // _logic.onChange();
+                //             });
+                //         }
+                //     }
+                // }
             ]
         };
 
