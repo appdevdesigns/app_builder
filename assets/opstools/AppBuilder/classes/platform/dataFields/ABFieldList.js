@@ -849,19 +849,21 @@ module.exports = class ABFieldList extends ABFieldListCore {
 };
 
 // == Private methods ==
-function _getSelectedOptions(rowData = {}) {
+function _getSelectedOptions(field, rowData = {}) {
 
 	let result = [];
-	if (rowData[this.columnName] != null) {
-		result = rowData[this.columnName];
+	if (rowData[field.columnName] != null) {
+		result = rowData[field.columnName];
 
 		if (typeof result == 'string')
 			result = JSON.parse(result);
 
 		// Pull text with current language
-		result = (this.settings.options || []).filter(opt => {
-			return (result || []).filter(v => (opt.id || opt) == (v.id || v)).length > 0
-		});
+		if (field.settings) {
+			result = (field.settings.options || []).filter(opt => {
+				return (result || []).filter(v => (opt.id || opt) == (v.id || v)).length > 0
+			});
+		}
 
 	}
 
