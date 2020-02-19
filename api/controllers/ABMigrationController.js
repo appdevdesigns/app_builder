@@ -174,7 +174,7 @@ function verifyAndReturnField(req, res) {
 
                 if (!objectData) {
                     var missingObj = new Error("Missing Object");
-                    var missingObj.objID = objID;
+                    missingObj.objID = objID;
                     console.log(`Error: Missing Object from id: ${objID}`);
                     return reject(missingObj);
                 }

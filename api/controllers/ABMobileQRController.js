@@ -144,60 +144,66 @@ module.exports = {
     // @param {string} email      the email address to send to.
     sendEmail: function (req, res) {
 
-        var user = req.param('user') || '--';
+        var allUsers = req.param('user') || '--';
         var appID = req.param('mobileApp') || '--';
         var email = req.param('email') || '--';
         var username = req.param('username') || '--';
 
         // in case > 1 user was provided
-        user = user.split(","); 
+        allUsers = allUsers.split(","); 
 
-        var QRAppUser = null;
-        var MobileApp = null;
-
-        var UserPublicToken = null;
-
-
-        // variables used in Email Sent:
-        var triggerID = null;   // EmailNotifications trigger ID for the QR Code Email;
-        var deepLink  = null;   // base deeplink url
-        var apkURL = null;      // url to access the android version of the mobile app
-        var cidQR = 'qr-code-key';  // unique key to point to QR image in attachment
-        var attachments = [];
-        
         var connextImgID = 'connexted-png';
         var connextedBase64 = "data:image/png;base64,"+Base64Images.connextedImg;
         var connextedImgBuffer = Buffer.from(connextedBase64.substring(22), 'base64');
 
-        async.series([
 
-            // verify Email
-            // if no email is provided, then lookup SiteUser's email:
-            (next) => {
-                
-                // if they provided an email, move along
-                if (email != '--') {
-                    next();
-                    return;
-                } 
+        async.each(allUsers, (user, cb)=>{
 
-                // lookup SiteUser
-                SiteUser.findOne({guid:user})
-                .then((lookupUser)=>{
 
-                    if (!lookupUser) {
-                        var error = new Error('Unknown user');
-                        error.httpResponseCode = 404;
-                        next(error);
+            var QRAppUser = null;
+            var MobileApp = null;
+
+            var UserPublicToken = null;
+
+
+            // variables used in Email Sent:
+            var triggerID = null;   // EmailNotifications trigger ID for the QR Code Email;
+            var deepLink  = null;   // base deeplink url
+            var apkURL = null;      // url to access the android version of the mobile app
+            var cidQR = 'qr-code-key';  // unique key to point to QR image in attachment
+            var attachments = [];
+            
+
+
+            async.series([
+
+                // verify Email
+                // if no email is provided, then lookup SiteUser's email:
+                (next) => {
+                    
+                    // if they provided an email, move along
+                    if (email != '--') {
+                        next();
                         return;
-                    }
+                    } 
 
-                    email = lookupUser.email;
-                    username = lookupUser.username;
-                    next();
-                })
-                .catch(next)
-            },
+                    // lookup SiteUser
+                    SiteUser.findOne({guid:user})
+                    .then((lookupUser)=>{
+
+                        if (!lookupUser) {
+                            var error = new Error('Unknown user');
+                            error.httpResponseCode = 404;
+                            next(error);
+                            return;
+                        }
+
+                        email = lookupUser.email;
+                        username = lookupUser.username;
+                        next();
+                    })
+                    .catch(next)
+                },
 
 //// NOTE: in usage, we don't use the QRToken in ABQRAppUser
 //// we might remove these next 2 steps in the future:
@@ -238,188 +244,194 @@ module.exports = {
 },
 
 
-            // Get the MobileApp object
-            (next) => {
+                // Get the MobileApp object
+                (next) => {
 
-                ABMobile.app(appID)
-                .then((App)=>{
+                    ABMobile.app(appID)
+                    .then((App)=>{
 
-                    if (!App) {
-                        var error = new Error('Unknown Mobile App');
-                        error.httpResponseCode = 403;
-                        next(error);
-                        return;
-                    }
+                        if (!App) {
+                            var error = new Error('Unknown Mobile App');
+                            error.httpResponseCode = 403;
+                            next(error);
+                            return;
+                        }
 
-                    MobileApp = App;
-                    next();
-                })
-                .catch(next);
-
-                // AppBuilder.mobileApps()
-                // .then((listApps)=>{
-
-                //     var App = listApps.filter((a)=>{return a.id == appID; })[0];
-
-                //     if (!App) {
-                //         var error = new Error('Unknown Mobile App');
-                //         error.httpResponseCode = 403;
-                //         next(error);
-                //         return;
-                //     }
-
-                //     MobileApp = App;
-                //     next();
-
-                // })
-                // .catch(next);
-            },
-
-
-            // Get the User's Public Auth Token:
-            (next) => {
-
-                ABMobile.publicAuthTokenForUser(user)
-                .then((token)=>{
-
-                    if (token) {
-                        UserPublicToken = token;
+                        MobileApp = App;
                         next();
-                        return;
-                    }
-
-                    // this is an error:
-                    var error = new Error('Requested User not setup for Relay.');
-                    next(error);
-                })
-                .catch(next);
-
-                // ABRelayUser.findOne({siteuser_guid: user})
-                // .then((ru)=>{
-                //     if (ru) {
-                //         UserPublicToken = ru.publicAuthToken;
-                //         next();
-                //         return;
-                //     }
-
-                //     // this is an error:
-                //     var error = new Error('Requested User not setup for Relay.');
-                //     next(error);
-                // })
-                // .catch(next);
-
-            },
-
-
-            // package together our Email Data
-            (next) => {
-
-
-                triggerID = MobileApp.emailInviteTrigger();     // EmailNotifications trigger ID for the QR Code Email;
-                deepLink  = sails.config.appbuilder.deeplink;   // base deeplink url
-                apkURL = MobileApp.urlAPK();                    // url to access the android version of the mobile app
-                cidQR = 'qr-code-key';                          // QR image attachment data
-                attachments = [];
-                
-
-                // package the data for our QR Code 
-                var QRData = ABMobile.getQRCodeData({
-                    UserPublicToken:UserPublicToken,
-                    codePushKeys: MobileApp.codePushKeys()
-                })
-
-                // deepLink needs to include this data for the MobileApp 
-                deepLink += "?settings=" + encodeURIComponent(QRData);
-
-                // now convert to a Base64 image 
-                ABMobile.getQRCodeBase64(QRData)
-                .then((qrcodeBuffer)=>{
-
-                    // add attachment
-                    attachments.push({
-                        filename: 'qrcode.png',
-                        content: qrcodeBuffer,
-                        contents: qrcodeBuffer, // old version syntax
-                        cid: cidQR
-                    });
-
-                    next();
-                })
-                .catch(next);
-
-                // QRCode.toDataURL(QRData, (err, image) => {
-                //     if (err) next(err);
-                //     else {
-
-                //         base64QR = image.substring(22);
-                //         var qrcodeBuffer = Buffer.from(base64QR, 'base64');
-
-                //         // add attachment
-                //         attachments.push({
-                //             filename: 'qrcode.png',
-                //             content: qrcodeBuffer,
-                //             contents: qrcodeBuffer, // old version syntax
-                //             cid: cidQR
-                //         });
-
-                //         next();
-                //     }
-                // });
-
-            },
-
-
-            // now build Email info and send to user
-            (next) => {
-                
-                if (email) {
-                    
-                    // add attachment
-                    attachments.push({
-                        filename: 'connexted.png',
-                        content: connextedImgBuffer,
-                        contents: connextedImgBuffer, // old version syntax
-                        cid: connextImgID
-                    });
-                    
-                    EmailNotifications.trigger(triggerID, {
-                        to: [email],
-                        variables: {
-                            apkURL: apkURL,       // url to android apk file
-                            cidQR: cidQR,       // CID for the QR code attachment
-                            connextImgID: connextImgID,
-                            deepLink: deepLink,
-                            username: username
-                        },
-                        attachments: attachments
                     })
-                    .done((html) => {
-                        next(); // res.send(html || 'OK');
-                    })
-                    .fail((err)=>{
+                    .catch(next);
 
+                    // AppBuilder.mobileApps()
+                    // .then((listApps)=>{
+
+                    //     var App = listApps.filter((a)=>{return a.id == appID; })[0];
+
+                    //     if (!App) {
+                    //         var error = new Error('Unknown Mobile App');
+                    //         error.httpResponseCode = 403;
+                    //         next(error);
+                    //         return;
+                    //     }
+
+                    //     MobileApp = App;
+                    //     next();
+
+                    // })
+                    // .catch(next);
+                },
+
+
+                // Get the User's Public Auth Token:
+                (next) => {
+
+                    ABMobile.publicAuthTokenForUser(user)
+                    .then((token)=>{
+
+                        if (token) {
+                            UserPublicToken = token;
+                            next();
+                            return;
+                        }
+
+                        // this is an error:
+                        var error = new Error('Requested User not setup for Relay.');
+                        next(error);
+                    })
+                    .catch(next);
+
+                    // ABRelayUser.findOne({siteuser_guid: user})
+                    // .then((ru)=>{
+                    //     if (ru) {
+                    //         UserPublicToken = ru.publicAuthToken;
+                    //         next();
+                    //         return;
+                    //     }
+
+                    //     // this is an error:
+                    //     var error = new Error('Requested User not setup for Relay.');
+                    //     next(error);
+                    // })
+                    // .catch(next);
+
+                },
+
+
+                // package together our Email Data
+                (next) => {
+
+
+                    triggerID = MobileApp.emailInviteTrigger();     // EmailNotifications trigger ID for the QR Code Email;
+                    deepLink  = sails.config.appbuilder.deeplink;   // base deeplink url
+                    apkURL = MobileApp.urlAPK();                    // url to access the android version of the mobile app
+                    cidQR = 'qr-code-key';                          // QR image attachment data
+                    attachments = [];
+                    
+
+                    // package the data for our QR Code 
+                    var QRData = ABMobile.getQRCodeData({
+                        UserPublicToken:UserPublicToken,
+                        codePushKeys: MobileApp.codePushKeys()
+                    })
+
+                    // deepLink needs to include this data for the MobileApp 
+                    deepLink += "?settings=" + encodeURIComponent(QRData);
+
+                    // now convert to a Base64 image 
+                    ABMobile.getQRCodeBase64(QRData)
+                    .then((qrcodeBuffer)=>{
+
+                        // add attachment
+                        attachments.push({
+                            filename: 'qrcode.png',
+                            content: qrcodeBuffer,
+                            contents: qrcodeBuffer, // old version syntax
+                            cid: cidQR
+                        });
+
+                        next();
+                    })
+                    .catch(next);
+
+                    // QRCode.toDataURL(QRData, (err, image) => {
+                    //     if (err) next(err);
+                    //     else {
+
+                    //         base64QR = image.substring(22);
+                    //         var qrcodeBuffer = Buffer.from(base64QR, 'base64');
+
+                    //         // add attachment
+                    //         attachments.push({
+                    //             filename: 'qrcode.png',
+                    //             content: qrcodeBuffer,
+                    //             contents: qrcodeBuffer, // old version syntax
+                    //             cid: cidQR
+                    //         });
+
+                    //         next();
+                    //     }
+                    // });
+
+                },
+
+
+                // now build Email info and send to user
+                (next) => {
+                    
+                    if (email) {
+                        
+                        // add attachment
+                        attachments.push({
+                            filename: 'connexted.png',
+                            content: connextedImgBuffer,
+                            contents: connextedImgBuffer, // old version syntax
+                            cid: connextImgID
+                        });
+                        
+                        EmailNotifications.trigger(triggerID, {
+                            to: [email],
+                            variables: {
+                                apkURL: apkURL,       // url to android apk file
+                                cidQR: cidQR,       // CID for the QR code attachment
+                                connextImgID: connextImgID,
+                                deepLink: deepLink,
+                                username: username
+                            },
+                            attachments: attachments
+                        })
+                        .done((html) => {
+                            next(); // res.send(html || 'OK');
+                        })
+                        .fail((err)=>{
+
+                            // pass a generic error back to the Client:
+                            var error = new Error('Error Sending Email.');
+                            error.httpResponseCode = 500;
+                            next(error);
+                            
+                        });
+                    } else {
                         // pass a generic error back to the Client:
-                        var error = new Error('Error Sending Email.');
+                        var error = new Error(`User [${user}] does not have an email address.`);
                         error.httpResponseCode = 500;
                         next(error);
-                        
-                    });
-                } else {
-                    // pass a generic error back to the Client:
-                    var error = new Error('User does not have an email address.');
-                    error.httpResponseCode = 500;
-                    next(error);
+                    }
+
                 }
 
-            }
+            ], (err, data)=>{
+                cb(err);
+            })
 
-        ], (err, data)=>{
+
+        },(err)=>{
             if (err) {
                 res.AD.error(err, err.httpResponseCode || 400);
             } else {
                 res.AD.success({sent:true});    
             }
         })
+
     },
 
 
