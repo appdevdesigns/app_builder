@@ -9,12 +9,15 @@ module.exports = class AB_Work_Admin_Role_User_Add extends ABComponent {
 			common: App.labels,
 			component: {
 				selectUser: L('ab.role.addUser.title', "*Select a user"),
-				selectScope: L('ab.role.addScope.title', "*Select a scope")
+				selectScope: L('ab.role.addScope.title', "*Select a scope"),
+
+				filterUser: L('ab.role.addUser.filterUser', "*Filter users"),
 			}
 		};
 
 		let ids = {
 			popup: this.unique('popup'),
+			filter: this.unique('filter'),
 			list: this.unique('list'),
 			buttonSave: this.unique('buttonSave')
 		};
@@ -96,9 +99,6 @@ module.exports = class AB_Work_Admin_Role_User_Add extends ABComponent {
 						let listData = [];
 						users.forEach(u => {
 
-							if (this._userDC.find({ username: u.username })[0])
-								return;
-
 							let userData = {
 								id: u.username,
 								name: u.username,
@@ -107,6 +107,9 @@ module.exports = class AB_Work_Admin_Role_User_Add extends ABComponent {
 							};
 
 							(role.scopes() || []).forEach(s => {
+
+								if (this._userDC.find(item => item.username == u.username && item.scope && item.scope.id == s.id)[0])
+									return;
 
 								userData.data.push({
 									scopeId: s.id,
@@ -125,6 +128,8 @@ module.exports = class AB_Work_Admin_Role_User_Add extends ABComponent {
 						_logic.ready();
 						$$(ids.buttonSave).disable();
 
+						_logic.filter();
+
 					}));
 
 			},
@@ -140,6 +145,18 @@ module.exports = class AB_Work_Admin_Role_User_Add extends ABComponent {
 				else {
 					return "N/A";
 				}
+
+			},
+
+			filter: () => {
+
+				let filterText = ($$(ids.filter).getValue() || "").trim().toLowerCase();
+				$$(ids.list).filter(item => {
+
+					return (item.name || "").trim().toLowerCase().indexOf(filterText) > -1 || 
+							(item.username || "").trim().toLowerCase().indexOf(filterText) > -1;
+				});
+				$$(ids.list).refresh();
 
 			},
 
@@ -235,12 +252,31 @@ module.exports = class AB_Work_Admin_Role_User_Add extends ABComponent {
 			body: {
 				borderless: true,
 				rows: [
+					// Filter
+					{
+						cols: [
+							{ view: 'icon', icon: 'fa fa-filter', align: 'left' },
+							{
+								view: 'text',
+								id: ids.filter,
+								placeholder: labels.component.filterUser,
+								on: {
+									onTimedKeyPress: () => {
+										_logic.filter();
+									}
+								}
+							}
+						]
+					},
+
+					// List
 					{
 						id: ids.list,
 						view: 'grouplist',
 						data: [],
 						borderless: true,
 						select: true,
+						multiselect: false,
 						templateBack: _logic.template,
 						template: _logic.template,
 						on: {

@@ -172,6 +172,13 @@ function verifyAndReturnField(req, res) {
             ABGraphObject.findOne(objID)
             .then(function(objectData){
 
+                if (!objectData) {
+                    var missingObj = new Error("Missing Object");
+                    var missingObj.objID = objID;
+                    console.log(`Error: Missing Object from id: ${objID}`);
+                    return reject(missingObj);
+                }
+                
                 let object = objectData.toABClass();
 
                 var fieldID = req.param('fieldID', -1);

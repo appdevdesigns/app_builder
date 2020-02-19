@@ -1074,6 +1074,11 @@ console.error(err);
                     "AppBuilder:ABModelController:find(): find() did not complete",
                     { error: err }
                 );
+                if (!err) {
+                    err = new Error(
+                        "AppBuilder:ABModelController:find(): find() did not complete. No Error Provided."
+                    );
+                }
                 res.AD.error(err, err.HTTPCode || 400);
             });
     },

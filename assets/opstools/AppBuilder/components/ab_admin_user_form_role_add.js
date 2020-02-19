@@ -10,13 +10,15 @@ module.exports = class AB_Work_Admin_User_Form_Role_Add extends ABComponent {
 		let labels = {
 			common: App.labels,
 			component: {
-				selectRole: L('ab.user.addRole.title', "*Select a role"),
-				selectScope: L('ab.user.addRole.title', "*Select a scope")
+				selectRole: L('ab.user.addRole.selectRole', "*Select a role"),
+				selectScope: L('ab.user.addRole.selectScope', "*Select a scope"),
+				filterRole: L('ab.user.addRole.filterRole', "*Filter roles")
 			}
 		};
 
 		let ids = {
 			popup: this.unique('popup'),
+			filter: this.unique('filter'),
 			list: this.unique('list'),
 			buttonSave: this.unique('buttonSave')
 		};
@@ -146,6 +148,14 @@ module.exports = class AB_Work_Admin_User_Form_Role_Add extends ABComponent {
 
 			},
 
+			filter: () => {
+
+				let filterText = ($$(ids.filter).getValue() || "").trim().toLowerCase();
+				$$(ids.list).filter(item => (item.name || "").trim().toLowerCase().indexOf(filterText) > -1);
+				$$(ids.list).refresh();
+
+			},
+
 			select: (itemId) => {
 
 				let selectedItem = $$(ids.list).getItem(itemId);
@@ -179,7 +189,7 @@ module.exports = class AB_Work_Admin_User_Form_Role_Add extends ABComponent {
 				if (!role)
 					return _logic.ready();
 
-					role.userAdd(selectedScope.id, user.username)
+				role.userAdd(selectedScope.id, user.username)
 					.catch(err => {
 						console.error(err);
 						_logic.ready();
@@ -242,6 +252,24 @@ module.exports = class AB_Work_Admin_User_Form_Role_Add extends ABComponent {
 			body: {
 				borderless: true,
 				rows: [
+					// Filter
+					{
+						cols: [
+							{ view: 'icon', icon: 'fa fa-filter', align: 'left' },
+							{
+								view: 'text',
+								id: ids.filter,
+								placeholder: labels.component.filterRole,
+								on: {
+									onTimedKeyPress: () => {
+										_logic.filter();
+									}
+								}
+							}
+						]
+					},
+
+					// List
 					{
 						id: ids.list,
 						view: 'grouplist',
