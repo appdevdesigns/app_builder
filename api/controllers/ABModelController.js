@@ -1043,7 +1043,16 @@ console.error(err);
             })
             .catch((err) => {
                 resolvePendingTransaction();
-                ADCore.error.log("AppBuilder:ABModelController:find(): find() did not complete", { error: err });
+                ADCore.error.log(
+                    "AppBuilder:ABModelController:find(): find() did not complete",
+                    { error: err }
+                );
+                if (!err) {
+                    err = new Error(
+                        "AppBuilder:ABModelController:find(): find() did not complete. No Error Provided."
+                    );
+                }
+
                 res.AD.error(err, err.HTTPCode || 400);
             });
 
