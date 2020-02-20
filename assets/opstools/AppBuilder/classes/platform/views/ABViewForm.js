@@ -10,6 +10,8 @@ const ABSubmitRule = require("../../rules/ABViewRuleListFormSubmitRules");
 let PopupRecordRule = null;
 let PopupSubmitRule = null;
 
+const ABViewFormPropertyComponentDefaults = ABViewFormCore.defaultValues();
+
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
@@ -110,11 +112,13 @@ module.exports = class ABViewForm extends ABViewFormCore {
 
 							// Add new form field
 							let newFieldView = currView.addFieldToForm(f, yPosition);
-							if (newFieldView)
+							if (newFieldView) {
 								newFieldView.once('destroyed', () => this.propertyEditorPopulate(App, ids, currView));
 
-							// Call save API
-							saveTasks.push(() => newFieldView.save());
+								// Call save API
+								saveTasks.push(() => newFieldView.save());
+
+							}
 
 							// update item to UI list
 							f.selected = 1;
