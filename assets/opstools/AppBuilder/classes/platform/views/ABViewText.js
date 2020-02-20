@@ -1,5 +1,7 @@
 const ABViewTextCore = require("../../core/views/ABViewTextCore");
 
+const ABViewTextPropertyComponentDefaults = ABViewTextCore.defaultValues();
+
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
@@ -302,7 +304,7 @@ module.exports = class ABViewText extends ABViewTextCore {
 
 			// listen DC events
 			let dv = this.datacollection;
-			if (dv && this.parent.key != "datacollection") {
+			if (dv && this.parent.key != "dataview") {
 
 				this.eventAdd({
 					emitter: dv,
