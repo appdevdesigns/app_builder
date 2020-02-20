@@ -1,5 +1,7 @@
 const ABViewTextCore = require("../../core/views/ABViewTextCore");
 
+const ABViewTextPropertyComponentDefaults = ABViewTextCore.defaultValues();
+
 function L(key, altText) {
     return AD.lang.label.getLabel(key) || altText;
 }
@@ -32,7 +34,7 @@ module.exports = class ABViewText extends ABViewTextCore {
         var _ui = {
             id: ids.component,
             view: "tinymce-editor",
-            value: this.text || ABViewTextCore.defaultValues().text,
+            value: this.text || ABViewTextPropertyComponentDefaults.text,
             config: {
                 plugins: [
                     "advlist autolink lists link image charmap print preview anchor",
@@ -161,7 +163,7 @@ module.exports = class ABViewText extends ABViewTextCore {
             (dc) => dc.id == dvId
         )[0];
 
-        if (!datacollection && view.parent.key == "datacollection") {
+        if (!datacollection && view.parent.key == "dataview") {
             datacollection = view.application.datacollections(
                 (dc) => dc.id == view.parent.settings.dataviewID
             )[0];
@@ -259,7 +261,7 @@ module.exports = class ABViewText extends ABViewTextCore {
 
             // listen DC events
             let dv = this.datacollection;
-            if (dv && this.parent.key != "datacollection") {
+            if (dv && this.parent.key != "dataview") {
                 this.eventAdd({
                     emitter: dv,
                     eventName: "changeCursor",

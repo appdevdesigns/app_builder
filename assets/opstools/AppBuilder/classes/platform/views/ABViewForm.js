@@ -1051,7 +1051,7 @@ module.exports = class ABViewForm extends ABViewFormCore {
             (fComp) => fComp.settings.required == true
         ).map((fComp) => fComp.field());
         requiredFields.forEach((f) => {
-            if (!formVals[f.columnName] && formVals[f.columnName] != "0") {
+            if (f && !formVals[f.columnName] && formVals[f.columnName] != "0") {
                 formView.markInvalid(
                     f.columnName,
                     "*This is a required field."
