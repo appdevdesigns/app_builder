@@ -15,6 +15,8 @@ var ABView = require(path.join('..', 'classes', 'platform', 'views', 'ABView'));
 var ApplicationGraph = require(path.join('..', 'graphModels', 'ABApplication'));
 var DataviewGraph = require(path.join('..', 'graphModels', 'ABDataview'));
 var ObjectGraph = require(path.join('..', 'graphModels', 'ABObject'));
+var QueryGraph = require(path.join('..', 'graphModels', 'ABQuery'));
+
 
 module.exports = {
 
@@ -726,6 +728,7 @@ module.exports = {
 
         let datacollectionIds = [];
         let linkFieldIds = [];
+        let datasources;
 
         Promise.resolve()
             .then(() => {
@@ -866,7 +869,7 @@ module.exports = {
                     let remainsObjectIds = [];
 
                     // Pull objects and queries from data views
-                    let datasources = app.json.datacollections.map(dv => {
+                    datasources = app.json.datacollections.map(dv => {
                         if (dv.query && dv.query[0]) {
                             return dv.query[0];
                         }
@@ -931,7 +934,7 @@ module.exports = {
                             (dc.settings.objectWorkspace.filterConditions.rules || []).forEach(r => {
 
                                 if ((r.rule == "in_query" || r.rule == "not_in_query") &&
-                                    dvDataSources.filter(ds => ds.id == r.value).length < 1) {
+                                    datasources.filter(ds => ds.id == r.value).length < 1) {
 
                                     remainsQueryIds.push(r.value);
                                 }
