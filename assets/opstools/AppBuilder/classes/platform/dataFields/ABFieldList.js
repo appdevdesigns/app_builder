@@ -1,6 +1,8 @@
 var ABFieldListCore = require('../../core/dataFields/ABFieldListCore');
 var ABFieldComponent = require('./ABFieldComponent');
 
+var ABFieldSelectivity = require('./ABFieldSelectivity');
+
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
@@ -70,6 +72,12 @@ function updateDefaultList(ids, settings = {}) {
 	if ($$(ids.isMultiple).getValue()) {
 		// Multiple default selector
 		var domNode = $$(ids.multipleDefault).$view.querySelector('.list-data-values');
+
+		// TODO : use to render selectivity to set default values
+		let selectivityRender = new ABFieldSelectivity({
+			settings: {}
+		}, {}, {});
+
 		selectivityRender.selectivityRender(domNode, {
 			multiple: true,
 			data: settings.multipleDefault,
@@ -394,6 +402,8 @@ module.exports = class ABFieldList extends ABFieldListCore {
 
 	constructor(values, object) {
 		super(values, object);
+
+		this._Selectivity = new ABFieldSelectivity(values, object);
 	}
 
 	/*
@@ -575,10 +585,10 @@ module.exports = class ABFieldList extends ABFieldListCore {
 				// var domNode = node.querySelector('.list-data-values');
 
 				// get selected values
-				let selectedData = _getSelectedOptions(row);
+				let selectedData = _getSelectedOptions(field, row);
 
 				// Render selectivity
-				field.selectivityRender(domNode, {
+				field._Selectivity.selectivityRender(domNode, {
 					multiple: true,
 					readOnly: readOnly,
 					placeholder: placeholder,
@@ -663,10 +673,10 @@ module.exports = class ABFieldList extends ABFieldListCore {
 			var domNode = node.querySelector('.list-data-values');
 
 			// get selected values
-			var selectedData = _getSelectedOptions(row);
+			var selectedData = _getSelectedOptions(this, row);
 
 			// Render selectivity
-			this.selectivityRender(domNode, {
+			this._Selectivity.selectivityRender(domNode, {
 				multiple: true,
 				readOnly: readOnly,
 				placeholder: placeholder,
@@ -681,7 +691,7 @@ module.exports = class ABFieldList extends ABFieldListCore {
 
 					// update just this value on our current object.model
 					var values = {};
-					values[this.columnName] = this.selectivityGet(domNode);
+					values[this.columnName] = this._Selectivity.selectivityGet(domNode);
 
 					// pass null because it could not put empty array in REST api
 					if (values[this.columnName].length == 0)
@@ -816,7 +826,7 @@ module.exports = class ABFieldList extends ABFieldListCore {
 
 		if (this.settings.isMultiple) {
 			var domNode = item.$view.querySelector('.list-data-values');
-			values = this.selectivityGet(domNode);
+			values = this._Selectivity.selectivityGet(domNode);
 		} else {
 			values = $$(item).getValue();
 		}
@@ -831,13 +841,13 @@ module.exports = class ABFieldList extends ABFieldListCore {
 
 		if (this.settings.isMultiple) {
 
-			let selectedOpts = _getSelectedOptions(rowData);
+			let selectedOpts = _getSelectedOptions(this, rowData);
 
 			// get selectivity dom
 			var domSelectivity = item.$view.querySelector('.list-data-values');
 
 			// set value to selectivity
-			this.selectivitySet(domSelectivity, selectedOpts, this.App);
+			this._Selectivity.selectivitySet(domSelectivity, selectedOpts, this.App);
 
 		} else {
 			super.setValue(item, rowData);
