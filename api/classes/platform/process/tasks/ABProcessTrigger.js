@@ -19,7 +19,7 @@ module.exports = class ABProcessTaskTrigger extends ABProcessTriggerCore {
             return;
         }
         var context = this.process.context(data);
-        this.initState(context, { triggered: true, status: "completed" });
+        this.initState(context, { triggered: true, status: "completed", data });
         context.startTaskID = this.diagramID;
 
         // modify data in any appropriate way then:
