@@ -727,8 +727,7 @@ module.exports = {
         let pageID = req.param('pageID');
 
         let datacollectionIds = [];
-        let linkFieldIds = [];
-        let datasources;
+        let datasources = [];
 
         Promise.resolve()
             .then(() => {
@@ -788,22 +787,6 @@ module.exports = {
                                 }
                             }
 
-                        }
-
-                        // add id of link objects who are used in detail and form widgets
-                        if (v.key == "detail" || v.key == "form") {
-                            (v.views || []).forEach(subView => {
-
-                                if (subView.key == "detailselectivity" ||
-                                    subView.key == "detailconnect" ||
-                                    subView.key == "connect") {
-                                    linkFieldIds.push({
-                                        objectId: subView.settings.objectId,
-                                        fieldId: subView.settings.fieldId
-                                    });
-                                }
-
-                            });
                         }
 
                         addDataviewIdToList(v.pages || []);
@@ -879,19 +862,20 @@ module.exports = {
                     }).filter(ds => ds);
 
                     // Find missing objects
-                    (linkFieldIds || []).forEach(item => {
-                        let object = datasources.filter(obj => obj.id == item.objectId)[0];
-                        if (!object){
-                            remainsObjectIds.push(item.objectId);
-                        }
-                        else {
+                    datasources.forEach(ds => {
 
-                            let field = (object.fields || []).filter(f => f.id == item.fieldId)[0];
-                            if (field) {
-                                let linkObject = datasources.filter(obj => obj.id == field.settings.linkObject)[0];
-                                if (!linkObject)
-                                    remainsObjectIds.push(field.settings.linkObject);
-                            }
+                        if (ds && ds.fields) {
+                            (ds.fields || []).forEach(f => {
+
+                                if (f.key != 'connectObject' ||
+                                    !f.settings ||
+                                    !f.settings.linkObject)
+                                    return;
+
+                                if (datasources.filter(d => d.id == f.settings.linkObject).length < 1)
+                                    remainsObjectIds.push(f.settings.linkObject);
+
+                            });
                         }
 
                     });

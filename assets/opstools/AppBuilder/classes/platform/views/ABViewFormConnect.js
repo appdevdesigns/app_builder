@@ -1,6 +1,8 @@
 const ABViewFormConnectCore = require("../../core/views/ABViewFormConnectCore");
 const ABViewPropertyAddPage = require("./viewProperties/ABViewPropertyAddPage");
 
+const ABViewFormConnectPropertyComponentDefaults = ABViewFormConnectCore.defaultValues();
+
 const RowFilter = require("../RowFilter");
 
 let FilterComponent = null;
