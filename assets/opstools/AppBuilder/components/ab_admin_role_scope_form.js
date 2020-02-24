@@ -189,19 +189,23 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 					$$(ids.form).setValues({});
 				}
 
-				let objects = currScope ? currScope.objects() : [];
+				let objectsOfScope = currScope ? currScope.objects() : [];
+				// Pull objects of this page (has mock ABApplication)
+				let objects = this._objects.filter(obj => objectsOfScope.filter(o => o.id == obj.id).length > 0);
 				_logic.refreshFilterData(currScope, objects);
 
 			},
 
 			refreshFilterData: (scope, objects = []) => {
 
+				this._rowFilter.queriesLoad(this._queries);
+
 				if (objects &&
 					objects.length) {
 
 					let fieldList = [];
 					(objects || []).forEach(obj => {
-						fieldList = fieldList.concat(obj.fields());
+						fieldList = fieldList.concat(obj.fields(null, true));
 					});
 
 					this._rowFilter.fieldsLoad(fieldList);
@@ -305,23 +309,45 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 
 				_logic.busy();
 
+				let mockApp = new ABApplication({});
+
 				return Promise.resolve()
 					.then(() => new Promise((next, err) => {
 
-						if (this._objects) {
-							_logic.ready();
-							return next();
+						let loadTasks = [];
+
+						if (!this._objects) {
+							loadTasks.push(new Promise((ok, bad) => {
+								// (new ABApplication()).objectInfo()
+								mockApp.objectFind()
+								.catch(bad)
+								.then(objects => {
+									this._objects = objects;
+									mockApp._objects = objects;
+									ok();
+
+								});
+							}));
 						}
 
-						// (new ABApplication()).objectInfo()
-						(new ABApplication({})).objectFind()
+						if (!this._queries) {
+							loadTasks.push(new Promise((ok, bad) => {
+								mockApp.queryFind()
+								.catch(bad)
+								.then(queries => {
+									this._queries = queries;
+									mockApp._queries = queries;
+									ok();
+								});
+							}));
+						}
+
+						Promise.all(loadTasks)
 							.catch(err)
-							.then(objects => {
-
-								this._objects = objects;
+							.then(() => {
 								next();
-
 							});
+
 					}))
 					.then(() => new Promise((next, err) => {
 

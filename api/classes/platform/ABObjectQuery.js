@@ -8,14 +8,6 @@ const ABObjectImport = require(path.join(__dirname, 'ABObjectImport'));
 
 const Model = require('objection').Model;
 
-// list of all the condition filtering policies we want our defined 
-// filters to pass through:
-const PolicyList = [
-	require(path.join(__dirname, '..', '..', 'policies', 'ABModelConvertSameAsUserConditions')),
-	require(path.join(__dirname, '..', '..', 'policies', 'ABModelConvertQueryConditions')),
-	require(path.join(__dirname, '..', '..', 'policies', 'ABModelConvertQueryFieldConditions'))
-]
-
 module.exports = class ABClassQuery extends ABClassObject {
 
 	constructor(attributes, application) {
@@ -1264,65 +1256,16 @@ sails.log.debug('ABClassQuery.migrateCreate - SQL:', sqlCommand);
 
 					if (options) {
 
-						// run the options.where through our existing policy filters
-						// get array of policies to run through
-						let processPolicy = (indx, cb) => {
-
-							if (indx >= PolicyList.length) {
-								cb();
-							} else {
-
-								// load the policy
-								let policy = PolicyList[indx];
-
-								// run the policy on my data
-								// policy(req, res, cb)
-								// 	req.options._where
-								//  req.user.data
-								let myReq = {
-									options: {
-										_where: options.where
-									},
-									user: {
-										data: userData
-									},
-									param: (id) => {
-										if (id == "appID") {
-											return this.application.id;
-										} else if (id == "objID") {
-											return this.id;
-										}
-									}
-								}
-
-								policy(myReq, {}, (err) => {
-
-									if (err) {
-										cb(err);
-									} else {
-										// try the next one
-										processPolicy(indx + 1, cb);
-									}
-								})
-							}
-						}
-
-						// run each One
-						processPolicy(0, (err) => {
-
-							// now that I'm through with updating our Conditions
-
-							if (err) {
-								bad(err);
-							} else {
+						this.processFilterPolicy(options.where , userData)
+							.catch(bad)
+							.then(() => {
 
 								// when finished populate our Find Conditions
 								this.populateFindConditions(query, options, userData)
 									.catch(bad)
 									.then(() => next());
 
-							}
-						})
+							});
 
 					}
 

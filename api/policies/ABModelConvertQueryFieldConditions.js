@@ -129,7 +129,7 @@ function parseQueryCondition(_where, object, req, res, cb) {
             var values = cond.value.split(":");
             if (values.length < 2) {
                 ADCore.error.log('AppBuilder:Policy:ABModelConvertQueryFieldConditions:Values format is not correct:', { value:cond.value, condition:cond });
-                    
+
                 var err = new Error('Value was not properly formated.');
                 err.condition = cond;
                 cb(err);
@@ -137,6 +137,15 @@ function parseQueryCondition(_where, object, req, res, cb) {
             }
             var queryID = values[0];
             var queryFieldID = values[1];
+            if (!queryID || !queryFieldID) {
+                ADCore.error.log('AppBuilder:Policy:ABModelConvertQueryFieldConditions:Values format is not correct:', { queryID:queryID, queryFieldID:queryFieldID });
+
+                var err = new Error('Value was not properly formated.');
+                err.condition = cond;
+                cb(err);
+                return;
+            }
+
 
             // make sure we find our QueryObject
             // var QueryObj = object.application.queries((q)=>{ return q.id == queryID; })[0];
@@ -198,7 +207,7 @@ function parseQueryCondition(_where, object, req, res, cb) {
                     }
                     
                     // get the Query Field we want to pull out
-                    var queryField = QueryObj.fields((f)=>{ return f.id == queryFieldID; })[0]
+                    var queryField = QueryObj.fields(f => (f.field ? f.field.id : f.id) == queryFieldID)[0];
                     if (!queryField) {
                         ADCore.error.log('AppBuilder:Policy:ABModelConvertQueryFieldConditions:Unable to resolve query field.:', { fieldID:queryFieldID, condition:cond });                    
                         var err = new Error('Unable to resolve query field.');
@@ -211,7 +220,7 @@ function parseQueryCondition(_where, object, req, res, cb) {
                     let columnName = queryField.dbPrefix().replace(/`/g, "") + "." + queryField.columnName;
                     
                     // run the Query, and parse out that data
-                    var query = null;
+                    // var query = null;
                     QueryObj.queryFind({
                         columnNames: [columnName],
                         ignoreIncludeId: true // we want real id

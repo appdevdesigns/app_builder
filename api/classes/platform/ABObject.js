@@ -10,7 +10,6 @@ const Model = require('objection').Model;
 
 const ABGraphScope = require("../../graphModels/ABScope");
 
-
 // var __ObjectPool = {};
 var __ModelPool = {};	// reuse any previously created Model connections
 						// to minimize .knex bindings (and connection pools!)
@@ -738,31 +737,41 @@ module.exports = class ABClassObject extends ABObjectCore {
 
 						(scopes || []).forEach(s => {
 
-							if (!s.filter) return;
+							if (!s || !s.filter) return;
+
+							let scopeRule = {
+								glue: s.filter.glue,
+								rules: []
+							};
 
 							(s.filter.rules || []).forEach(r => {
-								if (r.key) {
-									(this.fields(f => f.id == r.key) || []).forEach(f => {
+								if (!r.key) return;
 
-										let newRule = {
-											key: r.key,
-											rule: r.rule,
-											value: r.value
-										};
+								(this.fields(f => f.id == r.key) || []).forEach(fld => {
 
-										if (f.alias)
-											newRule.alias = f.alias;
+									let newRule = {
+										key: r.key,
+										rule: r.rule,
+										value: r.value
+									};
 
-										scopeWhere.rules.push(newRule);
-									});
-								}
+									if (fld.alias)
+										newRule.alias = fld.alias;
+
+									scopeRule.rules.push(newRule);
+								});
 							});
+
+							scopeWhere.rules.push(scopeRule);
 
 						});
 
-						where.rules.push(scopeWhere);
+						this.processFilterPolicy(scopeWhere, userData)
+							.then(() => {
+								where.rules.push(scopeWhere);
+								next();
+							});
 
-						next();
 					});
 
 			}))
@@ -1358,6 +1367,80 @@ module.exports = class ABClassObject extends ABObjectCore {
 
 		return this.fields(f => f && f.key == 'connectObject', getAll);
 
+	}
+
+	/**
+	 * @method processFilterPolicy
+	 * 
+	 * @return Promise
+	 */
+	processFilterPolicy(_where, userData) {
+
+		// list of all the condition filtering policies we want our defined 
+		// filters to pass through:
+		const PolicyList = [
+			require("../../policies/ABModelConvertSameAsUserConditions"),
+			require("../../policies/ABModelConvertQueryConditions"),
+			require("../../policies/ABModelConvertQueryFieldConditions")
+		];
+
+		// run the options.where through our existing policy filters
+		// get array of policies to run through
+		let processPolicy = (indx, cb) => {
+
+			if (indx >= PolicyList.length) {
+				cb();
+			} else {
+
+				// load the policy
+				let policy = PolicyList[indx];
+
+				// run the policy on my data
+				// policy(req, res, cb)
+				// 	req.options._where
+				//  req.user.data
+				let myReq = {
+					options: {
+						_where: _where
+					},
+					user: {
+						data: userData
+					},
+					param: (id) => {
+						if (id == "appID") {
+							return this.application.id;
+						} else if (id == "objID") {
+							return this.id;
+						}
+					}
+				}
+
+				policy(myReq, {}, (err) => {
+
+					if (err) {
+						cb(err);
+					} else {
+						// try the next one
+						processPolicy(indx + 1, cb);
+					}
+				})
+			}
+		}
+
+		return new Promise((resolve, reject) => {
+
+			// run each One
+			processPolicy(0, (err) => {
+
+				// now that I'm through with updating our Conditions
+				if (err) {
+					reject(err);
+				} else {
+					resolve();
+				}
+			});
+
+		});
 	}
 
 
