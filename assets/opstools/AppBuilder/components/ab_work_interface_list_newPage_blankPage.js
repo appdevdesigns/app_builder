@@ -99,16 +99,16 @@ module.exports = class AB_Work_Interface_List_NewPage_BlankPage extends ABCompon
 
 				var options = [{ id: '-', value: labels.component.rootPage }];
 
-				// var addPage = function (page, indent) {
-				// 	indent = indent || '';
-				// 	options.push({ id: page.urlPointer(), value: indent + page.label });
-				// 	page.pages(p => !(p instanceof ABViewReportPage)).forEach(function (p) {
-				// 		addPage(p, indent + '-');
-				// 	})
-				// }
-				// application.pages(p => !(p instanceof ABViewReportPage)).forEach(function (page) {
-				// 	addPage(page, '');
-				// });
+				var addPage = function (page, indent) {
+					indent = indent || '';
+					options.push({ id: page.urlPointer(), value: indent + page.label });
+					page.pages(p => p instanceof ABPage).forEach(function (p) {
+						addPage(p, indent + '-');
+					})
+				}
+				CurrentApplication.pages(p => p instanceof ABPage).forEach(function (page) {
+					addPage(page, '');
+				});
 
 				$$(ids.parentList).define('options', options);
 				$$(ids.parentList).refresh();
