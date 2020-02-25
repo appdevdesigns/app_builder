@@ -174,7 +174,7 @@ module.exports = class AB_Work_Dataview_List_NewDataview extends ABComponent {
 				}
 
 				// create a new (unsaved) instance of our object:
-				var newDataview = CurrentApplication.dataviewNew(values);
+				var newDataview = CurrentApplication.datacollectionNew(values);
 
 
 				// have newObject validate it's values.
