@@ -367,6 +367,8 @@ module.exports = class AB_Work_Datacollection_Workspace_Properties extends ABCom
 				});
 
 				$$(ids.dataSource).refresh();
+
+				this.FilterComponent.applicationLoad(this._application);
 				
 				this._logic.listBusy();
 
