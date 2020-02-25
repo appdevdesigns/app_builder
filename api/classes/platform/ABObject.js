@@ -726,7 +726,11 @@ module.exports = class ABClassObject extends ABObjectCore {
 					objectIds = [this.id];
 				}
 
-				ABGraphScope.getFilter(userData.username, objectIds)
+				ABGraphScope.getFilter({
+						username: userData.username,
+						objectIds: objectIds, 
+						ignoreQueryId: (this.viewName ? this.id : null)
+				})
 					.catch(err)
 					.then(scopes => {
 
@@ -745,7 +749,9 @@ module.exports = class ABClassObject extends ABObjectCore {
 							};
 
 							(s.filter.rules || []).forEach(r => {
-								if (!r.key) return;
+
+								if (!r.key)
+									return;
 
 								(this.fields(f => f.id == r.key) || []).forEach(fld => {
 

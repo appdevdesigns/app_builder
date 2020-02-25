@@ -191,19 +191,14 @@ function parseQueryCondition(_where, object, req, res, cb) {
 
 
                     // find field by it's name
-                    var field = object.fields((f)=>{return f.columnName == cond.key;})[0];
+                    var field = object.fields(f => f.columnName == cond.key || f.id == cond.key)[0];
                     if (!field) {
 
-                        // ok, maybe we passed in a field.id:
-                        field = object.fields((f)=>{return f.id == cond.key;})[0];
-                        if (!field) {
-
-                            ADCore.error.log('AppBuilder:Policy:ABModelConvertQueryFieldConditions:Unable to resolve condition field.:', { field:cond.key, condition:cond });                    
-                            var err = new Error('Unable to resolve condition field.');
-                            err.condition = cond;
-                            cb(err);
-                            return;
-                        }
+                        ADCore.error.log('AppBuilder:Policy:ABModelConvertQueryFieldConditions:Unable to resolve condition field.:', { field:cond.key, condition:cond });                    
+                        var err = new Error('Unable to resolve condition field.');
+                        err.condition = cond;
+                        cb(err);
+                        return;
                     }
                     
                     // get the Query Field we want to pull out
