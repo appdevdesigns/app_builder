@@ -59,6 +59,11 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 						placeholder: "Enter Description"
 					},
 					{
+						view: "checkbox",
+						name: "allowAll",
+						label: "Allow All"
+					},
+					{
 						id: ids.object,
 						view: "multicombo",
 						name: "objectIds",
@@ -182,6 +187,7 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 					$$(ids.form).setValues({
 						name: currScope.name,
 						description: currScope.description,
+						allowAll: currScope.allowAll,
 						objectIds: objectIds
 					});
 				}

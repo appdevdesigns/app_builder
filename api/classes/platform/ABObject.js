@@ -734,6 +734,10 @@ module.exports = class ABClassObject extends ABObjectCore {
 					.catch(err)
 					.then(scopes => {
 
+						// Check if user is anonymous
+						if (!scopes || scopes.length < 1)
+							return next(true);
+
 						let scopeWhere = {
 							glue: 'or',
 							rules: []
@@ -772,16 +776,34 @@ module.exports = class ABClassObject extends ABObjectCore {
 
 						});
 
-						this.processFilterPolicy(scopeWhere, userData)
-							.then(() => {
-								where.rules.push(scopeWhere);
-								next();
-							});
+						let isAdmin = (scopes || []).filter(s => s.allowAll).length > 0;
+
+						// Check if Admin/Anonymous
+						if (scopeWhere.rules.length < 1) {
+							if (isAdmin)
+								return next(false);
+							else
+								return next(true);
+						}
+						// Process filter policies
+						else {
+							this.processFilterPolicy(scopeWhere, userData)
+								.then(() => {
+									where.rules.push(scopeWhere);
+									next(false);
+								});
+						}
 
 					});
 
 			}))
-			.then(() => new Promise((next, err) => {
+			.then(isAnonymous => new Promise((next, err) => {
+
+				// If user is anonymous, then return empty data.
+				if (isAnonymous) {
+					query.clearWhere().whereRaw('1 = 0');
+					return next();
+				}
 
 				// Apply filters
 				if (!_.isEmpty(where)) {

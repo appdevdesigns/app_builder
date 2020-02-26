@@ -58,10 +58,10 @@ module.exports = class ABScope extends ABModelBase {
 				FOR r in role
 				FOR rScope in roleScope
 				FILTER sUser.username == '${options.username}'
-				&& [${options.objectIds.join(',')}] ANY == sObj._to
+				&& (s.allowAll == true || s.allowAll == '1' || [${options.objectIds.join(',')}] ANY == sObj._to)
+				&& (s.allowAll == true || s.allowAll == '1' || sObj._from == s._id)
 				&& sUser._from == r._id
 				&& sUser._to == s._id
-				&& sObj._from == s._id
 				&& rScope._from == r._id
 				&& rScope._to == s._id
 				RETURN s
