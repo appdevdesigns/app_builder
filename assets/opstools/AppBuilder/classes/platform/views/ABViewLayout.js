@@ -1,3 +1,4 @@
+const ABViewContainer = require("../../platform/views/ABViewContainer");
 const ABViewLayoutCore = require("../../core/views/ABViewLayoutCore");
 
 function L(key, altText) {
@@ -192,6 +193,79 @@ module.exports = class ABViewLayout extends ABViewLayoutCore {
 			}
 
 		]);
+	}
+
+	/**
+	 * @method component()
+	 * return a UI component based upon this view.
+	 * @param {obj} App 
+	 * @param {string} idPrefix
+	 * 
+	 * @return {obj} UI component
+	 */
+	component(App, idPrefix) {
+
+		let idBase = 'ABViewLayout_' + (idPrefix || '') + this.id;
+		let ids = {
+			component: App.unique(idBase + '_component'),
+		};
+
+		this.viewComponents = this.viewComponents || {}; // { viewId: viewComponent, ..., viewIdn: viewComponent }
+
+		let _ui = {
+			id: ids.component,
+			view: "layout",
+			cols: []
+		};
+
+		this.views().forEach(v => {
+
+			this.viewComponents[v.id] = v.component(App, idPrefix);
+
+			_ui.cols.push(this.viewComponents[v.id].ui);
+
+		});
+
+		// make sure each of our child views get .init() called
+		var _init = (options) => {
+
+			this.views().forEach((v) => {
+
+				var component = this.viewComponents[v.id];
+
+				// initial sub-component
+				if (component &&
+					component.init) {
+					component.init();
+				}
+
+			});
+
+		};
+
+		var _onShow = () => {
+
+			// calll .onShow in child components
+			this.views().forEach((v) => {
+
+				var component = this.viewComponents[v.id];
+
+				if (component &&
+					component.onShow) {
+					component.onShow();
+				}
+
+			});
+
+		}
+
+		return {
+			ui: _ui,
+			init: _init,
+			// logic: _logic,
+
+			onShow: _onShow
+		};
 	}
 
 
