@@ -293,7 +293,7 @@ module.exports = class ABChooseConfig extends ABComponent {
 											options:[
 												{id:'D', value:labels.component.versionDevelop },
 												{id:'S', value:labels.component.versionStaging },
-												{id:'P', value:labels.component.versionProduction }
+												{id:'P', value:labels.component.versionProduction },
 												{id:'N', value:labels.component.versionNSApp }
 												],
 											on:{
