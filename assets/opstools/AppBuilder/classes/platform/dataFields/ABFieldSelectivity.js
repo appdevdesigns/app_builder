@@ -16,9 +16,13 @@ let defaultSettings = {
 	multiple: false
 }
 
+let ABFieldSelectivityDefaults = {
+	key:"Selectivity"
+}
+
 module.exports = class ABFieldSelectivity extends ABField {
 
-	constructor(values, object, fieldDefaults) {
+	constructor(values, object, fieldDefaults=ABFieldSelectivityDefaults) {
 
 		super(values, object, fieldDefaults);
 	}
