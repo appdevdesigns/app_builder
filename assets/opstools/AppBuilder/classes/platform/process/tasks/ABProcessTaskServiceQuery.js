@@ -19,10 +19,6 @@ module.exports = class ABProcessTaskServiceQuery extends ABProcessTaskServiceQue
         };
     }
 
-    //// LEFT OFF HERE:
-    // ABQLObject.needs to verify given Object exists before allowing next op
-    // ABQLField conditions need to be enclosed in ""
-
     /**
      * propertiesShow()
      * display the properties panel for this Process Element.
@@ -38,20 +34,20 @@ module.exports = class ABProcessTaskServiceQuery extends ABProcessTaskServiceQue
 
         var ParseInput = (code, e) => {
             var currText = $$(ids.query).getValue() + e.key;
-            if (code == 8) {
+            if (code == 8 || code == 9) {
                 currText = $$(ids.query).getValue();
             }
-
-            /// LEFT OFF HERE:
-            //  - ABProcessTriggerLifecycleCore : adding of .uuid to list is janky! revamp.
-            //  - refactor ABQLObject & ABQLFind to share common class
-            //  - .find() -> .first()
 
             var parser = ABQLManager.currentParser(
                 currText,
                 this,
                 this.application
             );
+
+            // if they pressed [tab]
+            if (code == 9) {
+                parser.tabComplete();
+            }
 
             // let the parser fill in the query as we go:
             var bestGuess = parser.toQuery();
@@ -91,7 +87,7 @@ module.exports = class ABProcessTaskServiceQuery extends ABProcessTaskServiceQue
                                     }
 
                                     // if they pressed backspace, then process
-                                    // current value minus last
+                                    // the text after the delete was applied:
                                     if (code == 8) {
                                         // parse after text has been updated in control
                                         setImmediate(() => {
@@ -119,6 +115,26 @@ module.exports = class ABProcessTaskServiceQuery extends ABProcessTaskServiceQue
 
         webix.ui(ui, $$(id));
 
+        // prevent the normal tab switch to next component
+        // when in our query editor
+        let nodeQuery = $$(ids.query).getNode();
+        webix.event(nodeQuery, "keydown", function(e) {
+            if (e.which === 9) {
+                e.preventDefault();
+            }
+        });
+
+        // initialize the Query
+        if (this.qlObj) {
+            var initialParser = ABQLManager.fromAttributes(
+                this.qlObj,
+                this,
+                this.application
+            );
+            $$(ids.query).setValue(initialParser.toQuery());
+            $$(ids.suggestions).setValue(initialParser.suggestions());
+        }
+
         $$(id).show();
     }
 
@@ -131,5 +147,16 @@ module.exports = class ABProcessTaskServiceQuery extends ABProcessTaskServiceQue
     propertiesStash(id) {
         var ids = this.propertyIDs(id);
         this.name = this.property(ids.name);
+
+        var currText = $$(ids.query).getValue();
+        var parser = ABQLManager.currentParser(
+            currText,
+            this,
+            this.application
+        );
+
+        if (parser && parser.firstOP) {
+            this.qlObj = parser.firstOP().toObj();
+        }
     }
 };

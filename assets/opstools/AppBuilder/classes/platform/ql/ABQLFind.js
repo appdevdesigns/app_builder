@@ -6,98 +6,100 @@
  *
  */
 
+const ABQL = require("./ABQL.js");
 const moo = require("moo");
+const NextQLOps = require("./ABQLSet.js");
 
-class ABQLFind {
-    constructor(attributes, prevOP, task, application) {
-        this.entryComplete = false;
-        this.params = null;
-        this.currQuery = null;
-        this.queryValid = false;
-
-        this.object = prevOP.object;
-        this.paramObj = null;
-
-        this.prevOP = prevOP;
-        this.task = task;
-        this.application = application;
-        this.next = null;
-    }
-
-    /*
-     * parseQuery()
-     * check the given query string input and see if this object is the
-     * starting object.
-     * @param {string} query
-     *			 the entered query string operation.
-     * @return {bool}
-     */
-    static parseQuery(query) {
-        // we want to see if the beginning of this query matches our
-        // option_begin string.
-        var begQuery = query;
-        if (query.length > this.option_begin.length) {
-            begQuery = query.slice(0, this.option_begin.length);
-        }
-        if (this.option_begin.indexOf(begQuery) == 0) {
-            return true;
-        }
-        return false;
-    }
+class ABQLFind extends ABQL {
+    // constructor(attributes, prevOP, task, application) {
+    //     super(attributes, prevOP, task, application);
+    // }
 
     ///
     /// Instance Methods
     ///
 
-    /// ABApplication data methods
+    fromAttributes(attributes) {
+        super.fromAttributes(attributes);
+        this.paramObj = null;
+        if (attributes.paramObj) {
+            try {
+                this.paramObj = JSON.parse(attributes.paramObj);
+            } catch (e) {}
+        }
+    }
 
     /**
      * @method toObj()
      *
-     * properly compile the current state of this ABView instance
+     * properly compile the current state of this ABQL instance
      * into the values needed for saving to the DB.
-     *
      * @return {json}
      */
-    toQuery() {
-        return `${this.prevOP.toQuery()}${this.currQuery}`;
+    toObj() {
+        // OP.Multilingual.unTranslate(this, this, ["label"]);
+
+        var result = super.toObj();
+        result.paramObj = null;
+        if (this.paramObj) {
+            result.paramObj = JSON.stringify(this.paramObj);
+        }
+        return result;
     }
 
-    fromQuery(queryString) {
-        var results = ABQLFind.regEx.exec(queryString);
-        if (results) {
-            this.entryComplete = true;
-            this.queryValid = true;
-            this.params = results[1];
-            var newQuery = queryString.replace(ABQLFind.regEx, "");
-        } else {
-            this.currQuery = queryString;
-            this.queryValid = true; // assume true then set to false later
-            this._suggestions = null;
-
-            // calculate the processing of our command + params:
-            // if we have finished our begining
-            if (this.currQuery.indexOf(ABQLFind.option_begin) == 0) {
-                var param = this.currQuery.slice(ABQLFind.option_begin.length);
-
-                this.paramsFromQuery(param);
+    tabComplete() {
+        if (this._suggestions) {
+            // if our begin tag is  present in _suggestions
+            if (
+                this._suggestions.indexOf(this.constructor.option_begin) != -1
+            ) {
+                // this is probably finishing out our command:
+                this.currQuery = this._suggestions;
             } else {
-                // else they need to finish the beginning
-                this._suggestions = ABQLFind.option_begin;
+                // we are suggesting a parameter value:
+                debugger;
+                // if the last character of .currQuery isn't a ":"
+                // then look for replacing a portion of the .currQuery
+                if (this.currQuery[this.currQuery.length - 1] != ":") {
+                    // take the 1st character of _suggestions
+                    var first = this._suggestions[0];
+                    if (first) {
+                        // find the last place it matches in our currQuery
+                        var lastMatch = this.currQuery.lastIndexOf(first);
+
+                        // remove the remaining characters from .currQuery
+                        this.currQuery = this.currQuery.slice(0, lastMatch);
+
+                        // add _suggestions to .currQuery
+                        this.currQuery += this._suggestions;
+                    }
+                } else {
+                    // else we are just going to add _suggestion to the
+                    // end of .currQuery
+                    this.currQuery += this._suggestions;
+                }
             }
 
-            // if we didn't have any suggestions, then what they typed
-            // doesn't match, so remove the last character:
-            if (!this._suggestions) {
-                this.currQuery = this.currQuery.slice(0, -1);
-                this.queryValid = false;
-                this._suggestions = null;
+            // now make sure we do another fromQuery() to get another
+            // suggestion.
+            this.fromQuery(this.currQuery);
+        }
+    }
 
-                // try to regenerate the suggestions again:
-                var param = this.currQuery.slice(ABQLFind.option_begin.length);
+    /// ABApplication data methods
 
-                this.paramsFromQuery(param);
-            }
+    paramsValid(queryString) {
+        var results = this.constructor.regEx.exec(queryString);
+        if (results) {
+            this.params = results[1];
+            var paramComplete = false;
+            try {
+                this.paramObj = JSON.parse(this.params);
+                paramComplete = true;
+            } catch (e) {}
+            return paramComplete;
+        } else {
+            return false;
         }
     }
 
@@ -118,9 +120,11 @@ class ABQLFind {
 
         if (paramComplete) {
             this.paramObj = paramObj;
-            this.entryComplete = true;
+            this.params = queryString;
+            // this.entryComplete = true;
             this._suggestions = `.find(${queryString})`;
         } else {
+            // define a lexer to help us parse through the provided cond string
             var lexer = moo.states({
                 start: {
                     lbrace: { match: "{", push: "key" }
@@ -149,6 +153,9 @@ class ABQLFind {
                 }
             });
 
+            // now follow our state, to figure out if we are entering a
+            // key, or a value, and then figure out how to offer suggestions
+            // based upon what they are entering now:
             var state = "start";
             lexer.reset(queryString);
             var token = lexer.next();
@@ -180,9 +187,8 @@ class ABQLFind {
                 token = lexer.next();
             }
 
-            console.log(lastToken);
-            console.log(state);
-
+            // by this point, we have ended on a state, and can figure out
+            // what to suggest:
             switch (state) {
                 case "start":
                     // if we ended here, then we didn't even have our first {
@@ -190,15 +196,25 @@ class ABQLFind {
                     break;
 
                 case "key":
+                    // we are entering a Key, so suggest the available fields
+                    // from this object
                     var currKey = "";
                     var types = ["key", "currKey"];
                     if (types.indexOf(lastToken.type) != -1) {
                         currKey = lastToken.value;
                     }
                     this._suggestions = this.fieldList(currKey);
+
+                    // if we end up with ._suggestions == currKey
+                    // then the key is complete, and we need to now enter ":"
+                    if (this._suggestions == currKey) {
+                        this._suggestions = ":";
+                    }
                     break;
 
                 case "value":
+                    // entering a value, decide what to suggest based on what
+                    // the current key/field we are on:
                     var currValue = "";
                     var types = ["value", "valueContext", "currVal"];
                     if (types.indexOf(lastToken.type) != -1) {
@@ -207,39 +223,6 @@ class ABQLFind {
                     this._suggestions = this.valueList(lastKey, currValue);
                     break;
             }
-            /*
-            var markers = ["{", ",", ":"];
-            var resultsToken = this.pullToken(queryString, markers);
-
-            // if there are not characters for our param yet,
-            if (!resultsToken.bound) {
-                this._suggestions = "{cond}";
-                return;
-            }
-
-            switch (resultsToken.bound) {
-                case "{":
-                case ",":
-                    // we are looking for a field or cond value:
-                    this._suggestions = this.fieldList(resultsToken.token);
-                    break;
-
-                case ":":
-                    // we are looking for a value marker;
-                    this._suggestions = "some value";
-                    var resultsField = this.pullField(resultsToken.queryString);
-                    if (resultsField.field.length != 1) {
-                        // this isn't expected.  they must have typed ":"
-                        // before they completed their field name.
-
-                        // so mark this as query invalid and offer
-                        // all relevant fields as a suggestion:
-                        this.queryValid = false;
-                        this._suggestions = this.fieldList(resultsField.token);
-                    }
-                    break;
-            }
-*/
         }
     }
 
@@ -289,28 +272,27 @@ class ABQLFind {
                 foundField = f;
             }
         });
-        debugger;
+
         var hashFieldIDs = this.availableProcessDataFieldsHash();
         var suggestions = [];
 
         if (!foundField && fieldKey == `"This Object"`) {
             // maybe they chose the "This Object" option:
-            // look for a hash value that has "xxx->[object.label]"
-            var possibleKey = `->${this.object.label} `; // note the extra " "
+            // look for a hash value that has id:xxxxx.uuid and object == this object
             var foundKey = Object.keys(hashFieldIDs)
                 .map((f) => {
                     return hashFieldIDs[f];
                 })
                 .find((k) => {
-                    var indx = k.label.indexOf(possibleKey);
-                    var isEnd = indx + possibleKey.length == k.label.length;
-                    return indx != -1 && isEnd;
+                    var isSameObj = k.object && k.object.id == this.object.id;
+                    var isUUIDKey = k.key.split(".").pop() == "uuid";
+                    return isUUIDKey && isSameObj;
                 });
+
             if (foundKey) {
                 var field = hashFieldIDs[foundKey.key];
                 if (field) {
-                    // note: remove the " " at the end of .label:
-                    suggestions.push(`"$context(${field.label.slice(0, -1)})"`);
+                    suggestions.push(`"$context(${field.label})"`);
                 }
             }
         } else {
@@ -330,33 +312,12 @@ class ABQLFind {
             })
             .join("\n");
     }
-
-    lastOP() {
-        if (!this.entryComplete) {
-            return this;
-        } else {
-            // now figure out which of our nextOps are being used.
-            if (this.next) {
-                return this.next.lastOP();
-            } else {
-                // we haven't specified a next OP, so we are still up.
-                return this;
-            }
-        }
-    }
-
-    suggestions() {
-        if (this.entryComplete) {
-            // return suggestions for next operations.
-            return ".find(";
-        } else {
-            return this._suggestions;
-        }
-    }
 }
 
+ABQLFind.key = "find";
 ABQLFind.option = ".find({cond})";
 ABQLFind.option_begin = ".find(";
 ABQLFind.regEx = /\.find\((.*?\})\)/;
+ABQLFind.NextQLOps = NextQLOps;
 
 module.exports = ABQLFind;

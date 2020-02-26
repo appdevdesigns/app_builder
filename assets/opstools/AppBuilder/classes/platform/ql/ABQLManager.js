@@ -32,7 +32,7 @@ module.exports = {
             qlOP.fromQuery(query);
             return qlOP.lastOP();
         } else {
-            // return a parser generic parser
+            // return a generic parser
             return {
                 toQuery: function() {
                     if (matchingOPs.length == 0) {
@@ -49,6 +49,23 @@ module.exports = {
                     return options.join("\n");
                 }
             };
+        }
+    },
+
+    fromAttributes: function(attributes, task, application) {
+        var matchingOPs = [];
+        QLOps.forEach((Op) => {
+            if (Op.key == attributes.key) {
+                matchingOPs.push(Op);
+            }
+        });
+        if (matchingOPs.length == 1) {
+            // let this Operation initialize and return the last OP
+            // in the chain
+            var qlOP = new matchingOPs[0](attributes, task, application);
+            return qlOP.lastOP();
+        } else {
+            return null;
         }
     }
 };
