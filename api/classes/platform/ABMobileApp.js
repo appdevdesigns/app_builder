@@ -39,6 +39,7 @@ module.exports = class ABMobileApp extends ABMobileAppCore {
 		}
 		switch(version) {
 			case 'D': version = 'develop'; break;
+			case 'N': version = 'nsapp'; break;
 			case 'S': version = 'staging'; break;
 			case 'P': 
 			default:  version = 'production'; break;
