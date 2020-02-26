@@ -819,57 +819,38 @@ module.exports = class RowFilter extends RowFilterCore {
 			$viewCond.$$(ids.inputValue).showBatch(batchName);
 
 
+			let options = [];
+			let Queries = [];
+
 			// populate the list of Queries for this_object:
-			if (field.id == 'this_object') {
-
-				var options = [];
-				var Queries = [];
-				if (this._Application &&
-					this._Object) {
-					Queries = this._Application.queries((q) => { return q.canFilterObject(this._Object); });
-				}
-				Queries.forEach((q) => {
-					options.push({
-						id: q.id,
-						value: q.label
-					})
-				})
-
-				$viewCond.$$(ids.inputValue).$$(ids.queryCombo).define("options", options);
-				$viewCond.$$(ids.inputValue).$$(ids.queryCombo).refresh();
-
+			if (field.id == 'this_object' && this._Object) {
+				Queries = this.queries(q => q.canFilterObject(this._Object));
 			}
-
-
 			// populate the list of Queries for a query field
-			if (isQueryField) {
-
-				let options = [];
-				if (this._Application) {
-					let Queries = this._Application.queries((q) => { return q.canFilterObject(field.datasourceLink); });
-					Queries.forEach((q) => {
-						options.push({
-							id: q.id,
-							value: q.label
-						})
-					});
-				}
-
-				$viewCond.$$(ids.inputValue).$$(ids.queryCombo).define("options", options);
-				$viewCond.$$(ids.inputValue).$$(ids.queryCombo).refresh();
+			else if (isQueryField) {
+				Queries = this.queries(q => q.canFilterObject(field.datasourceLink));
 			}
+
+			Queries.forEach((q) => {
+				options.push({
+					id: q.id,
+					value: q.label
+				})
+			});
+			$viewCond.$$(ids.inputValue).$$(ids.queryCombo).define("options", options);
+			$viewCond.$$(ids.inputValue).$$(ids.queryCombo).refresh();
 
 
 			// populate options of list
 			if (field.key == 'list') {
-				var options = field.settings.options.map(function (x) {
+				let listOptions = field.settings.options.map(function (x) {
 					return {
 						id: x.id,
 						value: x.text
 					}
 				});
 
-				$viewCond.$$(ids.inputValue).$$(ids.listOptions).define("options", options);
+				$viewCond.$$(ids.inputValue).$$(ids.listOptions).define("options", listOptions);
 				$viewCond.$$(ids.inputValue).$$(ids.listOptions).refresh();
 			}
 			// set format of datepicker
@@ -939,15 +920,15 @@ module.exports = class RowFilter extends RowFilterCore {
 				case 'not_in_query_field':
 					// populate the list of Queries for this_object:
 					var options = [];
+
 					// Get all application's queries
-					if (this._Application && this._Object) {
-						this._Application.queries((q) => { return q.id != this._Object.id; }).forEach((q) => {
+					this.queries(q => this._Object == null || q.id != this._Object.id)
+						.forEach(q => {
 							options.push({
 								id: q.id,
 								value: q.label
 							})
 						});
-					}
 
 					$viewCond.$$(ids.inputValue).$$(ids.queryFieldComboQuery).define("options", options);
 					$viewCond.$$(ids.inputValue).$$(ids.queryFieldComboQuery).refresh();
@@ -1018,24 +999,21 @@ module.exports = class RowFilter extends RowFilterCore {
 
 		};
 
-		_logic.onChangeQueryFieldCombo = function(value, $viewCond) {
+		_logic.onChangeQueryFieldCombo = (value, $viewCond) => {
 			// populate the list of Queries for this_object:
 			let options = [];
 			// Get all queries fields
-			let Query = [];
-			if (this._Application) {
-				Query = this._Application.queries((q) => { return q.id == value; });
-				if (Query.length) {
-					Query[0].fields( (f) => { return f.key != "connectObject"; } ).forEach((q) => {
-						options.push({
-							id: q.id,
-							value: q.object.label + "." + q.label
-						})
+			let Query = this.queries((q) => { return q.id == value; })[0];
+			if (Query) {
+				Query.fields( (f) => { return f.key != "connectObject"; } ).forEach((q) => {
+					options.push({
+						id: q.id,
+						value: q.object.label + "." + q.label
 					})
+				})
 
-					$viewCond.$$(ids.inputValue).$$(ids.queryFieldComboField).define("options", options);
-					$viewCond.$$(ids.inputValue).$$(ids.queryFieldComboField).refresh();					
-				}
+				$viewCond.$$(ids.inputValue).$$(ids.queryFieldComboField).define("options", options);
+				$viewCond.$$(ids.inputValue).$$(ids.queryFieldComboField).refresh();
 			}
 
 			// _logic.onChange();

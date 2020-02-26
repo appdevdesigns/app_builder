@@ -36,6 +36,7 @@ module.exports = class ABChooseConfig extends ABComponent {
 				versionDevelop: L('ab.config.versionDevelop', '*Develop'),
 				versionStaging: L('ab.config.versionStaging', '*Staging'),
 				versionProduction: L('ab.config.versionProduction', '*Production'),
+				versionNSApp: L('ab.config.versionNSApp', '*NS App'),
 
 				confirmUsersCreated: L('ab.config.confirmUsersCreated', '*Users successfully created'),
 				errorUsersCreated:   L('ab.config.confirmUsersCreated', '*Error creating users.'),
@@ -292,7 +293,8 @@ module.exports = class ABChooseConfig extends ABComponent {
 											options:[
 												{id:'D', value:labels.component.versionDevelop },
 												{id:'S', value:labels.component.versionStaging },
-												{id:'P', value:labels.component.versionProduction }
+												{id:'P', value:labels.component.versionProduction },
+												{id:'N', value:labels.component.versionNSApp }
 												],
 											on:{
 												onChange:function(newVal, oldVal) {

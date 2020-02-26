@@ -11,7 +11,6 @@ const Model = require('objection').Model;
 
 const ABGraphScope = require("../../graphModels/ABScope");
 
-
 // var __ObjectPool = {};
 var __ModelPool = {}; // reuse any previously created Model connections
 // to minimize .knex bindings (and connection pools!)
@@ -684,9 +683,17 @@ module.exports = class ABClassObject extends ABObjectCore {
 					objectIds = [this.id];
 				}
 
-				ABGraphScope.getFilter(userData.username, objectIds)
+				ABGraphScope.getFilter({
+						username: userData.username,
+						objectIds: objectIds, 
+						ignoreQueryId: (this.viewName ? this.id : null)
+				})
 					.catch(err)
 					.then(scopes => {
+
+						// Check if user is anonymous
+						if (!scopes || scopes.length < 1)
+							return next(true);
 
 						let scopeWhere = {
 							glue: 'or',
@@ -695,35 +702,65 @@ module.exports = class ABClassObject extends ABObjectCore {
 
 						(scopes || []).forEach(s => {
 
-							if (!s.filter) return;
+							if (!s || !s.filter) return;
+
+							let scopeRule = {
+								glue: s.filter.glue,
+								rules: []
+							};
 
 							(s.filter.rules || []).forEach(r => {
-								if (r.key) {
-									(this.fields(f => f.id == r.key) || []).forEach(f => {
 
-										let newRule = {
-											key: r.key,
-											rule: r.rule,
-											value: r.value
-										};
+								if (!r.key)
+									return;
 
-										if (f.alias)
-											newRule.alias = f.alias;
+								(this.fields(f => f.id == r.key) || []).forEach(fld => {
 
-										scopeWhere.rules.push(newRule);
-									});
-								}
+									let newRule = {
+										key: r.key,
+										rule: r.rule,
+										value: r.value
+									};
+
+									if (fld.alias)
+										newRule.alias = fld.alias;
+
+									scopeRule.rules.push(newRule);
+								});
 							});
+
+							scopeWhere.rules.push(scopeRule);
 
 						});
 
-						where.rules.push(scopeWhere);
+						let isAdmin = (scopes || []).filter(s => s.allowAll).length > 0;
 
-						next();
+						// Check if Admin/Anonymous
+						if (scopeWhere.rules.length < 1) {
+							if (isAdmin)
+								return next(false);
+							else
+								return next(true);
+						}
+						// Process filter policies
+						else {
+							this.processFilterPolicy(scopeWhere, userData)
+								.then(() => {
+									where.rules.push(scopeWhere);
+									next(false);
+								});
+						}
+
 					});
 
 			}))
-			.then(() => new Promise((next, err) => {
+			.then(isAnonymous => new Promise((next, err) => {
+
+				// If user is anonymous, then return empty data.
+				if (isAnonymous) {
+					query.clearWhere().whereRaw('1 = 0');
+					return next();
+				}
 
 				// Apply filters
 				if (!_.isEmpty(where)) {
@@ -1313,10 +1350,85 @@ module.exports = class ABClassObject extends ABObjectCore {
 
     }
 
+
     connectFields (getAll = true) {
 
         return this.fields(f => f && f.key == 'connectObject', getAll);
 
     }
+
+	/**
+	 * @method processFilterPolicy
+	 * 
+	 * @return Promise
+	 */
+	processFilterPolicy(_where, userData) {
+
+		// list of all the condition filtering policies we want our defined 
+		// filters to pass through:
+		const PolicyList = [
+			require("../../policies/ABModelConvertSameAsUserConditions"),
+			require("../../policies/ABModelConvertQueryConditions"),
+			require("../../policies/ABModelConvertQueryFieldConditions")
+		];
+
+		// run the options.where through our existing policy filters
+		// get array of policies to run through
+		let processPolicy = (indx, cb) => {
+
+			if (indx >= PolicyList.length) {
+				cb();
+			} else {
+
+				// load the policy
+				let policy = PolicyList[indx];
+
+				// run the policy on my data
+				// policy(req, res, cb)
+				// 	req.options._where
+				//  req.user.data
+				let myReq = {
+					options: {
+						_where: _where
+					},
+					user: {
+						data: userData
+					},
+					param: (id) => {
+						if (id == "appID") {
+							return this.application.id;
+						} else if (id == "objID") {
+							return this.id;
+						}
+					}
+				}
+
+				policy(myReq, {}, (err) => {
+
+					if (err) {
+						cb(err);
+					} else {
+						// try the next one
+						processPolicy(indx + 1, cb);
+					}
+				})
+			}
+		}
+
+		return new Promise((resolve, reject) => {
+
+			// run each One
+			processPolicy(0, (err) => {
+
+				// now that I'm through with updating our Conditions
+				if (err) {
+					reject(err);
+				} else {
+					resolve();
+				}
+			});
+
+		});
+	}
 
 };

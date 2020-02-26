@@ -211,10 +211,10 @@ module.exports = class ABViewChart extends ABViewChartCore {
 		$$(ids.columnValue).define("options", []);
 		$$(ids.columnValue).refresh();
 
-		var dv = view.dataview;
-		if (dv == null) return;
+		var dc = view.datacollection;
+		if (dc == null) return;
 
-		var obj = dv.datasource;
+		var obj = dc.datasource;
 		if (obj == null) return;
 
 		var normalFields = obj.fields((f) => f.key != 'connectObject');
@@ -256,10 +256,10 @@ module.exports = class ABViewChart extends ABViewChartCore {
 		$$(ids.columnValue2).refresh();
 		$$(ids.columnValue2).enable();
 
-		var dv = view.dataview;
-		if (dv == null) return;
+		var dc = view.datacollection;
+		if (dc == null) return;
 
-		var obj = dv.datasource;
+		var obj = dc.datasource;
 		if (obj == null) return;
 
 		var numFields = obj.fields((f) => f.key == 'number');
@@ -324,43 +324,43 @@ module.exports = class ABViewChart extends ABViewChartCore {
 				webix.extend(currentComponent, webix.ProgressBar);
 			}
 
-			let dv = this.dataview;
-			if (dv) {
+			let dc = this.datacollection;
+			if (dc) {
 
-				if (dv.dataviewLink) {
+				if (dc.datacollectionLink) {
 					this.eventAdd({
-						emitter: dv.dataviewLink,
+						emitter: dc.datacollectionLink,
 						eventName: 'changeCursor',
 						listener: () => this.refreshData()
 					});
 				}
 
 				this.eventAdd({
-					emitter: dv,
+					emitter: dc,
 					eventName: 'changeCursor',
 					listener: () => this.refreshData()
 				});
 
 				this.eventAdd({
-					emitter: dv,
+					emitter: dc,
 					eventName: 'create',
 					listener: () => this.refreshData()
 				});
 
 				this.eventAdd({
-					emitter: dv,
+					emitter: dc,
 					eventName: 'update',
 					listener: () => this.refreshData()
 				});
 
 				this.eventAdd({
-					emitter: dv,
+					emitter: dc,
 					eventName: 'delete',
 					listener: () => this.refreshData()
 				});
 
 				this.eventAdd({
-					emitter: dv,
+					emitter: dc,
 					eventName: 'initializedData',
 					listener: () => this.refreshData()
 				});
@@ -394,8 +394,8 @@ module.exports = class ABViewChart extends ABViewChartCore {
 
 	refreshData() {
 
-		var dv = this.dataview;
-		if (dv == null) return this.dcChart;
+		var dc = this.datacollection;
+		if (dc == null) return this.dcChart;
 
 
 		var labelCol = this.labelField();
@@ -414,7 +414,7 @@ module.exports = class ABViewChart extends ABViewChartCore {
 
 		var colorList = ["#ee4339", "#ee9336", "#eed236", "#d3ee36", "#a7ee70", "#58dccd", "#36abee", "#476cee", "#a244ea", "#e33fc7"];
 
-		var dInfo = dv.getData();
+		var dInfo = dc.getData();
 
 		var result = [];
 		var sumData = {};

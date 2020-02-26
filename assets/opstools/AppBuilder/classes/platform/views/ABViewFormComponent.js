@@ -1,5 +1,7 @@
 const ABViewFormComponentCore = require("../../core/views/ABViewFormComponentCore");
 
+const ABViewFormFieldPropertyComponentDefaults = ABViewFormComponentCore.defaultValues();
+
 function L(key, altText) {
     return AD.lang.label.getLabel(key) || altText;
 }

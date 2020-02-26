@@ -70,8 +70,8 @@ module.exports = class ABViewPropertyAddPage extends ABViewProperty {
 						return p.views(v => {
 							return v &&
 								v.key == "form" &&
-								v.dataview &&
-								v.dataview.datasource.id == view.field().settings.linkObject;
+								v.datacollection &&
+								v.datacollection.datasource.id == view.field().settings.linkObject;
 						}, true).length;
 					}, true)
 					.map(p => {
