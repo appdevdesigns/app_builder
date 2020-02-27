@@ -544,7 +544,20 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
     }
 
     objectInfo(cond) {
-        return this.Model.staticData.objectInfo(cond);
+        return new Promise((resolve, reject) => {
+            this.Model.staticData
+                .objectInfo(cond)
+                .catch(reject)
+                .then((objects) => {
+                    let result = [];
+
+                    (objects || []).forEach((obj) => {
+                        result.push(this.objectNew(obj));
+                    });
+
+                    resolve(result);
+                });
+        });
     }
 
     objectImport(objectId) {
