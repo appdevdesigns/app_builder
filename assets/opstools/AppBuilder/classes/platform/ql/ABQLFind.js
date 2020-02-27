@@ -10,10 +10,17 @@ const ABQL = require("./ABQL.js");
 const moo = require("moo");
 const NextQLOps = require("./ABQLSet.js");
 
+var ParameterDefinitions = [
+    {
+        type: "objectConditions",
+        name: "cond"
+    }
+];
+
 class ABQLFind extends ABQL {
-    // constructor(attributes, prevOP, task, application) {
-    //     super(attributes, prevOP, task, application);
-    // }
+    constructor(attributes, prevOP, task, application) {
+        super(attributes, ParameterDefinitions, prevOP, task, application);
+    }
 
     ///
     /// Instance Methods
@@ -89,19 +96,23 @@ class ABQLFind extends ABQL {
     /// ABApplication data methods
 
     paramsValid(queryString) {
-        var results = this.constructor.regEx.exec(queryString);
-        if (results) {
-            this.params = results[1];
+        // let the parent parse the parameter into this.params[]
+        if (super.paramsValid(queryString)) {
+            // now make sure that our .params[cond] actually parses JSON
             var paramComplete = false;
             try {
-                this.paramObj = JSON.parse(this.params);
+                this.paramObj = JSON.parse(this.params["cond"]);
                 paramComplete = true;
             } catch (e) {}
+
             return paramComplete;
-        } else {
-            return false;
         }
+        return false;
     }
+
+    // suggestionComplete() {
+    //     return `.find(${this.params[cond]})`;
+    // }
 
     /**
      * @method paramsFromQuery()
@@ -110,121 +121,121 @@ class ABQLFind extends ABQL {
      * we update ._suggestions based upon the current param state.
      * @param {string} queryString
      */
-    paramsFromQuery(queryString) {
-        var paramComplete = false;
-        var paramObj = null;
-        try {
-            paramObj = JSON.parse(queryString);
-            paramComplete = true;
-        } catch (e) {}
+    // paramsFromQuery(queryString) {
+    //     var paramComplete = false;
+    //     var paramObj = null;
+    //     try {
+    //         paramObj = JSON.parse(queryString);
+    //         paramComplete = true;
+    //     } catch (e) {}
 
-        if (paramComplete) {
-            this.paramObj = paramObj;
-            this.params = queryString;
-            // this.entryComplete = true;
-            this._suggestions = `.find(${queryString})`;
-        } else {
-            // define a lexer to help us parse through the provided cond string
-            var lexer = moo.states({
-                start: {
-                    lbrace: { match: "{", push: "key" }
-                },
-                key: {
-                    colon: { match: ":", push: "value" },
-                    rparen: { match: ")", pop: true },
-                    key: {
-                        match: /"(?:\\["\\]|[^\n"\\])*"/
-                        // value: (s) => s.slice(1, -1)
-                    },
-                    WS: /[ \t]+/,
-                    currKey: moo.error
-                },
-                value: {
-                    // lbrace: { match: "{", push: "complexValue" },
-                    rbrace: { match: "}", pop: true },
-                    valueContext: {
-                        match: /"\$context\((?:\\["\\]|[^\n"\\])*?\)"/
-                    },
-                    value: {
-                        match: /"(?:\\["\\]|[^\n"\\])*"/
-                    },
-                    comma: { match: ",", pop: true },
-                    currVal: moo.error
-                }
-            });
+    //     if (paramComplete) {
+    //         this.paramObj = paramObj;
+    //         this.params = queryString;
+    //         // this.entryComplete = true;
+    //         this._suggestions = `.find(${queryString})`;
+    //     } else {
+    //         // define a lexer to help us parse through the provided cond string
+    //         var lexer = moo.states({
+    //             start: {
+    //                 lbrace: { match: "{", push: "key" }
+    //             },
+    //             key: {
+    //                 colon: { match: ":", push: "value" },
+    //                 rparen: { match: ")", pop: true },
+    //                 key: {
+    //                     match: /"(?:\\["\\]|[^\n"\\])*"/
+    //                     // value: (s) => s.slice(1, -1)
+    //                 },
+    //                 WS: /[ \t]+/,
+    //                 currKey: moo.error
+    //             },
+    //             value: {
+    //                 // lbrace: { match: "{", push: "complexValue" },
+    //                 rbrace: { match: "}", pop: true },
+    //                 valueContext: {
+    //                     match: /"\$context\((?:\\["\\]|[^\n"\\])*?\)"/
+    //                 },
+    //                 value: {
+    //                     match: /"(?:\\["\\]|[^\n"\\])*"/
+    //                 },
+    //                 comma: { match: ",", pop: true },
+    //                 currVal: moo.error
+    //             }
+    //         });
 
-            // now follow our state, to figure out if we are entering a
-            // key, or a value, and then figure out how to offer suggestions
-            // based upon what they are entering now:
-            var state = "start";
-            lexer.reset(queryString);
-            var token = lexer.next();
-            var lastToken = null;
-            var lastKey = null;
-            while (token) {
-                switch (state) {
-                    case "start":
-                        if (token.type == "lbrace") {
-                            state = "key";
-                        }
-                        break;
-                    case "key":
-                        if (token.type == "colon") {
-                            state = "value";
-                        }
-                        if (token.type == "key") {
-                            lastKey = token.value;
-                        }
-                        break;
+    //         // now follow our state, to figure out if we are entering a
+    //         // key, or a value, and then figure out how to offer suggestions
+    //         // based upon what they are entering now:
+    //         var state = "start";
+    //         lexer.reset(queryString);
+    //         var token = lexer.next();
+    //         var lastToken = null;
+    //         var lastKey = null;
+    //         while (token) {
+    //             switch (state) {
+    //                 case "start":
+    //                     if (token.type == "lbrace") {
+    //                         state = "key";
+    //                     }
+    //                     break;
+    //                 case "key":
+    //                     if (token.type == "colon") {
+    //                         state = "value";
+    //                     }
+    //                     if (token.type == "key") {
+    //                         lastKey = token.value;
+    //                     }
+    //                     break;
 
-                    case "value":
-                        if (token.type == "comma") {
-                            state = "key";
-                        }
-                        break;
-                }
-                lastToken = token;
-                token = lexer.next();
-            }
+    //                 case "value":
+    //                     if (token.type == "comma") {
+    //                         state = "key";
+    //                     }
+    //                     break;
+    //             }
+    //             lastToken = token;
+    //             token = lexer.next();
+    //         }
 
-            // by this point, we have ended on a state, and can figure out
-            // what to suggest:
-            switch (state) {
-                case "start":
-                    // if we ended here, then we didn't even have our first {
-                    this._suggestions = "{cond}";
-                    break;
+    //         // by this point, we have ended on a state, and can figure out
+    //         // what to suggest:
+    //         switch (state) {
+    //             case "start":
+    //                 // if we ended here, then we didn't even have our first {
+    //                 this._suggestions = "{cond}";
+    //                 break;
 
-                case "key":
-                    // we are entering a Key, so suggest the available fields
-                    // from this object
-                    var currKey = "";
-                    var types = ["key", "currKey"];
-                    if (types.indexOf(lastToken.type) != -1) {
-                        currKey = lastToken.value;
-                    }
-                    this._suggestions = this.fieldList(currKey);
+    //             case "key":
+    //                 // we are entering a Key, so suggest the available fields
+    //                 // from this object
+    //                 var currKey = "";
+    //                 var types = ["key", "currKey"];
+    //                 if (types.indexOf(lastToken.type) != -1) {
+    //                     currKey = lastToken.value;
+    //                 }
+    //                 this._suggestions = this.fieldList(currKey);
 
-                    // if we end up with ._suggestions == currKey
-                    // then the key is complete, and we need to now enter ":"
-                    if (this._suggestions == currKey) {
-                        this._suggestions = ":";
-                    }
-                    break;
+    //                 // if we end up with ._suggestions == currKey
+    //                 // then the key is complete, and we need to now enter ":"
+    //                 if (this._suggestions == currKey) {
+    //                     this._suggestions = ":";
+    //                 }
+    //                 break;
 
-                case "value":
-                    // entering a value, decide what to suggest based on what
-                    // the current key/field we are on:
-                    var currValue = "";
-                    var types = ["value", "valueContext", "currVal"];
-                    if (types.indexOf(lastToken.type) != -1) {
-                        currValue = lastToken.value;
-                    }
-                    this._suggestions = this.valueList(lastKey, currValue);
-                    break;
-            }
-        }
-    }
+    //             case "value":
+    //                 // entering a value, decide what to suggest based on what
+    //                 // the current key/field we are on:
+    //                 var currValue = "";
+    //                 var types = ["value", "valueContext", "currVal"];
+    //                 if (types.indexOf(lastToken.type) != -1) {
+    //                     currValue = lastToken.value;
+    //                 }
+    //                 this._suggestions = this.valueList(lastKey, currValue);
+    //                 break;
+    //         }
+    //     }
+    // }
 
     availableProcessDataFieldsHash() {
         var availableProcessDataFields = this.task.process.processDataFields(
@@ -297,8 +308,9 @@ class ABQLFind extends ABQL {
             }
         } else {
             switch (foundField.key) {
+                //// TODO: double check the validity of this:
                 case "connectObject":
-                    var field = hashFieldIDs[field.id];
+                    var field = hashFieldIDs[foundField.id];
                     if (field) {
                         suggestions.push(`"$context(${field.label})"`);
                     }
