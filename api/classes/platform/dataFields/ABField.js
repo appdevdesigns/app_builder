@@ -143,7 +143,16 @@ module.exports =  class ABField extends ABFieldCore {
 
 						// get the .table editor and drop the column
 						knex.schema.table(tableName, (t)=>{
-							t.dropColumn(this.columnName);
+
+							knex.schema.hasColumn(tableName, this.columnName).then(exists => {
+
+								if (!exists)
+									return next();
+
+								t.dropColumn(this.columnName);
+
+							});
+
 						})
 						.then(next)
 						.catch(err);
