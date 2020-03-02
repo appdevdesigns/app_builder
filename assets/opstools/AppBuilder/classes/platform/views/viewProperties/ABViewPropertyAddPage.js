@@ -14,7 +14,7 @@ module.exports = class ABViewPropertyAddPage extends ABViewProperty {
 	 */
 	static get default() {
 		return {
-			formView: '', // id of form to add new data
+			formView: 'none', // id of form to add new data
 		};
 	}
 
@@ -62,7 +62,7 @@ module.exports = class ABViewPropertyAddPage extends ABViewProperty {
 
 				// Set the options of the possible edit forms
 				let editForms = [
-					{ id: L('ab.component.connect.no', '*No add new option'), value: L('ab.component.connect.no', '*No add new option') }
+					{ id: "none", value: L('ab.component.connect.no', '*No add new option') }
 				];
 
 				let pagesHasForm = view.pageRoot()
@@ -83,9 +83,12 @@ module.exports = class ABViewPropertyAddPage extends ABViewProperty {
 
 				editForms = editForms.concat(pagesHasForm);
 
-				$$(ids.formView).define("options", editForms);
-				$$(ids.formView).refresh();
-				$$(ids.formView).setValue(settings.formView || this.default.formView);
+				let $selector = $$(ids.formView);
+				if ($selector) {
+					$selector.define("options", editForms);
+					$selector.define("value", settings.formView || this.default.formView);
+					$selector.refresh();
+				}
 
 			},
 
@@ -123,7 +126,7 @@ module.exports = class ABViewPropertyAddPage extends ABViewProperty {
 
 		let ui = "";
 
-		if (this.settings.formView) {
+		if (this.settings.formView && this.settings.formView != this.constructor.default.formView) {
 			let iDiv = document.createElement('div');
 			iDiv.className = 'ab-connect-add-new';
 			iDiv.innerHTML = '<a href="javascript:void(0);" class="fa fa-plus ab-connect-add-new-link"></a>';
@@ -157,7 +160,16 @@ module.exports = class ABViewPropertyAddPage extends ABViewProperty {
 				this._application = application;
 			},
 
-			openFormPopup: () => {
+			onClick: () => {
+
+				let pageId = this.settings.formView;
+				let page = this._application.pages(p => p.id == pageId, true)[0];
+
+				_logic.openFormPopup(page);
+
+			},
+
+			openFormPopup: (page) => {
 
 				if (this._application == null)
 					return;
@@ -167,14 +179,9 @@ module.exports = class ABViewPropertyAddPage extends ABViewProperty {
 					return;
 				}
 
-				let pageId = this.settings.formView;
-				let page = this._application.pages(p => p.id == pageId, true)[0];
-
-
 				// Clone page so we modify without causing problems
 				let pageClone = _.cloneDeep(page);
-				let instance = webix.uid();
-				pageClone.id = pageClone.id + "-" + instance; // lets take the stored id can create a new dynamic one so our views don't duplicate
+				pageClone.id = pageClone.id + "-" + webix.uid(); // lets take the stored id can create a new dynamic one so our views don't duplicate
 				let popUpComp = pageClone.component(App);
 				let ui = popUpComp.ui;
 
@@ -255,7 +262,8 @@ module.exports = class ABViewPropertyAddPage extends ABViewProperty {
 			init: init,
 
 			applicationLoad: _logic.applicationLoad,
-			onClick: _logic.openFormPopup
+			onClick: _logic.onClick,
+			openFormPopup: _logic.openFormPopup
 		};
 
 	}

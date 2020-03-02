@@ -40,6 +40,7 @@ module.exports = class ABViewDetailConnect extends ABViewDetailConnectCore {
 				onSave: () => {
 
 					let currView = _logic.currentEditObject();
+					if (!currView) return;
 
 					// refresh settings
 					this.propertyEditorValues(ids, currView);

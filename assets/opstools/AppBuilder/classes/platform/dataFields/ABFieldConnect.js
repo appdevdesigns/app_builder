@@ -419,6 +419,7 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
 				field.selectivityRender(domNode, {
 					multiple: multiselect,
 					readOnly: readOnly,
+					editPage: options.editPage,
 					placeholder: placeholder,
 					data: selectedData
 				}, App, row);
@@ -476,6 +477,7 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
 			data: selectedData,
 			placeholder: placeholder,
 			readOnly: readOnly,
+			editPage: options.editPage,
 			ajax: {
 				url: 'It will call url in .getOptions function', // require
 				minimumInputLength: 0,
