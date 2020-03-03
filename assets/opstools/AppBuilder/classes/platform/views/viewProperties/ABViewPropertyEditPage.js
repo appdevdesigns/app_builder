@@ -138,9 +138,11 @@ module.exports = class ABViewPropertyEditPage extends ABViewPropertyAddPage {
 			if (!this._application || !this.settings.editForm || this.settings.editForm == this.constructor.default.editForm)
 				return;
 
-			let page = this._application.urlResolve(this.settings.editForm);
-			if (!page)
-				return;
+			let form = this._application.urlResolve(this.settings.editForm);
+			if (!form) return;
+
+			let page = form.pageParent();
+			if (!page) return;
 
 			comp.openFormPopup(page);
 		}
