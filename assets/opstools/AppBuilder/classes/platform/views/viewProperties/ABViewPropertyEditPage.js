@@ -136,15 +136,15 @@ module.exports = class ABViewPropertyEditPage extends ABViewPropertyAddPage {
 		comp.onClick = () => {
 
 			if (!this._application || !this.settings.editForm || this.settings.editForm == this.constructor.default.editForm)
-				return;
+				return Promise.resolve();
 
 			let form = this._application.urlResolve(this.settings.editForm);
-			if (!form) return;
+			if (!form) return Promise.resolve();
 
 			let page = form.pageParent();
-			if (!page) return;
+			if (!page) return Promise.resolve();
 
-			comp.openFormPopup(page);
+			return comp.openFormPopup(page);
 		}
 
 		return comp;

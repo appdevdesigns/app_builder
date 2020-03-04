@@ -160,90 +160,163 @@ module.exports = class ABViewPropertyAddPage extends ABViewProperty {
 				this._application = application;
 			},
 
-			onClick: () => {
+			onClick: (dc) => {
 
 				let pageId = this.settings.formView;
 				let page = this._application.pages(p => p.id == pageId, true)[0];
 
-				_logic.openFormPopup(page);
+				return _logic.openFormPopup(page, dc);
 
 			},
 
-			openFormPopup: (page) => {
+			/**
+			 * @method openFormPopup
+			 * 
+			 * @param page {ABViewPage}
+			 * @param dc {ABDataCollection}
+			 */
+			openFormPopup: (page, dc) => {
 
-				if (this._application == null)
-					return;
+				return new Promise((resolve, reject) => {
 
-				if ($$(ids.popup)) {
-					$$(ids.popup).show();
-					return;
-				}
+					if (this._application == null)
+						return resolve();
 
-				// Clone page so we modify without causing problems
-				let pageClone = page.copy(null, null, { ignoreSubPages: true });
-				pageClone.id = pageClone.id + "-" + webix.uid(); // lets take the stored id can create a new dynamic one so our views don't duplicate
-				let popUpComp = pageClone.component(App);
-				let ui = popUpComp.ui;
-
-				let popupTemplate = {
-					view: "window",
-					id: ids.popup,
-					modal: true,
-					position: "center",
-					// position:function(stthis.__addPageToolate){
-					// 	state.left = x + 20this.__addPageTool; // offset the popups
-					// 	state.top = y + 20;this.__addPageTool
-					// },
-					resize: true,
-					width: parseInt(this.settings.popupWidth) || 700,
-					height: (parseInt(this.settings.popupHeight) + 44) || 450,
-					css: 'ab-main-container',
-					head: {
-						view: "toolbar",
-						css: "webix_dark",
-						cols: [
-							{
-								view: "label",
-								label: page.label,
-								css: "modal_title",
-								align: "center"
-							},
-							{
-								view: "button",
-								label: "Close",
-								autowidth: true,
-								align: "center",
-								click: function () {
-
-									var popup = this.getTopParentView();
-									popup.close();
-
-								}
-							}
-						]
-					},
-					body: {
-						view: "scrollview",
-						scroll: true,
-						body: ui
+					if ($$(ids.popup)) {
+						$$(ids.popup).show();
+						return resolve();
 					}
-				};
 
-				// Create popup
-				webix.ui(popupTemplate).show();
+					// Clone page so we modify without causing problems
+					let pageClone = page.copy(null, null, { ignoreSubPages: true });
+					pageClone.id = OP.Util.uuid(); // lets take the stored id can create a new dynamic one so our views don't duplicate
+					// pageClone.id = pageClone.id + "-" + webix.uid(); // lets take the stored id can create a new dynamic one so our views don't duplicate
+					let popUpComp = pageClone.component(App);
+					let ui = popUpComp.ui;
 
-				// Initial UI components
-				setTimeout(() => {
+					let popupTemplate = {
+						view: "window",
+						id: ids.popup,
+						modal: true,
+						position: "center",
+						// position:function(stthis.__addPageToolate){
+						// 	state.left = x + 20this.__addPageTool; // offset the popups
+						// 	state.top = y + 20;this.__addPageTool
+						// },
+						resize: true,
+						width: parseInt(this.settings.popupWidth) || 700,
+						height: (parseInt(this.settings.popupHeight) + 44) || 450,
+						css: 'ab-main-container',
+						head: {
+							view: "toolbar",
+							css: "webix_dark",
+							cols: [
+								{
+									view: "label",
+									label: page.label,
+									css: "modal_title",
+									align: "center"
+								},
+								{
+									view: "button",
+									label: "Close",
+									autowidth: true,
+									align: "center",
+									click: function () {
 
-					popUpComp.init({
-						onSaveData: _logic.callbacks.onSaveData,
-						onCancelClick: _logic.callbacks.onCancel,
-						clearOnLoad: _logic.callbacks.onClearOnLoad
+										var popup = this.getTopParentView();
+										popup.close();
+
+									}
+								}
+							]
+						},
+						body: {
+							view: "scrollview",
+							scroll: true,
+							body: ui
+						}
+					};
+
+					// Create popup
+					webix.ui(popupTemplate).show();
+
+					// Initial UI components
+					setTimeout(() => {
+
+						popUpComp.init({
+							onSaveData: _logic.callbacks.onSaveData,
+							onCancelClick: _logic.callbacks.onCancel,
+							clearOnLoad: _logic.callbacks.onClearOnLoad
+						});
+
+						popUpComp.onShow();
+
+						_logic.setDefaultValue(dc, pageClone);
+
+						resolve();
+
+					}, 50);
+
+				});
+
+			},
+
+			setDefaultValue: (dc, page) => {
+
+				if (!dc) return;
+
+				let obj = dc.datasource;
+				if (!obj) return;
+
+				let linkedData = dc.getCursor();
+				if (!linkedData) return;
+
+				page.views().forEach(v => {
+
+					if (!v || v.key != "form")
+						return;
+
+					v.views().forEach(fView => {
+
+						if (fView.key != 'connect' ||
+							fView.settings == null)
+							return;
+
+						let field = fView.field();
+						if (field == null)
+							return;
+
+						let objLink = field.datasourceLink;
+						if (objLink == null || 
+							objLink.id != obj.id)
+							return;
+
+						let data = {};
+						let relationName = field.relationName();
+						data[relationName] = {
+							id: linkedData.id
+						};
+
+						// Set label of selected item
+						if (linkedData.text) {
+							data[relationName].text = linkedData.text;
+						}
+						else {
+							let rawData = {};
+							rawData[relationName] = linkedData;
+							data[relationName].text = field.format(rawData);
+						}
+
+						let comp = v.viewComponents[fView.id];
+						if (!comp)
+							return;
+
+						field.setValue($$(comp.ui.id), data);
+
 					});
 
-					popUpComp.onShow();
-
-				}, 50);
+				});
 
 			}
 

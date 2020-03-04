@@ -473,7 +473,13 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
 			if (!this._editPageEvent) {
 				this._editPageEvent = field.on("editPage", rowId => {
 
-					component.logic.goToEditPage(rowId);
+					let $form;
+					let $elem = $$(ids.component);
+					if ($elem) {
+						$form = $elem.getFormView();
+					}
+
+					component.logic.goToEditPage(rowId, $form);
 
 				});
 			}
@@ -552,103 +558,58 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
 
 			},
 
-			goToEditPage: (rowId) => {
+			formBusy: ($form) => {
+
+				if (!$form)
+					return;
+
+				if ($form.disable)
+					$form.disable();
+
+				if ($form.showProgress)
+					$form.showProgress({ type: "icon" });
+
+			},
+
+			formReady: ($form) => {
+
+				if (!$form)
+					return;
+
+				if ($form.enable)
+					$form.enable();
+
+				if ($form.hideProgress)
+					$form.hideProgress();
+
+			},
+
+			goToEditPage: (rowId, $form) => {
 				if (!this.settings.editForm)
 					return;
 
 				let editForm = this.application.urlResolve(this.settings.editForm);
 				if (!editForm) return;
 
-				let dc = editForm.datacollection;
-				if (dc) {
-					dc.setCursor(rowId);
-				}
+				component.logic.formBusy($form);
 
-				// Open the form popup
-				editPageComponent.onClick();
+
+				setTimeout(() => {
+
+					// Open the form popup
+					editPageComponent.onClick()
+						.then(() => {
+
+							let dc = editForm.datacollection;
+							if (dc) {
+								dc.setCursor(rowId);
+							}
+
+							component.logic.formReady($form);
+						});
+				}, 50);
 
 			}
-
-			// openFormPopup: (x, y) => {
-			// 	if ($$(ids.popup)) {
-			// 		$$(ids.popup).show();
-			// 		return;
-			// 	}
-
-			// 	var pageId = this.settings.formView;
-			// 	var page = this.application.pages(function (p) {
-			// 		return p.id == pageId;
-			// 	}, true)[0];
-
-
-			// 	// Clone page so we modify without causing problems
-			// 	var pageClone = _.cloneDeep(page);
-			// 	var instance = webix.uid();
-			// 	pageClone.id = pageClone.id + "-" + instance; // lets take the stored id can create a new dynamic one so our views don't duplicate
-			// 	var popUpComp = pageClone.component(App);
-			// 	var ui = popUpComp.ui;
-
-			// 	var popupTemplate = {
-			// 		view: "window",
-			// 		id: ids.popup,
-			// 		modal: true,
-			// 		position: "center",
-			// 		// position:function(state){
-			// 		// 	state.left = x + 20; // offset the popups
-			// 		// 	state.top = y + 20;
-			// 		// },
-			// 		resize: true,
-			// 		width: parseInt(this.settings.popupWidth) || 700,
-			// 		height: (parseInt(this.settings.popupHeight) + 44) || 450,
-			// 		css: 'ab-main-container',
-			// 		head: {
-			// 			view: "toolbar",
-			// 			css: "webix_dark",
-			// 			cols: [
-			// 				{
-			// 					view: "label",
-			// 					label: page.label,
-			// 					css: "modal_title",
-			// 					align: "center"
-			// 				},
-			// 				{
-			// 					view: "button",
-			// 					label: "Close",
-			// 					autowidth: true,
-			// 					align: "center",
-			// 					click: function () {
-
-			// 						var popup = this.getTopParentView();
-			// 						popup.close();
-
-			// 					}
-			// 				}
-			// 			]ABViewFormConnectEditorComponent
-			// 		},
-			// 		body: {
-			// 			view: "scrollview",
-			// 			scroll: true,
-			// 			body: ui
-			// 		}
-			// 	};
-
-			// 	// Create popup
-			// 	webix.ui(popupTemplate).show();
-
-			// 	// Initial UI components
-			// 	setTimeout(() => {
-
-			// 		popUpComp.init({
-			// 			onSaveData: component.logic.callbackSaveData,
-			// 			onCancelClick: component.logic.callbackCancel,
-			// 			clearOnLoad: component.logic.callbackClearOnLoad
-			// 		});
-
-			// 		popUpComp.onShow();
-
-			// 	}, 50);
-
-			// }
 
 		};
 
@@ -679,12 +640,24 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
 						}
 					},
 					"ab-connect-add-new-link": function (e, id, trg) {
+						e.stopPropagation();
 						// var topParentView = this.getTopParentView();
 						// component.logic.openFormPopup(topParentView.config.left, topParentView.config.top);
 
-						addPageComponent.onClick();
+						let $form = this.getFormView();
+						component.logic.formBusy($form);
 
-						e.stopPropagation();
+						let dc = form.datacollection;
+
+						setTimeout(() => {
+
+							addPageComponent.onClick(dc)
+								.then(() => {
+									component.logic.formReady($form);
+								});
+
+						}, 50);
+
 						return false;
 					}
 				}
