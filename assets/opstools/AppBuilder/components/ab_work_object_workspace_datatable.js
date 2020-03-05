@@ -312,7 +312,8 @@ console.warn('!! ToDo: onAfterColumnHide()');
                 // let scrollState = DataTable.Sj(), // webix5
                 // let scrollState = DataTable.Ug(), // webix6.1.0
                 // let scrollState = DataTable.pw(), // webix6.2.0
-                let scrollState = DataTable.xw(), // webix6.2.6
+                // let scrollState = DataTable.xw(), // webix6.2.6
+                let scrollState = DataTable.vw(), // webix7.2.0
                 // let scrollState = DataTable._get_y_range(),
                     startRecIndex = scrollState[0],
                     endRecIndex = scrollState[1],
