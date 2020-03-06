@@ -424,6 +424,7 @@ console.warn('!! todo: onBeforeEditStop() editing');
 			remove: function() {
 
 				var selectedPage = $$(ids.list).getSelectedItem(false);
+				if (!selectedPage) return;
 
 				// verify they mean to do this:
 				OP.Dialog.Confirm({
