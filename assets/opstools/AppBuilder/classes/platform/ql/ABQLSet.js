@@ -6,8 +6,4 @@
  *
  */
 
-const QLFirst = require("./ABQLSetFirst.js");
-
-var allOps = [QLFirst];
-
-module.exports = allOps;
+module.exports = [require("./ABQLSetFirst.js")];

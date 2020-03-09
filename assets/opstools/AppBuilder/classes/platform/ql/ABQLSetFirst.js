@@ -17,24 +17,11 @@ class ABQLSetFirst extends ABQL {
     ///
     /// Instance Methods
     ///
-
-    /**
-     * @method paramsFromQuery()
-     * take the given queryString value and see if it matches our
-     * possible parameter values.
-     * we update ._suggestions based upon the current param state.
-     * @param {string} queryString
-     */
-    paramsFromQuery(queryString) {
-        this._suggestions = ".first()";
-    }
 }
 
 ABQLSetFirst.key = "first";
-ABQLSetFirst.option = ".first()";
-ABQLSetFirst.option_begin = ".first(";
-ABQLSetFirst.regEx = /\.first\(\)/;
-
+ABQLSetFirst.label = "first";
+ABQLSetFirst.uiIndentNext = 20;
 ABQLSetFirst.NextQLOps = ABQLRow;
 
 module.exports = ABQLSetFirst;
