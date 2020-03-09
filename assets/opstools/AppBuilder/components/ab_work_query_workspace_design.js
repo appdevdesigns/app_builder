@@ -843,7 +843,7 @@ module.exports = class ABWorkQueryWorkspaceDesign extends ABComponent {
 			refreshFilter: function () {
 
 				DataFilter.applicationLoad(CurrentQuery ? CurrentQuery.application : null);
-				DataFilter.fieldsLoad(CurrentQuery ? CurrentQuery.fields() : []);
+				DataFilter.fieldsLoad(CurrentQuery ? CurrentQuery.fields() : [], CurrentQuery);
 				DataFilter.setValue(CurrentQuery.where);
 			},
 

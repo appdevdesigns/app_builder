@@ -36,8 +36,13 @@ label {
 	float: none;
 	padding: 7px 5px 7px 0px;
 }
-.selectivity-multiple-selected-item-remove {
+.selectivity-multiple-selected-item-edit, .selectivity-multiple-selected-item-remove {
 	padding: 5px 0 5px 5px;
+}
+.selectivity-single-selected-item-edit, .selectivity-multiple-selected-item-edit {
+	color: #FFF;
+	cursor: pointer;
+	text-decoration: none !important;
 }
 .customField {
 	line-height: 33px;

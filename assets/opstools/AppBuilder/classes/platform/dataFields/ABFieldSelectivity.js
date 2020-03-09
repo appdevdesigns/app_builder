@@ -27,6 +27,17 @@ module.exports = class ABFieldSelectivity extends ABField {
 		super(values, object, fieldDefaults);
 	}
 
+	// return the default values for this DataField
+	static defaults() {
+		return {
+			key: "selectivity",
+			icon: "bars",
+			menuName: "",
+			description: "",
+		};
+	}
+	
+
 	selectivityRender(domNode, settings, App, row) {
 		if (domNode == null) return;
 
@@ -69,47 +80,28 @@ module.exports = class ABFieldSelectivity extends ABField {
 			if (settings.isUsers) {
 				settings.templates = {
 					multipleSelectedItem: function (options) {
-						var extraClass = options.highlighted ? ' highlighted' : '';
 						return (
-							'<span class="selectivity-multiple-selected-item' +
-							extraClass +
-							'" ' +
-							'style="background-color: #eee !important; color: #666 !important; box-shadow: inset 0px 1px 1px #333;"' +
-							'data-item-id="' +
-							options.id +
-							'">' +
-							'<i class="fa fa-user" style="color: #666; opacity: 0.6;"></i> ' + options.text +
-							(options.removable
-								? ' <a class="selectivity-multiple-selected-item-remove" style="color: #333;">' +
-								'<i class="fa fa-remove"></i>' +
-								'</a>'
-								: '') +
-							'</span>'
-						);
+							`<span class="selectivity-multiple-selected-item ${options.highlighted ? ' highlighted' : ''}"
+								style="background-color: #eee !important; color: #666 !important; box-shadow: inset 0px 1px 1px #333;"
+								data-item-id="${options.id}">
+								<i class="fa fa-user" style="color: #666; opacity: 0.6;"></i> 
+								${options.text}
+								${options.removable ? ` <a class="selectivity-multiple-selected-item-remove" style="color: #333;"><i class="fa fa-remove"></i></a>` : ''}
+							</span>`);
 					}
 				}
-			} else {
+			}
+			else {
 				settings.templates = {
 					multipleSelectedItem: function (options) {
-						var extraClass = options.highlighted ? ' highlighted' : '';
 						return (
-							'<span class="selectivity-multiple-selected-item' +
-							extraClass +
-							'" ' +
-							'style="background-color:' +
-							options.hex +
-							' !important;"' +
-							'data-item-id="' +
-							options.id +
-							'">' +
-							options.text +
-							(options.removable
-								? ' <a class="selectivity-multiple-selected-item-remove">' +
-								'<i class="fa fa-remove"></i>' +
-								'</a>'
-								: '') +
-							'</span>'
-						);
+							`<span class="selectivity-multiple-selected-item ${options.highlighted ? ' highlighted' : ''}"
+								style="background-color: ${options.hex} !important;"
+								data-item-id="${options.id}">
+								${options.text}
+								${settings.editPage ? ` <a class="selectivity-multiple-selected-item-edit"><i class="fa fa-edit"></i></a>` : ""}
+								${options.removable ? ` <a class="selectivity-multiple-selected-item-remove"><i class="fa fa-remove"></i></a>` : ""}
+							</span>`);
 					}
 				}
 			}
@@ -119,8 +111,46 @@ module.exports = class ABFieldSelectivity extends ABField {
 			this.selectivitySetBadge(domNode, App, row);
 		}
 		else {
+			settings.templates = {
+				singleSelectedItem: function (options) {
+					return (
+						`<span class="selectivity-single-selected-item" data-item-id="${options.id}">
+							${options.removable ? '<a class="selectivity-single-selected-item-remove"><i class="fa fa-remove"></i></a>' : ""}
+							${settings.editPage ? '<a class="selectivity-single-selected-item-edit"><i class="fa fa-edit"></i></a>' : ""}
+							${options.text}
+						</span>`
+					);
+				}
+			};
+
 			selectivityInput = new Selectivity.Inputs.Single(settings);
 			domNode.selectivity = selectivityInput;
+		}
+
+		if (settings.editPage) {
+			setTimeout(() => {
+				let instance = this;
+				let editMenus = document.querySelectorAll('.selectivity-single-selected-item-edit, .selectivity-multiple-selected-item-edit');
+				for (let i = 0; i < editMenus.length; i++) {
+					let eMenu = editMenus[i];
+					if (eMenu && !eMenu.__hasClickEvent) {
+						eMenu.addEventListener("click", function(e) {
+							e.stopPropagation();
+							e.preventDefault();
+
+							let parentElm = this.parentElement;
+							if (!parentElm) return;
+
+							let rowId = parentElm.getAttribute('data-item-id');
+							if (!rowId) return;
+
+							instance.emit("editPage", rowId);
+
+						}, true);
+						eMenu.__hasClickEvent = true;
+					}
+				}
+			}, 500);
 		}
 
 		// WORKAROUND : remove caret icon of selectivity

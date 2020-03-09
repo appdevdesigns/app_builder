@@ -828,7 +828,10 @@ module.exports = class RowFilter extends RowFilterCore {
 			}
 			// populate the list of Queries for a query field
 			else if (isQueryField) {
-				Queries = this.queries(q => q.canFilterObject(field.datasourceLink));
+				Queries = this.queries(q => {
+					return ((this._Object ? this._Object.id : "") != q.id) && // Prevent filter looping
+						q.canFilterObject(field.datasourceLink);
+				});
 			}
 
 			Queries.forEach((q) => {

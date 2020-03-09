@@ -40,6 +40,7 @@ module.exports = class ABViewDetailConnect extends ABViewDetailConnectCore {
 				onSave: () => {
 
 					let currView = _logic.currentEditObject();
+					if (!currView) return;
 
 					// refresh settings
 					this.propertyEditorValues(ids, currView);
@@ -109,11 +110,25 @@ module.exports = class ABViewDetailConnect extends ABViewDetailConnectCore {
 
 		// Click to open new data form
 		baseComp.ui.onClick = baseComp.ui.onClick || {};
-		baseComp.ui.onClick["ab-connect-add-new-link"] = function (e, id, trg) {
-
-			addPageComponent.onClick();
-
+		baseComp.ui.onClick["ab-connect-add-new-link"] = (e, id, trg) => {
 			e.stopPropagation();
+
+			// TODO: busy cursor
+
+			let dc;
+			let detail = this.detailComponent();
+			if (detail)
+				dc = detail.datacollection;
+
+			setTimeout(() => {
+
+				addPageComponent.onClick(dc)
+					.then(() => {
+						// TODO: ready cursor
+					});
+
+			}, 50);
+
 			return false;
 		};
 
