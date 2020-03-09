@@ -231,14 +231,10 @@ module.exports = {
 		let roleId = req.param('roleId');
 
 		ScopeGraph.query(`
-			FOR join in scopeUser
-			FOR s in scope
+			FOR join in roleUser
+			FOR r in role
 			FILTER join._from == 'role/${roleId}'
-			&& join._to == s._id
-			RETURN {
-				scope: s,
-				username: join.username
-			}
+			RETURN join._to
 		`, true, true)
 			.catch(err => {
 				console.error(err);
@@ -246,33 +242,39 @@ module.exports = {
 			})
 			.then(result => {
 
-				result = (result || []).map(r => {
-					return {
-						scope: new ScopeGraph(r.scope),
-						username: r.username
-					}
+				let usernames = [];
+
+				(result || []).forEach(r => {
+
+					if (r == null)
+						return;
+
+					usernames.push(r.replace("username/", ""));
 				});
 
-				res.AD.success(result);
+				res.AD.success(usernames);
 			});
 	},
 
-	// POST /app_builder/role/:roleId/scope/:scopeId/username/:username
+	// POST /app_builder/role/:roleId/username/:username
 	addUser: function (req, res) {
 
 		let roleId = req.param('roleId');
-		let scopeId = req.param('scopeId');
 		let username = req.param('username');
+
+		if (!roleId || !username) {
+			res.AD.success(true);
+			return;
+		}
 
 		Promise.resolve()
 			// check duplicate
 			.then(() => new Promise((next, err) => {
 
 				ScopeGraph.query(`
-					FOR join IN scopeUser
+					FOR join IN roleUser
 					FILTER join._from == 'role/${roleId}'
-					&& join._to == 'scope/${scopeId}'
-					&& join.username == '${username}'
+					&& join._to == 'username/${username}'
 					LIMIT 1
 					RETURN join`)
 					.catch(err)
@@ -303,12 +305,11 @@ module.exports = {
 
 				let values = {
 					_from: `role/${roleId}`,
-					_to: `scope/${scopeId}`,
-					username: username
+					_to: `username/${username}`
 				};
 
 				ScopeGraph.query(`
-					INSERT ${JSON.stringify(values)} INTO scopeUser
+					INSERT ${JSON.stringify(values)} INTO roleUser
 					RETURN NEW`)
 					.catch(error => {
 						err(error);
@@ -322,19 +323,22 @@ module.exports = {
 			}));
 	},
 
-	// DELETE /app_builder/role/:roleId/scope/:scopeId/username/:username
+	// DELETE /app_builder/role/:roleId/username/:username
 	removeUser: function (req, res) {
 
 		let roleId = req.param('roleId');
-		let scopeId = req.param('scopeId');
 		let username = req.param('username');
 
+		if (!roleId || !username) {
+			res.AD.success(true);
+			return;
+		}
+
 		ScopeGraph.query(`
-			FOR join IN scopeUser
+			FOR join IN roleUser
 			FILTER join._from == 'role/${roleId}'
-			&& join._to == 'scope/${scopeId}'
-			&& join.username == '${username}'
-			REMOVE join IN scopeUser`)
+			&& join._to == 'username/${username}'
+			REMOVE join IN roleUser`)
 			.catch(res.AD.error)
 			.then(() => {
 				res.AD.success(true);

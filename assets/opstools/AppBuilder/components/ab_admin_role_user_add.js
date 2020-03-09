@@ -75,22 +75,22 @@ module.exports = class AB_Work_Admin_Role_User_Add extends ABComponent {
 				let role = _logic.getRole();
 
 				Promise.resolve()
-					.then(() => new Promise((next, err) => {
+					// .then(() => new Promise((next, err) => {
 
-						if (role._scopes != null &&
-							role._scopes.length > 0)
-							return next();
+					// 	if (role._scopes != null &&
+					// 		role._scopes.length > 0)
+					// 		return next();
 
-						role.scopeLoad()
-							.catch(err)
-							.then(scopes => {
+					// 	role.scopeLoad()
+					// 		.catch(err)
+					// 		.then(scopes => {
 
-								role._scopes = scopes;
+					// 			role._scopes = scopes;
 
-								next();
-							})
+					// 			next();
+					// 		})
 
-					}))
+					// }))
 					.then(() => new Promise((next, err) => {
 
 						// Convert data to display in list
@@ -99,25 +99,28 @@ module.exports = class AB_Work_Admin_Role_User_Add extends ABComponent {
 						let listData = [];
 						users.forEach(u => {
 
+							let exists = this._userDC.find(uItem => uItem.id == u.username)[0];
+							if (exists) return;
+
 							let userData = {
 								id: u.username,
-								name: u.username,
-								data: [],
-								type: 'user'
+								username: u.username,
+								// data: [],
+								// type: 'user'
 							};
 
-							(role.scopes() || []).forEach(s => {
+							// (role.scopes() || []).forEach(s => {
 
-								if (this._userDC.find(item => item.username == u.username && item.scope && item.scope.id == s.id)[0])
-									return;
+							// 	if (this._userDC.find(item => item.username == u.username && item.scope && item.scope.id == s.id)[0])
+							// 		return;
 
-								userData.data.push({
-									scopeId: s.id,
-									name: s.name,
-									username: u.username,
-									type: 'scope'
-								})
-							});
+							// 	userData.data.push({
+							// 		scopeId: s.id,
+							// 		name: s.name,
+							// 		username: u.username,
+							// 		type: 'scope'
+							// 	})
+							// });
 
 							listData.push(userData);
 
@@ -136,15 +139,16 @@ module.exports = class AB_Work_Admin_Role_User_Add extends ABComponent {
 
 			template: (item) => {
 
-				if (item.type == 'user') {
-					return `<span class='fa fa-user'></span> ${item.name}`;
-				}
-				else if (item.type == 'scope') {
-					return `<span class='fa fa fa-street-view'></span> ${item.name}`;
-				}
-				else {
-					return "N/A";
-				}
+				// if (item.type == 'user') {
+				// 	return `<span class='fa fa-user'></span> ${item.name}`;
+				// }
+				// else if (item.type == 'scope') {
+				// 	return `<span class='fa fa fa-street-view'></span> ${item.name}`;
+				// }
+				// else {
+				// 	return "N/A";
+				// }
+				return `<span class='fa fa-user'></span> ${item.username}`;
 
 			},
 
@@ -153,8 +157,7 @@ module.exports = class AB_Work_Admin_Role_User_Add extends ABComponent {
 				let filterText = ($$(ids.filter).getValue() || "").trim().toLowerCase();
 				$$(ids.list).filter(item => {
 
-					return (item.name || "").trim().toLowerCase().indexOf(filterText) > -1 || 
-							(item.username || "").trim().toLowerCase().indexOf(filterText) > -1;
+					return (item.username || "").trim().toLowerCase().indexOf(filterText) > -1;
 				});
 				$$(ids.list).refresh();
 
@@ -162,17 +165,21 @@ module.exports = class AB_Work_Admin_Role_User_Add extends ABComponent {
 
 			select: (itemId) => {
 
+				$$(ids.buttonSave).disable();
+
 				let selectedItem = $$(ids.list).getItem(itemId);
 				if (!selectedItem) return;
 
-				if (selectedItem.type == 'scope') {
-					$$(ids.buttonSave).enable();
-				}
-				else if (selectedItem.type == 'user') {
-					$$(ids.popup).getHead().define("template", labels.component.selectScope);
-					$$(ids.popup).getHead().refresh();
-					$$(ids.buttonSave).disable();
-				}
+				// if (selectedItem.type == 'scope') {
+				// 	$$(ids.buttonSave).enable();
+				// }
+				// else if (selectedItem.type == 'user') {
+				// 	$$(ids.popup).getHead().define("template", labels.component.selectScope);
+				// 	$$(ids.popup).getHead().refresh();
+				// 	$$(ids.buttonSave).disable();
+				// }
+
+				$$(ids.buttonSave).enable();
 
 			},
 
@@ -188,7 +195,7 @@ module.exports = class AB_Work_Admin_Role_User_Add extends ABComponent {
 				if (!selectedItem)
 					return _logic.ready();
 
-				role.userAdd(selectedItem.scopeId, selectedItem.username)
+				role.userAdd(selectedItem.username)
 					.catch(err => {
 						console.error(err);
 						_logic.ready();
@@ -196,13 +203,14 @@ module.exports = class AB_Work_Admin_Role_User_Add extends ABComponent {
 					.then(() => {
 
 						// update user list of role
-						let scope = role.scopes(s => s.id == selectedItem.scopeId)[0];
-						if (scope) {
-							this._userDC.add({
-								username: selectedItem.username,
-								scope: scope
-							});
-						}
+						// let scope = role.scopes(s => s.id == selectedItem.scopeId)[0];
+						// if (scope) {
+						this._userDC.add({
+							id: selectedItem.username,
+							value: selectedItem.username
+							// scope: scope
+						});
+						// }
 
 						_logic.ready();
 						$$(ids.popup).hide();
@@ -270,14 +278,28 @@ module.exports = class AB_Work_Admin_Role_User_Add extends ABComponent {
 					},
 
 					// List
+					// {
+					// 	id: ids.list,
+					// 	view: 'grouplist',
+					// 	data: [],
+					// 	borderless: true,
+					// 	select: true,
+					// 	multiselect: false,
+					// 	templateBack: _logic.template,
+					// 	template: _logic.template,
+					// 	on: {
+					// 		onItemClick: (item) => {
+					// 			_logic.select(item);
+					// 		}
+					// 	}
+					// },
 					{
 						id: ids.list,
-						view: 'grouplist',
+						view: 'list',
 						data: [],
 						borderless: true,
 						select: true,
 						multiselect: false,
-						templateBack: _logic.template,
 						template: _logic.template,
 						on: {
 							onItemClick: (item) => {

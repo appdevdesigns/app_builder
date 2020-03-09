@@ -20,6 +20,11 @@ module.exports = class ABRole extends ABModelBase {
 				edgeName: "roleScope",
 				linkCollection: "scope",
 				direction: this.relateDirection.OUTBOUND
+			},
+
+			users: {
+				edgeName: "roleUser",
+				direction: this.relateDirection.OUTBOUND
 			}
 
 		};

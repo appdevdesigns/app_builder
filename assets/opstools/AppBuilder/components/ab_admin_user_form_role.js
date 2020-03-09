@@ -16,7 +16,7 @@ module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
 
 		let RoleAdd = new ABRoleAdd(App);
 
-		this._roleScopeDC = new webix.DataCollection();
+		this._rolesDC = new webix.DataCollection();
 
 		// Our webix UI definition:
 		this.ui = {
@@ -29,13 +29,13 @@ module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
 					data: [],
 					columns: [
 						{
-							id: "role", header: "<span class='fa fa-user-md'></span> Role", width: 150,
-							template: item => (item && item.role ? item.role.name : "")
+							id: "role", header: "<span class='fa fa-user-md'></span> Role", fillspace: true,
+							template: role => (role ? role.name : "")
 						},
-						{
-							id: "scope", header: "<span class='fa fa-street-view'></span> Scope", fillspace: true,
-							template: item => (item && item.scope ? item.scope.name : "")
-						},
+						// {
+						// 	id: "scope", header: "<span class='fa fa-street-view'></span> Scope", fillspace: true,
+						// 	template: item => (item && item.scope ? item.scope.name : "")
+						// },
 						// { id: "object", header: "Object", width: 150 },
 						{
 							id: "remove",
@@ -79,10 +79,10 @@ module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
 			if ($$(ids.datatable)) {
 				webix.extend($$(ids.datatable), webix.ProgressBar);
 
-				$$(ids.datatable).data.sync(this._roleScopeDC);
+				$$(ids.datatable).data.sync(this._rolesDC);
 			}
 
-			RoleAdd.init(this._userDC, this._roleScopeDC);
+			RoleAdd.init(this._userDC, this._rolesDC);
 
 		};
 
@@ -106,17 +106,17 @@ module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
 					return;
 				}
 
-				ABRole.roleScopeOfUser(currUser.username)
+				ABRole.rolesOfUser(currUser.username)
 					.catch(err => {
 						console.error(err);
 						_logic.ready();
 					})
-					.then(roleScopes => {
+					.then(roles => {
 
-						roleScopes = roleScopes || [];
+						roles = roles || [];
 
-						this._roleScopeDC.clearAll();
-						this._roleScopeDC.parse(roleScopes);
+						this._rolesDC.clearAll();
+						this._rolesDC.parse(roles);
 						_logic.ready();
 
 					});
@@ -135,26 +135,24 @@ module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
 
 						_logic.busy();
 
-						let roleScope = this._roleScopeDC.find(s => s.id == rowId)[0];
-						if (!roleScope)
+						let role = this._rolesDC.find(s => s.id == rowId)[0];
+						if (!role)
 							return _logic.ready();
 
-						let role = roleScope.role;
-						let scopeId = roleScope.scope ? roleScope.scope.id : "";
 						let userId = this._userDC.getCursor();
 						let user = this._userDC.getItem(userId);
 
-						if (!role || !scopeId || !user)
+						if (!role || !user)
 							return _logic.ready();
 
-						role.userRemove(scopeId, user.username)
+						role.userRemove(user.username)
 							.catch(err => {
 								console.error(err);
 								_logic.ready();
 							})
 							.then(() => {
 
-								this._roleScopeDC.remove(rowId);
+								this._rolesDC.remove(rowId);
 
 								_logic.ready();
 

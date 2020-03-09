@@ -24,10 +24,10 @@ module.exports = class AB_Work_Admin_User_Form_Role_Add extends ABComponent {
 		};
 
 		// Our init() function for setting up our UI
-		this.init = (userDC, roleScopeDC) => {
+		this.init = (userDC, roleDC) => {
 
 			this._userDC = userDC;
-			this._roleScopeDC = roleScopeDC;
+			this._roleDC = roleDC;
 
 			webix.ui(this.ui);
 
@@ -43,15 +43,17 @@ module.exports = class AB_Work_Admin_User_Form_Role_Add extends ABComponent {
 
 			template: (item) => {
 
-				if (item.type == 'role') {
-					return `<span class='fa fa-user-md'></span> ${item.name}`;
-				}
-				else if (item.type == 'scope') {
-					return `<span class='fa fa fa-street-view'></span> ${item.name}`;
-				}
-				else {
-					return "N/A";
-				}
+				// if (item.type == 'role') {
+				// 	return `<span class='fa fa-user-md'></span> ${item.name}`;
+				// }
+				// else if (item.type == 'scope') {
+				// 	return `<span class='fa fa fa-street-view'></span> ${item.name}`;
+				// }
+				// else {
+				// 	return "N/A";
+				// }
+
+				return `<span class='fa fa-user-md'></span> ${item.name}`;
 
 			},
 
@@ -82,69 +84,70 @@ module.exports = class AB_Work_Admin_User_Form_Role_Add extends ABComponent {
 					.then(roles => {
 
 						// remove included roles
-						let includedRoleIds = this._roleScopeDC.find({}).map(d => d.role ? d.role.id : "").filter(rId => rId);
-						let includedScopeIds = this._roleScopeDC.find({}).map(d => d.scope ? d.scope.id : "").filter(sId => sId);
-						roles = (roles || []).filter(r => includedRoleIds.indexOf(r.id) < 1);
+						let includedRoleIds = this._roleDC.find({}).map(role => role ? role.id : "").filter(rId => rId);
+						// let includedScopeIds = this._roleDC.find({}).map(d => d.scope ? d.scope.id : "").filter(sId => sId);
+						roles = (roles || []).filter(r => includedRoleIds.indexOf(r.id) < 0);
 
 						// pull scopes
-						let tasks = [];
-						roles.forEach(r => {
+						// let tasks = [];
+						// roles.forEach(r => {
 
-							if (r._scopes.length < 1) {
-								tasks.push(new Promise((next, err) => {
+						// 	if (r._scopes.length < 1) {
+						// 		tasks.push(new Promise((next, err) => {
 
-									r.scopeLoad()
-										.catch(err)
-										.then(scopes => {
-											r._scopes = scopes || [];
-											next();
-										});
+						// 			r.scopeLoad()
+						// 				.catch(err)
+						// 				.then(scopes => {
+						// 					r._scopes = scopes || [];
+						// 					next();
+						// 				});
 
-								}));
-							}
+						// 		}));
+						// 	}
 
-						});
+						// });
 
-						Promise.all(tasks)
-							.then(() => {
+						// Promise.all(tasks)
+						// 	.then(() => {
 
-								// Convert data to display in list
-								let listData = [];
-								roles.forEach(r => {
+						// Convert data to display in list
+						// let listData = [];
+						// roles.forEach(r => {
 
-									let roleData = {
-										id: r.id,
-										name: r.name,
-										data: [],
-										type: 'role'
-									};
+						// 	let roleData = {
+						// 		id: r.id,
+						// 		name: r.name,
+						// 		data: [],
+						// 		type: 'role'
+						// 	};
 
-									r.scopes().forEach(s => {
+						// 	r.scopes().forEach(s => {
 
-										if (includedScopeIds.indexOf(s.id) > -1)
-											return;
+						// 		if (includedScopeIds.indexOf(s.id) > -1)
+						// 			return;
 
-										roleData.data.push({
-											id: s.id,
-											name: s.name,
-											role: r,
-											type: 'scope'
-										})
-									});
+						// 		roleData.data.push({
+						// 			id: s.id,
+						// 			name: s.name,
+						// 			role: r,
+						// 			type: 'scope'
+						// 		})
+						// 	});
 
-									listData.push(roleData);
+						// 	listData.push(roleData);
 
-								});
+						// });
 
-								$$(ids.list).parse(listData || []);
+						// $$(ids.list).parse(listData || []);
 
-								_logic.ready();
-								$$(ids.buttonSave).disable();
+						$$(ids.list).parse(roles || []);
 
-							});
-
+						_logic.ready();
+						$$(ids.buttonSave).disable();
 
 					});
+
+					// });
 
 			},
 
@@ -158,17 +161,24 @@ module.exports = class AB_Work_Admin_User_Form_Role_Add extends ABComponent {
 
 			select: (itemId) => {
 
-				let selectedItem = $$(ids.list).getItem(itemId);
-				if (!selectedItem) return;
+				$$(ids.buttonSave).disable();
 
-				if (selectedItem.type == 'scope') {
-					$$(ids.buttonSave).enable();
-				}
-				else if (selectedItem.type == 'role') {
-					$$(ids.popup).getHead().define("template", labels.component.selectScope);
-					$$(ids.popup).getHead().refresh();
-					$$(ids.buttonSave).disable();
-				}
+				let selectedRole = $$(ids.list).getItem(itemId);
+				if (!selectedRole) return;
+
+				$$(ids.buttonSave).enable();
+
+				// let selectedItem = $$(ids.list).getItem(itemId);
+				// if (!selectedItem) return;
+
+				// if (selectedItem.type == 'scope') {
+				// 	$$(ids.buttonSave).enable();
+				// }
+				// else if (selectedItem.type == 'role') {
+				// 	$$(ids.popup).getHead().define("template", labels.component.selectScope);
+				// 	$$(ids.popup).getHead().refresh();
+				// 	$$(ids.buttonSave).disable();
+				// }
 
 			},
 
@@ -181,15 +191,11 @@ module.exports = class AB_Work_Admin_User_Form_Role_Add extends ABComponent {
 				if (!user)
 					return _logic.ready();
 
-				let selectedScope = $$(ids.list).getSelectedItem();
-				if (!selectedScope)
-					return _logic.ready();
-
-				let role = selectedScope.role;
+				let role = $$(ids.list).getSelectedItem();
 				if (!role)
 					return _logic.ready();
 
-				role.userAdd(selectedScope.id, user.username)
+				role.userAdd(user.username)
 					.catch(err => {
 						console.error(err);
 						_logic.ready();
@@ -197,12 +203,8 @@ module.exports = class AB_Work_Admin_User_Form_Role_Add extends ABComponent {
 					.then(() => {
 
 						// update role list of user
-						let scope = role.scopes(s => s.id == selectedScope.id)[0];
-						if (role && scope) {
-							this._roleScopeDC.add({
-								role: role,
-								scope: scope
-							});
+						if (role) {
+							this._roleDC.add(role);
 						}
 
 						_logic.ready();
@@ -272,11 +274,10 @@ module.exports = class AB_Work_Admin_User_Form_Role_Add extends ABComponent {
 					// List
 					{
 						id: ids.list,
-						view: 'grouplist',
+						view: 'list',
 						data: [],
 						borderless: true,
 						select: true,
-						templateBack: _logic.template,
 						template: _logic.template,
 						on: {
 							onItemClick: (item) => {
@@ -284,6 +285,21 @@ module.exports = class AB_Work_Admin_User_Form_Role_Add extends ABComponent {
 							}
 						}
 					},
+					// // List
+					// {
+					// 	id: ids.list,
+					// 	view: 'grouplist',
+					// 	data: [],
+					// 	borderless: true,
+					// 	select: true,
+					// 	templateBack: _logic.template,
+					// 	template: _logic.template,
+					// 	on: {
+					// 		onItemClick: (item) => {
+					// 			_logic.select(item);
+					// 		}
+					// 	}
+					// },
 
 					// Import & Cancel buttons
 					{

@@ -20,11 +20,6 @@ module.exports = class ABScope extends ABModelBase {
 				edgeName: "scopeObject",
 				linkCollection: "object",
 				direction: this.relateDirection.OUTBOUND
-			},
-
-			users: {
-				edgeName: "scopeUser",
-				direction: this.relateDirection.OUTBOUND
 			}
 
 		};
@@ -68,13 +63,12 @@ module.exports = class ABScope extends ABModelBase {
 			// `)
 
 			this.query(`
-				FOR sUser IN scopeUser
+				FOR rUser IN roleUser
 				FOR s IN scope
 				FOR r in role
 				FOR rScope in roleScope
-				FILTER sUser.username == 'admin'
-				&& sUser._from == r._id
-				&& sUser._to == s._id
+				FILTER rUser._from == r._id
+				&& rUser._to == 'username/${options.username}'
 				&& rScope._from == r._id
 				&& rScope._to == s._id
 				&& (s.allowAll == true || 
