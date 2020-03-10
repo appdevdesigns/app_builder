@@ -71,54 +71,21 @@ function updateDefaultList(ids, settings = {}) {
             };
         });
 
-    if ($$(ids.isMultiple).getValue()) {
-        // Multiple default selector
-        var domNode = $$(ids.multipleDefault).$view.querySelector(
-            ".list-data-values"
-        );
+    // if ($$(ids.isMultiple).getValue()) {
+    // } else {
+    // Single default selector
+    $$(ids.default).define("options", optList);
+    if (settings.default) $$(ids.default).setValue(settings.default);
 
-        // TODO : use to render selectivity to set default values
-        let selectivityRender = new ABFieldSelectivity(
-            {
-                settings: {}
-            },
-            {},
-            {}
-        );
+    $$(ids.default).refresh();
 
-        selectivityRender.selectivityRender(domNode, {
-            multiple: true,
-            data: settings.multipleDefault,
-            placeholder: L(
-                "ab.dataField.list.placeholder_multiple",
-                "*Select items"
-            ),
-            items: optList.map(function(opt) {
-                return {
-                    id: opt.id,
-                    text: opt.value,
-                    hex: opt.hex
-                };
-            })
-        });
-        domNode.addEventListener("change", function(e) {
-            if (e.value.length) {
-                $$(ids.multipleDefault).define("required", false);
-            } else if (
-                $$(ids.multipleDefault)
-                    .$view.querySelector(".webix_inp_label")
-                    .classList.contains("webix_required")
-            ) {
-                $$(ids.multipleDefault).define("required", true);
-            }
-        });
-    } else {
-        // Single default selector
-        $$(ids.default).define("options", optList);
-        if (settings.default) $$(ids.default).setValue(settings.default);
+    // Multiple default selector
+    $$(ids.multipleDefault).define("options", optList);
+    if (settings.default) $$(ids.multipleDefault).setValue(settings.multipleDefault);
 
-        $$(ids.default).refresh();
-    }
+    $$(ids.multipleDefault).refresh();
+    // }
+
 }
 
 /**
@@ -327,6 +294,7 @@ var ABFieldListComponent = new ABFieldComponent({
                     return items;
                 },
                 options: [],
+                hidden: true,
                 name: "multipleDefault",
                 view: "multicombo",
                 label: L("ab.common.default", "*Default")
@@ -934,3 +902,26 @@ module.exports = class ABFieldList extends ABFieldListCore {
         }
     }
 };
+
+// == Private methods ==
+function _getSelectedOptions(field, rowData = {}) {
+
+	let result = [];
+	if (rowData[field.columnName] != null) {
+		result = rowData[field.columnName];
+
+		if (typeof result == 'string')
+			result = JSON.parse(result);
+
+		// Pull text with current language
+		if (field.settings) {
+			result = (field.settings.options || []).filter(opt => {
+				return (result || []).filter(v => (opt.id || opt) == (v.id || v)).length > 0
+			});
+		}
+
+	}
+
+	return result;
+
+}
