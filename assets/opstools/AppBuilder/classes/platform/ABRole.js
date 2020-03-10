@@ -39,25 +39,22 @@ module.exports = class ABRole extends ABRoleCore {
 
 	}
 
-	static roleScopeOfUser(username) {
+	static rolesOfUser(username) {
 
 		return new Promise((resolve, reject) => {
 
-			Model.staticData.roleScopeOfUser(username)
+			Model.staticData.rolesOfUser(username)
 				.catch(reject)
-				.then(data => {
+				.then(roles => {
 
 					let result = [];
 
-					(data || []).forEach(d => {
+					(roles || []).forEach(r => {
 						// prevent processing of null values.
-						if (d) {
-							result.push({
-								role: new ABRole(d.role),
-								scope: new ABScope(d.scope),
-							});
+						if (r) {
+							result.push(new ABRole(r));
 						}
-					})
+					});
 
 					resolve(result);
 
@@ -142,16 +139,9 @@ module.exports = class ABRole extends ABRoleCore {
 
 			this.Model.staticData.roleUsers(this.id)
 				.catch(reject)
-				.then(scopeUsers => {
+				.then(usernames => {
 
-					scopeUsers = (scopeUsers || []).map(r => {
-						return {
-							scope: new ABScope(r.scope),
-							username: r.username
-						}
-					});
-
-					resolve(scopeUsers || []);
+					resolve(usernames || []);
 
 				});
 
@@ -283,11 +273,11 @@ module.exports = class ABRole extends ABRoleCore {
 	}
 
 
-	userAdd(scopeId, username) {
+	userAdd(username) {
 
 		return new Promise((resolve, reject) => {
 
-			this.Model.staticData.scopeAddUser(this.id, scopeId, username)
+			this.Model.staticData.addUser(this.id, username)
 				.catch(reject)
 				.then(() => {
 
@@ -299,11 +289,11 @@ module.exports = class ABRole extends ABRoleCore {
 
 	}
 
-	userRemove(scopeId, username) {
+	userRemove(username) {
 
 		return new Promise((resolve, reject) => {
 
-			this.Model.staticData.scopeRemoveUser(this.id, scopeId, username)
+			this.Model.staticData.removeUser(this.id, username)
 				.catch(reject)
 				.then(() => {
 

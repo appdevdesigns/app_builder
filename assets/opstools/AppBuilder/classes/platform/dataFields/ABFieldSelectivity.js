@@ -23,6 +23,17 @@ module.exports = class ABFieldSelectivity extends ABField {
 		super(values, object, fieldDefaults);
 	}
 
+	// return the default values for this DataField
+	static defaults() {
+		return {
+			key: "selectivity",
+			icon: "bars",
+			menuName: "",
+			description: "",
+		};
+	}
+	
+
 	selectivityRender(domNode, settings, App, row) {
 		if (domNode == null) return;
 

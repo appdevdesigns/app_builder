@@ -1,4 +1,5 @@
 const ABComponent = require("./ABComponent");
+const ABViewForm = require("../platform/views/ABViewForm");
 
 module.exports = class RowUpdater extends ABComponent {
 
@@ -6,48 +7,57 @@ module.exports = class RowUpdater extends ABComponent {
 
 		super(App, idBase);
 
-		var L = this.Label;
+		let L = this.Label;
 
-		var labels = {
+		let labels = {
 			common: (App || {}).labels,
 			component: {
 
 				addNew: L("ab.component.form.addNew", "*Add field to edit"),
 
 				set: L("ab.component.form.set", "*Set"),
-				setOption1: L("ab.component.form.recordrule.set.customValue", "*to a custom value"),
-				setOption2: L("ab.component.form.recordrule.set.formValue", "*to a form value"),
-				setOption3: L("ab.component.form.recordrule.set.connectedValue", "*to a connected value"),
-
 				to: L("ab.component.form.to", "*To"),
 
 			}
 		};
 
 		// internal list of Webix IDs to reference our UI components.
-		var ids = {
-			updateForm: this.unique(idBase + '_updateForm'),
-			addNew: this.unique(idBase + '_addNew'),
+		let ids = {
+			form: this.unique(idBase + '_rowUpdaterForm'),
+			addNew: this.unique(idBase + '_rowUpdaterAddNew'),
 
-			field: this.unique('field'),
-			updateAction: this.unique('updateAction'),
+			field: this.unique(idBase + '_rowUpdaterField'),
 
 		};
 
-		var _Object;
-
-		var updateValueOptions = [
-			{ id: "customValue", value: labels.component.setOption1 },
-			{ id: "formValue", value: labels.component.setOption2 },
-			{ id: "connectedValue", value: labels.component.setOption3 }
-		];
+		let _Object;
+		let _mockFormWidget;
 
 		// setting up UI
 		this.init = (options) => {
+
+			// register our callbacks:
+			for (var c in _logic.callbacks) {
+				_logic.callbacks[c] = options[c] || _logic.callbacks[c];
+			}
+
 		};
 
 		// internal business logic
-		var _logic = this._logic = {
+		let _logic = this._logic = {
+
+			callbacks: {
+
+				/**
+				 * @function onChange
+				 * called when we have made changes to the hidden field settings
+				 * of our Current Object.
+				 *
+				 * this is meant to alert our parent component to respond to the
+				 * change.
+				 */
+				onChange: function () { }
+			},
 
 			/**
 			 * @method objectLoad
@@ -59,23 +69,51 @@ module.exports = class RowUpdater extends ABComponent {
 
 				_Object = object;
 
+				_mockFormWidget = new ABViewForm({
+					settings: {
+						showLabel: false,
+						labelWidth: 0
+					}
+				}, _Object ? _Object.application : null);
+				_mockFormWidget.objectLoad(object);
+
+				_logic.setValue(null); // clear
+
 			},
 
 
 			getFieldList: function (excludeSelected) {
 
-				var options = (_Object.fields() || []).map(f => {
+				let options = (_Object.fields() || []).map(f => {
 					return {
 						id: f.id,
 						value: f.label
 					};
 				});
 
+				if (excludeSelected) {
+					let $form = $$(ids.form);
+
+					$form.getChildViews().forEach($viewCond => {
+
+						// Ignore "Add new" button
+						if (!$viewCond || !$viewCond.$$) return;
+
+						let $fieldElem = $viewCond.$$(ids.field);
+						if (!$fieldElem) return;
+
+						let fieldId = $fieldElem.getValue();
+						if (!fieldId) return;
+
+						options = options.filter(opt => opt.id != fieldId);
+					});
+				}
+
 				return options;
 
 			},
 
-			getUI: function () {
+			getItemUI: function () {
 
 				return {
 					view: 'layout',
@@ -95,7 +133,7 @@ module.exports = class RowUpdater extends ABComponent {
 							on: {
 								onChange: function (columnId) {
 
-									var $viewCond = this.getParentView();
+									let $viewCond = this.getParentView();
 									_logic.selectField(columnId, $viewCond);
 
 								}
@@ -109,34 +147,6 @@ module.exports = class RowUpdater extends ABComponent {
 						},
 						// Field value
 						{},
-						// {
-						// 	// Update action
-						// 	view: "combo",
-						// 	id: ids.updateAction,
-						// 	options: updateValueOptions,
-						// 	on: {
-						// 		onChange: function (updateValue) {
-
-						// 			var $viewCond = this.getParentView();
-						// 			// _logic.selectField(columnId, $viewCond);
-
-						// 		}
-						// 	}
-						// },
-						{
-							// "Add" button
-							view: "button",
-							icon: "fa fa-plus",
-							type: "icon",
-							width: 30,
-							click: function () {
-								var $viewForm = this.getFormView();
-
-								var indexView = $viewForm.index(this.getParentView());
-
-								_logic.addUpdateValue(indexView + 1);
-							}
-						},
 						{
 							// "Remove" button
 							view: "button",
@@ -145,9 +155,9 @@ module.exports = class RowUpdater extends ABComponent {
 							width: 30,
 							click: function () {
 
-								var $viewCond = this.getParentView();
+								let $viewCond = this.getParentView();
 
-								_logic.removeUpdateValue($viewCond);
+								_logic.removeItem($viewCond);
 							}
 						}
 					]
@@ -164,73 +174,54 @@ module.exports = class RowUpdater extends ABComponent {
 					label: labels.component.addNew,
 					click: function () {
 
-						_logic.addUpdateValue();
+						_logic.addItem();
 
 					}
 				}
 			},
 
-			addUpdateValue: function (index) {
+			addItem: function (index) {
 
-				var $viewForm = $$(ids.updateForm);
+				let $form = $$(ids.form);
 
-				var remainFields = _logic.getFieldList(true);
+				let remainFields = _logic.getFieldList(true);
 				if (remainFields.length < 1) return;
 
-				var ui = _logic.getUI();
+				let ui = _logic.getItemUI();
 
-				var viewId = $viewForm.addView(ui, index);
+				let viewId = $form.addView(ui, index);
 
-				_logic.toggleAddNewButton();
+				_logic.toggleForm();
 
 				return viewId;
 			},
 
-			removeUpdateValue: function ($viewCond) {
+			removeItem: function ($viewCond) {
 
-				var $viewForm = $$(ids.updateForm);
+				let $form = $$(ids.form);
 
-				$viewForm.removeView($viewCond);
+				$form.removeView($viewCond);
 
-				_logic.toggleAddNewButton();
-
-			},
-
-			toggleAddNewButton: function () {
-
-				var $viewForm = $$(ids.updateForm);
-				if (!$viewForm) return;
-
-				// Show "Add new filter" button
-				if ($viewForm.getChildViews().length < 1) {
-
-					$viewForm.hide();
-					$$(ids.addNew).show();
-				}
-				// Hide "Add new filter" button
-				else {
-
-					$viewForm.show();
-					$$(ids.addNew).hide();
-				}
+				_logic.toggleForm();
 
 			},
 
 			selectField: function (columnId, $viewCond) {
-				var fieldInfo = _Object.fields(col => col.id == columnId)[0],
-					fieldComponent = fieldInfo.formComponent(),
-					abView = fieldComponent.newInstance(fieldInfo.object.application),
-					formFieldComponent = abView.component(App),
+
+				let field = _Object.fields(col => col.id == columnId)[0],
+					fieldComponent = field.formComponent(),
+					formFieldWidget = fieldComponent.newInstance(field.object.application, _mockFormWidget),
+					formFieldComponent = formFieldWidget.component(App, idBase),
 					inputView = formFieldComponent.ui;
 
-// WORKAROUND: add '[Current User]' option to the user data field
-if (fieldInfo.key == 'user') {
-	inputView.options = inputView.options || [];
-	inputView.options.unshift({
-		id: 'ab-current-user',
-		value: '*[Current User]'
-	});
-}
+				// WORKAROUND: add '[Current User]' option to the user data field
+				if (field.key == 'user') {
+					inputView.options = inputView.options || [];
+					inputView.options.unshift({
+						id: 'ab-current-user',
+						value: '*[Current User]'
+					});
+				}
 
 				// Change component to display value
 				$viewCond.removeView($viewCond.getChildViews()[3]);
@@ -239,8 +230,8 @@ if (fieldInfo.key == 'user') {
 				formFieldComponent.init();
 
 				// Show custom display of data field
-				if (fieldInfo.customDisplay)
-					fieldInfo.customDisplay(fieldInfo, App, $viewCond.getChildViews()[3].$view);
+				if (field.customDisplay)
+					field.customDisplay({}, App, $viewCond.getChildViews()[3].$view);
 
 				// _logic.refreshFieldList();
 				// $$(this).adjust();
@@ -249,30 +240,54 @@ if (fieldInfo.key == 'user') {
 
 			},
 
+			toggleForm: () => {
+
+				let $form = $$(ids.form);
+				if ($form) {
+					let childViews = $form.getChildViews();
+					if (childViews && childViews.length) {
+						$form.show();
+					}
+					else {
+						$form.hide();
+					}
+				}
+
+			},
+
+			/**
+			 * @method getValue
+			 * @return {Array} - [
+			 * 						{
+			 * 							fieldId: {UUID}
+			 * 							value: {Object}
+			 * 						}, ...
+			 * 					]
+			 */
 			getValue: function () {
 
-				var result = [];
+				let result = [];
 
-				var $viewForm = $$(ids.updateForm);
-				if ($viewForm) {
-					$viewForm.getChildViews().forEach($viewCond => {
+				let $form = $$(ids.form);
+				if ($form) {
+					$form.getChildViews().forEach($viewCond => {
 
 						// Ignore "Add new" button
 						if (!$viewCond || !$viewCond.$$) return;
 
-						var $fieldElem = $viewCond.$$(ids.field);
+						let $fieldElem = $viewCond.$$(ids.field);
 						if (!$fieldElem) return;
 
-						var fieldId = $fieldElem.getValue();
+						let fieldId = $fieldElem.getValue();
 						if (!fieldId) return;
 
-						var $valueElem = $viewCond.getChildViews()[3];
+						let $valueElem = $viewCond.getChildViews()[3];
 						if (!$valueElem) return;
 
-						var fieldInfo = _Object.fields(f => f.id == fieldId)[0];
+						let fieldInfo = _Object.fields(f => f.id == fieldId)[0];
 
 						// Get value from data field manager
-						var val = fieldInfo.getValue($valueElem);
+						let val = fieldInfo.getValue($valueElem);
 
 						// Add to output
 						result.push({
@@ -283,47 +298,52 @@ if (fieldInfo.key == 'user') {
 					});
 				}
 
-
 				return result;
 
 			},
 
+			/**
+			 * @method setValue
+			 * @param settings {Array} - [
+			 * 								{
+			 * 									fieldId: {UUID}
+			 * 									value: {Object}
+			 * 								}, ...
+			 * 							]
+			 */
 			setValue: function (settings) {
 
-				settings = settings || [];
-
-				var $viewForm = $$(ids.updateForm);
-				if (!$viewForm || settings.length < 1) return;
+				let $form = $$(ids.form);
+				if (!$form) return;
 
 				// Redraw form with no elements
-				webix.ui([], $viewForm);
+				webix.ui([], $form);
 
-				// Add "new filter" button
-				if (settings.length == 0) {
-					_logic.toggleAddNewButton();
-				}
+				settings = settings || [];
+				if (settings.length < 1) return;
 
 				settings.forEach(item => {
 
-					var $viewCond = $$(_logic.addUpdateValue());
+					let $viewItem = $$(_logic.addItem());
 
-					$viewCond.$$(ids.field).setValue(item.fieldId);
+					$viewItem.$$(ids.field).setValue(item.fieldId);
 
-					var $valueElem = $viewCond.getChildViews()[3];
+					let $valueElem = $viewItem.getChildViews()[3];
 					if (!$valueElem) return;
 
-					var fieldInfo = _Object.fields(f => f.id == item.fieldId)[0];
+					let fieldInfo = _Object.fields(f => f.id == item.fieldId)[0];
 					if (!fieldInfo) return;
 
 					// Set value
-					var rowData = {};
+					let rowData = {};
 					rowData[fieldInfo.columnName] = item.value;
 					fieldInfo.setValue($valueElem, rowData);
 
 				});
 
-			}
+				_logic.toggleForm();
 
+			}
 
 		}
 
@@ -332,8 +352,9 @@ if (fieldInfo.key == 'user') {
 			rows: [
 				{
 					view: "form",
-					id: ids.updateForm,
+					id: ids.form,
 					hidden: true,
+					borderless: true,
 					elements: []
 				},
 				_logic.getAddButtonUI()
@@ -342,7 +363,7 @@ if (fieldInfo.key == 'user') {
 
 		// Interface methods for parent component:
 		this.objectLoad = _logic.objectLoad;
-		this.addUpdateValue = _logic.addUpdateValue;
+		this.addItem = _logic.addItem;
 		this.getValue = _logic.getValue;
 		this.setValue = _logic.setValue;
 

@@ -20,11 +20,6 @@ module.exports = class ABScope extends ABModelBase {
 				edgeName: "scopeObject",
 				linkCollection: "object",
 				direction: this.relateDirection.OUTBOUND
-			},
-
-			users: {
-				edgeName: "scopeUser",
-				direction: this.relateDirection.OUTBOUND
 			}
 
 		};
@@ -51,19 +46,35 @@ module.exports = class ABScope extends ABModelBase {
 
 		return new Promise((resolve, reject) => {
 
+			// this.query(`
+			// 	FOR sUser IN scopeUser
+			// 	FOR s IN scope
+			// 	FOR sObj IN scopeObject
+			// 	FOR r in role
+			// 	FOR rScope in roleScope
+			// 	FILTER sUser.username == '${options.username}'
+			// 	&& (s.allowAll == true || s.allowAll == '1' || [${options.objectIds.join(',')}] ANY == sObj._to
+			// 	&& (s.allowAll == true || s.allowAll == '1' || sObj._from == s._id)
+			// 	&& sUser._from == r._id
+			// 	&& sUser._to == s._id
+			// 	&& rScope._from == r._id
+			// 	&& rScope._to == s._id
+			// 	RETURN s
+			// `)
+
 			this.query(`
-				FOR sUser IN scopeUser
+				FOR rUser IN roleUser
 				FOR s IN scope
-				FOR sObj IN scopeObject
 				FOR r in role
 				FOR rScope in roleScope
-				FILTER sUser.username == '${options.username}'
-				&& (s.allowAll == true || s.allowAll == '1' || [${options.objectIds.join(',')}] ANY == sObj._to)
-				&& (s.allowAll == true || s.allowAll == '1' || sObj._from == s._id)
-				&& sUser._from == r._id
-				&& sUser._to == s._id
+				FILTER rUser._from == r._id
+				&& rUser._to == 'username/${options.username}'
 				&& rScope._from == r._id
 				&& rScope._to == s._id
+				&& (s.allowAll == true || 
+						s.allowAll == '1' || 
+						(FOR sObj IN scopeObject FILTER sObj._from == s._id RETURN sObj._to).length > 0
+					)
 				RETURN s
 			`)
 				.catch(reject)
