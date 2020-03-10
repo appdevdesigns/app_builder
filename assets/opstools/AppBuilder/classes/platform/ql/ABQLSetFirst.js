@@ -6,22 +6,16 @@
  *
  */
 
-const ABQL = require("./ABQL.js");
-const ABQLRow = require("./ABQLRow.js");
+const ABQLSetFirstCore = require("../../core/ql/ABQLSetFirstCore.js");
 
-class ABQLSetFirst extends ABQL {
-    constructor(attributes, prevOP, task, application) {
-        super(attributes, [], prevOP, task, application);
-    }
-
+class ABQLSetFirst extends ABQLSetFirstCore {
+    // constructor(attributes, prevOP, task, application) {
+    //     super(attributes, [], prevOP, task, application);
+    // }
     ///
     /// Instance Methods
     ///
 }
-
-ABQLSetFirst.key = "first";
-ABQLSetFirst.label = "first";
 ABQLSetFirst.uiIndentNext = 20;
-ABQLSetFirst.NextQLOps = ABQLRow;
 
 module.exports = ABQLSetFirst;

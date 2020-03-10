@@ -7,57 +7,18 @@
  *
  *
  */
-const QLFind = require("./ABQLFind.js");
 
-const ABQL = require("./ABQL.js");
+const ABQLRootObjectCore = require("../../core/ql/ABQLRootObjectCore.js");
 
-var NextQLOps = [QLFind];
-
-var ParameterDefinitions = [
-    {
-        type: "objectName",
-        name: "name"
-    }
-];
-
-class ABQLObject extends ABQL {
-    constructor(attributes, task, application) {
-        // NOTE: keep this so we can insert the prevOp == null
-        super(attributes, ParameterDefinitions, null, task, application);
-    }
+class ABQLObject extends ABQLRootObjectCore {
+    // constructor(attributes, task, application) {
+    //     // NOTE: keep this so we can insert the prevOp == null
+    //     super(attributes, ParameterDefinitions, null, task, application);
+    // }
 
     ///
     /// Instance Methods
     ///
-    fromAttributes(attributes) {
-        super.fromAttributes(attributes);
-
-        if (!this.object && this.params) {
-            var objNameDef = this.parameterDefinitions.find((pDef) => {
-                return pDef.type == "objectName";
-            });
-            if (objNameDef) {
-                this.objectID = this.params[objNameDef.name];
-                this.object = this.objectLookup(this.objectID);
-            }
-        }
-    }
-
-    toObj() {
-        var obj = super.toObj();
-
-        // if we don't have an objectID, but we have an objectName parameter
-        // definition then save that as our objectID
-        if (!obj.objectID && this.params) {
-            var objNameDef = this.parameterDefinitions.find((pDef) => {
-                return pDef.type == "objectName";
-            });
-            if (objNameDef) {
-                obj.objectID = this.params[objNameDef.name];
-            }
-        }
-        return obj;
-    }
 
     /*
      * @method paramChanged()
@@ -80,20 +41,7 @@ class ABQLObject extends ABQL {
             }
         }
     }
-
-    /// ABApplication data methods
-
-    // paramsValid(queryString) {
-    //     if (super.paramsValid(queryString)) {
-    //         this.object = this.objectLookup(this.params["name"]);
-    //         return true;
-    //     }
-    //     return false;
-    // }
 }
-ABQLObject.key = "object";
-ABQLObject.label = "object";
 ABQLObject.uiIndentNext = 10;
-ABQLObject.NextQLOps = [QLFind];
 
 module.exports = ABQLObject;

@@ -64,7 +64,6 @@ module.exports = class ABProcessTaskServiceQuery extends ABProcessTaskServiceQue
     propertiesStash(id) {
         var ids = this.propertyIDs(id);
         this.name = this.property(ids.name);
-        // var temp = ABQLManager.parse(ids.query, this, this.application);
         this.qlObj = ABQLManager.parse(ids.query, this, this.application);
     }
 };
