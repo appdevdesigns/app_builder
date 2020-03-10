@@ -137,7 +137,7 @@ module.exports = class ABViewDataview extends ABViewDataviewCore {
 			// initial the link page helper
 			linkPage.init({
 				view: this,
-				dataview: dc
+				datacollection: dc
 			});
 
 			com.onShow();
