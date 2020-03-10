@@ -54,25 +54,17 @@ module.exports = {
 
 	},
 
-	// GET: /app_builder/user/:user/rolescope
-	getRoleScope: function (req, res) {
+	// GET: /app_builder/user/:user/roles
+	getRoleScopes: function (req, res) {
 
 		let username = req.param('user');
 
 		ABGraphRole.query(`
-			FOR join IN scopeUser
+			FOR join IN roleUser
 			FOR r in role
-			FOR s in scope
-			FOR rScope in roleScope
-			FILTER join.username == '${username}'
+			FILTER join._to == 'username/${username}'
 			&& join._from == r._id
-			&& join._to == s._id
-			&& rScope._from == r._id
-			&& rScope._to == s._id
-			RETURN {
-				role: r,
-				scope: s
-			}
+			RETURN r
 		`)
 		.catch(res.AD.error)
 		.then(result => {

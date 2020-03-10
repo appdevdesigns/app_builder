@@ -133,8 +133,8 @@ module.exports = {
     'get /app_builder/user/list':
         'app_builder/ABUserController.getUserList',
 
-    'get /app_builder/user/:user/rolescope':
-        'app_builder/ABUserController.getRoleScope',
+    'get /app_builder/user/:user/roles':
+        'app_builder/ABUserController.getRoleScopes',
 
 
     /* Roles */
@@ -165,10 +165,10 @@ module.exports = {
     'get /app_builder/role/:roleId/users':
         'app_builder/ABRoleController.roleUsers',
 
-    'post /app_builder/role/:roleId/scope/:scopeId/username/:username':
+    'post /app_builder/role/:roleId/username/:username':
         'app_builder/ABRoleController.addUser',
 
-    'delete /app_builder/role/:roleId/scope/:scopeId/username/:username':
+    'delete /app_builder/role/:roleId/username/:username':
         'app_builder/ABRoleController.removeUser',
 
 

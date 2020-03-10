@@ -36,17 +36,17 @@ module.exports = class AB_Work_Admin_Role_User extends ABComponent {
 					view: 'datatable',
 					columns: [
 						{
-							id: "username", header: '<span class="fa fa-user"></span> Username', width: 200,
-							template: function (scopeUser) {
-								return scopeUser.username;
+							id: "username", header: '<span class="fa fa-user"></span> Username', fillspace: true,
+							template: function (user) {
+								return user ? user.value : "";
 							},
 						},
-						{
-							id: "scope", header: '<span class="fa fa-street-view"></span> Scope', fillspace: true,
-							template: function (scopeUser) {
-								return scopeUser.scope ? scopeUser.scope.name : "";
-							},
-						},
+						// {
+						// 	id: "scope", header: '<span class="fa fa-street-view"></span> Scope', fillspace: true,
+						// 	template: function (scopeUser) {
+						// 		return scopeUser.scope ? scopeUser.scope.name : "";
+						// 	},
+						// },
 						{
 							id: "remove", header: "", width: 40,
 							template: "<div class='remove'>{common.trashIcon()}</div>",
@@ -135,9 +135,9 @@ module.exports = class AB_Work_Admin_Role_User extends ABComponent {
 							console.error(err);
 							_logic.ready();
 						})
-						.then(scopeUsers => {
+						.then(usernames => {
 
-							this._userDC.parse(scopeUsers);
+							this._userDC.parse(usernames);
 							_logic.ready();
 
 						});
@@ -159,17 +159,16 @@ module.exports = class AB_Work_Admin_Role_User extends ABComponent {
 
 							_logic.busy();
 
-							let scopeUser = this._userDC.getItem(rowId);
+							let user = this._userDC.getItem(rowId);
 							let role = _logic.getRole();
-							if (!scopeUser || !role) {
+							if (!user || !role) {
 								_logic.ready();
 								return;
 							}
 
-							let scopeId = scopeUser.scope.id;
-							let username = scopeUser.username;
+							let username = user.value;
 
-							role.userRemove(scopeId, username)
+							role.userRemove(username)
 								.catch(err => {
 									console.error(err);
 									_logic.ready();

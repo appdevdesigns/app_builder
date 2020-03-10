@@ -50,26 +50,26 @@ OP.Model.extend('opstools.BuildApp.ABRole',
 
 		},
 
-		roleScopeOfUser: function (username) {
+		rolesOfUser: function (username) {
 
 			return OP.Comm.Socket.get({
-				url: `/app_builder/user/${username}/rolescope`
+				url: `/app_builder/user/${username}/roles`
 			});
 
 		},
 
-		scopeAddUser: function (roleId, scopeId, username) {
+		addUser: function (roleId, username) {
 
 			return OP.Comm.Service.post({
-				url: `/app_builder/role/${roleId}/scope/${scopeId}/username/${username}`
+				url: `/app_builder/role/${roleId}/username/${username}`
 			});
 
 		},
 
-		scopeRemoveUser: function (roleId, scopeId, username) {
+		removeUser: function (roleId, username) {
 
 			return OP.Comm.Service.delete({
-				url: `/app_builder/role/${roleId}/scope/${scopeId}/username/${username}`
+				url: `/app_builder/role/${roleId}/username/${username}`
 			});
 
 		},
