@@ -67,6 +67,10 @@ function getJuntionInfo(objectName, linkObjectName) {
 	};
 }
 
+function getConstraintName(tableName, columnName) {
+	return (AppBuilder.rules.toJunctionTableFK(tableName, columnName) || "").replace(/[^a-zA-Z0-9\_]/g, "");
+}
+
 module.exports = class ABFieldConnect extends ABFieldConnectCore {
 
 	constructor(values, object) {
@@ -155,7 +159,8 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
 								if (!linkObject.isExternal && this.connName == linkObject.connName) {
 									linkCol.references(linkPK)
 										.inTable(linkTableName)
-										.onDelete('SET NULL');
+										.onDelete('SET NULL')
+										.withKeyName(getConstraintName(this.object.name, this.columnName));
 								}
 
 								if (exists)
@@ -204,7 +209,8 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
 									if (!linkObject.isExternal && this.connName == linkObject.connName) {
 										linkCol.references(linkPK)
 												.inTable(linkTableName)
-												.onDelete('SET NULL');
+												.onDelete('SET NULL')
+												.withKeyName(getConstraintName(this.object.name, this.columnName));
 									}
 
 									t.unique(this.columnName);
@@ -253,7 +259,8 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
 								if (!this.object.isExternal && this.connName == linkObject.connName) {
 									linkCol.references(this.object.PK())
 											.inTable(tableName)
-											.onDelete('SET NULL');
+											.onDelete('SET NULL')
+											.withKeyName(getConstraintName(linkObject.name, linkColumnName));
 								}
 
 								if (exists)
