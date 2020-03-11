@@ -41,6 +41,32 @@ class ABQLObject extends ABQLRootObjectCore {
             }
         }
     }
+
+    /**
+     * @method parseRow()
+     * When it is time to pull the information from the properties panel,
+     * use this fn to get the current Row of data.
+     *
+     * This fn() will populate the this.params with the values for each
+     * of our .parameterDefinitions.
+     *
+     * @param {webixNode} row
+     *        the current webix node that contains the ROW defining the
+     *        operation and it's parameters.
+     * @param {string} id
+     *        the unique id for where the properties panel is displayed.
+     */
+    parseRow(row, id) {
+        super.parseRow(row, id);
+
+        // for an Object operation, we need to set our .objectID after
+        // the values are parsed.
+
+        if (this.params.name) {
+            this.objectID = this.params.name;
+            this.object = this.objectLookup(this.params.name);
+        }
+    }
 }
 ABQLObject.uiIndentNext = 10;
 

@@ -6,52 +6,9 @@
  *
  */
 
-const QLObject = require("./ABQLRootObject.js");
-
-var QLOps = [QLObject];
+const ABQLManagerCore = require("../../core/ql/ABQLManagerCore.js");
 
 var ABQLManager = {
-    /*
-     * @function currentParser
-     * return an ABQL object that best describes the query given
-     * @param {string} query
-     * 		 the entered query string
-     * @return [{ABQL},...]
-     */
-    // currentParser: function(query, task, application) {
-    //     var matchingOPs = [];
-    //     QLOps.forEach((Op) => {
-    //         if (Op.parseQuery(query)) {
-    //             matchingOPs.push(Op);
-    //         }
-    //     });
-    //     if (matchingOPs.length == 1) {
-    //         // let this Operation initialize and return the last OP
-    //         // in the chain
-    //         var qlOP = new matchingOPs[0]({}, task, application);
-    //         qlOP.fromQuery(query);
-    //         return qlOP.lastOP();
-    //     } else {
-    //         // return a generic parser
-    //         return {
-    //             toQuery: function() {
-    //                 if (matchingOPs.length == 0) {
-    //                     query = query.slice(0, -1);
-    //                 }
-
-    //                 return query;
-    //             },
-    //             suggestions: function() {
-    //                 var options = [];
-    //                 QLOps.forEach((Op) => {
-    //                     options.push(Op.option);
-    //                 });
-    //                 return options.join("\n");
-    //             }
-    //         };
-    //     }
-    // },
-
     /**
      * @method fromAttributes()
      * return an {ABQL} object that represents the given attributes that
@@ -64,25 +21,7 @@ var ABQLManager = {
      *		  the current ABApplication we are operating under.
      * @return {ABQL} | null
      */
-    fromAttributes: function(attributes, task, application) {
-        if (!attributes) {
-            return null;
-        }
-        var matchingOPs = [];
-        QLOps.forEach((Op) => {
-            if (Op.key == attributes.key) {
-                matchingOPs.push(Op);
-            }
-        });
-        if (matchingOPs.length == 1) {
-            // let this Operation initialize and return the last OP
-            // in the chain
-            var qlOP = new matchingOPs[0](attributes, task, application);
-            return qlOP;
-        } else {
-            return null;
-        }
-    },
+    fromAttributes: ABQLManagerCore.fromAttributes,
 
     /**
      * @method ids()
@@ -105,21 +44,21 @@ var ABQLManager = {
      * The component will support:
      *		.ui(id) : returns a webix ui definition for the current builder
      *		.init(id) : performs any special actions to prepare the webix ui
-     * @param {object} attributes
-     *		  the values returned from the previous .toObj() call
+     * @param {object} rootOP
+     *		  the root ABQLxxxx operation
      * @param {ABProcessTask***} task
      *		  the current Process Task that is requesting the data.
      * @param {ABApplication} application
      *		  the ABApplication object that is currently active.
      * @return {object}
      */
-    builder: function(attributes, task, application) {
-        var rootOP = this.fromAttributes(attributes, task, application);
+    builder: function(rootOP, task, application) {
+        // var rootOP = this.fromAttributes(attributes, task, application);
 
         return {
             ui: function(id) {
                 var options = [{ id: 0, value: "choose Root" }];
-                QLOps.forEach((op) => {
+                ABQLManagerCore.QLOps.forEach((op) => {
                     options.push({ id: op.key, value: op.label });
                 });
 
@@ -149,9 +88,11 @@ var ABQLManager = {
                                             if (newValue == oldValue) {
                                                 return;
                                             }
-                                            var newOP = QLOps.find((op) => {
-                                                return op.key == newValue;
-                                            });
+                                            var newOP = ABQLManagerCore.QLOps.find(
+                                                (op) => {
+                                                    return op.key == newValue;
+                                                }
+                                            );
                                             if (!newOP) {
                                                 resetValue();
                                                 return;
@@ -188,7 +129,6 @@ var ABQLManager = {
                                                     cancel: "no",
                                                     callback: (result) => {
                                                         if (result) {
-                                                            debugger;
                                                             // remove the current additional Rows:
                                                             var thisView = $$(
                                                                 ids.root
@@ -299,6 +239,14 @@ var ABQLManager = {
 
                 // now get currOP to initialize from it's parameters:
                 currOP.parseRow(row, id);
+
+                // carry forward any .object info if not already established
+                // by the .parseRow():
+                if (!currOP.object && prevOP) {
+                    currOP.object = prevOP.object;
+                    currOP.objectID = currOP.object ? currOP.object.id : null;
+                }
+
                 var nextRow = parseCurrent(
                     rows,
                     currOP.constructor.NextQLOps,
@@ -309,11 +257,8 @@ var ABQLManager = {
             }
             return null;
         }
-        var operation = parseCurrent(rows, QLOps, null);
-        if (operation) {
-            return operation.toObj();
-        }
-        return null;
+        var operation = parseCurrent(rows, ABQLManagerCore.QLOps, null);
+        return operation;
     }
 };
 module.exports = ABQLManager;

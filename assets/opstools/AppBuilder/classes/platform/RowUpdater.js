@@ -190,8 +190,16 @@ module.exports = class RowUpdater extends ABComponent {
             },
 
             selectField: function(columnId, $viewCond) {
-                let field = _Object.fields((col) => col.id == columnId)[0],
-                    fieldComponent = field.formComponent(),
+                let field = _Object.fields((col) => col.id == columnId)[0];
+                if (!field) {
+                    console.error(
+                        "RowUpdater.selectField() could not find a field for [" +
+                            columnId +
+                            "]"
+                    );
+                    return;
+                }
+                let fieldComponent = field.formComponent(),
                     formFieldWidget = fieldComponent.newInstance(
                         field.object.application,
                         _mockFormWidget

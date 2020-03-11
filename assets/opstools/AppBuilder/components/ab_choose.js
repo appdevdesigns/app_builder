@@ -1,4 +1,3 @@
-
 /*
  * AB Choose
  *
@@ -9,89 +8,76 @@
  */
 
 const ABComponent = require("../classes/platform/ABComponent");
-const AB_Choose_Config = require('./ab_choose_config');
-const AB_Choose_List = require('./ab_choose_list');
-const AB_Choose_Form = require('./ab_choose_form');
+const AB_Choose_Config = require("./ab_choose_config");
+const AB_Choose_List = require("./ab_choose_list");
+const AB_Choose_Form = require("./ab_choose_form");
 
+module.exports = class ABChoose extends ABComponent {
+    // (idBase, function(App) {
 
-module.exports = class ABChoose extends ABComponent {   // (idBase, function(App) {
+    constructor(App) {
+        super(App, "ab_choose");
 
+        var ids = {
+            component: this.unique("component")
+        };
 
-	constructor(App) {
-		super(App, 'ab_choose');
+        // Define the external components used in this Component:
+        var AppConfig = new AB_Choose_Config(App);
+        var AppList = new AB_Choose_List(App);
+        var AppForm = new AB_Choose_Form(App);
 
+        // This component's UI definition:
+        // Application multi-views
+        this.ui = {
+            view: "multiview",
+            animate: false,
+            id: ids.component,
+            cells: [AppList.ui, AppForm.ui, AppConfig.ui]
+        };
 
-		var ids = {
-			component: 	this.unique('component')
-		}
+        // This component's Init definition:
+        this.init = function() {
+            // get all the objects and store them locally:
+            OP.Model.get("opstools.BuildApp.ABApplication")
+                .staticData.objectFind()
+                // .catch(reject)
+                .then((objects) => {
+                    webix.storage.local.put("_ABObjects", objects);
+                    AppConfig.init();
+                    AppList.init();
+                    AppForm.init();
+                });
 
+            AppList.on("view.config", () => {
+                AppConfig.show();
+            });
 
-		// Define the external components used in this Component:
-		var AppConfig = new AB_Choose_Config(App);
-		var AppList = new AB_Choose_List(App); 
-		var AppForm = new AB_Choose_Form(App);  
+            AppConfig.on("view.list", () => {
+                AppList.show();
+            });
 
+            // AppList.show();
+        };
 
-		// This component's UI definition:
-		// Application multi-views
-		this.ui = {
-			view:"multiview",
-			animate:false,
-			id: ids.component,
-			cells: [
-				AppList.ui,
-				AppForm.ui,
-				AppConfig.ui
-			]
-		};
+        this.actions({
+            /**
+             * @function transitionApplicationChooser
+             *
+             * Switch the AppBuilder UI to show the Application Chooser component.
+             */
+            transitionApplicationChooser: function() {
+                $$(ids.component).show();
+            }
+        });
 
+        var _logic = {
+            show: () => {
+                AppList.show();
+            }
+        };
 
-		// This component's Init definition:
-		this.init = function() {
-
-			AppConfig.init();
-			AppList.init();
-			AppForm.init();
-
-			AppList.on('view.config', ()=>{
-				AppConfig.show();
-			})
-
-			AppConfig.on('view.list', ()=>{
-				AppList.show();
-			})
-
-			// AppList.show();
-		}
-
-
-		this.actions({
-
-			/**
-			 * @function transitionApplicationChooser
-			 *
-			 * Switch the AppBuilder UI to show the Application Chooser component.
-			 */
-			transitionApplicationChooser:function() {
-				$$(ids.component).show();
-			}
-
-		})
-
-
-		var _logic = {
-
-			show: () => {
-
-				AppList.show();
-
-			}
-
-		}
-
-		this._logic = _logic;
-		this.show = _logic.show;
-
-	}
-
+        this._logic = _logic;
+        this.show = _logic.show;
+    }
 };
