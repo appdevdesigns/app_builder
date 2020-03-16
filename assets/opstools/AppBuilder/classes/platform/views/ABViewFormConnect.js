@@ -319,11 +319,11 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
 		if (view.settings.objectWorkspace &&
 			view.settings.objectWorkspace.filterConditions &&
 			view.settings.objectWorkspace.filterConditions.rules) {
-			$$(ids.buttonFilter).define('badge', view.settings.objectWorkspace.filterConditions.rules.length);
+			$$(ids.buttonFilter).define('badge', view.settings.objectWorkspace.filterConditions.rules.length || null);
 			$$(ids.buttonFilter).refresh();
 		}
 		else {
-			$$(ids.buttonFilter).define('badge', 0);
+			$$(ids.buttonFilter).define('badge', null);
 			$$(ids.buttonFilter).refresh();
 		}
 

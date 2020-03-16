@@ -214,11 +214,11 @@ module.exports = class ABViewConditionalContainer extends ABViewConditionalConta
 
 		if (view.settings.filterConditions &&
 			view.settings.filterConditions.rules) {
-			$$(ids.buttonFilter).define('badge', view.settings.filterConditions.rules.length);
+			$$(ids.buttonFilter).define('badge', view.settings.filterConditions.rules.length || null);
 			$$(ids.buttonFilter).refresh();
 		}
 		else {
-			$$(ids.buttonFilter).define('badge', 0);
+			$$(ids.buttonFilter).define('badge', null);
 			$$(ids.buttonFilter).refresh();
 		}
 

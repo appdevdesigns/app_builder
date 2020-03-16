@@ -990,7 +990,7 @@ module.exports = class ABViewGrid extends ABViewGridCore {
 
 				let sortRules = sort_settings || [];
 
-				$$(ids.buttonSort).define('badge', sortRules.length);
+				$$(ids.buttonSort).define('badge', sortRules.length || null);
 				$$(ids.buttonSort).refresh();
 
 				// client sort data
@@ -1003,7 +1003,7 @@ module.exports = class ABViewGrid extends ABViewGridCore {
 				filterRules = filterRules || [];
 
 				if ($$(ids.buttonFilter)) {
-					$$(ids.buttonFilter).define('badge', filterRules.length);
+					$$(ids.buttonFilter).define('badge', filterRules.length || null);
 					$$(ids.buttonFilter).refresh();
 				}
 
@@ -1249,11 +1249,11 @@ module.exports = class ABViewGrid extends ABViewGridCore {
 		// set badge numbers to setting buttons
 		if (view.settings.objectWorkspace &&
 			view.settings.objectWorkspace.hiddenFields) {
-			$$(ids.buttonFieldsVisible).define('badge', view.settings.objectWorkspace.hiddenFields.length);
+			$$(ids.buttonFieldsVisible).define('badge', view.settings.objectWorkspace.hiddenFields.length || null);
 			$$(ids.buttonFieldsVisible).refresh();
 		}
 		else {
-			$$(ids.buttonFieldsVisible).define('badge', 0);
+			$$(ids.buttonFieldsVisible).define('badge', null);
 			$$(ids.buttonFieldsVisible).refresh();
 		}
 
@@ -1263,7 +1263,7 @@ module.exports = class ABViewGrid extends ABViewGridCore {
 			$$(ids.buttonFilterData).refresh();
 		}
 		else {
-			$$(ids.buttonFilterData).define('badge', 0);
+			$$(ids.buttonFilterData).define('badge', null);
 			$$(ids.buttonFilterData).refresh();
 		}
 
@@ -1273,29 +1273,29 @@ module.exports = class ABViewGrid extends ABViewGridCore {
 			$$(ids.buttonFieldsFreeze).refresh();
 		}
 		else {
-			$$(ids.buttonFieldsFreeze).define('badge', 0);
+			$$(ids.buttonFieldsFreeze).define('badge', null);
 			$$(ids.buttonFieldsFreeze).refresh();
 		}
 
 
 		if (view.settings.objectWorkspace &&
 			view.settings.objectWorkspace.summaryColumns) {
-			$$(ids.buttonSummaryFields).define('badge', view.settings.objectWorkspace.summaryColumns.length);
+			$$(ids.buttonSummaryFields).define('badge', view.settings.objectWorkspace.summaryColumns.length || null);
 			$$(ids.buttonSummaryFields).refresh();
 		}
 		else {
-			$$(ids.buttonSummaryFields).define('badge', 0);
+			$$(ids.buttonSummaryFields).define('badge', null);
 			$$(ids.buttonSummaryFields).refresh();
 		}
 
 
 		if (view.settings.objectWorkspace &&
 			view.settings.objectWorkspace.countColumns) {
-			$$(ids.buttonCountFields).define('badge', view.settings.objectWorkspace.countColumns.length);
+			$$(ids.buttonCountFields).define('badge', view.settings.objectWorkspace.countColumns.length || null);
 			$$(ids.buttonCountFields).refresh();
 		}
 		else {
-			$$(ids.buttonCountFields).define('badge', 0);
+			$$(ids.buttonCountFields).define('badge', null);
 			$$(ids.buttonCountFields).refresh();
 		}
 
