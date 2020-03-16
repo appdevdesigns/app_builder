@@ -704,11 +704,11 @@ module.exports = class AB_Work_Datacollection_Workspace_Properties extends ABCom
 					datacollection.settings.objectWorkspace &&
 					datacollection.settings.objectWorkspace.filterConditions &&
 					datacollection.settings.objectWorkspace.filterConditions.rules) {
-					$$(ids.buttonFilter).define('badge', datacollection.settings.objectWorkspace.filterConditions.rules.length);
+					$$(ids.buttonFilter).define('badge', datacollection.settings.objectWorkspace.filterConditions.rules.length || null);
 					$$(ids.buttonFilter).refresh();
 				}
 				else {
-					$$(ids.buttonFilter).define('badge', 0);
+					$$(ids.buttonFilter).define('badge', null);
 					$$(ids.buttonFilter).refresh();
 				}
 
@@ -716,11 +716,11 @@ module.exports = class AB_Work_Datacollection_Workspace_Properties extends ABCom
 					datacollection.settings &&
 					datacollection.settings.objectWorkspace &&
 					datacollection.settings.objectWorkspace.sortFields) {
-					$$(ids.buttonSort).define('badge', datacollection.settings.objectWorkspace.sortFields.length);
+					$$(ids.buttonSort).define('badge', datacollection.settings.objectWorkspace.sortFields.length || null);
 					$$(ids.buttonSort).refresh();
 				}
 				else {
-					$$(ids.buttonSort).define('badge', 0);
+					$$(ids.buttonSort).define('badge', null);
 					$$(ids.buttonSort).refresh();
 				}
 			},

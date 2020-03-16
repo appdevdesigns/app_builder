@@ -617,29 +617,29 @@ module.exports = class ABViewForm extends ABViewFormCore {
 		if (!view) return;
 
 		if (view.settings.submitRules) {
-			$$(ids.buttonSubmitRules).define('badge', view.settings.submitRules.length || 0);
+			$$(ids.buttonSubmitRules).define('badge', view.settings.submitRules.length || null);
 			$$(ids.buttonSubmitRules).refresh();
 		}
 		else {
-			$$(ids.buttonSubmitRules).define('badge', 0);
+			$$(ids.buttonSubmitRules).define('badge', null);
 			$$(ids.buttonSubmitRules).refresh();
 		}
 
 		if (view.settings.displayRules) {
-			$$(ids.buttonDisplayRules).define('badge', view.settings.displayRules.length || 0);
+			$$(ids.buttonDisplayRules).define('badge', view.settings.displayRules.length || null);
 			$$(ids.buttonDisplayRules).refresh();
 		}
 		else {
-			$$(ids.buttonDisplayRules).define('badge', 0);
+			$$(ids.buttonDisplayRules).define('badge', null);
 			$$(ids.buttonDisplayRules).refresh();
 		}
 
 		if (view.settings.recordRules) {
-			$$(ids.buttonRecordRules).define('badge', view.settings.recordRules.length || 0);
+			$$(ids.buttonRecordRules).define('badge', view.settings.recordRules.length || null);
 			$$(ids.buttonRecordRules).refresh();
 		}
 		else {
-			$$(ids.buttonRecordRules).define('badge', 0);
+			$$(ids.buttonRecordRules).define('badge', null);
 			$$(ids.buttonRecordRules).refresh();
 		}
 

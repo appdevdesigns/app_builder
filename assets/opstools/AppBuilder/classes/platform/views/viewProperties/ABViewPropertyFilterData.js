@@ -586,7 +586,7 @@ module.exports = class ABViewPropertyFilterData extends ABViewProperty {
 					let filterRules = (rowFilter.getValue().rules || []);
 
 					// if ($$(ids.buttonFilter)) {
-					// 	$$(ids.buttonFilter).define('badge', filterRules.length);
+					// 	$$(ids.buttonFilter).define('badge', filterRules.length || null);
 					// 	$$(ids.buttonFilter).refresh();
 					// }
 

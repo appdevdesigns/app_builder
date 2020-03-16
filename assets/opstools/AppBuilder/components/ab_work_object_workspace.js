@@ -261,7 +261,7 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
                     type: "icon",
                     // minWidth: 105,
                     // autowidth: true,
-                    badge: 0,
+                    badge: null,
                     click: function () {
                         _logic.toolbarFieldsVisible(this.$view);
                     }
@@ -275,7 +275,7 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
                     type: "icon",
                     // minWidth: 70,
                     // autowidth: true,
-                    badge: 0,
+                    badge: null,
                     click: function () {
                         _logic.toolbarFilter(this.$view);
                     }
@@ -289,7 +289,7 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
                     type: "icon",
                     // minWidth: 60,
                     // autowidth: true,
-                    badge: 0,
+                    badge: null,
                     click: function () {
                         _logic.toolbarSort(this.$view);
                     }
@@ -303,7 +303,7 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
                     type: "icon",
                     // minWidth: 75,
                     // autowidth: true,
-                    badge: 0,
+                    badge: null,
                     click: function(){
                         _logic.toolbarFrozen(this.$view);
                     }
@@ -366,7 +366,7 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
                     type: "icon",
                     // minWidth: 65,
                     // autowidth: true,
-                    badge: 0,
+                    badge: null,
                     hidden:true,
                     click: function () {
                         _logic.toolbarMassUpdate(this.$view);
@@ -381,7 +381,7 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
                     type: "icon",
                     // minWidth: 85,
                     // autowidth: true,
-                    badge: 0,
+                    badge: null,
                     hidden:true,
                     click: function () {
                         _logic.toolbarDeleteSelected(this.$view);
@@ -885,7 +885,7 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
 					numberOfFilter = filterConditions.rules.length;
 
 				if (typeof(filterConditions) != "undefined") {
-                    $$(ids.buttonFilter).define('badge', numberOfFilter);
+                    $$(ids.buttonFilter).define('badge', numberOfFilter || null);
                     $$(ids.buttonFilter).refresh();
                 }
             },
@@ -901,7 +901,7 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
                 if (typeof(frozenID) != "undefined") {
                     var badgeNumber = DataTable.getColumnIndex(frozenID) + 1;
 
-                    $$(ids.buttonFrozen).define('badge', badgeNumber);
+                    $$(ids.buttonFrozen).define('badge', badgeNumber || null);
                     $$(ids.buttonFrozen).refresh();
                 }
             },
@@ -915,7 +915,7 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
                 var hiddenFields = CurrentObject.workspaceHiddenFields;
 
                 if (typeof(hiddenFields) != "undefined") {
-                    $$(ids.buttonFieldsVisible).define('badge', hiddenFields.length);
+                    $$(ids.buttonFieldsVisible).define('badge', hiddenFields.length || null);
                     $$(ids.buttonFieldsVisible).refresh();
                 }
             },
@@ -929,7 +929,7 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
                 var sortFields = CurrentObject.workspaceSortFields;
 
     			if (typeof(sortFields) != "undefined") {
-    				$$(ids.buttonSort).define('badge', sortFields.length);
+    				$$(ids.buttonSort).define('badge', sortFields.length || null);
     				$$(ids.buttonSort).refresh();
     			}
             },
