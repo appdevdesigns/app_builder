@@ -332,7 +332,7 @@ module.exports = {
     viewSave: function (req, res) {
         var appID = req.param('appID');
         var resolveUrl = req.body.resolveUrl;
-        var vals = req.body.data;
+        var vals = req.body.data || {};
         var updateItem;
 
         Promise.resolve()
@@ -367,24 +367,33 @@ module.exports = {
                     // update
                     if (updateItem) {
 
-                        // var ignoreProps = ['id', 'pages', '_pages'];
-                        var ignoreProps = ['id', 'application', 'pages', '_pages', 'views', '_views'];
+                        let ignoreProps = ['id', 'application', 'pages', '_pages', 'views', '_views'];
 
                         // clear old values
-                        for (var key in updateItem) {
+                        for (let key in updateItem) {
 
                             if (ignoreProps.indexOf(key) > -1)
                                 continue;
 
                             delete updateItem[key];
                         }
+
                         // add update values
-                        for (var key in vals) {
+                        for (let key in vals) {
 
                             if (ignoreProps.indexOf(key) > -1)
                                 continue;
 
                             updateItem[key] = vals[key];
+
+                        }
+
+                        // Update sub-views
+                        if (vals.views && vals.views.length) {
+                            updateItem._views = [];
+                            (vals.views || []).forEach(v => {
+                                updateItem._views.push(updateItem.viewNew(v, data.appClass, updateItem));
+                            });
                         }
 
                     }
