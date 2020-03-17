@@ -1,4 +1,3 @@
-
 /*
  * ab_work_object_list_newObject_blank
  *
@@ -8,30 +7,32 @@
 
 const ABComponent = require("../classes/platform/ABComponent");
 
-module.exports = class AB_Work_Object_List_NewObject_Blank extends ABComponent {   //.extend(idBase, function(App) {
+module.exports = class AB_Work_Object_List_NewObject_Blank extends ABComponent {
+    //.extend(idBase, function(App) {
 
     constructor(App) {
-        super(App, 'ab_work_object_list_newObject_blank');
+        super(App, "ab_work_object_list_newObject_blank");
         var L = this.Label;
 
         var labels = {
-            common : App.labels,
+            common: App.labels,
             component: {
-                placeholderName: L('ab.object.form.placeholderName', "*Object name"),
-                addNewObject: L('ab.object.form.addNewObject', "*Add Object")
+                placeholderName: L(
+                    "ab.object.form.placeholderName",
+                    "*Object name"
+                ),
+                addNewObject: L("ab.object.form.addNewObject", "*Add Object")
             }
-        }
+        };
 
         // internal list of Webix IDs to reference our UI components.
         var ids = {
-            component: this.unique('component'),
+            component: this.unique("component"),
 
-            form: this.unique('blank'),
-            buttonSave: this.unique('save'),
-            buttonCancel: this.unique('cancel')
-        }
-
-
+            form: this.unique("blank"),
+            buttonSave: this.unique("save"),
+            buttonCancel: this.unique("cancel")
+        };
 
         // Our webix UI definition:
         this.ui = {
@@ -42,12 +43,18 @@ module.exports = class AB_Work_Object_List_NewObject_Blank extends ABComponent {
                 id: ids.form,
                 width: 400,
                 rules: {
-
-// TODO:
-// name: inputValidator.rules.validateObjectName
+                    // TODO:
+                    // name: inputValidator.rules.validateObjectName
                 },
                 elements: [
-                    { view: "text", label: labels.common.formName, name: "name", required: true, placeholder: labels.component.placeholderName, labelWidth: 70 },
+                    {
+                        view: "text",
+                        label: labels.common.formName,
+                        name: "name",
+                        required: true,
+                        placeholder: labels.component.placeholderName,
+                        labelWidth: 70
+                    },
                     {
                         margin: 5,
                         cols: [
@@ -55,10 +62,10 @@ module.exports = class AB_Work_Object_List_NewObject_Blank extends ABComponent {
                             {
                                 view: "button",
                                 id: ids.buttonCancel,
-                                value: labels.common.cancel, 
+                                value: labels.common.cancel,
                                 css: "ab-cancel-button",
                                 autowidth: true,
-                                click: function () {
+                                click: function() {
                                     _logic.cancel();
                                 }
                             },
@@ -66,9 +73,9 @@ module.exports = class AB_Work_Object_List_NewObject_Blank extends ABComponent {
                                 view: "button",
                                 id: ids.buttonSave,
                                 value: labels.component.addNewObject,
-                                autowidth: true, 
+                                autowidth: true,
                                 type: "form",
-                                click: function () {
+                                click: function() {
                                     return _logic.save();
                                 }
                             }
@@ -78,50 +85,44 @@ module.exports = class AB_Work_Object_List_NewObject_Blank extends ABComponent {
             }
         };
 
-
-
         // Our init() function for setting up our UI
-        this.init = ( options ) => {
+        this.init = (options) => {
             // webix.extend($$(ids.form), webix.ProgressBar);
 
             // load up our callbacks.
-            for(var c in _logic.callbacks) {
+            for (var c in _logic.callbacks) {
                 _logic.callbacks[c] = options[c] || _logic.callbacks[c];
             }
+        };
 
-        }
-
-
-
-        // our internal business logic 
-        var _logic = this._logic = {
-
-            callbacks:{
-                onCancel: function() { console.warn('NO onCancel()!') },
-                onSave  : function(values, cb) { console.warn('NO onSave()!') },
+        // our internal business logic
+        var _logic = (this._logic = {
+            callbacks: {
+                onCancel: function() {
+                    console.warn("NO onCancel()!");
+                },
+                onSave: function(values, cb) {
+                    console.warn("NO onSave()!");
+                }
             },
 
-            
-            cancel:function() {
-
+            cancel: function() {
                 _logic.formClear();
                 _logic.callbacks.onCancel();
             },
 
-
-            formClear:function() {
+            formClear: function() {
                 $$(ids.form).clearValidation();
                 $$(ids.form).clear();
             },
 
-
             /**
              * @function save
              *
-             * verify the current info is ok, package it, and return it to be 
+             * verify the current info is ok, package it, and return it to be
              * added to the application.createModel() method.
              */
-            save:function() {
+            save: function() {
                 var saveButton = $$(ids.buttonSave);
                 saveButton.disable();
 
@@ -141,15 +142,36 @@ module.exports = class AB_Work_Object_List_NewObject_Blank extends ABComponent {
                 values.primaryColumnName = "uuid";
 
                 // now send data back to be added:
-                _logic.callbacks.onSave(values, function(validator) {
+                _logic.callbacks.onSave(values, function(err) {
+                    if (err) {
+                        console.error(err);
+                        var message = "the entered data is invalid";
+                        // if this was our OP.Validation() object:
+                        if (err.updateForm) {
+                            err.updateForm(Form);
+                        } else {
+                            if (err.code && err.data) {
+                                if (err.data.sqlMessage) {
+                                    message = err.data.sqlMessage;
+                                }
+                            } else {
+                                if (err.message) {
+                                    message = err.message;
+                                }
+                            }
+                        }
 
-                    if (validator) {
-                        validator.updateForm(Form);
+                        webix.alert({
+                            title: "Error creating Object " + values.name,
+                            ok: "fix it",
+                            text: message,
+                            type: "alert-error"
+                        });
 
                         // get notified if there was an error saving.
                         saveButton.enable();
-                        return Promise.reject("the enter data is invalid");
-                    } 
+                        return Promise.reject(message);
+                    }
 
                     // if there was no error, clear the form for the next
                     // entry:
@@ -158,28 +180,20 @@ module.exports = class AB_Work_Object_List_NewObject_Blank extends ABComponent {
 
                     return Promise.resolve();
                 });
-
             },
-
 
             /**
              * @function show()
              *
              * Show this component.
              */
-            show:function() {
-
-                if ($$(ids.component))
-                    $$(ids.component).show();
+            show: function() {
+                if ($$(ids.component)) $$(ids.component).show();
             }
-        }
-
-
+        });
 
         // Expose any globally accessible Actions:
         this.actions({
-
-
             /**
              * @function populateApplicationForm()
              *
@@ -187,11 +201,10 @@ module.exports = class AB_Work_Object_List_NewObject_Blank extends ABComponent {
              *
              * If no ABApplication is provided, then show an empty form. (create operation)
              *
-             * @param {ABApplication} Application   [optional] The current ABApplication 
+             * @param {ABApplication} Application   [optional] The current ABApplication
              *                                      we are working with.
              */
             // populateApplicationForm:function(Application){
-                
             //  _logic.formReset();
             //  if (Application) {
             //      // populate Form here:
@@ -200,16 +213,10 @@ module.exports = class AB_Work_Object_List_NewObject_Blank extends ABComponent {
             //  _logic.permissionPopulate(Application);
             //  _logic.show();
             // }
+        });
 
-        })
-
-
-
-        // 
+        //
         // Define our external interface methods:
-        // 
-
-
+        //
     }
-
-}
+};
