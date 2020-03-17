@@ -499,6 +499,7 @@ module.exports = class ABViewDetail extends ABViewDetailCore {
 		// set settings to component
 		newView.settings = newView.settings || {};
 		newView.settings.fieldId = field.id;
+		newView.settings.labelWidth = this.settings.labelWidth || ABViewDetailPropertyComponentDefaults.labelWidth;
 
 		// keep alias to support Query that contains alias name
 		// [alias].[columnName]

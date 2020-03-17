@@ -31,13 +31,11 @@ function _onShow(App, compId, instance, component) {
 		editPage: (!instance.settings.editForm || instance.settings.editForm == "none" ? false : true)
 	});
 
-	// remove 'editPage' event
-	if (instance._editPageEvent) {
-		field.off("editPage", component.logic.goToEditPage);
-	}
-
 	// listen 'editPage' event
-	instance._editPageEvent = field.on("editPage", component.logic.goToEditPage);
+	if (!instance._editPageEvent) {
+		instance._editPageEvent = true;
+		field.on("editPage", component.logic.goToEditPage);
+	}
 
 }
 
@@ -604,6 +602,12 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
 							let dc = editForm.datacollection;
 							if (dc) {
 								dc.setCursor(rowId);
+
+								if (!this.__editFormDcEvent) {
+									this.__editFormDcEvent = dc.on("initializedData", () => {
+										dc.setCursor(rowId);
+									});
+								}
 							}
 
 							component.logic.formReady($form);

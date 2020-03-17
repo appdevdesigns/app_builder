@@ -769,7 +769,8 @@ module.exports = class ABViewForm extends ABViewFormCore {
 						if (comp == null) return;
 
 						// var colName = field.columnName;
-						if (this._showed)
+						if (this._showed &&
+							comp.onShow)
 							comp.onShow();
 
 						// set value to each components
@@ -808,7 +809,8 @@ module.exports = class ABViewForm extends ABViewFormCore {
 						var comp = this.viewComponents[f.id];
 						if (comp == null) return;
 
-						if (this._showed)
+						if (this._showed &&
+							comp.onShow)
 							comp.onShow();
 
 						// set value to each components
