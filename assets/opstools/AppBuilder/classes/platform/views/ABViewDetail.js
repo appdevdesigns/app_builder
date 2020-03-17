@@ -49,53 +49,68 @@ module.exports = class ABViewDetail extends ABViewDetailCore {
             _logic.busy();
 
             let currView = _logic.currentEditObject();
+            currView.settings.dataviewID = dcId;
 
-            return Promise.resolve()
-                .then(() => {
-                    // remove all old field components
-                    if (oldDcId != null) return currView.clearFieldComponents();
-                })
-                .then(() => {
-                    // refresh UI
-                    currView.emit("properties.updated", currView);
+            return (
+                Promise.resolve()
+                    // .then(() => {
 
-                    _logic.busy();
+                    // 	// remove all old field components
+                    // 	if (oldDcId != null)
+                    // 		return currView.clearFieldComponents();
 
-                    // Update field options in property
-                    this.propertyUpdateFieldOptions(ids, currView, dcId);
+                    // })
+                    .then(() => {
+                        // refresh UI
+                        // currView.emit('properties.updated', currView);
 
-                    // add all fields to editor by default
-                    if (currView._views.length > 0) return Promise.resolve();
+                        // _logic.busy();
 
-                    let tasks = [];
-                    let fields = $$(ids.fields).find({});
-                    fields.reverse();
-                    fields.forEach((f, index) => {
-                        if (!f.selected) {
-                            let yPosition = fields.length - index - 1;
+                        // clear sub views
+                        currView._views = [];
 
-                            tasks.push(() =>
-                                currView
-                                    .addFieldToView(f, yPosition, ids, App)
-                                    .save()
-                            );
+                        // Update field options in property
+                        this.propertyUpdateFieldOptions(ids, currView, dcId);
 
-                            // update item to UI list
-                            f.selected = 1;
-                            $$(ids.fields).updateItem(f.id, f);
-                        }
-                    });
+                        // add all fields to editor by default
+                        if (currView._views.length > 0)
+                            return Promise.resolve();
 
-                    return tasks.reduce((promiseChain, currTask) => {
-                        return promiseChain.then(currTask);
-                    }, Promise.resolve([]));
-                })
-                .then(() => {
-                    currView.emit("properties.updated", currView);
-                    _logic.ready();
+                        // let tasks = [];
+                        let fields = $$(ids.fields).find({});
+                        fields.reverse();
+                        fields.forEach((f, index) => {
+                            if (!f.selected) {
+                                let yPosition = fields.length - index - 1;
 
-                    return Promise.resolve();
-                });
+                                // tasks.push(() => currView.addFieldToView(f, yPosition, ids, App).save());
+                                currView.addFieldToView(f, yPosition, ids, App);
+
+                                // update item to UI list
+                                f.selected = 1;
+                                $$(ids.fields).updateItem(f.id, f);
+                            }
+                        });
+
+                        return Promise.resolve();
+                        // return tasks.reduce((promiseChain, currTask) => {
+                        // 	return promiseChain.then(currTask);
+                        // }, Promise.resolve([]));
+                    })
+                    // Saving
+                    .then(() => {
+                        let includeSubViews = true;
+                        return currView.save(includeSubViews);
+                    })
+                    // Finally
+                    .then(() => {
+                        currView.emit("properties.updated", currView);
+
+                        _logic.ready();
+
+                        return Promise.resolve();
+                    })
+            );
         };
 
         _logic.listTemplate = (field, common) => {
@@ -149,6 +164,7 @@ module.exports = class ABViewDetail extends ABViewDetailCore {
                 view: "richselect",
                 label: L("ab.components.detail.dataSource", "*Data Source"),
                 labelWidth: App.config.labelWidthLarge,
+                skipAutoSave: true,
                 on: {
                     onChange: _logic.selectSource
                 }
@@ -343,48 +359,30 @@ module.exports = class ABViewDetail extends ABViewDetailCore {
                                 val = rowData[field.columnName];
 
                                 if (field.settings.isMultiple == 0) {
-                                    let myText = "";
-                                    let myVal =
-                                        "<ul class='webix_multicombo_listbox hideWebixMulticomboTag notRemovable'>";
+                                    let myVal = "";
 
                                     field.settings.options.forEach(function(
                                         options
                                     ) {
                                         if (options.id == val)
-                                            myVal +=
-                                                '<li class="webix_multicombo_value" style="line-height:24px; color: white; background: ' +
-                                                (field.settings.hasColors
-                                                    ? options.hex
-                                                    : "#666") +
-                                                ' !important;"><span>' +
-                                                options.text +
-                                                "</span></li>";
+                                            myVal = options.text;
                                     });
 
-                                    myVal += "</ul>";
+                                    if (field.settings.hasColors) {
+                                        let myHex = "#66666";
+                                        field.settings.options.forEach(function(
+                                            h
+                                        ) {
+                                            if (h.text == myVal) myHex = h.hex;
+                                        });
+                                        myVal =
+                                            '<span class="selectivity-multiple-selected-item rendered" style="background-color:' +
+                                            myHex +
+                                            ' !important;">' +
+                                            myVal +
+                                            "</span>";
+                                    }
 
-                                    val = myVal;
-                                } else {
-                                    let myVal =
-                                        "<ul class='webix_multicombo_listbox hideWebixMulticomboTag notRemovable'>";
-                                    let myIds = [];
-                                    val.forEach(function(vals) {
-                                        myIds.push(vals.id);
-                                    });
-                                    field.settings.options.forEach(function(
-                                        options
-                                    ) {
-                                        if (myIds.indexOf(options.id) > -1)
-                                            myVal +=
-                                                '<li class="webix_multicombo_value" style="line-height:24px; color: white; background: ' +
-                                                (field.settings.hasColors
-                                                    ? options.hex
-                                                    : "#666") +
-                                                ' !important;"><span>' +
-                                                options.text +
-                                                "</span></li>";
-                                    });
-                                    myVal += "</ul>";
                                     val = myVal;
                                 }
                                 break;
