@@ -686,7 +686,7 @@ module.exports = class ABFieldList extends ABFieldListCore {
 			}, App, row);
 
 			// Listen event when selectivity value updates
-			if (domNode && row.id && node) {
+			if (domNode && !readOnly &&row.id && node) {
 				domNode.addEventListener('change', (e) => {
 
 					// update just this value on our current object.model
@@ -811,7 +811,7 @@ module.exports = class ABFieldList extends ABFieldListCore {
 
 		detailComponentSetting.common = () => {
 			return {
-				key: (this.settings.isMultiple ? 'detailselectivity' : 'detailtext'),
+				key: (this.settings.isMultiple ? 'detailcustom' : 'detailtext'),
 			}
 		};
 
