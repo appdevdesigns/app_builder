@@ -12,7 +12,7 @@ function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
-function _onShow(App, compId, instance) {
+function _onShow(App, compId, instance, component) {
 
 	let elem = $$(compId);
 	if (!elem) return;
@@ -30,6 +30,14 @@ function _onShow(App, compId, instance) {
 		editable: (instance.settings.disable == 1 ? false : true),
 		editPage: (!instance.settings.editForm || instance.settings.editForm == "none" ? false : true)
 	});
+
+	// remove 'editPage' event
+	if (instance._editPageEvent) {
+		field.off("editPage", component.logic.goToEditPage);
+	}
+
+	// listen 'editPage' event
+	instance._editPageEvent = field.on("editPage", component.logic.goToEditPage);
 
 }
 
@@ -90,7 +98,7 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
 			logic: baseComp.logic,
 			onShow: () => {
 
-				_onShow(App, ids.component, this);
+				_onShow(App, ids.component, this, baseComp);
 
 			}
 		}
@@ -470,20 +478,6 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
 				clearOnLoad: component.logic.callbackClearOnLoad
 			});
 
-			if (!this._editPageEvent) {
-				this._editPageEvent = field.on("editPage", rowId => {
-
-					let $form;
-					let $elem = $$(ids.component);
-					if ($elem) {
-						$form = $elem.getFormView();
-					}
-
-					component.logic.goToEditPage(rowId, $form);
-
-				});
-			}
-
 		};
 
 		component.logic = {
@@ -584,12 +578,19 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
 
 			},
 
-			goToEditPage: (rowId, $form) => {
+			goToEditPage: (rowId) => {
+
 				if (!this.settings.editForm)
 					return;
 
 				let editForm = this.application.urlResolve(this.settings.editForm);
 				if (!editForm) return;
+
+				let $form;
+				let $elem = $$(ids.component);
+				if ($elem) {
+					$form = $elem.getFormView();
+				}
 
 				component.logic.formBusy($form);
 
@@ -673,7 +674,7 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
 
 		component.onShow = () => {
 
-			_onShow(App, ids.component, this);
+			_onShow(App, ids.component, this, component);
 
 		};
 
