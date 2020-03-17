@@ -74,6 +74,7 @@ module.exports = class ABViewPropertyEditPage extends ABViewPropertyAddPage {
 						if (v &&
 							v.key == "form" &&
 							v.datacollection &&
+							v.datacollection.datasource &&
 							v.datacollection.datasource.id == view.field().settings.linkObject) {
 
 								editForms.push({
