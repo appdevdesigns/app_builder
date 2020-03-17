@@ -431,6 +431,10 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
     /// Objects
     ///
 
+    objectsAll() {
+        return webix.storage.local.get("_ABObjects");
+    }
+
     objectLoad() {
         if (this.loadedObjects) return Promise.resolve();
 

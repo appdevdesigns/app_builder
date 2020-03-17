@@ -58,6 +58,13 @@ module.exports = class ABClassApplication extends ABApplicationCore {
         return (ABObjectCache.list() || []).filter(filter);
     }
 
+    objectsAll() {
+        if (typeof ABObjectCache != "undefined") {
+            return this.objects();
+        }
+        return [];
+    }
+
     /**
      * @method objectNew()
      *
