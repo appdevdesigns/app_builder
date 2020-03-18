@@ -99,12 +99,12 @@ module.exports = class ABDataCollection extends ABDataCollectionCore {
 
 		// events
         AD.comm.hub.subscribe('ab.datacollection.create', (msg, data) => {
-debugger;
+// debugger;
             this.emit("ab.datacollection.create", msg, data);
         });
 		
         AD.comm.hub.subscribe('ab.datacollection.update', (msg, data) => {
-debugger;
+// debugger;
             this.emit("ab.datacollection.update", msg, data);
         });
 
@@ -112,12 +112,12 @@ debugger;
 		// We are subscribing to notifications from the server that an item may be stale and needs updating
 		// We will improve this later and verify that it needs updating before attempting the update on the client side
 		AD.comm.hub.subscribe('ab.datacollection.stale', (msg, data) => {
-debugger;
+// debugger;
             this.emit("ab.datacollection.stale", msg, data);
         });
 
 		AD.comm.hub.subscribe('ab.datacollection.delete', (msg, data) => {
-debugger;
+// debugger;
             this.emit("ab.datacollection.delete", msg, data);
         });
 

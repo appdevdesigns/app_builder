@@ -49,21 +49,25 @@ module.exports = class ABViewDetail extends ABViewDetailCore {
 			_logic.busy();
 
 			let currView = _logic.currentEditObject();
+			currView.settings.dataviewID = dcId;
+
+			// clear sub views
+			currView._views = [];
 
 			return Promise.resolve()
-				.then(() => {
+				// .then(() => {
 
-					// remove all old field components
-					if (oldDcId != null)
-						return currView.clearFieldComponents();
+				// 	// remove all old field components
+				// 	if (oldDcId != null)
+				// 		return currView.clearFieldComponents();
 
-				})
+				// })
 				.then(() => {
 
 					// refresh UI
-					currView.emit('properties.updated', currView);
+					// currView.emit('properties.updated', currView);
 
-					_logic.busy();
+					// _logic.busy();
 
 					// Update field options in property
 					this.propertyUpdateFieldOptions(ids, currView, dcId);
@@ -72,7 +76,7 @@ module.exports = class ABViewDetail extends ABViewDetailCore {
 					if (currView._views.length > 0)
 						return Promise.resolve();
 
-					let tasks = [];
+					// let tasks = [];
 					let fields = $$(ids.fields).find({});
 					fields.reverse();
 					fields.forEach((f, index) => {
@@ -81,7 +85,8 @@ module.exports = class ABViewDetail extends ABViewDetailCore {
 
 							let yPosition = (fields.length - index - 1);
 
-							tasks.push(() => currView.addFieldToView(f, yPosition, ids, App).save());
+							// tasks.push(() => currView.addFieldToView(f, yPosition, ids, App).save());
+							currView.addFieldToView(f, yPosition, ids, App);
 
 							// update item to UI list
 							f.selected = 1;
@@ -90,18 +95,27 @@ module.exports = class ABViewDetail extends ABViewDetailCore {
 
 					});
 
-					return tasks.reduce((promiseChain, currTask) => {
-						return promiseChain.then(currTask);
-					}, Promise.resolve([]));
+					return Promise.resolve();
+					// return tasks.reduce((promiseChain, currTask) => {
+					// 	return promiseChain.then(currTask);
+					// }, Promise.resolve([]));
 
 				})
+				// Saving
+				.then(() => {
+
+					let includeSubViews = true;
+					return currView.save(includeSubViews);
+
+				})
+				// Finally
 				.then(() => {
 
 					currView.emit('properties.updated', currView);
+
 					_logic.ready();
 
 					return Promise.resolve();
-
 				});
 
 		};
@@ -157,6 +171,7 @@ module.exports = class ABViewDetail extends ABViewDetailCore {
 				view: 'richselect',
 				label: L('ab.components.detail.dataSource', "*Data Source"),
 				labelWidth: App.config.labelWidthLarge,
+				skipAutoSave: true,
 				on: {
 					onChange: _logic.selectSource
 				}
@@ -484,6 +499,7 @@ module.exports = class ABViewDetail extends ABViewDetailCore {
 		// set settings to component
 		newView.settings = newView.settings || {};
 		newView.settings.fieldId = field.id;
+		newView.settings.labelWidth = this.settings.labelWidth || ABViewDetailPropertyComponentDefaults.labelWidth;
 
 		// keep alias to support Query that contains alias name
 		// [alias].[columnName]

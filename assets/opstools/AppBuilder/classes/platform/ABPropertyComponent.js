@@ -381,7 +381,10 @@ module.exports = class ABPropertyComponent {
     			if (!e.labelWidth) {
     				e.labelWidth = App.config.labelWidthMedium
     			}
-    		}
+			}
+			
+			if (e.skipAutoSave)
+				return;
 
     		// all elements should have an onChange event:
     		if (e.on && e.on.onChange) {

@@ -71,6 +71,7 @@ module.exports = class ABViewPropertyAddPage extends ABViewProperty {
 							return v &&
 								v.key == "form" &&
 								v.datacollection &&
+								v.datacollection.datasource &&
 								v.datacollection.datasource.id == view.field().settings.linkObject;
 						}, true).length;
 					}, true)
