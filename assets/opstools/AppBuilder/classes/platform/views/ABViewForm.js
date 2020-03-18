@@ -711,18 +711,32 @@ module.exports = class ABViewForm extends ABViewFormCore {
 			}
 
 			// bind a data collection to form component
-			let dv = this.datacollection;
-			if (dv) {
+			let dc = this.datacollection;
+			if (dc) {
 
 				// listen DC events
 				this.eventAdd({
-					emitter: dv,
+					emitter: dc,
 					eventName: 'changeCursor',
 					listener: _logic.displayData
 				});
 
+				this.eventAdd({
+					emitter: dc,
+					eventName: 'ab.datacollection.update',
+					listener: (msg, rowData) => {
+
+						// let currData = dc.getCursor();
+						// if (currData &&
+						// 	currData.id == (rowData || {}).id) {
+						_logic.displayData(rowData);
+						// }
+
+					}
+				});
+
 				// bind the cursor event of the parent DC
-				var linkDv = dv.datacollectionLink;
+				var linkDv = dc.datacollectionLink;
 				if (linkDv) {
 
 					// update the value of link field when data of the parent dc is changed
