@@ -724,13 +724,23 @@ module.exports = class ABViewForm extends ABViewFormCore {
 				this.eventAdd({
 					emitter: dc,
 					eventName: 'ab.datacollection.update',
-					listener: (msg, rowData) => {
+					listener: (msg, data) => {
 
-						// let currData = dc.getCursor();
-						// if (currData &&
-						// 	currData.id == (rowData || {}).id) {
-						_logic.displayData(rowData);
-						// }
+						if (!data || !data.objectId)
+							return;
+
+						let object = dc.datasource;
+						if (!object)
+							return;
+
+						if (object.id == data.objectId ||
+							object.fields(f => f.settings.linkObject == data.objectId).length > 0) {
+
+							let currData = dc.getCursor();
+							if (currData)
+								_logic.displayData(currData);
+		
+						}
 
 					}
 				});
