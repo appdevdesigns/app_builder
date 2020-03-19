@@ -739,7 +739,7 @@ module.exports = class ABViewForm extends ABViewFormCore {
 							let currData = dc.getCursor();
 							if (currData)
 								_logic.displayData(currData);
-		
+
 						}
 
 					}
