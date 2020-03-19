@@ -505,27 +505,27 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
 					.then(() => {
 
 						let datacollections = this.datacollections;
-						let isDvLabelAdded = datacollections.length > 1;
+						let isDcLabelAdded = datacollections.length > 1;
 
-						datacollections.forEach(dv => {
+						datacollections.forEach(dc => {
 
-							if (dv == null) return;
+							if (dc == null) return;
 
-							let obj = dv.datasource;
+							let obj = dc.datasource;
 							if (obj == null) return;
 
-							let dvValues = [];
+							let dcValues = [];
 							let dataList = [];
 
-							let dcCursor = dv.getCursor();
+							let dcCursor = dc.getCursor();
 
 							// merge cursor to support dc and tree cursor in the report
 							if (dcCursor) {
-								let treeCursor = dv.getCursor(true);
+								let treeCursor = dc.getCursor(true);
 								dataList.push(_.merge({}, dcCursor, treeCursor));
 							}
 							else
-								dataList = dv.getData();
+								dataList = dc.getData();
 
 							// update property names to column labels to match format names in docx file
 							let mlFields = obj.multilingualFields();
@@ -635,15 +635,15 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
 									setReportValues(data, resultData, f, fieldLabels);
 								});
 
-								dvValues.push(resultData);
+								dcValues.push(resultData);
 
 							});
 
 
 							// If data sources have more than 1, then add label of data source
-							let datacollectionData = (dvValues.length > 1 ? dvValues : dvValues[0]);
-							if (isDvLabelAdded) {
-								(dv.translations || []).forEach(tran => {
+							let datacollectionData = (dcValues.length > 1 ? dcValues : dcValues[0]);
+							if (isDcLabelAdded) {
+								(dc.translations || []).forEach(tran => {
 									reportValues[tran.label] = datacollectionData;
 								});
 							}
@@ -658,9 +658,6 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
 					.then(() => {
 
 						console.log("DOCX data: ", reportValues);
-
-						let currCursor = dv.getCursor();
-						if (!currCursor) return Promise.resolve();
 
 						let tasks = [];
 
@@ -696,20 +693,20 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
 
 						};
 
-						this.datacollections.forEach(dv => {
+						this.datacollections.forEach(dc => {
 
-							if (!dv) return;
+							if (!dc) return;
 
-							let obj = dv.datasource;
+							let obj = dc.datasource;
 							if (!obj) return;
 
-							let currCursor = dv.getCursor();
+							let currCursor = dc.getCursor();
 							if (currCursor) { // Current cursor
-								let treeCursor = dv.getCursor(true);
+								let treeCursor = dc.getCursor(true);
 								currCursor = [_.merge({}, currCursor, treeCursor)];
 							}
 							else // List of data
-								currCursor = dv.getData();
+								currCursor = dc.getData();
 
 							obj.fields(f => f instanceof ABFieldImage).forEach(f => {
 
@@ -763,10 +760,10 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
 
 									let defaultVal = [300, 160];
 
-									let dv = this.datacollection;
-									if (!dv) return defaultVal;
+									let dc = this.datacollection;
+									if (!dc) return defaultVal;
 
-									let obj = dv.datasource;
+									let obj = dc.datasource;
 									if (!obj) return defaultVal;
 
 									// This is a query object
