@@ -8,6 +8,7 @@ const ABObjectCore = require(path.join(
     "ABObjectCore.js"
 ));
 const Model = require("objection").Model;
+const ABModel = require(path.join(__dirname, "ABModel.js"));
 
 const ABGraphScope = require("../../graphModels/ABScope");
 
@@ -196,6 +197,12 @@ module.exports = class ABClassObject extends ABObjectCore {
         // 		.replace(/[^a-zA-Z0-9]/g, ""); // remove special characters to allow model name to be class name
 
         // return this.tableName.replace(/[^a-zA-Z0-9]/g, ""); // remove special characters to allow model name to be class name
+    }
+
+    // TODO: this should become model(), and current model() should become
+    // modelKnex();
+    modelAPI() {
+        return super.model();
     }
 
     /**
