@@ -84,6 +84,54 @@ module.exports = class ABModel extends ABModelCore {
         });
     }
 
+    /**
+     * @method update
+     * performs an update operation
+     * @param {string} id
+     *		the primary key for this update operation.
+     * @param {obj} values
+     *		A hash of the new values for this entry.
+     * @return {Promise} resolved with the result of the find()
+     */
+    update(id, values) {
+        return new Promise((resolve, reject) => {
+            // get a Knex Query Object
+            let query = this.modelKnex().query();
+
+            var PK = this.object.PK();
+
+            // update our value
+            query
+                .patch(values)
+                .where(PK, id)
+                .catch(reject)
+                .then((returnVals) => {
+                    // make sure we get a fully updated value for
+                    // the return value
+                    this.findAll({
+                        where: {
+                            glue: "and",
+                            rules: [
+                                {
+                                    key: PK,
+                                    rule: "equals",
+                                    value: id
+                                }
+                            ]
+                        },
+                        offset: 0,
+                        limit: 1,
+                        populate: true
+                    })
+                        .then((rows) => {
+                            // this returns an [] so pull 1st value:
+                            resolve(rows[0]);
+                        })
+                        .catch(reject);
+                });
+        });
+    }
+
     modelDefaultFields() {
         return {
             uuid: { type: "string" },

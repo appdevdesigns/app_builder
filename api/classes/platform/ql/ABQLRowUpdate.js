@@ -83,44 +83,20 @@ class ABQLRowUpdate extends ABQLRowUpdateCore {
                     updateParams[field.columnName] = value.value;
                 }
 
-                // TODO: standardize on our model api
-                // TODO: context.object.model().update({cond}, {values})
-
+                // Find the ID of the current .data row
                 var PK = context.object.PK();
-                var query = context.object.model().query();
+                var id = context.data[PK];
 
-                // Do Knex update
-                query
-                    .patch(updateParams)
-                    .where(PK, context.data[PK])
-                    .catch(reject)
-                    .then((returnVals) => {
-                        // make sure we get a fully updated value for
-                        // the current Row data.
-                        context.object
-                            .modelAPI()
-                            .findAll({
-                                where: {
-                                    glue: "and",
-                                    rules: [
-                                        {
-                                            key: PK,
-                                            rule: "equals",
-                                            value: context.data[PK]
-                                        }
-                                    ]
-                                },
-                                offset: 0,
-                                limit: 1,
-                                populate: true
-                            })
-                            .then((rows) => {
-                                // this returns an [] so pull 1st value:
-                                nextContext.data = rows[0];
-                                resolve(nextContext);
-                            })
-                            .catch(reject);
-                    });
+                // Perform the update.
+                context.object
+                    .modelAPI()
+                    .update(id, updateParams)
+                    .then((updatedRow) => {
+                        // this returns the fully populated & updated row
+                        nextContext.data = updatedRow;
+                        resolve(nextContext);
+                    })
+                    .catch(reject);
             });
         });
 
