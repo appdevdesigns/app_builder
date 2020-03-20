@@ -423,7 +423,7 @@ class ABQL extends ABQLCore {
                         // add an "equals" and "not equals" filter for each:
                         Filter.filterAdd([
                             {
-                                id: `context_${processField.key}`,
+                                id: `context_equals`,
                                 name: `equals`,
                                 type,
                                 fn: (a, b) => {
@@ -431,7 +431,7 @@ class ABQL extends ABQLCore {
                                 }
                             },
                             {
-                                id: `not_context_${processField.key}`,
+                                id: `context_not_equal`,
                                 name: `not equals`,
                                 type,
                                 fn: (a, b) => {

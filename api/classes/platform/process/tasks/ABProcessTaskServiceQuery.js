@@ -1,4 +1,3 @@
-
 const path = require("path");
 const ABProcessTaskServiceQueryCore = require(path.join(
     __dirname,
@@ -38,51 +37,33 @@ module.exports = class ABProcessTaskServiceQuery extends ABProcessTaskServiceQue
         return new Promise((resolve, reject) => {
             var myState = this.myState(instance);
 
+            if (!this.qlObj) {
+                var msg = `ABProcessTaskServiceQuery.do(): ${this.id} : Unable to create instance of our QL operations.`;
+                var qlError = new Error(msg);
+                reject(qlError);
+                return;
+            }
 
-            var msg = "ABProcessTaskServiceQuery not implemented yet.";
-            var badCallError = new Error(msg);
-            console.error(msg);
-            reject(badCallError);
-            return;
+            // tell our QueryLanguage Operation to .do() it's thang
+            this.qlObj
+                .do(instance)
+                .then(() => {
+                    // this resolves when all the operations are finished
+                    // so we are done!
 
-            // send a job to another micro service
-            // var jobData = {};
-            // reqAB.serviceRequest(
-            //     "microservice.task",
-            //     jobData,
-            //     (err, results) => {
-                   
-            //         if (err) {
-            //             // err objects are returned as simple {} not instances of {Error}
-            //             var error = new Error(
-            //                 `Microservice responded with an error (${err.code ||
-            //                     err.toString()})`
-            //             );
-            //             for (var v in err) {
-            //                 error[v] = err[v];
-            //             }
-            //             reject(error);
-            //             return;
-            //         }
-
-
-            //         if (results.yourWorkIsDone) {
-            //             this.log(instance, "Process Task completed successfully");
-            //             var data = {
-            //                 yourStateValue: result.importantValue,
-            //                 anotherValue: result.anotherValue
-            //             };
-            //             this.stateUpdate(instance, data);
-            //             this.stateCompleted(instance);
-            //             resolve(true);
-            //         } else {
-            //             // still pending:
-            //             resolve(false);
-            //         }
-            //     }
-            // );
-
+                    this.log(instance, `${this.name} completed successfully`);
+                    this.stateCompleted(instance);
+                    resolve(true);
+                })
+                .catch((err) => {
+                    this.log(
+                        instance,
+                        `${
+                            this.name
+                        } : QL Operation reported an error: ${err.toString()}`
+                    );
+                    reject(err);
+                });
         });
     }
-
 };
