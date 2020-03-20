@@ -1347,7 +1347,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
                 if (CurrentDatacollection) {
                     CurrentDatacollection.settings.loadAll = true;
-                    CurrentDatacollection.reloadData();
+                    CurrentDatacollection.reloadData(null, null);
                 }
 
                 // _logic.refresh(isLoadAll);

@@ -123,9 +123,7 @@ module.exports = class ABDataCollection extends ABDataCollectionCore {
 
 	}
 
-	loadData(start, limit) {
-
-		limit = limit || 20;
+	loadData(start, limit = 20) {
 
 		return super.loadData(start, limit)
 			.catch((err)=>{

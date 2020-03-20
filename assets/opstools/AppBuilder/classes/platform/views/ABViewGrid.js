@@ -1007,30 +1007,61 @@ module.exports = class ABViewGrid extends ABViewGridCore {
 					$$(ids.buttonFilter).refresh();
 				}
 
-				// client filter data
-				if (fnFilter) {
-					let table = $$(DataTable.ui.id);
-					table.filter((rowData) => {
+				Promise.resolve()
+					.then(() => new Promise((next, err) => {
 
-						// rowData is null when is not load from paging
-						if (rowData == null)
-							return false;
+						if (!this.settings || 
+							!this.settings.gridFilter ||
+							this.settings.gridFilter.filterOption != 3) // Global search
+							return next();
 
-						return fnFilter(rowData);
+						let dc = this.datacollection;
+						if (!dc ||
+							(dc.settings.loadAll && dc.dataStatus != dc.dataStatusFlag.notInitial)) // Load all already
+							return next();
 
-					});
+						// Load all data
+						dc.loadData(0, null)
+							.catch(err)
+							.then(() => {
 
-					if (this.settings.gridFilter.globalFilterPosition == "single") {
-						if (table.count() > 0) {
-							table.show();
-							table.select(table.getFirstId(), false);
-							table.callEvent("onItemClick", [table.getFirstId(), "auto", null]);
-						} else {
-							table.hide();
+								// Should set .loadAll to this data collection ?
+								dc.settings.loadAll = true;
+
+								next()
+							});
+
+					}))
+					// client filter data
+					.then(() => new Promise((next, err) => {
+
+						if (!fnFilter)
+							return next();
+
+						let table = $$(DataTable.ui.id);
+						table.filter((rowData) => {
+
+							// rowData is null when is not load from paging
+							if (rowData == null)
+								return false;
+
+							return fnFilter(rowData);
+
+						});
+
+						if (this.settings.gridFilter.globalFilterPosition == "single") {
+							if (table.count() > 0) {
+								table.show();
+								table.select(table.getFirstId(), false);
+								table.callEvent("onItemClick", [table.getFirstId(), "auto", null]);
+							} else {
+								table.hide();
+							}
 						}
-					}
 
-				}
+						next();
+
+					}));
 
 			},
 
