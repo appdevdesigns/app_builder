@@ -51,6 +51,9 @@ module.exports = class ABViewDetail extends ABViewDetailCore {
             let currView = _logic.currentEditObject();
             currView.settings.dataviewID = dcId;
 
+            // clear sub views
+            currView._views = [];
+
             return (
                 Promise.resolve()
                     // .then(() => {
@@ -65,9 +68,6 @@ module.exports = class ABViewDetail extends ABViewDetailCore {
                         // currView.emit('properties.updated', currView);
 
                         // _logic.busy();
-
-                        // clear sub views
-                        currView._views = [];
 
                         // Update field options in property
                         this.propertyUpdateFieldOptions(ids, currView, dcId);
@@ -494,6 +494,9 @@ module.exports = class ABViewDetail extends ABViewDetailCore {
         // set settings to component
         newView.settings = newView.settings || {};
         newView.settings.fieldId = field.id;
+        newView.settings.labelWidth =
+            this.settings.labelWidth ||
+            ABViewDetailPropertyComponentDefaults.labelWidth;
 
         // keep alias to support Query that contains alias name
         // [alias].[columnName]

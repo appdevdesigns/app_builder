@@ -467,9 +467,9 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
      *
      * @return {ABObject}
      */
-    // objectNew(values) {
-    //     return new ABObject(values, this);
-    // }
+    objectNew(values) {
+        return new ABObject(values, this);
+    }
 
     /**
      * @method objectDestroy()
@@ -638,7 +638,7 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
                 .then((object) => {
                     this.objects().forEach((obj, index) => {
                         if (obj.id == objectId) {
-                            this._objects[index] = new ABObject(object, this);
+                            this._objects[index] = this.objectNew(object);
                         }
                     });
 

@@ -128,7 +128,9 @@ module.exports = class ABFieldSelectivity extends ABField {
 		}
 
 		if (settings.editPage) {
-			setTimeout(() => {
+
+			let trigerEditPageEvent = () => {
+
 				let instance = this;
 				let editMenus = document.querySelectorAll('.selectivity-single-selected-item-edit, .selectivity-multiple-selected-item-edit');
 				for (let i = 0; i < editMenus.length; i++) {
@@ -137,19 +139,30 @@ module.exports = class ABFieldSelectivity extends ABField {
 						eMenu.addEventListener("click", function(e) {
 							e.stopPropagation();
 							e.preventDefault();
-
+	
 							let parentElm = this.parentElement;
 							if (!parentElm) return;
-
+	
 							let rowId = parentElm.getAttribute('data-item-id');
 							if (!rowId) return;
-
+	
 							instance.emit("editPage", rowId);
-
+	
 						}, true);
 						eMenu.__hasClickEvent = true;
 					}
 				}
+
+			};
+
+			setTimeout(() => {
+
+				trigerEditPageEvent();
+
+				domNode.addEventListener('change', (e) => {
+					trigerEditPageEvent();
+				});
+
 			}, 500);
 		}
 

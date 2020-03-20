@@ -81,11 +81,11 @@ function updateDefaultList(ids, settings = {}) {
 
     // Multiple default selector
     $$(ids.multipleDefault).define("options", optList);
-    if (settings.default) $$(ids.multipleDefault).setValue(settings.multipleDefault);
+    if (settings.default)
+        $$(ids.multipleDefault).setValue(settings.multipleDefault);
 
     $$(ids.multipleDefault).refresh();
     // }
-
 }
 
 /**
@@ -727,7 +727,7 @@ module.exports = class ABFieldList extends ABFieldListCore {
             );
 
             // Listen event when selectivity value updates
-            if (domNode && row.id && node) {
+            if (domNode && !readOnly && row.id && node) {
                 domNode.addEventListener(
                     "change",
                     (e) => {
@@ -859,9 +859,7 @@ module.exports = class ABFieldList extends ABFieldListCore {
 
         detailComponentSetting.common = () => {
             return {
-                key: this.settings.isMultiple
-                    ? "detailselectivity"
-                    : "detailtext"
+                key: this.settings.isMultiple ? "detailcustom" : "detailtext"
             };
         };
 
@@ -905,23 +903,22 @@ module.exports = class ABFieldList extends ABFieldListCore {
 
 // == Private methods ==
 function _getSelectedOptions(field, rowData = {}) {
+    let result = [];
+    if (rowData[field.columnName] != null) {
+        result = rowData[field.columnName];
 
-	let result = [];
-	if (rowData[field.columnName] != null) {
-		result = rowData[field.columnName];
+        if (typeof result == "string") result = JSON.parse(result);
 
-		if (typeof result == 'string')
-			result = JSON.parse(result);
+        // Pull text with current language
+        if (field.settings) {
+            result = (field.settings.options || []).filter((opt) => {
+                return (
+                    (result || []).filter((v) => (opt.id || opt) == (v.id || v))
+                        .length > 0
+                );
+            });
+        }
+    }
 
-		// Pull text with current language
-		if (field.settings) {
-			result = (field.settings.options || []).filter(opt => {
-				return (result || []).filter(v => (opt.id || opt) == (v.id || v)).length > 0
-			});
-		}
-
-	}
-
-	return result;
-
+    return result;
 }

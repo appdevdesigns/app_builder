@@ -186,10 +186,10 @@ module.exports = class ABViewChart extends ABViewChartCore {
 	static populateDataview(ids, view) {
 
 		// Set the objects you can choose from in the list
-		var objectOptions = view.application.dataviews().map(dv => {
+		var objectOptions = view.application.datacollections().map(dc => {
 			return {
-				id: dv.id,
-				value: dv.label
+				id: dc.id,
+				value: dc.label
 			};
 		});
 

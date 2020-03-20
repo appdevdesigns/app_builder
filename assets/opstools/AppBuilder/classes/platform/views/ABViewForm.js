@@ -75,23 +75,28 @@ module.exports = class ABViewForm extends ABViewFormCore {
 			let currView = _logic.currentEditObject();
 			let formView = currView.parentFormComponent();
 
-			return Promise.resolve()
-				.then(() => {
-					// remove all old components
-					let destroyTasks = [];
-					if (oldDcId != null) {
-						let oldComps = formView.views();
-						oldComps.forEach(child => destroyTasks.push(() => child.destroy()));
-					}
+			currView.settings.dataviewID = dcId;
 
-					return destroyTasks.reduce((promiseChain, currTask) => {
-						return promiseChain.then(currTask);
-					}, Promise.resolve([]));
-				})
+			// clear sub views
+			currView._views = [];
+
+			return Promise.resolve()
+				// .then(() => {
+				// 	// remove all old components
+				// 	let destroyTasks = [];
+				// 	if (oldDcId != null) {
+				// 		let oldComps = formView.views();
+				// 		oldComps.forEach(child => destroyTasks.push(() => child.destroy()));
+				// 	}
+
+				// 	return destroyTasks.reduce((promiseChain, currTask) => {
+				// 		return promiseChain.then(currTask);
+				// 	}, Promise.resolve([]));
+				// })
 				.then(() => {
 
 					// refresh UI
-					formView.emit('properties.updated', currView);
+					// formView.emit('properties.updated', currView);
 
 					_logic.busy();
 
@@ -102,7 +107,7 @@ module.exports = class ABViewForm extends ABViewFormCore {
 					if (currView._views.length > 0)
 						return Promise.resolve();
 
-					let saveTasks = [];
+					// let saveTasks = [];
 					let fields = $$(ids.fields).find({});
 					fields.reverse();
 					fields.forEach((f, index) => {
@@ -116,8 +121,8 @@ module.exports = class ABViewForm extends ABViewFormCore {
 							if (newFieldView) {
 								newFieldView.once('destroyed', () => this.propertyEditorPopulate(App, ids, currView));
 
-								// Call save API
-								saveTasks.push(() => newFieldView.save());
+								// // Call save API
+								// saveTasks.push(() => newFieldView.save());
 
 							}
 
@@ -129,14 +134,24 @@ module.exports = class ABViewForm extends ABViewFormCore {
 					});
 
 					let defaultButton = formView.refreshDefaultButton(ids);
-					if (defaultButton)
-						saveTasks.push(() => defaultButton.save());
+					// if (defaultButton)
+					// 	saveTasks.push(() => defaultButton.save());
 
-					return saveTasks.reduce((promiseChain, currTask) => {
-						return promiseChain.then(currTask);
-					}, Promise.resolve([]));
+					// return saveTasks.reduce((promiseChain, currTask) => {
+					// 	return promiseChain.then(currTask);
+					// }, Promise.resolve([]));
+
+					return Promise.resolve();
 
 				})
+				// Saving
+				.then(() => {
+
+					let includeSubViews = true;
+					return currView.save(includeSubViews);
+
+				})
+				// Finally
 				.then(() => {
 
 					// refresh UI
@@ -328,6 +343,7 @@ module.exports = class ABViewForm extends ABViewFormCore {
 				view: 'richselect',
 				label: L('ab.components.form.dataSource', "*Data Source"),
 				labelWidth: App.config.labelWidthLarge,
+				skipAutoSave: true,
 				on: {
 					onChange: _logic.selectSource
 				}
@@ -696,18 +712,42 @@ module.exports = class ABViewForm extends ABViewFormCore {
 			}
 
 			// bind a data collection to form component
-			let dv = this.datacollection;
-			if (dv) {
+			let dc = this.datacollection;
+			if (dc) {
 
 				// listen DC events
 				this.eventAdd({
-					emitter: dv,
+					emitter: dc,
 					eventName: 'changeCursor',
 					listener: _logic.displayData
 				});
 
+				this.eventAdd({
+					emitter: dc,
+					eventName: 'ab.datacollection.update',
+					listener: (msg, data) => {
+
+						if (!data || !data.objectId)
+							return;
+
+						let object = dc.datasource;
+						if (!object)
+							return;
+
+						if (object.id == data.objectId ||
+							object.fields(f => f.settings.linkObject == data.objectId).length > 0) {
+
+							let currData = dc.getCursor();
+							if (currData)
+								_logic.displayData(currData);
+
+						}
+
+					}
+				});
+
 				// bind the cursor event of the parent DC
-				var linkDv = dv.datacollectionLink;
+				var linkDv = dc.datacollectionLink;
 				if (linkDv) {
 
 					// update the value of link field when data of the parent dc is changed
@@ -754,7 +794,8 @@ module.exports = class ABViewForm extends ABViewFormCore {
 						if (comp == null) return;
 
 						// var colName = field.columnName;
-						if (this._showed)
+						if (this._showed &&
+							comp.onShow)
 							comp.onShow();
 
 						// set value to each components
@@ -793,7 +834,8 @@ module.exports = class ABViewForm extends ABViewFormCore {
 						var comp = this.viewComponents[f.id];
 						if (comp == null) return;
 
-						if (this._showed)
+						if (this._showed &&
+							comp.onShow)
 							comp.onShow();
 
 						// set value to each components
