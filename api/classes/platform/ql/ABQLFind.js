@@ -48,14 +48,6 @@ class ABQLFind extends ABQLFindCore {
             // otherwise, we perform our find, save the results to our
             // nextContext and then continue on:
             return new Promise((resolve, reject) => {
-                debugger;
-                // context.object
-                //     .queryFind(this.params.cond)
-                //     .then((rows) => {
-                //         nextContext.data = rows;
-                //         resolve(nextContext);
-                //     })
-                //     .catch(reject);
                 var reducedCondition = this.conditionReduce(
                     this.params.cond,
                     instance
