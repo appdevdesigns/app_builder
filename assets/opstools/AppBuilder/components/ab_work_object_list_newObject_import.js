@@ -307,7 +307,7 @@ module.exports = class AB_Work_Object_List_NewObject_Import extends ABComponent 
                         height: 20
                     },
                     {
-                        view: App.custom.activelist.view,
+                        view: 'list',
                         id: ids.columnList,
                         datatype: 'json',
                         multiselect: false,
@@ -316,15 +316,11 @@ module.exports = class AB_Work_Object_List_NewObject_Import extends ABComponent 
                         minHeight: 200,
                         maxHeight: 200,
                         type: {
-                            height: 40
-                        },
-                        activeContent: {
-
+                            height: 40,
                             isvisible: {
                                 view: 'checkbox',
                                 width: 30
                             }
-
                         },
                         template: (obj, common) => {
 

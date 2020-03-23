@@ -132,7 +132,7 @@ module.exports = class AB_Work_Object_List_NewObject_Csv extends ABComponent {
 					},
 					{
 						id: ids.columnList,
-						view: App.custom.activelist.view,
+						view: 'list',
 						datatype: "json",
 						multiselect: false,
 						select: false,
@@ -141,27 +141,31 @@ module.exports = class AB_Work_Object_List_NewObject_Csv extends ABComponent {
 						minHeight: 260,
 						maxHeight: 260,
 						type: {
-							height: 40
-						},
-						activeContent: {
-							include: {
-								view: "checkbox",
-								width: 30
+							height: 40,
+							include: function(obj, common) {
+								return {
+									view: "checkbox",
+									width: 30
+								};
 							},
-							columnName: {
-								view: 'text',
-								width: 170
+							columnName: function(obj, common) {
+								return {
+									view: 'text',
+									width: 170
+								};
 							},
-							dataType: {
-								view: "select",
-								options: [
-									{ id: 'string', value: ABFieldString.defaults().menuName },
-									{ id: 'LongText', value: ABFieldLongText.defaults().menuName },
-									{ id: 'number', value: ABFieldNumber.defaults().menuName },
-									{ id: 'date', value: ABFieldDate.defaults().menuName },
-									{ id: 'boolean', value: ABFieldBoolean.defaults().menuName },
-								],
-								width: 120
+							dataType: function(obj, common) {
+								return {
+									view: "select",
+									options: [
+										{ id: 'string', value: ABFieldString.defaults().menuName },
+										{ id: 'LongText', value: ABFieldLongText.defaults().menuName },
+										{ id: 'number', value: ABFieldNumber.defaults().menuName },
+										{ id: 'date', value: ABFieldDate.defaults().menuName },
+										{ id: 'boolean', value: ABFieldBoolean.defaults().menuName },
+									],
+									width: 120
+								};
 							}
 						},
 						template:
