@@ -179,7 +179,15 @@ module.exports = class RowFilter extends RowFilterCore {
 						// Field list
 						view: "combo",
 						id: ids.field,
-						options: _logic.getFieldList(),
+						suggest: {
+							on: {
+								onBeforeShow: function () {
+									this.define("width", 400);
+									this.resize();
+								}
+							},
+							data: _logic.getFieldList()
+						},
 						on: {
 							onChange: function (columnId) {
 

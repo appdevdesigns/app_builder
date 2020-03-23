@@ -45,7 +45,6 @@ module.exports = function(cb) {
                 defaultEmailNotificationInvite,
                 addSDCAppDataDirectory,
                 addSDCObjectLifecycleBeforeCreate,
-
                 loadDefinitions
             ],
             (err, data) => {
@@ -494,9 +493,7 @@ function addSDCObjectLifecycleBeforeCreate(next) {
                     if (!emailRows || emailRows.length == 0) {
                         bailError(
                             "E_NOTFOUND",
-                            `Provided email was not found. [${
-                                createParams["New Coach Email"]
-                            }]`
+                            `Provided email was not found. [${createParams["New Coach Email"]}]`
                         );
                         return;
                     }
