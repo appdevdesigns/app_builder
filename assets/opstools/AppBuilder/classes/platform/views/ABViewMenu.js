@@ -329,7 +329,8 @@ module.exports = class ABViewMenu extends ABViewMenuCore {
 			// update .aliasname and .translations of the page
 			if (view.settings.pages) {
 				view.settings.pages.forEach((localpage) => {
-					if (localpage.pageId == page.id) {
+					if ((localpage.pageId == page.id && !localpage.tabId) || // Page
+					 	(parentId && localpage.pageId == parentId && localpage.tabId == page.id)) { // Tab
 						page.aliasname = view.getAliasname(localpage);
 					}
 				});
@@ -425,6 +426,12 @@ module.exports = class ABViewMenu extends ABViewMenuCore {
 				}
 
 				let pageInfo = view.settings.pages.filter(p => p.pageId == currentPageId)[0];
+				let translations = [];
+
+				if (currentItem && currentItem.translations)
+					translations = currentItem.translations;
+				else if (pageInfo && pageInfo.translations)
+					translations = _.cloneDeep(pageInfo.translations);
 
 				pagesIdList.push({
 					pageId: currentPageId,
@@ -432,7 +439,7 @@ module.exports = class ABViewMenu extends ABViewMenuCore {
 					type: type,
 					isChecked: currentItem.checked,
 					aliasname: currentItem.aliasname,
-					translations: pageInfo && pageInfo.translations ? pageInfo.translations : []
+					translations: translations
 				});
 			}
 		}
