@@ -7,307 +7,286 @@
 
 const ABComponent = require("../classes/platform/ABComponent");
 
-const ABFieldNumber = require('../classes/platform/dataFields/ABFieldNumber');
-const ABFieldCalculate = require('../classes/platform/dataFields/ABFieldCalculate');
-const ABFieldFormula = require('../classes/platform/dataFields/ABFieldFormula');
+const ABFieldNumber = require("../classes/platform/dataFields/ABFieldNumber");
+const ABFieldCalculate = require("../classes/platform/dataFields/ABFieldCalculate");
+const ABFieldFormula = require("../classes/platform/dataFields/ABFieldFormula");
 
+module.exports = class AB_Work_Object_Workspace_PopupSummaryColumns extends ABComponent {
+    constructor(App, idBase) {
+        idBase = idBase || "ab_work_object_workspace_popupSummaryColumns";
 
-module.exports = class AB_Work_Object_Workspace_PopupSummaryColumns extends ABComponent {  
-	
-		constructor(App, idBase) {
-			idBase = idBase || 'ab_work_object_workspace_popupSummaryColumns';
-	
-			super(App, idBase);
-			var L = this.Label;
-	
-			var labels = {
-				common : App.labels,
-				component: {
-					showAll: L('ab.summary_columns.showAll', "*Show All"),
-					hideAll: L('ab.summary_columns.hideAll', "*Hide All")
-				}
-			}
-	
-	
-			// internal list of Webix IDs to reference our UI components
-			var ids = {
-				component: this.unique(idBase + '_popupSummary'),
-				list: this.unique(idBase + '_popupSummary_list')
-			}
-	
-	
-			// Our webix UI definition:
-			this.ui = {
-				view:"popup",
-				id: ids.component,
-				body: {
-					rows: [
-						{
-							cols: [
-								{
-									view: 'button',
-									value: labels.component.showAll,
-									on: {
-										onItemClick: function() {
-											_logic.clickShowAll();
-										}
-									}
-								},
-								{
-									view: 'button',
-									value: labels.component.hideAll,
-									on: {
-										onItemClick: function() {
-											_logic.clickHideAll();
-										}
-									}
-								}
-							]
-						},
-						{
-							view: 'list',
-							id: ids.list,
-							maxHeight: 250,
-							select: false,
-							template: '<span style="min-width: 18px; display: inline-block;"><i class="fa ab-summary-field-icon"></i>&nbsp;</span> #label#',
-							on: {
-								onItemClick: function (id, e, node) {
-									_logic.clickListItem(id, e, node);
-								}
-							}
-						}
-					]
-				},
-				on: {
-					onShow: function () {
-						_logic.onShow();
-					}
-				}
-			}
-	
-	
-			// Our init() function for setting up our UI
-			this.init = (options) => {
-	
-				// register our callbacks:
-				for(var c in _logic.callbacks) {
-					_logic.callbacks[c] = options[c] || _logic.callbacks[c];
-				}
-	
-				webix.ui(this.ui);
-			}
-	
-	
-			var CurrentObject = null;
-			var SummaryFieldIds = [];
-	
-			// our internal business logic
-			var _logic = this._logic = {
-	
-				callbacks:{
-	
-					/**
-					 * @function onChange
-					 * called when we have made changes to the hidden field settings
-					 * of our Current Object.
-					 *
-					 * this is meant to alert our parent component to respond to the
-					 * change.
-					 */
-					onChange:function(){}
-				},
-	
-	
-				/**
-				 * @function clickHideAll
-				 * the user clicked the [hide all] option.  So hide all our fields.
-				 */
-				clickHideAll: function () {
+        super(App, idBase);
+        var L = this.Label;
 
-					var List = $$(ids.list);
-	
-					// pass an array is empty
-					SummaryFieldIds = [];
+        var labels = {
+            common: App.labels,
+            component: {
+                showAll: L("ab.summary_columns.showAll", "*Show All"),
+                hideAll: L("ab.summary_columns.hideAll", "*Hide All")
+            }
+        };
 
-					// hide all icons
-					List.find({}).forEach(item => {
-						_logic.iconHide(item.id);
-					});
+        // internal list of Webix IDs to reference our UI components
+        var ids = {
+            component: this.unique(idBase + "_popupSummary"),
+            list: this.unique(idBase + "_popupSummary_list")
+        };
 
-					_logic.callbacks.onChange(SummaryFieldIds);
+        // Our webix UI definition:
+        this.ui = {
+            view: "popup",
+            id: ids.component,
+            body: {
+                rows: [
+                    {
+                        cols: [
+                            {
+                                view: "button",
+                                value: labels.component.hideAll,
+                                on: {
+                                    onItemClick: function() {
+                                        _logic.clickHideAll();
+                                    }
+                                }
+                            },
+                            {
+                                view: "button",
+                                css: "webix_primary",
+                                value: labels.component.showAll,
+                                on: {
+                                    onItemClick: function() {
+                                        _logic.clickShowAll();
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        view: "list",
+                        id: ids.list,
+                        maxHeight: 250,
+                        select: false,
+                        template:
+                            '<span style="min-width: 18px; display: inline-block;"><i class="fa ab-summary-field-icon"></i>&nbsp;</span> #label#',
+                        on: {
+                            onItemClick: function(id, e, node) {
+                                _logic.clickListItem(id, e, node);
+                            }
+                        }
+                    }
+                ]
+            },
+            on: {
+                onShow: function() {
+                    _logic.onShow();
+                }
+            }
+        };
 
-				},
-	
-	
-				/**
-				 * @function clickShowAll
-				 * the user clicked the [show all] option.  So show all our fields.
-				 */
-				clickShowAll: function () {
-	
-					var List = $$(ids.list);
-					var allFieldIds = List.find({}).map(f => f.id);
+        // Our init() function for setting up our UI
+        this.init = (options) => {
+            // register our callbacks:
+            for (var c in _logic.callbacks) {
+                _logic.callbacks[c] = options[c] || _logic.callbacks[c];
+            }
 
-					SummaryFieldIds = allFieldIds;
+            webix.ui(this.ui);
+        };
 
-					// show all icons
-					List.find({}).forEach(item => {
-						_logic.iconShow(item.id);
-					});
+        var CurrentObject = null;
+        var SummaryFieldIds = [];
 
-					_logic.callbacks.onChange(SummaryFieldIds);
+        // our internal business logic
+        var _logic = (this._logic = {
+            callbacks: {
+                /**
+                 * @function onChange
+                 * called when we have made changes to the hidden field settings
+                 * of our Current Object.
+                 *
+                 * this is meant to alert our parent component to respond to the
+                 * change.
+                 */
+                onChange: function() {}
+            },
 
-				},
-	
-	
-				/**
-				 * @function clickListItem
-				 * update the clicked field setting.
-				 */
-				clickListItem: function(fieldId) {
+            /**
+             * @function clickHideAll
+             * the user clicked the [hide all] option.  So hide all our fields.
+             */
+            clickHideAll: function() {
+                var List = $$(ids.list);
 
-					// select
-					if (SummaryFieldIds.indexOf(fieldId) < 0) {
-						SummaryFieldIds.push(fieldId);
+                // pass an array is empty
+                SummaryFieldIds = [];
 
-						_logic.iconShow(fieldId);
-					}
-					// unselect
-					else {
-						SummaryFieldIds = SummaryFieldIds.filter(fid => fid != fieldId);
+                // hide all icons
+                List.find({}).forEach((item) => {
+                    _logic.iconHide(item.id);
+                });
 
-						_logic.iconHide(fieldId);
-					}
+                _logic.callbacks.onChange(SummaryFieldIds);
+            },
 
-					_logic.callbacks.onChange(SummaryFieldIds);
+            /**
+             * @function clickShowAll
+             * the user clicked the [show all] option.  So show all our fields.
+             */
+            clickShowAll: function() {
+                var List = $$(ids.list);
+                var allFieldIds = List.find({}).map((f) => f.id);
 
-				},
+                SummaryFieldIds = allFieldIds;
 
+                // show all icons
+                List.find({}).forEach((item) => {
+                    _logic.iconShow(item.id);
+                });
 
-				/**
-				 * @function iconHide
-				 * Hide the icon for the given node
-				 * @param {DOM} node  the html dom node of the element that contains our icon
-				 */
-				iconHide: function(fieldId) {
+                _logic.callbacks.onChange(SummaryFieldIds);
+            },
 
-					var List = $$(ids.list);
-					var $node = List.getItemNode(fieldId);
-					if ($node) {
-						$node.querySelector('.ab-summary-field-icon').classList.remove("fa-circle");
-					}
-				},
-	
-	
-				/**
-				 * @function iconShow
-				 * Show the icon for the given node
-				 * @param {DOM} node  the html dom node of the element that contains our icon
-				 */
-				iconShow: function(fieldId) {
+            /**
+             * @function clickListItem
+             * update the clicked field setting.
+             */
+            clickListItem: function(fieldId) {
+                // select
+                if (SummaryFieldIds.indexOf(fieldId) < 0) {
+                    SummaryFieldIds.push(fieldId);
 
-					var List = $$(ids.list);
-					var $node = List.getItemNode(fieldId);
-					if ($node) {
-						$node.querySelector('.ab-summary-field-icon').classList.add("fa-circle");
-					}
-				},
+                    _logic.iconShow(fieldId);
+                }
+                // unselect
+                else {
+                    SummaryFieldIds = SummaryFieldIds.filter(
+                        (fid) => fid != fieldId
+                    );
 
-	
-				/**
-				 * @function objectLoad
-				 * Ready the Popup according to the current object
-				 * @param {ABObject} object  the currently selected object.
-				 */
-				objectLoad: function(object) {
-					CurrentObject = object;
-				},
-	
+                    _logic.iconHide(fieldId);
+                }
 
-				/**
-				 * @function setValue
-				 * 
-				 * @param {array} - an array contains field ids
-				 */
-				setValue: function(fieldIds) {
+                _logic.callbacks.onChange(SummaryFieldIds);
+            },
 
-					SummaryFieldIds = fieldIds || [];
+            /**
+             * @function iconHide
+             * Hide the icon for the given node
+             * @param {DOM} node  the html dom node of the element that contains our icon
+             */
+            iconHide: function(fieldId) {
+                var List = $$(ids.list);
+                var $node = List.getItemNode(fieldId);
+                if ($node) {
+                    $node
+                        .querySelector(".ab-summary-field-icon")
+                        .classList.remove("fa-circle");
+                }
+            },
 
-					_logic.onShow();
+            /**
+             * @function iconShow
+             * Show the icon for the given node
+             * @param {DOM} node  the html dom node of the element that contains our icon
+             */
+            iconShow: function(fieldId) {
+                var List = $$(ids.list);
+                var $node = List.getItemNode(fieldId);
+                if ($node) {
+                    $node
+                        .querySelector(".ab-summary-field-icon")
+                        .classList.add("fa-circle");
+                }
+            },
 
-				},
+            /**
+             * @function objectLoad
+             * Ready the Popup according to the current object
+             * @param {ABObject} object  the currently selected object.
+             */
+            objectLoad: function(object) {
+                CurrentObject = object;
+            },
 
+            /**
+             * @function setValue
+             *
+             * @param {array} - an array contains field ids
+             */
+            setValue: function(fieldIds) {
+                SummaryFieldIds = fieldIds || [];
 
-				/**
-				 * @function onShow
-				 * Ready the Popup according to the current object each time it is shown (perhaps a field was created or delted)
-				 */
-				onShow: function() {
+                _logic.onShow();
+            },
 
-					// refresh list
-					var numberFields = CurrentObject.fields(f => f instanceof ABFieldNumber).map(f => {
-						return {
-							id: f.id,
-							label: f.label
-						};
-					});
-					
-					var calculateFields = CurrentObject.fields(f => f instanceof ABFieldCalculate).map(f => {
-						return {
-							id: f.id,
-							label: f.label
-						};
-					});
+            /**
+             * @function onShow
+             * Ready the Popup according to the current object each time it is shown (perhaps a field was created or delted)
+             */
+            onShow: function() {
+                // refresh list
+                var numberFields = CurrentObject.fields(
+                    (f) => f instanceof ABFieldNumber
+                ).map((f) => {
+                    return {
+                        id: f.id,
+                        label: f.label
+                    };
+                });
 
-					var formulaFields = CurrentObject.fields(f => f instanceof ABFieldFormula).map(f => {
-						return {
-							id: f.id,
-							label: f.label
-						};
-					});
-					
-					var fieldOptions = numberFields.concat(calculateFields);
-					fieldOptions = fieldOptions.concat(formulaFields);
+                var calculateFields = CurrentObject.fields(
+                    (f) => f instanceof ABFieldCalculate
+                ).map((f) => {
+                    return {
+                        id: f.id,
+                        label: f.label
+                    };
+                });
 
-					$$(ids.list).clearAll();
-					$$(ids.list).parse(fieldOptions);
+                var formulaFields = CurrentObject.fields(
+                    (f) => f instanceof ABFieldFormula
+                ).map((f) => {
+                    return {
+                        id: f.id,
+                        label: f.label
+                    };
+                });
 
-					// update icons
-					SummaryFieldIds.forEach(fieldId => {
-						_logic.iconShow(fieldId);
-					});
+                var fieldOptions = numberFields.concat(calculateFields);
+                fieldOptions = fieldOptions.concat(formulaFields);
 
-				},
-	
-				/**
-				 * @function show()
-				 *
-				 * Show this component.
-				 * @param {obj} $view  the webix.$view to hover the popup around.
-				 */
-				show:function($view, options) {
-					if (options != null) {
-						$$(ids.component).show($view, options);
-					} else {
-						$$(ids.component).show($view);
-					}
-				}
-	
-			}
+                $$(ids.list).clearAll();
+                $$(ids.list).parse(fieldOptions);
 
+                // update icons
+                SummaryFieldIds.forEach((fieldId) => {
+                    _logic.iconShow(fieldId);
+                });
+            },
 
-			// Expose any globally accessible Actions:
-			this.actions({
-			})
+            /**
+             * @function show()
+             *
+             * Show this component.
+             * @param {obj} $view  the webix.$view to hover the popup around.
+             */
+            show: function($view, options) {
+                if (options != null) {
+                    $$(ids.component).show($view, options);
+                } else {
+                    $$(ids.component).show($view);
+                }
+            }
+        });
 
-			// 
-			// Define our external interface methods:
-			// 
-			this.objectLoad = _logic.objectLoad;
-			this.setValue = _logic.setValue;
-			this.show = _logic.show;
-	
-		}
-	
-	}
-	
+        // Expose any globally accessible Actions:
+        this.actions({});
+
+        //
+        // Define our external interface methods:
+        //
+        this.objectLoad = _logic.objectLoad;
+        this.setValue = _logic.setValue;
+        this.show = _logic.show;
+    }
+};

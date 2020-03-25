@@ -70,6 +70,7 @@ module.exports = class AB_Work_Interface_Workspace extends ABComponent {
                                 {},
                                 {
                                     view: "button",
+                                    css: "webix_primary",
                                     label: labels.component.newPage,
                                     type: "form",
                                     css: "webix_primary",

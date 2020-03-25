@@ -1,4 +1,3 @@
-
 /*
  * ab_work_object_workspace_PopupAddView
  *
@@ -29,7 +28,10 @@ module.exports = class AB_Work_Object_Workspace_PopupAddView extends ABComponent
             component: {
                 name: L("ab.add_view.name", "*Name"),
                 type: L("ab.add_view.type", "*Type"),
-                namePlaceholder: L("ab.add_view.name_placeholder", "*Create a name for the view"),
+                namePlaceholder: L(
+                    "ab.add_view.name_placeholder",
+                    "*Create a name for the view"
+                ),
                 viewSettings: L("ab.add_view.view_settings", "*View Settings")
             }
         };
@@ -96,19 +98,14 @@ module.exports = class AB_Work_Object_Workspace_PopupAddView extends ABComponent
                     required: true,
                     on: {
                         onChange: function(typeView) {
-
                             _logic.switchType(typeView);
-
                         }
                     }
                 },
                 {
                     id: ids.formAdditional,
-                    view: 'layout',
-                    rows: [
-                        comKanban.elements(),
-                        comGantt.elements()
-                    ]
+                    view: "layout",
+                    rows: [comKanban.elements(), comGantt.elements()]
                 },
                 {
                     margin: 5,
@@ -125,6 +122,7 @@ module.exports = class AB_Work_Object_Workspace_PopupAddView extends ABComponent
                         },
                         {
                             view: "button",
+                            css: "webix_primary",
                             value: labels.common.save,
                             autowidth: true,
                             type: "form",
@@ -146,18 +144,18 @@ module.exports = class AB_Work_Object_Workspace_PopupAddView extends ABComponent
                 view: "toolbar",
                 css: "webix_dark",
                 cols: [
-                    { 
-                        view: "label", 
+                    {
+                        view: "label",
                         label: labels.component.viewSettings,
                         css: "modal_title",
                         align: "center"
                     },
                     {
-                        view: "button", 
-                        label: labels.common.close, 
-                        autowidth: true, 
+                        view: "button",
+                        label: labels.common.close,
+                        autowidth: true,
                         align: "center",
-                        click: function () {
+                        click: function() {
                             _logic.buttonCancel();
                         }
                     }
@@ -174,7 +172,7 @@ module.exports = class AB_Work_Object_Workspace_PopupAddView extends ABComponent
         };
 
         // Our init() function for setting up our UI
-        this.init = options => {
+        this.init = (options) => {
             // register our callbacks:
             for (var c in _logic.callbacks) {
                 _logic.callbacks[c] = options[c] || _logic.callbacks[c];
@@ -205,43 +203,42 @@ module.exports = class AB_Work_Object_Workspace_PopupAddView extends ABComponent
                 onViewUpdated: function(view) {}
             },
 
-            objectLoad: object => {
+            objectLoad: (object) => {
                 _object = object;
             },
 
-            switchType: typeView => {
-
+            switchType: (typeView) => {
                 $$(ids.formAdditional).showBatch(typeView);
 
                 // initial
                 switch (typeView) {
-                    case 'kanban':
+                    case "kanban":
                         comKanban.init(_object, _view);
                         break;
-                    case 'gantt':
+                    case "gantt":
                         comGantt.init(_object, _view);
                         break;
                 }
 
                 $$(ids.component).resize();
-
             },
 
             onShow: function() {
                 // clear field options in the form
                 $$(ids.form).clear();
                 $$(ids.form).clearValidation();
-				
-				if (_view) {
+
+                if (_view) {
                     $$(ids.nameInput).setValue(_view.name);
                     $$(ids.typeInput).setValue(_view.type);
                 }
                 // Default value
                 else {
                     $$(ids.nameInput).setValue("");
-                    $$(ids.typeInput).setValue(ABObjectWorkspaceViewGrid.type());
+                    $$(ids.typeInput).setValue(
+                        ABObjectWorkspaceViewGrid.type()
+                    );
                 }
-
             },
 
             /**
@@ -268,25 +265,28 @@ module.exports = class AB_Work_Object_Workspace_PopupAddView extends ABComponent
             },
 
             buttonSave: function() {
-                if (!$$(ids.form).validate())
-                    return;
+                if (!$$(ids.form).validate()) return;
 
                 var view = {};
 
-                switch($$(ids.typeInput).getValue()) {
+                switch ($$(ids.typeInput).getValue()) {
                     case ABObjectWorkspaceViewKanban.type():
-
                         // validate
-                        if (comKanban.validate && !comKanban.validate($$(ids.form)))
+                        if (
+                            comKanban.validate &&
+                            !comKanban.validate($$(ids.form))
+                        )
                             return;
 
                         view = comKanban.values();
                         break;
 
                     case ABObjectWorkspaceViewGantt.type():
-
                         // validate
-                        if (comGantt.validate && !comGantt.validate($$(ids.form)))
+                        if (
+                            comGantt.validate &&
+                            !comGantt.validate($$(ids.form))
+                        )
                             return;
 
                         view = comGantt.values($$(ids.form));
@@ -298,15 +298,16 @@ module.exports = class AB_Work_Object_Workspace_PopupAddView extends ABComponent
                 view.type = $$(ids.typeInput).getValue();
 
                 if (_view) {
-                    var viewObj = _object.workspaceViews.updateView(_view, view);
+                    var viewObj = _object.workspaceViews.updateView(
+                        _view,
+                        view
+                    );
                     this.callbacks.onViewUpdated(viewObj);
-                } 
-                else {
+                } else {
                     var viewObj = _object.workspaceViews.addView(view);
                     this.callbacks.onViewAdded(viewObj);
                 }
                 this.hide();
-
             }
         });
 
@@ -319,4 +320,4 @@ module.exports = class AB_Work_Object_Workspace_PopupAddView extends ABComponent
         this.objectLoad = _logic.objectLoad;
         this.show = _logic.show;
     }
-}
+};

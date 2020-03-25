@@ -171,6 +171,7 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
         var newViewButton = {
             view: "button",
             type: "icon",
+            css: "webix_primary",
             label: labels.component.newView,
             width: 120,
             icon: "fa fa-plus-circle",
@@ -471,6 +472,7 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
                                     view: "button",
                                     label: labels.component.addNew,
                                     type: "form",
+                                    css: "webix_primary",
                                     autowidth: true,
                                     click: function() {
                                         App.actions.addNewObject(true);
@@ -509,6 +511,7 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
                                           view: "button",
                                           type: "form",
                                           id: ids.buttonRowNew,
+                                          css: "webix_primary",
                                           value: labels.component.addNewRow,
                                           click: function() {
                                               _logic.rowAdd();

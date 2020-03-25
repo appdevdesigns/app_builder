@@ -108,6 +108,7 @@ module.exports = class AB_Work_Interface_List extends ABComponent {
                 },
                 {
                     view: "button",
+                    css: "webix_primary",
                     id: ids.buttonNew,
                     css: "webix_primary",
                     type: "form",
