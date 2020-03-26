@@ -1797,7 +1797,8 @@ console.error(err);
 
                     allParams = cleanUp(object, allParams);
 
-                    sails.log.verbose('ABModelController.upsert(): allParams:', allParams);
+                    // sails.log.verbose('ABModelController.upsert(): allParams:', allParams);
+                    console.log('ABModelController.upsert(): allParams:', allParams);
 
                     // Upsert data
                     model

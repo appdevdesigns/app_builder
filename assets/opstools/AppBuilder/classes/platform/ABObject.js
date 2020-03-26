@@ -87,10 +87,6 @@ module.exports = class ABObject extends ABObjectCore {
 		if (this.workspaceViews)
 			this.workspaceViews.fromObj(attributes);
 
-		// multilingual fields: label, description
-		OP.Multilingual.translate(this, this, ['label']);
-
-
 	}
 
 
@@ -320,8 +316,6 @@ module.exports = class ABObject extends ABObjectCore {
 	 */
 	toObj () {
 
-		OP.Multilingual.unTranslate(this, this, ["label"]);
-
 		var result = super.toObj();
 
 		result.objectWorkspaceViews = this.workspaceViews.toObj();
@@ -504,7 +498,7 @@ module.exports = class ABObject extends ABObjectCore {
 
 		// translate multilingual
 		var mlFields = this.multilingualFields();
-		OP.Multilingual.translate(rowData, rowData, mlFields);
+		this.application.translate(rowData, rowData, mlFields);
 
 		var labelData = this.labelFormat || '';
 		

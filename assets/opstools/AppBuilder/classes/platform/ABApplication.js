@@ -47,7 +47,7 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 		this._datacollections = newDatacollections;
 
 		// multilingual fields: label, description
-		OP.Multilingual.translate(this, this.json, ABApplication.fieldsMultilingual());
+		this.translate(this, this.json, ABApplication.fieldsMultilingual());
 
 		// instance keeps a link to our Model for .save() and .destroy();
 		this.Model = OP.Model.get('opstools.BuildApp.ABApplication');
@@ -341,25 +341,6 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 				});
 		}
 
-	}
-
-
-	/**
-	 * @method toObj()
-	 *
-	 * properly compile the current state of this ABApplication instance
-	 * into the values needed for saving to the DB.
-	 *
-	 * Most of the instance data is stored in .json field, so be sure to
-	 * update that from all the current values of our child fields.
-	 *
-	 * @return {json}
-	 */
-	toObj() {
-
-		OP.Multilingual.unTranslate(this, this.json, ABApplication.fieldsMultilingual());
-
-		return super.toObj();
 	}
 
 

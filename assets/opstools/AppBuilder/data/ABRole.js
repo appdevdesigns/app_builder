@@ -36,9 +36,7 @@ OP.Model.extend('opstools.BuildApp.ABRole',
 
 			return OP.Comm.Service.put({
 				url: `/app_builder/role`,
-				data: {
-					role: role
-				}
+				data: role
 			});
 		},
 

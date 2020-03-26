@@ -127,13 +127,13 @@ module.exports = class ABRole extends ABRoleCore {
 
 
 	/**
-	 * @method users()
+	 * @method getUsers()
 	 *
-	 * remove the current ABRole from our list of ._roles.
+	 * pull users of the role from the server
 	 *
 	 * @return {Promise} - An array of usernames
 	 */
-	users() {
+	getUsers() {
 
 		return new Promise((resolve, reject) => {
 

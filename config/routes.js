@@ -155,13 +155,13 @@ module.exports = {
     'get /app_builder/role':
         'app_builder/ABRoleController.find',
 
-    'get /app_builder/role/:roleId':
+    'get /app_builder/role/:id':
         'app_builder/ABRoleController.findOne',
 
     'put /app_builder/role':
         'app_builder/ABRoleController.save',
 
-    'delete /app_builder/role/:roleId':
+    'delete /app_builder/role/:id':
         'app_builder/ABRoleController.destroy',
 
     // 'put /app_builder/application/:appID/role/:roleID':
@@ -170,16 +170,16 @@ module.exports = {
     // 'delete /app_builder/application/:appID/role/:roleID':
     //     'app_builder/ABRoleController.exclude',
 
-    'get /app_builder/role/:roleId/scope':
+    'get /app_builder/role/:id/scope':
         'app_builder/ABRoleController.roleScope',
 
-    'get /app_builder/role/:roleId/users':
+    'get /app_builder/role/:id/users':
         'app_builder/ABRoleController.roleUsers',
 
-    'post /app_builder/role/:roleId/username/:username':
+    'post /app_builder/role/:id/username/:username':
         'app_builder/ABRoleController.addUser',
 
-    'delete /app_builder/role/:roleId/username/:username':
+    'delete /app_builder/role/:id/username/:username':
         'app_builder/ABRoleController.removeUser',
 
 

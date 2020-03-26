@@ -130,7 +130,7 @@ module.exports = class AB_Work_Admin_Role_User extends ABComponent {
 				if (this._userDC) {
 					_logic.busy();
 
-					role.users()
+					role.getUsers()
 						.catch(err => {
 							console.error(err);
 							_logic.ready();

@@ -160,49 +160,6 @@ module.exports = class ABFieldString extends ABFieldStringCore {
 	}
 
 
-	/**
-	 * @method fromValues()
-	 *
-	 * initialze this object with the given set of values.
-	 * @param {obj} values
-	 */
-	fromValues(values) {
-
-		super.fromValues(values);
-
-		if (this.settings.supportMultilingual)
-			OP.Multilingual.translate(this.settings, this.settings, ["default"]);
-		else
-			this.settings.default = values.settings.default || '';
-
-	}
-
-
-	/**
-	 * @method toObj()
-	 *
-	 * properly compile the current state of this ABApplication instance
-	 * into the values needed for saving to the DB.
-	 *
-	 * Most of the instance data is stored in .json field, so be sure to
-	 * update that from all the current values of our child fields.
-	 *
-	 * @return {json}
-	 */
-	toObj() {
-
-		var obj = super.toObj();
-
-		if (this.settings.supportMultilingual)
-			OP.Multilingual.unTranslate(obj.settings, obj.settings, ["default"]);
-		else
-			obj.settings.default = this.settings.default;
-
-		return obj;
-	}
-
-
-
 
 	///
 	/// Working with Actual Object Values:

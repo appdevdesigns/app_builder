@@ -16,11 +16,10 @@ module.exports = class ABObjectWorkspaceView {
 */
 		this.fromObj(attributes || {});
 
-    	// multilingual fields: label
-    	OP.Multilingual.translate(this, this, ['label']);
-
     	this.object = object;
 
+    	// multilingual fields: label
+    	OP.Multilingual.translate(this, this, ['label']);
 
     	// user ids.  if has user id, then only those users can see this.
     	// this.users = [];  

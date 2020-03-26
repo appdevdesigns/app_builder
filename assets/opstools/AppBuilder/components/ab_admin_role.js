@@ -153,7 +153,7 @@ module.exports = class AB_Work_Admin_Role extends ABComponent {
 						.then(data => {
 
 							if (isAdded) {
-								currRole.id = data.id;
+								currRole.id = data.uuid || data.id;
 								roleDC.setCursor(null);
 								roleDC.add(currRole);
 								roleDC.setCursor(currRole.id);

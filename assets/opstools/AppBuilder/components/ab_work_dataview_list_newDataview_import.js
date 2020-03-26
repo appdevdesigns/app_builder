@@ -81,7 +81,7 @@ module.exports = class AB_Work_Datacollection_List_NewDataview_Import extends AB
 								return;
 
 							// translate label of objects
-							OP.Multilingual.translate(dc, dc, ['label']);
+							CurrentApplication.translate(dc, dc, ['label']);
 
 							availableDCs.push(dc);
 

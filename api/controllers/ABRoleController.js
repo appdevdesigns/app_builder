@@ -8,38 +8,23 @@
 const async = require('async');
 
 const ApplicationGraph = require("../graphModels/ABApplication");
-const RoleGraph = require("../graphModels/ABRole");
-const ScopeGraph = require("../graphModels/ABScope");
+// const RoleGraph = require("../graphModels/ABRole");
+// const ScopeGraph = require("../graphModels/ABScope");
 
-module.exports = {
+const ABModelController = require("./ABModelController");
 
-	// // GET /app_builder/application/:appID/role
-	// roleApplication: (req, res) => {
+const ROLE_OBJECT_ID = "AB_ROLE";
+const SCOPE_OBJECT_ID = "AB_SCOPE";
 
-	// 	let appID = req.param('appID');
-	// 	let cond = req.body.query || {};
-
-	// 	RoleGraph.findWithRelation('applications', appID, {
-	// 		where: cond,
-	// 		relations: ['scope']
-	// 	})
-	// 		.catch(error => {
-	// 			res.AD.error(error);
-	// 		})
-	// 		.then(roles => {
-
-	// 			res.AD.success(roles || []);
-
-	// 		});
-
-	// },
+let ABRoleController = {
 
 	// GET /app_builder/role
 	find: function (req, res) {
 
 		let cond = req.body;
+		let RoleModel = ABObjectCache.get(ROLE_OBJECT_ID);
 
-		RoleGraph.find(cond)
+		RoleModel.queryFind(cond, req.user.data)
 			.catch(res.AD.error)
 			.then(roles => {
 				res.AD.success(roles || []);
@@ -47,302 +32,193 @@ module.exports = {
 
 	},
 
-	// GET /app_builder/role/:roleId
+	// GET /app_builder/role/:id
 	findOne: function (req, res) {
 
-		let roleId = req.param('roleId');
+		let id = req.param('id');
+		let RoleModel = ABObjectCache.get(ROLE_OBJECT_ID);
 
-		RoleGraph.findOne(roleId)
-			.catch(res.AD.error)
-			.then(role => {
+		return new Promise((resolve, reject) => {
 
-				res.AD.success(role);
+			RoleModel.queryFind({
+				where: {
+					glue: 'and',
+					rules: [
+						{
+							key: RoleModel.PK(),
+							rule: "equals",
+							value: id
+						}
+					]
+				},
+				limit: 1
+			}, req.user.data)
+				.catch(err => {
+					if (res)
+						res.AD.error(err);
 
-			});
+					reject(err);
+				})
+				.then((role = []) => {
+
+					if (res)
+						res.AD.success(role[0]);
+
+					resolve(role[0]);
+
+				});
+
+		});
 
 	},
 
 	// PUT /app_builder/role
 	save: function (req, res) {
 
-		let appID = req.query.appID;
-		let role = req.body.role;
+		req.params["objID"] = ROLE_OBJECT_ID;
 
-		Promise.resolve()
-
-			// Save role
-			.then(() => {
-
-				return new Promise((next, error) => {
-
-					RoleGraph.upsert(role.id, role)
-						.catch(errMessage => {
-
-							error(errMessage);
-							res.AD.error(true);
-
-						})
-						.then(result => {
-
-							next(result);
-
-						});
-
-				});
-
-			})
-
-			// Set relation to application
-			.then(role => {
-
-				return new Promise((next, error) => {
-
-					if (appID == null)
-						return next(role);
-
-					role.relate('applications', appID)
-						.catch(errMessage => {
-
-							error(errMessage);
-							res.AD.error(true);
-
-						})
-						.then(() => {
-
-							next(role);
-
-						});
-
-				});
-
-			})
-			
-			.then(role => {
-				res.AD.success(role);
-			});
+		if (!req.body.id)
+			return ABModelController.create(req, res);
+		else
+			return ABModelController.update(req, res);
 
 	},
 
-	// DELETE /app_builder/role/:roleId
+	// DELETE /app_builder/role/:id
 	destroy: function (req, res) {
 
-		let roleId = req.param('roleId');
+		req.params["objID"] = ROLE_OBJECT_ID;
 
-		RoleGraph.remove(roleId)
-			.catch(res.AD.error)
-			.then(() => {
+		return ABModelController.delete(req, res);
 
-				res.AD.success(true);
-			});
 	},
 
-	// // PUT /app_builder/application/:appID/role/:roleID
-	// import: function (req, res) {
-
-	// 	let appID = req.param('appID'),
-	// 		roleID = req.param('roleID');
-
-	// 	Promise.resolve()
-
-	// 		// Get a role
-	// 		.then(() => {
-
-	// 			return new Promise((next, err) => {
-
-	// 				RoleGraph.findOne(roleID, {
-	// 					relations: ['applications']
-	// 				})
-	// 					.catch(err)
-	// 					.then(role => {
-	// 						next(role);
-	// 					});
-
-
-	// 			});
-
-	// 		})
-
-	// 		// Set relate
-	// 		.then(role => {
-
-	// 			return new Promise((next, err) => {
-
-	// 				// if exists
-	// 				if (role.applications.filter(app => app.id == appID)[0]) {
-	// 					res.AD.success(role);
-	// 					return next();
-	// 				}
-
-	// 				role.relate('applications', appID)
-	// 					.catch(err)
-	// 					.then(() => {
-
-	// 						res.AD.success(role);
-	// 						next();
-
-	// 					});
-
-	// 			});
-
-	// 		});
-
-	// },
-
-	// // DELETE /app_builder/application/:appID/role/:roleID
-	// exclude: function (req, res) {
-
-	// 	let appID = req.param('appID'),
-	// 		roleID = req.param('roleID');
-
-	// 	RoleGraph.unrelate(
-	// 		RoleGraph.relations.applications,
-	// 		appID,
-	// 		roleID
-	// 	)
-	// 		.catch(res.AD.error)
-	// 		.then(() => {
-
-	// 			res.AD.success(true);
-
-	// 		});
-
-	// },
-
-	// GET /app_builder/role/:roleId/scope
+	// GET /app_builder/role/:id/scope
 	roleScope: function (req, res) {
 
-		let roleId = req.param('roleId');
+		let id = req.param('id');
 
-		ScopeGraph.findWithRelation(ScopeGraph.relations.roles, roleId, {
-			relations: ['objects']
-		})
-			.catch(res.AD.error)
-			.then(scope => {
+		let RoleModel = ABObjectCache.get(ROLE_OBJECT_ID);
+		let ScopeModel = ABObjectCache.get(SCOPE_OBJECT_ID);
 
-				res.AD.success(scope);
+		let connectedField = RoleModel.fields(f => (f.settings || {}).linkObject == ROLE_OBJECT_ID)[0];
+		if (!connectedField) {
+			res.AD.success([]);
+			return Promise.resolve([]);
+		}
 
-			});
+		let where = {
+			glue: "and",
+			rules: [
+				{
+					key: connectedField.id,
+					rule: "equals",
+					value: id
+				}
+			]
+		};
+
+		return ScopeModel.queryFind({
+			where: where
+		}, req.user.data);
 
 	},
 
-	// GET /app_builder/role/:roleId/users
+	// GET /app_builder/role/:id/users
 	roleUsers: function (req, res) {
 
-		let roleId = req.param('roleId');
-
-		ScopeGraph.query(`
-			FOR join in roleUser
-			FOR r in role
-			FILTER join._from == 'role/${roleId}'
-			RETURN join._to
-		`, true, true)
-			.catch(err => {
-				console.error(err);
-				res.AD.error(500);
-			})
+		return Promise.resolve()
+			// Find role
+			.then(() => ABRoleController.findOne(req))
 			.then(result => {
 
-				let usernames = [];
-
-				(result || []).forEach(r => {
-
-					if (r == null)
-						return;
-
-					usernames.push(r.replace("username/", ""));
-				});
+				let usernames = (result.users || []).map(u => u.id || u);
 
 				res.AD.success(usernames);
 			});
+
 	},
 
-	// POST /app_builder/role/:roleId/username/:username
-	addUser: function (req, res) {
+	// POST /app_builder/role/:id/username/:username
+	addUser: (req, res) => {
 
-		let roleId = req.param('roleId');
-		let username = req.param('username');
+		req.params["objID"] = ROLE_OBJECT_ID;
 
-		if (!roleId || !username) {
-			res.AD.success(true);
-			return;
-		}
+		return Promise.resolve()
+			// Find role
+			.then(() => ABRoleController.findOne(req))
 
-		Promise.resolve()
-			// check duplicate
-			.then(() => new Promise((next, err) => {
+			// Add user
+			.then(role => new Promise((next, err) => {
 
-				ScopeGraph.query(`
-					FOR join IN roleUser
-					FILTER join._from == 'role/${roleId}'
-					&& join._to == 'username/${username}'
-					LIMIT 1
-					RETURN join`)
-					.catch(err)
-					.then(cursor => {
+				if (!role)
+					return next();
 
-						if (cursor && cursor.all) {
-							cursor.all()
-								.catch(err)
-								.then(exists => {
-									next(exists);
-								});
-						}
-						else {
-							next(null);
-						}
+				let username = req.param('username');
 
+				req.body.id = req.param('id');
+				req.body.users = role.users || [];
+
+				let exists = req.body.users.filter(u => (u.id || u) == username)[0];
+				if (!exists) {
+					req.body.users.push({
+						id: username,
+						image: "",
+						text: username
 					});
-
-			}))
-			.then(exists => new Promise((next, err) => {
-
-				// If exists
-				if (exists) {
-					next();
-					res.AD.success(true);
-					return;
 				}
 
-				let values = {
-					_from: `role/${roleId}`,
-					_to: `username/${username}`
-				};
+				next(role);
 
-				ScopeGraph.query(`
-					INSERT ${JSON.stringify(values)} INTO roleUser
-					RETURN NEW`)
-					.catch(error => {
-						err(error);
-						res.AD.error(error);
-					})
-					.then(() => {
-						next();
-						res.AD.success(true);
-					});
+			}))
+
+			// Update to DB
+			.then(role => new Promise((next, err) => {
+
+				if (!role)
+					return next();
+
+				ABModelController.update(req, res);
+				next();
 
 			}));
+
 	},
 
-	// DELETE /app_builder/role/:roleId/username/:username
+	// DELETE /app_builder/role/:id/username/:username
 	removeUser: function (req, res) {
 
-		let roleId = req.param('roleId');
-		let username = req.param('username');
+		req.params["objID"] = ROLE_OBJECT_ID;
 
-		if (!roleId || !username) {
-			res.AD.success(true);
-			return;
-		}
+		return Promise.resolve()
+			// Find role
+			.then(() => ABRoleController.findOne(req))
 
-		ScopeGraph.query(`
-			FOR join IN roleUser
-			FILTER join._from == 'role/${roleId}'
-			&& join._to == 'username/${username}'
-			REMOVE join IN roleUser`)
-			.catch(res.AD.error)
-			.then(() => {
-				res.AD.success(true);
-			});
+			// Add user
+			.then(role => new Promise((next, err) => {
+
+				if (!role)
+					return next();
+
+				let username = req.param('username');
+
+				req.body.id = req.param('id');
+				req.body.users = (role.users || []).filter(u => (u.id || u) != username);
+
+				next(role);
+
+			}))
+
+			// Update to DB
+			.then(role => new Promise((next, err) => {
+
+				if (!role)
+					return next();
+
+				ABModelController.update(req, res);
+				next();
+
+			}));
 
 	},
 
@@ -589,3 +465,5 @@ module.exports = {
 	}
 
 };
+
+module.exports = ABRoleController;

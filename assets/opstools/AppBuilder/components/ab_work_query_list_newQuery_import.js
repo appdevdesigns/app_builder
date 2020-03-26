@@ -81,7 +81,7 @@ module.exports = class AB_Work_Query_List_NewQuery_Import extends ABComponent {
 								return;
 
 							// translate label of objects
-							OP.Multilingual.translate(query, query, ['label']);
+							CurrentApplication.translate(query, query, ['label']);
 
 							availableQueries.push(query);
 

@@ -539,7 +539,7 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
 								// Translate multilinguage fields
 								if (mlFields.length) {
 									let transFields = (mlFields || []).filter(fieldName => baseData[fieldName] != null);
-									OP.Multilingual.translate(baseData, baseData, transFields, this.languageCode);
+									this.application.translate(baseData, baseData, transFields, this.languageCode);
 								}
 
 								// Pull value

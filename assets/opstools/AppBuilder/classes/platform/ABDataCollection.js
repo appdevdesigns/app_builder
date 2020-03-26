@@ -7,35 +7,6 @@ module.exports = class ABDataCollection extends ABDataCollectionCore {
     }
 
     /**
-     * @method fromValues()
-     *
-     * initialze this object with the given set of values.
-     * @param {obj} values
-     */
-    fromValues(values) {
-        super.fromValues(values);
-
-        OP.Multilingual.translate(this, this, ["label"]);
-    }
-
-    /**
-     * @method toObj()
-     *
-     * properly compile the current state of this ABApplication instance
-     * into the values needed for saving to the DB.
-     *
-     * Most of the instance data is stored in .json field, so be sure to
-     * update that from all the current values of our child fields.
-     *
-     * @return {json}
-     */
-    toObj() {
-        OP.Multilingual.unTranslate(this, this, ["label"]);
-
-        return super.toObj();
-    }
-
-    /**
      * @method save()
      *
      * persist this instance of ABDataCollection with it's parent

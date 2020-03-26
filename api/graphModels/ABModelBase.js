@@ -429,6 +429,8 @@ class ABModelBase {
 
 		if (addNew)
 			updates._key = uuid();
+		else
+			updates._key = updates.id;
 
 		updates = new this(updates || {}, {
 			includeDefault: true
@@ -495,13 +497,13 @@ class ABModelBase {
 	// 				this.query(
 	// 					`FOR row IN ${this.collectionName} ` +
 	// 					`FILTER row._key == '${rowId}'` +
-						
+
 	// 					`LET alteredList = (` +
 	// 					`	FOR sub IN row.${arrayName}` +
 	// 					`	LET newItem = (sub.id == '${subId}' ? MERGE(sub, ${updates}) : sub)` +
 	// 					`	RETURN newItem` +
 	// 					`)` +
-						
+
 	// 					`UPDATE row WITH { ${arrayName}: alteredList } IN ${this.collectionName}`
 	// 					, false)
 	// 					.catch(err)
@@ -811,6 +813,12 @@ class ABModelBase {
 					let val = (whereClause || "").split(',');
 					filters.push(`FILTER row.${prop} IN [${(val || []).map(v => `'${v}'`)}]`);
 				}
+				else if (whereClause == 'isnull') {
+					filters.push(`FILTER row.${prop} IN [null, false, 0]`);
+				}
+				else if (whereClause == 'isnotnull') {
+					filters.push(`FILTER row.${prop} NOT IN [null, false, 0]`);
+				}
 				else {
 					filters.push(`FILTER row.${prop} == '${whereClause}'`);
 				}
@@ -821,7 +829,8 @@ class ABModelBase {
 				Object.keys(whereClause).forEach(operate => {
 
 					let val = whereClause[operate];
-					if (val == null) return;
+					if (val == null)
+						return;
 
 					switch (operate) {
 						case '<':
