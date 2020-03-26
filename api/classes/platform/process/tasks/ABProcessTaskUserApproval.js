@@ -58,7 +58,7 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
             var jobData = {
                 name: this.name,
                 process: instance.id,
-                definition: this.id
+                definition: this.process.id
             };
 
             if (parseInt(this.who) == 1) {
