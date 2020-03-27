@@ -107,6 +107,7 @@ module.exports = class ABCustomFormIOBuilder {
                                         abFieldID: field.id,
                                         label: field.label,
                                         type: "checkbox",
+                                        disabled: true,
                                         key: field.columnName,
                                         input: true
                                     }
@@ -133,6 +134,27 @@ module.exports = class ABCustomFormIOBuilder {
                                     }
                                 };
                                 break;
+                            case "connectObject":
+                                components[field.columnName] = {
+                                    title: field.label,
+                                    key: field.columnName,
+                                    icon: field.icon,
+                                    schema: {
+                                        abFieldID: field.id,
+                                        label: field.label,
+                                        type: "textfield",
+                                        key: field.columnName,
+                                        input: true,
+                                        inputType: "text",
+                                        disabled: true,
+                                        calculateValue:
+                                            "value = '" +
+                                            field.settings.textFormula +
+                                            "'"
+                                    }
+                                };
+                                break;
+
                             case "date":
                                 components[field.columnName] = {
                                     title: field.label,
@@ -142,6 +164,7 @@ module.exports = class ABCustomFormIOBuilder {
                                         abFieldID: field.id,
                                         label: field.label,
                                         type: "datetime",
+                                        disabled: true,
                                         key: field.columnName,
                                         input: true,
                                         format:
@@ -159,6 +182,7 @@ module.exports = class ABCustomFormIOBuilder {
                                     schema: {
                                         abFieldID: field.id,
                                         label: field.label,
+                                        disabled: true,
                                         type: "email",
                                         key: field.columnName,
                                         input: true
@@ -200,6 +224,7 @@ module.exports = class ABCustomFormIOBuilder {
                                         ],
                                         refreshOnChange: true,
                                         key: field.columnName,
+                                        disabled: true,
                                         input: false
                                     }
                                 };
@@ -252,6 +277,7 @@ module.exports = class ABCustomFormIOBuilder {
                                         label: field.label,
                                         type: "select",
                                         key: field.columnName,
+                                        disabled: true,
                                         input: true,
                                         data: {
                                             values: vals
@@ -269,6 +295,7 @@ module.exports = class ABCustomFormIOBuilder {
                                         abFieldID: field.id,
                                         label: field.label,
                                         type: "textarea",
+                                        disabled: true,
                                         key: field.columnName,
                                         input: true
                                     }
@@ -282,6 +309,7 @@ module.exports = class ABCustomFormIOBuilder {
                                     schema: {
                                         abFieldID: field.id,
                                         label: field.label,
+                                        disabled: true,
                                         type: "number",
                                         key: field.columnName,
                                         input: true
@@ -317,6 +345,7 @@ module.exports = class ABCustomFormIOBuilder {
                                         abFieldID: field.id,
                                         label: field.label,
                                         type: "textfield",
+                                        disabled: true,
                                         key: field.columnName,
                                         input: true
                                     }
@@ -325,6 +354,54 @@ module.exports = class ABCustomFormIOBuilder {
                         }
                     });
                 });
+                components["approveButton"] = {
+                    title: "Approve Button",
+                    key: "approve",
+                    icon: "check-square",
+                    schema: {
+                        label: "Approve",
+                        type: "button",
+                        key: "approve",
+                        block: true,
+                        size: "lg",
+                        input: false,
+                        leftIcon: "fa fa-check-square",
+                        action: "event",
+                        theme: "success"
+                    }
+                };
+                components["denyButton"] = {
+                    title: "Deny Button",
+                    key: "deny",
+                    icon: "ban",
+                    schema: {
+                        label: "Deny",
+                        type: "button",
+                        key: "deny",
+                        block: true,
+                        size: "lg",
+                        input: false,
+                        leftIcon: "fa fa-ban",
+                        action: "event",
+                        theme: "danger"
+                    }
+                };
+                components["customButton"] = {
+                    title: "Custom Action Button",
+                    key: "custom",
+                    icon: "cog",
+                    schema: {
+                        label: "Custom Name",
+                        type: "button",
+                        key: "custom",
+                        block: true,
+                        size: "lg",
+                        input: false,
+                        leftIcon: "fa fa-cog",
+                        action: "event",
+                        theme: "primary"
+                    }
+                };
                 return components;
             }
         };

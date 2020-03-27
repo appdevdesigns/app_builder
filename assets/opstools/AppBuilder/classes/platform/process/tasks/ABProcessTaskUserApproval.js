@@ -180,7 +180,12 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
                                         modal: true,
                                         head: {
                                             view: "toolbar",
+                                            css: "webix_dark",
                                             cols: [
+                                                {
+                                                    view: "spacer",
+                                                    width: 17
+                                                },
                                                 {
                                                     view: "label",
                                                     label:
@@ -191,7 +196,7 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
                                                 },
                                                 {
                                                     view: "button",
-                                                    label: "Close",
+                                                    label: "Cancel",
                                                     autowidth: true,
                                                     click: function() {
                                                         $$(
@@ -201,15 +206,22 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
                                                 },
                                                 {
                                                     view: "button",
+                                                    css: "webixtype_form",
                                                     label: "Save",
-                                                    css: "primary",
                                                     autowidth: true,
                                                     click: () => {
                                                         this.formBuilder = $$(
                                                             ids.formBuilder
                                                         ).getFormData();
                                                         this.emit("save");
+                                                        $$(
+                                                            ids.modalWindow
+                                                        ).close();
                                                     }
+                                                },
+                                                {
+                                                    view: "spacer",
+                                                    width: 17
                                                 }
                                             ]
                                         },

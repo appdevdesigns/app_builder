@@ -17,6 +17,8 @@ const ABProcess = require("./ABProcess");
 
 var _AllApplications = [];
 
+var dfdReady = null;
+
 function L(key, altText) {
     return AD.lang.label.getLabel(key) || altText;
 }
@@ -137,10 +139,33 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
                         // }
 
                         resolve(_AllApplications);
+
+                        if (dfdReady) {
+                            dfdReady.__resolve();
+                        }
                     })
-                    .catch(reject);
+                    .catch((err) => {
+                        reject(err);
+                        if (dfdReady) {
+                            dfdReady.__reject(err);
+                        }
+                    });
             });
         });
+    }
+
+    static isReady() {
+        if (!dfdReady) {
+            dfdReady = Promise.resolve().then(() => {
+                return new Promise((resolve, reject) => {
+                    setTimeout(() => {
+                        dfdReady.__resolve = resolve;
+                        dfdReady.__reject = reject;
+                    }, 0);
+                });
+            });
+        }
+        return dfdReady;
     }
 
     /**

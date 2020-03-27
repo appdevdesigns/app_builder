@@ -41,7 +41,7 @@ module.exports = class ABCustomFormIOPreview {
                     ? config.formComponents
                     : {};
                 Formio.createForm(this.$view, formComponents, {
-                    readOnly: true
+                    // readOnly: true
                     // sanitizeConfig: {
                     //     addTags: ["a", "label", "img", "i"],
                     //     addAttr: ["src", "href", "class", "target"]
@@ -50,25 +50,25 @@ module.exports = class ABCustomFormIOPreview {
                     // now that it is set up we can push it into the global var
                     // formBuilder = builder;
                     // Provide a default submission.
-                    form.submission = {
-                        data: {
-                            Name: "Item #5",
-                            Image: "4f2be24f-6ad0-4687-abbb-1a87ce7bc1d6",
-                            "Long text": "This is a long text field.",
-                            "Number Field": 3,
-                            "Date Field": "2020-02-03",
-                            "Date and Time": "2020-02-19 00:00:00",
-                            "Checkbox field": 1,
-                            "Items to select": 1580782610224,
-                            "Multiple Items": [1580786381276, 1580786381494],
-                            "Email Field": "james@digiserve.org",
-                            "Image Field":
-                                "d5063af3-06b0-44d0-ae9d-c88a74b81e21",
-                            "File Attachment":
-                                '{"uuid":"2d3708eb-d567-483b-9b1e-7cbd6d654866","filename":"2018-01-12 09-44 copy.pdf"}',
-                            "User Field": "James"
-                        }
-                    };
+                    // form.submission = {
+                    //     data: {
+                    //         Name: "Item #5",
+                    //         Image: "4f2be24f-6ad0-4687-abbb-1a87ce7bc1d6",
+                    //         "Long text": "This is a long text field.",
+                    //         "Number Field": 3,
+                    //         "Date Field": "2020-02-03",
+                    //         "Date and Time": "2020-02-19 00:00:00",
+                    //         "Checkbox field": 1,
+                    //         "Items to select": 1580782610224,
+                    //         "Multiple Items": [1580786381276, 1580786381494],
+                    //         "Email Field": "james@digiserve.org",
+                    //         "Image Field":
+                    //             "d5063af3-06b0-44d0-ae9d-c88a74b81e21",
+                    //         "File Attachment":
+                    //             '{"uuid":"2d3708eb-d567-483b-9b1e-7cbd6d654866","filename":"2018-01-12 09-44 copy.pdf"}',
+                    //         "User Field": "James"
+                    //     }
+                    // };
                 });
             }
         };
