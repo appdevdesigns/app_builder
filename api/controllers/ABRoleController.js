@@ -13,16 +13,19 @@ const ApplicationGraph = require("../graphModels/ABApplication");
 
 const ABModelController = require("./ABModelController");
 
-const ROLE_OBJECT_ID = "AB_ROLE";
-const SCOPE_OBJECT_ID = "AB_SCOPE";
+const ROLE_OBJECT_ID = "c33692f3-26b7-4af3-a02e-139fb519296d";
+const SCOPE_OBJECT_ID = "af10e37c-9b3a-4dc6-a52a-85d52320b659";
 
 let ABRoleController = {
 
 	// GET /app_builder/role
 	find: function (req, res) {
 
-		let cond = req.body;
+		let cond = req.body || {};
 		let RoleModel = ABObjectCache.get(ROLE_OBJECT_ID);
+
+		if (cond.populate == null)
+			cond.populate = true;
 
 		RoleModel.queryFind(cond, req.user.data)
 			.catch(res.AD.error)
@@ -51,7 +54,8 @@ let ABRoleController = {
 						}
 					]
 				},
-				limit: 1
+				limit: 1,
+				populate: true
 			}, req.user.data)
 				.catch(err => {
 					if (res)
@@ -98,10 +102,9 @@ let ABRoleController = {
 
 		let id = req.param('id');
 
-		let RoleModel = ABObjectCache.get(ROLE_OBJECT_ID);
 		let ScopeModel = ABObjectCache.get(SCOPE_OBJECT_ID);
 
-		let connectedField = RoleModel.fields(f => (f.settings || {}).linkObject == ROLE_OBJECT_ID)[0];
+		let connectedField = ScopeModel.fields(f => (f.settings || {}).linkObject == ROLE_OBJECT_ID)[0];
 		if (!connectedField) {
 			res.AD.success([]);
 			return Promise.resolve([]);

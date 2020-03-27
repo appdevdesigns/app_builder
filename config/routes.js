@@ -121,22 +121,22 @@ module.exports = {
     'get /app_builder/scope':
         'app_builder/ABScopeController.find',
 
-    'get /app_builder/scope/:scopeId':
+    'get /app_builder/scope/:id':
         'app_builder/ABScopeController.findOne',
 
-    'get /app_builder/scope/:scopeId/role':
+    'get /app_builder/scope/:id/roles':
         'app_builder/ABScopeController.scopeRole',
 
     'put /app_builder/scope':
         'app_builder/ABScopeController.save',
 
-    'delete /app_builder/scope/:scopeId':
+    'delete /app_builder/scope/:id':
         'app_builder/ABScopeController.destroy',
 
-    'put /app_builder/role/:roleID/scope/:scopeID':
+    'put /app_builder/role/:roleID/scope/:id':
         'app_builder/ABScopeController.import',
 
-    'delete /app_builder/role/:roleID/scope/:scopeID':
+    'delete /app_builder/role/:roleID/scope/:id':
         'app_builder/ABScopeController.exclude',
 
 

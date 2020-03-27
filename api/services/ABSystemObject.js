@@ -32,13 +32,9 @@ module.exports = {
 
 			tasks.push(() => {
 
-				let fieldTasks = [];
-
 				obj.fields().forEach(f => {
-					fieldTasks.push(ABMigration.createField(f));
+					tasks.push(ABMigration.createField(f));
 				});
-
-				return Promise.all(fieldTasks);
 
 			});
 

@@ -95,9 +95,7 @@ OP.Model.extend('opstools.BuildApp.ABRole',
 
 			return OP.Comm.Service.put({
 				url: `/app_builder/scope?roleID=${roleId}`,
-				data: {
-					scope: scope
-				}
+				data: scope
 			});
 		},
 

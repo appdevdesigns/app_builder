@@ -12,7 +12,7 @@ module.exports = class ABObjectScope extends ABObjectSystem {
 	constructor() {
 
 		let attributes = {};
-		attributes.id = "AB_SCOPE";
+		attributes.id = "af10e37c-9b3a-4dc6-a52a-85d52320b659";
 		attributes.name = "SCOPE";
 		attributes.tableName = "AB_SYSTEM_SCOPE";
 		attributes.primaryColumnName = "uuid";
@@ -28,14 +28,14 @@ module.exports = class ABObjectScope extends ABObjectSystem {
 
 		// role
 		this._fields.push(new ABFieldConnect({
-			id: "AB_SCOPE_ROLE_FIELD",
-			label: "Role",
-			columnName: "role",
+			id: "e3670083-befb-4139-ae40-c375efe8da4e",
+			label: "Roles",
+			columnName: "roles",
 			settings: {
-				linkObject: "AB_ROLE",
+				linkObject: "c33692f3-26b7-4af3-a02e-139fb519296d",
 				linkType: "many",
 				linkViaType: "many",
-				linkColumn: "AB_ROLE_SCOPES_FIELD",
+				linkColumn: "4585d5cb-0eea-461d-a326-61187c88520f",
 				isSource: 1
 			}
 		}, this));
