@@ -7,12 +7,14 @@ const ABFieldUser = require("../classes/platform/dataFields/ABFieldUser");
 const ABFieldJson = require("../classes/platform/dataFields/ABFieldJson");
 const ABFieldBoolean = require("../classes/platform/dataFields/ABFieldBoolean");
 
+const SCOPE_OBJECT_ID = "af10e37c-9b3a-4dc6-a52a-85d52320b659";
+
 module.exports = class ABObjectScope extends ABObjectSystem {
 
 	constructor() {
 
 		let attributes = {};
-		attributes.id = "af10e37c-9b3a-4dc6-a52a-85d52320b659";
+		attributes.id = SCOPE_OBJECT_ID;
 		attributes.name = "SCOPE";
 		attributes.tableName = "AB_SYSTEM_SCOPE";
 		attributes.primaryColumnName = "uuid";
@@ -45,7 +47,7 @@ module.exports = class ABObjectScope extends ABObjectSystem {
 			label: "Name",
 			columnName: "name",
 			settings: {
-				supportMultilingual: true
+				supportMultilingual: 1
 			}
 		}, this));
 
@@ -54,7 +56,7 @@ module.exports = class ABObjectScope extends ABObjectSystem {
 			label: "Description",
 			columnName: "description",
 			settings: {
-				supportMultilingual: true
+				supportMultilingual: 1
 			}
 		}, this));
 
@@ -63,9 +65,16 @@ module.exports = class ABObjectScope extends ABObjectSystem {
 			label: "Created By",
 			columnName: "createdBy",
 			settings: {
-				isMultiple: 1,
-				isShowProfileImage: 0
+				isMultiple: 0,
+				isShowProfileImage: 0,
+				isCurrentUser: 1
 			}
+		}, this));
+
+		// objectIds
+		this._fields.push(new ABFieldJson({
+			label: "Objects",
+			columnName: "objectIds"
 		}, this));
 
 		// filter
@@ -80,8 +89,85 @@ module.exports = class ABObjectScope extends ABObjectSystem {
 			columnName: "allowAll"
 		}, this));
 
-		// TODO: objectIds
+	}
+
+	/**
+	 * @method pullScopes
+	 * 
+	 * @param {Object} options - {
+	 * 						username: {string},
+	 * 						objectIds: {array},
+	 * 						ignoreQueryId: {uuid}
+	 * 					}
+	 */
+	static pullScopes(options = {}) {
+
+		return new Promise((resolve, reject) => {
+
+			let ABObjectRole = ABObjectCache.get("c33692f3-26b7-4af3-a02e-139fb519296d");
+			// let ABObjectScope = ABObjectCache.get(SCOPE_OBJECT_ID);
+
+			ABObjectRole.queryFind({
+				where: {
+					glue: "and",
+					rules: [
+						{
+							key: "username",
+							rule: "contains",
+							value: options.username
+						}
+					]
+				},
+				populate: true
+			})
+				.catch(reject)
+				.then(roles => {
+
+					let scopes = [];
+
+					(roles || []).forEach(r => {
+						(r.scopes__relation || []).forEach(sData => {
+							if (!scopes.filter(s => s.id == sData.id)[0])
+								scopes.push(sData);
+						});
+					});
+
+					// remove rules who has filter to query id
+					if (options.ignoreQueryId) {
+						(scopes || []).forEach(s => {
+
+							if (!s ||
+								!s.filter ||
+								!s.filter.rules ||
+								s.filter.rules.length < 1)
+								return;
+
+							s.filter.rules.forEach((r, rIndex) => {
+
+								if (r.rule &&
+
+									(r.rule == "in_query" ||
+										r.rule == "not_in_query" ||
+										r.rule == "in_query_field" ||
+										r.rule == "not_in_query_field") &&
+
+									(r.value || "").indexOf(options.ignoreQueryId) > -1) {
+
+									s.filter.rules.splice(rIndex, 1);
+								}
+
+							});
+
+						});
+					}
+
+					resolve(scopes);
+
+				});
+
+		});
 
 	}
+
 
 }

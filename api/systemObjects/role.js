@@ -43,7 +43,7 @@ module.exports = class ABObjectRole extends ABObjectSystem {
 			label: "Name",
 			columnName: "name",
 			settings: {
-				supportMultilingual: true
+				supportMultilingual: 1
 			}
 		}, this));
 
@@ -52,7 +52,7 @@ module.exports = class ABObjectRole extends ABObjectSystem {
 			label: "Description",
 			columnName: "description",
 			settings: {
-				supportMultilingual: true
+				supportMultilingual: 1
 			}
 		}, this));
 

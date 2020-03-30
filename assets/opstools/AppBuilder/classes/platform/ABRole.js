@@ -69,6 +69,11 @@ module.exports = class ABRole extends ABRoleCore {
 
 		super.fromValues(values);
 
+		this._scopes = [];
+		(values.scopes__relation || values.scopes || []).forEach(s => {
+			this._scopes.push(new ABScope(s));
+		});
+
 		// multilingual fields: name, description
 		OP.Multilingual.translate(this, this, ['name', 'description']);
 

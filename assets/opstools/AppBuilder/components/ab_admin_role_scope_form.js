@@ -182,22 +182,19 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 				let currScope = _logic.getScope();
 				if (currScope) {
 
-					let objectIds = currScope.objects().map(o => o.id).join(',');
-
 					$$(ids.form).setValues({
 						name: currScope.name,
 						description: currScope.description,
 						allowAll: currScope.allowAll,
-						objectIds: objectIds
+						objectIds: currScope.objectIds
 					});
 				}
 				else {
 					$$(ids.form).setValues({});
 				}
 
-				let objectsOfScope = currScope ? currScope.objects() : [];
 				// Pull objects of this page (has mock ABApplication)
-				let objects = this._objects.filter(obj => objectsOfScope.filter(o => o.id == obj.id).length > 0);
+				let objects = this._objects.filter(obj => (currScope ? (currScope.objectIds || []) : []).filter(objId => objId == obj.id).length > 0);
 				_logic.refreshFilterData(currScope, objects);
 
 			},
@@ -248,6 +245,7 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 				// Add new
 				let isAdded = false;
 				if (!currScope) {
+					vals.createdBy = OP.User.username();
 					currScope = new ABScope(vals);
 					isAdded = true;
 				}
@@ -364,18 +362,16 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 							}
 						});
 
-						let scope = _logic.getScope();
-						if (scope &&
-							scope.object &&
-							scope.object[0]) {
-							let exists = (objOptions.filter(o => o.id == scope.object[0].id).length > 0);
-							if (!exists) {
-								objOptions.push({
-									id: scope.object[0].id,
-									value: scope.object[0].label
-								});
-							}
-						}
+						// let scope = _logic.getScope();
+						// if (scope) {
+						// 	let exists = (objOptions.filter(o => o.id == scope.object[0].id).length > 0);
+						// 	if (!exists) {
+						// 		objOptions.push({
+						// 			id: scope.object[0].id,
+						// 			value: scope.object[0].label
+						// 		});
+						// 	}
+						// }
 
 						$$(ids.object).define("options", objOptions);
 						$$(ids.object).refresh();

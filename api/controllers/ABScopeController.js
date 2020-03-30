@@ -130,7 +130,8 @@ let ABScopeController = {
 	// PUT /app_builder/role/:roleID/scope/:id'
 	import: function (req, res) {
 
-		let roleID = req.param('roleID')
+		req.params["objID"] = SCOPE_OBJECT_ID;
+		let roleID = req.param('roleID');
 
 		Promise.resolve()
 			// Pull the scope
@@ -166,7 +167,8 @@ let ABScopeController = {
 	// DELETE /app_builder/role/:roleID/scope/:id'
 	exclude: function (req, res) {
 
-		let roleID = req.param('roleID')
+		let roleID = req.param('roleID');
+		req.params["objID"] = SCOPE_OBJECT_ID;
 
 		Promise.resolve()
 			// Pull the scope
@@ -190,9 +192,8 @@ let ABScopeController = {
 					return next();
 				}
 
-				ABModelController.update(req, res)
-					.catch(err)
-					.then(() => next());
+				ABModelController.update(req, res);
+				next();
 			}));
 
 	}

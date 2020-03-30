@@ -31,7 +31,20 @@ module.exports = class ABScope extends ABScopeCore {
 
 	save(role) {
 
-		return this.Model.staticData.scopeSave(this.toObj(), (role ? role.id : null));
+		return new Promise((resolve, reject) => {
+
+			this.Model.staticData.scopeSave(this.toObj(), (role ? role.id : null))
+				.catch(reject)
+				.then(data => {
+
+					if (data)
+						resolve(new ABScope(data));
+					else
+						resolve();
+
+				});
+
+		});
 
 	}
 

@@ -8,7 +8,8 @@ const ABObjectCore = require(path.join(__dirname,  "..", "core", "ABObjectCore.j
 
 const Model = require('objection').Model;
 
-const ABGraphScope = require("../../graphModels/ABScope");
+// const ABGraphScope = require("../../graphModels/ABScope");
+const ABObjectScope = require("../../systemObjects/scope");
 
 // var __ObjectPool = {};
 var __ModelPool = {};	// reuse any previously created Model connections
@@ -726,10 +727,10 @@ module.exports = class ABClassObject extends ABObjectCore {
 					objectIds = [this.id];
 				}
 
-				ABGraphScope.getFilter({
-						username: userData.username,
-						objectIds: objectIds, 
-						ignoreQueryId: (this.viewName ? this.id : null)
+				ABObjectScope.pullScopes({
+					username: userData.username,
+					objectIds: objectIds, 
+					ignoreQueryId: (this.viewName ? this.id : null)
 				})
 					.catch(err)
 					.then(scopes => {
