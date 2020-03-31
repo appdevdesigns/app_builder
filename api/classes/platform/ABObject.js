@@ -9,7 +9,7 @@ const ABObjectCore = require(path.join(__dirname,  "..", "core", "ABObjectCore.j
 const Model = require('objection').Model;
 
 // const ABGraphScope = require("../../graphModels/ABScope");
-const ABObjectScope = require("../../systemObjects/scope");
+// const ABObjectScope = require("../../systemObjects/scope");
 
 // var __ObjectPool = {};
 var __ModelPool = {};	// reuse any previously created Model connections
@@ -698,7 +698,7 @@ module.exports = class ABClassObject extends ABObjectCore {
 	 *                             }
 	 * @return {Promise}
 	 */
-	populateFindConditions(query, options, userData) {
+	populateFindConditions(query, options, userData = {}) {
 
 		var where = {
 				glue: "and",
@@ -716,6 +716,9 @@ module.exports = class ABClassObject extends ABObjectCore {
 			// Apply filters from scopes
 			.then(() => new Promise((next, err) => {
 
+				if (this.isSystemObject)
+					return next();
+
 				let objectIds = [];
 
 				// ABObjectQuery
@@ -727,6 +730,7 @@ module.exports = class ABClassObject extends ABObjectCore {
 					objectIds = [this.id];
 				}
 
+				let ABObjectScope = ABSystemObject.getObjectScope();
 				ABObjectScope.pullScopes({
 					username: userData.username,
 					objectIds: objectIds, 

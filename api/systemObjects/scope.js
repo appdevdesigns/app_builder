@@ -100,7 +100,7 @@ module.exports = class ABObjectScope extends ABObjectSystem {
 	 * 						ignoreQueryId: {uuid}
 	 * 					}
 	 */
-	static pullScopes(options = {}) {
+	pullScopes(options = {}) {
 
 		return new Promise((resolve, reject) => {
 
@@ -112,7 +112,7 @@ module.exports = class ABObjectScope extends ABObjectSystem {
 					glue: "and",
 					rules: [
 						{
-							key: "username",
+							key: "users",
 							rule: "contains",
 							value: options.username
 						}
@@ -126,6 +126,11 @@ module.exports = class ABObjectScope extends ABObjectSystem {
 					let scopes = [];
 
 					(roles || []).forEach(r => {
+
+						// Check user in role
+						if (!(r.users || []).filter(u => (u.id || u) == options.username)[0])
+							return;
+
 						(r.scopes__relation || []).forEach(sData => {
 							if (!scopes.filter(s => s.id == sData.id)[0])
 								scopes.push(sData);
