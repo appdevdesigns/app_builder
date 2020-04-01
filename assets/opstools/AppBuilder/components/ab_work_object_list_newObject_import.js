@@ -6,38 +6,36 @@
  */
 
 const ABComponent = require("../classes/platform/ABComponent");
- // const ABObject = require('../classes/ABObject.js');
-const ABApplication = require('../classes/platform/ABApplication');
-const ABFieldManager = require('../classes/core/ABFieldManager.js');
+// const ABObject = require('../classes/ABObject.js');
+const ABApplication = require("../classes/platform/ABApplication");
+const ABFieldManager = require("../classes/core/ABFieldManager.js");
 
 module.exports = class AB_Work_Object_List_NewObject_Import extends ABComponent {
-
     constructor(App) {
-        super(App, 'ab_work_object_list_newObject_import');
+        super(App, "ab_work_object_list_newObject_import");
         var L = this.Label;
         var currentApp = null;
 
         var labels = {
             common: App.labels,
             component: {
-                existing: L('ab.object.import.title', "*Existing"),
-                columns: L('ab.object.import.columns', "*Columns"),
+                existing: L("ab.object.import.title", "*Existing"),
+                columns: L("ab.object.import.columns", "*Columns")
             }
         };
 
         // internal list of Webix IDs to reference UI components.
         var ids = {
-            component: this.unique('component'),
-            form: this.unique('import'),
+            component: this.unique("component"),
+            form: this.unique("import"),
 
-            filter: this.unique('filter'),
-            objectList: this.unique('objectList'),
-            columnList: this.unique('columnList'),
+            filter: this.unique("filter"),
+            objectList: this.unique("objectList"),
+            columnList: this.unique("columnList"),
 
-            buttonSave: this.unique('save'),
-            buttonCancel: this.unique('cancel')
+            buttonSave: this.unique("save"),
+            buttonCancel: this.unique("cancel")
         };
-
 
         /**
          * @param {object} options
@@ -55,13 +53,12 @@ module.exports = class AB_Work_Object_List_NewObject_Import extends ABComponent 
             }
         };
 
-
-
-        // internal business logic 
-        var _logic = this._logic = {
-
+        // internal business logic
+        var _logic = (this._logic = {
             callbacks: {
-                onCancel: function () { console.warn('NO onCancel()!') },
+                onCancel: function() {
+                    console.warn("NO onCancel()!");
+                },
                 //onSave  : function(values, cb) { console.warn('NO onSave()!') },
                 onBusyStart: null,
                 onBusyEnd: null,
@@ -69,63 +66,55 @@ module.exports = class AB_Work_Object_List_NewObject_Import extends ABComponent 
             },
 
             onShow: (app) => {
-
                 currentApp = app;
                 _logic.formClear();
                 _logic.busyStart();
                 // currentApp.objectFind()
-                currentApp.objectInfo()
-                    .then(objects => {
-
+                currentApp
+                    .objectInfo()
+                    .then((objects) => {
                         let availableObjs = [];
 
-                        objects.forEach(obj => {
-
+                        objects.forEach((obj) => {
                             // skip if this object is in application
-                            if (currentApp.objects(o => o.id == obj.id)[0])
+                            if (currentApp.objects((o) => o.id == obj.id)[0])
                                 return;
 
                             availableObjs.push(obj);
-
                         });
 
-                        $$(ids.objectList).parse(availableObjs, 'json');
+                        $$(ids.objectList).parse(availableObjs, "json");
 
                         _logic.busyEnd();
-
                     })
                     .catch((err) => {
                         _logic.busyEnd();
                     });
-
             },
 
-            busyStart: function () {
+            busyStart: function() {
                 if (_logic.callbacks.onBusyStart) {
                     _logic.callbacks.onBusyStart();
                 }
             },
 
-            busyEnd: function () {
+            busyEnd: function() {
                 if (_logic.callbacks.onBusyEnd) {
                     _logic.callbacks.onBusyEnd();
                 }
             },
 
-
-            filter: function () {
+            filter: function() {
                 // `this` should be from the Webix event
                 var filterText = this.getValue();
-                $$(ids.objectList).filter('#label#', filterText);
+                $$(ids.objectList).filter("#label#", filterText);
             },
 
-
-            objectSelect: function () {
+            objectSelect: function() {
                 $$(ids.columnList).clearAll();
 
                 let selectedObj = $$(ids.objectList).getSelectedItem(false);
                 if (selectedObj) {
-
                     _logic.busyStart();
 
                     let colNames = [];
@@ -133,26 +122,30 @@ module.exports = class AB_Work_Object_List_NewObject_Import extends ABComponent 
                     Promise.resolve()
                         .then(() => currentApp.objectGet(selectedObj.id))
 
-                        .then(obj => {
-
+                        .then((obj) => {
                             // Parse results and update column list
                             if (obj) {
                                 obj.fields().forEach((f) => {
-
                                     // Skip these columns
                                     // TODO : skip connect field
                                     // if (col.model) continue;
                                     // if (col.collection) continue;
 
-                                    let fieldClass = ABFieldManager.allFields().filter((field) => field.defaults().key == f.key)[0];
+                                    let fieldClass = ABFieldManager.allFields().filter(
+                                        (field) => field.defaults().key == f.key
+                                    )[0];
                                     if (fieldClass == null) return;
 
                                     // If connect field does not link to objects in app, then skip
-                                    if (f.key == 'connectObject' &&
-                                        !currentApp.objects(obj => obj.id == f.settings.linkObject)[0]) {
+                                    if (
+                                        f.key == "connectObject" &&
+                                        !currentApp.objects(
+                                            (obj) =>
+                                                obj.id == f.settings.linkObject
+                                        )[0]
+                                    ) {
                                         return;
                                     }
-
 
                                     colNames.push({
                                         id: f.id,
@@ -161,52 +154,45 @@ module.exports = class AB_Work_Object_List_NewObject_Import extends ABComponent 
                                         icon: f.icon
                                         // disabled: !supported
                                     });
-
                                 });
                             }
 
                             $$(ids.columnList).parse(colNames);
 
                             _logic.busyEnd();
-
                         });
-
                 }
             },
 
-            cancel: function () {
+            cancel: function() {
                 _logic.formClear();
                 _logic.callbacks.onCancel();
             },
 
-
-            formClear: function () {
+            formClear: function() {
                 // Filter section
                 $$(ids.form).clearValidation();
                 $$(ids.form).clear();
                 // Lists
                 $$(ids.objectList).clearAll();
                 $$(ids.columnList).clearAll();
-
             },
-
 
             /**
              * @function hide()
              *
              * hide this component.
              */
-            hide: function () {
+            hide: function() {
                 $$(ids.component).hide();
             },
-
 
             /**
              * @function save
              *
              * Send model import request to the server
              */
-            save: function () {
+            save: function() {
                 var saveButton = $$(ids.buttonSave);
                 var selectedObj = $$(ids.objectList).getSelectedItem();
                 if (!selectedObj) return false;
@@ -232,33 +218,30 @@ module.exports = class AB_Work_Object_List_NewObject_Import extends ABComponent 
                 //         columns: columns
                 //     }
                 // })
-                currentApp.objectImport(selectedObj.id)
-                    .then(newObj => {
+                currentApp
+                    .objectImport(selectedObj.id)
+                    .then((newObj) => {
                         saveButton.enable();
                         _logic.busyEnd();
 
                         _logic.callbacks.onDone(newObj);
                     })
                     .catch((err) => {
-                        console.log('ERROR:', err);
+                        console.log("ERROR:", err);
                         saveButton.enable();
                         _logic.busyEnd();
                     });
-
             },
-
 
             /**
              * @function show()
              *
              * Show this component.
              */
-            show: function () {
-                if ($$(ids.component))
-                    $$(ids.component).show();
+            show: function() {
+                if ($$(ids.component)) $$(ids.component).show();
             }
-        };
-
+        });
 
         // webix UI definition
         // (it references _logic functions defined above)
@@ -270,13 +253,16 @@ module.exports = class AB_Work_Object_List_NewObject_Import extends ABComponent 
                 id: ids.form,
                 width: 400,
                 elements: [
-
                     // Filter
                     {
                         cols: [
-                            { view: 'icon', icon: 'fa fa-filter', align: 'left' },
                             {
-                                view: 'text',
+                                view: "icon",
+                                icon: "fa fa-filter",
+                                align: "left"
+                            },
+                            {
+                                view: "text",
                                 id: ids.filter,
                                 on: {
                                     onTimedKeyPress: _logic.filter
@@ -287,47 +273,42 @@ module.exports = class AB_Work_Object_List_NewObject_Import extends ABComponent 
 
                     // Model list
                     {
-                        view: 'list',
+                        view: "list",
                         id: ids.objectList,
                         select: true,
                         height: 200,
                         minHeight: 250,
                         maxHeight: 250,
                         data: [],
-                        template: '<div>#label#</div>',
+                        template: "<div>#label#</div>",
                         on: {
                             onSelectChange: _logic.objectSelect
-                        },
+                        }
                     },
 
                     // Columns list
                     {
-                        view: 'label',
+                        view: "label",
                         label: `<b>${labels.component.columns}</b>`,
                         height: 20
                     },
                     {
-                        view: App.custom.activelist.view,
+                        view: "list",
                         id: ids.columnList,
-                        datatype: 'json',
+                        datatype: "json",
                         multiselect: false,
                         select: false,
                         height: 200,
                         minHeight: 200,
                         maxHeight: 200,
                         type: {
-                            height: 40
-                        },
-                        activeContent: {
-
+                            height: 40,
                             isvisible: {
-                                view: 'checkbox',
+                                view: "checkbox",
                                 width: 30
                             }
-
                         },
                         template: (obj, common) => {
-
                             // return `
                             //     <span style="float: left;">${common.isvisible(obj, common)}</span>
                             //     <span style="float: left;">${obj.label}</span>
@@ -336,7 +317,6 @@ module.exports = class AB_Work_Object_List_NewObject_Import extends ABComponent 
                                 <span style="float: left;"><i class="fa fa-${obj.icon}"></i></span>
                                 <span style="float: left;"> ${obj.label}</span>
                             `;
-
                         }
                     },
 
@@ -356,6 +336,7 @@ module.exports = class AB_Work_Object_List_NewObject_Import extends ABComponent 
                             {
                                 view: "button",
                                 id: ids.buttonSave,
+                                css: "webix_primary",
                                 value: labels.common.import,
                                 autowidth: true,
                                 type: "form",
@@ -367,19 +348,12 @@ module.exports = class AB_Work_Object_List_NewObject_Import extends ABComponent 
             }
         };
 
-
         // Expose any globally accessible Actions:
-        this.actions({
+        this.actions({});
 
-        });
-
-
-
-        // 
+        //
         // Define external interface methods:
-        // 
-        this.onShow = _logic.onShow
-
+        //
+        this.onShow = _logic.onShow;
     }
-
-}
+};

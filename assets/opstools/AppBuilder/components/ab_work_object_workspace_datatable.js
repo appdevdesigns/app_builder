@@ -313,7 +313,8 @@ console.warn('!! ToDo: onAfterColumnHide()');
                 // let scrollState = DataTable.Ug(), // webix6.1.0
                 // let scrollState = DataTable.pw(), // webix6.2.0
                 // let scrollState = DataTable.xw(), // webix6.2.6
-                let scrollState = DataTable._get_y_range(),
+                let scrollState = DataTable.vw(), // webix7.2.0
+                // let scrollState = DataTable._get_y_range(),
                     startRecIndex = scrollState[0],
                     endRecIndex = scrollState[1],
                     index = 0;
@@ -1346,7 +1347,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
                 if (CurrentDatacollection) {
                     CurrentDatacollection.settings.loadAll = true;
-                    CurrentDatacollection.reloadData();
+                    CurrentDatacollection.reloadData(null, null);
                 }
 
                 // _logic.refresh(isLoadAll);
