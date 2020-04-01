@@ -62,6 +62,16 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
                 ui: this.formBuilder
             };
 
+            var processData = {};
+            var listDataFields = this.process.processDataFields(this);
+            listDataFields.forEach((entry) => {
+                processData[entry.key] = this.process.processData(this, [
+                    instance,
+                    entry.key
+                ]);
+            });
+            jobData.data = processData;
+
             if (parseInt(this.who) == 1) {
                 if (parseInt(this.toUsers.useRole) == 1) {
                     jobData.roles = this.toUsers.role;

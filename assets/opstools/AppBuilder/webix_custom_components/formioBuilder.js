@@ -41,7 +41,7 @@ module.exports = class ABCustomFormIOBuilder {
                 autofit: true
             },
             $init: function(config) {
-                var comp = _logic.parseDataObjects(config.dataObjects);
+                var comp = _logic.parseDataFields(config.dataFields);
                 var formComponents = config.formComponents
                     ? config.formComponents
                     : {};
@@ -91,269 +91,270 @@ module.exports = class ABCustomFormIOBuilder {
              * @param elem {Object} the webix element
              * @param parentId {integer - nullable} id of parent id
              */
-            parseDataObjects: (objects) => {
+            parseDataFields: (fields) => {
                 var components = {};
-                objects.forEach((obj) => {
-                    var fields = obj.fields();
-                    console.log(fields);
-                    fields.forEach((field) => {
-                        switch (field.key) {
-                            case "boolean":
-                                components[field.columnName] = {
-                                    title: field.label,
-                                    key: field.columnName,
-                                    icon: field.icon,
-                                    schema: {
-                                        abFieldID: field.id,
-                                        label: field.label,
-                                        type: "checkbox",
-                                        disabled: true,
-                                        key: field.columnName,
-                                        input: true
-                                    }
-                                };
-                                break;
-                            case "calculate":
-                                components[field.columnName] = {
-                                    title: field.label,
-                                    key: field.columnName,
-                                    icon: field.icon,
-                                    schema: {
-                                        abFieldID: field.id,
-                                        label: field.label,
-                                        type: "textfield",
-                                        key: field.columnName,
-                                        input: true,
-                                        inputType: "text",
-                                        disabled: true,
-                                        calculateValue:
-                                            "value = " +
-                                            field.settings.formula
-                                                .replace(/{/g, "data['")
-                                                .replace(/}/g, "']")
-                                    }
-                                };
-                                break;
-                            case "connectObject":
-                                components[field.columnName] = {
-                                    title: field.label,
-                                    key: field.columnName,
-                                    icon: field.icon,
-                                    schema: {
-                                        abFieldID: field.id,
-                                        label: field.label,
-                                        type: "textfield",
-                                        key: field.columnName,
-                                        input: true,
-                                        inputType: "text",
-                                        disabled: true,
-                                        calculateValue:
-                                            "value = '" +
-                                            field.settings.textFormula +
-                                            "'"
-                                    }
-                                };
-                                break;
+                // objects.forEach((obj) => {
+                //     var fields = obj.fields();
+                //     console.log(fields);
+                fields.forEach((entry) => {
+                    if (!entry.field) return;
+                    switch (entry.field.key) {
+                        case "boolean":
+                            components[entry.key] = {
+                                title: entry.label,
+                                key: entry.key,
+                                icon: entry.field.icon,
+                                schema: {
+                                    abFieldID: entry.field.id,
+                                    label: entry.field.label,
+                                    type: "checkbox",
+                                    disabled: true,
+                                    key: entry.key,
+                                    input: true
+                                }
+                            };
+                            break;
+                        case "calculate":
+                            components[entry.key] = {
+                                title: entry.label,
+                                key: entry.key,
+                                icon: entry.field.icon,
+                                schema: {
+                                    abFieldID: entry.field.id,
+                                    label: entry.field.label,
+                                    type: "textfield",
+                                    key: entry.key,
+                                    input: true,
+                                    inputType: "text",
+                                    disabled: true,
+                                    calculateValue:
+                                        "value = " +
+                                        entry.field.settings.formula
+                                            .replace(/{/g, "data['")
+                                            .replace(/}/g, "']")
+                                }
+                            };
+                            break;
+                        case "connectObject":
+                            components[entry.key] = {
+                                title: entry.label,
+                                key: entry.key,
+                                icon: entry.field.icon,
+                                schema: {
+                                    abFieldID: entry.field.id,
+                                    label: entry.field.label,
+                                    type: "textfield",
+                                    key: entry.key,
+                                    input: true,
+                                    inputType: "text",
+                                    disabled: true,
+                                    calculateValue:
+                                        "value = '" +
+                                        entry.field.settings.textFormula +
+                                        "'"
+                                }
+                            };
+                            break;
 
-                            case "date":
-                                components[field.columnName] = {
-                                    title: field.label,
-                                    key: field.columnName,
-                                    icon: field.icon,
-                                    schema: {
-                                        abFieldID: field.id,
-                                        label: field.label,
-                                        type: "datetime",
-                                        disabled: true,
-                                        key: field.columnName,
-                                        input: true,
-                                        format:
-                                            field.settings.timeFormat == 1
-                                                ? "MMMM d, yyyy"
-                                                : "MMMM d, yyyy h:mm a"
-                                    }
-                                };
-                                break;
-                            case "email":
-                                components[field.columnName] = {
-                                    title: field.label,
-                                    key: field.columnName,
-                                    icon: field.icon,
-                                    schema: {
-                                        abFieldID: field.id,
-                                        label: field.label,
-                                        disabled: true,
-                                        type: "email",
-                                        key: field.columnName,
-                                        input: true
-                                    }
-                                };
-                                break;
-                            case "file":
-                                components[field.columnName] = {
-                                    title: field.label,
-                                    key: field.columnName,
-                                    icon: field.icon,
-                                    schema: {
-                                        abFieldID: field.id,
-                                        label: field.label,
-                                        type: "htmlelement",
-                                        tag: "a",
-                                        className: "btn btn-primary btn-block",
-                                        content:
-                                            "<i class='fa fa-paperclip'></i>  " +
-                                            "{{JSON.parse(data['" +
-                                            field.columnName +
-                                            "']).filename}}",
-                                        attrs: [
-                                            {
-                                                attr: "href",
-                                                value:
-                                                    "/opsportal/file/" +
-                                                    field.object.application
-                                                        .name +
-                                                    "/" +
-                                                    "{{JSON.parse(data['" +
-                                                    field.columnName +
-                                                    "']).uuid}}"
-                                            },
-                                            {
-                                                attr: "target",
-                                                value: "_blank"
-                                            }
-                                        ],
-                                        refreshOnChange: true,
-                                        key: field.columnName,
-                                        disabled: true,
-                                        input: false
-                                    }
-                                };
-                                break;
-                            case "image":
-                                components[field.columnName] = {
-                                    title: field.label,
-                                    key: field.columnName,
-                                    icon: field.icon,
-                                    schema: {
-                                        abFieldID: field.id,
-                                        label: field.label,
-                                        type: "htmlelement",
-                                        tag: "img",
-                                        className: "img-thumbnail max100",
-                                        content: "",
-                                        attrs: [
-                                            {
-                                                attr: "src",
-                                                value:
-                                                    "/opsportal/image/" +
-                                                    field.object.application
-                                                        .name +
-                                                    "/" +
-                                                    "{{data['" +
-                                                    field.columnName +
-                                                    "']}}"
-                                            }
-                                        ],
-                                        refreshOnChange: true,
-                                        key: field.columnName,
-                                        input: false
-                                    }
-                                };
-                                break;
-                            case "list":
-                                var vals = [];
-                                field.settings.options.forEach((opt) => {
-                                    vals.push({
-                                        label: opt.text,
-                                        value: opt.id
-                                    });
-                                });
-                                components[field.columnName] = {
-                                    title: field.label,
-                                    key: field.columnName,
-                                    icon: field.icon,
-                                    schema: {
-                                        abFieldID: field.id,
-                                        label: field.label,
-                                        type: "select",
-                                        key: field.columnName,
-                                        disabled: true,
-                                        input: true,
-                                        data: {
-                                            values: vals
+                        case "date":
+                            components[entry.key] = {
+                                title: entry.label,
+                                key: entry.key,
+                                icon: entry.field.icon,
+                                schema: {
+                                    abFieldID: entry.field.id,
+                                    label: entry.field.label,
+                                    type: "datetime",
+                                    disabled: true,
+                                    key: entry.key,
+                                    input: true,
+                                    format:
+                                        entry.field.settings.timeFormat == 1
+                                            ? "MMMM d, yyyy"
+                                            : "MMMM d, yyyy h:mm a"
+                                }
+                            };
+                            break;
+                        case "email":
+                            components[entry.key] = {
+                                title: entry.label,
+                                key: entry.key,
+                                icon: entry.field.icon,
+                                schema: {
+                                    abFieldID: entry.field.id,
+                                    label: entry.field.label,
+                                    disabled: true,
+                                    type: "email",
+                                    key: entry.key,
+                                    input: true
+                                }
+                            };
+                            break;
+                        case "file":
+                            components[entry.key] = {
+                                title: entry.label,
+                                key: entry.key,
+                                icon: entry.field.icon,
+                                schema: {
+                                    abFieldID: entry.field.id,
+                                    label: entry.field.label,
+                                    type: "htmlelement",
+                                    tag: "a",
+                                    className: "btn btn-primary btn-block",
+                                    content:
+                                        "<i class='fa fa-paperclip'></i>  " +
+                                        "{{JSON.parse(data['" +
+                                        entry.key +
+                                        "']).filename}}",
+                                    attrs: [
+                                        {
+                                            attr: "href",
+                                            value:
+                                                "/opsportal/file/" +
+                                                entry.field.object.application
+                                                    .name +
+                                                "/" +
+                                                "{{JSON.parse(data['" +
+                                                entry.key +
+                                                "']).uuid}}"
                                         },
-                                        multiple: field.settings.isMultiple
-                                    }
-                                };
-                                break;
-                            case "LongText":
-                                components[field.columnName] = {
-                                    title: field.label,
-                                    key: field.columnName,
-                                    icon: field.icon,
-                                    schema: {
-                                        abFieldID: field.id,
-                                        label: field.label,
-                                        type: "textarea",
-                                        disabled: true,
-                                        key: field.columnName,
-                                        input: true
-                                    }
-                                };
-                                break;
-                            case "number":
-                                components[field.columnName] = {
-                                    title: field.label,
-                                    key: field.columnName,
-                                    icon: field.icon,
-                                    schema: {
-                                        abFieldID: field.id,
-                                        label: field.label,
-                                        disabled: true,
-                                        type: "number",
-                                        key: field.columnName,
-                                        input: true
-                                    }
-                                };
-                                break;
-                            case "TextFormula":
-                                components[field.columnName] = {
-                                    title: field.label,
-                                    key: field.columnName,
-                                    icon: field.icon,
-                                    schema: {
-                                        abFieldID: field.id,
-                                        label: field.label,
-                                        type: "textfield",
-                                        key: field.columnName,
-                                        input: true,
-                                        inputType: "text",
-                                        disabled: true,
-                                        calculateValue:
-                                            "value = '" +
-                                            field.settings.textFormula +
-                                            "'"
-                                    }
-                                };
-                                break;
-                            default:
-                                components[field.columnName] = {
-                                    title: field.label,
-                                    key: field.columnName,
-                                    icon: field.icon,
-                                    schema: {
-                                        abFieldID: field.id,
-                                        label: field.label,
-                                        type: "textfield",
-                                        disabled: true,
-                                        key: field.columnName,
-                                        input: true
-                                    }
-                                };
-                                break;
-                        }
-                    });
+                                        {
+                                            attr: "target",
+                                            value: "_blank"
+                                        }
+                                    ],
+                                    refreshOnChange: true,
+                                    key: entry.key,
+                                    disabled: true,
+                                    input: false
+                                }
+                            };
+                            break;
+                        case "image":
+                            components[entry.key] = {
+                                title: entry.label,
+                                key: entry.key,
+                                icon: entry.field.icon,
+                                schema: {
+                                    abFieldID: entry.field.id,
+                                    label: entry.field.label,
+                                    type: "htmlelement",
+                                    tag: "img",
+                                    className: "img-thumbnail max100",
+                                    content: "",
+                                    attrs: [
+                                        {
+                                            attr: "src",
+                                            value:
+                                                "/opsportal/image/" +
+                                                entry.field.object.application
+                                                    .name +
+                                                "/" +
+                                                "{{data['" +
+                                                entry.key +
+                                                "']}}"
+                                        }
+                                    ],
+                                    refreshOnChange: true,
+                                    key: entry.key,
+                                    input: false
+                                }
+                            };
+                            break;
+                        case "list":
+                            var vals = [];
+                            entry.field.settings.options.forEach((opt) => {
+                                vals.push({
+                                    label: opt.text,
+                                    value: opt.id
+                                });
+                            });
+                            components[entry.key] = {
+                                title: entry.label,
+                                key: entry.key,
+                                icon: entry.field.icon,
+                                schema: {
+                                    abFieldID: entry.field.id,
+                                    label: entry.field.label,
+                                    type: "select",
+                                    key: entry.key,
+                                    disabled: true,
+                                    input: true,
+                                    data: {
+                                        values: vals
+                                    },
+                                    multiple: entry.field.settings.isMultiple
+                                }
+                            };
+                            break;
+                        case "LongText":
+                            components[entry.key] = {
+                                title: entry.label,
+                                key: entry.key,
+                                icon: entry.field.icon,
+                                schema: {
+                                    abFieldID: entry.field.id,
+                                    label: entry.field.label,
+                                    type: "textarea",
+                                    disabled: true,
+                                    key: entry.key,
+                                    input: true
+                                }
+                            };
+                            break;
+                        case "number":
+                            components[entry.key] = {
+                                title: entry.label,
+                                key: entry.key,
+                                icon: entry.field.icon,
+                                schema: {
+                                    abFieldID: entry.field.id,
+                                    label: entry.field.label,
+                                    disabled: true,
+                                    type: "number",
+                                    key: entry.key,
+                                    input: true
+                                }
+                            };
+                            break;
+                        case "TextFormula":
+                            components[entry.key] = {
+                                title: entry.label,
+                                key: entry.key,
+                                icon: entry.field.icon,
+                                schema: {
+                                    abFieldID: entry.field.id,
+                                    label: entry.field.label,
+                                    type: "textfield",
+                                    key: entry.key,
+                                    input: true,
+                                    inputType: "text",
+                                    disabled: true,
+                                    calculateValue:
+                                        "value = '" +
+                                        entry.field.settings.textFormula +
+                                        "'"
+                                }
+                            };
+                            break;
+                        default:
+                            components[entry.key] = {
+                                title: entry.label,
+                                key: entry.key,
+                                icon: entry.field.icon,
+                                schema: {
+                                    abFieldID: entry.field.id,
+                                    label: entry.field.label,
+                                    type: "textfield",
+                                    disabled: true,
+                                    key: entry.key,
+                                    input: true
+                                }
+                            };
+                            break;
+                    }
                 });
+                // });
                 components["approveButton"] = {
                     title: "Approve Button",
                     key: "approve",

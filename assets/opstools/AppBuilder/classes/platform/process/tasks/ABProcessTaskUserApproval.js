@@ -228,6 +228,9 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
                                         body: {
                                             id: ids.formBuilder,
                                             view: "formiobuilder",
+                                            dataFields: this.process.processDataFields(
+                                                this
+                                            ),
                                             dataObjects: this.process.processDataObjects(
                                                 this
                                             ),
