@@ -40,6 +40,7 @@ module.exports = class ABCustomFormIOPreview {
                 var formComponents = config.formComponents
                     ? config.formComponents
                     : {};
+                var formData = config.formData ? config.formData : {};
                 Formio.createForm(this.$view, formComponents, {
                     // readOnly: true
                     // sanitizeConfig: {
@@ -50,6 +51,9 @@ module.exports = class ABCustomFormIOPreview {
                     // now that it is set up we can push it into the global var
                     // formBuilder = builder;
                     // Provide a default submission.
+                    form.submission = {
+                        data: formData
+                    };
                     // form.submission = {
                     //     data: {
                     //         Name: "Item #5",
