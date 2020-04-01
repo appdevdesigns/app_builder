@@ -279,6 +279,9 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
 
 						this._scopeDC.updateItem(data.id, data);
 
+						if (!role.scopes(s => s.id == data.id)[0])
+							role._scopes.push(currScope);
+
 						_logic.ready();
 						_logic.hide();
 					});

@@ -7,14 +7,12 @@ const ABFieldUser = require("../classes/platform/dataFields/ABFieldUser");
 const ABFieldJson = require("../classes/platform/dataFields/ABFieldJson");
 const ABFieldBoolean = require("../classes/platform/dataFields/ABFieldBoolean");
 
-const SCOPE_OBJECT_ID = "af10e37c-9b3a-4dc6-a52a-85d52320b659";
-
 module.exports = class ABObjectScope extends ABObjectSystem {
 
 	constructor() {
 
 		let attributes = {};
-		attributes.id = SCOPE_OBJECT_ID;
+		attributes.id = ABSystemObject.getObjectScopeId();
 		attributes.name = "SCOPE";
 		attributes.tableName = "AB_SYSTEM_SCOPE";
 		attributes.primaryColumnName = "uuid";
@@ -34,7 +32,7 @@ module.exports = class ABObjectScope extends ABObjectSystem {
 			label: "Roles",
 			columnName: "roles",
 			settings: {
-				linkObject: "c33692f3-26b7-4af3-a02e-139fb519296d",
+				linkObject: ABSystemObject.getObjectRoleId(),
 				linkType: "many",
 				linkViaType: "many",
 				linkColumn: "4585d5cb-0eea-461d-a326-61187c88520f",
@@ -104,7 +102,7 @@ module.exports = class ABObjectScope extends ABObjectSystem {
 
 		return new Promise((resolve, reject) => {
 
-			let ABObjectRole = ABObjectCache.get("c33692f3-26b7-4af3-a02e-139fb519296d");
+			let ABObjectRole = ABObjectCache.get(ABSystemObject.getObjectRoleId());
 			// let ABObjectScope = ABObjectCache.get(SCOPE_OBJECT_ID);
 
 			ABObjectRole.queryFind({

@@ -46,9 +46,16 @@ module.exports = {
 
 	},
 
+	getObjectRoleId: () => {
+
+		const ROLE_OBJECT_ID = "c33692f3-26b7-4af3-a02e-139fb519296d";
+		return ROLE_OBJECT_ID;
+
+	},
+
 	getObjectRole: () => {
 
-		const ROLE_OBJECT_ID = "af10e37c-9b3a-4dc6-a52a-85d52320b659";
+		const ROLE_OBJECT_ID = ABSystemObject.getObjectRoleId();
 
 		let obj = ABObjectCache.get(ROLE_OBJECT_ID);
 		if (obj) {
@@ -62,9 +69,16 @@ module.exports = {
 
 	},
 
-	getObjectScope: () => {
+	getObjectScopeId: () => {
 
 		const SCOPE_OBJECT_ID = "af10e37c-9b3a-4dc6-a52a-85d52320b659";
+		return SCOPE_OBJECT_ID;
+
+	},
+
+	getObjectScope: () => {
+
+		const SCOPE_OBJECT_ID = ABSystemObject.getObjectScopeId();
 
 		let obj = ABObjectCache.get(SCOPE_OBJECT_ID);
 		if (obj) {

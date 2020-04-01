@@ -10,7 +10,10 @@
 
 const ABModelController = require("./ABModelController");
 
-const SCOPE_OBJECT_ID = "af10e37c-9b3a-4dc6-a52a-85d52320b659";
+function getScopeObject() {
+	const SCOPE_OBJECT_ID = ABSystemObject.getObjectScopeId();
+	return ABObjectCache.get(SCOPE_OBJECT_ID);
+}
 
 let ABScopeController = {
 
@@ -18,7 +21,7 @@ let ABScopeController = {
 	find: function (req, res) {
 
 		let cond = req.body || {};
-		let ScopeModel = ABObjectCache.get(SCOPE_OBJECT_ID);
+		let ScopeModel = getScopeObject();
 
 		if (cond.populate == null)
 			cond.populate = true;
@@ -35,7 +38,7 @@ let ABScopeController = {
 	findOne: function (req, res) {
 
 		let id = req.param('id');
-		let ScopeModel = ABObjectCache.get(SCOPE_OBJECT_ID);
+		let ScopeModel = getScopeObject();
 
 		return new Promise((resolve, reject) => {
 
@@ -79,7 +82,7 @@ let ABScopeController = {
 
 		let RoleModel = ABObjectCache.get(ROLE_OBJECT_ID);
 
-		let connectedField = RoleModel.fields(f => (f.settings || {}).linkObject == SCOPE_OBJECT_ID)[0];
+		let connectedField = RoleModel.fields(f => (f.settings || {}).linkObject == ABSystemObject.getObjectScopeId())[0];
 		if (!connectedField) {
 			res.AD.success([]);
 			return Promise.resolve([]);
@@ -109,7 +112,7 @@ let ABScopeController = {
 		if (roleID)
 			req.body.roles = [roleID];
 
-		req.params["objID"] = SCOPE_OBJECT_ID;
+		req.params["objID"] = ABSystemObject.getObjectScopeId();
 
 		if (!req.body.id)
 			return ABModelController.create(req, res);
@@ -121,7 +124,7 @@ let ABScopeController = {
 	// DELETE /app_builder/scope/:id'
 	destroy: function (req, res) {
 
-		req.params["objID"] = SCOPE_OBJECT_ID;
+		req.params["objID"] = ABSystemObject.getObjectScopeId();
 
 		return ABModelController.delete(req, res);
 
@@ -130,7 +133,7 @@ let ABScopeController = {
 	// PUT /app_builder/role/:roleID/scope/:id'
 	import: function (req, res) {
 
-		req.params["objID"] = SCOPE_OBJECT_ID;
+		req.params["objID"] = ABSystemObject.getObjectScopeId();
 		let roleID = req.param('roleID');
 
 		Promise.resolve()
@@ -168,7 +171,7 @@ let ABScopeController = {
 	exclude: function (req, res) {
 
 		let roleID = req.param('roleID');
-		req.params["objID"] = SCOPE_OBJECT_ID;
+		req.params["objID"] = ABSystemObject.getObjectScopeId();
 
 		Promise.resolve()
 			// Pull the scope

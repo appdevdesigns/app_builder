@@ -13,8 +13,16 @@ const ApplicationGraph = require("../graphModels/ABApplication");
 
 const ABModelController = require("./ABModelController");
 
-const ROLE_OBJECT_ID = "c33692f3-26b7-4af3-a02e-139fb519296d";
-const SCOPE_OBJECT_ID = "af10e37c-9b3a-4dc6-a52a-85d52320b659";
+
+function getRoleObject() {
+	const ROLE_OBJECT_ID = ABSystemObject.getObjectRoleId();
+	return ABObjectCache.get(ROLE_OBJECT_ID);
+}
+
+function getScopeObject() {
+	const SCOPE_OBJECT_ID = ABSystemObject.getObjectScopeId();
+	return ABObjectCache.get(SCOPE_OBJECT_ID);
+}
 
 let ABRoleController = {
 
@@ -22,7 +30,7 @@ let ABRoleController = {
 	find: function (req, res) {
 
 		let cond = req.body || {};
-		let RoleModel = ABObjectCache.get(ROLE_OBJECT_ID);
+		let RoleModel = getRoleObject();
 
 		if (cond.populate == null)
 			cond.populate = true;
@@ -39,7 +47,7 @@ let ABRoleController = {
 	findOne: function (req, res) {
 
 		let id = req.param('id');
-		let RoleModel = ABObjectCache.get(ROLE_OBJECT_ID);
+		let RoleModel = getRoleObject();
 
 		return new Promise((resolve, reject) => {
 
@@ -79,7 +87,7 @@ let ABRoleController = {
 	// PUT /app_builder/role
 	save: function (req, res) {
 
-		req.params["objID"] = ROLE_OBJECT_ID;
+		req.params["objID"] = ABSystemObject.getObjectRoleId();
 
 		if (!req.body.id)
 			return ABModelController.create(req, res);
@@ -91,7 +99,7 @@ let ABRoleController = {
 	// DELETE /app_builder/role/:id
 	destroy: function (req, res) {
 
-		req.params["objID"] = ROLE_OBJECT_ID;
+		req.params["objID"] = ABSystemObject.getObjectRoleId();
 
 		return ABModelController.delete(req, res);
 
@@ -102,9 +110,9 @@ let ABRoleController = {
 
 		let id = req.param('id');
 
-		let ScopeModel = ABObjectCache.get(SCOPE_OBJECT_ID);
+		let ScopeModel = getScopeObject();
 
-		let connectedField = ScopeModel.fields(f => (f.settings || {}).linkObject == ROLE_OBJECT_ID)[0];
+		let connectedField = ScopeModel.fields(f => (f.settings || {}).linkObject == ABSystemObject.getObjectRoleId())[0];
 		if (!connectedField) {
 			res.AD.success([]);
 			return Promise.resolve([]);
@@ -145,7 +153,7 @@ let ABRoleController = {
 	// POST /app_builder/role/:id/username/:username
 	addUser: (req, res) => {
 
-		req.params["objID"] = ROLE_OBJECT_ID;
+		req.params["objID"] = ABSystemObject.getObjectRoleId();
 
 		return Promise.resolve()
 			// Find role
@@ -178,8 +186,10 @@ let ABRoleController = {
 			// Update to DB
 			.then(role => new Promise((next, err) => {
 
-				if (!role)
+				if (!role){
+					res.AD.success(true);
 					return next();
+				}
 
 				ABModelController.update(req, res);
 				next();
@@ -191,7 +201,7 @@ let ABRoleController = {
 	// DELETE /app_builder/role/:id/username/:username
 	removeUser: function (req, res) {
 
-		req.params["objID"] = ROLE_OBJECT_ID;
+		req.params["objID"] = ABSystemObject.getObjectRoleId();
 
 		return Promise.resolve()
 			// Find role
@@ -200,7 +210,7 @@ let ABRoleController = {
 			// Add user
 			.then(role => new Promise((next, err) => {
 
-				if (!role)
+				if (!role) 
 					return next();
 
 				let username = req.param('username');
@@ -215,8 +225,10 @@ let ABRoleController = {
 			// Update to DB
 			.then(role => new Promise((next, err) => {
 
-				if (!role)
+				if (!role){
+					res.AD.success(true);
 					return next();
+				}
 
 				ABModelController.update(req, res);
 				next();

@@ -235,6 +235,11 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
 								.then(() => {
 									this._scopeDC.remove(scopeId);
 									this._scopeDC.setCursor(null);
+
+									let role = _logic.getRole();
+									if (role)
+										role._scopes = role.scopes(s => s.id != scopeId);
+
 									_logic.ready();
 								});
 						}
