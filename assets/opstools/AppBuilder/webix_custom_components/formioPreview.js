@@ -4,18 +4,21 @@
  * Create a custom webix component.
  *
  */
-
-module.exports = class ABCustomFormIOPreview {
+var ABEmitter = require("../classes/platform/ABEmitter.js");
+module.exports = class ABCustomFormIOPreview extends ABEmitter {
     get key() {
         return "formiopreview";
     }
 
     constructor(App) {
+        super();
+
         // App 	{obj}	our application instance object.
         // key {string}	the destination key in App.custom[componentKey] for the instance of this component:
 
         // super(App, key);
 
+        var _this = this;
         var L = App.Label;
 
         var labels = {
@@ -54,6 +57,20 @@ module.exports = class ABCustomFormIOPreview {
                     form.submission = {
                         data: formData
                     };
+                    formComponents.components.forEach((comp) => {
+                        if (
+                            comp.type == "button" &&
+                            comp.action == "event" &&
+                            comp.event
+                        ) {
+                            form.once(comp.event, function(click) {
+                                config.onButton
+                                    ? config.onButton(comp.event)
+                                    : null;
+                                // _this.emit("button", comp.event);
+                            });
+                        }
+                    });
                     // form.submission = {
                     //     data: {
                     //         Name: "Item #5",

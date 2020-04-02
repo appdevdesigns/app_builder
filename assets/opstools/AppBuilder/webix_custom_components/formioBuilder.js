@@ -66,12 +66,12 @@ module.exports = class ABCustomFormIOBuilder {
                     }
                 }).then(function(builder) {
                     // now that it is set up we can push it into the global var
-                    builder.submission = {
-                        data: {
-                            Name: "James",
-                            "Number Field": 3
-                        }
-                    };
+                    // builder.submission = {
+                    //     data: {
+                    //         Name: "James",
+                    //         "Number Field": 3
+                    //     }
+                    // };
                     formBuilder = builder;
                 });
             },
@@ -110,6 +110,7 @@ module.exports = class ABCustomFormIOBuilder {
                                     type: "checkbox",
                                     disabled: true,
                                     key: entry.key,
+                                    _key: entry.key,
                                     input: true
                                 }
                             };
@@ -124,6 +125,7 @@ module.exports = class ABCustomFormIOBuilder {
                                     label: entry.field.label,
                                     type: "textfield",
                                     key: entry.key,
+                                    _key: entry.key,
                                     input: true,
                                     inputType: "text",
                                     disabled: true,
@@ -145,6 +147,7 @@ module.exports = class ABCustomFormIOBuilder {
                                     label: entry.field.label,
                                     type: "textfield",
                                     key: entry.key,
+                                    _key: entry.key,
                                     input: true,
                                     inputType: "text",
                                     disabled: true,
@@ -167,6 +170,7 @@ module.exports = class ABCustomFormIOBuilder {
                                     type: "datetime",
                                     disabled: true,
                                     key: entry.key,
+                                    _key: entry.key,
                                     input: true,
                                     format:
                                         entry.field.settings.timeFormat == 1
@@ -186,6 +190,7 @@ module.exports = class ABCustomFormIOBuilder {
                                     disabled: true,
                                     type: "email",
                                     key: entry.key,
+                                    _key: entry.key,
                                     input: true
                                 }
                             };
@@ -225,6 +230,7 @@ module.exports = class ABCustomFormIOBuilder {
                                     ],
                                     refreshOnChange: true,
                                     key: entry.key,
+                                    _key: entry.key,
                                     disabled: true,
                                     input: false
                                 }
@@ -257,6 +263,7 @@ module.exports = class ABCustomFormIOBuilder {
                                     ],
                                     refreshOnChange: true,
                                     key: entry.key,
+                                    _key: entry.key,
                                     input: false
                                 }
                             };
@@ -278,6 +285,7 @@ module.exports = class ABCustomFormIOBuilder {
                                     label: entry.field.label,
                                     type: "select",
                                     key: entry.key,
+                                    _key: entry.key,
                                     disabled: true,
                                     input: true,
                                     data: {
@@ -298,6 +306,7 @@ module.exports = class ABCustomFormIOBuilder {
                                     type: "textarea",
                                     disabled: true,
                                     key: entry.key,
+                                    _key: entry.key,
                                     input: true
                                 }
                             };
@@ -313,6 +322,7 @@ module.exports = class ABCustomFormIOBuilder {
                                     disabled: true,
                                     type: "number",
                                     key: entry.key,
+                                    _key: entry.key,
                                     input: true
                                 }
                             };
@@ -327,6 +337,7 @@ module.exports = class ABCustomFormIOBuilder {
                                     label: entry.field.label,
                                     type: "textfield",
                                     key: entry.key,
+                                    _key: entry.key,
                                     input: true,
                                     inputType: "text",
                                     disabled: true,
@@ -348,6 +359,7 @@ module.exports = class ABCustomFormIOBuilder {
                                     type: "textfield",
                                     disabled: true,
                                     key: entry.key,
+                                    _key: entry.key,
                                     input: true
                                 }
                             };

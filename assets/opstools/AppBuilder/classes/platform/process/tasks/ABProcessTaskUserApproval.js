@@ -213,6 +213,21 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
                                                         this.formBuilder = $$(
                                                             ids.formBuilder
                                                         ).getFormData();
+                                                        (
+                                                            this.formBuilder
+                                                                .components ||
+                                                            []
+                                                        ).forEach(
+                                                            (component) => {
+                                                                if (
+                                                                    component._key &&
+                                                                    component.key !=
+                                                                        component._key
+                                                                )
+                                                                    component.key =
+                                                                        component._key;
+                                                            }
+                                                        );
                                                         this.emit("save");
                                                         $$(
                                                             ids.modalWindow
@@ -229,9 +244,6 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
                                             id: ids.formBuilder,
                                             view: "formiobuilder",
                                             dataFields: this.process.processDataFields(
-                                                this
-                                            ),
-                                            dataObjects: this.process.processDataObjects(
                                                 this
                                             ),
                                             formComponents: this.preProcessFormIOComponents()
