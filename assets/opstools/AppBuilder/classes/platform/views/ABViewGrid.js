@@ -723,7 +723,9 @@ module.exports = class ABViewGrid extends ABViewGridCore {
             buttonFilter: App.unique(idBase + "_buttonFilter"),
             buttonMassUpdate: App.unique(idBase + "_buttonMassUpdate"),
             buttonSort: App.unique(idBase + "_buttonSort"),
-            buttonExport: App.unique(idBase + "_buttonExport")
+            buttonExport: App.unique(idBase + "_buttonExport"),
+
+            globalSearchToolbar: App.unique(idBase + "_globalSearchToolbar")
         };
 
         var labels = {
@@ -827,6 +829,11 @@ module.exports = class ABViewGrid extends ABViewGridCore {
                     ) {
                         $$(DataTable.ui.id).hide();
                     }
+
+                    if (this.settings.gridFilter.isGlobalToolbar)
+                        $$(ids.globalSearchToolbar).show();
+                    else
+                        $$(ids.globalSearchToolbar).hide();
                 }
 
                 if (this.settings.isSortable == false) {
@@ -1058,7 +1065,7 @@ module.exports = class ABViewGrid extends ABViewGridCore {
                                 click: function() {
                                     _logic.toolbarExport(this.$view);
                                 }
-                            }
+                            },
                             /*
 							{
 								view: view,
@@ -1070,7 +1077,20 @@ module.exports = class ABViewGrid extends ABViewGridCore {
 									_logic.toolbarButtonExport(this.$view);
 								}
 							}
-							*/
+                            */
+                            {},
+                            {
+                                id: ids.globalSearchToolbar,
+                                view: 'search',
+                                placeholder:"Search..",
+                                on: {
+                                    onTimedKeyPress: () => {
+                                        let searchText = $$(ids.globalSearchToolbar).getValue();
+    
+                                        filterUI.searchText(searchText);
+                                    }
+                                }
+                            }
                         ]
                     },
                     filterUI.ui,
