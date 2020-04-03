@@ -75,7 +75,7 @@ module.exports = class AB_Work_Admin_Role_User extends ABComponent {
                         {
                             id: ids.addUser,
                             view: "button",
-                            css: "webix_primary",
+                            css: "webix_transparent",
                             type: "icon",
                             icon: "fa fa-plus",
                             label: "Add a user",

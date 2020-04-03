@@ -93,6 +93,7 @@ module.exports = class ABChooseList extends ABComponent {
                                     label: labels.component.administration,
                                     icon: "fa fa-user",
                                     autowidth: true,
+                                    css: "webix_transparent",
                                     click: () => {
                                         App.actions.transitionAdministration();
                                     }
@@ -103,6 +104,7 @@ module.exports = class ABChooseList extends ABComponent {
                                     label: labels.component.settings,
                                     icon: "fa fa-cog",
                                     autowidth: true,
+                                    css: "webix_transparent",
                                     click: () => {
                                         this.emit("view.config");
                                     }
@@ -114,6 +116,7 @@ module.exports = class ABChooseList extends ABComponent {
                                     autowidth: true,
                                     type: "icon",
                                     icon: "fa fa-plus",
+                                    css: "webix_transparent",
                                     click: function() {
                                         // Inform our Chooser we have a request to create an Application:
                                         App.actions.transitionApplicationForm(/* leave empty for a create */);
@@ -129,6 +132,7 @@ module.exports = class ABChooseList extends ABComponent {
                                     type: "icon",
                                     icon: "fa fa-upload",
                                     autosend: true,
+                                    css: "webix_transparent",
                                     on: {
                                         onAfterFileAdd: function() {
                                             _logic.onAfterFileAdd();

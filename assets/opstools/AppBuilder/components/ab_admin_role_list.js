@@ -114,7 +114,7 @@ module.exports = class AB_Work_Admin_Role_List extends ABComponent {
                         // },
                         {
                             view: "button",
-                            css: "webix_primary",
+                            css: "webix_transparent",
                             type: "icon",
                             icon: "fa fa-plus",
                             label: "Create new role",

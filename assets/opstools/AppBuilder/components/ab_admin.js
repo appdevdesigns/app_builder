@@ -41,7 +41,7 @@ module.exports = class ABChoose extends ABComponent {
                     elements: [
                         {
                             view: "button",
-                            css: "webix_primary",
+                            css: "webix_transparent",
                             label: labels.component.backToApplication,
                             autowidth: true,
                             align: "left",
