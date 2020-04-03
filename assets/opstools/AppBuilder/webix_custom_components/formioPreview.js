@@ -44,6 +44,20 @@ module.exports = class ABCustomFormIOPreview extends ABEmitter {
                     ? config.formComponents
                     : {};
                 var formData = config.formData ? config.formData : {};
+                // we need to find out when we are passing an array of objects and reduce it down to an array of IDs
+                for (var data in formData) {
+                    if (
+                        Array.isArray(formData[data]) &&
+                        typeof formData[data][0] == "object"
+                    ) {
+                        var newD = [];
+                        formData[data].forEach((item) => {
+                            if (item.id) newD.push(item.id);
+                        });
+                        formData[data] = newD;
+                    }
+                }
+
                 Formio.createForm(this.$view, formComponents, {
                     // readOnly: true
                     // sanitizeConfig: {
