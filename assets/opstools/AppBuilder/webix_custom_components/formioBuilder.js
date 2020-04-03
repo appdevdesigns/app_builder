@@ -375,10 +375,11 @@ module.exports = class ABCustomFormIOBuilder {
                         label: "Approve",
                         type: "button",
                         key: "approve",
+                        event: "approve",
                         block: true,
                         size: "lg",
                         input: false,
-                        leftIcon: "fa fa-check-square",
+                        leftIcon: "fa fa-thumbs-up",
                         action: "event",
                         theme: "success"
                     }
@@ -391,10 +392,11 @@ module.exports = class ABCustomFormIOBuilder {
                         label: "Deny",
                         type: "button",
                         key: "deny",
+                        event: "deny",
                         block: true,
                         size: "lg",
                         input: false,
-                        leftIcon: "fa fa-ban",
+                        leftIcon: "fa fa-thumbs-down",
                         action: "event",
                         theme: "danger"
                     }
@@ -407,6 +409,7 @@ module.exports = class ABCustomFormIOBuilder {
                         label: "Custom Name",
                         type: "button",
                         key: "custom",
+                        event: "yourEvent",
                         block: true,
                         size: "lg",
                         input: false,
