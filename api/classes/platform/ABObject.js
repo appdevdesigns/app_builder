@@ -1367,6 +1367,69 @@ module.exports = class ABClassObject extends ABObjectCore {
 
 				}
 
+				// Formula fields
+				this.fields(f => f.key == "formula").forEach(f => {
+
+					let settings = f.settings || {};
+
+					let connectedField = this.fields(f => f.id == settings.field)[0];
+					if (!connectedField) return;
+
+					let connectedObj = ABObjectCache.get(settings.object);
+					if (!connectedObj) return;
+
+					let numberField = connectedObj.fields(f => f.id == settings.fieldLink)[0];
+					if (!numberField) return;
+
+					let selectSQL = "";
+					let raw = ABMigration.connection().raw;
+
+				// type: "sum"
+				// fieldLink: "78bf4adb-a2db-4ad2-9216-054031c9bc0a"
+				// object: "35097735-4147-4533-bb84-761090f09c89"
+
+					// M:1
+					if (connectedField.settings.linkType == "many" && 
+						connectedField.settings.linkViaType == "one") {
+						selectSQL = `SELECT SUM(${numberField.columnName})
+									FROM ${connectedObj.dbTableName(true)}
+									WHERE ${connectedObj.dbTableName(true)}.${connectedField.columnName} = ${this.dbSchemaName(true)}.${this.PK()}`;
+					}
+					// 1:M
+					else if (connectedField.settings.linkType == "one" && 
+							connectedField.settings.linkViaType == "many") {
+
+							// SELECT SUM(`number`)
+							// FROM `bootCamp`.`AB_test_Tasks`
+							// WHERE `bootCamp`.`AB_test_Tasks`.`uuid` = `bootCamp`.`AB_test_Subtasks`.`Task`
+
+					}
+					// M:N
+					else if (connectedField.settings.linkType == "many" && 
+							connectedField.settings.linkViaType == "many") {
+
+							// SELECT SUM(`number`)
+							// FROM `bootCamp`.`AB_test_Tasks`
+							// INNER JOIN `bootCamp`.`AB_JOINMN_Player_Tasks_Tasks` ON `bootCamp`.`AB_JOINMN_Player_Tasks_Tasks`.`Tasks` = `bootCamp`.`AB_test_Tasks`.`uuid`
+							// WHERE `bootCamp`.`AB_JOINMN_Player_Tasks_Tasks`.`Player` = `bootCamp`.`AB_test_Player`.`uuid`
+
+					}
+					// 1:1
+					else if (connectedField.settings.linkType == "one" && 
+							connectedField.settings.linkViaType == "one") {
+
+						if (connectedField.settings.isSource) {
+
+						}
+						else {
+
+						}
+
+					}
+
+					query.select(selectSQL);
+				});
+
 				// sails.log.debug('SQL:', query.toString() );
 
 				next();
