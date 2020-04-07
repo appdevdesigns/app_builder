@@ -1368,12 +1368,18 @@ module.exports = class ABClassObject extends ABObjectCore {
 				}
 
 				// Formula fields
-				this.fields(f => f.key == "formula").forEach(f => {
+				this.fields().forEach(f => {
+
+					if (f.key != "formula")
+						return;
 
 					let settings = f.settings || {};
 
 					let connectedField = this.fields(f => f.id == settings.field)[0];
 					if (!connectedField) return;
+
+					let linkField = connectedField.fieldLink;
+					if (!linkField) return;
 
 					let connectedObj = ABObjectCache.get(settings.object);
 					if (!connectedObj) return;
@@ -1391,27 +1397,31 @@ module.exports = class ABClassObject extends ABObjectCore {
 					// M:1
 					if (connectedField.settings.linkType == "many" && 
 						connectedField.settings.linkViaType == "one") {
-						selectSQL = `SELECT SUM(${numberField.columnName})
+						selectSQL = `(SELECT SUM(${numberField.columnName})
 									FROM ${connectedObj.dbTableName(true)}
-									WHERE ${connectedObj.dbTableName(true)}.${connectedField.columnName} = ${this.dbSchemaName(true)}.${this.PK()}`;
+									WHERE ${connectedObj.dbTableName(true)}.${linkField.columnName} = ${this.dbTableName(true)}.${this.PK()})`;
 					}
 					// 1:M
 					else if (connectedField.settings.linkType == "one" && 
 							connectedField.settings.linkViaType == "many") {
 
-							// SELECT SUM(`number`)
-							// FROM `bootCamp`.`AB_test_Tasks`
-							// WHERE `bootCamp`.`AB_test_Tasks`.`uuid` = `bootCamp`.`AB_test_Subtasks`.`Task`
+						selectSQL = `(SELECT SUM(${numberField.columnName})
+									FROM ${connectedObj.dbTableName(true)}
+									WHERE ${connectedObj.dbTableName(true)}.${connectedObj.PK()} = ${this.dbTableName(true)}.${connectedField.columnName})`;
 
 					}
 					// M:N
 					else if (connectedField.settings.linkType == "many" && 
 							connectedField.settings.linkViaType == "many") {
 
-							// SELECT SUM(`number`)
-							// FROM `bootCamp`.`AB_test_Tasks`
-							// INNER JOIN `bootCamp`.`AB_JOINMN_Player_Tasks_Tasks` ON `bootCamp`.`AB_JOINMN_Player_Tasks_Tasks`.`Tasks` = `bootCamp`.`AB_test_Tasks`.`uuid`
-							// WHERE `bootCamp`.`AB_JOINMN_Player_Tasks_Tasks`.`Player` = `bootCamp`.`AB_test_Player`.`uuid`
+						let joinTable = connectedField.joinTableName(true),
+							joinColumnNames = connectedField.joinColumnNames();
+
+						selectSQL = `(SELECT SUM(${numberField.columnName})
+								FROM ${connectedObj.dbTableName(true)}
+								INNER JOIN ${joinTable}
+								ON ${joinTable}.${joinColumnNames.targetColumnName} = ${connectedObj.dbTableName(true)}.${connectedObj.PK()}
+								WHERE ${joinTable}.${joinColumnNames.sourceColumnName} = ${this.dbTableName(true)}.${this.PK()})`;
 
 					}
 					// 1:1
@@ -1427,7 +1437,11 @@ module.exports = class ABClassObject extends ABObjectCore {
 
 					}
 
-					query.select(selectSQL);
+					if (selectSQL) {
+						selectSQL += ` AS ${f.columnName}`;
+						query = query.select(raw(selectSQL));
+					}
+
 				});
 
 				// sails.log.debug('SQL:', query.toString() );
