@@ -700,3 +700,18 @@ label {
 	right: 0;
 	background: white;
 }
+.sidebarCustomIcon {
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size: 12px !important;
+    background: #94a1b3 !important;
+    border-radius: 100%;
+    width: 20px !important;
+    height: 20px;
+    line-height: 20px;
+    color: #4a4e58 !important;
+    font-weight: bold;
+}
+.webix_selected .sidebarCustomIcon {
+    background: #1ca1c1 !important;
+    color: #4a4e58 !important;
+}

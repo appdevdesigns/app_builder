@@ -642,15 +642,65 @@ module.exports = class ABViewTab extends ABViewTabCore {
         var idBase = "ABViewTab_" + this.id;
         var ids = {
             component: App.unique(idBase + "_component"),
-            sidebar: App.unique(idBase + "_sidebar")
+            sidebar: App.unique(idBase + "_sidebar"),
+            expandMenu: App.unique(idBase + "_expand_menu"),
+            collapseMenu: App.unique(idBase + "_collapse_menu")
         };
 
         var _ui = {};
 
+        // We are going to make a custom icon using the first letter of a menu item for menu items that don't have an icon
+        // to do this we need to modify the default template with the method webix recommended form this snippet https://snippet.webix.com/b566d9f8
+        webix.type(webix.ui.tree, {
+            baseType: "sideBar", // inherit everything else from sidebar type
+            name: "customIcons",
+            icon: function(obj, common) {
+                if (obj.icon.length)
+                    return (
+                        "<span class='webix_icon webix_sidebar_icon fa fa-fw fa-" +
+                        obj.icon +
+                        "'></span>"
+                    );
+                return (
+                    "<span class='webix_icon webix_sidebar_icon sidebarCustomIcon'>" +
+                    obj.value.charAt(0).toUpperCase() +
+                    "</span>"
+                );
+            }
+        });
+
         if (this._viewComponents.length > 0) {
             if (this.settings.stackTabs) {
+                // define your menu items from the view components
+                var menuItems = this._viewComponents.map((v) => {
+                    return {
+                        id: v.view.id + "_menu",
+                        value: v.view.label,
+                        icon: v.view.tabicon ? v.view.tabicon : ""
+                    };
+                });
+
+                // create a menu item for the collapse option to use later
+                var collapseMenu = {
+                    id: ids.collapseMenu,
+                    value: L("ab.application.collapseMenu", "*Collapse Menu"),
+                    icon: "chevron-circle-left"
+                };
+
+                // create a menu item from the expand option to use later
+                var expandMenu = {
+                    id: ids.expandMenu,
+                    value: L("ab.application.expandMenu", "*Expand Menu"),
+                    icon: "chevron-circle-right",
+                    hidden: true
+                };
+
+                // find out what the first option is so we can set it later
+                var selectedItem = this._viewComponents[0].view.id + "_menu";
+
                 var sidebar = {
                     view: "sidebar",
+                    type: "customIcons", // define the sidebar type with the new template created above
                     id: ids.sidebar,
                     width: this.settings.sidebarWidth
                         ? this.settings.sidebarWidth
@@ -660,19 +710,55 @@ module.exports = class ABViewTab extends ABViewTabCore {
                         ? this.settings.sidebarPos
                         : "left",
                     css: this.settings.darkTheme ? "webix_dark" : "",
-                    data: this._viewComponents.map((v) => {
-                        return {
-                            id: v.view.id + "_menu",
-                            value: v.view.label,
-                            icon: v.view.tabicon
-                                ? "fa fa-fw fa-" + v.view.tabicon
-                                : ""
-                        };
-                    }),
+                    data: menuItems.concat(collapseMenu), // add you menu items along with the collapse option to start
                     on: {
-                        onItemClick: function(nextId) {
-                            nextId = nextId.replace("_menu", "");
-                            _onShow(nextId);
+                        onItemClick: function(id, e, node) {
+                            // when a menu item is clicked
+                            if (id == ids.collapseMenu) {
+                                // if it was the collapse menu item
+                                setTimeout(function() {
+                                    // remove the collapse option from the menu
+                                    $$(ids.sidebar).remove(ids.collapseMenu);
+                                    // add the expand option to the menu
+                                    $$(ids.sidebar).add(expandMenu);
+                                    // toggle the sidebar state
+                                    $$(ids.sidebar).toggle();
+                                    // we just clicked the collapse...but we don't wanted highlighted
+                                    // so highlight the previously selected menu item
+                                    $$(ids.sidebar).select(selectedItem);
+                                    // store this state in local storage the user preference is
+                                    // remembered next time they see this sidebar
+                                    webix.storage.local.put(
+                                        idBase + "-state",
+                                        $$(ids.sidebar).getState()
+                                    );
+                                }, 0);
+                            } else if (id == ids.expandMenu) {
+                                setTimeout(function() {
+                                    // remove the expand option from the menu
+                                    $$(ids.sidebar).remove(ids.expandMenu);
+                                    // add the collapse option to the menu
+                                    $$(ids.sidebar).add(collapseMenu);
+                                    // toggle the sidebar state
+                                    $$(ids.sidebar).toggle();
+                                    // we just clicked the collapse...but we don't wanted highlighted
+                                    // so highlight the previously selected menu item
+                                    $$(ids.sidebar).select(selectedItem);
+                                    // store this state in local storage the user preference is
+                                    // remembered next time they see this sidebar
+                                    webix.storage.local.put(
+                                        idBase + "-state",
+                                        $$(ids.sidebar).getState()
+                                    );
+                                }, 0);
+                            } else {
+                                // store the selecte menu item just in case someone toggles the menu later
+                                selectedItem = id;
+                                // if the menu item is a regular menu item
+                                // call the onShow with the view id to load the view
+                                id = id.replace("_menu", "");
+                                _onShow(id);
+                            }
                         }
                     }
                 };
@@ -804,6 +890,21 @@ module.exports = class ABViewTab extends ABViewTabCore {
                 eventName: "changeTab",
                 listener: _logic.changeTab
             });
+
+            // initialize the sidebar and figure out if it should be collased or not
+            var state = webix.storage.local.get(idBase + "-state");
+            if (state) {
+                // this will collapse or expand the sidebar
+                $$(ids.sidebar).setState(state);
+
+                // if the state is collapsed we need to make sure the expand option is available
+                if (state.collapsed) {
+                    setTimeout(function() {
+                        $$(ids.sidebar).remove(ids.collapseMenu);
+                        $$(ids.sidebar).add(expandMenu);
+                    }, 0);
+                }
+            }
         };
 
         var _onShow = (viewId) => {
