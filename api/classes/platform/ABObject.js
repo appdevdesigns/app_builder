@@ -1368,10 +1368,8 @@ module.exports = class ABClassObject extends ABObjectCore {
 				}
 
 				// Formula fields
-				this.fields().forEach(f => {
-
-					if (f.key != "formula")
-						return;
+				let formulaFields = this.fields(f => f.key == "formula");
+				(formulaFields || []).forEach(f => {
 
 					let settings = f.settings || {};
 
@@ -1394,16 +1392,25 @@ module.exports = class ABClassObject extends ABObjectCore {
 				// fieldLink: "78bf4adb-a2db-4ad2-9216-054031c9bc0a"
 				// object: "35097735-4147-4533-bb84-761090f09c89"
 
-					// M:1
-					if (connectedField.settings.linkType == "many" && 
-						connectedField.settings.linkViaType == "one") {
+					// M:1 , 1:1 isSource: false
+					if ((connectedField.settings.linkType == "many" && 
+						connectedField.settings.linkViaType == "one") || 
+
+						(connectedField.settings.linkType == "one" && 
+						connectedField.settings.linkViaType == "one" && 
+						!connectedField.settings.isSource)) {
+
 						selectSQL = `(SELECT SUM(${numberField.columnName})
 									FROM ${connectedObj.dbTableName(true)}
 									WHERE ${connectedObj.dbTableName(true)}.${linkField.columnName} = ${this.dbTableName(true)}.${this.PK()})`;
 					}
-					// 1:M
-					else if (connectedField.settings.linkType == "one" && 
-							connectedField.settings.linkViaType == "many") {
+					// 1:M , 1:1 isSource: true
+					else if ((connectedField.settings.linkType == "one" && 
+							connectedField.settings.linkViaType == "many") || 
+
+							(connectedField.settings.linkType == "one" && 
+							connectedField.settings.linkViaType == "one" && 
+							connectedField.settings.isSource)) {
 
 						selectSQL = `(SELECT SUM(${numberField.columnName})
 									FROM ${connectedObj.dbTableName(true)}
@@ -1424,18 +1431,6 @@ module.exports = class ABClassObject extends ABObjectCore {
 								WHERE ${joinTable}.${joinColumnNames.sourceColumnName} = ${this.dbTableName(true)}.${this.PK()})`;
 
 					}
-					// 1:1
-					else if (connectedField.settings.linkType == "one" && 
-							connectedField.settings.linkViaType == "one") {
-
-						if (connectedField.settings.isSource) {
-
-						}
-						else {
-
-						}
-
-					}
 
 					if (selectSQL) {
 						selectSQL += ` AS ${f.columnName}`;
@@ -1443,6 +1438,10 @@ module.exports = class ABClassObject extends ABObjectCore {
 					}
 
 				});
+
+				// NOTE: 
+				if (formulaFields.length)
+					query = query.select(`${this.dbTableName(true)}.*`);
 
 				// sails.log.debug('SQL:', query.toString() );
 
