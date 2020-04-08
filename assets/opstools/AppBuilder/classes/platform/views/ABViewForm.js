@@ -454,7 +454,7 @@ module.exports = class ABViewForm extends ABViewFormCore {
                                 {
                                     view: "button",
                                     name: "buttonDisplayRules",
-                                    css: "webix_priamry",
+                                    css: "webix_primary",
                                     label: L(
                                         "ab.components.form.settings",
                                         "*Settings"
