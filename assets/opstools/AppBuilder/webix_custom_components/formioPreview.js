@@ -71,7 +71,7 @@ module.exports = class ABCustomFormIOPreview extends ABEmitter {
                     form.submission = {
                         data: formData
                     };
-                    formComponents.components.forEach((comp) => {
+                    (formComponents.components || []).forEach((comp) => {
                         if (
                             comp.type == "button" &&
                             comp.action == "event" &&
