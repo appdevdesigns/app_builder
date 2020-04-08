@@ -313,8 +313,8 @@ console.warn('!! ToDo: onAfterColumnHide()');
                 // let scrollState = DataTable.Ug(), // webix6.1.0
                 // let scrollState = DataTable.pw(), // webix6.2.0
                 // let scrollState = DataTable.xw(), // webix6.2.6
-                // let scrollState = DataTable.vw(), // webix7.2.0
-                let scrollState = DataTable._get_y_range(),
+                let scrollState = DataTable.vw(), // webix7.2.0
+                // let scrollState = DataTable._get_y_range(),
                     startRecIndex = scrollState[0],
                     endRecIndex = scrollState[1],
                     index = 0;
@@ -1188,10 +1188,15 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
                     if (obj == null) return;
 
-                    var DataTable = $$(ids.component);
-                    if (!DataTable.exists(obj.id))
-    				    DataTable.add(obj, 0);
-    			})
+                    // var DataTable = $$(ids.component);
+                    // if (!DataTable.exists(obj.id))
+                    //     DataTable.add(obj, 0);
+                    if (CurrentDatacollection && 
+                        CurrentDatacollection.__dataCollection &&
+                        !CurrentDatacollection.__dataCollection.exists(obj.id))
+                        CurrentDatacollection.__dataCollection.add(obj, 0);
+
+                })
     		},
 
 
