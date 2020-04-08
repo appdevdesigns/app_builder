@@ -1081,12 +1081,14 @@ module.exports = class ABViewGrid extends ABViewGridCore {
                             {},
                             {
                                 id: ids.globalSearchToolbar,
-                                view: 'search',
-                                placeholder:"Search..",
+                                view: "search",
+                                placeholder: "Search...",
                                 on: {
                                     onTimedKeyPress: () => {
-                                        let searchText = $$(ids.globalSearchToolbar).getValue();
-    
+                                        let searchText = $$(
+                                            ids.globalSearchToolbar
+                                        ).getValue();
+
                                         filterUI.searchText(searchText);
                                     }
                                 }

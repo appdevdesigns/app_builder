@@ -155,6 +155,8 @@ module.exports = class ABViewMenu extends ABViewMenuCore {
                 page.parent = treeItem.$parent;
                 // store the position so we can put it back in the right spot later
                 page.position = $$(ids.treeDnD).getBranchIndex(id);
+                // store the icon
+                page.icon = treeItem.icon;
             });
             currView.settings.order = pages;
 
@@ -428,8 +430,21 @@ module.exports = class ABViewMenu extends ABViewMenuCore {
                                         item.aliasname = state.value;
                                         this.updateItem(item);
                                     }
-
+                                    // we need to update the drag and drop tree item as well so get it first
+                                    var treeItem = $$(ids.treeDnD).getItem(
+                                        editor.id
+                                    );
+                                    // change the value (since that is what is being displayed)
+                                    treeItem.value = state.value;
+                                    // then change the aliasname (since that property controls the final view)
+                                    treeItem.aliasname = state.value;
+                                    // trigger a save so when we update the preview it has the new data to work with
                                     _logic.onChange();
+                                    // tell the tree to update with new alias (this will trigger a page reorder save and the values already saved will be used to rebuild the component)
+                                    $$(ids.treeDnD).updateItem(
+                                        editor.id,
+                                        treeItem
+                                    );
                                 }
                             }
                         }
@@ -441,7 +456,7 @@ module.exports = class ABViewMenu extends ABViewMenuCore {
                 view: "fieldset",
                 label: L(
                     "ab.component.menu.pageList",
-                    "*Drag and Drop to Reorder:"
+                    "*Drag & Drop to Reorder/Click to Add Icon:"
                 ),
                 labelWidth: App.config.labelWidthLarge,
                 body: {
@@ -450,15 +465,43 @@ module.exports = class ABViewMenu extends ABViewMenuCore {
                     padding: 10,
                     rows: [
                         {
-                            view: "tree",
+                            view: "edittree",
+                            borderless: true,
                             name: "treeDnD",
+                            template:
+                                "{common.icon()} <i class='fa fa-fw fa-#icon#'></i> <span>#value#</span>",
                             drag: true,
+                            editable: true,
+                            editValue: "icon",
+                            editor: "combo",
+                            options: App.icons,
+                            suggest: {
+                                template: "#value#",
+                                filter: function(item, value) {
+                                    if (
+                                        item.value
+                                            .toString()
+                                            .toLowerCase()
+                                            .indexOf(value.toLowerCase()) === 0
+                                    )
+                                        return true;
+                                    return false;
+                                },
+                                body: {
+                                    template:
+                                        "<i class='fa fa-fw fa-#value#'></i> #value#"
+                                }
+                            },
                             on: {
                                 onBeforeDrop: function(context) {
                                     context.parent = context.target; //drop as child
                                     context.index = -1; //as last child
                                 },
                                 onAfterDrop: function(context, native_event) {
+                                    _logic.reorderPages();
+                                },
+                                onDataUpdate: function() {
+                                    debugger;
                                     _logic.reorderPages();
                                 }
                             }
@@ -607,7 +650,8 @@ module.exports = class ABViewMenu extends ABViewMenuCore {
                             id: page.tabId || page.pageId,
                             value: label,
                             type: page.type,
-                            pageId: page.pageId
+                            pageId: page.pageId,
+                            icon: page.icon
                         },
                         page.position ? parseInt(page.position) : 0,
                         page.parent && page.parent != "0" ? page.parent : ""
