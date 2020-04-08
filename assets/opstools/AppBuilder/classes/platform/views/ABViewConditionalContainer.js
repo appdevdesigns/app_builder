@@ -196,8 +196,8 @@ module.exports = class ABViewConditionalContainer extends ABViewConditionalConta
             FilterComponent.fieldsLoad(dv.datasource.fields());
             view.__filterComponent.fieldsLoad(dv.datasource.fields());
         } else {
-            FilterComponent.fieldsLoad(null);
-            view.__filterComponent.fieldsLoad(null);
+            FilterComponent.fieldsLoad();
+            view.__filterComponent.fieldsLoad();
         }
 
         FilterComponent.setValue(

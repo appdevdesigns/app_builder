@@ -865,13 +865,15 @@ module.exports = class ABFieldList extends ABFieldListCore {
         formComponentSetting.common = () => {
             return {
                 key: this.settings.isMultiple ? "fieldcustom" : "selectsingle",
-                options: this.settings.options.map(function(opt) {
-                    return {
-                        id: opt.id,
-                        value: opt.text,
-                        hex: opt.hex
-                    };
-                })
+                settings: {
+                    options: this.settings.options.map(function(opt) {
+                        return {
+                            id: opt.id,
+                            value: opt.text,
+                            hex: opt.hex
+                        };
+                    })
+                }
             };
         };
 
