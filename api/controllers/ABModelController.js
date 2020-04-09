@@ -1114,9 +1114,6 @@ console.error(err);
 
                 // step #2
                 function(next) {
-                    // NOTE: We will update relation data of deleted items on client side
-                    return next();
-
                     // We are deleting an item...but first fetch its current data
                     // so we can clean up any relations on the client side after the delete
                     object
@@ -1254,6 +1251,11 @@ console.error(err);
 
                 // step #5: Process the .deleted object lifecycle
                 (next) => {
+                    if (!oldItem) {
+                        next();
+                        return;
+                    }
+
                     var key = `${object.id}.deleted`;
                     ABProcess.trigger(key, oldItem[0])
                         .then(() => {
