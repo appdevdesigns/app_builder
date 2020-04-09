@@ -708,10 +708,17 @@ label {
     width: 20px !important;
     height: 20px;
     line-height: 20px;
-    color: #4a4e58 !important;
+    color: #FFF !important;
     font-weight: bold;
 }
-.webix_selected .sidebarCustomIcon {
+.webix_dark .sidebarCustomIcon {
+	color: #4a4e58 !important;
+}
+.webix_dark .webix_selected .sidebarCustomIcon {
     background: #1ca1c1 !important;
     color: #4a4e58 !important;
+}
+.webix_selected .sidebarCustomIcon {
+	color: #FFF !important;
+	background: #1ca1c1 !important;
 }

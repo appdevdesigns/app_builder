@@ -501,7 +501,6 @@ module.exports = class ABViewMenu extends ABViewMenuCore {
                                     _logic.reorderPages();
                                 },
                                 onDataUpdate: function() {
-                                    debugger;
                                     _logic.reorderPages();
                                 }
                             }
