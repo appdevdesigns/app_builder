@@ -78,7 +78,7 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
                 }
 
                 if (parseInt(this.toUsers.useAccount) == 1) {
-                    jobData.user = this.toUsers.account;
+                    jobData.users = this.toUsers.account;
                 }
             } else {
                 // get roles & users from Lane
@@ -95,7 +95,7 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
                     jobData.roles = myLane.role;
                 }
                 if (myLane.useAccount) {
-                    jobData.user = myLane.account;
+                    jobData.users = myLane.account;
                 }
             }
 
