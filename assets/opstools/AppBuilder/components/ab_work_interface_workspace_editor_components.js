@@ -58,7 +58,7 @@ module.exports = class AB_Work_Interface_Workspace_Editor_Components extends ABC
                 view: "window",
                 id: ids.popup,
                 modal: true,
-                width: 500,
+                width: 600,
                 height: 350,
                 select: false,
                 position: "center",
@@ -88,7 +88,7 @@ module.exports = class AB_Work_Interface_Workspace_Editor_Components extends ABC
                     view: "dataview",
                     css: "ab-datacollection-table borderless",
                     borderless: true,
-                    xCount: 5, //the number of items in a row
+                    xCount: 6, //the number of items in a row
                     yCount: 3, //the number of items in a column
                     type: {
                         borderless: true,

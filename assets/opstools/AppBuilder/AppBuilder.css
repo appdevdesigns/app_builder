@@ -478,17 +478,17 @@ label {
 	vertical-align: middle;
 	display: table-cell;
 }
-.ab-datacollection-table .webix_datacollection_item {
+.ab-datacollection-table .webix_dataview_item {
 	display: table;
 }
 .ab-datacollection-table .fa {
 	color: #337ab7;
 	margin-bottom: 10px;
 }
-.webix_datacollection.borderless .webix_datacollection_item{
+.ab-datacollection-table.borderless .webix_dataview_item {
 	border:none;
 }
-.webix_datacollection_item:hover {
+.ab-datacollection-table .webix_dataview_item:hover {
     background: #edeff0;
     border-radius: 5px;
 }
