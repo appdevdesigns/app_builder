@@ -80,6 +80,22 @@ module.exports = class ABFieldFormula extends ABFieldFormulaCore {
 
 	}
 
+	/**
+	 * @method requestParam
+	 * return the entry in the given input that relates to this field.
+	 * @param {obj} allParameters  a key=>value hash of the inputs to parse.
+	 * @return {obj} or undefined
+	 */
+	requestParam(allParameters) {
+
+		let myParameter = super.requestParam(allParameters);
+		if (myParameter) {
+			delete myParameter[this.columnName];
+		}
+
+		return myParameter;
+	}
+
 
 	/**
 	 * @method isValidParams
