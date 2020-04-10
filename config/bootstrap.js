@@ -36,6 +36,7 @@ module.exports = function(cb) {
                 verifyDataDir,
 
                 initialGraphDB,
+                initialSystemObjects,
                 cacheABClassObjects,
 
                 setupPollingMCC,
@@ -667,4 +668,12 @@ function loadDefinitions(next) {
             next();
         })
         .catch(next);
+}
+
+function initialSystemObjects(next) {
+    ABSystemObject.initial()
+        .catch(next)
+        .then(() => {
+            next();
+        });
 }

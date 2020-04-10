@@ -42,11 +42,6 @@ module.exports = class ABField extends ABFieldCore {
 		// 	this.fromValues(values);
 
 
-
-		// label is a multilingual value:
-		OP.Multilingual.translate(this, this, ['label']);
-
-
 		// this.object = object;
 	}
 
@@ -482,26 +477,6 @@ module.exports = class ABField extends ABFieldCore {
 			}
 		)
 	}
-
-
-	/**
-	 * @method toObj()
-	 *
-	 * properly compile the current state of this ABField instance
-	 * into the values needed for saving to the DB.
-	 *
-	 * @return {json}
-	 */
-	toObj() {
-
-		// store "label" in our translations
-		OP.Multilingual.unTranslate(this, this, ["label"]);
-
-		return super.toObj();
-	}
-
-
-
 
 
 	///

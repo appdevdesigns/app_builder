@@ -69,6 +69,11 @@ module.exports = class ABRole extends ABRoleCore {
 
 		super.fromValues(values);
 
+		this._scopes = [];
+		(values.scopes__relation || values.scopes || []).forEach(s => {
+			this._scopes.push(new ABScope(s));
+		});
+
 		// multilingual fields: name, description
 		OP.Multilingual.translate(this, this, ['name', 'description']);
 
@@ -127,13 +132,13 @@ module.exports = class ABRole extends ABRoleCore {
 
 
 	/**
-	 * @method users()
+	 * @method getUsers()
 	 *
-	 * remove the current ABRole from our list of ._roles.
+	 * pull users of the role from the server
 	 *
 	 * @return {Promise} - An array of usernames
 	 */
-	users() {
+	getUsers() {
 
 		return new Promise((resolve, reject) => {
 

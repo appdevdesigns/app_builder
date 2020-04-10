@@ -49,7 +49,8 @@ module.exports = {
 	 */
 	objectFind: function (req, res) {
 
-		let cond = req.query;
+		let cond = req.query || {};
+		cond['isSystemObject'] = "isnull";
 
 		ABGraphObject.find({
 			where: cond
@@ -87,7 +88,8 @@ module.exports = {
 	*/
 	objectInfo: function(req, res) {
 
-		let cond = req.query;
+		let cond = req.query || {};
+		cond['isSystemObject'] = "isnull";
 
 		ABGraphObject.find({
 			select: ['id', 'translations'],

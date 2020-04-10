@@ -1449,4 +1449,11 @@ sails.log.debug('ABClassQuery.queryFind - SQL:', query.toString());
 		return errors;
 	}
 
+	selectFormulaFields(query) {
+
+		// Query does not need to generate formula field. 
+		// It should be created in CREATE VIEW command
+
+	}
+
 };

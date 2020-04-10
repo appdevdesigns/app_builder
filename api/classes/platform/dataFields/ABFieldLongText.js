@@ -55,30 +55,43 @@ module.exports = class ABFieldLongText extends ABFieldLongTextCore {
 				// if this is a multilingual field, then manage a json 
 				// translation store:
 				(next) => {
-					if (this.settings.supportMultilingual) {
-						// make sure there is a 'translations' json field 
-						// included:
-						knex.schema.hasColumn(tableName, 'translations')
-						.then((exists) => {
-							// create one if it doesn't exist:
-							if (!exists) {
-								knex.schema.table(tableName, (t) => {
-									t.json('translations');
-								})
-								.then(() => {
+					if (!this.settings.supportMultilingual)
+						return next();
+
+					// make sure there is a 'translations' json field 
+					// included:
+					knex.schema.hasColumn(tableName, 'translations')
+					.then((exists) => {
+						// create one if it doesn't exist:
+						if (!exists) {
+							knex.schema.table(tableName, (t) => {
+								t.json('translations');
+							})
+							.then(() => {
+								next();
+							})
+							.catch(err => {
+
+								if (err.code == "ER_DUP_FIELDNAME") {
 									next();
-								})
-								.catch(next);
-							} 
-							else next();
-						})
-						.catch(next);
-					}
-					else next();
+								}
+								else {
+									next(err);
+								}
+							});
+						} 
+						else next();
+					})
+					.catch(next);
 				},
 				
 				// create/alter the actual column
 				(next) => {
+
+					// [fix]: don't create a column for a multilingual field
+					if (this.settings.supportMultilingual)
+						return next();
+
 					knex.schema.hasColumn(tableName, this.columnName)
 					.then((exists) => {
 						knex.schema.table(tableName, (t) => {

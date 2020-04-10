@@ -140,9 +140,11 @@ module.exports = class RowUpdater extends ABComponent {
                         {
                             // "Remove" button
                             view: "button",
+                            css: "webix_danger",
                             icon: "fa fa-trash",
                             type: "icon",
-                            width: 30,
+                            autowidth: true,
+
                             click: function() {
                                 let $viewCond = this.getParentView();
 
@@ -157,6 +159,7 @@ module.exports = class RowUpdater extends ABComponent {
                 return {
                     view: "button",
                     id: ids.addNew,
+                    css: "webix_primary",
                     icon: "fa fa-plus",
                     type: "iconButton",
                     label: labels.component.addNew,

@@ -355,8 +355,17 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
 								// 	.withKeyName(targetFkName)
 								// 	.onDelete('SET NULL');
 							})
-								.then(() => { resolve(); })
-								.catch(reject);
+								.then(() => {
+									resolve();
+								})
+								.catch(err => {
+
+									// If the table exists, skip the error
+									if (err.code == "ER_TABLE_EXISTS_ERROR")
+										resolve();
+									else
+										reject(err);
+								});
 
 						} else {
 							resolve();

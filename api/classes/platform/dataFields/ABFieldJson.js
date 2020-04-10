@@ -79,7 +79,10 @@ module.exports = class ABFieldJson extends ABFieldJsonCore {
 	jsonSchemaProperties(obj) {
 
 		// obj[this.columnName] = { type: 'object' }
-		obj[this.columnName] = { type: 'string' }
+		// obj[this.columnName] = { type: 'string' }
+		obj[this.columnName] = { 
+			type: ['string', 'object', 'array', 'null']
+		};
 
 	}
 

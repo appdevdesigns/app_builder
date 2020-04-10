@@ -5,8 +5,6 @@
  * @help        :: See http://sailsjs.org/#!/documentation/concepts/Controllers
  */
 
-const ABGraphRole = require("../graphModels/ABRole");
-
 module.exports = {
 
 	// REST API: /app_builder/abuser
@@ -59,17 +57,27 @@ module.exports = {
 
 		let username = req.param('user');
 
-		ABGraphRole.query(`
-			FOR join IN roleUser
-			FOR r in role
-			FILTER join._to == 'username/${username}'
-			&& join._from == r._id
-			RETURN r
-		`)
-		.catch(res.AD.error)
-		.then(result => {
-			res.AD.success(result || []);
-		});
+		const ROLE_OBJECT_ID = ABSystemObject.getObjectRoleId();
+		const RoleModel = ABObjectCache.get(ROLE_OBJECT_ID);
+
+		let cond = {
+			where: {
+				glue: "and",
+				rules: [
+					{
+						key: "users",
+						rule: "contains",
+						value: username
+					}
+				]
+			}
+		};
+
+		RoleModel.queryFind(cond, req.user.data)
+			.catch(res.AD.error)
+			.then(roles => {
+				res.AD.success(roles || []);
+			});
 
 	}
 

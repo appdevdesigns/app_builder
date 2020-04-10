@@ -125,12 +125,13 @@ module.exports = class ABViewFormSelectSingle extends ABViewFormSelectSingleCore
         if (field && field.key == "user") options = field.getUsers();
         else if (field)
             options = field.settings.options || this.settings.options || [];
+        else options = this.settings.options || [];
 
         component.ui.id = ids.component;
         component.ui.options = options.map((opt) => {
             return {
                 id: opt.id,
-                value: opt.text
+                value: opt.text || opt.value
             };
         });
 

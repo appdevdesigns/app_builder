@@ -55,7 +55,10 @@ module.exports = class ABCustomActiveList  {
 
 
 		// Tell Webix to create an INSTANCE of our custom component:
-		webix.protoUI(_ui, webix.ui.list, webix.ActiveContent);
+		webix.protoUI(_ui, webix.ui.list);
+
+		// Webix 7 removes webix.ActiveContent
+		// webix.protoUI(_ui, webix.ui.list, webix.ActiveContent);
 	}
 
 }

@@ -171,6 +171,7 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
         var newViewButton = {
             view: "button",
             type: "icon",
+            css: "webix_primary",
             label: labels.component.newView,
             width: 120,
             icon: "fa fa-plus-circle",
@@ -251,6 +252,7 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
                     id: ids.buttonAddField,
                     label: labels.component.addFields,
                     icon: "fa fa-plus",
+                    css: "webix_transparent",
                     type: "icon",
                     hidden: !settings.isFieldAddable,
                     // minWidth: 115,
@@ -265,10 +267,11 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
                     id: ids.buttonFieldsVisible,
                     label: labels.component.hideFields,
                     icon: "fa fa-eye-slash",
+                    css: "webix_transparent",
                     type: "icon",
                     // minWidth: 105,
                     // autowidth: true,
-                    badge: 0,
+                    badge: null,
                     click: function() {
                         _logic.toolbarFieldsVisible(this.$view);
                     }
@@ -279,10 +282,11 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
                     id: ids.buttonFilter,
                     label: labels.component.filterFields,
                     icon: "fa fa-filter",
+                    css: "webix_transparent",
                     type: "icon",
                     // minWidth: 70,
                     // autowidth: true,
-                    badge: 0,
+                    badge: null,
                     click: function() {
                         _logic.toolbarFilter(this.$view);
                     }
@@ -293,10 +297,11 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
                     id: ids.buttonSort,
                     label: labels.component.sortFields,
                     icon: "fa fa-sort",
+                    css: "webix_transparent",
                     type: "icon",
                     // minWidth: 60,
                     // autowidth: true,
-                    badge: 0,
+                    badge: null,
                     click: function() {
                         _logic.toolbarSort(this.$view);
                     }
@@ -307,10 +312,11 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
                     id: ids.buttonFrozen,
                     label: labels.component.frozenColumns,
                     icon: "fa fa-thumb-tack",
+                    css: "webix_transparent",
                     type: "icon",
                     // minWidth: 75,
                     // autowidth: true,
-                    badge: 0,
+                    badge: null,
                     click: function() {
                         _logic.toolbarFrozen(this.$view);
                     }
@@ -321,6 +327,7 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
                     id: ids.buttonLabel,
                     label: labels.component.defineLabel,
                     icon: "fa fa-crosshairs",
+                    css: "webix_transparent",
                     type: "icon",
                     // minWidth: 75,
                     // autowidth: true,
@@ -345,6 +352,7 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
                     id: ids.buttonImport,
                     label: labels.component.import,
                     icon: "fa fa-upload",
+                    css: "webix_transparent",
                     type: "icon",
                     // minWidth: 80,
                     click: function() {
@@ -357,6 +365,7 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
                     id: ids.buttonExport,
                     label: labels.component.export,
                     icon: "fa fa-download",
+                    css: "webix_transparent",
                     type: "icon",
                     // minWidth: 80,
                     // autowidth: true,
@@ -370,10 +379,11 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
                     id: ids.buttonMassUpdate,
                     label: labels.component.massUpdate,
                     icon: "fa fa-pencil-square-o",
+                    css: "webix_transparent",
                     type: "icon",
                     // minWidth: 65,
                     // autowidth: true,
-                    badge: 0,
+                    badge: null,
                     hidden: true,
                     click: function() {
                         _logic.toolbarMassUpdate(this.$view);
@@ -385,10 +395,11 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
                     id: ids.buttonDeleteSelected,
                     label: labels.component.deleteSelected,
                     icon: "fa fa-trash",
+                    css: "webix_transparent",
                     type: "icon",
                     // minWidth: 85,
                     // autowidth: true,
-                    badge: 0,
+                    badge: null,
                     hidden: true,
                     click: function() {
                         _logic.toolbarDeleteSelected(this.$view);
@@ -461,6 +472,7 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
                                     view: "button",
                                     label: labels.component.addNew,
                                     type: "form",
+                                    css: "webix_primary",
                                     autowidth: true,
                                     click: function() {
                                         App.actions.addNewObject(true);
@@ -499,6 +511,7 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
                                           view: "button",
                                           type: "form",
                                           id: ids.buttonRowNew,
+                                          css: "webix_primary",
                                           value: labels.component.addNewRow,
                                           click: function() {
                                               _logic.rowAdd();
@@ -921,7 +934,10 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
                     numberOfFilter = filterConditions.rules.length;
 
                 if (typeof filterConditions != "undefined") {
-                    $$(ids.buttonFilter).define("badge", numberOfFilter);
+                    $$(ids.buttonFilter).define(
+                        "badge",
+                        numberOfFilter || null
+                    );
                     $$(ids.buttonFilter).refresh();
                 }
             },
@@ -938,7 +954,7 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
                 if (typeof frozenID != "undefined") {
                     var badgeNumber = DataTable.getColumnIndex(frozenID) + 1;
 
-                    $$(ids.buttonFrozen).define("badge", badgeNumber);
+                    $$(ids.buttonFrozen).define("badge", badgeNumber || null);
                     $$(ids.buttonFrozen).refresh();
                 }
             },
@@ -955,7 +971,7 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
                 if (typeof hiddenFields != "undefined") {
                     $$(ids.buttonFieldsVisible).define(
                         "badge",
-                        hiddenFields.length
+                        hiddenFields.length || null
                     );
                     $$(ids.buttonFieldsVisible).refresh();
                 }
@@ -971,7 +987,10 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
                 var sortFields = CurrentObject.workspaceSortFields;
 
                 if (typeof sortFields != "undefined") {
-                    $$(ids.buttonSort).define("badge", sortFields.length);
+                    $$(ids.buttonSort).define(
+                        "badge",
+                        sortFields.length || null
+                    );
                     $$(ids.buttonSort).refresh();
                 }
             },

@@ -10,7 +10,8 @@ const ABObjectCore = require(path.join(
 const Model = require("objection").Model;
 const ABModel = require(path.join(__dirname, "ABModel.js"));
 
-const ABGraphScope = require("../../graphModels/ABScope");
+// const ABGraphScope = require("../../graphModels/ABScope");
+// const ABObjectScope = require("../../systemObjects/scope");
 
 // var __ObjectPool = {};
 var __ModelPool = {}; // reuse any previously created Model connections
@@ -104,7 +105,7 @@ module.exports = class ABClassObject extends ABObjectCore {
                     // if it doesn't exist, then create it and any known fields:
                     if (!exists) {
                         sails.log.verbose("... creating!!!");
-                        knex.schema
+                        return knex.schema
                             .createTable(tableName, (t) => {
                                 // Use .uuid to be primary key instead
                                 // t.increments('id').primary();
@@ -665,8 +666,9 @@ module.exports = class ABClassObject extends ABObjectCore {
      *                              languageCode: {string}, - 'en', 'th'
      *                              ...
      *                             }
+     * @return {Promise}
      */
-    populateFindConditions(query, options, userData) {
+    populateFindConditions(query, options, userData = {}) {
         var where = {
                 glue: "and",
                 rules: []
@@ -684,6 +686,8 @@ module.exports = class ABClassObject extends ABObjectCore {
                 .then(
                     () =>
                         new Promise((next, err) => {
+                            if (this.isSystemObject) return next();
+
                             let objectIds = [];
 
                             // ABObjectQuery
@@ -695,7 +699,8 @@ module.exports = class ABClassObject extends ABObjectCore {
                                 objectIds = [this.id];
                             }
 
-                            ABGraphScope.getFilter({
+                            let ABObjectScope = ABSystemObject.getObjectScope();
+                            ABObjectScope.pullScopes({
                                 username: userData.username,
                                 objectIds: objectIds,
                                 ignoreQueryId: this.viewName ? this.id : null
@@ -1532,6 +1537,8 @@ module.exports = class ABClassObject extends ABObjectCore {
                                     query.omit(this.model(), ["id"]);
                             }
 
+                            this.selectFormulaFields(query);
+
                             // sails.log.debug('SQL:', query.toString() );
 
                             next();
@@ -1539,8 +1546,6 @@ module.exports = class ABClassObject extends ABObjectCore {
                 )
         );
     }
-
-    queries() {}
 
     ///
     /// Fields
@@ -1630,5 +1635,102 @@ module.exports = class ABClassObject extends ABObjectCore {
                 }
             });
         });
+    }
+
+    selectFormulaFields(query) {
+        // Formula fields
+        let formulaFields = this.fields((f) => f.key == "formula");
+        (formulaFields || []).forEach((f) => {
+            let settings = f.settings || {};
+
+            let connectedField = this.fields((f) => f.id == settings.field)[0];
+            if (!connectedField) return;
+
+            let linkField = connectedField.fieldLink;
+            if (!linkField) return;
+
+            let connectedObj = ABObjectCache.get(settings.object);
+            if (!connectedObj) return;
+
+            let numberField = connectedObj.fields(
+                (f) => f.id == settings.fieldLink
+            )[0];
+            if (!numberField) return;
+
+            let selectSQL = "";
+            let raw = ABMigration.connection().raw;
+            let type = {
+                sum: "SUM",
+                average: "AVG",
+                max: "MAX",
+                min: "MIN",
+                count: "COUNT"
+            };
+
+            // M:1 , 1:1 isSource: false
+            if (
+                (connectedField.settings.linkType == "many" &&
+                    connectedField.settings.linkViaType == "one") ||
+                (connectedField.settings.linkType == "one" &&
+                    connectedField.settings.linkViaType == "one" &&
+                    !connectedField.settings.isSource)
+            ) {
+                selectSQL = `(SELECT ${type[settings.type]}(${
+                    numberField.columnName
+                })
+							FROM ${connectedObj.dbTableName(true)}
+							WHERE ${connectedObj.dbTableName(true)}.${
+                    linkField.columnName
+                } = ${this.dbTableName(true)}.${this.PK()})`;
+            }
+            // 1:M , 1:1 isSource: true
+            else if (
+                (connectedField.settings.linkType == "one" &&
+                    connectedField.settings.linkViaType == "many") ||
+                (connectedField.settings.linkType == "one" &&
+                    connectedField.settings.linkViaType == "one" &&
+                    connectedField.settings.isSource)
+            ) {
+                selectSQL = `(SELECT ${type[settings.type]}(${
+                    numberField.columnName
+                })
+							FROM ${connectedObj.dbTableName(true)}
+							WHERE ${connectedObj.dbTableName(
+                                true
+                            )}.${connectedObj.PK()} = ${this.dbTableName(
+                    true
+                )}.${connectedField.columnName})`;
+            }
+            // M:N
+            else if (
+                connectedField.settings.linkType == "many" &&
+                connectedField.settings.linkViaType == "many"
+            ) {
+                let joinTable = connectedField.joinTableName(true),
+                    joinColumnNames = connectedField.joinColumnNames();
+
+                selectSQL = `(SELECT ${type[settings.type]}(${
+                    numberField.columnName
+                })
+						FROM ${connectedObj.dbTableName(true)}
+						INNER JOIN ${joinTable}
+						ON ${joinTable}.${
+                    joinColumnNames.targetColumnName
+                } = ${connectedObj.dbTableName(true)}.${connectedObj.PK()}
+						WHERE ${joinTable}.${joinColumnNames.sourceColumnName} = ${this.dbTableName(
+                    true
+                )}.${this.PK()})`;
+            }
+
+            if (selectSQL) {
+                // selectSQL += ` AS ${this.dbTableName(true)}.${f.columnName}`;
+                selectSQL += ` AS ${f.columnName}`;
+                query = query.select(raw(selectSQL));
+            }
+        });
+
+        // NOTE: select all columns
+        if (formulaFields.length)
+            query = query.select(`${this.dbTableName(true)}.*`);
     }
 };

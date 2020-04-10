@@ -110,22 +110,22 @@ module.exports = {
     'get /app_builder/scope':
         'app_builder/ABScopeController.find',
 
-    'get /app_builder/scope/:scopeId':
+    'get /app_builder/scope/:id':
         'app_builder/ABScopeController.findOne',
 
-    'get /app_builder/scope/:scopeId/role':
+    'get /app_builder/scope/:id/roles':
         'app_builder/ABScopeController.scopeRole',
 
     'put /app_builder/scope':
         'app_builder/ABScopeController.save',
 
-    'delete /app_builder/scope/:scopeId':
+    'delete /app_builder/scope/:id':
         'app_builder/ABScopeController.destroy',
 
-    'put /app_builder/role/:roleID/scope/:scopeID':
+    'put /app_builder/role/:roleID/scope/:id':
         'app_builder/ABScopeController.import',
 
-    'delete /app_builder/role/:roleID/scope/:scopeID':
+    'delete /app_builder/role/:roleID/scope/:id':
         'app_builder/ABScopeController.exclude',
 
 
@@ -144,13 +144,13 @@ module.exports = {
     'get /app_builder/role':
         'app_builder/ABRoleController.find',
 
-    'get /app_builder/role/:roleId':
+    'get /app_builder/role/:id':
         'app_builder/ABRoleController.findOne',
 
     'put /app_builder/role':
         'app_builder/ABRoleController.save',
 
-    'delete /app_builder/role/:roleId':
+    'delete /app_builder/role/:id':
         'app_builder/ABRoleController.destroy',
 
     // 'put /app_builder/application/:appID/role/:roleID':
@@ -159,16 +159,16 @@ module.exports = {
     // 'delete /app_builder/application/:appID/role/:roleID':
     //     'app_builder/ABRoleController.exclude',
 
-    'get /app_builder/role/:roleId/scope':
+    'get /app_builder/role/:id/scope':
         'app_builder/ABRoleController.roleScope',
 
-    'get /app_builder/role/:roleId/users':
+    'get /app_builder/role/:id/users':
         'app_builder/ABRoleController.roleUsers',
 
-    'post /app_builder/role/:roleId/username/:username':
+    'post /app_builder/role/:id/username/:username':
         'app_builder/ABRoleController.addUser',
 
-    'delete /app_builder/role/:roleId/username/:username':
+    'delete /app_builder/role/:id/username/:username':
         'app_builder/ABRoleController.removeUser',
 
 

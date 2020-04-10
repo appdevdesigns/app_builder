@@ -195,7 +195,9 @@ module.exports = class AB_Work_Object_List_NewObject extends ABComponent {
                         // successfully done:
                         cb(null, obj) // tell current tab component save successful
                             .then(() => _logic.done(obj))
-                            .catch((err) => {});
+                            .catch((err) => {
+                                console.error(err);
+                            });
                     })
                     .catch(function(err) {
                         // hide progress

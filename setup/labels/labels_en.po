@@ -2413,6 +2413,12 @@ msgstr "DOCX Builder"
 
 #. path: app_builder
 #. code: en
+#. key: ab.components.kanban
+msgid "Kanban"
+msgstr "Kanban"
+
+#. path: app_builder
+#. code: en
 #. key: ab.components.layout
 msgid "Layout"
 msgstr "Layout"

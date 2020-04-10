@@ -72,6 +72,7 @@ module.exports = class AB_Work_Object_List_NewObject_Blank extends ABComponent {
                             {
                                 view: "button",
                                 id: ids.buttonSave,
+                                css: "webix_primary",
                                 value: labels.component.addNewObject,
                                 autowidth: true,
                                 type: "form",

@@ -45,7 +45,9 @@ module.exports = window.ABWorkUI = class AB_Work extends ABComponent {
                     "*Data Collections"
                 ),
                 processTitle: L("ab.process.title", "*Process"),
-                interfaceTitle: L("ab.interface.title", "*Interface")
+                interfaceTitle: L("ab.interface.title", "*Interface"),
+                userTitle: L("ab.user.title", "*Users"),
+                roleTitle: L("ab.role.title", "*Roles")
             }
         };
 
@@ -61,6 +63,9 @@ module.exports = window.ABWorkUI = class AB_Work extends ABComponent {
             tab_dataview: this.unique("tab_dataview"),
             tab_processview: this.unique("tab_processview"),
             tab_interface: this.unique("tab_interface"),
+            tab_admin: this.unique("tab_admin"),
+            tab_user: this.unique("tab_user"),
+            tab_role: this.unique("tab_role"),
             workspace: this.unique("workspace"),
             collapseMenu: this.unique("collapseMenu"),
             expandMenu: this.unique("expandMenu")
@@ -125,6 +130,7 @@ module.exports = window.ABWorkUI = class AB_Work extends ABComponent {
                     elements: [
                         {
                             view: "button",
+                            css: "webix_transparent",
                             label: labels.component.backToApplication,
                             autowidth: true,
                             align: "left",

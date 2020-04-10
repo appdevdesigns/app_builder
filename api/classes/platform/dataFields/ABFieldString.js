@@ -68,8 +68,16 @@ module.exports = class ABFieldString extends ABFieldStringCore {
 								.then(() => {
 									next();
 								})
-								.catch(next);
-							} 
+								.catch(err => {
+
+									if (err.code == "ER_DUP_FIELDNAME") {
+										next();
+									}
+									else {
+										next(err);
+									}
+								});
+							}
 							else next();
 						})
 						.catch(next);

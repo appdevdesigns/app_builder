@@ -71,21 +71,54 @@ function updateDefaultList(ids, settings = {}) {
             };
         });
 
-    // if ($$(ids.isMultiple).getValue()) {
-    // } else {
-    // Single default selector
-    $$(ids.default).define("options", optList);
-    if (settings.default) $$(ids.default).setValue(settings.default);
+    if ($$(ids.isMultiple).getValue()) {
+        // Multiple default selector
+        var domNode = $$(ids.multipleDefault).$view.querySelector(
+            ".list-data-values"
+        );
 
-    $$(ids.default).refresh();
+        // TODO : use to render selectivity to set default values
+        let selectivityRender = new ABFieldSelectivity(
+            {
+                settings: {}
+            },
+            {},
+            {}
+        );
 
-    // Multiple default selector
-    $$(ids.multipleDefault).define("options", optList);
-    if (settings.default)
-        $$(ids.multipleDefault).setValue(settings.multipleDefault);
+        selectivityRender.selectivityRender(domNode, {
+            multiple: true,
+            data: settings.multipleDefault,
+            placeholder: L(
+                "ab.dataField.list.placeholder_multiple",
+                "*Select items"
+            ),
+            items: optList.map(function(opt) {
+                return {
+                    id: opt.id,
+                    text: opt.value,
+                    hex: opt.hex
+                };
+            })
+        });
+        domNode.addEventListener("change", function(e) {
+            if (e.value.length) {
+                $$(ids.multipleDefault).define("required", false);
+            } else if (
+                $$(ids.multipleDefault)
+                    .$view.querySelector(".webix_inp_label")
+                    .classList.contains("webix_required")
+            ) {
+                $$(ids.multipleDefault).define("required", true);
+            }
+        });
+    } else {
+        // Single default selector
+        $$(ids.default).define("options", optList);
+        if (settings.default) $$(ids.default).setValue(settings.default);
 
-    $$(ids.multipleDefault).refresh();
-    // }
+        $$(ids.default).refresh();
+    }
 }
 
 /**
@@ -179,7 +212,8 @@ var ABFieldListComponent = new ABFieldComponent({
                                     "ab.dataField.list.optionDeleteText",
                                     "*All exisiting entries with this value will be cleared. Are you sure you want to delete this option?"
                                 ),
-                                fnYes: function() {
+
+                                fnYes: () => {
                                     // store the item that will be deleted for the save action
                                     ABFieldListComponent._currentField.pendingDeletions =
                                         ABFieldListComponent._currentField
@@ -247,6 +281,7 @@ var ABFieldListComponent = new ABFieldComponent({
             },
             {
                 view: "button",
+                css: "webix_primary",
                 value: L("ab.dataField.list.addNewOption", "*Add new option"),
                 click: function() {
                     var itemId = webix.uid();
@@ -270,34 +305,23 @@ var ABFieldListComponent = new ABFieldComponent({
             },
             {
                 id: ids.multipleDefault,
-                placeholder: L(
-                    "ab.dataField.list.selectDefault",
-                    "*Select Default"
-                ),
-                css: "hideWebixMulticomboTag",
-                tagMode: false,
-                tagTemplate: function(values) {
-                    var items = "";
-                    values.forEach((val) => {
-                        var item = $$(this.id)
-                            .getList()
-                            .getItem(val);
-                        items +=
-                            '<li class="webix_multicombo_value" style="line-height:24px; color: white; background: ' +
-                            item.hex +
-                            ';" optvalue="' +
-                            item.id +
-                            '"><span>' +
-                            item.value +
-                            '</span><span class="webix_multicombo_delete" role="button" aria-label="Remove item">x</span></li>';
-                    });
-                    return items;
-                },
-                options: [],
-                hidden: true,
                 name: "multipleDefault",
-                view: "multicombo",
-                label: L("ab.common.default", "*Default")
+                view: "forminput",
+                labelWidth: 0,
+                height: 36,
+                borderless: true,
+                hidden: true,
+                body: {
+                    view: App.custom.focusabletemplate.view,
+                    css: "customFieldCls",
+                    borderless: true,
+                    template:
+                        `<label style="width: 80px;text-align: left;line-height:32px;" class="webix_inp_label">${L(
+                            "ab.common.default",
+                            "*Default"
+                        )}</label>` +
+                        '<div style="margin-left: 80px; height: 36px;" class="list-data-values form-entry"></div>'
+                }
             }
         ];
     },
@@ -325,8 +349,12 @@ var ABFieldListComponent = new ABFieldComponent({
             $$(ids.default).define("options", []);
             $$(ids.default).setValue(defaultValues.default);
 
-            $$(ids.multipleDefault).define("options", []);
-            $$(ids.multipleDefault).setValue(defaultValues.multipleDefault);
+            var domNode = $$(ids.multipleDefault).$view.querySelector(
+                ".list-data-values"
+            );
+            if (domNode && domNode.selectivity) {
+                domNode.selectivity.setData([]);
+            }
         },
 
         populate: (ids, field) => {
@@ -406,16 +434,13 @@ var ABFieldListComponent = new ABFieldComponent({
 
             // Set multiple default value
             values.settings.multipleDefault = [];
-            $$(ids.multipleDefault)
-                .getValue()
-                .split(",")
-                .forEach((v) => {
-                    values.settings.multipleDefault.push(
-                        values.settings.options.filter(function(b) {
-                            return b.id == v;
-                        })[0]
-                    );
-                });
+            var domNode = $$(ids.multipleDefault).$view.querySelector(
+                ".list-data-values"
+            );
+            if (domNode && domNode.selectivity) {
+                values.settings.multipleDefault =
+                    domNode.selectivity.getData() || [];
+            }
 
             return values;
         }
@@ -841,13 +866,15 @@ module.exports = class ABFieldList extends ABFieldListCore {
         formComponentSetting.common = () => {
             return {
                 key: this.settings.isMultiple ? "fieldcustom" : "selectsingle",
-                options: this.settings.options.map(function(opt) {
-                    return {
-                        id: opt.id,
-                        value: opt.text,
-                        hex: opt.hex
-                    };
-                })
+                settings: {
+                    options: this.settings.options.map(function(opt) {
+                        return {
+                            id: opt.id,
+                            value: opt.text,
+                            hex: opt.hex
+                        };
+                    })
+                }
             };
         };
 

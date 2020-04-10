@@ -1,240 +1,220 @@
 const ABComponent = require("../classes/platform/ABComponent");
 
-const ABScope = require("../classes/platform/ABScope")
+const ABScope = require("../classes/platform/ABScope");
 
 module.exports = class AB_Work_Admin_Role_Scope_Import extends ABComponent {
+    constructor(App) {
+        let idBase = "ab_admin_role_scope_import";
 
-	constructor(App) {
+        super(App, idBase);
 
-		let idBase = 'ab_admin_role_scope_import';
+        let L = this.Label;
+        let labels = {
+            common: App.labels,
+            component: {
+                scopeRole: L("ab.scope.import.title", "*Import exists scope")
+            }
+        };
 
-		super(App, idBase);
+        let CurrentApplication;
 
-		let L = this.Label;
-		let labels = {
-			common: App.labels,
-			component: {
-				scopeRole: L('ab.scope.import.title', "*Import exists scope")
-			}
-		};
+        // internal list of Webix IDs to reference our UI components.
+        let ids = {
+            popup: this.unique("popup"),
+            filter: this.unique("filter"),
+            list: this.unique("list"),
+            buttonImport: this.unique("buttonImport")
+        };
 
+        // Our webix UI definition:
+        this.ui = {
+            id: ids.popup,
+            view: "window",
+            head: labels.component.scopeRole,
+            hidden: true,
+            modal: true,
+            position: "center",
+            height: 500,
+            width: 350,
+            body: {
+                borderless: true,
+                rows: [
+                    // Filter
+                    {
+                        cols: [
+                            {
+                                view: "icon",
+                                icon: "fa fa-filter",
+                                align: "left"
+                            },
+                            {
+                                view: "text",
+                                id: ids.filter,
+                                on: {
+                                    onTimedKeyPress: () => {
+                                        _logic.filter();
+                                    }
+                                }
+                            }
+                        ]
+                    },
 
-		let CurrentApplication;
+                    // List
+                    {
+                        id: ids.list,
+                        view: "list",
+                        data: [],
+                        borderless: true,
+                        select: true,
+                        template: (scope) => {
+                            let templateText = `<span class='fa fa-street-view'></span> ${scope.name}`;
+                            let objects = scope.objects();
+                            if (objects && objects.length) {
+                                templateText += ` - <span class='fa fa-database'></span> ${objects
+                                    .map((obj) => obj.label)
+                                    .join(", ")}`;
+                            }
 
-		// internal list of Webix IDs to reference our UI components.
-		let ids = {
-			popup: this.unique('popup'),
-			filter: this.unique('filter'),
-			list: this.unique('list'),
-			buttonImport: this.unique('buttonImport')
-		};
+                            return templateText;
+                        }
+                    },
 
-		// Our webix UI definition:
-		this.ui = {
-			id: ids.popup,
-			view: "window",
-			head: labels.component.scopeRole,
-			hidden: true,
-			modal: true,
-			position: "center",
-			height: 500,
-			width: 350,
-			body: {
-				borderless: true,
-				rows: [
-					// Filter
-					{
-						cols: [
-							{ view: 'icon', icon: 'fa fa-filter', align: 'left' },
-							{
-								view: 'text',
-								id: ids.filter,
-								on: {
-									onTimedKeyPress: () => {
-										_logic.filter();
-									}
-								}
-							}
-						]
-					},
+                    // Import & Cancel buttons
+                    {
+                        margin: 5,
+                        cols: [
+                            { fillspace: true },
+                            {
+                                view: "button",
+                                value: labels.common.cancel,
+                                css: "ab-cancel-button",
+                                autowidth: true,
+                                click: () => {
+                                    _logic.cancel();
+                                }
+                            },
+                            {
+                                view: "button",
+                                css: "webix_primary",
+                                id: ids.buttonImport,
+                                value: labels.common.import,
+                                autowidth: true,
+                                type: "form",
+                                click: () => {
+                                    _logic.save();
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        };
 
-					// List
-					{
-						id: ids.list,
-						view: 'list',
-						data: [],
-						borderless: true,
-						select: true,
-						template: (scope) => {
+        // Our init() function for setting up our UI
+        this.init = function(roleDC, scopeDC) {
+            this._roleDC = roleDC;
+            this._scopeDC = scopeDC;
 
-							let templateText = `<span class='fa fa-street-view'></span> ${scope.name}`;
-							let objects = scope.objects();
-							if (objects && objects.length) {
-								templateText += ` - <span class='fa fa-database'></span> ${objects.map(obj => obj.label).join(', ')}`;
-							}
+            webix.ui(this.ui);
 
-							return templateText;
-						}
-					},
+            if ($$(ids.list)) webix.extend($$(ids.list), webix.ProgressBar);
+        };
 
-					// Import & Cancel buttons
-					{
-						margin: 5,
-						cols: [
-							{ fillspace: true },
-							{
-								view: "button",
-								value: labels.common.cancel,
-								css: "ab-cancel-button",
-								autowidth: true,
-								click: () => {
-									_logic.cancel();
-								}
-							},
-							{
-								view: "button",
-								id: ids.buttonImport,
-								value: labels.common.import,
-								autowidth: true,
-								type: "form",
-								click: () => {
-									_logic.save();
-								}
-							}
-						]
-					}
-				]
-			}
-		};
+        let _logic = {
+            show: () => {
+                if ($$(ids.popup)) {
+                    $$(ids.popup).show();
 
-		// Our init() function for setting up our UI
-		this.init = function (roleDC, scopeDC) {
+                    $$(ids.list).clearAll();
 
-			this._roleDC = roleDC;
-			this._scopeDC = scopeDC;
+                    _logic.busy();
 
-			webix.ui(this.ui);
+                    ABScope.find()
+                        .catch((err) => {
+                            console.error(err);
+                            _logic.ready();
+                        })
+                        .then((scopes) => {
+                            let includedScopes = this._scopeDC.find({});
 
-			if ($$(ids.list))
-				webix.extend($$(ids.list), webix.ProgressBar);
+                            scopes = (scopes || []).filter(
+                                (otherScope) =>
+                                    includedScopes.filter(
+                                        (s) => s.id == otherScope.id
+                                    ).length < 1
+                            );
 
-		}
+                            // refresh role list
+                            $$(ids.list).parse(scopes);
 
-		let _logic = {
+                            _logic.ready();
+                        });
+                }
+            },
 
-			show: () => {
+            getRole: () => {
+                if (!this._roleDC) return null;
 
-				if ($$(ids.popup)) {
-					$$(ids.popup).show();
+                let roleId = this._roleDC.getCursor();
 
-					$$(ids.list).clearAll();
+                return this._roleDC.getItem(roleId);
+            },
 
-					_logic.busy();
+            filter: () => {
+                let filterText = $$(ids.filter).getValue();
+                $$(ids.list).filter("#name#", filterText);
+            },
 
-					ABScope.find()
-						.catch(err => {
-							console.error(err);
-							_logic.ready();
-						})
-						.then(scopes => {
+            busy: () => {
+                if ($$(ids.list) && $$(ids.list).showProgress)
+                    $$(ids.list).showProgress({ type: "icon" });
 
-							let includedScopes = this._scopeDC.find({});
+                $$(ids.buttonImport).disable();
+            },
 
-							scopes = (scopes || []).filter(otherScope => includedScopes.filter(s => s.id == otherScope.id).length < 1);
+            ready: () => {
+                if ($$(ids.list) && $$(ids.list).hideProgress)
+                    $$(ids.list).hideProgress();
 
-							// refresh role list
-							$$(ids.list).parse(scopes);
+                $$(ids.buttonImport).enable();
+            },
 
-							_logic.ready();
+            hide: () => {
+                if ($$(ids.popup)) $$(ids.popup).hide();
+            },
 
-						});
+            cancel: () => {
+                _logic.hide();
+            },
 
-				}
+            save: () => {
+                let importedScope = $$(ids.list).getSelectedItem();
+                if (!importedScope) return;
 
-			},
+                _logic.busy();
 
-			getRole: () => {
+                let role = _logic.getRole();
 
-				if (!this._roleDC)
-					return null;
+                role.scopeImport(importedScope)
+                    .catch((err) => {
+                        console.error(err);
+                        _logic.ready();
+                    })
+                    .then(() => {
+                        // update list
+                        if (this._scopeDC) {
+                            this._scopeDC.add(importedScope);
+                        }
 
-				let roleId = this._roleDC.getCursor();
+                        _logic.ready();
+                        _logic.hide();
+                    });
+            }
+        };
 
-				return this._roleDC.getItem(roleId);
-
-			},
-
-			filter: () => {
-				let filterText = $$(ids.filter).getValue();
-				$$(ids.list).filter('#name#', filterText);
-			},
-
-			busy: () => {
-
-				if ($$(ids.list) &&
-					$$(ids.list).showProgress)
-					$$(ids.list).showProgress({ type: "icon" });
-
-				$$(ids.buttonImport).disable();
-
-			},
-
-			ready: () => {
-
-				if ($$(ids.list) &&
-					$$(ids.list).hideProgress)
-					$$(ids.list).hideProgress();
-
-				$$(ids.buttonImport).enable();
-
-			},
-
-			hide: () => {
-
-				if ($$(ids.popup))
-					$$(ids.popup).hide();
-			},
-
-			cancel: () => {
-
-				_logic.hide();
-
-			},
-
-			save: () => {
-
-				let importedScope = $$(ids.list).getSelectedItem();
-				if (!importedScope) return;
-
-				_logic.busy();
-
-				let role = _logic.getRole();
-
-				role.scopeImport(importedScope)
-					.catch(err => {
-						console.error(err);
-						_logic.ready();
-					})
-					.then(() => {
-
-						// update list
-						if (this._scopeDC) {
-							this._scopeDC.add(importedScope);
-						}
-
-						_logic.ready();
-						_logic.hide();
-
-					});
-
-			}
-
-		};
-
-		// 
-		// Define our external interface methods:
-		// 
-		this.show = _logic.show;
-	}
-
+        //
+        // Define our external interface methods:
+        //
+        this.show = _logic.show;
+    }
 };
