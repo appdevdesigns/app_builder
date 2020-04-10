@@ -1516,9 +1516,9 @@ module.exports = class ABClassObject extends ABObjectCore {
 				connectedField.settings.linkViaType == "one" && 
 				!connectedField.settings.isSource)) {
 
-				selectSQL = `(SELECT ${type[settings.type]}(${numberField.columnName})
+				selectSQL = `(SELECT ${type[settings.type]}(\`${numberField.columnName}\`)
 							FROM ${connectedObj.dbTableName(true)}
-							WHERE ${connectedObj.dbTableName(true)}.${linkField.columnName} = ${this.dbTableName(true)}.${this.PK()})`;
+							WHERE ${connectedObj.dbTableName(true)}.\`${linkField.columnName}\` = ${this.dbTableName(true)}.${this.PK()})`;
 			}
 			// 1:M , 1:1 isSource: true
 			else if ((connectedField.settings.linkType == "one" && 
@@ -1528,9 +1528,9 @@ module.exports = class ABClassObject extends ABObjectCore {
 					connectedField.settings.linkViaType == "one" && 
 					connectedField.settings.isSource)) {
 
-				selectSQL = `(SELECT ${type[settings.type]}(${numberField.columnName})
+				selectSQL = `(SELECT ${type[settings.type]}(\`${numberField.columnName}\`)
 							FROM ${connectedObj.dbTableName(true)}
-							WHERE ${connectedObj.dbTableName(true)}.${connectedObj.PK()} = ${this.dbTableName(true)}.${connectedField.columnName})`;
+							WHERE ${connectedObj.dbTableName(true)}.${connectedObj.PK()} = ${this.dbTableName(true)}.\`${connectedField.columnName}\`)`;
 
 			}
 			// M:N
@@ -1540,17 +1540,17 @@ module.exports = class ABClassObject extends ABObjectCore {
 				let joinTable = connectedField.joinTableName(true),
 					joinColumnNames = connectedField.joinColumnNames();
 
-				selectSQL = `(SELECT ${type[settings.type]}(${numberField.columnName})
+				selectSQL = `(SELECT ${type[settings.type]}(\`${numberField.columnName}\`)
 						FROM ${connectedObj.dbTableName(true)}
 						INNER JOIN ${joinTable}
-						ON ${joinTable}.${joinColumnNames.targetColumnName} = ${connectedObj.dbTableName(true)}.${connectedObj.PK()}
-						WHERE ${joinTable}.${joinColumnNames.sourceColumnName} = ${this.dbTableName(true)}.${this.PK()})`;
+						ON ${joinTable}.\`${joinColumnNames.targetColumnName}\` = ${connectedObj.dbTableName(true)}.${connectedObj.PK()}
+						WHERE ${joinTable}.\`${joinColumnNames.sourceColumnName}\` = ${this.dbTableName(true)}.${this.PK()})`;
 
 			}
 
 			if (selectSQL) {
 				// selectSQL += ` AS ${this.dbTableName(true)}.${f.columnName}`;
-				selectSQL += ` AS ${f.columnName}`;
+				selectSQL += ` AS \`${f.columnName}\``;
 				query = query.select(raw(selectSQL));
 			}
 
