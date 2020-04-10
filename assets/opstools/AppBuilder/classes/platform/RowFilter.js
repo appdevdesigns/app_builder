@@ -960,8 +960,9 @@ module.exports = class RowFilter extends RowFilterCore {
 
             // switch view
             batchName = field.key;
-            if (batchName == "LongText") batchName = "string";
             if (field.id == "this_object") batchName = "query"; // Special this object query
+            else if (batchName == "LongText") batchName = "string";
+            else if (field.key == "formula") batchName = "number";
             var isQueryField =
                 this._QueryFields.filter((f) => {
                     return f.id == field.id;
