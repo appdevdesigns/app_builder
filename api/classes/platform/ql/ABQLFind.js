@@ -48,10 +48,11 @@ class ABQLFind extends ABQLFindCore {
             // otherwise, we perform our find, save the results to our
             // nextContext and then continue on:
             return new Promise((resolve, reject) => {
-                var reducedCondition = this.conditionReduce(
-                    this.params.cond,
-                    instance
-                );
+                var cond = null;
+                if (this.params) {
+                    cond = this.params.cond;
+                }
+                var reducedCondition = this.conditionReduce(cond, instance);
                 context.object
                     .modelAPI()
                     .findAll(reducedCondition)
@@ -86,29 +87,31 @@ class ABQLFind extends ABQLFindCore {
     conditionReduce(cond, instance) {
         var newCond = {};
 
-        // if this is a group condition, then reduce each of it's rules:
-        if (cond.rules) {
-            newCond.glue = cond.glue;
-            newCond.rules = [];
-            cond.rules.forEach((r) => {
-                newCond.rules.push(this.conditionReduce(r, instance));
-            });
-        } else {
-            newCond.value = cond.value;
-            newCond.key = cond.key;
-            newCond.rule = cond.rule;
+        if (cond) {
+            // if this is a group condition, then reduce each of it's rules:
+            if (cond.rules) {
+                newCond.glue = cond.glue;
+                newCond.rules = [];
+                cond.rules.forEach((r) => {
+                    newCond.rules.push(this.conditionReduce(r, instance));
+                });
+            } else {
+                newCond.value = cond.value;
+                newCond.key = cond.key;
+                newCond.rule = cond.rule;
 
-            // if this is one of our context values:
-            if (cond.rule.indexOf("context") == 0) {
-                newCond.value = this.task.process.processData(this.task, [
-                    instance,
-                    cond.value
-                ]);
-                newCond.rule = cond.rule.replace("context_", "");
+                // if this is one of our context values:
+                if (cond.rule.indexOf("context") == 0) {
+                    newCond.value = this.task.process.processData(this.task, [
+                        instance,
+                        cond.value
+                    ]);
+                    newCond.rule = cond.rule.replace("context_", "");
 
-                // previous format fix:
-                if (["equals", "not_equal"].indexOf(newCond.rule) == -1) {
-                    newCond.rule = "equals";
+                    // previous format fix:
+                    if (["equals", "not_equal"].indexOf(newCond.rule) == -1) {
+                        newCond.rule = "equals";
+                    }
                 }
             }
         }

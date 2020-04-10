@@ -7,73 +7,61 @@
  */
 var ABProcessParticipantCore = require("../../core/process/ABProcessParticipantCore");
 
+var ABRole = require("../ABRole.js");
+
 let __Roles = null;
 let __Users = null;
 
-// until we properly merge in the CoreV2 code, we need to make sure this
-// doesn't run on the server:
-if (typeof ABServerApp == "undefined") {
-    // #HACK: temporary implementation until we pull Roles into AppBuilder.
-    if (!__Roles) {
-        __Roles = [{ id: 0, value: "Select Role" }];
-        var loadRoles = function() {
-            var Roles = AD.Model.get("opstools.RBAC.PermissionRole");
-            if (Roles) {
-                Roles.findAll()
-                    .fail(function(err) {
-                        AD.error.log(
-                            "ABProcessParticipantCore: Error loading Roles",
-                            {
-                                error: err
-                            }
-                        );
-                    })
-                    .then(function(list) {
-                        // make sure they are all translated.
-                        list.forEach(function(l) {
-                            l.translate();
-                            __Roles.push({ id: l.id, value: l.role_label });
-                        });
-                    });
-            } else {
-                console.warn(
-                    "opstools.RBAC.PermissionRole : not found yet ... trying again"
-                );
-                setTimeout(loadRoles, 1000);
-            }
-        };
-        loadRoles();
-    }
+// #HACK: temporary implementation until we pull Roles into AppBuilder.
+if (!__Roles) {
+    __Roles = [{ id: 0, value: "Select Role" }];
+    ABRole.find()
+        .then((list) => {
+            debugger;
+            // make sure they are all translated.
+            list.forEach(function(l) {
+                // l.translate();
+                __Roles.push({ id: l.uuid, value: l.name });
+            });
+        })
+        .catch((err) => {
+            AD.error.log("ABProcessParticipantCore: Error loading Roles", {
+                error: err
+            });
+        });
+}
 
-    // #HACK: temporary implementation until we pull Users into AppBuilder.
-    if (!__Users) {
-        __Users = [];
-        function loadUsers() {
-            var SiteUser = AD.Model.get("opstools.RBAC.SiteUser");
-            if (SiteUser) {
-                SiteUser.findAll()
-                    .fail(function(err) {
-                        AD.error.log(
-                            "ABProcessParticipantCore: Error loading SiteUser",
-                            {
-                                error: err
-                            }
-                        );
-                    })
-                    .then(function(list) {
-                        list.forEach(function(l) {
-                            __Users.push({ id: l.id, value: l.username });
+// #HACK: temporary implementation until we pull Users into AppBuilder.
+if (!__Users) {
+    __Users = [];
+    function loadUsers() {
+        var SiteUser = AD.Model.get("opstools.RBAC.SiteUser");
+        if (SiteUser) {
+            SiteUser.findAll()
+                .fail(function(err) {
+                    AD.error.log(
+                        "ABProcessParticipantCore: Error loading SiteUser",
+                        {
+                            error: err
+                        }
+                    );
+                })
+                .then(function(list) {
+                    list.forEach(function(l) {
+                        __Users.push({
+                            id: l.uuid || l.id,
+                            value: l.username
                         });
                     });
-            } else {
-                console.warn(
-                    "opstools.RBAC.SiteUser : not found yet ... trying again"
-                );
-                setTimeout(loadUsers, 1000);
-            }
+                });
+        } else {
+            console.warn(
+                "opstools.RBAC.SiteUser : not found yet ... trying again"
+            );
+            setTimeout(loadUsers, 1000);
         }
-        loadUsers();
     }
+    loadUsers();
 }
 
 module.exports = class ABProcessParticipant extends ABProcessParticipantCore {

@@ -28,7 +28,7 @@ module.exports = {
     // retrieve the list of a users inbox notifications:
     userInbox: (req, res) => {
         var User = req.AD.user();
-        var user = User.userModel.id;
+        var user = User.userModel.uuid || User.userModel.id;
         var roles = [];
         var inboxItems = null;
 
@@ -36,7 +36,7 @@ module.exports = {
             [
                 (done) => {
                     // lookup User's Roles:
-                    Permission.find({ user })
+                    Permission.find({ user: User.userModel.id })
                         .then((list) => {
                             if (list && list.length > 0) {
                                 list.forEach((perm) => {
@@ -51,7 +51,7 @@ module.exports = {
                 (done) => {
                     var jobData = {
                         roles,
-                        users: [user]
+                        users: [User.userModel.uuid]
                     };
                     reqAB.serviceRequest(
                         "process_manager.inbox.find",
