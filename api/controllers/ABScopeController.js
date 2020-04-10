@@ -162,9 +162,8 @@ let ABScopeController = {
 					return next();
 				}
 
-				ABModelController.update(req, res)
-					.catch(err)
-					.then(() => next());
+				ABModelController.update(req, res);
+				next();
 			}));
 
 	},
