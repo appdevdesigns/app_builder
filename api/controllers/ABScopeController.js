@@ -146,8 +146,10 @@ let ABScopeController = {
 					return next();
 
 				let exists = (scope.roles || []).filter(r => (r.id || r) == roleID)[0];
-				if (!exists)
+				if (!exists) {
 					req.body.roles = scope.roles || [];
+					req.body.roles.push(roleID);
+				}
 
 				next(scope);
 			}))

@@ -130,7 +130,7 @@ module.exports = class ABObjectScope extends ABObjectSystem {
 							return;
 
 						(r.scopes__relation || []).forEach(sData => {
-							if (!scopes.filter(s => s.id == sData.id)[0])
+							if (!scopes.filter(s => (s.id || s.uuid) == (sData.id || sData.uuid))[0])
 								scopes.push(sData);
 						});
 					});
