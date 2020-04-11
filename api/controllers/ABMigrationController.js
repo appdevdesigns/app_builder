@@ -167,19 +167,61 @@ function verifyAndReturnField(req, res) {
         (resolve, reject) => {
 
             let objID = req.param('objID', -1);
+            let object = ABObjectCache.get(objID);
+
 
             // AppBuilder.routes.verifyAndReturnObject(req, res)
-            ABGraphObject.findOne(objID)
+            // ABGraphObject.findOne(objID)
+            Promise.resolve()
+            .then(()=>{
+
+                // if object already in the ABObjectCache, skip this step
+                if (object) {
+                    sails.log.info("object returned form ABObjectCache");
+                    return;
+                }
+
+                // lookup the object information 
+                return AppBuilder.routes.verifyAndReturnObject(req, res)
+                .then((obj)=>{
+                    object = obj;
+                })
+            })
+            // .then(()=>{
+                
+            //     // if object already in the ABObjectCache, skip this step
+            //     if (object) {
+            //         return;
+            //     }
+
+            //     // lookup object if it isn't already in the cache:
+            //     return new Promise((next, error) =>{
+
+            //         var def = ABDefinitionModel.definitionForID(objID);
+            //         if (def) {
+            //             object = ABServerApp.objectNew(def);
+            //             next();
+            //             return;
+            //         } else {
+            //             ABDefinitionModel.find({id:objID})
+            //             .then((list)=>{
+            //                 if (list && list.length > 0) {
+            //                     object = ABServerApp.objectNew(list[0].json);
+            //                 }
+            //                 next();
+            //             })
+            //             .catch(error);
+            //         }
+            //     });
+            // })
             .then(function(objectData){
 
-                if (!objectData) {
+                if (!object) {
                     var missingObj = new Error("Missing Object");
                     missingObj.objID = objID;
                     console.log(`Error: Missing Object from id: ${objID}`);
                     return reject(missingObj);
                 }
-                
-                let object = objectData.toABClass();
 
                 var fieldID = req.param('fieldID', -1);
 
@@ -248,6 +290,12 @@ function simpleObjectOperation(req, res, operation) {
         })
 
     })
+    .catch((err)=>{
+        console.log(err);
+        // NOTE: verifyAndReturnObject() should already have handled the error 
+        // response.  So we don't need to do anything else here, but we 
+        // add the .catch() to prevent additional "unhandled" error messages.
+    })
 }
 
 
@@ -260,6 +308,8 @@ function simpleFieldOperation(req, res, operation) {
     // only need to respond to a field being passed back on .resolve()
     verifyAndReturnField(req, res)
     .then(function(field){
+
+sails.log.info("  -> found field:", field);
 
         ABMigration[operation](field)
         .then(function(){
@@ -275,6 +325,12 @@ function simpleFieldOperation(req, res, operation) {
             res.AD.error(err, 500);
         })
 
+    })
+    .catch((err)=>{
+        console.log(err);
+        // NOTE: verifyAndReturnField() should already have handled the error 
+        // response.  So we don't need to do anything else here, but we 
+        // add the .catch() to prevent additional "unhandled" error messages.
     })
 }
 

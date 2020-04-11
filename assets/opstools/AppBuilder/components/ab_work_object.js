@@ -94,7 +94,7 @@ module.exports = class AB_Work_Object extends ABComponent {   //.extend(idBase, 
 			show:function() {
 
 				$$(ids.component).show();
-
+/*
 				if (CurrentApplication &&
 					(!CurrentApplication.loadedObjects ||
 					ObjectList.count() < 1)) {
@@ -109,6 +109,7 @@ module.exports = class AB_Work_Object extends ABComponent {   //.extend(idBase, 
 
 						});
 				}
+*/
 
 			},
 

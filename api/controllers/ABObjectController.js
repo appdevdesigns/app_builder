@@ -62,21 +62,26 @@ module.exports = {
 	},
 
 	/**
-	* GET /app_builder/object/:objectId
+	* GET /app_builder/object/:objID
 	* 
 	* Get a object
 	*/
 	objectFindOne: function (req, res) {
 
-		let objectId = req.param('objectId');
+		AppBuilder.routes.verifyAndReturnObject(req, res)
+		.then((object)=>{
+			res.AD.success(object);
+		})
+		
+		// let objectId = req.param('objectId');
 
-		ABGraphObject.findOne(objectId)
-			.catch(res.AD.error)
-			.then(object => {
+		// ABGraphObject.findOne(objectId)
+		// 	.catch(res.AD.error)
+		// 	.then(object => {
 
-				res.AD.success(object);
+		// 		res.AD.success(object);
 
-			});
+		// 	});
 
 	},
 
@@ -264,43 +269,56 @@ module.exports = {
 
 			})
 
-			// Get an object
-			.then(() => {
-
-				return new Promise((next, err) => {
-
-					ABGraphObject.findOne(objID)
-						.catch(err)
-						.then(obj => {
-
-							object = obj;
-
-							next();
-						});
-
-
+			.then(()=>{
+				return  AppBuilder.routes.verifyAndReturnObject(req, res).then((obj)=>{
+					console.log("found object:", obj);
+					object = obj.toObj();
 				});
-
 			})
+
+			// Get an object
+			// .then(() => {
+
+			// 	return new Promise((next, err) => {
+
+			// 		ABGraphObject.findOne(objID)
+			// 			.catch(err)
+			// 			.then(obj => {
+
+			// 				object = obj;
+
+			// 				next();
+			// 			});
+
+
+			// 	});
+
+			// })
 
 			// Set relate
-			.then(() => {
+			// .then(() => {
 
-				return new Promise((next, err) => {
+			// 	return new Promise((next, err) => {
 
-					// if exists
-					if (application.objects.filter(obj => obj.id == objID)[0])
-						return next();
+			// 		// if exists
+			// 		if (application.objects.filter(obj => obj.id == objID)[0])
+			// 			return next();
 
-					application.relate('objects', object.id)
-						.catch(err)
-						.then(() => {
-							next();
-						});
+			// 		if (object) {
+			// 			application.relate('objects', object.id)
+			// 				.catch(err)
+			// 				.then(() => {
+			// 					next();
+			// 				});
+			// 		} else {
+			// 			var missingObjErr = new Error(`could not find object for id [${objID}]`);
+			// 			missingObjErr.objID = objID;
+			// 			err(missingObjErr);
+			// 		}
 
-				});
+			// 	});
 
-			})
+			// })
 
 			// Return a object to result
 			.then(() => {
@@ -312,7 +330,11 @@ module.exports = {
 
 				});
 
-			});
+			})
+			.catch((err)=>{
+				res.AD.error(err);
+
+			})
 
 	},
 

@@ -35,7 +35,7 @@ module.exports = {
 
     "get /app_builder/object/info": "app_builder/ABObjectController.objectInfo",
 
-    "get /app_builder/object/:objectId":
+    "get /app_builder/object/:objID":
         "app_builder/ABObjectController.objectFindOne",
 
     "put /app_builder/object": "app_builder/ABObjectController.objectSave",
