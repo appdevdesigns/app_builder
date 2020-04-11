@@ -50,6 +50,11 @@ var Log = function(text) {
     console.log("ABServerApp:" + text);
 };
 module.exports = {
+
+    objectNew: (def) =>{
+        return GeneralApp.objectNew(def);
+    },
+
     processes: (fn) => {
         fn =
             fn ||

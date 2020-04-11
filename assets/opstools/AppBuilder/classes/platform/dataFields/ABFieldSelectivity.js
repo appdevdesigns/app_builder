@@ -228,8 +228,15 @@ module.exports = class ABFieldSelectivity extends ABField {
 	}
 
 	prepareData(data, multiple = true) {
-		if (typeof data == 'string' && data.length > 0)
-			data = JSON.parse(data);
+		if (typeof data == 'string' && data.length > 0){
+			try {
+				data = JSON.parse(data);
+			} catch(e) {
+				// not JSON parsable, so convert to 
+				data = { id:data, text:data }
+			}
+			
+		}
 
 		// if single select, then it should be object
 		if (!multiple && Array.isArray(data)) {

@@ -184,6 +184,17 @@ module.exports = {
                 return Promise.reject(invalidError);
             }
 
+            let newInstance = (def) =>{
+                if (def.joins) {
+//// TODO: once Queries are in ABDefinitions, then we need to change this to
+//// check if the def is a query and then ABServerApp.queryNew(def) instead.
+return ABServerApp.queryNew(def);
+                } else {
+                    // this must be an Object
+                    return ABServerApp.objectNew(def);
+                }
+            }
+
             let sendError = () => {
 
                 if (!result) {
@@ -207,26 +218,57 @@ module.exports = {
                     return Promise.resolve();
 
                 })
-                .then(() => {
+                // .then(() => {
 
-                    return new Promise((next, err) => {
+                //     return new Promise((next, err) => {
 
-                        if (result)
-                            return next();
+                //         if (result)
+                //             return next();
 
-                        ABGraphObject.findOne(objID)
-                        .catch(err)
-                        .then(function (object) {
+                //         ABGraphObject.findOne(objID)
+                //         .catch(err)
+                //         .then(function (object) {
 
-                            if (object)
-                                result = object.toABClass();
+                //             if (object)
+                //                 result = object.toABClass();
 
+                //             next();
+
+                //         });
+
+                //     });
+
+                // })
+                .then(()=>{
+                
+                    // if object already in the ABObjectCache, skip this step
+                    if (result) {
+                        return;
+                    }
+
+                    // lookup object (if it isn't already in the cache):
+                    return new Promise((next, error) =>{
+
+                        // check the definition cache:
+                        var def = ABDefinitionModel.definitionForID(objID);
+                        if (def) {
+                            result = newInstance(def);
                             next();
+                            return;
+                        } else {
 
-                        });
-
+                            // try a manual lookup then ...
+                            ABDefinitionModel.find({id:objID})
+                            .then((list)=>{
+                                if (list && list.length > 0) {
+                                    def = list[0].json;
+                                    result = newInstance(def);
+                                }
+                                next();
+                            })
+                            .catch(error);
+                        }
                     });
-
                 })
                 .then(() => {
 
@@ -252,16 +294,22 @@ module.exports = {
 
                 })
                 .then(() => {
-                    return new Promise((next, err) => {
 
-                        if (result)
-                            next(result);
-                        else {
-                            err();
-                            return sendError();
-                        }
+                    if (result) {
+                        return result;
+                    } else {
+                        return sendError();
+                    }
+                    // return new Promise((next, err) => {
 
-                    });
+                    //     if (result)
+                    //         next(result);
+                    //     else {
+                    //         err();
+                    //         return sendError();
+                    //     }
+
+                    // });
                 });
 
         }

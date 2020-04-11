@@ -73,7 +73,7 @@ module.exports = {
      * 
      */
     refreshObject: function(object) {
-
+console.log("ABMigration.refreshObject()");
         var knex = ABMigration.connection(object.connName);
         var tableName = object.dbTableName(true);
 
@@ -105,11 +105,12 @@ module.exports = {
     },
 
     createField:function(field) {
-
+console.log("ABMigration.createField()");
         // disallow to create a new column in the external table
         if (field.object instanceof ABObjectExternal)
             return Promise.resolve();
 
+console.log("ABMigration.createField() -> get knex");
         var knex = ABMigration.connection(field.object.connName);
         return field.migrateCreate(knex);
 

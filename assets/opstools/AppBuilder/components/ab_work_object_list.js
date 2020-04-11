@@ -267,7 +267,7 @@ module.exports = class AB_Work_Object_List extends ABComponent {
 
                 // get a DataCollection of all our objects
                 objectList = new webix.DataCollection({
-                    data: application.objects()
+                    data: application.objectsIncluded()
                 });
 
                 // setup object list settings
@@ -592,17 +592,45 @@ module.exports = class AB_Work_Object_List extends ABComponent {
                         if (isOK) {
                             _logic.listBusy();
 
-                            selectedObject.destroy().then(() => {
-                                _logic.listReady();
+                            selectedObject
+                                .destroy()
+                                .then(() => {
+                                    _logic.listReady();
 
-                                objectList.remove(selectedObject.id);
+                                    objectList.remove(selectedObject.id);
 
-                                // refresh items list
-                                _logic.callbackNewObject();
+                                    // refresh items list
+                                    _logic.callbackNewObject();
 
-                                // clear object workspace
-                                _logic.callbacks.onChange(null);
-                            });
+                                    // clear object workspace
+                                    _logic.callbacks.onChange(null);
+                                })
+                                .catch((err) => {
+                                    var strError = err.toString();
+
+                                    if (strError.indexOf("Not Found")) {
+                                        // an object that wasn't found works just as good as a .destroy()
+
+                                        _logic.listReady();
+
+                                        objectList.remove(selectedObject.id);
+
+                                        // refresh items list
+                                        _logic.callbackNewObject();
+
+                                        // clear object workspace
+                                        _logic.callbacks.onChange(null);
+
+                                        return;
+                                    }
+
+                                    webix.alert({
+                                        title: "Error removing object",
+                                        ok: "fix it",
+                                        text: strError,
+                                        type: "alert-error"
+                                    });
+                                });
                         }
                     }
                 });

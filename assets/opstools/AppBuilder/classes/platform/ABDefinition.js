@@ -26,6 +26,26 @@ module.exports = class ABDefinition extends ABDefinitionCore {
     ///
 
     /**
+     * @method all()
+     *
+     * return the current definitions.
+     *
+     * @param {fn} filter   an optional filter that works on the ABDefinition 
+     * @return [array] of ABDefinition
+     */
+    static all(filter) {
+        if (!filter) filter = function () { return true; }
+
+        return Object.keys(__AllDefinitions).map((k)=>{ return __AllDefinitions[k];}).filter(filter).map((d)=>{return d.json;})
+    }
+
+    static allObjects(f) {
+        if (!f) f = function() { return true; };
+        var allObjs = ABDefinition.all((d)=>{ return d.type == "object"; });
+        return allObjs.filter(f);
+    }
+
+    /**
      * @method create()
      *
      * create a given ABDefinition
@@ -72,6 +92,7 @@ module.exports = class ABDefinition extends ABDefinitionCore {
             (allDefinitions || []).forEach((def) => {
                 __AllDefinitions[def.id] = def;
             });
+            return allDefinitions;
         });
     }
 
@@ -90,7 +111,13 @@ module.exports = class ABDefinition extends ABDefinitionCore {
             data: data
         }).then((serverDef) => {
             return (__AllDefinitions[serverDef.id] = serverDef);
-        });
+        })
+        .catch((err)=>{
+            debugger;
+            if (err.toString().indexOf("Not Found") > -1) {
+                return this.create(data)
+            }
+        })
     }
 
     static definition(id) {
