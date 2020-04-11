@@ -48,6 +48,7 @@ module.exports = class ABViewQueryBuilderObjectFieldConditions {
                     if (field) {
                         switch (field.type) {
                             case "number":
+                            case "formula":
                                 // when getting data from the server, the numbers are
                                 // sent back as strings ("100.25").
                                 // make sure to convert strings to numbers:
@@ -261,7 +262,7 @@ module.exports = class ABViewQueryBuilderObjectFieldConditions {
     //					    { id:"bdate",   value:"Birth Date", type:"date" }
     //					]
     conditionFields() {
-        var fieldTypes = ["string", "LongText", "number", "date", "email"];
+        var fieldTypes = ["string", "LongText", "number", "date", "email", "formula"];
 
         var currFields = [];
 
@@ -276,10 +277,17 @@ module.exports = class ABViewQueryBuilderObjectFieldConditions {
                     //  },
                     // then the ids should be:
                     // { id:'name_first', value:'xxx', type:'string' }
+
+                    let type = f.key;
+                    if (f.key == "formula")
+                        type = "number";
+                    else if (f.key == "LongText")
+                        type = "string";
+
                     currFields.push({
                         id: f.columnName,
                         value: f.label,
-                        type: f.key
+                        type: type
                     });
                 }
             });
