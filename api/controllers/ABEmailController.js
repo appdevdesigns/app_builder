@@ -6,42 +6,33 @@
  */
 
 module.exports = {
+   /* Email */
 
-	/* Email */
+   /**
+    * POST /app_builder/email
+    *
+    * Send a email to recipients
+    */
+   send: function(req, res) {
+      // Check opstools-emailNotification project is not included.
+      if (!EmailNotifications) {
+         res.AD.error("Email notification is not exist");
+         return;
+      }
 
-    /**
-     * POST /app_builder/email
-     * 
-     * Send a email to recipients
-     */
-	send: function (req, res) {
-
-		// Check opstools-emailNotification project is not included.
-		if (!EmailNotifications) {
-
-			res.AD.error("Email notification is not exist");
-			return;
-		}
-
-
-		EmailNotifications.send({
-			notify: {
-				// id: TODO
-				emailSubject: req.body.subject,
-				fromName: req.body.fromName,
-				fromEmail: req.body.fromEmail
-			},
-			recipients: req.body.recipients,
-			body: req.body.message
-		})
-			.fail(res.AD.error)
-			.then(function () {
-
-				res.AD.success(true);
-
-			});
-
-	}
-
+      EmailNotifications.send({
+         notify: {
+            // id: TODO
+            emailSubject: req.body.subject,
+            fromName: req.body.fromName,
+            fromEmail: req.body.fromEmail
+         },
+         recipients: req.body.recipients,
+         body: req.body.message
+      })
+         .fail(res.AD.error)
+         .then(function() {
+            res.AD.success(true);
+         });
+   }
 };
-

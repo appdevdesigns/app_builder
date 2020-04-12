@@ -1,224 +1,236 @@
-import AB from '../../../components/ab'
-import ABFieldList from "../../../classes/dataFields/ABFieldList"
+import AB from "../../../components/ab";
+import ABFieldList from "../../../classes/dataFields/ABFieldList";
 
 describe("ABFieldList unit tests", () => {
+   function L(key, altText) {
+      return AD.lang.label.getLabel(key) || altText;
+   }
+
+   var sandbox;
+
+   var ab;
+   var mockApp;
+   var mockObject;
+
+   var target;
+   var targetComponent;
+
+   var webixCom;
+
+   var columnName = "TEST_LIST_COLUMN";
+
+   var xlatedTestOptions = [
+      { id: 1, text: "1st" },
+      { id: 2, text: "2nd" },
+      { id: 3, text: "3rd" }
+   ];
+
+   var testOptions = [
+      {
+         id: 1,
+         text: "First",
+         translations: [{ language_code: "en", text: "1st" }]
+      },
+      {
+         id: 2,
+         text: "Second",
+         translations: [{ language_code: "en", text: "2nd" }]
+      },
+      {
+         id: 3,
+         text: "Third",
+         translations: [{ language_code: "en", text: "3rd" }]
+      }
+   ];
+
+   before(() => {
+      ab = new AB();
+
+      mockApp = ab._app;
+      mockObject = {};
+
+      target = new ABFieldList(
+         {
+            columnName: columnName,
+            settings: {
+               options: testOptions
+            }
+         },
+         mockObject
+      );
+
+      targetComponent = ABFieldList.propertiesComponent(mockApp);
+
+      // render edit component
+      targetComponent.ui.container = "ab_test_div";
+      webixCom = new webix.ui(targetComponent.ui);
+   });
+
+   beforeEach(() => {
+      sandbox = sinon.sandbox.create();
+   });
+
+   afterEach(() => {
+      sandbox.restore();
+   });
+
+   after(() => {
+      if (webixCom && webixCom.destructor) webixCom.destructor();
+   });
+
+   /* List field test cases */
+   describe("List field test cases", () => {
+      it("should exist field", () => {
+         assert.isDefined(target);
+      });
+
+      it("should have valid default value", () => {
+         let defaultValues = ABFieldList.defaults();
+
+         let menuName = L("ab.dataField.list.menuName", "*Select list");
+         let description = L(
+            "ab.dataField.list.description",
+            "*Select list allows you to select predefined options below from a dropdown."
+         );
+
+         assert.equal("list", defaultValues.key);
+         assert.equal("th-list", defaultValues.icon);
+         assert.equal(menuName, defaultValues.menuName);
+         assert.equal(description, defaultValues.description);
+      });
+
+      it(".fromValues: should populate .translations property to options", () => {
+         target.fromValues(target);
+
+         target.settings.options.forEach((opt) => {
+            assert.isDefined(opt.translations, " translations exist");
 
-	function L(key, altText) {
-		return AD.lang.label.getLabel(key) || altText;
-	}
+            var xlated = xlatedTestOptions.filter((o) => {
+               return o.id == opt.id;
+            })[0];
+            assert.equal(
+               opt.text,
+               xlated.text,
+               " entries are properly translated"
+            );
+         });
+      });
 
-	var sandbox;
+      it(".toObj: should populate .translations property to options", () => {
+         target.toObj(target);
 
-	var ab;
-	var mockApp;
-	var mockObject;
+         target.settings.options.forEach((opt) => {
+            assert.isDefined(opt.translations);
+            assert.isTrue(opt.translations.length > 0);
+         });
+      });
 
-	var target;
-	var targetComponent;
+      it(".columnHeader: should return single select column config", () => {
+         target.settings.isMultiple = false;
 
-	var webixCom;
+         var columnConfig = target.columnHeader();
 
-	var columnName = 'TEST_LIST_COLUMN';
+         assert.equal(
+            "richselect",
+            columnConfig.editor,
+            'should be "richselect" editor'
+         );
+         assert.isDefined(columnConfig.options);
+         assert.isUndefined(
+            columnConfig.sort,
+            "should not define sort in webix datatable"
+         );
 
-	var xlatedTestOptions = [
-		{ id: 1, text: '1st' },
-		{ id: 2, text: '2nd' },
-		{ id: 3, text: '3rd' }
-	];
+         columnConfig.options.forEach((opt, index) => {
+            assert.equal(testOptions[index].id, opt.id);
+            assert.equal(testOptions[index].value, opt.text);
+         });
+      });
 
-	var testOptions = [
-		{ id: 1, text: 'First', translations:[{ language_code:'en', text:'1st'}] },
-		{ id: 2, text: 'Second', translations:[{ language_code:'en', text:'2nd'}] },
-		{ id: 3, text: 'Third', translations:[{ language_code:'en', text:'3rd'}] }
-	];
+      it(".columnHeader: should return multiple select column config", () => {
+         target.settings.isMultiple = true;
 
-	before(() => {
-		ab = new AB();
+         var columnConfig = target.columnHeader();
 
-		mockApp = ab._app;
-		mockObject = {};
+         assert.isFunction(columnConfig.template);
+      });
 
-		target = new ABFieldList({
-			columnName: columnName,
-			settings: {
-				options: testOptions
-			}
-		}, mockObject);
+      it(".defaultValue: should set default single value to data", () => {
+         var rowData = {};
 
-		targetComponent = ABFieldList.propertiesComponent(mockApp);
+         target.settings.isMultiple = false;
 
-		// render edit component
-		targetComponent.ui.container = "ab_test_div";
-		webixCom = new webix.ui(targetComponent.ui);
-	});
+         // set single default setting
+         target.settings.default = 1;
 
-	beforeEach(() => {
-		sandbox = sinon.sandbox.create();
-	});
+         // Set default value
+         target.defaultValue(rowData);
 
-	afterEach(() => {
-		sandbox.restore();
-	});
+         assert.isDefined(rowData[columnName]);
+         assert.equal(target.settings.default, rowData[columnName]);
+      });
 
-	after(() => {
-		if (webixCom && webixCom.destructor)
-			webixCom.destructor();
-	});
+      it(".defaultValue: should set default multiple value to data", () => {
+         var rowData = {};
 
-	/* List field test cases */
-	describe('List field test cases', () => {
+         target.settings.isMultiple = true;
 
-		it('should exist field', () => {
-			assert.isDefined(target);
-		});
+         // set single default setting
+         target.settings.multipleDefault = [testOptions[0], testOptions[1]];
 
-		it('should have valid default value', () => {
-			let defaultValues = ABFieldList.defaults();
+         // Set default value
+         target.defaultValue(rowData);
 
-			let menuName = L('ab.dataField.list.menuName', '*Select list');
-			let description = L('ab.dataField.list.description', '*Select list allows you to select predefined options below from a dropdown.');
+         assert.isDefined(rowData[columnName]);
+         assert.equal(target.settings.multipleDefault, rowData[columnName]);
+      });
 
-			assert.equal('list', defaultValues.key);
-			assert.equal('th-list', defaultValues.icon);
-			assert.equal(menuName, defaultValues.menuName);
-			assert.equal(description, defaultValues.description);
-		});
+      it(".customDisplay: should not render selectivity to DOM when's single select", () => {
+         var rowData = {},
+            domNode = document.createElement("div");
 
-		it('.fromValues: should populate .translations property to options', () => {
+         target.settings.isMultiple = false;
 
-			target.fromValues(target);
+         target.customDisplay(rowData, mockApp, domNode);
 
-			target.settings.options.forEach((opt) => {
-				
-				assert.isDefined(opt.translations, ' translations exist');
+         assert.isUndefined(domNode.selectivity);
+      });
 
-				var xlated = xlatedTestOptions.filter((o)=>{ return (o.id == opt.id)})[0];
-				assert.equal(opt.text, xlated.text, ' entries are properly translated');
-			});
+      it(".customDisplay: should render selectivity to DOM when's multiple select", () => {
+         var rowData = {},
+            domNode = document.createElement("div"),
+            domSelectArea = document.createElement("div");
 
-		});
+         domSelectArea.className = "list-data-values";
+         domNode.appendChild(domSelectArea);
 
-		it('.toObj: should populate .translations property to options', () => {
+         target.settings.isMultiple = true;
 
-			target.toObj(target);
+         target.customDisplay(rowData, mockApp, domNode);
 
-			target.settings.options.forEach((opt) => {
-				assert.isDefined(opt.translations);
-				assert.isTrue(opt.translations.length > 0);
-			});
+         assert.isDefined(domSelectArea.selectivity);
+      });
 
-		});
+      it(".customEdit: should return true when's single select", () => {
+         var rowData = {},
+            domNode = document.createElement("div"),
+            domSelectArea = document.createElement("div");
 
-		it('.columnHeader: should return single select column config', () => {
-			target.settings.isMultiple = false;
+         domSelectArea.className = "list-data-values";
+         domNode.appendChild(domSelectArea);
 
-			var columnConfig = target.columnHeader();
+         target.settings.isMultiple = false;
 
-			assert.equal('richselect', columnConfig.editor, 'should be "richselect" editor');
-			assert.isDefined(columnConfig.options);
-			assert.isUndefined(columnConfig.sort, 'should not define sort in webix datatable');
+         var result = target.customEdit(rowData, mockApp, domNode);
 
-			columnConfig.options.forEach((opt, index) => {
-				assert.equal(testOptions[index].id, opt.id);
-				assert.equal(testOptions[index].value, opt.text);
-			});
+         assert.isTrue(result);
+      });
+   });
 
-		});
-
-		it('.columnHeader: should return multiple select column config', () => {
-			target.settings.isMultiple = true;
-
-			var columnConfig = target.columnHeader();
-
-			assert.isFunction(columnConfig.template);
-		});
-
-		it('.defaultValue: should set default single value to data', () => {
-			var rowData = {};
-
-			target.settings.isMultiple = false;
-
-			// set single default setting
-			target.settings.default = 1;
-
-			// Set default value
-			target.defaultValue(rowData);
-
-			assert.isDefined(rowData[columnName]);
-			assert.equal(target.settings.default, rowData[columnName]);
-		});
-
-		it('.defaultValue: should set default multiple value to data', () => {
-			var rowData = {};
-
-			target.settings.isMultiple = true;
-
-			// set single default setting
-			target.settings.multipleDefault = [
-				testOptions[0],
-				testOptions[1]
-			];
-
-			// Set default value
-			target.defaultValue(rowData);
-
-			assert.isDefined(rowData[columnName]);
-			assert.equal(target.settings.multipleDefault, rowData[columnName]);
-		});
-
-		it(".customDisplay: should not render selectivity to DOM when's single select", () => {
-			var rowData = {},
-				domNode = document.createElement("div");
-
-			target.settings.isMultiple = false;
-
-			target.customDisplay(rowData, mockApp, domNode);
-
-			assert.isUndefined(domNode.selectivity);
-
-		});
-
-		it(".customDisplay: should render selectivity to DOM when's multiple select", () => {
-			var rowData = {},
-				domNode = document.createElement("div"),
-				domSelectArea = document.createElement("div");
-
-			domSelectArea.className = "list-data-values";
-			domNode.appendChild(domSelectArea);
-
-			target.settings.isMultiple = true;
-
-			target.customDisplay(rowData, mockApp, domNode);
-
-			assert.isDefined(domSelectArea.selectivity);
-
-		});
-
-		it(".customEdit: should return true when's single select", () => {
-			var rowData = {},
-				domNode = document.createElement("div"),
-				domSelectArea = document.createElement("div");
-
-			domSelectArea.className = "list-data-values";
-			domNode.appendChild(domSelectArea);
-
-			target.settings.isMultiple = false;
-
-			var result = target.customEdit(rowData, mockApp, domNode);
-
-			assert.isTrue(result);
-		});
-
-	});
-
-
-	/* List field component test cases */
-	describe('List field component test cases', () => {
-
-		it('should exist list component', () => {
-			assert.isDefined(targetComponent);
-		});
-
-	});
-
+   /* List field component test cases */
+   describe("List field component test cases", () => {
+      it("should exist list component", () => {
+         assert.isDefined(targetComponent);
+      });
+   });
 });

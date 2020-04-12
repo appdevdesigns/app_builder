@@ -24,18 +24,18 @@
  *  
  */
 module.exports = {
+   language_code: "en",
 
-    language_code:'en',
-
-    actions:[
-        { 
-            action_key:'appbuilder.designer.view', 
-            action_description:'Allows the user to access the AppBuilder Designer tool.' 
-        },
-        {
-        	action_key:'appbuilder.mobile.admin',
-        	action_description:'Allow the user to configure Mobile Device settings.'
-        }
-    ]
-
+   actions: [
+      {
+         action_key: "appbuilder.designer.view",
+         action_description:
+            "Allows the user to access the AppBuilder Designer tool."
+      },
+      {
+         action_key: "appbuilder.mobile.admin",
+         action_description:
+            "Allow the user to configure Mobile Device settings."
+      }
+   ]
 };

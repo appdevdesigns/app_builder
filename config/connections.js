@@ -20,21 +20,19 @@
  */
 
 module.exports = {
-
-    /**
-     * api/hooks/appbuilder.js will set these to follow the default connection
-     * by default if nothing is explicitly defined.
-     *
-     * Except for database, which is 'appbuilder' by default.
-     *
-     * Put your custom settings into config/local.js
-     */
-    appBuilder: {
-        adapter: null,
-        host: null,
-        user: null,
-        password: null,
-        database: 'appbuilder'
-    }
-
+   /**
+    * api/hooks/appbuilder.js will set these to follow the default connection
+    * by default if nothing is explicitly defined.
+    *
+    * Except for database, which is 'appbuilder' by default.
+    *
+    * Put your custom settings into config/local.js
+    */
+   appBuilder: {
+      adapter: null,
+      host: null,
+      user: null,
+      password: null,
+      database: "appbuilder"
+   }
 };

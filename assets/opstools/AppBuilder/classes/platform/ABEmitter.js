@@ -8,7 +8,7 @@
 var EventEmitter = require("events").EventEmitter;
 
 module.exports = class ABEmitter extends EventEmitter {
-    constructor() {
-        super(/*{ maxListeners: 0 }*/);
-    }
+   constructor() {
+      super(/*{ maxListeners: 0 }*/);
+   }
 };

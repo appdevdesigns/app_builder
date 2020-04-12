@@ -2,39 +2,32 @@ const ABApplication = require("./ABApplication");
 const ABObject = require("./ABObject");
 
 module.exports = class ABObjectSystem extends ABObject {
+   constructor(attributes = {}, application) {
+      // MOCK ABApplication
+      // because it uses .fieldNew, .objectNew etc.
+      if (!application) application = new ABApplication({});
 
-	constructor(attributes = {}, application) {
+      super(attributes, application);
+   }
 
-		// MOCK ABApplication
-		// because it uses .fieldNew, .objectNew etc.
-		if (!application)
-			application = new ABApplication({});
+   ///
+   /// Instance Methods
+   ///
 
-		super(attributes, application);
+   fromValues(attributes) {
+      super.fromValues(attributes);
 
-	}
+      this.isSystemObject = true;
+   }
 
-	///
-	/// Instance Methods
-	///
+   toObj() {
+      let result = super.toObj();
+      result.isSystemObject = true;
 
-	fromValues(attributes) {
-		super.fromValues(attributes);
+      return result;
+   }
 
-		this.isSystemObject = true;
-	}
-
-	toObj() {
-
-		let result = super.toObj();
-		result.isSystemObject = true;
-
-		return result;
-
-	}
-
-	initFields() {
-		this._fields = [];
-	}
-
-}
+   initFields() {
+      this._fields = [];
+   }
+};

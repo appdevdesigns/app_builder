@@ -3,132 +3,125 @@ const ABViewFormNumberCore = require("../../core/views/ABViewFormNumberCore");
 const ABViewFormNumberPropertyComponentDefaults = ABViewFormNumberCore.defaultValues();
 
 function L(key, altText) {
-	return AD.lang.label.getLabel(key) || altText;
+   return AD.lang.label.getLabel(key) || altText;
 }
 
 module.exports = class ABViewFormNumber extends ABViewFormNumberCore {
+   constructor(values, application, parent, defaultValues) {
+      super(values, application, parent, defaultValues);
+   }
 
-	constructor(values, application, parent, defaultValues) {
+   //
+   //	Editor Related
+   //
 
-		super(values, application, parent, defaultValues);
+   /**
+    * @method editorComponent
+    * return the Editor for this UI component.
+    * the editor should display either a "block" view or "preview" of
+    * the current layout of the view.
+    * @param {string} mode what mode are we in ['block', 'preview']
+    * @return {Component}
+    */
+   editorComponent(App, mode) {
+      var idBase = "ABViewFormNumberEditorComponent";
+      var ids = {
+         component: App.unique(idBase + "_component")
+      };
 
-	}
+      var numberElem = this.component(App).ui;
+      numberElem.id = ids.component;
 
+      var _ui = {
+         type: "space",
+         rows: [numberElem, {}]
+      };
 
-	//
-	//	Editor Related
-	//
+      var _init = (options) => {};
 
-	/** 
-	 * @method editorComponent
-	 * return the Editor for this UI component.
-	 * the editor should display either a "block" view or "preview" of 
-	 * the current layout of the view.
-	 * @param {string} mode what mode are we in ['block', 'preview']
-	 * @return {Component} 
-	 */
-	editorComponent(App, mode) {
+      var _logic = {};
 
-		var idBase = 'ABViewFormNumberEditorComponent';
-		var ids = {
-			component: App.unique(idBase + '_component')
-		}
+      return {
+         ui: _ui,
+         init: _init,
+         logic: _logic
+      };
+   }
 
+   //
+   // Property Editor
+   //
 
-		var numberElem = this.component(App).ui;
-		numberElem.id = ids.component;
+   static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
+      var commonUI = super.propertyEditorDefaultElements(
+         App,
+         ids,
+         _logic,
+         ObjectDefaults
+      );
 
-		var _ui = {
-			type: "space",
-			rows: [
-				numberElem,
-				{}
-			]
-		};
+      // in addition to the common .label  values, we
+      // ask for:
+      return commonUI.concat([
+         {
+            name: "isStepper",
+            view: "checkbox",
+            labelWidth: App.config.labelWidthCheckbox,
+            labelRight: L(
+               "ab.component.button.isStepper",
+               "*Plus/Minus Buttons"
+            )
+         }
+      ]);
+   }
 
-		var _init = (options) => {
-		}
+   static propertyEditorPopulate(App, ids, view) {
+      super.propertyEditorPopulate(App, ids, view);
 
-		var _logic = {
-		}
+      $$(ids.isStepper).setValue(
+         view.settings.isStepper != null
+            ? view.settings.isStepper
+            : ABViewFormNumberPropertyComponentDefaults.isStepper
+      );
+   }
 
+   static propertyEditorValues(ids, view) {
+      super.propertyEditorValues(ids, view);
 
-		return {
-			ui: _ui,
-			init: _init,
-			logic: _logic
-		}
-	}
+      view.settings.isStepper = $$(ids.isStepper).getValue();
+   }
 
-	//
-	// Property Editor
-	// 
+   /**
+    * @method component()
+    * return a UI component based upon this view.
+    * @param {obj} App
+    * @return {obj} UI component
+    */
+   component(App) {
+      var component = super.component(App);
+      var field = this.field();
 
-	static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
+      var idBase = this.parentFormUniqueID(
+         "ABViewFormNumber_" + this.id + "_f_"
+      );
+      var ids = {
+         component: App.unique(idBase + "_component")
+      };
 
-		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
+      var viewType = this.settings.isStepper
+         ? "counter"
+         : App.custom.numbertext.view;
 
-		// in addition to the common .label  values, we 
-		// ask for:
-		return commonUI.concat([
-			{
-				name: 'isStepper',
-				view: 'checkbox',
-				labelWidth: App.config.labelWidthCheckbox,
-				labelRight: L('ab.component.button.isStepper', '*Plus/Minus Buttons')
-			}
-		]);
+      component.ui.id = ids.component;
+      component.ui.view = viewType;
+      component.ui.type = "number";
+      component.ui.validate = (val) => {
+         return !isNaN(val * 1);
+      };
 
-	}
+      // make sure each of our child views get .init() called
+      component.init = (options) => {};
 
-	static propertyEditorPopulate(App, ids, view) {
-
-		super.propertyEditorPopulate(App, ids, view);
-
-		$$(ids.isStepper).setValue(view.settings.isStepper != null ? view.settings.isStepper : ABViewFormNumberPropertyComponentDefaults.isStepper);
-
-	}
-
-	static propertyEditorValues(ids, view) {
-
-		super.propertyEditorValues(ids, view);
-
-		view.settings.isStepper = $$(ids.isStepper).getValue();
-
-	}
-
-
-
-
-	/**
-	 * @method component()
-	 * return a UI component based upon this view.
-	 * @param {obj} App 
-	 * @return {obj} UI component
-	 */
-	component(App) {
-
-		var component = super.component(App);
-		var field = this.field();
-
-		var idBase = this.parentFormUniqueID('ABViewFormNumber_' + this.id + "_f_");
-		var ids = {
-			component: App.unique(idBase + '_component'),
-		}
-
-		var viewType = this.settings.isStepper ? "counter" : App.custom.numbertext.view;
-
-		component.ui.id = ids.component;
-		component.ui.view = viewType;
-		component.ui.type = "number";
-		component.ui.validate = (val) => { return !isNaN(val * 1); };
-
-		// make sure each of our child views get .init() called
-		component.init = (options) => {
-		}
-
-
-		return component;
-	}
-
-}
+      return component;
+   }
+};

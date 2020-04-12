@@ -7,45 +7,33 @@
  * due to server errors (crashes, etc..);
  */
 
-
-var uuid = require('uuid/v4');
+var uuid = require("uuid/v4");
 
 module.exports = {
-    
-    tableName: 'appbuilder_relay_request_queue',
+   tableName: "appbuilder_relay_request_queue",
 
-    // migrate: 'safe',
-migrate:'alter',
-    
-    attributes: {
+   // migrate: 'safe',
+   migrate: "alter",
 
+   attributes: {
+      // Job Token: this is a uuid to identify this request
+      jt: {
+         type: "string",
+         maxLength: 36,
+         unique: true
+      },
 
-        // Job Token: this is a uuid to identify this request
-        jt: {
-            type: 'string',
-            maxLength: 36,
-            unique: true
-        },
+      // the {json} obj provided for this request.
+      request: {
+         type: "json"
+      }
+   }
 
+   ////
+   //// Life cycle callbacks
+   ////
 
-        // the {json} obj provided for this request.
-        request: {
-            type: 'json'
-        }
-
-
-    },
-    
-    ////
-    //// Life cycle callbacks
-    ////
-    
-    
-    
-    ////
-    //// Model class methods
-    ////
-    
- 
-
+   ////
+   //// Model class methods
+   ////
 };

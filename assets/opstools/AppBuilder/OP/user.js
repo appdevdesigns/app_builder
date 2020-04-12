@@ -1,51 +1,37 @@
-import Comm from "./comm/comm"
+import Comm from "./comm/comm";
 
 class OPUser {
+   constructor() {
+      // get current user
+      if (this.currentUser == null) {
+         Comm.Service.get({ url: "/site/user/data" }).then((data) => {
+            this.currentUser = data.user;
+         });
+      }
 
-	constructor() {
-
-		// get current user
-		if (this.currentUser == null) {
-			Comm.Service.get({ url: "/site/user/data" }).then((data) => {
-
-
-				this.currentUser = data.user;
-
-			});
-		}
-
-		// get the user list
-		if (this.userList == null) {
-			Comm.Service.get({ url: "/app_builder/user/list" }).then((data) => {
-
-				this.userList = data;
-
-			});
-		}
-
-	}
+      // get the user list
+      if (this.userList == null) {
+         Comm.Service.get({ url: "/app_builder/user/list" }).then((data) => {
+            this.userList = data;
+         });
+      }
+   }
 }
 
 export default {
+   init: function() {
+      if (!this.__user) this.__user = new OPUser();
+   },
 
-	init: function () {
+   user: function() {
+      return this.__user.currentUser || {};
+   },
 
-		if (!this.__user)
-			this.__user = new OPUser();
+   username: function() {
+      return this.user().username;
+   },
 
-	},
-
-	user: function () {
-		return this.__user.currentUser || {};
-	},
-
-	username: function () {
-		return this.user().username;
-	},
-
-	userlist: function() {
-		return this.__user.userList || [];
-	}
-
-
-}
+   userlist: function() {
+      return this.__user.userList || [];
+   }
+};

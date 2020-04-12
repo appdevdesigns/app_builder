@@ -2,346 +2,338 @@ const ABComponent = require("./ABComponent");
 const ABViewForm = require("../platform/views/ABViewForm");
 
 module.exports = class RowUpdater extends ABComponent {
-    constructor(App, idBase) {
-        super(App, idBase);
+   constructor(App, idBase) {
+      super(App, idBase);
 
-        let L = this.Label;
+      let L = this.Label;
 
-        let labels = {
-            common: (App || {}).labels,
-            component: {
-                addNew: L("ab.component.form.addNew", "*Add field to edit"),
+      let labels = {
+         common: (App || {}).labels,
+         component: {
+            addNew: L("ab.component.form.addNew", "*Add field to edit"),
 
-                set: L("ab.component.form.set", "*Set"),
-                to: L("ab.component.form.to", "*To")
-            }
-        };
+            set: L("ab.component.form.set", "*Set"),
+            to: L("ab.component.form.to", "*To")
+         }
+      };
 
-        // internal list of Webix IDs to reference our UI components.
-        let ids = {
-            form: this.unique(idBase + "_rowUpdaterForm"),
-            addNew: this.unique(idBase + "_rowUpdaterAddNew"),
+      // internal list of Webix IDs to reference our UI components.
+      let ids = {
+         form: this.unique(idBase + "_rowUpdaterForm"),
+         addNew: this.unique(idBase + "_rowUpdaterAddNew"),
 
-            field: this.unique(idBase + "_rowUpdaterField")
-        };
+         field: this.unique(idBase + "_rowUpdaterField")
+      };
 
-        let _Object;
-        let _mockFormWidget;
+      let _Object;
+      let _mockFormWidget;
 
-        // setting up UI
-        this.init = (options) => {
-            // register our callbacks:
-            for (var c in _logic.callbacks) {
-                _logic.callbacks[c] = options[c] || _logic.callbacks[c];
-            }
-        };
+      // setting up UI
+      this.init = (options) => {
+         // register our callbacks:
+         for (var c in _logic.callbacks) {
+            _logic.callbacks[c] = options[c] || _logic.callbacks[c];
+         }
+      };
 
-        // internal business logic
-        let _logic = (this._logic = {
-            callbacks: {
-                /**
-                 * @function onChange
-                 * called when we have made changes to the hidden field settings
-                 * of our Current Object.
-                 *
-                 * this is meant to alert our parent component to respond to the
-                 * change.
-                 */
-                onChange: function() {}
-            },
-
+      // internal business logic
+      let _logic = (this._logic = {
+         callbacks: {
             /**
-             * @method objectLoad
-             * set object
+             * @function onChange
+             * called when we have made changes to the hidden field settings
+             * of our Current Object.
              *
-             * @param object {Object}
+             * this is meant to alert our parent component to respond to the
+             * change.
              */
-            objectLoad: function(object) {
-                _Object = object;
+            onChange: function() {}
+         },
 
-                _mockFormWidget = new ABViewForm(
-                    {
-                        settings: {
-                            showLabel: false,
-                            labelWidth: 0
-                        }
-                    },
-                    _Object ? _Object.application : null
-                );
-                _mockFormWidget.objectLoad(object);
+         /**
+          * @method objectLoad
+          * set object
+          *
+          * @param object {Object}
+          */
+         objectLoad: function(object) {
+            _Object = object;
 
-                _logic.setValue(null); // clear
-            },
+            _mockFormWidget = new ABViewForm(
+               {
+                  settings: {
+                     showLabel: false,
+                     labelWidth: 0
+                  }
+               },
+               _Object ? _Object.application : null
+            );
+            _mockFormWidget.objectLoad(object);
 
-            getFieldList: function(excludeSelected) {
-                let options = (_Object.fields() || []).map((f) => {
-                    return {
-                        id: f.id,
-                        value: f.label
-                    };
-                });
+            _logic.setValue(null); // clear
+         },
 
-                if (excludeSelected) {
-                    let $form = $$(ids.form);
+         getFieldList: function(excludeSelected) {
+            let options = (_Object.fields() || []).map((f) => {
+               return {
+                  id: f.id,
+                  value: f.label
+               };
+            });
 
-                    $form.getChildViews().forEach(($viewCond) => {
-                        // Ignore "Add new" button
-                        if (!$viewCond || !$viewCond.$$) return;
+            if (excludeSelected) {
+               let $form = $$(ids.form);
 
-                        let $fieldElem = $viewCond.$$(ids.field);
-                        if (!$fieldElem) return;
+               $form.getChildViews().forEach(($viewCond) => {
+                  // Ignore "Add new" button
+                  if (!$viewCond || !$viewCond.$$) return;
 
-                        let fieldId = $fieldElem.getValue();
-                        if (!fieldId) return;
+                  let $fieldElem = $viewCond.$$(ids.field);
+                  if (!$fieldElem) return;
 
-                        options = options.filter((opt) => opt.id != fieldId);
-                    });
-                }
+                  let fieldId = $fieldElem.getValue();
+                  if (!fieldId) return;
 
-                return options;
-            },
-
-            getItemUI: function() {
-                return {
-                    view: "layout",
-                    isolate: true,
-                    cols: [
-                        {
-                            // Label
-                            view: "label",
-                            width: 40,
-                            label: labels.component.set
-                        },
-                        {
-                            // Field list
-                            view: "combo",
-                            id: ids.field,
-                            options: _logic.getFieldList(true),
-                            on: {
-                                onChange: function(columnId) {
-                                    let $viewCond = this.getParentView();
-                                    _logic.selectField(columnId, $viewCond);
-                                }
-                            }
-                        },
-                        {
-                            // Label
-                            view: "label",
-                            width: 40,
-                            label: labels.component.to
-                        },
-                        // Field value
-                        {},
-                        {
-                            // "Remove" button
-                            view: "button",
-                            css: "webix_danger",
-                            icon: "fa fa-trash",
-                            type: "icon",
-                            autowidth: true,
-                            click: function() {
-                                let $viewCond = this.getParentView();
-
-                                _logic.removeItem($viewCond);
-                            }
-                        }
-                    ]
-                };
-            },
-
-            getAddButtonUI: function() {
-                return {
-                    view: "button",
-                    id: ids.addNew,
-                    css: "webix_primary",
-                    icon: "fa fa-plus",
-                    type: "iconButton",
-                    label: labels.component.addNew,
-                    click: function() {
-                        _logic.addItem();
-                    }
-                };
-            },
-
-            addItem: function(index) {
-                let $form = $$(ids.form);
-
-                let remainFields = _logic.getFieldList(true);
-                if (remainFields.length < 1) return;
-
-                let ui = _logic.getItemUI();
-
-                let viewId = $form.addView(ui, index);
-
-                _logic.toggleForm();
-
-                return viewId;
-            },
-
-            removeItem: function($viewCond) {
-                let $form = $$(ids.form);
-
-                $form.removeView($viewCond);
-
-                _logic.toggleForm();
-            },
-
-            selectField: function(columnId, $viewCond) {
-                let field = _Object.fields((col) => col.id == columnId)[0],
-                    fieldComponent = field.formComponent(),
-                    formFieldWidget = fieldComponent.newInstance(
-                        field.object.application,
-                        _mockFormWidget
-                    ),
-                    formFieldComponent = formFieldWidget.component(App, idBase),
-                    inputView = formFieldComponent.ui;
-
-                // WORKAROUND: add '[Current User]' option to the user data field
-                if (field.key == "user") {
-                    inputView.options = inputView.options || [];
-                    inputView.options.unshift({
-                        id: "ab-current-user",
-                        value: "*[Current User]"
-                    });
-                }
-
-                // Change component to display value
-                $viewCond.removeView($viewCond.getChildViews()[3]);
-                $viewCond.addView(inputView, 3);
-
-                formFieldComponent.init();
-
-                // Show custom display of data field
-                if (field.customDisplay)
-                    field.customDisplay(
-                        {},
-                        App,
-                        $viewCond.getChildViews()[3].$view
-                    );
-
-                // _logic.refreshFieldList();
-                // $$(this).adjust();
-                $$($viewCond).adjust();
-                $viewCond.getFormView().adjust();
-            },
-
-            toggleForm: () => {
-                let $form = $$(ids.form);
-                if ($form) {
-                    let childViews = $form.getChildViews();
-                    if (childViews && childViews.length) {
-                        $form.show();
-                    } else {
-                        $form.hide();
-                    }
-                }
-            },
-
-            /**
-             * @method getValue
-             * @return {Array} - [
-             * 						{
-             * 							fieldId: {UUID}
-             * 							value: {Object}
-             * 						}, ...
-             * 					]
-             */
-            getValue: function() {
-                let result = [];
-
-                let $form = $$(ids.form);
-                if ($form) {
-                    $form.getChildViews().forEach(($viewCond) => {
-                        // Ignore "Add new" button
-                        if (!$viewCond || !$viewCond.$$) return;
-
-                        let $fieldElem = $viewCond.$$(ids.field);
-                        if (!$fieldElem) return;
-
-                        let fieldId = $fieldElem.getValue();
-                        if (!fieldId) return;
-
-                        let $valueElem = $viewCond.getChildViews()[3];
-                        if (!$valueElem) return;
-
-                        let fieldInfo = _Object.fields(
-                            (f) => f.id == fieldId
-                        )[0];
-
-                        // Get value from data field manager
-                        let val = fieldInfo.getValue($valueElem);
-
-                        // Add to output
-                        result.push({
-                            fieldId: fieldId,
-                            value: val
-                        });
-                    });
-                }
-
-                return result;
-            },
-
-            /**
-             * @method setValue
-             * @param settings {Array} - [
-             * 								{
-             * 									fieldId: {UUID}
-             * 									value: {Object}
-             * 								}, ...
-             * 							]
-             */
-            setValue: function(settings) {
-                let $form = $$(ids.form);
-                if (!$form) return;
-
-                // Redraw form with no elements
-                webix.ui([], $form);
-
-                settings = settings || [];
-                if (settings.length < 1) return;
-
-                settings.forEach((item) => {
-                    let $viewItem = $$(_logic.addItem());
-
-                    $viewItem.$$(ids.field).setValue(item.fieldId);
-
-                    let $valueElem = $viewItem.getChildViews()[3];
-                    if (!$valueElem) return;
-
-                    let fieldInfo = _Object.fields(
-                        (f) => f.id == item.fieldId
-                    )[0];
-                    if (!fieldInfo) return;
-
-                    // Set value
-                    let rowData = {};
-                    rowData[fieldInfo.columnName] = item.value;
-                    fieldInfo.setValue($valueElem, rowData);
-                });
-
-                _logic.toggleForm();
+                  options = options.filter((opt) => opt.id != fieldId);
+               });
             }
-        });
 
-        // webix UI definition:
-        this.ui = {
-            rows: [
-                {
-                    view: "form",
-                    id: ids.form,
-                    hidden: true,
-                    borderless: true,
-                    elements: []
-                },
-                _logic.getAddButtonUI()
-            ]
-        };
+            return options;
+         },
 
-        // Interface methods for parent component:
-        this.objectLoad = _logic.objectLoad;
-        this.addItem = _logic.addItem;
-        this.getValue = _logic.getValue;
-        this.setValue = _logic.setValue;
-    }
+         getItemUI: function() {
+            return {
+               view: "layout",
+               isolate: true,
+               cols: [
+                  {
+                     // Label
+                     view: "label",
+                     width: 40,
+                     label: labels.component.set
+                  },
+                  {
+                     // Field list
+                     view: "combo",
+                     id: ids.field,
+                     options: _logic.getFieldList(true),
+                     on: {
+                        onChange: function(columnId) {
+                           let $viewCond = this.getParentView();
+                           _logic.selectField(columnId, $viewCond);
+                        }
+                     }
+                  },
+                  {
+                     // Label
+                     view: "label",
+                     width: 40,
+                     label: labels.component.to
+                  },
+                  // Field value
+                  {},
+                  {
+                     // "Remove" button
+                     view: "button",
+                     css: "webix_danger",
+                     icon: "fa fa-trash",
+                     type: "icon",
+                     autowidth: true,
+                     click: function() {
+                        let $viewCond = this.getParentView();
+
+                        _logic.removeItem($viewCond);
+                     }
+                  }
+               ]
+            };
+         },
+
+         getAddButtonUI: function() {
+            return {
+               view: "button",
+               id: ids.addNew,
+               css: "webix_primary",
+               icon: "fa fa-plus",
+               type: "iconButton",
+               label: labels.component.addNew,
+               click: function() {
+                  _logic.addItem();
+               }
+            };
+         },
+
+         addItem: function(index) {
+            let $form = $$(ids.form);
+
+            let remainFields = _logic.getFieldList(true);
+            if (remainFields.length < 1) return;
+
+            let ui = _logic.getItemUI();
+
+            let viewId = $form.addView(ui, index);
+
+            _logic.toggleForm();
+
+            return viewId;
+         },
+
+         removeItem: function($viewCond) {
+            let $form = $$(ids.form);
+
+            $form.removeView($viewCond);
+
+            _logic.toggleForm();
+         },
+
+         selectField: function(columnId, $viewCond) {
+            let field = _Object.fields((col) => col.id == columnId)[0],
+               fieldComponent = field.formComponent(),
+               formFieldWidget = fieldComponent.newInstance(
+                  field.object.application,
+                  _mockFormWidget
+               ),
+               formFieldComponent = formFieldWidget.component(App, idBase),
+               inputView = formFieldComponent.ui;
+
+            // WORKAROUND: add '[Current User]' option to the user data field
+            if (field.key == "user") {
+               inputView.options = inputView.options || [];
+               inputView.options.unshift({
+                  id: "ab-current-user",
+                  value: "*[Current User]"
+               });
+            }
+
+            // Change component to display value
+            $viewCond.removeView($viewCond.getChildViews()[3]);
+            $viewCond.addView(inputView, 3);
+
+            formFieldComponent.init();
+
+            // Show custom display of data field
+            if (field.customDisplay)
+               field.customDisplay({}, App, $viewCond.getChildViews()[3].$view);
+
+            // _logic.refreshFieldList();
+            // $$(this).adjust();
+            $$($viewCond).adjust();
+            $viewCond.getFormView().adjust();
+         },
+
+         toggleForm: () => {
+            let $form = $$(ids.form);
+            if ($form) {
+               let childViews = $form.getChildViews();
+               if (childViews && childViews.length) {
+                  $form.show();
+               } else {
+                  $form.hide();
+               }
+            }
+         },
+
+         /**
+          * @method getValue
+          * @return {Array} - [
+          * 						{
+          * 							fieldId: {UUID}
+          * 							value: {Object}
+          * 						}, ...
+          * 					]
+          */
+         getValue: function() {
+            let result = [];
+
+            let $form = $$(ids.form);
+            if ($form) {
+               $form.getChildViews().forEach(($viewCond) => {
+                  // Ignore "Add new" button
+                  if (!$viewCond || !$viewCond.$$) return;
+
+                  let $fieldElem = $viewCond.$$(ids.field);
+                  if (!$fieldElem) return;
+
+                  let fieldId = $fieldElem.getValue();
+                  if (!fieldId) return;
+
+                  let $valueElem = $viewCond.getChildViews()[3];
+                  if (!$valueElem) return;
+
+                  let fieldInfo = _Object.fields((f) => f.id == fieldId)[0];
+
+                  // Get value from data field manager
+                  let val = fieldInfo.getValue($valueElem);
+
+                  // Add to output
+                  result.push({
+                     fieldId: fieldId,
+                     value: val
+                  });
+               });
+            }
+
+            return result;
+         },
+
+         /**
+          * @method setValue
+          * @param settings {Array} - [
+          * 								{
+          * 									fieldId: {UUID}
+          * 									value: {Object}
+          * 								}, ...
+          * 							]
+          */
+         setValue: function(settings) {
+            let $form = $$(ids.form);
+            if (!$form) return;
+
+            // Redraw form with no elements
+            webix.ui([], $form);
+
+            settings = settings || [];
+            if (settings.length < 1) return;
+
+            settings.forEach((item) => {
+               let $viewItem = $$(_logic.addItem());
+
+               $viewItem.$$(ids.field).setValue(item.fieldId);
+
+               let $valueElem = $viewItem.getChildViews()[3];
+               if (!$valueElem) return;
+
+               let fieldInfo = _Object.fields((f) => f.id == item.fieldId)[0];
+               if (!fieldInfo) return;
+
+               // Set value
+               let rowData = {};
+               rowData[fieldInfo.columnName] = item.value;
+               fieldInfo.setValue($valueElem, rowData);
+            });
+
+            _logic.toggleForm();
+         }
+      });
+
+      // webix UI definition:
+      this.ui = {
+         rows: [
+            {
+               view: "form",
+               id: ids.form,
+               hidden: true,
+               borderless: true,
+               elements: []
+            },
+            _logic.getAddButtonUI()
+         ]
+      };
+
+      // Interface methods for parent component:
+      this.objectLoad = _logic.objectLoad;
+      this.addItem = _logic.addItem;
+      this.getValue = _logic.getValue;
+      this.setValue = _logic.setValue;
+   }
 };

@@ -1,118 +1,114 @@
 const ABViewDetailComponentCore = require("../../core/views/ABViewDetailComponentCore");
 
 function L(key, altText) {
-	return AD.lang.label.getLabel(key) || altText;
+   return AD.lang.label.getLabel(key) || altText;
 }
 
 module.exports = class ABViewDetailComponent extends ABViewDetailComponentCore {
+   constructor(values, application, parent, defaultValues) {
+      super(values, application, parent, defaultValues);
+   }
 
-	constructor(values, application, parent, defaultValues) {
-		super(values, application, parent, defaultValues);
-	}
+   static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
+      var commonUI = super.propertyEditorDefaultElements(
+         App,
+         ids,
+         _logic,
+         ObjectDefaults
+      );
 
-	static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
+      return commonUI.concat([
+         {
+            name: "fieldLabel",
+            view: "text",
+            disabled: true,
+            label: L("ab.component.detail.field.label", "*Field")
+         }
+      ]);
+   }
 
-		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
+   static propertyEditorPopulate(App, ids, view) {
+      super.propertyEditorPopulate(App, ids, view);
 
-		return commonUI.concat([
-			{
-				name: 'fieldLabel',
-				view: "text",
-				disabled: true,
-				label: L('ab.component.detail.field.label', '*Field')
-			}
-		]);
+      var field = view.field();
 
-	}
+      if (field) {
+         $$(ids.fieldLabel).setValue(field.label);
+      }
+   }
 
-	static propertyEditorPopulate(App, ids, view) {
+   /**
+    * @component()
+    * return a UI component based upon this view.
+    * @param {obj} App
+    * @param {string} idPrefix
+    *
+    * @return {obj} UI component
+    */
+   component(App, idPrefix) {
+      // setup 'label' of the element
+      var detailView = this.detailComponent(),
+         field = this.field() || {},
+         label = "";
 
-		super.propertyEditorPopulate(App, ids, view);
+      var settings = {};
+      if (detailView) settings = detailView.settings;
 
-		var field = view.field();
+      var isUsers = false;
+      if (field && field.key == "user") isUsers = true;
 
-		if (field) {
-			$$(ids.fieldLabel).setValue(field.label);
-		}
-	}
+      var templateLabel = "";
+      if (settings.showLabel == true) {
+         if (settings.labelPosition == "top")
+            templateLabel =
+               "<label style='display:block; text-align: left;' class='webix_inp_top_label'>#label#</label>#display#";
+         else
+            templateLabel =
+               "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label><div class='ab-detail-component-holder' style='margin-left: #width#px;'>#display#</div>";
+      }
+      // no label
+      else {
+         templateLabel = "#display#";
+      }
 
-	/**
-	 * @component()
-	 * return a UI component based upon this view.
-	 * @param {obj} App 
-	 * @param {string} idPrefix
-	 * 
-	 * @return {obj} UI component
-	 */
-	component(App, idPrefix) {
+      var template = templateLabel
+         .replace(/#width#/g, settings.labelWidth)
+         .replace(/#label#/g, field ? field.label : "");
 
-		// setup 'label' of the element
-		var detailView = this.detailComponent(),
-			field = this.field() || {},
-			label = '';
+      var height = 38;
+      if (settings.labelPosition == "top") height = height * 2;
 
-		var settings = {};
-		if (detailView)
-			settings = detailView.settings;
+      if (
+         field &&
+         field.settings &&
+         typeof field.settings.useHeight != "undefined" &&
+         field.settings.useHeight == 1
+      ) {
+         height = parseInt(field.settings.imageHeight) || height;
+      }
 
-		var isUsers = false;
-		if (field && field.key == "user")
-			isUsers = true;
+      var _ui = {
+         view: "template",
+         borderless: true,
+         height: height,
+         isUsers: isUsers,
+         template: template,
+         data: { display: "" } // show empty data in template
+      };
 
-		var templateLabel = '';
-		if (settings.showLabel == true) {
-			if (settings.labelPosition == 'top')
-				templateLabel = "<label style='display:block; text-align: left;' class='webix_inp_top_label'>#label#</label>#display#";
-			else
-				templateLabel = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label><div class='ab-detail-component-holder' style='margin-left: #width#px;'>#display#</div>";
-		}
-		// no label
-		else {
-			templateLabel = "#display#";
-		}
+      // make sure each of our child views get .init() called
+      var _init = (options) => {};
 
-		var template = (templateLabel)
-			.replace(/#width#/g, settings.labelWidth)
-			.replace(/#label#/g, field ? field.label : "");
+      var _logic = {
+         setValue: (componentId, val) => {
+            if ($$(componentId)) $$(componentId).setValues({ display: val });
+         }
+      };
 
-		var height = 38;
-		if (settings.labelPosition == 'top')
-			height = height * 2;
-
-		if (field && field.settings && typeof field.settings.useHeight != "undefined" && field.settings.useHeight == 1) {
-			height = parseInt(field.settings.imageHeight) || height;
-		}
-
-		var _ui = {
-			view: "template",
-			borderless: true,
-			height: height,
-			isUsers: isUsers,
-			template: template,
-			data: { display: '' } // show empty data in template
-		};
-
-		// make sure each of our child views get .init() called
-		var _init = (options) => {
-		}
-
-		var _logic = {
-
-			setValue: (componentId, val) => {
-
-				if ($$(componentId))
-					$$(componentId).setValues({ display: val });
-
-			}
-
-		}
-
-		return {
-			ui: _ui,
-			init: _init,
-			logic: _logic
-		}
-
-	}
-
+      return {
+         ui: _ui,
+         init: _init,
+         logic: _logic
+      };
+   }
 };
