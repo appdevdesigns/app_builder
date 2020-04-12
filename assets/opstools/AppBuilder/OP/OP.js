@@ -1,4 +1,3 @@
-
 /**
  * @class OP
  * @parent index 4
@@ -16,59 +15,56 @@
 
 // if (!window.OP) {
 
-import Comm from "./comm/comm"
-import Component from "./component"
-import Config from "./config/config"
-import CustomComponent from "./customComponent"
-import DateTime from "./dateTime"
-import Icons from "./icons"
-import Model from "./model"
-import Multilingual from "./multilingual"
-import Test from "./test"
-import Util  from "./util"
-import Validation from "./validation"
-import User from "./user"
+import Comm from "./comm/comm";
+import Component from "./component";
+import Config from "./config/config";
+import CustomComponent from "./customComponent";
+import DateTime from "./dateTime";
+import Icons from "./icons";
+import Model from "./model";
+import Multilingual from "./multilingual";
+import Test from "./test";
+import Util from "./util";
+import Validation from "./validation";
+import User from "./user";
 
 if (!window.OP) {
-	var OP = {};
-    window.OP = OP;
+   var OP = {};
+   window.OP = OP;
 
+   // OP.xxxx      These properties hold the defined Class/Controller/Model definitions
+   //              for our loaded projects.
 
-    // OP.xxxx      These properties hold the defined Class/Controller/Model definitions
-    //              for our loaded projects.
+   OP.Comm = Comm; // communication routines (AJAX calls)
 
-    OP.Comm = Comm;	// communication routines (AJAX calls)
+   OP.Component = Component; // our defined components
 
-    OP.Component = Component;  // our defined components
+   OP.Config = Config; // configuration Settings for our current environment.
 
-    OP.Config = Config;		// configuration Settings for our current environment.
+   OP.CustomComponent = CustomComponent; // Webix Custom Components
 
-    OP.CustomComponent = CustomComponent;  // Webix Custom Components
-    
-    OP.DateTime = DateTime;
-	
-	OP.Icons = Icons;
+   OP.DateTime = DateTime;
 
-	OP.Dialog = AD.op.Dialog;
+   OP.Icons = Icons;
 
-	OP.Error = AD.error;
+   OP.Dialog = AD.op.Dialog;
 
-	OP.Model = Model;
+   OP.Error = AD.error;
 
-	OP.Multilingual = Multilingual;
+   OP.Model = Model;
 
-	OP.Test = Test;
-	
-	OP.Util = Util;
+   OP.Multilingual = Multilingual;
 
-	OP.Validation = Validation;
+   OP.Test = Test;
 
-	OP.User = User;
-	OP.User.init();
+   OP.Util = Util;
 
-}
-else {
-	var OP = window.OP;
+   OP.Validation = Validation;
+
+   OP.User = User;
+   OP.User.init();
+} else {
+   var OP = window.OP;
 }
 export default OP;
 

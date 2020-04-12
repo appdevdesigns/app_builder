@@ -1828,13 +1828,20 @@ console.error(err);
 
                         var attr = errorResponse.invalidAttributes;
 
-                        validationErrors.forEach((e) => {
-                            attr[e.name] = attr[e.name] || [];
-                            attr[e.name].push(e);
-                        });
+                        for (var e in err.data) {
+                            attr[e] = attr[e] || [];
+                            err.data[e].forEach((eObj) => {
+                                eObj.name = e;
+                                attr[e].push(eObj);
+                            });
+                        }
 
-                        resolvePendingTransaction();
                         res.AD.error(errorResponse);
+                    } else {
+                        var errorResponse = {
+                            error: "E_VALIDATION",
+                            invalidAttributes: {}
+                        };
 
                         return;
                     }

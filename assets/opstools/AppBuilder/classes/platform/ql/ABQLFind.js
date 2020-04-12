@@ -8,12 +8,12 @@
 const ABQLFindCore = require("../../core/ql/ABQLFindCore.js");
 
 class ABQLFind extends ABQLFindCore {
-    // constructor(attributes, prevOP, task, application) {
-    //     super(attributes, ParameterDefinitions, prevOP, task, application);
-    // }
-    ///
-    /// Instance Methods
-    ///
+   // constructor(attributes, prevOP, task, application) {
+   //     super(attributes, ParameterDefinitions, prevOP, task, application);
+   // }
+   ///
+   /// Instance Methods
+   ///
 }
 ABQLFind.uiIndentNext = 10;
 

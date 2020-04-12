@@ -1,130 +1,124 @@
-import AB from '../../components/ab'
-import ABPopupDefineLabel from "../../components/ab_work_object_workspace_popupDefineLabel"
+import AB from "../../components/ab";
+import ABPopupDefineLabel from "../../components/ab_work_object_workspace_popupDefineLabel";
 
-describe('ab_work_object_workspace_popupDefineLabel component', () => {
+describe("ab_work_object_workspace_popupDefineLabel component", () => {
+   var sandbox;
 
-	var sandbox;
+   var ab;
+   var mockApp;
 
-	var ab;
-	var mockApp;
+   const componentName = "ab_work_object_workspace_popupDefineLabel";
+   var target;
 
-	const componentName = 'ab_work_object_workspace_popupDefineLabel';
-	var target;
+   before(() => {
+      ab = new AB();
 
-	before(() => {
-		ab = new AB();
+      mockApp = ab._app;
 
-		mockApp = ab._app;
+      target = new ABPopupDefineLabel(mockApp);
+   });
 
-		target = new ABPopupDefineLabel(mockApp);
-	});
+   beforeEach(() => {
+      sandbox = sinon.sandbox.create();
+   });
 
-	beforeEach(() => {
-		sandbox = sinon.sandbox.create();
-	});
+   afterEach(() => {
+      sandbox.restore();
+   });
 
-	afterEach(() => {
-		sandbox.restore();
-	});
+   it("should look like a component", () => {
+      OP.Test.isComponent(target);
+   });
 
+   // UI test cases
+   describe("UI testing", () => {
+      it("should be webix's popup", () => {
+         assert.equal(target.ui.view, "popup");
+      });
 
-	it('should look like a component', () => {
-		OP.Test.isComponent(target);
-	});
+      it("should call .onShow when popup shows", () => {
+         var popup = target.ui,
+            stubOnShow = sinon
+               .stub(target._logic, "onShow")
+               .callsFake(() => {});
 
+         popup.on.onShow();
 
-	// UI test cases
-	describe('UI testing', () => {
+         sandbox.assert.calledOnce(stubOnShow);
+      });
 
-		it("should be webix's popup", () => {
-			assert.equal(target.ui.view, "popup");
-		});
+      it("should call .onItemClick when column list item is clicked", () => {
+         var columnList = OP.Test.findElement(target.ui, {
+               name: "columnList"
+            }),
+            stubOnItemClick = sinon
+               .stub(target._logic, "onItemClick")
+               .callsFake(() => {});
 
-		it("should call .onShow when popup shows", () => {
-			var popup = target.ui,
-				stubOnShow = sinon.stub(target._logic, "onShow").callsFake(() => { });
+         var param1 = "Test Param 1",
+            param2 = "Test Param 2",
+            param3 = "Test Param 3";
 
-			popup.on.onShow();
+         columnList.on.onItemClick(param1, param2, param3);
 
-			sandbox.assert.calledOnce(stubOnShow);
-		});
+         sandbox.assert.calledOnce(stubOnItemClick);
+         sandbox.assert.calledWith(stubOnItemClick, param1, param2, param3);
+      });
 
-		it("should call .onItemClick when column list item is clicked", () => {
-			var columnList = OP.Test.findElement(target.ui, { name: "columnList" }),
-				stubOnItemClick = sinon.stub(target._logic, "onItemClick").callsFake(() => { });
+      it("should call .buttonCancel when 'cancel' button is clicked ", () => {
+         var cancelButton = OP.Test.findElement(target.ui, { name: "cancel" }),
+            stubButtonCancel = sinon
+               .stub(target._logic, "buttonCancel")
+               .callsFake(() => {});
 
-			var param1 = "Test Param 1",
-				param2 = "Test Param 2",
-				param3 = "Test Param 3"
+         cancelButton.click();
 
-			columnList.on.onItemClick(param1, param2, param3);
+         sandbox.assert.calledOnce(stubButtonCancel);
+      });
 
-			sandbox.assert.calledOnce(stubOnItemClick);
-			sandbox.assert.calledWith(stubOnItemClick, param1, param2, param3);
-		});
+      it("should call .buttonSave when 'save' button is clicked ", () => {
+         var saveButton = OP.Test.findElement(target.ui, { name: "save" }),
+            stubButtonSave = sinon
+               .stub(target._logic, "buttonSave")
+               .callsFake(() => {});
 
-		it("should call .buttonCancel when 'cancel' button is clicked ", () => {
-			var cancelButton = OP.Test.findElement(target.ui, { name: "cancel" }),
-				stubButtonCancel = sinon.stub(target._logic, "buttonCancel").callsFake(() => { });
+         saveButton.click();
 
-			cancelButton.click();
+         sandbox.assert.calledOnce(stubButtonSave);
+      });
+   });
 
-			sandbox.assert.calledOnce(stubButtonCancel);
-		});
+   // Init test cases
+   describe("Init testing", () => {
+      it("should exist init property", () => {
+         assert.isDefined(target.init, "should have a init property");
+      });
 
-		it("should call .buttonSave when 'save' button is clicked ", () => {
-			var saveButton = OP.Test.findElement(target.ui, { name: "save" }),
-				stubButtonSave = sinon.stub(target._logic, "buttonSave").callsFake(() => { });
+      it("should define callbacks when initial", () => {
+         // Call init
+         let callbacks = {
+            onCancel: function() {},
+            onSave: function() {}
+         };
+         target.init(callbacks);
 
-			saveButton.click();
+         assert.equal(callbacks.onCancel, target._logic.callbacks.onCancel);
+         assert.equal(callbacks.onSave, target._logic.callbacks.onSave);
+      });
 
-			sandbox.assert.calledOnce(stubButtonSave);
-		});
+      it("should render webix component when initial", () => {
+         var spyUi = sandbox.spy(webix, "ui");
 
-	});
+         target.init({});
 
+         sandbox.assert.calledOnce(spyUi);
+         sandbox.assert.calledWith(spyUi, target.ui);
+      });
+   });
 
-	// Init test cases
-	describe('Init testing', () => {
-		it("should exist init property", () => {
-			assert.isDefined(target.init, "should have a init property");
-		});
+   // Actions test cases
+   describe("Actions testing", () => {});
 
-		it("should define callbacks when initial", () => {
-			// Call init
-			let callbacks = {
-				onCancel: function () { },
-				onSave: function () { }
-			};
-			target.init(callbacks);
-
-			assert.equal(callbacks.onCancel, target._logic.callbacks.onCancel);
-			assert.equal(callbacks.onSave, target._logic.callbacks.onSave)
-		});
-
-		it("should render webix component when initial", () => {
-			var spyUi = sandbox.spy(webix, "ui");
-
-			target.init({});
-
-			sandbox.assert.calledOnce(spyUi);
-			sandbox.assert.calledWith(spyUi, target.ui);
-		});
-
-	});
-
-
-	// Actions test cases
-	describe('Actions testing', () => {
-	});
-
-
-	// Logic test cases
-	describe('Logic testing', () => {
-	});
-
-
-
-
-
+   // Logic test cases
+   describe("Logic testing", () => {});
 });

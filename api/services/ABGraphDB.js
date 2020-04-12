@@ -1,152 +1,133 @@
-var Database = require('arangojs').Database;
+var Database = require("arangojs").Database;
 var fs = require("fs");
-var path = require('path');
+var path = require("path");
 
 var conn;
 
 module.exports = {
+   database: () => {
+      if (conn != null) return conn;
 
-	database: () => {
+      let url = sails.config.appbuilder.graphDB.url,
+         databaseName = sails.config.appbuilder.graphDB.databaseName,
+         user = sails.config.appbuilder.graphDB.user,
+         pass = sails.config.appbuilder.graphDB.pass;
 
-		if (conn != null)
-			return conn
+      conn = new Database(url);
+      conn.useDatabase(databaseName);
+      conn.useBasicAuth(user, pass);
 
-		let url = sails.config.appbuilder.graphDB.url,
-			databaseName = sails.config.appbuilder.graphDB.databaseName,
-			user = sails.config.appbuilder.graphDB.user,
-			pass = sails.config.appbuilder.graphDB.pass;
+      return conn;
+   },
 
-		conn = new Database(url);
-		conn.useDatabase(databaseName);
-		conn.useBasicAuth(user, pass);
+   initial: () => {
+      return (
+         Promise.resolve()
 
-		return conn;
+            // Initial database
+            .then(() => {
+               return new Promise((next, err) => {
+                  let db = ABGraphDB.database();
 
-	},
+                  db.exists().then((exists) => {
+                     if (exists) return next();
 
-	initial: () => {
+                     let url = sails.config.appbuilder.graphDB.url,
+                        databaseName =
+                           sails.config.appbuilder.graphDB.databaseName,
+                        user = sails.config.appbuilder.graphDB.user,
+                        pass = sails.config.appbuilder.graphDB.pass;
 
-		return Promise.resolve()
+                     let newDB = new Database(url);
+                     newDB.useBasicAuth(user, pass);
+                     newDB
+                        .createDatabase(databaseName, [
+                           { username: user, passwd: pass }
+                        ])
+                        .then(() => {
+                           conn = null;
 
-			// Initial database
-			.then(() => {
+                           next();
+                        }, err);
+                  });
+               });
+            })
 
-				return new Promise((next, err) => {
+            // Initial collections
+            .then(() => {
+               let tasks = [];
 
-					let db = ABGraphDB.database();
+               let db = ABGraphDB.database();
 
-					db.exists().then(exists => {
+               let modelsPath = path.join(__dirname, "..", "graphModels");
 
-						if (exists)
-							return next();
+               fs.readdirSync(modelsPath).forEach((fileName) => {
+                  if (fileName == "ABModelBase.js") return;
 
-						let url = sails.config.appbuilder.graphDB.url,
-							databaseName = sails.config.appbuilder.graphDB.databaseName,
-							user = sails.config.appbuilder.graphDB.user,
-							pass = sails.config.appbuilder.graphDB.pass;
+                  let model = require(path.join(modelsPath, fileName));
 
-						let newDB = new Database(url);
-						newDB.useBasicAuth(user, pass);
-						newDB.createDatabase(databaseName, [{ username: user, passwd: pass }])
-							.then(() => {
+                  // Initial collections
+                  tasks.push(
+                     () =>
+                        new Promise((next, err) => {
+                           let collection = db.collection(model.collectionName);
 
-								conn = null;
+                           Promise.resolve()
+                              .then(() => {
+                                 return new Promise((ok, error) => {
+                                    collection
+                                       .exists()
+                                       .catch(error)
+                                       .then((exists) => ok(exists));
+                                 });
+                              }, err)
+                              .then((exists) => {
+                                 return new Promise((ok, error) => {
+                                    if (exists) return ok();
 
-								next();
-							}, err);
+                                    collection
+                                       .create()
+                                       .catch(error)
+                                       .then(() => ok());
+                                 });
+                              }, err)
+                              .then(() => next());
+                        })
+                  );
 
-					});
+                  // Initial edges
+                  Object.keys(model.relations || {}).forEach((relationName) => {
+                     let edgeName = (model.relations || {})[relationName]
+                        .edgeName;
 
-				});
+                     tasks.push(
+                        () =>
+                           new Promise((next, err) => {
+                              let edge = db.edgeCollection(edgeName);
 
-			})
+                              Promise.resolve()
+                                 .then(() => {
+                                    return new Promise((ok, error) => {
+                                       edge
+                                          .exists()
+                                          .catch(error)
+                                          .then((exists) => ok(exists));
+                                    });
+                                 }, err)
+                                 .then((exists) => {
+                                    if (exists) return Promise.resolve();
+                                    else return edge.create();
+                                 }, err)
+                                 .then(() => next());
+                           })
+                     );
+                  });
+               });
 
-			// Initial collections
-			.then(() => {
-
-				let tasks = [];
-
-				let db = ABGraphDB.database();
-
-				let modelsPath = path.join(__dirname, "..", "graphModels");
-
-				fs.readdirSync(modelsPath).forEach(fileName => {
-
-					if (fileName == "ABModelBase.js")
-						return;
-
-					let model = require(path.join(modelsPath, fileName));
-
-					// Initial collections
-					tasks.push(() => new Promise((next, err) => {
-
-						let collection = db.collection(model.collectionName);
-
-						Promise.resolve()
-							.then(() => {
-								return new Promise((ok, error) => {
-
-									collection.exists()
-										.catch(error)
-										.then(exists => ok(exists));
-
-								});
-							}, err)
-							.then(exists => {
-
-								return new Promise((ok, error) => {
-									if (exists)
-										return ok();
-
-									collection.create()
-										.catch(error)
-										.then(() => ok());
-
-								});
-							}, err)
-							.then(() => next());
-
-					}));
-
-					// Initial edges
-					Object.keys(model.relations || {}).forEach(relationName => {
-
-						let edgeName = (model.relations || {})[relationName].edgeName;
-
-						tasks.push(() => new Promise((next, err) => {
-
-							let edge = db.edgeCollection(edgeName);
-
-							Promise.resolve()
-								.then(() => {
-									return new Promise((ok, error) => {
-
-										edge.exists()
-											.catch(error)
-											.then(exists => ok(exists));
-
-									});
-								}, err)
-								.then(exists => {
-									if (exists)
-										return Promise.resolve();
-									else
-										return edge.create();
-								}, err)
-								.then(() => next());
-
-						}));
-
-					});
-
-				});
-
-				return tasks.reduce((promiseChain, currTask) => {
-					return promiseChain.then(currTask);
-				}, Promise.resolve());
-
-			});
-
-	}
-
-}
+               return tasks.reduce((promiseChain, currTask) => {
+                  return promiseChain.then(currTask);
+               }, Promise.resolve());
+            })
+      );
+   }
+};

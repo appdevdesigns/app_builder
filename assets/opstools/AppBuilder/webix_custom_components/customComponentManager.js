@@ -21,30 +21,30 @@ const TreeSuggest = require("./treesuggest");
 // const SavableLayout = require('./savablelayout');
 
 var componentList = [
-    ActiveList,
-    CountFooter,
-    DateTimePicker,
-    EditList,
-    EditTree,
-    EditUnitList,
-    FocusableTemplate,
-    FormIOBuilder,
-    FormIOPreview,
-    NumberText,
-    TotalFooter,
-    TreeSuggest
-    // SavableLayout
+   ActiveList,
+   CountFooter,
+   DateTimePicker,
+   EditList,
+   EditTree,
+   EditUnitList,
+   FocusableTemplate,
+   FormIOBuilder,
+   FormIOPreview,
+   NumberText,
+   TotalFooter,
+   TreeSuggest
+   // SavableLayout
 ];
 
 module.exports = class ABCustomComponentManager {
-    constructor() {}
+   constructor() {}
 
-    initComponents(App) {
-        App.custom = App.custom || {};
+   initComponents(App) {
+      App.custom = App.custom || {};
 
-        componentList.forEach((Component) => {
-            var component = new Component(App);
-            App.custom[component.key] = component;
-        });
-    }
+      componentList.forEach((Component) => {
+         var component = new Component(App);
+         App.custom[component.key] = component;
+      });
+   }
 };

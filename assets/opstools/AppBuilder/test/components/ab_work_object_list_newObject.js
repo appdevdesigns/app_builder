@@ -1,123 +1,111 @@
-import AB from '../../components/ab'
-import ABApplication from "../../classes/ABApplication"
-import ABListNewObject from "../../components/ab_work_object_list_newObject"
+import AB from "../../components/ab";
+import ABApplication from "../../classes/ABApplication";
+import ABListNewObject from "../../components/ab_work_object_list_newObject";
 
-describe('ab_work_object_list_newObject component', () => {
+describe("ab_work_object_list_newObject component", () => {
+   var sandbox;
 
-	var sandbox;
+   var ab;
+   var mockApp;
 
-	var ab;
-	var mockApp;
+   const componentName = "ab_work_object_list_newObject";
+   var target;
 
-	const componentName = 'ab_work_object_list_newObject';
-	var target;
+   before(() => {
+      ab = new AB();
 
-	before(() => {
-		ab = new AB();
+      mockApp = ab._app;
 
-		mockApp = ab._app;
+      target = new ABListNewObject(mockApp);
+   });
 
-		target = new ABListNewObject(mockApp);
-	});
+   beforeEach(() => {
+      sandbox = sinon.sandbox.create();
+   });
 
-	beforeEach(() => {
-		sandbox = sinon.sandbox.create();
-	});
+   afterEach(() => {
+      sandbox.restore();
+   });
 
-	afterEach(() => {
-		sandbox.restore();
-	});
+   it("should look like a component", () => {
+      OP.Test.isComponent(target);
+   });
 
+   // UI test cases
+   describe("UI testing", () => {
+      it("should be webix's window", () => {
+         assert.equal(target.ui.view, "window");
+      });
+   });
 
-	it('should look like a component', () => {
-		OP.Test.isComponent(target);
-	});
+   // Init test cases
+   describe("Init testing", () => {
+      it("should create webix ui", () => {
+         // Call init
+         let callbacks = { onDone: function() {} };
+         target.init(callbacks);
 
+         assert.equal(target._logic.callbacks.onDone, callbacks.onDone);
+      });
+   });
 
-	// UI test cases
-	describe('UI testing', () => {
+   // Actions test cases
+   describe("Actions testing", () => {});
 
-		it("should be webix's window", () => {
-			assert.equal(target.ui.view, "window");
-		});
+   // Logic test cases
+   describe("Logic testing", () => {
+      it(".applicationLoad: should exist", () => {
+         assert.isDefined(target.applicationLoad);
+         assert.equal(target.applicationLoad, target._logic.applicationLoad);
+      });
 
-	});
+      it(".show: should exist", () => {
+         assert.isDefined(target.show);
+         assert.equal(target.show, target._logic.show);
+      });
 
+      it(".hide: should exist", () => {
+         assert.isDefined(target._logic.hide);
+      });
 
-	// Init test cases
-	describe('Init testing', () => {
+      it(".save: should show a alert box when currentApplication is null", () => {
+         // Use stub instead of spy to avoid show alert popup
+         let stubAlert = sandbox
+            .stub(OP.Dialog, "Alert")
+            .callsFake(function() {});
 
-		it("should create webix ui", () => {
-			// Call init
-			let callbacks = { onDone: function () { } };
-			target.init(callbacks);
+         let newObjectValues = {};
+         let callback = function(err) {
+            // Assert it should return error in callback
+            assert.isDefined(err);
+         };
 
-			assert.equal(target._logic.callbacks.onDone, callbacks.onDone);
-		});
+         // Call save object
+         let result = target._logic.save(newObjectValues, callback);
 
+         assert.isFalse(result);
+         sandbox.assert.calledOnce(stubAlert);
+      });
 
-	});
+      it(".save: should create a new object to current application", () => {
+         var sampleApp = new ABApplication({
+            id: 999,
+            name: "Test Application",
+            json: {}
+         });
 
+         // Load a example application to component
+         target.applicationLoad(sampleApp);
 
-	// Actions test cases
-	describe('Actions testing', () => {
-	});
+         let spyObjectNew = sandbox.spy(sampleApp, "objectNew");
+         let sampleObject = {};
+         let callback = function(err) {
+            // Assert it should not return any error in callback
+            assert.isNull(err);
+         };
+         let result = target._logic.save(sampleObject, callback);
 
-
-	// Logic test cases
-	describe('Logic testing', () => {
-		it('.applicationLoad: should exist', () => {
-			assert.isDefined(target.applicationLoad);
-			assert.equal(target.applicationLoad, target._logic.applicationLoad);
-		});
-
-		it('.show: should exist', () => {
-			assert.isDefined(target.show);
-			assert.equal(target.show, target._logic.show);
-		});
-
-		it('.hide: should exist', () => {
-			assert.isDefined(target._logic.hide);
-		});
-
-		it('.save: should show a alert box when currentApplication is null', () => {
-			// Use stub instead of spy to avoid show alert popup
-			let stubAlert = sandbox.stub(OP.Dialog, 'Alert').callsFake(function () { });
-
-			let newObjectValues = {};
-			let callback = function (err) {
-				// Assert it should return error in callback
-				assert.isDefined(err);
-			};
-
-			// Call save object
-			let result = target._logic.save(newObjectValues, callback);
-
-			assert.isFalse(result);
-			sandbox.assert.calledOnce(stubAlert);
-		});
-
-		it('.save: should create a new object to current application', () => {
-			var sampleApp = new ABApplication({
-				id: 999,
-				name: "Test Application",
-				json: {}
-			});
-
-			// Load a example application to component
-			target.applicationLoad(sampleApp);
-
-			let spyObjectNew = sandbox.spy(sampleApp, "objectNew");
-			let sampleObject = {};
-			let callback = function (err) {
-				// Assert it should not return any error in callback
-				assert.isNull(err);
-			};
-			let result = target._logic.save(sampleObject, callback)
-
-			sandbox.assert.calledOnce(spyObjectNew);
-		});
-	});
-
-
+         sandbox.assert.calledOnce(spyObjectNew);
+      });
+   });
 });

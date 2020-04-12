@@ -9,12 +9,12 @@
 const ABQLSetFirstCore = require("../../core/ql/ABQLSetFirstCore.js");
 
 class ABQLSetFirst extends ABQLSetFirstCore {
-    // constructor(attributes, prevOP, task, application) {
-    //     super(attributes, [], prevOP, task, application);
-    // }
-    ///
-    /// Instance Methods
-    ///
+   // constructor(attributes, prevOP, task, application) {
+   //     super(attributes, [], prevOP, task, application);
+   // }
+   ///
+   /// Instance Methods
+   ///
 }
 ABQLSetFirst.uiIndentNext = 20;
 

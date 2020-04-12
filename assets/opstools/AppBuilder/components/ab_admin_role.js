@@ -8,196 +8,166 @@ const ABAdminRoleScope = require("./ab_admin_role_scope");
 const ABAdminRoleUser = require("./ab_admin_role_user");
 
 module.exports = class AB_Work_Admin_Role extends ABComponent {
+   constructor(App) {
+      super(App, "ab_admin_role");
 
-	constructor(App) {
-		super(App, 'ab_admin_role');
+      let L = this.Label;
 
-		let L = this.Label;
+      let labels = {
+         common: App.labels,
+         component: {
+            // formHeader: L('ab.application.form.header', "*Application Info"),
+         }
+      };
 
-		let labels = {
+      let CurrentApplication;
+      let RoleList = new ABAdminRoleList(App);
+      let RoleForm = new ABAdminRoleForm(App);
+      let RoleScope = new ABAdminRoleScope(App);
+      let RoleUser = new ABAdminRoleUser(App);
 
-			common: App.labels,
-			component: {
-				// formHeader: L('ab.application.form.header', "*Application Info"),
-			}
-		}
+      let roleDC = new webix.DataCollection();
 
-		let CurrentApplication;
-		let RoleList = new ABAdminRoleList(App);
-		let RoleForm = new ABAdminRoleForm(App);
-		let RoleScope = new ABAdminRoleScope(App);
-		let RoleUser = new ABAdminRoleUser(App);
+      // internal list of Webix IDs to reference our UI components.
+      let ids = {
+         component: this.unique("component"),
+         info: this.unique("info"),
+         tabview: this.unique("tabview")
+      };
 
-		let roleDC = new webix.DataCollection();
+      // Our webix UI definition:
+      let uiScope = RoleScope.ui;
+      let uiUser = RoleUser.ui;
+      this.ui = {
+         id: ids.component,
+         type: "space",
+         cols: [
+            RoleList.ui,
+            {
+               id: ids.tabview,
+               view: "tabview",
+               cells: [
+                  {
+                     header:
+                        "<span class='webix_icon fa fa-user-md'></span> Info",
+                     body: {
+                        id: ids.info,
+                        borderless: true,
+                        rows: [RoleForm.ui]
+                     }
+                  },
+                  {
+                     header:
+                        "<span class='webix_icon fa fa-street-view'></span> Scopes",
+                     body: uiScope
+                  },
+                  {
+                     header:
+                        "<span class='webix_icon fa fa-users'></span> Users",
+                     body: uiUser
+                  }
+               ],
+               tabbar: {
+                  on: {
+                     onAfterTabClick: (id) => {
+                        switch (id) {
+                           case RoleScope.ui.id:
+                              RoleScope.onShow();
+                              break;
+                           case RoleUser.ui.id:
+                              RoleUser.onShow();
+                              break;
+                        }
+                     }
+                  }
+               }
+            }
+         ]
+      };
 
-		// internal list of Webix IDs to reference our UI components.
-		let ids = {
-			component: this.unique('component'),
-			info: this.unique('info'),
-			tabview: this.unique('tabview')
-		}
+      // Our init() function for setting up our UI
+      this.init = function() {
+         RoleList.init(roleDC);
+         RoleForm.init(roleDC);
+         RoleScope.init(roleDC);
+         RoleUser.init(roleDC);
+      };
 
+      // our internal business logic
+      var _logic = {
+         switchTab: function(name) {
+            let tabview = $$(ids.tabview);
+            let tabbar = tabview.getTabbar();
 
+            switch (name) {
+               case "info":
+                  tabbar.setValue(ids.info);
+                  RoleForm.focusName();
+                  break;
+               case "scope":
+                  tabbar.setValue(uiScope.id);
+                  break;
+               case "user":
+                  tabbar.setValue(uiUser.id);
+                  break;
+            }
+         },
 
-		// Our webix UI definition:
-		let uiScope = RoleScope.ui;
-		let uiUser = RoleUser.ui;
-		this.ui = {
-			id: ids.component,
-			type: "space",
-			cols: [
-				RoleList.ui,
-				{
-					id: ids.tabview,
-					view: "tabview",
-					cells: [
-						{
-							header: "<span class='webix_icon fa fa-user-md'></span> Info",
-							body: {
-								id: ids.info,
-								borderless: true,
-								rows: [
-									RoleForm.ui
-								]
-							}
-						},
-						{
-							header: "<span class='webix_icon fa fa-street-view'></span> Scopes",
-							body: uiScope
-						},
-						{
-							header: "<span class='webix_icon fa fa-users'></span> Users",
-							body: uiUser
-						}
-					],
-					tabbar: {
-						on: {
-							onAfterTabClick: (id) => {
+         roleSave: (vals) => {
+            let currRoleId = roleDC.getCursor();
+            let currRole = roleDC.getItem(currRoleId);
 
-								switch (id) {
-									case RoleScope.ui.id:
-										RoleScope.onShow();
-										break;
-									case RoleUser.ui.id:
-										RoleUser.onShow();
-										break;
-								}
+            // Add new
+            let isAdded = false;
+            if (!currRole) {
+               currRole = new ABRole(vals);
+               isAdded = true;
+            }
+            // Update
+            else {
+               for (let key in vals) {
+                  if (vals[key] != undefined) currRole[key] = vals[key];
+               }
+               isAdded = false;
+            }
 
-							}
-						}
-					}
-				}
-			]
-		};
+            return new Promise((resolve, reject) => {
+               currRole
+                  .save(currRole)
+                  .catch(reject)
+                  .then((data) => {
+                     if (isAdded) {
+                        currRole.id = data.uuid || data.id;
+                        roleDC.setCursor(null);
+                        roleDC.add(currRole);
+                        roleDC.setCursor(currRole.id);
+                     } else roleDC.updateItem(currRoleId, data);
 
+                     resolve();
+                  });
+            });
+         },
 
+         /**
+          * @function show()
+          *
+          * Show this component.
+          */
+         show: function() {
+            $$(ids.component).show();
+            RoleList.show();
+         }
+      };
+      this._logic = _logic;
 
-		// Our init() function for setting up our UI
-		this.init = function () {
+      this.actions({
+         roleSwitchTab: _logic.switchTab,
+         roleSave: _logic.roleSave
+      });
 
-			RoleList.init(roleDC);
-			RoleForm.init(roleDC);
-			RoleScope.init(roleDC);
-			RoleUser.init(roleDC);
-
-		}
-
-
-		// our internal business logic
-		var _logic = {
-
-			switchTab: function (name) {
-
-				let tabview = $$(ids.tabview);
-				let tabbar = tabview.getTabbar();
-
-				switch (name) {
-					case "info":
-						tabbar.setValue(ids.info);
-						RoleForm.focusName();
-						break;
-					case "scope":
-						tabbar.setValue(uiScope.id);
-						break;
-					case "user":
-						tabbar.setValue(uiUser.id);
-						break;
-				}
-
-			},
-
-			roleSave: (vals) => {
-
-				let currRoleId = roleDC.getCursor();
-				let currRole = roleDC.getItem(currRoleId);
-
-				// Add new
-				let isAdded = false;
-				if (!currRole) {
-					currRole = new ABRole(vals);
-					isAdded = true;
-				}
-				// Update
-				else {
-					for (let key in vals) {
-						if (vals[key] != undefined)
-							currRole[key] = vals[key];
-					}
-					isAdded = false;
-				}
-
-				return new Promise((resolve, reject) => {
-
-					currRole.save(currRole)
-						.catch(reject)
-						.then(data => {
-
-							if (isAdded) {
-								currRole.id = data.uuid || data.id;
-								roleDC.setCursor(null);
-								roleDC.add(currRole);
-								roleDC.setCursor(currRole.id);
-							}
-							else
-								roleDC.updateItem(currRoleId, data);
-
-							resolve();
-						});
-
-				});
-
-			},
-
-			/**
-			 * @function show()
-			 *
-			 * Show this component.
-			 */
-			show: function () {
-
-				$$(ids.component).show();
-				RoleList.show();
-
-			}
-
-		}
-		this._logic = _logic;
-
-
-		this.actions({
-
-			roleSwitchTab: _logic.switchTab,
-			roleSave: _logic.roleSave
-
-		});
-
-
-
-		// 
-		// Define our external interface methods:
-		// 
-		this.show = _logic.show;
-
-	}
-
-}
+      //
+      // Define our external interface methods:
+      //
+      this.show = _logic.show;
+   }
+};
