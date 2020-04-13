@@ -904,9 +904,12 @@ module.exports = class ABClassObject extends ABObjectCore {
 
                                  // If this is formula field and this object is not ABObjectQuery
                                  else if (
-                                    field.key == "formula" && 
-                                    !this.viewName) {
-                                    condition.key = this.convertFormulaField(field);
+                                    field.key == "formula" &&
+                                    !this.viewName
+                                 ) {
+                                    condition.key = this.convertFormulaField(
+                                       field
+                                    );
                                  }
                               }
                            }
@@ -1521,37 +1524,30 @@ module.exports = class ABClassObject extends ABObjectCore {
    }
 
    selectFormulaFields(query) {
-
       let raw = ABMigration.connection().raw;
 
       // Formula fields
-      let formulaFields = this.fields(f => f.key == "formula");
-      (formulaFields || []).forEach(f => {
-
+      let formulaFields = this.fields((f) => f.key == "formula");
+      (formulaFields || []).forEach((f) => {
          let selectSQL = this.convertFormulaField(f);
          if (selectSQL) {
             // selectSQL += ` AS ${this.dbTableName(true)}.${f.columnName}`;
             selectSQL += ` AS \`${f.columnName}\``;
             query = query.select(raw(selectSQL));
          }
-
       });
 
       // NOTE: select all columns
       if (formulaFields.length)
          query = query.select(`${this.dbTableName(true)}.*`);
-
    }
 
    convertFormulaField(formulaField) {
-
-      if (formulaField == null ||
-         formulaField.key != "formula")
-         return "";
+      if (formulaField == null || formulaField.key != "formula") return "";
 
       let settings = formulaField.settings || {};
 
-      let connectedField = this.fields(f => f.id == settings.field)[0];
+      let connectedField = this.fields((f) => f.id == settings.field)[0];
       if (!connectedField) return;
 
       let linkField = connectedField.fieldLink;
@@ -1560,59 +1556,75 @@ module.exports = class ABClassObject extends ABObjectCore {
       let connectedObj = ABObjectCache.get(settings.object);
       if (!connectedObj) return;
 
-      let numberField = connectedObj.fields(f => f.id == settings.fieldLink)[0];
+      let numberField = connectedObj.fields(
+         (f) => f.id == settings.fieldLink
+      )[0];
       if (!numberField) return;
 
       let selectSQL = "";
       let type = {
-         "sum": "SUM",
-         "average": "AVG",
-         "max": "MAX",
-         "min": "MIN",
-         "count": "COUNT"
+         sum: "SUM",
+         average: "AVG",
+         max: "MAX",
+         min: "MIN",
+         count: "COUNT"
       };
 
       // M:1 , 1:1 isSource: false
-      if ((connectedField.settings.linkType == "many" && 
-         connectedField.settings.linkViaType == "one") || 
-
-         (connectedField.settings.linkType == "one" && 
-         connectedField.settings.linkViaType == "one" && 
-         !connectedField.settings.isSource)) {
-
-         selectSQL = `(SELECT ${type[settings.type]}(\`${numberField.columnName}\`)
+      if (
+         (connectedField.settings.linkType == "many" &&
+            connectedField.settings.linkViaType == "one") ||
+         (connectedField.settings.linkType == "one" &&
+            connectedField.settings.linkViaType == "one" &&
+            !connectedField.settings.isSource)
+      ) {
+         selectSQL = `(SELECT ${type[settings.type]}(\`${
+            numberField.columnName
+         }\`)
                   FROM ${connectedObj.dbTableName(true)}
-                  WHERE ${connectedObj.dbTableName(true)}.\`${linkField.columnName}\` = ${this.dbTableName(true)}.${this.PK()})`;
+                  WHERE ${connectedObj.dbTableName(true)}.\`${
+            linkField.columnName
+         }\` = ${this.dbTableName(true)}.${this.PK()})`;
       }
       // 1:M , 1:1 isSource: true
-      else if ((connectedField.settings.linkType == "one" && 
-            connectedField.settings.linkViaType == "many") || 
-
-            (connectedField.settings.linkType == "one" && 
-            connectedField.settings.linkViaType == "one" && 
-            connectedField.settings.isSource)) {
-
-         selectSQL = `(SELECT ${type[settings.type]}(\`${numberField.columnName}\`)
+      else if (
+         (connectedField.settings.linkType == "one" &&
+            connectedField.settings.linkViaType == "many") ||
+         (connectedField.settings.linkType == "one" &&
+            connectedField.settings.linkViaType == "one" &&
+            connectedField.settings.isSource)
+      ) {
+         selectSQL = `(SELECT ${type[settings.type]}(\`${
+            numberField.columnName
+         }\`)
                   FROM ${connectedObj.dbTableName(true)}
-                  WHERE ${connectedObj.dbTableName(true)}.${connectedObj.PK()} = ${this.dbTableName(true)}.\`${connectedField.columnName}\`)`;
-
+                  WHERE ${connectedObj.dbTableName(
+                     true
+                  )}.${connectedObj.PK()} = ${this.dbTableName(true)}.\`${
+            connectedField.columnName
+         }\`)`;
       }
       // M:N
-      else if (connectedField.settings.linkType == "many" && 
-            connectedField.settings.linkViaType == "many") {
-
+      else if (
+         connectedField.settings.linkType == "many" &&
+         connectedField.settings.linkViaType == "many"
+      ) {
          let joinTable = connectedField.joinTableName(true),
             joinColumnNames = connectedField.joinColumnNames();
 
-         selectSQL = `(SELECT ${type[settings.type]}(\`${numberField.columnName}\`)
+         selectSQL = `(SELECT ${type[settings.type]}(\`${
+            numberField.columnName
+         }\`)
                FROM ${connectedObj.dbTableName(true)}
                INNER JOIN ${joinTable}
-               ON ${joinTable}.\`${joinColumnNames.targetColumnName}\` = ${connectedObj.dbTableName(true)}.${connectedObj.PK()}
-               WHERE ${joinTable}.\`${joinColumnNames.sourceColumnName}\` = ${this.dbTableName(true)}.${this.PK()})`;
+               ON ${joinTable}.\`${
+            joinColumnNames.targetColumnName
+         }\` = ${connectedObj.dbTableName(true)}.${connectedObj.PK()}
+               WHERE ${joinTable}.\`${
+            joinColumnNames.sourceColumnName
+         }\` = ${this.dbTableName(true)}.${this.PK()})`;
       }
 
       return selectSQL;
-
    }
-
 };
