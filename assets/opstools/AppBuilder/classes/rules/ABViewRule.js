@@ -327,7 +327,11 @@ module.exports = class ABViewRule {
          this.objectQB.cleanRules(QBCondition[0], QBCondition[1], false);
       }
 
-      hiddenQB.setValue(QBCondition);
+      // hiddenQB.setValue(QBCondition);
+      hiddenQB.setValue({
+         query: QBCondition[0] || {},
+         fields: QBCondition[1] || []
+      });
 
       var QBHelper = hiddenQB.getFilterHelper();
       var isValid = QBHelper(options.data);
