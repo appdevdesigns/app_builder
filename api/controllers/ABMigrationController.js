@@ -1,89 +1,65 @@
 /**
  * ABMigrationController
  *
- * @description :: Server-side logic for managing updating the table & column information 
+ * @description :: Server-side logic for managing updating the table & column information
  * @help        :: See http://sailsjs.org/#!/documentation/concepts/Controllers
  */
 
-var AD = require('ad-utils');
-var _ = require('lodash');
-var path = require('path');
-var async = require('async');
+var AD = require("ad-utils");
+var _ = require("lodash");
+var path = require("path");
+var async = require("async");
 
-var ABGraphObject = require(path.join('..', 'graphModels', 'ABObject'));
+var ABGraphObject = require(path.join("..", "graphModels", "ABObject"));
 
 var reloading = null;
 
 module.exports = {
+   /**
+    * createObject
+    *
+    * post app_builder/migrate/object/:objID
+    */
+   createObject: function(req, res) {
+      simpleObjectOperation(req, res, "createObject");
+   },
 
-    
-    /**
-     * createObject
-     *
-     * post app_builder/migrate/object/:objID
-     */
-    createObject: function(req, res) {
+   /**
+    * dropObject
+    *
+    * delete app_builder/migrate/object/:objID
+    */
+   dropObject: function(req, res) {
+      simpleObjectOperation(req, res, "dropObject");
+   },
 
-        simpleObjectOperation(req, res, 'createObject');
+   /**
+    * createField
+    *
+    * post app_builder/migrate/object/:objID/field/:fieldID
+    */
+   createField: function(req, res) {
+      simpleFieldOperation(req, res, "createField");
+   },
 
-    },
-    
+   /**
+    * updateField
+    *
+    * put app_builder/migrate/object/:objID/field/:fieldID
+    */
+   updateField: function(req, res) {
+      simpleFieldOperation(req, res, "updateField");
+   },
 
-    /**
-     * dropObject
-     *
-     * delete app_builder/migrate/object/:objID
-     */
-    dropObject: function(req, res) {
-        
-        simpleObjectOperation(req, res, 'dropObject'); 
-    },
-
-
-
-
-    /**
-     * createField
-     *
-     * post app_builder/migrate/object/:objID/field/:fieldID
-     */
-    createField: function(req, res) {
-
-        simpleFieldOperation(req, res, 'createField');
-
-    },
-
-
-
-
-    /**
-     * updateField
-     *
-     * put app_builder/migrate/object/:objID/field/:fieldID
-     */
-    updateField: function(req, res) {
-        
-        simpleFieldOperation(req, res, 'updateField');
-        
-    },
-
-
-
-
-    /**
-     * dropField
-     *
-     * delete app_builder/migrate/object/:objID/field/:fieldID
-     */
-    dropField: function(req, res) {
-
-        simpleFieldOperation(req, res, 'dropField');
-        
-    },
-	
+   /**
+    * dropField
+    *
+    * delete app_builder/migrate/object/:objID/field/:fieldID
+    */
+   dropField: function(req, res) {
+      simpleFieldOperation(req, res, "dropField");
+   }
 };
-
-
 
 // // Utility:
 // function verifyAndReturnObject(req, res) {
@@ -112,7 +88,6 @@ module.exports = {
 //                 res.AD.error(invalidError, 400);
 //                 reject();
 //             }
-            
 
 //             ABApplication.findOne({id: appID})
 //             .then(function(app) {
@@ -160,178 +135,161 @@ module.exports = {
 
 // }
 
-
 function verifyAndReturnField(req, res) {
+   return new Promise((resolve, reject) => {
+      let objID = req.param("objID", -1);
+      let object = ABObjectCache.get(objID);
 
-    return new Promise(
-        (resolve, reject) => {
+      // AppBuilder.routes.verifyAndReturnObject(req, res)
+      // ABGraphObject.findOne(objID)
+      Promise.resolve()
+         .then(() => {
+            // if object already in the ABObjectCache, skip this step
+            if (object) {
+               sails.log.info("object returned form ABObjectCache");
+               return;
+            }
 
-            let objID = req.param('objID', -1);
-            let object = ABObjectCache.get(objID);
+            // lookup the object information
+            return AppBuilder.routes
+               .verifyAndReturnObject(req, res)
+               .then((obj) => {
+                  object = obj;
+               });
+         })
+         // .then(()=>{
 
+         //     // if object already in the ABObjectCache, skip this step
+         //     if (object) {
+         //         return;
+         //     }
 
-            // AppBuilder.routes.verifyAndReturnObject(req, res)
-            // ABGraphObject.findOne(objID)
-            Promise.resolve()
-            .then(()=>{
+         //     // lookup object if it isn't already in the cache:
+         //     return new Promise((next, error) =>{
 
-                // if object already in the ABObjectCache, skip this step
-                if (object) {
-                    sails.log.info("object returned form ABObjectCache");
-                    return;
-                }
+         //         var def = ABDefinitionModel.definitionForID(objID);
+         //         if (def) {
+         //             object = ABServerApp.objectNew(def);
+         //             next();
+         //             return;
+         //         } else {
+         //             ABDefinitionModel.find({id:objID})
+         //             .then((list)=>{
+         //                 if (list && list.length > 0) {
+         //                     object = ABServerApp.objectNew(list[0].json);
+         //                 }
+         //                 next();
+         //             })
+         //             .catch(error);
+         //         }
+         //     });
+         // })
+         .then(function(objectData) {
+            if (!object) {
+               var missingObj = new Error("Missing Object");
+               missingObj.objID = objID;
+               console.log(`Error: Missing Object from id: ${objID}`);
+               return reject(missingObj);
+            }
 
-                // lookup the object information 
-                return AppBuilder.routes.verifyAndReturnObject(req, res)
-                .then((obj)=>{
-                    object = obj;
-                })
-            })
-            // .then(()=>{
-                
-            //     // if object already in the ABObjectCache, skip this step
-            //     if (object) {
-            //         return;
-            //     }
+            var fieldID = req.param("fieldID", -1);
 
-            //     // lookup object if it isn't already in the cache:
-            //     return new Promise((next, error) =>{
+            sails.log.verbose("... fieldID:" + fieldID);
 
-            //         var def = ABDefinitionModel.definitionForID(objID);
-            //         if (def) {
-            //             object = ABServerApp.objectNew(def);
-            //             next();
-            //             return;
-            //         } else {
-            //             ABDefinitionModel.find({id:objID})
-            //             .then((list)=>{
-            //                 if (list && list.length > 0) {
-            //                     object = ABServerApp.objectNew(list[0].json);
-            //                 }
-            //                 next();
-            //             })
-            //             .catch(error);
-            //         }
-            //     });
-            // })
-            .then(function(objectData){
+            // Verify input params are valid:
+            if (fieldID == -1) {
+               var invalidError = ADCore.error.fromKey("E_MISSINGPARAM");
+               invalidError.details = "missing field.id";
+               sails.log.error(invalidError);
+               res.AD.error(invalidError, 400);
+               reject();
+            }
 
-                if (!object) {
-                    var missingObj = new Error("Missing Object");
-                    missingObj.objID = objID;
-                    console.log(`Error: Missing Object from id: ${objID}`);
-                    return reject(missingObj);
-                }
-
-                var fieldID = req.param('fieldID', -1);
-
-                sails.log.verbose('... fieldID:'+fieldID);
-
-                // Verify input params are valid:
-                if (fieldID == -1) {
-                    var invalidError = ADCore.error.fromKey('E_MISSINGPARAM');
-                    invalidError.details = 'missing field.id';
-                    sails.log.error(invalidError);
-                    res.AD.error(invalidError, 400);
-                    reject();
-                } 
-
-                // find and return our field
-                var field = object.fields((f) => { return f.id == fieldID; })[0];
-                if (field) {
-
-                    resolve( field );
-
-                } else {
-
-                    // error: field not found!
-                    var err = ADCore.error.fromKey('E_NOTFOUND');
-                    err.message = "Field not found.";
-                    err.fieldID = fieldID;
-                    sails.log.error(err);
-                    res.AD.error(err, 404);
-                    reject();
-                }
-
-
-            }, reject)
-            .catch(reject);
-
-        }
-    )
-
+            // find and return our field
+            var field = object.fields((f) => {
+               return f.id == fieldID;
+            })[0];
+            if (field) {
+               resolve(field);
+            } else {
+               // error: field not found!
+               var err = ADCore.error.fromKey("E_NOTFOUND");
+               err.message = "Field not found.";
+               err.fieldID = fieldID;
+               sails.log.error(err);
+               res.AD.error(err, 404);
+               reject();
+            }
+         }, reject)
+         .catch(reject);
+   });
 }
-
 
 function simpleObjectOperation(req, res, operation) {
-    res.set('content-type', 'application/javascript');
-    
-    sails.log.info('ABMigrationConroller.'+operation+'()');
+   res.set("content-type", "application/javascript");
 
-    let objID = req.param('objID', -1);
+   sails.log.info("ABMigrationConroller." + operation + "()");
 
-    // NOTE: verifyAnd...() handles any errors and responses internally.
-    // only need to responde to an object being passed back on .resolve()
-    AppBuilder.routes.verifyAndReturnObject(req, res)
-    // ABGraphObject.findOne(objID)
-    .then(function(object){
+   let objID = req.param("objID", -1);
 
-        // let object = objectData.toABClass();
+   // NOTE: verifyAnd...() handles any errors and responses internally.
+   // only need to responde to an object being passed back on .resolve()
+   AppBuilder.routes
+      .verifyAndReturnObject(req, res)
+      // ABGraphObject.findOne(objID)
+      .then(function(object) {
+         // let object = objectData.toABClass();
 
-        ABMigration[operation](object)
-        .then(function(){
-
-            res.AD.success({good:'job'});
-
-        })
-        .catch(function(err){
-            ADCore.error.log('ABMigration'+operation+'() failed:', { error:err, object:object });
-            res.AD.error(err, 500);
-        })
-
-    })
-    .catch((err)=>{
-        console.log(err);
-        // NOTE: verifyAndReturnObject() should already have handled the error 
-        // response.  So we don't need to do anything else here, but we 
-        // add the .catch() to prevent additional "unhandled" error messages.
-    })
+         ABMigration[operation](object)
+            .then(function() {
+               res.AD.success({ good: "job" });
+            })
+            .catch(function(err) {
+               ADCore.error.log("ABMigration" + operation + "() failed:", {
+                  error: err,
+                  object: object
+               });
+               res.AD.error(err, 500);
+            });
+      })
+      .catch((err) => {
+         console.log(err);
+         // NOTE: verifyAndReturnObject() should already have handled the error
+         // response.  So we don't need to do anything else here, but we
+         // add the .catch() to prevent additional "unhandled" error messages.
+      });
 }
-
 
 function simpleFieldOperation(req, res, operation) {
-    res.set('content-type', 'application/javascript');
-    
-    sails.log.info('ABMigrationConroller.'+operation+'()');
+   res.set("content-type", "application/javascript");
 
-    // NOTE: verifyAnd...() handles any errors and responses internally.
-    // only need to respond to a field being passed back on .resolve()
-    verifyAndReturnField(req, res)
-    .then(function(field){
+   sails.log.info("ABMigrationConroller." + operation + "()");
 
-sails.log.info("  -> found field:", field);
+   // NOTE: verifyAnd...() handles any errors and responses internally.
+   // only need to respond to a field being passed back on .resolve()
+   verifyAndReturnField(req, res)
+      .then(function(field) {
+         sails.log.info("  -> found field:", field);
 
-        ABMigration[operation](field)
-        .then(function(){
+         ABMigration[operation](field)
+            .then(function() {
+               // make sure this field's object's model cache is reset
+               field.object.modelRefresh();
 
-            // make sure this field's object's model cache is reset
-            field.object.modelRefresh();
-
-            res.AD.success({ good:'job'});
-
-        })
-        .catch(function(err){
-            ADCore.error.log('ABMigration.'+operation+'() failed:', { error:err, field:field });
-            res.AD.error(err, 500);
-        })
-
-    })
-    .catch((err)=>{
-        console.log(err);
-        // NOTE: verifyAndReturnField() should already have handled the error 
-        // response.  So we don't need to do anything else here, but we 
-        // add the .catch() to prevent additional "unhandled" error messages.
-    })
+               res.AD.success({ good: "job" });
+            })
+            .catch(function(err) {
+               ADCore.error.log("ABMigration." + operation + "() failed:", {
+                  error: err,
+                  field: field
+               });
+               res.AD.error(err, 500);
+            });
+      })
+      .catch((err) => {
+         console.log(err);
+         // NOTE: verifyAndReturnField() should already have handled the error
+         // response.  So we don't need to do anything else here, but we
+         // add the .catch() to prevent additional "unhandled" error messages.
+      });
 }
-
-
