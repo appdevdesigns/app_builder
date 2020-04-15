@@ -97,11 +97,8 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
                (dc) => dc.id == datacollectionId
             )[0];
 
-            // No data source was choosen
-            if (CurrentDC == null) return;
-
             $$(ids.name).show();
-            $$(ids.name).setValue(CurrentDC.label);
+            $$(ids.name).setValue(CurrentDC ? CurrentDC.label : "");
 
             // Rename data source name to template
             $$(ids.form)
@@ -120,15 +117,18 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
 
             // Pull data collections that parent is the selected dc
             let subDCs = [];
-            let datasource = CurrentDC.datasource;
-            if (datasource) {
-               subDCs = CurrentApplication.datacollections((dc) => {
-                  let linkDatasource = dc.datasource;
-                  if (!linkDatasource) return false;
+            if (CurrentDC) {
+               let datasource = CurrentDC.datasource;
+               if (datasource) {
+                  subDCs = CurrentApplication.datacollections((dc) => {
+                     let linkDatasource = dc.datasource;
+                     if (!linkDatasource) return false;
 
-                  return dc.id == CurrentDC.settings.linkDatacollectionID;
-                  // return linkDatasource.fields(f => f.key == 'connectObject' && f.settings.linkObject == datasource.id).length > 0;
-               });
+                     return dc.settings.linkDatacollectionID == CurrentDC.id;
+                     // return dc.id == CurrentDC.settings.linkDatacollectionID;
+                     // return linkDatasource.fields(f => f.key == 'connectObject' && f.settings.linkObject == datasource.id).length > 0;
+                  });
+               }
             }
 
             // Re-build sub-dcs layout
@@ -176,6 +176,9 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
             $$(ids.form).clearValidation();
             $$(ids.form).clear();
             $$(ids.parentList).setValue("-");
+
+            // Re-build sub-dcs layout
+            $$(ids.subDVs).reconstruct();
          },
 
          /**
