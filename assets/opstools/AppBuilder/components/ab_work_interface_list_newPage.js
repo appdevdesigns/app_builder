@@ -165,8 +165,16 @@ module.exports = class AB_Work_Interface_List_NewPage extends ABComponent {
 
          buttonSave: function() {
             var SaveButton = $$(ids.buttonSave);
+
+            SaveButton.disable();
+            CurrentEditor.formBusy();
+
             var values = CurrentEditor.values();
-            if (!values) return;
+            if (!values) {
+               SaveButton.enable();
+               CurrentEditor.formReady();
+               return;
+            }
 
             // this interface only creates Root Pages, or pages related to
             var page = null;
@@ -180,9 +188,6 @@ module.exports = class AB_Work_Interface_List_NewPage extends ABComponent {
             if (validator.fail()) {
                CurrentEditor.errors(validator);
             } else {
-               SaveButton.disable();
-               CurrentEditor.formBusy();
-
                let includeSubview = true;
 
                page
