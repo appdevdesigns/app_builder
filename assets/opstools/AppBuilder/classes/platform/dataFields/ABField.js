@@ -340,6 +340,9 @@ module.exports = class ABField extends ABFieldCore {
                .then(() => {
                   return this.object.fieldRemove(this);
                })
+               .then(() => {
+                  return super.destroy();
+               })
                .then(resolve)
                .catch(reject);
          } else {
@@ -363,7 +366,7 @@ module.exports = class ABField extends ABFieldCore {
          // if this is our initial save()
          if (!this.id) {
             isAdd = true;
-            this.id = OP.Util.uuid(); // setup default .id
+            // this.id = OP.Util.uuid(); // setup default .id
          }
 
          Promise.resolve()
@@ -410,26 +413,51 @@ module.exports = class ABField extends ABFieldCore {
                      .catch(error);
                });
             })
-            .then(() => {
-               // save field
-               return new Promise((next, error) => {
-                  this.object
-                     .fieldSave(this)
-                     .then(() => {
-                        // not .migrateCreate, we have to wait until the link column will finish
-                        if (this.key == "connectObject") return next();
 
-                        var fnMigrate = isAdd
-                           ? this.migrateCreate()
-                           : this.migrateUpdate();
-                        fnMigrate
-                           .then(() => {
-                              next();
-                           })
-                           .catch(error);
-                     })
-                     .catch(error);
-               });
+            //// OLD Method:
+            // .then(() => {
+            //     // save field
+            //     return new Promise((next, error) => {
+            //         Promise.resolve()
+            //             .then(() => {
+            //                 if (!skipObjSave) {
+            //                     return this.object.fieldSave(this);
+            //                 }
+            //             })
+            //             .then(() => {
+            //                 // not .migrateCreate, we have to wait until the link column will finish
+            //                 if (this.key == "connectObject") return;
+
+            //                 var fnMigrate = isAdd
+            //                     ? this.migrateCreate()
+            //                     : this.migrateUpdate();
+            //                 return fnMigrate;
+            //             })
+            //             .then(next)
+            //             .catch(error);
+            //     });
+            // })
+            .then(() => {
+               // New ABDefinition method of saving:
+               // when this is done, we now have an .id
+               return super.save();
+            })
+            .then(() => {
+               // incase this was an ADD operation, make sure the
+               // parent Obj now includes this object:
+               // NOTE: must be done after the .save() so we have an .id
+               return this.object.fieldAdd(this);
+            })
+            .then(() => {
+               // perform any server side migrations for this Field:
+
+               // but not connectObject fields:
+               if (this.key == "connectObject") return;
+
+               var fnMigrate = isAdd
+                  ? this.migrateCreate()
+                  : this.migrateUpdate();
+               return fnMigrate;
             })
             .then(() => {
                resolve(this);

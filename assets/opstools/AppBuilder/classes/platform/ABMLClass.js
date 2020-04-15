@@ -107,7 +107,6 @@ module.exports = class ABMLClass extends ABMLClassCore {
       var def = this.toDefinition().toObj();
       def.name = def.name || this.name || this.label || "name";
       def.type = def.type || this.type || "type";
-
       if (def.id) {
          // here ABDefinition is our sails.model()
          return ABDefinition.update(def.id, def);

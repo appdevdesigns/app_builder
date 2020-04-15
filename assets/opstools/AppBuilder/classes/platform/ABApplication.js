@@ -354,7 +354,8 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
     * @return {json}
     */
    toObj() {
-      //// TODO:
+      //// TODO: isn't this an MLObject?
+
       OP.Multilingual.unTranslate(
          this,
          this.json,
@@ -631,7 +632,6 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
                let refreshTasks = [];
 
                // add connect field to exist objects
-
                // (newObj.fields || []).forEach((f) => {
                (newObj.fieldIDs || []).forEach((id) => {
                   var f = ABDefinition.definition(id);

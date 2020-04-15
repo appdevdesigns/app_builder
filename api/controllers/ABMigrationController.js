@@ -138,7 +138,6 @@ module.exports = {
 function verifyAndReturnField(req, res) {
    return new Promise((resolve, reject) => {
       let objID = req.param("objID", -1);
-
       let object = ABObjectCache.get(objID);
 
       // AppBuilder.routes.verifyAndReturnObject(req, res)
