@@ -12,17 +12,17 @@ var ABDefinition = require("./ABDefinition");
 var ABMLClassCore = require("../core/ABMLClassCore");
 
 module.exports = class ABMLClass extends ABMLClassCore {
-    constructor(fieldList) {
-        super(fieldList);
-    }
+   constructor(fieldList) {
+      super(fieldList);
+   }
 
-    /**
-     * @method translate()
-     *
-     * translate the multilingual fields (in this.mlFields) from
-     * our .translation data.
-     */
-    /*
+   /**
+    * @method translate()
+    *
+    * translate the multilingual fields (in this.mlFields) from
+    * our .translation data.
+    */
+   /*
     translate(instance, attributes, fields) {
         if (!instance) instance = this;
         if (!attributes) attributes = this;
@@ -32,13 +32,13 @@ module.exports = class ABMLClass extends ABMLClassCore {
     }
     */
 
-    /**
-     * @method unTranslate()
-     *
-     * un-translate the multilingual fields (in this.mlFields) into
-     * our .translation data
-     */
-     /*
+   /**
+    * @method unTranslate()
+    *
+    * un-translate the multilingual fields (in this.mlFields) into
+    * our .translation data
+    */
+   /*
     unTranslate(instance, attributes, fields) {
         if (!instance) instance = this;
         if (!attributes) attributes = this;
@@ -48,72 +48,72 @@ module.exports = class ABMLClass extends ABMLClassCore {
     }
     */
 
-    /**
-     * @method languageDefault
-     * return a default language code.
-     * @return {string} 
-     */
-    languageDefault() {
-        return AD.lang.currentLanguage || "en";
-    }
+   /**
+    * @method languageDefault
+    * return a default language code.
+    * @return {string}
+    */
+   languageDefault() {
+      return AD.lang.currentLanguage || "en";
+   }
 
-    /**
-     * @method destroy()
-     * remove this definition.
-     * @return {Promise}
-     */
-    destroy() {
-        ////
-        //// TODO: once our core conversion is complete, this .save() can be
-        //// moved to ABProcessTaskCore, and our ABDefinition.save() can take
-        //// care of the proper method to save depending on the current Platform.
-        ////
-        // return this.toDefinition()
-        //     .destroy()
+   /**
+    * @method destroy()
+    * remove this definition.
+    * @return {Promise}
+    */
+   destroy() {
+      ////
+      //// TODO: once our core conversion is complete, this .save() can be
+      //// moved to ABProcessTaskCore, and our ABDefinition.save() can take
+      //// care of the proper method to save depending on the current Platform.
+      ////
+      // return this.toDefinition()
+      //     .destroy()
 
-        //// Until then:
-        var def = this.toDefinition().toObj();
-        if (def.id) {
-            // here ABDefinition is our sails.model()
-            return ABDefinition.destroy(def.id);
-        } else {
-            return Promise.resolve();
-        }
-    }
+      //// Until then:
+      var def = this.toDefinition().toObj();
+      if (def.id) {
+         // here ABDefinition is our sails.model()
+         return ABDefinition.destroy(def.id);
+      } else {
+         return Promise.resolve();
+      }
+   }
 
-    /**
-     * @method save()
-     * persist this instance of ABObject with it's parent ABApplication
-     * @return {Promise}
-     */
-    save() {
-        ////
-        //// TODO: once our core conversion is complete, this .save() can be
-        //// moved to ABProcessTaskCore, and our ABDefinition.save() can take
-        //// care of the proper method to save depending on the current Platform.
-        ////
-        // return this.toDefinition()
-        //     .save()
-        //     .then((data) => {
-        //         // if I didn't have an .id then this was a create()
-        //         // and I need to update my data with the generated .id
+   /**
+    * @method save()
+    * persist this instance of ABObject with it's parent ABApplication
+    * @return {Promise}
+    */
+   save() {
+      ////
+      //// TODO: once our core conversion is complete, this .save() can be
+      //// moved to ABProcessTaskCore, and our ABDefinition.save() can take
+      //// care of the proper method to save depending on the current Platform.
+      ////
+      // return this.toDefinition()
+      //     .save()
+      //     .then((data) => {
+      //         // if I didn't have an .id then this was a create()
+      //         // and I need to update my data with the generated .id
 
-        //         if (!this.id) {
-        //             this.id = data.id;
-        //         }
-        //     });
+      //         if (!this.id) {
+      //             this.id = data.id;
+      //         }
+      //     });
 
-        //// Until then:
-        var def = this.toDefinition().toObj();
-        def.name = def.name || this.name || this.label || "name";
-        def.type = def.type || this.type || "type";
-        if (def.id) {
-            // here ABDefinition is our sails.model()
-            return ABDefinition.update(def.id, def);
-        } else {
-            return ABDefinition.create(def).then((data) => {
-                this.id = data.id;
-            });
-        }
-    }
+      //// Until then:
+      var def = this.toDefinition().toObj();
+      def.name = def.name || this.name || this.label || "name";
+      def.type = def.type || this.type || "type";
+      if (def.id) {
+         // here ABDefinition is our sails.model()
+         return ABDefinition.update(def.id, def);
+      } else {
+         return ABDefinition.create(def).then((data) => {
+            this.id = data.id;
+         });
+      }
+   }
 };
